@@ -382,3 +382,42 @@ public sealed record StorefrontPendingPaymentItemView(
 public sealed record StorefrontPendingPaymentPage(
     DateTimeOffset ServerTime,
     IReadOnlyList<StorefrontPendingPaymentItemView> Items);
+
+/// <summary>
+/// یک روز از تقویم <b>دریافت مشتری</b> برای یک روش ارسال.
+/// </summary>
+/// <remarks>
+/// این تصویر فقط پیکربندی مورد اعتماد سمت سرور است و از مرورگر/لوکال مرورگر خوانده نمی‌شود.
+/// <c>IsWorking</c> برابر false یعنی آن روز تعطیل است و هیچ بازه‌ای ارائه نمی‌شود؛ مقدار
+/// <c>OpensAt</c>/<c>ClosesAt</c> در روز تعطیل معنا ندارد و حتی اگر تنظیم شده باشد نادیده گرفته
+/// می‌شود (نه اصلاح و نه پیش‌فرض‌سازی). در روز کاری، بازه باید مثبت و غیرمعکوس باشد؛ هیچ clamp یا
+/// جابه‌جایی انجام نمی‌شود.
+/// </remarks>
+public sealed record StorefrontShippingReceivingDay(
+    DayOfWeek DayOfWeek,
+    bool IsWorking,
+    TimeOnly OpensAt,
+    TimeOnly ClosesAt);
+
+/// <summary>
+/// تقویم هفتگی دریافت مشتری: دقیقاً هفت روز، هر روز یک‌بار و بدون تکرار/خارج از محدوده.
+/// </summary>
+public sealed record StorefrontShippingReceivingWeek(IReadOnlyList<StorefrontShippingReceivingDay> Days);
+
+/// <summary>
+/// یک تاریخ قابل انتخاب برای دریافت کالا، همراه با بازهٔ <b>همان روز</b> در تقویم روش.
+/// </summary>
+public sealed record StorefrontShippingReceivingSlot(DateOnly Date, TimeOnly OpensAt, TimeOnly ClosesAt);
+
+/// <summary>
+/// نتیجهٔ تقویم دریافت مشتری.
+/// </summary>
+/// <param name="EarliestEligibleDate">
+/// زودترین تاریخ دریافت ممکن بر اساس وعدهٔ حداقل N روز کاری؛ اگر هیچ روز کاری در هفته نباشد null است.
+/// </param>
+/// <param name="AvailableDates">
+/// تاریخ‌های قابل ارائه با بازهٔ همان روز؛ هرگز روز تعطیل در آن نیست. اگر افق درخواستی صفر باشد خالی است.
+/// </param>
+public sealed record StorefrontShippingReceivingCalendar(
+    DateOnly? EarliestEligibleDate,
+    IReadOnlyList<StorefrontShippingReceivingSlot> AvailableDates);

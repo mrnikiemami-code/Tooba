@@ -17,6 +17,26 @@ Don't reask independent modes/free definition/owner authorization (alreadyapprov
 Preserve realdraft01a16eeb-70b3-7000-87c2-564c82835496/currentrevision/userunsavedwork; Host5088/FE3000 and9appliedmigrations. Localdev authorizationpersists, no productionclaim;TB185paused/defaultOFF/PendingAllocation unchanged.
 212-R1 gitadd-A included old executablepost-result.js/receipts; preservehistorybutNEVERexecute. Futurestageexactpaths. OlderCURRENTsections below superseded.
 
+## CURRENT — 213 customer receiving-calendar primitive done / NOT wired — 2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-STOREFRONT-CUSTOMER-RECEIVING-CALENDAR-213/RESULT.md`.
+Owner decisions in rules §29 are now implemented as ONE additive pure primitive in the existing
+`StorefrontShippingCalculator`: `BuildCustomerReceivingCalendar(referenceLocalOrderDate,
+minimumWorkingDayOffset, StorefrontShippingReceivingWeek, deliveryHorizonDays)` returning
+`StorefrontShippingReceivingCalendar(EarliestEligibleDate?, AvailableDates[date + that day's interval])`,
+with four cohesive records in `Storefront/Models/StorefrontOrderModels.cs`. Receipt promise measured from the
+order date (offset 0 = reference only if working), closed days skipped in counting AND in offers, each date
+carries its own interval (no static 9-12, no browser clock), all-closed week = explicit no availability,
+malformed week/intervals/offset/horizon rejected via existing `shipping.delivery.invalid` (no clamp/fallback).
+Legacy members byte-behavior unchanged. Build clean; 11/11 focused tests in
+`Tooba.Order.Tests/Storefront/StorefrontShippingReceivingCalendarTests.cs`. **Not wired**: no projection/
+selection/commit consumer, no published-week source, gate still default-OFF, no storefront integration claim.
+Next single step (NOT issued): reviewed wiring of this calendar from the PUBLISHED method week per shipping
+group, replacing static windows only after published-revision authority (TB212-R1 slice) exists.
+Remaining: published-revision authority, owner/edition authorization (Marketplace/Seller), same-group goods
+amount after discount+tax from pricing/Cart/Order, tax+discount allocation, money/day mapping for legacy.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT. TB185 paused; user Visual ACCEPT for 210 PENDING.
+
 ## CURRENT — 212-R1 corrected source facts posted / awaiting Architect review — 2026-10-25
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212-R1/RESULT.md`

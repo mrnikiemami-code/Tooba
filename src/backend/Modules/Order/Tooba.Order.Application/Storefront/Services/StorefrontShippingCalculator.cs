@@ -1,4 +1,5 @@
 using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Order.Application.Storefront.Models;
 
 namespace Tooba.Order.Application.Storefront.Services;
 
@@ -113,6 +114,172 @@ public static class StorefrontShippingCalculator
     {
         var days = Math.Clamp(horizonDays, 1, 30);
         return Enumerable.Range(0, days).Select(offset => minimum.AddDays(offset)).ToArray();
+    }
+
+    /// <summary>
+    /// تقویم <b>دریافت مشتری</b> را از پیکربندی هفتگی مورد اعتماد سرور می‌سازد.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// معنی وعده: <paramref name="minimumWorkingDayOffset"/> روز <b>کاری</b> بعد از تاریخ سفارش؛
+    /// تاریخ سفارش خودش شمرده نمی‌شود (offset 0 فقط وقتی همان روز کاری باشد قابل ارائه است).
+    /// روزهای تعطیل نه در شمارش و نه در فهرست تاریخ‌های قابل ارائه نمی‌آیند و هر تاریخ بازهٔ
+    /// <b>همان روز</b> را با خود دارد؛ هیچ بازهٔ ثابت (مثل ۹ تا ۱۲) و هیچ ساعت مرورگر اینجا نیست.
+    /// </para>
+    /// <para>
+    /// این عضو فقط یک محاسبهٔ خالص است: نه آماده‌سازی فروشنده را دوباره اضافه می‌کند (وعده از قبل
+    /// شامل آن است)، نه cutoff روز جاری، نه تفکیک بازه به slot، نه تقویم تعطیلات و نه ظرفیت را
+    /// حدس می‌زند. حداکثر مدت ثبت‌شده در مدل نویسندگی هم دست‌نخورده می‌ماند.
+    /// </para>
+    /// <para>
+    /// ورودی نامعتبر (هفتهٔ ناقص/تکراری/خارج از محدوده، بازهٔ کاری معکوس یا صفر، offset منفی، افق
+    /// غیرمثبت) با کد پایدار <see cref="StorefrontOrderErrors.ShippingDeliveryInvalid"/> رد می‌شود؛
+    /// هیچ روزی پیش‌فرض‌سازی یا اصلاح نمی‌شود. هفتهٔ کاملاً تعطیل «عدم دسترس‌پذیری» صریح برمی‌گرداند
+    /// و هرگز حلقهٔ بی‌پایان یا هفتهٔ پیش‌فرض نمی‌سازد.
+    /// </para>
+    /// </remarks>
+    public static StorefrontShippingReceivingCalendar BuildCustomerReceivingCalendar(
+        DateOnly referenceLocalOrderDate,
+        int minimumWorkingDayOffset,
+        StorefrontShippingReceivingWeek week,
+        int deliveryHorizonDays)
+    {
+        var byDay = ResolveReceivingWeek(week);
+
+        if (minimumWorkingDayOffset < 0 || minimumWorkingDayOffset > MaxReceivingWorkingDayOffset)
+        {
+            throw new StorefrontOrderException(
+                StorefrontOrderErrors.ShippingDeliveryInvalid,
+                "receiving.minimum_working_day_offset");
+        }
+
+        if (deliveryHorizonDays < 0 || deliveryHorizonDays > MaxReceivingHorizonDays)
+        {
+            throw new StorefrontOrderException(
+                StorefrontOrderErrors.ShippingDeliveryInvalid,
+                "receiving.horizon_days");
+        }
+
+        var earliest = FindEarliestReceivingDate(referenceLocalOrderDate, minimumWorkingDayOffset, byDay);
+        if (earliest is not DateOnly earliestDate)
+        {
+            // هیچ روز کاری در هفته نیست: عدم دسترس‌پذیری صریح، بدون حلقه و بدون هفتهٔ پیش‌فرض.
+            return new StorefrontShippingReceivingCalendar(null, Array.Empty<StorefrontShippingReceivingSlot>());
+        }
+
+        if (deliveryHorizonDays == 0)
+        {
+            return new StorefrontShippingReceivingCalendar(
+                earliestDate,
+                Array.Empty<StorefrontShippingReceivingSlot>());
+        }
+
+        var dates = new List<StorefrontShippingReceivingSlot>(deliveryHorizonDays);
+        var cursor = earliestDate;
+        while (dates.Count < deliveryHorizonDays)
+        {
+            var day = byDay[cursor.DayOfWeek];
+            if (day.IsWorking)
+            {
+                dates.Add(new StorefrontShippingReceivingSlot(cursor, day.OpensAt, day.ClosesAt));
+            }
+
+            cursor = cursor.AddDays(1);
+        }
+
+        return new StorefrontShippingReceivingCalendar(earliestDate, dates);
+    }
+
+    /// <summary>سقف صریح offset روز کاری و افق تقویم دریافت؛ ورودی خارج از آن رد می‌شود، نه clamp.</summary>
+    public const int MaxReceivingWorkingDayOffset = 365;
+
+    /// <summary>سقف صریح تعداد تاریخ‌های قابل ارائه در تقویم دریافت.</summary>
+    public const int MaxReceivingHorizonDays = 90;
+
+    private static IReadOnlyDictionary<DayOfWeek, StorefrontShippingReceivingDay> ResolveReceivingWeek(
+        StorefrontShippingReceivingWeek week)
+    {
+        if (week?.Days is null || week.Days.Count != 7)
+        {
+            throw new StorefrontOrderException(
+                StorefrontOrderErrors.ShippingDeliveryInvalid,
+                "receiving.week.incomplete");
+        }
+
+        var byDay = new Dictionary<DayOfWeek, StorefrontShippingReceivingDay>(7);
+        foreach (var day in week.Days)
+        {
+            if (day is null)
+            {
+                throw new StorefrontOrderException(
+                    StorefrontOrderErrors.ShippingDeliveryInvalid,
+                    "receiving.week.day_missing");
+            }
+
+            if (!Enum.IsDefined(day.DayOfWeek))
+            {
+                throw new StorefrontOrderException(
+                    StorefrontOrderErrors.ShippingDeliveryInvalid,
+                    "receiving.week.day_out_of_range");
+            }
+
+            if (!byDay.TryAdd(day.DayOfWeek, day))
+            {
+                throw new StorefrontOrderException(
+                    StorefrontOrderErrors.ShippingDeliveryInvalid,
+                    "receiving.week.day_duplicate");
+            }
+
+            // روز تعطیل بازهٔ دریافت ندارد؛ فقط روز کاری بازهٔ مثبت و غیرمعکوس لازم دارد.
+            if (day.IsWorking && day.ClosesAt <= day.OpensAt)
+            {
+                throw new StorefrontOrderException(
+                    StorefrontOrderErrors.ShippingDeliveryInvalid,
+                    "receiving.week.working_interval_invalid");
+            }
+        }
+
+        return byDay;
+    }
+
+    private static DateOnly? FindEarliestReceivingDate(
+        DateOnly referenceLocalOrderDate,
+        int minimumWorkingDayOffset,
+        IReadOnlyDictionary<DayOfWeek, StorefrontShippingReceivingDay> byDay)
+    {
+        if (!byDay.Values.Any(x => x.IsWorking))
+        {
+            return null;
+        }
+
+        // offset 0: خود تاریخ سفارش فقط اگر روز کاری باشد؛ وگرنه اولین روز کاری بعد از آن.
+        var cursor = referenceLocalOrderDate;
+        if (minimumWorkingDayOffset == 0)
+        {
+            while (!byDay[cursor.DayOfWeek].IsWorking)
+            {
+                cursor = cursor.AddDays(1);
+            }
+
+            return cursor;
+        }
+
+        // offset N≥1: N-امین روز کاری <b>بعد از</b> تاریخ سفارش؛ تاریخ سفارش شمرده نمی‌شود.
+        var counted = 0;
+        cursor = referenceLocalOrderDate.AddDays(1);
+        while (true)
+        {
+            if (byDay[cursor.DayOfWeek].IsWorking)
+            {
+                counted++;
+                if (counted == minimumWorkingDayOffset)
+                {
+                    return cursor;
+                }
+            }
+
+            cursor = cursor.AddDays(1);
+        }
     }
 
     public static string FormatDeliveryDateLabelFa(DateOnly date, DateOnly today)

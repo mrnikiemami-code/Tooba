@@ -17,6 +17,23 @@ Don't reask independent modes/free definition/owner authorization (alreadyapprov
 Preserve realdraft01a16eeb-70b3-7000-87c2-564c82835496/currentrevision/userunsavedwork; Host5088/FE3000 and9appliedmigrations. Localdev authorizationpersists, no productionclaim;TB185paused/defaultOFF/PendingAllocation unchanged.
 212-R1 gitadd-A included old executablepost-result.js/receipts; preservehistorybutNEVERexecute. Futurestageexactpaths. OlderCURRENTsections below superseded.
 
+## CURRENT — 213 customer receiving-calendar primitive done / NOT wired — 2026-10-25
+
+Rules §29 owner decisions are implemented as one additive pure primitive in the already-existing
+`Order.Application/Storefront/Services/StorefrontShippingCalculator.cs`
+(`BuildCustomerReceivingCalendar` + `ResolveReceivingWeek` + `FindEarliestReceivingDate`) with four cohesive
+records appended to `Storefront/Models/StorefrontOrderModels.cs`. Receipt promise from the order date, closed
+days skipped in counting and never offered, each date carries its own configured interval (no static 9-12,
+no browser clock), all-closed week = explicit no availability, malformed week/interval/offset/horizon rejected
+through the existing `shipping.delivery.invalid` code (no clamp, no default week). Legacy members unchanged.
+`dotnet build` clean; 11/11 focused tests. **Not wired**: nothing consumes it, published-week source absent,
+gate default-OFF, no Storefront integration/completion claim. Next single step (NOT issued): reviewed wiring
+from the published method week, per shipping group, only after published-revision authority exists.
+Remaining: published-revision authority (212-R1 slice), owner/edition authorization, same-group goods amount
+after discount+tax, tax/discount allocation, money/day mapping. Active task: NONE. Next task: NOT ISSUED —
+STOP_FOR_ARCHITECT. Read
+`docs/architecture/evidence/TB-SHIPPING-STOREFRONT-CUSTOMER-RECEIVING-CALENDAR-213/RESULT.md`.
+
 ## CURRENT — 212-R1 corrected source facts posted / awaiting Architect review — 2026-10-25
 
 Docs-only correction under the 10-minute box (no src/flag/schema/DB/build/test/browser change). Retractions:
