@@ -1,0 +1,86 @@
+BEGIN_TOOBA_WORKER_RESULT
+TASK: TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212
+PARENT: TB-SHIPPING-ADMIN-AREA-CONTRAST-AND-EDITOR-CHECKS-211
+CHANNEL: tooba-main
+WORKER: tooba-worker-01
+AGENT: cursor
+BASE: 51f65febfc15bdf1c9fdbaade5215def2ca88a3e
+COMMIT: ed0e761cfd2d0687aa176418429d33a684a08126
+PUSH: origin/main fast-forward, HEAD == origin/main
+VERDICT: READY_FOR_ARCHITECT_REVIEW (docs/evidence only; zero src/runtime/data change)
+STATUS: COMPLETED
+
+1. AUTHORITY (exact members, not absence claims)
+Quote/coverage: Shipping.Contracts.Rates.IShippingRateQuoteLookup.QuoteAsync(ShippingQuoteRequest) ->
+Shipping.Infrastructure/Rates/ShippingRateQuoteLookup (reads Shipping's own ShippingDbContext.RatePolicies,
+CoverageGrants, MethodCoverages) -> Domain/Rates/ShippingRatePolicyEngine.Quote. Request carries ServiceCode,
+DestinationIdentifiers, CartSubtotalExclusive, CurrencyCode?, OptionCode?, Parcel? and init OptionMatchMode.
+Measured inputs: ShippingMeasuredParcel(WeightGrams?, ItemCount?); empty => conditioned rule fails closed.
+Packaging: Shipping.Contracts.Packaging.IShippingPackagingFeeLookup + Domain/Packaging/ShippingPackagingFeeResolver
+(contract present, no implementation registered). Combined: Shipping.Contracts.Operations
+.IShippingOperationalQuoteLookup + ShippingOperationalQuote (freight, packaging, total, payable-at-checkout vs
+COD, payer modes) — contract present, no implementation, no consumer.
+Runtime WRITE authorities already exist in Shipping.Application: Create/UpdateShippingRatePolicyCommand,
+SetShippingRatePolicyActiveCommand, CreateShippingCoverageGrantCommand, Create/UpdateShippingPackagingPolicyCommand,
+UpsertShippingOperatingScheduleCommand, SetShippingOperatingScheduleActiveCommand.
+Storefront consumer: Order StorefrontShippingService.LoadEligibleMethodsAsync ->
+StorefrontShippingOwnedRateResolver.ResolveAsync (gate StorefrontShippingOwnedRateOptions.Enabled, default OFF;
+StrictOwnedOption; Parcel always null; currency/negative/reason fail-closed).
+Binding identity = Shipping ServiceCode + OptionCode + geographic scope + currency. RatePolicy has NO owner column,
+so Store/Marketplace/Seller ownership is not representable today.
+Candidate identity in Order = StorefrontShippingOwnedRateCandidate(MethodCode "service:option", ServiceCode,
+OptionCode) — the natural place a drafted method/type can be read WITHOUT rehoming authority.
+Projection/selection/commit parity is structural: CommitAsync replays SaveSelectionAsync through the same
+LoadEligibleMethodsAsync, so all three share one price path (not UI-only).
+
+2. DRAFT vs RUNTIME
+exact: group destination nodes -> RatePolicy/CoverageGrant scope (one row per node, same amounts); freight ->
+ChargeAmount and packaging -> packaging policy FeeAmount kept SEPARATE (never summed into ChargeAmount);
+weight/count conditions; weekly timezone+7 windows -> OperatingSchedule; FreightPaymentMode -> packaging
+FreightPayerMode; per-group currency -> RatePolicy.CurrencyCode.
+not representable: min/maxMerchandiseAmount (no merchandise axis), CalculationMode, per-language rate labels,
+owner kind/tenant, and min/maxDeliveryDays -> PreparationDays/LeadDays is not 1:1. ShippingTypeId has no runtime
+role (presentation only). Storefront resolver sends Parcel=null, so weight/count-conditioned rows stay fail-closed
+until a trustworthy cart measurement source exists (the operational contract does accept Weight/ItemCount).
+
+3. SAVE vs PUBLISH (explicit decision)
+Save stays authoring-only: Authoring/* has only Replace/Get commands, no publish/activate/promote; Order has no
+authoring reference. No approved publication boundary exists in code. Chosen minimal bridge: publish COPYs one
+draft revision snapshot into the existing Shipping aggregates through the existing Shipping commands — a
+mutation, not a read of drafts. Justification: runtime readers stay untouched, unpublished/unsaved edits cannot
+become customer-visible, rollback = reactivate prior rows via the existing …ActiveCommand, and Order does not get
+a second price authority. Active state = existing IsActive flags; NO new Activated flag. Fulfillment.Contracts is
+rejected as owner of Shipping draft publication.
+
+4. NEXT EXECUTABLE SLICE (not issued; no envelope emitted)
+TB-SHIPPING-ADMIN-DRAFT-PUBLISH-SNAPSHOT-213, Shipping module only:
+- Contracts: Shipping.Contracts.Authoring publish request/result (DraftId, ExpectedRevision) ->
+  (Revision, published rate/packaging/schedule ids, UnrepresentableAxes[] with stable codes).
+- Application: Authoring/Commands/PublishShippingAuthoringDraftCommand + handler, one transaction, upsert
+  RatePolicy+CoverageGrant per group x destination node, one PackagingPolicy per currency, one OperatingSchedule;
+  deactivate the prior snapshot; reject ExpectedRevision != draft.Revision; owner scope checked via
+  ShippingAuthoringOwnerScope.
+- Hard exclusions: merchandise-amount, delivery-range and CalculationMode reported as unrepresentable, never
+  silently mapped; Store-owned drafts only, other owner kinds rejected by stable code.
+- Consumers: none (no Order change). Acceptance: a published revision is quoted identically by the existing
+  IShippingRateQuoteLookup, an unpublished revision changes nothing, stale revision rejected.
+- Later slices: trustworthy parcel source, admin publish UX, real local Order->Shipping e2e with gate ON for one
+  seller, then customer UI (Shopeiva DOM/CSS unchanged). No completion time promised.
+
+UNDECIDED PRODUCT POLICY (named, not guessed)
+(a) whether owner scope / per-language labels become runtime fields or drafts stay single-store (safest: publish
+Store-owned only in slice 1); (b) the min/maxDeliveryDays -> PreparationDays/LeadDays mapping rule.
+
+CORRECTION TO 211
+211's "config + catalog only" was incomplete: a gated authoritative price path and an operational payer-split seam
+already exist. 211's "read-only publish/activation" wording is withdrawn — publication is a write into
+Shipping-owned aggregates.
+
+BOUNDS HONORED
+Docs/evidence only: no src/package/config/flag/schema/migration/data/runtime/browser change, no build/test/DB/probe,
+no post-result script executed, TB185 paused, default-OFF unchanged, no customer mutation. Storefront functional
+certification explicitly NOT claimed — nothing is connected yet.
+Timing: claimed 08:41:38Z, analysis complete ~08:43, evidence written ~08:44, commit/push ~08:45 — inside the
+12-minute box with the minute-8 analysis stop respected.
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+END_TOOBA_WORKER_RESULT
