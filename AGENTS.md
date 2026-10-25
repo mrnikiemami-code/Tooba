@@ -1,4 +1,26 @@
-## CURRENT —214-R1 partialrepairs; only214-R2 exactcleanup + truthful concurrencyfacts —2026-10-25
+## CURRENT —214-R2 exactcleanup executed; capture still staging-only —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R2/RESULT.md` plus the
+appended correction note in `214-R1/RESULT.md`. Only `CaptureRevisionAsync` changed: every non-committing
+path detaches ONLY this method's attempted snapshot (never the caller's tracker/root/children), and the
+exact-23505 catch disposes its OWN transaction BEFORE the single winner recovery read, so no completed
+`CurrentTransaction` and no pending failed insert can survive a later `SaveChanges`. Exception and caller
+token identity preserved; `SaveAuthoringReplacementAsync`, the exact unique identity filter and all
+no-write preflight rejections unchanged; capture still returns provider-persisted facts.
+Two 214-R1 overclaims are now real: the successful B-token capture runs through the ACTUAL stale context
+(old identities/revision/rows preserved, payload is B's full graph) and the duplicate-capture fact uses
+`Task.Run` plus a bounded gate with an asserted exactly-2 arrivals. Three failure facts executed (sentinel
+before save, real caller cancellation at the write boundary, REAL 23505 via an independent task-owned
+winner) each yield no row, no pending entry, later `SaveChanges` = 0; the unique case also proves
+`CurrentTransaction == null` and returns the winner id. Executed only on the task-owned disposable
+`127.0.0.1:15432` (`shipping_tb214`/`tb214`; container removed, port silent): build 0 errors, 8/8 storage
+facts. Timing exceeded the 12-minute box (recorded, not a process PASS).
+No 215 issued; staged capture is NOT live (no publish route/pointer/consumer, default-OFF, TB185 paused,
+PendingAllocation unchanged). Preserve real user draft/unsaved tab, Host5088/FE3000, 9 applied migrations.
+213 calendar remains accepted-but-unwired; 211 FE 119 tests and §29 owner decisions not reopened.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT.
+
+## SUPERSEDED —214-R1 partialrepairs; only214-R2 exactcleanup + truthful concurrencyfacts —2026-10-25
 
 Read214-R1/ARCHITECT-REVIEW.md. Rootobservedmainfixes but testsoverclaim: B-tokenfreshcapture usesNEWfreshInA notactualstaleA;duplicatecapturebarrierblocks synchronouslybeforeawait and ignoresSignalAndWaitbool. CaptureownAddedentrysurvivesrollback(false);exactunique catchnullstransactionwithoutDisposebeforeread. Fixonlythose, no newarchitecture.
 Only issued TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R2,parent214-R1;12min/stop7/setup<=3. Existingisolated15432target; no schema/newAPI/flags/userdata/sharedmigration/Hostrestart. Trueconcurrenttasks+gatearrivalassertions, actualstalecontext, fault/cancel/uniquerecovery leavescallerstatebutnoattemptedentry/laterSave0. Awaitresult; no215yet.

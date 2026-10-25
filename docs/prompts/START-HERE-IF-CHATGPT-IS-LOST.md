@@ -1,4 +1,39 @@
-## CURRENT —214-R1 partialrepairs; only214-R2 exactcleanup + truthful concurrencyfacts —2026-10-25
+## CURRENT —214-R2 exactcleanup + truthful concurrencyfacts executed; awaiting review —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R2/RESULT.md`
+(and the appended correction note at the end of `214-R1/RESULT.md`). One existing member only:
+`ShippingAuthoringDraftDirectory.CaptureRevisionAsync`.
+
+Repaired in source: every non-committing path now detaches ONLY this method's attempted snapshot entry
+(`DetachOwnedSnapshot`), so a later `SaveChanges` cannot publish a failed capture, and the caller's tracker
+root/children are never cleared or detached. The exact-23505 catch now runs rollback → dispose OWN
+transaction → `transaction = null` → detach OWN entry → **one** bounded winner recovery read, so no
+completed EF `CurrentTransaction` survives; the `finally` releases any remaining own transaction.
+Original exception and caller `CancellationToken` identity preserved; one transaction member only, so
+`SaveAuthoringReplacementAsync` semantics, the exact unique identity filter and all no-write preflight
+rejections are untouched. Capture still returns provider-persisted facts; historical reader unchanged.
+
+Two overclaimed 214-R1 facts are now real: the stale-context success capture executes through the ACTUAL
+stale context (old root/child identities, old revision, two old rows preserved while the payload is B's
+full graph), and the duplicate-capture fact uses `Task.Run` + a bounded gate with an asserted arrival
+count of exactly 2. Added three executed failure facts (sentinel before the capture save; real caller
+token cancelled at the write boundary; a REAL 23505 caused by an independent task-owned winner committed
+between the idempotent pre-check and the INSERT) each proving no row, no pending attempted entry and a
+later `SaveChanges` of 0; the unique case also proves `Database.CurrentTransaction == null` and returns the
+winner id.
+
+Executed only on the task-owned disposable `127.0.0.1:15432` (`shipping_tb214` / `tb214`, existing local
+postgres:17, container removed, port verified silent): build 0 errors, 8/8 storage facts. No shared
+migration, no schema/domain/API/reader/flag change, no user-draft write, no Host/FE restart, no browser or
+HTTP write. Timing exceeded the 12-minute box (recorded, not a process PASS).
+
+Staged capture is still NOT live: no publish route, no live pointer, no Order/Storefront consumer,
+default-OFF gate, TB185 paused, PendingAllocation unchanged. Rejected: mapping the capture onto legacy
+aggregates / lossy partial publication. Active task NONE; next task NOT ISSUED — STOP_FOR_ARCHITECT.
+Preserve real user draft/unsaved tab, Host5088/FE3000 and the 9 applied migrations; 213 calendar remains
+accepted-but-unwired, 211 FE 119 tests and §29 owner decisions are not reopened.
+
+## SUPERSEDED —214-R1 partialrepairs; only214-R2 exactcleanup + truthful concurrencyfacts —2026-10-25
 
 Read214-R1/ARCHITECT-REVIEW.md. Rootobservedmainfixes but testsoverclaim: B-tokenfreshcapture usesNEWfreshInA notactualstaleA;duplicatecapturebarrierblocks synchronouslybeforeawait and ignoresSignalAndWaitbool. CaptureownAddedentrysurvivesrollback(false);exactunique catchnullstransactionwithoutDisposebeforeread. Fixonlythose, no newarchitecture.
 Only issued TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R2,parent214-R1;12min/stop7/setup<=3. Existingisolated15432target; no schema/newAPI/flags/userdata/sharedmigration/Hostrestart. Trueconcurrenttasks+gatearrivalassertions, actualstalecontext, fault/cancel/uniquerecovery leavescallerstatebutnoattemptedentry/laterSave0. Awaitresult; no215yet.

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Tooba.Persistence;
@@ -204,20 +205,32 @@ public sealed class ShippingAuthoringRevisionSnapshotStorageTests
             newRevision = saved.Value.Revision;
         }
 
-        // A captures at B's token while still holding its own stale tracked graph: the captured facts must be
-        // B's COMPLETE graph, never a hybrid of the stale root/children and the new revision.
-        await using (var freshInA = await NewContextAsync())
-        {
-            var result = await new ShippingAuthoringDraftDirectory(freshInA)
-                .CaptureRevisionAsync(owner, draftId, newRevision, CancellationToken.None);
-            Assert.True(result.IsSuccess, result.IsFailure ? result.Errors[0].Code : null);
-            var payload = result.Value.ReadPayload();
-            Assert.Equal(newRevision, payload.SourceRevision);
-            var capturedGroup = payload.Groups.Single(group => group.GroupId == groups[0]);
-            Assert.Single(capturedGroup.RateRows);
-            Assert.Equal(1_111.00m, capturedGroup.RateRows[0].PackagingAmount);
-            Assert.Equal(700L, capturedGroup.RateRows[0].MaxWeightGrams);
-        }
+        // The successful capture runs through the ACTUAL stale context A (not a fresh context): the captured
+        // facts must be B's COMPLETE graph, never a hybrid of A's stale tracked root/children and the new
+        // revision, and A's stale tracked instances must survive the successful capture unchanged.
+        var staleChildBefore = staleDraft.RegionGroups.Single(group => group.GroupId == groups[0]);
+        var staleRootRevisionBefore = staleDraft.Revision;
+        var captured = await new ShippingAuthoringDraftDirectory(staleA)
+            .CaptureRevisionAsync(owner, draftId, newRevision, CancellationToken.None);
+        Assert.True(captured.IsSuccess, captured.IsFailure ? captured.Errors[0].Code : null);
+        var payload = captured.Value.ReadPayload();
+        Assert.Equal(newRevision, payload.SourceRevision);
+        var capturedGroup = payload.Groups.Single(group => group.GroupId == groups[0]);
+        Assert.Single(capturedGroup.RateRows);
+        Assert.Equal(1_111.00m, capturedGroup.RateRows[0].PackagingAmount);
+        Assert.Equal(700L, capturedGroup.RateRows[0].MaxWeightGrams);
+
+        // The stale caller's tracked instances were neither detached nor refreshed and nothing of its own work
+        // was flushed: same object identities, same old revision, same two children.
+        Assert.Same(staleDraft, staleA.AuthoringDrafts.Local.Single(candidate => candidate.DraftId == draftId));
+        Assert.Equal(staleRootRevisionBefore, staleDraft.Revision);
+        var staleChildAfter = staleA.AuthoringDrafts.Local
+            .Single(candidate => candidate.DraftId == draftId)
+            .RegionGroups
+            .Single(group => group.GroupId == groups[0]);
+        Assert.Same(staleChildBefore, staleChildAfter);
+        Assert.Equal(2, staleChildAfter.RateRows.Count);
+        Assert.False(staleA.ChangeTracker.HasChanges());
 
         // A capture through the SAME context that still holds the OLD graph (its token is now stale) is the
         // canonical conflict, adds no row, and does not clear or detach that caller's tracked work.
@@ -263,23 +276,29 @@ public sealed class ShippingAuthoringRevisionSnapshotStorageTests
         await using var first = await NewContextAsync();
         await using var second = await NewContextAsync();
 
-        using var barrier = new Barrier(2);
+        // A truly concurrent rendezvous: BOTH captures are started on the thread pool first and each signals
+        // the bounded gate INSIDE its Task; the arrival count is asserted, not the ignored barrier return.
+        using var gate = new Barrier(2);
+        var arrivals = 0;
         var results = await Task.WhenAll(
-            CaptureAtBarrierAsync(first, barrier, revision),
-            CaptureAtBarrierAsync(second, barrier, revision));
+            Task.Run(() => CaptureAtGateAsync(first, gate, revision)),
+            Task.Run(() => CaptureAtGateAsync(second, gate, revision)));
 
+        Assert.Equal(2, Volatile.Read(ref arrivals));
         Assert.All(results, result => Assert.True(result.IsSuccess, result.IsFailure ? result.Errors[0].Code : null));
         Assert.Equal(results[0].Value.SnapshotId, results[1].Value.SnapshotId);
         Assert.Equal(results[0].Value.CapturedAt, results[1].Value.CapturedAt);
         Assert.Equal(results[0].Value.Payload, results[1].Value.Payload);
         Assert.Equal(1, await CountSnapshotsAsync(draftId));
 
-        async Task<Tooba.BuildingBlocks.Results.Result<ShippingAuthoringRevisionSnapshot>> CaptureAtBarrierAsync(
+        async Task<Tooba.BuildingBlocks.Results.Result<ShippingAuthoringRevisionSnapshot>> CaptureAtGateAsync(
             ShippingDbContext context,
             Barrier rendezvous,
             long expected)
         {
-            rendezvous.SignalAndWait(TimeSpan.FromSeconds(10));
+            // Bounded: a rendezvous that does not get its second arrival fails instead of hanging the test.
+            Assert.True(rendezvous.SignalAndWait(TimeSpan.FromSeconds(10)));
+            Interlocked.Increment(ref arrivals);
             return await new ShippingAuthoringDraftDirectory(context)
                 .CaptureRevisionAsync(owner, draftId, expected, CancellationToken.None);
         }
@@ -334,6 +353,87 @@ public sealed class ShippingAuthoringRevisionSnapshotStorageTests
         }
 
         Assert.True(edit.IsSuccess || edit.Errors[0].Code == ShippingErrorCodes.AuthoringDraftRevisionConflict);
+    }
+
+    [Fact]
+    public async Task A_failure_before_the_capture_insert_propagates_and_publishes_nothing_later()
+    {
+        var (owner, draftId, firstRevision, _) = await SeedAsync();
+        var before = await CountSnapshotsAsync(draftId);
+
+        // A caller that merely PRELOADED (tracked, unmodified) instances: HasChanges() is false, so capture is
+        // allowed to start, and those instances must survive the failure untouched.
+        var interceptor = new ThrowSentinelOnSaveInterceptor();
+        await using var context = await NewContextAsync(interceptor);
+        var preloadedDraft = await context.AuthoringDrafts
+            .Include(candidate => candidate.RegionGroups)
+            .SingleAsync(candidate => candidate.DraftId == draftId);
+        var preloadedGroups = preloadedDraft.RegionGroups.ToArray();
+        Assert.False(context.ChangeTracker.HasChanges());
+
+        var thrown = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new ShippingAuthoringDraftDirectory(context).CaptureRevisionAsync(
+                owner, draftId, firstRevision, CancellationToken.None));
+
+        // The SAME sentinel instance propagates (no wrapping, no swallowing).
+        Assert.Same(interceptor.Sentinel, thrown);
+
+        // THIS method's attempted snapshot entry is gone: nothing can be published by a later SaveChanges.
+        Assert.Empty(context.AuthoringRevisionSnapshots.Local);
+        Assert.Equal(0, await context.SaveChangesAsync());
+
+        // The caller's preloaded instances are still tracked, same identities, and nothing was written.
+        Assert.Same(preloadedDraft, context.AuthoringDrafts.Local.Single(candidate => candidate.DraftId == draftId));
+        Assert.Equal(
+            preloadedGroups,
+            context.AuthoringDrafts.Local.Single(candidate => candidate.DraftId == draftId).RegionGroups.ToArray());
+        Assert.Equal(before, await CountSnapshotsAsync(draftId));
+    }
+
+    [Fact]
+    public async Task A_real_caller_cancellation_at_the_capture_write_boundary_writes_no_row()
+    {
+        var (owner, draftId, firstRevision, _) = await SeedAsync();
+        var before = await CountSnapshotsAsync(draftId);
+
+        using var cancellation = new CancellationTokenSource();
+        await using var context = await NewContextAsync(new CancelOnSaveInterceptor(cancellation));
+
+        var cancelled = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            new ShippingAuthoringDraftDirectory(context).CaptureRevisionAsync(
+                owner, draftId, firstRevision, cancellation.Token));
+
+        // The caller's own token identity propagates; nothing was retried with another token.
+        Assert.Equal(cancellation.Token, cancelled.CancellationToken);
+        Assert.Empty(context.AuthoringRevisionSnapshots.Local);
+        Assert.Equal(0, await context.SaveChangesAsync());
+        Assert.Equal(before, await CountSnapshotsAsync(draftId));
+    }
+
+    [Fact]
+    public async Task A_real_unique_violation_returns_the_independent_winner_and_leaves_no_current_transaction()
+    {
+        var (owner, draftId, firstRevision, _) = await SeedAsync();
+        var before = await CountSnapshotsAsync(draftId);
+
+        // An INDEPENDENT task-owned winner for the same owner/draft/revision is committed by another context
+        // AFTER the idempotent pre-check but BEFORE this capture's INSERT, so the capture truly hits SQLSTATE
+        // 23505 on ux_authoring_revision_snapshots_owner_revision and the REAL recovery catch executes.
+        var interceptor = new InsertIndependentWinnerOnSaveInterceptor(owner, draftId);
+        await using var context = await NewContextAsync(interceptor);
+
+        var result = await new ShippingAuthoringDraftDirectory(context).CaptureRevisionAsync(
+            owner, draftId, firstRevision, CancellationToken.None);
+
+        Assert.True(interceptor.Injected, "the winner must have been injected before the capture insert");
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Errors[0].Code : null);
+        Assert.Equal(interceptor.WinnerSnapshotId, result.Value.SnapshotId);
+
+        // The recovery path disposed ITS OWN transaction before reading the winner.
+        Assert.Null(context.Database.CurrentTransaction);
+        Assert.Empty(context.AuthoringRevisionSnapshots.Local);
+        Assert.Equal(0, await context.SaveChangesAsync());
+        Assert.Equal(before + 1, await CountSnapshotsAsync(draftId));
     }
 
     // ------------------------------------------------------------------ fixtures
@@ -449,45 +549,178 @@ public sealed class ShippingAuthoringRevisionSnapshotStorageTests
         return await context.AuthoringRevisionSnapshots.CountAsync(row => row.DraftId == draftId);
     }
 
-    private static async Task<ShippingDbContext> NewContextAsync()
+    private static async Task<ShippingDbContext> NewContextAsync(params IInterceptor[] interceptors)
     {
         // Parsed, test-owned target asserted against live server facts BEFORE any DDL.
         var target = ShippingCaptureRelationalTestTarget.FromEnvironment();
+        await EnsureSchemaAsync(target);
+
         var builder = new DbContextOptionsBuilder<ShippingDbContext>();
         ToobaNpgsql.ConfigureModuleContext(
             builder,
             target.ConnectionString,
             ShippingDbContext.Schema,
             typeof(ShippingDbContext));
+        if (interceptors.Length > 0)
+        {
+            builder.AddInterceptors(interceptors);
+        }
 
-        var context = new ShippingDbContext(builder.Options);
+        return new ShippingDbContext(builder.Options);
+    }
+
+    /// <summary>
+    /// یک‌بار (در هر اجرا) واقعیت هویت سرور و زنجیرهٔ واقعی migration را روی همان هدفِ
+    /// در اختیار تسک ثابت می‌کند؛ context این بررسی هیچ interceptor آزمایشی ندارد.
+    /// </summary>
+    /// <param name="target">هدف رابطه‌ایِ در اختیار تسک.</param>
+    private static async Task EnsureSchemaAsync(ShippingCaptureRelationalTestTarget target)
+    {
         await MigrationGate.WaitAsync();
         try
         {
-            if (!_schemaReady)
+            if (_schemaReady)
             {
-                // TCP (not a socket) plus the exact identity this task owns: never the shared database.
-                var facts = await context.Database
-                    .SqlQueryRaw<string>(
-                        "SELECT (current_database() || '|' || current_user || '|' || coalesce(host(inet_server_addr()), 'socket')) AS \"Value\"")
-                    .SingleAsync();
-                var parts = facts.Split('|');
-                Assert.Equal(ShippingCaptureRelationalTestTarget.ExpectedDatabase, parts[0]);
-                Assert.Equal(ShippingCaptureRelationalTestTarget.ExpectedUser, parts[1]);
-                Assert.NotEqual("socket", parts[2]);
-
-                await context.GetService<IMigrator>().MigrateAsync();
-                _schemaReady = true;
+                return;
             }
+
+            var options = new DbContextOptionsBuilder<ShippingDbContext>();
+            ToobaNpgsql.ConfigureModuleContext(
+                options,
+                target.ConnectionString,
+                ShippingDbContext.Schema,
+                typeof(ShippingDbContext));
+            await using var context = new ShippingDbContext(options.Options);
+
+            // TCP (not a socket) plus the exact identity this task owns: never the shared database.
+            var facts = await context.Database
+                .SqlQueryRaw<string>(
+                    "SELECT (current_database() || '|' || current_user || '|' || coalesce(host(inet_server_addr()), 'socket')) AS \"Value\"")
+                .SingleAsync();
+            var parts = facts.Split('|');
+            Assert.Equal(ShippingCaptureRelationalTestTarget.ExpectedDatabase, parts[0]);
+            Assert.Equal(ShippingCaptureRelationalTestTarget.ExpectedUser, parts[1]);
+            Assert.NotEqual("socket", parts[2]);
+
+            await context.GetService<IMigrator>().MigrateAsync();
+            _schemaReady = true;
         }
         finally
         {
             MigrationGate.Release();
         }
-
-        return context;
     }
 
     private static ShippingDestinationNode Node(Guid id)
         => new(ShippingDestinationNodeKind.City, id);
+
+    /// <summary>
+    /// یک استثنای شاهدِ یکتا پیش از نوشتنِ واقعی پرتاب می‌کند تا ثابت شود همان نمونه propagate می‌شود؛
+    /// فراخوانی‌های بعدی عبور می‌کنند تا «SaveChanges بعدی چیزی منتشر نمی‌کند» واقعاً سنجیده شود.
+    /// </summary>
+    private sealed class ThrowSentinelOnSaveInterceptor : SaveChangesInterceptor
+    {
+        public InvalidOperationException Sentinel { get; } = new("tb214 sentinel: capture write refused");
+
+        private bool _thrown;
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (_thrown)
+            {
+                return ValueTask.FromResult(result);
+            }
+
+            _thrown = true;
+            throw Sentinel;
+        }
+    }
+
+    /// <summary>
+    /// در مرزِ نوشتنِ capture، توکنِ واقعیِ فراخوان را یک‌بار لغو می‌کند و همان
+    /// OperationCanceledException را با هویتِ همان توکن پرتاب می‌کند.
+    /// </summary>
+    private sealed class CancelOnSaveInterceptor : SaveChangesInterceptor
+    {
+        private readonly CancellationTokenSource _cancellation;
+
+        private bool _cancelled;
+
+        public CancelOnSaveInterceptor(CancellationTokenSource cancellation) => _cancellation = cancellation;
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (_cancelled)
+            {
+                return ValueTask.FromResult(result);
+            }
+
+            _cancelled = true;
+            _cancellation.Cancel();
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(result);
+        }
+    }
+
+    /// <summary>
+    /// پس از بررسی idempotent و پیش از INSERTِ capture، یک برندهٔ مستقل برای همان
+    /// (owner, draft, revision) در تراکنشِ جدا می‌نویسد؛ سپس INSERTِ خودِ capture با نقضِ واقعیِ
+    /// قید یکتا (23505) مواجه می‌شود و مسیرِ بازیابیِ واقعی اجرا می‌گردد.
+    /// </summary>
+    private sealed class InsertIndependentWinnerOnSaveInterceptor : SaveChangesInterceptor
+    {
+        private readonly ShippingAuthoringOwnerScope _owner;
+        private readonly Guid _draftId;
+
+        public InsertIndependentWinnerOnSaveInterceptor(ShippingAuthoringOwnerScope owner, Guid draftId)
+        {
+            _owner = owner;
+            _draftId = draftId;
+        }
+
+        public bool Injected { get; private set; }
+
+        public Guid WinnerSnapshotId { get; private set; }
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (Injected)
+            {
+                return result;
+            }
+
+            // A separate context/connection = a separate committed transaction: the capture's own transaction
+            // only holds the draft root lock, so this winner insert is not blocked by it.
+            await using var winner = await NewContextAsync();
+            var draft = await winner.AuthoringDrafts
+                .Include(candidate => candidate.RegionGroups)
+                .ThenInclude(group => group.Areas)
+                .Include(candidate => candidate.RegionGroups)
+                .ThenInclude(group => group.RateRows)
+                .Include(candidate => candidate.RegionGroups)
+                .ThenInclude(group => group.Titles)
+                .Include(candidate => candidate.Translations)
+                .Include(candidate => candidate.MethodSettings)
+                .Include(candidate => candidate.WeeklySchedule)
+                .ThenInclude(schedule => schedule!.Days)
+                .SingleAsync(candidate => candidate.DraftId == _draftId, cancellationToken);
+
+            var independent = ShippingAuthoringRevisionSnapshot.Capture(draft, DateTimeOffset.UtcNow);
+            winner.AuthoringRevisionSnapshots.Add(independent);
+            await winner.SaveChangesAsync(cancellationToken);
+
+            WinnerSnapshotId = independent.SnapshotId;
+            Injected = true;
+            return result;
+        }
+    }
 }

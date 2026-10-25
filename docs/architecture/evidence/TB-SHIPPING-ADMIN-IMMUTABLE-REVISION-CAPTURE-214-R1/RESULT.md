@@ -98,3 +98,17 @@ honestly, not graded PASS on process. Setup (container + provenance) ≈ 3 min. 
 (fixture repair above), no new discovery work started after the stop.
 
 STOP_FOR_ARCHITECT. No envelope for 215.
+
+---
+
+## Correction (appended during 214-R2, history preserved)
+
+Two facts in this 214-R1 report were overclaimed and are corrected by
+`TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R2/RESULT.md`:
+
+1. the "stale tracked context" success path actually executed the capture through a NEW context
+   (`freshInA`), not through the stale context it described;
+2. the two-context concurrency fact signalled a synchronous `Barrier` before the first `await` and
+   ignored its boolean result, so a rendezvous was not truly proven.
+
+Both are now executed as originally claimed, in 214-R2. No figure in this file is otherwise revised.

@@ -758,9 +758,17 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         catch (DbUpdateException exception) when (IsCaptureSnapshotUniqueViolation(exception))
         {
             // A concurrent capture of the same revision won: report that ORIGINAL row, never a second one.
+            // The rollback, the disposal of THIS capture's transaction and the detach of THIS capture's
+            // attempted entry all complete BEFORE the recovery read, so no completed transaction is left
+            // current and no failed insert stays pending for a later SaveChanges to publish.
             await RollbackAsync(transaction, cancellationToken, clearTrackedChanges: false);
+            await DisposeCaptureTransactionAsync(transaction);
             transaction = null;
+            DetachOwnedSnapshot(snapshot);
             snapshot = null;
+
+            // The recovery read must not be interrupted by the caller's token (the write already happened);
+            // it is exactly ONE bounded lookup, not a retry loop.
             var winner = await CapturedRevisionQuery(key, draftId, expectedRevision, CancellationToken.None);
             return winner is null
                 ? Result.Failure<ShippingAuthoringRevisionSnapshot>(
@@ -769,15 +777,65 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         }
         catch
         {
+            // Failure/cancellation: only THIS method's attempted snapshot entry is detached; the caller's
+            // own tracked work is never cleared or detached, and the caller's exception/token identity is
+            // preserved by the plain rethrow. Cleanup uses None only because the failure may BE the cancel.
             await RollbackAsync(transaction, CancellationToken.None, clearTrackedChanges: false);
+            await DisposeCaptureTransactionAsync(transaction);
+            transaction = null;
+            DetachOwnedSnapshot(snapshot);
             throw;
         }
         finally
         {
+            // Every remaining path (not-found, conflict, idempotent hit, success) releases ONLY this
+            // method's own transaction; the caller's tracker and work stay exactly as they were.
             if (transaction is not null)
             {
-                await transaction.DisposeAsync();
+                await DisposeCaptureTransactionAsync(transaction);
             }
+        }
+    }
+
+    /// <summary>
+    /// تراکنشِ <b>خودِ همین متد</b> را آزاد می‌کند؛ دوباره‌آزادسازی بی‌خطر است و ترتیب «rollback، سپس
+    /// dispose، سپس خواندن بازیابی» تضمین می‌کند هیچ تراکنش تکمیل‌شده‌ای current نماند.
+    /// </summary>
+    /// <param name="transaction">تراکنش همین متد (ممکن است تهی باشد).</param>
+    private static async Task DisposeCaptureTransactionAsync(IDbContextTransaction? transaction)
+    {
+        if (transaction is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await transaction.DisposeAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // An already-completed/rolled-back transaction has nothing left to release.
+        }
+    }
+
+    /// <summary>
+    /// فقط ورودی snapshot که <b>همین متد</b> تلاش کرده افزوده شود را از tracker جدا می‌کند تا یک
+    /// SaveChanges بعدی نتواند capture شکست‌خورده را منتشر کند. هیچ موجودیت دیگری — به‌ویژه کار
+    /// ذخیره‌نشدهٔ فراخوان — لمس نمی‌شود.
+    /// </summary>
+    /// <param name="snapshot">snapshot تلاش‌شدهٔ همین متد (یا تهی).</param>
+    private void DetachOwnedSnapshot(ShippingAuthoringRevisionSnapshot? snapshot)
+    {
+        if (snapshot is null)
+        {
+            return;
+        }
+
+        var entry = context.Entry(snapshot);
+        if (entry.State != EntityState.Detached)
+        {
+            entry.State = EntityState.Detached;
         }
     }
 
