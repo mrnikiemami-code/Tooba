@@ -126,6 +126,11 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Storefront.Services.StorefrontCheckoutService>();
         services.AddScoped<Application.Storefront.Services.StorefrontShippingService>();
 
+        // TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218: یک سرویس فقط-خواندنی که فکت مالی
+        // واقعی گروه (Order) را با قیمت بازبینی capture‌شده (Contracts مالک Shipping) و تقویم دریافت
+        // (213) ترکیب می‌کند. هیچ مسیر عمومی/فعال‌سازی/انتخاب بازبینی نمی‌سازد.
+        services.AddScoped<Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupProjectionComposer>();
+
         // TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163: درز «نرخ مشتریِ مالک‌شدهٔ Shipping» با کلید
         // مستقل و پیش‌فرض خاموش (نبود بخش تنظیمات = false). خاموش یعنی صفر فراخوانی به Shipping و همان
         // قیمت/خطای قدیمی؛ روشن یعنی فقط نرخ authoritative گزینهٔ دقیق قیمت می‌دهد.

@@ -1,4 +1,32 @@
-## CURRENT —217 boundedACCEPT; only218 compose realgroup money + capturedquote + receivingcalendar —2026-10-25
+## CURRENT —218 captured-group composer done; NOT wired / NOT live —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218/RESULT.md`. 218 added ONE
+read-only Order.Application service `StorefrontCapturedGroupProjectionComposer` (registered scoped in
+`OrderModule.AddServices`) that composes the ACCEPTED primitives for an EXPLICIT TRUSTED SERVER PLAN:
+ONE 217 `ICheckoutShippingGroupGoodsFactsReader` call for the whole cart/partition (exact
+`FinalGoodsAmountAfterDiscountAndTax` reused, never a plan amount), ONE 216
+`IShippingCapturedRevisionQuoteLookup` call per candidate (exact owner/draft/revision/destination/currency;
+`GroupItemCount` always null, no quantity→count cast), and the 213
+`BuildCustomerReceivingCalendar` with the REAL method timezone, ONE `IClock` read per composition and
+`MinDeliveryDays` used directly (no seller preparation re-added, no static window). Plan, returned facts
+and quote binding fail closed (`plan_invalid` / `facts_mismatch` / `binding_mismatch`); per-candidate
+refusals never wipe other groups; dependency exceptions and the caller token propagate unchanged; no
+writes/SaveChanges/order/reservation/payment. Worked facts: real 99.00 / 198.00 through Promotion→Tax
+reaching the corresponding Shipping calls, Saturday order + min 2 → Tuesday 2026-10-27 with each day's own
+interval, one UTC instant → different local dates per group, unknown measurement stays unavailable.
+Executed: build 0 errors, 11/11 new focused facts (real 217 directory harness + controlled Shipping
+Contracts fixture + real 213) and 9/9 of the 217 foundation class.
+**NOT WIRED / NOT LIVE**: no Storefront/checkout consumer, no public route/MediatR/flag, no
+projection/selection/commit; the candidate owner/draft/revision/service plan must still come from a
+reviewed server publication/Offer/fulfillment authority (never a browser) and physical weight/item count
+stay unknown. No schema/migration/HTTP/FE/Host change, no shared DB, no restarts. Actual ≈33 min vs the
+25-min box / 17-min implementation stop — recorded, not a process PASS.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next slice = real captured-revision
+selection + fulfillment owner/type/membership + measurement sources, then projection/selection/commit;
+not another audit). §29 decisions and 211–217 stay accepted and are not reopened; the real user
+draft/current revision/unsaved tabs, Host5088/FE3000, the 9 applied migrations and default-OFF /
+TB185 paused / PendingAllocation are preserved. No 219 envelope.
+## SUPERSEDED —217 boundedACCEPT; 218 later issued and executed compose realgroup money + capturedquote + receivingcalendar —2026-10-25
 
 Read217/ARCHITECT-REVIEW.md. a213bd0e288f3155019118e9b4fa199d25721e5c acceptedreal217financialauthority: CartAccess/version/partition, existingPreviewPromotion->Tax, exactCartLineIdmap, ΣTaxInclusiveSnapshot pergroup. Worker9new/194retained/buildpass;notrootreruns;timeover25recorded. Physicalweight/itemcountunknownremainNULL, notquantitycast.
 Onlyissued TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218,parent217;25min/stop17. ONEreadonlyOrdercompositionservice combines217factsONCE with216Contractsquotes perexacttrustedcandidate and213calendar inmethodtimezone. Candidateplanexplicitserverinput, NOTbrowser/publish/activeauthority. No guessedSellerowner/type/measurement orlegacymoney/windowfallback. Availability≠monetaryQuoted. No newHTTP/liveflagyet.
