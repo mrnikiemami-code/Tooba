@@ -480,6 +480,191 @@ public sealed class ShippingSelectedCapturedRevisionStorageTests
         }
     }
 
+    // --------------------------------------------------- TB-219-R1 stale/overflow facts
+
+    [Fact]
+    public async Task A_clean_tracked_pointer_cannot_report_a_stale_noop_after_another_context_advances()
+    {
+        var (owner, tenant, draftId, firstRevision, firstSnapshot, payload) = await SeedCapturedDraftAsync();
+        var (secondRevision, secondSnapshot) = await AdvanceAndCaptureAsync(owner, draftId, firstRevision);
+
+        await using var a = await NewContextAsync();
+        var directoryA = Directory(a, tenant);
+
+        var created = await directoryA.SelectAsync(
+            owner, payload.ServiceCode, payload.OptionCode, draftId, firstRevision, 0, CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        Assert.Equal(1, created.Value.SelectionVersion);
+
+        // An unrelated caller instance stays tracked by context A across the whole fact.
+        var unrelated = await a.AuthoringDrafts.SingleAsync(row => row.DraftId == draftId);
+        var unrelatedService = unrelated.ServiceCode;
+
+        // Context A genuinely holds a CLEAN TRACKED pointer at v1 / old snapshot.
+        var tracked = await a.SelectedCapturedRevisions.SingleAsync(row => row.OwnerTenantId == tenant);
+        Assert.Equal(1, tracked.SelectionVersion);
+        Assert.Equal(firstSnapshot, tracked.SelectedSnapshotId);
+
+        // An INDEPENDENT context advances the same pointer to v2 / the newer snapshot.
+        await using (var b = await NewContextAsync())
+        {
+            var moved = await Directory(b, tenant).SelectAsync(
+                owner, payload.ServiceCode, payload.OptionCode, draftId, secondRevision, 1, CancellationToken.None);
+            Assert.True(moved.IsSuccess, moved.IsFailure ? moved.Errors[0].Code : null);
+            Assert.Equal(2, moved.Value.SelectionVersion);
+            Assert.Equal(secondSnapshot, moved.Value.SnapshotId);
+        }
+
+        // The tracked instance in A is provably STALE (still the same object at v1), not a fresh read.
+        Assert.Same(tracked, await a.SelectedCapturedRevisions.SingleAsync(row => row.OwnerTenantId == tenant));
+        Assert.Equal(1, tracked.SelectionVersion);
+
+        // Old target + old expected version must CONFLICT; a stale same-target no-op success is the defect.
+        var stale = await directoryA.SelectAsync(
+            owner, payload.ServiceCode, payload.OptionCode, draftId, firstRevision, 1, CancellationToken.None);
+        Assert.True(stale.IsFailure);
+        Assert.Equal(ShippingErrorCodes.SelectedCaptureConflict, stale.FirstError.Code);
+
+        // Control: the CURRENT token accepts a deliberate rollback to the older existing capture.
+        var rollback = await directoryA.SelectAsync(
+            owner, payload.ServiceCode, payload.OptionCode, draftId, firstRevision, 2, CancellationToken.None);
+        Assert.True(rollback.IsSuccess, rollback.IsFailure ? rollback.Errors[0].Code : null);
+        Assert.Equal(3, rollback.Value.SelectionVersion);
+        Assert.Equal(firstSnapshot, rollback.Value.SnapshotId);
+
+        // The caller's unrelated tracked instance keeps its identity, values and state.
+        Assert.Equal(EntityState.Unchanged, a.Entry(unrelated).State);
+        Assert.Same(unrelated, a.AuthoringDrafts.Local.Single(row => row.DraftId == draftId));
+        Assert.Equal(unrelatedService, unrelated.ServiceCode);
+
+        // A fresh independent read proves the persisted rollback really happened.
+        await using var fresh = await NewContextAsync();
+        var stored = await fresh.SelectedCapturedRevisions.AsNoTracking()
+            .SingleAsync(row => row.OwnerTenantId == tenant);
+        Assert.Equal(3, stored.SelectionVersion);
+        Assert.Equal(firstSnapshot, stored.SelectedSnapshotId);
+    }
+
+    [Fact]
+    public async Task A_clean_tracked_cleared_pointer_cannot_report_a_stale_clear_noop()
+    {
+        var (owner, tenant, draftId, firstRevision, _, payload) = await SeedCapturedDraftAsync();
+        var (secondRevision, secondSnapshot) = await AdvanceAndCaptureAsync(owner, draftId, firstRevision);
+
+        await using var a = await NewContextAsync();
+        var directoryA = Directory(a, tenant);
+
+        var created = await directoryA.SelectAsync(
+            owner, payload.ServiceCode, payload.OptionCode, draftId, firstRevision, 0, CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+        var cleared = await directoryA.ClearAsync(
+            owner, payload.ServiceCode, payload.OptionCode, 1, CancellationToken.None);
+        Assert.True(cleared.IsSuccess, cleared.IsFailure ? cleared.Errors[0].Code : null);
+        Assert.Equal(2, cleared.Value.SelectionVersion);
+
+        var tracked = await a.SelectedCapturedRevisions.SingleAsync(row => row.OwnerTenantId == tenant);
+        Assert.Equal(2, tracked.SelectionVersion);
+        Assert.Null(tracked.SelectedSnapshotId);
+
+        // Independent context selects the newer capture at v3: A's tracked cleared v2 is now stale.
+        await using (var b = await NewContextAsync())
+        {
+            var moved = await Directory(b, tenant).SelectAsync(
+                owner, payload.ServiceCode, payload.OptionCode, draftId, secondRevision, 2, CancellationToken.None);
+            Assert.True(moved.IsSuccess, moved.IsFailure ? moved.Errors[0].Code : null);
+            Assert.Equal(3, moved.Value.SelectionVersion);
+            Assert.Equal(secondSnapshot, moved.Value.SnapshotId);
+        }
+
+        Assert.Same(tracked, await a.SelectedCapturedRevisions.SingleAsync(row => row.OwnerTenantId == tenant));
+        Assert.Null(tracked.SelectedSnapshotId);
+
+        // Clearing at the STALE version must conflict, never report a stale already-cleared no-op.
+        var stale = await directoryA.ClearAsync(
+            owner, payload.ServiceCode, payload.OptionCode, 2, CancellationToken.None);
+        Assert.True(stale.IsFailure);
+        Assert.Equal(ShippingErrorCodes.SelectedCaptureConflict, stale.FirstError.Code);
+
+        // The CURRENT version clears and advances exactly once.
+        var current = await directoryA.ClearAsync(
+            owner, payload.ServiceCode, payload.OptionCode, 3, CancellationToken.None);
+        Assert.True(current.IsSuccess, current.IsFailure ? current.Errors[0].Code : null);
+        Assert.True(current.Value.Exists);
+        Assert.Equal(ShippingSelectedCaptureState.Cleared, current.Value.State);
+        Assert.Equal(4, current.Value.SelectionVersion);
+
+        await using var fresh = await NewContextAsync();
+        var stored = await fresh.SelectedCapturedRevisions.AsNoTracking()
+            .SingleAsync(row => row.OwnerTenantId == tenant);
+        Assert.Equal(4, stored.SelectionVersion);
+        Assert.Null(stored.SelectedSnapshotId);
+    }
+
+    [Fact]
+    public async Task A_max_version_pointer_rejects_select_and_clear_without_mutating_or_leaking()
+    {
+        var (owner, tenant, draftId, firstRevision, firstSnapshot, payload) = await SeedCapturedDraftAsync();
+        var (secondRevision, _) = await AdvanceAndCaptureAsync(owner, draftId, firstRevision);
+
+        await using var context = await NewContextAsync();
+        var directory = Directory(context, tenant);
+
+        var created = await directory.SelectAsync(
+            owner, payload.ServiceCode, payload.OptionCode, draftId, firstRevision, 0, CancellationToken.None);
+        Assert.True(created.IsSuccess, created.IsFailure ? created.Errors[0].Code : null);
+
+        // Test fixture only (task DB): the stored token is already at the maximum lawful version.
+        await context.Database.ExecuteSqlAsync(
+            $"UPDATE shipping.selected_captured_revisions SET selection_version = 9223372036854775807 WHERE owner_tenant_id = {tenant}");
+
+        var pointer = await context.SelectedCapturedRevisions.SingleAsync(row => row.OwnerTenantId == tenant);
+        await context.Entry(pointer).ReloadAsync();
+        Assert.Equal(long.MaxValue, pointer.SelectionVersion);
+        var storedTarget = pointer.SelectedSnapshotId;
+        var storedUpdatedAt = pointer.UpdatedAt;
+        Assert.Equal(EntityState.Unchanged, context.Entry(pointer).State);
+
+        // SELECT overflow: rejected with the stable code, and NOTHING is mutated or left pending.
+        var overflowSelect = await directory.SelectAsync(
+            owner, payload.ServiceCode, payload.OptionCode, draftId, secondRevision, long.MaxValue,
+            CancellationToken.None);
+        Assert.True(overflowSelect.IsFailure);
+        Assert.Equal(ShippingErrorCodes.SelectedCaptureInvalid, overflowSelect.FirstError.Code);
+        Assert.Equal(storedTarget, pointer.SelectedSnapshotId);
+        Assert.Equal(firstSnapshot, pointer.SelectedSnapshotId);
+        Assert.Equal(long.MaxValue, pointer.SelectionVersion);
+        Assert.Equal(storedUpdatedAt, pointer.UpdatedAt);
+        Assert.Equal(EntityState.Unchanged, context.Entry(pointer).State);
+        Assert.Equal(0, await context.SaveChangesAsync());
+        await AssertPersistedPointerUnchangedAsync(tenant, firstSnapshot, storedUpdatedAt, long.MaxValue);
+
+        // CLEAR overflow: same contract.
+        var overflowClear = await directory.ClearAsync(
+            owner, payload.ServiceCode, payload.OptionCode, long.MaxValue, CancellationToken.None);
+        Assert.True(overflowClear.IsFailure);
+        Assert.Equal(ShippingErrorCodes.SelectedCaptureInvalid, overflowClear.FirstError.Code);
+        Assert.Equal(storedTarget, pointer.SelectedSnapshotId);
+        Assert.Equal(long.MaxValue, pointer.SelectionVersion);
+        Assert.Equal(storedUpdatedAt, pointer.UpdatedAt);
+        Assert.Equal(EntityState.Unchanged, context.Entry(pointer).State);
+        Assert.Equal(0, await context.SaveChangesAsync());
+        await AssertPersistedPointerUnchangedAsync(tenant, firstSnapshot, storedUpdatedAt, long.MaxValue);
+    }
+
+    private static async Task AssertPersistedPointerUnchangedAsync(
+        string tenant,
+        Guid expectedSnapshotId,
+        DateTimeOffset expectedUpdatedAt,
+        long expectedVersion)
+    {
+        await using var independent = await NewContextAsync();
+        var stored = await independent.SelectedCapturedRevisions.AsNoTracking()
+            .SingleAsync(row => row.OwnerTenantId == tenant);
+        Assert.Equal(expectedVersion, stored.SelectionVersion);
+        Assert.Equal(expectedSnapshotId, stored.SelectedSnapshotId);
+        Assert.Equal(expectedUpdatedAt, stored.UpdatedAt);
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private static ShippingSelectedCapturedRevisionDirectory Directory(

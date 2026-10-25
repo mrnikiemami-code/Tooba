@@ -8,7 +8,35 @@ Active219-R1, await result. No220. No generic proof loop or new publication arch
 Still NOTLIVE: no admin publication action/Order selected-plan consumer/projection-selection-commit. After repair close219 and proceed actual publication/fulfillment-plan integration, no new calculator. Physical measurements unknown; §29/211–218 remain closed.
 214 and219 migrations NOT shared-applied, nine old migrations applied. Preserve actual draft/revision/unsaved tabs, Host5088/FE3000, TB185paused/defaultOFF/PendingAllocation. Local development authorization remains valid later. No Bridge/historical post-result script/external message; exact paths only. Historical CURRENT blocks below are superseded.
 
-## CURRENT —219 selected-capture pointer + Contracts read done; NOT wired / NOT live —2026-10-25
+## CURRENT —219-R1 stale-pointer + rejection-atomicity repaired; NOT wired / NOT live —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-SELECTED-CAPTURED-REVISION-AUTHORITY-219-R1/RESULT.md` (task
+verbatim in `TASK.md`) and `219/ARCHITECT-REVIEW.md`. The two source-confirmed defects are repaired; the 219
+schema/architecture/Contracts/owner-resolver are retained.
+(1) `ShippingSelectedCapturedRevisionDirectory` now obtains the AUTHORITATIVE persisted pointer through a new
+private `LoadPersistedPointerAsync` — the one owner-scoped tracked entry is explicitly `ReloadAsync`ed BEFORE
+any expected-version or no-op decision (identity preserved, unrelated caller state untouched); a vanished row
+is treated as absent (only that entry detached) and a stale leftover for a provably absent row is detached so
+it can never act as a live token. `RequireCleanTracker` still refuses dirty caller work first (no
+refresh/flush/clear); the real CAS token and exact unique matcher still guard writes.
+(2) `Select`/`Clear` compute and validate the whole next state BEFORE any assignment, so a rejection at an
+exhausted version leaves target/version/`UpdatedAt` unchanged, the entry `Unchanged`, a later `SaveChanges` at
+0 and the DB unchanged; the adapter maps that rejection to a normal `selected_capture.invalid` result.
+Executed on the task-owned disposable `127.0.0.1:15432`/`shipping_tb214`/`tb214` (identity verified before
+DDL, container removed, port silent): RED on unchanged production 3 failed / 9 passed → GREEN 12/12 (9
+accepted 219 facts + stale-select, stale-clear and max-version no-leak facts, each with an independent DB
+read and preserved unrelated tracked identity). Build 0 errors; only the affected storage class executed.
+**NOT WIRED / NOT LIVE**: no route, no admin publication UI, no Order consumer, no
+projection/selection/commit; selection remains publication intent only.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next = real publication/selected-plan
+integration + real fulfillment owner/type/group membership and measurement authority, then
+projection/selection/commit; not another audit).
+Preserve §29 decisions and accepted 211–219, real user draft/revision/unsaved tabs, Host5088/FE3000. Nine old
+migrations applied; 214 snapshot migration and the 219 pointer migration are NOT shared-applied. TB185
+paused/default-OFF/PendingAllocation. No Bridge interaction/historical post-result script/gitadd-A; exact-path
+staging. Older CURRENT sections are history.
+
+## SUPERSEDED —219 pointer executed; two write-correctness defects found in review, 219-R1 issued —2026-10-25
 
 Read `docs/architecture/evidence/TB-SHIPPING-SELECTED-CAPTURED-REVISION-AUTHORITY-219/RESULT.md` (task
 verbatim in `TASK.md`). 219 added ONE Shipping capability: `ShippingSelectedCapturedRevision` (one row per

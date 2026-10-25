@@ -139,8 +139,12 @@ public sealed class ShippingSelectedCapturedRevision
             return false;
         }
 
+        // The whole next state is computed and validated BEFORE any assignment: a rejection (e.g. an
+        // exhausted version) must leave the tracked row's target, version and timestamp exactly as they were.
+        var nextVersion = NextVersion(SelectionVersion);
+
         SelectedSnapshotId = snapshotId;
-        SelectionVersion = NextVersion(SelectionVersion);
+        SelectionVersion = nextVersion;
         UpdatedAt = now;
         return true;
     }
@@ -157,8 +161,11 @@ public sealed class ShippingSelectedCapturedRevision
             return false;
         }
 
+        // Same strong-exception-safety contract as Select: validate the next version before clearing.
+        var nextVersion = NextVersion(SelectionVersion);
+
         SelectedSnapshotId = null;
-        SelectionVersion = NextVersion(SelectionVersion);
+        SelectionVersion = nextVersion;
         UpdatedAt = now;
         return true;
     }

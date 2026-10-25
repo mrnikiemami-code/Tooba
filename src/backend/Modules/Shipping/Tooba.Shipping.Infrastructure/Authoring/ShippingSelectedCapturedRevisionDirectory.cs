@@ -99,7 +99,7 @@ public sealed class ShippingSelectedCapturedRevisionDirectory(
         }
 
         var key = ToDomainOwner(owner);
-        var pointer = await ScopedPointer(key, derivedService, derivedOption).SingleOrDefaultAsync(cancellationToken);
+        var pointer = await LoadPersistedPointerAsync(key, derivedService, derivedOption, cancellationToken);
 
         if (pointer is null)
         {
@@ -160,7 +160,18 @@ public sealed class ShippingSelectedCapturedRevisionDirectory(
                 snapshot.SourceRevision));
         }
 
-        pointer.Select(snapshot.SnapshotId, DateTimeOffset.UtcNow);
+        try
+        {
+            pointer.Select(snapshot.SnapshotId, DateTimeOffset.UtcNow);
+        }
+        catch (SemanticException exception)
+        {
+            // The domain validates the whole next state BEFORE assigning, so a rejection leaves the tracked
+            // pointer untouched: nothing to detach, nothing a later SaveChanges could leak. The stable code
+            // is returned as a normal refusal instead of escaping the seam.
+            return Result.Failure<ShippingSelectedCaptureSelection>(exception.Error);
+        }
+
         var failure = await TrySaveAsync(pointer, cancellationToken);
         if (failure is not null)
         {
@@ -197,7 +208,7 @@ public sealed class ShippingSelectedCapturedRevisionDirectory(
         RequireCleanTracker();
 
         var key = ToDomainOwner(owner);
-        var pointer = await ScopedPointer(key, serviceKey, optionKey).SingleOrDefaultAsync(cancellationToken);
+        var pointer = await LoadPersistedPointerAsync(key, serviceKey, optionKey, cancellationToken);
 
         if (pointer is null)
         {
@@ -219,7 +230,18 @@ public sealed class ShippingSelectedCapturedRevisionDirectory(
             return Conflict();
         }
 
-        if (!pointer.Clear(DateTimeOffset.UtcNow))
+        bool changed;
+        try
+        {
+            changed = pointer.Clear(DateTimeOffset.UtcNow);
+        }
+        catch (SemanticException exception)
+        {
+            // Same strong-exception-safety contract as Select: a rejected clear leaves the pointer untouched.
+            return Result.Failure<ShippingSelectedCaptureSelection>(exception.Error);
+        }
+
+        if (!changed)
         {
             // Already cleared at the current version: a no-op that keeps the row and its version.
             return Result.Success(new ShippingSelectedCaptureSelection(
@@ -445,6 +467,73 @@ public sealed class ShippingSelectedCapturedRevisionDirectory(
             && row.OwnerSellerPartyId == key.SellerPartyId
             && row.BindingServiceKey == serviceKey
             && row.BindingOptionKey == optionKey);
+
+    /// <summary>
+    /// اشاره‌گر <b>یک</b> مالک+Binding را با وضعیت واقعی دیتابیس می‌خواند، پیش از هر تصمیم نسخه/no-op.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// صرفاً «تراکر تمیز است» کافی نیست: identity map می‌تواند یک نمونهٔ <b>کهنهٔ تمیز</b> برگرداند و تصمیم
+    /// no-op/نسخه را از توکن قدیمی بگیرد. بنابراین همان یک اشاره‌گر صریحاً reload می‌شود؛ فقط همین ورودی
+    /// لمس می‌شود، هویت شیء حفظ می‌ماند و هیچ حالت دیگرِ فراخوان پاک/جدا نمی‌شود.
+    /// </para>
+    /// <para>
+    /// ردیفی که بین query و reload حذف شود «غایب» است، نه توکن قابل استفاده؛ در آن حالت فقط همان ورودی
+    /// جداشده و مسیر ساخت/تعارض معمول اجرا می‌شود.
+    /// </para>
+    /// </remarks>
+    /// <param name="key">مالک ماندگاری.</param>
+    /// <param name="serviceKey">کلید متعارف سرویس.</param>
+    /// <param name="optionKey">کلید متعارف گزینه یا تهی.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    private async Task<ShippingSelectedCapturedRevision?> LoadPersistedPointerAsync(
+        ShippingDraftOwner key,
+        string serviceKey,
+        string? optionKey,
+        CancellationToken cancellationToken)
+    {
+        var tracked = await ScopedPointer(key, serviceKey, optionKey).SingleOrDefaultAsync(cancellationToken);
+        if (tracked is null)
+        {
+            DetachVanishedPointer(key, serviceKey, optionKey);
+            return null;
+        }
+
+        try
+        {
+            await context.Entry(tracked).ReloadAsync(cancellationToken);
+            return tracked;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The row disappeared between the query and the reload: it is absent, never a usable token.
+            Detach(tracked);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// نمونهٔ کهنه‌ای که دیگر ردیفی در دیتابیس ندارد از تراکر جدا می‌شود تا هرگز به‌عنوان توکن زنده استفاده
+    /// نشود؛ فقط همین کلید، و فقط وقتی query تأیید کرده ردیفی نیست.
+    /// </summary>
+    /// <param name="key">مالک ماندگاری.</param>
+    /// <param name="serviceKey">کلید متعارف سرویس.</param>
+    /// <param name="optionKey">کلید متعارف گزینه یا تهی.</param>
+    private void DetachVanishedPointer(ShippingDraftOwner key, string serviceKey, string? optionKey)
+    {
+        foreach (var entry in context.ChangeTracker.Entries<ShippingSelectedCapturedRevision>().ToList())
+        {
+            var row = entry.Entity;
+            if (row.OwnerKind == key.Kind
+                && row.OwnerTenantId == key.TenantId
+                && row.OwnerSellerPartyId == key.SellerPartyId
+                && row.BindingServiceKey == serviceKey
+                && row.BindingOptionKey == optionKey)
+            {
+                entry.State = EntityState.Detached;
+            }
+        }
+    }
 
     /// <summary>فقط همان یکتایی نام‌بردهٔ همین جدول «تعارض» است؛ هر خطای دیگر provider منتشر می‌شود.</summary>
     private static bool IsUniqueViolation(DbUpdateException exception)

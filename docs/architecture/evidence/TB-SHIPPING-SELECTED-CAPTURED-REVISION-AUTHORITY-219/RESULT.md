@@ -134,3 +134,23 @@ shipping/Host/Order/solution suite was replayed).
 - Timebox: actual ≈29 min vs HARD30 / implementation-stop20 / final10 (over the implementation stop; recorded,
   not a process PASS). One correction round was used (test scoping to the task tenant + provider-failure probe).
   A Docker Desktop engine restart mid-run was re-verified before the final green run.
+
+---
+
+## Correction appendix — TB-219-R1 (2026-10-25, append-only)
+
+Architect review (ARCHITECT-REVIEW.md) source-confirmed two write-correctness defects in this deliverable;
+the architecture, table/index/CHECK shape, Contracts surface and owner resolver are retained.
+
+1. SelectAsync/ClearAsync decided expected-version and the same-target / already-cleared no-ops from a
+   tracking query, so a CLEAN STALE identity-map instance could report success from an OLD token (and a
+   current token could be falsely rejected) after another context advanced the row.
+2. ShippingSelectedCapturedRevision.Select/Clear assigned the target BEFORE computing NextVersion, so a
+   rejected overflow changed the tracked row without advancing the version; no cleanup ran and a later
+   SaveChanges could publish it.
+
+Both are repaired in TB-219-R1 with executed RED (3 failed) then GREEN (12/12) real-PostgreSQL facts, and the
+statement above that a rejected pointer "writes nothing" is only now true. See
+../TB-SHIPPING-SELECTED-CAPTURED-REVISION-AUTHORITY-219-R1/RESULT.md. Nothing else in this report changes;
+219 remains **NOT WIRED / NOT LIVE**, selection stays publication intent only, and the 214/219 migrations
+remain NOT shared-applied.
