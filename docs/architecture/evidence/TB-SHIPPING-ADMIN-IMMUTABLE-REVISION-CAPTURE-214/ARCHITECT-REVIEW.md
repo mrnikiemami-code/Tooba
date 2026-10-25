@@ -1,0 +1,17 @@
+# Architect review — TB214
+
+Verdict: PARTIAL / NOT_ACCEPTED_FOR_INTEGRATION. Source747036455d9be95366474d16e24b6b33d1c294f2 independently reviewed: full capturemember, domaincodec, migration, storagefact and guarddiff. Root did not run Windows/Postgres/.NET. Domain28/28 and guard90/1 are workerreported; no database atomicity proof.
+
+Required fixes before integration:
+1 LOCKED DATABASE != TRACKED GRAPH: raw FORUPDATE AsNoTracking obtains a lock then Scoped() trackedquery can reuse stale trackedroot/children. Existing dirtytrackedentities can be serialized and flushed by context.SaveChanges, violating persistedexactrevision/noextrawrites. Load fresh untrackedcompletegraph while lockheld, reject dirtycontext beforetransaction/noClear of userwork, and snapshot-onlysave. Preserve/reject callertrackedwork, don't silentlydetachandloseit. Execute stale-tracker and dirtytracker negativefacts.
+2 RETURN PROVIDER-PERSISTED FACTS: first result uses in-memory UTC100nstime + rawserializedJSON; PostgreSQL timestamptzprecision and JSONBnormalization alter them on read. Reload persisted snapshot before firstreturn so id/time/content idempotency is genuine; compare rawJSONBbytes only after provider normalization, logicaltypedfidelity separately.
+3 UNIQUE ERROR: IsUniqueViolation uses Contains(tablefragment), so lookalike constraints/PK can masquerade as idempotency conflict. Newcapturepath must match SQLSTATE23505 +exact ux_authoring_revision_snapshots_owner_revision identity (schema/table if provided), not reuse/broaden globalfragment mapper. Wrongstate/name propagate sameexception. Existingotherwriters unchanged.
+4 STORAGEFACT IS NOT GREEN: creates2groups then ReadPayload().Groups.Single() necessarily fails (or codec illegallydroppedonegroup). Fullgraph must retain2; choose intendedgroupbyactualid. One existingstoragefact does NOT implement promised concurrency/atomicity proof. JSONB/time comparisons also need providertruth, not loosenedexpectations. Completegraph/captureeditrace/duplicatecapture/foreignstale+laterSave essential focusedproof.
+5 Exact capturedrevision read is missing: only CaptureRevisionAsync added; add internalowner+draft+revisionlookup able to read oldcaptureafterdraftadvances, neverlatestfallback/currentdraftrecapture.
+Codec currently accepts syntacticallyvalid but structurallymissingidentityfields as defaultvalues. Reject missing/incoherentpayloadidentity+requiredcollections and ReadPayload rowheader/owner/revision mismatch; no fabricateddefaultscapture. Nestedfields shouldn't silently become validemptyconfigs. Not a newpricingvalidator.
+
+Migration is additiveoneTable+oneUniqueIndexNULLSNOTDISTINCT, no legacyddl observed. No sharedmigration approved until providerproof. Guard exactmember is bounded but capturecallers/shape must not regress originalSaveboundary; runtimeproof is stillrequired.
+
+214time70>25min and stop17 violated materially; no PASSonprocess. No newhelperscan make that compliantretroactively. Worker nextplan 'mapcaptureslegacycommands+UnrepresentableAxes' contradicts212rejection and is explicitlyREJECTEDagain. No lossy partialpublication.
+
+Only214-R1: exactfixes + realproviderproof on newtaskownedtarget15432 (old55432 remainsuntouched) with parsedidentity/liveprovenance. No needshared5432/reset/netshchanges/newdownload. Setup<=3min, stopcoding12/hard20. If environmentfailsreportactualblocker, no broadguards/raceconfidence/suite. Stagedcapture remainsNOTLIVE; userdraft/runtime/flagspreserved.
