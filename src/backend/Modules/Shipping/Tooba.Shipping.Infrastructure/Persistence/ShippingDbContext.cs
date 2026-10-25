@@ -67,6 +67,10 @@ public sealed class ShippingDbContext : DbContext
     public DbSet<ShippingAuthoringRevisionSnapshot> AuthoringRevisionSnapshots =>
         Set<ShippingAuthoringRevisionSnapshot>();
 
+    /// <summary>اشاره‌گر نسخه‌دار انتخاب capture برای مالک + Binding (قصد انتشار، نه آمادگی).</summary>
+    public DbSet<ShippingSelectedCapturedRevision> SelectedCapturedRevisions =>
+        Set<ShippingSelectedCapturedRevision>();
+
     /// <summary>Outbox همین ماژول؛ پیروی از اسکلت متعارف DbContext ماژول‌ها، بدون هیچ مصرف فعلی.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -764,6 +768,58 @@ public sealed class ShippingDbContext : DbContext
                 .IsUnique()
                 .AreNullsDistinct(false)
                 .HasDatabaseName("ux_authoring_revision_snapshots_owner_revision");
+        });
+
+        // TB-219 selected captured revision pointer. ONE row per FULL owner + canonical service/option;
+        // destination, method label and shipping type are NOT part of the key, and the persisted service/
+        // option columns are the canonical (trim + lowercase) keys so casing cannot create a second pointer.
+        // The selected row is an already-existing TB-214 immutable snapshot: this table copies no payload,
+        // has no FK/navigation into another schema and never mutates a capture.
+        modelBuilder.Entity<ShippingSelectedCapturedRevision>(entity =>
+        {
+            entity.ToTable("selected_captured_revisions", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_selected_captured_revisions_owner_coherent",
+                    $"((owner_kind = {(int)ShippingDraftOwnerKind.Store} AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL)"
+                    + $" OR (owner_kind = {(int)ShippingDraftOwnerKind.Marketplace} AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL)"
+                    + $" OR (owner_kind = {(int)ShippingDraftOwnerKind.Seller} AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
+                table.HasCheckConstraint(
+                    "ck_selected_captured_revisions_version_positive",
+                    "selection_version > 0");
+                table.HasCheckConstraint(
+                    "ck_selected_captured_revisions_service_key_canonical",
+                    "char_length(binding_service_key) > 0 AND binding_service_key = lower(btrim(binding_service_key))");
+                table.HasCheckConstraint(
+                    "ck_selected_captured_revisions_option_key_canonical",
+                    "binding_option_key IS NULL OR (char_length(binding_option_key) > 0 AND binding_option_key = lower(btrim(binding_option_key)))");
+                table.HasCheckConstraint(
+                    "ck_selected_captured_revisions_selected_snapshot_not_empty",
+                    "selected_snapshot_id IS NULL OR selected_snapshot_id <> '00000000-0000-0000-0000-000000000000'::uuid");
+            });
+            entity.HasKey(x => x.SelectionId);
+            entity.Property(x => x.SelectionId).ValueGeneratedNever();
+            entity.Property(x => x.OwnerKind).HasConversion<int>();
+            entity.Property(x => x.OwnerTenantId).HasMaxLength(ShippingDraftOwner.TenantIdMaxLength);
+            entity.Property(x => x.BindingServiceKey).HasMaxLength(ShippingAuthoringDraft.ServiceCodeMaxLength).IsRequired();
+            entity.Property(x => x.BindingOptionKey).HasMaxLength(ShippingAuthoringDraft.OptionCodeMaxLength);
+
+            // The version column is the real concurrency token: a stale writer is a conflict, never a merge.
+            entity.Property(x => x.SelectionVersion).IsConcurrencyToken();
+
+            // Missing nullable owner/option columns must not bypass uniqueness (NULLS NOT DISTINCT), which is
+            // the established repository pattern for this module.
+            entity.HasIndex(x => new
+                {
+                    x.OwnerKind,
+                    x.OwnerTenantId,
+                    x.OwnerSellerPartyId,
+                    x.BindingServiceKey,
+                    x.BindingOptionKey,
+                })
+                .IsUnique()
+                .AreNullsDistinct(false)
+                .HasDatabaseName("ux_selected_captured_revisions_owner_binding");
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

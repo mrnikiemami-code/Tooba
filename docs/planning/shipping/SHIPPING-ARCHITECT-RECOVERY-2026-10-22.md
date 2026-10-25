@@ -1,4 +1,45 @@
-## CURRENT —218-R1 bounded ACCEPT; only219 selected-capture authority —2026-10-25
+## CURRENT —219 selected-capture pointer + Contracts read done; NOT wired / NOT live —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-SELECTED-CAPTURED-REVISION-AUTHORITY-219/RESULT.md` (task
+verbatim in `TASK.md`). 219 added ONE Shipping capability: `ShippingSelectedCapturedRevision` (one row per
+FULL owner + canonical service/option) pointing at an **already existing** TB-214 immutable snapshot, table
+`shipping.selected_captured_revisions` + ONE additive migration `20261025130021_SelectedCapturedRevision`,
+a `NULLS NOT DISTINCT` unique owner/binding index (service/option persisted canonical), owner-coherence and
+version CHECKs; `selection_version` is a real concurrency token. `IShippingSelectedCapturedRevisionDirectory`
+(internal Select/Clear with `ExpectedSelectionVersion`, 0 = no row) and the Contracts-only
+`IShippingSelectedCapturedRevisionLookup.ReadAsync` are served by ONE scoped adapter in `ShippingModule`.
+Target resolution reuses the existing exact `GetCapturedRevisionAsync`+`ReadPayload` and NEVER captures; the
+persisted binding is **derived** from the verified payload (missing/foreign/corrupt ⇒ `snapshot_unavailable`,
+declared-binding mismatch ⇒ `binding_mismatch`). Create only from version 0; stale expected version ⇒
+`selected_capture.conflict` before any mutation (no last-write-wins/auto-retry); same target at the current
+version is a truthful no-op preserving version AND `UpdatedAt`; clear retains row/version and advances once
+when changed; a pre-clear version cannot resurrect; rollback = deliberately selecting an OLDER existing
+capture at the current pointer version. Unrelated dirty tracker is refused first; one `SaveChanges`; only the
+exact 23505 on the named unique index and `DbUpdateConcurrencyException` map to conflict, the attempted entry
+is detached on failure while caller exception/token propagate. 216's owner/edition/tenant coherence mapping
+was extracted to `ShippingCapturedOwnerScopeResolver` and is reused by 216+219 only (216 unchanged, its class
+re-executed 9/9).
+Executed on the task-owned disposable `127.0.0.1:15432`/`shipping_tb214`/`tb214` (identity verified before
+DDL, container removed): new class 9/9 real-PostgreSQL facts (schema/uniqueness, exact provenance + later
+draft edit changes nothing selected, newer select then older rollback, no-op vs stale conflict, clear/no-ABA,
+foreign+missing+binding-mismatch refusal with casing-same-pointer and owner separation, two-context
+one-winner, sentinel/cancellation/dirty-tracker with later `SaveChanges`=0, Contracts reader
+absent/cleared/scope/invalid plus provider+cancellation propagation); build 0 errors.
+**NOT WIRED / NOT LIVE**: the 218/218-R1 composer does NOT consume this reader yet; no HTTP route, no
+MediatR write, no admin publication UI, no projection/selection/commit, no Order consumer. Selection is
+publication intent ONLY — not readiness, eligibility, customer permission or quotability; no Active/
+CanCheckout flag, no Store-only restriction, no seller=fulfillment inference.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next slice = explicit admin publication wired
+to this pointer + real fulfillment owner/type/group membership and physical measurement authority, then
+projection/selection/commit; not another audit).
+Preserve §29 decisions (customer receipt days, closed days skipped, same-group post-discount tax-inclusive
+goods), accepted 211–218, the real user draft/current revision/unsaved tabs, Host5088/FE3000. Nine old
+migrations applied; the 214 snapshot migration AND this new 219 migration are NOT shared-applied. TB185
+paused/default-OFF/PendingAllocation. User nonproduction authorization stays valid for later necessary live
+refresh. No Bridge interaction, no historical post-result scripts, exact-path staging only. Older CURRENT
+sections are history.
+
+## SUPERSEDED —219 issued; 218-R1 accepted; result awaited —2026-10-25
 
 Architect reviewed dfdeae8afb1150d9beda10de43ec673f09c44aba against 3a583ab2c8a173bd4021046036074465218d75d1. Request-wide typed binding key/equality/hash and same-revision multi-group control are correct. Worker executed red3/green5 plus full composer16, build0 errors; not root reruns. Time26>12/two fixture corrections not process PASS. The casing regression also includes a whitespace-invalid service (not isolated casing execution); equality implementation independently inspected, no R2 proof loop.
 218 composition is closed for this bounded behavior, NOT LIVE. Canonical recovery was absent from worker diff again; this TOP checkpoint is authoritative.

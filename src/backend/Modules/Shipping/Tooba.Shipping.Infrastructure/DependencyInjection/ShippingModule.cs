@@ -106,6 +106,15 @@ public sealed class ShippingModule : IToobaModule
         // through its Contracts seam (no foreign DbContext, no local taxonomy, no cache). Registered
         // scoped once, like every other module-owned adapter.
         services.AddScoped<IShippingTypeCatalogReader, FulfillmentShippingTypeCatalogReader>();
+        // TB-219: ONE versioned selected-capture pointer for an exact owner + canonical service/option. The
+        // SAME scoped adapter serves the internal Application write/read port and the Contracts-only selected
+        // revision reader, so there is a single selection authority. It stores no payload copy, never takes a
+        // snapshot itself and has no public route, HTTP handler or Order consumer yet.
+        services.AddScoped<ShippingSelectedCapturedRevisionDirectory>();
+        services.AddScoped<IShippingSelectedCapturedRevisionDirectory>(
+            provider => provider.GetRequiredService<ShippingSelectedCapturedRevisionDirectory>());
+        services.AddScoped<IShippingSelectedCapturedRevisionLookup>(
+            provider => provider.GetRequiredService<ShippingSelectedCapturedRevisionDirectory>());
         services.AddDbContext<ShippingDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

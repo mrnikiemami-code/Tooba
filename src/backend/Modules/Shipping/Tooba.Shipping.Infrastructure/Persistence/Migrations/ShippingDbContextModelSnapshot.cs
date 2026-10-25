@@ -876,6 +876,72 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingSelectedCapturedRevision", b =>
+                {
+                    b.Property<Guid>("SelectionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("selection_id");
+
+                    b.Property<string>("BindingOptionKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("binding_option_key");
+
+                    b.Property<string>("BindingServiceKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("binding_service_key");
+
+                    b.Property<int>("OwnerKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_kind");
+
+                    b.Property<Guid?>("OwnerSellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_seller_party_id");
+
+                    b.Property<string>("OwnerTenantId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("owner_tenant_id");
+
+                    b.Property<Guid?>("SelectedSnapshotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("selected_snapshot_id");
+
+                    b.Property<long>("SelectionVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("selection_version");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("SelectionId")
+                        .HasName("pk_selected_captured_revisions");
+
+                    b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "BindingServiceKey", "BindingOptionKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_selected_captured_revisions_owner_binding");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "BindingServiceKey", "BindingOptionKey"), false);
+
+                    b.ToTable("selected_captured_revisions", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_selected_captured_revisions_option_key_canonical", "binding_option_key IS NULL OR (char_length(binding_option_key) > 0 AND binding_option_key = lower(btrim(binding_option_key)))");
+
+                            t.HasCheckConstraint("ck_selected_captured_revisions_owner_coherent", "((owner_kind = 0 AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 1 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 2 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
+
+                            t.HasCheckConstraint("ck_selected_captured_revisions_selected_snapshot_not_empty", "selected_snapshot_id IS NULL OR selected_snapshot_id <> '00000000-0000-0000-0000-000000000000'::uuid");
+
+                            t.HasCheckConstraint("ck_selected_captured_revisions_service_key_canonical", "char_length(binding_service_key) > 0 AND binding_service_key = lower(btrim(binding_service_key))");
+
+                            t.HasCheckConstraint("ck_selected_captured_revisions_version_positive", "selection_version > 0");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>
                 {
                     b.Property<Guid>("ScheduleId")

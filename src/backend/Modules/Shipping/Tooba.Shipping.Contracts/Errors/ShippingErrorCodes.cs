@@ -275,4 +275,22 @@ public static class ShippingErrorCodes
     /// هیچ جایگزینی با آخرین/فعال/جاری ندارد.
     /// </summary>
     public const string AuthoringRevisionSnapshotNotFound = "shipping.authoring.revision_snapshot_not_found";
+
+    /// <summary>
+    /// نسخهٔ اشاره‌گر انتخاب با وضعیت ذخیره‌شده نمی‌خواند (race/آخرین‌نویس‌برنده ممنوع). هیچ نوشتنی
+    /// انجام نشده و هیچ تلاش دوبارهٔ خودکار وجود ندارد.
+    /// </summary>
+    public const string SelectedCaptureConflict = "shipping.selected_capture.conflict";
+
+    /// <summary>
+    /// انتخاب درخواستی به یک capture موجود و متعلق به همین مالک اشاره نمی‌کند؛ یا payload تأییدشده با
+    /// هدر/مالک/Binding نمی‌خواند. هیچ نوشتنی انجام نمی‌شود.
+    /// </summary>
+    public const string SelectedCaptureSnapshotUnavailable = "shipping.selected_capture.snapshot_unavailable";
+
+    /// <summary>Binding درخواستی با Binding استخراج‌شده از capture تأییدشده یکسان نیست.</summary>
+    public const string SelectedCaptureBindingMismatch = "shipping.selected_capture.binding_mismatch";
+
+    /// <summary>ورودی اشاره‌گر انتخاب نامعتبر است (نسخهٔ غیرمثبت، شناسهٔ تهی، سرویس خالی).</summary>
+    public const string SelectedCaptureInvalid = "shipping.selected_capture.invalid";
 }

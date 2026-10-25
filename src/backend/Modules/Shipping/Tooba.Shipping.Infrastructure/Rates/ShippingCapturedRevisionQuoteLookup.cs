@@ -8,6 +8,7 @@ using Tooba.Shipping.Application.Authoring.Ports;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Authoring;
 using Tooba.Shipping.Domain.Rates;
+using Tooba.Shipping.Infrastructure.Authoring;
 using ContractVerdict = Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteVerdict;
 using ContractReasons = Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteVerdictCodes;
 using DomainOutcome = Tooba.Shipping.Domain.Rates.ShippingCapturedQuoteOutcome;
@@ -123,49 +124,12 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
     /// </summary>
     /// <param name="request">درخواست Contracts.</param>
     private ShippingAuthoringOwnerScope? ResolveOwnerScope(ShippingCapturedQuoteLookupRequest request)
-        => edition.Current?.Edition switch
-        {
-            ToobaEdition.SingleStore => ResolveStoreOwner(request),
-            ToobaEdition.Marketplace => ResolveMarketplaceOwner(request),
-            _ => null,
-        };
-
-    private ShippingAuthoringOwnerScope? ResolveStoreOwner(ShippingCapturedQuoteLookupRequest request)
-    {
-        var current = tenant.Current;
-        var tenantId = current?.TenantId.Value;
-
-        // In SingleStore a residual/inactive/missing tenant context is unusable; nothing is defaulted.
-        if (current is null
-            || current.Status != TenantStatus.Active
-            || string.IsNullOrWhiteSpace(tenantId)
-            || request.OwnerKind != ShippingCapturedQuoteOwnerKind.Store
-            || !string.Equals(request.OwnerTenantId?.Trim(), tenantId.Trim(), StringComparison.Ordinal)
-            || request.OwnerSellerPartyId is not null)
-        {
-            return null;
-        }
-
-        return ShippingAuthoringOwnerScope.ForStore(tenantId);
-    }
-
-    private ShippingAuthoringOwnerScope? ResolveMarketplaceOwner(ShippingCapturedQuoteLookupRequest request)
-    {
-        // Marketplace has no store tenant at all: a leftover tenant is an invalid context, not a guess.
-        if (tenant.Current is not null || !string.IsNullOrWhiteSpace(request.OwnerTenantId))
-        {
-            return null;
-        }
-
-        return request.OwnerKind switch
-        {
-            ShippingCapturedQuoteOwnerKind.Marketplace when request.OwnerSellerPartyId is null =>
-                ShippingAuthoringOwnerScope.ForMarketplace(),
-            ShippingCapturedQuoteOwnerKind.Seller when request.OwnerSellerPartyId is { } sellerId
-                && sellerId != Guid.Empty => ShippingAuthoringOwnerScope.ForSeller(sellerId),
-            _ => null,
-        };
-    }
+        => ShippingCapturedOwnerScopeResolver.Resolve(
+            request.OwnerKind,
+            request.OwnerTenantId,
+            request.OwnerSellerPartyId,
+            edition,
+            tenant);
 
     /// <summary>
     /// مسیر مقصد را با فکت‌های واقعی Geography اثبات می‌کند: کشور فعال، ناحیهٔ اداری با زنجیرهٔ والد
