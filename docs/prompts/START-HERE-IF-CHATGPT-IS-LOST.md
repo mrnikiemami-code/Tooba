@@ -1,10 +1,40 @@
-## CURRENT —214-R2 boundedACCEPT; only215 captured MANUAL quote evaluation —2026-10-25
+## CURRENT —215 captured manual quote primitive done / NOT wired —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-MANUAL-QUOTE-215/RESULT.md`. 215 added ONE pure
+additive capability on the EXISTING rate authority: `ShippingRatePolicyEngine.QuoteCapturedRevision(...)`
+over an exact decoded captured revision, with its typed records in
+`Domain/Rates/ShippingCapturedRevisionQuote.cs`. Legacy `Quote(...)` overloads are behaviourally unchanged.
+Fail-closed order: identity (owner kind/tenant/seller + draft + revision) → stored settings required →
+Manual only (CarrierApi/Free explicitly unavailable, never a zero price) → input sanity → ONE group by
+stored area NodeKind+NodeId (0 = coverage missing, >1 = ambiguous, several areas in one group still one
+group) → exact currency with no FX → three AND axes per row and alternatives across rows, half-open
+`[min,max)`, blank axis unconditional, explicit 0 distinct from missing, invalid stored bounds/config fail
+closed → exactly one row (0 = not matched or measurement required, >1 = ambiguous even with equal amounts)
+→ freight AND packaging from that ONE row with the existing payer split (packaging always checkout, only
+freight carrier-collectable). Result keeps group/row ids, draft/revision/format provenance, raw type id,
+min+max delivery days, stored settings and stored week; `Eligibility` is always `NotEvaluated` — monetary
+answer only, no activation/readiness/customer-eligibility claim.
+Guard hygiene: `DisposeCaptureTransactionAsync` is the single named type-only member added to
+`AllowedTypeMarkerMembers`; a begin inside it is still a violation and any other member mentioning the
+type is still rejected (narrow negative proof executed). Executed: build 0 errors, 11/11 new quote cases,
+exact `OperationalQuoteCompatibilityTests` class 23/23 (run once). No schema/migration/Contracts reader/
+DI/endpoint/Order/FE/Host change, no shared DB, no user-draft write, no gate flip. Ambiguous rows and
+invalid bounds are rebuilt with `with` because today's authoring guard refuses them; the evaluator fails
+closed instead of resolving them.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT. Next concrete slice: a trusted-owner +
+selected-captured-revision Contracts edge with the real group money/measurement authority, then
+projection/selection/commit — not another audit. §29 decisions resolved; 213 calendar and 211 FE 119 tests
+accepted and not replayed. Captures remain NOT LIVE and the 214 table is NOT shared-applied. Preserve the
+actual draft/revision/unsaved tab, Host5088/FE3000 and the 9 applied migrations. TB185 paused, default-OFF,
+PendingAllocation unchanged.
+
+## SUPERSEDED —214-R2 boundedACCEPT; only215 captured MANUAL quote evaluation —2026-10-25
 
 Read214-R2/ARCHITECT-REVIEW.md. Source8790165bd95bc48f64ecdc69a8b03d777edf3110 ownentrycleanup/dispose, actualstalectx/concurrency/sentinel/cancel/realuniqueproofaccepted;worker8/8realPostgres. Capturefoundationclosedforboundedbehavior, noR3loop. R2timeover12notprocessPASS. NewdisposalhelperneedsEXACTtype-onlyguardentry+narrowcompatcheckin215, nofileallowlist.
 Onlyissued TB-SHIPPING-CAPTURED-MANUAL-QUOTE-215,parent214-R2;25min/stop17. ExtendexistingShippingrateenginewithpureexactcapture evaluation, 3ANDaxes/perrowfreightANDpackaging/PrepaidCODsplit/metadata, meaningfulfocusedtests. No readliveDraft/latestfallback, no lossyconversion/newpriceengine/Orderliveconsumer/publishpointer. Puretrustedinputonly; taxinclgroupamountcomesfromownerlater, no fakeweight.
 Nextafterreview: trustedowner+selectedcapturedrevisionContractsedge and realgroupprice/measurementsource thenprojection/selection/commit connection. Notanothersourceaudit. §29decisionsresolved,213calendar/211119FEtestsacceptedandnotreplayed. CapturesNOTLIVE, tableNOTsharedapplied; preserveactualdraft/revision/unsavedtab, Host5088/FE3000 and9appliedmigrations. TB185paused/defaultOFF/PendingAllocationunchanged. Await215result;olderCURRENTsuperseded.
 
-## CURRENT —214-R2 exactcleanup + truthful concurrencyfacts executed; awaiting review —2026-10-25
+## SUPERSEDED —214-R2 exactcleanup + truthful concurrencyfacts executed; awaiting review —2026-10-25
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R2/RESULT.md`
 (and the appended correction note at the end of `214-R1/RESULT.md`). One existing member only:

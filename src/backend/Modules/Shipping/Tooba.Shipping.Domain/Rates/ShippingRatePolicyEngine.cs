@@ -1,5 +1,8 @@
+using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
+using Tooba.Shipping.Domain.Authoring;
 
 namespace Tooba.Shipping.Domain.Rates;
 
@@ -264,6 +267,314 @@ public static class ShippingRatePolicyEngine
         => new(outcome, serviceCode, 0m, null, 0, 0, null, reasonCode, optionCode);
 
     /// <summary>
+    /// قیمت‌گذاری یک بازبینیِ <b>capture‌شدهٔ</b> با ارزیابی سه‌محوری صریح (وزن/تعداد/مبلغ کالا).
+    /// </summary>
+    /// <param name="request">ورودی صریح و مورداعتماد سرور (هویت، payload رمزگشایی‌شده، مسیر، اندازه‌ها، ارز).</param>
+    /// <returns>نتیجهٔ قطعی؛ هرگز null.</returns>
+    /// <remarks>
+    /// <para>
+    /// <b>یک ردیف، نه جمع جایگزین‌ها.</b> هر ردیف ذخیره‌شده با هر سه محور به‌صورت <c>AND</c> سنجیده
+    /// می‌شود؛ محورِ ثبت‌نشده بی‌شرط است و محورِ ثبت‌شدهٔ بی‌اندازه قیمت نمی‌دهد. دقیقاً یک ردیف برنده
+    /// می‌شود؛ صفر ردیف «قیمت‌نشده» و بیش از یک ردیف «مبهم» است. هیچ fallback نرخ پایه، هیچ
+    /// «اولین/ارزان‌ترین/عمیق‌ترین» و هیچ جمع‌کردن جایگزین‌ها وجود ندارد.
+    /// </para>
+    /// <para>
+    /// <b>یک ردیف، دو مؤلفه.</b> کرایه و بسته‌بندی از همان ردیف برنده خوانده می‌شوند؛ resolver
+    /// بسته‌بندیِ scope-only اینجا به کار نمی‌آید چون هویت ردیف تطبیق‌یافته را از دست می‌دهد.
+    /// </para>
+    /// <para>
+    /// <b>هیچ صفر موفق‌نما.</b> نبود تنظیمات، حالت CarrierApi/Free، نبود پوشش/ارز/اندازه یا دادهٔ
+    /// ناسازگار همه باعث می‌شوند <em>همهٔ</em> مبالغ <c>null</c> بمانند.
+    /// </para>
+    /// <para>
+    /// <b>فقط پولی.</b> این متد هیچ DB/Geography/ساعت نمی‌خواند و هیچ ادعای فعال‌سازی/صلاحیت مشتری یا
+    /// آمادگی عملیاتی نمی‌سازد؛ نتیجهٔ پولی به‌تنهایی «روش برای مشتری فعال است» نیست.
+    /// </para>
+    /// </remarks>
+    public static ShippingCapturedRevisionQuote QuoteCapturedRevision(
+        ShippingCapturedRevisionQuoteRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.CapturedRevision);
+        ArgumentNullException.ThrowIfNull(request.Expected);
+
+        var payload = request.CapturedRevision;
+        var serviceCode = payload.ServiceCode?.Trim() ?? string.Empty;
+        var optionCode = string.IsNullOrWhiteSpace(payload.OptionCode) ? null : payload.OptionCode.Trim();
+
+        // Identity is checked BEFORE any amount: a payload that describes another owner/draft/revision is
+        // never priced, even if it happens to be shaped correctly.
+        if (!IdentityMatches(request.Expected, payload))
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.IdentityMismatch,
+                ShippingCapturedQuoteReasonCodes.IdentityMismatch,
+                serviceCode,
+                optionCode);
+        }
+
+        // "Not configured" is a stored fact, not a default: a method without captured settings cannot price.
+        if (payload.MethodSettings is not { } settings)
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.NotConfigured,
+                ShippingCapturedQuoteReasonCodes.NotConfigured,
+                serviceCode,
+                optionCode);
+        }
+
+        if (!Enum.IsDefined(settings.CalculationMode) || !Enum.IsDefined(settings.FreightPaymentMode))
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.ConfigurationInvalid,
+                ShippingCapturedQuoteReasonCodes.ConfigurationInvalid,
+                serviceCode,
+                optionCode);
+        }
+
+        switch (settings.CalculationMode)
+        {
+            case ShippingAuthoringCalculationMode.CarrierApi:
+                return NotQuoted(
+                    ShippingCapturedQuoteOutcome.CalculationModeUnavailable,
+                    ShippingCapturedQuoteReasonCodes.CarrierModeUnavailable,
+                    serviceCode,
+                    optionCode);
+            case ShippingAuthoringCalculationMode.Free:
+                // Freezing the real expense to zero would fabricate a free service; the funder/provider is
+                // future authority, so this is an explicit not-ready answer today.
+                return NotQuoted(
+                    ShippingCapturedQuoteOutcome.CalculationModeUnavailable,
+                    ShippingCapturedQuoteReasonCodes.FreeNotImplemented,
+                    serviceCode,
+                    optionCode);
+            case ShippingAuthoringCalculationMode.Manual:
+                break;
+            default:
+                return NotQuoted(
+                    ShippingCapturedQuoteOutcome.ConfigurationInvalid,
+                    ShippingCapturedQuoteReasonCodes.ConfigurationInvalid,
+                    serviceCode,
+                    optionCode);
+        }
+
+        // Measurements/amount are caller-declared facts. A negative one is invalid input, never a zero rate.
+        if (request.GroupWeightGrams is < 0
+            || request.GroupItemCount is < 0
+            || request.FinalGroupGoodsAmountAfterDiscountAndTax is < 0m)
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.ConfigurationInvalid,
+                ShippingCapturedQuoteReasonCodes.ConfigurationInvalid,
+                serviceCode,
+                optionCode);
+        }
+
+        if (!IsStructurallyValidDestination(request.Destination))
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.DestinationPathInvalid,
+                ShippingCapturedQuoteReasonCodes.DestinationPathInvalid,
+                serviceCode,
+                optionCode);
+        }
+
+        if (payload.Groups is null)
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.ConfigurationInvalid,
+                ShippingCapturedQuoteReasonCodes.ConfigurationInvalid,
+                serviceCode,
+                optionCode);
+        }
+
+        // Several matched AREAS in the SAME group are still ONE group: geography is not an actor and does
+        // not multiply choices. Only several GROUPS make the request ambiguous.
+        var matchedGroups = payload.Groups
+            .Where(group => group.Areas is not null
+                            && group.Areas.Any(area => AreaMatches(area, request.Destination)))
+            .ToArray();
+
+        if (matchedGroups.Length == 0)
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.CoverageMissing,
+                ShippingCapturedQuoteReasonCodes.CoverageMissing,
+                serviceCode,
+                optionCode);
+        }
+
+        if (matchedGroups.Length > 1)
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.GroupAmbiguous,
+                ShippingCapturedQuoteReasonCodes.GroupAmbiguous,
+                serviceCode,
+                optionCode);
+        }
+
+        var group = matchedGroups[0];
+        var groupCurrency = NormalizeCurrency(group.CurrencyCode);
+        var requestCurrency = NormalizeCurrency(request.CurrencyCode);
+        if (groupCurrency is null || requestCurrency is null)
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.CurrencyMissing,
+                ShippingCapturedQuoteReasonCodes.CurrencyMissing,
+                serviceCode,
+                optionCode);
+        }
+
+        if (!string.Equals(groupCurrency, requestCurrency, StringComparison.Ordinal))
+        {
+            // No FX is invented: another currency is a not-quoted answer, not a converted amount.
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.CurrencyMismatch,
+                ShippingCapturedQuoteReasonCodes.CurrencyMismatch,
+                serviceCode,
+                optionCode);
+        }
+
+        if (group.RateRows is null || group.RateRows.Count == 0)
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.RateRowMissing,
+                ShippingCapturedQuoteReasonCodes.RateRowMissing,
+                serviceCode,
+                optionCode);
+        }
+
+        ShippingAuthoringRevisionRateRow? winner = null;
+        ShippingNumericTier? winnerWeight = null;
+        ShippingNumericTier? winnerCount = null;
+        ShippingAmountTier? winnerMerchandise = null;
+        var matches = 0;
+        var undetermined = 0;
+
+        foreach (var row in group.RateRows)
+        {
+            if (!TryBuildCondition(row, out var weight, out var count, out var merchandise))
+            {
+                // One incoherent stored bound invalidates the money answer for this group: bounds are
+                // facts, and normalising them here would silently invent a tier.
+                return NotQuoted(
+                    ShippingCapturedQuoteOutcome.ConfigurationInvalid,
+                    ShippingCapturedQuoteReasonCodes.ConfigurationInvalid,
+                    serviceCode,
+                    optionCode);
+            }
+
+            var weightMatch = AxisMatch(weight, request.GroupWeightGrams);
+            var countMatch = AxisMatch(count, request.GroupItemCount);
+            var merchandiseMatch = MerchandiseMatch(merchandise, request.FinalGroupGoodsAmountAfterDiscountAndTax);
+
+            if (weightMatch == CapturedAxisMatch.Outside
+                || countMatch == CapturedAxisMatch.Outside
+                || merchandiseMatch == CapturedAxisMatch.Outside)
+            {
+                // A KNOWN axis that does not match excludes the row outright, before any other axis is
+                // allowed to make it "undetermined" — an irrelevant row never blocks a valid one.
+                continue;
+            }
+
+            if (weightMatch == CapturedAxisMatch.MissingMeasurement
+                || countMatch == CapturedAxisMatch.MissingMeasurement
+                || merchandiseMatch == CapturedAxisMatch.MissingMeasurement)
+            {
+                undetermined++;
+                continue;
+            }
+
+            matches++;
+            winner = row;
+            winnerWeight = weight;
+            winnerCount = count;
+            winnerMerchandise = merchandise;
+        }
+
+        if (matches > 1)
+        {
+            // Even with identical amounts, two matching alternatives are a data ambiguity a human resolves.
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.ConditionAmbiguous,
+                ShippingCapturedQuoteReasonCodes.ConditionAmbiguous,
+                serviceCode,
+                optionCode);
+        }
+
+        if (matches == 0)
+        {
+            return undetermined > 0
+                ? NotQuoted(
+                    ShippingCapturedQuoteOutcome.MeasurementRequired,
+                    ShippingCapturedQuoteReasonCodes.MeasurementRequired,
+                    serviceCode,
+                    optionCode)
+                : NotQuoted(
+                    ShippingCapturedQuoteOutcome.ConditionNotMatched,
+                    ShippingCapturedQuoteReasonCodes.ConditionNotMatched,
+                    serviceCode,
+                    optionCode);
+        }
+
+        // Exactly one row won: BOTH components come from it, so a mixed total is impossible.
+        var freightAmount = winner!.FreightAmount;
+        var packagingAmount = winner.PackagingAmount;
+        var total = freightAmount + packagingAmount;
+
+        // The module's defined payer semantics: packaging is always a checkout charge (the carrier has no
+        // packaging contract), so only the freight component can move to collect-on-delivery.
+        var carrierCollect = settings.FreightPaymentMode == ShippingFreightPayerMode.CollectOnDelivery
+            ? freightAmount
+            : 0m;
+        var payableAtCheckout = total - carrierCollect;
+
+        return new ShippingCapturedRevisionQuote(
+            ShippingCapturedQuoteOutcome.Quoted,
+            ShippingCapturedQuoteReasonCodes.Quoted,
+            serviceCode,
+            optionCode,
+            groupCurrency,
+            freightAmount,
+            packagingAmount,
+            total,
+            payableAtCheckout,
+            carrierCollect,
+            settings.FreightPaymentMode,
+            new ShippingCapturedQuoteSelection(
+                group.GroupId,
+                winner.RateRowId,
+                payload.DraftId,
+                payload.SourceRevision,
+                payload.FormatVersion,
+                payload.ShippingTypeId,
+                winner.MinDeliveryDays,
+                winner.MaxDeliveryDays,
+                settings,
+                payload.WeeklySchedule,
+                new ShippingCapturedQuoteMatchedConditions(winnerWeight, winnerCount, winnerMerchandise)));
+    }
+
+    private static ShippingCapturedRevisionQuote NotQuoted(
+        ShippingCapturedQuoteOutcome outcome,
+        string reasonCode,
+        string serviceCode,
+        string? optionCode)
+        => new(
+            outcome,
+            reasonCode,
+            serviceCode,
+            optionCode,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+
+    /// <summary>
     /// تطبیق مالکیت سخت‌گیرانهٔ گزینه: فقط ردیفی که گزینهٔ <em>خودش</em> دقیقاً با گزینهٔ درخواست
     /// برابر است. ردیف سطح‌خدمت (<c>OptionCode</c> تهی) و ردیف گزینهٔ هم‌خانواده هرگز واجد شرایط
     /// نیستند، پس «اولین تطابق» یا fallback ضمنی وجود ندارد.
@@ -272,4 +583,162 @@ public static class ShippingRatePolicyEngine
     /// <param name="optionCode">گزینهٔ نرمال‌شدهٔ درخواست.</param>
     private static bool MatchesOwnedOptionExactly(ShippingRatePolicy policy, string? optionCode)
         => string.Equals(policy.OptionCode, optionCode, StringComparison.OrdinalIgnoreCase);
+
+    // ------------------------------------------------------------------ captured-revision quote helpers
+
+    /// <summary>نتیجهٔ سنجش یک محور روی یک ردیف.</summary>
+    private enum CapturedAxisMatch
+    {
+        /// <summary>محور ثبت نشده یا اندازهٔ اعلام‌شده داخل بازه است.</summary>
+        Matched,
+
+        /// <summary>محور ثبت شده ولی اندازهٔ آن اعلام نشده است؛ صفر فرض نمی‌شود.</summary>
+        MissingMeasurement,
+
+        /// <summary>اندازهٔ اعلام‌شده بیرون بازهٔ ثبت‌شده است.</summary>
+        Outside,
+    }
+
+    /// <summary>هویت موردانتظار باید عیناً با هدر/بدنهٔ capture یکی باشد؛ هیچ دادهٔ غریبه قیمت نمی‌گیرد.</summary>
+    /// <param name="expected">هویت موردانتظار.</param>
+    /// <param name="payload">بدنهٔ capture‌شده.</param>
+    private static bool IdentityMatches(
+        ShippingCapturedRevisionIdentity expected,
+        ShippingAuthoringRevisionPayload payload)
+        => payload.Owner is not null
+           && payload.Owner.Kind == expected.OwnerKind
+           && string.Equals(payload.Owner.TenantId, expected.OwnerTenantId, StringComparison.Ordinal)
+           && payload.Owner.SellerPartyId == expected.OwnerSellerPartyId
+           && payload.DraftId == expected.DraftId
+           && payload.SourceRevision == expected.SourceRevision;
+
+    /// <summary>سنجش محور اندازهٔ صحیح با بازهٔ نیم‌باز موجود.</summary>
+    /// <param name="tier">بازهٔ ثبت‌شده یا تهی (بی‌شرط).</param>
+    /// <param name="value">اندازهٔ اعلام‌شده یا تهی.</param>
+    private static CapturedAxisMatch AxisMatch(ShippingNumericTier? tier, long? value)
+    {
+        if (tier is null)
+        {
+            return CapturedAxisMatch.Matched;
+        }
+
+        return value is { } measured
+            ? tier.Contains(measured) ? CapturedAxisMatch.Matched : CapturedAxisMatch.Outside
+            : CapturedAxisMatch.MissingMeasurement;
+    }
+
+    /// <summary>سنجش محور مبلغ کالا با همان معنای نیم‌باز.</summary>
+    /// <param name="tier">بازهٔ ثبت‌شده یا تهی (بی‌شرط).</param>
+    /// <param name="value">مبلغ نهایی اعلام‌شده یا تهی.</param>
+    private static CapturedAxisMatch MerchandiseMatch(ShippingAmountTier? tier, decimal? value)
+    {
+        if (tier is null)
+        {
+            return CapturedAxisMatch.Matched;
+        }
+
+        return value is { } measured
+            ? tier.Contains(measured) ? CapturedAxisMatch.Matched : CapturedAxisMatch.Outside
+            : CapturedAxisMatch.MissingMeasurement;
+    }
+
+    /// <summary>
+    /// بازه‌های سه‌محوری یک ردیف را می‌سازد و کران/مبلغ نامعتبر را رد می‌کند. «تهی» یعنی محور بی‌شرط؛
+    /// کرانِ بالای بدون کران پایین، کرانِ چسبیده/معکوس، مبلغ منفی و روزهای نامعتبر همه دادهٔ ناسازگارند.
+    /// </summary>
+    /// <param name="row">ردیف ذخیره‌شده.</param>
+    /// <param name="weight">بازهٔ وزن یا تهی.</param>
+    /// <param name="count">بازهٔ تعداد یا تهی.</param>
+    /// <param name="merchandise">بازهٔ مبلغ کالا یا تهی.</param>
+    private static bool TryBuildCondition(
+        ShippingAuthoringRevisionRateRow row,
+        out ShippingNumericTier? weight,
+        out ShippingNumericTier? count,
+        out ShippingAmountTier? merchandise)
+    {
+        weight = null;
+        count = null;
+        merchandise = null;
+
+        if (row.MinWeightGrams is { } minWeight)
+        {
+            if (minWeight < 0 || (row.MaxWeightGrams is { } maxWeight && maxWeight <= minWeight))
+            {
+                return false;
+            }
+
+            weight = ShippingNumericTier.Between(minWeight, row.MaxWeightGrams);
+        }
+        else if (row.MaxWeightGrams is not null)
+        {
+            return false;
+        }
+
+        if (row.MinItemCount is { } minCount)
+        {
+            if (minCount < 0 || (row.MaxItemCount is { } maxCount && maxCount <= minCount))
+            {
+                return false;
+            }
+
+            count = ShippingNumericTier.Between(minCount, row.MaxItemCount);
+        }
+        else if (row.MaxItemCount is not null)
+        {
+            return false;
+        }
+
+        if (row.MinMerchandiseAmount is { } minAmount)
+        {
+            if (minAmount < 0m || (row.MaxMerchandiseAmount is { } maxAmount && maxAmount <= minAmount))
+            {
+                return false;
+            }
+
+            merchandise = ShippingAmountTier.Between(minAmount, row.MaxMerchandiseAmount);
+        }
+        else if (row.MaxMerchandiseAmount is not null)
+        {
+            return false;
+        }
+
+        return row.FreightAmount >= 0m
+               && row.PackagingAmount >= 0m
+               && row.MinDeliveryDays >= 0
+               && row.MaxDeliveryDays >= row.MinDeliveryDays;
+    }
+
+    /// <summary>
+    /// یک انتخاب جغرافیایی ذخیره‌شده با همان گونه و شناسهٔ مسیر تأییدشدهٔ مقصد تطبیق می‌یابد.
+    /// </summary>
+    /// <param name="area">انتخاب ذخیره‌شده.</param>
+    /// <param name="path">مسیر تایپ‌شدهٔ مقصد.</param>
+    private static bool AreaMatches(ShippingAuthoringRevisionArea area, ShippingDestinationScope path)
+        => area.NodeKind switch
+        {
+            ShippingDestinationNodeKind.Country => path.CountryId == area.NodeId,
+            ShippingDestinationNodeKind.AdministrativeArea => path.AdministrativeAreaId == area.NodeId,
+            ShippingDestinationNodeKind.City => path.CityId == area.NodeId,
+            ShippingDestinationNodeKind.ServiceArea => path.ServiceAreaId == area.NodeId,
+            _ => false,
+        };
+
+    /// <summary>
+    /// ساختار مسیر مقصد را می‌سنجد: کشور الزامی، هیچ شناسهٔ تهی، و ناحیهٔ خدمت بدون شهر یک مسیر
+    /// نیمه‌دامنه است. این اعتبارسنجیِ وجودِ واقعی گره در Geography نیست؛ آن کار آداپتر آینده است.
+    /// </summary>
+    /// <param name="path">مسیر مقصد.</param>
+    private static bool IsStructurallyValidDestination(ShippingDestinationScope path)
+        => path is not null
+           && path.CountryId != Guid.Empty
+           && path.AdministrativeAreaId != Guid.Empty
+           && path.CityId != Guid.Empty
+           && path.ServiceAreaId != Guid.Empty
+           && (path.ServiceAreaId is null || path.CityId is not null);
+
+    private static string? NormalizeCurrency(string? currencyCode)
+    {
+        var trimmed = currencyCode?.Trim().ToUpperInvariant();
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
+    }
 }

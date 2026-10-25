@@ -602,6 +602,65 @@ public sealed class OperationalQuoteCompatibilityTests
     }
 
     [Fact]
+    public void Transaction_guard_allows_only_the_named_capture_disposal_helper_and_never_a_begin_inside_it()
+    {
+        // Baseline: the tree is clean, so the named disposal helper is the ONLY new type-only member.
+        Assert.Empty(ShippingTransactionBoundary.Analyze(BackendProductionSources())
+            .Where(violation => violation.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule));
+
+        var allowed = BackendProductionSources()
+            .Single(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath);
+
+        // (1) The allowed helper may mention the transaction TYPE but must never OPEN one: a begin smuggled
+        // into the named disposal helper is still an unauthorized transaction start.
+        var beginInsideDisposal = allowed with
+        {
+            Text = allowed.Text.Replace(
+                "        if (transaction is null)\r\n        {\r\n            return;\r\n        }",
+                "        using var smuggled = _context.Database.BeginTransaction();\r\n"
+                + "        if (transaction is null)\r\n        {\r\n            return;\r\n        }",
+                StringComparison.Ordinal),
+        };
+        if (beginInsideDisposal.Text == allowed.Text)
+        {
+            // Line endings are a build artifact, not a behaviour: retry the same edit for LF checkouts.
+            beginInsideDisposal = allowed with
+            {
+                Text = allowed.Text.Replace(
+                    "        if (transaction is null)\n        {\n            return;\n        }",
+                    "        using var smuggled = _context.Database.BeginTransaction();\n"
+                    + "        if (transaction is null)\n        {\n            return;\n        }",
+                    StringComparison.Ordinal),
+            };
+        }
+
+        Assert.NotEqual(allowed.Text, beginInsideDisposal.Text);
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze([beginInsideDisposal]),
+            violation => violation.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule
+                         && violation.Detail.Contains("transaction start", StringComparison.Ordinal));
+
+        // (2) The allowance is MEMBER-scoped, not file-wide: any other member mentioning a transaction type
+        // is still a violation.
+        var thirdTypeMember = allowed with
+        {
+            Text = allowed.Text
+                   + "\n\ninternal sealed class SmuggledTypeMember\n{\n"
+                   + "    internal static void Extra()\n"
+                   + "    {\n"
+                   + "        System.IDbContextTransaction? leaked = null;\n"
+                   + "        System.GC.KeepAlive(leaked);\n"
+                   + "    }\n"
+                   + "}\n",
+        };
+
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze([thirdTypeMember]),
+            violation => violation.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule
+                         && violation.Detail.Contains("'Extra'", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Transaction_guard_fails_for_a_third_caller_or_a_callback_indirection_in_the_reviewed_file()
     {
         var allowed = BackendProductionSources()

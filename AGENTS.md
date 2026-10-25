@@ -4,7 +4,36 @@ Read214-R2/ARCHITECT-REVIEW.md. Source8790165bd95bc48f64ecdc69a8b03d777edf3110 o
 Onlyissued TB-SHIPPING-CAPTURED-MANUAL-QUOTE-215,parent214-R2;25min/stop17. ExtendexistingShippingrateenginewithpureexactcapture evaluation, 3ANDaxes/perrowfreightANDpackaging/PrepaidCODsplit/metadata, meaningfulfocusedtests. No readliveDraft/latestfallback, no lossyconversion/newpriceengine/Orderliveconsumer/publishpointer. Puretrustedinputonly; taxinclgroupamountcomesfromownerlater, no fakeweight.
 Nextafterreview: trustedowner+selectedcapturedrevisionContractsedge and realgroupprice/measurementsource thenprojection/selection/commit connection. Notanothersourceaudit. §29decisionsresolved,213calendar/211119FEtestsacceptedandnotreplayed. CapturesNOTLIVE, tableNOTsharedapplied; preserveactualdraft/revision/unsavedtab, Host5088/FE3000 and9appliedmigrations. TB185paused/defaultOFF/PendingAllocationunchanged. Await215result;olderCURRENTsuperseded.
 
-## CURRENT —214-R2 exactcleanup executed; capture still staging-only —2026-10-25
+## CURRENT —215 captured manual quote primitive done; NOT wired —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-MANUAL-QUOTE-215/RESULT.md` and
+`214-R2/ARCHITECT-REVIEW.md`. 215 added ONE pure additive capability on the EXISTING rate authority:
+`ShippingRatePolicyEngine.QuoteCapturedRevision(...)` over an exact decoded captured revision, with its
+typed input/result in `Domain/Rates/ShippingCapturedRevisionQuote.cs`. Existing `Quote(...)` overloads are
+behaviourally unchanged. Identity (owner/draft/revision) is checked first and fails closed; settings are
+required (missing = NotConfigured, CarrierApi/Free = explicit unavailable, never a zero price); groups
+resolve by stored area NodeKind+NodeId with one-group-required (0 = coverage missing, >1 = ambiguous);
+currency must match exactly with no FX; the three axes (weight/count/merchandise amount after discount and
+tax) are AND within a row and alternatives across rows, half-open `[min,max)`, blank axis unconditional,
+explicit 0 distinct from missing, invalid bounds/config fail closed; exactly one row wins (0 = not matched
+or measurement required, >1 = ambiguous even with equal amounts); freight AND packaging come from that one
+row, with the module's defined payer split (packaging always checkout, only freight can be carrier
+collect). Result carries group/row ids, draft/revision/format provenance, raw type id, min+max delivery
+days, stored settings and the stored week — no preparation/lead-day conversion, no label guessing.
+`Eligibility` is always `NotEvaluated`: monetary answer only, no activation/readiness claim.
+Integration hygiene: `DisposeCaptureTransactionAsync` is now the single named type-only member in
+`AllowedTypeMarkerMembers` (begin still forbidden there; narrow negative proof executed). Executed: build
+0 errors, 11/11 new quote cases, exact `OperationalQuoteCompatibilityTests` class 23/23 once. No
+schema/migration/Contracts reader/DI/endpoint/Order/FE/Host change, no shared DB, no user-draft write, no
+gate flip. Ambiguous/invalid-bound cases are rebuilt with `with` because today's authoring guard refuses
+them; the evaluator fails closed instead of resolving them.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next concrete slice = Contracts-only
+reader/selection edge + group money authority, then projection/selection/commit; not another audit).
+Preserve real user draft/unsaved tab, Host5088/FE3000, 9 applied migrations; 213 calendar still
+accepted-but-unwired; 211 FE 119 tests and §29 owner decisions not reopened. TB185 paused, default-OFF,
+PendingAllocation unchanged.
+
+## SUPERSEDED —214-R2 exactcleanup executed; capture still staging-only —2026-10-25
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R2/RESULT.md` plus the
 appended correction note in `214-R1/RESULT.md`. Only `CaptureRevisionAsync` changed: every non-committing

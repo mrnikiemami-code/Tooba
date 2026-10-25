@@ -95,6 +95,13 @@ internal static class ShippingTransactionBoundary
     /// </summary>
     public const string AllowedBoundaryHelperMember = "RollbackAsync";
 
+    /// <summary>
+    /// TB-215: the ONE additional reviewed member allowed to mention a transaction type, for the capture
+    /// path only. It takes an optional transaction and can only dispose it: it must never open, save,
+    /// commit or roll back anything, and no filename-wide exemption exists.
+    /// </summary>
+    public const string AllowedCaptureDisposalHelperMember = "DisposeCaptureTransactionAsync";
+
     /// <summary>Transaction-start markers.</summary>
     private static readonly string[] TransactionStartMarkers = ["BeginTransaction"];
 
@@ -113,7 +120,12 @@ internal static class ShippingTransactionBoundary
 
     /// <summary>Members inside the reviewed file that may legitimately mention a transaction type.</summary>
     private static readonly string[] AllowedTypeMarkerMembers =
-        [AllowedBoundaryMember, AllowedBoundaryHelperMember, AllowedCaptureBoundaryMember];
+    [
+        AllowedBoundaryMember,
+        AllowedBoundaryHelperMember,
+        AllowedCaptureBoundaryMember,
+        AllowedCaptureDisposalHelperMember,
+    ];
 
     /// <summary>Shipping production schema-authority markers.</summary>
     private static readonly string[] SchemaAuthorityMarkers =
@@ -203,7 +215,7 @@ internal static class ShippingTransactionBoundary
                             path,
                             UnexpectedTransactionRule,
                             $"transaction type '{marker}' at line {index + 1} in member '{site.Member}'; outside "
-                            + $"{AllowedBoundaryPath}::{{{AllowedBoundaryMember},{AllowedBoundaryHelperMember}}} a "
+                            + $"{AllowedBoundaryPath}::{{{string.Join(",", AllowedTypeMarkerMembers)}}} a "
                             + "transaction is not authorized"));
                     }
                 }
