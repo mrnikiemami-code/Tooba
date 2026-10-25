@@ -37,7 +37,19 @@ public sealed record ShippingAuthoringDraftItem(
     long Revision,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    IReadOnlyList<ShippingAuthoringRegionGroupItem> RegionGroups);
+    IReadOnlyList<ShippingAuthoringRegionGroupItem> RegionGroups)
+{
+    /// <summary>
+    /// متن‌های <b>واقعاً ذخیره‌شدهٔ</b> نام/توضیح روش به‌ازای زبان، برای خواندنهای فهرستی.
+    /// </summary>
+    /// <remarks>
+    /// این فقط یک <b>فیلد افزایشی</b> روی پاسخ موجود است: هیچ مسیر/سازندهٔ موضعی/طرح‌وارهٔ تازه‌ای
+    /// ساخته نمی‌شود و مصرف‌کننده‌های فعلی که فقط Binding را می‌خوانند آن را نادیده می‌گیرند. مقدار آن
+    /// همان متن‌های ذخیره‌شده‌ای است که خواندن فهرست در همان پرس‌وجو بارگذاری می‌کند؛ مجموعهٔ خالی
+    /// یعنی «متنی در این پاسخ ذخیره نشده است» — نه نام fallback و نه حدس زبان.
+    /// </remarks>
+    public IReadOnlyList<ShippingAuthoringMethodTranslationItem> MethodTranslations { get; init; } = [];
+}
 
 /// <summary>فهرست پیش‌نویس‌های مالک مجاز همین درخواست.</summary>
 /// <param name="Drafts">پیش‌نویس‌ها؛ فهرست خالی یعنی هنوز پیش‌نویسی ساخته نشده است.</param>

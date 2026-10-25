@@ -203,11 +203,11 @@ public sealed class WithdrawShippingAuthoringPublicationHandler(
             return Result.Failure<ShippingAuthoringPublicationView>(cleared.Errors);
         }
 
-        // An already-cleared pointer keeps its stored version; a lawful clear of an ABSENT pointer creates
-        // nothing and therefore reports 0, which is the only state where 0 is truthful.
+        // A clear of an ABSENT pointer creates nothing, so the ONLY truthful answer is Absent/0 — the same
+        // shape the next GET derives. An already-cleared pointer keeps its real stored version.
         return Result.Success(ShippingAuthoringPublicationWorkflow.View(
             stored,
-            ShippingAuthoringPublicationState.Cleared,
+            cleared.Value.Exists ? ShippingAuthoringPublicationState.Cleared : ShippingAuthoringPublicationState.Absent,
             cleared.Value.SelectionVersion ?? 0));
     }
 }

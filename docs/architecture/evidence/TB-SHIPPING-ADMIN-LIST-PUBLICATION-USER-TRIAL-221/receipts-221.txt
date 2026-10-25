@@ -1,0 +1,99 @@
+TB-SHIPPING-ADMIN-LIST-PUBLICATION-USER-TRIAL-221 — live receipts (2026-10-25)
+Target: 127.0.0.1:5432/tooba_alpha · edition SingleStore · tenant store-alpha
+Host: 127.0.0.1:5088 (Development, PID 26600) · FE: :3000 (next dev, PID 28288)
+Dev actor: X-Tooba-Dev-Actor-User-Id 01a036c2-970e-7000-8eb7-94bf5cc2d8db
+
+[1] GET /health
+200 {"status":"ok"}
+
+[2] MigrationRunner apply --tenant store-alpha (exact Migration Apply lines)
+Shipping   current=20261025130021_SelectedCapturedRevision pendingCount=0 result=ok
+Order      current=20261016100000_AddOrderShippingGroups   pendingCount=0 result=ok
+Settlement current=20261016140000_AddSettlementShippingGroupFees pendingCount=0 result=ok
+(plan before apply reported exactly those two pending migrations)
+
+[3] GET /v1/admin/shipping-services/authoring-context
+{"edition":"SingleStore","defaultCurrency":"IRR","contentLanguages":[
+ {"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","code":"fa-IR",...,"isDefault":true},
+ {"languageId":"01a06a53-4196-7000-9b98-fb3706490005","code":"en-US",...},
+ {"languageId":"01a0844c-829e-7000-ab25-64b381896053","code":"ru-RU",...}],
+ "defaultContentLanguageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4"}
+
+[4] GET /v1/admin/shipping-services/authoring-drafts
+{"drafts":[{"draftId":"01a16eeb-70b3-7000-87c2-564c82835496","owner":{"ownerKind":"Store"},
+ "serviceCode":"post","revision":2,"createdAt":"2026-10-24T17:18:06.002894+00:00",
+ "updatedAt":"2026-10-24T19:05:52.452036+00:00",
+ "regionGroups":[{"groupId":"01a16f4e-1c41-7000-8e7a-e54b0b29ae5b","order":0,
+   "areas":[{"kind":"Country","id":"e3451206-e503-51a8-91ad-afa9ab70e330"}]}],
+ "methodTranslations":[{"languageId":"01a06a53-4139-7000-bb9b-3078a0d2e5c4","name":"پیشتاز"}]}]}
+
+[5] GET /v1/admin/shipping-services/authoring-drafts/01a16eeb-70b3-7000-87c2-564c82835496/publication
+before any action:
+{"draftId":"01a16eeb-70b3-7000-87c2-564c82835496","currentDraftRevision":2,"serviceCode":"post",
+ "state":"Absent","selectionVersion":0,"selectedMatchesCurrentDraftRevision":false}
+
+after UI publish (confirm dialog accepted):
+{"draftId":"01a16eeb-70b3-7000-87c2-564c82835496","currentDraftRevision":2,"serviceCode":"post",
+ "state":"Selected","selectionVersion":3,"selectedSnapshotId":"01a17389-c201-7000-8512-c2950a6e913a",
+ "selectedDraftId":"01a16eeb-70b3-7000-87c2-564c82835496","selectedSourceRevision":2,
+ "selectedFormatVersion":1,"selectedMatchesCurrentDraftRevision":true}
+
+after UI withdraw:
+{"draftId":"01a16eeb-70b3-7000-87c2-564c82835496","currentDraftRevision":2,"serviceCode":"post",
+ "state":"Cleared","selectionVersion":2,"selectedMatchesCurrentDraftRevision":false}
+
+[6] Draft untouched by publication — re-read after publish/withdraw/publish
+revision=2, updatedAt=2026-10-24T19:05:52.452036+00:00 (unchanged from before any action)
+
+[7] Browser DOM receipts (localhost:3000, real mounted Next app)
+7.1 list /admin/shipping-services rows:
+    "عملیات | نام روش | پیوند روش | بازبینی ذخیره‌شده | محدوده‌های ارسال"
+    "پیشتاز | post | بازبینی 2 | 1 محدوده"
+    links: [{"t":"کاتالوگ و تنظیمات قبلی","h":"?legacy=1"}]
+7.2 row action View (aria-label مشاهده) -> location
+    http://localhost:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+7.3 publication panel, VIEW mode, before publish:
+    status="این روش هنوز منتشر نشده است."
+    publish disabled=false, withdraw disabled=true
+    note="این انتخاب فقط یک نسخهٔ منتشرشده را مشخص می‌کند؛ اتصال آن به تسویهٔ نهایی هنوز فعال نشده است."
+7.4 publish confirm text:
+    "بازبینی 2 به‌عنوان نسخهٔ منتشرشده انتخاب شود؟ متن ذخیره‌شدهٔ این روش تغییر نمی‌کند."
+7.5 after publish:
+    status="یک نسخهٔ منتشرشده انتخاب شده است."
+    notice="نسخهٔ منتشرشده ثبت شد (بازبینی 2)."
+    version="نسخهٔ انتخاب: 1"
+    snapshot="شناسهٔ نسخه: 01a17389-c201-7000-8512-c2950a6e913a"
+    current="نسخهٔ منتشرشده همان بازبینی فعلی است (بازبینی 2)."
+7.6 withdraw confirm text:
+    "انتخاب نسخهٔ منتشرشدهٔ این روش برداشته شود؟"
+7.7 after withdraw:
+    status="انتشار این روش برداشته شده است." notice="انتخاب انتشار برداشته شد."
+    version="نسخهٔ انتخاب: 2" snapshot=null publishDisabled=false
+7.8 after republish:
+    status="یک نسخهٔ منتشرشده انتخاب شده است." version="نسخهٔ انتخاب: 3"
+    snapshot="شناسهٔ نسخه: 01a17389-c201-7000-8512-c2950a6e913a"
+    publishDisabled=true  blocked="همین بازبینی از قبل منتشر شده است."
+7.9 EDIT mode (ویرایش) disables both publication actions (view-only rule) and
+    «انصراف از ویرایش» restores them; no draft write occurred (revision stayed 2).
+7.10 390x844: document.documentElement.scrollWidth 390 == innerWidth 390 (0 overflow);
+     publication panel box x=32 y=235 w=326; mobile list row shows
+     "عملیات | نام روش | پیوند روش".
+7.11 legacy ?legacy=1 still renders the old catalog: rows
+     پیشتاز/post:express/خیر, معمولی/post:standard/بله, پیشتاز/tipax:express/بله,
+     معمولی/tipax:standard/بله, اسنپ / پیک آنلاین/snapp_courier/خیر, پیک فروشگاه/store_courier/بله,
+     تحویل حضوری/in_person/بله — «نمایش ۱ تا ۷ از ۷ ردیف» + «سرویس جدید».
+
+[8] Focused tests
+node --experimental-strip-types --test features/admin-shipping-authoring/list-publication-221.test.ts
+tests 14 / pass 14 / fail 0 / skipped 0
+
+[9] Typecheck
+npx tsc --noEmit  -> exit 0
+
+[10] Architecture guards
+import-boundary pass · flat-folder 2/2 · feature-boundary pass · test-discovery 3/3
+source-size FAIL (pre-existing, files untouched by 221):
+  app/admin/category-admin-screen.tsx 2230 > 2215
+  app/admin/landing-pages/admin-landing-page-composer.tsx 1442 > 1440
+  app/storefront/storefront-landing-blocks.tsx 1033 > 1026
+  lib/storefront-composition/shared-composition-renderer.tsx 918 > 907

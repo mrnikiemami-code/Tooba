@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * Rendered editor of ONE existing shipping draft: General (names/type/two settings), the ONE
@@ -66,9 +66,10 @@ import { hasUnsavedWork, type EditorSaveStatus } from "../session/editor-session
 import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
 import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
-import { AuthoringWeekEditor, weekIssueMessage } from "./authoring-week-editor.tsx";
-import { rowIssueMessage } from "./authoring-rates-editor.tsx";
+import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
+import { AuthoringPublicationPanel } from "./authoring-publication-panel.tsx";
+import { AuthoringLocalIssuesPanel, AuthoringSaveFailurePanel } from "./authoring-problem-view.tsx";
 import {
   isRowScoped,
   rateRowKey,
@@ -90,42 +91,6 @@ const AREA_KIND_KEYS = {
 } as const;
 
 /** Field labels for server validation properties; raw codes are never shown as prose. */
-function groupIssueText(issue: GroupIssue, messages: AuthoringMessages): string {
-  switch (issue.code) {
-    case "groupLimitExceeded":
-      return messages.groupLimitExceeded;
-    case "selectionLimitExceeded":
-      return messages.selectionLimitExceeded;
-    case "duplicateSelection":
-      return messages.duplicateSelection;
-    case "titleTooLong":
-      return messages.titleTooLong;
-  }
-}
-
-function failureMessages(failure: EditorTransportFailure, messages: AuthoringMessages): readonly string[] {
-  switch (failure.kind) {
-    case "denied":
-      return [messages.saveDenied];
-    case "conflict":
-      return [messages.saveConflict];
-    case "validation":
-      return [messages.saveValidation];
-    case "unavailable":
-      return [messages.saveUnavailable];
-    case "outcomeUnknown":
-      return [messages.saveUnknown];
-    case "untrusted":
-      return [messages.loadUntrusted];
-    case "notFound":
-      return [messages.loadNotFound];
-    case "network":
-      return [messages.saveUnavailable];
-    default:
-      return [messages.saveError];
-  }
-}
-
 export function ShippingAuthoringScreen({
   draftId,
   locale,
@@ -614,6 +579,15 @@ export function ShippingAuthoringScreen({
         {session.unsaved ? ` · ${messages.unsavedNote}` : ""}
       </p>
 
+      {/* Publication is intent only: it reads/writes its own pointer and never reseeds this form. */}
+      <AuthoringPublicationPanel
+        draftId={draftId}
+        currentRevision={document?.revision ?? null}
+        mode={mode}
+        busy={busy}
+        messages={messages}
+      />
+
       {notice ? (
         <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
           {notice}
@@ -641,54 +615,16 @@ export function ShippingAuthoringScreen({
         </div>
       ) : null}
 
-      {saveFailure && saveStatus !== "clean" ? (
-        <div role="alert" className="rounded-xl border border-danger/40 bg-red-50 px-3 py-2 text-xs font-semibold text-danger">
-          {failureMessages(saveFailure, messages)
-            .filter(() => !(saveFailure.kind === "validation" && serverIssues.length > 0))
-            .map((text) => (
-              <p key={text} data-testid={`shipping-authoring-save-${saveFailure.kind}`}>
-                {text}
-              </p>
-            ))}
-          {serverIssues.length > 0 ? (
-            <>
-              <p className="mt-1 font-normal text-gray-700">{messages.saveValidation}</p>
-              <ul className="mt-1 grid gap-0.5 font-normal" data-testid="shipping-authoring-save-fields">
-                {serverIssues.map((issue) => (
-                  <li key={`${issue.target}:${issue.rowIndex ?? "-"}:${issue.reason}`}>
-                    <button
-                      type="button"
-                      className="text-start underline decoration-dotted underline-offset-2"
-                      data-testid={`shipping-authoring-save-field-${issue.target}`}
-                      onClick={() => revealServerIssue(issue)}
-                    >
-                      {authoringFormat(messages.serverFieldErrorLine, { field: issue.field, reason: issue.reason })}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : null}
-          {serverCodes.length > 0 ? (
-            <details className="mt-1 font-normal" data-testid="shipping-authoring-save-diagnostics">
-              <summary className="cursor-pointer text-[11px] text-gray-600">{messages.diagnosticsToggle}</summary>
-              <p dir="ltr" className="mt-0.5 text-[11px] text-gray-500" data-testid="shipping-authoring-save-code">
-                {authoringFormat(messages.serverErrorCodeNote, { code: serverCodes.join(", ") })}
-              </p>
-            </details>
-          ) : null}
-          {saveStatus === "outcomeUnknown" || session.commitUncertain ? (
-            <button
-              type="button"
-              className="mt-2 inline-flex min-h-8 items-center rounded-lg border border-border px-2 text-gray-800"
-              data-testid="shipping-authoring-reconcile"
-              onClick={() => void controller.reconcile()}
-            >
-              {messages.reconcileAction}
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+      <AuthoringSaveFailurePanel
+        failure={saveFailure}
+        status={saveStatus}
+        serverIssues={serverIssues}
+        serverCodes={serverCodes}
+        messages={messages}
+        commitUncertain={session.commitUncertain}
+        onReveal={revealServerIssue}
+        onReconcile={() => void controller.reconcile()}
+      />
       {session.reconcileFailure ? (
         <p role="alert" className="text-xs font-semibold text-danger">{messages.reconcileFailed}</p>
       ) : null}
@@ -739,29 +675,7 @@ export function ShippingAuthoringScreen({
             </div>
           ) : null}
 
-          {intent && !hasNoIssues(intent.issues) ? (
-            <div
-              role="alert"
-              className="rounded-xl border border-danger/40 bg-red-50 px-3 py-2 text-xs font-semibold text-danger"
-              data-testid="shipping-authoring-local-issues"
-            >
-              <p className="font-black">{messages.applyBlockedLocal}</p>
-              <ul className="mt-1 list-disc space-y-0.5 ps-4 font-normal">
-                {Array.from(
-                  new Set([
-                    ...intent.issues.general.map((issue) =>
-                      issue.code === "nameRequired" ? messages.nameRequired : messages.settingsIncomplete,
-                    ),
-                    ...groupProblems.map((issue) => groupIssueText(issue, messages)),
-                    ...intent.issues.rates.map((issue) => rowIssueMessage(issue.code, messages)),
-                    ...intent.issues.week.map((issue) => weekIssueMessage(issue.code, messages)),
-                  ]),
-                ).map((text) => (
-                  <li key={text}>{text}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          {intent ? <AuthoringLocalIssuesPanel issues={intent.issues} groupProblems={groupProblems} messages={messages} /> : null}
 
           <div role="tabpanel" hidden={tab !== "general"} data-testid="shipping-authoring-panel-general">
             {form ? (

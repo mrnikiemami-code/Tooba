@@ -1,6 +1,7 @@
 ﻿import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { ShippingServicesFlatScreenGate } from "./flat-screen-gate.tsx";
+import { ShippingServicesAuthoringListClient } from "./shipping-services-authoring-list-client.tsx";
 import {
   ONE_LEVEL_CATALOG_ADMIN_READ_PATH,
   mapHostOneLevelMethods,
@@ -63,7 +64,26 @@ async function readOneLevelCatalogFromHost(): Promise<HostRead> {
   }
 }
 
-export default async function AdminShippingServicesPage() {
+export default async function AdminShippingServicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ legacy?: string | string[] }>;
+}) {
+  // TB-221: the PRIMARY screen is the owner's real authoring-method list. The previous flat catalog is
+  // reachable ONLY through the explicit secondary link (`?legacy=1`) and is never a silent fallback.
+  const { legacy } = await searchParams;
+  const locale = parseLocale(readLocaleFromCookieString((await cookies()).toString()));
+
+  if (legacy !== "1") {
+    return (
+      <Suspense fallback={<p className="p-6 text-sm text-gray-500">در حال بارگذاری…</p>}>
+        <div className="p-4 lg:p-6">
+          <ShippingServicesAuthoringListClient locale={locale} />
+        </div>
+      </Suspense>
+    );
+  }
+
   const hostRead = await readOneLevelCatalogFromHost();
   const gate: OneLevelCatalogGate = resolveOneLevelCatalogGateFromHost(hostRead);
   const initialMethods = gate.state === "enabled" ? mapHostOneLevelMethods(hostRead.payload) : [];

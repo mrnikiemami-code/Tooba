@@ -313,7 +313,16 @@ internal static class ShippingAuthoringDraftWorkflow
                         .OrderBy(area => area.Kind)
                         .ThenBy(area => area.Id)
                         .ToArray()))
-                .ToArray());
+                .ToArray())
+        {
+            // Additive list payload: the stored texts of THIS draft only (no fallback, no invented name).
+            MethodTranslations = draft.Translations
+                .Select(translation => new ShippingAuthoringMethodTranslationItem(
+                    translation.LanguageId,
+                    translation.Name,
+                    translation.Description))
+                .ToArray(),
+        };
     }
 
     private static Guid SelectedId(ShippingAuthoringSelectedAreaWrite area) => area.Kind switch

@@ -47,6 +47,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .AsNoTracking()
             .Include(draft => draft.RegionGroups)
             .ThenInclude(group => group.Areas)
+            // ONE set-based read of the stored method texts: no per-row editor/presentation GET.
+            .Include(draft => draft.Translations)
             .OrderBy(draft => draft.ServiceCode)
             .ThenBy(draft => draft.OptionCode)
             .ThenBy(draft => draft.DraftId)
