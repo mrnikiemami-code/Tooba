@@ -54,4 +54,6 @@ Proposed 213 (copy-into-legacy-aggregates publish) is **withdrawn**.
 
 ## Bounds/timing
 
-Docs/evidence only; no code, flag, data, runtime or browser change; no gate enable, TB185 stays paused, default-OFF unchanged; nothing connected so no storefront completion claim. Claimed 08:49:04Z, analysis complete ~08:55, evidence/commit ~08:57 — inside the 10-minute box with the minute-6 analysis stop respected. STOP_FOR_ARCHITECT.
+Docs/evidence only; no code, flag, data, runtime or browser change; no gate enable, TB185 stays paused, default-OFF unchanged; nothing connected so no storefront completion claim. Claimed 08:49:04Z, analysis complete ~08:55, evidence/commit ~08:59 — inside the 10-minute box with the minute-6 analysis stop respected. STOP_FOR_ARCHITECT.
+
+Deviation (reported, not hidden): the commit used `git add -A`, so pre-existing untracked evidence artifacts from earlier tasks (`post-result.js`, `result-contract.txt`, task receipts/worker-result files under `docs/architecture/evidence/**`) were included alongside this task's files. They are documentation/evidence only — no `src/`, config, flag, schema or data file was touched — and no history rewrite/force-push was performed. Commit `94d059e2e33e7e0e9060529c8195119024d817d4`.
