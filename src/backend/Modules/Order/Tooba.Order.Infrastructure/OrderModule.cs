@@ -84,6 +84,11 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsSupplyPort, Admin.Operations.AdminOrderOperationsSupplyAdapter>();
         services.AddScoped<Application.Admin.Operations.Services.AdminOrderOperationsOrchestrator>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
+
+        // TB-SHIPPING-GROUP-GOODS-QUOTE-FACTS-217: همان نمونهٔ scoped دایرکتوری، درز فقط-خواندنی
+        // فکت مالی گروه ارسال را هم می‌دهد؛ DbContext/نمونهٔ دوم ساخته نمی‌شود.
+        services.AddScoped<ICheckoutShippingGroupGoodsFactsReader>(
+            sp => (ICheckoutShippingGroupGoodsFactsReader)sp.GetRequiredService<ICheckoutDirectory>());
         services.AddScoped<IOrderPaymentHoldPreparationPort, Application.Checkout.Process.OrderPaymentHoldPreparationService>();
         services.AddScoped<IOrderCheckoutReservationSetReader, OrderCheckoutReservationSetReader>();
         services.AddScoped<IOrderPaymentFreshPayabilityPort, Application.Checkout.Process.OrderPaymentFreshPayabilityService>();

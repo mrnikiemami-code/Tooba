@@ -1,4 +1,29 @@
-## CURRENT —216 boundedACCEPT; only217 real same-group goods amount authority —2026-10-25
+## CURRENT —217 posted; real group money authority exists but is NOT wired —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-GROUP-GOODS-QUOTE-FACTS-217/RESULT.md`. 217 added ONE
+read-only internal Order edge `ICheckoutShippingGroupGoodsFactsReader` (Application.Checkout.Contracts)
+implemented on the EXISTING `CheckoutDirectory` and registered scoped to the SAME directory instance.
+`PreviewAsync` was split into `LoadPreviewCartAsync` + `QuotePreviewSnapshotAsync` with byte-identical
+legacy behavior (one authoritative whole-cart Pricing→Promotion→Tax quote, no persistence).
+Server-validated complete partition of cart lines per group key (unknown/duplicate/shared/omitted/empty/
+mixed-seller/untrimmed/duplicate-key fail closed), stale version → `PRICE_CHANGED`, one seller per group,
+exact `_orderLineIdByCartLineId` join (no OfferId/proportional allocation), per group
+Σ `TaxInclusiveSnapshot` = goods amount AFTER discount AND tax (99.00 / 198.00 worked example).
+Currency must be sole and identical; negative authored amounts fail; explicit zero stays valid.
+Physical `GroupWeightGrams`/`PhysicalItemCount` remain `null` (no authoritative measurement) and
+`QuantityTotal` is metadata only.
+Executed: build 0 errors, 9/9 new focused facts, 194/194 retained Storefront + infra organization/boundary
+subset. No schema/migration/HTTP/MediatR/foreign Contracts/FE/flag/seed/user-draft change, no Host/FE
+restart. **NOT WIRED**: nothing consumes the reader yet; no published/selected captured revision, no
+fulfillment owner/type/membership, no projection/selection/commit, Storefront runtime unchanged.
+Next single step after review: connect captured revision selection + these real group facts + the accepted
+213 receiving calendar through projection/selection/commit; remaining gaps are publication/activation
+ownership, fulfillment owner/type/membership and real measurement sources. Not another audit.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT. TB185 paused/default-OFF/PendingAllocation
+unchanged; §29 decisions, 211 FE, 213/214/215/216 not reopened; Host5088/FE3000 and 9 applied migrations
+preserved. Actual time exceeded the 25-minute box (recorded, not a process PASS).
+
+## SUPERSEDED —216 boundedACCEPT; only217 real same-group goods amount authority —2026-10-25
 
 Read216/ARCHITECT-REVIEW.md. Source5f7aed605ea0225888a7d66e13e51b8399402b9c exactcapturedContracts+verifiedGeo+scopedDIaccepted;worker9new/11legacy/23compatgreen. Source-reviewedbranches!=fullrealGeoexecution;time43>25notPASS. NoStorefrontconsumer/publishselectionyet.
 ROOTFOUNDrealexistingmoneyauthority: CheckoutDirectory.PreviewAsync -> QuoteSellerOrdersAsync -> Pricing/Promotion -> Tax; TaxInclusiveSnapshot ispostdiscounttaxinclusivegoodslineamount. _orderLineIdByCartLineId isexactexistingmap. NoCartSubtotalExclusive substitution, noOfferIdjoin/proportionalallocation.

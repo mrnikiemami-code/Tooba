@@ -131,6 +131,18 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     /// <inheritdoc />
     public async Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
     {
+        var cart = await LoadPreviewCartAsync(command, cancellationToken);
+        return await QuotePreviewSnapshotAsync(cart, command, cancellationToken);
+    }
+
+    /// <summary>
+    /// خواندن سبد مجاز برای پیش‌نمایش: نگهبان، دسترسی، وضعیت و خالی‌نبودن. هیچ قیمت/ترویج/مالیاتی
+    /// اینجا صدا زده نمی‌شود تا رد شدن هویت/نسخه/افراز پیش از هر quote ممکن باشد.
+    /// </summary>
+    internal async Task<CartSnapshot> LoadPreviewCartAsync(
+        SubmitCheckoutCommand command,
+        CancellationToken cancellationToken)
+    {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var cart = await _carts.GetCartAsync(command.CartId, command.CartAccess, cancellationToken)
             ?? throw new ContractOperationException("checkout.cart.missing");
@@ -144,6 +156,19 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             throw new ContractOperationException("checkout.cart.empty");
         }
 
+        return cart;
+    }
+
+    /// <summary>
+    /// هستهٔ فقط-خواندنی نقل‌قول <b>یک‌بار برای کل سبد</b>: Pricing، Promotion و Tax روی خطوط همین
+    /// سبد، سپس ساخت <see cref="CheckoutGroup"/> در حافظه و snapshot. هیچ SaveChanges‌ای در آن نیست
+    /// و نقشهٔ دقیق خط سبد به خط سفارش را در <c>_orderLineIdByCartLineId</c> پر می‌کند.
+    /// </summary>
+    internal async Task<CheckoutSnapshot> QuotePreviewSnapshotAsync(
+        CartSnapshot cart,
+        SubmitCheckoutCommand command,
+        CancellationToken cancellationToken)
+    {
         var now = DateTimeOffset.UtcNow;
         var checkoutId = UuidV7.New();
         var sellerOrders = await QuoteSellerOrdersAsync(

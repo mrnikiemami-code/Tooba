@@ -20,6 +20,7 @@
     <ProjectReference Include="..\Tooba.Order.Domain\Tooba.Order.Domain.csproj" />
     <ProjectReference Include="..\Tooba.Order.Application\Tooba.Order.Application.csproj" />
     <ProjectReference Include="..\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
+    <ProjectReference Include="..\Tooba.Order.Infrastructure\Tooba.Order.Infrastructure.csproj" />
     <ProjectReference Include="..\Tooba.Order.Endpoints\Tooba.Order.Endpoints.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />

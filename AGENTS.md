@@ -1,4 +1,32 @@
-## CURRENT —216 boundedACCEPT; only217 real same-group goods amount authority —2026-10-25
+## CURRENT —217 group goods money authority done; NOT wired —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-GROUP-GOODS-QUOTE-FACTS-217/RESULT.md`. 217 added ONE
+read-only internal Order seam `ICheckoutShippingGroupGoodsFactsReader` (Application.Checkout.Contracts),
+implemented on the EXISTING `CheckoutDirectory` and registered scoped to the SAME instance in
+`OrderModule.AddServices`. `PreviewAsync` was split into `LoadPreviewCartAsync` (guard/access/status/empty)
+and `QuotePreviewSnapshotAsync` (ONE whole-cart Pricing→Promotion→Tax quote, no persistence); legacy
+signature/return/behavior unchanged. The reader validates server-side cart membership as a complete,
+non-ambiguous partition (blank/untrimmed/duplicate group key, empty group, unknown/duplicate/shared/omitted
+line, mixed seller ⇒ `checkout.shipping_groups.invalid`) and requires `ExpectedCartVersion == real.Version`
+(stale ⇒ `PRICE_CHANGED`) BEFORE any quote call, then sums the EXACT per-group members'
+`TaxInclusiveSnapshot` via the existing `_orderLineIdByCartLineId` map (no OfferId join, no proportional
+allocation, no second tax/discount). Sole cart currency must match every line; negative authored amounts ⇒
+`checkout.shipping_groups.amount_invalid`; explicit zero stays valid. Physical `GroupWeightGrams` and
+`PhysicalItemCount` are `null` (no authoritative measurement source in this slice) and `QuantityTotal` is
+decimal metadata only — never a Shipping item count. Executed: build 0 errors, 9/9 new focused facts
+(incl. 99.00/198.00 worked example, duplicate-Offer identity, fail-before-quote call counts, no DB/reserve/
+convert, same-scoped-instance DI) and 194/194 retained Storefront + infra organization/boundary subset.
+**NOT WIRED**: no consumer, no published/selected captured revision, no fulfillment owner/type/membership,
+no projection/selection/commit; Storefront/checkout runtime unchanged. No schema/migration/HTTP/MediatR/
+foreign-Contracts/FE/flag/seed/user-draft change; no Host5088/FE3000 restart.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next slice = wire captured revision
+selection + these group facts + accepted 213 calendar through projection/selection/commit; remaining gaps
+are publication/activation ownership, fulfillment owner/type/membership and real measurement sources, not
+another audit). TB185 paused/default-OFF/PendingAllocation unchanged; §29 decisions and 211/213/214/215/216
+not reopened; 9 applied migrations and the real user draft/unsaved tab preserved. Actual time exceeded the
+25-minute box (recorded, not process PASS).
+
+## SUPERSEDED —216 boundedACCEPT; only217 real same-group goods amount authority —2026-10-25
 
 Read216/ARCHITECT-REVIEW.md. Source5f7aed605ea0225888a7d66e13e51b8399402b9c exactcapturedContracts+verifiedGeo+scopedDIaccepted;worker9new/11legacy/23compatgreen. Source-reviewedbranches!=fullrealGeoexecution;time43>25notPASS. NoStorefrontconsumer/publishselectionyet.
 ROOTFOUNDrealexistingmoneyauthority: CheckoutDirectory.PreviewAsync -> QuoteSellerOrdersAsync -> Pricing/Promotion -> Tax; TaxInclusiveSnapshot ispostdiscounttaxinclusivegoodslineamount. _orderLineIdByCartLineId isexactexistingmap. NoCartSubtotalExclusive substitution, noOfferIdjoin/proportionalallocation.
