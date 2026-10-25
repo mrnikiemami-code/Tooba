@@ -1,3 +1,15 @@
+## CURRENT — 212-R1 facts accepted; THREE product semantics needed, no active worker — 2026-10-25
+
+Read212-R1/ARCHITECT-REVIEW.md. Corrected runtimeDI/adapters accepted; lossy legacy conversion rejected. Snapshot alternative is NOT implementation approval: moving livepointer beforeactivationdefined, omittingtranslations/type and blanketrejectingSeller/Marketplace not accepted. NO213 issued. ActiveNONE/awaitingworkerNONE; next is productanswers, not anotheraudit.
+Canonical rules6/8 explicitly defer runtime bases. Ask user only:
+1 authored method week = dispatch/working hours or customer's receiving hours?
+2 min/max delivery days counted from handoff/dispatch or from orderconfirmation (sellerprep is separate)?
+3 merchandise-condition amount for SAME shippinggroup = afterdiscountbeforetax, beforediscountbeforetax, or aftertax?
+Don't reask independent modes/free definition/owner authorization (alreadyapproved rules2/4/7/13/18). Recommend explicit publication separate from SAVE as architecture, no live activation yet. Onceanswersarrive recordthem in canonicaldecision, then one executable integration slice, no analysisloop.
+211contrast +119/119all14featuretests/typecheck/7guards accepted; no replay/retestrequest. ExistingStorefront shipping exists, newdraftintegrationpending. Userneedsfastdelivery; don't hide gaps or invent policies.
+Preserve realdraft01a16eeb-70b3-7000-87c2-564c82835496/currentrevision/userunsavedwork; Host5088/FE3000 and9appliedmigrations. Localdev authorizationpersists, no productionclaim;TB185paused/defaultOFF/PendingAllocation unchanged.
+212-R1 gitadd-A included old executablepost-result.js/receipts; preservehistorybutNEVERexecute. Futurestageexactpaths. OlderCURRENTsections below superseded.
+
 ## CURRENT — 212-R1 corrected source facts posted / awaiting Architect review — 2026-10-25
 
 Docs-only correction under the 10-minute box (no src/flag/schema/DB/build/test/browser change). Retractions:

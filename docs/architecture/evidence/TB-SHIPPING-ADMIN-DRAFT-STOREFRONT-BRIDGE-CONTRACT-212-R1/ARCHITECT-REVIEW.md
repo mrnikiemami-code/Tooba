@@ -1,0 +1,14 @@
+# Architect review — TB212-R1
+
+Verdict: ACCEPT_CORRECTED_SOURCE_FACTS; SNAPSHOT_IMPLEMENTATION_NOT_YET_AUTHORIZED. Next state PRODUCT_SEMANTICS_CLARIFICATION, not another source audit.
+Reviewed94d059e2e33e7e0e9060529c8195119024d817d4 +8d445a2393d65207556af1b8697cd820b672f2a4 diff, fullRESULT and canonical SHIPPING-ADMIN-RULES-DECISION.md. Prior root fetched actual module DI, operational adapter/contracts, rate engine and packaging resolver. Corrected implementations/tenant-binding/applicability facts accepted. Legacy conversion remains rejected: per-row packaging, merchandise bounds, deliveryrange/mode/owner semantics must not disappear.
+
+Snapshot design is a possible architecture direction, not completed integration. 'Move PublishedRevision pointer while noactivation semantics chosen' remains premature. Snapshot field list omits explicit translations/type/group titles and metadata despite lossless claim. Blanket reject Marketplace/Seller is not approved substitute for existing authenticated owner model. Existing source-owner scope/edition rules are already defined in decision2/13/18; use them, do not ask user to redesign authorization. No new tables/commands/readers/pointers authorized solely by worker recommendation.
+
+Canonical product decisions already settle two modes: Manual/CarrierApi/Free independent of Prepaid/COD; fullyFree zeroes customerfreight+packaging while preserving real cost and explicit funder. Do not reask those or implement zeroing cost. Carrier without provider remains unavailable, not fictional fallback. Legacy operational week is pickup/dispatch; authored weekruntime meaning not explicitly decided.
+
+Actual unresolved runtime semantics explicitly recorded in rules6/8 and later authoring gates: groupmerchandise base before/afterdiscount/tax; min/maxdeliverydays reference event distinct from seller prep; authored week vs customerreceiving calendar. Need three concrete product answers before implementing runtime calculations. Ask short choices, not a generic approval. Architecture can recommend explicit publication separate from SAVE; no live pointer activation until reviewed implementation.
+
+git add-A deviation accepted as reported, not scope compliant: approximately30files include old receipts and executable post-result scripts, not merely inert prose. Do not execute these. Preserve history; don't delete older artifacts or forcepush. Future stage exactpaths only. No runtime/data change in reviewed delta. Root didn't execute scripts/tests. Timing~10min workerreported, no independent stopwatch.
+
+190–211 acceptance remains. UI contrast/test suite119 already accepted, no replay. Storefront itself exists; new authoring isn't connected. Don't call user for another editor test or issue speculative213 while waiting three policy answers. Recovery records exact continuation; once answered issue one bounded implementation usingexistingShippingauthority, fullowner isolation, no lossycopy.
