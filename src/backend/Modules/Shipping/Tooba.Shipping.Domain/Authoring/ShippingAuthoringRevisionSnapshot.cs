@@ -192,6 +192,50 @@ public sealed class ShippingAuthoringRevisionSnapshot
     public string Payload { get; private set; } = string.Empty;
 
     /// <summary>
+    /// یک ردیف ذخیره‌شده را برای <b>خواندن</b> بازسازی می‌کند؛ هدرهای ردیف همان‌هایی هستند که در دیتابیس
+    /// ذخیره شده‌اند. این متد هیچ نوشتنی نمی‌سازد و بدنه را اعتبارسنجی نمی‌کند؛ تناقض بدنه با هدر در
+    /// <see cref="ReadPayload"/> رد می‌شود.
+    /// </summary>
+    /// <param name="snapshotId">شناسهٔ ردیف ذخیره‌شده.</param>
+    /// <param name="ownerKind">گونهٔ مالک ذخیره‌شده.</param>
+    /// <param name="ownerTenantId">tenant ذخیره‌شده.</param>
+    /// <param name="ownerSellerPartyId">فروشندهٔ ذخیره‌شده.</param>
+    /// <param name="draftId">پیش‌نویس ذخیره‌شده.</param>
+    /// <param name="sourceRevision">بازبینی ذخیره‌شده.</param>
+    /// <param name="formatVersion">نسخهٔ قالب ذخیره‌شده.</param>
+    /// <param name="capturedAt">زمان ثبت ذخیره‌شده.</param>
+    /// <param name="payload">بدنهٔ JSONB ذخیره‌شده.</param>
+    public static ShippingAuthoringRevisionSnapshot RestoreForRead(
+        Guid snapshotId,
+        ShippingDraftOwnerKind ownerKind,
+        string? ownerTenantId,
+        Guid? ownerSellerPartyId,
+        Guid draftId,
+        long sourceRevision,
+        int formatVersion,
+        DateTimeOffset capturedAt,
+        string payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRevisionSnapshotInvalid));
+        }
+
+        return new ShippingAuthoringRevisionSnapshot
+        {
+            SnapshotId = snapshotId,
+            OwnerKind = ownerKind,
+            OwnerTenantId = ownerTenantId,
+            OwnerSellerPartyId = ownerSellerPartyId,
+            DraftId = draftId,
+            SourceRevision = sourceRevision,
+            FormatVersion = formatVersion,
+            CapturedAt = capturedAt,
+            Payload = payload,
+        };
+    }
+
+    /// <summary>
     /// یک capture تازه از وضعیت فعلی همان aggregate می‌سازد. فراخوان باید پیش‌تر مالک/بازبینی را
     /// سنجیده باشد؛ این متد هیچ قاعدهٔ دسترسی‌ای اضافه نمی‌کند.
     /// </summary>
@@ -220,13 +264,32 @@ public sealed class ShippingAuthoringRevisionSnapshot
         };
     }
 
-    /// <summary>بدنهٔ تایپ‌شدهٔ همین capture را رمزگشایی می‌کند؛ بدنهٔ ناخوانا خطای پایدار می‌دهد.</summary>
+    /// <summary>
+    /// بدنهٔ تایپ‌شدهٔ همین capture را رمزگشایی می‌کند؛ بدنهٔ ناخوانا یا ناسازگار با هدر همین ردیف
+    /// (مالک/شناسه/بازبینی/نسخهٔ قالب) خطای پایدار می‌دهد و هرگز مقدار «تهی» برنمی‌گرداند.
+    /// </summary>
     public ShippingAuthoringRevisionPayload ReadPayload()
-        => ShippingAuthoringRevisionSnapshotCodec.Deserialize(Payload);
+    {
+        var payload = ShippingAuthoringRevisionSnapshotCodec.Deserialize(Payload);
+
+        // The ROW headers are the authority: a body that describes another owner/draft/revision/format is a
+        // corrupt row, not a read to be silently trusted.
+        if (payload.DraftId != DraftId
+            || payload.SourceRevision != SourceRevision
+            || payload.FormatVersion != FormatVersion
+            || payload.Owner.Kind != OwnerKind
+            || !string.Equals(payload.Owner.TenantId, OwnerTenantId, StringComparison.Ordinal)
+            || payload.Owner.SellerPartyId != OwnerSellerPartyId)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRevisionSnapshotInvalid));
+        }
+
+        return payload;
+    }
 
     /// <summary>
     /// یک بدنهٔ ذخیره‌شده را برای یک خوانندهٔ آیندهٔ همین ماژول رمزگشایی می‌کند؛ نسخهٔ ناشناخته یا
-    /// بدنهٔ ناخوانا خطای پایدار می‌دهد و هرگز مقدار «تهی» برنمی‌گرداند.
+    /// بدنهٔ ناخوانا/ناقص خطای پایدار می‌دهد و هرگز مقدار «تهی» برنمی‌گرداند.
     /// </summary>
     /// <param name="payload">متن JSONB ذخیره‌شده.</param>
     public static ShippingAuthoringRevisionPayload DecodeStoredPayload(string payload)
@@ -362,6 +425,112 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
             throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRevisionSnapshotInvalid));
         }
 
+        ValidateShape(payload);
         return payload;
     }
+
+    /// <summary>
+    /// شکل الزامی بدنه را می‌سنجد: هویت مالک سازگار، شناسه/بازبینی/کد خدمت واقعی، مجموعه‌های الزامی و
+    /// اعضای تودرتوی الزامی. این اعتبارسنجی <b>قیمت‌گذاری</b> و کامل‌بودن پیکربندی نیست: یک پیش‌نویس
+    /// خالی/ناقص، capture معتبر است.
+    /// </summary>
+    /// <param name="payload">بدنهٔ رمزگشایی‌شده.</param>
+    private static void ValidateShape(ShippingAuthoringRevisionPayload payload)
+    {
+        var ownerCoherent = payload.Owner.Kind switch
+        {
+            ShippingDraftOwnerKind.Store =>
+                !string.IsNullOrWhiteSpace(payload.Owner.TenantId) && payload.Owner.SellerPartyId is null,
+            ShippingDraftOwnerKind.Marketplace =>
+                payload.Owner.TenantId is null && payload.Owner.SellerPartyId is null,
+            ShippingDraftOwnerKind.Seller =>
+                payload.Owner.TenantId is null
+                && payload.Owner.SellerPartyId is { } seller
+                && seller != Guid.Empty,
+            _ => false,
+        };
+
+        if (!ownerCoherent
+            || payload.DraftId == Guid.Empty
+            || payload.SourceRevision <= 0
+            || string.IsNullOrWhiteSpace(payload.ServiceCode))
+        {
+            Reject();
+        }
+
+        foreach (var group in payload.Groups)
+        {
+            if (group is null
+                || group.GroupId == Guid.Empty
+                || group.Order < 0
+                || group.Areas is null
+                || group.RateRows is null
+                || group.Titles is null)
+            {
+                Reject();
+            }
+
+            foreach (var area in group.Areas)
+            {
+                if (area is null
+                    || area.SelectedAreaId == Guid.Empty
+                    || area.NodeId == Guid.Empty
+                    || !Enum.IsDefined(area.NodeKind))
+                {
+                    Reject();
+                }
+            }
+
+            // Only required identity is enforced: an existing captured row's amounts/bounds are facts, and
+            // no pricing/completeness rule is invented here.
+            foreach (var row in group.RateRows)
+            {
+                if (row is null || row.RateRowId == Guid.Empty)
+                {
+                    Reject();
+                }
+            }
+
+            foreach (var title in group.Titles)
+            {
+                if (title is null || title.LanguageId == Guid.Empty || title.Title is null)
+                {
+                    Reject();
+                }
+            }
+        }
+
+        foreach (var translation in payload.Translations)
+        {
+            if (translation is null || translation.LanguageId == Guid.Empty || translation.Name is null)
+            {
+                Reject();
+            }
+        }
+
+        if (payload.MethodSettings is { } settings
+            && (!Enum.IsDefined(settings.FreightPaymentMode) || !Enum.IsDefined(settings.CalculationMode)))
+        {
+            Reject();
+        }
+
+        if (payload.WeeklySchedule is { } week)
+        {
+            if (string.IsNullOrWhiteSpace(week.TimeZoneId) || week.Days is null)
+            {
+                Reject();
+            }
+
+            foreach (var day in week.Days)
+            {
+                if (day is null || day.Weekday is < 1 or > 7)
+                {
+                    Reject();
+                }
+            }
+        }
+    }
+
+    private static void Reject()
+        => throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRevisionSnapshotInvalid));
 }

@@ -206,6 +206,24 @@ public interface IShippingAuthoringDraftDirectory
         Guid draftId,
         long expectedRevision,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// یک capture <b>تاریخی</b> مشخص را با (مالک، پیش‌نویس، بازبینی مبدأ) می‌خواند؛ حتی پس از آنکه
+    /// پیش‌نویس جلوتر رفته است.
+    /// </summary>
+    /// <remarks>
+    /// هیچ «آخرین/فعال/جاری» در این متد وجود ندارد: نسخهٔ خواسته‌شده صریح است، مالک همیشه فیلتر است و
+    /// نبودِ ردیف همان «پیدا نشد» امن است. این متد هیچ تراکنشی باز نمی‌کند و هیچ نوشتنی ندارد.
+    /// </remarks>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="sourceRevision">شمارهٔ بازبینی مبدأ همان capture.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringRevisionSnapshot>> GetCapturedRevisionAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long sourceRevision,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

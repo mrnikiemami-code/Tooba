@@ -1,4 +1,4 @@
-# TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214 — RESULT
+﻿# TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214 — RESULT
 
 Mode: `BOUNDED_SHIPPING_OWNED_LOSSLESS_REVISION_CAPTURE`
 Base SHA: `a6e0c6816b31482daac7158496686d17f3a2a92f`
@@ -139,3 +139,24 @@ task. No EF InMemory substitute was used as a transaction/concurrency proof.
   with the full owner scope; this is a read-lock, not a schema or ownership change.
 
 STOP_FOR_ARCHITECT.
+## APPENDIX — 214-R1 correction (architect review of this task)
+
+The 214 review established that the gap was **not merely a blocked port**. Defects in the code and in the
+only storage fact were found and have been repaired in 214-R1:
+
+- LOCKED DATABASE != TRACKED GRAPH: the capture now reads the complete graph untracked while holding the root
+  lock, and refuses a caller with unsaved work before any transaction instead of flushing or clearing it.
+- RETURN PROVIDER-PERSISTED FACTS: the first answer is re-read from the persisted row inside the capture
+  transaction, so id/time/content idempotency is genuine (JSONB/timestamptz normalization included).
+- UNIQUE ERROR: the capture path matches SQLSTATE 23505 with the exact constraint/table/schema identity.
+- STORAGE FACT WAS NOT GREEN: the two-group fixture asserted Groups.Single(); the full typed roundtrip is now
+  proven with the intended group selected by its actual server id.
+- MISSING READ: an exact owner+draft+revision historical read now exists (no latest fallback).
+- CODEC: required shape and row-header consistency are enforced; no fabricated defaults.
+
+Also rejected explicitly (again): mapping the capture onto existing legacy aggregates with
+UnrepresentableAxes[] — partial lossy publication remains forbidden.
+
+Provider proof was executed on the task-owned 127.0.0.1:15432 / shipping_tb214 target (see
+`TB-SHIPPING-ADMIN-IMMUTABLE-REVISION-CAPTURE-214-R1/RESULT.md`). The 55432 family target is untouched.
+This 214 result document is preserved as history; its PARTIAL verdict stands for the 214 attempt.

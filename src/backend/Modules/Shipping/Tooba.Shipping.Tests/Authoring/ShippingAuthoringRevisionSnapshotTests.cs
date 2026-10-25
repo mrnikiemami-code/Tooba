@@ -231,6 +231,51 @@ public sealed class ShippingAuthoringRevisionSnapshotTests
     }
 
     [Fact]
+    public void A_syntactically_valid_payload_missing_required_identity_is_rejected_never_defaulted()
+    {
+        var draft = RichDraft();
+        var snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, Now);
+        var json = snapshot.Payload;
+
+        // Each forged body is valid JSON with an identity member removed/zeroed: no default value may make
+        // it look like a complete capture.
+        AssertRejected(json.Replace("\"Owner\":", "\"IgnoredOwner\":", StringComparison.Ordinal));
+        AssertRejected(json.Replace(
+            $"\"DraftId\":\"{draft.DraftId}\"",
+            "\"DraftId\":\"00000000-0000-0000-0000-000000000000\"",
+            StringComparison.Ordinal));
+        AssertRejected(json.Replace("\"SourceRevision\":" + draft.Revision, "\"SourceRevision\":0", StringComparison.Ordinal));
+        AssertRejected(json.Replace("\"ServiceCode\":\"post\"", "\"ServiceCode\":\"  \"", StringComparison.Ordinal));
+        AssertRejected(json.Replace("\"Groups\":[", "\"Groups\":null,\"IgnoredGroups\":[", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_payload_that_disagrees_with_its_row_headers_is_rejected()
+    {
+        // The row headers (owner/draft/revision/format) are the authority for a stored capture.
+        var draft = RichDraft();
+        var snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, Now);
+        var forged = ShippingAuthoringRevisionSnapshot.Capture(draft, Now)
+            .Payload
+            .Replace($"\"SourceRevision\":{draft.Revision}", $"\"SourceRevision\":{draft.Revision + 5}", StringComparison.Ordinal);
+
+        Assert.Equal(snapshot.SourceRevision, draft.Revision);
+        var rebuilt = ShippingAuthoringRevisionSnapshot.RestoreForRead(
+            snapshot.SnapshotId,
+            snapshot.OwnerKind,
+            snapshot.OwnerTenantId,
+            snapshot.OwnerSellerPartyId,
+            snapshot.DraftId,
+            snapshot.SourceRevision,
+            snapshot.FormatVersion,
+            snapshot.CapturedAt,
+            forged);
+
+        var exception = Assert.Throws<SemanticException>(() => rebuilt.ReadPayload());
+        Assert.Equal(ShippingErrorCodes.AuthoringRevisionSnapshotInvalid, exception.Error.Code);
+    }
+
+    [Fact]
     public void Every_owner_kind_is_preserved_in_the_captured_identity()
     {
         var marketplace = ShippingAuthoringRevisionSnapshot.Capture(

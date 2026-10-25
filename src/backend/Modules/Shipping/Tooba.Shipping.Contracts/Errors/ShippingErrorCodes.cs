@@ -269,4 +269,10 @@ public static class ShippingErrorCodes
     /// الزامی غایب یا مقدار ناخوانا. هیچ بازیابی «تهی» جای این خطا را نمی‌گیرد.
     /// </summary>
     public const string AuthoringRevisionSnapshotInvalid = "shipping.authoring.revision_snapshot_invalid";
+
+    /// <summary>
+    /// capture درخواستی برای همان (مالک، پیش‌نویس، بازبینی مبدأ) وجود ندارد. این «پیدا نشد» امن است و
+    /// هیچ جایگزینی با آخرین/فعال/جاری ندارد.
+    /// </summary>
+    public const string AuthoringRevisionSnapshotNotFound = "shipping.authoring.revision_snapshot_not_found";
 }

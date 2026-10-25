@@ -204,4 +204,7 @@
   <data name="shipping.authoring.revision_snapshot_invalid" xml:space="preserve">
     <value>The stored draft revision snapshot payload is not readable.</value>
   </data>
+  <data name="shipping.authoring.revision_snapshot_not_found" xml:space="preserve">
+    <value>No captured revision snapshot exists for the requested draft revision.</value>
+  </data>
 </root>

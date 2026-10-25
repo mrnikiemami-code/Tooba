@@ -669,9 +669,19 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
     {
         ArgumentNullException.ThrowIfNull(owner);
 
+        // A caller with UNSAVED authored work must never have it serialized by this internal API: capture
+        // writes exactly one snapshot row and nothing else. Its tracker is left untouched (never cleared or
+        // detached), and the caller decides what to do with its own pending work.
+        if (context.ChangeTracker.HasChanges())
+        {
+            throw new InvalidOperationException(
+                "Shipping revision capture requires a clean change tracker; the caller has unsaved work.");
+        }
+
         var key = ToDomainOwner(owner);
         var relational = context.Database.IsRelational();
         IDbContextTransaction? transaction = null;
+        ShippingAuthoringRevisionSnapshot? snapshot = null;
         try
         {
             // ONE Shipping-owned transaction for this capture path: the root row is locked FIRST, so the
@@ -679,10 +689,7 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             if (relational)
             {
                 transaction = await context.Database.BeginTransactionAsync(cancellationToken);
-            }
 
-            if (relational)
-            {
                 // A root lock (not merely a tracked read) closes the read-graph / recheck / INSERT window.
                 // NULL-safe casts keep the full owner scope in the predicate without untyped parameters.
                 await context.AuthoringDrafts
@@ -697,21 +704,15 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
                     .ToListAsync(cancellationToken);
             }
 
-            var draft = await Scoped(key)
-                .Include(candidate => candidate.RegionGroups)
-                .ThenInclude(group => group.Areas)
-                .Include(candidate => candidate.RegionGroups)
-                .ThenInclude(group => group.RateRows)
-                .Include(candidate => candidate.RegionGroups)
-                .ThenInclude(group => group.Titles)
-                .Include(candidate => candidate.Translations)
-                .Include(candidate => candidate.MethodSettings)
-                .Include(candidate => candidate.WeeklySchedule)
-                .ThenInclude(schedule => schedule!.Days)
+            // The graph is loaded UNTRACKED so the captured copy is the DATABASE truth even when the caller's
+            // context already holds stale tracked copies of the same root/children: the identity map is never
+            // consulted, nothing is fixed up, and no captured fact can come from an older in-memory object.
+            var draft = await CaptureGraphQuery(key)
+                .AsNoTracking()
                 .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
             if (draft is null)
             {
-                await RollbackAsync(transaction, cancellationToken);
+                await RollbackAsync(transaction, cancellationToken, clearTrackedChanges: false);
                 return Result.Failure<ShippingAuthoringRevisionSnapshot>(
                     new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
             }
@@ -719,22 +720,14 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             // A stale expected revision is refused BEFORE any snapshot row exists, with the canonical code.
             if (draft.Revision != expectedRevision)
             {
-                await RollbackAsync(transaction, cancellationToken);
+                await RollbackAsync(transaction, cancellationToken, clearTrackedChanges: false);
                 return Result.Failure<ShippingAuthoringRevisionSnapshot>(
                     new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
             }
 
-            // Capturing the SAME revisions again is idempotent: the ORIGINAL row/identity/time is returned
-            // and no second write pretends to be a new publication.
-            var existing = await context.AuthoringRevisionSnapshots
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    snapshot => snapshot.OwnerKind == key.Kind
-                                && snapshot.OwnerTenantId == key.TenantId
-                                && snapshot.OwnerSellerPartyId == key.SellerPartyId
-                                && snapshot.DraftId == draftId
-                                && snapshot.SourceRevision == draft.Revision,
-                    cancellationToken);
+            // Capturing the SAME revision again is idempotent: the ORIGINAL persisted row is returned and no
+            // second write pretends to be a new publication.
+            var existing = await CapturedRevisionQuery(key, draftId, draft.Revision, cancellationToken);
             if (existing is not null)
             {
                 if (transaction is not null)
@@ -746,30 +739,29 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             }
 
             // The whole stored graph is copied from THIS read; capture never bumps draft Revision/UpdatedAt.
-            var snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, DateTimeOffset.UtcNow);
+            snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, DateTimeOffset.UtcNow);
             context.AuthoringRevisionSnapshots.Add(snapshot);
             await context.SaveChangesAsync(cancellationToken);
 
+            // PostgreSQL normalises JSONB text and timestamptz precision, so the FIRST answer must be the
+            // provider-persisted row, not the in-memory instance that produced the INSERT.
+            var persisted = await CapturedRevisionQuery(key, draftId, snapshot.SourceRevision, cancellationToken)
+                ?? throw new InvalidOperationException(
+                    "the captured revision snapshot was not readable inside its own transaction");
             if (transaction is not null)
             {
                 await transaction.CommitAsync(cancellationToken);
             }
 
-            return Result.Success(snapshot);
+            return Result.Success(persisted);
         }
-        catch (DbUpdateException exception) when (IsUniqueViolation(exception, "authoring_revision_snapshots"))
+        catch (DbUpdateException exception) when (IsCaptureSnapshotUniqueViolation(exception))
         {
-            // A concurrent capture of the same revision won: report the ORIGINAL row, never a second one.
-            await RollbackAsync(transaction, cancellationToken);
-            var winner = await context.AuthoringRevisionSnapshots
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    snapshot => snapshot.OwnerKind == key.Kind
-                                && snapshot.OwnerTenantId == key.TenantId
-                                && snapshot.OwnerSellerPartyId == key.SellerPartyId
-                                && snapshot.DraftId == draftId
-                                && snapshot.SourceRevision == expectedRevision,
-                    cancellationToken);
+            // A concurrent capture of the same revision won: report that ORIGINAL row, never a second one.
+            await RollbackAsync(transaction, cancellationToken, clearTrackedChanges: false);
+            transaction = null;
+            snapshot = null;
+            var winner = await CapturedRevisionQuery(key, draftId, expectedRevision, CancellationToken.None);
             return winner is null
                 ? Result.Failure<ShippingAuthoringRevisionSnapshot>(
                     new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict))
@@ -777,7 +769,7 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         }
         catch
         {
-            await RollbackAsync(transaction, CancellationToken.None);
+            await RollbackAsync(transaction, CancellationToken.None, clearTrackedChanges: false);
             throw;
         }
         finally
@@ -789,11 +781,74 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         }
     }
 
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringRevisionSnapshot>> GetCapturedRevisionAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long sourceRevision,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+
+        // A HISTORICAL read: the exact requested revision only. No newest/active/current fallback exists and
+        // the owner scope is part of the predicate, so another owner's row is the same safe not-found.
+        var snapshot = await CapturedRevisionQuery(
+            ToDomainOwner(owner),
+            draftId,
+            sourceRevision,
+            cancellationToken);
+        return snapshot is null
+            ? Result.Failure<ShippingAuthoringRevisionSnapshot>(
+                new SemanticError(ShippingErrorCodes.AuthoringRevisionSnapshotNotFound))
+            : Result.Success(snapshot);
+    }
+
+    /// <summary>The complete authored graph of one owner-scoped draft, as a composable query.</summary>
+    /// <param name="key">مالک ماندگاری.</param>
+    private IQueryable<ShippingAuthoringDraft> CaptureGraphQuery(ShippingDraftOwner key)
+        => Scoped(key)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Areas)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.RateRows)
+            .Include(candidate => candidate.RegionGroups)
+            .ThenInclude(group => group.Titles)
+            .Include(candidate => candidate.Translations)
+            .Include(candidate => candidate.MethodSettings)
+            .Include(candidate => candidate.WeeklySchedule)
+            .ThenInclude(schedule => schedule!.Days);
+
+    /// <summary>
+    /// یک capture دقیق با (مالک، پیش‌نویس، بازبینی) به‌صورت فقط‌خواندنی؛ تهی یعنی ردیفی نیست.
+    /// </summary>
+    /// <param name="key">مالک ماندگاری.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="sourceRevision">بازبینی مبدأ.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    private Task<ShippingAuthoringRevisionSnapshot?> CapturedRevisionQuery(
+        ShippingDraftOwner key,
+        Guid draftId,
+        long sourceRevision,
+        CancellationToken cancellationToken)
+        => context.AuthoringRevisionSnapshots
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                snapshot => snapshot.OwnerKind == key.Kind
+                            && snapshot.OwnerTenantId == key.TenantId
+                            && snapshot.OwnerSellerPartyId == key.SellerPartyId
+                            && snapshot.DraftId == draftId
+                            && snapshot.SourceRevision == sourceRevision,
+                cancellationToken);
+
     /// <summary>
     /// تراکنش را برمی‌گرداند و هیچ تغییر نیمه‌کاره‌ای را در tracker همین context باقی نمی‌گذارد؛
     /// بنابراین یک SaveChanges بعدی در همان context نمی‌تواند ویرایش رد‌شده را منتشر کند.
     /// </summary>
-    private async Task RollbackAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken)    {
+    private async Task RollbackAsync(
+        IDbContextTransaction? transaction,
+        CancellationToken cancellationToken,
+        bool clearTrackedChanges = true)
+    {
         if (transaction is not null)
         {
             try
@@ -806,8 +861,28 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             }
         }
 
-        context.ChangeTracker.Clear();
+        // Capture paths keep the caller's tracker: only the write boundary clears its own staged work.
+        if (clearTrackedChanges)
+        {
+            context.ChangeTracker.Clear();
+        }
     }
+
+    /// <summary>
+    /// فقط همان <b>یک</b> قید یکتایی capture بازبینی، با نام دقیق و جدول/اسکیمای همان ماژول، همان
+    /// «تکراری» است. قید هم‌شکل، نام دیگر، PK یا هر خطای provider دیگری دوباره پرتاب می‌شود؛ مسیر
+    /// idempotent هیچ خطای نامرتبطی را نمی‌بلعد.
+    /// </summary>
+    /// <param name="exception">خطای به‌روزرسانی.</param>
+    private static bool IsCaptureSnapshotUniqueViolation(DbUpdateException exception)
+        => exception.InnerException is PostgresException { SqlState: "23505" } postgres
+           && string.Equals(
+               postgres.ConstraintName,
+               "ux_authoring_revision_snapshots_owner_revision",
+               StringComparison.Ordinal)
+           && string.Equals(postgres.TableName, "authoring_revision_snapshots", StringComparison.Ordinal)
+           && (postgres.SchemaName is null
+               || string.Equals(postgres.SchemaName, "shipping", StringComparison.Ordinal));
 
     private IQueryable<ShippingAuthoringDraft> Scoped(ShippingDraftOwner key)
         => context.AuthoringDrafts.Where(draft =>

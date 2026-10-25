@@ -204,4 +204,7 @@
   <data name="shipping.authoring.revision_snapshot_invalid" xml:space="preserve">
     <value>بدنهٔ ذخیره‌شدهٔ بازبینی پیش‌نویس قابل خواندن نیست.</value>
   </data>
+  <data name="shipping.authoring.revision_snapshot_not_found" xml:space="preserve">
+    <value>نسخهٔ ثبت‌شدهٔ این بازبینی پیش‌نویس یافت نشد.</value>
+  </data>
 </root>

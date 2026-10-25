@@ -1,3 +1,24 @@
+﻿## CURRENT —214-R1 executed; capture correctness + real provider proof, awaiting review —2026-10-25
+
+Read214/ARCHITECT-REVIEW.md then214-R1/RESULT.md. 214 defects repaired: capture now loads a complete
+UNTRACKED graph while the root FOR UPDATE lock is held (identity map never consulted), refuses a caller with
+an unsaved tracker BEFORE any transaction without clearing it, re-reads the persisted row inside its own
+transaction so the first answer is provider truth (JSONB/timestamptz), matches SQLSTATE23505 + the EXACT
+constraint/table/schema for idempotency, and adds exact GetCapturedRevisionAsync (owner+draft+revision, no
+latest fallback). Codec rejects missing/incoherent identity and body-vs-rowheader mismatch; no fabricated
+defaults and an empty draft is still a valid incomplete capture. The 214 storage fact's two-group Single()
+gap is fixed (intended group selected by real server id) and the full typed roundtrip is proven.
+Real PostgreSQL proof executed ONLY on the task-owned 127.0.0.1:15432/shipping_tb214/tb214 (postgres:17
+existing local image, parsed+live-verified, container removed, port silent). 55432 family helper untouched; no
+shared migration, no user-draft write, no Host/FE restart. Focused: 43/43 domain+guard+target-isolation, 18/18
+storage+isolation, build0 errors. Timing ~48min vs 20 box = recorded deviation, not PASS on process.
+REJECTED again (recorded in evidence): mapping the capture onto legacy aggregates with UnrepresentableAxes[];
+partial lossy publication stays forbidden. Staged capture is NOT LIVE: no pointer, no publish route, no Order
+consumer, gate default-OFF, TB185 paused, PendingAllocation unchanged. Active task NONE; next task NOT ISSUED
+(STOP_FOR_ARCHITECT): a reviewed publish/selection design that does not flatten into legacy, plus the
+same-group-after-discount-AND-tax amount authority, activation semantics and seller/marketplace activation
+authorization. Preserve real user draft/unsaved tab, Host5088/FE3000, the 9 applied migrations and the 119
+accepted FE tests. 213 calendar stays accepted-but-unwired; §29 decisions remain resolved, do not reask.
 ## CURRENT —214 PARTIAL; only214-R1 capture correctness + isolated providerproof —2026-10-25
 
 Read214/ARCHITECT-REVIEW.md. Source747036455 notacceptedforintegration. RootfoundstaleEFtrackedgraphdespiteDBlock, dirtytrackerSaveleak, firstreturnJSONB/time notprovider-normalized, substringconstraintcatch, missingexacthistoricalreader. Storagefactseeds2groupsbutSingle() so cannotbeclaimedgreen; onlydomain28green, relationalblocked. Codecidentitydefaultgap. 70minvs25timedeviationrecorded.
