@@ -119,6 +119,13 @@ export function AuthoringGroupsEditor({
           <section
             key={group.key}
             className="rounded-xl border border-border bg-surface-elevated p-3"
+            /* Dense areas stay distinguishable: the WHOLE card alternates by current display position,
+               using the existing theme-aware alternate-surface token. Children keep their own surfaces. */
+            style={
+              position % 2 === 1
+                ? { backgroundColor: "rgb(var(--color-section-alternate))" }
+                : undefined
+            }
             data-testid="shipping-authoring-group-draft"
             data-group-index={position}
           >

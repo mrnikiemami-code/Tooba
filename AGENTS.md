@@ -1,3 +1,20 @@
+﻿## CURRENT — 211 area contrast + editor checks posted / awaiting Architect review — 2026-10-25
+
+User said the UI is better and asked for alternating delivery-area card backgrounds, quick editor checks and
+a storefront status answer. 211 delivered: whole area card alternates by display position using the existing
+theme-aware alternate-surface token (white / rgb(247,248,250) light, 22 22 26 dark) in VIEW and EDIT; nothing
+else changed. All **14** feature test files enumerated recursively (incl. api/ and session/) and run by real
+path: 119 tests / 119 pass / 0 fail / 0 skipped (one stale assertion updated to the truthful «Weight (g)»
+label; no assertion weakened). typecheck clean; import/feature/flat-folder/test-discovery guards 7/7.
+Live: one stored area, second area added locally only for contrast, discarded through the normal
+«خروج بدون ذخیره» flow; stored 120000.00/5000.00 unchanged, no Apply/HTTP write/migration.
+Storefront answer (source only): storefront/checkout shipping choice EXISTS but reads config
+(ShippingMethodsOptions + ShippingMethodRegistry) and the Fulfillment catalog; the Order module has ZERO
+references to the authoring draft, so authored type/areas/fees/week do NOT reach customers — no
+publish/activation seam exists yet. Smallest next slice = a read-only publish/activation projection into what
+StorefrontShippingService.ProjectAsync already reads. Read
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-CONTRAST-AND-EDITOR-CHECKS-211/RESULT.md`.
+Active task: NONE. Next task: NONE — await Architect review; User Visual ACCEPT PENDING.
 ## CURRENT — user says UI better; task211 alternating delivery areas + editor checks — 2026-10-25
 
 User feedback: "better"; requested alternating white/very-light-gray DELIVERY AREA cards so adjacent areas are distinguishable, requested fast tests/all editor parts working, asked whether Storefront is done. This is bounded positive feedback, not blanket production/visual certification.

@@ -298,7 +298,8 @@ test("R203-09 read-only rate conditions show every real axis, not only weight", 
 
   const combined = draftOf({ minItemCount: "1", maxItemCount: "4", minMerchandiseAmount: "100000", maxMerchandiseAmount: "" });
   const text = rateDraftConditionText(combined, "en", messages);
-  assert.ok(text.includes("Weight: 0–5,000"));
+  // The truthful label carries its unit ("Weight (g)"), so the assertion follows the real rendered text.
+  assert.ok(text.includes("Weight (g): 0–5,000"));
   assert.ok(text.includes("Count: 1–4"));
   assert.ok(text.includes("Merchandise: 100,000–—"), "an open upper bound is never invented");
 

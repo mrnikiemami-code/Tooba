@@ -1,3 +1,22 @@
+﻿## CURRENT — 211 posted / awaiting Architect review — 2026-10-25
+
+211 executed the user's positive-feedback follow-up, frontend + verification only.
+Contrast: ui/authoring-groups-editor.tsx alternates the WHOLE area card by display position — even keeps
+g-surface-elevated, odd uses the existing theme-aware gb(var(--color-section-alternate)) token
+(247 248 250 light / 22 22 26 dark). Measured live card0 gb(255,255,255) and card1 gb(247,248,250) at
+1440 and 390, both w=1057, no overflow. No new token/CSS/model/persistence.
+Checks: ALL 14 feature test files enumerated recursively (incl. nested pi/ and session/) and passed by
+explicit path — 119 tests, 119 pass, 0 fail, 0 skipped. First run had one stale assertion (Weight: vs the
+truthful Weight (g):); it was corrected against the real rendered text, no assertion weakened. typecheck
+clean; import/feature/flat-folder/test-discovery guards 7/7. No backend/solution build, no source-size loop.
+Live: the real draft currently has ONE stored area; a second area was added only locally in Edit, captured,
+then discarded via the app's own confirm; stored 120000.00/5000.00 and 1 area unchanged, no Apply/HTTP write.
+Storefront status (source only): storefront/checkout shipping choice + projection endpoints exist
+(/v1/storefront/shipping/* → Order StorefrontShippingService), but they read configuration
+ShippingMethodsOptions / ShippingMethodRegistry plus the Fulfillment catalog; Modules/Order has ZERO
+references to the authoring draft, so authored type/areas/fees/week do not reach customers and no
+publish/activation seam exists. Next slice (not implemented) = read-only publish/activation projection.
+Active task: NONE. Next task: NONE — await Architect review; User Visual ACCEPT PENDING; default-OFF intact.
 ## CURRENT — user says UI better; task211 alternating delivery areas + editor checks — 2026-10-25
 
 User feedback: "better"; requested alternating white/very-light-gray DELIVERY AREA cards so adjacent areas are distinguishable, requested fast tests/all editor parts working, asked whether Storefront is done. This is bounded positive feedback, not blanket production/visual certification.
