@@ -1,4 +1,32 @@
-## CURRENT —218 reviewed; only218-R1 cross-group revision consistency repair —2026-10-25
+## CURRENT —218-R1 request-wide revision consistency done; NOT wired / NOT live —2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218-R1/RESULT.md` (task
+verbatim in `TASK.md`) and `218/ARCHITECT-REVIEW.md`. 218-R1 executed the ONE source-confirmed defect:
+`ValidatePlan` now owns a single request-wide typed key `StorefrontCapturedPublicationBinding` (coherent
+owner kind + exact tenant + seller + canonical trim/OrdinalIgnoreCase service/option; destination,
+`MethodCode` label and group key are NOT publication identity) mapping to exact `DraftId` +
+`SourceRevision`. The per-group `seenBindings` string dictionary is gone; same binding with a different
+draft OR revision across groups ⇒ existing `storefront.captured_group.plan_invalid` BEFORE any goods
+reader/Cart/Pricing/Shipping call, while the same binding + same exact draft/revision in two groups stays
+lawful with each group's own facts/destination/one quote+calendar. `NormalizeOwnerText` delegates to the
+key's single `Canonical` (no second normalization policy). Composition, 217 reader, 216 quote, 213
+calendar, `OwnerResult`, one clock read and scoped DI untouched.
+Executed: one OrderTests build 0 errors; new `StorefrontCapturedGroupProjectionRevisionConsistencyTests`
+proven RED first (3 failed / 2 passed: the two-revision, case/destination and different-draft conflicts
+were not rejected) then GREEN 5/5; full composer area 16/16 (11 218 + 5 R1). Four 218 fixtures that had
+used two drafts of the SAME binding were moved to genuinely independent bindings; every accepted
+financial/calendar assertion unchanged. No public API/Contracts/schema/migration/flag/frontend/shared DB,
+no user-draft access, no Host/FE restart. Actual ≈26 min vs 12-min box / 7-min stop — recorded, not a
+process PASS.
+**NOT WIRED / NOT LIVE**: no Storefront/checkout consumer, no route, no projection/selection/commit; the
+selected captured revision and fulfillment owner/type/membership must still come from a reviewed server
+publication/Offer/fulfillment authority, and physical weight/item count stay unknown.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next slice = server-selected captured
+revision + real fulfillment owner/type/membership + measurement sources, then projection/selection/commit;
+not another audit). §29 decisions and 211–217 stay accepted; the real user draft/revision/unsaved tabs,
+Host5088/FE3000, the 9 applied migrations and default-OFF / TB185 paused / PendingAllocation are
+preserved. No 219 envelope.
+## SUPERSEDED —218 reviewed; 218-R1 later executed cross-group revision consistency repair —2026-10-25
 
 Architect source-reviewed 6b3f3d2e940641f5b735d97b9da975acd2dcc05f and the exact base comparison.
 218's composition of 217 whole-cart group facts, 216 Contracts quotes and 213 method-local receiving calendar is retained. Worker reports 11 new + 9 foundation facts/build green; Architect did not rerun them. This is NOT live Storefront acceptance. Time 33>25 and two corrections remain process deviations.
@@ -7,7 +35,7 @@ Only issued TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218-R1, parent218: on
 Active task: 218-R1. Await its result; no219 issued. After review the next implementation must supply server-selected captured revision and real fulfillment owner/type/membership authority, then connect current projection/selection/commit. Physical weight/count unknown remain NULL; do not infer from decimal quantity. Do not advertise current composer as active/eligible.
 Preserve §29 decisions, accepted 211–217, 218 composition, real user draft/revision/unsaved tab, Host5088/FE3000, nine applied migrations; snapshot migration214 NOT shared-applied. TB185 paused, default-OFF, PendingAllocation unchanged. No Bridge calls or historical post-result scripts. Older CURRENT headings below are history.
 
-## CURRENT —218 captured-group composer done; NOT wired / NOT live —2026-10-25
+## SUPERSEDED —218 composer posted (review later found the cross-group revision defect) —2026-10-25
 
 Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218/RESULT.md`. 218 added ONE
 read-only Order.Application service `StorefrontCapturedGroupProjectionComposer` (registered scoped in

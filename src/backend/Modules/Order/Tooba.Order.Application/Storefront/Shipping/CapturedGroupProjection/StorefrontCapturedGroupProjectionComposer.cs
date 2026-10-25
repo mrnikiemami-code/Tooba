@@ -335,7 +335,7 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
         new(candidate, StorefrontCapturedCandidateOutcome.Unavailable, reasonCode, ownerResult, Receiving: null);
 
     private static string? NormalizeOwnerText(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        StorefrontCapturedPublicationBinding.Canonical(value);
 
     /// <summary>
     /// شبکهٔ گروه/نامزد را اعتبارسنجی می‌کند: بدون کلید تکراری/خالی، بدون خط تکراری، بدون دو نامزد
@@ -351,6 +351,8 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
 
         var seenGroupKeys = new HashSet<string>(StringComparer.Ordinal);
         var seenCartLineIds = new HashSet<Guid>();
+        // یک بازبینی انتخاب‌شده برای هر تعهد در کل درخواست: مالک + سرویس/گزینه، بدون مقصد گروه.
+        var selectedBinding = new Dictionary<StorefrontCapturedPublicationBinding, (Guid DraftId, long Revision)>();
         var validated = new List<StorefrontCapturedGroupPlan>(groups.Count);
 
         foreach (var group in groups)
@@ -383,18 +385,19 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
                 throw PlanInvalid();
             }
 
-            ValidateCandidates(group.Candidates);
+            ValidateCandidates(group.Candidates, selectedBinding);
             validated.Add(group);
         }
 
         return validated;
     }
 
-    private static void ValidateCandidates(IReadOnlyList<StorefrontCapturedCandidatePlan> candidates)
+    private static void ValidateCandidates(
+        IReadOnlyList<StorefrontCapturedCandidatePlan> candidates,
+        Dictionary<StorefrontCapturedPublicationBinding, (Guid DraftId, long Revision)> selectedBinding)
     {
         var seenMethodCodes = new HashSet<string>(StringComparer.Ordinal);
         var seenIdentities = new HashSet<string>(StringComparer.Ordinal);
-        var seenBindings = new Dictionary<string, (Guid DraftId, long Revision)>(StringComparer.Ordinal);
 
         foreach (var candidate in candidates)
         {
@@ -439,26 +442,20 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
                 throw PlanInvalid();
             }
 
-            // یک تعهد (مالک + مقصد + سرویس/گزینه) نباید هم‌زمان دو بازبینی/پیش‌نویس داشته باشد.
-            var binding = string.Join(
-                '\u001f',
-                (int)candidate.OwnerKind,
-                NormalizeOwnerText(candidate.OwnerTenantId) ?? string.Empty,
-                candidate.OwnerSellerPartyId?.ToString("N") ?? string.Empty,
-                candidate.Destination.CountryId.ToString("N"),
-                candidate.Destination.AdministrativeAreaId?.ToString("N") ?? string.Empty,
-                candidate.Destination.CityId?.ToString("N") ?? string.Empty,
-                candidate.Destination.ServiceAreaId?.ToString("N") ?? string.Empty,
-                candidate.ServiceCode,
-                NormalizeOwnerText(candidate.OptionCode) ?? string.Empty);
-
-            if (seenBindings.TryGetValue(binding, out var existing)
-                && (existing.DraftId != candidate.DraftId || existing.Revision != candidate.SourceRevision))
+            // همان تعهد با همان پیش‌نویس و همان بازبینی در گروه دیگر مجاز و لازم است؛ فقط تعارض
+            // پیش‌نویس/بازبینی رد می‌شود. مقصد و برچسب روش هویت انتشار نیستند.
+            var binding = new StorefrontCapturedPublicationBinding(candidate);
+            if (selectedBinding.TryGetValue(binding, out var existing))
             {
-                throw PlanInvalid();
+                if (existing.DraftId != candidate.DraftId || existing.Revision != candidate.SourceRevision)
+                {
+                    throw PlanInvalid();
+                }
+
+                continue;
             }
 
-            seenBindings[binding] = (candidate.DraftId, candidate.SourceRevision);
+            selectedBinding[binding] = (candidate.DraftId, candidate.SourceRevision);
         }
     }
 

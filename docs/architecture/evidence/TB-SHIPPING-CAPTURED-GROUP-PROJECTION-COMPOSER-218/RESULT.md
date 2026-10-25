@@ -218,3 +218,15 @@ expectation for the explicit `AvailableDateCount`, one support-file using placem
 not a process PASS.
 
 Task status for Architect: `STOP_FOR_ARCHITECT`. Automatic next task: NONE. No 219 envelope.
+
+## APPENDED CORRECTION (TB-218-R1, 2026-10-25)
+
+The claim above that the plan validator enforced one captured revision per binding is **superseded**: the
+shipped 218 code checked this **per group only**, with Ordinal delimiter-string keys that included the
+group destination and the raw service casing. `218/ARCHITECT-REVIEW.md` records the defect and
+`../TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218-R1/RESULT.md` records the executed repair: one
+request-wide typed `StorefrontCapturedPublicationBinding` (exact owner tenant/seller, trim +
+OrdinalIgnoreCase service/option, no destination/method label) holding exact `DraftId` + `SourceRevision`,
+enforced before any goods reader/Cart/Pricing/Shipping call, while the same binding with the same exact
+draft+revision across groups stays lawful. Everything else described above (numbers, isolation, calendar,
+remaining gaps, NOT_WIRED/NOT_LIVE status) still stands.

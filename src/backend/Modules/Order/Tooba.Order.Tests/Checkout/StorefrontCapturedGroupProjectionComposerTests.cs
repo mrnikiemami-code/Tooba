@@ -52,14 +52,14 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
 
         shipping.Respond = request => request.DraftId == DraftA
             ? Quoted(request, freight: 15_000m, packaging: 2_000m, groupId: RowA, rateRowId: RowA, week: week)
-            : Quoted(request, freight: 25_000m, packaging: 0m, groupId: RowB, rateRowId: RowB, week: week);
+            : Quoted(request, freight: 25_000m, packaging: 0m, serviceCode: "standard", optionCode: "std", groupId: RowB, rateRowId: RowB, week: week);
 
         var result = await composer.ComposeAsync(
             new StorefrontCapturedGroupProjectionRequest(
                 harness.Command(),
                 [
                     Plan("g1", [LineA], Candidate(DraftA, revision: 3, methodCode: "express", availableDateCount: 3)),
-                    Plan("g2", [LineB], Candidate(DraftB, revision: 5, methodCode: "standard")),
+                    Plan("g2", [LineB], Candidate(DraftB, revision: 5, methodCode: "standard", serviceCode: "standard")),
                 ]),
             CancellationToken.None);
 
@@ -184,14 +184,14 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
 
         shipping.Respond = request => request.DraftId == DraftA
             ? Quoted(request, 1_000m, 0m, week: tehran, minDays: 1, maxDays: 4)
-            : Quoted(request, 2_000m, 0m, week: utc, minDays: 3, maxDays: 7);
+            : Quoted(request, 2_000m, 0m, serviceCode: "utc", optionCode: "std", week: utc, minDays: 3, maxDays: 7);
 
         var result = await composer.ComposeAsync(
             new StorefrontCapturedGroupProjectionRequest(
                 harness.Command(),
                 [
                     Plan("g1", [LineA], Candidate(DraftA, revision: 1, methodCode: "tehran")),
-                    Plan("g2", [LineB], Candidate(DraftB, revision: 1, methodCode: "utc")),
+                    Plan("g2", [LineB], Candidate(DraftB, revision: 1, methodCode: "utc", serviceCode: "utc")),
                 ]),
             CancellationToken.None);
 
@@ -274,14 +274,14 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
                 ShippingCapturedQuoteVerdictCodes.NotConfigured,
                 null, null, null, null, null, null, null, null, null,
                 Guid.Parse("0199f666-0000-7000-8000-000000000002"), DraftA, 1, 1, null, null, null, null, null, null)
-            : Quoted(request, 7_000m, 500m, week: week);
+            : Quoted(request, 7_000m, 500m, serviceCode: "b", optionCode: "std", week: week);
 
         var result = await composer.ComposeAsync(
             new StorefrontCapturedGroupProjectionRequest(
                 harness.Command(),
                 [
-                    Plan("g1", [LineA], Candidate(DraftA, revision: 1, methodCode: "a")),
-                    Plan("g2", [LineB], Candidate(DraftB, revision: 1, methodCode: "b")),
+                    Plan("g1", [LineA], Candidate(DraftA, revision: 1, methodCode: "a", serviceCode: "a")),
+                    Plan("g2", [LineB], Candidate(DraftB, revision: 1, methodCode: "b", serviceCode: "b")),
                 ]),
             CancellationToken.None);
 
