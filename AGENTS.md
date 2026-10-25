@@ -1,3 +1,21 @@
+﻿## CURRENT — 212 draft→runtime bridge contract posted / awaiting Architect review — 2026-10-25
+
+212 is source-only (no src/runtime/data change). Decision: do NOT add a second quote engine or let Order read
+draft tables. The runtime quote authority already exists — Shipping.Contracts.Rates.IShippingRateQuoteLookup
+→ ShippingRateQuoteLookup → ShippingRatePolicyEngine, consumed by Order's gated
+StorefrontShippingOwnedRateResolver (parcel always null, fail-closed); IShippingPackagingFeeLookup and
+IShippingOperationalQuoteLookup exist as contracts with no implementation/consumer. Publishing a draft must
+be a **write** into Shipping's existing aggregates (RatePolicy, CoverageGrant, MethodCoverages,
+PackagingPolicy, OperatingSchedule) via the existing Shipping commands, as a revision-keyed snapshot;
+active state reuses existing IsActive (no new flag). Freight and packaging stay separate (freight =
+ChargeAmount, packaging = packaging policy); destinations = one row per node; week = OperatingSchedule.
+Not representable today: merchandise-amount condition, CalculationMode, per-language rate labels, seller
+ownership in RatePolicy, and a 1:1 min/maxDeliveryDays → PreparationDays/LeadDays mapping (undecided).
+Next slice (issued nowhere yet): TB-SHIPPING-ADMIN-DRAFT-PUBLISH-SNAPSHOT-213 — Shipping-only publish command
++ Contracts result with UnrepresentableAxes[], Store-owned only, no Order change. Read
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212/RESULT.md`.
+211's "config-only" and "read-only publish" wording is corrected there. Active task: NONE. Next task: NONE —
+await Architect review; User Visual ACCEPT PENDING; TB185 paused/default-OFF intact.
 ## CURRENT — 211 accepted; only212 runtime bridge contract/reuse decision — 2026-10-25
 
 211 contrast accepted after source+desktopPNG review. Worker119/119all14recursive feature files, typecheck clean, guards7/7; one exact stale gram-label assertion correction. Mobile screenshot shows only first area (not proof of both colors), no extra screenshot-only task. User said better; User Visual ACCEPT not blanket granted.

@@ -1,3 +1,26 @@
+﻿## CURRENT — 212 bridge contract posted / awaiting Architect review — 2026-10-25
+
+212 (source-only, no code change) grounded the draft→storefront path in existing authority instead of a new
+calculator. Authority chain: Shipping.Contracts.Rates.IShippingRateQuoteLookup →
+Shipping.Infrastructure/Rates/ShippingRateQuoteLookup (reads Shipping's RatePolicies/CoverageGrants/
+MethodCoverages) → ShippingRatePolicyEngine; Order consumes it only through the gated
+StorefrontShippingOwnedRateResolver (default OFF, StrictOwnedOption, parcel always null, currency/destination
+fail-closed). IShippingPackagingFeeLookup and IShippingOperationalQuoteLookup already exist as Contracts with
+NO implementation/consumer. Runtime writes already exist as Shipping.Application commands (rate policy,
+coverage grant, packaging policy, operating schedule).
+Publish decision: a draft publish is a WRITE that copies one revision snapshot into those Shipping aggregates via
+the existing commands; runtime readers never read drafts; unsaved edits cannot leak; rollback = reactivate prior
+rows; active state = existing IsActive (no new flag, no Fulfillment-owned publication). Exact representable
+mapping: destinations (one policy+grant per node), freight→ChargeAmount with packaging as its own policy (never
+summed), weight/count conditions, weekly hours+timezone→OperatingSchedule, FreightPaymentMode→packaging
+FreightPayerMode. Not representable: merchandise-amount axis, CalculationMode, per-language rate labels,
+seller ownership in RatePolicy, and min/maxDeliveryDays → PreparationDays/LeadDays (undecided policy).
+Selection/commit parity is structural: ProjectAsync and CommitAsync share LoadEligibleMethodsAsync
+(commit replays SaveSelectionAsync).
+Next slice (not issued): TB-SHIPPING-ADMIN-DRAFT-PUBLISH-SNAPSHOT-213, Shipping-only publish command with
+ExpectedRevision guard, UnrepresentableAxes[] honest reporting, Store-owned drafts only, no Order change;
+then a trustworthy parcel source, admin publish UX, real local end-to-end, then customer UI. Active task: NONE.
+Next task: NONE — await Architect review. User Visual ACCEPT PENDING; no quote engine, no flag change.
 ## CURRENT — 211 accepted; only212 runtime bridge contract/reuse decision — 2026-10-25
 
 211 contrast accepted after source+desktopPNG review. Worker119/119all14recursive feature files, typecheck clean, guards7/7; one exact stale gram-label assertion correction. Mobile screenshot shows only first area (not proof of both colors), no extra screenshot-only task. User said better; User Visual ACCEPT not blanket granted.
