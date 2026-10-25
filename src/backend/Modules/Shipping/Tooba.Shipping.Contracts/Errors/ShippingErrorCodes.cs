@@ -263,4 +263,10 @@ public static class ShippingErrorCodes
     /// غیرفعال است، یا فکت برگشتی با شناسهٔ درخواستی/مالک نمی‌خواند. هیچ نوشتنی انجام نمی‌شود.
     /// </summary>
     public const string AuthoringTypeSelectionUnavailable = "shipping.authoring.type_selection_unavailable";
+
+    /// <summary>
+    /// بدنهٔ ذخیره‌شدهٔ یک snapshot بازبینی پیش‌نویس قابل رمزگشایی نیست: نسخهٔ قالب ناشناخته، فیلد
+    /// الزامی غایب یا مقدار ناخوانا. هیچ بازیابی «تهی» جای این خطا را نمی‌گیرد.
+    /// </summary>
+    public const string AuthoringRevisionSnapshotInvalid = "shipping.authoring.revision_snapshot_invalid";
 }

@@ -715,6 +715,67 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRevisionSnapshot", b =>
+                {
+                    b.Property<Guid>("SnapshotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("snapshot_id");
+
+                    b.Property<DateTimeOffset>("CapturedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("captured_at");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<int>("FormatVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("format_version");
+
+                    b.Property<int>("OwnerKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_kind");
+
+                    b.Property<Guid?>("OwnerSellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_seller_party_id");
+
+                    b.Property<string>("OwnerTenantId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("owner_tenant_id");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.Property<long>("SourceRevision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("source_revision");
+
+                    b.HasKey("SnapshotId")
+                        .HasName("pk_authoring_revision_snapshots");
+
+                    b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "DraftId", "SourceRevision")
+                        .IsUnique()
+                        .HasDatabaseName("ux_authoring_revision_snapshots_owner_revision");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "DraftId", "SourceRevision"), false);
+
+                    b.ToTable("authoring_revision_snapshots", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_revision_snapshots_format_version_known", "format_version = 1");
+
+                            t.HasCheckConstraint("ck_authoring_revision_snapshots_owner_coherent", "((owner_kind = 0 AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 1 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 2 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
+
+                            t.HasCheckConstraint("ck_authoring_revision_snapshots_source_revision_positive", "source_revision > 0");
+
+                            t.HasCheckConstraint("ck_authoring_revision_snapshots_tenant_not_blank", "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringScheduleDay", b =>
                 {
                     b.Property<Guid>("DraftId")

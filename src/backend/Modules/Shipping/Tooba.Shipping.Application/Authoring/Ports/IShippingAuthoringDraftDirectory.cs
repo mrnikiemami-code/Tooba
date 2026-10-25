@@ -181,6 +181,31 @@ public interface IShippingAuthoringDraftDirectory
         IReadOnlySet<Guid> activeLanguageIds,
         string trustedCurrencyCode,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// یک capture تغییرناپذیر از <b>همان</b> بازبینی جاری پیش‌نویس ثبت می‌کند (staging، نه انتشار).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// مالک/پیش‌نویس/بازبینی همیشه با هم سنجیده می‌شوند: مالک دیگر همان «پیدا نشد» است و بازبینی
+    /// نامطابق همان تعارض canonical را می‌دهد، بدون هیچ ردیف capture.
+    /// </para>
+    /// <para>
+    /// گراف ذخیره‌شده پیش از نوشتن snapshot کامل خوانده می‌شود و ردیف ریشه در همان تراکنش قفل
+    /// می‌شود، پس تصویر ثبت‌شده همیشه یک بازبینی سازگار است. capture دوبارهٔ همان سه‌گانه ردیف و
+    /// زمان اولیه را برمی‌گرداند و هیچ نوشتن دومی ندارد. خودِ capture بازبینی/زمان پیش‌نویس را
+    /// تغییر نمی‌دهد.
+    /// </para>
+    /// </remarks>
+    /// <param name="owner">مالک مجاز همین درخواست.</param>
+    /// <param name="draftId">شناسهٔ پیش‌نویس.</param>
+    /// <param name="expectedRevision">بازبینی مورد انتظار.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    Task<Result<ShippingAuthoringRevisionSnapshot>> CaptureRevisionAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

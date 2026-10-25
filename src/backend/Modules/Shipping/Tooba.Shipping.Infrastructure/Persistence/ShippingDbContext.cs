@@ -63,6 +63,10 @@ public sealed class ShippingDbContext : DbContext
     /// <summary>پیش‌نویس‌های نویسندگی روش ارسال (Draft، بدون فعال‌سازی یا مصرف استعلام).</summary>
     public DbSet<ShippingAuthoringDraft> AuthoringDrafts => Set<ShippingAuthoringDraft>();
 
+    /// <summary>capture‌های تغییرناپذیر بازبینی پیش‌نویس نویسندگی (staging، نه انتشار).</summary>
+    public DbSet<ShippingAuthoringRevisionSnapshot> AuthoringRevisionSnapshots =>
+        Set<ShippingAuthoringRevisionSnapshot>();
+
     /// <summary>Outbox همین ماژول؛ پیروی از اسکلت متعارف DbContext ماژول‌ها، بدون هیچ مصرف فعلی.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -719,9 +723,53 @@ public sealed class ShippingDbContext : DbContext
                 .HasDatabaseName("ux_authoring_selected_areas_draft_node");
         });
 
+        // TB-214 immutable revision capture (STAGING ONLY). One row per trusted owner + draft + source
+        // revision. The payload is versioned typed JSONB owned by Shipping's own codec: it duplicates no
+        // rule table, holds no FK/navigation into any other schema, and is never updated after insert.
+        modelBuilder.Entity<ShippingAuthoringRevisionSnapshot>(entity =>
+        {
+            entity.ToTable("authoring_revision_snapshots", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_revision_snapshots_owner_coherent",
+                    $"((owner_kind = {(int)ShippingDraftOwnerKind.Store} AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL)"
+                    + $" OR (owner_kind = {(int)ShippingDraftOwnerKind.Marketplace} AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL)"
+                    + $" OR (owner_kind = {(int)ShippingDraftOwnerKind.Seller} AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
+                table.HasCheckConstraint(
+                    "ck_authoring_revision_snapshots_source_revision_positive",
+                    "source_revision > 0");
+                table.HasCheckConstraint(
+                    "ck_authoring_revision_snapshots_format_version_known",
+                    $"format_version = {ShippingAuthoringRevisionSnapshot.CurrentFormatVersion}");
+                table.HasCheckConstraint(
+                    "ck_authoring_revision_snapshots_tenant_not_blank",
+                    "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");
+            });
+            entity.HasKey(x => x.SnapshotId);
+            entity.Property(x => x.SnapshotId).ValueGeneratedNever();
+            entity.Property(x => x.OwnerKind).HasConversion<int>();
+            entity.Property(x => x.OwnerTenantId).HasMaxLength(ShippingDraftOwner.TenantIdMaxLength);
+            entity.Property(x => x.Payload).HasColumnName("payload").HasColumnType("jsonb").IsRequired();
+
+            // One capture per trusted owner + draft + source revision: a second capture of the SAME
+            // revision is idempotent, never a second row pretending to be a new publication.
+            entity.HasIndex(x => new
+                {
+                    x.OwnerKind,
+                    x.OwnerTenantId,
+                    x.OwnerSellerPartyId,
+                    x.DraftId,
+                    x.SourceRevision,
+                })
+                .IsUnique()
+                .AreNullsDistinct(false)
+                .HasDatabaseName("ux_authoring_revision_snapshots_owner_revision");
+        });
+
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }
+
 /// <summary>
 /// کارخانهٔ design-time مهاجرت Shipping. اتصال فقط از متغیر محیطی ابزار EF خوانده می‌شود؛ هیچ
 /// رشتهٔ اتصال runtime یا credential در این پروژه وجود ندارد.

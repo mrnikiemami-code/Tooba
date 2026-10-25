@@ -57,6 +57,9 @@ internal static class ShippingTransactionBoundary
     /// <summary>Stable rule: the reviewed boundary itself lost its required shape.</summary>
     public const string BoundaryShapeRule = "AUTHORING_TRANSACTION_SHAPE";
 
+    /// <summary>Stable rule: the reviewed revision-capture boundary lost its required shape.</summary>
+    public const string CaptureBoundaryShapeRule = "AUTHORING_CAPTURE_TRANSACTION_SHAPE";
+
     /// <summary>Stable rule: the reviewed boundary gained a caller or a callback indirection.</summary>
     public const string CallerUniverseRule = "AUTHORING_TRANSACTION_CALLER_UNIVERSE";
 
@@ -73,6 +76,17 @@ internal static class ShippingTransactionBoundary
     /// writer share ONE begin-save-commit shape; the caller universe stays inside this file.
     /// </summary>
     public const string AllowedBoundaryMember = "SaveAuthoringReplacementAsync";
+
+    /// <summary>
+    /// TB-214: the ONE additional reviewed member allowed to open a transaction, for the immutable
+    /// revision capture path only. It is named exactly, lives in the same reviewed file, and must keep its
+    /// own single begin/save/commit/rollback shape; no filename-wide exemption exists.
+    /// </summary>
+    public const string AllowedCaptureBoundaryMember = "CaptureRevisionAsync";
+
+    /// <summary>Transaction-start members authorized in the reviewed file.</summary>
+    private static readonly string[] AllowedTransactionStartMembers =
+        [AllowedBoundaryMember, AllowedCaptureBoundaryMember];
 
     /// <summary>
     /// The only other reviewed members allowed to mention a transaction type: the rollback/failure helper
@@ -99,7 +113,7 @@ internal static class ShippingTransactionBoundary
 
     /// <summary>Members inside the reviewed file that may legitimately mention a transaction type.</summary>
     private static readonly string[] AllowedTypeMarkerMembers =
-        [AllowedBoundaryMember, AllowedBoundaryHelperMember];
+        [AllowedBoundaryMember, AllowedBoundaryHelperMember, AllowedCaptureBoundaryMember];
 
     /// <summary>Shipping production schema-authority markers.</summary>
     private static readonly string[] SchemaAuthorityMarkers =
@@ -166,14 +180,16 @@ internal static class ShippingTransactionBoundary
                 {
                     var site = new ShippingTransactionSite(path, member ?? "<file>", index + 1, marker);
                     sites.Add(site);
-                    // Only the reviewed member may OPEN a transaction, and only in the reviewed file.
-                    if (!inAllowedFile || !string.Equals(member, AllowedBoundaryMember, StringComparison.Ordinal))
+                    // Only the reviewed members may OPEN a transaction, and only in the reviewed file.
+                    if (!inAllowedFile
+                        || !AllowedTransactionStartMembers.Contains(member ?? string.Empty, StringComparer.Ordinal))
                     {
                         violations.Add(new ShippingBoundaryViolation(
                             path,
                             UnexpectedTransactionRule,
                             $"transaction start '{marker}' at line {index + 1} in member '{site.Member}'; only "
-                            + $"{AllowedBoundaryPath}::{AllowedBoundaryMember} may open a Shipping transaction"));
+                            + $"{AllowedBoundaryPath}::{{{string.Join(",", AllowedTransactionStartMembers)}}} may "
+                            + "open a Shipping transaction"));
                     }
                 }
 
@@ -332,6 +348,51 @@ internal static class ShippingTransactionBoundary
                     $"the reviewed boundary call at line {site.LineNumber} in member '{site.Member}' must be a "
                     + "direct awaited call, not a delegate/callback indirection");
             }
+        }
+
+        // TB-214: the capture member has its OWN exact transaction shape. A capture that silently lost its
+        // begin, its save, its commit or its rollback would otherwise pass "one start in an allowed member".
+        var captureShape = ShapeSites(boundarySource)
+            .Where(site => string.Equals(site.Member, AllowedCaptureBoundaryMember, StringComparison.Ordinal))
+            .ToArray();
+        var captureStarts = sites.Count(site =>
+            site.RelativePath == AllowedBoundaryPath
+            && string.Equals(site.Member, AllowedCaptureBoundaryMember, StringComparison.Ordinal)
+            && TransactionStartMarkers.Contains(site.Marker, StringComparer.Ordinal));
+
+        if (captureStarts != 1)
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                CaptureBoundaryShapeRule,
+                $"the reviewed capture boundary must open exactly one transaction, found {captureStarts}");
+        }
+
+        if (captureShape.Count(site => site.Marker == "SaveChangesAsync(") < 1)
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                CaptureBoundaryShapeRule,
+                $"the reviewed capture boundary must persist its snapshot, found no SaveChangesAsync in "
+                + AllowedCaptureBoundaryMember);
+        }
+
+        if (!captureShape.Any(site => site.Marker == "CommitAsync("))
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                CaptureBoundaryShapeRule,
+                $"the reviewed capture boundary must commit its transaction, found no CommitAsync in "
+                + AllowedCaptureBoundaryMember);
+        }
+
+        if (!captureShape.Any(site => site.Marker == "RollbackAsync("))
+        {
+            yield return new ShippingBoundaryViolation(
+                AllowedBoundaryPath,
+                CaptureBoundaryShapeRule,
+                $"the reviewed capture boundary must keep its rollback path, found no RollbackAsync in "
+                + AllowedCaptureBoundaryMember);
         }
     }
 

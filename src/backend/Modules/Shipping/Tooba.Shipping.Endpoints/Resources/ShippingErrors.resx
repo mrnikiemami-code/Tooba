@@ -201,4 +201,7 @@
   <data name="shipping.authoring.type_selection_unavailable" xml:space="preserve">
     <value>The selected shipping type is unknown or not active.</value>
   </data>
+  <data name="shipping.authoring.revision_snapshot_invalid" xml:space="preserve">
+    <value>The stored draft revision snapshot payload is not readable.</value>
+  </data>
 </root>

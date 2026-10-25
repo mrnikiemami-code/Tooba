@@ -363,8 +363,10 @@ public sealed class OperationalQuoteCompatibilityTests
             .Single(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath);
         var code = CodeLines(boundary.Text).ToArray();
 
-        Assert.Equal(1, CountOccurrences(string.Join('\n', code), "BeginTransactionAsync("));
-        Assert.Equal(1, CountOccurrences(string.Join('\n', code), "CommitAsync("));
+        // TB-214 added exactly ONE further reviewed transaction member in the same file (the revision
+        // capture), and it legitimately commits on both its idempotent path and its write path.
+        Assert.Equal(2, CountOccurrences(string.Join('\n', code), "BeginTransactionAsync("));
+        Assert.Equal(3, CountOccurrences(string.Join('\n', code), "CommitAsync("));
         Assert.True(
             CountOccurrences(string.Join('\n', code), "SaveChangesAsync(") >= 2,
             "both staged saves must live inside the reviewed boundary");
@@ -443,6 +445,48 @@ public sealed class OperationalQuoteCompatibilityTests
         Assert.Contains(
             doubledViolations,
             violation => violation.Rule == ShippingTransactionBoundary.BoundaryShapeRule);
+    }
+
+    [Fact]
+    public void Capture_guard_fails_when_the_revision_capture_is_not_the_reviewed_member_or_gains_a_third_member()
+    {
+        // TB-214: the capture transaction is authorized for the EXACT reviewed member name only. Renaming
+        // that member must fail, even though the file and the statement shape are unchanged.
+        var renamed = BackendProductionSources()
+            .Select(source => source.RelativePath == ShippingTransactionBoundary.AllowedBoundaryPath
+                ? source with
+                {
+                    Text = ReplaceFirst(
+                        source.Text,
+                        "public async Task<Result<ShippingAuthoringRevisionSnapshot>> CaptureRevisionAsync(",
+                        "public async Task<Result<ShippingAuthoringRevisionSnapshot>> CaptureRevisionUnreviewedAsync("),
+                }
+                : source)
+            .ToArray();
+
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze(renamed),
+            violation => violation.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule);
+
+        // And a third, unreviewed member may still not open a transaction in the reviewed file.
+        var smuggled = BackendProductionSources()
+            .Append(new OperationalBoundarySource(
+                ShippingTransactionBoundary.AllowedBoundaryPath,
+                "namespace X;\ninternal sealed class Smuggled\n{\n    internal void Extra()\n    {\n"
+                + "        using var tx = db.Database.BeginTransaction();\n    }\n}\n"))
+            .ToArray();
+
+        Assert.Contains(
+            ShippingTransactionBoundary.Analyze(smuggled),
+            violation => violation.Rule == ShippingTransactionBoundary.UnexpectedTransactionRule
+                         && violation.Detail.Contains("Extra", StringComparison.Ordinal));
+    }
+
+    private static string ReplaceFirst(string text, string oldValue, string newValue)
+    {
+        var index = text.IndexOf(oldValue, StringComparison.Ordinal);
+        Assert.True(index >= 0, "the expected reviewed declaration must exist in the reviewed boundary");
+        return string.Concat(text.AsSpan(0, index), newValue, text.AsSpan(index + oldValue.Length));
     }
 
     [Fact]

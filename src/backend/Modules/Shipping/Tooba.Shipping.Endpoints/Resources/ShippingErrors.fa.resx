@@ -201,4 +201,7 @@
   <data name="shipping.authoring.type_selection_unavailable" xml:space="preserve">
     <value>نوع ارسال انتخاب‌شده ناشناخته یا غیرفعال است.</value>
   </data>
+  <data name="shipping.authoring.revision_snapshot_invalid" xml:space="preserve">
+    <value>بدنهٔ ذخیره‌شدهٔ بازبینی پیش‌نویس قابل خواندن نیست.</value>
+  </data>
 </root>

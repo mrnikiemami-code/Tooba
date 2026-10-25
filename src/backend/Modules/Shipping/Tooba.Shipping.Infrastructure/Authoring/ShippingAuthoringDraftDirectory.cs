@@ -660,6 +660,135 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         return Result.Success(draft);
     }
 
+    /// <inheritdoc />
+    public async Task<Result<ShippingAuthoringRevisionSnapshot>> CaptureRevisionAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid draftId,
+        long expectedRevision,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+
+        var key = ToDomainOwner(owner);
+        var relational = context.Database.IsRelational();
+        IDbContextTransaction? transaction = null;
+        try
+        {
+            // ONE Shipping-owned transaction for this capture path: the root row is locked FIRST, so the
+            // revision read below and the INSERT cannot be separated by another writer's replacement.
+            if (relational)
+            {
+                transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+            }
+
+            if (relational)
+            {
+                // A root lock (not merely a tracked read) closes the read-graph / recheck / INSERT window.
+                // NULL-safe casts keep the full owner scope in the predicate without untyped parameters.
+                await context.AuthoringDrafts
+                    .FromSqlInterpolated(
+                        $@"SELECT * FROM shipping.authoring_drafts
+                           WHERE draft_id = {draftId}
+                             AND owner_kind = {(int)key.Kind}
+                             AND owner_tenant_id IS NOT DISTINCT FROM CAST({key.TenantId} AS text)
+                             AND owner_seller_party_id IS NOT DISTINCT FROM CAST({key.SellerPartyId} AS uuid)
+                           FOR UPDATE")
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+            }
+
+            var draft = await Scoped(key)
+                .Include(candidate => candidate.RegionGroups)
+                .ThenInclude(group => group.Areas)
+                .Include(candidate => candidate.RegionGroups)
+                .ThenInclude(group => group.RateRows)
+                .Include(candidate => candidate.RegionGroups)
+                .ThenInclude(group => group.Titles)
+                .Include(candidate => candidate.Translations)
+                .Include(candidate => candidate.MethodSettings)
+                .Include(candidate => candidate.WeeklySchedule)
+                .ThenInclude(schedule => schedule!.Days)
+                .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
+            if (draft is null)
+            {
+                await RollbackAsync(transaction, cancellationToken);
+                return Result.Failure<ShippingAuthoringRevisionSnapshot>(
+                    new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound));
+            }
+
+            // A stale expected revision is refused BEFORE any snapshot row exists, with the canonical code.
+            if (draft.Revision != expectedRevision)
+            {
+                await RollbackAsync(transaction, cancellationToken);
+                return Result.Failure<ShippingAuthoringRevisionSnapshot>(
+                    new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict));
+            }
+
+            // Capturing the SAME revisions again is idempotent: the ORIGINAL row/identity/time is returned
+            // and no second write pretends to be a new publication.
+            var existing = await context.AuthoringRevisionSnapshots
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    snapshot => snapshot.OwnerKind == key.Kind
+                                && snapshot.OwnerTenantId == key.TenantId
+                                && snapshot.OwnerSellerPartyId == key.SellerPartyId
+                                && snapshot.DraftId == draftId
+                                && snapshot.SourceRevision == draft.Revision,
+                    cancellationToken);
+            if (existing is not null)
+            {
+                if (transaction is not null)
+                {
+                    await transaction.CommitAsync(cancellationToken);
+                }
+
+                return Result.Success(existing);
+            }
+
+            // The whole stored graph is copied from THIS read; capture never bumps draft Revision/UpdatedAt.
+            var snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, DateTimeOffset.UtcNow);
+            context.AuthoringRevisionSnapshots.Add(snapshot);
+            await context.SaveChangesAsync(cancellationToken);
+
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return Result.Success(snapshot);
+        }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception, "authoring_revision_snapshots"))
+        {
+            // A concurrent capture of the same revision won: report the ORIGINAL row, never a second one.
+            await RollbackAsync(transaction, cancellationToken);
+            var winner = await context.AuthoringRevisionSnapshots
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    snapshot => snapshot.OwnerKind == key.Kind
+                                && snapshot.OwnerTenantId == key.TenantId
+                                && snapshot.OwnerSellerPartyId == key.SellerPartyId
+                                && snapshot.DraftId == draftId
+                                && snapshot.SourceRevision == expectedRevision,
+                    cancellationToken);
+            return winner is null
+                ? Result.Failure<ShippingAuthoringRevisionSnapshot>(
+                    new SemanticError(ShippingErrorCodes.AuthoringDraftRevisionConflict))
+                : Result.Success(winner);
+        }
+        catch
+        {
+            await RollbackAsync(transaction, CancellationToken.None);
+            throw;
+        }
+        finally
+        {
+            if (transaction is not null)
+            {
+                await transaction.DisposeAsync();
+            }
+        }
+    }
+
     /// <summary>
     /// تراکنش را برمی‌گرداند و هیچ تغییر نیمه‌کاره‌ای را در tracker همین context باقی نمی‌گذارد؛
     /// بنابراین یک SaveChanges بعدی در همان context نمی‌تواند ویرایش رد‌شده را منتشر کند.
