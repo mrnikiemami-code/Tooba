@@ -1,0 +1,72 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208
+Parent-Task: TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+
+Status: COMPLETED
+Base-SHA: 822a8ea8de14630c84fb62a241b2c058bc27a4c5
+Source-SHA: f2fa49d5432d38663aa67ea057583c51bf0bb01e
+HEAD==origin/main: YES
+Working-Tree: CLEAN (task-scoped; unrelated untracked evidence helpers preserved)
+Claim: 2026-10-24T17:11:25Z
+Last-Interaction: 2026-10-24T17:31:00Z
+
+Scope: authorized local-development actions only - required checked-in migrations on the existing 127.0.0.1:5432/tooba_alpha target (alias tenant-alpha, tenant store-alpha, SingleStore), Host-only refresh on :5088 using the retained TB-207 binary, existing startup effects, and ONE minimal real trial draft. No DB reset/drop, no production/external target, no FE restart, no auth/edition change, no new migration or seed framework.
+
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208/RESULT.md
+Task artifact: docs/ai/tasks/TB-SHIPPING-ADMIN-LOCAL-STACK-REFRESH-AND-USER-TRIAL-208.task.md
+
+MIGRATIONS: APPLIED (9/9 expected, 0 extra)
+- Runner: current source built isolated to D:\temp\tb208-runner\out (0 errors / 42 warnings); CLI plan/apply with explicit --tenant store-alpha; no invented --module flag.
+- plan read the COMPLETE 33-descriptor set: Shipping 7 + Fulfillment 2 = exactly the nine named in 207, all other modules pendingMigrations [] and succeeded true; no unknown module, no divergent history.
+- Shipping: 20261022055446_AuthoringDraftPersistence, 20261022065333_AuthoringGroupRateRows, 20261022075711_AuthoringRateRowConstraintParity, 20261022081351_AuthoringPresentationTranslations, 20261022085811_AuthoringWeeklySchedule, 20261022093803_AuthoringMethodSettings, 20261022195929_AuthoringDraftTypeAssignment.
+- Fulfillment: 20261022101415_ShippingTypeCatalog, 20261022182208_AddFulfillmentOutboxPendingIndex.
+- apply exit 0, every module result=ok. Post-check: shipping.__ef_migrations_history = 13 rows ending at AuthoringDraftTypeAssignment; fulfillment.__ef_migrations_history = 12 rows; authoring_drafts/authoring_rate_rows/authoring_region_groups/authoring_selected_areas/authoring_draft_translations/authoring_group_titles/authoring_weekly_schedules/authoring_weekly_schedule_days/authoring_method_settings and fulfillment.shipping_types/shipping_type_translations all exist.
+- No migration file, history row or outbox index object was edited/adopted by name. Runner advisory lock respected; no session force-killed.
+- Backup: no pg_dump/pg_basebackup or repository backup tooling present - recorded, not a blocker on this explicitly disposable dev DB; no restore simulated and no tooling installed.
+
+RUNTIME: Host :5088 REFRESHED, frontend :3000 UNTOUCHED
+- Old: PID 24304, src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe, started 2026-10-22 06:41:43 (the TB-206 stale binary). Identity verified before action.
+- DEVIATION: taskkill without /F could not terminate this console app within a 15s finite wait, so that exact verified PID was force-stopped. No kill-by-name.
+- Source parity since the TB-207 build confirmed empty (git diff --stat a932fa2..HEAD -- src/backend), so the retained binary was reused: NO second Host build.
+- New: PID 10800, D:\temp\tb207-build\out\Tooba.Host.exe, sha256 9987F7A532067FCE97C9DE511E652C9D799564D998560528913DCBB8997B76E5, Development, content root D:\temp\tb207-build\out, http://127.0.0.1:5088, Tooba__ShippingOneLevelCatalog__Enabled=true. Launcher with no secrets: D:\temp\tb208-host\run-host.cmd. Left running for the user.
+- Startup: 467 log lines, 0 Error, 3 Warning. MassTransit SQL Transport created/upgraded the tooba_messaging schema; LanguageBootstrapHostedService reported "Language bootstrap skipped: no commerce context is bound at host startup" (documented Development ordering owned by the post-migration seed); legacy Catalog bootstraps skipped because RunLegacyBootstraps=false. No seed/backfill write is claimed merely because a wrapper ran.
+- BOUNDED REPAIR 1/2: the first launch inherited a trailing space in ASPNETCORE_ENVIRONMENT ("Development ") from a cmd `set X=value &&` line, which suppressed appsettings.Development.json and produced 503 platform.edition.unconfigured. Launcher rewritten as a .cmd with one assignment per line and the Host relaunched ONCE. No source change.
+- FE PID 19108 (started 2026-10-22 06:45:12) still listening on :3000; not rebuilt, not restarted.
+
+DRAFT + REAL MOUNTED PAGE: READY_FOR_USER_TRIAL
+- Real dev-context 200 for tenant store-alpha via the app's existing documented dev-actor mechanism (X-Tooba-Dev-Actor-User-Id from the dev-context actor + Accept/Accept-Language). No invented token/grant, no guard weakening, no owner/tenant/edition authority supplied by the browser.
+- authoring-types 200 {"types":[]} - genuinely empty active catalog, NOT seeded. authoring-drafts 200 {"drafts":[]} before creation.
+- Draft created through the existing authorized POST: 01a16eeb-70b3-7000-87c2-564c82835496, binding serviceCode=post optionCode=null (existing active service), revision 1, owner Store, regionGroups [] (lawful empty tree). 201. This single creation is the ONLY business write of this task; no PUT was ever issued.
+- Trial URL: http://127.0.0.1:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view
+
+LIVE INTEGRATION DEFECT FOUND AND REPAIRED (one focused repair)
+- First real mount returned 200 for capabilities/authoring-types/editor-document yet rendered "خواندن پیش‌نویس ناموفق بود.": the server sends owner.ownerKind (canonical ShippingAuthoringOwnerView.OwnerKind) while the strict frontend decoder required owner.kind. Prior synthetic fixtures used `kind`, so only real data could expose it.
+- Fix inside the feature's own transport boundary, no API/DTO change: editor-document-decode.ts now reads ownerKind (reason path owner.ownerKind); the adapter test wire fixture and its negative case use the real field name.
+- Focused check actually run: node --test features/admin-shipping-authoring/api/editor-document-adapter.test.ts -> 7 pass / 0 fail. No suite-wide run; npm run typecheck not claimed.
+
+MOUNTED OUTCOME (real traffic, no interception)
+- Harness docs/.../208/scripts/mount-read.mjs: isolated headless Chrome profile, NO Fetch fulfilment, no response replacement, no request rewrite. /v1 capabilities 200, authoring-types 200, editor-document 200 (GETs only).
+- View mode rendered from real data: owner «همین فروشگاه» (server-authorized, not selectable); type «نوعی انتخاب نشده است» with the real empty-catalog note; three configured languages fa-IR (rtl, default), en-US, Russian, each «بدون ترجمه», «۰ از ۳ زبان ترجمه شده»; settings «پیکربندی نشده‌اند»; weekly schedule «پیکربندی نشده است» and read-only. No route blocker, no load-error panel.
+- Edit reachability with no mutation: ویرایش -> edit mode, Apply disabled, not dirty -> انصراف از ویرایش -> back to view mode, no load error, 0 PUT.
+
+LIMITS
+- Active type catalog is genuinely empty; a real type must be created through the normal catalog flow before type binding can be exercised.
+- Authoring WRITE acceptance on this draft was NOT exercised; Apply persistence is not claimed.
+- Drafts with regions/rates/week/settings content were not re-proven here; 202-205-R3 evidence unchanged.
+- No quote, activation, whole-method creation, integration acceptance, deployment or certification claim.
+- Visual: no new Visual ACCEPT; screenshots are review artifacts only and were not committed as binary.
+
+Recovery: docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md top section updated (explicit user authorization recorded once, actual migrations vs pending, runtime identity, draft binding/URL, READY_FOR_USER_TRIAL, limits). AGENTS current checkpoint updated; historical evidence untouched. Accepted 190-205 unchanged, no replay. TB185 paused/default-OFF preserved.
+Task-owned cleanup: browser profile stopped and its processes gone; runner build D:\temp\tb208-runner\out retained (safe to delete). Shared :3000 and the new Host remain up for user trial. No build artifact, log or credential committed.
+
+Production-Functional-Acceptance: PENDING
+Shared-Database-Data-Flag-Changes: ONE development draft created (id above); nothing else mutated
+Visual: no new Visual ACCEPT
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT

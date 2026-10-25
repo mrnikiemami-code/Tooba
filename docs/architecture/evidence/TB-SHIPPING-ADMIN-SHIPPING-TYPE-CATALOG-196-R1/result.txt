@@ -1,0 +1,45 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1
+Parent-Task: TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Program: TOOBA-SHIPPING-ADMIN-BACKEND-DELIVERY
+Mode: BOUNDED_TYPE_CATALOG_INPUT_PREFLIGHT_LANGUAGE_AND_TRACING_REPAIR
+Bridge-Task-Row: 49b121ff-fd40-4ae2-a734-30a628c58fe0
+Status: PARTIAL
+Expected-Base-SHA: feabb7aaf9de99b69a791cd2b239670700f377fa
+Base-SHA: feabb7aaf9de99b69a791cd2b239670700f377fa
+Code-SHA: d5406396e8032b32d22244f29d20336f4c4017fb
+Evidence-SHA: d5406396e8032b32d22244f29d20336f4c4017fb
+HEAD-Origin-Parity: HEAD == origin/main == d5406396e8032b32d22244f29d20336f4c4017fb
+Lossless-Input-And-Canonical-Body-Proof: TO_INPUTS_REMOVED + PRESENCE_AWARE_TRANSPORT + MODULE_OWNED_SHIPPINGTYPEBODYREADER(authorize->read->ISender) + shipping_type.body.malformed(descriptor+neutral/fa resources) + ApiResponseFactory.FromSemanticException/From/Created. Unit-proven: missing/null/null-collection/null-last-element preserved; empty/truncated/array-root/wrong-typed sortOrder/translations/languageId -> malformed. In-process delegate run NOT executed.
+Four-Route-Request-Validation-Set-Equality: GET list PARAMETERLESS + documented NO_VALIDATOR_REQUIRED (no caller input, no content-language inference); unused languageId binding REMOVED. GET detail -> GetShippingTypeQueryValidator (Guid.Empty rejected). POST -> CreateShippingTypeCommandValidator (code shape, sortOrder required+bounds, translations required, no null entry, duplicate/blank/overlength). PUT -> UpdateShippingTypeCommandValidator (id, expectedRevision>0, isActive required, sortOrder required+bounds, translations required+same translation rules). Provenance proven by validator unit tests only; durable route->request->handler set-equality guard NOT added this wave (existing Architecture guards pass).
+Real-Authorizer-And-PreDispatch-Denials: NOT EXECUTED. Source order is authorize-first then body read on both write routes; malformed body from unauthorized actor would be denied before parsing by construction, but no in-process denial matrix (panel/seller-only/edition/single-store tenant/marketplace leftover tenant) was run.
+Nonempty-Patch-NoOp-Revision-And-Timestamp: PROVEN with EF InMemory + controllable IClock: identical nonempty patch keeps Revision=1 and UpdatedAt unchanged; stale identical request (expectedRevision 99) still returns shipping_type.revision_conflict; a real change advances revision once.
+Invalid-Last-Entry-SameObject-Tracker-And-LaterSave: PROVEN: whole patch prepared/validated before first tracked assignment; invalid LAST entry leaves no modified ShippingType entry, a later SaveChanges publishes nothing, re-read keeps Revision=1 and one translation.
+Dynamic-Registry-Default-Cardinality-And-RawText: PROVEN at Application facts level: single default, non-first default, zero default, zero active, duplicate/empty identity, multiple defaults -> shipping_type.default_language.ambiguous. Adapter rejects absent IsActive/SortOrder facts and wraps the real ILanguageLookup. Real ILanguageLookup fixture through the adapter (non-fa / mixed RTL-LTR / three-plus / deactivate-reactivate / switched default without stored name / byte-identical other text) NOT executed; selected-clear and other-text preservation proven at store level.
+Canonical-RealListener-ModuleCall-Proof: SOURCE: mandatory IModuleCallTracer in LocalizationShippingTypeLanguageFacts, one module.Fulfillment.Localization.ListLanguages span, SetOk/SetError(type only)/same-instance rethrow, single disposal, no sensitive tags, no no-op fallback, no new registration. Real ActivityListener assertion of parent/trace/correlation/disposal/restoration, dependency-exception type, cancellation propagation NOT executed.
+Exact-Constraint-Identity-And-PathNamespace-Guards: IsUniqueViolation now requires SqlState 23505 AND ordinal ConstraintName equality with the owned index name; lookalikes propagate. Focused negative test NOT added (no DB needed but none written). Path/namespace and structural guards: existing Fulfillment guards now pass, including the two that failed at 7f1e1e080; capability relocated from Application/ShippingTypes to Application/Shipping/{Models,Commands,Queries,Validators} because those same guards forbid the previous root/nested layout.
+Focused-Commands-And-Test-Counts: dotnet build Endpoints/Infrastructure/Tests all 0 errors; dotnet test --filter ShippingTypeCatalogRulesTests -> 43 passed / 0 failed; --filter Architecture -> 26 passed / 0 failed; combined 69 passed / 0 failed. dotnet build Tooba.Host BLOCKED by a running Host process holding shared bin (MSB3027/MSB3021); no Host source changed and the process was not stopped.
+Changed-Files: Application/Shipping/{Models/ShippingTypeModels.cs,Commands/ShippingTypeCommands.cs,Queries/ShippingTypeQueries.cs,Validators/ShippingTypeValidators.cs} (old Application/ShippingTypes/* deleted); Application/Validators/FulfillmentValidationCodes.cs; Contracts/Errors/FulfillmentErrorCodes.cs; Domain/Aggregates/ShippingType.cs; Endpoints/Admin/ShippingTypeAdminEndpoints.cs; Endpoints/Admin/ShippingTypeBodyReader.cs (new); Endpoints/Resources/FulfillmentErrors.resx + .fa.resx; Infrastructure/DependencyInjection/FulfillmentModule.cs; Infrastructure/Errors/FulfillmentErrorCatalogContributor.cs; Infrastructure/Shipping/ShippingTypeLanguageFacts.cs; Infrastructure/Shipping/ShippingTypeStore.cs; Tests/Behavior/ShippingTypeCatalogRulesTests.cs; docs/ai/tasks/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1.task.md; docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196-R1/RESULT.md; docs/architecture/evidence/TB-SHIPPING-ADMIN-SHIPPING-TYPE-CATALOG-196/RESULT.md (appended correction); docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md.
+Deviation-Reported: FulfillmentErrorCodes cannot be referenced from Domain; the existing guard Fulfillment_golden_boundaries_and_physical_layout_remain_clean forbids Domain -> Fulfillment.Contracts. Typed constants therefore live in Application/Infrastructure/Endpoints and Domain keeps only ArgumentException invariant guards. Weakening that guard was out of scope.
+Migration-Designer-Snapshot-EFMapping-Changes: NONE
+Postgres-Snapshot-Chain-And-Relational-Race-Proof: PENDING_NOT_RUN
+TB196-Acceptance: PARTIAL_PENDING_RELATIONAL_SNAPSHOT_PROOF
+Shipping-Assignment-And-UI: NOT_IMPLEMENTED
+Shared-Database-Data-Flag-Changes: NONE
+Isolation-And-Cleanup: No container/DB/seed/server/browser/HTTP listener; no reset/rebase/stash/force-push; shared :3000/:3419/:5088/:5432 untouched; only Fulfillment module and its test project built; migration/designer/snapshot/EF mapping byte-identical; working tree clean apart from pre-existing untracked evidence and build output.
+Claim-UTC: 2026-10-22T10:21:55Z
+Result-UTC: 2026-10-22T11:47:00Z
+Elapsed-Minutes: 85
+Hard-Deadline-Compliance: EXCEEDED (45 minute hard timebox; no new feature added after expiry, but two guard-driven layout reworks and full test reruns overran the limit - reported as non-compliance)
+Out-Of-Scope-Commands: NONE_EXECUTED
+Production-Functional-Acceptance: PENDING
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Automatic-Next-Task: NONE
+END_TOOBA_WORKER_RESULT

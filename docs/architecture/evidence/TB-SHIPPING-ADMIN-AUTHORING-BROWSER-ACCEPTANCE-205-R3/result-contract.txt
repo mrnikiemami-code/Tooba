@@ -1,0 +1,55 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3
+Parent-Task: TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R2
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+
+Status: COMPLETED
+Base-SHA: 61043bb5d699a55145ec18fb8d03ce3bd82e2f28
+Source-SHA: d6fd1ba0c7e43fe3493f91b77a6bd5a6402c3e76
+HEAD==origin/main: YES
+Working-Tree: CLEAN (task-scoped)
+Claim: 2026-10-24T16:19:54Z
+Last-Interaction: 2026-10-24T16:30:30Z
+
+Scope: only the three critical mounted work-protection controls; 205-R2 save/duplicate/newid/FA-EN captures were not repeated; no full geography/group-move matrix, no new feature, no production change.
+
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3/RESULT.md
+Task artifact: docs/ai/tasks/TB-SHIPPING-ADMIN-AUTHORING-BROWSER-ACCEPTANCE-205-R3.task.md
+
+Runtime: task-owned next dev 127.0.0.1:3517 with TOOBA_HOST_ORIGIN=http://127.0.0.1:1 (fail-closed), installed deps/junction, isolated output; headless Chrome fresh task profile, CDP 9555; Fetch interception installed before navigation to the real route /admin/shipping-services/authoring/<IDS.draft>?mode=edit; all /v1 synthetic and fail-closed. Ports 3517/9555 proven free before start and free after stop; shared :3000 untouched (still listening). No install/download/login/shared write/restart of shared processes.
+
+Harness: reused 205-R2 CDP harness copied to 205-R3 with only the permitted error-plan ops (canonical-409 fulfill for a held PUT, failRequest transport failure, deliberate fresh-trial reset). Prepared save scenario/fixture unchanged; one harness restart used (permitted maximum).
+
+CASE 1 INVALID + REJECT/CONFIRM CANCEL EDIT: PASS
+Local work on initial revision 7: FA description "توضیح موقت R3", Monday start 09:00->08:45, existing rate freight 0.50->0.75, then stored FA name blanked.
+Observed: {"name":"","desc":"توضیح موقت R3","nameIssue":true,"dirty":true,"applyDis":true,"times":["08:45","17:30"]} -> visible name-required issue, Apply disabled, dirty indicated. "انصراف از ویرایش" opened the real discard dialog (تغییرات اعمال‌نشده; بازگشت به ویرایش / خروج بدون ذخیره).
+Reject: {"name":"","desc":"توضیح موقت R3","times":["08:45","17:30"],"nameIssue":true,"dirty":true,"editable":true} and Regions still showed freight 0.75; PUT delta 0.
+Confirm: view mode restored stored values {"name":"ارسال استاندارد","desc":"ارسال عادی"} with both stored groups (استان: تهران / شهر: قم). Re-enter Edit: {"name":"ارسال استاندارد","desc":"ارسال عادی","times":["09:00","17:30"],"nameIssue":false,"dirty":false,"applyDis":true} and {"groups":["گروه تهران","گروه دوم"],"row1freight":"0.50"} - no discarded residue, same group count/titles, original rate/week, clean Apply, 0 PUT, no extra GET. Implemented through real dialog/button DOM actions only.
+
+CASE 2 CANONICAL 409 PRESERVES WORK / NO RETRY: PASS
+Fresh initial document (separate StrictMode GETs recorded), edited name "نام تعارض R3", Apply held one PUT, then fulfilled 409 with {"errorCode":"shipping.authoring.draft_revision_conflict","errors":{"expectedRevision":["stale"]}} grounded in ShippingErrorCodes.AuthoringDraftRevisionConflict and the existing adapter 409 mapping (not an invented code).
+Observed: {"conflict":true,"kept":"نام تعارض R3","dirty":true,"mode":"edit","applyDis":false}; message "این پیش‌نویس هم‌زمان تغییر کرده است؛ تغییرات شما حفظ شد."; putCount stayed 1 and getCount stayed 4 after extra 3s observation; server revision unchanged (only the initial read document was ever served). No automatic retry, no post-save GET, no second intentional Apply.
+
+CASE 3 TRANSPORT UNKNOWN -> EXPLICIT RECONCILE, ZERO REPLAY: PASS
+Fresh initial document, edited name "نام نامعلوم R3", Apply held one PUT, then Fetch.failRequest (ConnectionAborted) as a real transport failure.
+Observed unknown state: {"kept":"نام نامعلوم R3","dirty":true,"applyDis":true,"reconcile":true}, put=1, gets=2 -> explicit unknown message plus explicit "خواندن وضعیت از سرور" action, edits kept, Apply blocked.
+Additional local edit to "نام نامعلوم R3b": {"keep":"نام نامعلوم R3b","applyDis":true,"reconcile":true} - latch not cleared, no PUT sent.
+One explicit reconcile click served the initial valid read document (fixture branch models no committed write, not a guessed real outcome): {"name":"نام نامعلوم R3b","reconcile":false,"mode":"edit","dirty":true}, put=1, gets=3 - GET delta exactly +1 attributable only to that explicit action, uncertainty cleared for operator review, typed work retained, no automatic PUT/replay; stopped before another deliberate save.
+
+Deviations:
+- One permitted harness correction: the deliberate fresh-trial reset left the first renderer unresponsive (Runtime.evaluate/Page.captureScreenshot timeouts, no new document GET on reload); harness restarted once and Case 3 then ran normally. No product defect reproduced, no repair loop.
+- Case 3 executed slightly after the minute-10 new-interaction stop point (last interaction ~minute 10.6); setup stayed within budget. This sub-box does not claim PASS on timing compliance.
+- No screenshot set produced (optional here); the observed DOM states are recorded as text. Visual ACCEPT is reused from 205-R2 evidence only.
+- Broader A-E/geography/group-move-remove combinations remain model-tested, NOT mounted-certified beyond these three controls.
+
+Production-Functional-Acceptance: PENDING
+Shared-Database-Data-Flag-Changes: NONE
+Visual: existing 205-R2 evidence reused; no new Visual ACCEPT
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+Production-Code-Changes: NONE
+END_TOOBA_WORKER_RESULT

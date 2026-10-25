@@ -63,3 +63,12 @@ Decision taken here (justified, minimal): **publishing must copy the draft into 
 ## Bounds/limits
 
 Docs only. No quote engine built, no flag enabled, TB185 paused, default-OFF intact. No storefront functionality certification — nothing is connected yet.
+
+## Correction appended by TB212-R1 (2026-10-25) — history above not rewritten
+
+Architect review `ARCHITECT-REVIEW.md` corrected two source claims in this report:
+
+1. "Contracts only / no implementation registered" is **FALSE**. `ShippingModule.AddServices` registers `IShippingPackagingFeeLookup`, `IShippingShipmentCostLookup` and `IShippingOperationalQuoteLookup`, and `Infrastructure/Operations/ShippingOperationalQuoteLookup.cs` really loads `RatePolicies`, `CoverageGrants`, `PackagingPolicies`, `OperatingSchedules` and delegates to `ShippingOperationalQuoteEvaluator.Evaluate`. Do not build duplicates.
+2. Service/option/geography/currency identity is **applicability**, not tenant/seller **authorization**; tenant binding exists via `ShippingDbContext` + `ICurrentCommerceContext`. Seller scope is the real remaining gap.
+
+Also withdrawn here: the proposed "copy draft into legacy `RatePolicy`/`CoverageGrant`/`PackagingPolicy`/`OperatingSchedule`" publication. Actual source shows that conversion is lossy (per-row packaging vs scope-only resolver, merchandise bounds, delivery range vs prep/lead, `CalculationMode` Free/CarrierApi, editor week vs carrier pickup windows, owner/seller identity), and the operating schedule is a carrier pickup window, not a delivery promise. TB212-R1 chooses instead a Shipping-owned immutable published revision snapshot read through Contracts, with no Order access to draft tables and no consumer/activation in that slice. **Task 213 as proposed is withdrawn; no publication implementation is authorized.** See `../TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212-R1/RESULT.md`.

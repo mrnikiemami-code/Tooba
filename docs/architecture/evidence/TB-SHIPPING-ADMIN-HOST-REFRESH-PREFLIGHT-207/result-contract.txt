@@ -1,0 +1,79 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207
+Parent-Task: TB-SHIPPING-ADMIN-LIVE-EXISTING-DRAFT-READINESS-206
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+
+Status: PREFLIGHT_READY_PENDING_APPROVAL
+Base-SHA: a932fa2915fed4827635d0cb8dbb0260baf35945 (verified HEAD == origin/main before work)
+Source-SHA: 149faf7cdb9456041374198861257ff966e21c9b (this result-contract.txt file is added in the immediately following docs-only commit)
+HEAD==origin/main: YES
+Claim: 2026-10-24T16:54:52Z
+Last-Interaction: 2026-10-24T17:02Z
+
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207/RESULT.md
+Probe script: docs/architecture/evidence/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207/scripts/readonly-sql-probe.mjs
+Task artifact: docs/ai/tasks/TB-SHIPPING-ADMIN-HOST-REFRESH-PREFLIGHT-207.task.md
+
+HEADLINE: the isolated current Host build succeeds, but a binary-only refresh would NOT produce a working editor. Shipping owns 7 unapplied migrations and registers NO IModuleSchemaMigrator, so a Host restart can never apply them; today's honest 404 would become 42P01 relation does not exist. No restart, migration, seed, DDL/DML or Host execution was performed.
+
+RUNTIME PROVENANCE (re-verified; both shared processes untouched):
+- 5088 Tooba.Host.exe PID24304, started 2026-10-22 06:41:43, path src/backend/Host/Tooba.Host/bin/Debug/net8.0.
+- 3000 node next start-server PID19108, started 2026-10-22 06:45:12, src/frontend.
+- Live process ASPNETCORE_ENVIRONMENT is UNKNOWN to this worker (process env not readable without instrumentation). Verified instead: development dev-context answers 200, launchSettings declares Development + ShippingOneLevelCatalog enabled, and appsettings.Development.json resolves Tooba:Edition=SingleStore with only store-alpha Active. No credential/connection string reproduced.
+- Frontend .env.local TOOBA_HOST_ORIGIN=http://127.0.0.1:5088 and next.config.ts rewrite /v1/:path* => no frontend change needed for a refresh.
+
+STARTUP EFFECTS (current config, from Program.cs after builder.Build(), all unconditional unless stated):
+1 MarketplaceDevelopmentBootstrap - NOT executed (Edition=SingleStore, branch requires Marketplace).
+2 DevelopmentSchemaMigrator.MigrateSchemaOnlyAsync - RUNS every registered IModuleSchemaMigrator in Order 1..31 (per-module EF MigrateAsync = DDL + history inserts) then Catalog/Localization/Promotion post-steps. Suppressed by RunLegacyBootstraps=false? NO - that flag only skips the legacy Catalog seed.
+3 ContentDevelopmentSeedHost.ApplyAsync - runs, try/catch only.
+4 SupportDevelopmentSeedHost.ApplyAsync - runs, try/catch only.
+5 WalletDevelopmentSeedHost.ApplyAsync - runs, try/catch only.
+6 ShippingOneLevelCatalogDevelopmentSeed.ApplyAsync via DevelopmentTenantCommerceContext on store-alpha - runs, Fulfillment-owned backfill writes.
+7 Legacy Catalog seed (EnsureLegacyBootstrapsAsync) - the ONLY genuinely suppressed operation (RunLegacyBootstraps=false).
+8 OutboxDispatcherHostedService - always registered (Program.cs:174), polls and updates each module outbox_messages.
+9 UnpaidOrderExpiryWorker (Order), PaymentReconciliationWorker (Payment), CartExpiryWorker (Cart) - always registered by module DI, timed background writes.
+10 AuthorizationSchemaHostedService (AccessControl) - BootstrapIfConfiguredAsync, internally config-gated.
+11 LanguageBootstrapHostedService (Localization) - MigrateAndSeedAsync, seeds fa/en only when empty.
+Registered migrator order: Catalog1 Offer2 Pricing3 Inventory4 Tax5 Party6 Identity7 Cart8 Order9 Payment10 Fulfillment11 Promotion12 Reviews14 ProductQnA15 BulkInquiry16 Wishlist17 AddressBook18 CustomerProfile19 UserPreference20 OperatorProfile21 Localization22 Content23 Media24 PageComposition25 Story26 Notification27 AccessControl28 Support29. Geography30 and Shipping31 exist as constants but are deliberately NOT registered (ShippingModule.cs "No schema migrator is registered"; same rationale in GeographyModule.cs) - their DDL is CLI migration-runner only.
+
+READ-ONLY DATABASE TRUTH (verified live):
+- Probe used a task-owned dependency-free PostgreSQL wire client with startup options default_transaction_read_only=on and statement_timeout=5000; only SELECT statements; connection string/password never printed; no business payload read.
+- Verified before reading: current_database=tooba_alpha, current_user=admin, default_transaction_read_only=on; alias tenant-alpha (the Active single-store tenant, i.e. exactly the target MigrateSchemaOnlyAsync assigns). __ef_migrations_history exists per module schema (34 found), so history is real.
+- Shipping APPLIED 6: 20261014144742_InitialShipping, 20261015030159_OptionLevelRatePolicy, 20261015045130_OperatingSchedule, 20261015063838_WeightAndCountRateTiers, 20261015071836_ShippingPackagingPolicy, 20261016211322_OptionScopedCoverageRestriction.
+- Shipping PENDING 7 (unreachable by any Host restart): 20261022055446_AuthoringDraftPersistence, 20261022065333_AuthoringGroupRateRows, 20261022075711_AuthoringRateRowConstraintParity, 20261022081351_AuthoringPresentationTranslations, 20261022085811_AuthoringWeeklySchedule, 20261022093803_AuthoringMethodSettings, 20261022195929_AuthoringDraftTypeAssignment. These are exactly the draft/group/rate/presentation/week/settings/type-assignment tables the editor reads.
+- Fulfillment APPLIED 10; PENDING 2 that a Host restart WOULD apply: 20261022101415_ShippingTypeCatalog (Up: CreateTable fulfillment.shipping_types + fulfillment.shipping_type_translations, additive, no backfill/seed) and 20261022182208_AddFulfillmentOutboxPendingIndex (Up: CreateIndex ix_outbox_messages_pending on fulfillment.outbox_messages(occurred_at) WHERE processed_at IS NULL AND dead_lettered_at IS NULL).
+- Geography APPLIED 1 (20261014113949_InitialGeography); no pending.
+
+INDEX COLLISION: NO. ix_outbox_messages_pending already exists in 29 other module schemas on their own outbox_messages tables with the identical definition, but it is ABSENT from fulfillment (also absent from returns, settlement, wallet, localization). The pending fulfillment CreateIndex therefore finds no same-name index in its own schema; the R10 fail-closed behaviour is not triggered by a name clash and must not be worked around if it is ever re-pointed at a schema that already has it.
+
+ISOLATED BUILD (once, from current sources): dotnet build src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Release --no-restore -p:BaseOutputPath=D:\temp\tb207-build\bin\ -p:OutDir=D:\temp\tb207-build\out\
+- SUCCESS: 0 Errors, 42 Warnings, Time Elapsed 00:00:45.50, no stderr.
+- Isolation verified for references too: referenced module assemblies also emit to D:\temp\tb207-build\out (Tooba.Shipping.Endpoints.dll, Tooba.Geography.Infrastructure.dll, ...), so the locked bin/Debug and shared obj/Debug were never written. No package restore, no install, no solution/test build.
+- Output D:\temp\tb207-build\out: 776 files + Tooba.Host.exe (151,552 bytes), Tooba.Host.runtimeconfig.json present, appsettings.Development.json co-located. SHA-256 (first 16): Tooba.Host.dll FD7C37F4CC13E95F, Tooba.Shipping.Endpoints.dll 9F826441F2B6431D, Tooba.Fulfillment.Infrastructure.dll 5F6824C725EA1A3F.
+- The built executable was NOT run (that would start the mutating startup path); binaries not committed, retained only in the task-owned temp folder.
+
+REFRESH / ROLLBACK PLAN (for review, nothing executed):
+- Rollback: current exe D:\Users\User\source\repos\SarvNewVer\src\backend\Host\Tooba.Host\bin\Debug\net8.0\Tooba.Host.exe, working directory that folder, Development, port 5088, Edition SingleStore, tenant store-alpha. That tree is untouched, so rollback is a plain restart from it.
+- Candidate refresh: D:\temp\tb207-build\out\Tooba.Host.exe, working directory D:\temp\tb207-build\out, same environment/edition/port 5088, appsettings.Development.json already present. Frontend stays on 3000 with the existing rewrite.
+- Already-existing fully non-mutating startup mode: NONE (source- and config-proven; RunLegacyBootstraps is not such a switch). A refresh is therefore a combined runtime + schema + data event and must be approved as two separable steps in this order:
+  (1) Schema step, shipping only, no Host restart: apply the 7 pending Shipping migrations with the existing Tooba.MigrationRunner against tooba_alpha and verify the 7 ids appear in shipping.__ef_migrations_history. Host will never do this and the editor cannot work without it. Pure additive EF DDL, no seed.
+  (2) Runtime step, binary swap on 5088: the new binary's startup will then apply the 2 pending Fulfillment migrations AND run Content/Support/Wallet seeds, the shipping one-level backfill and the background workers; approval for (2) is approval of that effect set.
+- Order 1 then 2 is mandatory; reversing it yields 42P01 on the first editor read. Do not approve "all migrations" generically - the ids above are the pending set.
+
+LIMITS: no restart, no migration/seed/DDL/DML, no MigrationRunner, no Host execution, no build beyond the Host, no shared process/port/config change, no interception/mock, no business payload read. The 206 auth boundary (401 on /v1/admin/shipping-services) is still unproven after a route refresh; dev-context is not by itself authorization for shipping reads.
+
+FIELDS:
+Production-Functional-Acceptance: PENDING
+Live-Write-Acceptance: PENDING
+Shared-Database-Data-Flag-Changes: NONE (read-only SQL only; no DDL/DML/migration/seed)
+Visual: none claimed
+Production-Code-Changes: NONE (docs/evidence/task-owned read-only script only)
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+
+PROCESS: claimed 16:54:52Z; build 16:57:47Z -> ~16:59:00Z; new work stopped at the minute-14 line; no deviation. No task-owned server/browser was started; ports 3517/9555 stayed free; shared 3000/5088 untouched and still listening; temp build folder intentionally retained as the refresh artifact; no sensitive file left behind.
+END_TOOBA_WORKER_RESULT

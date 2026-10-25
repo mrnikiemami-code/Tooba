@@ -1,0 +1,136 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199
+Parent-Task: TB-SHIPPING-ADMIN-EDITOR-INTEGRATION-CONTRACT-198
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Mode: BOUNDED_EXISTING_DRAFT_ATOMIC_EDITOR_DOCUMENT_IMPLEMENTATION
+Base-SHA: 8211c5e43eb9cf5a8a265c99f78c5c68f6758af9
+Result-SHA: be639a473700d771cbf7b3f90f011814cb82bfeb
+Branch: main
+Parity: HEAD == origin/main (be639a473700d771cbf7b3f90f011814cb82bfeb), tracked tree clean, fast-forward only
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199/RESULT.md
+
+STATUS: PARTIAL (one bounded proof item not added: a dedicated throwing-catalog post-commit fault-injection fact)
+Production-Functional-Acceptance: PENDING
+Worker PASS != Architect ACCEPT
+Stop-State: STOP_FOR_ARCHITECT
+Automatic-Next-Task: NONE
+Shared-Database-Data-Flag-Changes: NONE
+
+DELIVERED (existing authorized draft only; no frontend, no whole-method creation)
+Four additive routes, ONE query + ONE command/handler shared by both audiences:
+  GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/editor-document
+  PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/editor-document
+  GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/editor-document
+  PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/editor-document
+Real owner gate BEFORE ISender and BEFORE write-body parsing (view for GET, manage for PUT, independently).
+Full own owner+draft filter; unknown/foreign draft = same safe shipping.authoring.draft_not_found; SingleStore
+seller = canonical early 404 before seller resolution. No transport owner/tenant/seller/edition/currency authority.
+GET = ONE consistent own authored root snapshot (groups identity/order/currency, areas, rate rows, method text,
+group titles, week, settings, stored type id with truthful resolution, revision/timestamps, language registry).
+
+WIRE PRESENCE SEMANTICS (actual)
+regionGroups: required non-null whole ordered collection; [] valid; absent/null = validation failure.
+methodTranslations: required non-null selected-language patch; [] = no change; omitted languages untouched.
+weeklySchedule: absent/null = PRESERVE; supplied = replace (7 ISO days + timezone, closed-hour semantics).
+methodSettings: absent/null = PRESERVE (unconfigured stays unconfigured); supplied = replace both independent axes.
+typeAssignment: absent/null wrapper = PRESERVE; supplied shippingTypeId:null = CLEAR with zero catalog lookup;
+Guid.Empty = invalid; non-null id needs exactly ONE ACTIVE fact (identical selection revalidated, 197-R1 reuse).
+Group: groupId null/absent = new server id; areas required; rows required ([] valid); titles required patch list
+([] = no change, explicit null title clears). New groups carry nested rows+titles in the SAME PUT.
+
+PROSPECTIVE PREFLIGHT / NEW-GROUP PROOF
+PreflightEditorDocument builds detached prospective ShippingAuthoringRegionGroup instances for brand-new groups,
+so nested rates and titles are validated BEFORE any tracked mutation. Shared mutation cores
+(ApplyRegionGroupsCore/ApplyGroupRateRowsCore/ApplyPresentationCore/ApplyWeeklyScheduleCore/ApplyMethodSettingsCore/
+ApplyTypeAssignmentCore) do not advance the root; ApplyEditorDocument composes them and performs exactly ONE
+Revision = checked(Revision + 1). No group is "added then validated", no second range/geography/presentation engine.
+
+SINGLE REVISION / NO-OP
+Unchanged identity/order/areas/rows/text/schedule/settings/type => EditorDocumentPlan.HasChanges == false =>
+no SaveChanges, Revision and UpdatedAt preserved. Stale token always wins over an identical payload (409).
+Currency binding is never cleared by []. RegionsDiffer now compares the persisted tree by its Order (0..n-1)
+instead of incidental EF materialisation position (minimal defensive fix required by the storage no-op proof).
+
+ONE BEGIN SITE / COMMIT STRATEGY
+Reviewed staged-save boundary extracted into ONE private typed helper SaveAuthoringReplacementAsync(draft,
+regionPlan?, editorPlan?, ct) in ShippingAuthoringDraftDirectory, called ONLY by ReplaceRegionGroupsAsync and
+ReplaceEditorDocumentAsync. Exactly ONE BeginTransactionAsync site remains: phase-1 staged order (only when the
+region tree changes), phase-2 final zero-based order, ONE commit, rollback + tracker cleanup on failure/cancel.
+ShippingTransactionBoundary and its compatibility facts updated only for that exact member/caller universe
+(no filename exemption, no broadened allowlist, no removed negative, startup schema/money/capacity negatives kept).
+
+EXECUTED PROOF (disposable PostgreSQL 17: 127.0.0.1:55432 / shipping_tb190r1 / tb190r1; parsed fail-closed target
+with live current_database()/current_user verification before DDL)
+ShippingAuthoringEditorDocumentDomainTests: 4 passed.
+ShippingAuthoringEditorDocumentEndpointTests: 4 passed (real endpoint delegates, real owner authorizer, real body
+reader, real MediatR validation, real handlers/directory): composite admin PUT (new group with nested row+title,
+reorder, method text, settings, week, type) advances root exactly once; identical PUT no-op preserves revision AND
+UpdatedAt; stale PUT 409 conflict; omitted optional wrappers preserve stored values; reversed interval / inactive
+language / duplicate node / empty type id -> 400 with exact codes and no write; absent-collection and malformed
+payloads never reach a handler (per-request handler deltas); unknown draft and another store's draft are 404 for
+GET and PUT; seller (Marketplace, no tenant) shares the same use case and advances one revision.
+ShippingAuthoringEditorDocumentStorageTests: 4 passed on the live target:
+ 1. ONE composite PUT (new group with rate row + title, reorder, sections) => new context shows the exact whole
+    winning tree, stable retained ids and revision exactly old+1; identical document at advanced clock preserves
+    revision/UpdatedAt; late-invalid LAST child after valid earlier edits leaves the same-context tracker empty,
+    SaveChanges()==0 and the persisted tree/timestamp unchanged; stale token 409.
+ 2. Rejected-last-child retry fact: same context tracker empty after rejection, SaveChanges()==0, unknown group id
+    and unknown row id rejected before any write, valid retry at the ORIGINAL revision succeeds and advances once.
+ 3. Editor vs existing region capability on the SAME root revision with a bounded FIRST-SavingChanges two-arrival
+    barrier AFTER both read and BEFORE writes: both captured OriginalValues[Revision]==1, exactly one success and
+    one canonical 409, revision 2, winner-specific complete tree with no hybrid, actual loser tracker empty and
+    SaveChanges()==0.
+ 4. Second staged SaveChanges failure AND caller cancellation (real caller CTS) at the same boundary: fresh-context
+    full tree unchanged at revision 1, no staged residue (stored group Order set still {0}), clean writing tracker,
+    retry at the original revision succeeds (revision 2).
+Whole Shipping suite ONCE with the live DB: 645 passed, 0 failed, 0 skipped (includes the transaction-boundary
+compatibility guard and the route/request/handler/validator set equality: 53 shipped routes, 35 reachable requests,
+31 validator-required, 4 without).
+Post-commit I/O: language/currency context, option/geography validation and type facts are all acquired BEFORE the
+single write; responses are composed from the saved actual root plus those pre-read facts (no fallible re-query
+after commit). This property is argued by construction and by the reused TB-197 handler-composition proof.
+
+REUSED PROOF (not re-executed as new facts)
+Source/parent tracing and module call spans were not re-instrumented by this task; TB-197-R1 handler/DI/trace evidence
+remains the binding proof for the shared authoring surface. Context source 1/2/3+ language facts continue to be
+covered by the existing ShippingAuthoringContextSourceTests (real adapter), not by hardcoded fa/en fixtures.
+
+NOT EXECUTED
+A dedicated "catalog fixture throws on any post-write lookup" fault-injection fact was not added (deadline); the
+no-post-commit-I/O property above is therefore not evidenced by a throwing fixture. No other required proof omitted.
+Not executed / not claimed: UI, full-method creation workflow, live merchant registry acceptance, runtime activation.
+
+CHANGED FILES
+Contracts: Authoring/ShippingAuthoringEditorDocumentContracts.cs (new)
+Domain: Authoring/ShippingAuthoringDraft.cs
+Application: Authoring/Ports/IShippingAuthoringDraftDirectory.cs, Authoring/Models/ShippingAuthoringEditorDocumentModels.cs (new),
+  Authoring/Queries/GetShippingAuthoringEditorDocumentQuery.cs (new), Authoring/Queries/GetShippingAuthoringTypeQueries.cs,
+  Authoring/Commands/ReplaceShippingAuthoringEditorDocumentCommand.cs (new), Authoring/Validation/ShippingAuthoringDraftValidators.cs
+Infrastructure: Authoring/ShippingAuthoringDraftDirectory.cs
+Endpoints: Admin/ShippingAuthoringDraftEndpoints.cs, Seller/ShippingSellerAuthoringDraftEndpoints.cs
+Tests: Authoring/ShippingAuthoringEditorDocumentDomainTests.cs (new), Authoring/ShippingAuthoringEditorDocumentEndpointTests.cs (new),
+  Authoring/ShippingAuthoringEditorDocumentStorageTests.cs (new), Authoring/ShippingAuthoringContextEndpointTests.cs,
+  Authoring/ShippingAuthoringOwnerEndpointTests.cs, Certification/ShippingRequestClassificationTests.cs,
+  Compatibility/ShippingTransactionBoundary.cs
+Docs: docs/ai/tasks/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199.task.md (received verbatim),
+  docs/architecture/evidence/TB-SHIPPING-ADMIN-ATOMIC-EDITOR-DOCUMENT-199/RESULT.md,
+  docs/architecture/shipping/shipping-request-classification.json,
+  docs/architecture/shipping/SHIPPING-ADMIN-RULES-DECISION.md (implementation facts, section 28),
+  docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md (one worker pointer)
+No new project/package, no foreign module/Host/frontend production file, no schema/DbContext mapping/migration/
+designer/snapshot, no shared library, no feature flag, no skill/AGENTS change.
+
+DEVIATIONS
+1. RegionsDiffer compares persisted groups by Order (not EF materialisation position): minimal defensive correction
+   required to make the identical-document no-op truthful after a database load. No business rule/policy changed.
+2. STATUS is PARTIAL for the single unevidenced throwing-catalog fault fact above; all other required gates passed.
+A whole-solution build was not used as proof: the running Tooba.Host process holds output DLL locks (environmental);
+Shipping.Tests and its Shipping references build with 0 errors.
+
+CLEANUP
+Task container tb199pg removed; 127.0.0.1:55432 verified free (port55432_free=True). No shared 5432/tooba_alpha/
+store-alpha/sharedapps/Redis/RabbitMQ touched; no image/package download; no credentials logged.
+UTC: 2026-10-22T22:5xZ (worker local 2026-10-23 02:5x +03:30). Timebox: exceeded (implementation + two bounded
+harness corrections + live-suite run); cleanup/diff/evidence/commit/push/parity were still completed before this result.
+END_TOOBA_WORKER_RESULT

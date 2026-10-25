@@ -1,4 +1,32 @@
-## CURRENT — 212 publication proposal REJECTED; only212-R1 exact source correction — 2026-10-25
+## CURRENT — 212-R1 corrected source facts posted / awaiting Architect review — 2026-10-25
+
+Docs-only correction under the 10-minute box (no src/flag/schema/DB/build/test/browser change). Retractions:
+211/212's "Shipping Contracts only / no implementation" is false — `ShippingModule.AddServices` registers
+`IShippingPackagingFeeLookup`, `IShippingShipmentCostLookup` and `IShippingOperationalQuoteLookup`, and
+`Infrastructure/Operations/ShippingOperationalQuoteLookup.cs` loads the four module-owned slices then calls
+`ShippingOperationalQuoteEvaluator.Evaluate` (freight + packaging, payer split, stable reason codes).
+Service/option/geography/currency = applicability, not tenant/seller authorization (tenant binding is real
+via `ShippingDbContext` + `ICurrentCommerceContext`; seller scope remains the gap). Operating schedule =
+carrier pickup/dispatch windows, NOT a customer delivery promise.
+
+Rejected: publishing a draft by copying into `RatePolicy`/`CoverageGrant`/`PackagingPolicy`/
+`OperatingSchedule`. Actual source proves lossy representation (per-row packaging vs scope-only
+`ShippingPackagingFeeResolver`, merchandise bounds, delivery min/max vs prep+lead, `CalculationMode`
+Free/CarrierApi, owner/seller identity, week semantics), and partial activation with warnings is forbidden.
+
+Chosen next slice (NOT issued, no implementation authorized): Shipping-owned immutable **published revision
+snapshot** — owner identity, per-row freight+packaging, matched conditions, delivery range, week and settings,
+read through new Shipping Contracts; one transaction, `ExpectedRevision` optimistic guard, rollback by
+pointer, existing runtime rows never deactivated, and **no consumer/activation** in that slice so no product
+policy is guessed. Named blockers: week meaning, `CalculationMode` runtime semantics, seller/marketplace
+authorization, activation semantics. Read
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212-R1/RESULT.md` and the
+appended correction in `.../TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212/RESULT.md`.
+Proposed TB213 (copy-into-legacy publish) is withdrawn. Active task: NONE. Next task: NOT ISSUED —
+STOP_FOR_ARCHITECT. Gate stays default-OFF, TB185 paused, nothing connected. Older CURRENT headings below
+are superseded.
+
+## SUPERSEDED — 212 publication proposal REJECTED; only212-R1 exact source correction — 2026-10-25
 
 Root independently read ShippingModule+OperationalQuoteLookup: packaging/operational implementations and scopedDI ALREADY EXIST.212 claimed none: false. Root also read operational contract: week means carrierpickup, not customer delivery promise. Don't duplicate adapters or implement proposed213 snapshotcopy.
 Read212/ARCHITECT-REVIEW.md. Other blockers: per-row packaging cannot flatten onepolicy/currency, owner != geography and tenantcontext isolation exists, IsActive flags don't prove snapshot provenance/rollback, partial publication of unsupported delivery/amount/mode is forbidden. Store-only restriction is not approval for Marketplace/Seller architecture.

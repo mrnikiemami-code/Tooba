@@ -1,3 +1,25 @@
+## CURRENT — 212-R1 corrected source facts posted / awaiting Architect review — 2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212-R1/RESULT.md`
+and `.../212/ARCHITECT-REVIEW.md`. 212-R1 is docs-only source correction under the 10min box.
+Retracted: "Shipping Contracts only / no implementation". Actual registrations in
+`ShippingModule.AddServices` include `IShippingPackagingFeeLookup`, `IShippingShipmentCostLookup`,
+`IShippingOperationalQuoteLookup`; `Infrastructure/Operations/ShippingOperationalQuoteLookup.cs` loads the
+four module-owned slices and delegates to `ShippingOperationalQuoteEvaluator.Evaluate` (freight+packaging,
+payer split, stable reason codes). Applicability (service/option/geography/currency) is NOT seller/tenant
+authorization; tenant binding is real via `ShippingDbContext`+`ICurrentCommerceContext`; seller scope is
+the remaining gap. Operating schedule = carrier pickup/dispatch windows, NOT a delivery promise.
+Conversion to legacy aggregates is provably lossy (per-row packaging vs scope-only resolver, merchandise
+bounds, delivery range vs prep/lead, CalculationMode Free/CarrierApi, owner/seller, week semantics).
+Chosen next slice: Shipping-owned immutable published revision snapshot (owner identity + per-row freight
+and packaging + conditions + delivery range + week + settings) read through new Shipping Contracts, one
+transaction, `ExpectedRevision` guard, rollback by pointer, **no consumer/activation** so no policy is
+guessed. Proposed 213 (copy-into-legacy publish) withdrawn; no publication implementation authorized.
+Named blockers: week semantics, CalculationMode runtime semantics, seller/marketplace authorization,
+activation semantics. Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT.
+Storefront gate stays default-OFF, TB185 paused, no src/data/flag change; nothing connected, no
+storefront certification claim. User Visual ACCEPT for 210 remains PENDING.
+
 ## CURRENT — 212 publication proposal REJECTED; only212-R1 exact source correction — 2026-10-25
 
 Root independently read ShippingModule+OperationalQuoteLookup: packaging/operational implementations and scopedDI ALREADY EXIST.212 claimed none: false. Root also read operational contract: week means carrierpickup, not customer delivery promise. Don't duplicate adapters or implement proposed213 snapshotcopy.
@@ -5,7 +27,7 @@ Read212/ARCHITECT-REVIEW.md. Other blockers: per-row packaging cannot flatten on
 Only issued TB-SHIPPING-ADMIN-DRAFT-STOREFRONT-BRIDGE-CONTRACT-212-R1,parent212;10min/stop6, source-only targetedcorrection. NO213implementation authorized. Await result, then one concrete safe runtime implementation slice, not generic audit. Runtime gateOFF/TB185paused remain.
 211119/119featuretests/typecheck/7guards and contrast accepted; no replay. Actual draft/user unsaved data, Host5088/FE3000 and applied9migrations preserved. Prior explicit localdev authorization persists. User needs quick correct integration, not unsafe partial price. Older CURRENT headings below superseded.
 
-﻿## CURRENT — 212 draft→runtime bridge contract posted / awaiting Architect review — 2026-10-25
+﻿## SUPERSEDED — 212 draft→runtime bridge contract / proposed213 withdrawn by 212-R1 — 2026-10-25
 
 212 is source-only (no src/runtime/data change). Decision: do NOT add a second quote engine or let Order read
 draft tables. The runtime quote authority already exists — Shipping.Contracts.Rates.IShippingRateQuoteLookup
@@ -82,7 +104,7 @@ Actual mobile file shows TOP General, not week; source has three lines/day and n
 Only issued task TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210-R1,parent210: complete paired labelled mobile times, truthful view columns, actual week screenshot at390 plus bounded EN/LTR check; preserve desktop. Hard12min/stop7. No save/domain/backend/runtime restart/proof replay.
 Read210/ARCHITECT-REVIEW.md and task. Await210-R1 result; do not issue another task meanwhile. Preserve real draft01a16eeb-70b3-7000-87c2-564c82835496, actual revision/unsaved work, Host5088 and FE3000. Local-dev authorization persists.190–209 functional accepted, do not replay. TB185paused/defaultOFF. Older CURRENT sections below are historical and superseded.
 
-﻿## CURRENT — 210 visual alignment posted / awaiting Architect review — 2026-10-25
+﻿## Historical — 210 visual alignment posted / Architect reviewed — 2026-10-25 (superseded above)
 
 User rejected 209-R1/R2 visual alignment (10/20) from two real screenshots: General formed a second
 content axis, type floated in its own max-w box, language chips changed geometry, week was two columns of
@@ -93,7 +115,7 @@ Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210/RESULT.m
 Measured at 1440x900: both panels w=1057, type/name inner x=73 w=1023, all seven week rows identical
 (day 481/607, start 209/120, end 81/120), 390x844 no horizontal overflow. No Apply/HTTP write/migration;
 stored 120000.00/5000.00 unchanged. typecheck clean. Hard 20min timebox was exceeded (~32min) — recorded,
-not graded PASS. Active task: NONE. Next task: NONE — await Architect review; User Visual ACCEPT PENDING.
+not graded PASS. User Visual ACCEPT PENDING.
 # Tooba — Agent Rules
 
 ## CURRENT TASK —210 / user rejected alignment10/20 —2026-10-25
