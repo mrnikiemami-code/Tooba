@@ -1,0 +1,69 @@
+BEGIN_TOOBA_WORKER_RESULT
+TASK: TB-SHIPPING-ADMIN-AREA-CONTRAST-AND-EDITOR-CHECKS-211
+PARENT: TB-SHIPPING-ADMIN-VISUAL-ALIGNMENT-210-R1
+CHANNEL: tooba-main
+WORKER: tooba-worker-01
+AGENT: cursor
+BASE: a2e274d1275847305b6997d090380e0bd3295eae
+COMMIT: 8bf2ea0a11c3bf165665e8eb9c83e68d4f814c37
+PUSH: origin/main fast-forward, HEAD == origin/main
+VERDICT: READY_FOR_ARCHITECT_REVIEW (frontend presentation + verification, zero domain writes)
+STATUS: COMPLETED
+
+A. CONTRAST (minimal, as asked)
+ui/authoring-groups-editor.tsx only: the WHOLE area card alternates by current display position. Even keeps
+bg-surface-elevated (white); odd gets inline backgroundColor rgb(var(--color-section-alternate)), the existing
+theme-aware alternate-surface token (247 248 250 light / 22 22 26 dark). No new token, no globalCSS, no
+design-system/model/persistence/save change, no child opacity, cost rows untouched.
+Live measured (EDIT, both cards): position 0 rgb(255,255,255), position 1 rgb(247,248,250); both x=56 w=1057;
+same at 390 with document.scrollWidth == innerWidth == 390 (no overflow). Reorder/add/remove follow `position`,
+the same display index the header label already uses.
+
+B. CHECKS — enumerated, real paths, one run
+Test files enumerated RECURSIVELY under features/admin-shipping-authoring and passed explicitly to the Node
+runner (14 files, incl. nested api/editor-document-adapter.test.ts and session/editor-session.test.ts +
+editor-session-200-r2.test.ts):
+tests 119 · pass 119 · fail 0 · skipped 0.
+First run: tests 119 · pass 118 · fail 1 · skipped 0. The single failure was R203-09 in
+authoring-rates-week-203-r1.test.ts asserting "Weight: 0–5,000" while production renders the truthful
+"Weight (g): 0–5,000" (unit added by earlier accepted 209 work). Production was right, the assertion was
+stale; the ONE bounded correction updated that assertion to the real text. No assertion disabled, loosened
+or removed; the row still proves every axis and the open upper bound.
+npm run typecheck clean (exit 0). One run of the four guards (import-boundary, feature-boundary,
+flat-folder, test-discovery): 7/7 pass. Not run: frontend-source-size and the wider architecture set (the four
+historical unrelated size failures left untouched), no backend/solution build, no discovery sweep.
+
+C. REAL VISUAL, ZERO WRITES
+The live draft currently holds ONE stored area, so a SECOND area was added only locally in Edit to inspect
+contrast. Screenshots: areas-alternating-1440x900.png (both cards) and areas-alternating-390x844.png.
+Exited through the app's normal flow (cancel edit -> «تغییرات اعمال‌نشده» -> «خروج بدون ذخیره»). After the
+discard: view mode, areas = 1, no unsaved banner, Regions inputs = 0, stored freight/packaging still
+120000.00 / 5000.00. No Apply, no POST/PUT/PATCH/DELETE, no seed/migration/new draft/reset/backend
+build/restart. The user's own tab was not reloaded (isolated tab).
+
+D. STOREFRONT — source analysis
+- Draft editor persistence: IMPLEMENTED (Shipping authoring commands/endpoints/migrations; save accepted in 209).
+- Publish/activation/registry bridge from draft to runtime: ABSENT. Modules/Order has ZERO references to
+  Authoring / ShippingAuthoringDraft; no publish or activate endpoint exists in the authoring surface.
+- Existing storefront/checkout shipping choice: IMPLEMENTED and separate — storefront-shipping.tsx,
+  storefront-shipping-group-cards.tsx, storefront-shipping-delivery-card.tsx, storefront-checkout.tsx calling
+  /v1/storefront/shipping/{projection,selection,commit}.
+- Its runtime source: config + Fulfillment catalog, NOT the draft — Order StorefrontShippingService uses
+  ShippingMethodRegistry.Enabled(ShippingMethodsOptions) and StorefrontShippingCalculator.ResolveRate(methodCode,
+  ShippingMethodsOptions) for availability/amounts, labels from IShippingCatalogReader and the gated
+  IShippingOneLevelCanonicalMethodReader (default OFF).
+- Do authored type/areas/fees/week reach customers? NO.
+Smallest next slice (not implemented): a read-only publish/activation seam projecting one completed draft into
+what StorefrontShippingService.ProjectAsync already reads, with an explicit Activated/Inactive state, no change
+to legacy ShippingMethodsOptions defaults and no quote-engine work. Feature tests passing does not make the
+storefront integration production-ready.
+
+TIMING (honest)
+Claimed 08:30:55Z; contrast edit ~08:33, checks ~08:34, live visual ~08:35, source analysis ~08:38, docs/commit
+from ~08:40 — implementation stop point (minute 12) respected, finish inside the 20-minute box.
+
+LIMITS
+Presentation + verification only. No save/quote/activation/readiness/deployment/certification/production
+acceptance. Storefront section is source reading, not a live storefront run. USER VISUAL ACCEPT REMAINS
+PENDING; the worker does not grade its own UI. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+END_TOOBA_WORKER_RESULT
