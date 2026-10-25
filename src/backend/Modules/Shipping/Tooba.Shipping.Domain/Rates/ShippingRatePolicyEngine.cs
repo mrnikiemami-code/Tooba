@@ -390,9 +390,20 @@ public static class ShippingRatePolicyEngine
 
         // Several matched AREAS in the SAME group are still ONE group: geography is not an actor and does
         // not multiply choices. Only several GROUPS make the request ambiguous.
+        IReadOnlyList<Guid>? ancestors = null;
+        if (request.AdministrativeAreaAncestors is { } declaredAncestors
+            && !TryVerifyAncestors(declaredAncestors, request.Destination, out ancestors))
+        {
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.DestinationPathInvalid,
+                ShippingCapturedQuoteReasonCodes.DestinationPathInvalid,
+                serviceCode,
+                optionCode);
+        }
+
         var matchedGroups = payload.Groups
             .Where(group => group.Areas is not null
-                            && group.Areas.Any(area => AreaMatches(area, request.Destination)))
+                            && group.Areas.Any(area => AreaMatches(area, request.Destination, ancestors)))
             .ToArray();
 
         if (matchedGroups.Length == 0)
@@ -515,6 +526,19 @@ public static class ShippingRatePolicyEngine
                     ShippingCapturedQuoteReasonCodes.ConditionNotMatched,
                     serviceCode,
                     optionCode);
+        }
+
+        if (undetermined > 0)
+        {
+            // A row that could STILL match once its missing axis is supplied means the current answer is
+            // not yet decidable: another row may become a second match (ambiguity) or may not. Reporting a
+            // price here would hide that ambiguity behind whichever row happened to be complete, so the
+            // answer stays "we need the measurement" — never a price, never a guess.
+            return NotQuoted(
+                ShippingCapturedQuoteOutcome.MeasurementRequired,
+                ShippingCapturedQuoteReasonCodes.MeasurementRequired,
+                serviceCode,
+                optionCode);
         }
 
         // Exactly one row won: BOTH components come from it, so a mixed total is impossible.
@@ -711,17 +735,66 @@ public static class ShippingRatePolicyEngine
     /// <summary>
     /// یک انتخاب جغرافیایی ذخیره‌شده با همان گونه و شناسهٔ مسیر تأییدشدهٔ مقصد تطبیق می‌یابد.
     /// </summary>
+    /// <remarks>
+    /// برای ناحیهٔ اداری، وقتی فراخوان زنجیرهٔ اثبات‌شدهٔ والدها را داده باشد، هر عضو آن زنجیره یک
+    /// تطبیق معتبر است (پوشش ریشه برای شهر عمیق)؛ هیچ شناسه‌ای بیرون زنجیره — حتی اگر GUID معتبری
+    /// باشد — تطبیق نمی‌یابد. بدون زنجیره، فقط همان برگ تطبیق می‌یابد.
+    /// </remarks>
     /// <param name="area">انتخاب ذخیره‌شده.</param>
     /// <param name="path">مسیر تایپ‌شدهٔ مقصد.</param>
-    private static bool AreaMatches(ShippingAuthoringRevisionArea area, ShippingDestinationScope path)
+    /// <param name="ancestors">زنجیرهٔ اثبات‌شدهٔ ناحیهٔ اداری (ریشه..برگ) یا تهی.</param>
+    private static bool AreaMatches(
+        ShippingAuthoringRevisionArea area,
+        ShippingDestinationScope path,
+        IReadOnlyList<Guid>? ancestors)
         => area.NodeKind switch
         {
             ShippingDestinationNodeKind.Country => path.CountryId == area.NodeId,
-            ShippingDestinationNodeKind.AdministrativeArea => path.AdministrativeAreaId == area.NodeId,
+            ShippingDestinationNodeKind.AdministrativeArea =>
+                ancestors is { Count: > 0 }
+                    ? ancestors.Contains(area.NodeId)
+                    : path.AdministrativeAreaId == area.NodeId,
             ShippingDestinationNodeKind.City => path.CityId == area.NodeId,
             ShippingDestinationNodeKind.ServiceArea => path.ServiceAreaId == area.NodeId,
             _ => false,
         };
+
+    /// <summary>
+    /// زنجیرهٔ اعلام‌شدهٔ والدها را می‌سنجد: هر شناسه واقعی و یکتا، و برگِ زنجیره باید همان ناحیهٔ
+    /// اداری مسیر باشد. زنجیرهٔ ناسازگار fail-closed است تا «پوشش با والد جعلی» ساخته نشود.
+    /// </summary>
+    /// <param name="ancestors">زنجیرهٔ اعلام‌شده.</param>
+    /// <param name="path">مسیر مقصد.</param>
+    /// <param name="verified">زنجیرهٔ تأییدشده یا تهی.</param>
+    private static bool TryVerifyAncestors(
+        IReadOnlyList<Guid> ancestors,
+        ShippingDestinationScope path,
+        out IReadOnlyList<Guid>? verified)
+    {
+        verified = null;
+
+        if (ancestors.Count == 0)
+        {
+            return false;
+        }
+
+        var seen = new HashSet<Guid>();
+        foreach (var id in ancestors)
+        {
+            if (id == Guid.Empty || !seen.Add(id))
+            {
+                return false;
+            }
+        }
+
+        if (path.AdministrativeAreaId is not { } leaf || ancestors[^1] != leaf)
+        {
+            return false;
+        }
+
+        verified = ancestors;
+        return true;
+    }
 
     /// <summary>
     /// ساختار مسیر مقصد را می‌سنجد: کشور الزامی، هیچ شناسهٔ تهی، و ناحیهٔ خدمت بدون شهر یک مسیر

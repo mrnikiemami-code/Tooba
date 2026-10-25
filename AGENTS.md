@@ -10,7 +10,31 @@ Read214-R2/ARCHITECT-REVIEW.md. Source8790165bd95bc48f64ecdc69a8b03d777edf3110 o
 Onlyissued TB-SHIPPING-CAPTURED-MANUAL-QUOTE-215,parent214-R2;25min/stop17. ExtendexistingShippingrateenginewithpureexactcapture evaluation, 3ANDaxes/perrowfreightANDpackaging/PrepaidCODsplit/metadata, meaningfulfocusedtests. No readliveDraft/latestfallback, no lossyconversion/newpriceengine/Orderliveconsumer/publishpointer. Puretrustedinputonly; taxinclgroupamountcomesfromownerlater, no fakeweight.
 Nextafterreview: trustedowner+selectedcapturedrevisionContractsedge and realgroupprice/measurementsource thenprojection/selection/commit connection. Notanothersourceaudit. §29decisionsresolved,213calendar/211119FEtestsacceptedandnotreplayed. CapturesNOTLIVE, tableNOTsharedapplied; preserveactualdraft/revision/unsavedtab, Host5088/FE3000 and9appliedmigrations. TB185paused/defaultOFF/PendingAllocationunchanged. Await215result;olderCURRENTsuperseded.
 
-## CURRENT —215 captured manual quote primitive done; NOT wired —2026-10-25
+## CURRENT — 216 captured quote Contracts edge done; NOT connected — 2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-QUOTE-CONTRACTS-EDGE-216/RESULT.md`. 216 added the
+Contracts edge over the EXISTING 215 authority: `IShippingCapturedRevisionQuoteLookup.QuoteAsync` +
+typed request/result in `Contracts/Rates/ShippingCapturedRevisionQuoteContracts.cs`, implemented once,
+scoped, in `Infrastructure/Rates/ShippingCapturedRevisionQuoteLookup.cs` and registered in
+`ShippingModule.AddServices`. Exact owner+draft+revision read (no latest/current/active), owner/edition
+coherence from `ICurrentEdition`+`ICurrentTenant`, verified Geography path via
+`IGeographyPlaceSnapshotReader` (active country/city, full active same-country admin chain, declared area
+must equal the city's real parent, service area must belong to the declared city, duplicate/outside rows and
+provider failures fail closed, null admin city lawful), then ONE `QuoteCapturedRevision` call and an explicit
+Domain→Contracts map. Two narrow Domain corrections executed: `matches==1 && undetermined>0` now returns
+`MeasurementRequired` (known-outside control unchanged), and `AdministrativeAreaAncestors` (additive optional,
+root..leaf, verified) lets a stored ROOT admin area cover a deep city without any per-ancestor pricing loop;
+ancestor+descendant in two groups stays `GroupAmbiguous`. Executed: build 0 errors, 9/9 new edge cases,
+11/11 exact 215 class, 23/23 exact `OperationalQuoteCompatibilityTests`. No schema/migration/HTTP/DI-host/
+Order/FE/Host change, no shared DB, no gate flip. NOT CONNECTED: Storefront/checkout still legacy, owner key
+is data identity not permission, caller-declared money/measurements are not Cart-proven, no active-capture
+selection or projection/commit.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next slice = trusted owner + selected
+captured revision authority and group financial/measurement authority, then projection/selection/commit).
+Preserve real user draft/unsaved tab, Host5088/FE3000, 9 applied migrations; default-OFF, TB185 paused,
+PendingAllocation unchanged; 213 calendar and 211 FE remain accepted-but-unwired.
+
+## SUPERSEDED —215 captured manual quote primitive done; NOT wired —2026-10-25
 
 Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-MANUAL-QUOTE-215/RESULT.md` and
 `214-R2/ARCHITECT-REVIEW.md`. 215 added ONE pure additive capability on the EXISTING rate authority:

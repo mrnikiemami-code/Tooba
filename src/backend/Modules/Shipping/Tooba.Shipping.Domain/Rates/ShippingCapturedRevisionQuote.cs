@@ -197,6 +197,11 @@ public sealed record ShippingCapturedRevisionIdentity(
 /// <param name="GroupItemCount">تعداد اقلام گروه؛ تهی یعنی اعلام‌نشده.</param>
 /// <param name="FinalGroupGoodsAmountAfterDiscountAndTax">مبلغ نهایی کالای گروه پس از تخفیف و مالیات؛ تهی یعنی اعلام‌نشده.</param>
 /// <param name="CurrencyCode">ارز دقیق درخواست؛ تهی یعنی اعلام‌نشده.</param>
+/// <param name="AdministrativeAreaAncestors">
+/// زنجیرهٔ <b>اثبات‌شدهٔ</b> ناحیهٔ اداری مقصد از ریشه تا برگ؛ تهی یعنی فراخوان فقط همان برگ را
+/// اعلام کرده است. وقتی داده شود، پوشش ناحیهٔ اداری ذخیره‌شده با هر عضو این زنجیره تطبیق می‌یابد
+/// (ناحیهٔ ریشه‌ایِ والد یک شهر عمیق هم پوشش می‌دهد) و هیچ شناسه‌ای بیرون این زنجیره پذیرفته نمی‌شود.
+/// </param>
 public sealed record ShippingCapturedRevisionQuoteRequest(
     ShippingCapturedRevisionIdentity Expected,
     ShippingAuthoringRevisionPayload CapturedRevision,
@@ -204,7 +209,8 @@ public sealed record ShippingCapturedRevisionQuoteRequest(
     long? GroupWeightGrams = null,
     int? GroupItemCount = null,
     decimal? FinalGroupGoodsAmountAfterDiscountAndTax = null,
-    string? CurrencyCode = null);
+    string? CurrencyCode = null,
+    IReadOnlyList<Guid>? AdministrativeAreaAncestors = null);
 
 /// <summary>شرط‌های واقعاً تطبیق‌یافتهٔ ردیف برنده؛ فقط توصیفی و برای شفافیت.</summary>
 /// <param name="Weight">بازهٔ وزن برنده؛ تهی یعنی ردیف روی وزن شرطی نبود.</param>

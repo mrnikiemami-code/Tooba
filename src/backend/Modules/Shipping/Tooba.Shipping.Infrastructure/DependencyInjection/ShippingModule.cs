@@ -57,6 +57,10 @@ public sealed class ShippingModule : IToobaModule
         IHostEnvironment environment)
     {
         services.AddScoped<IShippingRateQuoteLookup, ShippingRateQuoteLookup>();
+        // TB-216: the captured-revision Contracts edge. It reads ONE exact owner+draft+revision, proves the
+        // destination path through Geography Contracts and calls the SAME rate authority once. Registered
+        // once, scoped, read-only; it is not a publication pointer and has no live Order/Storefront consumer.
+        services.AddScoped<IShippingCapturedRevisionQuoteLookup, ShippingCapturedRevisionQuoteLookup>();
         // Packaging fee is a Shipping-owned commercial fact kept SEPARATE from the freight charge:
         // this read-only seam answers "what is the packaging component" without ever mutating a quote.
         services.AddScoped<IShippingPackagingFeeLookup, ShippingPackagingFeeLookup>();

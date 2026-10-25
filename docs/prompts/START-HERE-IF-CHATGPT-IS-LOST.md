@@ -1,4 +1,24 @@
-## CURRENT —215 boundedACCEPT; only216 exact-capture Contracts quote edge + verified destination —2026-10-25
+## CURRENT — 216 captured quote Contracts edge done / NOT connected — 2026-10-25
+
+Read `docs/architecture/evidence/TB-SHIPPING-CAPTURED-QUOTE-CONTRACTS-EDGE-216/RESULT.md`. 216 exposes the
+ACCEPTED 215 authority through a single scoped Contracts seam
+(`IShippingCapturedRevisionQuoteLookup`) implemented once in Infrastructure and registered in
+`ShippingModule.AddServices`. Exact owner+draft+revision (no latest/current/active), owner/edition
+coherence from existing `ICurrentEdition`+`ICurrentTenant`, verified Geography path through
+`IGeographyPlaceSnapshotReader` (active country/city, full active same-country admin chain, declared area =
+city's real parent, service area belongs to city, duplicate/outside rows refuted, null admin city lawful),
+one engine call, explicit Domain→Contracts map. Domain corrections executed: undetermined alternative ⇒
+`MeasurementRequired` (known-outside control kept) and verified `AdministrativeAreaAncestors` so a stored
+root area covers a deep city (ancestor+descendant groups = `GroupAmbiguous`). Executed: build 0 errors,
+9/9 new edge cases, 11/11 exact 215 class, 23/23 exact compatibility class. No schema/migration/HTTP/
+Order/FE/Host change. NOT CONNECTED to any customer path; owner key is data identity not permission;
+caller money/measurements are not Cart-proven; no selected-capture publication and no projection/commit.
+Active task: NONE. Next task: NOT ISSUED — STOP_FOR_ARCHITECT (next slice = trusted owner + selected
+captured revision authority and group financial/measurement authority, then projection/selection/commit).
+Preserve real user draft/revision/unsaved work, Host5088/FE3000, 9 applied migrations; default-OFF,
+TB185 paused, PendingAllocation unchanged; 213 calendar and 211 FE stay accepted-but-unwired.
+
+## SUPERSEDED —215 boundedACCEPT; only216 exact-capture Contracts quote edge + verified destination —2026-10-25
 
 Read215/ARCHITECT-REVIEW.md. fff92bb4552d0a9e5c48aa362ddd36c9059fb5cf manualengineextensionaccepted;worker11new+23compatpass. Same-rowfreight+packaging,3ANDaxes,taxinclusivegroupamountinput,Prepaid/CODsplit. No active/runtimeconsumer yet;Free/Carrierunavailable, EligibilityNotEvaluated.
 Onlyissued TB-SHIPPING-CAPTURED-QUOTE-CONTRACTS-EDGE-216,parent215;25min/stop17. ThinShippingContractsrequest/result+scopedadapter exactowner/draft/rev, no latestfallback, actualGeographyparentclosure/nulladmin/inactive+identityvalidation, existingengineonly. Correctpotentialmissingalternativecase andverifieddeepadminpathinthissameedge task. Focusedtests, no anotheraudit/replay.
