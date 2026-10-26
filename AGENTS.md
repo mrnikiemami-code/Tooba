@@ -1,3 +1,15 @@
+## CURRENT —225 NOT ACCEPTED;225-R1 narrow money/modal integrity repair issued —2026-10-26
+
+Root independently read225 source2e6aed0951a5e1ef75d5206d77c4df9f433f55b1. Preserve modals/cascade/mobile work.
+Blockers: typing strips commas from prior invalid pasted text (12,34 then5 ->12345); caret offset from grouped
+text wrongly reused after commas stripped; modal stored-fraction tolerance not revoked when value changes.
+Active TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1; read TASK and225/ARCHITECT-REVIEW.md.
+User must NOT be called to test before Architect accepts repaired result. Worker PASS188 is not acceptance.
+No root runtime/test execution. Existing Tehran service areas absent, so fourth-stage live proof pending;
+breadcrumb branch reads not constant-count performance proof. No whole-suite confidence loop.
+No Storefront/seller-admin/schema changes in repair. Preserve compact-order-evidence decision, user draft/
+capture/tabs/runtime. HARD20/implementation12. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
 ## CURRENT — 225 executed: destination cascade modal, rate-row modal + local validation, IRR integer UI, mobile week — 2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225/{RESULT.md,TASK.md}`.
