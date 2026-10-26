@@ -1,0 +1,83 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2
+Parent-Task: TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1
+Repository: mrnikiemami-code/Tooba / Branch: main / Worker-Id: tooba-worker-01
+Reviewed-Main: 1d06252188a3278127401e804f53b263725c47e1
+Mode: BOUNDED_PERSISTENT_MONEY_PROVENANCE_AND_ISOLATED_CHROME_PROOF
+Status: EXECUTED — awaits Architect review; 225/R1/R2 are NOT accepted and NO user trial was called
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2/
+
+DEFECT CONFIRMED AND REPAIRED — provenance was inferred from the text instead of owned by the field
+RED on the unchanged R1 module (probe executed, not remembered): paste `12,34` -> `12,34`; append `5` ->
+`12,345` (invalid, truthful); append `6` -> `123456` ACCEPTED; append `7` -> `1234567`. R1 returned the prior
+`valid:false` but never owned it, so the second key re-derived trust from the now lawfully-shaped `12,345`.
+Now: model/money-text.ts owns `MoneyInputProvenance { raw, untrusted }`; interpretMoneyTyping(previous,nextText,
+caret) takes it and computes trusted = !untrusted && readMoneyText(raw).valid; MoneyEdit carries `untrusted`
+and every entry point propagates it (interpretMoneyEdit paste/drop/replacement, interpretMoneyTyping,
+interpretMoneyBackspace, interpretMoneyDelete). readMoneyProvenance(raw) is the ONLY fallback and is used for an
+EXTERNAL token (reseed), where the crime is what the text is. Operator text therefore stays invalid through ANY
+number of appended keys until the operator removes/replaces the offending grouping.
+ui/authoring-money-field.tsx owns ONE provenance ref keyed by the committed token; a single commit(edit) is used
+by the change path (strict paste reader by inputType/onPaste, else typing) and by the Backspace/Delete handlers,
+and currentProvenance() drops the record the moment the value prop no longer matches it (external reseed, another
+row, a reopened modal). Blur/re-render/another field changing cannot launder it because the record lives with the
+value. No second sanitizer, no copy of model authority: the model still receives the raw text and the parent still
+blocks it. Rate shape, self-exclusion, legacy fraction, MessageBox semantics and all 225 modal/cascade/mobile UI
+unchanged. No backend/schema/flag.
+
+GREEN (focused only, as instructed)
+- destination-rate-modals-225-r2.test.ts 8/8, each driving the same state transitions the component owns
+  (committed token + provenance + aria-invalid + paste/typing/backspace/delete/reseed entries):
+  invalid through 5,6,7 AND an interleaved re-render/blur; operator's own separator deletion and whole-value
+  replacement are lawful; provenance never leaks to another row/an external reseed; middle insert keeps the
+  caret after the typed digit; 5000000 -> 5,000,000; 0 lawful; malformed/negative/exponent invalid; stored
+  `100.50` still a lawful stored token; comma-adjacent Backspace/Delete symmetric.
+- destination-rate-modals-225-r1 12/12 and destination-rate-modals-225 22/22 (42/42 together);
+  area-range-money-224-r1 + user-trial-209-r2 21/21. ONE `tsc --noEmit` clean. No 188/76/full-feature/backend/
+  guards sweep.
+
+MOUNTED GATE — FRESH task-owned Chrome, not the user's webview
+Installed Chrome 155.0.8059.85, `--headless=new --remote-debugging-port=9333 --user-data-dir=%TEMP%\tb225r2-
+chrome-profile` (profile created fresh, port verified free first). Page target 75081F7DB2547954825D0574BD0D1869
+was CREATED by this task (Target.createTarget); no enumeration/selection of any user tab, no Electron, no /v1
+interception. Only processes whose command line carried that profile were stopped; port has no listener.
+Real input only, `document.activeElement` verified as shipping-authoring-rate-freight before every sequence:
+typed 1234 -> `1,234`; insert `9` at offset 3 -> `12,934` caret 4 (after the typed digit); `0` -> `0`;
+`5000000` -> `5,000,000`; pasted `12,34` -> `12,34` aria-invalid; +5 -> `12,345`, +6 -> `12,3456`, +7 ->
+`12,34567`, then after clicking ANOTHER field +8 -> `12,345678` — every step aria-invalid and verbatim.
+Confirm on that token kept the modal open with the non-empty localized reason «مبلغ باید عددی نامنفی باشد؛
+محدودیت دو رقم اعشار فقط برای ارزهای اعشاری اعمال می‌شود.» (screens/225-R2-refusal.png with DOM receipts in
+mount-receipts.json). Cancel restored the baseline exactly: one row `120,000`/`5,000`, delivery 1..3, Apply
+disabled, no false dirty. NO Apply/PUT/publication/catalog/migration/seed/restart.
+
+HONEST LIMITS
+- The pasted token used the element's REAL paste event plus CDP Input.insertText: browser input, never a value
+  setter, but clipboard commands are denied in this tool set, so it is the paste CODE PATH and not an OS
+  clipboard round-trip.
+- Typing a comma into an already-valid value cannot create one (the comma keystroke is display grouping and is
+  dropped), so a malformed comma token can only arrive by paste/drop. That is pre-existing accepted grouped-field
+  behaviour, recorded here rather than changed outside scope.
+- The four-stage destination/Tehran service-area live gap is unchanged and not re-proven here.
+
+USER TAB INCIDENT — RECORDED, NOT RECOVERED
+R1's mounted detour reloaded an existing USER editor tab and discarded that tab's unsaved LOCAL edits. The stored
+draft was untouched, but an unsaved local edit cannot be rebuilt from the server, so "user tabs untouched" is
+withdrawn for that step and NO recovery is claimed. This task never read, enumerated, selected or manipulated that
+tab; the isolated browser above was used for every mounted step.
+
+Changed paths: src/frontend/features/admin-shipping-authoring/{model/money-text.ts,
+ui/authoring-money-field.tsx, destination-rate-modals-225-r2.test.ts};
+docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2/{TASK.md,RESULT.md,
+result-contract.txt,post-result.js,mount-check.mjs,mount-receipts.json,screens/225-R2-refusal.png};
+docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1/RESULT.md (append-only correction);
+AGENTS.md + docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md +
+docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md (top recovery, both the issued-task block and
+this executed block kept). Exact-path staging only; no git add -A, no reset/stash/rebase/force-push; the three
+pre-existing backend line-ending drifts were never staged.
+
+Parity: code + evidence pushed to origin/main; upstream Architect commit 4a47d9e1b merged (conflicts resolved by
+keeping its issued-task statement under this result), HEAD fast-forwarded content, no force-push.
+Actual elapsed ≈45 min vs HARD20 / implementation10 — recorded, NOT a process PASS.
+Active task: NONE. Next: Architect review only. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+Worker PASS != Architect ACCEPT. Do not invite the user to test.
+END_TOOBA_WORKER_RESULT
