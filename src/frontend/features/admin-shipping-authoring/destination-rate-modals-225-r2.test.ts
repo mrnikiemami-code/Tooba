@@ -57,8 +57,8 @@ function field(initial = "", policy: Policy = "scaled") {
       return edit;
     },
     /** One typed character appended at the end of the CURRENT visible text. */
-    key(character: string, caret = this.text.length) {
-      return this.type(`${this.text}${character}`, caret + 1);
+    key(character: string, caret?: number) {
+      return this.type(`${this.text}${character}`, (caret ?? this.text.length) + 1);
     },
     backspace(caret: number) {
       const edit = interpretMoneyBackspace(this.text, caret);

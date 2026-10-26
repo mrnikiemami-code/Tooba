@@ -1,0 +1,714 @@
+[
+  {
+    "name": "target",
+    "targetId": "1AD7D3F4E69886CF52D32A55D5591E2E",
+    "browser": "Chrome/155.0.8059.85",
+    "port": 9334,
+    "profile": "task-owned fresh profile"
+  },
+  {
+    "name": "view390:measure",
+    "rows": [
+      {
+        "testid": "shipping-authoring-week-day-6",
+        "h": 28,
+        "text": "شنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-7",
+        "h": 28,
+        "text": "یکشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-1",
+        "h": 47,
+        "text": "دوشنبه روز کاری از 09:00 – تا 17:00",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-2",
+        "h": 28,
+        "text": "سه‌شنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-3",
+        "h": 28,
+        "text": "چهارشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-4",
+        "h": 28,
+        "text": "پنجشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-5",
+        "h": 28,
+        "text": "جمعه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      }
+    ],
+    "ulWidth": 300,
+    "overflowX": false,
+    "dir": "rtl"
+  },
+  {
+    "name": "png:226-390-view.png",
+    "bytes": 29195,
+    "width": 390,
+    "height": 844,
+    "viewport": {
+      "w": 390,
+      "h": 844,
+      "scrollWidth": 390
+    }
+  },
+  {
+    "name": "view360:measure",
+    "rows": [
+      {
+        "testid": "shipping-authoring-week-day-6",
+        "h": 28,
+        "text": "شنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-7",
+        "h": 28,
+        "text": "یکشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-1",
+        "h": 47,
+        "text": "دوشنبه روز کاری از 09:00 – تا 17:00",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-2",
+        "h": 28,
+        "text": "سه‌شنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-3",
+        "h": 28,
+        "text": "چهارشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-4",
+        "h": 28,
+        "text": "پنجشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-5",
+        "h": 28,
+        "text": "جمعه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      }
+    ],
+    "ulWidth": 270,
+    "overflowX": false,
+    "dir": "rtl"
+  },
+  {
+    "name": "png:226-360-view.png",
+    "bytes": 24862,
+    "width": 360,
+    "height": 780,
+    "viewport": {
+      "w": 360,
+      "h": 780,
+      "scrollWidth": 360
+    }
+  },
+  {
+    "name": "view390en:measure",
+    "rows": [
+      {
+        "testid": "shipping-authoring-week-day-6",
+        "h": 28,
+        "text": "شنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-7",
+        "h": 28,
+        "text": "یکشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-1",
+        "h": 47,
+        "text": "دوشنبه روز کاری از 09:00 – تا 17:00",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-2",
+        "h": 28,
+        "text": "سه‌شنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-3",
+        "h": 28,
+        "text": "چهارشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-4",
+        "h": 28,
+        "text": "پنجشنبه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      },
+      {
+        "testid": "shipping-authoring-week-day-5",
+        "h": 28,
+        "text": "جمعه تعطیل",
+        "closedTextCount": 1,
+        "closedSpans": [
+          {
+            "testid": null,
+            "text": "تعطیل"
+          }
+        ],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": false
+      }
+    ],
+    "ulWidth": 300,
+    "overflowX": false,
+    "dir": "rtl"
+  },
+  {
+    "name": "png:226-390-view-en.png",
+    "bytes": 29195,
+    "width": 390,
+    "height": 844,
+    "viewport": {
+      "w": 390,
+      "h": 844,
+      "scrollWidth": 390
+    }
+  },
+  {
+    "name": "edit390:measure",
+    "rows": [
+      {
+        "testid": "shipping-authoring-week-day-6",
+        "h": 28,
+        "text": "شنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-7",
+        "h": 28,
+        "text": "یکشنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-1",
+        "h": 80,
+        "text": "دوشنبه روز کاری دوشنبه از دوشنبه تا",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [
+          {
+            "testid": "shipping-authoring-week-start-1",
+            "value": "09:00",
+            "w": 138
+          },
+          {
+            "testid": "shipping-authoring-week-end-1",
+            "value": "17:00",
+            "w": 138
+          }
+        ],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-2",
+        "h": 28,
+        "text": "سه‌شنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-3",
+        "h": 28,
+        "text": "چهارشنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-4",
+        "h": 28,
+        "text": "پنجشنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-5",
+        "h": 28,
+        "text": "جمعه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      }
+    ],
+    "ulWidth": 300,
+    "overflowX": false,
+    "dir": "rtl"
+  },
+  {
+    "name": "png:226-390-edit.png",
+    "bytes": 30007,
+    "width": 390,
+    "height": 844,
+    "viewport": {
+      "w": 390,
+      "h": 844,
+      "scrollWidth": 390
+    }
+  },
+  {
+    "name": "edit360:measure",
+    "rows": [
+      {
+        "testid": "shipping-authoring-week-day-6",
+        "h": 28,
+        "text": "شنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-7",
+        "h": 28,
+        "text": "یکشنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-1",
+        "h": 80,
+        "text": "دوشنبه روز کاری دوشنبه از دوشنبه تا",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [
+          {
+            "testid": "shipping-authoring-week-start-1",
+            "value": "09:00",
+            "w": 123
+          },
+          {
+            "testid": "shipping-authoring-week-end-1",
+            "value": "17:00",
+            "w": 123
+          }
+        ],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-2",
+        "h": 28,
+        "text": "سه‌شنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-3",
+        "h": 28,
+        "text": "چهارشنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-4",
+        "h": 28,
+        "text": "پنجشنبه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      },
+      {
+        "testid": "shipping-authoring-week-day-5",
+        "h": 28,
+        "text": "جمعه روز کاری",
+        "closedTextCount": 0,
+        "closedSpans": [],
+        "rangeText": null,
+        "rangeTestid": null,
+        "timeInputs": [],
+        "checkbox": true
+      }
+    ],
+    "ulWidth": 270,
+    "overflowX": false,
+    "dir": "rtl"
+  },
+  {
+    "name": "png:226-360-edit.png",
+    "bytes": 26886,
+    "width": 360,
+    "height": 780,
+    "viewport": {
+      "w": 360,
+      "h": 780,
+      "scrollWidth": 360
+    }
+  },
+  {
+    "name": "toggle:opened",
+    "weekday": "6",
+    "before": "شنبه روز کاری",
+    "text": "شنبه روز کاری شنبه از شنبه تا برای روز کاری، ساعت شروع و پایان الزامی است.",
+    "times": [
+      "",
+      ""
+    ],
+    "disabled": [
+      false,
+      false
+    ],
+    "applyDisabled": true
+  },
+  {
+    "name": "toggle:reclosed",
+    "text": "شنبه روز کاری",
+    "timeInputs": 0,
+    "applyDisabled": true
+  },
+  {
+    "name": "png:226-390-edit-toggled.png",
+    "bytes": 30007,
+    "width": 390,
+    "height": 844,
+    "viewport": {
+      "w": 390,
+      "h": 844,
+      "scrollWidth": 390
+    }
+  },
+  {
+    "name": "view1440:measure",
+    "cells": [
+      {
+        "text": "روز",
+        "x": 481,
+        "w": 622
+      },
+      {
+        "text": "وضعیت",
+        "x": 337,
+        "w": 136
+      },
+      {
+        "text": "از",
+        "x": 209,
+        "w": 120
+      },
+      {
+        "text": "تا",
+        "x": 81,
+        "w": 120
+      }
+    ],
+    "rows": [
+      {
+        "day": "شنبه",
+        "x": 481,
+        "w": 622,
+        "h": 28
+      },
+      {
+        "day": "یکشنبه",
+        "x": 481,
+        "w": 622,
+        "h": 28
+      },
+      {
+        "day": "دوشنبه",
+        "x": 481,
+        "w": 622,
+        "h": 28
+      },
+      {
+        "day": "سه‌شنبه",
+        "x": 481,
+        "w": 622,
+        "h": 28
+      },
+      {
+        "day": "چهارشنبه",
+        "x": 481,
+        "w": 622,
+        "h": 28
+      },
+      {
+        "day": "پنجشنبه",
+        "x": 481,
+        "w": 622,
+        "h": 28
+      },
+      {
+        "day": "جمعه",
+        "x": 481,
+        "w": 622,
+        "h": 28
+      }
+    ],
+    "overflowX": false
+  },
+  {
+    "name": "png:226-1440-view.png",
+    "bytes": 54078,
+    "width": 1440,
+    "height": 900,
+    "viewport": {
+      "w": 1440,
+      "h": 900,
+      "scrollWidth": 1440
+    }
+  }
+]

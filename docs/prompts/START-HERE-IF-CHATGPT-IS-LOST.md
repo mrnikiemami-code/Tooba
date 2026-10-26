@@ -12,7 +12,46 @@ Await fixed week screenshot then Architect/user trial handoff. No Storefront con
 implementation or seller-admin work. R1 unsaved-user-tab loss remains unrecovered; only new task Chrome target.
 Automatic-Next-Task NONE; STOP_FOR_ARCHITECT after226.
 
-## CURRENT —225-R2 executed: money provenance is field state; proof in an isolated task Chrome —2026-10-26
+## CURRENT —226 executed: mobile week is one Closed badge + one coherent hours line, native PNGs —2026-10-26
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-MOBILE-WEEK-VISUAL-226/{RESULT.md,TASK.md}. Base
+afbdadc7b, fast-forwarded to 94ea7ed2e (docs-only). 225-R2 money integrity stays ACCEPTED and untouched.
+Task status: executed, NOT accepted; user trial still waits for Architect.
+
+Presentation only, in ui/authoring-week-editor.tsx: a CLOSED day no longer emits the status word AND a
+second span across the bound columns — narrow VIEW is now `weekday` + ONE Closed badge, one line, no dash,
+no bounds (28px rows, measured). A working narrow VIEW day is `weekday` + ONE working status, then ONE
+inline range whose labels sit immediately next to their own values (RTL measured `از`/`09:00` adjacent,
+`تا`/`17:00` adjacent; EN `From 09:00 – To 17:00`), 47px. Narrow EDIT keeps the stored controls: weekday +
+working checkbox on line one, the two equal accessible time inputs on line two (138px at 390, 123px at
+360), and a closed day is a single compact line with its checkbox and no extra Closed label;
+onDayWorking/onDayTime/model guards and every existing test id are unchanged. Desktop VIEW keeps the
+accepted four-column geometry (header and rows both day x=481 w=607, status x=337 w=136, from x=209 w=120,
+to x=81 w=120) and now shows `تعطیل` only in the status column with an honest `—` in the bound columns,
+which is the per-column truth 210-R1 described. Narrow padding tightened only (`py-1`, `gap-y-0.5`).
+No time model/validation, dirty/cancel, area/rate/destination modal, money policy or global CSS touched.
+
+Proof: one clean `tsc --noEmit`; no 188/76/42/full-frontend/backend/solution sweep and no invented CSS tests.
+Mounted in a NEW task-owned Chrome (155.0.8059.85, `--headless=new`, port 9334, fresh profile, every page in
+a target created by this task), real FE3000 traffic, no writes/interception/restart, real draft week read
+as-is (only Monday 09:00–17:00 working; nothing invented). Native PNGs at 390×844 and 360×780 (view +
+edit, RTL/fa) plus EN/LTR 390 via the real `/en` prefix and one 1440 desktop shot; dimensions read from the
+PNG headers and each file inspected by eye. `scrollWidth == innerWidth`, `overflowX false` at 360/390.
+Toggle round-trip on the real working day: closed → 0 time inputs/1 line, reopened → `09:00`/`17:00`
+restored, Apply still disabled, no Apply ever pressed.
+HONEST: `?locale=en` does not switch this admin locale (prefix/cookie does) — the first EN capture was wrong
+and re-done; the `/en` visit wrote `tooba_locale` and briefly overwrote the 390 FA PNGs, which were cleared
+and re-captured (shipped FA bytes are the re-captured RTL ones). A pre-existing typecheck break in the
+ACCEPTED 225-R2 test helper (`this` in a default parameter, TS2683 — that task's tsc ran before the file
+existed) was fixed with a bare annotation, no behaviour change.
+
+Actual elapsed ≈10 min vs HARD15 — box respected in wall-clock terms, still NOT a process PASS.
+Not claimed: user Visual ACCEPT, the form as a whole, Storefront wiring, seller-admin entry, Tehran
+service-area gap. Active task: NONE. Next: Architect review only. STOP_FOR_ARCHITECT;
+Automatic-Next-Task NONE. Compact-order-evidence invariant still unimplemented; TB185 paused, default-OFF,
+PendingAllocation preserved.
+
+## SUPERSEDED —225-R2 executed: money provenance is field state; proof in an isolated task Chrome —2026-10-26
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2/{RESULT.md,TASK.md} and the
 correction appended to 225-R1/RESULT.md. Base 1d0625218 (clean; the three backend line-ending drifts and no

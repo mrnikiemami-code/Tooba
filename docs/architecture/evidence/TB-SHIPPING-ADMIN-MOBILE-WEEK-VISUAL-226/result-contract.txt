@@ -1,0 +1,76 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-MOBILE-WEEK-VISUAL-226
+Parent-Task: TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2
+Repository: mrnikiemami-code/Tooba / Branch: main / Worker-Id: tooba-worker-01
+Reviewed-Source: afbdadc7beb363393eba8aa6c988beacf827db24 (fast-forwarded to 94ea7ed2e, docs-only)
+Mode: BOUNDED_WEEK_MOBILE_PRESENTATION_ONLY
+Status: EXECUTED — awaits Architect review; NO user trial called, no visual acceptance claimed
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-MOBILE-WEEK-VISUAL-226/
+225-R2 money integrity stays ACCEPTED; no money/model/quote code reopened.
+
+DEFECT (source, not just the PNG)
+ui/authoring-week-editor.tsx emitted, for a closed day in VIEW, the status-column word AND a second span
+across the bound columns with the same word; the working narrow row put its two bounds in a two-column block
+whose labels sat above the values, reading as two far-apart numbers.
+
+REPAIR — presentation only
+- Narrow VIEW closed day: ONE Closed badge (status column), one line, no second span, no dash, no bounds;
+  measured height 28px. Narrow VIEW working day: weekday + ONE working status, then ONE inline range whose
+  labels sit immediately next to their own values (RTL measured: `از` right edge 337 with `09:00` at
+  292–323; `تا` 266–274 with `17:00` at 230–260; EN `From 09:00 – To 17:00`), height 47px.
+- Narrow EDIT: unchanged controls, compacted — weekday + working checkbox on line one, the two equal
+  accessible time inputs on line two (138px each at 390, 123px at 360), a closed day is one compact line
+  with its checkbox and NO extra Closed label. onDayWorking/onDayTime/model guards and every existing
+  test id untouched; no time model or validation change.
+- Desktop VIEW: accepted four-column geometry unchanged (header and rows both day x=481 w=607, status
+  x=337 w=136, from x=209 w=120, to x=81 w=120; seven identical rows). The duplicate that also existed
+  there is gone: `تعطیل` only in the status column plus an honest `—` across the bound columns, i.e. the
+  truthful per-column view 210-R1 described.
+- Narrow padding only (`py-1`, `gap-y-0.5`). No area/rate/destination modal, dirty/cancel, money policy or
+  global CSS change.
+
+PROOF
+One `tsc --noEmit` clean (0 errors). No 188/76/42/full-frontend/backend/solution sweep; no CSS/source-regex
+test invented. Mounted in a NEW task-owned Chrome — installed 155.0.8059.85, `--headless=new`,
+`--remote-debugging-port=9334`, fresh `--user-data-dir=%TEMP%\tb226-chrome-profile`, port verified free,
+every page in a target created by this task; no user Electron, no URL-matched tab, no /v1 interception.
+Real FE3000 traffic, no write/interception/restart; the real draft week was read as-is (only Monday
+09:00–17:00 working — nothing invented). Native viewport PNGs at 390×844 and 360×780 for BOTH view and
+edit, EN/LTR 390 through the real `/en` prefix, and one 1440 desktop shot; sizes read from the PNG headers
+and every file inspected by eye:
+  226-390-view.png 29195B 390x844 (RTL, one `تعطیل` per closed row, range `از 09:00 – تا 17:00`)
+  226-390-edit.png 30007B 390x844 (7 checkboxes, exactly 2 time inputs)
+  226-390-edit-day1-closed.png 29781B 390x844 (day 1 locally closed: 1 line, 0 inputs, 0 Closed labels)
+  226-360-view.png 24862B 360x780 · 226-360-edit.png 26886B 360x780
+  226-390-view-en.png 31801B 390x844 (lang=en dir=ltr) · 226-390-edit-en.png 33699B 390x844
+  226-1440-view.png 53491B 1440x900
+`scrollWidth == innerWidth` and `overflowX false` at 360/390. Toggle round-trip on the real working day:
+closed → 0 time inputs/1 line, reopened → `09:00`/`17:00` restored, Apply still disabled; no Apply pressed
+and no publication/catalog write.
+
+HONEST LIMITS
+- `?locale=en` does not switch this admin locale (the `/en` prefix or the `tooba_locale` cookie does), so
+  the first EN capture was wrong and was redone; that `/en` visit wrote the locale cookie and briefly
+  overwrote the 390 FA files, which were cleared and re-captured — the shipped FA PNGs are the re-captured
+  RTL bytes listed above.
+- The edit row's checkbox label is the pre-existing control label (`روز کاری`/`Working day`); unchecked
+  means closed, and no second state word is added (per the no-redundant-Closed instruction).
+- A pre-existing typecheck break in the ACCEPTED 225-R2 test helper (`this` in a default parameter, TS2683;
+  that task's `npx tsc` ran before the file existed) was repaired with a bare annotation
+  (`caret?: number` + `caret ?? this.text.length`), no behaviour change. Disclosed, not silent.
+- Desktop closed rows now carry a new `—` glyph (no localization key) in the bound columns.
+
+Changed paths: src/frontend/features/admin-shipping-authoring/ui/authoring-week-editor.tsx;
+src/frontend/features/admin-shipping-authoring/destination-rate-modals-225-r2.test.ts (typing annotation
+only); docs/architecture/evidence/TB-SHIPPING-ADMIN-MOBILE-WEEK-VISUAL-226/{RESULT.md,
+result-contract.txt,post-result.js,week-capture.mjs,mount-receipts.json,screens/*}; AGENTS.md +
+docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md +
+docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md (top recovery). Exact-path staging only;
+no git add -A, no reset/stash/rebase/force-push; the three unrelated backend line-ending drifts untouched.
+
+Actual elapsed ≈10 min vs HARD15 / source8 — box respected in wall-clock terms, still NOT a process PASS.
+Active task: NONE. Next: Architect review only (user trial only after the Architect sees these screenshots).
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+Storefront still not wired; compact shared-snapshot order-evidence invariant unimplemented; seller-admin
+separate. Worker PASS != Architect ACCEPT.
+END_TOOBA_WORKER_RESULT

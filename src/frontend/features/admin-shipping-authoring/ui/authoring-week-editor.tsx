@@ -268,7 +268,7 @@ export function AuthoringWeekEditor({
               return (
                 <li
                   key={weekday}
-                  className="grid items-center gap-x-2 gap-y-1 rounded-lg bg-surface px-2 py-1.5 sm:rounded-none sm:py-1"
+                  className="grid items-center gap-x-2 gap-y-0.5 rounded-lg bg-surface px-2 py-1 sm:rounded-none sm:py-1"
                   style={{ gridTemplateColumns: wide ? WEEK_COLUMNS_DESKTOP : WEEK_COLUMNS_NARROW, columnGap: 8 }}
                   data-testid={`shipping-authoring-week-day-${weekday}`}
                 >
@@ -290,64 +290,83 @@ export function AuthoringWeekEditor({
                       {day.isWorking ? messages.weekWorking : messages.weekClosed}
                     </span>
                   )}
-                  {/* Paired bounds: on narrow screens they share ONE second line with equal widths and
-                      visible From/To labels; on desktop they are the two existing header columns. A CLOSED
-                      day shows one compact note instead of two empty bound blocks — its remembered times
-                      stay in the form state and reappear the moment the day is reopened. */}
+                  {/* Paired bounds. Narrow VIEW: ONE coherent inline range, each label physically next to its
+                      own value. Narrow EDIT: the two equal, accessible time inputs on the second line.
+                      Desktop: the two existing shared header columns, unchanged. */}
                   {day.isWorking ? (
-                    <div style={boundPairStyle(wide)}>
-                    <label className="grid min-w-0 gap-0.5">
-                      <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
-                      <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
-                        {messages.weekFromColumn}
-                      </span>
-                      {editable ? (
-                        <input
-                          type="time"
-                          dir="ltr"
-                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                          value={inputTime(day.startTime)}
-                          disabled={!day.isWorking}
-                          onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
-                          data-testid={`shipping-authoring-week-start-${weekday}`}
-                        />
-                      ) : (
-                        <span dir="ltr" className="text-xs text-gray-700">
-                          {formatTimeText(day.startTime)}
+                    !editable && !wide ? (
+                      <p
+                        className="flex flex-wrap items-baseline gap-x-1.5 text-xs text-gray-700"
+                        style={{ gridColumn: "1 / -1" }}
+                        data-testid={`shipping-authoring-week-range-${weekday}`}
+                      >
+                        <span className="text-[11px] font-semibold text-gray-500">{messages.weekFromColumn}</span>
+                        <span dir="ltr">{formatTimeText(day.startTime)}</span>
+                        <span aria-hidden className="text-gray-400">
+                          –
                         </span>
-                      )}
-                    </label>
-                    <label className="grid min-w-0 gap-0.5">
-                      <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
-                      <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
-                        {messages.weekToColumn}
-                      </span>
-                      {editable ? (
-                        <input
-                          type="time"
-                          dir="ltr"
-                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                          value={inputTime(day.endTime)}
-                          disabled={!day.isWorking}
-                          onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
-                          data-testid={`shipping-authoring-week-end-${weekday}`}
-                        />
-                      ) : (
-                        <span dir="ltr" className="text-xs text-gray-700">
-                          {formatTimeText(day.endTime)}
-                        </span>
-                      )}
-                    </label>
-                    </div>
-                  ) : (
+                        <span className="text-[11px] font-semibold text-gray-500">{messages.weekToColumn}</span>
+                        <span dir="ltr">{formatTimeText(day.endTime)}</span>
+                      </p>
+                    ) : (
+                      <div style={boundPairStyle(wide)}>
+                        <label className="grid min-w-0 gap-0.5">
+                          <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
+                          <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
+                            {messages.weekFromColumn}
+                          </span>
+                          {editable ? (
+                            <input
+                              type="time"
+                              dir="ltr"
+                              className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                              value={inputTime(day.startTime)}
+                              disabled={!day.isWorking}
+                              onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
+                              data-testid={`shipping-authoring-week-start-${weekday}`}
+                            />
+                          ) : (
+                            <span dir="ltr" className="text-xs text-gray-700">
+                              {formatTimeText(day.startTime)}
+                            </span>
+                          )}
+                        </label>
+                        <label className="grid min-w-0 gap-0.5">
+                          <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
+                          <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
+                            {messages.weekToColumn}
+                          </span>
+                          {editable ? (
+                            <input
+                              type="time"
+                              dir="ltr"
+                              className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                              value={inputTime(day.endTime)}
+                              disabled={!day.isWorking}
+                              onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
+                              data-testid={`shipping-authoring-week-end-${weekday}`}
+                            />
+                          ) : (
+                            <span dir="ltr" className="text-xs text-gray-700">
+                              {formatTimeText(day.endTime)}
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                    )
+                  ) : wide ? (
+                    /* Desktop keeps the accepted four-column truth: the status column already says closed, so
+                       the From/To cells show one honest dash instead of repeating the word. A narrow closed
+                       day carries ONE Closed badge (the status column) and nothing else — no second line,
+                       dash or empty bounds. */
                     <span
-                      className="text-xs font-semibold text-gray-500"
-                      style={{ gridColumn: wide ? "3 / 5" : "1 / -1" }}
-                      data-testid={`shipping-authoring-week-closed-${weekday}`}
+                      className="text-xs text-gray-400"
+                      style={{ gridColumn: "3 / 5" }}
+                      data-testid={`shipping-authoring-week-bounds-${weekday}`}
                     >
-                      {messages.weekClosed}
+                      —
                     </span>
-                  )}
+                  ) : null}
                   {dayIssue ? (
                     <p
                       role="alert"
