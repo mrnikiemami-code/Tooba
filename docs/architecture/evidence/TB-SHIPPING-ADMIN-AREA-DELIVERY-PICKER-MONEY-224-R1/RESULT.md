@@ -39,6 +39,11 @@ group-level persisted duration remains a schema change, NOT done here.
   letters, exponent, multiple/malformed separators, `12,34`) keeps its raw text with `valid: false`.
 - `MoneyCaret { whole, fraction, inFraction }` + `caretAnchorAt`/`caretOffsetFor` replace the digit-count-only
   anchor, so the caret knows which side of the separator it is on and local digits are counted as digits.
+- `interpretMoneyBackspace(text, caret)` (found DEFECTIVE during this task's mounted gate, see below): display
+  grouping re-inserts the separator, so a browser Backspace that deleted only the comma left the same text and
+  the same caret forever. A Backspace directly after a separator now removes the separator AND the digit it
+  follows (the digit the operator is deleting), leaves the remaining digit run verbatim and anchors the caret
+  at the deletion point; any other caret position stays a plain browser edit.
 - `MoneyField` renders `aria-invalid` from `isCanonicalMoneyText` and hands the RAW token to the model; the
   row/amount validation (`amountInvalid`) blocks Apply. No Number/parseFloat round-trip, no scale forcing.
 
@@ -66,10 +71,10 @@ DEFECT-CONFIRMED A typed range is not form state: the baseline range model had N
 
 ## GREEN (exact classes, no broad replay)
 
-- `area-range-money-224-r1.test.ts` — 10/10 new facts (A1–A7, B1–B3) executed against the real models the
+- `area-range-money-224-r1.test.ts` — 11/11 new facts (A1–A7, B1–B4) executed against the real models the
   screen and the money input use.
 - Every feature test file under `features/admin-shipping-authoring/` (recursive, `*.test.ts` by real path):
-  **165 tests / 165 pass / 0 fail / 0 skipped**.
+  **166 tests / 166 pass / 0 fail / 0 skipped**.
 - ONE `npx tsc --noEmit` after the final source: exit 0, no output.
 - Architecture guards: **7/7 pass** except `FE-SIZE`, which still fails ONLY on the four documented pre-existing
   baseline drifts (`category-admin-screen.tsx 2230>2215`, `landing-pages/admin-landing-page-composer.tsx
@@ -103,6 +108,12 @@ stored range `1..3`, one row `weight 1000..2000`, freight `120,000.00`, packagin
   `aria-invalid=true`, the row message «مبلغ باید عددی نامنفی با حداکثر دو رقم اعشار باشد.» and Apply disabled;
   no digit was silently removed and no alternative amount was accepted. Restoring `120000` displayed
   `120,000` and cleared the invalid state.
+- **Backspace at a grouping separator (defect found by this gate, then repaired)**: with the caret right after
+  the comma of `1,000`, the BASELINE code deleted the comma, regrouped, restored the same caret — repeated
+  Backspace produced no change at all, forever. After the repair one Backspace at that position removes the
+  digit with the separator: `1,000` → `000` (caret 0, `aria-invalid=true`, Apply blocked, i.e. the honest
+  consequence of deleting the leading digit of 1000) and `120,000` → `12,000` (caret 2, still valid, Apply
+  enabled). No loop, no invented amount.
 - **Reject then confirm (discard)**: «انصراف از ویرایش» → the discard dialog → «بازگشت به ویرایش» kept
   everything (2 areas, `1..4`, `4..9`, `120,000`, `6,000`). Re-opening and choosing «خروج بدون ذخیره» returned
   view mode with the EXACT stored baseline (1 area, `۱ تا ۳ روز`, `120,000.00` · `5,000.00`), Apply disabled and
@@ -139,7 +150,9 @@ the locked future Storefront invariant and remains unimplemented; no seller-admi
 
 ## Elapsed
 
-≈28 min measured from the task base commit (`2026-10-26T17:54:37+03:30`) to the final commit — i.e. past the
-HARD25 box. Recorded, NOT a process PASS.
+≈50 min measured from the task base commit (`2026-10-26T17:54:37+03:30`) to the final commit — i.e. well past
+the HARD25 box. The overrun is a third mounted-found defect (the separator Backspace no-op) discovered while
+executing the task's own proof list, repaired with one focused helper + one key handler + 1 test. Recorded, NOT
+a process PASS.
 
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.

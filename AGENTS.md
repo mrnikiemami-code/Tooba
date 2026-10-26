@@ -1,4 +1,4 @@
-## CURRENT — 224-R1 executed: typed range is form state, invalid money stays invalid — 2026-10-26
+﻿## CURRENT — 224-R1 executed: typed range is form state, invalid money stays invalid — 2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224-R1/{RESULT.md,TASK.md}` and the
 append-only correction in `.../TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224/RESULT.md`.
@@ -15,7 +15,10 @@ says «یک ردیف اضافه کنید یا بازه را خالی کنید» 
 DTO/capture still repeats the days per row; a true group-level persisted duration remains a schema change, NOT
 done.
 
-B — `model/money-text.ts` no longer rewrites unsupported money. `readMoneyText` normalizes only Persian/
+B — `model/money-text.ts` no longer rewrites unsupported money, and its grouping no longer swallows a separator
+Backspace (found by this task's OWN mounted gate: a Backspace right after a comma deleted only the separator,
+grouping re-inserted it with the same caret, so the key did nothing forever; `interpretMoneyBackspace` now
+removes the digit with it — `120,000` → `12,000`, `1,000` → `000` visibly invalid). `readMoneyText` normalizes only Persian/
 Arabic-Indic digits, the Arabic decimal separator, correctly formed 3-digit comma grouping and boundary
 whitespace; signs, letters, exponent, multiple/malformed separators keep their raw text with `valid: false`,
 render `aria-invalid` and block Apply with `amountInvalid`. `MoneyCaret { whole, fraction, inFraction }` +
@@ -23,7 +26,7 @@ render `aria-invalid` and block Apply with `amountInvalid`. `MoneyCaret { whole,
 
 RED measured on the reviewed baseline (probe, not memory): 8/8 defect facts — `-100`→`100`, `1e3`→`13`,
 `12.3.4`→`12.34`, `12,34`→`1234`, `abc100`→`100`, digit-only caret with no decimal side, and NO typed-range form
-state. GREEN: 10/10 new R1 facts, 165/165 feature tests (all files recursive), one clean `tsc`; guards 7/7
+state. GREEN: 11/11 new R1 facts, 166/166 feature tests (all files recursive), one clean `tsc`; guards 7/7
 except `FE-SIZE` on the four documented pre-existing drifts (none touched; the edited screen is 798 LOC ≤ 800).
 
 Mounted (FE3000 PID28288 / Host5088 `D:\temp\tb221-build\out`, both health 200, no restart, isolated new tab —
@@ -37,7 +40,7 @@ closed-day inputs were retained. NO Apply/PUT/publication/catalog/migration/seed
 returned `revision 2`, `updatedAt 2026-10-24T19:05:52.452036Z` — the draft and the selected pointer are untouched.
 Screenshots stored (1440×900 and 390×844, `scrollWidth == clientWidth`, `overflowX 0`).
 NOT claimed: user Visual ACCEPT, Architect acceptance, legacy-conflict live rendering, any Storefront effect.
-Actual ≈28 min vs HARD25 — recorded, NOT a process PASS.
+Actual ≈50 min vs HARD25 — recorded, NOT a process PASS.
 Active task: NONE. Next: Architect review; user must NOT be called to test before acceptance.
 The compact-order-evidence decision stays locked and unimplemented; STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
 

@@ -24,6 +24,7 @@ import {
   caretOffsetFor,
   countDigits,
   groupMoneyText,
+  interpretMoneyBackspace,
   interpretMoneyEdit,
   readMoneyText,
 } from "./model/money-text.ts";
@@ -374,4 +375,34 @@ test("224R1-B3 the caret distinguishes both sides of the decimal separator and c
   assert.deepEqual(backspace.caret, { whole: 1, fraction: 0, inFraction: false });
   assert.equal(caretOffsetFor(groupMoneyText(backspace.raw), backspace.caret), 1);
   assert.equal(backspace.raw, "1234", "deleting a separator changes no digit");
+});
+
+test("224R1-B4 a Backspace right after a grouping separator really removes the digit", () => {
+  // §29 / task proof: the separator alone would be re-inserted by display grouping, so the key would look
+  // broken forever. The digit the operator deletes goes with it, and the remaining digit run is verbatim.
+  const first = interpretMoneyBackspace("1,000", 2);
+  assert.notEqual(first, null);
+  assert.equal(first!.raw, "000", "the digit before the separator is the one that disappears");
+  assert.equal(groupMoneyText(first!.raw), "000");
+  assert.deepEqual(first!.caret, { whole: 0, fraction: 0, inFraction: false });
+  assert.equal(caretOffsetFor(groupMoneyText(first!.raw), first!.caret), 0);
+
+  // No digit is invented, dropped twice or re-grouped into another amount: 1000 without its first digit is 0.
+  assert.equal(readMoneyText(first!.raw).valid, true);
+  assert.equal(first!.raw.length, 3, "exactly one digit left the field");
+
+  // A caret anywhere else is a plain browser edit and must not be intercepted.
+  assert.equal(interpretMoneyBackspace("1,000", 5), null, "end of the text is not a separator position");
+  assert.equal(interpretMoneyBackspace("1,000", 1), null, "caret before the first digit is untouched");
+  assert.equal(interpretMoneyBackspace("1000", 2), null, "no separator in the field");
+
+  // The fraction side keeps its own digits and the whole part loses exactly one.
+  const fraction = interpretMoneyBackspace("1,234.56", 2);
+  assert.equal(fraction!.raw, "234.56");
+  assert.deepEqual(fraction!.caret, { whole: 0, fraction: 0, inFraction: false });
+  assert.equal(caretOffsetFor(groupMoneyText(fraction!.raw), fraction!.caret), 0);
+
+  // Local digits are handled the same way (the displayed separator is what the caret follows).
+  const persian = interpretMoneyBackspace("۱۲٬۰۰۰", 3);
+  assert.equal(persian!.raw, "1000", "12,000 minus the digit before the separator");
 });

@@ -188,6 +188,28 @@ export function interpretMoneyEdit(nextText: string, caret: number): MoneyEdit {
   return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(nextText, caret) };
 }
 
+/**
+ * One Backspace pressed directly after a grouping separator.
+ *
+ * Display grouping re-inserts that separator on every render, so letting the browser delete it alone would
+ * leave the same text and the same caret forever: the key would look broken. A Backspace there therefore
+ * removes the separator AND the digit it follows, which is exactly the digit the operator is deleting; the
+ * remaining digit run is kept verbatim (nothing is guessed, padded or re-scaled).
+ *
+ * @param text The CURRENTLY DISPLAYED text of the field (grouped or invalid).
+ * @param caret The caret offset the browser reported.
+ * @returns The interpreted edit, or `null` when a plain browser edit must stay in charge.
+ */
+export function interpretMoneyBackspace(text: string, caret: number): MoneyEdit | null {
+  const normalized = toAsciiDigits(text).replace(/\u066b/g, ".").replace(/\u066c/g, ",");
+  if (caret <= 0 || caret > normalized.length) return null;
+  const previous = normalized[caret - 1];
+  if (previous !== ",") return null;
+  const nextText = `${normalized.slice(0, caret - 2)}${normalized.slice(caret)}`;
+  const reading = readMoneyText(nextText);
+  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(nextText, Math.max(0, caret - 2)) };
+}
+
 /** True when the token is a lawful canonical money token of the local contract (shape only). */
 export function isCanonicalMoneyText(raw: string): boolean {
   return /^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/.test(raw);

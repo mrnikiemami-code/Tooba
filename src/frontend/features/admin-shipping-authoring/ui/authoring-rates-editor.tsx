@@ -24,7 +24,14 @@ import {
   type AreaRangePair,
   type AreaRangeView,
 } from "../model/editor-area-range.ts";
-import { caretOffsetFor, groupMoneyText, interpretMoneyEdit, isCanonicalMoneyText, type MoneyCaret } from "../model/money-text.ts";
+import {
+  caretOffsetFor,
+  groupMoneyText,
+  interpretMoneyBackspace,
+  interpretMoneyEdit,
+  isCanonicalMoneyText,
+  type MoneyCaret,
+} from "../model/money-text.ts";
 import { rateDraftConditionText } from "./rate-presentation.ts";
 import { formatDecimalText, formatNumber } from "./authoring-format.ts";
 
@@ -146,6 +153,17 @@ export function MoneyField({
         onChange={(event) => {
           const element = event.target;
           const edit = interpretMoneyEdit(element.value, element.selectionStart ?? element.value.length);
+          pendingCaret.current = edit.caret;
+          onChange(edit.raw);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "Backspace" || event.ctrlKey || event.metaKey || event.altKey) return;
+          const element = event.currentTarget;
+          if (element.selectionStart !== element.selectionEnd) return;
+          const edit = interpretMoneyBackspace(element.value, element.selectionStart ?? 0);
+          if (edit === null) return;
+          // Display grouping would restore the separator and swallow the key; the digit goes with it.
+          event.preventDefault();
           pendingCaret.current = edit.caret;
           onChange(edit.raw);
         }}

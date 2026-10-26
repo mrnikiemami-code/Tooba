@@ -12,12 +12,15 @@ that `buildAuthoringIntent(..., areaRanges)` folds into the blocking issues, so 
 never submit stale row values, a row-less staged range is refused with an area-scoped message, and one
 `applyLocalDrafts` helper reseeds form+groups+rates+area ranges+week from the same baseline on load and confirmed
 cancel. The DTO/capture still repeats days per row — a group-level persisted duration stays a schema change.
-(B) `model/money-text.ts` stopped rewriting unsupported input: only Persian/Arabic-Indic digits, the Arabic decimal
+(B) `model/money-text.ts` stopped rewriting unsupported input AND stopped swallowing a Backspace at a grouping
+separator (found mounted by this task: the deleted comma was re-grouped back with the same caret, a permanent
+no-op; `interpretMoneyBackspace` now removes the digit with the separator, so `120,000` → `12,000` and
+`1,000` → `000` visibly invalid): only Persian/Arabic-Indic digits, the Arabic decimal
 separator, correct 3-digit grouping and edge whitespace are normalized; anything else keeps its raw text,
 `valid:false`, `aria-invalid` and a disabled Apply. `MoneyCaret{whole,fraction,inFraction}` gives decimal-side-aware
 caret anchoring, so `12`→`.`→`5` really is `12.5`.
 
-Proof: RED 8/8 defect facts on the reviewed baseline; GREEN 10/10 new R1 facts + 165/165 feature tests, one clean
+Proof: RED 8/8 defect facts on the reviewed baseline; GREEN 11/11 new R1 facts + 166/166 feature tests, one clean
 `tsc`, guards 7/7 except the four documented pre-existing `FE-SIZE` drifts (untouched, edited screen 798 LOC ≤ 800).
 Mounted on the untouched local stack (FE3000 PID28288, Host5088 `D:\temp\tb221-build\out`, health 200, no restart,
 isolated tab — the user's tabs were not reloaded) with real traffic: partial max blocks Apply with an area issue,
@@ -28,7 +31,7 @@ unchanged. No Apply/PUT/publication/catalog/migration/seed. 1440×900 + 390×844
 NOT claimed: Architect acceptance, user Visual ACCEPT, live legacy-conflict rendering, any Storefront consumer.
 Active task: NONE. Next: Architect review; do NOT hand the user a trial before acceptance.
 The shared-snapshot / compact per-order-group decision stays locked and NOT implemented; STOP_FOR_ARCHITECT;
-Automatic-Next-Task NONE. Elapsed ≈28 min vs HARD25 — recorded, NOT a process PASS.
+Automatic-Next-Task NONE. Elapsed ≈50 min vs HARD25 — recorded, NOT a process PASS.
 
 ## SUPERSEDED — 224 executed: one delivery range per area, Add-time duplicate, level-aware picker, exact money — 2026-10-26
 
