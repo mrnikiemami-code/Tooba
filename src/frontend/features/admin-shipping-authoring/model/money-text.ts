@@ -214,3 +214,53 @@ export function interpretMoneyBackspace(text: string, caret: number): MoneyEdit 
 export function isCanonicalMoneyText(raw: string): boolean {
   return /^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/.test(raw);
 }
+
+/**
+ * One typed keystroke (NOT a paste) inside the grouped field.
+ *
+ * Every separator that a typing edit produces belongs to the field's OWN display grouping: the browser
+ * reports the new text of a field whose value we formatted, so a middle insert or a delete around an
+ * existing group can leave text like `1,200000`. Treating those characters as user-supplied grouping
+ * would refuse a perfectly lawful amount (the reported screenshot defect), so a typing edit drops the
+ * display separators before reading. Pasted text keeps the strict reader, where a malformed grouping such
+ * as `12,34` really is what the operator supplied and must stay visibly invalid.
+ *
+ * @param nextText The field's new display text, exactly as the browser reported it.
+ * @param caret The caret offset the browser reported for that text.
+ */
+export function interpretMoneyTyping(nextText: string, caret: number): MoneyEdit {
+  const withoutGrouping = toAsciiDigits(nextText)
+    .replace(/\u066b/g, ".")
+    .replace(/[\u002c\u066c]/g, "");
+  const reading = readMoneyText(withoutGrouping);
+  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(withoutGrouping, caret) };
+}
+
+/** True when a canonical token carries a NON-zero fraction (an amount that is not a whole unit). */
+export function moneyHasFraction(raw: string): boolean {
+  const dot = raw.indexOf(".");
+  if (dot < 0) return false;
+  return /[1-9]/.test(raw.slice(dot + 1));
+}
+
+/**
+ * Currency precision policy of the customer-facing money input.
+ *
+ * `IRR` is quoted to customers in whole rial, so the operator's requested input is an integer. This is a
+ * DISPLAY/entry policy only: the stored token is never rounded, padded or truncated, and a currency the
+ * server metadata does not mark this way keeps the existing two-decimal contract.
+ *
+ * @param currencyCode Server-owned currency of the area (`null` while a new area has none).
+ */
+export function moneyPrecisionPolicy(currencyCode: string | null | undefined): "integer" | "scaled" {
+  return currencyCode?.trim().toUpperCase() === "IRR" ? "integer" : "scaled";
+}
+
+/** Display text under a currency policy: an integral IRR token shows no `.00`, a fraction is kept. */
+export function displayMoneyText(raw: string, policy: "integer" | "scaled"): string {
+  if (policy === "integer") {
+    const grouped = groupMoneyText(raw);
+    return moneyHasFraction(raw) ? grouped : grouped.replace(/\.0+$/, "");
+  }
+  return groupMoneyText(raw);
+}

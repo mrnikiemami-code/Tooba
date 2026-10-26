@@ -147,8 +147,12 @@ test("R2-09 the screen opens ONLY the enclosing disclosure and never edits a val
 test("R2-10 group and row ownership is carried into the rendered attributes and map lookup", () => {
   const groups = readFileSync(join(FEATURE_DIR, "ui", "authoring-groups-editor.tsx"), "utf8");
   const rates = readFileSync(join(FEATURE_DIR, "ui", "authoring-rates-editor.tsx"), "utf8");
+  const modal = readFileSync(join(FEATURE_DIR, "ui", "authoring-rate-modal.tsx"), "utf8");
   assert.match(groups, /data-group-index=\{position\}/);
   assert.match(groups, /serverRateErrors\?\.get\(rateRowKey\(position, rowIndex\)\)/);
-  assert.match(rates, /data-row-index=\{index\}/);
+  // TB-225: the editable row is a summary whose ONLY write path is the modal, keyed by the stable row key.
+  assert.match(rates, /data-testid="shipping-authoring-rate-row"/);
+  assert.match(rates, /toleratedStoredFractions\(/);
+  assert.match(modal, /other\.rowKey !== row\.rowKey/, "self is excluded by stable key, never by index");
   assert.doesNotMatch(groups, /serverRateErrors\?\.get\(rowIndex\)/);
 });

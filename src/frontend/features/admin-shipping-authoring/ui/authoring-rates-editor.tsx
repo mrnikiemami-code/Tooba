@@ -1,39 +1,40 @@
-"use client";
+﻿"use client";
 
 /**
  * Editable rows of ONE existing region group: identity, order, currency and geography are shown
- * read-only exactly once, while the operator can add, remove and edit the rate rows beneath it.
+ * read-only exactly once, while the operator can add, edit and remove the rate rows beneath it.
  *
  * TB-224: the shipping duration is ONE customer-receiving range of the WHOLE delivery area, placed above
  * the rows; the rows carry only freight/packaging and their optional weight/count/amount conditions. The
  * persisted wire still repeats the days per row, so the area control writes the chosen pair to exactly the
  * rows of this area (see `model/editor-area-range.ts`).
  *
- * Pure presentation: no fetch, no session, no pricing/overlap policy. Money fields are TEXT inputs whose
- * DISPLAY is grouped while the model keeps the canonical ungrouped token, so `0.50` / `1850000.00` are
- * never transformed by `input[type=number]` or a float round-trip.
+ * TB-225: the rows are READ as compact summaries and are only written inside ONE isolated modal
+ * (`authoring-rate-modal.tsx`). Nothing appears in the area until the modal is confirmed, and the parent
+ * Apply stays the only persistence call.
+ *
+ * Pure presentation: no fetch, no session, no pricing/overlap policy.
  */
-import { useLayoutEffect, useRef } from "react";
+import { useRef, useState } from "react";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
 import { authoringFormat } from "../messages/authoring-messages.ts";
 import type { EditorRegionGroup } from "../model/editor-document.ts";
 import type { DestinationFactIndex } from "../model/editor-destination-ancestry.ts";
-import { RATE_LIMITS, type RateField, type RateRowDraft, type RateRowIssue } from "../model/editor-rates.ts";
 import {
-  type AreaRangeDraftIssueCode,
-  type AreaRangePair,
-  type AreaRangeView,
-} from "../model/editor-area-range.ts";
-import {
-  caretOffsetFor,
-  groupMoneyText,
-  interpretMoneyBackspace,
-  interpretMoneyEdit,
-  isCanonicalMoneyText,
-  type MoneyCaret,
-} from "../model/money-text.ts";
+  RATE_LIMITS,
+  newRateRow,
+  toleratedStoredFractions,
+  type RateRowDraft,
+  type RateRowIssue,
+  type RateField,
+} from "../model/editor-rates.ts";
+import { type AreaRangePair, type AreaRangeView } from "../model/editor-area-range.ts";
+import { displayMoneyText, moneyPrecisionPolicy } from "../model/money-text.ts";
 import { rateDraftConditionText } from "./rate-presentation.ts";
-import { formatDecimalText, formatNumber } from "./authoring-format.ts";
+import { areaRangeIssueMessage, rowIssueMessage } from "./rate-issue-messages.ts";
+import { BoundField } from "./authoring-money-field.tsx";
+import { formatNumber } from "./authoring-format.ts";
+import { AuthoringRateModal } from "./authoring-rate-modal.tsx";
 
 const AREA_KIND_LABEL = {
   Country: "areaCountry",
@@ -42,275 +43,19 @@ const AREA_KIND_LABEL = {
   ServiceArea: "areaServiceArea",
 } as const;
 
-/** Issue message of one row (first blocking reason). */
-export function rowIssueMessage(code: RateRowIssue["code"], messages: AuthoringMessages): string {
-  switch (code) {
-    case "rowLimitExceeded":
-      return messages.rowLimitExceeded;
-    case "boundIncomplete":
-      return messages.boundIncomplete;
-    case "integerInvalid":
-      return messages.integerInvalid;
-    case "boundRangeInvalid":
-      return messages.boundRangeInvalid;
-    case "amountRequired":
-      return messages.amountRequired;
-    case "amountInvalid":
-      return messages.amountInvalid;
-    case "durationRequired":
-      return messages.durationRequired;
-    case "durationInvalid":
-      return messages.durationInvalid;
-  }
-}
-
-/** Issue message of the shared area range. */
-export function areaRangeIssueMessage(code: AreaRangeDraftIssueCode, messages: AuthoringMessages): string {
-  if (code === "durationRequired") return messages.durationRequired;
-  if (code === "durationInvalid") return messages.durationInvalid;
-  return messages.areaRangeRowsRequired;
-}
-
-function BoundField({
-  label,
-  value,
-  onChange,
-  testId,
-  inputMode,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  testId: string;
-  inputMode?: "numeric" | "decimal";
-  placeholder?: string;
-}) {
-  return (
-    <label className="grid gap-0.5">
-      <span className="text-xs font-bold text-gray-700">{label}</span>
-      <input
-        type="text"
-        inputMode={inputMode}
-        dir="ltr"
-        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-        data-testid={testId}
-      />
-    </label>
-  );
-}
-
-/**
- * Exact money field: grouped DISPLAY, canonical token to the model, caret anchored to a digit position.
- *
- * The displayed value is derived from the model token on every render, so grouping can never become part of
- * the committed value; an INVALID text is shown exactly as typed (never trimmed down to different digits)
- * and is refused by the row/amount validation, and the caret anchor keeps which side of the decimal
- * separator it is on, so typing `12`, `.`, `5` really yields `12.5`.
- */
-export function MoneyField({
-  label,
-  value,
-  onChange,
-  testId,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  /** Receives the CANONICAL ungrouped token, or the invalid text as typed. */
-  onChange: (raw: string) => void;
-  testId: string;
-  placeholder?: string;
-}) {
-  const input = useRef<HTMLInputElement>(null);
-  const pendingCaret = useRef<MoneyCaret | null>(null);
-
-  useLayoutEffect(() => {
-    const element = input.current;
-    const anchor = pendingCaret.current;
-    pendingCaret.current = null;
-    if (element === null || anchor === null) return;
-    const caret = caretOffsetFor(element.value, anchor);
-    element.setSelectionRange(caret, caret);
-  });
-
-  return (
-    <label className="grid gap-0.5">
-      <span className="text-xs font-bold text-gray-700">{label}</span>
-      <input
-        ref={input}
-        type="text"
-        inputMode="decimal"
-        dir="ltr"
-        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900 aria-[invalid=true]:border-danger"
-        value={groupMoneyText(value)}
-        placeholder={placeholder}
-        data-testid={testId}
-        aria-invalid={value !== "" && !isCanonicalMoneyText(value)}
-        onChange={(event) => {
-          const element = event.target;
-          const edit = interpretMoneyEdit(element.value, element.selectionStart ?? element.value.length);
-          pendingCaret.current = edit.caret;
-          onChange(edit.raw);
-        }}
-        onKeyDown={(event) => {
-          if (event.key !== "Backspace" || event.ctrlKey || event.metaKey || event.altKey) return;
-          const element = event.currentTarget;
-          if (element.selectionStart !== element.selectionEnd) return;
-          const edit = interpretMoneyBackspace(element.value, element.selectionStart ?? 0);
-          if (edit === null) return;
-          // Display grouping would restore the separator and swallow the key; the digit goes with it.
-          event.preventDefault();
-          pendingCaret.current = edit.caret;
-          onChange(edit.raw);
-        }}
-      />
-    </label>
-  );
-}
-
-/** One editable row of one group (shared with the group-collection editor). */
-export function RateRowEditor({
-  row,
-  index,
-  locale,
-  messages,
-  issue,
-  serverError,
-  onChange,
-  onRemove,
-}: {
-  row: RateRowDraft;
-  index: number;
-  locale: AuthoringLocale;
-  messages: AuthoringMessages;
-  issue: RateRowIssue | undefined;
-  /** Localized reason placed by the SERVER on this exact row (never a generic banner). */
-  serverError?: string;
-  onChange: (field: RateField, value: string) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <li
-      className="grid gap-2 rounded-lg border border-border bg-surface p-2"
-      data-testid="shipping-authoring-rate-row-edit"
-      data-row-index={index}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-black text-gray-800">
-          {authoringFormat(messages.rowLabel, { index: formatNumber(index + 1, locale) })}
-        </span>
-        <button
-          type="button"
-          className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-danger"
-          data-testid="shipping-authoring-rate-row-remove"
-          onClick={onRemove}
-        >
-          {messages.removeRowAction}
-        </button>
-      </div>
-      {/* Only the money of THIS row: the customer-receiving duration belongs to the whole area above. */}
-      <div className="grid gap-2 sm:grid-cols-2">
-        <MoneyField
-          label={messages.freightLabel}
-          value={row.freightAmount}
-          onChange={(value) => onChange("freightAmount", value)}
-          testId="shipping-authoring-rate-freight"
-        />
-        <MoneyField
-          label={messages.packagingLabel}
-          value={row.packagingAmount}
-          onChange={(value) => onChange("packagingAmount", value)}
-          testId="shipping-authoring-rate-packaging"
-        />
-      </div>
-
-      {/* Optional axes stay collapsed but are never hidden: the summary line states the active
-          condition, so a configured weight/count/merchandise range is always visible at a glance.
-          Opening or closing this disclosure only changes presentation, never the values. */}
-      <details className="rounded-lg bg-surface px-2 py-1" data-testid="shipping-authoring-rate-conditions">
-        <summary className="cursor-pointer text-[11px] font-bold text-gray-700">
-          {messages.conditionsToggle}
-          <span className="ms-2 font-normal text-gray-500">
-            {messages.conditionSummary}: {rateDraftConditionText(row, locale, messages)}
-          </span>
-        </summary>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="grid grid-cols-2 gap-1">
-            <BoundField
-              label={`${messages.weightLabel} ${messages.minLabel}`}
-              value={row.minWeightGrams}
-              inputMode="numeric"
-              onChange={(value) => onChange("minWeightGrams", value)}
-              testId="shipping-authoring-rate-min-weight"
-            />
-            <BoundField
-              label={`${messages.weightLabel} ${messages.maxLabel}`}
-              value={row.maxWeightGrams}
-              inputMode="numeric"
-              onChange={(value) => onChange("maxWeightGrams", value)}
-              testId="shipping-authoring-rate-max-weight"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-1">
-            <BoundField
-              label={`${messages.countLabel} ${messages.minLabel}`}
-              value={row.minItemCount}
-              inputMode="numeric"
-              onChange={(value) => onChange("minItemCount", value)}
-              testId="shipping-authoring-rate-min-count"
-            />
-            <BoundField
-              label={`${messages.countLabel} ${messages.maxLabel}`}
-              value={row.maxItemCount}
-              inputMode="numeric"
-              onChange={(value) => onChange("maxItemCount", value)}
-              testId="shipping-authoring-rate-max-count"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-1">
-            <MoneyField
-              label={`${messages.amountLabel} ${messages.minLabel}`}
-              value={row.minMerchandiseAmount}
-              onChange={(value) => onChange("minMerchandiseAmount", value)}
-              testId="shipping-authoring-rate-min-amount"
-            />
-            <MoneyField
-              label={`${messages.amountLabel} ${messages.maxLabel}`}
-              value={row.maxMerchandiseAmount}
-              onChange={(value) => onChange("maxMerchandiseAmount", value)}
-              testId="shipping-authoring-rate-max-amount"
-            />
-          </div>
-        </div>
-      </details>
-      {issue ? (
-        <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-rate-row-issue">
-          {rowIssueMessage(issue.code, messages)}
-        </p>
-      ) : null}
-      {serverError ? (
-        <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-rate-row-server-error">
-          {serverError}
-        </p>
-      ) : null}
-    </li>
-  );
-}
-
 /** Truthful read-only row: the same stored values as text, with no input and no mutation control. */
 export function RateRowSummary({
   row,
   locale,
   messages,
+  currencyCode,
 }: {
   row: RateRowDraft;
   locale: AuthoringLocale;
   messages: AuthoringMessages;
+  currencyCode: string | null;
 }) {
+  const policy = moneyPrecisionPolicy(currencyCode);
   return (
     <li
       className="grid gap-1 rounded-lg bg-surface px-2.5 py-1.5 text-xs text-gray-700 sm:grid-cols-2"
@@ -320,9 +65,18 @@ export function RateRowSummary({
         {messages.conditionSummary}: {rateDraftConditionText(row, locale, messages)}
       </span>
       <span>
-        {messages.freightLabel}: <span dir="ltr">{row.freightAmount ? formatDecimalText(row.freightAmount, locale) : "—"}</span>
+        {messages.freightLabel}:{" "}
+        <span dir="ltr">{row.freightAmount ? displayMoneyText(row.freightAmount, policy) : "—"}</span>
         {" · "}
-        {messages.packagingLabel}: <span dir="ltr">{row.packagingAmount ? formatDecimalText(row.packagingAmount, locale) : "—"}</span>
+        {messages.packagingLabel}:{" "}
+        <span dir="ltr">{row.packagingAmount ? displayMoneyText(row.packagingAmount, policy) : "—"}</span>
+        {" · "}
+        {messages.deliveryLabel}:{" "}
+        <span dir="ltr">
+          {row.minDeliveryDays === "" || row.maxDeliveryDays === ""
+            ? "—"
+            : `${formatNumber(Number(row.minDeliveryDays), locale)}–${formatNumber(Number(row.maxDeliveryDays), locale)}`}
+        </span>
       </span>
     </li>
   );
@@ -359,7 +113,7 @@ export function AreaDeliveryRange({
   /** The operator's own typed pair of THIS area. */
   value: AreaRangePair;
   /** Blocking reason computed by the composed intent for this area, if any. */
-  issue: AreaRangeDraftIssueCode | null;
+  issue: import("../model/editor-area-range.ts").AreaRangeDraftIssueCode | null;
   editable: boolean;
   locale: AuthoringLocale;
   messages: AuthoringMessages;
@@ -424,7 +178,7 @@ export function AreaDeliveryRange({
   );
 }
 
-/** The whole read-only group shell with its editable rows. */
+/** The whole read-only group shell with its compact editable rows (used by the single-group screen). */
 export function AuthoringRatesEditor({
   group,
   position,
@@ -435,9 +189,10 @@ export function AuthoringRatesEditor({
   messages,
   contentLanguageId,
   editable,
-  onAddRow,
+  currencyCode,
+  rowServerErrors,
+  onCommitRow,
   onRemoveRow,
-  onChangeField,
 }: {
   group: EditorRegionGroup;
   position: number;
@@ -448,15 +203,23 @@ export function AuthoringRatesEditor({
   messages: AuthoringMessages;
   contentLanguageId: string;
   editable: boolean;
-  onAddRow: () => void;
+  /** Server-owned currency of THIS area (drives the integer-rial entry policy); `null` when absent. */
+  currencyCode: string | null;
+  /** Server rejections keyed by the stable row key of this area. */
+  rowServerErrors?: ReadonlyMap<string, string>;
+  onCommitRow: (row: RateRowDraft) => void;
   onRemoveRow: (rowKey: string) => void;
-  onChangeField: (rowKey: string, field: RateField, value: string) => void;
 }) {
+  const [modal, setModal] = useState<
+    { readonly title: string; readonly initial: RateRowDraft; readonly tolerated: readonly RateField[] } | null
+  >(null);
+  const newRowCounter = useRef(0);
   const title = group.titles.find((entry) => entry.languageId.toLowerCase() === contentLanguageId.toLowerCase());
   const titleText =
     title && title.title.trim().length > 0
       ? title.title
       : authoringFormat(messages.groupTitle, { index: formatNumber(position + 1, locale) });
+  const policy = moneyPrecisionPolicy(currencyCode);
 
   return (
     <section
@@ -499,9 +262,17 @@ export function AuthoringRatesEditor({
           {editable ? (
             <button
               type="button"
-              className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+              className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800 disabled:opacity-50"
               data-testid="shipping-authoring-rate-add"
-              onClick={onAddRow}
+              disabled={rows.length >= RATE_LIMITS.maxRowsPerGroup}
+              onClick={() => {
+                newRowCounter.current += 1;
+                setModal({
+                  title: messages.rateAddTitle,
+                  initial: newRateRow(`new-${group.groupId}-${newRowCounter.current}`),
+                  tolerated: [],
+                });
+              }}
             >
               {messages.addRowAction}
             </button>
@@ -511,38 +282,102 @@ export function AuthoringRatesEditor({
           <p className="mt-1 text-[11px] text-gray-500">{messages.noRows}</p>
         ) : (
           <ul className="mt-1 grid gap-2">
-            {rows.map((row, rowIndex) =>
-              editable ? (
-                <RateRowEditor
-                  key={row.rowKey}
-                  row={row}
-                  index={rowIndex}
-                  locale={locale}
-                  messages={messages}
-                  issue={issues.find((issue) => issue.rowKey === row.rowKey)}
-                  onChange={(field, value) => onChangeField(row.rowKey, field, value)}
-                  onRemove={() => onRemoveRow(row.rowKey)}
-                />
-              ) : (
+            {rows.map((row) => {
+              const issue = issues.find(
+                (candidate) =>
+                  candidate.rowKey === row.rowKey &&
+                  candidate.code !== "durationRequired" &&
+                  candidate.code !== "durationInvalid",
+              );
+              const serverError = rowServerErrors?.get(row.rowKey);
+              return (
                 <li
                   key={row.rowKey}
-                  className="grid gap-1 rounded-lg bg-surface px-2 py-1 text-[11px] text-gray-700 md:grid-cols-2"
+                  className="grid gap-1 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs text-gray-700"
                   data-testid="shipping-authoring-rate-row"
                 >
-                  <span data-testid="shipping-authoring-rate-row-condition">
-                    {rateDraftConditionText(row, locale, messages)}
-                  </span>
-                  <span>
-                    {messages.freightLabel}: <span dir="ltr">{row.freightAmount ? formatDecimalText(row.freightAmount, locale) : "—"}</span>
-                    {" · "}
-                    {messages.packagingLabel}: <span dir="ltr">{row.packagingAmount ? formatDecimalText(row.packagingAmount, locale) : "—"}</span>
-                  </span>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <span className="grid gap-0.5" data-testid="shipping-authoring-rate-row-condition">
+                      <span>
+                        {messages.conditionSummary}: {rateDraftConditionText(row, locale, messages)}
+                      </span>
+                      <span>
+                        {messages.freightLabel}:{" "}
+                        <span dir="ltr">{row.freightAmount ? displayMoneyText(row.freightAmount, policy) : "—"}</span>
+                        {" · "}
+                        {messages.packagingLabel}:{" "}
+                        <span dir="ltr">{row.packagingAmount ? displayMoneyText(row.packagingAmount, policy) : "—"}</span>
+                        {" · "}
+                        {messages.deliveryLabel}:{" "}
+                        <span dir="ltr">
+                          {row.minDeliveryDays === "" || row.maxDeliveryDays === ""
+                            ? "—"
+                            : `${formatNumber(Number(row.minDeliveryDays), locale)}–${formatNumber(Number(row.maxDeliveryDays), locale)}`}
+                        </span>
+                      </span>
+                    </span>
+                    {editable ? (
+                      <span className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-gray-700"
+                          data-testid="shipping-authoring-rate-row-edit"
+                          onClick={() =>
+                            setModal({
+                              title: messages.rateEditTitle,
+                              initial: row,
+                              tolerated: toleratedStoredFractions(
+                                row,
+                                group.rows.find((candidate) => candidate.rateRowId === row.rateRowId) ?? null,
+                              ),
+                            })
+                          }
+                        >
+                          {messages.rateEditAction}
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-danger"
+                          data-testid="shipping-authoring-rate-row-remove"
+                          onClick={() => onRemoveRow(row.rowKey)}
+                        >
+                          {messages.removeRowAction}
+                        </button>
+                      </span>
+                    ) : null}
+                  </div>
+                  {issue ? (
+                    <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-rate-row-issue">
+                      {rowIssueMessage(issue.code, messages)}
+                    </p>
+                  ) : null}
+                  {serverError ? (
+                    <p role="alert" className="text-[11px] font-semibold text-danger" data-testid="shipping-authoring-rate-row-server-error">
+                      {serverError}
+                    </p>
+                  ) : null}
                 </li>
-              ),
-            )}
+              );
+            })}
           </ul>
         )}
       </div>
+
+      <AuthoringRateModal
+        open={modal !== null}
+        title={modal?.title ?? ""}
+        initial={modal?.initial ?? null}
+        currencyCode={currencyCode}
+        otherRows={rows}
+        tolerated={modal?.tolerated ?? []}
+        editable={editable}
+        messages={messages}
+        onConfirm={(row) => {
+          setModal(null);
+          onCommitRow(row);
+        }}
+        onClose={() => setModal(null)}
+      />
     </section>
   );
 }

@@ -347,3 +347,49 @@ export function unresolvedDraftSelections(
   }
   return unresolved;
 }
+
+/**
+ * The FOUR fixed cascade stages of the destination modal (country -> province -> city -> area).
+ *
+ * Every stage is optional after the country: choosing only a country, a country+province or a
+ * country+province+city is lawful, and the DEEPEST chosen stage is the one terminal that gets added.
+ * Ancestors describe the path; they never become extra selections.
+ */
+export interface StagedPath {
+  readonly country: GeographyOption | null;
+  readonly administrativeArea: GeographyOption | null;
+  readonly city: GeographyOption | null;
+  readonly serviceArea: GeographyOption | null;
+}
+
+/** An untouched four-field path. */
+export function emptyStagedPath(): StagedPath {
+  return { country: null, administrativeArea: null, city: null, serviceArea: null };
+}
+
+/**
+ * The existing choice model of one staged path, with the DEEPEST chosen stage as the terminal level.
+ *
+ * This is the single bridge between the modal's four fields and the already-accepted ancestry/eligibility
+ * rules: no second, weaker validation path is introduced.
+ *
+ * @param path The staged four-field path.
+ */
+export function pathChoice(path: StagedPath): DestinationChoice {
+  const level: AuthoringAreaKind =
+    path.serviceArea !== null
+      ? "ServiceArea"
+      : path.city !== null
+        ? "City"
+        : path.administrativeArea !== null
+          ? "AdministrativeArea"
+          : "Country";
+  return {
+    level,
+    country: path.country,
+    administrativeArea: path.administrativeArea,
+    city: path.city,
+    serviceArea: path.serviceArea,
+  };
+}
+

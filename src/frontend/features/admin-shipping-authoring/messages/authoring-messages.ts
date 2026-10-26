@@ -83,7 +83,7 @@ const fa = {
   integerInvalid: "عدد باید صحیح، نامنفی و در محدودهٔ مجاز باشد.",
   boundRangeInvalid: "انتهای بازه باید بزرگ‌تر از ابتدای آن باشد.",
   amountRequired: "مبلغ کرایه و بسته‌بندی الزامی است.",
-  amountInvalid: "مبلغ باید عددی نامنفی با حداکثر دو رقم اعشار باشد.",
+  amountInvalid: "مبلغ باید عددی نامنفی باشد؛ محدودیت دو رقم اعشار فقط برای ارزهای اعشاری اعمال می‌شود.",
   durationRequired: "کمینه و بیشینهٔ روز تحویل الزامی است.",
   durationInvalid: "مدت تحویل باید عدد صحیح ۰ تا ۳۶۵ و بیشینه بزرگ‌تر یا مساوی کمینه باشد.",
   groupsEditNote:
@@ -289,6 +289,52 @@ const fa = {
   listSurfaceMismatchTitle: "این صفحه برای مالک فروشگاه نیست",
   listSurfaceMismatchDetail:
     "دسترسی مجاز شما در این نصب مالک مارکت‌پلیس است؛ روش‌های فروشگاه از مسیر خودش دیده می‌شوند.",
+
+  /* ————— destination modal — four fixed cascading fields (TB-225) ————— */
+  destinationOpenAction: "افزودن منطقه",
+  destinationModalTitle: "افزودن منطقه",
+  destinationModalIntro:
+    "کشور، استان، شهر و ناحیه را به ترتیب انتخاب کنید. فقط عمیق‌ترین سطحی که انتخاب می‌کنید به‌عنوان یک مقصد ثبت می‌شود.",
+  destinationCountryField: "کشور",
+  destinationProvinceField: "استان",
+  destinationCityField: "شهر",
+  destinationServiceAreaField: "ناحیه",
+  destinationSelectPlaceholder: "انتخاب کنید",
+  destinationAddConfirm: "افزودن منطقه",
+  destinationCloseAction: "بستن",
+  destinationAddedKept: "منطقه افزوده شد؛ می‌توانید ناحیهٔ بعدی را انتخاب کنید.",
+  destinationPathLabel: "مسیر",
+  destinationNoAdministrativeArea:
+    "برای این کشور استان ثبت نشده است؛ در این نصب نمی‌توان استان/شهر را انتخاب کرد. این یک شکاف بازنمایی داده است، نه نبود مقصد.",
+  destinationNoCity: "برای این استان/کشور شهری ثبت نشده است.",
+  destinationNoServiceArea: "برای این شهر ناحیه‌ای ثبت نشده است.",
+  destinationSelectDeepestAvailable:
+    "برای این شاخه سطح عمیق‌تری ثبت نشده؛ همان سطح انتخاب‌شده افزوده می‌شود.",
+  destinationAncestorUnavailable: "بخش مسیر در دسترس نیست",
+  destinationOverlapRefusedTitle: "این مقصد افزوده نشد",
+  destinationOverlapRefusedText:
+    "مقصد انتخابی با پوشش ذخیره‌شدهٔ همین یا گروه دیگر هم‌پوشانی دارد؛ قاعدهٔ عدم‌هم‌پوشانی سرور تغییر نکرد.",
+  destinationRemoveBreadcrumb: "حذف این منطقه",
+  destinationModalBusy: "تا پایان ذخیره‌سازی، تغییر مقصد ممکن نیست.",
+
+  /* ————— rate row modal (TB-225) ————— */
+  rateOpenAddAction: "افزودن ردیف هزینه",
+  rateAddTitle: "افزودن ردیف هزینه",
+  rateEditTitle: "ویرایش ردیف هزینه",
+  rateModalIntro: "شرط‌های وزن/تعداد/مبلغ کالا با هم (AND) اعمال می‌شوند؛ ردیف‌ها جایگزین یکدیگرند.",
+  rateModalConfirm: "تأیید ردیف",
+  rateModalCancel: "انصراف",
+  rateEditAction: "ویرایش",
+  rateModalInvalidTitle: "ردیف هزینه تأیید نشد",
+  rateModalConditionsSummary: "شرط",
+  rateOverlapConflict: "شرایط این ردیف با ردیف دیگری در همین محدوده هم‌پوشانی دارد.",
+  rateDuplicateConflict: "شرط این ردیف دقیقاً با ردیف دیگری در همین محدوده یکسان است.",
+  rialFractionInvalid:
+    "مبلغ ریالی باید عدد صحیح باشد؛ بخش اعشاری غیرصفر مجاز نیست و هیچ گردکردنی انجام نمی‌شود.",
+  rialFractionStored:
+    "این مبلغ ذخیره‌شده کسری غیرصفر دارد و با ورودی ریال صحیح نمایش داده نمی‌شود؛ مقدار ذخیره‌شده دست‌نخورده می‌ماند.",
+  rateInheritAreaDuration: "بازهٔ تحویل از خود محدودهٔ ارسال گرفته می‌شود.",
+  rateOrderedSummary: "ردیف‌های هزینه",
 } as const;
 
 export type AuthoringMessageKey = keyof typeof fa;
@@ -371,7 +417,7 @@ const en: Record<AuthoringMessageKey, string> = {
   integerInvalid: "The value must be a whole, non-negative number within the allowed range.",
   boundRangeInvalid: "The end of a range must be greater than its start.",
   amountRequired: "Freight and packaging amounts are required.",
-  amountInvalid: "An amount must be a non-negative number with at most two decimals.",
+  amountInvalid: "An amount must be a non-negative number; the two-decimal limit applies only to decimal currencies.",
   durationRequired: "Minimum and maximum delivery days are required.",
   durationInvalid: "Delivery days must be whole numbers 0–365 with a maximum not below the minimum.",
   groupsEditNote:
@@ -577,6 +623,52 @@ const en: Record<AuthoringMessageKey, string> = {
   listSurfaceMismatchTitle: "This page is not the store owner surface",
   listSurfaceMismatchDetail:
     "Your authorized owner in this installation is the marketplace; store methods are shown on their own route.",
+
+  /* ————— destination modal — four fixed cascading fields (TB-225) ————— */
+  destinationOpenAction: "Add destination",
+  destinationModalTitle: "Add destination",
+  destinationModalIntro:
+    "Choose country, province, city and area in that order. Only the deepest level you select is recorded as one destination.",
+  destinationCountryField: "Country",
+  destinationProvinceField: "Province",
+  destinationCityField: "City",
+  destinationServiceAreaField: "Area",
+  destinationSelectPlaceholder: "Select",
+  destinationAddConfirm: "Add destination",
+  destinationCloseAction: "Close",
+  destinationAddedKept: "Destination added; you can pick the next area.",
+  destinationPathLabel: "Path",
+  destinationNoAdministrativeArea:
+    "This country has no recorded provinces, so province/city cannot be selected in this installation. That is a data representation gap, not a missing destination.",
+  destinationNoCity: "No city is recorded for this province/country.",
+  destinationNoServiceArea: "No area is recorded for this city.",
+  destinationSelectDeepestAvailable:
+    "No deeper level is recorded for this branch; the selected level itself will be added.",
+  destinationAncestorUnavailable: "Path part unavailable",
+  destinationOverlapRefusedTitle: "This destination was not added",
+  destinationOverlapRefusedText:
+    "The selected destination overlaps a stored coverage in this or another group; the server's no-overlap rule is unchanged.",
+  destinationRemoveBreadcrumb: "Remove this area",
+  destinationModalBusy: "Destinations cannot be changed until saving finishes.",
+
+  /* ————— rate row modal (TB-225) ————— */
+  rateOpenAddAction: "Add cost row",
+  rateAddTitle: "Add cost row",
+  rateEditTitle: "Edit cost row",
+  rateModalIntro: "Weight/count/merchandise conditions of one row are combined (AND); rows are alternatives.",
+  rateModalConfirm: "Confirm row",
+  rateModalCancel: "Cancel",
+  rateEditAction: "Edit",
+  rateModalInvalidTitle: "The cost row was not confirmed",
+  rateModalConditionsSummary: "Condition",
+  rateOverlapConflict: "This row's conditions overlap another row of the same area.",
+  rateDuplicateConflict: "This row's conditions are exactly the same as another row of the same area.",
+  rialFractionInvalid:
+    "A rial amount must be a whole number; a non-zero fraction is not allowed and nothing is rounded.",
+  rialFractionStored:
+    "This stored amount has a non-zero fraction and is not shown as a whole-rial input; the stored value stays untouched.",
+  rateInheritAreaDuration: "The delivery range comes from the delivery area itself.",
+  rateOrderedSummary: "Cost rows",
 };
 
 export type AuthoringMessages = Record<AuthoringMessageKey, string>;

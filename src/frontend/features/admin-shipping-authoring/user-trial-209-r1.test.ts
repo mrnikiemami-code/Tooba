@@ -104,19 +104,24 @@ test("view mode cannot render an editable rate row, and every mutation is guarde
   const groups = readFileSync(join(FEATURE_DIR, "ui", "authoring-groups-editor.tsx"), "utf8");
   assert.match(screen, /mutationBlocked\.current = mode !== "edit" \|\| session\.save === "saving" \|\| session\.reconcile === "pending"/);
   assert.ok((screen.match(/blockedNow\(\)/g) ?? []).length >= 10, "each mutation callback is guarded");
-  assert.match(groups, /\(rates\[group\.key\] \?\? \[\]\)\.map\(\(row: RateRowDraft, rowIndex: number\)/);
+  // TB-225: the row list is a READ-ONLY summary in view mode, and the only write path is the isolated modal.
   assert.match(groups, /<RateRowSummary/);
-  assert.match(groups, /: \(rates\[group\.key\] \?\? \[\]\)\.map\(\(row: RateRowDraft\)/);
+  assert.match(groups, /data-testid="shipping-authoring-rate-row-edit"/);
+  assert.match(groups, /<AuthoringRateModal/);
+  assert.doesNotMatch(groups, /MoneyField/, "no money input is rendered inline in the area card");
   assert.match(groups, /storedTitle\?\.title \?\? titleEntry\?\.title/);
   assert.match(groups, /data-testid="shipping-authoring-group-title-text"/, "view shows the stored title as text");
 });
 
-test("optional conditions collapse without any value mutation path", () => {
+test("optional conditions are edited in the modal, with no disclosure mutation path", () => {
   const rates = readFileSync(join(FEATURE_DIR, "ui", "authoring-rates-editor.tsx"), "utf8");
-  const details = rates.slice(rates.indexOf("<details"), rates.indexOf("</details>"));
-  assert.ok(details.length > 0);
-  assert.doesNotMatch(details, /onToggle=/);
-  assert.match(details, /rateDraftConditionText\(row, locale, messages\)/);
+  const modal = readFileSync(join(FEATURE_DIR, "ui", "authoring-rate-modal.tsx"), "utf8");
+  // The row summary always states the ACTIVE condition, so a collapsed editor never hides a configured axis.
+  assert.match(rates, /rateDraftConditionText\(row, locale, messages\)/);
+  const conditions = modal.slice(modal.indexOf("messages.conditionsToggle"));
+  assert.ok(conditions.length > 0);
+  assert.doesNotMatch(conditions, /onToggle=/);
+  assert.match(conditions, /testId="shipping-authoring-rate-min-weight"/);
 });
 
 test("time zone suggestions do not claim to be market-derived", () => {

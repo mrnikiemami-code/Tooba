@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Rendered editor of ONE existing shipping draft: General, the ONE method-level weekly schedule and the
@@ -20,7 +20,8 @@ import type {
   FreightPaymentMode,
   SelectedAreaRead,
 } from "../model/editor-document.ts";
-import { indexDestinationFacts, withPickedLabels } from "../model/editor-destination-ancestry.ts";
+import { indexWithTrails } from "../model/editor-destination-ancestry.ts";
+import { useStoredTrails } from "./use-stored-trails.ts";
 import { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "../model/authoring-intent.ts";
 import { resetAuthoringDrafts, seedAuthoringDrafts, type AuthoringDrafts } from "../model/authoring-drafts.ts";
 import { composeAncestryResolver, areaIdentity, unresolvedDraftSelections } from "../model/destination-choice.ts";
@@ -45,10 +46,8 @@ import {
   type EditorFormState,
 } from "../model/editor-form.ts";
 import {
-  withAddedRowInheriting,
+  withConfirmedRow,
   withRemovedRow,
-  withRowField,
-  type RateField,
   type RateRowDraft,
   type RatesFormState,
 } from "../model/editor-rates.ts";
@@ -119,6 +118,10 @@ export function ShippingAuthoringScreen({
   const [pickedFacts, setPickedFacts] = useState<ReadonlyMap<string, ResolvedAreaAncestry>>(new Map());
   /** Localized labels of those same picks, so a fresh chip never shows "name unavailable". */
   const [pickedLabels, setPickedLabels] = useState<ReadonlyMap<string, string>>(new Map());
+  /** Verified walking path per freshly picked area (display breadcrumb of that session's pick). */
+  const [pickedTrails, setPickedTrails] = useState<ReadonlyMap<string, readonly string[]>>(new Map());
+  /** Breadcrumb of ALREADY STORED selections, from the existing Geography read (labels only). */
+  const storedTrails = useStoredTrails(document);
   const [contentLanguageId, setContentLanguageId] = useState<string>("");
   const [types, setTypes] = useState<readonly AuthoringTypeChoice[]>([]);
   const [typesState, setTypesState] = useState<"loading" | "ok" | "error">("loading");
@@ -128,7 +131,6 @@ export function ShippingAuthoringScreen({
   const exitDestinationRef = useRef<AuthoringExitDestination>("back");
 
   const formSeed = state.formSeed;
-  const rowCounter = useRef(0);
   const groupCounter = useRef(0);
   /**
    * Handler-boundary guard: a view-mode (or saving/reconciling) tree must not change local rows even
@@ -211,8 +213,8 @@ export function ShippingAuthoringScreen({
     if (session.decision === "discardUnsaved") setConfirmDiscardVisible(true);
   }, [session.decision]);
   const index = useMemo(
-    () => (document ? withPickedLabels(indexDestinationFacts(document), pickedLabels) : null),
-    [document, pickedLabels],
+    () => (document ? indexWithTrails(document, pickedLabels, storedTrails, pickedTrails) : null),
+    [document, pickedLabels, storedTrails, pickedTrails],
   );
   /** Retained server-proven facts + this session's verified picks, as ONE resolver. */
   const resolver = useMemo(
@@ -224,10 +226,7 @@ export function ShippingAuthoringScreen({
     [areaRanges, document, form, rates, week, groups],
   );
 
-  /**
-   * ONE dispatch for every capability: sets the local drafts and hands the controller a SINGLE
-   * composed patch, so a General edit never drops a pending group/rate/week change and vice versa.
-   */
+  /** ONE dispatch: sets the local drafts and hands the controller a SINGLE composed patch. */
   const commit = useCallback(
     (
       nextForm: EditorFormState,
@@ -257,18 +256,21 @@ export function ShippingAuthoringScreen({
     [commit, groups, rates, week],
   );
 
-  const changeRow = useCallback(
-    (groupKey: string, rowKey: string, field: RateField, value: string) => {
+  /** ONE confirmed row from its modal: a NEW row inherits this area's own range; an edit replaces its stable key. */
+  const commitRow = useCallback(
+    (groupKey: string, row: RateRowDraft) => {
       if (blockedNow() || !form || !week) return;
-      commit(form, groups, withRowField(rates, groupKey, rowKey, field, value), week);
+      const inherited =
+        row.rateRowId === null && row.minDeliveryDays === "" && row.maxDeliveryDays === ""
+          ? inheritedAreaRange(rates[groupKey] ?? [], areaRanges[groupKey] ?? null)
+          : null;
+      const confirmed: RateRowDraft =
+        inherited === null ? row : { ...row, minDeliveryDays: inherited.min, maxDeliveryDays: inherited.max };
+      commit(form, groups, withConfirmedRow(rates, groupKey, confirmed), week);
     },
-    [commit, form, groups, rates, week],
+    [areaRanges, blockedNow, commit, form, groups, rates, week],
   );
-
-  /**
-   * ONE entry of one area's shared range: the typed text BECOMES form state (blank/partial/invalid is real
-   * work that blocks Apply) and a lawful pair is written to exactly that area's rows through this commit.
-   */
+  /** ONE entry of one area's shared range: the typed text IS form state; a lawful pair is written to its rows. */
   const changeAreaRange = useCallback(
     (groupKey: string, min: string, max: string) => {
       if (blockedNow() || !form || !week) return;
@@ -276,17 +278,6 @@ export function ShippingAuthoringScreen({
       commit(form, groups, next.rates, week, next.drafts);
     },
     [areaRanges, blockedNow, commit, form, groups, rates, week],
-  );
-
-  const addRow = useCallback(
-    (groupKey: string) => {
-      if (blockedNow() || !form || !week) return;
-      rowCounter.current += 1;
-      // A new row inherits THIS area's own shared range only (never another area's, never a default).
-      const inherited = inheritedAreaRange(rates[groupKey] ?? [], areaRanges[groupKey] ?? null);
-      commit(form, groups, withAddedRowInheriting(rates, groupKey, `new-${rowCounter.current}`, inherited), week);
-    },
-    [areaRanges, commit, form, groups, rates, week],
   );
 
   const removeRow = useCallback(
@@ -340,13 +331,23 @@ export function ShippingAuthoringScreen({
   );
 
   const addGroupArea = useCallback(
-    (groupKey: string, area: SelectedAreaRead, ancestry: ResolvedAreaAncestry, label: string) => {
+    (
+      groupKey: string,
+      area: SelectedAreaRead,
+      ancestry: ResolvedAreaAncestry,
+      label: string,
+      trail: readonly string[],
+    ) => {
       if (blockedNow() || !form || !week) return;
       const nextGroups = withGroupAreaAdded(groups, groupKey, area);
       if (nextGroups === groups) return; // an exact duplicate is rejected locally, never double-sent
       setPickedFacts((previous) => new Map(previous).set(areaIdentity(area), ancestry));
       if (label.trim().length > 0) {
         setPickedLabels((previous) => new Map(previous).set(areaIdentity(area), label.trim()));
+      }
+      // The REAL walked path of this pick, so the chip shows the verified breadcrumb (display only).
+      if (trail.length > 0) {
+        setPickedTrails((previous) => new Map(previous).set(areaIdentity(area), [...trail]));
       }
       commit(form, nextGroups, rates, week);
     },
@@ -761,9 +762,8 @@ export function ShippingAuthoringScreen({
               onChangeTitle={changeGroupTitle}
               onRemoveArea={removeGroupArea}
               onAddArea={addGroupArea}
-              onAddRow={addRow}
+              onCommitRow={commitRow}
               onRemoveRow={removeRow}
-              onChangeRowField={changeRow}
               onChangeAreaRange={changeAreaRange}
             />
           </div>

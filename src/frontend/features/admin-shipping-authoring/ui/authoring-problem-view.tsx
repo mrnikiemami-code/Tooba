@@ -12,7 +12,7 @@ import { authoringFormat, type AuthoringMessageKey, type AuthoringMessages } fro
 import type { AuthoringIntentIssues } from "../model/authoring-intent.ts";
 import type { GroupIssue } from "../model/editor-groups.ts";
 import type { EditorSaveStatus } from "../session/editor-session.ts";
-import { areaRangeIssueMessage, rowIssueMessage } from "./authoring-rates-editor.tsx";
+import { areaRangeIssueMessage, rowIssueMessage } from "./rate-issue-messages.ts";
 import { weekIssueMessage } from "./authoring-week-editor.tsx";
 import type { ServerFieldIssue } from "./server-field-error.ts";
 

@@ -1,4 +1,37 @@
-## CURRENT —225 issued after user rejects picker/rate UX, IRR formatting and mobile —2026-10-26
+## CURRENT —225 executed: modal cascade, modal rate rows, IRR integer UI, mobile week —2026-10-26
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225/RESULT.md` + `TASK.md`.
+Active task NONE; next NOT ISSUED; user must NOT be called to test before Architect review.
+
+A — destinations are ONE modal with FOUR fixed labelled cascade selects (کشور → استان → شهر → ناحیه) over the
+real Geography reads; descendants start disabled, a changed parent clears dependents and superseded completions
+are ignored, and `Add` submits ONLY the deepest verified terminal as ONE `(kind,id)` with a MessageBox duplicate
+refusal on the explicit action only (staging is not an addition and does not dirty). Stored chips rebuild their
+breadcrumb after reload from bounded set-based ancestor reads (`model/destination-trail-resolver.ts`,
+`ui/use-stored-trails.ts`), never per-chip N+1, never a fabricated segment; a country selection is not shown as
+`ایران › ایران`. HONEST GAP observed live: the real `تهران` city has NO service areas, so the modal says
+«برای این شهر ناحیهای ثبت نشده است.» — the service-area Add path is test-proven only, no seed/no schema change.
+B — rate rows are compact summaries with Edit/Delete and an isolated modal draft; Confirm validates against the
+other rows of the SAME area (AND axes, half-open, touching endpoints lawful, exact duplicate tuple refused,
+self excluded by stable key), zero amounts valid, blank not; a failed Confirm shows the MessageBox and keeps the
+typed values, and the parent Apply stays the only persistence call.
+C — money: `interpretMoneyTyping` separates presentation grouping from logical edits (`1,200,000` not
+`1,200000`), strict paste keeps `-100`/`1e3`/`12,34` visibly invalid, IRR is integer-rial in the UI (`120000.00`
+→ `120,000`, wire untouched) and a stored non-zero fraction is refused only on edit, never rounded.
+D — weekly view/edit is compact at 360/390 (paired From/To on one line, closed day as one badge with no empty
+inputs; live edit exposes exactly 2 time inputs) and both modals fit/scroll internally (390: 352×566;
+`scrollWidth == clientWidth` at 390 and 360).
+Proof: 22/22 new facts, ALL feature tests recursively 188/188, one clean `tsc`; guards 10/11 with `FE-SIZE`
+failing only on the four documented pre-existing drifts. Live on the real rev2 draft with no Apply/PUT/
+publication/migration: cascade, no phantom chip, breadcrumb, duplicate refusal, invalid money refusal, clean
+Cancel with no discard dialog and the stored baseline (`1..3`, `120,000/5,000`) intact. Screens in
+`screens/` (1440 destination modal, 390 rate modal/refusal, 390 week view/edit).
+NOT claimed: user Visual ACCEPT, live service-area or legacy-conflict rendering, any Storefront/checkout
+consumer. Elapsed exceeded the HARD45 box across a chat-loss and correction rounds — recorded, NOT a process
+PASS. Compact per-order-group order-evidence decision stays locked and unimplemented; TB185 paused, default-OFF,
+PendingAllocation preserved. STOP_FOR_ARCHITECT.
+
+## SUPERSEDED —225 issued after user rejects picker/rate UX, IRR formatting and mobile —2026-10-26
 
 Active task TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225. Read225/TASK.md. No new user trial until Architect review.
 224-R1 integrity acceptance remains bounded, NOT UI Visual ACCEPT; latest user screenshots show grouping unusable for ordinary editing (5,000000), duplicate row checks absent/poor feedback, and mobile week whitespace. Reproduce/repair, don't claim previous166 tests prove these.

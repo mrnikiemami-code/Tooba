@@ -31,6 +31,12 @@ export interface DestinationReadContext {
   readonly countryId: string | null;
   readonly administrativeAreaId: string | null;
   readonly cityId: string | null;
+  /**
+   * The sequential four-field branch (TB-225): a city read requires a chosen administrative area, so no
+   * country-wide city list is ever read before the operator's own area choice. Absent = the previous
+   * country-wide behaviour is preserved for every existing caller.
+   */
+  readonly citiesRequireAdministrativeArea?: boolean;
 }
 
 /** The four sibling lists of the picker. */
@@ -199,7 +205,9 @@ export function createDestinationReadCoordinator(
   function citiesKey(): string | null {
     const countryId = normalize(context.countryId);
     if (countryId === null) return null;
-    return `${languageKey()}|${countryId}|${normalize(context.administrativeAreaId) ?? ""}`;
+    const areaId = normalize(context.administrativeAreaId);
+    if (areaId === null && context.citiesRequireAdministrativeArea === true) return null;
+    return `${languageKey()}|${countryId}|${areaId ?? ""}`;
   }
 
   function serviceAreasKey(): string | null {
@@ -287,6 +295,11 @@ export function createDestinationReadCoordinator(
   function startCities(): void {
     const key = citiesKey();
     if (key === null || normalize(context.countryId) === null) {
+      resetStage("cities");
+      return;
+    }
+    if (normalize(context.administrativeAreaId) === null && context.citiesRequireAdministrativeArea === true) {
+      // Sequential branch: no area, no city read at all (never a country-wide eager scan).
       resetStage("cities");
       return;
     }

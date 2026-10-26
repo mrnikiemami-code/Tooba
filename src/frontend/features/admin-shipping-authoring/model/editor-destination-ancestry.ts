@@ -21,6 +21,13 @@ export interface DestinationFactIndex {
   readonly factOf: (area: SelectedAreaRead) => EditorDestinationFact | null;
   /** Real localized label of the selected key, or `null` (the UI never shows a raw GUID as a name). */
   readonly labelOf: (area: SelectedAreaRead) => string | null;
+  /**
+   * Displayable path segments of a selected key, root first.
+   *
+   * A segment is a real localized name; when an ancestor's name is not part of the read snapshot the
+   * list simply starts at the deepest proven name — no GUID, code or guessed ancestor is ever shown.
+   */
+  readonly segmentsOf: (area: SelectedAreaRead) => readonly string[];
   /** Authoritative ancestry resolver consumed by the request builder. */
   readonly resolver: AreaAncestryResolver;
 }
@@ -49,12 +56,17 @@ export function indexDestinationFacts(document: EditorDocument): DestinationFact
   const facts = new Map<string, EditorDestinationFact>();
   for (const fact of document.destinationFacts ?? []) facts.set(keyOf(fact), fact);
   const factOf = (area: SelectedAreaRead): EditorDestinationFact | null => facts.get(keyOf(area)) ?? null;
+  const labelOf = (area: SelectedAreaRead): string | null => {
+    const label = factOf(area)?.label?.trim() ?? "";
+    return label.length > 0 ? label : null;
+  };
   return {
     available: document.destinationFacts !== null,
     factOf,
-    labelOf: (area) => {
-      const label = factOf(area)?.label?.trim() ?? "";
-      return label.length > 0 ? label : null;
+    labelOf,
+    segmentsOf: (area) => {
+      const label = labelOf(area);
+      return label === null ? [] : [label];
     },
     resolver: { resolve: (area) => {
       const fact = factOf(area);
@@ -88,6 +100,52 @@ export function withPickedLabels(
       return picked.length > 0 ? picked : null;
     },
   };
+}
+
+/**
+ * Composes the PATH of this session's verified picks into the document's fact index.
+ *
+ * Only the terminal of a pick has a server fact, so the ancestors the operator actually walked are known
+ * for this session only. A stored selection keeps working from its own fact (and, when the snapshot does
+ * not carry ancestor names, honestly starts at the deepest proven name) — nothing is ever invented.
+ *
+ * @param base The document's own (or already label-composed) fact index.
+ * @param trails Displayable segments per `kind:id`, root first.
+ */
+export function withPickedTrails(
+  base: DestinationFactIndex,
+  trails: ReadonlyMap<string, readonly string[]>,
+): DestinationFactIndex {
+  if (trails.size === 0) return base;
+  return {
+    ...base,
+    segmentsOf: (area) => {
+      const trail = trails.get(keyOf(area));
+      if (trail !== undefined && trail.length > 0) return trail;
+      return base.segmentsOf(area);
+    },
+  };
+}
+
+/**
+ * The ONE composed index of a document plus every display path known for it.
+ *
+ * Precedence: the document's own proven fact, then this session's pick, then the stored breadcrumb — a
+ * fresh pick is never overridden by an older read of the same key.
+ *
+ * @param document Validated editor document.
+ * @param pickedLabels Localized labels of this session's picks.
+ * @param storedTrails Breadcrumb of already stored selections (labels only).
+ * @param pickedTrails Breadcrumb of this session's picks.
+ */
+export function indexWithTrails(
+  document: EditorDocument,
+  pickedLabels: ReadonlyMap<string, string>,
+  storedTrails: ReadonlyMap<string, readonly string[]>,
+  pickedTrails: ReadonlyMap<string, readonly string[]>,
+): DestinationFactIndex {
+  const trails = new Map<string, readonly string[]>([...storedTrails, ...pickedTrails]);
+  return withPickedTrails(withPickedLabels(indexDestinationFacts(document), pickedLabels), trails);
 }
 
 /** Every stored selection that the snapshot did not prove, in document order (never filtered away). */export function unresolvedSelections(

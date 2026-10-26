@@ -291,8 +291,11 @@ export function AuthoringWeekEditor({
                     </span>
                   )}
                   {/* Paired bounds: on narrow screens they share ONE second line with equal widths and
-                      visible From/To labels; on desktop they are the two existing header columns. */}
-                  <div style={boundPairStyle(wide)}>
+                      visible From/To labels; on desktop they are the two existing header columns. A CLOSED
+                      day shows one compact note instead of two empty bound blocks — its remembered times
+                      stay in the form state and reappear the moment the day is reopened. */}
+                  {day.isWorking ? (
+                    <div style={boundPairStyle(wide)}>
                     <label className="grid min-w-0 gap-0.5">
                       <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
                       <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
@@ -310,7 +313,7 @@ export function AuthoringWeekEditor({
                         />
                       ) : (
                         <span dir="ltr" className="text-xs text-gray-700">
-                          {day.isWorking ? formatTimeText(day.startTime) : "—"}
+                          {formatTimeText(day.startTime)}
                         </span>
                       )}
                     </label>
@@ -331,11 +334,20 @@ export function AuthoringWeekEditor({
                         />
                       ) : (
                         <span dir="ltr" className="text-xs text-gray-700">
-                          {day.isWorking ? formatTimeText(day.endTime) : "—"}
+                          {formatTimeText(day.endTime)}
                         </span>
                       )}
                     </label>
-                  </div>
+                    </div>
+                  ) : (
+                    <span
+                      className="text-xs font-semibold text-gray-500"
+                      style={{ gridColumn: wide ? "3 / 5" : "1 / -1" }}
+                      data-testid={`shipping-authoring-week-closed-${weekday}`}
+                    >
+                      {messages.weekClosed}
+                    </span>
+                  )}
                   {dayIssue ? (
                     <p
                       role="alert"

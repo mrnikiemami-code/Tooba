@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Local RATE-ROW intent of the EXISTING region groups of one draft.
  *
  * Only the rows under an existing group are editable here: group identity/order/areas/currency and
@@ -14,6 +14,7 @@
  */
 import type { EditorRegionGroup, EditorRateRow } from "./editor-document.ts";
 import type { RateRowEdit, RegionGroupEdit } from "./editor-edits.ts";
+import { moneyHasFraction, moneyPrecisionPolicy } from "./money-text.ts";
 
 /** Domain limits mirrored from `ShippingAuthoringRateRowRules` (no new policy invented). */
 export const RATE_LIMITS = {
@@ -54,6 +55,8 @@ export type RateRowIssueCode =
   | "boundRangeInvalid"
   | "amountRequired"
   | "amountInvalid"
+  | "rialFractionInvalid"
+  | "overlapConflict"
   | "durationRequired"
   | "durationInvalid";
 
@@ -158,6 +161,28 @@ export function withRemovedRow(state: RatesFormState, groupId: string, rowKey: s
   return replaceRows(state, groupId, current.filter((row) => row.rowKey !== rowKey));
 }
 
+/**
+ * Writes ONE confirmed row of the modal back into the area.
+ *
+ * A row that already exists keeps its position and identity (replace by stable `rowKey`), and a new row is
+ * appended; no other row is reordered, dropped or rewritten. Confirmation is LOCAL — the modal never sends a
+ * request, only the parent Apply persists.
+ *
+ * @param state Local rows.
+ * @param groupId The area the row belongs to.
+ * @param row The confirmed row (already validated by the caller).
+ */
+export function withConfirmedRow(state: RatesFormState, groupId: string, row: RateRowDraft): RatesFormState {
+  const current = state[groupId];
+  if (current === undefined) return state;
+  const exists = current.some((candidate) => candidate.rowKey === row.rowKey);
+  return replaceRows(
+    state,
+    groupId,
+    exists ? current.map((candidate) => (candidate.rowKey === row.rowKey ? row : candidate)) : [...current, row],
+  );
+}
+
 /** Replaces one text field of one row (no coercion, no trimming, no rounding). */
 export function withRowField(
   state: RatesFormState,
@@ -192,17 +217,34 @@ function parseInteger(text: string, minimum: number, maximum: number): ParsedInt
 interface ParsedAmount {
   readonly value: string | null;
   readonly ok: boolean;
+  /** Set when the token is representable but the currency's customer precision refuses it (IRR). */
+  readonly fractional: boolean;
 }
 
-/** Money keeps its exact token text; only representable 2-decimal values are lawful. */
-function parseAmount(text: string, required: boolean): ParsedAmount {
-  if (text === "") return { value: null, ok: !required };
-  if (!DECIMAL.test(text)) return { value: null, ok: false };
+/**
+ * Money keeps its exact token text; only representable 2-decimal values are lawful.
+ *
+ * Under the integer-rial policy of `IRR` a NON-zero fraction is refused with its own reason (never rounded,
+ * truncated or converted), while an explicit `.00` stays lawful because it is the same whole amount. A
+ * fraction that the caller explicitly TOLERATES (a stored IRR amount the operator never touched) keeps its
+ * exact text and its numeric value here; only its entry-level acceptance is up to the caller.
+ */
+function parseAmount(text: string, required: boolean, policy: "integer" | "scaled" = "scaled"): ParsedAmount {
+  if (text === "") return { value: null, ok: !required, fractional: false };
+  if (!DECIMAL.test(text)) return { value: null, ok: false, fractional: false };
   const [whole, fraction = ""] = text.split(".");
-  if (fraction.length > RATE_LIMITS.amountScale) return { value: null, ok: false };
-  if (whole.length > 12) return { value: null, ok: false };
-  if (Number(text) > RATE_LIMITS.amountMax) return { value: null, ok: false };
-  return { value: text, ok: true };
+  if (fraction.length > RATE_LIMITS.amountScale) return { value: null, ok: false, fractional: false };
+  if (whole.length > 12) return { value: null, ok: false, fractional: false };
+  if (Number(text) > RATE_LIMITS.amountMax) return { value: null, ok: false, fractional: false };
+  if (policy === "integer" && /[1-9]/.test(fraction)) {
+    return { value: text, ok: false, fractional: true };
+  }
+  return { value: text, ok: true, fractional: false };
+}
+
+/** A money reading is acceptable when it is lawful OR its only objection was tolerated by the caller. */
+function amountAccepted(parsed: ParsedAmount, field: RateField, tolerated: readonly RateField[]): boolean {
+  return parsed.ok || (parsed.fractional && tolerated.includes(field));
 }
 
 /** True when the two numeric texts are strict, half-open bounds (`min < max`). */
@@ -212,17 +254,34 @@ function orderedPair(min: string, max: string): boolean {
   return Number(max) > Number(min);
 }
 
-/** Validates ONE row against the real contract and returns the first blocking issue (or none). */
-export function rowIssue(row: RateRowDraft): RateRowIssueCode | null {
+/**
+ * Validates the SHAPE of ONE row (conditions + the two amounts) and returns its first issue.
+ *
+ * @param row Local draft row.
+ * @param currencyCode Server-owned currency of the area.
+ * @param tolerated Money fields whose NON-ZERO fraction is preserved from storage (never rounded); every
+ *   other objection of those fields — blank, unsupported text, ordering — is still reported.
+ */
+export function rowConditionIssue(
+  row: RateRowDraft,
+  currencyCode?: string | null,
+  tolerated: readonly RateField[] = [],
+): RateRowIssueCode | null {
+  const policy = moneyPrecisionPolicy(currencyCode);
   const weightMin = parseInteger(row.minWeightGrams, 0, RATE_LIMITS.weightGramsMax);
   const weightMax = parseInteger(row.maxWeightGrams, 0, RATE_LIMITS.weightGramsMax);
   const countMin = parseInteger(row.minItemCount, RATE_LIMITS.itemCountMin, RATE_LIMITS.itemCountMax);
   const countMax = parseInteger(row.maxItemCount, RATE_LIMITS.itemCountMin, RATE_LIMITS.itemCountMax);
-  const amountMin = parseAmount(row.minMerchandiseAmount, false);
-  const amountMax = parseAmount(row.maxMerchandiseAmount, false);
+  const amountMin = parseAmount(row.minMerchandiseAmount, false, policy);
+  const amountMax = parseAmount(row.maxMerchandiseAmount, false, policy);
 
   if (!weightMin.ok || !weightMax.ok || !countMin.ok || !countMax.ok) return "integerInvalid";
-  if (!amountMin.ok || !amountMax.ok) return "amountInvalid";
+  if (!amountAccepted(amountMin, "minMerchandiseAmount", tolerated)) {
+    return amountMin.fractional ? "rialFractionInvalid" : "amountInvalid";
+  }
+  if (!amountAccepted(amountMax, "maxMerchandiseAmount", tolerated)) {
+    return amountMax.fractional ? "rialFractionInvalid" : "amountInvalid";
+  }
   if (
     (row.maxWeightGrams !== "" && row.minWeightGrams === "") ||
     (row.maxItemCount !== "" && row.minItemCount === "") ||
@@ -235,16 +294,148 @@ export function rowIssue(row: RateRowDraft): RateRowIssueCode | null {
   if (amountMin.value !== null && amountMax.value !== null && Number(amountMax.value) <= Number(amountMin.value)) {
     return "boundRangeInvalid";
   }
-  const freight = parseAmount(row.freightAmount, true);
-  const packaging = parseAmount(row.packagingAmount, true);
   if (row.freightAmount === "" || row.packagingAmount === "") return "amountRequired";
-  if (!freight.ok || !packaging.ok) return "amountInvalid";
+  const freight = parseAmount(row.freightAmount, true, policy);
+  const packaging = parseAmount(row.packagingAmount, true, policy);
+  if (!amountAccepted(freight, "freightAmount", tolerated)) {
+    return freight.fractional ? "rialFractionInvalid" : "amountInvalid";
+  }
+  if (!amountAccepted(packaging, "packagingAmount", tolerated)) {
+    return packaging.fractional ? "rialFractionInvalid" : "amountInvalid";
+  }
+  return null;
+}
+
+/** Validates ONE row against the real contract and returns the first blocking issue (or none). */
+export function rowIssue(
+  row: RateRowDraft,
+  currencyCode?: string | null,
+  tolerated: readonly RateField[] = [],
+): RateRowIssueCode | null {
+  const shape = rowConditionIssue(row, currencyCode, tolerated);
+  if (shape !== null) return shape;
 
   const minDays = parseInteger(row.minDeliveryDays, 0, RATE_LIMITS.daysMax);
   const maxDays = parseInteger(row.maxDeliveryDays, 0, RATE_LIMITS.daysMax);
   if (!minDays.ok || !maxDays.ok) return "durationInvalid";
   if (minDays.value === null || maxDays.value === null) return "durationRequired";
   if (maxDays.value < minDays.value) return "durationInvalid";
+  return null;
+}
+
+/**
+ * The money fields whose NON-ZERO fraction is preserved verbatim from storage.
+ *
+ * These are the exact fields validation must tolerate (never round): only a field the operator has actually
+ * edited, or one of a NEW row, may be refused as a fractional rial amount.
+ *
+ * @param row The local draft.
+ * @param stored The stored row, or `null` for a new row.
+ */
+export function toleratedStoredFractions(
+  row: RateRowDraft,
+  stored: EditorRateRow | null,
+): readonly RateField[] {
+  if (stored === null) return [];
+  const pairs: readonly (readonly [RateField, string, string])[] = [
+    ["freightAmount", row.freightAmount, stored.freightAmount],
+    ["packagingAmount", row.packagingAmount, stored.packagingAmount],
+    ["minMerchandiseAmount", row.minMerchandiseAmount, stored.minMerchandiseAmount ?? ""],
+    ["maxMerchandiseAmount", row.maxMerchandiseAmount, stored.maxMerchandiseAmount ?? ""],
+  ];
+  const tolerated: RateField[] = [];
+  for (const [field, draft, baseline] of pairs) {
+    if (moneyHasFraction(draft) && draft === baseline) tolerated.push(field);
+  }
+  return tolerated;
+}
+
+/** True when the three money texts of a row are exactly the stored ones (an untouched amount). */
+export function moneyUnchangedFromStored(row: RateRowDraft, stored: EditorRateRow): boolean {
+  return (
+    row.freightAmount === stored.freightAmount &&
+    row.packagingAmount === stored.packagingAmount &&
+    row.minMerchandiseAmount === (stored.minMerchandiseAmount ?? "") &&
+    row.maxMerchandiseAmount === (stored.maxMerchandiseAmount ?? "")
+  );
+}
+
+/** One step of an axis interval: `null` bounds are unbounded, exactly as the domain reads them. */
+interface AxisInterval {
+  readonly min: number | null;
+  readonly max: number | null;
+}
+
+/** The three condition axes of one row, or `null` when the row's own shape is not lawful. */
+function rowAxes(row: RateRowDraft, policy: "integer" | "scaled"): readonly AxisInterval[] | null {
+  const weightMin = parseInteger(row.minWeightGrams, 0, RATE_LIMITS.weightGramsMax);
+  const weightMax = parseInteger(row.maxWeightGrams, 0, RATE_LIMITS.weightGramsMax);
+  const countMin = parseInteger(row.minItemCount, RATE_LIMITS.itemCountMin, RATE_LIMITS.itemCountMax);
+  const countMax = parseInteger(row.maxItemCount, RATE_LIMITS.itemCountMin, RATE_LIMITS.itemCountMax);
+  const amountMin = parseAmount(row.minMerchandiseAmount, false, policy);
+  const amountMax = parseAmount(row.maxMerchandiseAmount, false, policy);
+  if (!weightMin.ok || !weightMax.ok || !countMin.ok || !countMax.ok) return null;
+  if (!amountMin.ok || !amountMax.ok) return null;
+  return [
+    { min: weightMin.value, max: weightMax.value },
+    { min: countMin.value, max: countMax.value },
+    { min: amountMin.value === null ? null : Number(amountMin.value), max: amountMax.value === null ? null : Number(amountMax.value) },
+  ];
+}
+
+/** Half-open `[min, max)` overlap of one axis; touching endpoints (`[1000,2000)` and `[2000,3000)`) do not. */
+function axisOverlaps(left: AxisInterval, right: AxisInterval): boolean {
+  const leftEnd = left.max;
+  const rightEnd = right.max;
+  const leftStart = left.min ?? Number.NEGATIVE_INFINITY;
+  const rightStart = right.min ?? Number.NEGATIVE_INFINITY;
+  return (leftEnd === null || rightStart < leftEnd) && (rightEnd === null || leftStart < rightEnd);
+}
+
+/**
+ * Whether two rows of the SAME area describe an ambiguous price: every AND axis of the two rows must
+ * overlap for the pair to be ambiguous; an unconditional axis spans the whole domain, exactly like the
+ * domain's `ShippingAuthoringRateRowValue.Overlaps`.
+ */
+export function rowsOverlap(left: RateRowDraft, right: RateRowDraft, currencyCode?: string | null): boolean {
+  const policy = moneyPrecisionPolicy(currencyCode);
+  const leftAxes = rowAxes(left, policy);
+  const rightAxes = rowAxes(right, policy);
+  if (leftAxes === null || rightAxes === null) return false;
+  return leftAxes.every((axis, index) => axisOverlaps(axis, rightAxes[index]!));
+}
+
+/**
+ * The condition tuple of one row, in a comparable canonical text (only lawful rows have one).
+ *
+ * Used to name an EXACT duplicate: the same three axes on two rows is ambiguous even when the prices differ.
+ */
+export function conditionTuple(row: RateRowDraft, currencyCode?: string | null): string | null {
+  const axes = rowAxes(row, moneyPrecisionPolicy(currencyCode));
+  if (axes === null) return null;
+  return axes.map((axis) => `${axis.min ?? ""}:${axis.max ?? ""}`).join("|");
+}
+
+/**
+ * The first OTHER row of the same area this candidate would conflict with.
+ *
+ * The candidate is compared with every other row of the SAME group only: self is excluded by the caller's
+ * stable row key (never by index) and rows of another area/owner are never inspected. This mirrors the
+ * domain ambiguity rule; it is not a new pricing authority — the server still enforces it at Apply.
+ *
+ * @param candidate Row being confirmed in the modal.
+ * @param othersRows Every row of the same area (including the candidate itself when editing).
+ * @param currencyCode Server-owned currency of that area.
+ */
+export function conflictingRowKey(
+  candidate: RateRowDraft,
+  othersRows: readonly RateRowDraft[],
+  currencyCode?: string | null,
+): string | null {
+  for (const other of othersRows) {
+    if (other.rowKey === candidate.rowKey) continue;
+    if (rowsOverlap(candidate, other, currencyCode)) return other.rowKey;
+  }
   return null;
 }
 
@@ -260,8 +451,20 @@ export function rateIssues(
       issues.push({ groupId: group.groupId, rowKey: rows[RATE_LIMITS.maxRowsPerGroup]!.rowKey, code: "rowLimitExceeded" });
     }
     for (const row of rows) {
-      const code = rowIssue(row);
-      if (code) issues.push({ groupId: group.groupId, rowKey: row.rowKey, code });
+      const stored = row.rateRowId === null
+        ? null
+        : group.rows.find((candidate) => candidate.rateRowId === row.rateRowId) ?? null;
+      // A STORED amount with a non-zero fraction is preserved verbatim and never rounded; only the fields
+      // the operator actually edited (or a new row's) are refused. Every OTHER objection still surfaces.
+      const code = rowIssue(row, group.currencyCode, toleratedStoredFractions(row, stored));
+      if (code !== null) {
+        issues.push({ groupId: group.groupId, rowKey: row.rowKey, code });
+        continue;
+      }
+      // Two lawful rows of the same area must not describe the same conditions; the server refuses it.
+      if (rows.some((other) => other.rowKey !== row.rowKey && rowsOverlap(row, other, group.currencyCode))) {
+        issues.push({ groupId: group.groupId, rowKey: row.rowKey, code: "overlapConflict" });
+      }
     }
   }
   return issues;
