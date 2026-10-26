@@ -7,8 +7,11 @@
  * - grouping is presentation only: it never rounds, never pads a fraction, never invents `.00`, and never
  *   raises the decimal scale;
  * - no `Number`/`parseFloat` touches the value, so a large lawful amount keeps every digit;
- * - Persian/Arabic-Indic digits, thousands separators and pasted grouped values are normalized
- *   deterministically so a paste cannot produce a different number than what the operator sees.
+ * - ONLY harmless display normalizations are applied — Persian/Arabic-Indic digits become ASCII, a
+ *   recognized well-formed grouping separator is removed, the Arabic decimal separator becomes `.` and
+ *   boundary whitespace is trimmed. Anything else (`-100`, `1e3`, `abc100`, `12.3.4`, `12,34`, internal
+ *   spaces) is kept VISIBLY INVALID and never turned into a different accepted amount: removing the
+ *   unsupported parts and accepting the remaining digits as money is not authorized normalization.
  */
 import type { AuthoringLocale } from "../messages/authoring-messages.ts";
 
@@ -34,29 +37,48 @@ function isDigit(character: string): boolean {
   return character >= "0" && character <= "9";
 }
 
+/** Boundary whitespace an operator legitimately gets from a paste (never an internal space). */
+const BOUNDARY_SPACE = /^[\s\u00a0\u2007\u202f]+|[\s\u00a0\u2007\u202f]+$/g;
+/** Grouping separators a paste may carry between well-formed digit groups. */
+const GROUP_SEPARATOR = /[\u002c\u066c]/g;
+/** A plain digit run with an optional (possibly empty) fraction. */
+const PLAIN = /^[0-9]+(?:\.[0-9]*)?$/;
+/** A grouped whole part: 1-3 digits, then groups of exactly 3. `12,34` and `1,2,3` do not match. */
+const GROUPED = /^[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]*)?$/;
+
+/** One read of a typed/pasted amount: canonical token, or the invalid text kept as typed. */
+export interface MoneyTextReading {
+  /** Canonical ungrouped token when `valid`; otherwise the normalized text as the operator must see it. */
+  readonly raw: string;
+  /** True only when nothing but harmless display normalization was needed. */
+  readonly valid: boolean;
+}
+
 /**
- * Canonical raw token of arbitrary typed/pasted text: ASCII digits, at most one decimal point.
+ * Reads arbitrary typed/pasted text as a money token.
  *
- * Group separators (`,` `٬` `٬` `,`), Arabic decimal separator `٫`, spaces and any other character are
- * dropped; a leading decimal point becomes `0.`. The digits themselves and their order are preserved
- * exactly, so the result is the SAME number the operator sees, only ungrouped.
+ * @param text What the operator typed or pasted.
+ */
+export function readMoneyText(text: string): MoneyTextReading {
+  const trimmed = toAsciiDigits(text)
+    .replace(/\u066b/g, ".")
+    .replace(/\u066c/g, ",")
+    .replace(BOUNDARY_SPACE, "");
+  if (trimmed === "") return { raw: "", valid: true };
+  // A leading decimal separator is the same number as `0.`; it is display normalization, not a guess.
+  const normalized = trimmed.startsWith(".") ? `0${trimmed}` : trimmed;
+  if (PLAIN.test(normalized)) return { raw: normalized, valid: true };
+  if (GROUPED.test(normalized)) return { raw: normalized.replace(GROUP_SEPARATOR, ""), valid: true };
+  return { raw: normalized, valid: false };
+}
+
+/**
+ * Canonical raw token of lawful typed/pasted text, or the invalid text itself.
  *
  * @param text What the operator typed or pasted.
  */
 export function sanitizeMoneyText(text: string): string {
-  const normalized = toAsciiDigits(text).replace(/\u066B/g, ".");
-  let whole = "";
-  let fraction: string | null = null;
-  for (const character of normalized) {
-    if (isDigit(character)) {
-      if (fraction === null) whole += character;
-      else fraction += character;
-      continue;
-    }
-    if (character === "." && fraction === null) fraction = "";
-  }
-  if (fraction === null) return whole;
-  return `${whole === "" ? "0" : whole}.${fraction}`;
+  return readMoneyText(text).raw;
 }
 
 /** Groups one digit run in threes, without any numeric conversion. */
@@ -72,17 +94,19 @@ function groupDigits(digits: string): string {
 /**
  * Display text of a canonical raw token: thousands grouped, fraction kept EXACTLY as stored.
  *
- * `120000.00` becomes `120,000.00`, `0.50` stays `0.50`, `1850000` becomes `1,850,000`, and an empty
- * value stays empty (a deliberate blank is not turned into `0`).
+ * `120000.00` becomes `120,000.00`, `0.50` stays `0.50`, `1850000` becomes `1,850,000`, an empty value
+ * stays empty (a deliberate blank is not turned into `0`), and text that is not a lawful token is shown
+ * exactly as it is, so an invalid amount can never be displayed as a different valid one.
  *
  * @param raw Canonical token (ungrouped).
  */
 export function groupMoneyText(raw: string): string {
   if (raw === "") return "";
   const dot = raw.indexOf(".");
-  if (dot < 0) return groupDigits(raw);
-  const whole = raw.slice(0, dot);
-  return `${groupDigits(whole === "" ? "0" : whole)}.${raw.slice(dot + 1)}`;
+  const whole = dot < 0 ? raw : raw.slice(0, dot);
+  if (!/^[0-9]+$/.test(whole)) return raw;
+  const grouped = groupDigits(whole === "" ? "0" : whole);
+  return dot < 0 ? grouped : `${grouped}.${raw.slice(dot + 1)}`;
 }
 
 /** Locale-aware grouping of a canonical token (grouping character is `,` in both supported locales). */
@@ -90,19 +114,41 @@ export function formatMoneyText(raw: string, _locale: AuthoringLocale): string {
   return groupMoneyText(raw);
 }
 
-/** Count of decimal digits in a text (used for caret restoration, not for value comparison). */
+/** Count of decimal digits in a text, after local digit normalization (Persian digits count too). */
 export function countDigits(text: string): number {
   let count = 0;
-  for (const character of text) if (isDigit(character)) count += 1;
+  for (const character of toAsciiDigits(text)) if (isDigit(character)) count += 1;
   return count;
 }
 
-/** How many digits precede `caret` — the caret anchor that survives re-grouping. */
-export function digitIndexAt(text: string, caret: number): number {
-  return countDigits(text.slice(0, Math.max(0, Math.min(caret, text.length))));
+/**
+ * Position of the caret as the number of digits BEFORE the decimal separator plus the digits AFTER it.
+ *
+ * `inFraction` records which side of the separator the caret is on, so `12|.` and `12.|` are NOT the same
+ * position: a digit-only count cannot tell them apart, and mistaking them turns `12` + `.` + `5` into
+ * `125` instead of `12.5`.
+ */
+export interface MoneyCaret {
+  readonly whole: number;
+  readonly fraction: number;
+  readonly inFraction: boolean;
 }
 
-/** Display offset of the caret that follows the `digits`-th digit (`0` = before the first digit). */
+/** Caret anchor of one display text at one offset. */
+export function caretAnchorAt(text: string, caret: number): MoneyCaret {
+  const normalized = toAsciiDigits(text).replace(/\u066b/g, ".");
+  const offset = Math.max(0, Math.min(caret, normalized.length));
+  const dot = normalized.indexOf(".");
+  if (dot < 0) return { whole: countDigits(normalized.slice(0, offset)), fraction: 0, inFraction: false };
+  if (offset <= dot) return { whole: countDigits(normalized.slice(0, offset)), fraction: 0, inFraction: false };
+  return {
+    whole: countDigits(normalized.slice(0, dot)),
+    fraction: countDigits(normalized.slice(dot + 1, offset)),
+    inFraction: true,
+  };
+}
+
+/** Display offset of the caret that follows `digits` digits (never inside a group separator). */
 export function caretForDigitIndex(display: string, digits: number): number {
   if (digits <= 0) return 0;
   let seen = 0;
@@ -114,25 +160,32 @@ export function caretForDigitIndex(display: string, digits: number): number {
   return display.length;
 }
 
-/** One interpreted edit of a money input: canonical token plus the digit anchor of the caret. */
+/** Display offset of a caret anchor, rebuilt against the CURRENTLY displayed text. */
+export function caretOffsetFor(display: string, anchor: MoneyCaret): number {
+  if (!anchor.inFraction) return caretForDigitIndex(display, anchor.whole);
+  const dot = display.indexOf(".");
+  if (dot < 0) return caretForDigitIndex(display, anchor.whole + anchor.fraction);
+  return caretForDigitIndex(display.slice(dot + 1), anchor.fraction) + dot + 1;
+}
+
+/** One interpreted edit of a money input: canonical-or-invalid token plus the stable caret anchor. */
 export interface MoneyEdit {
+  /** The exact text the model must keep: canonical token, or the visible invalid text. */
   readonly raw: string;
-  readonly caretDigits: number;
+  /** True only for a lawful amount (an invalid text is preserved and left to validation to refuse). */
+  readonly valid: boolean;
+  readonly caret: MoneyCaret;
 }
 
 /**
- * Interprets one input change exactly the way the field must: canonical token + stable caret anchor.
- *
- * The anchor is a DIGIT count (not a character offset), so re-grouping after a keystroke or a paste can
- * never move the caret to another number position.
+ * Interprets one input change exactly the way the field must: the model token plus the caret anchor.
  *
  * @param nextText The input's new text (already including the typed/pasted characters).
  * @param caret The caret offset the browser reported for that text.
  */
 export function interpretMoneyEdit(nextText: string, caret: number): MoneyEdit {
-  const raw = sanitizeMoneyText(nextText);
-  const anchor = Math.min(digitIndexAt(nextText, caret), countDigits(raw));
-  return { raw, caretDigits: anchor };
+  const reading = readMoneyText(nextText);
+  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(nextText, caret) };
 }
 
 /** True when the token is a lawful canonical money token of the local contract (shape only). */

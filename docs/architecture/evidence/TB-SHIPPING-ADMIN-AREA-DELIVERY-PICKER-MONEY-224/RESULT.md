@@ -114,3 +114,26 @@ projection/selection/commit, and no seller-admin entry work (planned separately)
 
 Elapsed: ≈55 min against the HARD40 box / 25-min implementation stop — recorded, NOT a process PASS.
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+---
+
+## APPEND-ONLY CORRECTION — 2026-10-26 — TB-224-R1 repaired the two integrity defects below
+
+This RESULT was ACCEPTED-NOT: the Architect's review of `d7e3f4e3d72acb588c2d9d0de7f24495d8b90053` found two
+input-integrity defects in the behaviour claimed here, and they are now repaired in
+`docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224-R1/RESULT.md`.
+
+1. "the range is serialized as the same pair on every row" was TRUE, but the TYPED range above the rows was only
+   local text inside `ui/use-area-range-edits.ts` (now deleted): a partial/invalid pair left the previous lawful
+   row values saveable while different text was visible. The typed pair is now controlled form state that owns
+   dirty/issues/Apply/discard, and the row-less staged range is explicitly blocked instead of silently omitted.
+2. "pasting a grouped value must not change the number" overstated the sanitizer: it also REWROTE unsupported
+   input (`-100` -> `100`, `1e3` -> `13`, `12.3.4` -> `12.34`, `12,34` -> `1234`). Unsupported money text now stays
+   visibly invalid (`readMoneyText(...).valid === false`, `aria-invalid`, Apply blocked), and the caret tracks both
+   sides of the decimal separator so typing `12` -> `.` -> `5` yields `12.5`.
+
+The four 224 UX changes (area-level shared duration UI, Add-only duplicate feedback, the level-aware destination
+picker, exact money display) are preserved and were re-inspected live. The live claims in this file that
+described "1 row, range 1..3, 120,000.00 / 5,000.00 restored" remain true for the stored draft; the two
+defective behaviours above must NOT be quoted as delivered. 224 remains superseded pending Architect review of
+224-R1; the user is still not to be called to test before acceptance.

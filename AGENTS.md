@@ -1,16 +1,47 @@
-## CURRENT —224 NOT ACCEPTED;224-R1 issued, wait Architect before user trial —2026-10-26
+## CURRENT — 224-R1 executed: typed range is form state, invalid money stays invalid — 2026-10-26
 
-Architect source review of d7e3f4e3d72acb588c2d9d0de7f24495d8b90053 found TWO integrity defects:
-(1) partial/invalid area range is only local text/ref while previous valid rows remain saveable; raw range must join dirty/issues/Apply/discard authority.
-(2) money sanitizer silently changes invalid input (-100->100,1e3->13,12.3.4->12.34); reject/preserve invalid, allow only explicit harmless grouping/digit normalization. Decimal caret/local-digit handling also needs mounted proof.
-Active task TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224-R1; read its TASK.md.
-User explicitly requests full Architect acceptance BEFORE being called to test. Worker PASS is not acceptance. Do not mark READY or request user Apply until review closes both.
-224 retains area-level shared duration UI with row-based compatibility, relevant-level picker and Add-only duplicate feedback; don't undo those changes. No group-level schema invariant claimed. No user Apply/catalog/publication write in this repair.
-223 compact publication restored; separate marketplace page is UI boundary, not completed seller administration. Storefront consumer/compact order-group provenance remains NOT IMPLEMENTED; shared snapshot decision remains locked.
-Preserve real user draft/pointer, unsaved tab, live FE3000/Host5088; old PIDs/revision are historical, read current. No Bridge, full-suite loop or new scope.
-Automatic-Next-Task NONE; STOP_FOR_ARCHITECT after224-R1.
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224-R1/{RESULT.md,TASK.md}` and the
+append-only correction in `.../TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224/RESULT.md`.
+Base `63b0a3c3c3b588769e37b31d0e9200b8a3dbcba6` (clean fast-forward; the three/four pre-existing backend
+line-ending drifts and a stray 0-byte root file were never staged — the stray file was deleted).
 
-## CURRENT — 224 executed: one delivery range per area, Add-time duplicate, level-aware picker, exact money — 2026-10-26
+A — the TYPED area range is now the form state that owns dirty/issues/Apply/discard. `ui/use-area-range-edits.ts`
+is DELETED; `model/editor-area-range.ts` adds `AreaRangeDrafts`/`areaRangeEdit`/`areaRangeDraftIssues`/
+`areaRangeDraftsDirty`/`createAreaRangeDrafts`, `buildAuthoringIntent(..., areaRanges)` folds blank, partial and
+invalid text into the blocking issues, `authoring-screen.tsx` keeps `areaRanges` in state and reseeds form +
+groups + rates + area ranges + week from the SAME baseline through ONE `applyLocalDrafts` helper (fresh load and
+confirmed cancel), and `AreaDeliveryRange` is fully controlled with an area-scoped message — a row-less area
+says «یک ردیف اضافه کنید یا بازه را خالی کنید» instead of silently persisting nothing. HONEST BOUNDARY: the
+DTO/capture still repeats the days per row; a true group-level persisted duration remains a schema change, NOT
+done.
+
+B — `model/money-text.ts` no longer rewrites unsupported money. `readMoneyText` normalizes only Persian/
+Arabic-Indic digits, the Arabic decimal separator, correctly formed 3-digit comma grouping and boundary
+whitespace; signs, letters, exponent, multiple/malformed separators keep their raw text with `valid: false`,
+render `aria-invalid` and block Apply with `amountInvalid`. `MoneyCaret { whole, fraction, inFraction }` +
+`caretAnchorAt`/`caretOffsetFor` replace digit-count-only anchoring, so `12` → `.` → `5` really yields `12.5`.
+
+RED measured on the reviewed baseline (probe, not memory): 8/8 defect facts — `-100`→`100`, `1e3`→`13`,
+`12.3.4`→`12.34`, `12,34`→`1234`, `abc100`→`100`, digit-only caret with no decimal side, and NO typed-range form
+state. GREEN: 10/10 new R1 facts, 165/165 feature tests (all files recursive), one clean `tsc`; guards 7/7
+except `FE-SIZE` on the four documented pre-existing drifts (none touched; the edited screen is 798 LOC ≤ 800).
+
+Mounted (FE3000 PID28288 / Host5088 `D:\temp\tb221-build\out`, both health 200, no restart, isolated new tab —
+the user's two tabs were never reloaded): a partial maximum disabled Apply with a visible area issue while a
+valid packaging edit was already staged; `2.5` was refused; a row-less area's staged `4..9` blocked Apply on its
+own, then moved into the first row; freight `12` → `12.` (invalid, blocked) → `12.5` with caret 4, never `125`;
+pasted `-100`, `1e3`, `12,34` stayed exactly as typed with `aria-invalid` and a disabled Apply; reject-cancel
+kept every draft, confirm-discard restored the exact stored baseline (1 area, `1..3`, `120,000.00`/`5,000.00`),
+re-entry was identical and a clean cancel raised no dialog. Publication stayed view-only, the level picker and
+closed-day inputs were retained. NO Apply/PUT/publication/catalog/migration/seed; a read-only editor-document GET
+returned `revision 2`, `updatedAt 2026-10-24T19:05:52.452036Z` — the draft and the selected pointer are untouched.
+Screenshots stored (1440×900 and 390×844, `scrollWidth == clientWidth`, `overflowX 0`).
+NOT claimed: user Visual ACCEPT, Architect acceptance, legacy-conflict live rendering, any Storefront effect.
+Actual ≈28 min vs HARD25 — recorded, NOT a process PASS.
+Active task: NONE. Next: Architect review; user must NOT be called to test before acceptance.
+The compact-order-evidence decision stays locked and unimplemented; STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+## SUPERSEDED — 224 executed: one delivery range per area, Add-time duplicate, level-aware picker, exact money — 2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224/{RESULT.md,TASK.md}`.
 Base `920b51a7f2dc193afb47366daf9a531415d21373` (clean fast-forward; only the four pre-existing

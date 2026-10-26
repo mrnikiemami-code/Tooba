@@ -19,7 +19,10 @@ import type { RateField, RateRowDraft, RateRowIssue, RatesFormState } from "../m
 import type { UnresolvedDraftSelection } from "../model/destination-choice.ts";
 import { areaIdentity } from "../model/destination-choice.ts";
 import {
+  areaRangeDraftOf,
   areaRangeOf,
+  type AreaRangeDraftIssue,
+  type AreaRangeDrafts,
 } from "../model/editor-area-range.ts";
 import { AuthoringDestinationPicker } from "./authoring-destination-picker.tsx";
 import { AreaDeliveryRange, RateRowEditor, RateRowSummary } from "./authoring-rates-editor.tsx";
@@ -52,6 +55,8 @@ export function AuthoringGroupsEditor({
   unresolved,
   editable,
   serverRateErrors,
+  areaRanges,
+  areaRangeIssues,
   onAddGroup,
   onRemoveGroup,
   onMoveGroup,
@@ -76,6 +81,10 @@ export function AuthoringGroupsEditor({
   editable: boolean;
   /** Server rejections keyed by composite group+row ownership (`rateRowKey`), never row alone. */
   serverRateErrors?: ReadonlyMap<string, string>;
+  /** The operator's typed shared delivery range per area (the ONE form state of that control). */
+  areaRanges?: AreaRangeDrafts;
+  /** Blocking reasons of those typed ranges, from the composed intent. */
+  areaRangeIssues?: readonly AreaRangeDraftIssue[];
   onAddGroup: () => void;
   onRemoveGroup: (groupKey: string) => void;
   onMoveGroup: (groupKey: string, delta: -1 | 1) => void;
@@ -118,7 +127,7 @@ export function AuthoringGroupsEditor({
         const groupRows = rates[group.key] ?? [];
         /** ONE delivery range of the WHOLE area, derived from the rows the wire still repeats it on. */
         const range = areaRangeOf(groupRows);
-        const rangeSeed = `${group.key}|${range.kind}|${range.kind === "uniform" ? `${range.min}/${range.max}` : ""}`;
+        const rangeIssue = areaRangeIssues?.find((issue) => issue.groupKey === group.key) ?? null;
         const titleEntry = group.titles.find((entry) => entry.languageId.toLowerCase() === contentLanguageId.toLowerCase());
         const storedTitle = stored?.titles.find((entry) => entry.languageId.toLowerCase() === contentLanguageId.toLowerCase());
         const inactiveTitles = (stored?.titles ?? []).filter(
@@ -302,7 +311,8 @@ export function AuthoringGroupsEditor({
             <div className="mt-2">
               <AreaDeliveryRange
                 range={range}
-                seedKey={rangeSeed}
+                value={areaRangeDraftOf(areaRanges ?? {}, group.key, groupRows)}
+                issue={rangeIssue?.code ?? null}
                 editable={editable}
                 locale={locale}
                 messages={messages}

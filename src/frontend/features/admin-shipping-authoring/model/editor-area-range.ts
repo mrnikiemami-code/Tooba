@@ -12,7 +12,8 @@
  * The range is the CUSTOMER RECEIVING duration promised from the order (§29), not a carrier handoff or a
  * seller preparation span. Nothing here converts or reinterprets those days.
  */
-import { RATE_LIMITS, type RateRowDraft } from "./editor-rates.ts";
+import type { EditorRateRow, EditorRegionGroup } from "./editor-document.ts";
+import { RATE_LIMITS, draftFromRow, type RateRowDraft, type RatesFormState } from "./editor-rates.ts";
 
 /** One distinct `min..max` pair found on the rows of an area. */
 export interface AreaRangePair {
@@ -106,4 +107,116 @@ export function inheritedAreaRange(
   if (range.kind === "conflict") return null;
   if (staged === null) return null;
   return areaRangeIssue(staged.min, staged.max) === null ? staged : null;
+}
+
+/**
+ * The operator's OWN typed text of every area, keyed by the SAME stable group key as the rows.
+ *
+ * This is the form's shared-range state: it is controlled, it survives re-render, it is compared with
+ * the CONFIRMED baseline for dirty/issue purposes, and it is reseeded from that same baseline on a
+ * cancel/discard. It is not a second persisted store — only the rows are ever serialized.
+ */
+export type AreaRangeDrafts = Readonly<Record<string, AreaRangePair>>;
+
+/** Stable local reason a typed shared range blocks Apply. */
+export type AreaRangeDraftIssueCode = AreaRangeIssueCode | "rowsRequired";
+
+export interface AreaRangeDraftIssue {
+  readonly groupKey: string;
+  readonly code: AreaRangeDraftIssueCode;
+}
+
+/** Text of one area derived from its CURRENT local rows (`""`/`""` unless every row agrees). */
+export function areaRangeTextOf(rows: readonly RateRowDraft[]): AreaRangePair {
+  return areaRangeText(areaRangeOf(rows));
+}
+
+/** Text of one area derived from its STORED rows (same derivation, exact stored tokens). */
+export function storedAreaRangeText(rows: readonly EditorRateRow[]): AreaRangePair {
+  return areaRangeText(areaRangeOf(rows.map(draftFromRow)));
+}
+
+/** The operator text of one area, falling back to the text its rows already carry. */
+export function areaRangeDraftOf(
+  drafts: AreaRangeDrafts,
+  groupKey: string,
+  rows: readonly RateRowDraft[],
+): AreaRangePair {
+  return drafts[groupKey] ?? areaRangeTextOf(rows);
+}
+
+/** Seeds the typed text of every stored area from the CONFIRMED baseline rows. */
+export function createAreaRangeDrafts(
+  document: { readonly regionGroups: readonly EditorRegionGroup[] },
+): AreaRangeDrafts {
+  const drafts: Record<string, AreaRangePair> = {};
+  for (const group of document.regionGroups) drafts[group.groupId] = storedAreaRangeText(group.rows);
+  return drafts;
+}
+
+/**
+ * ONE operator entry of one area: the typed TEXT is kept verbatim and a LAWFUL pair is written to the
+ * rows of exactly that area through the same rows state the rest of the editor uses.
+ *
+ * A partial/invalid pair changes only the text, so the stored row values are never normalized, defaulted
+ * or half-written behind the operator's back — and the text still blocks Apply.
+ */
+export function areaRangeEdit(
+  rates: RatesFormState,
+  drafts: AreaRangeDrafts,
+  groupKey: string,
+  min: string,
+  max: string,
+): { readonly drafts: AreaRangeDrafts; readonly rates: RatesFormState } {
+  const rows = rates[groupKey];
+  const applied = rows === undefined || rows.length === 0 ? rows : applyAreaRange(rows, min, max);
+  return {
+    drafts: { ...drafts, [groupKey]: { min, max } },
+    rates: applied === undefined || applied === rows ? rates : { ...rates, [groupKey]: applied },
+  };
+}
+
+/**
+ * Every typed shared range that blocks Apply, in draft order.
+ *
+ * Text the CURRENT rows already carry is the applied state (a legacy conflict or an area with no rows is
+ * not an error by itself). An area that no longer exists locally is ignored, so a removed/stale key can
+ * never block or leak into another area; text that cannot be persisted without rows is said explicitly.
+ */
+export function areaRangeDraftIssues(
+  drafts: AreaRangeDrafts,
+  rowsOf: (groupKey: string) => readonly RateRowDraft[] | undefined,
+): readonly AreaRangeDraftIssue[] {
+  const issues: AreaRangeDraftIssue[] = [];
+  for (const [groupKey, pair] of Object.entries(drafts)) {
+    const rows = rowsOf(groupKey);
+    if (rows === undefined) continue;
+    const carried = areaRangeTextOf(rows);
+    if (pair.min === carried.min && pair.max === carried.max) continue;
+    const code = areaRangeIssue(pair.min, pair.max);
+    if (code !== null) issues.push({ groupKey, code });
+    else if (rows.length === 0) issues.push({ groupKey, code: "rowsRequired" });
+  }
+  return issues;
+}
+
+/**
+ * True when at least one typed shared range differs from the CONFIRMED baseline text of its area.
+ *
+ * This is raw operator work (valid or not), so the session knows the form is dirty even when the rows
+ * were never touched; a uniform untouched area, a legacy conflict and a row-less area stay clean.
+ */
+export function areaRangeDraftsDirty(
+  document: { readonly regionGroups: readonly EditorRegionGroup[] },
+  drafts: AreaRangeDrafts,
+  rates: RatesFormState,
+): boolean {
+  const baseline = new Map(document.regionGroups.map((group) => [group.groupId, storedAreaRangeText(group.rows)]));
+  return Object.entries(drafts).some(([groupKey, pair]) => {
+    if (rates[groupKey] === undefined) return false; // a removed area is not pending work of its own
+    const stored = baseline.get(groupKey);
+    return stored === undefined
+      ? pair.min !== "" || pair.max !== ""
+      : pair.min !== stored.min || pair.max !== stored.max;
+  });
 }

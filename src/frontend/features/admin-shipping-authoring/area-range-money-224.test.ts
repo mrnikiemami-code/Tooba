@@ -13,11 +13,13 @@ import {
   inheritedAreaRange,
 } from "./model/editor-area-range.ts";
 import {
+  caretAnchorAt,
   caretForDigitIndex,
+  caretOffsetFor,
   countDigits,
-  digitIndexAt,
   groupMoneyText,
   interpretMoneyEdit,
+  readMoneyText,
   sanitizeMoneyText,
 } from "./model/money-text.ts";
 import { formatDecimalText } from "./ui/authoring-format.ts";
@@ -298,11 +300,11 @@ test("224-C2 typing, paste, deletion and local digits keep the exact value", () 
   // typing the sixth digit into a grouped field: the canonical token is ungrouped
   const typed = interpretMoneyEdit("120,000.0", "120,000.0".length);
   assert.equal(typed.raw, "120000.0");
-  assert.equal(typed.caretDigits, countDigits("120000.0"));
+  assert.deepEqual(typed.caret, caretAnchorAt("120,000.0", "120,000.0".length));
 
   // pasting a grouped value must not change the number
   assert.equal(sanitizeMoneyText("1,850,000.00"), "1850000.00");
-  assert.equal(sanitizeMoneyText(" 1 850 000 "), "1850000");
+  assert.equal(sanitizeMoneyText(" 1,850,000 "), "1850000");
   // Persian/Arabic-Indic digits and the Arabic decimal separator
   assert.equal(sanitizeMoneyText("۱۲۰۰۰۰٫۵۰"), "120000.50");
   assert.equal(sanitizeMoneyText("١٢٣٤"), "1234");
@@ -323,10 +325,12 @@ test("224-C3 the caret is anchored to a DIGIT, so re-grouping cannot move it", (
   const display = groupMoneyText("1850000.00");
   assert.equal(display, "1,850,000.00");
   // caret right after "1,8" (digit anchor 2) must land after "8", not after the separator
-  const anchor = digitIndexAt("1,850,000.00", 3);
-  assert.equal(anchor, 2);
-  assert.equal(caretForDigitIndex(display, anchor), 3);
+  const anchor = caretAnchorAt("1,850,000.00", 3);
+  assert.deepEqual(anchor, { whole: 2, fraction: 0, inFraction: false });
+  assert.equal(caretOffsetFor(display, anchor), 3);
   assert.equal(caretForDigitIndex(display, 0), 0);
   assert.equal(caretForDigitIndex(display, countDigits(display)), display.length);
-  assert.equal(sanitizeMoneyText("1,2,3"), "123", "extra separators are dropped, digits kept");
+  // A malformed grouping is NOT silently reduced to its digits any more (TB-224-R1: it stays invalid).
+  assert.equal(sanitizeMoneyText("1,2,3"), "1,2,3");
+  assert.equal(readMoneyText("1,2,3").valid, false);
 });

@@ -1,13 +1,12 @@
 "use client";
 
 /**
- * Rendered editor of ONE existing shipping draft: General (names/type/two settings), the ONE
- * method-level weekly schedule and the rate rows under each EXISTING region group.
+ * Rendered editor of ONE existing shipping draft: General, the ONE method-level weekly schedule and the
+ * rate rows (with their AREA-level delivery range) under each EXISTING region group.
  *
- * Boundary: this component only renders state and dispatches the feature controller. Transport,
- * decoding, ancestry, validation and the ONE atomic PUT stay in `api`/`model`/`session`; group
- * topology/geography editing, whole-method creation, activation and unsupported cutoff/carrier/
- * funding controls are NOT here.
+ * Boundary: this component only renders state and dispatches the feature controller. Transport, decoding,
+ * ancestry, validation and the ONE atomic PUT stay in `api`/`model`/`session`; group topology/geography
+ * editing, whole-method creation, activation and unsupported cutoff/carrier/funding controls are NOT here.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -23,7 +22,7 @@ import type {
 } from "../model/editor-document.ts";
 import { indexDestinationFacts, withPickedLabels } from "../model/editor-destination-ancestry.ts";
 import { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "../model/authoring-intent.ts";
-import { resetAuthoringDrafts, seedAuthoringDrafts } from "../model/authoring-drafts.ts";
+import { resetAuthoringDrafts, seedAuthoringDrafts, type AuthoringDrafts } from "../model/authoring-drafts.ts";
 import { composeAncestryResolver, areaIdentity, unresolvedDraftSelections } from "../model/destination-choice.ts";
 import type { ResolvedAreaAncestry } from "../model/editor-edits.ts";
 import {
@@ -53,7 +52,7 @@ import {
   type RateRowDraft,
   type RatesFormState,
 } from "../model/editor-rates.ts";
-import { inheritedAreaRange } from "../model/editor-area-range.ts";
+import { areaRangeEdit, createAreaRangeDrafts, inheritedAreaRange, type AreaRangeDrafts } from "../model/editor-area-range.ts";
 import {
   configureWeek,
   resetWeek,
@@ -65,7 +64,6 @@ import {
 } from "../model/editor-week.ts";
 import { hasUnsavedWork, type EditorSaveStatus } from "../session/editor-session.ts";
 import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
-import { useAreaRangeEdits } from "./use-area-range-edits.ts";
 import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
@@ -114,6 +112,8 @@ export function ShippingAuthoringScreen({
   const [form, setForm] = useState<EditorFormState | null>(null);
   const [groups, setGroups] = useState<GroupsFormState>([]);
   const [rates, setRates] = useState<RatesFormState>({});
+  /** The operator's OWN typed shared delivery range per area: the ONE form state of that control. */
+  const [areaRanges, setAreaRanges] = useState<AreaRangeDrafts>({});
   const [week, setWeek] = useState<WeekFormState | null>(null);
   /** Verified ancestry of terminals the operator picked in THIS session (reset with the drafts). */
   const [pickedFacts, setPickedFacts] = useState<ReadonlyMap<string, ResolvedAreaAncestry>>(new Map());
@@ -143,21 +143,23 @@ export function ShippingAuthoringScreen({
   );
 
   /**
-   * All local drafts (General, group collection, rate rows, weekly schedule) are seeded from the
-   * CONFIRMED baseline only on an accepted transition (fresh load, accepted save, explicit discard +
-   * fresh read). A render, an invalid `edited({})` or a reconcile never re-seeds them, so typed work
-   * survives. Staged picker selections are cleared with the same reset.
+   * ONE cohesive reseed of EVERY local draft (General, groups, rows, AREA RANGES, week) from a confirmed
+   * baseline; staged picker facts are cleared with it. A render/invalid edit/reconcile never calls it.
    */
-  useEffect(() => {
-    if (!document) return;
-    const languageIds = document.presentation.contentLanguages.map((language) => language.languageId);
-    const drafts = seedAuthoringDrafts(document, languageIds);
+  const applyLocalDrafts = useCallback((drafts: AuthoringDrafts, source: EditorDocument) => {
     setForm(drafts.form);
     setGroups(drafts.groups);
     setRates(drafts.rates);
+    setAreaRanges(createAreaRangeDrafts(source));
     setWeek(drafts.week);
     setPickedFacts(new Map());
     setPickedLabels(new Map());
+  }, []);
+
+  useEffect(() => {
+    if (!document) return;
+    const languageIds = document.presentation.contentLanguages.map((language) => language.languageId);
+    applyLocalDrafts(seedAuthoringDrafts(document, languageIds), document);
     const defaultLanguage = document.presentation.contentLanguages.find(
       (language) => language.languageId.toLowerCase() === document.presentation.defaultContentLanguageId.toLowerCase(),
     );
@@ -208,7 +210,6 @@ export function ShippingAuthoringScreen({
   useEffect(() => {
     if (session.decision === "discardUnsaved") setConfirmDiscardVisible(true);
   }, [session.decision]);
-
   const index = useMemo(
     () => (document ? withPickedLabels(indexDestinationFacts(document), pickedLabels) : null),
     [document, pickedLabels],
@@ -219,8 +220,8 @@ export function ShippingAuthoringScreen({
     [index, pickedFacts],
   );
   const intent = useMemo(
-    () => (document && form && week ? buildAuthoringIntent(document, form, rates, week, groups) : null),
-    [document, form, rates, week, groups],
+    () => (document && form && week ? buildAuthoringIntent(document, form, rates, week, groups, areaRanges) : null),
+    [areaRanges, document, form, rates, week, groups],
   );
 
   /**
@@ -233,17 +234,19 @@ export function ShippingAuthoringScreen({
       nextGroups: GroupsFormState,
       nextRates: RatesFormState,
       nextWeek: WeekFormState,
+      nextAreaRanges: AreaRangeDrafts = areaRanges,
     ) => {
       if (blockedNow()) return;
       setForm(nextForm);
       setGroups(nextGroups);
       setRates(nextRates);
+      setAreaRanges(nextAreaRanges);
       setWeek(nextWeek);
       if (!document) return;
-      const composed = buildAuthoringIntent(document, nextForm, nextRates, nextWeek, nextGroups);
+      const composed = buildAuthoringIntent(document, nextForm, nextRates, nextWeek, nextGroups, nextAreaRanges);
       controller.edit(composed.edits, composed.localDirty);
     },
-    [blockedNow, controller, document],
+    [areaRanges, blockedNow, controller, document],
   );
 
   const pushEdits = useCallback(
@@ -262,24 +265,28 @@ export function ShippingAuthoringScreen({
     [commit, form, groups, rates, week],
   );
 
-  const areaRange = useAreaRangeEdits({
-    rates,
-    writeRates: (next) => {
-      if (form && week) commit(form, groups, next, week);
+  /**
+   * ONE entry of one area's shared range: the typed text BECOMES form state (blank/partial/invalid is real
+   * work that blocks Apply) and a lawful pair is written to exactly that area's rows through this commit.
+   */
+  const changeAreaRange = useCallback(
+    (groupKey: string, min: string, max: string) => {
+      if (blockedNow() || !form || !week) return;
+      const next = areaRangeEdit(rates, areaRanges, groupKey, min, max);
+      commit(form, groups, next.rates, week, next.drafts);
     },
-    blocked: blockedNow,
-    seed: document,
-  });
+    [areaRanges, blockedNow, commit, form, groups, rates, week],
+  );
 
   const addRow = useCallback(
     (groupKey: string) => {
       if (blockedNow() || !form || !week) return;
       rowCounter.current += 1;
       // A new row inherits THIS area's own shared range only (never another area's, never a default).
-      const inherited = inheritedAreaRange(rates[groupKey] ?? [], areaRange.staged(groupKey));
+      const inherited = inheritedAreaRange(rates[groupKey] ?? [], areaRanges[groupKey] ?? null);
       commit(form, groups, withAddedRowInheriting(rates, groupKey, `new-${rowCounter.current}`, inherited), week);
     },
-    [areaRange, commit, form, groups, rates, week],
+    [areaRanges, commit, form, groups, rates, week],
   );
 
   const removeRow = useCallback(
@@ -362,8 +369,7 @@ export function ShippingAuthoringScreen({
   const formIssues = intent?.issues.general ?? [];
   const groupProblems = intent?.issues.groups ?? [];
   const rateRowIssues = intent?.issues.rates ?? [];
-  const weekProblemIssues = intent?.issues.week ?? [];
-  const nameIssueLanguageIds = formIssues.flatMap((issue) =>
+  const weekProblemIssues = intent?.issues.week ?? [];  const nameIssueLanguageIds = formIssues.flatMap((issue) =>
     issue.code === "nameRequired" ? [issue.languageId] : [],
   );
   const settingsIncomplete = formIssues.some((issue) => issue.code === "settingsIncomplete");
@@ -379,7 +385,6 @@ export function ShippingAuthoringScreen({
     unresolved.length === 0 &&
     !session.commitUncertain &&
     session.load === "loaded";
-
   const apply = useCallback(async () => {
     if (applyRef.current || !resolver) return;
     applyRef.current = true;
@@ -387,8 +392,7 @@ export function ShippingAuthoringScreen({
     try {
       const outcome = await controller.apply(resolver);
       if (outcome.status !== "sent") return;
-      const revision = controller.getState().savedRevision;
-      setNotice(authoringFormat(messages.saved, { revision: revision ?? "" }));
+      setNotice(authoringFormat(messages.saved, { revision: controller.getState().savedRevision ?? "" }));
       setMode("view");
     } finally {
       applyRef.current = false;
@@ -411,6 +415,7 @@ export function ShippingAuthoringScreen({
         setForm(null);
         setGroups([]);
         setRates({});
+        setAreaRanges({});
         setWeek(null);
         setPickedFacts(new Map());
         setPickedLabels(new Map());
@@ -419,13 +424,7 @@ export function ShippingAuthoringScreen({
         // ONE cohesive reseed: General AND group collection AND rate rows AND week come from the SAME
         // confirmed baseline, so discarded groups/rows/week can never stay or be resurrected.
         if (document) {
-          const drafts = resetAuthoringDrafts(document, activeLanguageIds);
-          setForm(drafts.form);
-          setGroups(drafts.groups);
-          setRates(drafts.rates);
-          setWeek(drafts.week);
-          setPickedFacts(new Map());
-          setPickedLabels(new Map());
+          applyLocalDrafts(resetAuthoringDrafts(document, activeLanguageIds), document);
         }
         controller.edit({});
       }
@@ -752,6 +751,8 @@ export function ShippingAuthoringScreen({
               rates={rates}
               rateIssues={rateRowIssues}
               serverRateErrors={rateServerErrors}
+              areaRanges={areaRanges}
+              areaRangeIssues={intent?.issues.areaRanges}
               unresolved={unresolved}
               editable={!readOnly && !busy}
               onAddGroup={addGroup}
@@ -763,7 +764,7 @@ export function ShippingAuthoringScreen({
               onAddRow={addRow}
               onRemoveRow={removeRow}
               onChangeRowField={changeRow}
-              onChangeAreaRange={areaRange.change}
+              onChangeAreaRange={changeAreaRange}
             />
           </div>
         </>

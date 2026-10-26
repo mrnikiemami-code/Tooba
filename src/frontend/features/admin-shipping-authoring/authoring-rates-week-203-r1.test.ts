@@ -257,12 +257,23 @@ test("R203-07 confirmed discard restores ALL three capabilities from the same ba
 
 test("R203-08 the real screen Cancel Edit path calls the same whole-document reseed", () => {
   const source = readFileSync(new URL("./ui/authoring-screen.tsx", import.meta.url), "utf8");
-  assert.ok(source.includes("resetAuthoringDrafts(document"), "the UI path uses the tested helper");
+  assert.ok(source.includes("resetAuthoringDrafts(document, activeLanguageIds)"), "the UI path uses the tested helper");
   const cancelBlock = source.slice(source.indexOf("controller.cancelDiscard();"), source.lastIndexOf('setMode("view")'));
-  for (const call of ["setForm(drafts.form)", "setRates(drafts.rates)", "setWeek(drafts.week)"]) {
-    assert.ok(cancelBlock.includes(call), `cancel edit reseeds ${call}`);
-  }
+  assert.ok(cancelBlock.includes("applyLocalDrafts(resetAuthoringDrafts("), "cancel edit reseeds every local draft");
   assert.ok(cancelBlock.includes("controller.edit({})"), "the session intent is cleared too");
+  // The reseed setters live in ONE shared helper (the fresh load uses the same code), so the cancel path
+  // cannot drift from it: every draft, INCLUDING the typed area ranges, comes from the same baseline.
+  const helperStart = source.indexOf("const applyLocalDrafts");
+  const helper = source.slice(helperStart, source.indexOf("}, []);", helperStart));
+  for (const call of [
+    "setForm(drafts.form)",
+    "setGroups(drafts.groups)",
+    "setRates(drafts.rates)",
+    "setAreaRanges(createAreaRangeDrafts(source))",
+    "setWeek(drafts.week)",
+  ]) {
+    assert.ok(helper.includes(call), `the shared reseed sets ${call}`);
+  }
 });
 
 function draftOf(overrides: Partial<RateRowDraft>): RateRowDraft {

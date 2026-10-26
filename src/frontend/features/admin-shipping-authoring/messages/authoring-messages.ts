@@ -121,6 +121,8 @@ const fa = {
   areaRangeHint: "یک بازه برای کل این محدوده؛ روزهای کاری وعدهٔ رسیدن به مشتری، نه تحویل به باربر.",
   areaRangeUnset: "تعیین نشده",
   areaRangeEmpty: "با افزودن اولین ردیف هزینه، همین بازه به آن منتقل می‌شود.",
+  areaRangeRowsRequired:
+    "این محدوده هنوز ردیف هزینه ندارد؛ بازه بدون ردیف ذخیره نمی‌شود. یک ردیف اضافه کنید یا بازه را خالی کنید.",
   areaRangeConflict: "ردیف‌های ذخیره‌شده بازهٔ یکسان ندارند ({pairs}). برای یکی‌کردن، بازهٔ مشترک را صریح وارد کنید؛ تا آن زمان مقادیر اصلی حفظ می‌شوند.",
   removeAreaAction: "حذف این مقصد",
   unresolvedDraftSelection: "این مقصد اثبات نشده و تا حذف یا جایگزینی، اعمال را مسدود می‌کند:",
@@ -407,6 +409,8 @@ const en: Record<AuthoringMessageKey, string> = {
   areaRangeHint: "One range for the whole area; working days are the customer receiving promise, not carrier handoff.",
   areaRangeUnset: "Not set",
   areaRangeEmpty: "The first cost row will inherit this range.",
+  areaRangeRowsRequired:
+    "This area has no cost row yet, so the range cannot be saved. Add a row or clear the range.",
   areaRangeConflict: "The stored rows do not share one range ({pairs}). Enter a shared range explicitly to unify them; until then the original values are preserved.",
   removeAreaAction: "Remove this destination",
   unresolvedDraftSelection: "This destination is not proven and blocks Apply until removed or replaced:",

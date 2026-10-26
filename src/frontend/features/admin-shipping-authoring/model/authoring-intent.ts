@@ -11,6 +11,12 @@ import type { EditorEdits } from "./editor-edits.ts";
 import { buildEditorEdits, formHasLocalChanges, type EditorFormIssue, type EditorFormState } from "./editor-form.ts";
 import { buildGroupsEdits, groupIssues, groupRateIssues, groupsDirty, type GroupIssue, type GroupsFormState } from "./editor-groups.ts";
 import { rateIssues as rateIssuesOf, ratesDirty, type RateRowIssue, type RatesFormState } from "./editor-rates.ts";
+import {
+  areaRangeDraftIssues,
+  areaRangeDraftsDirty,
+  type AreaRangeDraftIssue,
+  type AreaRangeDrafts,
+} from "./editor-area-range.ts";
 import { buildWeeklyScheduleEdit, weekDirty, weekIssues, type WeekFormState, type WeekIssue } from "./editor-week.ts";
 
 /** All local blocking problems of the composed intent. */
@@ -19,6 +25,8 @@ export interface AuthoringIntentIssues {
   readonly groups: readonly GroupIssue[];
   readonly rates: readonly RateRowIssue[];
   readonly week: readonly WeekIssue[];
+  /** Typed shared delivery ranges that cannot be applied (partial/invalid, or with no row to live in). */
+  readonly areaRanges: readonly AreaRangeDraftIssue[];
 }
 
 /** One composed result: the single patch plus everything that blocks Apply. */
@@ -35,7 +43,8 @@ export function hasNoIssues(issues: AuthoringIntentIssues): boolean {
     issues.general.length === 0 &&
     issues.groups.length === 0 &&
     issues.rates.length === 0 &&
-    issues.week.length === 0
+    issues.week.length === 0 &&
+    issues.areaRanges.length === 0
   );
 }
 
@@ -47,6 +56,7 @@ export function hasNoIssues(issues: AuthoringIntentIssues): boolean {
  * @param rates Local rows keyed by LOCAL group key (an existing group's key is its server id).
  * @param week Local weekly schedule.
  * @param groups Local ordered group collection; absent means the baseline topology (read-only view).
+ * @param areaRanges Operator's typed shared delivery range per area; absent means no typed range work.
  */
 export function buildAuthoringIntent(
   document: EditorDocument,
@@ -54,6 +64,7 @@ export function buildAuthoringIntent(
   rates: RatesFormState,
   week: WeekFormState,
   groups: GroupsFormState | null = null,
+  areaRanges: AreaRangeDrafts | null = null,
 ): AuthoringIntent {
   const generalResult = buildEditorEdits(document, general);
   const regionGroups =
@@ -84,12 +95,15 @@ export function buildAuthoringIntent(
       groups: groups === null ? [] : groupIssues(groups),
       rates: rateIssues,
       week: weekIssues(week),
+      areaRanges:
+        areaRanges === null ? [] : areaRangeDraftIssues(areaRanges, (groupKey) => rates[groupKey]),
     },
     localDirty:
       formHasLocalChanges(document, general) ||
       ratesDirty(document, rates) ||
       weekDirty(document.weeklySchedule, week) ||
-      (groups !== null && groupsDirty(document, groups)),
+      (groups !== null && groupsDirty(document, groups)) ||
+      (areaRanges !== null && areaRangeDraftsDirty(document, areaRanges, rates)),
   };
 }
 

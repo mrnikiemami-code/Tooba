@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * Editable rows of ONE existing region group: identity, order, currency and geography are shown
@@ -13,19 +13,18 @@
  * DISPLAY is grouped while the model keeps the canonical ungrouped token, so `0.50` / `1850000.00` are
  * never transformed by `input[type=number]` or a float round-trip.
  */
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
 import { authoringFormat } from "../messages/authoring-messages.ts";
 import type { EditorRegionGroup } from "../model/editor-document.ts";
 import type { DestinationFactIndex } from "../model/editor-destination-ancestry.ts";
 import { RATE_LIMITS, type RateField, type RateRowDraft, type RateRowIssue } from "../model/editor-rates.ts";
 import {
-  areaRangeIssue,
-  areaRangeText,
-  type AreaRangeIssueCode,
+  type AreaRangeDraftIssueCode,
+  type AreaRangePair,
   type AreaRangeView,
 } from "../model/editor-area-range.ts";
-import { caretForDigitIndex, groupMoneyText, interpretMoneyEdit } from "../model/money-text.ts";
+import { caretOffsetFor, groupMoneyText, interpretMoneyEdit, isCanonicalMoneyText, type MoneyCaret } from "../model/money-text.ts";
 import { rateDraftConditionText } from "./rate-presentation.ts";
 import { formatDecimalText, formatNumber } from "./authoring-format.ts";
 
@@ -59,8 +58,10 @@ export function rowIssueMessage(code: RateRowIssue["code"], messages: AuthoringM
 }
 
 /** Issue message of the shared area range. */
-export function areaRangeIssueMessage(code: AreaRangeIssueCode, messages: AuthoringMessages): string {
-  return code === "durationRequired" ? messages.durationRequired : messages.durationInvalid;
+export function areaRangeIssueMessage(code: AreaRangeDraftIssueCode, messages: AuthoringMessages): string {
+  if (code === "durationRequired") return messages.durationRequired;
+  if (code === "durationInvalid") return messages.durationInvalid;
+  return messages.areaRangeRowsRequired;
 }
 
 function BoundField({
@@ -98,8 +99,10 @@ function BoundField({
 /**
  * Exact money field: grouped DISPLAY, canonical token to the model, caret anchored to a digit position.
  *
- * The displayed value is derived from the raw token on every render, so grouping can never become part of
- * the committed value; the caret is restored by digit count, which keeps editing/backspace/paste usable.
+ * The displayed value is derived from the model token on every render, so grouping can never become part of
+ * the committed value; an INVALID text is shown exactly as typed (never trimmed down to different digits)
+ * and is refused by the row/amount validation, and the caret anchor keeps which side of the decimal
+ * separator it is on, so typing `12`, `.`, `5` really yields `12.5`.
  */
 export function MoneyField({
   label,
@@ -110,20 +113,20 @@ export function MoneyField({
 }: {
   label: string;
   value: string;
-  /** Receives the CANONICAL ungrouped token. */
+  /** Receives the CANONICAL ungrouped token, or the invalid text as typed. */
   onChange: (raw: string) => void;
   testId: string;
   placeholder?: string;
 }) {
   const input = useRef<HTMLInputElement>(null);
-  const pendingCaret = useRef<number | null>(null);
+  const pendingCaret = useRef<MoneyCaret | null>(null);
 
   useLayoutEffect(() => {
     const element = input.current;
-    const digits = pendingCaret.current;
+    const anchor = pendingCaret.current;
     pendingCaret.current = null;
-    if (element === null || digits === null) return;
-    const caret = caretForDigitIndex(element.value, digits);
+    if (element === null || anchor === null) return;
+    const caret = caretOffsetFor(element.value, anchor);
     element.setSelectionRange(caret, caret);
   });
 
@@ -135,14 +138,15 @@ export function MoneyField({
         type="text"
         inputMode="decimal"
         dir="ltr"
-        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900 aria-[invalid=true]:border-danger"
         value={groupMoneyText(value)}
         placeholder={placeholder}
         data-testid={testId}
+        aria-invalid={value !== "" && !isCanonicalMoneyText(value)}
         onChange={(event) => {
           const element = event.target;
           const edit = interpretMoneyEdit(element.value, element.selectionStart ?? element.value.length);
-          pendingCaret.current = edit.caretDigits;
+          pendingCaret.current = edit.caret;
           onChange(edit.raw);
         }}
       />
@@ -319,39 +323,31 @@ export function areaRangeSummary(range: AreaRangeView, locale: AuthoringLocale, 
 /**
  * The ONE delivery range of a whole delivery area, placed OUTSIDE the repeated price rows.
  *
- * In edit mode the operator sets the shared range here; the typed text is local to this control so a
- * HALF-typed pair is visible without ever reaching the rows. When the stored rows disagree, the control
- * starts empty and states the conflict, so the stored per-row values are only normalized by a deliberate
- * entry. `seedKey` changes whenever the derived range/baseline changes, which re-seeds the text from the
- * rows (so a discard or an accepted save cannot leave stale text behind).
+ * CONTROLLED by the screen's shared-range drafts: the operator's text (including blank/partial/invalid)
+ * is the form state, so it drives dirty/Apply/issues even when the rows still carry an older lawful pair.
+ * When the stored rows disagree, the control starts empty and states the conflict, so the stored per-row
+ * values are only normalized by a deliberate lawful entry.
  */
 export function AreaDeliveryRange({
   range,
-  seedKey,
+  value,
+  issue,
   editable,
   locale,
   messages,
   onChange,
 }: {
   range: AreaRangeView;
-  /** Identity of the currently derived range; a new value re-seeds the operator text from the rows. */
-  seedKey: string;
+  /** The operator's own typed pair of THIS area. */
+  value: AreaRangePair;
+  /** Blocking reason computed by the composed intent for this area, if any. */
+  issue: AreaRangeDraftIssueCode | null;
   editable: boolean;
   locale: AuthoringLocale;
   messages: AuthoringMessages;
   onChange: (min: string, max: string) => void;
 }) {
-  const seeded = areaRangeText(range);
-  const [min, setMin] = useState(seeded.min);
-  const [max, setMax] = useState(seeded.max);
-  useEffect(() => {
-    const next = areaRangeText(range);
-    setMin(next.min);
-    setMax(next.max);
-    // `range` is intentionally excluded: only a NEW derived identity re-seeds the typed text.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seedKey]);
-
+  const { min, max } = value;
   if (!editable) {
     return (
       <p className="text-[11px] font-bold text-gray-800" data-testid="shipping-authoring-area-range">
@@ -359,10 +355,9 @@ export function AreaDeliveryRange({
       </p>
     );
   }
-  /** A row that carries no duration yet blocks Apply; say it ONCE here instead of on a price row. */
+  /** A stored row that carries no duration yet blocks Apply; say it ONCE here instead of on a price row. */
   const missing = range.kind === "uniform" && (range.min === "" || range.max === "");
-  const issue: AreaRangeIssueCode | null =
-    missing || min !== "" || max !== "" ? areaRangeIssue(min, max) : null;
+  const blocking = issue ?? (missing ? "durationRequired" : null);
   return (
     <div className="rounded-lg border border-border bg-surface px-2 py-1.5" data-testid="shipping-authoring-area-range">
       <p className="text-[11px] font-bold text-gray-800">{messages.areaRangeTitle}</p>
@@ -372,20 +367,14 @@ export function AreaDeliveryRange({
           label={messages.minLabel}
           value={min}
           inputMode="numeric"
-          onChange={(value) => {
-            setMin(value);
-            onChange(value, max);
-          }}
+          onChange={(value2) => onChange(value2, max)}
           testId="shipping-authoring-area-range-min"
         />
         <BoundField
           label={messages.maxLabel}
           value={max}
           inputMode="numeric"
-          onChange={(value) => {
-            setMax(value);
-            onChange(min, value);
-          }}
+          onChange={(value2) => onChange(min, value2)}
           testId="shipping-authoring-area-range-max"
         />
       </div>
@@ -403,9 +392,9 @@ export function AreaDeliveryRange({
           })}
         </p>
       ) : null}
-      {issue !== null && (min !== "" || max !== "" || missing) ? (
+      {blocking !== null ? (
         <p role="alert" className="mt-1 text-[11px] font-semibold text-danger" data-testid="shipping-authoring-area-range-issue">
-          {areaRangeIssueMessage(issue, messages)}
+          {areaRangeIssueMessage(blocking, messages)}
         </p>
       ) : null}
       {range.kind === "empty" ? (
