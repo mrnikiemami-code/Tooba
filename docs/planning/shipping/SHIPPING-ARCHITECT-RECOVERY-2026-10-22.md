@@ -1,3 +1,24 @@
+## CURRENT —226 mobile week reviewed; admin form READY FOR USER RETEST —2026-10-26
+
+Architect reviewed source9734e77ac81eacb8d158988bd2f3ca2f65f4cde4 and VIEWED actual native225? NO:
+226/screens/226-390-view.png,226-390-edit.png,226-360-view.png,226-1440-view.png.
+Mobile closed rows now one line/one Closed status; working view range compact adjacent labels+values;
+edit paired controls and checkbox visible; desktop four-column view retained. Accept bounded226 presentation
+repair for ADMIN USER RETEST, not user Visual ACCEPT/global UI certification. Root read exact diff: only week
+presentation and225R2 test helper type annotation. Root didn't execute Windows typecheck/browser; worker
+one clean typecheck and mounted toggle-restoration receipts are evidence. R2's prior typecheck claim predates
+its test helper and was incomplete;226 corrected TS2683 with no behavior change.
+225-R2 money integrity ACCEPTED; no further money/proof loop. 225 modals/cascade/rate duplicate-edit validation
+accepted within documented focused/helper+mounted limits, not full save or live service-area matrix.
+CALL USER NOW: http://127.0.0.1:3000/admin/shipping-services ; draft01a16eeb-70b3-7000-87c2-564c82835496
+view/edit via actual row. Ask actual user feedback, no next implementation task without it.
+Active NONE / Automatic-Next-Task NONE. Preserve user's tabs and edits; prior R1 local tab loss remains
+unrecovered, no claim otherwise. New browser only task-owned profile/created target.
+Limits: real Tehran has no service areas so fourth-level Add test-only; no new Apply/PUT/save replay in225R2/
+226, live stored-fraction/legacy conflicts/multi-area360 not proved. No Storefront integration/activation,
+compact per-order-group evidence still unimplemented, seller-admin separate. No blanket completion claim.
+226 actual10min inside15; older overruns remain recorded. Applied schema/catalog/capture/defaultOFF preserved.
+
 ## CURRENT —225-R2 money ACCEPTED;226 mobile-week-only repair issued —2026-10-26
 
 Architect read afbdadc7beb363393eba8aa6c988beacf827db24 actual money model/field and R2 mount-receipts.
