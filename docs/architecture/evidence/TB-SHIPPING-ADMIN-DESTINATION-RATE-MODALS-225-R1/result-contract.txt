@@ -85,7 +85,8 @@ correction); AGENTS.md + docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md +
 docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md (top recovery). Exact-path staging only; no
 git add -A, no reset/stash/rebase/force-push.
 
-Parity: commit 2107a63db pushed to origin/main; HEAD == origin/main after fetch.
+Parity: source commit 2107a63db pushed to origin/main (code + evidence docs); HEAD == origin/main verified after
+fetch, with the evidence/poster commit immediately following the source commit. No force-push, no reset/stash/rebase.
 Active task: NONE. Next: Architect review only. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
 Worker PASS != Architect ACCEPT.
 END_TOOBA_WORKER_RESULT
