@@ -1,3 +1,13 @@
+## CURRENT —225 issued after user rejects picker/rate UX, IRR formatting and mobile —2026-10-26
+
+Active task TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225. Read225/TASK.md. No new user trial until Architect review.
+224-R1 integrity acceptance remains bounded, NOT UI Visual ACCEPT; latest user screenshots show grouping unusable for ordinary editing (5,000000), duplicate row checks absent/poor feedback, and mobile week whitespace. Reproduce/repair, don't claim previous166 tests prove these.
+User requires destination Add in persistent modal with FOUR fixed DB-backed cascade fields country/area/city/service; parents disabled until selected, changing parent clears descendants+stale requests. One deepest-terminal selection/chip with full actual breadcrumb+remove, ancestors not extra coverage. Add multiple without modal closing. No terminal-level dropdown. Actual overlap prohibition remains.
+Rate Add/Edit in modal, compact main summaries; validate against other rows in SAME area, exclude only actual self on edit;0 valid, blank invalid. Use existing MessageBox on explicit failed action, accessible field indication, not red text wall/keypress popups.
+IRR is integer display/input per user; existing integral .00 displayed without fractional suffix but exact untouched wire retained. No rounding nonzero fractions or globally forcing other currencies. Repair generated grouping vs pasted invalid handling; preserve negative/exponent refusal and caret.
+Mobile view/edit week needs compact coherent day/status/hours, not merely no horizontal overflow. Check actual modal/weekly screenshots360/390/1440.
+No owner/seller redesign or Storefront feature in225; compact shared-snapshot order-evidence decision still mandatory/unimplemented. Preserve user draft/capture/tabs and applied migrations/catalog. HARD45/stop30, narrow tests only, no166/whole-suite replay/Bridge. STOP_FOR_ARCHITECT after225.
+
 ## CURRENT —224-R1 integrity repairs accepted for bounded ADMIN USER TRIAL —2026-10-26
 
 Architect independently inspected e79bd74c53a0f6b514785b480739e60709eeb43c: editor-area-range, authoring-intent, money-text, screen controlled state/reseed/commit/hasNoIssues wiring, MoneyField and rate validator. The two acceptance blockers from224 are closed for user trial: invalid/partial shared range now joins localDirty/issues and blocks Apply; unsupported money input remains invalid instead of becoming a different accepted amount. Separator Backspace and decimal-side caret repaired as worker-reported mounted proof.
