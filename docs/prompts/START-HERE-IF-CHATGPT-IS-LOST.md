@@ -1,4 +1,18 @@
-﻿## CURRENT —225-R1 executed: money edit provenance + caret mapping + modal tolerance; 225 still awaits review —2026-10-26
+## CURRENT —225-R1 not accepted;225-R2 money provenance + isolated Chrome proof —2026-10-26
+
+Current main1d06252188a3278127401e804f53b263725c47e1/source2107a63db inspected by Architect.
+Stored-fraction current-value validation and editable guard corrected. Still defective TWO-key transition:
+invalid12,34 ->append5 raw12,345 validfalse ->append6 reclassified trusted ->accepted123456. Validity/
+provenance must persist, not infer trusted from shape. Read225-R2/TASK.md and225-R1/ARCHITECT-REVIEW.md.
+Active TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2. No user trial before Architect acceptance.
+R1 mounted real keys did NOT reach field; caret/typing only unit-proven. Fresh installed Chrome task-owned
+profile/created target only, no Electron/user tab interaction. INCIDENT: R1 mistakenly reloaded user edit
+tab and lost unsaved LOCAL changes; DB unchanged is not preservation/recovery. Disclose truthfully.
+Keep225 modals/cascade/mobile/rate validation, no more redesign. Tehran no service areas, live fourth level
+not proven. Compact-order-evidence/Storefront consumer still unimplemented; no seller-admin work.
+No broad tests/Bridge/known historical script. HARD20/implementation10; STOP_FOR_ARCHITECT afterR2.
+
+## CURRENT —225-R1 executed: money edit provenance + caret mapping + modal tolerance; 225 still awaits review —2026-10-26
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1/{RESULT.md,TASK.md} and
 225/ARCHITECT-REVIEW.md. Base84999b4f9 (clean fast-forward; the three backend line-ending drifts untouched).
