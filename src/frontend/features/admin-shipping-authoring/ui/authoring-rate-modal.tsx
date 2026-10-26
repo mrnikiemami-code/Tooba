@@ -15,11 +15,9 @@ import { useEffect, useState } from "react";
 import { Dialog } from "../../../design-system";
 import type { AuthoringMessages } from "../messages/authoring-messages.ts";
 import {
-  conditionTuple,
-  conflictingRowKey,
-  rowConditionIssue,
-  type RateField,
+  rateConfirmIssue,
   type RateRowDraft,
+  type StoredRateAmounts,
 } from "../model/editor-rates.ts";
 import { moneyPrecisionPolicy } from "../model/money-text.ts";
 import { MoneyField } from "./authoring-money-field.tsx";
@@ -61,7 +59,7 @@ export function AuthoringRateModal({
   initial,
   currencyCode,
   otherRows,
-  tolerated,
+  storedAmounts,
   editable,
   messages,
   onConfirm,
@@ -76,10 +74,10 @@ export function AuthoringRateModal({
   /** EVERY row of the same area, including the one being edited (self is excluded by stable key). */
   otherRows: readonly RateRowDraft[];
   /**
-   * Money fields whose non-zero fraction came verbatim from storage: they are preserved (never rounded) and
-   * are NOT refused, while a fraction the operator types here still is.
+   * The EXACT stored money tokens of the row being edited. Fraction tolerance is recomputed against these on
+   * every confirm, so an amount the operator edits here can never inherit the stored tolerance.
    */
-  tolerated: readonly RateField[];
+  storedAmounts: StoredRateAmounts | null;
   editable: boolean;
   messages: AuthoringMessages;
   onConfirm: (row: RateRowDraft) => void;
@@ -103,26 +101,23 @@ export function AuthoringRateModal({
 
   const confirm = () => {
     if (row === null) return;
-    const shape = rowConditionIssue(row, currencyCode, tolerated);
-    if (shape !== null) {
-      setRefusal(rowIssueMessage(shape, messages));
+    // The disabled button is presentation: a view/busy state that changed while the modal was open must
+    // make the HANDLER refuse, without a dialog and without touching the parent.
+    const refusalIssue = rateConfirmIssue(row, otherRows, currencyCode, storedAmounts, editable);
+    if (refusalIssue === null) {
+      // The delivery duration belongs to the whole area, so the modal never carries its own pair.
+      setRefusal(null);
+      onConfirm(row);
       return;
     }
-    const tuple = conditionTuple(row, currencyCode);
-    const duplicate = otherRows.find(
-      (other) => other.rowKey !== row.rowKey && tuple !== null && conditionTuple(other, currencyCode) === tuple,
+    if (refusalIssue.kind === "blocked") return;
+    setRefusal(
+      refusalIssue.kind === "shape"
+        ? rowIssueMessage(refusalIssue.code, messages)
+        : refusalIssue.kind === "duplicate"
+          ? messages.rateDuplicateConflict
+          : messages.rateOverlapConflict,
     );
-    if (duplicate !== undefined) {
-      setRefusal(messages.rateDuplicateConflict);
-      return;
-    }
-    if (conflictingRowKey(row, otherRows, currencyCode) !== null) {
-      setRefusal(messages.rateOverlapConflict);
-      return;
-    }
-    // The delivery duration belongs to the whole area, so the modal never carries its own pair.
-    setRefusal(null);
-    onConfirm(row);
   };
 
   return (

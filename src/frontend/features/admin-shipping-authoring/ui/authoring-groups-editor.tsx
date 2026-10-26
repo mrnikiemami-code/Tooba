@@ -18,11 +18,11 @@ import { groupIssues, type GroupDraft, type GroupIssue } from "../model/editor-g
 import {
   RATE_LIMITS,
   newRateRow,
-  toleratedStoredFractions,
-  type RateField,
+  storedRateAmounts,
   type RateRowDraft,
   type RateRowIssue,
   type RatesFormState,
+  type StoredRateAmounts,
 } from "../model/editor-rates.ts";
 import type { UnresolvedDraftSelection } from "../model/destination-choice.ts";
 import { areaIdentity } from "../model/destination-choice.ts";
@@ -123,7 +123,8 @@ export function AuthoringGroupsEditor({
       readonly groupKey: string;
       readonly title: string;
       readonly initial: RateRowDraft;
-      readonly tolerated: readonly RateField[];
+      /** Exact stored money tokens of the edited row: tolerance is re-derived from these on confirm. */
+      readonly storedAmounts: StoredRateAmounts | null;
     } | null
   >(null);
   const newRowCounter = useRef(0);
@@ -370,7 +371,7 @@ export function AuthoringGroupsEditor({
                         groupKey: group.key,
                         title: messages.rateAddTitle,
                         initial: newRateRow(`new-${group.key}-${newRowCounter.current}`),
-                        tolerated: [],
+                        storedAmounts: null,
                       });
                     }}
                   >
@@ -441,8 +442,7 @@ export function AuthoringGroupsEditor({
                                   groupKey: group.key,
                                   title: messages.rateEditTitle,
                                   initial: row,
-                                  tolerated: toleratedStoredFractions(
-                                    row,
+                                  storedAmounts: storedRateAmounts(
                                     stored?.rows.find((candidate) => candidate.rateRowId === row.rateRowId) ?? null,
                                   ),
                                 })
@@ -513,7 +513,7 @@ export function AuthoringGroupsEditor({
           initial={rateModal.initial}
           currencyCode={groups.find((entry) => entry.key === rateModal.groupKey)?.currencyCode ?? null}
           otherRows={rates[rateModal.groupKey] ?? []}
-          tolerated={rateModal.tolerated}
+          storedAmounts={rateModal.storedAmounts}
           editable={editable}
           messages={messages}
           onConfirm={(row) => {

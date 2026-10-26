@@ -104,3 +104,14 @@ Screens: `screens/225-1440-destination-modal.png`, `225-390-rate-modal.png`, `22
   45-minute box was EXCEEDED (measured minutes cannot be reconstructed) — recorded, NOT a process PASS.
 
 Active task: NONE. Next: Architect review, then the user trial. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+## Correction appended by 225-R1 (2026-10-26)
+
+Architect review (ARCHITECT-REVIEW.md) confirmed three defects in the money/modal layer of this task; 225 is
+NOT accepted and the user trial still waits. `../TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1/RESULT.md`
+repairs exactly those: typing edits now know the PRIOR committed token (an invalid `12,34` can no longer be
+healed into `12345`), the caret is mapped through the separator removal (middle insertion into `1,234` lands
+after the typed digit), and the rate modal re-derives stored-fraction tolerance from the exact stored tokens on
+every confirm plus refuses a view/busy confirm in the handler itself. The statements above about money
+behaviour and modal confirmation therefore describe the REPAIRED behaviour, not what was reviewed at
+`2e6aed095`.

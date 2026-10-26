@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TB-225 focused regressions: destination modal (sequential 4-stage path), rate-row modal (isolated draft +
  * local overlap/duplicate mirror), and integer-rial money entry/display.
  *
@@ -29,6 +29,7 @@ import {
   newRateRow,
   rateIssues,
   rowConditionIssue,
+  storedRateAmounts,
   toleratedStoredFractions,
   withConfirmedRow,
   withRowField,
@@ -318,7 +319,8 @@ test("225-C1b a whole IRR token is never reported as a visible fraction", () => 
 });
 
 test("225-C2 a typing edit never turns its own display grouping into an invalid amount", () => {
-  const edit = interpretMoneyTyping("1,200000", 9);
+  // The PRIOR token was lawful, so the separators in the new text are the field's own grouping.
+  const edit = interpretMoneyTyping("1200000", "1,200000", 9);
   assert.equal(edit.valid, true);
   assert.equal(edit.raw, "1200000");
 });
@@ -336,21 +338,21 @@ test("225-C3 a strict paste keeps unsupported text exactly as typed", () => {
 test("225-C4 a STORED fraction is tolerated only while untouched; an edit is refused honestly", () => {
   const stored = row({ minMerchandiseAmount: "0.50" });
   const untouched = draftFromRow(stored);
-  const tolerated = toleratedStoredFractions(untouched, stored);
+  const tolerated = toleratedStoredFractions(untouched, storedRateAmounts(stored));
   assert.deepEqual(tolerated, ["minMerchandiseAmount"]);
   assert.equal(rowConditionIssue(untouched, "IRR", tolerated), null);
 
   // The operator edits another money field: the stored fraction is STILL untouched, so it stays lawful…
   const editedFreight = { ...untouched, freightAmount: "130000.00" };
-  assert.equal(rowConditionIssue(editedFreight, "IRR", toleratedStoredFractions(editedFreight, stored)), null);
+  assert.equal(rowConditionIssue(editedFreight, "IRR", toleratedStoredFractions(editedFreight, storedRateAmounts(stored))), null);
 
   // …but changing the fractional amount itself is refused, and nothing is rounded.
   const editedFraction = { ...untouched, minMerchandiseAmount: "0.75" };
   assert.equal(
-    rowConditionIssue(editedFraction, "IRR", toleratedStoredFractions(editedFraction, stored)),
+    rowConditionIssue(editedFraction, "IRR", toleratedStoredFractions(editedFraction, storedRateAmounts(stored))),
     "rialFractionInvalid",
   );
-  assert.equal(toleratedStoredFractions(editedFraction, stored).length, 0);
+  assert.equal(toleratedStoredFractions(editedFraction, storedRateAmounts(stored)).length, 0);
 });
 
 test("225-C5 the whole-area issue list never blocks Apply on an untouched stored fraction", () => {

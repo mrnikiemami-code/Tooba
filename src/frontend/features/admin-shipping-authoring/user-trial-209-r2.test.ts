@@ -152,7 +152,11 @@ test("R2-10 group and row ownership is carried into the rendered attributes and 
   assert.match(groups, /serverRateErrors\?\.get\(rateRowKey\(position, rowIndex\)\)/);
   // TB-225: the editable row is a summary whose ONLY write path is the modal, keyed by the stable row key.
   assert.match(rates, /data-testid="shipping-authoring-rate-row"/);
-  assert.match(rates, /toleratedStoredFractions\(/);
-  assert.match(modal, /other\.rowKey !== row\.rowKey/, "self is excluded by stable key, never by index");
+  // TB-225-R1: the edit modal receives the EXACT stored tokens and re-derives fraction tolerance on confirm.
+  assert.match(rates, /storedRateAmounts\(/);
+  assert.match(modal, /rateConfirmIssue\(row, otherRows, currencyCode, storedAmounts, editable\)/);
+  // Self-exclusion by stable key now lives in the ONE confirm decision the modal calls.
+  const ratesModel = readFileSync(join(FEATURE_DIR, "model", "editor-rates.ts"), "utf8");
+  assert.match(ratesModel, /other\.rowKey !== row\.rowKey/, "self is excluded by stable key, never by index");
   assert.doesNotMatch(groups, /serverRateErrors\?\.get\(rowIndex\)/);
 });

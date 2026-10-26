@@ -218,22 +218,82 @@ export function isCanonicalMoneyText(raw: string): boolean {
 /**
  * One typed keystroke (NOT a paste) inside the grouped field.
  *
- * Every separator that a typing edit produces belongs to the field's OWN display grouping: the browser
- * reports the new text of a field whose value we formatted, so a middle insert or a delete around an
- * existing group can leave text like `1,200000`. Treating those characters as user-supplied grouping
- * would refuse a perfectly lawful amount (the reported screenshot defect), so a typing edit drops the
- * display separators before reading. Pasted text keeps the strict reader, where a malformed grouping such
- * as `12,34` really is what the operator supplied and must stay visibly invalid.
+ * A separator the browser reports belongs to the field's OWN display grouping ONLY when the value the field
+ * last committed was itself lawful. Then a middle insert or a delete around an existing group can leave text
+ * like `1,200000`, and reading those characters as user-supplied grouping would refuse a perfectly lawful
+ * amount (the reported screenshot defect) — so those separators are dropped.
  *
+ * When the previous value was already INVALID, the separators in it are the operator's own text: dropping
+ * them would heal `12,34` + a typed `5` into the accepted `12345`. That text therefore stays exactly as
+ * typed and invalid until the operator removes the offending characters himself.
+ *
+ * The caret is mapped through the SAME separator removal (logical offset), never applied to a shorter text.
+ *
+ * @param previousRaw The token the field last committed (canonical, or the invalid text as typed).
  * @param nextText The field's new display text, exactly as the browser reported it.
  * @param caret The caret offset the browser reported for that text.
  */
-export function interpretMoneyTyping(nextText: string, caret: number): MoneyEdit {
-  const withoutGrouping = toAsciiDigits(nextText)
-    .replace(/\u066b/g, ".")
-    .replace(/[\u002c\u066c]/g, "");
-  const reading = readMoneyText(withoutGrouping);
-  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(withoutGrouping, caret) };
+export function interpretMoneyTyping(previousRaw: string, nextText: string, caret: number): MoneyEdit {
+  const display = visibleMoneyText(nextText);
+  const offset = Math.max(0, Math.min(caret, display.length));
+  const trusted = readMoneyText(previousRaw).valid;
+  if (!trusted) {
+    // The operator's OWN text was already invalid. A separator in it was NOT produced by our display
+    // grouping, so dropping it would silently heal `12,34` + `5` into the accepted `12345`. The text stays
+    // exactly as typed and invalid until the operator himself removes the offending characters.
+    if (hasGroupSeparator(display)) return { raw: display, valid: false, caret: caretAnchorAt(display, offset) };
+    const reading = readMoneyText(display);
+    return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(display, offset) };
+  }
+  // Trusted display: every separator in it belongs to OUR grouping, so dropping it is display-only.
+  const stripped = withoutDisplayGrouping(display);
+  const reading = readMoneyText(stripped.text);
+  return {
+    raw: reading.raw,
+    valid: reading.valid,
+    caret: caretAnchorAt(stripped.text, stripped.offsets[offset] ?? stripped.text.length),
+  };
+}
+
+/** Normalized VISIBLE text: local digits become ASCII and the Arabic decimal separator becomes `.`. */
+function visibleMoneyText(text: string): string {
+  return toAsciiDigits(text).replace(/\u066b/g, ".");
+}
+
+/** True when the text carries a GROUPING separator (ours, or one the operator supplied). */
+function hasGroupSeparator(text: string): boolean {
+  return text.includes(",") || text.includes("\u066c");
+}
+
+/** The text with the display grouping dropped, plus the logical offset of EVERY display offset. */
+function withoutDisplayGrouping(display: string): { text: string; offsets: readonly number[] } {
+  let text = "";
+  const offsets: number[] = [0];
+  for (const character of display) {
+    if (character !== "," && character !== "\u066c") text += character;
+    offsets.push(text.length);
+  }
+  return { text, offsets };
+}
+
+/**
+ * One Delete pressed directly BEFORE a grouping separator.
+ *
+ * Symmetric to `interpretMoneyBackspace`: the separator is re-inserted by display grouping on every render,
+ * so deleting it alone would change nothing forever. The digit AFTER it is the character the operator is
+ * deleting, so both go; the remaining digit run is kept verbatim.
+ *
+ * @param text The CURRENTLY DISPLAYED text of the field (grouped or invalid).
+ * @param caret The caret offset the browser reported.
+ * @returns The interpreted edit, or `null` when a plain browser edit must stay in charge.
+ */
+export function interpretMoneyDelete(text: string, caret: number): MoneyEdit | null {
+  const normalized = visibleMoneyText(text).replace(/\u066c/g, ",");
+  if (caret < 0 || caret >= normalized.length) return null;
+  if (normalized[caret] !== ",") return null;
+  const nextText = `${normalized.slice(0, caret)}${normalized.slice(caret + 2)}`;
+  const reading = readMoneyText(nextText);
+  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(nextText, caret) };
 }
 
 /** True when a canonical token carries a NON-zero fraction (an amount that is not a whole unit). */

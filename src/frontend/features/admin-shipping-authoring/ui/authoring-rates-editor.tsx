@@ -23,10 +23,10 @@ import type { DestinationFactIndex } from "../model/editor-destination-ancestry.
 import {
   RATE_LIMITS,
   newRateRow,
-  toleratedStoredFractions,
+  storedRateAmounts,
   type RateRowDraft,
   type RateRowIssue,
-  type RateField,
+  type StoredRateAmounts,
 } from "../model/editor-rates.ts";
 import { type AreaRangePair, type AreaRangeView } from "../model/editor-area-range.ts";
 import { displayMoneyText, moneyPrecisionPolicy } from "../model/money-text.ts";
@@ -211,7 +211,11 @@ export function AuthoringRatesEditor({
   onRemoveRow: (rowKey: string) => void;
 }) {
   const [modal, setModal] = useState<
-    { readonly title: string; readonly initial: RateRowDraft; readonly tolerated: readonly RateField[] } | null
+    {
+      readonly title: string;
+      readonly initial: RateRowDraft;
+      readonly storedAmounts: StoredRateAmounts | null;
+    } | null
   >(null);
   const newRowCounter = useRef(0);
   const title = group.titles.find((entry) => entry.languageId.toLowerCase() === contentLanguageId.toLowerCase());
@@ -270,7 +274,7 @@ export function AuthoringRatesEditor({
                 setModal({
                   title: messages.rateAddTitle,
                   initial: newRateRow(`new-${group.groupId}-${newRowCounter.current}`),
-                  tolerated: [],
+                  storedAmounts: null,
                 });
               }}
             >
@@ -326,8 +330,7 @@ export function AuthoringRatesEditor({
                             setModal({
                               title: messages.rateEditTitle,
                               initial: row,
-                              tolerated: toleratedStoredFractions(
-                                row,
+                              storedAmounts: storedRateAmounts(
                                 group.rows.find((candidate) => candidate.rateRowId === row.rateRowId) ?? null,
                               ),
                             })
@@ -369,7 +372,7 @@ export function AuthoringRatesEditor({
         initial={modal?.initial ?? null}
         currencyCode={currencyCode}
         otherRows={rows}
-        tolerated={modal?.tolerated ?? []}
+        storedAmounts={modal?.storedAmounts ?? null}
         editable={editable}
         messages={messages}
         onConfirm={(row) => {

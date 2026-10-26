@@ -324,30 +324,99 @@ export function rowIssue(
 }
 
 /**
+ * The EXACT stored money tokens of one row — the baseline a stored fraction must still be equal to.
+ *
+ * Kept as its own value so a modal can re-evaluate tolerance against the CURRENT row instead of a list
+ * computed when the modal opened (an edited amount must never inherit the tolerance of the stored one).
+ */
+export interface StoredRateAmounts {
+  readonly freightAmount: string;
+  readonly packagingAmount: string;
+  readonly minMerchandiseAmount: string;
+  readonly maxMerchandiseAmount: string;
+}
+
+/**
+ * Baseline money tokens of a stored row, or `null` for a new/unknown row.
+ *
+ * @param stored The stored row of the same stable identity, or `null`.
+ */
+export function storedRateAmounts(stored: EditorRateRow | null): StoredRateAmounts | null {
+  if (stored === null) return null;
+  return {
+    freightAmount: stored.freightAmount,
+    packagingAmount: stored.packagingAmount,
+    minMerchandiseAmount: stored.minMerchandiseAmount ?? "",
+    maxMerchandiseAmount: stored.maxMerchandiseAmount ?? "",
+  };
+}
+
+/**
  * The money fields whose NON-ZERO fraction is preserved verbatim from storage.
  *
  * These are the exact fields validation must tolerate (never round): only a field the operator has actually
- * edited, or one of a NEW row, may be refused as a fractional rial amount.
+ * edited, or one of a NEW row, may be refused as a fractional rial amount. The comparison is against the
+ * EXACT stored token, so editing `100.50` into `200.75` drops the tolerance of that field.
  *
  * @param row The local draft.
- * @param stored The stored row, or `null` for a new row.
+ * @param stored The stored baseline tokens, or `null` for a new row.
  */
 export function toleratedStoredFractions(
   row: RateRowDraft,
-  stored: EditorRateRow | null,
+  stored: StoredRateAmounts | null,
 ): readonly RateField[] {
   if (stored === null) return [];
   const pairs: readonly (readonly [RateField, string, string])[] = [
     ["freightAmount", row.freightAmount, stored.freightAmount],
     ["packagingAmount", row.packagingAmount, stored.packagingAmount],
-    ["minMerchandiseAmount", row.minMerchandiseAmount, stored.minMerchandiseAmount ?? ""],
-    ["maxMerchandiseAmount", row.maxMerchandiseAmount, stored.maxMerchandiseAmount ?? ""],
+    ["minMerchandiseAmount", row.minMerchandiseAmount, stored.minMerchandiseAmount],
+    ["maxMerchandiseAmount", row.maxMerchandiseAmount, stored.maxMerchandiseAmount],
   ];
   const tolerated: RateField[] = [];
   for (const [field, draft, baseline] of pairs) {
     if (moneyHasFraction(draft) && draft === baseline) tolerated.push(field);
   }
   return tolerated;
+}
+
+/** One refusal reason of a row modal's confirm: an owning field issue, a same-area duplicate/overlap, or a
+ * view/busy state that changed while the modal was open (commit is then refused silently). */
+export type RateConfirmRefusal =
+  | { readonly kind: "shape"; readonly code: RateRowIssueCode }
+  | { readonly kind: "duplicate" }
+  | { readonly kind: "overlap" }
+  | { readonly kind: "blocked" };
+
+/**
+ * ONE confirm decision of the rate modal, on the CURRENT draft.
+ *
+ * Tolerance is re-derived here from the current values against the EXACT stored tokens, so an amount the
+ * operator edited into a non-zero fraction can never inherit the tolerance of the stored one; self is
+ * excluded by stable row key (never by index) and the duplicate/overlap scope stays the SAME area.
+ *
+ * @param row The modal's current draft.
+ * @param otherRows EVERY row of the same area, including the one being edited.
+ * @param currencyCode Server-owned currency of the area.
+ * @param stored Exact stored money tokens of this row, or `null` for a new row.
+ * @param editable Whether the screen may still be edited (the disabled button is presentation only).
+ */
+export function rateConfirmIssue(
+  row: RateRowDraft,
+  otherRows: readonly RateRowDraft[],
+  currencyCode: string | null,
+  stored: StoredRateAmounts | null,
+  editable = true,
+): RateConfirmRefusal | null {
+  if (!editable) return { kind: "blocked" };
+  const shape = rowConditionIssue(row, currencyCode, toleratedStoredFractions(row, stored));
+  if (shape !== null) return { kind: "shape", code: shape };
+  const tuple = conditionTuple(row, currencyCode);
+  const duplicate = otherRows.some(
+    (other) => other.rowKey !== row.rowKey && tuple !== null && conditionTuple(other, currencyCode) === tuple,
+  );
+  if (duplicate) return { kind: "duplicate" };
+  if (conflictingRowKey(row, otherRows, currencyCode) !== null) return { kind: "overlap" };
+  return null;
 }
 
 /** True when the three money texts of a row are exactly the stored ones (an untouched amount). */
@@ -456,7 +525,7 @@ export function rateIssues(
         : group.rows.find((candidate) => candidate.rateRowId === row.rateRowId) ?? null;
       // A STORED amount with a non-zero fraction is preserved verbatim and never rounded; only the fields
       // the operator actually edited (or a new row's) are refused. Every OTHER objection still surfaces.
-      const code = rowIssue(row, group.currencyCode, toleratedStoredFractions(row, stored));
+      const code = rowIssue(row, group.currencyCode, toleratedStoredFractions(row, storedRateAmounts(stored)));
       if (code !== null) {
         issues.push({ groupId: group.groupId, rowKey: row.rowKey, code });
         continue;

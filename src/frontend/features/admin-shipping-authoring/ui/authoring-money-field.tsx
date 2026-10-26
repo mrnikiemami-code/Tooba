@@ -20,12 +20,24 @@ import {
   caretOffsetFor,
   displayMoneyText,
   interpretMoneyBackspace,
+  interpretMoneyDelete,
   interpretMoneyEdit,
   interpretMoneyTyping,
   isCanonicalMoneyText,
   moneyHasFraction,
   type MoneyCaret,
 } from "../model/money-text.ts";
+
+/**
+ * Input types whose text is what the OPERATOR supplied verbatim, so the strict reader applies and a
+ * malformed grouping such as `12,34` stays visibly invalid instead of being re-grouped into money.
+ */
+const STRICT_INPUT_TYPES: ReadonlySet<string> = new Set([
+  "insertFromPaste",
+  "insertFromPasteAsQuotation",
+  "insertFromDrop",
+  "insertReplacementText",
+]);
 
 /** One integer text bound (weight/count/area range). */
 export function BoundField({
@@ -86,6 +98,8 @@ export function MoneyField({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const pendingCaret = useRef<MoneyCaret | null>(null);
+  /** A real paste is in flight: the strict reader must apply even if the change event omits `inputType`. */
+  const pastePending = useRef(false);
   // A token WITHOUT a separator is a whole rial amount, never a "visible fraction": only a real `.` that
   // carries a non-zero digit is one, so `1000` can never be reported as decimal.
   const fractionVisible = policy === "integer" && moneyHasFraction(value);
@@ -113,19 +127,38 @@ export function MoneyField({
         placeholder={placeholder}
         data-testid={testId}
         aria-invalid={invalid}
+        onPaste={() => {
+          // Some browsers/environments deliver the change without a recognizable `inputType`.
+          pastePending.current = true;
+        }}
         onChange={(event) => {
           const element = event.target;
           const caret = element.selectionStart ?? element.value.length;
-          const pasted = (event.nativeEvent as InputEvent | undefined)?.inputType === "insertFromPaste";
-          const edit = pasted ? interpretMoneyEdit(element.value, caret) : interpretMoneyTyping(element.value, caret);
+          const inputType = (event.nativeEvent as InputEvent | undefined)?.inputType ?? "";
+          const strict = pastePending.current || STRICT_INPUT_TYPES.has(inputType);
+          pastePending.current = false;
+          const edit = strict
+            ? interpretMoneyEdit(element.value, caret)
+            : interpretMoneyTyping(value, element.value, caret);
           pendingCaret.current = edit.caret;
           onChange(edit.raw);
         }}
         onKeyDown={(event) => {
-          if (event.key !== "Backspace" || event.ctrlKey || event.metaKey || event.altKey) return;
+          // Any real key invalidates a leftover paste flag from a cancelled paste.
+          pastePending.current = false;
           const element = event.currentTarget;
+          const caret = element.selectionStart ?? 0;
           if (element.selectionStart !== element.selectionEnd) return;
-          const edit = interpretMoneyBackspace(element.value, element.selectionStart ?? 0);
+          if (event.key === "Delete" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            const edit = interpretMoneyDelete(element.value, caret);
+            if (edit === null) return;
+            event.preventDefault();
+            pendingCaret.current = edit.caret;
+            onChange(edit.raw);
+            return;
+          }
+          if (event.key !== "Backspace" || event.ctrlKey || event.metaKey || event.altKey) return;
+          const edit = interpretMoneyBackspace(element.value, caret);
           if (edit === null) return;
           // Display grouping would restore the separator and swallow the key; the digit goes with it.
           event.preventDefault();

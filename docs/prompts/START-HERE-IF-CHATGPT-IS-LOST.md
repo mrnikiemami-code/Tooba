@@ -1,4 +1,43 @@
-## CURRENT —225 NOT ACCEPTED;225-R1 narrow money/modal integrity repair issued —2026-10-26
+﻿## CURRENT —225-R1 executed: money edit provenance + caret mapping + modal tolerance; 225 still awaits review —2026-10-26
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1/{RESULT.md,TASK.md} and
+225/ARCHITECT-REVIEW.md. Base84999b4f9 (clean fast-forward; the three backend line-ending drifts untouched).
+Task status: executed, NOT accepted. 225 is NOT accepted and NO user trial was called; Architect reviews first.
+
+A — invalid operator text can no longer become different money. `interpretMoneyTyping` is now
+(previousRaw,nextText,caret): it reads the field's LAST COMMITTED token, and only when that token was LAWFUL
+(dropping separators as display-only) — when it was INVALID, a still-present separator keeps the text verbatim
+and invalid, so `12,34` + `5` stays `12,345` invalid instead of the accepted `12345`; only the operator's own
+deletion/replacement makes it lawful. The field selects the strict paste reader by `inputType`
+(paste/pasteAsQuotation/drop/replacementText) AND by an `onPaste` flag for environments that omit it; a real
+key clears a stale flag.
+B — the caret is mapped through that same separator removal (`withoutDisplayGrouping` returns the logical
+offset of every display offset), so a middle insertion into `1,234` (`1,2934`, caret4) anchors 3 digits and the
+re-grouped `12,934` keeps the caret after the typed `9`. New symmetric `interpretMoneyDelete` handles Delete
+directly before a separator like `interpretMoneyBackspace` does behind it.
+C — the rate modal no longer receives an open-time tolerance list. It receives the EXACT stored tokens
+(`StoredRateAmounts`/`storedRateAmounts`) and calls the new `rateConfirmIssue(row,otherRows,currency,stored,
+editable)` INSIDE the confirm handler: tolerance is re-derived on the current row, self is excluded by stable
+row key, the duplicate/overlap scope is the same area, and a view/busy state refuses silently in the handler
+(no dialog, no parent mutation). Stored `100.50` confirms untouched; editing it to `200.75` is refused with the
+integer-rial reason. Parent Apply stays the only persistence call and the final validator.
+
+Proof: RED measured on the reviewed module (healed `12345`, caret off by one digit, stale tolerance accepting
+`200.75`); GREEN 12/12 new focused facts + 76/76 affected feature tests (225, 225-R1, 224+224-R1 money,
+209-R1/R2 with the two truthful seam corrections) + ONE clean tsc. Not run: whole188/backend/guards.
+Mounted on FE3000/Host5088 (real traffic): the paste path left `12,34` verbatim with aria-invalid and a
+deliberate Confirm showed the localized amountInvalid reason; the stored baseline (row120,000/5,000, delivery
+1..3, Apply disabled) was unchanged afterwards — no Apply/PUT/publication/catalog/migration/restart.
+HONEST LIMITS: automated real keystrokes did not reach the field in this Electron webview (caret/Delete facts
+unit-level only); one earlier mount showed an unexplained EMPTY refusal reason that did not reproduce (all ten
+codes are mapped) — recorded, not claimed; the navigation that reloaded the tab hit an existing edit tab and
+discarded its unsaved LOCAL edits (no server write). No screenshot matrix, no live stored-fraction record
+(model fixture labelled). Not claimed: user Visual ACCEPT, Storefront/checkout consumer, seller-admin entry.
+Actual elapsed exceeded HARD20 (repair round + mounted detour) — recorded, NOT a process PASS.
+Active task: NONE. Next: Architect review only. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. Compact
+shared-snapshot order-evidence decision still locked/unimplemented; TB185 paused, default-OFF,
+PendingAllocation preserved.
+## SUPERSEDED —225 NOT ACCEPTED;225-R1 narrow money/modal integrity repair issued —2026-10-26
 
 Root independently read225 source2e6aed0951a5e1ef75d5206d77c4df9f433f55b1. Preserve modals/cascade/mobile work.
 Blockers: typing strips commas from prior invalid pasted text (12,34 then5 ->12345); caret offset from grouped
@@ -10,7 +49,7 @@ breadcrumb branch reads not constant-count performance proof. No whole-suite con
 No Storefront/seller-admin/schema changes in repair. Preserve compact-order-evidence decision, user draft/
 capture/tabs/runtime. HARD20/implementation12. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
 
-## CURRENT —225 executed: modal cascade, modal rate rows, IRR integer UI, mobile week —2026-10-26
+## SUPERSEDED —225 executed (worker report): modal cascade, modal rate rows, IRR integer UI, mobile week —2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225/RESULT.md` + `TASK.md`.
 Active task NONE; next NOT ISSUED; user must NOT be called to test before Architect review.
