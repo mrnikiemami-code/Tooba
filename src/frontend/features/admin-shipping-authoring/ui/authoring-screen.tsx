@@ -46,13 +46,14 @@ import {
   type EditorFormState,
 } from "../model/editor-form.ts";
 import {
-  withAddedRow,
+  withAddedRowInheriting,
   withRemovedRow,
   withRowField,
   type RateField,
   type RateRowDraft,
   type RatesFormState,
 } from "../model/editor-rates.ts";
+import { inheritedAreaRange } from "../model/editor-area-range.ts";
 import {
   configureWeek,
   resetWeek,
@@ -64,6 +65,7 @@ import {
 } from "../model/editor-week.ts";
 import { hasUnsavedWork, type EditorSaveStatus } from "../session/editor-session.ts";
 import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
+import { useAreaRangeEdits } from "./use-area-range-edits.ts";
 import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
@@ -260,13 +262,24 @@ export function ShippingAuthoringScreen({
     [commit, form, groups, rates, week],
   );
 
+  const areaRange = useAreaRangeEdits({
+    rates,
+    writeRates: (next) => {
+      if (form && week) commit(form, groups, next, week);
+    },
+    blocked: blockedNow,
+    seed: document,
+  });
+
   const addRow = useCallback(
     (groupKey: string) => {
       if (blockedNow() || !form || !week) return;
       rowCounter.current += 1;
-      commit(form, groups, withAddedRow(rates, groupKey, `new-${rowCounter.current}`), week);
+      // A new row inherits THIS area's own shared range only (never another area's, never a default).
+      const inherited = inheritedAreaRange(rates[groupKey] ?? [], areaRange.staged(groupKey));
+      commit(form, groups, withAddedRowInheriting(rates, groupKey, `new-${rowCounter.current}`, inherited), week);
     },
-    [commit, form, groups, rates, week],
+    [areaRange, commit, form, groups, rates, week],
   );
 
   const removeRow = useCallback(
@@ -750,6 +763,7 @@ export function ShippingAuthoringScreen({
               onAddRow={addRow}
               onRemoveRow={removeRow}
               onChangeRowField={changeRow}
+              onChangeAreaRange={areaRange.change}
             />
           </div>
         </>

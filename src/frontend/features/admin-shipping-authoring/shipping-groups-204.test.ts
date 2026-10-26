@@ -351,7 +351,7 @@ test("204-05 country-wide cities keep their ACTUAL admin; null-admin city is law
   const picker = read("ui/authoring-destination-picker.tsx");
   assert.match(picker, /createDestinationReadCoordinator/, "the picker delegates ALL orchestration to the one coordinator");
   assert.match(picker, /choiceChainActive/, "Add re-checks active/chain coherence");
-  assert.match(picker, /destination-level-/, "all four terminal levels are explicit");
+  assert.match(picker, /destination-level/, "the terminal level stays an explicit choice in the picker");
   assert.equal(picker.includes("app/admin/shipping-services"), false, "no feature→app import of the legacy picker");
 });
 

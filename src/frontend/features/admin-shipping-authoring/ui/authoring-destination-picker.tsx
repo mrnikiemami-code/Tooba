@@ -8,6 +8,14 @@
  * actually returned rows as the only parent evidence, and hands the verified terminal + its typed
  * ancestry to the caller on a deliberate Add. Disabled during save/reconcile/view.
  *
+ * TB-224 rules:
+ * - ONLY the controls the chosen terminal level needs are rendered (country / country+province /
+ *   country+city / country+city+service area), so the picker is not a wall of four disabled selects;
+ * - staging a country, area or city is NOT an addition: choosing an already stored country therefore never
+ *   shows a duplicate error, and the operator can keep browsing deeper levels of that same branch;
+ * - the duplicate/overlap feedback belongs to ONE submitted Add attempt and is cleared as soon as the path
+ *   or the terminal level changes — the stored chips are never removed by it.
+ *
  * Request orchestration lives in ONE coordinator (`./destination-read-coordinator.ts`): sibling
  * branches own independent request identities, a country-wide city read waits for the verified area
  * set of that same country/language, and any parent/language change clears the dependent rows at once
@@ -32,7 +40,9 @@ import {
   clearCity,
   clearServiceArea,
   destinationAddEligibility,
+  destinationAddAvailable,
   emptyChoice,
+  isDuplicateSelection,
   optionDisplayName,
   type DestinationChoice,
 } from "../model/destination-choice.ts";
@@ -109,6 +119,19 @@ function OptionSelect({
   );
 }
 
+/** Which path stages a terminal level needs (the administrative filter stays OPTIONAL for city/service). */
+function needsAdministrativeArea(level: AuthoringAreaKind): boolean {
+  return level === "AdministrativeArea" || level === "City" || level === "ServiceArea";
+}
+
+function needsCity(level: AuthoringAreaKind): boolean {
+  return level === "City" || level === "ServiceArea";
+}
+
+function needsServiceArea(level: AuthoringAreaKind): boolean {
+  return level === "ServiceArea";
+}
+
 export function AuthoringDestinationPicker({
   languageId,
   locale,
@@ -126,7 +149,8 @@ export function AuthoringDestinationPicker({
 }) {
   const [choice, setChoice] = useState<DestinationChoice>(() => emptyChoice());
   const [readState, setReadState] = useState<DestinationReadState>(() => emptyDestinationReadState());
-  const [rejected, setRejected] = useState(false);
+  /** Set ONLY by a submitted Add attempt that the authoritative rule needs to explain; cleared on path change. */
+  const [rejectedAttempt, setRejectedAttempt] = useState<string | null>(null);
   const coordinator = useRef<DestinationReadCoordinator | null>(null);
 
   const countryId = choice.country?.id ?? "";
@@ -160,6 +184,11 @@ export function AuthoringDestinationPicker({
     coordinator.current?.update(context);
   }, [context]);
 
+  // A changed path or terminal level invalidates the previous attempt's explanation, nothing else.
+  useEffect(() => {
+    setRejectedAttempt(null);
+  }, [choice.level, countryId, areaId, cityId, serviceAreaId]);
+
   const lists = readState.lists;
   const loading = Object.values(readState.loading).some(Boolean);
   const failure =
@@ -171,36 +200,36 @@ export function AuthoringDestinationPicker({
 
   const terminal = choiceTerminal(choice);
   const ancestry = choiceAncestry(choice);
-  const duplicate = terminal !== null && isSelected(terminal);
-  // Add is gated by the CURRENT verified rows (not by staged flags alone).
-  const eligible = destinationAddEligibility(choice, readState);
-  const canAdd = !disabled && eligible && ancestry !== null && !duplicate;
+  // Add is gated by the CURRENT verified rows (not by staged flags alone) — and NOT by "already stored",
+  // because staging an existing country must stay usable to reach a province/city beneath it.
+  const canAdd = destinationAddAvailable(choice, readState, disabled);
 
   return (
     <div className="grid gap-2 rounded-lg border border-dashed border-border p-2" data-testid="shipping-authoring-destination-picker">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[11px] font-bold text-gray-800">{messages.destinationTitle}</p>
-        <div className="flex gap-1">
-          {AREA_LEVELS.map((level) => (
-            <button
-              key={level}
-              type="button"
-              disabled={disabled}
-              className={`inline-flex min-h-7 items-center rounded-lg border px-2 text-[11px] font-bold ${
-                choice.level === level ? "border-primary bg-primary/10 text-primary" : "border-border text-gray-700"
-              }`}
-              data-testid={`shipping-authoring-destination-level-${level}`}
-              onClick={() => setChoice((previous) => chooseLevel(previous, level))}
-            >
-              {levelLabel(level, messages)}
-            </button>
-          ))}
-        </div>
-      </div>
+      <p className="text-[11px] font-bold text-gray-800">{messages.destinationTitle}</p>
 
-      <p className="text-xs text-gray-500">{messages.destinationHint}</p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="grid gap-0.5">
+          <span className="text-xs font-bold text-gray-600">{messages.destinationLevel}</span>
+          <select
+            className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+            value={choice.level}
+            disabled={disabled}
+            data-testid="shipping-authoring-destination-level"
+            onChange={(event) => {
+              const level = AREA_LEVELS.find((candidate) => candidate === event.target.value);
+              if (level === undefined) return;
+              setChoice((previous) => chooseLevel(previous, level));
+            }}
+          >
+            {AREA_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {levelLabel(level, messages)}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      <div className="grid gap-2 md:grid-cols-4">
         <OptionSelect
           label={messages.areaCountry}
           value={countryId}
@@ -214,40 +243,50 @@ export function AuthoringDestinationPicker({
             )
           }
         />
-        <OptionSelect
-          label={messages.areaAdministrativeArea}
-          value={areaId}
-          options={lists.areas}
-          disabled={disabled || countryId === ""}
-          unavailableName={messages.destinationNameUnavailable}
-          testId="shipping-authoring-destination-area"
-          onChange={(option) =>
-            setChoice((previous) =>
-              option === null ? clearAdministrativeArea(previous) : chooseAdministrativeArea(previous, option),
-            )
-          }
-        />
-        <OptionSelect
-          label={messages.areaCity}
-          value={cityId}
-          options={lists.cities}
-          disabled={disabled || countryId === ""}
-          unavailableName={messages.destinationNameUnavailable}
-          testId="shipping-authoring-destination-city"
-          onChange={(option) => setChoice((previous) => (option === null ? clearCity(previous) : chooseCity(previous, option)))}
-        />
-        <OptionSelect
-          label={messages.areaServiceArea}
-          value={serviceAreaId}
-          options={lists.serviceAreas}
-          disabled={disabled || cityId === ""}
-          unavailableName={messages.destinationNameUnavailable}
-          testId="shipping-authoring-destination-service-area"
-          onChange={(option) =>
-            setChoice((previous) => (option === null ? clearServiceArea(previous) : chooseServiceArea(previous, option)))
-          }
-        />
+
+        {/* Only the levels this terminal actually needs are rendered. */}
+        {needsAdministrativeArea(choice.level) ? (
+          <OptionSelect
+            label={messages.areaAdministrativeArea}
+            value={areaId}
+            options={lists.areas}
+            disabled={disabled || countryId === ""}
+            unavailableName={messages.destinationNameUnavailable}
+            testId="shipping-authoring-destination-area"
+            onChange={(option) =>
+              setChoice((previous) =>
+                option === null ? clearAdministrativeArea(previous) : chooseAdministrativeArea(previous, option),
+              )
+            }
+          />
+        ) : null}
+        {needsCity(choice.level) ? (
+          <OptionSelect
+            label={messages.areaCity}
+            value={cityId}
+            options={lists.cities}
+            disabled={disabled || countryId === ""}
+            unavailableName={messages.destinationNameUnavailable}
+            testId="shipping-authoring-destination-city"
+            onChange={(option) => setChoice((previous) => (option === null ? clearCity(previous) : chooseCity(previous, option)))}
+          />
+        ) : null}
+        {needsServiceArea(choice.level) ? (
+          <OptionSelect
+            label={messages.areaServiceArea}
+            value={serviceAreaId}
+            options={lists.serviceAreas}
+            disabled={disabled || cityId === ""}
+            unavailableName={messages.destinationNameUnavailable}
+            testId="shipping-authoring-destination-service-area"
+            onChange={(option) =>
+              setChoice((previous) => (option === null ? clearServiceArea(previous) : chooseServiceArea(previous, option)))
+            }
+          />
+        ) : null}
       </div>
+
+      <p className="text-xs text-gray-500">{messages.destinationHint}</p>
 
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -258,14 +297,17 @@ export function AuthoringDestinationPicker({
           onClick={() => {
             // Re-checked synchronously against the coordinator's CURRENT evidence, not a stale closure.
             const evidence = coordinator.current?.getState() ?? readState;
-            if (terminal === null || ancestry === null) return;
-            if (!choiceChainActive(choice) || !destinationAddEligibility(choice, evidence)) return;
-            if (isSelected(terminal)) {
-              setRejected(true);
+            if (!choiceChainActive(choice)) return;
+            if (!destinationAddEligibility(choice, evidence)) return;
+            const settled = choiceTerminal(choice);
+            const settledAncestry = choiceAncestry(choice);
+            if (settled === null || settledAncestry === null) return;
+            if (isDuplicateSelection(settled, isSelected)) {
+              // The attempt is refused, but the staged path stays so a deeper level is still reachable.
+              setRejectedAttempt(`${settled.kind}:${settled.id.toLowerCase()}`);
               return;
-            }
-            setRejected(false);
-            onAdd(terminal, ancestry, choiceTerminalLabel(choice));
+            }            setRejectedAttempt(null);
+            onAdd(settled, settledAncestry, choiceTerminalLabel(choice));
           }}
         >
           {messages.destinationAddAction}
@@ -285,14 +327,15 @@ export function AuthoringDestinationPicker({
             {failureText(failure, messages)}
           </span>
         ) : null}
-        {duplicate || rejected ? (
+        {rejectedAttempt !== null ? (
           <span role="alert" className="text-xs font-semibold text-danger" data-testid="shipping-authoring-destination-duplicate">
-            {messages.destinationDuplicate}
+            {messages.destinationDuplicate}{" "}
+            <span className="font-normal text-gray-600">{messages.destinationOverlapHint}</span>
           </span>
         ) : null}
       </div>
 
-      {countryId !== "" && !loading && lists.cities.length === 0 ? (
+      {countryId !== "" && !loading && lists.cities.length === 0 && needsCity(choice.level) ? (
         <p className="text-xs text-gray-500">{messages.destinationEmpty}</p>
       ) : null}
     </div>

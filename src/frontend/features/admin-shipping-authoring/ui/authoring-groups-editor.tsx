@@ -18,8 +18,11 @@ import { groupIssues, type GroupDraft, type GroupIssue } from "../model/editor-g
 import type { RateField, RateRowDraft, RateRowIssue, RatesFormState } from "../model/editor-rates.ts";
 import type { UnresolvedDraftSelection } from "../model/destination-choice.ts";
 import { areaIdentity } from "../model/destination-choice.ts";
+import {
+  areaRangeOf,
+} from "../model/editor-area-range.ts";
 import { AuthoringDestinationPicker } from "./authoring-destination-picker.tsx";
-import { RateRowEditor, RateRowSummary } from "./authoring-rates-editor.tsx";
+import { AreaDeliveryRange, RateRowEditor, RateRowSummary } from "./authoring-rates-editor.tsx";
 import { formatNumber } from "./authoring-format.ts";
 import { rateRowKey } from "./server-field-error.ts";
 
@@ -58,6 +61,7 @@ export function AuthoringGroupsEditor({
   onAddRow,
   onRemoveRow,
   onChangeRowField,
+  onChangeAreaRange,
 }: {
   document: EditorDocument;
   index: DestinationFactIndex;
@@ -81,6 +85,8 @@ export function AuthoringGroupsEditor({
   onAddRow: (groupKey: string) => void;
   onRemoveRow: (groupKey: string, rowKey: string) => void;
   onChangeRowField: (groupKey: string, rowKey: string, field: RateField, value: string) => void;
+  /** Deliberate shared-range entry of one area: applied to exactly that area's rows. */
+  onChangeAreaRange?: (groupKey: string, min: string, max: string) => void;
 }) {
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
   const issues = groupIssues(groups);
@@ -109,6 +115,10 @@ export function AuthoringGroupsEditor({
         const groupGroupIssues = issues.filter((issue) => issue.groupKey === group.key);
         const groupUnresolved = unresolved.filter((entry) => entry.groupKey === group.key);
         const stored = group.groupId === null ? null : document.regionGroups.find((entry) => entry.groupId === group.groupId) ?? null;
+        const groupRows = rates[group.key] ?? [];
+        /** ONE delivery range of the WHOLE area, derived from the rows the wire still repeats it on. */
+        const range = areaRangeOf(groupRows);
+        const rangeSeed = `${group.key}|${range.kind}|${range.kind === "uniform" ? `${range.min}/${range.max}` : ""}`;
         const titleEntry = group.titles.find((entry) => entry.languageId.toLowerCase() === contentLanguageId.toLowerCase());
         const storedTitle = stored?.titles.find((entry) => entry.languageId.toLowerCase() === contentLanguageId.toLowerCase());
         const inactiveTitles = (stored?.titles ?? []).filter(
@@ -290,6 +300,17 @@ export function AuthoringGroupsEditor({
             ) : null}
 
             <div className="mt-2">
+              <AreaDeliveryRange
+                range={range}
+                seedKey={rangeSeed}
+                editable={editable}
+                locale={locale}
+                messages={messages}
+                onChange={(min, max) => onChangeAreaRange?.(group.key, min, max)}
+              />
+            </div>
+
+            <div className="mt-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[11px] font-bold text-gray-800">{messages.ratesTitle}</p>
                 {editable ? (
@@ -315,7 +336,12 @@ export function AuthoringGroupsEditor({
                           index={rowIndex}
                           locale={locale}
                           messages={messages}
-                          issue={groupRateIssues.find((issue) => issue.rowKey === row.rowKey)}
+                          issue={groupRateIssues.find(
+                            (issue) =>
+                              issue.rowKey === row.rowKey &&
+                              issue.code !== "durationRequired" &&
+                              issue.code !== "durationInvalid",
+                          )}
                           serverError={serverRateErrors?.get(rateRowKey(position, rowIndex))}
                           onChange={(field, value) => onChangeRowField(group.key, row.rowKey, field, value)}
                           onRemove={() => onRemoveRow(group.key, row.rowKey)}

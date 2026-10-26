@@ -1,3 +1,51 @@
+## CURRENT — 224 executed: one delivery range per area, Add-time duplicate, level-aware picker, exact money — 2026-10-26
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224/{RESULT.md,TASK.md}`.
+Base `920b51a7f2dc193afb47366daf9a531415d21373` (clean fast-forward; only the four pre-existing
+backend line-ending drifts and the new evidence folder were untracked/unrelated and never staged).
+
+A — the customer-receiving duration is now ONE range of the WHOLE delivery area, placed above the rows.
+`model/editor-area-range.ts` derives `empty|uniform|conflict` from the rows, writes a chosen pair to exactly
+that area's rows (same identity when nothing changes), and gives a new row only its own area's range
+(`withAddedRowInheriting`). Unequal stored rows are a LEGACY CONFLICT: values are preserved, the control
+starts empty and only a deliberate lawful entry unifies them. HONEST BOUNDARY: the existing DTO/snapshot
+still repeats the days per row, so the shared range is serialized as the same pair on every row of that
+area; a row-less area persists nothing. A true group-level persisted duration is a schema change, NOT done.
+`ui/use-area-range-edits.ts` keeps the staged pair (first-row inheritance) and forgets it on a new baseline.
+
+B — duplicate/overlap is checked ONLY on a submitted Add, never on render/onChange. Staging an already
+stored country (the screenshot's Iran) shows no error and keeps the branch explorable; the refusal appears
+inline on Add and is cleared by any level/path change, and the staged path plus the stored chips survive.
+`destinationAddAvailable` (verified evidence + ancestry, deliberately ignoring "already stored") and
+`isDuplicateSelection` are the executed helpers; authoritative overlap rules are untouched.
+
+C — the four level buttons became ONE localized level select, and only the controls that terminal needs are
+rendered (country / +province / +city / +service area). Country-wide null-admin cities stay lawful; parents
+are never fabricated or substituted.
+
+D — exact money display: `model/money-text.ts` groups for display and hands the RAW canonical token to the
+model (Persian/Arabic-Indic digits, grouped paste, Arabic decimal separator, digit-anchored caret). Applied to
+freight, packaging and both merchandise bounds; read summaries use the same string grouping. No Number
+round-trip, no forced `.00`, no scale guess, currency stays server-owned; grouping never dirties or saves.
+
+Verified: one clean `tsc`; 155/155 feature tests (11 new) ; guards 7/7 except the four documented pre-existing
+`frontend-source-size` drifts (untouched; the edited screen was kept at 798 LOC ≤ 800). Live FE3000/Host5088
+reused with no restart and real traffic: grouped `120,000.00`/`5,000.00`, one `1..3` area range with zero
+per-row duration inputs, stored-country staging without error → Add shows the localized duplicate/overlap
+message and keeps the path, City level renders country+province+city with the error cleared, `4..9` applied to
+the area, `1850000.00` → `1,850,000.00`, Persian `۵٬۰۰۰` → `5,000`, and cancel→discard→re-enter restored the
+exact baseline (1 row, `1..3`, `120,000.00`) with no residue. 1440×900 and 390×844 screenshots stored
+(390 `scrollWidth == clientWidth == 390`). NO Apply/PUT/publication/catalog write, no migration/seed/reset;
+the user draft `01a16eeb-70b3-7000-87c2-564c82835496`, its revision, publication pointer and open tab are
+preserved. NOT claimed: user Visual ACCEPT, live legacy-conflict rendering (test-proven only), and any
+Storefront consumer/projection/selection/commit. Elapsed ≈55 min vs HARD40 — recorded, NOT a process PASS.
+Active task: NONE. Next: Architect review; then the seller-admin entry (planned separately) and the still
+unwired Storefront path under `SHIPPING-PUBLICATION-AND-COMPACT-ORDER-EVIDENCE-DECISION-2026-10-26.md`
+(one shared immutable snapshot per owner+draft+revision; compact per-order-group facts; no full authored JSON
+per order; no historical repricing). STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+# Tooba — Agent Rules
+
 ## CURRENT — 223 executed: compact publication restored + separate owner surface; await review — 2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-PUBLICATION-OWNER-PAGES-223/RESULT.md` and `TASK.md`.

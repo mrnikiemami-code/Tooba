@@ -4,16 +4,30 @@
  * Editable rows of ONE existing region group: identity, order, currency and geography are shown
  * read-only exactly once, while the operator can add, remove and edit the rate rows beneath it.
  *
- * Pure presentation: no fetch, no session, no pricing/overlap policy. Money and integer fields are
- * TEXT inputs so `0.50` / `1850000.00` are never transformed by `input[type=number]` or a float
- * round-trip; the local issues come from the model.
+ * TB-224: the shipping duration is ONE customer-receiving range of the WHOLE delivery area, placed above
+ * the rows; the rows carry only freight/packaging and their optional weight/count/amount conditions. The
+ * persisted wire still repeats the days per row, so the area control writes the chosen pair to exactly the
+ * rows of this area (see `model/editor-area-range.ts`).
+ *
+ * Pure presentation: no fetch, no session, no pricing/overlap policy. Money fields are TEXT inputs whose
+ * DISPLAY is grouped while the model keeps the canonical ungrouped token, so `0.50` / `1850000.00` are
+ * never transformed by `input[type=number]` or a float round-trip.
  */
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
 import { authoringFormat } from "../messages/authoring-messages.ts";
-import type { EditorRegionGroup } from "../model/editor-document.ts";import type { DestinationFactIndex } from "../model/editor-destination-ancestry.ts";
+import type { EditorRegionGroup } from "../model/editor-document.ts";
+import type { DestinationFactIndex } from "../model/editor-destination-ancestry.ts";
 import { RATE_LIMITS, type RateField, type RateRowDraft, type RateRowIssue } from "../model/editor-rates.ts";
+import {
+  areaRangeIssue,
+  areaRangeText,
+  type AreaRangeIssueCode,
+  type AreaRangeView,
+} from "../model/editor-area-range.ts";
+import { caretForDigitIndex, groupMoneyText, interpretMoneyEdit } from "../model/money-text.ts";
 import { rateDraftConditionText } from "./rate-presentation.ts";
-import { formatNumber } from "./authoring-format.ts";
+import { formatDecimalText, formatNumber } from "./authoring-format.ts";
 
 const AREA_KIND_LABEL = {
   Country: "areaCountry",
@@ -44,6 +58,11 @@ export function rowIssueMessage(code: RateRowIssue["code"], messages: AuthoringM
   }
 }
 
+/** Issue message of the shared area range. */
+export function areaRangeIssueMessage(code: AreaRangeIssueCode, messages: AuthoringMessages): string {
+  return code === "durationRequired" ? messages.durationRequired : messages.durationInvalid;
+}
+
 function BoundField({
   label,
   value,
@@ -71,6 +90,61 @@ function BoundField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         data-testid={testId}
+      />
+    </label>
+  );
+}
+
+/**
+ * Exact money field: grouped DISPLAY, canonical token to the model, caret anchored to a digit position.
+ *
+ * The displayed value is derived from the raw token on every render, so grouping can never become part of
+ * the committed value; the caret is restored by digit count, which keeps editing/backspace/paste usable.
+ */
+export function MoneyField({
+  label,
+  value,
+  onChange,
+  testId,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  /** Receives the CANONICAL ungrouped token. */
+  onChange: (raw: string) => void;
+  testId: string;
+  placeholder?: string;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const pendingCaret = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    const element = input.current;
+    const digits = pendingCaret.current;
+    pendingCaret.current = null;
+    if (element === null || digits === null) return;
+    const caret = caretForDigitIndex(element.value, digits);
+    element.setSelectionRange(caret, caret);
+  });
+
+  return (
+    <label className="grid gap-0.5">
+      <span className="text-xs font-bold text-gray-700">{label}</span>
+      <input
+        ref={input}
+        type="text"
+        inputMode="decimal"
+        dir="ltr"
+        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+        value={groupMoneyText(value)}
+        placeholder={placeholder}
+        data-testid={testId}
+        onChange={(event) => {
+          const element = event.target;
+          const edit = interpretMoneyEdit(element.value, element.selectionStart ?? element.value.length);
+          pendingCaret.current = edit.caretDigits;
+          onChange(edit.raw);
+        }}
       />
     </label>
   );
@@ -116,34 +190,19 @@ export function RateRowEditor({
           {messages.removeRowAction}
         </button>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <BoundField
+      {/* Only the money of THIS row: the customer-receiving duration belongs to the whole area above. */}
+      <div className="grid gap-2 sm:grid-cols-2">
+        <MoneyField
           label={messages.freightLabel}
           value={row.freightAmount}
-          inputMode="decimal"
           onChange={(value) => onChange("freightAmount", value)}
           testId="shipping-authoring-rate-freight"
         />
-        <BoundField
+        <MoneyField
           label={messages.packagingLabel}
           value={row.packagingAmount}
-          inputMode="decimal"
           onChange={(value) => onChange("packagingAmount", value)}
           testId="shipping-authoring-rate-packaging"
-        />
-        <BoundField
-          label={`${messages.deliveryLabel} ${messages.minLabel}`}
-          value={row.minDeliveryDays}
-          inputMode="numeric"
-          onChange={(value) => onChange("minDeliveryDays", value)}
-          testId="shipping-authoring-rate-min-days"
-        />
-        <BoundField
-          label={`${messages.deliveryLabel} ${messages.maxLabel}`}
-          value={row.maxDeliveryDays}
-          inputMode="numeric"
-          onChange={(value) => onChange("maxDeliveryDays", value)}
-          testId="shipping-authoring-rate-max-days"
         />
       </div>
 
@@ -191,17 +250,15 @@ export function RateRowEditor({
             />
           </div>
           <div className="grid grid-cols-2 gap-1">
-            <BoundField
+            <MoneyField
               label={`${messages.amountLabel} ${messages.minLabel}`}
               value={row.minMerchandiseAmount}
-              inputMode="decimal"
               onChange={(value) => onChange("minMerchandiseAmount", value)}
               testId="shipping-authoring-rate-min-amount"
             />
-            <BoundField
+            <MoneyField
               label={`${messages.amountLabel} ${messages.maxLabel}`}
               value={row.maxMerchandiseAmount}
-              inputMode="decimal"
               onChange={(value) => onChange("maxMerchandiseAmount", value)}
               testId="shipping-authoring-rate-max-amount"
             />
@@ -234,25 +291,129 @@ export function RateRowSummary({
 }) {
   return (
     <li
-      className="grid gap-1 rounded-lg bg-surface px-2.5 py-1.5 text-xs text-gray-700 sm:grid-cols-3"
+      className="grid gap-1 rounded-lg bg-surface px-2.5 py-1.5 text-xs text-gray-700 sm:grid-cols-2"
       data-testid="shipping-authoring-rate-row"
     >
       <span data-testid="shipping-authoring-rate-row-condition">
         {messages.conditionSummary}: {rateDraftConditionText(row, locale, messages)}
       </span>
       <span>
-        {messages.freightLabel}: <span dir="ltr">{row.freightAmount || "—"}</span>
+        {messages.freightLabel}: <span dir="ltr">{row.freightAmount ? formatDecimalText(row.freightAmount, locale) : "—"}</span>
         {" · "}
-        {messages.packagingLabel}: <span dir="ltr">{row.packagingAmount || "—"}</span>
-      </span>
-      <span>
-        {messages.deliveryLabel}:{" "}
-        {authoringFormat(messages.deliveryRange, {
-          min: row.minDeliveryDays || "—",
-          max: row.maxDeliveryDays || "—",
-        })}
+        {messages.packagingLabel}: <span dir="ltr">{row.packagingAmount ? formatDecimalText(row.packagingAmount, locale) : "—"}</span>
       </span>
     </li>
+  );
+}
+
+/** Honest localized text of the shared range (unicode dashes, no invented value). */
+export function areaRangeSummary(range: AreaRangeView, locale: AuthoringLocale, messages: AuthoringMessages): string {
+  if (range.kind === "empty") return messages.areaRangeUnset;
+  if (range.kind === "conflict") return messages.areaRangeConflict;
+  return authoringFormat(messages.deliveryRange, {
+    min: range.min === "" ? "—" : formatNumber(Number(range.min), locale),
+    max: range.max === "" ? "—" : formatNumber(Number(range.max), locale),
+  });
+}
+
+/**
+ * The ONE delivery range of a whole delivery area, placed OUTSIDE the repeated price rows.
+ *
+ * In edit mode the operator sets the shared range here; the typed text is local to this control so a
+ * HALF-typed pair is visible without ever reaching the rows. When the stored rows disagree, the control
+ * starts empty and states the conflict, so the stored per-row values are only normalized by a deliberate
+ * entry. `seedKey` changes whenever the derived range/baseline changes, which re-seeds the text from the
+ * rows (so a discard or an accepted save cannot leave stale text behind).
+ */
+export function AreaDeliveryRange({
+  range,
+  seedKey,
+  editable,
+  locale,
+  messages,
+  onChange,
+}: {
+  range: AreaRangeView;
+  /** Identity of the currently derived range; a new value re-seeds the operator text from the rows. */
+  seedKey: string;
+  editable: boolean;
+  locale: AuthoringLocale;
+  messages: AuthoringMessages;
+  onChange: (min: string, max: string) => void;
+}) {
+  const seeded = areaRangeText(range);
+  const [min, setMin] = useState(seeded.min);
+  const [max, setMax] = useState(seeded.max);
+  useEffect(() => {
+    const next = areaRangeText(range);
+    setMin(next.min);
+    setMax(next.max);
+    // `range` is intentionally excluded: only a NEW derived identity re-seeds the typed text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seedKey]);
+
+  if (!editable) {
+    return (
+      <p className="text-[11px] font-bold text-gray-800" data-testid="shipping-authoring-area-range">
+        {messages.deliveryLabel}: <span data-testid="shipping-authoring-area-range-value">{areaRangeSummary(range, locale, messages)}</span>
+      </p>
+    );
+  }
+  /** A row that carries no duration yet blocks Apply; say it ONCE here instead of on a price row. */
+  const missing = range.kind === "uniform" && (range.min === "" || range.max === "");
+  const issue: AreaRangeIssueCode | null =
+    missing || min !== "" || max !== "" ? areaRangeIssue(min, max) : null;
+  return (
+    <div className="rounded-lg border border-border bg-surface px-2 py-1.5" data-testid="shipping-authoring-area-range">
+      <p className="text-[11px] font-bold text-gray-800">{messages.areaRangeTitle}</p>
+      <p className="text-[11px] text-gray-500">{messages.areaRangeHint}</p>
+      <div className="mt-1 grid max-w-xs grid-cols-2 gap-2">
+        <BoundField
+          label={messages.minLabel}
+          value={min}
+          inputMode="numeric"
+          onChange={(value) => {
+            setMin(value);
+            onChange(value, max);
+          }}
+          testId="shipping-authoring-area-range-min"
+        />
+        <BoundField
+          label={messages.maxLabel}
+          value={max}
+          inputMode="numeric"
+          onChange={(value) => {
+            setMax(value);
+            onChange(min, value);
+          }}
+          testId="shipping-authoring-area-range-max"
+        />
+      </div>
+      {range.kind === "conflict" ? (
+        <p role="alert" className="mt-1 text-[11px] font-semibold text-amber-800" data-testid="shipping-authoring-area-range-conflict">
+          {authoringFormat(messages.areaRangeConflict, {
+            pairs: range.pairs
+              .map((pair) =>
+                authoringFormat(messages.deliveryRange, {
+                  min: pair.min === "" ? "—" : pair.min,
+                  max: pair.max === "" ? "—" : pair.max,
+                }),
+              )
+              .join(" · "),
+          })}
+        </p>
+      ) : null}
+      {issue !== null && (min !== "" || max !== "" || missing) ? (
+        <p role="alert" className="mt-1 text-[11px] font-semibold text-danger" data-testid="shipping-authoring-area-range-issue">
+          {areaRangeIssueMessage(issue, messages)}
+        </p>
+      ) : null}
+      {range.kind === "empty" ? (
+        <p className="mt-1 text-[11px] text-gray-500" data-testid="shipping-authoring-area-range-empty">
+          {messages.areaRangeEmpty}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -358,22 +519,16 @@ export function AuthoringRatesEditor({
               ) : (
                 <li
                   key={row.rowKey}
-                  className="grid gap-1 rounded-lg bg-surface px-2 py-1 text-[11px] text-gray-700 md:grid-cols-4"
+                  className="grid gap-1 rounded-lg bg-surface px-2 py-1 text-[11px] text-gray-700 md:grid-cols-2"
                   data-testid="shipping-authoring-rate-row"
                 >
-                  <span className="md:col-span-2" data-testid="shipping-authoring-rate-row-condition">
+                  <span data-testid="shipping-authoring-rate-row-condition">
                     {rateDraftConditionText(row, locale, messages)}
                   </span>
                   <span>
-                    {messages.freightLabel}: <span dir="ltr">{row.freightAmount || "—"}</span>
-                  </span>
-                  <span>
-                    {messages.packagingLabel}: <span dir="ltr">{row.packagingAmount || "—"}</span>
+                    {messages.freightLabel}: <span dir="ltr">{row.freightAmount ? formatDecimalText(row.freightAmount, locale) : "—"}</span>
                     {" · "}
-                    {authoringFormat(messages.deliveryRange, {
-                      min: row.minDeliveryDays || "—",
-                      max: row.maxDeliveryDays || "—",
-                    })}
+                    {messages.packagingLabel}: <span dir="ltr">{row.packagingAmount ? formatDecimalText(row.packagingAmount, locale) : "—"}</span>
                   </span>
                 </li>
               ),

@@ -126,6 +126,31 @@ export function withAddedRow(state: RatesFormState, groupId: string, rowKey: str
   return replaceRows(state, groupId, [...current, newRateRow(rowKey)]);
 }
 
+/**
+ * Appends one row that inherits the AREA's own delivery range (never another area's, never a default).
+ *
+ * Used by the area-level delivery range: a new row of an area with a chosen shared range starts with that
+ * range, so adding a row cannot silently create a second, different delivery promise.
+ *
+ * @param state Local rows.
+ * @param groupId The area (group) the row belongs to.
+ * @param rowKey Client-local row identity.
+ * @param range The area's shared range, or `null` when the area has none to inherit.
+ */
+export function withAddedRowInheriting(
+  state: RatesFormState,
+  groupId: string,
+  rowKey: string,
+  range: { readonly min: string; readonly max: string } | null,
+): RatesFormState {
+  const current = state[groupId];
+  if (current === undefined) return state;
+  const row = range === null
+    ? newRateRow(rowKey)
+    : { ...newRateRow(rowKey), minDeliveryDays: range.min, maxDeliveryDays: range.max };
+  return replaceRows(state, groupId, [...current, row]);
+}
+
 /** Removes exactly one row; removing the last one leaves `[]` for THAT group only. */
 export function withRemovedRow(state: RatesFormState, groupId: string, rowKey: string): RatesFormState {
   const current = state[groupId];

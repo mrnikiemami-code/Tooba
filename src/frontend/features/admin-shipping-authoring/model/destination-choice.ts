@@ -276,6 +276,39 @@ export function destinationAddEligibility(
 }
 
 /**
+ * Whether the Add control is AVAILABLE for the staged path (verified evidence + complete ancestry).
+ *
+ * Deliberately independent of "this destination is already stored": staging an already stored country is
+ * the lawful way to reach a province/city beneath it, so availability must not encode the duplicate rule.
+ *
+ * @param choice The staged choice.
+ * @param evidence The picker's current verified rows.
+ * @param disabled True while the editor is read-only/busy.
+ */
+export function destinationAddAvailable(
+  choice: DestinationChoice,
+  evidence: DestinationRowEvidence,
+  disabled: boolean,
+): boolean {
+  return !disabled && choiceAncestry(choice) !== null && destinationAddEligibility(choice, evidence);
+}
+
+/**
+ * Whether ONE submitted Add must be refused because that exact `(kind, id)` is already selected.
+ *
+ * The caller decides when to ask this — on the explicit Add attempt, never on render/onChange.
+ *
+ * @param terminal The settled terminal the operator asked to add.
+ * @param isSelected Existing selection test of the proposed tree.
+ */
+export function isDuplicateSelection(
+  terminal: SelectedAreaRead,
+  isSelected: (area: SelectedAreaRead) => boolean,
+): boolean {
+  return isSelected(terminal);
+}
+
+/**
  * Composes the baseline `destinationFacts` resolver with the operation-local verified picks.
  *
  * @param baseline The document's own validated fact resolver.

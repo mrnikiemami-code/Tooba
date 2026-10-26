@@ -3,6 +3,7 @@
  */
 import type { AuthoringLocale } from "../messages/authoring-messages.ts";
 import type { DecimalText } from "../model/editor-document.ts";
+import { groupMoneyText } from "../model/money-text.ts";
 
 function tag(locale: AuthoringLocale): string {
   return locale === "fa" ? "fa-IR" : "en-US";
@@ -14,11 +15,13 @@ export function formatNumber(value: number, locale: AuthoringLocale): string {
   return new Intl.NumberFormat(tag(locale)).format(value);
 }
 
-/** Exact stored decimal TEXT, re-grouped for display only (never rounded by the editor). */
+/**
+ * Exact stored decimal TEXT, re-grouped for display only (never rounded by the editor).
+ *
+ * Uses the string-based money grouping, so even a very large lawful amount keeps every digit.
+ */
 export function formatDecimalText(amount: DecimalText, locale: AuthoringLocale): string {
-  const [whole, fraction] = amount.split(".");
-  const grouped = new Intl.NumberFormat(tag(locale), { maximumFractionDigits: 0 }).format(Number(whole));
-  return fraction === undefined ? grouped : `${grouped}.${fraction}`;
+  return groupMoneyText(amount);
 }
 
 /** Keeps the stored `HH:mm:ss[.fffffff]` text, dropping only the seconds when they are zero. */

@@ -336,7 +336,7 @@ test("204-R2 B: strict decoder fails closed on missing country-wide evidence", (
 
 test("204-R2: the picker actually wires the eligibility helper and current coordinator evidence", () => {
   const picker = readFileSync(new URL("./ui/authoring-destination-picker.tsx", import.meta.url), "utf8");
-  assert.match(picker, /destinationAddEligibility\(choice, readState\)/, "canAdd uses the current rows");
+  assert.match(picker, /destinationAddAvailable\(choice, readState, disabled\)/, "availability uses the current rows and never the duplicate rule");
   assert.match(picker, /coordinator\.current\?\.getState\(\)/, "Add re-reads current coordinator evidence");
   assert.match(picker, /destinationAddEligibility\(choice, evidence\)/, "Add re-checks eligibility synchronously");
   assert.equal(picker.includes("epoch"), false, "no shared epoch remains");
