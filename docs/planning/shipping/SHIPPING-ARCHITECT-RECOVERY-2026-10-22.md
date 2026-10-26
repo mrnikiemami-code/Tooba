@@ -1,3 +1,15 @@
+## CURRENT —224 NOT ACCEPTED;224-R1 issued, wait Architect before user trial —2026-10-26
+
+Architect source review of d7e3f4e3d72acb588c2d9d0de7f24495d8b90053 found TWO integrity defects:
+(1) partial/invalid area range is only local text/ref while previous valid rows remain saveable; raw range must join dirty/issues/Apply/discard authority.
+(2) money sanitizer silently changes invalid input (-100->100,1e3->13,12.3.4->12.34); reject/preserve invalid, allow only explicit harmless grouping/digit normalization. Decimal caret/local-digit handling also needs mounted proof.
+Active task TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224-R1; read its TASK.md.
+User explicitly requests full Architect acceptance BEFORE being called to test. Worker PASS is not acceptance. Do not mark READY or request user Apply until review closes both.
+224 retains area-level shared duration UI with row-based compatibility, relevant-level picker and Add-only duplicate feedback; don't undo those changes. No group-level schema invariant claimed. No user Apply/catalog/publication write in this repair.
+223 compact publication restored; separate marketplace page is UI boundary, not completed seller administration. Storefront consumer/compact order-group provenance remains NOT IMPLEMENTED; shared snapshot decision remains locked.
+Preserve real user draft/pointer, unsaved tab, live FE3000/Host5088; old PIDs/revision are historical, read current. No Bridge, full-suite loop or new scope.
+Automatic-Next-Task NONE; STOP_FOR_ARCHITECT after224-R1.
+
 ## CURRENT — 224 executed: one delivery range per area, Add-time duplicate, level-aware picker, exact money — 2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224/{RESULT.md,TASK.md}`.
