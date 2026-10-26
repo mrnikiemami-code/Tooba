@@ -1,0 +1,91 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1
+Parent-Task: TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225
+Repository: mrnikiemami-code/Tooba / Branch: main / Worker-Id: tooba-worker-01
+Reviewed-Source: 2e6aed0951a5e1ef75d5206d77c4df9f433f55b1
+Base-After-Safe-Fast-Forward: 84999b4f9 (docs-only Architect commit; three backend line-ending drifts never staged)
+Mode: BOUNDED_MONEY_EDIT_PROVENANCE_AND_MODAL_VALIDATION_REPAIR
+Status: EXECUTED — awaits Architect review; 225 is NOT accepted and NO user trial was called
+Evidence-SHA: 2107a63db
+
+BLOCKER 1 — invalid operator text can no longer be healed into different money
+model/money-text.ts: interpretMoneyTyping(previousRaw,nextText,caret) reads the token the field LAST COMMITTED.
+Prior LAWFUL -> separators are the field's own grouping and are dropped (TB-224 screenshot defect stays fixed).
+Prior INVALID -> a still-present separator keeps the visible text verbatim and valid:false, so `12,34` + `5`
+stays the invalid `12,345` (previously became the accepted 12345). Only the operator's own deletion/replacement
+(`12,34` -> `1234`, or a replaced plain amount) makes it lawful again. No number conversion, no sign/exponent/
+letter/multi-dot rewrite, 0 stays lawful, IRR integer display and untouched .00 wire token unchanged.
+ui/authoring-money-field.tsx: strict paste reader selected by inputType (insertFromPaste|insertFromPasteAsQuotation|
+insertFromDrop|insertReplacementText) AND by an onPaste flag for environments that omit inputType; any real key
+clears a stale flag. The field passes its current model token as previousRaw.
+
+BLOCKER 2 — the caret is mapped through the separator removal
+withoutDisplayGrouping returns the stripped text AND the logical offset of every display offset; the reported
+caret is mapped through it before caretAnchorAt. Middle insertion into `1,234` (browser text `1,2934`, caret 4)
+now anchors 3 digits, so re-grouped `12,934` keeps the caret after the typed `9` (previously anchored 4 digits).
+New symmetric interpretMoneyDelete handles Delete directly BEFORE a separator (removes it plus the digit after),
+as interpretMoneyBackspace already does behind it; the field handles Delete in onKeyDown. Persian digits and the
+Arabic separators use the same path.
+
+ADJACENT MODAL DEFECT — stored-fraction tolerance re-derived on the CURRENT row
+model/editor-rates.ts: new StoredRateAmounts + storedRateAmounts(stored); toleratedStoredFractions(row,stored) now
+compares against those EXACT tokens; new rateConfirmIssue(row,otherRows,currencyCode,stored,editable) is the ONE
+confirm decision (shape -> duplicate -> overlap, self excluded by stable row key, scope = same area, plus a
+"blocked" result for a view/busy state). ui/authoring-rate-modal.tsx no longer receives an open-time tolerance
+list: it receives the exact stored tokens and calls rateConfirmIssue INSIDE the confirm handler with the current
+editable, so a view/busy state that changed while the modal was open refuses silently in the handler (no dialog,
+no parent mutation); the disabled button stays presentation only. Stored 100.50 confirms untouched; editing it to
+200.75 is refused with the integer-rial reason and the parent row is untouched. Both editor call sites pass
+storedAmounts. Parent Apply remains the only persistence call and the final validator.
+
+RED measured on the reviewed module (baseline money-text.ts extracted from 2e6aed095, executed probe):
+- interpretMoneyTyping("12,345",6) -> {raw:"12345",valid:true}  (healed)
+- middle insert 1,2934 caret 4 -> caret.whole=4, offset 5 in 12,934  (off by one digit)
+- modal open-time tolerance ["freightAmount"] + rowConditionIssue(200.75,"IRR") -> null  (Confirm accepted a
+  value the parent later refuses)
+
+GREEN: destination-rate-modals-225-r1.test.ts 12/12 (invalid paste then next keystroke stays invalid; explicit
+correction lawful; -100/1e3/abc100/12.3.4 keep their text; middle insertion + caret; deletion; sequential
+5,000,000 typing with end caret; 0; Persian digits; comma-adjacent Backspace AND Delete; untouched stored
+fraction confirms; edited 200.75 refused; view/busy blocked; self excluded / duplicate scope). Affected feature
+tests 76/76 (225, 225-R1, area-range-money 224 + 224-R1, user-trial 209-R1 + 209-R2). Two 209-R2 source
+assertions were corrected to the truthful new seam and the self-exclusion assertion now points at
+model/editor-rates.ts; no assertion weakened. ONE clean tsc --noEmit. NOT run: whole 188 suite, backend/solution
+builds, architecture guard sweep (per task instruction).
+
+Mounted on FE3000/Host5088 with real traffic (no /v1 interception), real draft 01a16eeb-70b3-7000-87c2-564c82835496:
+the rate modal opened from the single stored row (120,000 / 5,000, no aria-invalid); the paste path left `12,34`
+displayed verbatim with aria-invalid="true"; a deliberate Confirm opened the MessageBox with the localized
+«مبلغ باید عددی نامنفی باشد…» reason; the stored baseline was unchanged afterwards (one row, 120,000 / 5,000,
+delivery 1..3, Apply disabled). No Apply/PUT/publication/catalog/migration/restart, no draft revision or pointer
+change.
+
+HONEST LIMITS: automated real keystrokes did not reach the focused field in this Electron webview (value and caret
+unchanged after the key), so the middle-insertion caret, Delete/Backspace and the valid-typing sequence are
+unit-proven only while the paste/change handlers were exercised in the live DOM; one earlier mount showed the
+refusal box with an EMPTY reason immediately after a synthesized paste+input sequence, which did NOT reproduce on
+the deliberate Confirm (all ten issue codes are mapped) — recorded as an observation, not claimed fixed or as a
+regression; the navigation that reloaded the tab targeted an existing edit tab instead of the isolated one and
+discarded that tab's unsaved LOCAL edits (no server write; the stored values re-read from the API are identical);
+no screenshot matrix and no live stored-fraction record (that fact uses a clearly labelled model fixture).
+
+NOT CLAIMED: user Visual ACCEPT, Architect acceptance, live stored-fraction rendering, any Storefront/checkout
+consumer, seller-admin entry, price/activation/readiness. The compact shared-snapshot order-evidence decision stays
+locked and unimplemented; TB-185 paused, default-OFF, PendingAllocation preserved.
+
+TIMING: actual elapsed exceeded the HARD20 / 12+8 box (one repair round plus the mounted detour) — recorded, NOT a
+process PASS.
+
+Changed paths: src/frontend/features/admin-shipping-authoring/{destination-rate-modals-225-r1.test.ts,
+destination-rate-modals-225.test.ts, model/editor-rates.ts, model/money-text.ts, ui/authoring-groups-editor.tsx,
+ui/authoring-money-field.tsx, ui/authoring-rate-modal.tsx, ui/authoring-rates-editor.tsx,
+user-trial-209-r2.test.ts}; docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1/{RESULT.md,
+task-receipt.json}; docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225/RESULT.md (append-only
+correction); AGENTS.md + docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md +
+docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md (top recovery). Exact-path staging only; no
+git add -A, no reset/stash/rebase/force-push.
+
+Parity: commit 2107a63db pushed to origin/main; HEAD == origin/main after fetch.
+Active task: NONE. Next: Architect review only. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+Worker PASS != Architect ACCEPT.
+END_TOOBA_WORKER_RESULT
