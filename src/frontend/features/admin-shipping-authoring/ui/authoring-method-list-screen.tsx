@@ -44,15 +44,24 @@ interface MethodListRow extends AuthoringMethodRow {
   readonly duplicateBinding: boolean;
 }
 
-type ListState = "loading" | "ok" | "denied" | "error" | "untrusted";
+type ListState = "loading" | "ok" | "denied" | "error" | "untrusted" | "surfaceUnavailable";
+
+/**
+ * Owner surface of this screen. The surface is a UI boundary ONLY: the server still resolves which owner
+ * the request is authorized for, so a surface can never grant a scope the server does not authorize.
+ */
+export type AuthoringOwnerSurface = "store" | "marketplace";
 
 export function ShippingAuthoringMethodListScreen({
   locale,
   savedViewStore,
+  surface = "store",
 }: {
   locale: AuthoringLocale;
   /** App-owned saved-view adapter (the feature never imports the app layer). */
   savedViewStore?: SavedViewStore;
+  /** Which named owner surface this route renders; the server decides whether that owner is lawful. */
+  surface?: AuthoringOwnerSurface;
 }) {
   const router = useRouter();
   const messages = authoringMessages(locale);
@@ -76,19 +85,33 @@ export function ShippingAuthoringMethodListScreen({
     setState("loading");
     setRows([]);
     setContext(null);
-    const [drafts, languages, ownerRead] = await Promise.all([
-      loadAuthoringMethodRows(),
-      loadAuthoringContext(),
-      loadAuthoringOwner(),
-    ]);
-    if (generation.current !== mine) return; // a superseded scope never wins
-    if (ownerRead.state === "ok") {
-      setOwner(ownerRead.value);
-      setOwnerUnavailable(false);
-    } else {
+
+    // The authorized owner is read FIRST: on a named surface it decides whether this page may show
+    // anything at all. Trusting the route name instead would be a UI-only permission.
+    const ownerRead = await loadAuthoringOwner();
+    if (generation.current !== mine) return;
+    if (ownerRead.state !== "ok") {
       setOwner(null);
       setOwnerUnavailable(true);
+      const kind = ownerRead.failure.kind;
+      setState(kind === "denied" ? "denied" : kind === "untrusted" ? "untrusted" : "error");
+      return;
     }
+    setOwner(ownerRead.value);
+    setOwnerUnavailable(false);
+
+    const lawful = surface === "marketplace"
+      ? ownerRead.value.ownerKind === "Marketplace"
+      : ownerRead.value.ownerKind !== "Marketplace";
+    if (!lawful) {
+      // No drafts are read for a surface the server did not authorize: showing another owner's methods
+      // under this heading would be false, and no client-side substitution is allowed.
+      setState("surfaceUnavailable");
+      return;
+    }
+
+    const [drafts, languages] = await Promise.all([loadAuthoringMethodRows(), loadAuthoringContext()]);
+    if (generation.current !== mine) return; // a superseded scope never wins
     if (drafts.state !== "ok") {
       const kind = drafts.failure.kind;
       setState(kind === "denied" ? "denied" : kind === "untrusted" ? "untrusted" : "error");
@@ -104,7 +127,7 @@ export function ShippingAuthoringMethodListScreen({
       setLanguageUnavailable(true);
     }
     setState("ok");
-  }, []);
+  }, [surface]);
 
   useEffect(() => {
     void load();
@@ -243,49 +266,48 @@ export function ShippingAuthoringMethodListScreen({
     direction,
   });
 
+  const title = surface === "marketplace" ? messages.listSurfaceMarketplaceTitle : messages.listSurfaceStoreTitle;
+
   if (state === "denied") {
-    return <ErrorState title={messages.listTitle} detail={messages.listDenied} />;
+    return <ErrorState title={title} detail={messages.listDenied} />;
   }
   if (state === "untrusted") {
-    return <ErrorState title={messages.listTitle} detail={messages.listUntrusted} onRetry={() => void load()} retryLabel={messages.listRetry} />;
+    return <ErrorState title={title} detail={messages.listUntrusted} onRetry={() => void load()} retryLabel={messages.listRetry} />;
   }
   if (state === "error") {
-    return <ErrorState title={messages.listTitle} detail={messages.listError} onRetry={() => void load()} retryLabel={messages.listRetry} />;
+    return <ErrorState title={title} detail={messages.listError} onRetry={() => void load()} retryLabel={messages.listRetry} />;
+  }
+  if (state === "surfaceUnavailable") {
+    // Routes are UI boundaries only. When the server did not authorize THIS named owner, the page says so
+    // instead of borrowing another owner's methods or switching installation edition.
+    return (
+      <main className="space-y-2 p-4 lg:p-6" dir={direction} lang={locale} data-testid="admin-shipping-authoring-surface-unavailable">
+        <h1 className="text-xl font-black text-gray-900">
+          {surface === "marketplace" ? messages.listMarketplaceUnavailableTitle : messages.listSurfaceMismatchTitle}
+        </h1>
+        <p className="text-sm text-gray-600">
+          {surface === "marketplace" ? messages.listMarketplaceUnavailableDetail : messages.listSurfaceMismatchDetail}
+        </p>
+      </main>
+    );
   }
 
   return (
-    <main className="space-y-4" dir={direction} lang={locale} data-testid="admin-shipping-authoring-list-screen">
+    <main className="space-y-4" dir={direction} lang={locale} data-testid="admin-shipping-authoring-list-screen" data-surface={surface}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-black text-gray-900">{messages.listTitle}</h1>
+          <h1 className="text-xl font-black text-gray-900">{title}</h1>
           <p className="mt-1 text-sm text-gray-500">{messages.listIntro}</p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
-          {/* The owner is a REAL server fact, not a local choice: the options come from the authorized
-              owner read, so a SingleStore installation honestly shows its one lawful owner only. */}
-          <label className="text-xs">
-            <span className="block font-bold text-gray-900">{messages.listOwnerLabel}</span>
-            <select
-              className="mt-1 min-h-9 rounded-lg border border-border bg-surface px-2 text-xs disabled:opacity-70"
-              value={scopeKey}
-              disabled={owner === null}
-              data-testid="admin-shipping-authoring-owner"
-              onChange={() => {
-                /* One lawful owner: the server exposes no alternate authorized scope to switch to. */
-              }}
-            >
-              {owner === null ? <option value="unresolved">—</option> : null}
-              {owner !== null ? (
-                <option value={scopeKey}>
-                  {owner.ownerKind === "Seller"
-                    ? authoringFormat(messages.listOwnerSellerIdentity, { id: owner.sellerPartyId ?? "" })
-                    : owner.ownerKind === "Marketplace"
-                      ? messages.listOwnerMarketplace
-                      : messages.listOwnerStore}
-                </option>
-              ) : null}
-            </select>
-          </label>
+          {/* A separate PAGE (not a client owner switch) is the only lawful way to reach another owner. */}
+          <a
+            href={surface === "marketplace" ? "/admin/shipping-services" : "/admin/shipping-services/marketplace"}
+            className="inline-flex min-h-9 items-center rounded-xl border border-border px-3 text-xs font-bold text-gray-700"
+            data-testid="admin-shipping-authoring-surface-link"
+          >
+            {surface === "marketplace" ? messages.listSurfaceStoreLink : messages.listSurfaceMarketplaceLink}
+          </a>
           <a
             href="?legacy=1"
             className="inline-flex min-h-9 items-center rounded-xl border border-border px-3 text-xs font-bold text-gray-700"
@@ -296,11 +318,6 @@ export function ShippingAuthoringMethodListScreen({
         </div>
       </div>
 
-      {owner !== null ? (
-        <p className="text-[11px] text-gray-500" data-testid="admin-shipping-authoring-owner-note">
-          {messages.listOwnerSingleNote}
-        </p>
-      ) : null}
       {ownerUnavailable ? (
         <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900" data-testid="admin-shipping-authoring-owner-unavailable">
           {messages.listOwnerUnavailable}

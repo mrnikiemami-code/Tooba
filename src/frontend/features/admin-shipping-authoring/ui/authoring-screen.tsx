@@ -69,6 +69,7 @@ import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
 import { AuthoringLocalIssuesPanel, AuthoringSaveFailurePanel } from "./authoring-problem-view.tsx";
+import { AuthoringPublicationPanel } from "./authoring-publication-panel.tsx";
 import {
   isRowScoped,
   rateRowKey,
@@ -621,6 +622,19 @@ export function ShippingAuthoringScreen({
       />
       {session.reconcileFailure ? (
         <p role="alert" className="text-xs font-semibold text-danger">{messages.reconcileFailed}</p>
+      ) : null}
+
+      {/* Publication appears only for a LOADED draft: its own status read is the authority, and it never
+          reads/writes the editor document. */}
+      {session.load === "loaded" ? (
+        <AuthoringPublicationPanel
+          draftId={draftId}
+          currentRevision={document?.revision ?? null}
+          mode={mode}
+          busy={busy}
+          messages={messages}
+          onPublished={setNotice}
+        />
       ) : null}
 
       {document && index ? (

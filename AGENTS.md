@@ -1,4 +1,45 @@
-## CURRENT — TB223 issued: compact publication restore + separate owner pages — 2026-10-26
+## CURRENT — 223 executed: compact publication restored + separate owner surface; await review — 2026-10-26
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-PUBLICATION-OWNER-PAGES-223/RESULT.md` and `TASK.md`.
+Base `d62bab9a4f31dc1966aed8c06b4f7ea08a366df3` (untracked 223 evidence folder collided with that commit's
+tracked TASK.md: moved aside, fast-forwarded, artifact restored; no reset/stash/rebase/force-push).
+
+A — publication is BACK, compact. The model and transport were recovered BYTE-EXACT from 221 (exact
+`expectedRevision`+`expectedSelectionVersion`, strict decode, synchronous in-flight gate, stale/unknown latches
+cleared only by an explicit successful read, no editor reseed, no auto-retry). The new panel is deliberately
+small: one status line, at most one short reason, one honest note, Publish/Withdraw + confirmation. Snapshot id,
+selection counter and format version are NOT in the normal UI. Live trial on the real draft
+`01a16eeb-70b3-7000-87c2-564c82835496` (view mode): `Selected`, matches current revision ⇒ Publish DISABLED with
+«همین بازبینی از قبل منتشر شده است.» (same capture is not republished), Withdraw available. NO write sent; the
+draft revision and pointer were not touched by this task.
+
+B — the TB222 single-option owner combo is GONE (live DOM `combo:false`, `ownerNote:false`). A separate route
+`/admin/shipping-services/marketplace` renders the SAME list feature (`surface="marketplace"`), separate saved
+views/grid namespace, store list at `/admin/shipping-services` (`store` surface) with a link to it. The route is
+a UI boundary only: the authorized owner (`/v1/admin/shipping-services/authoring-owner`) is read FIRST and no
+drafts are read when that owner is not the surface's owner. SingleStore live: marketplace renders the honest
+«مارکت‌پلیس در این نصب در دسترس نیست» state with no list and no fabricated owner; the reverse mismatch also has
+its own honest state. No owner id from query/body, no edition change, no seller inference.
+
+C — the compact order invariant stays as recorded in
+`docs/architecture/shipping/SHIPPING-PUBLICATION-AND-COMPACT-ORDER-EVIDENCE-DECISION-2026-10-26.md`
+(one shared immutable snapshot per owner+draft+revision; only compact per-order-group reference/final money/
+receiving facts; no full authored JSON per order; no historical repricing). NOT implemented by this task.
+
+Proof: one clean `tsc`; 144/144 feature tests (restored publication facts + 3 new owner-surface facts); 7/7
+architecture guards; live FE3000/Host5088 with no restarts; 1440 + 390 screenshots with `overflowX 0`; closed-day
+inputs still disabled; type options عادی/سنگین/فوق‌سنگین intact. Not replayed: 127/194/backend suites; the four
+pre-existing source-size drifts untouched.
+NOT claimed: Storefront/checkout consumer, projection/selection/commit, multi-owner live proof (impossible on
+SingleStore — needs a server authorized-owner SET route), whole-method creation, any price/activation claim.
+Actual ≈40 min vs the HARD30 box — recorded, NOT a process PASS.
+Trial URLs: `http://127.0.0.1:3000/admin/shipping-services`,
+`/admin/shipping-services/marketplace`,
+`/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=view`.
+Active task: NONE. Next: Architect review, then hand the user the trial. STOP_FOR_ARCHITECT;
+Automatic-Next-Task NONE. TB185 paused, default-OFF, PendingAllocation preserved.
+
+## SUPERSEDED — TB223 issued: compact publication restore + separate owner pages — 2026-10-26
 
 User explicitly requests publication restored, separate Marketplace page reusing SAME form instead of owner combo, and compact order evidence recorded before Storefront connection. TB222 source063aa05fd reviewed narrowly: closed-day UI+handler guard correct; heavy/extra_heavy real catalog writes worker-reported; no-op single-owner combo is NOT multi-owner delivery. Publication UI removal is now superseded by restore instruction; backend/pointer preserved.
 Active task TB-SHIPPING-ADMIN-PUBLICATION-OWNER-PAGES-223. Read its TASK.md and docs/architecture/shipping/SHIPPING-PUBLICATION-AND-COMPACT-ORDER-EVIDENCE-DECISION-2026-10-26.md.

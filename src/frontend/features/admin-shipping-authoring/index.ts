@@ -33,3 +33,4 @@ export {
 } from "./api/authoring-method-list-api.ts";
 
 export { ShippingAuthoringMethodListScreen } from "./ui/authoring-method-list-screen.tsx";
+export type { AuthoringOwnerSurface } from "./ui/authoring-method-list-screen.tsx";

@@ -230,6 +230,56 @@ const fa = {
     "این نصب فقط همین مالک را برای شما مجاز کرده است؛ گزینهٔ دیگری از سرور ارائه نمی‌شود.",
   listOwnerUnavailable:
     "مالک مجاز خوانده نشد؛ تا خواندن دوباره، فهرست به یک مالک حدسی نسبت داده نمی‌شود.",
+
+  /* ————— publication — compact status + actions (TB-223) ————— */
+  publicationTitle: "انتشار روش",
+  publicationLoading: "در حال خواندن وضعیت انتشار…",
+  publicationAbsent: "منتشر نشده است.",
+  publicationCleared: "انتشار برداشته شده است.",
+  publicationSelected: "نسخهٔ منتشرشده انتخاب شده است.",
+  publicationSelectedOlder: "نسخهٔ منتشرشده قدیمی‌تر از بازبینی فعلی است.",
+  publicationNote: "این انتخاب فقط نسخهٔ منتشرشده را مشخص می‌کند؛ اتصال آن به سفارش مشتری هنوز فعال نشده است.",
+  publicationDenied: "اجازهٔ دیدن یا تغییر انتشار این روش را ندارید.",
+  publicationNotFound: "این پیش‌نویس پیدا نشد.",
+  publicationUnavailable: "خواندن وضعیت انتشار موقتاً ممکن نیست.",
+  publicationUntrusted: "پاسخ انتشار قابل اعتماد نبود و نمایش داده نشد.",
+  publicationStale: "این وضعیت دیگر معتبر نیست؛ برای ادامه، وضعیت انتشار را دوباره بخوانید.",
+  publicationUnknown: "نتیجهٔ عملیات مشخص نیست؛ ابتدا وضعیت را از سرور بخوانید.",
+  publicationStaleBlock: "پس از تغییر هم‌زمان، ابتدا وضعیت انتشار را دوباره بخوانید.",
+  publicationUnknownBlock: "نتیجهٔ عملیات قبلی مشخص نیست؛ پیش از هر اقدام، وضعیت انتشار را بخوانید.",
+  publicationInFlight: "یک درخواست انتشار در جریان است.",
+  publicationViewOnly: "انتشار فقط از حالت مشاهده اعمال می‌شود.",
+  publicationBusy: "تا پایان ذخیره‌سازی، انتشار ممکن نیست.",
+  publicationNoState: "وضعیت انتشار خوانده نشده است؛ ابتدا آن را بخوانید.",
+  publicationNoRevision: "بازبینی تأییدشدهٔ این پیش‌نویس مشخص نیست.",
+  publicationAlreadyCurrent: "همین بازبینی از قبل منتشر شده است.",
+  publicationNothingToWithdraw: "انتخاب فعالی برای برداشتن وجود ندارد.",
+  publishAction: "انتشار",
+  withdrawAction: "برداشتن انتشار",
+  publicationReadAction: "خواندن وضعیت",
+  publicationPublishConfirmTitle: "انتشار نسخهٔ ذخیره‌شده",
+  publicationPublishConfirmText:
+    "بازبینی {revision} به‌عنوان نسخهٔ منتشرشده انتخاب شود؟ متن ذخیره‌شدهٔ این روش تغییر نمی‌کند.",
+  publicationWithdrawConfirmTitle: "برداشتن انتشار",
+  publicationWithdrawConfirmText: "انتخاب نسخهٔ منتشرشدهٔ این روش برداشته شود؟",
+  publicationConfirmAction: "تأیید",
+  publicationCancelAction: "انصراف",
+  publicationPublishing: "در حال انتشار…",
+  publicationWithdrawing: "در حال برداشتن…",
+  publicationPublished: "نسخهٔ منتشرشده ثبت شد.",
+  publicationDidWithdraw: "انتخاب انتشار برداشته شد.",
+
+  /* ————— separate owner surfaces (TB-223) ————— */
+  listSurfaceStoreTitle: "روش‌های ارسال — همین فروشگاه",
+  listSurfaceMarketplaceTitle: "روش‌های ارسال — مارکت‌پلیس",
+  listMarketplaceUnavailableTitle: "مارکت‌پلیس در این نصب در دسترس نیست",
+  listMarketplaceUnavailableDetail:
+    "این نصب SingleStore است و فقط مالک همین فروشگاه را مجاز می‌کند. هیچ مالک دوم یا فروشندهٔ ساختگی نمایش داده نمی‌شود.",
+  listSurfaceStoreLink: "مارکت‌پلیس",
+  listSurfaceMarketplaceLink: "همین فروشگاه",
+  listSurfaceMismatchTitle: "این صفحه برای مالک فروشگاه نیست",
+  listSurfaceMismatchDetail:
+    "دسترسی مجاز شما در این نصب مالک مارکت‌پلیس است؛ روش‌های فروشگاه از مسیر خودش دیده می‌شوند.",
 } as const;
 
 export type AuthoringMessageKey = keyof typeof fa;
@@ -459,6 +509,56 @@ const en: Record<AuthoringMessageKey, string> = {
     "This installation authorizes only this owner for you; the server offers no other choice.",
   listOwnerUnavailable:
     "The authorized owner could not be read; until a fresh read, the list is not attributed to a guessed owner.",
+
+  /* ————— publication — compact status + actions (TB-223) ————— */
+  publicationTitle: "Method publication",
+  publicationLoading: "Reading the publication status…",
+  publicationAbsent: "Not published.",
+  publicationCleared: "Publication was withdrawn.",
+  publicationSelected: "A published revision is selected.",
+  publicationSelectedOlder: "The published revision is older than the current revision.",
+  publicationNote: "This only selects the published revision; the customer order connection is not active yet.",
+  publicationDenied: "You may not read or change the publication of this method.",
+  publicationNotFound: "This draft was not found.",
+  publicationUnavailable: "The publication status cannot be read right now.",
+  publicationUntrusted: "The publication response was untrusted and is not shown.",
+  publicationStale: "This status is no longer valid; read the publication status again to continue.",
+  publicationUnknown: "The outcome is unknown; read the status from the server first.",
+  publicationStaleBlock: "The draft changed in the meantime; read the publication status again first.",
+  publicationUnknownBlock: "The previous outcome is unknown; read the publication status before any action.",
+  publicationInFlight: "A publication request is in flight.",
+  publicationViewOnly: "Publication applies from view mode only.",
+  publicationBusy: "Publication is not possible until saving finishes.",
+  publicationNoState: "The publication status has not been read; read it first.",
+  publicationNoRevision: "The confirmed revision of this draft is unknown.",
+  publicationAlreadyCurrent: "This revision is already published.",
+  publicationNothingToWithdraw: "There is no active selection to withdraw.",
+  publishAction: "Publish",
+  withdrawAction: "Withdraw",
+  publicationReadAction: "Read status",
+  publicationPublishConfirmTitle: "Publish the saved revision",
+  publicationPublishConfirmText:
+    "Select revision {revision} as the published version? The stored text of this method does not change.",
+  publicationWithdrawConfirmTitle: "Withdraw publication",
+  publicationWithdrawConfirmText: "Clear the selected published version of this method?",
+  publicationConfirmAction: "Confirm",
+  publicationCancelAction: "Cancel",
+  publicationPublishing: "Publishing…",
+  publicationWithdrawing: "Withdrawing…",
+  publicationPublished: "The published revision was recorded.",
+  publicationDidWithdraw: "The publication selection was cleared.",
+
+  /* ————— separate owner surfaces (TB-223) ————— */
+  listSurfaceStoreTitle: "Shipping methods — this store",
+  listSurfaceMarketplaceTitle: "Shipping methods — marketplace",
+  listMarketplaceUnavailableTitle: "Marketplace is not available in this installation",
+  listMarketplaceUnavailableDetail:
+    "This installation is SingleStore and authorizes only this store owner. No second owner or invented seller is shown.",
+  listSurfaceStoreLink: "Marketplace",
+  listSurfaceMarketplaceLink: "This store",
+  listSurfaceMismatchTitle: "This page is not the store owner surface",
+  listSurfaceMismatchDetail:
+    "Your authorized owner in this installation is the marketplace; store methods are shown on their own route.",
 };
 
 export type AuthoringMessages = Record<AuthoringMessageKey, string>;

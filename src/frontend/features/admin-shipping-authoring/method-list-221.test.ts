@@ -8,8 +8,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseJsonNode, type JsonNode } from "./api/wire-json.ts";
 import {
+  authoringOwnerKey,
   decodeAuthoringMethodRows,
   decodeAuthoringContext,
+  decodeAuthoringOwner,
   duplicateBindingDraftIds,
   methodBinding,
   storedMethodName,
@@ -117,4 +119,39 @@ test("two rows with the same exact binding are flagged, other bindings are not",
   const duplicates = duplicateBindingDraftIds(rows);
   assert.equal(duplicates.size, 2);
   assert.ok(duplicates.has(DRAFT) && duplicates.has(OTHER_DRAFT));
+});
+
+/* ————————————————— the authorized owner + separate surfaces (TB-223) ————————————————— */
+
+test("223-01 the authorized owner is decoded as exactly one lawful scope", () => {
+  assert.deepEqual(decodeAuthoringOwner(nodeOf({ ownerKind: "Store", sellerPartyId: null })), {
+    ownerKind: "Store",
+    sellerPartyId: null,
+  });
+  assert.deepEqual(decodeAuthoringOwner(nodeOf({ ownerKind: "Marketplace" })), {
+    ownerKind: "Marketplace",
+    sellerPartyId: null,
+  });
+  const seller = decodeAuthoringOwner(nodeOf({ ownerKind: "Seller", sellerPartyId: SNAPSHOT }));
+  assert.equal(seller.ownerKind, "Seller");
+  assert.equal(seller.sellerPartyId, SNAPSHOT);
+});
+
+test("223-02 a contradictory or unknown owner is untrusted, never repaired into a scope", () => {
+  // A store/marketplace carrying a seller id, a seller without one, and an unknown kind are all refused.
+  assert.throws(() => decodeAuthoringOwner(nodeOf({ ownerKind: "Store", sellerPartyId: SNAPSHOT })));
+  assert.throws(() => decodeAuthoringOwner(nodeOf({ ownerKind: "Marketplace", sellerPartyId: SNAPSHOT })));
+  assert.throws(() => decodeAuthoringOwner(nodeOf({ ownerKind: "Seller", sellerPartyId: null })));
+  assert.throws(() => decodeAuthoringOwner(nodeOf({ ownerKind: "Seller", sellerPartyId: "00000000-0000-0000-0000-000000000000" })));
+  assert.throws(() => decodeAuthoringOwner(nodeOf({ ownerKind: "Reseller", sellerPartyId: null })));
+});
+
+test("223-03 each lawful owner has its own grid namespace, so views never cross surfaces", () => {
+  assert.equal(authoringOwnerKey({ ownerKind: "Store", sellerPartyId: null }), "store");
+  assert.equal(authoringOwnerKey({ ownerKind: "Marketplace", sellerPartyId: null }), "marketplace");
+  assert.equal(authoringOwnerKey({ ownerKind: "Seller", sellerPartyId: SNAPSHOT.toUpperCase() }), `seller:${SNAPSHOT}`);
+  assert.notEqual(
+    authoringOwnerKey({ ownerKind: "Seller", sellerPartyId: SNAPSHOT }),
+    authoringOwnerKey({ ownerKind: "Seller", sellerPartyId: OTHER_DRAFT }),
+  );
 });
