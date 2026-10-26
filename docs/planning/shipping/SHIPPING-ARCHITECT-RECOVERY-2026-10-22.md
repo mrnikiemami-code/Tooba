@@ -1,4 +1,12 @@
-﻿## CURRENT — 224-R1 executed: typed range is form state, invalid money stays invalid — 2026-10-26
+## CURRENT —224-R1 integrity repairs accepted for bounded ADMIN USER TRIAL —2026-10-26
+
+Architect independently inspected e79bd74c53a0f6b514785b480739e60709eeb43c: editor-area-range, authoring-intent, money-text, screen controlled state/reseed/commit/hasNoIssues wiring, MoneyField and rate validator. The two acceptance blockers from224 are closed for user trial: invalid/partial shared range now joins localDirty/issues and blocks Apply; unsupported money input remains invalid instead of becoming a different accepted amount. Separator Backspace and decimal-side caret repaired as worker-reported mounted proof.
+Evidence: worker11 new focused facts, recursive166/166, clean typecheck; worker actual isolated mounted invalid-range+valid-edit blocks Apply, row-less range block, invalid money/decimal typing and discard/reentry. Root did NOT rerun tests or execute local browser/Apply. No blanket save/error/legacy-conflict/browser matrix certification. Legacy unequal durations remain test-only; shared duration is still repeated per row, no group-level schema change. No user Visual ACCEPT.
+USER MAY NOW TEST admin panel: http://127.0.0.1:3000/admin/shipping-services and actual draft .../authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=edit. Read current before later writes; worker preserved rev2/pointer and user's tabs, no PUT. Host actual path per worker D:\temp\tb221-build\out\Tooba.Host.exe on5088, FE3000; historical PID26600/28288 must be reverified.
+Current active task NONE, next NOT ISSUED. Await user feedback, don't reopen proof-only loops. UI acceptance only, NOT Storefront delivery: actual consumer/projection/selection/commit and compact per-order-group provenance/final money still unimplemented. Keep locked compact order evidence decision. Seller-admin entry from seller list is separately pending. Four unrelated FE-size drifts remain; elapsed50min vs25 was NONCOMPLIANT, not processPASS.
+No Bridge/historical scripts; preserve shared migrations/catalog/captures, TB185paused/defaultOFF/PendingAllocation.
+
+## CURRENT — 224-R1 executed: typed range is form state, invalid money stays invalid — 2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224-R1/{RESULT.md,TASK.md}` and the
 append-only correction appended to `.../TB-SHIPPING-ADMIN-AREA-DELIVERY-PICKER-MONEY-224/RESULT.md`.
