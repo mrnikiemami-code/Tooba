@@ -1,3 +1,17 @@
+## CURRENT —225-R2 money ACCEPTED;226 mobile-week-only repair issued —2026-10-26
+
+Architect read afbdadc7beb363393eba8aa6c988beacf827db24 actual money model/field and R2 mount-receipts.
+Repeated invalid-token laundering closed, Chrome actual input/caret/0/5million/nonemptyMessageBox/cancel
+receipts support bounded acceptance. Root didn't rerun tests/browser. No more money/proof-only loop.
+Root VIEWED225 desktop destination modal,390rate modal and390weekview. WEEK STILL VISUALLY INCOMPLETE:
+Closed shown twice (status+extra span), working From/To detached/spread. Screenshot large canvas with narrow
+content, not actual390PNG. User's mobile complaint not fully closed. No user Visual ACCEPT.
+Active TB-SHIPPING-ADMIN-MOBILE-WEEK-VISUAL-226, presentation-only authoring-week-editor, HARD15/source8.
+Read TASK and225-R2/ARCHITECT-REVIEW.md. Preserve all225 money/modals/cascade logic; no broad tests.
+Await fixed week screenshot then Architect/user trial handoff. No Storefront consumer/compact order evidence
+implementation or seller-admin work. R1 unsaved-user-tab loss remains unrecovered; only new task Chrome target.
+Automatic-Next-Task NONE; STOP_FOR_ARCHITECT after226.
+
 ## CURRENT —225-R2 executed: money provenance is field state; proof in an isolated task Chrome —2026-10-26
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2/{RESULT.md,TASK.md} and the
