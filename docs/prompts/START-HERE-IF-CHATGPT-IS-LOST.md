@@ -1,3 +1,11 @@
+## CURRENT — TB223 issued: compact publication restore + separate owner pages — 2026-10-26
+
+User explicitly requests publication restored, separate Marketplace page reusing SAME form instead of owner combo, and compact order evidence recorded before Storefront connection. TB222 source063aa05fd reviewed narrowly: closed-day UI+handler guard correct; heavy/extra_heavy real catalog writes worker-reported; no-op single-owner combo is NOT multi-owner delivery. Publication UI removal is now superseded by restore instruction; backend/pointer preserved.
+Active task TB-SHIPPING-ADMIN-PUBLICATION-OWNER-PAGES-223. Read its TASK.md and docs/architecture/shipping/SHIPPING-PUBLICATION-AND-COMPACT-ORDER-EVIDENCE-DECISION-2026-10-26.md.
+Order MUST reuse one shared immutable snapshot, compact per-order-group reference/final monetary/receiving facts; NO full authored JSON per order, NO historical repricing. This is a required future integration invariant, NOT implemented yet.
+TB223 restores UI first, real authorized separate owner entry, no copied form/no fake edition/owner switching. Live SingleStore cannot prove Marketplace multi-owner behavior. Publication still intent, NOT Storefront activation. After223 review move toward actual existing projection/selection/commit, not another calculator/audit.
+Preserve user data/unsaved tabs, real catalog, backend snapshot/pointer, applied migrations. No new Bridge probe. STOP_FOR_ARCHITECT after task; no automatic next task.
+
 ## CURRENT — 222 user feedback executed: closed-day guard, honest owner control, real type catalog — 2026-10-26
 
 Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-FEEDBACK-222/RESULT.md` and `TASK.md`. Base
