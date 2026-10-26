@@ -1,0 +1,150 @@
+[
+  {
+    "name": "target",
+    "targetId": "75081F7DB2547954825D0574BD0D1869",
+    "browser": "Chrome/155.0.8059.85",
+    "profile": "task-owned fresh profile",
+    "port": 9333,
+    "url": "http://127.0.0.1:3000/admin/shipping-services/authoring/01a16eeb-70b3-7000-87c2-564c82835496?mode=edit"
+  },
+  {
+    "name": "tab",
+    "testId": "shipping-authoring-tab-regions",
+    "clicked": true,
+    "box": {
+      "x": 910,
+      "y": 268,
+      "w": 138,
+      "h": 40
+    }
+  },
+  {
+    "name": "baseline",
+    "row": "شرط: وزن (گرم): ۱٬۰۰۰–۲٬۰۰۰ کرایهٔ حمل: 120,000 · بسته‌بندی: 5,000 · تحویل: ۱–۳ ویرایش حذف این ردیف",
+    "applyDisabled": true
+  },
+  {
+    "name": "open-modal",
+    "testId": "shipping-authoring-rate-row-edit",
+    "clicked": true,
+    "box": {
+      "x": 205,
+      "y": 704,
+      "w": 56,
+      "h": 18
+    }
+  },
+  {
+    "name": "modal",
+    "freight": "120,000"
+  },
+  {
+    "name": "focus",
+    "testId": "shipping-authoring-rate-freight",
+    "w": 313
+  },
+  {
+    "name": "valid-typed",
+    "value": "1,234",
+    "invalid": "false",
+    "caret": 5,
+    "focused": true
+  },
+  {
+    "name": "middle-insert",
+    "value": "12,934",
+    "invalid": "false",
+    "caret": 4,
+    "focused": true
+  },
+  {
+    "name": "valid-0",
+    "value": "0",
+    "invalid": "false",
+    "caret": 1,
+    "focused": true
+  },
+  {
+    "name": "valid-5000000",
+    "value": "5,000,000",
+    "invalid": "false",
+    "caret": 9,
+    "focused": true
+  },
+  {
+    "name": "pasted-invalid",
+    "value": "12,34",
+    "invalid": "true",
+    "caret": 5,
+    "focused": true
+  },
+  {
+    "name": "appended-5",
+    "value": "12,345",
+    "invalid": "true",
+    "caret": 6,
+    "focused": true
+  },
+  {
+    "name": "appended-6",
+    "value": "12,3456",
+    "invalid": "true",
+    "caret": 7,
+    "focused": true
+  },
+  {
+    "name": "appended-7",
+    "value": "12,34567",
+    "invalid": "true",
+    "caret": 8,
+    "focused": true
+  },
+  {
+    "name": "after-other-field",
+    "value": "12,34567",
+    "invalid": "true",
+    "caret": 8,
+    "focused": false
+  },
+  {
+    "name": "appended-8",
+    "value": "12,345678",
+    "invalid": "true",
+    "caret": 9,
+    "focused": true
+  },
+  {
+    "name": "confirm",
+    "testId": "shipping-authoring-rate-modal-confirm",
+    "clicked": true,
+    "box": {
+      "x": 430,
+      "y": 610,
+      "w": 80,
+      "h": 40
+    }
+  },
+  {
+    "name": "refusal",
+    "open": true,
+    "reason": "مبلغ باید عددی نامنفی باشد؛ محدودیت دو رقم اعشار فقط برای ارزهای اعشاری اعمال می‌شود.",
+    "modalStillOpen": true,
+    "freight": "12,345678"
+  },
+  {
+    "name": "cancel",
+    "testId": "shipping-authoring-rate-modal-cancel",
+    "clicked": true,
+    "box": {
+      "x": 511,
+      "y": 610,
+      "w": 68,
+      "h": 40
+    }
+  },
+  {
+    "name": "after-cancel",
+    "row": "شرط: وزن (گرم): ۱٬۰۰۰–۲٬۰۰۰ کرایهٔ حمل: 120,000 · بسته‌بندی: 5,000 · تحویل: ۱–۳ ویرایش حذف این ردیف",
+    "applyDisabled": true
+  }
+]

@@ -174,7 +174,36 @@ export interface MoneyEdit {
   readonly raw: string;
   /** True only for a lawful amount (an invalid text is preserved and left to validation to refuse). */
   readonly valid: boolean;
+  /**
+   * True when this text (or the text it came from) was supplied by the OPERATOR in an unsupported shape, so
+   * its separators are the operator's own characters and must never be read as the field's display grouping.
+   * The field stores this together with `raw` and hands it back on the next edit.
+   */
+  readonly untrusted: boolean;
   readonly caret: MoneyCaret;
+}
+
+/**
+ * The edit provenance of one money field: the token it last committed AND whether that token is the
+ * operator's own unsupported text.
+ *
+ * This is real field state, not something re-inferred from the text later: `12,34` + `5` yields the
+ * structurally well-grouped `12,345`, which a text-only reader would call lawful — but its comma is still the
+ * operator's, so it must stay invalid through ANY further keystrokes until the operator removes it.
+ */
+export interface MoneyInputProvenance {
+  readonly raw: string;
+  readonly untrusted: boolean;
+}
+
+/** Provenance of an externally received token (an authoritative reseed): only crime is what the text is. */
+export function readMoneyProvenance(raw: string): MoneyInputProvenance {
+  return { raw, untrusted: !readMoneyText(raw).valid };
+}
+
+/** Normalizes the optional convenience form used by pure callers into real provenance. */
+function asProvenance(previous: MoneyInputProvenance | string): MoneyInputProvenance {
+  return typeof previous === "string" ? readMoneyProvenance(previous) : previous;
 }
 
 /**
@@ -185,7 +214,12 @@ export interface MoneyEdit {
  */
 export function interpretMoneyEdit(nextText: string, caret: number): MoneyEdit {
   const reading = readMoneyText(nextText);
-  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(nextText, caret) };
+  return {
+    raw: reading.raw,
+    valid: reading.valid,
+    untrusted: !reading.valid,
+    caret: caretAnchorAt(nextText, caret),
+  };
 }
 
 /**
@@ -207,7 +241,12 @@ export function interpretMoneyBackspace(text: string, caret: number): MoneyEdit 
   if (previous !== ",") return null;
   const nextText = `${normalized.slice(0, caret - 2)}${normalized.slice(caret)}`;
   const reading = readMoneyText(nextText);
-  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(nextText, Math.max(0, caret - 2)) };
+  return {
+    raw: reading.raw,
+    valid: reading.valid,
+    untrusted: !reading.valid,
+    caret: caretAnchorAt(nextText, Math.max(0, caret - 2)),
+  };
 }
 
 /** True when the token is a lawful canonical money token of the local contract (shape only). */
@@ -219,31 +258,39 @@ export function isCanonicalMoneyText(raw: string): boolean {
  * One typed keystroke (NOT a paste) inside the grouped field.
  *
  * A separator the browser reports belongs to the field's OWN display grouping ONLY when the value the field
- * last committed was itself lawful. Then a middle insert or a delete around an existing group can leave text
- * like `1,200000`, and reading those characters as user-supplied grouping would refuse a perfectly lawful
- * amount (the reported screenshot defect) — so those separators are dropped.
+ * last committed was both lawful AND not the operator's own unsupported text. Then a middle insert or a delete
+ * around an existing group can leave text like `1,200000`, and reading those characters as user-supplied
+ * grouping would refuse a perfectly lawful amount (the reported screenshot defect) — so they are dropped.
  *
- * When the previous value was already INVALID, the separators in it are the operator's own text: dropping
- * them would heal `12,34` + a typed `5` into the accepted `12345`. That text therefore stays exactly as
- * typed and invalid until the operator removes the offending characters himself.
+ * When the previous value was UNTRUSTED (whether plainly invalid like `12,34`, or structurally well-grouped
+ * but still the operator's own text like `12,345` after one appended digit), its separators are the operator's
+ * characters: dropping them would heal `12,34` + `5` + `6` into the accepted `123456`. That text stays exactly
+ * as typed and invalid through any number of appended keys until the operator removes the offending grouping.
  *
  * The caret is mapped through the SAME separator removal (logical offset), never applied to a shorter text.
  *
- * @param previousRaw The token the field last committed (canonical, or the invalid text as typed).
+ * @param previous Provenance the FIELD owns (the token it last committed plus its trust), or a bare token
+ *   for a pure caller with no field history.
  * @param nextText The field's new display text, exactly as the browser reported it.
  * @param caret The caret offset the browser reported for that text.
  */
-export function interpretMoneyTyping(previousRaw: string, nextText: string, caret: number): MoneyEdit {
+export function interpretMoneyTyping(
+  previous: MoneyInputProvenance | string,
+  nextText: string,
+  caret: number,
+): MoneyEdit {
+  const provenance = asProvenance(previous);
   const display = visibleMoneyText(nextText);
   const offset = Math.max(0, Math.min(caret, display.length));
-  const trusted = readMoneyText(previousRaw).valid;
+  const trusted = !provenance.untrusted && readMoneyText(provenance.raw).valid;
   if (!trusted) {
-    // The operator's OWN text was already invalid. A separator in it was NOT produced by our display
-    // grouping, so dropping it would silently heal `12,34` + `5` into the accepted `12345`. The text stays
-    // exactly as typed and invalid until the operator himself removes the offending characters.
-    if (hasGroupSeparator(display)) return { raw: display, valid: false, caret: caretAnchorAt(display, offset) };
+    // The operator's OWN text: a separator in it was NOT produced by our display grouping, so dropping it
+    // would silently heal it into a different accepted amount. It stays exactly as typed and invalid.
+    if (hasGroupSeparator(display)) {
+      return { raw: display, valid: false, untrusted: true, caret: caretAnchorAt(display, offset) };
+    }
     const reading = readMoneyText(display);
-    return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(display, offset) };
+    return { raw: reading.raw, valid: reading.valid, untrusted: !reading.valid, caret: caretAnchorAt(display, offset) };
   }
   // Trusted display: every separator in it belongs to OUR grouping, so dropping it is display-only.
   const stripped = withoutDisplayGrouping(display);
@@ -251,6 +298,7 @@ export function interpretMoneyTyping(previousRaw: string, nextText: string, care
   return {
     raw: reading.raw,
     valid: reading.valid,
+    untrusted: !reading.valid,
     caret: caretAnchorAt(stripped.text, stripped.offsets[offset] ?? stripped.text.length),
   };
 }
@@ -293,7 +341,7 @@ export function interpretMoneyDelete(text: string, caret: number): MoneyEdit | n
   if (normalized[caret] !== ",") return null;
   const nextText = `${normalized.slice(0, caret)}${normalized.slice(caret + 2)}`;
   const reading = readMoneyText(nextText);
-  return { raw: reading.raw, valid: reading.valid, caret: caretAnchorAt(nextText, caret) };
+  return { raw: reading.raw, valid: reading.valid, untrusted: !reading.valid, caret: caretAnchorAt(nextText, caret) };
 }
 
 /** True when a canonical token carries a NON-zero fraction (an amount that is not a whole unit). */

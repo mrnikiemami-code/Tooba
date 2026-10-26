@@ -25,7 +25,10 @@ import {
   interpretMoneyTyping,
   isCanonicalMoneyText,
   moneyHasFraction,
+  readMoneyProvenance,
   type MoneyCaret,
+  type MoneyEdit,
+  type MoneyInputProvenance,
 } from "../model/money-text.ts";
 
 /**
@@ -100,6 +103,22 @@ export function MoneyField({
   const pendingCaret = useRef<MoneyCaret | null>(null);
   /** A real paste is in flight: the strict reader must apply even if the change event omits `inputType`. */
   const pastePending = useRef(false);
+  /**
+   * EDIT PROVENANCE of THIS field: the token it last committed and whether that token is the operator's own
+   * unsupported text. It is real state (not re-inferred from the text), so `12,34` + `5` + `6` stays invalid
+   * even though `12,345` alone looks lawfully grouped; it is dropped as soon as the value prop no longer
+   * matches (external reseed, another row, a reopened modal).
+   */
+  const provenance = useRef<MoneyInputProvenance | null>(null);
+  const currentProvenance = (): MoneyInputProvenance =>
+    provenance.current !== null && provenance.current.raw === value
+      ? provenance.current
+      : readMoneyProvenance(value);
+  const commit = (edit: MoneyEdit) => {
+    provenance.current = { raw: edit.raw, untrusted: edit.untrusted };
+    pendingCaret.current = edit.caret;
+    onChange(edit.raw);
+  };
   // A token WITHOUT a separator is a whole rial amount, never a "visible fraction": only a real `.` that
   // carries a non-zero digit is one, so `1000` can never be reported as decimal.
   const fractionVisible = policy === "integer" && moneyHasFraction(value);
@@ -139,9 +158,8 @@ export function MoneyField({
           pastePending.current = false;
           const edit = strict
             ? interpretMoneyEdit(element.value, caret)
-            : interpretMoneyTyping(value, element.value, caret);
-          pendingCaret.current = edit.caret;
-          onChange(edit.raw);
+            : interpretMoneyTyping(currentProvenance(), element.value, caret);
+          commit(edit);
         }}
         onKeyDown={(event) => {
           // Any real key invalidates a leftover paste flag from a cancelled paste.
@@ -153,8 +171,7 @@ export function MoneyField({
             const edit = interpretMoneyDelete(element.value, caret);
             if (edit === null) return;
             event.preventDefault();
-            pendingCaret.current = edit.caret;
-            onChange(edit.raw);
+            commit(edit);
             return;
           }
           if (event.key !== "Backspace" || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -162,8 +179,7 @@ export function MoneyField({
           if (edit === null) return;
           // Display grouping would restore the separator and swallow the key; the digit goes with it.
           event.preventDefault();
-          pendingCaret.current = edit.caret;
-          onChange(edit.raw);
+          commit(edit);
         }}
       />
       {fractionVisible ? (

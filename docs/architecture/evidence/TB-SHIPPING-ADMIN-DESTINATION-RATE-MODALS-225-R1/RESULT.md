@@ -113,3 +113,20 @@ Honest limits of the mounted part:
 - Active task: NONE. Next: Architect review. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
 - The compact shared-snapshot order-evidence decision stays locked and unimplemented; TB-185 paused,
   default-OFF, PendingAllocation preserved.
+
+## Correction appended by 225-R2 (2026-10-26)
+
+Two of this result's claims do not hold and are corrected here, not silently rewritten:
+
+1. **Provenance did not survive one keystroke.** `interpretMoneyTyping(previousRaw, ...)` re-derived trust from
+   the text, so `12,34` + `5` (raw `12,345`, still invalid) was followed by `6` taking the TRUSTED branch and
+   becoming the accepted `123456`. R1's `valid:false` was returned but never owned by the field. R2 replaces it
+   with real field-state provenance; see `../TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2/RESULT.md`.
+2. **The mounted detour was not harmless.** It reloaded an existing USER editor tab and discarded that tab's
+   unsaved local edits. The draft stayed unchanged in the database, but local edits are not recoverable, so
+   the earlier "user tabs were never reloaded" statement is withdrawn for that step. R2's proof runs in a
+   fresh task-owned Chrome instead.
+
+Everything R1 did about the strict paste path, the logical caret mapping, `interpretMoneyDelete`, and the
+modal's stored-fraction tolerance (`rateConfirmIssue` / `storedRateAmounts`) still stands and is untouched.
+- STOP_FOR_ARCHITECT; no user trial before Architect review.

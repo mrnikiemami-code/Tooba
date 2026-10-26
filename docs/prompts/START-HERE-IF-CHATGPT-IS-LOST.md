@@ -1,4 +1,50 @@
-﻿## CURRENT —225-R1 executed: money edit provenance + caret mapping + modal tolerance; 225 still awaits review —2026-10-26
+## CURRENT —225-R2 executed: money provenance is field state; proof in an isolated task Chrome —2026-10-26
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R2/{RESULT.md,TASK.md} and the
+correction appended to 225-R1/RESULT.md. Base 1d0625218 (clean; the three backend line-ending drifts and no
+other file staged). Task status: executed, NOT accepted. 225/R1/R2 are NOT accepted and NO user trial was
+called; Architect reviews first.
+
+A — the R1 defect was real: trust was re-inferred from the text, so `12,34` (invalid) + `5` gave the
+structurally well-grouped `12,345` and the NEXT key took the trusted branch and accepted `123456`. Now
+`MoneyInputProvenance { raw, untrusted }` is real edit state: `interpretMoneyTyping(previous,nextText,caret)`
+takes it, every entry point propagates `MoneyEdit.untrusted` (paste/edit/backspace/delete), and
+`authoring-money-field.tsx` owns ONE ref keyed by the committed token through a single `commit(edit)` used by
+change/Backspace/Delete, dropped the moment the value prop no longer matches (external reseed, other row,
+reopened modal). Operator text therefore stays invalid through ANY number of appended keys until the
+operator removes/replaces the offending grouping; blur/re-render/other-field change cannot launder it; the
+model still receives the raw text and the parent still blocks it. No second sanitizer; rate shape,
+self-exclusion, legacy fraction and MessageBox semantics untouched.
+
+RED measured on the unchanged R1 module (probe executed): `12,34`→`12,345`→`123456` ACCEPTED at the second
+appended digit. GREEN 8/8 new R2 facts driving the same state transitions (invalid through 5/6/7/8 + blur;
+explicit correction; reseed/other-row; middle insert `12,934` caret 4; `5,000,000`; `0`; malformed/negative/
+exponent; comma-adjacent Backspace/Delete) + 42/42 across the three 225 classes + 21/21 in 224-R1 money and
+209-R2 + ONE clean tsc.
+
+Mounted gate in a FRESH task-owned Chrome (installed Chrome 155, `--headless=new`, dedicated port 9333,
+fresh profile, target created by this task: 75081F7DB2547954825D0574BD0D1869; only that profile's processes
+stopped, port silent): real keys throughout — `1,234`→insert 9→`12,934` caret 4, `0`, `5,000,000`; pasted
+`12,34` invalid then +5/+6/+7 and +8 after another field change stayed `12,34567`/`12,345678` with
+aria-invalid, Confirm showed a non-empty localized reason with the modal open (screenshot), Cancel restored
+`120,000`/`5,000`, delivery `1–3`, Apply disabled. NO Apply/PUT/publication/catalog/migration/restart; draft
+and pointer untouched.
+HONEST: the pasted token used the element's real paste event plus CDP Input.insertText (clipboard commands are
+denied here), so it is the paste CODE PATH, not an OS clipboard round-trip; typing a comma into a valid value
+still cannot produce one (pre-existing grouped-field behaviour, recorded not silently changed).
+
+B — USER TAB INCIDENT (recorded, NOT recovered): R1's mounted detour reloaded an existing user editor tab and
+discarded that tab's unsaved local edits. The stored draft was untouched but an unsaved local edit cannot be
+rebuilt from the server, so "user tabs untouched" is withdrawn for that step and no recovery is claimed. This
+task never read, enumerated or manipulated that tab; proof used the isolated browser above.
+
+Actual elapsed ≈45 min vs HARD20 — recorded, NOT a process PASS.
+Not claimed: user Visual ACCEPT, Storefront/checkout consumer, seller-admin entry, Tehran service-area live
+gap. Active task: NONE. Next: Architect review only. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+Compact shared-snapshot order-evidence decision still locked/unimplemented; TB185 paused, default-OFF,
+PendingAllocation preserved.
+
+## SUPERSEDED —225-R1 executed: money edit provenance + caret mapping + modal tolerance; 225 still awaits review —2026-10-26
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-RATE-MODALS-225-R1/{RESULT.md,TASK.md} and
 225/ARCHITECT-REVIEW.md. Base84999b4f9 (clean fast-forward; the three backend line-ending drifts untouched).
