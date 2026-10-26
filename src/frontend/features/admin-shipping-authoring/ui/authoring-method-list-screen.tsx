@@ -11,7 +11,7 @@
  * The previous catalog/settings screen stays reachable through the explicit secondary link only: a failed
  * read of this list is reported as itself and NEVER falls back to the old screen.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil } from "lucide-react";
 import {
@@ -23,13 +23,16 @@ import {
 import type { GridColumnDef, GridServerQuery, SavedViewStore } from "../../../design-system/data-grid";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-system/app-data-grid/app-grid-row-actions";
 import {
+  authoringOwnerKey,
   duplicateBindingDraftIds,
   loadAuthoringContext,
   loadAuthoringMethodRows,
+  loadAuthoringOwner,
   methodBinding,
   storedMethodName,
   type AuthoringContextRead,
   type AuthoringMethodRow,
+  type AuthoringOwnerRead,
 } from "../api/authoring-method-list-api.ts";
 import { authoringFormat, authoringMessages, type AuthoringLocale } from "../messages/authoring-messages.ts";
 
@@ -58,13 +61,36 @@ export function ShippingAuthoringMethodListScreen({
   const [rows, setRows] = useState<readonly AuthoringMethodRow[]>([]);
   const [context, setContext] = useState<AuthoringContextRead | null>(null);
   const [languageUnavailable, setLanguageUnavailable] = useState(false);
+  /** The server-authorized owner of this scope; `null` until it is read (never a local guess). */
+  const [owner, setOwner] = useState<AuthoringOwnerRead | null>(null);
+  const [ownerUnavailable, setOwnerUnavailable] = useState(false);
+  /**
+   * Scope generation: every read belongs to one owner scope. A response from a superseded scope is
+   * dropped (never merged), and rows are cleared while the new scope loads, so an old owner's methods
+   * can never appear under the new owner.
+   */
+  const generation = useRef(0);
 
   const load = useCallback(async () => {
+    const mine = ++generation.current;
     setState("loading");
-    const [drafts, languages] = await Promise.all([loadAuthoringMethodRows(), loadAuthoringContext()]);
+    setRows([]);
+    setContext(null);
+    const [drafts, languages, ownerRead] = await Promise.all([
+      loadAuthoringMethodRows(),
+      loadAuthoringContext(),
+      loadAuthoringOwner(),
+    ]);
+    if (generation.current !== mine) return; // a superseded scope never wins
+    if (ownerRead.state === "ok") {
+      setOwner(ownerRead.value);
+      setOwnerUnavailable(false);
+    } else {
+      setOwner(null);
+      setOwnerUnavailable(true);
+    }
     if (drafts.state !== "ok") {
       const kind = drafts.failure.kind;
-      setRows([]);
       setState(kind === "denied" ? "denied" : kind === "untrusted" ? "untrusted" : "error");
       return;
     }
@@ -203,8 +229,13 @@ export function ShippingAuthoringMethodListScreen({
     async (query: GridServerQuery) => createClientGridQueryAdapter(viewRows, columns)(query),
     [columns, viewRows],
   );
+  /**
+   * Grid identity is SCOPE-keyed: changing the authorized owner (when the server ever offers more than
+   * one) starts a separate grid/saved-view/export namespace instead of inheriting the previous scope's.
+   */
+  const scopeKey = owner === null ? "unresolved" : authoringOwnerKey(owner);
   const gridProps = useLegacyAdminGridDirectProps({
-    gridId: GRID_ID,
+    gridId: `${GRID_ID}:${scopeKey}`,
     columns,
     queryAdapter,
     savedViewStore,
@@ -229,14 +260,52 @@ export function ShippingAuthoringMethodListScreen({
           <h1 className="text-xl font-black text-gray-900">{messages.listTitle}</h1>
           <p className="mt-1 text-sm text-gray-500">{messages.listIntro}</p>
         </div>
-        <a
-          href="?legacy=1"
-          className="inline-flex min-h-9 items-center rounded-xl border border-border px-3 text-xs font-bold text-gray-700"
-          data-testid="admin-shipping-authoring-legacy-link"
-        >
-          {messages.listLegacyLink}
-        </a>
+        <div className="flex flex-wrap items-end gap-3">
+          {/* The owner is a REAL server fact, not a local choice: the options come from the authorized
+              owner read, so a SingleStore installation honestly shows its one lawful owner only. */}
+          <label className="text-xs">
+            <span className="block font-bold text-gray-900">{messages.listOwnerLabel}</span>
+            <select
+              className="mt-1 min-h-9 rounded-lg border border-border bg-surface px-2 text-xs disabled:opacity-70"
+              value={scopeKey}
+              disabled={owner === null}
+              data-testid="admin-shipping-authoring-owner"
+              onChange={() => {
+                /* One lawful owner: the server exposes no alternate authorized scope to switch to. */
+              }}
+            >
+              {owner === null ? <option value="unresolved">—</option> : null}
+              {owner !== null ? (
+                <option value={scopeKey}>
+                  {owner.ownerKind === "Seller"
+                    ? authoringFormat(messages.listOwnerSellerIdentity, { id: owner.sellerPartyId ?? "" })
+                    : owner.ownerKind === "Marketplace"
+                      ? messages.listOwnerMarketplace
+                      : messages.listOwnerStore}
+                </option>
+              ) : null}
+            </select>
+          </label>
+          <a
+            href="?legacy=1"
+            className="inline-flex min-h-9 items-center rounded-xl border border-border px-3 text-xs font-bold text-gray-700"
+            data-testid="admin-shipping-authoring-legacy-link"
+          >
+            {messages.listLegacyLink}
+          </a>
+        </div>
       </div>
+
+      {owner !== null ? (
+        <p className="text-[11px] text-gray-500" data-testid="admin-shipping-authoring-owner-note">
+          {messages.listOwnerSingleNote}
+        </p>
+      ) : null}
+      {ownerUnavailable ? (
+        <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900" data-testid="admin-shipping-authoring-owner-unavailable">
+          {messages.listOwnerUnavailable}
+        </p>
+      ) : null}
 
       {languageUnavailable ? (
         <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900" data-testid="admin-shipping-authoring-language-unavailable">

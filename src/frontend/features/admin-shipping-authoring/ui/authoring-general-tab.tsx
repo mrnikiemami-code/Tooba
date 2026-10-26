@@ -40,7 +40,9 @@ export function typeDisplayName(
 }
 
 function languageLabel(language: EditorContentLanguage, locale: AuthoringLocale): string {
-  const preferred = locale === "fa" ? language.displayName : language.nativeName;
+  // Both names come from the DB language registry; the Persian UI prefers the stored native name so
+  // an English display name is never used as a Persian label.
+  const preferred = locale === "fa" ? language.nativeName : language.displayName;
   return (preferred || language.displayName || language.nativeName).trim();
 }
 
@@ -106,15 +108,6 @@ export function AuthoringGeneralTab({
     /* ONE inline-axis contract for both main panels: no inner max-width offset, so the General fields
        and the Regions cards share the same outer edges and paddings. */
     <div className="grid gap-4" data-testid="shipping-authoring-general-tab">
-      <p className="text-xs text-gray-600">
-        <span className="font-bold text-gray-900">{messages.ownerLabel}: </span>
-        {document.owner.kind === "Marketplace"
-          ? messages.ownerMarketplace
-          : document.owner.kind === "Seller"
-            ? messages.ownerSeller
-            : messages.ownerStore}
-      </p>
-
       {/* Type sits on the same form axis as the name card below (same card padding and full width). */}
       <section className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
         <Field
@@ -221,7 +214,7 @@ export function AuthoringGeneralTab({
           <div className="mt-3 grid gap-3">
             <Field
               id="authoring-name"
-              label={`${messages.nameLabel} — ${languageLabel(active, locale)}`}
+              label={messages.nameLabel}
               hint={messages.contentLanguageHint}
               error={nameInvalid ? messages.nameRequired : (serverErrors?.name ?? undefined)}
             >
@@ -237,7 +230,7 @@ export function AuthoringGeneralTab({
             </Field>
             <Field
               id="authoring-description"
-              label={`${messages.descriptionLabel} — ${languageLabel(active, locale)}`}
+              label={messages.descriptionLabel}
               error={serverErrors?.description}
             >
               <Textarea
@@ -321,9 +314,9 @@ export function AuthoringGeneralTab({
         </fieldset>
       </div>
 
-      <p className="text-[11px] text-gray-500">
-        {form.freightPaymentMode === null && form.calculationMode === null ? messages.settingsBlank : messages.settingsNote}
-      </p>
+      {form.freightPaymentMode === null && form.calculationMode === null ? (
+        <p className="text-[11px] text-gray-500">{messages.settingsBlank}</p>
+      ) : null}
       {settingsIncomplete ? (
         <p role="alert" className="rounded-lg border border-danger/40 bg-red-50 px-2 py-1 text-xs font-semibold text-danger">
           {messages.settingsIncomplete}

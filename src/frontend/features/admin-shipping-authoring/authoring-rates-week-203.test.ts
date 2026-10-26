@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import test from "node:test";
 import type { EditorDocument, EditorRateRow, EditorWeeklySchedule } from "./model/editor-document.ts";
 import {
@@ -276,7 +276,7 @@ test("203-05 untouched fractional TimeText is retained; deliberate edits become 
   const base = createWeekForm(document.weeklySchedule);
   assert.equal(buildWeeklyScheduleEdit(document.weeklySchedule, base), undefined, "no phantom week edit");
 
-  const saturday = withDayWorking(withDayTime(base, 6, "startTime", "10:00"), 6, true);
+  const saturday = withDayTime(withDayWorking(base, 6, true), 6, "startTime", "10:00");
   const saturdayDone = withDayTime(saturday, 6, "endTime", "14:30");
   assert.deepEqual(weekIssues(saturdayDone), []);
   const write = buildWeeklyScheduleEdit(document.weeklySchedule, saturdayDone)!;
@@ -285,7 +285,7 @@ test("203-05 untouched fractional TimeText is retained; deliberate edits become 
   assert.equal(write.days.find((day) => day.weekday === 1)!.endTime, "18:00:00.5000000", "precision is untouched");
   assert.equal(write.days.find((day) => day.weekday === 7)!.endTime, null);
 
-  const partial = withDayWorking(withDayTime(base, 7, "startTime", "09:00"), 7, true);
+  const partial = withDayTime(withDayWorking(base, 7, true), 7, "startTime", "09:00");
   assert.deepEqual(weekIssues(partial), [{ code: "dayHoursRequired", weekday: 7 }]);
   const reversed = withDayTime(withDayTime(withDayWorking(base, 7, true), 7, "startTime", "18:00"), 7, "endTime", "08:00");
   assert.deepEqual(weekIssues(reversed), [{ code: "dayRangeInvalid", weekday: 7 }]);

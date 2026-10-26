@@ -29,6 +29,15 @@ export const TIME_ZONE_MAX_LENGTH = 100;
 /** ISO weekdays, Monday first. */
 export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 
+/**
+ * Presentation order of the seven days: Saturday (6) → Friday (5).
+ *
+ * This is DISPLAY metadata only. `WEEKDAYS` remains the ISO Monday-first WIRE order used by validation,
+ * comparison and serialization, so the order the operator reads the table in never changes the payload.
+ * A single declared order is used for both interface locales so the weekly grid is one visual truth.
+ */
+export const WEEK_DISPLAY_ORDER = [6, 7, 1, 2, 3, 4, 5] as const;
+
 export interface ScheduleDayDraft {
   readonly weekday: number;
   readonly isWorking: boolean;
@@ -137,13 +146,21 @@ export function withDayWorking(state: WeekFormState, weekday: number, isWorking:
   return replaceDay(state, weekday, (day) => ({ ...day, isWorking }));
 }
 
-/** A deliberate `HH:mm` (or blank) edit of ONE bound; the other bound keeps its provenance. */
+/**
+ * Bound edit of ONE day. The handler boundary itself refuses a CLOSED day (and an unknown day), so a
+ * programmatic/assistive change can never modify the hours of a day the operator marked as closed; the
+ * disabled inputs are presentation, not the protection. A refused edit returns the SAME state, so no
+ * dirty flag, revision or remembered time is touched.
+ */
 export function withDayTime(
   state: WeekFormState,
   weekday: number,
   bound: "startTime" | "endTime",
   value: string,
 ): WeekFormState {
+  if (state.kind !== "configured") return state;
+  const target = state.days.find((day) => day.weekday === weekday);
+  if (!target || !target.isWorking) return state;
   return replaceDay(state, weekday, (day) =>
     bound === "startTime"
       ? { ...day, startTime: value, startEdited: true }

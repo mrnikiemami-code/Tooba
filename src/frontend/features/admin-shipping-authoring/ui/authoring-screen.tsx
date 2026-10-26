@@ -68,7 +68,6 @@ import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
-import { AuthoringPublicationPanel } from "./authoring-publication-panel.tsx";
 import { AuthoringLocalIssuesPanel, AuthoringSaveFailurePanel } from "./authoring-problem-view.tsx";
 import {
   isRowScoped,
@@ -570,23 +569,18 @@ export function ShippingAuthoringScreen({
         </div>
       </header>
 
-      <p
-        role="note"
-        className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-gray-600"
-        data-testid="shipping-authoring-mode-banner"
-      >
-        {mode === "view" ? messages.viewBanner : messages.editBanner}
-        {session.unsaved ? ` · ${messages.unsavedNote}` : ""}
-      </p>
-
-      {/* Publication is intent only: it reads/writes its own pointer and never reseeds this form. */}
-      <AuthoringPublicationPanel
-        draftId={draftId}
-        currentRevision={document?.revision ?? null}
-        mode={mode}
-        busy={busy}
-        messages={messages}
-      />
+      {/* Mode notice: the view-mode instruction, or the unapplied-work warning alone. Edit mode has no
+          standing prose of its own — the Apply button state and this warning carry the truth. */}
+      {mode === "view" || session.unsaved ? (
+        <p
+          role="note"
+          className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-gray-600"
+          data-testid="shipping-authoring-mode-banner"
+        >
+          {mode === "view" ? messages.viewBanner : messages.unsavedNote}
+          {mode === "view" && session.unsaved ? ` · ${messages.unsavedNote}` : ""}
+        </p>
+      ) : null}
 
       {notice ? (
         <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">

@@ -222,6 +222,56 @@ export function duplicateBindingDraftIds(rows: readonly AuthoringMethodRow[]): R
   return duplicates;
 }
 
+/** The single server-authorized authoring owner of THIS request (never a client-chosen owner). */
+export interface AuthoringOwnerRead {
+  readonly ownerKind: "Store" | "Marketplace" | "Seller";
+  /** Business seller identity of the authorized scope; only for `Seller`, never a user account. */
+  readonly sellerPartyId: string | null;
+}
+
+/** Exact authorized authoring-owner route (server resolves the scope after authorization). */
+const AUTHORING_OWNER_PATH = "/v1/admin/shipping-services/authoring-owner";
+
+/**
+ * Strict decode of the authorized owner. The route accepts no owner/seller parameter, so this is the
+ * only owner the caller may see; a seller id is required for `Seller` and forbidden otherwise.
+ *
+ * @param node Parsed response root.
+ */
+export function decodeAuthoringOwner(node: JsonNode): AuthoringOwnerRead {
+  const root = object(node);
+  const ownerKind = text(required(root, "ownerKind"));
+  if (ownerKind !== "Store" && ownerKind !== "Marketplace" && ownerKind !== "Seller") {
+    throw new MethodListDecodeFailure("ownerKind");
+  }
+  const sellerPartyId = optionalText(root.get("sellerPartyId"));
+  if (ownerKind === "Seller") {
+    if (sellerPartyId === null) throw new MethodListDecodeFailure("sellerPartyId:missing");
+    if (!GUID.test(sellerPartyId) || sellerPartyId.toLowerCase() === ZERO_GUID) {
+      throw new MethodListDecodeFailure("sellerPartyId:invalid");
+    }
+  } else if (sellerPartyId !== null) {
+    throw new MethodListDecodeFailure("sellerPartyId:unexpected");
+  }
+  return { ownerKind, sellerPartyId };
+}
+
+/** Stable key of an authorized owner, used to isolate grid state/saved views per scope. */
+export function authoringOwnerKey(owner: AuthoringOwnerRead): string {
+  return owner.ownerKind === "Seller"
+    ? `seller:${(owner.sellerPartyId ?? "").toLowerCase()}`
+    : owner.ownerKind.toLowerCase();
+}
+
+/**
+ * Reads the server-authorized authoring owner of this request.
+ *
+ * @param signal Abort signal of the caller (a superseded read is aborted, never merged).
+ */
+export function loadAuthoringOwner(signal?: AbortSignal): Promise<AuthoringListOutcome<AuthoringOwnerRead>> {
+  return read(AUTHORING_OWNER_PATH, decodeAuthoringOwner, signal);
+}
+
 async function readJson(
   path: string,
   signal: AbortSignal | undefined,

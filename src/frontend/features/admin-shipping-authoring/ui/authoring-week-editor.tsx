@@ -11,7 +11,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import type { EditorWeeklySchedule } from "../model/editor-document.ts";
 import type { WeekFormState, WeekIssue } from "../model/editor-week.ts";
-import { WEEKDAYS, type WeekIssueCode } from "../model/editor-week.ts";
+import { WEEK_DISPLAY_ORDER, type WeekIssueCode } from "../model/editor-week.ts";
 import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-messages.ts";
 import { formatTimeText } from "./authoring-format.ts";
 import { weekdayLabel } from "./authoring-general-tab.tsx";
@@ -261,7 +261,7 @@ export function AuthoringWeekEditor({
             className="grid gap-1 sm:gap-0 sm:divide-y sm:divide-border sm:rounded-lg sm:bg-surface"
             data-testid="shipping-authoring-week-days"
           >
-            {WEEKDAYS.map((weekday) => {
+            {WEEK_DISPLAY_ORDER.map((weekday) => {
               const day = week.days.find((candidate) => candidate.weekday === weekday);
               if (!day) return null;
               const dayIssue = issues.find((issue) => issue.weekday === weekday);
@@ -302,8 +302,9 @@ export function AuthoringWeekEditor({
                         <input
                           type="time"
                           dir="ltr"
-                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs"
+                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
                           value={inputTime(day.startTime)}
+                          disabled={!day.isWorking}
                           onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
                           data-testid={`shipping-authoring-week-start-${weekday}`}
                         />
@@ -322,8 +323,9 @@ export function AuthoringWeekEditor({
                         <input
                           type="time"
                           dir="ltr"
-                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs"
+                          className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
                           value={inputTime(day.endTime)}
+                          disabled={!day.isWorking}
                           onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
                           data-testid={`shipping-authoring-week-end-${weekday}`}
                         />
@@ -354,7 +356,6 @@ export function AuthoringWeekEditor({
           ) : null}
         </div>
       )}
-      <p className="mt-2 text-[11px] text-gray-500">{editable ? messages.weekEditNote : messages.weekNote}</p>
     </section>
   );
 }

@@ -1,3 +1,43 @@
+## CURRENT — 222 user feedback executed: closed-day guard, honest owner control, real type catalog — 2026-10-26
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-USER-FEEDBACK-222/RESULT.md` and `TASK.md`. Base
+`472384b81e5cde3e9e2b45b3e3c7aa2a5c1172f8` (local was one docs-only commit behind; fast-forwarded, no
+reset/stash/rebase/force-push). The pending frontend cleanup reported by the user was inspected FIRST,
+preserved, and committed by this task: publication UI/API/model removed from the editor, owner line and
+repetitive explanatory text removed, simple «نام»/«توضیح» labels, DB-native language labels, Saturday-first
+DISPLAY order, and an unsaved-work warning only when the session is dirty. Backend publication/capture/
+pointer capability, routes, migration and data were NOT deleted.
+Executed: (1) a closed day now really disables BOTH `type="time"` bounds AND `withDayTime` refuses an
+unknown or closed day at the handler boundary returning the same state (grey input is presentation, not the
+protection); toggling closed preserves the exact remembered bounds, the ISO weekday and the stored time
+text, and reopening restores them — proven live (08:30/12:45 → disabled+preserved → restored). Two old week
+facts that typed bounds before marking the day working were corrected to the truthful order, no assertion
+weakened; new `closed-day-222.test.ts` 3/3.
+(2) the primary list now shows a REAL owner control populated only from the server-authorized
+`GET /v1/admin/shipping-services/authoring-owner`, with strict decode, generation-guarded loads (rows
+cleared, superseded scope never wins) and scope-keyed grid identity for saved views/export. This
+installation is SingleStore/store-alpha, so exactly one lawful option exists (`همین فروشگاه`) with an
+honest note; no fake Marketplace entry, no guessed GUID, no legacy row import, no owner picker in the
+editor. Documented gap: an ALTERNATE authorized owner (Marketplace listing its real authorized sellers)
+needs a server route returning the actor's authorized owner SET plus owner-keyed list/context reads — an
+authorization-surface change, deliberately not faked with client filtering.
+(3) the real type catalog was completed through the existing catalog API only: `heavy` →
+`01a1785e-01f3-7000-b50d-d6372e756f89` and `extra_heavy` → `01a1785e-6b50-7000-a98f-2e1c80544815`, created
+inactive then activated (both `isActive:true`, revision 2, sort 20/30) with fa-IR/en-US/ru-RU labels from
+the DB registry; `standard/عادی` untouched and no type auto-assigned. `extra-heavy` is not a lawful code
+(domain rule is `a-z0-9_`). The editor selector now lists عادی/سنگین/فوق‌سنگین from the API.
+Verified: typecheck clean once after final source; ALL feature tests 127/127; import/feature/flat-folder/
+test-discovery guards 7/7; live trial on FE:3000 with real traffic (no `/v1` mocks) for the closed-day
+facts, owner options, direct View/Edit and type options; desktop 1440 + 390 screenshots stored (390 has
+`overflowX 0`). User draft `01a16eeb-70b3-7000-87c2-564c82835496` still revision 2, `updatedAt` 2026-10-24,
+1 region group, pointer `selectionVersion 3`; no Apply, no publication write, no migration reapply
+(214/219 already shared-applied by 221).
+NOT delivered / NOT claimed: Storefront integration (still no live selected-plan consumer), multi-owner
+list (server authorization gap above), and any price/eligibility/activation/readiness statement. Backend
+unchanged; three backend files in `git status` are line-ending-only drift and were NOT staged.
+Active task: NONE. Next: Architect review, then hand the user the trial. STOP_FOR_ARCHITECT;
+Automatic-Next-Task NONE. Elapsed ≈60 min vs the 30-minute box — recorded, NOT a process PASS. TB185 paused,
+default-OFF, PendingAllocation preserved.
 ## CURRENT —221 bounded ADMIN USER TRIAL READY; WAIT FOR USER FEEDBACK —2026-10-25
 
 Architect reviewed443c75817dca4d84065be73c4089fd29e9a96eba against87a138a224a3f12b3f1e4b481a9e4cc3980f7fd5, production/test diff, live receipts and screenshots01/07/08. Accept for ADMIN USER TRIAL, not full functional/visual/Storefront certification. Worker14 focused tests/typecheck/7 architecture facts green; root did not rerun. Four pre-existing source-size failures untouched.221 elapsed not reported: timing compliance UNKNOWN, not PASS.
