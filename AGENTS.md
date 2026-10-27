@@ -1,3 +1,14 @@
+# CURRENT — corrected235-R1 task envelope and architecture contract —2026-10-27
+
+Same active task TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1; NOT a new implementation task.
+The earlier ef929373 task artifact was malformed: missing BEGIN_TOOBA_TASK, complete routing header and RESULT
+CONTRACT. This corrected issuance supersedes that artifact, preserves implementation scope and adds explicit
+existing Order file/namespace/Contracts/DI/error boundaries. Read corrected TASK.md and235/ARCHITECT-REVIEW.md.
+Resolve ISSUE_COMMIT_CONTAINING_THIS_TASK to THIS corrected issuance before editing. Do not execute two copies.
+No implementation/runtime/gate/schema/data change by this correction. USER reviewwindow/unsavedwork untouched.
+All prior full-owner/coupon/frontend/practical-trial requirements and safety/preservation limits remain binding.
+Active235-R1 only; STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Prior recovery follows.
+
 # CURRENT — 235 PARTIAL reviewed; issued235-R1 per-line validation + coherent preview + actual owner vertical —2026-10-27
 
 Read 235/ARCHITECT-REVIEW.md and TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1/TASK.md.
