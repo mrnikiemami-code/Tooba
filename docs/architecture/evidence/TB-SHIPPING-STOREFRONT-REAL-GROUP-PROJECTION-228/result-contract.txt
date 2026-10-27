@@ -1,0 +1,80 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228
+Parent-Task: TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227
+Repository: mrnikiemami-code/Tooba / Branch: main / Worker-Id: tooba-worker-01
+Reviewed-Source: 02d46d782348963a67966158d4713d860f0dbc73 (fast-forward from a32d99ee4 to d292e88b6;
+the three backend line-ending drifts were never staged)
+Mode: IMPLEMENT_FIRST_REAL_STOREFRONT_GROUP_PROJECTION
+Status: EXECUTED — PARTIAL. Slice A (explicit stored responsibility + type) is real. Slices B (server plan ->
+219 -> one 218 compose) and C (existing storefront cards) are NOT delivered. No live trial, no migration apply,
+no Host restart, no mounted proof, no user visual acceptance.
+Evidence: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/{TASK.md,RESULT.md}
+
+A — EXPLICIT STORED RESPONSIBILITY + TYPE (delivered)
+- `SellerOffer` now owns nullable `FulfillmentResponsibility` (Seller|Platform) and nullable real
+  `FulfillmentShippingTypeId`. Both are `private set`; the ONLY mutation is
+  `AssignFulfillment(responsibility, shippingTypeId, now)`, which leaves legacy listings null (no backfill and
+  no inference from seller id, channel, name or an absent field), refuses an archived offer, refuses a type id
+  without an explicit responsibility, refuses `Guid.Empty`, and clears both parts only on an explicit
+  null+null call. The responsible Seller identity stays the aggregate's own `SellerPartyId`; Platform ownership
+  stays a later trusted edition/tenant decision.
+- ONE additive nullable migration `20261027120000_AddOfferFulfillmentAssignment` (`varchar(16)` + `uuid`).
+  Only the stable id is stored: no type code/label copy, no FK, no cross-module join. WRITTEN, NOT APPLIED to
+  any database (no runner execution, no schema write).
+- ONE batch Contracts read `IOfferFulfillmentAssignmentLookup.GetAssignmentsAsync` (Dtos/Ports only) resolved
+  to the same scoped `OfferStore` instance: a single query for the distinct real offer ids; a missing id is
+  absent, never defaulted.
+- ONE admin write entry `PUT /v1/admin/offers/{offerId}/fulfillment` -> `AssignOfferFulfillmentCommand`.
+  Order is fixed: authorization BEFORE body read, then a presence-aware body reader (absent `responsibility`
+  key ⇒ `offer.fulfillment.body_malformed`; explicit null ⇒ clear), then ISender. It reuses the EXISTING admin
+  panel gate and the EXISTING `fulfillment.manage` permission — no new permission code, no seller route, so a
+  seller gains no right to declare Platform responsibility. A requested type is validated against the real
+  active Fulfillment taxonomy through its Contracts reader; infrastructure failure stays an exception.
+- Hygiene: FA/EN resources + catalogue descriptors for six new codes; Offer manifest un-forbids `Admin/` for
+  Tooba.Offer.Endpoints with an explicit justification (Storefront still forbidden); the endpoint-validator
+  manifest now classifies seven requests (6→7) with the new command as VALIDATOR_REQUIRED.
+
+B — NOT DELIVERED (no server plan builder)
+Nothing yet loads the cart's real offer ids, reads assignments in one batch, partitions the cart by
+(responsible owner + real type + seller boundary), discovers candidate bindings from the real catalog
+(including a service with a NULL option), reads the 219 selected pointer once per distinct owner+binding, and
+calls the 218 composer ONCE for the whole partition. `StorefrontCapturedGroupProjectionComposer`, the 219
+reader and the 220 publication API remain unconsumed. No group is priced, no unassigned/unavailable group is
+surfaced with an explicit reason yet.
+
+C — NOT DELIVERED (no storefront wiring)
+`storefront-shipping.tsx`, the group cards, the delivery card and the horizon helpers are untouched: no
+additive transport, no per-date interval from the stored method week, no default-OFF read opt-in. Because no
+captured candidate is reachable from any transport, `SaveSelectionAsync`/`CommitAsync` still cannot be handed
+one; the intended explicit refusal is therefore NOT added yet and MUST ship together with C so a
+quoted-but-uncommittable candidate can never be disguised as checkout-ready.
+
+PROOF ACTUALLY EXECUTED
+- `dotnet build Tooba.Offer.Endpoints` — 0 errors.
+- `dotnet build Host/Tooba.Host` — 0 errors (48 warnings, all pre-existing in other modules).
+- New focused facts `Tooba.Offer.Tests/Domain/OfferFulfillmentAssignmentTests.cs` — 8/8 pass (default
+  unassigned, both families, Platform+type id, explicit clear, type-without-responsibility refusal, empty id
+  refusal, archived refusal).
+- Full `Tooba.Offer.Tests` — 92/93. The single failure is
+  `OfferArchitectureGuardTests.Extracted_host_surfaces_use_offer_query_gateway_not_persistence`, which reads
+  `Modules/ProductWorkspace/.../GetProductWorkspaceHandler.cs`; that path is absent from git itself, so it is a
+  PRE-EXISTING missing-file drift unrelated to this task. Recorded, not repaired, not hidden.
+- Not run: 119/188/194/full-frontend/backend/solution suites, migration application, browser, live storefront.
+
+LIMITS (honest)
+- Elapsed ≈82 minutes vs the HARD40 box (source stop 25) — NONCOMPLIANT, NOT a process PASS.
+- The user-facing outcome is NOT delivered: the storefront still shows the legacy projection only; no real
+  group plan reaches the existing cards.
+- No user draft, rates, publication pointer, dev actor, catalog or seed touched; no Apply published; no
+  reset/drop/reseed; TB185 stays paused, default-OFF/PendingAllocation preserved.
+- Not claimed: user Visual ACCEPT, checkout certification, selection/commit parity, compact order evidence,
+  price/eligibility/activation/readiness.
+
+NEXT EXACT STEP (Architect)
+1) Apply `20261027120000_AddOfferFulfillmentAssignment` through the real MigrationRunner plan/apply on
+   `store-alpha` after inspecting the actual pending set (no reset/reseed).
+2) Build the server plan (batch assignment read → partition → real catalog bindings → 219 read per owner+binding
+   → ONE 218 compose) and feed each group's OWN result into the existing cards behind a narrow default-OFF read
+   opt-in, adding the explicit captured-plan refusal in SaveSelection/Commit in the SAME change.
+STOP_FOR_ARCHITECT. Automatic-Next-Task NONE. No task 229 envelope.
+END_TOOBA_WORKER_RESULT
