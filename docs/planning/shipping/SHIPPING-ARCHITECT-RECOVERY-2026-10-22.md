@@ -1,3 +1,25 @@
+# CURRENT —230 positive read ACCEPTED; narrow230-R1 failure/display correction issued —2026-10-27
+
+Active: TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1. Root VIEWED actual1440/390 priced cards.
+Configured SingleStore read positive accepted: real group freight120000+packaging5000, actual dates skipFriday,
+second unassigned group survives. This is NOT selection/commit/checkout or user Visual ACCEPT.
+Root found current refresh exception clears pending and re-exposes previous destination quote; same key
+already marked requested then skipped.230-R1 fixes only current failed/retry identity state plus integerIRR
+display(all-zero fraction only) and bidi-safe interval. No another backend/auth/setup/calculator loop.
+Review: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1/TASK.md.
+DEV draft01a17d0d-e033-7000-af43-49a1daa28822 post:standard/heavy; snapshot01a17d0e-0419-7000-b575-f507d2f89abc,
+sourceRevision2/selectionVersion1; Offer0442a1fa-1d95-4b24-b9d9-129fc19942d2 Platformheavy.
+Normal trial buyer01a17cf7-e38d-7000-82a5-00c57929bc54/cart01a17cfd-c1b1-7000-b10d-8cf21258a1cd(v11historical).
+Host5088 retainedtb230build/PID24660historical,FE3000/localpreviewONcount7; reverify not restart needlessly.
+User post/NULL draft untouched.230 evidence publication-write chronology contradictory, do not certify a
+new write solely from prose; actual selected snapshot read quoted. No re-publish for proof.
+228 migrationAPPLIED. Shared immutable capture/compact order-group evidence/nohistoricalrepricing remain
+mandatory/unimplemented. not_ready guard stays; no parity task before narrow repair review.
+Existing cross-ownerlabel/decoder andOfferAPIproof gaps retained, no Marketplace certification.
+225-R2/226 accepted;227empty-note residual;225-R1 lost unsaveduserLOCALedits,no recovery.
+Task-owned browser only;TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below.
+
 # CURRENT — 230 EXECUTED: captured destination refresh + ONE real configured priced read — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230/{RESULT.md,TASK.md}.
