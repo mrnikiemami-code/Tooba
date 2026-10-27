@@ -1,4 +1,22 @@
-# CURRENT — 232-R1 executed: per-group evidence + attempt-only rollback proven — 2026-10-27
+# CURRENT — 232-R1 data repairs accepted; issued232-R2 transaction cleanup — 2026-10-27
+
+Active: TB-SHIPPING-CAPTURED-SELECTION-TRANSACTION-CLEANUP-232-R2.
+Root source-reviewed5c38f9761; review232-R1/ARCHITECT-REVIEW.md and task232-R2/TASK.md in evidence.
+ACCEPTED WITHIN SCOPE: per-group seller/binding/membership evidence, fresh detached captured preflight,
+pending-work refusal, explicit CAS intent, mixed legacy refusal, nonblank coupon unavailable, ordinary rollback.
+Overall232 writer NOT ACCEPTED: both transaction-allocating methods lack disposal; rollback/recovery secondary
+errors can skip cleanup and mask primary error. R2 fixes ONLY this adapter lifetime/failure contract.
+R1 cancellation test pre-cancels before call; NOT write-boundary cancellation proof. R2 real staged cancellation
+and scripted rollback-failure proof required; no generic audit/new engine/233.
+NO frontend/HMR/runtime/Host/FE/live write/shared migration apply. USER VISIBLE review window is USER unsaved
+work: no enumerate/read/automate/reload/close. Local previewON/count7 unchanged; checked-in gatesOFF.
+231/232 migrations WRITTEN/sharedNOTAPPLIED; staleEFsnapshot gap retained. Commit/PaymentDraft not_ready even
+allflagsOFF for captured evidence; no final checkout/payment/history endpoint or activation claim.
+Compact231 accepted; no full JSON/order/historical repricing. Known230emptykey/inflight/cross-ownerdecoderlabels/
+OfferAPI gaps,227mobile residual,225-R1 lost LOCAL edits unrecovered. TB185paused/defaultOFF/PendingAllocation.
+STOP_FOR_ARCHITECT after boundedR2; Automatic-Next-Task NONE. History preserved below.
+
+# HISTORICAL WORKER RESULT — 232-R1 executed: per-group evidence + attempt-only rollback proven — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232-R1/{TASK.md,RESULT.md} and
 232/ARCHITECT-REVIEW.md. Base `71b0e71d4` (local `520c508d7` fast-forwarded; the three pre-existing Shipping
