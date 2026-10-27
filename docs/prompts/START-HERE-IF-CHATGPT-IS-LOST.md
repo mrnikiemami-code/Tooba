@@ -1,3 +1,4 @@
+
 # CURRENT — 233-R2 EXECUTED: real positive submit through the actual process — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2/{TASK.md,RESULT.md}; a correction
@@ -42,7 +43,29 @@ TB185 paused/default-OFF/PendingAllocation.
 NEXT (Architect): issue a bounded slice for AddressBook saved-address authority (real actor, real country code),
 true concurrent advance, and coupon read/selection/commit parity — or accept this as the submit-integration proof.
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
-# SUPERSEDED — 233-R1 EXECUTED PARTIAL: bypass closed + real acceptance wired; positive submit NOT proven — 2026-10-27
+
+
+# CURRENT — 233-R1 NOT ACCEPTED; issued233-R2 source repair + real Submit proof —2026-10-27
+
+Active TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2. Read233-R1/ARCHITECT-REVIEW.md and233-R2/TASK.md.
+Root source-reviewedce7356217: no positive actual submit. NOT accepted as wiring-only. Confirmed DI cycle:
+CheckoutDirectory -> capturedComposer ->217reader factory ->sameDirectory. Build != container resolution.
+Facts groupGUID keys vs planMethodCode keys make positive impossible; same binding also duplicates plan keys.
+ComposeFromFacts checks facts against THEMSELVES instead of command. R2 reader-free SAME composition core,
+stable group key on facts+plan, actual command validation, actual ProcessManager/provider two-group test.
+Trust gaps explicitly open: evidence.Owner/currenttenant, assignment identity/seller, duplicateOffer-line
+dictionary, active catalog, savedAddress ownership/current contents, storedcart version, quote refs, coherentgates.
+Acceptance still outside TransactionScope with no root revision retention: result claim corrected. R2 fixes same
+real acceptance; no new placeholder/parser-only finish, no second pricing/calendar engine.
+231/232 accepted scopes retained. Public Commit/PaymentDraft CLOSED; no frontendHMR/runtime/HostFE/livewrites/
+sharedDDL. USER VISIBLE review window USER unsavedwork: no enumerate/read/automate/reload/close, previewONcount7.
+231/232 migrations sharedNOTAPPLIED/staleEFsnapshotgap retained, checked-in gatesOFF. No checkoutactivation/
+fullJSONperorder/historyrepricing/VisualACCEPT. Known230emptykey/inflight/crossownerlabelsdecoder/OfferAPI,
+227mobile,225-R1lostLOCALwork retained. TB185paused/defaultOFF/PendingAllocation. STOP_FOR_ARCHITECT afterR2,
+Automatic-Next-Task NONE. History retained below.
+
+# HISTORICAL WORKER RESULT — 233-R1 EXECUTED PARTIAL: bypass closed + real acceptance wired; positive submit NOT proven — 2026-10-27
+
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1/{TASK.md,RESULT.md}.
 Base `388ca996f`. Status: **EXECUTED — PARTIAL**, NOT accepted, no user Visual ACCEPT, no live/HTTP/browser run,

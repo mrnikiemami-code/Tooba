@@ -1,8 +1,3 @@
-# TASK — TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2
-
-Verbatim task (Bridge `tooba-main`, worker `tooba-worker-01`, parent `TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1`):
-
-```text
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 Task-ID: TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2
 Parent-Task: TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1
@@ -29,15 +24,14 @@ Mandatory positive TWO sellers SAME Store binding/sharedSnapshot, distinct persi
 Build the one fixture FIRST; if it cannot reach positive inside source28, STOP with exact failing call/stack, not another set of parser facts. Do not claim PASS or partial source acceptance merely from build.
 
 TRUST/ATOMICITY REPAIRS IN SAME ACCEPTANCE (no new product features)
-
-Require coherent Enabled+SelectionEnabled+CheckoutEnabled+valid date count for captured route; inactive/unset tenant/edition or missing optional DI authority => typed refusal, no null-reference/default.
-Compare stored.CartVersion with authoritative current cart and command.ExpectedCartVersion. Compare EVERY stored evidence owner to actual active Store tenant EXACT Ordinal; don't merely derive tenant. No Seller/Marketplace inference.
-Verify assignment dictionary key+OfferId+SellerPartyId against actual cart; reject null/missing/foreign/contradictory answers; lawful same-offer multiple lines supported. Verify batched types no duplicate/foreign answers and active exact id. Verify saved service/option active in real Shipping catalog (NULL option identity exact, no post:standard guess). Reuse existing canonical typed StorefrontCapturedPublicationBinding cache key; don't invent delimiter owner identity.
-Re-read stored.SavedAddressId through existing AddressBook Contracts using the real authorized actor when present; verify its current country/province/city/postal/recipient snapshot against what would actually persist and against unique priced destination. Command display strings alone are NOT server address authority. Do NOT inject StorefrontCheckoutService into directory (cycle). Unsaved address also must equal the accepted stored address and resolve exact destination. Never invent country: use existing trusted country resolution and test the actual country-code parameter; current countryCode:null may not be assumed a successful lookup by a permissive fake. Unsupported service area refuses.
-Check quote/pointer owner-bound snapshot/draft/revision/format/type + all money/date/ticks/timezone/minmax against accepted evidence; no silent rewrite. Preserve coupon-unavailable/Manual-only/unknown measurements.
-Move acceptance into existing CheckoutProcessManager TransactionScope BEFORE reservation and hold/check the Order root expected SelectionRevision through persistence (narrow Order-row lock/CAS, no nested transaction). No foreign schema FK/DbContext, no distributed Shipping lock/serializability claim. Document point-in-time pointer validation precisely.
-Materialize ONLY validated server groups on captured path, never raw caller evidence fallback. Existing true legacy path behavior remains, own-Order probe allowed; no foreign calls for genuine legacy.
-Keep idempotency/access check FIRST: repeat an existing authorized order returns its ORIGINAL evidence after pointer change, no new quote/reservation/order.
+- Require coherent Enabled+SelectionEnabled+CheckoutEnabled+valid date count for captured route; inactive/unset tenant/edition or missing optional DI authority => typed refusal, no null-reference/default.
+- Compare stored.CartVersion with authoritative current cart and command.ExpectedCartVersion. Compare EVERY stored evidence owner to actual active Store tenant EXACT Ordinal; don't merely derive tenant. No Seller/Marketplace inference.
+- Verify assignment dictionary key+OfferId+SellerPartyId against actual cart; reject null/missing/foreign/contradictory answers; lawful same-offer multiple lines supported. Verify batched types no duplicate/foreign answers and active exact id. Verify saved service/option active in real Shipping catalog (NULL option identity exact, no post:standard guess). Reuse existing canonical typed StorefrontCapturedPublicationBinding cache key; don't invent delimiter owner identity.
+- Re-read stored.SavedAddressId through existing AddressBook Contracts using the real authorized actor when present; verify its current country/province/city/postal/recipient snapshot against what would actually persist and against unique priced destination. Command display strings alone are NOT server address authority. Do NOT inject StorefrontCheckoutService into directory (cycle). Unsaved address also must equal the accepted stored address and resolve exact destination. Never invent country: use existing trusted country resolution and test the actual country-code parameter; current countryCode:null may not be assumed a successful lookup by a permissive fake. Unsupported service area refuses.
+- Check quote/pointer owner-bound snapshot/draft/revision/format/type + all money/date/ticks/timezone/minmax against accepted evidence; no silent rewrite. Preserve coupon-unavailable/Manual-only/unknown measurements.
+- Move acceptance into existing CheckoutProcessManager TransactionScope BEFORE reservation and hold/check the Order root expected SelectionRevision through persistence (narrow Order-row lock/CAS, no nested transaction). No foreign schema FK/DbContext, no distributed Shipping lock/serializability claim. Document point-in-time pointer validation precisely.
+- Materialize ONLY validated server groups on captured path, never raw caller evidence fallback. Existing true legacy path behavior remains, own-Order probe allowed; no foreign calls for genuine legacy.
+- Keep idempotency/access check FIRST: repeat an existing authorized order returns its ORIGINAL evidence after pointer change, no new quote/reservation/order.
 
 FOCUSED PROOF GATES (same fixture, no broad replay)
 A actual DI scoped resolution + wrong facts cart/version rejection.
@@ -51,4 +45,3 @@ FINISH / PRESERVE
 No frontend/HMR/browser/HostFE runtime rebuild/restart, no live cart/address/assignment/draft/pointer/payment write, no shared migration apply/schema/baseline edit. 231/232 migrations sharedNOTAPPLIED, staleEFsnapshot disclosed.
 USER VISIBLE review window is USER unsaved work: never enumerate/read/automate/reload/close; localpreviewONcount7 unchanged. Public Commit/PaymentDraft not_ready; no StartPayment/payment-provider activation, no full checkout/VisualACCEPT claim.
 Task verbatim+RESULT in task folder; append233-R1RESULT correction on actual source blockers; ALL3recoveryTOPs precise. Exactpathscommit/push/fetch, no amend/force/reset/stash/rebase; leave CRLFdrift. Real counts/timing/remaining failures; STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. Known230emptykey/inflight/cross-ownerdecoderlabels/OfferAPI/227residual/225-R1lostLOCALwork retained. TB185paused/defaultOFF/PendingAllocation.
-```
