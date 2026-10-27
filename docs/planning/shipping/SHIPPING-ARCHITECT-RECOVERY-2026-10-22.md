@@ -1,8 +1,8 @@
 # CURRENT — 233-R3 executed: real country/address authority + corrected real submit proof —2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-ADDRESS-BINDING-AND-PROOF-233-R3/{TASK.md,RESULT.md}.
-Status EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base2218873b9; elapsed≈48min vs HARD40 —
-recorded NONCOMPLIANT. Final acceptance resolves a canonical NONBLANK ISO country from CURRENT trusted country
+Status EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base2218873b9; elapsed≈20min from the
+Bridge claim(17:06:43Z) to report — inside HARD40, source/final split not timed; one-correction budget exceeded. Final acceptance resolves a canonical NONBLANK ISO country from CURRENT trusted country
 data matching the priced stored country id (unique match else destination_unverified; no IR literal, no
 first-country, no label guess) and passes it to ResolveLegacyAsync; resolved country/area/city ids must equal the
 stored priced destination and serviceArea stays explicitly unsupported. SavedAddressId is read through

@@ -6,10 +6,10 @@ Status: **EXECUTED**, NOT accepted by the Architect, **NO user Visual ACCEPT**, 
 frontend/HMR/browser/Host-FE/runtime change, no live storefront/API/business write, no shared migration apply,
 no schema/baseline edit.
 
-Elapsed ≈48 min measured from the first BRIDGE-WAKE that delivered this task (≈20:06) to the report (≈20:54),
-plus the resumed run from ≈20:33, vs HARD40/source25/final15 — recorded **NONCOMPLIANT**, not a process PASS.
-One correction budget was already consumed by compile/fixture fixes (see *Corrections*, honestly listed as more
-than one in-task fix round).
+Elapsed ≈20 min wall-clock from the Bridge claim (`17:06:43Z` = 20:36:43 local) to this report (≈20:57 local) vs
+HARD40 — inside the limit; the requested source25/final15 split was **not** independently timed, so no split
+compliance is claimed. The single-correction budget was exceeded by compile/fixture fix rounds (see *Corrections*),
+which is a process noncompliance even though the clock was inside HARD40.
 
 ---
 
