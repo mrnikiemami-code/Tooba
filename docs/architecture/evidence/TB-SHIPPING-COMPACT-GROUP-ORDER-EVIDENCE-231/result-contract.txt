@@ -1,0 +1,72 @@
+TASK: TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231
+STATUS: EXECUTED — PARTIAL (storage + transfer slice only; no live writer, no captured checkout)
+BASE: 5a3070567
+COMMIT: 6e0e41c53e743a971c903f374e4d85bb9f183328 (pushed, origin/main == HEAD)
+MODE: EXISTING_ORDER_GROUP_COMPACT_CAPTURE_EVIDENCE
+ELAPSED: ~16 min vs HARD35; one correction round. NOT a process PASS.
+
+A — ONE cohesive Order-owned compact value (Order.Domain/Checkout/ShippingGroupAcceptedEvidence.cs):
+   refs SnapshotId, DraftId, SourceRevision, FormatVersion (only 1 accepted), SelectionVersion, matched
+   AreaGroupId + RateRowId, optional ShippingTypeId, optional existing OfferFulfillmentResponsibility (unknown
+   stays null, never inferred); accepted Freight / Packaging / Currency / PayableAtCheckout / CarrierCollect as
+   exact decimals; accepted ReceivingStart/End + TimeZone + optional Min/Max delivery days.
+   All-or-none: null (legacy) or complete. Create refuses empty ids, nonpositive revision/token/version,
+   unsupported format, undefined enum, negative money, non-3-letter currency, inverted interval, empty
+   timezone, half/inverted days — BEFORE any mutation, stable shipping.group.evidence.* faults. No id,
+   timezone, owner invented; no amount clamped or recomputed; no HTTP/DTO accepting evidence from a browser.
+   Wiring is the EXISTING path: CartShippingDraftGroup.AcceptedEvidence + ReplaceAcceptedEvidence (refuses
+   currency/payable mismatch, replaces only that group), trailing optional OrderShippingGroupPlan
+   .AcceptedEvidence, OrderShippingGroup.Create stores privately (no public mutation), and
+   StorefrontShippingService.BuildOrderGroupPlans carries it. No Shipping.Domain/Infra reference, no new quote
+   authority, no Payment/Settlement payer change.
+
+B — storage: additive migration 20261027150000_AddShippingGroupAcceptedEvidence adds the SAME 19 nullable
+   accepted_* columns to EXISTING order.cart_shipping_groups and order.order_shipping_groups, plus ONE small
+   ix_order_shipping_groups_accepted_snapshot_id. No cross-module FK, no snapshot copy, no history subsystem,
+   no backfill (legacy rows stay NULL). Measured (information_schema): 19 scalar columns per group row each
+   table, ZERO json/jsonb, constant size per GROUP not per line. Owner/method/charge/currency/dates/lead-days
+   REUSED from existing columns. Migration WRITTEN, NOT applied to tooba_alpha/store-alpha or any shared
+   instance; it exists only on the task-owned disposable DB (removed after proof). OrderDbContextModelSnapshot
+   left byte-identical: the EF tool re-scaffolded the pre-existing stale baseline, so that migration was
+   deleted; the hand-written additive SQL follows the 20261016 precedent. No existing migration edited, no
+   baseline regenerated.
+
+C — proof on ONE task-owned disposable PostgreSQL 127.0.0.1:15433/order_tb231/tb231 (postgres:17-alpine;
+   identity verified current_user=tb231 / current_database=order_tb231 BEFORE DDL; normal Order migration chain;
+   container stopped+removed, port silent). TOOBA_TB231_ORDER_POSTGRES fails closed on missing/foreign target.
+   21/21 focused facts: two groups on ONE SnapshotId keep distinct area/row/money/date through the real
+   materializer AND persist/readback with unchanged group/line membership; a later draft replacement (new
+   snapshot/amount/selection version) never rewrites the stored order's old snapshot reference, freight,
+   packaging, receiving start or selection version (read uses Order storage only, no Shipping draft/pointer);
+   legacy groups persist NULL evidence with their original charge; 15 invalid/partial + incoherent
+   currency/payable cases refuse before any mutation (AcceptedEvidence still null, UpdatedAt untouched);
+   storage shape = 19 nullable accepted_* columns, 0 json/jsonb, one snapshot index. Unchanged
+   OrderShippingGroupMaterializerTests re-run 9/9. Order.Infrastructure / Order.Tests / Host build 0 errors.
+   Not run: whole Order suite, 119/188/194, frontend, guard wildcard loops.
+
+D — FIRST USER HANDOFF (bounded, no new setup): local preview runtime left untouched (Host 5088 PID 24660,
+   FE 3000 PID 28288, preview ON/count7; no rebuild, restart, migration or write). ONE VISIBLE installed-Chrome
+   window opened with the EXISTING task-owned profile D:\temp\tb229r2-chrome on
+   http://127.0.0.1:3000/fa/shipping (PID 34788) after stopping ONLY that verified profile's own headless
+   browser (PID 33524 / port 9336) — never a user browser, never kill-by-name. Existing normal logged-in
+   session/cart is what the user inspects; no password/token in message or git; no destination/address/cart/
+   rate changed. That is the dedicated REVIEW window: not automated, reloaded or tab-enumerated afterwards.
+   All 231 proof used the isolated DB, never that window or the live runtime.
+
+HONEST GAPS: no production writer composes evidence yet, so every real draft/order group stores NULL and
+SaveSelection/Commit still refuse with storefront.captured_preview.not_ready (unchanged); no historical reader
+endpoint exists ("no mutable Shipping draft needed" is a storage fact, not an implemented read); the compact
+value deliberately stores no week/region/rate-condition/translation copy; retained and NOT fixed: 230-R1
+empty-key destination failure/retry gap + in-flight new-key wait, cross-owner label map/decoder id-coercion
+limits, Offer API proof gaps, 227 mobile empty-note residual, unrecovered 225-R1 user LOCAL tab edit loss;
+SingleStore trial does not certify Marketplace.
+
+EVIDENCE: docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231/{RESULT.md,RECEIPTS.md}
+TOP RECOVERY UPDATED: AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md,
+docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md
+
+NEXT (Architect): trusted server composer (selected captured revision + cart/version + Offer/type/quote/date
+revalidation) writing this evidence inside the existing atomic draft/order boundary, then the Order-storage-only
+historical read; captured checkout stays not_ready until then.
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused, default-OFF, PendingAllocation preserved.
+No user Visual ACCEPT claimed.
