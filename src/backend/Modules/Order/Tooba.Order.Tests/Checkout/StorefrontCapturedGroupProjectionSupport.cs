@@ -43,6 +43,9 @@ internal sealed class RecordingCapturedQuoteLookup : IShippingCapturedRevisionQu
 
     internal CancellationToken? LastToken { get; private set; }
 
+    /// <summary>نسخهٔ قالبِ پاسخ کنترل‌شده (برای کنترل منفیِ «نقل‌قول متناقض»).</summary>
+    internal int FormatVersion { get; set; } = 1;
+
     public Task<Result<ShippingCapturedQuoteResult>> QuoteAsync(
         ShippingCapturedQuoteLookupRequest request,
         CancellationToken cancellationToken)

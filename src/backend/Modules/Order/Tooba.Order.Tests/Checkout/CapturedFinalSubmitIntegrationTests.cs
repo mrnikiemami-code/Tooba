@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Tooba.AddressBook.Contracts.Dtos;
+using Tooba.AddressBook.Contracts.Ports;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Catalog.Contracts.Checkout;
@@ -14,9 +16,12 @@ using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 using Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
 using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Order.Contracts.Storefront;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Promotion.Contracts.Checkout;
@@ -31,13 +36,21 @@ using Xunit;
 namespace Tooba.Order.Tests.Checkout;
 
 /// <summary>
-/// TB-233-R2: the ONE real positive captured submit through the ACTUAL
+/// TB-233-R3: the ONE coherent captured submit through the ACTUAL
 /// <see cref="CheckoutDirectory.SubmitAsync"/> path on the task-owned disposable PostgreSQL.
 /// </summary>
 /// <remarks>
-/// Reservation/conversion are clearly labelled controlled Contracts (no live Inventory/Cart module is
-/// contacted); Order persistence, <see cref="OrderDbContext"/>, migrations, the quote path and the
-/// captured acceptance are real.
+/// <para>
+/// <b>Controlled Contracts vs real Order.</b> Reservation/conversion, Pricing/Promotion/Tax, the 216 quote,
+/// the 219 pointer, the 228 assignment, the Fulfillment catalog, Geography and AddressBook are clearly
+/// labelled controlled Contracts; <see cref="OrderDbContext"/>, migrations, the real quote/promotion/tax
+/// composition, the captured acceptance and Order persistence are real.
+/// </para>
+/// <para>
+/// <b>One binding.</b> Both sellers use the SAME Store service/option, one shared immutable snapshot, one
+/// draft/revision and the SAME destination area group; independence is each group's own rate row, fee and
+/// chosen date/hour on ONE shared receiving week.
+/// </para>
 /// </remarks>
 [Collection(OrderEvidenceRelationalCollection.Name)]
 public sealed class CapturedFinalSubmitIntegrationTests
@@ -52,26 +65,32 @@ public sealed class CapturedFinalSubmitIntegrationTests
     private static readonly Guid LineB = Guid.Parse("01a17cfd-0000-7000-8000-00000000000b");
     private static readonly Guid DraftGroupA = Guid.Parse("01a17d0f-0000-7000-8000-0000000000a1");
     private static readonly Guid DraftGroupB = Guid.Parse("01a17d0f-0000-7000-8000-0000000000b2");
-    private static readonly Guid AreaA = Guid.Parse("01a17d10-0000-7000-8000-0000000000a1");
-    private static readonly Guid AreaB = Guid.Parse("01a17d10-0000-7000-8000-0000000000b2");
+    // همان ناحیه برای همان مقصد: تفاوت مستقل گروه، ردیف نرخ/کارمزد/تاریخ خودش است.
+    private static readonly Guid AreaGroup = Guid.Parse("01a17d10-0000-7000-8000-0000000000a1");
     private static readonly Guid RowA = Guid.Parse("01a17d11-0000-7000-8000-0000000000a1");
     private static readonly Guid RowB = Guid.Parse("01a17d11-0000-7000-8000-0000000000b2");
     private static readonly Guid SnapshotId = Guid.Parse("01a17d0e-0419-7000-b500-0000000000a1");
     private static readonly Guid ShippingTypeId = Guid.Parse("01a1785e-01f3-7000-b500-0000000000c1");
     private static readonly Guid CountryId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d1");
+    private static readonly Guid OtherCountryId = Guid.Parse("e3451206-e503-51a8-9100-0000000000e1");
     private static readonly Guid ProvinceId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d2");
     private static readonly Guid CityId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d3");
+    private static readonly Guid SavedAddressId = Guid.Parse("01a17d13-0000-7000-8000-0000000000f1");
     private static readonly DateTimeOffset Now = new(2026, 10, 25, 9, 30, 0, TimeSpan.Zero);
-    private static readonly DateOnly ReceivingDate = new(2026, 10, 27);
-    private static readonly long OpenTicks = new TimeOnly(9, 0).Ticks;
-    private static readonly long CloseTicks = new TimeOnly(17, 0).Ticks;
+    private static readonly DateOnly DateA = new(2026, 10, 27); // سه‌شنبه
+    private static readonly DateOnly DateB = new(2026, 10, 28); // چهارشنبه
+    private static readonly long OpenTicksA = new TimeOnly(9, 0, 0).Ticks + 1_234_567L;
+    private static readonly long CloseTicksA = new TimeOnly(17, 0, 0).Ticks + 7_654_321L;
+    private static readonly long OpenTicksB = new TimeOnly(10, 0, 0).Ticks + 5_000_000L;
+    private static readonly long CloseTicksB = new TimeOnly(18, 0, 0).Ticks + 2_500_000L;
 
     /// <summary>
-    /// دو فروشنده روی <b>همان</b> Binding فروشگاهی: گروه‌های persist‌شدهٔ جدا، snapshot مشترک،
-    /// منطقه/ردیف/تاریخ/مبلغ مستقل. مبلغ کالای نهایی ۹۹/۱۹۸ باید به همان دو فراخوان ۲۱۶ برسد.
+    /// دو فروشنده روی <b>همان</b> Binding و همان snapshot/پیش‌نویس/بازبینی و همان ناحیهٔ مقصد:
+    /// دو ردیف نرخ مستقل (بر اساس مبلغ کالای هر گروه)، دو تاریخ قانونی متفاوت از <b>یک</b> هفتهٔ
+    /// ذخیره‌شده با ساعت‌های کسری ۱۰۰نانوثانیه‌ای، و مبلغ کالای واقعی ۱۰۰−۱۰+۹=۹۹ و ۲۰۰−۲۰+۱۸=۱۹۸.
     /// </summary>
     [Fact]
-    public async Task Two_sellers_on_one_binding_submit_real_persisted_groups_and_evidence()
+    public async Task Two_sellers_on_one_binding_submit_real_persisted_groups_with_their_own_row_date_and_ticks()
     {
         var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
         await using var db = await ReadyAsync(target);
@@ -95,6 +114,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         Assert.Equal(2, groups.Length);
         var groupA = Assert.Single(groups, x => x.ShippingGroupId == DraftGroupA);
         var groupB = Assert.Single(groups, x => x.ShippingGroupId == DraftGroupB);
+        // کارمزد پرداختنی هر گروه همان نقل‌قول خودش است.
         Assert.Equal(125m, groupA.ShippingChargeSnapshot);
         Assert.Equal(75m, groupB.ShippingChargeSnapshot);
         Assert.Single(groupA.Lines);
@@ -105,28 +125,51 @@ public sealed class CapturedFinalSubmitIntegrationTests
 
         var evidenceA = Assert.IsType<ShippingGroupAcceptedEvidence>(groupA.AcceptedEvidence);
         var evidenceB = Assert.IsType<ShippingGroupAcceptedEvidence>(groupB.AcceptedEvidence);
+        // یک snapshot/پیش‌نویس/بازبینی مشترک، مالک Store همان tenant فعال.
+        Assert.Equal(SnapshotId, evidenceA.SnapshotId);
+        Assert.Equal(SnapshotId, evidenceB.SnapshotId);
+        Assert.Equal(CartId, evidenceA.DraftId);
+        Assert.Equal(2L, evidenceA.SourceRevision);
+        Assert.Equal(1L, evidenceA.SelectionVersion);
         Assert.Equal(ShippingGroupOwnerKind.Store, evidenceA.Owner.Kind);
         Assert.Equal("store-alpha", evidenceA.Owner.TenantKey);
         Assert.Equal("store-alpha", evidenceB.Owner.TenantKey);
-        Assert.Equal(SnapshotId, evidenceA.SnapshotId);
-        Assert.Equal(SnapshotId, evidenceB.SnapshotId);
-        Assert.Equal(1L, evidenceA.SelectionVersion);
-        Assert.Equal(ReceivingDate, evidenceA.ReceivingDate);
-        Assert.Equal(OpenTicks, evidenceA.ReceivingOpenTicks);
-        Assert.Equal(CloseTicks, evidenceA.ReceivingCloseTicks);
-        Assert.Equal("UTC", evidenceA.ReceivingTimeZone);
+        Assert.Null(evidenceA.Owner.SellerPartyId);
+        // همان ناحیهٔ مقصد، ولی ردیف نرخ هر گروه مستقل است.
+        Assert.Equal(AreaGroup, evidenceA.AreaGroupId);
+        Assert.Equal(AreaGroup, evidenceB.AreaGroupId);
+        Assert.Equal(RowA, evidenceA.RateRowId);
+        Assert.Equal(RowB, evidenceB.RateRowId);
+        // مبلغ/تاریخ/ساعت مستقل هر گروه، با تیک‌های کسری دقیق.
         Assert.Equal(120m, evidenceA.FreightAmount);
         Assert.Equal(5m, evidenceA.PackagingAmount);
+        Assert.Equal(125m, evidenceA.PayableAtCheckoutAmount);
         Assert.Equal(0m, evidenceA.CarrierCollectAmount);
+        Assert.Equal(DateA, evidenceA.ReceivingDate);
+        Assert.Equal(OpenTicksA, evidenceA.ReceivingOpenTicks);
+        Assert.Equal(CloseTicksA, evidenceA.ReceivingCloseTicks);
         Assert.Equal(70m, evidenceB.FreightAmount);
+        Assert.Equal(75m, evidenceB.PayableAtCheckoutAmount);
+        Assert.Equal(DateB, evidenceB.ReceivingDate);
+        Assert.Equal(OpenTicksB, evidenceB.ReceivingOpenTicks);
+        Assert.Equal(CloseTicksB, evidenceB.ReceivingCloseTicks);
+        Assert.Equal("UTC", evidenceA.ReceivingTimeZone);
+        Assert.Equal("UTC", evidenceB.ReceivingTimeZone);
 
-        // همان دو فراخوان ۲۱۶ با مبلغ کالای نهایی همان گروه؛ بدون Preview/217 دوم.
+        // دقیقاً یک خواندن ۲۱۹ برای همان Binding مشترک و دو نقل‌قول ۲۱۶ با مبلغ کالای واقعی.
+        Assert.Equal(1, harness.PointerCalls);
         Assert.Equal(2, harness.Quotes.Calls);
         Assert.Equal(
             new[] { 99m, 198m },
-            harness.Quotes.Requests.Select(x => x.FinalGroupGoodsAmountAfterDiscountAndTax!.Value).OrderBy(x => x).ToArray());
+            harness.Quotes.Requests
+                .Select(x => x.FinalGroupGoodsAmountAfterDiscountAndTax!.Value)
+                .OrderBy(x => x)
+                .ToArray());
         Assert.Equal(1, harness.AssignmentCalls);
-        Assert.Equal(2, harness.PointerCalls);
+        Assert.Equal(1, harness.CatalogCalls);
+        // کشور متعارف غیرتهی به Geography داده شده است، نه null.
+        Assert.Equal("IR", harness.Geography.LastCountryCode);
+
         Assert.Equal(1, harness.Reservation.Calls);
         Assert.Equal(1, harness.Conversion.Calls);
         Assert.Equal(new[] { LineA, LineB }, harness.Reservation.LastLines.OrderBy(x => x).ToArray());
@@ -149,16 +192,47 @@ public sealed class CapturedFinalSubmitIntegrationTests
         Assert.Equal(2, order.Lines.Count);
     }
 
-    /// <summary>ناسازگاری دروازه/مالک/اشاره‌گر/مبلغ/تاریخ/نسخه/کوپن پیش از هر رزرو/سفارش/تبدیل رد می‌شود.</summary>
+    /// <summary>آدرس ذخیره‌شدهٔ خودی و بدون تغییر در ثبت نهایی پذیرفته و همان رکورد خوانده می‌شود.</summary>
+    [Fact]
+    public async Task An_owned_unchanged_saved_address_is_accepted_and_read_once()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await ReadyAsync(target);
+        using var harness = new CapturedSubmitHarness(db);
+
+        await SeedTwoGroupDraftAsync(db, savedAddressId: SavedAddressId);
+        var snapshot = await harness.Directory.SubmitAsync(
+            harness.Command(expectedSelectionRevision: "1"),
+            CancellationToken.None);
+
+        Assert.Equal(2, snapshot.SellerOrders.Count);
+        Assert.Equal(1, harness.Addresses.Calls);
+        Assert.Equal(Buyer, harness.Addresses.LastActor);
+        Assert.Equal(SavedAddressId, harness.Addresses.LastAddressId);
+    }
+
+    /// <summary>
+    /// ناسازگاری دروازه/مالک/اشاره‌گر/مبلغ/تاریخ/نشانی/کشور/فهرست فعال/نسخهٔ قالب/کوپن/نسخهٔ ریشه
+    /// با <b>کد دقیق مالک</b> و پیش از هر رزرو/سفارش/تبدیل رد می‌شود.
+    /// </summary>
     [Theory]
-    [InlineData("gate")]
-    [InlineData("owner")]
-    [InlineData("pointer")]
-    [InlineData("amount")]
-    [InlineData("date")]
-    [InlineData("coupon")]
-    [InlineData("root")]
-    public async Task Incoherent_captured_submit_is_refused_before_reservation(string scenario)
+    [InlineData("gate", "storefront.captured_preview.not_ready")]
+    [InlineData("owner", "storefront.captured_selection.conflict")]
+    [InlineData("pointer", "storefront.captured_selection.conflict")]
+    [InlineData("amount", "storefront.captured_selection.conflict")]
+    [InlineData("date", "storefront.captured_selection.conflict")]
+    [InlineData("root", "storefront.captured_selection.conflict")]
+    [InlineData("format", "storefront.captured_selection.conflict")]
+    [InlineData("coupon", "storefront.captured_selection.coupon_unavailable")]
+    [InlineData("address-missing", "storefront.captured_selection.destination_unverified")]
+    [InlineData("address-foreign", "storefront.captured_selection.destination_unverified")]
+    [InlineData("address-edited", "storefront.captured_selection.destination_unverified")]
+    [InlineData("country", "storefront.captured_selection.destination_unverified")]
+    [InlineData("command-address", "storefront.captured_selection.destination_unverified")]
+    [InlineData("binding-inactive", "storefront.captured_selection.unavailable")]
+    [InlineData("binding-option-inactive", "storefront.captured_selection.unavailable")]
+    [InlineData("authority-missing", "storefront.captured_selection.unavailable")]
+    public async Task Incoherent_captured_submit_is_refused_with_the_exact_owning_code(string scenario, string code)
     {
         var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
         await using var db = await ReadyAsync(target);
@@ -166,28 +240,63 @@ public sealed class CapturedFinalSubmitIntegrationTests
             db,
             checkoutEnabled: scenario != "gate",
             freightA: scenario == "amount" ? 130m : null,
-            quoteCloseHour: scenario == "date" ? 16 : 17,
-            pointerRevision: scenario == "pointer" ? 3 : 2);
+            withAddressBook: scenario != "authority-missing");
 
-        await SeedTwoGroupDraftAsync(db, mutate: scenario);
+        await SeedTwoGroupDraftAsync(
+            db,
+            mutate: scenario,
+            savedAddressId: SavedAddressId);
+
+        switch (scenario)
+        {
+            case "pointer":
+                harness.Pointers.Revision = 7;
+                break;
+            case "format":
+                harness.Quotes.FormatVersion = 2;
+                break;
+            case "address-missing":
+                harness.Addresses.Drop = true;
+                break;
+            case "address-foreign":
+                harness.Addresses.ActorMismatch = true;
+                break;
+            case "address-edited":
+                harness.Addresses.ChangePostalAddress = true;
+                break;
+            case "country":
+                harness.Geography.HidePricedCountry = true;
+                break;
+            case "binding-inactive":
+                harness.ShippingCatalog.Active = false;
+                break;
+            case "binding-option-inactive":
+                harness.ShippingCatalog.OptionActive = false;
+                break;
+        }
 
         var error = await Assert.ThrowsAsync<ContractOperationException>(() =>
             harness.Directory.SubmitAsync(
                 harness.Command(
                     expectedSelectionRevision: "1",
-                    coupon: scenario == "coupon" ? "OFF10" : null),
+                    coupon: scenario == "coupon" ? "OFF10" : null,
+                    postalCode: scenario == "command-address" ? "9999999999" : null),
                 CancellationToken.None));
 
-        Assert.False(string.IsNullOrWhiteSpace(error.Code));
+        Assert.Equal(code, error.Code);
         Assert.Equal(0, harness.Reservation.Calls);
         Assert.Equal(0, harness.Conversion.Calls);
         db.ChangeTracker.Clear();
         Assert.False(await db.Checkouts.AnyAsync(x => x.CartId == CartId));
+        Assert.Equal(0, await db.Set<OrderShippingGroup>().CountAsync());
     }
 
-    /// <summary>تکرار همان ارسال پس از تغییر اشاره‌گر، همان سفارش و همان شاهد اصلی را برمی‌گرداند.</summary>
+    /// <summary>
+    /// تکرار همان ارسال پس از <b>تغییر واقعی</b> اشاره‌گر ۲۱۹: بدون خواندن دوبارهٔ اشاره‌گر/نقل‌قول،
+    /// بدون رزرو/سفارش دوم و با همان شاهد تاریخی پایدار.
+    /// </summary>
     [Fact]
-    public async Task A_repeat_submit_returns_the_original_checkout_and_evidence_without_requoting()
+    public async Task A_repeat_submit_after_the_pointer_moved_returns_the_original_checkout_and_evidence()
     {
         var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
         await using var db = await ReadyAsync(target);
@@ -199,16 +308,31 @@ public sealed class CapturedFinalSubmitIntegrationTests
         var quotesAfterFirst = harness.Quotes.Calls;
         var pointersAfterFirst = harness.PointerCalls;
 
+        // انتشار واقعاً جلو می‌رود: اشاره‌گر ۲۱۹ دیگر همان بازبینی قبلی نیست.
+        harness.Pointers.Revision = 9;
         var second = await harness.Directory.SubmitAsync(command, CancellationToken.None);
 
         Assert.Equal(first.CheckoutId, second.CheckoutId);
-        Assert.Equal(2, second.ShippingGroups.Count);
-        Assert.Equal(first.ShippingGroups.Select(x => x.ShippingGroupId).Order().ToArray(), second.ShippingGroups.Select(x => x.ShippingGroupId).Order().ToArray());
+        Assert.Equal(
+            first.ShippingGroups.Select(x => x.ShippingGroupId).Order().ToArray(),
+            second.ShippingGroups.Select(x => x.ShippingGroupId).Order().ToArray());
         Assert.Equal(quotesAfterFirst, harness.Quotes.Calls);
         Assert.Equal(pointersAfterFirst, harness.PointerCalls);
         Assert.Equal(1, harness.Reservation.Calls);
+        // تبدیل سبد در مسیر تکرار idempotent بازهم reconcile می‌شود؛ ادعای این تست فقط
+        // «بدون خواندن دوبارهٔ اشاره‌گر/نقل‌قول، بدون رزرو/سفارش دوم» است.
+        Assert.True(harness.Conversion.Calls >= 1);
+
         db.ChangeTracker.Clear();
         Assert.Equal(1, await db.Checkouts.CountAsync(x => x.CartId == CartId));
+        var groups = await db.Set<OrderShippingGroup>()
+            .Where(x => x.CheckoutId == first.CheckoutId)
+            .ToListAsync();
+        Assert.Equal(2, groups.Count);
+        // شاهد پایدار همان بازبینی تاریخی است؛ اشاره‌گر جدید آن را بازنویسی نمی‌کند.
+        Assert.All(groups, group => Assert.Equal(2L, group.AcceptedEvidence!.SourceRevision));
+        Assert.Equal(DateA, groups.Single(x => x.ShippingGroupId == DraftGroupA).AcceptedEvidence!.ReceivingDate);
+        Assert.Equal(DateB, groups.Single(x => x.ShippingGroupId == DraftGroupB).AcceptedEvidence!.ReceivingDate);
     }
 
     /// <summary>شکست سد پس از نوشتن سفارش، هیچ گروه/شاهد فشرده‌ای را پایدار نمی‌کند.</summary>
@@ -217,7 +341,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     {
         var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
         await using var db = await ReadyAsync(target);
-        var failure = new InvalidOperationException("tb233r2-barrier");
+        var failure = new InvalidOperationException("tb233r3-barrier");
         using var harness = new CapturedSubmitHarness(db, barrier: new FailingBarrier(failure));
 
         await SeedTwoGroupDraftAsync(db);
@@ -228,6 +352,199 @@ public sealed class CapturedFinalSubmitIntegrationTests
         db.ChangeTracker.Clear();
         Assert.Equal(0, await db.Checkouts.CountAsync(x => x.CartId == CartId));
         Assert.Equal(0, await db.Set<OrderShippingGroup>().CountAsync());
+    }
+
+    /// <summary>
+    /// TB-233-R3: آماده‌سازی، شناسهٔ واقعی آدرس ذخیره‌شده را فقط در منشأ <b>فقط-سرور</b> نگه می‌دارد و
+    /// تصویر snapshot قدیمی (<c>Shipping.SavedAddressId</c>) همان معنای تهی قبلی را حفظ می‌کند.
+    /// </summary>
+    [Fact]
+    public async Task Preparation_keeps_the_saved_address_id_as_server_provenance_only()
+    {
+        var addresses = new RecordingAddressBook();
+        var service = new StorefrontCheckoutService(null!, null!, addresses, new FixedStorefrontActor());
+
+        var placement = await service.PrepareShippingAsync(
+            new StorefrontCheckoutShippingInput(
+                string.Empty,
+                "0000000000",
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                SavedAddressId,
+                string.Empty,
+                string.Empty),
+            CancellationToken.None);
+
+        Assert.Equal(SavedAddressId, placement.SourceSavedAddressId);
+        Assert.Null(placement.Shipping.SavedAddressId);
+        Assert.Equal(Buyer, placement.PlacedByUserId);
+        // تصویر قیمت‌گذاری همان رکورد کتاب آدرس است، نه فیلدهای بدنه.
+        Assert.Equal("تهران", placement.Shipping.ProvinceName);
+        Assert.Equal("1234567890", placement.Shipping.PostalCode);
+        Assert.Equal("09120000000", placement.Shipping.ContactMobile);
+    }
+
+    private sealed class FixedStorefrontActor : IOrderStorefrontActor
+    {
+        public Guid GuestActorId => Tooba.Order.Contracts.Fulfillment.StorefrontGuestActor.ActorId;
+
+        public bool IsAuthenticated => true;
+
+        public Guid? AuthenticatedUserId => Buyer;
+
+        public Guid ResolvePlacementActor(bool usingSavedAddress) => Buyer;
+
+        public Guid? TryResolveListActor() => Buyer;
+
+        public CartAccess BuildCartAccess(string? guestSecret) => new(Buyer, guestSecret);
+    }
+
+    /// <summary>
+    /// <b>هم‌زمانی ۱:</b> context مستقل B نسخهٔ انتخاب را <b>پیش از</b> گرفتن قفل ریشه توسط A جلو می‌برد؛
+    /// A با نسخهٔ قدیمی رد می‌شود (کد دقیق conflict) و هیچ رزرو/سفارشی ساخته نمی‌شود. اثبات با قفل واقعی
+    /// PostgreSQL (نه sleep و نه فرض).
+    /// </summary>
+    [Fact]
+    public async Task A_selection_advanced_before_the_root_lock_is_an_exact_conflict_with_zero_reservation()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await ReadyAsync(target);
+        using var harness = new CapturedSubmitHarness(db);
+        await SeedTwoGroupDraftAsync(db);
+
+        // B: یک به‌روزرسانی باز (uncommitted) روی همان ردیف ریشه.
+        await using var dbB = CreateContext(target.ConnectionString);
+        await using var txB = await dbB.Database.BeginTransactionAsync();
+        await dbB.Database.ExecuteSqlRawAsync(
+            "UPDATE \"order\".cart_shipping_drafts SET selection_revision = 2 WHERE cart_id = {0}",
+            CartId);
+
+        var submitA = Task.Run(() => harness.Directory.SubmitAsync(
+            harness.Command(expectedSelectionRevision: "1"),
+            CancellationToken.None));
+
+        // A باید روی همان ردیف منتظر بماند: انتظار قفل واقعی، حداکثر ۱۰ ثانیه.
+        Assert.True(
+            await WaitForLockWaiterAsync(target.ConnectionString, TimeSpan.FromSeconds(10)),
+            "expected the submit to block on the persisted Order root row");
+        Assert.False(submitA.IsCompleted);
+
+        await txB.CommitAsync();
+
+        var error = await Assert.ThrowsAsync<ContractOperationException>(() => submitA);
+        Assert.Equal("storefront.captured_selection.conflict", error.Code);
+        Assert.Equal(0, harness.Reservation.Calls);
+        Assert.Equal(0, harness.Conversion.Calls);
+
+        db.ChangeTracker.Clear();
+        Assert.False(await db.Checkouts.AnyAsync(x => x.CartId == CartId));
+        Assert.Equal(0, await db.Set<OrderShippingGroup>().CountAsync());
+    }
+
+    /// <summary>
+    /// <b>هم‌زمانی ۲:</b> A قفل ریشه را گرفته و در حال پایدارسازی است؛ B با <b>همان</b> نسخهٔ موردانتظار
+    /// از آداپتر واقعی ۲۳۲ روی همان ردیف بلاک می‌شود. پس از یک‌بار آزادسازی، A پایدار می‌شود و نوشتن
+    /// انتخاب بعدی، شاهدِ سفارشِ پذیرفته‌شده را تغییر نمی‌دهد.
+    /// </summary>
+    [Fact]
+    public async Task A_held_root_lock_blocks_the_real_selection_writer_and_the_order_evidence_survives()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await ReadyAsync(target);
+        var reached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var barrier = new PausingBarrier(reached, release);
+        using var harness = new CapturedSubmitHarness(db, barrier: barrier);
+        await SeedTwoGroupDraftAsync(db);
+
+        var submitA = Task.Run(() => harness.Directory.SubmitAsync(
+            harness.Command(expectedSelectionRevision: "1"),
+            CancellationToken.None));
+        // A اکنون قفل ریشه را دارد (پس از رزرو، پیش از نوشتن سفارش) و منتظر آزادسازی است.
+        await reached.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        await using var dbB = CreateContext(target.ConnectionString);
+        var storeB = new Tooba.Order.Infrastructure.Storefront.StorefrontShippingDraftStore(dbB);
+        var intentB = await storeB.GetForCapturedSelectionAsync(CartId, CancellationToken.None);
+        Assert.NotNull(intentB);
+        var advanceB = Task.Run(() => storeB.ReplaceCapturedSelectionAsync(
+            intentB!,
+            intentB!.ShippingGroups,
+            isNew: false,
+            expectedSelectionRevision: 1,
+            CancellationToken.None));
+
+        Assert.True(
+            await WaitForLockWaiterAsync(target.ConnectionString, TimeSpan.FromSeconds(10)),
+            "expected the real selection writer to block on the accepted Order root lock");
+        Assert.False(advanceB.IsCompleted);
+
+        release.TrySetResult();
+        var accepted = await submitA;
+
+        // نوشتن انتخاب B پس از آزادسازی کامل می‌شود و نسخه را جلو می‌برد…
+        var advanced = await advanceB;
+        Assert.Equal(2, advanced.SelectionRevision);
+
+        // …ولی شاهد پایدار سفارش دست‌نخورده می‌ماند.
+        db.ChangeTracker.Clear();
+        var groups = await db.Set<OrderShippingGroup>()
+            .Where(x => x.CheckoutId == accepted.CheckoutId)
+            .ToListAsync();
+        Assert.Equal(2, groups.Count);
+        Assert.All(groups, group => Assert.Equal(2L, group.AcceptedEvidence!.SourceRevision));
+        Assert.Equal(DateA, groups.Single(x => x.ShippingGroupId == DraftGroupA).AcceptedEvidence!.ReceivingDate);
+        Assert.Equal(DateB, groups.Single(x => x.ShippingGroupId == DraftGroupB).AcceptedEvidence!.ReceivingDate);
+        Assert.Equal(1, harness.Reservation.Calls);
+    }
+
+    private sealed class PausingBarrier(
+        TaskCompletionSource reached,
+        TaskCompletionSource release) : ICheckoutCommitBarrier
+    {
+        public Task OnAfterReserveAsync(CancellationToken cancellationToken)
+        {
+            reached.TrySetResult();
+            return release.Task.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken);
+        }
+
+        public Task OnAfterOrderWriteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task OnAfterCartConvertedWriteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    /// <summary>انتظار قفل واقعی: یک backend در حال انتظار روی قفل ردیف (حداکثر تا مهلت داده‌شده).</summary>
+    private static async Task<bool> WaitForLockWaiterAsync(string connectionString, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            await using var probe = new Npgsql.NpgsqlConnection(connectionString);
+            await probe.OpenAsync();
+            await using var command = probe.CreateCommand();
+            command.CommandText =
+                "SELECT count(*) FROM pg_stat_activity "
+                + "WHERE datname = current_database() AND wait_event_type = 'Lock'";
+            var waiting = Convert.ToInt64(await command.ExecuteScalarAsync());
+            if (waiting > 0)
+            {
+                return true;
+            }
+
+            await Task.Delay(50);
+        }
+
+        return false;
+    }
+
+    private static OrderDbContext CreateContext(string connectionString)
+    {
+        var builder = new DbContextOptionsBuilder<OrderDbContext>();
+        Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(
+            builder, connectionString, OrderDbContext.Schema, typeof(OrderDbContext));
+        return new OrderDbContext(builder.Options);
     }
 
     private sealed class FailingBarrier(Exception failure) : ICheckoutCommitBarrier
@@ -301,28 +618,30 @@ public sealed class CapturedFinalSubmitIntegrationTests
         internal readonly FakeTaxCalculator Taxes = new();
         internal readonly FakeCatalogCheckout Catalog = new();
         internal readonly FakeGuard Guard = new();
+        internal readonly StrictGeography Geography = new();
+        internal readonly FixedCapturedPointerLookup Pointers = new();
+        internal readonly FixedShippingTypeReader Types = new();
+        internal readonly StrictCatalogReader ShippingCatalog = new();
+        internal readonly RecordingAddressBook Addresses = new();
         internal readonly CheckoutDirectory Directory;
-        private readonly FixedCapturedPointerLookup _pointers = new();
-        private readonly FixedShippingTypeReader _types = new();
-        private readonly FixedGeography _geography = new();
 
         internal CapturedSubmitHarness(
             OrderDbContext db,
             bool checkoutEnabled = true,
             bool sharedOffer = false,
             decimal? freightA = null,
-            int quoteCloseHour = 17,
-            long pointerRevision = 2,
-            ICheckoutCommitBarrier? barrier = null)
+            ICheckoutCommitBarrier? barrier = null,
+            bool withAddressBook = true)
         {
             CheckoutEnabled = checkoutEnabled;
             SharedOffer = sharedOffer;
             FreightA = freightA;
-            QuoteCloseHour = quoteCloseHour;
-            _pointers.Revision = pointerRevision;
             Registrations.RegisterAll(Prices);
             Registrations.RegisterAll(Offers);
-            Taxes.Rate = 0m;
+            // مسیر واقعی نقل‌قول: ۱۰۰ − ۱۰ + ۹ = ۹۹ و ۲۰۰ − ۲۰ + ۱۸ = ۱۹۸.
+            Promotions.Discounts[OfferA] = 10m;
+            Promotions.Discounts[OfferB] = 20m;
+            Taxes.Rate = 0.10m;
             Quotes.Respond = Quoted;
             Directory = new CheckoutDirectory(
                 db,
@@ -350,12 +669,14 @@ public sealed class CapturedFinalSubmitIntegrationTests
                     AvailableDateCount = 7,
                 }),
                 offerAssignments: Assignments,
-                shippingTypes: _types,
-                selectedCaptures: _pointers,
+                shippingTypes: Types,
+                selectedCaptures: Pointers,
                 capturedComposition: new StorefrontCapturedGroupCompositionCore(Quotes, new FixedClock()),
-                geography: _geography,
+                geography: Geography,
                 edition: new FakeEdition(),
-                tenant: new FakeTenant());
+                tenant: new FakeTenant(),
+                addressBook: withAddressBook ? Addresses : null,
+                shippingCatalog: ShippingCatalog);
             ConfigureCart();
         }
 
@@ -365,11 +686,11 @@ public sealed class CapturedFinalSubmitIntegrationTests
 
         internal decimal? FreightA { get; }
 
-        internal int QuoteCloseHour { get; }
-
-        internal int PointerCalls => _pointers.Calls;
+        internal int PointerCalls => Pointers.Calls;
 
         internal int AssignmentCalls => Assignments.Calls;
+
+        internal int CatalogCalls => ShippingCatalog.Calls;
 
         internal void ConfigureCart()
         {
@@ -378,26 +699,29 @@ public sealed class CapturedFinalSubmitIntegrationTests
                 : CartOf([Line(LineA, OfferA, SellerA), Line(LineB, OfferB, SellerB)]);
         }
 
-        internal SubmitCheckoutCommand Command(string? expectedSelectionRevision, string? coupon = null) => new(
+        internal SubmitCheckoutCommand Command(
+            string? expectedSelectionRevision,
+            string? coupon = null,
+            string? postalCode = null) => new(
             CartId,
             new CartAccess(Buyer, null),
             7,
             OrderMode.OnlinePurchase,
             BuyerPartyId: null,
             PlacedByUserId: Buyer,
-            IdempotencyKey: "tb233r2-positive",
+            IdempotencyKey: "tb233r3-positive",
             TaxJurisdiction: "IR-NAT",
             RecipientName: "گیرنده",
             ContactMobile: "09120000000",
             ProvinceName: "تهران",
             CityName: "تهران",
             PostalAddress: "نشانی",
-            PostalCode: "1234567890",
+            PostalCode: postalCode ?? "1234567890",
             ShippingMethodCode: "post:standard",
             ShippingMethodLabel: "پست",
             ShippingAmount: 200m,
             MinimumDeliveryDate: new DateOnly(2026, 10, 26),
-            RequestedDeliveryDate: ReceivingDate,
+            RequestedDeliveryDate: DateA,
             RequestedDeliveryTimeWindow: "09:00-17:00",
             CouponCode: coupon,
             ShippingGroups: [],
@@ -427,7 +751,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
             sellerPartyId,
             1m,
             ReservationId: null,
-            QuotedAmount: offerId == OfferA ? 99m : 198m,
+            QuotedAmount: offerId == OfferA ? 100m : 200m,
             QuotedCurrency: "IRR",
             QuotedTaxExclusive: true,
             PriceId: PriceOf(offerId),
@@ -440,8 +764,8 @@ public sealed class CapturedFinalSubmitIntegrationTests
             return new ShippingCapturedQuoteResult(
                 ShippingCapturedQuoteVerdict.Quoted,
                 ShippingCapturedQuoteVerdictCodes.Quoted,
-                isA ? "post" : "tipax",
-                isA ? "standard" : "express",
+                "post",
+                "standard",
                 "IRR",
                 freight,
                 5m,
@@ -452,44 +776,56 @@ public sealed class CapturedFinalSubmitIntegrationTests
                 SnapshotId: SnapshotId,
                 DraftId: request.DraftId,
                 SourceRevision: request.SourceRevision,
-                FormatVersion: 1,
+                FormatVersion: Quotes.FormatVersion,
                 ShippingTypeId: ShippingTypeId,
-                GroupId: isA ? AreaA : AreaB,
+                GroupId: AreaGroup,
                 RateRowId: isA ? RowA : RowB,
                 MinDeliveryDays: 2,
                 MaxDeliveryDays: 3,
-                ReceivingWeek: Week(QuoteCloseHour));
+                ReceivingWeek: Week());
         }
 
-        private static ShippingCapturedReceivingWeek Week(int closeHour) => new(
+        /// <summary>
+        /// یک هفتهٔ <b>مشترک</b> ذخیره‌شده برای همان snapshot/Binding؛ فقط دو روز کاری منتخب ساعت
+        /// کسری متفاوت دارند (۱۰۰نانوثانیه‌ای) تا استقلال تاریخ/ساعت قابل اثبات باشد.
+        /// </summary>
+        private static ShippingCapturedReceivingWeek Week() => new(
             "UTC",
             Enumerable.Range(1, 7)
-                .Select(iso => new ShippingCapturedReceivingWeekDay(
-                    iso,
-                    true,
-                    new TimeOnly(9, 0),
-                    new TimeOnly(closeHour, 0)))
+                .Select(iso => iso switch
+                {
+                    2 => new ShippingCapturedReceivingWeekDay(iso, true, At(OpenTicksA), At(CloseTicksA)),
+                    3 => new ShippingCapturedReceivingWeekDay(iso, true, At(OpenTicksB), At(CloseTicksB)),
+                    _ => new ShippingCapturedReceivingWeekDay(iso, true, new TimeOnly(9, 0), new TimeOnly(17, 0)),
+                })
                 .ToArray());
+
+        private static TimeOnly At(long ticks) => new(ticks);
     }
 
-    private static async Task SeedTwoGroupDraftAsync(OrderDbContext db, string? mutate = null)
+    private static async Task SeedTwoGroupDraftAsync(
+        OrderDbContext db,
+        string? mutate = null,
+        Guid? savedAddressId = null)
     {
-        var draft = NewDraft();
-        var groupA = DraftGroup(DraftGroupA, SellerA, "post", "standard", 125m);
-        var groupB = DraftGroup(DraftGroupB, SellerB, "tipax", "express", 75m);
+        const string service = "post";
+        const string option = "standard";
+        var draft = NewDraft(savedAddressId);
+        var groupA = DraftGroup(DraftGroupA, SellerA, service, option, 125m, DateA);
+        var groupB = DraftGroup(DraftGroupB, SellerB, service, option, 75m, DateB);
         groupA.AddWholeLine(LineA, SellerA);
         groupB.AddWholeLine(LineB, SellerB);
 
         groupA.ReplaceAcceptedEvidence(
             EvidenceFor(
                 mutate == "owner" ? "other-tenant" : "store-alpha",
-                groupA,
+                A: true,
                 120m,
-                null,
-                1L),
+                mutate == "date" ? new TimeOnly(16, 0).Ticks : CloseTicksA),
             Now);
-
-        groupB.ReplaceAcceptedEvidence(EvidenceFor("store-alpha", groupB, 70m, null, 1L), Now);
+        groupB.ReplaceAcceptedEvidence(
+            EvidenceFor("store-alpha", A: false, 70m, CloseTicksB),
+            Now);
 
         draft.SetDestinationIdentity(CountryId, ProvinceId, CityId, null, Now);
         draft.AddShippingGroups([groupA, groupB], Now);
@@ -505,14 +841,14 @@ public sealed class CapturedFinalSubmitIntegrationTests
 
     private static async Task SeedSingleGroupDraftAsync(OrderDbContext db, Guid sellerId, Guid[] lines)
     {
-        var draft = NewDraft();
-        var group = DraftGroup(DraftGroupA, sellerId, "post", "standard", 125m);
+        var draft = NewDraft(null);
+        var group = DraftGroup(DraftGroupA, sellerId, "post", "standard", 125m, DateA);
         foreach (var line in lines)
         {
             group.AddWholeLine(line, sellerId);
         }
 
-        group.ReplaceAcceptedEvidence(EvidenceFor("store-alpha", group, 120m, null, 1L), Now);
+        group.ReplaceAcceptedEvidence(EvidenceFor("store-alpha", A: true, 120m, CloseTicksA), Now);
         draft.SetDestinationIdentity(CountryId, ProvinceId, CityId, null, Now);
         draft.AddShippingGroups([group], Now);
         draft.BumpSelectionRevision(Now);
@@ -521,7 +857,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         db.ChangeTracker.Clear();
     }
 
-    private static CartShippingDraft NewDraft() => CartShippingDraft.Create(
+    private static CartShippingDraft NewDraft(Guid? savedAddressId) => CartShippingDraft.Create(
         CartId,
         "hash",
         7,
@@ -531,12 +867,12 @@ public sealed class CapturedFinalSubmitIntegrationTests
         "تهران",
         "نشانی",
         "1234567890",
-        null,
+        savedAddressId,
         "post:standard",
         "پست",
         200m,
         new DateOnly(2026, 10, 26),
-        ReceivingDate,
+        DateA,
         "09:00-17:00",
         null,
         Now);
@@ -546,7 +882,8 @@ public sealed class CapturedFinalSubmitIntegrationTests
         Guid sellerId,
         string serviceCode,
         string optionCode,
-        decimal payable) => CartShippingDraftGroup.Create(
+        decimal payable,
+        DateOnly date) => CartShippingDraftGroup.Create(
         groupId,
         CartId,
         sellerId,
@@ -558,37 +895,35 @@ public sealed class CapturedFinalSubmitIntegrationTests
         payable,
         "IRR",
         new DateOnly(2026, 10, 26),
-        ReceivingDate,
+        date,
         "09:00-17:00",
         0,
         Now);
 
     private static ShippingGroupAcceptedEvidence EvidenceFor(
         string tenant,
-        CartShippingDraftGroup group,
+        bool A,
         decimal freight,
-        DateOnly? date,
-        long selectionVersion)
+        long closeTicks)
     {
-        var isA = group.ShippingGroupId == DraftGroupA;
         return ShippingGroupAcceptedEvidence.Create(
             SnapshotId,
             CartId,
             2,
             1,
-            selectionVersion,
+            1,
             ShippingGroupOwner.Store(tenant),
-            isA ? AreaA : AreaB,
-            isA ? RowA : RowB,
+            AreaGroup,
+            A ? RowA : RowB,
             ShippingTypeId,
             freight,
             5m,
             "IRR",
             freight + 5m,
             0m,
-            date ?? ReceivingDate,
-            OpenTicks,
-            CloseTicks,
+            A ? DateA : DateB,
+            A ? OpenTicksA : OpenTicksB,
+            closeTicks,
             "UTC",
             2,
             3);
@@ -618,7 +953,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         await db.Database.ExecuteSqlRawAsync(
             "DELETE FROM \"order\".order_shipping_group_lines;"
             + "DELETE FROM \"order\".order_shipping_groups;"
-            + "DELETE FROM \"order\".checkout_processes;"+"DELETE FROM \"order\".order_lines;"
+            + "DELETE FROM \"order\".checkout_processes;" + "DELETE FROM \"order\".order_lines;"
             + "DELETE FROM \"order\".seller_orders;"
             + "DELETE FROM \"order\".checkouts;"
             + "DELETE FROM \"order\".cart_shipping_group_lines;"
@@ -701,6 +1036,46 @@ public sealed class CapturedFinalSubmitIntegrationTests
             ShippingTypeId, "heavy", true, 1, 1, []);
     }
 
+    /// <summary>فهرست فعال فروشگاه: یک سرویس post با گزینهٔ standard (قابل خاموش‌کردن برای کنترل منفی).</summary>
+    private sealed class StrictCatalogReader : IShippingCatalogReader
+    {
+        internal int Calls { get; private set; }
+
+        internal bool Active { get; set; } = true;
+
+        internal bool OptionActive { get; set; } = true;
+
+        public Task<IReadOnlyList<ShippingCatalogServiceSnapshot>> ListAsync(CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult<IReadOnlyList<ShippingCatalogServiceSnapshot>>(
+            [
+                new ShippingCatalogServiceSnapshot(
+                    Guid.Parse("01a17d14-0000-7000-8000-0000000000a1"),
+                    "post",
+                    "Manual",
+                    "post",
+                    "blue",
+                    Active,
+                    1,
+                    [],
+                    [
+                        new ShippingCatalogOptionSnapshot(
+                            Guid.Parse("01a17d14-0000-7000-8000-0000000000a2"),
+                            Guid.Parse("01a17d14-0000-7000-8000-0000000000a1"),
+                            "standard",
+                            OptionActive,
+                            1,
+                            []),
+                    ]),
+            ]);
+        }
+
+        public Task<ShippingCatalogServiceSnapshot?> GetAsync(Guid serviceId, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("the captured final acceptance reads the catalog once");
+    }
+
+    /// <summary>اشاره‌گر ۲۱۹: همان Binding/همان snapshot و نسخهٔ قابل تغییر برای کنترل تازگی.</summary>
     private sealed class FixedCapturedPointerLookup : IShippingSelectedCapturedRevisionLookup
     {
         internal int Calls { get; private set; }
@@ -728,10 +1103,21 @@ public sealed class CapturedFinalSubmitIntegrationTests
         }
     }
 
-    private sealed class FixedGeography : IGeographyLookup
+    /// <summary>
+    /// Geography سخت‌گیر: کد کشور تهی/نادرست یا نام نادرست هرگز «حل‌شده» نمی‌شود و کد واقعی داده‌شده
+    /// ثبت می‌گردد؛ هیچ کشوری به‌جای کشور قیمت‌گذاری‌شده انتخاب نمی‌شود.
+    /// </summary>
+    private sealed class StrictGeography : IGeographyLookup
     {
+        internal string? LastCountryCode { get; private set; }
+
+        internal bool HidePricedCountry { get; set; }
+
         public Task<IReadOnlyList<CountrySnapshot>> ListCountriesAsync(CancellationToken cancellationToken) =>
-            throw new InvalidOperationException("the captured final acceptance resolves the destination only");
+            Task.FromResult<IReadOnlyList<CountrySnapshot>>(
+            [
+                new CountrySnapshot(HidePricedCountry ? OtherCountryId : CountryId, "IR", true),
+            ]);
 
         public Task<IReadOnlyList<AdministrativeAreaSnapshot>> ListAdministrativeAreasAsync(
             Guid countryId,
@@ -759,14 +1145,74 @@ public sealed class CapturedFinalSubmitIntegrationTests
             string? administrativeAreaName,
             string? cityName,
             string? serviceAreaName,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(DestinationResolution.Resolved(
+            CancellationToken cancellationToken)
+        {
+            LastCountryCode = countryCode;
+            var code = countryCode?.Trim();
+            if (string.IsNullOrEmpty(code)
+                || !string.Equals(code, "IR", StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(administrativeAreaName?.Trim(), "تهران", StringComparison.Ordinal)
+                || !string.Equals(cityName?.Trim(), "تهران", StringComparison.Ordinal)
+                || !string.IsNullOrEmpty(serviceAreaName))
+            {
+                return Task.FromResult(DestinationResolution.Unresolved());
+            }
+
+            return Task.FromResult(DestinationResolution.Resolved(
                 new DestinationIdentifiers(CountryId, ProvinceId, CityId, null)));
+        }
+    }
+
+    /// <summary>کتاب آدرس: فقط رکورد خودیِ actor واقعی؛ حذف/بیگانگی/تغییر با پرچم قابل شبیه‌سازی.</summary>
+    private sealed class RecordingAddressBook : IAddressBookCheckoutLookup
+    {
+        internal int Calls { get; private set; }
+
+        internal Guid LastActor { get; private set; }
+
+        internal Guid LastAddressId { get; private set; }
+
+        internal bool Drop { get; set; }
+
+        internal bool ActorMismatch { get; set; }
+
+        internal bool ChangePostalAddress { get; set; }
+
+        public Task<CustomerAddressRecord?> GetAsync(
+            Guid actorUserId,
+            Guid addressId,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            LastActor = actorUserId;
+            LastAddressId = addressId;
+            if (Drop || ActorMismatch || actorUserId != Buyer || addressId != SavedAddressId)
+            {
+                return Task.FromResult<CustomerAddressRecord?>(null);
+            }
+
+            return Task.FromResult<CustomerAddressRecord?>(new CustomerAddressRecord(
+                SavedAddressId,
+                "گیرنده",
+                "09120000000",
+                "IR",
+                "تهران",
+                "تهران",
+                "1234567890",
+                ChangePostalAddress ? "نشانی ویرایش‌شده" : "نشانی",
+                null,
+                "خانه",
+                true,
+                Now,
+                Now,
+                "گیرنده",
+                "آزمایشی"));
+        }
     }
 
     private sealed class FakeEdition : ICurrentEdition
     {
-        public EditionContext? Current { get; } = new(ToobaEdition.SingleStore, "tb233r2");
+        public EditionContext? Current { get; } = new(ToobaEdition.SingleStore, "tb233r3");
     }
 
     private sealed class FakeTenant : ICurrentTenant
@@ -774,7 +1220,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         public TenantContext? Current { get; } = new(
             new TenantId("store-alpha"),
             TenantStatus.Active,
-            new ConnectionReference("tb233r2"),
+            new ConnectionReference("tb233r3"),
             "Tooba",
             null,
             "IR",
@@ -786,8 +1232,8 @@ public sealed class CapturedFinalSubmitIntegrationTests
     {
         internal static void RegisterAll(FakePriceLookup prices)
         {
-            prices.Register(new PriceQuote(PriceOf(OfferA), OfferA, "IR", SalesChannel.Direct, 99m, "IRR", true, true));
-            prices.Register(new PriceQuote(PriceOf(OfferB), OfferB, "IR", SalesChannel.Direct, 198m, "IRR", true, true));
+            prices.Register(new PriceQuote(PriceOf(OfferA), OfferA, "IR", SalesChannel.Direct, 100m, "IRR", true, true));
+            prices.Register(new PriceQuote(PriceOf(OfferB), OfferB, "IR", SalesChannel.Direct, 200m, "IRR", true, true));
         }
 
         internal static void RegisterAll(FakeOfferLookup offers)

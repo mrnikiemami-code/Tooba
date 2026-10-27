@@ -19,7 +19,7 @@ namespace Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 /// کد گزینهٔ غایب همان هویت غایب است.
 /// </para>
 /// </remarks>
-internal sealed class StorefrontCapturedPublicationBinding : IEquatable<StorefrontCapturedPublicationBinding>
+public sealed class StorefrontCapturedPublicationBinding : IEquatable<StorefrontCapturedPublicationBinding>
 {
     /// <summary>هویت تعهد از نامزد صریح سرور.</summary>
     internal StorefrontCapturedPublicationBinding(StorefrontCapturedCandidatePlan candidate)
@@ -52,6 +52,23 @@ internal sealed class StorefrontCapturedPublicationBinding : IEquatable<Storefro
     /// <summary>سیاست یگانهٔ متعارف‌سازی متن هویت: trim و تبدیل تهی/فضاخالی به تهی.</summary>
     internal static string? Canonical(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>
+    /// همان هویت متعارف از اجزای خام برای مصرف‌کنندهٔ خارج از این لایه (کش/مقایسهٔ اشاره‌گر ۲۱۹)؛
+    /// هیچ کلید متنیِ delimiter‌دار و هیچ هویت دوم ساخته نمی‌شود.
+    /// </summary>
+    /// <param name="ownerKind">نوع مالک.</param>
+    /// <param name="ownerTenantId">tenant مالک (برای Store/Marketplace).</param>
+    /// <param name="ownerSellerPartyId">فروشندهٔ مالک (برای Seller).</param>
+    /// <param name="serviceCode">کد سرویس.</param>
+    /// <param name="optionCode">کد گزینه (تهی = هویت غایب).</param>
+    public static StorefrontCapturedPublicationBinding For(
+        ShippingCapturedQuoteOwnerKind ownerKind,
+        string? ownerTenantId,
+        Guid? ownerSellerPartyId,
+        string? serviceCode,
+        string? optionCode) =>
+        new(ownerKind, ownerTenantId, ownerSellerPartyId, serviceCode, optionCode);
 
     internal ShippingCapturedQuoteOwnerKind OwnerKind { get; }
 

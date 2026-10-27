@@ -244,7 +244,8 @@ public sealed class StorefrontCheckoutService
             null,
             names.First,
             names.Last);
-        return new StorefrontCheckoutPlacement(actor, snapshot);
+        // منشأ شناسه فقط-سرور؛ تصویر آماده‌شده همان معنای قدیمی (SavedAddressId تهی) را نگه می‌دارد.
+        return new StorefrontCheckoutPlacement(actor, snapshot, shipping.SavedAddressId);
     }
 
     private async Task<CartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
@@ -427,4 +428,14 @@ public sealed class StorefrontCheckoutService
 }
 
 /// <summary>نتیجهٔ Resolve هویت ثبت و تصویر ارسال قبل از ماندگاری سفارش.</summary>
-public sealed record StorefrontCheckoutPlacement(Guid PlacedByUserId, StorefrontCheckoutShippingInput Shipping);
+/// <param name="PlacedByUserId">هویت واقعی ثبت‌کننده از مرز اعتماد.</param>
+/// <param name="Shipping">تصویر ارسالِ آماده‌شده (همان چیزی که قیمت می‌گیرد).</param>
+/// <param name="SourceSavedAddressId">
+/// منشأ <b>فقط-سرور</b> نشانی ذخیره‌شده: شناسهٔ واقعی آدرس کتاب آدرس که این تصویر از آن ساخته شده است.
+/// این فیلد جای <c>Shipping.SavedAddressId</c> را نمی‌گیرد و آن مقدار برای معنای snapshot قدیمی تهی
+/// می‌ماند؛ یعنی هیچ مصرف‌کنندهٔ legacy شاهد تازه‌ای نمی‌بیند و هیچ شناسه‌ای حدس زده نمی‌شود.
+/// </param>
+public sealed record StorefrontCheckoutPlacement(
+    Guid PlacedByUserId,
+    StorefrontCheckoutShippingInput Shipping,
+    Guid? SourceSavedAddressId = null);

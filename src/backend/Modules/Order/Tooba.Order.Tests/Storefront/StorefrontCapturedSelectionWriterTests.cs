@@ -218,6 +218,46 @@ public sealed class StorefrontCapturedSelectionWriterTests
     }
 
     /// <summary>
+    /// TB-233-R3: شناسهٔ واقعی آدرس ذخیره‌شده فقط از منشأ سرورِ placement روی ریشهٔ پیش‌نویس
+    /// (<c>CartShippingDraft.SavedAddressId</c>) پایدار می‌شود؛ تصویر snapshot قدیمی تهی می‌ماند و
+    /// «نامعلوم» هیچ‌گاه به شناسهٔ حدسی تبدیل نمی‌شود.
+    /// </summary>
+    [Fact]
+    public async Task The_server_source_saved_address_id_is_persisted_on_the_captured_draft()
+    {
+        var savedAddressId = Guid.Parse("01a17d13-0000-7000-8000-0000000000f1");
+        using var harness = Positive(OfferA, LineA);
+        var drafts = new DraftStoreFake();
+        var planner = PositivePlanner(harness);
+        var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+        var cart = Cart(harness, LineA, OfferA);
+        var intent = await IntentFromPreviewAsync(harness, planner, cart);
+
+        var draft = await writer.SaveAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Prepared() with { SourceSavedAddressId = savedAddressId },
+            existing: null,
+            guestSecretHash: null,
+            intent,
+            CancellationToken.None);
+
+        Assert.Equal(savedAddressId, draft.SavedAddressId);
+
+        // کنترل: بدون منشأ سرور همان «ناشناخته/بدون آدرس» می‌ماند.
+        var second = await writer.SaveAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Prepared(),
+            existing: null,
+            guestSecretHash: null,
+            intent,
+            CancellationToken.None);
+        Assert.Null(second.SavedAddressId);
+    }
+
+    /// <summary>
     /// TB-232-R1: قصد کوپن در این برش fail-closed است — پیش از هر نقل‌قول/نوشتنی رد می‌شود و هیچ
     /// مبلغ کالای دیگری زیر همان توکن‌های بازتاب ذخیره نمی‌شود.
     /// </summary>

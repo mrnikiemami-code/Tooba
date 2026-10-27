@@ -165,6 +165,10 @@ public sealed class StorefrontCapturedSelectionWriter(
 
         var now = clock.UtcNow;
 
+        // TB-233-R3: شناسهٔ واقعی آدرس ذخیره‌شده فقط از منشأ سرور می‌آید؛ تصویر snapshot قدیمی تهی است
+        // و «نامعلوم» هرگز به یک شناسهٔ حدسی تبدیل نمی‌شود.
+        var sourceSavedAddressId = prepared.SourceSavedAddressId ?? prepared.Shipping.SavedAddressId;
+
         var requests = new List<CartShippingGroupRequest>(intents.Count);
         var eligible = new List<CartShippingGroupEligibleMethod>(intents.Count);
         var commitments = new List<CapturedCommitment>(intents.Count);
@@ -300,7 +304,7 @@ public sealed class StorefrontCapturedSelectionWriter(
             prepared.Shipping.CityName,
             prepared.Shipping.PostalAddress,
             prepared.Shipping.PostalCode,
-            prepared.Shipping.SavedAddressId,
+            sourceSavedAddressId,
             multiGroup ? string.Empty : primary.MethodCode,
             multiGroup ? string.Empty : primary.MethodLabel,
             groups.Sum(x => x.ShippingAmount),
@@ -321,7 +325,7 @@ public sealed class StorefrontCapturedSelectionWriter(
                 prepared.Shipping.CityName,
                 prepared.Shipping.PostalAddress,
                 prepared.Shipping.PostalCode,
-                prepared.Shipping.SavedAddressId,
+                sourceSavedAddressId,
                 multiGroup ? string.Empty : primary.MethodCode,
                 multiGroup ? string.Empty : primary.MethodLabel,
                 groups.Sum(x => x.ShippingAmount),

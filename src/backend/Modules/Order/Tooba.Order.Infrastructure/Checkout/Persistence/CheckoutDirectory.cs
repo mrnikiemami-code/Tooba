@@ -1,3 +1,4 @@
+using Tooba.AddressBook.Contracts.Ports;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Geography.Contracts.Places;
@@ -72,6 +73,10 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly IGeographyLookup? _geography;
     internal readonly ICurrentEdition? _edition;
     internal readonly ICurrentTenant? _tenant;
+    // TB-233-R3: اختیاری‌های تازهٔ بازاعتبارسنجی نهایی (نشانی ذخیره‌شده و فهرست فعال سرویس/گزینه).
+    // نبودشان در مسیر capture یعنی «در دسترس نیست»، نه پذیرش پیش‌فرض.
+    internal readonly IAddressBookCheckoutLookup? _addressBook;
+    internal readonly IShippingCatalogReader? _shippingCatalog;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -107,7 +112,9 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupCompositionCore? capturedComposition = null,
         IGeographyLookup? geography = null,
         ICurrentEdition? edition = null,
-        ICurrentTenant? tenant = null)
+        ICurrentTenant? tenant = null,
+        IAddressBookCheckoutLookup? addressBook = null,
+        IShippingCatalogReader? shippingCatalog = null)
     {
         _db = db;
         _guard = guard;
@@ -142,6 +149,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _geography = geography;
         _edition = edition;
         _tenant = tenant;
+        _addressBook = addressBook;
+        _shippingCatalog = shippingCatalog;
     }
 
     /// <inheritdoc />

@@ -114,3 +114,32 @@ empty-note residual, 225-R1 lost unsaved user LOCAL edits. TB185 paused/default-
 
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. The next slice (AddressBook saved-address authority + true concurrent
 advance + coupon parity) must be issued by the Architect.
+
+---
+
+## CORRECTION APPENDED BY 233-R3 (2026-10-27, append-only — earlier text preserved)
+
+The Architect review of this result named claims that the executed fixture did **not** support. They are corrected
+here, and the fixture itself was replaced by 233-R3 on the same test class:
+
+- The positive used **two different bindings** (`post/standard` + `tipax/express`), not one Store binding shared by
+  two sellers, and it made **two** 219 pointer reads, not one.
+- Both groups carried the **same** receiving date with **whole-minute** `09:00–17:00` hours; the fractional 100 ns
+  ticks that this result described were not exercised by a persisted/read-back order group.
+- Goods were **99/198 with a zero tax rate**, not the real `100 − 10 + 9` / `200 − 20 + 18` computation.
+- The replay did **not** mutate the 219 pointer before the second submit, so "repeat submit after a pointer change"
+  overstated what ran.
+- The DI/module-scope fact used **manually constructed equivalent types**, not the real `OrderModule.AddServices`
+  registration path.
+- The final acceptance passed `countryCode: null` into `IGeographyLookup.ResolveLegacyAsync` and never re-read the
+  saved address through AddressBook Contracts, so a permissive Geography fake could make any destination resolve;
+  there was no saved-address ownership/content authority, no active-catalog check and no quote
+  `SnapshotId`/`FormatVersion`/`DraftId`/`SourceRevision` comparison.
+
+233-R3 repairs exactly these (see `TB-SHIPPING-CAPTURED-ADDRESS-BINDING-AND-PROOF-233-R3/RESULT.md`): canonical
+non-blank country resolution against trusted data, address-book authority with the real actor and exact content
+comparison, server-only `SourceSavedAddressId` persisted in the existing draft column, one active-catalog read per
+submit, typed pointer binding plus quote reference equality, the coherent same-binding 99/198 positive with two
+distinct rate rows and one shared week with fractional ticks, a strict Geography fixture, a real changed-pointer
+replay, and two bounded root-contention cases proved through `pg_stat_activity` waiting rather than assumed sleeps.
+Nothing in the earlier sections above should be read as proof of those facts.

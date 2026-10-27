@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
@@ -40,6 +40,7 @@ public sealed partial class CheckoutDirectory
     private const string CapturedUnavailable = StorefrontCapturedSelectionReasons.Unavailable;
     private const string CapturedIntentInvalid = StorefrontCapturedSelectionReasons.IntentInvalid;
     private const string CapturedCouponUnsupported = StorefrontCapturedSelectionReasons.CouponUnavailable;
+    private const string CapturedDestinationUnverified = StorefrontCapturedSelectionReasons.DestinationUnverified;
     private const string CapturedNotReady = StorefrontCapturedPreviewReasons.PreviewNotReady;
 
     /// <inheritdoc />
@@ -76,9 +77,10 @@ public sealed partial class CheckoutDirectory
             || options.Enabled is false
             || options.SelectionEnabled is false
             || options.CheckoutEnabled is false
-            || options.AvailableDateCount is null)
+            || !options.HasValidAvailableDateCount)
         {
-            // دروازهٔ ثبت نهایی خاموش/ناهمساز: هیچ گذر capture‌شده‌ای (حتی با شاهد ساختگی) پذیرفته نمی‌شود.
+            // دروازهٔ ثبت نهایی خاموش/ناهمساز (یا تعداد تاریخ نامعتبر): هیچ گذر capture‌شده‌ای (حتی با
+            // شاهد ساختگی) پذیرفته نمی‌شود.
             throw new ContractOperationException(CapturedNotReady);
         }
 
@@ -88,7 +90,9 @@ public sealed partial class CheckoutDirectory
             || _shippingTypes is null
             || _selectedCaptures is null
             || _capturedComposition is null
-            || _geography is null)
+            || _geography is null
+            || _addressBook is null
+            || _shippingCatalog is null)
         {
             throw new ContractOperationException(CapturedUnavailable);
         }
@@ -126,8 +130,13 @@ public sealed partial class CheckoutDirectory
         // هیچ به‌روزرسانی هم‌زمان نتواند سفارشی با نسخهٔ ریشهٔ مخلوط بسازد.
         await LockStoredCapturedRootAsync(command.CartId, expectedRevision, cancellationToken);
 
-        // مقصد پرسیده‌شده باید همان مقصد قیمت‌گذاری‌شدهٔ ذخیره‌شده باشد (نه مقصد ارزان‌تر/دیگر).
-        var destination = await ResolveCurrentDestinationAsync(command, cancellationToken);
+        // مقصد نهایی از کشور متعارف (نه null) + نشانی معتبر سرور resolve می‌شود؛ آدرس ذخیره‌شده فقط با
+        // هویت واقعی سبد/ثبت‌کننده از کتاب آدرس خوانده می‌شود و هر تغییر/بیگانگی پیش از رزرو رد می‌شود.
+        var destination = await ResolveAcceptedAddressAsync(command, cart, stored, cancellationToken);
+        if (!SameDestination(stored, destination))
+        {
+            throw new ContractOperationException(CapturedConflict);
+        }
 
         var groups = stored.ShippingGroups
             .OrderBy(group => group.ShippingGroupId)
@@ -150,8 +159,7 @@ public sealed partial class CheckoutDirectory
             var evidence = group.AcceptedEvidence!;
             // مالک شاهد باید دقیقاً همان tenant فعال و به‌صورت Ordinal برابر باشد؛ هیچ استنتاج
             // Seller/Marketplace و هیچ مقایسهٔ حساس‌نبودن به حروف پذیرفته نمی‌شود.
-            if (!SameDestination(stored, destination)
-                || !string.Equals(evidence.Currency, group.Currency, StringComparison.Ordinal)
+            if (!string.Equals(evidence.Currency, group.Currency, StringComparison.Ordinal)
                 || evidence.Owner.Kind != ShippingGroupOwnerKind.Store
                 || evidence.Owner.SellerPartyId is not null
                 || !string.Equals(evidence.Owner.TenantKey, tenantId, StringComparison.Ordinal))
@@ -236,7 +244,10 @@ public sealed partial class CheckoutDirectory
 
         // یک اشاره‌گر ۲۱۹ برای هر جفت مالک+Binding ذخیره‌شده (نه enumeration همهٔ نامزدهای ممکن).
         var capturedPlans = new List<StorefrontCapturedGroupPlan>(groups.Length);
-        var pointers = new Dictionary<string, ShippingSelectedCapturedRevisionResult>(StringComparer.Ordinal);
+        var pointers = new Dictionary<StorefrontCapturedPublicationBinding, ShippingSelectedCapturedRevisionResult>();
+        // TB-233-R3: یک خواندن فهرست فعال سرویس/گزینه برای همین ثبت نهایی؛ نبود/غیرفعالی هر روش
+        // ذخیره‌شده صریحاً رد می‌شود (گزینهٔ تهی همان هویت غایب است، بدون تطبیق تقریبی).
+        var catalog = await _shippingCatalog!.ListAsync(cancellationToken);
         foreach (var group in groups)
         {
             var evidence = group.AcceptedEvidence!;
@@ -246,12 +257,15 @@ public sealed partial class CheckoutDirectory
                 throw new ContractOperationException(CapturedUnavailable);
             }
 
-            var cacheKey = string.Join(
-                '\u001F',
+            RequireActiveCatalogBinding(catalog, serviceCode, group.OptionCode);
+
+            var binding = StorefrontCapturedPublicationBinding.For(
+                ShippingCapturedQuoteOwnerKind.Store,
                 tenantId,
-                CanonicalBinding(serviceCode),
-                CanonicalBinding(group.OptionCode));
-            if (!pointers.TryGetValue(cacheKey, out var pointer))
+                null,
+                serviceCode,
+                group.OptionCode);
+            if (!pointers.TryGetValue(binding, out var pointer))
             {
                 pointer = await _selectedCaptures!.ReadAsync(
                     new ShippingSelectedCapturedRevisionRequest(
@@ -261,7 +275,7 @@ public sealed partial class CheckoutDirectory
                         serviceCode,
                         group.OptionCode),
                     cancellationToken);
-                pointers[cacheKey] = pointer;
+                pointers[binding] = pointer;
             }
 
             if (pointer.Verdict != ShippingSelectedCaptureVerdict.Selected
@@ -270,7 +284,16 @@ public sealed partial class CheckoutDirectory
                 || pointer.SelectionVersion != evidence.SelectionVersion
                 || pointer.SnapshotId != evidence.SnapshotId
                 || pointer.FormatVersion != evidence.FormatVersion
-                || pointer.ShippingTypeId != evidence.ShippingTypeId)
+                || pointer.ShippingTypeId != evidence.ShippingTypeId
+                // پاسخ مالک باید همان Binding درخواستی را بیان کند؛ پاسخ متناقض پذیرفته نمی‌شود.
+                || !string.Equals(
+                    NormalizeBindingText(pointer.ServiceCode),
+                    NormalizeBindingText(serviceCode),
+                    StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(
+                    NormalizeBindingText(pointer.OptionCode),
+                    NormalizeBindingText(group.OptionCode),
+                    StringComparison.OrdinalIgnoreCase))
             {
                 // اشاره‌گر عوض‌شده/ناموجود: انتخاب جدید لازم است؛ هیچ fallback به «آخرین» نیست.
                 throw new ContractOperationException(CapturedConflict);
@@ -330,6 +353,11 @@ public sealed partial class CheckoutDirectory
                     && available.ClosesAt.Ticks == evidence.ReceivingCloseTicks);
             if (slot is null
                 || !string.Equals(quote.CurrencyCode, evidence.Currency, StringComparison.Ordinal)
+                // ارجاع‌های نقل‌قول باید همان بازبینی/پیش‌نویس/نسخهٔ قالب شاهد ذخیره‌شده باشند.
+                || quote.SnapshotId != evidence.SnapshotId
+                || quote.FormatVersion != evidence.FormatVersion
+                || quote.DraftId != evidence.DraftId
+                || quote.SourceRevision != evidence.SourceRevision
                 || quote.GroupId != evidence.AreaGroupId
                 || quote.RateRowId != evidence.RateRowId
                 || quote.ShippingTypeId != evidence.ShippingTypeId
@@ -418,32 +446,183 @@ public sealed partial class CheckoutDirectory
     }
 
     /// <summary>
-    /// مقصد نهاییِ همین submit را از نام‌های معتبر سرور resolve می‌کند؛ ابهام/عدم‌تطبیق رد می‌شود.
+    /// مقصد نهاییِ همین submit: کشور متعارف را از <b>دادهٔ مورداعتماد فعلی</b> برای شناسهٔ کشور
+    /// قیمت‌گذاری‌شده می‌گیرد (نه null، نه حدس/کشور اول)، نشانی را با هویت واقعی سبد/ثبت‌کننده
+    /// اعتبارسنجی می‌کند و سپس متن معتبر سرور را دقیقاً resolve می‌کند.
     /// </summary>
-    private async Task<DestinationIdentifiers> ResolveCurrentDestinationAsync(
+    /// <remarks>
+    /// <b>Saved address.</b> وقتی شناسهٔ نشانی ذخیره‌شده روی ریشهٔ قیمت‌گذاری‌شده موجود است، همان
+    /// رکورد با actor واقعی از کتاب آدرس خوانده می‌شود و کشور/استان/شهر/کد پستی/نشانی/موبایل آن باید
+    /// عیناً همان مقادیر قیمت‌گذاری‌شده باشد؛ نشانی حذف‌شده/بیگانه/تغییرکرده پیش از هر رزرو رد می‌شود.
+    /// نشانی بدون شناسه هم باید عیناً با همان تصویر ذخیره‌شده برابر باشد. هیچ شناسه/کاربری از بدنه
+    /// مرورگر گرفته نمی‌شود و مالکیت با شناسهٔ کاربر سبد و ثبت‌کننده بررسی می‌شود.
+    /// </remarks>
+    private async Task<DestinationIdentifiers> ResolveAcceptedAddressAsync(
         SubmitCheckoutCommand command,
+        CartSnapshot cart,
+        CartShippingDraft draft,
         CancellationToken cancellationToken)
     {
-        if (_geography is null)
+        if (_geography is null || _addressBook is null)
         {
             throw new ContractOperationException(CapturedUnavailable);
         }
 
+        var countryCode = await ResolveCanonicalCountryCodeAsync(draft.DestinationCountryId, cancellationToken);
+
+        if (draft.SavedAddressId is Guid savedAddressId && savedAddressId != Guid.Empty)
+        {
+            var actor = ResolveAcceptedAddressActor(command, cart);
+            if (actor is null)
+            {
+                throw new ContractOperationException(CapturedDestinationUnverified);
+            }
+
+            var saved = await _addressBook.GetAsync(actor.Value, savedAddressId, cancellationToken);
+            if (saved is null
+                || !StorefrontAddressCanonical.Same(
+                    saved.Country,
+                    saved.ProvinceName,
+                    saved.CityName,
+                    saved.PostalAddress,
+                    saved.PostalCode,
+                    saved.ContactMobile,
+                    countryCode,
+                    draft.ProvinceName,
+                    draft.CityName,
+                    draft.PostalAddress,
+                    draft.PostalCode,
+                    draft.ContactMobile))
+            {
+                // رکورد حذف‌شده/بیگانه/تغییرکرده: نشانی قیمت‌گذاری‌شده دیگر معتبر نیست.
+                throw new ContractOperationException(CapturedDestinationUnverified);
+            }
+        }
+
+        // نشانی واقعی که پایدار می‌شود باید عیناً همان نشانیِ قیمت‌گذاری‌شده باشد؛ آدرس ذخیره‌شده و
+        // آدرس بدون شناسه هر دو از همین یک مقایسه می‌گذرند (بدون معنای نشانی تازه).
+        if (!StorefrontAddressCanonical.Same(
+                countryCode,
+                command.ProvinceName,
+                command.CityName,
+                command.PostalAddress,
+                command.PostalCode,
+                command.ContactMobile,
+                countryCode,
+                draft.ProvinceName,
+                draft.CityName,
+                draft.PostalAddress,
+                draft.PostalCode,
+                draft.ContactMobile))
+        {
+            throw new ContractOperationException(CapturedDestinationUnverified);
+        }
+
         var resolution = await _geography.ResolveLegacyAsync(
-            countryCode: null,
-            string.IsNullOrWhiteSpace(command.ProvinceName) ? null : command.ProvinceName,
-            string.IsNullOrWhiteSpace(command.CityName) ? null : command.CityName,
+            countryCode,
+            string.IsNullOrWhiteSpace(draft.ProvinceName) ? null : draft.ProvinceName,
+            string.IsNullOrWhiteSpace(draft.CityName) ? null : draft.CityName,
+            // ناحیهٔ خدمت پشتیبانی نمی‌شود و هرگز از نام حدس زده نمی‌شود.
             serviceAreaName: null,
             cancellationToken);
 
         if (resolution.Outcome != DestinationResolutionOutcome.Resolved
-            || resolution.Identifiers is not { } identifiers)
+            || resolution.Identifiers is not { } identifiers
+            || identifiers.CountryId != draft.DestinationCountryId)
         {
-            throw new ContractOperationException(CapturedUnavailable);
+            throw new ContractOperationException(CapturedDestinationUnverified);
         }
 
         return identifiers;
     }
+
+    /// <summary>
+    /// کد کشور متعارف و غیرتهی برای شناسهٔ کشور قیمت‌گذاری‌شده از فهرست مورداعتماد فعلی؛ تطبیق باید
+    /// یگانه و دقیق باشد، وگرنه هیچ کشوری جایگزین/پیش‌فرض نمی‌شود.
+    /// </summary>
+    private async Task<string> ResolveCanonicalCountryCodeAsync(
+        Guid? pricedCountryId,
+        CancellationToken cancellationToken)
+    {
+        if (pricedCountryId is not Guid countryId || countryId == Guid.Empty || _geography is null)
+        {
+            throw new ContractOperationException(CapturedDestinationUnverified);
+        }
+
+        var countries = await _geography.ListCountriesAsync(cancellationToken);
+        var matches = countries
+            .Where(country => country.CountryId == countryId)
+            .Select(country => country.CountryCode?.Trim())
+            .Where(code => !string.IsNullOrEmpty(code))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (matches.Length != 1)
+        {
+            throw new ContractOperationException(CapturedDestinationUnverified);
+        }
+
+        return matches[0]!;
+    }
+
+    /// <summary>
+    /// هویت واقعیِ صاحب نشانی: شناسهٔ کاربر سبد و ثبت‌کننده باید یکی باشند و دسترسی سبد با همان
+    /// کاربر هم‌خوان باشد. هیچ userId از فیلدهای مالکِ بدنه گرفته نمی‌شود.
+    /// </summary>
+    private static Guid? ResolveAcceptedAddressActor(SubmitCheckoutCommand command, CartSnapshot cart)
+    {
+        if (command.PlacedByUserId == Guid.Empty
+            || cart.OwnerUserId is not Guid owner
+            || owner != command.PlacedByUserId
+            || command.CartAccess.UserId != owner)
+        {
+            return null;
+        }
+
+        return owner;
+    }
+
+    /// <summary>
+    /// هر روش ذخیره‌شده باید در فهرست <b>فعال</b> فروشگاه دقیقاً یک سرویس هم‌کد و (اگر گزینه دارد)
+    /// دقیقاً یک گزینهٔ فعال هم‌کد داشته باشد؛ گزینهٔ تهی همان هویت غایب است و تطبیق تقریبی ممنوع.
+    /// </summary>
+    private static void RequireActiveCatalogBinding(
+        IReadOnlyList<ShippingCatalogServiceSnapshot> catalog,
+        string serviceCode,
+        string? optionCode)
+    {
+        var services = catalog
+            .Where(service => service.IsActive
+                && string.Equals(
+                    NormalizeBindingText(service.Code),
+                    NormalizeBindingText(serviceCode),
+                    StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        if (services.Length != 1)
+        {
+            throw new ContractOperationException(CapturedUnavailable);
+        }
+
+        var normalizedOption = NormalizeBindingText(optionCode);
+        if (normalizedOption is null)
+        {
+            return;
+        }
+
+        var options = services[0].Options
+            .Where(option => option.IsActive
+                && string.Equals(
+                    NormalizeBindingText(option.Code),
+                    normalizedOption,
+                    StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        if (options.Length != 1)
+        {
+            throw new ContractOperationException(CapturedUnavailable);
+        }
+    }
+
+    private static string? NormalizeBindingText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     /// <summary>مقایسهٔ هویت یکتای مقصد فعلی با مقصد قیمت‌گذاری‌شدهٔ ذخیره‌شده روی ریشهٔ پیش‌نویس.</summary>
     private static bool SameDestination(CartShippingDraft draft, DestinationIdentifiers current) =>

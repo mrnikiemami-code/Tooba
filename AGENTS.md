@@ -1,4 +1,45 @@
-# CURRENT — 233-R2 integration scoped accepted; issued233-R3 address/binding/proof —2026-10-27
+# CURRENT — 233-R3 executed: real country/address authority + corrected real submit proof —2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-ADDRESS-BINDING-AND-PROOF-233-R3/{TASK.md,RESULT.md}.
+Status EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base2218873b9; elapsed≈48min vs HARD40 —
+recorded NONCOMPLIANT. Final acceptance resolves a canonical NONBLANK ISO country from CURRENT trusted country
+data matching the priced stored country id (unique match else destination_unverified; no IR literal, no
+first-country, no label guess) and passes it to ResolveLegacyAsync; resolved country/area/city ids must equal the
+stored priced destination and serviceArea stays explicitly unsupported. SavedAddressId is read through
+IAddressBookCheckoutLookup.GetAsync with the REAL server actor (cart owner == PlacedByUserId == CartAccess.UserId),
+and missing/foreign/edited records refuse BEFORE reserve; the accepted command province/city/postal/mobile must
+equal the priced root exactly, so the persisted Order address cannot differ from the priced one. HONEST LIMIT:
+the command carries NO country field, so country identity is asserted on the priced root + resolved ids.
+Server-only StorefrontCheckoutPlacement.SourceSavedAddressId (trailing optional) keeps snapshot SavedAddressId
+null and the232 writer persists it into the EXISTING draft column; unknown stays unknown, no new column/backfill.
+ONE IShippingCatalogReader read per submit requires each stored service/option ACTIVE (exact trimmed code, null
+option = absent, no fuzzy); typed StorefrontCapturedPublicationBinding.For for the219 pointer cache; the pointer
+must be Selected and equal DraftId/SourceRevision/SelectionVersion/SnapshotId/FormatVersion/ShippingTypeId and
+echo the requested binding; the quote must repeat SnapshotId/FormatVersion/DraftId/SourceRevision. Gate adds
+HasValidAvailableDateCount; a missing optional authority is an explicit unavailable; the true legacy passage is
+unchanged with zero foreign calls. Corrected fixture (same class, no new framework): TWO sellers on ONE Store
+binding, ONE shared snapshot/draft/revision/area group with own rate rows, REAL 100-10+10%=99 and 200-20+10%=198
+through the existing pricing/tax registration, ONE shared stored week with fractional 100ns ticks on two lawful
+dates, strict Geography (null/wrong code or name => Unresolved, actual IR asserted), genuinely changed-pointer
+replay, 16 exact negative codes, barrier rollback, provenance-through-preparation, module-scope resolution.
+PROOF on ONE task-owned disposable postgres:17-alpine /tb231 15433/order_tb231 (identity before DDL, container
+removed, 15433 verified closed): CapturedFinalSubmitIntegrationTests 25/25, all StorefrontCaptured* classes 68/68
+(writer/storage/transaction subset 32/32), Order.Tests build 0 errors; no124/36/28/31/50/119/188/194/285/310/312/
+fullOrder/Host/solution/guard sweep. Bounded concurrency on the same target: an uncommitted selection advance
+before the root lock is an exact conflict with zero reservation/order; the REAL232 selection writer at the same
+expected revision is proven BLOCKED on the accepted root (pg_stat_activity waiter probe, no assumed sleep),
+released once, then the persisted order evidence survives while the revision advances. NOT delivered: public
+CommitAsync/ProjectPaymentDraftAsync stay not_ready, checked-in gates OFF, coupon read/selection/commit parity
+unimplemented, no HTTP/live/StartPayment/provider/payment or Marketplace proof, point-in-time lock only (no
+serializability claim), 231/232 migrations sharedNOTAPPLIED/EFsnapshotgap retained. Two test-hygiene corrections
+beyond the single allowed round (fixture window length, missing usings, replay assertion).
+USER VISIBLE review window is USER unsavedwork: never enumerate/read/automate/reload/close; localpreviewON/count7,
+Host/FE/runtime/data/cart/addressbook/draft/rates/week/pointer/assignments untouched. Known230emptykey/inflight/
+crossownerlabelsdecoder/OfferAPI/227mobile/225-R1lostLOCALwork retained. TB185paused/defaultOFF/PendingAllocation.
+NEXT (Architect): review this proof, then coupon read/selection/commit parity and any live submit/StartPayment
+parity slice if required. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+# HISTORICAL — 233-R2 integration scoped accepted; issued233-R3 address/binding/proof —2026-10-27
 
 Active TB-SHIPPING-CAPTURED-ADDRESS-BINDING-AND-PROOF-233-R3. Read233-R2/ARCHITECT-REVIEW.md and233-R3/TASK.md.
 Root reviewed2ef0125cd/source1d2106dd2: reader-free core/fixedgroupkeys/commandfacts/actualOrder persistence/
