@@ -1,4 +1,42 @@
-# CURRENT — Architect did NOT accept231 contract; issued231-R1 —2026-10-27
+﻿# CURRENT — 231-R1 executed: evidence owner/token/hour/money corrected, still unshared/unaccepted — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/{RESULT.md,TASK.md} and
+231/ARCHITECT-REVIEW.md. Base `5cd72434e`. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no live
+writer/HTTP/parity/UI/runtime change. The five blocking review facts are repaired on the SAME unshared value.
+
+A — `SourceRevision`/`SelectionVersion` are long/bigint end-to-end (3,000,000,000 and 4,294,967,296 persist and
+read back exactly through draft AND confirmed group, incl. raw column text); format stays 1, non-positive tokens
+refuse. B — optional responsibility replaced by a REQUIRED Order-owned
+`ShippingGroupOwner` Store(tenant)/Marketplace/Seller(sellerId): all-or-none, tenant Ordinal (never lowercased),
+Seller must equal the group's selling party, Store/Marketplace never rewritten as that seller, no inferred owner,
+DB repeats the three shapes. C — accepted ReceivingDate + opening/closing TimeOnly bounds as bigint ticks
+(0..TicksPerDay-1; 09:00:00.1234567 proven exact, no time/timestamp truncation) + method timezone; same-day
+positive interval; group's chosen date required and `ApplySchedule` refuses a contradicting schedule BEFORE
+mutation; delivery days stay optional metadata, never mapped onto endpoints or LeadDays. D — amounts refused
+unless exactly representable in numeric(18,2) and `freight+packaging == payable+collect` (Manual slice only);
+explicit 0/max/split lawful, nothing recomputed/clamped; historical-replacement fixture is now a coherent
+157,000 quote (150,000+7,000) instead of 150,000+7,000 against 125,000. E — migration231 corrected IN PLACE: 22
+plain (NO IFNOTEXISTS) columns on BOTH existing group tables + two CHECK constraints each (all-or-none + shape),
+still WRITTEN/sharedNOTAPPLIED; EF snapshot deliberately left stale (pre-existing baseline lacks the group
+entities) and the runtime model is proven equal to the migrated columns/types/nullability/indexes for the two
+touched tables — no future-scaffolding claim.
+Proof: 50/50 focused only (11 domain + 5 provider + 12 target-isolation + directly affected materializer/planner/
+schedule facts) on the task-owned disposable 15433/order_tb231/tb231, identity asserted before DDL, container
+removed and port verified closed; Order Domain/Infrastructure/Tests build 0 errors. No whole-Order/Shipping/
+119/188/194/Host/solution/guard sweep.
+HONEST: no production writer composes evidence yet (real draft/order groups stay NULL), no historical reader
+exists, `SaveSelectionAsync`/`CommitAsync` still refuse `storefront.captured_preview.not_ready`; `ApplySchedule`
+has no production caller (proved through InternalsVisibleTo). Retained unfixed: 230-R1 empty-key destination
+failure/retry gap + in-flight new-key wait, cross-owner label map/decoder id-coercion, Offer API proof gaps, 227
+mobile empty-note residual, 225-R1 lost unsaved user LOCAL edits. SingleStore trial does not certify Marketplace.
+The user's visible review window, live Host/FE, previewON/count7, runtime data, buyer/cart, draft/rates/week/
+pointer/assignment were NOT touched (no enumerate/automate/reload/close). Elapsed ≈16 min vs HARD35 with one
+in-module correction round — still NOT a process PASS.
+NEXT (Architect): trusted server composer revalidating selected revision + cart/version + Offer/type/quote/date
+and writing this evidence inside the existing atomic boundary, then the Order-storage-only historical read;
+captured checkout stays not_ready until then. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused/
+default-OFF/PendingAllocation preserved.
+# SUPERSEDED — Architect did NOT accept231 contract; issued231-R1 —2026-10-27
 
 Active: TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1. Fix existing evidence: long(bigint) source/selection
 tokens, FULL owner key, actual chosen-date TimeOnly interval (exactticks, not two invented DateOnly endpoints),
@@ -17,7 +55,7 @@ must be accepted before connecting writer. No historicalrepricing. 228migration 
 Known empty-keyrefresh/cross-ownerlabel/decoder/OfferAPI gaps retained;227mobile residual;225-R1 lostunsaved
 userLOCALtabedits,no recovery. TB185paused/defaultOFF/PendingAllocation preserved. Prior history below.
 
-# CURRENT — 231 executed PARTIAL: compact per-group order evidence stored, no live writer — 2026-10-27
+# SUPERSEDED — 231 executed PARTIAL (was CURRENT before 231-R1) — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231/{RESULT.md,RECEIPTS.md,TASK.md}.
 Base `5a3070567`. Status: **EXECUTED — PARTIAL**, not accepted, no capture checkout, no user Visual ACCEPT.
@@ -1925,3 +1963,4 @@ explicit product-owner decision.
 - `docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md`
 - `docs/PROJECT-STATE.md`
 - `docs/ROADMAP.md`
+

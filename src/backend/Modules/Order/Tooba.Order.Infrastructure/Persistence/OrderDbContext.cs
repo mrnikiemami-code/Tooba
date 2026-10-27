@@ -406,7 +406,6 @@ public sealed class OrderDbContext : DbContext
         owned.Property(x => x.SourceRevision).HasColumnName("accepted_source_revision");
         owned.Property(x => x.FormatVersion).HasColumnName("accepted_format_version");
         owned.Property(x => x.SelectionVersion).HasColumnName("accepted_selection_version");
-        owned.Property(x => x.Responsibility).HasColumnName("accepted_responsibility");
         owned.Property(x => x.AreaGroupId).HasColumnName("accepted_area_group_id");
         owned.Property(x => x.RateRowId).HasColumnName("accepted_rate_row_id");
         owned.Property(x => x.ShippingTypeId).HasColumnName("accepted_shipping_type_id");
@@ -421,13 +420,29 @@ public sealed class OrderDbContext : DbContext
         owned.Property(x => x.CarrierCollectAmount)
             .HasColumnName("accepted_carrier_collect_amount")
             .HasPrecision(18, 2);
-        owned.Property(x => x.ReceivingStartDate).HasColumnName("accepted_receiving_start_date");
-        owned.Property(x => x.ReceivingEndDate).HasColumnName("accepted_receiving_end_date");
+        owned.Property(x => x.ReceivingDate).HasColumnName("accepted_receiving_date");
+        owned.Property(x => x.ReceivingOpenTicks).HasColumnName("accepted_receiving_open_ticks");
+        owned.Property(x => x.ReceivingCloseTicks).HasColumnName("accepted_receiving_close_ticks");
         owned.Property(x => x.ReceivingTimeZone)
             .HasColumnName("accepted_receiving_time_zone")
             .HasMaxLength(ShippingGroupAcceptedEvidence.MaxTimeZoneLength);
         owned.Property(x => x.MinimumDeliveryDays).HasColumnName("accepted_minimum_delivery_days");
         owned.Property(x => x.MaximumDeliveryDays).HasColumnName("accepted_maximum_delivery_days");
+
+        owned.OwnsOne(
+            x => x.Owner,
+            owner =>
+            {
+                owner.Property(x => x.Kind)
+                    .HasColumnName("accepted_owner_kind")
+                    .HasConversion<int>();
+                owner.Property(x => x.TenantKey)
+                    .HasColumnName("accepted_owner_tenant_key")
+                    .HasMaxLength(ShippingGroupOwner.MaxTenantKeyLength);
+                owner.Property(x => x.SellerPartyId)
+                    .HasColumnName("accepted_owner_seller_party_id");
+            });
+        owned.Navigation(x => x.Owner).IsRequired();
     }
 }
 

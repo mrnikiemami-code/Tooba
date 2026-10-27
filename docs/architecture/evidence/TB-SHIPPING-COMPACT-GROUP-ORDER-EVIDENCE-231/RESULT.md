@@ -142,3 +142,34 @@ Offer/type/quote/date and writes this evidence inside the existing atomic draft/
 historical read that uses only Order storage. Captured checkout stays `not_ready` until that lands.
 
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused, default-OFF, PendingAllocation preserved.
+
+# CORRECTION APPENDED BY TB-231-R1 (2026-10-27) — this result is superseded, not deleted
+
+The Architect review of this result is `ARCHITECT-REVIEW.md` in this folder: the contract above was
+**NOT ACCEPTED**. The 231 value/mapping/migration were corrected in place (still unshared/unaccepted) by
+`TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1`; read
+`../TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/RESULT.md` for the executed contract.
+
+What changed against the statements above, kept here for history only:
+
+- `SourceRevision`/`SelectionVersion` are `long` (bigint) now, not `int`/`integer`.
+- The optional `OfferFulfillmentResponsibility` on the evidence is replaced by a **required** Order-owned
+  `ShippingGroupOwner` (`Store(tenant)` / `Marketplace()` / `Seller(sellerId)`), validated all-or-none and
+  matched against the group's selling party; the group's seller is no longer treated as the owner.
+- The invented `ReceivingStartDate..ReceivingEndDate` range is replaced by the accepted `ReceivingDate` plus the
+  actual opening/closing `TimeOnly` bounds stored as `bigint` ticks (lossless to 100 ns) with the method timezone,
+  and `ApplySchedule` refuses a schedule change that would contradict existing evidence.
+- Amounts are validated against `numeric(18,2)` representability and `freight + packaging == payable + collect`
+  before any mutation; the historical-replacement fixture now uses a coherent new quote (`157,000` group amount
+  with `150,000 + 7,000`) instead of the incoherent `150,000 + 7,000` against `125,000`.
+- The migration adds 22 plain (no `IF NOT EXISTS`) columns plus two CHECK constraints per table that enforce
+  complete-vs-absent and basic shape at the database level; the "19 nullable columns" and the
+  "successful provider storage = all-or-none proof" claims above are withdrawn.
+- The EF model snapshot remains a documented pre-existing baseline gap; the runtime model is proven against the
+  migrated columns/types/nullability/indexes for the two touched group tables instead.
+
+Still true from the original contract: no production writer composes the evidence, no historical reader exists,
+`storefront.captured_preview.not_ready` still guards SaveSelection/Commit, the migration was never applied to the
+shared `tooba_alpha`, and no user runtime/browser/draft/pointer/assignment change was made.
+
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.

@@ -290,13 +290,26 @@ public sealed class CartShippingDraftGroup
         }
     }
 
-    /// <summary>چانه‌زنی تاریخ تحویل انتخابی را روی همین گروه جایگزین می‌کند.</summary>
+    /// <summary>
+    /// چانه‌زنی تاریخ/پنجرهٔ تحویل انتخابی را روی همین گروه جایگزین می‌کند.
+    /// چون شاهد پذیرفته‌شده به تاریخ/پنجرهٔ واقعی گره خورده است، وقتی شاهد وجود دارد تغییر ناسازگار
+    /// <b>پیش از هر جهش</b> رد می‌شود؛ بدین ترتیب هیچ شاهد کهنه‌ای زیر زمان‌بندی عوض‌شده نمی‌ماند.
+    /// </summary>
     internal void ApplySchedule(DateOnly? selectedDeliveryDate, string? selectedDeliveryTimeWindow)
     {
-        SelectedDeliveryDate = selectedDeliveryDate;
-        SelectedDeliveryTimeWindow = string.IsNullOrWhiteSpace(selectedDeliveryTimeWindow)
+        var normalizedWindow = string.IsNullOrWhiteSpace(selectedDeliveryTimeWindow)
             ? null
             : selectedDeliveryTimeWindow.Trim();
+
+        if (AcceptedEvidence is { } evidence
+            && (selectedDeliveryDate != evidence.ReceivingDate
+                || !string.Equals(normalizedWindow, SelectedDeliveryTimeWindow, StringComparison.Ordinal)))
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.ScheduleMismatch);
+        }
+
+        SelectedDeliveryDate = selectedDeliveryDate;
+        SelectedDeliveryTimeWindow = normalizedWindow;
     }
 
     /// <summary>
@@ -318,6 +331,9 @@ public sealed class CartShippingDraftGroup
             {
                 throw new ContractOperationException(ShippingGroupEvidenceFault.PayableMismatch);
             }
+
+            evidence.Owner.EnsureCoherentWithGroupSeller(SellerPartyId);
+            evidence.EnsureCoherentWithGroupSchedule(SelectedDeliveryDate);
         }
 
         AcceptedEvidence = evidence;

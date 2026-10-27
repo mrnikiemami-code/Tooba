@@ -1,4 +1,36 @@
-# CURRENT — Architect did NOT accept231 contract; issued231-R1 —2026-10-27
+﻿# CURRENT — 231-R1 executed: evidence owner/token/hour/money corrected in place — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/{RESULT.md,TASK.md}.
+Base `5cd72434e`. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no live writer/parity/UI/runtime.
+The five blocking 231 review facts are repaired inside the SAME unshared value/mapping/migration.
+
+A — `SourceRevision`/`SelectionVersion` are `long` (bigint) end-to-end; `3_000_000_000` and `4_294_967_296`
+persisted and read back exactly through BOTH draft and confirmed group (and from raw column text). Format stays1;
+non-positive tokens still refuse. B — optional responsibility replaced by required Order-owned
+`ShippingGroupOwner` Store(tenant)/Marketplace/Seller(sellerId): all-or-none, tenant Ordinal (never lowercased),
+Seller must equal the group's selling party, Store/Marketplace never rewritten as that seller, no inferred owner.
+C — accepted `ReceivingDate` + opening/closing bounds as bigint TimeOnly ticks (0..TicksPerDay-1, 7-digit
+fraction proven exactly, no time/timestamp truncation) + method timezone; same-day positive interval; group's
+chosen date required and `ApplySchedule` refuses a contradicting schedule BEFORE mutation; delivery days stay
+optional metadata, never mapped onto endpoints/LeadDays. D — amounts refused unless exactly numeric(18,2) and
+`freight+packaging == payable+collect` (Manual slice only); explicit0/max/split lawful; nothing recomputed; the
+historical-replacement fixture is now a coherent `157,000` quote. E — migration231 corrected IN PLACE:
+22 plain (no IFNOTEXISTS) columns on BOTH existing tables plus two CHECK constraints each (all-or-none + shape),
+still WRITTEN/sharedNOTAPPLIED; EF snapshot left stale by decision, runtime model proven equal to migrated
+columns/types/nullability/indexes for the two touched tables.
+Proof only: 50/50 focused (11 domain + 5 provider + 12 target-isolation + directly affected materializer/planner
+facts) on the task-owned disposable 15433/order_tb231/tb231, container removed and port verified closed; Order
+Domain/Infrastructure/Tests build 0 errors.
+HONEST: no production composer writes evidence yet (real groups stay NULL; `not_ready` still guards
+SaveSelection/Commit), no historical reader exists, `ApplySchedule` has no production caller (proved via
+InternalsVisibleTo), snapshot baseline gap retained. Retained unfixed: 230-R1 empty-key retry gap, cross-owner
+label map/decoder, Offer API proof gaps, 227 mobile empty-note residual, 225-R1 lost unsaved user LOCAL edits.
+Live Host/FE/previewONcount7 and the user's visible review window + runtime data untouched. Elapsed ≈16 min vs
+HARD35 — still NOT a process PASS.
+NEXT (Architect): trusted server composer writing this evidence inside the existing atomic boundary, then the
+Order-storage-only historical read; captured checkout stays not_ready. STOP_FOR_ARCHITECT;
+Automatic-Next-Task NONE. TB185 paused/default-OFF/PendingAllocation preserved.
+# SUPERSEDED — Architect did NOT accept231 contract; issued231-R1 —2026-10-27
 
 Active: TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1. Fix existing evidence: long(bigint) source/selection
 tokens, FULL owner key, actual chosen-date TimeOnly interval (exactticks, not two invented DateOnly endpoints),
@@ -17,7 +49,7 @@ must be accepted before connecting writer. No historicalrepricing. 228migration 
 Known empty-keyrefresh/cross-ownerlabel/decoder/OfferAPI gaps retained;227mobile residual;225-R1 lostunsaved
 userLOCALtabedits,no recovery. TB185paused/defaultOFF/PendingAllocation preserved. Prior history below.
 
-# CURRENT — 231 executed PARTIAL: compact per-group order evidence stored, no live writer — 2026-10-27
+# SUPERSEDED — 231 executed PARTIAL (was CURRENT before 231-R1) — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231/{RESULT.md,RECEIPTS.md,TASK.md}.
 Base `5a3070567`. Status: **EXECUTED — PARTIAL**, not accepted, no capture checkout, no user Visual ACCEPT.
@@ -1601,3 +1633,4 @@ PRODUCT_FULLY_READY = NO
 ```
 
 Evidence for current task: `docs/evidence/TB-P07-T001-R5/` (Admin+Seller UI/UX polish; Shopeiva vendor fidelity; DataGrid/AC UX; manual visual supervision). Flags: T001/R1/R2/R3/R4 = SUPERSEDED; R5 = AWAITING_ARCHITECT_ACCEPT; `CURRENT_FOCUS` = UI_UX_ONLY; `ADMIN_UI` = PRIORITY_1; `SELLER_UI` = PRIORITY_2; `BACKEND_FEATURE_EXPANSION` = FROZEN; `CATEGORY_ATTRIBUTE_*` / `PRODUCT_VARIANT_AXES` / `VARIANT_COMBINATION_FOUNDATION` = LIVE (kept); `FULL_VARIANT_MATRIX` = DEFERRED; `FACETED_SEARCH_INTEGRATION` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Do **not** claim `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, `PRODUCTION_GO_LIVE_READY`, `SELLER_PANEL_COMPLETE`, or `FULL_VARIANT_MATRIX_LIVE`.
+

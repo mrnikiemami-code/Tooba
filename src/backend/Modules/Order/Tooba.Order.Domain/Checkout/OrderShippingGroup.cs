@@ -135,6 +135,9 @@ public sealed class OrderShippingGroup
             {
                 throw new ContractOperationException(ShippingGroupEvidenceFault.PayableMismatch);
             }
+
+            evidence.Owner.EnsureCoherentWithGroupSeller(plan.SellerPartyId);
+            evidence.EnsureCoherentWithGroupSchedule(plan.RequestedDeliveryDate);
         }
 
         return new OrderShippingGroup
