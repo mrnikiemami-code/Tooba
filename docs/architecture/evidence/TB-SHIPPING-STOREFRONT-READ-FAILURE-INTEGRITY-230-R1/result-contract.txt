@@ -1,0 +1,108 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1
+Parent-Task: TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: Tooba Storefront Shipping
+Mode: ONE_FAILED_DESTINATION_REFRESH_STATE_REPAIR_PLUS_TWO_DISPLAY_FIXES
+Bridge-Task-Row: 7c6b609b-81e9-4153-8515-f8f4da49d2cd
+Status: EXECUTED — failed-refresh state repaired + two display fixes; NOT accepted, NO user Visual ACCEPT
+Stop-State: STOP_FOR_ARCHITECT
+Base-SHA: 6d0a506b2 (issue commit)
+Code-SHA: e25860ba899217c5f6cab0b73afe17ce26fb31e5
+Evidence-SHA: e25860ba899217c5f6cab0b73afe17ce26fb31e5
+automaticNextImplementationTask: NONE
+
+1 — THE DESCRIBED DEFECT WAS REAL AND IS REPAIRED IN THE SAME REFRESH PATH
+`refreshProjection` did keep the last successful projection in state, hid it only through one
+`capturedDestinationPending` boolean, cleared that boolean in `finally` on BOTH success and exception, let the
+outer `catch` only set `error`, and advanced `appliedDestinationKey` BEFORE the response — so a failed refresh
+for a new destination re-showed the previous destination's price and could not be retried.
+Now ONE explicit identity state owns the decision (`storefront-shipping-destination-refresh.ts`):
+DestinationRefreshSnapshot { confirmedKey (the destination the CURRENT successful preview really describes),
+requestedKey, failedKey, inFlight }, with createDestinationRefreshSnapshot / beginDestinationRefresh (never
+confirms) / completeDestinationRefresh / failDestinationRefresh (both return the snapshot UNCHANGED unless
+requestedKey === key, so a stale success OR a stale error cannot mutate the current projection, error or
+pending state) / canRetryDestinationRefresh (!inFlight && failedKey === key) /
+resolveDestinationPreviewMode → "current" | "pending" | "failed" / planDestinationRefresh (skip when legacy OFF,
+in flight, already confirmed, or already failed → no auto retry, no render/request loop) with
+preserveTypedAddress: true. `storefront-shipping.tsx` keeps that snapshot in ONE ref (synchronous decisions)
+mirrored to state (render); the old `appliedDestinationKey` ref and `capturedDestinationPending` boolean are
+deleted; `refreshProjection` now takes `options.destinationKey`, begins the identity, and its completion/failure
+is gated by the SAME request generation that already gates `setProjection`. The mount call is tracked for the
+empty identity, so the first honest `destination_required` answer is "current" for "no destination" instead of
+looking pending forever.
+Presentation stays inside the EXISTING card: with a non-current mode the card renders no money and no dates —
+one compact existing-style reason (`storefront.captured_preview.destination_pending` while in flight,
+`storefront.captured_preview.destination_failed` after failure) plus ONE explicit «تلاش دوباره» button
+(data-testid shipping-captured-destination-retry) gated by the synchronous snapshot. Typed recipient/address
+is untouched (destination refresh never calls setAddress and passes rehydrateDraft:false). Legacy OFF still
+short-circuits to `skip`; its card path is unchanged.
+
+2 — TWO PRESENTATION FIXES ONLY
+(1) `formatExactAmountText`: IRR with an ALL-ZERO fraction displays as the integer — `120000.00` → `۱۲۰,۰۰۰ ریال`,
+`0.00` → `۰ ریال` — with the raw token never rewritten and exact grouping/local digits kept; an unexpected
+NON-zero fraction is preserved exactly (`120000.50` → `۱۲۰,۰۰۰.۵۰ ریال`, `1234.000001` → `۱,۲۳۴.۰۰۰۰۰۱ ریال`,
+never rounded or truncated); other currencies keep their decimal text (`۱۲۰,۰۰۰.۰۰ USD`), null stays unknown and
+malformed stays invalid. No Number/parseFloat, no FX, no business mutation.
+(2) The captured interval line wraps the server's own interval text in `<bdi dir="ltr">`, so `09:00–17:00` reads
+in the correct order in RTL. Stored hours are not reversed and no calendar/slot design changed.
+
+3 — FOCUSED VERIFICATION (same coordinator the page calls, not a parallel toy)
+node --experimental-strip-types --test on the three affected storefront test files → 22/22 pass, covering:
+destination transition requests exactly the verified current identifiers; old destination priced → new request
+fails → old money/dates cannot look current (mode "failed", confirmedKey still the OLD identity); same failed
+key explicit retry ONCE → the failed latch is dropped the same tick (a second click/render issues nothing) and
+the keyed success makes the NEW quote current; stale failure after a newer request and stale success while
+another request is in flight leave the snapshot identical; unrelated render (same confirmed key) and legacy OFF
+issue no request; preserveTypedAddress true for every destination refresh; formatter facts as above.
+ONE final `tsc --noEmit`: clean (exit 0). No backend build, no 188/194/full suite, no guard suite.
+
+4 — MOUNTED PROOF (task-owned profile, real traffic, 390)
+FE 127.0.0.1:3000 PID 28288 and Host 127.0.0.1:5088 untouched — no rebuild, no restart, no migration, no seed;
+only frontend source changed. Task-owned Chrome (CDP 9336), target created by this task, existing logged-in
+buyer 01a17cf7-e38d-7000-82a5-00c57929bc54 / cart 01a17cfd-c1b1-7000-b10d-8cf21258a1cd; no user tab read.
+(a) Real destination via the existing selects (تهران/تهران) → priced card with the NEW display
+`کرایه ۱۲۰,۰۰۰ ریال · بسته‌بندی ۵,۰۰۰ ریال`, goods ۹,۴۸۵,۷۷۱ ریال, date strip present.
+(b) REAL failure: Network.emulateNetworkConditions offline:true on that target, then province changed to البرز
+through already-loaded options → DOM: pricedCardVisible false, oldPriceVisible false, dateChipVisible false,
+one compact line «ارسال این مقصد محاسبه نشد؛ قیمت مقصد قبلی نمایش داده نمی‌شود.» with the retry button.
+Screenshot screens/230r1-390-destination-failed.png (390x844, card scrolled to block:center).
+(c) Network restored, ONE explicit Retry: the driver clicked the real button TWICE in the same tick and the
+network receipt shows exactly 1 projection POST, carrying the exact new verified ids
+{countryId e3451206-…, administrativeAreaId 1f8050a8-c325-59fa-959f-82d76b5b2bc5, cityId null},
+provinceName "البرز"; the priced card returned for THAT destination, the retry control disappeared,
+`intervalBdiDir ltr` (computed direction ltr, text «بازهٔ همین روز: 09:00–17:00»),
+scrollWidth == clientWidth == 390, card bounds top 59 / bottom 786 in 844 with intersects true.
+Screenshot screens/230r1-390-retry-success.png.
+
+5 — HONEST LIMITS
+With Chrome offline emulation the blocked request emitted no Network.requestWillBeSent (count 0 while offline),
+so the failure is proven by the resulting page state and the absence of any successful answer, not by a captured
+failing request record. Only 390 was mounted (per task). While a destination refresh is pending or failed the
+card renders only the compact notice — product lines, seller and type are NOT rendered in that window — but cart
+lines and typed recipient/address are preserved in state and return unchanged with the confirmed answer (visible
+again in the retry screenshot); if the reviewer requires product lines during the failed window, that is a
+presentation follow-up, not a data loss. No user Visual ACCEPT is claimed from my screenshots.
+
+6 — UNTOUCHED / NOT CLAIMED / GIT / TIME
+No auth, cart, draft, rate, week, pointer, assignment, publication or setup write; 230's accepted positive
+configured read and its DEV data are unchanged. No selection/save/commit/order/payment; the server not_ready
+guard remains. Checked-in captured-preview default stays OFF, local read preview stays ON with its date count,
+TB185 paused / default-OFF / PendingAllocation preserved. Still unimplemented and NOT claimed: compact
+per-order-group immutable order evidence, server-selected revision revalidation across selection/commit,
+no-historical-repricing. Known cross-owner label-map/decoder limits, the 227 mobile empty-note residual and the
+unrecovered 225-R1 user-tab local-edit loss remain recorded; the full Storefront is NOT relabelled as delivered.
+Exact-path staging only (the three Shipping files in git status are pre-existing CRLF drift, never staged); one
+commit e25860ba899217c5f6cab0b73afe17ce26fb31e5 pushed to origin/main, HEAD == origin/main; no add-A, reset,
+stash, rebase or force-push. Elapsed ≈10 min (15:00 → 15:10 local) vs HARD20 — inside the box in wall-clock,
+with ONE in-flight in-module correction found by the new tests (an idle-snapshot comparison that would have
+skipped a lawful clear-to-no-destination request) plus two test-file assertion/type adjustments. Not a process
+PASS claim.
+
+NEXT (Architect)
+Review this repair, then the remaining mandatory slice: compact immutable per-order-group order evidence and
+server-selected captured revision revalidation across selection/commit (no full authored JSON per order, no
+historical repricing). STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. User Visual ACCEPT still pending.
+END_TOOBA_WORKER_RESULT
