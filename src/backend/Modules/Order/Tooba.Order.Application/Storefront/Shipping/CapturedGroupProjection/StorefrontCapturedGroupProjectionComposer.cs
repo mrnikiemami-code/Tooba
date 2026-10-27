@@ -55,7 +55,39 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
             cancellationToken);
 
         ValidateFacts(facts, command, plan);
+        return await ComposeValidatedAsync(plan, facts, cancellationToken);
+    }
 
+    /// <summary>
+    /// ترکیب از <b>فکت‌های آمادهٔ</b> همین Order (TB-233-R1): همان اعتبارسنجی برنامه/فکت، همان یک
+    /// خواندن ساعت سرور، همان یک نقل‌قول ۲۱۶ و همان تقویم ۲۱۳ برای هر نامزد.
+    /// </summary>
+    /// <remarks>
+    /// این مسیر عمداً <b>هیچ</b> فراخوانی به <see cref="ICheckoutShippingGroupGoodsFactsReader"/>،
+    /// Preview/Submit یا Pricing/Promotion/Tax ندارد: فکت‌ها از خطوط <c>SellerOrder</c> همان submit
+    /// ساخته شده‌اند و فقط اعتبارسنجی/ترکیب می‌شوند. ورودی فقط داخلی و متعلق به Order است.
+    /// </remarks>
+    /// <param name="request">درخواست با فرمان checkout و برنامهٔ گروه/نامزد.</param>
+    /// <param name="facts">فکت‌های ساخته‌شده از خطوط سفارش همان submit.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    public async Task<StorefrontCapturedGroupProjectionResult> ComposeFromFactsAsync(
+        StorefrontCapturedGroupProjectionRequest request,
+        CheckoutShippingGroupGoodsFactsResult facts,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(facts);
+        _ = request.Command ?? throw PlanInvalid();
+        var plan = ValidatePlan(request.Groups);
+        ValidateFacts(facts, facts.CartId, facts.CartVersion, plan);
+        return await ComposeValidatedAsync(plan, facts, cancellationToken);
+    }
+
+    private async Task<StorefrontCapturedGroupProjectionResult> ComposeValidatedAsync(
+        List<StorefrontCapturedGroupPlan> plan,
+        CheckoutShippingGroupGoodsFactsResult facts,
+        CancellationToken cancellationToken)
+    {
         // یک خواندن ساعت سرور برای کل ترکیب؛ تبدیل به تاریخ محلی هر روش جدا انجام می‌شود.
         var nowUtc = clock.UtcNow;
 
@@ -480,12 +512,19 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
     private static void ValidateFacts(
         CheckoutShippingGroupGoodsFactsResult? facts,
         SubmitCheckoutCommand command,
+        List<StorefrontCapturedGroupPlan> plan) =>
+        ValidateFacts(facts, command.CartId, command.ExpectedCartVersion, plan);
+
+    private static void ValidateFacts(
+        CheckoutShippingGroupGoodsFactsResult? facts,
+        Guid cartId,
+        int cartVersion,
         List<StorefrontCapturedGroupPlan> plan)
     {
         if (facts is null
             || facts.Groups.Count != plan.Count
-            || facts.CartId != command.CartId
-            || facts.CartVersion != command.ExpectedCartVersion
+            || facts.CartId != cartId
+            || facts.CartVersion != cartVersion
             || string.IsNullOrWhiteSpace(facts.Currency))
         {
             throw FactsMismatch();

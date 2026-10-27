@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Xunit;
 using Tooba.BuildingBlocks;
@@ -26,7 +26,9 @@ public sealed class CapturedCheckoutGateTests
     [Fact]
     public async Task Legacy_submit_without_evidence_gets_the_exact_same_plans_and_no_refusal()
     {
-        var directory = Directory(checkoutEnabled: false);
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await ReadyContextAsync(target);
+        var directory = Directory(db, checkoutEnabled: false);
         var plans = new[] { LegacyPlan() };
 
         var accepted = await Host(directory).AcceptCapturedShippingAsync(
@@ -43,12 +45,60 @@ public sealed class CapturedCheckoutGateTests
     [Fact]
     public async Task Caller_supplied_evidence_is_refused_when_the_final_gate_is_off()
     {
-        var directory = Directory(checkoutEnabled: false);
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await ReadyContextAsync(target);
+        var directory = Directory(db, checkoutEnabled: false);
         var plans = new[] { CapturedPlan() };
 
         var error = await Assert.ThrowsAsync<ContractOperationException>(() =>
             Host(directory).AcceptCapturedShippingAsync(
                 Command(plans, expectedSelectionRevision: "1"),
+                new ShippingGroupGoodsFactsHarness().Cart(),
+                [],
+                DateTimeOffset.UnixEpoch,
+                CancellationToken.None));
+
+        Assert.Equal(StorefrontCapturedPreviewReasons.PreviewNotReady, error.Code);
+    }
+
+    /// <summary>
+    /// شاهد ساختگی بدون هیچ پیش‌نویس capture‌شدهٔ ذخیره‌شده، حتی با کلید روشن، هرگز legacy نمی‌شود و
+    /// پیش از هر خواندن ماژول بیرونی رد می‌شود.
+    /// </summary>
+    [Fact]
+    public async Task Forged_caller_evidence_without_a_stored_capture_is_refused_even_when_the_gate_is_on()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await ReadyContextAsync(target);
+        var directory = Directory(db, checkoutEnabled: true);
+        var plans = new[] { CapturedPlan() };
+
+        var error = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            Host(directory).AcceptCapturedShippingAsync(
+                Command(plans, expectedSelectionRevision: "1"),
+                new ShippingGroupGoodsFactsHarness().Cart(),
+                [],
+                DateTimeOffset.UnixEpoch,
+                CancellationToken.None));
+
+        Assert.Equal(StorefrontCapturedPreviewReasons.PreviewNotReady, error.Code);
+    }
+
+    /// <summary>
+    /// قصد capture تنها با متن نسخه (بدون شاهد ذخیره‌شده) هم مسیر capture است و هرگز به مسیر قدیمی
+    /// نمی‌افتد؛ پیش از رزرو/نوشتن سفارش رد می‌شود.
+    /// </summary>
+    [Fact]
+    public async Task Revision_intent_alone_never_falls_back_to_the_legacy_path()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await ReadyContextAsync(target);
+        var directory = Directory(db, checkoutEnabled: true);
+        var plans = new[] { LegacyPlan() };
+
+        var error = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            Host(directory).AcceptCapturedShippingAsync(
+                Command(plans, expectedSelectionRevision: "2"),
                 new ShippingGroupGoodsFactsHarness().Cart(),
                 [],
                 DateTimeOffset.UnixEpoch,
@@ -127,11 +177,11 @@ public sealed class CapturedCheckoutGateTests
         };
     }
 
-    private static CheckoutDirectory Directory(bool checkoutEnabled)
+    private static CheckoutDirectory Directory(OrderDbContext db, bool checkoutEnabled)
     {
         var harness = new ShippingGroupGoodsFactsHarness();
         return new CheckoutDirectory(
-            new OrderDbContext(new DbContextOptionsBuilder<OrderDbContext>().Options),
+            db,
             harness.Guard,
             harness.Carts,
             harness.Offers,
@@ -150,5 +200,29 @@ public sealed class CapturedCheckoutGateTests
             {
                 CheckoutEnabled = checkoutEnabled,
             }));
+    }
+
+    /// <summary>پایگاه دادهٔ یک‌بار مهاجرت‌شده با جدول‌های ارسال خالی (همان هدف یک‌بارمصرف ۲۳۱).</summary>
+    private static async Task<OrderDbContext> ReadyContextAsync(OrderEvidenceRelationalTestTarget target)
+    {
+        var builder = new DbContextOptionsBuilder<OrderDbContext>();
+        Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(
+            builder, target.ConnectionString, OrderDbContext.Schema, typeof(OrderDbContext));
+        var db = new OrderDbContext(builder.Options);
+        try
+        {
+            // جدول‌های ارسال همین‌جا کافی‌اند؛ مهاجرت فقط وقتی اجرا می‌شود که هنوز ساخته نشده‌اند.
+            await db.Database.ExecuteSqlRawAsync("SELECT 1 FROM \"order\".cart_shipping_drafts LIMIT 1");
+        }
+        catch (Npgsql.PostgresException)
+        {
+            await db.Database.MigrateAsync();
+        }
+
+        await db.Database.ExecuteSqlRawAsync(
+            "DELETE FROM \"order\".cart_shipping_group_lines;"
+            + "DELETE FROM \"order\".cart_shipping_groups;"
+            + "DELETE FROM \"order\".cart_shipping_drafts;");
+        return db;
     }
 }

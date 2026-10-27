@@ -1,4 +1,42 @@
-# CURRENT — 233 PARTIAL, NOT ACCEPTED; issued233-R1 actual final-quote acceptance —2026-10-27
+# CURRENT — 233-R1 EXECUTED PARTIAL: bypass closed + real acceptance wired; positive submit NOT proven — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1/{TASK.md,RESULT.md}.
+Base `388ca996f`. Status: **EXECUTED — PARTIAL**, NOT accepted, no user Visual ACCEPT, no live/HTTP/browser run,
+no frontend/StartPayment/payment-provider activation, no shared migration/schema change.
+LANDED (0 build errors, focused 36/36): the direct-caller bypass is closed — the acceptance ALWAYS reads the
+own-Order persisted draft marker (`AsNoTracking` + groups + lines) and treats stored-captured OR caller evidence
+OR nonblank revision intent as the captured route (gate OFF ⇒ `storefront.captured_preview.not_ready`; caller
+evidence/intent with no stored capture ⇒ the same refusal); genuine legacy still returns the exact caller plans
+with zero FOREIGN calls. `TryParseSelectionRevision` now controls acceptance (strict digits, `"0"` lawful);
+nonblank coupon ⇒ `coupon_unavailable`; stale root revision ⇒ `conflict`; all before the existing
+reserve/persist/convert boundary. 217 membership/lines/group-facts were extracted ONCE into
+`ShippingGroupGoodsFactsBuilder` and are shared by preview and the final acceptance over the SAME submit's
+already-quoted `SellerOrder` lines (via `_orderLineIdByCartLineId` only) — no requote, no second calendar/rate
+engine; `ComposeFromFactsAsync` is the typed facts-input composer entry sharing ValidatePlan/ValidateFacts/
+candidate/calendar with `ComposeAsync` and calling no 217/Preview/Pricing/Promotion/Tax. Saved-choice
+revalidation uses existing authorities: complete stored partition, real cart version, SingleStore Store owner ==
+current trusted tenant, one batch Offer assignment read (Platform + assigned type == stored type), batched active
+types, ONE 219 per distinct owner+binding with no latest fallback, and an exact comparison of every stored 231
+scalar (refs/area/row/type/currency/money/date/100ns ticks/timezone/min+max) with the current quote plus the
+customer's own chosen date; destination resolves through `IGeographyLookup.ResolveLegacyAsync` against the
+persisted priced destination scalars. Manual charge = payable, carrier collect separate.
+
+NOT DELIVERED (PROMINENT): the REQUIRED POSITIVE real-submit fact was NOT executed — no end-to-end
+`CheckoutProcessManager.SubmitAsync` run exists, because the acceptance depends on the quote-derived
+cart-line→order-line map and the available harnesses either stop before the submit boundary or throw on the first
+reserve/convert call; building that fixture is what HARD40 did not allow. Also unexecuted: stale/changed
+token-cart-partition-address-pointer-type-row-money-date-hours matrix, coupon captured refusal, preview-vs-final
+goods change, order-write/cart-convert rollback of compact evidence, idempotent replay after pointer change
+(source fails closed, no relational fact run). Public Commit/PaymentDraft stay `not_ready`; `CheckoutEnabled`
+stays checked-in false. 231/232 migrations sharedNOTAPPLIED, stale EF snapshot retained. Point-in-time pointer
+observation only — no distributed lock/serializability claim. Elapsed ≈75 min vs HARD40 — NONCOMPLIANT.
+BOUNDS: no frontend/HMR/browser, no Host/FE restart/rebuild, no live write, no schema/migration/baseline edit,
+USER VISIBLE review window untouched, local previewON/count7 unchanged. Known 230 empty-key/in-flight,
+cross-owner label/decoder, Offer API proof, 227 mobile empty-note, 225-R1 lost LOCAL edits remain. TB185
+paused/default-OFF/PendingAllocation. NEXT (Architect): issue a fixture-only task for the real
+SubmitAsync positive, or accept this as wiring-only. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+# SUPERSEDED — 233 PARTIAL, NOT ACCEPTED; issued233-R1 actual final-quote acceptance —2026-10-27
 
 Active TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1. Read233/ARCHITECT-REVIEW.md and233-R1/TASK.md.
 Root source-reviewed1c42a43f7: additive final gate/text token/parser/real submit hook retained as scaffolding ONLY.

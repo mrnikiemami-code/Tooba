@@ -1,4 +1,7 @@
 using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Geography.Contracts.Places;
+using Tooba.Shipping.Contracts.Rates;
 using System.Linq.Expressions;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +65,13 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly IIdGenerator _ids;
     internal readonly ILogger<CheckoutProcessManager> _checkoutLogger;
     internal readonly Microsoft.Extensions.Options.IOptions<Tooba.Order.Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions>? _capturedPreview;
+    internal readonly IOfferFulfillmentAssignmentLookup? _offerAssignments;
+    internal readonly IShippingTypeReader? _shippingTypes;
+    internal readonly IShippingSelectedCapturedRevisionLookup? _selectedCaptures;
+    internal readonly Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupProjectionComposer? _capturedComposer;
+    internal readonly IGeographyLookup? _geography;
+    internal readonly ICurrentEdition? _edition;
+    internal readonly ICurrentTenant? _tenant;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -90,7 +100,14 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         ICheckoutProcessTracker? processes = null,
         ICheckoutInventoryReservationPort? inventoryReservation = null,
         ICartConversionPort? cartConversion = null,
-        Microsoft.Extensions.Options.IOptions<Tooba.Order.Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions>? capturedPreview = null)
+        Microsoft.Extensions.Options.IOptions<Tooba.Order.Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions>? capturedPreview = null,
+        IOfferFulfillmentAssignmentLookup? offerAssignments = null,
+        IShippingTypeReader? shippingTypes = null,
+        IShippingSelectedCapturedRevisionLookup? selectedCaptures = null,
+        Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupProjectionComposer? capturedComposer = null,
+        IGeographyLookup? geography = null,
+        ICurrentEdition? edition = null,
+        ICurrentTenant? tenant = null)
     {
         _db = db;
         _guard = guard;
@@ -118,6 +135,13 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _cartConversion = cartConversion
             ?? throw new InvalidOperationException("درز تبدیل سبد checkout لازم است.");
         _capturedPreview = capturedPreview;
+        _offerAssignments = offerAssignments;
+        _shippingTypes = shippingTypes;
+        _selectedCaptures = selectedCaptures;
+        _capturedComposer = capturedComposer;
+        _geography = geography;
+        _edition = edition;
+        _tenant = tenant;
     }
 
     /// <inheritdoc />
