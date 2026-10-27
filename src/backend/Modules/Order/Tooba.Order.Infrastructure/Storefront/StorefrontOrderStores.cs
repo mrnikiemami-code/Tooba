@@ -66,6 +66,10 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
         // پیش‌شرط: context برای همین نوشتن تمیز است؛ کار در انتظار فراخوان دست‌نخورده رد می‌شود.
         EnsureNoForeignPendingWork();
 
+        // TB-232-R2: تراکنشِ بازِ فراخوان مالکیت داراست؛ نه adopt می‌شود و نه تودرتو. پیش از هر تغییر رد می‌شود
+        // تا هرگز تراکنش کسی Dispose نشود.
+        EnsureNoAmbientTransaction();
+
         if (isNew)
         {
             return await CreateCapturedSelectionAsync(draft, expectedSelectionRevision, cancellationToken);
@@ -86,7 +90,12 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
 
         var root = db.Entry(persisted);
 
+        // TB-232-R2: ورودی‌های cleanup پیش از <b>هر</b> تغییر گرفته می‌شوند تا detach دقیقاً همین‌ها را بگیرد و
+        // به‌هیچ‌وجه به state جاری (که ممکن است پاک‌سازی خراب شود) تکیه نکند.
         var previousGroups = persisted.ShippingGroups.ToArray();
+        var previousLines = previousGroups.SelectMany(group => group.Lines).ToArray();
+        var attemptedGroups = groups.ToArray();
+        var attemptedLines = attemptedGroups.SelectMany(group => group.Lines).ToArray();
 
         IDbContextTransaction? transaction = null;
         try
@@ -133,13 +142,28 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
         }
         catch (Exception error)
         {
-            await RestoreRejectedAttemptAsync(persisted, previousGroups, groups, transaction);
+            // TB-232-R2: rollback/dispose/recovery خطای دوم را هرگز جای خطای اصلی نمی‌گذارد و detach حتی با
+            // شکست rollback اجرا می‌شود. مالکیت تراکنش همین‌جا مصرف می‌شود (یک‌بار Dispose) و finally دیگر
+            // چیزی برای Dispose ندارد.
+            await RestoreRejectedAttemptAsync(
+                transaction,
+                persisted,
+                previousGroups,
+                previousLines,
+                attemptedGroups,
+                attemptedLines);
+            transaction = null;
+
             if (IsStaleOrConflicting(error))
             {
                 throw Conflict();
             }
 
             throw;
+        }
+        finally
+        {
+            await DisposeOwnedAsync(transaction);
         }
     }
 
@@ -167,17 +191,9 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
         }
         catch (Exception error)
         {
-            if (transaction is not null)
-            {
-                try
-                {
-                    await transaction.RollbackAsync(CancellationToken.None);
-                }
-                catch (InvalidOperationException)
-                {
-                    // تراکنش پیش‌تر بسته شده است.
-                }
-            }
+            // TB-232-R2: rollback با توکن غیرلغوشده، سپس Dispose، و detach مستقل از نتیجهٔ rollback.
+            await RollbackAndDisposeAsync(transaction);
+            transaction = null;
 
             DetachDraftGraph(draft);
             if (IsStaleOrConflicting(error))
@@ -187,43 +203,50 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
 
             throw;
         }
+        finally
+        {
+            await DisposeOwnedAsync(transaction);
+        }
     }
 
     /// <summary>
-    /// پس از شکست، <b>فقط همین تلاش</b> بازگردانده می‌شود: تراکنش با توکن غیرلغوشده برمی‌گردد، گراف همین
-    /// تلاش (گروه‌های درج‌نشده و گروه/خطوط قبلی) و ریشهٔ همین پیش‌نویس از tracking خارج می‌شوند و سپس ریشه
-    /// دقیقاً از DB رول‌بک‌شده بازخوانی می‌شود. بنابراین هم CurrentValues و هم OriginalValues با مقدار پیش از
-    /// تلاش برابرند، هیچ کار در انتظاری باقی نمی‌ماند و SaveChanges بعدی نمی‌تواند انتخاب ردشده را جاودانه
-    /// کند. هیچ پاک‌سازی سراسری/نامرتبطی انجام نمی‌شود.
+    /// پس از شکست، <b>فقط همین تلاش</b> بازگردانده می‌شود. ترتیب عمدی است و هر مرحله خطای اصلی را حفظ
+    /// می‌کند: rollback با توکن غیرلغوشده، سپس Dispose همان تراکنشِ خودمان (پیش از هر بازخوانی)، سپس detach
+    /// گروه/خطوط همین تلاش و گراف قبلی همان ریشه (حتی اگر rollback شکست بخورد)، و در پایان بازخوانی گراف
+    /// رول‌بک‌شده فقط وقتی rollback واقعاً موفق بوده است. اگر rollback ناموفق باشد هیچ گرافِ «بازسازی‌شده»ای
+    /// ساخته نمی‌شود: گراف همین تلاش detached می‌ماند، هیچ نوشتن در انتظاری باقی نمی‌ماند و خطای اصلی دست‌نخورده
+    /// می‌ماند (محدودیت در RESULT ثبت شده است). هیچ پاک‌سازی سراسری/نامرتبطی انجام نمی‌شود.
     /// </summary>
-    private async Task RestoreRejectedAttemptAsync(
+    /// <returns>آیا حقیقت رول‌بک‌شده از DB بازخوانی شد.</returns>
+    private async Task<bool> RestoreRejectedAttemptAsync(
+        IDbContextTransaction? transaction,
         CartShippingDraft persisted,
         IReadOnlyList<CartShippingDraftGroup> previousGroups,
+        IReadOnlyList<CartShippingDraftGroupLine> previousLines,
         IReadOnlyList<CartShippingDraftGroup> attemptedGroups,
-        IDbContextTransaction? transaction)
+        IReadOnlyList<CartShippingDraftGroupLine> attemptedLines)
     {
-        if (transaction is not null)
-        {
-            try
-            {
-                // لغو فراخوان نباید پاک‌سازی را نیمه‌کاره رها کند و نباید خطای اصلی را بپوشاند.
-                await transaction.RollbackAsync(CancellationToken.None);
-            }
-            catch (InvalidOperationException)
-            {
-                // تراکنش پیش‌تر بسته/قطع شده است.
-            }
-        }
+        var rolledBack = await RollbackAndDisposeAsync(transaction);
 
-        // فقط گروه‌های همین تلاش و گروه‌های قبلیِ همان ریشه detach می‌شوند؛ هیچ sweep سراسری‌ای نیست.
+        // برخلاف rollback، این بخش هرگز نمی‌تواند از کار بیفتد: ورودی‌ها پیش از تغییر گرفته شده‌اند.
         foreach (var attempted in attemptedGroups)
         {
             DetachGroup(attempted);
         }
 
+        foreach (var line in attemptedLines)
+        {
+            DetachLine(line);
+        }
+
         foreach (var previous in previousGroups)
         {
             DetachGroup(previous);
+        }
+
+        foreach (var line in previousLines)
+        {
+            DetachLine(line);
         }
 
         var rootEntry = db.Entry(persisted);
@@ -232,11 +255,77 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
             rootEntry.State = EntityState.Detached;
         }
 
-        // حقیقت رول‌بک‌شده دوباره از DB خوانده می‌شود؛ نه حالت دست‌سازِ ناوبری/state.
-        await db.ShippingDrafts
-            .Include(x => x.ShippingGroups)
-            .ThenInclude(x => x.Lines)
-            .FirstOrDefaultAsync(x => x.CartId == persisted.CartId, CancellationToken.None);
+        if (!rolledBack)
+        {
+            // rollback تأیید نشد ⇒ هیچ بازخوانی‌ای انجام نمی‌شود تا گراف تأییدنشده به‌عنوان حقیقت جا نزند.
+            return false;
+        }
+
+        // حقیقت رول‌بک‌شده دوباره از DB خوانده می‌شود؛ نه حالت دست‌سازِ ناوبری/state. تراکنش پیش‌تر
+        // Dispose شده است و شکست همین بازخوانی هم نباید خطای اصلی را جایگزین کند.
+        try
+        {
+            await db.ShippingDrafts
+                .Include(x => x.ShippingGroups)
+                .ThenInclude(x => x.Lines)
+                .FirstOrDefaultAsync(x => x.CartId == persisted.CartId, CancellationToken.None);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// rollback با توکن غیرلغوشده و سپس Dispose همان تراکنشِ خودمان؛ هیچ خطای ثانویه‌ای جای خطای اصلی
+    /// نمی‌نشیند. فقط «تراکنش پیش‌تر بسته شده» و موفقیت rollback «بازیابی‌شده» شمرده می‌شوند.
+    /// </summary>
+    private static async Task<bool> RollbackAndDisposeAsync(IDbContextTransaction? transaction)
+    {
+        if (transaction is null)
+        {
+            return false;
+        }
+
+        var rolledBack = false;
+        try
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            rolledBack = true;
+        }
+        catch (InvalidOperationException)
+        {
+            // تراکنش پیش‌تر بسته شده است؛ وضعیت DB نامعلوم است، پس «بازیابی‌شده» ادعا نمی‌شود.
+        }
+        catch (Exception)
+        {
+            // شکست واقعی rollback (provider/شبکه): خطای اصلی حفظ می‌شود و بازیابی ادعا نمی‌شود.
+        }
+        finally
+        {
+            await DisposeOwnedAsync(transaction);
+        }
+
+        return rolledBack;
+    }
+
+    /// <summary>Dispose یک‌بارهٔ تراکنشِ خودمان؛ شکست Dispose هرگز نتیجهٔ اصلی را عوض نمی‌کند.</summary>
+    private static async Task DisposeOwnedAsync(IDbContextTransaction? transaction)
+    {
+        if (transaction is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await transaction.DisposeAsync();
+        }
+        catch (Exception)
+        {
+            // Dispose ثانویه است: نه موفقیت را باطل می‌کند و نه خطای اصلی را جایگزین می‌شود.
+        }
     }
 
     /// <summary>
@@ -251,6 +340,19 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
             {
                 throw new StorefrontOrderException(StorefrontCapturedSelectionReasons.PendingWork);
             }
+        }
+    }
+
+    /// <summary>
+    /// تراکنش بازِ فراخوان مالکیت داراست: این آداپتور نه آن را adopt می‌کند و نه تودرتو باز می‌کند. پیش از هر
+    /// تغییر رد می‌شود تا هیچ‌گاه تراکنشی که ما مالکش نیستیم Rollback/Dispose نشود.
+    /// </summary>
+    private void EnsureNoAmbientTransaction()
+    {
+        if (db.Database.CurrentTransaction is not null)
+        {
+            // همان معنای «کار ناتمامِ فراخوان»: نوشتن capture تا پایان آن واحدِ کار ممکن نیست.
+            throw new StorefrontOrderException(StorefrontCapturedSelectionReasons.PendingWork);
         }
     }
 
@@ -271,6 +373,7 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
     private static bool IsStaleOrConflicting(Exception error) =>
         error is DbUpdateConcurrencyException
         || (error is DbUpdateException update && IsRootUniquenessViolation(update));
+
     private void DetachGroup(CartShippingDraftGroup group)
     {
         var entry = db.Entry(group);
@@ -281,11 +384,16 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
 
         foreach (var line in group.Lines.ToArray())
         {
-            var lineEntry = db.Entry(line);
-            if (lineEntry.State != EntityState.Detached)
-            {
-                lineEntry.State = EntityState.Detached;
-            }
+            DetachLine(line);
+        }
+    }
+
+    private void DetachLine(CartShippingDraftGroupLine line)
+    {
+        var lineEntry = db.Entry(line);
+        if (lineEntry.State != EntityState.Detached)
+        {
+            lineEntry.State = EntityState.Detached;
         }
     }
 

@@ -1,4 +1,55 @@
-# CURRENT — 232-R1 data repairs accepted; issued232-R2 transaction cleanup — 2026-10-27
+﻿# CURRENT — 232-R2 executed: owned transactions are disposed once, primary failure never masked — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-TRANSACTION-CLEANUP-232-R2/{TASK.md,RESULT.md} and
+232-R1/ARCHITECT-REVIEW.md. Base `92e1d9a03` (fast-forward; the three pre-existing Shipping line-ending drifts
+never staged). Status: **EXECUTED**, NOT accepted, NO user Visual ACCEPT, no live/HTTP writer, no frontend/Host/
+runtime change, no shared migration apply. R1's accepted group correlation/preflight/CAS/coupon/ordinary rollback
+were NOT reopened; this task repaired ONE adapter lifetime/failure contract.
+
+A — every transaction THIS adapter opens is now owned and consumed exactly once: one awaited `finally` on success,
+rollback-then-dispose on failure, handle nulled immediately so `finally` cannot double-dispose, begin-failure
+disposes nothing, and a secondary `DisposeAsync` failure can never change the primary result. A caller-owned
+transaction (`Database.CurrentTransaction` non-null) is refused BEFORE any mutation with the existing
+`storefront.captured_selection.pending_work` code — never nested, adopted, rolled back or disposed. Rollback always
+uses `CancellationToken.None`; only "already completed" and real rollback failures are treated as UNCONFIRMED and
+never re-thrown. Previous groups+lines and attempted groups+lines are captured before the first mutation and
+detached exactly, AFTER the rollback attempt, so cleanup runs even when rollback throws. The rolled-back root is
+re-read only when rollback was CONFIRMED and only after our transaction is disposed; unconfirmed rollback or a
+failing recovery read leaves the attempt detached with NO fabricated graph and preserves the primary exception.
+Conflict mapping stays narrow (concurrency + existing exact root-PK uniqueness); unexpected provider errors become
+neither success nor conflict.
+
+B — proof on ONE task-owned disposable `postgres:17-alpine` 15433/order_tb231/tb231 (identity before DDL, normal
+migrations, container removed, port verified closed), using real EF seams only: test-only `ISaveChangesInterceptor`
+/ `DbCommandInterceptor` / `IDbTransactionInterceptor` plus EF's own DiagnosticSource `...Database.Transaction.*`
+events (EF has NO disposal interceptor, and a cleared `CurrentTransaction` is explicitly not accepted as proof).
+New class `StorefrontCapturedSelectionTransactionTests` 5/5: create AND replacement each emit exactly ONE
+`TransactionDisposed` and the same context can start/commit its own next explicit transaction; caller CTS
+cancelled INSIDE the second `SaveChangesAsync` ⇒ thrown `OperationCanceledException` carries the caller token,
+rollback ran with a non-cancelled token, owned transaction disposed, no pending attempt, unrelated draft
+`Unchanged`, DB still revision 1; a real duplicate-line provider failure plus an injected `TransactionRollingBack`
+fault ⇒ the SAME primary instance propagates, no recovery read (rollback unconfirmed), attempt still detached
+(0 pending), transaction disposed, unrelated graph untouched; recovery-SELECT failure ⇒ primary instance preserved;
+open caller transaction ⇒ refused before mutation, still current, not disposed, still commits, stored revision 1.
+RED→GREEN measured: on the reviewed R1 adapter the lifetime fact fails `Expected 1, Actual 0` — the leak is real.
+Existing 232 storage+writer+guard classes ran ONCE with the new class: 31/31. Order.Infrastructure/Tests build 0
+errors 0 warnings. No 285/310/312/full Storefront/Shipping/Host/solution/guard sweep.
+
+HONEST: the rollback fault is scripted (a `TransactionRollingBack` exception), not a real database outage, and is
+distinguished from "already closed"; in that fixture the following `DisposeAsync` performs the implicit rollback,
+so the DB ends old while the ADAPTER treats recovery as unconfirmed and fabricates nothing; an unconfirmed rollback
+has no restored in-memory graph (caller must re-read) — recorded limitation, not "recovered context"; cancellation
+is proven at the `SaveChangesAsync` boundary via a test interceptor, not an OS-level abort. Writer stays
+model-bound (never HTTP/live), `DestinationServiceAreaId` NULL, sequential CAS not a simultaneous race, 231/232
+migrations WRITTEN/sharedNOTAPPLIED, stale EF snapshot gap retained, Commit/ProjectPaymentDraft stay not_ready with
+SelectionEnabled checked-in false. Retained unfixed: 230-R1 empty-key retry/in-flight, cross-owner label/decoder,
+Offer API proof, 227 mobile empty-note, 225-R1 lost unsaved LOCAL edits. The user's visible review window, live
+Host/FE, previewON/count7, runtime data, buyer/cart, draft/rates/week/pointer/assignments were NOT touched. Elapsed
+≈62 min vs HARD20 — recorded NONCOMPLIANT, not a process PASS. No amend/force-push.
+NEXT (Architect): accept/reject this cleanup proof, then commit-time destination/cart/pointer/quote revalidation and
+coupon read-write-final parity, then final order composition / Order-only historical read. STOP_FOR_ARCHITECT;
+Automatic-Next-Task NONE. TB185 paused/default-OFF/PendingAllocation preserved.
+# SUPERSEDED — 232-R2 issued; 232-R1 data repairs accepted within scope — 2026-10-27
 
 Active: TB-SHIPPING-CAPTURED-SELECTION-TRANSACTION-CLEANUP-232-R2.
 Root source-reviewed5c38f9761; review232-R1/ARCHITECT-REVIEW.md and task232-R2/TASK.md in evidence.

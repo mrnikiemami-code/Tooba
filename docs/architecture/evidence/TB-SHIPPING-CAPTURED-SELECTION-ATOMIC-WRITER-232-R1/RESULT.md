@@ -156,3 +156,20 @@ a product behaviour.
 Elapsed ≈29 min from claim to proof completion, inside HARD35, with one in-task correction round (rollback
 tracker corruption + strengthened mid-stage fact). No commit amendment, no force-push, no history rewrite.
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE; TB185 paused/default-OFF/PendingAllocation preserved.
+
+## Correction appended by 232-R2 (2026-10-27) — cancellation fact is pre-cancelled, not a write-boundary proof
+
+The R1 fact `Caller_cancellation_leaves_no_attempt_and_the_old_selection` cancels its
+`CancellationTokenSource` **before** calling `ReplaceCapturedSelectionAsync`. It therefore proves pre-cancelled
+token safety only; it does **not** prove cancellation after the first deletion/root save. The original test is
+left as-is and is not relabelled. The real boundary proof (caller CTS cancelled inside the second
+`SaveChangesAsync`, caller token retained on the thrown `OperationCanceledException`, rollback with a
+non-cancelled token, owned transaction disposed, no pending attempt, old graph intact) now lives in
+`Order.Tests/Checkout/StorefrontCapturedSelectionTransactionTests`
+(`Cancellation_at_the_write_boundary_keeps_the_caller_token_and_disposes_the_transaction`).
+
+Also recorded by 232-R2: R1's adapter allocated `IDbContextTransaction` without disposing it on any path
+(measured RED: zero `TransactionDisposed` events for create/replace) and its rollback/detachment ordering could
+let a secondary rollback failure mask the primary exception. Both are repaired and proven in
+`TB-SHIPPING-CAPTURED-SELECTION-TRANSACTION-CLEANUP-232-R2`. Everything else in this RESULT stands unchanged;
+the writer remains NOT accepted pending Architect review.
