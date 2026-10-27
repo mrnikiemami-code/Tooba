@@ -1,3 +1,22 @@
+# CURRENT — issued235 full-owner flow + necessary preview contract repairs —2026-10-27
+
+Active TB-SHIPPING-FULL-OWNER-FLOW-AND-PREVIEW-CONTRACT-235. Read234/ARCHITECT-REVIEW.md and235/TASK.md.
+FULL release scope Store/Marketplace/eachrealSellerStore + coupon context + actual existingUI/practical trial
+remains binding;234 SingleStore/noncoupon mechanics are NOT final delivery. Root reviewed3ed9f4279 actual code.
+Scoped retained: coherent public commit delegating to actual Directory, idempotent Order replay, read-only
+payment validation, exact-text token inprocesscomposer. NO endpointdelegate/listener/PSP proof;5/5+200/200worker.
+Concrete mapping blockers: paymentpreview StubCartPage => version0/empty productmetadata; old command totals
+canmixwithfreshacceptedgroups; OrderLineIds wrongly emitted as CartLineIds; missing historical groups fallback
+to CURRENT draft. Fix in235 alongside required owner support, no helper-only audit/replay loop.
+235 share real Order owner resolution across read/selection/final: Storetenant, Marketplace, Seller actualOffer
+businessSellerPartyId, neverloginuser; close cross-owner labelmap; preserve merchant auth/buyer cart boundaries.
+Use real existing business relationships; no inventedStoreId/framework. No arbitrary admin delegation claim.
+Coupon remains current-safe refusal ONLY until next required common-context implementation; not final exclusion.
+NO frontendHMR/runtime/HostFE/livewrites/sharedDDL/browser; USERreviewwindow unsavedwork untouched, previewONcount7.
+231/232 sharedNOTAPPLIED/EFsnapshotgap; allcheckedgatesOFF; no activation/fullcheckout/VisualACCEPT. Known
+230emptykey/inflight/OfferAPI/227mobile/225-R1lostLOCALwork retained. TB185paused/defaultOFF/PendingAllocation.
+STOP_FOR_ARCHITECT after235; Automatic-Next-Task NONE. Prior full delivery scope/recovery follows.
+
 # CURRENT DELIVERY SCOPE — BOTH editions + all real seller/store owners + coupon context required —2026-10-27
 
 Latest explicit user instruction REJECTS final delivery limited to SingleStore/noncoupon.
