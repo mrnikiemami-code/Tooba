@@ -1,3 +1,23 @@
+# CURRENT — R1 repairs accepted for live verification; issued229-R2 — 2026-10-27
+
+Active: TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2. Runtime-only gap: normal task-owned buyer
+registration+existingBFFlogin, verify commerce context, observe actual captured cards1440/390. HARD20min.
+Root source confirms POST/v1/auth/register plus existingCSRF-protected/api/auth/login with normal cookies;
+no user credentials needed initially. Visible OTP-only login is not the only existing auth API.
+Four229-R1 repairs accepted within tested scope; NOT live storefront/VisualACCEPT. Worker18backend+11frontend
+andtypecheck reported; root source review only. R1 stopped atlogin/401 plus commerce-resolution log;
+both causes require correlation, not an assumption that planner/auth alone caused the failure.
+Review: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2/TASK.md.
+Runtime preview restoredOFF perR1; reverify actual process/environment/settings instead of historicPIDs.
+228 assignmentmigration sharedAPPLIED. No migration replay. AssignmentAPI negatives still not provider-proven.
+Known scoped limits: decoder identifier String-coercion/calendar-shape only; cross-owner label map currently
+binding-only (not Marketplace display certified). No repeated generic audit or unrelated repairs.
+Selection/commit remains blocked; compact order evidence/parity mandatory/unimplemented. No price eligibility
+or readiness claim. Existing money/week/admin acceptance and227 mobileempty-note residual retained.
+Task-owned browser only;225-R1 unsaveduser-local-tab loss,no recovery. TB185paused/defaultOFF/PendingAllocation.
+Historical checkpoints retained below.
+
 # CURRENT — 229-R1 executed: four read-path defects repaired; live card trial blocked at buyer login — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1/{RESULT.md,TASK.md}.
