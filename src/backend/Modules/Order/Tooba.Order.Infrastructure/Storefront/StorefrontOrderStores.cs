@@ -1,8 +1,12 @@
 ﻿#pragma warning disable CS1591
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage;
 using Tooba.Order.Application.Storefront;
 using Tooba.Order.Application.Storefront.Ports;
+using Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
 using Tooba.Order.Domain;
+using Tooba.Order.Domain.Checkout;
 using Tooba.Order.Infrastructure.Persistence;
 
 namespace Tooba.Order.Infrastructure.Storefront;
@@ -26,7 +30,30 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
     }
 
     /// <inheritdoc />
-    public async Task ReplaceCapturedSelectionAsync(
+    public async Task<CartShippingDraft?> GetForCapturedSelectionAsync(Guid cartId, CancellationToken cancellationToken)
+    {
+        // کار در انتظارِ نامرتبط هرگز flush/پاک نمی‌شود: نوشتن پیش از هر خواندن/تغییر/تراکنش رد می‌شود.
+        EnsureNoForeignPendingWork();
+
+        // حقیقت ذخیره‌شده مرجع است، نه identity map: هر نمونهٔ tracked همین سبد (که ممکن است کهنه
+        // باشد) کنار گذاشته می‌شود و گراف تازه و detached خوانده می‌شود.
+        foreach (var previous in db.ChangeTracker.Entries<CartShippingDraft>()
+                     .Where(entry => entry.Entity.CartId == cartId)
+                     .Select(entry => entry.Entity)
+                     .ToArray())
+        {
+            DetachDraftGraph(previous);
+        }
+
+        return await db.ShippingDrafts
+            .AsNoTracking()
+            .Include(x => x.ShippingGroups)
+            .ThenInclude(x => x.Lines)
+            .FirstOrDefaultAsync(x => x.CartId == cartId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CartShippingDraft> ReplaceCapturedSelectionAsync(
         CartShippingDraft draft,
         IReadOnlyList<CartShippingDraftGroup> groups,
         bool isNew,
@@ -36,186 +63,214 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
         ArgumentNullException.ThrowIfNull(draft);
         ArgumentNullException.ThrowIfNull(groups);
 
-        var previousGroups = draft.ShippingGroups.ToArray();
-        var previousRevision = draft.SelectionRevision;
-        var now = draft.UpdatedAt;
+        // پیش‌شرط: context برای همین نوشتن تمیز است؛ کار در انتظار فراخوان دست‌نخورده رد می‌شود.
+        EnsureNoForeignPendingWork();
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        if (isNew)
+        {
+            return await CreateCapturedSelectionAsync(draft, expectedSelectionRevision, cancellationToken);
+        }
+
+        // گراف authoritative ذخیره‌شده (تازه و tracked)؛ هیچ‌گاه حقیقتِ شیء ورودی یا identity mapِ کهنه.
+        var persisted = await db.ShippingDrafts
+            .Include(x => x.ShippingGroups)
+            .ThenInclude(x => x.Lines)
+            .FirstOrDefaultAsync(x => x.CartId == draft.CartId, cancellationToken)
+            ?? throw Conflict();
+
+        // CAS فقط با نسخهٔ <b>ذخیره‌شده</b>؛ مقدار تشخیصی شیء ورودی مرجع نیست.
+        if (persisted.SelectionRevision != expectedSelectionRevision)
+        {
+            throw Conflict();
+        }
+
+        var root = db.Entry(persisted);
+
+        var previousGroups = persisted.ShippingGroups.ToArray();
+
+        IDbContextTransaction? transaction = null;
         try
         {
-            if (isNew)
-            {
-                // نبود ریشه فقط با نسخهٔ ۰ (یعنی «هیچ انتخاب ثبت‌شده‌ای») قابل ساخت است.
-                if (expectedSelectionRevision != 0)
-                {
-                    throw Conflict();
-                }
+            // شروع تراکنش هم داخل همان try است تا شکست آن نیز همین تلاش را پاک کند.
+            transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-                draft.BumpSelectionRevision(now);
-                db.ShippingDrafts.Add(draft);
-                await db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                // CAS صریح روی نسخهٔ مشاهده‌شده؛ توکن هم‌زمانی EF همین ستون را در UPDATE هم می‌آورد.
-                if (draft.SelectionRevision != expectedSelectionRevision)
-                {
-                    throw Conflict();
-                }
+            persisted.Replace(
+                draft.GuestSecretHash,
+                draft.CartVersion,
+                draft.RecipientName,
+                draft.ContactMobile,
+                draft.ProvinceName,
+                draft.CityName,
+                draft.PostalAddress,
+                draft.PostalCode,
+                draft.SavedAddressId,
+                draft.ShippingMethodCode,
+                draft.ShippingMethodLabel,
+                draft.ShippingAmount,
+                draft.MinimumDeliveryDate,
+                draft.SelectedDeliveryDate,
+                draft.SelectedDeliveryTimeWindow,
+                draft.CustomerNote,
+                draft.UpdatedAt);
+            persisted.ApplyRecipientNames(draft.FirstName, draft.LastName);
+            persisted.SetDestinationIdentity(
+                draft.DestinationCountryId ?? Guid.Empty,
+                draft.DestinationAdministrativeAreaId,
+                draft.DestinationCityId,
+                draft.DestinationServiceAreaId,
+                draft.UpdatedAt);
+            persisted.BumpSelectionRevision(draft.UpdatedAt);
+            root.Property(x => x.SelectionRevision).IsModified = true;
 
-                draft.BumpSelectionRevision(now);
-                var entry = db.Entry(draft);
-                entry.Property(x => x.SelectionRevision).IsModified = true;
-
-                // حذف‌ها و به‌روزرسانی ریشه در همان تراکنش؛ حذفِ durable جزئی هرگز اتفاق نمی‌افتد.
-                draft.ClearShippingGroups(now);
-                await db.SaveChangesAsync(cancellationToken);
-                draft.AddShippingGroups(groups, now);
-                await db.SaveChangesAsync(cancellationToken);
-            }
+            // حذف‌ها و به‌روزرسانی ریشه در همان تراکنش؛ حذفِ durable جزئی هرگز اتفاق نمی‌افتد.
+            persisted.ClearShippingGroups(draft.UpdatedAt);
+            await db.SaveChangesAsync(cancellationToken);
+            persisted.AddShippingGroups(groups, draft.UpdatedAt);
+            await db.SaveChangesAsync(cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
+            return persisted;
         }
-        catch (DbUpdateConcurrencyException)
+        catch (Exception error)
         {
-            await RollbackOwnChangesAsync(draft, previousGroups, groups, previousRevision, isNew, cancellationToken);
+            await RestoreRejectedAttemptAsync(persisted, previousGroups, groups, transaction);
+            if (IsStaleOrConflicting(error))
+            {
+                throw Conflict();
+            }
+
+            throw;
+        }
+    }
+
+    /// <summary>ساخت ریشه در یک تراکنش؛ شکست (حتی شروع تراکنش) گراف همین تلاش را پاک می‌کند.</summary>
+    private async Task<CartShippingDraft> CreateCapturedSelectionAsync(
+        CartShippingDraft draft,
+        long expectedSelectionRevision,
+        CancellationToken cancellationToken)
+    {
+        // نبود ریشه فقط با نسخهٔ ۰ (یعنی «هیچ انتخاب ثبت‌شده‌ای») قابل ساخت است.
+        if (expectedSelectionRevision != 0)
+        {
             throw Conflict();
         }
-        catch (DbUpdateException error) when (IsRootUniquenessViolation(error))
+
+        IDbContextTransaction? transaction = null;
+        try
         {
-            await RollbackOwnChangesAsync(draft, previousGroups, groups, previousRevision, isNew, cancellationToken);
-            throw Conflict();
+            transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            draft.BumpSelectionRevision(draft.UpdatedAt);
+            db.ShippingDrafts.Add(draft);
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return draft;
         }
-        catch
+        catch (Exception error)
         {
-            await RollbackOwnChangesAsync(draft, previousGroups, groups, previousRevision, isNew, cancellationToken);
+            if (transaction is not null)
+            {
+                try
+                {
+                    await transaction.RollbackAsync(CancellationToken.None);
+                }
+                catch (InvalidOperationException)
+                {
+                    // تراکنش پیش‌تر بسته شده است.
+                }
+            }
+
+            DetachDraftGraph(draft);
+            if (IsStaleOrConflicting(error))
+            {
+                throw Conflict();
+            }
+
             throw;
         }
     }
 
     /// <summary>
-    /// تراکنش را برمی‌گرداند و <b>فقط</b> تغییرات همین تلاش را از tracking پاک می‌کند: گروه‌های
-    /// درج‌نشده detach می‌شوند، گروه‌های حذف‌شده به Unchanged برمی‌گردند و اسکالرهای ریشه به مقادیر
-    /// اصلی خود بازمی‌گردند. هیچ موجودیت نامرتبطی flush/clear نمی‌شود.
+    /// پس از شکست، <b>فقط همین تلاش</b> بازگردانده می‌شود: تراکنش با توکن غیرلغوشده برمی‌گردد، گراف همین
+    /// تلاش (گروه‌های درج‌نشده و گروه/خطوط قبلی) و ریشهٔ همین پیش‌نویس از tracking خارج می‌شوند و سپس ریشه
+    /// دقیقاً از DB رول‌بک‌شده بازخوانی می‌شود. بنابراین هم CurrentValues و هم OriginalValues با مقدار پیش از
+    /// تلاش برابرند، هیچ کار در انتظاری باقی نمی‌ماند و SaveChanges بعدی نمی‌تواند انتخاب ردشده را جاودانه
+    /// کند. هیچ پاک‌سازی سراسری/نامرتبطی انجام نمی‌شود.
     /// </summary>
-    private async Task RollbackOwnChangesAsync(
-        CartShippingDraft draft,
+    private async Task RestoreRejectedAttemptAsync(
+        CartShippingDraft persisted,
         IReadOnlyList<CartShippingDraftGroup> previousGroups,
         IReadOnlyList<CartShippingDraftGroup> attemptedGroups,
-        long previousRevision,
-        bool isNew,
-        CancellationToken cancellationToken)
+        IDbContextTransaction? transaction)
     {
-        try
+        if (transaction is not null)
         {
-            await db.Database.RollbackTransactionAsync(cancellationToken);
-        }
-        catch (InvalidOperationException)
-        {
-            // تراکنش پیش‌تر بسته شده است؛ rollback دوباره لازم نیست.
+            try
+            {
+                // لغو فراخوان نباید پاک‌سازی را نیمه‌کاره رها کند و نباید خطای اصلی را بپوشاند.
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch (InvalidOperationException)
+            {
+                // تراکنش پیش‌تر بسته/قطع شده است.
+            }
         }
 
-        // هر گروهی که همین تلاش درج کرده است — حتی اگر پس از شکست از مجموعهٔ ریشه بیرون افتاده باشد —
-        // صریحاً detach می‌شود تا SaveChanges بعدی هرگز آن را جاودانه نکند.
+        // فقط گروه‌های همین تلاش و گروه‌های قبلیِ همان ریشه detach می‌شوند؛ هیچ sweep سراسری‌ای نیست.
         foreach (var attempted in attemptedGroups)
         {
             DetachGroup(attempted);
         }
 
-        var root = db.Entry(draft);
-        if (isNew)
+        foreach (var previous in previousGroups)
         {
-            root.State = EntityState.Detached;
-            foreach (var group in draft.ShippingGroups.ToArray())
-            {
-                DetachGroup(group);
-            }
-
-            return;
+            DetachGroup(previous);
         }
 
-        root.CurrentValues.SetValues(root.OriginalValues);
-        root.State = EntityState.Unchanged;
-
-        // نسخهٔ انتخاب نیز به مقدار مشاهده‌شدهٔ پیش از همین تلاش برمی‌گردد: SaveChanges مرحلهٔ اول
-        // OriginalValues را به مقدار bumpشده به‌روز کرده است، پس بازگردانی از OriginalValues کافی نیست.
-        draft.RestoreSelectionRevision(previousRevision);
-        root.Property(x => x.SelectionRevision).OriginalValue = previousRevision;
-        root.CurrentValues[nameof(CartShippingDraft.SelectionRevision)] = previousRevision;
-        root.Property(x => x.SelectionRevision).IsModified = false;
-
-        if (previousGroups.Count > 0)
+        var rootEntry = db.Entry(persisted);
+        if (rootEntry.State != EntityState.Detached)
         {
-            foreach (var group in draft.ShippingGroups.ToArray())
-            {
-                if (previousGroups.Contains(group))
-                {
-                    continue;
-                }
-
-                DetachGroup(group);
-            }
-
-            draft.ClearShippingGroups(draft.UpdatedAt);
-            draft.AddShippingGroups(previousGroups, draft.UpdatedAt);
-            foreach (var group in previousGroups)
-            {
-                var entry = db.Entry(group);
-                if (entry.State == EntityState.Deleted)
-                {
-                    entry.State = EntityState.Unchanged;
-                }
-            }
+            rootEntry.State = EntityState.Detached;
         }
 
-        // آخرین پاک‌سازی قطعی: در پایان، state هر گروهِ این پیش‌نویس صریحاً تثبیت می‌شود — گروه‌های
-        // قبلی Unchanged و هر چیز دیگری (درج‌شده یا حذف‌شدهٔ همین تلاش) detach. پس SaveChanges بعدی
-        // نمی‌تواند انتخاب ردشده را جاودانه کند و گراف قبلی هم دست‌نخورده می‌ماند.
-        var keep = previousGroups.Select(group => group.ShippingGroupId).ToHashSet();
-        foreach (var entry in db.ChangeTracker.Entries<CartShippingDraftGroup>().ToArray())
-        {
-            if (entry.Entity.CartId != draft.CartId)
-            {
-                continue;
-            }
-
-            if (keep.Contains(entry.Entity.ShippingGroupId))
-            {
-                if (entry.State != EntityState.Unchanged)
-                {
-                    entry.State = EntityState.Unchanged;
-                }
-
-                continue;
-            }
-
-            DetachGroup(entry.Entity);
-        }
-
-        // خطوط گروه‌های حذف‌شده هم صریحاً پاک می‌شوند: با detach شدن گروه، ناوبری خطوطش خالی می‌شود و
-        // اگر این‌جا رها شوند SaveChanges بعدی آن‌ها را دوباره درج می‌کرد.
-        foreach (var lineEntry in db.ChangeTracker.Entries<CartShippingDraftGroupLine>().ToArray())
-        {
-            if (keep.Contains(lineEntry.Entity.ShippingGroupId))
-            {
-                if (lineEntry.State != EntityState.Unchanged)
-                {
-                    lineEntry.State = EntityState.Unchanged;
-                }
-
-                continue;
-            }
-
-            if (lineEntry.State != EntityState.Detached)
-            {
-                lineEntry.State = EntityState.Detached;
-            }
-        }
-
-        // AddShippingGroups مشتق‌های اسکالر را بازنویسی می‌کند؛ مقدار اصلی دوباره حاکم می‌شود.
-        root.CurrentValues.SetValues(root.OriginalValues);
-        root.State = EntityState.Unchanged;
+        // حقیقت رول‌بک‌شده دوباره از DB خوانده می‌شود؛ نه حالت دست‌سازِ ناوبری/state.
+        await db.ShippingDrafts
+            .Include(x => x.ShippingGroups)
+            .ThenInclude(x => x.Lines)
+            .FirstOrDefaultAsync(x => x.CartId == persisted.CartId, CancellationToken.None);
     }
+
+    /// <summary>
+    /// پیش‌شرط نوشتن: هر کار Added/Modified/Deleted در همین context «کار در انتظار» است و نوشتن
+    /// capture را می‌بندد. هیچ ورودی‌ای تغییر نمی‌کند؛ فقط رد می‌شود.
+    /// </summary>
+    private void EnsureNoForeignPendingWork()
+    {
+        foreach (var entry in db.ChangeTracker.Entries())
+        {
+            if (entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            {
+                throw new StorefrontOrderException(StorefrontCapturedSelectionReasons.PendingWork);
+            }
+        }
+    }
+
+    private void DetachDraftGraph(CartShippingDraft draft)
+    {
+        foreach (var group in draft.ShippingGroups.ToArray())
+        {
+            DetachGroup(group);
+        }
+
+        var entry = db.Entry(draft);
+        if (entry.State != EntityState.Detached)
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
+
+    private static bool IsStaleOrConflicting(Exception error) =>
+        error is DbUpdateConcurrencyException
+        || (error is DbUpdateException update && IsRootUniquenessViolation(update));
     private void DetachGroup(CartShippingDraftGroup group)
     {
         var entry = db.Entry(group);

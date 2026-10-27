@@ -238,7 +238,10 @@ public sealed class StorefrontCapturedPreviewWriteGuardTests
         public Task SaveAsync(CartShippingDraft value, bool isNew, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("a captured draft must never be written by the legacy path");
 
-        public Task ReplaceCapturedSelectionAsync(
+        public Task<CartShippingDraft?> GetForCapturedSelectionAsync(Guid cartId, CancellationToken cancellationToken) =>
+            GetByCartIdAsync(cartId, cancellationToken);
+
+        public Task<CartShippingDraft> ReplaceCapturedSelectionAsync(
             CartShippingDraft draft,
             IReadOnlyList<CartShippingDraftGroup> groups,
             bool isNew,

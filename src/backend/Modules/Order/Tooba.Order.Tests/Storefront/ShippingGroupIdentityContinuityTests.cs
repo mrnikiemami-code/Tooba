@@ -500,7 +500,10 @@ public sealed class ShippingGroupIdentityContinuityTests
             return Task.CompletedTask;
         }
 
-        public Task ReplaceCapturedSelectionAsync(
+        public Task<CartShippingDraft?> GetForCapturedSelectionAsync(Guid cartId, CancellationToken cancellationToken) =>
+            GetByCartIdAsync(cartId, cancellationToken);
+
+        public Task<CartShippingDraft> ReplaceCapturedSelectionAsync(
             CartShippingDraft value,
             IReadOnlyList<CartShippingDraftGroup> groups,
             bool isNew,

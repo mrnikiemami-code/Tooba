@@ -213,4 +213,10 @@
   <data name="storefront.captured_selection.evidence_present" xml:space="preserve">
     <value>This cart already has a captured shipping selection and cannot be changed from the legacy path.</value>
   </data>
+  <data name="storefront.captured_selection.coupon_unavailable" xml:space="preserve">
+    <value>Saving a captured shipping selection together with a coupon is not supported in this version.</value>
+  </data>
+  <data name="storefront.captured_selection.pending_work" xml:space="preserve">
+    <value>Other unsaved changes are still in progress. Finish them first and try again.</value>
+  </data>
 </root>

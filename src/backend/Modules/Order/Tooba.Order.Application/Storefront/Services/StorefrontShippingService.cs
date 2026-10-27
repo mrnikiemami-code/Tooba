@@ -668,7 +668,9 @@ public sealed class StorefrontShippingService
                 names.Last),
             cancellationToken);
 
-        var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
+        // TB-232-R1: خواندن تازه/جدا از ردیف ذخیره‌شده — نه identity mapِ کهنه — تا CAS و گروه‌های
+        // قابل‌بازاستفاده از حقیقت ذخیره‌شده بیایند و کار در انتظار نامرتبط پیش از هر تغییر رد شود.
+        var existing = await _drafts.GetForCapturedSelectionAsync(cart.CartId, cancellationToken);
         if (existing is not null)
         {
             EnsureDraftOwnership(existing, guestSecret);

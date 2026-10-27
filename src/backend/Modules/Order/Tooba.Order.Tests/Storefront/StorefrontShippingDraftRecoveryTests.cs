@@ -459,7 +459,10 @@ public sealed class StorefrontShippingDraftRecoveryTests
             throw new NotSupportedException("projection must never write the shipping draft");
         }
 
-        public Task ReplaceCapturedSelectionAsync(
+        public Task<CartShippingDraft?> GetForCapturedSelectionAsync(Guid cartId, CancellationToken cancellationToken) =>
+            GetByCartIdAsync(cartId, cancellationToken);
+
+        public Task<CartShippingDraft> ReplaceCapturedSelectionAsync(
             CartShippingDraft value,
             IReadOnlyList<CartShippingDraftGroup> groups,
             bool isNew,

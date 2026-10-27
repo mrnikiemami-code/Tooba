@@ -37,6 +37,19 @@ public static class StorefrontCapturedSelectionReasons
 
     /// <summary>پیش‌نویس ذخیره‌شده شاهد capture دارد و مسیر قدیمی نمی‌تواند آن را جایگزین/بازقیمت کند.</summary>
     public const string EvidencePresent = "storefront.captured_selection.evidence_present";
+
+    /// <summary>
+    /// TB-232-R1: قصد کوپن در این برش پشتیبانی نمی‌شود. خواندن capture هیچ قصد کوپنی ندارد، پس
+    /// پذیرفتن کوپن در نوشتن می‌توانست مبلغ کالای دیگری را با همان توکن‌های بازتاب ذخیره کند؛
+    /// به‌جای نادیده‌گرفتن بی‌صدا، پیش از هر نقل‌قول/نوشتنی صریحاً رد می‌شود.
+    /// </summary>
+    public const string CouponUnavailable = "storefront.captured_selection.coupon_unavailable";
+
+    /// <summary>
+    /// TB-232-R1: در همان context کار افزودن/تغییر/حذفِ نامرتبطِ در انتظار وجود دارد. نوشتن پیش از
+    /// هر تغییر/تراکنش رد می‌شود تا کار فراخوان هرگز flush/پاک نشود.
+    /// </summary>
+    public const string PendingWork = "storefront.captured_selection.pending_work";
 }
 
 /// <summary>
@@ -104,16 +117,38 @@ public sealed class StorefrontCapturedSelectionWriter(
         // هر shorthand قدیمی در حضور قصد capture مبهم است و پذیرفته نمی‌شود (بدون fallback).
         if (!string.IsNullOrWhiteSpace(request.ShippingMethodCode)
             || !string.IsNullOrWhiteSpace(request.SelectedDeliveryDate)
-            || !string.IsNullOrWhiteSpace(request.SelectedDeliveryTimeWindow))
+            || !string.IsNullOrWhiteSpace(request.SelectedDeliveryTimeWindow)
+            || request.ShippingGroups is { Count: > 0 })
         {
             throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
         }
 
+        // TB-232-R1: قصد کوپن در این برش رد می‌شود (نه نادیده گرفته) — خواندن capture هیچ قصد کوپنی
+        // ندارد و پذیرفتن آن می‌توانست مبلغ کالای دیگری را زیر همان توکن‌های بازتاب ذخیره کند.
+        if (!string.IsNullOrWhiteSpace(request.CouponCode))
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.CouponUnavailable);
+        }
+
+        // شکل ارزانِ قصد پیش از هر خواندن بیرونی: کلید تکراری/تهی و توکن نسخهٔ اجباری.
+        var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var intent in intents)
+        {
+            if (intent is null
+                || string.IsNullOrWhiteSpace(intent.GroupKey)
+                || (intent.ServiceCode ?? string.Empty).Trim().Length == 0
+                || !seenKeys.Add(intent.GroupKey))
+            {
+                throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+            }
+        }
+
+        // TB-232-R1: نسخهٔ موردانتظار باید <b>صریح</b> بیاید؛ نبود/خالی «نسخهٔ صفر» نیست. متن «0» همان
+        // نبود/ردیف قدیمی است و همچنان معتبر می‌ماند.
+        var expectedRevision = ParseExpectedRevision(request.ExpectedSelectionRevision);
+
         // مقصد قیمت = نشانی واقعیِ آماده‌شده سمت سرور، نه یک جفت دلخواه مرورگر.
         var destination = await ResolvePreparedDestinationAsync(prepared, cancellationToken);
-
-        // توکن CAS نامعتمد پیش از هر خواندن گران اعتبارسنجی می‌شود (شکل نامعتبر = تضاد، بدون خواندن).
-        var expectedRevision = ParseExpectedRevision(request.ExpectedSelectionRevision);
 
         var resolved = await planner.ResolveAsync(
             cart,
@@ -121,9 +156,7 @@ public sealed class StorefrontCapturedSelectionWriter(
             destination,
             currency: null,
             languageId: Guid.Empty,
-            cancellationToken,
-            // قصد کوپنِ همین درخواست، نه یک مقدار ساختگی؛ تهی = بدون کوپن.
-            couponCode: request.CouponCode);
+            cancellationToken);
 
         if (resolved.Context is not { } context)
         {
@@ -134,16 +167,10 @@ public sealed class StorefrontCapturedSelectionWriter(
 
         var requests = new List<CartShippingGroupRequest>(intents.Count);
         var eligible = new List<CartShippingGroupEligibleMethod>(intents.Count);
-        var evidenceByMethod = new Dictionary<string, ShippingGroupAcceptedEvidence>(StringComparer.Ordinal);
-        var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+        var commitments = new List<CapturedCommitment>(intents.Count);
 
         foreach (var intent in intents)
         {
-            if (intent is null || string.IsNullOrWhiteSpace(intent.GroupKey) || !seenKeys.Add(intent.GroupKey))
-            {
-                throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
-            }
-
             var plan = context.Plans.FirstOrDefault(group => string.Equals(group.GroupKey, intent.GroupKey, StringComparison.Ordinal))
                 ?? throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
             var composedGroup = context.Composition.Groups
@@ -203,6 +230,9 @@ public sealed class StorefrontCapturedSelectionWriter(
             var label = context.Labels.TryGetValue(candidate.MethodCode, out var methodLabel)
                 ? methodLabel
                 : candidate.ServiceCode;
+            // فروشندهٔ همین گروه از خطوط authoritative همان گروه می‌آید (همان فروشنده‌ای که
+            // CartShippingGroupPlanner برای یکتایی/تعهد استفاده می‌کند)، نه از یک مقدار اختیاری ترکیب.
+            var sellerPartyId = CartSellerOf(cart, plan.CartLineIds);
             eligible.Add(new CartShippingGroupEligibleMethod(
                 candidate.MethodCode,
                 candidate.ServiceCode,
@@ -212,9 +242,19 @@ public sealed class StorefrontCapturedSelectionWriter(
                 quote.CurrencyCode!,
                 quote.MinDeliveryDays ?? 0,
                 slot.Date,
-                composedGroup.SellerPartyId));
+                sellerPartyId));
 
-            evidenceByMethod[candidate.MethodCode] = evidence;
+            // TB-232-R1: شاهد به «تعهد کاملِ همان گروه سرور» بسته می‌شود، نه به کد روش. دو فروشندهٔ
+            // متفاوت با همان سرویس/گزینهٔ Store دقیقاً یک MethodCode دارند؛ کلید روش باعث می‌شد شاهد
+            // گروه دوم شاهد گروه اول را بازنویسی کند.
+            commitments.Add(new CapturedCommitment(
+                plan.GroupKey,
+                sellerPartyId,
+                candidate.MethodCode,
+                candidate.ServiceCode,
+                candidate.OptionCode,
+                plan.CartLineIds.ToHashSet(),
+                evidence));
         }
 
         // همهٔ گروه‌های سرور باید انتخاب شوند؛ گروه ناقص/ناشناخته کل نوشتن را می‌بندد.
@@ -242,23 +282,10 @@ public sealed class StorefrontCapturedSelectionWriter(
             throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
         }
 
-        // شاهد فقط روی گروه ساخته‌شدهٔ همان تعهد می‌نشیند؛ هیچ گروهی بی‌شاهد نمی‌ماند.
-        foreach (var group in groups)
-        {
-            if (!evidenceByMethod.TryGetValue(group.MethodCode, out var evidence))
-            {
-                throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
-            }
-
-            try
-            {
-                group.ReplaceAcceptedEvidence(evidence, now);
-            }
-            catch (ContractOperationException)
-            {
-                throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
-            }
-        }
+        // شاهد فقط روی گروه ساخته‌شدهٔ <b>همان تعهد</b> می‌نشیند. تطبیق کامل است (فروشنده + روش +
+        // سرویس/گزینه + مجموعهٔ خطوط)؛ نه ایندکس لیست، نه برچسب، نه اولین تطبیق. تطبیق صفر یا بیش از
+        // یک (تعهد مبهم) کل نوشتن را رد می‌کند.
+        AttachEvidenceToOneGroupEach(groups, commitments, now);
 
         var primary = groups[0];
         var multiGroup = groups.Count > 1;
@@ -318,8 +345,7 @@ public sealed class StorefrontCapturedSelectionWriter(
             draft.AddShippingGroups(groups, now);
         }
 
-        await drafts.ReplaceCapturedSelectionAsync(draft, groups, isNew, expectedRevision, cancellationToken);
-        return draft;
+        return await drafts.ReplaceCapturedSelectionAsync(draft, groups, isNew, expectedRevision, cancellationToken);
     }
 
     /// <summary>مقصد از نشانی آماده‌شدهٔ سمت سرور resolve می‌شود (بدون tuple دلخواه مرورگر).</summary>
@@ -411,17 +437,112 @@ public sealed class StorefrontCapturedSelectionWriter(
 
     private static long ParseExpectedRevision(string? text)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        // TB-232-R1: نبود/خالی «صفر» نیست؛ نسخهٔ موردانتظار باید صریح باشد. متن «0» معتبر است.
+        if (string.IsNullOrWhiteSpace(text)
+            || !long.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var parsed)
+            || parsed < 0)
         {
-            return 0;
-        }
-
-        if (!long.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var parsed) || parsed < 0)
-        {
-            throw Refuse(StorefrontCapturedSelectionReasons.Conflict);
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
         }
 
         return parsed;
+    }
+
+    /// <summary>
+    /// یک تعهد سرور برای یک گروه: کلید پایدار گروه، فروشندهٔ واقعی، هویت Binding و مجموعهٔ خطوط.
+    /// </summary>
+    private sealed record CapturedCommitment(
+        string GroupKey,
+        Guid SellerPartyId,
+        string MethodCode,
+        string? ServiceCode,
+        string? OptionCode,
+        IReadOnlySet<Guid> LineIds,
+        ShippingGroupAcceptedEvidence Evidence);
+
+    /// <summary>
+    /// هر گروه ساخته‌شده دقیقاً شاهد تعهد <b>همان</b> گروه را می‌گیرد. تطبیق صفر یا بیش از یک ⇒ رد کل
+    /// نوشتن؛ هیچ شاهد گروه دیگری به ارث نمی‌رسد و هیچ گروهی بی‌شاهد نمی‌ماند.
+    /// </summary>
+    private static void AttachEvidenceToOneGroupEach(
+        IReadOnlyList<CartShippingDraftGroup> groups,
+        IReadOnlyList<CapturedCommitment> commitments,
+        DateTimeOffset now)
+    {
+        if (groups.Count != commitments.Count)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+
+        var remaining = new List<CapturedCommitment>(commitments);
+        foreach (var group in groups)
+        {
+            var matches = remaining.Where(commitment => SameObligation(commitment, group)).ToArray();
+            if (matches.Length != 1)
+            {
+                // هیچ تعهدی یا بیش از یک تعهد با همان فروشنده/روش/هویت/خطوط ⇒ مبهم؛ هیچ‌کدام پذیرفته نمی‌شود.
+                throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+            }
+
+            remaining.Remove(matches[0]);
+            try
+            {
+                group.ReplaceAcceptedEvidence(matches[0].Evidence, now);
+            }
+            catch (ContractOperationException)
+            {
+                throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
+            }
+        }
+
+        if (remaining.Count != 0)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+    }
+
+    private static bool SameObligation(CapturedCommitment commitment, CartShippingDraftGroup group)
+    {
+        if (group.SellerPartyId != commitment.SellerPartyId
+            || !string.Equals(
+                (group.MethodCode ?? string.Empty).Trim(),
+                (commitment.MethodCode ?? string.Empty).Trim(),
+                StringComparison.OrdinalIgnoreCase)
+            || !SameCode(group.ServiceCode, commitment.ServiceCode)
+            || !SameCode(group.OptionCode, commitment.OptionCode))
+        {
+            return false;
+        }
+
+        if (group.Lines.Count != commitment.LineIds.Count)
+        {
+            return false;
+        }
+
+        return group.Lines.All(line => commitment.LineIds.Contains(line.CartLineId));
+    }
+
+    /// <summary>
+    /// فروشندهٔ authoritative همین گروه از خطوط همان گروه در سبد؛ نبود/تناقض یعنی قصد نامعتبر.
+    /// </summary>
+    private static Guid CartSellerOf(CartPage cart, IReadOnlyList<Guid> cartLineIds)
+    {
+        if (cartLineIds.Count == 0)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+
+        var sellers = cartLineIds
+            .Select(lineId => cart.Lines.FirstOrDefault(line => line.LineId == lineId)?.SellerPartyId)
+            .ToArray();
+
+        if (sellers.Any(seller => seller is null) || sellers.Distinct().Count() != 1)
+        {
+            // خط ناشناس یا فروشندهٔ مختلط در یک گروه هرگز گروه معتبر نمی‌سازد.
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+
+        return sellers[0]!.Value;
     }
 
     private static bool SameCode(string? left, string? right) =>

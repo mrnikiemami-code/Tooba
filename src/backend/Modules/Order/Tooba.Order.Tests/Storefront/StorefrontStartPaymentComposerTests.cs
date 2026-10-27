@@ -531,7 +531,10 @@ public sealed class StorefrontStartPaymentComposerTests
         public Task SaveAsync(CartShippingDraft value, bool isNew, CancellationToken cancellationToken) =>
             Task.CompletedTask;
 
-        public Task ReplaceCapturedSelectionAsync(
+        public Task<CartShippingDraft?> GetForCapturedSelectionAsync(Guid cartId, CancellationToken cancellationToken) =>
+            GetByCartIdAsync(cartId, cancellationToken);
+
+        public Task<CartShippingDraft> ReplaceCapturedSelectionAsync(
             CartShippingDraft value,
             IReadOnlyList<CartShippingDraftGroup> groups,
             bool isNew,

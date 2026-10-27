@@ -1,4 +1,4 @@
-# TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232 — RESULT
+﻿# TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232 — RESULT
 
 Status: **EXECUTED**, not accepted. No user Visual ACCEPT. No checkout, reservation, payment, cart
 conversion, historical read, UI or runtime change. `not_ready` for final write stays.
@@ -229,3 +229,20 @@ earlier; no other author's or shared history was touched, and nothing was lost f
 history rewrite inside one task window and is recorded here rather than hidden.
 
 STOP_FOR_ARCHITECT. Automatic-Next-Task NONE. No 233 envelope.
+
+## 232-R1 correction (appended — history above is preserved, not rewritten)
+
+Architect review `docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232/ARCHITECT-REVIEW.md`
+did NOT accept this result: the evidence map was keyed only by method code (two sellers on one Store binding could
+overwrite each other's row/date/money), the captured load returned a stale tracking graph with no clean-caller
+guard, the rollback restored originals that the first SaveChanges had already overwritten and swept every tracked
+group line, and a forwarded CouponCode could store a different goods total under identical echo tokens.
+
+All four are repaired in `docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232-R1/RESULT.md`.
+The parts of THIS result that remain true: the single shared `ResolveAsync`, the server-only quote/evidence
+construction, the 231 compact scalar model, the default-OFF selection gate, the Order transaction/CAS direction,
+and the final order/payment `not_ready` refusals. The parts this result overstated: "rollback that restores/
+detaches ONLY this attempt's graph" was not true of the code reviewed (global line sweep + post-SaveChanges
+originals), and "the optional `CouponCode` intent goes through the 217 path" was withdrawn in 232-R1 in favour of
+an explicit `storefront.captured_selection.coupon_unavailable` refusal. The two-seller same-binding defect was a
+real provenance bug, not a theoretical edge case.

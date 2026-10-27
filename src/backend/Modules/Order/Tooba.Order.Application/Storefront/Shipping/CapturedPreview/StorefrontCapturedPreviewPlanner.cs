@@ -226,8 +226,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
         DestinationIdentifiers? destination,
         string? currency,
         Guid languageId,
-        CancellationToken cancellationToken,
-        string? couponCode = null)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(cart);
         ArgumentNullException.ThrowIfNull(access);
@@ -466,9 +465,9 @@ public sealed class StorefrontCapturedPreviewPlanner(
             // not a tax jurisdiction key, and quoting with it refused every live priced read
             // (`checkout.tax.unavailable`) while a jurisdiction-keyed rule exists.
             TaxJurisdiction: StorefrontCheckoutService.StorefrontTaxJurisdiction,
-            // TB-232: قصد تخفیف واقعیِ همین درخواست از همان مسیر ۲۱۷ می‌گذرد؛ تهی یعنی «بدون کوپن»،
-            // و هیچ تخفیف/مبلغی جای آن ساخته نمی‌شود.
-            CouponCode: string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim());
+            // TB-232-R1: قصد کوپن در این برش پشتیبانی نمی‌شود و نویسنده آن را پیش از هر نقل‌قولی رد
+            // می‌کند؛ پس این مسیر هرگز کوپن نمی‌فرستد و هیچ تخفیف/مبلغی جای آن ساخته نمی‌شود.
+            CouponCode: null);
 
         StorefrontCapturedGroupProjectionResult composed;
         try

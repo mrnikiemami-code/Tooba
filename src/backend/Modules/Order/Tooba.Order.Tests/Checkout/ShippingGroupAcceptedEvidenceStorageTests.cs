@@ -14,6 +14,7 @@ namespace Tooba.Order.Tests.Checkout;
 /// همهٔ حقایق با مادی‌ساز واقعی و همان زنجیرهٔ مهاجرت Order اجرا می‌شوند؛ هیچ fixture درون‌حافظه‌ای
 /// جانشین ذخیره‌سازی نمی‌شود و هیچ تراکنش بین‌ماژولی ساخته نمی‌شود.
 /// </remarks>
+[Collection(OrderEvidenceRelationalCollection.Name)]
 public sealed class ShippingGroupAcceptedEvidenceStorageTests
 {
     [Fact]

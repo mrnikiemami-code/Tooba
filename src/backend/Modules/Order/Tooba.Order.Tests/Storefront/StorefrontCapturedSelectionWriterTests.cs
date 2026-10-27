@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Shipping;
@@ -47,6 +47,8 @@ public sealed class StorefrontCapturedSelectionWriterTests
     private static readonly Guid DraftA = Guid.Parse("aaaaaaaa-0000-4000-8000-00000000000a");
     private static readonly Guid AreaGroup = Guid.Parse("10000000-0000-4000-8000-000000000001");
     private static readonly Guid RateRow = Guid.Parse("20000000-0000-4000-8000-000000000002");
+    private static readonly Guid AreaGroupB = Guid.Parse("10000000-0000-4000-8000-0000000000b1");
+    private static readonly Guid RateRowB = Guid.Parse("20000000-0000-4000-8000-0000000000b2");
     private static readonly Guid Snapshot = Guid.Parse("30000000-0000-4000-8000-000000000003");
     private static readonly DateTimeOffset Now = new(2026, 10, 27, 8, 0, 0, TimeSpan.Zero);
 
@@ -114,8 +116,9 @@ public sealed class StorefrontCapturedSelectionWriterTests
         Assert.Equal(0, drafts.ReplaceCalls);
     }
 
+    /// <summary>متن نسخهٔ نامعتبر قصد است (نه تضاد): شکل نامعتبر پیش از هر خواندن گران رد می‌شود.</summary>
     [Fact]
-    public async Task Malformed_expected_revision_is_a_conflict()
+    public async Task Malformed_expected_revision_is_refused_as_invalid_intent()
     {
         using var harness = new ShippingGroupGoodsFactsHarness();
         var writer = Writer(harness, new DraftStoreFake(), new GeographyFake());
@@ -129,7 +132,7 @@ public sealed class StorefrontCapturedSelectionWriterTests
             Intent(GroupKey(harness), "post", "standard", "2026-10-29") with { ExpectedSelectionRevision = "3.5" },
             CancellationToken.None));
 
-        Assert.Equal(StorefrontCapturedSelectionReasons.Conflict, error.Code);
+        Assert.Equal(StorefrontCapturedSelectionReasons.IntentInvalid, error.Code);
     }
 
     [Fact]
@@ -215,11 +218,39 @@ public sealed class StorefrontCapturedSelectionWriterTests
     }
 
     /// <summary>
-    /// TB-232: قصد کوپنِ همین درخواست از همان مسیر ۲۱۷ (Pricing/Promotion/Tax) می‌گذرد؛ هیچ تخفیف
-    /// یا مبلغی در بدنه پذیرفته نمی‌شود و تهی‌بودن یعنی «بدون کوپن».
+    /// TB-232-R1: قصد کوپن در این برش fail-closed است — پیش از هر نقل‌قول/نوشتنی رد می‌شود و هیچ
+    /// مبلغ کالای دیگری زیر همان توکن‌های بازتاب ذخیره نمی‌شود.
     /// </summary>
     [Fact]
-    public async Task Requested_coupon_flows_through_the_same_pricing_path()
+    public async Task Nonblank_coupon_is_refused_before_any_quote_or_write()
+    {
+        using var harness = Positive(OfferA, LineA);
+        var drafts = new DraftStoreFake();
+        var planner = PositivePlanner(harness);
+        var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+        var cart = Cart(harness, LineA, OfferA);
+        var intent = await IntentFromPreviewAsync(harness, planner, cart);
+
+        var quoteCallsBefore = harness.Promotions.Calls;
+        var error = await Assert.ThrowsAsync<StorefrontOrderException>(() => writer.SaveAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Prepared(),
+            existing: null,
+            guestSecretHash: null,
+            intent with { CouponCode = "  SUMMER-232  " },
+            CancellationToken.None));
+
+        Assert.Equal(StorefrontCapturedSelectionReasons.CouponUnavailable, error.Code);
+        // هیچ نقل‌قول/تخفیفی برای این درخواست انجام نشده و هیچ نوشتنی رخ نداده است.
+        Assert.Equal(quoteCallsBefore, harness.Promotions.Calls);
+        Assert.Equal(0, drafts.ReplaceCalls);
+    }
+
+    /// <summary>کوپن خالی/فاصله همان «بدون کوپن» است و مسیر عادی را نمی‌بندد.</summary>
+    [Fact]
+    public async Task Blank_coupon_takes_the_ordinary_path()
     {
         using var harness = Positive(OfferA, LineA);
         var drafts = new DraftStoreFake();
@@ -235,12 +266,10 @@ public sealed class StorefrontCapturedSelectionWriterTests
             Prepared(),
             existing: null,
             guestSecretHash: null,
-            intent with { CouponCode = "  SUMMER-232  " },
+            intent with { CouponCode = "   " },
             CancellationToken.None);
 
-        // همان کوپن، پاک‌شده و بدون هیچ تفسیر محلی، به مسیر تخفیف واقعی رسیده است.
-        Assert.NotNull(harness.Promotions.LastRequest);
-        Assert.Equal("SUMMER-232", harness.Promotions.LastRequest!.CouponCode);
+        Assert.Equal(1, drafts.ReplaceCalls);
     }
 
     /// <summary>پیش‌نویس موجود با نسخهٔ مشاهده‌شده: همان نسخه به‌عنوان CAS تحویل می‌شود.</summary>
@@ -428,7 +457,113 @@ public sealed class StorefrontCapturedSelectionWriterTests
         Assert.Equal(0, drafts.ReplaceCalls);
     }
 
+    /// <summary>
+    /// TB-232-R1 (RED→GREEN): دو فروشندهٔ متفاوت با <b>همان</b> Binding سرویس/گزینهٔ Store دقیقاً یک
+    /// MethodCode مشترک دارند. شاهد هر گروه باید متعلق به <b>همان تعهد</b> باشد: ردیف نرخ و ساعت دریافتی
+    /// خودش — نه ردیف/تاریخ/ساعت گروه دیگر. مبلغ برابر است تا هیچ تفاوت قیمتی مچ‌گیری را پنهان نکند.
+    /// </summary>
+    [Fact]
+    public async Task Two_sellers_sharing_one_store_binding_keep_their_own_evidence()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        var planner = TwoGroupPlanner(harness, TwoSellerQuoteLookup(secondFreight: 15_000m));
+        var drafts = new DraftStoreFake();
+        var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+        var cart = Cart(harness, LineA, OfferA, LineB, OfferB);
+        var intent = await IntentFromPreviewAsync(harness, planner, cart);
+        Assert.Equal(2, intent.CapturedGroups!.Count);
+
+        await writer.SaveAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Prepared(),
+            existing: null,
+            guestSecretHash: null,
+            intent,
+            CancellationToken.None);
+
+        Assert.Equal(2, drafts.LastGroups.Count);
+        var first = drafts.LastGroups.Single(group => group.SellerPartyId == harness.SellerId);
+        var second = drafts.LastGroups.Single(group => group.SellerPartyId == harness.OtherSellerId);
+        var firstEvidence = first.AcceptedEvidence!;
+        var secondEvidence = second.AcceptedEvidence!;
+
+        // فروشندهٔ اول: ناحیه/ردیف/ساعت خودش.
+        Assert.Equal(AreaGroup, firstEvidence.AreaGroupId);
+        Assert.Equal(RateRow, firstEvidence.RateRowId);
+        Assert.Equal(new TimeOnly(9, 0).Ticks, firstEvidence.ReceivingOpenTicks);
+        Assert.Equal(new TimeOnly(17, 0).Ticks, firstEvidence.ReceivingCloseTicks);
+        Assert.Equal(first.SelectedDeliveryDate, firstEvidence.ReceivingDate);
+
+        // فروشندهٔ دوم با همان MethodCode: ردیف/ساعت خودش، نه شاهد گروه اول.
+        Assert.Equal(AreaGroupB, secondEvidence.AreaGroupId);
+        Assert.Equal(RateRowB, secondEvidence.RateRowId);
+        Assert.Equal(new TimeOnly(10, 0).Ticks, secondEvidence.ReceivingOpenTicks);
+        Assert.Equal(new TimeOnly(14, 0).Ticks, secondEvidence.ReceivingCloseTicks);
+        Assert.Equal(second.SelectedDeliveryDate, secondEvidence.ReceivingDate);
+
+        Assert.NotEqual(firstEvidence.RateRowId, secondEvidence.RateRowId);
+        Assert.NotEqual(firstEvidence.ReceivingOpenTicks, secondEvidence.ReceivingOpenTicks);
+    }
+
+    /// <summary>
+    /// کنترل با مبلغ‌های متفاوت: تفاوت قیمت هم نوشتن را نمی‌شکند و هر گروه همان مبلغ خودش را نگه می‌دارد.
+    /// </summary>
+    [Fact]
+    public async Task Two_sellers_with_different_prices_each_keep_their_own_money()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        var planner = TwoGroupPlanner(harness, TwoSellerQuoteLookup(secondFreight: 90_000m));
+        var drafts = new DraftStoreFake();
+        var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+        var cart = Cart(harness, LineA, OfferA, LineB, OfferB);
+        var intent = await IntentFromPreviewAsync(harness, planner, cart);
+
+        await writer.SaveAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Prepared(),
+            existing: null,
+            guestSecretHash: null,
+            intent,
+            CancellationToken.None);
+
+        var first = drafts.LastGroups.Single(group => group.SellerPartyId == harness.SellerId);
+        var second = drafts.LastGroups.Single(group => group.SellerPartyId == harness.OtherSellerId);
+        Assert.Equal(15_000m, first.AcceptedEvidence!.FreightAmount);
+        Assert.Equal(2_000m, first.AcceptedEvidence!.PackagingAmount);
+        Assert.Equal(90_000m, second.AcceptedEvidence!.FreightAmount);
+        Assert.Equal(2_000m, second.AcceptedEvidence!.PackagingAmount);
+        Assert.Equal(92_000m, second.AcceptedEvidence!.PayableAtCheckoutAmount);
+    }
+
     // ---------------------------------------------------------------- helpers
+
+    /// <summary>
+    /// همان Binding برای هر دو گروه (post/standard)، ولی ردیف نرخ و ساعت دریافتی هر فروشنده جداست؛
+    /// انتخاب پاسخ بر پایهٔ مبلغ کالای همان گروه است تا هیچ‌کدام پاسخ دیگری را نگیرد.
+    /// </summary>
+    private static RecordingCapturedQuoteLookup TwoSellerQuoteLookup(decimal secondFreight) =>
+        new()
+        {
+            Respond = request => (request.FinalGroupGoodsAmountAfterDiscountAndTax ?? 0m) >= 150m
+                ? Quoted(
+                    request,
+                    secondFreight,
+                    2_000m,
+                    AreaGroupB,
+                    RateRowB,
+                    Week([6, 7], new TimeOnly(10, 0), new TimeOnly(14, 0)))
+                : Quoted(
+                    request,
+                    15_000m,
+                    2_000m,
+                    AreaGroup,
+                    RateRow,
+                    Week([1, 2, 3, 4, 5], new TimeOnly(9, 0), new TimeOnly(17, 0))),
+        };
 
     private static StorefrontCapturedSelectionWriter Writer(
         ShippingGroupGoodsFactsHarness harness,
@@ -463,7 +598,9 @@ public sealed class StorefrontCapturedSelectionWriterTests
             }));
     }
 
-    private static StorefrontCapturedPreviewPlanner TwoGroupPlanner(ShippingGroupGoodsFactsHarness harness)
+    private static StorefrontCapturedPreviewPlanner TwoGroupPlanner(
+        ShippingGroupGoodsFactsHarness harness,
+        RecordingCapturedQuoteLookup? quoteLookup = null)
     {
         harness.Carts.Cart = harness.Cart(
             harness.Line(LineA, OfferA, 100m),
@@ -480,7 +617,7 @@ public sealed class StorefrontCapturedSelectionWriterTests
             harness.OtherSellerId,
             OfferFulfillmentResponsibility.Platform,
             StoreTypeId);
-        var quote = new RecordingCapturedQuoteLookup
+        var quote = quoteLookup ?? new RecordingCapturedQuoteLookup
         {
             Respond = request => Quoted(request, 15_000m, 2_000m),
         };
@@ -525,7 +662,7 @@ public sealed class StorefrontCapturedSelectionWriterTests
         ShippingGroupGoodsFactsHarness harness,
         StorefrontCapturedPreviewPlanner planner,
         CartPage cart,
-        string? expectedRevision = null)
+        string? expectedRevision = "0")
     {
         var preview = await planner.BuildAsync(
             cart,
@@ -583,8 +720,9 @@ public sealed class StorefrontCapturedSelectionWriterTests
             string.Empty,
             string.Empty,
             null,
-            CapturedGroups: groups
-                ?? [new StorefrontCapturedGroupSelection(groupKey, serviceCode, optionCode, date)]);
+            ShippingGroups: null,
+            CapturedGroups: groups ?? [new StorefrontCapturedGroupSelection(groupKey, serviceCode, optionCode, date)],
+            ExpectedSelectionRevision: "0");
 
     private static string GroupKey(ShippingGroupGoodsFactsHarness harness) =>
         "cap|platform|store|" + harness.SellerId.ToString("N") + "|" + StoreTypeId.ToString("N");
@@ -667,7 +805,10 @@ public sealed class StorefrontCapturedSelectionWriterTests
     private static ShippingCapturedQuoteResult Quoted(
         ShippingCapturedQuoteLookupRequest request,
         decimal freight,
-        decimal packaging) =>
+        decimal packaging,
+        Guid? areaGroup = null,
+        Guid? rateRow = null,
+        ShippingCapturedReceivingWeek? week = null) =>
         new(
             ShippingCapturedQuoteVerdict.Quoted,
             ShippingCapturedQuoteVerdictCodes.Quoted,
@@ -687,17 +828,23 @@ public sealed class StorefrontCapturedSelectionWriterTests
             SourceRevision: request.SourceRevision,
             FormatVersion: 1,
             ShippingTypeId: StoreTypeId,
-            GroupId: AreaGroup,
-            RateRowId: RateRow,
+            GroupId: areaGroup ?? AreaGroup,
+            RateRowId: rateRow ?? RateRow,
             MinDeliveryDays: 2,
             MaxDeliveryDays: 4,
-            ReceivingWeek: Week());
+            ReceivingWeek: week ?? Week());
 
-    private static ShippingCapturedReceivingWeek Week()
+    private static ShippingCapturedReceivingWeek Week(
+        int[]? openIsos = null,
+        TimeOnly? opens = null,
+        TimeOnly? closes = null)
     {
+        var openDays = openIsos ?? [6, 7];
+        var opensAt = opens ?? new TimeOnly(9, 0);
+        var closesAt = closes ?? new TimeOnly(17, 0);
         var days = Enumerable.Range(1, 7)
-            .Select(iso => iso is 6 or 7
-                ? new ShippingCapturedReceivingWeekDay(iso, true, new TimeOnly(9, 0), new TimeOnly(17, 0))
+            .Select(iso => openDays.Contains(iso)
+                ? new ShippingCapturedReceivingWeekDay(iso, true, opensAt, closesAt)
                 : new ShippingCapturedReceivingWeekDay(iso, false, null, null))
             .ToArray();
         return new ShippingCapturedReceivingWeek("Asia/Tehran", days);
@@ -732,7 +879,10 @@ public sealed class StorefrontCapturedSelectionWriterTests
         public Task SaveAsync(CartShippingDraft value, bool isNew, CancellationToken cancellationToken) =>
             throw new NotSupportedException("the legacy save path must not be used by the captured writer");
 
-        public Task ReplaceCapturedSelectionAsync(
+        public Task<CartShippingDraft?> GetForCapturedSelectionAsync(Guid cartId, CancellationToken cancellationToken) =>
+            GetByCartIdAsync(cartId, cancellationToken);
+
+        public Task<CartShippingDraft> ReplaceCapturedSelectionAsync(
             CartShippingDraft draft,
             IReadOnlyList<CartShippingDraftGroup> groups,
             bool isNew,
@@ -747,17 +897,17 @@ public sealed class StorefrontCapturedSelectionWriterTests
             {
                 if (expectedSelectionRevision != 0)
                 {
-                    return Task.FromException(new StorefrontOrderException(StorefrontShippingSelectionConflict.Stale));
+                    return Task.FromException<CartShippingDraft>(new StorefrontOrderException(StorefrontShippingSelectionConflict.Stale));
                 }
             }
             else if (draft.SelectionRevision != expectedSelectionRevision)
             {
-                return Task.FromException(new StorefrontOrderException(StorefrontShippingSelectionConflict.Stale));
+                return Task.FromException<CartShippingDraft>(new StorefrontOrderException(StorefrontShippingSelectionConflict.Stale));
             }
 
             LastGroups = groups;
             draft.BumpSelectionRevision(draft.UpdatedAt);
-            return Task.CompletedTask;
+            return Task.FromResult(draft);
         }
     }
 

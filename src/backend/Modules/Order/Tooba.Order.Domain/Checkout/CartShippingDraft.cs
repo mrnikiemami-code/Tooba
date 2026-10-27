@@ -211,16 +211,6 @@ public sealed class CartShippingDraft
     }
 
     /// <summary>
-    /// بازگرداندن نسخهٔ انتخاب به مقدار پیش از یک تلاش ردشده (فقط برای rollback همان تلاش). این متد
-    /// نسخه را افزایش نمی‌دهد و هیچ تاریخ/ردیفی نمی‌سازد؛ صرفاً همان مقدار مشاهده‌شده را برمی‌گرداند.
-    /// </summary>
-    public void RestoreSelectionRevision(long revision)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(revision);
-        SelectionRevision = revision;
-    }
-
-    /// <summary>
     /// هویت مقصد تأییدشدهٔ همان قیمت را ذخیره می‌کند (چهار اسکالر، بدون JSON جغرافیایی). فقط پس از
     /// تأیید یکتای Geography صدا زده می‌شود؛ هیچ مقداری از مرورگر بدون تأیید این‌جا نمی‌نشیند.
     /// </summary>

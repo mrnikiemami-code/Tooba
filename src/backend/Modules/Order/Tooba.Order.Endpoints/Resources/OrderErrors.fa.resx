@@ -213,4 +213,10 @@
   <data name="storefront.captured_selection.evidence_present" xml:space="preserve">
     <value>برای این سبد انتخاب ارسال ثبت‌شده وجود دارد و از مسیر قدیمی قابل تغییر نیست.</value>
   </data>
+  <data name="storefront.captured_selection.coupon_unavailable" xml:space="preserve">
+    <value>ثبت انتخاب ارسال همراه با کد تخفیف در این نسخه پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="storefront.captured_selection.pending_work" xml:space="preserve">
+    <value>تغییرات ذخیره‌نشدهٔ دیگری در جریان است. ابتدا آن را کامل کنید و دوباره تلاش کنید.</value>
+  </data>
 </root>

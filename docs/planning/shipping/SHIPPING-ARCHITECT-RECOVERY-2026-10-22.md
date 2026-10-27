@@ -1,4 +1,52 @@
-# CURRENT — 232 NOT ACCEPTED; issued232-R1 group isolation + failure atomicity — 2026-10-27
+# CURRENT — 232-R1 executed: per-group evidence + attempt-only rollback proven — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232-R1/{TASK.md,RESULT.md} and
+232/ARCHITECT-REVIEW.md. Base `71b0e71d4` (local `520c508d7` fast-forwarded; the three pre-existing Shipping
+line-ending drifts never staged). Status: **EXECUTED**, NOT accepted, NO user Visual ACCEPT, no live/HTTP writer,
+no frontend/Host/runtime change, no shared migration apply.
+
+A — evidence is GROUP-scoped, not method-scoped: each server group yields one `CapturedCommitment` (server
+`GroupKey`, authoritative seller of that group's own cart lines, method/service/option, exact `LineIds`, evidence
+from that group's own quote/slot) and `AttachEvidenceToOneGroupEach` requires exactly one match per group and one
+group per commitment by FULL obligation; zero/second/leftover ⇒ whole write refused. Two sellers on the SAME Store
+binding keep their own row/date/money (same-price control green).
+B — clean caller + fresh graph: `GetForCapturedSelectionAsync` refuses unrelated Added/Modified/Deleted work with
+`storefront.captured_selection.pending_work` BEFORE any query/transaction/mutation and preserves it, detaches only
+that cart's tracked drafts and returns the persisted authoritative root/children AsNoTracking. The adapter re-reads
+the tracked root, derives CAS and reusable groups from it, and cheap intent validation (keys, legacy shorthand,
+captured+`ShippingGroups` mix, explicit revision text, coupon) runs before any foreign quote read.
+`ExpectedSelectionRevision` must be explicit: blank/omitted/malformed/negative ⇒ intent_invalid, `"0"` remains
+lawful absence.
+C — rollback is attempt-only: non-cancelled transaction rollback that cannot mask the original
+exception/cancellation, detach of ONLY this attempt's and this draft's previous groups/lines/root (no context
+clear, no global line sweep) and a re-read of the rolled-back root, so Current AND Original values are the
+pre-attempt persisted row and nothing rejected can be published later. The earlier hand-restore was PROVEN to
+corrupt the tracker (previous group re-attached as Added ⇒ duplicate-key identity conflict); detach-and-reload
+replaced it.
+D — coupon fails closed: nonblank `CouponCode` refuses `storefront.captured_selection.coupon_unavailable` before
+any quote/write (blank = absent); the planner's coupon passthrough was removed, so no path can quote a discount the
+read never showed. Couponed captured checkout stays unsupported until read+selection+final checkout share one
+context.
+Proof focused only on the task-owned disposable `postgres:17-alpine` 15433/order_tb231 (identity before DDL,
+container removed, port verified closed): captured-selection classes 26/26 (two-seller same-binding writer fact red
+on the reviewed version then green, own-money control, coupon/write-count facts, stale-context exact token, stale
+token conflict, full-scalar between-stages failure with originals/HasChanges0/SaveChanges0 and a later lawful edit
+publishing nothing rejected, unrelated pending work refused and preserved, caller cancellation). Affected
+Storefront+Checkout run ONCE 285/286 with the single failure being the PRE-EXISTING packaging allow-list guard
+(red at base). Order projects build 0 errors.
+HONEST: writer still model-bound (never exercised over HTTP/live), `DestinationServiceAreaId` always NULL, no
+commit-time revalidation, sequential concurrency fixtures are not a simultaneous race, 231/232 migrations
+WRITTEN/sharedNOTAPPLIED, EF snapshot gap retained, CommitAsync/ProjectPaymentDraftAsync stay not_ready with
+SelectionEnabled checked-in false. One test-hygiene change: the two relational classes now share one non-parallel
+xUnit collection because their whole-table resets wiped each other. Retained unfixed: 230-R1 empty-key
+retry/in-flight, cross-owner label/decoder, Offer API proof, 227 mobile empty-note, 225-R1 lost unsaved LOCAL edits.
+The user's visible review window, live Host/FE, previewON/count7, runtime data, buyer/cart, draft/rates/week/
+pointer/assignments were NOT touched. Elapsed ≈29 min vs HARD35 with one in-task correction; no amend/force-push.
+NEXT (Architect): review, then commit-time destination/cart/pointer/quote revalidation and coupon read-write-final
+parity, then final order composition / Order-only historical read. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+TB185 paused/default-OFF/PendingAllocation preserved.
+
+# SUPERSEDED — 232 NOT ACCEPTED; issued232-R1 group isolation + failure atomicity — 2026-10-27
 
 Active: TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232-R1.
 Read 232/ARCHITECT-REVIEW.md and 232-R1/TASK.md under docs/architecture/evidence/.
