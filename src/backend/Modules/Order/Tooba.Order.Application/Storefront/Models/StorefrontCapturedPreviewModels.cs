@@ -57,7 +57,20 @@ public sealed record StorefrontCapturedPreviewMethodView(
     string? Currency,
     string? EarliestEligibleDate,
     IReadOnlyList<StorefrontCapturedDateSlotView> AvailableDates,
-    string? UnavailableReason);
+    string? UnavailableReason,
+    /// <summary>
+    /// هویت تأیید همین روش (TB-232): متن دقیق snapshot انتخاب‌شده یا تهی. فقط برای مقایسهٔ
+    /// «همان چیزی که دیدم» است؛ هیچ‌گاه مبنای قیمت/مالکیت نیست.
+    /// </summary>
+    string? ConfirmationSnapshotId = null,
+    /// <summary>بازبینی دقیق مبدأ به‌صورت متن اعشاری (بدون گردکردن).</summary>
+    string? ConfirmationSourceRevision = null,
+    /// <summary>نسخهٔ انتخاب/اشاره‌گر به‌صورت متن اعشاری (بدون گردکردن).</summary>
+    string? ConfirmationSelectionVersion = null,
+    /// <summary>گروه ناحیهٔ تطبیق‌داده‌شدهٔ همان ردیف یا تهی.</summary>
+    string? ConfirmationAreaGroupId = null,
+    /// <summary>ردیف تعرفهٔ تطبیق‌داده‌شدهٔ همان روش یا تهی.</summary>
+    string? ConfirmationRateRowId = null);
 
 /// <summary>
 /// پیش‌نمایش یک گروه ارسال capture‌شده با روش‌های <b>همان گروه</b>.

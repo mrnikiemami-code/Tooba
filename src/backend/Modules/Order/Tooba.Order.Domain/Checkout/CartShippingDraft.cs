@@ -77,6 +77,25 @@ public sealed class CartShippingDraft
     public DateTimeOffset UpdatedAt { get; private set; }
 
     /// <summary>
+    /// نسخهٔ یکنوای صعودیِ انتخاب (TB-232): هر جایگزینی موفق انتخاب دقیقاً یک واحد بالا می‌رود و
+    /// نوشتن جدید فقط با نسخهٔ موردانتظار برابر مجاز است. هرگز بازنشانی نمی‌شود (بدون ABA) و
+    /// هیچ‌گاه از کلاینت به‌عنوان حقیقت پذیرفته نمی‌شود.
+    /// </summary>
+    public long SelectionRevision { get; private set; }
+
+    /// <summary>شناسهٔ پایدار کشورِ مقصدی که قیمت با آن محاسبه شد (TB-232).</summary>
+    public Guid? DestinationCountryId { get; private set; }
+
+    /// <summary>شناسهٔ پایدار ناحیهٔ اداریِ همین مقصد یا تهی.</summary>
+    public Guid? DestinationAdministrativeAreaId { get; private set; }
+
+    /// <summary>شناسهٔ پایدار شهرِ همین مقصد یا تهی.</summary>
+    public Guid? DestinationCityId { get; private set; }
+
+    /// <summary>شناسهٔ پایدار ناحیهٔ خدمتِ همین مقصد یا تهی.</summary>
+    public Guid? DestinationServiceAreaId { get; private set; }
+
+    /// <summary>
     /// گروه‌های ارسال پیش‌نویس همین سبد. یک گروه = یک فروشنده + یک روش متعارف.
     /// برای پیش‌نویس‌های تک‌روشی قدیمی نیز همیشه حداقل یک گروه ساخته می‌شود.
     /// </summary>
@@ -177,6 +196,51 @@ public sealed class CartShippingDraft
     {
         GuestSecretHash = string.Empty;
         UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// نسخهٔ انتخاب را یک واحد بالا می‌برد. فقط نویسندهٔ اتمیک سرور پس از تأیید CAS صدا می‌زند؛
+    /// هیچ transport این متد را مستقیم اجرا نمی‌کند.
+    /// </summary>
+    public void BumpSelectionRevision(DateTimeOffset now)
+    {
+        SelectionRevision = SelectionRevision == long.MaxValue
+            ? throw new ContractOperationException("shipping.selection.revision.overflow")
+            : SelectionRevision + 1;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// بازگرداندن نسخهٔ انتخاب به مقدار پیش از یک تلاش ردشده (فقط برای rollback همان تلاش). این متد
+    /// نسخه را افزایش نمی‌دهد و هیچ تاریخ/ردیفی نمی‌سازد؛ صرفاً همان مقدار مشاهده‌شده را برمی‌گرداند.
+    /// </summary>
+    public void RestoreSelectionRevision(long revision)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(revision);
+        SelectionRevision = revision;
+    }
+
+    /// <summary>
+    /// هویت مقصد تأییدشدهٔ همان قیمت را ذخیره می‌کند (چهار اسکالر، بدون JSON جغرافیایی). فقط پس از
+    /// تأیید یکتای Geography صدا زده می‌شود؛ هیچ مقداری از مرورگر بدون تأیید این‌جا نمی‌نشیند.
+    /// </summary>
+    public void SetDestinationIdentity(
+        Guid countryId,
+        Guid? administrativeAreaId,
+        Guid? cityId,
+        Guid? serviceAreaId,
+        DateTimeOffset now)
+    {
+        if (countryId == Guid.Empty)
+        {
+            throw new ContractOperationException("shipping.destination.country.required");
+        }
+
+        DestinationCountryId = countryId;
+        DestinationAdministrativeAreaId = administrativeAreaId is Guid area && area != Guid.Empty ? area : null;
+        DestinationCityId = cityId is Guid city && city != Guid.Empty ? city : null;
+        DestinationServiceAreaId = serviceAreaId is Guid service && service != Guid.Empty ? service : null;
+        UpdatedAt = now;
     }
 
     /// <summary>نام و نام خانوادگی را جداگانه نگه می‌دارد و نام نمایشی را فقط وقتی هر دو موجودند می‌سازد.</summary>

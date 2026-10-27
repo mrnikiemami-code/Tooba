@@ -458,6 +458,14 @@ public sealed class StorefrontShippingDraftRecoveryTests
             SaveCalls++;
             throw new NotSupportedException("projection must never write the shipping draft");
         }
+
+        public Task ReplaceCapturedSelectionAsync(
+            CartShippingDraft value,
+            IReadOnlyList<CartShippingDraftGroup> groups,
+            bool isNew,
+            long expectedSelectionRevision,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException("projection must never write the shipping draft");
     }
 
     private sealed class LanguageFake : ILanguageLookup

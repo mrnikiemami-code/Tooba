@@ -258,6 +258,14 @@ public sealed class StorefrontShippingOneLevelLabelTests
 
         public Task SaveAsync(CartShippingDraft value, bool isNew, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task ReplaceCapturedSelectionAsync(
+            CartShippingDraft value,
+            IReadOnlyList<CartShippingDraftGroup> groups,
+            bool isNew,
+            long expectedSelectionRevision,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class LanguagesFake : ILanguageLookup

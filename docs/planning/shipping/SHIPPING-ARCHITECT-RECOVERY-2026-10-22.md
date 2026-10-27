@@ -1,4 +1,71 @@
-# CURRENT —231/R1/R2 compact evidence ACCEPTED; issued232 real selection writer —2026-10-27
+﻿# CURRENT — 232 executed: server-revalidated captured selection is written atomically — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232/{TASK.md,RESULT.md}.
+Base `54b01303b`. Status: **EXECUTED**, NOT accepted, NO user Visual ACCEPT. No checkout/reservation/payment/
+cart conversion, no historical read, no UI, no runtime refresh, no shared migration apply.
+
+A — ONE resolution: `StorefrontCapturedPreviewPlanner.ResolveAsync` is now the single body (current cart/
+access/version → one 228 assignment batch → real active types/bindings → one 219 pointer read per distinct
+full owner+binding → ONE 218 compose with the one 217 whole-cart goods read and one 216 quote per candidate).
+The read projection (`BuildAsync`) and the new writer consume the SAME typed context; the optional
+`CouponCode` intent of the selection request goes through that same 217 path (trimmed; blank = absent).
+
+B — intent is only untrusted keys: complete server `GroupKey`, catalog binding, ISO date and the expected
+snapshot/source-revision/selection-version/area-group/rate-row echo tokens plus `ExpectedSelectionRevision`.
+Every value is re-derived server-side; mismatches refuse with stable `storefront.captured_selection.*`
+codes (disabled/intent_invalid/unavailable/date_unavailable/conflict/destination_unverified/
+evidence_present) and FA+EN resources. All-or-none: every server group must be selected, so unknown/
+unassigned/unquoted groups block the whole write and stay visible in the read. Captured+legacy mixture is
+refused; option OFF refuses instead of falling back. Only `Store` owner is writable on SingleStore;
+Marketplace/Seller refuse `unavailable` (read unchanged, nothing guessed).
+
+C — 231 evidence is created from that same quote/slot (owner, snapshot/draft/source revision/format/
+selection version, matched area+row, optional real type, freight/packaging/payable/collect exactly as
+quoted, chosen date and slot ticks/timezone) and attached to the real `CartShippingDraftGroup` built by the
+existing planner; legacy `ShippingAmount` keeps its payable-at-checkout meaning, carrier collect lives only
+in evidence.
+
+D — destination identity: the EXISTING `PrepareShippingAsync` server-bound address is resolved with
+`IGeographyLookup.ResolveLegacyAsync`; the verified ids persist as four scalars on the existing draft root
+(`selection_revision bigint NOT NULL DEFAULT 0` + 4 nullable uuid) in the ONE additive migration
+`20261027180000_AddCapturedSelectionRevisionAndDestination` with
+`ck_cart_shipping_drafts_captured_selection_shape`. `ReplaceCapturedSelectionAsync` is the ONE named atomic
+store member: one Order-owned transaction, delete+insert inside it, `SelectionRevision` as a real EF
+concurrency token (monotonic, expected 0 only for absence), exact-root-uniqueness ⇒ conflict, stale token ⇒
+409 with no auto retry, and rollback that restores/detaches ONLY this attempt's graph (no context clear, no
+leak into later SaveChanges). A captured draft can never be downgraded by the legacy path (`evidence_present`).
+
+E — final order/payment stay closed: `CommitAsync` AND `ProjectPaymentDraftAsync` refuse
+`storefront.captured_preview.not_ready` for a stored captured draft even with all options OFF, and
+`StorefrontStartPaymentComposer` reaches final order only through `CommitAsync`. No captured checkout/
+activation claim.
+
+Proof (focused only, isolated disposable `postgres:17-alpine` 15433/order_tb231, identity asserted before
+DDL): 24/24 — 13 writer facts (incl. positive single AND two-group evidence saves, echo/date/pointer/
+address refusals with zero writes, Marketplace refusal, coupon reaching the 217 promotion path), 5 real
+relational facts (first save persists revision+destination+evidence atomically; second replacement
+increments and replaces the complete graph; zero expected revision conflicts; concurrent advance conflicts
+with the old selection intact; no duplicate lines/mixed graph; and a forced BETWEEN-stage failure that
+rolls back, restores the revision and leaves no Added graph for a later SaveChanges), plus 5 Commit/
+projection guard facts. Order.Tests and Host build 0 errors. Storefront+Shipping suite 310/312 with TWO pre-existing red guards at base
+(architecture `DateTimeOffset.UtcNow` in the 229/231 planner and the packaging-boundary allow-list) — NOT
+repaired here, disclosed in RESULT.md.
+
+HONEST: HTTP reachability of the writer via the existing `PUT /v1/storefront/shipping/selection` is
+model-bound only — never exercised live. `DestinationServiceAreaId` is always NULL (no trusted service-area
+name is ever supplied) and no commit-time destination revalidation exists yet. The captured READ has no
+coupon field, so a couponed selection can differ from the read's discounted goods facts. Insert-stage-only
+failure injection is not separately proven (same transaction/rollback path). EF snapshot still omits the
+draft table (pre-existing stale baseline). Migrations 231 and 232 remain WRITTEN/shared NOT APPLIED.
+Retained unfixed: 230-R1 empty-key retry/in-flight wait, cross-owner label/decoder, Offer API proof, 227
+mobile empty-note, 225-R1 lost unsaved user LOCAL edits. Host/FE/previewONcount7/data/cart/draft/pointer/
+assignments and the user's visible review window were NOT touched. Elapsed ≈42 min vs HARD40 — recorded
+NONCOMPLIANT, not a process PASS.
+NEXT (Architect): the decision on closing the coupon asymmetry + commit-time destination/evidence
+revalidation, then final order composition / historical read. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+TB185 paused/default-OFF/PendingAllocation preserved.
+
+# SUPERSEDED —231/R1/R2 compact evidence ACCEPTED; issued232 real selection writer —2026-10-27
 
 Active: TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232. Save captured shipping DRAFT choices through actual
 existing selection service, freshly revalidated cart/Offer/type/pointer/quote/address/date,231evidence and

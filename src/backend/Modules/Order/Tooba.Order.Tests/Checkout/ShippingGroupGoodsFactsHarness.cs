@@ -244,6 +244,7 @@ internal sealed class FakePromotion : ICheckoutPromotionPort
     internal readonly Dictionary<Guid, decimal> Discounts = [];
     internal int Calls { get; private set; }
     internal CancellationToken? LastToken { get; private set; }
+    internal CheckoutPromotionEvaluationRequest? LastRequest { get; private set; }
     internal Exception? Failure { get; set; }
 
     public Task<CheckoutPromotionEvaluationResult> EvaluateForCheckoutAsync(
@@ -252,6 +253,7 @@ internal sealed class FakePromotion : ICheckoutPromotionPort
     {
         Calls++;
         LastToken = cancellationToken;
+        LastRequest = request;
         if (Failure is not null)
         {
             return Task.FromException<CheckoutPromotionEvaluationResult>(Failure);

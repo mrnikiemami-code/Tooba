@@ -246,6 +246,14 @@ public sealed class StorefrontPaymentDraftTests
             SaveCalls++;
             throw new NotSupportedException();
         }
+
+        public Task ReplaceCapturedSelectionAsync(
+            CartShippingDraft value,
+            IReadOnlyList<CartShippingDraftGroup> groups,
+            bool isNew,
+            long expectedSelectionRevision,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class ActorFake : IOrderStorefrontActor

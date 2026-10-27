@@ -192,4 +192,25 @@
   <data name="order.operation.denied" xml:space="preserve">
     <value>مجوز انجام این عملیات وجود ندارد.</value>
   </data>
+  <data name="storefront.captured_selection.disabled" xml:space="preserve">
+    <value>انتخاب این روش ارسال هنوز در دسترس نیست.</value>
+  </data>
+  <data name="storefront.captured_selection.intent_invalid" xml:space="preserve">
+    <value>گروه‌های ارسال انتخاب‌شده ناقص یا با انتخاب دیگری مخلوط شده‌اند. صفحه را تازه کنید و دوباره انتخاب کنید.</value>
+  </data>
+  <data name="storefront.captured_selection.unavailable" xml:space="preserve">
+    <value>برای این گروه ارسال هنوز قیمتی اعلام نشده است. گروه دیگری را انتخاب کنید یا بعداً دوباره تلاش کنید.</value>
+  </data>
+  <data name="storefront.captured_selection.date_unavailable" xml:space="preserve">
+    <value>تاریخ تحویل انتخاب‌شده دیگر برای این گروه ارائه نمی‌شود.</value>
+  </data>
+  <data name="storefront.captured_selection.conflict" xml:space="preserve">
+    <value>اطلاعات ارسال تغییر کرده است. صفحه را تازه کنید و دوباره انتخاب کنید.</value>
+  </data>
+  <data name="storefront.captured_selection.destination_unverified" xml:space="preserve">
+    <value>نشانی تحویل برای این قیمت ارسال تأیید نشد. نشانی را بررسی و دوباره تلاش کنید.</value>
+  </data>
+  <data name="storefront.captured_selection.evidence_present" xml:space="preserve">
+    <value>برای این سبد انتخاب ارسال ثبت‌شده وجود دارد و از مسیر قدیمی قابل تغییر نیست.</value>
+  </data>
 </root>

@@ -499,6 +499,14 @@ public sealed class ShippingGroupIdentityContinuityTests
 
             return Task.CompletedTask;
         }
+
+        public Task ReplaceCapturedSelectionAsync(
+            CartShippingDraft value,
+            IReadOnlyList<CartShippingDraftGroup> groups,
+            bool isNew,
+            long expectedSelectionRevision,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class ActorFake : IOrderStorefrontActor

@@ -155,6 +155,12 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.ShippingAmount).HasPrecision(18, 2);
             entity.Property(x => x.SelectedDeliveryTimeWindow).HasMaxLength(32);
             entity.Property(x => x.CustomerNote).HasMaxLength(CartShippingDraft.CustomerNoteMaxLength);
+            // TB-232: نسخهٔ یکنوای انتخاب، توکن CAS واقعی EF است (بدون ABA و بدون reset).
+            entity.Property(x => x.SelectionRevision).IsConcurrencyToken();
+            entity.Property(x => x.DestinationCountryId);
+            entity.Property(x => x.DestinationAdministrativeAreaId);
+            entity.Property(x => x.DestinationCityId);
+            entity.Property(x => x.DestinationServiceAreaId);
             entity.HasMany(x => x.ShippingGroups)
                 .WithOne()
                 .HasForeignKey(x => x.CartId)

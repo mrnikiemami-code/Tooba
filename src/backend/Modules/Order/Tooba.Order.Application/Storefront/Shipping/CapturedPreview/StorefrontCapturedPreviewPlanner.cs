@@ -55,6 +55,32 @@ public static class StorefrontCapturedPreviewReasons
 }
 
 /// <summary>
+/// نتیجهٔ resolve مشترک خواندن و انتخاب (TB-232): یا نمای نهایی/زودتر، یا زمینهٔ تایپ‌شدهٔ همان
+/// افراز/نامزد/قیمت‌ها. هیچ‌کدام از این دو مسیر قیمت را از نو حساب نمی‌کند و هر دو از همین یک
+/// resolve تغذیه می‌شوند.
+/// </summary>
+/// <param name="Early">نمای نهایی وقتی ترکیب ساخته نشد (خاموش/ناقص/بدون مقصد/امتناع).</param>
+/// <param name="Context">زمینهٔ تایپ‌شدهٔ قیمت‌دار وقتی ترکیب ساخته شد.</param>
+public sealed record StorefrontCapturedResolution(
+    StorefrontCapturedPreviewView? Early,
+    StorefrontCapturedSelectionContext? Context);
+
+/// <summary>
+/// زمینهٔ تایپ‌شدهٔ resolve: همان گروه‌های افرازشده، همان برنامهٔ نامزدها، همان <b>یک</b> ترکیب ۲۱۸ و
+/// همان برچسب‌ها/دلایل. مصرف‌کنندهٔ نوشتن هیچ مبلغ/برچسبی را از این زمینه به‌عنوان ورودی نمی‌پذیرد؛
+/// فقط هویت و نتیجهٔ سرور را می‌خواند.
+/// </summary>
+public sealed record StorefrontCapturedSelectionContext(
+    string Currency,
+    DateTimeOffset EvaluatedAtUtc,
+    IReadOnlyList<StorefrontCapturedPreviewGroupView> Groups,
+    IReadOnlyList<StorefrontCapturedGroupPlan> Plans,
+    StorefrontCapturedGroupProjectionResult Composition,
+    IReadOnlyDictionary<string, string> Labels,
+    IReadOnlyDictionary<string, string> Unavailable,
+    (long? SelectionVersion, Guid? SnapshotId)? Provenance);
+
+/// <summary>
 /// سازندهٔ واقعی برنامهٔ گروه‌های ارسال: سبد واقعی → انتساب‌های صریح Offer → اشاره‌گرهای انتخاب‌شدهٔ
 /// ۲۱۹ → <b>یک</b> ترکیب ۲۱۸.
 /// </summary>
@@ -83,11 +109,15 @@ public sealed class StorefrontCapturedPreviewPlanner(
     /// </summary>
     public bool IsEnabled => options.Value.Enabled;
 
+    /// <summary>آیا نوشتن انتخاب capture‌شده (نویسندهٔ اتمیک ۲۳۲) مجاز است. مستقل از کلید خواندن است.</summary>
+    public bool SelectionEnabled => options.Value.SelectionEnabled;
+
     /// <summary>پیش‌نمایش گروه‌ها را می‌سازد؛ خطاهای تجاری به نمای صادقانه ترجمه می‌شوند.</summary>
     /// <remarks>
     /// تعداد تاریخ‌های تقویم فقط از سیاست صریح پیش‌نمایش (<c>AvailableDateCount</c>) می‌آید؛ افق روش‌ها
     /// هرگز به‌عنوان «تعداد تاریخ قابل ارائه» بازتفسیر نمی‌شود.
     /// </remarks>
+    /// <summary>پیش‌نمایش گروه‌ها را می‌سازد؛ خطاهای تجاری به نمای صادقانه ترجمه می‌شوند.</summary>
     public async Task<StorefrontCapturedPreviewView> BuildAsync(
         CartPage cart,
         CartAccess access,
@@ -95,6 +125,109 @@ public sealed class StorefrontCapturedPreviewPlanner(
         string? currency,
         Guid languageId,
         CancellationToken cancellationToken)
+    {
+        var resolution = await ResolveAsync(cart, access, destination, currency, languageId, cancellationToken);
+        if (resolution.Early is { } early)
+        {
+            return early;
+        }
+
+        var context = resolution.Context!;
+        var composed = context.Composition;
+        var plans = context.Plans;
+        var groups = context.Groups;
+        var labels = context.Labels;
+        var unavailable = context.Unavailable;
+        var today = DateOnly.FromDateTime(composed.EvaluatedAtUtc.UtcDateTime);
+
+        var views = new List<StorefrontCapturedPreviewGroupView>(composed.Groups.Count);
+        foreach (var composedGroup in composed.Groups)
+        {
+            var readGroup = groups.First(group => group.GroupKey == composedGroup.GroupKey);
+            var methods = composedGroup.Candidates
+                .Where(candidate => candidate.Outcome == StorefrontCapturedCandidateOutcome.Quoted
+                    && candidate.OwnerResult is not null)
+                .Select(candidate => new StorefrontCapturedPreviewMethodView(
+                    labels.TryGetValue(candidate.Identity.MethodCode, out var label)
+                        ? label
+                        : candidate.Identity.ServiceCode,
+                    candidate.Identity.ServiceCode,
+                    candidate.Identity.OptionCode,
+                    ToText(candidate.OwnerResult!.FreightAmount),
+                    ToText(candidate.OwnerResult.PackagingAmount),
+                    ToText(candidate.OwnerResult.PayableAtCheckoutAmount),
+                    ToText(candidate.OwnerResult.CarrierCollectAmount),
+                    string.IsNullOrWhiteSpace(candidate.OwnerResult.CurrencyCode)
+                        ? null
+                        : candidate.OwnerResult.CurrencyCode,
+                    candidate.Receiving?.EarliestEligibleDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    candidate.Receiving is null
+                        ? []
+                        : candidate.Receiving.AvailableDates
+                            .Select(slot => new StorefrontCapturedDateSlotView(
+                                slot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                                StorefrontShippingCalculator.FormatDeliveryDateLabelFa(slot.Date, today),
+                                StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(slot.Date),
+                                $"{slot.OpensAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}–{slot.ClosesAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}",
+                                candidate.Receiving.EarliestEligibleDate == slot.Date))
+                            .ToArray(),
+                    candidate.Receiving?.UnavailableReason
+                        ?? (candidate.Outcome == StorefrontCapturedCandidateOutcome.Quoted
+                            ? null
+                            : candidate.ReasonCode),
+                    candidate.Identity.SnapshotId == Guid.Empty
+                        ? null
+                        : candidate.Identity.SnapshotId.ToString("D"),
+                    candidate.Identity.SourceRevision > 0
+                        ? candidate.Identity.SourceRevision.ToString(CultureInfo.InvariantCulture)
+                        : null,
+                    candidate.Identity.SelectionVersion > 0
+                        ? candidate.Identity.SelectionVersion.ToString(CultureInfo.InvariantCulture)
+                        : null,
+                    candidate.OwnerResult.GroupId?.ToString("D"),
+                    candidate.OwnerResult.RateRowId?.ToString("D")))
+                .ToArray();
+
+            var methodReason = composedGroup.Candidates
+                .Where(candidate => candidate.Outcome != StorefrontCapturedCandidateOutcome.Quoted)
+                .Select(candidate => candidate.ReasonCode)
+                .FirstOrDefault();
+
+            var reason = readGroup.UnavailableReason
+                ?? (unavailable.TryGetValue(composedGroup.GroupKey, out var plannedReason)
+                    ? plannedReason
+                    : methods.Length == 0
+                        ? methodReason ?? StorefrontCapturedPreviewReasons.NoSelectedCapture
+                        : null);
+
+            views.Add(new StorefrontCapturedPreviewGroupView(
+                composedGroup.GroupKey,
+                readGroup.TypeLabel,
+                composedGroup.SellerPartyId,
+                composedGroup.CartLineIds,
+                ToText(composedGroup.FinalGoodsAmountAfterDiscountAndTax),
+                methods,
+                reason));
+        }
+
+        return new StorefrontCapturedPreviewView(
+            true,
+            composed.Currency,
+            composed.EvaluatedAtUtc,
+            views,
+            context.Provenance?.Item1,
+            context.Provenance?.Item2,
+            null);
+    }
+
+    public async Task<StorefrontCapturedResolution> ResolveAsync(
+        CartPage cart,
+        CartAccess access,
+        DestinationIdentifiers? destination,
+        string? currency,
+        Guid languageId,
+        CancellationToken cancellationToken,
+        string? couponCode = null)
     {
         ArgumentNullException.ThrowIfNull(cart);
         ArgumentNullException.ThrowIfNull(access);
@@ -104,26 +237,26 @@ public sealed class StorefrontCapturedPreviewPlanner(
         // خاموش (پیش‌فرض): صفر فراخوانی به Offer/Fulfillment/Shipping و صفر تغییر در مسیر قدیمی.
         if (options.Value.Enabled is false)
         {
-            return new StorefrontCapturedPreviewView(
-                false, currencyCode, DateTimeOffset.UtcNow, [], null, null, null);
+            return Early(new StorefrontCapturedPreviewView(
+                false, currencyCode, DateTimeOffset.UtcNow, [], null, null, null));
         }
 
         // روشن‌بودن کلید بدون سیاست تعداد تاریخ معتبر یعنی هیچ قیمت/تاریخی ادعا نمی‌شود (fail-closed).
         if (options.Value.HasValidAvailableDateCount is false || options.Value.AvailableDateCount is not int availableDateCount)
         {
-            return new StorefrontCapturedPreviewView(
+            return Early(new StorefrontCapturedPreviewView(
                 true,
                 currencyCode,
                 DateTimeOffset.UtcNow,
                 [],
                 null,
                 null,
-                StorefrontCapturedPreviewReasons.AvailableDateCountInvalid);
+                StorefrontCapturedPreviewReasons.AvailableDateCountInvalid));
         }
 
         if (cart.Lines.Count == 0)
         {
-            return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
+            return Early(Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory));
         }
 
         // شکست واقعی درز بیرونی/لغو فراخوان این‌جا گرفته نمی‌شود: هیچ «انتساب ناقص» یا پیش‌نمایش
@@ -140,7 +273,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
         {
             if (assignment is null || !requestedOfferIds.Contains(offerId) || assignment.OfferId != offerId)
             {
-                return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
+                return Early(Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory));
             }
         }
 
@@ -148,12 +281,12 @@ public sealed class StorefrontCapturedPreviewPlanner(
         {
             if (!assignmentById.TryGetValue(line.OfferId, out var assignment) || assignment is null)
             {
-                return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentMissing);
+                return Early(Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentMissing));
             }
 
             if (assignment.OfferId != line.OfferId || assignment.SellerPartyId != line.SellerPartyId)
             {
-                return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
+                return Early(Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory));
             }
         }
 
@@ -175,7 +308,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
                     || !requestedTypeIds.Contains(type.ShippingTypeId)
                     || !typeById.TryAdd(type.ShippingTypeId, type))
                 {
-                    return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
+                    return Early(Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory));
                 }
             }
         }
@@ -183,12 +316,12 @@ public sealed class StorefrontCapturedPreviewPlanner(
         var plan = BuildPartition(cart, assignmentById, typeById, out var groups);
         if (plan.Count == 0)
         {
-            return Empty(currencyCode, StorefrontCapturedPreviewReasons.Unassigned);
+            return Early(Empty(currencyCode, StorefrontCapturedPreviewReasons.Unassigned));
         }
 
         if (destination is null)
         {
-            return new StorefrontCapturedPreviewView(
+            return Early(new StorefrontCapturedPreviewView(
                 true,
                 currencyCode,
                 DateTimeOffset.UtcNow,
@@ -198,7 +331,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 }).ToArray(),
                 null,
                 null,
-                StorefrontCapturedPreviewReasons.DestinationRequired);
+                StorefrontCapturedPreviewReasons.DestinationRequired));
         }
 
         // کش کردن خواندن ۲۱۹ بر اساس هویت تایپ‌شدهٔ «مالک کامل + Binding»: هر جفت دقیقاً یک‌بار در این
@@ -215,7 +348,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
             var candidates = new List<StorefrontCapturedCandidatePlan>();
             if (group.UnavailableReason is not null || group.TypeId is null)
             {
-                plans.Add(new StorefrontCapturedGroupPlan(group.GroupKey, group.CartLineIds, candidates));
+                plans.Add(new StorefrontCapturedGroupPlan(group.GroupKey, group.CartLineIds, candidates, group.TypeLabel));
                 unavailable[group.GroupKey] = group.UnavailableReason ?? StorefrontCapturedPreviewReasons.TypeUnavailable;
                 continue;
             }
@@ -279,7 +412,9 @@ public sealed class StorefrontCapturedPreviewPlanner(
                     destination,
                     pointer.ServiceCode!,
                     pointer.OptionCode,
-                    availableDateCount));
+                    availableDateCount,
+                    pointer.SnapshotId ?? Guid.Empty,
+                    pointer.SelectionVersion ?? 0));
                 provenance.Add((pointer.SelectionVersion, pointer.SnapshotId));
             }
 
@@ -288,13 +423,13 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 unavailable[group.GroupKey] = StorefrontCapturedPreviewReasons.NoSelectedCapture;
             }
 
-            plans.Add(new StorefrontCapturedGroupPlan(group.GroupKey, group.CartLineIds, candidates));
+            plans.Add(new StorefrontCapturedGroupPlan(group.GroupKey, group.CartLineIds, candidates, group.TypeLabel));
         }
 
         if (plans.All(p => p.Candidates.Count == 0))
         {
             // هیچ نامزدی نیست: گروه‌ها با دلیل صریح برمی‌گردند و صفر فراخوانی ۲۱۸/۲۱۷ انجام می‌شود.
-            return new StorefrontCapturedPreviewView(
+            return Early(new StorefrontCapturedPreviewView(
                 true,
                 currencyCode,
                 DateTimeOffset.UtcNow,
@@ -307,14 +442,14 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 }).ToArray(),
                 null,
                 null,
-                StorefrontCapturedPreviewReasons.NoSelectedCapture);
+                StorefrontCapturedPreviewReasons.NoSelectedCapture));
         }
 
         if (access.UserId is null)
         {
             // مسیر واقعی فکت‌های ۲۱۷ یک کاربر عامل ثبت می‌خواهد و سبد مهمان در این foundation آن را
             // ندارد. پس ترکیب ساخته نمی‌شود؛ نه خطای ۵۰۰ و نه پیش‌نمایش «موفق» بدون مبلغ.
-            return Refused(currencyCode, groups);
+            return Early(Refused(currencyCode, groups));
         }
 
         var command = new SubmitCheckoutCommand(
@@ -331,7 +466,9 @@ public sealed class StorefrontCapturedPreviewPlanner(
             // not a tax jurisdiction key, and quoting with it refused every live priced read
             // (`checkout.tax.unavailable`) while a jurisdiction-keyed rule exists.
             TaxJurisdiction: StorefrontCheckoutService.StorefrontTaxJurisdiction,
-            CouponCode: null);
+            // TB-232: قصد تخفیف واقعیِ همین درخواست از همان مسیر ۲۱۷ می‌گذرد؛ تهی یعنی «بدون کوپن»،
+            // و هیچ تخفیف/مبلغی جای آن ساخته نمی‌شود.
+            CouponCode: string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim());
 
         StorefrontCapturedGroupProjectionResult composed;
         try
@@ -344,82 +481,24 @@ public sealed class StorefrontCapturedPreviewPlanner(
         {
             // امتناع تجاری شناخته‌شدهٔ ترکیب: گروه‌ها حفظ می‌شوند و هیچ مبلغ/تاریخی ادعا نمی‌شود؛
             // سبد به «خالی» تقلیل نمی‌یابد. خطای وابستگی/لغو فراخوان همچنان منتشر می‌شود.
-            return Refused(currencyCode, groups);
-        }
-
-        var today = DateOnly.FromDateTime(composed.EvaluatedAtUtc.UtcDateTime);
-        var views = new List<StorefrontCapturedPreviewGroupView>(composed.Groups.Count);
-        foreach (var composedGroup in composed.Groups)
-        {
-            var planned = plan.First(group => group.GroupKey == composedGroup.GroupKey);
-            var methods = composedGroup.Candidates
-                .Where(candidate => candidate.Outcome == StorefrontCapturedCandidateOutcome.Quoted
-                    && candidate.OwnerResult is not null)
-                .Select(candidate => new StorefrontCapturedPreviewMethodView(
-                    labels.TryGetValue(candidate.Identity.MethodCode, out var label)
-                        ? label
-                        : candidate.Identity.ServiceCode,
-                    candidate.Identity.ServiceCode,
-                    candidate.Identity.OptionCode,
-                    ToText(candidate.OwnerResult!.FreightAmount),
-                    ToText(candidate.OwnerResult.PackagingAmount),
-                    ToText(candidate.OwnerResult.PayableAtCheckoutAmount),
-                    ToText(candidate.OwnerResult.CarrierCollectAmount),
-                    string.IsNullOrWhiteSpace(candidate.OwnerResult.CurrencyCode)
-                        ? null
-                        : candidate.OwnerResult.CurrencyCode,
-                    candidate.Receiving?.EarliestEligibleDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                    candidate.Receiving is null
-                        ? []
-                        : candidate.Receiving.AvailableDates
-                            .Select(slot => new StorefrontCapturedDateSlotView(
-                                slot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                                StorefrontShippingCalculator.FormatDeliveryDateLabelFa(slot.Date, today),
-                                StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(slot.Date),
-                                $"{slot.OpensAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}–{slot.ClosesAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}",
-                                candidate.Receiving.EarliestEligibleDate == slot.Date))
-                            .ToArray(),
-                    candidate.Receiving?.UnavailableReason
-                        ?? (candidate.Outcome == StorefrontCapturedCandidateOutcome.Quoted
-                            ? null
-                            : candidate.ReasonCode)))
-                .ToArray();
-
-            var methodReason = composedGroup.Candidates
-                .Where(candidate => candidate.Outcome != StorefrontCapturedCandidateOutcome.Quoted)
-                .Select(candidate => candidate.ReasonCode)
-                .FirstOrDefault();
-
-            var reason = planned.UnavailableReason
-                ?? (unavailable.TryGetValue(composedGroup.GroupKey, out var plannedReason)
-                    ? plannedReason
-                    : methods.Length == 0
-                        ? methodReason ?? StorefrontCapturedPreviewReasons.NoSelectedCapture
-                        : null);
-
-            views.Add(new StorefrontCapturedPreviewGroupView(
-                composedGroup.GroupKey,
-                planned.TypeLabel,
-                composedGroup.SellerPartyId,
-                composedGroup.CartLineIds,
-                ToText(composedGroup.FinalGoodsAmountAfterDiscountAndTax),
-                methods,
-                reason));
+            return Early(Refused(currencyCode, groups));
         }
 
         // provenance فقط وقتی یکتاست اعلام می‌شود؛ دو اشاره‌گر متفاوت هرگز به یک مقدار تقلیل نمی‌یابد.
         var single = provenance.Count == 1 ? provenance.Single() : ((long?, Guid?)?)null;
 
-        return new StorefrontCapturedPreviewView(
-            true,
-            composed.Currency,
-            composed.EvaluatedAtUtc,
-            views,
-            single?.Item1,
-            single?.Item2,
-            null);
+        return new StorefrontCapturedResolution(
+            null,
+            new StorefrontCapturedSelectionContext(
+                currencyCode,
+                composed.EvaluatedAtUtc,
+                groups,
+                plans,
+                composed,
+                labels,
+                unavailable,
+                single));
     }
-
     /// <summary>متن اعشاری دقیق بدون هیچ تبدیل شناور/گردکردن؛ نبود مقدار تهی می‌ماند.</summary>
     private static string? ToText(decimal? value) =>
         value?.ToString(CultureInfo.InvariantCulture);
@@ -436,6 +515,8 @@ public sealed class StorefrontCapturedPreviewPlanner(
 
     private static StorefrontCapturedPreviewView Empty(string currency, string reason, bool enabled = true) =>
         new(enabled, currency, DateTimeOffset.UtcNow, [], null, null, reason);
+
+    private static StorefrontCapturedResolution Early(StorefrontCapturedPreviewView view) => new(view, null);
 
     /// <summary>گروه‌ها با دلیل صریح می‌مانند و هیچ مبلغ/تاریخی ادعا نمی‌شود.</summary>
     private static StorefrontCapturedPreviewView Refused(

@@ -1,0 +1,443 @@
+using System.Globalization;
+using Tooba.BuildingBlocks;
+using Tooba.Cart.Contracts;
+using Tooba.Geography.Contracts.Places;
+using Tooba.Order.Application.Storefront.Models;
+using Tooba.Order.Application.Storefront.Ports;
+using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
+using Tooba.Order.Domain;
+using Tooba.Order.Domain.Checkout;
+using Tooba.Shipping.Contracts.Rates;
+
+namespace Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
+
+/// <summary>
+/// کدهای پایدار رد انتخاب capture‌شده (TB-232). هیچ‌کدام «آمادهٔ تسویه» یا مجوز نیستند.
+/// </summary>
+public static class StorefrontCapturedSelectionReasons
+{
+    /// <summary>کلید نوشتن خاموش است؛ قصد capture هرگز به مسیر قدیمی نمی‌افتد.</summary>
+    public const string Disabled = "storefront.captured_selection.disabled";
+
+    /// <summary>ترکیب قصد capture با shorthand قدیمی یا نامعلوم/تکراری/ناقص است.</summary>
+    public const string IntentInvalid = "storefront.captured_selection.intent_invalid";
+
+    /// <summary>گروه/نوع/نامزد قیمت‌دار نیست (یا مسئولیت/انتساب کامل نیست).</summary>
+    public const string Unavailable = "storefront.captured_selection.unavailable";
+
+    /// <summary>تاریخ انتخاب‌شده در تقویم همان گروه نیست.</summary>
+    public const string DateUnavailable = "storefront.captured_selection.date_unavailable";
+
+    /// <summary>بازتاب قصد با وضعیت جاری سرور نمی‌خواند (سبد/اشاره‌گر/ردیف/مقصد/نسخه).</summary>
+    public const string Conflict = "storefront.captured_selection.conflict";
+
+    /// <summary>نشانی آماده‌شده به مقصد یکتا و پشتیبانی‌شده نگاشت نشد.</summary>
+    public const string DestinationUnverified = "storefront.captured_selection.destination_unverified";
+
+    /// <summary>پیش‌نویس ذخیره‌شده شاهد capture دارد و مسیر قدیمی نمی‌تواند آن را جایگزین/بازقیمت کند.</summary>
+    public const string EvidencePresent = "storefront.captured_selection.evidence_present";
+}
+
+/// <summary>
+/// نویسندهٔ اتمیک انتخاب capture‌شده: همان resolve خواندن، اعتبارسنجی قصد نامعتمد، ساخت شاهد فشردهٔ ۲۳۱
+/// روی گروه‌های واقعی و یک جایگزینی اتمیک با CAS نسخهٔ انتخاب.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>No client authority.</b> هیچ مالک/فروشنده/مبلغ/صلاحیت/شاهد از بدنه پذیرفته نمی‌شود؛ کلیدهای
+/// کلاینت فقط برنامهٔ سرور را <b>مکان‌یابی</b> می‌کنند و هر مقدار بازتابی فقط برای مقایسه است.
+/// </para>
+/// <para>
+/// <b>One atomic write.</b> حذف/درج گروه‌ها و ریشه در یک تراکنش انجام می‌شود؛ هیچ حذف جزئی durable
+/// نمی‌شود و هیچ سفارش/رزرو/پرداخت/تبدیلی ساخته نمی‌شود. نوشتن فقط برای مالک Store فعال است؛
+/// Marketplace/Seller صریحاً در دسترس نیست.
+/// </para>
+/// </remarks>
+public sealed class StorefrontCapturedSelectionWriter(
+    StorefrontCapturedPreviewPlanner planner,
+    IStorefrontShippingDraftStore drafts,
+    IGeographyLookup? geography,
+    IClock clock)
+{
+    private const string SupportedCountryCode = "IR";
+
+    /// <summary>آیا نوشتن انتخاب capture‌شده روشن است.</summary>
+    public bool IsEnabled => planner.SelectionEnabled;
+
+    /// <summary>
+    /// انتخاب capture‌شده را با بازاعتبارسنجی کامل سرور ثبت می‌کند.
+    /// </summary>
+    /// <param name="cart">سبد authoritative همین درخواست.</param>
+    /// <param name="access">دسترسی سبد از مرز اعتماد.</param>
+    /// <param name="prepared">نشانی/گیرندهٔ سمت سرور (همان چیزی که واقعاً قیمت می‌گیرد).</param>
+    /// <param name="existing">پیش‌نویس موجود یا تهی.</param>
+    /// <param name="guestSecretHash">هش راز مهمان (یا تهی).</param>
+    /// <param name="request">قصد انتخاب نامعتمد.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    public async Task<CartShippingDraft> SaveAsync(
+        CartPage cart,
+        CartAccess access,
+        StorefrontCheckoutPlacement prepared,
+        CartShippingDraft? existing,
+        string? guestSecretHash,
+        StorefrontShippingSelectionRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(cart);
+        ArgumentNullException.ThrowIfNull(access);
+        ArgumentNullException.ThrowIfNull(prepared);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var intents = request.CapturedGroups;
+        if (intents is not { Count: > 0 })
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+
+        // خاموش‌بودن کلید نوشتن حتی وقتی کسی مستقیم این نویسنده را صدا بزند fail-closed است.
+        if (!IsEnabled)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.Disabled);
+        }
+
+        // هر shorthand قدیمی در حضور قصد capture مبهم است و پذیرفته نمی‌شود (بدون fallback).
+        if (!string.IsNullOrWhiteSpace(request.ShippingMethodCode)
+            || !string.IsNullOrWhiteSpace(request.SelectedDeliveryDate)
+            || !string.IsNullOrWhiteSpace(request.SelectedDeliveryTimeWindow))
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+
+        // مقصد قیمت = نشانی واقعیِ آماده‌شده سمت سرور، نه یک جفت دلخواه مرورگر.
+        var destination = await ResolvePreparedDestinationAsync(prepared, cancellationToken);
+
+        // توکن CAS نامعتمد پیش از هر خواندن گران اعتبارسنجی می‌شود (شکل نامعتبر = تضاد، بدون خواندن).
+        var expectedRevision = ParseExpectedRevision(request.ExpectedSelectionRevision);
+
+        var resolved = await planner.ResolveAsync(
+            cart,
+            access,
+            destination,
+            currency: null,
+            languageId: Guid.Empty,
+            cancellationToken,
+            // قصد کوپنِ همین درخواست، نه یک مقدار ساختگی؛ تهی = بدون کوپن.
+            couponCode: request.CouponCode);
+
+        if (resolved.Context is not { } context)
+        {
+            throw Refuse(resolved.Early?.NoticeReason ?? StorefrontCapturedSelectionReasons.Unavailable);
+        }
+
+        var now = clock.UtcNow;
+
+        var requests = new List<CartShippingGroupRequest>(intents.Count);
+        var eligible = new List<CartShippingGroupEligibleMethod>(intents.Count);
+        var evidenceByMethod = new Dictionary<string, ShippingGroupAcceptedEvidence>(StringComparer.Ordinal);
+        var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var intent in intents)
+        {
+            if (intent is null || string.IsNullOrWhiteSpace(intent.GroupKey) || !seenKeys.Add(intent.GroupKey))
+            {
+                throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+            }
+
+            var plan = context.Plans.FirstOrDefault(group => string.Equals(group.GroupKey, intent.GroupKey, StringComparison.Ordinal))
+                ?? throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+            var composedGroup = context.Composition.Groups
+                .FirstOrDefault(group => string.Equals(group.GroupKey, plan.GroupKey, StringComparison.Ordinal))
+                ?? throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+
+            var candidate = plan.Candidates.FirstOrDefault(c =>
+                    SameCode(c.ServiceCode, intent.ServiceCode) && SameCode(c.OptionCode, intent.OptionCode))
+                ?? throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+
+            var composed = composedGroup.Candidates
+                .FirstOrDefault(c => string.Equals(c.Identity.MethodCode, candidate.MethodCode, StringComparison.Ordinal))
+                ?? throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
+
+            // هیچ گروهی نباید بی‌قیمت/بدون‌تاریخ عبور کند.
+            if (composed.Outcome != StorefrontCapturedCandidateOutcome.Quoted
+                || composed.OwnerResult is not { } quote
+                || quote.IsQuoted is false
+                || composed.Receiving is not { } receiving)
+            {
+                throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
+            }
+
+            if (candidate.OwnerKind != ShippingCapturedQuoteOwnerKind.Store)
+            {
+                // نوشتن این برش فقط Store فعال است؛ Marketplace/Seller صریحاً در دسترس نیست.
+                throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
+            }
+
+            AssertEcho(intent, candidate, quote);
+
+            var expectedDate = (intent.SelectedDeliveryDate ?? string.Empty).Trim();
+            var slot = receiving.AvailableDates.FirstOrDefault(
+                s => string.Equals(
+                    s.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    expectedDate,
+                    StringComparison.Ordinal));
+            if (slot is null)
+            {
+                throw Refuse(StorefrontCapturedSelectionReasons.DateUnavailable);
+            }
+
+            var evidence = BuildEvidence(candidate, quote, slot);
+            var window = string.Create(
+                CultureInfo.InvariantCulture,
+                $"{slot.OpensAt:HH\\:mm}-{slot.ClosesAt:HH\\:mm}");
+
+            requests.Add(new CartShippingGroupRequest(
+                candidate.MethodCode,
+                candidate.ServiceCode,
+                candidate.OptionCode,
+                OriginContext: null,
+                plan.CartLineIds,
+                SelectedDeliveryDate: slot.Date,
+                SelectedDeliveryTimeWindow: window));
+
+            var label = context.Labels.TryGetValue(candidate.MethodCode, out var methodLabel)
+                ? methodLabel
+                : candidate.ServiceCode;
+            eligible.Add(new CartShippingGroupEligibleMethod(
+                candidate.MethodCode,
+                candidate.ServiceCode,
+                candidate.OptionCode,
+                label,
+                quote.PayableAtCheckoutAmount!.Value,
+                quote.CurrencyCode!,
+                quote.MinDeliveryDays ?? 0,
+                slot.Date,
+                composedGroup.SellerPartyId));
+
+            evidenceByMethod[candidate.MethodCode] = evidence;
+        }
+
+        // همهٔ گروه‌های سرور باید انتخاب شوند؛ گروه ناقص/ناشناخته کل نوشتن را می‌بندد.
+        if (seenKeys.Count != context.Plans.Count)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+
+        IReadOnlyList<CartShippingDraftGroup> groups;
+        try
+        {
+            groups = CartShippingGroupPlanner.Plan(
+                cart.CartId,
+                cart.Lines.Select(x => new CartShippingGroupCartLine(x.LineId, x.SellerPartyId, x.Quantity)).ToArray(),
+                requests,
+                eligible,
+                selectedDeliveryDate: null,
+                selectedDeliveryTimeWindow: null,
+                now,
+                UuidV7.New,
+                existing?.ShippingGroups);
+        }
+        catch (ContractOperationException)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+        }
+
+        // شاهد فقط روی گروه ساخته‌شدهٔ همان تعهد می‌نشیند؛ هیچ گروهی بی‌شاهد نمی‌ماند.
+        foreach (var group in groups)
+        {
+            if (!evidenceByMethod.TryGetValue(group.MethodCode, out var evidence))
+            {
+                throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
+            }
+
+            try
+            {
+                group.ReplaceAcceptedEvidence(evidence, now);
+            }
+            catch (ContractOperationException)
+            {
+                throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
+            }
+        }
+
+        var primary = groups[0];
+        var multiGroup = groups.Count > 1;
+        var isNew = existing is null;
+        var draft = existing ?? CartShippingDraft.Create(
+            cart.CartId,
+            guestSecretHash,
+            cart.Version,
+            prepared.Shipping.RecipientName,
+            prepared.Shipping.ContactMobile,
+            prepared.Shipping.ProvinceName,
+            prepared.Shipping.CityName,
+            prepared.Shipping.PostalAddress,
+            prepared.Shipping.PostalCode,
+            prepared.Shipping.SavedAddressId,
+            multiGroup ? string.Empty : primary.MethodCode,
+            multiGroup ? string.Empty : primary.MethodLabel,
+            groups.Sum(x => x.ShippingAmount),
+            multiGroup ? groups.Max(x => x.MinimumDeliveryDate) : primary.MinimumDeliveryDate,
+            multiGroup ? null : primary.SelectedDeliveryDate,
+            multiGroup ? null : primary.SelectedDeliveryTimeWindow,
+            request.CustomerNote,
+            now);
+
+        if (!isNew)
+        {
+            draft.Replace(
+                guestSecretHash,
+                cart.Version,
+                prepared.Shipping.RecipientName,
+                prepared.Shipping.ContactMobile,
+                prepared.Shipping.ProvinceName,
+                prepared.Shipping.CityName,
+                prepared.Shipping.PostalAddress,
+                prepared.Shipping.PostalCode,
+                prepared.Shipping.SavedAddressId,
+                multiGroup ? string.Empty : primary.MethodCode,
+                multiGroup ? string.Empty : primary.MethodLabel,
+                groups.Sum(x => x.ShippingAmount),
+                multiGroup ? groups.Max(x => x.MinimumDeliveryDate) : primary.MinimumDeliveryDate,
+                multiGroup ? null : primary.SelectedDeliveryDate,
+                multiGroup ? null : primary.SelectedDeliveryTimeWindow,
+                request.CustomerNote,
+                now);
+        }
+
+        draft.ApplyRecipientNames(prepared.Shipping.FirstName, prepared.Shipping.LastName);
+        draft.SetDestinationIdentity(
+            destination.CountryId,
+            destination.AdministrativeAreaId,
+            destination.CityId,
+            destination.ServiceAreaId,
+            now);
+
+        if (isNew)
+        {
+            draft.AddShippingGroups(groups, now);
+        }
+
+        await drafts.ReplaceCapturedSelectionAsync(draft, groups, isNew, expectedRevision, cancellationToken);
+        return draft;
+    }
+
+    /// <summary>مقصد از نشانی آماده‌شدهٔ سمت سرور resolve می‌شود (بدون tuple دلخواه مرورگر).</summary>
+    private async Task<DestinationIdentifiers> ResolvePreparedDestinationAsync(
+        StorefrontCheckoutPlacement prepared,
+        CancellationToken cancellationToken)
+    {
+        if (geography is null)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.DestinationUnverified);
+        }
+
+        var resolution = await geography.ResolveLegacyAsync(
+            SupportedCountryCode,
+            prepared.Shipping.ProvinceName,
+            prepared.Shipping.CityName,
+            serviceAreaName: null,
+            cancellationToken);
+
+        if (resolution.Outcome != DestinationResolutionOutcome.Resolved || resolution.Identifiers is not { } resolved)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.DestinationUnverified);
+        }
+
+        return resolved;
+    }
+
+    /// <summary>
+    /// بازتاب کلاینت فقط مقایسه می‌شود: هر مقدار گم/ناهمخوان یعنی وضعیت عوض شده است و هیچ مبلغی از
+    /// کلاینت پذیرفته نمی‌شود.
+    /// </summary>
+    private static void AssertEcho(
+        StorefrontCapturedGroupSelection intent,
+        StorefrontCapturedCandidatePlan candidate,
+        Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteResult quote)
+    {
+        if (!SameGuid(intent.ExpectedSnapshotId, candidate.SnapshotId)
+            || !SameLong(intent.ExpectedSourceRevision, candidate.SourceRevision)
+            || !SameLong(intent.ExpectedSelectionVersion, candidate.SelectionVersion)
+            || !SameGuid(intent.ExpectedAreaGroupId, quote.GroupId)
+            || !SameGuid(intent.ExpectedRateRowId, quote.RateRowId))
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.Conflict);
+        }
+    }
+
+    /// <summary>شاهد فشردهٔ ۲۳۱ از همان نتیجهٔ سرور ساخته می‌شود (بدون بازمحاسبهٔ مبلغ/تعرفه).</summary>
+    private static ShippingGroupAcceptedEvidence BuildEvidence(
+        StorefrontCapturedCandidatePlan candidate,
+        Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteResult quote,
+        StorefrontShippingReceivingSlot slot)
+    {
+        if (quote.FormatVersion is not { } formatVersion || formatVersion <= 0)
+        {
+            // نسخهٔ قالب ناشناخته/تهی یعنی قیمت مالک شاهد معتبر نمی‌سازد.
+            throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
+        }
+
+        try
+        {
+            return ShippingGroupAcceptedEvidence.Create(
+                candidate.SnapshotId,
+                candidate.DraftId,
+                candidate.SourceRevision,
+                formatVersion,
+                candidate.SelectionVersion,
+                ShippingGroupOwner.Store(candidate.OwnerTenantId ?? string.Empty),
+                quote.GroupId ?? Guid.Empty,
+                quote.RateRowId ?? Guid.Empty,
+                quote.ShippingTypeId,
+                quote.FreightAmount ?? -1m,
+                quote.PackagingAmount ?? -1m,
+                quote.CurrencyCode ?? string.Empty,
+                quote.PayableAtCheckoutAmount ?? -1m,
+                quote.CarrierCollectAmount ?? -1m,
+                slot.Date,
+                slot.OpensAt.Ticks,
+                slot.ClosesAt.Ticks,
+                quote.ReceivingWeek?.TimeZoneId ?? string.Empty,
+                quote.MinDeliveryDays,
+                quote.MaxDeliveryDays);
+        }
+        catch (ContractOperationException)
+        {
+            // مقدار ناقص/غیرقابل‌نمایش یعنی قیمت مالک برای شاهد کافی نیست؛ هیچ clamp/گردکردنی نیست.
+            throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
+        }
+    }
+
+    private static long ParseExpectedRevision(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return 0;
+        }
+
+        if (!long.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var parsed) || parsed < 0)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.Conflict);
+        }
+
+        return parsed;
+    }
+
+    private static bool SameCode(string? left, string? right) =>
+        string.Equals(
+            (left ?? string.Empty).Trim(),
+            (right ?? string.Empty).Trim(),
+            StringComparison.OrdinalIgnoreCase);
+
+    private static bool SameGuid(string? expected, Guid? actual) =>
+        Guid.TryParse((expected ?? string.Empty).Trim(), out var parsed)
+        && actual is Guid real
+        && parsed == real;
+
+    private static bool SameLong(string? expected, long actual) =>
+        long.TryParse((expected ?? string.Empty).Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var parsed)
+        && parsed == actual;
+
+    private static StorefrontOrderException Refuse(string reason) => new(reason);
+}

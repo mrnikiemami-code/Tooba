@@ -26,6 +26,17 @@ public sealed class StorefrontCapturedPreviewOptions
     public bool Enabled { get; set; }
 
     /// <summary>
+    /// آیا ثبت انتخاب capture‌شده (نویسندهٔ اتمیک ۲۳۲) مجاز است. پیش‌فرض خاموش.
+    /// </summary>
+    /// <remarks>
+    /// این کلید فقط <b>نوشتن</b> انتخاب را باز می‌کند و هیچ قیمت/فعال‌سازی/تسویه‌ای نمی‌سازد:
+    /// <c>CommitAsync</c> و مسیر پرداخت نهایی حتی با روشن‌بودن آن همچنان
+    /// <see cref="StorefrontCapturedPreviewReasons.PreviewNotReady"/> می‌دهند. قصد capture‌شده با
+    /// کلید خاموش صریحاً رد می‌شود و هرگز به مسیر قدیمی نمی‌افتد.
+    /// </remarks>
+    public bool SelectionEnabled { get; set; }
+
+    /// <summary>
     /// تعداد صریح تاریخ‌های قابل ارائهٔ تقویم دریافت در این پیش‌نمایش (۰..۹۰).
     /// </summary>
     /// <remarks>

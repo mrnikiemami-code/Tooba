@@ -42,7 +42,11 @@ public sealed record StorefrontCapturedCandidatePlan(
     DestinationIdentifiers Destination,
     string ServiceCode,
     string? OptionCode,
-    int AvailableDateCount);
+    int AvailableDateCount,
+    /// <summary>شناسهٔ snapshot همان اشاره‌گر انتخاب‌شده (TB-232؛ فقط برای مقایسهٔ قصد).</summary>
+    Guid SnapshotId = default,
+    /// <summary>نسخهٔ انتخاب همان اشاره‌گر (TB-232؛ فقط برای مقایسهٔ قصد).</summary>
+    long SelectionVersion = 0);
 
 /// <summary>
 /// برنامهٔ سرور برای یک گروه ارسال: کلید پایدار گروه، عضوهای دقیق همان گروه و نامزدهای روش.
@@ -53,7 +57,9 @@ public sealed record StorefrontCapturedCandidatePlan(
 public sealed record StorefrontCapturedGroupPlan(
     string GroupKey,
     IReadOnlyList<Guid> CartLineIds,
-    IReadOnlyList<StorefrontCapturedCandidatePlan> Candidates);
+    IReadOnlyList<StorefrontCapturedCandidatePlan> Candidates,
+    /// <summary>برچسب نوع واقعی همین گروه (فقط ارائه) یا تهی.</summary>
+    string? TypeLabel = null);
 
 /// <summary>
 /// درخواست ترکیب: همان فرمان/دسترسی/نسخهٔ checkout به‌همراه برنامهٔ گروه‌ها.

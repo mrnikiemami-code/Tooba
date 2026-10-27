@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Tooba.AddressBook.Contracts.Dtos;
@@ -37,6 +38,7 @@ public sealed class StorefrontShippingService
     private readonly StorefrontShippingOwnedRateResolver? _ownedRates;
     private readonly IShippingOneLevelCanonicalMethodReader? _canonicalMethods;
     private readonly Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner? _capturedPreview;
+    private readonly Shipping.CapturedPreview.StorefrontCapturedSelectionWriter? _capturedSelection;
 
     /// <summary>
     /// وابستگی اختیاریِ آخر عمداً پیش‌فرض‌دار است: هر ترکیب‌کننده‌ای که آن را تأمین نکند رفتار قدیمی را
@@ -56,7 +58,8 @@ public sealed class StorefrontShippingService
         IClock clock,
         StorefrontShippingOwnedRateResolver? ownedRates = null,
         IShippingOneLevelCanonicalMethodReader? canonicalMethods = null,
-        Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner? capturedPreview = null)
+        Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner? capturedPreview = null,
+        Shipping.CapturedPreview.StorefrontCapturedSelectionWriter? capturedSelection = null)
     {
         _carts = carts;
         _checkouts = checkouts;
@@ -72,6 +75,7 @@ public sealed class StorefrontShippingService
         _ownedRates = ownedRates;
         _canonicalMethods = canonicalMethods;
         _capturedPreview = capturedPreview;
+        _capturedSelection = capturedSelection;
     }
 
     /// <summary>
@@ -303,6 +307,12 @@ public sealed class StorefrontShippingService
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
 
+        // TB-232: پیش‌نویس دارای شاهد capture هرگز به‌عنوان «آمادهٔ پرداخت» با مسیر قدیمی بازقیمت نمی‌شود.
+        if (draft.ShippingGroups.Any(group => group.AcceptedEvidence is not null))
+        {
+            throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
+        }
+
         return await _checkouts.PreviewAsync(
             cartId,
             guestSecret,
@@ -337,6 +347,18 @@ public sealed class StorefrontShippingService
         // TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229: پیش‌نمایش capture‌شده عمداً آمادهٔ تسویه
         // نیست. این رد پیش از هر خواندن سبد/انتخاب/رزرو/تبدیل انجام می‌شود تا کدهای روش capture‌شده
         // هرگز به مسیر قیمت/ثبت قدیمی نیفتند. خاموش ⇒ رفتار قبلی عیناً.
+        if (request.CapturedGroups is { Count: > 0 })
+        {
+            // TB-232: قصد capture‌شده مسیر مستقل اتمیک دارد؛ بدون کلید نوشتن هرگز به مسیر قدیمی
+            // نمی‌افتد (fail-closed) و هیچ مبلغ/مالکی از بدنه پذیرفته نمی‌شود.
+            if (_capturedSelection is null || !_capturedSelection.IsEnabled)
+            {
+                throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedSelectionReasons.Disabled);
+            }
+
+            return await SaveCapturedSelectionAsync(request, guestSecret, cancellationToken);
+        }
+
         EnsureCapturedPreviewIsNotCheckoutReady();
 
         var cart = await RequireCartAsync(request.CartId, guestSecret, cancellationToken);
@@ -499,6 +521,13 @@ public sealed class StorefrontShippingService
         // همان تعداد خواندن قبلی)؛ هیچ شناسه‌ای از کلاینت به‌عنوان حقیقت پذیرفته نمی‌شود.
         var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
 
+        // TB-232: پیش‌نویس دارای شاهد capture هرگز با مسیر قدیمی بازقیمت/بی‌شاهد نمی‌شود؛ حتی وقتی
+        // کلیدها بعداً خاموش شوند این رد باقی می‌ماند (بدون downgrade بی‌صدا).
+        if (existing is not null && existing.ShippingGroups.Any(group => group.AcceptedEvidence is not null))
+        {
+            throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedSelectionReasons.EvidencePresent);
+        }
+
         // عضویت گروه‌ها: هر خط سبد دقیقاً یک بار، فروشنده از Cart، روش متعارف واجد شرایط.
         IReadOnlyList<CartShippingDraftGroup> groups;
         try
@@ -595,6 +624,68 @@ public sealed class StorefrontShippingService
         return MapDraft(existing);
     }
 
+    /// <summary>
+    /// TB-232: نوشتن انتخاب capture‌شده با بازاعتبارسنجی کامل سرور.
+    /// </summary>
+    /// <remarks>
+    /// کل بدنه یک <b>قصد نامعتمد</b> است: هیچ مالک/فروشنده/مبلغ/شاهد/تاریخی از آن حقیقت نیست. نشانی از
+    /// مسیر سمت سرور (همان آماده‌سازی قدیمی) خوانده می‌شود، قیمت‌ها/تقویم/اشاره‌گرها دوباره resolve
+    /// می‌شوند و تنها نوشتن، جایگزینی اتمیک گروه‌های همین پیش‌نویس است. پیش از این نقطه همهٔ خواندن‌های
+    /// بیرونی و اعتبارسنجی‌ها انجام شده است.
+    /// </remarks>
+    private async Task<StorefrontShippingDraftView> SaveCapturedSelectionAsync(
+        StorefrontShippingSelectionRequest request,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var cart = await RequireCartAsync(request.CartId, guestSecret, cancellationToken);
+        if (cart.Version != request.ExpectedCartVersion)
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingCartStale);
+        }
+
+        var names = StorefrontRecipientNames.Resolve(request.FirstName, request.LastName, request.RecipientName);
+        if (request.SavedAddressId is null || request.SavedAddressId == Guid.Empty)
+        {
+            StorefrontRecipientNames.EnsureNewAddressNames(names.First, names.Last);
+        }
+        else if (names.First.Length == 0 && names.Last.Length == 0 && names.Recipient.Length == 0)
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingFirstNameRequired);
+        }
+
+        // همین مسیر موجود: نشانی ذخیره‌شده/گیرنده از سمت سرور، همان چیزی که واقعاً قیمت می‌گیرد.
+        var prepared = await _checkouts.PrepareShippingAsync(
+            new StorefrontCheckoutShippingInput(
+                names.Recipient,
+                request.ContactMobile,
+                request.ProvinceName,
+                request.CityName,
+                request.PostalAddress,
+                request.PostalCode,
+                request.SavedAddressId,
+                names.First,
+                names.Last),
+            cancellationToken);
+
+        var existing = await _drafts.GetByCartIdAsync(cart.CartId, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureDraftOwnership(existing, guestSecret);
+        }
+
+        var draft = await _capturedSelection!.SaveAsync(
+            cart,
+            _actor.BuildCartAccess(guestSecret),
+            prepared,
+            existing,
+            HashGuestSecret(guestSecret),
+            request,
+            cancellationToken);
+
+        return MapDraft(draft);
+    }
+
     /// <summary>انتخاب معتبر را به Checkout ثبت و برای /payment برمی‌گرداند.</summary>
     public async Task<StorefrontCheckoutPage> CommitAsync(
         Guid cartId,
@@ -609,6 +700,12 @@ public sealed class StorefrontShippingService
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
+
+        // TB-232: ثبت نهایی/پرداخت برای پیش‌نویس دارای شاهد capture حتی با کلید نوشتن روشن هم بسته است.
+        if (draft.ShippingGroups.Any(group => group.AcceptedEvidence is not null))
+        {
+            throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
+        }
 
         // بازاعتبارسنجی قبل از ثبت سفارش.
         await SaveSelectionAsync(
@@ -1086,7 +1183,8 @@ public sealed class StorefrontShippingService
             draft.LastName,
             draft.ShippingGroups.Count == 0
                 ? null
-                : draft.ShippingGroups.Select(MapGroup).ToArray());
+                : draft.ShippingGroups.Select(MapGroup).ToArray(),
+            draft.SelectionRevision.ToString(CultureInfo.InvariantCulture));
 
     private static StorefrontShippingGroupView MapGroup(CartShippingDraftGroup group) =>
         new(

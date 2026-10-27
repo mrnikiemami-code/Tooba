@@ -530,6 +530,14 @@ public sealed class StorefrontStartPaymentComposerTests
 
         public Task SaveAsync(CartShippingDraft value, bool isNew, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+
+        public Task ReplaceCapturedSelectionAsync(
+            CartShippingDraft value,
+            IReadOnlyList<CartShippingDraftGroup> groups,
+            bool isNew,
+            long expectedSelectionRevision,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class ActorFake(Guid? authenticatedUserId) : IOrderStorefrontActor

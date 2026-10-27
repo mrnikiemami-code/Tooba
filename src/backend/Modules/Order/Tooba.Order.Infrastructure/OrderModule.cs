@@ -140,6 +140,16 @@ public sealed class OrderModule : IToobaModule
                 Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions.SectionName));
         services.AddScoped<Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner>();
 
+        // TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232: نویسندهٔ اتمیک انتخاب capture‌شده. کلید
+        // نوشتن جدا و پیش‌فرض خاموش است؛ خاموش یعنی قصد capture صریحاً رد می‌شود (بدون fallback قدیمی).
+        services.AddScoped(
+            sp => new Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedSelectionWriter(
+                sp.GetRequiredService<
+                    Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner>(),
+                sp.GetRequiredService<Application.Storefront.Ports.IStorefrontShippingDraftStore>(),
+                sp.GetService<Tooba.Geography.Contracts.Places.IGeographyLookup>(),
+                sp.GetRequiredService<Tooba.BuildingBlocks.IClock>()));
+
         // TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163: درز «نرخ مشتریِ مالک‌شدهٔ Shipping» با کلید
         // مستقل و پیش‌فرض خاموش (نبود بخش تنظیمات = false). خاموش یعنی صفر فراخوانی به Shipping و همان
         // قیمت/خطای قدیمی؛ روشن یعنی فقط نرخ authoritative گزینهٔ دقیق قیمت می‌دهد.

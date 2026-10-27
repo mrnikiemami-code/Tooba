@@ -192,4 +192,25 @@
   <data name="order.operation.denied" xml:space="preserve">
     <value>This order operation is not permitted.</value>
   </data>
+  <data name="storefront.captured_selection.disabled" xml:space="preserve">
+    <value>Selecting this captured shipping option is not available yet.</value>
+  </data>
+  <data name="storefront.captured_selection.intent_invalid" xml:space="preserve">
+    <value>The selected shipping groups are incomplete or mixed with another selection. Refresh and try again.</value>
+  </data>
+  <data name="storefront.captured_selection.unavailable" xml:space="preserve">
+    <value>This shipping group is not priced yet. Choose another group or try again later.</value>
+  </data>
+  <data name="storefront.captured_selection.date_unavailable" xml:space="preserve">
+    <value>The chosen delivery date is no longer offered for this group.</value>
+  </data>
+  <data name="storefront.captured_selection.conflict" xml:space="preserve">
+    <value>Shipping information changed. Refresh the page and choose again.</value>
+  </data>
+  <data name="storefront.captured_selection.destination_unverified" xml:space="preserve">
+    <value>We could not verify the delivery address for this shipping price. Check the address and try again.</value>
+  </data>
+  <data name="storefront.captured_selection.evidence_present" xml:space="preserve">
+    <value>This cart already has a captured shipping selection and cannot be changed from the legacy path.</value>
+  </data>
 </root>

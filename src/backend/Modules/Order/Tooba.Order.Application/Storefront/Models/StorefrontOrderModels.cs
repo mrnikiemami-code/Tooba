@@ -147,7 +147,12 @@ public sealed record StorefrontShippingDraftView(
     string? CustomerNote,
     string FirstName = "",
     string LastName = "",
-    IReadOnlyList<StorefrontShippingGroupView>? ShippingGroups = null);
+    IReadOnlyList<StorefrontShippingGroupView>? ShippingGroups = null,
+    /// <summary>
+    /// نسخهٔ انتخاب ذخیره‌شده به‌صورت <b>متن اعشاری دقیق</b> (TB-232)؛ همان مقداری که کلاینت باید در
+    /// CAS بعدی بفرستد. صفر یعنی هیچ انتخاب capture‌شده‌ای ثبت نشده است.
+    /// </summary>
+    string? SelectionRevision = null);
 
 /// <summary>تصویر یکپارچهٔ مرحلهٔ ارسال.</summary>
 public sealed record StorefrontShippingProjection(
@@ -267,6 +272,31 @@ public sealed record StorefrontShippingGroupSelection(
     string? OriginContext = null,
     string? SelectedDeliveryDate = null,
     string? SelectedDeliveryTimeWindow = null);
+/// <summary>
+/// قصد انتخاب یک گروه capture‌شده (TB-232). همهٔ فیلدهای <c>Expected*</c> فقط <b>بازتاب
+/// مقایسه‌ای</b> همان چیزی هستند که سرور در خواندن اعلام کرده بود: هیچ‌کدام مجوز، مالک، مبلغ یا
+/// صلاحیت نیست و سرور همه را دوباره resolve می‌کند. توکن‌های بزرگ به‌صورت متن دقیق می‌آیند تا
+/// هیچ گردکردن JavaScript روی آن‌ها رخ ندهد.
+/// </summary>
+/// <param name="GroupKey">کلید پایدار سرورِ همان گروه (فقط برای مکان‌یابی برنامهٔ جاری).</param>
+/// <param name="ServiceCode">کد خدمت انتخاب‌شده از همان خواندن.</param>
+/// <param name="OptionCode">کد گزینهٔ انتخاب‌شده یا تهی.</param>
+/// <param name="SelectedDeliveryDate">تاریخ ISO انتخاب‌شده از تقویم همان گروه.</param>
+/// <param name="ExpectedSnapshotId">capture انتخاب‌شده که کلاینت دید.</param>
+/// <param name="ExpectedSourceRevision">بازبینی دقیق به‌صورت متن.</param>
+/// <param name="ExpectedSelectionVersion">نسخهٔ انتخاب به‌صورت متن.</param>
+/// <param name="ExpectedAreaGroupId">گروه ناحیهٔ تطبیق‌داده‌شده که کلاینت دید.</param>
+/// <param name="ExpectedRateRowId">ردیف تعرفهٔ تطبیق‌داده‌شده که کلاینت دید.</param>
+public sealed record StorefrontCapturedGroupSelection(
+    string GroupKey,
+    string ServiceCode,
+    string? OptionCode,
+    string SelectedDeliveryDate,
+    string? ExpectedSnapshotId = null,
+    string? ExpectedSourceRevision = null,
+    string? ExpectedSelectionVersion = null,
+    string? ExpectedAreaGroupId = null,
+    string? ExpectedRateRowId = null);
 
 /// <summary>
 /// نمای یک گروه ارسال در پیش‌نویس سبد. هویت/برچسب/مبلغ/ارز/زمان‌بندی همه از گروه ذخیره‌شده می‌آید.
@@ -295,6 +325,13 @@ public sealed record StorefrontShippingGroupView(
 /// ذخیرهٔ انتخاب ارسال. <see cref="ShippingGroups"/> افزایشی و اختیاری است: در نبود آن همان
 /// انتخاب تک‌روشی گذشته به‌عنوان shorthand سازگار پذیرفته و به یک گروه کامل تبدیل می‌شود.
 /// </summary>
+/// <remarks>
+/// <see cref="CapturedGroups"/> قصد انتخاب گروه‌های capture‌شده است (TB-232). حضور آن هرگونه
+/// shorthand قدیمی را مبهم می‌کند و صریحاً رد می‌شود؛ نبودش رفتار قدیمی را عیناً حفظ می‌کند.
+/// <see cref="ExpectedSelectionRevision"/> نسخهٔ انتخاب مشاهده‌شده به‌صورت متن دقیق است (CAS اتمیک).
+/// <see cref="CouponCode"/> تنها قصدِ تخفیف است و از همان مسیر ۲۱۷ (Pricing/Promotion/Tax) قیمت می‌گیرد؛
+/// هیچ مبلغ/درصدی از کلاینت پذیرفته نمی‌شود.
+/// </remarks>
 public sealed record StorefrontShippingSelectionRequest(
     Guid CartId,
     int ExpectedCartVersion,
@@ -311,7 +348,10 @@ public sealed record StorefrontShippingSelectionRequest(
     string? CustomerNote,
     string FirstName = "",
     string LastName = "",
-    IReadOnlyList<StorefrontShippingGroupSelection>? ShippingGroups = null);
+    IReadOnlyList<StorefrontShippingGroupSelection>? ShippingGroups = null,
+    IReadOnlyList<StorefrontCapturedGroupSelection>? CapturedGroups = null,
+    string? ExpectedSelectionRevision = null,
+    string? CouponCode = null);
 
 /// <summary>ثبت نهایی ارسال و ساخت checkout برای پرداخت.</summary>
 public sealed record StorefrontShippingCommitRequest(
