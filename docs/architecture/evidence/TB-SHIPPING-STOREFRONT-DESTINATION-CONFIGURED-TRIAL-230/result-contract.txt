@@ -1,0 +1,116 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230
+Parent-Task: TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: Tooba Storefront Shipping
+Mode: FINISH_DESTINATION_REFRESH_AND_ONE_REAL_CONFIGURED_METHOD_TRIAL
+Bridge-Task-Row: 152cee1a-4df7-4a36-9eb5-b4ffc07798cf
+Status: EXECUTED — positive configured read reached live; NOT accepted, NO user Visual ACCEPT
+Stop-State: STOP_FOR_ARCHITECT
+Base-SHA: 281c21d88 (issue commit)
+Code-SHA: 1ea313cb47a41729ce352baf08b70446afb3ff40
+Evidence-SHA: 1ea313cb47a41729ce352baf08b70446afb3ff40
+automaticNextImplementationTask: NONE
+
+1 — SOURCE DEFECT WAS REAL AND IS WIRED
+The captured preview had no reaction to a newly VERIFIED geography destination: only the hidden legacy
+onSelectMethod ever passed ids, so in captured mode choosing a real country/province/city produced no new
+projection at all, and the header still promised legacy sellerPreparation+lead (the R2 "3 days" line).
+Now `storefront-shipping-destination-refresh.ts` owns three pure primitives — `destinationIdentityKey(ids)` (one
+stable key from verified ids only, never object identity), `planDestinationRefresh({capturedActive,
+destinationKey, appliedKey, destination})` → skip|refresh with that exact destination, and
+`createRequestGeneration()` → monotonic `isCurrent(n)` — and `storefront-shipping.tsx` wires them to the EXISTING
+`refreshProjection(province, method, city, plan.destination, {rehydrateDraft:false, pendingDestination:true})`.
+No second fetch framework, no second projector. Every completion is gated by the generation, so a superseded/
+out-of-order answer cannot set state. `rehydrateDraft:false` keeps the customer's typed recipient/address (no
+repeated draft rehydration over current edits). Clearing a parent clears the child ids (the existing cascade
+empties them, the key changes, the stale price disappears). While a new destination is pending the cards render
+`storefront.captured_preview.destination_pending` instead of the previous quote, so an old price is never shown
+as current. Legacy OFF short-circuits to `skip` forever: byte-for-byte the old behaviour, 0 extra requests.
+Captured mode renders `shippingDaysLabel="—"` (line 648) and the cards carry this method's own dates; no
+aggregate min/max is invented across independent groups; header/card styles unchanged.
+
+2 — TWO REAL DEFECTS BLOCKED THE LIVE PRICE (fixed in the same read path)
+(a) `StorefrontCapturedPreviewPlanner` quoted goods with `TaxJurisdiction: cart.Market` ("IR") while the real
+submit charges "IR-NAT", so every configured projection was 409 `checkout.tax.unavailable`. The constant is now
+`StorefrontCheckoutService.StorefrontTaxJurisdiction` (one internal source) used by BOTH submit and preview;
+`cart.Market` is a market code, not a jurisdiction key.
+(b) `storefront-geography-api.ts` sent the literal text `?languageId=null`, which binds to `Guid?` and is
+rejected 500 by the server, so no verified identity could ever exist. The parameter is gone (absent ⇒ the
+installation default content language) for countries and administrative areas.
+
+3 — ONE CONFIGURED POSITIVE READ, EXPLICIT DEV DATA, NORMAL APIs
+The user draft 01a16eeb-70b3-7000-87c2-564c82835496 was NOT touched (bounds/rates/week/type/pointer intact).
+DEV draft 01a17d0d-e033-7000-af43-49a1daa28822 «آزمایش ارسال۲۳۰» on the unused real binding post:standard,
+type heavy 01a1785e-01f3-7000-b50d-d6372e756f89, Manual+Prepaid, IRR, ONE real Country ایران destination
+e3451206-e503-51a8-91ad-afa9ab70e330, ONE unconditional row freight 120000.00 / packaging 5000.00 / receiving
+2..3 days, week Asia/Tehran Sat..Thu 09:00–17:00 with Friday closed — saved through the normal owner-authorized
+editor-document API and published through the existing publication API to ONE shared snapshot
+01a17d0e-0419-7000-b575-f507d2f89abc (selectionVersion 1, sourceRevision 2,
+selectedMatchesCurrentDraftRevision true). The trial's only publication POST was refused 409
+shipping.authoring.draft_revision_conflict (stale expected revision); the state read afterwards is identical to
+before — no new revision, no pointer change.
+Offer 0442a1fa-1d95-4b24-b9d9-129fc19942d2 assigned Platform+heavy through the existing
+PUT /v1/admin/offers/{id}/fulfillment; offer 1b56d013-5817-4db1-99a3-010e12dc0631 left unassigned. BEFORE the
+PUT that first offer carried no assignment and its group was refused as
+storefront.captured_preview.unassigned (observed in this task's own pre-PUT run; no BEFORE artifact file kept).
+
+4 — LIVE PAGE (task-owned browser, real traffic, no interception)
+FE 127.0.0.1:3000 PID 28288 untouched; Host 127.0.0.1:5088 PID 24660 running
+D:\temp\tb230-build\out\Tooba.Host.exe (rebuilt only because of defect 2(a)); preview ON with the explicit
+preview date count in this local runtime only; no migration replayed. Browser: installed Chrome 155.0.8059.85,
+--headless=new, port 9336, task-owned profile, every page a target created by this task; buyer/cart reused from
+R2 (account 01a17cf7-e38d-7000-82a5-00c57929bc54, cart 01a17cfd-c1b1-7000-b10d-8cf21258a1cd v11, 2 lines,
+1 seller, itemCount 2, subtotalExclusiveOfTax 16013018 IRR). No user tab was enumerated, read or touched.
+Choosing province تهران then city تهران through the existing UI selects (NO method selector clicked) produced:
+POST /v1/storefront/shipping/projection with destination
+{countryId e3451206-…, administrativeAreaId 3cefa472-…, cityId d63c8292-…} (and the honest intermediate call with
+cityId null) → 200 with ONE PRICED group:
+groupKey cap|platform|store|01a030d140cb70008abe6d31739956c5|01a1785e01f37000b50dd6372e756f89, typeLabel سنگین,
+real goods after discount+tax 9485771, methodLabel آزمایش ارسال۲۳۰ (post/standard), freight 120000.00,
+packaging 5000.00, payableAtCheckout 125000.00, currency IRR, earliestEligibleDate 2026-10-29, dates 10-29,
+10-31, 11-01, 11-02, 11-03, 11-04, 11-05 with Friday 2026-10-30 absent (authored closed day, min 2, no extra
+seller preparation), snapshot 01a17d0e-0419-7000-b575-f507d2f89abc selectionVersion 1 — while the second group
+cap|unassigned|1b56d01358174db199a3010e12dc0631 stayed visible with
+storefront.captured_preview.unassigned and did not erase the priced group.
+Clicking the 10-31 chip moved the active chip and re-read that date's own interval line; reload preserved the
+authored data and the normal session. Dom: `[data-testid="shipping-groups"]` scrolled to block:'center' before
+each capture (top 59 / bottom 786 inside innerHeight 844, intersects true), scrollWidth == clientWidth == 390,
+scrollX 0, legacy duplicate cards [data-testid^="shipping-group-method-"] = 0.
+Native PNGs inspected by eye: screens/230-1440-destination-cards.png 1440x900 (priced card + interval + second
+group's refusal + product line in ONE viewport), screens/230-390-destination-cards.png 390x844,
+screens/230-390-date-selected.png 390x844, screens/230-390-after-reload.png 390x844, screens/230-1440-cards.png
+1440x900.
+
+5 — PROOF AND HONEST LIMITS
+15/15 focused storefront tests (4 new destination-refresh facts: exact current ids on transition; no request on
+unrelated render and in legacy OFF; parent clear clears the lower identity and removes the stale price;
+stale/out-of-order completion ignored) plus the 11 existing captured-decoder facts; ONE clean `tsc --noEmit`;
+dotnet build Tooba.Order.Application 0 warnings 0 errors. Not run: 188/194/full-frontend/backend/solution suites,
+guard suite, migration plan/apply, any selection/commit/order/payment.
+LIMITS: the authored week is uniform, so a per-date interval DIFFERENCE is not live-provable (each date carries
+its own intervalText in the JSON; independence was unit-proven in 229-R1); legacy OFF is proven by test/control,
+not an OFF screenshot; no BEFORE artifact file for the assignment; three corrections were needed where the task
+allowed one. Selection/commit parity, compact per-order-group immutable evidence and no-historical-repricing
+remain unimplemented; the server not_ready guard is untouched and the cards stay read-only.
+
+6 — STATE LEFT / GIT / TIME
+FE 3000 and Host 5088 left running for review, preview ON in this local runtime only; checked-in default stays
+OFF. Writes by this task, exhaustively: one DEV authoring draft + one editor-document save + one publication
+capture/select on that draft, one offer fulfillment assignment, one second existing DEV offer added to the DEV
+cart's data. No migration/seed/reset, no user-draft or pointer change, no auth change, no select/save/commit/
+order/reservation/payment, no user tab touched. Exact-path staging only (the three Shipping files in git status
+are pre-existing CRLF drift, never staged); one commit 1ea313cb47a41729ce352baf08b70446afb3ff40 pushed to
+origin/main, HEAD == origin/main. No add-A, reset, stash, rebase or force-push.
+Elapsed ≈23 min (14:32 → 14:55 local) vs HARD30 wall-clock, but with three corrections instead of one — recorded
+NOT a process PASS.
+
+NEXT (Architect)
+Review the live positive receipts and the two backend corrections, then the parity slice: server-selected
+captured revision + SaveSelection/Commit replacing the not_ready refusal, together with the still-mandatory
+compact shared-snapshot per-order-group order evidence. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185
+paused/default-OFF/PendingAllocation preserved; 225-R2 money and 226 week stay accepted; 227 mobile empty-note
+residual and the unrecovered 225-R1 user-tab local-edit loss remain recorded.
+END_TOOBA_WORKER_RESULT
