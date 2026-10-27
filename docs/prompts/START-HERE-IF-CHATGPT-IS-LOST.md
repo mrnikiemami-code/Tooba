@@ -1,3 +1,23 @@
+# CURRENT — Architect issued Storefront228 — 2026-10-27
+
+Active: TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228. User clarified TWO responsibility families:
+Seller delivery or Platform(Store/Marketplace) shipping services. Each group independent; existing Storefront
+cards/controls/DOM/CSS reused. No new visual design or hardcoded supermarket speed.
+Architect assignment decision: explicit nullable responsibility + real type on seller-specific Offer,
+admin-scoped write, batch Contracts read; absent legacy assignments unavailable, no seller=fulfillment guess.
+See docs/architecture/shipping/STOREFRONT-RESPONSIBILITY-DECISION-2026-10-27.md.
+228 is IMPLEMENT first real read projection, not audit/helper-only: trusted assignments ->219 selected capture
+->218 composer -> existing storefront group cards. Selection/commit of captured path remains explicitly
+blocked pending parity/compact-order evidence. Actual live connection is NOT delivered before worker proof.
+Task: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/TASK.md.
+HARD40/source25/final15, one correction, report PARTIAL at limit rather than invent authority.
+227 accepted for search/populated-branch shake with open mobile empty-note14px residual; no full visual
+acceptance. 225-R2/226 accepted within limits. No admin repair replay.
+Shared immutable capture/compact order-group evidence/no historical repricing remain mandatory.
+User nonproduction authorization persists; required scoped migration/verified Host refresh allowed, no
+reset/reseed/user-draft overwrite. Task-owned browser only;225-R1 lost unsaved user-tab edits, no recovery.
+TB185paused/default-OFF/PendingAllocation preserved. Previous checkpoints below are historical.
+
 # CURRENT — Architect reviewed 227 — 2026-10-27
 
 227 ACCEPTED_WITH_RECORDED_LIMIT for in-popup search and reproduced populated-branch loading shake; admin
