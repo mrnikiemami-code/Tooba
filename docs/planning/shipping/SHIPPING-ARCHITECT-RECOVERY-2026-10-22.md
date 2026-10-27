@@ -1,4 +1,25 @@
-﻿# CURRENT — 232 executed: server-revalidated captured selection is written atomically — 2026-10-27
+# CURRENT — 232 NOT ACCEPTED; issued232-R1 group isolation + failure atomicity — 2026-10-27
+
+Active: TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232-R1.
+Read 232/ARCHITECT-REVIEW.md and 232-R1/TASK.md under docs/architecture/evidence/.
+Root reviewed actual d2307889f / evidence520c508d7. Shared resolver/compact231 direction retained; writer NOT accepted.
+Confirmed: binding-only evidence dictionary overwrites across sellers; captured load uses stale tracking graph;
+no clean-caller guard; writer mutates before adapter/BEGIN; rollback originals accepted rejected scalars;
+global non-keep line detach touches unrelated drafts; cancelled cleanup can mask failure.
+R1 fixes same writer with full per-group correlation, fresh clean preflight, explicit CAS text, entire owned
+graph rollback incl cancellation/BEGIN failure and unrelated tracker preservation. Captured nonblank coupon
+explicitly refused until read/write/final money context matches; no silent discount/price replacement.
+No233/final checkout/history endpoint. Commit/PaymentDraft remain not_ready even flagsOFF for captured drafts.
+NO frontend/HMR/Host/FE/runtime change, no live DB/API/business write; user VISIBLE review window is USER
+unsaved work: never enumerate/read/automate/reload/close. Local previewON/count7 unchanged; checked-in gatesOFF.
+231/232 migrations WRITTEN/sharedNOTAPPLIED; stale EF snapshot remains disclosed, no scaffolding claim.
+Worker amended/force-with-lease own232commit against task rule: recorded violation; R1 no history rewrite.
+Read-only user trial remains accepted, no user Visual ACCEPT/full Storefront certification. Compact evidence
+shared snapshot refs only, no full authoredJSON/order, no historical repricing. Known emptykey refresh/inflight,
+cross-owner labels/decoder/OfferAPI proof,227mobile residual,225-R1 lost LOCAL edits retained. TB185 paused,
+default-OFF/PendingAllocation. Automatic-Next-Task NONE; STOP_FOR_ARCHITECT after R1. History below.
+
+# HISTORICAL WORKER RESULT — 232 executed: server-revalidated captured selection is written atomically — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232/{TASK.md,RESULT.md}.
 Base `54b01303b`. Status: **EXECUTED**, NOT accepted, NO user Visual ACCEPT. No checkout/reservation/payment/
