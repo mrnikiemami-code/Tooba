@@ -88,16 +88,8 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
             requireReservation: false,
             cancellationToken);
 
-        // TB-233: پذیرش capture‌شده فقط داخل همین مسیر واقعی و <b>پیش از</b> نخستین رزرو/نوشتن سفارش.
-        // نتیجهٔ همین پذیرش (نه پلن خام فراخوان) مرجع ماندگاری گروه‌های سفارش است.
-        var acceptedShippingGroups = await _host.AcceptCapturedShippingAsync(
-            command,
-            cart,
-            sellerOrders,
-            now,
-            cancellationToken);
-
         IReadOnlyDictionary<Guid, Guid>? reservations = null;
+        IReadOnlyList<OrderShippingGroupPlan>? acceptedShippingGroups = null;
         var abuseSettings = await _host.LoadAbuseSettingsAsync(cancellationToken);
         try
         {
@@ -107,6 +99,17 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
                 TransactionScopeAsyncFlowOption.Enabled);
 
             await _host.EnsureCanStartInitialReservationAsync(command.PlacedByUserId, abuseSettings, cancellationToken);
+
+            // TB-233/233-R2: پذیرش capture‌شده داخل همان تراکنش submit و <b>پیش از</b> نخستین رزرو/نوشتن
+            // سفارش. نتیجهٔ همین پذیرش (نه پلن خام فراخوان) مرجع ماندگاری گروه‌های سفارش است و قفل ردیف
+            // ریشهٔ Order تا پایدارسازی سفارش نگه داشته می‌شود.
+            acceptedShippingGroups = await _host.AcceptCapturedShippingAsync(
+                command,
+                cart,
+                sellerOrders,
+                now,
+                cancellationToken);
+
             if (process is not null)
             {
                 _processes!.MarkInventoryReserving(process, now);

@@ -131,6 +131,11 @@ public sealed class OrderModule : IToobaModule
         // (213) ترکیب می‌کند. هیچ مسیر عمومی/فعال‌سازی/انتخاب بازبینی نمی‌سازد.
         services.AddScoped<Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupProjectionComposer>();
 
+        // TB-233-R2: هستهٔ بدون خوانندهٔ فکت همان ترکیب ۲۱۸. CheckoutDirectory همین هسته را می‌گیرد
+        // (نه پوشش ۲۱۸ را) تا چرخهٔ سازندهٔ دایرکتوری↔خوانندهٔ فکت ممکن نباشد؛ هیچ نمونهٔ دوم
+        // DbContext/دایرکتوری و هیچ service-locator ساخته نمی‌شود.
+        services.AddScoped<Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupCompositionCore>();
+
         // TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229: مسیر خواندنی واقعی «سبد → انتساب Offer →
         // انتخاب ۲۱۹ → یک ترکیب ۲۱۸». کلید پیش‌فرض خاموش است؛ خاموش یعنی صفر فراخوانی و همان پاسخ قبلی،
         // و انتخاب/ثبت هم فقط در حالت روشن صریحاً رد می‌شود. هیچ مالک/پیش‌نویس/بازبینی/مبلغی از مرورگر

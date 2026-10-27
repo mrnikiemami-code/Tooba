@@ -72,10 +72,25 @@ public sealed partial class CheckoutDirectory
         }
 
         var options = _capturedPreview?.Value;
-        if (options is null || options.CheckoutEnabled is false)
+        if (options is null
+            || options.Enabled is false
+            || options.SelectionEnabled is false
+            || options.CheckoutEnabled is false
+            || options.AvailableDateCount is null)
         {
-            // دروازهٔ ثبت نهایی خاموش: هیچ گذر capture‌شده‌ای (حتی با شاهد ساختگی) پذیرفته نمی‌شود.
+            // دروازهٔ ثبت نهایی خاموش/ناهمساز: هیچ گذر capture‌شده‌ای (حتی با شاهد ساختگی) پذیرفته نمی‌شود.
             throw new ContractOperationException(CapturedNotReady);
+        }
+
+        // هر مرجع اختیاریِ لازم برای بازاعتبارسنجی باید واقعاً در همین scope موجود باشد؛ نبودشان
+        // هرگز به null-reference یا پذیرش پیش‌فرض تبدیل نمی‌شود.
+        if (_offerAssignments is null
+            || _shippingTypes is null
+            || _selectedCaptures is null
+            || _capturedComposition is null
+            || _geography is null)
+        {
+            throw new ContractOperationException(CapturedUnavailable);
         }
 
         if (storedCaptured is false || stored is null)
@@ -101,6 +116,16 @@ public sealed partial class CheckoutDirectory
             throw new ContractOperationException(CapturedConflict);
         }
 
+        // نسخهٔ سبد ذخیره‌شده باید همان نسخهٔ authoritative جاری و همان نسخهٔ صریح فرمان باشد.
+        if (stored.CartVersion != cart.Version || cart.Version != command.ExpectedCartVersion)
+        {
+            throw new ContractOperationException(CapturedConflict);
+        }
+
+        // قفل/بررسی ریشهٔ Order داخل همین تراکنشِ submit: تا پایدارسازی سفارش نگه داشته می‌شود تا
+        // هیچ به‌روزرسانی هم‌زمان نتواند سفارشی با نسخهٔ ریشهٔ مخلوط بسازد.
+        await LockStoredCapturedRootAsync(command.CartId, expectedRevision, cancellationToken);
+
         // مقصد پرسیده‌شده باید همان مقصد قیمت‌گذاری‌شدهٔ ذخیره‌شده باشد (نه مقصد ارزان‌تر/دیگر).
         var destination = await ResolveCurrentDestinationAsync(command, cancellationToken);
 
@@ -113,11 +138,23 @@ public sealed partial class CheckoutDirectory
             throw new ContractOperationException(CapturedUnavailable);
         }
 
+        // مسئولیت/نوع/مالک: فقط SingleStore با مالک Store و همان tenant مورداعتماد.
+        var tenantId = ResolveCapturedStoreTenantId();
+        if (tenantId is null)
+        {
+            throw new ContractOperationException(CapturedUnavailable);
+        }
+
         foreach (var group in groups)
         {
             var evidence = group.AcceptedEvidence!;
+            // مالک شاهد باید دقیقاً همان tenant فعال و به‌صورت Ordinal برابر باشد؛ هیچ استنتاج
+            // Seller/Marketplace و هیچ مقایسهٔ حساس‌نبودن به حروف پذیرفته نمی‌شود.
             if (!SameDestination(stored, destination)
-                || !string.Equals(evidence.Currency, group.Currency, StringComparison.Ordinal))
+                || !string.Equals(evidence.Currency, group.Currency, StringComparison.Ordinal)
+                || evidence.Owner.Kind != ShippingGroupOwnerKind.Store
+                || evidence.Owner.SellerPartyId is not null
+                || !string.Equals(evidence.Owner.TenantKey, tenantId, StringComparison.Ordinal))
             {
                 throw new ContractOperationException(CapturedConflict);
             }
@@ -146,12 +183,7 @@ public sealed partial class CheckoutDirectory
                 .Select(group => ShippingGroupGoodsFactsBuilder.BuildGroupFacts(group, linesByCartLineId, currency))
                 .ToArray());
 
-        // مسئولیت/نوع/مالک: فقط SingleStore با مالک Store و همان tenant مورداعتماد.
-        var tenantId = ResolveCapturedStoreTenantId();
-        if (tenantId is null)
-        {
-            throw new ContractOperationException(CapturedUnavailable);
-        }
+        // مسئولیت/نوع/مالک: فقط SingleStore با مالک Store و همان tenant مورداعتماد (Ordinal، بدون حدس).
 
         var offerIds = cart.Lines.Select(line => line.OfferId).Distinct().ToArray();
         var assignments = await _offerAssignments!.GetAssignmentsAsync(offerIds, cancellationToken);
@@ -164,9 +196,15 @@ public sealed partial class CheckoutDirectory
         var types = typeIds.Length == 0
             ? Array.Empty<ShippingTypeSnapshot>()
             : (await _shippingTypes!.GetByIdsAsync(typeIds, cancellationToken)).ToArray();
+        if (types.Select(type => type.ShippingTypeId).Distinct().Count() != types.Length
+            || types.Length != typeIds.Length)
+        {
+            // پاسخ دسته‌ای ناقص/تکراری/بیگانه برای نوع‌ها پذیرفته نمی‌شود (بدون حدس نوع فعال).
+            throw new ContractOperationException(CapturedUnavailable);
+        }
 
-        var sellerByOffer = cart.Lines.ToDictionary(line => line.OfferId, line => line.SellerPartyId);
         var offerByCartLineId = cart.Lines.ToDictionary(line => line.LineId, line => line.OfferId);
+        var sellerByCartLineId = cart.Lines.ToDictionary(line => line.LineId, line => line.SellerPartyId);
         foreach (var group in groups)
         {
             var evidence = group.AcceptedEvidence!;
@@ -174,6 +212,11 @@ public sealed partial class CheckoutDirectory
             {
                 if (!offerByCartLineId.TryGetValue(line.CartLineId, out var offerId)
                     || !assignments.TryGetValue(offerId, out var assignment)
+                    // پاسخ باید همان کلید/همان Offer/همان فروشندهٔ واقعی همین خط باشد؛ پاسخ
+                    // بیگانه/متناقض هرگز با «مسئولیت Platform» جبران نمی‌شود.
+                    || assignment.OfferId != offerId
+                    || !sellerByCartLineId.TryGetValue(line.CartLineId, out var lineSeller)
+                    || assignment.SellerPartyId != lineSeller
                     // مسئولیت صریح ۲۲۸: نبود/ناشناخته/Seller هرگز به Store بازتفسیر نمی‌شود.
                     || assignment.Responsibility != OfferFulfillmentResponsibility.Platform
                     || assignment.ShippingTypeId is not Guid assignedType
@@ -248,14 +291,20 @@ public sealed partial class CheckoutDirectory
                 evidence.SnapshotId,
                 evidence.SelectionVersion);
 
-            capturedPlans.Add(new StorefrontCapturedGroupPlan(candidate.MethodCode, group.Lines
-                .OrderBy(line => line.CartLineId)
-                .Select(line => line.CartLineId)
-                .ToArray(), [candidate]));
+            // کلید گروه همان هویت پایدار persist‌شدهٔ گروه ارسال است؛ فکت‌ها و پلن‌ها هرگز با
+            // روش/برچسب/اندیس به هم گره نمی‌خورند و دو فروشنده روی یک Binding دو کلید جدا دارند.
+            capturedPlans.Add(new StorefrontCapturedGroupPlan(
+                group.ShippingGroupId.ToString("N"),
+                group.Lines
+                    .OrderBy(line => line.CartLineId)
+                    .Select(line => line.CartLineId)
+                    .ToArray(),
+                [candidate]));
         }
 
-        var composed = await _capturedComposer!.ComposeFromFactsAsync(
-            new StorefrontCapturedGroupProjectionRequest(command, capturedPlans),
+        var composed = await _capturedComposition!.ComposeFromFactsAsync(
+            command,
+            capturedPlans,
             facts,
             cancellationToken);
 
@@ -340,6 +389,32 @@ public sealed partial class CheckoutDirectory
             .ThenInclude(group => group.Lines)
             .Where(x => x.CartId == cartId)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// قفل ردیف ریشهٔ پیش‌نویس <b>در همان تراکنش submit</b> و مقایسهٔ نسخهٔ انتخاب با نسخهٔ پذیرفته‌شده.
+    /// </summary>
+    /// <remarks>
+    /// این یک قفل نقطه‌ای روی ردیف Order است (نه قفل توزیع‌شدهٔ Shipping و نه ادعای serializability):
+    /// نویسندهٔ انتخاب که ریشه را جایگزین می‌کند همان ردیف را به‌روزرسانی می‌کند، پس تا پایان تراکنش
+    /// هیچ نسخهٔ مخلوطی نمی‌تواند پایدار شود. مالکیت نقطه‌ای است: فقط در همان لحظه خوانده می‌شود.
+    /// </remarks>
+    private async Task LockStoredCapturedRootAsync(
+        Guid cartId,
+        long expectedRevision,
+        CancellationToken cancellationToken)
+    {
+        var revisions = await _db.Database
+            .SqlQueryRaw<long>(
+                "SELECT selection_revision AS \"Value\" FROM \"order\".cart_shipping_drafts "
+                + "WHERE cart_id = {0} FOR UPDATE",
+                cartId)
+            .ToListAsync(cancellationToken);
+
+        if (revisions.Count != 1 || revisions[0] != expectedRevision)
+        {
+            throw new ContractOperationException(CapturedConflict);
+        }
     }
 
     /// <summary>

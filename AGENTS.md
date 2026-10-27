@@ -1,4 +1,48 @@
-# CURRENT — 233-R1 EXECUTED PARTIAL: bypass closed + real acceptance wired; positive submit NOT proven — 2026-10-27
+# CURRENT — 233-R2 EXECUTED: real positive submit through the actual process — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2/{TASK.md,RESULT.md}; a correction
+was appended to 233-R1/RESULT.md. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no checkout/payment
+activation, no frontend/HMR/browser/Host-FE/runtime change, no shared migration/schema/baseline edit, no live write.
+Base = the issue commit; elapsed ≈100 min vs HARD45 — recorded NONCOMPLIANT (positive reached, so the
+"stop at source cutoff" branch was not taken).
+LANDED: the four reviewed source blockers are repaired by MOVING code — `StorefrontCapturedGroupCompositionCore`
+(reader-free, scoped) owns ValidatePlan/ValidateFacts/candidate/216/calendar so `CheckoutDirectory` and the 218
+composer share it with no DI cycle (real module-scope resolution fact); `EnsurePlanIsValid` runs BEFORE the cart/facts
+read; facts/plans/accepted groups all key by the persisted `ShippingGroupId.ToString("N")`; `ComposeFromFactsAsync`
+validates against `request.Command.CartId/ExpectedCartVersion`; `sellerByOffer.ToDictionary` is gone (two lines may
+share one OfferId; per-line key/offer/seller checks only). Acceptance is now invoked INSIDE
+`CheckoutProcessManager`'s existing TransactionScope, before reservation, with a narrow Order-row
+`SELECT selection_revision … FOR UPDATE` compare of the caller's parsed revision (point-in-time lock, NOT
+distributed serializability, no Shipping-schema lock).
+EXECUTED PROOF on ONE task-owned disposable postgres:17-alpine 15433/order_tb231/tb231 (identity asserted before the
+normal migration chain; container removed, port verified closed): new `CapturedFinalSubmitIntegrationTests` **12/12**
+— real public `CheckoutDirectory.SubmitAsync` positive for TWO sellers on ONE Store binding/shared snapshot with
+distinct persisted groups/line sets/area+row/date/fractional 100ns hours/fees, final goods 99/198 reaching the
+matching 216 calls, persisted checkout + SellerOrder lines + order shipping groups carrying compact `AcceptedEvidence`
+(payable vs carrier collect kept separate), one whole-cart quote, zero recursive 217 preview; lawful duplicate
+`OfferId` across two lines; SEVEN parameterized early refusals (gate OFF, owner, stale pointer, changed money,
+changed hour, coupon, wrong cart/version) each with zero reservation/order/conversion; barrier failure after the order
+write leaves zero checkout/group rows and the SAME exception instance; repeat submit after a pointer change returns
+the ORIGINAL checkout with no extra quote/pointer calls and one reservation. Directly affected classes ran ONCE with
+it: **124/124**. Affected Order projects build 0 errors. Two in-task corrections (assert order, shared-offer
+discriminator) exceeded the one-correction budget — recorded.
+NOT DELIVERED (PROMINENT): **AddressBook saved-address authority is NOT implemented** — the destination is still
+resolved with `IGeographyLookup.ResolveLegacyAsync` passing `countryCode: null`, and `SavedAddressId` is not re-read
+through AddressBook Contracts, so command display strings are not verified against the address book and a permissive
+geography fake can make the destination match; the true concurrent-advance case is only a sequential stale
+pointer/revision control; the 219 read is an Order-side Contracts port, never live/HTTP; coupon read/selection/commit
+parity, public `CommitAsync`/`ProjectPaymentDraftAsync` (still `not_ready`), payment provider and every frontend path
+remain closed. No live storefront/StartPayment exercise, no final-checkout certification.
+PRESERVED: 231/232 migrations WRITTEN/sharedNOTAPPLIED, stale EF snapshot gap retained, no baseline edit;
+`CheckoutEnabled`/preview/selection checked in OFF; the user's visible review window, live Host/FE, previewON/count7,
+runtime data, cart, address book, draft, rates, week, pointer and assignments untouched (never enumerated/read/
+reloaded/closed). Retained unfixed: 230-R1 empty-key refresh/retry + in-flight new-key wait, cross-owner label
+map/decoder limits, Offer API proof gaps, 227 mobile empty-note residual, 225-R1 lost unsaved user LOCAL edits.
+TB185 paused/default-OFF/PendingAllocation.
+NEXT (Architect): issue a bounded slice for AddressBook saved-address authority (real actor, real country code),
+true concurrent advance, and coupon read/selection/commit parity — or accept this as the submit-integration proof.
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+# SUPERSEDED — 233-R1 EXECUTED PARTIAL: bypass closed + real acceptance wired; positive submit NOT proven — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1/{TASK.md,RESULT.md}.
 Base `388ca996f`. Status: **EXECUTED — PARTIAL**, NOT accepted, no user Visual ACCEPT, no live/HTTP/browser run,

@@ -108,3 +108,22 @@ residual, unrecovered 225-R1 unsaved LOCAL user edits. TB185 stays paused/defaul
 NEXT (Architect): decide whether to issue a bounded fixture-building task whose ONLY goal is the end-to-end
 `SubmitAsync` positive with real reserve/convert seams (so the acceptance receipt is actually exercised), or to
 accept this slice as wiring-only. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+## CORRECTION (2026-10-27, appended by 233-R2 — original text preserved above)
+
+Root's 233-R1/ARCHITECT-REVIEW.md finding is confirmed against actual source ce7356217: this slice could
+not pass a positive submit. Recorded source blockers: (1) CheckoutDirectory took a captured composer whose
+ICheckoutShippingGroupGoodsFactsReader resolved the same CheckoutDirectory — a constructor CYCLE, so no real
+DI scope could resolve the directory; (2) facts keyed groups by GUID while plans keyed them by MethodCode, so two
+sellers on one binding collided; (3) ComposeFromFactsAsync validated the facts against the facts' OWN
+CartId/CartVersion instead of the command; (4) a sellerByOffer.ToDictionary broke lawful carts where two lines
+share one OfferId. The acceptance gate itself was also outside the CheckoutProcessManager transaction, so the
+root revision was compared without a lock and before reservation.
+
+All four are repaired in 233-R2 (StorefrontCapturedGroupCompositionCore reader-free core, persisted
+ShippingGroupId keys, command-bound facts validation, per-line assignment checks) and the acceptance now runs inside
+the existing transaction with a SELECT … FOR UPDATE root lock. The positive and the refusal matrix were executed
+through real CheckoutDirectory.SubmitAsync — see ../TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2/RESULT.md.
+Still open there: AddressBook saved-address authority (country code passed as 
+ull), a true concurrent advance, and
+the coupon parity. No acceptance/Visual ACCEPT is implied by this correction.

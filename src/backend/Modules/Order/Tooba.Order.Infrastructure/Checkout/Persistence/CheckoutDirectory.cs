@@ -68,7 +68,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly IOfferFulfillmentAssignmentLookup? _offerAssignments;
     internal readonly IShippingTypeReader? _shippingTypes;
     internal readonly IShippingSelectedCapturedRevisionLookup? _selectedCaptures;
-    internal readonly Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupProjectionComposer? _capturedComposer;
+    internal readonly Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupCompositionCore? _capturedComposition;
     internal readonly IGeographyLookup? _geography;
     internal readonly ICurrentEdition? _edition;
     internal readonly ICurrentTenant? _tenant;
@@ -104,7 +104,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         IOfferFulfillmentAssignmentLookup? offerAssignments = null,
         IShippingTypeReader? shippingTypes = null,
         IShippingSelectedCapturedRevisionLookup? selectedCaptures = null,
-        Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupProjectionComposer? capturedComposer = null,
+        Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupCompositionCore? capturedComposition = null,
         IGeographyLookup? geography = null,
         ICurrentEdition? edition = null,
         ICurrentTenant? tenant = null)
@@ -138,7 +138,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _offerAssignments = offerAssignments;
         _shippingTypes = shippingTypes;
         _selectedCaptures = selectedCaptures;
-        _capturedComposer = capturedComposer;
+        _capturedComposition = capturedComposition;
         _geography = geography;
         _edition = edition;
         _tenant = tenant;
