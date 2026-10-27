@@ -188,3 +188,19 @@ scope + earlier history untouched. No source, test, gate, schema or runtime file
 
 Expected-Base-SHA for the Architect review = 5baee32b (correction) with implementation commit cb3d054bb and
 merge 2c452586 on top; Code-SHA / Evidence-SHA = the pushed main tip containing all three.
+
+## H — CORRECTION by TB-236 (2026-10-27, recorded evidence only)
+
+The 235-R1 claim that `StorefrontFullOwnerVerticalTests` exercised "one coherent accepted preview after a REAL
+selection advance" must be read narrowly: that test advanced the writer **before** calling
+`ProjectPaymentDraftAsync`, so it never covered the inter-read boundary (facade draft read → core fresh read), and
+its two revisions kept the SAME per-group dates. The replacement did produce a coherent revision/money preview with
+zero writes, but it was **not** proof that a root advanced *between* the outer and inner reads is read freshly, and
+it was **not** proof of aggregated-date absence (the groups agreed on dates).
+
+TB-236 closes exactly that gap through an EXISTING TEST port (`IStorefrontShippingDraftStore` wrapper passed into the
+owner vertical, no production hook, no private-map seeding): the root is advanced to revision 2 with +40 per group
+and genuinely different dates after the facade read and before the core read, and the response describes the fresh
+root with `"2"`, three distinct dates and an absent aggregated date/window.
+See `../TB-SHIPPING-CAPTURED-COUPON-CONTEXT-PARITY-236/RESULT.md` §C. No 235-R1 source claim is retracted beyond
+this boundary wording.
