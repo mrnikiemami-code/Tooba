@@ -692,7 +692,8 @@ public sealed class StorefrontShippingService
                 group.SelectedDeliveryDate,
                 group.SelectedDeliveryTimeWindow,
                 group.LeadDays,
-                group.Lines.Select(x => x.CartLineId).ToArray()))
+                group.Lines.Select(x => x.CartLineId).ToArray(),
+                group.AcceptedEvidence))
             .ToArray();
 
     private async Task<StorefrontEligibleMethods> LoadEligibleMethodsAsync(

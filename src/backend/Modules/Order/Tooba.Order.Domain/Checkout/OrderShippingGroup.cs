@@ -69,6 +69,12 @@ public sealed class OrderShippingGroup
     /// <summary>زمان snapshot.</summary>
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>
+    /// شاهد فشردهٔ پذیرفته‌شدهٔ همین گروه (TB-231). پس از ثبت سفارش تغییرناپذیر است؛ سفارش‌های
+    /// قدیمی آن را null دارند. هیچ قیمت/تعرفهٔ فعلی این مقدار را بازمحاسبه نمی‌کند.
+    /// </summary>
+    public ShippingGroupAcceptedEvidence? AcceptedEvidence { get; private set; }
+
     /// <summary>عضویت خطوط سفارش.</summary>
     public List<OrderShippingGroupLine> Lines { get; } = [];
 
@@ -116,6 +122,21 @@ public sealed class OrderShippingGroup
             throw new ContractOperationException(OrderShippingGroupFault.OriginUnverified);
         }
 
+        // TB-231: شاهد فشرده اختیاری است، اما وقتی هست باید با همین گروه بخواند؛ نه clamp، نه بازمحاسبه.
+        var evidence = plan.AcceptedEvidence;
+        if (evidence is not null)
+        {
+            if (!string.Equals(evidence.Currency, currency, StringComparison.Ordinal))
+            {
+                throw new ContractOperationException(ShippingGroupEvidenceFault.CurrencyMismatch);
+            }
+
+            if (evidence.PayableAtCheckoutAmount != plan.ShippingCharge)
+            {
+                throw new ContractOperationException(ShippingGroupEvidenceFault.PayableMismatch);
+            }
+        }
+
         return new OrderShippingGroup
         {
             ShippingGroupId = plan.ShippingGroupId,
@@ -135,6 +156,7 @@ public sealed class OrderShippingGroup
             LeadDays = Math.Max(0, plan.LeadDays),
             State = ConfirmedState,
             CreatedAt = now,
+            AcceptedEvidence = evidence,
         };
     }
 
@@ -246,4 +268,5 @@ public sealed record OrderShippingGroupPlan(
     DateOnly? RequestedDeliveryDate,
     string? RequestedDeliveryTimeWindow,
     int LeadDays,
-    IReadOnlyList<Guid> CartLineIds);
+    IReadOnlyList<Guid> CartLineIds,
+    ShippingGroupAcceptedEvidence? AcceptedEvidence = null);

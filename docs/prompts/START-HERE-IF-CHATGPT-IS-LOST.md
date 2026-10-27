@@ -1,4 +1,62 @@
-# CURRENT —230-R1 accepted READ user trial; issued231 compact order evidence —2026-10-27
+﻿# CURRENT — 231 executed PARTIAL: compact per-group order evidence stored, no live writer — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231/{RESULT.md,RECEIPTS.md,TASK.md}.
+Base `5a3070567`. Status: **EXECUTED — PARTIAL**, not accepted, no capture checkout, no user Visual ACCEPT.
+230-R1 stays accepted FOR READ-ONLY user retest only.
+
+A — ONE cohesive Order-owned value `ShippingGroupAcceptedEvidence` (Order.Domain/Checkout): shared snapshot
+reference (SnapshotId, DraftId, SourceRevision, FormatVersion=1 only, SelectionVersion), matched Shipping
+AreaGroupId/RateRowId, optional ShippingTypeId, optional existing `OfferFulfillmentResponsibility` (unknown stays
+null, never inferred), accepted Freight/Packaging/Currency/PayableAtCheckout/CarrierCollect as exact decimals,
+accepted ReceivingStart/End + TimeZone + optional Min/Max delivery days. All-or-none: null (legacy) or complete;
+`Create` refuses empty ids, nonpositive revision/token/version, unsupported format, undefined enum, negative
+money, non-3-letter currency, inverted interval, empty timezone, half/inverted days — all BEFORE mutation, with
+stable `shipping.group.evidence.*` faults. No id/timezone/owner invented, no amount clamped or recomputed.
+Wiring is the EXISTING path: `CartShippingDraftGroup.AcceptedEvidence` + `ReplaceAcceptedEvidence` (replaces only
+that group, refuses currency/payable mismatch), trailing optional `OrderShippingGroupPlan.AcceptedEvidence`,
+`OrderShippingGroup.Create` stores it privately (no public mutation), and `StorefrontShippingService
+.BuildOrderGroupPlans` carries it. No Shipping.Domain/Infrastructure reference, no HTTP/DTO accepting evidence
+from a browser, no Payment/Settlement payer change, no new quote authority.
+
+B — storage: ONE additive migration `20261027150000_AddShippingGroupAcceptedEvidence` adds the SAME 19 nullable
+`accepted_*` columns to the EXISTING `order.cart_shipping_groups` and `order.order_shipping_groups`, plus ONE
+small `ix_order_shipping_groups_accepted_snapshot_id`. No cross-module FK, no snapshot copy, no history
+subsystem, no backfill (legacy rows stay NULL). Measured: 19 scalar columns per group row, zero json/jsonb,
+constant size per GROUP not per line. Owner/method/charge/currency/dates/lead-days are REUSED from existing
+columns, not duplicated. Migration is WRITTEN and NOT applied to shared `tooba_alpha`/store-alpha; it exists only
+on the task-owned disposable DB. `OrderDbContextModelSnapshot.cs` is byte-identical (the tool re-scaffolded the
+pre-existing stale baseline, so that generated migration was deleted; hand-written additive SQL follows the
+20261016 precedent). No existing migration edited, no baseline regenerated.
+
+C — proof only on the task-owned disposable PostgreSQL `127.0.0.1:15433/order_tb231/tb231` (identity verified
+before DDL, normal Order migration chain, `TOOBA_TB231_ORDER_POSTGRES` fails closed). 21/21 focused facts: two
+groups on ONE SnapshotId keep distinct area/row/money/date through materialization AND persist/readback with
+unchanged group/line membership; a later draft replacement (new snapshot/amount/selection version) never
+rewrites the stored order's old snapshot reference, money, receiving start or selection version (read uses Order
+storage only); legacy groups persist NULL evidence; 15 invalid/partial + incoherent cases refuse with no partial
+mutation; storage shape = 19 nullable accepted_* columns, 0 json/jsonb, one snapshot index; replacing/clearing one
+group leaves the sibling untouched. Unchanged materializer class re-run 9/9. Order.Infrastructure, Order.Tests
+and Host build 0 errors. No whole-suite/guard wildcard loop.
+
+D — FIRST USER HANDOFF: local preview runtime left untouched (Host 5088 PID 24660, FE 3000 PID 28288, previewON/
+count7, no rebuild/restart/migration). ONE VISIBLE installed-Chrome window opened with the EXISTING task-owned
+`D:\temp\tb229r2-chrome` profile on `http://127.0.0.1:3000/fa/shipping` (PID 34788) after stopping ONLY that
+profile's own headless browser (PID 33524/port 9336); normal logged-in session/cart, no password/token in message
+or git, no destination/address/cart/rate changed. That is the dedicated REVIEW window: not automated, reloaded or
+tab-enumerated afterwards. All 231 proof used the isolated DB, never that window or the live runtime.
+
+HONEST: no production writer composes evidence yet, so every real draft/order group stores NULL and
+SaveSelection/Commit still refuse with `storefront.captured_preview.not_ready` (unchanged). No historical reader
+endpoint exists; "no mutable Shipping draft needed" is a storage fact, not an implemented read. Retained and NOT
+fixed: 230-R1 empty-key destination failure/retry gap + in-flight new-key wait, cross-owner label map/decoder
+id-coercion limits, Offer API proof gaps, 227 mobile empty-note residual, unrecovered 225-R1 user LOCAL tab edit
+loss. SingleStore trial does not certify Marketplace. Elapsed ≈16 min vs HARD35 with one correction round — still
+NOT a process PASS. NEXT (Architect): trusted server composer (selected revision + cart/version + Offer/type/
+quote/date revalidation) writing this evidence inside the existing atomic boundary, then the Order-storage-only
+historical read; captured checkout stays not_ready until then. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+TB185 paused/default-OFF/PendingAllocation preserved.
+
+# SUPERSEDED — 231 issued; 230-R1 accepted READ user trial — 2026-10-27
 
 Active: TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231. Add compact evidence to EXISTING cart/order shipping
 groups/materializer; shared capture reference+accepted money/date, no full authored JSON perorder/line.

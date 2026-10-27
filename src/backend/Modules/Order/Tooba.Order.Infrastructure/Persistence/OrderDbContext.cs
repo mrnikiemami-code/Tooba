@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Order.Domain;
+using Tooba.Order.Domain.Checkout;
 using ReservationCycleEntity = Tooba.Order.Domain.Reservation.ReservationCycle;
 using Tooba.Persistence;
 
@@ -174,6 +176,9 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.State).HasMaxLength(16);
             entity.HasIndex(x => x.CartId);
             entity.HasIndex(x => new { x.CartId, x.SellerPartyId, x.MethodCode }).IsUnique();
+            entity.OwnsOne(
+                x => x.AcceptedEvidence,
+                owned => ConfigureAcceptedEvidence<CartShippingDraftGroup>(owned));
             entity.HasMany(x => x.Lines)
                 .WithOne()
                 .HasForeignKey(x => x.ShippingGroupId)
@@ -205,6 +210,14 @@ public sealed class OrderDbContext : DbContext
             entity.HasIndex(x => x.CheckoutId);
             entity.HasIndex(x => x.SellerOrderId);
             entity.HasIndex(x => new { x.CheckoutId, x.SellerPartyId, x.MethodCode }).IsUnique();
+            entity.OwnsOne(
+                x => x.AcceptedEvidence,
+                owned =>
+                {
+                    ConfigureAcceptedEvidence<OrderShippingGroup>(owned);
+                    // ارجاع منطقی snapshot برای ردیابی تاریخی؛ یک ایندکس کوچک، بدون پوشش گسترده.
+                    owned.HasIndex(x => x.SnapshotId);
+                });
             entity.HasMany(x => x.Lines)
                 .WithOne()
                 .HasForeignKey(x => x.ShippingGroupId)
@@ -378,6 +391,43 @@ public sealed class OrderDbContext : DbContext
             entity.HasIndex(x => x.CorrelationId);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
+    }
+
+    /// <summary>
+    /// نگاشت مشترک شاهد فشردهٔ گروه ارسال (TB-231): ستون‌های nullable در همان جدول گروه.
+    /// همهٔ ستون‌ها nullable هستند تا گروه‌های قدیمی بدون شاهد معتبر بمانند.
+    /// </summary>
+    private static void ConfigureAcceptedEvidence<TEntity>(
+        OwnedNavigationBuilder<TEntity, ShippingGroupAcceptedEvidence> owned)
+        where TEntity : class
+    {
+        owned.Property(x => x.SnapshotId).HasColumnName("accepted_snapshot_id");
+        owned.Property(x => x.DraftId).HasColumnName("accepted_draft_id");
+        owned.Property(x => x.SourceRevision).HasColumnName("accepted_source_revision");
+        owned.Property(x => x.FormatVersion).HasColumnName("accepted_format_version");
+        owned.Property(x => x.SelectionVersion).HasColumnName("accepted_selection_version");
+        owned.Property(x => x.Responsibility).HasColumnName("accepted_responsibility");
+        owned.Property(x => x.AreaGroupId).HasColumnName("accepted_area_group_id");
+        owned.Property(x => x.RateRowId).HasColumnName("accepted_rate_row_id");
+        owned.Property(x => x.ShippingTypeId).HasColumnName("accepted_shipping_type_id");
+        owned.Property(x => x.FreightAmount).HasColumnName("accepted_freight_amount").HasPrecision(18, 2);
+        owned.Property(x => x.PackagingAmount).HasColumnName("accepted_packaging_amount").HasPrecision(18, 2);
+        owned.Property(x => x.Currency)
+            .HasColumnName("accepted_currency")
+            .HasMaxLength(ShippingGroupAcceptedEvidence.MaxCurrencyLength);
+        owned.Property(x => x.PayableAtCheckoutAmount)
+            .HasColumnName("accepted_payable_at_checkout_amount")
+            .HasPrecision(18, 2);
+        owned.Property(x => x.CarrierCollectAmount)
+            .HasColumnName("accepted_carrier_collect_amount")
+            .HasPrecision(18, 2);
+        owned.Property(x => x.ReceivingStartDate).HasColumnName("accepted_receiving_start_date");
+        owned.Property(x => x.ReceivingEndDate).HasColumnName("accepted_receiving_end_date");
+        owned.Property(x => x.ReceivingTimeZone)
+            .HasColumnName("accepted_receiving_time_zone")
+            .HasMaxLength(ShippingGroupAcceptedEvidence.MaxTimeZoneLength);
+        owned.Property(x => x.MinimumDeliveryDays).HasColumnName("accepted_minimum_delivery_days");
+        owned.Property(x => x.MaximumDeliveryDays).HasColumnName("accepted_maximum_delivery_days");
     }
 }
 

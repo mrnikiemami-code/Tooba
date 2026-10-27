@@ -165,6 +165,12 @@ public sealed class CartShippingDraftGroup
     /// <summary>پنجرهٔ ساعتی انتخابی.</summary>
     public string? SelectedDeliveryTimeWindow { get; private set; }
 
+    /// <summary>
+    /// شاهد فشردهٔ پذیرفته‌شدهٔ همین گروه (TB-231). گروه‌های قدیمی/بدون پذیرش trusted آن را null دارند.
+    /// این فیلد مرجع snapshot و مبلغ/دریافت نهایی است، نه payload خام یا بازمحاسبهٔ تعرفه.
+    /// </summary>
+    public ShippingGroupAcceptedEvidence? AcceptedEvidence { get; private set; }
+
     /// <summary>روزهای آماده‌سازی مؤثر روش.</summary>
     public int LeadDays { get; private set; }
 
@@ -291,6 +297,31 @@ public sealed class CartShippingDraftGroup
         SelectedDeliveryTimeWindow = string.IsNullOrWhiteSpace(selectedDeliveryTimeWindow)
             ? null
             : selectedDeliveryTimeWindow.Trim();
+    }
+
+    /// <summary>
+    /// شاهد فشردهٔ همین گروه را جایگزین می‌کند (null = پاک‌کردن شاهد همین گروه).
+    /// فقط ترکیب trusted سمت سرور این را صدا می‌زند؛ هیچ transport دادهٔ مرورگر را اینجا نمی‌نشاند.
+    /// گروه‌های دیگر و بقیهٔ فیلدهای همین گروه دست‌نخورده می‌مانند.
+    /// </summary>
+    public void ReplaceAcceptedEvidence(ShippingGroupAcceptedEvidence? evidence, DateTimeOffset now)
+    {
+        if (evidence is not null)
+        {
+            var currency = (Currency ?? string.Empty).Trim();
+            if (!string.Equals(currency, evidence.Currency, StringComparison.Ordinal))
+            {
+                throw new ContractOperationException(ShippingGroupEvidenceFault.CurrencyMismatch);
+            }
+
+            if (evidence.PayableAtCheckoutAmount != ShippingAmount)
+            {
+                throw new ContractOperationException(ShippingGroupEvidenceFault.PayableMismatch);
+            }
+        }
+
+        AcceptedEvidence = evidence;
+        UpdatedAt = now;
     }
 
     private static string Normalize(string value, int maxLength)
