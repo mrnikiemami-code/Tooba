@@ -178,7 +178,13 @@ public sealed record StorefrontShippingProjection(
     /// مالک از فهرست حذف شده‌اند، با دلیل پایدار. <c>null</c> یعنی دروازهٔ نرخ مالک خاموش است و رفتار
     /// قدیمی عیناً حفظ شده؛ هیچ مبلغ یا صفر ساختگی برای این روش‌ها اعلام نمی‌شود.
     /// </summary>
-    IReadOnlyList<StorefrontShippingUnavailableMethodView>? UnavailableMethods = null);
+    IReadOnlyList<StorefrontShippingUnavailableMethodView>? UnavailableMethods = null,
+    /// <summary>
+    /// TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229: پیش‌نمایش <b>خواندنی</b> گروه‌های ارسال
+    /// capture‌شده. <c>null</c> یعنی کلید پیش‌فرض-خاموش فعال نیست و پاسخ دقیقاً همان شکل قبلی است؛ هرگز
+    /// به‌عنوان روش/قیمت/تاریخ قابل انتخاب خوانده نمی‌شود.
+    /// </summary>
+    StorefrontCapturedPreviewView? CapturedPreview = null);
 
 /// <summary>
 /// افق زمان‌بندی یک گروه ارسال. همهٔ مقادیر از منابع authoritative سرور می‌آید

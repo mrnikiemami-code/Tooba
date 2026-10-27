@@ -146,6 +146,45 @@ export interface StorefrontShippingProjection {
    * (`null`)؛ در آن حالت دقیقاً رفتار قبلی حفظ می‌شود.
    */
   unavailableMethods: StorefrontShippingUnavailableMethod[] | null;
+  /**
+   * TB-229: پیش‌نمایش فقط‌خواندنی گروه‌های capture‌شده. `null` یعنی کلید سرور خاموش است و رفتار دقیقاً
+   * قبلی است؛ این بخش هیچ روش/قیمتی به `methods` تزریق نمی‌کند و قابل انتخاب/ثبت نیست.
+   */
+  capturedPreview: StorefrontCapturedPreview | null;
+}
+
+/** TB-229: یک روش پیشنهادی از بازبینی capture‌شدهٔ همان گروه. */
+export interface StorefrontCapturedPreviewMethod {
+  methodLabel: string;
+  serviceCode: string;
+  optionCode: string | null;
+  freightAmount: number | null;
+  packagingAmount: number | null;
+  payableAtCheckoutAmount: number | null;
+  carrierCollectAmount: number | null;
+  currency: string;
+  earliestEligibleDate: string | null;
+  availableDates: StorefrontDeliveryDateOption[];
+  unavailableReason: string | null;
+}
+
+/** TB-229: یک گروه ارسال capture‌شده با روش‌ها و تقویم خودش. */
+export interface StorefrontCapturedPreviewGroup {
+  groupKey: string;
+  typeLabel: string | null;
+  sellerPartyId: string;
+  cartLineIds: string[];
+  finalGoodsAmountAfterDiscountAndTax: number;
+  methods: StorefrontCapturedPreviewMethod[];
+  unavailableReason: string | null;
+}
+
+/** TB-229: پاسخ خواندنی؛ `enabled === false` یعنی هیچ‌چیز از این مسیر خوانده نشد. */
+export interface StorefrontCapturedPreview {
+  enabled: boolean;
+  currency: string;
+  groups: StorefrontCapturedPreviewGroup[];
+  unavailableReason: string | null;
 }
 
 export interface StorefrontShippingSelectionInput {
@@ -190,6 +229,12 @@ function asNumber(value: unknown, fallback = 0): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+/** TB-229: مبلغ nullable؛ نبود مقدار «صفر» نیست. */
+function asNullableNumber(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  return asNumber(value, Number.NaN) === Number.NaN ? null : asNumber(value);
 }
 
 function asBool(value: unknown): boolean {
@@ -391,6 +436,65 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
           })
           .filter((m): m is StorefrontShippingUnavailableMethod => m !== null)
       : null,
+    capturedPreview: mapCapturedPreview(prop(item, "capturedPreview", "CapturedPreview")),
+  };
+}
+
+/**
+ * TB-229: پیش‌نمایش خواندنی گروه‌های capture‌شده. هر مقدار ناشناخته/ناقص ⇒ `null` (رفتار قبلی)،
+ * چون نمایش نیمه‌خوانده‌شدهٔ این بخش نمی‌تواند به قیمت/تاریخ ساختگی تبدیل شود.
+ */
+function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
+  const raw = asRecord(value);
+  if (!raw) return null;
+  const groupsRaw = prop(raw, "groups", "Groups");
+  const groups: StorefrontCapturedPreviewGroup[] = [];
+  for (const row of Array.isArray(groupsRaw) ? groupsRaw : []) {
+    const g = asRecord(row);
+    if (!g) continue;
+    const groupKey = asString(prop(g, "groupKey", "GroupKey"));
+    if (!groupKey) continue;
+    const methodsRaw = prop(g, "methods", "Methods");
+    const methods: StorefrontCapturedPreviewMethod[] = [];
+    for (const m of Array.isArray(methodsRaw) ? methodsRaw : []) {
+      const method = asRecord(m);
+      if (!method) continue;
+      const serviceCode = asString(prop(method, "serviceCode", "ServiceCode"));
+      if (!serviceCode) continue;
+      methods.push({
+        methodLabel: asString(prop(method, "methodLabel", "MethodLabel"), serviceCode),
+        serviceCode,
+        optionCode: asString(prop(method, "optionCode", "OptionCode")) || null,
+        freightAmount: asNullableNumber(prop(method, "freightAmount", "FreightAmount")),
+        packagingAmount: asNullableNumber(prop(method, "packagingAmount", "PackagingAmount")),
+        payableAtCheckoutAmount: asNullableNumber(
+          prop(method, "payableAtCheckoutAmount", "PayableAtCheckoutAmount"),
+        ),
+        carrierCollectAmount: asNullableNumber(prop(method, "carrierCollectAmount", "CarrierCollectAmount")),
+        currency: asString(prop(method, "currency", "Currency"), "IRR"),
+        earliestEligibleDate: asString(prop(method, "earliestEligibleDate", "EarliestEligibleDate")) || null,
+        availableDates: asArray(prop(method, "availableDates", "AvailableDates")).map(mapDateOption),
+        unavailableReason: asString(prop(method, "unavailableReason", "UnavailableReason")) || null,
+      });
+    }
+    const lineIdsRaw = prop(g, "cartLineIds", "CartLineIds");
+    groups.push({
+      groupKey,
+      typeLabel: asString(prop(g, "typeLabel", "TypeLabel")) || null,
+      sellerPartyId: asString(prop(g, "sellerPartyId", "SellerPartyId")),
+      cartLineIds: Array.isArray(lineIdsRaw) ? lineIdsRaw.map((id) => String(id)) : [],
+      finalGoodsAmountAfterDiscountAndTax: asNumber(
+        prop(g, "finalGoodsAmountAfterDiscountAndTax", "FinalGoodsAmountAfterDiscountAndTax"),
+      ),
+      methods,
+      unavailableReason: asString(prop(g, "unavailableReason", "UnavailableReason")) || null,
+    });
+  }
+  return {
+    enabled: prop(raw, "enabled", "Enabled") === true,
+    currency: asString(prop(raw, "currency", "Currency"), "IRR"),
+    groups,
+    unavailableReason: asString(prop(raw, "noticeReason", "NoticeReason")) || null,
   };
 }
 

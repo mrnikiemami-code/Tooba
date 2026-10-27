@@ -1,4 +1,22 @@
-# CURRENT — Architect reviewed228 PARTIAL; issued229 — 2026-10-27
+# CURRENT — 229 EXECUTED PARTIAL: read path wired behind default-OFF option; migration applied — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229/{RESULT.md,TASK.md}.
+Base `02250f55f`. Status EXECUTED — PARTIAL, not accepted, NO live browser trial.
+`StorefrontShippingService.ProjectAsync` now: real cart → ONE Offer assignment batch → explicit partition
+(responsibility + real assigned type + real offer seller) → catalog bindings → ONE 219 read per distinct
+owner+binding → ONE 218 composition for the whole partition. Additive nullable `CapturedPreview` on the
+projection; `null` when OFF (legacy response unchanged). FE renders it inside the EXISTING group cards.
+Option `Tooba:StorefrontCapturedPreview:Enabled` default OFF = zero Offer/Fulfillment/Shipping calls.
+With the option ON, `SaveSelectionAsync`/`CommitAsync` throw `storefront.captured_preview.not_ready` FIRST.
+Migration `20261027120000_AddOfferFulfillmentAssignment` **APPLIED** on tooba_alpha/store-alpha (plan showed one
+pending Offer module; apply result=ok, pendingCount=0); legacy columns stay NULL.
+Proof: two Order projects build 0 errors; new `StorefrontCapturedPreviewPlannerTests` 9/9; FE tsc clean.
+NOT done: live URL/page/screenshots, positive composition run, Offer admin API integration class.
+Elapsed ≈70 min vs HARD45 ⇒ NONCOMPLIANT, not a process PASS.
+NEXT: live ON-option Storefront GET + screenshots in a task-owned browser, then compact-order-evidence +
+selected-capture commit parity. TB185 paused/default-OFF/PendingAllocation.
+
+## SUPERSEDED — Architect reviewed228 PARTIAL; issued229 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229. Finish228 B/C: real cart+batch Offer assignments
 ->219 exact selected revision ->ONE218 composer ->EXISTING Storefront group/date cards. No new design.

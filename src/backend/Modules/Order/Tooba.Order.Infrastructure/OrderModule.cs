@@ -131,6 +131,15 @@ public sealed class OrderModule : IToobaModule
         // (213) ترکیب می‌کند. هیچ مسیر عمومی/فعال‌سازی/انتخاب بازبینی نمی‌سازد.
         services.AddScoped<Application.Storefront.Shipping.CapturedGroupProjection.StorefrontCapturedGroupProjectionComposer>();
 
+        // TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229: مسیر خواندنی واقعی «سبد → انتساب Offer →
+        // انتخاب ۲۱۹ → یک ترکیب ۲۱۸». کلید پیش‌فرض خاموش است؛ خاموش یعنی صفر فراخوانی و همان پاسخ قبلی،
+        // و انتخاب/ثبت هم فقط در حالت روشن صریحاً رد می‌شود. هیچ مالک/پیش‌نویس/بازبینی/مبلغی از مرورگر
+        // پذیرفته نمی‌شود.
+        services.Configure<Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions>(
+            configuration.GetSection(
+                Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions.SectionName));
+        services.AddScoped<Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner>();
+
         // TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163: درز «نرخ مشتریِ مالک‌شدهٔ Shipping» با کلید
         // مستقل و پیش‌فرض خاموش (نبود بخش تنظیمات = false). خاموش یعنی صفر فراخوانی به Shipping و همان
         // قیمت/خطای قدیمی؛ روشن یعنی فقط نرخ authoritative گزینهٔ دقیق قیمت می‌دهد.

@@ -24,6 +24,8 @@ import type {
 } from "./storefront-shipping-group-schedule.ts";
 import { StorefrontShippingUnavailableMethods } from "./storefront-shipping-unavailable-methods.tsx";
 import type { StorefrontShippingUnavailableNotice } from "./storefront-shipping-unavailable-methods.ts";
+import { StorefrontShippingCapturedPreview } from "./storefront-shipping-captured-preview.tsx";
+import type { StorefrontCapturedPreview } from "./storefront-shipping-api.ts";
 
 export interface ShippingGroupCard {
   /** کلید پایدار گروه در کلاینت (فروشندهٔ واقعی + روش canonical). */
@@ -256,6 +258,7 @@ export function StorefrontShippingGroupCards({
   currency,
   schedules,
   selections,
+  capturedPreview = null,
   onSelectMethod,
   onSelectDate,
   onSelectWindow,
@@ -273,10 +276,17 @@ export function StorefrontShippingGroupCards({
   currency: string;
   schedules: Readonly<Record<string, StorefrontShippingGroupSchedule>>;
   selections: Readonly<Record<string, StorefrontShippingGroupSelection>>;
+  /** TB-229: پیش‌نمایش خواندنی گروه‌های capture‌شده؛ `null` یعنی کلید خاموش و رفتار قبلی. */
+  capturedPreview?: StorefrontCapturedPreview | null;
   onSelectMethod: (lineId: string, methodCode: string) => void;
   onSelectDate: (groupKey: string, value: string) => void;
   onSelectWindow: (groupKey: string, value: string) => void;
 }) {
+  // TB-229: نام نمایشی فروشنده از همان گروه‌های واقعی سبد؛ هیچ نام/شناسهٔ ساختگی ساخته نمی‌شود.
+  const sellerNames: Record<string, string> = {};
+  for (const group of groups) sellerNames[group.sellerPartyId] = group.sellerDisplayName;
+  for (const seller of unassigned) sellerNames[seller.sellerPartyId] = seller.sellerDisplayName;
+
   return (
     <div
       className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm"
@@ -296,6 +306,8 @@ export function StorefrontShippingGroupCards({
         notices={unavailableNotices}
         testIdPrefix="shipping-group-unavailable"
       />
+
+      <StorefrontShippingCapturedPreview preview={capturedPreview} sellerNames={sellerNames} />
 
       <div className="space-y-4">
         {unassigned.map((seller) => (

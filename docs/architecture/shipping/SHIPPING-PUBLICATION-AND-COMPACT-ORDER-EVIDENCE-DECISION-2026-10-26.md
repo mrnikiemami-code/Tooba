@@ -1,5 +1,18 @@
 # Shipping publication, separate owner surfaces and compact order evidence — 2026-10-26
 
+## CURRENT READ STATE — 2026-10-27 (TB-229)
+
+`StorefrontShippingService.ProjectAsync` now composes the real captured path **read-only** behind
+`Tooba:StorefrontCapturedPreview:Enabled` (default OFF): real cart → ONE `IOfferFulfillmentAssignmentLookup`
+batch → explicit responsibility/type/seller partition → catalog bindings → ONE
+`IShippingSelectedCapturedRevisionLookup.ReadAsync` per distinct owner+binding → ONE 218 `ComposeAsync`.
+Additive nullable `CapturedPreview` on the projection; `null` when OFF. `20261027120000_AddOfferFulfillmentAssignment`
+is APPLIED on local `tooba_alpha`/store-alpha. With the option ON, `SaveSelectionAsync`/`CommitAsync` refuse
+first with `storefront.captured_preview.not_ready`; no order/reservation/payment path is open yet.
+See `docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229/RESULT.md` (PARTIAL: no live
+browser trial, no positive composition executed). The compact per-order-group evidence rule below still applies
+to the NEXT selection/commit slice and is still unimplemented.
+
 User decision after TB222. Supersedes the temporary removal of publication UI, not the immutable revision architecture.
 
 ## Owner surfaces

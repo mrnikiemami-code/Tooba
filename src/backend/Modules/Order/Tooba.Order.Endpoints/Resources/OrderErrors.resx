@@ -108,6 +108,9 @@
   <data name="shipping.selection.required" xml:space="preserve">
     <value>Complete shipping details first.</value>
   </data>
+  <data name="storefront.captured_preview.not_ready" xml:space="preserve">
+    <value>This shipping preview is read-only. Choosing and submitting the delivery method is not available yet.</value>
+  </data>
   <data name="shipping.firstname.required" xml:space="preserve">
     <value>First name is required.</value>
   </data>

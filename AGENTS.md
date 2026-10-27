@@ -1,4 +1,40 @@
-# CURRENT — Architect reviewed228 PARTIAL; issued229 — 2026-10-27
+# CURRENT — 229 EXECUTED PARTIAL: Storefront group cards read path wired behind default-OFF option — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229/{RESULT.md,TASK.md}.
+Base `02250f55f` (fast-forwarded; the three pre-existing Shipping line-ending drifts never staged).
+Status: **EXECUTED — PARTIAL**, not accepted, NO live browser trial, Host/FE not refreshed.
+
+CONNECTED (read only): `StorefrontShippingService.ProjectAsync` now runs real cart/access/version → ONE
+`IOfferFulfillmentAssignmentLookup` batch over distinct offer ids → explicit partition by responsibility +
+real assigned type + real offer seller → catalog bindings from `IShippingCatalogReader` (active service with
+NULL option or each active option) → ONE `IShippingSelectedCapturedRevisionLookup.ReadAsync` per distinct
+full-owner + canonical service/option → ONE 218 `ComposeAsync` for the complete partition (which does the ONE
+217 goods read and one 216 quote per candidate). Additive nullable `StorefrontShippingProjection.CapturedPreview`;
+`null` when OFF, so the legacy response is unchanged. FE: new `storefront-shipping-captured-preview.tsx` mounted
+inside the EXISTING `StorefrontShippingGroupCards` (one optional prop), same card classes, per-group seller/type/
+post-discount+tax goods amount, per-method freight+packaging, that method's own dates, and on date change THAT
+date's own stored interval. Unavailable groups stay visible with one short reason.
+Option: `Tooba:StorefrontCapturedPreview:Enabled` = **default OFF** (absent ⇒ zero Offer/Fulfillment/Shipping calls).
+Write boundary: with the option ON, `SaveSelectionAsync` and `CommitAsync` both throw
+`storefront.captured_preview.not_ready` (FA/EN resources added) as their FIRST statement — before cart read,
+selection, draft write, order/reservation/payment/cart conversion. Disabling the FE button is not the gate.
+Migration: `20261027120000_AddOfferFulfillmentAssignment` **APPLIED** on real local `tooba_alpha`/store-alpha via
+normal `Tooba.MigrationRunner` after a plan with exactly one pending module (Offer); `result=ok, pendingCount=0`;
+legacy rows keep NULL in both columns. No reset/backfill/reseed, no Host restart.
+
+Proof executed: Order.Application + Order.Infrastructure build 0 errors; new affected class
+`StorefrontCapturedPreviewPlannerTests` **9/9 passed** (default-OFF zero-call control, missing/contradictory
+assignment, unassigned group visible, inactive type, SingleStore Seller unsupported with zero 219 reads, one 219
+read per distinct catalog binding, foreign captured type rejected, cleared pointer rejected, zero candidates ⇒
+composer/217 never called); frontend `tsc --noEmit` clean.
+HONEST GAPS: no live page/URL, no desktop/390 screenshots, no positive composition executed in this task (216/217/
+218 only covered by their own earlier classes), no Offer admin API integration class, positive live quote not
+proven. Elapsed ≈70 min vs HARD45 — NONCOMPLIANT, not a process PASS.
+NEXT (Architect): live Storefront GET with the option ON in a task-owned browser + desktop/390 screenshots, then
+the parity slice (compact shared-snapshot order evidence + selected-captured-revision commit) that may replace the
+not_ready refusal. Compact-order-evidence decision stays mandatory; TB185 paused/default-OFF/PendingAllocation.
+
+## SUPERSEDED — Architect reviewed228 PARTIAL; issued229 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229. Finish228 B/C: real cart+batch Offer assignments
 ->219 exact selected revision ->ONE218 composer ->EXISTING Storefront group/date cards. No new design.

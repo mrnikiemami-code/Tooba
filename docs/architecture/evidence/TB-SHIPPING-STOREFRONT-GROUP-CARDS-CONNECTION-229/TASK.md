@@ -5,13 +5,13 @@ Repository: mrnikiemami-code/Tooba
 Branch: main
 Worker-Id: tooba-worker-01
 Mode: FINISH_EXISTING_228_B_C_WITH_REAL_STOREFRONT_READ_TRIAL
-Expected-Base-SHA: ISSUE_COMMIT_CONTAINING_THIS_TASK
+Expected-Base-SHA: 02250f55f
 HARD45min / implementation stop30 / final15 focused verification+recovery+commit.
 One correction. At source stop preserve honest partial work; never extend to an unbounded proof loop.
 
 OUTCOME
 A real storefront shipping URL must consume the REAL cart -> 228 Offer assignments -> 219 selected immutable
-revision -> ONE218 composition and render each group's OWN result in our EXISTING group/date cards.
+revision -> ONE 218 composition and render each group's OWN result in our EXISTING group/date cards.
 228 delivered A only. Do NOT redesign/reimplement A or add another unconsumed service instead of connecting B/C.
 This is a READ PREVIEW connection, not final checkout delivery. Captured-path selection/commit remains blocked
 in the SAME change; existing legacy branch stays unchanged when preview is OFF.

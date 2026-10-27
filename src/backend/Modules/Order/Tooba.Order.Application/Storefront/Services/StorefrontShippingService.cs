@@ -36,6 +36,7 @@ public sealed class StorefrontShippingService
     private readonly IClock _clock;
     private readonly StorefrontShippingOwnedRateResolver? _ownedRates;
     private readonly IShippingOneLevelCanonicalMethodReader? _canonicalMethods;
+    private readonly Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner? _capturedPreview;
 
     /// <summary>
     /// وابستگی اختیاریِ آخر عمداً پیش‌فرض‌دار است: هر ترکیب‌کننده‌ای که آن را تأمین نکند رفتار قدیمی را
@@ -54,7 +55,8 @@ public sealed class StorefrontShippingService
         IOrderStorefrontActor actor,
         IClock clock,
         StorefrontShippingOwnedRateResolver? ownedRates = null,
-        IShippingOneLevelCanonicalMethodReader? canonicalMethods = null)
+        IShippingOneLevelCanonicalMethodReader? canonicalMethods = null,
+        Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner? capturedPreview = null)
     {
         _carts = carts;
         _checkouts = checkouts;
@@ -69,6 +71,18 @@ public sealed class StorefrontShippingService
         _clock = clock;
         _ownedRates = ownedRates;
         _canonicalMethods = canonicalMethods;
+        _capturedPreview = capturedPreview;
+    }
+
+    /// <summary>
+    /// دروازهٔ یگانهٔ «پیش‌نمایش آمادهٔ تسویه نیست»: در حالت روشن، انتخاب/ثبت پیش از هر نوشتن رد می‌شود.
+    /// </summary>
+    private void EnsureCapturedPreviewIsNotCheckoutReady()
+    {
+        if (_capturedPreview?.IsEnabled == true)
+        {
+            throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
+        }
     }
 
     /// <summary>تصویر ارسال برای سبد جاری.</summary>
@@ -153,6 +167,23 @@ public sealed class StorefrontShippingService
         // سازگاری تک‌گروهی‌اند. در سبد تک‌خطی هیچ افقی ساخته نمی‌شود تا مسیر قدیمی دست‌نخورده بماند.
         var groupHorizons = BuildGroupHorizons(cart, methods, draft, today);
 
+        // TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229: فقط‌خواندنی و پیش‌فرض-خاموش. روشن‌بودن کلید
+        // یعنی مسیر واقعی «سبد → انتساب Offer → انتخاب ۲۱۹ → یک ترکیب ۲۱۸» خوانده می‌شود؛ انتخاب/ثبت
+        // همان کلید را صریحاً رد می‌کند. خاموش یعنی صفر فراخوانی و همان پاسخ قبلی.
+        Models.StorefrontCapturedPreviewView? capturedPreviewView = null;
+        if (_capturedPreview?.IsEnabled == true)
+        {
+            var previewLanguageId = await ResolveLanguageIdAsync(language, cancellationToken);
+            capturedPreviewView = await _capturedPreview.BuildAsync(
+                cart,
+                _actor.BuildCartAccess(guestSecret),
+                destination,
+                effectiveCurrency,
+                previewLanguageId,
+                _shippingOptions.DeliveryHorizonDays,
+                cancellationToken);
+        }
+
         return new StorefrontShippingProjection(
             cart.CartId,
             cart.Version,
@@ -171,7 +202,8 @@ public sealed class StorefrontShippingService
             revalidationMessage,
             StorefrontIranGeography.Provinces,
             groupHorizons.Length == 0 ? null : groupHorizons,
-            eligible.Unavailable);
+            eligible.Unavailable,
+            capturedPreviewView);
     }
 
     /// <summary>
@@ -303,6 +335,11 @@ public sealed class StorefrontShippingService
         string? guestSecret,
         CancellationToken cancellationToken)
     {
+        // TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229: پیش‌نمایش capture‌شده عمداً آمادهٔ تسویه
+        // نیست. این رد پیش از هر خواندن سبد/انتخاب/رزرو/تبدیل انجام می‌شود تا کدهای روش capture‌شده
+        // هرگز به مسیر قیمت/ثبت قدیمی نیفتند. خاموش ⇒ رفتار قبلی عیناً.
+        EnsureCapturedPreviewIsNotCheckoutReady();
+
         var cart = await RequireCartAsync(request.CartId, guestSecret, cancellationToken);
         if (cart.Version != request.ExpectedCartVersion)
         {
@@ -568,6 +605,8 @@ public sealed class StorefrontShippingService
         string? couponCode,
         CancellationToken cancellationToken)
     {
+        EnsureCapturedPreviewIsNotCheckoutReady();
+
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);

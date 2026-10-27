@@ -599,8 +599,9 @@ export function StorefrontShopeivaShipping() {
                   methods={projection.methods}
                   unavailableNotices={unavailableNotices}
                   currency={projection.currency}
-                  schedules={groupSchedules}
-                  selections={groupSelections}
+   schedules={groupSchedules}
+   selections={groupSelections}
+   capturedPreview={projection.capturedPreview}
                   onSelectMethod={(lineId, code) => setLineMethodByLine((prev) => ({ ...prev, [lineId]: code }))}
                   onSelectDate={(groupKey, value) =>
                     setGroupSelections((prev) => setGroupSelection(prev, groupKey, { deliveryDate: value }))

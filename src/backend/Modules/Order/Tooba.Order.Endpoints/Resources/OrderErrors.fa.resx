@@ -108,6 +108,9 @@
   <data name="shipping.selection.required" xml:space="preserve">
     <value>ابتدا اطلاعات ارسال را تکمیل کنید.</value>
   </data>
+  <data name="storefront.captured_preview.not_ready" xml:space="preserve">
+    <value>این پیش‌نمایش ارسال فقط‌خواندنی است و انتخاب/ثبت روش ارسال هنوز در دسترس نیست.</value>
+  </data>
   <data name="shipping.firstname.required" xml:space="preserve">
     <value>نام الزامی است.</value>
   </data>
