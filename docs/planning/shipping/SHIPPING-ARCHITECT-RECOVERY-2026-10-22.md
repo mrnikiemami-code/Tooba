@@ -1,4 +1,42 @@
-# CURRENT — Architect REJECTED229 read delivery; issued229-R1 — 2026-10-27
+# CURRENT — 229-R1 executed: four read-path defects repaired; live card trial blocked at buyer login — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1/{RESULT.md,TASK.md}.
+Base `304ac4da8059e91673cd54306e0930b9bfd94378`. Status: **EXECUTED — PARTIAL**, not accepted.
+All four Architect defects are repaired in the same path: (1) captured money is exact decimal WIRE TEXT with no
+Number/parseFloat round-trip, invalid never becomes 0 or another amount, explicit 0 lawful, unknown goods stays
+null, missing/foreign currency untrusted (never IRR), malformed/duplicate group·method·date untrusted instead of
+silently dropped; (2) method identity is the stable catalog binding serviceCode+optionCode (case-insensitive, one
+219 read per distinct binding) while the translated label is presentation only, so two methods sharing a label
+both survive; (3) the parallel captured component is DELETED and the preview renders inside the EXISTING
+`StorefrontShippingGroupCards` through one optional prop for BOTH single-line and multi-line carts with the legacy
+duplicate row suppressed (`—`), unknown shown as missing not 0; (4) preview date count is an explicit validated
+option `0..90` required when ON (never re-derived from DeliveryHorizonDays; checked-in Enabled stays false), an
+unknown responsibility enum refuses instead of defaulting, contradictory/out-of-request rows fail closed, a known
+business refusal surfaces a precise Refused view instead of an empty cart, dependency exceptions and caller
+cancellation propagate, and SaveSelection/Commit refuse on `storefront.captured_preview.not_ready` as their first
+statement before any cart/draft/order/reservation/payment work when ON (OFF keeps the legacy path).
+Proof (focused only): 18/18 real tests (15 planner incl. the required POSITIVE composition through the REAL 218
+composer + REAL 217 CheckoutDirectory harness with real goods 99.00/198.00, two groups, third unassigned group
+visible, label-sharing bindings both surviving, case variants one pointer read, dependency failure propagating;
+3 write-guard facts driving the actual service methods), 11/11 frontend decoder facts via
+`node --experimental-strip-types --test`, one clean `tsc --noEmit`, Order test build 0 errors.
+HONEST GAP — REAL TRIAL: the current source was built isolated and run on `127.0.0.1:5088` with the option ON and
+an explicit date count, but the storefront shipping route requires an authenticated buyer: the page redirects to
+`/fa/login?returnTo=/fa/shipping` and `POST /v1/storefront/shipping/projection` returned 401
+`checkout.authentication_required`. No buyer session/credentials exist for this task, so the captured cards were
+NOT observed live and NO desktop/390 screenshots exist; that confirmation is not claimed. Original Host restored
+(PID 27588, `D:\temp\tb221-build\out`, preview OFF, `/health` 200); checked-in default stays OFF; no assignment/
+draft/rate/pointer/order write, no migration, no user tab touched.
+Not claimed: Architect acceptance, user Visual ACCEPT, live positive quote or live cards, projection/selection/
+commit parity, compact shared-snapshot order evidence, price/activation/readiness. Actual ≈39 min vs HARD35 —
+recorded NONCOMPLIANT, not a process PASS.
+NEXT (Architect): the single blocking gap is a live authenticated-buyer observation at desktop+390 (needs a
+task-scoped buyer session or explicit credentials), then the parity slice (selected captured revision +
+SaveSelection/Commit) that may replace the `not_ready` refusal, with the compact order-group evidence decision
+still mandatory and unimplemented. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused/default-OFF/
+PendingAllocation preserved; 225-R2/226 accepted and 227's recorded mobile empty-note residual retained.
+
+# SUPERSEDED — Architect REJECTED229 read delivery; issued229-R1 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1. New read-path SOURCE exists but is NOT accepted
 or observed live. Root confirmed money invalid->0 bug (isolated JS reproduction), label used as method

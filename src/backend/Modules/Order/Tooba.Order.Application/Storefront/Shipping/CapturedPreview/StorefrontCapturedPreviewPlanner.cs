@@ -1,3 +1,4 @@
+using System.Globalization;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Cart.Contracts;
@@ -7,6 +8,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Storefront.Models;
+using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 using Tooba.Order.Domain;
 using Tooba.Shipping.Contracts.Rates;
@@ -27,6 +29,9 @@ public static class StorefrontCapturedPreviewReasons
     /// <summary>آفر هنوز مسئولیت انجام ارسال نگرفته است.</summary>
     public const string Unassigned = "storefront.captured_preview.unassigned";
 
+    /// <summary>مقدار مسئولیت خارج از دو خانوادهٔ شناخته‌شده است؛ هیچ نگاشت پیش‌فرضی جای آن نیست.</summary>
+    public const string ResponsibilityInvalid = "storefront.captured_preview.responsibility_invalid";
+
     /// <summary>نوع ارسال انتساب‌شده در کاتالوگ فعال نیست.</summary>
     public const string TypeUnavailable = "storefront.captured_preview.type_unavailable";
 
@@ -42,6 +47,9 @@ public static class StorefrontCapturedPreviewReasons
     /// <summary>ترکیب سرور نتوانست افراز/فکت‌های سبد را تأیید کند.</summary>
     public const string CompositionRefused = "storefront.captured_preview.composition_refused";
 
+    /// <summary>سیاست تعداد تاریخ‌های پیش‌نمایش تنظیم نشده یا خارج از محدودهٔ مجاز است.</summary>
+    public const string AvailableDateCountInvalid = "storefront.captured_preview.available_date_count_invalid";
+
     /// <summary>رد کردن انتخاب/ثبت تا برش parity و شواهد فشردهٔ سفارش — هرگز «آمادهٔ تسویه» نیست.</summary>
     public const string PreviewNotReady = "storefront.captured_preview.not_ready";
 }
@@ -54,7 +62,7 @@ public static class StorefrontCapturedPreviewReasons
 /// <para>
 /// <b>No browser identity.</b> نه مالک، نه پیش‌نویس، نه بازبینی و نه مبلغی از کلاینت پذیرفته نمی‌شود.
 /// مسئولیت از فیلد صریح همان آفر و مالک Seller از فروشندهٔ واقعی همان آفر می‌آید؛ Platform از زمینهٔ
-/// trusted نصب. آفر بدون مسئولیت استنتاج نمی‌شود.
+/// trusted نصب. آفر بدون مسئولیت استنتاج نمی‌شود و مقدار مسئولیت ناشناخته هم رد می‌شود.
 /// </para>
 /// <para>
 /// <b>Read only.</b> هیچ انتخاب/سفارش/رزرو/پرداخت/تبدیل سبد نوشته نمی‌شود.
@@ -76,13 +84,16 @@ public sealed class StorefrontCapturedPreviewPlanner(
     public bool IsEnabled => options.Value.Enabled;
 
     /// <summary>پیش‌نمایش گروه‌ها را می‌سازد؛ خطاهای تجاری به نمای صادقانه ترجمه می‌شوند.</summary>
+    /// <remarks>
+    /// تعداد تاریخ‌های تقویم فقط از سیاست صریح پیش‌نمایش (<c>AvailableDateCount</c>) می‌آید؛ افق روش‌ها
+    /// هرگز به‌عنوان «تعداد تاریخ قابل ارائه» بازتفسیر نمی‌شود.
+    /// </remarks>
     public async Task<StorefrontCapturedPreviewView> BuildAsync(
         CartPage cart,
         CartAccess access,
         DestinationIdentifiers? destination,
         string? currency,
         Guid languageId,
-        int availableDateCount,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(cart);
@@ -96,25 +107,43 @@ public sealed class StorefrontCapturedPreviewPlanner(
             return new StorefrontCapturedPreviewView(
                 false, currencyCode, DateTimeOffset.UtcNow, [], null, null, null);
         }
+
+        // روشن‌بودن کلید بدون سیاست تعداد تاریخ معتبر یعنی هیچ قیمت/تاریخی ادعا نمی‌شود (fail-closed).
+        if (options.Value.HasValidAvailableDateCount is false || options.Value.AvailableDateCount is not int availableDateCount)
+        {
+            return new StorefrontCapturedPreviewView(
+                true,
+                currencyCode,
+                DateTimeOffset.UtcNow,
+                [],
+                null,
+                null,
+                StorefrontCapturedPreviewReasons.AvailableDateCountInvalid);
+        }
+
         if (cart.Lines.Count == 0)
         {
             return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
         }
 
-        IReadOnlyDictionary<Guid, OfferFulfillmentAssignmentSnapshot> assignmentById;
-        try
+        // شکست واقعی درز بیرونی/لغو فراخوان این‌جا گرفته نمی‌شود: هیچ «انتساب ناقص» یا پیش‌نمایش
+        // موفقِ خالی جای آن نمی‌نشیند.
+        var assignmentById = await assignments.GetAssignmentsAsync(
+            cart.Lines.Select(line => line.OfferId).Distinct().ToArray(),
+            cancellationToken);
+
+        var requestedOfferIds = cart.Lines.Select(line => line.OfferId).ToHashSet();
+
+        // ردیف بیرون از درخواست، آفر جاافتاده یا فروشندهٔ ناسازگار کل مسیر خواندنی را fail-closed
+        // می‌کند (هیچ پیش‌فرضی جای آن نمی‌نشیند).
+        foreach (var (offerId, assignment) in assignmentById)
         {
-            assignmentById = await assignments.GetAssignmentsAsync(
-                cart.Lines.Select(line => line.OfferId).Distinct().ToArray(),
-                cancellationToken);
-        }
-        catch (ContractOperationException)
-        {
-            return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
+            if (assignment is null || !requestedOfferIds.Contains(offerId) || assignment.OfferId != offerId)
+            {
+                return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
+            }
         }
 
-        // هر خط سبد باید انتساب همان آفر و همان فروشنده را داشته باشد؛ ردیف جاافتاده یا ناسازگار
-        // کل مسیر خواندنی را fail-closed می‌کند (هیچ پیش‌فرضی جای آن نمی‌نشیند).
         foreach (var line in cart.Lines)
         {
             if (!assignmentById.TryGetValue(line.OfferId, out var assignment) || assignment is null)
@@ -135,11 +164,21 @@ public sealed class StorefrontCapturedPreviewPlanner(
             .Select(id => id!.Value)
             .Distinct()
             .ToArray();
-        var typeById = requestedTypeIds.Length == 0
-            ? new Dictionary<Guid, ShippingTypeSnapshot>()
-            : (await shippingTypes.GetByIdsAsync(requestedTypeIds, cancellationToken))
-                .Where(type => type is not null)
-                .ToDictionary(type => type.ShippingTypeId);
+        var typeById = new Dictionary<Guid, ShippingTypeSnapshot>();
+        if (requestedTypeIds.Length > 0)
+        {
+            var typeRows = await shippingTypes.GetByIdsAsync(requestedTypeIds, cancellationToken);
+            foreach (var type in typeRows)
+            {
+                // ردیف تهی/تکراری/بیرون از درخواست یعنی پاسخ کاتالوگ قابل اتکا نیست.
+                if (type is null
+                    || !requestedTypeIds.Contains(type.ShippingTypeId)
+                    || !typeById.TryAdd(type.ShippingTypeId, type))
+                {
+                    return Empty(currencyCode, StorefrontCapturedPreviewReasons.AssignmentContradictory);
+                }
+            }
+        }
 
         var plan = BuildPartition(cart, assignmentById, typeById, out var groups);
         if (plan.Count == 0)
@@ -162,11 +201,13 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 StorefrontCapturedPreviewReasons.DestinationRequired);
         }
 
-        // کش کردن خواندن ۲۱۹ بر اساس مالک کامل + Binding: هر جفت دقیقاً یک‌بار در این درخواست.
+        // کش کردن خواندن ۲۱۹ بر اساس هویت تایپ‌شدهٔ «مالک کامل + Binding»: هر جفت دقیقاً یک‌بار در این
+        // درخواست (همان سیاست trim + OrdinalIgnoreCase سرویس/گزینه که ۲۱۸/۲۱۹ به کار می‌برند).
         var bindings = await ResolveCatalogBindingsAsync(cancellationToken);
-        var pointerCache = new Dictionary<string, ShippingSelectedCapturedRevisionResult>(StringComparer.Ordinal);
+        var pointerCache = new Dictionary<StorefrontCapturedPublicationBinding, ShippingSelectedCapturedRevisionResult>();
         var plans = new List<StorefrontCapturedGroupPlan>(plan.Count);
         var unavailable = new Dictionary<string, string>(StringComparer.Ordinal);
+        var labels = new Dictionary<string, string>(StringComparer.Ordinal);
         var provenance = new HashSet<(long?, Guid?)>();
 
         foreach (var group in plan)
@@ -181,14 +222,13 @@ public sealed class StorefrontCapturedPreviewPlanner(
 
             foreach (var binding in bindings)
             {
-                var cacheKey = string.Join(
-                    '\u001f',
-                    (int)group.OwnerKind,
-                    group.OwnerTenantId ?? string.Empty,
-                    group.OwnerSellerPartyId?.ToString("N") ?? string.Empty,
+                var ownerBinding = new StorefrontCapturedPublicationBinding(
+                    group.OwnerKind,
+                    group.OwnerTenantId,
+                    group.OwnerSellerPartyId,
                     binding.ServiceCode,
-                    binding.OptionCode ?? string.Empty);
-                if (!pointerCache.TryGetValue(cacheKey, out var pointer))
+                    binding.OptionCode);
+                if (!pointerCache.TryGetValue(ownerBinding, out var pointer))
                 {
                     pointer = await selectedCaptures.ReadAsync(
                         new ShippingSelectedCapturedRevisionRequest(
@@ -198,7 +238,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
                             binding.ServiceCode,
                             binding.OptionCode),
                         cancellationToken);
-                    pointerCache[cacheKey] = pointer;
+                    pointerCache[ownerBinding] = pointer;
                 }
 
                 if (pointer.Verdict != ShippingSelectedCaptureVerdict.Selected
@@ -211,17 +251,26 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 }
 
                 // هویت Binding برگشتی باید همان درخواست باشد؛ هیچ تطبیق تقریبی/پارس برچسب مجاز نیست.
-                if (StorefrontCapturedPublicationBinding.Canonical(pointer.ServiceCode)
-                        != StorefrontCapturedPublicationBinding.Canonical(binding.ServiceCode)
-                    || (StorefrontCapturedPublicationBinding.Canonical(pointer.OptionCode) ?? string.Empty)
-                        != (StorefrontCapturedPublicationBinding.Canonical(binding.OptionCode) ?? string.Empty))
+                // مالک همان مالک درخواست است (خواندن با هویت دقیق انجام شد)، پس مقایسهٔ سرویس/گزینه با
+                // همان سیاست متعارف trim + OrdinalIgnoreCase کافی و دقیق است.
+                var pointerBinding = new StorefrontCapturedPublicationBinding(
+                    ownerBinding.OwnerKind,
+                    ownerBinding.OwnerTenantId,
+                    ownerBinding.OwnerSellerPartyId,
+                    pointer.ServiceCode,
+                    pointer.OptionCode);
+                if (!pointerBinding.Equals(ownerBinding))
                 {
                     continue;
                 }
 
-                var label = SelectLabel(pointer.Translations, languageId) ?? binding.ServiceCode;
+                // هویت پایدار روش از خود Binding کاتالوگ می‌آید (نه برچسب ترجمه‌شده)؛ برچسب فقط برای
+                // نمایش در نقشهٔ همین درخواست نگه داشته می‌شود. دو روش با برچسب یکسان دو نامزد جدا می‌مانند.
+                var methodCode = MethodCode(pointer.ServiceCode!, pointer.OptionCode);
+                labels[methodCode] = SelectLabel(pointer.Translations, languageId) ?? pointer.ServiceCode!;
+
                 candidates.Add(new StorefrontCapturedCandidatePlan(
-                    label,
+                    methodCode,
                     group.OwnerKind,
                     group.OwnerTenantId,
                     group.OwnerSellerPartyId,
@@ -261,13 +310,22 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 StorefrontCapturedPreviewReasons.NoSelectedCapture);
         }
 
+        if (access.UserId is null)
+        {
+            // مسیر واقعی فکت‌های ۲۱۷ یک کاربر عامل ثبت می‌خواهد و سبد مهمان در این foundation آن را
+            // ندارد. پس ترکیب ساخته نمی‌شود؛ نه خطای ۵۰۰ و نه پیش‌نمایش «موفق» بدون مبلغ.
+            return Refused(currencyCode, groups);
+        }
+
         var command = new SubmitCheckoutCommand(
             cart.CartId,
             access,
             cart.Version,
             OrderMode.OnlinePurchase,
             BuyerPartyId: null,
-            PlacedByUserId: Guid.Empty,
+            // فکت‌های ۲۱۷ از همان مسیر نقل‌قول Checkout می‌آیند و آن مسیر کاربر عامل واقعی
+            // می‌خواهد؛ شناسهٔ ساختگی، ترکیب مثبت را برای هر سبد واردشده می‌شکست.
+            PlacedByUserId: access.UserId ?? Guid.Empty,
             IdempotencyKey: "captured-preview",
             TaxJurisdiction: cart.Market,
             CouponCode: null);
@@ -279,11 +337,14 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 new StorefrontCapturedGroupProjectionRequest(command, plans),
                 cancellationToken);
         }
-        catch (ContractOperationException)
+        catch (ContractOperationException error) when (IsKnownCompositionRefusal(error))
         {
-            return Empty(currencyCode, StorefrontCapturedPreviewReasons.CompositionRefused, enabled: true);
+            // امتناع تجاری شناخته‌شدهٔ ترکیب: گروه‌ها حفظ می‌شوند و هیچ مبلغ/تاریخی ادعا نمی‌شود؛
+            // سبد به «خالی» تقلیل نمی‌یابد. خطای وابستگی/لغو فراخوان همچنان منتشر می‌شود.
+            return Refused(currencyCode, groups);
         }
 
+        var today = DateOnly.FromDateTime(composed.EvaluatedAtUtc.UtcDateTime);
         var views = new List<StorefrontCapturedPreviewGroupView>(composed.Groups.Count);
         foreach (var composedGroup in composed.Groups)
         {
@@ -292,22 +353,27 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 .Where(candidate => candidate.Outcome == StorefrontCapturedCandidateOutcome.Quoted
                     && candidate.OwnerResult is not null)
                 .Select(candidate => new StorefrontCapturedPreviewMethodView(
-                    candidate.Identity.MethodCode,
+                    labels.TryGetValue(candidate.Identity.MethodCode, out var label)
+                        ? label
+                        : candidate.Identity.ServiceCode,
                     candidate.Identity.ServiceCode,
                     candidate.Identity.OptionCode,
-                    candidate.OwnerResult!.FreightAmount,
-                    candidate.OwnerResult.PackagingAmount,
-                    candidate.OwnerResult.PayableAtCheckoutAmount,
-                    candidate.OwnerResult.CarrierCollectAmount,
-                    composedGroup.Currency,
-                    candidate.Receiving?.EarliestEligibleDate?.ToString("yyyy-MM-dd"),
+                    ToText(candidate.OwnerResult!.FreightAmount),
+                    ToText(candidate.OwnerResult.PackagingAmount),
+                    ToText(candidate.OwnerResult.PayableAtCheckoutAmount),
+                    ToText(candidate.OwnerResult.CarrierCollectAmount),
+                    string.IsNullOrWhiteSpace(candidate.OwnerResult.CurrencyCode)
+                        ? null
+                        : candidate.OwnerResult.CurrencyCode,
+                    candidate.Receiving?.EarliestEligibleDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                     candidate.Receiving is null
                         ? []
                         : candidate.Receiving.AvailableDates
-                            .Select(slot => new StorefrontDeliveryDateOption(
-                                slot.Date.ToString("yyyy-MM-dd"),
-                                slot.Date.ToString("yyyy-MM-dd"),
-                                $"{slot.OpensAt:HH\\:mm}–{slot.ClosesAt:HH\\:mm}",
+                            .Select(slot => new StorefrontCapturedDateSlotView(
+                                slot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                                StorefrontShippingCalculator.FormatDeliveryDateLabelFa(slot.Date, today),
+                                StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(slot.Date),
+                                $"{slot.OpensAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}–{slot.ClosesAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}",
                                 candidate.Receiving.EarliestEligibleDate == slot.Date))
                             .ToArray(),
                     candidate.Receiving?.UnavailableReason
@@ -333,7 +399,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 planned.TypeLabel,
                 composedGroup.SellerPartyId,
                 composedGroup.CartLineIds,
-                composedGroup.FinalGoodsAmountAfterDiscountAndTax,
+                ToText(composedGroup.FinalGoodsAmountAfterDiscountAndTax),
                 methods,
                 reason));
         }
@@ -351,8 +417,39 @@ public sealed class StorefrontCapturedPreviewPlanner(
             null);
     }
 
+    /// <summary>متن اعشاری دقیق بدون هیچ تبدیل شناور/گردکردن؛ نبود مقدار تهی می‌ماند.</summary>
+    private static string? ToText(decimal? value) =>
+        value?.ToString(CultureInfo.InvariantCulture);
+
+    private static string MethodCode(string serviceCode, string? optionCode) =>
+        $"{StorefrontCapturedPublicationBinding.Canonical(serviceCode)}\u001F"
+        + $"{StorefrontCapturedPublicationBinding.Canonical(optionCode) ?? string.Empty}";
+
+    /// <summary>امتناع تجاری شناخته‌شدهٔ ترکیب (برنامه/فکت/تعهد)، نه خطای وابستگی.</summary>
+    private static bool IsKnownCompositionRefusal(ContractOperationException error) =>
+        error.Code is StorefrontCapturedGroupProjectionReasons.PlanInvalid
+            or StorefrontCapturedGroupProjectionReasons.FactsMismatch
+            or StorefrontCapturedGroupProjectionReasons.BindingMismatch;
+
     private static StorefrontCapturedPreviewView Empty(string currency, string reason, bool enabled = true) =>
         new(enabled, currency, DateTimeOffset.UtcNow, [], null, null, reason);
+
+    /// <summary>گروه‌ها با دلیل صریح می‌مانند و هیچ مبلغ/تاریخی ادعا نمی‌شود.</summary>
+    private static StorefrontCapturedPreviewView Refused(
+        string currency,
+        IReadOnlyList<StorefrontCapturedPreviewGroupView> groups) =>
+        new(
+            true,
+            currency,
+            DateTimeOffset.UtcNow,
+            groups.Select(group => group with
+            {
+                UnavailableReason = group.UnavailableReason
+                    ?? StorefrontCapturedPreviewReasons.CompositionRefused,
+            }).ToArray(),
+            null,
+            null,
+            StorefrontCapturedPreviewReasons.CompositionRefused);
 
     private static string? SelectLabel(
         IReadOnlyList<ShippingSelectedCapturedTranslation> translations,
@@ -368,13 +465,18 @@ public sealed class StorefrontCapturedPreviewPlanner(
     {
         var snapshot = await catalog.ListAsync(cancellationToken);
         var bindings = new List<(string ServiceCode, string? OptionCode)>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seen = new HashSet<StorefrontCapturedPublicationBinding>();
         foreach (var service in snapshot.Where(service => service.IsActive))
         {
             var options = service.Options.Where(option => option.IsActive).ToArray();
             if (options.Length == 0)
             {
-                if (seen.Add(service.Code + "\u001f"))
+                if (seen.Add(new StorefrontCapturedPublicationBinding(
+                        default,
+                        null,
+                        null,
+                        service.Code,
+                        null)))
                 {
                     bindings.Add((service.Code, null));
                 }
@@ -384,7 +486,12 @@ public sealed class StorefrontCapturedPreviewPlanner(
 
             foreach (var option in options)
             {
-                if (seen.Add(service.Code + "\u001f" + option.Code))
+                if (seen.Add(new StorefrontCapturedPublicationBinding(
+                        default,
+                        null,
+                        null,
+                        service.Code,
+                        option.Code)))
                 {
                     bindings.Add((service.Code, option.Code));
                 }
@@ -416,49 +523,60 @@ public sealed class StorefrontCapturedPreviewPlanner(
             Guid? ownerSellerId = null;
             var typeId = assignment.ShippingTypeId;
 
-            switch (assignment.Responsibility)
+            if (assignment.Responsibility is null)
             {
-                case null:
-                    key = $"cap|unassigned|{line.OfferId:N}";
-                    reason = StorefrontCapturedPreviewReasons.Unassigned;
-                    break;
-                case OfferFulfillmentResponsibility.Seller when !marketplace:
-                    key = $"cap|seller|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                    reason = StorefrontCapturedPreviewReasons.SellerOwnerUnsupported;
-                    break;
-                case OfferFulfillmentResponsibility.Seller:
-                    ownerKind = ShippingCapturedQuoteOwnerKind.Seller;
-                    ownerSellerId = line.SellerPartyId;
-                    key = $"cap|seller|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                    if (typeId is null || !typeById.TryGetValue(typeId.Value, out var sellerType) || !sellerType.IsActive)
-                    {
-                        reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
-                    }
-
-                    break;
-                case OfferFulfillmentResponsibility.Platform when marketplace:
-                    ownerKind = ShippingCapturedQuoteOwnerKind.Marketplace;
-                    key = $"cap|platform|marketplace|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                    if (typeId is null || !typeById.TryGetValue(typeId.Value, out var mpType) || !mpType.IsActive)
-                    {
-                        reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
-                    }
-
-                    break;
-                default:
-                    ownerKind = ShippingCapturedQuoteOwnerKind.Store;
-                    ownerTenantId = singleStoreTenantId;
-                    key = $"cap|platform|store|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                    if (singleStoreTenantId is null)
-                    {
+                key = $"cap|unassigned|{line.OfferId:N}";
+                reason = StorefrontCapturedPreviewReasons.Unassigned;
+            }
+            else
+            {
+                switch (assignment.Responsibility.Value)
+                {
+                    case OfferFulfillmentResponsibility.Seller when !marketplace:
+                        // SingleStore: مالک Seller توسط اقتدار موجود پشتیبانی نمی‌شود و هرگز به Store
+                        // بازتفسیر نمی‌شود.
+                        key = $"cap|seller|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
                         reason = StorefrontCapturedPreviewReasons.SellerOwnerUnsupported;
-                    }
-                    else if (typeId is null || !typeById.TryGetValue(typeId.Value, out var storeType) || !storeType.IsActive)
-                    {
-                        reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
-                    }
+                        break;
+                    case OfferFulfillmentResponsibility.Seller:
+                        ownerKind = ShippingCapturedQuoteOwnerKind.Seller;
+                        ownerSellerId = line.SellerPartyId;
+                        key = $"cap|seller|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
+                        if (typeId is null || !typeById.TryGetValue(typeId.Value, out var sellerType) || !sellerType.IsActive)
+                        {
+                            reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
+                        }
 
-                    break;
+                        break;
+                    case OfferFulfillmentResponsibility.Platform when marketplace:
+                        ownerKind = ShippingCapturedQuoteOwnerKind.Marketplace;
+                        key = $"cap|platform|marketplace|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
+                        if (typeId is null || !typeById.TryGetValue(typeId.Value, out var mpType) || !mpType.IsActive)
+                        {
+                            reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
+                        }
+
+                        break;
+                    case OfferFulfillmentResponsibility.Platform:
+                        ownerKind = ShippingCapturedQuoteOwnerKind.Store;
+                        ownerTenantId = singleStoreTenantId;
+                        key = $"cap|platform|store|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
+                        if (singleStoreTenantId is null)
+                        {
+                            reason = StorefrontCapturedPreviewReasons.SellerOwnerUnsupported;
+                        }
+                        else if (typeId is null || !typeById.TryGetValue(typeId.Value, out var storeType) || !storeType.IsActive)
+                        {
+                            reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
+                        }
+
+                        break;
+                    default:
+                        // مقدار مسئولیت ناشناخته: هیچ پیش‌فرض Store/Platformی جای آن نمی‌نشیند.
+                        key = $"cap|invalid|{line.OfferId:N}";
+                        reason = StorefrontCapturedPreviewReasons.ResponsibilityInvalid;
+                        break;
+                }
             }
 
             if (!planned.TryGetValue(key, out var group))
@@ -491,7 +609,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 group.TypeLabel,
                 group.SellerPartyId,
                 group.CartLineIds,
-                0m,
+                null,
                 [],
                 group.UnavailableReason))
             .ToList();

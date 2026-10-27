@@ -1,4 +1,49 @@
-# CURRENT — Architect REJECTED229 read delivery; issued229-R1 — 2026-10-27
+# CURRENT — 229-R1 EXECUTED PARTIAL: four read-path defects repaired; live card trial blocked at buyer login
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1/{RESULT.md,TASK.md}.
+Base `304ac4da8059e91673cd54306e0930b9bfd94378`. Status: **EXECUTED — PARTIAL**, not accepted, NO live card
+observation, NO screenshots, nothing refreshed for users.
+
+Defects closed in the same read path. Money is exact decimal WIRE TEXT: no Number/parseFloat round-trip, an
+invalid amount never becomes 0 or another amount, an explicit 0 is lawful, unknown goods stays NULL, missing or
+foreign currency is untrusted (never IRR), and malformed/duplicate group, method or date identity is untrusted
+instead of silently dropped. Method identity is the stable catalog binding serviceCode+optionCode
+(case-insensitive, one 219 read per distinct binding) with the translated label kept only for presentation, so
+two distinct methods sharing one label both survive. The parallel captured component is DELETED: the preview is
+drawn inside the EXISTING `StorefrontShippingGroupCards` through one optional prop for BOTH single-line and
+multi-line carts, with the legacy duplicate row suppressed and unknown shown as missing rather than 0. Plan
+honesty: `AvailableDateCount` is an explicit preview option 0..90 required when ON and never re-derived from
+`DeliveryHorizonDays` (checked-in `Enabled` stays false); an unknown responsibility enum refuses instead of
+defaulting; contradictory/out-of-request rows fail closed; a known business refusal surfaces a precise Refused
+view instead of an empty cart; dependency exceptions and caller cancellation propagate; `SaveSelectionAsync`
+and `CommitAsync` refuse first on `storefront.captured_preview.not_ready` when ON and keep the legacy path when
+OFF. 218 validation was not relaxed (empty Candidates lawful, groups never removed, ONE 217 read, ONE 218
+composition, one 219 read per distinct binding, one 216 quote per candidate).
+Proof focused only: 18/18 real tests — 15 `StorefrontCapturedPreviewPlannerTests` including the required POSITIVE
+composition through the REAL 218 composer plus the REAL 217 `CheckoutDirectory` harness (real goods 99.00/198.00,
+two independent fee/week groups, a third unassigned group still visible, label-sharing distinct bindings both
+surviving, case variants collapsing to one pointer read, dependency failure propagating) and 3
+`StorefrontCapturedPreviewWriteGuardTests` driving the actual service methods — plus 11/11 frontend decoder facts
+via `node --experimental-strip-types --test`, one clean `tsc --noEmit`, and an Order test build with 0 errors.
+HONEST GAP: the REAL local trial is blocked at authentication. The current source was built isolated and served
+on `127.0.0.1:5088` with the option ON and an explicit date count, but the storefront shipping route redirects to
+`/fa/login?returnTo=/fa/shipping` and `POST /v1/storefront/shipping/projection` returned 401
+`checkout.authentication_required`; no buyer session or credentials exist for this task, so the captured cards
+were never rendered live and desktop/390 screenshots do not exist. Single surface / no duplicate cards / no
+horizontal overflow are therefore source- and test-proven only, not live-proven. The original Host was restored
+(PID 27588, `D:\temp\tb221-build\out`, preview OFF, `/health` 200), the checked-in default stays OFF, and no
+assignment/draft/rate/pointer/order write, migration, Apply or user-tab interaction was performed.
+Not claimed: Architect acceptance, user Visual ACCEPT, live positive quote or live cards, projection/selection/
+commit parity, compact shared-snapshot order evidence, seller-admin entry, any price/eligibility/activation/
+readiness statement. Actual ≈39 min vs HARD35 — recorded NONCOMPLIANT, NOT a process PASS.
+NEXT (Architect): the one blocking gap is a live authenticated-buyer observation at desktop + 390 (a task-scoped
+buyer session or explicit credentials), then the parity slice — selected captured revision plus SaveSelection/
+Commit — which may replace the `not_ready` refusal; the compact order-group evidence decision stays mandatory and
+unimplemented. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused/default-OFF/PendingAllocation
+preserved; 225-R2 money and 226 week stay accepted; 227's mobile empty-note residual and the unrecovered 225-R1
+user-tab local-edit loss remain recorded.
+
+# SUPERSEDED — Architect REJECTED229 read delivery; issued229-R1 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1. New read-path SOURCE exists but is NOT accepted
 or observed live. Root confirmed money invalid->0 bug (isolated JS reproduction), label used as method

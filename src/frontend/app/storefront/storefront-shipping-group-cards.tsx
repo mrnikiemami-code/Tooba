@@ -11,21 +11,25 @@
  * خطوطی که هنوز روش ندارند در بلوک «انتخاب روش» همان فروشنده می‌مانند (رفتار قبلی، بدون ادغام
  * فروشندگان) و به‌محض انتخاب روش، گروه مستقل آن‌ها ساخته می‌شود.
  */
-import { Calendar, Check, Clock, Package, Store } from "lucide-react";
+import { AlertTriangle, Calendar, Check, Clock, Package, Store } from "lucide-react";
+import { useState } from "react";
 
 import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontCartLine } from "./storefront-cart-api.ts";
-import { deliveryChipParts, toPersianDigits } from "./storefront-shipping-format.ts";
+import { deliveryChipParts, formatExactAmountText, toPersianDigits } from "./storefront-shipping-format.ts";
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
-import type { StorefrontShippingMethod } from "./storefront-shipping-api.ts";
+import type {
+  StorefrontCapturedPreview,
+  StorefrontCapturedPreviewGroup,
+  StorefrontCapturedPreviewMethod,
+  StorefrontShippingMethod,
+} from "./storefront-shipping-api.ts";
 import type {
   StorefrontShippingGroupSchedule,
   StorefrontShippingGroupSelection,
 } from "./storefront-shipping-group-schedule.ts";
 import { StorefrontShippingUnavailableMethods } from "./storefront-shipping-unavailable-methods.tsx";
 import type { StorefrontShippingUnavailableNotice } from "./storefront-shipping-unavailable-methods.ts";
-import { StorefrontShippingCapturedPreview } from "./storefront-shipping-captured-preview.tsx";
-import type { StorefrontCapturedPreview } from "./storefront-shipping-api.ts";
 
 export interface ShippingGroupCard {
   /** کلید پایدار گروه در کلاینت (فروشندهٔ واقعی + روش canonical). */
@@ -51,6 +55,67 @@ function iconFor(method: StorefrontShippingMethod) {
   if (key.includes("zap") || key.includes("express") || method.methodCode.includes("express")) return Clock;
   if (key.includes("store") || key.includes("person") || method.serviceCode === "in_person") return Store;
   return Package;
+}
+
+/** یک تاریخ در نوار تاریخ؛ هم مسیر قدیمی و هم پیش‌نمایش capture‌شده از همین کنترل استفاده می‌کنند. */
+interface DateChipItem {
+  value: string;
+  label: string;
+  subLabel: string;
+  isEarliest: boolean;
+}
+
+/**
+ * نوار تاریخ مشترک (TB-150 + TB-229-R1): همان DOM/کلاس چپ‌های موجود، بدون هیچ تاریخ ساختگی.
+ * `disabledBefore` فقط در مسیر قدیمی معنا دارد؛ در پیش‌نمایش capture‌شده تاریخ‌ها از قبل مجازند.
+ */
+function DateChipStrip({
+  dates,
+  identity,
+  testIdPrefix,
+  active,
+  disabledBefore = null,
+  onPick,
+}: {
+  dates: readonly DateChipItem[];
+  identity: string;
+  testIdPrefix: string;
+  active: string;
+  disabledBefore?: string | null;
+  onPick: (value: string) => void;
+}) {
+  return (
+    <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+      {dates.map((d) => {
+        const disabled = Boolean(disabledBefore && d.value < disabledBefore);
+        const selected = active === d.value;
+        const chip = deliveryChipParts(d);
+        return (
+          <button
+            key={d.value}
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onPick(d.value);
+            }}
+            title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : `${chip.weekday} ${chip.day} ${chip.month}`}
+            className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+              selected
+                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                : "border-gray-200 bg-surface text-gray-700 hover:border-gray-300"
+            }`}
+            data-testid={`${testIdPrefix}-${identity}-${d.value}`}
+          >
+            <p className="text-[11px] font-medium">{chip.weekday}</p>
+            <p className="mt-1 text-xl font-black leading-none tabular-nums">{chip.day}</p>
+            <p className="mt-1 text-[10px] text-gray-500">{chip.month}</p>
+            {d.isEarliest ? <p className="mt-1 text-[9px] font-bold text-primary">نزدیک‌ترین</p> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 /** روش‌های همین گروه: هزینهٔ گروه = هزینهٔ روش همان گروه (از سرور، بدون محاسبهٔ کلاینت). */
@@ -96,36 +161,14 @@ function GroupSchedulePicker({
           </span>
         </p>
       ) : null}
-      <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-        {schedule.dates.map((d) => {
-          const disabled = Boolean(schedule.minimumDeliveryDate && d.value < schedule.minimumDeliveryDate);
-          const selected = deliveryDate === d.value;
-          const chip = deliveryChipParts(d);
-          return (
-            <button
-              key={d.value}
-              type="button"
-              disabled={disabled}
-              onClick={() => {
-                if (disabled) return;
-                onSelectDate(d.value);
-              }}
-              title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : `${chip.weekday} ${chip.day} ${chip.month}`}
-              className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                selected
-                  ? "border-primary bg-primary/5 text-primary shadow-sm"
-                  : "border-gray-200 bg-surface text-gray-700 hover:border-gray-300"
-              }`}
-              data-testid={`shipping-group-date-${identity}-${d.value}`}
-            >
-              <p className="text-[11px] font-medium">{chip.weekday}</p>
-              <p className="mt-1 text-xl font-black leading-none tabular-nums">{chip.day}</p>
-              <p className="mt-1 text-[10px] text-gray-500">{chip.month}</p>
-              {d.isEarliest ? <p className="mt-1 text-[9px] font-bold text-primary">نزدیک‌ترین</p> : null}
-            </button>
-          );
-        })}
-      </div>
+      <DateChipStrip
+        dates={schedule.dates}
+        identity={identity}
+        testIdPrefix="shipping-group-date"
+        active={deliveryDate}
+        disabledBefore={schedule.minimumDeliveryDate}
+        onPick={onSelectDate}
+      />
       <div className="mt-3">
         <p className="text-[11px] md:text-xs font-bold text-gray-700 mb-2">بازهٔ ساعت تحویل همین گروه</p>
         <div
@@ -249,6 +292,165 @@ function CartLineRow({
   );
 }
 
+/** توضیح کوتاه و پایدار برای هر کد امتناع سرور؛ کد ناشناخته متن عمومی می‌گیرد. */
+const CAPTURED_REASON_TEXT: Record<string, string> = {
+  "storefront.captured_preview.unassigned": "مسئولیت ارسال این کالا هنوز تعیین نشده است.",
+  "storefront.captured_preview.type_unavailable": "نوع ارسال این کالا فعال نیست.",
+  "storefront.captured_preview.seller_owner_unsupported": "ارسال فروشنده در این نصب پشتیبانی نمی‌شود.",
+  "storefront.captured_preview.no_selected_capture": "برای این گروه هنوز روش ارسالی انتخاب نشده است.",
+  "storefront.captured_preview.destination_required": "برای زمان و هزینه، مقصد را انتخاب کنید.",
+  "storefront.captured_preview.assignment_contradictory": "اطلاعات ارسال این کالاها کامل نیست.",
+  "storefront.captured_preview.assignment_missing": "اطلاعات ارسال این کالاها کامل نیست.",
+  "storefront.captured_preview.responsibility_invalid": "مسئولیت ارسال این کالا معتبر نیست.",
+  "storefront.captured_preview.composition_refused": "محاسبهٔ ارسال این سبد ممکن نشد.",
+  "storefront.captured_preview.available_date_count_invalid": "بازهٔ تاریخ‌های ارسال تنظیم نشده است.",
+  "storefront.captured_preview.untrusted": "پاسخ ارسال این سبد قابل اتکا نیست؛ دوباره تلاش کنید.",
+};
+
+function capturedReasonText(code: string | null): string {
+  if (!code) return "این گروه ارسال در دسترس نیست.";
+  return CAPTURED_REASON_TEXT[code] ?? "این گروه ارسال در دسترس نیست.";
+}
+
+/**
+ * TB-229-R1: یک روش capture‌شده با تقویم **خودش**.
+ *
+ * انتخاب تاریخ فقط بازهٔ همان روز را نشان می‌دهد؛ هیچ انتخاب/ثبتی به سرور نمی‌رود، چون سرور این
+ * مسیر را پیش از نوشتن رد می‌کند. مبالغ متن دقیق سرور هستند و «نامشخص» هرگز صفر نمایش داده نمی‌شود.
+ */
+function CapturedMethodRow({
+  groupKey,
+  method,
+  currency,
+}: {
+  groupKey: string;
+  method: StorefrontCapturedPreviewMethod;
+  currency: string | null;
+}) {
+  const [picked, setPicked] = useState<string | null>(null);
+  const identity = `${groupKey}-${method.serviceCode}-${method.optionCode ?? "none"}`;
+  const active = picked ?? method.earliestEligibleDate ?? method.availableDates[0]?.value ?? "";
+  const activeDate = method.availableDates.find((d) => d.value === active) ?? null;
+  const freight = formatExactAmountText(method.freightAmountText, method.currency ?? currency);
+  const packaging = formatExactAmountText(method.packagingAmountText, method.currency ?? currency);
+
+  return (
+    <div
+      className="mt-3 border-t border-dashed border-gray-200 pt-3"
+      data-testid={`shipping-group-captured-method-${identity}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] md:text-xs font-bold text-gray-800 flex items-center gap-1.5">
+            <Package className="w-3.5 h-3.5 text-primary shrink-0" />
+            {method.methodLabel}
+          </p>
+          <p className="text-[10px] text-gray-500 mt-0.5">
+            {freight === null ? "کرایه نامشخص" : `کرایه ${freight}`}
+            {packaging === null ? "" : ` · بسته‌بندی ${packaging}`}
+          </p>
+        </div>
+      </div>
+
+      {method.availableDates.length === 0 ? (
+        <p
+          className="mt-2 text-[11px] text-gray-500"
+          data-testid={`shipping-group-captured-dates-empty-${identity}`}
+        >
+          {capturedReasonText(method.unavailableReason)}
+        </p>
+      ) : (
+        <>
+          <p className="mt-2 text-[10px] text-gray-500 flex items-center gap-1">
+            <Calendar className="w-2.5 h-2.5" /> تاریخ‌های مجاز همین روش
+          </p>
+          <DateChipStrip
+            dates={method.availableDates}
+            identity={identity}
+            testIdPrefix="shipping-group-captured-date"
+            active={active}
+            onPick={setPicked}
+          />
+          <p
+            className="mt-1 text-[10px] text-gray-600"
+            data-testid={`shipping-group-captured-interval-${identity}`}
+          >
+            بازهٔ همین روز: {activeDate?.intervalText ?? "ثبت نشده"}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** کارت یک گروه capture‌شده با همان کارت/خط‌های موجود؛ فقط‌خواندنی و بدون دکمهٔ ثبت. */
+function CapturedGroupCard({
+  group,
+  lines,
+  sellerName,
+  currency,
+}: {
+  group: StorefrontCapturedPreviewGroup;
+  lines: readonly StorefrontCartLine[];
+  sellerName: string;
+  currency: string | null;
+}) {
+  const goodsText = formatExactAmountText(group.finalGoodsAmountText, currency);
+  return (
+    <div
+      className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
+      data-testid={`shipping-group-${group.groupKey}`}
+    >
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Store className="w-4 h-4 text-primary shrink-0" />
+            <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{sellerName}</p>
+          </div>
+          <p className="text-[10px] md:text-[11px] text-gray-500 mt-1 truncate">
+            {group.typeLabel ?? "نوع ارسال تعیین‌نشده"}
+          </p>
+        </div>
+        <span className="text-[11px] md:text-xs font-black text-gray-900 shrink-0">
+          {goodsText ?? "مبلغ کالا نامشخص"}
+        </span>
+      </div>
+
+      <ul className="space-y-2">
+        {lines.map((line) => (
+          <CartLineRow
+            key={line.lineId}
+            line={line}
+            methodCode=""
+            methods={[]}
+            testIdPrefix="shipping-group-captured-line"
+            onSelectMethod={() => {}}
+          />
+        ))}
+      </ul>
+
+      {group.unavailableReason ? (
+        <p
+          className="mt-3 flex items-start gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3"
+          data-testid={`shipping-group-unavailable-${group.groupKey}`}
+        >
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          {capturedReasonText(group.unavailableReason)}
+        </p>
+      ) : null}
+
+      {group.methods.map((method) => (
+        <CapturedMethodRow
+          key={`${method.serviceCode}|${method.optionCode ?? ""}`}
+          groupKey={group.groupKey}
+          method={method}
+          currency={currency}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function StorefrontShippingGroupCards({
   groups,
   unassigned,
@@ -284,8 +486,23 @@ export function StorefrontShippingGroupCards({
 }) {
   // TB-229: نام نمایشی فروشنده از همان گروه‌های واقعی سبد؛ هیچ نام/شناسهٔ ساختگی ساخته نمی‌شود.
   const sellerNames: Record<string, string> = {};
-  for (const group of groups) sellerNames[group.sellerPartyId] = group.sellerDisplayName;
-  for (const seller of unassigned) sellerNames[seller.sellerPartyId] = seller.sellerDisplayName;
+  const lineById: Record<string, StorefrontCartLine> = {};
+  for (const group of groups) {
+    sellerNames[group.sellerPartyId] = group.sellerDisplayName;
+    for (const line of group.lines) lineById[line.lineId] = line;
+  }
+  for (const seller of unassigned) {
+    sellerNames[seller.sellerPartyId] = seller.sellerDisplayName;
+    for (const line of seller.lines) lineById[line.lineId] = line;
+  }
+
+  // TB-229-R1: وقتی پیش‌نمایش روشن است، **همین** کارت‌ها تک‌منبع نمایش ارسال‌اند (چه سبد تک‌خطی و چه
+  // چندخطی) و هیچ کارت/روش/قیمت قدیمی در کنارشان رندر نمی‌شود. پاسخ نامعتبر هم مسیر قدیمی را جای
+  // خودش نمی‌بیند: فقط پیام صادقانهٔ «در دسترس نیست» می‌آید.
+  const capturedActive = capturedPreview !== null;
+  const capturedGroups = capturedPreview?.state === "ok" && capturedPreview.enabled
+    ? capturedPreview.groups
+    : [];
 
   return (
     <div
@@ -302,84 +519,124 @@ export function StorefrontShippingGroupCards({
         می‌آید و با گروه‌های دیگر اشتراک گذاشته نمی‌شود.
       </p>
 
-      <StorefrontShippingUnavailableMethods
-        notices={unavailableNotices}
-        testIdPrefix="shipping-group-unavailable"
-      />
+      {capturedActive ? (
+        <>
+          <p className="text-[11px] text-gray-500 mb-3" data-testid="shipping-captured-preview-notice">
+            {capturedPreview?.state === "untrusted"
+              ? "پاسخ ارسال این سبد قابل اتکا نیست؛ تا اصلاح آن، روش یا تاریخ قدیمی نمایش داده نمی‌شود."
+              : "این پیش‌نمایش فقط‌خواندنی است؛ انتخاب و ثبت روش ارسال هنوز فعال نیست."}
+          </p>
+          <div className="space-y-4" data-testid="shipping-captured-groups">
+            {capturedPreview?.state === "untrusted" ? (
+              <p
+                className="flex items-start gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3"
+                data-testid="shipping-captured-preview-untrusted"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                {capturedReasonText(capturedPreview.unavailableReason)}
+              </p>
+            ) : null}
 
-      <StorefrontShippingCapturedPreview preview={capturedPreview} sellerNames={sellerNames} />
+            {capturedGroups.length === 0 && capturedPreview?.state === "ok" ? (
+              <p
+                className="text-[11px] text-gray-500 bg-surface border border-dashed border-gray-200 rounded-xl p-3"
+                data-testid="shipping-captured-preview-empty"
+              >
+                {capturedReasonText(capturedPreview.unavailableReason)}
+              </p>
+            ) : null}
 
-      <div className="space-y-4">
-        {unassigned.map((seller) => (
-          <div
-            key={`unassigned-${seller.sellerPartyId}`}
-            className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
-            data-testid={`shipping-group-unassigned-${seller.sellerPartyId}`}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Store className="w-4 h-4 text-primary shrink-0" />
-              <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{seller.sellerDisplayName}</p>
-            </div>
-            <ul className="space-y-2">
-              {seller.lines.map((line) => (
-                <CartLineRow
-                  key={line.lineId}
-                  line={line}
-                  methodCode={methodByLine[line.lineId] ?? ""}
-                  methods={methods}
-                  testIdPrefix={`shipping-group-method-${seller.sellerPartyId}`}
-                  onSelectMethod={onSelectMethod}
-                />
-              ))}
-            </ul>
+            {capturedGroups.map((group) => (
+              <CapturedGroupCard
+                key={group.groupKey}
+                group={group}
+                lines={group.cartLineIds.map((lineId) => lineById[lineId]).filter((line): line is StorefrontCartLine => Boolean(line))}
+                sellerName={sellerNames[group.sellerPartyId] ?? ""}
+                currency={capturedPreview?.currency ?? null}
+              />
+            ))}
           </div>
-        ))}
+        </>
+      ) : (
+        <>
+          <StorefrontShippingUnavailableMethods
+            notices={unavailableNotices}
+            testIdPrefix="shipping-group-unavailable"
+          />
 
-        {groups.map((group) => (
-          <div
-            key={group.key}
-            className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
-            data-testid={`shipping-group-${group.identity}`}
-          >
-            <div className="flex items-start justify-between gap-2 mb-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
+          <div className="space-y-4">
+            {unassigned.map((seller) => (
+              <div
+                key={`unassigned-${seller.sellerPartyId}`}
+                className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
+                data-testid={`shipping-group-unassigned-${seller.sellerPartyId}`}
+              >
+                <div className="flex items-center gap-2 mb-3">
                   <Store className="w-4 h-4 text-primary shrink-0" />
-                  <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{group.sellerDisplayName}</p>
+                  <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{seller.sellerDisplayName}</p>
                 </div>
-                <p className="text-[10px] md:text-[11px] text-gray-500 mt-1 truncate">
-                  روش: {group.methodLabel}
-                  <span className="text-gray-400"> · {group.methodCode}</span>
-                </p>
+                <ul className="space-y-2">
+                  {seller.lines.map((line) => (
+                    <CartLineRow
+                      key={line.lineId}
+                      line={line}
+                      methodCode={methodByLine[line.lineId] ?? ""}
+                      methods={methods}
+                      testIdPrefix={`shipping-group-method-${seller.sellerPartyId}`}
+                      onSelectMethod={onSelectMethod}
+                    />
+                  ))}
+                </ul>
               </div>
-              <span className="text-[11px] md:text-xs font-black text-gray-900 shrink-0">
-                {formatOfferAmount(group.amount, currency)}
-              </span>
-            </div>
+            ))}
 
-            <ul className="space-y-2">
-              {group.lines.map((line) => (
-                <CartLineRow
-                  key={line.lineId}
-                  line={line}
-                  methodCode={methodByLine[line.lineId] ?? group.methodCode}
-                  methods={methods}
-                  testIdPrefix={`shipping-group-method-${group.identity}`}
-                  onSelectMethod={onSelectMethod}
+            {groups.map((group) => (
+              <div
+                key={group.key}
+                className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
+                data-testid={`shipping-group-${group.identity}`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-4 h-4 text-primary shrink-0" />
+                      <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{group.sellerDisplayName}</p>
+                    </div>
+                    <p className="text-[10px] md:text-[11px] text-gray-500 mt-1 truncate">
+                      روش: {group.methodLabel}
+                      <span className="text-gray-400"> · {group.methodCode}</span>
+                    </p>
+                  </div>
+                  <span className="text-[11px] md:text-xs font-black text-gray-900 shrink-0">
+                    {formatOfferAmount(group.amount, currency)}
+                  </span>
+                </div>
+
+                <ul className="space-y-2">
+                  {group.lines.map((line) => (
+                    <CartLineRow
+                      key={line.lineId}
+                      line={line}
+                      methodCode={methodByLine[line.lineId] ?? group.methodCode}
+                      methods={methods}
+                      testIdPrefix={`shipping-group-method-${group.identity}`}
+                      onSelectMethod={onSelectMethod}
+                    />
+                  ))}
+                </ul>
+
+                <GroupSchedulePicker
+                  schedule={schedules[group.key] ?? null}
+                  selection={selections[group.key]}
+                  identity={group.identity}
+                  onSelectDate={(value) => onSelectDate(group.key, value)}
+                  onSelectWindow={(value) => onSelectWindow(group.key, value)}
                 />
-              ))}
-            </ul>
-
-            <GroupSchedulePicker
-              schedule={schedules[group.key] ?? null}
-              selection={selections[group.key]}
-              identity={group.identity}
-              onSelectDate={(value) => onSelectDate(group.key, value)}
-              onSelectWindow={(value) => onSelectWindow(group.key, value)}
-            />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }

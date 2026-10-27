@@ -180,7 +180,6 @@ public sealed class StorefrontShippingService
                 destination,
                 effectiveCurrency,
                 previewLanguageId,
-                _shippingOptions.DeliveryHorizonDays,
                 cancellationToken);
         }
 

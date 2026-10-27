@@ -30,6 +30,8 @@ internal sealed class ShippingGroupGoodsFactsHarness : IDisposable
     internal const string Currency = "IRR";
 
     internal readonly Guid CartId = Guid.Parse("0199aaaa-0000-7000-8000-000000000001");
+    /// <summary>کاربر عامل همین سبد؛ همان که دسترسی سبد و فرمان پیش‌نمایش باید حمل کنند.</summary>
+    internal readonly Guid UserId = Guid.Parse("0199aaaa-0000-7000-8000-0000000000cc");
     internal readonly Guid SellerId = Guid.Parse("0199aaaa-0000-7000-8000-0000000000aa");
     internal readonly Guid OtherSellerId = Guid.Parse("0199aaaa-0000-7000-8000-0000000000bb");
 
@@ -99,7 +101,7 @@ internal sealed class ShippingGroupGoodsFactsHarness : IDisposable
         CartId,
         CartStatus.Active,
         CartAccessKind.Authenticated,
-        Guid.Parse("0199aaaa-0000-7000-8000-0000000000cc"),
+        UserId,
         "IR",
         Currency,
         SalesChannel.Direct,

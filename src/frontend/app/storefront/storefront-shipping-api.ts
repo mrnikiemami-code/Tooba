@@ -153,36 +153,57 @@ export interface StorefrontShippingProjection {
   capturedPreview: StorefrontCapturedPreview | null;
 }
 
-/** TB-229: یک روش پیشنهادی از بازبینی capture‌شدهٔ همان گروه. */
+/** TB-229-R1: یک تاریخ قابل ارائهٔ capture‌شده با برچسب محلی و بازهٔ همان روز. */
+export interface StorefrontCapturedDateSlot {
+  value: string;
+  label: string;
+  subLabel: string;
+  intervalText: string | null;
+  isEarliest: boolean;
+}
+
+/**
+ * TB-229-R1: یک روش پیشنهادی از بازبینی capture‌شدهٔ همان گروه.
+ *
+ * مبالغ **متن اعشاری دقیق** همان چیزی هستند که سرور فرستاده است؛ هیچ تبدیل `Number`/شناور، گردکردن
+ * یا تبدیل ارز روی آن‌ها انجام نمی‌شود. `null` یعنی «نامشخص»، هرگز صفر.
+ */
 export interface StorefrontCapturedPreviewMethod {
   methodLabel: string;
   serviceCode: string;
   optionCode: string | null;
-  freightAmount: number | null;
-  packagingAmount: number | null;
-  payableAtCheckoutAmount: number | null;
-  carrierCollectAmount: number | null;
-  currency: string;
+  freightAmountText: string | null;
+  packagingAmountText: string | null;
+  payableAtCheckoutAmountText: string | null;
+  carrierCollectAmountText: string | null;
+  currency: string | null;
   earliestEligibleDate: string | null;
-  availableDates: StorefrontDeliveryDateOption[];
+  availableDates: StorefrontCapturedDateSlot[];
   unavailableReason: string | null;
 }
 
-/** TB-229: یک گروه ارسال capture‌شده با روش‌ها و تقویم خودش. */
+/** TB-229-R1: یک گروه ارسال capture‌شده با روش‌ها و تقویم خودش. */
 export interface StorefrontCapturedPreviewGroup {
   groupKey: string;
   typeLabel: string | null;
   sellerPartyId: string;
   cartLineIds: string[];
-  finalGoodsAmountAfterDiscountAndTax: number;
+  finalGoodsAmountText: string | null;
   methods: StorefrontCapturedPreviewMethod[];
   unavailableReason: string | null;
 }
 
-/** TB-229: پاسخ خواندنی؛ `enabled === false` یعنی هیچ‌چیز از این مسیر خوانده نشد. */
+/**
+ * TB-229-R1: پاسخ خواندنی.
+ *
+ * `null` در سطح projection یعنی کلید سرور خاموش/غایب است و رفتار دقیقاً قبلی است. `state === "untrusted"`
+ * یعنی پاسخ **حاضر ولی نامعتبر** است: در این حالت هیچ گروهی نمایش داده نمی‌شود و مسیر قدیمی هم جای آن
+ * نمی‌نشیند؛ فقط یک پیام صادقانهٔ «در دسترس نیست» می‌آید.
+ */
 export interface StorefrontCapturedPreview {
+  state: "ok" | "untrusted";
   enabled: boolean;
-  currency: string;
+  currency: string | null;
   groups: StorefrontCapturedPreviewGroup[];
   unavailableReason: string | null;
 }
@@ -231,10 +252,12 @@ function asNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-/** TB-229: مبلغ nullable؛ نبود مقدار «صفر» نیست. */
+/** TB-229: مبلغ nullable؛ نبود مقدار «صفر» نیست. (رمزگشای legacy؛ مسیر capture‌شده متن دقیق دارد.) */
 function asNullableNumber(value: unknown): number | null {
   if (value == null || value === "") return null;
-  return asNumber(value, Number.NaN) === Number.NaN ? null : asNumber(value);
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function asBool(value: unknown): boolean {
@@ -441,60 +464,172 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
 }
 
 /**
- * TB-229: پیش‌نمایش خواندنی گروه‌های capture‌شده. هر مقدار ناشناخته/ناقص ⇒ `null` (رفتار قبلی)،
- * چون نمایش نیمه‌خوانده‌شدهٔ این بخش نمی‌تواند به قیمت/تاریخ ساختگی تبدیل شود.
+ * TB-229-R1: پیش‌نمایش خواندنی گروه‌های capture‌شده — رمزگشای **سخت‌گیر**.
+ *
+ * قواعد:
+ * - غایب/`null` ⇒ `null` (کلید خاموش؛ رفتار قبلی دست‌نخورده).
+ * - حاضر ولی نامعتبر ⇒ `{ state: "untrusted" }`؛ هیچ گروهی ساخته نمی‌شود، هیچ ردیفی بی‌صدا حذف
+ *   نمی‌شود و مسیر قدیمی هم جای آن نمی‌نشیند.
+ * - مبالغ فقط **متن اعشاری دقیق** پذیرفته می‌شوند؛ هیچ `Number`/`parseFloat`/گردکردن روی پول نیست و
+ *   مقدار نامعتبر هرگز به ۰ یا مبلغ دیگر تبدیل نمی‌شود.
  */
 function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
+  if (value === undefined || value === null) return null;
   const raw = asRecord(value);
-  if (!raw) return null;
+  if (!raw) return untrustedPreview();
+
+  const enabled = prop(raw, "enabled", "Enabled");
+  if (enabled === false) {
+    return { state: "ok", enabled: false, currency: null, groups: [], unavailableReason: null };
+  }
+  if (enabled !== true) return untrustedPreview();
+
+  const currency = asNonEmptyString(prop(raw, "currency", "Currency"));
+  if (!currency) return untrustedPreview();
+
   const groupsRaw = prop(raw, "groups", "Groups");
+  if (!Array.isArray(groupsRaw)) return untrustedPreview();
+
   const groups: StorefrontCapturedPreviewGroup[] = [];
-  for (const row of Array.isArray(groupsRaw) ? groupsRaw : []) {
+  const seenGroupKeys = new Set<string>();
+  for (const row of groupsRaw) {
     const g = asRecord(row);
-    if (!g) continue;
-    const groupKey = asString(prop(g, "groupKey", "GroupKey"));
-    if (!groupKey) continue;
+    if (!g) return untrustedPreview();
+    const groupKey = asNonEmptyString(prop(g, "groupKey", "GroupKey"));
+    if (!groupKey || seenGroupKeys.has(groupKey)) return untrustedPreview();
+    seenGroupKeys.add(groupKey);
+
+    const sellerPartyId = asNonEmptyString(prop(g, "sellerPartyId", "SellerPartyId"));
+    if (!sellerPartyId) return untrustedPreview();
+
+    const rawLineIds = prop(g, "cartLineIds", "CartLineIds");
+    if (!Array.isArray(rawLineIds) || rawLineIds.length === 0) return untrustedPreview();
+    const cartLineIds: string[] = [];
+    for (const lineId of rawLineIds) {
+      const text = asNonEmptyString(lineId);
+      if (!text || cartLineIds.includes(text)) return untrustedPreview();
+      cartLineIds.push(text);
+    }
+
+    const goodsText = decodeExactAmount(prop(g, "finalGoodsAmountAfterDiscountAndTax", "FinalGoodsAmountAfterDiscountAndTax"));
+    if (goodsText === INVALID) return untrustedPreview();
+
     const methodsRaw = prop(g, "methods", "Methods");
+    if (!Array.isArray(methodsRaw)) return untrustedPreview();
     const methods: StorefrontCapturedPreviewMethod[] = [];
-    for (const m of Array.isArray(methodsRaw) ? methodsRaw : []) {
+    const seenMethods = new Set<string>();
+    for (const m of methodsRaw) {
       const method = asRecord(m);
-      if (!method) continue;
-      const serviceCode = asString(prop(method, "serviceCode", "ServiceCode"));
-      if (!serviceCode) continue;
+      if (!method) return untrustedPreview();
+      const serviceCode = asNonEmptyString(prop(method, "serviceCode", "ServiceCode"));
+      if (!serviceCode) return untrustedPreview();
+      const optionCode = asNonEmptyString(prop(method, "optionCode", "OptionCode"));
+      const methodKey = `${serviceCode}\u001f${optionCode ?? ""}`.toLowerCase();
+      if (seenMethods.has(methodKey)) return untrustedPreview();
+      seenMethods.add(methodKey);
+
+      const methodLabel = asNonEmptyString(prop(method, "methodLabel", "MethodLabel"));
+      if (!methodLabel) return untrustedPreview();
+
+      const methodCurrency = asNonEmptyString(prop(method, "currency", "Currency"));
+      if (!methodCurrency || methodCurrency !== currency) return untrustedPreview();
+
+      const freight = decodeExactAmount(prop(method, "freightAmount", "FreightAmount"));
+      const packaging = decodeExactAmount(prop(method, "packagingAmount", "PackagingAmount"));
+      const payable = decodeExactAmount(prop(method, "payableAtCheckoutAmount", "PayableAtCheckoutAmount"));
+      const carrier = decodeExactAmount(prop(method, "carrierCollectAmount", "CarrierCollectAmount"));
+      if (freight === INVALID || packaging === INVALID || payable === INVALID || carrier === INVALID) {
+        return untrustedPreview();
+      }
+
+      const datesRaw = prop(method, "availableDates", "AvailableDates");
+      if (!Array.isArray(datesRaw)) return untrustedPreview();
+      const availableDates: StorefrontCapturedDateSlot[] = [];
+      for (const d of datesRaw) {
+        const slot = asRecord(d);
+        if (!slot) return untrustedPreview();
+        const date = asNonEmptyString(prop(slot, "date", "Date"));
+        if (!date || !ISO_DATE.test(date) || availableDates.some((existing) => existing.value === date)) {
+          return untrustedPreview();
+        }
+        availableDates.push({
+          value: date,
+          label: asString(prop(slot, "label", "Label")),
+          subLabel: asString(prop(slot, "subLabel", "SubLabel")),
+          intervalText: asNonEmptyString(prop(slot, "intervalText", "IntervalText")),
+          isEarliest: prop(slot, "isEarliest", "IsEarliest") === true,
+        });
+      }
+
       methods.push({
-        methodLabel: asString(prop(method, "methodLabel", "MethodLabel"), serviceCode),
+        methodLabel,
         serviceCode,
-        optionCode: asString(prop(method, "optionCode", "OptionCode")) || null,
-        freightAmount: asNullableNumber(prop(method, "freightAmount", "FreightAmount")),
-        packagingAmount: asNullableNumber(prop(method, "packagingAmount", "PackagingAmount")),
-        payableAtCheckoutAmount: asNullableNumber(
-          prop(method, "payableAtCheckoutAmount", "PayableAtCheckoutAmount"),
-        ),
-        carrierCollectAmount: asNullableNumber(prop(method, "carrierCollectAmount", "CarrierCollectAmount")),
-        currency: asString(prop(method, "currency", "Currency"), "IRR"),
-        earliestEligibleDate: asString(prop(method, "earliestEligibleDate", "EarliestEligibleDate")) || null,
-        availableDates: asArray(prop(method, "availableDates", "AvailableDates")).map(mapDateOption),
-        unavailableReason: asString(prop(method, "unavailableReason", "UnavailableReason")) || null,
+        optionCode,
+        freightAmountText: freight,
+        packagingAmountText: packaging,
+        payableAtCheckoutAmountText: payable,
+        carrierCollectAmountText: carrier,
+        currency: methodCurrency,
+        earliestEligibleDate: asIsoDateOrNull(prop(method, "earliestEligibleDate", "EarliestEligibleDate")),
+        availableDates,
+        unavailableReason: asNonEmptyString(prop(method, "unavailableReason", "UnavailableReason")),
       });
     }
-    const lineIdsRaw = prop(g, "cartLineIds", "CartLineIds");
+
     groups.push({
       groupKey,
-      typeLabel: asString(prop(g, "typeLabel", "TypeLabel")) || null,
-      sellerPartyId: asString(prop(g, "sellerPartyId", "SellerPartyId")),
-      cartLineIds: Array.isArray(lineIdsRaw) ? lineIdsRaw.map((id) => String(id)) : [],
-      finalGoodsAmountAfterDiscountAndTax: asNumber(
-        prop(g, "finalGoodsAmountAfterDiscountAndTax", "FinalGoodsAmountAfterDiscountAndTax"),
-      ),
+      typeLabel: asNonEmptyString(prop(g, "typeLabel", "TypeLabel")),
+      sellerPartyId,
+      cartLineIds,
+      finalGoodsAmountText: goodsText,
       methods,
-      unavailableReason: asString(prop(g, "unavailableReason", "UnavailableReason")) || null,
+      unavailableReason: asNonEmptyString(prop(g, "unavailableReason", "UnavailableReason")),
     });
   }
+
   return {
-    enabled: prop(raw, "enabled", "Enabled") === true,
-    currency: asString(prop(raw, "currency", "Currency"), "IRR"),
+    state: "ok",
+    enabled: true,
+    currency,
     groups,
-    unavailableReason: asString(prop(raw, "noticeReason", "NoticeReason")) || null,
+    unavailableReason: asNonEmptyString(prop(raw, "noticeReason", "NoticeReason")),
+  };
+}
+
+/** نشانگر «مقدار حاضر ولی نامعتبر»؛ با `null` (نامشخص) اشتباه نمی‌شود. */
+const INVALID = Symbol("invalid-amount");
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const EXACT_DECIMAL = /^\d+(\.\d+)?$/;
+
+/**
+ * متن اعشاری دقیق. `null`/`""` یعنی نامشخص (قانونی)؛ هر شکل دیگری که اعشار دقیق غیرمنفی نباشد
+ * نامعتبر است و هرگز به عدد/صفر تبدیل نمی‌شود.
+ */
+function decodeExactAmount(value: unknown): string | null | typeof INVALID {
+  if (value === undefined || value === null) return null;
+  // فقط متن دقیق پذیرفته می‌شود؛ عدد JSON (که ممکن است قبلاً گِرد شده باشد) یا شکل ناقص نامعتبر است.
+  if (typeof value !== "string") return INVALID;
+  return EXACT_DECIMAL.test(value) ? value : INVALID;
+}
+
+function asNonEmptyString(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  const text = String(value).trim();
+  return text.length > 0 ? text : null;
+}
+
+function asIsoDateOrNull(value: unknown): string | null {
+  const text = asNonEmptyString(value);
+  return text && ISO_DATE.test(text) ? text : null;
+}
+
+function untrustedPreview(): StorefrontCapturedPreview {
+  return {
+    state: "untrusted",
+    enabled: true,
+    currency: null,
+    groups: [],
+    unavailableReason: "storefront.captured_preview.untrusted",
   };
 }
 

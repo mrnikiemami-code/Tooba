@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Geography.Contracts.Places;
@@ -8,6 +8,8 @@ using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 using Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
 using Tooba.Order.Tests.Checkout;
+using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Xunit;
 
@@ -24,6 +26,7 @@ namespace Tooba.Order.Tests.Storefront;
 /// تکرار نمی‌شوند؛ برای همین `FixedGoodsFactsReader(null)` در صورت فراخوانی صریحاً شکست می‌دهد.
 /// </para>
 /// </remarks>
+[Collection("ShippingGroupGoodsFacts")]
 public class StorefrontCapturedPreviewPlannerTests
 {
     private static readonly Guid StoreTypeId = Guid.Parse("01a1785e-01f3-7000-b50d-d6372e756f89");
@@ -34,6 +37,8 @@ public class StorefrontCapturedPreviewPlannerTests
     private static readonly Guid LineA = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
     private static readonly Guid LineB = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
     private static readonly Guid LanguageId = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+    private static readonly Guid DraftA = Guid.Parse("aaaaaaaa-0000-4000-8000-00000000000a");
+    private static readonly Guid DraftB = Guid.Parse("bbbbbbbb-0000-4000-8000-00000000000b");
     private static readonly DestinationIdentifiers Destination = new(
         CountryId: Guid.Parse("99999999-9999-9999-9999-999999999999"));
 
@@ -54,7 +59,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         Assert.False(result.Enabled);
@@ -77,7 +81,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         Assert.True(result.Enabled);
@@ -100,7 +103,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         Assert.Equal(StorefrontCapturedPreviewReasons.AssignmentContradictory, result.NoticeReason);
@@ -120,7 +122,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         var group = Assert.Single(result.Groups);
@@ -145,7 +146,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         var group = Assert.Single(result.Groups);
@@ -174,7 +174,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         var group = Assert.Single(result.Groups);
@@ -203,7 +202,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         // دو Binding واقعی کاتالوگ ⇒ دقیقاً دو خواندن ۲۱۹ برای همان مالک (نه بیشتر، نه کمتر).
@@ -245,7 +243,6 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         var group = Assert.Single(result.Groups);
@@ -285,11 +282,329 @@ public class StorefrontCapturedPreviewPlannerTests
             Destination,
             "IRR",
             LanguageId,
-            7,
             CancellationToken.None);
 
         Assert.Equal(StorefrontCapturedPreviewReasons.NoSelectedCapture, Assert.Single(result.Groups).UnavailableReason);
         Assert.Equal(0, goods.Calls);
+    }
+
+    /// <summary>
+    /// TB-229-R1: ترکیب مثبت واقعی — دو گروه با مبلغ کالای ۹۹/۱۹۸ از مسیر واقعی ۲۱۷، کرایه و هفتهٔ
+    /// جدا، و یک گروه سوم بدون مسئولیت که دیده می‌شود و گروه‌های قیمت‌دار را پاک نمی‌کند.
+    /// </summary>
+    [Fact]
+    public async Task Two_groups_compose_real_goods_amounts_with_independent_fees_and_one_unassigned_group()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        harness.Promotions.Discounts[OfferA] = 10m;
+        harness.Promotions.Discounts[OfferB] = 20m;
+
+        var assignments = new AssignmentFake();
+        // فروشنده‌های Harness: افراز/فکت‌های واقعی ۲۱۷ با همین هویت‌ها ساخته می‌شوند.
+        var sellerA = harness.SellerId;
+        var sellerB = harness.OtherSellerId;
+        assignments.Values[OfferA] = Assignment(OfferA, sellerA, OfferFulfillmentResponsibility.Platform, StoreTypeId);
+        assignments.Values[OfferB] = Assignment(OfferB, sellerB, OfferFulfillmentResponsibility.Platform, StoreTypeId);
+
+        var catalog = new CatalogFake();
+        catalog.Services = [Service("post", "standard")];
+        var shipping = new RecordingCapturedQuoteLookup();
+        var week = Week("Asia/Tehran", (6, 9, 0, 12, 0), (7, 10, 15, 13, 45));
+        // کرایه/بسته‌بندی هر گروه از نقل‌قول همان گروه می‌آید؛ دو گروه حتی با یک تعهد مشترک هم
+        // مبلغ مستقل خودشان را دارند (مبلغ گروه از فکت ۲۱۷، نه از برچسب روش).
+        shipping.Respond = request => request.FinalGroupGoodsAmountAfterDiscountAndTax == 99m
+            ? Quoted(request, freight: 15_000m, packaging: 2_000m, week: week)
+            : Quoted(request, freight: 25_000m, packaging: 0m, week: week);
+
+        var selected = new SelectedCaptureFake
+        {
+            // هر دو گروه Platform/Store با یک Binding کاتالوگ‌اند: یک انتخاب سرور، نه دو.
+            Respond = request => Selected(request, StoreTypeId, DraftA, revision: 3),
+        };
+
+        var planner = Planner(
+            true,
+            assignments,
+            catalog,
+            ActiveTypeFake(),
+            selected,
+            edition: ToobaEdition.SingleStore,
+            composer: new StorefrontCapturedGroupProjectionComposer(
+                harness.Directory,
+                shipping,
+                new MutableClock(new DateTimeOffset(2026, 10, 24, 8, 0, 0, TimeSpan.Zero))));
+
+        // یک خط سوم با آفر بدون مسئولیت: گروهش باید زنده بماند.
+        var unassignedLine = Guid.Parse("ffffffff-ffff-4fff-8fff-ffffffffffff");
+        var unassignedOffer = Guid.Parse("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee");
+        assignments.Values[unassignedOffer] = Assignment(
+            unassignedOffer,
+            sellerA,
+            responsibility: null,
+            shippingTypeId: null);
+        harness.Carts.Cart = harness.Cart(
+            harness.Line(LineA, OfferA, 100m, sellerPartyId: sellerA),
+            harness.Line(LineB, OfferB, 200m, sellerPartyId: sellerB),
+            harness.Line(unassignedLine, unassignedOffer, 50m, sellerPartyId: sellerA));
+
+        var cart = CartFor(
+            harness.CartId,
+            Line(LineA, OfferA, sellerA),
+            Line(LineB, OfferB, sellerB),
+            Line(unassignedLine, unassignedOffer, sellerA));
+
+        var result = await planner.BuildAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Destination,
+            "IRR",
+            LanguageId,
+            CancellationToken.None);
+
+        Assert.True(result.Enabled);
+        Assert.Equal(3, result.Groups.Count);
+        Assert.Null(result.NoticeReason);
+        // یک نقل‌قول برای هر نامزد همان گروه‌ها؛ گروه بدون مسئولیت هیچ نقل‌قولی نمی‌خواهد.
+        Assert.Equal(2, shipping.Calls);
+        Assert.Equal(
+            [99m, 198m],
+            shipping.Requests
+                .Select(request => request.FinalGroupGoodsAmountAfterDiscountAndTax!.Value)
+                .OrderBy(amount => amount)
+                .ToArray());
+        Assert.Equal(
+            [DraftA, DraftA],
+            shipping.Requests.Select(request => request.DraftId).ToArray());
+        Assert.All(shipping.Requests, request => Assert.Equal(3, request.SourceRevision));
+        Assert.Equal(1, selected.Calls);
+
+        var quotedGroups = result.Groups.Where(group => group.Methods.Count > 0).ToArray();
+        Assert.Equal(2, quotedGroups.Length);
+        Assert.Equal(["99.00", "198.00"], quotedGroups.Select(group => group.FinalGoodsAmountAfterDiscountAndTax).ToArray());
+
+        var firstMethod = quotedGroups[0].Methods.Single();
+        Assert.Equal("15000", firstMethod.FreightAmount);
+        Assert.Equal("2000", firstMethod.PackagingAmount);
+        Assert.Equal("IRR", firstMethod.Currency);
+        // تعداد تاریخ‌ها دقیقاً از سیاست صریح AvailableDateCount (۷) می‌آید، نه از افق روش.
+        Assert.Equal(7, firstMethod.AvailableDates.Count);
+        Assert.Equal("09:00–12:00", firstMethod.AvailableDates[0].IntervalText);
+        Assert.Equal("10:15–13:45", firstMethod.AvailableDates[1].IntervalText);
+        Assert.True(firstMethod.AvailableDates[0].IsEarliest);
+
+        var secondMethod = quotedGroups[1].Methods.Single();
+        Assert.Equal("25000", secondMethod.FreightAmount);
+        Assert.Equal("0", secondMethod.PackagingAmount);
+
+        var unassignedGroup = Assert.Single(result.Groups.Where(group => group.Methods.Count == 0));
+        Assert.Equal(StorefrontCapturedPreviewReasons.Unassigned, unassignedGroup.UnavailableReason);
+        Assert.Equal([unassignedLine], unassignedGroup.CartLineIds);
+        Assert.Null(result.NoticeReason);
+    }
+
+    /// <summary>دو Binding واقعی با برچسب ترجمه‌شدهٔ یکسان هر دو زنده می‌مانند (هویت از کد، نه برچسب).</summary>
+    [Fact]
+    public async Task Two_distinct_bindings_sharing_one_translated_label_both_survive()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        var assignments = new AssignmentFake();
+        assignments.Values[OfferA] = Assignment(
+            OfferA,
+            harness.SellerId,
+            OfferFulfillmentResponsibility.Platform,
+            StoreTypeId);
+        var catalog = new CatalogFake();
+        catalog.Services = [Service("post", "standard", "express")];
+        var selected = new SelectedCaptureFake
+        {
+            Respond = request => Selected(
+                request,
+                StoreTypeId,
+                request.OptionCode == "express" ? DraftB : DraftA,
+                revision: request.OptionCode == "express" ? 5 : 3,
+                label: "ارسال یکسان"),
+        };
+        var shipping = new RecordingCapturedQuoteLookup
+        {
+            // پاسخ هر نامزد همان Binding خودش را می‌گوید؛ وگرنه ۲۱۸ عمداً رد می‌کند.
+            Respond = request => Quoted(
+                request,
+                10_000m,
+                0m,
+                week: null,
+                optionCode: request.DraftId == DraftB ? "express" : "standard"),
+        };
+        harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
+        var planner = Planner(
+            true,
+            assignments,
+            catalog,
+            ActiveTypeFake(),
+            selected,
+            composer: new StorefrontCapturedGroupProjectionComposer(
+                harness.Directory,
+                shipping,
+                new MutableClock(new DateTimeOffset(2026, 10, 24, 8, 0, 0, TimeSpan.Zero))));
+
+        var result = await planner.BuildAsync(
+            CartFor(harness.CartId, Line(LineA, OfferA, harness.SellerId)),
+            new CartAccess(harness.UserId, null),
+            Destination,
+            "IRR",
+            LanguageId,
+            CancellationToken.None);
+
+        var group = Assert.Single(result.Groups);
+        Assert.Equal(2, group.Methods.Count);
+        Assert.Equal(["standard", "express"], group.Methods.Select(method => method.OptionCode).ToArray());
+        Assert.All(group.Methods, method => Assert.Equal("ارسال یکسان", method.MethodLabel));
+    }
+
+    /// <summary>
+    /// تفاوت بزرگ/کوچک حرف در سرویس همان تعهد است: یک خواندن ۲۱۹ و یک نامزد، نه دو.
+    /// </summary>
+    [Fact]
+    public async Task Case_variant_service_binding_is_one_pointer_read_and_one_candidate()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        var assignments = new AssignmentFake();
+        assignments.Values[OfferA] = Assignment(
+            OfferA,
+            harness.SellerId,
+            OfferFulfillmentResponsibility.Platform,
+            StoreTypeId);
+        var catalog = new CatalogFake();
+        catalog.Services = [Service("POST", "standard")];
+        var selected = new SelectedCaptureFake
+        {
+            Respond = request => Selected(request, StoreTypeId, DraftA, revision: 3),
+        };
+        var shipping = new RecordingCapturedQuoteLookup
+        {
+            Respond = request => Quoted(request, 10_000m, 0m, week: null, serviceCode: "POST"),
+        };
+        harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
+        var planner = Planner(
+            true,
+            assignments,
+            catalog,
+            ActiveTypeFake(),
+            selected,
+            composer: new StorefrontCapturedGroupProjectionComposer(
+                harness.Directory,
+                shipping,
+                new MutableClock(new DateTimeOffset(2026, 10, 24, 8, 0, 0, TimeSpan.Zero))));
+
+        var result = await planner.BuildAsync(
+            CartFor(harness.CartId, Line(LineA, OfferA, harness.SellerId)),
+            new CartAccess(harness.UserId, null),
+            Destination,
+            "IRR",
+            LanguageId,
+            CancellationToken.None);
+
+        Assert.Equal(1, selected.Calls);
+        Assert.Single(Assert.Single(result.Groups).Methods);
+    }
+
+    /// <summary>مقدار مسئولیت ناشناخته رد می‌شود و هرگز به Store/Platform پیش‌فرض نمی‌افتد.</summary>
+    [Fact]
+    public async Task Unknown_responsibility_value_is_refused_instead_of_default_store()
+    {
+        var assignments = new AssignmentFake();
+        assignments.Values[OfferA] = Assignment(
+            OfferA,
+            SellerA,
+            (OfferFulfillmentResponsibility)99,
+            StoreTypeId);
+        var selected = new SelectedCaptureFake();
+        var planner = Planner(true, assignments, new CatalogFake(), ActiveTypeFake(), selected);
+
+        var result = await planner.BuildAsync(
+            Cart(Line(LineA, OfferA, SellerA)),
+            new CartAccess(null, "guest"),
+            Destination,
+            "IRR",
+            LanguageId,
+            CancellationToken.None);
+
+        var group = Assert.Single(result.Groups);
+        Assert.Equal(StorefrontCapturedPreviewReasons.ResponsibilityInvalid, group.UnavailableReason);
+        Assert.Empty(group.Methods);
+        Assert.Equal(0, selected.Calls);
+    }
+
+    /// <summary>روشن‌بودن کلید بدون سیاست تعداد تاریخ معتبر هیچ خواندنی انجام نمی‌دهد.</summary>
+    [Fact]
+    public async Task Enabled_preview_without_a_valid_date_count_refuses_before_any_read()
+    {
+        var assignments = new AssignmentFake();
+        var selected = new SelectedCaptureFake();
+        var planner = new StorefrontCapturedPreviewPlanner(
+            assignments,
+            new CatalogFake(),
+            new TypeFake(),
+            selected,
+            new StorefrontCapturedGroupProjectionComposer(
+                new FixedGoodsFactsReader(null),
+                new RecordingCapturedQuoteLookup(),
+                new MutableClock(DateTimeOffset.UtcNow)),
+            new EditionFake(ToobaEdition.SingleStore),
+            new TenantFake("store-alpha"),
+            Options.Create(new StorefrontCapturedPreviewOptions { Enabled = true, AvailableDateCount = null }));
+
+        var result = await planner.BuildAsync(
+            Cart(Line(LineA, OfferA, SellerA)),
+            new CartAccess(null, "guest"),
+            Destination,
+            "IRR",
+            LanguageId,
+            CancellationToken.None);
+
+        Assert.True(result.Enabled);
+        Assert.Equal(StorefrontCapturedPreviewReasons.AvailableDateCountInvalid, result.NoticeReason);
+        Assert.Empty(result.Groups);
+        Assert.Equal(0, assignments.Calls);
+        Assert.Equal(0, selected.Calls);
+    }
+
+    /// <summary>خطای واقعی درز قیمت منتشر می‌شود و به «گروه‌های خالی/موفق» تبدیل نمی‌شود.</summary>
+    [Fact]
+    public async Task Dependency_failure_propagates_instead_of_empty_success()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        var assignments = new AssignmentFake();
+        assignments.Values[OfferA] = Assignment(
+            OfferA,
+            harness.SellerId,
+            OfferFulfillmentResponsibility.Platform,
+            StoreTypeId);
+        var catalog = new CatalogFake();
+        catalog.Services = [Service("post", "standard")];
+        var selected = new SelectedCaptureFake
+        {
+            Respond = request => Selected(request, StoreTypeId, DraftA, revision: 3),
+        };
+        var shipping = new RecordingCapturedQuoteLookup { Failure = new InvalidOperationException("owner down") };
+        harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
+        var planner = Planner(
+            true,
+            assignments,
+            catalog,
+            ActiveTypeFake(),
+            selected,
+            composer: new StorefrontCapturedGroupProjectionComposer(
+                harness.Directory,
+                shipping,
+                new MutableClock(DateTimeOffset.UtcNow)));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => planner.BuildAsync(
+            CartFor(harness.CartId, Line(LineA, OfferA, harness.SellerId)),
+            new CartAccess(harness.UserId, null),
+            Destination,
+            "IRR",
+            LanguageId,
+            CancellationToken.None));
     }
 
     /// <summary>کاتالوگ نوع با همان نوع واقعیِ فعال که انتساب‌ها به آن اشاره می‌کنند.</summary>
@@ -308,24 +623,28 @@ public class StorefrontCapturedPreviewPlannerTests
         SelectedCaptureFake selected,
         FixedGoodsFactsReader? goodsFacts = null,
         ToobaEdition edition = ToobaEdition.SingleStore,
-        string? tenantId = "store-alpha") =>
+        string? tenantId = "store-alpha",
+        StorefrontCapturedGroupProjectionComposer? composer = null) =>
         new(
             assignments,
             catalog,
             types,
             selected,
-            new StorefrontCapturedGroupProjectionComposer(
+            composer ?? new StorefrontCapturedGroupProjectionComposer(
                 goodsFacts ?? new FixedGoodsFactsReader(null),
                 new RecordingCapturedQuoteLookup(),
                 new MutableClock(new DateTimeOffset(2026, 10, 27, 8, 0, 0, TimeSpan.Zero))),
             new EditionFake(edition),
             new TenantFake(tenantId),
-            Options.Create(new StorefrontCapturedPreviewOptions { Enabled = enabled }));
+            Options.Create(new StorefrontCapturedPreviewOptions { Enabled = enabled, AvailableDateCount = enabled ? 7 : null }));
 
-    private static CartPage Cart(params CartLineView[] lines) =>
+    private static CartPage Cart(params CartLineView[] lines) => CartFor(Guid.NewGuid(), lines);
+
+    /// <summary>سبد با همان شناسهٔ سبدی که Harness به Checkout می‌دهد (تفکیک هویت در ترکیب).</summary>
+    private static CartPage CartFor(Guid cartId, params CartLineView[] lines) =>
         new(
-            Guid.NewGuid(),
-            3,
+            cartId,
+            7,
             "IR",
             "IRR",
             "Online",
@@ -347,6 +666,57 @@ public class StorefrontCapturedPreviewPlannerTests
 
     private static ShippingTypeSnapshot Type(Guid id, bool active) =>
         new(id, "standard", active, 10, 2, [new ShippingTypeTranslationSnapshot(LanguageId, "نوع", null)]);
+
+    /// <summary>پاسخ کنترل‌شدهٔ مالک Shipping برای اثبات ترکیب مثبت (برچسب‌دار، نه provider واقعی).</summary>
+    private static ShippingCapturedQuoteResult Quoted(
+        ShippingCapturedQuoteLookupRequest request,
+        decimal freight,
+        decimal packaging,
+        ShippingCapturedReceivingWeek? week,
+        string serviceCode = "post",
+        string? optionCode = "standard") =>
+        new(
+            ShippingCapturedQuoteVerdict.Quoted,
+            ShippingCapturedQuoteVerdictCodes.Quoted,
+            serviceCode,
+            optionCode,
+            "IRR",
+            freight,
+            packaging,
+            freight + packaging,
+            freight + packaging,
+            0m,
+            new ShippingCapturedQuoteSettings(
+                ShippingFreightPayerMode.Prepaid,
+                ShippingAuthoringCalculationMode.Manual),
+            SnapshotId: Guid.NewGuid(),
+            DraftId: request.DraftId,
+            SourceRevision: request.SourceRevision,
+            FormatVersion: 1,
+            ShippingTypeId: StoreTypeId,
+            GroupId: Guid.NewGuid(),
+            RateRowId: Guid.NewGuid(),
+            MinDeliveryDays: 2,
+            MaxDeliveryDays: 4,
+            ReceivingWeek: week);
+
+    /// <summary>هفتهٔ کاری کنترل‌شده (ISO ۱..۷) برای اثبات بازهٔ همان روز.</summary>
+    private static ShippingCapturedReceivingWeek Week(
+        string timeZoneId,
+        params (int Weekday, int OpenHour, int OpenMinute, int CloseHour, int CloseMinute)[] working)
+    {
+        var open = working.ToDictionary(x => x.Weekday);
+        var days = Enumerable.Range(1, 7)
+            .Select(iso => open.TryGetValue(iso, out var span)
+                ? new ShippingCapturedReceivingWeekDay(
+                    iso,
+                    true,
+                    new TimeOnly(span.OpenHour, span.OpenMinute),
+                    new TimeOnly(span.CloseHour, span.CloseMinute))
+                : new ShippingCapturedReceivingWeekDay(iso, false, null, null))
+            .ToArray();
+        return new ShippingCapturedReceivingWeek(timeZoneId, days);
+    }
 
     private static ShippingCatalogServiceSnapshot Service(string code, params string[] options) =>
         new(
@@ -370,7 +740,8 @@ public class StorefrontCapturedPreviewPlannerTests
         ShippingSelectedCapturedRevisionRequest request,
         Guid shippingTypeId,
         Guid draftId,
-        long revision) =>
+        long revision,
+        string? label = null) =>
         new(
             ShippingSelectedCaptureVerdict.Selected,
             null,
@@ -383,7 +754,7 @@ public class StorefrontCapturedPreviewPlannerTests
             request.ServiceCode,
             request.OptionCode,
             shippingTypeId,
-            [new ShippingSelectedCapturedTranslation(LanguageId, $"{request.ServiceCode} {request.OptionCode}", null)]);
+            [new ShippingSelectedCapturedTranslation(LanguageId, label ?? $"{request.ServiceCode} {request.OptionCode}", null)]);
 
     private sealed class AssignmentFake : IOfferFulfillmentAssignmentLookup
     {

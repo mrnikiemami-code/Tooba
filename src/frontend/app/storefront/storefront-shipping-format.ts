@@ -1,9 +1,25 @@
-import { formatJalaliDate, isoToJalaliDisplay } from "../../design-system/app-data-grid/jalali.ts";
-import type { StorefrontDeliveryDateOption } from "./storefront-shipping-api.ts";
+﻿import { formatJalaliDate, isoToJalaliDisplay } from "../../design-system/app-data-grid/jalali.ts";
 
 /** ارقام فارسی برای نمایش مبلغ/تعداد در سطح ارسال. */
 export function toPersianDigits(n: string | number): string {
   return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]!);
+}
+
+/**
+ * TB-229-R1: نمایش **متن اعشاری دقیق** یک مبلغ capture‌شده.
+ *
+ * فقط ارقام صحیح را سه‌رقمی گروه می‌کند و بخش اعشاری را عیناً همان‌طور که سرور فرستاده نگه می‌دارد؛
+ * هیچ `Number`/`parseFloat`، گردکردن، حذف اعشار یا تبدیل ارز انجام نمی‌شود. `null` یعنی نامشخص.
+ */
+export function formatExactAmountText(text: string | null, currency: string | null): string | null {
+  if (text === null) return null;
+  const match = /^(\d+)(\.\d+)?$/.exec(text);
+  if (!match) return null;
+  const grouped = match[1]!.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const exact = `${grouped}${match[2] ?? ""}`;
+  const digits = toPersianDigits(exact);
+  if (!currency) return digits;
+  return currency === "IRR" ? `${digits} ریال` : `${digits} ${currency}`;
 }
 
 const JALALI_MONTHS = [
@@ -22,7 +38,7 @@ const JALALI_MONTHS = [
 ];
 
 /** چیپ تاریخ: روز هفته از سرور، روز و ماه جلالی فقط یک‌بار. */
-export function deliveryChipParts(option: StorefrontDeliveryDateOption): {
+export function deliveryChipParts(option: { value: string; label: string; subLabel: string }): {
   weekday: string;
   day: string;
   month: string;

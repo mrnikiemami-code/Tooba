@@ -396,6 +396,9 @@ export function StorefrontShopeivaShipping() {
     : selectedMethod?.priceAmount ?? projection?.selectedShippingAmount ?? 0;
   const payable = (projection?.subtotalExclusiveOfTax ?? 0) + shippingAmount;
 
+  // TB-229-R1: پیش‌نمایش روشن یعنی مسیر قدیمی هیچ هزینه/تاریخی را «محاسبه‌شده» نمایش نمی‌دهد.
+  const capturedPreviewActive = projection?.capturedPreview != null;
+
   const isValid =
     (Boolean(address.firstName.trim() && address.lastName.trim())
       || Boolean(savedAddressId && address.recipientName.trim())) &&
@@ -590,8 +593,10 @@ export function StorefrontShopeivaShipping() {
                 }}
               />
 
-              {/* (150) یک کارت مستقل برای هر گروه ارسال واقعی؛ تاریخ/بازه داخل همان کارت */}
-              {isGroupedCart ? (
+              {/* (150) یک کارت مستقل برای هر گروه ارسال واقعی؛ تاریخ/بازه داخل همان کارت.
+                  TB-229-R1: وقتی پیش‌نمایش capture‌شده روشن است، همین کارت‌ها تنها نمایش ارسال‌اند
+                  (سبد تک‌خطی هم از همین مسیر می‌آید) و هیچ کارت/روش/تاریخ قدیمی در کنارش رندر نمی‌شود. */}
+              {isGroupedCart || projection.capturedPreview !== null ? (
                 <StorefrontShippingGroupCards
                   groups={groupCards}
                   unassigned={unassignedSellerBlocks}
@@ -613,7 +618,7 @@ export function StorefrontShopeivaShipping() {
               ) : null}
 
               {/* (150) مسیر تک‌گروهی: روش + زمان تحویل؛ در سبد چندگروهی هر گروه کارت مستقل دارد. */}
-              {isGroupedCart ? null : (
+              {isGroupedCart || projection.capturedPreview !== null ? null : (
                 <StorefrontShippingSingleGroupSection
                   methods={projection.methods}
                   unavailableNotices={unavailableNotices}
@@ -663,14 +668,22 @@ export function StorefrontShopeivaShipping() {
                     <div className="flex justify-between">
                       <span className="text-gray-500">هزینه ارسال</span>
                       <span className={`font-bold ${shippingAmount === 0 ? "text-emerald-500" : "text-gray-900"}`}>
-                        {shippingAmount === 0 && (isGroupedCart ? groupSelectionsByMethod.length > 0 : selectedMethod)
-                          ? "رایگان"
-                          : (isGroupedCart ? allGroupsHaveMethod : selectedMethod)
-                            ? formatOfferAmount(shippingAmount, projection.currency)
-                            : "—"}
+                        {capturedPreviewActive
+                          ? "—"
+                          : shippingAmount === 0 && (isGroupedCart ? groupSelectionsByMethod.length > 0 : selectedMethod)
+                            ? "رایگان"
+                            : (isGroupedCart ? allGroupsHaveMethod : selectedMethod)
+                              ? formatOfferAmount(shippingAmount, projection.currency)
+                              : "—"}
                       </span>
                     </div>
-                    {isGroupedCart ? (
+                    {capturedPreviewActive ? (
+                      <p className="text-[10px] text-gray-500" data-testid="shipping-captured-summary-note">
+                        هزینه و تاریخ ارسال در کارت هر گروه نمایش داده می‌شود؛ مبلغ نهایی پس از تکمیل مسیر
+                        انتخاب/ثبت محاسبه می‌شود.
+                      </p>
+                    ) : null}
+                    {isGroupedCart && !capturedPreviewActive ? (
                       <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2.5 mt-1" data-testid="shipping-group-fees">
                         {groupSelectionsByMethod.map((group) => (
                           <div key={`fee-${group.key}`} className="flex justify-between gap-2 text-[11px] md:text-xs">
@@ -688,7 +701,7 @@ export function StorefrontShopeivaShipping() {
                     <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
                       <span className="text-sm font-black">قابل پرداخت</span>
                       <span className="text-base font-black text-primary">
-                        {formatOfferAmount(payable, projection.currency)}
+                        {capturedPreviewActive ? "—" : formatOfferAmount(payable, projection.currency)}
                       </span>
                     </div>
                   </div>

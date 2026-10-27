@@ -1,4 +1,35 @@
-# CURRENT — Architect REJECTED229 read delivery; issued229-R1 — 2026-10-27
+# CURRENT — 229-R1 executed PARTIAL: four read-path defects repaired; live card trial blocked at buyer login — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1/{RESULT.md,TASK.md}.
+Base `304ac4da8059e91673cd54306e0930b9bfd94378`. Not accepted; NO live card observation and NO screenshots.
+Repaired in one path: exact decimal WIRE money (invalid never 0/another amount, explicit 0 lawful, unknown stays
+null, missing/foreign currency untrusted, no IRR fallback, malformed/duplicate group·method·date untrusted);
+method identity = stable serviceCode+optionCode binding with the label only for display (two methods sharing a
+label both survive, case variants one 219 read); the parallel captured component DELETED and the preview drawn
+inside the EXISTING StorefrontShippingGroupCards for single-line AND multi-line carts with the legacy duplicate
+row suppressed; explicit validated AvailableDateCount 0..90 required when ON (never DeliveryHorizonDays, default
+OFF), unknown responsibility refused, contradictory rows fail closed, known refusals surface a precise Refused
+view, dependency errors and cancellation propagate, SaveSelection/Commit refuse first on
+`storefront.captured_preview.not_ready` when ON and keep the legacy path when OFF.
+Proof focused only: 18/18 real tests (15 planner incl. positive composition through the REAL 218 composer + REAL
+217 CheckoutDirectory harness — real goods 99.00/198.00, two groups independent, third unassigned group visible,
+label-sharing bindings both surviving, one pointer read for case variants, dependency failure propagating;
+3 write-guard facts on the actual service methods), 11/11 frontend decoder facts
+(`node --experimental-strip-types --test`), one clean `tsc --noEmit`, Order test build 0 errors.
+REAL TRIAL BLOCKED: current source built isolated and served on `127.0.0.1:5088` with the option ON + explicit
+date count, but storefront shipping needs an authenticated buyer — the page redirects to
+`/fa/login?returnTo=/fa/shipping` and `POST /v1/storefront/shipping/projection` returned 401
+`checkout.authentication_required`. No desktop/390 captured-card evidence exists; single-card/no-duplicate/
+no-overflow is source- and test-proven only. Original Host restored (PID 27588, `D:\temp\tb221-build\out`,
+preview OFF, `/health` 200); no write/migration/user tab.
+Not claimed: acceptance, user visual ACCEPT, live quote/cards, parity selection+commit, compact order evidence,
+price/activation/readiness. ≈39 min vs HARD35 = NONCOMPLIANT, not a process PASS.
+NEXT (Architect): live authenticated-buyer desktop+390 observation (task-scoped session or credentials), then the
+parity slice replacing the not_ready refusal; compact order-group evidence still mandatory/unimplemented.
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused/default-OFF/PendingAllocation preserved; 227 residual
+recorded; 225-R1 lost unsaved user-tab local edits remain unrecovered.
+
+# SUPERSEDED — Architect REJECTED229 read delivery; issued229-R1 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1. New read-path SOURCE exists but is NOT accepted
 or observed live. Root confirmed money invalid->0 bug (isolated JS reproduction), label used as method
