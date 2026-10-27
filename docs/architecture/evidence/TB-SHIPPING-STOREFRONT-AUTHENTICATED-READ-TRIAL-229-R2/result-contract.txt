@@ -1,0 +1,101 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2
+Parent-Task: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: Tooba Storefront Shipping
+Mode: NORMAL_LOCAL_BUYER_SESSION_AND_REAL_CARD_OBSERVATION
+Bridge-Task-Row: 152a86a4-43c7-4994-9fd3-6e8de15870eb
+Status: PASS (live read observed; NO source change, NO user Visual ACCEPT)
+Stop-State: STOP_FOR_ARCHITECT
+Base-SHA: e7bc126f4c44499e113fdb357854006666eb2efb (issue commit)
+Code-SHA: 7556a9c08022b3596e3602abe2a576c1788b72e8 (docs/evidence only; no source change)
+Evidence-SHA: 7556a9c08022b3596e3602abe2a576c1788b72e8
+automaticNextImplementationTask: NONE
+
+1 — THE LOGIN/COMMERCE QUESTION IS CLOSED
+The R1 pair of lines was ONE exception, not two causes. TenantResolutionMiddleware wraps its whole
+_next(httpContext) call in the same catch (SemanticException) it uses for resolution failures, so the identity
+gate's checkout.authentication_required (Classification=Forbidden, StatusCode=401, ActorId=(null)) was re-logged
+under the text "Commerce resolution failed". In that same trace TenantId=store-alpha and StoreId=store-alpha were
+already resolved, so commerce resolution succeeded and authentication was the ONLY blocker. No middleware or
+guard was weakened and the planner did not manufacture the 401.
+
+2 — REAL NORMAL BUYER SESSION (no bypass)
+Registered one task-owned account through the PUBLIC POST /v1/auth/register with IdentifierKind=Email, a unique
+synthetic non-deliverable address (@example.invalid) and a random temporary password → 201,
+userId 01a17cf7-e38d-7000-82a5-00c57929bc54. Then, inside the fresh task-owned browser and from the app origin:
+GET /api/auth/csrf (real cookie) followed by the EXISTING BFF POST /api/auth/login with the X-Tooba-Csrf
+double-submit → 200 {"userId":"01a17cf7-…","authenticated":true}; the route set its own normal cookies and
+GET /api/auth/me returned the same account with edition SingleStore and tenantId store-alpha. No dev-actor,
+no role/SQL injection, no invented CustomerPartyId, no auth reset, no other user's account, no user tab touched.
+No password, session token or cookie appears in git, screenshots or this result.
+
+3 — LIVE OBSERVATION
+Host 127.0.0.1:5088 PID 36952 from D:\temp\tb229r1-build\out (backend parity with df6ec9017 verified: no backend
+source change after that build), ASPNETCORE_ENVIRONMENT=Development, content root that folder, /health 200,
+Tooba__StorefrontCapturedPreview__Enabled=true and Tooba__StorefrontCapturedPreview__AvailableDateCount=7 as the
+preview policy (never re-derived from DeliveryHorizonDays). FE 127.0.0.1:3000 PID 28288 unchanged, no restart.
+Task browser: installed Chrome 155.0.8059.85, --headless=new, port 9336, fresh profile D:\temp\tb229r2-chrome,
+every page in a target created by this task.
+Real cart: guest cart 01a17cfd-c1b1-7000-b10d-8cf21258a1cd v1, two real offers of seller
+01a030d1-40cb-7000-8abe-6d31739956c5 (0442a1fa-1d95-4b24-b9d9-129fc19942d2 8,702,542 and
+1b56d013-5817-4db1-99a3-010e12dc0631 7,310,476, qty 1 each) added through the normal cart-lines API with the
+cart-version header, then POST /cart/merge with the guest secret bound it to the account (v6, itemCount 2,
+subtotal 16,013,018 IRR); later two lines were removed through the normal DELETE endpoint for the single-line
+case (v9, itemCount 1). No quantity or weight was fabricated.
+POST /v1/storefront/shipping/projection → 200 with capturedPreview.enabled=true, currency IRR, one group per real
+offer (groupKey cap|unassigned|<offerId>) carrying the real sellerPartyId and real cartLineIds, and
+unavailableReason storefront.captured_preview.destination_required because no address was submitted; the goods
+amount is absent (unknown), never 0.
+Rendered page (real DOM, real traffic, no interception, no mocked payload, no text injection):
+- ONE groups surface only; legacyMethodCards = 0 at both widths, so no duplicate legacy method card next to the
+  captured cards and no duplicated fees;
+- multi-line cart: 2 captured group cards, each with its own product line (نایک شلوار مردانه سری 1 /
+  آدیداس پیراهن مردانه انتخاب 5), seller فروشگاه آرمان, type «تعیین‌نشده», «مبلغ کالا نامشخص» and one short
+  reason «برای زمان و هزینه، مقصد را انتخاب کنید.»;
+- single-line cart (v9): 1 captured group card on the same surface, with its product line;
+- the read-only notice «این پیش‌نمایش فقط‌خواندنی است؛ انتخاب و ثبت روش ارسال هنوز فعال نیست.» is visible, and the
+  summary keeps هزینه ارسال «—» rather than a fabricated number;
+- scrollWidth == innerWidth and overflowX = false at 1440 (1440) and 390 (390) for both carts.
+Native PNGs, dimensions read from the files: 229r2-1440-2line.png 1440x900, 229r2-390-2line.png 390x844,
+229r2-1440-1line.png 1440x900, 229r2-390-1line.png 390x844, under
+docs/architecture/evidence/TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2/screens/.
+
+4 — NOT CLAIMED
+Live positive two-group FINANCIAL quote: the live capture is destination-gated and these offers carry no
+fulfillment assignment, so the honest live state is unavailable; the positive 99.00/198.00 composition stays the
+R1 real-composer harness fact, not a live quote. Also not claimed: selection/commit/order/reservation/payment,
+the not_ready write guard exercised (nothing was submitted), Storefront activation, any price/eligibility/
+readiness statement, Marketplace cross-owner behaviour (SingleStore). R1 recorded limits carried: frontend
+identifier helper still String-coerces non-string values, ISO-shape check is not full calendar validity, label
+map keyed by service/option rather than owner. Compact shared-snapshot per-order-group order evidence and the
+selection/commit parity slice remain mandatory and unimplemented.
+
+5 — STATE LEFT
+The local Host is deliberately LEFT ON with the preview enabled on 5088 for the Architect/user visual test: the
+page is read-only and the server still refuses selection/commit on storefront.captured_preview.not_ready.
+Checked-in Enabled stays false. No migration applied or replayed, no reset/reseed, no assignment write, no Apply,
+no publication/rate/pointer/draft change, no user tab read. The local trial password is NOT in git; it exists
+only in %TEMP%\tb229r2-acct.txt on this machine, and the account identifier is 01a17cf7-e38d-7000-82a5-00c57929bc54
+(@example.invalid). Note: /fa/login is OTP-only, so the normal login path for this local account is the existing
+BFF password route (/api/auth/csrf then POST /api/auth/login with IdentifierKind=Email).
+
+6 — GIT
+Exact-path staging only; the three Shipping files in git status are pre-existing CRLF drift and were never staged.
+One docs/evidence commit 7556a9c08022b3596e3602abe2a576c1788b72e8 pushed to origin/main; HEAD == origin/main.
+No add-A, reset, stash, rebase or force-push.
+
+7 — TIME
+13:25 → 15:10 local ≈ 105 min against HARD20 (environment+login 8 / mounted 8 / recovery 4). Recorded
+NONCOMPLIANT, NOT a process PASS. Overrun from writing a task-owned CDP driver, the cart-version header
+requirement, and the destination-gated rendering.
+
+NEXT (Architect)
+Review these live receipts, then the parity slice — server-selected captured revision plus SaveSelection/Commit,
+replacing the not_ready refusal — together with the still-mandatory compact shared-snapshot per-order-group order
+evidence. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused/default-OFF/PendingAllocation preserved;
+225-R2 money and 226 week stay accepted; 227 mobile empty-note residual and the unrecovered 225-R1 user-tab
+local-edit loss remain recorded.
+END_TOOBA_WORKER_RESULT
