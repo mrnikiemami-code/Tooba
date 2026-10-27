@@ -1,0 +1,110 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1
+Parent-Task: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: Tooba Storefront Shipping
+Mode: BOUNDED_FOUR_DEFECT_REPAIR_PLUS_REAL_TRIAL
+Bridge-Task-Row: bdb72a17-3e01-40f9-a890-7f6a2d4be004
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+Reviewed-Source: ad599cbcd (229 ARCHITECT-REVIEW)
+Base-SHA: 304ac4da8059e91673cd54306e0930b9bfd94378
+Code-SHA: 6ddf8496d30a540aeebd010389b31a4d8ce156bc
+Evidence-SHA: 6ddf8496d30a540aeebd010389b31a4d8ce156bc
+automaticNextImplementationTask: NONE
+
+DEFECT 1 — MONEY / STRICT DECODE (repaired)
+Captured amounts decode as exact decimal WIRE TEXT; no Number/parseFloat round-trip, no reformatting. Invalid
+amount never becomes 0 or another amount — the whole preview becomes untrusted. Explicit 0 is lawful and stays
+distinct from null; unknown goods stays null and is not rendered as 0; missing/foreign currency is untrusted,
+never a hardcoded IRR. Malformed/duplicate/missing group identity, duplicate method identity inside a group and
+duplicate/malformed dates are untrusted rather than silently dropped.
+
+DEFECT 2 — METHOD IDENTITY IS NOT A LABEL (repaired)
+A method is keyed by its stable catalog binding serviceCode+optionCode (case-insensitive, one 219 read per
+distinct typed binding); methodLabel is presentation only. Two distinct methods sharing one translated label both
+survive and stay independent; a duplicate of the same binding inside a group is untrusted. Request-wide
+publication identity stays the typed StorefrontCapturedPublicationBinding; destination/label/group key are not
+publication identity.
+
+DEFECT 3 — ONE EXISTING UI PRESENTATION (repaired)
+The parallel storefront-shipping-captured-preview.tsx component is DELETED. The preview is drawn inside the
+EXISTING StorefrontShippingGroupCards through one optional prop, for BOTH single-line and multi-line carts, with
+the legacy duplicate row suppressed (— instead of a second number), so there is one card surface and no duplicate
+legacy card. Per group: its own seller/type, post-discount tax-inclusive goods amount, that method's own
+freight+packaging, that method's own dates and on date change THAT date's own stored interval. An unavailable
+group stays visible with one short reason; an untrusted preview shows one warning and no numbers.
+
+DEFECT 4 — PLAN HONESTY (repaired)
+StorefrontCapturedPreviewOptions.AvailableDateCount is an explicit validated preview policy 0..90, required when
+Enabled; it is never re-derived from ShippingMethodsOptions.DeliveryHorizonDays (that argument was removed from
+the compose call). Enabled with a missing/out-of-range count refuses before any read. Checked-in Enabled stays
+false. An unknown/undefined FulfillmentResponsibility is REFUSED, never defaulted into the Store/Platform branch;
+contradictory and out-of-request assignment/type rows fail closed. A known business composition refusal surfaces
+a precise Refused view (group visible with its reason) instead of erasing the cart into an empty success;
+dependency exceptions and the caller's cancellation propagate unchanged. SaveSelectionAsync and CommitAsync both
+refuse on storefront.captured_preview.not_ready as their FIRST statement when ON, before cart read/selection/
+draft/order/reservation/payment/cart conversion; with OFF both keep the legacy path. The 218 composer was not
+relaxed: empty Candidates stays lawful, groups are never removed, ONE 217 read, ONE 218 composition, one 219 read
+per distinct binding, one 216 quote per candidate, no new price/working-day algorithm.
+
+PROOF (focused only; no Offer/194/188/solution/Host confidence loop)
+18/18 passed on --filter FullyQualifiedName~StorefrontCapturedPreview: 15 StorefrontCapturedPreviewPlannerTests
+including the REQUIRED positive composition driven through the REAL 218 composer plus the REAL 217
+CheckoutDirectory harness (real goods 99.00 / 198.00, two groups with independent fees and weeks, a third
+unassigned group still visible without erasing the quoted groups, two distinct bindings sharing one translated
+label both surviving, case variants collapsing to ONE pointer read and one candidate, dependency failure
+propagating instead of an empty success) and 3 StorefrontCapturedPreviewWriteGuardTests that drive the actual
+SaveSelectionAsync/CommitAsync methods (refusal before any dependency when ON; legacy path when OFF).
+11/11 frontend decoder facts via node --experimental-strip-types --test app/storefront/
+storefront-shipping-captured-preview.test.ts (invalid never 0, explicit 0 lawful, exact decimal text, absent !=
+untrusted, unknown goods null, missing/foreign currency untrusted, malformed/duplicate group-method-date
+untrusted, label-sharing bindings both survive). One clean tsc --noEmit (exit 0) on final source. The Order test
+build compiled the changed projects with 0 errors.
+
+REAL LOCAL TRIAL — EXECUTED BUT BLOCKED AT AUTHENTICATION (honest gap)
+Runtime identities verified first: Host 127.0.0.1:5088 = PID 27588 from D:\temp\tb221-build\out (preview OFF),
+FE 127.0.0.1:3000 = PID 28288 (node), /health 200. Current source was built once into the isolated
+D:\temp\tb229r1-build\out and run on the same 5088 with Tooba__StorefrontCapturedPreview__Enabled=true and an
+explicit AvailableDateCount (preview policy, not the method horizon). No migration, reset or reseed.
+What the live page actually did (real traffic, receipts in D:\temp\tb229r1-build\host-out.log): storefront shipping
+redirects to /fa/login?returnTo=/fa/shipping (the fresh task browser ended on the login page, «ورود | توبا») and
+POST /v1/storefront/shipping/projection returned 401 application/problem+json with
+ErrorCode=checkout.authentication_required (same trace also logged "Commerce resolution failed"). That is the
+planner's documented refusal for an unauthenticated cart, but it means the captured cards were NEVER rendered
+live. No buyer session or credentials exist for this task and none were invented. Therefore NO desktop/390
+screenshot exists and the live single-card / no-duplicate / no-horizontal-overflow confirmation is NOT obtained;
+single surface and strictness are source- and test-proven only.
+Original Host restored (PID 27588, preview OFF, /health 200); checked-in default stays OFF; no local preview left
+enabled. No Apply/publication/order/reservation/payment/cart conversion, no assignment write, no user draft/rate/
+pointer edit, no user tab read or reloaded.
+
+NOT CLAIMED
+Architect acceptance; user Visual ACCEPT; live positive quote or live captured cards; projection/selection/commit
+parity; compact shared-snapshot per-order-group evidence (still mandatory and unimplemented); seller-admin entry;
+any price/eligibility/activation/readiness statement.
+
+TIME / PROCESS
+Actual ≈39 min (13:25 → 14:04 local) vs HARD35 / source-stop20 / final15. Recorded NONCOMPLIANT, NOT a process
+PASS. One correction round used.
+
+GIT
+Exact-path staging only; the three Shipping files in git status are pre-existing CRLF drift and were NEVER staged
+(verified with --ignore-cr-at-eol: no content diff). No add-A, reset, stash, rebase or force-push. Commit
+6ddf8496d pushed to origin/main; HEAD == origin/main.
+
+FILES
+docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1/RESULT.md (full evidence)
+AGENTS.md, docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md,
+docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md (three TOP recovery files updated with actual proof and state)
+
+NEXT (Architect)
+The single blocking gap is a live authenticated-buyer observation at desktop + 390 (task-scoped buyer session or
+explicit credentials). After that: the parity slice — selected captured revision plus SaveSelection/Commit — which
+may replace the not_ready refusal, with the compact order-group evidence decision still mandatory. STOP_FOR_
+ARCHITECT; Automatic-Next-Task NONE. TB185 paused/default-OFF/PendingAllocation preserved; 225-R2 money and 226
+week stay accepted; 227 mobile empty-note residual and the unrecovered 225-R1 user-tab local-edit loss remain
+recorded.
+END_TOOBA_WORKER_RESULT
