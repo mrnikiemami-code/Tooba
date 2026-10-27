@@ -1,4 +1,21 @@
-﻿# CURRENT — 231-R1 executed: evidence owner/token/hour/money corrected in place — 2026-10-27
+# CURRENT —231-R1 value/transfer accepted; narrowSQL231-R2 issued —2026-10-27
+
+Active: TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2.
+Root read corrected fullowner/longtokens/100nsticks/money contract and providerfixtures: value+transfer
+accepted within reported proof. DBshape/migration acceptance pendingSQLCHECKfix only, no newcontractdesign.
+Current optionaldayCHECK allows halfNULLpair as UNKNOWN; blankStoretenant, emptyUUID refs and currency123
+also pass basicshape. DirectPostgresRED/GREEN required on bothtables. Keep22columns,model,Domainunchanged.
+Review: docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2/TASK.md.
+Migration20261027150000 is WRITTEN/sharedNOTAPPLIED; correct this unsharedunacceptedmigration only,
+never sharedhistory. Broader staleEFsnapshot remains disclosed, scopedruntimeModelDB proof accepted withinlimit.
+Still no livewriter, selection/commitnot_ready, compacthistoricalreader/parityunimplemented.
+Userread-onlytrial accepted; dedicatedvisibleREVIEWwindow is user'sunsavedwork: no automation/reload/close.
+Host/FE/localpreviewONcount7/data/account/cart/drafts/pointers/assignments unchanged by231lineage.
+Known emptykeyUIrefresh/cross-ownerlabel/decoder/OfferAPI gaps retained;227mobileresidual;225-R1unsavedLOCAL
+user-tab loss,no recovery. TB185paused/defaultOFF/PendingAllocation preserved. History below retained.
+
+# CURRENT — 231-R1 executed: evidence owner/token/hour/money corrected in place — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/{RESULT.md,TASK.md}.
 Base `5cd72434e`. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no live writer/parity/UI/runtime.
