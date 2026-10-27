@@ -1,3 +1,22 @@
+# CURRENT — Architect reviewed228 PARTIAL; issued229 — 2026-10-27
+
+Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229. Finish228 B/C: real cart+batch Offer assignments
+->219 exact selected revision ->ONE218 composer ->EXISTING Storefront group/date cards. No new design.
+228 A/domain stored nullable responsibility+type accepted as integration basis only; endpoint/provider proof
+pending in229. Migration20261027120000_AddOfferFulfillmentAssignment WRITTEN/NOTAPPLIED as of228.
+228 delivered NO user-facing Storefront connection or live trial; do not call it completed.
+229 requires real storefront URL/screenshots and explicit SaveSelection/Commit refusal with default-OFF
+read-preview branch. No customer checkout readiness, activation or order certification implied.
+Review: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229/TASK.md.
+Two-family policy resolved: Seller vs Platform(Store/Marketplace); each group independent, unknown physical
+facts null, assigned DB type not inferred. Existing admin endpoint is not a CAS/versioned writer.
+Compact shared snapshot and compact order evidence/no historical repricing remain required/unimplemented.
+User nonproduction migration/verified refresh/bounded dev API authorization persists; no draft/pointer changes.
+225-R2/226 accepted;227 accepted with recorded mobile empty-note residual; no replay.
+Fresh task-owned browser only;225-R1 unsaved local-user-tab loss recorded,no recovery.
+TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below retained.
+
 # CURRENT — 228 PARTIAL: assignment authority stored; storefront projection NOT wired — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/{RESULT.md,TASK.md}.
