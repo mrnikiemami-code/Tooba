@@ -1,4 +1,23 @@
-﻿# CURRENT — 231 executed PARTIAL: compact per-group order evidence stored, no live writer — 2026-10-27
+# CURRENT — Architect did NOT accept231 contract; issued231-R1 —2026-10-27
+
+Active: TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1. Fix existing evidence: long(bigint) source/selection
+tokens, FULL owner key, actual chosen-date TimeOnly interval (exactticks, not two invented DateOnly endpoints),
+financial representability/conservation and coherent group schedule/amount transfer. No live writer/parity.
+Review: docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/TASK.md.
+231 provider facts useful but incomplete/invalid-pricefixture; do not call contract/history ready.
+231 migration20261027150000_AddShippingGroupAcceptedEvidence is WRITTEN/sharedNOTAPPLIED; correction of this
+unaccepted/unshared migration explicitly allowed, no earlier/shared migrations modified. EF snapshot already
+lacks group entities; no wholesale baseline regeneration or claim of future scaffolding safety.
+Dedicated VISIBLE task-profile Chrome review window handed to USER on /fa/shipping; NEVER automate/reload it.
+230/R1 read-only user trial accepted within stated limits, no userVisualACCEPT. LiveHost/FE/previewONcount7
+and user's pending local input unchanged by231/R1. Current captured selection/commit not_ready stays.
+No authoredJSON perorder, one sharedcapture+constant compact group facts. Fullowner/date/money fidelity
+must be accepted before connecting writer. No historicalrepricing. 228migration alreadyAPPLIED.
+Known empty-keyrefresh/cross-ownerlabel/decoder/OfferAPI gaps retained;227mobile residual;225-R1 lostunsaved
+userLOCALtabedits,no recovery. TB185paused/defaultOFF/PendingAllocation preserved. Prior history below.
+
+# CURRENT — 231 executed PARTIAL: compact per-group order evidence stored, no live writer — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231/{RESULT.md,RECEIPTS.md,TASK.md}.
 Base `5a3070567`. Status: **EXECUTED — PARTIAL**, not accepted, no capture checkout, no user Visual ACCEPT.
