@@ -11,7 +11,7 @@
  * خطوطی که هنوز روش ندارند در بلوک «انتخاب روش» همان فروشنده می‌مانند (رفتار قبلی، بدون ادغام
  * فروشندگان) و به‌محض انتخاب روش، گروه مستقل آن‌ها ساخته می‌شود.
  */
-import { AlertTriangle, Calendar, Check, Clock, Package, Store } from "lucide-react";
+import { AlertTriangle, Calendar, Check, Clock, Package, RefreshCw, Store } from "lucide-react";
 import { useState } from "react";
 
 import { formatOfferAmount } from "./storefront-api.ts";
@@ -305,6 +305,7 @@ const CAPTURED_REASON_TEXT: Record<string, string> = {
   "storefront.captured_preview.composition_refused": "محاسبهٔ ارسال این سبد ممکن نشد.",
   "storefront.captured_preview.available_date_count_invalid": "بازهٔ تاریخ‌های ارسال تنظیم نشده است.",
   "storefront.captured_preview.destination_pending": "در حال محاسبهٔ ارسال برای مقصد جدید…",
+  "storefront.captured_preview.destination_failed": "ارسال این مقصد محاسبه نشد؛ قیمت مقصد قبلی نمایش داده نمی‌شود.",
   "storefront.captured_preview.untrusted": "پاسخ ارسال این سبد قابل اتکا نیست؛ دوباره تلاش کنید.",
 };
 
@@ -376,7 +377,11 @@ function CapturedMethodRow({
             className="mt-1 text-[10px] text-gray-600"
             data-testid={`shipping-group-captured-interval-${identity}`}
           >
-            بازهٔ همین روز: {activeDate?.intervalText ?? "ثبت نشده"}
+            {/* TB-230-R1: بازه ساعت واقعی سرور؛ جهت‌دهی صریح LTR تا در RTL هم 09:00–17:00 درست خوانده شود. */}
+            بازهٔ همین روز:{" "}
+            <bdi dir="ltr" className="inline-block">
+              {activeDate?.intervalText ?? "ثبت نشده"}
+            </bdi>
           </p>
         </>
       )}
@@ -462,6 +467,8 @@ export function StorefrontShippingGroupCards({
   schedules,
   selections,
   capturedPreview = null,
+  destinationRefreshState = null,
+  onRetryDestination,
   onSelectMethod,
   onSelectDate,
   onSelectWindow,
@@ -481,6 +488,12 @@ export function StorefrontShippingGroupCards({
   selections: Readonly<Record<string, StorefrontShippingGroupSelection>>;
   /** TB-229: پیش‌نمایش خواندنی گروه‌های capture‌شده؛ `null` یعنی کلید خاموش و رفتار قبلی. */
   capturedPreview?: StorefrontCapturedPreview | null;
+  /**
+   * TB-230-R1: وضعیت صریح تازه‌سازی مقصد. `failed` تنها حالت شکست برای همین هویت است و یک Retry
+   * صریح نشان می‌دهد؛ `pending` در حال محاسبه است؛ `current` یعنی همین پیش‌نمایش مال همین مقصد است.
+   */
+  destinationRefreshState?: "current" | "pending" | "failed" | null;
+  onRetryDestination?: () => void;
   onSelectMethod: (lineId: string, methodCode: string) => void;
   onSelectDate: (groupKey: string, value: string) => void;
   onSelectWindow: (groupKey: string, value: string) => void;
@@ -539,12 +552,24 @@ export function StorefrontShippingGroupCards({
             ) : null}
 
             {capturedGroups.length === 0 && capturedPreview?.state === "ok" ? (
-              <p
+              <div
                 className="text-[11px] text-gray-500 bg-surface border border-dashed border-gray-200 rounded-xl p-3"
                 data-testid="shipping-captured-preview-empty"
               >
-                {capturedReasonText(capturedPreview.unavailableReason)}
-              </p>
+                <p>{capturedReasonText(capturedPreview.unavailableReason)}</p>
+                {/* TB-230-R1: تنها راه تکرار، یک Retry صریح برای همان مقصدِ شکست‌خورده است. */}
+                {destinationRefreshState === "failed" && onRetryDestination ? (
+                  <button
+                    type="button"
+                    onClick={onRetryDestination}
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-[11px] font-bold text-primary"
+                    data-testid="shipping-captured-destination-retry"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    تلاش دوباره
+                  </button>
+                ) : null}
+              </div>
             ) : null}
 
             {capturedGroups.map((group) => (

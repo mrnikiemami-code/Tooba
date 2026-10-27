@@ -20,7 +20,50 @@ Existing cross-ownerlabel/decoder andOfferAPIproof gaps retained, no Marketplace
 225-R2/226 accepted;227empty-note residual;225-R1 lost unsaveduserLOCALedits,no recovery.
 Task-owned browser only;TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below.
 
-# CURRENT — 230 EXECUTED: captured destination refresh + ONE real configured priced read — 2026-10-27
+# CURRENT — 230-R1 EXECUTED: failed destination refresh no longer resurrects the old price — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1/{RESULT.md,TASK.md}.
+Base `6d0a506b2`. Status: **EXECUTED — one real failed-refresh defect repaired + two display fixes**, not
+accepted, no user Visual ACCEPT.
+
+A — the captured destination coordinator no longer relies on a loading boolean. One explicit identity state
+(`confirmedKey` = the destination the current successful preview actually describes, `requestedKey`,
+`failedKey`, `inFlight`) lives in `storefront-shipping-destination-refresh.ts`
+(`beginDestinationRefresh`, `completeDestinationRefresh`, `failDestinationRefresh`,
+`canRetryDestinationRefresh`, `resolveDestinationPreviewMode`, `planDestinationRefresh`), and
+`storefront-shipping.tsx` drives it through ONE ref+state pair while the existing `refreshProjection` takes
+`options.destinationKey`. The old `appliedDestinationKey` ref and `capturedDestinationPending` boolean are
+deleted. A tracked request is only "confirmed" by its own keyed success; a stale success OR a stale error
+returns the snapshot unchanged, so it cannot mutate the current projection/error/pending state. When the
+current identity differs from the confirmed one, or its refresh failed, the card hides money and dates and
+shows one compact reason (`destination_pending` / `destination_failed`) plus ONE explicit
+«تلاش دوباره» retry button, gated on the synchronous snapshot so a double click sends ONE request and nothing
+auto-retries. Typed recipient/address is never re-hydrated (`preserveTypedAddress:true`). Legacy OFF still
+short-circuits to `skip` and its card path is unchanged.
+
+B — display only: IRR all-zero fractions display as the integer (`۱۲۰,۰۰۰ ریال`, `۰ ریال`) while the raw token
+is untouched; a non-zero fraction is preserved exactly (never rounded/truncated); other currencies keep their
+decimal text. The captured interval text is wrapped in `<bdi dir="ltr">` so `09:00–17:00` reads correctly in
+RTL; stored hours untouched.
+
+C — proof: 22/22 focused facts (state: priced→new key fails⇒old money cannot look current; same-key explicit
+retry ONCE⇒success with cleared latch; stale failure/success ignored; unrelated render and legacy OFF issue no
+request; preserveTypedAddress; formatter facts) driving the SAME coordinator the page uses; ONE clean `tsc`.
+Mounted on the task-owned profile at 390 (FE 3000 PID 28288 / Host 5088 untouched, no rebuild/restart/
+migration): real priced card with `کرایه ۱۲۰,۰۰۰ ریال`; REAL Chrome offline emulation + province change to
+البرز ⇒ no priced card, no old price, no dates, retry visible; network restored ⇒ two same-tick clicks produced
+exactly ONE real projection POST with the exact new destination ids and the priced card returned with
+`intervalBdiDir ltr`, `scrollWidth == clientWidth == 390`, card bounds 59/786 in 844.
+HONEST: offline blocks before `requestWillBeSent`, so the failure is proven by the resulting state (count 0),
+not by a captured failing request; while pending/failed only the compact notice renders (product lines and
+typed inputs are preserved and return with the confirmed answer); one width mounted. No draft/rate/week/
+pointer/assignment/cart/auth write, no selection/save/commit. Elapsed ≈10 min vs HARD20 with one in-flight
+in-module correction. Compact per-order-group immutable order evidence and server-selected revision
+revalidation across selection/commit remain mandatory and unimplemented. TB185 paused/default-OFF/
+PendingAllocation preserved; Storefront is NOT relabelled as delivered.
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+## SUPERSEDED — 230 EXECUTED: captured destination refresh + ONE real configured priced read — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230/{RESULT.md,TASK.md}.
 Base `281c21d88`. Status: **EXECUTED — positive configured read reached live**, NOT accepted, no user Visual

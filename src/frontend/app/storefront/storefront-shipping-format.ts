@@ -10,13 +10,21 @@ export function toPersianDigits(n: string | number): string {
  *
  * فقط ارقام صحیح را سه‌رقمی گروه می‌کند و بخش اعشاری را عیناً همان‌طور که سرور فرستاده نگه می‌دارد؛
  * هیچ `Number`/`parseFloat`، گردکردن، حذف اعشار یا تبدیل ارز انجام نمی‌شود. `null` یعنی نامشخص.
+ *
+ * TB-230-R1: ریال ایران ارز صحیح است؛ اگر بخش اعشاری **کاملاً صفر** باشد (120000.00) همان عدد صحیح با
+ * گروه‌بندی و ارقام فارسی نمایش داده می‌شود و توکن خام دست‌نخورده می‌ماند. اعشار غیرصفر هرگز
+ * گرد/بریده نمی‌شود و عیناً نمایش داده می‌شود؛ ارزهای دیگر متن اعشاری فعلی خود را نگه می‌دارند.
  */
 export function formatExactAmountText(text: string | null, currency: string | null): string | null {
   if (text === null) return null;
   const match = /^(\d+)(\.\d+)?$/.exec(text);
   if (!match) return null;
   const grouped = match[1]!.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const exact = `${grouped}${match[2] ?? ""}`;
+  const fraction = match[2] ?? "";
+  // فقط «همه‌ی اعشار صفر» در ریال حذف می‌شود؛ صفر صریح (0.00) هم همین‌طور معتبر و صفر می‌ماند.
+  const integralCurrencyWithZeroFraction =
+    currency === "IRR" && fraction !== "" && /^\.0+$/.test(fraction);
+  const exact = integralCurrencyWithZeroFraction ? grouped : `${grouped}${fraction}`;
   const digits = toPersianDigits(exact);
   if (!currency) return digits;
   return currency === "IRR" ? `${digits} ریال` : `${digits} ${currency}`;

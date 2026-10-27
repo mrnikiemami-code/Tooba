@@ -1,0 +1,60 @@
+TB-230-R1 receipts — scrubbed (no credentials, cookies, tokens)
+Collected 2026-10-27 15:00–15:12 local (Asia/Tehran)
+
+== base / runtime ==
+base        6d0a506b2 (issue commit, fast-forward)
+FE          127.0.0.1:3000  PID 28288  (frontend source changed; dev server already serves it — no restart)
+Host        127.0.0.1:5088  (unchanged; no backend rebuild, no migration, no seed)
+browser     task-owned Chrome, CDP 127.0.0.1:9336, target created by this task, 390x844 emulation
+account     01a17cf7-e38d-7000-82a5-00c57929bc54 (existing session)
+cart        01a17cfd-c1b1-7000-b10d-8cf21258a1cd (existing)
+
+== focused tests (same coordinator the page calls) ==
+node --experimental-strip-types --test
+  app/storefront/storefront-shipping-destination-refresh.test.ts
+  app/storefront/storefront-shipping-format.test.ts
+  app/storefront/storefront-shipping-captured-preview.test.ts
+  tests 22  pass 22  fail 0
+npx tsc --noEmit   exit 0
+
+== mounted run (real traffic, no interception; only Chrome offline emulation) ==
+PRICED true
+PRICED_CARD  "... آزمایش ارسال۲۳۰ | کرایه ۱۲۰,۰۰۰ ریال · بسته‌بندی ۵,۰۰۰ ریال | تاریخ ..."
+             goods ۹,۴۸۵,۷۷۱ ریال, seller فروشگاه آرمان, type سنگین
+PROVINCE_CHANGE changed:البرز     (offline emulation ON, options already loaded)
+FAILED_STATE {"cardText":"... | ارسال این مقصد محاسبه نشد؛ قیمت مقصد قبلی نما",
+              "emptyText":"ارسال این مقصد محاسبه نشد؛ قیمت مقصد قبلی نمایش داده نمی‌شود. | تلاش دوباره",
+              "hasRetry":true,
+              "pricedCardVisible":false,
+              "oldPriceVisible":false,
+              "dateChipVisible":false,
+              "scrollWidth":390,"clientWidth":390}
+REQUESTS_DURING_OFFLINE 0        (Chrome offline blocks before requestWillBeSent — honest limit)
+RETRY clicked-twice              (two clicks in one tick)
+RECOVERED true
+AFTER_RETRY {"cardText":"... آزمایش ارسال۲۳۰ | کرایه ۱۲۰,۰۰۰ ریال · بسته‌بندی ۵,۰۰۰ ریال | تاریخ‌های مجاز همین روش ...",
+             "hasRetry":false,
+             "intervalText":"بازهٔ همین روز: 09:00–17:00",
+             "intervalBdiDir":"ltr",
+             "computedDirection":"ltr",
+             "scrollWidth":390,"clientWidth":390}
+RETRY_REQUESTS 1
+  {"cartId":"01a17cfd-c1b1-7000-b10d-8cf21258a1cd","provinceName":"البرز","cityName":null,
+   "destination":{"countryId":"e3451206-e503-51a8-91ad-afa9ab70e330",
+                  "administrativeAreaId":"1f8050a8-c325-59fa-959f-82d76b5b2bc5","cityId":null},
+   "methodCode":null,"language":"fa"}
+BOUNDS {"top":59,"bottom":786,"innerHeight":844,"intersects":true}
+
+== screenshots (native PNG, 390x844, card scrolled into view) ==
+screens/230r1-390-destination-failed.png   compact failed state + تلاش دوباره, NO old price/date
+screens/230r1-390-retry-success.png         priced card for the NEW destination, interval bdi ltr
+
+== code touched ==
+src/frontend/app/storefront/storefront-shipping-destination-refresh.ts   (+ coordinator identities/modes)
+src/frontend/app/storefront/storefront-shipping-destination-refresh.test.ts
+src/frontend/app/storefront/storefront-shipping-format.ts                (IRR all-zero fraction display)
+src/frontend/app/storefront/storefront-shipping-format.test.ts           (new)
+src/frontend/app/storefront/storefront-shipping-group-cards.tsx          (failure reason + retry + bdi ltr)
+src/frontend/app/storefront/storefront-shipping.tsx                      (tracked refresh, no boolean latch)
+no backend, no migration, no catalog, no draft/pointer/assignment/cart/auth write
+elapsed ≈10 min (15:00 → 15:10) vs HARD20 — inside box; one in-module decision corrected during tests

@@ -44,9 +44,16 @@ import {
   type GeographyDestinationIdentifiers,
 } from "./storefront-shipping-destination-model.ts";
 import {
+  beginDestinationRefresh,
+  canRetryDestinationRefresh,
+  completeDestinationRefresh,
+  createDestinationRefreshSnapshot,
   createRequestGeneration,
   destinationIdentityKey,
+  failDestinationRefresh,
   planDestinationRefresh,
+  resolveDestinationPreviewMode,
+  type DestinationRefreshSnapshot,
 } from "./storefront-shipping-destination-refresh.ts";
 import {
   isShippingDateHorizonComplete,
@@ -127,27 +134,45 @@ export function StorefrontShopeivaShipping() {
    * هویت مقصدش تغییر کرده، وضعیت «در انتظار» را هم پاک نمی‌کند.
    */
   const projectionGeneration = useRef(createRequestGeneration());
-  /** آخرین کلید مقصدی که واقعاً برایش درخواست فرستاده شد (نظم پایدار، نه ارجاع شیء). */
-  const appliedDestinationKey = useRef("");
-  /** در انتظار پاسخ مقصد تازه: قیمت قبلی نباید «جاری» به نظر برسد. */
-  const [capturedDestinationPending, setCapturedDestinationPending] = useState(false);
+  /**
+   * TB-230-R1: هویت مقصدِ تأییدشده/درخواست‌شده/شکست‌خورده جدا نگه داشته می‌شود. «شروع درخواست» هرگز
+   * به‌معنای موفقیت نیست، یک بولین بارگذاری تصمیم‌گیر نیست، و خطای کهنه وضعیت درخواست تازه را
+   * دست نمی‌زند. `ref` برای تصمیم همگام (مثلاً جلوگیری از کلیک تکراری Retry) و `state` برای رندر.
+   */
+  const destinationRefreshRef = useRef<DestinationRefreshSnapshot>(createDestinationRefreshSnapshot());
+  const [destinationRefresh, setDestinationRefresh] = useState<DestinationRefreshSnapshot>(
+    destinationRefreshRef.current,
+  );
+  const commitDestinationRefresh = useCallback((next: DestinationRefreshSnapshot) => {
+    if (next === destinationRefreshRef.current) return;
+    destinationRefreshRef.current = next;
+    setDestinationRefresh(next);
+  }, []);
 
   const refreshProjection = useCallback(async (
     province?: string,
     method?: string | null,
     city?: string,
     destination?: GeographyDestinationIdentifiers | null,
-    options?: { rehydrateDraft?: boolean; pendingDestination?: boolean },
+    options?: { rehydrateDraft?: boolean; destinationKey?: string },
   ) => {
     const sequence = projectionGeneration.current.next();
     const rehydrateDraft = options?.rehydrateDraft !== false;
-    if (options?.pendingDestination) setCapturedDestinationPending(true);
+    // کلید مقصد فقط وقتی داده می‌شود که این فراخوانی «تازه‌سازی مقصد» باشد؛ مسیر legacy بدون کلید
+    // رفتار قبلی خودش را دارد و هیچ قفلی نمی‌گیرد.
+    const trackedKey = options?.destinationKey ?? null;
+    if (trackedKey !== null) {
+      commitDestinationRefresh(beginDestinationRefresh(destinationRefreshRef.current, trackedKey));
+    }
     try {
       const cart = await loadStorefrontCart();
       if (!projectionGeneration.current.isCurrent(sequence)) return;
       if (!cart?.cartId) {
         setError("سبد خرید پیدا نشد.");
         setProjection(null);
+        if (trackedKey !== null) {
+          commitDestinationRefresh(failDestinationRefresh(destinationRefreshRef.current, trackedKey));
+        }
         return;
       }
       const page = await loadShippingProjection({
@@ -160,6 +185,10 @@ export function StorefrontShopeivaShipping() {
       if (!projectionGeneration.current.isCurrent(sequence)) return;
       setCartLines(cart.lines);
       setProjection(page);
+      // موفقیت همین درخواست، هویت تأییدشده را جلو می‌برد و قفل شکست همان کلید را پاک می‌کند.
+      if (trackedKey !== null) {
+        commitDestinationRefresh(completeDestinationRefresh(destinationRefreshRef.current, trackedKey));
+      }
       if (page.revalidationMessage) {
         setError(page.revalidationMessage);
       }
@@ -204,19 +233,29 @@ export function StorefrontShopeivaShipping() {
         setMethodCode(page.selectedMethodCode);
         setDeliveryDate((prev) => clampDate(prev));
       }
-    } finally {
-      if (projectionGeneration.current.isCurrent(sequence)) setCapturedDestinationPending(false);
+    } catch (cause) {
+      // فقط خطای همین درخواست جاری می‌تواند وضعیت را عوض کند؛ خطای کهنه هیچ‌چیز را دست نمی‌زند.
+      if (!projectionGeneration.current.isCurrent(sequence)) return;
+      if (trackedKey !== null) {
+        // شکست تازه‌سازی مقصد: قیمت قبلی «جاری» نمی‌شود و قفل Retry صریح برای همان کلید می‌نشیند.
+        commitDestinationRefresh(failDestinationRefresh(destinationRefreshRef.current, trackedKey));
+      } else {
+        setError(toCustomerShippingMessage(cause, locale));
+      }
     }
-  }, []);
+  }, [commitDestinationRefresh, locale]);
 
   /* TB-230: بدنهٔ بالا تنها مسیر معتبر تازه‌سازی است. */
 
   useEffect(() => {
-    void refreshProjection().catch((cause: unknown) => setError(toCustomerShippingMessage(cause, locale)));
+    // بارگذاری اولیه برای هویت «هیچ مقصد» است تا پیش‌نمایش اولیه هم به همین هویت بسته شود.
+    void refreshProjection(undefined, undefined, undefined, null, { destinationKey: "" }).catch((cause: unknown) =>
+      setError(toCustomerShippingMessage(cause, locale)),
+    );
     void listCheckoutSavedAddresses()
       .then((result) => setSavedAddresses(result.addresses))
       .catch(() => setSavedAddresses(null));
-  }, [refreshProjection]);
+  }, [refreshProjection, locale]);
 
   // انتخاب «هر خط» ذخیره‌شده هنگام بازگشت/رفرش بازیابی می‌شود؛ روش نامعتبر بازیابی نمی‌شود و
   // هیچ تبدیل خودکار روش رخ نمی‌دهد (fail-closed).
@@ -321,18 +360,30 @@ export function StorefrontShopeivaShipping() {
   const capturedPreviewActive = projection?.capturedPreview != null;
 
   /**
-   * TB-230: تا رسیدن پاسخ مقصد تازه، گروه‌های قیمت‌خوردهٔ قبلی پنهان می‌شوند؛ قیمت قدیمی هرگز
-   * به‌عنوان نتیجهٔ مقصد فعلی نمایش داده نمی‌شود. پیام «در حال محاسبه» صادقانه است و قیمتی نمی‌سازد.
+   * وضعیت صریح مقصد نسبت به هویت فعلی. `current` تنها حالتی است که پول/تاریخ موجود «جاری» است؛
+   * در `pending` و `failed` قیمت قبلی پنهان می‌شود و در `failed` فقط Retry صریح همان کلید هست.
+   */
+  const destinationPreviewMode = useMemo(
+    () => resolveDestinationPreviewMode(destinationRefresh, destinationKey),
+    [destinationRefresh, destinationKey],
+  );
+
+  /**
+   * TB-230-R1: کارت‌ها فقط وقتی پول/تاریخ نشان می‌دهند که پیش‌نمایش موجود دقیقاً برای همین هویت مقصد
+   * باشد. در انتظار پاسخ تازه «در حال محاسبه» و پس از شکست «در دسترس نیست + تلاش دوباره» می‌آید؛
+   * قیمت مقصد قبلی هرگز به‌عنوان پاسخ مقصد فعلی برنمی‌گردد. ورودی تایپ‌شده دست‌نخورده می‌ماند.
    */
   const capturedPreviewForCards = useMemo(() => {
     const preview = projection?.capturedPreview ?? null;
-    if (!preview || !capturedDestinationPending || preview.state !== "ok") return preview;
+    if (!preview || preview.state !== "ok" || destinationPreviewMode === "current") return preview;
     return {
       ...preview,
       groups: [],
-      unavailableReason: "storefront.captured_preview.destination_pending",
+      unavailableReason: destinationPreviewMode === "failed"
+        ? "storefront.captured_preview.destination_failed"
+        : "storefront.captured_preview.destination_pending",
     };
-  }, [projection, capturedDestinationPending]);
+  }, [projection, destinationPreviewMode]);
 
   const destinationContext = useRef({ province: "", city: "", method: "" });
   destinationContext.current = {
@@ -344,21 +395,37 @@ export function StorefrontShopeivaShipping() {
   useEffect(() => {
     const plan = planDestinationRefresh({
       capturedActive: capturedPreviewActive,
+      snapshot: destinationRefresh,
       destinationKey,
-      appliedKey: appliedDestinationKey.current,
       destination: destinationIdentifiers,
     });
     if (plan.action === "skip") return;
-    appliedDestinationKey.current = destinationKey;
     const context = destinationContext.current;
     void refreshProjection(
       context.province,
       context.method || null,
       context.city,
       plan.destination,
-      { rehydrateDraft: false, pendingDestination: true },
-    ).catch((cause: unknown) => setError(toCustomerShippingMessage(cause, locale)));
-  }, [capturedPreviewActive, destinationKey, destinationIdentifiers, refreshProjection, locale]);
+      // ورودی تایپ‌شده بازنویسی نمی‌شود؛ کلید پایدار این درخواست ثبت می‌شود.
+      { rehydrateDraft: !plan.preserveTypedAddress, destinationKey: plan.key },
+    );
+  }, [capturedPreviewActive, destinationRefresh, destinationKey, destinationIdentifiers, refreshProjection]);
+
+  /**
+   * تنها راه تکرار یک تازه‌سازی شکست‌خورده: یک Retry صریح برای همان کلید.
+   * کلیک تکراری/رندر مجدد هیچ درخواست دومی نمی‌سازد (قفل همگام در همان لحظه بسته می‌شود).
+   */
+  const retryDestinationRefresh = useCallback(() => {
+    if (!canRetryDestinationRefresh(destinationRefreshRef.current, destinationKey)) return;
+    const context = destinationContext.current;
+    void refreshProjection(
+      context.province,
+      context.method || null,
+      context.city,
+      destinationIdentifiers,
+      { rehydrateDraft: false, destinationKey },
+    );
+  }, [destinationKey, destinationIdentifiers, refreshProjection]);
 
   /** فهرست شهر: اگر Geography برای این استان شهر واقعی داد از آن، وگرنه همان کاتالوگ قدیمی. */
   const cityOptions = useMemo(() => {
@@ -695,6 +762,8 @@ export function StorefrontShopeivaShipping() {
    schedules={groupSchedules}
    selections={groupSelections}
                   capturedPreview={capturedPreviewForCards}
+                  destinationRefreshState={capturedPreviewActive ? destinationPreviewMode : null}
+                  onRetryDestination={retryDestinationRefresh}
                   onSelectMethod={(lineId, code) => setLineMethodByLine((prev) => ({ ...prev, [lineId]: code }))}
                   onSelectDate={(groupKey, value) =>
                     setGroupSelections((prev) => setGroupSelection(prev, groupKey, { deliveryDate: value }))
