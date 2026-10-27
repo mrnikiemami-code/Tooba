@@ -228,9 +228,9 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     /// <param name="checkoutId">شناسهٔ موقت snapshot.</param>
     /// <param name="now">زمان همین فرمان.</param>
     /// <param name="sellerOrders">خطوط سفارش نقل‌قول‌شدهٔ همین درخواست.</param>
-    /// <param name="shippingAmountOverride">
-    /// کرایهٔ <b>مشتق‌شده</b> از گروه‌های واقعی همین لحظه (جمع کرایهٔ پذیرفته‌شدهٔ هر گروه)؛ تهی یعنی
-    /// همان مقدار فرمان. هیچ مبلغی از فیلد کهنهٔ فرمان در نمای چندگروهی باقی نمی‌ماند.
+    /// <param name="shippingOverride">
+    /// تصویر <b>پذیرفته‌شدهٔ</b> ارسال (مبلغ/تاریخ/روش) از گروه‌های واقعی همین لحظه؛ تهی یعنی همان مقدار
+    /// فرمان. با این مقدار، پول و تاریخ/روش صفحه از <b>یک</b> ریشه می‌آیند و هیچ فیلد کهنه‌ای باقی نمی‌ماند.
     /// </param>
     internal static CheckoutSnapshot ComposePreviewSnapshot(
         CartSnapshot cart,
@@ -238,7 +238,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         Guid checkoutId,
         DateTimeOffset now,
         IReadOnlyList<SellerOrder> sellerOrders,
-        decimal? shippingAmountOverride = null)
+        CheckoutPreviewShippingOverride? shippingOverride = null)
     {
         var group = CheckoutGroup.Submit(
             checkoutId,
@@ -258,12 +258,12 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             command.CityName,
             command.PostalAddress,
             command.PostalCode,
-            command.ShippingMethodCode,
-            command.ShippingMethodLabel,
-            shippingAmountOverride ?? command.ShippingAmount,
-            command.MinimumDeliveryDate,
-            command.RequestedDeliveryDate,
-            command.RequestedDeliveryTimeWindow,
+            shippingOverride?.ShippingMethodCode ?? command.ShippingMethodCode,
+            shippingOverride?.ShippingMethodLabel ?? command.ShippingMethodLabel,
+            shippingOverride?.ShippingAmount ?? command.ShippingAmount,
+            shippingOverride?.MinimumDeliveryDate ?? command.MinimumDeliveryDate,
+            shippingOverride?.RequestedDeliveryDate ?? command.RequestedDeliveryDate,
+            shippingOverride?.RequestedDeliveryTimeWindow ?? command.RequestedDeliveryTimeWindow,
             command.CustomerNote,
             command.RecipientFirstName,
             command.RecipientLastName);

@@ -133,6 +133,60 @@ public sealed record CapturedPaymentDraftSnapshot(
     string? SelectionRevision);
 
 /// <summary>
+/// TB-235-R1: انتقال تایپ‌شدهٔ <b>مالی/زمانیِ پذیرفته‌شده</b> به ترکیب snapshot پیش‌نمایش.
+/// </summary>
+/// <remarks>
+/// پیش از این فقط مبلغ از پذیرش می‌آمد و تاریخ/روش از فرمان کهنه باقی می‌ماند؛ پس یک صفحه می‌توانست پول
+/// ریشهٔ تازه و تاریخ/روش ریشهٔ کهنه را با هم نشان دهد. این مقدار کل تصویر ارسالِ snapshot را از
+/// <b>یک</b> ریشهٔ پذیرفته‌شده می‌سازد و هیچ پنجرهٔ زمانیِ تجمیعی از گروه‌های مستقل نمی‌سازد: مقدار
+/// مشترک فقط وقتی منتقل می‌شود که همهٔ گروه‌ها واقعاً همان را بگویند، وگرنه صریحاً تهی/خالی می‌ماند.
+/// </remarks>
+public sealed record CheckoutPreviewShippingOverride(
+    decimal ShippingAmount,
+    DateOnly? MinimumDeliveryDate,
+    DateOnly? RequestedDeliveryDate,
+    string ShippingMethodCode,
+    string ShippingMethodLabel,
+    string RequestedDeliveryTimeWindow)
+{
+    /// <summary>مقدار انتقال‌یافته از گروه‌های همین پذیرش؛ بدون گروه، تهی (فرمان تغییر نمی‌کند).</summary>
+    public static CheckoutPreviewShippingOverride? Derive(IReadOnlyList<OrderShippingGroupPlan> groups)
+    {
+        ArgumentNullException.ThrowIfNull(groups);
+        if (groups.Count == 0)
+        {
+            return null;
+        }
+
+        var codes = groups
+            .Select(group => (group.MethodCode ?? string.Empty).Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var labels = groups
+            .Select(group => (group.MethodLabel ?? string.Empty).Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var windows = groups
+            .Select(group => (group.RequestedDeliveryTimeWindow ?? string.Empty).Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var requestedDates = groups
+            .Select(group => group.RequestedDeliveryDate)
+            .Distinct()
+            .ToArray();
+
+        return new CheckoutPreviewShippingOverride(
+            groups.Sum(group => group.ShippingCharge),
+            // زودترین تاریخ ممکنِ گروه‌ها یک مقدار واقعی است، نه یک پنجرهٔ ساختگی.
+            groups.Min(group => group.MinimumDeliveryDate),
+            requestedDates.Length == 1 ? requestedDates[0] : null,
+            codes.Length == 1 ? codes[0] : string.Empty,
+            labels.Length == 1 ? labels[0] : string.Empty,
+            windows.Length == 1 ? windows[0] : string.Empty);
+    }
+}
+
+/// <summary>
 /// فرمان ارسال checkout از روی سبد فعال.
 /// </summary>
 public sealed record SubmitCheckoutCommand(

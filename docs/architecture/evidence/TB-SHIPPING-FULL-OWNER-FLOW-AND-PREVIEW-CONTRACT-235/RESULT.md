@@ -183,3 +183,31 @@ was replayed; Order.Application/Infrastructure/Tests build 0 errors.
 * NEXT (Architect): review this owner/response slice; then the required shared coupon context (preview + selection +
   final quote) and the real frontend desktop/mobile complete trial. **Do not** treat this as the final
   Store/Marketplace/coupon delivery.
+
+---
+
+## F. Corrections appended by TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1 (2026-10-27)
+
+Full evidence: `docs/architecture/evidence/TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1/RESULT.md`.
+
+1. **§3(b) overstated the preview coherence.** In this 235 version `ComposePreviewSnapshot` overrode **only**
+   `ShippingAmount`; `MinimumDeliveryDate`, `RequestedDeliveryDate`, `ShippingMethodCode/Label` and the time
+   window still came from the stale command. R1 replaced that scalar override with a typed
+   `CheckoutPreviewShippingOverride` derived from the accepted groups (earliest accepted minimum, shared method/date/
+   window only when every group agrees, otherwise explicitly empty) and re-proved it with a real root advance.
+2. **§2/§3(a) exercised a second cart load.** `ProjectCapturedPaymentDraftAsync` still called `RequireCartAsync`
+   itself even though the public facade had already authorized and loaded the same `CartPage`. R1 passes that exact
+   server object in; the directory keeps its own independent authoritative cart/version check.
+3. **§4 overstated per-line assignment validation.** `ResolveGroupOwner` checked only the assignment dictionary key,
+   so a row carrying another `OfferId` as payload was accepted, and a `null` responsibility on the first line could
+   be repaired by a later line (`??=` accumulator). R1 requires the exact payload `OfferId` + real seller, a defined
+   responsibility and a non-empty assigned type equal to the stored evidence on **every** line, with explicit
+   initialization.
+4. **§4's owner vertical was harness/policy-level, not one real multi-owner vertical.** R1 adds a real
+   planner → 232 writer → public preview → public commit → persisted Order proof for Marketplace Platform + two Seller
+   business ids on one binding, with swapped-owner refusal and the coherent-root preview fact on the disposable
+   `15433/order_tb231` target. No accepted evidence was manually seeded.
+5. Unchanged and still true: coupon parity not implemented, no live HTTP/PSP/carrier proof, no activation, gates OFF,
+   231/232 migrations `shared NOT APPLIED` with the stale EF snapshot, `previewON/count7` and the user's unsaved
+   review window untouched, and the two pre-existing red guards (`DateTimeOffset.UtcNow` planner, packaging
+   allow-list). R1 elapsed ≈23 min (inside HARD35) with the one-correction budget exceeded.

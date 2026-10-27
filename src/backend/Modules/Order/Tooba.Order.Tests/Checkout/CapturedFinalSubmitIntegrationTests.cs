@@ -56,7 +56,7 @@ namespace Tooba.Order.Tests.Checkout;
 public sealed class CapturedFinalSubmitIntegrationTests
 {
     internal static readonly Guid CartId = Guid.Parse("01a17d0d-e033-7000-af43-49a1daa28821");
-    private static readonly Guid Buyer = Guid.Parse("01a17cf7-e38d-7000-82a5-00c57929bc54");
+    internal static readonly Guid Buyer = Guid.Parse("01a17cf7-e38d-7000-82a5-00c57929bc54");
     internal static readonly Guid SellerA = Guid.Parse("0199aaaa-0000-7000-8000-0000000000aa");
     internal static readonly Guid SellerB = Guid.Parse("0199aaaa-0000-7000-8000-0000000000bb");
     internal static readonly Guid OfferA = Guid.Parse("01a17cfc-0000-7000-8000-00000000000a");
@@ -70,7 +70,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     internal static readonly Guid RowA = Guid.Parse("01a17d11-0000-7000-8000-0000000000a1");
     internal static readonly Guid RowB = Guid.Parse("01a17d11-0000-7000-8000-0000000000b2");
     private static readonly Guid SnapshotId = Guid.Parse("01a17d0e-0419-7000-b500-0000000000a1");
-    private static readonly Guid ShippingTypeId = Guid.Parse("01a1785e-01f3-7000-b500-0000000000c1");
+    internal static readonly Guid ShippingTypeId = Guid.Parse("01a1785e-01f3-7000-b500-0000000000c1");
     private static readonly Guid CountryId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d1");
     private static readonly Guid OtherCountryId = Guid.Parse("e3451206-e503-51a8-9100-0000000000e1");
     private static readonly Guid ProvinceId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d2");
@@ -701,6 +701,23 @@ public sealed class CapturedFinalSubmitIntegrationTests
                 : CartOf([Line(LineA, OfferA, SellerA), Line(LineB, OfferB, SellerB)]);
         }
 
+        /// <summary>
+        /// دو آفر <b>متفاوت</b> از یک فروشندهٔ واقعی در یک گروه ارسال؛ افراز خطوط معتبر می‌ماند تا
+        /// اعتبارسنجی هر خط (آفر/مسئولیت/نوع) جداگانه سنجیده شود، نه افراز مختلط. آفر دوم هم واقعاً
+        /// همان فروشنده را بیان می‌کند تا نقل‌قول اولیهٔ submit به خطای فروشنده نرسد.
+        /// </summary>
+        internal void UseSingleSellerTwoOfferCart()
+        {
+            Offers.Register(new OfferReference(
+                OfferB,
+                VariantOf(OfferB),
+                SellerA,
+                SalesChannel.Direct,
+                OfferStatus.Active,
+                null));
+            Carts.Cart = CartOf([Line(LineA, OfferA, SellerA), Line(LineB, OfferB, SellerA)]);
+        }
+
         internal SubmitCheckoutCommand Command(
             string? expectedSelectionRevision,
             string? coupon = null,
@@ -1068,6 +1085,15 @@ public sealed class CapturedFinalSubmitIntegrationTests
         /// <summary>مسئولیت صریح هر آفر؛ آفر بدون ورودی همان Platform است (پیش‌فرض دانهٔ ۲۳۳).</summary>
         internal readonly Dictionary<Guid, OfferFulfillmentResponsibility?> Responsibility = [];
 
+        /// <summary>فروشندهٔ واقعی هر آفر (پیش‌فرض دانهٔ ۲۳۳: A→SellerA و بقیه→SellerB).</summary>
+        internal readonly Dictionary<Guid, Guid> SellerOf = [];
+
+        /// <summary>
+        /// آفرِ <b>داخل</b> شاهدِ برگشتی برای کنترل منفی «ردیف زیر کلید درست اما با آفرِ دیگر»؛ پیش‌فرض
+        /// همان آفر درخواستی است.
+        /// </summary>
+        internal readonly Dictionary<Guid, Guid> PayloadOfferId = [];
+
         public Task<IReadOnlyDictionary<Guid, OfferFulfillmentAssignmentSnapshot>> GetAssignmentsAsync(
             IReadOnlyCollection<Guid> offerIds,
             CancellationToken cancellationToken)
@@ -1077,8 +1103,10 @@ public sealed class CapturedFinalSubmitIntegrationTests
                 offerIds.ToDictionary(
                     id => id,
                     id => new OfferFulfillmentAssignmentSnapshot(
-                        id,
-                        id == OfferA ? SellerA : SellerB,
+                        PayloadOfferId.TryGetValue(id, out var payload) ? payload : id,
+                        SellerOf.TryGetValue(id, out var seller)
+                            ? seller
+                            : id == OfferA ? SellerA : SellerB,
                         Responsibility.TryGetValue(id, out var responsibility)
                             ? responsibility
                             : OfferFulfillmentResponsibility.Platform,
@@ -1147,12 +1175,30 @@ public sealed class CapturedFinalSubmitIntegrationTests
 
         internal long Revision { get; set; } = 2;
 
+        /// <summary>
+        /// پاسخ <b>وابسته به مالک/Binding</b> برای اثبات چندمالکی؛ تهی یعنی پاسخ یکسانِ ثابت پایین. هیچ
+        /// مسیر تولیدی از این درز استفاده نمی‌کند.
+        /// </summary>
+        internal Func<ShippingSelectedCapturedRevisionRequest, ShippingSelectedCapturedRevisionResult?>? Respond { get; set; }
+
         public Task<ShippingSelectedCapturedRevisionResult> ReadAsync(
             ShippingSelectedCapturedRevisionRequest request,
             CancellationToken cancellationToken)
         {
             Calls++;
-            return Task.FromResult(new ShippingSelectedCapturedRevisionResult(
+            if (Respond is { } respond)
+            {
+                var answered = respond(request)
+                    ?? throw new InvalidOperationException("the pointer fixture refused an unknown owner/binding");
+                return Task.FromResult(answered);
+            }
+
+            return Task.FromResult(Default(request));
+        }
+
+        internal ShippingSelectedCapturedRevisionResult Default(
+            ShippingSelectedCapturedRevisionRequest request) =>
+            new(
                 ShippingSelectedCaptureVerdict.Selected,
                 null,
                 ShippingSelectedCaptureReadState.Selected,
@@ -1164,8 +1210,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
                 request.ServiceCode,
                 request.OptionCode,
                 ShippingTypeId,
-                []));
-        }
+                []);
     }
 
     /// <summary>

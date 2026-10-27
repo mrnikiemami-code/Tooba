@@ -655,9 +655,23 @@ public sealed partial class CheckoutDirectory
     /// مالک ذخیره‌شده <b>عیناً</b> می‌سنجد.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// <b>TB-235-R1.</b> اعتبارسنجی <b>هر خط</b> کامل و مستقل است: انتساب باید همان <c>OfferId</c> دقیق
+    /// همان خط باشد (نه فقط کلید درست فرهنگ با مقدار آفر دیگر)، مسئولیت باید صریح و از مقادیر شناخته‌شده
+    /// باشد و نوع انتساب باید تهی‌نبوده و عیناً همان نوع شاهد باشد. <c>null</c> مسئولیت هرگز یک
+    /// «انبارهٔ مقدارنشده» نیست که خط بعدی پرش کند؛ خط اول نامعتبر کل گروه را رد می‌کند.
+    /// </para>
+    /// <para>
+    /// <b>TB-235-R1.</b> اعتبارسنجی <b>هر خط</b> کامل و مستقل است: انتساب باید همان <c>OfferId</c> دقیق
+    /// همان خط باشد (نه فقط کلید درست فرهنگ با مقدار آفر دیگر)، مسئولیت باید صریح و از مقادیر شناخته‌شده
+    /// باشد و نوع انتساب نباید تهی باشد و باید عیناً همان نوع شاهد باشد. <c>null</c> مسئولیت هرگز یک
+    /// «انبارهٔ مقدارنشده» نیست که خط بعدی آن را پر کند؛ خط اول نامعتبر کل گروه را رد می‌کند.
+    /// </para>
+    /// <para>
     /// هر خط گروه باید همان فروشندهٔ واقعی گروه باشد و همان مسئولیت/نوع انتساب را بیان کند؛ گروه مخلوط
     /// (دو مسئولیت یا دو نوع در یک گروه) هرگز پذیرفته نمی‌شود. مالک ذخیره‌شده شاهد نیست: اگر با مالک
     /// بازساخته‌شده نخواند، ثبت نهایی رد می‌شود و هیچ مالکی بازنویسی/گِرد نمی‌شود.
+    /// </para>
     /// </remarks>
     private StorefrontCapturedOwner ResolveGroupOwner(
         CartShippingDraftGroup group,
@@ -672,9 +686,12 @@ public sealed partial class CheckoutDirectory
             throw new ContractOperationException(CapturedUnavailable);
         }
 
+        // TB-235-R1: هیچ مقدار «مقدارنشده»ی مشترکی وجود ندارد که خط بعدی آن را پر کند؛ خط اول نیز
+        // باید کامل باشد و هر خط بعدی عیناً با همان مسئولیت/نوع سنجیده می‌شود.
         OfferFulfillmentResponsibility? responsibility = null;
         Guid? assignedTypeId = null;
-        foreach (var line in group.Lines)
+        var initialized = false;
+        foreach (var line in group.Lines.OrderBy(line => line.CartLineId))
         {
             // فروشندهٔ هر خط باید همان فروشندهٔ ذخیره‌شدهٔ گروه باشد؛ هیچ خط بیگانه‌ای در گروه نمی‌نشیند.
             if (!sellerByCartLineId.TryGetValue(line.CartLineId, out var seller)
@@ -683,25 +700,52 @@ public sealed partial class CheckoutDirectory
                 throw new ContractOperationException(CapturedConflict);
             }
 
-            if (!offerByCartLineId.TryGetValue(line.CartLineId, out var offerId)
-                || !assignments.TryGetValue(offerId, out var assignment)
+            if (!offerByCartLineId.TryGetValue(line.CartLineId, out var offerId))
+            {
+                throw new ContractOperationException(CapturedUnavailable);
+            }
+
+            // انتساب باید همان آفر دقیق همین خط باشد: ردیفی زیر کلید درست اما با آفر دیگر، «انتساب
+            // همین خط» نیست و پیش از رزرو/نوشتن رد می‌شود.
+            if (!assignments.TryGetValue(offerId, out var assignment)
+                || assignment.OfferId != offerId
                 || assignment.SellerPartyId != group.SellerPartyId)
             {
                 throw new ContractOperationException(CapturedUnavailable);
             }
 
-            if (responsibility is null)
+            // مسئولیت هر خط باید صریح و از مقادیر شناخته‌شده باشد؛ «نامعلوم» با خط بعدی جبران نمی‌شود.
+            if (assignment.Responsibility is not { } lineResponsibility
+                || !Enum.IsDefined(lineResponsibility))
             {
-                responsibility = assignment.Responsibility;
-                assignedTypeId = assignment.ShippingTypeId;
+                throw new ContractOperationException(CapturedUnavailable);
+            }
+
+            // نوع انتساب هر خط: شناسهٔ تهی «نوع» نیست و نوع/بی‌نوعی باید عیناً همان شاهد ذخیره‌شده باشد.
+            var lineTypeId = assignment.ShippingTypeId;
+            if (lineTypeId == Guid.Empty || lineTypeId != evidence.ShippingTypeId)
+            {
+                throw new ContractOperationException(CapturedConflict);
+            }
+
+            if (initialized is false)
+            {
+                responsibility = lineResponsibility;
+                assignedTypeId = lineTypeId;
+                initialized = true;
                 continue;
             }
 
-            if (responsibility != assignment.Responsibility || assignedTypeId != assignment.ShippingTypeId)
+            if (responsibility != lineResponsibility || assignedTypeId != lineTypeId)
             {
                 // گروه مخلوط (مسئولیت/نوع متفاوت در یک گروه) هرگز یک مالک واحد ندارد.
                 throw new ContractOperationException(CapturedConflict);
             }
+        }
+
+        if (initialized is false)
+        {
+            throw new ContractOperationException(CapturedUnavailable);
         }
 
         // نوع انتساب همین لحظه باید همان نوع شاهد ذخیره‌شده باشد و آن نوع باید واقعاً فعال باشد.

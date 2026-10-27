@@ -1,4 +1,28 @@
-# CURRENT — issued235 full-owner flow + necessary preview contract repairs —2026-10-27
+﻿# CURRENT — 235-R1 executed: per-line assignment validation + one accepted preview root + real multi-owner vertical —2026-10-27
+
+Active TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1 (row5daf73f2-b83d-45e5-82ba-e2ac37383c62).
+Read235-R1/TASK.md and235-R1/RESULT.md. Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation.
+Base1662e6f92. A: ResolveGroupOwner now refuses an assignment payload carrying another OfferId, requires a DEFINED
+responsibility and a non-empty assigned type equal to stored evidence on EVERY line, explicit initialized flag (null-first/
+valid-second and reverse both refuse before reserve/order; sameOfferId multi-line lawful). B: ProjectPaymentDraftAsync
+passes the already authorized CartPage into the captured facade (no second cart load; Directory keeps its own
+authoritative cart/version check) and ComposePreviewSnapshot takes a typed CheckoutPreviewShippingOverride derived from
+the ACCEPTED groups (sum, earliest minimum, shared method/date/window only when every group agrees, else explicit empty),
+so money+dates+method describe ONE accepted root. C: new StorefrontFullOwnerVerticalTests 6/6 on disposable
+15433/order_tb231 (identity before DDL, normal migrations, container removed, port closed): real planner -> 232 writer ->
+public preview -> public commit -> persisted Order owners/evidence for Marketplace Platform + two Seller business ids on
+ONE binding with own capture/row/money/date/100ns ticks (125/73/94 own payer), one219 per full binding, one216 per group,
+swapped owner responses refused with zero reserve/order, foreign payload and null-first/valid-second refused, and a REAL
+selection advance (rev1->2, +40 each) yielding one coherent accepted preview (revision"2", money AND dates, zero writes).
+Focused Checkout+Storefront run 412 total / 410 pass; the 2 reds are PRE-EXISTING guards (DateTimeOffset.UtcNow in the
+229/231 planner, packaging allow-list). HARD35 ~23min but one-correction budget EXCEEDED; measured RED for the two
+regressions NOT taken (source-derived expectation only) — disclosed in RESULT. NOT DELIVERED: no HTTP/live/browser/PSP/
+payment/carrier, coupon parity still refuses, no test-only seam (real writer advance instead), no physical per-tenant DB
+isolation claim. 231/232 sharedNOTAPPLIED/EFsnapshotgap, gatesOFF, no migration/schema/baseline edit. USER reviewwindow
+unsavedwork/previewONcount7/Host/FE/data untouched. Known230emptykey/inflight/OfferAPI/227mobile/225-R1lostLOCALwork
+retained. TB185paused/defaultOFF/PendingAllocation. STOP_FOR_ARCHITECT after235-R1; Automatic-Next-Task NONE.
+
+# SUPERSEDED — issued235 full-owner flow + necessary preview contract repairs —2026-10-27
 
 Active TB-SHIPPING-FULL-OWNER-FLOW-AND-PREVIEW-CONTRACT-235. Read234/ARCHITECT-REVIEW.md and235/TASK.md.
 FULL release scope Store/Marketplace/eachrealSellerStore + coupon context + actual existingUI/practical trial

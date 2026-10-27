@@ -58,8 +58,10 @@ public sealed class StorefrontCapturedPreviewContractTests
         };
         var service = Service(directory);
 
+        // TB-235-R1: صفحهٔ سبد مجاز همان‌بار در مسیر عمومی خوانده می‌شود و همان شیء به نمای داخلی می‌رسد.
+        var cart = await new CartFake().GetAsync(CartId, guestSecret: null, CancellationToken.None);
         var page = await service.ProjectCapturedPaymentDraftAsync(
-            CartId,
+            cart!,
             guestSecret: null,
             Draft(),
             couponCode: null,

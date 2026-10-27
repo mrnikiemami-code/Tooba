@@ -336,30 +336,33 @@ public sealed class StorefrontCheckoutService
     /// <summary>
     /// «پیش‌نویس پرداخت» یک انتخاب capture‌شده: همان یک گذر مالی + همان بازاعتبارسنجی ۲۳۳، بدون هیچ نوشتن.
     /// </summary>
-    /// <param name="cartId">سبد همین درخواست.</param>
-    /// <param name="guestSecret">گواه مالکیت سبد مهمان.</param>
+    /// <param name="cart">
+    /// <b>همان</b> صفحهٔ سبد مجازِ سرور که مسیر عمومی یک‌بار خوانده و اجازه داده است (TB-235-R1). هیچ
+    /// بارگذاری دوبارهٔ سبد در این نمای داخلی انجام نمی‌شود و مقدار از فراخوان مرورگر پذیرفته نمی‌شود؛
+    /// دایرکتوری همچنان نسخهٔ authoritative خودش را مستقل می‌خواند و می‌سنجد.
+    /// </param>
     /// <param name="draft">ریشهٔ ذخیره‌شدهٔ انتخاب.</param>
+    /// <param name="guestSecret">گواه مالکیت سبد مهمان (برای توصیف دسترسی، نه بارگذاری دوبارهٔ سبد).</param>
     /// <param name="couponCode">کوپن؛ خالی یعنی نبود.</param>
     /// <param name="expectedSelectionRevision">متن دقیق نسخهٔ انتخاب.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     public async Task<StorefrontCheckoutPage> ProjectCapturedPaymentDraftAsync(
-        Guid cartId,
+        CartPage cart,
         string? guestSecret,
         CartShippingDraft draft,
         string? couponCode,
         string? expectedSelectionRevision,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(cart);
         ArgumentNullException.ThrowIfNull(draft);
-        if (draft.CartId != cartId)
+        if (draft.CartId != cart.CartId)
         {
+            // ریشهٔ انتخاب و صفحهٔ مجاز سبد باید یک سبد باشند؛ هیچ نمایش مخلوطی ساخته نمی‌شود.
             throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         }
 
-        // سبد <b>واقعی</b> همین درخواست: عنوان‌ها/فروشنده‌ها/نسخه از همان سبد authoritative می‌آید تا
-        // نمای پیش‌نویس پرداخت هرگز به صفحهٔ ساختگی یا نسخهٔ کهنهٔ پیش‌نویس برنگردد.
-        var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
-
+        var cartId = cart.CartId;
         var usingSaved = draft.SavedAddressId is Guid savedId && savedId != Guid.Empty;
         var actor = _actor.ResolvePlacementActor(usingSaved);
         var command = new SubmitCheckoutCommand(

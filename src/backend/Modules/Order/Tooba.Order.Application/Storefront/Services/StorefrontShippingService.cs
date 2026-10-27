@@ -301,7 +301,9 @@ public sealed class StorefrontShippingService
         CancellationToken cancellationToken)
     {
         // دسترسی سبد اول بررسی می‌شود تا cartId ناشناس/بیگانه پیش از هر خواندن پیش‌نویس یکسان ۴۰۴ بگیرد.
-        await RequireCartAsync(cartId, guestSecret, cancellationToken);
+        // TB-235-R1: همین صفحهٔ <b>مجاز سرور</b> به نمای داخلی داده می‌شود؛ هیچ بارگذاری دوبارهٔ سبد در
+        // مسیر عمومی انجام نمی‌شود (دایرکتوری همچنان نسخهٔ authoritative خودش را مستقل می‌سنجد).
+        var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
 
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
@@ -322,7 +324,7 @@ public sealed class StorefrontShippingService
             }
 
             return await _checkouts.ProjectCapturedPaymentDraftAsync(
-                cartId,
+                cart,
                 guestSecret,
                 draft,
                 couponCode,

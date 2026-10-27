@@ -58,12 +58,10 @@ public sealed partial class CheckoutDirectory
             requireExplicitSelectionRevision: false,
             cancellationToken);
 
-        // مبلغ/نسخهٔ نمایش از <b>همین پذیرش</b> می‌آید، نه از فیلد کهنهٔ فرمان: جمع کرایهٔ گروه‌های
-        // پذیرفته‌شده و نسخه‌های واقعی سبد/ریشه. در نبود گروه، همان مقدار فرمان حفظ می‌شود.
-        var shippingTotal = acceptance.Groups.Count == 0
-            ? (decimal?)null
-            : acceptance.Groups.Sum(group => group.ShippingCharge);
-        var quote = ComposePreviewSnapshot(cart, command, checkoutId, now, sellerOrders, shippingTotal);
+        // مبلغ/تاریخ/روش نمایش از <b>همین پذیرش</b> می‌آید، نه از فیلد کهنهٔ فرمان: صفحه از یک ریشه
+        // توصیف می‌شود و نمی‌تواند پول ریشهٔ تازه را با تاریخ/روش ریشهٔ کهنه ترکیب کند.
+        var shipping = CheckoutPreviewShippingOverride.Derive(acceptance.Groups);
+        var quote = ComposePreviewSnapshot(cart, command, checkoutId, now, sellerOrders, shipping);
         return new CapturedPaymentDraftSnapshot(
             quote,
             acceptance.Groups,
