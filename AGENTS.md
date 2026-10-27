@@ -1,4 +1,23 @@
-﻿# CURRENT — 232-R2 executed: owned transactions are disposed once, primary failure never masked — 2026-10-27
+# CURRENT — 232/R1/R2 captured draft selection ACCEPTED; issued233 final Order parity — 2026-10-27
+
+Active: TB-SHIPPING-CAPTURED-ORDER-COMMIT-PARITY-233. Review232-R2/ARCHITECT-REVIEW.md,233/TASK.md in evidence.
+Root reviewed98c1c4ee0 actual adapter/tests. Accepted WITHIN SCOPE: per-group commitments, fresh clean preflight,
+explicit root CAS, compact231 evidence, coupon refusal, atomic replacement and owned transaction cleanup.
+Reported31/31+builds are WORKER execution, not root execution. Scripted rollback fault is not real outage;
+EF boundary cancellation not OS abort; diagnostic counts bounded by fixture window; sequentialCAS not race.
+232 has NO live/HTTP/frontend writer proof. 231/232 migrations sharedNOTAPPLIED; EFsnapshot gap retained.
+233 connects actual CheckoutProcessManager final submit to fresh cart/assignment/type/pointer/address/quote/date
+validation, using ACTUAL final SellerOrder quoted goods (no second inconsistent preview) before reservation;
+persist same compact evidence on existing Order groups in established atomic boundary. Actual StartPayment
+path must forward explicit captured selection revision. New final gate defaultOFF; coupon unsupported.
+No UI/runtime enabling/payment provider/history endpoint in233. USER VISIBLE review window is USER unsaved work:
+no enumerate/read/automate/reload/close; NO frontendHMR/HostFErefresh/live write. LocalpreviewON/count7 unchanged.
+Current final Commit/PaymentDraft remain not_ready until reviewed defaultOFF capability; no checkoutcertification.
+No full authoredJSON/order/historyrepricing; compact sharedcapture invariant locked. TB185paused/defaultOFF/
+PendingAllocation. Known230emptykey/inflight/cross-ownerlabelsdecoder/OfferAPI,227mobile,225-R1lostLOCALwork
+remain. STOP_FOR_ARCHITECT after233; Automatic-Next-Task NONE. History retained below.
+
+# HISTORICAL WORKER RESULT — 232-R2 executed: owned transactions are disposed once, primary failure never masked — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-TRANSACTION-CLEANUP-232-R2/{TASK.md,RESULT.md} and
 232-R1/ARCHITECT-REVIEW.md. Base `92e1d9a03` (fast-forward; the three pre-existing Shipping line-ending drifts
