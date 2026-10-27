@@ -1,3 +1,22 @@
+# CURRENT — Architect reviewed 227 — 2026-10-27
+
+227 ACCEPTED_WITH_RECORDED_LIMIT for in-popup search and reproduced populated-branch loading shake; admin
+user retest allowed, not user Visual ACCEPT/full pixel-stability. Root viewed 1440 and390 popup screenshots
+and source diff at a32d99ee47d445f6715df3436ca3a5689f6c114e. Remaining: 52px status min-height grows to66px for longest empty-branch note on
+mobile; retain this open limit. Service-area selectable options not live-proven. Worker69/69+typecheck are
+worker execution, not Architect execution.
+Review: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227/ARCHITECT-REVIEW.md.
+Active implementation: NONE. Storefront remains NOT connected. Next user-authorized priority is integration
+PER GROUP using existing Storefront UI; source review confirms inspected Cart/Offer contracts carry seller
+identity but not explicit fulfillment responsibility/required shipping type. Do not equate seller with
+fulfillment owner or selected publication with customer eligibility. Clarify explicit product/offer
+responsibility policy before inventing that authority. No228 implementation task issued yet.
+Compact shared immutable snapshot/compact per-order-group evidence/no historical repricing stays required
+and unimplemented. No full authored JSON per order.
+225-R2 money and226 week acceptance retained; no replay. 225-R1 lost unsaved LOCAL user-tab edits: no recovery
+claimed; fresh task-owned browser profile/target only. Default-OFF/TB185 paused/PendingAllocation and real
+draft/pointer/runtime preserved. Historical checkpoints below remain historical.
+
 # CURRENT — 227 executed: in-popup search + pixel-stable destination modal — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227/{RESULT.md,TASK.md}.
