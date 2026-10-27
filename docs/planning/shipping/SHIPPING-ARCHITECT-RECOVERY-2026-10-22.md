@@ -59,7 +59,7 @@ failure injection is not separately proven (same transaction/rollback path). EF 
 draft table (pre-existing stale baseline). Migrations 231 and 232 remain WRITTEN/shared NOT APPLIED.
 Retained unfixed: 230-R1 empty-key retry/in-flight wait, cross-owner label/decoder, Offer API proof, 227
 mobile empty-note, 225-R1 lost unsaved user LOCAL edits. Host/FE/previewONcount7/data/cart/draft/pointer/
-assignments and the user's visible review window were NOT touched. Elapsed ≈42 min vs HARD40 — recorded
+assignments and the user's visible review window were NOT touched. Elapsed ≈54 min vs HARD40 — recorded
 NONCOMPLIANT, not a process PASS.
 NEXT (Architect): the decision on closing the coupon asymmetry + commit-time destination/evidence
 revalidation, then final order composition / historical read. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.

@@ -215,8 +215,17 @@ residual; 225-R1 lost unsaved user LOCAL tab edits (no recovery).
 
 ## Elapsed
 
-Task window measured by this worker: ≈16:23 → ≈17:05 (≈42 min) against a HARD 40 box, with one in-module
-correction round (payment-draft guard proof + coupon threading + a pre-existing-guard investigation).
-Recorded **NONCOMPLIANT** — not a process PASS.
+Task window measured by this worker: ≈16:23 → 17:17 (≈54 min) against a HARD 40 box, with one in-module
+correction round (payment-draft guard proof + coupon threading + a pre-existing-guard investigation) and a
+second one after the mid-stage rollback fact exposed a real leak (revision not restored, detached groups'
+lines still `Added`). Recorded **NONCOMPLIANT** — not a process PASS.
+
+## Process disclosure
+
+The first version of this change was committed as `26be41d38` and pushed, then the rollback fix and the
+corrected evidence were folded into it with `--amend` + `--force-with-lease`, so `origin/main` now points at
+`d2307889f` and `26be41d38` is orphaned. That rewrote a commit this worker itself had just pushed minutes
+earlier; no other author's or shared history was touched, and nothing was lost from the tree. It is still a
+history rewrite inside one task window and is recorded here rather than hidden.
 
 STOP_FOR_ARCHITECT. Automatic-Next-Task NONE. No 233 envelope.
