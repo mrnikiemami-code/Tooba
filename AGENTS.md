@@ -1,3 +1,22 @@
+# CURRENT DELIVERY SCOPE — BOTH editions + all real seller/store owners + coupon context required —2026-10-27
+
+Latest explicit user instruction REJECTS final delivery limited to SingleStore/noncoupon.
+URGENT PRIORITY: real usable vertical trial for sale; after234review prioritize actual owner/frontend/coupon
+flow and task-owned practical desktop/mobile run. No generic audit/helper-only or broad test-confidence loops.
+Read docs/architecture/shipping/SHIPPING-COMPLETE-OWNER-AND-COUPON-DELIVERY-SCOPE-2026-10-27.md.
+Required final flow: independent SingleStore stores, Marketplace-owned fulfillment AND each authorized seller/store
+owned fulfillment, mixed cart per-group methods/prices/dates, server permissions and actual business owner identity,
+SAME coupon context in preview/selection/final quote, existingUI desktop/mobile and actual complete trials.
+No login-user ownership or invented StoreId/SellerPartyId mapping, no fake ownerpicker, no blanket final denial of
+required owner/coupon paths. Reuse same separate surfaces/forms/cards and real Contracts/policy authorities.
+CURRENT ACTIVE234 remains bounded public backend edge, NOT final handoff. Do not broaden its claimed task mid-run;
+after review implement missing full-owner/access, coupons, frontend and complete trials as focused slices.
+231/232/233 prior acceptance remains SCOPED SingleStoreManual/noncoupon, not full final acceptance.
+Earlier3-task/1-2hour estimate was for smaller scope and is superseded; no unverified replacement promise.
+This docs-only scope update changes NO runtime/source/gates/schema/data and issues NO235. USER reviewwindow
+unsavedwork/HostFE/localpreviewONcount7 untouched; migrations231/232sharedpending/EFsnapshot gap retained.
+TB185paused/defaultOFF/PendingAllocation. All prior recorded gaps retained. Detailed active-task recovery follows.
+
 # CURRENT — 233 core captured submit ACCEPTED; issued234 public commit edge —2026-10-27
 
 Active TB-SHIPPING-CAPTURED-PUBLIC-COMMIT-EDGE-234. Review233-R3/ARCHITECT-REVIEW.md,234/TASK.md.
