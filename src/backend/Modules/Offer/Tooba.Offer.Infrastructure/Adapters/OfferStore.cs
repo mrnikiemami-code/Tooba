@@ -11,7 +11,8 @@ using DomainOfferStatus = Tooba.Offer.Domain.ValueObjects.OfferStatus;
 namespace Tooba.Offer.Infrastructure.Adapters;
 
 /// <summary>EF-backed persistence adapter for Offer aggregates and Host read queries.</summary>
-public sealed class OfferStore(OfferDbContext db) : IOfferStore, IOfferQueryGateway
+public sealed class OfferStore(OfferDbContext db)
+    : IOfferStore, IOfferQueryGateway, Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup
 {
     /// <inheritdoc />
     public Task<SellerOffer?> GetByIdAsync(Guid offerId, CancellationToken token) =>
@@ -156,8 +157,7 @@ public sealed class OfferStore(OfferDbContext db) : IOfferStore, IOfferQueryGate
     /// <inheritdoc />
     public Task<bool> AnyOffersForCatalogVariantIdsAsync(
         IReadOnlyCollection<Guid> catalogVariantIds,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken)    {
         if (catalogVariantIds.Count == 0) return Task.FromResult(false);
         var ids = catalogVariantIds.Distinct().ToArray();
         return db.Offers.AsNoTracking().AnyAsync(x => ids.Contains(x.CatalogVariantId), cancellationToken);
@@ -221,6 +221,44 @@ public sealed class OfferStore(OfferDbContext db) : IOfferStore, IOfferQueryGate
         return row?.ToReference();
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, Tooba.Offer.Contracts.Dtos.OfferFulfillmentAssignmentSnapshot>>
+        GetAssignmentsAsync(IReadOnlyCollection<Guid> offerIds, CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<Guid, Tooba.Offer.Contracts.Dtos.OfferFulfillmentAssignmentSnapshot>();
+        if (offerIds.Count == 0)
+        {
+            return result;
+        }
+
+        // One batch read for the distinct real ids of the cart: never a per-line round trip, and a missing row
+        // simply does not appear (the consumer must refuse it instead of inventing a default).
+        var ids = offerIds.Distinct().ToArray();
+        var rows = await db.Offers.AsNoTracking()
+            .Where(x => ids.Contains(x.OfferId))
+            .Select(x => new
+            {
+                x.OfferId,
+                x.SellerPartyId,
+                x.FulfillmentResponsibility,
+                x.FulfillmentShippingTypeId,
+            })
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in rows)
+        {
+            result[row.OfferId] = new Tooba.Offer.Contracts.Dtos.OfferFulfillmentAssignmentSnapshot(
+                row.OfferId,
+                row.SellerPartyId,
+                row.FulfillmentResponsibility is null
+                    ? null
+                    : (Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility)(int)row.FulfillmentResponsibility.Value,
+                row.FulfillmentShippingTypeId);
+        }
+
+        return result;
+    }
+
     private static OfferListItem ToListItem(SellerOffer offer) => new(
         offer.OfferId,
         offer.CatalogVariantId,
@@ -230,3 +268,4 @@ public sealed class OfferStore(OfferDbContext db) : IOfferStore, IOfferQueryGate
         offer.SellerSku,
         offer.UpdatedAt);
 }
+

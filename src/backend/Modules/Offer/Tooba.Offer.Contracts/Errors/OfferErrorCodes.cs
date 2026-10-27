@@ -47,4 +47,22 @@ public static class OfferErrorCodes
 
     /// <summary>The requested status is unsupported.</summary>
     public const string StatusUnsupported = "offer.status.unsupported";
+
+    /// <summary>An archived offer cannot take a fulfillment assignment.</summary>
+    public const string ArchivedCannotAssignFulfillment = "offer.archived.cannot_assign_fulfillment";
+
+    /// <summary>The requested fulfillment responsibility is not one of the two supported families.</summary>
+    public const string FulfillmentResponsibilityUnsupported = "offer.fulfillment.responsibility_unsupported";
+
+    /// <summary>A fulfillment shipping type id cannot be stored without an explicit responsibility.</summary>
+    public const string FulfillmentTypeWithoutResponsibility = "offer.fulfillment.type_without_responsibility";
+
+    /// <summary>The fulfillment shipping type identity is structurally invalid.</summary>
+    public const string FulfillmentTypeInvalid = "offer.fulfillment.type_invalid";
+
+    /// <summary>The referenced Fulfillment shipping type does not exist in the real active taxonomy.</summary>
+    public const string FulfillmentTypeUnavailable = "offer.fulfillment.type_unavailable";
+
+    /// <summary>The fulfillment assignment body is empty, malformed or has an unsupported shape.</summary>
+    public const string FulfillmentBodyMalformed = "offer.fulfillment.body_malformed";
 }

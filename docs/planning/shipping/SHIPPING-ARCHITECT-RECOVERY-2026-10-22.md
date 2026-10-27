@@ -1,4 +1,30 @@
-# CURRENT — Architect issued Storefront228 — 2026-10-27
+# CURRENT — 228 PARTIAL: assignment authority stored; storefront projection NOT wired — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/{RESULT.md,TASK.md}.
+Base `d292e88b6`. EXECUTED — PARTIAL, not accepted; no live trial, no migration applied, no Host restart.
+
+Two-family policy stays exactly as decided (docs/architecture/shipping/STOREFRONT-RESPONSIBILITY-DECISION-2026-10-27.md):
+Seller delivery or Platform(Store/Marketplace) services, per-group fee/dates/interval, existing storefront UI.
+A delivered: nullable explicit `FulfillmentResponsibility` + real `FulfillmentShippingTypeId` on `SellerOffer`
+with one guarded `AssignFulfillment` (no inference, no archived, no type-without-responsibility, no empty id);
+additive nullable migration `20261027120000_AddOfferFulfillmentAssignment` written and NOT applied; ONE-query
+batch Contracts read `IOfferFulfillmentAssignmentLookup`; single admin write route
+`PUT /v1/admin/offers/{offerId}/fulfillment` (existing panel gate + existing `fulfillment.manage`, authorize
+before body, presence-aware body, real active Fulfillment type check, no seller route). Codes, FA/EN resources,
+catalogue and the Offer manifest updated (Admin un-forbidden with justification; Storefront still forbidden).
+NOT delivered and NOT to be claimed: B (cart offer ids → one assignment batch read → partition by responsible
+owner+real type with seller boundaries → real catalog bindings incl. service with NULL option → one 219 read per
+owner+binding → ONE 218 ComposeAsync) and C (per-group results into the existing group/delivery cards with that
+date's own interval, default-OFF read opt-in). 218/219/220 stay unconsumed, so no captured candidate is
+selectable and the explicit SaveSelection/Commit refusal must ship together with C.
+Proof: Offer.Endpoints + Host build 0 errors; 8/8 new focused facts; Offer suite 92/93 where the only failure is
+a PRE-EXISTING missing ProductWorkspace guard file (untouched by this task). Elapsed ≈82 min vs HARD40 =
+NONCOMPLIANT, not a process PASS.
+Next exact step: apply the migration on store-alpha via the real runner plan, then B+C in one change.
+227 accepted for search/populated-branch shake with the open mobile empty-note14px residual; no full visual
+acceptance. 225-R2/226 accepted within limits. No admin repair replay.
+
+# SUPERSEDED — Architect issued Storefront228 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228. User clarified TWO responsibility families:
 Seller delivery or Platform(Store/Marketplace) shipping services. Each group independent; existing Storefront

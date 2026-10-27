@@ -53,4 +53,10 @@ public static class OfferValidationCodes
 
     /// <summary>Adjustment reason must not be blank when supplied.</summary>
     public const string ReasonShape = "offer.validation.reason_shape";
+
+    /// <summary>Fulfillment responsibility must be one of the two supported families when supplied.</summary>
+    public const string FulfillmentResponsibilityShape = "offer.validation.fulfillment_responsibility_shape";
+
+    /// <summary>Fulfillment shipping type id must not be empty when supplied.</summary>
+    public const string FulfillmentShippingTypeIdShape = "offer.validation.fulfillment_shipping_type_id_shape";
 }

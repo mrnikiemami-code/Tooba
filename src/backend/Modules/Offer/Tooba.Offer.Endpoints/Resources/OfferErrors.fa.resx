@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -56,5 +56,23 @@
   </data>
   <data name="offer.status.unsupported" xml:space="preserve">
     <value>وضعیت درخواست‌شده پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="offer.archived.cannot_assign_fulfillment" xml:space="preserve">
+    <value>آفر بایگانی‌شده نمی‌تواند انتساب انجام ارسال بگیرد.</value>
+  </data>
+  <data name="offer.fulfillment.responsibility_unsupported" xml:space="preserve">
+    <value>مسئولیت انجام ارسال درخواست‌شده پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="offer.fulfillment.type_without_responsibility" xml:space="preserve">
+    <value>نوع ارسال بدون مسئولیت صریح ذخیره نمی‌شود.</value>
+  </data>
+  <data name="offer.fulfillment.type_invalid" xml:space="preserve">
+    <value>شناسهٔ نوع ارسال نامعتبر است.</value>
+  </data>
+  <data name="offer.fulfillment.type_unavailable" xml:space="preserve">
+    <value>نوع ارسال در کاتالوگ فعال موجود نیست.</value>
+  </data>
+  <data name="offer.fulfillment.body_malformed" xml:space="preserve">
+    <value>بدنهٔ انتساب انجام ارسال نامعتبر است.</value>
   </data>
 </root>

@@ -10,7 +10,7 @@ namespace Tooba.Offer.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001 — endpoint-reachable Offer validator coverage.
-/// Exactly six Offer.Endpoints-reachable MediatR requests; five carry a concrete transport validator
+/// Exactly seven Offer.Endpoints-reachable MediatR requests; six carry a concrete transport validator
 /// and one is explicitly NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY.
 /// </summary>
 public sealed class OfferEndpointValidatorCoverageGuardTests
@@ -27,12 +27,13 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
         ("UpdateOfferCommand", "VALIDATOR_REQUIRED"),
         ("SetOfferPriceCommand", "VALIDATOR_REQUIRED"),
         ("SetOfferInventoryCommand", "VALIDATOR_REQUIRED"),
+        ("AssignOfferFulfillmentCommand", "VALIDATOR_REQUIRED"),
     ];
 
     [Fact]
-    public void Exactly_six_endpoint_reachable_requests_are_manifested_once()
+    public void Exactly_seven_endpoint_reachable_requests_are_manifested_once()
     {
-        Assert.Equal(6, Manifest.Length);
+        Assert.Equal(7, Manifest.Length);
         var names = Manifest.Select(x => x.RequestTypeName).ToArray();
         Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
 
@@ -54,7 +55,7 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Five_required_validators_resolve_via_foundation_DI_and_auth_scoped_query_has_none()
+    public void Six_required_validators_resolve_via_foundation_DI_and_auth_scoped_query_has_none()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -80,7 +81,7 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void All_six_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
+    public void All_seven_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
     {
         var appAsm = typeof(CreateOfferCommand).Assembly;
         foreach (var (name, _) in Manifest)
@@ -163,3 +164,4 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
         throw new InvalidOperationException("repo root not found");
     }
 }
+

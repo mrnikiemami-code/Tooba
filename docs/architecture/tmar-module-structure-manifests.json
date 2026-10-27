@@ -1161,9 +1161,9 @@
             "OfferEndpointLocalizer.cs"
           ],
           "forbiddenTopLevelFolders": [
-            "Admin",
             "Storefront"
-          ]
+          ],
+          "structureJustification": "TB-228 adds exactly one real admin write surface (Admin/) for the explicit Offer fulfillment assignment; Storefront stays forbidden because Offer owns no storefront endpoint."
         },
         {
           "projectName": "Tooba.Offer.Infrastructure",

@@ -1,4 +1,30 @@
-# CURRENT — Architect issued Storefront228 — 2026-10-27
+# CURRENT — 228 PARTIAL: Offer assignment stored; storefront read projection NOT wired — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/{RESULT.md,TASK.md}.
+Base `d292e88b6`. Status EXECUTED — PARTIAL, not accepted; no live trial, no migration applied, no restart.
+
+A is real: `SellerOffer.FulfillmentResponsibility` (Seller|Platform, nullable) +
+`FulfillmentShippingTypeId` (nullable, uuid) with one guarded `AssignFulfillment` (no inference, no archived,
+no type-without-responsibility, no empty id); additive nullable migration
+`20261027120000_AddOfferFulfillmentAssignment` WRITTEN, NOT APPLIED; batch Contracts read
+`IOfferFulfillmentAssignmentLookup` (one query, missing id absent); one admin write route
+`PUT /v1/admin/offers/{offerId}/fulfillment` behind the EXISTING panel gate + EXISTING `fulfillment.manage`,
+authorize-before-body, real active Fulfillment type validation, no seller route. Codes/resources/catalogue/
+manifest updated. Admin folder un-forbidden for Offer.Endpoints with justification; Storefront still forbidden.
+B NOT STARTED: no cart→assignments→partition→real-binding→219 read→ONE 218 ComposeAsync plan builder.
+C NOT STARTED: existing storefront cards/transport/read opt-in untouched; 218/219/220 remain unconsumed, so no
+captured candidate is reachable and the explicit SaveSelection/Commit refusal must land WITH C.
+Proof: Offer.Endpoints + Host build 0 errors; 8/8 new focused facts; Offer suite 92/93 (single failure is a
+PRE-EXISTING missing ProductWorkspace guard file, unrelated). Elapsed ≈82 min vs HARD40 = NONCOMPLIANT.
+Next: apply migration on store-alpha via real runner plan, then B+C together with the captured refusal.
+227 accepted for search/populated-branch shake with open mobile empty-note14px residual; no full visual
+acceptance. 225-R2/226 accepted within limits. No admin repair replay.
+Shared immutable capture/compact order-group evidence/no historical repricing remain mandatory.
+User nonproduction authorization persists; required scoped migration/verified Host refresh allowed, no
+reset/reseed/user-draft overwrite. Task-owned browser only;225-R1 lost unsaved user-tab edits, no recovery.
+TB185paused/default-OFF/PendingAllocation preserved. Previous checkpoints below are historical.
+
+# SUPERSEDED — Architect issued Storefront228 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228. User clarified TWO responsibility families:
 Seller delivery or Platform(Store/Marketplace) shipping services. Each group independent; existing Storefront

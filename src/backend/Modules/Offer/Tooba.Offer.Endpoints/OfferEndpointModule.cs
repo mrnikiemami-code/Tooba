@@ -22,6 +22,12 @@ public static class OfferEndpointModule
         ArgumentNullException.ThrowIfNull(app);
         var group = app.MapGroup("/v1/seller");
         OfferSellerEndpoints.Map(group);
+
+        // TB-228: the ONLY write entry for the explicit fulfillment assignment. It lives on the real admin
+        // prefix and is gated by the existing panel gate + existing fulfillment.manage permission; no seller
+        // route is added, so a seller cannot declare Platform responsibility.
+        var admin = app.MapGroup("/v1/admin");
+        Admin.OfferFulfillmentAdminEndpoints.Map(admin);
         return app;
     }
 
@@ -31,6 +37,7 @@ public static class OfferEndpointModule
         ArgumentNullException.ThrowIfNull(services);
         services.AddSingleton<IErrorCatalogContributor, OfferErrorCatalogContributor>();
         services.AddSingleton<IErrorResourceSet, OfferErrorResourceSet>();
+        services.AddScoped<Admin.IOfferFulfillmentAdminAuthorizer, Admin.OfferFulfillmentAdminAuthorizer>();
         return services;
     }
 }

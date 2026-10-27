@@ -70,6 +70,23 @@ public sealed class SellerOffer : IHasDomainEvents
     /// <summary>Optional maximum order quantity.</summary>
     public decimal? MaximumOrderQuantity { get; private set; }
 
+    /// <summary>
+    /// Explicit fulfillment responsibility of this listing, or <c>null</c> when it was never assigned.
+    /// </summary>
+    /// <remarks>
+    /// <b>Never inferred.</b> A legacy/unassigned listing stays <c>null</c>; nothing in the storefront may read
+    /// the seller id, the sales channel or a method name as if it were a responsibility.
+    /// </remarks>
+    public FulfillmentResponsibility? FulfillmentResponsibility { get; private set; }
+
+    /// <summary>
+    /// Explicit real Fulfillment shipping type identity of this listing, or <c>null</c> when unassigned.
+    /// </summary>
+    /// <remarks>
+    /// Only the stable id is stored: no type code/label copy, no foreign key into another module's schema.
+    /// </remarks>
+    public Guid? FulfillmentShippingTypeId { get; private set; }
+
     /// <inheritdoc />
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
@@ -144,6 +161,58 @@ public sealed class SellerOffer : IHasDomainEvents
 
         MinimumOrderQuantity = minimum;
         MaximumOrderQuantity = maximum;
+        UpdatedAt = now;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Assigns the explicit fulfillment responsibility (and the real shipping type of a Platform seller-free
+    /// listing) to this offer, or clears the assignment.
+    /// </summary>
+    /// <remarks>
+    /// This is the ONLY assignment point: the responsible Seller identity is always this aggregate's own
+    /// <see cref="SellerPartyId"/>, and the Platform owner is resolved later from the trusted edition/tenant
+    /// context — never from a caller-supplied owner id, account or display name.
+    /// </remarks>
+    /// <param name="responsibility">Explicit responsibility, or <c>null</c> to clear the assignment.</param>
+    /// <param name="shippingTypeId">Real Fulfillment shipping type id, or <c>null</c> when unassigned.</param>
+    /// <param name="now">Current server instant.</param>
+    public Result AssignFulfillment(
+        FulfillmentResponsibility? responsibility,
+        Guid? shippingTypeId,
+        DateTimeOffset now)
+    {
+        if (Status == OfferStatus.Archived)
+        {
+            return Result.Failure(new SemanticError(OfferErrorCodes.ArchivedCannotAssignFulfillment));
+        }
+
+        if (responsibility is null)
+        {
+            // Clearing is lawful and explicit; a stray type id alone would be a half assignment.
+            if (shippingTypeId is not null)
+            {
+                return Result.Failure(new SemanticError(OfferErrorCodes.FulfillmentTypeWithoutResponsibility));
+            }
+
+            FulfillmentResponsibility = null;
+            FulfillmentShippingTypeId = null;
+            UpdatedAt = now;
+            return Result.Success();
+        }
+
+        if (!Enum.IsDefined(responsibility.Value))
+        {
+            return Result.Failure(new SemanticError(OfferErrorCodes.FulfillmentResponsibilityUnsupported));
+        }
+
+        if (shippingTypeId is Guid typeId && typeId == Guid.Empty)
+        {
+            return Result.Failure(new SemanticError(OfferErrorCodes.FulfillmentTypeInvalid));
+        }
+
+        FulfillmentResponsibility = responsibility;
+        FulfillmentShippingTypeId = shippingTypeId;
         UpdatedAt = now;
         return Result.Success();
     }

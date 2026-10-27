@@ -23,6 +23,10 @@ public sealed class SellerOfferConfiguration : IEntityTypeConfiguration<SellerOf
         entity.Property(x => x.CustomReturnWindowDays);
         entity.Property(x => x.MinimumOrderQuantity).HasColumnType("numeric(18,6)");
         entity.Property(x => x.MaximumOrderQuantity).HasColumnType("numeric(18,6)");
+        // Explicit fulfillment assignment (TB-228): nullable by design — an unassigned legacy listing stays
+        // unassigned and is never implicitly Seller/Platform. Only the stable id is copied, never a type code.
+        entity.Property(x => x.FulfillmentResponsibility).HasConversion<string>().HasMaxLength(16);
+        entity.Property(x => x.FulfillmentShippingTypeId);
         entity.Ignore(x => x.DomainEvents);
         entity.HasIndex(x => new { x.SellerPartyId, x.CatalogVariantId, x.Channel })
             .IsUnique()

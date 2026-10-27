@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -56,5 +56,23 @@
   </data>
   <data name="offer.status.unsupported" xml:space="preserve">
     <value>Requested offer status is unsupported.</value>
+  </data>
+  <data name="offer.archived.cannot_assign_fulfillment" xml:space="preserve">
+    <value>An archived offer cannot take a fulfillment assignment.</value>
+  </data>
+  <data name="offer.fulfillment.responsibility_unsupported" xml:space="preserve">
+    <value>Requested fulfillment responsibility is unsupported.</value>
+  </data>
+  <data name="offer.fulfillment.type_without_responsibility" xml:space="preserve">
+    <value>A fulfillment shipping type cannot be stored without an explicit responsibility.</value>
+  </data>
+  <data name="offer.fulfillment.type_invalid" xml:space="preserve">
+    <value>Fulfillment shipping type identity is invalid.</value>
+  </data>
+  <data name="offer.fulfillment.type_unavailable" xml:space="preserve">
+    <value>Fulfillment shipping type is not available in the active catalog.</value>
+  </data>
+  <data name="offer.fulfillment.body_malformed" xml:space="preserve">
+    <value>Fulfillment assignment body is malformed.</value>
   </data>
 </root>

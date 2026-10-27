@@ -1,4 +1,41 @@
-# CURRENT — Architect issued Storefront228 — 2026-10-27
+# CURRENT — 228 PARTIAL executed: Offer holds the explicit two-family assignment; storefront wiring NOT delivered — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/{RESULT.md,TASK.md}.
+Base `d292e88b6` (fast-forwarded; three pre-existing backend line-ending drifts never staged).
+Status: **EXECUTED — PARTIAL**, not accepted, no live trial, no migration applied, no Host restart.
+
+A — assignment authority is real and stored. `SellerOffer` now has nullable
+`FulfillmentResponsibility` (Seller|Platform) and nullable real `FulfillmentShippingTypeId`; the ONLY mutation is
+`AssignFulfillment`, which leaves legacy listings null (no inference from seller id/channel/name), refuses an
+archived offer, refuses a type without responsibility and an empty type, and clears both only explicitly. One
+additive nullable migration `20261027120000_AddOfferFulfillmentAssignment` (varchar(16) + uuid, no backfill, no
+FK, no code/label copy) is WRITTEN BUT NOT APPLIED to any DB. Batch Contracts read
+`IOfferFulfillmentAssignmentLookup` returns assignments for the distinct offer ids in ONE query (missing id is
+absent, never defaulted). The only write entry is `PUT /v1/admin/offers/{offerId}/fulfillment` — authorize BEFORE
+body, presence-aware body (absent key ⇒ malformed, explicit null ⇒ clear), then ISender; it reuses the EXISTING
+admin panel gate + EXISTING `fulfillment.manage` (no new permission, NO seller route) and validates the type
+through the real active Fulfillment taxonomy. Error codes + FA/EN resources + catalogue + Offer manifest
+(Admin un-forbidden with justification, Storefront still forbidden) + endpoint-validator manifest 6→7.
+
+B/C NOT IMPLEMENTED — this is the honest gap: no server plan builder (cart offer ids → partition by
+owner+type+seller → real catalog bindings incl. service with NULL option → one 219 read per owner+binding → ONE
+218 ComposeAsync), and no Storefront wiring (existing group cards/delivery card/date intervals/read opt-in all
+untouched). The 218 composer, 219 reader and 220 publication API are still unconsumed. Captured-plan selection/
+commit needs no refusal YET because no captured candidate is reachable from any transport; the explicit refusal
+must land together with C so a quoted-but-uncommittable candidate is never disguised as checkout-ready.
+
+Proof: Offer.Endpoints build 0 errors; Host build 0 errors (48 pre-existing warnings elsewhere); 8/8 new focused
+domain facts; Offer suite 92/93 with the single failure being a PRE-EXISTING missing-file drift
+(`ProductWorkspace/.../GetProductWorkspaceHandler.cs` is absent from git) unrelated to this task.
+Not run: 119/188/194/full-frontend/backend/solution suites, migration apply, browser, live storefront.
+Actual ≈82 min vs HARD40 — recorded as NONCOMPLIANT, NOT a process PASS.
+
+NEXT (Architect): apply the migration on store-alpha via the real runner plan; then build the server plan and
+feed each group's own result into the existing cards behind a default-OFF read opt-in, with the captured
+selection/commit refusal in the same change. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE; no 229 envelope.
+TB185 paused, default-OFF, PendingAllocation preserved; no money/rate/week/publication/geography change.
+
+## SUPERSEDED — Architect issued Storefront228 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228. User clarified TWO responsibility families:
 Seller delivery or Platform(Store/Marketplace) shipping services. Each group independent; existing Storefront

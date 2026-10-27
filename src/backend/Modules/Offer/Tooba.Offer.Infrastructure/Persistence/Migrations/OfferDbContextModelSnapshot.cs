@@ -55,6 +55,15 @@ namespace Tooba.Offer.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(18,6)")
                         .HasColumnName("minimum_order_quantity");
 
+                    b.Property<string>("FulfillmentResponsibility")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("fulfillment_responsibility");
+
+                    b.Property<Guid?>("FulfillmentShippingTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_shipping_type_id");
+
                     b.Property<string>("ReturnPolicyChoice")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
