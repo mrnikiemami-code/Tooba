@@ -1,0 +1,104 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229
+Parent-Task: TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228
+Repository: mrnikiemami-code/Tooba / Branch: main / Worker-Id: tooba-worker-01
+Reviewed-Source: 1418cf01d (fast-forward from 1e466786d to 02250f55f; the three pre-existing Shipping
+line-ending drifts were never staged and remain unmodified)
+Mode: FINISH_EXISTING_228_B_C_WITH_REAL_STOREFRONT_READ_TRIAL
+Status: EXECUTED — PARTIAL. The real read path (cart -> 228 assignments -> 219 selected revision -> ONE 218
+composition -> EXISTING group cards) is now wired behind a checked-in default-OFF option, and the captured
+write refusal ships in the same change. NOT accepted, NO live browser trial, Host/FE NOT refreshed, no
+desktop/390 screenshots. Honest partial, not a completion claim.
+Evidence: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229/{TASK.md,RESULT.md}
+
+2 — REAL SERVER PLAN AT THE EXISTING ORDER PROJECTION (delivered, read-only)
+- `StorefrontShippingService.ProjectAsync` now builds the captured preview inside the SAME existing GET:
+  real cart/access/version -> ONE batch `IOfferFulfillmentAssignmentLookup.GetAssignmentsAsync` over the
+  distinct offer ids -> explicit partition by `Responsibility` + real assigned active type + real offer
+  seller (stable server key `cap|{owner}|{seller}|{type}`) -> real catalog binding identities from
+  `IShippingCatalogReader` (active service with NULL option, or each active option; no label parsing, no
+  post/NULL -> post:standard guess) -> ONE `IShippingSelectedCapturedRevisionLookup.ReadAsync` per DISTINCT
+  full owner + canonical service/option, cached inside the request -> ONE
+  `StorefrontCapturedGroupProjectionComposer.ComposeAsync` for the COMPLETE cart partition (that composer
+  performs the single whole-cart 217 goods read and one 216 quote per candidate).
+- Exact fail-closed branches (all proven by the new class): missing offer in the batch -> whole preview
+  `assignment_missing` and zero catalog/219 calls; batch row whose OfferId/SellerPartyId disagrees with the
+  cart line -> `assignment_contradictory`; `Responsibility = null` -> group STAYS VISIBLE with `unassigned`
+  and no methods; assigned type not active/unknown -> `type_unavailable`; Seller responsibility on SingleStore
+  -> `seller_owner_unsupported` and 219 is not even read (never reinterpreted as Store); selected pointer with
+  a captured `ShippingTypeId` different from the assigned active type, or a `Cleared`/`Absent` pointer -> no
+  candidate, group visible with `no_selected_capture`; zero candidates across the cart -> early return with
+  per-group reasons and ZERO 218/217/216 calls.
+- Candidate labels come from the captured translations (language-preferred) and the type label from the real
+  Fulfillment `ShippingTypeSnapshot`; no taxonomy or UUID is exposed to the customer. Selection
+  version/snapshot id stay server-side provenance and are only reported when exactly one distinct pointer was
+  used (`null` otherwise, never collapsed).
+- Additive nullable `StorefrontShippingProjection.CapturedPreview`. When the option is OFF it is `null`, so the
+  legacy response shape/flow is unchanged and no Offer/Fulfillment/Shipping call is made from this path.
+- Option: `Tooba:StorefrontCapturedPreview:Enabled`, bound from `StorefrontCapturedPreviewOptions.SectionName`.
+  Absent section = `false`.
+
+3 — EXISTING TRANSPORT + EXISTING STOREFRONT CARDS (delivered, additive)
+- No new page/mockup/framework. `storefront-shipping-api.ts` maps the additive payload defensively (unknown
+  shape -> `null`), and a new `storefront-shipping-captured-preview.tsx` renders INSIDE the existing
+  `StorefrontShippingGroupCards` through one optional prop. Existing card DOM/CSS/images/address/order summary
+  are untouched.
+- Per group: real seller name (from the cart's own groups), real DB type label, that group's own
+  post-discount/post-tax goods amount, and each method's OWN freight + packaging rendered separately via
+  `formatOfferAmount` (no JS float recompute, no rounding, no FX, no zero/free fabrication — a missing amount
+  renders as unknown).
+- Per method: that method's own eligible dates; changing the date shows THAT date's own stored interval
+  (`subLabel`), never a union of weekdays. Unavailable groups/methods remain visible with one short localized
+  reason; nothing is erased or merged.
+
+4 — WRITE REFUSAL SHIPS WITH THE READ PREVIEW (delivered)
+- With the option ON, `StorefrontShippingService.SaveSelectionAsync` and `CommitAsync` both call the SAME
+  guard as their FIRST statement and throw `storefront.captured_preview.not_ready` BEFORE the cart read,
+  address preparation, selection/draft write, or any order/reservation/payment/cart-conversion work.
+  FA + EN resources added to `OrderErrors.resx` / `OrderErrors.fa.resx`. The FE simply has no save action, but
+  the server gate is the real boundary; captured method codes cannot fall through into legacy price/commit.
+- With the option OFF the legacy methods/requests behave exactly as before (TB185/default legacy gates
+  untouched).
+
+1 — AUTHORITY INTEGRATION (partially delivered)
+- Migration `20261027120000_AddOfferFulfillmentAssignment` is now APPLIED on the real local
+  `tooba_alpha` / store-alpha through the normal `Tooba.MigrationRunner`: plan showed exactly ONE pending
+  module (Offer) and apply logged
+  `Migration Apply module=Offer ... current=20261027120000_AddOfferFulfillmentAssignment pendingCount=0 result=ok`
+  (Order/Shipping/Fulfillment/Cart/Catalog/Pricing/Tax/Party/Identity/Payment/Returns all `pendingCount=0`).
+  No reset/backfill/reseed and no historical migration edit. Legacy rows keep NULL in both new columns; that
+  nullable state was not additionally queried by SQL in this task.
+- NOT delivered: the focused Offer API integration class (denied admin => no body/dispatch/write; missing
+  responsibility => malformed; explicit null clears; active type accepted; missing/inactive rejected;
+  dependency error/caller-token propagation). Those remain source-reviewed only from 228. No CAS/concurrency
+  claim is made for this assignment path.
+
+5 — PROOF ACTUALLY EXECUTED
+- ONE new affected class `StorefrontCapturedPreviewPlannerTests` -> 9/9 PASSED: default-OFF zero-call control;
+  missing assignment; contradictory seller; unassigned group visible; inactive type; SingleStore Seller
+  unsupported with zero 219 reads; one 219 read per distinct catalog binding with Store owner+tenant derived
+  from trusted context; foreign captured type rejected; cleared pointer rejected; and "no candidate => composer
+  and 217 never called" (the goods-facts fake throws if invoked).
+- `dotnet build` Tooba.Order.Application -> 0 errors; Tooba.Order.Infrastructure -> 0 errors.
+- `npx tsc --noEmit` -> clean after the final frontend source change.
+- Not run: Offer/Shipping/194/188/solution suites, browser, migration apply re-run, Host restart.
+
+HONEST LIMITS (why this is PARTIAL)
+- No live page trial: the running Host (:5088, PID 26600) and FE (:3000) were NOT rebuilt/restarted for this
+  task, so the ON-option path has not been observed in any browser; no desktop/390 screenshots exist.
+- No positive composition executed by this task: 216/217/218 are covered only by their own earlier classes.
+  Two groups keeping different fees/week schedules and the real 99/198 per-group goods are NOT proven here.
+- Positive live quote may legitimately be unavailable locally (measurement-gated draft) — nothing was relaxed
+  to force a green screenshot, and no weight bounds were erased.
+- Elapsed ≈70 min vs the HARD45 box (implementation plus two self-inflicted fixture/file detours) — recorded
+  as NONCOMPLIANT, NOT a process PASS.
+
+NEXT (Architect)
+1. Live Storefront shipping GET with the option ON in a task-owned Chrome profile/target (real cart + one real
+   DEV assignment through normal APIs), desktop + 390 screenshots of the EXISTING group cards.
+2. Then the parity slice: compact shared-snapshot order evidence + selected-captured-revision commit, which is
+   the only change allowed to replace `storefront.captured_preview.not_ready`.
+Compact-order-evidence decision remains mandatory and unimplemented; no full authored JSON per order, no
+historical repricing. TB185 paused, default-OFF, PendingAllocation preserved.
+STOP_FOR_ARCHITECT. Automatic-Next-Task NONE.
+END_TOOBA_WORKER_RESULT
