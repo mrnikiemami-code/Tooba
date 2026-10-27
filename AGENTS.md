@@ -1,4 +1,22 @@
-# CURRENT — 233-R3 executed: real country/address authority + corrected real submit proof —2026-10-27
+# CURRENT — 233 core captured submit ACCEPTED; issued234 public commit edge —2026-10-27
+
+Active TB-SHIPPING-CAPTURED-PUBLIC-COMMIT-EDGE-234. Review233-R3/ARCHITECT-REVIEW.md,234/TASK.md.
+Root reviewed1f0ee603e/source897fc673c actual address/provenance/catalog/core/comparison/tests. Accepted within
+SingleStore Store Manual NONCOUPON controlledContracts/realOrder scope: same-binding sharedcapture/area, real
+99/198, own rows/dates/fractionalticks, typedpointercache, fresh address/country and activebinding, actualOrder
+write/replay/rollback/rowlock.25/25+68/68 are WORKER execution not root. Coarse isolatedDB lockwaiter probe not PID
+certificate; first winner rawSQL, second real232adapter; DI test equivalentregistrations notfullOrderModule.
+234 connects EXISTING publicCommit/PaymentDraft/StartPayment to acceptedcore behind coherent defaultOFF gates.
+No legacy replay/staticrepricing for captures; public idempotency must survive convertedcart/deletedaddress/
+changedpointer; PaymentDraft real validation read-only,217goodshelper stayspure. Actualrequest token TEXT
+forwarding +realOrderDBproof, controlled downstreampayment only. NO newcoupon engine/parity/historyendpoint.
+NO frontendHMR/runtime/HostFE/livewrites/sharedDDL/browser. USER VISIBLE reviewwindow USERunsavedwork:
+no enumerate/read/automate/reload/close; localpreviewONcount7 unchanged. 231/232 sharedNOTAPPLIED/EFsnapshotgap.
+Current publicguards not_ready until234review; no activation/fullcheckout/payment/VisualACCEPT. Known230emptykey/
+inflight/crossownerlabelsdecoder/OfferAPI/227mobile/225-R1lostLOCALwork retained. TB185paused/defaultOFF/
+PendingAllocation. STOP_FOR_ARCHITECT after234; Automatic-Next-Task NONE. History retained below.
+
+# HISTORICAL WORKER RESULT — 233-R3 executed: real country/address authority + corrected real submit proof —2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-ADDRESS-BINDING-AND-PROOF-233-R3/{TASK.md,RESULT.md}.
 Status EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base2218873b9; elapsed≈20min from the
