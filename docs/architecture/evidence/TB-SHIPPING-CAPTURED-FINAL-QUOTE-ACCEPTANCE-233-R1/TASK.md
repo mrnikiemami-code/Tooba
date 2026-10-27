@@ -1,0 +1,48 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Task-ID: TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1
+Parent-Task: TB-SHIPPING-CAPTURED-ORDER-COMMIT-PARITY-233
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Worker-Id: tooba-worker-01
+Expected-Base-SHA: ISSUE_COMMIT_CONTAINING_THIS_TASK
+Mode: FINISH_REAL_SUBMIT_ACCEPTANCE_NOT_ANOTHER_PLACEHOLDER
+HARD40 / source25 / final15. One correction round. Hard stop is real: if the first positive real-submit case cannot be reached inside source25, stop and report the exact blocker; do not spend another70 minutes adding token tests. No Bridge/enqueue/wake/post-result script. No234.
+Read233/ARCHITECT-REVIEW.md and applicable backend instructions. 231 compact evidence and232/R1/R2 selection writer remain ACCEPTED in recorded scope, do not reopen.
+
+ONE BOUNDED OUTCOME
+Finish ICheckoutSubmitHost.AcceptCapturedShippingAsync in the REAL CheckoutProcessManager path and prove its returned groups are persisted as compact evidence by actual CheckoutDirectory.SubmitAsync. Keep public Storefront Commit/PaymentDraft guards CLOSED in this slice; NO frontend or StartPayment/payment-provider activation. New CheckoutEnabled stays checked-in false and no runtime gate change.
+This is the core final-quote acceptance slice of233, NOT completion of Storefront checkout. A pure helper not called by real submit, a permanent ON=>not_ready stub, or token-only tests do not deliver it.
+
+A CLOSE THE DIRECT-CALLER BYPASS FIRST
+Current (!checkoutEnabled && !callerSuppliedEvidence) returns plans before checking stored captured evidence. An internal/direct Submit caller can omit evidence and treat a captured cart as legacy. Read current Order draft/capture marker regardless of caller omitting evidence; allow one own-Order DB probe. The prior zero-additional-OWN-DB-read shortcut is explicitly superseded: preserve legacy behavior and zero FOREIGN module calls when truly legacy, not a bypass. Stored captured OR caller evidence OR captured-only revision intent => captured route, gateOFF=>not_ready; mixed/forged/partial/dropped evidence never becomes legacy.
+Use fresh no-tracking persisted graph, real cart access/version and explicit strict ExpectedSelectionRevision text. Current parser can be reused (currently tests only); it must now control acceptance. Missing/null/blank/stale token fails before reservation. Caller plans are comparison intent, not accepted authority.
+
+B FACTS FROM THIS SUBMIT'S ALREADY-QUOTED LINES — NO REQUOTE
+AcceptCapturedShippingAsync already receives cart + sellerOrders AFTER actual QuoteSellerOrdersAsync. Build SAME-GROUP facts from THOSE lines using the current _orderLineIdByCartLineId, never OfferId/quantity matching. Reuse/extract existing217 ValidateMembership/BuildAuthoritativeLinesByCartLineId/BuildGroupFacts into one common builder used by preview AND submit; do not copy discount/tax math. final amount = sum exact TaxInclusiveSnapshot, shipping excluded, physical weight/count unknown.
+Add a typed facts-input method to EXISTING218 composer which shares ValidatePlan/ValidateFacts/candidate/calendar code with ComposeAsync. Existing ComposeAsync still reads217 ONCE; final facts-input method NEVER calls goodsFactsReader/Preview/Submit/Pricing/Promotion/Tax. No second calendar or rate engine. Internal Order-owned facts input only, never HTTP payload.
+
+C REVALIDATE ONLY THE SAVED CHOICES, USING EXISTING CONTRACT AUTHORITIES
+For the complete stored captured partition, verify current actual cart lines, seller, explicit228 assignment/responsibility/type and active real type. Only active SingleStore Store owner allowed, exactly current trusted tenant (not seller=>owner). No missing/unassigned/foreign/mixed group can be silently removed.
+Use existing canonical owner/binding policy and existing Contracts reads; share/extract small existing partition/owner helpers where needed, not a second full planner or second cart read. A final submit needs only the SAVED selected binding, not enumeration/quoting of every possible candidate. One batch Offer read, batched types/catalog, one219 per distinct full owner+binding, one216 quote per saved group through existing218 facts composition.
+Re-read current selected219snapshot/draft/sourceRevision/selectionVersion/type, no latest fallback. Match all stored231 owner/refs/area/row/type/currency/money/receivingDate/100ns ticks/timezone/minmax against current quote/calendar. A new amount/row/date/hours/pointer => stable localized conflict/unavailable requiring new customer selection, never rewrite old evidence or accept a fresh price silently.
+Resolve actual final address from server-owned saved AddressBook record when SavedAddressId exists; compare command address with that real record and unique Geography identity with stored priced destination scalars. Direct callers cannot price one destination and persist another. Reuse existing canonical Geography resolution; ambiguous/foreign/changed=>refuse. Do not call StorefrontCheckoutService from CheckoutDirectory (would create DI recursion); use existing module Contracts/pure shared preparation helper as needed. Untrusted unsaved-address fields must also resolve to the exact persisted priced destination. Service-area stays unsupported when the trusted address has no such identity; no guessing.
+Nonblank coupon explicitly unsupported in captured route before any reservation (read/write/final common coupon context still absent). Free/CarrierApi, Marketplace/Seller remain unavailable. Unknown weight/count stays null. No pricing/tax/discount/calendar algorithm invented.
+
+D USE THE REAL ORDER ATOMIC BOUNDARY
+The accepted result is the ONLY captured plan list PersistCheckoutAsync may materialize. No null fallback to raw caller evidence; direct persistence of arbitrary accepted plans must not create a bypass. Use the complete persisted stable groups and current server-verified evidence, exact membership, own selected dates; no per-method dictionary collision. No full authoredJSON per group/order, no new history table/schema.
+Final root SelectionRevision must remain the one accepted at Order persistence: add a narrow Order-owned revision check/lock at the EXISTING TransactionScope before reservation (move acceptance there if appropriate), no nested/cross-module transaction. Document point-in-time Shipping pointer observation; do not claim a distributed lock or serializability across Shipping/Offer. Exact expected revision mismatch => conflict.
+Preserve existing idempotency/access first: repeat of an ALREADY committed authorized Order returns original stored evidence without asking current Shipping pointer or rebuilding prices. Legacy genuine submit path retains existing behavior.
+Manual checkout charge = payableAtCheckout; carrier collect separate, no double charge or Payment/Settlement policy change. Existing order/cart/inventory transaction and compensation stay authoritative.
+
+PROOF — DELIVERY GATE, NO TOKEN-ONLY SUBSTITUTE
+Use real CheckoutDirectory/CheckoutProcessManager and OrderDbContext on disposable existing231target15433/order_tb231/tb231, identity beforeDDL, normal chain once, existing local image, cleanup+portclosed. Controlled foreign Contracts are labelled fixtures, not live provider proof.
+1 REQUIRED POSITIVE: actual SubmitAsync, TWO sellers SAME Store binding/sharedSnapshot but independent area/row/date/ticks/fees; final Pricing->Promotion->Tax goods99/198 reach corresponding216calls; actual persisted order groups+lines retain their OWN compact evidence. One whole-cart goods quote; no217preview recursion; foreign call counts asserted.
+2 Before reserve/order/cart conversion: parameterized stale/missing root token, changed cart/partition, address/pointer/type/row/money/date/hours, nonblank coupon. Direct forged/no-evidence caller against stored captured cart and gateOFF cannot bypass. Genuine legacyOFF control remains.
+3 A preview-vs-final goods amount change exercises the ACTUAL final SellerOrder facts and refuses if shipping acceptance differs, never uses preview total.
+4 Existing real process failure after order write/cart-convert boundary rolls back compact Order evidence with its established compensation contract; idempotent replay after pointer change returns original accepted Order, no new reserve/order.
+Use existing order submit fixtures rather than creating a new test framework. Run exact NEW acceptance/submit classes + narrowly affected existing ProcessManager/materializer tests ONCE, affectedOrder builds only. No28/31/50/119/188/194/285/310/312/Host/solution/wholeOrder/guards replay. If a requested fact remains unexecuted, report it prominently; no acceptance claim.
+
+BOUNDS / RECOVERY
+No frontend/HMR/browser, no Host/FE runtime restart/rebuild, no live buyer/cart/address/assignment/draft/pointer/payment write, no shared migration apply, no schema/migration/baseline edits. 231/232 still sharedNOTAPPLIED; staleEFsnapshot retained. USER VISIBLE review window is USER unsaved work: never enumerate/read/automate/reload/close. LocalpreviewON/count7 unchanged; public Commit/PaymentDraft stay not_ready.
+Record233 core acceptance delivery separately from public Storefront commit hookup (still pending after this task). No fullcheckout/activation/Marketplace/VisualACCEPT claim. Keep known230emptykey/inflight/cross-ownerdecoderlabels/OfferAPI/227residual/225-R1lostLOCALwork recorded.
+Task verbatim+RESULT in this folder; append233RESULT correction; ALL3TOPs with exact actual outcome, next public commit hookup only AFTER review. Exact-path commit/push/fetch parity, no amend/force/reset/stash/rebase; leave CRLFdrift. Actualtime/corrections, STOP_FOR_ARCHITECT; Automatic-Next-Task NONE; TB185paused/defaultOFF/PendingAllocation.

@@ -1,4 +1,22 @@
-# CURRENT — 233 executed PARTIAL: final captured gate + revision token + submit-seam hook; revalidation NOT delivered — 2026-10-27
+# CURRENT — 233 PARTIAL, NOT ACCEPTED; issued233-R1 actual final-quote acceptance —2026-10-27
+
+Active TB-SHIPPING-CAPTURED-FINAL-QUOTE-ACCEPTANCE-233-R1. Read233/ARCHITECT-REVIEW.md and233-R1/TASK.md.
+Root source-reviewed1c42a43f7: additive final gate/text token/parser/real submit hook retained as scaffolding ONLY.
+ON hook still unconditionally not_ready; no actual final facts/revalidation/persistence. Reported28facts not
+positive submit/provider/HTTP proof. GateOFF+caller no evidence skips stored capture check: direct-caller bypass.
+R1 finishes SAME actual CheckoutDirectory/ProcessManager hook, uses already-quoted final SellerOrder goods via
+shared217facts/218composition, current server address/Offer/type/pointer/quote/calendar vs exact231evidence,
+Order-root revision at established atomic boundary, REAL persisted two-seller same-binding positive proof.
+Own-Order marker read allowed evenOFF to reject omitted-evidence downgrade; zero FOREIGN calls genuinelegacy.
+Public Storefront Commit/PaymentDraft stay CLOSED inR1; public hookup later AFTER core acceptance review.
+No new placeholder-only finish, no new price/calendarengine, no frontend/HMR/HostFE/runtime/livewrites/sharedDDL.
+USER VISIBLE review window is USER unsavedwork: no enumerate/read/automate/reload/close; localpreviewONcount7.
+231/232 acceptedwithinrecordedscopes, migrationssharedNOTAPPLIED/EFsnapshotgap retained; all gatesdefaultOFF.
+No fullauthoredJSON/order/historyrepricing/paymentactivation/fullcheckout/VisualACCEPT claim. Known230emptykey/
+inflight/crossownerlabeldecoder/OfferAPI,227mobile,225-R1lostLOCALwork retained. TB185paused/defaultOFF/
+PendingAllocation. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. History below.
+
+# HISTORICAL WORKER RESULT — 233 executed PARTIAL: final captured gate + revision token + submit-seam hook; revalidation NOT delivered — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-ORDER-COMMIT-PARITY-233/{TASK.md,RESULT.md}. Base
 `1bcc3c41a` fast-forward. Status: **EXECUTED — PARTIAL**, NOT accepted, no user Visual ACCEPT, no checkout
