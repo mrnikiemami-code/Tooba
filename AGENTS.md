@@ -1,3 +1,23 @@
+# CURRENT — 235 PARTIAL reviewed; issued235-R1 per-line validation + coherent preview + actual owner vertical —2026-10-27
+
+Read 235/ARCHITECT-REVIEW.md and TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1/TASK.md.
+Root reviewed1662e6f92 actual code, not worker tests execution. Retain shared typed owner policy, owner+binding
+labels in source, accepted-group amount, exact revision, separate OrderLineIds and absent-history no fallback.
+BLOCKERS: ResolveGroupOwner lost assignment.OfferId==lookup key; null responsibility used as uninitialized means
+first missing assignment may be overwritten by later valid line. Validate EACH before owner derivation.
+Preview amount fixed but ComposePreviewSnapshot retains old command dates/method; deterministic Order-root
+replacement proof missing. Reuse first authorized presentation CartPage (current facade adds another load).
+Marketplace edge manually seeds accepted owners; pointer fake gives same capture for every owner; NOT proof of
+read->selection->preview->commit with distinct owner captures/labels. Issue235-R1 closes these with one strict
+Marketplace Platform+SellerA+SellerB actual existing-path fixture, controlled Contracts/realOrder, not live.
+Worker fullOrder564/566 was out-of-scope; do not replay. Worker commit did not update recovery TOPs; fixed here.
+NO frontend/browser/HMR/runtime/HostFE/livewrites/sharedDDL. USER reviewwindow unsavedwork never touched.
+All checked-in gatesOFF; localpreviewONcount7 unchanged;231/232 sharedNOTAPPLIED/EFsnapshotgap retained.
+FULL final delivery still BOTH editions/all owners + coupon parity + existing frontend + complete practical
+desktop/mobile trials; not delivered by this repair. Known230/OfferAPI/227/225-R1lostLOCALwork retained.
+TB185paused/defaultOFF/PendingAllocation. Active235-R1 only; STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+Prior recovery statements below are historical when conflicting with this TOP.
+
 # CURRENT — issued235 full-owner flow + necessary preview contract repairs —2026-10-27
 
 Active TB-SHIPPING-FULL-OWNER-FLOW-AND-PREVIEW-CONTRACT-235. Read234/ARCHITECT-REVIEW.md and235/TASK.md.
