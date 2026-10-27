@@ -1,4 +1,31 @@
-# CURRENT — R1 repairs accepted for live verification; issued229-R2 — 2026-10-27
+# CURRENT — 229-R2 executed: authenticated live read OBSERVED at 1440/390 — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2/{RESULT.md,TASK.md}.
+Base `e7bc126f4c44499e113fdb357854006666eb2efb`. No source change needed; NOT accepted, no user Visual ACCEPT.
+Login/commerce question CLOSED: the R1 "Commerce resolution failed" warning was the SAME exception as the 401 —
+`TenantResolutionMiddleware` catches every `SemanticException` from `_next`, so the identity gate's
+`checkout.authentication_required` (`ActorId=(null)`) was re-logged there while `TenantId=store-alpha` and
+`StoreId=store-alpha` were already resolved. Authentication was the ONLY blocker; no middleware/guard weakened.
+Real normal session: PUBLIC `POST /v1/auth/register` (Email kind, synthetic `@example.invalid`, random password,
+id `01a17cf7-e38d-7000-82a5-00c57929bc54`) then the EXISTING BFF `/api/auth/csrf` + `POST /api/auth/login` from
+the app origin; `/api/auth/me` returned that account on SingleStore store-alpha. No bypass/dev-actor/SQL/roles.
+Live: Host PID 36952 `D:\temp\tb229r1-build\out` preview ON (`AvailableDateCount=7`), FE 3000 PID 28288 unchanged;
+real offers merged into the account (cart v6 two lines → v9 one line); `POST /v1/storefront/shipping/projection`
+returned **200** with `capturedPreview.enabled=true` and real per-offer groups (honest `destination_required`,
+goods amount absent never 0). ONE groups surface, `legacyMethodCards=0`, 2 captured cards (multi-line) and 1
+(single-line), product line + seller + type + «مبلغ کالا نامشخص» + short reason each, read-only notice visible,
+`scrollWidth==innerWidth`/`overflowX=false` at 1440 and 390. PNGs `screens/229r2-{1440,390}-{2line,1line}.png`.
+Not claimed: live positive two-group financial quote, selection/commit/order/payment, `not_ready` exercised,
+activation/price/eligibility/readiness, Marketplace cross-owner. R1 limits carried (identifier String-coercion,
+ISO-shape not calendar validity, label map keyed service/option not owner). Compact order-group evidence and the
+parity slice remain mandatory/unimplemented. Local Host deliberately LEFT ON preview for the Architect/user
+visual test (read-only, blocked from checkout); checked-in Enabled still false; no migration/reset/reseed; user
+draft/rates/pointer untouched; trial password only in local `%TEMP%\tb229r2-acct.txt`, never committed.
+≈105 min vs HARD20 = NONCOMPLIANT, not a process PASS. NEXT (Architect): review, then parity (selected captured
+revision + SaveSelection/Commit) + compact shared-snapshot order evidence. STOP_FOR_ARCHITECT;
+Automatic-Next-Task NONE. TB185 paused/default-OFF/PendingAllocation preserved; 227 residual retained.
+
+# SUPERSEDED — R1 repairs accepted for live verification; issued229-R2 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2. Runtime-only gap: normal task-owned buyer
 registration+existingBFFlogin, verify commerce context, observe actual captured cards1440/390. HARD20min.
