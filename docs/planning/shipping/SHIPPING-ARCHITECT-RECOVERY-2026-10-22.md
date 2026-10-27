@@ -1,3 +1,22 @@
+# CURRENT —231/R1/R2 compact evidence ACCEPTED; issued232 real selection writer —2026-10-27
+
+Active: TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232. Save captured shipping DRAFT choices through actual
+existing selection service, freshly revalidated cart/Offer/type/pointer/quote/address/date,231evidence and
+ONE atomic Order replacement+CAS. No new unusedcomposer/quoteengine, no full checkout.
+Review: docs/architecture/evidence/TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-CAPTURED-SELECTION-ATOMIC-WRITER-232/TASK.md.
+Root read231-R2actualSQL/directtests; corrected basicCHECKs accepted within scope. WorkerRED4/10GREEN10/10
+not rootexecution. Compact22scalarfields/fullowner/longtokens/exactticks/manualmoney accepted;numericcoercion,
+btrim(space-only), staleEFsnapshot/future-scaffolding limitations remain.
+Migration23120261027150000 WRITTEN/sharedNOTAPPLIED.232 mayaddminimal rootselectionCAS/destination fields,
+isolatedproof only. SelectionEnabled defaultOFF; Commit/StartPayment not_ready persists, no runtimeenablement.
+Current legacygroupreplacement has TWOcommits; captured cannotreuse it asatomic. Actual finalpayment calls
+StartPaymentComposer->ShippingService.CommitAsync; futureparity must coverthis path.
+DedicatedvisibleUSERreviewwindow/Host/FE/previewONcount7/data alluntouched;232 nofrontendHMR/runtimechanges.
+Read-only usertrial accepted, no VisualACCEPT/fullStorefront certification. NoJSONperorder/historyrepricing.
+Known emptykeyrefresh/inflightwait/crossownerlabel/decoder/OfferAPIproof gaps retained;227mobileresidual;
+225-R1lostunsaveduserLOCALtabedits,no recovery. TB185paused/defaultOFF/PendingAllocation. History below.
+
 # CURRENT —231-R2 executed: DB shape CHECKs corrected + direct RED→GREEN —2026-10-27
 
 231-R1 value/owner/token/time/money contract and the group transfer path are ACCEPTED within their recorded
