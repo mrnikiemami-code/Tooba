@@ -96,6 +96,10 @@ export interface StorefrontCheckoutShippingGroup {
   selectedDeliveryTimeWindow: string | null;
   leadDays: number;
   lineCount: number;
+  /** (TB-235) عضویت خط سبد فقط برای گروه‌های پیش‌نویس؛ در گروه پایدارشده `null` است. */
+  cartLineIds?: string[] | null;
+  /** (TB-235) شناسهٔ واقعی خطوط سفارش گروه پایدارشده؛ هرگز جای `cartLineIds` نمی‌نشیند. */
+  orderLineIds?: string[] | null;
 }
 
 export interface StorefrontCheckoutPage {
@@ -125,6 +129,11 @@ export interface StorefrontCheckoutPage {
   /** گروه‌های ارسال سفارش از projection مالک Order؛ خالی برای سفارش تک‌گروهی/قدیمی. */
   shippingGroups: StorefrontCheckoutShippingGroup[];
   canInitiatePayment: boolean;
+  /**
+   * (TB-235) نسخهٔ واقعی ریشهٔ انتخاب به‌صورت متن دقیق برای CAS بعدی؛ فقط در نمای پیش‌نویس پرداخت یک
+   * انتخاب capture‌شده پر می‌شود. `null` یعنی هیچ انتخاب capture‌شده‌ای وجود ندارد.
+   */
+  selectionRevision?: string | null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -240,13 +249,35 @@ export function mapStorefrontCheckout(payload: unknown): StorefrontCheckoutPage 
               asString(readProp(group, "selectedDeliveryTimeWindow", "SelectedDeliveryTimeWindow")) || null,
             leadDays: asNumber(readProp(group, "leadDays", "LeadDays")),
             lineCount: asNumber(readProp(group, "lineCount", "LineCount")),
+            cartLineIds: readGuidList(readProp(group, "cartLineIds", "CartLineIds")),
+            orderLineIds: readGuidList(readProp(group, "orderLineIds", "OrderLineIds")),
           };
         })
       : [],
     canInitiatePayment: readProp(item, "canInitiatePayment", "CanInitiatePayment") === false
       ? false
       : asString(readProp(item, "paymentState", "PaymentState"), "PendingPayment") !== "Paid",
+    selectionRevision: asString(readProp(item, "selectionRevision", "SelectionRevision")) || null,
   };
+}
+
+/**
+ * (TB-235) فهرست شناسهٔ خط <b>اختیاری</b>؛ نبود/ناتهی یعنی «غایب» و هرگز با فهرست خالی یا شناسهٔ
+ * گروه دیگر جایگزین نمی‌شود.
+ */
+function readGuidList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+  const ids: string[] = [];
+  for (const entry of value) {
+    const text = typeof entry === "string" ? entry.trim() : "";
+    if (!text) {
+      return null;
+    }
+    ids.push(text);
+  }
+  return ids;
 }
 
 async function parseCheckout(response: Response): Promise<StorefrontCheckoutPage> {

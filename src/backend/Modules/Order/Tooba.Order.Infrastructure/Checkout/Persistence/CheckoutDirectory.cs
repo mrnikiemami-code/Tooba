@@ -228,12 +228,17 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     /// <param name="checkoutId">شناسهٔ موقت snapshot.</param>
     /// <param name="now">زمان همین فرمان.</param>
     /// <param name="sellerOrders">خطوط سفارش نقل‌قول‌شدهٔ همین درخواست.</param>
+    /// <param name="shippingAmountOverride">
+    /// کرایهٔ <b>مشتق‌شده</b> از گروه‌های واقعی همین لحظه (جمع کرایهٔ پذیرفته‌شدهٔ هر گروه)؛ تهی یعنی
+    /// همان مقدار فرمان. هیچ مبلغی از فیلد کهنهٔ فرمان در نمای چندگروهی باقی نمی‌ماند.
+    /// </param>
     internal static CheckoutSnapshot ComposePreviewSnapshot(
         CartSnapshot cart,
         SubmitCheckoutCommand command,
         Guid checkoutId,
         DateTimeOffset now,
-        IReadOnlyList<SellerOrder> sellerOrders)
+        IReadOnlyList<SellerOrder> sellerOrders,
+        decimal? shippingAmountOverride = null)
     {
         var group = CheckoutGroup.Submit(
             checkoutId,
@@ -255,7 +260,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             command.PostalCode,
             command.ShippingMethodCode,
             command.ShippingMethodLabel,
-            command.ShippingAmount,
+            shippingAmountOverride ?? command.ShippingAmount,
             command.MinimumDeliveryDate,
             command.RequestedDeliveryDate,
             command.RequestedDeliveryTimeWindow,

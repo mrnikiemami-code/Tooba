@@ -50,13 +50,13 @@ public sealed partial class CheckoutDirectory
         IReadOnlyList<SellerOrder> sellerOrders,
         DateTimeOffset now,
         CancellationToken cancellationToken)
-        => await AcceptCapturedShippingCoreAsync(
+        => (await AcceptCapturedShippingCoreAsync(
             command,
             cart,
             sellerOrders,
             now,
             requireExplicitSelectionRevision: true,
-            cancellationToken);
+            cancellationToken)).Groups;
 
     /// <summary>
     /// هستهٔ <b>یگانهٔ</b> بازاعتبارسنجی یک انتخاب capture‌شده روی نقل‌قول همین لحظه.
@@ -65,8 +65,12 @@ public sealed partial class CheckoutDirectory
     /// ثبت نهایی علاوه بر این، نسخهٔ انتخاب <b>صریح</b> و قفل نقطه‌ای ریشهٔ Order را می‌طلبد؛ خواندنِ
     /// فقط-خواندنیِ «پیش‌نویس پرداخت» همان مسیر را بدون نسخهٔ صریح و بدون قفل طی می‌کند تا هیچ نوشتن/قفلی
     /// در مسیر خواندن ساخته نشود. هیچ‌کدام هیچ ماژول بیرونی را دوباره نقل‌قول نمی‌کنند.
+    /// <para>
+    /// نتیجهٔ تایپ‌شدهٔ پذیرش (گروه‌های پذیرفته‌شده + نسخهٔ واقعی سبد + نسخهٔ واقعی ریشه) برمی‌گردد تا
+    /// مصرف‌کنندهٔ خواندنی نمای خود را از <b>همین</b> گروه‌های پذیرفته‌شده بسازد، نه از فرمان کهنه.
+    /// </para>
     /// </remarks>
-    internal async Task<IReadOnlyList<OrderShippingGroupPlan>> AcceptCapturedShippingCoreAsync(
+    internal async Task<CapturedShippingAcceptance> AcceptCapturedShippingCoreAsync(
         SubmitCheckoutCommand command,
         CartSnapshot cart,
         IReadOnlyList<SellerOrder> sellerOrders,
@@ -92,7 +96,7 @@ public sealed partial class CheckoutDirectory
         // هیچ ماژول بیرونی و با همان پلن ورودی.
         if (!storedCaptured && !callerSuppliedEvidence && !revisionIntent)
         {
-            return callerPlans;
+            return new CapturedShippingAcceptance(callerPlans, cart.Version, null);
         }
 
         var options = _capturedPreview?.Value;
@@ -179,27 +183,6 @@ public sealed partial class CheckoutDirectory
             throw new ContractOperationException(CapturedUnavailable);
         }
 
-        // مسئولیت/نوع/مالک: فقط SingleStore با مالک Store و همان tenant مورداعتماد.
-        var tenantId = ResolveCapturedStoreTenantId();
-        if (tenantId is null)
-        {
-            throw new ContractOperationException(CapturedUnavailable);
-        }
-
-        foreach (var group in groups)
-        {
-            var evidence = group.AcceptedEvidence!;
-            // مالک شاهد باید دقیقاً همان tenant فعال و به‌صورت Ordinal برابر باشد؛ هیچ استنتاج
-            // Seller/Marketplace و هیچ مقایسهٔ حساس‌نبودن به حروف پذیرفته نمی‌شود.
-            if (!string.Equals(evidence.Currency, group.Currency, StringComparison.Ordinal)
-                || evidence.Owner.Kind != ShippingGroupOwnerKind.Store
-                || evidence.Owner.SellerPartyId is not null
-                || !string.Equals(evidence.Owner.TenantKey, tenantId, StringComparison.Ordinal))
-            {
-                throw new ContractOperationException(CapturedConflict);
-            }
-        }
-
         // افراز کامل سبد با همان خطوط ذخیره‌شده؛ هیچ خطی جا نمی‌افتد یا اضافه نمی‌شود.
         var membership = ShippingGroupGoodsFactsBuilder.ValidateMembership(
             groups.Select(group => new CheckoutShippingGroupMembership(
@@ -223,8 +206,6 @@ public sealed partial class CheckoutDirectory
                 .Select(group => ShippingGroupGoodsFactsBuilder.BuildGroupFacts(group, linesByCartLineId, currency))
                 .ToArray());
 
-        // مسئولیت/نوع/مالک: فقط SingleStore با مالک Store و همان tenant مورداعتماد (Ordinal، بدون حدس).
-
         var offerIds = cart.Lines.Select(line => line.OfferId).Distinct().ToArray();
         var assignments = await _offerAssignments!.GetAssignmentsAsync(offerIds, cancellationToken);
         var typeIds = groups
@@ -243,35 +224,34 @@ public sealed partial class CheckoutDirectory
             throw new ContractOperationException(CapturedUnavailable);
         }
 
-        var offerByCartLineId = cart.Lines.ToDictionary(line => line.LineId, line => line.OfferId);
-        var sellerByCartLineId = cart.Lines.ToDictionary(line => line.LineId, line => line.SellerPartyId);
-        foreach (var group in groups)
-        {
-            var evidence = group.AcceptedEvidence!;
-            foreach (var line in group.Lines)
-            {
-                if (!offerByCartLineId.TryGetValue(line.CartLineId, out var offerId)
-                    || !assignments.TryGetValue(offerId, out var assignment)
-                    // پاسخ باید همان کلید/همان Offer/همان فروشندهٔ واقعی همین خط باشد؛ پاسخ
-                    // بیگانه/متناقض هرگز با «مسئولیت Platform» جبران نمی‌شود.
-                    || assignment.OfferId != offerId
-                    || !sellerByCartLineId.TryGetValue(line.CartLineId, out var lineSeller)
-                    || assignment.SellerPartyId != lineSeller
-                    // مسئولیت صریح ۲۲۸: نبود/ناشناخته/Seller هرگز به Store بازتفسیر نمی‌شود.
-                    || assignment.Responsibility != OfferFulfillmentResponsibility.Platform
-                    || assignment.ShippingTypeId is not Guid assignedType
-                    || assignedType != evidence.ShippingTypeId
-                    || !types.Any(type => type.ShippingTypeId == assignedType && type.IsActive))
-                {
-                    throw new ContractOperationException(CapturedUnavailable);
-                }
-            }
-        }
-
         if (assignments.Count != offerIds.Length)
         {
             // حتی یک خط بدون مسئولیت صریح = کل انتخاب نامعتبر؛ هیچ گروهی بی‌صدا حذف نمی‌شود.
             throw new ContractOperationException(CapturedUnavailable);
+        }
+
+        var offerByCartLineId = cart.Lines.ToDictionary(line => line.LineId, line => line.OfferId);
+        var sellerByCartLineId = cart.Lines.ToDictionary(line => line.LineId, line => line.SellerPartyId);
+
+        // مالک هر گروه از <b>انتساب‌های واقعی همین لحظه</b> دوباره ساخته می‌شود (همان سیاست مشترک
+        // خواندن/نوشتن/ثبت) و سپس با مالک ذخیره‌شده <b>عیناً</b> مقایسه می‌شود؛ شاهد هرگز اعتبارسنج
+        // خودش نیست و هیچ مالک/tenant/فروشنده‌ای از خود شاهد یا از بدنه پذیرفته نمی‌شود.
+        var groupOwners = new Dictionary<Guid, StorefrontCapturedOwner>(groups.Length);
+        foreach (var group in groups)
+        {
+            var evidence = group.AcceptedEvidence!;
+            if (!string.Equals(evidence.Currency, group.Currency, StringComparison.Ordinal))
+            {
+                throw new ContractOperationException(CapturedConflict);
+            }
+
+            groupOwners[group.ShippingGroupId] = ResolveGroupOwner(
+                group,
+                assignments,
+                offerByCartLineId,
+                sellerByCartLineId,
+                types,
+                evidence);
         }
 
         // یک اشاره‌گر ۲۱۹ برای هر جفت مالک+Binding ذخیره‌شده (نه enumeration همهٔ نامزدهای ممکن).
@@ -291,19 +271,22 @@ public sealed partial class CheckoutDirectory
 
             RequireActiveCatalogBinding(catalog, serviceCode, group.OptionCode);
 
+            // هویت درخواست ۲۱۹ از مالک بازسازی‌شدهٔ همین گروه می‌آید: Store با tenant، Marketplace
+            // بدون کلید و Seller با فروشندهٔ واقعی گروه. هیچ مالکی به Store گِرد نمی‌شود.
+            var owner = groupOwners[group.ShippingGroupId];
             var binding = StorefrontCapturedPublicationBinding.For(
-                ShippingCapturedQuoteOwnerKind.Store,
-                tenantId,
-                null,
+                owner.Kind,
+                owner.TenantId,
+                owner.SellerPartyId,
                 serviceCode,
                 group.OptionCode);
             if (!pointers.TryGetValue(binding, out var pointer))
             {
                 pointer = await _selectedCaptures!.ReadAsync(
                     new ShippingSelectedCapturedRevisionRequest(
-                        ShippingCapturedQuoteOwnerKind.Store,
-                        tenantId,
-                        null,
+                        owner.Kind,
+                        owner.TenantId,
+                        owner.SellerPartyId,
                         serviceCode,
                         group.OptionCode),
                     cancellationToken);
@@ -334,9 +317,9 @@ public sealed partial class CheckoutDirectory
             var candidate = new StorefrontCapturedCandidatePlan(
                 CanonicalBinding(serviceCode) + "\u001F"
                     + (CanonicalBinding(group.OptionCode) ?? string.Empty),
-                ShippingCapturedQuoteOwnerKind.Store,
-                tenantId,
-                null,
+                owner.Kind,
+                owner.TenantId,
+                owner.SellerPartyId,
                 evidence.DraftId,
                 evidence.SourceRevision,
                 destination,
@@ -427,7 +410,7 @@ public sealed partial class CheckoutDirectory
         }
 
         _ = now;
-        return accepted;
+        return new CapturedShippingAcceptance(accepted, stored.CartVersion, stored.SelectionRevision);
     }
 
     /// <summary>
@@ -666,17 +649,90 @@ public sealed partial class CheckoutDirectory
         && draft.DestinationServiceAreaId is null
         && current.ServiceAreaId is null;
 
-    private string? ResolveCapturedStoreTenantId()
+    /// <summary>
+    /// مالک <b>واقعی</b> یک گروه ذخیره‌شده را دوباره از انتساب‌های همین لحظه می‌سازد (همان
+    /// <see cref="StorefrontCapturedOwnerPolicy"/> مشترک خواندن/نوشتن/ثبت) و آن را با فروشندهٔ گروه و
+    /// مالک ذخیره‌شده <b>عیناً</b> می‌سنجد.
+    /// </summary>
+    /// <remarks>
+    /// هر خط گروه باید همان فروشندهٔ واقعی گروه باشد و همان مسئولیت/نوع انتساب را بیان کند؛ گروه مخلوط
+    /// (دو مسئولیت یا دو نوع در یک گروه) هرگز پذیرفته نمی‌شود. مالک ذخیره‌شده شاهد نیست: اگر با مالک
+    /// بازساخته‌شده نخواند، ثبت نهایی رد می‌شود و هیچ مالکی بازنویسی/گِرد نمی‌شود.
+    /// </remarks>
+    private StorefrontCapturedOwner ResolveGroupOwner(
+        CartShippingDraftGroup group,
+        IReadOnlyDictionary<Guid, OfferFulfillmentAssignmentSnapshot> assignments,
+        IReadOnlyDictionary<Guid, Guid> offerByCartLineId,
+        IReadOnlyDictionary<Guid, Guid> sellerByCartLineId,
+        IReadOnlyList<ShippingTypeSnapshot> types,
+        ShippingGroupAcceptedEvidence evidence)
     {
-        if (_edition?.Current?.Edition != ToobaEdition.SingleStore)
+        if (group.Lines.Count == 0)
         {
-            return null;
+            throw new ContractOperationException(CapturedUnavailable);
         }
 
-        var current = _tenant?.Current;
-        return current is null || current.Status != TenantStatus.Active || string.IsNullOrWhiteSpace(current.TenantId.Value)
-            ? null
-            : current.TenantId.Value.Trim();
+        OfferFulfillmentResponsibility? responsibility = null;
+        Guid? assignedTypeId = null;
+        foreach (var line in group.Lines)
+        {
+            // فروشندهٔ هر خط باید همان فروشندهٔ ذخیره‌شدهٔ گروه باشد؛ هیچ خط بیگانه‌ای در گروه نمی‌نشیند.
+            if (!sellerByCartLineId.TryGetValue(line.CartLineId, out var seller)
+                || seller != group.SellerPartyId)
+            {
+                throw new ContractOperationException(CapturedConflict);
+            }
+
+            if (!offerByCartLineId.TryGetValue(line.CartLineId, out var offerId)
+                || !assignments.TryGetValue(offerId, out var assignment)
+                || assignment.SellerPartyId != group.SellerPartyId)
+            {
+                throw new ContractOperationException(CapturedUnavailable);
+            }
+
+            if (responsibility is null)
+            {
+                responsibility = assignment.Responsibility;
+                assignedTypeId = assignment.ShippingTypeId;
+                continue;
+            }
+
+            if (responsibility != assignment.Responsibility || assignedTypeId != assignment.ShippingTypeId)
+            {
+                // گروه مخلوط (مسئولیت/نوع متفاوت در یک گروه) هرگز یک مالک واحد ندارد.
+                throw new ContractOperationException(CapturedConflict);
+            }
+        }
+
+        // نوع انتساب همین لحظه باید همان نوع شاهد ذخیره‌شده باشد و آن نوع باید واقعاً فعال باشد.
+        if (assignedTypeId != evidence.ShippingTypeId)
+        {
+            throw new ContractOperationException(CapturedConflict);
+        }
+
+        if (evidence.ShippingTypeId is Guid typeId
+            && !types.Any(type => type.ShippingTypeId == typeId && type.IsActive))
+        {
+            throw new ContractOperationException(CapturedUnavailable);
+        }
+
+        var resolved = StorefrontCapturedOwnerPolicy.Resolve(
+            _edition?.Current?.Edition,
+            _tenant?.Current,
+            responsibility,
+            group.SellerPartyId);
+        if (resolved.Failure != StorefrontCapturedOwnerFailure.None || resolved.Owner is null)
+        {
+            throw new ContractOperationException(CapturedUnavailable);
+        }
+
+        if (!resolved.Owner.IsSameAs(evidence.Owner))
+        {
+            // مالک ذخیره‌شده با مالک بازساخته‌شدهٔ همین لحظه نمی‌خواند: هیچ بازنویسی/گِرد کردنی نیست.
+            throw new ContractOperationException(CapturedConflict);
+        }
+
+        return resolved.Owner;
     }
 
     /// <summary>کلید مقایسهٔ پایدار Binding (حساس به حروف نیست) — همان سیاست نام‌گذاری پایه.</summary>
@@ -708,4 +764,26 @@ public sealed partial class CheckoutDirectory
         return long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out revision)
             && revision >= 0;
     }
+}
+
+/// <summary>
+/// نتیجهٔ <b>تایپ‌شدهٔ</b> پذیرش گروه‌های capture‌شده روی نقل‌قول همین لحظه.
+/// </summary>
+/// <remarks>
+/// این مقدار «رسید» پذیرش است: گروه‌های <b>پذیرفته‌شده</b> به‌همراه نسخهٔ <b>واقعی</b> سبد و نسخهٔ
+/// <b>واقعی</b> ریشهٔ انتخاب که همین لحظه خوانده شدند. مسیر خواندنی نمای پرداخت باید نمای خود را از
+/// همین مقادیر بسازد، نه از فرمان کهنه؛ و نسخهٔ انتخاب به‌شکل متن دقیق به فراخوان برگردانده می‌شود تا
+/// CAS بعدی همان نسخه را بفرستد.
+/// </remarks>
+/// <param name="Groups">گروه‌های پذیرفته‌شده (در مسیر قدیمی همان پلن‌های فراخوان).</param>
+/// <param name="CartVersion">نسخهٔ واقعی سبدی که همین پذیرش بر آن اجرا شد.</param>
+/// <param name="SelectionRevision">نسخهٔ واقعی ریشهٔ انتخاب، یا تهی در مسیر قدیمی.</param>
+internal sealed record CapturedShippingAcceptance(
+    IReadOnlyList<OrderShippingGroupPlan> Groups,
+    int CartVersion,
+    long? SelectionRevision)
+{
+    /// <summary>همان نسخه به‌شکل <b>متن اعشاری دقیق</b> که کلاینت در CAS بعدی می‌فرستد.</summary>
+    public string? SelectionRevisionText =>
+        SelectionRevision?.ToString(CultureInfo.InvariantCulture);
 }

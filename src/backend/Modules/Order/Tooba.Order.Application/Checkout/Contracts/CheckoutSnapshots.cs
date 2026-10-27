@@ -121,9 +121,16 @@ public sealed record CheckoutShippingGroupSnapshot(
 /// </remarks>
 /// <param name="Quote">نقل‌قول فقط-خواندنی کل سبد.</param>
 /// <param name="Groups">گروه‌های پذیرفته‌شدهٔ همین لحظه از انتخاب ذخیره‌شده.</param>
+/// <param name="CartVersion">نسخهٔ <b>واقعی</b> سبدی که همین پذیرش بر آن اجرا شد.</param>
+/// <param name="SelectionRevision">
+/// نسخهٔ <b>واقعی</b> ریشهٔ انتخاب به‌شکل متن اعشاری دقیق (همان مقداری که کلاینت در CAS بعدی می‌فرستد)،
+/// یا تهی وقتی انتخاب capture‌شده‌ای وجود ندارد. هیچ متن ساختگی/پیش‌فرضی ساخته نمی‌شود.
+/// </param>
 public sealed record CapturedPaymentDraftSnapshot(
     CheckoutSnapshot Quote,
-    IReadOnlyList<OrderShippingGroupPlan> Groups);
+    IReadOnlyList<OrderShippingGroupPlan> Groups,
+    int CartVersion,
+    string? SelectionRevision);
 
 /// <summary>
 /// فرمان ارسال checkout از روی سبد فعال.

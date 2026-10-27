@@ -38,6 +38,12 @@ public static class StorefrontCapturedPreviewReasons
     /// <summary>مسئولیت Seller در نصب SingleStore پشتیبانی نمی‌شود (نه بازتفسیر به Store).</summary>
     public const string SellerOwnerUnsupported = "storefront.captured_preview.seller_owner_unsupported";
 
+    /// <summary>
+    /// زمینهٔ نصب/tenant مورداعتماد هیچ مالک پشتیبانی‌شده‌ای نمی‌سازد (نصب ناشناخته، tenant غیرفعال/تهی
+    /// یا tenant باقی‌مانده در Marketplace). هیچ مالک پیش‌فرضی جای آن نمی‌نشیند.
+    /// </summary>
+    public const string OwnerUnavailable = "storefront.captured_preview.owner_unavailable";
+
     /// <summary>هیچ capture انتخاب‌شده‌ای برای Bindingهای همان نوع پیدا نشد.</summary>
     public const string NoSelectedCapture = "storefront.captured_preview.no_selected_capture";
 
@@ -76,7 +82,11 @@ public sealed record StorefrontCapturedSelectionContext(
     IReadOnlyList<StorefrontCapturedPreviewGroupView> Groups,
     IReadOnlyList<StorefrontCapturedGroupPlan> Plans,
     StorefrontCapturedGroupProjectionResult Composition,
-    IReadOnlyDictionary<string, string> Labels,
+    /// <summary>
+    /// برچسب نمایشی هر <b>تعهد</b> (مالک کامل + Binding) از همان ردیف DB خودش. کلید عمداً هویت کامل
+    /// است، نه کد روش: دو مالک (Marketplace/Seller/Store) با همان سرویس/گزینه برچسب‌های جدا دارند.
+    /// </summary>
+    IReadOnlyDictionary<StorefrontCapturedPublicationBinding, string> Labels,
     IReadOnlyDictionary<string, string> Unavailable,
     (long? SelectionVersion, Guid? SnapshotId)? Provenance);
 
@@ -159,9 +169,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 .Where(candidate => candidate.Outcome == StorefrontCapturedCandidateOutcome.Quoted
                     && candidate.OwnerResult is not null)
                 .Select(candidate => new StorefrontCapturedPreviewMethodView(
-                    labels.TryGetValue(candidate.Identity.MethodCode, out var label)
-                        ? label
-                        : candidate.Identity.ServiceCode,
+                    LabelOf(labels, candidate.Identity) ?? candidate.Identity.ServiceCode,
                     candidate.Identity.ServiceCode,
                     candidate.Identity.OptionCode,
                     ToText(candidate.OwnerResult!.FreightAmount),
@@ -350,7 +358,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
         var pointerCache = new Dictionary<StorefrontCapturedPublicationBinding, ShippingSelectedCapturedRevisionResult>();
         var plans = new List<StorefrontCapturedGroupPlan>(plan.Count);
         var unavailable = new Dictionary<string, string>(StringComparer.Ordinal);
-        var labels = new Dictionary<string, string>(StringComparer.Ordinal);
+        var labels = new Dictionary<StorefrontCapturedPublicationBinding, string>();
         var provenance = new HashSet<(long?, Guid?)>();
 
         foreach (var group in plan)
@@ -408,9 +416,10 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 }
 
                 // هویت پایدار روش از خود Binding کاتالوگ می‌آید (نه برچسب ترجمه‌شده)؛ برچسب فقط برای
-                // نمایش در نقشهٔ همین درخواست نگه داشته می‌شود. دو روش با برچسب یکسان دو نامزد جدا می‌مانند.
+                // نمایش در نقشهٔ همین تعهد نگه داشته می‌شود. دو مالک با همان سرویس/گزینه (و حتی همان
+                // برچسب نمایشی) دو تعهد جدا می‌مانند و هرکدام فقط ترجمهٔ DB خودش را می‌گیرد.
                 var methodCode = MethodCode(pointer.ServiceCode!, pointer.OptionCode);
-                labels[methodCode] = SelectLabel(pointer.Translations, languageId) ?? pointer.ServiceCode!;
+                labels[ownerBinding] = SelectLabel(pointer.Translations, languageId) ?? pointer.ServiceCode!;
 
                 candidates.Add(new StorefrontCapturedCandidatePlan(
                     methodCode,
@@ -595,7 +604,10 @@ public sealed class StorefrontCapturedPreviewPlanner(
         return bindings;
     }
 
-    /// <summary>افراز کامل خطوط سبد با کلید پایدار مالک+نوع+فروشنده؛ هیچ خطی جا نمی‌افتد یا تکرار نمی‌شود.</summary>
+    /// <summary>
+    /// افراز کامل خطوط سبد با کلید پایدار مسئولیت+نوع+فروشنده و <b>یک</b> سیاست مالک مشترک؛ هیچ خطی جا
+    /// نمی‌افتد یا تکرار نمی‌شود و مالک هر گروه فقط از انتساب صریح همان خطوط resolve می‌شود.
+    /// </summary>
     private List<PlannedGroup> BuildPartition(
         CartPage cart,
         IReadOnlyDictionary<Guid, OfferFulfillmentAssignmentSnapshot> assignmentById,
@@ -604,85 +616,68 @@ public sealed class StorefrontCapturedPreviewPlanner(
     {
         var planned = new Dictionary<string, PlannedGroup>(StringComparer.Ordinal);
         var order = new List<string>();
-        var singleStoreTenantId = ResolveStoreTenantId();
         var marketplace = edition.Current?.Edition == ToobaEdition.Marketplace;
 
         foreach (var line in cart.Lines)
         {
             var assignment = assignmentById[line.OfferId];
-            string key;
-            var reason = (string?)null;
-            ShippingCapturedQuoteOwnerKind ownerKind = ShippingCapturedQuoteOwnerKind.Store;
-            string? ownerTenantId = null;
-            Guid? ownerSellerId = null;
             var typeId = assignment.ShippingTypeId;
 
-            if (assignment.Responsibility is null)
+            // یک سیاست واحد برای هر سه مصرف‌کننده (خواندن/نوشتن/ثبت): مالک فقط از زمینهٔ trusted نصب
+            // و انتساب واقعی همین خطوط می‌آید؛ هیچ مالکی از بدنه یا از فروشندهٔ «دیگری» ساخته نمی‌شود.
+            var resolved = StorefrontCapturedOwnerPolicy.Resolve(
+                edition.Current?.Edition,
+                tenant.Current,
+                assignment.Responsibility,
+                line.SellerPartyId);
+
+            string key;
+            switch (assignment.Responsibility)
             {
-                key = $"cap|unassigned|{line.OfferId:N}";
-                reason = StorefrontCapturedPreviewReasons.Unassigned;
+                case null:
+                    key = $"cap|unassigned|{line.OfferId:N}";
+                    break;
+                case OfferFulfillmentResponsibility.Seller:
+                    key = $"cap|seller|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
+                    break;
+                case OfferFulfillmentResponsibility.Platform when marketplace:
+                    key = $"cap|platform|marketplace|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
+                    break;
+                case OfferFulfillmentResponsibility.Platform:
+                    key = $"cap|platform|store|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
+                    break;
+                default:
+                    // مقدار مسئولیت ناشناخته: هیچ پیش‌فرض Store/Platformی جای آن نمی‌نشیند.
+                    key = $"cap|invalid|{line.OfferId:N}";
+                    break;
             }
-            else
+
+            var reason = resolved.Failure switch
             {
-                switch (assignment.Responsibility.Value)
-                {
-                    case OfferFulfillmentResponsibility.Seller when !marketplace:
-                        // SingleStore: مالک Seller توسط اقتدار موجود پشتیبانی نمی‌شود و هرگز به Store
-                        // بازتفسیر نمی‌شود.
-                        key = $"cap|seller|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                        reason = StorefrontCapturedPreviewReasons.SellerOwnerUnsupported;
-                        break;
-                    case OfferFulfillmentResponsibility.Seller:
-                        ownerKind = ShippingCapturedQuoteOwnerKind.Seller;
-                        ownerSellerId = line.SellerPartyId;
-                        key = $"cap|seller|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                        if (typeId is null || !typeById.TryGetValue(typeId.Value, out var sellerType) || !sellerType.IsActive)
-                        {
-                            reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
-                        }
+                StorefrontCapturedOwnerFailure.None => null,
+                StorefrontCapturedOwnerFailure.ResponsibilityMissing => StorefrontCapturedPreviewReasons.Unassigned,
+                StorefrontCapturedOwnerFailure.ResponsibilityInvalid => StorefrontCapturedPreviewReasons.ResponsibilityInvalid,
+                StorefrontCapturedOwnerFailure.SellerUnsupportedInSingleStore => StorefrontCapturedPreviewReasons.SellerOwnerUnsupported,
+                _ => StorefrontCapturedPreviewReasons.OwnerUnavailable,
+            };
 
-                        break;
-                    case OfferFulfillmentResponsibility.Platform when marketplace:
-                        ownerKind = ShippingCapturedQuoteOwnerKind.Marketplace;
-                        key = $"cap|platform|marketplace|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                        if (typeId is null || !typeById.TryGetValue(typeId.Value, out var mpType) || !mpType.IsActive)
-                        {
-                            reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
-                        }
-
-                        break;
-                    case OfferFulfillmentResponsibility.Platform:
-                        ownerKind = ShippingCapturedQuoteOwnerKind.Store;
-                        ownerTenantId = singleStoreTenantId;
-                        key = $"cap|platform|store|{line.SellerPartyId:N}|{typeId?.ToString("N") ?? "none"}";
-                        if (singleStoreTenantId is null)
-                        {
-                            reason = StorefrontCapturedPreviewReasons.SellerOwnerUnsupported;
-                        }
-                        else if (typeId is null || !typeById.TryGetValue(typeId.Value, out var storeType) || !storeType.IsActive)
-                        {
-                            reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
-                        }
-
-                        break;
-                    default:
-                        // مقدار مسئولیت ناشناخته: هیچ پیش‌فرض Store/Platformی جای آن نمی‌نشیند.
-                        key = $"cap|invalid|{line.OfferId:N}";
-                        reason = StorefrontCapturedPreviewReasons.ResponsibilityInvalid;
-                        break;
-                }
+            if (reason is null
+                && (typeId is null || !typeById.TryGetValue(typeId.Value, out var type) || !type.IsActive))
+            {
+                reason = StorefrontCapturedPreviewReasons.TypeUnavailable;
             }
 
             if (!planned.TryGetValue(key, out var group))
             {
+                var owner = resolved.Owner;
                 group = new PlannedGroup(
                     key,
                     line.SellerPartyId,
                     typeId,
                     TypeLabel(typeId, typeById),
-                    ownerKind,
-                    ownerTenantId,
-                    ownerSellerId,
+                    owner?.Kind ?? ShippingCapturedQuoteOwnerKind.Store,
+                    owner?.TenantId,
+                    owner?.SellerPartyId,
                     [],
                     reason);
                 planned[key] = group;
@@ -718,18 +713,16 @@ public sealed class StorefrontCapturedPreviewPlanner(
             ? type.Translations.Select(translation => translation.Name).FirstOrDefault(name => !string.IsNullOrWhiteSpace(name))
             : null;
 
-    private string? ResolveStoreTenantId()
-    {
-        if (edition.Current?.Edition != ToobaEdition.SingleStore)
-        {
-            return null;
-        }
-
-        var current = tenant.Current;
-        return current is null || current.Status != TenantStatus.Active || string.IsNullOrWhiteSpace(current.TenantId.Value)
-            ? null
-            : current.TenantId.Value.Trim();
-    }
+    /// <summary>
+    /// برچسب نمایشی <b>همان تعهد</b> (مالک کامل + Binding)؛ همان برچسبی که ردیف DB همان مالک داد.
+    /// کلید هرگز فقط کد روش نیست، وگرنه دو مالک با همان سرویس/گزینه برچسب یکدیگر را بازنویسی می‌کردند.
+    /// </summary>
+    /// <param name="labels">نقشهٔ برچسب هر تعهد.</param>
+    /// <param name="candidate">نامزد صریح سرور.</param>
+    internal static string? LabelOf(
+        IReadOnlyDictionary<StorefrontCapturedPublicationBinding, string> labels,
+        StorefrontCapturedCandidatePlan candidate) =>
+        labels.TryGetValue(new StorefrontCapturedPublicationBinding(candidate), out var label) ? label : null;
 
     private sealed class PlannedGroup(
         string groupKey,

@@ -327,7 +327,10 @@ public sealed class StorefrontCheckoutService
             ExpectedSelectionRevision: expectedSelectionRevision);
 
         var submitted = await _checkouts.SubmitAsync(command, cancellationToken);
-        return MapCapturedPage(submitted, StorefrontShippingService.BuildOrderGroupPlans(draft));
+
+        // پس از تبدیل سبد، سبد فعالی برای نمایش عنوان‌ها نمی‌ماند؛ نمای پایدار از snapshot سفارش می‌آید و
+        // هیچ خواندن بیرونی پس از ثبوت انجام نمی‌شود.
+        return MapCapturedPage(submitted, StubCartPage(submitted));
     }
 
     /// <summary>
@@ -353,12 +356,16 @@ public sealed class StorefrontCheckoutService
             throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         }
 
+        // سبد <b>واقعی</b> همین درخواست: عنوان‌ها/فروشنده‌ها/نسخه از همان سبد authoritative می‌آید تا
+        // نمای پیش‌نویس پرداخت هرگز به صفحهٔ ساختگی یا نسخهٔ کهنهٔ پیش‌نویس برنگردد.
+        var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
+
         var usingSaved = draft.SavedAddressId is Guid savedId && savedId != Guid.Empty;
         var actor = _actor.ResolvePlacementActor(usingSaved);
         var command = new SubmitCheckoutCommand(
             cartId,
             _actor.BuildCartAccess(guestSecret),
-            draft.CartVersion,
+            cart.Version,
             OrderMode.OnlinePurchase,
             BuyerPartyId: null,
             PlacedByUserId: actor,
@@ -391,18 +398,23 @@ public sealed class StorefrontCheckoutService
         var projected = await _checkouts.ProjectCapturedPaymentDraftAsync(command, cancellationToken);
         return MapPage(
             projected.Quote,
-            StubCartPage(projected.Quote),
+            // سبد واقعیِ همین درخواست (عنوان‌ها/فروشنده‌ها/نسخهٔ واقعی) — نه یک صفحهٔ ساختگی.
+            cart,
             persisted: false,
-            groupViews: projected.Groups.Select(MapGroupPlan).ToArray());
+            groupViews: projected.Groups.Select(MapGroupPlan).ToArray(),
+            selectionRevision: projected.SelectionRevision);
     }
 
     /// <summary>
     /// نمای پاسخ برای یک ثبت capture‌شده: گروه‌های <b>پایدارشده</b> از snapshot همان سفارش، و در نبودشان
-    /// همان پلن ذخیره‌شده. هیچ خواندن بیرونی پس از ثبوت انجام نمی‌شود.
+    /// <b>هیچ</b> گروهی (نه پلن‌های فعلی پیش‌نویس). هیچ خواندن بیرونی پس از ثبوت انجام نمی‌شود.
     /// </summary>
-    private static StorefrontCheckoutPage MapCapturedPage(
-        CheckoutSnapshot snapshot,
-        IReadOnlyList<OrderShippingGroupPlan> storedPlans)
+    /// <remarks>
+    /// فقدان <c>ShippingGroups</c> در یک snapshot ذخیره‌شده یعنی «گروهی ثبت نشده است»، نه مجوز پرکردن آن
+    /// از پیش‌نویس جاری: پلن‌های امروز می‌توانند مبلغ/روش/تاریخ دیگری داشته باشند و نمایش آن‌ها به‌جای
+    /// snapshot یک سفارشِ پایدار، یک تاریخچهٔ نادرست می‌سازد.
+    /// </remarks>
+    private static StorefrontCheckoutPage MapCapturedPage(CheckoutSnapshot snapshot, CartPage cart)
     {
         var committed = snapshot.ShippingGroups;
         var groupViews = committed is { Count: > 0 }
@@ -413,9 +425,8 @@ public sealed class StorefrontCheckoutService
             : (IReadOnlyList<StorefrontShippingGroupView>?)null;
         return MapPage(
             snapshot,
-            StubCartPage(snapshot),
+            cart,
             persisted: true,
-            shippingGroups: groupViews is null ? storedPlans : null,
             groupViews: groupViews);
     }
 
@@ -435,7 +446,9 @@ public sealed class StorefrontCheckoutService
             group.RequestedDeliveryTimeWindow,
             group.LeadDays,
             group.OrderLineIds.Count,
-            group.OrderLineIds.ToArray());
+            // گروه پایدارشده عضویت <b>خط سبد</b> ندارد؛ شناسهٔ خطوط سفارش جداگانه و بدون جانشینی می‌آید.
+            CartLineIds: null,
+            OrderLineIds: group.OrderLineIds.ToArray());
 
     private async Task<CartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {
@@ -501,9 +514,24 @@ public sealed class StorefrontCheckoutService
         CartPage cart,
         bool persisted,
         IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null,
-        IReadOnlyList<StorefrontShippingGroupView>? groupViews = null)
+        IReadOnlyList<StorefrontShippingGroupView>? groupViews = null,
+        string? selectionRevision = null)
     {
-        var titleByOffer = cart.Lines.ToDictionary(x => x.OfferId, x => (x.Title, x.SellerDisplayName));
+        // یک آفر می‌تواند روی دو خط سبد تکرار شود؛ عنوان/فروشندهٔ نمایشی کلید یکتا لازم دارد و تکرار
+        // نباید نمای پرداخت را بشکند (اولین جفت غیرتهی همان آفر، وگرنه اولین خط).
+        var titleByOffer = cart.Lines
+            .GroupBy(line => line.OfferId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var named = group
+                        .Select(line => (line.Title, line.SellerDisplayName))
+                        .FirstOrDefault(pair => !string.IsNullOrWhiteSpace(pair.Title) && !string.IsNullOrWhiteSpace(pair.SellerDisplayName));
+                    return string.IsNullOrWhiteSpace(named.Title)
+                        ? (group.First().Title, group.First().SellerDisplayName)
+                        : named;
+                });
         var sellers = snapshot.SellerOrders.Select(order =>
         {
             var sellerName = order.Lines
@@ -578,7 +606,8 @@ public sealed class StorefrontCheckoutService
             !string.Equals(paymentState, "Paid", StringComparison.Ordinal),
             shippingGroups is { Count: > 0 }
                 ? shippingGroups.Select(MapGroupPlan).ToArray()
-                : groupViews);
+                : groupViews,
+            selectionRevision);
     }
 
     private static StorefrontShippingGroupView MapGroupPlan(OrderShippingGroupPlan plan) =>

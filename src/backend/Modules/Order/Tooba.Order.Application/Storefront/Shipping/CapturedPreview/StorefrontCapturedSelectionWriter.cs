@@ -63,8 +63,8 @@ public static class StorefrontCapturedSelectionReasons
 /// </para>
 /// <para>
 /// <b>One atomic write.</b> حذف/درج گروه‌ها و ریشه در یک تراکنش انجام می‌شود؛ هیچ حذف جزئی durable
-/// نمی‌شود و هیچ سفارش/رزرو/پرداخت/تبدیلی ساخته نمی‌شود. نوشتن فقط برای مالک Store فعال است؛
-/// Marketplace/Seller صریحاً در دسترس نیست.
+/// نمی‌شود و هیچ سفارش/رزرو/پرداخت/تبدیلی ساخته نمی‌شود. مالک هر گروه همان مالک resolve‌شدهٔ سرور است:
+/// Store با tenant فعال، Marketplace بدون کلید و Seller با فروشندهٔ واقعی همان گروه.
 /// </para>
 /// </remarks>
 public sealed class StorefrontCapturedSelectionWriter(
@@ -198,9 +198,11 @@ public sealed class StorefrontCapturedSelectionWriter(
                 throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
             }
 
-            if (candidate.OwnerKind != ShippingCapturedQuoteOwnerKind.Store)
+            if (candidate.OwnerKind is not (ShippingCapturedQuoteOwnerKind.Store
+                or ShippingCapturedQuoteOwnerKind.Marketplace
+                or ShippingCapturedQuoteOwnerKind.Seller))
             {
-                // نوشتن این برش فقط Store فعال است؛ Marketplace/Seller صریحاً در دسترس نیست.
+                // گونهٔ مالک ناشناخته هرگز با پیش‌فرض Store جایگزین نمی‌شود.
                 throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
             }
 
@@ -217,7 +219,11 @@ public sealed class StorefrontCapturedSelectionWriter(
                 throw Refuse(StorefrontCapturedSelectionReasons.DateUnavailable);
             }
 
-            var evidence = BuildEvidence(candidate, quote, slot);
+            // فروشندهٔ همین گروه از خطوط authoritative همان گروه می‌آید (همان فروشنده‌ای که
+            // CartShippingGroupPlanner برای یکتایی/تعهد استفاده می‌کند)، نه از یک مقدار اختیاری ترکیب.
+            var sellerPartyId = CartSellerOf(cart, plan.CartLineIds);
+
+            var evidence = BuildEvidence(candidate, quote, slot, sellerPartyId);
             var window = string.Create(
                 CultureInfo.InvariantCulture,
                 $"{slot.OpensAt:HH\\:mm}-{slot.ClosesAt:HH\\:mm}");
@@ -231,12 +237,8 @@ public sealed class StorefrontCapturedSelectionWriter(
                 SelectedDeliveryDate: slot.Date,
                 SelectedDeliveryTimeWindow: window));
 
-            var label = context.Labels.TryGetValue(candidate.MethodCode, out var methodLabel)
-                ? methodLabel
-                : candidate.ServiceCode;
-            // فروشندهٔ همین گروه از خطوط authoritative همان گروه می‌آید (همان فروشنده‌ای که
-            // CartShippingGroupPlanner برای یکتایی/تعهد استفاده می‌کند)، نه از یک مقدار اختیاری ترکیب.
-            var sellerPartyId = CartSellerOf(cart, plan.CartLineIds);
+            var label = StorefrontCapturedPreviewPlanner.LabelOf(context.Labels, candidate)
+                ?? candidate.ServiceCode;
             eligible.Add(new CartShippingGroupEligibleMethod(
                 candidate.MethodCode,
                 candidate.ServiceCode,
@@ -400,7 +402,8 @@ public sealed class StorefrontCapturedSelectionWriter(
     private static ShippingGroupAcceptedEvidence BuildEvidence(
         StorefrontCapturedCandidatePlan candidate,
         Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteResult quote,
-        StorefrontShippingReceivingSlot slot)
+        StorefrontShippingReceivingSlot slot,
+        Guid groupSellerPartyId)
     {
         if (quote.FormatVersion is not { } formatVersion || formatVersion <= 0)
         {
@@ -408,15 +411,24 @@ public sealed class StorefrontCapturedSelectionWriter(
             throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
         }
 
+        // مالک شاهد از همان سیاست مشترک/نامزد سرور می‌آید: Store با tenant، Marketplace بدون کلید و
+        // Seller فقط با فروشندهٔ <b>واقعی همین گروه</b>. هیچ‌کدام از مالک‌ها به دیگری بازتفسیر نمی‌شود.
+        var owner = new StorefrontCapturedOwner(
+            candidate.OwnerKind,
+            candidate.OwnerTenantId,
+            candidate.OwnerSellerPartyId);
+
         try
         {
+            var domainOwner = owner.ToDomainOwner();
+            domainOwner.EnsureCoherentWithGroupSeller(groupSellerPartyId);
             return ShippingGroupAcceptedEvidence.Create(
                 candidate.SnapshotId,
                 candidate.DraftId,
                 candidate.SourceRevision,
                 formatVersion,
                 candidate.SelectionVersion,
-                ShippingGroupOwner.Store(candidate.OwnerTenantId ?? string.Empty),
+                domainOwner,
                 quote.GroupId ?? Guid.Empty,
                 quote.RateRowId ?? Guid.Empty,
                 quote.ShippingTypeId,
@@ -434,7 +446,8 @@ public sealed class StorefrontCapturedSelectionWriter(
         }
         catch (ContractOperationException)
         {
-            // مقدار ناقص/غیرقابل‌نمایش یعنی قیمت مالک برای شاهد کافی نیست؛ هیچ clamp/گردکردنی نیست.
+            // مقدار ناقص/غیرقابل‌نمایش یا مالک ناسازگار یعنی قیمت مالک برای شاهد کافی نیست؛ هیچ
+            // clamp/گردکردن/جایگزینی نیست.
             throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
         }
     }

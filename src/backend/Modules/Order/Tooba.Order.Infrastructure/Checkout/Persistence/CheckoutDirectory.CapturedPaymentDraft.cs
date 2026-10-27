@@ -50,7 +50,7 @@ public sealed partial class CheckoutDirectory
         // همان پذیرش مسیر ثبت نهایی — فقط-خواندنی: شاهد ذخیره‌شده با سبد/نشانی/اشاره‌گر/نقل‌قول/تاریخ
         // همین لحظه سنجیده می‌شود و نتیجهٔ آن نمای پرداخت است. نسخهٔ صریح و قفل نقطه‌ای (مخصوص ثبت) اجرا
         // نمی‌شود تا این مسیر هیچ قفل/نوشتنی نداشته باشد.
-        var groups = await AcceptCapturedShippingCoreAsync(
+        var acceptance = await AcceptCapturedShippingCoreAsync(
             command,
             cart,
             sellerOrders,
@@ -58,7 +58,16 @@ public sealed partial class CheckoutDirectory
             requireExplicitSelectionRevision: false,
             cancellationToken);
 
-        var quote = ComposePreviewSnapshot(cart, command, checkoutId, now, sellerOrders);
-        return new CapturedPaymentDraftSnapshot(quote, groups);
+        // مبلغ/نسخهٔ نمایش از <b>همین پذیرش</b> می‌آید، نه از فیلد کهنهٔ فرمان: جمع کرایهٔ گروه‌های
+        // پذیرفته‌شده و نسخه‌های واقعی سبد/ریشه. در نبود گروه، همان مقدار فرمان حفظ می‌شود.
+        var shippingTotal = acceptance.Groups.Count == 0
+            ? (decimal?)null
+            : acceptance.Groups.Sum(group => group.ShippingCharge);
+        var quote = ComposePreviewSnapshot(cart, command, checkoutId, now, sellerOrders, shippingTotal);
+        return new CapturedPaymentDraftSnapshot(
+            quote,
+            acceptance.Groups,
+            acceptance.CartVersion,
+            acceptance.SelectionRevisionText);
     }
 }

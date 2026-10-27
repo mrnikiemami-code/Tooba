@@ -53,6 +53,8 @@ export interface StorefrontShippingGroupView {
   lineCount: number;
   /** (135) شناسهٔ واقعی خطوط سبد این گروه برای بازیابی قطعی انتخاب «هر خط». */
   cartLineIds: string[] | null;
+  /** (TB-235) شناسهٔ واقعی خطوط سفارش گروه پایدارشده؛ هرگز جای `cartLineIds` نمی‌نشیند. */
+  orderLineIds?: string[] | null;
 }
 
 export interface StorefrontShippingDraft {
@@ -324,6 +326,7 @@ function mapGroup(value: unknown): StorefrontShippingGroupView | null {
     leadDays: asNumber(prop(item, "leadDays", "LeadDays")),
     lineCount: asNumber(prop(item, "lineCount", "LineCount")),
     cartLineIds: asStringArray(prop(item, "cartLineIds", "CartLineIds")),
+    orderLineIds: asStringArray(prop(item, "orderLineIds", "OrderLineIds")),
   };
 }
 

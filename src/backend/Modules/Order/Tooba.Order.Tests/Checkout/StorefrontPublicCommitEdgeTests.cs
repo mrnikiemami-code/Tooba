@@ -105,6 +105,18 @@ public sealed class StorefrontPublicCommitEdgeTests
         Assert.Equal(Window.OpenTicksB, groupB.AcceptedEvidence!.ReceivingOpenTicks);
         Assert.Equal(Window.CloseTicksB, groupB.AcceptedEvidence!.ReceivingCloseTicks);
 
+        // TB-235 (۳): گروه پایدارشده شناسهٔ خط <b>سفارش</b> را جدا اعلام می‌کند و هرگز عضویت خط سبد
+        // را با آن جانشین نمی‌کند (خط سبد ≠ خط سفارش).
+        Assert.All(page.ShippingGroups!, group => Assert.Null(group.CartLineIds));
+        foreach (var persistedGroup in groups)
+        {
+            var view = Assert.Single(page.ShippingGroups!, x => x.ShippingGroupId == persistedGroup.ShippingGroupId);
+            Assert.NotNull(view.OrderLineIds);
+            Assert.Equal(
+                persistedGroup.Lines.Select(line => line.OrderLineId).OrderBy(id => id).ToArray(),
+                view.OrderLineIds!.OrderBy(id => id).ToArray());
+        }
+
         // مسیر قدیمی هرگز اجرا نشد: ریشهٔ انتخاب دست‌نخورده و همان دو گروه ذخیره‌شده باقی مانده است.
         var stored = await db.ShippingDrafts.Include(x => x.ShippingGroups).SingleAsync(x => x.CartId == CartId);
         Assert.Equal(1, stored.SelectionRevision);
@@ -193,7 +205,9 @@ public sealed class StorefrontPublicCommitEdgeTests
         // نشانی ذخیره‌شدهٔ واقعی: مسیر فقط-خواندنی همان اقتدار کتاب آدرس را می‌سنجد.
         await CapturedFinalSubmitIntegrationTests.SeedTwoGroupDraftAsync(
             db,
-            savedAddressId: CapturedFinalSubmitIntegrationTests.SavedAddressId);
+            savedAddressId: CapturedFinalSubmitIntegrationTests.SavedAddressId,
+            // فیلد کهنهٔ فرمان عمداً با جمع گروه‌های پذیرفته‌شده فرق دارد (TB-235).
+            flatShippingAmount: 999m);
 
         var page = await edge.Shipping.ProjectPaymentDraftAsync(CartId, null, couponCode: null, CancellationToken.None);
 
@@ -203,6 +217,32 @@ public sealed class StorefrontPublicCommitEdgeTests
         Assert.Equal(PayableB, page.ShippingGroups[1].ShippingAmount);
         Assert.Equal(2, edge.Core.Quotes.Requests.Count);
         Assert.True(edge.Core.Addresses.Calls > 0);
+
+        // TB-235 (۱): نمای پیش‌نویس پرداخت، سبد/نسخه/عنوان‌های <b>واقعی</b> را نگه می‌دارد (نه صفحهٔ ساختگی).
+        Assert.Equal(7, page.CartVersion);
+        Assert.Contains(
+            page.SellerOrders.SelectMany(order => order.Lines),
+            line => line.Title == "کالای الف");
+        Assert.Contains(
+            page.SellerOrders.SelectMany(order => order.Lines),
+            line => line.Title == "کالای ب");
+        Assert.DoesNotContain(
+            page.SellerOrders.SelectMany(order => order.Lines),
+            line => line.Title == "کالا");
+
+        // TB-235 (۲): جمع مالی نمای پرداخت از گروه‌های پذیرفته‌شده می‌آید، نه از فیلد کهنهٔ فرمان (۹۹۹).
+        Assert.NotEqual(999m, page.ShippingAmount);
+        Assert.Equal(PayableA + PayableB, page.ShippingAmount);
+        Assert.Equal(
+            page.SellerOrders.Sum(order => order.PayableAmount) + PayableA + PayableB,
+            page.PayableAmount);
+        // و نسخهٔ واقعی ریشه به‌شکل متن دقیق برای CAS بعدی برمی‌گردد.
+        Assert.Equal("1", page.SelectionRevision);
+        // گروه‌های نمای پیش‌نویس عضویت خط <b>سبد</b> دارند و شناسهٔ خط سفارش ندارند.
+        Assert.All(page.ShippingGroups, group => Assert.Null(group.OrderLineIds));
+        Assert.Equal(
+            [CapturedFinalSubmitIntegrationTests.LineA, CapturedFinalSubmitIntegrationTests.LineB],
+            page.ShippingGroups.SelectMany(group => group.CartLineIds!).ToArray());
 
         // هیچ نوشتنی: صفر سفارش/گروه سفارش، صفر رزرو/تبدیل، و ریشهٔ انتخاب دست‌نخورده.
         db.ChangeTracker.Clear();
@@ -245,6 +285,107 @@ public sealed class StorefrontPublicCommitEdgeTests
         Assert.Equal(0, closed.Core.Reservation.Calls);
         db.ChangeTracker.Clear();
         Assert.Equal(0, await db.Checkouts.CountAsync(x => x.CartId == CartId));
+    }
+
+    /// <summary>
+    /// <b>۵)</b> افراز <b>چندمالکی</b> Marketplace: یک گروه با مالک <c>Marketplace</c> و یک گروه با مالک
+    /// فروشندهٔ <b>واقعی</b> روی همان Store binding؛ هر گروه ردیف/تاریخ/مبلغ خودش، یک اشاره‌گر ۲۱۹ برای هر
+    /// مالک+Binding، و مالک ذخیره‌شده دقیقاً همان مالک بازساخته‌شده از انتساب واقعی است.
+    /// </summary>
+    [Fact]
+    public async Task Marketplace_mixed_cart_keeps_each_partition_owner_binding_row_date_and_money()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await CapturedFinalSubmitIntegrationTests.ReadyAsync(target);
+        using var edge = new EdgeHarness(
+            db,
+            edition: Tooba.BuildingBlocks.ToobaEdition.Marketplace,
+            tenantId: null);
+        await CapturedFinalSubmitIntegrationTests.SeedMarketplaceOwnerDraftAsync(db);
+        edge.Core.Assignments.Responsibility[CapturedFinalSubmitIntegrationTests.OfferA] =
+            Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility.Platform;
+        edge.Core.Assignments.Responsibility[CapturedFinalSubmitIntegrationTests.OfferB] =
+            Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility.Seller;
+
+        var page = await edge.Shipping.CommitAsync(
+            CartId,
+            null,
+            CartVersion,
+            "tb235-marketplace-mixed",
+            couponCode: null,
+            expectedSelectionRevision: "1",
+            CancellationToken.None);
+
+        Assert.NotNull(page.CheckoutId);
+        Assert.Equal(2, page.ShippingGroups!.Count);
+        // یک اشاره‌گر ۲۱۹ برای هر جفت مالک+Binding (نه یکی برای هر Binding).
+        Assert.Equal(2, edge.Core.Pointers.Calls);
+        Assert.Equal(2, edge.Core.Quotes.Requests.Count);
+        Assert.Equal(1, edge.Core.Reservation.Calls);
+
+        db.ChangeTracker.Clear();
+        var checkout = await db.Checkouts
+            .Include(x => x.ShippingGroups).ThenInclude(group => group.Lines)
+            .SingleAsync(x => x.CartId == CartId);
+        var groups = checkout.ShippingGroups.ToArray();
+        var platformGroup = Assert.Single(groups, x => x.ShippingGroupId == DraftGroupA);
+        var sellerGroup = Assert.Single(groups, x => x.ShippingGroupId == DraftGroupB);
+
+        // مالک هر گروه همان مالک واقعی انتساب است: Marketplace بدون tenant/فروشنده، Seller با فروشندهٔ خودش.
+        Assert.Equal(ShippingGroupOwnerKind.Marketplace, platformGroup.AcceptedEvidence!.Owner.Kind);
+        Assert.Null(platformGroup.AcceptedEvidence.Owner.TenantKey);
+        Assert.Null(platformGroup.AcceptedEvidence.Owner.SellerPartyId);
+        Assert.Equal(ShippingGroupOwnerKind.Seller, sellerGroup.AcceptedEvidence!.Owner.Kind);
+        Assert.Null(sellerGroup.AcceptedEvidence.Owner.TenantKey);
+        Assert.Equal(CapturedFinalSubmitIntegrationTests.SellerB, sellerGroup.AcceptedEvidence.Owner.SellerPartyId);
+
+        // پول/ردیف/تاریخ/تیک هر گروه خودش (هیچ مقدار گروه دیگر جایگزین نمی‌شود).
+        Assert.Equal(125m, platformGroup.ShippingChargeSnapshot);
+        Assert.Equal(75m, sellerGroup.ShippingChargeSnapshot);
+        Assert.Equal(CapturedFinalSubmitIntegrationTests.RowA, platformGroup.AcceptedEvidence.RateRowId);
+        Assert.Equal(CapturedFinalSubmitIntegrationTests.RowB, sellerGroup.AcceptedEvidence.RateRowId);
+        Assert.Equal(new DateOnly(2026, 10, 27), platformGroup.AcceptedEvidence.ReceivingDate);
+        Assert.Equal(new DateOnly(2026, 10, 28), sellerGroup.AcceptedEvidence.ReceivingDate);
+        Assert.Equal(CapturedFinalSubmitIntegrationTests.OpenTicksA, platformGroup.AcceptedEvidence.ReceivingOpenTicks);
+        Assert.Equal(CapturedFinalSubmitIntegrationTests.OpenTicksB, sellerGroup.AcceptedEvidence.ReceivingOpenTicks);
+    }
+
+    /// <summary>
+    /// <b>۶)</b> شاهد ذخیره‌شده هرگز اعتبارسنج خودش نیست: مالک <b>Store</b> ذخیره‌شده در نصب Marketplace با
+    /// مالک بازساخته‌شده از انتساب واقعی نمی‌خواند ⇒ رد پیش از هر رزرو/نوشتار.
+    /// </summary>
+    [Fact]
+    public async Task Stored_owner_that_does_not_match_the_rebuilt_owner_is_refused_before_any_write()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        await using var db = await CapturedFinalSubmitIntegrationTests.ReadyAsync(target);
+        using var edge = new EdgeHarness(
+            db,
+            edition: Tooba.BuildingBlocks.ToobaEdition.Marketplace,
+            tenantId: null);
+        await CapturedFinalSubmitIntegrationTests.SeedMarketplaceOwnerDraftAsync(db, storeOwnerForPlatform: true);
+        edge.Core.Assignments.Responsibility[CapturedFinalSubmitIntegrationTests.OfferA] =
+            Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility.Platform;
+        edge.Core.Assignments.Responsibility[CapturedFinalSubmitIntegrationTests.OfferB] =
+            Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility.Seller;
+
+        var refused = await Assert.ThrowsAsync<Tooba.BuildingBlocks.ContractOperationException>(() =>
+            edge.Shipping.CommitAsync(
+                CartId,
+                null,
+                CartVersion,
+                "tb235-marketplace-owner-mismatch",
+                couponCode: null,
+                expectedSelectionRevision: "1",
+                CancellationToken.None));
+
+        Assert.Equal(StorefrontCapturedSelectionReasons.Conflict, refused.Code);
+        Assert.Equal(0, edge.Core.Reservation.Calls);
+        Assert.Equal(0, edge.Core.Conversion.Calls);
+        db.ChangeTracker.Clear();
+        Assert.Equal(0, await db.Checkouts.CountAsync(x => x.CartId == CartId));
+        Assert.Equal(0, await db.Set<OrderShippingGroup>().CountAsync());
+        Assert.Equal(1, (await db.ShippingDrafts.SingleAsync(x => x.CartId == CartId)).SelectionRevision);
     }
 
     /// <summary>
@@ -403,9 +544,15 @@ public sealed class StorefrontPublicCommitEdgeTests
             OrderDbContext db,
             bool checkoutEnabled = true,
             bool foreignActor = false,
-            bool capturedEnabled = true)
+            bool capturedEnabled = true,
+            Tooba.BuildingBlocks.ToobaEdition edition = Tooba.BuildingBlocks.ToobaEdition.SingleStore,
+            string? tenantId = "store-alpha")
         {
-            Core = new CapturedFinalSubmitIntegrationTests.CapturedSubmitHarness(db, checkoutEnabled: checkoutEnabled);
+            Core = new CapturedFinalSubmitIntegrationTests.CapturedSubmitHarness(
+                db,
+                checkoutEnabled: checkoutEnabled,
+                edition: edition,
+                tenantId: tenantId);
             Drafts = new StorefrontShippingDraftStore(db);
             var options = Options.Create(new StorefrontCapturedPreviewOptions
             {
@@ -420,8 +567,8 @@ public sealed class StorefrontPublicCommitEdgeTests
                 Core.Types,
                 Core.Pointers,
                 new StorefrontCapturedGroupProjectionComposer(Core.Directory, Core.Quotes, new FixedClock()),
-                new CapturedFinalSubmitIntegrationTests.FakeEdition(),
-                new CapturedFinalSubmitIntegrationTests.FakeTenant(),
+                new CapturedFinalSubmitIntegrationTests.FakeEdition(edition),
+                new CapturedFinalSubmitIntegrationTests.FakeTenant(tenantId),
                 options);
             var writer = new StorefrontCapturedSelectionWriter(planner, Drafts, Core.Geography, new FixedClock());
             var actorSeam = foreignActor ? new ForeignActor() : (IOrderStorefrontActor)Actor;

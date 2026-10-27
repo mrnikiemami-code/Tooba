@@ -454,47 +454,174 @@ public sealed class StorefrontCapturedSelectionWriterTests
         Assert.Equal(0, drafts.ReplaceCalls);
     }
 
-    /// <summary>این برش فقط مالک Store را می‌نویسد؛ مالک دیگر هرگز ذخیره نمی‌شود.</summary>
+    /// <summary>
+    /// TB-235: در نصب Marketplace، انتساب <c>Platform</c> مالک <b>Marketplace</b> را می‌نویسد — بدون tenant
+    /// فروشگاه و بدون فروشنده. هیچ مالکی به Store گِرد نمی‌شود.
+    /// </summary>
     [Fact]
-    public async Task Marketplace_owner_is_never_written_by_this_slice()
+    public async Task Marketplace_platform_group_is_written_with_the_marketplace_owner()
     {
         using var harness = new ShippingGroupGoodsFactsHarness();
+        var planner = MarketplacePlanner(
+            harness,
+            OfferFulfillmentResponsibility.Platform,
+            tenantId: null);
+        var drafts = new DraftStoreFake();
+        var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+        var cart = Cart(harness, LineA, OfferA);
+        var intent = await IntentFromPreviewAsync(harness, planner, cart);
+
+        await writer.SaveAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Prepared(),
+            existing: null,
+            guestSecretHash: null,
+            intent,
+            CancellationToken.None);
+
+        var group = Assert.Single(drafts.LastGroups);
+        var owner = group.AcceptedEvidence!.Owner;
+        Assert.Equal(ShippingGroupOwnerKind.Marketplace, owner.Kind);
+        Assert.Null(owner.TenantKey);
+        Assert.Null(owner.SellerPartyId);
+    }
+
+    /// <summary>
+    /// TB-235: در نصب Marketplace، انتساب <c>Seller</c> مالک فروشندهٔ <b>واقعی</b> همان آفر را می‌نویسد و
+    /// هرگز به فروشندهٔ دیگری/Store نسبت داده نمی‌شود.
+    /// </summary>
+    [Fact]
+    public async Task Marketplace_seller_group_is_written_with_the_real_seller_owner()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        var planner = MarketplacePlanner(
+            harness,
+            OfferFulfillmentResponsibility.Seller,
+            tenantId: null);
+        var drafts = new DraftStoreFake();
+        var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+        var cart = Cart(harness, LineA, OfferA);
+        var intent = await IntentFromPreviewAsync(harness, planner, cart);
+
+        await writer.SaveAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            Prepared(),
+            existing: null,
+            guestSecretHash: null,
+            intent,
+            CancellationToken.None);
+
+        var group = Assert.Single(drafts.LastGroups);
+        var owner = group.AcceptedEvidence!.Owner;
+        Assert.Equal(ShippingGroupOwnerKind.Seller, owner.Kind);
+        Assert.Null(owner.TenantKey);
+        Assert.Equal(harness.SellerId, owner.SellerPartyId);
+    }
+
+    /// <summary>
+    /// کنترل‌های منفی مالک (TB-235): نه Marketplace با tenant باقی‌مانده و نه ارسالِ فروشنده در SingleStore
+    /// هیچ مالکی نمی‌سازند؛ هیچ نوشتنی رخ نمی‌دهد و هیچ گروهی بی‌صدا حذف/بازتفسیر نمی‌شود.
+    /// </summary>
+    [Fact]
+    public async Task Unsupported_owner_combinations_refuse_instead_of_guessing_a_default_owner()
+    {
+        // ۱) Marketplace با tenant باقی‌مانده: هیچ ownerای ساخته نمی‌شود.
+        using (var harness = new ShippingGroupGoodsFactsHarness())
+        {
+            var planner = MarketplacePlanner(
+                harness,
+                OfferFulfillmentResponsibility.Platform,
+                tenantId: "store-alpha");
+            var drafts = new DraftStoreFake();
+            var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+            var error = await Assert.ThrowsAsync<StorefrontOrderException>(() => writer.SaveAsync(
+                Cart(harness, LineA, OfferA),
+                new CartAccess(harness.UserId, null),
+                Prepared(),
+                null,
+                null,
+                Intent("cap|platform|marketplace|" + harness.SellerId.ToString("N") + "|" + StoreTypeId.ToString("N"), "post", "standard", "2026-10-29"),
+                CancellationToken.None));
+
+            // هیچ مالکی حدس زده نمی‌شود: رد با کد پایدار سطح capture (بدون انتخاب معتبر) و صفر نوشتن.
+            Assert.StartsWith("storefront.captured_", error.Code, StringComparison.Ordinal);
+            Assert.Equal(0, drafts.ReplaceCalls);
+        }
+
+        // ۲) SingleStore با انتساب Seller: پشتیبانی نمی‌شود و به Store بازتفسیر نمی‌شود.
+        using (var harness = new ShippingGroupGoodsFactsHarness())
+        {
+            harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
+            var assignments = new AssignmentFake();
+            assignments.Values[OfferA] = new OfferFulfillmentAssignmentSnapshot(
+                OfferA,
+                harness.SellerId,
+                OfferFulfillmentResponsibility.Seller,
+                StoreTypeId);
+            var planner = new StorefrontCapturedPreviewPlanner(
+                assignments,
+                new CatalogFake("post", "standard"),
+                ActiveTypeFake(),
+                new SelectedCaptureFake(),
+                Composer(harness),
+                new EditionFake(ToobaEdition.SingleStore),
+                new TenantFake("store-alpha"),
+                Options.Create(new StorefrontCapturedPreviewOptions
+                {
+                    Enabled = true,
+                    SelectionEnabled = true,
+                    AvailableDateCount = 7,
+                }));
+            var drafts = new DraftStoreFake();
+            var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
+
+            var error = await Assert.ThrowsAsync<StorefrontOrderException>(() => writer.SaveAsync(
+                Cart(harness, LineA, OfferA),
+                new CartAccess(harness.UserId, null),
+                Prepared(),
+                null,
+                null,
+                Intent("cap|seller|" + harness.SellerId.ToString("N") + "|" + StoreTypeId.ToString("N"), "post", "standard", "2026-10-29"),
+                CancellationToken.None));
+
+            // Seller در SingleStore پشتیبانی نمی‌شود: نه بازتفسیر به Store، نه نوشتن.
+            Assert.StartsWith("storefront.captured_", error.Code, StringComparison.Ordinal);
+            Assert.Equal(0, drafts.ReplaceCalls);
+        }
+    }
+
+    /// <summary>یک آفر در نصب Marketplace با tenant داده‌شده (یا بدون tenant) و انتساب صریح.</summary>
+    private static StorefrontCapturedPreviewPlanner MarketplacePlanner(
+        ShippingGroupGoodsFactsHarness harness,
+        OfferFulfillmentResponsibility responsibility,
+        string? tenantId)
+    {
         harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
         var assignments = new AssignmentFake();
         assignments.Values[OfferA] = new OfferFulfillmentAssignmentSnapshot(
             OfferA,
             harness.SellerId,
-            OfferFulfillmentResponsibility.Platform,
+            responsibility,
             StoreTypeId);
-        var planner = new StorefrontCapturedPreviewPlanner(
+        return new StorefrontCapturedPreviewPlanner(
             assignments,
             new CatalogFake("post", "standard"),
             ActiveTypeFake(),
             new SelectedCaptureFake(),
             Composer(harness),
             new EditionFake(ToobaEdition.Marketplace),
-            new TenantFake("store-alpha"),
+            new TenantFake(tenantId),
             Options.Create(new StorefrontCapturedPreviewOptions
             {
                 Enabled = true,
                 SelectionEnabled = true,
                 AvailableDateCount = 7,
             }));
-
-        var drafts = new DraftStoreFake();
-        var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
-
-        var error = await Assert.ThrowsAsync<StorefrontOrderException>(() => writer.SaveAsync(
-            Cart(harness, LineA, OfferA),
-            new CartAccess(harness.UserId, null),
-            Prepared(),
-            null,
-            null,
-            Intent("cap|platform|marketplace|" + harness.SellerId.ToString("N") + "|" + StoreTypeId.ToString("N"), "post", "standard", "2026-10-29"),
-            CancellationToken.None));
-
-        Assert.Equal(StorefrontCapturedSelectionReasons.Unavailable, error.Code);
-        Assert.Equal(0, drafts.ReplaceCalls);
     }
 
     /// <summary>
@@ -1080,17 +1207,20 @@ public sealed class StorefrontCapturedSelectionWriterTests
         public EditionContext? Current { get; } = new(edition, "test");
     }
 
-    private sealed class TenantFake(string tenantId) : ICurrentTenant
+    private sealed class TenantFake(string? tenantId) : ICurrentTenant
     {
-        public TenantContext? Current { get; } = new(
-            new TenantId(tenantId),
-            TenantStatus.Active,
-            new ConnectionReference("test"),
-            null,
-            null,
-            null,
-            "store.local",
-            null);
+        /// <summary>tenant تهی یعنی «هیچ زمینهٔ تجارتی» — همان چیزی که Marketplace expects.</summary>
+        public TenantContext? Current { get; } = tenantId is null
+            ? null
+            : new TenantContext(
+                new TenantId(tenantId),
+                TenantStatus.Active,
+                new ConnectionReference("test"),
+                null,
+                null,
+                null,
+                "store.local",
+                null);
     }
 
     private sealed class FixedClock232 : IClock

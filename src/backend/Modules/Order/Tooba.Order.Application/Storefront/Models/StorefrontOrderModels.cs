@@ -84,7 +84,12 @@ public sealed record StorefrontCheckoutPage(
     decimal PayableAmount,
     IReadOnlyList<StorefrontSellerOrderView> SellerOrders,
     bool CanInitiatePayment = true,
-    IReadOnlyList<StorefrontShippingGroupView>? ShippingGroups = null);
+    IReadOnlyList<StorefrontShippingGroupView>? ShippingGroups = null,
+    /// <summary>
+    /// نسخهٔ <b>واقعی</b> ریشهٔ انتخاب به‌شکل متن اعشاری دقیق برای CAS بعدی (TB-235)؛ فقط در نمای
+    /// پیش‌نویس پرداخت یک انتخاب capture‌شده پر می‌شود و در بقیهٔ مسیرها تهی می‌ماند.
+    /// </summary>
+    string? SelectionRevision = null);
 
 /// <summary>روش ارسال قابل انتخاب فروشگاهی از کاتالوگ Store-enabled.</summary>
 /// <param name="OptionCode">
@@ -319,7 +324,13 @@ public sealed record StorefrontShippingGroupView(
     /// شناسهٔ واقعی خطوط سبد همین گروه (Whole-line membership). برای بازیابی قطعی انتخاب «هر خط» پس از
     /// رفرش/برگشت لازم است؛ هیچ مبلغ/فروشنده‌ای از آن استنتاج نمی‌شود. در پاسخ قدیمی خالی می‌ماند.
     /// </summary>
-    IReadOnlyList<Guid>? CartLineIds = null);
+    IReadOnlyList<Guid>? CartLineIds = null,
+    /// <summary>
+    /// شناسهٔ واقعی خطوط <b>سفارش</b> همین گروه برای گروه‌های <b>پایدارشده/تاریخی</b> (TB-235).
+    /// <c>OrderLineId</c> هرگز جای <c>CartLineId</c> نیست؛ در نمای پیش‌نویس خالی و در نمای سفارشِ
+    /// ذخیره‌شده پر می‌شود. هیچ مبلغی از این شناسه‌ها استنتاج نمی‌شود.
+    /// </summary>
+    IReadOnlyList<Guid>? OrderLineIds = null);
 
 /// <summary>
 /// ذخیرهٔ انتخاب ارسال. <see cref="ShippingGroups"/> افزایشی و اختیاری است: در نبود آن همان

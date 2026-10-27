@@ -66,9 +66,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
     internal static readonly Guid DraftGroupA = Guid.Parse("01a17d0f-0000-7000-8000-0000000000a1");
     internal static readonly Guid DraftGroupB = Guid.Parse("01a17d0f-0000-7000-8000-0000000000b2");
     // همان ناحیه برای همان مقصد: تفاوت مستقل گروه، ردیف نرخ/کارمزد/تاریخ خودش است.
-    private static readonly Guid AreaGroup = Guid.Parse("01a17d10-0000-7000-8000-0000000000a1");
-    private static readonly Guid RowA = Guid.Parse("01a17d11-0000-7000-8000-0000000000a1");
-    private static readonly Guid RowB = Guid.Parse("01a17d11-0000-7000-8000-0000000000b2");
+    internal static readonly Guid AreaGroup = Guid.Parse("01a17d10-0000-7000-8000-0000000000a1");
+    internal static readonly Guid RowA = Guid.Parse("01a17d11-0000-7000-8000-0000000000a1");
+    internal static readonly Guid RowB = Guid.Parse("01a17d11-0000-7000-8000-0000000000b2");
     private static readonly Guid SnapshotId = Guid.Parse("01a17d0e-0419-7000-b500-0000000000a1");
     private static readonly Guid ShippingTypeId = Guid.Parse("01a1785e-01f3-7000-b500-0000000000c1");
     private static readonly Guid CountryId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d1");
@@ -79,9 +79,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
     private static readonly DateTimeOffset Now = new(2026, 10, 25, 9, 30, 0, TimeSpan.Zero);
     private static readonly DateOnly DateA = new(2026, 10, 27); // سه‌شنبه
     private static readonly DateOnly DateB = new(2026, 10, 28); // چهارشنبه
-    private static readonly long OpenTicksA = new TimeOnly(9, 0, 0).Ticks + 1_234_567L;
+    internal static readonly long OpenTicksA = new TimeOnly(9, 0, 0).Ticks + 1_234_567L;
     private static readonly long CloseTicksA = new TimeOnly(17, 0, 0).Ticks + 7_654_321L;
-    private static readonly long OpenTicksB = new TimeOnly(10, 0, 0).Ticks + 5_000_000L;
+    internal static readonly long OpenTicksB = new TimeOnly(10, 0, 0).Ticks + 5_000_000L;
     private static readonly long CloseTicksB = new TimeOnly(18, 0, 0).Ticks + 2_500_000L;
 
     /// <summary>
@@ -631,7 +631,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
             bool sharedOffer = false,
             decimal? freightA = null,
             ICheckoutCommitBarrier? barrier = null,
-            bool withAddressBook = true)
+            bool withAddressBook = true,
+            ToobaEdition edition = ToobaEdition.SingleStore,
+            string? tenantId = "store-alpha")
         {
             CheckoutEnabled = checkoutEnabled;
             SharedOffer = sharedOffer;
@@ -673,8 +675,8 @@ public sealed class CapturedFinalSubmitIntegrationTests
                 selectedCaptures: Pointers,
                 capturedComposition: new StorefrontCapturedGroupCompositionCore(Quotes, new FixedClock()),
                 geography: Geography,
-                edition: new FakeEdition(),
-                tenant: new FakeTenant(),
+                edition: new FakeEdition(edition),
+                tenant: new FakeTenant(tenantId),
                 addressBook: withAddressBook ? Addresses : null,
                 shippingCatalog: ShippingCatalog);
             ConfigureCart();
@@ -806,11 +808,12 @@ public sealed class CapturedFinalSubmitIntegrationTests
     internal static async Task SeedTwoGroupDraftAsync(
         OrderDbContext db,
         string? mutate = null,
-        Guid? savedAddressId = null)
+        Guid? savedAddressId = null,
+        decimal flatShippingAmount = 200m)
     {
         const string service = "post";
         const string option = "standard";
-        var draft = NewDraft(savedAddressId);
+        var draft = NewDraft(savedAddressId, flatShippingAmount);
         var groupA = DraftGroup(DraftGroupA, SellerA, service, option, 125m, DateA);
         var groupB = DraftGroup(DraftGroupB, SellerB, service, option, 75m, DateB);
         groupA.AddWholeLine(LineA, SellerA);
@@ -873,8 +876,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         db.ChangeTracker.Clear();
     }
 
-    internal static CartShippingDraft NewDraft(Guid? savedAddressId) => CartShippingDraft.Create(
-        CartId,
+    internal static CartShippingDraft NewDraft(Guid? savedAddressId, decimal flatShippingAmount = 200m) => CartShippingDraft.Create(        CartId,
         "hash",
         7,
         "گیرنده",
@@ -886,7 +888,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         savedAddressId,
         "post:standard",
         "پست",
-        200m,
+        flatShippingAmount,
         new DateOnly(2026, 10, 26),
         DateA,
         "09:00-17:00",
@@ -920,6 +922,14 @@ public sealed class CapturedFinalSubmitIntegrationTests
         string tenant,
         bool A,
         decimal freight,
+        long closeTicks) =>
+        EvidenceForOwner(ShippingGroupOwner.Store(tenant), A, freight, closeTicks);
+
+    /// <summary>همان شاهد با مالک <b>تایپ‌شده</b> (Marketplace/Seller) برای افراز چندمالکی.</summary>
+    internal static ShippingGroupAcceptedEvidence EvidenceForOwner(
+        ShippingGroupOwner owner,
+        bool A,
+        decimal freight,
         long closeTicks)
     {
         return ShippingGroupAcceptedEvidence.Create(
@@ -928,7 +938,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
             2,
             1,
             1,
-            ShippingGroupOwner.Store(tenant),
+            owner,
             AreaGroup,
             A ? RowA : RowB,
             ShippingTypeId,
@@ -943,6 +953,40 @@ public sealed class CapturedFinalSubmitIntegrationTests
             "UTC",
             2,
             3);
+    }
+
+    /// <summary>
+    /// دانهٔ <b>چندمالکی</b> Marketplace: گروه A با مالک <c>Marketplace</c> و گروه B با مالک فروشندهٔ واقعی
+    /// <see cref="SellerB"/> روی <b>همان</b> Store binding (همان سرویس/گزینه)، هر گروه با ردیف/تاریخ/مبلغ خودش.
+    /// </summary>
+    internal static async Task SeedMarketplaceOwnerDraftAsync(OrderDbContext db, bool storeOwnerForPlatform = false)
+    {
+        const string service = "post";
+        const string option = "standard";
+        var draft = NewDraft(null);
+        var groupA = DraftGroup(DraftGroupA, SellerA, service, option, 125m, DateA);
+        var groupB = DraftGroup(DraftGroupB, SellerB, service, option, 75m, DateB);
+        groupA.AddWholeLine(LineA, SellerA);
+        groupB.AddWholeLine(LineB, SellerB);
+
+        groupA.ReplaceAcceptedEvidence(
+            EvidenceForOwner(
+                // کنترل منفی: مالک ذخیره‌شده Store در نصب Marketplace با مالک بازساخته‌شده نمی‌خواند.
+                storeOwnerForPlatform ? ShippingGroupOwner.Store("store-alpha") : ShippingGroupOwner.Marketplace(),
+                A: true,
+                120m,
+                CloseTicksA),
+            Now);
+        groupB.ReplaceAcceptedEvidence(
+            EvidenceForOwner(ShippingGroupOwner.Seller(SellerB), A: false, 70m, CloseTicksB),
+            Now);
+
+        draft.SetDestinationIdentity(CountryId, ProvinceId, CityId, null, Now);
+        draft.AddShippingGroups([groupA, groupB], Now);
+        draft.BumpSelectionRevision(Now);
+        db.ShippingDrafts.Add(draft);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
     }
 
     internal static Guid VariantOf(Guid offerId)
@@ -1021,6 +1065,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
     {
         internal int Calls { get; private set; }
 
+        /// <summary>مسئولیت صریح هر آفر؛ آفر بدون ورودی همان Platform است (پیش‌فرض دانهٔ ۲۳۳).</summary>
+        internal readonly Dictionary<Guid, OfferFulfillmentResponsibility?> Responsibility = [];
+
         public Task<IReadOnlyDictionary<Guid, OfferFulfillmentAssignmentSnapshot>> GetAssignmentsAsync(
             IReadOnlyCollection<Guid> offerIds,
             CancellationToken cancellationToken)
@@ -1032,7 +1079,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
                     id => new OfferFulfillmentAssignmentSnapshot(
                         id,
                         id == OfferA ? SellerA : SellerB,
-                        OfferFulfillmentResponsibility.Platform,
+                        Responsibility.TryGetValue(id, out var responsibility)
+                            ? responsibility
+                            : OfferFulfillmentResponsibility.Platform,
                         ShippingTypeId)));
         }
     }
@@ -1226,22 +1275,24 @@ public sealed class CapturedFinalSubmitIntegrationTests
         }
     }
 
-    internal sealed class FakeEdition : ICurrentEdition
+    internal sealed class FakeEdition(ToobaEdition edition = ToobaEdition.SingleStore) : ICurrentEdition
     {
-        public EditionContext? Current { get; } = new(ToobaEdition.SingleStore, "tb233r3");
+        public EditionContext? Current { get; } = new(edition, "tb233r3");
     }
 
-    internal sealed class FakeTenant : ICurrentTenant
+    internal sealed class FakeTenant(string? tenantId = "store-alpha") : ICurrentTenant
     {
-        public TenantContext? Current { get; } = new(
-            new TenantId("store-alpha"),
-            TenantStatus.Active,
-            new ConnectionReference("tb233r3"),
-            "Tooba",
-            null,
-            "IR",
-            "127.0.0.1",
-            null);
+        public TenantContext? Current { get; } = tenantId is null
+            ? null
+            : new(
+                new TenantId(tenantId),
+                TenantStatus.Active,
+                new ConnectionReference("tb233r3"),
+                "Tooba",
+                null,
+                "IR",
+                "127.0.0.1",
+                null);
     }
 
     internal static class Registrations
