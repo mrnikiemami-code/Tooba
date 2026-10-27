@@ -1,3 +1,13 @@
+# CURRENT — Architect issued 227 — 2026-10-27
+
+Active: TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227. User reports destination selection shake/jump and requests search INSIDE all four dropdown popups. Reproduce/measure cause, reuse existing design-system combobox, preserve DB cascade/current-generation evidence and modal Add semantics. Task is bounded 25 minutes; no money/week/backend reopening.
+225-R2 money integrity and 226 mobile week presentation remain accepted within recorded proof limits; no user Visual ACCEPT is implied.
+NEXT USER-AUTHORIZED PRIORITY after 227 review: concrete Storefront connection PER SHIPPING GROUP with existing Storefront cards/controls/DOM/CSS. No invented design or generic audit/calculator loop. Selected immutable revision + trusted fulfillment membership/owner/type + existing composer and projection/selection/commit are required. Storefront is currently NOT wired/live.
+Preserve compact shared-snapshot order evidence decision; do not copy authored JSON per order or reprice historical orders.
+Safety continuity: 225-R1 reloaded a user tab and lost unsaved LOCAL edits; no recovery claimed. Future browser proof uses fresh task-owned profile and target ONLY, never user tabs. Preserve real draft, pointer, runtime, default-OFF/TB185 paused/PendingAllocation.
+Task: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227/TASK.md.
+Prior checkpoints below are historical.
+
 ## CURRENT —226 mobile week reviewed; admin form READY FOR USER RETEST —2026-10-26
 
 Architect reviewed source9734e77ac81eacb8d158988bd2f3ca2f65f4cde4 and VIEWED actual native225? NO:
