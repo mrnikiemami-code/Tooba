@@ -1,3 +1,24 @@
+# CURRENT — reviewed229-R2 auth/unavailable only; issued230 configured read — 2026-10-27
+
+Active: TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230. Reuse R2 normal buyer/profile/cart/driver.
+Root VIEWED1440/390 screenshots: hero/address only, group cards out of viewport. No card Visual ACCEPT.
+R2 closes normal local buyer auth +200destination-gated unassigned read, NOT configured shipping quote.
+Root source found missing captured destination-change refresh (only hidden legacy method path sends ids);
+legacy3days prep+lead header still displayed.230 fixes these two narrow UI wiring issues and proves ONE
+task-owned configured manual DEV method through real normal APIs, priced group + independent refusal,
+screenshots scrolled to actual cards. No another auth/driver/audit loop.
+Review: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230/TASK.md.
+Local previewON/count7 perR2; actual HostPID36952/pathretainedR1,FE28288 are historic,reverify.
+Buyer01a17cf7-e38d-7000-82a5-00c57929bc54/cart01a17cfd-c1b1-7000-b10d-8cf21258a1cd/taskprofiletb229r2-chrome.
+One NEW clearly named DEV draft/capture on UNUSED real binding plus bounded taskOffer assignment explicitly
+authorized in230 if needed. NEVER alter user's post/NULL draft/rates/week/pointer or fabricate weight.
+228 migration alreadyAPPLIED; no replay/reset/reseed. R1 money/binding fixes accepted within proof.
+Selection/commit NOTready guard remains. Compact shared snapshot/order-group evidence/parity unimplemented.
+Known cross-owner label-map/decoder limits retained; SingleStore test not Marketplace certification.
+Fresh/task-owned browser only;225-R1 lost unsaved userLOCALedits,no recovery.227 empty-note residual retained.
+TB185paused/default-OFF/PendingAllocation preserved. Prior checkpoints historical.
+
 # CURRENT — 229-R2 executed: authenticated live read OBSERVED at 1440/390 — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2/{RESULT.md,TASK.md}.
