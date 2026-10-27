@@ -1,10 +1,33 @@
-# CURRENT —231-R1 value/transfer accepted; narrowSQL231-R2 issued —2026-10-27
+# CURRENT —231-R2 executed: DB shape CHECKs corrected + direct RED→GREEN —2026-10-27
 
-Active: TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2.
-Root read corrected fullowner/longtokens/100nsticks/money contract and providerfixtures: value+transfer
-accepted within reported proof. DBshape/migration acceptance pendingSQLCHECKfix only, no newcontractdesign.
-Current optionaldayCHECK allows halfNULLpair as UNKNOWN; blankStoretenant, emptyUUID refs and currency123
-also pass basicshape. DirectPostgresRED/GREEN required on bothtables. Keep22columns,model,Domainunchanged.
+231-R1 value/owner/token/time/money contract and the group transfer path are ACCEPTED within their recorded
+proof and unchanged. This task repaired only the SQL shape CHECK in the SAME still-unshared, still-unapplied
+migration `20261027150000_AddShippingGroupAcceptedEvidence`, on BOTH `order.cart_shipping_groups` and
+`order.order_shipping_groups`: optional delivery days now require BOTH NULL or BOTH explicitly NOT NULL (an
+explicit `IS NOT NULL` pair turns a half pair from `UNKNOWN` — which PostgreSQL accepts in a CHECK — into FALSE)
+with the existing `0 ≤ min ≤ max ≤ 365`; a Store tenant must be non-blank and already trimmed (never
+lowercased, never guessed); `snapshot/draft/area_group/rate_row` and the optional-present `shipping_type_id`
+plus a Seller owner's seller id must not be the empty UUID; currency is `^[A-Z]{3}$`, not three characters.
+Same 22 plain columns, same two constraint names per table, same snapshot index, same `Down`; no Domain/mapping/
+column/index/transaction/amount/owner change and no EF snapshot regeneration.
+Proof on ONE task-owned disposable `postgres:17-alpine` at `127.0.0.1:15433/order_tb231/tb231` (identity
+asserted before DDL, normal Order chain): RED `4/10` — the half pairs, blank tenant, empty UUIDs and
+`123`/`A$!` currencies are ACCEPTED by the reviewed CHECK; then the task-owned DB was recreated EMPTY and GREEN
+`10/10`, each refusal asserted as SQLSTATE `23514` + the exact `ck_<table>_accepted_evidence_shape` with the row
+re-read intact. Still lawful: both-NULL days, `0..365`, Store `Store-Alpha`, Marketplace, Seller, absent type,
+`USD`, four explicit zero amounts, complete 22-column NULL clear. Container removed, `15433` closed.
+HONEST: SQL does not preserve out-of-scale money (`numeric(18,2)` coerces before the CHECK) — exact amounts stay
+the application's authority; `btrim` trims spaces only. The migration is still **WRITTEN/sharedNOTAPPLIED**
+(no shared history rewrite, no replay) and the EF model snapshot baseline gap is retained, not certified for
+future scaffolding. Still no production writer (real groups keep NULL evidence), no historical reader,
+`SaveSelectionAsync`/`CommitAsync` keep refusing `storefront.captured_preview.not_ready`.
+Review: docs/architecture/evidence/TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2/{RESULT.md,TASK.md};
+correction appended to 231-R1/RESULT.md.
+Next (Architect): trusted server composer (selected captured revision + cart/version + Offer/type/quote/date
+revalidation) writing the compact evidence inside the existing atomic boundary, then the Order-storage-only
+historical read. No full authored JSON per order and no historical repricing. Known read-only Storefront UI /
+cross-owner label / decoder / Offer API gaps retained; the dedicated user REVIEW window was not enumerated,
+automated, reloaded or navigated. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
 Review: docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/ARCHITECT-REVIEW.md.
 Task: docs/architecture/evidence/TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2/TASK.md.
 Migration20261027150000 is WRITTEN/sharedNOTAPPLIED; correct this unsharedunacceptedmigration only,

@@ -456,6 +456,341 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
         Assert.Equal(1, snapshotIndex);
     }
 
+    // ---------------------------------------------------------------------
+    // TB-231-R2 — direct PostgreSQL facts that bypass the domain constructor.
+    // A CHECK that evaluates to UNKNOWN is ACCEPTED by PostgreSQL, so the half
+    // delivery-day pair and the cheap canonical-shape holes must be asserted
+    // against the real constraint on BOTH group tables.
+    // ---------------------------------------------------------------------
+
+    [Fact]
+    public async Task Half_delivery_day_pairs_are_refused_by_the_database_not_left_unknown()
+    {
+        await using var fixture = await EvidenceRowFixture.CreateAsync("66");
+        var db = fixture.Db;
+
+        foreach (var table in EvidenceRowFixture.Tables)
+        {
+            var groupId = fixture.GroupId(table);
+            var shape = EvidenceRowFixture.ShapeConstraint(table);
+
+            // min NULL / max 3 was UNKNOWN on the previous CHECK and therefore accepted.
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_minimum_delivery_days = NULL, accepted_maximum_delivery_days = 3 WHERE shipping_group_id = '{groupId}'",
+                shape);
+
+            // min 2 / max NULL was UNKNOWN for the same reason.
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_minimum_delivery_days = 2, accepted_maximum_delivery_days = NULL WHERE shipping_group_id = '{groupId}'",
+                shape);
+
+            // min NULL / max NULL is lawful, and so is a real ordered pair.
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_minimum_delivery_days = NULL, accepted_maximum_delivery_days = NULL WHERE shipping_group_id = '{groupId}'");
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_minimum_delivery_days = 0, accepted_maximum_delivery_days = 365 WHERE shipping_group_id = '{groupId}'");
+
+            // A half pair is still refused after the lawful rows above, and the row is intact.
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_minimum_delivery_days = NULL, accepted_maximum_delivery_days = 4 WHERE shipping_group_id = '{groupId}'",
+                shape);
+            await fixture.AssertIntactAsync(table);
+        }
+    }
+
+    [Fact]
+    public async Task Blank_or_noncanonical_store_tenant_is_refused_by_the_database()
+    {
+        await using var fixture = await EvidenceRowFixture.CreateAsync("67");
+        var db = fixture.Db;
+
+        foreach (var table in EvidenceRowFixture.Tables)
+        {
+            var groupId = fixture.GroupId(table);
+            var shape = EvidenceRowFixture.ShapeConstraint(table);
+
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 0, accepted_owner_seller_party_id = NULL, accepted_owner_tenant_key = '' WHERE shipping_group_id = '{groupId}'",
+                shape);
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 0, accepted_owner_seller_party_id = NULL, accepted_owner_tenant_key = '   ' WHERE shipping_group_id = '{groupId}'",
+                shape);
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 0, accepted_owner_seller_party_id = NULL, accepted_owner_tenant_key = ' store-alpha' WHERE shipping_group_id = '{groupId}'",
+                shape);
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 0, accepted_owner_seller_party_id = NULL, accepted_owner_tenant_key = 'store-alpha ' WHERE shipping_group_id = '{groupId}'",
+                shape);
+
+            // همهٔ ردها بدون هیچ جهشی: ردیف دقیقاً همان شاهد اولیه است.
+            await fixture.AssertIntactAsync(table);
+
+            // A real Store / Marketplace / Seller key stays lawful, and the tenant is never lowercased.
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 0, accepted_owner_seller_party_id = NULL, accepted_owner_tenant_key = 'Store-Alpha' WHERE shipping_group_id = '{groupId}'");
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 1, accepted_owner_seller_party_id = NULL, accepted_owner_tenant_key = NULL WHERE shipping_group_id = '{groupId}'");
+        }
+    }
+
+    [Fact]
+    public async Task Empty_required_and_optional_present_uuids_are_refused_by_the_database()
+    {
+        await using var fixture = await EvidenceRowFixture.CreateAsync("68");
+        var db = fixture.Db;
+        const string empty = "00000000-0000-0000-0000-000000000000";
+
+        foreach (var table in EvidenceRowFixture.Tables)
+        {
+            var groupId = fixture.GroupId(table);
+            var shape = EvidenceRowFixture.ShapeConstraint(table);
+
+            foreach (var column in new[]
+                     {
+                         "accepted_snapshot_id",
+                         "accepted_draft_id",
+                         "accepted_area_group_id",
+                         "accepted_rate_row_id",
+                     })
+            {
+                await EvidenceRowFixture.AssertRefusedAsync(
+                    $"UPDATE \"order\".{table} SET {column} = '{empty}' WHERE shipping_group_id = '{groupId}'",
+                    shape);
+            }
+
+            // The optional-present type must not be an empty GUID either.
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_shipping_type_id = '{empty}' WHERE shipping_group_id = '{groupId}'",
+                shape);
+
+            // A Seller owner with an empty seller id is not a real owner.
+            await EvidenceRowFixture.AssertRefusedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 2, accepted_owner_tenant_key = NULL, accepted_owner_seller_party_id = '{empty}' WHERE shipping_group_id = '{groupId}'",
+                shape);
+
+            // هیچ‌کدام از ردها ردیف را تغییر نداد؛ شاهد اولیه سالم است.
+            await fixture.AssertIntactAsync(table);
+
+            // Absent optional type and a real seller key remain lawful.
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_shipping_type_id = NULL WHERE shipping_group_id = '{groupId}'");
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_owner_kind = 2, accepted_owner_tenant_key = NULL, accepted_owner_seller_party_id = '{ShippingGroupAcceptedEvidenceTests.SellerA}' WHERE shipping_group_id = '{groupId}'");
+        }
+    }
+
+    [Fact]
+    public async Task Currency_must_be_exactly_three_ascii_uppercase_letters()
+    {
+        await using var fixture = await EvidenceRowFixture.CreateAsync("69");
+        var db = fixture.Db;
+
+        foreach (var table in EvidenceRowFixture.Tables)
+        {
+            var groupId = fixture.GroupId(table);
+            var shape = EvidenceRowFixture.ShapeConstraint(table);
+
+            foreach (var candidate in new[] { "123", "A$!", "irr", "IrR", " IR" })
+            {
+                await EvidenceRowFixture.AssertRefusedAsync(
+                    $"UPDATE \"order\".{table} SET accepted_currency = '{candidate}' WHERE shipping_group_id = '{groupId}'",
+                    shape);
+            }
+
+            // ارز اصلی دست‌نخورده مانده است.
+            await fixture.AssertIntactAsync(table);
+
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_currency = 'USD' WHERE shipping_group_id = '{groupId}'");
+        }
+    }
+
+    [Fact]
+    public async Task Explicit_zero_amounts_and_a_fully_absent_row_stay_lawful()
+    {
+        await using var fixture = await EvidenceRowFixture.CreateAsync("6a");
+        var db = fixture.Db;
+
+        foreach (var table in EvidenceRowFixture.Tables)
+        {
+            var groupId = fixture.GroupId(table);
+
+            // Explicit zero money is lawful and is not mistaken for an absent row.
+            await EvidenceRowFixture.AssertAcceptedAsync(
+                $"UPDATE \"order\".{table} SET accepted_freight_amount = 0, accepted_packaging_amount = 0, accepted_payable_at_checkout_amount = 0, accepted_carrier_collect_amount = 0 WHERE shipping_group_id = '{groupId}'");
+
+            // A complete NULL clear is the lawful legacy shape.
+            await EvidenceRowFixture.AssertAcceptedAsync(EvidenceRowFixture.ClearAllAccepted(table, groupId));
+
+            var legacy = await db.Database
+                .SqlQueryRaw<int>(
+                    $"SELECT count(*)::int AS \"Value\" FROM \"order\".{table} WHERE shipping_group_id = '{groupId}' AND accepted_snapshot_id IS NULL")
+                .SingleAsync();
+            Assert.Equal(1, legacy);
+        }
+    }
+
+    /// <summary>
+    /// یک ردیف معتبر روی هر دو جدول گروه (سفارش و پیش‌نویس) برای اجرای UPDATEهای خام مستقیم.
+    /// </summary>
+    /// <remarks>
+    /// فقط برای اثبات مستقیم CHECKهای پایگاه‌داده است: شاهد با سازندهٔ دامنه نوشته می‌شود، سپس هر
+    /// حقیقت با SQL خام همان ردیف را دستکاری می‌کند تا سازندهٔ دامنه دور زده شود.
+    /// </remarks>
+    private sealed class EvidenceRowFixture : IAsyncDisposable
+    {
+        internal static readonly string[] Tables = ["order_shipping_groups", "cart_shipping_groups"];
+
+        private EvidenceRowFixture(
+            OrderDbContext db,
+            Guid orderGroupId,
+            Guid cartGroupId,
+            ShippingGroupAcceptedEvidence expected)
+        {
+            Db = db;
+            OrderGroupId = orderGroupId;
+            CartGroupId = cartGroupId;
+            Expected = expected;
+        }
+
+        internal OrderDbContext Db { get; }
+
+        internal Guid OrderGroupId { get; }
+
+        internal Guid CartGroupId { get; }
+
+        internal ShippingGroupAcceptedEvidence Expected { get; }
+
+        internal static string ShapeConstraint(string table) => $"ck_{table}_accepted_evidence_shape";
+
+        internal Guid GroupId(string table) => table == "order_shipping_groups" ? OrderGroupId : CartGroupId;
+
+        internal static async Task<EvidenceRowFixture> CreateAsync(string suffix)
+        {
+            var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+            var checkoutId = Guid.Parse($"01a17d0e-6666-7000-9000-0000000000{suffix}");
+            var sellerOrderId = Guid.Parse($"01a17d0e-6666-7000-9000-000000000a{suffix}");
+            var orderLineId = ShippingGroupAcceptedEvidenceTests.OrderLineId(1);
+
+            var groups = ShippingGroupAcceptedEvidenceTests.PlannerGroups()
+                .Where(group => group.SellerPartyId == ShippingGroupAcceptedEvidenceTests.SellerA)
+                .ToArray();
+            var expected = ShippingGroupAcceptedEvidenceTests.Evidence(
+                ShippingGroupAcceptedEvidenceTests.AreaA,
+                ShippingGroupAcceptedEvidenceTests.RowA,
+                freight: 120_000m,
+                packaging: 5_000m,
+                payable: groups[0].ShippingAmount);
+            groups[0].ReplaceAcceptedEvidence(expected, ShippingGroupAcceptedEvidenceTests.Now);
+
+            var draft = CartShippingDraft.Create(
+                ShippingGroupAcceptedEvidenceTests.Cart,
+                "hash",
+                1,
+                "گیرنده",
+                "09120000000",
+                "تهران",
+                "تهران",
+                "نشانی",
+                "1234567890",
+                null,
+                groups[0].MethodCode,
+                groups[0].MethodLabel,
+                groups[0].ShippingAmount,
+                groups[0].MinimumDeliveryDate,
+                groups[0].SelectedDeliveryDate,
+                groups[0].SelectedDeliveryTimeWindow,
+                null,
+                ShippingGroupAcceptedEvidenceTests.Now);
+            draft.AddShippingGroups(groups, ShippingGroupAcceptedEvidenceTests.Now);
+
+            var db = CreateContext(target.ConnectionString);
+            await db.Database.MigrateAsync();
+            await ResetAsync(db);
+            await InsertOwnersAsync(db, checkoutId, sellerOrderId, Guid.Empty);
+            await InsertOrderLineAsync(db, orderLineId, sellerOrderId, ShippingGroupAcceptedEvidenceTests.SellerA);
+
+            var materialized = OrderShippingGroupMaterializer.Materialize(
+                [ShippingGroupAcceptedEvidenceTests.Plan(groups[0])],
+                [(orderLineId, ShippingGroupAcceptedEvidenceTests.SellerA)],
+                new Dictionary<Guid, Guid> { [ShippingGroupAcceptedEvidenceTests.SellerA] = sellerOrderId },
+                new Dictionary<Guid, Guid> { [ShippingGroupAcceptedEvidenceTests.CartLineA] = orderLineId },
+                checkoutId,
+                ShippingGroupAcceptedEvidenceTests.Now);
+
+            db.AddRange(materialized);
+            db.Add(draft);
+            await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
+
+            return new EvidenceRowFixture(
+                db, materialized[0].ShippingGroupId, groups[0].ShippingGroupId, expected);
+        }
+
+        /// <summary>رد قاطع با SQLSTATE 23514 و نام همان CHECK انتظاری.</summary>
+        internal static async Task AssertRefusedAsync(string statement, string expectedConstraint)
+        {
+            var error = await Assert.ThrowsAnyAsync<Exception>(() => ExecuteAsync(statement));
+            Assert.True(
+                FindSqlState(error) == "23514",
+                $"expected a CHECK violation (23514) but got: {error.GetType().Name}: {error.Message}");
+            Assert.Equal(expectedConstraint, FindConstraintName(error));
+        }
+
+        internal static async Task AssertAcceptedAsync(string statement) => await ExecuteAsync(statement);
+
+        private static async Task ExecuteAsync(string statement)
+        {
+            var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+            await using var db = CreateContext(target.ConnectionString);
+            await db.Database.ExecuteSqlRawAsync(statement);
+        }
+
+        internal static string ClearAllAccepted(string table, Guid groupId) =>
+            $"""
+             UPDATE "order".{table}
+                SET accepted_snapshot_id = NULL,
+                    accepted_draft_id = NULL,
+                    accepted_source_revision = NULL,
+                    accepted_format_version = NULL,
+                    accepted_selection_version = NULL,
+                    accepted_owner_kind = NULL,
+                    accepted_owner_tenant_key = NULL,
+                    accepted_owner_seller_party_id = NULL,
+                    accepted_area_group_id = NULL,
+                    accepted_rate_row_id = NULL,
+                    accepted_shipping_type_id = NULL,
+                    accepted_freight_amount = NULL,
+                    accepted_packaging_amount = NULL,
+                    accepted_currency = NULL,
+                    accepted_payable_at_checkout_amount = NULL,
+                    accepted_carrier_collect_amount = NULL,
+                    accepted_receiving_date = NULL,
+                    accepted_receiving_open_ticks = NULL,
+                    accepted_receiving_close_ticks = NULL,
+                    accepted_receiving_time_zone = NULL,
+                    accepted_minimum_delivery_days = NULL,
+                    accepted_maximum_delivery_days = NULL
+              WHERE shipping_group_id = '{groupId}'
+             """;
+
+        /// <summary>پس از هر رد، ردیف باید دست‌نخورده و کامل باقی مانده باشد.</summary>
+        internal async Task AssertIntactAsync(string table)
+        {
+            Db.ChangeTracker.Clear();
+            var snapshot = await Db.Database
+                .SqlQueryRaw<string>(
+                    $"SELECT accepted_snapshot_id::text || '|' || accepted_owner_kind::text || '|' || accepted_currency || '|' || accepted_freight_amount::text || '|' || accepted_receiving_open_ticks::text AS \"Value\" FROM \"order\".{table} WHERE shipping_group_id = '{GroupId(table)}'")
+                .SingleAsync();
+
+            Assert.Equal(
+                FormattableString.Invariant($"{Expected.SnapshotId}|{(int)Expected.Owner.Kind}|{Expected.Currency}|{Expected.FreightAmount:0.00}|{Expected.ReceivingOpenTicks}"),
+                snapshot);
+        }
+
+        public ValueTask DisposeAsync() => Db.DisposeAsync();
+    }
+
     private static IReadOnlyList<string> ModelEvidenceColumns(OrderDbContext db, Type clrType)
     {
         var entityType = db.Model.FindEntityType(clrType)
@@ -487,6 +822,20 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
         Assert.True(
             FindSqlState(error) == "23514",
             $"expected a CHECK violation (23514) but got: {error.GetType().Name}: {error.Message}");
+    }
+
+    private static string? FindConstraintName(Exception? error)
+    {
+        for (var current = error; current is not null; current = current.InnerException)
+        {
+            if (current.GetType().GetProperty("ConstraintName")?.GetValue(current) is string name
+                && name.Length > 0)
+            {
+                return name;
+            }
+        }
+
+        return null;
     }
 
     private static string? FindSqlState(Exception? error)

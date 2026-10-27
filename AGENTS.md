@@ -15,7 +15,49 @@ Host/FE/localpreviewONcount7/data/account/cart/drafts/pointers/assignments uncha
 Known emptykeyUIrefresh/cross-ownerlabel/decoder/OfferAPI gaps retained;227mobileresidual;225-R1unsavedLOCAL
 user-tab loss,no recovery. TB185paused/defaultOFF/PendingAllocation preserved. History below retained.
 
-# CURRENT — 231-R1 executed: evidence owner/token/hour/money corrected, still unshared/unaccepted — 2026-10-27
+# CURRENT — 231-R2 executed: null-safe/canonical DB CHECKs corrected and proven RED→GREEN — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2/{RESULT.md,TASK.md} and
+231-R1/ARCHITECT-REVIEW.md. Base `a74fadd92`. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no
+live writer/HTTP/parity/UI/runtime change. Value/owner/token/time/money contract and the group transfer path are
+unchanged and remain accepted within their recorded proof; this task only repaired the SQL shape CHECK.
+
+A — the four confirmed holes are closed IN PLACE on BOTH `order.cart_shipping_groups` and
+`order.order_shipping_groups`: the optional delivery-day pair now requires BOTH NULL or BOTH explicitly
+NOT NULL (explicit `IS NOT NULL` turns a half pair from `UNKNOWN`, which PostgreSQL CHECK accepts, into FALSE)
+with the existing `0 ≤ min ≤ max ≤ 365`; a Store tenant must be non-blank and already trimmed (`btrim`), never
+lowercased/guessed; `snapshot/draft/area_group/rate_row` plus optional-present `shipping_type_id` and a Seller
+owner's seller id must not be the empty UUID; the currency is `^[A-Z]{3}$` instead of `char_length = 3`. Same
+22 plain columns, same two constraint names per table, same single snapshot index, same `Down`. No
+Domain/DTO/mapping/column/index/transaction/amount/owner semantics change; EF snapshot baseline gap retained,
+no regeneration.
+
+B — direct PostgreSQL proof on ONE task-owned disposable `postgres:17-alpine` at
+`127.0.0.1:15433/order_tb231/tb231`, identity asserted before DDL, normal Order migration chain.
+RED on the reviewed CHECK: `4/10` of the storage class fail with "No exception was thrown" — half day pairs,
+blank tenant, empty UUID references and `123`/`A$!` currencies are all ACCEPTED. Then the same task-owned DB was
+recreated EMPTY (no already-applied history row reused, no manual ALTER, no constraint adoption) and GREEN:
+`10/10` pass. Each refusal asserts SQLSTATE `23514` + the exact `ck_<table>_accepted_evidence_shape` name and
+re-reads the row (snapshot/owner/currency/freight/open ticks) so nothing mutated. Still-lawful cases proved:
+both-NULL days, `0..365`, Store `Store-Alpha`, Marketplace, Seller, absent type, `USD`, four explicit zero
+amounts, and a complete 22-column NULL clear. Container removed, `15433` verified closed.
+Order Domain/Infrastructure/Tests build 0 errors. No whole-Order/Shipping/Host/solution/guard sweep.
+
+HONEST: SQL is NOT claimed to preserve out-of-scale money (`numeric(18,2)` coerces before the CHECK) — exact
+amounts stay the application's authority; `btrim` is space-only. Migration `20261027150000` remains
+WRITTEN/sharedNOTAPPLIED, no shared history rewrite. No production writer composes evidence yet (real
+draft/order groups stay NULL), no historical reader exists, `SaveSelectionAsync`/`CommitAsync` still refuse
+`storefront.captured_preview.not_ready`. Retained unfixed: 230-R1 empty-key destination failure/retry gap +
+in-flight new-key wait, cross-owner label map/decoder id-coercion, Offer API proof gaps, 227 mobile empty-note
+residual, 225-R1 lost unsaved user LOCAL edits. The user's visible review window, live Host/FE, previewON/count7,
+runtime data, buyer/cart, draft/rates/week/pointer/assignment were NOT touched (no enumerate/automate/reload/
+close). Elapsed ≈13 min vs HARD15 — still NOT a process PASS claim.
+NEXT (Architect): trusted server composer revalidating selected revision + cart/version + Offer/type/quote/date
+and writing this evidence inside the existing atomic boundary, then the Order-storage-only historical read;
+captured checkout stays not_ready until then. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused/
+default-OFF/PendingAllocation preserved.
+
+# SUPERSEDED — 231-R1 executed: value accepted, DB checks narrowed to 231-R2 — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/{RESULT.md,TASK.md} and
 231/ARCHITECT-REVIEW.md. Base `5cd72434e`. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no live

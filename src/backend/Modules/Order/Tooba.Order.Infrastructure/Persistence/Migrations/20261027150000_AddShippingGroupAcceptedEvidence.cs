@@ -98,50 +98,8 @@ public partial class AddShippingGroupAcceptedEvidence : Migration
                 $"ALTER TABLE \"order\".{table} ADD CONSTRAINT ck_{table}_accepted_evidence_complete "
                 + $"CHECK (({allNull}) OR ({allPresent}));");
 
-            // شکل پایه: بازهٔ مثبتِ همان‌روز، ارز سه‌حرفی، مبالغ نامنفی و متوازن، مالک دقیقاً یکی از سه شکل مجاز.
-            migrationBuilder.Sql(
-                $"""
-                 ALTER TABLE "order".{table} ADD CONSTRAINT ck_{table}_accepted_evidence_shape
-                 CHECK (
-                     accepted_snapshot_id IS NULL
-                     OR (
-                         accepted_source_revision > 0
-                         AND accepted_format_version = 1
-                         AND accepted_selection_version > 0
-                         AND accepted_owner_kind IN (0, 1, 2)
-                         AND char_length(accepted_currency) = 3
-                         AND accepted_freight_amount >= 0
-                         AND accepted_packaging_amount >= 0
-                         AND accepted_payable_at_checkout_amount >= 0
-                         AND accepted_carrier_collect_amount >= 0
-                         AND accepted_freight_amount + accepted_packaging_amount
-                             = accepted_payable_at_checkout_amount + accepted_carrier_collect_amount
-                         AND accepted_receiving_open_ticks >= 0
-                         AND accepted_receiving_open_ticks < accepted_receiving_close_ticks
-                         AND accepted_receiving_close_ticks <= 863999999999
-                         AND char_length(accepted_receiving_time_zone) > 0
-                         AND (
-                             (accepted_minimum_delivery_days IS NULL AND accepted_maximum_delivery_days IS NULL)
-                             OR (
-                                 accepted_minimum_delivery_days >= 0
-                                 AND accepted_maximum_delivery_days >= accepted_minimum_delivery_days
-                                 AND accepted_maximum_delivery_days <= 365
-                             )
-                         )
-                         AND (
-                             (accepted_owner_kind = 2
-                                 AND accepted_owner_seller_party_id IS NOT NULL
-                                 AND accepted_owner_tenant_key IS NULL)
-                             OR (accepted_owner_kind = 0
-                                 AND accepted_owner_tenant_key IS NOT NULL
-                                 AND accepted_owner_seller_party_id IS NULL)
-                             OR (accepted_owner_kind = 1
-                                 AND accepted_owner_tenant_key IS NULL
-                                 AND accepted_owner_seller_party_id IS NULL)
-                         )
-                     )
-                 );
-                 """);
+            // شکل پایه: بازهٔ مثبتِ همان‌روز، ارز سه‌حرفی ASCII، مبالغ نامنفی و متوازن، مالک دقیقاً یکی از سه شکل مجاز.
+            migrationBuilder.Sql(BuildShapeConstraint(table));
         }
 
         // ارجاع منطقی snapshot برای ردیابی تاریخی سفارش‌ها؛ یک ایندکس کوچک و بدون پوشش گسترده.
@@ -151,6 +109,81 @@ public partial class AddShippingGroupAcceptedEvidence : Migration
                 ON "order".order_shipping_groups (accepted_snapshot_id);
             """);
     }
+
+    /// <summary>
+    /// CHECKهای شکل واقعیِ ذخیره‌سازی برای یک جدول؛ همهٔ شاخه‌ها FALSE/TRUE می‌دهند، نه UNKNOWN.
+    /// </summary>
+    /// <remarks>
+    /// نکتهٔ سه‌مقداری SQL: یک CHECK با نتیجهٔ UNKNOWN پذیرفته می‌شود. بنابراین جفت نیمه‌کاملِ
+    /// روزهای تحویل با <c>IS NOT NULL</c> صریح پوشانده می‌شود تا جفت ناقص «رد» شود، نه «نامعلوم».
+    /// مقادیر UUID خالی، tenant خالی/غیر‌canonical و ارز غیر‌ASCII نیز همین‌جا رد می‌شوند.
+    /// </remarks>
+    private static string BuildShapeConstraint(string table) =>
+        """
+        ALTER TABLE "order".__TABLE__ ADD CONSTRAINT ck___TABLE___accepted_evidence_shape
+        CHECK (
+            accepted_snapshot_id IS NULL
+            OR (
+                accepted_snapshot_id <> '00000000-0000-0000-0000-000000000000'::uuid
+                AND accepted_draft_id <> '00000000-0000-0000-0000-000000000000'::uuid
+                AND accepted_area_group_id <> '00000000-0000-0000-0000-000000000000'::uuid
+                AND accepted_rate_row_id <> '00000000-0000-0000-0000-000000000000'::uuid
+                AND (
+                    accepted_shipping_type_id IS NULL
+                    OR accepted_shipping_type_id <> '00000000-0000-0000-0000-000000000000'::uuid
+                )
+                AND accepted_source_revision > 0
+                AND accepted_format_version = 1
+                AND accepted_selection_version > 0
+                AND accepted_owner_kind IN (0, 1, 2)
+                AND accepted_currency ~ '^[A-Z]{3}$'
+                AND accepted_freight_amount >= 0
+                AND accepted_packaging_amount >= 0
+                AND accepted_payable_at_checkout_amount >= 0
+                AND accepted_carrier_collect_amount >= 0
+                AND accepted_freight_amount + accepted_packaging_amount
+                    = accepted_payable_at_checkout_amount + accepted_carrier_collect_amount
+                AND accepted_receiving_open_ticks >= 0
+                AND accepted_receiving_open_ticks < accepted_receiving_close_ticks
+                AND accepted_receiving_close_ticks <= 863999999999
+                AND char_length(accepted_receiving_time_zone) > 0
+                AND (
+                    (
+                        accepted_minimum_delivery_days IS NULL
+                        AND accepted_maximum_delivery_days IS NULL
+                    )
+                    OR (
+                        accepted_minimum_delivery_days IS NOT NULL
+                        AND accepted_maximum_delivery_days IS NOT NULL
+                        AND accepted_minimum_delivery_days >= 0
+                        AND accepted_maximum_delivery_days >= accepted_minimum_delivery_days
+                        AND accepted_maximum_delivery_days <= 365
+                    )
+                )
+                AND (
+                    (
+                        accepted_owner_kind = 2
+                        AND accepted_owner_seller_party_id IS NOT NULL
+                        AND accepted_owner_seller_party_id <> '00000000-0000-0000-0000-000000000000'::uuid
+                        AND accepted_owner_tenant_key IS NULL
+                    )
+                    OR (
+                        accepted_owner_kind = 0
+                        AND accepted_owner_tenant_key IS NOT NULL
+                        AND btrim(accepted_owner_tenant_key) <> ''
+                        AND accepted_owner_tenant_key = btrim(accepted_owner_tenant_key)
+                        AND accepted_owner_seller_party_id IS NULL
+                    )
+                    OR (
+                        accepted_owner_kind = 1
+                        AND accepted_owner_tenant_key IS NULL
+                        AND accepted_owner_seller_party_id IS NULL
+                    )
+                )
+            )
+        );
+        """
+        .Replace("__TABLE__", table);
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)

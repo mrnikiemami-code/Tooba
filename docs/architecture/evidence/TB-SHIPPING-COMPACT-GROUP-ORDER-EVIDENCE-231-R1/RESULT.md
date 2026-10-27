@@ -149,3 +149,30 @@ existing atomic boundary, then an Order-storage-only historical read that refuse
 Selection/commit parity was deliberately NOT implemented here.
 
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE. TB185 paused, default-OFF, PendingAllocation preserved.
+
+---
+
+## CORRECTION APPENDED BY 231-R2 (2026-10-27) — the storage-shape claim below was too strong
+
+`TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2` corrected the SHAPE CHECK in the SAME still-unshared,
+still-unapplied migration and proved the database directly. Everything above about the value/owner/token/time/
+money contract, the transfer path, the 22 columns and the materialization/readback facts stands as recorded.
+
+What was wrong here: the optional delivery-day branch `(min IS NULL AND max IS NULL) OR (min >= 0 AND …)` returns
+`UNKNOWN` for a half pair (`min NULL / max 3`, `min 2 / max NULL`) and PostgreSQL ACCEPTS `UNKNOWN` in a CHECK,
+so "the DB repeats the domain's all-or-none day rule" was not true at SQL level. The same reviewed CHECK also
+accepted a blank/space-padded Store tenant, empty required/optional-present UUIDs, and any three-character
+currency (`123`, `A$!`). The eight raw `UPDATE` refusals in this task's proof simply never covered those shapes.
+
+Now (231-R2): the half pair is `FALSE` via explicit `IS NOT NULL`, the tenant must be non-blank and already
+trimmed, the four required UUIDs plus optional-present type and Seller id must be non-empty, and the currency
+must match `^[A-Z]{3}$`. Direct RED then GREEN on a recreated task-owned `15433/order_tb231` proves both tables:
+`4/10` failed on the reviewed CHECK, `10/10` pass after the correction, each refusal asserted as SQLSTATE `23514`
+plus the exact constraint name with the row left intact.
+
+Still true and unchanged: migration `20261027150000_AddShippingGroupAcceptedEvidence` is WRITTEN and
+`shared-NOT-APPLIED`; there is no production writer, so real draft/order groups keep NULL evidence and
+`SaveSelectionAsync`/`CommitAsync` still refuse `storefront.captured_preview.not_ready`; no historical reader
+exists. SQL is not claimed to preserve out-of-scale money (`numeric(18,2)` coerces before the CHECK) — exact
+amounts stay the application's authority. No shared migration, no Host/FE restart, no browser, no user review
+window access.

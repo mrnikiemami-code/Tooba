@@ -1,10 +1,17 @@
-# CURRENT —231-R1 value/transfer accepted; narrowSQL231-R2 issued —2026-10-27
+# CURRENT —231-R2 executed: DB shape CHECKs corrected + direct RED→GREEN —2026-10-27
 
-Active: TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2.
-Root read corrected fullowner/longtokens/100nsticks/money contract and providerfixtures: value+transfer
-accepted within reported proof. DBshape/migration acceptance pendingSQLCHECKfix only, no newcontractdesign.
-Current optionaldayCHECK allows halfNULLpair as UNKNOWN; blankStoretenant, emptyUUID refs and currency123
-also pass basicshape. DirectPostgresRED/GREEN required on bothtables. Keep22columns,model,Domainunchanged.
+231-R1 value/owner/token/time/money contract remains accepted within its recorded proof; the SQL shape CHECK was
+the only open blocker and is repaired in place in the SAME still-unshared migration.
+Optional delivery days now require BOTHNULL or BOTH explicitly NOTNULL (half pair is FALSE, not UNKNOWN),
+Store tenant must be non-blank/already-trimmed/never lowercased, required + optional-present UUIDs must be
+non-empty and currency must be `^[A-Z]{3}$` — on BOTH cart and order group tables. Same22columns/model/Domain.
+Direct Postgres proof on ONE task-owned `15433/order_tb231`: RED4/10 on the reviewed CHECK, DB recreated empty,
+GREEN10/10, every refusal=SQLSTATE23514+exact constraint name with the row intact; container removed, port
+closed. Migration20261027150000 still WRITTEN/sharedNOTAPPLIED, no shared history rewrite, no writer/parity.
+Read: docs/architecture/evidence/TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2/RESULT.md.
+Next (Architect): trusted server composer (selected revision + cart/version + Offer/type/quote/date) writing the
+compact evidence inside the existing atomic boundary, then the Order-storage-only historical read.
+Selection/commit stays `storefront.captured_preview.not_ready`; no fullJSONperorder, no historicalrepricing.
 Review: docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/ARCHITECT-REVIEW.md.
 Task: docs/architecture/evidence/TB-SHIPPING-COMPACT-EVIDENCE-NULLSAFE-CHECKS-231-R2/TASK.md.
 Migration20261027150000 is WRITTEN/sharedNOTAPPLIED; correct this unsharedunacceptedmigration only,
