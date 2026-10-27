@@ -1,0 +1,235 @@
+{
+  "baseline": {
+    "rect": {
+      "top": 299,
+      "left": 384,
+      "w": 672,
+      "h": 303
+    },
+    "selects": [
+      {
+        "testid": "shipping-authoring-destination-country",
+        "options": 2,
+        "disabled": false,
+        "value": ""
+      },
+      {
+        "testid": "shipping-authoring-destination-area",
+        "options": 1,
+        "disabled": true,
+        "value": ""
+      },
+      {
+        "testid": "shipping-authoring-destination-city",
+        "options": 1,
+        "disabled": true,
+        "value": ""
+      },
+      {
+        "testid": "shipping-authoring-destination-service-area",
+        "options": 1,
+        "disabled": true,
+        "value": ""
+      }
+    ],
+    "pageY": 0,
+    "active": "SELECT"
+  },
+  "steps": [
+    {
+      "label": "country-first-option",
+      "testId": "shipping-authoring-destination-country",
+      "focused": "shipping-authoring-destination-country",
+      "downs": 1,
+      "summary": {
+        "frames": 366,
+        "topMin": 257,
+        "topMax": 299,
+        "travel": 42,
+        "distinctTops": [
+          299,
+          271,
+          257
+        ],
+        "heightMin": 303,
+        "heightMax": 387,
+        "heightTravel": 84,
+        "pageYDistinct": [
+          0
+        ],
+        "innerScrollDistinct": [
+          0
+        ],
+        "activeDistinct": [
+          "shipping-authoring-destination-country"
+        ]
+      },
+      "after": {
+        "rect": {
+          "top": 271,
+          "h": 359
+        },
+        "selects": [
+          {
+            "testid": "shipping-authoring-destination-country",
+            "options": 2,
+            "disabled": false,
+            "value": "e3451206-e503-51a8-91ad-afa9ab70e330"
+          },
+          {
+            "testid": "shipping-authoring-destination-area",
+            "options": 13,
+            "disabled": false,
+            "value": ""
+          },
+          {
+            "testid": "shipping-authoring-destination-city",
+            "options": 1,
+            "disabled": true,
+            "value": ""
+          },
+          {
+            "testid": "shipping-authoring-destination-service-area",
+            "options": 1,
+            "disabled": true,
+            "value": ""
+          }
+        ],
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "innerScrollH": 285,
+        "innerClientH": 285
+      }
+    },
+    {
+      "label": "province-first-option",
+      "testId": "shipping-authoring-destination-area",
+      "focused": "shipping-authoring-destination-area",
+      "downs": 1,
+      "summary": {
+        "frames": 363,
+        "topMin": 257,
+        "topMax": 271,
+        "travel": 14,
+        "distinctTops": [
+          271,
+          257
+        ],
+        "heightMin": 359,
+        "heightMax": 387,
+        "heightTravel": 28,
+        "pageYDistinct": [
+          0
+        ],
+        "innerScrollDistinct": [
+          0
+        ],
+        "activeDistinct": [
+          "shipping-authoring-destination-country",
+          "shipping-authoring-destination-area"
+        ]
+      },
+      "after": {
+        "rect": {
+          "top": 271,
+          "h": 359
+        },
+        "selects": [
+          {
+            "testid": "shipping-authoring-destination-country",
+            "options": 2,
+            "disabled": false,
+            "value": "e3451206-e503-51a8-91ad-afa9ab70e330"
+          },
+          {
+            "testid": "shipping-authoring-destination-area",
+            "options": 13,
+            "disabled": false,
+            "value": "1f8050a8-c325-59fa-959f-82d76b5b2bc5"
+          },
+          {
+            "testid": "shipping-authoring-destination-city",
+            "options": 5,
+            "disabled": false,
+            "value": ""
+          },
+          {
+            "testid": "shipping-authoring-destination-service-area",
+            "options": 1,
+            "disabled": true,
+            "value": ""
+          }
+        ],
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "innerScrollH": 285,
+        "innerClientH": 285
+      }
+    },
+    {
+      "label": "city-first-option",
+      "testId": "shipping-authoring-destination-city",
+      "focused": "shipping-authoring-destination-city",
+      "downs": 1,
+      "summary": {
+        "frames": 361,
+        "topMin": 257,
+        "topMax": 271,
+        "travel": 14,
+        "distinctTops": [
+          271,
+          257
+        ],
+        "heightMin": 359,
+        "heightMax": 387,
+        "heightTravel": 28,
+        "pageYDistinct": [
+          0
+        ],
+        "innerScrollDistinct": [
+          0
+        ],
+        "activeDistinct": [
+          "shipping-authoring-destination-area",
+          "shipping-authoring-destination-city"
+        ]
+      },
+      "after": {
+        "rect": {
+          "top": 271,
+          "h": 359
+        },
+        "selects": [
+          {
+            "testid": "shipping-authoring-destination-country",
+            "options": 2,
+            "disabled": false,
+            "value": "e3451206-e503-51a8-91ad-afa9ab70e330"
+          },
+          {
+            "testid": "shipping-authoring-destination-area",
+            "options": 13,
+            "disabled": false,
+            "value": "1f8050a8-c325-59fa-959f-82d76b5b2bc5"
+          },
+          {
+            "testid": "shipping-authoring-destination-city",
+            "options": 5,
+            "disabled": false,
+            "value": "68255340-c69f-5d20-bf33-e8e0b24edde9"
+          },
+          {
+            "testid": "shipping-authoring-destination-service-area",
+            "options": 1,
+            "disabled": false,
+            "value": ""
+          }
+        ],
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "innerScrollH": 285,
+        "innerClientH": 285
+      }
+    }
+  ]
+}

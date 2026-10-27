@@ -1,0 +1,1057 @@
+{
+  "baseline": {
+    "dialog": {
+      "top": 273,
+      "left": 384,
+      "w": 672,
+      "h": 355
+    },
+    "pageY": 0,
+    "innerScrollTop": 0,
+    "fields": [
+      {
+        "name": "country",
+        "exists": true,
+        "disabled": false,
+        "text": "انتخاب کنید▾",
+        "expanded": "false"
+      },
+      {
+        "name": "area",
+        "exists": true,
+        "disabled": true,
+        "text": "انتخاب کنید▾",
+        "expanded": "false"
+      },
+      {
+        "name": "city",
+        "exists": true,
+        "disabled": true,
+        "text": "انتخاب کنید▾",
+        "expanded": "false"
+      },
+      {
+        "name": "service-area",
+        "exists": true,
+        "disabled": true,
+        "text": "انتخاب کنید▾",
+        "expanded": "false"
+      }
+    ],
+    "panel": null,
+    "panelHasSearchInside": false,
+    "searchFocused": false,
+    "options": [],
+    "count": null,
+    "empty": null,
+    "status": "",
+    "dialogOpen": true,
+    "viewport": {
+      "w": 1440,
+      "h": 900
+    },
+    "docScrollW": 1440,
+    "docClientW": 1440
+  },
+  "steps": [
+    {
+      "step": "country-popup-open",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "true"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": {
+          "top": 432,
+          "bottom": 539,
+          "h": 108,
+          "w": 313,
+          "left": 726,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [
+          "ایران"
+        ],
+        "count": "1 از 1",
+        "empty": null,
+        "status": "",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      },
+      "shots": [
+        "227-1440-country-popup.png"
+      ]
+    },
+    {
+      "step": "country-popup-no-result",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "true"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": {
+          "top": 432,
+          "bottom": 559,
+          "h": 128,
+          "w": 313,
+          "left": 726,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [],
+        "count": "0 از 1",
+        "empty": "موردی با این جستجو در فهرست ثبت‌شدهٔ این شاخه نیست.",
+        "status": "",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "country-keyboard-picked",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": null,
+        "panelHasSearchInside": false,
+        "searchFocused": false,
+        "options": [],
+        "count": null,
+        "empty": null,
+        "status": "مسیر: ایرانبرای این شاخه سطح عمیق‌تری ثبت نشده؛ همان سطح انتخاب‌شده افزوده می‌شود.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "province-popup-open",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "true"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": {
+          "top": 432,
+          "bottom": 720,
+          "h": 288,
+          "w": 313,
+          "left": 405,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [
+          "البرز",
+          "آذربایجان شرقی",
+          "فارس",
+          "گیلان",
+          "اصفهان",
+          "کرمان",
+          "خوزستان",
+          "مازندران",
+          "قم",
+          "خراسان رضوی",
+          "تهران",
+          "یزد"
+        ],
+        "count": "12 از 12",
+        "empty": null,
+        "status": "مسیر: ایرانبرای این شاخه سطح عمیق‌تری ثبت نشده؛ همان سطح انتخاب‌شده افزوده می‌شود.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "province-filtered",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "true"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": {
+          "top": 432,
+          "bottom": 539,
+          "h": 108,
+          "w": 313,
+          "left": 405,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [
+          "تهران"
+        ],
+        "count": "1 از 12",
+        "empty": null,
+        "status": "مسیر: ایرانبرای این شاخه سطح عمیق‌تری ثبت نشده؛ همان سطح انتخاب‌شده افزوده می‌شود.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "province-keyboard-picked",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "تهران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": null,
+        "panelHasSearchInside": false,
+        "searchFocused": false,
+        "options": [],
+        "count": null,
+        "empty": null,
+        "status": "مسیر: ایران › تهرانبرای این شاخه سطح عمیق‌تری ثبت نشده؛ همان سطح انتخاب‌شده افزوده می‌شود.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "city-popup-open",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "تهران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "true"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": {
+          "top": 498,
+          "bottom": 785,
+          "h": 288,
+          "w": 313,
+          "left": 726,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [
+          "تهران",
+          "ری",
+          "شهریار",
+          "اسلامشهر",
+          "ملارد",
+          "پاکدشت"
+        ],
+        "count": "6 از 6",
+        "empty": null,
+        "status": "مسیر: ایران › تهرانبرای این شاخه سطح عمیق‌تری ثبت نشده؛ همان سطح انتخاب‌شده افزوده می‌شود.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      },
+      "shots": [
+        "227-1440-city-popup.png"
+      ]
+    },
+    {
+      "step": "city-keyboard-picked",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "تهران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "ری▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": null,
+        "panelHasSearchInside": false,
+        "searchFocused": false,
+        "options": [],
+        "count": null,
+        "empty": null,
+        "status": "مسیر: ایران › تهران › ریبرای این شهر ناحیه‌ای ثبت نشده است.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "escape-in-popup",
+      "beforeEscape": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "تهران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "ری▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "true"
+          }
+        ],
+        "panel": {
+          "top": 498,
+          "bottom": 605,
+          "h": 108,
+          "w": 313,
+          "left": 405,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [],
+        "count": "0 از 0",
+        "empty": "برای این شاخه مقداری ثبت نشده است.",
+        "status": "مسیر: ایران › تهران › ریبرای این شهر ناحیه‌ای ثبت نشده است.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      },
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "تهران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "ری▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": null,
+        "panelHasSearchInside": false,
+        "searchFocused": false,
+        "options": [],
+        "count": null,
+        "empty": null,
+        "status": "مسیر: ایران › تهران › ریبرای این شهر ناحیه‌ای ثبت نشده است.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "country-cleared-descendants-reset",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": true,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": null,
+        "panelHasSearchInside": false,
+        "searchFocused": false,
+        "options": [],
+        "count": null,
+        "empty": null,
+        "status": "",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      }
+    },
+    {
+      "step": "service-area-branch",
+      "state": {
+        "dialog": {
+          "top": 273,
+          "left": 384,
+          "w": 672,
+          "h": 355
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "آذربایجان شرقی▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "مرند▾",
+            "expanded": "false"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "true"
+          }
+        ],
+        "panel": {
+          "top": 498,
+          "bottom": 605,
+          "h": 108,
+          "w": 313,
+          "left": 405,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [],
+        "count": "0 از 0",
+        "empty": "برای این شاخه مقداری ثبت نشده است.",
+        "status": "مسیر: ایران › آذربایجان شرقی › مرندبرای این شهر ناحیه‌ای ثبت نشده است.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "docScrollW": 1440,
+        "docClientW": 1440
+      },
+      "shots": [
+        "227-1440-service-area-empty.png"
+      ]
+    },
+    {
+      "step": "390-popup",
+      "state": {
+        "dialog": {
+          "top": 171,
+          "left": 19,
+          "w": 352,
+          "h": 503
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "آذربایجان شرقی▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "مرند▾",
+            "expanded": "true"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": {
+          "top": 478,
+          "bottom": 693,
+          "h": 216,
+          "w": 314,
+          "left": 40,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [
+          "تبریز",
+          "مرند",
+          "مراغه",
+          "اهر"
+        ],
+        "count": "4 از 4",
+        "empty": null,
+        "status": "مسیر: ایران › آذربایجان شرقی › مرندبرای این شهر ناحیه‌ای ثبت نشده است.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docScrollW": 390,
+        "docClientW": 390
+      },
+      "shots": [
+        "227-390-popup.png"
+      ]
+    },
+    {
+      "step": "360-popup",
+      "state": {
+        "dialog": {
+          "top": 139,
+          "left": 19,
+          "w": 322,
+          "h": 503
+        },
+        "pageY": 0,
+        "innerScrollTop": 0,
+        "fields": [
+          {
+            "name": "country",
+            "exists": true,
+            "disabled": false,
+            "text": "ایران▾",
+            "expanded": "false"
+          },
+          {
+            "name": "area",
+            "exists": true,
+            "disabled": false,
+            "text": "آذربایجان شرقی▾",
+            "expanded": "false"
+          },
+          {
+            "name": "city",
+            "exists": true,
+            "disabled": false,
+            "text": "مرند▾",
+            "expanded": "true"
+          },
+          {
+            "name": "service-area",
+            "exists": true,
+            "disabled": false,
+            "text": "انتخاب کنید▾",
+            "expanded": "false"
+          }
+        ],
+        "panel": {
+          "top": 446,
+          "bottom": 661,
+          "h": 216,
+          "w": 284,
+          "left": 40,
+          "inViewport": true
+        },
+        "panelHasSearchInside": true,
+        "searchFocused": true,
+        "options": [
+          "تبریز",
+          "مرند",
+          "مراغه",
+          "اهر"
+        ],
+        "count": "4 از 4",
+        "empty": null,
+        "status": "مسیر: ایران › آذربایجان شرقی › مرندبرای این شهر ناحیه‌ای ثبت نشده است.",
+        "dialogOpen": true,
+        "viewport": {
+          "w": 360,
+          "h": 780
+        },
+        "docScrollW": 360,
+        "docClientW": 360
+      },
+      "shots": [
+        "227-360-popup.png"
+      ]
+    }
+  ],
+  "shots": [
+    "227-1440-modal-final.png"
+  ],
+  "desktop": {
+    "frames": 2230,
+    "topDistinct": [
+      273
+    ],
+    "heightDistinct": [
+      355
+    ],
+    "topTravel": 0,
+    "heightTravel": 0,
+    "pageYDistinct": [
+      0
+    ],
+    "innerScrollDistinct": [
+      0
+    ],
+    "activeSequence": [
+      "shipping-authoring-destination-country",
+      "shipping-authoring-destination-country-search",
+      "shipping-authoring-destination-area-search",
+      "shipping-authoring-destination-area",
+      "shipping-authoring-destination-city-search",
+      "shipping-authoring-destination-city",
+      "shipping-authoring-destination-service-area",
+      "shipping-authoring-destination-service-area-search"
+    ],
+    "statuses": [
+      "",
+      "مسیر: ایراندر حال خواندن…",
+      "مسیر: ایرانبرای این شاخه سطح عمیق‌تری ثب",
+      "مسیر: ایران › تهراندر حال خواندن…",
+      "مسیر: ایران › تهرانبرای این شاخه سطح عمی",
+      "مسیر: ایران › تهران › ریدر حال خواندن…",
+      "مسیر: ایران › تهران › ریبرای این شهر ناح",
+      "مسیر: ایران › آذربایجان شرقیدر حال خواند",
+      "مسیر: ایران › آذربایجان شرقیبرای این شاخ",
+      "مسیر: ایران › آذربایجان شرقی › مرنددر حا",
+      "مسیر: ایران › آذربایجان شرقی › مرندبرای "
+    ]
+  },
+  "mobile390": {
+    "frames": 125,
+    "topDistinct": [
+      171
+    ],
+    "heightDistinct": [
+      503
+    ],
+    "topTravel": 0,
+    "heightTravel": 0,
+    "pageYDistinct": [
+      0
+    ],
+    "innerScrollDistinct": [
+      0
+    ],
+    "activeSequence": [
+      "shipping-authoring-destination-city-search",
+      "shipping-authoring-destination-city"
+    ],
+    "statuses": [
+      "مسیر: ایران › آذربایجان شرقی › مرندبرای "
+    ]
+  },
+  "mobile360": {
+    "frames": 126,
+    "topDistinct": [
+      139
+    ],
+    "heightDistinct": [
+      503
+    ],
+    "topTravel": 0,
+    "heightTravel": 0,
+    "pageYDistinct": [
+      0
+    ],
+    "innerScrollDistinct": [
+      0
+    ],
+    "activeSequence": [
+      "shipping-authoring-destination-city",
+      "shipping-authoring-destination-city-search"
+    ],
+    "statuses": [
+      "مسیر: ایران › آذربایجان شرقی › مرندبرای "
+    ]
+  },
+  "dialogClosedByEscape": true
+}

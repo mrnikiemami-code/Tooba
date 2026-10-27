@@ -1,0 +1,72 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227
+Parent-Task: TB-SHIPPING-ADMIN-MOBILE-WEEK-VISUAL-226
+Repository: mrnikiemami-code/Tooba / Branch: main / Worker-Id: tooba-worker-01
+Reviewed-Source: 2d744fc67df34dc9427b2f0db56e2946c1344784 (fast-forward from 9734e77ac; the three backend
+line-ending drifts were never staged)
+Mode: BOUNDED_DESTINATION_INTERNAL_SEARCH_AND_LAYOUT_STABILITY
+Status: EXECUTED — awaits Architect review; NO user trial called, no visual acceptance claimed
+Evidence: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227/
+225-R2 money and 226 mobile week stay ACCEPTED and were not reopened.
+
+DEFECT — MEASURED ON THE UNCHANGED SOURCE (before/measure-before.json)
+Baseline dialog rect top299 h303 w672. Picking the country: 366 frames, top distinct [299, 271, 257]
+= 42px travel, height 303 -> 387 -> 359 = 84px swing. Province/city picks: 14px travel each.
+Page scroll and the internal scroller stayed at 0, so neither of them caused it.
+Cause: the modal CONDITIONALLY inserted path/branchNote/deepest/added/loading/failure rows; a native
+<dialog> is UA-vertically-centred, so every height change moved top by half the delta, and the height
+swung while a branch read was in flight.
+
+REPAIR
+- Four fixed fields always rendered with their existing identities (country|area|city|service-area);
+  nothing is inserted or removed per level.
+- ONE reserved status slot (min-height 3.25rem, deterministic priority path > failure > loading >
+  branch note > added > deepest hint) replaces all conditional rows; its content changes, its height
+  does not.
+- Each field is a searchable combobox with the search input as the FIRST element INSIDE the opened
+  dropdown (no external search input). The popup is portalled INTO the open <dialog> with fixed
+  coordinates measured from its trigger: a modal dialog makes everything outside it inert, so a
+  document.body popup could be seen but neither focused nor clicked (observed, then corrected). It is
+  out of flow, so it cannot resize the dialog, is not clipped by the dialog's overflow, flips above the
+  field when there is no room below, and scrolls internally inside the viewport.
+- Search filters ONLY the rows the current verified branch returned (the Geography routes return the
+  whole branch array, no pagination) and the popup prints "{shown} / {total}" so a filtered view is never
+  presented as a complete search. Inactive places stay visible but are never selectable. Empty branch and
+  empty query match are distinguished honestly.
+- Slot height was sized from the nine REAL localized status strings at 1440/390/360 (measure-slot.mjs):
+  all stay 52px except path + "no provinces recorded for this country" needing 66px at <=390 — a recorded
+  +14px once-per-empty-branch residual, not the loading shake.
+
+FOCUSED PROOF
+One clean tsc --noEmit. New destination-search-227.test.ts 7/7 plus 62/62 in the affected
+destination/rate classes (204-r1, 204-r2, 225, 225-r1, 225-r2) = 69/69. No 188/backend/solution replay.
+Mounted in a NEW task-owned Chrome: installed 155.0.8059.85, --headless=new,
+--remote-debugging-port=9335 (verified free), fresh --user-data-dir=%TEMP%\tb227-chrome-profile, every
+page in a target created by this task; no user Electron webview, no user tab enumerated/selected/reloaded,
+no /v1 interception, real API traffic, no write.
+2230 sampled frames at 1440: dialog top = 273 only, height = 355 only, travel 0, page scroll 0, inner
+scroll 0. 390x844: top 171, h 503, travel 0. 360x780: top 139, h 503, travel 0.
+Real input exercised: country popup (search inside + focused, "1 از 1"), query zz -> "0 از 1" with the
+honest no-result text, ArrowDown+Enter pick, province popup with the 12 real provinces, Persian filter
+ته -> "1 از 12" -> Enter picks تهران, city popup (6 real cities), city pick, service-area popup for مرند
+-> "0 از 0" + «برای این شاخه مقداری ثبت نشده است.», Escape inside an open dropdown closed ONLY the
+dropdown (panel 128px -> gone, dialog still open) and Escape with no dropdown closed the dialog, country
+clear emptied AND disabled all three descendants immediately, scrollWidth == clientWidth at 390 and 360.
+Screens: 227-1440-country-popup.png, 227-1440-city-popup.png, 227-1440-service-area-empty.png,
+227-1440-modal-final.png, 227-390-popup.png, 227-360-popup.png.
+
+LIMITS (honest)
+- This installation's only country has no fourth stage under its cities, so service-area OPTIONS are not
+  live-provable: the branch was proven honestly empty; the selectable path is test-proven only.
+- The +14px empty-branch note shift at <=390 remains and is recorded.
+- The dead authoring-destination-picker.tsx (unused since TB-225) was left untouched.
+- No money/rate/range/week/publication/backend/geography change; no Apply, PUT, catalog, seed, migration,
+  restart; user draft revision and selected pointer untouched; default-OFF / TB185 paused /
+  PendingAllocation preserved.
+- Still NOT CONNECTED: Storefront/checkout has no consumer of the selected immutable revision; compact
+  per-order-group order evidence decision remains mandatory and unimplemented.
+Actual elapsed ~15 min (HARD25 / implementation 15 respected). Three implementation corrections were made
+inside the mounted gate before reporting (portal container inside the dialog, search focus on the
+post-placement commit, inline min-height because this build did not emit the Tailwind arbitrary utility).
+STOP_FOR_ARCHITECT. Automatic-Next-Task NONE. No user Visual ACCEPT claim.
+END_TOOBA_WORKER_RESULT

@@ -1,4 +1,47 @@
-# CURRENT — Architect issued 227 — 2026-10-27
+# CURRENT — 227 executed: in-popup search + pixel-stable destination modal — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227/{RESULT.md,TASK.md}.
+Base `2d744fc67df34dc9427b2f0db56e2946c1344784` (fast-forward; the three backend line-ending drifts never staged).
+Status: EXECUTED, NOT accepted. 225-R2 money and 226 mobile week stay accepted; both untouched.
+
+A — the shake was MEASURED on the unchanged source: dialog top 299 → 271 → 257 (42px travel) and height
+303 → 387 → 359 (84px swing) when the country's provinces were read; page scroll and the internal scroller
+stayed 0. Cause: conditional path/branch-note/deepest/added/loading/failure rows inside a native
+UA-centred `<dialog>`. Now the four fields are always rendered with their existing identities and every
+transient line shares ONE reserved status slot (min-height 3.25rem), so the dialog height is a function of
+the four fields only: 2230 sampled frames at 1440 show a single top (273) and height (355); 390 → 171/503
+and 360 → 139/503 with ZERO travel, page scroll 0, inner scroll 0.
+
+B — search lives INSIDE each dropdown popup (never an external input), filters ONLY the current verified
+branch's loaded rows, prints `{shown} / {total}`, keeps inactive places visible-but-unselectable and
+separates "this branch is empty" from "this query matched nothing". The popup is portalled INTO the open
+`<dialog>` (a body portal is inert and cannot be focused — observed, then corrected) with fixed coordinates
+from its trigger: never resizes or is clipped by the dialog, flips up when there is no room, always scrolls
+inside the viewport (313/314/284 px wide at 1440/390/360). Live real input: `1 از 1` → `zz` → `0 از 1`,
+Persian `ته` → `1 از 12` → Enter picks تهران, Escape closes ONLY the dropdown (dialog stays open), country
+clear empties and disables all descendants, service area under مرند honestly `0 از 0`.
+
+HONEST LIMITS: this installation has no service area under any city, so the fourth-stage OPTIONS are not
+live-provable (branch proven honestly empty; selectable path test-proven only); the longest
+no-provinces note still needs 66px at ≤390 (one recorded +14px shift when a branch settles empty); the dead
+`authoring-destination-picker.tsx` was left untouched. ONE clean tsc, 7 new + 62 affected = 69/69.
+No money/rate/week/publication/backend/geography change, no Apply/PUT/seed/migration/restart, no user tab
+touched, draft revision and pointer untouched, default-OFF/TB185 paused/PendingAllocation preserved.
+Actual ≈15 min vs HARD25. NO user Visual ACCEPT claimed.
+
+NEXT PRIORITY (Architect issues it, user need not repeat authorization): concrete Storefront integration PER
+SHIPPING GROUP using the EXISTING storefront cards/controls/DOM/CSS — 219 selected immutable revision +
+218 composer + real trusted fulfillment owner/type/membership + existing projection/selection/commit; never
+browser owner or price, never seller=fulfillment inference, unknown physical facts stay null. Storefront is
+currently NOT wired/live. Compact order history remains mandatory and unimplemented: shared immutable
+capture, compact per-order-group reference and final money/receiving facts, no full authored JSON per order,
+no historical repricing.
+Safety continuity: 225-R1 reloaded a user tab and lost unsaved LOCAL edits; no recovery claimed. Browser
+proof uses a fresh task-owned profile and target ONLY, never user tabs.
+Task: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227/TASK.md.
+Prior checkpoints below are historical.
+
+## SUPERSEDED — Architect issued 227 — 2026-10-27
 
 Active: TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227. User reports destination selection shake/jump and requests search INSIDE all four dropdown popups. Reproduce/measure cause, reuse existing design-system combobox, preserve DB cascade/current-generation evidence and modal Add semantics. Task is bounded 25 minutes; no money/week/backend reopening.
 225-R2 money integrity and 226 mobile week presentation remain accepted within recorded proof limits; no user Visual ACCEPT is implied.

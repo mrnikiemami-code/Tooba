@@ -12,11 +12,17 @@
  * the chip) and are never added as extra coverage. The duplicate/overlap refusal happens on the explicit
  * Add attempt — staging a parent is never an error — and it is reported through the existing dialog, with
  * the staged path left intact so the operator can pick a lawful terminal.
+ *
+ * TB-227 layout stability: the dialog's height is a function of the FOUR fields only. Every transient line
+ * (path, loading, branch note, deepest-level hint, added confirmation, read failure) shares ONE reserved
+ * status region whose height never changes, so a branch read can no longer grow the dialog and shift it
+ * vertically while the operator is choosing. The dropdown itself is portalled out of the dialog
+ * (`authoring-destination-field.tsx`), so opening a search popup does not resize the dialog either.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "../../../design-system";
 import { loadGeographyOptions, type GeographyOption, type GeographyReadFailure } from "../api/geography-lookup-api.ts";
-import type { EditorDocument, SelectedAreaRead } from "../model/editor-document.ts";
+import type { SelectedAreaRead } from "../model/editor-document.ts";
 import type { ResolvedAreaAncestry } from "../model/editor-edits.ts";
 import {
   choiceAncestry,
@@ -37,7 +43,7 @@ import {
   pathChoice,
   type StagedPath,
 } from "../model/destination-choice.ts";
-import type { AuthoringMessages } from "../messages/authoring-messages.ts";
+import { authoringFormat, type AuthoringMessages } from "../messages/authoring-messages.ts";
 import {
   createDestinationReadCoordinator,
   emptyDestinationReadState,
@@ -45,6 +51,7 @@ import {
   type DestinationReadContext,
   type DestinationReadState,
 } from "./destination-read-coordinator.ts";
+import { AuthoringDestinationField, type DestinationFieldLabels } from "./authoring-destination-field.tsx";
 import { AuthoringMessageBox } from "./authoring-message-box.tsx";
 
 /** One display segment of a verified path (identity + real localized label, never a guessed name). */
@@ -63,46 +70,6 @@ function failureText(failure: GeographyReadFailure, messages: AuthoringMessages)
     case "network":
       return messages.destinationNetwork;
   }
-}
-
-function PathSelect({
-  label,
-  value,
-  options,
-  disabled,
-  placeholder,
-  unavailableName,
-  testId,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: readonly GeographyOption[];
-  disabled: boolean;
-  placeholder: string;
-  unavailableName: string;
-  testId: string;
-  onChange: (option: GeographyOption | null) => void;
-}) {
-  return (
-    <label className="grid gap-0.5">
-      <span className="text-xs font-bold text-gray-700">{label}</span>
-      <select
-        className="min-h-10 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
-        value={value}
-        disabled={disabled}
-        data-testid={testId}
-        onChange={(event) => onChange(options.find((option) => option.id === event.target.value) ?? null)}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id} disabled={!option.isActive}>
-            {optionDisplayName(option, unavailableName)}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
 }
 
 export function AuthoringDestinationModal({
@@ -203,6 +170,33 @@ export function AuthoringDestinationModal({
     return null;
   }, [areaId, cityId, countryId, lists.areas.length, lists.cities.length, lists.serviceAreas.length, loading, messages, readState.settled]);
 
+  /**
+   * ONE status line of the reserved region. Priority is deterministic, so the region's CONTENT changes but
+   * never its height: the dialog therefore cannot jump between states.
+   */
+  const status = useMemo<{ tone: "muted" | "danger" | "success"; text: string; testId: string } | null>(() => {
+    if (failure) return { tone: "danger", text: failureText(failure, messages), testId: "shipping-authoring-destination-failure" };
+    if (loading) return { tone: "muted", text: messages.destinationLoading, testId: "shipping-authoring-destination-loading" };
+    if (branchNote) return { tone: "muted", text: branchNote, testId: "shipping-authoring-destination-branch-note" };
+    if (added) return { tone: "success", text: messages.destinationAddedKept, testId: "shipping-authoring-destination-added" };
+    if (canAdd) return { tone: "muted", text: messages.destinationSelectDeepestAvailable, testId: "shipping-authoring-destination-deepest" };
+    return null;
+  }, [added, branchNote, canAdd, failure, loading, messages]);
+
+  const fieldLabels = useMemo<DestinationFieldLabels>(() => {
+    return {
+      label: "",
+      placeholder: messages.destinationSelectPlaceholder,
+      searchPlaceholder: messages.destinationSearchPlaceholder,
+      noResult: messages.destinationSearchNoResult,
+      emptyBranch: messages.destinationEmpty,
+      loading: messages.destinationLoading,
+      clearChoice: messages.destinationClearChoice,
+      count: (shown, total) => authoringFormat(messages.destinationSearchCount, { shown, total }),
+      unavailableName: messages.destinationNameUnavailable,
+    };
+  }, [messages]);
+
   const submit = () => {
     // Re-checked synchronously against the coordinator's CURRENT evidence, not a stale render closure.
     const evidence = coordinator.current?.getState() ?? readState;
@@ -226,34 +220,30 @@ export function AuthoringDestinationModal({
   return (
     <>
       <Dialog open={open} onClose={onClose} title={messages.destinationModalTitle} showCloseButton={false} size="lg">
-        <div className="flex max-h-[70vh] flex-col gap-3 overflow-y-auto pe-1 text-sm text-gray-700">
+        <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto pe-1 text-sm text-gray-700">
           <p className="text-xs text-gray-600">{messages.destinationModalIntro}</p>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <PathSelect
-              label={messages.destinationCountryField}
+            <AuthoringDestinationField
+              labels={{ ...fieldLabels, label: messages.destinationCountryField }}
               value={countryId}
               options={lists.countries}
               disabled={disabled}
-              placeholder={messages.destinationSelectPlaceholder}
-              unavailableName={messages.destinationNameUnavailable}
+              loading={readState.loading.countries === true}
               testId="shipping-authoring-destination-country"
               onChange={(option) =>
                 setPath((previous) => {
                   const base = pathChoice(previous);
-                  return option === null
-                    ? emptyStagedPath()
-                    : pathOf(chooseCountry(base, option));
+                  return option === null ? emptyStagedPath() : pathOf(chooseCountry(base, option));
                 })
               }
             />
-            <PathSelect
-              label={messages.destinationProvinceField}
+            <AuthoringDestinationField
+              labels={{ ...fieldLabels, label: messages.destinationProvinceField }}
               value={areaId}
               options={lists.areas}
               disabled={disabled || countryId === ""}
-              placeholder={messages.destinationSelectPlaceholder}
-              unavailableName={messages.destinationNameUnavailable}
+              loading={readState.loading.areas === true}
               testId="shipping-authoring-destination-area"
               onChange={(option) =>
                 setPath((previous) => {
@@ -262,13 +252,12 @@ export function AuthoringDestinationModal({
                 })
               }
             />
-            <PathSelect
-              label={messages.destinationCityField}
+            <AuthoringDestinationField
+              labels={{ ...fieldLabels, label: messages.destinationCityField }}
               value={cityId}
               options={lists.cities}
               disabled={disabled || areaId === ""}
-              placeholder={messages.destinationSelectPlaceholder}
-              unavailableName={messages.destinationNameUnavailable}
+              loading={readState.loading.cities === true}
               testId="shipping-authoring-destination-city"
               onChange={(option) =>
                 setPath((previous) => {
@@ -277,13 +266,12 @@ export function AuthoringDestinationModal({
                 })
               }
             />
-            <PathSelect
-              label={messages.destinationServiceAreaField}
+            <AuthoringDestinationField
+              labels={{ ...fieldLabels, label: messages.destinationServiceAreaField }}
               value={serviceAreaId}
               options={lists.serviceAreas}
               disabled={disabled || cityId === ""}
-              placeholder={messages.destinationSelectPlaceholder}
-              unavailableName={messages.destinationNameUnavailable}
+              loading={readState.loading.serviceAreas === true}
               testId="shipping-authoring-destination-service-area"
               onChange={(option) =>
                 setPath((previous) => {
@@ -294,36 +282,34 @@ export function AuthoringDestinationModal({
             />
           </div>
 
-          {segments.length > 0 ? (
-            <p className="text-xs text-gray-600" data-testid="shipping-authoring-destination-path">
-              <span className="font-bold">{messages.destinationPathLabel}: </span>
-              <span dir="auto">{segments.map((segment) => segment.label).join(" › ")}</span>
-            </p>
-          ) : null}
+          {/*
+            ONE reserved status region: same height in every state. This is what keeps the native dialog
+            (vertically centred by the user agent) from moving while a branch is loading.
+          */}
+          <div
+            className="grid content-start gap-0.5"
+            style={{ minHeight: "3.25rem" }}
+            aria-live="polite"
+            data-testid="shipping-authoring-destination-status"
+          >
+            {segments.length > 0 ? (
+              <p className="truncate text-xs text-gray-600" data-testid="shipping-authoring-destination-path">
+                <span className="font-bold">{messages.destinationPathLabel}: </span>
+                <span dir="auto">{segments.map((segment) => segment.label).join(" › ")}</span>
+              </p>
+            ) : null}
+            {status !== null ? (
+              <p
+                role={status.tone === "danger" ? "alert" : undefined}
+                className={`text-xs ${status.tone === "danger" ? "font-semibold text-danger" : status.tone === "success" ? "font-semibold text-emerald-800" : "text-gray-500"}`}
+                data-testid={status.testId}
+              >
+                {status.text}
+              </p>
+            ) : null}
+          </div>
 
-          {branchNote ? (
-            <p className="text-xs text-amber-800" data-testid="shipping-authoring-destination-branch-note">
-              {branchNote}
-            </p>
-          ) : null}
-          {!branchNote && canAdd ? (
-            <p className="text-xs text-gray-500" data-testid="shipping-authoring-destination-deepest">
-              {messages.destinationSelectDeepestAvailable}
-            </p>
-          ) : null}
-          {added ? (
-            <p role="status" className="text-xs font-semibold text-emerald-800" data-testid="shipping-authoring-destination-added">
-              {messages.destinationAddedKept}
-            </p>
-          ) : null}
-          {loading ? <span className="text-xs text-gray-500">{messages.destinationLoading}</span> : null}
-          {failure ? (
-            <span role="alert" className="text-xs font-semibold text-danger">
-              {failureText(failure, messages)}
-            </span>
-          ) : null}
-
-          <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-surface pt-2">
+          <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-2">
             <button
               type="button"
               className="inline-flex min-h-10 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
