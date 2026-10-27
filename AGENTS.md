@@ -1,4 +1,43 @@
-# CURRENT — 235-R1 owner vertical scoped accepted; issued236 shared coupon context —2026-10-27
+﻿# CURRENT — 236 EXECUTED: one coupon intent across captured read, selection, payment preview and final commit —2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-COUPON-CONTEXT-PARITY-236/{TASK.md,RESULT.md}. Status
+EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base607e12c17, code36c44a35; claim23:18Z→result23:55Z
+≈34min inside HARD45 (source/proof split untimed) but the one-correction budget EXCEEDED (5 recorded fixture/test
+corrections in RESULT §G). Bridge row 9a393fb5-c1b4-4f3d-b82c-d145a433ac8d.
+LANDED on the EXISTING paths only: `StorefrontCouponIntent{Normalize,Same}` is a confirmation TOKEN (trim only, no
+fold/length/code policy) — Promotion/Tax remain the only pricing authority. Coupon reaches read
+(transport→endpoint→query→ProjectAsync→planner SubmitCheckoutCommand), selection (writer re-quotes the SAME intent in
+the SAME 232 atomic/CAS/rollback boundary and stores it on the draft root), public payment-draft and public commit
+(blanket `coupon_unavailable` removed where the coherent path exists). Final acceptance compares the current intent
+with `SelectionCouponCode` and EVERY group's stored `ConfirmedGoodsAmount` with THIS submit's own quote before any
+reserve/order/convert (A→B/clear/changed-goods ⇒ `storefront.captured_selection.conflict`, zero writes).
+231-residuals closed: `ComposePreviewSnapshot` branches on the OVERRIDE OBJECT (intentional null dates stay absent,
+old command dates never resurrect); `ResolveGroupOwner` requires a nonempty assigned type equal to stored evidence on
+EVERY line. Schema: ONE additive Order migration 20261027230000 — `selection_coupon_code text` on
+`order.cart_shipping_drafts` + `confirmed_goods_amount numeric(18,2)` on `order.cart_shipping_groups`, one shape CHECK
+each, WRITTEN/sharedNOTAPPLIED, no JSON/table/backfill, legacy NULL = unconfirmed.
+PROOF (worker execution, ONE disposable postgres:17-alpine tb236 127.0.0.1:15433/order_tb231/tb231, identity before
+DDL, normal migration chain, container removed and port verified closed): StorefrontCapturedCouponParityTests 8/8
+(coupon SAVE10 through read→save→preview→commit on 3 lawful owners/one binding with own 99/220/330 goods; changed
+coupon with stale echo refused with zero writes; SAME code with changed goods refuses preview+commit at zero
+reserve; idempotent replay returns the original order with zero extra quote/pointer/reserve; explicit date absence
+never resurrects command dates; REAL inter-read boundary via an existing TEST port with root advanced 1→2, +40/group,
+distinct dates, absent aggregate, zero writes; DB proves the two nullable columns, zero json, both CHECKs and
+23514 refusals for untrimmed coupon/-1 goods; blank intent reaches Promotion as null and uses the base path) and
+StorefrontShippingCouponEndpointTests 5/5 (the actual projection delegate forwards `" SAVE10 "`/`save10`/
+`4294967296`/Persian text VERBATIM, gate once; payment-draft GET forwards `%20SAVE10%20` verbatim). Directly affected
+focused set ONCE: 173/173; Order.Tests build 0 errors. NOT re-proven: Promotion/provider failure + caller
+cancellation on the coupon path (§5.3 half), no HTTP/listener/live/browser/PSP/payment, no physical per-tenant DB,
+no Order-only historical read, no frontend wiring, no desktop/390/mobile practical trial. Case-sensitive token
+comparison is deliberate (Order must not invent Promotion's matching policy).
+NO frontend/HMR/browser/user-window access, no Host/FE rebuild/restart/runtime gate change, no shared migration,
+no live business write; USER VISIBLE review window is USER unsaved work and was never enumerated/read/automated/
+reloaded/closed; local previewON/count7 unchanged; all checked-in Enabled/SelectionEnabled/CheckoutEnabled stay false;
+231/232 sharedNOTAPPLIED and the stale EF snapshot gap retained; TB185 paused/defaultOFF/PendingAllocation.
+Known 230 empty-key/in-flight, cross-owner label/decoder, Offer API, 227 mobile empty-note, 225-R1 lost LOCAL edits
+retained. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Older TOPs are historical.
+
+# SUPERSEDED — CURRENT — 235-R1 owner vertical scoped accepted; issued236 shared coupon context —2026-10-27
 
 Active TB-SHIPPING-CAPTURED-COUPON-CONTEXT-PARITY-236. Read235-R1/ARCHITECT-REVIEW.md and236/TASK.md.
 Root reviewed9b765e81b/sourcecb3d054bb: real read/232selection/publicpreview/publiccommit/Order persistence for
