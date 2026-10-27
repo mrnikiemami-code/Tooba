@@ -1,5 +1,23 @@
+# CURRENT — 233-R2 integration scoped accepted; issued233-R3 address/binding/proof —2026-10-27
 
-# CURRENT — 233-R2 EXECUTED: real positive submit through the actual process — 2026-10-27
+Active TB-SHIPPING-CAPTURED-ADDRESS-BINDING-AND-PROOF-233-R3. Read233-R2/ARCHITECT-REVIEW.md and233-R3/TASK.md.
+Root reviewed2ef0125cd/source1d2106dd2: reader-free core/fixedgroupkeys/commandfacts/actualOrder persistence/
+ordinary replay/barrier rollback accepted as MECHANICAL integration with controlledContracts ONLY.
+Evidence corrections: fixture has post/standard +tipax/express NOTsamebinding;pointercalls2;SAMEdate/wholeminute
+hours NOTfractional;prices99/198 tax0 NOT100-10+9;replaydoesNOTmutatepointer;DI manuallyregistered equivalent
+types NOTrealOrderModule.AddServices. Do not repeat these false-expanded claims. Samebinding+destination
+must share SAMEareaGroupId; independent rate rows/dates on sharedweek required (Architect clarification).
+RealGeography nullcountry=>Unresolved, finalsource ALWAYSnull; savedAddressnotowned/re-read and PrepareShipping
+dropssourceSavedAddressId. R3 preserve serverprovenance existingdraftcolumn, realcountry/addressauthority,
+activebinding/snapshotformatchecks, correctedactualpositive+changedpointerreplay and boundedroot contention.
+NOcoupon scope expansion; publicCommit/PaymentDraft stay CLOSED, checked-in flagsOFF. NofrontendHMR/runtime/
+HostFE/livewrites/sharedDDL. USER VISIBLEreviewwindow USERunsavedwork: no enumerate/read/automate/reload/close.
+LocalpreviewONcount7 unchanged. 231/232 accepted; migrationssharedNOTAPPLIED/EFsnapshotgap retained.
+No fullcheckout/paymentactivation/VisualACCEPT/fullJSON/order/historyrepricing. Known230emptykey/inflight/
+crossownerlabelsdecoder/OfferAPI/227mobile/225-R1lostLOCALwork retained. TB185paused/defaultOFF/PendingAllocation.
+STOP_FOR_ARCHITECT afterR3; Automatic-Next-Task NONE. History below retained.
+
+# HISTORICAL WORKER RESULT — 233-R2 EXECUTED: real positive submit through the actual process — 2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2/{TASK.md,RESULT.md}; a correction
 was appended to 233-R1/RESULT.md. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no checkout/payment
