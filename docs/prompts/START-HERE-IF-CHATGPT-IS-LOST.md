@@ -1,4 +1,59 @@
-# CURRENT — reviewed229-R2 auth/unavailable only; issued230 configured read — 2026-10-27
+# CURRENT — 230 EXECUTED: captured destination refresh + ONE real configured priced read — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230/{RESULT.md,TASK.md}.
+Base `281c21d88`. Status: **EXECUTED — positive configured read reached live**, NOT accepted, no user Visual
+ACCEPT, selection/commit still blocked.
+
+A — the captured destination really never refreshed. `storefront-shipping.tsx` had no reaction to a newly
+VERIFIED geography destination (only the hidden legacy method path ever sent ids), and the header still
+promised legacy prep+lead. Now three pure primitives own it
+(`storefront-shipping-destination-refresh.ts`: `destinationIdentityKey`, `planDestinationRefresh`,
+`createRequestGeneration`), the page calls the EXISTING `refreshProjection` with the exact verified
+destination and `rehydrateDraft:false` (typed recipient/address is never overwritten), every response is
+gated by the request generation so a superseded/out-of-order answer cannot win, the last applied key is a
+stable identity ref (no render loop), clearing a parent clears the child ids, and while a new destination is
+pending the cards show `storefront.captured_preview.destination_pending`. Legacy OFF short-circuits to `skip`
+forever — unchanged. Captured mode now shows `shippingDaysLabel = "—"`, never the legacy delivery promise.
+TWO real defects blocked the live price and are fixed in the same path: the planner quoted goods with
+`cart.Market` instead of the storefront's own `StorefrontCheckoutService.StorefrontTaxJurisdiction`
+(`IR-NAT`) — every configured read was 409 `checkout.tax.unavailable`; and `storefront-geography-api.ts`
+sent the literal `?languageId=null` which the server binds to `Guid?` and rejects with 500, so no verified
+identity could exist.
+
+B — explicit DEV test data through normal APIs only: DEV draft `01a17d0d-e033-7000-af43-49a1daa28822`
+«آزمایش ارسال۲۳۰» on the unused real binding `post:standard`, type `heavy`
+`01a1785e-01f3-7000-b50d-d6372e756f89`, Manual+Prepaid, IRR, ONE real Country ایران destination
+`e3451206-e503-51a8-91ad-afa9ab70e330`, ONE unconditional row freight `120000.00` / packaging `5000.00` /
+receiving `2..3` days, week Asia/Tehran Sat–Thu 09:00–17:00 with Friday closed, published to ONE shared
+snapshot `01a17d0e-0419-7000-b575-f507d2f89abc` (`selectionVersion 1`, revision 2). Offer
+`0442a1fa-1d95-4b24-b9d9-129fc19942d2` assigned `Platform`+`heavy` through the existing admin fulfillment
+API; offer `1b56d013-5817-4db1-99a3-010e12dc0631` stays unassigned. The existing user draft
+`01a16eeb-...` was NOT touched (bounds/rates/week/type/pointer untouched).
+
+C — real page `http://127.0.0.1:3000/fa/shipping` in the task-owned Chrome (CDP 9336, buyer
+`01a17cf7-e38d-7000-82a5-00c57929bc54`, cart `01a17cfd-c1b1-7000-b10d-8cf21258a1cd` v11, FE 3000 PID 28288
+untouched, Host 5088 PID 24660 `D:\temp\tb230-build\out`). Choosing province/city through the existing UI
+selects (no method selector) sent the destination POSTs and 200 returned a PRICED group:
+`cap|platform|store|...|heavy`, type سنگین, real goods `9485771` after discount+tax, freight `120000.00`,
+packaging `5000.00`, payable `125000.00`, IRR, earliest `2026-10-29`, dates 10-29,10-31,11-01..11-05
+(Friday 10-30 skipped by the authored week, min 2, no extra seller prep), snapshot
+`01a17d0e-0419-7000-b575-f507d2f89abc`, while the second group stayed visible and refused
+(`storefront.captured_preview.unassigned`). Clicking the 10-31 chip moved selection to that chip and showed
+that date's own interval; reload kept the authored data and the normal session. Card scrolled to
+`block:'center'` (top 59 / bottom 786 in 844, intersects), `scrollWidth == 390 == clientWidth`, legacy
+duplicate cards `0`. Screenshots 1440×900 and 390×844 under the 230 evidence `screens/` inspected by eye.
+Proof: 15/15 focused storefront tests (4 new destination-refresh facts), ONE clean `tsc`, Order.Application
+build 0 errors. No migration, no seed, no reset, no user-draft/pointer change, no select/save/commit/order.
+
+HONEST: a uniform authored week means a per-date interval DIFFERENCE is not live-provable (each date carries
+its own interval in the JSON; independence was unit-proven in 229-R1). No BEFORE artifact file for the offer
+assignment was kept. Legacy OFF was proven by test/control, not an OFF screenshot. Three corrections were
+needed where the task allowed one. Actual ≈23 min vs HARD30 wall-clock — still NOT a process PASS.
+Selection/commit parity, compact per-order-group immutable evidence and no-historical-repricing remain
+unimplemented. TB185 paused/default-OFF/PendingAllocation preserved; checked-in preview default stays OFF.
+STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+## SUPERSEDED — reviewed229-R2 auth/unavailable only; issued230 configured read — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-DESTINATION-CONFIGURED-TRIAL-230. Reuse R2 normal buyer/profile/cart/driver.
 Root VIEWED1440/390 screenshots: hero/address only, group cards out of viewport. No card Visual ACCEPT.

@@ -56,15 +56,20 @@ async function loadPlaces(url: string): Promise<StorefrontGeographyResult> {
   }
 }
 
-/** کشورها را از مسیر عمومی Geography می‌خواند. */
+/**
+ * کشورها را از مسیر عمومی Geography می‌خواند.
+ *
+ * TB-230: پارامتر زبان حذف شده است. ارسال «languageId=null» به‌صورت متن، پارس `Guid?` سرور را می‌شکند
+ * (500) و در نتیجه هیچ هویت تأییدشده‌ای ساخته نمی‌شد؛ نبودِ پارامتر یعنی همان زبان پیش‌فرض نصب.
+ */
 export function loadStorefrontGeographyCountries(): Promise<StorefrontGeographyResult> {
-  return loadPlaces("/v1/storefront/geography/places/countries?languageId=null");
+  return loadPlaces("/v1/storefront/geography/places/countries");
 }
 
 /** ناحیه‌های اداری (استان) یک کشور. */
 export function loadStorefrontGeographyAreas(countryId: string): Promise<StorefrontGeographyResult> {
   return loadPlaces(
-    `/v1/storefront/geography/places/countries/${encodeURIComponent(countryId)}/administrative-areas?languageId=null`,
+    `/v1/storefront/geography/places/countries/${encodeURIComponent(countryId)}/administrative-areas`,
   );
 }
 

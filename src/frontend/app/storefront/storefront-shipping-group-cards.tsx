@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * TB-SHIPPING-INDEPENDENT-GROUP-FRONTEND-150 — کارت مستقل برای هر گروه ارسال واقعی.
@@ -304,6 +304,7 @@ const CAPTURED_REASON_TEXT: Record<string, string> = {
   "storefront.captured_preview.responsibility_invalid": "مسئولیت ارسال این کالا معتبر نیست.",
   "storefront.captured_preview.composition_refused": "محاسبهٔ ارسال این سبد ممکن نشد.",
   "storefront.captured_preview.available_date_count_invalid": "بازهٔ تاریخ‌های ارسال تنظیم نشده است.",
+  "storefront.captured_preview.destination_pending": "در حال محاسبهٔ ارسال برای مقصد جدید…",
   "storefront.captured_preview.untrusted": "پاسخ ارسال این سبد قابل اتکا نیست؛ دوباره تلاش کنید.",
 };
 

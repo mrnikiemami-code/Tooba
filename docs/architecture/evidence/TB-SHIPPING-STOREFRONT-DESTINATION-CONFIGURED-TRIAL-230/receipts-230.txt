@@ -1,0 +1,101 @@
+TB-230 receipts — scrubbed (no credentials, cookies, tokens or account secrets)
+Collected 2026-10-27 14:32–14:55 local (Asia/Tehran)
+
+== identity / base ==
+git log -1           281c21d88  docs(shipping): review R2 limited proof and issue230 destination configured read trial
+branch               main
+working tree         only task files: 2 Order files, 1 frontend ast, 2 new storefront ast, evidence folder;
+                     3 Shipping files show LF/CRLF drift only (never staged)
+
+== runtime (verified now, not historic) ==
+FE      127.0.0.1:3000  PID 28288  (untouched by this task)
+Host    127.0.0.1:5088  PID 24660  D:\temp\tb230-build\out\Tooba.Host.exe
+CDP     127.0.0.1:9336  task-owned Chrome 155.0.8059.85, every page a target created by this task
+no migration replayed; 228 migration already applied
+
+== task account / cart (reused from R2, no new registration) ==
+account   01a17cf7-e38d-7000-82a5-00c57929bc54
+cart      01a17cfd-c1b1-7000-b10d-8cf21258a1cd   cartVersion 11   lines 2   sellers 1   itemCount 2
+subtotalExclusiveOfTax 16013018.0000000000 IRR
+
+== DEV authoring draft (normal owner-authorized API, X-Tooba-Dev-Actor-User-Id) ==
+draftId        01a17d0d-e033-7000-af43-49a1daa28822
+binding        post / standard   (unused real active service+option)
+name (fa-IR)   آزمایش ارسال۲۳۰
+revision       2
+type           heavy 01a1785e-01f3-7000-b50d-d6372e756f89 (سنگین)
+settings       Manual + Prepaid, currency IRR
+destination    Country ایران e3451206-e503-51a8-91ad-afa9ab70e330 (single area of the group)
+row            unconditional; freight 120000.00, packaging 5000.00, receiving range 2..3 days
+week           Asia/Tehran; weekday 1..4,6,7 working 09:00–17:00; weekday 5 (Friday) closed
+publication    state Selected, selectionVersion 1, selectedSnapshotId 01a17d0e-0419-7000-b575-f507d2f89abc,
+               selectedSourceRevision 2, selectedMatchesCurrentDraftRevision true
+re-POST trial  refused 409 shipping.authoring.draft_revision_conflict (stale expected revision supplied);
+               publication state read AFTER is identical to BEFORE (no revision / pointer change)
+
+untouched      user draft 01a16eeb-70b3-7000-87c2-564c82835496 (weight-gated; no edit, no publish)
+
+== Offer assignment (only bounded write) ==
+PUT /v1/admin/offers/0442a1fa-1d95-4b24-b9d9-129fc19942d2/fulfillment
+    {"fulfillmentResponsibility":"Platform","fulfillmentShippingTypeId":"01a1785e-01f3-7000-b50d-d6372e756f89"}
+second offer  1b56d013-5817-4db1-99a3-010e12dc0631 left unassigned (independent refused group)
+BEFORE        the first offer carried no assignment; the planner refused its group as
+              storefront.captured_preview.unassigned (observed in this task's pre-PUT run; no artifact file kept)
+AFTER (live)  group key cap|platform|store|01a030d140cb70008abe6d31739956c5|01a1785e01f37000b50dd6372e756f89
+              typeLabel سنگین
+
+== page / network ==
+URL   http://127.0.0.1:3000/fa/shipping  (task-owned profile; no user tab read)
+POST /v1/storefront/shipping/projection 200
+  {"cartId":"01a17cfd-c1b1-7000-b10d-8cf21258a1cd","provinceName":"تهران","cityName":null,
+   "destination":{"countryId":"e3451206-e503-51a8-91ad-afa9ab70e330",
+                  "administrativeAreaId":"3cefa472-d0ac-5b2e-817b-ae7df7c33382","cityId":null},
+   "methodCode":null,"language":"fa"}
+POST /v1/storefront/shipping/projection 200
+  {"cartId":"01a17cfd-c1b1-7000-b10d-8cf21258a1cd","provinceName":"تهران","cityName":"تهران",
+   "destination":{"countryId":"e3451206-e503-51a8-91ad-afa9ab70e330",
+                  "administrativeAreaId":"3cefa472-d0ac-5b2e-817b-ae7df7c33382",
+                  "cityId":"d63c8292-bc14-558a-825f-b39e25c07f61"},
+   "methodCode":null,"language":"fa"}
+no method selector clicked; no mocked/intercepted traffic; no DOM-injected data or price
+
+== server answer for the priced group (configured-read-projection.json) ==
+groupKey   cap|platform|store|01a030d140cb70008abe6d31739956c5|01a1785e01f37000b50dd6372e756f89
+typeLabel  سنگین
+goods (after discount + tax, real cart)  9485771
+methodLabel آزمایش ارسال۲۳۰  service post  option standard
+freight 120000.00   packaging 5000.00   payableAtCheckout 125000.00   currency IRR
+earliest 2026-10-29
+dates    2026-10-29, 10-31, 11-01, 11-02, 11-03, 11-04, 11-05  (Friday 2026-10-30 absent)
+interval per date "09:00–17:00"
+snapshotId 01a17d0e-0419-7000-b575-f507d2f89abc   selectionVersion 1
+refused group cap|unassigned|1b56d01358174db199a3010e12dc0631 → storefront.captured_preview.unassigned
+
+== DOM receipts ==
+card-bounds    {"top":59,"bottom":786,"height":727,"innerWidth":390,"scrollWidth":390,"intersects":true}
+overflow       [scrollWidth 390, clientWidth 390, scrollX 0]
+legacy duplicate cards [data-testid^="shipping-group-method-"] = 0
+date click     clicked …-post-standard-2026-10-31 →
+               interval-before "بازهٔ همین روز: 09:00–17:00"
+               interval-after  "بازهٔ همین روز: 09:00–17:00"
+               selected-after  ["…-post-standard-2026-10-31"]
+after reload   /fa/shipping, priced card present, authored data + normal session intact
+
+== tests / builds ==
+node --experimental-strip-types --test app/storefront/storefront-shipping-destination-refresh.test.ts \
+     app/storefront/storefront-shipping-captured-preview.test.ts
+  tests 15  pass 15  fail 0
+npx tsc --noEmit            exit 0
+dotnet build Tooba.Order.Application   0 Warning(s) 0 Error(s)
+
+== screenshots (native PNG; dimensions read from PNG headers, inspected by eye) ==
+screens/230-1440-destination-cards.png  1440x900
+screens/230-390-destination-cards.png   390x844
+screens/230-390-date-selected.png       390x844
+screens/230-390-after-reload.png        390x844
+screens/230-1440-cards.png              1440x900
+
+== correction budget ==
+three corrections were required (duplicate declaration after typecheck; planner tax jurisdiction;
+geography languageId literal 500). The task allowed one. Recorded honestly.
+elapsed ≈ 23 min (14:32 → 14:55) vs HARD30; NOT a process PASS.

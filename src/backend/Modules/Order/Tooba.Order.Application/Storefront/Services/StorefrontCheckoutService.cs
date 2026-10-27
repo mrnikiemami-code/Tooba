@@ -26,7 +26,12 @@ public sealed class StorefrontCheckoutService
 
     private const string DefaultShippingCode = "storefront-default";
     private const string DefaultShippingLabel = "ارسال پیش‌فرض فروشگاه";
-    private const string TaxJurisdiction = "IR-NAT";
+    /// <summary>
+    /// TB-230: the ONE authoritative storefront tax jurisdiction of this installation. The captured
+    /// read preview must quote with the SAME jurisdiction the real submit charges; the cart's market
+    /// code is not a jurisdiction key and no rule is keyed by it.
+    /// </summary>
+    internal const string StorefrontTaxJurisdiction = "IR-NAT";
 
     private readonly ICartPresentationGateway _carts;
     private readonly ICheckoutDirectory _checkouts;
@@ -277,7 +282,7 @@ public sealed class StorefrontCheckoutService
             null,
             placedByUserId,
             idempotencyKey,
-            TaxJurisdiction,
+            StorefrontTaxJurisdiction,
             string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim(),
             null,
             shipping?.RecipientName ?? string.Empty,

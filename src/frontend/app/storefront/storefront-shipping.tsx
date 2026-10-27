@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { Check, ChevronLeft, CreditCard, Edit3, Package, Shield, ShoppingBag, Store, Truck } from "lucide-react";
@@ -43,6 +43,11 @@ import {
   matchCityInArea,
   type GeographyDestinationIdentifiers,
 } from "./storefront-shipping-destination-model.ts";
+import {
+  createRequestGeneration,
+  destinationIdentityKey,
+  planDestinationRefresh,
+} from "./storefront-shipping-destination-refresh.ts";
 import {
   isShippingDateHorizonComplete,
   pickEligibleDeliveryDate,
@@ -117,63 +122,94 @@ export function StorefrontShopeivaShipping() {
   const [geoCities, setGeoCities] = useState<StorefrontGeographyPlace[]>([]);
   const LEGACY_STOREFRONT_COUNTRY = "IR";
 
+  /**
+   * TB-230: نسل درخواست. پاسخ قدیمی/بی‌ترتیب هرگز جای پاسخ جاری را نمی‌گیرد و درخواستی که
+   * هویت مقصدش تغییر کرده، وضعیت «در انتظار» را هم پاک نمی‌کند.
+   */
+  const projectionGeneration = useRef(createRequestGeneration());
+  /** آخرین کلید مقصدی که واقعاً برایش درخواست فرستاده شد (نظم پایدار، نه ارجاع شیء). */
+  const appliedDestinationKey = useRef("");
+  /** در انتظار پاسخ مقصد تازه: قیمت قبلی نباید «جاری» به نظر برسد. */
+  const [capturedDestinationPending, setCapturedDestinationPending] = useState(false);
+
   const refreshProjection = useCallback(async (
     province?: string,
     method?: string | null,
     city?: string,
     destination?: GeographyDestinationIdentifiers | null,
+    options?: { rehydrateDraft?: boolean; pendingDestination?: boolean },
   ) => {
-    const cart = await loadStorefrontCart();
-    if (!cart?.cartId) {
-      setError("سبد خرید پیدا نشد.");
-      setProjection(null);
-      return;
-    }
-    const page = await loadShippingProjection({
-      cartId: cart.cartId,
-      provinceName: province || undefined,
-      cityName: city || undefined,
-      destination: destination ?? null,
-      methodCode: method || undefined,
-    });
-    setCartLines(cart.lines);
-    setProjection(page);
-    if (page.revalidationMessage) {
-      setError(page.revalidationMessage);
-    }
-
-    const clampDate = (candidate: string | null | undefined) => {
-      const min = page.minimumDeliveryDate;
-      if (!min) return candidate ?? "";
-      if (!candidate || candidate < min) return min;
-      return candidate;
-    };
-
-    if (page.draft) {
-      setAddress({
-        firstName: page.draft.firstName,
-        lastName: page.draft.lastName,
-        recipientName: page.draft.recipientName,
-        contactMobile: page.draft.contactMobile,
-        provinceName: page.draft.provinceName,
-        cityName: page.draft.cityName,
-        postalAddress: page.draft.postalAddress,
-        postalCode: page.draft.postalCode,
+    const sequence = projectionGeneration.current.next();
+    const rehydrateDraft = options?.rehydrateDraft !== false;
+    if (options?.pendingDestination) setCapturedDestinationPending(true);
+    try {
+      const cart = await loadStorefrontCart();
+      if (!projectionGeneration.current.isCurrent(sequence)) return;
+      if (!cart?.cartId) {
+        setError("سبد خرید پیدا نشد.");
+        setProjection(null);
+        return;
+      }
+      const page = await loadShippingProjection({
+        cartId: cart.cartId,
+        provinceName: province || undefined,
+        cityName: city || undefined,
+        destination: destination ?? null,
+        methodCode: method || undefined,
       });
-      setSavedAddressId(page.draft.savedAddressId);
-      setUseSavedAddress(Boolean(page.draft.savedAddressId));
-      setMethodCode(page.selectedMethodCode ?? page.draft.shippingMethodCode);
-      setDeliveryDate(clampDate(page.draft.selectedDeliveryDate));
-      setDeliveryTime(page.draft.selectedDeliveryTimeWindow ?? "");
-      setNotes(page.draft.customerNote ?? "");
-    } else if (method) {
-      setMethodCode(method);
-      setDeliveryDate((prev) => clampDate(prev));
-    } else if (page.selectedMethodCode) {
-      setMethodCode(page.selectedMethodCode);
-      setDeliveryDate((prev) => clampDate(prev));
+      if (!projectionGeneration.current.isCurrent(sequence)) return;
+      setCartLines(cart.lines);
+      setProjection(page);
+      if (page.revalidationMessage) {
+        setError(page.revalidationMessage);
+      }
+
+      const clampDate = (candidate: string | null | undefined) => {
+        const min = page.minimumDeliveryDate;
+        if (!min) return candidate ?? "";
+        if (!candidate || candidate < min) return min;
+        return candidate;
+      };
+
+      // مقصد‌محور: هیچ بازنویسی روی ورودی تایپ‌شدهٔ گیرنده/آدرس انجام نمی‌شود.
+      if (!rehydrateDraft) {
+        if (method) {
+          setMethodCode(method);
+          setDeliveryDate((prev) => clampDate(prev));
+        }
+        return;
+      }
+
+      if (page.draft) {
+        setAddress({
+          firstName: page.draft.firstName,
+          lastName: page.draft.lastName,
+          recipientName: page.draft.recipientName,
+          contactMobile: page.draft.contactMobile,
+          provinceName: page.draft.provinceName,
+          cityName: page.draft.cityName,
+          postalAddress: page.draft.postalAddress,
+          postalCode: page.draft.postalCode,
+        });
+        setSavedAddressId(page.draft.savedAddressId);
+        setUseSavedAddress(Boolean(page.draft.savedAddressId));
+        setMethodCode(page.selectedMethodCode ?? page.draft.shippingMethodCode);
+        setDeliveryDate(clampDate(page.draft.selectedDeliveryDate));
+        setDeliveryTime(page.draft.selectedDeliveryTimeWindow ?? "");
+        setNotes(page.draft.customerNote ?? "");
+      } else if (method) {
+        setMethodCode(method);
+        setDeliveryDate((prev) => clampDate(prev));
+      } else if (page.selectedMethodCode) {
+        setMethodCode(page.selectedMethodCode);
+        setDeliveryDate((prev) => clampDate(prev));
+      }
+    } finally {
+      if (projectionGeneration.current.isCurrent(sequence)) setCapturedDestinationPending(false);
     }
   }, []);
+
+  /* TB-230: بدنهٔ بالا تنها مسیر معتبر تازه‌سازی است. */
 
   useEffect(() => {
     void refreshProjection().catch((cause: unknown) => setError(toCustomerShippingMessage(cause, locale)));
@@ -273,6 +309,56 @@ export function StorefrontShopeivaShipping() {
     }),
     [geoCountryId, selectedArea, selectedCity],
   );
+
+  /**
+   * TB-230 — اتصال واقعی مقصد به پیش‌نمایش capture‌شده.
+   *
+   * فقط وقتی پیش‌نمایش روشن است اجرا می‌شود (حالت خاموش/قدیمی دست‌نخورده می‌ماند). ملاک، کلید پایدار
+   * مقصد تأییدشده است؛ رندر نامرتبط درخواست نمی‌سازد، پاسخ قدیمی دور ریخته می‌شود و تا رسیدن پاسخ تازه
+   * هیچ قیمت قبلی «جاری» نمایش داده نمی‌شود. ورودی تایپ‌شدهٔ گیرنده/آدرس بازنویسی نمی‌شود.
+   */
+  const destinationKey = destinationIdentityKey(destinationIdentifiers);
+  const capturedPreviewActive = projection?.capturedPreview != null;
+
+  /**
+   * TB-230: تا رسیدن پاسخ مقصد تازه، گروه‌های قیمت‌خوردهٔ قبلی پنهان می‌شوند؛ قیمت قدیمی هرگز
+   * به‌عنوان نتیجهٔ مقصد فعلی نمایش داده نمی‌شود. پیام «در حال محاسبه» صادقانه است و قیمتی نمی‌سازد.
+   */
+  const capturedPreviewForCards = useMemo(() => {
+    const preview = projection?.capturedPreview ?? null;
+    if (!preview || !capturedDestinationPending || preview.state !== "ok") return preview;
+    return {
+      ...preview,
+      groups: [],
+      unavailableReason: "storefront.captured_preview.destination_pending",
+    };
+  }, [projection, capturedDestinationPending]);
+
+  const destinationContext = useRef({ province: "", city: "", method: "" });
+  destinationContext.current = {
+    province: address.provinceName,
+    city: address.cityName,
+    method: methodCode ?? "",
+  };
+
+  useEffect(() => {
+    const plan = planDestinationRefresh({
+      capturedActive: capturedPreviewActive,
+      destinationKey,
+      appliedKey: appliedDestinationKey.current,
+      destination: destinationIdentifiers,
+    });
+    if (plan.action === "skip") return;
+    appliedDestinationKey.current = destinationKey;
+    const context = destinationContext.current;
+    void refreshProjection(
+      context.province,
+      context.method || null,
+      context.city,
+      plan.destination,
+      { rehydrateDraft: false, pendingDestination: true },
+    ).catch((cause: unknown) => setError(toCustomerShippingMessage(cause, locale)));
+  }, [capturedPreviewActive, destinationKey, destinationIdentifiers, refreshProjection, locale]);
 
   /** فهرست شهر: اگر Geography برای این استان شهر واقعی داد از آن، وگرنه همان کاتالوگ قدیمی. */
   const cityOptions = useMemo(() => {
@@ -397,7 +483,7 @@ export function StorefrontShopeivaShipping() {
   const payable = (projection?.subtotalExclusiveOfTax ?? 0) + shippingAmount;
 
   // TB-229-R1: پیش‌نمایش روشن یعنی مسیر قدیمی هیچ هزینه/تاریخی را «محاسبه‌شده» نمایش نمی‌دهد.
-  const capturedPreviewActive = projection?.capturedPreview != null;
+  // TB-230: همین پرچم (بالاتر، همراه هماهنگ‌کنندهٔ مقصد) یک‌بار تعریف شده است.
 
   const isValid =
     (Boolean(address.firstName.trim() && address.lastName.trim())
@@ -559,7 +645,9 @@ export function StorefrontShopeivaShipping() {
       <ShippingHero
         itemCount={projection.itemCount}
         subtotalLabel={formatOfferAmount(projection.subtotalExclusiveOfTax, projection.currency)}
-        shippingDaysLabel={toPersianDigits(projection.maxSellerPreparationDays + (selectedMethod?.leadDays ?? 0))}
+        shippingDaysLabel={projection.capturedPreview !== null
+          ? "—"
+          : toPersianDigits(projection.maxSellerPreparationDays + (selectedMethod?.leadDays ?? 0))}
       />
 
       <section className="w-full bg-section-surface" data-storefront-surface-role="section">
@@ -606,7 +694,7 @@ export function StorefrontShopeivaShipping() {
                   currency={projection.currency}
    schedules={groupSchedules}
    selections={groupSelections}
-   capturedPreview={projection.capturedPreview}
+                  capturedPreview={capturedPreviewForCards}
                   onSelectMethod={(lineId, code) => setLineMethodByLine((prev) => ({ ...prev, [lineId]: code }))}
                   onSelectDate={(groupKey, value) =>
                     setGroupSelections((prev) => setGroupSelection(prev, groupKey, { deliveryDate: value }))

@@ -327,7 +327,10 @@ public sealed class StorefrontCapturedPreviewPlanner(
             // می‌خواهد؛ شناسهٔ ساختگی، ترکیب مثبت را برای هر سبد واردشده می‌شکست.
             PlacedByUserId: access.UserId ?? Guid.Empty,
             IdempotencyKey: "captured-preview",
-            TaxJurisdiction: cart.Market,
+            // TB-230: the SAME jurisdiction the real submit charges. `cart.Market` is a market code,
+            // not a tax jurisdiction key, and quoting with it refused every live priced read
+            // (`checkout.tax.unavailable`) while a jurisdiction-keyed rule exists.
+            TaxJurisdiction: StorefrontCheckoutService.StorefrontTaxJurisdiction,
             CouponCode: null);
 
         StorefrontCapturedGroupProjectionResult composed;
