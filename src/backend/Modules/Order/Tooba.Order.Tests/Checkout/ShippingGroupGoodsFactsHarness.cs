@@ -176,11 +176,14 @@ internal sealed class FakeCartGateway : ICartQueryGateway
 
     internal CartAccess? LastAccess { get; private set; }
 
+    /// <summary>سبد دیگر خواندنی نیست (حذف‌شده) — برای اثبات بازگشت بدون وابستگی به سبد.</summary>
+    internal bool Fail { get; set; }
+
     public Task<CartSnapshot?> GetCartAsync(Guid cartId, CartAccess access, CancellationToken cancellationToken)
     {
         Calls++;
         LastAccess = access;
-        return Task.FromResult(Cart);
+        return Task.FromResult(Fail ? null : Cart);
     }
 }
 
@@ -429,6 +432,10 @@ internal sealed class ProbeCheckoutDirectory : ICheckoutDirectory, ICheckoutShip
 
     public Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken) =>
         throw new NotSupportedException();
+
+    public Task<CapturedPaymentDraftSnapshot> ProjectCapturedPaymentDraftAsync(
+        SubmitCheckoutCommand command,
+        CancellationToken cancellationToken) => throw new NotSupportedException();
 
     public Task<CheckoutSnapshot?> GetCheckoutAsync(
         Guid checkoutId,

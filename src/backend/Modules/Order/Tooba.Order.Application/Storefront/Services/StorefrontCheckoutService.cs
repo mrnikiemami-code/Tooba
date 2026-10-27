@@ -1,4 +1,4 @@
-using Tooba.AddressBook.Contracts.Ports;
+﻿using Tooba.AddressBook.Contracts.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.Cart.Contracts;
 using Tooba.Order.Application.Storefront.Models;
@@ -248,6 +248,195 @@ public sealed class StorefrontCheckoutService
         return new StorefrontCheckoutPlacement(actor, snapshot, shipping.SavedAddressId);
     }
 
+    /// <summary>
+    /// ثبت نهایی یک انتخاب <b>capture‌شده</b> روی همان دامنهٔ موجود checkout (TB-234).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// این عضو عمداً <b>مقدمهٔ قدیمی</b> (<see cref="PrepareShippingAsync"/> + بررسی نسخهٔ سبد جاری) را
+    /// اجرا نمی‌کند: آن مقدمه پیش از رسیدن به idempotency، سبد/نشانی را می‌خواند و یک سبد تبدیل‌شده یا
+    /// نشانی حذف‌شده می‌توانست بازگشتِ سفارشِ <b>همین قبل پایدارشده</b> را بشکند. فرمان فقط از
+    /// <b>انتخاب ذخیره‌شدهٔ سرور</b> + هویت مرز اعتماد ساخته می‌شود و به مرجعِ موجود
+    /// <c>ICheckoutDirectory.SubmitAsync</c> سپرده می‌شود که اول idempotency/دسترسی را می‌سنجد و برای
+    /// ثبت <b>تازه</b> همان بازاعتبارسنجی کامل ۲۳۳ را داخل تراکنش اجرا می‌کند. هیچ هماهنگ‌کنندهٔ دوم و
+    /// هیچ snapshot ساختگی از سبد ساخته نمی‌شود.
+    /// </para>
+    /// <para>
+    /// هیچ مالک/مبلغ/شاهد/تاریخی از مرورگر خوانده نمی‌شود؛ گروه‌ها فقط انتقال snapshot ذخیره‌شده‌اند و
+    /// تصمیم نهایی با پذیرش ۲۳۳ است. خطای خارجی پس از ثبوت سفارش ساخته نمی‌شود.
+    /// </para>
+    /// </remarks>
+    /// <param name="cartId">سبد همین درخواست.</param>
+    /// <param name="guestSecret">گواه مالکیت سبد مهمان.</param>
+    /// <param name="expectedCartVersion">نسخهٔ سبدی که فراخوان دیده است.</param>
+    /// <param name="idempotencyKey">کلید پایدار همین ارسال.</param>
+    /// <param name="draft">ریشهٔ ذخیره‌شدهٔ انتخاب (نه بدنهٔ فراخوان).</param>
+    /// <param name="couponCode">کوپن؛ خالی یعنی نبود (کوپن در این برش پشتیبانی نمی‌شود).</param>
+    /// <param name="expectedSelectionRevision">متن دقیق نسخهٔ انتخاب.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    public async Task<StorefrontCheckoutPage> SubmitCapturedSelectionAsync(
+        Guid cartId,
+        string? guestSecret,
+        int expectedCartVersion,
+        string idempotencyKey,
+        CartShippingDraft draft,
+        string? couponCode,
+        string? expectedSelectionRevision,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        if (draft.CartId != cartId)
+        {
+            // پیش‌نویس سبد دیگری هرگز مبنای این فرمان نمی‌شود.
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
+        }
+
+        var usingSaved = draft.SavedAddressId is Guid savedId && savedId != Guid.Empty;
+        var actor = _actor.ResolvePlacementActor(usingSaved);
+        var command = new SubmitCheckoutCommand(
+            cartId,
+            _actor.BuildCartAccess(guestSecret),
+            expectedCartVersion,
+            OrderMode.OnlinePurchase,
+            BuyerPartyId: null,
+            PlacedByUserId: actor,
+            IdempotencyKey: idempotencyKey,
+            TaxJurisdiction: StorefrontTaxJurisdiction,
+            CouponCode: string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim(),
+            QuotedDiscountAmount: null,
+            RecipientName: draft.RecipientName,
+            ContactMobile: draft.ContactMobile,
+            ProvinceName: draft.ProvinceName,
+            CityName: draft.CityName,
+            PostalAddress: draft.PostalAddress,
+            PostalCode: draft.PostalCode,
+            ShippingMethodCode: string.IsNullOrWhiteSpace(draft.ShippingMethodCode)
+                ? DefaultShippingCode
+                : draft.ShippingMethodCode.Trim().ToLowerInvariant(),
+            ShippingMethodLabel: string.IsNullOrWhiteSpace(draft.ShippingMethodLabel)
+                ? DefaultShippingLabel
+                : draft.ShippingMethodLabel.Trim(),
+            ShippingAmount: draft.ShippingAmount,
+            MinimumDeliveryDate: draft.MinimumDeliveryDate,
+            RequestedDeliveryDate: draft.SelectedDeliveryDate,
+            RequestedDeliveryTimeWindow: draft.SelectedDeliveryTimeWindow ?? string.Empty,
+            CustomerNote: draft.CustomerNote ?? string.Empty,
+            RecipientFirstName: draft.FirstName,
+            RecipientLastName: draft.LastName,
+            ShippingGroups: StorefrontShippingService.BuildOrderGroupPlans(draft),
+            ExpectedSelectionRevision: expectedSelectionRevision);
+
+        var submitted = await _checkouts.SubmitAsync(command, cancellationToken);
+        return MapCapturedPage(submitted, StorefrontShippingService.BuildOrderGroupPlans(draft));
+    }
+
+    /// <summary>
+    /// «پیش‌نویس پرداخت» یک انتخاب capture‌شده: همان یک گذر مالی + همان بازاعتبارسنجی ۲۳۳، بدون هیچ نوشتن.
+    /// </summary>
+    /// <param name="cartId">سبد همین درخواست.</param>
+    /// <param name="guestSecret">گواه مالکیت سبد مهمان.</param>
+    /// <param name="draft">ریشهٔ ذخیره‌شدهٔ انتخاب.</param>
+    /// <param name="couponCode">کوپن؛ خالی یعنی نبود.</param>
+    /// <param name="expectedSelectionRevision">متن دقیق نسخهٔ انتخاب.</param>
+    /// <param name="cancellationToken">توکن لغو.</param>
+    public async Task<StorefrontCheckoutPage> ProjectCapturedPaymentDraftAsync(
+        Guid cartId,
+        string? guestSecret,
+        CartShippingDraft draft,
+        string? couponCode,
+        string? expectedSelectionRevision,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        if (draft.CartId != cartId)
+        {
+            throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
+        }
+
+        var usingSaved = draft.SavedAddressId is Guid savedId && savedId != Guid.Empty;
+        var actor = _actor.ResolvePlacementActor(usingSaved);
+        var command = new SubmitCheckoutCommand(
+            cartId,
+            _actor.BuildCartAccess(guestSecret),
+            draft.CartVersion,
+            OrderMode.OnlinePurchase,
+            BuyerPartyId: null,
+            PlacedByUserId: actor,
+            IdempotencyKey: "payment-draft",
+            TaxJurisdiction: StorefrontTaxJurisdiction,
+            CouponCode: string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim(),
+            QuotedDiscountAmount: null,
+            RecipientName: draft.RecipientName,
+            ContactMobile: draft.ContactMobile,
+            ProvinceName: draft.ProvinceName,
+            CityName: draft.CityName,
+            PostalAddress: draft.PostalAddress,
+            PostalCode: draft.PostalCode,
+            ShippingMethodCode: string.IsNullOrWhiteSpace(draft.ShippingMethodCode)
+                ? DefaultShippingCode
+                : draft.ShippingMethodCode.Trim().ToLowerInvariant(),
+            ShippingMethodLabel: string.IsNullOrWhiteSpace(draft.ShippingMethodLabel)
+                ? DefaultShippingLabel
+                : draft.ShippingMethodLabel.Trim(),
+            ShippingAmount: draft.ShippingAmount,
+            MinimumDeliveryDate: draft.MinimumDeliveryDate,
+            RequestedDeliveryDate: draft.SelectedDeliveryDate,
+            RequestedDeliveryTimeWindow: draft.SelectedDeliveryTimeWindow ?? string.Empty,
+            CustomerNote: draft.CustomerNote ?? string.Empty,
+            RecipientFirstName: draft.FirstName,
+            RecipientLastName: draft.LastName,
+            ShippingGroups: StorefrontShippingService.BuildOrderGroupPlans(draft),
+            ExpectedSelectionRevision: expectedSelectionRevision);
+
+        var projected = await _checkouts.ProjectCapturedPaymentDraftAsync(command, cancellationToken);
+        return MapPage(
+            projected.Quote,
+            StubCartPage(projected.Quote),
+            persisted: false,
+            groupViews: projected.Groups.Select(MapGroupPlan).ToArray());
+    }
+
+    /// <summary>
+    /// نمای پاسخ برای یک ثبت capture‌شده: گروه‌های <b>پایدارشده</b> از snapshot همان سفارش، و در نبودشان
+    /// همان پلن ذخیره‌شده. هیچ خواندن بیرونی پس از ثبوت انجام نمی‌شود.
+    /// </summary>
+    private static StorefrontCheckoutPage MapCapturedPage(
+        CheckoutSnapshot snapshot,
+        IReadOnlyList<OrderShippingGroupPlan> storedPlans)
+    {
+        var committed = snapshot.ShippingGroups;
+        var groupViews = committed is { Count: > 0 }
+            ? committed
+                .OrderBy(group => group.ShippingGroupId)
+                .Select(MapCommittedGroup)
+                .ToArray()
+            : (IReadOnlyList<StorefrontShippingGroupView>?)null;
+        return MapPage(
+            snapshot,
+            StubCartPage(snapshot),
+            persisted: true,
+            shippingGroups: groupViews is null ? storedPlans : null,
+            groupViews: groupViews);
+    }
+
+    /// <summary>گروه ارسال <b>پایدارشده</b> → نمای ویترین (فقط انتقال مقدار snapshot).</summary>
+    private static StorefrontShippingGroupView MapCommittedGroup(CheckoutShippingGroupSnapshot group) =>
+        new(
+            group.ShippingGroupId,
+            group.SellerPartyId,
+            group.MethodCode,
+            group.ServiceCode,
+            group.OptionCode,
+            group.MethodLabel,
+            group.ShippingChargeSnapshot,
+            group.Currency,
+            group.MinimumDeliveryDate.ToString("yyyy-MM-dd"),
+            group.RequestedDeliveryDate?.ToString("yyyy-MM-dd"),
+            group.RequestedDeliveryTimeWindow,
+            group.LeadDays,
+            group.OrderLineIds.Count,
+            group.OrderLineIds.ToArray());
+
     private async Task<CartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {
         var cart = await _carts.GetAsync(cartId, guestSecret, cancellationToken)
@@ -311,7 +500,8 @@ public sealed class StorefrontCheckoutService
         CheckoutSnapshot snapshot,
         CartPage cart,
         bool persisted,
-        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null)
+        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null,
+        IReadOnlyList<StorefrontShippingGroupView>? groupViews = null)
     {
         var titleByOffer = cart.Lines.ToDictionary(x => x.OfferId, x => (x.Title, x.SellerDisplayName));
         var sellers = snapshot.SellerOrders.Select(order =>
@@ -354,7 +544,7 @@ public sealed class StorefrontCheckoutService
             : "PendingPayment";
         // A genuine multi-group checkout has no single applicable method: never present one arbitrary
         // method (or the legacy default) as if it covered every line.
-        var multiGroup = shippingGroups is { Count: > 1 };
+        var multiGroup = shippingGroups is { Count: > 1 } || groupViews is { Count: > 1 };
         var methodCode = multiGroup
             ? string.Empty
             : string.IsNullOrWhiteSpace(snapshot.ShippingMethodCode) ? DefaultShippingCode : snapshot.ShippingMethodCode;
@@ -388,7 +578,7 @@ public sealed class StorefrontCheckoutService
             !string.Equals(paymentState, "Paid", StringComparison.Ordinal),
             shippingGroups is { Count: > 0 }
                 ? shippingGroups.Select(MapGroupPlan).ToArray()
-                : null);
+                : groupViews);
     }
 
     private static StorefrontShippingGroupView MapGroupPlan(OrderShippingGroupPlan plan) =>

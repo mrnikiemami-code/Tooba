@@ -46,6 +46,14 @@ public interface ICheckoutDirectory
     Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken);
 
     /// <summary>
+    /// پیش‌نویس پرداخت یک انتخاب capture‌شده را <b>فقط-خواندنی</b> می‌سازد: یک نقل‌قول کل سبد و همان
+    /// بازاعتبارسنجیِ مسیر ثبت نهایی روی شاهد ذخیره‌شده. هیچ سفارش/رزرو/تبدیل/SaveChanges‌ای ندارد.
+    /// </summary>
+    Task<CapturedPaymentDraftSnapshot> ProjectCapturedPaymentDraftAsync(
+        SubmitCheckoutCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// checkout را پس از احراز هویت خریدار یا کاربر عامل برمی‌گرداند.
     /// </summary>
     Task<CheckoutSnapshot?> GetCheckoutAsync(Guid checkoutId, OrderAccess access, CancellationToken cancellationToken);

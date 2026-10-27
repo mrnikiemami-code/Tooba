@@ -112,6 +112,17 @@ public sealed class StorefrontCapturedPreviewPlanner(
     /// <summary>آیا نوشتن انتخاب capture‌شده (نویسندهٔ اتمیک ۲۳۲) مجاز است. مستقل از کلید خواندن است.</summary>
     public bool SelectionEnabled => options.Value.SelectionEnabled;
 
+    /// <summary>
+    /// آیا <b>ثبت نهایی</b> سفارش capture‌شده از مسیر عمومی مجاز است. هر چهار شرط باید هم‌زمان برقرار
+    /// باشند: خواندن، نوشتن انتخاب، ثبت نهایی و تعداد تاریخ معتبر. روشن‌بودن فقط
+    /// <see cref="SelectionEnabled"/> هرگز ثبت نهایی را مجاز نمی‌کند.
+    /// </summary>
+    public bool IsCapturedCommitEnabled =>
+        options.Value.Enabled
+        && options.Value.SelectionEnabled
+        && options.Value.CheckoutEnabled
+        && options.Value.HasValidAvailableDateCount;
+
     /// <summary>پیش‌نمایش گروه‌ها را می‌سازد؛ خطاهای تجاری به نمای صادقانه ترجمه می‌شوند.</summary>
     /// <remarks>
     /// تعداد تاریخ‌های تقویم فقط از سیاست صریح پیش‌نمایش (<c>AvailableDateCount</c>) می‌آید؛ افق روش‌ها

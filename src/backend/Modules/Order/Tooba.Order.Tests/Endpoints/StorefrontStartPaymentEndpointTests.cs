@@ -823,6 +823,10 @@ public sealed class StorefrontStartPaymentEndpointTests
             return Task.FromResult(Snapshot(checkoutId, command));
         }
 
+        public Task<CapturedPaymentDraftSnapshot> ProjectCapturedPaymentDraftAsync(
+            SubmitCheckoutCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<CheckoutSnapshot?> GetCheckoutAsync(
             Guid requestedCheckoutId,
             OrderAccess access,

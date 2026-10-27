@@ -109,6 +109,23 @@ public sealed record CheckoutShippingGroupSnapshot(
     IReadOnlyList<Guid> OrderLineIds);
 
 /// <summary>
+/// نتیجهٔ <b>فقط-خواندنی</b> «پیش‌نویس پرداخت» یک انتخاب capture‌شده (TB-234).
+/// </summary>
+/// <remarks>
+/// <para>
+/// <see cref="Quote"/> همان یک گذر مالی کل سبد است (یک نقل‌قول، بدون هیچ نوشتن) و
+/// <see cref="Groups"/> همان گروه‌های <b>بازاعتبارسنجی‌شده</b> با هستهٔ پذیرفته‌شدهٔ ۲۳۳ (همان
+/// اشاره‌گر/فهرست فعال/نشانی/تاریخ/مبلغ که ثبت نهایی می‌سنجد). هیچ سفارش/رزرو/تبدیلی ساخته نمی‌شود؛
+/// دسترس‌پذیری تاریخ هم به‌معنای «قابل تسویه» یا فعال‌سازی نیست.
+/// </para>
+/// </remarks>
+/// <param name="Quote">نقل‌قول فقط-خواندنی کل سبد.</param>
+/// <param name="Groups">گروه‌های پذیرفته‌شدهٔ همین لحظه از انتخاب ذخیره‌شده.</param>
+public sealed record CapturedPaymentDraftSnapshot(
+    CheckoutSnapshot Quote,
+    IReadOnlyList<OrderShippingGroupPlan> Groups);
+
+/// <summary>
 /// فرمان ارسال checkout از روی سبد فعال.
 /// </summary>
 public sealed record SubmitCheckoutCommand(

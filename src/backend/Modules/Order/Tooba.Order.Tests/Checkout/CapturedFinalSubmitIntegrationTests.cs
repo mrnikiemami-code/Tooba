@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -55,16 +55,16 @@ namespace Tooba.Order.Tests.Checkout;
 [Collection(OrderEvidenceRelationalCollection.Name)]
 public sealed class CapturedFinalSubmitIntegrationTests
 {
-    private static readonly Guid CartId = Guid.Parse("01a17d0d-e033-7000-af43-49a1daa28821");
+    internal static readonly Guid CartId = Guid.Parse("01a17d0d-e033-7000-af43-49a1daa28821");
     private static readonly Guid Buyer = Guid.Parse("01a17cf7-e38d-7000-82a5-00c57929bc54");
-    private static readonly Guid SellerA = Guid.Parse("0199aaaa-0000-7000-8000-0000000000aa");
-    private static readonly Guid SellerB = Guid.Parse("0199aaaa-0000-7000-8000-0000000000bb");
-    private static readonly Guid OfferA = Guid.Parse("01a17cfc-0000-7000-8000-00000000000a");
-    private static readonly Guid OfferB = Guid.Parse("01a17cfc-0000-7000-8000-00000000000b");
-    private static readonly Guid LineA = Guid.Parse("01a17cfd-0000-7000-8000-00000000000a");
-    private static readonly Guid LineB = Guid.Parse("01a17cfd-0000-7000-8000-00000000000b");
-    private static readonly Guid DraftGroupA = Guid.Parse("01a17d0f-0000-7000-8000-0000000000a1");
-    private static readonly Guid DraftGroupB = Guid.Parse("01a17d0f-0000-7000-8000-0000000000b2");
+    internal static readonly Guid SellerA = Guid.Parse("0199aaaa-0000-7000-8000-0000000000aa");
+    internal static readonly Guid SellerB = Guid.Parse("0199aaaa-0000-7000-8000-0000000000bb");
+    internal static readonly Guid OfferA = Guid.Parse("01a17cfc-0000-7000-8000-00000000000a");
+    internal static readonly Guid OfferB = Guid.Parse("01a17cfc-0000-7000-8000-00000000000b");
+    internal static readonly Guid LineA = Guid.Parse("01a17cfd-0000-7000-8000-00000000000a");
+    internal static readonly Guid LineB = Guid.Parse("01a17cfd-0000-7000-8000-00000000000b");
+    internal static readonly Guid DraftGroupA = Guid.Parse("01a17d0f-0000-7000-8000-0000000000a1");
+    internal static readonly Guid DraftGroupB = Guid.Parse("01a17d0f-0000-7000-8000-0000000000b2");
     // همان ناحیه برای همان مقصد: تفاوت مستقل گروه، ردیف نرخ/کارمزد/تاریخ خودش است.
     private static readonly Guid AreaGroup = Guid.Parse("01a17d10-0000-7000-8000-0000000000a1");
     private static readonly Guid RowA = Guid.Parse("01a17d11-0000-7000-8000-0000000000a1");
@@ -75,7 +75,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     private static readonly Guid OtherCountryId = Guid.Parse("e3451206-e503-51a8-9100-0000000000e1");
     private static readonly Guid ProvinceId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d2");
     private static readonly Guid CityId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d3");
-    private static readonly Guid SavedAddressId = Guid.Parse("01a17d13-0000-7000-8000-0000000000f1");
+    internal static readonly Guid SavedAddressId = Guid.Parse("01a17d13-0000-7000-8000-0000000000f1");
     private static readonly DateTimeOffset Now = new(2026, 10, 25, 9, 30, 0, TimeSpan.Zero);
     private static readonly DateOnly DateA = new(2026, 10, 27); // سه‌شنبه
     private static readonly DateOnly DateB = new(2026, 10, 28); // چهارشنبه
@@ -386,7 +386,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         Assert.Equal("09120000000", placement.Shipping.ContactMobile);
     }
 
-    private sealed class FixedStorefrontActor : IOrderStorefrontActor
+    internal sealed class FixedStorefrontActor : IOrderStorefrontActor
     {
         public Guid GuestActorId => Tooba.Order.Contracts.Fulfillment.StorefrontGuestActor.ActorId;
 
@@ -500,7 +500,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         Assert.Equal(1, harness.Reservation.Calls);
     }
 
-    private sealed class PausingBarrier(
+    internal sealed class PausingBarrier(
         TaskCompletionSource reached,
         TaskCompletionSource release) : ICheckoutCommitBarrier
     {
@@ -547,7 +547,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         return new OrderDbContext(builder.Options);
     }
 
-    private sealed class FailingBarrier(Exception failure) : ICheckoutCommitBarrier
+    internal sealed class FailingBarrier(Exception failure) : ICheckoutCommitBarrier
     {
         public Task OnAfterReserveAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
@@ -605,7 +605,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         Assert.Same(core, scope.ServiceProvider.GetRequiredService<StorefrontCapturedGroupCompositionCore>());
     }
 
-    private sealed class CapturedSubmitHarness : IDisposable
+    internal sealed class CapturedSubmitHarness : IDisposable
     {
         internal readonly RecordingCapturedQuoteLookup Quotes = new();
         internal readonly CountingReservationPort Reservation = new();
@@ -803,7 +803,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         private static TimeOnly At(long ticks) => new(ticks);
     }
 
-    private static async Task SeedTwoGroupDraftAsync(
+    internal static async Task SeedTwoGroupDraftAsync(
         OrderDbContext db,
         string? mutate = null,
         Guid? savedAddressId = null)
@@ -839,7 +839,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         db.ChangeTracker.Clear();
     }
 
-    private static async Task SeedSingleGroupDraftAsync(OrderDbContext db, Guid sellerId, Guid[] lines)
+    internal static async Task SeedSingleGroupDraftAsync(OrderDbContext db, Guid sellerId, Guid[] lines)
     {
         var draft = NewDraft(null);
         var group = DraftGroup(DraftGroupA, sellerId, "post", "standard", 125m, DateA);
@@ -857,7 +857,23 @@ public sealed class CapturedFinalSubmitIntegrationTests
         db.ChangeTracker.Clear();
     }
 
-    private static CartShippingDraft NewDraft(Guid? savedAddressId) => CartShippingDraft.Create(
+    /// <summary>
+    /// یک پیش‌نویس <b>واقعاً قدیمی</b> (بدون هیچ شاهد ۲۳۱/۲۳۲) برای کنترل مسیر legacy: همان ریشه/گروه/خط
+    /// موجود، فقط بدون capture — هیچ دادهٔ ساختگی مالی اضافه نمی‌شود.
+    /// </summary>
+    internal static async Task SeedLegacyGroupDraftAsync(OrderDbContext db)
+    {
+        var draft = NewDraft(null);
+        var group = DraftGroup(DraftGroupA, SellerA, "post", "standard", 125m, DateA);
+        group.AddWholeLine(LineA, SellerA);
+        draft.AddShippingGroups([group], Now);
+        draft.BumpSelectionRevision(Now);
+        db.ShippingDrafts.Add(draft);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+    }
+
+    internal static CartShippingDraft NewDraft(Guid? savedAddressId) => CartShippingDraft.Create(
         CartId,
         "hash",
         7,
@@ -877,7 +893,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         null,
         Now);
 
-    private static CartShippingDraftGroup DraftGroup(
+    internal static CartShippingDraftGroup DraftGroup(
         Guid groupId,
         Guid sellerId,
         string serviceCode,
@@ -900,7 +916,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         0,
         Now);
 
-    private static ShippingGroupAcceptedEvidence EvidenceFor(
+    internal static ShippingGroupAcceptedEvidence EvidenceFor(
         string tenant,
         bool A,
         decimal freight,
@@ -929,21 +945,21 @@ public sealed class CapturedFinalSubmitIntegrationTests
             3);
     }
 
-    private static Guid VariantOf(Guid offerId)
+    internal static Guid VariantOf(Guid offerId)
     {
         var bytes = offerId.ToByteArray();
         bytes[15] ^= 0x5a;
         return new Guid(bytes);
     }
 
-    private static Guid PriceOf(Guid offerId)
+    internal static Guid PriceOf(Guid offerId)
     {
         var bytes = offerId.ToByteArray();
         bytes[14] ^= 0x33;
         return new Guid(bytes);
     }
 
-    private static async Task<OrderDbContext> ReadyAsync(OrderEvidenceRelationalTestTarget target)
+    internal static async Task<OrderDbContext> ReadyAsync(OrderEvidenceRelationalTestTarget target)
     {
         var builder = new DbContextOptionsBuilder<OrderDbContext>();
         Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(
@@ -963,7 +979,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         return db;
     }
 
-    private sealed class CountingReservationPort : ICheckoutInventoryReservationPort
+    internal sealed class CountingReservationPort : ICheckoutInventoryReservationPort
     {
         internal int Calls { get; private set; }
 
@@ -987,7 +1003,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
             Task.CompletedTask;
     }
 
-    private sealed class RecordingConversionPort : ICartConversionPort
+    internal sealed class RecordingConversionPort : ICartConversionPort
     {
         internal int Calls { get; private set; }
 
@@ -1001,7 +1017,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         }
     }
 
-    private sealed class CountingAssignmentLookup : IOfferFulfillmentAssignmentLookup
+    internal sealed class CountingAssignmentLookup : IOfferFulfillmentAssignmentLookup
     {
         internal int Calls { get; private set; }
 
@@ -1021,7 +1037,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         }
     }
 
-    private sealed class FixedShippingTypeReader : IShippingTypeReader
+    internal sealed class FixedShippingTypeReader : IShippingTypeReader
     {
         public Task<IReadOnlyList<ShippingTypeSnapshot>> ListActiveAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<ShippingTypeSnapshot>>([Active()]);
@@ -1037,7 +1053,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     }
 
     /// <summary>فهرست فعال فروشگاه: یک سرویس post با گزینهٔ standard (قابل خاموش‌کردن برای کنترل منفی).</summary>
-    private sealed class StrictCatalogReader : IShippingCatalogReader
+    internal sealed class StrictCatalogReader : IShippingCatalogReader
     {
         internal int Calls { get; private set; }
 
@@ -1076,7 +1092,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     }
 
     /// <summary>اشاره‌گر ۲۱۹: همان Binding/همان snapshot و نسخهٔ قابل تغییر برای کنترل تازگی.</summary>
-    private sealed class FixedCapturedPointerLookup : IShippingSelectedCapturedRevisionLookup
+    internal sealed class FixedCapturedPointerLookup : IShippingSelectedCapturedRevisionLookup
     {
         internal int Calls { get; private set; }
 
@@ -1107,7 +1123,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     /// Geography سخت‌گیر: کد کشور تهی/نادرست یا نام نادرست هرگز «حل‌شده» نمی‌شود و کد واقعی داده‌شده
     /// ثبت می‌گردد؛ هیچ کشوری به‌جای کشور قیمت‌گذاری‌شده انتخاب نمی‌شود.
     /// </summary>
-    private sealed class StrictGeography : IGeographyLookup
+    internal sealed class StrictGeography : IGeographyLookup
     {
         internal string? LastCountryCode { get; private set; }
 
@@ -1164,7 +1180,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     }
 
     /// <summary>کتاب آدرس: فقط رکورد خودیِ actor واقعی؛ حذف/بیگانگی/تغییر با پرچم قابل شبیه‌سازی.</summary>
-    private sealed class RecordingAddressBook : IAddressBookCheckoutLookup
+    internal sealed class RecordingAddressBook : IAddressBookCheckoutLookup
     {
         internal int Calls { get; private set; }
 
@@ -1210,12 +1226,12 @@ public sealed class CapturedFinalSubmitIntegrationTests
         }
     }
 
-    private sealed class FakeEdition : ICurrentEdition
+    internal sealed class FakeEdition : ICurrentEdition
     {
         public EditionContext? Current { get; } = new(ToobaEdition.SingleStore, "tb233r3");
     }
 
-    private sealed class FakeTenant : ICurrentTenant
+    internal sealed class FakeTenant : ICurrentTenant
     {
         public TenantContext? Current { get; } = new(
             new TenantId("store-alpha"),
@@ -1228,7 +1244,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
             null);
     }
 
-    private static class Registrations
+    internal static class Registrations
     {
         internal static void RegisterAll(FakePriceLookup prices)
         {
@@ -1243,3 +1259,4 @@ public sealed class CapturedFinalSubmitIntegrationTests
         }
     }
 }
+

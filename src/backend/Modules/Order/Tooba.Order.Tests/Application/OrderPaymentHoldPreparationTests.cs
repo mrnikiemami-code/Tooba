@@ -554,6 +554,10 @@ public sealed class OrderPaymentHoldPreparationTests
         public Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<CapturedPaymentDraftSnapshot> ProjectCapturedPaymentDraftAsync(
+            SubmitCheckoutCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<SellerOrderSnapshot?> GetSellerOrderByNumberAsync(
             string orderNumber,
             OrderAccess access,

@@ -307,10 +307,27 @@ public sealed class StorefrontShippingService
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
 
-        // TB-232: پیش‌نویس دارای شاهد capture هرگز به‌عنوان «آمادهٔ پرداخت» با مسیر قدیمی بازقیمت نمی‌شود.
+        // TB-232/234: پیش‌نویس دارای شاهد capture هرگز با مسیر قدیمی بازقیمت نمی‌شود. با دروازهٔ منسجم،
+        // همان هستهٔ ۲۳۳ آن را فقط-خواندنی اعتبارسنجی می‌کند؛ با دروازهٔ ناهمساز/خاموش همان رد قبلی است.
         if (draft.ShippingGroups.Any(group => group.AcceptedEvidence is not null))
         {
-            throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
+            if (_capturedPreview?.IsCapturedCommitEnabled != true || _capturedSelection is null)
+            {
+                throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
+            }
+
+            if (!string.IsNullOrWhiteSpace(couponCode))
+            {
+                throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedSelectionReasons.CouponUnavailable);
+            }
+
+            return await _checkouts.ProjectCapturedPaymentDraftAsync(
+                cartId,
+                guestSecret,
+                draft,
+                couponCode,
+                expectedSelectionRevision: null,
+                cancellationToken);
         }
 
         return await _checkouts.PreviewAsync(
@@ -698,14 +715,40 @@ public sealed class StorefrontShippingService
         string? expectedSelectionRevision,
         CancellationToken cancellationToken)
     {
-        EnsureCapturedPreviewIsNotCheckoutReady();
+        // TB-234: مسیر ثبت نهایی capture‌شده فقط وقتی باز است که هر چهار کلید هم‌زمان و منسجم روشن باشند؛
+        // «فقط نوشتن انتخاب» هرگز ثبت نهایی را مجاز نمی‌کند. ناهمسازی همین‌جا و پیش از هر خواندن رد می‌شود
+        // تا پیش‌نویس capture‌شده هرگز با دروازهٔ نیمه‌باز به مسیر قدیمی نیفتد.
+        var capturedCommitEnabled = _capturedPreview?.IsCapturedCommitEnabled == true && _capturedSelection is not null;
+        if (!capturedCommitEnabled)
+        {
+            EnsureCapturedPreviewIsNotCheckoutReady();
+        }
 
         var draft = await _drafts.GetByCartIdAsync(cartId, cancellationToken)
             ?? throw new StorefrontOrderException(StorefrontOrderErrors.ShippingSelectionRequired);
         EnsureDraftOwnership(draft, guestSecret);
 
-        // TB-232: ثبت نهایی/پرداخت برای پیش‌نویس دارای شاهد capture حتی با کلید نوشتن روشن هم بسته است.
+        // TB-232/234: پیش‌نویس دارای شاهد capture فقط از مسیر capture‌شده و فقط با دروازهٔ منسجم ثبت می‌شود.
         if (draft.ShippingGroups.Any(group => group.AcceptedEvidence is not null))
+        {
+            if (!capturedCommitEnabled)
+            {
+                throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
+            }
+
+            return await SubmitCapturedSelectionAsync(
+                cartId,
+                guestSecret,
+                expectedCartVersion,
+                idempotencyKey,
+                couponCode,
+                expectedSelectionRevision,
+                draft,
+                cancellationToken);
+        }
+
+        // پیش‌نمایش روشن ولی بدون شاهد ذخیره‌شده: همان رد قبلی، هرگز مسیر قدیمی.
+        if (_capturedPreview?.IsEnabled == true)
         {
             throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
         }
@@ -774,10 +817,43 @@ public sealed class StorefrontShippingService
     }
 
     /// <summary>
+    /// ثبت نهایی انتخاب capture‌شده از <b>ریشهٔ ذخیره‌شده</b> — فقط انتقال به عضو موجود دامنهٔ checkout.
+    /// </summary>
+    /// <remarks>
+    /// کوپن در این برش پشتیبانی نمی‌شود و <b>پیش از هر خواندن/رزرو/نوشتن</b> با کد پایدار همان نویسندهٔ
+    /// capture رد می‌شود؛ هیچ تخفیفی ساکت حذف یا جایگزین نمی‌شود.
+    /// </remarks>
+    private Task<StorefrontCheckoutPage> SubmitCapturedSelectionAsync(
+        Guid cartId,
+        string? guestSecret,
+        int expectedCartVersion,
+        string idempotencyKey,
+        string? couponCode,
+        string? expectedSelectionRevision,
+        CartShippingDraft draft,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(couponCode))
+        {
+            throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedSelectionReasons.CouponUnavailable);
+        }
+
+        return _checkouts.SubmitCapturedSelectionAsync(
+            cartId,
+            guestSecret,
+            expectedCartVersion,
+            idempotencyKey,
+            draft,
+            couponCode,
+            expectedSelectionRevision,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// پلن گروه‌های ارسال پایدار سفارش از پیش‌نویس M1. فقط انتقال snapshot معتبر backend است؛
     /// هیچ قیمت/مجوز جدیدی اینجا ساخته نمی‌شود.
     /// </summary>
-    private static IReadOnlyList<OrderShippingGroupPlan> BuildOrderGroupPlans(CartShippingDraft draft) =>
+    internal static IReadOnlyList<OrderShippingGroupPlan> BuildOrderGroupPlans(CartShippingDraft draft) =>
         draft.ShippingGroups
             .Select(group => new OrderShippingGroupPlan(
                 group.ShippingGroupId,

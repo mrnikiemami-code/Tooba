@@ -215,6 +215,26 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             new Dictionary<Guid, Guid>(),
             requireReservation: false,
             cancellationToken);
+        return ComposePreviewSnapshot(cart, command, checkoutId, now, sellerOrders);
+    }
+
+    /// <summary>
+    /// ساخت <b>در-حافظهٔ</b> snapshot از خطوط سفارشِ همین یک نقل‌قول. هیچ نوشتن/خواندن دیگری ندارد؛
+    /// پیش‌نمایش عادی و خواندنِ فقط-خواندنیِ پیش‌نویس پرداخت capture‌شده هر دو از همین یک مسیر
+    /// می‌آیند تا منطق یک‌بار نوشته شود.
+    /// </summary>
+    /// <param name="cart">سبد authoritative همین درخواست.</param>
+    /// <param name="command">فرمان همین درخواست.</param>
+    /// <param name="checkoutId">شناسهٔ موقت snapshot.</param>
+    /// <param name="now">زمان همین فرمان.</param>
+    /// <param name="sellerOrders">خطوط سفارش نقل‌قول‌شدهٔ همین درخواست.</param>
+    internal static CheckoutSnapshot ComposePreviewSnapshot(
+        CartSnapshot cart,
+        SubmitCheckoutCommand command,
+        Guid checkoutId,
+        DateTimeOffset now,
+        IReadOnlyList<SellerOrder> sellerOrders)
+    {
         var group = CheckoutGroup.Submit(
             checkoutId,
             command.IdempotencyKey.Length == 0 ? "preview" : command.IdempotencyKey,

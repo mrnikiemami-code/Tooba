@@ -603,6 +603,11 @@ public sealed class ShippingGroupIdentityContinuityTests
             throw new NotSupportedException();
         }
 
+        /// <summary>پیش‌نمایش خواندنی سبد پرداخت capture هم در این تست‌ها بی‌مصرف است.</summary>
+        public Task<CapturedPaymentDraftSnapshot> ProjectCapturedPaymentDraftAsync(
+            SubmitCheckoutCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<CheckoutSnapshot?> GetCheckoutAsync(Guid checkoutId, OrderAccess access, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 

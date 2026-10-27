@@ -17,7 +17,52 @@ This docs-only scope update changes NO runtime/source/gates/schema/data and issu
 unsavedwork/HostFE/localpreviewONcount7 untouched; migrations231/232sharedpending/EFsnapshot gap retained.
 TB185paused/defaultOFF/PendingAllocation. All prior recorded gaps retained. Detailed active-task recovery follows.
 
-# CURRENT — 233 core captured submit ACCEPTED; issued234 public commit edge —2026-10-27
+# CURRENT — 234 EXECUTED: public commit / payment-draft / StartPayment edge on the accepted captured core —2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-PUBLIC-COMMIT-EDGE-234/{TASK.md,RESULT.md}. Status
+EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base3f4ee29e6; ≈28min vs HARD35 (source/proof split
+not timed); one-correction budget EXCEEDED (5 recorded rounds in RESULT §G).
+LANDED on the EXISTING edge only: `StorefrontCapturedPreviewPlanner.IsCapturedCommitEnabled` =
+Enabled&&SelectionEnabled&&CheckoutEnabled&&HasValidAvailableDateCount (all checked in OFF, untouched);
+`StorefrontShippingService.CommitAsync` refuses `storefront.captured_preview.not_ready` BEFORE any read when the
+gate is incoherent/OFF, routes a stored-evidence draft to the NEW
+`StorefrontCheckoutService.SubmitCapturedSelectionAsync` (server-owned stored root/groups + real actor; NO
+PrepareShippingAsync, NO live-cart preamble, NO legacy SaveSelectionAsync, NO second217/218, nonblank coupon
+refused before delegation) which delegates to the EXISTING `ICheckoutDirectory.SubmitAsync`/
+`CheckoutProcessManager` (access/idempotency first, then the 233 acceptance inside the established submit
+transaction before reservation) and maps the response from the PERSISTED snapshot with no post-commit external
+read. Preview-ON with NO stored evidence still refuses and never falls to legacy; a truly OFF deployment keeps
+the legacy path. New read-only port `ICheckoutDirectory.ProjectCapturedPaymentDraftAsync` →
+`CapturedPaymentDraftSnapshot` (ONE LoadPreviewCartAsync+explicit version check, ONE whole-cart
+QuoteSellerOrdersAsync, the SAME `AcceptCapturedShippingCoreAsync` with requireExplicitSelectionRevision:false
+and NO root lock, shared extracted `ComposePreviewSnapshot`) with zero SaveChanges/reserve/order/conversion/
+abuse; the 217 goods reader was NOT taught final acceptance. Token path Body→Request→Composer→Commit→command
+keeps `4294967296` as lossless TEXT; a JSON number/missing/whitespace/stale token refuses with
+`storefront.captured_selection.intent_invalid` before reservation.
+PROOF on ONE task-owned disposable postgres:17-alpine `tb234` 15433/order_tb231/tb231 (identity asserted before
+DDL, normal Order migration chain, container removed, 15433 verified closed): new
+`StorefrontPublicCommitEdgeTests` **5/5** — two-seller persisted order with own 125/75 money, own dates and
+fractional 100ns ticks, 1 reservation / 1 conversion / 2 quotes and no legacy rewrite; PUBLIC replay after a
+pointer advance + dropped saved address + Converted cart returns the SAME order with ZERO new quote/pointer/
+address/reserve/convert and a foreign actor denied with no new rows; read-only payment draft with a REAL saved
+address and conflict/destination_unverified/not_ready negatives at zero writes; the real StartPayment body with
+the large revision TEXT reaching the accepted commit and stopping honestly at `HoldPreparationFailed` with
+Payment never called; and the legacy-OFF control (draft without evidence stops on its own
+`shipping.first_name_required` with zero pointer/address/reserve, while preview-ON-without-evidence refuses
+`not_ready`). Directly affected captured/edge/storefront/shipping classes re-ran ONCE: **200/200**. Order
+Application/Infrastructure/Endpoints/Tests build 0 errors.
+NOT DELIVERED: no HTTP/listener/browser/live-cart exercise (in-process and model-bound only), no PSP or payment
+write, no Marketplace/Seller/carrier path, no coupon parity, no history/repricing endpoint, no activation/
+readiness/VisualACCEPT, and no legacy positive order end-to-end. Two PRE-EXISTING red guards remain disclosed
+(architecture `DateTimeOffset.UtcNow` in the 229/231 planner, packaging allow-list) and were proven red at the
+base commit — not repaired, not widened. The remaining user-visible step is still the frontend/live trial.
+No migration/schema/baseline edited; 231/232 migrations sharedNOTAPPLIED and the stale EF snapshot gap retained.
+No frontend/HMR/browser/Host-FE/runtime change; the USER VISIBLE review window is USER unsaved work and was
+never enumerated/read/automated/reloaded/closed; local previewON/count7 unchanged. Known 230 emptykey/inflight/
+crossownerlabelsdecoder/OfferAPI/227mobile/225-R1lostLOCALwork retained. TB185 paused/defaultOFF/
+PendingAllocation. STOP_FOR_ARCHITECT after234; Automatic-Next-Task NONE. History retained below.
+
+# SUPERSEDED — 233 core captured submit ACCEPTED; issued234 public commit edge —2026-10-27
 
 Active TB-SHIPPING-CAPTURED-PUBLIC-COMMIT-EDGE-234. Review233-R3/ARCHITECT-REVIEW.md,234/TASK.md.
 Root reviewed1f0ee603e/source897fc673c actual address/provenance/catalog/core/comparison/tests. Accepted within

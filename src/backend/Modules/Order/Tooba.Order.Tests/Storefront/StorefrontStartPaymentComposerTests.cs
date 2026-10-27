@@ -767,6 +767,10 @@ public sealed class StorefrontStartPaymentComposerTests
             return Task.FromResult(Snapshot(commitReturnsCheckoutId ? checkoutId : Guid.Empty, command));
         }
 
+        public Task<CapturedPaymentDraftSnapshot> ProjectCapturedPaymentDraftAsync(
+            SubmitCheckoutCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<CheckoutSnapshot?> GetCheckoutAsync(
             Guid requestedCheckoutId,
             OrderAccess access,

@@ -50,6 +50,29 @@ public sealed partial class CheckoutDirectory
         IReadOnlyList<SellerOrder> sellerOrders,
         DateTimeOffset now,
         CancellationToken cancellationToken)
+        => await AcceptCapturedShippingCoreAsync(
+            command,
+            cart,
+            sellerOrders,
+            now,
+            requireExplicitSelectionRevision: true,
+            cancellationToken);
+
+    /// <summary>
+    /// هستهٔ <b>یگانهٔ</b> بازاعتبارسنجی یک انتخاب capture‌شده روی نقل‌قول همین لحظه.
+    /// </summary>
+    /// <remarks>
+    /// ثبت نهایی علاوه بر این، نسخهٔ انتخاب <b>صریح</b> و قفل نقطه‌ای ریشهٔ Order را می‌طلبد؛ خواندنِ
+    /// فقط-خواندنیِ «پیش‌نویس پرداخت» همان مسیر را بدون نسخهٔ صریح و بدون قفل طی می‌کند تا هیچ نوشتن/قفلی
+    /// در مسیر خواندن ساخته نشود. هیچ‌کدام هیچ ماژول بیرونی را دوباره نقل‌قول نمی‌کنند.
+    /// </remarks>
+    internal async Task<IReadOnlyList<OrderShippingGroupPlan>> AcceptCapturedShippingCoreAsync(
+        SubmitCheckoutCommand command,
+        CartSnapshot cart,
+        IReadOnlyList<SellerOrder> sellerOrders,
+        DateTimeOffset now,
+        bool requireExplicitSelectionRevision,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(cart);
@@ -109,26 +132,35 @@ public sealed partial class CheckoutDirectory
             throw new ContractOperationException(CapturedCouponUnsupported);
         }
 
-        // نسخهٔ انتخاب باید صریح و دقیقاً همان ریشهٔ ذخیره‌شده باشد؛ «۰» یعنی نبودِ صریح.
-        if (!TryParseSelectionRevision(command.ExpectedSelectionRevision, out var expectedRevision))
+        // نسخهٔ انتخاب باید صریح و دقیقاً همان ریشهٔ ذخیره‌شده باشد؛ «۰» یعنی نبودِ صریح. مسیر
+        // فقط-خواندنی (پیش‌نویس پرداخت) نسخهٔ صریح ندارد، پس این شرط و قفل نقطه‌ای را اجرا نمی‌کند.
+        if (requireExplicitSelectionRevision)
         {
-            throw new ContractOperationException(CapturedIntentInvalid);
-        }
+            if (!TryParseSelectionRevision(command.ExpectedSelectionRevision, out var expectedRevision))
+            {
+                throw new ContractOperationException(CapturedIntentInvalid);
+            }
 
-        if (expectedRevision != stored.SelectionRevision)
+            if (expectedRevision != stored.SelectionRevision)
+            {
+                throw new ContractOperationException(CapturedConflict);
+            }
+
+            // نسخهٔ سبد ذخیره‌شده باید همان نسخهٔ authoritative جاری و همان نسخهٔ صریح فرمان باشد.
+            if (stored.CartVersion != cart.Version || cart.Version != command.ExpectedCartVersion)
+            {
+                throw new ContractOperationException(CapturedConflict);
+            }
+
+            // قفل/بررسی ریشهٔ Order داخل همین تراکنشِ submit: تا پایدارسازی سفارش نگه داشته می‌شود تا
+            // هیچ به‌روزرسانی هم‌زمان نتواند سفارشی با نسخهٔ ریشهٔ مخلوط بسازد.
+            await LockStoredCapturedRootAsync(command.CartId, expectedRevision, cancellationToken);
+        }
+        else if (stored.CartVersion != cart.Version)
         {
+            // خواندن هم نسخهٔ ذخیره‌شده را با سبد جاری می‌سنجد؛ انتخاب کهنه نمای تازه نمی‌سازد.
             throw new ContractOperationException(CapturedConflict);
         }
-
-        // نسخهٔ سبد ذخیره‌شده باید همان نسخهٔ authoritative جاری و همان نسخهٔ صریح فرمان باشد.
-        if (stored.CartVersion != cart.Version || cart.Version != command.ExpectedCartVersion)
-        {
-            throw new ContractOperationException(CapturedConflict);
-        }
-
-        // قفل/بررسی ریشهٔ Order داخل همین تراکنشِ submit: تا پایدارسازی سفارش نگه داشته می‌شود تا
-        // هیچ به‌روزرسانی هم‌زمان نتواند سفارشی با نسخهٔ ریشهٔ مخلوط بسازد.
-        await LockStoredCapturedRootAsync(command.CartId, expectedRevision, cancellationToken);
 
         // مقصد نهایی از کشور متعارف (نه null) + نشانی معتبر سرور resolve می‌شود؛ آدرس ذخیره‌شده فقط با
         // هویت واقعی سبد/ثبت‌کننده از کتاب آدرس خوانده می‌شود و هر تغییر/بیگانگی پیش از رزرو رد می‌شود.

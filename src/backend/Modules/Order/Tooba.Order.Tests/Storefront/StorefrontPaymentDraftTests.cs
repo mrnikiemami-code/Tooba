@@ -307,6 +307,10 @@ public sealed class StorefrontPaymentDraftTests
             throw new NotSupportedException();
         }
 
+        public Task<CapturedPaymentDraftSnapshot> ProjectCapturedPaymentDraftAsync(
+            SubmitCheckoutCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<CheckoutSnapshot?> GetCheckoutAsync(Guid checkoutId, OrderAccess access, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
