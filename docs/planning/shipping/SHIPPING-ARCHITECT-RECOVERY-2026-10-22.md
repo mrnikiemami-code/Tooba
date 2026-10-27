@@ -1,3 +1,22 @@
+# CURRENT — Architect REJECTED229 read delivery; issued229-R1 — 2026-10-27
+
+Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1. New read-path SOURCE exists but is NOT accepted
+or observed live. Root confirmed money invalid->0 bug (isolated JS reproduction), label used as method
+identity, duplicate legacy/new cards and missing single-line UI, unknown goods shown0, silent legacy horizon
+reuse, unknown responsibility default, and empty-on-composition-error. Correct these in same path then
+execute positive real-composer financial case and actual desktop/mobile page trial; no next parity task yet.
+Read229 ARCHITECT-REVIEW.md and229-R1 TASK.md under their evidence folders.
+228 Offer assignment migration20261027120000_AddOfferFulfillmentAssignment is shared-APPLIED per229 runner
+evidence. Do not replay. Offer API negative/relational proof is still incomplete; no CAS claim.
+229 tests9/9 refusal/planning only; no positive218/217 composition, no refreshed Host/FE or live screenshots.
+Checked-in captured preview defaultOFF, Save/Commit source refusal exists; runtime remains old until refresh.
+229-R1 must make preview one existing UI presentation for BOTH single/multi-line, no invented parallel cards.
+Unknown monetary values nullable/exact text; no0/IRR/legacy fallback. Default legacy branch stays whenOFF.
+Compact shared snapshot/order evidence and selection/commit parity remain mandatory/unimplemented.
+225-R2/226 accepted;227 accepted with recorded empty-branch mobile residual. No admin replay.
+Fresh task-owned Chrome only;225-R1 lost unsaved user-tab LOCAL edits,no recovery. Real draft/pointer intact.
+TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below retained.
+
 # CURRENT — Architect reviewed228 PARTIAL; issued229 — 2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229. Finish228 B/C: real cart+batch Offer assignments
