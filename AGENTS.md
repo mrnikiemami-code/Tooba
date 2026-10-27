@@ -1,3 +1,25 @@
+# CURRENT —230-R1 accepted READ user trial; issued231 compact order evidence —2026-10-27
+
+Active: TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231. Add compact evidence to EXISTING cart/order shipping
+groups/materializer; shared capture reference+accepted money/date, no full authored JSON perorder/line.
+No captured checkout enablement. not_ready guard stays;231 migration isolated test only, not sharedapply.
+230-R1 accepted for demonstrated populated-destination failure/retry, IRR integer display and intervalbidi.
+Root read source and VIEWED390fail/retryimages. Read-only user trial /fa/shipping is now allowed; no VisualACCEPT.
+231 first may open dedicated VISIBLE task-profile review window with existing normal buyer/cart; after handoff
+never automate/reload it. Never user browser/tab. No credentials committed or printed.
+Review: docs/architecture/evidence/TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1/ARCHITECT-REVIEW.md.
+Task: docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231/TASK.md.
+Known empty-key no-destination failure sentinel means retry not yet covered/accepted; in-flight newkeys wait.
+Earlier cross-ownerlabel/decoder/OfferAPIproof gaps still named, no Marketplace/fullcheckout certification.
+DEVdraft01a17d0d-e033-7000-af43-49a1daa28822/post:standard/heavy/snapshot01a17d0e-0419-7000-b575-f507d2f89abc,
+source2/selection1; buyer01a17cf7-e38d-7000-82a5-00c57929bc54/cart01a17cfd-c1b1-7000-b10d-8cf21258a1cd.
+Host5088/FE3000 retained localpreviewON/count7. Keep runtime/data unchanged while user reviews.
+228 migrationAPPLIED; no replay. User post/NULL draft/rates/pointer untouched perworker.
+Compact history/parity still unimplemented BEFORE231; do not preclaim task result. Next after review:
+same authoritative quote+selected revision revalidation through actual selection/commit, then final order proof.
+225-R2/226 accepted;227empty-note residual;225-R1 unsaveduserLOCALtabloss,no recovery.
+TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below retained.
+
 # CURRENT —230 positive read ACCEPTED; narrow230-R1 failure/display correction issued —2026-10-27
 
 Active: TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1. Root VIEWED actual1440/390 priced cards.
