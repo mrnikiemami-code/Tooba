@@ -13,6 +13,11 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <!-- TB-236: the focused coupon-parity proof drives the SAME in-memory preview composer the
+         captured payment-draft path uses; no production behavior is added by this visibility. -->
+    <InternalsVisibleTo Include="Tooba.Order.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Tooba.Order.Application\Tooba.Order.Application.csproj" />
     <ProjectReference Include="..\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
     <ProjectReference Include="..\..\Cart\Tooba.Cart.Contracts\Tooba.Cart.Contracts.csproj" />

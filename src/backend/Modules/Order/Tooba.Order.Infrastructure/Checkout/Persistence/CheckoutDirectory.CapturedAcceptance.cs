@@ -9,6 +9,7 @@ using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Checkout.Process;
+using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 using Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
@@ -39,7 +40,6 @@ public sealed partial class CheckoutDirectory
     private const string CapturedConflict = StorefrontCapturedSelectionReasons.Conflict;
     private const string CapturedUnavailable = StorefrontCapturedSelectionReasons.Unavailable;
     private const string CapturedIntentInvalid = StorefrontCapturedSelectionReasons.IntentInvalid;
-    private const string CapturedCouponUnsupported = StorefrontCapturedSelectionReasons.CouponUnavailable;
     private const string CapturedDestinationUnverified = StorefrontCapturedSelectionReasons.DestinationUnverified;
     private const string CapturedNotReady = StorefrontCapturedPreviewReasons.PreviewNotReady;
 
@@ -130,10 +130,13 @@ public sealed partial class CheckoutDirectory
             throw new ContractOperationException(CapturedNotReady);
         }
 
-        // کوپن در این برش پشتیبانی نمی‌شود: هیچ تخفیفی بی‌شاهد مشترک خواندن/نوشتن/ثبت اعمال نمی‌شود.
-        if (!string.IsNullOrWhiteSpace(command.CouponCode))
+        // TB-236: قصد کوپن دیگر «پشتیبانی‌نشده» نیست، ولی هیچ تخفیفی بی‌شاهد مشترک خواندن/نوشتن/ثبت
+        // اعمال نمی‌شود: قصد همین حالا باید <b>همان</b> قصدی باشد که انتخاب ذخیره‌شده با آن تأیید شد.
+        // A→B، پاک‌کردن یا کد دیگر ⇒ وضعیت کهنه و انتخاب تازه لازم است؛ هیچ بازنویسی بی‌صدا نیست.
+        var currentCoupon = StorefrontCouponIntent.Normalize(command.CouponCode);
+        if (!StorefrontCouponIntent.Same(currentCoupon, stored.SelectionCouponCode))
         {
-            throw new ContractOperationException(CapturedCouponUnsupported);
+            throw new ContractOperationException(CapturedConflict);
         }
 
         // نسخهٔ انتخاب باید صریح و دقیقاً همان ریشهٔ ذخیره‌شده باشد؛ «۰» یعنی نبودِ صریح. مسیر
@@ -205,6 +208,24 @@ public sealed partial class CheckoutDirectory
             membership
                 .Select(group => ShippingGroupGoodsFactsBuilder.BuildGroupFacts(group, linesByCartLineId, currency))
                 .ToArray());
+
+        // TB-236: مبلغ تأییدشدهٔ کالای هر گروه باید همان چیزی باشد که همین submit با همان قصد کوپن
+        // دوباره ساخت. تغییر نتیجهٔ Promotion/Tax با همان کد (یا نبودِ تأیید قدیمی) پیش از هر
+        // رزرو/سفارش/تبدیل رد می‌شود؛ هیچ تخفیف/مبلغی بی‌تأیید عبور نمی‌کند و هیچ backfill حدسی نیست.
+        var currentGoodsByGroup = facts.Groups.ToDictionary(
+            group => group.GroupKey,
+            group => group.FinalGoodsAmountAfterDiscountAndTax,
+            StringComparer.Ordinal);
+        foreach (var group in groups)
+        {
+            var key = group.ShippingGroupId.ToString("N");
+            if (!currentGoodsByGroup.TryGetValue(key, out var currentGoods)
+                || group.ConfirmedGoodsAmount is not decimal confirmedGoods
+                || currentGoods != confirmedGoods)
+            {
+                throw new ContractOperationException(CapturedConflict);
+            }
+        }
 
         var offerIds = cart.Lines.Select(line => line.OfferId).Distinct().ToArray();
         var assignments = await _offerAssignments!.GetAssignmentsAsync(offerIds, cancellationToken);
@@ -721,9 +742,13 @@ public sealed partial class CheckoutDirectory
                 throw new ContractOperationException(CapturedUnavailable);
             }
 
-            // نوع انتساب هر خط: شناسهٔ تهی «نوع» نیست و نوع/بی‌نوعی باید عیناً همان شاهد ذخیره‌شده باشد.
+            // نوع انتساب هر خط: شناسهٔ تهی «نوع» نیست و نوع باید عیناً همان شاهد ذخیره‌شدهٔ <b>غیرتهی</b>
+            // باشد. پیش‌تر هر دو تهی (نوع انتساب و نوع اختیاری شاهد) از این شرط می‌گذشتند و بررسی
+            // فعال‌بودن نوع هم بعداً رد می‌شد؛ TB-236 این نشت را می‌بندد: هیچ خطی بی‌نوع عبور نمی‌کند.
             var lineTypeId = assignment.ShippingTypeId;
-            if (lineTypeId == Guid.Empty || lineTypeId != evidence.ShippingTypeId)
+            if (lineTypeId is not Guid assignedTyped
+                || assignedTyped == Guid.Empty
+                || evidence.ShippingTypeId != assignedTyped)
             {
                 throw new ContractOperationException(CapturedConflict);
             }

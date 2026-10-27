@@ -96,6 +96,17 @@ public sealed class CartShippingDraft
     public Guid? DestinationServiceAreaId { get; private set; }
 
     /// <summary>
+    /// توکنِ <b>تأییدشدهٔ</b> قصد کوپن همین انتخاب (TB-236) یا تهی یعنی «بدون کوپن».
+    /// </summary>
+    /// <remarks>
+    /// این مقدار <b>سیاست کوپن نیست</b>: هیچ تخفیف/صلاحیت/تطبیقی از آن استنتاج نمی‌شود. فقط همان متنی
+    /// است که آخرین انتخاب موفق با آن پذیرفته شد تا پیش‌نمایش/ثبت بعدی بتواند بفهمد قصد عوض شده و
+    /// انتخاب را کهنه رد کند. نمایندگی کوپن همان Promotion است و متن بدون هیچ case-fold/truncate
+    /// عیناً حفظ می‌شود.
+    /// </remarks>
+    public string? SelectionCouponCode { get; private set; }
+
+    /// <summary>
     /// گروه‌های ارسال پیش‌نویس همین سبد. یک گروه = یک فروشنده + یک روش متعارف.
     /// برای پیش‌نویس‌های تک‌روشی قدیمی نیز همیشه حداقل یک گروه ساخته می‌شود.
     /// </summary>
@@ -230,6 +241,20 @@ public sealed class CartShippingDraft
         DestinationAdministrativeAreaId = administrativeAreaId is Guid area && area != Guid.Empty ? area : null;
         DestinationCityId = cityId is Guid city && city != Guid.Empty ? city : null;
         DestinationServiceAreaId = serviceAreaId is Guid service && service != Guid.Empty ? service : null;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// توکن تأییدشدهٔ قصد کوپن همین انتخاب را ثبت می‌کند (TB-236). تهی یعنی «بدون کوپن».
+    /// </summary>
+    /// <remarks>
+    /// فقط نویسندهٔ اتمیک سرور این را پس از یک انتخاب موفق صدا می‌زند. متن عیناً (فقط trim) ذخیره
+    /// می‌شود: هیچ uppercase/حذف فاصلهٔ درونی/برش/اعتبارسنجی کوپن این‌جا انجام نمی‌شود، چون نمایندگی
+    /// تطبیق/صلاحیت کوپن Promotion است. مقدار خالی/فاصله یعنی نبود، نه کد.
+    /// </remarks>
+    public void SetSelectionCoupon(string? couponCode, DateTimeOffset now)
+    {
+        SelectionCouponCode = string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim();
         UpdatedAt = now;
     }
 

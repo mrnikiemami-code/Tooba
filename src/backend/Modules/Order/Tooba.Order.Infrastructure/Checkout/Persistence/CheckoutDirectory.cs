@@ -258,12 +258,15 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             command.CityName,
             command.PostalAddress,
             command.PostalCode,
-            shippingOverride?.ShippingMethodCode ?? command.ShippingMethodCode,
-            shippingOverride?.ShippingMethodLabel ?? command.ShippingMethodLabel,
+            // TB-236: انتخاب بر <b>حضور شیء override</b> است، نه بر مقدار nullable هر فیلد. یک
+            // <c>null</c> عمدی در تاریخ/پنجره یعنی «گروه‌ها توافق ندارند» و نباید تاریخ کهنهٔ فرمان را
+            // بازگرداند؛ پس این فیلدها از خود override (حتی تهی) می‌آیند.
+            shippingOverride is null ? command.ShippingMethodCode : shippingOverride.ShippingMethodCode,
+            shippingOverride is null ? command.ShippingMethodLabel : shippingOverride.ShippingMethodLabel,
             shippingOverride?.ShippingAmount ?? command.ShippingAmount,
-            shippingOverride?.MinimumDeliveryDate ?? command.MinimumDeliveryDate,
-            shippingOverride?.RequestedDeliveryDate ?? command.RequestedDeliveryDate,
-            shippingOverride?.RequestedDeliveryTimeWindow ?? command.RequestedDeliveryTimeWindow,
+            shippingOverride is null ? command.MinimumDeliveryDate : shippingOverride.MinimumDeliveryDate,
+            shippingOverride is null ? command.RequestedDeliveryDate : shippingOverride.RequestedDeliveryDate,
+            shippingOverride is null ? command.RequestedDeliveryTimeWindow : shippingOverride.RequestedDeliveryTimeWindow,
             command.CustomerNote,
             command.RecipientFirstName,
             command.RecipientLastName);

@@ -27,7 +27,12 @@ public sealed record ProjectStorefrontShippingQuery(
     string? MethodCode,
     string? Language,
     string? CityName = null,
-    DestinationIdentifiers? Destination = null) : IRequest<Result<StorefrontShippingProjection>>;
+    DestinationIdentifiers? Destination = null,
+    /// <summary>
+    /// قصد کوپن همین خواندن (TB-236): همان توکنی که انتخاب/پیش‌نمایش/ثبت با آن سنجیده می‌شود.
+    /// فاصله/تهی یعنی نبود؛ هیچ مبلغ/تخفیفی از آن پذیرفته نمی‌شود.
+    /// </summary>
+    string? CouponCode = null) : IRequest<Result<StorefrontShippingProjection>>;
 
 public sealed class ProjectStorefrontShippingHandler(
     StorefrontShippingService shipping,
@@ -43,7 +48,7 @@ public sealed class ProjectStorefrontShippingHandler(
         // نرخ مالک (پیش‌فرض خاموش) به سرویس می‌رسند و در حالت خاموش هیچ اثری ندارند.
         var result = await StorefrontOrderResult.ExecuteAsync(() => shipping.ProjectAsync(
             request.CartId, request.GuestSecret, request.ProvinceName, request.MethodCode, request.Language, cancellationToken,
-            request.CityName, request.Destination));
+            request.CityName, request.Destination, request.CouponCode));
 
         // مشاهدهٔ سایه روی همان projection واقعی: فقط-مشاهده. نتیجهٔ بازگشتی دست‌نخورده است و
         // هیچ مقدار مشاهده‌شده به روش انتخاب، قیمت مشتری، promise یا draft راه نمی‌یابد.

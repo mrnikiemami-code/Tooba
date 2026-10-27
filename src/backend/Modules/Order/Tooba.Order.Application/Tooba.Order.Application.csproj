@@ -8,6 +8,11 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <!-- TB-236: the focused coupon-parity proof reads the SAME tax-jurisdiction constant the real
+         storefront submit uses instead of duplicating that value in the test. -->
+    <InternalsVisibleTo Include="Tooba.Order.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Tooba.Order.Domain\Tooba.Order.Domain.csproj" />
     <ProjectReference Include="..\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
     <ProjectReference Include="..\..\Cart\Tooba.Cart.Contracts\Tooba.Cart.Contracts.csproj" />

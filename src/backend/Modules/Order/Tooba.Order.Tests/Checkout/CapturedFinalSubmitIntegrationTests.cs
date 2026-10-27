@@ -183,7 +183,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
         await using var db = await ReadyAsync(target);
         using var harness = new CapturedSubmitHarness(db, sharedOffer: true);
 
-        await SeedSingleGroupDraftAsync(db, SellerA, [LineA, LineB]);
+        await SeedSingleGroupDraftAsync(db, SellerA, [LineA, LineB], confirmedGoods: 198m);
         var snapshot = await harness.Directory.SubmitAsync(
             harness.Command(expectedSelectionRevision: "1"),
             CancellationToken.None);
@@ -223,7 +223,8 @@ public sealed class CapturedFinalSubmitIntegrationTests
     [InlineData("date", "storefront.captured_selection.conflict")]
     [InlineData("root", "storefront.captured_selection.conflict")]
     [InlineData("format", "storefront.captured_selection.conflict")]
-    [InlineData("coupon", "storefront.captured_selection.coupon_unavailable")]
+    // TB-236: کوپن دیگر «پشتیبانی‌نشده» نیست؛ قصدی که با قصد تأییدشدهٔ ریشه یکی نیست وضعیت کهنه است.
+    [InlineData("coupon", "storefront.captured_selection.conflict")]
     [InlineData("address-missing", "storefront.captured_selection.destination_unverified")]
     [InlineData("address-foreign", "storefront.captured_selection.destination_unverified")]
     [InlineData("address-edited", "storefront.captured_selection.destination_unverified")]
@@ -847,6 +848,11 @@ public sealed class CapturedFinalSubmitIntegrationTests
             EvidenceFor("store-alpha", A: false, 70m, CloseTicksB),
             Now);
 
+        // TB-236: هر گروه در یک انتخاب واقعی مبلغ کالای همان قصد را هم تأیید می‌کند؛ همان عددی که
+        // مسیر واقعی ۲۱۷ می‌سازد (۱۰۰−۱۰+۹٪ = ۹۹ و ۲۰۰−۲۰+۹٪ = ۱۹۸).
+        groupA.ConfirmGoodsAmount(99m, Now);
+        groupB.ConfirmGoodsAmount(198m, Now);
+
         draft.SetDestinationIdentity(CountryId, ProvinceId, CityId, null, Now);
         draft.AddShippingGroups([groupA, groupB], Now);
         if (mutate != "root")
@@ -859,7 +865,11 @@ public sealed class CapturedFinalSubmitIntegrationTests
         db.ChangeTracker.Clear();
     }
 
-    internal static async Task SeedSingleGroupDraftAsync(OrderDbContext db, Guid sellerId, Guid[] lines)
+    internal static async Task SeedSingleGroupDraftAsync(
+        OrderDbContext db,
+        Guid sellerId,
+        Guid[] lines,
+        decimal confirmedGoods = 297m)
     {
         var draft = NewDraft(null);
         var group = DraftGroup(DraftGroupA, sellerId, "post", "standard", 125m, DateA);
@@ -869,6 +879,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
         }
 
         group.ReplaceAcceptedEvidence(EvidenceFor("store-alpha", A: true, 120m, CloseTicksA), Now);
+        // TB-236: یک گروه با هر دو خط (۱۰۰ و ۲۰۰) با همان قصد: ۹۹ + ۱۹۸ = ۲۹۷؛ دو خط از یک آفر
+        // ۱۰۰تایی: ۹۰ + ۹۰ + ۹٪ = ۱۹۸ (مقدار از فراخوان می‌آید، نه حدس).
+        group.ConfirmGoodsAmount(confirmedGoods, Now);
         draft.SetDestinationIdentity(CountryId, ProvinceId, CityId, null, Now);
         draft.AddShippingGroups([group], Now);
         draft.BumpSelectionRevision(Now);
@@ -997,6 +1010,10 @@ public sealed class CapturedFinalSubmitIntegrationTests
         groupB.ReplaceAcceptedEvidence(
             EvidenceForOwner(ShippingGroupOwner.Seller(SellerB), A: false, 70m, CloseTicksB),
             Now);
+
+        // TB-236: همان مبلغ کالای تأییدشدهٔ مسیر واقعی ۲۱۷ برای هر گروه (۹۹ و ۱۹۸).
+        groupA.ConfirmGoodsAmount(99m, Now);
+        groupB.ConfirmGoodsAmount(198m, Now);
 
         draft.SetDestinationIdentity(CountryId, ProvinceId, CityId, null, Now);
         draft.AddShippingGroups([groupA, groupB], Now);

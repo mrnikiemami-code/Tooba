@@ -145,9 +145,10 @@ public sealed class StorefrontCapturedPreviewPlanner(
         DestinationIdentifiers? destination,
         string? currency,
         Guid languageId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? couponCode = null)
     {
-        var resolution = await ResolveAsync(cart, access, destination, currency, languageId, cancellationToken);
+        var resolution = await ResolveAsync(cart, access, destination, currency, languageId, cancellationToken, couponCode);
         if (resolution.Early is { } early)
         {
             return early;
@@ -245,7 +246,8 @@ public sealed class StorefrontCapturedPreviewPlanner(
         DestinationIdentifiers? destination,
         string? currency,
         Guid languageId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? couponCode = null)
     {
         ArgumentNullException.ThrowIfNull(cart);
         ArgumentNullException.ThrowIfNull(access);
@@ -485,9 +487,9 @@ public sealed class StorefrontCapturedPreviewPlanner(
             // not a tax jurisdiction key, and quoting with it refused every live priced read
             // (`checkout.tax.unavailable`) while a jurisdiction-keyed rule exists.
             TaxJurisdiction: StorefrontCheckoutService.StorefrontTaxJurisdiction,
-            // TB-232-R1: قصد کوپن در این برش پشتیبانی نمی‌شود و نویسنده آن را پیش از هر نقل‌قولی رد
-            // می‌کند؛ پس این مسیر هرگز کوپن نمی‌فرستد و هیچ تخفیف/مبلغی جای آن ساخته نمی‌شود.
-            CouponCode: null);
+            // TB-236: قصد کوپن همان متنی است که خواندن/انتخاب/ثبت می‌بینند و از همان مسیر ۲۱۷
+            // (Pricing/Promotion/Tax) قیمت می‌گیرد. هیچ تخفیف/صلاحیتی این‌جا ساخته نمی‌شود.
+            CouponCode: StorefrontCouponIntent.Normalize(couponCode));
 
         StorefrontCapturedGroupProjectionResult composed;
         try

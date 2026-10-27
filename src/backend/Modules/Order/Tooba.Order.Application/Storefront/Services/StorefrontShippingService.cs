@@ -98,7 +98,8 @@ public sealed class StorefrontShippingService
         string? language,
         CancellationToken cancellationToken,
         string? cityName = null,
-        Tooba.Geography.Contracts.Places.DestinationIdentifiers? destination = null)
+        Tooba.Geography.Contracts.Places.DestinationIdentifiers? destination = null,
+        string? couponCode = null)
     {
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
         var (effectiveCurrency, cartSubtotal) = StorefrontCartCurrencyCompatibility.ResolveSoleCurrencyAndSubtotal(cart);
@@ -184,7 +185,8 @@ public sealed class StorefrontShippingService
                 destination,
                 effectiveCurrency,
                 previewLanguageId,
-                cancellationToken);
+                cancellationToken,
+                Models.StorefrontCouponIntent.Normalize(couponCode));
         }
 
         return new StorefrontShippingProjection(
@@ -318,11 +320,8 @@ public sealed class StorefrontShippingService
                 throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedPreviewReasons.PreviewNotReady);
             }
 
-            if (!string.IsNullOrWhiteSpace(couponCode))
-            {
-                throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedSelectionReasons.CouponUnavailable);
-            }
-
+            // TB-236: قصد کوپن دیگر پیش از خواندن رد نمی‌شود؛ همین هستهٔ فقط-خواندنی قصد را با قصد
+            // تأییدشدهٔ ریشه می‌سنجد و مبلغ کالای هر گروه را با همان قصد بازمی‌سازد.
             return await _checkouts.ProjectCapturedPaymentDraftAsync(
                 cart,
                 guestSecret,
@@ -822,8 +821,8 @@ public sealed class StorefrontShippingService
     /// ثبت نهایی انتخاب capture‌شده از <b>ریشهٔ ذخیره‌شده</b> — فقط انتقال به عضو موجود دامنهٔ checkout.
     /// </summary>
     /// <remarks>
-    /// کوپن در این برش پشتیبانی نمی‌شود و <b>پیش از هر خواندن/رزرو/نوشتن</b> با کد پایدار همان نویسندهٔ
-    /// capture رد می‌شود؛ هیچ تخفیفی ساکت حذف یا جایگزین نمی‌شود.
+    /// TB-236: قصد کوپن به‌صورت <b>بی‌اتلاف</b> به همان هستهٔ پذیرش می‌رسد؛ آن‌جا با قصد تأییدشدهٔ ریشه و
+    /// مبلغ کالای تأییدشدهٔ هر گروه سنجیده می‌شود. این لایه هیچ تخفیفی محاسبه/بازنویسی نمی‌کند.
     /// </remarks>
     private Task<StorefrontCheckoutPage> SubmitCapturedSelectionAsync(
         Guid cartId,
@@ -835,11 +834,6 @@ public sealed class StorefrontShippingService
         CartShippingDraft draft,
         CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(couponCode))
-        {
-            throw new StorefrontOrderException(Shipping.CapturedPreview.StorefrontCapturedSelectionReasons.CouponUnavailable);
-        }
-
         return _checkouts.SubmitCapturedSelectionAsync(
             cartId,
             guestSecret,

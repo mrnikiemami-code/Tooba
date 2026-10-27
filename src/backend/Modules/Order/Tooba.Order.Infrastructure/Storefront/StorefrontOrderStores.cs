@@ -122,6 +122,8 @@ public sealed class StorefrontShippingDraftStore(OrderDbContext db) : IStorefron
                 draft.CustomerNote,
                 draft.UpdatedAt);
             persisted.ApplyRecipientNames(draft.FirstName, draft.LastName);
+            // TB-236: توکن قصد کوپن همین انتخاب، در همان مرز اتمیک و با همان ریشه.
+            persisted.SetSelectionCoupon(draft.SelectionCouponCode, draft.UpdatedAt);
             persisted.SetDestinationIdentity(
                 draft.DestinationCountryId ?? Guid.Empty,
                 draft.DestinationAdministrativeAreaId,

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Globalization;
+using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Shipping;
@@ -258,13 +259,17 @@ public sealed class StorefrontCapturedSelectionWriterTests
     }
 
     /// <summary>
-    /// TB-232-R1: قصد کوپن در این برش fail-closed است — پیش از هر نقل‌قول/نوشتنی رد می‌شود و هیچ
-    /// مبلغ کالای دیگری زیر همان توکن‌های بازتاب ذخیره نمی‌شود.
+    /// TB-236: قصد کوپن یک توکن <b>بی‌اتلاف</b> است — با همان متن trim‌شده به مسیر واقعی ۲۱۷ می‌رسد
+    /// (بدون case-fold/برش) و مبلغ کالای تأییدشدهٔ گروه همان چیزی است که با همان قصد ساخته شد.
     /// </summary>
     [Fact]
-    public async Task Nonblank_coupon_is_refused_before_any_quote_or_write()
+    public async Task Nonblank_coupon_reaches_the_quote_path_and_confirms_the_discounted_goods()
     {
         using var harness = Positive(OfferA, LineA);
+        harness.Promotions.DiscountsByCoupon["SUMMER-232"] = new Dictionary<Guid, decimal>
+        {
+            [OfferA] = 25m,
+        };
         var drafts = new DraftStoreFake();
         var planner = PositivePlanner(harness);
         var writer = new StorefrontCapturedSelectionWriter(planner, drafts, new GeographyFake(), new FixedClock232());
@@ -272,20 +277,44 @@ public sealed class StorefrontCapturedSelectionWriterTests
         var cart = Cart(harness, LineA, OfferA);
         var intent = await IntentFromPreviewAsync(harness, planner, cart);
 
-        var quoteCallsBefore = harness.Promotions.Calls;
-        var error = await Assert.ThrowsAsync<StorefrontOrderException>(() => writer.SaveAsync(
+        // مبلغ کوپن‌دار از همان مسیر واقعی خوانده می‌شود؛ عدد جادویی در تست نیست.
+        var couponed = await planner.BuildAsync(
+            cart,
+            new CartAccess(harness.UserId, null),
+            new DestinationIdentifiers(GeographyFake.Country, GeographyFake.Area, GeographyFake.City),
+            "IRR",
+            LanguageId,
+            CancellationToken.None,
+            "SUMMER-232");
+        var couponedGoods = couponed.Groups[0].FinalGoodsAmountAfterDiscountAndTax;
+        Assert.NotEqual(
+            (await planner.BuildAsync(
+                cart,
+                new CartAccess(harness.UserId, null),
+                new DestinationIdentifiers(GeographyFake.Country, GeographyFake.Area, GeographyFake.City),
+                "IRR",
+                LanguageId,
+                CancellationToken.None)).Groups[0].FinalGoodsAmountAfterDiscountAndTax,
+            couponedGoods);
+
+        harness.Promotions.CouponsSeen.Clear();
+        await writer.SaveAsync(
             cart,
             new CartAccess(harness.UserId, null),
             Prepared(),
             existing: null,
             guestSecretHash: null,
             intent with { CouponCode = "  SUMMER-232  " },
-            CancellationToken.None));
+            CancellationToken.None);
 
-        Assert.Equal(StorefrontCapturedSelectionReasons.CouponUnavailable, error.Code);
-        // هیچ نقل‌قول/تخفیفی برای این درخواست انجام نشده و هیچ نوشتنی رخ نداده است.
-        Assert.Equal(quoteCallsBefore, harness.Promotions.Calls);
-        Assert.Equal(0, drafts.ReplaceCalls);
+        Assert.Equal(1, drafts.ReplaceCalls);
+        // همان متن trim‌شده دید promotion شد (بدون case-fold).
+        Assert.NotEmpty(harness.Promotions.CouponsSeen);
+        Assert.All(harness.Promotions.CouponsSeen, seen => Assert.Equal("SUMMER-232", seen));
+        Assert.Equal("SUMMER-232", drafts.LastDraft!.SelectionCouponCode);
+        Assert.Equal(
+            decimal.Parse(couponedGoods, NumberStyles.Number, CultureInfo.InvariantCulture),
+            drafts.LastGroups[0].ConfirmedGoodsAmount);
     }
 
     /// <summary>کوپن خالی/فاصله همان «بدون کوپن» است و مسیر عادی را نمی‌بندد.</summary>
@@ -1034,6 +1063,8 @@ public sealed class StorefrontCapturedSelectionWriterTests
     {
         internal int ReplaceCalls { get; private set; }
 
+        internal CartShippingDraft? LastDraft { get; private set; }
+
         internal bool LastIsNew { get; private set; }
 
         internal long LastExpectedRevision { get; private set; }
@@ -1057,6 +1088,7 @@ public sealed class StorefrontCapturedSelectionWriterTests
             CancellationToken cancellationToken)
         {
             ReplaceCalls++;
+            LastDraft = draft;
             LastIsNew = isNew;
             LastExpectedRevision = expectedSelectionRevision;
 

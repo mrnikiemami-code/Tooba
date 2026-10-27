@@ -158,7 +158,8 @@ internal static class StorefrontOrderEndpoints
                 body.MethodCode,
                 body.Language,
                 body.CityName,
-                body.Destination),
+                body.Destination,
+                body.CouponCode),
             ct));
     }
 

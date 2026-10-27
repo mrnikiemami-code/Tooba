@@ -123,12 +123,9 @@ public sealed class StorefrontCapturedSelectionWriter(
             throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
         }
 
-        // TB-232-R1: قصد کوپن در این برش رد می‌شود (نه نادیده گرفته) — خواندن capture هیچ قصد کوپنی
-        // ندارد و پذیرفتن آن می‌توانست مبلغ کالای دیگری را زیر همان توکن‌های بازتاب ذخیره کند.
-        if (!string.IsNullOrWhiteSpace(request.CouponCode))
-        {
-            throw Refuse(StorefrontCapturedSelectionReasons.CouponUnavailable);
-        }
+        // TB-236: قصد کوپن یک توکنِ تأیید است، نه سیاست تخفیف. فاصله/تهی یعنی نبود و متن فقط trim
+        // می‌شود (بدون case-fold/برش)؛ قیمت/تخفیف همیشه از همان مسیر ۲۱۷ می‌آید.
+        var couponIntent = StorefrontCouponIntent.Normalize(request.CouponCode);
 
         // شکل ارزانِ قصد پیش از هر خواندن بیرونی: کلید تکراری/تهی و توکن نسخهٔ اجباری.
         var seenKeys = new HashSet<string>(StringComparer.Ordinal);
@@ -156,7 +153,8 @@ public sealed class StorefrontCapturedSelectionWriter(
             destination,
             currency: null,
             languageId: Guid.Empty,
-            cancellationToken);
+            cancellationToken,
+            couponIntent);
 
         if (resolved.Context is not { } context)
         {
@@ -207,6 +205,7 @@ public sealed class StorefrontCapturedSelectionWriter(
             }
 
             AssertEcho(intent, candidate, quote);
+            AssertGoodsEcho(intent, composedGroup);
 
             var expectedDate = (intent.SelectedDeliveryDate ?? string.Empty).Trim();
             var slot = receiving.AvailableDates.FirstOrDefault(
@@ -260,6 +259,7 @@ public sealed class StorefrontCapturedSelectionWriter(
                 candidate.ServiceCode,
                 candidate.OptionCode,
                 plan.CartLineIds.ToHashSet(),
+                composedGroup.FinalGoodsAmountAfterDiscountAndTax,
                 evidence));
         }
 
@@ -345,6 +345,8 @@ public sealed class StorefrontCapturedSelectionWriter(
             destination.CityId,
             destination.ServiceAreaId,
             now);
+        // TB-236: توکن قصد کوپن همین انتخاب؛ «نبود» صریحاً null است و هیچ کد/صفر جای آن نمی‌نشیند.
+        draft.SetSelectionCoupon(couponIntent, now);
 
         if (isNew)
         {
@@ -352,6 +354,28 @@ public sealed class StorefrontCapturedSelectionWriter(
         }
 
         return await drafts.ReplaceCapturedSelectionAsync(draft, groups, isNew, expectedRevision, cancellationToken);
+    }
+
+    /// <summary>
+    /// بازتاب مبلغ کالای دیده‌شدهٔ همان گروه (TB-236) فقط <b>مقایسه</b> می‌شود: اگر کلاینت مقداری
+    /// فرستاده باشد و با مبلغ authoritative همین ترکیب نخواند، وضعیت بین خواندن و نوشتن عوض شده و
+    /// انتخاب کهنه رد می‌شود. نبودِ مقدار هرگز «صفر» نیست و هیچ مبلغی از کلاینت ذخیره نمی‌شود.
+    /// </summary>
+    private static void AssertGoodsEcho(
+        StorefrontCapturedGroupSelection intent,
+        StorefrontCapturedGroupProjection composedGroup)
+    {
+        var echo = (intent.ExpectedGoodsAmount ?? string.Empty).Trim();
+        if (echo.Length == 0)
+        {
+            return;
+        }
+
+        if (!decimal.TryParse(echo, NumberStyles.Number, CultureInfo.InvariantCulture, out var expected)
+            || expected != composedGroup.FinalGoodsAmountAfterDiscountAndTax)
+        {
+            throw Refuse(StorefrontCapturedSelectionReasons.Conflict);
+        }
     }
 
     /// <summary>مقصد از نشانی آماده‌شدهٔ سمت سرور resolve می‌شود (بدون tuple دلخواه مرورگر).</summary>
@@ -475,6 +499,7 @@ public sealed class StorefrontCapturedSelectionWriter(
         string? ServiceCode,
         string? OptionCode,
         IReadOnlySet<Guid> LineIds,
+        decimal GoodsAmount,
         ShippingGroupAcceptedEvidence Evidence);
 
     /// <summary>
@@ -505,6 +530,8 @@ public sealed class StorefrontCapturedSelectionWriter(
             try
             {
                 group.ReplaceAcceptedEvidence(matches[0].Evidence, now);
+                // TB-236: مبلغ کالای تأییدشده از همان ترکیب authoritative همین انتخاب، روی همان گروه.
+                group.ConfirmGoodsAmount(matches[0].GoodsAmount, now);
             }
             catch (ContractOperationException)
             {

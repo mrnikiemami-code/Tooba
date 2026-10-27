@@ -248,7 +248,13 @@ public sealed record StorefrontShippingProjectionRequest(
     string? MethodCode = null,
     string? Language = null,
     string? CityName = null,
-    Tooba.Geography.Contracts.Places.DestinationIdentifiers? Destination = null);
+    Tooba.Geography.Contracts.Places.DestinationIdentifiers? Destination = null,
+    /// <summary>
+    /// قصد کوپن همین خواندن (TB-236)؛ همان توکنی که انتخاب/پیش‌نمایش/ثبت با آن سنجیده می‌شود.
+    /// فاصله/تهی یعنی نبود. هیچ قیمت/تخفیفی از این فیلد پذیرفته نمی‌شود؛ قیمت از Promotion/Tax همان
+    /// مسیر ۲۱۷ می‌آید.
+    /// </summary>
+    string? CouponCode = null);
 
 /// <summary>
 /// انتخاب یک گروه ارسال از سمت کلاینت: تنها قصد انتخاب (روش متعارف + خطوط سبد).
@@ -301,7 +307,13 @@ public sealed record StorefrontCapturedGroupSelection(
     string? ExpectedSourceRevision = null,
     string? ExpectedSelectionVersion = null,
     string? ExpectedAreaGroupId = null,
-    string? ExpectedRateRowId = null);
+    string? ExpectedRateRowId = null,
+    /// <summary>
+    /// بازتاب <b>مقایسه‌ای</b> مبلغ کالای همین گروه پس از تخفیف/مالیات که کلاینت در همان خواندن دید
+    /// (TB-236؛ متن دقیق). نبود یعنی این بازتاب ارسال نشده و «صفر» نیست؛ مقدار ارسالی فقط برای مقایسه
+    /// است و هرگز قیمت/مالیات/تخفیف نیست.
+    /// </summary>
+    string? ExpectedGoodsAmount = null);
 
 /// <summary>
 /// نمای یک گروه ارسال در پیش‌نویس سبد. هویت/برچسب/مبلغ/ارز/زمان‌بندی همه از گروه ذخیره‌شده می‌آید.

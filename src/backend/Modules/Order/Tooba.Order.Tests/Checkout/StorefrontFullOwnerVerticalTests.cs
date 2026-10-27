@@ -140,7 +140,7 @@ public sealed class StorefrontFullOwnerVerticalTests
         new TimeOnly(11, 0).Ticks + 5_555_555L,
         new TimeOnly(19, 0).Ticks + 6_666_666L);
 
-    private static readonly OwnerFixture[] Owners = [MarketplaceOwner, SellerBOwner, SellerCOwner];
+    internal static readonly OwnerFixture[] Owners = [MarketplaceOwner, SellerBOwner, SellerCOwner];
 
     /// <summary>مالک Domain که از همان سیاست مشترک برای این افراز انتظار می‌رود.</summary>
     private static ShippingGroupOwnerKind ExpectedOwnerKind(OwnerFixture owner) =>
@@ -431,7 +431,10 @@ public sealed class StorefrontFullOwnerVerticalTests
         private readonly CapturedFinalSubmitIntegrationTests.FixedStorefrontActor _actor = new();
         private decimal _delta;
 
-        internal Vertical(OrderDbContext db, bool marketplace)
+        internal Vertical(
+            OrderDbContext db,
+            bool marketplace,
+            Func<IStorefrontShippingDraftStore, IStorefrontShippingDraftStore>? wrapDrafts = null)
         {
             Core = new CapturedFinalSubmitIntegrationTests.CapturedSubmitHarness(
                 db,
@@ -494,7 +497,9 @@ public sealed class StorefrontFullOwnerVerticalTests
                 Core.Addresses,
                 Core.ShippingCatalog,
                 null!,
-                Drafts,
+                // TB-236: یک پورت تست می‌تواند <b>بین</b> خواندن پیش‌نویس توسط facade و خواندن تازهٔ هسته
+                // عمل کند تا مرز واقعی خواندن بیرونی/پذیرش تازه اثبات شود (بدون hook تولیدی).
+                wrapDrafts?.Invoke(Drafts) ?? Drafts,
                 null!,
                 new ShippingMethodsOptions(),
                 null!,

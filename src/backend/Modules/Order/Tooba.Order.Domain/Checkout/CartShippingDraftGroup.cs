@@ -96,6 +96,9 @@ public static class CartShippingGroupFault
 
     /// <summary>گروه تکراری برای همان فروشنده و روش.</summary>
     public const string DuplicateSellerMethod = "shipping.group.seller_method.duplicate";
+
+    /// <summary>مبلغ تأییدشدهٔ کالای گروه در <c>numeric(18,2)</c> نمایش‌پذیر نیست.</summary>
+    public const string ConfirmedGoodsUnrepresentable = "shipping.group.confirmed_goods.unrepresentable";
 }
 
 /// <summary>
@@ -170,6 +173,13 @@ public sealed class CartShippingDraftGroup
     /// این فیلد مرجع snapshot و مبلغ/دریافت نهایی است، نه payload خام یا بازمحاسبهٔ تعرفه.
     /// </summary>
     public ShippingGroupAcceptedEvidence? AcceptedEvidence { get; private set; }
+
+    /// <summary>
+    /// مبلغ <b>تأییدشدهٔ</b> کالای همین گروه پس از تخفیف و پس از مالیات در لحظهٔ همان انتخاب (TB-236)
+    /// یا تهی یعنی «تأیید نشده». این مقدار برای <b>مقایسه</b> است، نه قیمت‌گذاری: قیمت همیشه از
+    /// مسیر Order/Promotion/Tax می‌آید و هیچ مبلغی از مرورگر این‌جا نمی‌نشیند.
+    /// </summary>
+    public decimal? ConfirmedGoodsAmount { get; private set; }
 
     /// <summary>روزهای آماده‌سازی مؤثر روش.</summary>
     public int LeadDays { get; private set; }
@@ -337,6 +347,34 @@ public sealed class CartShippingDraftGroup
         }
 
         AcceptedEvidence = evidence;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// مبلغ تأییدشدهٔ کالای همین گروه (پس از تخفیف و مالیات) را ثبت می‌کند. فقط نویسندهٔ اتمیک سرور
+    /// آن را از همان ترکیب authoritative صدا می‌زند؛ هیچ transport مقدار مرورگر را این‌جا نمی‌نشاند.
+    /// </summary>
+    /// <remarks>
+    /// <c>null</c> یعنی «تأیید نشده» و هرگز به صفر تعبیر نمی‌شود. مقدار باید دقیقاً در
+    /// <c>numeric(18,2)</c> نمایش‌پذیر باشد؛ نه گرد کردن، نه برش.
+    /// </remarks>
+    public void ConfirmGoodsAmount(decimal? amount, DateTimeOffset now)
+    {
+        if (amount is decimal value)
+        {
+            if (value < 0m)
+            {
+                throw new ContractOperationException(CartShippingGroupFault.AmountInvalid);
+            }
+
+            if (value > ShippingGroupAcceptedEvidence.MaxStorableAmount
+                || value != decimal.Round(value, 2, MidpointRounding.ToZero))
+            {
+                throw new ContractOperationException(CartShippingGroupFault.ConfirmedGoodsUnrepresentable);
+            }
+        }
+
+        ConfirmedGoodsAmount = amount;
         UpdatedAt = now;
     }
 

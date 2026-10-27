@@ -245,6 +245,14 @@ internal sealed class FakePriceLookup : IPriceLookupGateway
 internal sealed class FakePromotion : ICheckoutPromotionPort
 {
     internal readonly Dictionary<Guid, decimal> Discounts = [];
+
+    /// <summary>تخفیف وابسته به کد کوپن (کلید = متن دقیق قصد)؛ برای اثبات «کوپن فقط یک گروه».</summary>
+    internal readonly Dictionary<string, Dictionary<Guid, decimal>> DiscountsByCoupon =
+        new(StringComparer.Ordinal);
+
+    /// <summary>هر قصد کوپنی که واقعاً به Promotion رسید (به ترتیب) — بدون تغییر/ fold.</summary>
+    internal readonly List<string?> CouponsSeen = [];
+
     internal int Calls { get; private set; }
     internal CancellationToken? LastToken { get; private set; }
     internal CheckoutPromotionEvaluationRequest? LastRequest { get; private set; }
@@ -257,12 +265,16 @@ internal sealed class FakePromotion : ICheckoutPromotionPort
         Calls++;
         LastToken = cancellationToken;
         LastRequest = request;
+        CouponsSeen.Add(request.CouponCode);
         if (Failure is not null)
         {
             return Task.FromException<CheckoutPromotionEvaluationResult>(Failure);
         }
 
-        var discount = Discounts.GetValueOrDefault(request.OfferId);
+        var discount = request.CouponCode is not null
+            && DiscountsByCoupon.TryGetValue(request.CouponCode, out var byCoupon)
+                ? byCoupon.GetValueOrDefault(request.OfferId)
+                : Discounts.GetValueOrDefault(request.OfferId);
         var postDiscount = request.BaseTaxExclusiveAmount - discount;
         return Task.FromResult(new CheckoutPromotionEvaluationResult(
             discount,

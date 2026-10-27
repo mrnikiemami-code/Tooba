@@ -161,6 +161,8 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.DestinationAdministrativeAreaId);
             entity.Property(x => x.DestinationCityId);
             entity.Property(x => x.DestinationServiceAreaId);
+            // TB-236: توکنِ تأییدشدهٔ قصد کوپن (متن دقیق، بدون سیاست کوپن؛ تهی = بدون کوپن).
+            entity.Property(x => x.SelectionCouponCode).HasColumnName("selection_coupon_code");
             entity.HasMany(x => x.ShippingGroups)
                 .WithOne()
                 .HasForeignKey(x => x.CartId)
@@ -180,6 +182,10 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.Currency).HasMaxLength(3);
             entity.Property(x => x.SelectedDeliveryTimeWindow).HasMaxLength(32);
             entity.Property(x => x.State).HasMaxLength(16);
+            // TB-236: مبلغ تأییدشدهٔ کالای همین گروه (پس از تخفیف/مالیات)؛ تهی = تأیید نشده.
+            entity.Property(x => x.ConfirmedGoodsAmount)
+                .HasColumnName("confirmed_goods_amount")
+                .HasPrecision(18, 2);
             entity.HasIndex(x => x.CartId);
             entity.HasIndex(x => new { x.CartId, x.SellerPartyId, x.MethodCode }).IsUnique();
             entity.OwnsOne(
