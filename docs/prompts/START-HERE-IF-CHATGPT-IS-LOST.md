@@ -1,4 +1,25 @@
-﻿# CURRENT — 236 EXECUTED: one coupon intent across captured read, selection, payment preview and final commit —2026-10-27
+# CURRENT — 236 valid coupon mechanics retained; issued237 CONNECT EXISTING UI + PRACTICAL LOCAL TRIAL —2026-10-28
+
+Active TB-SHIPPING-STOREFRONT-CONNECTED-PRACTICAL-TRIAL-237. Read236/ARCHITECT-REVIEW.md and237/TASK.md.
+Root reviewed6d820e9/source36c44: samecoupon217/selection/finalgoods confirmation and2nullable draft scalars
+retained; nullable-date override/nonemptytype fixed.8/8+5/5+173/173 worker, NOT root/live certificate.
+Two blockers inline237: ExpectedGoodsAmount currently OPTIONAL bypass, and actual quote path ignores Promotion
+RejectionReasons (invalid coupon handling NOT already proven/implemented). Fix on practical path, no audit loop.
+USER latest: connect quickly, test data not concern. Authorized normal LOCAL migrations/devdata/runtime setup,
+no repeated routine permission.237 implements frontend cards/groupchoices/save/paymentpreview/StartPayment with
+exact tokens/context and actual browser/HTTP trial. All owners/coupons remain final requirement; no false readiness.
+Protect USER unsaved reviewwindow by ISOLATED implementation worktree + task-owned FE/Host ports; original watched
+FE3000 checkout files/runtime untouched (intentional old branch allowed). Push normalHEAD:main, verify worktree parity.
+Expected231/232/236 migrations MAY apply via actual MigrationRunner plan to verified nonproduction target, no
+history rewrite/reset; new Marketplace taskDB via official bootstrap allowed. No production/realmoney/authbypass.
+Checked-in gatesOFF; coherent ON only tasklocal. Normal buyer/admin APIs; DEV data may be created, originaluserdraft
+untouched. Leave working URL; actual PSP/hold stages honest. ExistingCSS/cards, desktop1440/mobile360/390.
+Known230emptykey/newkeywait addressed in same coordinator; crossowner labelmap already repaired, decoderstrictness
+is separate. PreserveTB185paused/defaultOFF/PendingAllocation and225-R1unrecoveredLOCALwork record.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Earlier no-runtime/no-frontend scopes were task-local,
+NOT a ban on this newly authorized practical task. Prior history follows.
+
+# CURRENT — 236 EXECUTED: one coupon intent across captured read, selection, payment preview and final commit —2026-10-27
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-COUPON-CONTEXT-PARITY-236/{TASK.md,RESULT.md}. Status
 EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base607e12c17, code36c44a35; claim23:18Z→result23:55Z
