@@ -1,4 +1,23 @@
-﻿# CURRENT — 235-R1 executed: per-line assignment validation + one accepted preview root + real multi-owner vertical —2026-10-27
+# CURRENT — 235-R1 owner vertical scoped accepted; issued236 shared coupon context —2026-10-27
+
+Active TB-SHIPPING-CAPTURED-COUPON-CONTEXT-PARITY-236. Read235-R1/ARCHITECT-REVIEW.md and236/TASK.md.
+Root reviewed9b765e81b/sourcecb3d054bb: real read/232selection/publicpreview/publiccommit/Order persistence for
+Marketplace Platform+SellerB+SellerC on same binding with DISTINCT captures/labels/rows/dates/ticks125/73/94
+is accepted as controlledContracts/realOrder integration, NOT live HTTP/PSP/physicalDB/visual release proof.
+PayloadOfferId/defined responsibility/initialized line guards and presentation-cart reuse retained. Residual:
+nullable type BOTHNULL still passes; preview nullable override ?? restores stale command date; fix inline236.
+235-R1 replacement test advances writer BEFORE publicpreview (no inter-read boundary), dates unchanged; do NOT
+claim deterministic stale-outer/new-inner proof.6/6 new worker facts, no measuredRED; broad412sweep out-of-scope.
+236 implements SAME coupon across existingread/selection/paymentpreview/finalquote using existingPromotion/Tax/
+goods builder. Minimal own-draftcoupon+pergroupgoods scalars/new additive migration permitted ONLY isolatedDB,
+no JSON/fullsnapshot/perline copies. ExistingatomicCAS/rollback/idempotency and all owners retained.
+NO frontend/HMR/browser/runtime/HostFE/livewrites/sharedDDL/gateactivation. USER reviewwindow unsavedwork
+never enumerate/read/automate/reload/close; previewONcount7 untouched. AllcheckedgatesOFF;231/232sharedNOTAPPLIED/
+EFsnapshotgap retained. Coupon/frontend/practical desktop360/390+mobile and Order-onlyhistory remain mandatory
+final delivery, not exclusions. Known230/OfferAPI/227/225-R1lostLOCALwork retained. TB185paused/defaultOFF/
+PendingAllocation. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Older TOPs are historical.
+
+# CURRENT — 235-R1 executed: per-line assignment validation + one accepted preview root + real multi-owner vertical —2026-10-27
 
 Active TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1 (row5daf73f2-b83d-45e5-82ba-e2ac37383c62).
 Read235-R1/TASK.md and235-R1/RESULT.md. Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation.
