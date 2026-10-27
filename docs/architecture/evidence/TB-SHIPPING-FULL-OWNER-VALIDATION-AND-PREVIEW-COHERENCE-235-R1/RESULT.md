@@ -174,3 +174,17 @@ NONCOMPLIANT on corrections, not a process PASS.
 
 STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. Coupons, existing frontend connection and the complete
 practical desktop/mobile trial remain required before any sellable/ready claim.
+
+## G — issuance/merge reconciliation (recorded, no source change)
+
+The archived issuance reached main as 5baee32b (corrected 235-R1 envelope: routing header, BEGIN_TOOBA_TASK
+block and RESULT CONTRACT). It arrived AFTER this task's implementation commit cb3d054bb, so the base received the
+correction through the merge 2c452586 rather than being present when the work started. The three recovery TOPs
+(AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md,
+docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md) were reconciled by keeping the executed 235-R1
+header CURRENT, demoting the corrected-envelope header and every older header, and preserving the full delivery
+scope + earlier history untouched. No source, test, gate, schema or runtime file was changed by the reconciliation;
+235-R1/TASK.md was taken verbatim from the corrected issuance.
+
+Expected-Base-SHA for the Architect review = 5baee32b (correction) with implementation commit cb3d054bb and
+merge 2c452586 on top; Code-SHA / Evidence-SHA = the pushed main tip containing all three.
