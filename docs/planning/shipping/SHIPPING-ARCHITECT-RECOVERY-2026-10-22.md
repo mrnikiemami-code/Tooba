@@ -1,4 +1,28 @@
-# CURRENT — 232/R1/R2 captured draft selection ACCEPTED; issued233 final Order parity — 2026-10-27
+# CURRENT — 233 executed PARTIAL: final captured gate + revision token + submit-seam hook; revalidation NOT delivered — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-ORDER-COMMIT-PARITY-233/{TASK.md,RESULT.md}. Base
+`1bcc3c41a` fast-forward. Status: **EXECUTED — PARTIAL**, NOT accepted, no user Visual ACCEPT, no checkout
+activation, no live/HTTP/browser run. ≈70 min vs HARD45 — NONCOMPLIANT. LANDED: `CheckoutEnabled` (default OFF)
+in `StorefrontCapturedPreviewOptions`; `ExpectedSelectionRevision` carried as TEXT from
+`StorefrontStartPaymentBody`→`StorefrontStartPaymentRequest`→`CommitAsync`→`SubmitAsync`→`BuildCommand`→
+`SubmitCheckoutCommand`, parsed only by `CheckoutDirectory.TryParseSelectionRevision` (digits only; `"0"` lawful;
+`4294967296` preserved); `ICheckoutSubmitHost.AcceptCapturedShippingAsync` called by `CheckoutProcessManager`
+after the quote and BEFORE TransactionScope/reserve/persist/convert, its RESULT feeding `PersistCheckoutAsync`.
+Gate OFF returns the same plans with zero extra read; evidence is refused `storefront.captured_preview.not_ready`
+before any read; every captured passage refuses the same code because revalidation does not exist — the gate
+never opens a captured write. NOT DELIVERED: saved-address/Geography destination comparison, cart/version/line
+membership, 228 owner/type/seller + active binding, 219 snapshot/revision/selection comparison, same 216 quote +
+213 calendar + money/date scalars, final-`SellerOrder`-derived goods facts (typed input into 217/218, no recursive
+Preview/Submit), compact evidence persistence in the checkout atomic boundary, PaymentDraft readiness, and every
+requested execution fact (positive two-seller groups, refusal matrix, changed-quote proof, forged direct caller,
+order-write/cart-convert rollback, relational 15433 run). Gate-ON branch UNPROVEN. Builds 0 errors; focused
+28/28 (gate facts + strict revision parses + unchanged 232 write guard + unchanged materializer). No frontend/
+HMR/browser/Host-FE rebuild, no live write, no schema change, no shared migration apply, 231/232 sharedNOTAPPLIED,
+stale EF snapshot retained, user review window untouched, previewON/count7 unchanged, new gates OFF. Known 230-R1
+empty-key retry/in-flight, cross-owner label/decoder, Offer API proof, 227 mobile empty-note, 225-R1 lost LOCAL
+edits remain. TB185 paused/default-OFF/PendingAllocation. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+# SUPERSEDED — 232/R1/R2 captured draft selection ACCEPTED; issued233 final Order parity — 2026-10-27
 
 Active: TB-SHIPPING-CAPTURED-ORDER-COMMIT-PARITY-233. Review232-R2/ARCHITECT-REVIEW.md,233/TASK.md in evidence.
 Root reviewed98c1c4ee0 actual adapter/tests. Accepted WITHIN SCOPE: per-group commitments, fresh clean preflight,

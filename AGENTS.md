@@ -1,4 +1,40 @@
-# CURRENT — 232/R1/R2 captured draft selection ACCEPTED; issued233 final Order parity — 2026-10-27
+# CURRENT — 233 executed PARTIAL: final captured gate + revision token + submit-seam hook; revalidation NOT delivered — 2026-10-27
+
+Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-ORDER-COMMIT-PARITY-233/{TASK.md,RESULT.md}.
+Base `1bcc3c41a` (fast-forward of the issue commit). Status: **EXECUTED — PARTIAL**, NOT accepted, no user Visual
+ACCEPT, no checkout activation, no live/HTTP/browser run. Elapsed ≈70 min vs HARD45 — recorded NONCOMPLIANT.
+
+LANDED (verified, builds 0 errors + 28/28 focused): one explicit `StorefrontCapturedPreviewOptions.CheckoutEnabled`
+(default OFF, coherent with preview/selection, never enabled at runtime); `ExpectedSelectionRevision` carried as
+TEXT from `StorefrontStartPaymentBody` → `StorefrontStartPaymentRequest` → `CommitAsync` → `SubmitAsync` →
+`BuildCommand` → `SubmitCheckoutCommand`, parsed only by `CheckoutDirectory.TryParseSelectionRevision` (digits only;
+blank/space/sign/fraction/exponent/letters invalid, `"0"` lawful, `4294967296` preserved); a new
+`ICheckoutSubmitHost.AcceptCapturedShippingAsync` invoked by `CheckoutProcessManager.SubmitAsync` AFTER
+`QuoteSellerOrdersAsync(requireReservation:false)` and BEFORE the existing TransactionScope/reserve/persist/convert,
+whose RESULT feeds `PersistCheckoutAsync` (`acceptedShippingGroups ?? command.ShippingGroups`) so a caller cannot
+paste plans into persistence; gate OFF returns the same plans with zero extra read, gate OFF + caller evidence
+refuses `storefront.captured_preview.not_ready` before any read, and every captured passage (stored captured root or
+caller evidence) refuses the same code because full revalidation does not exist yet — the gate never opens a
+captured write.
+
+NOT DELIVERED: trusted revalidation (saved-address owner/unique Geography identity vs persisted priced destination,
+cart/version/whole-line membership, 228 responsibility/type/seller, active type/binding, 219 snapshot/draft/revision/
+selection version, same 216 quote and same 213 calendar, all accepted money/date/interval scalars); final-quote
+financial truth from THIS submit's `SellerOrder` lines through a typed facts input into 217/218 (no recursive
+Preview/Submit, foreign-call counting); compact evidence persistence into existing `order.order_shipping_groups`
+inside the checkout atomic boundary with checkout-vs-collect totals and idempotent original-order replay;
+`ProjectPaymentDraftAsync` captured readiness; and every requested execution fact (positive two-seller groups,
+changed cart/root/address/pointer/type/row/amount/date refusal matrix, final-quote-changed proof, direct-caller
+forged evidence, order-write/cart-convert rollback, relational `15433/order_tb231` run). The gate-ON branch is
+UNPROVEN (needs the real draft read). `CommitAsync`/PaymentDraft stay `not_ready`; nothing is checkout-ready.
+BOUNDS: no frontend/HMR/browser/Host-FE rebuild, no live write, no schema change, no shared migration apply,
+231/232 sharedNOTAPPLIED + stale EF snapshot retained, user's visible review window untouched, local
+previewON/count7 unchanged, new gates checked-in OFF. Known 230-R1 empty-key retry/in-flight, cross-owner
+label/decoder, Offer API proof, 227 mobile empty-note, 225-R1 lost LOCAL edits remain. TB185 paused/default-OFF/
+PendingAllocation. NEXT (Architect): decide whether to issue a bounded revalidation-only task (facts input + 216/213
+comparison + evidence persistence) before any captured checkout claim. STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
+
+# SUPERSEDED — 232/R1/R2 captured draft selection ACCEPTED; issued233 final Order parity — 2026-10-27
 
 Active: TB-SHIPPING-CAPTURED-ORDER-COMMIT-PARITY-233. Review232-R2/ARCHITECT-REVIEW.md,233/TASK.md in evidence.
 Root reviewed98c1c4ee0 actual adapter/tests. Accepted WITHIN SCOPE: per-group commitments, fresh clean preflight,

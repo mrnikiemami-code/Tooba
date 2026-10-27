@@ -32,6 +32,7 @@ public sealed class CommitStorefrontShippingHandler(StorefrontShippingService sh
                 request.ExpectedCartVersion,
                 request.IdempotencyKey,
                 request.CouponCode,
+                expectedSelectionRevision: null,
                 cancellationToken),
             abuse,
             cancellationToken);

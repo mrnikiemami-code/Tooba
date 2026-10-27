@@ -137,4 +137,5 @@ public sealed record SubmitCheckoutCommand(
     string CustomerNote = "",
     string RecipientFirstName = "",
     string RecipientLastName = "",
-    IReadOnlyList<OrderShippingGroupPlan>? ShippingGroups = null);
+    IReadOnlyList<OrderShippingGroupPlan>? ShippingGroups = null,
+    string? ExpectedSelectionRevision = null);

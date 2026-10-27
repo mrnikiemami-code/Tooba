@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Shipping;
@@ -53,7 +53,7 @@ public sealed class StorefrontCapturedPreviewWriteGuardTests
         var service = Service(enabled: true);
 
         var error = await Assert.ThrowsAsync<StorefrontOrderException>(() =>
-            service.CommitAsync(CartId, null, 7, "key", null, CancellationToken.None));
+            service.CommitAsync(CartId, null, 7, "key", null, expectedSelectionRevision: null, CancellationToken.None));
 
         Assert.Equal(StorefrontCapturedPreviewReasons.PreviewNotReady, error.Code);
     }
@@ -66,7 +66,7 @@ public sealed class StorefrontCapturedPreviewWriteGuardTests
         var saveFailure = await Record.ExceptionAsync(() =>
             service.SaveSelectionAsync(Selection(), null, CancellationToken.None));
         var commitFailure = await Record.ExceptionAsync(() =>
-            service.CommitAsync(CartId, null, 7, "key", null, CancellationToken.None));
+            service.CommitAsync(CartId, null, 7, "key", null, expectedSelectionRevision: null, CancellationToken.None));
 
         Assert.NotNull(saveFailure);
         Assert.NotNull(commitFailure);
@@ -85,7 +85,7 @@ public sealed class StorefrontCapturedPreviewWriteGuardTests
         var service = Service(enabled: false, drafts: new CapturedDraftStore());
 
         var error = await Assert.ThrowsAsync<StorefrontOrderException>(() =>
-            service.CommitAsync(CartId, null, 7, "key", null, CancellationToken.None));
+            service.CommitAsync(CartId, null, 7, "key", null, expectedSelectionRevision: null, CancellationToken.None));
 
         Assert.Equal(StorefrontCapturedPreviewReasons.PreviewNotReady, error.Code);
     }

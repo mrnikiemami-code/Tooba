@@ -30,7 +30,11 @@ public sealed record StorefrontStartPaymentRequest(
     bool UseWallet,
     string? ProviderCode,
     Guid? AuthenticatedUserId,
-    string? CouponCode = null);
+    string? CouponCode = null,
+    /// <summary>
+    /// نسخهٔ انتخاب capture‌شده به‌صورت متن؛ همان چیزی که کلاینت از خواندن authoritative دیده است.
+    /// </summary>
+    string? ExpectedSelectionRevision = null);
 
 /// <summary>دلیل رد درخواست پیش از هر عملیات پولی (بدون کد خطای ساختگی).</summary>
 public enum StorefrontStartPaymentFault
@@ -275,6 +279,7 @@ public sealed class StorefrontStartPaymentComposer
                     request.ExpectedCartVersion,
                     commitKey,
                     request.CouponCode,
+                    request.ExpectedSelectionRevision,
                     cancellationToken).ConfigureAwait(false);
             }
             catch (StorefrontOrderException exception)

@@ -88,6 +88,15 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
             requireReservation: false,
             cancellationToken);
 
+        // TB-233: پذیرش capture‌شده فقط داخل همین مسیر واقعی و <b>پیش از</b> نخستین رزرو/نوشتن سفارش.
+        // نتیجهٔ همین پذیرش (نه پلن خام فراخوان) مرجع ماندگاری گروه‌های سفارش است.
+        var acceptedShippingGroups = await _host.AcceptCapturedShippingAsync(
+            command,
+            cart,
+            sellerOrders,
+            now,
+            cancellationToken);
+
         IReadOnlyDictionary<Guid, Guid>? reservations = null;
         var abuseSettings = await _host.LoadAbuseSettingsAsync(cancellationToken);
         try
@@ -129,7 +138,8 @@ public sealed class CheckoutProcessManager : ICheckoutProcessManager
                 now,
                 abuseSettings,
                 process,
-                cancellationToken);
+                cancellationToken,
+                acceptedShippingGroups);
 
             await _host.OnAfterOrderWriteAsync(cancellationToken);
 
@@ -305,6 +315,23 @@ public interface ICheckoutSubmitHost
         DateTimeOffset now,
         CheckoutAbuseSettingsSnapshot abuseSettings,
         CheckoutProcess? process,
+        CancellationToken cancellationToken,
+        IReadOnlyList<OrderShippingGroupPlan>? acceptedShippingGroups = null);
+
+    /// <summary>
+    /// پذیرش گروه‌های ارسال capture‌شده از دادهٔ همین لحظهٔ سرور — فقط پیش از نخستین رزرو/نوشتن سفارش.
+    /// </summary>
+    /// <remarks>
+    /// پلن خام فراخوان اعتبارسنجی مستقل نیست: پیاده‌سازی باید شاهد ذخیره‌شده را تازه بخواند و آن را با
+    /// سبد/نسخه/مقصد/اشاره‌گر/نقل‌قول همین submit بسنجد. وقتی مسیر capture خاموش یا پشتیبانی‌نشده است
+    /// باید با کد پایدار رد کند، نه اینکه پلن فراخوان را بی‌اعتبارسنجی بپذیرد. مسیر قدیمی (بدون شاهد)
+    /// دقیقاً همان پلن ورودی را برمی‌گرداند.
+    /// </remarks>
+    Task<IReadOnlyList<OrderShippingGroupPlan>> AcceptCapturedShippingAsync(
+        SubmitCheckoutCommand command,
+        CartSnapshot cart,
+        IReadOnlyList<SellerOrder> sellerOrders,
+        DateTimeOffset now,
         CancellationToken cancellationToken);
 
     /// <summary>پس از نوشتن سفارش.</summary>

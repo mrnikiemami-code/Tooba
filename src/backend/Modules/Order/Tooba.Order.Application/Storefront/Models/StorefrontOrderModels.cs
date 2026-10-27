@@ -371,7 +371,12 @@ public sealed record StorefrontStartPaymentBody(
     string IdempotencyKey,
     bool UseWallet = false,
     string? ProviderCode = null,
-    string? CouponCode = null);
+    string? CouponCode = null,
+    /// <summary>
+    /// نسخهٔ انتخاب capture‌شده به‌صورت <b>متن</b> (TB-233). فقط برای مسیر capture لازم است؛ نبود/تهی/بدشکل
+    /// در آن مسیر امن‌بسته رد می‌شود و رفتار درخواست قدیمی تغییری نمی‌کند.
+    /// </summary>
+    string? ExpectedSelectionRevision = null);
 
 /// <summary>
 /// پاسخ موفق «کلیک نهایی پرداخت»: مرجع پایدار سفارش و پرداخت. هیچ فیلد مشتق/حدسی اضافه نمی‌شود.

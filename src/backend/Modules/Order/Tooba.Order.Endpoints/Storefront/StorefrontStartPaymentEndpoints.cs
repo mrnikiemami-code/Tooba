@@ -64,7 +64,8 @@ internal static class StorefrontStartPaymentEndpoints
                 wire.UseWallet,
                 wire.ProviderCode,
                 actor.AuthenticatedUserId,
-                wire.CouponCode),
+                wire.CouponCode,
+                wire.ExpectedSelectionRevision),
             ct);
 
         if (result.Started)

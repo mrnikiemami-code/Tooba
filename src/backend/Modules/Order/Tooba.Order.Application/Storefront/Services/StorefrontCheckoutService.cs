@@ -105,7 +105,8 @@ public sealed class StorefrontCheckoutService
         DateOnly? requestedDeliveryDate = null,
         string? requestedDeliveryTimeWindow = null,
         string? customerNote = null,
-        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null)
+        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null,
+        string? expectedSelectionRevision = null)
     {
         var prepared = await PrepareShippingAsync(shipping, cancellationToken);
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
@@ -129,7 +130,8 @@ public sealed class StorefrontCheckoutService
                 requestedDeliveryDate,
                 requestedDeliveryTimeWindow,
                 customerNote,
-                shippingGroups),
+                shippingGroups,
+                expectedSelectionRevision),
             cancellationToken);
         return MapPage(submitted, cart, persisted: true, shippingGroups);
     }
@@ -273,7 +275,8 @@ public sealed class StorefrontCheckoutService
         DateOnly? requestedDeliveryDate = null,
         string? requestedDeliveryTimeWindow = null,
         string? customerNote = null,
-        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null) =>
+        IReadOnlyList<OrderShippingGroupPlan>? shippingGroups = null,
+        string? expectedSelectionRevision = null) =>
         new(
             cart.CartId,
             _actor.BuildCartAccess(guestSecret),
@@ -300,7 +303,8 @@ public sealed class StorefrontCheckoutService
             customerNote ?? string.Empty,
             shipping?.FirstName ?? string.Empty,
             shipping?.LastName ?? string.Empty,
-            shippingGroups);
+            shippingGroups,
+            expectedSelectionRevision);
 
     private static StorefrontCheckoutPage MapPage(
         CheckoutSnapshot snapshot,

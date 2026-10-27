@@ -47,6 +47,23 @@ public sealed class StorefrontCapturedPreviewOptions
     /// </remarks>
     public int? AvailableDateCount { get; set; }
 
+    /// <summary>
+    /// آیا <b>ثبت نهایی سفارش</b> برای پیش‌نویس دارای شاهد capture مجاز است. پیش‌فرض خاموش.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// این کلید تنها کلید ثبت نهایی است و هیچ‌چیز را فعال نمی‌کند: نبود/خاموشی آن، ثبت نهاییِ capture را
+    /// حتی با روشن‌بودن <see cref="Enabled"/> و <see cref="SelectionEnabled"/> با
+    /// <see cref="StorefrontCapturedPreviewReasons.PreviewNotReady"/> رد می‌کند.
+    /// </para>
+    /// <para>
+    /// <b>Fail-closed.</b> روشن‌بودن این کلید مسیر واقعی submit را باز می‌کند، ولی تا وقتی بازاعتبارسنجی
+    /// سرور کامل نشده باشد همان <see cref="StorefrontCapturedPreviewReasons.PreviewNotReady"/> برمی‌گردد؛
+    /// هیچ شاهد capture‌شده‌ای بی‌اعتبارسنجی به سفارش تبدیل نمی‌شود.
+    /// </para>
+    /// </remarks>
+    public bool CheckoutEnabled { get; set; }
+
     /// <summary>آیا مقدار تاریخ‌ها برای روشن‌بودن کلید معتبر است.</summary>
     public bool HasValidAvailableDateCount =>
         AvailableDateCount is int count and >= 0 and <= MaxAvailableDateCount;

@@ -144,12 +144,14 @@ public sealed partial class CheckoutDirectory : ICheckoutSubmitHost
         DateTimeOffset now,
         CheckoutAbuseSettingsSnapshot abuseSettings,
         CheckoutProcess? process,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<OrderShippingGroupPlan>? acceptedShippingGroups = null)
     {
         // M2: freeze accepted-order shipping groups exactly once, inside the caller's transaction.
         // Nothing is written if any membership/ownership invariant fails (fail-closed).
+        // TB-233: پلن ماندگاری همان نتیجهٔ پذیرش داخل مسیر submit است، نه پلن خام فراخوان.
         var shippingGroups = OrderShippingGroupMaterializer.Materialize(
-            command.ShippingGroups ?? [],
+            acceptedShippingGroups ?? command.ShippingGroups ?? [],
             sellerOrders.SelectMany(x => x.Lines.Select(line => (line.LineId, line.SellerPartyId)))
                 .Distinct()
                 .ToList(),

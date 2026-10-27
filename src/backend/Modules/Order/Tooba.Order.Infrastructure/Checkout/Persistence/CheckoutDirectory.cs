@@ -61,6 +61,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     internal readonly IClock _clock;
     internal readonly IIdGenerator _ids;
     internal readonly ILogger<CheckoutProcessManager> _checkoutLogger;
+    internal readonly Microsoft.Extensions.Options.IOptions<Tooba.Order.Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions>? _capturedPreview;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -88,7 +89,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         ICampaignCartPriceAuthority? campaignPrices = null,
         ICheckoutProcessTracker? processes = null,
         ICheckoutInventoryReservationPort? inventoryReservation = null,
-        ICartConversionPort? cartConversion = null)
+        ICartConversionPort? cartConversion = null,
+        Microsoft.Extensions.Options.IOptions<Tooba.Order.Application.Storefront.Shipping.CapturedPreview.StorefrontCapturedPreviewOptions>? capturedPreview = null)
     {
         _db = db;
         _guard = guard;
@@ -115,6 +117,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             ?? throw new InvalidOperationException("درز رزرو موجودی checkout لازم است.");
         _cartConversion = cartConversion
             ?? throw new InvalidOperationException("درز تبدیل سبد checkout لازم است.");
+        _capturedPreview = capturedPreview;
     }
 
     /// <inheritdoc />

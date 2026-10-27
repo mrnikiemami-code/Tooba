@@ -695,6 +695,7 @@ public sealed class StorefrontShippingService
         int expectedCartVersion,
         string idempotencyKey,
         string? couponCode,
+        string? expectedSelectionRevision,
         CancellationToken cancellationToken)
     {
         EnsureCapturedPreviewIsNotCheckoutReady();
@@ -768,7 +769,8 @@ public sealed class StorefrontShippingService
             draft.SelectedDeliveryDate,
             draft.SelectedDeliveryTimeWindow,
             draft.CustomerNote,
-            BuildOrderGroupPlans(draft));
+            BuildOrderGroupPlans(draft),
+            expectedSelectionRevision);
     }
 
     /// <summary>
