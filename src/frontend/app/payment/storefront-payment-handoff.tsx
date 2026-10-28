@@ -12,7 +12,16 @@ import {
 } from "../storefront/storefront-checkout-api.ts";
 import { StorefrontCartApiError } from "../storefront/storefront-cart-api.ts";
 import { readStoredCheckoutId } from "../storefront/storefront-shipping-api.ts";
-import { loadStorefrontPendingPayments } from "../storefront/storefront-pending-payment-api.ts";
+import {
+  loadStorefrontPendingPayments,
+  type StorefrontPendingPaymentPage,
+} from "../storefront/storefront-pending-payment-api.ts";
+import {
+  allowsFreshPaymentAction,
+  resolveExistingPaymentState,
+  type ExistingPaymentState,
+  type PendingStatusRead,
+} from "./storefront-payment-existing-state.ts";
 import { StorefrontPaymentMethodPicker } from "../storefront/storefront-payment-methods.tsx";
 import {
   loadStorefrontPaymentMethods,
@@ -56,6 +65,12 @@ export function StorefrontPaymentHandoff() {
   const [error, setError] = useState<string | null>(null);
   const [recoveryCheckoutId, setRecoveryCheckoutId] = useState<string | null>(null);
   const [startedPaymentId, setStartedPaymentId] = useState<string | null>(null);
+  const [startedAwaitingManual, setStartedAwaitingManual] = useState(false);
+  /**
+   * TB240-R5: نتیجهٔ سه‌حالتهٔ خواندن «پرداخت آغاز‌شده؟». `unknown` یعنی خواندن شکست خورد و هیچ شاهدی
+   * نداریم؛ در این حالت فرم پرداخت تازه باز نمی‌شود (تنها تلاش دوباره/خطا).
+   */
+  const [existingState, setExistingState] = useState<ExistingPaymentState>({ kind: "none" });
   const [paying, setPaying] = useState(false);
   /**
    * TB-238 — gate همگام پیش از نخستین `await`: `setPaying(true)` تا رندر بعدی هیچ کلیک دومی را نمی‌بندد،
@@ -117,17 +132,23 @@ export function StorefrontPaymentHandoff() {
         // سفارشی که اثبات محلی مرورگر نداشت همیشه در resolver محلی می‌شکست.
         const checkout = await loadStorefrontCheckout(checkoutId);
         if (cancelled) return;
-        const [methodsPage, nextQuote, pendingPage] = await Promise.all([
+        const [methodsPage, nextQuote, pendingRead] = await Promise.all([
           loadStorefrontPaymentMethods(),
           loadStorefrontWalletQuote(checkoutId, checkout.cartId),
-          loadStorefrontPendingPayments().catch(() => null),
+          // TB240-R5: شکست این خواندن «پرداختی آغاز نشده» نیست. نتیجه به‌صورت صریح ناموفق نگه داشته
+          // می‌شود تا فرم تازه برای سفارشی که ممکن است از پیش آغاز شده باشد باز نشود.
+          loadStorefrontPendingPayments()
+            .then((page): PendingStatusRead => ({ status: "verified", page }))
+            .catch((): PendingStatusRead => ({ status: "failed" })),
         ]);
         if (cancelled) return;
         setPage(checkout);
         // پرداختی که قبلاً برای همین سفارش شروع شده (جدیدترین کارت در انتظار همان کاربر احراز‌شده) نباید
         // دوباره فرم پرداخت تازه بگیرد؛ ادامهٔ همان پرداخت از سطح نتیجهٔ موجود انجام می‌شود.
-        const started = pendingPage?.items.find((item) => item.checkoutId === checkout.checkoutId) ?? null;
-        setStartedPaymentId(started?.paymentId ?? null);
+        const existing = resolveExistingPaymentState(pendingRead, checkout.checkoutId);
+        setExistingState(existing);
+        setStartedPaymentId(existing.kind === "started" ? existing.paymentId : null);
+        setStartedAwaitingManual(existing.kind === "started" && existing.awaitingManual);
         setQuote(nextQuote);
         const codes = methodsPage.methods.map((m) => m.code.toLowerCase());
         setEnabledCodes(codes);
@@ -201,6 +222,8 @@ export function StorefrontPaymentHandoff() {
 
   async function pay() {
     if (!page || paid || paying) return;
+    // TB240-R5: وضعیت نامعلوم پرداخت هرگز فرم تازه را باز نمی‌کند، حتی با کلیک مستقیم.
+    if (!allowsFreshPaymentAction(existingState, mode)) return;
     const invalid = validateMethod();
     if (invalid) {
       setError(invalid);
@@ -373,7 +396,7 @@ export function StorefrontPaymentHandoff() {
                     </Link>
                   </div>
                 </div>
-              ) : mode === "checkout" && startedPaymentId ? (
+              ) : mode === "checkout" && existingState.kind === "started" && startedPaymentId ? (
                 <div
                   className="rounded-2xl border border-sky-200 bg-sky-50 p-5 text-sm text-sky-900"
                   data-testid="payment-started-continuation"
@@ -381,11 +404,29 @@ export function StorefrontPaymentHandoff() {
                   پرداخت این سفارش قبلاً آغاز شده و در انتظار تکمیل است؛ سفارش دوباره ثبت نمی‌شود.
                   <div className="mt-3">
                     <Link
-                      href={`/payment/result?paymentId=${encodeURIComponent(startedPaymentId)}&checkoutId=${encodeURIComponent(page.checkoutId || "")}&awaitingManual=1`}
+                      href={`/payment/result?paymentId=${encodeURIComponent(startedPaymentId)}&checkoutId=${encodeURIComponent(page.checkoutId || "")}${startedAwaitingManual ? "&awaitingManual=1" : ""}`}
                       className="inline-flex px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-bold"
                     >
                       ادامهٔ همان پرداخت
                     </Link>
+                  </div>
+                </div>
+              ) : mode === "checkout" && existingState.kind === "unknown" ? (
+                <div
+                  className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900"
+                  data-testid="payment-status-unknown"
+                >
+                  وضعیت پرداخت این سفارش بررسی نشد. تا بررسی دوباره، امکان ثبت پرداخت تازه بسته است تا سفارش
+                  دوباره ساخته نشود.
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="inline-flex px-4 py-2 rounded-xl bg-amber-600 text-white text-sm font-bold"
+                      data-testid="payment-status-retry"
+                    >
+                      بررسی دوباره وضعیت پرداخت
+                    </button>
                   </div>
                 </div>
               ) : !hasAnyMethod ? (
