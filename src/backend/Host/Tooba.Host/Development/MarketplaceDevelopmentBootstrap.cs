@@ -60,6 +60,10 @@ internal static class MarketplaceDevelopmentBootstrap
         await ContentDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await StoryDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        // TB240: opt-in commissioning of the EXISTING Catalog-owned Development sellable fixture inside
+        // THIS assigned Tenant=NULL Marketplace scope, so real seller organizations and buyable offers exist
+        // before seller contexts are reconciled. Inert by default; the module keeps all data authority.
+        await EnsureSellableFixturesAsync(provider, environment, CancellationToken.None);
         var sellerDevContexts = provider.GetRequiredService<Tooba.AccessControl.Application.Development.Seller.ISellerDevContextStore>();
         await sellerDevContexts.EnsureAsync(CancellationToken.None);
         await MarketplaceSellerDevBootstrap.EnsureAsync(provider, CancellationToken.None);
@@ -70,4 +74,48 @@ internal static class MarketplaceDevelopmentBootstrap
     }
 
     private static Task MigrateAsync(DbContext context) => context.Database.MigrateAsync();
+
+    /// <summary>
+    /// TB240: asks the Catalog-owned Development seam to create its documented live sellable fixture
+    /// (one live product, Seller A + Seller B organizations, their offers/prices/tax/locations/stock and the
+    /// Seller A companion) inside the CURRENT assigned Marketplace scope. Guarded by real Development +
+    /// explicit local opt-in; the existence check is the exact live fixture, never "any product exists".
+    /// </summary>
+    private static async Task EnsureSellableFixturesAsync(
+        IServiceProvider provider,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        if (!environment.IsDevelopment())
+        {
+            return;
+        }
+
+        var options = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<MarketplaceSellableSeedOptions>>().Value;
+        var seed = provider.GetRequiredService<Tooba.Catalog.Application.Development.IWorkspaceDemoSeed>();
+        await EnsureSellableFixturesAsync(environment, options, seed, cancellationToken);
+    }
+
+    /// <summary>
+    /// Seam body with explicit inputs so the guard shape is provable without a database: it seeds ONLY on
+    /// real Development + explicit opt-in + an absent EXACT live fixture.
+    /// </summary>
+    internal static async Task EnsureSellableFixturesAsync(
+        IHostEnvironment environment,
+        MarketplaceSellableSeedOptions options,
+        Tooba.Catalog.Application.Development.IWorkspaceDemoSeed seed,
+        CancellationToken cancellationToken)
+    {
+        if (!environment.IsDevelopment() || !options.Enabled)
+        {
+            return;
+        }
+
+        if (await seed.IsLiveProductSeededAsync(cancellationToken))
+        {
+            return;
+        }
+
+        await seed.SeedNewProductAsync(cancellationToken);
+    }
 }

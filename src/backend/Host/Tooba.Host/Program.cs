@@ -130,6 +130,8 @@ builder.Services.AddOptions<ToobaPlatformOptions>()
 builder.Services.AddSingleton<IValidateOptions<ToobaPlatformOptions>, PlatformOptionsValidator>();
 builder.Services.AddOptions<MarketplaceAdminDevOptions>()
     .Bind(builder.Configuration.GetSection(MarketplaceAdminDevOptions.SectionName));
+builder.Services.AddOptions<MarketplaceSellableSeedOptions>()
+    .Bind(builder.Configuration.GetSection(MarketplaceSellableSeedOptions.SectionName));
 builder.Services.AddSingleton(sp =>
     PlatformOptionsValidator.BuildRegistry(sp.GetRequiredService<IOptions<ToobaPlatformOptions>>().Value));
 builder.Services.AddSingleton<IDatabaseConnectionResolver, DatabaseConnectionResolver>();

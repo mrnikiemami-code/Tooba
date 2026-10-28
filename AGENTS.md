@@ -1,4 +1,36 @@
-# CURRENT — 240 ISSUED: FINISH CONNECTED MARKETPLACE DELIVERY; CUMULATIVE FOUR-HOUR END CONTRACT — 2026-10-28
+# CURRENT — 240 EXECUTED PARTIAL: real Marketplace sellable fixture + real mixed-owner read; reference data missing —2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PARTIAL**, NOT accepted, no userVisualACCEPT, no activation, no PSP/paid claim; base/issue
+dc987ce4e. LANDED: one opt-in Host seam `Tooba:Development:MarketplaceSellableSeed` (default false) that runs
+the EXISTING Catalog-owned `IWorkspaceDemoSeed` INSIDE the assigned Tenant=NULL Marketplace scope before seller
+contexts, guarded by exact-live-fixture existence (never Any(products), never a reseed, no consumed-stock
+refill); 4 new focused Host facts + the 239-R1 seam guard = 15/15, build 0 errors; no Datab/DbContext/SQL in Host.
+CHECKPOINT PASSED at minute 8 with REAL data on tooba_marketplace_tb239: parties=2 (آرمان/دیجی‌استایل), offers=3
+Active (ARM-LN-01, ARM-SC-01 same Seller A, DGS-LN-01 Seller B), prices=3/tax 1+1+3/stock=4/locations=3; seller A
+own /v1/seller/offers 200 (706B) and foreign seller header 403, seller B own 200; survives 2 real Host restarts
+with identical counts. NEW real mixed-owner READ: normal buyer registered, real guest cart with the 3 real offer
+lines (v7, IRR, 5,090,000, sellerCount 2) and POST /v1/storefront/shipping/projection 200 with THREE per-line
+captured groups keyed on the REAL seller ids. Admin authoring authz proven: after access-control bootstrap admin
+holds fulfillment.view+manage, GET authoring-drafts 200, POST authoring-drafts reaches 400
+shipping.service_code.unknown (not 403). BLOCKERS (measured, source-confirmed): geography countries/areas/cities = 0
+and Geography exposes ONLY MapGet routes with no Development seed/importer anywhere in the repo ⇒ every group is
+storefront.captured_preview.destination_required even with legacy province/city text; localization.languages = 0 ⇒
+no canonical shipping method can be created (name/language required) so no owner publication exists; shipping
+catalog 0/0/0; and a fresh owner needs a SECOND POST /v1/admin/access-control/bootstrap before fulfillment.manage
+tuples are honored (first 204→403, second 204→400). NOT delivered: 3-owner publications on one binding, per-group
+method/date, selection save, payment preview, StartPayment→Order/manual Pending, coupon partial/invalid/clear,
+duplicate UI+HTTP, immutable Order read, 1440/390/360 PAYMENT captures. Budget cumulative ≈123 min of the 240-min
+envelope (53 min 239-R1 + ≈70 min here); ≈117 min remain and the residual scope is multi-hour, so a fresh clock was
+NOT started. Preservation intact: checked-in gates OFF, no schema/migration/baseline edit, 231/232/236 applied,
+stale EF snapshot gap retained, USER review window / FE3000 / Host5088 / 238 handoff 3100+5188 untouched, 230
+publication + user draft/rates/week/pointer/cart untouched, no reset/reseed/direct business SQL/cross-DB copy.
+TB185 paused/defaultOFF/PendingAllocation; 238 SQLSTATE22001 still UNCLASSIFIED. Next architectural decision (no
+automatic task): compose the EXISTING Localization language seed and add ONE Geography-owned Development seed
+(same Development+opt-in guards) or provision that dataset out-of-band, then this task's remaining flow becomes
+executable. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 240 ISSUED: FINISH CONNECTED MARKETPLACE DELIVERY; CUMULATIVE FOUR-HOUR END CONTRACT — 2026-10-28
 
 239-R1 DEV admin commissioning ACCEPTED WITHIN SCOPE after source + committed receipt review; full delivery NOT accepted.
 Reviewed source 3c726019449f1ccad0dadc93e783292ac8de276f. Root did not execute worker tests/runtime.
