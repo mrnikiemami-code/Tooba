@@ -1,4 +1,4 @@
-﻿# CURRENT — 240-R7 EXECUTED: honest unselected date + per-group delivery time + one owning Continue blocker; proven on TWO sellers AND ONE seller — 2026-10-28
+﻿﻿# CURRENT — 240-R7 EXECUTED (worker result): honest unselected date + per-group delivery time + one owning Continue blocker; proven on TWO sellers AND ONE seller — 2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT userVisualACCEPT, no activation, no checkout/order. Base581c5f31a;
@@ -38,7 +38,38 @@ earlier (this task restarted nothing global). Checked-in StorefrontCapturedPrevi
 named task processes' local env); no schema/migration/seed/reset/direct SQL. TB185 paused/default-OFF/
 PendingAllocation. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
 
-# SUPERSEDED — 240-R7 USER TRIAL DEFECT ISSUED: one-seller handoff / no delivery time / grey Continue — 2026-10-28
+BINDING BELOW: the Architect CORRECTION dated 2026-10-28 (hourly receiving-slot regression / configurable slot duration) is
+NOT delivered by this worker result and stays OPEN for the next task. R7 closes only the delivery-date display, per-group
+delivery time and silent disabled-Continue defect it was issued for.
+
+# CORRECTION — DELIVERY-TIME SELECTION IS A USER-REPORTED REGRESSION —2026-10-28
+
+User says it existed before and is now gone. Do NOT frame restoration as an optionalnewfeature or completionwaiver.
+Root confirmed legacyGroupSchedulePicker still has schedule.timeWindows radiochoices/onSelectWindow; newCapturedMethodRow
+onlydates+intervalText. Earlier "NEWrequirement" classification superseded. Exactoldhourlydurationpolicy not independentlyverified.
+Requiredrestoration: date THEN selectable server-authorizedslots09–10,10–11,... from explicit methodsettings, pergroupindependent,
+selectedslot validated+persisted unchanged. No frontendfakehours/legacyquoteauthority fallback or9–17text substituted forslotchoice.
+Read docs/architecture/shipping/SHIPPING-RECEIVING-SLOT-DURATION-USER-REQUIREMENT-2026-10-28.md appendedCORRECTION.
+240-R7 remains active; date/disabledreasonfix alone cannot close this slotregression. No automaticnewtask/deadlinereset.
+Preserve all USERtab/HMR and NOscreenshots/visualworker constraints below.
+
+---
+# USER CLARIFICATION — CONFIGURABLE HOURLY RECEIVING SLOTS ARE OPEN — 2026-10-28
+
+Latest user: "ساعت داشته باشد9تا10 10تا11 همینطور البته با تنظیمات".
+Read docs/architecture/shipping/SHIPPING-RECEIVING-SLOT-DURATION-USER-REQUIREMENT-2026-10-28.md.
+Required: owner/method openinghours + explicit slotduration (example60minutes) => server-produced selectable09–10,10–11,...;
+customer chooses date AND ONE realslot per group. NOT just intervaltext or manually namedmorning/afternoon choices.
+Persist/capture/validate selectedslot end-to-end and keep originalOrder receivingticks immutable. No frontendhardcodedsplit/
+default60 for oldcaptures, no inventedcapacity/cutoff or reuse of unrelated legacyoperatingschedule as captureauthority.
+Currentcontracts/editor only have one start/endpair perday, no slotduration; this feature is NOT delivered.
+Already-issued240-R7 scope remains datechoice/disabledreason/displayrepair; do not silentlyfakehourlyslots or claimR7 delivers
+this clarified requirement. No newautomatic task issued here; overallhourlyslotrequirement OPEN for Architect integration.
+Preserve currentactive task and all usertab/HMR/no-screenshot safeguards below. Earlier localmanualcheckpoint is scoped,
+not fullfeaturecompletion. OriginaldeadlineMISSED.
+
+---
+# SUPERSEDED —240-R7 ISSUE BLOCK: the user defect report this worker result answers —2026-10-28
 
 User reports onlyone store,no deliverytime,selectiondidnotenablepayment. NOT userVisualACCEPT. Active TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7.
 Read docs/ai/tasks/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/TASK.md. Base3ba69d239fddacf850253c820d89a3bdce5a170a, appsource763506b34.
