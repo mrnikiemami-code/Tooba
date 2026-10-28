@@ -95,6 +95,10 @@ function DateChipStrip({
             key={d.value}
             type="button"
             disabled={disabled}
+            // TB-240-R7: انتخاب باید در DOM هم قابل خواندن باشد؛ یک تاریخ «نزدیک‌ترین» تا وقتی
+            // واقعاً انتخاب نشده aria-pressed=false می‌ماند.
+            aria-pressed={selected}
+            data-selected={selected ? "true" : "false"}
             onClick={() => {
               if (disabled) return;
               onPick(d.value);
@@ -353,8 +357,18 @@ function CapturedMethodRow({
 }) {
   const identity = `${groupKey}-${method.serviceCode}-${method.optionCode ?? "none"}`;
   const methodKey = capturedMethodKey(method);
-  const active = selectedDate ?? method.earliestEligibleDate ?? method.availableDates[0]?.value ?? "";
-  const activeDate = method.availableDates.find((d) => d.value === active) ?? null;
+  /**
+   * TB-240-R7: «نزدیک‌ترین روز» فقط یک **پیشنهاد** است، نه انتخاب.
+   *
+   * پیش از این `active` حتی وقتی هیچ انتخابی در state نبود به زودترین تاریخ برمی‌گشت؛ نوار تاریخ آن
+   * روز را انتخاب‌شده نشان می‌داد و بازهٔ همان روز هم نمایش داده می‌شد، در حالی که هیچ تاریخ تأییدشده‌ای
+   * برای این گروه وجود نداشت (`aria-pressed` روی روش false بود). اکنون `active` فقط انتخاب واقعی است.
+   */
+  const recommended = method.earliestEligibleDate ?? method.availableDates[0]?.value ?? "";
+  const active = selected && selectedDate ? selectedDate : "";
+  const shownDate = active || recommended;
+  const activeDate = method.availableDates.find((d) => d.value === shownDate) ?? null;
+  const dateChosen = active.length > 0 && activeDate !== null;
   const freight = formatExactAmountText(method.freightAmountText, method.currency ?? currency);
   const packaging = formatExactAmountText(method.packagingAmountText, method.currency ?? currency);
 
@@ -367,7 +381,9 @@ function CapturedMethodRow({
         <div className="min-w-0">
           <button
             type="button"
-            onClick={() => onSelectMethod(groupKey, methodKey, active || null)}
+            // TB-240-R7: کلیک روی نام روش یک اقدام صریح کاربر است و همان روز پیشنهادی سرور را
+            // انتخاب می‌کند؛ هیچ رندر/افکتی خودش انتخاب نمی‌سازد.
+            onClick={() => onSelectMethod(groupKey, methodKey, recommended || null)}
             aria-pressed={selected}
             disabled={method.availableDates.length === 0}
             className={`text-[11px] md:text-xs font-bold flex items-center gap-1.5 text-start disabled:opacity-60 ${
@@ -395,7 +411,10 @@ function CapturedMethodRow({
         </p>
       ) : (
         <>
-          <p className="mt-2 text-[10px] text-gray-500 flex items-center gap-1">
+          <p
+            className="mt-2 text-[10px] text-gray-500 flex items-center gap-1"
+            data-testid={`shipping-group-captured-dates-label-${identity}`}
+          >
             <Calendar className="w-2.5 h-2.5" /> تاریخ‌های مجاز همین روش
           </p>
           <DateChipStrip
@@ -409,8 +428,10 @@ function CapturedMethodRow({
             className="mt-1 text-[10px] text-gray-600"
             data-testid={`shipping-group-captured-interval-${identity}`}
           >
-            {/* TB-230-R1: بازه ساعت واقعی سرور؛ جهت‌دهی صریح LTR تا در RTL هم 09:00–17:00 درست خوانده شود. */}
-            بازهٔ همین روز:{" "}
+            {/* TB-230-R1: بازه ساعت واقعی سرور؛ جهت‌دهی صریح LTR تا در RTL هم 09:00–17:00 درست خوانده شود.
+                TB-240-R7: تا وقتی روزی انتخاب نشده، همان ساعت با برچسب «پیشنهادی» نشان داده می‌شود؛
+                هرگز به‌شکل انتخاب‌شده نمایش داده نمی‌شود و ساعتی ساخته نمی‌شود. */}
+            {dateChosen ? "زمان تحویل (بازهٔ روز انتخابی): " : "زمان تحویل (بازهٔ روز پیشنهادی — هنوز انتخاب نشده): "}
             <bdi dir="ltr" className="inline-block">
               {activeDate?.intervalText ?? "ثبت نشده"}
             </bdi>
@@ -438,6 +459,15 @@ function CapturedGroupCard({
   onSelectCapturedMethod: (groupKey: string, methodKey: string, date: string | null) => void;
 }) {
   const goodsText = formatExactAmountText(group.finalGoodsAmountText, currency);
+  const chosenMethod = selection
+    ? group.methods.find((method) => capturedMethodKey(method) === selection.methodKey) ?? null
+    : null;
+  const chosenSlot = chosenMethod && selection?.date
+    ? chosenMethod.availableDates.find((slot) => slot.value === selection?.date) ?? null
+    : null;
+  const chosenDateLabel = chosenSlot && selection?.date
+    ? formatJalaliDate(`${selection.date}T12:00:00`, "fa")
+    : null;
   return (
     <div
       className="rounded-2xl border border-gray-200 bg-gray-50/60 p-3 md:p-4"
@@ -480,6 +510,37 @@ function CapturedGroupCard({
           {capturedReasonText(group.unavailableReason)}
         </p>
       ) : null}
+
+      {/* TB-240-R7: «زمان تحویل همین گروه» به‌صورت یک خط مستقل و صریح — یا تاریخ انتخاب‌شدهٔ همین گروه،
+          یا «هنوز انتخاب نشده». هیچ تاریخی حدس زده نمی‌شود و هیچ گروهی بدون تاریخ به ادامه نمی‌رسد. */}
+      <p
+        className="mt-2 text-[11px] text-gray-700"
+        data-testid={`shipping-group-delivery-${group.groupKey}`}
+      >
+        <span className="font-bold">زمان تحویل این گروه: </span>
+        {chosenDateLabel ? (
+          <>
+            {chosenDateLabel}
+            {chosenMethod ? ` — ${chosenMethod.methodLabel}` : ""}
+            {chosenSlot?.intervalText ? (
+              <>
+                {" "}
+                <bdi dir="ltr" className="inline-block">{chosenSlot.intervalText}</bdi>
+              </>
+            ) : null}
+          </>
+        ) : (
+          "هنوز انتخاب نشده"
+        )}
+      </p>
+      {chosenDateLabel || group.methods.length === 0 ? null : (
+        <p
+          className="mt-1 text-[10px] font-bold text-amber-700"
+          data-testid={`shipping-group-captured-need-date-${group.groupKey}`}
+        >
+          برای این گروه یکی از تاریخ‌های هر روش را انتخاب کنید.
+        </p>
+      )}
 
       {group.methods.map((method) => (
         <CapturedMethodRow

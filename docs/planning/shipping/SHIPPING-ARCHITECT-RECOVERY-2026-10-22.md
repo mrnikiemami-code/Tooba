@@ -1,4 +1,44 @@
-# CURRENT —240-R7 USERTRIAL DEFECT OPEN: ONESELLER HANDOFF / NO TIME / CONTINUE GREY —2026-10-28
+﻿# CURRENT — 240-R7 EXECUTED: honest unselected date + per-group delivery time + one owning Continue blocker; proven on TWO sellers AND ONE seller — 2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT userVisualACCEPT, no activation, no checkout/order. Base581c5f31a;
+claim18:52:39Z→result≈19:23Z ≈31min vs Focus20 recorded NONCOMPLIANT; one-correction budget EXCEEDED.
+LANDED on the EXISTING page/cards only: new pure `storefront-shipping-continue-state.ts`
+(resolveShippingContinueState/describeShippingContinueBlocker) is the ONE enabled-state+blocker authority replacing
+the anonymous isValid; Continue carries aria-describedby + ONE short Persian owning reason
+(testid/id shipping-continue-blocker, aria-live polite) naming the exact owning group
+(«برای «X» یکی از تاریخهای تحویل را انتخاب کنید.»); DateChipStrip exposes aria-pressed/data-selected;
+CapturedMethodRow no longer derives `active` from earliestdate (recommendation only, no render/effect autoselect) and
+labels the interval «بازهٔ روز پیشنهادی — هنوز انتخاب نشده» until a real choice; CapturedGroupCard adds
+per-group shipping-group-delivery-<groupKey> (chosen Jalali day + method + that day's own authored interval, else
+«هنوز انتخاب نشده») plus a short per-group hint. No backend/Contracts/DI/owner/quote/calendar/slot engine, no
+validation loosening, no invented date/hour, no new UI framework.
+MEASURED: BEFORE base build 2 groups = no delivery element at all, «بازهٔ همین روز», nearest chip styledPrimary:true
+with aria-pressed absent, method aria-pressed false, Continue disabled with aria-describedby null / blockerText null.
+AFTER real two-seller cart: name blocker → «برای «فروشگاه آرمان»…» → only A chosen (1405/08/07 + own interval) while
+blocker names B → both chosen (1405/08/07 & 1405/08/09) => enabled => ONE PUT /v1/storefront/shipping/selection 200
+with 2 own echo groups + expectedSelectionRevision TEXT ("0" first, "3" later) => /fa/payment rows 71,000 + 49,500
+= shipping 120,500, payable 3,652,100, «این سفارش هنوز ثبت نشده است». AFTER real SINGLE-group cart (second line
+removed through the public cart API, v6): 1 card honest unselected → the SAME exact owning blocker → date 2026-10-29
+→ enabled → ONE PUT 200 groups1 revision TEXT "2" → payment 200. Checks: helper 13/13, frontend-test-discovery 3/3,
+tsc clean; frontend-source-size guard RED PRE-EXISTING (shipping.tsx already 1105 > baseline 945 at base, 1210 after)
+— disclosed, not re-baselined, no guard sweep.
+HANDOFF: ONE visible task-owned installed-Chrome window (profile D:\temp\tb240r7-chrome, CDP9344, PID44116) on
+http://127.0.0.1:3104/fa/shipping (FE3104 PID46448, Host5190 PID43548 → tooba_marketplace_tb239), buyer
+01a183e3-59cd-7000-829d-a0587da45e17 with /api/auth/me 200, cart 01a183e5-b620-7000-bf41-97187918d843 v8 with TWO
+real sellers (فروشگاه آرمان + دیجیاستایل نمونه), address filled, deliberately NO date chosen, Continue disabled with
+the exact Arman group reason, UNSUBMITTED (zero checkout/order/reservation). Window/profile/FE watcher frozen after
+the final read; the R6 user window (9343/FE3103) and its cart were never enumerated/read/automated/reloaded/closed;
+3000/5088 and the R4/handoff profiles untouched.
+NOT delivered: no final payment/order, no PSP, no coupon/history exercise, no Marketplace-edition trial, no full
+solution/Order/Shipping suite, no userVisualACCEPT/activation/release. Per-group delivery label is Jalali/`fa`
+regardless of locale (`/en` route not exercised). Known 238 unknown22001 inventory-outbox concurrency, 227 mobile
+empty-note, 225-R1 lost user LOCAL edits retained; R6's Docker Desktop restart already touched the shared engine
+earlier (this task restarted nothing global). Checked-in StorefrontCapturedPreview gates stay OFF (ON only in the
+named task processes' local env); no schema/migration/seed/reset/direct SQL. TB185 paused/default-OFF/
+PendingAllocation. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 240-R7 USER TRIAL DEFECT ISSUED: one-seller handoff / no delivery time / grey Continue — 2026-10-28
 
 User reports onlyone store,no deliverytime,selectiondidnotenablepayment. NOT userVisualACCEPT. Active TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7.
 Read docs/ai/tasks/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/TASK.md. Base3ba69d239fddacf850253c820d89a3bdce5a170a, appsource763506b34.

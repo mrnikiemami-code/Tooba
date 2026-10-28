@@ -4,7 +4,7 @@ import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
-import { Check, ChevronLeft, CreditCard, Edit3, Package, Shield, ShoppingBag, Store, Truck } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, CreditCard, Edit3, Package, Shield, ShoppingBag, Store, Truck } from "lucide-react";
 import { toPersianDigits } from "./storefront-shipping-format.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { loadStorefrontCart, StorefrontCartApiError, type StorefrontCartLine } from "./storefront-cart-api.ts";
@@ -74,10 +74,13 @@ import {
 import { StorefrontShippingGroupCards, type ShippingGroupCard, type StorefrontCapturedGroupChoice, type UnassignedSellerBlock } from "./storefront-shipping-group-cards.tsx";
 import {
   buildCapturedSelectionIntent,
-  capturedSelectionComplete,
   capturedSelectionContextKey,
   resolveCapturedSelectionRevision,
 } from "./storefront-shipping-captured-selection.ts";
+import {
+  describeShippingContinueBlocker,
+  resolveShippingContinueState,
+} from "./storefront-shipping-continue-state.ts";
 import { StorefrontShippingSingleGroupSection } from "./storefront-shipping-single-group-section.tsx";
 import { resolveShippingUnavailableNotices } from "./storefront-shipping-unavailable-methods.ts";
 import {
@@ -622,24 +625,52 @@ export function StorefrontShopeivaShipping() {
   // TB-229-R1: پیش‌نمایش روشن یعنی مسیر قدیمی هیچ هزینه/تاریخی را «محاسبه‌شده» نمایش نمی‌دهد.
   // TB-230: همین پرچم (بالاتر، همراه هماهنگ‌کنندهٔ مقصد) یک‌بار تعریف شده است.
 
-  const isValid =
-    (Boolean(address.firstName.trim() && address.lastName.trim())
-      || Boolean(savedAddressId && address.recipientName.trim())) &&
-    Boolean(address.contactMobile.trim()) &&
-    Boolean(address.provinceName.trim()) &&
-    Boolean(address.cityName.trim()) &&
-    Boolean(address.postalAddress.trim()) &&
-    Boolean(address.postalCode.trim()) &&
-    // TB-237: مسیر capture‌شده اعتبار خودش را دارد: هر گروه باید روش + تاریخِ همان روش را داشته باشد
-    // و مبلغ کالای همان گروه از همان پاسخ موفق موجود باشد؛ هیچ روش/تاریخ/مبلغی حدس زده نمی‌شود.
-    (capturedPreviewActive
-      ? capturedSelectionComplete(capturedPreviewForIntent, capturedChoices)
-      : (isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode))
-        && (isGroupedCart
-          ? allGroupSchedulesComplete({ schedules: groupSchedules, selections: groupSelections })
-          : Boolean(deliveryDate) && Boolean(deliveryTime)
-            && isShippingDateHorizonComplete(singleGroupHorizon, deliveryDate, deliveryTime))) &&
-    (capturedPreviewActive ? true : (projection?.methods.length ?? 0) > 0);
+  /**
+   * TB-240-R7 — یک مرجع واحد برای روشن‌بودن «ادامه به پرداخت» + دلیل کوتاه مالک آن.
+   *
+   * پیش از این فقط `isValid` وجود داشت و دکمهٔ غیرفعال هیچ توضیحی نداشت؛ کاربر فقط یک دکمهٔ خاکستری
+   * می‌دید. اکنون همان تصمیم قبلی (بدون هیچ شل‌شدنی) به یک دلیل کاربری ترجمه می‌شود.
+   */
+  const legacyMethodReady = isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode);
+  const legacyScheduleReady = isGroupedCart
+    ? allGroupSchedulesComplete({ schedules: groupSchedules, selections: groupSelections })
+    : Boolean(deliveryDate) && Boolean(deliveryTime)
+      && isShippingDateHorizonComplete(singleGroupHorizon, deliveryDate, deliveryTime);
+  const continueState = resolveShippingContinueState({
+    address: {
+      recipient:
+        Boolean(address.firstName.trim() && address.lastName.trim())
+        || Boolean(savedAddressId && address.recipientName.trim()),
+      contactMobile: Boolean(address.contactMobile.trim()),
+      province: Boolean(address.provinceName.trim()),
+      city: Boolean(address.cityName.trim()),
+      postalAddress: Boolean(address.postalAddress.trim()),
+      postalCode: Boolean(address.postalCode.trim()),
+    },
+    captured: {
+      active: capturedPreviewActive,
+      confirmed: capturedPreviewConfirmed,
+      preview: capturedPreviewForIntent,
+      choices: capturedChoices,
+    },
+    legacy: {
+      available: (projection?.methods.length ?? 0) > 0,
+      methodReady: legacyMethodReady,
+      scheduleReady: legacyScheduleReady,
+    },
+  });
+  const isValid = continueState.ready;
+  const continueBlockerGroupKey = continueState.blocker?.groupKey ?? null;
+  const continueBlockerGroupLabel = (() => {
+    if (!continueBlockerGroupKey) return null;
+    const group = capturedPreviewForIntent?.groups.find((entry) => entry.groupKey === continueBlockerGroupKey);
+    if (!group) return null;
+    return cartLines.find((line) => line.sellerPartyId === group.sellerPartyId)?.sellerDisplayName ?? null;
+  })();
+  const continueBlockerText = describeShippingContinueBlocker(continueState.blocker, {
+    locale,
+    groupLabel: continueBlockerGroupLabel,
+  });
 
   function selectSaved(row: CustomerAddress) {
     const mapped = shippingFromCustomerAddress(row);
@@ -1028,6 +1059,7 @@ export function StorefrontShopeivaShipping() {
                   <button
                     type="button"
                     disabled={!isValid || busy}
+                    aria-describedby={continueBlockerText ? "shipping-continue-blocker" : undefined}
                     onClick={() => void persistAndContinue()}
                     className={`mt-4 w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
                       isValid && !busy
@@ -1039,6 +1071,18 @@ export function StorefrontShopeivaShipping() {
                     {busy ? "در حال ثبت…" : "ادامه به پرداخت"}
                     <ChevronLeft className="w-4 h-4" />
                   </button>
+                  {/* TB-240-R7: دلیل کوتاهِ مالکِ غیرفعال‌بودن دکمه — همان تصمیم واحد بالا، نه چک‌لیست. */}
+                  {continueBlockerText ? (
+                    <p
+                      id="shipping-continue-blocker"
+                      className="mt-2 flex items-start gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-800"
+                      data-testid="shipping-continue-blocker"
+                      aria-live="polite"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      {continueBlockerText}
+                    </p>
+                  ) : null}
                   <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-400">
                     <span className="flex items-center gap-1">
                       <Shield className="w-3 h-3" /> پرداخت امن
