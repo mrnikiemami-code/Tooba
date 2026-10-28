@@ -1,3 +1,31 @@
+# CURRENT —240-R5 ISSUED: FRESHCART FORM + UI REQUESTCOUNTS/RETRY; BACKENDCOUPON/HISTORY ACCEPTED IN SCOPE —2026-10-28
+
+Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5, task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/TASK.md.
+Reviewed main829c032bed767f534709ed1d60bcab7930f38e39/source74af687bf243213e54a1d511f6da989fa03f26a4.
+R4 acceptedWITHIN manualconnectedbackend + authorizedoldorder recovery: emptycacheownerread200,foreign/guestnosecret404,
+3groupcouponvalid/invalid/clear+Order/manualPending,samekeymanualpaymentrows/cycles1,originalOrder unchangedaftertaskpublication.
+Root inspectedsource/receipts, didNOTexecuteWindowsproof. No fullrelease/VisualACCEPT/PSPexactlyonce.
+
+Remaining: normalNEWcart paymentform + actualContinue/finaldoubleclick networkcounts + failure/explicitretryfunctionalcheck.
+No missing-password/convertedcart block: normalnewtaskaccount register/BFFlogin+newcart EXPLICITLYauthorized. PrivatepasswordretainTEMP.
+Use realcurrentSellerArate68000+3000=71000, notold65000; readfreshserverechoes. No seeds/migrations/permissionwaves.
+Sourcependingstatus .catch(()=>null) must not infer nopayment/reopenfreshpay; explicitunknown/retry retainsmanualcontinuation.
+IsolatefrontendchangesfromR4watcher; usefreeFE3103+newprofileifneeded, sameHost5190.
+
+USEROVERRIDE NO SCREENSHOTS/IMAGES/VISUALREVIEW/VIEWPORTMATRIX. ActualHTTP/DOM/persistedfacts only; userchecksappearance.
+Original240-minuteEND MISSED. R4timecontradiction:10:38:34Z→~10:52Z≈14m, not43; cumulative286UNVERIFIED.
+Ifendpointsactual,previous243+14≈257 beforefurtherwork; reconcilewithactualstartbasis or markunverified, no clockreset.
+Taskfocused15 operationalminutes, not a newdeliverypromise; actualstart/endnowrecorded. Avoidanotherhelper-onlypartialclaim.
+
+HandedoffR4URL http://127.0.0.1:3102/fa/payment?checkoutId=01a18209-cd78-7000-a9b6-02dadf377e55
+profileD:\temp\tb240r4-review-chrome/CDP9342 nowPRESERVE, no enumerate/read/automate/reload/close/HMR.
+Also USER3000/5088,handoff3100/5188+D:\temp\tb238-handoff-chrome/userunsavedwork/watchers NEVERtouch.
+Tasknewprofile only,isolatedFE3103ifmodifying. Preserveoriginaluserdraft/review230/handoffcart andR4orders.
+TaskHost5190/MarketplaceTenantNULL/tooba_marketplace_tb239 ready; checked-ingatesOFF/namedlocalON, no schemareset/reseed.
+TB185paused/defaultOFF/PendingAllocation;externalproviderconcurrency/238unknown22001/227mobileempty-note/225-R1LOCALloss retained.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE; no automatic241.
+
+---
 # CURRENT — 240-R4 EXECUTED PARTIAL: usable authorized order page + real coupon order; UI double-click/form/retry remain — 2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/{RESULT.md,RECEIPTS.md}.
