@@ -1,6 +1,25 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-28 (TB-237-R1)
+## Current Shipping handoff — 2026-10-28 (TB-240-R2, BLOCKED)
+
+The live pointer is
+[`TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/RESULT.md`](../architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/RESULT.md)
+and the task-wide TOP is the root `AGENTS.md`.
+
+240-R2 is **BLOCKED**, not accepted. Both real sellers are now commissioned through the AccessControl-owned
+Development prelude (`EnsureMarketplaceSellerAccessAsync`, existing `seller-owner` role, real
+`ISellerDevContextStore` pairs, idempotent, local opt-in) and their captures publish through their own seller APIs on
+the SAME `post:standard` binding; payment same-key concurrency was repaired in `PaymentDirectory` (winner PaymentId AND
+AttemptId, no 500). A 3-offer mixed cart projects three PRICED owner groups (Platform 100000 / SellerA 65000 /
+SellerB 49500). The mixed-owner SELECTION then fails `23505` on the EXISTING
+`ux_cart_shipping_groups_cart_seller_method`: one seller with a Platform-fulfilled and a Seller-fulfilled group on one
+cart using the same one-level method is structurally refused, and relaxing that needs a migration this task forbids.
+Not delivered: mixed order/manual Pending, 3-group payment draft/StartPayment, coupon fact, Order-only mixed read, FE
+build/screenshots, usable URL handoff. Architect decision needed: mixed-owner persistence contract (per-group owner
+discriminator vs relaxed index), then re-Issue 240-R3. Nothing is activated; checked-in gates stay OFF; TB185 paused/
+default-OFF/PendingAllocation. `STOP_FOR_ARCHITECT`, no automatic next task.
+
+## Historical Shipping handoff — 2026-10-28 (TB-237-R1)
 
 The live pointer is
 [`TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/RESULT.md`](../architecture/evidence/TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/RESULT.md)

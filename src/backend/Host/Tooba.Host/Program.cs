@@ -134,6 +134,8 @@ builder.Services.AddOptions<MarketplaceSellableSeedOptions>()
     .Bind(builder.Configuration.GetSection(MarketplaceSellableSeedOptions.SectionName));
 builder.Services.AddOptions<MarketplaceReferenceDataOptions>()
     .Bind(builder.Configuration.GetSection(MarketplaceReferenceDataOptions.SectionName));
+builder.Services.AddOptions<MarketplaceSellerAccessOptions>()
+    .Bind(builder.Configuration.GetSection(MarketplaceSellerAccessOptions.SectionName));
 builder.Services.AddSingleton(sp =>
     PlatformOptionsValidator.BuildRegistry(sp.GetRequiredService<IOptions<ToobaPlatformOptions>>().Value));
 builder.Services.AddSingleton<IDatabaseConnectionResolver, DatabaseConnectionResolver>();

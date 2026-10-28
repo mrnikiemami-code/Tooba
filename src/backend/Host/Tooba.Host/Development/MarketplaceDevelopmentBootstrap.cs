@@ -75,9 +75,56 @@ internal static class MarketplaceDevelopmentBootstrap
         // TB239-R1: opt-in binding of ONE normally registered Development administrator to the EXISTING
         // Marketplace platform membership. Inert by default; the legacy tuple above stays unchanged.
         await MarketplaceAdminDevBootstrap.ProvisionConfiguredAsync(provider, environment, CancellationToken.None);
+        // TB240-R2: opt-in binding of BOTH real seller identities to their own seller-owner scope (the
+        // existing bootstrap creates the scope but never assigns it) and re-publication of the REAL pairs
+        // after the legacy synthetic Marketplace pair above. Inert by default.
+        await EnsureMarketplaceSellerAccessAsync(provider, environment, CancellationToken.None);
     }
 
     private static Task MigrateAsync(DbContext context) => context.Database.MigrateAsync();
+
+    /// <summary>
+    /// TB240-R2: commissions the MISSING step of the existing access-control bootstrap — assigning each real
+    /// seller identity its own already-created seller-owner role — inside the CURRENT Marketplace scope only.
+    /// Guarded by real Development + explicit local opt-in; AccessControl keeps all persistence authority.
+    /// </summary>
+    private static async Task EnsureMarketplaceSellerAccessAsync(
+        IServiceProvider provider,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        if (!environment.IsDevelopment())
+        {
+            return;
+        }
+
+        var options = provider
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<MarketplaceSellerAccessOptions>>()
+            .Value;
+        if (!options.Enabled)
+        {
+            return;
+        }
+
+        var admin = provider
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<MarketplaceAdminDevOptions>>()
+            .Value;
+        Guid? auditActor = null;
+        var identifier = (admin.Identifier ?? string.Empty).Trim();
+        if (identifier.Length != 0)
+        {
+            // Same real principal resolution used by the admin provisioning seam; never a fixed actor id.
+            auditActor = await provider.GetRequiredService<Tooba.Identity.Contracts.Auth.IIdentityAuthenticationService>()
+                .FindUserIdByIdentifierAsync(
+                    Tooba.Identity.Contracts.Auth.LoginIdentifierKind.Email,
+                    identifier,
+                    cancellationToken);
+        }
+
+        var prelude = provider
+            .GetRequiredService<Tooba.AccessControl.Contracts.Development.IAccessControlDevelopmentSeedPrelude>();
+        await prelude.EnsureMarketplaceSellerAccessAsync(auditActor, cancellationToken);
+    }
 
     /// <summary>
     /// TB240-R1: commissions the reference data that shipping authoring depends on, inside the CURRENT
@@ -108,7 +155,20 @@ internal static class MarketplaceDevelopmentBootstrap
             options,
             ct => Tooba.Localization.Infrastructure.Bootstrap.LanguageBootstrapDevelopmentSeed.PostMigration
                 .EnsureAsync(provider, ct),
-            ct => Tooba.Geography.Infrastructure.Development.GeographyDevelopmentSeed.EnsureAsync(provider, ct),
+            async ct =>
+            {
+                var outcome = await Tooba.Geography.Infrastructure.Development.GeographyDevelopmentSeed
+                    .EnsureAsync(provider, ct);
+                // TB240-R2: a non-Completed commissioning is an explicit startup refusal, never success. The
+                // seed now validates the existing shape before staging, so nothing stays eligible for a later
+                // SaveChanges on this scope.
+                if (outcome.Status != Tooba.Geography.Infrastructure.Development.GeographyDevSeedStatus.Completed)
+                {
+                    throw new InvalidOperationException(
+                        "Marketplace reference-data commissioning refused: geography seed status " +
+                        outcome.Status + ".");
+                }
+            },
             cancellationToken);
     }
 

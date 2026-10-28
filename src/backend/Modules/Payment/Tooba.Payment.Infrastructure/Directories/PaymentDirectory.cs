@@ -206,7 +206,58 @@ public sealed class PaymentDirectory : IPaymentDirectory
         _db.Payments.Add(payment);
         _db.Allocations.AddRange(payment.Allocations);
         _db.Attempts.Add(attempt);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyKeyConflict(ex))
+        {
+            // TB240-R2: TWO simultaneous requests with the SAME key both passed the lookup above. The unique
+            // index on idempotency_key is the real arbiter, so the loser must never surface a raw
+            // DbUpdateException as platform.unexpected and must never leave two payment side effects.
+            // Detach exactly this attempt's graph, then resolve the winner: the caller that won the insert is
+            // the ONLY owner of that intent, and this response must describe the SAME payment.
+            Detach(payment, attempt);
+            var winner = await _db.Payments.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
+            if (winner is null)
+            {
+                // The winner's row is not visible yet (its transaction is still open). Fail closed with the
+                // typed conflict; an explicit later same-key retry replays the original payment.
+                throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
+            }
+
+            if (winner.CheckoutId != command.CheckoutId
+                || !string.Equals(winner.ProviderCode, gateway.ProviderCode, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
+            }
+
+            var winnerAttempt = await _db.Attempts.AsNoTracking()
+                .Where(x => x.PaymentId == winner.PaymentId)
+                .OrderBy(x => x.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (winnerAttempt is null)
+            {
+                throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
+            }
+
+            var winnerGateway = _gateways.Resolve(winner.ProviderCode);
+            return new PaymentInitiationResult(
+                winner.PaymentId,
+                winnerAttempt.AttemptId,
+                winner.Status,
+                winner.ProviderCode,
+                winnerAttempt.ProviderRequestReference,
+                ResolveRedirectUrl(
+                    winnerGateway,
+                    winner.PaymentId,
+                    winnerAttempt.AttemptId,
+                    winnerAttempt.ProviderRequestReference,
+                    null),
+                winner.Amount,
+                winner.Currency);
+        }
         return new PaymentInitiationResult(
             payment.PaymentId,
             attempt.AttemptId,
@@ -223,6 +274,40 @@ public sealed class PaymentDirectory : IPaymentDirectory
     /// <c>ShippingGroupId</c>؛ سفارش قدیمی تک‌روشی: همان باکت sentinel قبلی. ناسازگاری مبلغ/شناسه
     /// fail-closed است و هیچ‌گاه گروه تکراری یا گم‌شده بی‌صدا ساخته نمی‌شود.
     /// </summary>
+    /// <summary>
+    /// TB240-R2: is this failure the EXISTING unique index on <c>payment.payments.idempotency_key</c>?
+    /// Narrow by provider SQLSTATE 23505 + the persisted constraint/index name, so no other persistence error
+    /// is ever mistaken for an idempotent replay.
+    /// </summary>
+    private static bool IsIdempotencyKeyConflict(DbUpdateException exception)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is Npgsql.PostgresException { SqlState: "23505" } postgres)
+            {
+                return postgres.ConstraintName is { } name
+                    && name.Contains("idempotency_key", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Detaches exactly this attempt's staged graphs so the shared context stays usable after the losing
+    /// concurrent insert (the winner's row is then read fresh, never adopted into the tracker).
+    /// </summary>
+    private void Detach(CustomerPayment payment, PaymentAttempt attempt)
+    {
+        _db.Entry(attempt).State = EntityState.Detached;
+        foreach (var allocation in payment.Allocations)
+        {
+            _db.Entry(allocation).State = EntityState.Detached;
+        }
+
+        _db.Entry(payment).State = EntityState.Detached;
+    }
+
     private static IReadOnlyList<(PaymentAllocationTargetKind TargetKind, Guid TargetId, decimal Amount)>
         ResolveShippingAllocationRows(
             IReadOnlyList<PayableShippingGroupSnapshot>? groups,

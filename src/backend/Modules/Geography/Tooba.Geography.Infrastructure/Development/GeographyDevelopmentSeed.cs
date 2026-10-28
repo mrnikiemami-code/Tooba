@@ -91,7 +91,37 @@ public static class GeographyDevelopmentSeed
         var db = provider.GetRequiredService<GeographyDbContext>();
         var now = DateTimeOffset.UtcNow;
 
+        // TB240-R2: VALIDATE the existing shape BEFORE staging any new row. A contradictory existing shape used
+        // to return with newly added Country/Area/City still pending in the change tracker, so any later
+        // SaveChanges on the same scope could silently publish a partially-staged seed after an early refusal.
         var country = await db.Countries.SingleOrDefaultAsync(x => x.CountryCode == IranCountryCode, cancellationToken);
+        AdministrativeArea? area = null;
+        City? city = null;
+        if (country is not null)
+        {
+            area = await db.AdministrativeAreas
+                .SingleOrDefaultAsync(
+                    x => x.CountryId == country.CountryId && x.Code == TehranAreaCode,
+                    cancellationToken);
+            city = await db.Cities
+                .SingleOrDefaultAsync(
+                    x => x.CountryId == country.CountryId && x.Code == TehranCityCode,
+                    cancellationToken);
+
+            if (area is not null && area.ParentAdministrativeAreaId is not null)
+            {
+                return GeographyDevSeedOutcome.ContradictoryExistingShape;
+            }
+
+            if (city is not null
+                && (area is null || city.AdministrativeAreaId != area.AdministrativeAreaId))
+            {
+                // A city carrying the seed code must belong to the seed province; never create a second
+                // apparent place beside it.
+                return GeographyDevSeedOutcome.ContradictoryExistingShape;
+            }
+        }
+
         var changed = false;
         if (country is null)
         {
@@ -100,21 +130,13 @@ public static class GeographyDevelopmentSeed
             changed = true;
         }
 
-        var area = await db.AdministrativeAreas
-            .SingleOrDefaultAsync(x => x.CountryId == country.CountryId && x.Code == TehranAreaCode, cancellationToken);
         if (area is null)
         {
             area = AdministrativeArea.Create(country.CountryId, TehranAreaCode, parentAdministrativeAreaId: null, now);
             db.AdministrativeAreas.Add(area);
             changed = true;
         }
-        else if (area.CountryId != country.CountryId || area.ParentAdministrativeAreaId is not null)
-        {
-            return GeographyDevSeedOutcome.ContradictoryExistingShape;
-        }
 
-        var city = await db.Cities
-            .SingleOrDefaultAsync(x => x.CountryId == country.CountryId && x.Code == TehranCityCode, cancellationToken);
         if (city is null)
         {
             city = City.Create(country.CountryId, area.AdministrativeAreaId, TehranCityCode, now);

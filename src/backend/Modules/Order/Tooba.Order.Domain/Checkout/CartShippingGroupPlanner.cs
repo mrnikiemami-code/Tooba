@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 
 namespace Tooba.Order.Domain.Checkout;
 
@@ -25,7 +25,14 @@ public sealed record CartShippingGroupRequest(
     string? OriginContext,
     IReadOnlyList<Guid> CartLineIds,
     DateOnly? SelectedDeliveryDate = null,
-    string? SelectedDeliveryTimeWindow = null);
+    string? SelectedDeliveryTimeWindow = null,
+    /// <summary>
+    /// TB240-R2: optional commitment correlation for the CAPTURED path only. Two responsibilities of the same
+    /// seller may share one canonical method over DISJOINT lines (Platform-owned vs that seller's own group),
+    /// so the authoritative eligible row must be selectable by the same stable group key the server resolved.
+    /// Absent (legacy callers) keeps the previous seller+method resolution unchanged.
+    /// </summary>
+    string? ObligationKey = null);
 
 /// <summary>روش واجد شرایط authoritative که Order آن را از کاتالوگ/نرخ resolve می‌کند.</summary>
 /// <param name="SellerPartyId">
@@ -42,7 +49,9 @@ public sealed record CartShippingGroupEligibleMethod(
     string Currency,
     int LeadDays,
     DateOnly MinimumDeliveryDate,
-    Guid? SellerPartyId = null);
+    Guid? SellerPartyId = null,
+    /// <summary>TB240-R2: stable captured group key of the commitment this row prices (legacy rows: null).</summary>
+    string? ObligationKey = null);
 
 /// <summary>
 /// سازندهٔ قطعی (pure) نقشهٔ گروه‌های ارسال پیش‌نویس سبد.
@@ -116,10 +125,19 @@ public static class CartShippingGroupPlanner
 
             var method = ResolveMethod(request, seller, eligibleMethods);
 
-            var sellerMethodKey = $"{seller:N}|{method.MethodCode}";
+            // TB240-R2: the collapse key is the FULL commitment — seller + canonical method + the exact
+            // whole-line membership. Two responsibilities of the SAME seller (for example a Marketplace-owned
+            // Platform group and that seller's OWN Seller group) legitimately share one catalog method yet are
+            // two different commitments over DISJOINT lines; keying only by seller+method wrongly refused that
+            // lawful mixed-ownership cart. A repeated line is still refused below
+            // (DuplicateLineMembership), so a genuine duplicate commitment can never pass.
+            var membershipKey = string.Join(
+                ',',
+                request.CartLineIds.OrderBy(x => x).Select(x => x.ToString("N")));
+            var sellerMethodKey = $"{seller:N}|{method.MethodCode}|{membershipKey}";
             if (!seenSellerMethod.Add(sellerMethodKey))
             {
-                // Same seller + same canonical method must collapse into ONE group in v1
+                // Same seller + same canonical method over the SAME lines must collapse into ONE group in v1
                 // (whole-line membership, no quantity split).
                 throw new ContractOperationException(CartShippingGroupFault.DuplicateSellerMethod);
             }
@@ -205,6 +223,20 @@ public static class CartShippingGroupPlanner
         var sameCode = eligibleMethods
             .Where(m => string.Equals(m.MethodCode, code, StringComparison.OrdinalIgnoreCase))
             .ToArray();
+
+        // TB240-R2: the CAPTURED writer knows exactly which commitment each row prices. When both sides carry
+        // the same stable obligation key, that is the authoritative match — never the first row of the same
+        // seller+method (which could belong to the other responsibility of the same seller).
+        var obligationKey = (request.ObligationKey ?? string.Empty).Trim();
+        if (obligationKey.Length != 0)
+        {
+            var exact = sameCode.FirstOrDefault(m =>
+                string.Equals((m.ObligationKey ?? string.Empty).Trim(), obligationKey, StringComparison.Ordinal));
+            if (exact is not null)
+            {
+                return exact;
+            }
+        }
 
         var method = sameCode.FirstOrDefault(m => m.SellerPartyId == sellerPartyId)
             ?? sameCode.FirstOrDefault(m => m.SellerPartyId is null)
@@ -329,3 +361,4 @@ public static class CartShippingGroupPlanner
         return cartLineIds.All(existingLines.Contains);
     }
 }
+

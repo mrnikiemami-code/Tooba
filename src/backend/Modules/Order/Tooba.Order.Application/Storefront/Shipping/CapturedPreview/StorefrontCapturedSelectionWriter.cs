@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Geography.Contracts.Places;
@@ -234,7 +234,8 @@ public sealed class StorefrontCapturedSelectionWriter(
                 OriginContext: null,
                 plan.CartLineIds,
                 SelectedDeliveryDate: slot.Date,
-                SelectedDeliveryTimeWindow: window));
+                SelectedDeliveryTimeWindow: window,
+                ObligationKey: plan.GroupKey));
 
             var label = StorefrontCapturedPreviewPlanner.LabelOf(context.Labels, candidate)
                 ?? candidate.ServiceCode;
@@ -247,7 +248,8 @@ public sealed class StorefrontCapturedSelectionWriter(
                 quote.CurrencyCode!,
                 quote.MinDeliveryDays ?? 0,
                 slot.Date,
-                sellerPartyId));
+                sellerPartyId,
+                ObligationKey: plan.GroupKey));
 
             // TB-232-R1: شاهد به «تعهد کاملِ همان گروه سرور» بسته می‌شود، نه به کد روش. دو فروشندهٔ
             // متفاوت با همان سرویس/گزینهٔ Store دقیقاً یک MethodCode دارند؛ کلید روش باعث می‌شد شاهد
@@ -614,3 +616,4 @@ public sealed class StorefrontCapturedSelectionWriter(
 
     private static StorefrontOrderException Refuse(string reason) => new(reason);
 }
+
