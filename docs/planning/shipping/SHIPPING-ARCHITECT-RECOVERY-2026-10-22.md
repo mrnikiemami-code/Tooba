@@ -1,4 +1,40 @@
-﻿# CURRENT —240-R5 EXECUTED: never-cached freshcart form, ONE selection PUT, ONE start-payment, real failure/retry —2026-10-28
+# CURRENT — 240-R5 ARCHITECT CHECKPOINT ACCEPTED: LOCAL MANUAL FUNCTIONAL FLOW; ACTIVE TASK NONE — 2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/ARCHITECT-REVIEW.md.
+Main/evidence10e635f621f2ba1e42ca2c86c902ea1273810704, source763506b3487de1b80a799bffe91c00b96dac4e7f.
+Root reviewed source/helper/tests/committedreceipts only; did NOT run Windowsruntime/browser/tests. NO newtask/envelope.
+Active task NONE, automaticNextImplementationTask NONE. Local MANUAL FUNCTIONAL CHECKPOINT ACCEPTED, not production/fullrelease.
+
+CLOSED observedR5 UI gap: normalbuyer+BFF+realPDP2seller cart, current ownquotes/dates; Continuetwice=>ONEselectionPUT/noOrder;
+freshpaymentform=>finaldoubleclickONEStartPayment, real2sellerOrder/manualPending, originalsamekeyreplay. Newfailure/retry:
+oldpriceabsent/typedrecipientpreserved/retrytwice=>ONEcurrentidentityprojection. Pendingstatusfailed=>unknown/source+7facts,
+no freshcheckoutpaymentaction, manualflagonlyactualmanual; unknownpending500 not exercised live.
+
+EarlieracceptedR3/R4 realAPI+storage facts remain: MarketplacePlatform+SellerA+SellerB SAMEbinding (including sameSeller twice),
+partial/invalid/clearcoupon, originalOrderhistory after actualtaskpublicationchange,owner/foreign/guestcontrols.
+R5 UI had TWO sellergroups, not allTHREEowners/coupon. ThirdUIowner NOTOBSERVED; two products do NOT prove thirdofferunselectable.
+No full3ownerUI/productionreadiness/paidPSP/providerexactlyonce/VisualACCEPT/mobileappearancecertification.
+USEROVERRIDE NOscreenshots/images/visualreview/viewportmatrix; functionalityHTTP/DOM/storage only, userchecksappearance.
+
+HANDOFF FREEZE: taskprofileD:\temp\tb240r5-chrome/CDP9343, FE3103D:\temp\tb240r5-fe source763506b34 -> Host5190.
+ReadyUNSUBMITTEDcart01a18251-2042-7000-8b37-bec94335eab5 (onegroup68000+3000):
+http://127.0.0.1:3103/fa/shipping
+Completed2sellerOrderTB-20261028113839-01-bbb9bf/checkout01a1824e-1c32-7000-9669-999b6a2a7c20/payment01a1824e-1cff-7000-88f1-db546d9df62a,
+manualPending3652100, result/fa/payment/result?paymentId=...&checkoutId=...&awaitingManual=1.
+Same normaltaskloggedinprofile required. No taskwindow enumerate/read/automate/reload/close/HMR afterhandoff.
+
+PRESERVATION DEVIATION: R5editedFE3102watchedtree, so R4handoffdevserver MAY haveHMRrecompiled. No directR4tabinteraction
+reported does NOT mean itsruntimewhollyuntouched. Do not claim recovery of unknownunsavededits. OriginalUSER3000/5088,
+handoff3100/5188+tb238-handoff-chrome and originaldraft/review230 preservation remain separatelyreported.
+No seed/migration/reset inR5; checked-ingatesOFF/namedtasklocalON, TB185paused/defaultOFF/PendingAllocation.
+
+DEADLINE MISSED, not reset/processPASS. R4~14m by10:38:34Z→~10:52Z, former43/286unsupported. Earlier243unreverified,
+exactcumulativeUNVERIFIED. R5own14:52→15:13Tehran~21mvs15box(over6). Conditional243+14+21≈278 is NOT independentelapsed.
+Retain externalproviderconcurrency/238unknown22001/227mobileempty-note/225-R1unrecoveredLOCALloss.
+No automaticimplementation task. Next = user functional/appearance review or explicit user direction.
+
+---
+# CURRENT —240-R5 EXECUTED: never-cached freshcart form, ONE selection PUT, ONE start-payment, real failure/retry —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status PASS for the remaining FUNCTIONAL scope of this slice, no VisualACCEPT/activation/PSP; basef97b43906,
