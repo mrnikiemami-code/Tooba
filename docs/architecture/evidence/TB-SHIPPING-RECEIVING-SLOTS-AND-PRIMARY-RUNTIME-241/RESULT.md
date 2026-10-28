@@ -1,10 +1,10 @@
 # TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241 — WORKER RESULT
 
-Status: **PASS (scoped)** — configurable receiving slot duration is authored, captured (format 2), projected as
-nested date→slots, selectable per group on the EXISTING shipping cards, persisted as exact open/close ticks through
-selection → payment form → StartPayment/Order, and the user surface is consolidated to **ONE primary**
-`http://127.0.0.1:3000` → Host `5088` (Marketplace / `tooba_marketplace_tb239`). Task extra FE310x / Host518x/5190
-stopped. Stop-State: `STOP_FOR_ARCHITECT`. `automaticNextImplementationTask: NONE`.
+Status: **PARTIAL (demoted by 241-R1)** — configurable receiving slot duration + primary consolidation remain
+landed; Architect review + R1 proved the disclosed public `shipping/commit` 500 and TimeOnly slot wraparound /
+unfit-duration preflight gaps. Successful 60/120 paths and Order tick persistence from this task stay valid.
+Do **not** treat this RESULT as unqualified PASS. See TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1.
+Stop-State: `STOP_FOR_ARCHITECT`. `automaticNextImplementationTask: NONE`.
 No PSP/paid claim, no Visual ACCEPT, no screenshots.
 
 Issue commit (Expected/Base): `5552a97f84ac28f948d690169be1e458420c0dd4`.

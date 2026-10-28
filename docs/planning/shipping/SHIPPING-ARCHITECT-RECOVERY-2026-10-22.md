@@ -1,4 +1,13 @@
-# CURRENT — 241 ARCHITECT REVIEW PARTIAL; 241-R1 ISSUED — 2026-10-29
+# CURRENT — 241-R1 EXECUTED PARTIAL: tick-bounded slots + commit revision wire; publication-immutability not re-run — 2026-10-29
+
+Read docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status PARTIAL, Code-SHA 03b24cc35, Base/issue db34c6f04. Bounded tick calendar + authoring unfit preflight + public
+commit ExpectedSelectionRevision forward + captured_* → typed 4xx. LIVE: missing-revision commit 400 intent_invalid
+(not 500); with revision 200 → StartPayment Pending; DB ticks 324e9–360e9 fmt2. Primary Host swapped PID41232;
+user Chrome CDP9350 / cart 01a1846b… never touched. 241 demoted from unqualified PASS. Publication duration-change
+Order immutability NOT re-run this box. Focus≈22/35. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 241 ARCHITECT REVIEW PARTIAL; 241-R1 ISSUED — 2026-10-29
 Active TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1; read docs/ai/tasks/TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1/TASK.md.
 Reviewed source0bcfa52aa / evidence64e3c1ce5. 241's normal60/120 slots and primary3000/5088 handoff retained.
 BLOCKERS: TimeOnly.Add wraps at midnight (1440 can loop forever;09–23/120 can wrap23→01); active-day/no-full-slot
