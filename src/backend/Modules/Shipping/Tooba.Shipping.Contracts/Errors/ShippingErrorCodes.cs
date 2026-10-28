@@ -102,6 +102,12 @@ public static class ShippingErrorCodes
     /// <summary>TB-241: مدت هر نوبت تحویل باید عدد صحیح بین ۱ و ۱۴۴۰ دقیقه باشد؛ تهی یعنی پنجرهٔ کامل روز.</summary>
     public const string ScheduleSlotDurationInvalid = "shipping.schedule.slot_duration.invalid";
 
+    /// <summary>
+    /// TB-241-R1: مدت انتخاب‌شده در دست‌کم یک روز کاری حتی یک نوبت کامل نمی‌سازد (مثلاً ۰۹–۱۷ با ۱۴۴۰
+    /// یا ۰۹–۱۰ با ۱۲۰). پیش از هر جهش بازبینی/زمان هفته رد می‌شود.
+    /// </summary>
+    public const string ScheduleSlotDurationUnfit = "shipping.schedule.slot_duration.unfit";
+
     /// <summary>بازهٔ وزن نامعتبر است: کران پایین منفی، یا کران بالا بزرگ‌تر از کران پایین نیست.</summary>
     public const string WeightTierInvalid = "shipping.rate_policy.weight_tier.invalid";
 

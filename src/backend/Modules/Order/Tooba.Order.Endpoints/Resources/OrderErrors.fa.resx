@@ -207,6 +207,9 @@
   <data name="storefront.captured_selection.date_unavailable" xml:space="preserve">
     <value>تاریخ تحویل انتخاب‌شده دیگر برای این گروه ارائه نمی‌شود.</value>
   </data>
+  <data name="storefront.captured_selection.slot_unavailable" xml:space="preserve">
+    <value>نوبت تحویل انتخاب‌شده دیگر برای این گروه ارائه نمی‌شود.</value>
+  </data>
   <data name="storefront.captured_selection.conflict" xml:space="preserve">
     <value>اطلاعات ارسال تغییر کرده است. صفحه را تازه کنید و دوباره انتخاب کنید.</value>
   </data>

@@ -1007,6 +1007,27 @@ public sealed class ShippingAuthoringDraft
             throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
         }
 
+        // TB-241-R1: every working day must hold at least one complete slot for the chosen duration
+        // BEFORE any week mutation/publication. Closed days have no slot requirement; NULL keeps
+        // the legacy full-window behaviour.
+        if (normalizedSlot is { } configuredMinutes)
+        {
+            foreach (var assignment in assignments)
+            {
+                if (!assignment.IsWorking)
+                {
+                    continue;
+                }
+
+                if (assignment.StartTime is not { } opens
+                    || assignment.EndTime is not { } closes
+                    || ShippingScheduleRules.CountCompleteSlots(opens, closes, configuredMinutes) <= 0)
+                {
+                    throw new SemanticException(new SemanticError(ShippingErrorCodes.ScheduleSlotDurationUnfit));
+                }
+            }
+        }
+
         var unchanged = WeeklySchedule is { } current
                          && string.Equals(current.TimeZoneId, normalizedTimeZone, StringComparison.Ordinal)
                          && current.SlotDurationMinutes == normalizedSlot

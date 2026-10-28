@@ -7,6 +7,7 @@ using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.Seller;
 using Tooba.Order.Application.Storefront;
+using Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
 
 namespace Tooba.Order.Endpoints.Errors;
 
@@ -93,6 +94,26 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "نام خانوادگی الزامی است."),
         D(StorefrontOrderErrors.ShippingRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد."),
+
+        // TB-241-R1: captured selection/preview codes (resources already exist) — typed 4xx, never 500.
+        D(StorefrontCapturedSelectionReasons.Disabled, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "انتخاب این روش ارسال هنوز در دسترس نیست."),
+        D(StorefrontCapturedSelectionReasons.IntentInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "گروه‌های ارسال انتخاب‌شده ناقص یا با انتخاب دیگری مخلوط شده‌اند."),
+        D(StorefrontCapturedSelectionReasons.Unavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "برای این گروه ارسال هنوز قیمتی اعلام نشده است."),
+        D(StorefrontCapturedSelectionReasons.DateUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "تاریخ تحویل انتخاب‌شده دیگر برای این گروه ارائه نمی‌شود."),
+        D(StorefrontCapturedSelectionReasons.SlotUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "نوبت تحویل انتخاب‌شده دیگر برای این گروه ارائه نمی‌شود."),
+        D(StorefrontCapturedSelectionReasons.Conflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "اطلاعات ارسال تغییر کرده است."),
+        D(StorefrontCapturedSelectionReasons.DestinationUnverified, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "نشانی تحویل برای این قیمت ارسال تأیید نشد."),
+        D(StorefrontCapturedSelectionReasons.EvidencePresent, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "برای این سبد انتخاب ارسال ثبت‌شده وجود دارد."),
+        D(StorefrontCapturedPreviewReasons.PreviewNotReady, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "پیش‌نمایش ارسال آماده نیست."),
 
         // Pending
         D(StorefrontOrderErrors.OrderCancelUnpaidOnly, ErrorClassification.Conflict, StatusCodes.Status409Conflict,

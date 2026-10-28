@@ -184,27 +184,37 @@ public static class StorefrontShippingCalculator
             var day = byDay[cursor.DayOfWeek];
             if (day.IsWorking)
             {
-                distinctDates++;
-                // TB-241: a configured duration splits the SAME authored window into complete,
-                // non-overlapping slots anchored at the real opening; the remainder is never rounded into
-                // a shorter tail and a day without one complete slot contributes no slot at all.
+                // TB-241-R1: configured duration uses bounded INTEGER tick arithmetic only — never
+                // TimeOnly.Add wraparound. A working day that cannot hold one complete slot refuses
+                // (no empty horizon / invented later availability / nontermination).
                 if (slotLength is { } length)
                 {
-                    var opens = day.OpensAt;
-                    while (true)
+                    var lengthTicks = checked((long)length * TimeSpan.TicksPerMinute);
+                    var openTicks = day.OpensAt.Ticks;
+                    var closeTicks = day.ClosesAt.Ticks;
+                    var windowTicks = closeTicks >= openTicks ? closeTicks - openTicks : 0L;
+                    var slotCount = lengthTicks <= 0 ? 0 : (int)(windowTicks / lengthTicks);
+                    if (slotCount <= 0)
                     {
-                        var closes = opens.Add(TimeSpan.FromMinutes(length));
-                        if (closes > day.ClosesAt)
-                        {
-                            break;
-                        }
+                        throw new StorefrontOrderException(
+                            StorefrontOrderErrors.ShippingDeliveryInvalid,
+                            "receiving.slot_duration.unfit");
+                    }
 
-                        dates.Add(new StorefrontShippingReceivingSlot(cursor, opens, closes));
-                        opens = closes;
+                    distinctDates++;
+                    for (var index = 0; index < slotCount; index++)
+                    {
+                        var startTicks = openTicks + (index * lengthTicks);
+                        var endTicks = startTicks + lengthTicks;
+                        dates.Add(new StorefrontShippingReceivingSlot(
+                            cursor,
+                            new TimeOnly(startTicks),
+                            new TimeOnly(endTicks)));
                     }
                 }
                 else
                 {
+                    distinctDates++;
                     dates.Add(new StorefrontShippingReceivingSlot(cursor, day.OpensAt, day.ClosesAt));
                 }
             }

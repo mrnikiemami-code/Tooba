@@ -425,7 +425,12 @@ public sealed record StorefrontShippingCommitRequest(
     Guid CartId,
     int ExpectedCartVersion,
     string IdempotencyKey,
-    string? CouponCode = null);
+    string? CouponCode = null,
+    /// <summary>
+    /// نسخهٔ انتخاب capture‌شده به‌صورت <b>متن</b> (TB-241-R1). مسیر capture بدون توکن معتبر
+    /// با <c>storefront.captured_selection.intent_invalid</c> رد می‌شود؛ نه ۵۰۰ ناشناخته.
+    /// </summary>
+    string? ExpectedSelectionRevision = null);
 
 /// <summary>
 /// ورودی «کلیک نهایی پرداخت» فروشگاهی. مبلغ/شناسهٔ سفارش/رزرو/مهلت در بدنه نیست؛ CartId تنها از مسیر

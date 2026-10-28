@@ -332,4 +332,79 @@ public sealed class StorefrontShippingReceivingCalendarTests
 
         Assert.Contains("receiving.slot_duration", refused.Message, StringComparison.Ordinal);
     }
+
+    // --- TB-241-R1: bounded tick slots / no wraparound ------------------------------------------
+
+    [Fact]
+    public void A_09_to_23_day_with_120_minute_slots_stops_at_21_to_23_without_wraparound()
+    {
+        var calendar = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, new TimeOnly(23, 0)), deliveryHorizonDays: 1, slotDurationMinutes: 120);
+
+        Assert.Equal(7, calendar.AvailableDates.Count);
+        Assert.Equal(Nine, calendar.AvailableDates[0].OpensAt);
+        Assert.Equal(new TimeOnly(21, 0), calendar.AvailableDates[^1].OpensAt);
+        Assert.Equal(new TimeOnly(23, 0), calendar.AvailableDates[^1].ClosesAt);
+        Assert.DoesNotContain(calendar.AvailableDates, slot => slot.OpensAt > slot.ClosesAt);
+        Assert.DoesNotContain(calendar.AvailableDates, slot => slot.OpensAt < Nine);
+    }
+
+    [Fact]
+    public void A_09_to_12_day_with_100_minute_slots_keeps_one_complete_slot_and_no_tail()
+    {
+        var calendar = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, Twelve), deliveryHorizonDays: 1, slotDurationMinutes: 100);
+
+        Assert.Single(calendar.AvailableDates);
+        Assert.Equal(Nine, calendar.AvailableDates[0].OpensAt);
+        Assert.Equal(new TimeOnly(10, 40), calendar.AvailableDates[0].ClosesAt);
+    }
+
+    [Fact]
+    public void Fractional_100ns_opening_is_preserved_through_slot_endpoints()
+    {
+        // Opening offset by 123 ticks: only TWO complete 60-minute slots fit before 12:00
+        // (window = 3h−123 ticks); remainder is discarded, never a shorter third slot.
+        var opens = TimeOnly.FromTimeSpan(TimeSpan.FromTicks((9L * TimeSpan.TicksPerHour) + 123));
+        var closes = new TimeOnly(12, 0);
+        var calendar = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(opens, closes), deliveryHorizonDays: 1, slotDurationMinutes: 60);
+
+        Assert.Equal(2, calendar.AvailableDates.Count);
+        Assert.Equal(opens.Ticks, calendar.AvailableDates[0].OpensAt.Ticks);
+        Assert.Equal(opens.Ticks + TimeSpan.TicksPerHour, calendar.AvailableDates[0].ClosesAt.Ticks);
+        Assert.Equal(opens.Ticks + TimeSpan.TicksPerHour, calendar.AvailableDates[1].OpensAt.Ticks);
+        Assert.Equal(opens.Ticks + (2L * TimeSpan.TicksPerHour), calendar.AvailableDates[1].ClosesAt.Ticks);
+    }
+
+    [Theory]
+    [InlineData(1440)]
+    [InlineData(481)]
+    public void An_overlong_duration_on_a_working_same_day_window_refuses_promptly(int minutes)
+    {
+        var refused = Assert.Throws<StorefrontOrderException>(() =>
+            StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+                Saturday, 0, AllWorking(Nine, new TimeOnly(17, 0)), deliveryHorizonDays: 1, slotDurationMinutes: minutes));
+
+        Assert.Contains("receiving.slot_duration.unfit", refused.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Configured_60_and_120_on_09_to_17_remain_exact()
+    {
+        var sixty = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, new TimeOnly(17, 0)), deliveryHorizonDays: 1, slotDurationMinutes: 60);
+        var hundredTwenty = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, new TimeOnly(17, 0)), deliveryHorizonDays: 1, slotDurationMinutes: 120);
+
+        Assert.Equal(8, sixty.AvailableDates.Count);
+        Assert.Equal(Nine, sixty.AvailableDates[0].OpensAt);
+        Assert.Equal(new TimeOnly(16, 0), sixty.AvailableDates[^1].OpensAt);
+        Assert.Equal(new TimeOnly(17, 0), sixty.AvailableDates[^1].ClosesAt);
+
+        Assert.Equal(4, hundredTwenty.AvailableDates.Count);
+        Assert.Equal(Nine, hundredTwenty.AvailableDates[0].OpensAt);
+        Assert.Equal(new TimeOnly(15, 0), hundredTwenty.AvailableDates[^1].OpensAt);
+        Assert.Equal(new TimeOnly(17, 0), hundredTwenty.AvailableDates[^1].ClosesAt);
+    }
 }

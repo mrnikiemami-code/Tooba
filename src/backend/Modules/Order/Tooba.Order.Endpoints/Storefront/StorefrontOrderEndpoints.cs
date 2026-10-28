@@ -211,7 +211,8 @@ internal static class StorefrontOrderEndpoints
                 ReadGuestSecret(request),
                 body.ExpectedCartVersion,
                 body.IdempotencyKey,
-                body.CouponCode),
+                body.CouponCode,
+                body.ExpectedSelectionRevision),
             ct));
     }
 

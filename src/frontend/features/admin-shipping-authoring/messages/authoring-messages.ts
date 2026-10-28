@@ -145,7 +145,7 @@ const fa = {
   weekSlotDurationFullDay: "یک پنجرهٔ کامل روز (بدون نوبت ساعتی)",
   weekSlotDurationMinutes: "دقیقه",
   weekSlotDurationHint:
-    "با انتخاب مدت، هر روز کاری به نوبت‌های پیوسته از ساعت شروع همان روز تقسیم می‌شود (مثلاً ۶۰ دقیقه = ۹–۱۰، ۱۰–۱۱ …).",
+    "با انتخاب مدت، هر روز کاری به نوبت‌های پیوسته از ساعت شروع همان روز تقسیم می‌شود (مثلاً ۶۰ دقیقه = ۹–۱۰، ۱۰–۱۱ …). باقی‌ماندهٔ کوتاه‌تر از مدت نوبت نمی‌سازد و هر روز کاری باید دست‌کم یک نوبت کامل داشته باشد.",
   weekSlotDurationInvalid: "مدت هر نوبت باید بین ۱ تا ۱۴۴۰ دقیقه باشد.",
   applyBlockedLocal: "برای اعمال، ابتدا موارد زیر را اصلاح کنید:",
   weekTitle: "برنامهٔ کاری هفتگی",
@@ -489,7 +489,7 @@ const en: Record<AuthoringMessageKey, string> = {
   weekSlotDurationFullDay: "One full-day window (no hourly slots)",
   weekSlotDurationMinutes: "minutes",
   weekSlotDurationHint:
-    "With a length set, each working day splits into back-to-back slots from that day's start (e.g. 60 minutes = 9–10, 10–11 …).",
+    "With a length set, each working day splits into back-to-back slots from that day's start (e.g. 60 minutes = 9–10, 10–11 …). A shorter leftover never becomes a slot, and every working day must hold at least one complete slot.",
   weekSlotDurationInvalid: "The slot length must be between 1 and 1440 minutes.",
   applyBlockedLocal: "Fix the following before applying:",
   weekTitle: "Weekly operating schedule",

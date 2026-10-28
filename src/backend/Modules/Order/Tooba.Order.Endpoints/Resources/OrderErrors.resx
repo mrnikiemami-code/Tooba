@@ -207,6 +207,9 @@
   <data name="storefront.captured_selection.date_unavailable" xml:space="preserve">
     <value>The chosen delivery date is no longer offered for this group.</value>
   </data>
+  <data name="storefront.captured_selection.slot_unavailable" xml:space="preserve">
+    <value>The chosen delivery slot is no longer offered for this group.</value>
+  </data>
   <data name="storefront.captured_selection.conflict" xml:space="preserve">
     <value>Shipping information changed. Refresh the page and choose again.</value>
   </data>

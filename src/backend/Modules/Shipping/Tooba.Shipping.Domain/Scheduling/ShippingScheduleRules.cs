@@ -83,4 +83,26 @@ public static class ShippingScheduleRules
 
     /// <summary>بیشینهٔ صریح مدت هر نوبت تحویل: یک شبانه‌روز کامل.</summary>
     public const int MaxSlotDurationMinutes = 1440;
+
+    /// <summary>
+    /// TB-241-R1: تعداد نوبت‌های کاملِ هم‌اندازه در یک بازهٔ هم‌روز با حساب تیک صحیح (نه
+    /// <see cref="TimeOnly.Add"/>). باقی‌مانده هرگز نوبت کوتاه‌تر نمی‌سازد؛ بازهٔ معکوس/تهی صفر است.
+    /// </summary>
+    /// <param name="opensAt">شروع شامل بازهٔ محلی.</param>
+    /// <param name="closesAt">پایان غیرشامل بازهٔ محلی.</param>
+    /// <param name="slotDurationMinutes">مدت هر نوبت (۱..۱۴۴۰).</param>
+    /// <returns>تعداد نوبت کامل؛ صفر وقتی حتی یک نوبت در بازه جا نمی‌شود.</returns>
+    public static int CountCompleteSlots(TimeOnly opensAt, TimeOnly closesAt, int slotDurationMinutes)
+    {
+        if (slotDurationMinutes < 1 || slotDurationMinutes > MaxSlotDurationMinutes)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.ScheduleSlotDurationInvalid));
+        }
+
+        var lengthTicks = checked((long)slotDurationMinutes * TimeSpan.TicksPerMinute);
+        var openTicks = opensAt.Ticks;
+        var closeTicks = closesAt.Ticks;
+        var windowTicks = closeTicks >= openTicks ? closeTicks - openTicks : 0L;
+        return (int)(windowTicks / lengthTicks);
+    }
 }

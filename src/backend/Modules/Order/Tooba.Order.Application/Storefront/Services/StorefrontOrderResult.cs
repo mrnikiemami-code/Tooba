@@ -93,7 +93,11 @@ public static class StorefrontOrderResult
             || code.StartsWith("shipping.", StringComparison.Ordinal)
             || code.StartsWith("order.", StringComparison.Ordinal)
             || code.StartsWith("pending.", StringComparison.Ordinal)
-            || code.StartsWith("payment.", StringComparison.Ordinal))
+            || code.StartsWith("payment.", StringComparison.Ordinal)
+            // TB-241-R1: capture selection refusals must surface as typed business failures, not
+            // unhandled ContractOperationException → platform.unexpected 500.
+            || code.StartsWith("storefront.captured_selection.", StringComparison.Ordinal)
+            || code.StartsWith("storefront.captured_preview.", StringComparison.Ordinal))
         {
             mapped = code;
             return true;

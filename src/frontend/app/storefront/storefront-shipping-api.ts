@@ -985,6 +985,7 @@ export function readStoredCheckoutId(): string | null {
 export async function commitShippingToPayment(
   cartId: string,
   expectedCartVersion: number,
+  expectedSelectionRevision?: string | null,
 ): Promise<StorefrontCheckoutPage> {
   const { mapStorefrontCheckout } = await import("./storefront-checkout-api.ts");
   const response = await fetch("/v1/storefront/shipping/commit", {
@@ -1000,6 +1001,8 @@ export async function commitShippingToPayment(
       expectedCartVersion,
       idempotencyKey: readOrCreateShippingIdempotency(),
       couponCode: readStoredCouponCode(),
+      // TB-241-R1: capture commit CAS token must reach the Host (was previously dropped → intent_invalid 500).
+      expectedSelectionRevision: expectedSelectionRevision ?? null,
     }),
   });
   if (!response.ok) {

@@ -76,6 +76,9 @@
   <data name="shipping.schedule.slot_duration.invalid" xml:space="preserve">
     <value>مدت هر نوبت تحویل باید عدد صحیحی بین ۱ تا ۱۴۴۰ دقیقه باشد.</value>
   </data>
+  <data name="shipping.schedule.slot_duration.unfit" xml:space="preserve">
+    <value>مدت انتخاب‌شده در هر روز کاری باید دست‌کم یک نوبت کامل بسازد؛ باقی‌ماندهٔ کوتاه‌تر از مدت هرگز نوبت جدا نمی‌شود.</value>
+  </data>
   <data name="shipping.schedule.window.range_invalid" xml:space="preserve">
     <value>بازهٔ پنجرهٔ عملیاتی نامعتبر است.</value>
   </data>

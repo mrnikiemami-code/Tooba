@@ -19,7 +19,9 @@ public sealed record CommitStorefrontShippingCommand(
     string? GuestSecret,
     int ExpectedCartVersion,
     string IdempotencyKey,
-    string? CouponCode) : IRequest<Result<StorefrontCheckoutPage>>;
+    string? CouponCode,
+    /// <summary>نسخهٔ انتخاب capture‌شده به‌صورت متن دقیق (CAS)؛ مسیر capture بدون آن رد می‌شود.</summary>
+    string? ExpectedSelectionRevision = null) : IRequest<Result<StorefrontCheckoutPage>>;
 
 public sealed class CommitStorefrontShippingHandler(StorefrontShippingService shipping, ICheckoutAbuseGate abuse)
     : IRequestHandler<CommitStorefrontShippingCommand, Result<StorefrontCheckoutPage>>
@@ -32,7 +34,7 @@ public sealed class CommitStorefrontShippingHandler(StorefrontShippingService sh
                 request.ExpectedCartVersion,
                 request.IdempotencyKey,
                 request.CouponCode,
-                expectedSelectionRevision: null,
+                request.ExpectedSelectionRevision,
                 cancellationToken),
             abuse,
             cancellationToken);

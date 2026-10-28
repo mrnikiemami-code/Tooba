@@ -210,6 +210,58 @@ public sealed class ShippingAuthoringRevisionSnapshotTests
         Assert.Null(roundtripped.Days.Single(day => day.Weekday == 4).StartTime);
     }
 
+    [Theory]
+    [InlineData(1440)]
+    [InlineData(120)]
+    public void An_unfit_slot_duration_is_refused_before_any_week_mutation(int minutes)
+    {
+        var draft = RichDraft();
+        var beforeRevision = draft.Revision;
+        var beforeUpdated = draft.UpdatedAt;
+        // 09–17 cannot hold 1440; 09–10 cannot hold 120. Closed days stay unconstrained.
+        var nine = new TimeOnly(9, 0);
+        var end = minutes == 1440 ? new TimeOnly(17, 0) : new TimeOnly(10, 0);
+        var days = new[]
+        {
+            new ShippingAuthoringDraft.ScheduleDayInput(1, true, nine, end),
+            new ShippingAuthoringDraft.ScheduleDayInput(2, false, null, null),
+            new ShippingAuthoringDraft.ScheduleDayInput(3, true, nine, end),
+            new ShippingAuthoringDraft.ScheduleDayInput(4, false, null, null),
+            new ShippingAuthoringDraft.ScheduleDayInput(5, true, nine, end),
+            new ShippingAuthoringDraft.ScheduleDayInput(6, true, nine, end),
+            new ShippingAuthoringDraft.ScheduleDayInput(7, false, null, null),
+        };
+
+        var refused = Assert.Throws<SemanticException>(() =>
+            draft.PreflightWeeklySchedule("Asia/Tehran", days, minutes));
+
+        Assert.Equal(ShippingErrorCodes.ScheduleSlotDurationUnfit, refused.Error.Code);
+        Assert.Equal(beforeRevision, draft.Revision);
+        Assert.Equal(beforeUpdated, draft.UpdatedAt);
+        Assert.Null(draft.WeeklySchedule?.SlotDurationMinutes);
+    }
+
+    [Fact]
+    public void Null_slot_duration_preflight_keeps_legacy_full_window_without_unfit_check()
+    {
+        var draft = RichDraft();
+        var plan = draft.PreflightWeeklySchedule(
+            "Asia/Tehran",
+            [
+                new ShippingAuthoringDraft.ScheduleDayInput(1, true, new TimeOnly(9, 0), new TimeOnly(10, 0)),
+                new ShippingAuthoringDraft.ScheduleDayInput(2, false, null, null),
+                new ShippingAuthoringDraft.ScheduleDayInput(3, true, new TimeOnly(9, 0), new TimeOnly(10, 0)),
+                new ShippingAuthoringDraft.ScheduleDayInput(4, false, null, null),
+                new ShippingAuthoringDraft.ScheduleDayInput(5, true, new TimeOnly(9, 0), new TimeOnly(10, 0)),
+                new ShippingAuthoringDraft.ScheduleDayInput(6, true, new TimeOnly(9, 0), new TimeOnly(10, 0)),
+                new ShippingAuthoringDraft.ScheduleDayInput(7, false, null, null),
+            ],
+            slotDurationMinutes: null);
+
+        Assert.Null(plan.SlotDurationMinutes);
+        Assert.True(plan.HasChanges);
+    }
+
     [Fact]
     public void A_later_draft_edit_never_rewrites_an_existing_capture()
     {
