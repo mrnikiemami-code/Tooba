@@ -1,3 +1,18 @@
+# USER CLARIFICATION — CONFIGURABLE HOURLY RECEIVING SLOTS ARE OPEN — 2026-10-28
+
+Latest user: "ساعت داشته باشد9تا10 10تا11 همینطور البته با تنظیمات".
+Read docs/architecture/shipping/SHIPPING-RECEIVING-SLOT-DURATION-USER-REQUIREMENT-2026-10-28.md.
+Required: owner/method openinghours + explicit slotduration (example60minutes) => server-produced selectable09–10,10–11,...;
+customer chooses date AND ONE realslot per group. NOT just intervaltext or manually namedmorning/afternoon choices.
+Persist/capture/validate selectedslot end-to-end and keep originalOrder receivingticks immutable. No frontendhardcodedsplit/
+default60 for oldcaptures, no inventedcapacity/cutoff or reuse of unrelated legacyoperatingschedule as captureauthority.
+Currentcontracts/editor only have one start/endpair perday, no slotduration; this feature is NOT delivered.
+Already-issued240-R7 scope remains datechoice/disabledreason/displayrepair; do not silentlyfakehourlyslots or claimR7 delivers
+this clarified requirement. No newautomatic task issued here; overallhourlyslotrequirement OPEN for Architect integration.
+Preserve currentactive task and all usertab/HMR/no-screenshot safeguards below. Earlier localmanualcheckpoint is scoped,
+not fullfeaturecompletion. OriginaldeadlineMISSED.
+
+---
 # CURRENT —240-R7 USERTRIAL DEFECT OPEN: ONESELLER HANDOFF / NO TIME / CONTINUE GREY —2026-10-28
 
 User reports onlyone store,no deliverytime,selectiondidnotenablepayment. NOT userVisualACCEPT. Active TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7.
