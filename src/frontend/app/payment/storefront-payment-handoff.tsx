@@ -1,7 +1,7 @@
 "use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronLeft, CreditCard, ShoppingBag, Truck } from "lucide-react";
 import { formatOfferAmount } from "../storefront/storefront-api.ts";
@@ -55,6 +55,12 @@ export function StorefrontPaymentHandoff() {
   const [error, setError] = useState<string | null>(null);
   const [recoveryCheckoutId, setRecoveryCheckoutId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
+  /**
+   * TB-238 — gate همگام پیش از نخستین `await`: `setPaying(true)` تا رندر بعدی هیچ کلیک دومی را نمی‌بندد،
+   * پس دو کلیک در همان tick دو درخواست start-payment می‌ساخت. این ref بلافاصله بسته و در `finally`
+   * آزاد می‌شود؛ idempotency سرور بدون تغییر باقی می‌ماند و هیچ retry خودکار اضافه نمی‌شود.
+   */
+  const payInFlightRef = useRef(false);
 
   useEffect(() => {
     const cartId = params.get("cartId");
@@ -189,6 +195,9 @@ export function StorefrontPaymentHandoff() {
       setError(invalid);
       return;
     }
+    // TB-238: قفل همگام همان‌tick؛ رندر busy برای جلوگیری از کلیک دوم کافی نیست.
+    if (payInFlightRef.current) return;
+    payInFlightRef.current = true;
     setPaying(true);
     setError(null);
     setRecoveryCheckoutId(null);
@@ -200,7 +209,6 @@ export function StorefrontPaymentHandoff() {
       const capturedRevision = page.selectionRevision ?? null;
       if (capturedRevision !== null && !/^\d+$/.test(capturedRevision)) {
         setError("نسخهٔ انتخاب ارسال معتبر نیست؛ صفحه را تازه کنید.");
-        setPaying(false);
         return;
       }
       const initiated =
@@ -219,6 +227,9 @@ export function StorefrontPaymentHandoff() {
       setError(mode === "cart" ? toCustomerFinalClickMessage(cause) : toCustomerPaymentMessage(cause));
       // شکست پس از commit: ارجاع سفارش پایدار برای بازیابی همان سفارش (بدون commit دوباره، بدون لغو خودکار).
       setRecoveryCheckoutId(cause instanceof StorefrontCartApiError ? cause.meta.checkoutId ?? null : null);
+    } finally {
+      // رهاسازی همیشه — حتی وقتی درخواست موفق شده و مسیر عوض شده — تا صفحهٔ بازگشتی قفل نماند.
+      payInFlightRef.current = false;
       setPaying(false);
     }
   }
@@ -238,23 +249,25 @@ export function StorefrontPaymentHandoff() {
             </p>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-2 -mt-5 relative z-20 mb-8">
+        {/* TB-238: گام‌های پرداخت در عرض ۳۶۰/۳۹۰ نباید از viewport پهن‌تر شوند؛ شکستن خط و متن
+            کوچک‌تر محلی همین کارت است و هیچ Home/PDP را تغییر نمی‌دهد. */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 -mt-5 relative z-20 mb-8 max-w-full">
           {[
             { id: 1, label: "سبد خرید", icon: ShoppingBag },
             { id: 2, label: "ارسال", icon: Truck },
             { id: 3, label: "پرداخت", icon: CreditCard },
           ].map((s, i) => (
-            <div key={s.id} className="flex items-center gap-2">
+            <div key={s.id} className="flex items-center gap-1.5 sm:gap-2 min-w-0">
               <div
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap ${
                   s.id === 3 ? "bg-primary text-white" : "bg-red-50 text-red-600"
                 }`}
               >
-                <s.icon className="w-4 h-4" />
-                {s.id < 3 ? <Check className="w-3.5 h-3.5" /> : null}
+                <s.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                {s.id < 3 ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> : null}
                 {s.label}
               </div>
-              {i < 2 ? <ChevronLeft className="w-4 h-4 text-red-400" /> : null}
+              {i < 2 ? <ChevronLeft className="hidden sm:block w-4 h-4 text-red-400 shrink-0" /> : null}
             </div>
           ))}
         </div>

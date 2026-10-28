@@ -54,6 +54,7 @@ import {
   failDestinationRefresh,
   planDestinationRefresh,
   resolveDestinationPreviewMode,
+  shippingResponseIdentityKey,
   type DestinationRefreshSnapshot,
 } from "./storefront-shipping-destination-refresh.ts";
 import {
@@ -279,7 +280,13 @@ export function StorefrontShopeivaShipping() {
 
   useEffect(() => {
     // بارگذاری اولیه برای هویت «هیچ مقصد» است تا پیش‌نمایش اولیه هم به همین هویت بسته شود.
-    void refreshProjection(undefined, undefined, undefined, null, { destinationKey: "" }).catch((cause: unknown) =>
+    void refreshProjection(undefined, undefined, undefined, null, {
+      // TB-238: هویت پاسخ = مقصد + قصد کوپن؛ همان کلیدی که این خواندن واقعاً برایش انجام شده.
+      destinationKey: shippingResponseIdentityKey(
+        destinationIdentityKey(null),
+        readStoredCouponCodeRef.current,
+      ),
+    }).catch((cause: unknown) =>
       setError(toCustomerShippingMessage(cause, locale)),
     );
     void listCheckoutSavedAddresses()
@@ -387,6 +394,12 @@ export function StorefrontShopeivaShipping() {
    * هیچ قیمت قبلی «جاری» نمایش داده نمی‌شود. ورودی تایپ‌شدهٔ گیرنده/آدرس بازنویسی نمی‌شود.
    */
   const destinationKey = destinationIdentityKey(destinationIdentifiers);
+  /**
+   * TB-238: هویت **پاسخ** فقط مقصد نیست؛ همان خواندن با قصد کوپن انجام می‌شود، پس تغییر/پاک‌کردن کوپن
+   * هم پاسخ قبلی را «کهنه» می‌کند. کلید نهایی همان کلید هماهنگ‌کننده است تا پول/تاریخ/تأیید انتخاب
+   * تنها برای همین ترکیب «جاری» باشد.
+   */
+  const responseIdentity = shippingResponseIdentityKey(destinationKey, couponIntent);
   const capturedPreviewActive = projection?.capturedPreview != null;
 
   /**
@@ -394,8 +407,8 @@ export function StorefrontShopeivaShipping() {
    * در `pending` و `failed` قیمت قبلی پنهان می‌شود و در `failed` فقط Retry صریح همان کلید هست.
    */
   const destinationPreviewMode = useMemo(
-    () => resolveDestinationPreviewMode(destinationRefresh, destinationKey),
-    [destinationRefresh, destinationKey],
+    () => resolveDestinationPreviewMode(destinationRefresh, responseIdentity),
+    [destinationRefresh, responseIdentity],
   );
 
   /**
@@ -416,11 +429,19 @@ export function StorefrontShopeivaShipping() {
   }, [projection, destinationPreviewMode]);
 
   /**
+   * TB-238 — قصد ثبت/ارسال فقط از پاسخِ **تأییدشدهٔ همین هویت** (مقصد + کوپن + نسخهٔ سبد) ساخته می‌شود.
+   * تا پیش از این، `isValid`/سازندهٔ قصد از نمای خام استفاده می‌کردند: هنگام pending/failed کارت‌ها
+   * پنهان بودند ولی context کهنه هنوز قابل انتخاب/ارسال بود. اکنون نبودِ تأیید صریح = قصد `null`.
+   */
+  const capturedPreviewConfirmed = capturedPreviewActive && destinationPreviewMode === "current";
+  const capturedPreviewForIntent = capturedPreviewConfirmed ? projection?.capturedPreview ?? null : null;
+
+  /**
    * TB-237: هر تغییر context (مقصد/کوپن/نسخهٔ سبد/مبدأ پاسخ) تأییدهای قبلی را باطل می‌کند تا هیچ
    * انتخاب کهنه‌ای با مبلغ/تاریخ تازه ثبت نشود؛ مشتری باید دوباره تأیید کند (بدون بازنویسی خودکار).
    */
   const capturedContextKey = capturedSelectionContextKey({
-    destinationKey,
+    destinationKey: responseIdentity,
     couponCode: couponIntent,
     cartVersion: projection?.cartVersion ?? 0,
     // TB-237-R1: هویت کامل پاسخ تأییدشده (هر گروه: بازتاب‌ها + مبلغ کالا + تقویم) بخشی از context است؛
@@ -445,6 +466,7 @@ export function StorefrontShopeivaShipping() {
       capturedActive: capturedPreviewActive,
       snapshot: destinationRefresh,
       destinationKey,
+      identityKey: responseIdentity,
       destination: destinationIdentifiers,
     });
     if (plan.action === "skip") return;
@@ -457,23 +479,23 @@ export function StorefrontShopeivaShipping() {
       // ورودی تایپ‌شده بازنویسی نمی‌شود؛ کلید پایدار این درخواست ثبت می‌شود.
       { rehydrateDraft: !plan.preserveTypedAddress, destinationKey: plan.key },
     );
-  }, [capturedPreviewActive, destinationRefresh, destinationKey, destinationIdentifiers, refreshProjection]);
+  }, [capturedPreviewActive, destinationRefresh, destinationKey, responseIdentity, destinationIdentifiers, refreshProjection]);
 
   /**
    * تنها راه تکرار یک تازه‌سازی شکست‌خورده: یک Retry صریح برای همان کلید.
    * کلیک تکراری/رندر مجدد هیچ درخواست دومی نمی‌سازد (قفل همگام در همان لحظه بسته می‌شود).
    */
   const retryDestinationRefresh = useCallback(() => {
-    if (!canRetryDestinationRefresh(destinationRefreshRef.current, destinationKey)) return;
+    if (!canRetryDestinationRefresh(destinationRefreshRef.current, responseIdentity)) return;
     const context = destinationContext.current;
     void refreshProjection(
       context.province,
       context.method || null,
       context.city,
       destinationIdentifiers,
-      { rehydrateDraft: false, destinationKey },
+      { rehydrateDraft: false, destinationKey: responseIdentity },
     );
-  }, [destinationKey, destinationIdentifiers, refreshProjection]);
+  }, [responseIdentity, destinationIdentifiers, refreshProjection]);
 
   /** فهرست شهر: اگر Geography برای این استان شهر واقعی داد از آن، وگرنه همان کاتالوگ قدیمی. */
   const cityOptions = useMemo(() => {
@@ -611,7 +633,7 @@ export function StorefrontShopeivaShipping() {
     // TB-237: مسیر capture‌شده اعتبار خودش را دارد: هر گروه باید روش + تاریخِ همان روش را داشته باشد
     // و مبلغ کالای همان گروه از همان پاسخ موفق موجود باشد؛ هیچ روش/تاریخ/مبلغی حدس زده نمی‌شود.
     (capturedPreviewActive
-      ? capturedSelectionComplete(projection?.capturedPreview ?? null, capturedChoices)
+      ? capturedSelectionComplete(capturedPreviewForIntent, capturedChoices)
       : (isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode))
         && (isGroupedCart
           ? allGroupSchedulesComplete({ schedules: groupSchedules, selections: groupSelections })
@@ -697,8 +719,14 @@ export function StorefrontShopeivaShipping() {
      * shorthand قدیمی مخلوط نمی‌شود. نبود هر بازتاب یعنی قصد ناقص ⇒ ارسال نمی‌شود.
      */
     const capturedGroups = capturedPreviewActive
-      ? buildCapturedSelectionIntent(projection.capturedPreview, capturedChoices)
+      ? buildCapturedSelectionIntent(capturedPreviewForIntent, capturedChoices)
       : null;
+    if (capturedPreviewActive && !capturedPreviewConfirmed) {
+      setError(locale === "fa"
+        ? "پاسخ تازهٔ ارسال برای این مقصد/کوپن هنوز تأیید نشده است؛ تا رسیدن پاسخ معتبر صبر کنید و دوباره تلاش کنید."
+        : "The shipping response for this destination/coupon is not confirmed yet; wait for the current answer and try again.");
+      return;
+    }
     if (capturedPreviewActive && capturedGroups === null) {
       setError(locale === "fa"
         ? "برای هر گروه یک روش و تاریخ معتبر انتخاب کنید و دوباره تلاش کنید."

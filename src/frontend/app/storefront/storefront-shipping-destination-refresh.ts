@@ -30,6 +30,21 @@ export function destinationIdentityKey(destination: GeographyDestinationIdentifi
   return `${country}|${area}|${city}`;
 }
 
+/**
+ * TB-238 — هویت پاسخ فقط مقصد نیست: همان خواندن با **قصد کوپن** هم انجام می‌شود، پس مبلغ گروه‌ها
+ * مالِ ترکیب (مقصد + کوپن) است. اگر کوپن عوض/پاک شود، پاسخ قبلی دیگر «جاری» نیست.
+ *
+ * هویت خالی (هیچ مقصدی) یک نشانهٔ پایدار می‌گیرد تا شکست همان هویت هم قابل ثبت و Retry باشد؛
+ * رشتهٔ خالی هرگز در `failedKey` ثبت نمی‌شد و Retry مقصد خالی کار نمی‌کرد.
+ */
+export const NO_DESTINATION_IDENTITY = "\u2205none";
+
+export function shippingResponseIdentityKey(destinationKey: string, couponCode: string | null): string {
+  const destination = destinationKey.trim() || NO_DESTINATION_IDENTITY;
+  const coupon = (couponCode ?? "").trim();
+  return coupon ? `${destination}|coupon:${coupon}` : destination;
+}
+
 /** وضعیت صریح تازه‌سازی مقصد: موفق/در انتظار/شکست‌خورده — نه یک بولین بارگذاری. */
 export interface DestinationRefreshSnapshot {
   /** هویت مقصدی که پیش‌نمایش فعلی واقعاً برای آن است. */
@@ -90,9 +105,9 @@ export function failDestinationRefresh(
 /** Retry فقط برای همان کلید شکست‌خورده و فقط یک‌بار (کلیک تکراری درخواست دوم نمی‌سازد). */
 export function canRetryDestinationRefresh(
   snapshot: DestinationRefreshSnapshot,
-  currentKey: string,
+  currentIdentity: string,
 ): boolean {
-  return !snapshot.inFlight && snapshot.failedKey !== "" && snapshot.failedKey === currentKey;
+  return !snapshot.inFlight && snapshot.failedKey !== "" && snapshot.failedKey === currentIdentity;
 }
 
 export type DestinationPreviewMode = "current" | "pending" | "failed";
@@ -105,18 +120,18 @@ export type DestinationPreviewMode = "current" | "pending" | "failed";
  */
 export function resolveDestinationPreviewMode(
   snapshot: DestinationRefreshSnapshot,
-  currentKey: string,
+  currentIdentity: string,
 ): DestinationPreviewMode {
   if (snapshot.inFlight) return "pending";
-  if (snapshot.failedKey !== "" && snapshot.failedKey === currentKey) return "failed";
-  return snapshot.confirmedKey === currentKey ? "current" : "pending";
+  if (snapshot.failedKey !== "" && snapshot.failedKey === currentIdentity) return "failed";
+  return snapshot.confirmedKey === currentIdentity ? "current" : "pending";
 }
 
 export type DestinationRefreshAction = "skip" | "request";
 
 export interface DestinationRefreshPlan {
   action: DestinationRefreshAction;
-  /** هویت دقیقی که این درخواست برایش فرستاده می‌شود (کلید پایدار). */
+  /** هویت دقیقی که این درخواست برایش فرستاده می‌شود (کلید پایدار مقصد + قصد کوپن). */
   key: string;
   /** مقصد دقیقی که باید فرستاده شود؛ `null` یعنی پاک‌شدن هویت و ارسال بدون مقصد. */
   destination: GeographyDestinationIdentifiers | null;
@@ -143,19 +158,22 @@ const SKIP: DestinationRefreshPlan = {
 export function planDestinationRefresh(input: {
   capturedActive: boolean;
   snapshot: DestinationRefreshSnapshot;
+  /** هویت پایدار مقصد (خالی = هیچ مقصدی) — فقط برای تصمیم «مقصد فرستاده شود یا نه». */
   destinationKey: string;
+  /** هویت کامل پاسخ (مقصد + قصد کوپن) — ملاک تأیید/درخواست/شکست. */
+  identityKey: string;
   destination: GeographyDestinationIdentifiers | null;
 }): DestinationRefreshPlan {
-  const { capturedActive, snapshot, destinationKey, destination } = input;
+  const { capturedActive, snapshot, destinationKey, identityKey, destination } = input;
   if (!capturedActive) return SKIP;
   if (snapshot.inFlight) return SKIP;
   // هویتِ تأییدشده همان پاسخ فعلی است؛ هیچ درخواست تازه‌ای لازم نیست.
-  if (destinationKey === snapshot.confirmedKey) return SKIP;
+  if (identityKey === snapshot.confirmedKey) return SKIP;
   // شکست فقط با Retry صریح تکرار می‌شود؛ رندر/تغییر نامرتبط هرگز تلاش خودکار نمی‌سازد.
-  if (snapshot.failedKey !== "" && destinationKey === snapshot.failedKey) return SKIP;
+  if (snapshot.failedKey !== "" && identityKey === snapshot.failedKey) return SKIP;
   return {
     action: "request",
-    key: destinationKey,
+    key: identityKey,
     // هویت پاک‌شده = درخواست بدون مقصد (پاسخ صادقانهٔ سرور، نه قیمت قدیمی).
     destination: destinationKey === "" ? null : destination,
     preserveTypedAddress: true,

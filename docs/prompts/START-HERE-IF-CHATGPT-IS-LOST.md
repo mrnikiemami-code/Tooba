@@ -1,4 +1,35 @@
-# CURRENT — 237-R1 SingleStore practical checkpoint accepted; issued238 LIVE COUPON + MARKETPLACE —2026-10-28
+﻿# CURRENT — 238 EXECUTED PARTIAL: coupons proven LIVE; Marketplace edition trial NOT run —2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-LIVE-COUPON-MARKETPLACE-COMPLETION-238/{TASK.md,RESULT.md}.
+Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation. Bridge row b2dc1b7e-317c-44c5-af54-a593ffb97d9e.
+Preserved: 237-R1 handoff FE3100/Host5188 + profile D:\temp\tb238-handoff-chrome + cart
+01a1807a-e7ef-7000-82d1-285f4bd5c982 never automated/read/reloaded; original 3000/5088 untouched. New work only in
+D:\temp\tb238 on 3101/5189.
+COUPON LIVE (real DEV promo via actual seller API, code TB238-264452 10%): read no-coupon goods 9,485,771 -> with
+coupon 8,537,194 (discount 948,577) freight120000+packaging5000 -> selection200 rev1 -> payment-draft200 discount
+870,254 shipping125,000 payable 8,662,194 -> start-payment200 checkout 01a18165-04b7-7000-8764-09fb8c0bf4d4 Pending
+manual, 1 reservation. Invalid code tolerated by read, refused at selection/commit with
+checkout.coupon.not_applicable (409). Explicit coupon clear/change is a NEW response identity: old priced answer
+becomes pending, no card money/date, typed address preserved, ONE new read.
+DOUBLE CLICK measured: two same-tick start-payment calls both failed at inventory outbox (22001 varchar128) creating
+ZERO checkout/reservation; a later single call created exactly ONE checkout and replay returned it. Client fix:
+payInFlightRef closed BEFORE the first await, released in finally.
+Source (existing paths only): payment-handoff payInFlightRef + stepper flex-wrap/min-w0/text-[11px] sm:text-sm/
+px-2.5 sm:px-4/chevron hidden below sm; shipping-destination-refresh shippingResponseIdentityKey(destination,coupon)
++ NO_DESTINATION_IDENTITY; storefront-shipping keys preview mode/plan/retry on responseIdentity and builds
+isValid/intent only from capturedPreviewForIntent (current only), explicit refusal instead of raw-projection fallback.
+PROOF: tsc clean; destination-refresh 8/8 (incl coupon-identity fact); payment page classes 8/8; test:critical-storefront
+ONCE with ONE pre-existing unrelated red (storefront-landing-blocks.tsx:286 bg-white). Measured viewports
+1440/390/360 => innerWidth==requested, clientWidth==scrollWidth<=innerWidth, visualViewport consistent, PNG exactly
+1440x900 / 390x844 / 360x800 in screens/.
+NOT DELIVERED: NO Marketplace edition live trial (no 3102/5190 target, no Platform+2 Seller groups on one binding, no
+merchant Manage/View denial) -> edition claim stays OPEN; NO payment-page native screenshot at 360/390 (stepper fix is
+code+tsc only, payment metrics NOT claimed); no partial-applicability mixed-cart coupon; no post-order publication
+change + Order GET immutability receipt; manual Pending only, no PSP/funds/VisualACCEPT/activation.
+Elapsed far over HARD40 (NONCOMPLIANT). No migration/schema/baseline/seed; 231/232/236 applied state untouched;
+checked-in gates OFF, preview/selection/checkout ON only on the named task processes; TB185 paused/defaultOFF;
+227 mobile note + 225-R1 lost LOCAL edits retained. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read237-R1/ARCHITECT-REVIEW.md and TB-SHIPPING-LIVE-COUPON-MARKETPLACE-COMPLETION-238/TASK.md.
 Root reviewede02c1a6 source+actualPNG: SingleStore Store/store-alpha Manual/no-coupon real normal-buyer
@@ -19,7 +50,7 @@ ALL3TOPs updatedhere (planningrecovery was stale inworkercommit). CanonicalResul
 TB185paused/defaultOFF/PendingAllocation; OfferAPI/227note/225-R1lostLOCALwork retained; labelmap repaired.
 Active238 only; STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Prior recovery/history follows.
 
-# CURRENT — 237-R1 EXECUTED: booted SingleStore buyer reaches a REAL committed checkout —2026-10-28
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read `docs/architecture/evidence/TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/` (TASK+RESULT). Status PASS
 scoped, NOT accepted, nothing activated. FE `127.0.0.1:3100` + Host `127.0.0.1:5188` live; real order
@@ -50,7 +81,7 @@ Known230emptykey/inflight tocloseinexistingcoordinator; rootcontextstrictness/pa
 already repaired, do not re-add that resolved gap. PreserveTB185paused/defaultOFF/PendingAllocation/225-R1lostLOCAL.
 STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Prior recovery/history follows.
 
-# CURRENT — 237 PARTIAL: coupon-refusal + mandatory goods echo + real captured selection wiring; NO live trial —2026-10-28
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-CONNECTED-PRACTICAL-TRIAL-237/{TASK.md,RESULT.md}.
 Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation, no usable URL, no account handoff.
@@ -100,7 +131,7 @@ is separate. PreserveTB185paused/defaultOFF/PendingAllocation and225-R1unrecover
 STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Earlier no-runtime/no-frontend scopes were task-local,
 NOT a ban on this newly authorized practical task. Prior history follows.
 
-# CURRENT — 236 EXECUTED: one coupon intent across captured read, selection, payment preview and final commit —2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-COUPON-CONTEXT-PARITY-236/{TASK.md,RESULT.md}. Status
 EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base607e12c17, code36c44a35; claim23:18Z→result23:55Z
@@ -158,7 +189,7 @@ EFsnapshotgap retained. Coupon/frontend/practical desktop360/390+mobile and Orde
 final delivery, not exclusions. Known230/OfferAPI/227/225-R1lostLOCALwork retained. TB185paused/defaultOFF/
 PendingAllocation. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Older TOPs are historical.
 
-# CURRENT — 235-R1 executed: per-line assignment validation + one accepted preview root + real multi-owner vertical —2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Active TB-SHIPPING-FULL-OWNER-VALIDATION-AND-PREVIEW-COHERENCE-235-R1 (row5daf73f2-b83d-45e5-82ba-e2ac37383c62).
 Read235-R1/TASK.md and235-R1/RESULT.md. Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation.
@@ -252,7 +283,7 @@ This docs-only scope update changes NO runtime/source/gates/schema/data and issu
 unsavedwork/HostFE/localpreviewONcount7 untouched; migrations231/232sharedpending/EFsnapshot gap retained.
 TB185paused/defaultOFF/PendingAllocation. All prior recorded gaps retained. Detailed active-task recovery follows.
 
-# CURRENT — 234 EXECUTED: public commit / payment-draft / StartPayment edge on the accepted captured core —2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-CAPTURED-PUBLIC-COMMIT-EDGE-234/{TASK.md,RESULT.md}. Status
 EXECUTED, NOT accepted, no userVisualACCEPT, no activation; base3f4ee29e6; ≈28min vs HARD35 (source/proof split
@@ -421,7 +452,7 @@ true concurrent advance, and coupon read/selection/commit parity — or accept t
 STOP_FOR_ARCHITECT; Automatic-Next-Task NONE.
 
 
-# CURRENT — 233-R1 NOT ACCEPTED; issued233-R2 source repair + real Submit proof —2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Active TB-SHIPPING-CAPTURED-SUBMIT-INTEGRATION-233-R2. Read233-R1/ARCHITECT-REVIEW.md and233-R2/TASK.md.
 Root source-reviewedce7356217: no positive actual submit. NOT accepted as wiring-only. Confirmed DI cycle:
@@ -764,7 +795,7 @@ Read-only usertrial accepted, no VisualACCEPT/fullStorefront certification. NoJS
 Known emptykeyrefresh/inflightwait/crossownerlabel/decoder/OfferAPIproof gaps retained;227mobileresidual;
 225-R1lostunsaveduserLOCALtabedits,no recovery. TB185paused/defaultOFF/PendingAllocation. History below.
 
-# CURRENT —231-R2 executed: DB shape CHECKs corrected + direct RED→GREEN —2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 231-R1 value/owner/token/time/money contract remains accepted within its recorded proof; the SQL shape CHECK was
 the only open blocker and is repaired in place in the SAME still-unshared migration.
@@ -788,7 +819,7 @@ Host/FE/localpreviewONcount7/data/account/cart/drafts/pointers/assignments uncha
 Known emptykeyUIrefresh/cross-ownerlabel/decoder/OfferAPI gaps retained;227mobileresidual;225-R1unsavedLOCAL
 user-tab loss,no recovery. TB185paused/defaultOFF/PendingAllocation preserved. History below retained.
 
-# CURRENT — 231-R1 executed: evidence owner/token/hour/money corrected in place — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-COMPACT-GROUP-ORDER-EVIDENCE-231-R1/{RESULT.md,TASK.md}.
 Base `5cd72434e`. Status: **EXECUTED**, NOT accepted, no user Visual ACCEPT, no live writer/parity/UI/runtime.
@@ -919,7 +950,7 @@ same authoritative quote+selected revision revalidation through actual selection
 225-R2/226 accepted;227empty-note residual;225-R1 unsaveduserLOCALtabloss,no recovery.
 TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below retained.
 
-# CURRENT —230 positive read ACCEPTED; narrow230-R1 failure/display correction issued —2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Active: TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1. Root VIEWED actual1440/390 priced cards.
 Configured SingleStore read positive accepted: real group freight120000+packaging5000, actual dates skipFriday,
@@ -941,7 +972,7 @@ Existing cross-ownerlabel/decoder andOfferAPIproof gaps retained, no Marketplace
 225-R2/226 accepted;227empty-note residual;225-R1 lost unsaveduserLOCALedits,no recovery.
 Task-owned browser only;TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below.
 
-# CURRENT — 230-R1 EXECUTED: failed destination refresh no longer resurrects the old price — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-READ-FAILURE-INTEGRITY-230-R1/{RESULT.md,TASK.md}.
 Base `6d0a506b2`. Status: **EXECUTED — one real failed-refresh defect repaired + two display fixes**, not
@@ -1058,7 +1089,7 @@ Known cross-owner label-map/decoder limits retained; SingleStore test not Market
 Fresh/task-owned browser only;225-R1 lost unsaved userLOCALedits,no recovery.227 empty-note residual retained.
 TB185paused/default-OFF/PendingAllocation preserved. Prior checkpoints historical.
 
-# CURRENT — 229-R2 executed: authenticated live read OBSERVED at 1440/390 — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-AUTHENTICATED-READ-TRIAL-229-R2/{RESULT.md,TASK.md}.
 Base `e7bc126f4c44499e113fdb357854006666eb2efb`. No source change needed; NOT accepted, no user Visual ACCEPT.
@@ -1105,7 +1136,7 @@ or readiness claim. Existing money/week/admin acceptance and227 mobileempty-note
 Task-owned browser only;225-R1 unsaveduser-local-tab loss,no recovery. TB185paused/defaultOFF/PendingAllocation.
 Historical checkpoints retained below.
 
-# CURRENT — 229-R1 executed PARTIAL: four read-path defects repaired; live card trial blocked at buyer login — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229-R1/{RESULT.md,TASK.md}.
 Base `304ac4da8059e91673cd54306e0930b9bfd94378`. Not accepted; NO live card observation and NO screenshots.
@@ -1155,7 +1186,7 @@ Compact shared snapshot/order evidence and selection/commit parity remain mandat
 Fresh task-owned Chrome only;225-R1 lost unsaved user-tab LOCAL edits,no recovery. Real draft/pointer intact.
 TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below retained.
 
-# CURRENT — 229 EXECUTED PARTIAL: read path wired behind default-OFF option; migration applied — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-GROUP-CARDS-CONNECTION-229/{RESULT.md,TASK.md}.
 Base `02250f55f`. Status EXECUTED — PARTIAL, not accepted, NO live browser trial.
@@ -1192,7 +1223,7 @@ User nonproduction migration/verified refresh/bounded dev API authorization pers
 Fresh task-owned browser only;225-R1 unsaved local-user-tab loss recorded,no recovery.
 TB185paused/default-OFF/PendingAllocation preserved. Historical checkpoints below retained.
 
-# CURRENT — 228 PARTIAL: Offer assignment stored; storefront read projection NOT wired — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-REAL-GROUP-PROJECTION-228/{RESULT.md,TASK.md}.
 Base `d292e88b6`. Status EXECUTED — PARTIAL, not accepted; no live trial, no migration applied, no restart.
@@ -1238,7 +1269,7 @@ User nonproduction authorization persists; required scoped migration/verified Ho
 reset/reseed/user-draft overwrite. Task-owned browser only;225-R1 lost unsaved user-tab edits, no recovery.
 TB185paused/default-OFF/PendingAllocation preserved. Previous checkpoints below are historical.
 
-# CURRENT — Architect reviewed 227 — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 227 ACCEPTED_WITH_RECORDED_LIMIT for in-popup search and reproduced populated-branch loading shake; admin
 user retest allowed, not user Visual ACCEPT/full pixel-stability. Root viewed 1440 and390 popup screenshots
@@ -1257,7 +1288,7 @@ and unimplemented. No full authored JSON per order.
 claimed; fresh task-owned browser profile/target only. Default-OFF/TB185 paused/PendingAllocation and real
 draft/pointer/runtime preserved. Historical checkpoints below remain historical.
 
-# CURRENT — 227 executed: in-popup search + pixel-stable destination modal — 2026-10-27
+# SUPERSEDED — 237-R1 checkpoint was current before 238 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-SEARCH-STABILITY-227/{RESULT.md,TASK.md}.
 Base `2d744fc67df34dc9427b2f0db56e2946c1344784`. Status: EXECUTED, NOT accepted. 225-R2 money and 226 week untouched.

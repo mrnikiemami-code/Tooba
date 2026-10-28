@@ -11,6 +11,7 @@ import {
   failDestinationRefresh,
   planDestinationRefresh,
   resolveDestinationPreviewMode,
+  shippingResponseIdentityKey,
   type DestinationRefreshSnapshot,
 } from "./storefront-shipping-destination-refresh.ts";
 
@@ -21,17 +22,22 @@ const destination = {
 };
 const deeper = { ...destination, cityId: "01a17000-0000-7000-8000-0000000000dd" };
 
-/** فراخوانی همان تصمیم صفحه: پلن برای هویت فعلی با وضعیت فعلی هماهنگ‌کننده. */
+/**
+ * فراخوانی همان تصمیم صفحه: پلن برای هویت پاسخ فعلی (مقصد + قصد کوپن) با وضعیت فعلی هماهنگ‌کننده.
+ * بدون کوپن، هویت پاسخ همان کلید مقصد است.
+ */
 function plan(
   snapshot: DestinationRefreshSnapshot,
   key: string,
   current: typeof destination | null = destination,
   capturedActive = true,
+  couponCode: string | null = null,
 ) {
   return planDestinationRefresh({
     capturedActive,
     snapshot,
     destinationKey: key,
+    identityKey: shippingResponseIdentityKey(key, couponCode),
     destination: current,
   });
 }
@@ -96,9 +102,10 @@ test("clearing a parent clears the lower identity and removes the stale price", 
   assert.equal(empty.destination, null);
 
   // Repeated clear (already confirmed) does not loop.
+  const emptyIdentity = shippingResponseIdentityKey("", null);
   const confirmedEmpty = completeDestinationRefresh(
-    beginDestinationRefresh(createDestinationRefreshSnapshot(), ""),
-    "",
+    beginDestinationRefresh(createDestinationRefreshSnapshot(), emptyIdentity),
+    emptyIdentity,
   );
   assert.equal(plan(confirmedEmpty, "", null).action, "skip");
 });
@@ -192,6 +199,39 @@ test("stale success and stale failure can never mutate the current request", () 
   const fresh = completeDestinationRefresh(inFlight, newKey);
   assert.equal(fresh.confirmedKey, newKey);
   assert.equal(resolveDestinationPreviewMode(fresh, newKey), "current");
+});
+
+test("a coupon change or clear is a NEW response identity, never a stale price shown as current", () => {
+  const key = destinationIdentityKey(destination);
+  const withoutCoupon = shippingResponseIdentityKey(key, null);
+  const withCoupon = shippingResponseIdentityKey(key, " TB238-264452 ");
+
+  // همان مقصد اما قصد کوپن متفاوت = هویت پاسخ متفاوت.
+  assert.notEqual(withCoupon, withoutCoupon);
+  assert.equal(withCoupon, shippingResponseIdentityKey(key, "TB238-264452"));
+  // بدون مقصد هم هویت پایدار (نه رشتهٔ خالی) تا شکست/Retry کار کند.
+  assert.equal(shippingResponseIdentityKey("", null), "\u2205none");
+  assert.equal(shippingResponseIdentityKey("", "SAVE10"), "\u2205none|coupon:SAVE10");
+
+  const priced = completeDestinationRefresh(
+    beginDestinationRefresh(createDestinationRefreshSnapshot(), withoutCoupon),
+    withoutCoupon,
+  );
+  assert.equal(resolveDestinationPreviewMode(priced, withoutCoupon), "current");
+  // افزودن کوپن: پاسخ پیشین جاری نیست → درخواست تازه.
+  const withCouponPlan = plan(priced, key, destination, true, "TB238-264452");
+  assert.equal(withCouponPlan.action, "request");
+  assert.equal(withCouponPlan.key, withCoupon);
+  // هرگز با «مبلغ قبلی بدون تخفیف» به‌عنوان نتیجهٔ کوپن ادامه نمی‌دهد.
+  assert.equal(resolveDestinationPreviewMode(priced, withCoupon), "pending");
+
+  // پاک کردن صریح کوپن هم هویت تازه است و دوباره درخواست می‌سازد.
+  const couponPriced = completeDestinationRefresh(
+    beginDestinationRefresh(createDestinationRefreshSnapshot(), withCoupon),
+    withCoupon,
+  );
+  assert.equal(plan(couponPriced, key, destination, true, null).action, "request");
+  assert.equal(resolveDestinationPreviewMode(couponPriced, withoutCoupon), "pending");
 });
 
 test("stale/out-of-order completions are ignored by the request generation", () => {
