@@ -1,4 +1,23 @@
-﻿# CURRENT — 238 EXECUTED PARTIAL: coupons proven LIVE; Marketplace edition trial NOT run —2026-10-28
+# CURRENT — 238 valid coupon HTTP milestone retained; issued239 MARKETPLACE FIRST —2026-10-28
+
+Read238/ARCHITECT-REVIEW.md and TB-SHIPPING-MARKETPLACE-FIRST-LIVE-ACCEPTANCE-239/TASK.md.
+Root reviewed600a96f actualpayment/ref/current-onlyintent+responseidentity source. Retain SingleStore real DBcoupon
+HTTP read/save/preview/final Order/manualPending1reservation (goods8537194+fee125000=8662194IRR); NOT browser
+coupon certification, partialapplicability/Marketplace/paid. User3100/5188reviewprofile NEVER touched; new3101/
+5189task target exists.238 had NO Marketplace target; formdriver trouble isn't anedition/config blocker.
+NEW reportedtwoHTTPsubmit failures22001 NOT passing duplicate proof. Actual sharedOutbox normal correlation=32Guid,
+columnmax128; exactfailingcolumn/parameter/binary must be verified, no blind schema widening/truncate/ignore.
+239 boots actualMarketplaceDB/Host/ownerAPI FIRST, then normal threeowner buyer flow/couponpartial/orderhistory,
+sameUI smoke + actualpayment390/360capture.238 onlyshippingPNGs; paymentlayout source NOT mobileproof.
+Invalidread200 "tolerant bydesign" unproven: mayearlyrefuse beforequote; record fullrequest+status/body.
+In-flight newidentity stillSKIP/waits; no allraceclosed claim. Freezeinputs atrequeststart ifliveblocker.
+Normalnonprod setup authorized; no authbypass/directbusinessSQL/realmoney/newframework. Existingowner/evidence/
+financialcore retained, allcheckedgatesOFF/localnamedON;231/232/236alreadyAPPLIED store-alpha nohistoryrewrite.
+All-owner finalgate remainsopen. No genericreview/retestloop.Original3000/5088+user3100window/sourcefrozen.
+TB185paused/defaultOFF/PendingAllocation;OfferAPI/227note/225-R1lostLOCALwork retained.
+Active239 only;STOP_FOR_ARCHITECT;automaticNextImplementationTask NONE. Prior history follows.
+
+# CURRENT — 238 EXECUTED PARTIAL: coupons proven LIVE; Marketplace edition trial NOT run —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-LIVE-COUPON-MARKETPLACE-COMPLETION-238/{TASK.md,RESULT.md}.
 Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation. Bridge row b2dc1b7e-317c-44c5-af54-a593ffb97d9e.
