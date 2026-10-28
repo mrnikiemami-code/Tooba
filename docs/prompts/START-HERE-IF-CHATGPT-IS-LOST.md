@@ -1,4 +1,36 @@
-﻿# CURRENT — 240-R2 BLOCKED: seller access + payment idempotency repaired, mixed-owner save blocked by existing index — 2026-10-28
+# CURRENT — 240-R3 ISSUED: BOTH GROUP INDEXES + STRICT CORRELATION; ORIGINAL DEADLINE AT SERIOUS RISK — 2026-10-28
+
+Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3; task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/TASK.md.
+Main77ed71dfb709df7806018875d833edd9540121db, source769f43ff5c3339ae78c74dacb4929168bf8801a6.
+240-R2 reached seller rights/captures +3 PRICED owner groups. Full delivery BLOCKED on unconditional cart seller/method
+unique index; SAME unconditional unique exists in FINALordergroups too. No mixedOrder/coupon/UIhandoff/mobile/history yet.
+Root inspected source, did not execute Windows proof. No inferred Visual ACCEPT.
+
+ARCHITECT DECISION/AUTHORIZATION: ONE NEW Order forward migration changes BOTH existing unique seller/method indexes to
+UNIQUE legacy-only WHERE accepted_snapshot_id IS NULL; matching runtime EF HasFilter/actualName. Preserve PK/FKs/exact
+line UNIQUE/evidence CHECKs. No newownercolumn/JSON/copy or applied-history edit. Normalrunner plan/apply TASKMarketplaceDB ONLY.
+Down cannot delete/merge rows to force old invariant; unsafe downgrade fails atomically. Do not just fix cart then failfinalOrder.
+Existing groupid+membership+acceptedfullowner is identity. Mixed sameSeller/sameMethod disjointcapturedgroups lawful.
+R2 planner needs exactONE keyed seller+binding match, NO fallback, and legacy no-key duplicate-seller/method control restored.
+
+PAYMENT REVIEW LIMIT: gateway.InitiateAsync precedes contested SaveChanges, so winnercatch does NOT prove provider exactly-once.
+ManualPending samePayment/Attempt rows useful only within that bound. Tighten substring23505 to exactpaymentschema/table/index
+and normal actor-access check before winnerreturn. Do not certify PSP/paid or globalproviderconcurrency. checkoutReplayedfalse open.
+ActualcamelCase listener worked, no serializerfix. R2 says231/232NOTAPPLIED incorrectly; inspect actual history (alreadyappliedearlier).
+
+DEADLINE unchanged:53+70+62+31=216/240 reported focused minutes,24 left before any otherfocus; taskplans20 incl.evidence.
+Originalestimate optimistic, fullcompletion unguaranteed. checkpoint8 mixedsave200,14 mixedOrder,final6 UI/handoff; no newclock.
+At240 report actual unmet delivery and overrun, not partial-as-final or automatic241. All original mixedowner/coupon/manual/mobile/
+duplicate/history requirements remain OPEN and binding. Existingtaskcart01a181e2-0d5e-7000-a94c-87e9b826f94d/captures usable, no bootstrap.
+
+Task5190 Marketplace TenantNULL DBtooba_marketplace_tb239 ONLY for apply/restart; isolatedFE3102 only. Preserve USER3000/5088,
+handoff3100/5188+D:\temp\tb238-handoff-chrome, usertabs/unsavedwork/watchedsource NEVER enumerate/read/automate/reload/close/edit/HMR.
+Preserve userdraft/rates/pointer and review230/handoffcart. No reset/reseed/foreignbusinessSQL/baselineregeneration.
+Checked-in gatesOFF/localtaskON, TB185paused/defaultOFF/PendingAllocation.238unclassified22001,227mobileempty-note,
+225-R1unrecoveredLOCALeditloss retained. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+---
+# CURRENT — 240-R2 BLOCKED: seller access + payment idempotency repaired, mixed-owner save blocked by existing index — 2026-10-28
 
 Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2, evidence docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/{RESULT.md,RECEIPTS.md}.
 Status BLOCKED (not accepted). Base4f95bdd9b7dcabecc9950c9b1485c0b046b509e0, code769f43ff5c3339ae78c74dacb4929168bf8801a6.
