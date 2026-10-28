@@ -36,3 +36,14 @@ The already-issued240-R7 only fixes honest date selection, missing interval disp
 Do not broaden an already-running worker silently or fakehourlychoices to reportR7PASS. Preserve its current task and user-work safeguards.
 At next Architect integration, treat configurable hourly receiving slots as OPEN product work; no automaticnewtask is issued by this documentation commit.
 Original completion deadline remains MISSED; do not invent a new date or claim overallcompletion while this requirement is open.
+
+
+## CORRECTION — user says this is a lost existing capability, 2026-10-28
+
+User: "من قبلا داشتم انتخاب زمان تحویل الان ندارم". Classify missing delivery-time selection as a USER-REPORTED REGRESSION, not merely a new request or optional enhancement. The earlier section's wording "NEW clarified user requirement" was an inaccurate classification and is superseded here; the observed gap is not accepted delivery.
+
+Root verified source4bce0a8b66490643b179180c176d9c2ac17264b3: existing GroupSchedulePicker in storefront-shipping-group-cards.tsx renders schedule.timeWindows as role=radio choices via onSelectWindow, while CapturedMethodRow offers dates and only intervalText. This proves the feature exists in the legacy UI and is missing in the new captured UI. It does NOT independently prove what exact old hourly-duration policy was configured; do not invent that history.
+
+Restore equivalent customer ability in the captured authoritative path: choose eligible day then one server-authorized receiving slot (e.g.09–10,10–11) derived from explicit method settings. Do not revert to legacy mutable quote/price logic, merely show selectable9–17 as a substitute for configured hourlyslots, or add fake browser-only intervals rejected by finalacceptance. Duration configuration remains the user's clarified required behaviour.
+
+No screenshot/visualworker task; user mention of Digikala is an analogy, not proof of this product's implementation. No new deadline allowance and no automatictask created by this correction.240-R7 remains the active issued task for datechoice/disabledreason; its limited repair must not be called completion of this regression unless actual date+configuredslot selection reaches persistence.

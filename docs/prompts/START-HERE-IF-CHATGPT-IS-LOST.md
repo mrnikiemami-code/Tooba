@@ -1,3 +1,15 @@
+# CORRECTION — DELIVERY-TIME SELECTION IS A USER-REPORTED REGRESSION —2026-10-28
+
+User says it existed before and is now gone. Do NOT frame restoration as an optionalnewfeature or completionwaiver.
+Root confirmed legacyGroupSchedulePicker still has schedule.timeWindows radiochoices/onSelectWindow; newCapturedMethodRow
+onlydates+intervalText. Earlier "NEWrequirement" classification superseded. Exactoldhourlydurationpolicy not independentlyverified.
+Requiredrestoration: date THEN selectable server-authorizedslots09–10,10–11,... from explicit methodsettings, pergroupindependent,
+selectedslot validated+persisted unchanged. No frontendfakehours/legacyquoteauthority fallback or9–17text substituted forslotchoice.
+Read docs/architecture/shipping/SHIPPING-RECEIVING-SLOT-DURATION-USER-REQUIREMENT-2026-10-28.md appendedCORRECTION.
+240-R7 remains active; date/disabledreasonfix alone cannot close this slotregression. No automaticnewtask/deadlinereset.
+Preserve all USERtab/HMR and NOscreenshots/visualworker constraints below.
+
+---
 # USER CLARIFICATION — CONFIGURABLE HOURLY RECEIVING SLOTS ARE OPEN — 2026-10-28
 
 Latest user: "ساعت داشته باشد9تا10 10تا11 همینطور البته با تنظیمات".
