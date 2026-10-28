@@ -139,7 +139,7 @@ public sealed class StorefrontCapturedPreviewContractTests
     }
 
     private static StorefrontCheckoutService Service(ICheckoutDirectory directory) =>
-        new(new CartFake(), directory, new EmptyAddressBook(), new CapturedFinalSubmitIntegrationTests.FixedStorefrontActor());
+        new(new CartFake(), directory, new EmptyAddressBook(), new CapturedFinalSubmitIntegrationTests.FixedStorefrontActor(), shippingGroupHistory: null!);
 
     private static CartShippingDraft Draft() => CartShippingDraft.Create(
         CartId,

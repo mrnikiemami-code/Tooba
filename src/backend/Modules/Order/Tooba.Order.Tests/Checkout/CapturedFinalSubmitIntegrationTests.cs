@@ -363,7 +363,7 @@ public sealed class CapturedFinalSubmitIntegrationTests
     public async Task Preparation_keeps_the_saved_address_id_as_server_provenance_only()
     {
         var addresses = new RecordingAddressBook();
-        var service = new StorefrontCheckoutService(null!, null!, addresses, new FixedStorefrontActor());
+        var service = new StorefrontCheckoutService(null!, null!, addresses, new FixedStorefrontActor(), shippingGroupHistory: null!);
 
         var placement = await service.PrepareShippingAsync(
             new StorefrontCheckoutShippingInput(

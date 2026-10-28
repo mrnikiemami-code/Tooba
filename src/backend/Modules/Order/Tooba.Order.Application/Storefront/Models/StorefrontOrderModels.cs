@@ -342,7 +342,43 @@ public sealed record StorefrontShippingGroupView(
     /// <c>OrderLineId</c> هرگز جای <c>CartLineId</c> نیست؛ در نمای پیش‌نویس خالی و در نمای سفارشِ
     /// ذخیره‌شده پر می‌شود. هیچ مبلغی از این شناسه‌ها استنتاج نمی‌شود.
     /// </summary>
-    IReadOnlyList<Guid>? OrderLineIds = null);
+    IReadOnlyList<Guid>? OrderLineIds = null,
+    /// <summary>
+    /// TB240-R4: شاهد فشردهٔ <b>ذخیره‌شده در خود Order</b> برای گروه‌های پایدار. در نمای پیش‌نویس/زنده تهی است و
+    /// فقط از ستون‌های `order.order_shipping_groups` خوانده می‌شود؛ هیچ lookup ارسال/تعرفه/گروه منطقه‌ای برای
+    /// ساختن آن انجام نمی‌شود و هیچ مبلغی بازمحاسبه نمی‌گردد.
+    /// </summary>
+    StorefrontShippingGroupHistoryView? History = null);
+
+/// <summary>
+/// نمایش فقط-خواندنی شاهد پذیرفته‌شدهٔ یک گروه ارسالِ <b>ذخیره‌شده</b> (TB240-R4).
+/// </summary>
+/// <remarks>
+/// همهٔ مقادیر عیناً از Order storage می‌آیند؛ نبودِ شاهد ⇒ <c>null</c> (گروه قدیمی) و هیچ مقدار پیش‌فرض/جعل‌شده
+/// ساخته نمی‌شود. تیک‌های 100ns بازهٔ تحویل بدون کوتاه‌سازی منتقل می‌شوند.
+/// </remarks>
+public sealed record StorefrontShippingGroupHistoryView(
+    string OwnerKind,
+    string? OwnerTenantKey,
+    Guid? OwnerSellerPartyId,
+    Guid SnapshotId,
+    Guid DraftId,
+    long SourceRevision,
+    int FormatVersion,
+    long SelectionVersion,
+    Guid AreaGroupId,
+    Guid RateRowId,
+    Guid? ShippingTypeId,
+    decimal FreightAmount,
+    decimal PackagingAmount,
+    decimal PayableAtCheckoutAmount,
+    decimal CarrierCollectAmount,
+    string ReceivingDate,
+    long ReceivingOpenTicks,
+    long ReceivingCloseTicks,
+    string ReceivingTimeZone,
+    int? MinimumDeliveryDays,
+    int? MaximumDeliveryDays);
 
 /// <summary>
 /// ذخیرهٔ انتخاب ارسال. <see cref="ShippingGroups"/> افزایشی و اختیاری است: در نبود آن همان

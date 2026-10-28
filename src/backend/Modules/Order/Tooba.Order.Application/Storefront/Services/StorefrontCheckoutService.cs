@@ -1,4 +1,5 @@
-﻿using Tooba.AddressBook.Contracts.Ports;
+﻿using System.Globalization;
+using Tooba.AddressBook.Contracts.Ports;
 using Tooba.AddressBook.Contracts.Dtos;
 using Tooba.Cart.Contracts;
 using Tooba.Order.Application.Storefront.Models;
@@ -37,17 +38,20 @@ public sealed class StorefrontCheckoutService
     private readonly ICheckoutDirectory _checkouts;
     private readonly IAddressBookCheckoutLookup _addresses;
     private readonly IOrderStorefrontActor _actor;
+    private readonly IOrderShippingGroupHistoryReader _shippingGroupHistory;
 
     public StorefrontCheckoutService(
         ICartPresentationGateway carts,
         ICheckoutDirectory checkouts,
         IAddressBookCheckoutLookup addresses,
-        IOrderStorefrontActor actor)
+        IOrderStorefrontActor actor,
+        IOrderShippingGroupHistoryReader shippingGroupHistory)
     {
         _carts = carts;
         _checkouts = checkouts;
         _addresses = addresses;
         _actor = actor;
+        _shippingGroupHistory = shippingGroupHistory;
     }
 
     /// <summary>
@@ -145,9 +149,11 @@ public sealed class StorefrontCheckoutService
         var owned = await GetOwnedForPaymentResultAsync(checkoutId, guestSecret, cancellationToken);
         if (owned is not null)
         {
-            return owned;
+            return await WithStoredShippingGroupsAsync(owned, cancellationToken);
         }
 
+        // TB240-R4: locator مرورگر هرگز مجوز نیست. مالکیت از actor واقعی سرور (همین خواندن) یا guest secret
+        // همان سبد متعهد اثبات می‌شود؛ بنابراین `cartId` عمداً استفاده نمی‌شود و نبودش مانع خواندن صاحب سفارش نیست.
         _ = cartId;
         var actor = _actor.ResolvePlacementActor(usingSavedAddress: false);
         var snapshot = await _checkouts.GetCheckoutAsync(
@@ -160,6 +166,75 @@ public sealed class StorefrontCheckoutService
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// TB240-R4: گروه‌های ارسالِ <b>همین سفارش پایدار</b> را از خود Order به نمای مجاز اضافه می‌کند.
+    /// </summary>
+    /// <remarks>
+    /// این کار فقط برای پاسخ <b>مجازشدهٔ</b> سفارش انجام می‌شود و هیچ Shipping/تعرفه/گروه منطقه‌ای را
+    /// نمی‌خواند، هیچ مبلغی را بازمحاسبه نمی‌کند و هیچ شاهد جعلی برای گروه بدون evidence نمی‌سازد. تغییر
+    /// publication/تعرفه/انتخاب بعدی هیچ اثری روی این اعداد ندارد.
+    /// </remarks>
+    private async Task<StorefrontCheckoutPage> WithStoredShippingGroupsAsync(
+        StorefrontCheckoutPage page,
+        CancellationToken cancellationToken)
+    {
+        if (page.CheckoutId is not Guid checkoutId || checkoutId == Guid.Empty)
+        {
+            return page;
+        }
+
+        var stored = await _shippingGroupHistory.GetForCheckoutAsync(checkoutId, cancellationToken);
+        if (stored.Count == 0)
+        {
+            return page;
+        }
+
+        var views = stored
+            .Select(group => new StorefrontShippingGroupView(
+                group.ShippingGroupId,
+                group.SellerPartyId,
+                group.MethodCode,
+                group.ServiceCode,
+                group.OptionCode,
+                group.MethodLabel,
+                group.ShippingChargeSnapshot,
+                group.Currency,
+                group.MinimumDeliveryDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                group.RequestedDeliveryDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                group.RequestedDeliveryTimeWindow,
+                group.LeadDays,
+                group.OrderLineIds.Count,
+                null,
+                group.OrderLineIds,
+                group.Evidence is null
+                    ? null
+                    : new StorefrontShippingGroupHistoryView(
+                        group.Evidence.OwnerKind,
+                        group.Evidence.OwnerTenantKey,
+                        group.Evidence.OwnerSellerPartyId,
+                        group.Evidence.SnapshotId,
+                        group.Evidence.DraftId,
+                        group.Evidence.SourceRevision,
+                        group.Evidence.FormatVersion,
+                        group.Evidence.SelectionVersion,
+                        group.Evidence.AreaGroupId,
+                        group.Evidence.RateRowId,
+                        group.Evidence.ShippingTypeId,
+                        group.Evidence.FreightAmount,
+                        group.Evidence.PackagingAmount,
+                        group.Evidence.PayableAtCheckoutAmount,
+                        group.Evidence.CarrierCollectAmount,
+                        group.Evidence.ReceivingDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        group.Evidence.ReceivingOpenTicks,
+                        group.Evidence.ReceivingCloseTicks,
+                        group.Evidence.ReceivingTimeZone,
+                        group.Evidence.MinimumDeliveryDays,
+                        group.Evidence.MaximumDeliveryDays)))
+            .ToArray();
+
+        return page with { ShippingGroups = views };
     }
 
     public async Task<StorefrontCheckoutPage?> GetOwnedForPaymentResultAsync(

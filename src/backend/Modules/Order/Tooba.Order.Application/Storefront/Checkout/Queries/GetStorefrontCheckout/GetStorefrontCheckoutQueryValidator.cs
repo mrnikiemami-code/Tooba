@@ -8,6 +8,8 @@ public sealed class GetStorefrontCheckoutQueryValidator : AbstractValidator<GetS
     public GetStorefrontCheckoutQueryValidator()
     {
         OrderFluentRules.RequireCheckoutId(this, x => x.CheckoutId);
-        OrderFluentRules.RequireCartId(this, x => x.CartId);
+        // TB240-R4: `CartId` فقط یک locator اختیاری است و سرویس عمداً آن را نادیده می‌گیرد؛ مالکیت واقعی از
+        // طریق actor سرور (کاربر احراز‌شدهٔ OrderAccess) یا guest secret همان سبد متعهد سنجیده می‌شود.
+        // بنابراین نبودِ آن برای خواندن مجازِ صاحب سفارش خطای اعتبارسنجی نیست.
     }
 }

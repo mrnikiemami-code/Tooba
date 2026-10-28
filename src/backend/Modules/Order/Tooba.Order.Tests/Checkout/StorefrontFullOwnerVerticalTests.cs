@@ -490,7 +490,7 @@ public sealed class StorefrontFullOwnerVerticalTests
                 new CapturedFinalSubmitIntegrationTests.FakeTenant(marketplace ? null : "store-alpha"),
                 options);
             Writer = new StorefrontCapturedSelectionWriter(Planner, Drafts, Core.Geography, _clock);
-            Checkouts = new StorefrontCheckoutService(Carts, Core.Directory, Core.Addresses, _actor);
+            Checkouts = new StorefrontCheckoutService(Carts, Core.Directory, Core.Addresses, _actor, shippingGroupHistory: null!);
             Shipping = new StorefrontShippingService(
                 Carts,
                 Checkouts,

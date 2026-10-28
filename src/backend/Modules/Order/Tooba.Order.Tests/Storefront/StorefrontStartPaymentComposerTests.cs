@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Tooba.BuildingBlocks;
@@ -403,7 +403,7 @@ public sealed class StorefrontStartPaymentComposerTests
             var drafts = new DraftStoreFake(Draft(cartId));
             var actor = new ActorFake(authenticatedUserId);
             var carts = new CartsFake(cartId, replayOwnershipGranted);
-            var checkout = new StorefrontCheckoutService(carts, directory, addresses: null!, actor);
+            var checkout = new StorefrontCheckoutService(carts, directory, addresses: null!, actor, shippingGroupHistory: null!);
             var shipping = new StorefrontShippingService(
                 carts,
                 checkout,

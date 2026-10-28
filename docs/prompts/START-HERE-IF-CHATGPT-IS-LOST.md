@@ -1,3 +1,40 @@
+﻿# CURRENT — 240-R4 EXECUTED PARTIAL: usable authorized order page + real coupon order; UI double-click/form/retry remain — 2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/{RESULT.md,RECEIPTS.md}.
+Status PARTIAL, NOT accepted, no userVisualACCEPT, no activation, no PSP/paid claim. Base3fa823d33148f6c9cde0c3df12b216df17593f62.
+DEADLINE: original240M END MISSED (~243 focused before this slice) and this recovery segment ran ≈39min vs the 30min
+focusbox (exceeded ≈9, cumulative ≈282). No clock reset/new promise/automatic241.
+USABLE URL: http://127.0.0.1:3102/fa/payment?checkoutId=01a18209-cd78-7000-a9b6-02dadf377e55 in the task profile
+(D:\temp\tb240r4-review-chrome, CDP9342) with EMPTY local committed/payment cache: real buyerBFF session,
+GET checkout200 WITHOUT cartId locator, wallet-quote200 with the server-returned cartId, pending-payments200,
+3 group cards + payable۵٬۷۶۲٬۶۰۰ + PendingPayment + continuation node, 0 fresh pay buttons, no error, survives reload,
+390/desktop no overflow; foreignbuyer and anonymous both 404 checkout.missing.
+REAL COUPON ORDER: TB240R4DIGI (PercentageOff10%, DigiStyle-only) via existing seller promotionAPI; projection
+1951100→1755990 only for that group; TB240R4NOPE 409 checkout.coupon.not_applicable; exact3group choice rev1;
+draft discount179000 ship214500 tax441990; clear→rev2 draft discount0 (no resurrectedcode); reapply→rev3;
+stale rev 400 storefront.captured_selection.stale; start-payment200 checkout01a18230-b7c1-7000-9983-6d588a5b0c08
+payment01a18230-b91a-7000-a804-e26e52ec8f40 amount5567490; Order200 PendingPayment disc179000 tax441990 ship214500
+groups3. DB: seller_orders Arman3597000/disc0 + DigiStyle1755990/disc179000 tax144990; line
+promotion_code_snapshot TB240R4DIGI PercentageOff pre1790000→post1611000; 3 order groups own owner/capture/money/
+dates/100nsticks; payments1 cycles1 processPaymentPending. Same-key replay: 2 sequential + 2 concurrent identical
+start-payment calls → SAME checkout+payment, replayed=true, still 1 payment row (bounded, NOT PSP exactly-once).
+HISTORY: ONE DEV publication changed through normalAPI (draft01a181dd-6bcb… arman rate freight62000→68000 rev6→7,
+publication200 snapshot01a18231-8fbe-7000-85fd-23705cc49084 sourceRev7 selVer2; fresh quote 68000+3000=71000) and the
+original order01a18209… re-read = 0 diffs across group fields + all20 history fields×3, still snapshots
+01a181ca-e8f8/01a181de-0c80/01a181de-0e59 rev6 sel1 freight95000/62000/47000 payable5762600 from Order storage.
+SOURCE: checkoutapi authenticated fallback (local storage hint only), handoff owner-read-FIRST then wallet/cartIdHint,
+optional cartId locator (query+validator) with service still ignoring it after GetOwnedForPaymentResultAsync, new
+read-only IOrderShippingGroupHistoryReader + OrderStorage reader AsNoTracking + StorefrontShippingGroupHistoryView on
+the existing group DTO (no Shipping/Catalog lookup, no new endpoint). tsc0, Endpoints+Infrastructure builds0, focused
+OrderTests 66pass/1fail = PRE-EXISTING DateTimeOffset.UtcNow guard in the untouched planner.
+NOT DELIVERED: UI double-click network counter on real Continue/final controls (only API-level 4-identical-calls=1
+checkout/1payment), fresh pre-commit payment form in a NEW cart (only converted carts/session available; coupon buyer
+password not retained so no fabricated session), 230-R1 failed-destination+retry re-execution. checkoutReplayed=false
+on FIRST call unchanged; PaymentGateway.InitiateAsync still precedes contested SaveChanges.
+No screenshot/visual work. No migration/reset/reseed/businessSQL/crossDBcopy; 20261028140000 not re-run; user3000/5088,
+handoff3100/5188, unsaved tabs, 230capture and original draft/rates/week/pointer/assignments untouched (except the ONE
+deliberate DEV rate-row change above). Gates remain OFF; TB185 paused/defaultOFF/PendingAllocation; 238unclassified22001,
+227mobileempty-note, 225-R1 lost LOCAL edits retained. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
 # CURRENT — 240-R4 ISSUED: USABLE AUTHORIZED PAYMENT + COUPON/HISTORY; ORIGINAL DEADLINE MISSED — 2026-10-28
 
 Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4; task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/TASK.md; sourcedf5a21d05a0ffd9499ca55dd3c17c97b3731ea98.

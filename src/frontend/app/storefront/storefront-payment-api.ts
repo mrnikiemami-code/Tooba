@@ -374,14 +374,21 @@ export function toCustomerPaymentMessage(error: unknown): string {
 /**
  * نقل‌قول کیف‌پول را از Host می‌خواند (endpoint بک‌اند).
  */
-export async function loadStorefrontWalletQuote(checkoutId: string): Promise<StorefrontWalletQuote | null> {
+export async function loadStorefrontWalletQuote(
+  checkoutId: string,
+  cartIdHint?: string | null,
+): Promise<StorefrontWalletQuote | null> {
   const access = resolveCommittedCheckoutAccess(checkoutId);
-  if (!access.cartId) {
+  // TB240-R4: مالکیت احراز‌شده ممکن است از پاسخ معتبر همین سفارش آمده باشد (بدون اثبات محلی مرورگر).
+  // این مقدار فقط locator درخواست است؛ اهلیت کیف‌پول/پوشش مبلغ همیشه از همان پاسخ سرور می‌آید.
+  const hint = (cartIdHint ?? "").trim();
+  const cartId = access.cartId ?? (hint.length > 0 ? hint : null);
+  if (!cartId) {
     return null;
   }
   try {
     const response = await fetch(
-      `/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/wallet-quote?cartId=${encodeURIComponent(access.cartId)}`,
+      `/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/wallet-quote?cartId=${encodeURIComponent(cartId)}`,
       { cache: "no-store", headers: storefrontActorHeaders(access) },
     );
     if (response.status === 401 || response.status === 404) {

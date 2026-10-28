@@ -12,6 +12,7 @@ import {
 } from "../storefront/storefront-checkout-api.ts";
 import { StorefrontCartApiError } from "../storefront/storefront-cart-api.ts";
 import { readStoredCheckoutId } from "../storefront/storefront-shipping-api.ts";
+import { loadStorefrontPendingPayments } from "../storefront/storefront-pending-payment-api.ts";
 import { StorefrontPaymentMethodPicker } from "../storefront/storefront-payment-methods.tsx";
 import {
   loadStorefrontPaymentMethods,
@@ -54,6 +55,7 @@ export function StorefrontPaymentHandoff() {
   const [method, setMethod] = useState<StorefrontPaymentMethodId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recoveryCheckoutId, setRecoveryCheckoutId] = useState<string | null>(null);
+  const [startedPaymentId, setStartedPaymentId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   /**
    * TB-238 — gate همگام پیش از نخستین `await`: `setPaying(true)` تا رندر بعدی هیچ کلیک دومی را نمی‌بندد،
@@ -110,13 +112,22 @@ export function StorefrontPaymentHandoff() {
     let cancelled = false;
     void (async () => {
       try {
-        const [checkout, methodsPage, nextQuote] = await Promise.all([
-          loadStorefrontCheckout(checkoutId),
+        // TB240-R4: ترتیب وابسته — نخست خواندن مجازِ همین سفارش برای صاحب احراز‌شده (که CartId واقعی را
+        // برمی‌گرداند)، سپس خواندن کیف‌پول/روش‌ها با همان CartId بازگردانده‌شده. اجرای موازی قبلی برای
+        // سفارشی که اثبات محلی مرورگر نداشت همیشه در resolver محلی می‌شکست.
+        const checkout = await loadStorefrontCheckout(checkoutId);
+        if (cancelled) return;
+        const [methodsPage, nextQuote, pendingPage] = await Promise.all([
           loadStorefrontPaymentMethods(),
-          loadStorefrontWalletQuote(checkoutId),
+          loadStorefrontWalletQuote(checkoutId, checkout.cartId),
+          loadStorefrontPendingPayments().catch(() => null),
         ]);
         if (cancelled) return;
         setPage(checkout);
+        // پرداختی که قبلاً برای همین سفارش شروع شده (جدیدترین کارت در انتظار همان کاربر احراز‌شده) نباید
+        // دوباره فرم پرداخت تازه بگیرد؛ ادامهٔ همان پرداخت از سطح نتیجهٔ موجود انجام می‌شود.
+        const started = pendingPage?.items.find((item) => item.checkoutId === checkout.checkoutId) ?? null;
+        setStartedPaymentId(started?.paymentId ?? null);
         setQuote(nextQuote);
         const codes = methodsPage.methods.map((m) => m.code.toLowerCase());
         setEnabledCodes(codes);
@@ -359,6 +370,21 @@ export function StorefrontPaymentHandoff() {
                       className="inline-flex px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold"
                     >
                       مشاهده نتیجه
+                    </Link>
+                  </div>
+                </div>
+              ) : mode === "checkout" && startedPaymentId ? (
+                <div
+                  className="rounded-2xl border border-sky-200 bg-sky-50 p-5 text-sm text-sky-900"
+                  data-testid="payment-started-continuation"
+                >
+                  پرداخت این سفارش قبلاً آغاز شده و در انتظار تکمیل است؛ سفارش دوباره ثبت نمی‌شود.
+                  <div className="mt-3">
+                    <Link
+                      href={`/payment/result?paymentId=${encodeURIComponent(startedPaymentId)}&checkoutId=${encodeURIComponent(page.checkoutId || "")}&awaitingManual=1`}
+                      className="inline-flex px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-bold"
+                    >
+                      ادامهٔ همان پرداخت
                     </Link>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Cart.Contracts;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Localization.Contracts.Ports;
@@ -334,7 +334,7 @@ public sealed class ShippingGroupIdentityContinuityTests
             var drafts = new DraftStoreFake();
             var actor = new ActorFake();
             var carts = new CartsFake(cartId, singleSellerOnly);
-            var checkout = new StorefrontCheckoutService(carts, directory, addresses: null!, actor);
+            var checkout = new StorefrontCheckoutService(carts, directory, addresses: null!, actor, shippingGroupHistory: null!);
             var service = new StorefrontShippingService(
                 carts,
                 checkout,

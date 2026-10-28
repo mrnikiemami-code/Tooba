@@ -572,7 +572,7 @@ public sealed class StorefrontPublicCommitEdgeTests
                 options);
             var writer = new StorefrontCapturedSelectionWriter(planner, Drafts, Core.Geography, new FixedClock());
             var actorSeam = foreignActor ? new ForeignActor() : (IOrderStorefrontActor)Actor;
-            var checkouts = new StorefrontCheckoutService(_carts, Core.Directory, Core.Addresses, actorSeam);
+            var checkouts = new StorefrontCheckoutService(_carts, Core.Directory, Core.Addresses, actorSeam, shippingGroupHistory: null!);
             Shipping = new StorefrontShippingService(
                 _carts,
                 checkouts,

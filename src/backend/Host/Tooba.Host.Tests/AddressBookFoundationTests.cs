@@ -1,4 +1,4 @@
-using Tooba.Host.Order;
+﻿using Tooba.Host.Order;
 using Tooba.Cart.Contracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -265,7 +265,8 @@ public sealed class AddressBookFoundationTests
             new HostOrderStorefrontActor(
                 new CurrentAuthenticatedSession(),
                 env,
-                http));
+                http),
+            shippingGroupHistory: null!);
     }
 
     private static string FindRepoRoot()

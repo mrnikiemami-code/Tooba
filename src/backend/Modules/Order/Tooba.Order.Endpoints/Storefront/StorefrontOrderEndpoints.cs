@@ -132,13 +132,15 @@ internal static class StorefrontOrderEndpoints
 
     private static async Task<IResult> GetCheckoutAsync(
         Guid checkoutId,
-        Guid cartId,
         ISender sender,
         ApiResponseFactory api,
         HttpRequest request,
         CancellationToken ct) =>
         api.From(await sender.Send(
-            new GetStorefrontCheckoutQuery(checkoutId, cartId, ReadGuestSecret(request)),
+            new GetStorefrontCheckoutQuery(
+                checkoutId,
+                await ReadOptionalCartIdAsync(request, ct),
+                ReadGuestSecret(request)),
             ct));
 
     private static async Task<IResult> ProjectShippingAsync(

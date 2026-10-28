@@ -1,5 +1,16 @@
 # Tooba — Recovery Context
 
+## Current Shipping handoff — 2026-10-28 (TB-240-R4, PARTIAL)
+
+The live pointer is
+[`TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/RESULT.md`](../architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/RESULT.md)
+and the task-wide TOP is the root `AGENTS.md`. Task-owned runtime Host `127.0.0.1:5190` / FE `3102` / DB
+`tooba_marketplace_tb239`; usable authenticated page
+`http://127.0.0.1:3102/fa/payment?checkoutId=01a18209-cd78-7000-a9b6-02dadf377e55`.
+Screenshots and visual assessment are permanently NOT worker deliverables (explicit user override).
+Remaining before any delivery claim: UI double-click network counters on the real controls, a fresh
+pre-commit payment form in a NEW cart, and the 230-R1 failed-destination/retry functional re-run.
+
 ## Current Shipping handoff — 2026-10-28 (TB-240-R3, bounded PASS)
 
 The live pointer is

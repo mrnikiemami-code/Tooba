@@ -420,14 +420,39 @@ export async function submitStorefrontCheckout(
   return page;
 }
 
+/**
+ * TB240-R4: یک سفارش پایدار را از مسیر مجاز همان کاربر احراز‌شده می‌خواند.
+ *
+ * <para>
+ * تا پیش از این، نبودِ اثبات محلی مرورگر (committed/payment proof) پیش از هر درخواستی 403 محلی می‌داد؛
+ * بنابراین سفارشی که از API یا از مرورگر دیگری ساخته شده بود هرگز برای صاحب واقعی‌اش قابل خواندن نبود.
+ * اکنون:
+ * </para>
+ * <list type="bullet">
+ * <item>اثبات محلی (کارت متعهد یا نتیجهٔ پرداخت + guest secret) همان مسیر قبلی را نگه می‌دارد.</item>
+ * <item>بدون اثبات محلی، همان درخواست موجود با نشست فعلی مرورگر (BFF → Host با Authorization) و بدون
+ * هویت‌سنجی محلی ارسال می‌شود؛ <c>checkoutId</c> فقط یک locator است و اجازه نمی‌دهد — سرور مالکیت واقعی را
+ * با همان OrderAccess و actor واقعی می‌سنجد و سفارش بیگانه/ناموجود را رد می‌کند.</item>
+ * </list>
+ * <para>
+ * هیچ باگ اثبات جعلی نوشته نمی‌شود و هیچ‌گاه یک سبد فعال/حدسی به‌عنوان مبنای این خواندن ساخته نمی‌شود.
+ * </para>
+ */
 export async function loadStorefrontCheckout(checkoutId: string, paymentId?: string | null): Promise<StorefrontCheckoutPage> {
   const access = resolveCommittedCheckoutAccess(checkoutId, paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(
-      403,
-      "checkout.access.denied",
-      "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
-    );
+    const recovered = await fetch(`/v1/storefront/checkout/${encodeURIComponent(checkoutId)}`, {
+      cache: "no-store",
+      headers: customerAuthHeaders(),
+    });
+    if (recovered.status === 401 || recovered.status === 403 || recovered.status === 404) {
+      throw new StorefrontCartApiError(
+        403,
+        "checkout.access.denied",
+        "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
+      );
+    }
+    return parseCheckout(recovered);
   }
   const response = await fetch(
     `/v1/storefront/checkout/${checkoutId}?cartId=${encodeURIComponent(access.cartId)}`,
