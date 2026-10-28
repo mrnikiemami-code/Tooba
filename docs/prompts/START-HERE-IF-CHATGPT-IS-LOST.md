@@ -1,4 +1,33 @@
-# CURRENT — 238 valid coupon HTTP milestone retained; issued239 MARKETPLACE FIRST —2026-10-28
+﻿# CURRENT — 239 EXECUTED PARTIAL: real Marketplace target live; authoring admin identity missing —2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-FIRST-LIVE-ACCEPTANCE-239/{TASK.md,RESULT.md}. Status
+EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation. Bridge row 0326ae9f-5fa8-45ab-b33f-79e743cb7fcb.
+REAL Marketplace edition target BOOTED: Host 127.0.0.1:5190 PID40544, /health 200, Edition=Marketplace,
+DeploymentId tb239-marketplace, Tenant NULL, NEW task-owned DB tooba_marketplace_tb239 on 127.0.0.1:5432 (existing
+DBs untouched), binary D:\temp\tb238-build\out\Tooba.Host.dll SHA256 2A2485DC2107 from 600a96f1a (no rebuild).
+Development Marketplace bootstrap migrates only 12 schemas and seeds 2 dev sellers; official Tooba.MigrationRunner
+plan/apply then migrated 33 schemas (catalog/offer/inventory/promotion/shipping/fulfillment/geography/tax/pricing/
+cart/address_book included). GET /v1/storefront/home was 500 (42P01 catalog.categories) before, 200 real payload
+after. Real seller logins on this DB 200 (seller-actor-a/b). Real denial evidence: seller token calling official
+POST /v1/admin/catalog/demo/reset-and-seed = 403 admin.authorization.denied (no role/header injection attempted).
+BLOCKER (actual target): fresh Marketplace DB has 0 parties/catalog products/offers; the bootstrap seeds the
+platform-admin auth tuple but NO admin identity/credential, so no authorized principal can author Platform+2 seller
+publications, offers, stock, drafts or coupons; the sanctioned demo seed needs that missing admin (403). Inventing
+identity/grant or direct business SQL is forbidden. Therefore NOT produced: Platform+SellerA/B groups on one
+binding, per-group captures/owner responses, mixed 3-group cart read->save->preview->Order, per-group coupon,
+post-order publication immutability receipt, payment 390/360 captures. SingleStore NOT relabelled as Marketplace.
+238 CORRECTIONS: (a) the "invalid coupon read 200 tolerant" was a 200 WITHOUT any priced group -> not a priced
+acceptance; only the selection/commit checkout.coupon.not_applicable 409 is verified. (b) the 22001 attribution to
+inventory.outbox_messages.correlation_id is NOT source-confirmed: CorrelationIdContext.TryNormalize/MessagingCorrelation
+accept a GUID and emit 32 chars vs column 128, and no saved PostgresException column metadata existed; nothing
+enlarged/truncated/swallowed/bypassed and simultaneous idempotency is NOT certified. Client payInFlightRef stays but
+cannot close a server-side failure.
+No source change (Code-SHA==Base-SHA 4567c1ad598f4215e61941cf74b7a45d02e1a101); no migration/schema/baseline/seed
+authored; no suite replayed. Elapsed ~42min vs HARD35 NONCOMPLIANT; two corrections. Preserved: 3000/5088,
+handed-off 3100/5188 + profile D:\temp\tb238-handoff-chrome, 230 DEV publication/draft/rates/week/pointer, TB185
+paused/defaultOFF, 231/232/236 shared applied state. Marketplace runtime left running on 5190.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. No240.
+# SUPERSEDED — 238 was current before 239 —2026-10-28
 
 Read238/ARCHITECT-REVIEW.md and TB-SHIPPING-MARKETPLACE-FIRST-LIVE-ACCEPTANCE-239/TASK.md.
 Root reviewed600a96f actualpayment/ref/current-onlyintent+responseidentity source. Retain SingleStore real DBcoupon
@@ -17,7 +46,7 @@ All-owner finalgate remainsopen. No genericreview/retestloop.Original3000/5088+u
 TB185paused/defaultOFF/PendingAllocation;OfferAPI/227note/225-R1lostLOCALwork retained.
 Active239 only;STOP_FOR_ARCHITECT;automaticNextImplementationTask NONE. Prior history follows.
 
-# CURRENT — 238 EXECUTED PARTIAL: coupons proven LIVE; Marketplace edition trial NOT run —2026-10-28
+# SUPERSEDED — 238 was current before 239 —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-LIVE-COUPON-MARKETPLACE-COMPLETION-238/{TASK.md,RESULT.md}.
 Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation. Bridge row b2dc1b7e-317c-44c5-af54-a593ffb97d9e.
