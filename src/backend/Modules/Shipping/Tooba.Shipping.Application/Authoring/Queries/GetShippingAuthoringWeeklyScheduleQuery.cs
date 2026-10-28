@@ -66,6 +66,7 @@ internal static class ShippingAuthoringWeeklyScheduleWorkflow
                         day.IsWorking,
                         day.StartTime,
                         day.EndTime))
-                    .ToArray());
+                    .ToArray(),
+            schedule?.SlotDurationMinutes);
     }
 }

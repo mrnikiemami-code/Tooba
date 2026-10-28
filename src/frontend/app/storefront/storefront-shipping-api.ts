@@ -107,6 +107,12 @@ export interface StorefrontCapturedGroupSelectionInput {
   expectedAreaGroupId: string;
   expectedRateRowId: string;
   expectedGoodsAmount: string;
+  /**
+   * TB-241: تیک‌های دقیق نوبت انتخاب‌شده از همان پاسخ سرور. فقط «بازشناسی» همان نوبت در تقویم تازه —
+   * نه ساعت/پنجره/اعتبار؛ `null` فقط برای روزی با یک نوبت (پنجرهٔ کامل روز) مجاز است.
+   */
+  selectedSlotStartTicks?: number | null;
+  selectedSlotEndTicks?: number | null;
 }
 
 export interface StorefrontShippingGroupSelectionInput {
@@ -191,6 +197,21 @@ export interface StorefrontCapturedDateSlot {
   subLabel: string;
   intervalText: string | null;
   isEarliest: boolean;
+  /**
+   * TB-241: نوبت‌های همان تاریخ از همان capture. برای capture بدون مدت دقیقاً یک نوبت پنجرهٔ کامل
+   * روز است؛ نبود آن (سرور قدیمی/تست) یعنی «بدون زیرنوبت» و همان پنجرهٔ روز معتبر است.
+   */
+  slots?: StorefrontCapturedSlot[];
+}
+
+/** TB-241: یک نوبت تحویل همان تاریخ با هویت پایدار و بازهٔ دقیق سرور. */
+export interface StorefrontCapturedSlot {
+  /** هویت پایدار سرور: `yyyy-MM-dd:startTicks-endTicks` — فقط برای نمایش/رهگیری. */
+  slotKey: string;
+  opensAt: string;
+  closesAt: string;
+  startTicks: number;
+  endTicks: number;
 }
 
 /**
@@ -633,6 +654,7 @@ function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
           subLabel: asString(prop(slot, "subLabel", "SubLabel")),
           intervalText: asNonEmptyString(prop(slot, "intervalText", "IntervalText")),
           isEarliest: prop(slot, "isEarliest", "IsEarliest") === true,
+          slots: decodeCapturedSlots(prop(slot, "slots", "Slots")),
         });
       }
 
@@ -699,6 +721,40 @@ function asNonEmptyString(value: unknown): string | null {
   if (value === undefined || value === null) return null;
   const text = String(value).trim();
   return text.length > 0 ? text : null;
+}
+
+/**
+ * TB-241: نوبت‌های یک تاریخ. غیبت/`null` یا هر نوبت نامعتبر یعنی «هیچ نوبت قابل‌انتخابی نیست»؛
+ * هرگز نوبتی ساخته/گرد نمی‌شود و انتخاب ساعت روی چنین روزی مسدود می‌ماند (fail-closed).
+ */
+function decodeCapturedSlots(raw: unknown): StorefrontCapturedSlot[] {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw)) return [];
+  const slots: StorefrontCapturedSlot[] = [];
+  for (const entry of raw) {
+    const record = asRecord(entry);
+    if (!record) return [];
+    const slotKey = asNonEmptyString(prop(record, "slotKey", "SlotKey"));
+    const opensAt = asNonEmptyString(prop(record, "opensAt", "OpensAt"));
+    const closesAt = asNonEmptyString(prop(record, "closesAt", "ClosesAt"));
+    const startTicks = prop(record, "startTicks", "StartTicks");
+    const endTicks = prop(record, "endTicks", "EndTicks");
+    if (
+      !slotKey
+      || !opensAt
+      || !closesAt
+      || typeof startTicks !== "number"
+      || typeof endTicks !== "number"
+      || !Number.isSafeInteger(startTicks)
+      || !Number.isSafeInteger(endTicks)
+      || startTicks >= endTicks
+      || slots.some((existing) => existing.slotKey === slotKey)
+    ) {
+      return [];
+    }
+    slots.push({ slotKey, opensAt, closesAt, startTicks, endTicks });
+  }
+  return slots;
 }
 
 /**

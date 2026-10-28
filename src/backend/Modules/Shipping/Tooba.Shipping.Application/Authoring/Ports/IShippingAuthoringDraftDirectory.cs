@@ -112,6 +112,7 @@ public interface IShippingAuthoringDraftDirectory
     /// <param name="expectedRevision">بازبینی مورد انتظار کلاینت.</param>
     /// <param name="timeZoneId">شناسهٔ منطقهٔ زمانی صریح؛ اعتبارسنجی در دامنه.</param>
     /// <param name="days">دقیقاً هفت روز هفته (جایگزینی کامل).</param>
+    /// <param name="slotDurationMinutes">TB-241: مدت اختیاری هر نوبت تحویل به دقیقه یا تهی.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
     Task<Result<ShippingAuthoringDraft>> ReplaceWeeklyScheduleAsync(
         ShippingAuthoringOwnerScope owner,
@@ -119,7 +120,8 @@ public interface IShippingAuthoringDraftDirectory
         long expectedRevision,
         string? timeZoneId,
         IReadOnlyList<ShippingAuthoringDraft.ScheduleDayInput> days,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        int? slotDurationMinutes = null);
 
     /// <summary>
     /// تنظیمات روش یک پیش‌نویس همین مالک (زمان پرداخت کرایه + حالت محاسبه) را در <b>یک</b> SaveChanges

@@ -25,6 +25,12 @@ const WEEK_COLUMNS_DESKTOP = "minmax(6rem, 1fr) 8.5rem 7.5rem 7.5rem";
 /** Narrow viewport: day + status on the first line, from/to together on the second. */
 const WEEK_COLUMNS_NARROW = "minmax(0, 1fr) auto";
 
+/**
+ * TB-241: offered lengths of ONE receiving slot, in minutes. These are the real values the server stores
+ * and the storefront splits the day by; the empty choice stays "one full-day window" and is never inferred.
+ */
+export const SLOT_DURATION_OPTIONS = [15, 20, 30, 45, 60, 90, 120] as const;
+
 /** True when the week table may use its four desktop columns. */
 function useWideWeekGrid(): boolean {
   const [wide, setWide] = useState(false);
@@ -63,6 +69,8 @@ export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessage
       return messages.weekDayRangeInvalid;
     case "pendingTimeZoneUnapplied":
       return messages.weekPendingTimeZoneUnapplied;
+    case "slotDurationInvalid":
+      return messages.weekSlotDurationInvalid;
   }
 }
 
@@ -125,6 +133,7 @@ export function AuthoringWeekEditor({
   onPendingTimeZone,
   onConfigure,
   onTimeZone,
+  onSlotDuration,
   onDayWorking,
   onDayTime,
   onReset,
@@ -140,6 +149,8 @@ export function AuthoringWeekEditor({
   onPendingTimeZone: (value: string) => void;
   onConfigure: () => void;
   onTimeZone: (value: string) => void;
+  /** TB-241: explicit slot length in minutes, or null for one full-day window. */
+  onSlotDuration: (minutes: number | null) => void;
   onDayWorking: (weekday: number, isWorking: boolean) => void;
   onDayTime: (weekday: number, bound: "startTime" | "endTime", value: string) => void;
   onReset: () => void;
@@ -243,6 +254,51 @@ export function AuthoringWeekEditor({
               {serverErrors.timeZone}
             </p>
           ) : null}
+
+          {/* TB-241: ONE explicit slot length per method. Choosing a whole number of minutes makes the
+              customer pick real back-to-back slots (9–10, 10–11 …); the empty choice keeps the single
+              full-day window and is never read as 60 minutes. */}
+          <div className="grid gap-0.5" data-testid="shipping-authoring-week-slot-duration">
+            {editable ? (
+              <label className="grid w-full gap-0.5 md:w-72">
+                <span className="text-xs font-bold text-gray-700">{messages.weekSlotDuration}</span>
+                <select
+                  className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+                  value={week.slotDurationMinutes === null ? "" : String(week.slotDurationMinutes)}
+                  data-testid="shipping-authoring-week-slot-duration-select"
+                  onChange={(event) => onSlotDuration(event.target.value === "" ? null : Number(event.target.value))}
+                >
+                  <option value="">{messages.weekSlotDurationFullDay}</option>
+                  {week.slotDurationMinutes !== null
+                    && !(SLOT_DURATION_OPTIONS as readonly number[]).includes(week.slotDurationMinutes) ? (
+                      <option value={String(week.slotDurationMinutes)}>
+                        {week.slotDurationMinutes} {messages.weekSlotDurationMinutes}
+                      </option>
+                    ) : null}
+                  {SLOT_DURATION_OPTIONS.map((minutes) => (
+                    <option key={minutes} value={String(minutes)}>
+                      {minutes} {messages.weekSlotDurationMinutes}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <p>
+                <span className="font-bold">{messages.weekSlotDuration}: </span>
+                <span data-testid="shipping-authoring-week-slot-duration-value">
+                  {week.slotDurationMinutes === null
+                    ? messages.weekSlotDurationFullDay
+                    : `${week.slotDurationMinutes} ${messages.weekSlotDurationMinutes}`}
+                </span>
+              </p>
+            )}
+            {editable ? <p className="text-[11px] text-gray-500">{messages.weekSlotDurationHint}</p> : null}
+            {issues.some((issue) => issue.code === "slotDurationInvalid") ? (
+              <p role="alert" className="text-[11px] font-semibold text-danger">
+                {messages.weekSlotDurationInvalid}
+              </p>
+            ) : null}
+          </div>
 
           {/* ONE column contract for all seven days: header and every row share the same template,
               so day labels, status controls and start/end inputs each line up on one x position. */}

@@ -160,6 +160,17 @@ public sealed class ShippingGroupAcceptedEvidence
     /// <summary>نسخهٔ پشتیبانی‌شدهٔ قالب capture؛ نسخهٔ ناشناس رد می‌شود (بدون fallback).</summary>
     public const int SupportedFormatVersion = 1;
 
+    /// <summary>
+    /// TB-241: نسخهٔ قالبی که مدت نوبت تحویل را نیز در بر می‌گیرد. هر دو نسخه فقط برای خواندن/پذیرش
+    /// پشتیبانی می‌شوند؛ مقدار ناشناس همچنان رد می‌شود.
+    /// </summary>
+    public const int SlotDurationFormatVersion = 2;
+
+    /// <summary>آیا این نسخهٔ قالب شاهد قابل پذیرش است (فقط ۱ و ۲).</summary>
+    /// <param name="formatVersion">نسخهٔ قالب.</param>
+    public static bool IsSupportedFormat(int formatVersion)
+        => formatVersion is SupportedFormatVersion or SlotDurationFormatVersion;
+
     /// <summary>حداکثر طول کد ارز.</summary>
     public const int MaxCurrencyLength = 3;
 
@@ -284,7 +295,7 @@ public sealed class ShippingGroupAcceptedEvidence
             throw new ContractOperationException(ShippingGroupEvidenceFault.SourceRevisionInvalid);
         }
 
-        if (formatVersion != SupportedFormatVersion)
+        if (!IsSupportedFormat(formatVersion))
         {
             throw new ContractOperationException(ShippingGroupEvidenceFault.FormatUnsupported);
         }

@@ -104,10 +104,12 @@ public sealed record ShippingAuthoringRevisionWeekDay(
 /// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی ذخیره‌شده.</param>
 /// <param name="UpdatedAt">زمان آخرین نوشتن برنامه.</param>
 /// <param name="Days">دقیقاً هفت روز ذخیره‌شده.</param>
+/// <param name="SlotDurationMinutes">TB-241: مدت اختیاری هر نوبت تحویل به دقیقه یا تهی.</param>
 public sealed record ShippingAuthoringRevisionWeek(
     string TimeZoneId,
     DateTimeOffset UpdatedAt,
-    IReadOnlyList<ShippingAuthoringRevisionWeekDay> Days);
+    IReadOnlyList<ShippingAuthoringRevisionWeekDay> Days,
+    int? SlotDurationMinutes = null);
 
 /// <summary>
 /// بدنهٔ تایپ‌شدهٔ یک capture کامل از بازبینی پیش‌نویس. این record فقط واقعیت‌های <b>ذخیره‌شدهٔ</b>
@@ -157,8 +159,22 @@ public sealed record ShippingAuthoringRevisionPayload(
 /// </remarks>
 public sealed class ShippingAuthoringRevisionSnapshot
 {
-    /// <summary>نسخهٔ قالب بدنهٔ همین پیاده‌سازی.</summary>
-    public const int CurrentFormatVersion = 1;
+    /// <summary>نسخهٔ قالب بدنهٔ همین پیاده‌سازی برای capture‌های بدون مدت نوبت.</summary>
+    public const int LegacyFormatVersion = 1;
+
+    /// <summary>
+    /// TB-241: نسخهٔ قالبی که مدت نوبت تحویل را نیز در بر می‌گیرد. خوانندهٔ قدیمی این نسخه را
+    /// نمی‌فهمد، پس capture دارای مدت هرگز با نسخهٔ ۱ نوشته نمی‌شود.
+    /// </summary>
+    public const int SlotDurationFormatVersion = 2;
+
+    /// <summary>نسخهٔ قالبی که نویسندهٔ فعلی برای capture تازه به کار می‌برد (بدون‌مدت=۱، بادمت=۲).</summary>
+    public const int CurrentFormatVersion = SlotDurationFormatVersion;
+
+    /// <summary>آیا این نسخهٔ قالب برای خواندن پشتیبانی می‌شود (فقط ۱ و ۲).</summary>
+    /// <param name="formatVersion">نسخهٔ قالب.</param>
+    public static bool IsSupportedFormatVersion(int formatVersion)
+        => formatVersion is LegacyFormatVersion or SlotDurationFormatVersion;
 
     private ShippingAuthoringRevisionSnapshot()
     {
@@ -258,7 +274,7 @@ public sealed class ShippingAuthoringRevisionSnapshot
             OwnerSellerPartyId = draft.OwnerSellerPartyId,
             DraftId = draft.DraftId,
             SourceRevision = draft.Revision,
-            FormatVersion = CurrentFormatVersion,
+            FormatVersion = payload.FormatVersion,
             CapturedAt = now,
             Payload = ShippingAuthoringRevisionSnapshotCodec.Serialize(payload),
         };
@@ -368,11 +384,16 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
                         day.IsWorking,
                         day.StartTime,
                         day.EndTime))
-                    .ToArray())
+                    .ToArray(),
+                schedule.SlotDurationMinutes)
             : null;
 
+        var formatVersion = week?.SlotDurationMinutes is null
+            ? ShippingAuthoringRevisionSnapshot.LegacyFormatVersion
+            : ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion;
+
         return new ShippingAuthoringRevisionPayload(
-            ShippingAuthoringRevisionSnapshot.CurrentFormatVersion,
+            formatVersion,
             new ShippingAuthoringRevisionOwner(
                 draft.OwnerKind,
                 draft.OwnerTenantId,
@@ -417,7 +438,7 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
         }
 
         if (payload is null
-            || payload.FormatVersion != ShippingAuthoringRevisionSnapshot.CurrentFormatVersion
+            || !ShippingAuthoringRevisionSnapshot.IsSupportedFormatVersion(payload.FormatVersion)
             || payload.Groups is null
             || payload.Translations is null
             || payload.Owner is null)
@@ -517,6 +538,16 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
         if (payload.WeeklySchedule is { } week)
         {
             if (string.IsNullOrWhiteSpace(week.TimeZoneId) || week.Days is null)
+            {
+                Reject();
+            }
+
+            // TB-241: the slot duration is part of the versioned contract, not a free extra. A version-1
+            // body must stay a full-day window and a version-2 body must carry a real 1..1440 duration.
+            var durationValid = payload.FormatVersion == ShippingAuthoringRevisionSnapshot.LegacyFormatVersion
+                ? week.SlotDurationMinutes is null
+                : week.SlotDurationMinutes is >= 1 and <= 1440;
+            if (!durationValid)
             {
                 Reject();
             }

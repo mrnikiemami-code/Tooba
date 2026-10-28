@@ -203,10 +203,15 @@ public sealed record ShippingAuthoringScheduleDayWrite(
 /// <param name="ExpectedRevision">بازبینی ریشهٔ پیش‌نویس که کلاینت دیده است.</param>
 /// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی صریح (ترجیحاً IANA)؛ سرور آن را اعتبارسنجی می‌کند.</param>
 /// <param name="Days">دقیقاً هفت روز هفته.</param>
+/// <param name="SlotDurationMinutes">
+/// TB-241: مدت اختیاری هر نوبت تحویل به دقیقه (۱..۱۴۴۰). تهی/غایب یعنی «یک پنجرهٔ کامل روز» و
+/// هرگز به ۶۰ دقیقه استنتاج نمی‌شود.
+/// </param>
 public sealed record ShippingAuthoringWeeklyScheduleReplaceRequest(
     long ExpectedRevision,
     string TimeZoneId,
-    IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days);
+    IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days,
+    int? SlotDurationMinutes = null);
 
 /// <summary>
 /// مُد محاسبهٔ کرایهٔ یک روش ارسال در پیش‌نویس مالک: دستی، API حامل یا رایگان.

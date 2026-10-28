@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TB-240-R7 — یک مرجع واحد برای «آیا ادامهٔ مسیر ارسال روشن است؟» و «اگر نه، دلیل کوتاه مالک آن چیست؟».
  *
  * چرا این ماژول وجود دارد: پیش از این صفحه فقط `isValid` را می‌ساخت و دکمهٔ غیرفعال هیچ دلیلی
@@ -27,6 +27,7 @@ export type ShippingContinueBlockerCode =
   | "group_unavailable"
   | "group_no_dates"
   | "group_date"
+  | "group_slot"
   | "method"
   | "schedule";
 
@@ -122,6 +123,17 @@ function capturedGroupBlocker(
         groupKey: group.groupKey,
       };
     }
+    // TB-241: روزی با چند نوبت تا انتخاب صریح ساعت کامل نیست؛ همان تصمیم سرور، نه اعتبارسنج دوم.
+    const chosenDate = method?.availableDates.find((entry) => entry.value === choice?.date);
+    if (
+      chosenDate
+      && (chosenDate.slots ?? []).length > 1
+      && !(chosenDate.slots ?? []).some(
+        (slot) => slot.startTicks === choice?.slotStartTicks && slot.endTicks === choice?.slotEndTicks,
+      )
+    ) {
+      return { code: "group_slot", groupKey: group.groupKey };
+    }
   }
   // بازتاب‌های تأیید/مبلغ کالا با همان اعتبارسنج موجود بررسی می‌شوند (نه یک کپی دوم).
   if (capturedSelectionBlocker(preview, choices) !== null) {
@@ -198,6 +210,10 @@ export function describeShippingContinueBlocker(
       return fa
         ? `برای ${named} یکی از تاریخ‌های تحویل را انتخاب کنید.`
         : `Choose one delivery date for ${named}.`;
+    case "group_slot":
+      return fa
+        ? `برای ${named} یکی از ساعت‌های تحویل همان روز را انتخاب کنید.`
+        : `Choose one delivery time for ${named}.`;
     case "method":
       return fa ? "روش ارسال هر گروه را انتخاب کنید." : "Choose a shipping method for each group.";
     case "schedule":

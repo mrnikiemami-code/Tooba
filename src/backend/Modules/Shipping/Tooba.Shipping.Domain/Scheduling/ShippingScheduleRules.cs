@@ -59,4 +59,28 @@ public static class ShippingScheduleRules
 
         return trimmed;
     }
+
+    /// <summary>
+    /// TB-241: مدت اختیاری هر نوبت تحویل را نرمال می‌کند. تهی یعنی «یک پنجرهٔ کامل روز» و هرگز به
+    /// ۶۰ دقیقه استنتاج نمی‌شود؛ مقدار غیرصحیح/صفر/منفی/بزرگ‌تر از ۱۴۴۰ پیش از هر نوشتن رد می‌شود.
+    /// </summary>
+    /// <param name="slotDurationMinutes">مدت پیشنهادی به دقیقه یا تهی.</param>
+    /// <exception cref="SemanticException">مقدار خارج از ۱..۱۴۴۰ با کد پایدار <c>shipping.schedule.slot_duration.invalid</c>.</exception>
+    public static int? NormalizeSlotDuration(int? slotDurationMinutes)
+    {
+        if (slotDurationMinutes is not { } minutes)
+        {
+            return null;
+        }
+
+        if (minutes <= 0 || minutes > MaxSlotDurationMinutes)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.ScheduleSlotDurationInvalid));
+        }
+
+        return minutes;
+    }
+
+    /// <summary>بیشینهٔ صریح مدت هر نوبت تحویل: یک شبانه‌روز کامل.</summary>
+    public const int MaxSlotDurationMinutes = 1440;
 }

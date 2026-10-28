@@ -207,7 +207,8 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 request.Request.MethodSettings?.FreightPaymentMode,
                 request.Request.MethodSettings?.CalculationMode,
                 includeType,
-                typeId);
+                typeId,
+                request.Request.WeeklySchedule?.SlotDurationMinutes);
 
             // (6) Destination facts for the WHOLE submitted tree are acquired here — before the first
             // tracked mutation and therefore before the commit — so the response can be composed

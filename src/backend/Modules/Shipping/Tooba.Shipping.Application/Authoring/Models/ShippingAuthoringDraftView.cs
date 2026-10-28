@@ -170,7 +170,8 @@ public sealed record ShippingAuthoringWeeklyScheduleItem(
     long Revision,
     bool IsConfigured,
     string? TimeZoneId,
-    IReadOnlyList<ShippingAuthoringScheduleDayItem> Days);
+    IReadOnlyList<ShippingAuthoringScheduleDayItem> Days,
+    int? SlotDurationMinutes = null);
 
 /// <summary>
 /// تنظیمات روش یک پیش‌نویس: بازبینی ریشهٔ واقعی و وضعیت صریح تنظیم‌شده/نشده با دو انتخاب مستقل.

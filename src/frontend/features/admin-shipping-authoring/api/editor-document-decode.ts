@@ -257,7 +257,21 @@ function decodeSchedule(node: JsonNode | undefined): EditorWeeklySchedule | null
   const weekdays = new Set(days.map((day) => day.weekday));
   if (weekdays.size !== days.length) fail("weeklySchedule.days:duplicate");
   if (days.length !== 7) fail("weeklySchedule.days:count");
-  return { timeZoneId: text(required(fields, "timeZoneId"), "weeklySchedule.timeZoneId"), days };
+  return {
+    timeZoneId: text(required(fields, "timeZoneId"), "weeklySchedule.timeZoneId"),
+    days,
+    slotDurationMinutes: optionalSlotDuration(fields.get("slotDurationMinutes")),
+  };
+}
+
+/**
+ * TB-241: the optional slot length is a REAL positive integer of minutes the server accepts (1..1440) or
+ * an explicit null. Anything else is untrusted input and is refused, never coerced or rounded.
+ */
+function optionalSlotDuration(node: JsonNode | undefined): number | null {
+  const value = optionalInteger(node, "weeklySchedule.slotDurationMinutes");
+  if (value !== null && (value < 1 || value > 1440)) fail("weeklySchedule.slotDurationMinutes:range");
+  return value;
 }
 
 function decodePresentation(node: ReadonlyMap<string, JsonNode>): EditorPresentation {

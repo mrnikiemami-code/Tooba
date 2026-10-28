@@ -67,7 +67,8 @@ public sealed class ReplaceShippingAuthoringWeeklyScheduleHandler(IShippingAutho
                 request.Request.ExpectedRevision,
                 request.Request.TimeZoneId,
                 days,
-                cancellationToken);
+                cancellationToken,
+                request.Request.SlotDurationMinutes);
             return replaced.IsFailure
                 ? Result.Failure<ShippingAuthoringWeeklyScheduleItem>(replaced.Errors)
                 : Result.Success(ShippingAuthoringWeeklyScheduleWorkflow.Map(replaced.Value));

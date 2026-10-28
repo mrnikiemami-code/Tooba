@@ -136,9 +136,11 @@ public sealed record ShippingCapturedReceivingWeekDay(
 /// </summary>
 /// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی ذخیره‌شده.</param>
 /// <param name="Days">روزهای ذخیره‌شده.</param>
+/// <param name="SlotDurationMinutes">TB-241: مدت اختیاری هر نوبت تحویل به دقیقه یا تهی (پنجرهٔ کامل روز).</param>
 public sealed record ShippingCapturedReceivingWeek(
     string TimeZoneId,
-    IReadOnlyList<ShippingCapturedReceivingWeekDay> Days);
+    IReadOnlyList<ShippingCapturedReceivingWeekDay> Days,
+    int? SlotDurationMinutes = null);
 
 /// <summary>تنظیمات ذخیره‌شدهٔ روش که به قیمت مربوط است.</summary>
 /// <param name="FreightPaymentMode">طرف پرداخت کرایه.</param>

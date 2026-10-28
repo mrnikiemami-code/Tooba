@@ -194,7 +194,8 @@ public sealed class StorefrontCapturedGroupCompositionCore(
                 referenceLocalDate,
                 minimumDays,
                 week,
-                candidate.AvailableDateCount);
+                candidate.AvailableDateCount,
+                week.SlotDurationMinutes);
         }
         catch (StorefrontOrderException)
         {
@@ -258,7 +259,7 @@ public sealed class StorefrontCapturedGroupCompositionCore(
                 TimeOnly.MinValue));
         }
 
-        week = new StorefrontShippingReceivingWeek(days);
+        week = new StorefrontShippingReceivingWeek(days, stored.SlotDurationMinutes);
         return true;
     }
 

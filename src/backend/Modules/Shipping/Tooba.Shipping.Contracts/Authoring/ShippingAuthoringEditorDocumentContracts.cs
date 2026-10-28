@@ -42,9 +42,11 @@ public sealed record ShippingAuthoringEditorGroupWrite(
 /// </summary>
 /// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی.</param>
 /// <param name="Days">هفت روز ISO.</param>
+/// <param name="SlotDurationMinutes">TB-241: مدت اختیاری هر نوبت تحویل به دقیقه؛ تهی یعنی پنجرهٔ کامل روز.</param>
 public sealed record ShippingAuthoringEditorScheduleWrite(
     string TimeZoneId,
-    IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days);
+    IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days,
+    int? SlotDurationMinutes = null);
 
 /// <summary>
 /// تنظیمات روش در سند ویرایشگر: زمان پرداخت کرایه و حالت محاسبه، دو انتخاب مستقل و صریح.

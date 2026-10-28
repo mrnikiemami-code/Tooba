@@ -57,6 +57,7 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.ScheduleNotFound, "The shipping schedule was not found."),
         D(ShippingErrorCodes.ScheduleDuplicate, "A shipping schedule already exists for this method."),
         D(ShippingErrorCodes.ScheduleOptionMismatch, "The shipping schedule does not match the requested method."),
+        D(ShippingErrorCodes.ScheduleSlotDurationInvalid, "The receiving slot duration must be a whole number of minutes between 1 and 1440."),
         D(ShippingErrorCodes.WeightTierInvalid, "The weight tier range is invalid."),
         D(ShippingErrorCodes.WeightTierOutOfRange, "The weight tier is out of range."),
         D(ShippingErrorCodes.CountTierInvalid, "The item-count tier range is invalid."),

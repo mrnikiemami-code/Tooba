@@ -141,6 +141,12 @@ const fa = {
   weekDayRangeInvalid: "پایان بازه باید بعد از شروع آن باشد.",
   weekPendingTimeZoneUnapplied:
     "منطقهٔ زمانی نوشته شده هنوز پیکربندی نشده است؛ برای ذخیره، «پیکربندی برنامهٔ هفتگی» را بزنید یا آن را پاک کنید.",
+  weekSlotDuration: "مدت هر نوبت تحویل",
+  weekSlotDurationFullDay: "یک پنجرهٔ کامل روز (بدون نوبت ساعتی)",
+  weekSlotDurationMinutes: "دقیقه",
+  weekSlotDurationHint:
+    "با انتخاب مدت، هر روز کاری به نوبت‌های پیوسته از ساعت شروع همان روز تقسیم می‌شود (مثلاً ۶۰ دقیقه = ۹–۱۰، ۱۰–۱۱ …).",
+  weekSlotDurationInvalid: "مدت هر نوبت باید بین ۱ تا ۱۴۴۰ دقیقه باشد.",
   applyBlockedLocal: "برای اعمال، ابتدا موارد زیر را اصلاح کنید:",
   weekTitle: "برنامهٔ کاری هفتگی",
   weekDayColumn: "روز",
@@ -479,6 +485,12 @@ const en: Record<AuthoringMessageKey, string> = {
   weekDayRangeInvalid: "The end of the interval must come after its start.",
   weekPendingTimeZoneUnapplied:
     "The typed time zone is not configured yet; press “Configure the weekly schedule” to save it, or clear it.",
+  weekSlotDuration: "Receiving slot length",
+  weekSlotDurationFullDay: "One full-day window (no hourly slots)",
+  weekSlotDurationMinutes: "minutes",
+  weekSlotDurationHint:
+    "With a length set, each working day splits into back-to-back slots from that day's start (e.g. 60 minutes = 9–10, 10–11 …).",
+  weekSlotDurationInvalid: "The slot length must be between 1 and 1440 minutes.",
   applyBlockedLocal: "Fix the following before applying:",
   weekTitle: "Weekly operating schedule",
   weekUnconfigured: "No operating schedule is configured.",

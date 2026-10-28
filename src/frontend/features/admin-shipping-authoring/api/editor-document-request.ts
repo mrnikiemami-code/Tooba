@@ -224,6 +224,12 @@ export function buildEditorDocumentBody(
 
   if (edits.weeklySchedule) {
     if (edits.weeklySchedule.days.length !== 7) throw new Error("editor_request_invalid:schedule-days");
+    const slotDurationMinutes = edits.weeklySchedule.slotDurationMinutes ?? null;
+    // TB-241: the slot length is a real contract value; an out-of-range number is refused here rather
+    // than being sent to the server for a round-trip rejection.
+    if (slotDurationMinutes !== null && (!Number.isSafeInteger(slotDurationMinutes) || slotDurationMinutes < 1 || slotDurationMinutes > 1440)) {
+      throw new Error("editor_request_invalid:slot-duration");
+    }
     body.weeklySchedule = {
       timeZoneId: edits.weeklySchedule.timeZoneId,
       days: edits.weeklySchedule.days.map((day) => ({
@@ -232,6 +238,7 @@ export function buildEditorDocumentBody(
         startTime: time(day.startTime, "startTime"),
         endTime: time(day.endTime, "endTime"),
       })),
+      slotDurationMinutes,
     };
   }
   if (edits.methodSettings) {

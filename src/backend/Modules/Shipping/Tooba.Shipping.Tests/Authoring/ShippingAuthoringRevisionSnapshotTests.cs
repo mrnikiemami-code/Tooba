@@ -119,7 +119,9 @@ public sealed class ShippingAuthoringRevisionSnapshotTests
         var snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, Now.AddHours(1));
         var payload = snapshot.ReadPayload();
 
-        Assert.Equal(ShippingAuthoringRevisionSnapshot.CurrentFormatVersion, payload.FormatVersion);
+        // TB-241: the writer's format follows the authored body — no duration is the legacy version and a
+        // configured slot duration is version 2. The count stays exact so the contract is reviewable.
+        Assert.Equal(ShippingAuthoringRevisionSnapshot.LegacyFormatVersion, payload.FormatVersion);
         Assert.Equal(draft.Revision, payload.SourceRevision);
         Assert.Equal(draft.DraftId, payload.DraftId);
         Assert.Equal("post", payload.ServiceCode);
@@ -167,6 +169,45 @@ public sealed class ShippingAuthoringRevisionSnapshotTests
         var settings = Assert.IsType<ShippingAuthoringRevisionSettings>(payload.MethodSettings);
         Assert.Equal(ShippingFreightPayerMode.CollectOnDelivery, settings.FreightPaymentMode);
         Assert.Equal(ShippingAuthoringCalculationMode.Manual, settings.CalculationMode);
+
+        // TB-241: a legacy body carries no slot duration; nothing is inferred as 60 minutes.
+        Assert.Null(week.SlotDurationMinutes);
+    }
+
+    [Fact]
+    public void A_configured_slot_duration_is_captured_as_format_two_and_roundtrips_exactly()
+    {
+        var draft = RichDraft();
+        draft.ApplyWeeklySchedule(
+            draft.PreflightWeeklySchedule(
+                "Asia/Tehran",
+                [
+                    new ShippingAuthoringDraft.ScheduleDayInput(1, true, MorningStart, MorningEnd),
+                    new ShippingAuthoringDraft.ScheduleDayInput(2, false, MorningStart, MorningEnd),
+                    new ShippingAuthoringDraft.ScheduleDayInput(3, true, new TimeOnly(8, 0), new TimeOnly(16, 30)),
+                    new ShippingAuthoringDraft.ScheduleDayInput(4, false, null, null),
+                    new ShippingAuthoringDraft.ScheduleDayInput(5, true, new TimeOnly(10, 0), new TimeOnly(18, 0)),
+                    new ShippingAuthoringDraft.ScheduleDayInput(6, true, new TimeOnly(9, 0), new TimeOnly(13, 0)),
+                    new ShippingAuthoringDraft.ScheduleDayInput(7, false, new TimeOnly(9, 0), new TimeOnly(13, 0)),
+                ],
+                60),
+            Now.AddMinutes(30));
+
+        var snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, Now.AddHours(1));
+        var payload = snapshot.ReadPayload();
+
+        Assert.Equal(ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion, payload.FormatVersion);
+        Assert.Equal(ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion, snapshot.FormatVersion);
+        var week = Assert.IsType<ShippingAuthoringRevisionWeek>(payload.WeeklySchedule);
+        Assert.Equal(60, week.SlotDurationMinutes);
+
+        // The stored body really is version 2 and decoding that stored text keeps the duration exactly.
+        var decoded = snapshot.ReadPayload();
+        Assert.Equal(2, decoded.FormatVersion);
+        var roundtripped = Assert.IsType<ShippingAuthoringRevisionWeek>(decoded.WeeklySchedule);
+        Assert.Equal(60, roundtripped.SlotDurationMinutes);
+        Assert.Equal(MorningStart, roundtripped.Days.Single(day => day.Weekday == 1).StartTime);
+        Assert.Null(roundtripped.Days.Single(day => day.Weekday == 4).StartTime);
     }
 
     [Fact]

@@ -99,6 +99,9 @@ public static class ShippingErrorCodes
     /// <summary>هویت روش برنامهٔ عملیاتی با مسیر/بدنهٔ درخواست یکسان نیست.</summary>
     public const string ScheduleOptionMismatch = "shipping.schedule.option_mismatch";
 
+    /// <summary>TB-241: مدت هر نوبت تحویل باید عدد صحیح بین ۱ و ۱۴۴۰ دقیقه باشد؛ تهی یعنی پنجرهٔ کامل روز.</summary>
+    public const string ScheduleSlotDurationInvalid = "shipping.schedule.slot_duration.invalid";
+
     /// <summary>بازهٔ وزن نامعتبر است: کران پایین منفی، یا کران بالا بزرگ‌تر از کران پایین نیست.</summary>
     public const string WeightTierInvalid = "shipping.rate_policy.weight_tier.invalid";
 

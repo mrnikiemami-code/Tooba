@@ -58,6 +58,7 @@ import {
   withDayTime,
   withDayWorking,
   withPendingTimeZone,
+  withSlotDuration,
   withTimeZone,
   type WeekFormState,
 } from "../model/editor-week.ts";
@@ -731,6 +732,7 @@ export function ShippingAuthoringScreen({
                       onPendingTimeZone={(value) => changeWeek(withPendingTimeZone(week, value))}
                       onConfigure={() => changeWeek(configureWeek(week))}
                       onTimeZone={(value) => changeWeek(withTimeZone(week, value))}
+                      onSlotDuration={(minutes) => changeWeek(withSlotDuration(week, minutes))}
                       onDayWorking={(weekday, isWorking) => changeWeek(withDayWorking(week, weekday, isWorking))}
                       onDayTime={(weekday, bound, value) => changeWeek(withDayTime(week, weekday, bound, value))}
                       onReset={() => changeWeek(resetWeek(document.weeklySchedule))}

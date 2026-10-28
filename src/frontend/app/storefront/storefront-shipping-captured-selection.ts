@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TB-237-R1 — قصد ثبت انتخاب capture‌شده، ساخته‌شده **فقط** از پاسخ موفق سرور.
  *
  * قواعد این ماژول عمداً سخت‌گیرانه و خالص‌اند:
@@ -44,7 +44,7 @@ function nonBlank(value: string | null | undefined): value is string {
 export function capturedSelectionBlocker(
   preview: StorefrontCapturedPreview | null,
   choices: Readonly<Record<string, StorefrontCapturedGroupChoice>>,
-): "no_preview" | "unavailable_group" | "incomplete_group" | null {
+): "no_preview" | "unavailable_group" | "incomplete_group" | "slot_required" | null {
   if (!preview || preview.state !== "ok" || !preview.enabled) return "no_preview";
   if (preview.groups.length === 0) return "no_preview";
   for (const group of preview.groups) {
@@ -53,7 +53,16 @@ export function capturedSelectionBlocker(
     if (!choice || !choice.date) return "incomplete_group";
     const method = methodOf(group, choice);
     if (!method) return "incomplete_group";
-    if (!method.availableDates.some((slot) => slot.value === choice.date)) return "incomplete_group";
+    const date = method.availableDates.find((slot) => slot.value === choice.date);
+    if (!date) return "incomplete_group";
+    // TB-241: روزی که چند نوبت دارد تا انتخاب صریح یک نوبت از همان پاسخ کامل نیست؛ روزی با یک نوبت
+    // همان یک نوبت را دارد و انتخاب تاریخ کافی است.
+    if ((date.slots ?? []).length > 1) {
+      const chosen = (date.slots ?? []).some(
+        (slot) => slot.startTicks === choice.slotStartTicks && slot.endTicks === choice.slotEndTicks,
+      );
+      if (!chosen) return "slot_required";
+    }
     // هر پنج بازتاب و متن دقیق مبلغ کالا باید همان چیزی باشد که در همین پاسخ دیدیم.
     if (
       !nonBlank(method.confirmationSnapshotId)
@@ -120,6 +129,11 @@ export function buildCapturedSelectionIntent(
     if (!method || !choice.date || !goods || !EXACT_DECIMAL.test(goods)) return null;
     const slot = method.availableDates.find((entry) => entry.value === choice.date);
     if (!slot) return null;
+    // TB-241: تنها نوبتِ همان تاریخ از همان پاسخ. روز چندنوبتی بدون انتخاب صریح قصد معتبر ندارد.
+    const chosenSlot = (slot.slots ?? []).find(
+      (entry) => entry.startTicks === choice.slotStartTicks && entry.endTicks === choice.slotEndTicks,
+    ) ?? null;
+    if ((slot.slots ?? []).length > 1 && !chosenSlot) return null;
 
     intent.push({
       groupKey: group.groupKey,
@@ -133,6 +147,8 @@ export function buildCapturedSelectionIntent(
       expectedSelectionVersion: method.confirmationSelectionVersion as string,
       expectedAreaGroupId: method.confirmationAreaGroupId as string,
       expectedRateRowId: method.confirmationRateRowId as string,
+      selectedSlotStartTicks: chosenSlot?.startTicks ?? null,
+      selectedSlotEndTicks: chosenSlot?.endTicks ?? null,
     });
   }
 
@@ -167,6 +183,9 @@ export function capturedSelectionContextKey(input: {
             method.confirmationAreaGroupId ?? "",
             method.confirmationRateRowId ?? "",
             method.availableDates.map((slot) => slot.value).join(","),
+            method.availableDates
+              .map((slot) => (slot.slots ?? []).map((entry) => `${entry.startTicks}-${entry.endTicks}`).join(","))
+              .join(","),
           ].join("|")),
         ].join("~"))
         .join("^")

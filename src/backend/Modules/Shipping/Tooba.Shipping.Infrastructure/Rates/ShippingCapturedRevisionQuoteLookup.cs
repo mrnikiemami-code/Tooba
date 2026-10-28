@@ -380,7 +380,8 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                             day.IsWorking,
                             day.StartTime,
                             day.EndTime))
-                        .ToList()));
+                        .ToList(),
+                    week.SlotDurationMinutes));
     }
 
     private static ContractVerdict MapOutcome(DomainOutcome outcome)

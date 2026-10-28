@@ -133,7 +133,8 @@ internal static class ShippingAuthoringEditorDocumentComposition
                             day.IsWorking,
                             day.StartTime,
                             day.EndTime))
-                        .ToArray())
+                        .ToArray(),
+                    schedule.SlotDurationMinutes)
                 : null,
             draft.RegionGroups
                 .OrderBy(group => group.Order)

@@ -936,6 +936,9 @@ public sealed class ShippingAuthoringDraft
         /// بررسی می‌شود.
         /// </summary>
         public bool HasChanges { get; init; }
+
+        /// <summary>TB-241: مدت اختیاری هر نوبت تحویل به دقیقه؛ تهی یعنی یک پنجرهٔ کامل روز.</summary>
+        public int? SlotDurationMinutes { get; init; }
     }
 
     /// <summary>
@@ -961,11 +964,15 @@ public sealed class ShippingAuthoringDraft
     /// </remarks>
     /// <param name="timeZoneId">شناسهٔ منطقهٔ زمانی از بدنه.</param>
     /// <param name="days">مجموعهٔ هفت‌روزهٔ پیشنهادی.</param>
-    public WeeklySchedulePlan PreflightWeeklySchedule(string? timeZoneId, IReadOnlyList<ScheduleDayInput> days)
+    public WeeklySchedulePlan PreflightWeeklySchedule(
+        string? timeZoneId,
+        IReadOnlyList<ScheduleDayInput> days,
+        int? slotDurationMinutes = null)
     {
         ArgumentNullException.ThrowIfNull(days);
 
         var normalizedTimeZone = ShippingScheduleRules.NormalizeTimeZone(timeZoneId);
+        var normalizedSlot = ShippingScheduleRules.NormalizeSlotDuration(slotDurationMinutes);
         if (days.Count != ShippingAuthoringWeeklySchedule.DaysPerWeek)
         {
             throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
@@ -1002,12 +1009,17 @@ public sealed class ShippingAuthoringDraft
 
         var unchanged = WeeklySchedule is { } current
                          && string.Equals(current.TimeZoneId, normalizedTimeZone, StringComparison.Ordinal)
+                         && current.SlotDurationMinutes == normalizedSlot
                          && assignments.All(assignment => assignment.Existing is { } row
                                                           && row.Matches(
                                                               assignment.IsWorking,
                                                               assignment.StartTime,
                                                               assignment.EndTime));
-        return new WeeklySchedulePlan(normalizedTimeZone, assignments) { HasChanges = !unchanged };
+        return new WeeklySchedulePlan(normalizedTimeZone, assignments)
+        {
+            HasChanges = !unchanged,
+            SlotDurationMinutes = normalizedSlot,
+        };
     }
 
     /// <summary>
@@ -1042,11 +1054,16 @@ public sealed class ShippingAuthoringDraft
 
         if (WeeklySchedule is { } schedule)
         {
-            schedule.Apply(plan.TimeZoneId, plan.Days, now);
+            schedule.Apply(plan.TimeZoneId, plan.Days, now, plan.SlotDurationMinutes);
         }
         else
         {
-            WeeklySchedule = ShippingAuthoringWeeklySchedule.Create(DraftId, plan.TimeZoneId, plan.Days, now);
+            WeeklySchedule = ShippingAuthoringWeeklySchedule.Create(
+                DraftId,
+                plan.TimeZoneId,
+                plan.Days,
+                now,
+                plan.SlotDurationMinutes);
         }
 
         return true;
@@ -1296,7 +1313,8 @@ public sealed class ShippingAuthoringDraft
         ShippingFreightPayerMode? FreightPaymentMode,
         ShippingAuthoringCalculationMode? CalculationMode,
         bool ReplaceTypeAssignment,
-        Guid? ShippingTypeId);
+        Guid? ShippingTypeId,
+        int? SlotDurationMinutes = null);
 
     /// <summary>برنامهٔ تأییدشدهٔ ردیف‌های یک گروه در سند ویرایشگر.</summary>
     /// <param name="GroupKey">شناسهٔ پایدار گروه مقصد (موجود یا تازه).</param>
@@ -1409,7 +1427,7 @@ public sealed class ShippingAuthoringDraft
 
         var presentation = PreflightPresentation(input.MethodTranslations, [], activeLanguageIds);
         var schedule = input.ReplaceWeeklySchedule
-            ? PreflightWeeklySchedule(input.TimeZoneId, input.ScheduleDays ?? [])
+            ? PreflightWeeklySchedule(input.TimeZoneId, input.ScheduleDays ?? [], input.SlotDurationMinutes)
             : null;
         var settings = input.ReplaceMethodSettings
             ? PreflightMethodSettings(input.FreightPaymentMode, input.CalculationMode)

@@ -73,6 +73,9 @@
   <data name="shipping.schedule.weekday.invalid" xml:space="preserve">
     <value>The schedule weekday is invalid.</value>
   </data>
+  <data name="shipping.schedule.slot_duration.invalid" xml:space="preserve">
+    <value>The receiving slot duration must be a whole number between 1 and 1440 minutes.</value>
+  </data>
   <data name="shipping.schedule.window.range_invalid" xml:space="preserve">
     <value>The operating window range is invalid.</value>
   </data>

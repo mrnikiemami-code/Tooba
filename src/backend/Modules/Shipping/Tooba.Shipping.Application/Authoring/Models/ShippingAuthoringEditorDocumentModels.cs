@@ -25,9 +25,11 @@ public sealed record ShippingAuthoringEditorScheduleDayItem(
 /// <summary>برنامهٔ هفتگی ذخیره‌شده در سند ویرایشگر.</summary>
 /// <param name="TimeZoneId">منطقهٔ زمانی.</param>
 /// <param name="Days">هفت روز.</param>
+/// <param name="SlotDurationMinutes">TB-241: مدت اختیاری هر نوبت تحویل به دقیقه یا تهی.</param>
 public sealed record ShippingAuthoringEditorScheduleItem(
     string TimeZoneId,
-    IReadOnlyList<ShippingAuthoringEditorScheduleDayItem> Days);
+    IReadOnlyList<ShippingAuthoringEditorScheduleDayItem> Days,
+    int? SlotDurationMinutes = null);
 
 /// <summary>عنوان ذخیره‌شدهٔ یک گروه برای یک زبان (متن خام، بدون fallback).</summary>
 /// <param name="LanguageId">شناسهٔ زبان.</param>

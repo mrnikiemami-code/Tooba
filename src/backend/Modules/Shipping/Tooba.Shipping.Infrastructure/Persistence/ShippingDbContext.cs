@@ -618,10 +618,16 @@ public sealed class ShippingDbContext : DbContext
                 table.HasCheckConstraint(
                     "ck_authoring_weekly_schedules_timezone_length",
                     $"char_length(btrim(time_zone_id)) > 0 AND char_length(time_zone_id) <= {ShippingRatePolicyLimits.TimeZoneIdMaxLength.ToString(CultureInfo.InvariantCulture)}");
+                // TB-241: no slot duration means ONE full-day window; a present duration must be a real
+                // positive whole number of minutes inside one day, never zero/negative/overflowing.
+                table.HasCheckConstraint(
+                    "ck_authoring_weekly_schedules_slot_duration",
+                    "slot_duration_minutes IS NULL OR (slot_duration_minutes >= 1 AND slot_duration_minutes <= 1440)");
             });
             entity.HasKey(x => x.DraftId);
             entity.Property(x => x.DraftId).ValueGeneratedNever();
             entity.Property(x => x.TimeZoneId).IsRequired().HasMaxLength(ShippingRatePolicyLimits.TimeZoneIdMaxLength);
+            entity.Property(x => x.SlotDurationMinutes);
             entity.Property(x => x.UpdatedAt).IsRequired();
 
             // ONE schedule per draft/method: the draft key is the real invariant, so a second header for
@@ -744,7 +750,8 @@ public sealed class ShippingDbContext : DbContext
                     "source_revision > 0");
                 table.HasCheckConstraint(
                     "ck_authoring_revision_snapshots_format_version_known",
-                    $"format_version = {ShippingAuthoringRevisionSnapshot.CurrentFormatVersion}");
+                    $"format_version IN ({ShippingAuthoringRevisionSnapshot.LegacyFormatVersion}, "
+                    + $"{ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion})");
                 table.HasCheckConstraint(
                     "ck_authoring_revision_snapshots_tenant_not_blank",
                     "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");

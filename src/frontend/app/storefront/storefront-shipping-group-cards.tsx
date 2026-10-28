@@ -16,7 +16,8 @@ import { useState } from "react";
 
 import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontCartLine } from "./storefront-cart-api.ts";
-import { deliveryChipParts, formatExactAmountText, toPersianDigits } from "./storefront-shipping-format.ts";
+import { formatExactAmountText, toPersianDigits } from "./storefront-shipping-format.ts";
+import { CapturedSlotPicker, DateChipStrip } from "./storefront-shipping-date-chips.tsx";
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
 import type {
   StorefrontCapturedPreview,
@@ -57,70 +58,6 @@ function iconFor(method: StorefrontShippingMethod) {
   return Package;
 }
 
-/** یک تاریخ در نوار تاریخ؛ هم مسیر قدیمی و هم پیش‌نمایش capture‌شده از همین کنترل استفاده می‌کنند. */
-interface DateChipItem {
-  value: string;
-  label: string;
-  subLabel: string;
-  isEarliest: boolean;
-}
-
-/**
- * نوار تاریخ مشترک (TB-150 + TB-229-R1): همان DOM/کلاس چپ‌های موجود، بدون هیچ تاریخ ساختگی.
- * `disabledBefore` فقط در مسیر قدیمی معنا دارد؛ در پیش‌نمایش capture‌شده تاریخ‌ها از قبل مجازند.
- */
-function DateChipStrip({
-  dates,
-  identity,
-  testIdPrefix,
-  active,
-  disabledBefore = null,
-  onPick,
-}: {
-  dates: readonly DateChipItem[];
-  identity: string;
-  testIdPrefix: string;
-  active: string;
-  disabledBefore?: string | null;
-  onPick: (value: string) => void;
-}) {
-  return (
-    <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-      {dates.map((d) => {
-        const disabled = Boolean(disabledBefore && d.value < disabledBefore);
-        const selected = active === d.value;
-        const chip = deliveryChipParts(d);
-        return (
-          <button
-            key={d.value}
-            type="button"
-            disabled={disabled}
-            // TB-240-R7: انتخاب باید در DOM هم قابل خواندن باشد؛ یک تاریخ «نزدیک‌ترین» تا وقتی
-            // واقعاً انتخاب نشده aria-pressed=false می‌ماند.
-            aria-pressed={selected}
-            data-selected={selected ? "true" : "false"}
-            onClick={() => {
-              if (disabled) return;
-              onPick(d.value);
-            }}
-            title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : `${chip.weekday} ${chip.day} ${chip.month}`}
-            className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-              selected
-                ? "border-primary bg-primary/5 text-primary shadow-sm"
-                : "border-gray-200 bg-surface text-gray-700 hover:border-gray-300"
-            }`}
-            data-testid={`${testIdPrefix}-${identity}-${d.value}`}
-          >
-            <p className="text-[11px] font-medium">{chip.weekday}</p>
-            <p className="mt-1 text-xl font-black leading-none tabular-nums">{chip.day}</p>
-            <p className="mt-1 text-[10px] text-gray-500">{chip.month}</p>
-            {d.isEarliest ? <p className="mt-1 text-[9px] font-bold text-primary">نزدیک‌ترین</p> : null}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 /** روش‌های همین گروه: هزینهٔ گروه = هزینهٔ روش همان گروه (از سرور، بدون محاسبهٔ کلاینت). */
 function GroupSchedulePicker({
@@ -327,6 +264,12 @@ export interface StorefrontCapturedGroupChoice {
   serviceCode: string;
   optionCode: string | null;
   date: string | null;
+  /**
+   * TB-241: نوبت انتخاب‌شدهٔ همان تاریخ (تیک‌های دقیق سرور). `null` یعنی هنوز نوبتی انتخاب نشده؛
+   * برای روزی با یک نوبت (پنجرهٔ کامل روز) همان یک نوبت به‌صورت صریح انتخاب می‌شود.
+   */
+  slotStartTicks?: number | null;
+  slotEndTicks?: number | null;
 }
 
 /** کلید پایدار روش در محدودهٔ یک گروه: کد سرویس + کد گزینه. هرگز از برچسب یا تطبیق فازی. */
@@ -346,14 +289,20 @@ function CapturedMethodRow({
   currency,
   selected,
   selectedDate,
+  selectedSlotStartTicks,
+  selectedSlotEndTicks,
   onSelectMethod,
+  onSelectSlot,
 }: {
   groupKey: string;
   method: StorefrontCapturedPreviewMethod;
   currency: string | null;
   selected: boolean;
   selectedDate: string | null;
+  selectedSlotStartTicks?: number | null;
+  selectedSlotEndTicks?: number | null;
   onSelectMethod: (groupKey: string, methodKey: string, date: string | null) => void;
+  onSelectSlot: (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => void;
 }) {
   const identity = `${groupKey}-${method.serviceCode}-${method.optionCode ?? "none"}`;
   const methodKey = capturedMethodKey(method);
@@ -369,6 +318,22 @@ function CapturedMethodRow({
   const shownDate = active || recommended;
   const activeDate = method.availableDates.find((d) => d.value === shownDate) ?? null;
   const dateChosen = active.length > 0 && activeDate !== null;
+  /**
+   * TB-241: انتخاب روز. روزی با یک نوبت (پنجرهٔ کامل روز) همان نوبت صریح را انتخاب می‌کند؛ روزی با
+   * چند نوبت تا انتخاب صریح ساعت هیچ نوبتی را فرض نمی‌کند (ادامه مسدود می‌ماند). هیچ نوبتی ساخته نمی‌شود.
+   */
+  const pickDate = (value: string) => {
+    const slots = method.availableDates.find((entry) => entry.value === value)?.slots ?? [];
+    if (slots.length === 1) {
+      onSelectSlot(groupKey, methodKey, value, slots[0].startTicks, slots[0].endTicks);
+      return;
+    }
+    onSelectMethod(groupKey, methodKey, value);
+  };
+  const activeSlots = activeDate?.slots ?? [];
+  const activeSlot = activeSlots.find(
+    (slot) => slot.startTicks === selectedSlotStartTicks && slot.endTicks === selectedSlotEndTicks,
+  ) ?? null;
   const freight = formatExactAmountText(method.freightAmountText, method.currency ?? currency);
   const packaging = formatExactAmountText(method.packagingAmountText, method.currency ?? currency);
 
@@ -383,7 +348,13 @@ function CapturedMethodRow({
             type="button"
             // TB-240-R7: کلیک روی نام روش یک اقدام صریح کاربر است و همان روز پیشنهادی سرور را
             // انتخاب می‌کند؛ هیچ رندر/افکتی خودش انتخاب نمی‌سازد.
-            onClick={() => onSelectMethod(groupKey, methodKey, recommended || null)}
+            onClick={() => {
+              if (!recommended) {
+                onSelectMethod(groupKey, methodKey, null);
+                return;
+              }
+              pickDate(recommended);
+            }}
             aria-pressed={selected}
             disabled={method.availableDates.length === 0}
             className={`text-[11px] md:text-xs font-bold flex items-center gap-1.5 text-start disabled:opacity-60 ${
@@ -422,8 +393,21 @@ function CapturedMethodRow({
             identity={identity}
             testIdPrefix="shipping-group-captured-date"
             active={active}
-            onPick={(value) => onSelectMethod(groupKey, methodKey, value)}
+            onPick={(value) => pickDate(value)}
           />
+
+          {/* TB-241: انتخاب صریح نوبت همان روز؛ نوبت‌ها فقط همان‌هایی هستند که سرور فرستاده است. */}
+          {dateChosen && activeDate && activeSlots.length > 0 ? (
+            <CapturedSlotPicker
+              slots={activeSlots}
+              identity={identity}
+              activeSlotKey={activeSlot?.slotKey ?? null}
+              onPick={(startTicks, endTicks) =>
+                onSelectSlot(groupKey, methodKey, activeDate.value, startTicks, endTicks)
+              }
+            />
+          ) : null}
+
           <p
             className="mt-1 text-[10px] text-gray-600"
             data-testid={`shipping-group-captured-interval-${identity}`}
@@ -431,9 +415,13 @@ function CapturedMethodRow({
             {/* TB-230-R1: بازه ساعت واقعی سرور؛ جهت‌دهی صریح LTR تا در RTL هم 09:00–17:00 درست خوانده شود.
                 TB-240-R7: تا وقتی روزی انتخاب نشده، همان ساعت با برچسب «پیشنهادی» نشان داده می‌شود؛
                 هرگز به‌شکل انتخاب‌شده نمایش داده نمی‌شود و ساعتی ساخته نمی‌شود. */}
-            {dateChosen ? "زمان تحویل (بازهٔ روز انتخابی): " : "زمان تحویل (بازهٔ روز پیشنهادی — هنوز انتخاب نشده): "}
+            {dateChosen && activeSlot
+              ? "ساعت تحویل انتخاب‌شده: "
+              : dateChosen
+                ? "زمان تحویل (بازهٔ روز انتخابی): "
+                : "زمان تحویل (بازهٔ روز پیشنهادی — هنوز انتخاب نشده): "}
             <bdi dir="ltr" className="inline-block">
-              {activeDate?.intervalText ?? "ثبت نشده"}
+              {activeSlot ? `${activeSlot.opensAt}–${activeSlot.closesAt}` : activeDate?.intervalText ?? "ثبت نشده"}
             </bdi>
           </p>
         </>
@@ -450,6 +438,7 @@ function CapturedGroupCard({
   currency,
   selection,
   onSelectCapturedMethod,
+  onSelectCapturedSlot,
 }: {
   group: StorefrontCapturedPreviewGroup;
   lines: readonly StorefrontCartLine[];
@@ -457,6 +446,7 @@ function CapturedGroupCard({
   currency: string | null;
   selection: StorefrontCapturedGroupChoice | undefined;
   onSelectCapturedMethod: (groupKey: string, methodKey: string, date: string | null) => void;
+  onSelectCapturedSlot: (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => void;
 }) {
   const goodsText = formatExactAmountText(group.finalGoodsAmountText, currency);
   const chosenMethod = selection
@@ -465,6 +455,9 @@ function CapturedGroupCard({
   const chosenSlot = chosenMethod && selection?.date
     ? chosenMethod.availableDates.find((slot) => slot.value === selection?.date) ?? null
     : null;
+  const chosenInterval = (chosenSlot?.slots ?? []).find(
+    (slot) => slot.startTicks === selection?.slotStartTicks && slot.endTicks === selection?.slotEndTicks,
+  ) ?? null;
   const chosenDateLabel = chosenSlot && selection?.date
     ? formatJalaliDate(`${selection.date}T12:00:00`, "fa")
     : null;
@@ -522,7 +515,12 @@ function CapturedGroupCard({
           <>
             {chosenDateLabel}
             {chosenMethod ? ` — ${chosenMethod.methodLabel}` : ""}
-            {chosenSlot?.intervalText ? (
+            {chosenInterval ? (
+              <>
+                {" "}
+                <bdi dir="ltr" className="inline-block">{`${chosenInterval.opensAt}–${chosenInterval.closesAt}`}</bdi>
+              </>
+            ) : chosenSlot?.intervalText ? (
               <>
                 {" "}
                 <bdi dir="ltr" className="inline-block">{chosenSlot.intervalText}</bdi>
@@ -550,7 +548,10 @@ function CapturedGroupCard({
           currency={currency}
           selected={selection?.methodKey === capturedMethodKey(method)}
           selectedDate={selection?.methodKey === capturedMethodKey(method) ? selection.date : null}
+          selectedSlotStartTicks={selection?.methodKey === capturedMethodKey(method) ? selection?.slotStartTicks ?? null : null}
+          selectedSlotEndTicks={selection?.methodKey === capturedMethodKey(method) ? selection?.slotEndTicks ?? null : null}
           onSelectMethod={onSelectCapturedMethod}
+          onSelectSlot={onSelectCapturedSlot}
         />
       ))}
     </div>
@@ -569,6 +570,7 @@ export function StorefrontShippingGroupCards({
   capturedPreview = null,
   capturedChoices = {},
   onSelectCapturedMethod,
+  onSelectCapturedSlot,
   destinationRefreshState = null,
   onRetryDestination,
   onSelectMethod,
@@ -593,6 +595,11 @@ export function StorefrontShippingGroupCards({
   /** TB-237: انتخاب روش/تاریخ هر گروه capture‌شده، کلید = GroupKey سرور. */
   capturedChoices?: Readonly<Record<string, StorefrontCapturedGroupChoice>>;
   onSelectCapturedMethod?: (groupKey: string, methodKey: string, date: string | null) => void;
+  /**
+   * TB-241: انتخاب صریح نوبت همان روز (تیک‌های دقیق سرور). روزی با یک نوبت، همان نوبت را انتخاب
+   * می‌کند و روزی با چند نوبت تا انتخاب کاربر هیچ نوبتی را فرض نمی‌کند.
+   */
+  onSelectCapturedSlot?: (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => void;
   /**
    * TB-230-R1: وضعیت صریح تازه‌سازی مقصد. `failed` تنها حالت شکست برای همین هویت است و یک Retry
    * صریح نشان می‌دهد؛ `pending` در حال محاسبه است؛ `current` یعنی همین پیش‌نمایش مال همین مقصد است.
@@ -688,6 +695,7 @@ export function StorefrontShippingGroupCards({
                 currency={capturedPreview?.currency ?? null}
                 selection={capturedChoices[group.groupKey]}
                 onSelectCapturedMethod={onSelectCapturedMethod ?? (() => {})}
+                onSelectCapturedSlot={onSelectCapturedSlot ?? (() => {})}
               />
             ))}
           </div>

@@ -12,12 +12,32 @@ namespace Tooba.Order.Application.Storefront.Models;
 /// <param name="SubLabel">تاریخ محلی عددی.</param>
 /// <param name="IntervalText">بازهٔ همان روز به شکل <c>HH:mm–HH:mm</c> یا تهی.</param>
 /// <param name="IsEarliest">آیا زودترین تاریخ مجاز است.</param>
+/// <param name="Slots">
+/// TB-241: نوبت‌های همان تاریخ از همان capture؛ برای capture بدون مدت دقیقاً یک نوبتِ کاملِ روز است.
+/// </param>
 public sealed record StorefrontCapturedDateSlotView(
     string Date,
     string Label,
     string SubLabel,
     string? IntervalText,
-    bool IsEarliest);
+    bool IsEarliest,
+    IReadOnlyList<StorefrontCapturedSlotView>? Slots = null);
+
+/// <summary>
+/// یک نوبت تحویل <b>همان تاریخ</b> با هویت پایدار سرور و بازهٔ دقیق. کلاینت فقط همین هویت/بازه را
+/// برمی‌گرداند و سرور آن را در تقویم تازهٔ همان انتخاب بازمی‌یابد؛ هیچ برچسب انسانی مبنای اعتبار نیست.
+/// </summary>
+/// <param name="SlotKey">هویت پایدار سرور: <c>yyyy-MM-dd:startTicks-endTicks</c>.</param>
+/// <param name="OpensAt">شروع <c>HH:mm</c>.</param>
+/// <param name="ClosesAt">پایان <c>HH:mm</c>.</param>
+/// <param name="StartTicks">تیک‌های <see cref="TimeOnly"/> شروع (بدون گردکردن).</param>
+/// <param name="EndTicks">تیک‌های <see cref="TimeOnly"/> پایان (بدون گردکردن).</param>
+public sealed record StorefrontCapturedSlotView(
+    string SlotKey,
+    string OpensAt,
+    string ClosesAt,
+    long StartTicks,
+    long EndTicks);
 
 /// <summary>
 /// یک روش پیشنهادی از یک <b>گروه ارسال capture‌شده</b>؛ همهٔ مقادیر از بازبینی تغییرناپذیر انتخاب‌شده

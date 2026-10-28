@@ -254,4 +254,82 @@ public sealed class StorefrontShippingReceivingCalendarTests
         Assert.Empty(StorefrontShippingCalculator.ValidTimeWindows(Saturday, Monday));
         Assert.Equal("9-12", StorefrontShippingCalculator.DayTimeWindows[0].Value);
     }
+
+    // --- TB-241: نوبت‌های ساعتی ارسال -----------------------------------------------------------
+
+    [Fact]
+    public void A_configured_slot_length_splits_the_same_window_into_complete_hourly_slots()
+    {
+        var calendar = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, Twelve), deliveryHorizonDays: 1, slotDurationMinutes: 60);
+
+        Assert.Equal(Saturday, calendar.EarliestEligibleDate);
+        Assert.Equal(3, calendar.AvailableDates.Count);
+        Assert.All(calendar.AvailableDates, slot => Assert.Equal(Saturday, slot.Date));
+        Assert.Equal(
+            new[] { Nine, new TimeOnly(10, 0), new TimeOnly(11, 0) },
+            calendar.AvailableDates.Select(slot => slot.OpensAt).ToArray());
+        Assert.Equal(
+            new[] { new TimeOnly(10, 0), new TimeOnly(11, 0), Twelve },
+            calendar.AvailableDates.Select(slot => slot.ClosesAt).ToArray());
+    }
+
+    [Fact]
+    public void The_tail_is_never_rounded_into_a_shorter_slot()
+    {
+        // 09:00–12:00 با نوبت ۹۰ دقیقه: دو نوبت کامل ۰۹–۱۰:۳۰ و ۱۰:۳۰–۱۲؛ باقی‌مانده نوبت نمی‌سازد.
+        var ninety = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, Twelve), deliveryHorizonDays: 1, slotDurationMinutes: 90);
+        // 09:00–12:00 با نوبت ۱۰۰ دقیقه: فقط یک نوبت کامل ۰۹–۱۰:۴۰ در روز جا می‌شود.
+        var hundred = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, Twelve), deliveryHorizonDays: 1, slotDurationMinutes: 100);
+
+        Assert.Equal(2, ninety.AvailableDates.Count);
+        Assert.Equal(new TimeOnly(10, 30), ninety.AvailableDates[1].OpensAt);
+        Assert.Equal(Twelve, ninety.AvailableDates[1].ClosesAt);
+
+        Assert.Single(hundred.AvailableDates);
+        Assert.Equal(Nine, hundred.AvailableDates[0].OpensAt);
+        Assert.Equal(new TimeOnly(10, 40), hundred.AvailableDates[0].ClosesAt);
+    }
+
+    [Fact]
+    public void Every_offered_day_carries_its_own_slots_and_a_closed_day_carries_none()
+    {
+        var week = Closed(DayOfWeek.Sunday);
+        var calendar = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, week, deliveryHorizonDays: 2, slotDurationMinutes: 60);
+
+        Assert.Equal(Saturday, calendar.EarliestEligibleDate);
+        Assert.DoesNotContain(Sunday, calendar.AvailableDates.Select(slot => slot.Date));
+        Assert.Equal(3, calendar.AvailableDates.Count(slot => slot.Date == Saturday));
+        Assert.Equal(3, calendar.AvailableDates.Count(slot => slot.Date == Monday));
+        Assert.All(
+            calendar.AvailableDates,
+            slot => Assert.Equal(TimeSpan.FromHours(1), slot.ClosesAt.ToTimeSpan() - slot.OpensAt.ToTimeSpan()));
+    }
+
+    [Fact]
+    public void Absent_slot_length_keeps_the_legacy_full_day_window()
+    {
+        var calendar = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+            Saturday, 0, AllWorking(Nine, Twelve), deliveryHorizonDays: 1);
+
+        Assert.Single(calendar.AvailableDates);
+        Assert.Equal(Nine, calendar.AvailableDates[0].OpensAt);
+        Assert.Equal(Twelve, calendar.AvailableDates[0].ClosesAt);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(1441)]
+    public void An_out_of_range_slot_length_is_refused_instead_of_clamped(int minutes)
+    {
+        var refused = Assert.Throws<StorefrontOrderException>(() =>
+            StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
+                Saturday, 0, AllWorking(Nine, Twelve), deliveryHorizonDays: 1, slotDurationMinutes: minutes));
+
+        Assert.Contains("receiving.slot_duration", refused.Message, StringComparison.Ordinal);
+    }
 }

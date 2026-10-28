@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TB-240-R7 — حقایق متمرکز برای «دلیلِ مالکِ غیرفعال‌بودن ادامه» و «تاریخِ نشان‌داده‌شده = انتخاب واقعی».
  *
  * این فایل فقط رفتار خالص همین تصمیم را می‌سنجد؛ هیچ سرور/DOM شبیه‌سازی‌شده‌ای اینجا ادعا نمی‌شود.
@@ -199,6 +199,47 @@ test("captured: a date that is not in the current server calendar is not accepte
   assert.equal(state.blocker?.code, "group_date");
 });
 
+test("captured: a multi-slot day blocks Continue until an offered slot is chosen", () => {
+  const hourly = method({
+    availableDates: [
+      {
+        ...slot("2026-10-29", "09:00–11:00", true),
+        slots: [
+          { slotKey: "09:00-10:00", opensAt: "09:00", closesAt: "10:00", startTicks: 324000000000, endTicks: 360000000000 },
+          { slotKey: "10:00-11:00", opensAt: "10:00", closesAt: "11:00", startTicks: 360000000000, endTicks: 396000000000 },
+        ],
+      },
+    ],
+  });
+  const hourlyGroup = group(arman.groupKey, "seller-arman", [hourly]);
+  const dayOnly = resolveShippingContinueState(input({
+    captured: { active: true, confirmed: true, preview: preview([hourlyGroup]), choices: { [arman.groupKey]: armanChoice } },
+  }));
+  assert.equal(dayOnly.blocker?.code, "group_slot");
+  assert.equal(dayOnly.blocker?.groupKey, arman.groupKey);
+
+  const chosen = resolveShippingContinueState(input({
+    captured: {
+      active: true,
+      confirmed: true,
+      preview: preview([hourlyGroup]),
+      choices: { [arman.groupKey]: { ...armanChoice, slotStartTicks: 360000000000, slotEndTicks: 396000000000 } },
+    },
+  }));
+  assert.equal(chosen.ready, true);
+
+  // نوبتی که در همان پاسخ نیست (مثلاً گردشده یا ساخته‌شده) ادامه را باز نمی‌کند.
+  const foreign = resolveShippingContinueState(input({
+    captured: {
+      active: true,
+      confirmed: true,
+      preview: preview([hourlyGroup]),
+      choices: { [arman.groupKey]: { ...armanChoice, slotStartTicks: 300000000000, slotEndTicks: 360000000000 } },
+    },
+  }));
+  assert.equal(foreign.blocker?.code, "group_slot");
+});
+
 test("captured: missing server confirmation reflections are reported, never silently accepted", () => {
   const broken = group("cap|broken", "seller-z", [method({ confirmationRateRowId: null })]);
   const state = resolveShippingContinueState(input({
@@ -269,6 +310,15 @@ test("every blocker has a short, group-specific, non-technical Persian text", ()
 
   const unnamed = describeShippingContinueBlocker({ code: "group_no_dates" }, { locale: "fa" });
   assert.ok(unnamed && unnamed.includes("این گروه"));
+
+  // TB-241: روز چندنوبتی بدون انتخاب ساعت — همان تصمیم واحد، با متن کوتاه و نام گروه.
+  const slotFa = describeShippingContinueBlocker(
+    { code: "group_slot", groupKey: arman.groupKey },
+    { locale: "fa", groupLabel: "فروشگاه آرمان" },
+  );
+  assert.ok(slotFa && slotFa.includes("فروشگاه آرمان"));
+  assert.ok(slotFa && slotFa.includes("ساعت"));
+  assert.ok(slotFa && !slotFa.includes("slot") && !slotFa.includes("groupKey"));
   assert.equal(describeShippingContinueBlocker(null, { locale: "fa" }), null);
 });
 
@@ -276,11 +326,14 @@ test("every blocker has a short, group-specific, non-technical Persian text", ()
 
 test("captured date chips only look selected for a real committed choice", () => {
   const cards = fs.readFileSync(path.join(root, "app/storefront/storefront-shipping-group-cards.tsx"), "utf8");
+  // TB-241: خودِ کنترل نوار تاریخ/نوبت از کارت جدا شد تا هر فایل کوچک بماند؛ همان DOM است.
+  const chips = fs.readFileSync(path.join(root, "app/storefront/storefront-shipping-date-chips.tsx"), "utf8");
+  const surface = `${cards}\n${chips}`;
   assert.match(cards, /const recommended = method\.earliestEligibleDate \?\? method\.availableDates\[0\]\?\.value \?\? "";/);
   assert.match(cards, /const active = selected && selectedDate \? selectedDate : "";/);
-  assert.match(cards, /aria-pressed=\{selected\}/);
-  assert.match(cards, /data-selected=\{selected \? "true" : "false"\}/);
-  assert.match(cards, /بازهٔ روز پیشنهادی — هنوز انتخاب نشده/);
+  assert.match(surface, /aria-pressed=\{selected\}/);
+  assert.match(surface, /data-selected=\{selected \? "true" : "false"\}/);
+  assert.match(surface, /بازهٔ روز پیشنهادی — هنوز انتخاب نشده/);
   // هیچ fallback خودکار به زودترین تاریخ به‌عنوان انتخاب وجود ندارد.
   assert.doesNotMatch(cards, /const active = selectedDate \?\? method\.earliestEligibleDate/);
   assert.match(cards, /data-testid=\{`shipping-group-delivery-\$\{group\.groupKey\}`\}/);

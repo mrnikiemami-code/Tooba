@@ -142,9 +142,11 @@ public static class StorefrontShippingCalculator
         DateOnly referenceLocalOrderDate,
         int minimumWorkingDayOffset,
         StorefrontShippingReceivingWeek week,
-        int deliveryHorizonDays)
+        int deliveryHorizonDays,
+        int? slotDurationMinutes = null)
     {
         var byDay = ResolveReceivingWeek(week);
+        var slotLength = NormalizeSlotDuration(slotDurationMinutes);
 
         if (minimumWorkingDayOffset < 0 || minimumWorkingDayOffset > MaxReceivingWorkingDayOffset)
         {
@@ -176,12 +178,35 @@ public static class StorefrontShippingCalculator
 
         var dates = new List<StorefrontShippingReceivingSlot>(deliveryHorizonDays);
         var cursor = earliestDate;
-        while (dates.Count < deliveryHorizonDays)
+        var distinctDates = 0;
+        while (distinctDates < deliveryHorizonDays)
         {
             var day = byDay[cursor.DayOfWeek];
             if (day.IsWorking)
             {
-                dates.Add(new StorefrontShippingReceivingSlot(cursor, day.OpensAt, day.ClosesAt));
+                distinctDates++;
+                // TB-241: a configured duration splits the SAME authored window into complete,
+                // non-overlapping slots anchored at the real opening; the remainder is never rounded into
+                // a shorter tail and a day without one complete slot contributes no slot at all.
+                if (slotLength is { } length)
+                {
+                    var opens = day.OpensAt;
+                    while (true)
+                    {
+                        var closes = opens.Add(TimeSpan.FromMinutes(length));
+                        if (closes > day.ClosesAt)
+                        {
+                            break;
+                        }
+
+                        dates.Add(new StorefrontShippingReceivingSlot(cursor, opens, closes));
+                        opens = closes;
+                    }
+                }
+                else
+                {
+                    dates.Add(new StorefrontShippingReceivingSlot(cursor, day.OpensAt, day.ClosesAt));
+                }
             }
 
             cursor = cursor.AddDays(1);
@@ -189,6 +214,31 @@ public static class StorefrontShippingCalculator
 
         return new StorefrontShippingReceivingCalendar(earliestDate, dates);
     }
+
+    /// <summary>
+    /// TB-241: یکتای صریح قاعدهٔ مدت نوبت. تهی یعنی پنجرهٔ کامل روز؛ مقدار حاضر باید ۱..۱۴۴۰ دقیقه
+    /// باشد و مقدار نامعتبر رد می‌شود (هرگز clamp/پیش‌فرض ۶۰ دقیقه).
+    /// </summary>
+    /// <param name="slotDurationMinutes">مدت نوبت به دقیقه یا تهی.</param>
+    private static int? NormalizeSlotDuration(int? slotDurationMinutes)
+    {
+        if (slotDurationMinutes is not { } minutes)
+        {
+            return null;
+        }
+
+        if (minutes < 1 || minutes > MaxReceivingSlotDurationMinutes)
+        {
+            throw new StorefrontOrderException(
+                StorefrontOrderErrors.ShippingDeliveryInvalid,
+                "receiving.slot_duration");
+        }
+
+        return minutes;
+    }
+
+    /// <summary>بیشینهٔ صریح مدت هر نوبت دریافت: یک شبانه‌روز.</summary>
+    public const int MaxReceivingSlotDurationMinutes = 1440;
 
     /// <summary>سقف صریح offset روز کاری و افق تقویم دریافت؛ ورودی خارج از آن رد می‌شود، نه clamp.</summary>
     public const int MaxReceivingWorkingDayOffset = 365;

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Local WEEKLY-SCHEDULE intent of ONE shipping method (shared by every region group).
  *
  * A configured schedule initializes from the real stored timezone + seven ISO days (1 = Monday).
@@ -55,6 +55,11 @@ export type WeekFormState =
       readonly kind: "configured";
       readonly timeZoneId: string;
       readonly days: readonly ScheduleDayDraft[];
+      /**
+       * TB-241: chosen length of ONE receiving slot in minutes, or `null` for a single full-day window.
+       * `null` is the legacy shape and is never read as 60 minutes.
+       */
+      readonly slotDurationMinutes: number | null;
     };
 
 const STORED_TIME = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]{1,7})?$/;
@@ -98,6 +103,7 @@ export function createWeekForm(schedule: EditorWeeklySchedule | null): WeekFormS
     kind: "configured",
     timeZoneId: schedule.timeZoneId,
     days: schedule.days.map(dayDraft),
+    slotDurationMinutes: schedule.slotDurationMinutes ?? null,
   };
 }
 
@@ -120,6 +126,7 @@ export function configureWeek(state: WeekFormState): WeekFormState {
       startEdited: false,
       endEdited: false,
     })),
+    slotDurationMinutes: null,
   };
 }
 
@@ -130,6 +137,17 @@ export function resetWeek(schedule: EditorWeeklySchedule | null): WeekFormState 
 
 export function withTimeZone(state: WeekFormState, value: string): WeekFormState {
   return state.kind === "configured" ? { ...state, timeZoneId: value } : state;
+}
+
+/**
+ * TB-241: the operator's explicit slot length. `null` means one full-day window; any other value must be a
+ * whole number of minutes the server accepts (1..1440). An out-of-range programmatic value is refused
+ * (the same state is returned) exactly like a refused day edit.
+ */
+export function withSlotDuration(state: WeekFormState, minutes: number | null): WeekFormState {
+  if (state.kind !== "configured") return state;
+  if (minutes !== null && (!Number.isSafeInteger(minutes) || minutes < 1 || minutes > 1440)) return state;
+  return { ...state, slotDurationMinutes: minutes };
 }
 
 function replaceDay(
@@ -175,6 +193,7 @@ export type WeekIssueCode =
   | "dayHoursRequired"
   | "dayTimeInvalid"
   | "dayRangeInvalid"
+  | "slotDurationInvalid"
   | "pendingTimeZoneUnapplied";
 
 export interface WeekIssue {
@@ -200,6 +219,11 @@ export function weekIssues(state: WeekFormState): readonly WeekIssue[] {
   const timeZone = state.timeZoneId.trim();
   if (timeZone.length === 0) issues.push({ code: "timeZoneRequired", weekday: null });
   else if (timeZone.length > TIME_ZONE_MAX_LENGTH) issues.push({ code: "timeZoneTooLong", weekday: null });
+  // TB-241: an out-of-range slot length is a real blocking issue, never silently normalised.
+  if (state.slotDurationMinutes !== null && (!Number.isSafeInteger(state.slotDurationMinutes)
+    || state.slotDurationMinutes < 1 || state.slotDurationMinutes > 1440)) {
+    issues.push({ code: "slotDurationInvalid", weekday: null });
+  }
 
   const seen = new Set<number>();
   for (const day of state.days) {
@@ -272,6 +296,8 @@ export function weekDirty(schedule: EditorWeeklySchedule | null, state: WeekForm
   if (state.kind === "unconfigured") return state.pendingTimeZone.trim().length > 0;
   if (schedule === null) return true;
   if (schedule.timeZoneId !== state.timeZoneId.trim()) return true;
+  // TB-241: changing only the slot length is real work, and an untouched null stays untouched.
+  if ((schedule.slotDurationMinutes ?? null) !== state.slotDurationMinutes) return true;
   return !sameDays(schedule, state);
 }
 
@@ -286,5 +312,9 @@ export function buildWeeklyScheduleEdit(
 ): WeeklyScheduleEdit | undefined {
   if (state.kind === "unconfigured") return undefined;
   if (!weekDirty(schedule, state)) return undefined;
-  return { timeZoneId: state.timeZoneId.trim(), days: dayEdits(state) };
+  return {
+    timeZoneId: state.timeZoneId.trim(),
+    days: dayEdits(state),
+    slotDurationMinutes: state.slotDurationMinutes,
+  };
 }

@@ -90,6 +90,8 @@ test("a complete selection carries exactly the server WRITE keys and the exact g
     "groupKey",
     "optionCode",
     "selectedDeliveryDate",
+    "selectedSlotEndTicks",
+    "selectedSlotStartTicks",
     "serviceCode",
   ]);
   assert.equal(only.expectedGoodsAmount, "9485771");
@@ -99,6 +101,9 @@ test("a complete selection carries exactly the server WRITE keys and the exact g
   assert.equal(only.expectedAreaGroupId, "01a17d0e-aaaa-7000-b575-f507d2f89abc");
   assert.equal(only.expectedRateRowId, "01a17d0e-bbbb-7000-b575-f507d2f89abc");
   assert.equal(only.selectedDeliveryDate, "2026-10-29");
+  // روزی که نوبت hourly ندارد: هیچ tick حدس زده نمی‌شود و صریحاً null می‌ماند.
+  assert.equal(only.selectedSlotStartTicks, null);
+  assert.equal(only.selectedSlotEndTicks, null);
   // هیچ shorthand قدیمی در بدنهٔ گروه capture‌شده نیست.
   assert.equal("shippingMethodCode" in only, false);
   assert.equal("cartLineIds" in only, false);
@@ -239,3 +244,86 @@ test("the captured root revision comes from the server, never an invented zero",
   assert.equal(resolveCapturedSelectionRevision({}), null);
 });
 
+
+/**
+ * TB-241 — نوبت‌های ساعتی ارسال.
+ *
+ * وقتی نویسنده برای روش نوبت (مثلاً ۶۰ دقیقه) تنظیم کرده باشد، سرور برای همان روز چند نوبت می‌فرستد.
+ * آن‌وقت انتخاب «روز» به‌تنهایی کامل نیست: فقط نوبتی که **در همان پاسخ** دیده شده می‌تواند به‌عنوان
+ * tick شروع/پایان ارسال شود. هیچ نوبتی ساخته یا گرد نمی‌شود.
+ */
+const SLOT_DAY = {
+  value: "2026-10-29",
+  label: "پنجشنبه",
+  subLabel: "۸ آبان",
+  intervalText: "09:00-11:00",
+  isEarliest: true,
+  slots: [
+    { slotKey: "09:00-10:00", label: "۰۹:۰۰–۱۰:۰۰", startTicks: 324000000000, endTicks: 360000000000 },
+    { slotKey: "10:00-11:00", label: "۱۰:۰۰–۱۱:۰۰", startTicks: 360000000000, endTicks: 396000000000 },
+  ],
+};
+
+const SLOT_CHOICE = { ...choice, slotStartTicks: 360000000000, slotEndTicks: 396000000000 };
+
+function slotPreview(): StorefrontCapturedPreview {
+  return preview({ groups: [group({ methods: [method({ availableDates: [SLOT_DAY] })] })] });
+}
+
+test("a multi-slot day blocks continuation until one real slot is chosen", () => {
+  assert.equal(capturedSelectionComplete(slotPreview(), { "cap|post|store|heavy": choice }), false);
+  assert.equal(
+    capturedSelectionBlocker(slotPreview(), { "cap|post|store|heavy": choice }),
+    "slot_required",
+  );
+  assert.equal(buildCapturedSelectionIntent(slotPreview(), { "cap|post|store|heavy": choice }), null);
+  assert.equal(capturedSelectionComplete(slotPreview(), { "cap|post|store|heavy": SLOT_CHOICE }), true);
+});
+
+test("the chosen slot ticks are sent verbatim from the server response", () => {
+  const intent = buildCapturedSelectionIntent(slotPreview(), { "cap|post|store|heavy": SLOT_CHOICE });
+  assert.ok(intent);
+  assert.equal(intent[0].selectedSlotStartTicks, 360000000000);
+  assert.equal(intent[0].selectedSlotEndTicks, 396000000000);
+});
+
+test("an invented or foreign slot is refused instead of being normalised", () => {
+  for (const bad of [
+    { slotStartTicks: 0, slotEndTicks: 0 },
+    { slotStartTicks: 360000000000, slotEndTicks: 324000000000 },
+    { slotStartTicks: null, slotEndTicks: 396000000000 },
+  ]) {
+    assert.equal(
+      buildCapturedSelectionIntent(slotPreview(), { "cap|post|store|heavy": { ...choice, ...bad } }),
+      null,
+      JSON.stringify(bad),
+    );
+  }
+});
+
+test("changing the offered slots invalidates a previously confirmed selection", () => {
+  const base = {
+    destinationKey: "d|1",
+    couponCode: null,
+    cartVersion: 7,
+    preview: slotPreview(),
+  };
+  const key = capturedSelectionContextKey(base);
+  const changedSlots = preview({
+    groups: [
+      group({
+        methods: [
+          method({
+            availableDates: [
+              {
+                ...SLOT_DAY,
+                slots: [{ slotKey: "09:00-10:00", label: "۰۹:۰۰–۱۰:۰۰", startTicks: 324000000000, endTicks: 360000000000 }],
+              },
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+  assert.notEqual(capturedSelectionContextKey({ ...base, preview: changedSlots }), key);
+});

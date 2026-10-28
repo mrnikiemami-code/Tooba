@@ -766,7 +766,7 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
 
                     b.ToTable("authoring_revision_snapshots", "shipping", t =>
                         {
-                            t.HasCheckConstraint("ck_authoring_revision_snapshots_format_version_known", "format_version = 1");
+                            t.HasCheckConstraint("ck_authoring_revision_snapshots_format_version_known", "format_version IN (1, 2)");
 
                             t.HasCheckConstraint("ck_authoring_revision_snapshots_owner_coherent", "((owner_kind = 0 AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 1 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 2 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
 
@@ -857,6 +857,10 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("draft_id");
 
+                    b.Property<int?>("SlotDurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("slot_duration_minutes");
+
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -872,6 +876,8 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
 
                     b.ToTable("authoring_weekly_schedules", "shipping", t =>
                         {
+                            t.HasCheckConstraint("ck_authoring_weekly_schedules_slot_duration", "slot_duration_minutes IS NULL OR (slot_duration_minutes >= 1 AND slot_duration_minutes <= 1440)");
+
                             t.HasCheckConstraint("ck_authoring_weekly_schedules_timezone_length", "char_length(btrim(time_zone_id)) > 0 AND char_length(time_zone_id) <= 64");
                         });
                 });

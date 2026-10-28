@@ -184,12 +184,21 @@ public sealed class StorefrontCapturedPreviewPlanner(
                     candidate.Receiving is null
                         ? []
                         : candidate.Receiving.AvailableDates
-                            .Select(slot => new StorefrontCapturedDateSlotView(
-                                slot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                                StorefrontShippingCalculator.FormatDeliveryDateLabelFa(slot.Date, today),
-                                StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(slot.Date),
-                                $"{slot.OpensAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}–{slot.ClosesAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}",
-                                candidate.Receiving.EarliestEligibleDate == slot.Date))
+                            .GroupBy(slot => slot.Date)
+                            .Select(daySlots => new StorefrontCapturedDateSlotView(
+                                daySlots.Key.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                                StorefrontShippingCalculator.FormatDeliveryDateLabelFa(daySlots.Key, today),
+                                StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(daySlots.Key),
+                                FormatDayInterval(daySlots),
+                                candidate.Receiving.EarliestEligibleDate == daySlots.Key,
+                                daySlots
+                                    .Select(slot => new StorefrontCapturedSlotView(
+                                        FormatSlotKey(slot),
+                                        slot.OpensAt.ToString("HH\\:mm", CultureInfo.InvariantCulture),
+                                        slot.ClosesAt.ToString("HH\\:mm", CultureInfo.InvariantCulture),
+                                        slot.OpensAt.Ticks,
+                                        slot.ClosesAt.Ticks))
+                                    .ToArray()))
                             .ToArray(),
                     candidate.Receiving?.UnavailableReason
                         ?? (candidate.Outcome == StorefrontCapturedCandidateOutcome.Quoted
@@ -534,6 +543,25 @@ public sealed class StorefrontCapturedPreviewPlanner(
     /// <summary>متن اعشاری دقیق بدون هیچ تبدیل شناور/گردکردن؛ نبود مقدار تهی می‌ماند.</summary>
     private static string? ToText(decimal? value) =>
         value?.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>بازهٔ کل همان تاریخ؛ برای یک نوبت، همان نوبت و برای چند نوبت، کف..سقف همان تاریخ.</summary>
+    private static string FormatDayInterval(IEnumerable<StorefrontShippingReceivingSlot> daySlots)
+    {
+        var ordered = daySlots.OrderBy(slot => slot.OpensAt).ToArray();
+        if (ordered.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        return $"{ordered[0].OpensAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}–"
+            + $"{ordered[^1].ClosesAt.ToString("HH\\:mm", CultureInfo.InvariantCulture)}";
+    }
+
+    /// <summary>هویت پایدار سرور یک نوبت: تاریخ + تیک‌های دقیق شروع/پایان (بدون برچسب انسانی).</summary>
+    private static string FormatSlotKey(StorefrontShippingReceivingSlot slot) =>
+        $"{slot.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}:"
+        + $"{slot.OpensAt.Ticks.ToString(CultureInfo.InvariantCulture)}-"
+        + $"{slot.ClosesAt.Ticks.ToString(CultureInfo.InvariantCulture)}";
 
     private static string MethodCode(string serviceCode, string? optionCode) =>
         $"{StorefrontCapturedPublicationBinding.Canonical(serviceCode)}\u001F"

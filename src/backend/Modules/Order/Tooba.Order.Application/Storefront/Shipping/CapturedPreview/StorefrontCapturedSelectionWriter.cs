@@ -29,6 +29,12 @@ public static class StorefrontCapturedSelectionReasons
     /// <summary>تاریخ انتخاب‌شده در تقویم همان گروه نیست.</summary>
     public const string DateUnavailable = "storefront.captured_selection.date_unavailable";
 
+    /// <summary>
+    /// TB-241: نوبت انتخاب‌شده در تقویم تازهٔ همان تاریخ نیست (تغییر مدت/روز/انتشار) یا برای روزی با
+    /// چند نوبت هیچ نوبتی انتخاب نشده است.
+    /// </summary>
+    public const string SlotUnavailable = "storefront.captured_selection.slot_unavailable";
+
     /// <summary>بازتاب قصد با وضعیت جاری سرور نمی‌خواند (سبد/اشاره‌گر/ردیف/مقصد/نسخه).</summary>
     public const string Conflict = "storefront.captured_selection.conflict";
 
@@ -208,14 +214,36 @@ public sealed class StorefrontCapturedSelectionWriter(
             AssertGoodsEcho(intent, composedGroup);
 
             var expectedDate = (intent.SelectedDeliveryDate ?? string.Empty).Trim();
-            var slot = receiving.AvailableDates.FirstOrDefault(
-                s => string.Equals(
+            var daySlots = receiving.AvailableDates
+                .Where(s => string.Equals(
                     s.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                     expectedDate,
-                    StringComparison.Ordinal));
-            if (slot is null)
+                    StringComparison.Ordinal))
+                .ToArray();
+            if (daySlots.Length == 0)
             {
                 throw Refuse(StorefrontCapturedSelectionReasons.DateUnavailable);
+            }
+
+            // TB-241: the chosen slot must exist in THIS freshly composed calendar for THIS date. The
+            // client echo is only a lookup key — never a window, an hour or a price — and an absent echo is
+            // only lawful when the day carries exactly one (legacy full-day) slot.
+            StorefrontShippingReceivingSlot? slot;
+            if (intent.SelectedSlotStartTicks is { } startTicks && intent.SelectedSlotEndTicks is { } endTicks)
+            {
+                slot = daySlots.FirstOrDefault(s => s.OpensAt.Ticks == startTicks && s.ClosesAt.Ticks == endTicks);
+                if (slot is null)
+                {
+                    throw Refuse(StorefrontCapturedSelectionReasons.SlotUnavailable);
+                }
+            }
+            else
+            {
+                slot = daySlots.Length == 1 ? daySlots[0] : null;
+                if (slot is null)
+                {
+                    throw Refuse(StorefrontCapturedSelectionReasons.SlotUnavailable);
+                }
             }
 
             // فروشندهٔ همین گروه از خطوط authoritative همان گروه می‌آید (همان فروشنده‌ای که

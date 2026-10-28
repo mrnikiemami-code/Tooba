@@ -313,7 +313,15 @@ public sealed record StorefrontCapturedGroupSelection(
     /// (TB-236؛ متن دقیق). نبود یعنی این بازتاب ارسال نشده و «صفر» نیست؛ مقدار ارسالی فقط برای مقایسه
     /// است و هرگز قیمت/مالیات/تخفیف نیست.
     /// </summary>
-    string? ExpectedGoodsAmount = null);
+    string? ExpectedGoodsAmount = null,
+    /// <summary>
+    /// TB-241: تیک‌های دقیق شروع نوبت انتخاب‌شده (پاسخ سرور). این مقدار فقط برای
+    /// <b>بازشناسی</b> همان نوبت در تقویم تازهٔ سرور است؛ هرگز پنجره/ساعت/اعتبار نیست و نبودش یعنی
+    /// نوبت انتخاب نشده (فقط برای روش بدون مدت، پنجرهٔ کامل روز).
+    /// </summary>
+    long? SelectedSlotStartTicks = null,
+    /// <summary>TB-241: تیک‌های دقیق پایان نوبت انتخاب‌شده؛ باید با نوبت موجود همان تاریخ بخواند.</summary>
+    long? SelectedSlotEndTicks = null);
 
 /// <summary>
 /// نمای یک گروه ارسال در پیش‌نویس سبد. هویت/برچسب/مبلغ/ارز/زمان‌بندی همه از گروه ذخیره‌شده می‌آید.
@@ -512,7 +520,13 @@ public sealed record StorefrontShippingReceivingDay(
 /// <summary>
 /// تقویم هفتگی دریافت مشتری: دقیقاً هفت روز، هر روز یک‌بار و بدون تکرار/خارج از محدوده.
 /// </summary>
-public sealed record StorefrontShippingReceivingWeek(IReadOnlyList<StorefrontShippingReceivingDay> Days);
+public sealed record StorefrontShippingReceivingWeek(
+    IReadOnlyList<StorefrontShippingReceivingDay> Days,
+    /// <summary>
+    /// TB-241: مدت اختیاری هر نوبت تحویل به دقیقه از همان capture تغییرناپذیر. تهی یعنی تقویم فقط
+    /// یک پنجرهٔ کامل روز را برای هر تاریخ ارائه می‌دهد و هرگز به ۶۰ دقیقه استنتاج نمی‌شود.
+    /// </summary>
+    int? SlotDurationMinutes = null);
 
 /// <summary>
 /// یک تاریخ قابل انتخاب برای دریافت کالا، همراه با بازهٔ <b>همان روز</b> در تقویم روش.

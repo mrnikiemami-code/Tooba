@@ -465,7 +465,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         long expectedRevision,
         string? timeZoneId,
         IReadOnlyList<ShippingAuthoringDraft.ScheduleDayInput> days,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int? slotDurationMinutes = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(days);
@@ -492,7 +493,7 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             // The WHOLE week is preflighted before the first mutation, so a bad seventh day leaves this
             // aggregate, its tracker, the revision and every unrelated capability untouched. The
             // schedule header, its day rows and the root revision share ONE implicit SaveChanges.
-            var plan = draft.PreflightWeeklySchedule(timeZoneId, days);
+            var plan = draft.PreflightWeeklySchedule(timeZoneId, days, slotDurationMinutes);
             draft.ApplyWeeklySchedule(plan, DateTimeOffset.UtcNow);
             if (plan.HasChanges)
             {

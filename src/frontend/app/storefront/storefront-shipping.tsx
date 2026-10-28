@@ -713,6 +713,7 @@ export function StorefrontShopeivaShipping() {
       const separator = methodKey.indexOf("\u001f");
       const serviceCode = separator >= 0 ? methodKey.slice(0, separator) : methodKey;
       const optionCode = separator >= 0 ? methodKey.slice(separator + 1) : "";
+      const keepSlot = (date ?? (sameMethod ? current?.date ?? null : null)) === current?.date;
       return {
         ...prev,
         [groupKey]: {
@@ -720,10 +721,39 @@ export function StorefrontShopeivaShipping() {
           serviceCode,
           optionCode: optionCode.length > 0 ? optionCode : null,
           date: date ?? (sameMethod ? current?.date ?? null : null),
+          // TB-241: تغییر تاریخ/روش انتخاب نوبت قبلی را نگه نمی‌دارد؛ نوبت دوباره انتخاب می‌شود.
+          slotStartTicks: date !== null && keepSlot ? current?.slotStartTicks ?? null : null,
+          slotEndTicks: date !== null && keepSlot ? current?.slotEndTicks ?? null : null,
         },
       };
     });
   }, []);
+
+  /**
+   * TB-241: انتخاب صریح نوبت. فقط همین وظیفه را دارد: همان گروه/روش/تاریخ با تیک‌های دقیقی که
+   * سرور در پاسخ داده بود. هیچ ساعت/پنجره‌ای اینجا ساخته نمی‌شود.
+   */
+  const selectCapturedSlot = useCallback(
+    (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => {
+      setCapturedChoices((prev) => {
+        const separator = methodKey.indexOf("\u001f");
+        const serviceCode = separator >= 0 ? methodKey.slice(0, separator) : methodKey;
+        const optionCode = separator >= 0 ? methodKey.slice(separator + 1) : "";
+        return {
+          ...prev,
+          [groupKey]: {
+            methodKey,
+            serviceCode,
+            optionCode: optionCode.length > 0 ? optionCode : null,
+            date,
+            slotStartTicks: startTicks,
+            slotEndTicks: endTicks,
+          },
+        };
+      });
+    },
+    [],
+  );
 
   async function persistAndContinue() {
     if (!projection || !isValid) return;
@@ -956,6 +986,7 @@ export function StorefrontShopeivaShipping() {
                   capturedPreview={capturedPreviewForCards}
                   capturedChoices={capturedChoices}
                   onSelectCapturedMethod={selectCapturedMethod}
+                  onSelectCapturedSlot={selectCapturedSlot}
                   destinationRefreshState={capturedPreviewActive ? destinationPreviewMode : null}
                   onRetryDestination={retryDestinationRefresh}
                   onSelectMethod={(lineId, code) => setLineMethodByLine((prev) => ({ ...prev, [lineId]: code }))}

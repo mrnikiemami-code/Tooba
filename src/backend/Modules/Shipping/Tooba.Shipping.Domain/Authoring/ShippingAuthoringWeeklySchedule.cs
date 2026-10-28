@@ -98,6 +98,12 @@ public sealed class ShippingAuthoringWeeklySchedule
     /// <summary>شناسهٔ صریح و اعتبارسنجی‌شدهٔ منطقهٔ زمانی که بازه‌ها به وقت محلی آن تفسیر می‌شوند.</summary>
     public string TimeZoneId { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// TB-241: مدت اختیاری هر نوبت تحویل به <b>دقیقه</b>؛ تهی یعنی «یک پنجرهٔ کامل روز» و هرگز
+    /// به ۶۰ دقیقه استنتاج نمی‌شود.
+    /// </summary>
+    public int? SlotDurationMinutes { get; private set; }
+
     /// <summary>زمان آخرین جایگزینی UTC.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -108,12 +114,14 @@ public sealed class ShippingAuthoringWeeklySchedule
         Guid draftId,
         string timeZoneId,
         IReadOnlyList<ShippingAuthoringDraft.ScheduleDayAssignment> assignments,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        int? slotDurationMinutes = null)
     {
         var schedule = new ShippingAuthoringWeeklySchedule
         {
             DraftId = draftId,
             TimeZoneId = timeZoneId,
+            SlotDurationMinutes = slotDurationMinutes,
             UpdatedAt = now,
         };
         schedule._days.AddRange(assignments.Select(assignment => ShippingAuthoringScheduleDay.Create(
@@ -128,9 +136,11 @@ public sealed class ShippingAuthoringWeeklySchedule
     internal void Apply(
         string timeZoneId,
         IReadOnlyList<ShippingAuthoringDraft.ScheduleDayAssignment> assignments,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        int? slotDurationMinutes = null)
     {
         TimeZoneId = timeZoneId;
+        SlotDurationMinutes = slotDurationMinutes;
         foreach (var assignment in assignments)
         {
             if (assignment.Existing is { } existing)

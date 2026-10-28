@@ -86,6 +86,8 @@ export interface ScheduleDayEdit {
 export interface WeeklyScheduleEdit {
   readonly timeZoneId: string;
   readonly days: readonly ScheduleDayEdit[];
+  /** TB-241: slot length in minutes; null = one full-day window (legacy). */
+  readonly slotDurationMinutes?: number | null;
 }
 
 /** Explicit full replacement of both independent settings. */

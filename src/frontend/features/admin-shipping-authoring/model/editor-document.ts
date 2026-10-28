@@ -106,6 +106,11 @@ export interface EditorScheduleDay {
 export interface EditorWeeklySchedule {
   readonly timeZoneId: string;
   readonly days: readonly EditorScheduleDay[];
+  /**
+   * TB-241: method-level receiving slot length in minutes, or absent/null for ONE full-day window.
+   * Absent is the legacy shape and is never read as "60 minutes".
+   */
+  readonly slotDurationMinutes?: number | null;
 }
 
 /** Stored method settings (`null` = unconfigured; no implicit Prepaid/Manual). */
