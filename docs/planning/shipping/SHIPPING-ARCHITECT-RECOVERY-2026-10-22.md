@@ -1,4 +1,24 @@
-﻿# CURRENT — 239 EXECUTED PARTIAL: real Marketplace target live; authoring admin identity missing —2026-10-28
+# CURRENT — 239 Marketplace boot accepted; issued239-R1 REAL DEV ADMIN COMMISSIONING + OWNER FLOW —2026-10-28
+
+Read239/ARCHITECT-REVIEW.md + TB-SHIPPING-MARKETPLACE-ADMIN-BOOTSTRAP-AND-LIVE-FLOW-239-R1/TASK.md.
+Root reviewed8f5126b docs+actualbootstrap/IdentityContracts/HostAdminPanelAccess/sellerEnsure. Real Marketplace5190/
+tooba_marketplace_tb239/tenantNULL/home200 viaofficialrunner and real seller403 accepted only; noownercheckout.
+SOURCEgap: MarketplaceAdminDevBootstrap grants fixedorphanccccactor, no registeredlogin. Identity.Contracts
+already has Register/Find/auth; SellerEnsure returns early when Partiesmissing, legacyPublishpair isn't realA/B.
+Architect NOW authorizes opt-in Development+Marketplace-only binding of dedicated normallyregistered DEV admin
+to SAMEexisting marketplace-platform Member relation viaIdentityContracts+tuplewriter. Legitimatecommissioning,
+NOT forbiddennewprivilegeframework. No sellerpromotion/fakeheader/JWT/SQLgrant/productionpolicy/newendpoint.
+Enableddefaultfalse+explicitidentifier; exactlookup; nofallback/credentialreset; idempotent; outsideguards no
+additionalbinding. Then adminnormal200/protectedseed200 withsellerstill403, officialPartydata+realSellerreconcile,
+continue actualthreeownerbuyer shipping/save/preview/order/coupon/history. APIsfirst, noformdriverdetour.
+Keep5190actualtarget, no repeatmigrationreset; all33schemasalreadyofficialmigrated.Original3000/5088+USER3100/
+5188profile/windows/source nevertouched; checkedshippinggatesOFF/localtaskON.231/232/236appliedstore-alpha.
+UNKNOWN23822001 staysunclassified, no correlationcolumnblame/schemawidening/concurrencycertificate.
+FullMarketplace/coupon/practical requirement remainsOPEN untilactualproof. No production/paid/PSP/VisualACCEPT.
+TB185paused/defaultOFF/PendingAllocation;227/225-R1lostLOCAL retained. Active239-R1 only;STOP_FOR_ARCHITECT;
+automaticNextImplementationTask NONE. Prior recovery/history follows.
+
+# CURRENT — 239 EXECUTED PARTIAL: real Marketplace target live; authoring admin identity missing —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-FIRST-LIVE-ACCEPTANCE-239/{TASK.md,RESULT.md}. Status
 EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation. Bridge row 0326ae9f-5fa8-45ab-b33f-79e743cb7fcb.
