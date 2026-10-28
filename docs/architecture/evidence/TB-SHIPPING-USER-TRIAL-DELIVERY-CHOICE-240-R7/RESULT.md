@@ -153,8 +153,20 @@ read, automated, reloaded or closed; original 3000/5088 and the R4/handoff profi
 
 ## 7 — Elapsed / honesty
 
-Claimed `2026-10-28T18:52:39Z`, code/evidence commit ≈`2026-10-28T19:23Z` ⇒ **≈31 min** vs the task's `Focus20minutes` — recorded
+Claimed `2026-10-28T18:52:39Z`, result ≈`2026-10-28T19:25Z` ⇒ **≈32 min** vs the task's `Focus20minutes` — recorded
 **NONCOMPLIANT** on the focus box, not a process PASS. The original 240 deadline stays MISSED; no new promise is made.
 More than one in-task correction was needed (the first blocker text only named the field, the method-name click still
 selected the *apparent* date, and the review cart had to be re-formed after a line removal), so the one-correction
 budget is also exceeded and recorded.
+
+## 8 — Merge-time Architect CORRECTION (read, NOT delivered here)
+
+While this result was being committed, `origin/main` advanced with two docs-only Architect commits
+(`4bce0a8b6`, `8c29c633e`) whose CORRECTION states that **selectable hourly receiving slots** (owner/method opening
+hours + explicit slot duration ⇒ server-produced `09–10`, `10–11`, … chosen per group, validated and persisted) are a
+**user-reported regression** and are **not** closed by a date/display/blocker fix. This task does not implement that:
+the cards still show the method's authored single interval (`09:00–17:00`) as the delivery window text and there is no
+slot picker, no slot contract, no persistence of a chosen slot. That regression stays **OPEN** for the next task; R7 is
+reported as closing only the three defects it was issued for. The merge kept both the Architect CORRECTION blocks and
+this worker result (no rebase/force/reset, docs-only conflict resolution, no CRLF churn).
+

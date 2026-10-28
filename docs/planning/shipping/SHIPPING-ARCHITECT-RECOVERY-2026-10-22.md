@@ -2,7 +2,7 @@
 
 Read docs/architecture/evidence/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT userVisualACCEPT, no activation, no checkout/order. Base581c5f31a;
-claim18:52:39Z→result≈19:23Z ≈31min vs Focus20 recorded NONCOMPLIANT; one-correction budget EXCEEDED.
+claim18:52:39Z→result≈19:25Z ≈32min vs Focus20 recorded NONCOMPLIANT; one-correction budget EXCEEDED.
 LANDED on the EXISTING page/cards only: new pure `storefront-shipping-continue-state.ts`
 (resolveShippingContinueState/describeShippingContinueBlocker) is the ONE enabled-state+blocker authority replacing
 the anonymous isValid; Continue carries aria-describedby + ONE short Persian owning reason
