@@ -1,3 +1,23 @@
+# CURRENT — 237 NOT CONNECTED reviewed; issued237-R1 BOOT FIRST + exact wire/payment completion —2026-10-28
+
+Active TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1. Read237/ARCHITECT-REVIEW.md + newTASK.
+Root reviewedaffef4029 actual page/API/backendDTO/paymenthandoff: captured WRITE incorrectly uses confirmation*
+instead of expected*; page sends forbidden top-level legacy method; builder skips unavailable groups and doesn't
+check all tokens. Payment realpath final-click-api/handoff still lacks expectedSelectionRevision entirely.
+These are SOURCE blockers, not environment anxiety.237 has NO runtime/URL/migration/trial;6units not delivery.
+Retain backend mandatorygoods/couponApplied guard and choice scaffolding; do not reopen financial/owner core.
+237-R1 reuses isolatedD:\temp\tb237, boots Host/FE FIRST, actual MigrationRunner pending231/232/236 and normal DEV
+setup authorized already. Fix actualwire/allgroups/currentcontext/syncgate/paymentTEXT on SAME UI, realPUT200 ->
+paymentpreview200 -> actualStartPayment stage. First SingleStoreusableURL, actualMarketplace remaining if notrun;
+all-owner final delivery remains mandatory. Checked-ingatesOFF, coherenttasklocalON; no realmoney/authbypass.
+Original watchedcheckout FE3000/Host5088 and USER unsavedreviewwindow untouched; noHMR/user-tab inspection.
+Main target via isolatedtaskbranch normalHEAD:main, oldwatchedcheckout disk intentional. No new schema/engine/audit.
+Again literalprobe sent byworker is a protocol violation; never diagnosticPOST toResults. Complete currentbody+
+actualsource reviewed; no rootBridge interaction/transportrepair task. Requiredcriticalvisualcheck/screens notrun.
+Known230emptykey/inflight tocloseinexistingcoordinator; rootcontextstrictness/paymentclear needed. Historic labelmap
+already repaired, do not re-add that resolved gap. PreserveTB185paused/defaultOFF/PendingAllocation/225-R1lostLOCAL.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Prior recovery/history follows.
+
 # CURRENT — 237 PARTIAL: coupon-refusal + mandatory goods echo + real captured selection wiring; NO live trial —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-CONNECTED-PRACTICAL-TRIAL-237/{TASK.md,RESULT.md}.
