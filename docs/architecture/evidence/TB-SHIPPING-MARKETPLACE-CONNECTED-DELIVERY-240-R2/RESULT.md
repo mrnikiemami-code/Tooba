@@ -141,9 +141,13 @@ payment's persisted key is exactly `start-payment:payment:<the camelCase key sen
 - No mixed-owner Order/manual-Pending (blocked by the index above), no 3-group payment-draft/StartPayment.
 - No coupon fact (the group context they would be measured on never persisted).
 - No Order-only historical read of mixed evidence, no foreign-buyer denial fact for it.
-- No FE3102 build, no browser/desktop/390/360 screenshots and **no usable URL handoff**: the shipping page can render
-  the three priced owner cards, but its save would hit the same 500, so handing off a payment window would be
-  misleading. No API-only handoff is claimed as a usable trial.
+- No browser/desktop/390/360 screenshots and **no usable URL handoff**. A bounded attempt WAS made: a task-only
+  Next dev server (`TOOBA_HOST_ORIGIN=http://127.0.0.1:5190`, port 3102) reached `Ready`, and a fresh task-owned
+  Chrome profile on its own CDP port was launched to log in through the existing BFF and open
+  `/fa/shipping?cartId=…`; the CDP session stalled before any capture, so the attempt was abandoned inside the
+  deadline, both processes were stopped and port 3102/9339 are closed. No screenshot was produced, nothing is
+  claimed from it, and the shipping page's save would in any case hit the same 500 (see §B), so handing off a
+  payment window would be misleading. No API-only handoff is claimed as a usable trial.
 - Geography outcome handling: implemented (non-Completed commissioning now throws at startup and the seed validates
   the existing shape BEFORE staging, so nothing stays eligible for a later SaveChanges) — verified by build + the
   existing seam tests only; NOT re-exercised against a contradictory live row.
@@ -160,3 +164,11 @@ never enumerated, read, automated, reloaded or closed. Checked-in gates stay OFF
 PendingAllocation. 231/232 shared NOT APPLIED and the stale EF snapshot gap retained. Known 238-unknown-22001,
 230 empty-key refresh/in-flight, cross-owner label/decoder, Offer API proof, 227 mobile empty-note and the unrecovered
 225-R1 user LOCAL tab edits remain disclosed and untouched.
+
+## F — Cumulative deadline (ledger, no fresh clock)
+
+Original 240 minute contract: 53 + 70 + 62 = 185 focused minutes consumed before intervening work, 55 remaining.
+This task (claimed 2026-10-28T09:28:29Z, result written 2026-10-28T~09:59Z) consumed ~31 focused minutes of that
+remaining 55 — inside the cumulative envelope, NOT a fresh budget and NOT a new estimate.
+Correction budget: EXCEEDED (several in-task corrections: seller commissioning shape, planner collapse key, row
+resolution, payment conflict path, plus one abandoned UI attempt). Recorded, not waived.
