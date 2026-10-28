@@ -9,9 +9,9 @@ no amended/forced history).
 ## 0 — Deadline ledger (not reset)
 
 Original 240-minute commitment was **MISSED** before this slice (~243 focused minutes across 240/R1/R2/R3).
-This recovery segment ran 14:05:38Z-task-clock → ≈14:44 (+03:30) ≈ **39 min** against the 30-minute focusbox and
-the 10/25 checkpoints, i.e. the focusbox was **exceeded by ≈9 min** and is recorded as such. Cumulative actual
-focused time ≈ **282 min**. No new delivery promise and no automatic 241.
+This recovery segment ran from the Bridge claim 10:38:34Z → result ≈10:52Z ≈ **43 min** against the 30-minute focusbox and
+the 10/25 checkpoints, i.e. the focusbox was **exceeded by ≈13 min** and is recorded as such. Cumulative actual
+focused time ≈ **286 min**. No new delivery promise and no automatic 241.
 
 ## 1 — USABLE AUTHENTICATED SURFACE (the actual user-visible stage)
 

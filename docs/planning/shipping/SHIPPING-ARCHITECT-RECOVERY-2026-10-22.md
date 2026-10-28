@@ -1,9 +1,9 @@
-﻿# CURRENT — 240-R4 EXECUTED PARTIAL: usable authorized order page + real coupon order; UI double-click/form/retry remain — 2026-10-28
+# CURRENT — 240-R4 EXECUTED PARTIAL: usable authorized order page + real coupon order; UI double-click/form/retry remain — 2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/{RESULT.md,RECEIPTS.md}.
 Status PARTIAL, NOT accepted, no userVisualACCEPT, no activation, no PSP/paid claim. Base3fa823d33148f6c9cde0c3df12b216df17593f62.
-DEADLINE: original240M END MISSED (~243 focused before this slice) and this recovery segment ran ≈39min vs the 30min
-focusbox (exceeded ≈9, cumulative ≈282). No clock reset/new promise/automatic241.
+DEADLINE: original240M END MISSED (~243 focused before this slice) and this recovery segment ran ≈43min (claim10:38:34Z → result≈10:52Z) vs the 30min
+focusbox (exceeded ≈13, cumulative ≈286). No clock reset/new promise/automatic241.
 USABLE URL: http://127.0.0.1:3102/fa/payment?checkoutId=01a18209-cd78-7000-a9b6-02dadf377e55 in the task profile
 (D:\temp\tb240r4-review-chrome, CDP9342) with EMPTY local committed/payment cache: real buyerBFF session,
 GET checkout200 WITHOUT cartId locator, wallet-quote200 with the server-returned cartId, pending-payments200,
