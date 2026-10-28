@@ -187,9 +187,13 @@ Docs: this RESULT, a correction appended to 235-R1/RESULT.md, and the three reco
 
 - **§5.3 not fully closed:** Promotion/provider **failure propagation** and **caller cancellation** on the shared
   coupon path were not re-proven in this slice (the planner's dependency-failure propagation is unchanged code
-  already covered by 229-R1; a cancelled-token fact for the coupon path was not added). An invalid/rejected coupon
-  is surfaced by the existing Promotion/checkout policy, but no new fact asserts a specific Promotion rejection
-  code end-to-end.
+  already covered by 229-R1; a cancelled-token fact for the coupon path was not added). **CORRECTED by TB-237
+  (2026-10-28):** the claim that an invalid/rejected coupon "is surfaced by the existing Promotion/checkout
+  policy" was **false for this quote path**. `CheckoutDirectory` never inspected `promotion.RejectionReasons`,
+  so a supplied coupon that Promotion never applied (e.g. `COUPON_NOT_APPLICABLE` with zero discount, or an
+  unrelated automatic promotion) could complete as if accepted. TB-237 added the whole-cart
+  `checkout.coupon.not_applicable` refusal on that same path (`Applied[].CouponCode` evidence, partial
+  applicability still lawful).
 - The whole proof is **model-bound**: no HTTP listener, no live storefront/browser, no PSP/payment, no physical
   per-tenant DB claim. Endpoint forwarding is proven by invoking the real delegate with a capturing sender, not by
   a network round trip.

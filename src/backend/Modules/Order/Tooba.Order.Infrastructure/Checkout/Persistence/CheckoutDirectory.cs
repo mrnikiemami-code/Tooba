@@ -27,6 +27,7 @@ using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
+using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;

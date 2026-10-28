@@ -1,4 +1,33 @@
-# CURRENT — 236 valid coupon mechanics retained; issued237 CONNECT EXISTING UI + PRACTICAL LOCAL TRIAL —2026-10-28
+﻿# CURRENT — 237 PARTIAL: coupon-refusal + mandatory goods echo + real captured selection wiring; NO live trial —2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-STOREFRONT-CONNECTED-PRACTICAL-TRIAL-237/{TASK.md,RESULT.md}.
+Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation, no usable URL, no account handoff.
+Base(issue)f9b873eee, isolated worktree task237, original watched checkout6d820e9ae intentionally untouched/behind.
+A: `AssertGoodsEcho` now REQUIRES canonical non-negative decimal WIRE text per selected group ("0" lawful);
+missing/blank/grouped/signed/exponent ⇒ `storefront.captured_selection.intent_invalid` BEFORE mutation; real
+mismatch ⇒ `conflict`; AllowDecimalPoint only; server composed goods stay authority.
+B: `CheckoutDirectory` quote path accumulates WHOLE-cart `promotion.Applied[].CouponCode` evidence; nonblank intent
+with zero applied coupon promotion ⇒ `checkout.coupon.not_applicable` (409, fa/en). Partial applicability lawful;
+NO Order-side coupon text matching, no amount==0 inference, no new engine/duplicate evaluator. 236/RESULT corrected
+(it had wrongly claimed rejection handling existed).
+C(frontend, existing page/components only): decoder keeps exact confirmationSnapshot/SourceRevision/
+SelectionVersion/AreaGroupId/RateRowId + root selectionRevision through `asExactTokenOrNull`(no String/number
+coercion); captured cards choose method+allowed date per SERVER GroupKey (method key = service/option WITHIN group);
+selection hoisted to page; new `storefront-shipping-captured-selection.ts` builds the intent only from the successful
+response (exact goods text, all echoes, that date's own interval, real lineIds) else null; PUT sends
+capturedGroups+expectedSelectionRevision+same coupon and never mixes legacy shippingGroups; context key
+(destination·coupon·cartVersion·stored revision) resets confirmations. Gates stay checked-in OFF.
+PROOF: `tsc --noEmit` clean; new captured-selection test 6/6; Order.Infrastructure build 0 errors.
+NOT DONE: NO live buyer trial/no migration plan OR apply/no taskHost/no taskFE/no DEV data/no browser or HTTP
+read→save→preview→StartPayment/no screenshots/no SingleStore or Marketplace runtime/no URL. Payment page
+StartPayment not exercised. `StorefrontFullOwnerVerticalTests.SelectionRequest` still omits ExpectedGoodsAmount ⇒
+expected red under A; not updated and that class NOT run (no disposable PostgreSQL). No test:critical-storefront
+visual run. Elapsed ≈95min vs HARD45 = NONCOMPLIANT, recorded.
+Preserved: user review window/previewONcount7/live HostFE/data untouched; 231/232/236 sharedNOTAPPLIED; stale EF
+snapshot; TB185 paused/defaultOFF/PendingAllocation. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+Older TOPs are historical.
+
+
 
 Active TB-SHIPPING-STOREFRONT-CONNECTED-PRACTICAL-TRIAL-237. Read236/ARCHITECT-REVIEW.md and237/TASK.md.
 Root reviewed6d820e9/source36c44: samecoupon217/selection/finalgoods confirmation and2nullable draft scalars

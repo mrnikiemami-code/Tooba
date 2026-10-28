@@ -357,26 +357,34 @@ public sealed class StorefrontCapturedSelectionWriter(
     }
 
     /// <summary>
-    /// بازتاب مبلغ کالای دیده‌شدهٔ همان گروه (TB-236) فقط <b>مقایسه</b> می‌شود: اگر کلاینت مقداری
-    /// فرستاده باشد و با مبلغ authoritative همین ترکیب نخواند، وضعیت بین خواندن و نوشتن عوض شده و
-    /// انتخاب کهنه رد می‌شود. نبودِ مقدار هرگز «صفر» نیست و هیچ مبلغی از کلاینت ذخیره نمی‌شود.
+    /// بازتاب مبلغ کالای دیده‌شدهٔ همان گروه (TB-236/TB-237) برای <b>هر</b> گروه انتخاب‌شده الزامی است و
+    /// فقط با متن اعشاری متعارف (ارقام، بدون گروه‌بندی/علامت/نما/فاصله) پذیرفته می‌شود؛ «0» صریح قانونی
+    /// است. نبود/تهی/بدشکل یعنی قصد ناقص است و پیش از هر نقل‌قول/تغییری رد می‌شود؛ مغایرت واقعی یعنی
+    /// وضعیت بین خواندن و نوشتن عوض شده و <c>conflict</c> است. هیچ مبلغی از کلاینت ذخیره نمی‌شود.
     /// </summary>
     private static void AssertGoodsEcho(
         StorefrontCapturedGroupSelection intent,
         StorefrontCapturedGroupProjection composedGroup)
     {
-        var echo = (intent.ExpectedGoodsAmount ?? string.Empty).Trim();
-        if (echo.Length == 0)
+        var echo = intent.ExpectedGoodsAmount;
+        if (echo is null || !ExactNonNegativeDecimal.IsMatch(echo))
         {
-            return;
+            throw Refuse(StorefrontCapturedSelectionReasons.IntentInvalid);
         }
 
-        if (!decimal.TryParse(echo, NumberStyles.Number, CultureInfo.InvariantCulture, out var expected)
+        if (!decimal.TryParse(echo, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var expected)
             || expected != composedGroup.FinalGoodsAmountAfterDiscountAndTax)
         {
             throw Refuse(StorefrontCapturedSelectionReasons.Conflict);
         }
     }
+
+    /// <summary>
+    /// متن اعشاری متعارف و غیرمنفی: فقط ارقام و حداکثر یک نقطهٔ اعشار (بدون گروه‌بندی، علامت، نما،
+    /// فاصله یا رشتهٔ تهی). همان شکل سیمی که سرور خودش تولید می‌کند.
+    /// </summary>
+    private static readonly System.Text.RegularExpressions.Regex ExactNonNegativeDecimal =
+        new(@"^\d+(\.\d+)?$", System.Text.RegularExpressions.RegexOptions.CultureInvariant | System.Text.RegularExpressions.RegexOptions.Compiled);
 
     /// <summary>مقصد از نشانی آماده‌شدهٔ سمت سرور resolve می‌شود (بدون tuple دلخواه مرورگر).</summary>
     private async Task<DestinationIdentifiers> ResolvePreparedDestinationAsync(

@@ -78,6 +78,32 @@ export interface StorefrontShippingDraft {
   customerNote: string | null;
   /** گروه‌های ذخیره‌شدهٔ پایدار؛ در سبد تک‌گروهی/قدیمی خالی است. */
   shippingGroups: StorefrontShippingGroupView[];
+  /**
+   * TB-237: نسخهٔ واقعی ریشهٔ انتخاب برای CAS بعدی، به‌صورت متن دقیق (بدون `Number`). `null` یعنی
+   * هیچ انتخاب capture‌شده‌ای ذخیره نشده است.
+   */
+  selectionRevision: string | null;
+}
+
+/**
+ * TB-237: یک گروه capture‌شده برای ثبت. کلید/بازتاب‌ها فقط «مکان‌یابی» همان چیزی است که مشتری دید؛
+ * هیچ مالک/مبلغ/صلاحیت/تخفیفی از کلاینت پذیرفته نمی‌شود. `expectedGoodsAmount` برای هر گروه الزامی است
+ * (متن اعشاری متعارف، `"0"` صریح قانونی) و سرور آن را با مبلغ authoritative خودش مقایسه می‌کند.
+ */
+export interface StorefrontCapturedGroupSelectionInput {
+  groupKey: string;
+  shippingMethodCode: string;
+  serviceCode: string;
+  optionCode: string | null;
+  cartLineIds: string[];
+  selectedDeliveryDate: string;
+  selectedDeliveryTimeWindow: string;
+  expectedGoodsAmount: string;
+  confirmationSnapshotId: string | null;
+  confirmationSourceRevision: string | null;
+  confirmationSelectionVersion: string | null;
+  confirmationAreaGroupId: string | null;
+  confirmationRateRowId: string | null;
 }
 
 export interface StorefrontShippingGroupSelectionInput {
@@ -182,6 +208,15 @@ export interface StorefrontCapturedPreviewMethod {
   earliestEligibleDate: string | null;
   availableDates: StorefrontCapturedDateSlot[];
   unavailableReason: string | null;
+  /**
+   * TB-237: هویت تأیید همین روش از همان پاسخ موفق. همه **متن دقیق** سرور هستند و هرگز از `Number`
+   * عبور نمی‌کنند؛ فقط بازتاب «همان چیزی که دیدم» برای ثبت است، نه مبنای قیمت/مالکیت.
+   */
+  confirmationSnapshotId: string | null;
+  confirmationSourceRevision: string | null;
+  confirmationSelectionVersion: string | null;
+  confirmationAreaGroupId: string | null;
+  confirmationRateRowId: string | null;
 }
 
 /** TB-229-R1: یک گروه ارسال capture‌شده با روش‌ها و تقویم خودش. */
@@ -208,6 +243,11 @@ export interface StorefrontCapturedPreview {
   currency: string | null;
   groups: StorefrontCapturedPreviewGroup[];
   unavailableReason: string | null;
+  /**
+   * TB-237: نسخهٔ انتخاب ریشه به‌صورت متن دقیق برای CAS بعدی؛ `null` یعنی هیچ انتخاب ثبت‌شده‌ای نیست
+   * (نخستین ذخیره «0» می‌فرستد). هرگز با `Number` خوانده نمی‌شود.
+   */
+  selectionRevision: string | null;
 }
 
 export interface StorefrontShippingSelectionInput {
@@ -229,6 +269,15 @@ export interface StorefrontShippingSelectionInput {
    * واجد شرایط اعتبارسنجی می‌کند. در سبد تک‌گروهی همان `shippingMethodCode` قدیمی کافی است.
    */
   shippingGroups?: StorefrontShippingGroupSelectionInput[] | null;
+  /**
+   * TB-237: انتخاب capture‌شدهٔ گروه‌ها؛ همیشه همراه `expectedSelectionRevision` و کوپنِ همان context.
+   * هرگز با `shippingGroups` قدیمی مخلوط نمی‌شود.
+   */
+  capturedGroups?: StorefrontCapturedGroupSelectionInput[] | null;
+  /** نسخهٔ انتخاب ریشه به‌صورت متن دقیق؛ «0» یعنی نخستین ذخیره (نبودِ انتخاب قبلی). */
+  expectedSelectionRevision?: string | null;
+  /** TB-237: قصد کوپنِ همین درخواست؛ تهی/فاصله یعنی بدون کوپن. */
+  couponCode?: string | null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -358,6 +407,11 @@ function mapDraft(value: unknown): StorefrontShippingDraft | null {
     shippingGroups: Array.isArray(groupsRaw)
       ? groupsRaw.map(mapGroup).filter((g): g is StorefrontShippingGroupView => g !== null)
       : [],
+    /**
+     * TB-237: نسخهٔ انتخابِ **ذخیره‌شده** به‌صورت متن دقیق؛ همان مقداری که CAS بعدی باید بفرستد.
+     * نبود یعنی صفر/هیچ انتخاب capture‌شده‌ای ثبت نشده است.
+     */
+    selectionRevision: asExactTokenOrNull(prop(item, "selectionRevision", "SelectionRevision")),
   };
 }
 
@@ -483,7 +537,7 @@ function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
 
   const enabled = prop(raw, "enabled", "Enabled");
   if (enabled === false) {
-    return { state: "ok", enabled: false, currency: null, groups: [], unavailableReason: null };
+    return { state: "ok", enabled: false, currency: null, groups: [], unavailableReason: null, selectionRevision: null };
   }
   if (enabled !== true) return untrustedPreview();
 
@@ -576,6 +630,11 @@ function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
         earliestEligibleDate: asIsoDateOrNull(prop(method, "earliestEligibleDate", "EarliestEligibleDate")),
         availableDates,
         unavailableReason: asNonEmptyString(prop(method, "unavailableReason", "UnavailableReason")),
+        confirmationSnapshotId: asExactTokenOrNull(prop(method, "confirmationSnapshotId", "ConfirmationSnapshotId")),
+        confirmationSourceRevision: asExactTokenOrNull(prop(method, "confirmationSourceRevision", "ConfirmationSourceRevision")),
+        confirmationSelectionVersion: asExactTokenOrNull(prop(method, "confirmationSelectionVersion", "ConfirmationSelectionVersion")),
+        confirmationAreaGroupId: asExactTokenOrNull(prop(method, "confirmationAreaGroupId", "ConfirmationAreaGroupId")),
+        confirmationRateRowId: asExactTokenOrNull(prop(method, "confirmationRateRowId", "ConfirmationRateRowId")),
       });
     }
 
@@ -596,6 +655,7 @@ function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
     currency,
     groups,
     unavailableReason: asNonEmptyString(prop(raw, "noticeReason", "NoticeReason")),
+    selectionRevision: asExactTokenOrNull(prop(raw, "selectionRevision", "SelectionRevision")),
   };
 }
 
@@ -621,6 +681,17 @@ function asNonEmptyString(value: unknown): string | null {
   return text.length > 0 ? text : null;
 }
 
+/**
+ * TB-237: توکن دقیق سرور (نسخه/شناسه/بازتاب) فقط وقتی **متن** باشد پذیرفته می‌شود. عدد JSON ممکن
+ * است قبلاً گِرد شده باشد و `String()` یک `[object Object]` می‌سازد؛ هر دو نامعتبرند و `null`
+ * («نبود») می‌دهند. هیچ‌گاه صفر/رشتهٔ ساختگی جای مقدار غایب نمی‌نشیند.
+ */
+function asExactTokenOrNull(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  return text.length > 0 ? text : null;
+}
+
 function asIsoDateOrNull(value: unknown): string | null {
   const text = asNonEmptyString(value);
   return text && ISO_DATE.test(text) ? text : null;
@@ -633,6 +704,7 @@ function untrustedPreview(): StorefrontCapturedPreview {
     currency: null,
     groups: [],
     unavailableReason: "storefront.captured_preview.untrusted",
+    selectionRevision: null,
   };
 }
 
@@ -660,6 +732,25 @@ export function toCustomerShippingMessage(cause: unknown, locale: Locale = "fa")
         return fa ? "سبد خرید منقضی شده است. لطفاً دوباره از سبد شروع کنید." : "The cart has expired. Please restart from the cart.";
       case "checkout.cart.empty":
         return fa ? "سبد خرید خالی است." : "The cart is empty.";
+      // TB-237: کوپن در هیچ خطی از سبد پذیرفته نشد — امتناع صریح، نه «پذیرفته با تخفیف صفر».
+      case "checkout.coupon.not_applicable":
+        return fa
+          ? "کد تخفیف برای اقلام این سبد قابل اعمال نیست. کد را بررسی کنید یا بدون آن ادامه دهید."
+          : "This coupon code cannot be applied to the items in this cart. Check the code or continue without it.";
+      case "storefront.captured_selection.coupon_unavailable":
+        return fa
+          ? "ثبت انتخاب ارسال همراه با کد تخفیف در این نسخه پشتیبانی نمی‌شود."
+          : "Saving a shipping selection together with a coupon is not supported in this version.";
+      case "storefront.captured_selection.conflict":
+        return fa
+          ? "شرایط ارسال یا مبلغ کالا تغییر کرده است. لطفاً انتخاب‌های خود را دوباره تأیید کنید."
+          : "Shipping conditions or goods amount changed. Please confirm your choices again.";
+      case "storefront.captured_selection.date_unavailable":
+        return fa ? "تاریخ انتخاب‌شده برای این روش مجاز نیست." : "The selected date is not available for this method.";
+      case "storefront.captured_selection.destination_unverified":
+        return fa ? "نشانی انتخاب‌شده قابل تأیید نیست؛ مقصد را دوباره انتخاب کنید." : "The destination could not be verified. Choose it again.";
+      case "storefront.captured_selection.intent_invalid":
+        return fa ? "انتخاب ارسال ناقص است؛ هر گروه را دوباره تأیید کنید." : "The shipping selection is incomplete. Confirm every group again.";
       default:
         return toCustomerCartMessage(cause, locale);
     }
@@ -680,6 +771,8 @@ export async function loadShippingProjection(input: {
     cityId?: string | null;
   } | null;
   methodCode?: string;
+  /** TB-237: همان قصد کوپنِ همین context؛ فاصله/تهی یعنی «بدون کوپن» (نه مقدار ذخیره‌شده). */
+  couponCode?: string | null;
 }): Promise<StorefrontShippingProjection> {
   const response = await fetch("/v1/storefront/shipping/projection", {
     method: "POST",
@@ -701,6 +794,7 @@ export async function loadShippingProjection(input: {
           }
         : null,
       methodCode: input.methodCode || null,
+      couponCode: input.couponCode?.trim() ? input.couponCode.trim() : null,
       language: "fa",
     }),
   });
@@ -751,6 +845,27 @@ export async function saveShippingSelection(
             selectedDeliveryTimeWindow: group.selectedDeliveryTimeWindow || null,
           }))
         : null,
+      // TB-237: انتخاب capture‌شدهٔ گروه‌ها فقط با بازتاب دقیق همان پاسخ موفق؛ هرگز مخلوط با
+      // `shippingGroups` قدیمی، و همیشه با نسخهٔ انتخاب و کوپنِ همان context.
+      capturedGroups: selection.capturedGroups && selection.capturedGroups.length > 0
+        ? selection.capturedGroups.map((group) => ({
+            groupKey: group.groupKey,
+            shippingMethodCode: group.shippingMethodCode,
+            serviceCode: group.serviceCode,
+            optionCode: group.optionCode,
+            cartLineIds: group.cartLineIds,
+            selectedDeliveryDate: group.selectedDeliveryDate,
+            selectedDeliveryTimeWindow: group.selectedDeliveryTimeWindow,
+            expectedGoodsAmount: group.expectedGoodsAmount,
+            confirmationSnapshotId: group.confirmationSnapshotId,
+            confirmationSourceRevision: group.confirmationSourceRevision,
+            confirmationSelectionVersion: group.confirmationSelectionVersion,
+            confirmationAreaGroupId: group.confirmationAreaGroupId,
+            confirmationRateRowId: group.confirmationRateRowId,
+          }))
+        : null,
+      expectedSelectionRevision: selection.expectedSelectionRevision ?? null,
+      couponCode: selection.couponCode?.trim() ? selection.couponCode.trim() : null,
     }),
   });
   if (!response.ok) {

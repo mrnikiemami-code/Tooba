@@ -24,6 +24,7 @@ import {
   type StorefrontShippingMethod,
   type StorefrontShippingProjection,
 } from "./storefront-shipping-api.ts";
+import { readStoredCouponCode } from "./storefront-checkout-api.ts";
 import {
   buildShippingItemGroups,
   isItemGroupingComplete,
@@ -69,7 +70,12 @@ import {
   setGroupSelection,
   type StorefrontShippingGroupSelection,
 } from "./storefront-shipping-group-schedule.ts";
-import { StorefrontShippingGroupCards, type ShippingGroupCard, type UnassignedSellerBlock } from "./storefront-shipping-group-cards.tsx";
+import { StorefrontShippingGroupCards, type ShippingGroupCard, type StorefrontCapturedGroupChoice, type UnassignedSellerBlock } from "./storefront-shipping-group-cards.tsx";
+import {
+  buildCapturedSelectionIntent,
+  capturedSelectionComplete,
+  capturedSelectionContextKey,
+} from "./storefront-shipping-captured-selection.ts";
 import { StorefrontShippingSingleGroupSection } from "./storefront-shipping-single-group-section.tsx";
 import { resolveShippingUnavailableNotices } from "./storefront-shipping-unavailable-methods.ts";
 import {
@@ -112,6 +118,19 @@ export function StorefrontShopeivaShipping() {
   const [cartLines, setCartLines] = useState<StorefrontCartLine[]>([]);
   /** (150) انتخاب تاریخ/بازهٔ **هر گروه جداگانه**؛ کلید = کلید پایدار گروه. */
   const [groupSelections, setGroupSelections] = useState<Record<string, StorefrontShippingGroupSelection>>({});
+  /**
+   * TB-237: انتخاب روش + تاریخِ مجاز هر گروه capture‌شده، کلید = GroupKey سرور. روش با کلید متعارف
+   * سرویس/گزینه **در همان گروه** ذخیره می‌شود تا دو مالک با همان Binding/ترجمه مستقل بمانند.
+   */
+  const [capturedChoices, setCapturedChoices] = useState<Record<string, StorefrontCapturedGroupChoice>>({});
+  /**
+   * TB-237: قصد کوپنِ همین context. پاک‌کردن صریح در سبد، `null` ذخیره می‌کند و همین‌جا هم «بدون
+   * کوپن» است؛ هیچ `value || stored` fallback وجود ندارد.
+   */
+  const couponIntent = readStoredCouponCode();
+  /** همان قصد کوپن برای فراخوانی‌های async طولانی (بدون تغییر هویت در طول یک تازه‌سازی). */
+  const readStoredCouponCodeRef = useRef<string | null>(couponIntent);
+  readStoredCouponCodeRef.current = couponIntent;
   const [deliveryDate, setDeliveryDate] = useState<string>("");
   const [deliveryTime, setDeliveryTime] = useState<string>("");
   const [notes, setNotes] = useState("");
@@ -181,6 +200,9 @@ export function StorefrontShopeivaShipping() {
         cityName: city || undefined,
         destination: destination ?? null,
         methodCode: method || undefined,
+        // TB-237: همان قصد کوپنِ همین context در خواندن هم فرستاده می‌شود تا مبلغ کالا/گروه‌ها با
+        // همان تخفیفی که بعداً ثبت می‌شود هم‌خوان باشد.
+        couponCode: readStoredCouponCodeRef.current,
       });
       if (!projectionGeneration.current.isCurrent(sequence)) return;
       setCartLines(cart.lines);
@@ -385,8 +407,26 @@ export function StorefrontShopeivaShipping() {
     };
   }, [projection, destinationPreviewMode]);
 
-  const destinationContext = useRef({ province: "", city: "", method: "" });
-  destinationContext.current = {
+  /**
+   * TB-237: هر تغییر context (مقصد/کوپن/نسخهٔ سبد/مبدأ پاسخ) تأییدهای قبلی را باطل می‌کند تا هیچ
+   * انتخاب کهنه‌ای با مبلغ/تاریخ تازه ثبت نشود؛ مشتری باید دوباره تأیید کند (بدون بازنویسی خودکار).
+   */
+  const capturedContextKey = capturedSelectionContextKey({
+    destinationKey,
+    couponCode: couponIntent,
+    cartVersion: projection?.cartVersion ?? 0,
+    // نسخهٔ پایدارِ انتخابِ ذخیره‌شده، خودش بخشی از context است؛ تغییر آن یعنی تأیید قبلی معتبر نیست.
+    snapshotId: null,
+    selectionVersion: projection?.capturedPreview?.selectionRevision ?? projection?.draft?.selectionRevision ?? null,
+  });
+  const capturedContextKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (capturedContextKeyRef.current === capturedContextKey) return;
+    capturedContextKeyRef.current = capturedContextKey;
+    setCapturedChoices((prev) => (Object.keys(prev).length === 0 ? prev : {}));
+  }, [capturedContextKey]);
+
+  const destinationContext = useRef({ province: "", city: "", method: "" });  destinationContext.current = {
     province: address.provinceName,
     city: address.cityName,
     method: methodCode ?? "",
@@ -560,13 +600,16 @@ export function StorefrontShopeivaShipping() {
     Boolean(address.cityName.trim()) &&
     Boolean(address.postalAddress.trim()) &&
     Boolean(address.postalCode.trim()) &&
-    (isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode)) &&
-    // سبد چندگروهی: هر گروه باید تاریخ و بازهٔ **خودش** را از پاسخ سرور همان گروه داشته باشد.
-    (isGroupedCart
-      ? allGroupSchedulesComplete({ schedules: groupSchedules, selections: groupSelections })
-      : Boolean(deliveryDate) && Boolean(deliveryTime)
-        && isShippingDateHorizonComplete(singleGroupHorizon, deliveryDate, deliveryTime)) &&
-    (projection?.methods.length ?? 0) > 0;
+    // TB-237: مسیر capture‌شده اعتبار خودش را دارد: هر گروه باید روش + تاریخِ همان روش را داشته باشد
+    // و مبلغ کالای همان گروه از همان پاسخ موفق موجود باشد؛ هیچ روش/تاریخ/مبلغی حدس زده نمی‌شود.
+    (capturedPreviewActive
+      ? capturedSelectionComplete(projection?.capturedPreview ?? null, capturedChoices)
+      : (isGroupedCart ? allGroupsHaveMethod : Boolean(methodCode))
+        && (isGroupedCart
+          ? allGroupSchedulesComplete({ schedules: groupSchedules, selections: groupSelections })
+          : Boolean(deliveryDate) && Boolean(deliveryTime)
+            && isShippingDateHorizonComplete(singleGroupHorizon, deliveryDate, deliveryTime))) &&
+    (capturedPreviewActive ? true : (projection?.methods.length ?? 0) > 0);
 
   function selectSaved(row: CustomerAddress) {
     const mapped = shippingFromCustomerAddress(row);
@@ -598,6 +641,29 @@ export function StorefrontShopeivaShipping() {
     }
   }
 
+  /**
+   * TB-237: انتخاب یک روش capture‌شده. تاریخ پیش‌فرض همان روش (زودترین مجاز) فقط وقتی انتخاب می‌شود
+   * که قبلاً تاریخی برای همین روش نبود؛ تغییر روش تاریخِ روش قبلی را حمل نمی‌کند.
+   */
+  const selectCapturedMethod = useCallback((groupKey: string, methodKey: string, date: string | null) => {
+    setCapturedChoices((prev) => {
+      const current = prev[groupKey];
+      const sameMethod = current?.methodKey === methodKey;
+      const separator = methodKey.indexOf("\u001f");
+      const serviceCode = separator >= 0 ? methodKey.slice(0, separator) : methodKey;
+      const optionCode = separator >= 0 ? methodKey.slice(separator + 1) : "";
+      return {
+        ...prev,
+        [groupKey]: {
+          methodKey,
+          serviceCode,
+          optionCode: optionCode.length > 0 ? optionCode : null,
+          date: date ?? (sameMethod ? current?.date ?? null : null),
+        },
+      };
+    });
+  }, []);
+
   async function persistAndContinue() {
     if (!projection || !isValid) return;
     const requestedGroups: StorefrontShippingGroupSelectionInput[] = isGroupedCart
@@ -613,11 +679,27 @@ export function StorefrontShopeivaShipping() {
         }))
       : [];
     const primaryMethodCode = isGroupedCart ? requestedGroups[0]?.shippingMethodCode ?? "" : methodCode ?? "";
-    if (!primaryMethodCode) return;
     /** (150) تنها گروهِ سبد: همان shorthand قدیمی تک‌گروهی معتبر است (سرور فقط >۱ گروه را چندگروهی می‌داند). */
     const onlyGroupSelection = groupSelectionsByMethod.length === 1
       ? groupSelections[groupSelectionsByMethod[0].key]
       : undefined;
+    /**
+     * TB-237: قصد capture‌شده فقط از همان پاسخ موفق ساخته می‌شود: بازتاب دقیق snapshot/مبدأ/نسخه/ناحیه/
+     * ردیف + مبلغ کالای همان گروه + تاریخ مجاز همان روش. هیچ روش/تاریخ/مبلغی حدس زده نمی‌شود و هیچ
+     * shorthand قدیمی مخلوط نمی‌شود. نبود هر بازتاب یعنی قصد ناقص ⇒ ارسال نمی‌شود.
+     */
+    const capturedGroups = capturedPreviewActive
+      ? buildCapturedSelectionIntent(projection.capturedPreview, capturedChoices)
+      : null;
+    if (capturedPreviewActive && capturedGroups === null) {
+      setError(locale === "fa"
+        ? "برای هر گروه یک روش و تاریخ معتبر انتخاب کنید و دوباره تلاش کنید."
+        : "Choose a valid method and date for every group, then try again.");
+      return;
+    }
+    const capturedPrimary = capturedGroups?.[0];
+    const effectiveMethodCode = capturedPrimary?.shippingMethodCode ?? primaryMethodCode;
+    if (!effectiveMethodCode) return;
     setBusy(true);
     setError(null);
     setLimitCode(null);
@@ -632,13 +714,20 @@ export function StorefrontShopeivaShipping() {
         postalAddress: address.postalAddress,
         postalCode: address.postalCode,
         savedAddressId,
-        shippingMethodCode: primaryMethodCode,
+        shippingMethodCode: effectiveMethodCode,
         // (150) مقدار اسکالری فقط برای سازگاری مسیر تک‌گروهی ارسال می‌شود؛ در سبد چندگروهی هیچ
         // تاریخ سراسری معتبر نیست و هر گروه زمان‌بندی خودش را جدا می‌فرستد.
         selectedDeliveryDate: isGroupedCart ? onlyGroupSelection?.deliveryDate ?? "" : deliveryDate,
         selectedDeliveryTimeWindow: isGroupedCart ? onlyGroupSelection?.deliveryTime ?? "" : deliveryTime,
         customerNote: notes,
-        shippingGroups: isGroupedCart ? requestedGroups : null,
+        shippingGroups: capturedPreviewActive ? null : (isGroupedCart ? requestedGroups : null),
+        capturedGroups,
+        // نسخهٔ انتخاب ریشه: از همان پاسخ موفق، وگرنه نسخهٔ ذخیره‌شدهٔ پیش‌نویس، وگرنه «0» (نبود).
+        expectedSelectionRevision: capturedPreviewActive
+          ? projection.capturedPreview?.selectionRevision ?? projection.draft?.selectionRevision ?? "0"
+          : null,
+        // همان قصد کوپنِ همین context؛ پاک‌کردن صریح یعنی «بدون کوپن»، نه fallback به مقدار ذخیره‌شده.
+        couponCode: couponIntent,
       });
       // ارسال فقط «پیش‌نویس» می‌شود و سبد Active می‌ماند. commit/رزرو/ساخت سفارش فقط با کلیک نهایی
       // پرداخت در صفحهٔ پرداخت رخ می‌دهد؛ اینجا هیچ درخواست commit ارسال نمی‌شود.
@@ -762,6 +851,8 @@ export function StorefrontShopeivaShipping() {
    schedules={groupSchedules}
    selections={groupSelections}
                   capturedPreview={capturedPreviewForCards}
+                  capturedChoices={capturedChoices}
+                  onSelectCapturedMethod={selectCapturedMethod}
                   destinationRefreshState={capturedPreviewActive ? destinationPreviewMode : null}
                   onRetryDestination={retryDestinationRefresh}
                   onSelectMethod={(lineId, code) => setLineMethodByLine((prev) => ({ ...prev, [lineId]: code }))}

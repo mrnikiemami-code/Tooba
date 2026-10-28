@@ -63,6 +63,9 @@
   <data name="checkout.cart.empty" xml:space="preserve">
     <value>سبد خرید خالی است.</value>
   </data>
+  <data name="checkout.coupon.not_applicable" xml:space="preserve">
+    <value>کد تخفیف برای اقلام این سبد قابل اعمال نیست. کد را بررسی کنید یا بدون آن ادامه دهید.</value>
+  </data>
   <data name="checkout.version.conflict" xml:space="preserve">
     <value>سبد هم‌زمان به‌روز شده است. صفحه را تازه کنید.</value>
   </data>

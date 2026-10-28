@@ -60,6 +60,9 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "سبد خرید پیدا نشد."),
         D(StorefrontOrderErrors.CheckoutMultiCurrencyNotSupported, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "در حال حاضر پرداخت سبدی که اقلام آن ارزهای متفاوت دارند پشتیبانی نمی‌شود."),
+        // TB-237: کد کوپن در هیچ خطی از سبد پذیرفته نشد (شاهد: خود Promotion) — 409 و قابل اصلاح توسط کاربر.
+        D(StorefrontOrderErrors.CouponNotApplicable, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "کد تخفیف برای اقلام این سبد قابل اعمال نیست. کد را بررسی کنید یا بدون آن ادامه دهید."),
 
         // Shipping
         D(StorefrontOrderErrors.ShippingAddressForbidden, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,

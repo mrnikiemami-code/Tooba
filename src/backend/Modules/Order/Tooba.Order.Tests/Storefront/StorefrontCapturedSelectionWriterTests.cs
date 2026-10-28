@@ -885,7 +885,9 @@ public sealed class StorefrontCapturedSelectionWriterTests
                     method.ConfirmationSourceRevision,
                     method.ConfirmationSelectionVersion,
                     method.ConfirmationAreaGroupId,
-                    method.ConfirmationRateRowId);
+                    method.ConfirmationRateRowId,
+                    // TB-237: بازتاب مبلغ کالا برای هر گروه الزامی است؛ متن دقیق همان خواندن.
+                    group.FinalGoodsAmountAfterDiscountAndTax);
             })
             .ToArray();
 

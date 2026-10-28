@@ -63,6 +63,9 @@
   <data name="checkout.cart.empty" xml:space="preserve">
     <value>The cart is empty.</value>
   </data>
+  <data name="checkout.coupon.not_applicable" xml:space="preserve">
+    <value>This coupon code cannot be applied to the items in this cart. Check the code or continue without it.</value>
+  </data>
   <data name="checkout.version.conflict" xml:space="preserve">
     <value>The cart was updated concurrently. Refresh the page.</value>
   </data>

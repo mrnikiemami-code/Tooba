@@ -14,6 +14,8 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Application;
+using Tooba.Order.Application.Storefront;
+using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Checkout.Policies;
@@ -168,6 +170,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         var sellerOrders = new List<SellerOrder>();
         var sequence = 0;
         _orderLineIdByCartLineId.Clear();
+        var couponAppliedAnywhere = false;
         var categoryByVariant = await _catalog.GetPrimaryCategoryIdsByVariantIdsAsync(
             cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
             cancellationToken);
@@ -236,6 +239,9 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
                         now,
                         rounding),
                     cancellationToken);
+
+                // TB-237: هر خطی که یک پروموشنِ کوپن‌دار اعمال کرد، شاهد پذیرش کد در کل سبد است.
+                couponAppliedAnywhere |= promotion.Applied.Any(applied => !string.IsNullOrWhiteSpace(applied.CouponCode));
 
                 var tax = await _taxes.CalculateAsync(
                     new TaxCalculationRequest(
@@ -313,6 +319,17 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
             && quotedDiscount != sellerOrders.Sum(x => x.DiscountSnapshot))
         {
             throw new ContractOperationException("PROMOTION_CHANGED");
+        }
+
+        // TB-237: قصد کوپنِ ارسال‌شده باید در Promotion <b>واقعاً</b> پذیرفته شده باشد. قابلیت جزئی
+        // قانونی است (کد فقط روی یک فروشنده/خط اثر کند) و هر خط دیگر ممکن است COUPON_NOT_APPLICABLE
+        // بگیرد؛ اما اگر هیچ خطی از کل سبد یک پروموشنِ کوپن‌دار اعمال نکرده باشد، کد پذیرفته نشده و
+        // نباید «پذیرفته با تخفیف صفر» یا با یک پروموشن خودکار نامرتبط نمایش داده شود.
+        // هیچ تطبیق/صلاحیت/تخفیفی این‌جا ساخته نمی‌شود: شاهد، همان «CouponCode» اعمال‌شدهٔ خود
+        // Promotion است (متن مقایسه نمی‌شود، پس هیچ سیاست case/طول در Order اختراع نمی‌گردد).
+        if (StorefrontCouponIntent.Normalize(command.CouponCode) is not null && !couponAppliedAnywhere)
+        {
+            throw new ContractOperationException(StorefrontOrderErrors.CouponNotApplicable);
         }
 
         return sellerOrders;

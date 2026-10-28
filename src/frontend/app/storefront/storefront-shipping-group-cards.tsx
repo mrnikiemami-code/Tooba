@@ -315,6 +315,22 @@ function capturedReasonText(code: string | null): string {
 }
 
 /**
+ * TB-237: انتخاب مشتری برای یک گروه capture‌شده. روش با **کلید متعارف سرویس/گزینه در همان گروه**
+ * ذخیره می‌شود (نه برچسب ترجمه/برچسب جهانی) تا دو مالک با همان Binding/همان ترجمه مستقل بمانند.
+ */
+export interface StorefrontCapturedGroupChoice {
+  methodKey: string;
+  serviceCode: string;
+  optionCode: string | null;
+  date: string | null;
+}
+
+/** کلید پایدار روش در محدودهٔ یک گروه: کد سرویس + کد گزینه. هرگز از برچسب یا تطبیق فازی. */
+export function capturedMethodKey(method: { serviceCode: string; optionCode: string | null }): string {
+  return `${method.serviceCode}\u001f${method.optionCode ?? ""}`;
+}
+
+/**
  * TB-229-R1: یک روش capture‌شده با تقویم **خودش**.
  *
  * انتخاب تاریخ فقط بازهٔ همان روز را نشان می‌دهد؛ هیچ انتخاب/ثبتی به سرور نمی‌رود، چون سرور این
@@ -324,29 +340,45 @@ function CapturedMethodRow({
   groupKey,
   method,
   currency,
+  selected,
+  selectedDate,
+  onSelectMethod,
 }: {
   groupKey: string;
   method: StorefrontCapturedPreviewMethod;
   currency: string | null;
+  selected: boolean;
+  selectedDate: string | null;
+  onSelectMethod: (groupKey: string, methodKey: string, date: string | null) => void;
 }) {
-  const [picked, setPicked] = useState<string | null>(null);
   const identity = `${groupKey}-${method.serviceCode}-${method.optionCode ?? "none"}`;
-  const active = picked ?? method.earliestEligibleDate ?? method.availableDates[0]?.value ?? "";
+  const methodKey = capturedMethodKey(method);
+  const active = selectedDate ?? method.earliestEligibleDate ?? method.availableDates[0]?.value ?? "";
   const activeDate = method.availableDates.find((d) => d.value === active) ?? null;
   const freight = formatExactAmountText(method.freightAmountText, method.currency ?? currency);
   const packaging = formatExactAmountText(method.packagingAmountText, method.currency ?? currency);
 
   return (
     <div
-      className="mt-3 border-t border-dashed border-gray-200 pt-3"
+      className={`mt-3 border-t border-dashed border-gray-200 pt-3 ${selected ? "rounded-xl bg-primary/5 px-2 pb-2" : ""}`}
       data-testid={`shipping-group-captured-method-${identity}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] md:text-xs font-bold text-gray-800 flex items-center gap-1.5">
-            <Package className="w-3.5 h-3.5 text-primary shrink-0" />
+          <button
+            type="button"
+            onClick={() => onSelectMethod(groupKey, methodKey, active || null)}
+            aria-pressed={selected}
+            disabled={method.availableDates.length === 0}
+            className={`text-[11px] md:text-xs font-bold flex items-center gap-1.5 text-start disabled:opacity-60 ${
+              selected ? "text-primary" : "text-gray-800"
+            }`}
+            data-testid={`shipping-group-captured-pick-${identity}`}
+          >
+            <Package className="w-3.5 h-3.5 shrink-0" />
             {method.methodLabel}
-          </p>
+            {selected ? <Check className="w-3 h-3" /> : null}
+          </button>
           <p className="text-[10px] text-gray-500 mt-0.5">
             {freight === null ? "کرایه نامشخص" : `کرایه ${freight}`}
             {packaging === null ? "" : ` · بسته‌بندی ${packaging}`}
@@ -371,7 +403,7 @@ function CapturedMethodRow({
             identity={identity}
             testIdPrefix="shipping-group-captured-date"
             active={active}
-            onPick={setPicked}
+            onPick={(value) => onSelectMethod(groupKey, methodKey, value)}
           />
           <p
             className="mt-1 text-[10px] text-gray-600"
@@ -389,17 +421,21 @@ function CapturedMethodRow({
   );
 }
 
-/** کارت یک گروه capture‌شده با همان کارت/خط‌های موجود؛ فقط‌خواندنی و بدون دکمهٔ ثبت. */
+/** کارت یک گروه capture‌شده با همان کارت/خط‌های موجود؛ انتخاب روش/تاریخ همان گروه را بالا می‌برد. */
 function CapturedGroupCard({
   group,
   lines,
   sellerName,
   currency,
+  selection,
+  onSelectCapturedMethod,
 }: {
   group: StorefrontCapturedPreviewGroup;
   lines: readonly StorefrontCartLine[];
   sellerName: string;
   currency: string | null;
+  selection: StorefrontCapturedGroupChoice | undefined;
+  onSelectCapturedMethod: (groupKey: string, methodKey: string, date: string | null) => void;
 }) {
   const goodsText = formatExactAmountText(group.finalGoodsAmountText, currency);
   return (
@@ -451,6 +487,9 @@ function CapturedGroupCard({
           groupKey={group.groupKey}
           method={method}
           currency={currency}
+          selected={selection?.methodKey === capturedMethodKey(method)}
+          selectedDate={selection?.methodKey === capturedMethodKey(method) ? selection.date : null}
+          onSelectMethod={onSelectCapturedMethod}
         />
       ))}
     </div>
@@ -467,6 +506,8 @@ export function StorefrontShippingGroupCards({
   schedules,
   selections,
   capturedPreview = null,
+  capturedChoices = {},
+  onSelectCapturedMethod,
   destinationRefreshState = null,
   onRetryDestination,
   onSelectMethod,
@@ -488,6 +529,9 @@ export function StorefrontShippingGroupCards({
   selections: Readonly<Record<string, StorefrontShippingGroupSelection>>;
   /** TB-229: پیش‌نمایش خواندنی گروه‌های capture‌شده؛ `null` یعنی کلید خاموش و رفتار قبلی. */
   capturedPreview?: StorefrontCapturedPreview | null;
+  /** TB-237: انتخاب روش/تاریخ هر گروه capture‌شده، کلید = GroupKey سرور. */
+  capturedChoices?: Readonly<Record<string, StorefrontCapturedGroupChoice>>;
+  onSelectCapturedMethod?: (groupKey: string, methodKey: string, date: string | null) => void;
   /**
    * TB-230-R1: وضعیت صریح تازه‌سازی مقصد. `failed` تنها حالت شکست برای همین هویت است و یک Retry
    * صریح نشان می‌دهد؛ `pending` در حال محاسبه است؛ `current` یعنی همین پیش‌نمایش مال همین مقصد است.
@@ -579,6 +623,8 @@ export function StorefrontShippingGroupCards({
                 lines={group.cartLineIds.map((lineId) => lineById[lineId]).filter((line): line is StorefrontCartLine => Boolean(line))}
                 sellerName={sellerNames[group.sellerPartyId] ?? ""}
                 currency={capturedPreview?.currency ?? null}
+                selection={capturedChoices[group.groupKey]}
+                onSelectCapturedMethod={onSelectCapturedMethod ?? (() => {})}
               />
             ))}
           </div>

@@ -50,6 +50,13 @@ public static class StorefrontOrderErrors
     public const string PendingHideActiveHold = "pending.hide.active_hold";
 
     /// <summary>
+    /// TB-237: کد کوپنِ ارسال‌شده در <b>هیچ</b> خطی از کل سبد پذیرفته نشد (Promotion هیچ پروموشنِ
+    /// کوپن‌داری اعمال نکرد). این وضعیت هرگز «پذیرفته با تخفیف صفر» یا جایگزین‌شده با پروموشن خودکار
+    /// نامرتبط نمایش داده نمی‌شود؛ صلاحیت/تطبیق کد همچنان فقط مالک Promotion است.
+    /// </summary>
+    public const string CouponNotApplicable = "checkout.coupon.not_applicable";
+
+    /// <summary>
     /// «بررسی موجودی و پرداخت مجدد» نتوانست موجودی را تأمین کند.
     /// کد پایدار متعلق به Payment است و در سطح‌های Customer/Storefront مصرف می‌شود؛
     /// Order آن را بازتعریف/دوباره ثبت نمی‌کند (LOCK-SF-078/095).
