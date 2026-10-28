@@ -1,3 +1,22 @@
+# CURRENT — 240-R6 LOGIN HANDOFF ONLY: USER CANNOT ENTER VIA PHONE PAGE — 2026-10-28
+
+Active TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6; docs/ai/tasks/TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6/TASK.md.
+User asks "چه شماره‌ای؟ / چیکارکنیم؟". Existing R5testaccount is EMAIL-based; plain3103URL was insufficient for anotherbrowser.
+ONLY authorized work: VISIBLE task-owned installedChrome with real normalbuyerBFFsession verified/api/auth/me, shippingroute noOTPwall.
+No source/tests/build/schema/authpolicy change, NO screenshots. Taskfocus5min. No authbypass/fakephone/OTP/sessioninjection.
+Prefer R5normalbuyer01a18247-54d3-7000-9f2f-219ac7de9e6d with privately retainedtaskTEMPcredential.
+R5profileD:\temp\tb240r5-chrome/CDP9343 may beheadless: do not stop/loseunsavedtaskform to make itvisible.
+Ifnecessary NEWheadedprofileD:\temp\tb240-login-handoff + SAMEbuyer normalCSRF/BFFlogin; fallbackNEWnormalbuyer explicitlyallowed
+only if oldprivatepassword unavailable, noaccountreset. Report actualsame/freshbuyer+cartstate. VISIBLEwindow required, nothealth/headless.
+
+FE3103/Host5190 ready; no restart/HMR. Currentreviewcart01a18251-2042-7000-8b37-bec94335eab5 belongsR5, not transferbyinference.
+User original3000/5088,handoff3100/5188+tb238-handoff-chrome,R4profile9342 and arbitraryuserbrowser NEVERtouch.
+ExacttaskR5session interaction is now authorized ONLY to finishloginhandoff, preserveunsavedforms/tabs.
+AfterVISIBLEhandoff freezeit, ActiveNONE. No automaticnewtask. No password/token/cookie/guestsecret inresult/git.
+Previously acceptedlocalmanualfunctionalcheckpoint unchanged; original240deadlineMISSED, noreset. No full3ownerUI/PSP/VisualACCEPTclaim.
+TB185paused/defaultOFF/PendingAllocation. ALL3TOPs must recordactualhandoffstateafterexecution.
+
+---
 # CURRENT — 240-R5 ARCHITECT CHECKPOINT ACCEPTED: LOCAL MANUAL FUNCTIONAL FLOW; ACTIVE TASK NONE — 2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/ARCHITECT-REVIEW.md.
