@@ -1,4 +1,31 @@
-# CURRENT — 240-R2 ISSUED: SELLER ROLE ASSIGNMENT + PAYMENT SAFE REPLAY + VISIBLE HANDOFF — 2026-10-28
+﻿# CURRENT — 240-R2 BLOCKED: seller access + payment idempotency repaired, mixed-owner save blocked by existing index — 2026-10-28
+
+Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2, evidence docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/{RESULT.md,RECEIPTS.md}.
+Status BLOCKED (not accepted). Base4f95bdd9b7dcabecc9950c9b1485c0b046b509e0, code769f43ff5c3339ae78c74dacb4929168bf8801a6.
+LANDED: AccessControl-owned Development prelude EnsureMarketplaceSellerAccessAsync (real ISellerDevContextStore pairs,
+existing seller-owner role/AssignRoleAsync, real audit actor, legacy synthetic pair unpublished LAST, idempotent, real
+Development + local opt-in) => both real sellers commissioned, one owner role each; SellerA 201 own authoring, SellerB
+foreign-header 403, admin route 403 for seller; BOTH seller captures authored+published on the SAME existing
+post:standard/type (own snapshot/row/fees/dates). PaymentDirectory now handles the existing idempotency unique index:
+concurrent same-key attempts return the SAME PaymentId AND AttemptId with one payment row (was 200+500 DbUpdateException);
+no random fallback key, no in-memory lock, no new table. The camelCase JSON wire claim did NOT reproduce (browser body
+bound, persisted key/provider/amount real, ExpectedSelectionRevision stayed TEXT) so no serializer change was made.
+MIXED CART: 3 offers -> 3 PRICED owner groups (Platform goods2016500 payable100000; SellerA1580500/65000; SellerB1951100/49500)
+after two real Order repairs (planner collapse key = seller|method|line membership, repeated LINE still refused; optional
+trailing ObligationKey makes row resolution prefer the exact server group).
+BLOCKER (exact): PUT /v1/storefront/shipping/selection -> 500 DbUpdateException 23505
+ux_cart_shipping_groups_cart_seller_method — the SAME seller in a Platform-fulfilled AND a Seller-fulfilled group on ONE
+cart with the SAME one-level method is structurally refused by the EXISTING unique index; relaxing it needs a
+schema/migration, forbidden here. Nothing half-written (one SaveChanges inside the atomic boundary).
+NOT DELIVERED: mixed order/manualPending, 3-group payment draft/StartPayment, coupon fact, Order-only mixed read, FE3102
+build/browser/desktop/390/360 screenshots, usable URL handoff (save would 500; an API-only handoff is not claimed).
+Geography outcome handling implemented (non-Completed throws at startup; seed validates before staging) — build/seam proof only.
+checkoutReplayed still false on replay (not repaired; no defect proven). No migration/schema/baseline/history/reseed/product
+seed/direct SQL/foreign context/new permission catalogue/guard weakening. USER3000/5088, handoff3100/5188+profile and the
+review window untouched; gates OFF, local toggles unchanged, 231/232 sharedNOTAPPLIED + EF snapshot gap retained.
+NEXT (Architect): decide the mixed-owner persistence contract (per-group owner discriminator vs relaxed index) and
+re-Issue 240-R3. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+# SUPERSEDED — 240-R2 issued (executed, BLOCKED): SELLER ROLE ASSIGNMENT + PAYMENT SAFE REPLAY + VISIBLE HANDOFF — 2026-10-28
 
 Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2, task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/TASK.md. Base source14c7353f9117711d78711a368ade54df00c1e510.
 240-R1 executed PARTIAL: reference languages/geography/Fulfillment and ONE Platform-owned API Order/manualPending reached;
