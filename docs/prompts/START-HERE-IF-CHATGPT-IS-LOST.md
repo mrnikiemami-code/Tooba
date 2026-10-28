@@ -1,4 +1,35 @@
-﻿﻿# CURRENT — 240-R7 EXECUTED (worker result): honest unselected date + per-group delivery time + one owning Continue blocker; proven on TWO sellers AND ONE seller — 2026-10-28
+# CURRENT —241 ISSUED: RESTORE CONFIGURABLE HOURLY SLOTS + ONE PRIMARY3000/5088 —2026-10-28
+
+Latestuser explicitlyordersfastfixonMAIN, no moretwoapplicationversions, updaterecovery.
+Active TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241; docs/ai/tasks/TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241/TASK.md. Receiptbase=issuecommit; reviewedmain/evidencedb5ae3a6738bcf2fff45cd3b19ca769cb07623c5, R7sourceacb7f16e631927ea6bd4b99d34f84720f23fb9ba.
+240-R7 NOWEXECUTED: datehonesty/oneowningblocker acceptedWITHINSCOPE, hourlyslotstillOPEN. Retainactualcode, no replay/parallelworker/discard.
+Thisauthorizesschedulingbackend/config/capture/read-selection-final persistence, supersedingR7limitedfrontendonlyscope.
+
+RequiredREGRESSIONfix: authoredreceivinghours+EXPLICITslotminutes(1..1440) -> servercompletecontainedslots09–10,10–11...
+Nulllegacy=>ONEoriginalfullwindow, no inferred60. Closeddaynone, no shorttail/overflow, invalid/nofullslotrefuses.
+Adminsetting mustpersist+capture(versionedknownformat2/dualformat1read), SAMEcalendar generatesuniqueDATE+slotoptions;
+browser dateTHENslot pergroup, samechosen100nsticks inselection/paymentpreview/finalOrderhistory. No fakefrontendsplit,
+mutablelegacyoperatingfallback,newcalendar/price/capacityengine or fullslotsJSONperOrder. No claimdonefrombuttons/modeltests.
+
+LATEST USER AUTHORIZATION SUPERSEDES oldabsolute3000/5088/sourcewatcherfreezeforPLANNEDsafePRIMARYcutover.
+Preparestagedmainbuild, preserveuserinput/tabs/data/configbeforestop/restart, stopoldwatcherBEFOREdiskupdate toavoiduncontrolledHMR.
+CurrenttestedMarketplace/TenantNULL/tooba_marketplace_tb239 toprimary5088+FE3000 foruser'smultisellertrial, allonactualmain.
+OriginalSingleStore/store-alpha DB and previousruntimeconfig preservedprivately, NOclone/merge/editionrelabel/businessreset.
+Reportactiveedition/DB honestly; supportedSingleStorepathnotremoved. ThisisLOCALpromotion, notprod/PSPactivation.
+Afterprimaryhealthy/realworkflowproven, stopverifiedTASK310x/518x/5190processes; only3000/5088userURL. No deleteprofiles/DBs,
+kill-by-name/globalDockerrestart or closetabs. NewVISIBLEnormalBFFsignedinprofilePRIMARY; TWOrealSellerunsubmittedreviewcart.
+Do not silentlychangecurrentuserbrowser/account/cart; privatebackupofrelevantlocalinputonly, no forcedserverApply.
+
+NOscreenshots/images/visualreview/viewportmatrix. FunctionalHTTP/DOM/storage only. Original240deadlineMISSED/noreset.
+Operationalbox60 incl.final20primarychecks/recovery,checkpoint10contract/35same-slotcommit. Nocode-onlyPASS/automatic242.
+AllowminimalforwardShippingcolumnmigration and OrderformatCHECKonlyifactuallyneeded, normalrunnerverifiedtarget, noappliedhistoryedit/
+baseline/regenerate/backfill. Exactmoney/owners/coupon/atomicCAS+historyinvariantsretained. CheckedingatesOFF/localprimarytestON,
+TB185paused/defaultOFF/PendingAllocation, externalprovider/23822001/227mobileempty-note/225-R1LOCALloss retained.
+ALL3TOPs+deadlineledger mustreportactualprimarypaths/config/DB/SHA/stoppedports/unmetdefectsafterexecution.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+---
+# CURRENT — 240-R7 EXECUTED (worker result): honest unselected date + per-group delivery time + one owning Continue blocker; proven on TWO sellers AND ONE seller — 2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT userVisualACCEPT, no activation, no checkout/order. Base581c5f31a;
