@@ -1,3 +1,30 @@
+# CURRENT —240-R7 USERTRIAL DEFECT OPEN: ONESELLER HANDOFF / NO TIME / CONTINUE GREY —2026-10-28
+
+User reports onlyone store,no deliverytime,selectiondidnotenablepayment. NOT userVisualACCEPT. Active TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7.
+Read docs/ai/tasks/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/TASK.md. Base3ba69d239fddacf850253c820d89a3bdce5a170a, appsource763506b34.
+R6 visibleloginhandoff worked but itscart01a18251-... wasONEseller, unsuitablemultistoretrial. Rootacknowledgeshandoffmistake.
+Older API/manualfunctionalcheckpoint remains scoped; user's new actualUIproblem is OPEN, not waived by priorgreenfacts.
+
+SOURCECONFIRMED: CapturedMethodRow derives active from earliestdate even with no parentchoice, DateChipStrip stylesitselected.
+isValid requiresaddressfields+allcapturedchoices/currentquote but greyContinue showsNOowningreason. Exact user's liveblocker
+stillmustbereproduced in separateprofile; do not claimmissingaddress/state cause without actualevent/DOMtrace.
+Repair samecontrols/onevalidationauthority: honestunselected/actualatomicgroupdatechoice,OWNdate+authoredinterval,
+conciselocalizedowningblocker near Continue/field, enabledwhencomplete. No fakeearliest/date/hour/quote or validationbypass.
+
+PRESERVE USER NOWACTIVE3103/profiletb240r5-chrome/CDP9343 + typedLOCALwork/cart: DO NOTenumerate/read/automate/reload/close
+or edititswatchedsource/HMR. Also original3000/5088,handoff3100/5188+tb238-handoff-chrome,R4profile9342/FE3102 frozen.
+NEWisolatedworktree+FE3104->sameHost5190+NEWtaskprofile/newnormalbuyer/cart only. No globalDockerrestart.
+R6 restartedDockerDesktopsharedengine; noappPIDrestart doesnotmeaninfrastructureuntouched. Do not repeatblindrestart.
+
+Mustdeliver NEWVISIBLEsignedinwindow with TWOrealSeller groups/currentdates+intervals, validformContinue200→existingpaymentform,
+leaveunsubmitted2sellercartforuser tochoose. Alsoprovesingle-group path; no finalOrder consumptionofreviewcart.
+NOscreenshots/images/visualreview/viewportmatrix peruseroverride. FunctionalHTTP/DOM/stateonly. Focus20operationalminutes,
+checkpoint8cause/15Continue200. Original240deadlineMISSED, noreset/newpromise, noautomaticnexttask.
+No backendowner/quote/calendar/price/schema changes,migrate/reseed/SQLwrite/fullsuite. Checked-ingatesOFF/localtaskON,
+TB185paused/defaultOFF/PendingAllocation. Preserveuserdraft/review230/handoffcart. Olderexternalprovider/23822001/
+227mobileempty-note/225-R1unrecoveredLOCALloss retained. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+---
 # CURRENT — 240-R6 EXECUTED: VISIBLE AUTHENTICATED WINDOW HANDED OFF; ACTIVE TASK NONE — 2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
