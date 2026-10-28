@@ -1,6 +1,12 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-28 (TB-240-R2, BLOCKED)
+## Current Shipping handoff — 2026-10-28 (TB-240-R3, bounded PASS)
+
+The live pointer is
+[`TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/RESULT.md`](../architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/RESULT.md)
+and the task-wide TOP is the root `AGENTS.md`.
+
+## Superseded — 2026-10-28 (TB-240-R2, BLOCKED)
 
 The live pointer is
 [`TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/RESULT.md`](../architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/RESULT.md)

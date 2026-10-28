@@ -1,62 +1,36 @@
-# CURRENT — 240-R3 ISSUED: BOTH GROUP INDEXES + STRICT CORRELATION; ORIGINAL DEADLINE AT SERIOUS RISK — 2026-10-28
+# CURRENT — 240-R3 EXECUTED (bounded PASS): both group uniqueness gates legacy-scoped; real mixed-owner Order reached — 2026-10-28
 
-Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3; task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/TASK.md.
-Main77ed71dfb709df7806018875d833edd9540121db, source769f43ff5c3339ae78c74dacb4929168bf8801a6.
-240-R2 reached seller rights/captures +3 PRICED owner groups. Full delivery BLOCKED on unconditional cart seller/method
-unique index; SAME unconditional unique exists in FINALordergroups too. No mixedOrder/coupon/UIhandoff/mobile/history yet.
-Root inspected source, did not execute Windows proof. No inferred Visual ACCEPT.
+Active evidence: docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Base 307e7bc90c4e1fbe9d05487d4f1f0415249c5009. Claim 10:03:07Z -> report ~10:31Z = ~27min vs 24 remaining,
+cumulative ~243 (about 3min over the original 240 contract). Status PASS for the bounded scope ONLY:
+NOT final delivery, no user Visual ACCEPT, no activation, no PSP/provider exactly-once claim.
 
-ARCHITECT DECISION/AUTHORIZATION: ONE NEW Order forward migration changes BOTH existing unique seller/method indexes to
-UNIQUE legacy-only WHERE accepted_snapshot_id IS NULL; matching runtime EF HasFilter/actualName. Preserve PK/FKs/exact
-line UNIQUE/evidence CHECKs. No newownercolumn/JSON/copy or applied-history edit. Normalrunner plan/apply TASKMarketplaceDB ONLY.
-Down cannot delete/merge rows to force old invariant; unsafe downgrade fails atomically. Do not just fix cart then failfinalOrder.
-Existing groupid+membership+acceptedfullowner is identity. Mixed sameSeller/sameMethod disjointcapturedgroups lawful.
-R2 planner needs exactONE keyed seller+binding match, NO fallback, and legacy no-key duplicate-seller/method control restored.
+Landed: ONE new Order migration 20261028140000_AddCapturedGroupLegacyScopedUniqueIndexes replaces BOTH
+ux_cart_shipping_groups_cart_seller_method and ux_order_shipping_groups_checkout_seller_method with UNIQUE PARTIAL
+indexes on the SAME keys and names (predicate accepted_snapshot_id IS NULL); runtime EF mappings now
+IsUnique + HasDatabaseName + HasFilter the same. Legacy duplicate still refuses with 23505 (rolled-back DB control).
+CartShippingGroupPlanner.ResolveMethod: a supplied captured ObligationKey must match exactly ONE row of THAT seller
+with canonical service/option, NO fallback; legacy no-key requests keep the seller+method collapse. The
+OrderShippingGroupMaterializer twin was scoped the same way (the measured RED order.shipping.group.seller_method.duplicate
+at StartPayment). PaymentDirectory: exact ix_payments_idempotency_key/23505 detector and the losing branch re-enters
+the EXISTING same-key replay path once (actor access + provider identity + succeeded/failed rules).
 
-PAYMENT REVIEW LIMIT: gateway.InitiateAsync precedes contested SaveChanges, so winnercatch does NOT prove provider exactly-once.
-ManualPending samePayment/Attempt rows useful only within that bound. Tighten substring23505 to exactpaymentschema/table/index
-and normal actor-access check before winnerreturn. Do not certify PSP/paid or globalproviderconcurrency. checkoutReplayedfalse open.
-ActualcamelCase listener worked, no serializerfix. R2 says231/232NOTAPPLIED incorrectly; inspect actual history (alreadyappliedearlier).
+Proven on the task Marketplace target tooba_marketplace_tb239: real 3-owner cart -> projection 200 (3 PRICED groups)
+-> selection 200 revision 1 with the SAME seller in TWO groups on one binding -> payment-draft 200 (shipping 214500,
+payable 5762600) -> start-payment 200 (checkout 01a18209-cd78-..., manual Pending, reservationCount 3) -> persisted
+3 order_shipping_groups with their own snapshots/owner/money/dates + 2 seller orders + 3 order lines + 3 group lines
++ 1 attempt + cart Converted; buyer order GET 200.
 
-DEADLINE unchanged:53+70+62+31=216/240 reported focused minutes,24 left before any otherfocus; taskplans20 incl.evidence.
-Originalestimate optimistic, fullcompletion unguaranteed. checkpoint8 mixedsave200,14 mixedOrder,final6 UI/handoff; no newclock.
-At240 report actual unmet delivery and overrun, not partial-as-final or automatic241. All original mixedowner/coupon/manual/mobile/
-duplicate/history requirements remain OPEN and binding. Existingtaskcart01a181e2-0d5e-7000-a94c-87e9b826f94d/captures usable, no bootstrap.
+NOT RUN at the deadline: publication-change immutability, coupon partial/invalid/cleared, foreign-owner denial on
+this order, UI double-click/failed-refresh retry, and the authenticated payment FORM at 1440/390/360 (the existing
+access guard fails closed because the committed-checkout proof is browser-local while this order was created through
+the APIs; the three screenshots record that guard with native widths and no overflow).
+231/232/236 ARE applied on THIS task target; the shared-NOT-APPLIED statement belongs to tooba_alpha only.
+No baseline regeneration, no reset/drop/manual DDL on shared targets, gates stay OFF (task-local env only), USER
+3000/5088 + handoff 3100/5188 + all user tabs/unsaved work untouched.
+Retained: 238 unclassified 22001, 227 mobile empty-note, 225-R1 lost LOCAL edits.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
 
-Task5190 Marketplace TenantNULL DBtooba_marketplace_tb239 ONLY for apply/restart; isolatedFE3102 only. Preserve USER3000/5088,
-handoff3100/5188+D:\temp\tb238-handoff-chrome, usertabs/unsavedwork/watchedsource NEVER enumerate/read/automate/reload/close/edit/HMR.
-Preserve userdraft/rates/pointer and review230/handoffcart. No reset/reseed/foreignbusinessSQL/baselineregeneration.
-Checked-in gatesOFF/localtaskON, TB185paused/defaultOFF/PendingAllocation.238unclassified22001,227mobileempty-note,
-225-R1unrecoveredLOCALeditloss retained. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
-
----
-# CURRENT — 240-R2 BLOCKED: seller access + payment idempotency repaired, mixed-owner save blocked by existing index — 2026-10-28
-
-Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2, evidence docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/{RESULT.md,RECEIPTS.md}.
-Status BLOCKED (not accepted). Base4f95bdd9b7dcabecc9950c9b1485c0b046b509e0, code769f43ff5c3339ae78c74dacb4929168bf8801a6.
-LANDED: AccessControl-owned Development prelude EnsureMarketplaceSellerAccessAsync (real ISellerDevContextStore pairs,
-existing seller-owner role/AssignRoleAsync, real audit actor, legacy synthetic pair unpublished LAST, idempotent, real
-Development + local opt-in) => both real sellers commissioned, one owner role each; SellerA 201 own authoring, SellerB
-foreign-header 403, admin route 403 for seller; BOTH seller captures authored+published on the SAME existing
-post:standard/type (own snapshot/row/fees/dates). PaymentDirectory now handles the existing idempotency unique index:
-concurrent same-key attempts return the SAME PaymentId AND AttemptId with one payment row (was 200+500 DbUpdateException);
-no random fallback key, no in-memory lock, no new table. The camelCase JSON wire claim did NOT reproduce (browser body
-bound, persisted key/provider/amount real, ExpectedSelectionRevision stayed TEXT) so no serializer change was made.
-MIXED CART: 3 offers -> 3 PRICED owner groups (Platform goods2016500 payable100000; SellerA1580500/65000; SellerB1951100/49500)
-after two real Order repairs (planner collapse key = seller|method|line membership, repeated LINE still refused; optional
-trailing ObligationKey makes row resolution prefer the exact server group).
-BLOCKER (exact): PUT /v1/storefront/shipping/selection -> 500 DbUpdateException 23505
-ux_cart_shipping_groups_cart_seller_method — the SAME seller in a Platform-fulfilled AND a Seller-fulfilled group on ONE
-cart with the SAME one-level method is structurally refused by the EXISTING unique index; relaxing it needs a
-schema/migration, forbidden here. Nothing half-written (one SaveChanges inside the atomic boundary).
-NOT DELIVERED: mixed order/manualPending, 3-group payment draft/StartPayment, coupon fact, Order-only mixed read, FE3102
-build/browser/desktop/390/360 screenshots, usable URL handoff (save would 500; an API-only handoff is not claimed).
-Geography outcome handling implemented (non-Completed throws at startup; seed validates before staging) — build/seam proof only.
-checkoutReplayed still false on replay (not repaired; no defect proven). No migration/schema/baseline/history/reseed/product
-seed/direct SQL/foreign context/new permission catalogue/guard weakening. USER3000/5088, handoff3100/5188+profile and the
-review window untouched; gates OFF, local toggles unchanged, 231/232 sharedNOTAPPLIED + EF snapshot gap retained.
-NEXT (Architect): decide the mixed-owner persistence contract (per-group owner discriminator vs relaxed index) and
-re-Issue 240-R3. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
 # SUPERSEDED — 240-R2 issued (executed, BLOCKED): SELLER ROLE ASSIGNMENT + PAYMENT SAFE REPLAY + VISIBLE HANDOFF — 2026-10-28
 
 Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2, task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/TASK.md. Base source14c7353f9117711d78711a368ade54df00c1e510.

@@ -187,7 +187,12 @@ public sealed class OrderDbContext : DbContext
                 .HasColumnName("confirmed_goods_amount")
                 .HasPrecision(18, 2);
             entity.HasIndex(x => x.CartId);
-            entity.HasIndex(x => new { x.CartId, x.SellerPartyId, x.MethodCode }).IsUnique();
+            // TB240-R3: یکتایی «هر فروشنده+روش یک‌بار» فقط برای گروه‌های قدیمی (بدون شاهد تأییدشده) معتبر است؛
+            // دو تعهد جدا از یک فروشنده (Platform-owned و Seller-owned) با همان روش یک‌سطحی باید کنار هم بمانند.
+            entity.HasIndex(x => new { x.CartId, x.SellerPartyId, x.MethodCode })
+                .IsUnique()
+                .HasDatabaseName("ux_cart_shipping_groups_cart_seller_method")
+                .HasFilter("accepted_snapshot_id IS NULL");
             entity.OwnsOne(
                 x => x.AcceptedEvidence,
                 owned => ConfigureAcceptedEvidence<CartShippingDraftGroup>(owned));
@@ -221,7 +226,10 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.State).HasMaxLength(32);
             entity.HasIndex(x => x.CheckoutId);
             entity.HasIndex(x => x.SellerOrderId);
-            entity.HasIndex(x => new { x.CheckoutId, x.SellerPartyId, x.MethodCode }).IsUnique();
+            entity.HasIndex(x => new { x.CheckoutId, x.SellerPartyId, x.MethodCode })
+                .IsUnique()
+                .HasDatabaseName("ux_order_shipping_groups_checkout_seller_method")
+                .HasFilter("accepted_snapshot_id IS NULL");
             entity.OwnsOne(
                 x => x.AcceptedEvidence,
                 owned =>

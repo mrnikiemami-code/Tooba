@@ -1,4 +1,32 @@
-# CURRENT — 240-R3 ISSUED: BOTH GROUP INDEXES + STRICT CORRELATION; ORIGINAL DEADLINE AT SERIOUS RISK — 2026-10-28
+# CURRENT — 240-R3 EXECUTED (bounded PASS): both group uniqueness gates legacy-scoped; real mixed-owner Order reached — 2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status PASS for the bounded schema+vertical scope, NOT final delivery, no user Visual ACCEPT, no activation.
+Base307e7bc90c4e1fbe9d05487d4f1f0415249c5009 (fast-forward only). Claim10:03:07Z, report≈10:31Z ⇒ ≈27min vs 24
+remaining = cumulative ≈243 (≈3min over the original 240 contract); two extra in-task source corrections
+recorded. ONE new Order migration 20261028140000_AddCapturedGroupLegacyScopedUniqueIndexes replaces BOTH
+ux_cart_shipping_groups_cart_seller_method AND ux_order_shipping_groups_checkout_seller_method with UNIQUE PARTIAL
+indexes on the SAME keys/names, predicate accepted_snapshot_id IS NULL; runtime EF IsUnique+HasDatabaseName+HasFilter
+match. Legacy collision still 23505 (rolled-back control, 0 rows). PlannerResolveMethod: supplied captured
+ObligationKey must match exactly ONE row of THAT seller with canonical service/option, NO fallback (zero/dup/
+foreign/contradictory refuse); legacy no-key requests keep seller+method collapse. Materializer twin scoped the
+same way (this was the measured RED order.shipping.group.seller_method.duplicate at StartPayment).
+PROVEN on the task Marketplace target (DB tooba_marketplace_tb239): projection200 3 PRICED groups, selection200
+revision1 with SAME seller in TWO groups on one binding, payment-draft200 (shipping214500 payable5762600),
+start-payment200 checkout01a18209-cd78-… manual Pending 5762600 reservationCount3, persisted 3 order_shipping_groups
+with own snapshots/owner/money/date +2 sellerorders+3 orderlines+3 grouplines+1 attempt+cart Converted, buyer order
+GET200. Payment idempotency: exact ix_payments_idempotency_key/23505 detector and winner replay re-enters the
+EXISTING same-key path once (actor access + provider identity + succeeded/failed rules); provider still called
+BEFORE the contested SaveChanges ⇒ NO PSP exactly-once claim. NOT RUN: publication-change immutability, coupon
+partial/invalid/cleared, foreign-owner denial on this order, UI double-click/failed-refresh, and the authenticated
+payment FORM at 1440/390/360 (the existing access guard correctly fails closed because the committed-checkout
+access proof is browser-local and this order was created via the APIs; screenshots record the guard, native widths
+equal, no overflow). 231/232/236 ARE applied on THIS task target; the shared-NOT-APPLIED statement applies to
+tooba_alpha only. No baseline regeneration, no reset/drop/manual DDL on shared targets, gates stay OFF (task-local
+env only), USER 3000/5088 + handoff 3100/5188 + all user tabs/unsaved work untouched. Retained: 238 unclassified
+22001, 227 mobile empty-note, 225-R1 lost LOCAL edits. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 240-R3 ISSUED: BOTH GROUP INDEXES + STRICT CORRELATION; ORIGINAL DEADLINE AT SERIOUS RISK — 2026-10-28
 
 Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3; task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/TASK.md.
 Main77ed71dfb709df7806018875d833edd9540121db, source769f43ff5c3339ae78c74dacb4929168bf8801a6.

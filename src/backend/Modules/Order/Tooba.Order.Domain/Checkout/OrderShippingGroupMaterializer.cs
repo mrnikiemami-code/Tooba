@@ -50,7 +50,17 @@ public static class OrderShippingGroupMaterializer
                 throw new ContractOperationException(OrderShippingGroupFault.SellerMismatch);
             }
 
-            if (!seenSellerMethod.Add($"{plan.SellerPartyId:N}|{(plan.MethodCode ?? string.Empty).Trim()}"))
+            // TB240-R3: "one group per (seller, method)" is the LEGACY rule. A plan carrying COMPLETE captured
+            // evidence is an authoritative commitment (one seller may be Platform-fulfilled for one line set and
+            // Seller-fulfilled for another over the same one-level catalog method), so its uniqueness key is the
+            // whole commitment — seller + canonical method + exact whole-line membership. This mirrors the partial
+            // unique indexes on order.cart_shipping_groups/order.order_shipping_groups and the planner seam; a
+            // repeated LINE is still refused below, so a genuine duplicate can never pass.
+            var sellerMethodKey = plan.AcceptedEvidence is null
+                ? $"{plan.SellerPartyId:N}|{(plan.MethodCode ?? string.Empty).Trim()}"
+                : $"{plan.SellerPartyId:N}|{(plan.MethodCode ?? string.Empty).Trim()}|{string.Join(',', (plan.CartLineIds ?? []).OrderBy(x => x).Select(x => x.ToString("N")))}";
+
+            if (!seenSellerMethod.Add(sellerMethodKey))
             {
                 throw new ContractOperationException(OrderShippingGroupFault.DuplicateSellerMethod);
             }

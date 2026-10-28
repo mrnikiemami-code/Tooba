@@ -19,6 +19,12 @@ namespace Tooba.Payment.Infrastructure.Directories;
 /// </summary>
 public sealed class PaymentDirectory : IPaymentDirectory
 {
+    /// <summary>TB240-R3: نام واقعی ایندکس یکتای کلید idempotency روی <c>payment.payments</c>.</summary>
+    private const string PaymentIdempotencyIndexName = "ix_payments_idempotency_key";
+
+    /// <summary>TB240-R3: نام واقعی جدول پرداخت برای تطبیق دقیق نقض یکتایی.</summary>
+    private const string PaymentTableName = "payments";
+
     private readonly PaymentDbContext _db;
     private readonly IPaymentUseCaseGuard _guard;
     private readonly PaymentActorAccess _actorAccess;
@@ -58,7 +64,17 @@ public sealed class PaymentDirectory : IPaymentDirectory
     }
 
     /// <inheritdoc />
-    public async Task<PaymentInitiationResult> InitiateAsync(InitiatePaymentCommand command, CancellationToken cancellationToken)
+    public Task<PaymentInitiationResult> InitiateAsync(InitiatePaymentCommand command, CancellationToken cancellationToken) =>
+        InitiateCoreAsync(command, cancellationToken, idempotencyRaceResolved: false);
+
+    /// <summary>
+    /// TB240-R3: <c>idempotencyRaceResolved</c> is true only when this call is the single re-resolution of a lost
+    /// same-key insert race. Such a call may NEVER insert again, so a second conflict is a typed conflict, not a loop.
+    /// </summary>
+    private async Task<PaymentInitiationResult> InitiateCoreAsync(
+        InitiatePaymentCommand command,
+        CancellationToken cancellationToken,
+        bool idempotencyRaceResolved)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var key = command.IdempotencyKey.Trim();
@@ -212,51 +228,32 @@ public sealed class PaymentDirectory : IPaymentDirectory
         }
         catch (DbUpdateException ex) when (IsIdempotencyKeyConflict(ex))
         {
-            // TB240-R2: TWO simultaneous requests with the SAME key both passed the lookup above. The unique
+            // TB240-R2/R3: TWO simultaneous requests with the SAME key both passed the lookup above. The unique
             // index on idempotency_key is the real arbiter, so the loser must never surface a raw
             // DbUpdateException as platform.unexpected and must never leave two payment side effects.
             // Detach exactly this attempt's graph, then resolve the winner: the caller that won the insert is
-            // the ONLY owner of that intent, and this response must describe the SAME payment.
+            // the ONLY owner of that intent.
             Detach(payment, attempt);
-            var winner = await _db.Payments.AsNoTracking()
-                .FirstOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
-            if (winner is null)
+
+            // TB240-R3: the winner is described by the EXISTING same-key replay path, so operation identity
+            // (checkout + canonical provider), the actor-access check, already-succeeded and failed-retry rules
+            // are exactly the lawful replay rules — never a new "first row" policy invented for the race.
+            var winnerVisible = await _db.Payments.AsNoTracking()
+                .AnyAsync(x => x.IdempotencyKey == key, cancellationToken);
+            if (!winnerVisible)
             {
                 // The winner's row is not visible yet (its transaction is still open). Fail closed with the
                 // typed conflict; an explicit later same-key retry replays the original payment.
                 throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
             }
 
-            if (winner.CheckoutId != command.CheckoutId
-                || !string.Equals(winner.ProviderCode, gateway.ProviderCode, StringComparison.OrdinalIgnoreCase))
+            if (idempotencyRaceResolved)
             {
+                // One resolution attempt only: never loop on the same key.
                 throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
             }
 
-            var winnerAttempt = await _db.Attempts.AsNoTracking()
-                .Where(x => x.PaymentId == winner.PaymentId)
-                .OrderBy(x => x.CreatedAt)
-                .FirstOrDefaultAsync(cancellationToken);
-            if (winnerAttempt is null)
-            {
-                throw new ContractOperationException(PaymentErrorCodes.IdempotencyConflict);
-            }
-
-            var winnerGateway = _gateways.Resolve(winner.ProviderCode);
-            return new PaymentInitiationResult(
-                winner.PaymentId,
-                winnerAttempt.AttemptId,
-                winner.Status,
-                winner.ProviderCode,
-                winnerAttempt.ProviderRequestReference,
-                ResolveRedirectUrl(
-                    winnerGateway,
-                    winner.PaymentId,
-                    winnerAttempt.AttemptId,
-                    winnerAttempt.ProviderRequestReference,
-                    null),
-                winner.Amount,
-                winner.Currency);
+            return await InitiateCoreAsync(command, cancellationToken, idempotencyRaceResolved: true);
         }
         return new PaymentInitiationResult(
             payment.PaymentId,
@@ -275,9 +272,9 @@ public sealed class PaymentDirectory : IPaymentDirectory
     /// fail-closed است و هیچ‌گاه گروه تکراری یا گم‌شده بی‌صدا ساخته نمی‌شود.
     /// </summary>
     /// <summary>
-    /// TB240-R2: is this failure the EXISTING unique index on <c>payment.payments.idempotency_key</c>?
-    /// Narrow by provider SQLSTATE 23505 + the persisted constraint/index name, so no other persistence error
-    /// is ever mistaken for an idempotent replay.
+    /// TB240-R2/R3: is this failure the EXISTING unique index on <c>payment.payments.idempotency_key</c>?
+    /// Exact provider identity only (SQLSTATE 23505 + the real table and index name), so no other uniqueness
+    /// violation anywhere in the module can ever be mistaken for an idempotent replay.
     /// </summary>
     private static bool IsIdempotencyKeyConflict(DbUpdateException exception)
     {
@@ -285,8 +282,9 @@ public sealed class PaymentDirectory : IPaymentDirectory
         {
             if (current is Npgsql.PostgresException { SqlState: "23505" } postgres)
             {
-                return postgres.ConstraintName is { } name
-                    && name.Contains("idempotency_key", StringComparison.OrdinalIgnoreCase);
+                return string.Equals(postgres.ConstraintName, PaymentIdempotencyIndexName, StringComparison.Ordinal)
+                    && (postgres.TableName is null
+                        || string.Equals(postgres.TableName, PaymentTableName, StringComparison.Ordinal));
             }
         }
 

@@ -134,7 +134,14 @@ public static class CartShippingGroupPlanner
             var membershipKey = string.Join(
                 ',',
                 request.CartLineIds.OrderBy(x => x).Select(x => x.ToString("N")));
-            var sellerMethodKey = $"{seller:N}|{method.MethodCode}|{membershipKey}";
+
+            // The relaxation above is ONLY for authoritative captured commitments carrying the server-resolved
+            // obligation key. A legacy request without a key keeps the historic "one group per seller+method"
+            // rule exactly as before, so this repair cannot silently acquire a second legacy group.
+            var hasObligationKey = (request.ObligationKey ?? string.Empty).Trim().Length != 0;
+            var sellerMethodKey = hasObligationKey
+                ? $"{seller:N}|{method.MethodCode}|{membershipKey}"
+                : $"{seller:N}|{method.MethodCode}";
             if (!seenSellerMethod.Add(sellerMethodKey))
             {
                 // Same seller + same canonical method over the SAME lines must collapse into ONE group in v1
@@ -224,18 +231,47 @@ public static class CartShippingGroupPlanner
             .Where(m => string.Equals(m.MethodCode, code, StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
-        // TB240-R2: the CAPTURED writer knows exactly which commitment each row prices. When both sides carry
-        // the same stable obligation key, that is the authoritative match — never the first row of the same
-        // seller+method (which could belong to the other responsibility of the same seller).
+        // TB240-R3: a supplied CAPTURED obligation key is an authoritative server token, never a hint. It must
+        // resolve to EXACTLY ONE eligible row of THIS seller whose key matches exactly; zero rows, several rows,
+        // a row owned by a foreign seller, or a row whose canonical service/option contradicts the declared identity
+        // all refuse. There is no fallback to "first row of the same seller+method" — that fallback is precisely the
+        // wrong-price defect this seam exists to close.
         var obligationKey = (request.ObligationKey ?? string.Empty).Trim();
         if (obligationKey.Length != 0)
         {
-            var exact = sameCode.FirstOrDefault(m =>
-                string.Equals((m.ObligationKey ?? string.Empty).Trim(), obligationKey, StringComparison.Ordinal));
-            if (exact is not null)
+            var keyed = sameCode
+                .Where(m => string.Equals(
+                    (m.ObligationKey ?? string.Empty).Trim(),
+                    obligationKey,
+                    StringComparison.Ordinal))
+                .ToArray();
+
+            if (keyed.Length == 0)
             {
-                return exact;
+                throw new ContractOperationException(CartShippingGroupFault.MethodNotEligible);
             }
+
+            if (keyed.Length != 1)
+            {
+                // Two rows claiming the same commitment key cannot both price it.
+                throw new ContractOperationException(CartShippingGroupFault.MethodIdentityMismatch);
+            }
+
+            var captured = keyed[0];
+
+            if (captured.SellerPartyId != sellerPartyId)
+            {
+                // A foreign seller's (or an owner-less legacy) row can never price this group.
+                throw new ContractOperationException(CartShippingGroupFault.MethodIdentityMismatch);
+            }
+
+            if (!MatchesDeclared(request.ServiceCode, captured.ServiceCode)
+                || !MatchesDeclared(request.OptionCode, captured.OptionCode))
+            {
+                throw new ContractOperationException(CartShippingGroupFault.MethodIdentityMismatch);
+            }
+
+            return captured;
         }
 
         var method = sameCode.FirstOrDefault(m => m.SellerPartyId == sellerPartyId)
