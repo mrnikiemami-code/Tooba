@@ -1,30 +1,13 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-28 (TB-240-R7, delivery-choice defect repaired, two-seller window left unsubmitted)
+## Current Shipping handoff — 2026-10-28 (TB-241, configurable slots on ONE primary 3000/5088)
 
-The live pointer is
-[`TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/RESULT.md`](../architecture/evidence/TB-SHIPPING-USER-TRIAL-DELIVERY-CHOICE-240-R7/RESULT.md)
-and the task-wide TOP is the root `AGENTS.md`. The user's report («فقط یک فروشگاه بود زمان ارسال نداشت وقتی هم
-انتخاب کردم دکمه پرداخت روشن نشد») was reproduced on the base build and repaired on the existing shipping page:
-an unselected group no longer *looks* selected (`aria-pressed`/`data-selected` + recommendation-only earliest date),
-each group now shows its OWN «زمان تحویل» line with the day's authored interval, and the disabled
-«ادامه به پرداخت» always states ONE short owning Persian reason through a single validation authority
-(`storefront-shipping-continue-state.ts`). Live-proved on a real TWO-seller cart (ONE
-`PUT /v1/storefront/shipping/selection` 200 with per-group echoes and `expectedSelectionRevision` TEXT → payment rows
-71,000 + 49,500) **and** on a real SINGLE-group cart with the same exact owning blocker (ONE PUT 200 with one group).
-**A visible task-owned Chrome window is open** on profile `D:\temp\tb240r7-chrome` (CDP 9344, PID 44116) at
-`http://127.0.0.1:3104/fa/shipping` (FE 3104 PID 46448, Host `127.0.0.1:5190` PID 43548 →
-`tooba_marketplace_tb239`), signed in as the new public synthetic buyer `userId
-01a183e3-59cd-7000-829d-a0587da45e17` (`GET /api/auth/me` → 200), cart `01a183e5-b620-7000-bf41-97187918d843` v8 with
-TWO real sellers (فروشگاه آرمان + دیجی‌استایل نمونه), address filled, **no date chosen**, Continue disabled with
-«برای «فروشگاه آرمان» یکی از تاریخ‌های تحویل را انتخاب کنید.» and **nothing submitted** (no checkout/order/
-reservation). After that final read the window/profile/FE watcher are frozen — do not automate, reload or HMR them.
-The R6 user window (`D:\temp\tb240r5-chrome`, CDP 9343, FE 3103) and its cart were never enumerated, read, automated,
-reloaded or closed; 3000/5088 and the R4/handoff profiles were untouched. No backend/Contracts/DI/schema/migration/
-seed change; checked-in captured-preview gates stay OFF (ON only in the named task processes' local env).
-Screenshots remain permanently NOT a deliverable. Still NOT delivered: final payment/order, PSP/paid flow, coupon
-parity/history, Marketplace-edition trial, user Visual ACCEPT, and the original 240-minute deadline stays MISSED
-(this task's own Focus20 window was also overrun, recorded NONCOMPLIANT).
+Live pointer: docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241/RESULT.md and root AGENTS.md.
+PRIMARY user URL http://127.0.0.1:3000/fa/shipping → Host 5088 (Marketplace, Tenant NULL, DB tooba_marketplace_tb239).
+Visible Chrome D:\temp\tb241-chrome CDP9350 signed in as buyer 01a18247-54d3-7000-9f2f-219ac7de9e6d with TWO-seller
+unsubmitted cart 01a1846b-aede-7000-850f-de073a511739; DigiStyle shows 60-minute slots 09–10…14–15; Arman shows 120-minute
+slots. Task FE310x/Host518x/5190 stopped. Code SHA 0bcfa52aa. No screenshots. Original 240 deadline MISSED.
+
 
 ## Superseded — 2026-10-28 (TB-240-R5, PASS for the remaining functional scope)
 

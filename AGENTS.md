@@ -1,4 +1,15 @@
-# CURRENT —241 ISSUED: RESTORE CONFIGURABLE HOURLY SLOTS + ONE PRIMARY3000/5088 —2026-10-28
+﻿# CURRENT — 241 EXECUTED: configurable receiving slots end-to-end + ONE primary 3000/5088 (Marketplace tb239) — 2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT VisualACCEPT/PSP. Base5552a97f8; Code0bcfa52aa; claim21:00:33Z→≈21:48Z ≈48min inside60box.
+LANDED: Shipping slot_duration_minutes (NULL=legacy full window; 1..1440) + capture format2; Order format CHECK [1,2];
+server date→nested slots; FE CapturedSlotPicker on existing cards; R7 continue-state owns slot blocker; selection/payment/
+StartPayment persist exact open/close ticks (Order proof 14:00-15:00 ticks504e9–540e9 format2). PRIMARY http://127.0.0.1:3000
+→5088 Marketplace/tooba_marketplace_tb239; visible Chrome D:\temp\tb241-chrome CDP9350 signed-in two-seller cart
+01a1846b-aede… UNSUBMITTED with DigiStyle 09–10…14–15 and Arman 120min slots. Stopped task FE3100-3104 + Host5188/5189/5190;
+only3000/5088 user URL. store-alpha preserved/not relabelled. Checked-in gates OFF/local primary ON; TB185 paused.
+Disclosed one shipping/commit 500; StartPayment path proved. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+# SUPERSEDED —241 ISSUED: RESTORE CONFIGURABLE HOURLY SLOTS + ONE PRIMARY3000/5088 —2026-10-28
 
 Latestuser explicitlyordersfastfixonMAIN, no moretwoapplicationversions, updaterecovery.
 Active TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241; docs/ai/tasks/TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241/TASK.md. Receiptbase=issuecommit; reviewedmain/evidencedb5ae3a6738bcf2fff45cd3b19ca769cb07623c5, R7sourceacb7f16e631927ea6bd4b99d34f84720f23fb9ba.
