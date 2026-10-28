@@ -1,3 +1,36 @@
+# CURRENT — 240-R1 ISSUED: REFERENCE DATA + COMPLETE SAME DELIVERY; ORIGINAL DEADLINE AT RISK — 2026-10-28
+
+Active: TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R1; task at docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R1/TASK.md.
+Reviewed source6ece5f78415b03f5458ddb33b45dc3656b87bcca; 240 accepted ONLY for sellable Development commissioning,
+not priced mixed-owner/checkout/coupon/UI completion. Root inspected source/committed results, did not execute Windows proof.
+Original focused240-minute END contract: reported239-R1~53 +240~70 =123 consumed,117 remaining before other actual focus.
+NO NEW CLOCK. Continuation plans105 including evidence; checkpoint15 languages/geography/active catalog,
+checkpoint40 three PRICED groups, checkpoint75 Order/manual Pending. Report slip at checkpoint; PARTIAL is not completion.
+
+AUTHORIZE ONE Geography-owned Development seed (own Domain factories/own EF, generated persisted IDs, Iran/Tehran province/city,
+canonical real FA/EN language IDs, idempotent natural keys, no overwriting nonseeddata). Compose existing Localization
+LanguageBootstrapDevelopmentSeed.PostMigration.EnsureAsync FIRST in SAME assigned Marketplace scope, explicit default-OFF
+Development/Marketplace opt-in. Host orchestration only. No public write endpoint, crossDBcopy, raw business SQL, migration/rebaseline.
+Fill existing Fulfillment active type/service/method through NORMAL admin APIs, then actual Offer responsibility and three owner publications.
+No need to request another approval merely because the existing DB is empty. Do not repeat566-product bulk seed or stock fixture.
+
+Task target5190 / Development / Marketplace / TenantNULL / DB tooba_marketplace_tb239, knownPID23444 verify.
+Real SellerA01a181b0-5c87-7000-976e-ae5ce19864f6, SellerB01a181b0-5c9a-7000-bf9b-8c8e1c47da72,
+three active seeded offers/prices/tax/stock already exist; cart01a181b8-2640-7000-a27e-a9c926ca1cf1 re-read actual version.
+Prior projection200 had ONLY unassigned+destination_required/no-method groups, NOT configured owner proof.
+239-R1 admin commissioning accepted; fulfillment access eventual200, first-call bootstrap incompleteness still recorded.
+Normal API setup and module-owned reference writes explicitly authorized; secrets private task disk.
+
+Still mandatory: Marketplace Platform+SellerA+SellerB own capture/row/money/date, partial/invalid/clear coupon, actual Order/manual
+Pending, own/foreign/view access, UI+HTTP duplicate, publication-change+original authorized OrderGET, actual payment1440/390/360.
+Preserve SingleStore accepted path. 238 SQLSTATE22001 UNCLASSIFIED, no guessed correlation overflow or blind widening.
+Original USER3000/5088, handoff3100/5188 + D:\temp\tb238-handoff-chrome and watched source/tabs NEVER enumerate/read/
+automate/reload/close/edit/HMR. Isolated task FE3102/task5190 only. Preserve userdraft+review230 and handedoffcart.
+231/232/236 already applied; no reset/schema/history/baseline rewrite. Checked-in shipping+seed gates OFF, tasklocal ON only.
+TB185 paused/default-OFF/PendingAllocation. 227mobileempty-note and unrecovered225-R1 LOCAL edits retained.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE; no inferred user Visual ACCEPT or PSP/paid/production activation.
+
+---
 # CURRENT — 240 EXECUTED PARTIAL: real Marketplace sellable fixture + real mixed-owner read; reference data missing —2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240/{TASK.md,RESULT.md,RECEIPTS.md}.
