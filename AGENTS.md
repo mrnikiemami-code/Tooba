@@ -1,4 +1,28 @@
-# CURRENT — 240-R6 LOGIN HANDOFF ONLY: USER CANNOT ENTER VIA PHONE PAGE — 2026-10-28
+# CURRENT — 240-R6 EXECUTED: VISIBLE AUTHENTICATED WINDOW HANDED OFF; ACTIVE TASK NONE — 2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status PASS, basebc8539b55, Code-SHA NONE (no source/test/build change), claim21:51+03:30→result22:1x≈25min vs
+5min focusbox (overrun recorded, no promise).
+VISIBLE window REALLY exists: Chrome PID15632, profileD:\temp\tb240r5-chrome, CDP9343, title«اطلاعات ارسال|توبا»,
+URL http://127.0.0.1:3103/fa/shipping — SIGNED IN as the SAME R5 buyer tb240r5-150115@example.invalid / userId
+01a18247-54d3-7000-9f2f-219ac7de9e6d / Marketplace via existing BFF csrf+password (200) with its privately retained
+taskTEMP credential; /api/auth/me 200 authenticated; shippingroute 200 with shipping-page root, NO /login redirect,
+NO phone/OTP wall. SAME R5 review cart 01a18251-2042-7000-8b37-bec94335eab5 (شال×2, 2,900,000 IRR) with its priced
+card 68,000+3,000 and lawful dates; «ادامه به پرداخت» disabled until address/date (normal).
+There is NO phone number to enter — the R5 buyer is EMAIL-based; the visible phone/OTP page can never authenticate it,
+so the window is handed over already logged in.
+BLOCKER DISCLOSED: on arrival every auth/cart call was 500 because PostgreSQL 5432 was gone — the Docker Desktop
+ENGINE was wedged (docker version/ps → HTTP500; docker desktop status "running"), Host log Npgsql 10061. One bounded
+`docker desktop restart` restored postgres-db+rabbitmq and the SAME Host PID43548 reconnected by itself (APP BACKEND
+NOT RESTARTED, FE3103 not restarted); no schema/migration/seed/reset/SQLwrite, data intact. Deviation recorded.
+No screenshots/images. Untouched: USER3000/5088, handoff3100/5188+tb238-handoff-chrome, R4profile9342, arbitrary
+userbrowser; nothing killed/closed; after handoff the window is NOT enumerated/read/automated/reloaded/closed.
+No full3ownerUI/PSP/VisualACCEPT claim; original240deadline MISSED, time history not erased; TB185 paused/defaultOFF/
+PendingAllocation; checked-in gatesOFF. Retained: externalprovider concurrency,238 22001,227mobile,225-R1lostLOCAL.
+ActiveNONE; automaticNextImplementationTask NONE.
+
+---
+# SUPERSEDED — 240-R6 LOGIN HANDOFF ONLY: USER CANNOT ENTER VIA PHONE PAGE — 2026-10-28
 
 Active TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6; docs/ai/tasks/TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6/TASK.md.
 User asks "چه شماره‌ای؟ / چیکارکنیم؟". Existing R5testaccount is EMAIL-based; plain3103URL was insufficient for anotherbrowser.

@@ -1,6 +1,23 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-28 (TB-240-R5, PASS for the remaining functional scope)
+## Current Shipping handoff — 2026-10-28 (TB-240-R6, visible authenticated window handed off)
+
+The live pointer is
+[`TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6/RESULT.md`](../architecture/evidence/TB-SHIPPING-TEST-SESSION-HANDOFF-240-R6/RESULT.md)
+and the task-wide TOP is the root `AGENTS.md`. **A real visible Chrome window is open and signed in** on the task
+profile `D:\temp\tb240r5-chrome` (PID 15632, CDP 9343) at `http://127.0.0.1:3103/fa/shipping` as the same R5 buyer
+`tb240r5-150115@example.invalid` (`userId 01a18247-54d3-7000-9f2f-219ac7de9e6d`, Marketplace), with the same review
+cart `01a18251-2042-7000-8b37-bec94335eab5` (شال × 2, priced 68,000 + 3,000). `GET /api/auth/me` → 200; the route
+shows no login redirect and no phone/OTP wall. The R5 buyer is **email/password** based, so there is no phone number
+to enter — the window is delivered already logged in through the existing BFF password route.
+Runtime note: PostgreSQL `5432` had died because the Docker Desktop engine was wedged (HTTP 500); one
+`docker desktop restart` brought `postgres-db`/`rabbitmq` back and the **same** Host `5190` PID 43548 reconnected —
+the application backend and FE `3103` were never restarted. Screenshots remain permanently NOT a deliverable.
+No source/test/build/schema/auth-policy change; Active task NONE.
+Still NOT delivered: three-owner UI, PSP/paid, coupon parity, Visual ACCEPT, and the original 240-minute deadline
+stays MISSED.
+
+## Superseded — 2026-10-28 (TB-240-R5, PASS for the remaining functional scope)
 
 The live pointer is
 [`TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/RESULT.md`](../architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/RESULT.md)
