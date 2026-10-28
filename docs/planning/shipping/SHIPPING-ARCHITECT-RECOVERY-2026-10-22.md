@@ -1,3 +1,36 @@
+# CURRENT — 240-R2 ISSUED: SELLER ROLE ASSIGNMENT + PAYMENT SAFE REPLAY + VISIBLE HANDOFF — 2026-10-28
+
+Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2, task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R2/TASK.md. Base source14c7353f9117711d78711a368ade54df00c1e510.
+240-R1 executed PARTIAL: reference languages/geography/Fulfillment and ONE Platform-owned API Order/manualPending reached;
+both Seller groups lack capture; mixedowner/coupon/browser/mobile/history UNMET. No root runtime execution or Visual ACCEPT.
+240-R1 failed to update these TOPs, corrected here with preserved history.
+
+ORIGINAL240-minute END contract:53+70+62=185 consumed,55 remaining before actual intervening focus, NO NEW CLOCK.
+Continuation plans50 incl.last15 UI/handoff; checkpoint10 seller writes,25 mixedowner order. Deadline seriously at risk;
+report exact slip promptly, PARTIAL never end-of-delivery. Full required scope unchanged.
+
+AUTHORIZED OWNERSHIP FIX: existing AccessControlDirectory.EnsureBootstrapAsync(admin,bothRealSellerIds,tenant:null) creates
+seller-owner roles/ceilings but NOT assignments. Existing prelude only ActorA/nonblanktenant/sync. Extend SAME AccessControl-owned
+guarded Development prelude via its Contracts for both real verified Identity/Party pairs, existing own-role assignment+sync.
+Do not substitute store-alpha/synthetictenant or legacy MarketplaceSellerDevBootstrap fixed published pair, no new grantlist/SQL/ACL engine.
+Normal seller authoring then create missing own captures on same existing post:standard/type; retain Platform capture.
+
+PAYMENT BLOCKER: same key returned same checkout but NEW PaymentId/AttemptId and replayfalse. Repair existing owning Order/Payment
+wire/idempotency path, not client-ref-only. Order source has stable commit/payment key prefixes; PaymentOrchestrator forwards them;
+actual cause unproven. Capture bound/request/derived/persisted equality and binary parity. CamelCase-vs-PascalCase binder observation also
+unproven at source; actual endpoint roundtrip and narrow fix, ExpectedSelectionRevision TEXT. No blind globalserializer/schema edits.
+Need original same-key payment/attempt and no duplicate side effects under sequential+concurrent HTTP.
+
+Task5190 Development Marketplace TenantNULL/tooba_marketplace_tb239 already commissioned; no reseed/reset/migration/bootstrap loop.
+Geography IR/Tehran ids and catalog now real; three offers/two real sellers/stock exist. Prior checkout01a181cf-afd3-7000-a33f-7ea2262fbe6e
+is ONE owner after seller lines removed; use new3-line cart for mixed trial. Seed nonCompleted outcome must be honored, stagedfailedrows detached.
+Update allTOPs + deadline ledger; checked-in gatesOFF/namedtasklocalON. IsolatedFE3102+5190; preserve USER3000/5088,
+handoff3100/5188 + D:\temp\tb238-handoff-chrome and unsavedtabs/watchedsource NEVER enumerate/read/automate/reload/close/edit/HMR.
+Preserve userdraft/rates/pointer/assignments and review230/handoffcart. No new schema/baseline/businessSQL.
+TB185 paused/default-OFF/PendingAllocation;23822001 stillUNCLASSIFIED,227mobileempty-note,225-R1 unrecoveredLOCALeditloss retained.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+---
 # CURRENT — 240-R1 ISSUED: REFERENCE DATA + COMPLETE SAME DELIVERY; ORIGINAL DEADLINE AT RISK — 2026-10-28
 
 Active: TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R1; task at docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R1/TASK.md.
