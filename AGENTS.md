@@ -1,4 +1,20 @@
-# CURRENT — 242 EXECUTED: SingleStore primary restored + polished delivery picker — 2026-10-29
+# CURRENT — 242 ARCHITECT REVIEW: original primary restored; own-service setup/user UI acceptance OPEN — 2026-10-29
+Active implementation NONE; automaticNextImplementationTask NONE.
+Read docs/architecture/evidence/TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242/ARCHITECT-REVIEW.md.
+Reviewed source3c42be960/evidencea1fb2f3b7. Worker reports primary3000->5088 SingleStore/store-alpha/tooba_alpha,
+both FE/Host rebuilt; Marketplace trials retained off-primary; backup+two forward migrations recorded.
+UI now larger rounded selectable time cards; actual PUT slot-tick forwarding fixed. Scope accepted, NOT full delivery.
+Original user service01a16eeb… type01a16f43… has NO active offer assignment; preserved unmodified.
+Live proof uses named DEV230 post/standard with NULL duration -> ONE authored09–17 window, not invented hourly slots.
+For own-service hourly flow: real authorized offer/type assignment + explicit duration and selected publication needed;
+do not silently change user's settings or disguise DEV230 as original method. User visual acceptance still pending.
+FA hardcoding/EN locale not closed; no committed mobile DOM geometry/keyboard or explicit new-profile auth identity.
+User CDP9350 frozen; new tb242-chrome/CDP9351 opened, do not promise original user session survived DB switch.
+Worker27/27 focused/typecheck; critical19/20 existing landing red. Root source/receipt review only.
+No screenshots/new ports/automatic243. Checked-in gatesOFF; TB185 paused/defaultOFF/PendingAllocation.
+Original deadlineMISSED;242 focus overrun disclosed; no new time promise.
+
+# SUPERSEDED — 242 EXECUTED: SingleStore primary restored + polished delivery picker — 2026-10-29
 Read docs/architecture/evidence/TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT VisualACCEPT/PSP. Base/issue39ba84c77. PRIMARY http://127.0.0.1:3000/fa/shipping
 → Host5088 PID45304 SingleStore/store-alpha/tooba_alpha (DeploymentId store-alpha-tb242-primary); FE3000 PID41116
