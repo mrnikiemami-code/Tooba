@@ -1,3 +1,24 @@
+# CURRENT — 237-R1 SingleStore practical checkpoint accepted; issued238 LIVE COUPON + MARKETPLACE —2026-10-28
+
+Read237-R1/ARCHITECT-REVIEW.md and TB-SHIPPING-LIVE-COUPON-MARKETPLACE-COMPLETION-238/TASK.md.
+Root reviewede02c1a6 source+actualPNG: SingleStore Store/store-alpha Manual/no-coupon real normal-buyer
+read->selection200->paymentpreview200->startpayment200->Order+1reservation/manualPending accepted WITHIN SCOPE.
+NOT PSP/paid/fullrelease/Marketplace edition (saleschannelMarketplace != edition). Actual group125000 +
+goods9485771=payment9610771IRR; compactacceptedrefs/date/ticks persist. ActiveDEVcart01a1807a-e7ef-7000-82d1-285f4bd5c982.
+ReviewURL http://127.0.0.1:3100/fa/shipping +payment?cartId=...; taskHost5188 PID22404/FE3100 PID37492.
+Normal authenticated dedicated visible buyer handoff required; URL in other browser doesn't carry task session.
+231/232/236 migrations NOW APPLIED on verified nonproductiontooba_alpha/store-alpha via normalrunner; no reset.
+237R1 original3000/5088/window untouched. Freeze237R1worktree/runtime too AFTER userhandoff;238 changes/trials
+inNEW isolatedworktree/ports. Userapproved normalnonprodsetup remains; checkedingatesOFF, namedtasklocalON.
+Pending LIVE: actual couponvalid/invalid/clear, MarketplacePlatform+twoSeller scopes, doubleclick/failedrefresh/
+emptykey, OrderGETimmutableafterDEVpublication.238 finishes those, minimal existingstate/syncpay/mobile fixes only.
+Mobilepayment claim NOT accepted: PNG360reportsinnerWidth378,390reports393; require exactCSSwidth+nooverflow.
+Sharedcriticalguardbaselinebg-white retained;38missing-disposable-env test failures NOT relational passes.
+Full owner/coupon/practical completion still mandatory. No generic audit/algorithm/retestloop.
+ALL3TOPs updatedhere (planningrecovery was stale inworkercommit). CanonicalResult needs autoNext field afterSHA.
+TB185paused/defaultOFF/PendingAllocation; OfferAPI/227note/225-R1lostLOCALwork retained; labelmap repaired.
+Active238 only; STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Prior recovery/history follows.
+
 # CURRENT — 237 NOT CONNECTED reviewed; issued237-R1 BOOT FIRST + exact wire/payment completion —2026-10-28
 
 Active TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1. Read237/ARCHITECT-REVIEW.md + newTASK.
