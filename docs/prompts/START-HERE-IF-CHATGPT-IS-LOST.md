@@ -1,4 +1,15 @@
-﻿# CURRENT — 241 EXECUTED: configurable receiving slots end-to-end + ONE primary 3000/5088 (Marketplace tb239) — 2026-10-28
+# CURRENT — 241 ARCHITECT REVIEW PARTIAL; 241-R1 ISSUED — 2026-10-29
+Active TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1; read docs/ai/tasks/TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1/TASK.md.
+Reviewed source0bcfa52aa / evidence64e3c1ce5. 241's normal60/120 slots and primary3000/5088 handoff retained.
+BLOCKERS: TimeOnly.Add wraps at midnight (1440 can loop forever;09–23/120 can wrap23→01); active-day/no-full-slot
+authoring check missing; disclosed public shipping/commit500 actual cause unresolved. NO full acceptance.
+Repair SAME canonical calendar/preflight/commit edge; exact focused tests and normal HTTP, NO screenshots/new ports.
+Primary Marketplace/Tenant NULL/tooba_marketplace_tb239, user profile D:\temp\tb241-chrome CDP9350 and unsubmitted
+cart01a1846b-aede-7000-850f-de073a511739 frozen against automation/reload/close; preserve unsaved input.
+store-alpha/data/config retained; checked-in gatesOFF, primary localON; TB185 paused/defaultOFF/PendingAllocation.
+Original deadlineMISSED. STOP_FOR_ARCHITECT on result; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 241 EXECUTED: configurable receiving slots end-to-end + ONE primary 3000/5088 (Marketplace tb239) — 2026-10-28
 
 Read docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT VisualACCEPT/PSP. Base5552a97f8; Code0bcfa52aa; claim21:00:33Z→≈21:48Z ≈48min inside60box.
