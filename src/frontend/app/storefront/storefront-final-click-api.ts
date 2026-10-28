@@ -60,7 +60,7 @@ export async function loadCartPaymentDraft(
   couponCode?: string | null,
 ): Promise<StorefrontCheckoutPage> {
   const query = new URLSearchParams();
-  const code = couponCode?.trim() || readStoredCouponCode();
+  const code = resolveCouponIntent(couponCode);
   if (code) query.set("couponCode", code);
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
   const response = await fetch(`/v1/storefront/cart/${encodeURIComponent(cartId)}/payment-draft${suffix}`, {
@@ -135,7 +135,23 @@ export interface StorefrontFinalClickInput {
   expectedCartVersion: number;
   method: StorefrontPaymentMethodId;
   providerCode?: string | null;
+  /**
+   * TB-237-R1: قصد کوپن. `undefined` یعنی «همان قصد ذخیره‌شدهٔ جاری»؛ `null`/تهی یعنی
+   * «صریحاً پاک شد» و هرگز به مقدار ذخیره‌شده برنمی‌گردد.
+   */
   couponCode?: string | null;
+  /**
+   * TB-237-R1: نسخهٔ ریشهٔ انتخاب capture‌شده به‌صورت متن دقیق، از همان نمای
+   * پیش‌نویس پرداخت سرور. `null` یعنی مسیر قدیمی/بدون انتخاب capture‌شده.
+   */
+  expectedSelectionRevision?: string | null;
+}
+
+/** قصد کوپن: `undefined` = قصد ذخیره‌شدهٔ جاری، `null`/تهی = صریحاً بدون کوپن. */
+function resolveCouponIntent(couponCode: string | null | undefined): string | null {
+  if (couponCode === undefined) return readStoredCouponCode();
+  const trimmed = couponCode?.trim() ?? "";
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 /**
@@ -148,7 +164,7 @@ export async function startFinalClickPayment(
   input: StorefrontFinalClickInput,
 ): Promise<StorefrontPaymentInitiation> {
   const providerCode = providerCodeFor(input.method, input.providerCode);
-  const coupon = input.couponCode?.trim() || readStoredCouponCode();
+  const coupon = resolveCouponIntent(input.couponCode);
   const response = await fetch(`/v1/storefront/cart/${encodeURIComponent(input.cartId)}/start-payment`, {
     method: "POST",
     cache: "no-store",
@@ -163,6 +179,9 @@ export async function startFinalClickPayment(
       useWallet: input.method === "wallet",
       providerCode,
       couponCode: coupon || null,
+      // TB-237-R1: بازتاب دقیق نسخهٔ انتخابِ همان نمای پرداخت — متن، بدون تبدیل عددی. نبود آن
+      // یعنی مسیر قدیمی؛ هیچ «0» ساختگی ساخته نمی‌شود.
+      expectedSelectionRevision: input.expectedSelectionRevision ?? null,
     }),
   });
   const payload: unknown = await response.json().catch(() => null);

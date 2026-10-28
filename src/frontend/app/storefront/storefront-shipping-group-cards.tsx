@@ -582,7 +582,9 @@ export function StorefrontShippingGroupCards({
           <p className="text-[11px] text-gray-500 mb-3" data-testid="shipping-captured-preview-notice">
             {capturedPreview?.state === "untrusted"
               ? "پاسخ ارسال این سبد قابل اتکا نیست؛ تا اصلاح آن، روش یا تاریخ قدیمی نمایش داده نمی‌شود."
-              : "این پیش‌نمایش فقط‌خواندنی است؛ انتخاب و ثبت روش ارسال هنوز فعال نیست."}
+              : capturedPreview?.selectionEnabled === false
+                ? "این پیش‌نمایش فقط‌خواندنی است؛ انتخاب و ثبت روش ارسال هنوز فعال نیست."
+                : null}
           </p>
           <div className="space-y-4" data-testid="shipping-captured-groups">
             {capturedPreview?.state === "untrusted" ? (

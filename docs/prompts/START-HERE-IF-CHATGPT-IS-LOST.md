@@ -1,4 +1,15 @@
-# CURRENT — 237 NOT CONNECTED reviewed; issued237-R1 BOOT FIRST + exact wire/payment completion —2026-10-28
+# CURRENT — 237-R1 EXECUTED: booted SingleStore buyer reaches a REAL committed checkout —2026-10-28
+
+Read `docs/architecture/evidence/TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/` (TASK+RESULT). Status PASS
+scoped, NOT accepted, nothing activated. FE `127.0.0.1:3100` + Host `127.0.0.1:5188` live; real order
+`01a1807a-81f0-7000-a1be-091f589a6c1b` / `TB-20261028030754-01-faee55` (full accepted shipping evidence, 1
+reservation, manual payment Pending). Wire now sends the server `expected*` keys; root CAS comes from the persisted
+draft revision, not an invented `"0"` (the live `storefront.captured_selection.stale` regression is fixed and was
+reproduced first). Still open: live coupon trial, double-click/failed-refresh negatives, Marketplace/each-real-seller
+owner trial, PSP success. Screens 1440/390/360 at exact viewports. 231/232/236 APPLIED on non-production
+`tooba_alpha`. User FE `:3000`/Host `:5088` and review window untouched. STOP_FOR_ARCHITECT; no next task.
+
+# SUPERSEDED — 237 NOT CONNECTED reviewed; issued237-R1 BOOT FIRST + exact wire/payment completion —2026-10-28
 
 Active TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1. Read237/ARCHITECT-REVIEW.md + newTASK.
 Root reviewedaffef4029 actual page/API/backendDTO/paymenthandoff: captured WRITE incorrectly uses confirmation*

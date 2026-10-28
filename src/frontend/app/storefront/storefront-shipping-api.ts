@@ -90,20 +90,23 @@ export interface StorefrontShippingDraft {
  * هیچ مالک/مبلغ/صلاحیت/تخفیفی از کلاینت پذیرفته نمی‌شود. `expectedGoodsAmount` برای هر گروه الزامی است
  * (متن اعشاری متعارف، `"0"` صریح قانونی) و سرور آن را با مبلغ authoritative خودش مقایسه می‌کند.
  */
+/**
+ * TB-237-R1: نام‌های **نوشتاری** همان DTO سرور (`StorefrontCapturedGroupSelection`).
+ *
+ * نام‌های `Confirmation*` فقط در پاسخ **خواندن** وجود دارند؛ فرستادن آن‌ها به PUT یعنی پنج بازتاب
+ * `expected*` خالی می‌رسد و نویسنده با `intent_invalid` رد می‌کند. اینجا فقط کلیدهای bind‌شده هست.
+ */
 export interface StorefrontCapturedGroupSelectionInput {
   groupKey: string;
-  shippingMethodCode: string;
   serviceCode: string;
   optionCode: string | null;
-  cartLineIds: string[];
   selectedDeliveryDate: string;
-  selectedDeliveryTimeWindow: string;
+  expectedSnapshotId: string;
+  expectedSourceRevision: string;
+  expectedSelectionVersion: string;
+  expectedAreaGroupId: string;
+  expectedRateRowId: string;
   expectedGoodsAmount: string;
-  confirmationSnapshotId: string | null;
-  confirmationSourceRevision: string | null;
-  confirmationSelectionVersion: string | null;
-  confirmationAreaGroupId: string | null;
-  confirmationRateRowId: string | null;
 }
 
 export interface StorefrontShippingGroupSelectionInput {
@@ -248,6 +251,12 @@ export interface StorefrontCapturedPreview {
    * (نخستین ذخیره «0» می‌فرستد). هرگز با `Number` خوانده نمی‌شود.
    */
   selectionRevision: string | null;
+  /**
+   * TB-237-R1: توانایی واقعی همین سرور برای نوشتن انتخاب/ثبت نهایی. فقط برای نمایش صادقانهٔ وضعیت
+   * استفاده می‌شود؛ هیچ تصمیم مجوز/اعتبار در مرورگر از آن ساخته نمی‌شود.
+   */
+  selectionEnabled: boolean;
+  checkoutEnabled: boolean;
 }
 
 export interface StorefrontShippingSelectionInput {
@@ -537,7 +546,16 @@ function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
 
   const enabled = prop(raw, "enabled", "Enabled");
   if (enabled === false) {
-    return { state: "ok", enabled: false, currency: null, groups: [], unavailableReason: null, selectionRevision: null };
+    return {
+      state: "ok",
+      enabled: false,
+      currency: null,
+      groups: [],
+      unavailableReason: null,
+      selectionRevision: null,
+      selectionEnabled: false,
+      checkoutEnabled: false,
+    };
   }
   if (enabled !== true) return untrustedPreview();
 
@@ -656,6 +674,8 @@ function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
     groups,
     unavailableReason: asNonEmptyString(prop(raw, "noticeReason", "NoticeReason")),
     selectionRevision: asExactTokenOrNull(prop(raw, "selectionRevision", "SelectionRevision")),
+    selectionEnabled: prop(raw, "selectionEnabled", "SelectionEnabled") === true,
+    checkoutEnabled: prop(raw, "checkoutEnabled", "CheckoutEnabled") === true,
   };
 }
 
@@ -705,6 +725,8 @@ function untrustedPreview(): StorefrontCapturedPreview {
     groups: [],
     unavailableReason: "storefront.captured_preview.untrusted",
     selectionRevision: null,
+    selectionEnabled: false,
+    checkoutEnabled: false,
   };
 }
 
@@ -847,21 +869,20 @@ export async function saveShippingSelection(
         : null,
       // TB-237: انتخاب capture‌شدهٔ گروه‌ها فقط با بازتاب دقیق همان پاسخ موفق؛ هرگز مخلوط با
       // `shippingGroups` قدیمی، و همیشه با نسخهٔ انتخاب و کوپنِ همان context.
+      // TB-237-R1: بدنهٔ گروه capture‌شده فقط همان کلیدهای bind‌شدهٔ DTO سرور را دارد؛ هیچ نام
+      // خواندنی (confirmation*) و هیچ shorthand قدیمی (shippingMethodCode/cartLineIds/window) نه.
       capturedGroups: selection.capturedGroups && selection.capturedGroups.length > 0
         ? selection.capturedGroups.map((group) => ({
             groupKey: group.groupKey,
-            shippingMethodCode: group.shippingMethodCode,
             serviceCode: group.serviceCode,
             optionCode: group.optionCode,
-            cartLineIds: group.cartLineIds,
             selectedDeliveryDate: group.selectedDeliveryDate,
-            selectedDeliveryTimeWindow: group.selectedDeliveryTimeWindow,
+            expectedSnapshotId: group.expectedSnapshotId,
+            expectedSourceRevision: group.expectedSourceRevision,
+            expectedSelectionVersion: group.expectedSelectionVersion,
+            expectedAreaGroupId: group.expectedAreaGroupId,
+            expectedRateRowId: group.expectedRateRowId,
             expectedGoodsAmount: group.expectedGoodsAmount,
-            confirmationSnapshotId: group.confirmationSnapshotId,
-            confirmationSourceRevision: group.confirmationSourceRevision,
-            confirmationSelectionVersion: group.confirmationSelectionVersion,
-            confirmationAreaGroupId: group.confirmationAreaGroupId,
-            confirmationRateRowId: group.confirmationRateRowId,
           }))
         : null,
       expectedSelectionRevision: selection.expectedSelectionRevision ?? null,

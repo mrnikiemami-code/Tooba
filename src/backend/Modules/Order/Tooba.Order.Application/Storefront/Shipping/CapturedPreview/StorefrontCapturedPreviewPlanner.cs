@@ -151,7 +151,7 @@ public sealed class StorefrontCapturedPreviewPlanner(
         var resolution = await ResolveAsync(cart, access, destination, currency, languageId, cancellationToken, couponCode);
         if (resolution.Early is { } early)
         {
-            return early;
+            return WithCapabilities(early);
         }
 
         var context = resolution.Context!;
@@ -230,15 +230,26 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 reason));
         }
 
-        return new StorefrontCapturedPreviewView(
+        return WithCapabilities(new StorefrontCapturedPreviewView(
             true,
             composed.Currency,
             composed.EvaluatedAtUtc,
             views,
             context.Provenance?.Item1,
             context.Provenance?.Item2,
-            null);
+            null));
     }
+
+    /// <summary>
+    /// TB-237-R1: توانایی واقعی همین سرور را روی نما می‌گذارد تا UI وضعیت «فقط‌خواندنی» را فقط وقتی
+    /// نشان دهد که نوشتن انتخاب واقعاً بسته است. این مقدار صرفاً نمایشی است و هیچ مجوزی نمی‌سازد.
+    /// </summary>
+    private StorefrontCapturedPreviewView WithCapabilities(StorefrontCapturedPreviewView view) =>
+        view with
+        {
+            SelectionEnabled = SelectionEnabled,
+            CheckoutEnabled = IsCapturedCommitEnabled,
+        };
 
     public async Task<StorefrontCapturedResolution> ResolveAsync(
         CartPage cart,

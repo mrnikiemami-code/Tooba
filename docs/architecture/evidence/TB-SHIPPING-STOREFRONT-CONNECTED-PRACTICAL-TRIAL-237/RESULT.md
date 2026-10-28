@@ -89,3 +89,17 @@ Original watched checkout and its branch/disk, user visible Chrome window, `prev
 runtime data, cart/address book/draft/rates/week/pointer/assignments, shared migrations (231/232/236 remain
 `sharedNOTAPPLIED`), stale EF snapshot gap, TB185 paused/default-OFF/PendingAllocation. No production
 activation, no real-money payment, no Visual ACCEPT.
+
+## Correction appended by 237-R1 (2026-10-28)
+
+The two statements above that 237-R1 supersedes:
+
+- The 231/232/236 migrations are **no longer** sharedNOTAPPLIED on the verified non-production 	ooba_alpha:
+  237-R1 applied all three through the normal Order migration runner (recorded in __ef_migrations_history).
+- The captured selection/payment path **was** exercised for real in 237-R1: PUT /v1/storefront/shipping/selection
+  200, payment preview 200 and a committed checkout 01a1807a-81f0-7000-a1be-091f589a6c1b
+  (TB-20261028030754-01-faee55), with screenshots at 1440/390/360. See
+  ../TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/RESULT.md.
+
+Still open after 237-R1: live coupon trial, double-click/failed-refresh negatives, and the Marketplace/each-real-seller
+owner trial. No Visual ACCEPT; nothing activated.

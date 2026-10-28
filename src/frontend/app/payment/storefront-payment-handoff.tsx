@@ -193,12 +193,23 @@ export function StorefrontPaymentHandoff() {
     setError(null);
     setRecoveryCheckoutId(null);
     try {
+      /**
+       * TB-237-R1: نسخهٔ انتخاب از **همان نمای پرداخت سرور** می‌آید (`page.selectionRevision`).
+       * نبودش یعنی مسیر قدیمی؛ مقدار نامعتبر هرگز به «0» تبدیل نمی‌شود.
+       */
+      const capturedRevision = page.selectionRevision ?? null;
+      if (capturedRevision !== null && !/^\d+$/.test(capturedRevision)) {
+        setError("نسخهٔ انتخاب ارسال معتبر نیست؛ صفحه را تازه کنید.");
+        setPaying(false);
+        return;
+      }
       const initiated =
         mode === "cart"
           ? await startFinalClickPayment({
               cartId: page.cartId,
               expectedCartVersion: page.cartVersion,
               method: method as StorefrontPaymentMethodId,
+              expectedSelectionRevision: capturedRevision,
             })
           : await startStorefrontPayment(page.checkoutId as string, {
               providerCode: method === "wallet" ? WALLET_PROVIDER_CODE : method === "manual" ? "manual" : "gateway",

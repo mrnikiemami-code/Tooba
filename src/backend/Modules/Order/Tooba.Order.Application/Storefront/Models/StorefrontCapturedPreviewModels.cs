@@ -113,6 +113,18 @@ public sealed record StorefrontCapturedPreviewGroupView(
 /// <param name="SelectionVersion">نسخهٔ اشاره‌گر انتخاب‌شده یا تهی.</param>
 /// <param name="SnapshotId">capture انتخاب‌شده یا تهی.</param>
 /// <param name="NoticeReason">کد پایدار توضیح وضعیت خواندنی یا تهی.</param>
+/// <param name="SelectionRevision">
+/// TB-237-R1: نسخهٔ <b>ذخیره‌شدهٔ</b> ریشهٔ انتخاب به‌صورت متن اعشاری دقیق — همان مقداری که CAS بعدی
+/// باید بفرستد. `"0"` یعنی سرور اثبات کرده هیچ انتخاب capture‌شده‌ای ذخیره نشده است؛ `null` یعنی این
+/// هویت اثبات نشده (نمای غیرفعال/نامعتبر) و هرگز به «0» تفسیر نمی‌شود.
+/// </param>
+/// <param name="SelectionEnabled">
+/// TB-237-R1: توانایی واقعی «نوشتن انتخاب» در همین سرور. فقط برای نمایش صادقانهٔ وضعیت در UI است؛
+/// هیچ مجوزی از آن ساخته نمی‌شود و مرورگر با آن چیزی را معتبر نمی‌کند.
+/// </param>
+/// <param name="CheckoutEnabled">
+/// TB-237-R1: توانایی واقعی «ثبت نهایی» (همان دروازهٔ چهارشرطی). مثل بالا فقط نمایشی است.
+/// </param>
 public sealed record StorefrontCapturedPreviewView(
     bool Enabled,
     string? Currency,
@@ -120,4 +132,7 @@ public sealed record StorefrontCapturedPreviewView(
     IReadOnlyList<StorefrontCapturedPreviewGroupView> Groups,
     long? SelectionVersion,
     Guid? SnapshotId,
-    string? NoticeReason);
+    string? NoticeReason,
+    string? SelectionRevision = null,
+    bool SelectionEnabled = false,
+    bool CheckoutEnabled = false);

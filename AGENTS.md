@@ -1,4 +1,25 @@
-# CURRENT — 237 NOT CONNECTED reviewed; issued237-R1 BOOT FIRST + exact wire/payment completion —2026-10-28
+# CURRENT — 237-R1 EXECUTED: booted SingleStore buyer reaches a REAL committed checkout through the existing UI —2026-10-28
+
+Read `docs/architecture/evidence/TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/{TASK.md,RESULT.md}`.
+Status **PASS (scoped)**, NOT Architect-accepted, no Visual ACCEPT, nothing activated for users. Row
+`739fb2be-ee72-4297-b074-f5ae37f8647c`, base `ff9962e84`, claimed 02:21:12Z → result ≈03:52Z **≈91 min vs HARD40
+(NONCOMPLIANT, recorded)**.
+URL: `http://127.0.0.1:3100/fa/shipping` + `/fa/payment?cartId=` on FE 3100 (`D:\temp\tb237\src\frontend`) and Host
+`127.0.0.1:5188` (PID 22404, `bin\Release`), both 200, gates ON in LOCAL env only. Real order
+`01a1807a-81f0-7000-a1be-091f589a6c1b` / `TB-20261028030754-01-faee55` with full accepted group evidence, 1
+reservation, `manual` payment Pending. Wire fixed to the server DTO `expected*` keys (no `confirmation*`), legacy
+shorthand empty, root CAS taken from the PERSISTED draft revision (else server-built `capturedPreview.selectionRevision`)
+so a re-entered page can no longer send `"0"` and be refused `storefront.captured_selection.stale`; all-groups blocker,
+confirmed-identity context key, sync in-flight ref, TEXT revision + tri-state coupon in the final click. LIVE
+reproduction of the stale defect (03:17:20Z/03:18:42Z 400) then 200 with revision `1→2→3`. STILL OPEN: live coupon
+trial, double-click/failed-refresh negatives, Marketplace/each-real-seller owner trial, PSP/payment success. Tests:
+typecheck clean, 9/9 selection units, critical-storefront one PRE-EXISTING red (`storefront-landing-blocks.tsx:286`,
+untouched file), backend `~Storefront` 299 pass / 38 disposable-DB-guard failures. Screens 1440/390/360 re-captured at
+exact viewports (first batch was 1920×1042 after the override expired — discarded, disclosed). 231/232/236 now APPLIED
+on verified non-production `tooba_alpha` via the normal runner. Original FE `:3000`/Host `:5088` and the user's review
+window untouched. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 237 NOT CONNECTED reviewed; issued237-R1 BOOT FIRST + exact wire/payment completion —2026-10-28
 
 Active TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1. Read237/ARCHITECT-REVIEW.md + newTASK.
 Root reviewedaffef4029 actual page/API/backendDTO/paymenthandoff: captured WRITE incorrectly uses confirmation*

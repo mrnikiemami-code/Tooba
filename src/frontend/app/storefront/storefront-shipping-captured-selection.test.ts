@@ -3,8 +3,10 @@ import test from "node:test";
 
 import {
   buildCapturedSelectionIntent,
+  capturedSelectionBlocker,
   capturedSelectionComplete,
   capturedSelectionContextKey,
+  resolveCapturedSelectionRevision,
 } from "./storefront-shipping-captured-selection.ts";
 import type {
   StorefrontCapturedPreview,
@@ -12,11 +14,12 @@ import type {
 } from "./storefront-shipping-api.ts";
 
 /**
- * TB-237 — قصد ثبت انتخاب capture‌شده فقط از پاسخ موفق سرور.
+ * TB-237-R1 — قصد ثبت انتخاب capture‌شده فقط از پاسخ موفق سرور.
  *
- * این تست قرارداد **ساخت درخواست** را ثابت می‌کند، نه قیمت/مالکیت: مبلغ کالا متن دقیق سرور است،
- * قصد ناقص هرگز ارسال نمی‌شود، روش با کلید سرویس/گزینهٔ همان گروه پیدا می‌شود و هر تغییر context
- * تأییدهای قبلی را باطل می‌کند.
+ * این تست قرارداد **ساخت درخواست** را با نام‌های واقعیِ DTO سرور ثابت می‌کند
+ * (`expectedSnapshotId`/`expectedSourceRevision`/`expectedSelectionVersion`/`expectedAreaGroupId`/
+ * `expectedRateRowId`/`expectedGoodsAmount`)، نه با نام‌های خواندنی `confirmation*`. مبلغ کالا متن
+ * دقیق سرور است، قصد ناقص هرگز ارسال نمی‌شود و گروه غیرقابل‌ارسال کل قصد را مسدود می‌کند.
  */
 function method(overrides: Record<string, unknown> = {}) {
   return {
@@ -48,7 +51,7 @@ function group(overrides: Partial<StorefrontCapturedPreviewGroup> = {}): Storefr
     typeLabel: "سنگین",
     sellerPartyId: "01a030d1-40cb-7000-8abe-6d31739956c5",
     cartLineIds: ["01a17cfd-c1b1-7000-b10d-8cf21258a1cd"],
-    finalGoodsAmountText: "9485771.00",
+    finalGoodsAmountText: "9485771",
     methods: [method()],
     unavailableReason: null,
     ...overrides,
@@ -64,37 +67,72 @@ function preview(overrides: Partial<StorefrontCapturedPreview> = {}): Storefront
     currency: "IRR",
     groups: [group()],
     unavailableReason: null,
-    selectionRevision: "0",
+    selectionRevision: null,
+    selectionEnabled: true,
+    checkoutEnabled: true,
     ...overrides,
   };
 }
 
-test("a complete selection carries the exact server goods text and every confirmation echo verbatim", () => {
+test("a complete selection carries exactly the server WRITE keys and the exact goods text", () => {
   const intent = buildCapturedSelectionIntent(preview(), { "cap|post|store|heavy": choice });
   assert.ok(intent);
   assert.equal(intent.length, 1);
   const [only] = intent;
-  // متن دقیق — هیچ تبدیل عددی/گردکردنی روی پول رخ نمی‌دهد.
-  assert.equal(only.expectedGoodsAmount, "9485771.00");
-  assert.equal(only.confirmationSourceRevision, "4294967296");
-  assert.equal(only.confirmationSnapshotId, "01a17d0e-0419-7000-b575-f507d2f89abc");
-  assert.equal(only.confirmationSelectionVersion, "1");
+  // نام‌های نوشتاری سرور — نه نام‌های خواندنی.
+  assert.deepEqual(Object.keys(only).sort(), [
+    "expectedAreaGroupId",
+    "expectedGoodsAmount",
+    "expectedRateRowId",
+    "expectedSelectionVersion",
+    "expectedSnapshotId",
+    "expectedSourceRevision",
+    "groupKey",
+    "optionCode",
+    "selectedDeliveryDate",
+    "serviceCode",
+  ]);
+  assert.equal(only.expectedGoodsAmount, "9485771");
+  assert.equal(only.expectedSnapshotId, "01a17d0e-0419-7000-b575-f507d2f89abc");
+  assert.equal(only.expectedSourceRevision, "4294967296");
+  assert.equal(only.expectedSelectionVersion, "1");
+  assert.equal(only.expectedAreaGroupId, "01a17d0e-aaaa-7000-b575-f507d2f89abc");
+  assert.equal(only.expectedRateRowId, "01a17d0e-bbbb-7000-b575-f507d2f89abc");
   assert.equal(only.selectedDeliveryDate, "2026-10-29");
-  assert.equal(only.selectedDeliveryTimeWindow, "09:00-17:00");
-  assert.deepEqual(only.cartLineIds, ["01a17cfd-c1b1-7000-b10d-8cf21258a1cd"]);
+  // هیچ shorthand قدیمی در بدنهٔ گروه capture‌شده نیست.
+  assert.equal("shippingMethodCode" in only, false);
+  assert.equal("cartLineIds" in only, false);
+  assert.equal("selectedDeliveryTimeWindow" in only, false);
 });
 
 test("a missing/blank/malformed goods echo blocks the whole intent instead of sending a guess", () => {
   for (const goods of [null, "", "  ", "9,485,771", "+9485771", "9485771.0e3"]) {
-    const intent = buildCapturedSelectionIntent(
-      preview({ groups: [group({ finalGoodsAmountText: goods as string | null })] }),
-      { "cap|post|store|heavy": choice },
-    );
-    assert.equal(intent, null, `goods=${String(goods)} must not produce an intent`);
+    const blocked = preview({ groups: [group({ finalGoodsAmountText: goods as string | null })] });
     assert.equal(
-      capturedSelectionComplete(preview({ groups: [group({ finalGoodsAmountText: goods as string | null })] }), { "cap|post|store|heavy": choice }),
-      false,
+      buildCapturedSelectionIntent(blocked, { "cap|post|store|heavy": choice }),
+      null,
+      `goods=${String(goods)} must not produce an intent`,
     );
+    assert.equal(capturedSelectionComplete(blocked, { "cap|post|store|heavy": choice }), false);
+  }
+});
+
+test("any missing confirmation token blocks the intent (no partial echo is ever sent)", () => {
+  for (const token of [
+    "confirmationSnapshotId",
+    "confirmationSourceRevision",
+    "confirmationSelectionVersion",
+    "confirmationAreaGroupId",
+    "confirmationRateRowId",
+  ]) {
+    const blocked = preview({ groups: [group({ methods: [method({ [token]: null })] })] });
+    assert.equal(
+      buildCapturedSelectionIntent(blocked, { "cap|post|store|heavy": choice }),
+      null,
+      `${token}=null must block`,
+    );
+    const blank = preview({ groups: [group({ methods: [method({ [token]: "   " })] })] });
+    assert.equal(buildCapturedSelectionIntent(blank, { "cap|post|store|heavy": choice }), null, `${token}=blank must block`);
   }
 });
 
@@ -104,6 +142,25 @@ test("explicit zero goods is lawful and stays the literal text zero", () => {
   });
   assert.ok(intent);
   assert.equal(intent[0].expectedGoodsAmount, "0");
+});
+
+test("an unavailable server group BLOCKS the request instead of being dropped from a partial cart", () => {
+  const withUnavailable = preview({
+    groups: [
+      group(),
+      group({
+        groupKey: "cap|post|seller|heavy",
+        sellerPartyId: "01a030d1-40cb-7000-8abe-6d3173995600",
+        cartLineIds: ["01a17cfd-c1b1-7000-b10d-8cf21258a1ff"],
+        methods: [],
+        unavailableReason: "storefront.captured_preview.unassigned",
+      }),
+    ],
+  });
+  const choices = { "cap|post|store|heavy": choice };
+  assert.equal(capturedSelectionBlocker(withUnavailable, choices), "unavailable_group");
+  assert.equal(capturedSelectionComplete(withUnavailable, choices), false);
+  assert.equal(buildCapturedSelectionIntent(withUnavailable, choices), null);
 });
 
 test("no method chosen, a date outside that method, or no preview at all never builds a request", () => {
@@ -117,6 +174,7 @@ test("no method chosen, a date outside that method, or no preview at all never b
     buildCapturedSelectionIntent(preview({ state: "untrusted", groups: [] }), { "cap|post|store|heavy": choice }),
     null,
   );
+  assert.equal(buildCapturedSelectionIntent(preview({ enabled: false, groups: [] }), {}), null);
 });
 
 test("two owners sharing the same binding keep independent choices and goods", () => {
@@ -124,7 +182,7 @@ test("two owners sharing the same binding keep independent choices and goods", (
     groupKey: "cap|post|seller|heavy",
     sellerPartyId: "01a030d1-40cb-7000-8abe-6d3173995600",
     cartLineIds: ["01a17cfd-c1b1-7000-b10d-8cf21258a1ff"],
-    finalGoodsAmountText: "198.00",
+    finalGoodsAmountText: "198",
   });
   const intent = buildCapturedSelectionIntent(preview({ groups: [group(), other] }), {
     "cap|post|store|heavy": choice,
@@ -132,16 +190,52 @@ test("two owners sharing the same binding keep independent choices and goods", (
   });
   assert.ok(intent);
   assert.equal(intent.length, 2);
-  assert.deepEqual(intent.map((entry) => entry.expectedGoodsAmount), ["9485771.00", "198.00"]);
+  assert.deepEqual(intent.map((entry) => entry.expectedGoodsAmount), ["9485771", "198"]);
   assert.deepEqual(intent.map((entry) => entry.groupKey), ["cap|post|store|heavy", "cap|post|seller|heavy"]);
 });
 
-test("any destination, coupon, cart-version or revision change invalidates previous confirmations", () => {
-  const base = { destinationKey: "d1", couponCode: null, cartVersion: 7, snapshotId: null, selectionVersion: "1" };
+test("any destination, coupon, cart-version or confirmed-identity change invalidates confirmations", () => {
+  const base = { destinationKey: "d1", couponCode: null, cartVersion: 7, preview: preview() };
   const key = capturedSelectionContextKey(base);
   assert.equal(capturedSelectionContextKey({ ...base }), key);
   assert.notEqual(capturedSelectionContextKey({ ...base, destinationKey: "d2" }), key);
   assert.notEqual(capturedSelectionContextKey({ ...base, couponCode: "SAVE10" }), key);
   assert.notEqual(capturedSelectionContextKey({ ...base, cartVersion: 8 }), key);
-  assert.notEqual(capturedSelectionContextKey({ ...base, selectionVersion: "2" }), key);
+  // تغییر بازتاب سرور (مثلاً بازبینی مبدأ) یا مبلغ کالا، حتی با همان snapshot، تأیید را باطل می‌کند.
+  assert.notEqual(
+    capturedSelectionContextKey({
+      ...base,
+      preview: preview({ groups: [group({ methods: [method({ confirmationSourceRevision: "3" })] })] }),
+    }),
+    key,
+  );
+  assert.notEqual(
+    capturedSelectionContextKey({ ...base, preview: preview({ groups: [group({ finalGoodsAmountText: "1" })] }) }),
+    key,
+  );
+  assert.notEqual(capturedSelectionContextKey({ ...base, preview: null }), key);
 });
+
+/**
+ * TB-237-R1 — نسخهٔ ریشهٔ CAS فقط از سرور.
+ *
+ * سناریوی واقعی: مشتری به صفحهٔ ارسال برمی‌گردد، نمای قدیمی `draft` غایب است (مسیر بازیابی) ولی
+ * ریشهٔ capture‌شده با نسخهٔ `1` ذخیره مانده. فرستادن `0` در آن حالت `storefront.captured_selection.stale`
+ * می‌سازد و ذخیرهٔ درست را رد می‌کند؛ پس نسخهٔ `capturedPreview.selectionRevision` همان مقدار
+ * اثبات‌شدهٔ سرور است. هیچ نسخه‌ای حدس زده نمی‌شود و «0» تنها یعنی ریشه اثباتاً غایب.
+ */
+test("the captured root revision comes from the server, never an invented zero", () => {
+  assert.equal(resolveCapturedSelectionRevision({ draftRevision: "1", previewRevision: "2" }), "1");
+  assert.equal(
+    resolveCapturedSelectionRevision({ draftRevision: null, previewRevision: "1" }),
+    "1",
+    "a missing legacy draft view must not downgrade a stored root to zero",
+  );
+  assert.equal(resolveCapturedSelectionRevision({ draftRevision: null, previewRevision: "0" }), "0");
+  assert.equal(resolveCapturedSelectionRevision({ draftRevision: undefined, previewRevision: "4294967296" }), "4294967296");
+  assert.equal(resolveCapturedSelectionRevision({ draftRevision: " 1", previewRevision: null }), null);
+  assert.equal(resolveCapturedSelectionRevision({ draftRevision: "-1", previewRevision: "1.0" }), null);
+  assert.equal(resolveCapturedSelectionRevision({ draftRevision: null, previewRevision: null }), null);
+  assert.equal(resolveCapturedSelectionRevision({}), null);
+});
+

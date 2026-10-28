@@ -75,6 +75,7 @@ import {
   buildCapturedSelectionIntent,
   capturedSelectionComplete,
   capturedSelectionContextKey,
+  resolveCapturedSelectionRevision,
 } from "./storefront-shipping-captured-selection.ts";
 import { StorefrontShippingSingleGroupSection } from "./storefront-shipping-single-group-section.tsx";
 import { resolveShippingUnavailableNotices } from "./storefront-shipping-unavailable-methods.ts";
@@ -123,6 +124,13 @@ export function StorefrontShopeivaShipping() {
    * سرویس/گزینه **در همان گروه** ذخیره می‌شود تا دو مالک با همان Binding/ترجمه مستقل بمانند.
    */
   const [capturedChoices, setCapturedChoices] = useState<Record<string, StorefrontCapturedGroupChoice>>({});
+  /**
+   * TB-237-R1: نگهبان همگام ذخیره/کلیک نهایی. `busy` فقط state ری‌اکت است و دو کلیک در یک tick را
+   * نمی‌بندد؛ این ref پیش از نخستین `await` بسته و در `finally` آزاد می‌شود.
+   */
+  const saveInFlightRef = useRef(false);
+  /** TB-237-R1: نسخهٔ واقعیِ برگشتی از همان ذخیرهٔ موفق (متن دقیق) برای تحویل به پرداخت. */
+  const [, setSavedSelectionRevision] = useState<string | null>(null);
   /**
    * TB-237: قصد کوپنِ همین context. پاک‌کردن صریح در سبد، `null` ذخیره می‌کند و همین‌جا هم «بدون
    * کوپن» است؛ هیچ `value || stored` fallback وجود ندارد.
@@ -415,9 +423,9 @@ export function StorefrontShopeivaShipping() {
     destinationKey,
     couponCode: couponIntent,
     cartVersion: projection?.cartVersion ?? 0,
-    // نسخهٔ پایدارِ انتخابِ ذخیره‌شده، خودش بخشی از context است؛ تغییر آن یعنی تأیید قبلی معتبر نیست.
-    snapshotId: null,
-    selectionVersion: projection?.capturedPreview?.selectionRevision ?? projection?.draft?.selectionRevision ?? null,
+    // TB-237-R1: هویت کامل پاسخ تأییدشده (هر گروه: بازتاب‌ها + مبلغ کالا + تقویم) بخشی از context است؛
+    // تغییر قیمت/تقویم/ناحیه/ردیف با همان snapshot هم تأیید قبلی را باطل می‌کند.
+    preview: projection?.capturedPreview ?? null,
   });
   const capturedContextKeyRef = useRef<string | null>(null);
   useEffect(() => {
@@ -697,14 +705,44 @@ export function StorefrontShopeivaShipping() {
         : "Choose a valid method and date for every group, then try again.");
       return;
     }
-    const capturedPrimary = capturedGroups?.[0];
-    const effectiveMethodCode = capturedPrimary?.shippingMethodCode ?? primaryMethodCode;
-    if (!effectiveMethodCode) return;
+    /**
+     * TB-237-R1: نسخهٔ ریشهٔ CAS فقط از سرور می‌آید.
+     *
+     * - پیش‌نویس ذخیره‌شده با نسخهٔ معتبر ⇒ همان `draft.selectionRevision` دقیق.
+     * - نمای قدیمی `draft` غایب ولی ریشهٔ capture‌شده موجود ⇒ `capturedPreview.selectionRevision`
+     *   (ساختهٔ سرور از همان ریشهٔ ذخیره‌شده؛ «0» تنها یعنی ریشه اثباتاً غایب). این حالت هنگام
+     *   ورود دوباره به صفحه رخ می‌دهد؛ فرستادن «0» آنجا `storefront.captured_selection.stale` واقعی
+     *   می‌سازد و ذخیرهٔ درست را بی‌دلیل رد می‌کند.
+     * - هیچ نسخهٔ قابل‌استنادی نرسیده ⇒ محلی رد می‌شود؛ هیچ نسخه‌ای حدس زده نمی‌شود.
+     */
+    let expectedSelectionRevision: string | null = null;
+    if (capturedPreviewActive) {
+      expectedSelectionRevision = resolveCapturedSelectionRevision({
+        draftRevision: projection.draft?.selectionRevision ?? null,
+        previewRevision: projection.capturedPreview?.selectionRevision ?? null,
+      });
+      if (expectedSelectionRevision === null) {
+        setError(locale === "fa"
+          ? "نسخهٔ ثبت‌شدهٔ ارسال از سرور دریافت نشد؛ صفحه را تازه کنید و دوباره تلاش کنید."
+          : "The stored shipping revision could not be confirmed; refresh and try again.");
+        return;
+      }
+    }
+    const effectiveMethodCode = capturedPreviewActive
+      ? (capturedGroups?.[0]?.serviceCode ?? "")
+      : primaryMethodCode;
+    if (!capturedPreviewActive && !effectiveMethodCode) return;
+    /**
+     * TB-237-R1: نگهبان همگام پیش از نخستین `await` — `busy` (state ری‌اکت) کلیک دوم در همان tick را
+     * نمی‌بندد؛ این ref بلافاصله بسته می‌شود و در `finally` آزاد می‌شود. هیچ تلاش خودکار بعدی نیست.
+     */
+    if (saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
     setBusy(true);
     setError(null);
     setLimitCode(null);
     try {
-      await saveShippingSelection(projection.cartId, projection.cartVersion, {
+      const savedDraft = await saveShippingSelection(projection.cartId, projection.cartVersion, {
         firstName: address.firstName,
         lastName: address.lastName,
         recipientName: composeRecipient(address),
@@ -714,21 +752,26 @@ export function StorefrontShopeivaShipping() {
         postalAddress: address.postalAddress,
         postalCode: address.postalCode,
         savedAddressId,
-        shippingMethodCode: effectiveMethodCode,
+        // TB-237-R1: در مسیر capture‌شده، shorthand قدیمی (روش/تاریخ/بازه) **خالی** می‌ماند؛
+        // نویسندهٔ سرور هر shorthand غیرخالی را `intent_invalid` می‌داند و مسیر قدیمی دست‌نخورده است.
+        shippingMethodCode: capturedPreviewActive ? "" : effectiveMethodCode,
         // (150) مقدار اسکالری فقط برای سازگاری مسیر تک‌گروهی ارسال می‌شود؛ در سبد چندگروهی هیچ
         // تاریخ سراسری معتبر نیست و هر گروه زمان‌بندی خودش را جدا می‌فرستد.
-        selectedDeliveryDate: isGroupedCart ? onlyGroupSelection?.deliveryDate ?? "" : deliveryDate,
-        selectedDeliveryTimeWindow: isGroupedCart ? onlyGroupSelection?.deliveryTime ?? "" : deliveryTime,
+        selectedDeliveryDate: capturedPreviewActive
+          ? ""
+          : (isGroupedCart ? onlyGroupSelection?.deliveryDate ?? "" : deliveryDate),
+        selectedDeliveryTimeWindow: capturedPreviewActive
+          ? ""
+          : (isGroupedCart ? onlyGroupSelection?.deliveryTime ?? "" : deliveryTime),
         customerNote: notes,
         shippingGroups: capturedPreviewActive ? null : (isGroupedCart ? requestedGroups : null),
         capturedGroups,
-        // نسخهٔ انتخاب ریشه: از همان پاسخ موفق، وگرنه نسخهٔ ذخیره‌شدهٔ پیش‌نویس، وگرنه «0» (نبود).
-        expectedSelectionRevision: capturedPreviewActive
-          ? projection.capturedPreview?.selectionRevision ?? projection.draft?.selectionRevision ?? "0"
-          : null,
+        expectedSelectionRevision,
         // همان قصد کوپنِ همین context؛ پاک‌کردن صریح یعنی «بدون کوپن»، نه fallback به مقدار ذخیره‌شده.
         couponCode: couponIntent,
       });
+      // TB-237-R1: نسخهٔ واقعیِ برگشتی از همان ذخیره، مقصد بعدیِ کلیک نهایی پرداخت است (متن دقیق).
+      setSavedSelectionRevision(capturedPreviewActive ? savedDraft.selectionRevision ?? null : null);
       // ارسال فقط «پیش‌نویس» می‌شود و سبد Active می‌ماند. commit/رزرو/ساخت سفارش فقط با کلیک نهایی
       // پرداخت در صفحهٔ پرداخت رخ می‌دهد؛ اینجا هیچ درخواست commit ارسال نمی‌شود.
       router.push(localizePath(`/payment?cartId=${encodeURIComponent(projection.cartId)}`));
@@ -736,6 +779,7 @@ export function StorefrontShopeivaShipping() {
       setError(toCustomerShippingMessage(cause, locale));
       setLimitCode(cause instanceof StorefrontCartApiError ? cause.errorCode : null);
     } finally {
+      saveInFlightRef.current = false;
       setBusy(false);
     }
   }

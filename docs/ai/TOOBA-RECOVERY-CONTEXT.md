@@ -1,6 +1,19 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-22
+## Current Shipping handoff — 2026-10-28 (TB-237-R1)
+
+The live pointer is
+[`TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/RESULT.md`](../architecture/evidence/TB-SHIPPING-STOREFRONT-LIVE-WIRE-COMPLETION-237-R1/RESULT.md)
+and the task-wide TOP is the root `AGENTS.md`.
+
+A booted SingleStore buyer now completes read → selection `PUT` 200 → payment preview 200 → committed checkout
+`01a1807a-81f0-7000-a1be-091f589a6c1b` (`TB-20261028030754-01-faee55`) on task FE `127.0.0.1:3100` / Host
+`127.0.0.1:5188`. Migrations 231/232/236 are APPLIED on that verified non-production `tooba_alpha`. Still open: live
+coupon trial, double-click/failed-refresh negatives, and the Marketplace/each-real-seller owner trial. Nothing is
+activated for users; checked-in gates stay OFF; TB185 remains paused/default-OFF/PendingAllocation.
+`STOP_FOR_ARCHITECT`, no automatic next task.
+
+## Historical Shipping handoff — 2026-10-22
 
 The current Shipping task/acceptance pointer is
 [`SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md`](../planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md).

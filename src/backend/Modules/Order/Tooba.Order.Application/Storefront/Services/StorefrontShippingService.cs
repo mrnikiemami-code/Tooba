@@ -117,6 +117,14 @@ public sealed class StorefrontShippingService
         var methods = eligible.Methods;
 
         var draft = await LoadDraftAsync(cart.CartId, guestSecret, cancellationToken);
+
+        // TB-237-R1: نسخهٔ ریشهٔ CAS از «پیش‌نویس ذخیره‌شده» خوانده می‌شود، نه از متغیر
+        // بازاعتبارسنجی‌شدهٔ زیر. یک انتخاب capture‌شده عمداً shorthand قدیمی ندارد، پس
+        // StorefrontShippingDraftRecovery می‌تواند آن را نامعتبر بداند و `draft` را null کند؛
+        // آن null هرگز نباید نسخهٔ پایدار ریشه را به «0» برگرداند (وگرنه CAS دروغ می‌گوید).
+        var persistedSelectionRevision = draft is null
+            ? "0"
+            : draft.SelectionRevision.ToString(System.Globalization.CultureInfo.InvariantCulture);
         var revalidationMessage = (string?)null;
         if (draft is not null)
         {
@@ -187,6 +195,15 @@ public sealed class StorefrontShippingService
                 previewLanguageId,
                 cancellationToken,
                 Models.StorefrontCouponIntent.Normalize(couponCode));
+
+            // TB-237-R1: نسخهٔ ریشهٔ CAS فقط از دادهٔ ذخیره‌شدهٔ همین سرور می‌آید و از متغیر
+            // `persistedSelectionRevision` خوانده می‌شود تا بازاعتبارسنجی قدیمی نتواند آن را صفر کند.
+            capturedPreviewView = capturedPreviewView is null
+                ? null
+                : capturedPreviewView with
+                {
+                    SelectionRevision = persistedSelectionRevision,
+                };
         }
 
         return new StorefrontShippingProjection(
