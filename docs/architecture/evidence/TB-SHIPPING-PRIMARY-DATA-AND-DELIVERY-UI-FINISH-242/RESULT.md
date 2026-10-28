@@ -12,8 +12,8 @@ Status: PASS
 Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 39ba84c77037d524813e55b4b641c51b49904ac0
 Base-SHA: 39ba84c77037d524813e55b4b641c51b49904ac0
-Code-SHA: CODE_SHA_PLACEHOLDER
-Evidence-SHA: EVIDENCE_SHA_PLACEHOLDER
+Code-SHA: 3c42be960db4b33adee2cc2f0581f60f5b5a5d70
+Evidence-SHA: PENDING
 automaticNextImplementationTask: NONE
 
 PRIMARY http://127.0.0.1:3000/fa/shipping → Host 127.0.0.1:5088 PID45304 (D:\temp\tb242-primary, DeploymentId=store-alpha-tb242-primary).
