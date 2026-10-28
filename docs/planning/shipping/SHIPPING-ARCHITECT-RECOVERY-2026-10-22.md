@@ -1,17 +1,12 @@
-# CURRENT — 242 ISSUED: original SingleStore data + polished configured delivery UI — 2026-10-29
-Active TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242; read docs/ai/tasks/TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242/TASK.md.
-User rejects current tiny time-picker visuals AND Marketplace trial DB on primary. Restore ORIGINAL
-SingleStore/store-alpha/tooba_alpha at SAME3000/5088 using preserved config, no copy/merge/reset/reseed/data loss.
-This latest instruction supersedes241's Marketplace-on-primary decision, not Marketplace support or stored trials.
-Apply .cursor/skills/tooba-frontend-feature/SKILL.md + frontend standard; reuse legacy time-card visual vocabulary
-with the existing captured slots authority. NO screenshots/new ports/globalCSS/new design/calendar engine.
-Real selected shipping method's published weekly hours/duration/timezone -> server nested slots -> polished
-per-group date/time cards -> exact selection/payment preview. No invented60, fallback presets or changed user rules.
-Rebuild BOTH FE and Host final main; previous FE241/HostR1 bundle divergence must end. Preserve user local forms,
-all original/Marketplace DBs/profiles and original user draft01a16eeb…; current CDP9350 is user work, no automation.
-Only authorized additive pending forward migrations through normal runner after exact target+backup; no history edit.
-241-R1 scope accepted, worker historical repeat unmet retained. Original deadlineMISSED; no replacement promise.
-Checked-in gatesOFF, TB185 paused/defaultOFF/PendingAllocation. Result STOP_FOR_ARCHITECT; no automatic243.
+# CURRENT — 242 EXECUTED: SingleStore primary restored + polished delivery picker — 2026-10-29
+Read docs/architecture/evidence/TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242/{RESULT.md,RECEIPTS.md}.
+PRIMARY http://127.0.0.1:3000/fa/shipping →5088 SingleStore/store-alpha/tooba_alpha; FE+Host rebuilt; polished
+CapturedSlotPicker; NULL slot_duration → one authored window proven; selection+payment-draft same ticks/window.
+User draft01a16eeb preserved; only DEV230-typed offer currently assigned for priced path (disclosed). Active NONE;
+automaticNext NONE; STOP_FOR_ARCHITECT.
+
+# SUPERSEDED — 242 ISSUED: original SingleStore data + polished configured delivery UI — 2026-10-29
+Issued restore + UI polish; Marketplace-on-primary revoked for primary only.
 
 # SUPERSEDED — 241-R1 ARCHITECT REVIEW: boundary/commit repair ACCEPTED WITHIN SCOPE; user trial — 2026-10-29
 

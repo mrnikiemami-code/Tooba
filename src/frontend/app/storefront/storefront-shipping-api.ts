@@ -939,6 +939,9 @@ export async function saveShippingSelection(
             expectedAreaGroupId: group.expectedAreaGroupId,
             expectedRateRowId: group.expectedRateRowId,
             expectedGoodsAmount: group.expectedGoodsAmount,
+            // TB-241/242: exact server ticks must reach PUT; omitting them drops the chosen slot.
+            selectedSlotStartTicks: group.selectedSlotStartTicks ?? null,
+            selectedSlotEndTicks: group.selectedSlotEndTicks ?? null,
           }))
         : null,
       expectedSelectionRevision: selection.expectedSelectionRevision ?? null,

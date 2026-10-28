@@ -333,10 +333,15 @@ test("captured date chips only look selected for a real committed choice", () =>
   assert.match(cards, /const active = selected && selectedDate \? selectedDate : "";/);
   assert.match(surface, /aria-pressed=\{selected\}/);
   assert.match(surface, /data-selected=\{selected \? "true" : "false"\}/);
-  assert.match(surface, /بازهٔ روز پیشنهادی — هنوز انتخاب نشده/);
+  // TB-242: پیشنهاد هرگز به‌عنوان انتخاب دیده نمی‌شود؛ خلاصه فقط پس از انتخاب واقعی است.
+  assert.match(cards, /ابتدا یکی از روزهای بالا را انتخاب کنید/);
+  assert.match(cards, /هنوز ساعت تحویل انتخاب نشده/);
+  assert.doesNotMatch(surface, /بازهٔ روز پیشنهادی — هنوز انتخاب نشده/);
   // هیچ fallback خودکار به زودترین تاریخ به‌عنوان انتخاب وجود ندارد.
   assert.doesNotMatch(cards, /const active = selectedDate \?\? method\.earliestEligibleDate/);
   assert.match(cards, /data-testid=\{`shipping-group-delivery-\$\{group\.groupKey\}`\}/);
+  assert.match(chips, /ساعت تحویل/);
+  assert.match(chips, /min-h-11/);
 });
 
 test("the page renders one short owning blocker next to Continue from the shared decision", () => {

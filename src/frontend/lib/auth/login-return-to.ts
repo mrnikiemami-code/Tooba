@@ -15,7 +15,7 @@ export function sanitizeReturnTo(raw: string | null | undefined, locale: Locale)
     return fallback;
   }
 
-  let value = raw.trim();
+  const value = raw.trim();
   try {
     if (/^[a-zA-Z][a-zA-Z+\-.]*:/.test(value) || value.startsWith("//") || value.includes("\\")) {
       return fallback;

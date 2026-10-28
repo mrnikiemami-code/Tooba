@@ -1,14 +1,14 @@
 ﻿"use client";
 
 /**
- * TB-150 / TB-229-R1 / TB-241 — کنترل‌های مشترک زمان تحویل.
+ * TB-150 / TB-229-R1 / TB-241 / TB-242 — کنترل‌های مشترک زمان تحویل.
  *
  * این فایل فقط DOM مشترک را نگه می‌دارد تا کارت گروه کوچک بماند:
  * - `DateChipStrip` نوار تاریخ مشترک مسیر قدیمی و پیش‌نمایش capture‌شده است (بدون تاریخ ساختگی).
  * - `CapturedSlotPicker` نوبت‌های ساعتی همان روز را نشان می‌دهد که سرور فرستاده است؛ هیچ نوبتی
- *   ساخته، گرد یا با فاصلهٔ حدسی تولید نمی‌شود.
+ *   ساخته، گرد یا با فاصلهٔ حدسی تولید نمی‌شود. ظاهر با `GroupSchedulePicker` هم‌سبک است.
  */
-import { Clock } from "lucide-react";
+import { Check, Clock } from "lucide-react";
 
 import type { StorefrontCapturedSlot } from "./storefront-shipping-api.ts";
 import { deliveryChipParts } from "./storefront-shipping-format.ts";
@@ -79,8 +79,9 @@ export function DateChipStrip({
 }
 
 /**
- * TB-241 — نوبت‌های همان روز. برای یک نوبت، همان بازه به‌عنوان تنها گزینه دیده می‌شود؛ برای چند
- * نوبت، رادیو واقعی و تا انتخاب هیچ نوبتی فرض نمی‌شود.
+ * TB-241 / TB-242 — نوبت‌های همان روز به‌صورت کارت‌های قابل‌انتخاب هم‌سبک با
+ * `GroupSchedulePicker` (نه pillهای ریز radio). برای یک نوبت همان بازه تنها گزینه است؛ برای چند
+ * نوبت تا انتخاب صریح هیچ نوبتی فرض نمی‌شود. همهٔ بازه‌ها فقط از سرور می‌آیند.
  */
 export function CapturedSlotPicker({
   slots,
@@ -93,38 +94,58 @@ export function CapturedSlotPicker({
   activeSlotKey: string | null;
   onPick: (startTicks: number, endTicks: number) => void;
 }) {
+  const groupName = `shipping-slot-${identity}`;
   return (
-    <fieldset className="mt-2 grid gap-1" data-testid={`shipping-group-captured-slots-${identity}`}>
-      <legend className="text-[10px] text-gray-500 flex items-center gap-1">
-        <Clock className="w-2.5 h-2.5" /> ساعت تحویل همین روز
+    <fieldset className="mt-3" data-testid={`shipping-group-captured-slots-${identity}`}>
+      <legend className="mb-2 text-[11px] md:text-xs font-bold text-gray-700 flex items-center gap-1.5">
+        <Clock className="size-3.5 text-primary shrink-0" aria-hidden />
+        ساعت تحویل
       </legend>
-      <div className="flex flex-wrap gap-1.5">
+      <div
+        className="grid grid-cols-2 gap-2 min-w-0 sm:grid-cols-3"
+        role="radiogroup"
+        aria-label="ساعت تحویل"
+      >
         {slots.map((slot) => {
           const chosen = activeSlotKey === slot.slotKey;
+          const range = `${slot.opensAt}–${slot.closesAt}`;
           return (
             <label
               key={slot.slotKey}
-              className={`inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-lg border px-2 text-[11px] ${
-                chosen ? "border-primary bg-primary/10 text-primary font-bold" : "border-gray-200 bg-white text-gray-700"
+              className={`relative inline-flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-[13px] md:text-sm font-bold transition-all ${
+                chosen
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300"
               }`}
               data-testid={`shipping-group-captured-slot-${identity}-${slot.slotKey}`}
+              data-selected={chosen ? "true" : "false"}
             >
               <input
                 type="radio"
-                className="size-3"
-                name={`shipping-slot-${identity}`}
+                className="peer sr-only"
+                name={groupName}
+                value={slot.slotKey}
                 checked={chosen}
                 onChange={() => onPick(slot.startTicks, slot.endTicks)}
               />
-              <bdi dir="ltr">
-                {slot.opensAt}–{slot.closesAt}
+              <Clock className="size-3.5 shrink-0 opacity-80" aria-hidden />
+              <bdi dir="ltr" className="min-w-0 truncate tabular-nums">
+                {range}
               </bdi>
+              {chosen ? <Check className="ms-auto size-3.5 shrink-0" aria-hidden /> : null}
+              <span
+                className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-transparent peer-focus-visible:ring-primary"
+                aria-hidden
+              />
             </label>
           );
         })}
       </div>
       {slots.length > 1 && !activeSlotKey ? (
-        <p className="text-[10px] font-semibold text-amber-700" data-testid={`shipping-group-captured-slot-required-${identity}`}>
+        <p
+          className="mt-2 text-[11px] font-semibold text-amber-700"
+          data-testid={`shipping-group-captured-slot-required-${identity}`}
+        >
           یکی از ساعت‌های بالا را انتخاب کنید.
         </p>
       ) : null}

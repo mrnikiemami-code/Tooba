@@ -12,7 +12,6 @@
  * فروشندگان) و به‌محض انتخاب روش، گروه مستقل آن‌ها ساخته می‌شود.
  */
 import { AlertTriangle, Calendar, Check, Clock, Package, RefreshCw, Store } from "lucide-react";
-import { useState } from "react";
 
 import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontCartLine } from "./storefront-cart-api.ts";
@@ -383,10 +382,10 @@ function CapturedMethodRow({
       ) : (
         <>
           <p
-            className="mt-2 text-[10px] text-gray-500 flex items-center gap-1"
+            className="mt-2 text-[11px] md:text-xs font-bold text-gray-700 flex items-center gap-1.5"
             data-testid={`shipping-group-captured-dates-label-${identity}`}
           >
-            <Calendar className="w-2.5 h-2.5" /> تاریخ‌های مجاز همین روش
+            <Calendar className="w-3.5 h-3.5 text-primary" /> روز تحویل
           </p>
           <DateChipStrip
             dates={method.availableDates}
@@ -396,7 +395,7 @@ function CapturedMethodRow({
             onPick={(value) => pickDate(value)}
           />
 
-          {/* TB-241: انتخاب صریح نوبت همان روز؛ نوبت‌ها فقط همان‌هایی هستند که سرور فرستاده است. */}
+          {/* TB-241/242: نوبت‌های همان روز فقط پس از انتخاب تاریخ؛ ظاهر کارت هم‌سبک GroupSchedulePicker. */}
           {dateChosen && activeDate && activeSlots.length > 0 ? (
             <CapturedSlotPicker
               slots={activeSlots}
@@ -406,24 +405,34 @@ function CapturedMethodRow({
                 onSelectSlot(groupKey, methodKey, activeDate.value, startTicks, endTicks)
               }
             />
+          ) : !dateChosen ? (
+            <p
+              className="mt-2 text-[11px] text-gray-500"
+              data-testid={`shipping-group-captured-pick-date-hint-${identity}`}
+            >
+              ابتدا یکی از روزهای بالا را انتخاب کنید.
+            </p>
           ) : null}
 
-          <p
-            className="mt-1 text-[10px] text-gray-600"
-            data-testid={`shipping-group-captured-interval-${identity}`}
-          >
-            {/* TB-230-R1: بازه ساعت واقعی سرور؛ جهت‌دهی صریح LTR تا در RTL هم 09:00–17:00 درست خوانده شود.
-                TB-240-R7: تا وقتی روزی انتخاب نشده، همان ساعت با برچسب «پیشنهادی» نشان داده می‌شود؛
-                هرگز به‌شکل انتخاب‌شده نمایش داده نمی‌شود و ساعتی ساخته نمی‌شود. */}
-            {dateChosen && activeSlot
-              ? "ساعت تحویل انتخاب‌شده: "
-              : dateChosen
-                ? "زمان تحویل (بازهٔ روز انتخابی): "
-                : "زمان تحویل (بازهٔ روز پیشنهادی — هنوز انتخاب نشده): "}
-            <bdi dir="ltr" className="inline-block">
-              {activeSlot ? `${activeSlot.opensAt}–${activeSlot.closesAt}` : activeDate?.intervalText ?? "ثبت نشده"}
-            </bdi>
-          </p>
+          {/* TB-242: یک خلاصهٔ کوتاه فقط وقتی روز+ساعت واقعاً انتخاب شده‌اند؛ پیشنهاد هرگز انتخاب‌شده نیست. */}
+          {dateChosen && activeSlot ? (
+            <p
+              className="mt-2 text-[11px] text-gray-700"
+              data-testid={`shipping-group-captured-interval-${identity}`}
+            >
+              انتخاب شما:{" "}
+              <bdi dir="ltr" className="inline-block font-bold tabular-nums">
+                {`${activeSlot.opensAt}–${activeSlot.closesAt}`}
+              </bdi>
+            </p>
+          ) : (
+            <p
+              className="sr-only"
+              data-testid={`shipping-group-captured-interval-${identity}`}
+            >
+              هنوز ساعت تحویل انتخاب نشده
+            </p>
+          )}
         </>
       )}
     </div>
