@@ -1,6 +1,28 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-28 (TB-240-R4, PARTIAL)
+## Current Shipping handoff — 2026-10-28 (TB-240-R5, PASS for the remaining functional scope)
+
+The live pointer is
+[`TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/RESULT.md`](../architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/RESULT.md)
+and the task-wide TOP is the root `AGENTS.md`. Task-owned runtime Host `127.0.0.1:5190` / DB
+`tooba_marketplace_tb239`; the R5 run used the **new** profile `D:\temp\tb240r5-chrome` (CDP 9343) against the
+isolated FE `3103` (`D:\temp\tb240r5-fe` worktree) while the handed-off R4 page
+`http://127.0.0.1:3102/fa/payment?checkoutId=01a18209-cd78-7000-a9b6-02dadf377e55` stays untouched.
+Screenshots and visual assessment are permanently NOT worker deliverables (explicit user override).
+
+Delivered in R5: a real fresh browser cart → two priced captured groups with own money/dates → ONE selection PUT
+from a same-tick double click → a local-cache-free pre-commit payment form (own group rows, payable 3,652,100,
+manual enabled) → ONE start-payment POST from a same-tick double click → manual `PendingPayment` order
+`TB-20261028113839-01-bbb9bf` with 2 seller orders and 2 accepted-evidence order groups → same-key retry returning
+the same checkout/payment; plus a NEW destination-failure run (old money gone, retry visible, typed name kept,
+ONE projection restores the price). Source: pending-status read failure is now `unknown` and cannot reopen a
+fresh pay form.
+Still NOT delivered: a third group through the UI (this DEV catalog has only two real sellable products), any PSP
+or paid state, coupon re-run in this slice, `unknown`-via-forced-5xx, and every release/activation claim.
+Deadline: R4's 43-minute figure was an arithmetic error against its own timestamps (14 min); cumulative is
+labelled UNVERIFIED and the 240-minute commitment is MISSED.
+
+## Superseded — 2026-10-28 (TB-240-R4, PARTIAL)
 
 The live pointer is
 [`TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/RESULT.md`](../architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/RESULT.md)

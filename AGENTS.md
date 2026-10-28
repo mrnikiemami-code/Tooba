@@ -1,4 +1,32 @@
-# CURRENT —240-R5 ISSUED: FRESHCART FORM + UI REQUESTCOUNTS/RETRY; BACKENDCOUPON/HISTORY ACCEPTED IN SCOPE —2026-10-28
+# CURRENT —240-R5 EXECUTED: never-cached freshcart form, ONE selection PUT, ONE start-payment, real failure/retry —2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status PASS for the remaining FUNCTIONAL scope of this slice, no VisualACCEPT/activation/PSP; basef97b43906,
+code763506b34, claim14:52+03:30→result15:13+03:30 ≈21min vs 15min focusbox (≈6min over, recorded).
+REAL browser run (new profile tb240r5-chrome/CDP9343 + isolated FE3103 from worktree tb240r5-fe, SAME Host5190):
+newbuyer register201+BFF CSRF/password login (same userId), cart created by the product's OWN add-to-cart on the two
+real PDPs (Armanscarf/DigiStyleshirt), real province/city selects → TWO priced captured groups with OWN money/dates
+(68,000+3,000 from10-29 / 47,000+2,500 from10-31, both09:00–17:00), date chip per group, then real «ادامه به پرداخت»
+clicked TWICE in one tick ⇒ EXACTLY ONE selection PUT (200) → /fa/payment?cartId, draft selection_revision1, 0 checkouts;
+fresh reload paymentform = draft200 + own group rows71,000/49,500 + payable3,652,100 + manualenabled + submitenabled +
+no error/unknown panel; real finalcontrol clicked TWICE in one tick ⇒ EXACTLY ONE start-payment200 ⇒ manualPending
+OrderTB-20261028113839-01-bbb9bf, 1checkout/1idemkey/2sellerOrders/2 order groups with own accepted evidence and
+`awaitingManual` only for the real manual row; same-key retry returns the SAME checkoutId+paymentId (checkoutReplayed).
+Step D NEW run: real offline + province change ⇒ old money GONE, retry visible, typed name preserved, then TWO retry
+clicks ⇒ EXACTLY ONE projection POST with the current identity ⇒ price/dates return.
+SOURCE FIX (§4): pending-status failure is UNKNOWN, never "no payment"; `resolveExistingPaymentState`+`allowsFreshPaymentAction`
+gate the action, `unknown` shows one explicit re-check panel (no fresh form, no fabricated paymentId), continuation no
+longer stamps awaitingManual on non-manual rows; focused7/7 + tsc0 + adjacent32/32.
+HONEST: 2 groups not 3 (the third platform-owned offer has NO product surface in this DEV catalog; the API-only
+projection stays data, not a UI receipt); no PSP/paid/exactly-once; coupon not re-exercised (R4 coupon order stays
+accepted in the manual connected scope); `unknown` proven by facts/component contract, not a forced 5xx; disclosure —
+the fix was committed in the tree FE3102 watches so that dev server may have HMR-recompiled once (no R4 profile window
+touched). DEADLINE: R4's "43 min" was an arithmetic error against its own 10:38:34Z→≈10:52Z pair (=14 min); the derived
+286 cumulative had no basis ⇒ cumulative labelled UNVERIFIED (≈257 if 243 was actual); 240-minute commitment MISSED.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Retained: external provider concurrency, 238 22001, 227
+mobile empty-note, 225-R1 unrecovered LOCAL edits; TB185 paused/defaultOFF/PendingAllocation; checked-in gatesOFF.
+
+# SUPERSEDED —240-R5 ISSUED: FRESHCART FORM + UI REQUESTCOUNTS/RETRY; BACKENDCOUPON/HISTORY ACCEPTED IN SCOPE —2026-10-28
 
 Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5, task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R5/TASK.md.
 Reviewed main829c032bed767f534709ed1d60bcab7930f38e39/source74af687bf243213e54a1d511f6da989fa03f26a4.
