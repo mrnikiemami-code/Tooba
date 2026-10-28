@@ -1,3 +1,46 @@
+﻿# CURRENT — 239-R1 EXECUTED PARTIAL: REAL DEV ADMIN BOUND (login200 + protected seed200, seller403); owner flow blocked on missing seller data —2026-10-28
+
+Read docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-ADMIN-BOOTSTRAP-AND-LIVE-FLOW-239-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PARTIAL, NOT accepted, no userVisualACCEPT, no activation. Bridge row 210643f4-ada5-4997-ae78-101494d2aa4c.
+Base fe963e325; same task Marketplace 5190 / Edition=Marketplace / TenantNULL / DB tooba_marketplace_tb239 (NOT reset).
+THE DECIDED GAP IS CLOSED, with real receipts: a dedicated account registered through normal POST /v1/auth/register
+(userId 01a1818b-5257-7000-bada-84233a2b21fb) was powerless BEFORE the opt-in (login200 then admin seed403
+admin.authorization.denied traceId dc4bdc78…). Host restarted once with private opt-in env
+(Tooba__Development__MarketplaceAdmin__{Enabled,Identifier}, nothing checked in) and the new seam bound THAT real
+Identity principal to the EXISTING tenant marketplace-platform / member relation through IAuthorizationTupleWriter
+(resolving via IIdentityAuthenticationService.FindUserIdByIdentifierAsync; no invented id, no credential reset,
+no seller promotion, no fake header/JWT/SQL grant). After binding: the SAME account login200 and the official
+POST /v1/admin/catalog/demo/reset-and-seed EXECUTED and finished 200 (890.6s, 566 products); seller-actor-a on the
+SAME route stays 403 admin.authorization.denied traceId 2a7401a0…; a third freshly registered account stays 403.
+Idempotency proven by a real restart (InMemory authorization store EMPTY afterwards; admin GET
+/v1/admin/catalog/demo/status 200 with rootsDemo15/categories116/brands22/tags36/attributes41/products565 draft,
+seller 403). Source seam: NEW Configuration/MarketplaceAdminDevOptions.cs (Enabled default false, Identifier only,
+no password), extended Development/MarketplaceAdminDevBootstrap.ProvisionConfiguredAsync (refuses unless real
+IsDevelopment + Edition Marketplace + marketplace connection + explicit opt-in + nonblank resolvable email),
+MarketplaceDevelopmentBootstrap.ApplyAsync(…,IHostEnvironment), Program options binding + environment pass, NEW
+Development/MarketplaceAdminDevBootstrapTests.cs. No Identity/AccessControl EF, no DbContext/SaveChanges/Migrate,
+no new endpoint/permission catalogue, no Production/SingleStore behaviour change, no migration/schema edit.
+Focused 10/10 (5 new provisioning facts + 5 affected MarketplaceDevelopment guard facts); Host.Tests 0 errors.
+OWNER FLOW NOT DELIVERED — concrete stage, not permission: after the authorized seed the task DB holds
+catalog.products=566 (all Draft), party.parties=0, offer.offers=0; GET /v1/storefront/home 200 but seller
+GET /v1/seller/offers 403 seller.authorization.denied because no seller business scope exists. Root cause: the
+Marketplace Development path never runs the Party/offer seeds used by SingleStore (SettingsFoundationDevelopmentSeedHost
+/ PartyOrganizationProfileDevelopmentSeed / IWorkspaceDemoSeed / WorkspaceDemoMarketplaceSeed are called only from
+DevelopmentSchemaMigrator) and NO HTTP route creates seller organizations (Party exposes only GET /v1/admin/sellers
+and POST /v1/admin/sellers/query), so SellerDevContextBootstrap.EnsureAsync hits its documented early return.
+Therefore no Platform/SellerA/SellerB publication, offer responsibility/type, stock, draft/rates/week/publication,
+cart line, projection, selection echoes, paymentpreview, StartPayment, Order or coupon-on-one-group was reachable.
+NOT done: no browser/UI smoke (no payment page could be reached), no 390/360 captures, no marketplace Order, no
+multi-owner evidence. Preserved: original3000/5088, handed-off3100/5188 and D:\temp\tb238-handoff-chrome untouched;
+TB185 paused/defaultOFF/PendingAllocation; checked-in gates OFF; 238 unknown 22001 correlation failure still
+unclassified (no schema fix invented); 227 mobile empty-note and 225-R1 lost LOCAL edits retained. Process ledger
+40544→27428→22832 (final left running), binary D:\temp\tb239r1-build\out SHA256 prefix B31E1048BA6AB101.
+Elapsed ≈45min vs HARD35 with one in-task correction — NONCOMPLIANT, disclosed.
+NEXT: wire an existing module-owned Development Party+offer+stock seed for the Marketplace branch (or an authorized
+module-owned seed route) and then run the mixed-owner Platform+SellerA+SellerB shipping/selection/paymentpreview/
+StartPayment/Order + coupon-on-one-group slice and the existing UI smoke.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
 # CURRENT — 239 Marketplace boot accepted; issued239-R1 REAL DEV ADMIN COMMISSIONING + OWNER FLOW —2026-10-28
 
 Read239/ARCHITECT-REVIEW.md + TB-SHIPPING-MARKETPLACE-ADMIN-BOOTSTRAP-AND-LIVE-FLOW-239-R1/TASK.md.
@@ -2880,4 +2923,5 @@ explicit product-owner decision.
 - `docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md`
 - `docs/PROJECT-STATE.md`
 - `docs/ROADMAP.md`
+
 

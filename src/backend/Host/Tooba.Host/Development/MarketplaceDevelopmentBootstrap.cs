@@ -26,7 +26,7 @@ namespace Tooba.Host;
 /// </summary>
 internal static class MarketplaceDevelopmentBootstrap
 {
-    public static async Task ApplyAsync(IServiceProvider services)
+    public static async Task ApplyAsync(IServiceProvider services, IHostEnvironment environment)
     {
         await using var scope = services.CreateAsyncScope();
         var provider = scope.ServiceProvider;
@@ -64,6 +64,9 @@ internal static class MarketplaceDevelopmentBootstrap
         await sellerDevContexts.EnsureAsync(CancellationToken.None);
         await MarketplaceSellerDevBootstrap.EnsureAsync(provider, CancellationToken.None);
         await MarketplaceAdminDevBootstrap.EnsureAsync(provider, CancellationToken.None);
+        // TB239-R1: opt-in binding of ONE normally registered Development administrator to the EXISTING
+        // Marketplace platform membership. Inert by default; the legacy tuple above stays unchanged.
+        await MarketplaceAdminDevBootstrap.ProvisionConfiguredAsync(provider, environment, CancellationToken.None);
     }
 
     private static Task MigrateAsync(DbContext context) => context.Database.MigrateAsync();

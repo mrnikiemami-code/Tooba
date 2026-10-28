@@ -79,3 +79,17 @@ SingleStore channel is NOT relabelled as Marketplace.
 - Preserved untouched: original `3000`/`5088`, handed-off `3100`/`5188` with profile
   `D:\temp\tb238-handoff-chrome`, the 230 DEV publication/draft/rates/week/pointer, TB185 paused/default-OFF,
   and all 231/232/236 shared applied state on `tooba_alpha`. The new Marketplace runtime is left running on 5190.
+
+## TB239-R1 commissioning outcome (appended 2026-10-28)
+
+The single authorized decision in `ARCHITECT-REVIEW.md` was executed and PROVEN on this same target:
+one dedicated normally registered Development administrator (`01a1818b-5257-7000-bada-84233a2b21fb`)
+is now a real `member` of `tenant:marketplace-platform`, so the official
+`POST /v1/admin/catalog/demo/reset-and-seed` runs to 200 for it while `seller-actor-a` and a third
+registered account still receive 403 `admin.authorization.denied`. The known 239 blocker
+("no corresponding normal login principal") is therefore CLOSED.
+The next blocker is DATA, not authorization: the authorized seed creates 566 Draft catalog products
+and still leaves `party.parties = 0` / `offer.offers = 0`, because the Marketplace Development path
+does not run the Party/offer Development seeds that single-store uses and no HTTP route creates seller
+organizations. Details and receipts:
+`docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-ADMIN-BOOTSTRAP-AND-LIVE-FLOW-239-R1/`.

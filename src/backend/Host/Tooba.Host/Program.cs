@@ -128,6 +128,8 @@ builder.Services.AddOptions<ToobaPlatformOptions>()
     .Bind(builder.Configuration.GetSection(ToobaPlatformOptions.SectionName))
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<ToobaPlatformOptions>, PlatformOptionsValidator>();
+builder.Services.AddOptions<MarketplaceAdminDevOptions>()
+    .Bind(builder.Configuration.GetSection(MarketplaceAdminDevOptions.SectionName));
 builder.Services.AddSingleton(sp =>
     PlatformOptionsValidator.BuildRegistry(sp.GetRequiredService<IOptions<ToobaPlatformOptions>>().Value));
 builder.Services.AddSingleton<IDatabaseConnectionResolver, DatabaseConnectionResolver>();
@@ -358,7 +360,7 @@ if (app.Environment.IsDevelopment())
 {
     if (app.Services.GetRequiredService<ControlPlaneRegistry>().Edition == ToobaEdition.Marketplace)
     {
-        await MarketplaceDevelopmentBootstrap.ApplyAsync(app.Services);
+        await MarketplaceDevelopmentBootstrap.ApplyAsync(app.Services, app.Environment);
     }
     else
     {
