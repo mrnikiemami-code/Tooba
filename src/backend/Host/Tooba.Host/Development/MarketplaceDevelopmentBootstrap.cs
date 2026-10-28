@@ -60,6 +60,10 @@ internal static class MarketplaceDevelopmentBootstrap
         await ContentDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await StoryDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        // TB240-R1: opt-in commission of the REFERENCE data that must exist before any shipping method can be
+        // authored — the canonical Localization languages first, then the Geography module's own bounded seed.
+        // Inert by default; each module keeps its own persistence authority.
+        await EnsureReferenceDataAsync(provider, environment, CancellationToken.None);
         // TB240: opt-in commissioning of the EXISTING Catalog-owned Development sellable fixture inside
         // THIS assigned Tenant=NULL Marketplace scope, so real seller organizations and buyable offers exist
         // before seller contexts are reconciled. Inert by default; the module keeps all data authority.
@@ -74,6 +78,59 @@ internal static class MarketplaceDevelopmentBootstrap
     }
 
     private static Task MigrateAsync(DbContext context) => context.Database.MigrateAsync();
+
+    /// <summary>
+    /// TB240-R1: commissions the reference data that shipping authoring depends on, inside the CURRENT
+    /// assigned Marketplace scope only. Guarded by real Development + explicit local opt-in; the canonical
+    /// languages come from the EXISTING Localization Development entry point, and the bounded Iran/Tehran
+    /// geography comes from the Geography-owned Development seed. Ordering matters: languages first.
+    /// </summary>
+    private static async Task EnsureReferenceDataAsync(
+        IServiceProvider provider,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        if (!environment.IsDevelopment())
+        {
+            return;
+        }
+
+        var options = provider
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<MarketplaceReferenceDataOptions>>()
+            .Value;
+        if (!options.Enabled)
+        {
+            return;
+        }
+
+        await EnsureReferenceDataAsync(
+            environment,
+            options,
+            ct => Tooba.Localization.Infrastructure.Bootstrap.LanguageBootstrapDevelopmentSeed.PostMigration
+                .EnsureAsync(provider, ct),
+            ct => Tooba.Geography.Infrastructure.Development.GeographyDevelopmentSeed.EnsureAsync(provider, ct),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Guard + ordering seam with explicit inputs so the shape is provable without a database: the canonical
+    /// languages are commissioned FIRST and the Geography seed runs only after that step succeeded.
+    /// </summary>
+    internal static async Task EnsureReferenceDataAsync(
+        IHostEnvironment environment,
+        MarketplaceReferenceDataOptions options,
+        Func<CancellationToken, Task> ensureLanguages,
+        Func<CancellationToken, Task> ensureGeography,
+        CancellationToken cancellationToken)
+    {
+        if (!environment.IsDevelopment() || !options.Enabled)
+        {
+            return;
+        }
+
+        await ensureLanguages(cancellationToken);
+        await ensureGeography(cancellationToken);
+    }
 
     /// <summary>
     /// TB240: asks the Catalog-owned Development seam to create its documented live sellable fixture
