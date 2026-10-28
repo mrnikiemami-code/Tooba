@@ -1,3 +1,36 @@
+# CURRENT — 240-R4 ISSUED: USABLE AUTHORIZED PAYMENT + COUPON/HISTORY; ORIGINAL DEADLINE MISSED — 2026-10-28
+
+Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4; task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R4/TASK.md; sourcedf5a21d05a0ffd9499ca55dd3c17c97b3731ea98.
+R3 schema+planner/materializer source accepted WITHIN SCOPE; worker real3-groupOrder/manualPending reached, not full delivery.
+Checkout01a18209-cd78-7000-a9b6-02dadf377e55 payment01a18209-d01d-7000-a1f0-d59a53b1124f,shipping214500/payable5762600.
+Root inspectedsource/receipts only, no Windowsruntime/testing/VisualACCEPT.
+
+USEROVERRIDE: DO NOT REQUEST/CREATE/INSPECT/UPLOAD SCREENSHOTS, nativecapturematrix or visualassessment. Applies to ALL earlier tasks.
+Functionalbrowser/HTTP/DOM/data proof remains; user reviews appearance at usableURL. No screenshot blocker or inferredVisualACCEPT.
+
+Original240-minute END promise MISSED:53+70+62+31+27≈243 used,≈3over before furtherfocus. Originalestimate optimistic.
+No clockreset/newpromise; continuation focusedbox30 with checkpoint10 functionalpayment,25 coupon/history, reportactualoverrun.
+Fullscopeowner/coupon/manual/usableUI/duplicate/history remains binding, not waived.
+
+SourceconfirmedUIblocker: loadStorefrontCheckout locally403s if no browsercommittedproof beforeserverread. Existing server
+GetOwnedForPaymentResultAsync already owns authenticatedOrderaccess and actualCartId,guest pathrequiressecret. ExistingGET
+requirescartlocator thoughserviceignoresit. Recover through SAME authorizedserverread, deriveactualCartId onlyafter success;
+sequencecheckoutbeforewallet/payreads (currentPromise.all fails beforecache). No activecartfallback/fakeguestproof/querypermission.
+Test samebuyerEMPTYlocalcache refresh,foreignbuyer/guestnosecretdenial,normalguestproof,actualusableexistingpage. No newpage/authengine.
+
+R3 both legacy-filteredgroupindexes applied TASKMarketplaceDB; no migrate/reset/reseed. Existingcaptures/stock/sellerroles ready.
+Complete actualpartialcoupon(validonONEgroup,invalid,clear),originalOrderGET immutableafter taskDEVpublicationchange+foreigndenial,
+functionalUI doubleclick/failurerefreshretry and normalNEWcartpaymentform. ManualPending no PSP/providerexactlyonce;
+gatewaycall stillbeforecontestedSaveChanges; checkoutReplayedfalse known.
+Do not repeat store-alpha231/232/236NOTAPPLIED:237-R1 recordedapplied; tasktarget applied. ActualR3 runner attributionMarketplacebootstrap.
+
+Task5190+isolatedFE3102/profiletb240r3-review-chrome ONLY. USER3000/5088,handoff3100/5188+D:\temp\tb238-handoff-chrome
+and unsavedtabs/watchedsource NEVER enumerate/read/automate/reload/close/edit/HMR. Preserve userdraft/review230/handoffcart.
+Checked-ingatesOFF/localtaskON, no baseline/schema/newmigration/directSQL. TB185paused/defaultOFF/PendingAllocation.
+238unknown22001,227mobileempty-note,225-R1unrecoveredLOCALeditsretained. ALLTHREETOPs+deadlineledger updated afterresult.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE; no automatic241.
+
+---
 # CURRENT — 240-R3 ISSUED: BOTH GROUP INDEXES + STRICT CORRELATION; ORIGINAL DEADLINE AT SERIOUS RISK — 2026-10-28
 
 Active TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3; task docs/ai/tasks/TB-SHIPPING-MARKETPLACE-CONNECTED-DELIVERY-240-R3/TASK.md.
