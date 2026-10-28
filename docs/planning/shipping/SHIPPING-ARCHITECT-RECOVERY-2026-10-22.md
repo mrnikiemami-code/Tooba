@@ -1,4 +1,19 @@
-# CURRENT — 241-R1 ARCHITECT REVIEW: boundary/commit repair ACCEPTED WITHIN SCOPE; user trial — 2026-10-29
+# CURRENT — 242 ISSUED: original SingleStore data + polished configured delivery UI — 2026-10-29
+Active TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242; read docs/ai/tasks/TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242/TASK.md.
+User rejects current tiny time-picker visuals AND Marketplace trial DB on primary. Restore ORIGINAL
+SingleStore/store-alpha/tooba_alpha at SAME3000/5088 using preserved config, no copy/merge/reset/reseed/data loss.
+This latest instruction supersedes241's Marketplace-on-primary decision, not Marketplace support or stored trials.
+Apply .cursor/skills/tooba-frontend-feature/SKILL.md + frontend standard; reuse legacy time-card visual vocabulary
+with the existing captured slots authority. NO screenshots/new ports/globalCSS/new design/calendar engine.
+Real selected shipping method's published weekly hours/duration/timezone -> server nested slots -> polished
+per-group date/time cards -> exact selection/payment preview. No invented60, fallback presets or changed user rules.
+Rebuild BOTH FE and Host final main; previous FE241/HostR1 bundle divergence must end. Preserve user local forms,
+all original/Marketplace DBs/profiles and original user draft01a16eeb…; current CDP9350 is user work, no automation.
+Only authorized additive pending forward migrations through normal runner after exact target+backup; no history edit.
+241-R1 scope accepted, worker historical repeat unmet retained. Original deadlineMISSED; no replacement promise.
+Checked-in gatesOFF, TB185 paused/defaultOFF/PendingAllocation. Result STOP_FOR_ARCHITECT; no automatic243.
+
+# SUPERSEDED — 241-R1 ARCHITECT REVIEW: boundary/commit repair ACCEPTED WITHIN SCOPE; user trial — 2026-10-29
 
 Active implementation NONE; automaticNextImplementationTask NONE. Read
 docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1/ARCHITECT-REVIEW.md.
