@@ -1,4 +1,20 @@
-# CURRENT — 241-R1 EXECUTED PARTIAL: tick-bounded slots + commit revision wire; publication-immutability not re-run — 2026-10-29
+# CURRENT — 241-R1 ARCHITECT REVIEW: boundary/commit repair ACCEPTED WITHIN SCOPE; user trial — 2026-10-29
+
+Active implementation NONE; automaticNextImplementationTask NONE. Read
+docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1/ARCHITECT-REVIEW.md.
+Reviewed source03b24cc35 / worker evidence7ac8fc381. Bounded exact-tick slot arithmetic and pre-mutation unfit-day
+validation accepted; worker tests24/24 calendar +12/12 authoring. Public commit TEXT revision wire repaired:
+missing token400, valid token200, StartPayment manual Pending, same-key sameids; selected09–10 stored exactly.
+Primary http://127.0.0.1:3000/fa/shipping ->5088, Marketplace/Tenant NULL/tooba_marketplace_tb239.
+Host R1/PID41232; FE3000/PID18832 STILL241 build: R1 helper/admin hint not rebuilt; do not claim FE source parity.
+User Chrome CDP9350/profile/cart01a1846b-aede… remains unsubmitted and frozen against automation/reload/close.
+Earlier241 duration-change Order-history receipt retained; no fresh R1 re-run claimed or duplicate task required.
+Root reviewed source/receipts ONLY, no root localhost execution. Local manual checkpoint, NOT release/PSP/paid/
+Visual ACCEPT. No screenshots/new ports. Checked-in gatesOFF, primary localON, store-alpha preserved.
+TB185 paused/defaultOFF/PendingAllocation. Original deadlineMISSED, exact cumulativeUNVERIFIED.
+Worker PARTIAL report/history preserved below.
+
+# SUPERSEDED — 241-R1 EXECUTED PARTIAL: tick-bounded slots + commit revision wire; publication-immutability not re-run — 2026-10-29
 
 Read docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOT-BOUNDARIES-AND-COMMIT-241-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status PARTIAL, Code-SHA 03b24cc35, Base/issue db34c6f04. Bounded tick calendar + authoring unfit preflight + public
