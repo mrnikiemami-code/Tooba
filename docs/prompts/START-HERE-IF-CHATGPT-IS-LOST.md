@@ -1,3 +1,16 @@
+# CURRENT — 245-R2 ISSUED: visible navigation timeout feedback — 2026-10-29
+
+Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1`  
+State: **ISSUED — narrow frontend correction only**  
+Expected base: issue commit containing this task  
+automaticNextImplementationTask: `NONE`
+
+Architect accepts 245-R1 shipping invalidation, native-click behavior, route reconciliation and measured performance. The only blocker is that timeout retry text is screen-reader-only and invisible to sighted users. R2 must add a compact visible FA/EN bounded message without reopening accepted scope, backend, data or runtime.
+
+Read `docs/ai/tasks/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2/TASK.md`.
+STOP_FOR_ARCHITECT after execution.
+
 # CURRENT — 245-R1 EXECUTED: navigation pending + shipping fingerprint invalidation — 2026-10-29
 
 Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
