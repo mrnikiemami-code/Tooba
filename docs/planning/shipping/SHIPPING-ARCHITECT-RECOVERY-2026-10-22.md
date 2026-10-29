@@ -1,4 +1,16 @@
-# CURRENT — 244-R3 EXECUTED: non-routing address edits preserve delivery date/hour — 2026-10-29
+# CURRENT — 244-R3 ARCHITECT PARTIAL; NO NEW TASK — 2026-10-29
+
+Task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  
+State: **PARTIAL — non-routing fields preserve choices; pricing-context invalidation needs correction**  
+automaticNextImplementationTask: **NONE**
+
+The actual user bug is repaired for name/mobile/postal/address/notes and canonical live proof reached payment-ready
+without submission. Architect review found over-retention: reconciliation checks only method/date/slot, so a changed
+coupon/cart/snapshot/area/rate/goods/quote may retain confirmation when the same slot exists; zero-slot days can also
+retain non-null ticks. This violates the issued invalidation contract. No correction task is issued yet. 245 remains
+withdrawn; per user instruction, wait for any stray already-started result before further work.
+
+# SUPERSEDED — 244-R3 EXECUTED: non-routing address edits preserve delivery date/hour — 2026-10-29
 
 Read docs/architecture/evidence/TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT/PSP. Base/issue `e9495b0388dae6e878cb8349bb58e25be8a69e18`.
