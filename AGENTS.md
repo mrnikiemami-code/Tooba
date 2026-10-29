@@ -1,4 +1,15 @@
-# CURRENT — USER VALUES APPROVED; 244-R2 FINAL ACTUAL-CART CONFIGURATION ISSUED — 2026-10-29
+# CURRENT — 244-R2 EXECUTED: approved demo settings applied; actual cart payment-ready unsubmitted — 2026-10-29
+
+Read docs/architecture/evidence/TB-SHIPPING-USER-ENVIRONMENT-FINAL-CONFIGURED-DELIVERY-244-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within authorized scope, NOT Architect/Visual/PSP ACCEPT. Base/issue `3dc16e709`; Code-SHA NONE.
+Canonical FE3000+Host5088 SingleStore/store-alpha/tooba_alpha. Correct userId `01a0996c-b8d9…` owns cart `01a17b2d-e219…`
+Active v48 qty18. Applied: 4× Platform+type01a16f43→Store; weight def g + 500g×3 products; rate [0,∞) NULL max
+freight120000+pack5000; publish snapshot `01a186f7-dd7a…` selVer11; selection200 rev2 + stale twin; payment-draft200
+ship250000 payable81661464.16; DB 2 groups 14:00–15:00 ticks504e9–540e9 owner Store/store-alpha; 0 checkout/payment.
+URL `/fa/payment?cartId=…` unsubmitted. Identity corrections appended under 244/244-R1. Gates OFF; TB185 paused.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — USER VALUES APPROVED; 244-R2 FINAL ACTUAL-CART CONFIGURATION ISSUED — 2026-10-29
 
 Task: `TB-SHIPPING-USER-ENVIRONMENT-FINAL-CONFIGURED-DELIVERY-244-R2`  
 Parent: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
