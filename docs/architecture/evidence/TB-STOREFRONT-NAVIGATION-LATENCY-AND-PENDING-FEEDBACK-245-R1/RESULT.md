@@ -46,4 +46,4 @@ Focused 55/55 (nav + shipping-choice + continue + cart-ui guards); `npm run type
 
 Expected-Base / Base: `7bb390682cddb8a02b9e41c38d9c8c96b6ca6d26` (issue tip after format correction; issue body `9f1462a97`)  
 Code-SHA: `3f656e364acefae49af363fe27952486254066df`
-Evidence-SHA: `3f656e364acefae49af363fe27952486254066df`
+Evidence-SHA: `5e4ac35288d52749c366a9680c00ff79eee01cb3`
