@@ -1,4 +1,20 @@
-# CURRENT — 242 ARCHITECT REVIEW: original primary restored; own-service setup/user UI acceptance OPEN — 2026-10-29
+# CURRENT — 243 ISSUED: finish actual original-store shipping handoff — 2026-10-29
+User explicitly: «ببین من می خوام کار کلا تحویل بشه». Active TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243.
+Read docs/ai/tasks/TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243/TASK.md. ONE coherent delivery ledger, not more partial demo claims.
+Same primary3000/5088 SingleStore/store-alpha/tooba_alpha. No Marketplace DB substitution, new ports or screenshots.
+Complete original service/type-to-eligible-offer configuration, explicit60-minute AUTHORING setting as requested,
+normal publication ->server slots ->quality locale-aware UI ->actual browser PUT/payment/Order chosen hour.
+This authorizes narrow normal-API configuration completion; no invented measurements, erased weight/rate bounds,
+unrelated offer reassignment, user-local-draft submission, reset/reseed/business SQL or auth bypass.
+If no authoritative eligible product measurement exists, expose the single missing business datum immediately
+and continue independent work; never conceal it with DEV230 or manufacture a green price.
+Finish locale/geometry/keyboard, real negative/duplicate/history and user-ready unsubmitted authenticated review cart.
+Both FE/Host final source parity; existing user profiles/tabs/input and both DBs retained. Marketplace support stays.
+242 restoration/UI source accepted within scope only.7 delivery rows required; partial is not full handoff.
+Original deadlineMISSED; checkpoints not a replacement time promise. TB185 paused/defaultOFF/PendingAllocation.
+Result STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE; no automatic244.
+
+# SUPERSEDED — 242 ARCHITECT REVIEW: original primary restored; own-service setup/user UI acceptance OPEN — 2026-10-29
 Active implementation NONE; automaticNextImplementationTask NONE.
 Read docs/architecture/evidence/TB-SHIPPING-PRIMARY-DATA-AND-DELIVERY-UI-FINISH-242/ARCHITECT-REVIEW.md.
 Reviewed source3c42be960/evidencea1fb2f3b7. Worker reports primary3000->5088 SingleStore/store-alpha/tooba_alpha,
