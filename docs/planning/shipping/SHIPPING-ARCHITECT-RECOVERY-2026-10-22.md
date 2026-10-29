@@ -1,4 +1,17 @@
-# CURRENT — USER-REPORTED DELIVERY CHOICE RESET BUG; 244-R3 ISSUED — 2026-10-29
+# CURRENT — 244-R3 ACTIVE; 245 NAVIGATION STALL REPAIR QUEUED — 2026-10-29
+
+Active task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  
+Next held task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245`  
+State: **245 ISSUED BUT MUST NOT START UNTIL 244-R3 RESULT/SOURCE IS IN MAIN**  
+automaticNextImplementationTask: **NONE**
+
+The user reports a separate global storefront defect: product and cart navigation can take minutes with no immediate
+feedback. 245 must first measure click→router→RSC/API→render on canonical SarvNewVer FE3000/Host5088, remove the
+actual loop/retry/duplicate/latency cause, then add ≤100ms accessible pending feedback. Warm product/cart navigation
+must be usable within 2s and cold within 5s or fail with an exact dependency blocker. It must not run concurrently
+with 244-R3, mask latency with a spinner, use alternate ports/data, or create checkout/payment. No screenshots.
+
+# SUPERSEDED — USER-REPORTED DELIVERY CHOICE RESET BUG; 244-R3 ISSUED — 2026-10-29
 
 Task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  
 Parent: `TB-SHIPPING-USER-ENVIRONMENT-FINAL-CONFIGURED-DELIVERY-244-R2`  
