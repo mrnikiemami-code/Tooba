@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { LocalizedLink } from "../../lib/i18n/LocalizedLink.tsx";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
@@ -24,7 +24,6 @@ export function StorefrontMiniCartDrawer({
   open: boolean;
   onClose: () => void;
 }) {
-  const localizePath = useLocalizedPath();
   const [cart, setCart] = useState<StorefrontCartPage | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -226,14 +225,13 @@ export function StorefrontMiniCartDrawer({
               <span className="text-gray-700">جمع کل</span>
               <span className="text-primary">{formatOfferAmount(subtotal, currency)}</span>
             </div>
-            {/* لینک کامل سند — نه Next Link؛ soft-nav به /fa/cart گاهی بدون rewrite می‌ماند. */}
-            <a
-              href={localizePath("/cart")}
+            <LocalizedLink
+              href="/cart"
               className="block w-full py-2.5 bg-primary text-white text-center rounded-xl font-bold text-sm hover:bg-primary-strong transition-all shadow-md hover:shadow-lg hover:shadow-primary/25"
               data-testid="mini-cart-checkout-cta"
             >
               تکمیل خرید
-            </a>
+            </LocalizedLink>
           </div>
         ) : null}
       </div>

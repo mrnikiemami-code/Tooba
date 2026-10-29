@@ -18,13 +18,20 @@ export function StorefrontPdpQa({ detail }: { detail: StorefrontProductDetailPag
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     void loadStorefrontQuestions(detail.slug)
       .then((page) => {
+        if (cancelled) return;
         setItems(page?.items ?? []);
         setTotalCount(page?.totalCount ?? 0);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [detail.slug]);
 
   return (

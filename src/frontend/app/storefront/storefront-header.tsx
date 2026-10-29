@@ -3,7 +3,7 @@
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { localeToContentApi } from "../../lib/i18n/routing.ts";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Award,
   Coffee,
@@ -81,30 +81,32 @@ export function StorefrontShopeivaHeader({
 
   type NavRow = StorefrontCategoryItem & { href: string };
 
-  const navigationRoots: NavRow[] = useStoreMenu
-    ? menuChildren(storeMenuItems, null).map((item) => ({
+  const navigationRoots: NavRow[] = useMemo(() => {
+    if (useStoreMenu) {
+      return menuChildren(storeMenuItems, null).map((item) => ({
         categoryId: item.menuItemId,
         parentCategoryId: item.parentMenuItemId,
         name: item.label,
         href: item.href || "#",
-      }))
-    : useConfiguredMenu
-    ? megaMenuItems
+      }));
+    }
+    if (useConfiguredMenu) {
+      return megaMenuItems
         .filter((item) => item.parentMegaMenuItemId === null)
         .map((item) => ({
           categoryId: item.megaMenuItemId,
           parentCategoryId: item.parentMegaMenuItemId,
           name: item.title,
           href: item.destination,
-        }))
-    : (() => {
-        const roots = categories.filter((category) => category.parentCategoryId === null);
-        const list = roots.length > 0 ? roots : categories;
-        return list.map((item) => ({
-          ...item,
-          href: `${lp("/products")}?categoryId=${item.categoryId}`,
         }));
-      })();
+    }
+    const roots = categories.filter((category) => category.parentCategoryId === null);
+    const list = roots.length > 0 ? roots : categories;
+    return list.map((item) => ({
+      ...item,
+      href: `${lp("/products")}?categoryId=${item.categoryId}`,
+    }));
+  }, [useStoreMenu, storeMenuItems, useConfiguredMenu, megaMenuItems, categories, lp]);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(navigationRoots[0]?.categoryId ?? null);
   const [cartCount, setCartCount] = useState(0);
@@ -145,28 +147,39 @@ export function StorefrontShopeivaHeader({
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     void fetch("/v1/storefront/brands", { cache: "no-store" })
-      .then(async (response) => response.ok ? await response.json() as unknown : null)
+      .then(async (response) => (response.ok ? ((await response.json()) as unknown) : null))
       .then((payload) => {
+        if (cancelled) return;
         if (!Array.isArray(payload)) return setBrands([]);
-        setBrands(payload.flatMap((item): StorefrontBrandItem[] => {
-          if (!item || typeof item !== "object") return [];
-          const row = item as Record<string, unknown>;
-          const brandId = String(row.brandId ?? row.BrandId ?? "");
-          const slug = String(row.slug ?? row.Slug ?? "");
-          const name = String(row.name ?? row.Name ?? "");
-          if (!brandId || !slug || !name) return [];
-          const logoRaw = row.logoMediaAssetId ?? row.LogoMediaAssetId;
-          return [{
-            brandId,
-            slug,
-            name,
-            productCount: Number(row.productCount ?? row.ProductCount ?? 0),
-            logoMediaAssetId: logoRaw == null ? null : String(logoRaw),
-          }];
-        }));
+        setBrands(
+          payload.flatMap((item): StorefrontBrandItem[] => {
+            if (!item || typeof item !== "object") return [];
+            const row = item as Record<string, unknown>;
+            const brandId = String(row.brandId ?? row.BrandId ?? "");
+            const slug = String(row.slug ?? row.Slug ?? "");
+            const name = String(row.name ?? row.Name ?? "");
+            if (!brandId || !slug || !name) return [];
+            const logoRaw = row.logoMediaAssetId ?? row.LogoMediaAssetId;
+            return [
+              {
+                brandId,
+                slug,
+                name,
+                productCount: Number(row.productCount ?? row.ProductCount ?? 0),
+                logoMediaAssetId: logoRaw == null ? null : String(logoRaw),
+              },
+            ];
+          }),
+        );
       })
-      .catch(() => setBrands([]));
+      .catch(() => {
+        if (!cancelled) setBrands([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const closeMegaMenu = useCallback(() => {

@@ -63,7 +63,8 @@ test("mini-cart drawer preserves Shopeiva structure on Host cart APIs", () => {
   assert.match(miniCartSource, /removeCartLine/);
   assert.match(miniCartSource, /loadStorefrontCart/);
   assert.match(miniCartSource, /تکمیل خرید/);
-  assert.match(miniCartSource, /localizePath\("\/cart"\)/);
+  assert.match(miniCartSource, /LocalizedLink/);
+  assert.match(miniCartSource, /href="\/cart"/);
   assert.match(miniCartSource, /data-testid="mini-cart-checkout-cta"/);
   assert.match(miniCartSource, /max-w-sm/);
   assert.match(miniCartSource, /bg-primary|text-primary|--color-primary/);

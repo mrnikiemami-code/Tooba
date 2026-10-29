@@ -1,3 +1,13 @@
+# CURRENT — 245 EXECUTED: storefront nav latency + pending feedback — 2026-10-29
+
+Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base claim HEAD `2620f8091`; issue `717c2dd42`.
+Canonical FE production :3000 → Host5088 SingleStore/store-alpha/tooba_alpha. Cart `01a17b2d-e219…` Active v48 preserved.
+LANDED: PDP drops full /home for categories+cached detail; LocalizedLink pending ≤100ms; mini-cart soft Link; loading.tsx;
+header memo/cancel. Warm product pending10ms usable694ms home0; warm cart pending15ms usable347ms; cold PDP762/cart204.
+Focused 16/16 + typecheck + production build. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+
 # CURRENT — 244-R3 ARCHITECT PARTIAL; NO NEW TASK — 2026-10-29
 
 Task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  

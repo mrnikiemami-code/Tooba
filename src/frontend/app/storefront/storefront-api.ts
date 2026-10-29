@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type {
   StorefrontAlternateOffer,
   StorefrontAppliedFilterChip,
@@ -772,11 +773,15 @@ export async function loadStorefrontListing(request: StorefrontListingRequest = 
  * PDP را از Host می‌خواند و در صورت انتخاب ترکیب، VariantId را فقط به درخواست
  * مقتدر Host می‌افزاید. تعویض فروشنده روی همان گونه از otherSellers ترکیب‌شدهٔ Host
  * انجام می‌شود و مبلغ/موجودی جعل نمی‌شود.
+ * `cache` dedupes generateMetadata + page within one RSC request.
  */
-export async function loadStorefrontDetail(slug: string, variantId?: string): Promise<StorefrontProductDetailPage | null> {
+export const loadStorefrontDetail = cache(async function loadStorefrontDetail(
+  slug: string,
+  variantId?: string,
+): Promise<StorefrontProductDetailPage | null> {
   const suffix = variantId ? `?variantId=${encodeURIComponent(variantId)}` : "";
   return mapStorefrontDetail(await readJson(`/v1/storefront/products/${encodeURIComponent(slug)}${suffix}`));
-}
+});
 
 /** صفحهٔ merchandising را با وضعیت پشتیبانی صریح از Host می‌خواند. */
 export async function loadStorefrontMerchandising(kind: string): Promise<StorefrontMerchandisingPage | null> {
@@ -790,12 +795,14 @@ export async function loadStorefrontBrands(): Promise<StorefrontBrandItem[] | nu
 }
 
 /** فهرست رده‌های منتشرشده را از Catalog می‌خواند (سبک‌تر از /home). */
-export async function loadStorefrontCategories(): Promise<StorefrontCategoryItem[] | null> {
+export const loadStorefrontCategories = cache(async function loadStorefrontCategories(): Promise<
+  StorefrontCategoryItem[] | null
+> {
   const payload = await readJson("/v1/storefront/categories");
   return Array.isArray(payload)
     ? payload.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
     : null;
-}
+});
 
 /** landing برند را بدون کپی بازاریابی ساختگی نگاشت می‌کند. */
 export async function loadStorefrontBrand(slug: string): Promise<StorefrontBrandPage | null> {

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { useStorefrontNavigationPending } from "../../lib/storefront-navigation/navigation-pending-context.tsx";
 import { Eye, Heart, Share2, ShoppingBag, Sparkles, Star, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -46,6 +47,7 @@ export function StorefrontProductCardView({
   const register = wishlist.register;
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const navPending = useStorefrontNavigationPending();
   const [note, setNote] = useState<string | null>(null);
   const [atcBusy, setAtcBusy] = useState(false);
   const [atcAdded, setAtcAdded] = useState(false);
@@ -70,7 +72,11 @@ export function StorefrontProductCardView({
   const handleViewProduct = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    router.push(localizePath(productHref));
+    const href = localizePath(productHref);
+    if (!navPending.begin(href, event)) {
+      return;
+    }
+    router.push(href);
   };
 
   async function handleAddToCart(event: React.MouseEvent) {
