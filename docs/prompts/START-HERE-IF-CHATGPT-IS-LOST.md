@@ -1,4 +1,17 @@
-# CURRENT — 243 ISSUED: finish actual original-store shipping handoff — 2026-10-29
+# CURRENT — 243 ARCHITECT REVIEW PARTIAL; 243-R1 correction ISSUED — 2026-10-29
+Active TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1; read docs/ai/tasks/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/TASK.md and243 ARCHITECT-REVIEW.
+Original primary3000/5088 SingleStore/store-alpha/tooba_alpha retained. Real original method60min14–15 Order
+and unsubmitted review cart are progress, NOT full delivery acceptance.
+BLOCKERS: concurrent StartPayment500;120minute0slot read unexplained; post:standard deactivated to forceNULLbinding.
+Source weight reader infers authority from displayg/kg, invalid variant falls back to product, loses per-definition
+merge and risks decimal/sum overflow; no focused new weight tests. Correct owning code, no data trick for green.
+Restore only243's post:standard active change through normal API; no new ports/DB/screenshot or commissioning.
+Preserve all user sessions/profiles/input, original rates/conditions/orders and unsubmitted review cart.
+Correct remaining SAME243 delivery; no automatic244. Root source/receipt review only, no root runtime execution.
+Checked-in gatesOFF/local primary as recorded; TB185 paused/defaultOFF/PendingAllocation.
+Original deadlineMISSED; no new time promise or PSP/Visual ACCEPT. Result STOP_FOR_ARCHITECT.
+
+# SUPERSEDED — 243 ISSUED: finish actual original-store shipping handoff — 2026-10-29
 User explicitly: «ببین من می خوام کار کلا تحویل بشه». Active TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243.
 Read docs/ai/tasks/TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243/TASK.md. ONE coherent delivery ledger, not more partial demo claims.
 Same primary3000/5088 SingleStore/store-alpha/tooba_alpha. No Marketplace DB substitution, new ports or screenshots.
