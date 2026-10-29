@@ -1,3 +1,17 @@
+# CURRENT — 245-R2 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-10-29
+
+Accepted chain:
+- `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3` corrected through 245-R1;
+- `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245` corrected through 245-R1/R2.
+
+Final accepted behavior: recipient-only edits preserve selected delivery day/hour; routing/pricing changes invalidate stale confirmation; product/cart navigation gives immediate progress, native modified clicks, bounded unlock and a visible localized timeout message. Canonical cart `01a17b2d-e219…` remains Active v48 with zero checkouts.
+
+State: **ARCHITECT ACCEPTED within scope**  
+Active task: `NONE`  
+automaticNextImplementationTask: `NONE`
+
+Read `docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2/ARCHITECT-REVIEW.md`.
+
 # CURRENT — 245-R2 EXECUTED: visible navigation timeout feedback — 2026-10-29
 
 Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
