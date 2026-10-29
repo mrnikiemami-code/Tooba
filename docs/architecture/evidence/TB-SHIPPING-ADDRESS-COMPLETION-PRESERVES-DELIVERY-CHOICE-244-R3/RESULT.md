@@ -45,7 +45,7 @@ often coincided with that wipe, so the user saw day/hour disappear.
 
 Expected-Base-SHA / Base-SHA: `e9495b0388dae6e878cb8349bb58e25be8a69e18`  
 Code-SHA: `f870c716a4a0f2c132b19dd8db5cc96041edee30`  
-Evidence-SHA: `f870c716a4a0f2c132b19dd8db5cc96041edee30` (pin commit may follow)  
+Evidence-SHA: `1a482df8fba8a886395429c74e20c831876d5177`  
 local==origin/main after push.
 
 ## Touched files
