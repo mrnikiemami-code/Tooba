@@ -1,4 +1,10 @@
-# CURRENT — 243 ISSUED: finish actual original-store shipping handoff — 2026-10-29
+# CURRENT — 243 EXECUTED: original-store 60min slots + weight wire + Order 14–15 + review cart — 2026-10-29
+Read docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status PASS within scope, NOT VisualACCEPT/PSP. Base c6c5ebd48; Code 7ea79556f.
+PRIMARY 3000/5088 SingleStore/store-alpha/tooba_alpha. Order TB-20261029024514-01-43b144 manual Pending
+14:00-15:00 on draft01a16eeb; review cart unsubmitted BFF me200. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 243 ISSUED: finish actual original-store shipping handoff — 2026-10-29
 User explicitly: «ببین من می خوام کار کلا تحویل بشه». Active TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243.
 Read docs/ai/tasks/TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243/TASK.md. ONE coherent delivery ledger, not more partial demo claims.
 Same primary3000/5088 SingleStore/store-alpha/tooba_alpha. No Marketplace DB substitution, new ports or screenshots.

@@ -1,12 +1,16 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-28 (TB-241, configurable slots on ONE primary 3000/5088)
+## Current Shipping handoff — 2026-10-29 (TB-243, original-store complete handoff on primary 3000/5088)
 
-Live pointer: docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241/RESULT.md and root AGENTS.md.
-PRIMARY user URL http://127.0.0.1:3000/fa/shipping → Host 5088 (Marketplace, Tenant NULL, DB tooba_marketplace_tb239).
-Visible Chrome D:\temp\tb241-chrome CDP9350 signed in as buyer 01a18247-54d3-7000-9f2f-219ac7de9e6d with TWO-seller
-unsubmitted cart 01a1846b-aede-7000-850f-de073a511739; DigiStyle shows 60-minute slots 09–10…14–15; Arman shows 120-minute
-slots. Task FE310x/Host518x/5190 stopped. Code SHA 0bcfa52aa. No screenshots. Original 240 deadline MISSED.
+Live pointer: docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243/RESULT.md and root AGENTS.md.
+PRIMARY http://127.0.0.1:3000 → Host 5088 SingleStore/store-alpha/tooba_alpha (Code 7ea79556f).
+Original draft 01a16eeb 60-min slots + type 01a16f43 + laptop offer; Order TB-20261029024514-01-43b144
+manual Pending 14:00-15:00; review cart 01a1858d-06ee… BFF me200 unsubmitted. No screenshots. Deadline MISSED.
+
+## Superseded — 2026-10-28 (TB-241, configurable slots on ONE primary 3000/5088)
+
+Live pointer was docs/architecture/evidence/TB-SHIPPING-RECEIVING-SLOTS-AND-PRIMARY-RUNTIME-241/RESULT.md.
+PRIMARY was Marketplace/tooba_marketplace_tb239; later restored to SingleStore by 242 then completed by 243.
 
 
 ## Superseded — 2026-10-28 (TB-240-R5, PASS for the remaining functional scope)
