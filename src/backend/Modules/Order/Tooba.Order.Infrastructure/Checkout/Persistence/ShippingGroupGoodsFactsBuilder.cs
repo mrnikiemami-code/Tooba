@@ -16,7 +16,8 @@ namespace Tooba.Order.Infrastructure.Checkout.Persistence;
 /// </para>
 /// <para>
 /// مبلغ گروه = جمع <c>TaxInclusiveSnapshot</c> همان اعضا؛ هیچ سهمی از جمع کل سبد و هیچ مبلغ ارسالی
-/// فراخوان پذیرفته نمی‌شود. وزن/تعداد فیزیکی منبع authoritative ندارند و تهی می‌مانند.
+/// فراخوان پذیرفته نمی‌شود. وزن/تعداد فیزیکی در این سازنده تهی می‌مانند؛ خوانندهٔ Checkout آن‌ها را
+/// از Contracts اندازه‌گیری Catalog پر می‌کند وقتی منبع authoritative موجود باشد.
 /// </para>
 /// </remarks>
 internal static class ShippingGroupGoodsFactsBuilder

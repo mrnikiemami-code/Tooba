@@ -341,6 +341,11 @@ internal sealed class FakeCatalogCheckout : ICatalogCheckoutLookup
 
     public Task<QuantityRoundingMode> GetGlobalRoundingModeAsync(CancellationToken cancellationToken) =>
         Task.FromResult(QuantityRoundingMode.Nearest);
+
+    public Task<IReadOnlyDictionary<Guid, long?>> GetShippingWeightGramsByVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, long?>>(new Dictionary<Guid, long?>());
 }
 
 internal sealed class NoCallCancelGate : ISellerOrderCancelFulfillmentGate

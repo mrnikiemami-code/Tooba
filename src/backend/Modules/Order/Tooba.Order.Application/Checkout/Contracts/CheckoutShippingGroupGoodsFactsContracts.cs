@@ -64,11 +64,10 @@ public sealed record CheckoutShippingGroupGoodsContribution(
 /// دوباره اضافه می‌شود، نه تخفیف دوباره کم، و نه سهمی از جمع کل سبد به نسبت تقسیم می‌شود.
 /// </para>
 /// <para>
-/// <b>Physical facts stay unknown.</b> <see cref="GroupWeightGrams"/> و
+/// <b>Physical facts stay optional.</b> <see cref="GroupWeightGrams"/> و
 /// <see cref="PhysicalItemCount"/> فقط وقتی پر می‌شوند که منبع authoritative اندازه‌گیری موجود باشد؛
-/// این برش چنین منبعی ندارد، پس هر دو <c>null</c> می‌مانند. <see cref="QuantityTotal"/> فقط
-/// متادیتای مقدار است و هرگز به‌طور خودکار «تعداد اقلام» Shipping نمی‌شود (مقدار اعشاری گرد/سقف
-/// نمی‌شود).
+/// در غیر این صورت <c>null</c> می‌مانند. <see cref="QuantityTotal"/> فقط متادیتای مقدار است و هرگز
+/// به‌طور خودکار «تعداد اقلام» Shipping نمی‌شود (مقدار اعشاری گرد/سقف نمی‌شود).
 /// </para>
 /// </remarks>
 /// <param name="GroupKey">کلید گروه همان درخواست.</param>
@@ -76,8 +75,8 @@ public sealed record CheckoutShippingGroupGoodsContribution(
 /// <param name="Currency">ارز همان گروه؛ نبود/ناسازگاری رد می‌شود.</param>
 /// <param name="FinalGoodsAmountAfterDiscountAndTax">جمع مبلغ نهایی اعضای همین گروه.</param>
 /// <param name="QuantityTotal">جمع مقدار خطوط همین گروه (متادیتا، اعشاری).</param>
-/// <param name="GroupWeightGrams">وزن اندازه‌گیری‌شدهٔ گروه؛ این برش منبع authoritative ندارد ⇒ <c>null</c>.</param>
-/// <param name="PhysicalItemCount">تعداد فیزیکی اقلام؛ این برش منبع authoritative ندارد ⇒ <c>null</c>.</param>
+/// <param name="GroupWeightGrams">وزن اندازه‌گیری‌شدهٔ گروه یا تهی وقتی منبع authoritative نیست.</param>
+/// <param name="PhysicalItemCount">تعداد فیزیکی اقلام یا تهی وقتی منبع authoritative نیست.</param>
 /// <param name="Contributions">سهم دقیق هر خط سبد در همین گروه.</param>
 public sealed record CheckoutShippingGroupGoodsFacts(
     string GroupKey,

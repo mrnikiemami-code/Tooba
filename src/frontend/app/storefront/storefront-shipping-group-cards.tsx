@@ -13,11 +13,17 @@
  */
 import { AlertTriangle, Calendar, Check, Clock, Package, RefreshCw, Store } from "lucide-react";
 
+import { useLocale } from "../../lib/i18n/locale-context.tsx";
+import { shippingDeliveryMessagesFor } from "../../lib/i18n/messages.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontCartLine } from "./storefront-cart-api.ts";
-import { formatExactAmountText, toPersianDigits } from "./storefront-shipping-format.ts";
-import { CapturedSlotPicker, DateChipStrip } from "./storefront-shipping-date-chips.tsx";
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
+import {
+  formatExactAmountText,
+  formatShippingChoiceDate,
+  toPersianDigits,
+} from "./storefront-shipping-format.ts";
+import { CapturedSlotPicker, DateChipStrip } from "./storefront-shipping-date-chips.tsx";
 import type {
   StorefrontCapturedPreview,
   StorefrontCapturedPreviewGroup,
@@ -303,6 +309,8 @@ function CapturedMethodRow({
   onSelectMethod: (groupKey: string, methodKey: string, date: string | null) => void;
   onSelectSlot: (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => void;
 }) {
+  const locale = useLocale();
+  const copy = shippingDeliveryMessagesFor(locale);
   const identity = `${groupKey}-${method.serviceCode}-${method.optionCode ?? "none"}`;
   const methodKey = capturedMethodKey(method);
   /**
@@ -333,8 +341,8 @@ function CapturedMethodRow({
   const activeSlot = activeSlots.find(
     (slot) => slot.startTicks === selectedSlotStartTicks && slot.endTicks === selectedSlotEndTicks,
   ) ?? null;
-  const freight = formatExactAmountText(method.freightAmountText, method.currency ?? currency);
-  const packaging = formatExactAmountText(method.packagingAmountText, method.currency ?? currency);
+  const freight = formatExactAmountText(method.freightAmountText, method.currency ?? currency, locale);
+  const packaging = formatExactAmountText(method.packagingAmountText, method.currency ?? currency, locale);
 
   return (
     <div
@@ -366,8 +374,8 @@ function CapturedMethodRow({
             {selected ? <Check className="w-3 h-3" /> : null}
           </button>
           <p className="text-[10px] text-gray-500 mt-0.5">
-            {freight === null ? "کرایه نامشخص" : `کرایه ${freight}`}
-            {packaging === null ? "" : ` · بسته‌بندی ${packaging}`}
+            {freight === null ? copy.freightUnknown : `${copy.freightPrefix} ${freight}`}
+            {packaging === null ? "" : ` · ${copy.packagingPrefix} ${packaging}`}
           </p>
         </div>
       </div>
@@ -385,7 +393,7 @@ function CapturedMethodRow({
             className="mt-2 text-[11px] md:text-xs font-bold text-gray-700 flex items-center gap-1.5"
             data-testid={`shipping-group-captured-dates-label-${identity}`}
           >
-            <Calendar className="w-3.5 h-3.5 text-primary" /> روز تحویل
+            <Calendar className="w-3.5 h-3.5 text-primary" /> {copy.deliveryDay}
           </p>
           <DateChipStrip
             dates={method.availableDates}
@@ -410,7 +418,7 @@ function CapturedMethodRow({
               className="mt-2 text-[11px] text-gray-500"
               data-testid={`shipping-group-captured-pick-date-hint-${identity}`}
             >
-              ابتدا یکی از روزهای بالا را انتخاب کنید.
+              {copy.pickDateFirst}
             </p>
           ) : null}
 
@@ -420,8 +428,8 @@ function CapturedMethodRow({
               className="mt-2 text-[11px] text-gray-700"
               data-testid={`shipping-group-captured-interval-${identity}`}
             >
-              انتخاب شما:{" "}
-              <bdi dir="ltr" className="inline-block font-bold tabular-nums">
+              {copy.yourChoice}{" "}
+              <bdi dir="ltr" className="inline-block font-bold whitespace-nowrap tabular-nums">
                 {`${activeSlot.opensAt}–${activeSlot.closesAt}`}
               </bdi>
             </p>
@@ -430,7 +438,7 @@ function CapturedMethodRow({
               className="sr-only"
               data-testid={`shipping-group-captured-interval-${identity}`}
             >
-              هنوز ساعت تحویل انتخاب نشده
+              {copy.hourNotChosen}
             </p>
           )}
         </>
@@ -457,7 +465,9 @@ function CapturedGroupCard({
   onSelectCapturedMethod: (groupKey: string, methodKey: string, date: string | null) => void;
   onSelectCapturedSlot: (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => void;
 }) {
-  const goodsText = formatExactAmountText(group.finalGoodsAmountText, currency);
+  const locale = useLocale();
+  const copy = shippingDeliveryMessagesFor(locale);
+  const goodsText = formatExactAmountText(group.finalGoodsAmountText, currency, locale);
   const chosenMethod = selection
     ? group.methods.find((method) => capturedMethodKey(method) === selection.methodKey) ?? null
     : null;
@@ -468,7 +478,7 @@ function CapturedGroupCard({
     (slot) => slot.startTicks === selection?.slotStartTicks && slot.endTicks === selection?.slotEndTicks,
   ) ?? null;
   const chosenDateLabel = chosenSlot && selection?.date
-    ? formatJalaliDate(`${selection.date}T12:00:00`, "fa")
+    ? formatShippingChoiceDate(selection.date, locale)
     : null;
   return (
     <div
@@ -482,11 +492,11 @@ function CapturedGroupCard({
             <p className="text-xs md:text-sm font-bold text-gray-900 truncate">{sellerName}</p>
           </div>
           <p className="text-[10px] md:text-[11px] text-gray-500 mt-1 truncate">
-            {group.typeLabel ?? "نوع ارسال تعیین‌نشده"}
+            {group.typeLabel ?? copy.typeUnset}
           </p>
         </div>
         <span className="text-[11px] md:text-xs font-black text-gray-900 shrink-0">
-          {goodsText ?? "مبلغ کالا نامشخص"}
+          {goodsText ?? copy.goodsAmountUnknown}
         </span>
       </div>
 
@@ -519,7 +529,7 @@ function CapturedGroupCard({
         className="mt-2 text-[11px] text-gray-700"
         data-testid={`shipping-group-delivery-${group.groupKey}`}
       >
-        <span className="font-bold">زمان تحویل این گروه: </span>
+        <span className="font-bold">{copy.groupDeliveryTime} </span>
         {chosenDateLabel ? (
           <>
             {chosenDateLabel}
@@ -527,17 +537,17 @@ function CapturedGroupCard({
             {chosenInterval ? (
               <>
                 {" "}
-                <bdi dir="ltr" className="inline-block">{`${chosenInterval.opensAt}–${chosenInterval.closesAt}`}</bdi>
+                <bdi dir="ltr" className="inline-block whitespace-nowrap">{`${chosenInterval.opensAt}–${chosenInterval.closesAt}`}</bdi>
               </>
             ) : chosenSlot?.intervalText ? (
               <>
                 {" "}
-                <bdi dir="ltr" className="inline-block">{chosenSlot.intervalText}</bdi>
+                <bdi dir="ltr" className="inline-block whitespace-nowrap">{chosenSlot.intervalText}</bdi>
               </>
             ) : null}
           </>
         ) : (
-          "هنوز انتخاب نشده"
+          copy.notChosenYet
         )}
       </p>
       {chosenDateLabel || group.methods.length === 0 ? null : (
@@ -545,7 +555,7 @@ function CapturedGroupCard({
           className="mt-1 text-[10px] font-bold text-amber-700"
           data-testid={`shipping-group-captured-need-date-${group.groupKey}`}
         >
-          برای این گروه یکی از تاریخ‌های هر روش را انتخاب کنید.
+          {copy.pickGroupDate}
         </p>
       )}
 

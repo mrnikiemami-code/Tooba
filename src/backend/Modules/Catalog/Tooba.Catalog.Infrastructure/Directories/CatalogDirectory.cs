@@ -261,6 +261,148 @@ public sealed class CatalogDirectory :
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, long?>> GetShippingWeightGramsByVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        if (variantIds.Count == 0)
+        {
+            return new Dictionary<Guid, long?>();
+        }
+
+        var distinct = variantIds.Distinct().ToArray();
+        var variantRows = await _db.Variants.AsNoTracking()
+            .Where(v => distinct.Contains(v.VariantId))
+            .Select(v => new { v.VariantId, v.ProductId })
+            .ToListAsync(cancellationToken);
+        if (variantRows.Count == 0)
+        {
+            return new Dictionary<Guid, long?>();
+        }
+
+        var weightDefinitions = await _db.AttributeDefinitions.AsNoTracking()
+            .Where(d => d.ValueKind == CatalogAttributeValueKind.Number && d.Unit != null)
+            .Select(d => new { d.DefinitionId, d.Unit })
+            .ToListAsync(cancellationToken);
+        var unitByDefinition = new Dictionary<Guid, string>();
+        foreach (var definition in weightDefinitions)
+        {
+            var unit = definition.Unit!.Trim();
+            if (unit.Equals("g", StringComparison.OrdinalIgnoreCase)
+                || unit.Equals("kg", StringComparison.OrdinalIgnoreCase))
+            {
+                unitByDefinition[definition.DefinitionId] = unit;
+            }
+        }
+
+        if (unitByDefinition.Count == 0)
+        {
+            return new Dictionary<Guid, long?>();
+        }
+
+        var definitionIds = unitByDefinition.Keys.ToArray();
+        var productIds = variantRows.Select(v => v.ProductId).Distinct().ToArray();
+        var productValues = await _db.ProductAttributeValues.AsNoTracking()
+            .Where(v => productIds.Contains(v.ProductId) && definitionIds.Contains(v.DefinitionId))
+            .Select(v => new { v.ProductId, v.DefinitionId, v.CanonicalValue })
+            .ToListAsync(cancellationToken);
+        var variantValues = await _db.VariantAttributeValues.AsNoTracking()
+            .Where(v => distinct.Contains(v.VariantId) && definitionIds.Contains(v.DefinitionId))
+            .Select(v => new { v.VariantId, v.DefinitionId, v.CanonicalValue })
+            .ToListAsync(cancellationToken);
+
+        var productGramsByProduct = new Dictionary<Guid, long?>();
+        foreach (var productGroup in productValues.GroupBy(v => v.ProductId))
+        {
+            productGramsByProduct[productGroup.Key] = ResolveUniqueWeightGrams(
+                productGroup.Select(v => (v.DefinitionId, v.CanonicalValue)),
+                unitByDefinition);
+        }
+
+        var result = new Dictionary<Guid, long?>();
+        foreach (var row in variantRows)
+        {
+            var variantOverrides = variantValues
+                .Where(v => v.VariantId == row.VariantId)
+                .Select(v => (v.DefinitionId, v.CanonicalValue))
+                .ToList();
+            long? grams = null;
+            if (variantOverrides.Count > 0)
+            {
+                grams = ResolveUniqueWeightGrams(variantOverrides, unitByDefinition);
+            }
+
+            if (grams is null)
+            {
+                productGramsByProduct.TryGetValue(row.ProductId, out grams);
+            }
+
+            if (grams is not null)
+            {
+                result[row.VariantId] = grams;
+            }
+        }
+
+        return result;
+    }
+
+    private static long? ResolveUniqueWeightGrams(
+        IEnumerable<(Guid DefinitionId, string CanonicalValue)> values,
+        IReadOnlyDictionary<Guid, string> unitByDefinition)
+    {
+        long? agreed = null;
+        foreach (var (definitionId, canonicalValue) in values)
+        {
+            if (!unitByDefinition.TryGetValue(definitionId, out var unit))
+            {
+                continue;
+            }
+
+            var converted = ConvertCanonicalWeightToGrams(canonicalValue, unit);
+            if (converted is null)
+            {
+                return null;
+            }
+
+            if (agreed is null)
+            {
+                agreed = converted;
+            }
+            else if (agreed.Value != converted.Value)
+            {
+                return null;
+            }
+        }
+
+        return agreed;
+    }
+
+    private static long? ConvertCanonicalWeightToGrams(string canonicalValue, string unit)
+    {
+        if (string.IsNullOrWhiteSpace(canonicalValue)
+            || !decimal.TryParse(
+                canonicalValue.Trim(),
+                System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var amount)
+            || amount <= 0m)
+        {
+            return null;
+        }
+
+        var grams = unit.Equals("kg", StringComparison.OrdinalIgnoreCase)
+            ? amount * 1000m
+            : amount;
+        if (grams != decimal.Truncate(grams) || grams > long.MaxValue)
+        {
+            return null;
+        }
+
+        var whole = (long)grams;
+        return whole > 0 ? whole : null;
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<AccessControlCategoryItem>> ListCategoriesForAccessControlAsync(
         string? search,
         CancellationToken cancellationToken)

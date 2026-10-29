@@ -1,7 +1,7 @@
 ﻿"use client";
 
 /**
- * TB-150 / TB-229-R1 / TB-241 / TB-242 — کنترل‌های مشترک زمان تحویل.
+ * TB-150 / TB-229-R1 / TB-241 / TB-242 / TB-243 — کنترل‌های مشترک زمان تحویل.
  *
  * این فایل فقط DOM مشترک را نگه می‌دارد تا کارت گروه کوچک بماند:
  * - `DateChipStrip` نوار تاریخ مشترک مسیر قدیمی و پیش‌نمایش capture‌شده است (بدون تاریخ ساختگی).
@@ -10,6 +10,8 @@
  */
 import { Check, Clock } from "lucide-react";
 
+import { useLocale } from "../../lib/i18n/locale-context.tsx";
+import { shippingDeliveryMessagesFor } from "../../lib/i18n/messages.ts";
 import type { StorefrontCapturedSlot } from "./storefront-shipping-api.ts";
 import { deliveryChipParts } from "./storefront-shipping-format.ts";
 
@@ -40,12 +42,14 @@ export function DateChipStrip({
   disabledBefore?: string | null;
   onPick: (value: string) => void;
 }) {
+  const locale = useLocale();
+  const copy = shippingDeliveryMessagesFor(locale);
   return (
     <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
       {dates.map((d) => {
         const disabled = Boolean(disabledBefore && d.value < disabledBefore);
         const selected = active === d.value;
-        const chip = deliveryChipParts(d);
+        const chip = deliveryChipParts(d, locale);
         return (
           <button
             key={d.value}
@@ -59,8 +63,8 @@ export function DateChipStrip({
               if (disabled) return;
               onPick(d.value);
             }}
-            title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : `${chip.weekday} ${chip.day} ${chip.month}`}
-            className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+            title={disabled ? copy.beforeMinimum : `${chip.weekday} ${chip.day} ${chip.month}`}
+            className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               selected
                 ? "border-primary bg-primary/5 text-primary shadow-sm"
                 : "border-gray-200 bg-surface text-gray-700 hover:border-gray-300"
@@ -70,7 +74,7 @@ export function DateChipStrip({
             <p className="text-[11px] font-medium">{chip.weekday}</p>
             <p className="mt-1 text-xl font-black leading-none tabular-nums">{chip.day}</p>
             <p className="mt-1 text-[10px] text-gray-500">{chip.month}</p>
-            {d.isEarliest ? <p className="mt-1 text-[9px] font-bold text-primary">نزدیک‌ترین</p> : null}
+            {d.isEarliest ? <p className="mt-1 text-[9px] font-bold text-primary">{copy.nearest}</p> : null}
           </button>
         );
       })}
@@ -79,7 +83,7 @@ export function DateChipStrip({
 }
 
 /**
- * TB-241 / TB-242 — نوبت‌های همان روز به‌صورت کارت‌های قابل‌انتخاب هم‌سبک با
+ * TB-241 / TB-242 / TB-243 — نوبت‌های همان روز به‌صورت کارت‌های قابل‌انتخاب هم‌سبک با
  * `GroupSchedulePicker` (نه pillهای ریز radio). برای یک نوبت همان بازه تنها گزینه است؛ برای چند
  * نوبت تا انتخاب صریح هیچ نوبتی فرض نمی‌شود. همهٔ بازه‌ها فقط از سرور می‌آیند.
  */
@@ -94,17 +98,19 @@ export function CapturedSlotPicker({
   activeSlotKey: string | null;
   onPick: (startTicks: number, endTicks: number) => void;
 }) {
+  const locale = useLocale();
+  const copy = shippingDeliveryMessagesFor(locale);
   const groupName = `shipping-slot-${identity}`;
   return (
-    <fieldset className="mt-3" data-testid={`shipping-group-captured-slots-${identity}`}>
+    <fieldset className="mt-3 min-w-0" data-testid={`shipping-group-captured-slots-${identity}`}>
       <legend className="mb-2 text-[11px] md:text-xs font-bold text-gray-700 flex items-center gap-1.5">
         <Clock className="size-3.5 text-primary shrink-0" aria-hidden />
-        ساعت تحویل
+        {copy.deliveryHourLegend}
       </legend>
       <div
         className="grid grid-cols-2 gap-2 min-w-0 sm:grid-cols-3"
         role="radiogroup"
-        aria-label="ساعت تحویل"
+        aria-label={copy.deliveryHourAria}
       >
         {slots.map((slot) => {
           const chosen = activeSlotKey === slot.slotKey;
@@ -129,7 +135,7 @@ export function CapturedSlotPicker({
                 onChange={() => onPick(slot.startTicks, slot.endTicks)}
               />
               <Clock className="size-3.5 shrink-0 opacity-80" aria-hidden />
-              <bdi dir="ltr" className="min-w-0 truncate tabular-nums">
+              <bdi dir="ltr" className="min-w-0 whitespace-nowrap tabular-nums">
                 {range}
               </bdi>
               {chosen ? <Check className="ms-auto size-3.5 shrink-0" aria-hidden /> : null}
@@ -146,7 +152,7 @@ export function CapturedSlotPicker({
           className="mt-2 text-[11px] font-semibold text-amber-700"
           data-testid={`shipping-group-captured-slot-required-${identity}`}
         >
-          یکی از ساعت‌های بالا را انتخاب کنید.
+          {copy.pickOneHour}
         </p>
       ) : null}
     </fieldset>

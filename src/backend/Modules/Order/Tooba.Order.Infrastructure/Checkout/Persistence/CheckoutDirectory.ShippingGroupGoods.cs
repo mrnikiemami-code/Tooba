@@ -58,10 +58,18 @@ public sealed partial class CheckoutDirectory : ICheckoutShippingGroupGoodsFacts
             cart,
             _orderLineIdByCartLineId);
 
+        var weightByVariant = await _catalog.GetShippingWeightGramsByVariantIdsAsync(
+            cart.Lines.Select(line => line.CatalogVariantId).Distinct().ToArray(),
+            cancellationToken);
+
         var groups = new List<CheckoutShippingGroupGoodsFacts>(membership.Count);
         foreach (var group in membership)
         {
-            groups.Add(ShippingGroupGoodsFactsBuilder.BuildGroupFacts(group, linesByCartLineId, cartCurrency));
+            var facts = ShippingGroupGoodsFactsBuilder.BuildGroupFacts(group, linesByCartLineId, cartCurrency);
+            groups.Add(facts with
+            {
+                GroupWeightGrams = ResolveGroupWeightGrams(cart, group.Group.CartLineIds, weightByVariant),
+            });
         }
 
         return new CheckoutShippingGroupGoodsFactsResult(
@@ -69,5 +77,34 @@ public sealed partial class CheckoutDirectory : ICheckoutShippingGroupGoodsFacts
             cart.Version,
             cartCurrency,
             groups);
+    }
+
+    /// <summary>
+    /// وزن گروه از اندازه‌گیری authoritative هر خط؛ اگر هر خط وزن نداشته باشد تهی می‌ماند.
+    /// </summary>
+    private static long? ResolveGroupWeightGrams(
+        CartSnapshot cart,
+        IReadOnlyList<Guid> cartLineIds,
+        IReadOnlyDictionary<Guid, long?> weightByVariant)
+    {
+        long total = 0;
+        foreach (var cartLineId in cartLineIds)
+        {
+            var line = cart.Lines.First(candidate => candidate.LineId == cartLineId);
+            if (!weightByVariant.TryGetValue(line.CatalogVariantId, out var unitGrams) || unitGrams is null)
+            {
+                return null;
+            }
+
+            var lineGrams = (decimal)unitGrams.Value * line.Quantity;
+            if (lineGrams <= 0m || lineGrams != decimal.Truncate(lineGrams) || lineGrams > long.MaxValue)
+            {
+                return null;
+            }
+
+            total += (long)lineGrams;
+        }
+
+        return total > 0 ? total : null;
     }
 }

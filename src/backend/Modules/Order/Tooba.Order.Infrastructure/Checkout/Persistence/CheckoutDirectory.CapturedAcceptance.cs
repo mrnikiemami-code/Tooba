@@ -201,12 +201,22 @@ public sealed partial class CheckoutDirectory
             cart,
             _orderLineIdByCartLineId);
         var currency = StorefrontCartCurrencyCompatibility.ResolveSoleCurrency(cart);
+        var weightByVariant = await _catalog.GetShippingWeightGramsByVariantIdsAsync(
+            cart.Lines.Select(line => line.CatalogVariantId).Distinct().ToArray(),
+            cancellationToken);
         var facts = new CheckoutShippingGroupGoodsFactsResult(
             cart.CartId,
             cart.Version,
             currency,
             membership
-                .Select(group => ShippingGroupGoodsFactsBuilder.BuildGroupFacts(group, linesByCartLineId, currency))
+                .Select(group =>
+                {
+                    var built = ShippingGroupGoodsFactsBuilder.BuildGroupFacts(group, linesByCartLineId, currency);
+                    return built with
+                    {
+                        GroupWeightGrams = ResolveGroupWeightGrams(cart, group.Group.CartLineIds, weightByVariant),
+                    };
+                })
                 .ToArray());
 
         // TB-236: مبلغ تأییدشدهٔ کالای هر گروه باید همان چیزی باشد که همین submit با همان قصد کوپن
