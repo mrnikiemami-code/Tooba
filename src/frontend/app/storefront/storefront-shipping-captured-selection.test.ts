@@ -3,9 +3,11 @@ import test from "node:test";
 
 import {
   buildCapturedSelectionIntent,
+  captureGroupConfirmationFingerprint,
   capturedSelectionBlocker,
   capturedSelectionComplete,
   capturedSelectionContextKey,
+  fingerprintsForCapturedChoices,
   reconcileCapturedChoicesAgainstPreview,
   resolveCapturedSelectionRevision,
 } from "./storefront-shipping-captured-selection.ts";
@@ -346,10 +348,30 @@ const SLOT_CHOICE_FULL = {
   slotEndTicks: 396000000000,
 };
 
+const routing = { destinationKey: "d1", couponCode: null as string | null, cartVersion: 7 };
+
+function reconcile(
+  previous: Record<string, typeof SLOT_CHOICE_FULL>,
+  nextPreview: StorefrontCapturedPreview,
+  opts: {
+    previousRouting?: typeof routing | null;
+    nextRouting?: typeof routing;
+    previousFingerprints?: Record<string, string>;
+  } = {},
+) {
+  const previousFingerprints =
+    opts.previousFingerprints
+    ?? fingerprintsForCapturedChoices(slotPreview(), previous);
+  return reconcileCapturedChoicesAgainstPreview(previous, nextPreview, {
+    previousRouting: opts.previousRouting === undefined ? routing : opts.previousRouting,
+    nextRouting: opts.nextRouting ?? routing,
+    previousFingerprints,
+  });
+}
+
 test("recipient-form fields are outside the captured context identity", () => {
   const base = { destinationKey: "d1", couponCode: null, cartVersion: 7, preview: slotPreview() };
   const key = capturedSelectionContextKey(base);
-  // فیلدهای فرم گیرنده هرگز وارد کلید نمی‌شوند؛ همان کلید باید پایدار بماند.
   assert.equal(capturedSelectionContextKey({ ...base }), key);
   assert.equal(
     key.includes("firstName") || key.includes("postalCode") || key.includes("notes"),
@@ -357,12 +379,55 @@ test("recipient-form fields are outside the captured context identity", () => {
   );
 });
 
-test("reconcile keeps date+slot when the refreshed preview still offers them", () => {
+test("semantically identical re-fetch preserves choices via confirmation fingerprints", () => {
   const previous = { "cap|post|store|heavy": SLOT_CHOICE_FULL };
-  const kept = reconcileCapturedChoicesAgainstPreview(previous, slotPreview());
-  assert.equal(kept, previous);
-  assert.equal(kept["cap|post|store|heavy"].date, "2026-10-29");
-  assert.equal(kept["cap|post|store|heavy"].slotStartTicks, 360000000000);
+  const kept = reconcile(previous, slotPreview());
+  assert.equal(kept.choices, previous);
+  assert.equal(kept.choices["cap|post|store|heavy"].slotStartTicks, 360000000000);
+});
+
+test("destination coupon and cart-version changes clear all choices", () => {
+  const previous = { "cap|post|store|heavy": SLOT_CHOICE_FULL };
+  for (const nextRouting of [
+    { ...routing, destinationKey: "d2" },
+    { ...routing, couponCode: "SAVE10" },
+    { ...routing, cartVersion: 9 },
+  ]) {
+    const cleared = reconcile(previous, slotPreview(), { nextRouting });
+    assert.deepEqual(cleared.choices, {});
+    assert.deepEqual(cleared.fingerprints, {});
+  }
+});
+
+test("snapshot/rate/goods fingerprint change clears only the affected group", () => {
+  const otherKey = "cap|post|store|light";
+  const previous = {
+    "cap|post|store|heavy": SLOT_CHOICE_FULL,
+    [otherKey]: { ...SLOT_CHOICE_FULL },
+  };
+  const twoGroupPreview = preview({
+    groups: [
+      group({ methods: [method({ availableDates: [SLOT_DAY] })] }),
+      group({ groupKey: otherKey, methods: [method({ availableDates: [SLOT_DAY] })] }),
+    ],
+  });
+  const fingerprints = fingerprintsForCapturedChoices(twoGroupPreview, previous);
+  const changedHeavy = preview({
+    groups: [
+      group({
+        finalGoodsAmountText: "1",
+        methods: [method({ availableDates: [SLOT_DAY] })],
+      }),
+      group({ groupKey: otherKey, methods: [method({ availableDates: [SLOT_DAY] })] }),
+    ],
+  });
+  const next = reconcileCapturedChoicesAgainstPreview(previous, changedHeavy, {
+    previousRouting: routing,
+    nextRouting: routing,
+    previousFingerprints: fingerprints,
+  });
+  assert.equal(next.choices["cap|post|store|heavy"], undefined);
+  assert.equal(next.choices[otherKey]?.date, "2026-10-29");
 });
 
 test("reconcile clears only the group whose slot disappeared", () => {
@@ -371,6 +436,20 @@ test("reconcile clears only the group whose slot disappeared", () => {
     "cap|post|store|heavy": SLOT_CHOICE_FULL,
     [otherKey]: { ...SLOT_CHOICE_FULL, date: "2026-10-30" },
   };
+  const basePreview = preview({
+    groups: [
+      group({ methods: [method({ availableDates: [SLOT_DAY] })] }),
+      group({
+        groupKey: otherKey,
+        methods: [
+          method({
+            availableDates: [{ ...SLOT_DAY, value: "2026-10-30" }],
+          }),
+        ],
+      }),
+    ],
+  });
+  const fingerprints = fingerprintsForCapturedChoices(basePreview, previous);
   const refreshed = preview({
     groups: [
       group({ methods: [method({ availableDates: [SLOT_DAY] })] }),
@@ -380,9 +459,13 @@ test("reconcile clears only the group whose slot disappeared", () => {
       }),
     ],
   });
-  const next = reconcileCapturedChoicesAgainstPreview(previous, refreshed);
-  assert.equal(next["cap|post|store|heavy"]?.date, "2026-10-29");
-  assert.equal(next[otherKey], undefined);
+  const next = reconcileCapturedChoicesAgainstPreview(previous, refreshed, {
+    previousRouting: routing,
+    nextRouting: routing,
+    previousFingerprints: fingerprints,
+  });
+  assert.equal(next.choices["cap|post|store|heavy"]?.date, "2026-10-29");
+  assert.equal(next.choices[otherKey], undefined);
 });
 
 test("reconcile drops a slot that left the server calendar", () => {
@@ -403,7 +486,48 @@ test("reconcile drops a slot that left the server calendar", () => {
       }),
     ],
   });
-  assert.deepEqual(reconcileCapturedChoicesAgainstPreview(previous, onlyMorning), {});
+  assert.deepEqual(reconcile(previous, onlyMorning).choices, {});
+});
+
+test("zero-slot day rejects a choice carrying ticks and accepts only a tickless legacy choice", () => {
+  const tickless = { ...SLOT_CHOICE_FULL, slotStartTicks: null, slotEndTicks: null };
+  const zeroSlotDay = {
+    value: "2026-10-29",
+    label: "پنجشنبه",
+    subLabel: "۸ آبان",
+    intervalText: "09:00-17:00",
+    isEarliest: true,
+    slots: [],
+  };
+  const zeroPreview = preview({
+    groups: [group({ methods: [method({ availableDates: [zeroSlotDay] })] })],
+  });
+  assert.equal(
+    captureGroupConfirmationFingerprint(zeroPreview.groups[0]!, SLOT_CHOICE_FULL),
+    null,
+  );
+  const legacyFp = captureGroupConfirmationFingerprint(zeroPreview.groups[0]!, tickless);
+  assert.ok(legacyFp);
+  const kept = reconcileCapturedChoicesAgainstPreview(
+    { "cap|post|store|heavy": tickless },
+    zeroPreview,
+    {
+      previousRouting: routing,
+      nextRouting: routing,
+      previousFingerprints: { "cap|post|store|heavy": legacyFp! },
+    },
+  );
+  assert.equal(kept.choices["cap|post|store|heavy"]?.date, "2026-10-29");
+  const dropped = reconcile(
+    { "cap|post|store|heavy": SLOT_CHOICE_FULL },
+    zeroPreview,
+    {
+      previousFingerprints: fingerprintsForCapturedChoices(slotPreview(), {
+        "cap|post|store|heavy": SLOT_CHOICE_FULL,
+      }),
+    },
+  );
+  assert.deepEqual(dropped.choices, {});
 });
 
 test("Continue blockers for missing recipient fields do not require clearing choices", () => {
@@ -423,17 +547,4 @@ test("Continue blockers for missing recipient fields do not require clearing cho
     assert.equal(choices["cap|post|store|heavy"].date, "2026-10-29");
     assert.equal(choices["cap|post|store|heavy"].slotStartTicks, 360000000000);
   }
-});
-
-test("routing identity changes still invalidate via context key while reconcile may retain valid slots", () => {
-  const base = { destinationKey: "d1", couponCode: null, cartVersion: 7, preview: slotPreview() };
-  const key = capturedSelectionContextKey(base);
-  assert.notEqual(capturedSelectionContextKey({ ...base, destinationKey: "d2" }), key);
-  assert.notEqual(capturedSelectionContextKey({ ...base, couponCode: "SAVE10" }), key);
-  assert.notEqual(capturedSelectionContextKey({ ...base, cartVersion: 9 }), key);
-  const retained = reconcileCapturedChoicesAgainstPreview(
-    { "cap|post|store|heavy": SLOT_CHOICE_FULL },
-    slotPreview(),
-  );
-  assert.equal(retained["cap|post|store|heavy"]?.slotEndTicks, 396000000000);
 });

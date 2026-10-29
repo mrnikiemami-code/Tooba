@@ -73,7 +73,8 @@ export function StorefrontProductCardView({
     event.preventDefault();
     event.stopPropagation();
     const href = localizePath(productHref);
-    if (!navPending.begin(href, event)) {
+    const result = navPending.begin(href, event);
+    if (result.kind === "native" || result.kind === "duplicate" || result.kind === "same-location") {
       return;
     }
     router.push(href);

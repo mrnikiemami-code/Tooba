@@ -16,8 +16,9 @@ test("product card announces pending before router.push on eye action", () => {
   assert.match(productCard, /navPending\.begin\(href/);
 });
 
-test("LocalizedLink begins pending on primary click and blocks duplicate same-target", () => {
+test("LocalizedLink begins pending on primary click and blocks only duplicate same-target", () => {
   assert.match(localizedLink, /navPending\.begin\(resolved, event\)/);
+  assert.match(localizedLink, /result\.kind === \"duplicate\"/);
   assert.match(localizedLink, /event\.preventDefault\(\)/);
 });
 

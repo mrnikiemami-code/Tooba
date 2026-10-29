@@ -75,8 +75,10 @@ import { StorefrontShippingGroupCards, type ShippingGroupCard, type StorefrontCa
 import {
   buildCapturedSelectionIntent,
   capturedSelectionContextKey,
+  fingerprintsForCapturedChoices,
   reconcileCapturedChoicesAgainstPreview,
   resolveCapturedSelectionRevision,
+  type CapturedSelectionRoutingIdentity,
 } from "./storefront-shipping-captured-selection.ts";
 import {
   describeShippingContinueBlocker,
@@ -129,6 +131,11 @@ export function StorefrontShopeivaShipping() {
    * سرویس/گزینه **در همان گروه** ذخیره می‌شود تا دو مالک با همان Binding/ترجمه مستقل بمانند.
    */
   const [capturedChoices, setCapturedChoices] = useState<Record<string, StorefrontCapturedGroupChoice>>({});
+  /** TB-245-R1: اثرانگشت تأیید سرور در لحظهٔ انتخاب؛ جدا از فیلدهای گیرنده. */
+  const [capturedFingerprints, setCapturedFingerprints] = useState<Record<string, string>>({});
+  const capturedFingerprintsRef = useRef(capturedFingerprints);
+  capturedFingerprintsRef.current = capturedFingerprints;
+  const capturedRoutingRef = useRef<CapturedSelectionRoutingIdentity | null>(null);
   /**
    * TB-237-R1: نگهبان همگام ذخیره/کلیک نهایی. `busy` فقط state ری‌اکت است و دو کلیک در یک tick را
    * نمی‌بندد؛ این ref پیش از نخستین `await` بسته و در `finally` آزاد می‌شود.
@@ -441,9 +448,9 @@ export function StorefrontShopeivaShipping() {
   const capturedPreviewForIntent = capturedPreviewConfirmed ? projection?.capturedPreview ?? null : null;
 
   /**
-   * TB-237 / TB-244-R3: هویت مسیریابی+تقویم/نقل‌قول، نه کامل‌بودن فرم گیرنده.
+   * TB-237 / TB-244-R3 / TB-245-R1: هویت مسیریابی+تقویم/نقل‌قول، نه کامل‌بودن فرم گیرنده.
    * تغییر نام/موبایل/کدپستی/نشانی/یادداشت این کلید را عوض نمی‌کند.
-   * وقتی هویت عوض شود، انتخاب‌های هنوز معتبر در تقویم تازه نگه داشته می‌شوند (پاکِ سراسری ممنوع).
+   * مقصد/کوپن/نسخهٔ سبد همه را پاک می‌کند؛ تغییر اثرانگشت گروه فقط همان گروه را.
    */
   const capturedContextKey = capturedSelectionContextKey({
     destinationKey: responseIdentity,
@@ -452,13 +459,31 @@ export function StorefrontShopeivaShipping() {
     // TB-237-R1: هویت کامل پاسخ تأییدشده (هر گروه: بازتاب‌ها + مبلغ کالا + تقویم) بخشی از context است.
     preview: projection?.capturedPreview ?? null,
   });
+  const nextRoutingIdentity = useMemo<CapturedSelectionRoutingIdentity>(
+    () => ({
+      destinationKey: responseIdentity,
+      couponCode: couponIntent,
+      cartVersion: projection?.cartVersion ?? 0,
+    }),
+    [responseIdentity, couponIntent, projection?.cartVersion],
+  );
   const capturedContextKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (capturedContextKeyRef.current === capturedContextKey) return;
     capturedContextKeyRef.current = capturedContextKey;
     const preview = projection?.capturedPreview ?? null;
-    setCapturedChoices((prev) => reconcileCapturedChoicesAgainstPreview(prev, preview));
-  }, [capturedContextKey, projection?.capturedPreview]);
+    setCapturedChoices((prev) => {
+      const reconciled = reconcileCapturedChoicesAgainstPreview(prev, preview, {
+        previousRouting: capturedRoutingRef.current,
+        nextRouting: nextRoutingIdentity,
+        previousFingerprints: capturedFingerprintsRef.current,
+      });
+      capturedFingerprintsRef.current = reconciled.fingerprints;
+      setCapturedFingerprints(reconciled.fingerprints);
+      capturedRoutingRef.current = nextRoutingIdentity;
+      return reconciled.choices;
+    });
+  }, [capturedContextKey, projection?.capturedPreview, nextRoutingIdentity]);
 
   const destinationContext = useRef({ province: "", city: "", method: "" });  destinationContext.current = {
     province: address.provinceName,
@@ -716,7 +741,7 @@ export function StorefrontShopeivaShipping() {
       const serviceCode = separator >= 0 ? methodKey.slice(0, separator) : methodKey;
       const optionCode = separator >= 0 ? methodKey.slice(separator + 1) : "";
       const keepSlot = (date ?? (sameMethod ? current?.date ?? null : null)) === current?.date;
-      return {
+      const next = {
         ...prev,
         [groupKey]: {
           methodKey,
@@ -728,8 +753,15 @@ export function StorefrontShopeivaShipping() {
           slotEndTicks: date !== null && keepSlot ? current?.slotEndTicks ?? null : null,
         },
       };
+      const fingerprints = fingerprintsForCapturedChoices(projection?.capturedPreview ?? null, next);
+      capturedFingerprintsRef.current = fingerprints;
+      setCapturedFingerprints(fingerprints);
+      if (!capturedRoutingRef.current) {
+        capturedRoutingRef.current = nextRoutingIdentity;
+      }
+      return next;
     });
-  }, []);
+  }, [projection?.capturedPreview, nextRoutingIdentity]);
 
   /**
    * TB-241: انتخاب صریح نوبت. فقط همین وظیفه را دارد: همان گروه/روش/تاریخ با تیک‌های دقیقی که
@@ -741,7 +773,7 @@ export function StorefrontShopeivaShipping() {
         const separator = methodKey.indexOf("\u001f");
         const serviceCode = separator >= 0 ? methodKey.slice(0, separator) : methodKey;
         const optionCode = separator >= 0 ? methodKey.slice(separator + 1) : "";
-        return {
+        const next = {
           ...prev,
           [groupKey]: {
             methodKey,
@@ -752,9 +784,16 @@ export function StorefrontShopeivaShipping() {
             slotEndTicks: endTicks,
           },
         };
+        const fingerprints = fingerprintsForCapturedChoices(projection?.capturedPreview ?? null, next);
+        capturedFingerprintsRef.current = fingerprints;
+        setCapturedFingerprints(fingerprints);
+        if (!capturedRoutingRef.current) {
+          capturedRoutingRef.current = nextRoutingIdentity;
+        }
+        return next;
       });
     },
-    [],
+    [projection?.capturedPreview, nextRoutingIdentity],
   );
 
   async function persistAndContinue() {

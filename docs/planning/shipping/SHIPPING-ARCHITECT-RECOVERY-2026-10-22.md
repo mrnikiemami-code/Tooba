@@ -1,4 +1,14 @@
-# CURRENT — CORRECTED 245-R1 ISSUED — 2026-10-29
+# CURRENT — 245-R1 EXECUTED: navigation pending + shipping fingerprint invalidation — 2026-10-29
+
+Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `7bb390682`.
+Canonical FE production :3000 → Host5088. Cart `01a17b2d-e219…` Active v48 preserved.
+LANDED: routing identity clears all choices; group confirmation fingerprints; zero-slot tick reject;
+beginNavigationResult native/started/duplicate/same-location; path+query+hash+timeout FA/EN pending.
+Warm product pending9ms usable345ms; warm/cold HTML within 1s/5s. Focused 55/55 + typecheck + build.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — CORRECTED 245-R1 ISSUED — 2026-10-29
 
 Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1`  
 Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245`  

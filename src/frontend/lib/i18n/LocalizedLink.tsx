@@ -38,8 +38,9 @@ export function LocalizedLink({
     if (event.defaultPrevented || !announceNavigationPending) {
       return;
     }
-    const accepted = navPending.begin(resolved, event);
-    if (!accepted) {
+    const result = navPending.begin(resolved, event);
+    // Only a duplicate ordinary same-target click is prevented. Modified/native clicks stay native.
+    if (result.kind === "duplicate") {
       event.preventDefault();
     }
   };

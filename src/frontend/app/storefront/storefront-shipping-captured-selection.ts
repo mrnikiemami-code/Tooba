@@ -198,46 +198,149 @@ export function capturedSelectionContextKey(input: {
   ].join("\u001f");
 }
 
+/** هویت سراسری مسیریابی/کوپن/سبد — جدا از اثر انگشت تأیید هر گروه. */
+export type CapturedSelectionRoutingIdentity = {
+  destinationKey: string;
+  couponCode: string | null;
+  cartVersion: number;
+};
+
+export function capturedSelectionRoutingIdentityKey(
+  identity: CapturedSelectionRoutingIdentity,
+): string {
+  return [
+    identity.destinationKey,
+    identity.couponCode?.trim() ?? "",
+    String(identity.cartVersion),
+  ].join("\u001f");
+}
+
 /**
- * TB-244-R3 — پس از تغییر هویت مسیریابی/تقویم، انتخاب‌های قبلی را **پاکِ سراسری** نکن؛
- * فقط گروهی را حذف کن که تاریخ/نوبتش دیگر در پاسخ تازه نیست.
+ * اثرانگشت تأیید سرور برای یک انتخاب گروهی: کلید گروه + سرویس/گزینه + بازتاب‌ها + مبلغ کالا
+ * + تاریخ + تیک‌های نوبت. تغییر هر جزء انتخاب قبلی را برای همان گروه باطل می‌کند.
+ */
+export function captureGroupConfirmationFingerprint(
+  group: StorefrontCapturedPreviewGroup,
+  choice: StorefrontCapturedGroupChoice,
+): string | null {
+  if (!choice.date) return null;
+  const method = methodOf(group, choice);
+  if (!method) return null;
+  const day = method.availableDates.find((slot) => slot.value === choice.date);
+  if (!day) return null;
+  const slots = day.slots ?? [];
+  if (slots.length > 0) {
+    const chosen = slots.find(
+      (slot) => slot.startTicks === choice.slotStartTicks && slot.endTicks === choice.slotEndTicks,
+    );
+    if (!chosen) return null;
+  } else if (choice.slotStartTicks != null || choice.slotEndTicks != null) {
+    // روز بدون نوبت: فقط انتخاب بدون تیک قانونی است؛ تیک قبلی باید پاک شود.
+    return null;
+  }
+  if (
+    !nonBlank(method.confirmationSnapshotId)
+    || !nonBlank(method.confirmationSourceRevision)
+    || !nonBlank(method.confirmationSelectionVersion)
+    || !nonBlank(method.confirmationAreaGroupId)
+    || !nonBlank(method.confirmationRateRowId)
+    || !nonBlank(group.finalGoodsAmountText)
+  ) {
+    return null;
+  }
+  return [
+    group.groupKey,
+    method.serviceCode,
+    method.optionCode ?? "",
+    method.confirmationSnapshotId,
+    method.confirmationSourceRevision,
+    method.confirmationSelectionVersion,
+    method.confirmationAreaGroupId,
+    method.confirmationRateRowId,
+    group.finalGoodsAmountText,
+    choice.date,
+    choice.slotStartTicks == null ? "" : String(choice.slotStartTicks),
+    choice.slotEndTicks == null ? "" : String(choice.slotEndTicks),
+  ].join("|");
+}
+
+export function fingerprintsForCapturedChoices(
+  preview: StorefrontCapturedPreview | null,
+  choices: Readonly<Record<string, StorefrontCapturedGroupChoice>>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!preview || preview.state !== "ok") return out;
+  for (const group of preview.groups) {
+    const choice = choices[group.groupKey];
+    if (!choice) continue;
+    const fingerprint = captureGroupConfirmationFingerprint(group, choice);
+    if (fingerprint) out[group.groupKey] = fingerprint;
+  }
+  return out;
+}
+
+export type ReconcileCapturedChoicesResult = {
+  choices: Record<string, StorefrontCapturedGroupChoice>;
+  fingerprints: Record<string, string>;
+};
+
+/**
+ * TB-244-R3 / TB-245-R1 — پس از تغییر هویت، انتخاب را فقط با اثرانگشت تأیید سرور نگه دار.
  *
- * گیرنده/کدپستی/موبایل/یادداشت بخشی از این هویت نیستند و نباید از این مسیر انتخاب را عوض کنند.
- * پیش‌نمایش از نظر معنایی یکسان ⇒ همان ارجاع قبلی برمی‌گردد (بدون ساخت شیء تازه).
+ * - تغییر مقصد/کوپن/نسخهٔ سبد ⇒ پاک کردن همه.
+ * - در غیر این صورت هر گروه فقط وقتی نگه داشته می‌شود که اثرانگشت ذخیره‌شده با اثرانگشت
+ *   محاسبه‌شده از پاسخ تازه یکی باشد (شامل snapshot/rate/goods/date/ticks).
+ * - روز صفرنوبت تیک غیرتهی را رد می‌کند.
  */
 export function reconcileCapturedChoicesAgainstPreview(
   previous: Readonly<Record<string, StorefrontCapturedGroupChoice>>,
   preview: StorefrontCapturedPreview | null,
-): Record<string, StorefrontCapturedGroupChoice> {
+  meta: {
+    previousRouting: CapturedSelectionRoutingIdentity | null;
+    nextRouting: CapturedSelectionRoutingIdentity;
+    previousFingerprints: Readonly<Record<string, string>>;
+  },
+): ReconcileCapturedChoicesResult {
   const previousKeys = Object.keys(previous);
-  if (previousKeys.length === 0) return previous as Record<string, StorefrontCapturedGroupChoice>;
+  if (previousKeys.length === 0) {
+    return { choices: previous as Record<string, StorefrontCapturedGroupChoice>, fingerprints: {} };
+  }
 
   if (!preview || preview.state !== "ok" || !preview.enabled) {
-    return {};
+    return { choices: {}, fingerprints: {} };
+  }
+
+  if (
+    meta.previousRouting
+    && capturedSelectionRoutingIdentityKey(meta.previousRouting)
+      !== capturedSelectionRoutingIdentityKey(meta.nextRouting)
+  ) {
+    return { choices: {}, fingerprints: {} };
   }
 
   const next: Record<string, StorefrontCapturedGroupChoice> = {};
+  const nextFingerprints: Record<string, string> = {};
   for (const group of preview.groups) {
     const choice = previous[group.groupKey];
     if (!choice?.date) continue;
-    const method = methodOf(group, choice);
-    if (!method) continue;
-    const day = method.availableDates.find((slot) => slot.value === choice.date);
-    if (!day) continue;
-    const slots = day.slots ?? [];
-    if (slots.length > 0) {
-      // نوبت انتخاب‌شده باید هنوز در تقویم همان روز باشد؛ نوبت غایب فقط همین گروه را می‌اندازد.
-      const chosen = slots.some(
-        (slot) => slot.startTicks === choice.slotStartTicks && slot.endTicks === choice.slotEndTicks,
-      );
-      if (!chosen) continue;
-    }
+    const fingerprint = captureGroupConfirmationFingerprint(group, choice);
+    if (!fingerprint) continue;
+    const prior = meta.previousFingerprints[group.groupKey];
+    if (!prior || prior !== fingerprint) continue;
     next[group.groupKey] = choice;
+    nextFingerprints[group.groupKey] = fingerprint;
   }
 
   const nextKeys = Object.keys(next);
-  if (nextKeys.length === previousKeys.length && nextKeys.every((key) => previous[key] === next[key])) {
-    return previous as Record<string, StorefrontCapturedGroupChoice>;
+  if (
+    nextKeys.length === previousKeys.length
+    && nextKeys.every((key) => previous[key] === next[key])
+    && nextKeys.every((key) => meta.previousFingerprints[key] === nextFingerprints[key])
+  ) {
+    return {
+      choices: previous as Record<string, StorefrontCapturedGroupChoice>,
+      fingerprints: { ...meta.previousFingerprints },
+    };
   }
-  return next;
+  return { choices: next, fingerprints: nextFingerprints };
 }
