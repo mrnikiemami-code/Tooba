@@ -1,4 +1,16 @@
-# CURRENT — 244-R3 ACTIVE; 245 NAVIGATION STALL REPAIR QUEUED — 2026-10-29
+# CURRENT — ONLY 244-R3 IS ACTIVE; 245 WITHDRAWN — 2026-10-29
+
+Active task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  
+State: **IN PROGRESS / awaiting worker result**  
+automaticNextImplementationTask: **NONE**
+
+The Architect incorrectly issued `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245` while 244-R3 was
+still active, contrary to the user's explicit sequencing instruction. **245 is WITHDRAWN and must not be sent,
+claimed or executed.** Its files remain only as historical evidence of the withdrawn issuance. The reported global
+navigation latency is retained as a user report; no task may be issued for it until the active 244-R3 result has
+been received and reviewed.
+
+# SUPERSEDED — 244-R3 ACTIVE; 245 NAVIGATION STALL REPAIR QUEUED — 2026-10-29
 
 Active task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  
 Next held task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245`  
