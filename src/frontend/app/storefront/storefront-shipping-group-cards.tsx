@@ -296,6 +296,7 @@ function CapturedMethodRow({
   selectedDate,
   selectedSlotStartTicks,
   selectedSlotEndTicks,
+  interactionLocked = false,
   onSelectMethod,
   onSelectSlot,
 }: {
@@ -306,6 +307,7 @@ function CapturedMethodRow({
   selectedDate: string | null;
   selectedSlotStartTicks?: number | null;
   selectedSlotEndTicks?: number | null;
+  interactionLocked?: boolean;
   onSelectMethod: (groupKey: string, methodKey: string, date: string | null) => void;
   onSelectSlot: (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => void;
 }) {
@@ -330,6 +332,7 @@ function CapturedMethodRow({
    * چند نوبت تا انتخاب صریح ساعت هیچ نوبتی را فرض نمی‌کند (ادامه مسدود می‌ماند). هیچ نوبتی ساخته نمی‌شود.
    */
   const pickDate = (value: string) => {
+    if (interactionLocked) return;
     const slots = method.availableDates.find((entry) => entry.value === value)?.slots ?? [];
     if (slots.length === 1) {
       onSelectSlot(groupKey, methodKey, value, slots[0].startTicks, slots[0].endTicks);
@@ -341,13 +344,18 @@ function CapturedMethodRow({
   const activeSlot = activeSlots.find(
     (slot) => slot.startTicks === selectedSlotStartTicks && slot.endTicks === selectedSlotEndTicks,
   ) ?? null;
-  const freight = formatExactAmountText(method.freightAmountText, method.currency ?? currency, locale);
-  const packaging = formatExactAmountText(method.packagingAmountText, method.currency ?? currency, locale);
+  const freight = interactionLocked
+    ? null
+    : formatExactAmountText(method.freightAmountText, method.currency ?? currency, locale);
+  const packaging = interactionLocked
+    ? null
+    : formatExactAmountText(method.packagingAmountText, method.currency ?? currency, locale);
 
   return (
     <div
       className={`mt-3 border-t border-dashed border-gray-200 pt-3 ${selected ? "rounded-xl bg-primary/5 px-2 pb-2" : ""}`}
       data-testid={`shipping-group-captured-method-${identity}`}
+      data-destination-unconfirmed={interactionLocked ? "true" : undefined}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -356,6 +364,7 @@ function CapturedMethodRow({
             // TB-240-R7: کلیک روی نام روش یک اقدام صریح کاربر است و همان روز پیشنهادی سرور را
             // انتخاب می‌کند؛ هیچ رندر/افکتی خودش انتخاب نمی‌سازد.
             onClick={() => {
+              if (interactionLocked) return;
               if (!recommended) {
                 onSelectMethod(groupKey, methodKey, null);
                 return;
@@ -363,7 +372,7 @@ function CapturedMethodRow({
               pickDate(recommended);
             }}
             aria-pressed={selected}
-            disabled={method.availableDates.length === 0}
+            disabled={interactionLocked || method.availableDates.length === 0}
             className={`text-[11px] md:text-xs font-bold flex items-center gap-1.5 text-start disabled:opacity-60 ${
               selected ? "text-primary" : "text-gray-800"
             }`}
@@ -395,6 +404,7 @@ function CapturedMethodRow({
           >
             <Calendar className="w-3.5 h-3.5 text-primary" /> {copy.deliveryDay}
           </p>
+          <div className={interactionLocked ? "pointer-events-none opacity-70" : undefined}>
           <DateChipStrip
             dates={method.availableDates}
             identity={identity}
@@ -409,9 +419,10 @@ function CapturedMethodRow({
               slots={activeSlots}
               identity={identity}
               activeSlotKey={activeSlot?.slotKey ?? null}
-              onPick={(startTicks, endTicks) =>
-                onSelectSlot(groupKey, methodKey, activeDate.value, startTicks, endTicks)
-              }
+              onPick={(startTicks, endTicks) => {
+                if (interactionLocked) return;
+                onSelectSlot(groupKey, methodKey, activeDate.value, startTicks, endTicks);
+              }}
             />
           ) : !dateChosen ? (
             <p
@@ -441,6 +452,7 @@ function CapturedMethodRow({
               {copy.hourNotChosen}
             </p>
           )}
+          </div>
         </>
       )}
     </div>
@@ -454,6 +466,7 @@ function CapturedGroupCard({
   sellerName,
   currency,
   selection,
+  choicesLocked = false,
   onSelectCapturedMethod,
   onSelectCapturedSlot,
 }: {
@@ -462,12 +475,16 @@ function CapturedGroupCard({
   sellerName: string;
   currency: string | null;
   selection: StorefrontCapturedGroupChoice | undefined;
+  /** TB-245-R3: در انتظار بازاعتبار مقصد — انتخاب دیده می‌شود ولی تعامل/پول تأییدشده نیست. */
+  choicesLocked?: boolean;
   onSelectCapturedMethod: (groupKey: string, methodKey: string, date: string | null) => void;
   onSelectCapturedSlot: (groupKey: string, methodKey: string, date: string, startTicks: number, endTicks: number) => void;
 }) {
   const locale = useLocale();
   const copy = shippingDeliveryMessagesFor(locale);
-  const goodsText = formatExactAmountText(group.finalGoodsAmountText, currency, locale);
+  const goodsText = choicesLocked
+    ? null
+    : formatExactAmountText(group.finalGoodsAmountText, currency, locale);
   const chosenMethod = selection
     ? group.methods.find((method) => capturedMethodKey(method) === selection.methodKey) ?? null
     : null;
@@ -564,11 +581,12 @@ function CapturedGroupCard({
           key={`${method.serviceCode}|${method.optionCode ?? ""}`}
           groupKey={group.groupKey}
           method={method}
-          currency={currency}
+          currency={choicesLocked ? null : currency}
           selected={selection?.methodKey === capturedMethodKey(method)}
           selectedDate={selection?.methodKey === capturedMethodKey(method) ? selection.date : null}
           selectedSlotStartTicks={selection?.methodKey === capturedMethodKey(method) ? selection?.slotStartTicks ?? null : null}
           selectedSlotEndTicks={selection?.methodKey === capturedMethodKey(method) ? selection?.slotEndTicks ?? null : null}
+          interactionLocked={choicesLocked}
           onSelectMethod={onSelectCapturedMethod}
           onSelectSlot={onSelectCapturedSlot}
         />
@@ -684,13 +702,18 @@ export function StorefrontShippingGroupCards({
               </p>
             ) : null}
 
-            {capturedGroups.length === 0 && capturedPreview?.state === "ok" ? (
+            {/* TB-245-R3: بنر بازاعتبار مقصد حتی وقتی کارت‌های موقت هنوز دیده می‌شوند. */}
+            {destinationRefreshState === "pending" || destinationRefreshState === "failed" ? (
               <div
-                className="text-[11px] text-gray-500 bg-surface border border-dashed border-gray-200 rounded-xl p-3"
-                data-testid="shipping-captured-preview-empty"
+                className="text-[11px] text-gray-600 bg-surface border border-dashed border-gray-200 rounded-xl p-3"
+                data-testid="shipping-captured-destination-revalidate"
+                data-destination-mode={destinationRefreshState}
               >
-                <p>{capturedReasonText(capturedPreview.unavailableReason)}</p>
-                {/* TB-230-R1: تنها راه تکرار، یک Retry صریح برای همان مقصدِ شکست‌خورده است. */}
+                <p>{capturedReasonText(
+                  destinationRefreshState === "failed"
+                    ? "storefront.captured_preview.destination_failed"
+                    : "storefront.captured_preview.destination_pending",
+                )}</p>
                 {destinationRefreshState === "failed" && onRetryDestination ? (
                   <button
                     type="button"
@@ -705,6 +728,15 @@ export function StorefrontShippingGroupCards({
               </div>
             ) : null}
 
+            {capturedGroups.length === 0 && capturedPreview?.state === "ok" ? (
+              <div
+                className="text-[11px] text-gray-500 bg-surface border border-dashed border-gray-200 rounded-xl p-3"
+                data-testid="shipping-captured-preview-empty"
+              >
+                <p>{capturedReasonText(capturedPreview.unavailableReason)}</p>
+              </div>
+            ) : null}
+
             {capturedGroups.map((group) => (
               <CapturedGroupCard
                 key={group.groupKey}
@@ -713,6 +745,7 @@ export function StorefrontShippingGroupCards({
                 sellerName={sellerNames[group.sellerPartyId] ?? ""}
                 currency={capturedPreview?.currency ?? null}
                 selection={capturedChoices[group.groupKey]}
+                choicesLocked={destinationRefreshState === "pending" || destinationRefreshState === "failed" || capturedPreview?.selectionEnabled === false}
                 onSelectCapturedMethod={onSelectCapturedMethod ?? (() => {})}
                 onSelectCapturedSlot={onSelectCapturedSlot ?? (() => {})}
               />

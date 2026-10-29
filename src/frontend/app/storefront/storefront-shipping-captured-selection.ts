@@ -216,6 +216,21 @@ export function capturedSelectionRoutingIdentityKey(
 }
 
 /**
+ * TB-245-R3 — باطل‌سازی سخت فقط کوپن یا نسخهٔ سبد؛ تغییر مقصد به‌تنهایی پاک‌سازی فوری نیست
+ * (انتخاب موقت می‌ماند تا پاسخ تازه اثرانگشت را تأیید/رد کند).
+ */
+export function isHardInvalidatingRoutingChange(
+  previous: CapturedSelectionRoutingIdentity | null,
+  next: CapturedSelectionRoutingIdentity,
+): boolean {
+  if (!previous) return false;
+  const prevCoupon = previous.couponCode?.trim() ?? "";
+  const nextCoupon = next.couponCode?.trim() ?? "";
+  if (prevCoupon !== nextCoupon) return true;
+  return previous.cartVersion !== next.cartVersion;
+}
+
+/**
  * اثرانگشت تأیید سرور برای یک انتخاب گروهی: کلید گروه + سرویس/گزینه + بازتاب‌ها + مبلغ کالا
  * + تاریخ + تیک‌های نوبت. تغییر هر جزء انتخاب قبلی را برای همان گروه باطل می‌کند.
  */
@@ -285,11 +300,12 @@ export type ReconcileCapturedChoicesResult = {
 };
 
 /**
- * TB-244-R3 / TB-245-R1 — پس از تغییر هویت، انتخاب را فقط با اثرانگشت تأیید سرور نگه دار.
+ * TB-244-R3 / TB-245-R1 / TB-245-R3 — پس از تغییر هویت، انتخاب را فقط با اثرانگشت تأیید سرور نگه دار.
  *
- * - تغییر مقصد/کوپن/نسخهٔ سبد ⇒ پاک کردن همه.
- * - در غیر این صورت هر گروه فقط وقتی نگه داشته می‌شود که اثرانگشت ذخیره‌شده با اثرانگشت
- *   محاسبه‌شده از پاسخ تازه یکی باشد (شامل snapshot/rate/goods/date/ticks).
+ * - تغییر کوپن یا نسخهٔ سبد ⇒ پاک کردن همه (باطل‌سازی سخت).
+ * - تغییر مقصد به‌تنهایی ⇒ نگه داشتن موقت انتخاب تا پاسخ تازه؛ در انتظار/شکست/بدون‌گروه پاک نکن.
+ * - پس از پاسخ معتبر هر گروه فقط با اثرانگشت یکسان نگه داشته می‌شود
+ *   (snapshot/rate/goods/date/ticks).
  * - روز صفرنوبت تیک غیرتهی را رد می‌کند.
  */
 export function reconcileCapturedChoicesAgainstPreview(
@@ -306,16 +322,24 @@ export function reconcileCapturedChoicesAgainstPreview(
     return { choices: previous as Record<string, StorefrontCapturedGroupChoice>, fingerprints: {} };
   }
 
-  if (!preview || preview.state !== "ok" || !preview.enabled) {
+  if (isHardInvalidatingRoutingChange(meta.previousRouting, meta.nextRouting)) {
     return { choices: {}, fingerprints: {} };
   }
 
-  if (
-    meta.previousRouting
-    && capturedSelectionRoutingIdentityKey(meta.previousRouting)
-      !== capturedSelectionRoutingIdentityKey(meta.nextRouting)
-  ) {
-    return { choices: {}, fingerprints: {} };
+  // بازاعتبار مقصد ناقص/در انتظار: انتخاب موقت و اثرانگشت قبلی می‌مانند؛ Continue از مسیر confirmed بسته است.
+  if (!preview || preview.state !== "ok" || !preview.enabled) {
+    return {
+      choices: previous as Record<string, StorefrontCapturedGroupChoice>,
+      fingerprints: { ...meta.previousFingerprints },
+    };
+  }
+
+  // مقصد میانی بدون گروه (مثلاً فقط استان): انتخاب موقت را پاک نکن.
+  if (preview.groups.length === 0) {
+    return {
+      choices: previous as Record<string, StorefrontCapturedGroupChoice>,
+      fingerprints: { ...meta.previousFingerprints },
+    };
   }
 
   const next: Record<string, StorefrontCapturedGroupChoice> = {};

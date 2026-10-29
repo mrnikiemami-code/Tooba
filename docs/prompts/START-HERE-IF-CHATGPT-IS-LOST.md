@@ -1,4 +1,10 @@
-# CURRENT — 245-R3 ISSUED: province/city must not erase compatible delivery choices — 2026-10-29
+# CURRENT — 245-R3 EXECUTED: province/city retention without duplicate refresh — 2026-10-29
+
+Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `a3e64896a`.
+Province handler state-only; coordinator owns destination refresh; coupon/cart hard-clear only; provisional choices + fingerprint reconcile; cards stay during pending. Focused 47/47 + typecheck + build. Cart Active v48 preserved. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 245-R3 ISSUED: province/city must not erase compatible delivery choices — 2026-10-29
 
 Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R3`  
 Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2`  

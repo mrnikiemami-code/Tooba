@@ -386,10 +386,9 @@ test("semantically identical re-fetch preserves choices via confirmation fingerp
   assert.equal(kept.choices["cap|post|store|heavy"].slotStartTicks, 360000000000);
 });
 
-test("destination coupon and cart-version changes clear all choices", () => {
+test("coupon and cart-version changes clear all choices; destination alone keeps identical fingerprints", () => {
   const previous = { "cap|post|store|heavy": SLOT_CHOICE_FULL };
   for (const nextRouting of [
-    { ...routing, destinationKey: "d2" },
     { ...routing, couponCode: "SAVE10" },
     { ...routing, cartVersion: 9 },
   ]) {
@@ -397,6 +396,31 @@ test("destination coupon and cart-version changes clear all choices", () => {
     assert.deepEqual(cleared.choices, {});
     assert.deepEqual(cleared.fingerprints, {});
   }
+  const destKept = reconcile(previous, slotPreview(), {
+    nextRouting: { ...routing, destinationKey: "d2" },
+  });
+  assert.equal(destKept.choices["cap|post|store|heavy"]?.date, "2026-10-29");
+  assert.equal(destKept.choices["cap|post|store|heavy"]?.slotStartTicks, 360000000000);
+});
+
+test("destination revalidation keeps provisional choices while preview is incomplete or empty", () => {
+  const previous = { "cap|post|store|heavy": SLOT_CHOICE_FULL };
+  const fingerprints = fingerprintsForCapturedChoices(slotPreview(), previous);
+  const pending = reconcileCapturedChoicesAgainstPreview(previous, null, {
+    previousRouting: routing,
+    nextRouting: { ...routing, destinationKey: "d2" },
+    previousFingerprints: fingerprints,
+  });
+  assert.equal(pending.choices, previous);
+  assert.deepEqual(pending.fingerprints, fingerprints);
+
+  const emptyOk = preview({ groups: [], unavailableReason: "storefront.captured_preview.destination_required" });
+  const mid = reconcileCapturedChoicesAgainstPreview(previous, emptyOk, {
+    previousRouting: routing,
+    nextRouting: { ...routing, destinationKey: "IR|teh|" },
+    previousFingerprints: fingerprints,
+  });
+  assert.equal(mid.choices["cap|post|store|heavy"]?.date, "2026-10-29");
 });
 
 test("snapshot/rate/goods fingerprint change clears only the affected group", () => {

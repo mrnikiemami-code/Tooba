@@ -423,19 +423,40 @@ export function StorefrontShopeivaShipping() {
   );
 
   /**
-   * TB-230-R1: کارت‌ها فقط وقتی پول/تاریخ نشان می‌دهند که پیش‌نمایش موجود دقیقاً برای همین هویت مقصد
-   * باشد. در انتظار پاسخ تازه «در حال محاسبه» و پس از شکست «در دسترس نیست + تلاش دوباره» می‌آید؛
-   * قیمت مقصد قبلی هرگز به‌عنوان پاسخ مقصد فعلی برنمی‌گردد. ورودی تایپ‌شده دست‌نخورده می‌ماند.
+   * TB-230-R1 / TB-245-R3: در انتظار/شکست/مقصد ناقص، آخرین کارت‌های غیرخالی + انتخاب موقت می‌مانند
+   * (بدون پرش خالی‌شدن) ولی پول تأییدشده نیست و Continue از مسیر confirmed بسته می‌ماند.
    */
+  const lastNonEmptyCapturedPreviewRef = useRef<StorefrontShippingProjection["capturedPreview"]>(null);
   const capturedPreviewForCards = useMemo(() => {
     const preview = projection?.capturedPreview ?? null;
-    if (!preview || preview.state !== "ok" || destinationPreviewMode === "current") return preview;
+    if (preview?.state === "ok" && preview.enabled && preview.groups.length > 0) {
+      lastNonEmptyCapturedPreviewRef.current = preview;
+      if (destinationPreviewMode === "current") return preview;
+    }
+    const pendingOrFailed = destinationPreviewMode === "pending" || destinationPreviewMode === "failed";
+    const incompleteCurrent =
+      destinationPreviewMode === "current"
+      && preview?.state === "ok"
+      && (preview.groups.length === 0 || !preview.enabled);
+    if (!pendingOrFailed && !incompleteCurrent) return preview;
+    const base = lastNonEmptyCapturedPreviewRef.current;
+    if (!base || base.state !== "ok" || base.groups.length === 0) {
+      if (!preview || preview.state !== "ok") return preview;
+      return {
+        ...preview,
+        groups: [],
+        selectionEnabled: false,
+        unavailableReason: destinationPreviewMode === "failed"
+          ? "storefront.captured_preview.destination_failed"
+          : "storefront.captured_preview.destination_pending",
+      };
+    }
     return {
-      ...preview,
-      groups: [],
+      ...base,
+      selectionEnabled: false,
       unavailableReason: destinationPreviewMode === "failed"
         ? "storefront.captured_preview.destination_failed"
-        : "storefront.captured_preview.destination_pending",
+        : (preview?.unavailableReason ?? "storefront.captured_preview.destination_pending"),
     };
   }, [projection, destinationPreviewMode]);
 
@@ -448,9 +469,10 @@ export function StorefrontShopeivaShipping() {
   const capturedPreviewForIntent = capturedPreviewConfirmed ? projection?.capturedPreview ?? null : null;
 
   /**
-   * TB-237 / TB-244-R3 / TB-245-R1: هویت مسیریابی+تقویم/نقل‌قول، نه کامل‌بودن فرم گیرنده.
+   * TB-237 / TB-244-R3 / TB-245-R1 / TB-245-R3: هویت مسیریابی+تقویم/نقل‌قول، نه کامل‌بودن فرم گیرنده.
    * تغییر نام/موبایل/کدپستی/نشانی/یادداشت این کلید را عوض نمی‌کند.
-   * مقصد/کوپن/نسخهٔ سبد همه را پاک می‌کند؛ تغییر اثرانگشت گروه فقط همان گروه را.
+   * کوپن/نسخهٔ سبد همه را پاک می‌کند؛ مقصد انتخاب را موقت نگه می‌دارد تا اثرانگشت پاسخ تازه؛
+   * تغییر اثرانگشت گروه فقط همان گروه را.
    */
   const capturedContextKey = capturedSelectionContextKey({
     destinationKey: responseIdentity,
@@ -714,9 +736,12 @@ export function StorefrontShopeivaShipping() {
     setSavedAddressId(row.addressId);
     setUseSavedAddress(true);
     setShowSaved(false);
-    void refreshProjection(mapped.provinceName, methodCode, mapped.cityName).catch((cause: unknown) =>
-      setError(toCustomerShippingMessage(cause, locale)),
-    );
+    // TB-245-R3: در مسیر capture، هماهنگ‌کنندهٔ مقصد تنها مالک تازه‌سازی است (بدون درخواست موازی).
+    if (projection?.capturedPreview == null) {
+      void refreshProjection(mapped.provinceName, methodCode, mapped.cityName).catch((cause: unknown) =>
+        setError(toCustomerShippingMessage(cause, locale)),
+      );
+    }
   }
 
   async function onSelectMethod(code: string) {
@@ -940,7 +965,9 @@ export function StorefrontShopeivaShipping() {
         setAddress(newAddress);
         setSavedAddressId(null);
         setUseSavedAddress(false);
-        await refreshProjection(newAddress.provinceName, methodCode, newAddress.cityName);
+        if (projection?.capturedPreview == null) {
+          await refreshProjection(newAddress.provinceName, methodCode, newAddress.cityName);
+        }
       }
       setShowNewDialog(false);
       setNewAddress(emptyAddress);
@@ -1006,8 +1033,8 @@ export function StorefrontShopeivaShipping() {
                 provinceOptions={provinceOptions}
                 cityOptions={cityOptions}
                 onProvinceChange={(provinceName) => {
+                  // TB-245-R3: فقط state؛ مالک تازه‌سازی مقصد هماهنگ‌کنندهٔ destination-refresh است.
                   setAddress((a) => ({ ...a, provinceName, cityName: "" }));
-                  void refreshProjection(provinceName, methodCode);
                 }}
               />
 
@@ -1028,7 +1055,11 @@ export function StorefrontShopeivaShipping() {
                   capturedChoices={capturedChoices}
                   onSelectCapturedMethod={selectCapturedMethod}
                   onSelectCapturedSlot={selectCapturedSlot}
-                  destinationRefreshState={capturedPreviewActive ? destinationPreviewMode : null}
+                  destinationRefreshState={
+                    capturedPreviewActive
+                      ? (capturedPreviewConfirmed ? "current" : (destinationPreviewMode === "failed" ? "failed" : "pending"))
+                      : null
+                  }
                   onRetryDestination={retryDestinationRefresh}
                   onSelectMethod={(lineId, code) => setLineMethodByLine((prev) => ({ ...prev, [lineId]: code }))}
                   onSelectDate={(groupKey, value) =>
