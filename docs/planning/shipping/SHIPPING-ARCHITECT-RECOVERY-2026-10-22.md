@@ -1,4 +1,18 @@
-# CURRENT — 244 EXECUTED: actual-user cart payment-ready (canonical) — 2026-10-29
+# CURRENT — 244 REJECTED; 244-R1 DATA-INTEGRITY CORRECTION ISSUED — 2026-10-29
+
+Task: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
+Parent: `TB-SHIPPING-USER-ENVIRONMENT-ACTUAL-CART-DELIVERY-244`  
+State: **ISSUED — compensate guessed merchant data, then lawful actual-cart delivery or one exact merchant decision table**  
+Expected base: `ISSUE_COMMIT_CONTAINING_THIS_TASK`
+
+244 proved canonical 3000/5088, SingleStore/store-alpha/tooba_alpha and the actual quantity-18 cart, but its PASS is
+rejected: it uniformly assigned four offers, reinterpreted a weight unit, set three products to 1.5kg and expanded
+the original [1000,2000) rate to nearly all weights. Those guesses can materially misprice shipping. 244-R1 must
+compensate only unchanged 244 writes through normal APIs, recover authoritative responsibility/type/packaged weight/
+rate coverage, and either finish the same cart lawfully or stop with one compact merchant-decision table. No further
+implementation task, test buyer, alternate DB, screenshots or guessed green path is authorized.
+
+# SUPERSEDED — 244 EXECUTED: actual-user cart payment-ready (canonical) — 2026-10-29
 
 Active implementation NONE after worker result. automaticNextImplementationTask NONE.
 Read 244 RESULT/RECEIPTS. Canonical 3000/5088 tooba_alpha; cart 01a17b2d… payment-ready unsubmitted.
