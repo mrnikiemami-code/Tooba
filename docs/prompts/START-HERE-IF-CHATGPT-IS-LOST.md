@@ -1,3 +1,18 @@
+# CURRENT — 245-R4 ISSUED: cart critical-path and visible action feedback — 2026-10-29
+
+Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R3`  
+State: **ISSUED — measured cart critical-path defect**  
+Source base: `76d9c4a7743e8ca7f95c0b8d39bec2404be9b1da` (worker must fast-forward the docs-only issue commit)  
+automaticNextImplementationTask: `NONE`
+
+Architect accepts 245-R3 within scope. The remaining cart defect is separate: `app/cart/page.tsx` still blocks on full `loadStorefrontHome()`, while the mini-cart CTA exposes only the global one-pixel pending bar. R4 removes Home from the primary cart path, adds visible CTA feedback, and proves bounded requests/effects/listeners without reopening shipping selection.
+
+Read `docs/ai/tasks/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4/TASK.md`.
+STOP_FOR_ARCHITECT after execution.
+
+# SUPERSEDED — 245-R3 EXECUTED: province/city retention without duplicate refresh — 2026-10-29
+
 # CURRENT — 245-R3 EXECUTED: province/city retention without duplicate refresh — 2026-10-29
 
 Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
