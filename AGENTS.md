@@ -1,4 +1,16 @@
-# CURRENT — 244 REJECTED; 244-R1 DATA-INTEGRITY CORRECTION ISSUED — 2026-10-29
+# CURRENT — 244-R1 EXECUTED BLOCKED: guessed data compensated; stopped on merchant-decision table — 2026-10-29
+
+Read docs/architecture/evidence/TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **BLOCKED** within scope (compensation complete; lawful delivery impossible without merchant decisions), NOT Architect ACCEPT.
+Base/issue `9484c59a75c9152ab75cf103057db1d6ee890fff`; Code-SHA NONE.
+Canonical FE3000 + Host5088 SingleStore/store-alpha/tooba_alpha. Cart `01a17b2d-e219…` Active v48 qty18 intact, unsubmitted.
+Compensated via owning APIs: 4× fulfillment null; mobile_weight unit g; 244 category bindings removed; 3 product 1.5 values cleared;
+adjacent rate rows removed (sole [1000,2000)); publish snapshot `01a185cb-6909…` selVer10; payment-draft 400
+`storefront.captured_selection.unavailable`; projection 4× unassigned. No authoritative per-offer fulfillment or packaged
+weight on cart lines → compact merchant-decision table in RESULT. No Order/checkout. Gates OFF; TB185 paused.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 244 REJECTED; 244-R1 DATA-INTEGRITY CORRECTION ISSUED — 2026-10-29
 
 Task: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
 Parent: `TB-SHIPPING-USER-ENVIRONMENT-ACTUAL-CART-DELIVERY-244`  

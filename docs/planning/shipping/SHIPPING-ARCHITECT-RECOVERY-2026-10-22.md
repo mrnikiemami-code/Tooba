@@ -1,4 +1,10 @@
-# CURRENT — 244 REJECTED; 244-R1 DATA-INTEGRITY CORRECTION ISSUED — 2026-10-29
+# CURRENT — 244-R1 EXECUTED BLOCKED: compensation complete; merchant-decision table — 2026-10-29
+
+Active implementation NONE after worker result. automaticNextImplementationTask NONE.
+Read 244-R1 RESULT/RECEIPTS. Compensated 244 guessed mutations on canonical tooba_alpha; cart intact unsubmitted;
+stopped on missing fulfillment/weight authority (decision table). STOP_FOR_ARCHITECT.
+
+# SUPERSEDED — 244 REJECTED; 244-R1 DATA-INTEGRITY CORRECTION ISSUED — 2026-10-29
 
 Task: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
 Parent: `TB-SHIPPING-USER-ENVIRONMENT-ACTUAL-CART-DELIVERY-244`  

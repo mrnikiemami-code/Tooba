@@ -1,4 +1,11 @@
-# CURRENT — 244 REJECTED; 244-R1 DATA-INTEGRITY CORRECTION ISSUED — 2026-10-29
+# CURRENT — 244-R1 EXECUTED BLOCKED: guessed data compensated; merchant-decision table — 2026-10-29
+
+Read evidence `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`. Status BLOCKED (compensation OK; no lawful green path).
+Base `9484c59a7`; Code NONE. Canonical 3000/5088 tooba_alpha; cart `01a17b2d-e219…` v48 unsubmitted.
+Fulfillment/weights/bindings/extra rates restored; payment-draft unavailable; projection unassigned×4; decision table in RESULT.
+STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 244 REJECTED; 244-R1 DATA-INTEGRITY CORRECTION ISSUED — 2026-10-29
 
 Task: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
 Parent: `TB-SHIPPING-USER-ENVIRONMENT-ACTUAL-CART-DELIVERY-244`  
