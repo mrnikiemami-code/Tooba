@@ -1,3 +1,17 @@
+# CURRENT — 245-R1 ISSUED: close shipping invalidation + navigation pending — 2026-10-29
+
+Task: `TB-STOREFRONT-NAVIGATION-AND-SHIPPING-CONTEXT-CLOSURE-245-R1`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245`  
+Also closes Architect blockers from `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`.  
+State: **ISSUED — one frontend closure task; no parallel task**  
+Expected base: issue commit containing this task  
+automaticNextImplementationTask: `NONE`
+
+Scope: preserve delivery choices only across non-routing recipient edits and exact-identical refreshes; invalidate on destination/coupon/cart/quote/price/calendar changes. Fix 245 modified-click blocking, full-target reconciliation, timeout unlock and FA/EN pending feedback while retaining its measured latency improvements. Canonical FE3000→Host5088 only; no backend/data/migration/order/payment/screenshots.
+
+Read `docs/ai/tasks/TB-STOREFRONT-NAVIGATION-AND-SHIPPING-CONTEXT-CLOSURE-245-R1/TASK.md`.
+STOP_FOR_ARCHITECT after execution.
+
 # CURRENT — 245 EXECUTED: storefront nav latency + pending feedback — 2026-10-29
 
 Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245/{TASK.md,RESULT.md,RECEIPTS.md}.
