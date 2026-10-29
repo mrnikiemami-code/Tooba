@@ -1,3 +1,15 @@
+# CURRENT — 244-R3 EXECUTED: non-routing address edits preserve delivery date/hour — 2026-10-29
+
+Read docs/architecture/evidence/TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT/PSP. Base/issue `e9495b0388dae6e878cb8349bb58e25be8a69e18`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. Cart `01a17b2d-e219…` Active v48 qty18 intact.
+LANDED: `reconcileCapturedChoicesAgainstPreview` replaces blanket `setCapturedChoices({})` on context-key change;
+recipient/contact/postal/notes stay outside routing identity; invalid slots prune per-group only. Focused 41/41 +
+tsc clean. Live: name/mobile/address/postal/notes keep 14:00–15:00; Continue → payment-ready; draft rev3 ship250000;
+checkouts 0; URL `http://127.0.0.1:3000/fa/payment?cartId=01a17b2d-e219…` unsubmitted. 244-R2 merchant config preserved.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+
 # CURRENT — ONLY 244-R3 IS ACTIVE; 245 WITHDRAWN — 2026-10-29
 
 Active task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  

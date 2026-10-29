@@ -75,6 +75,7 @@ import { StorefrontShippingGroupCards, type ShippingGroupCard, type StorefrontCa
 import {
   buildCapturedSelectionIntent,
   capturedSelectionContextKey,
+  reconcileCapturedChoicesAgainstPreview,
   resolveCapturedSelectionRevision,
 } from "./storefront-shipping-captured-selection.ts";
 import {
@@ -440,23 +441,24 @@ export function StorefrontShopeivaShipping() {
   const capturedPreviewForIntent = capturedPreviewConfirmed ? projection?.capturedPreview ?? null : null;
 
   /**
-   * TB-237: هر تغییر context (مقصد/کوپن/نسخهٔ سبد/مبدأ پاسخ) تأییدهای قبلی را باطل می‌کند تا هیچ
-   * انتخاب کهنه‌ای با مبلغ/تاریخ تازه ثبت نشود؛ مشتری باید دوباره تأیید کند (بدون بازنویسی خودکار).
+   * TB-237 / TB-244-R3: هویت مسیریابی+تقویم/نقل‌قول، نه کامل‌بودن فرم گیرنده.
+   * تغییر نام/موبایل/کدپستی/نشانی/یادداشت این کلید را عوض نمی‌کند.
+   * وقتی هویت عوض شود، انتخاب‌های هنوز معتبر در تقویم تازه نگه داشته می‌شوند (پاکِ سراسری ممنوع).
    */
   const capturedContextKey = capturedSelectionContextKey({
     destinationKey: responseIdentity,
     couponCode: couponIntent,
     cartVersion: projection?.cartVersion ?? 0,
-    // TB-237-R1: هویت کامل پاسخ تأییدشده (هر گروه: بازتاب‌ها + مبلغ کالا + تقویم) بخشی از context است؛
-    // تغییر قیمت/تقویم/ناحیه/ردیف با همان snapshot هم تأیید قبلی را باطل می‌کند.
+    // TB-237-R1: هویت کامل پاسخ تأییدشده (هر گروه: بازتاب‌ها + مبلغ کالا + تقویم) بخشی از context است.
     preview: projection?.capturedPreview ?? null,
   });
   const capturedContextKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (capturedContextKeyRef.current === capturedContextKey) return;
     capturedContextKeyRef.current = capturedContextKey;
-    setCapturedChoices((prev) => (Object.keys(prev).length === 0 ? prev : {}));
-  }, [capturedContextKey]);
+    const preview = projection?.capturedPreview ?? null;
+    setCapturedChoices((prev) => reconcileCapturedChoicesAgainstPreview(prev, preview));
+  }, [capturedContextKey, projection?.capturedPreview]);
 
   const destinationContext = useRef({ province: "", city: "", method: "" });  destinationContext.current = {
     province: address.provinceName,

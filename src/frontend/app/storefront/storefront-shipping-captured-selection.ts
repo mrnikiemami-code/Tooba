@@ -197,3 +197,47 @@ export function capturedSelectionContextKey(input: {
     identity,
   ].join("\u001f");
 }
+
+/**
+ * TB-244-R3 — پس از تغییر هویت مسیریابی/تقویم، انتخاب‌های قبلی را **پاکِ سراسری** نکن؛
+ * فقط گروهی را حذف کن که تاریخ/نوبتش دیگر در پاسخ تازه نیست.
+ *
+ * گیرنده/کدپستی/موبایل/یادداشت بخشی از این هویت نیستند و نباید از این مسیر انتخاب را عوض کنند.
+ * پیش‌نمایش از نظر معنایی یکسان ⇒ همان ارجاع قبلی برمی‌گردد (بدون ساخت شیء تازه).
+ */
+export function reconcileCapturedChoicesAgainstPreview(
+  previous: Readonly<Record<string, StorefrontCapturedGroupChoice>>,
+  preview: StorefrontCapturedPreview | null,
+): Record<string, StorefrontCapturedGroupChoice> {
+  const previousKeys = Object.keys(previous);
+  if (previousKeys.length === 0) return previous as Record<string, StorefrontCapturedGroupChoice>;
+
+  if (!preview || preview.state !== "ok" || !preview.enabled) {
+    return {};
+  }
+
+  const next: Record<string, StorefrontCapturedGroupChoice> = {};
+  for (const group of preview.groups) {
+    const choice = previous[group.groupKey];
+    if (!choice?.date) continue;
+    const method = methodOf(group, choice);
+    if (!method) continue;
+    const day = method.availableDates.find((slot) => slot.value === choice.date);
+    if (!day) continue;
+    const slots = day.slots ?? [];
+    if (slots.length > 0) {
+      // نوبت انتخاب‌شده باید هنوز در تقویم همان روز باشد؛ نوبت غایب فقط همین گروه را می‌اندازد.
+      const chosen = slots.some(
+        (slot) => slot.startTicks === choice.slotStartTicks && slot.endTicks === choice.slotEndTicks,
+      );
+      if (!chosen) continue;
+    }
+    next[group.groupKey] = choice;
+  }
+
+  const nextKeys = Object.keys(next);
+  if (nextKeys.length === previousKeys.length && nextKeys.every((key) => previous[key] === next[key])) {
+    return previous as Record<string, StorefrontCapturedGroupChoice>;
+  }
+  return next;
+}

@@ -6,8 +6,10 @@ import {
   capturedSelectionBlocker,
   capturedSelectionComplete,
   capturedSelectionContextKey,
+  reconcileCapturedChoicesAgainstPreview,
   resolveCapturedSelectionRevision,
 } from "./storefront-shipping-captured-selection.ts";
+import { resolveShippingContinueState } from "./storefront-shipping-continue-state.ts";
 import type {
   StorefrontCapturedPreview,
   StorefrontCapturedPreviewGroup,
@@ -326,4 +328,112 @@ test("changing the offered slots invalidates a previously confirmed selection", 
     ],
   });
   assert.notEqual(capturedSelectionContextKey({ ...base, preview: changedSlots }), key);
+});
+
+/**
+ * TB-244-R3 — تکمیل فیلدهای گیرنده نباید انتخاب روز/ساعت را پاک کند.
+ *
+ * ریشهٔ اندازه‌گیری‌شده: تغییر هویت context همهٔ `capturedChoices` را `{}` می‌کرد حتی وقتی همان
+ * تاریخ/نوبت هنوز در تقویم تازه بود (مثلاً پس از تکمیل مقصد Geography یا refresh هم‌معنا).
+ * گیرنده/موبایل/کدپستی اصلاً در کلید context نیستند؛ Continue فقط blocker می‌دهد و state را عوض نمی‌کند.
+ */
+const SLOT_CHOICE_FULL = {
+  methodKey: "post\u001fstandard",
+  serviceCode: "post",
+  optionCode: "standard",
+  date: "2026-10-29",
+  slotStartTicks: 360000000000,
+  slotEndTicks: 396000000000,
+};
+
+test("recipient-form fields are outside the captured context identity", () => {
+  const base = { destinationKey: "d1", couponCode: null, cartVersion: 7, preview: slotPreview() };
+  const key = capturedSelectionContextKey(base);
+  // فیلدهای فرم گیرنده هرگز وارد کلید نمی‌شوند؛ همان کلید باید پایدار بماند.
+  assert.equal(capturedSelectionContextKey({ ...base }), key);
+  assert.equal(
+    key.includes("firstName") || key.includes("postalCode") || key.includes("notes"),
+    false,
+  );
+});
+
+test("reconcile keeps date+slot when the refreshed preview still offers them", () => {
+  const previous = { "cap|post|store|heavy": SLOT_CHOICE_FULL };
+  const kept = reconcileCapturedChoicesAgainstPreview(previous, slotPreview());
+  assert.equal(kept, previous);
+  assert.equal(kept["cap|post|store|heavy"].date, "2026-10-29");
+  assert.equal(kept["cap|post|store|heavy"].slotStartTicks, 360000000000);
+});
+
+test("reconcile clears only the group whose slot disappeared", () => {
+  const otherKey = "cap|post|store|light";
+  const previous = {
+    "cap|post|store|heavy": SLOT_CHOICE_FULL,
+    [otherKey]: { ...SLOT_CHOICE_FULL, date: "2026-10-30" },
+  };
+  const refreshed = preview({
+    groups: [
+      group({ methods: [method({ availableDates: [SLOT_DAY] })] }),
+      group({
+        groupKey: otherKey,
+        methods: [method({ availableDates: [SLOT_DAY] })],
+      }),
+    ],
+  });
+  const next = reconcileCapturedChoicesAgainstPreview(previous, refreshed);
+  assert.equal(next["cap|post|store|heavy"]?.date, "2026-10-29");
+  assert.equal(next[otherKey], undefined);
+});
+
+test("reconcile drops a slot that left the server calendar", () => {
+  const previous = { "cap|post|store|heavy": SLOT_CHOICE_FULL };
+  const onlyMorning = preview({
+    groups: [
+      group({
+        methods: [
+          method({
+            availableDates: [
+              {
+                ...SLOT_DAY,
+                slots: [{ slotKey: "09:00-10:00", label: "۰۹:۰۰–۱۰:۰۰", startTicks: 324000000000, endTicks: 360000000000 }],
+              },
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+  assert.deepEqual(reconcileCapturedChoicesAgainstPreview(previous, onlyMorning), {});
+});
+
+test("Continue blockers for missing recipient fields do not require clearing choices", () => {
+  const choices = { "cap|post|store|heavy": SLOT_CHOICE_FULL };
+  for (const incomplete of [
+    { recipient: false, contactMobile: true, province: true, city: true, postalAddress: true, postalCode: true },
+    { recipient: true, contactMobile: false, province: true, city: true, postalAddress: true, postalCode: true },
+    { recipient: true, contactMobile: true, province: true, city: true, postalAddress: true, postalCode: false },
+  ]) {
+    const state = resolveShippingContinueState({
+      address: incomplete,
+      captured: { active: true, confirmed: true, preview: slotPreview(), choices },
+      legacy: { available: false, methodReady: false, scheduleReady: false },
+    });
+    assert.equal(state.ready, false);
+    assert.ok(state.blocker);
+    assert.equal(choices["cap|post|store|heavy"].date, "2026-10-29");
+    assert.equal(choices["cap|post|store|heavy"].slotStartTicks, 360000000000);
+  }
+});
+
+test("routing identity changes still invalidate via context key while reconcile may retain valid slots", () => {
+  const base = { destinationKey: "d1", couponCode: null, cartVersion: 7, preview: slotPreview() };
+  const key = capturedSelectionContextKey(base);
+  assert.notEqual(capturedSelectionContextKey({ ...base, destinationKey: "d2" }), key);
+  assert.notEqual(capturedSelectionContextKey({ ...base, couponCode: "SAVE10" }), key);
+  assert.notEqual(capturedSelectionContextKey({ ...base, cartVersion: 9 }), key);
+  const retained = reconcileCapturedChoicesAgainstPreview(
+    { "cap|post|store|heavy": SLOT_CHOICE_FULL },
+    slotPreview(),
+  );
+  assert.equal(retained["cap|post|store|heavy"]?.slotEndTicks, 396000000000);
 });
