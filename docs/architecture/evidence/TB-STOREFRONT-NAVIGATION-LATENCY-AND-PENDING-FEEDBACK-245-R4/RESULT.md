@@ -35,4 +35,4 @@ Live FE3000→Host5088 (buyer `01a0996c…`, cart `01a17b2d…` Active v48 qty18
 
 Expected-Base / Base: `c659914b346350e52b71d7de4e46c160bda4b10f`  
 Code-SHA: `21ee8e8bc2d52e5c6bbc4a0952b7af3654bc6125`
-Evidence-SHA: `21ee8e8bc2d52e5c6bbc4a0952b7af3654bc6125`
+Evidence-SHA: `8e18c2fe740d227b44b9f9c0552342bbc1233509`
