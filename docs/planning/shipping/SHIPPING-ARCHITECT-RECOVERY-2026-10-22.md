@@ -1,4 +1,18 @@
-# CURRENT — 244-R2 EXECUTED: approved demo config; payment-ready unsubmitted — 2026-10-29
+# CURRENT — SHIPPING ACTUAL-CART FUNCTIONAL HANDOFF ACCEPTED — 2026-10-29
+
+Task: `TB-SHIPPING-USER-ENVIRONMENT-FINAL-CONFIGURED-DELIVERY-244-R2`  
+State: **ARCHITECT ACCEPTED — canonical actual-account/cart payment-ready handoff**  
+automaticNextImplementationTask: **NONE**
+
+Canonical SarvNewVer FE3000/Host5088 runs SingleStore/store-alpha/tooba_alpha. The authenticated user matches the
+actual Active quantity-18 cart. User-approved Platform→Store fulfillment, original type/post-null method, 500g
+packaged unit weights, fixed 120000 freight + 5000 packaging, 1–3 days and 60-minute slots are persisted through
+owning APIs. Two groups cover every line, explicit 14:00–15:00 choices are accepted, and payment-draft is ready.
+No checkout/Order/reservation/payment was created. Final URL is
+`http://127.0.0.1:3000/fa/payment?cartId=01a17b2d-e219-7000-b3b2-5bcdbe6810c5`.
+This is functional shipping handoff, not Visual ACCEPT, payment/PSP/paid certification or checked-in activation.
+
+# SUPERSEDED — 244-R2 EXECUTED: approved demo config; payment-ready unsubmitted — 2026-10-29
 
 Active implementation NONE after worker result. automaticNextImplementationTask NONE.
 Read 244-R2 RESULT/RECEIPTS. Canonical 3000/5088 tooba_alpha; cart 01a17b2d… payment-ready unsubmitted after approved settings.
