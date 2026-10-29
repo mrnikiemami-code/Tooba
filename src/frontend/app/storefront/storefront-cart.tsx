@@ -19,7 +19,7 @@ import {
   Truck,
 } from "lucide-react";
 import { formatQuantityDisplay, parseQuantityInput } from "../../lib/quantity-display.ts";
-import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
+import { formatOfferAmount, loadStorefrontHome, storefrontMediaUrl } from "./storefront-api.ts";
 import {
   CART_CHANGED_EVENT,
   changeCartLineQuantity,
@@ -42,16 +42,15 @@ import {
 } from "./storefront-checkout-api.ts";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import type { StorefrontProductCard } from "./storefront-model.ts";
+import { pickCartRecommendations } from "./storefront-cart-recommendations.ts";
+import { noteCartOwnerRead } from "./storefront-cart-read-ownership.ts";
 
 /**
  * سبد خرید با پوستهٔ Shopeiva روی حقیقت Cart Host.
  * کوپن از Host ارزیابی می‌شود؛ تخفیف جعلی در UI ساخته نمی‌شود.
+ * TB-245-R4: پیشنهادها فقط پس از usable شدن سبد اصلی، با یک مالک و لغو روی unmount.
  */
-export function StorefrontShopeivaCart({
-  recommendations = [],
-}: {
-  recommendations?: StorefrontProductCard[];
-}) {
+export function StorefrontShopeivaCart() {
   const [cart, setCart] = useState<StorefrontCartPage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -61,6 +60,7 @@ export function StorefrontShopeivaCart({
   const [couponDiscount, setCouponDiscount] = useState<number | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
   const [pendingItems, setPendingItems] = useState<StorefrontPendingPaymentItem[]>([]);
+  const [recommendations, setRecommendations] = useState<StorefrontProductCard[]>([]);
   const removedPendingIds = useRef(new Set<string>());
   const locale = useLocale();
   const [checkoutHref, setCheckoutHref] = useState("/shipping");
@@ -78,29 +78,47 @@ export function StorefrontShopeivaCart({
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    noteCartOwnerRead("cart-route-mount-cart");
     setCouponInput(readStoredCouponCode() ?? "");
     void loadStorefrontCart()
       .then((page) => {
+        if (cancelled) return;
         setCart(page);
         setError(null);
       })
       .catch((cause: unknown) => {
+        if (cancelled) return;
         setError(toCustomerCartMessage(cause));
         setCart(null);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    noteCartOwnerRead("cart-route-mount-pending");
     void loadStorefrontPendingPayments()
-      .then((page) => applyPendingItems(page.items))
-      .catch(() => setPendingItems([]));
+      .then((page) => {
+        if (cancelled) return;
+        applyPendingItems(page.items);
+      })
+      .catch(() => {
+        if (!cancelled) setPendingItems([]);
+      });
+    noteCartOwnerRead("cart-route-mount-login");
     void requiresCheckoutLogin().then((needsLogin) => {
+      if (cancelled) return;
       setCheckoutHref(needsLogin ? loginPath(locale, `/${locale}/shipping`) : "/shipping");
     });
-  }, [locale]);
+    return () => {
+      cancelled = true;
+    };
+  }, [locale, applyPendingItems]);
 
   useEffect(() => {
     let generation = 0;
     const refresh = () => {
       const mine = ++generation;
+      noteCartOwnerRead("cart-route-event-cart");
       void loadStorefrontCart()
         .then((page) => {
           if (mine !== generation) {
@@ -129,6 +147,24 @@ export function StorefrontShopeivaCart({
       window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
     };
   }, []);
+
+  // TB-245-R4: پیشنهادها فقط بعد از usable شدن سبد؛ یک درخواست در هر mount؛ شکست بی‌صدا.
+  useEffect(() => {
+    if (loading) return;
+    let cancelled = false;
+    noteCartOwnerRead("cart-route-recommendations");
+    void loadStorefrontHome()
+      .then((home) => {
+        if (cancelled) return;
+        setRecommendations(pickCartRecommendations(home));
+      })
+      .catch(() => {
+        if (!cancelled) setRecommendations([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loading]);
 
   async function applyCoupon() {
     if (!cart) {

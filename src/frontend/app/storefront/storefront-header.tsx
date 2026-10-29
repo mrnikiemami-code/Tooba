@@ -32,6 +32,7 @@ import type { StorefrontBrandItem, StorefrontCategoryItem } from "./storefront-m
 import { loadStorefrontMegaMenu, type StorefrontMegaMenuItem } from "../admin/catalog-mega-menu-api.ts";
 import { loadStorefrontHeaderMenu, menuChildren, type StorefrontMenuItem } from "./storefront-menu-api.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
+import { noteCartOwnerRead } from "./storefront-cart-read-ownership.ts";
 import { AUTH_CHANGED_EVENT } from "./storefront-identity-api.ts";
 import { StorefrontMiniCartDrawer } from "./storefront-mini-cart.tsx";
 import { StorefrontAccountMenu } from "./storefront-account-menu.tsx";
@@ -116,8 +117,13 @@ export function StorefrontShopeivaHeader({
 
   useEffect(() => {
     let generation = 0;
-    const refreshBadge = () => {
+    const refreshBadge = (fromEvent: boolean) => {
       const mine = ++generation;
+      if (fromEvent) {
+        noteCartOwnerRead("header-badge-event");
+      } else {
+        noteCartOwnerRead("header-badge-mount");
+      }
       void loadStorefrontCart()
         .then((cart) => {
           if (mine !== generation) {
@@ -134,14 +140,15 @@ export function StorefrontShopeivaHeader({
     };
     const onAuthChanged = () => {
       setCartCount(0);
-      refreshBadge();
+      refreshBadge(true);
     };
-    refreshBadge();
-    window.addEventListener(CART_CHANGED_EVENT, refreshBadge);
+    const onCartChanged = () => refreshBadge(true);
+    refreshBadge(false);
+    window.addEventListener(CART_CHANGED_EVENT, onCartChanged);
     window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
     return () => {
       generation += 1;
-      window.removeEventListener(CART_CHANGED_EVENT, refreshBadge);
+      window.removeEventListener(CART_CHANGED_EVENT, onCartChanged);
       window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
     };
   }, []);

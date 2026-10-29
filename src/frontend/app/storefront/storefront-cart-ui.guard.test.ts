@@ -74,9 +74,10 @@ test("mini-cart drawer preserves Shopeiva structure on Host cart APIs", () => {
 test("cart page recommendations use live feed cards with working ATC reuse", () => {
   assert.match(cartSource, /data-testid="cart-recommendations"/);
   assert.match(cartSource, /StorefrontProductCardView/);
-  assert.match(cartPageSource, /pickCartRecommendations/);
-  assert.match(cartPageSource, /newArrivals/);
-  assert.match(cartPageSource, /featuredProducts/);
+  assert.match(cartSource, /pickCartRecommendations/);
+  assert.match(cartSource, /loadStorefrontHome/);
+  assert.doesNotMatch(cartPageSource, /loadStorefrontHome/);
+  assert.match(cartPageSource, /loadStorefrontCategories/);
   // Shipping honesty is an invariant, not a disclaimer block: the cart defers the shipping
   // amount to checkout and never fabricates a rate or free shipping in the browser.
   assert.match(cartSource, /هزینه ارسال/);

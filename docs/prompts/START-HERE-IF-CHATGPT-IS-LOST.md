@@ -1,4 +1,10 @@
-# CURRENT — 245-R4 ISSUED: cart critical-path and visible action feedback — 2026-10-29
+# CURRENT — 245-R4 EXECUTED: cart nav without Home critical path + CTA busy — 2026-10-29
+
+Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `c659914b3`.
+Cart RSC uses categories only; recommendations after cart usable; mini-cart CTA action-busy ≤100ms; ownership ledger bounded. Focused 32/32 + typecheck + build. Cart Active v48 preserved. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 245-R4 ISSUED: cart critical-path and visible action feedback — 2026-10-29
 
 Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4`  
 Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R3`  

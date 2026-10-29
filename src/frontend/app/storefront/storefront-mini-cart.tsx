@@ -1,7 +1,10 @@
 "use client";
 
 import { LocalizedLink } from "../../lib/i18n/LocalizedLink.tsx";
-import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { useStorefrontNavigationPending } from "../../lib/storefront-navigation/navigation-pending-context.tsx";
+import { normalizeNavigationHref } from "../../lib/storefront-navigation/navigation-pending.ts";
+import { Loader2, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
@@ -12,10 +15,12 @@ import {
   toCustomerCartMessage,
   type StorefrontCartPage,
 } from "./storefront-cart-api.ts";
+import { noteCartOwnerRead } from "./storefront-cart-read-ownership.ts";
 
 /**
  * کشوی مینی‌سبد Shopeiva روی حقیقت Cart Host.
  * برند از توکن primary؛ بدون قیمت جعلی و بدون پرش مستقیم به shipping.
+ * TB-245-R4: CTA سبد بازخورد سطح‌اقدام فوری + یک خواندن در هر باز شدن.
  */
 export function StorefrontMiniCartDrawer({
   open,
@@ -28,33 +33,52 @@ export function StorefrontMiniCartDrawer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const navPending = useStorefrontNavigationPending();
+  const lp = useLocalizedPath();
+  const locale = useLocale();
+  const cartHref = lp("/cart");
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const ctaBusy =
+    navPending.isPending
+    && Boolean(navPending.pending.href)
+    && normalizeNavigationHref(navPending.pending.href ?? "", origin)
+      === normalizeNavigationHref(cartHref, origin);
+  const ctaLabel = ctaBusy
+    ? (locale === "en" ? "Opening cart…" : "در حال باز کردن سبد…")
+    : (locale === "en" ? "Checkout" : "تکمیل خرید");
 
   useEffect(() => {
     if (!open) {
       return;
     }
     let cancelled = false;
+    let generation = 0;
+    const mine = ++generation;
     setLoading(true);
+    noteCartOwnerRead("mini-cart-open-cart");
     void loadStorefrontCart()
       .then((page) => {
-        if (!cancelled) {
-          setCart(page);
-          setError(null);
+        if (cancelled || mine !== generation) {
+          return;
         }
+        setCart(page);
+        setError(null);
       })
       .catch((cause: unknown) => {
-        if (!cancelled) {
-          setError(toCustomerCartMessage(cause));
-          setCart(null);
+        if (cancelled || mine !== generation) {
+          return;
         }
+        setError(toCustomerCartMessage(cause));
+        setCart(null);
       })
       .finally(() => {
-        if (!cancelled) {
+        if (!cancelled && mine === generation) {
           setLoading(false);
         }
       });
     return () => {
       cancelled = true;
+      generation += 1;
     };
   }, [open]);
 
@@ -62,18 +86,26 @@ export function StorefrontMiniCartDrawer({
     if (!open) {
       return;
     }
+    let generation = 0;
     const refresh = () => {
+      const mine = ++generation;
+      noteCartOwnerRead("mini-cart-event-cart");
       void loadStorefrontCart()
         .then((page) => {
+          if (mine !== generation) return;
           setCart(page);
           setError(null);
         })
         .catch((cause: unknown) => {
+          if (mine !== generation) return;
           setError(toCustomerCartMessage(cause));
         });
     };
     window.addEventListener(CART_CHANGED_EVENT, refresh);
-    return () => window.removeEventListener(CART_CHANGED_EVENT, refresh);
+    return () => {
+      generation += 1;
+      window.removeEventListener(CART_CHANGED_EVENT, refresh);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -121,6 +153,7 @@ export function StorefrontMiniCartDrawer({
         aria-modal="true"
         aria-label="سبد خرید"
         data-testid="mini-cart-drawer"
+        data-nav-busy={ctaBusy ? "true" : "false"}
         className="absolute left-0 top-0 bottom-0 w-full max-w-sm bg-surface shadow-2xl flex flex-col animate-in slide-in-from-left duration-300"
         onClick={(event) => event.stopPropagation()}
       >
@@ -227,10 +260,13 @@ export function StorefrontMiniCartDrawer({
             </div>
             <LocalizedLink
               href="/cart"
-              className="block w-full py-2.5 bg-primary text-white text-center rounded-xl font-bold text-sm hover:bg-primary-strong transition-all shadow-md hover:shadow-lg hover:shadow-primary/25"
+              className="flex w-full items-center justify-center gap-2 py-2.5 bg-primary text-white text-center rounded-xl font-bold text-sm hover:bg-primary-strong transition-all shadow-md hover:shadow-lg hover:shadow-primary/25 disabled:opacity-80"
               data-testid="mini-cart-checkout-cta"
+              aria-busy={ctaBusy || undefined}
+              data-action-pending={ctaBusy ? "true" : "false"}
             >
-              تکمیل خرید
+              {ctaBusy ? <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden /> : null}
+              {ctaLabel}
             </LocalizedLink>
           </div>
         ) : null}
