@@ -1,3 +1,16 @@
+# CURRENT — 245-R3 ISSUED: province/city must not erase compatible delivery choices — 2026-10-29
+
+Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R3`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2`  
+State: **ISSUED — user-reproduced canonical regression**  
+Expected base: issue commit containing this task  
+automaticNextImplementationTask: `NONE`
+
+The user reproduced day/hour loss when selecting province. Source review found a direct province refresh plus the destination coordinator refresh, followed by unconditional destination clear-all. R3 makes the coordinator the single owner, keeps choices provisionally while pending, and retains them only after exact server fingerprint revalidation. Accepted navigation performance/native-click/visible-timeout behavior must not be reopened.
+
+Read `docs/ai/tasks/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R3/TASK.md`.
+STOP_FOR_ARCHITECT after execution.
+
 # CURRENT — 245-R2 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-10-29
 
 Accepted chain:
