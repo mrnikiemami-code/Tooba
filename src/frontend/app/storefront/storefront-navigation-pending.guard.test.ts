@@ -10,6 +10,11 @@ const localizedLink = fs.readFileSync(path.join(root, "lib/i18n/LocalizedLink.ts
 const providers = fs.readFileSync(path.join(root, "app/providers.tsx"), "utf8");
 const pdpPage = fs.readFileSync(path.join(root, "app/products/[slug]/page.tsx"), "utf8");
 const miniCart = fs.readFileSync(path.join(root, "app/storefront/storefront-mini-cart.tsx"), "utf8");
+const pendingCtx = fs.readFileSync(
+  path.join(root, "lib/storefront-navigation/navigation-pending-context.tsx"),
+  "utf8",
+);
+const pendingPure = fs.readFileSync(path.join(root, "lib/storefront-navigation/navigation-pending.ts"), "utf8");
 
 test("product card announces pending before router.push on eye action", () => {
   assert.match(productCard, /useStorefrontNavigationPending/);
@@ -35,4 +40,13 @@ test("mini-cart cart CTA uses LocalizedLink for soft navigation + pending", () =
   assert.match(miniCart, /LocalizedLink/);
   assert.match(miniCart, /data-testid="mini-cart-checkout-cta"/);
   assert.doesNotMatch(miniCart, /لینک کامل سند/);
+});
+
+test("timeout feedback is visible (not sr-only only) and auto-dismisses", () => {
+  assert.match(pendingCtx, /data-testid="storefront-nav-timeout"/);
+  assert.match(pendingCtx, /NAVIGATION_RETRY_DISMISS_MS/);
+  assert.match(pendingCtx, /pointer-events-none/);
+  assert.match(pendingPure, /باز شدن صفحه طول کشید/);
+  assert.match(pendingPure, /The page is taking too long to open/);
+  assert.doesNotMatch(pendingCtx, /StorefrontNavigationPendingProvider[\s\S]*StorefrontNavigationPendingProvider/);
 });

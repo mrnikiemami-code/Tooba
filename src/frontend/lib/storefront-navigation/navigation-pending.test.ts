@@ -4,8 +4,10 @@ import {
   beginNavigationPending,
   clearNavigationPending,
   isModifiedNavigationEvent,
+  NAVIGATION_RETRY_DISMISS_MS,
   navigationPendingLiveMessage,
   navigationPendingTimedOut,
+  navigationTimeoutFeedbackVisible,
   normalizeNavigationHref,
   reconcileNavigationPending,
   resolveBeginNavigation,
@@ -96,9 +98,22 @@ test("failed/no-op navigation times out", () => {
 
 test("FA and EN live-region strings are both asserted", () => {
   assert.match(navigationPendingLiveMessage("fa", "pending"), /رفتن|صفحه/);
-  assert.match(navigationPendingLiveMessage("fa", "retry"), /تلاش/);
+  assert.equal(
+    navigationPendingLiveMessage("fa", "retry"),
+    "باز شدن صفحه طول کشید؛ دوباره تلاش کنید.",
+  );
   assert.match(navigationPendingLiveMessage("en", "pending"), /Navigating/);
-  assert.match(navigationPendingLiveMessage("en", "retry"), /Try again/);
+  assert.equal(
+    navigationPendingLiveMessage("en", "retry"),
+    "The page is taking too long to open. Try again.",
+  );
+});
+
+test("timeout feedback is visible only after pending clears", () => {
+  assert.equal(navigationTimeoutFeedbackVisible(null, true), false);
+  assert.equal(navigationTimeoutFeedbackVisible("x", true), false);
+  assert.equal(navigationTimeoutFeedbackVisible("x", false), true);
+  assert.ok(NAVIGATION_RETRY_DISMISS_MS >= 4000 && NAVIGATION_RETRY_DISMISS_MS <= 8000);
 });
 
 test("normalize compares path regardless of origin", () => {

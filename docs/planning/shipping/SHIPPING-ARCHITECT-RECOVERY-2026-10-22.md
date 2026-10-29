@@ -1,4 +1,11 @@
-# CURRENT — 245-R2 ISSUED: visible navigation timeout feedback — 2026-10-29
+# CURRENT — 245-R2 EXECUTED: visible navigation timeout feedback — 2026-10-29
+
+Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `6187bf7b7`.
+Timeout retryHint now visible FA/EN banner (not sr-only/h-0); auto-dismiss 6s; clears on next ordinary click.
+Focused 17/17 + typecheck + production build. Cart Active v48 preserved. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 245-R2 ISSUED: visible navigation timeout feedback — 2026-10-29
 
 Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R2`  
 Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1`  

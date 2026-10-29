@@ -16,8 +16,10 @@ import {
   clearNavigationPending,
   NAVIGATION_PENDING_IDLE,
   NAVIGATION_PENDING_TIMEOUT_MS,
+  NAVIGATION_RETRY_DISMISS_MS,
   navigationPendingLiveMessage,
   navigationPendingTimedOut,
+  navigationTimeoutFeedbackVisible,
   reconcileNavigationPending,
   resolveBeginNavigation,
   type BeginNavigationResult,
@@ -130,6 +132,14 @@ export function StorefrontNavigationPendingProvider({ children }: { children: Re
     };
   }, [pending.href, pending.startedAtMs, locale, syncFromLocation]);
 
+  useEffect(() => {
+    if (!retryHint) return;
+    const dismiss = window.setTimeout(() => {
+      setRetryHint(null);
+    }, NAVIGATION_RETRY_DISMISS_MS);
+    return () => window.clearTimeout(dismiss);
+  }, [retryHint]);
+
   const value = useMemo<NavigationPendingApi>(
     () => ({
       pending,
@@ -177,23 +187,41 @@ function StorefrontNavigationPendingIndicator({
   locale: "fa" | "en";
 }) {
   const active = pending.href != null;
-  const live = retryHint ?? (active ? navigationPendingLiveMessage(locale, "pending") : "");
+  const showTimeout = navigationTimeoutFeedbackVisible(retryHint, active);
+  const pendingLive = active ? navigationPendingLiveMessage(locale, "pending") : "";
   return (
-    <div
-      data-testid="storefront-nav-pending"
-      data-nav-pending={active ? "true" : "false"}
-      data-nav-retry={retryHint ? "true" : "false"}
-      aria-busy={active ? true : undefined}
-      aria-live="polite"
-      aria-atomic="true"
-      className={
-        active
-          ? "pointer-events-none fixed inset-x-0 top-0 z-[200] h-1 overflow-hidden bg-primary/20"
-          : "pointer-events-none fixed inset-x-0 top-0 z-[200] h-0 overflow-hidden"
-      }
-    >
-      {active ? <div className="h-full w-1/3 animate-pulse bg-primary" /> : null}
-      {live ? <span className="sr-only">{live}</span> : <span className="sr-only" />}
-    </div>
+    <>
+      <div
+        data-testid="storefront-nav-pending"
+        data-nav-pending={active ? "true" : "false"}
+        data-nav-retry={showTimeout ? "true" : "false"}
+        aria-busy={active ? true : undefined}
+        className={
+          active
+            ? "pointer-events-none fixed inset-x-0 top-0 z-[200] h-1 overflow-hidden bg-primary/20"
+            : "pointer-events-none fixed inset-x-0 top-0 z-[200] h-0 overflow-hidden"
+        }
+      >
+        {active ? <div className="h-full w-1/3 animate-pulse bg-primary" /> : null}
+      </div>
+      {active ? (
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {pendingLive}
+        </span>
+      ) : null}
+      {showTimeout && retryHint ? (
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          data-testid="storefront-nav-timeout"
+          className="pointer-events-none fixed inset-x-0 top-2 z-[201] flex justify-center px-3"
+        >
+          <p className="max-w-md rounded-xl border border-gray-200 bg-surface px-3 py-2 text-center text-sm font-medium text-gray-800 shadow-md">
+            {retryHint}
+          </p>
+        </div>
+      ) : null}
+    </>
   );
 }

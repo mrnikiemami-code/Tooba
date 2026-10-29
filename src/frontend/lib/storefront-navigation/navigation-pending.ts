@@ -16,6 +16,9 @@ export const NAVIGATION_PENDING_IDLE: NavigationPendingSnapshot = {
 /** Soft failure unlock after a no-op / stuck soft navigation. */
 export const NAVIGATION_PENDING_TIMEOUT_MS = 5_000;
 
+/** Visible timeout banner auto-dismiss window (4–8s). */
+export const NAVIGATION_RETRY_DISMISS_MS = 6_000;
+
 export type BeginNavigationResult =
   | { readonly kind: "native" }
   | { readonly kind: "started"; readonly pending: NavigationPendingSnapshot }
@@ -130,10 +133,18 @@ export function navigationPendingLiveMessage(
 ): string {
   if (locale === "en") {
     return phase === "retry"
-      ? "Navigation did not finish. Try again."
+      ? "The page is taking too long to open. Try again."
       : "Navigating…";
   }
   return phase === "retry"
-    ? "انتقال کامل نشد. دوباره تلاش کنید."
+    ? "باز شدن صفحه طول کشید؛ دوباره تلاش کنید."
     : "در حال رفتن به صفحه…";
+}
+
+/** Timeout banner is visible only after pending cleared and a retry hint exists. */
+export function navigationTimeoutFeedbackVisible(
+  retryHint: string | null,
+  pendingActive: boolean,
+): boolean {
+  return Boolean(retryHint) && !pendingActive;
 }
