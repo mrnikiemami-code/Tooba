@@ -1,4 +1,19 @@
-# CURRENT — 244-R1 SAFE RECOVERY ACCEPTED; DELIVERY AWAITS MERCHANT VALUES — 2026-10-29
+# CURRENT — USER VALUES APPROVED; 244-R2 FINAL ACTUAL-CART CONFIGURATION ISSUED — 2026-10-29
+
+Task: `TB-SHIPPING-USER-ENVIRONMENT-FINAL-CONFIGURED-DELIVERY-244-R2`  
+Parent: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
+State: **ISSUED — explicit merchant decision, final canonical actual-cart handoff**  
+Expected base: `ISSUE_COMMIT_CONTAINING_THIS_TASK`
+
+The user authorized the chosen demo merchant values: all four offers Platform responsibility resolving to
+Store(store-alpha), original type/post-null “پیشتاز”, 500g packaged weight per Huawei/Samsung/Xiaomi unit, and fixed
+120000 IRR freight + 5000 IRR packaging per group across the supported weight domain, preserving the original
+1–3 days, geography, timezone, schedule and 60-minute slots. Apply only through owning APIs on canonical
+SarvNewVer FE3000/Host5088/tooba_alpha, replace the rejected stale selection, and leave the real quantity-18 cart
+payment-ready but unsubmitted. Resolve the 244 evidence userId mismatch from the authenticated session. No automatic
+245, alternate account/cart/DB, screenshots, payment, or guessed values remain authorized.
+
+# SUPERSEDED — 244-R1 SAFE RECOVERY ACCEPTED; DELIVERY AWAITS MERCHANT VALUES — 2026-10-29
 
 Task: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
 State: **ARCHITECT ACCEPTED AS COMPENSATION / BLOCKED AS DELIVERY**  
