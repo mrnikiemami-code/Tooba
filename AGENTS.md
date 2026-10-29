@@ -1,4 +1,17 @@
-# CURRENT — 243-R1 ARCHITECT ACCEPT: original-store local shipping handoff / MANUAL PENDING — 2026-10-29
+# CURRENT — USER TRIAL FAILED: actual 18-item primary cart is NOT a completed handoff — 2026-10-29
+User rejected actual3000/fa/shipping image («این چیه اصلا من چی رو تایید کنم»).
+Read docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/USER-TRIAL-REOPENED.md.
+Root image inspection:18-item cart, multiple unassigned-shipping warnings, unknown shipping amounts, no offered
+date/hour controls, disabledContinue; address/destination also empty. Do not blame only empty form or request approval.
+WITHDRAW actual-user delivery implication of prior243-R1 acceptance. Source fixes/task laptop manualPending
+receipt remain bounded valid progress, NOT completion of this user's different real cart.
+Actual buyer/cart identity not established from image. No session substitution/cart deletion/bulk guessed assignment/
+rate or weight weakening/seed/DB switch/new port. Preserve all user local input, cart and profiles.
+Work remains OPEN on real normal session/cart. No new implementation envelope issued here; automaticNext NONE.
+No screenshot request or user-tab automation performed. Original deadlineMISSED; TB185 paused/defaultOFF.
+Checked-in gatesOFF/local primary config unchanged. Do not announce full handoff again from a task-only cart.
+
+# SUPERSEDED — 243-R1 ARCHITECT ACCEPT: original-store local shipping handoff / MANUAL PENDING — 2026-10-29
 Active implementation NONE; automaticNextImplementationTask NONE; no automatic244.
 Read docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/ARCHITECT-REVIEW.md.
 Root reviewed source0e2ec5282/evidence527007cf5; no root Windows/runtime execution.
