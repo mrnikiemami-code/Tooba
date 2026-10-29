@@ -1,4 +1,22 @@
-# CURRENT — USER TRIAL FAILED: actual 18-item primary cart is NOT a completed handoff — 2026-10-29
+# CURRENT — 244 FINAL DELIVERY ON USER CANONICAL PROJECT / DATABASE / ACCOUNT / CART — 2026-10-29
+
+Task: `TB-SHIPPING-USER-ENVIRONMENT-ACTUAL-CART-DELIVERY-244`  
+Parent: `TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1`  
+State: **ISSUED — final actual-user delivery, not yet executed or accepted**  
+Expected base: `ISSUE_COMMIT_CONTAINING_THIS_TASK`
+
+The previous task-fixture handoff is not delivery. This task succeeds only when the canonical checkout
+`D:\Users\User\source\repos\SarvNewVer` serves FE 3000 and Host 5088 against the user's
+`tooba_alpha / store-alpha`, and the user's existing signed-in account and actual cart reach the existing
+payment-ready form with every real line accounted for and configured per-group date/hour choices. No temporary
+worktree/runtime, replacement account/cart, alternate database, screenshots, silent cart deletion, guessed bulk
+assignment, Order/payment submission on the user's cart, or fixture-only substitute is accepted.
+
+The user explicitly authorizes narrow read-only diagnosis of the current primary shipping session to identify the
+actual account/cart. Preserve unrelated tabs, browser state and user LOCAL changes. Checked-in gates remain OFF.
+Worker PASS is not Architect acceptance. `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — USER TRIAL FAILED: actual 18-item primary cart is NOT a completed handoff — 2026-10-29
 User rejected actual3000/fa/shipping image («این چیه اصلا من چی رو تایید کنم»).
 Read docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/USER-TRIAL-REOPENED.md.
 Root image inspection:18-item cart, multiple unassigned-shipping warnings, unknown shipping amounts, no offered
