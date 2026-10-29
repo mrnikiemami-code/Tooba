@@ -1,3 +1,16 @@
+# CURRENT — CORRECTED 245-R1 ISSUED — 2026-10-29
+
+Task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245`  
+State: **ISSUED — corrected established BRIDGE-WAKE-V1 format and naming**  
+Expected base: issue commit containing this corrected task  
+automaticNextImplementationTask: `NONE`
+
+The earlier issuance named `TB-STOREFRONT-NAVIGATION-AND-SHIPPING-CONTEXT-CLOSURE-245-R1` was malformed and is superseded/deleted. Execute only this corrected 245-R1. It closes the reviewed navigation defects plus the 244-R3 selection-context invalidation blockers on canonical FE3000→Host5088, with no parallel task.
+
+Read `docs/ai/tasks/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1/TASK.md`.
+STOP_FOR_ARCHITECT after execution.
+
 # CURRENT — 245-R1 ISSUED: close shipping invalidation + navigation pending — 2026-10-29
 
 Task: `TB-STOREFRONT-NAVIGATION-AND-SHIPPING-CONTEXT-CLOSURE-245-R1`  

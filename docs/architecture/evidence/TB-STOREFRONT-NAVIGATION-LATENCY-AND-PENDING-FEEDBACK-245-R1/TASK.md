@@ -1,11 +1,17 @@
-# TB-STOREFRONT-NAVIGATION-AND-SHIPPING-CONTEXT-CLOSURE-245-R1
-
-Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245`  
-Also closes the Architect blockers recorded for `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`.  
-Mode: `CLOSE_SELECTION_INVALIDATION_AND_NAVIGATION_PENDING_WITHOUT_NEW_RUNTIME`  
-Expected base: `ISSUE_COMMIT_CONTAINING_THIS_TASK`  
-Stop state: `STOP_FOR_ARCHITECT`  
-Automatic next task: `NONE`
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_TASK
+Task-ID: TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1
+Parent-Task: TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: Tooba Storefront — close reviewed navigation pending and shipping selection-context regressions
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Expected-Base-SHA: ISSUE_COMMIT_CONTAINING_THIS_TASK
+Mode: REPAIR_REVIEWED_NAVIGATION_AND_SELECTION_CONTEXT_REGRESSIONS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
 
 ## Outcome
 
@@ -86,3 +92,31 @@ Required focused RED→GREEN facts:
 ## Delivery report
 
 Report exact base/code/evidence SHAs, tests and timings, modified paths, canonical runtime identity, cart preservation, before/after behavior for both defects, disclosed limits and process compliance. Worker PASS is not Architect or Visual ACCEPT. End with `STOP_FOR_ARCHITECT`; do not create an automatic next task.
+
+# Worker result delivery contract
+
+Return the final result through the Bridge with exactly this envelope:
+
+```text
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R1
+Parent-Task: TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: Tooba Storefront — close reviewed navigation pending and shipping selection-context regressions
+Mode: REPAIR_REVIEWED_NAVIGATION_AND_SELECTION_CONTEXT_REGRESSIONS
+Status: PASS | PARTIAL | BLOCKED
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: <resolved issue commit>
+Base-SHA: <sha>
+Code-SHA: <sha-or-NONE>
+Evidence-SHA: <sha-or-NONE>
+automaticNextImplementationTask: NONE
+<full honest result>
+END_TOOBA_WORKER_RESULT
+```
+
+Append the task-end marker separately. Never send placeholder/probe content.
+END_TOOBA_TASK
