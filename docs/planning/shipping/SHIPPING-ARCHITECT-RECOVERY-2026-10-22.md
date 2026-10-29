@@ -1,3 +1,17 @@
+# CURRENT — 245-R4 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-10-29
+
+Accepted chain: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245` through R4, including R3 province/city selection retention and R4 cart critical-path/visible pending closure.
+
+Final accepted behavior: PDP and cart clicks acknowledge immediately; cart RSC does not block on full Home; recommendations load after the primary cart is usable; mini-cart CTA shows localized action-busy feedback; repeated navigation has bounded request/listener counts; province/city revalidation keeps compatible delivery choices without duplicate projection or stale submission.
+
+State: **ARCHITECT ACCEPTED within scope**  
+Active task: `NONE`  
+automaticNextImplementationTask: `NONE`
+
+Read `docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 245-R4 EXECUTED: cart nav without Home critical path + CTA busy — 2026-10-29
+
 # CURRENT — 245-R4 EXECUTED: cart nav without Home critical path + CTA busy — 2026-10-29
 
 Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
