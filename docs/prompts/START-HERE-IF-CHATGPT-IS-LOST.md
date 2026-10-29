@@ -1,4 +1,18 @@
-# CURRENT — SHIPPING ACTUAL-CART FUNCTIONAL HANDOFF ACCEPTED — 2026-10-29
+# CURRENT — USER-REPORTED DELIVERY CHOICE RESET BUG; 244-R3 ISSUED — 2026-10-29
+
+Task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  
+Parent: `TB-SHIPPING-USER-ENVIRONMENT-FINAL-CONFIGURED-DELIVERY-244-R2`  
+State: **ISSUED — preserve chosen date/hour while completing non-routing recipient fields**  
+Expected base: `ISSUE_COMMIT_CONTAINING_THIS_TASK`
+
+244-R2 merchant configuration and payment-ready backend evidence remain accepted, but the user found a frontend
+defect: selecting a day/hour before completing name, surname, mobile, postal address or postal code can lose/reset
+the choices. Non-routing form edits and validation must preserve per-group method/date/slot; only a real routing,
+coupon, cart, group, quote or calendar identity change may invalidate. Reproduce on canonical SarvNewVer
+FE3000/Host5088/tooba_alpha, fix in the existing frontend flow, and prove the actual cart reaches Continue without
+reselecting. No screenshots, alternate account/cart/DB, temp runtime, payment or automatic next task.
+
+# SUPERSEDED — SHIPPING ACTUAL-CART FUNCTIONAL HANDOFF ACCEPTED — 2026-10-29
 
 Task: `TB-SHIPPING-USER-ENVIRONMENT-FINAL-CONFIGURED-DELIVERY-244-R2`  
 State: **ARCHITECT ACCEPTED — canonical actual-account/cart payment-ready handoff**  
