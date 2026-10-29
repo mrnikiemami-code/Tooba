@@ -23,4 +23,5 @@ Focused navigation + guard tests 17/17; typecheck clean; production build; warm 
 ## SHAs
 
 Expected-Base / Base: `6187bf7b71bf75ada518dd1ae9976757660f2c53`  
-Code-SHA / Evidence-SHA: *(filled after commit)*
+Code-SHA: `c9a33d4cee6adc05e610a7c5ccccd681c4e09d1e`
+Evidence-SHA: `c9a33d4cee6adc05e610a7c5ccccd681c4e09d1e`
