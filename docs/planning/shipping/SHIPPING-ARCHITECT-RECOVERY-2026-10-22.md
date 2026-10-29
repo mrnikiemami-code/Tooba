@@ -1,4 +1,20 @@
-# CURRENT — 243-R1 EXECUTED: weight authority + post:standard restore + StartPayment race + 60/120 slots — 2026-10-29
+# CURRENT — 243-R1 ARCHITECT ACCEPT: original-store local shipping handoff / MANUAL PENDING — 2026-10-29
+Active implementation NONE; automaticNextImplementationTask NONE; no automatic244.
+Read docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/ARCHITECT-REVIEW.md.
+Root reviewed source0e2ec5282/evidence527007cf5; no root Windows/runtime execution.
+Original primary3000/5088 SingleStore/store-alpha/tooba_alpha, HostPID35260 R1; FE46476 remains243 source7ea79556f
+(no frontend changes in R1). Original method01a16eeb60min published; actual laptop1400g;14–15 Order proven.
+post:standard restoredACTIVE alongside own post/NULL;60=>8/120=>4/60=>8 live slots; original Order unchanged.
+Checkout abuse-lock upsert closes reported500; bounded concurrent200+typed409, replay same ids. Not PSP exactly-once.
+Local original-store shipping flow through manual Pending ACCEPTED within actual configuration; user appearance
+acceptance and paid/PSP/full release are NOT implied. No new task for repeating accepted campaigns.
+Review cart01a1858d-06ee-7000-a130-e5f8824ab667 Activev4, normal auth200 reported, unsubmitted; user profiles frozen.
+Weight activeCode convention usesweight/*_weight; known laptop verified, arbitrary component-weight definitions
+not certified.25/25 is Domain policy+planner, no claim of full DB/overflow/cancellation integration matrix.
+No screenshots/new ports/DB switch. Original deadlineMISSED, checked-in gatesOFF/local primaryON.
+TB185 paused/defaultOFF/PendingAllocation; retained unrelated issues preserved below.
+
+# SUPERSEDED — 243-R1 EXECUTED: weight authority + post:standard restore + StartPayment race + 60/120 slots — 2026-10-29
 Read docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status PASS within scope, NOT VisualACCEPT/PSP. Base5080b833e. PRIMARY3000/5088 SingleStore/store-alpha/tooba_alpha
 (Host PID35260 tb243-primary; FE46476 unchanged). LANDED: CatalogShippingWeightGrams Code*_weight+IsActive;
