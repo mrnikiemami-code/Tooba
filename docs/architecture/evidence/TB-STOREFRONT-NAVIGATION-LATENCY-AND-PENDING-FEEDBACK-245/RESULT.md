@@ -43,4 +43,4 @@ Cart `01a17b2d-e219…` Active v48 qty18, checkouts 0; shipping config untouched
 Expected-Base-SHA: `717c2dd42` (issue commit containing this task)  
 Base-SHA: `2620f80911d2af6a67805f92d253b3371486894b` (main at claim; parent 244-R3 source present)  
 Code-SHA: `42a93601d45921766e69008dae098b86018894e0`
-Evidence-SHA: `42a93601d45921766e69008dae098b86018894e0`
+Evidence-SHA: `1ad04c87df33e187a99d72222cd8fde0bf315217`
