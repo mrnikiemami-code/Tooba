@@ -25,10 +25,12 @@ public interface ICatalogCheckoutLookup
     /// Authoritative shipping weight in whole grams keyed by variant id.
     /// </summary>
     /// <remarks>
-    /// Sourced only from stored Number attribute values whose definition unit is
-    /// <c>g</c> or <c>kg</c> (case-insensitive). Variant-level values override product-level for
-    /// the same definition. Missing, unparsable, non-positive, or conflicting converted grams
-    /// yield a missing map entry (caller treats as measurement unknown). No invented defaults.
+    /// Sourced only from <b>active</b> Number definitions whose machine Code is the established
+    /// shipping/product weight identity (<c>weight</c> or <c>*_weight</c>); unit <c>g</c>/<c>kg</c>
+    /// is conversion metadata only. Variant value overrides the same product definition when
+    /// present; a present invalid/conflicting override stays unknown (never healed from product).
+    /// Missing, unparsable, non-positive, overflow, or conflicting effective grams yield a missing
+    /// map entry. Cancellation/provider failure propagates. No invented defaults.
     /// </remarks>
     Task<IReadOnlyDictionary<Guid, long?>> GetShippingWeightGramsByVariantIdsAsync(
         IReadOnlyCollection<Guid> variantIds,

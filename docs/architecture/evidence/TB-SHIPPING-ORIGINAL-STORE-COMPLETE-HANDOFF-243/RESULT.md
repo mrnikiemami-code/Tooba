@@ -16,6 +16,11 @@ Code-SHA: 7ea79556fa91fa8fe00b5fa45b349023d8ae7c88
 Evidence-SHA: 4f21dc069e09d4b94676ca959151b047c25ddcb8
 automaticNextImplementationTask: NONE
 
+ARCHITECT CORRECTION (2026-10-29): Worker PASS was NOT Architect-accepted. Decision = PARTIAL.
+Open regressions closed by TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1 (weight authority,
+post:standard restore + binding null-probe, StartPayment abuse-lock 500, proven 60/120/60 slots).
+Do not treat this RESULT as full original-store delivery acceptance.
+
 PRIMARY http://127.0.0.1:3000/fa/shipping → Host 127.0.0.1:5088
 FE PID46476 (D:\temp\tb243-fe next start, source 7ea79556f); Host PID8856 (D:\temp\tb243-primary, DeploymentId=store-alpha-tb243-primary).
 Edition=SingleStore Tenant=store-alpha DB=tooba_alpha. Marketplace primary NOT used. CDP9350/9351 frozen (not enumerated).

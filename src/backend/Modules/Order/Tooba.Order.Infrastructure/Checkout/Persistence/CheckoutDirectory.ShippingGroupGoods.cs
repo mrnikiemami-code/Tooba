@@ -96,13 +96,29 @@ public sealed partial class CheckoutDirectory : ICheckoutShippingGroupGoodsFacts
                 return null;
             }
 
-            var lineGrams = (decimal)unitGrams.Value * line.Quantity;
+            decimal lineGrams;
+            try
+            {
+                lineGrams = checked((decimal)unitGrams.Value * line.Quantity);
+            }
+            catch (OverflowException)
+            {
+                return null;
+            }
+
             if (lineGrams <= 0m || lineGrams != decimal.Truncate(lineGrams) || lineGrams > long.MaxValue)
             {
                 return null;
             }
 
-            total += (long)lineGrams;
+            try
+            {
+                total = checked(total + (long)lineGrams);
+            }
+            catch (OverflowException)
+            {
+                return null;
+            }
         }
 
         return total > 0 ? total : null;

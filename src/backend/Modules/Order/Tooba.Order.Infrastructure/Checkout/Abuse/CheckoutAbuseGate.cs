@@ -142,27 +142,18 @@ public sealed class CheckoutAbuseGate : ICheckoutAbuseGate
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        var row = await _orders.CheckoutAbuseCustomerLocks
-            .SingleOrDefaultAsync(x => x.CustomerId == customerId, cancellationToken);
-        if (row is null)
-        {
-            var created = new CheckoutAbuseCustomerLock { CustomerId = customerId, TouchedAt = now };
-            _orders.CheckoutAbuseCustomerLocks.Add(created);
-            try
-            {
-                await _orders.SaveChangesAsync(cancellationToken);
-                return;
-            }
-            catch (DbUpdateException)
-            {
-                _orders.Entry(created).State = EntityState.Detached;
-                row = await _orders.CheckoutAbuseCustomerLocks
-                    .SingleAsync(x => x.CustomerId == customerId, cancellationToken);
-            }
-        }
-
-        row.TouchedAt = now;
-        await _orders.SaveChangesAsync(cancellationToken);
+        // TB-243-R1: StartPayment runs inside an ambient TransactionScope. A losing INSERT that
+        // raises 23505 on pk_checkout_abuse_customer_locks aborts that PG transaction; a subsequent
+        // SingleAsync then escapes as 25P02 → HTTP 500. Upsert via ON CONFLICT never raises 23505
+        // and keeps the ambient submit transaction usable for the winner and concurrent loser.
+        await _orders.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO "order".checkout_abuse_customer_locks (customer_id, touched_at)
+             VALUES ({customerId}, {now})
+             ON CONFLICT (customer_id) DO UPDATE
+             SET touched_at = EXCLUDED.touched_at
+             """,
+            cancellationToken);
     }
 
     /// <summary>

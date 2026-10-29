@@ -1,4 +1,13 @@
-# CURRENT — 243 ARCHITECT REVIEW PARTIAL; 243-R1 correction ISSUED — 2026-10-29
+# CURRENT — 243-R1 EXECUTED: weight authority + post:standard restore + StartPayment race + 60/120 slots — 2026-10-29
+Read docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status PASS within scope, NOT VisualACCEPT/PSP. Base5080b833e. PRIMARY3000/5088 SingleStore/store-alpha/tooba_alpha
+(Host PID35260 tb243-primary; FE46476 unchanged). LANDED: CatalogShippingWeightGrams Code*_weight+IsActive;
+per-def override/no heal; overflow checked; post:standard ACTIVE via one-level API; ResolveCatalogBindings null-probe;
+CheckoutAbuseGate ON CONFLICT (was pk_checkout_abuse_customer_locks23505→25P02→500); live60→8/120→4/60→8;
+concurrent StartPayment 200+409 no500, replay same ids; review cart Active v4. 243 PASS was Architect PARTIAL.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 243 ARCHITECT REVIEW PARTIAL; 243-R1 correction ISSUED — 2026-10-29
 Active TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1; read docs/ai/tasks/TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1/TASK.md and243 ARCHITECT-REVIEW.
 Original primary3000/5088 SingleStore/store-alpha/tooba_alpha retained. Real original method60min14–15 Order
 and unsubmitted review cart are progress, NOT full delivery acceptance.

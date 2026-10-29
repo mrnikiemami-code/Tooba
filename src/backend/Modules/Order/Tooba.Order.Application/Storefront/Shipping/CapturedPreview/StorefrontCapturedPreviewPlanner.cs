@@ -603,7 +603,11 @@ public sealed class StorefrontCapturedPreviewPlanner(
             .Select(translation => translation.Name)
             .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name));
 
-    /// <summary>Bindingهای واقعی کاتالوگ: سرویس با گزینهٔ تهی یا هر گزینهٔ فعال — بدون پارس برچسب.</summary>
+    /// <summary>
+    /// Bindingهای واقعی کاتالوگ: هر گزینهٔ فعال، و مسیر option=null وقتی سرویس بدون گزینه است یا
+    /// وقتی گزینه‌ها نباید مسیر تهیِ منتشرشده را سایه کنند. تطبیق نهایی با خواندن ۲۱۹ است — بدون
+    /// ساختن روش قیمت‌دار ساختگی و بدون پارس برچسب.
+    /// </summary>
     private async Task<IReadOnlyList<(string ServiceCode, string? OptionCode)>> ResolveCatalogBindingsAsync(
         CancellationToken cancellationToken)
     {
@@ -613,21 +617,6 @@ public sealed class StorefrontCapturedPreviewPlanner(
         foreach (var service in snapshot.Where(service => service.IsActive))
         {
             var options = service.Options.Where(option => option.IsActive).ToArray();
-            if (options.Length == 0)
-            {
-                if (seen.Add(new StorefrontCapturedPublicationBinding(
-                        default,
-                        null,
-                        null,
-                        service.Code,
-                        null)))
-                {
-                    bindings.Add((service.Code, null));
-                }
-
-                continue;
-            }
-
             foreach (var option in options)
             {
                 if (seen.Add(new StorefrontCapturedPublicationBinding(
@@ -639,6 +628,19 @@ public sealed class StorefrontCapturedPreviewPlanner(
                 {
                     bindings.Add((service.Code, option.Code));
                 }
+            }
+
+            // Null-option is a distinct publishable identity (authoring option_code NULL). Active
+            // options must not shadow it: probe (service, null) so a Selected 219 for that exact
+            // binding can surface. ReadAsync below is the authority — no synthetic priced method.
+            if (seen.Add(new StorefrontCapturedPublicationBinding(
+                    default,
+                    null,
+                    null,
+                    service.Code,
+                    null)))
+            {
+                bindings.Add((service.Code, null));
             }
         }
 

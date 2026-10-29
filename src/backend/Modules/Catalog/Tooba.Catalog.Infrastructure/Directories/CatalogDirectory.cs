@@ -23,6 +23,7 @@ using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
+using Tooba.Catalog.Domain.Rules;
 using Tooba.Catalog.Infrastructure.Persistence;
 
 namespace Tooba.Catalog.Infrastructure.Directories;
@@ -280,19 +281,25 @@ public sealed class CatalogDirectory :
             return new Dictionary<Guid, long?>();
         }
 
-        var weightDefinitions = await _db.AttributeDefinitions.AsNoTracking()
+        // Load Number definitions that could carry units; semantic identity + IsActive applied in-process
+        // so CatalogShippingWeightGrams remains the single authority (EF cannot call that helper).
+        var candidateDefinitions = await _db.AttributeDefinitions.AsNoTracking()
             .Where(d => d.ValueKind == CatalogAttributeValueKind.Number && d.Unit != null)
-            .Select(d => new { d.DefinitionId, d.Unit })
+            .Select(d => new { d.DefinitionId, d.Code, d.ValueKind, d.IsActive, d.Unit })
             .ToListAsync(cancellationToken);
         var unitByDefinition = new Dictionary<Guid, string>();
-        foreach (var definition in weightDefinitions)
+        foreach (var definition in candidateDefinitions)
         {
-            var unit = definition.Unit!.Trim();
-            if (unit.Equals("g", StringComparison.OrdinalIgnoreCase)
-                || unit.Equals("kg", StringComparison.OrdinalIgnoreCase))
+            if (!CatalogShippingWeightGrams.IsShippingWeightDefinition(
+                    definition.Code,
+                    definition.ValueKind,
+                    definition.IsActive,
+                    definition.Unit))
             {
-                unitByDefinition[definition.DefinitionId] = unit;
+                continue;
             }
+
+            unitByDefinition[definition.DefinitionId] = definition.Unit!.Trim();
         }
 
         if (unitByDefinition.Count == 0)
@@ -311,32 +318,30 @@ public sealed class CatalogDirectory :
             .Select(v => new { v.VariantId, v.DefinitionId, v.CanonicalValue })
             .ToListAsync(cancellationToken);
 
-        var productGramsByProduct = new Dictionary<Guid, long?>();
-        foreach (var productGroup in productValues.GroupBy(v => v.ProductId))
-        {
-            productGramsByProduct[productGroup.Key] = ResolveUniqueWeightGrams(
-                productGroup.Select(v => (v.DefinitionId, v.CanonicalValue)),
-                unitByDefinition);
-        }
+        var productValuesByProduct = productValues
+            .GroupBy(v => v.ProductId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>)g
+                    .Select(v => (v.DefinitionId, v.CanonicalValue))
+                    .ToArray());
+        var variantValuesByVariant = variantValues
+            .GroupBy(v => v.VariantId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>)g
+                    .Select(v => (v.DefinitionId, v.CanonicalValue))
+                    .ToArray());
 
         var result = new Dictionary<Guid, long?>();
         foreach (var row in variantRows)
         {
-            var variantOverrides = variantValues
-                .Where(v => v.VariantId == row.VariantId)
-                .Select(v => (v.DefinitionId, v.CanonicalValue))
-                .ToList();
-            long? grams = null;
-            if (variantOverrides.Count > 0)
-            {
-                grams = ResolveUniqueWeightGrams(variantOverrides, unitByDefinition);
-            }
-
-            if (grams is null)
-            {
-                productGramsByProduct.TryGetValue(row.ProductId, out grams);
-            }
-
+            productValuesByProduct.TryGetValue(row.ProductId, out var productForRow);
+            variantValuesByVariant.TryGetValue(row.VariantId, out var variantForRow);
+            var grams = CatalogShippingWeightGrams.ResolveEffectiveGrams(
+                unitByDefinition,
+                productForRow ?? Array.Empty<(Guid, string)>(),
+                variantForRow ?? Array.Empty<(Guid, string)>());
             if (grams is not null)
             {
                 result[row.VariantId] = grams;
@@ -344,62 +349,6 @@ public sealed class CatalogDirectory :
         }
 
         return result;
-    }
-
-    private static long? ResolveUniqueWeightGrams(
-        IEnumerable<(Guid DefinitionId, string CanonicalValue)> values,
-        IReadOnlyDictionary<Guid, string> unitByDefinition)
-    {
-        long? agreed = null;
-        foreach (var (definitionId, canonicalValue) in values)
-        {
-            if (!unitByDefinition.TryGetValue(definitionId, out var unit))
-            {
-                continue;
-            }
-
-            var converted = ConvertCanonicalWeightToGrams(canonicalValue, unit);
-            if (converted is null)
-            {
-                return null;
-            }
-
-            if (agreed is null)
-            {
-                agreed = converted;
-            }
-            else if (agreed.Value != converted.Value)
-            {
-                return null;
-            }
-        }
-
-        return agreed;
-    }
-
-    private static long? ConvertCanonicalWeightToGrams(string canonicalValue, string unit)
-    {
-        if (string.IsNullOrWhiteSpace(canonicalValue)
-            || !decimal.TryParse(
-                canonicalValue.Trim(),
-                System.Globalization.NumberStyles.Number,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out var amount)
-            || amount <= 0m)
-        {
-            return null;
-        }
-
-        var grams = unit.Equals("kg", StringComparison.OrdinalIgnoreCase)
-            ? amount * 1000m
-            : amount;
-        if (grams != decimal.Truncate(grams) || grams > long.MaxValue)
-        {
-            return null;
-        }
-
-        var whole = (long)grams;
-        return whole > 0 ? whole : null;
     }
 
     /// <inheritdoc />

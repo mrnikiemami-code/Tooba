@@ -204,8 +204,11 @@ public class StorefrontCapturedPreviewPlannerTests
             LanguageId,
             CancellationToken.None);
 
-        // دو Binding واقعی کاتالوگ ⇒ دقیقاً دو خواندن ۲۱۹ برای همان مالک (نه بیشتر، نه کمتر).
-        Assert.Equal(2, selected.Calls);
+        // Active options + null-option probe ⇒ three 219 reads for the same owner (no Selected).
+        Assert.Equal(3, selected.Calls);
+        Assert.Contains(selected.Requests, request => request.OptionCode is null);
+        Assert.Contains(selected.Requests, request => request.OptionCode == "standard");
+        Assert.Contains(selected.Requests, request => request.OptionCode == "express");
         Assert.All(selected.Requests, request =>
         {
             Assert.Equal(ShippingCapturedQuoteOwnerKind.Store, request.OwnerKind);
@@ -229,11 +232,13 @@ public class StorefrontCapturedPreviewPlannerTests
         catalog.Services = [Service("post", "standard")];
         var otherType = Guid.Parse("01a1785e-6b50-7000-a98f-2e1c80544815");
         var selected = new SelectedCaptureFake();
-        selected.Respond = request => Selected(
-            request,
-            shippingTypeId: otherType,
-            draftId: Guid.NewGuid(),
-            revision: 4);
+        selected.Respond = request => request.OptionCode is null
+            ? Absent()
+            : Selected(
+                request,
+                shippingTypeId: otherType,
+                draftId: Guid.NewGuid(),
+                revision: 4);
         var goods = new FixedGoodsFactsReader(null);
         var planner = Planner(true, assignments, catalog, ActiveTypeFake(), selected, goodsFacts: goods);
 
@@ -319,7 +324,10 @@ public class StorefrontCapturedPreviewPlannerTests
         var selected = new SelectedCaptureFake
         {
             // هر دو گروه Platform/Store با یک Binding کاتالوگ‌اند: یک انتخاب سرور، نه دو.
-            Respond = request => Selected(request, StoreTypeId, DraftA, revision: 3),
+            // Null-option is probed but has no Selected capture here.
+            Respond = request => request.OptionCode is null
+                ? Absent()
+                : Selected(request, StoreTypeId, DraftA, revision: 3),
         };
 
         var planner = Planner(
@@ -376,7 +384,8 @@ public class StorefrontCapturedPreviewPlannerTests
             [DraftA, DraftA],
             shipping.Requests.Select(request => request.DraftId).ToArray());
         Assert.All(shipping.Requests, request => Assert.Equal(3, request.SourceRevision));
-        Assert.Equal(1, selected.Calls);
+        // Shared Store owner: active option + null-option probe once each (pointer cache).
+        Assert.Equal(2, selected.Calls);
 
         var quotedGroups = result.Groups.Where(group => group.Methods.Count > 0).ToArray();
         Assert.Equal(2, quotedGroups.Length);
@@ -417,12 +426,14 @@ public class StorefrontCapturedPreviewPlannerTests
         catalog.Services = [Service("post", "standard", "express")];
         var selected = new SelectedCaptureFake
         {
-            Respond = request => Selected(
-                request,
-                StoreTypeId,
-                request.OptionCode == "express" ? DraftB : DraftA,
-                revision: request.OptionCode == "express" ? 5 : 3,
-                label: "ارسال یکسان"),
+            Respond = request => request.OptionCode is null
+                ? Absent()
+                : Selected(
+                    request,
+                    StoreTypeId,
+                    request.OptionCode == "express" ? DraftB : DraftA,
+                    revision: request.OptionCode == "express" ? 5 : 3,
+                    label: "ارسال یکسان"),
         };
         var shipping = new RecordingCapturedQuoteLookup
         {
@@ -477,7 +488,9 @@ public class StorefrontCapturedPreviewPlannerTests
         catalog.Services = [Service("POST", "standard")];
         var selected = new SelectedCaptureFake
         {
-            Respond = request => Selected(request, StoreTypeId, DraftA, revision: 3),
+            Respond = request => request.OptionCode is null
+                ? Absent()
+                : Selected(request, StoreTypeId, DraftA, revision: 3),
         };
         var shipping = new RecordingCapturedQuoteLookup
         {
@@ -503,8 +516,70 @@ public class StorefrontCapturedPreviewPlannerTests
             LanguageId,
             CancellationToken.None);
 
-        Assert.Equal(1, selected.Calls);
+        // Active option + null-option probe (null Absent) — one Selected candidate.
+        Assert.Equal(2, selected.Calls);
         Assert.Single(Assert.Single(result.Groups).Methods);
+    }
+
+    /// <summary>
+    /// TB-243-R1: post/NULL and post:standard coexist when both have Selected captures;
+    /// active options no longer shadow the null-option publication identity.
+    /// </summary>
+    [Fact]
+    public async Task Null_option_and_named_option_bindings_both_survive_when_selected()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        var assignments = new AssignmentFake();
+        assignments.Values[OfferA] = Assignment(
+            OfferA,
+            harness.SellerId,
+            OfferFulfillmentResponsibility.Platform,
+            StoreTypeId);
+        var catalog = new CatalogFake();
+        catalog.Services = [Service("post", "standard")];
+        var selected = new SelectedCaptureFake
+        {
+            Respond = request => Selected(
+                request,
+                StoreTypeId,
+                request.OptionCode is null ? DraftA : DraftB,
+                revision: request.OptionCode is null ? 2 : 4,
+                label: request.OptionCode is null ? "پست بدون گزینه" : "پست استاندارد"),
+        };
+        var shipping = new RecordingCapturedQuoteLookup
+        {
+            Respond = request => Quoted(
+                request,
+                10_000m,
+                0m,
+                week: null,
+                optionCode: request.DraftId == DraftA ? null : "standard"),
+        };
+        harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
+        var planner = Planner(
+            true,
+            assignments,
+            catalog,
+            ActiveTypeFake(),
+            selected,
+            composer: new StorefrontCapturedGroupProjectionComposer(
+                harness.Directory,
+                shipping,
+                new MutableClock(new DateTimeOffset(2026, 10, 24, 8, 0, 0, TimeSpan.Zero))));
+
+        var result = await planner.BuildAsync(
+            CartFor(harness.CartId, Line(LineA, OfferA, harness.SellerId)),
+            new CartAccess(harness.UserId, null),
+            Destination,
+            "IRR",
+            LanguageId,
+            CancellationToken.None);
+
+        var group = Assert.Single(result.Groups);
+        Assert.Equal(2, group.Methods.Count);
+        Assert.Contains(group.Methods, method => method.OptionCode is null);
+        Assert.Contains(group.Methods, method => method.OptionCode == "standard");
+        Assert.Equal(2, selected.Calls);
     }
 
     /// <summary>مقدار مسئولیت ناشناخته رد می‌شود و هرگز به Store/Platform پیش‌فرض نمی‌افتد.</summary>
@@ -583,7 +658,9 @@ public class StorefrontCapturedPreviewPlannerTests
         catalog.Services = [Service("post", "standard")];
         var selected = new SelectedCaptureFake
         {
-            Respond = request => Selected(request, StoreTypeId, DraftA, revision: 3),
+            Respond = request => request.OptionCode is null
+                ? Absent()
+                : Selected(request, StoreTypeId, DraftA, revision: 3),
         };
         var shipping = new RecordingCapturedQuoteLookup { Failure = new InvalidOperationException("owner down") };
         harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
@@ -735,6 +812,21 @@ public class StorefrontCapturedPreviewPlannerTests
                 true,
                 10,
                 [new ShippingCatalogOptionTranslationSnapshot(LanguageId, option)])).ToArray());
+
+    private static ShippingSelectedCapturedRevisionResult Absent() =>
+        new(
+            ShippingSelectedCaptureVerdict.Absent,
+            null,
+            ShippingSelectedCaptureReadState.Absent,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            []);
 
     private static ShippingSelectedCapturedRevisionResult Selected(
         ShippingSelectedCapturedRevisionRequest request,
