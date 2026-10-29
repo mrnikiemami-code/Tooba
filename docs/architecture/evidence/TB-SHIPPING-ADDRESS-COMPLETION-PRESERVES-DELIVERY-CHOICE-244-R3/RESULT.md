@@ -1,4 +1,4 @@
-# TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3 — WORKER RESULT
+﻿# TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3 — WORKER RESULT
 
 Status: **PASS** within scope. Stop-State: STOP_FOR_ARCHITECT. automaticNextImplementationTask: NONE.  
 Worker result ≠ Architect / Visual / PSP acceptance.
@@ -44,8 +44,8 @@ often coincided with that wipe, so the user saw day/hour disappear.
 ## SHAs
 
 Expected-Base-SHA / Base-SHA: `e9495b0388dae6e878cb8349bb58e25be8a69e18`  
-Code-SHA: *(this implementation commit)*  
-Evidence-SHA: *(same evidence commit or follow-up pin)*  
+Code-SHA: `f870c716a4a0f2c132b19dd8db5cc96041edee30`  
+Evidence-SHA: `f870c716a4a0f2c132b19dd8db5cc96041edee30` (pin commit may follow)  
 local==origin/main after push.
 
 ## Touched files

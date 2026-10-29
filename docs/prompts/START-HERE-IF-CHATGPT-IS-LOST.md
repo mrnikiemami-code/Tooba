@@ -10,7 +10,7 @@ checkouts 0; URL `http://127.0.0.1:3000/fa/payment?cartId=01a17b2d-e219…` unsu
 STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
 
 
-# CURRENT — ONLY 244-R3 IS ACTIVE; 245 WITHDRAWN — 2026-10-29
+# SUPERSEDED — ONLY 244-R3 IS ACTIVE; 245 WITHDRAWN — 2026-10-29
 
 Active task: `TB-SHIPPING-ADDRESS-COMPLETION-PRESERVES-DELIVERY-CHOICE-244-R3`  
 State: **IN PROGRESS / awaiting worker result**  
