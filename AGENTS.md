@@ -1,4 +1,15 @@
-# CURRENT — 244 FINAL DELIVERY ON USER CANONICAL PROJECT / DATABASE / ACCOUNT / CART — 2026-10-29
+# CURRENT — 244 EXECUTED: actual user cart payment-ready on canonical 3000/5088 (tooba_alpha) — 2026-10-29
+
+Read docs/architecture/evidence/TB-SHIPPING-USER-ENVIRONMENT-ACTUAL-CART-DELIVERY-244/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT/PSP. Base/issue 183aa2ba6; Code-SHA NONE (config+evidence).
+Canonical FE3000 (src/frontend) + Host5088 publish-primary SingleStore/store-alpha/tooba_alpha.
+Actual buyer 01a0996c… cart 01a17b2d-e219… Active v48 qty18: fulfillment Platform+type01a16f43 on 4 offers; mobile_weight kg+1.5;
+rate tiers adjacent to kept 1000–2000; selection200 rev1 + stale twin; payment-draft200 ship250000 payable81661464.16;
+DB draft rev1 + 2 accepted groups 14:00–15:00 ticks504e9–540e9; 0 checkout/payment. Leave /fa/payment?cartId=… unsubmitted.
+Checked-in gates OFF/local primary ON; TB185 paused. STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — 244 ISSUED: final delivery on user canonical project/DB/account/cart — 2026-10-29
+# SUPERSEDED — 244 ISSUED DELIVERY ON USER CANONICAL PROJECT / DATABASE / ACCOUNT / CART — 2026-10-29
 
 Task: `TB-SHIPPING-USER-ENVIRONMENT-ACTUAL-CART-DELIVERY-244`  
 Parent: `TB-SHIPPING-ORIGINAL-STORE-DELIVERY-CLOSURE-243-R1`  
