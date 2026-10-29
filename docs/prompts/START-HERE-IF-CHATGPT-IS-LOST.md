@@ -1,4 +1,16 @@
-# CURRENT — 244-R1 EXECUTED BLOCKED: guessed data compensated; merchant-decision table — 2026-10-29
+# CURRENT — 244-R1 SAFE RECOVERY ACCEPTED; DELIVERY AWAITS MERCHANT VALUES — 2026-10-29
+
+Task: `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`  
+State: **ARCHITECT ACCEPTED AS COMPENSATION / BLOCKED AS DELIVERY**  
+automaticNextImplementationTask: **NONE**
+
+All guessed 244 merchant-data writes were compensated through owning APIs and the real cart remains Active with no
+checkout/payment. Delivery now requires explicit merchant responsibility/type, packaged per-unit weights and rate
+coverage outside the existing [1000,2000)g row. Do not issue or execute another implementation task until those
+values are supplied. The RESULT/RECEIPTS userId mismatch must also be corrected from the authenticated session.
+Stale rejected accepted-groups remain fail-closed and must be atomically replaced by a later lawful selection.
+
+# SUPERSEDED — 244-R1 EXECUTED BLOCKED: guessed data compensated; merchant-decision table — 2026-10-29
 
 Read evidence `TB-SHIPPING-USER-ENVIRONMENT-DATA-INTEGRITY-AND-DELIVERY-244-R1`. Status BLOCKED (compensation OK; no lawful green path).
 Base `9484c59a7`; Code NONE. Canonical 3000/5088 tooba_alpha; cart `01a17b2d-e219…` v48 unsubmitted.
