@@ -1,4 +1,11 @@
-# CURRENT — 246 ISSUED: sales-ready Shipping Admin authoring UI — 2026-11-01
+# CURRENT — 246 EXECUTED: sales-ready Shipping Admin authoring UI — 2026-11-01
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `b414e2099`.
+Canonical FE3000→Host5088. Draft `01a17d0d-e033…` unchanged (no save/publish).
+LANDED: header+badge+sticky `ذخیره تغییرات`; publication technical paragraphs removed from UI; schedule slot cards + FA 24h; destination chips; merchant tabs/cards. Focused 37/37 + typecheck + production build. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 246 ISSUED: sales-ready Shipping Admin authoring UI — 2026-11-01
 
 Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246`  
 Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6` (Architect accepted within scope)  
