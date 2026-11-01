@@ -1,3 +1,17 @@
+# CURRENT — 246-R2 ISSUED AFTER USER VISUAL REJECTION — 2026-11-01
+
+Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2`  
+Parent: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1`  
+Expected source base: `6e4b15cb9788e2204da92c674a7b862a678279ef` (fast-forward current docs)  
+State: **ISSUED / ACTIVE — R1 acceptance revoked**  
+automaticNextImplementationTask: `NONE`
+
+The user rejected the canonical R1 page as visually unacceptable. The receipt shows a fixed save bar covering the form, duplicate Save/Cancel, giant native radio circles, contradictory full-window/hourly controls, excessive header whitespace, and seven tall repetitive day cards. R2 rebuilds the same frontend composition into one compact toolbar, normal-size control glyphs with 44px label targets, one unambiguous slot selector and a compact seven-row schedule. Same FE3000/Host5088 route; frontend-only; no save/publish/data mutation; no worker screenshots.
+
+Read `docs/ai/tasks/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2/TASK.md` and the revocation at `docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 246-R1 ARCHITECT ACCEPTANCE REVOKED — 2026-11-01
+
 # CURRENT — 246-R1 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
 
 Accepted: the existing canonical Shipping authoring screen now has a compact merchant header, no internal publication prose, clear method/region tabs, understandable configured delivery scheduling, readable destination breadcrumbs and rate hierarchy, and 44px minimum authoring hit targets. The real authorized draft loaded on FE3000→Host5088 with DB languages fa-IR/en-US/ru-RU, seven day rows, full-window null slot mode and destination ایران. DOM receipts show no overflow at 1440/1024/390; no Save/publish/PUT occurred and draft revision 2 remained unchanged. Frontend-only; focused 44/44, typecheck and production build green.
