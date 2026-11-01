@@ -1,4 +1,16 @@
-# CURRENT — 245-R6 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
+# CURRENT — 246 ISSUED: sales-ready Shipping Admin authoring UI — 2026-11-01
+
+Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6` (Architect accepted within scope)  
+Expected base: `e1714cb64c468bba3b18ad2dae4cf02aa30f0a74`  
+State: **ISSUED / ACTIVE**  
+automaticNextImplementationTask: `NONE`
+
+User objective: polish the existing canonical Shipping authoring screen for sale-ready delivery. Remove internal publication prose, consolidate actions, make weekly slot behavior understandable, enlarge destination hierarchy and rates, and preserve all backend contracts/business rules on the same FE3000 route.
+
+Read `docs/ai/tasks/TB-SHIPPING-ADMIN-SALES-READY-UI-246/TASK.md`.
+
+# SUPERSEDED — 245-R6 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
 
 Accepted: the stale captured-selection advisory is now derived from current confirmed choices and disappears after lawful reselection; operation/network errors remain separate. Equal shipping methods are labeled by seller/store and the exact 125000 + 125000 = 250000 total remains authoritative.
 
