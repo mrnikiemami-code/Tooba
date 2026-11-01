@@ -1,3 +1,18 @@
+# CURRENT — 246-R3 TECHNICALLY READY; USER FUNCTIONAL / VISUAL ACCEPT PENDING — 2026-11-01
+
+Implementation task: `NONE`  
+Decision state: **PENDING_USER_FUNCTIONAL_AND_VISUAL_ACCEPT**  
+automaticNextImplementationTask: `NONE`
+
+Independent review accepts the overlap repair technically. The frontend now blocks exact and ancestor/descendant destination conflicts across every group before mutation and before Save, using only server-proven ancestry; sibling branches remain lawful and missing ancestry fails closed. The known `shipping.authoring.region_selection_overlap` code is presented as an actionable Regions message while raw diagnostics stay collapsed. Canonical FE3000 was rebuilt; the live exercise made no Save/PUT and draft revision 2 stayed unchanged.
+
+The worker header uses final Evidence-SHA `256565b...`; RECEIPTS retains an interim SHA. Review authority is the final evidence envelope. R2/R3 visual and functional acceptance must come from the user on the canonical route:
+`http://127.0.0.1:3000/admin/shipping-services/authoring/01a17d0d-e033-7000-af43-49a1daa28822?mode=edit`
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R3/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 246-R3 EXECUTED/PASS — 2026-11-01
+
 # CURRENT — 246-R3 EXECUTED: hierarchical destination exclusivity before Save — 2026-11-01
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
