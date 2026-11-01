@@ -121,7 +121,7 @@ const REGISTERED: Readonly<Record<string, { target: ServerFieldTarget; key: keyo
   "shipping.authoring.rate_overlap": { target: "rates", key: "rateRowServerError" },
   "shipping.authoring.rate_currency_mismatch": { target: "rates", key: "rateRowServerError" },
   "shipping.authoring.region_payload_invalid": { target: "regions", key: "fieldRejectedServer" },
-  "shipping.authoring.region_selection_overlap": { target: "regions", key: "fieldRejectedServer" },
+  "shipping.authoring.region_selection_overlap": { target: "regions", key: "regionSelectionOverlapServer" },
   "shipping.authoring.region_group_not_found": { target: "regions", key: "fieldRejectedServer" },
   "shipping.authoring.presentation_payload_invalid": { target: "name", key: "fieldRejectedServer" },
   "shipping.authoring.presentation_language_invalid": { target: "name", key: "fieldRejectedServer" },

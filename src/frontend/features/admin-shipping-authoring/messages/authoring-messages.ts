@@ -118,6 +118,12 @@ const fa = {
   destinationUnavailable: "خواندن جغرافیا موقتاً ممکن نیست.",
   destinationNetwork: "ارتباط با جغرافیا برقرار نشد.",
   destinationDuplicate: "این مقصد قبلاً به این گروه یا گروه دیگری اضافه شده است.",
+  destinationOverlapConflict:
+    "این مقصد با «{existing}» در «{group}» هم‌پوشانی دارد. ابتدا مقصد قبلی را حذف کنید یا مقصد دیگری انتخاب کنید.",
+  destinationOverlapTree:
+    "دو مقصد انتخاب‌شده یک محدوده جغرافیایی مشترک دارند. یکی از آن‌ها را حذف یا محدودتر کنید.",
+  regionSelectionOverlapServer:
+    "دو مقصد انتخاب‌شده یک محدوده جغرافیایی مشترک دارند. یکی از آن‌ها را حذف یا محدودتر کنید.",
   destinationOverlapHint:
     "اگر این مقصد زیر پوشش یک مقصد ذخیره‌شدهٔ بالاتر باشد، افزودن آن با قاعدهٔ عدم‌هم‌پوشانی رد می‌شود؛ می‌توانید شاخه را ببینید اما پوشش تکراری ذخیره نمی‌شود.",
   areaRangeTitle: "بازهٔ تحویل این محدودهٔ ارسال",
@@ -467,6 +473,12 @@ const en: Record<AuthoringMessageKey, string> = {
   destinationUnavailable: "The geography catalog is temporarily unavailable.",
   destinationNetwork: "The geography catalog could not be reached.",
   destinationDuplicate: "This destination is already added to this or another group.",
+  destinationOverlapConflict:
+    "This destination overlaps «{existing}» in «{group}». Remove the earlier destination first, or pick a different one.",
+  destinationOverlapTree:
+    "Two selected destinations share the same geographic coverage. Remove or narrow one of them.",
+  regionSelectionOverlapServer:
+    "Two selected destinations share the same geographic coverage. Remove or narrow one of them.",
   destinationOverlapHint:
     "If this destination is inside a stored higher-level coverage, adding it is rejected by the no-overlap rule; you can still browse the branch, but overlapping coverage is not saved.",
   areaRangeTitle: "Delivery range of this delivery area",

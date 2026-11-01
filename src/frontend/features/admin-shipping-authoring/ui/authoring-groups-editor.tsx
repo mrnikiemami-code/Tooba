@@ -13,8 +13,13 @@ import type { AuthoringLocale, AuthoringMessages } from "../messages/authoring-m
 import { authoringFormat } from "../messages/authoring-messages.ts";
 import type { EditorDocument, SelectedAreaRead } from "../model/editor-document.ts";
 import type { DestinationFactIndex } from "../model/editor-destination-ancestry.ts";
-import type { ResolvedAreaAncestry } from "../model/editor-edits.ts";
+import type { AreaAncestryResolver, ResolvedAreaAncestry } from "../model/editor-edits.ts";
 import { groupIssues, type GroupDraft, type GroupIssue } from "../model/editor-groups.ts";
+import {
+  existingDestinationRefs,
+  findDestinationOverlap,
+  type DestinationOverlapConflict,
+} from "../model/destination-overlap.ts";
 import {
   RATE_LIMITS,
   newRateRow,
@@ -65,6 +70,9 @@ export function AuthoringGroupsEditor({
   rates,
   rateIssues,
   unresolved,
+  overlaps,
+  ancestryResolver,
+  formatOverlap,
   editable,
   serverRateErrors,
   areaRanges,
@@ -89,6 +97,9 @@ export function AuthoringGroupsEditor({
   rates: RatesFormState;
   rateIssues: readonly RateRowIssue[];
   unresolved: readonly UnresolvedDraftSelection[];
+  overlaps: readonly DestinationOverlapConflict[];
+  ancestryResolver: AreaAncestryResolver;
+  formatOverlap: (conflict: DestinationOverlapConflict) => string;
   editable: boolean;
   /** Server rejections keyed by composite group+row ownership (`rateRowKey`), never row alone. */
   serverRateErrors?: ReadonlyMap<string, string>;
@@ -149,6 +160,13 @@ export function AuthoringGroupsEditor({
         const groupRateIssues = rateIssues.filter((issue) => issue.groupId === group.key);
         const groupGroupIssues = issues.filter((issue) => issue.groupKey === group.key);
         const groupUnresolved = unresolved.filter((entry) => entry.groupKey === group.key);
+        const groupOverlaps = overlaps.filter((entry) =>
+          group.areas.some(
+            (area) =>
+              areaIdentity(area) === areaIdentity(entry.existing) ||
+              areaIdentity(area) === areaIdentity(entry.candidate),
+          ),
+        );
         const stored = group.groupId === null ? null : document.regionGroups.find((entry) => entry.groupId === group.groupId) ?? null;
         const groupRows = rates[group.key] ?? [];
         /** ONE delivery range of the WHOLE area, derived from the rows the wire still repeats it on. */
@@ -277,11 +295,23 @@ export function AuthoringGroupsEditor({
                     const segments = index.segmentsOf(area);
                     const label = segments.length > 0 ? segments.join(" › ") : index.labelOf(area);
                     const isUnresolved = groupUnresolved.some((entry) => areaIdentity(entry.area) === areaIdentity(area));
+                    const isOverlap = groupOverlaps.some(
+                      (entry) =>
+                        areaIdentity(area) === areaIdentity(entry.existing) ||
+                        areaIdentity(area) === areaIdentity(entry.candidate),
+                    );
                     return (
                       <li
                         key={areaIdentity(area)}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-gray-800"
+                        className={
+                          isOverlap
+                            ? "inline-flex min-h-11 items-center gap-2 rounded-xl border border-danger/50 bg-red-50 px-3 py-1.5 text-sm text-gray-800"
+                            : "inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-gray-800"
+                        }
                         data-testid={`shipping-authoring-area-${area.kind}`}
+                        data-area-id={areaIdentity(area)}
+                        data-overlap={isOverlap ? "true" : undefined}
+                        tabIndex={isOverlap ? -1 : undefined}
                       >
                         <span aria-hidden className="text-base leading-none text-gray-500">⌖</span>
                         <span className="sr-only">{messages[AREA_KIND_LABEL_OF[area.kind]]}</span>
@@ -324,6 +354,11 @@ export function AuthoringGroupsEditor({
               {groupUnresolved.length > 0 ? (
                 <p role="alert" className="mt-1 text-[11px] font-semibold text-danger" data-testid="shipping-authoring-group-unresolved">
                   {messages.unresolvedDraftSelection}
+                </p>
+              ) : null}
+              {groupOverlaps.length > 0 ? (
+                <p role="alert" className="mt-1 text-[11px] font-semibold text-danger" data-testid="shipping-authoring-group-overlap">
+                  {formatOverlap(groupOverlaps[0]!)}
                 </p>
               ) : null}
             </div>
@@ -493,9 +528,10 @@ export function AuthoringGroupsEditor({
           languageId={contentLanguageId}
           messages={messages}
           disabled={!editable}
-          isSelected={(area) =>
-            groups.some((candidate) => candidate.areas.some((entry) => areaIdentity(entry) === areaIdentity(area)))
+          findOverlap={(area, ancestry) =>
+            findDestinationOverlap(area, ancestry, existingDestinationRefs(groups), ancestryResolver)
           }
+          formatOverlap={formatOverlap}
           onAdd={(area, ancestry, label, segments) =>
             onAddArea(destinationGroup, area, ancestry, label, segments.map((segment) => segment.label))
           }

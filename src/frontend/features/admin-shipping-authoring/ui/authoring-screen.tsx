@@ -14,6 +14,7 @@ import { Dialog } from "../../../design-system";
 import { loadAuthoringTypeChoices, type AuthoringTypeChoice } from "../api/authoring-lookup-api.ts";
 import type { EditorTransportFailure } from "../api/editor-document-api.ts";
 import { authoringMessages, authoringFormat, type AuthoringLocale, type AuthoringMessages } from "../messages/authoring-messages.ts";
+import { formatNumber } from "./authoring-format.ts";
 import type {
   AuthoringCalculationMode,
   EditorDocument,
@@ -25,6 +26,12 @@ import { useStoredTrails } from "./use-stored-trails.ts";
 import { buildAuthoringIntent, hasNoIssues, intentHasEdits } from "../model/authoring-intent.ts";
 import { resetAuthoringDrafts, seedAuthoringDrafts, type AuthoringDrafts } from "../model/authoring-drafts.ts";
 import { composeAncestryResolver, areaIdentity, unresolvedDraftSelections } from "../model/destination-choice.ts";
+import {
+  existingDestinationRefs,
+  findAllDestinationOverlaps,
+  findDestinationOverlap,
+  type DestinationOverlapConflict,
+} from "../model/destination-overlap.ts";
 import type { ResolvedAreaAncestry } from "../model/editor-edits.ts";
 import {
   withAddedGroup,
@@ -341,7 +348,9 @@ export function ShippingAuthoringScreen({
       label: string,
       trail: readonly string[],
     ) => {
-      if (blockedNow() || !form || !week) return;
+      if (blockedNow() || !form || !week || !resolver) return;
+      // Defense in depth: hierarchical exclusivity already refused in the modal; never mutate on conflict.
+      if (findDestinationOverlap(area, ancestry, existingDestinationRefs(groups), resolver) !== null) return;
       const nextGroups = withGroupAreaAdded(groups, groupKey, area);
       if (nextGroups === groups) return; // an exact duplicate is rejected locally, never double-sent
       setPickedFacts((previous) => new Map(previous).set(areaIdentity(area), ancestry));
@@ -354,7 +363,7 @@ export function ShippingAuthoringScreen({
       }
       commit(form, nextGroups, rates, week);
     },
-    [commit, form, groups, rates, week],
+    [commit, form, groups, rates, resolver, week],
   );
 
   const changeWeek = useCallback(
@@ -370,6 +379,32 @@ export function ShippingAuthoringScreen({
   const blockedByFacts = document && index ? !index.available : false;
   /** Only the PROPOSED tree blocks: a removed unresolved destination/group no longer does. */
   const unresolved = resolver ? unresolvedDraftSelections(groups, resolver) : [];
+  const destinationOverlaps = useMemo(
+    () => (resolver ? findAllDestinationOverlaps(groups, resolver) : []),
+    [groups, resolver],
+  );
+  const formatOverlap = useCallback(
+    (conflict: DestinationOverlapConflict) => {
+      const existingLabel =
+        index?.labelOf(conflict.existing)?.trim() ||
+        index?.segmentsOf(conflict.existing).join(" › ").trim() ||
+        messages.unavailableName;
+      const groupLabel = authoringFormat(messages.groupTitle, {
+        index: formatNumber(conflict.existingGroupIndex + 1, locale),
+      });
+      if (conflict.kind === "exact") {
+        return authoringFormat(messages.destinationOverlapConflict, {
+          existing: existingLabel,
+          group: groupLabel,
+        });
+      }
+      return authoringFormat(messages.destinationOverlapConflict, {
+        existing: existingLabel,
+        group: groupLabel,
+      });
+    },
+    [index, locale, messages],
+  );
   const formIssues = intent?.issues.general ?? [];
   const groupProblems = intent?.issues.groups ?? [];
   const rateRowIssues = intent?.issues.rates ?? [];
@@ -387,6 +422,7 @@ export function ShippingAuthoringScreen({
     hasNoIssues(intent.issues) &&
     !blockedByFacts &&
     unresolved.length === 0 &&
+    destinationOverlaps.length === 0 &&
     !session.commitUncertain &&
     session.load === "loaded";
   const apply = useCallback(async () => {
@@ -482,10 +518,25 @@ export function ShippingAuthoringScreen({
   const saveStatus: EditorSaveStatus = session.save;
   const saveFailure = session.saveFailure;
   /** Localized, actionable placement of the server's rejection on real fields of this screen. */
-  const serverIssues = useMemo(
-    () => (saveFailure ? serverFieldIssues(saveFailure, messages) : []),
-    [saveFailure, messages],
-  );
+  const serverIssues = useMemo(() => {
+    if (!saveFailure) return [];
+    const issues = serverFieldIssues(saveFailure, messages);
+    const hasOverlapCode =
+      (saveFailure.kind === "validation" || saveFailure.kind === "httpError" || saveFailure.kind === "conflict") &&
+      (saveFailure.errorCode === "shipping.authoring.region_selection_overlap" ||
+        saveFailure.errors.some((entry) => entry.codes.includes("shipping.authoring.region_selection_overlap")));
+    if (!hasOverlapCode) return issues;
+    const concrete =
+      destinationOverlaps.length > 0
+        ? formatOverlap(destinationOverlaps[0]!)
+        : messages.regionSelectionOverlapServer;
+    return issues.map((issue) =>
+      issue.target === "regions" ||
+      (issue.reason === messages.regionSelectionOverlapServer || issue.reason === messages.fieldRejectedServer)
+        ? { ...issue, reason: concrete, target: "regions" as const }
+        : issue,
+    );
+  }, [destinationOverlaps, formatOverlap, messages, saveFailure]);
   const serverCodes = useMemo(() => (saveFailure ? serverErrorCodes(saveFailure) : []), [saveFailure]);
   /** Reasons that belong next to their own field (not in the summary prose). */
   const fieldServerErrors = useMemo(() => {
@@ -514,20 +565,29 @@ export function ShippingAuthoringScreen({
    */
   const revealServerIssue = useCallback((issue: ServerFieldIssue) => {
     setTab(targetTab(issue.target));
-    const selector = serverIssueSelector(issue);
-    if (selector === null) return;
     window.requestAnimationFrame(() => {
+      if (issue.target === "regions" && destinationOverlaps.length > 0) {
+        const first = destinationOverlaps[0]!;
+        const overlapEl = globalThis.document.querySelector<HTMLElement>(
+          `[data-area-id="${areaIdentity(first.existing)}"][data-overlap="true"], [data-area-id="${areaIdentity(first.candidate)}"][data-overlap="true"]`,
+        );
+        if (overlapEl) {
+          overlapEl.scrollIntoView({ block: "center" });
+          overlapEl.focus({ preventScroll: true });
+          return;
+        }
+      }
+      const selector = serverIssueSelector(issue);
+      if (selector === null) return;
       const element = globalThis.document.querySelector<HTMLElement>(selector);
       if (!element) return;
-      // The target may be inside a collapsed disclosure (optional conditions): open ONLY the
-      // disclosures that contain it, so the input is focusable and still inside its own group.
       for (let parent = element.parentElement; parent !== null; parent = parent.parentElement) {
         if (parent instanceof HTMLDetailsElement && !parent.open) parent.open = true;
       }
       element.scrollIntoView({ block: "center" });
       element.focus({ preventScroll: true });
     });
-  }, []);
+  }, [destinationOverlaps]);
 
   // A new rejection immediately shows the failing section and focuses the first rejected field.
   const revealedFailure = useRef<EditorTransportFailure | null>(null);
@@ -713,7 +773,7 @@ export function ShippingAuthoringScreen({
             ))}
           </div>
 
-          {blockedByFacts || unresolved.length > 0 ? (
+          {blockedByFacts || unresolved.length > 0 || destinationOverlaps.length > 0 ? (
             <div
               role="alert"
               className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900"
@@ -733,6 +793,26 @@ export function ShippingAuthoringScreen({
                     ))}
                   </ul>
                 </>
+              ) : null}
+              {destinationOverlaps.length > 0 ? (
+                <button
+                  type="button"
+                  className="mt-1 block text-start font-normal underline decoration-dotted underline-offset-2"
+                  data-testid="shipping-authoring-overlap-summary"
+                  onClick={() => {
+                    setTab("regions");
+                    window.requestAnimationFrame(() => {
+                      const first = destinationOverlaps[0]!;
+                      const el = globalThis.document.querySelector<HTMLElement>(
+                        `[data-area-id="${areaIdentity(first.existing)}"][data-overlap="true"]`,
+                      );
+                      el?.scrollIntoView({ block: "center" });
+                      el?.focus({ preventScroll: true });
+                    });
+                  }}
+                >
+                  {formatOverlap(destinationOverlaps[0]!)}
+                </button>
               ) : null}
             </div>
           ) : null}
@@ -797,6 +877,9 @@ export function ShippingAuthoringScreen({
               areaRanges={areaRanges}
               areaRangeIssues={intent?.issues.areaRanges}
               unresolved={unresolved}
+              overlaps={destinationOverlaps}
+              ancestryResolver={resolver!}
+              formatOverlap={formatOverlap}
               editable={!readOnly && !busy}
               onAddGroup={addGroup}
               onRemoveGroup={removeGroup}

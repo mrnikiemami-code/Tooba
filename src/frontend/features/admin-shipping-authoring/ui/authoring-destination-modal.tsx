@@ -38,11 +38,11 @@ import {
   clearServiceArea,
   destinationAddAvailable,
   emptyStagedPath,
-  isDuplicateSelection,
   optionDisplayName,
   pathChoice,
   type StagedPath,
 } from "../model/destination-choice.ts";
+import type { DestinationOverlapConflict } from "../model/destination-overlap.ts";
 import { authoringFormat, type AuthoringMessages } from "../messages/authoring-messages.ts";
 import {
   createDestinationReadCoordinator,
@@ -77,7 +77,8 @@ export function AuthoringDestinationModal({
   languageId,
   messages,
   disabled,
-  isSelected,
+  findOverlap,
+  formatOverlap,
   onAdd,
   onClose,
 }: {
@@ -86,7 +87,13 @@ export function AuthoringDestinationModal({
   messages: AuthoringMessages;
   /** Save/reconcile/view: the modal shows the path but cannot add. */
   disabled: boolean;
-  isSelected: (area: SelectedAreaRead) => boolean;
+  /** Hierarchical exclusivity check for the proposed Add (exact + ancestor/descendant). */
+  findOverlap: (
+    area: SelectedAreaRead,
+    ancestry: ResolvedAreaAncestry,
+  ) => DestinationOverlapConflict | null;
+  /** Localized merchant text for a refused Add. */
+  formatOverlap: (conflict: DestinationOverlapConflict) => string;
   onAdd: (
     area: SelectedAreaRead,
     ancestry: ResolvedAreaAncestry,
@@ -206,8 +213,9 @@ export function AuthoringDestinationModal({
     const terminal = choiceTerminal(current);
     const ancestry = choiceAncestry(current);
     if (terminal === null || ancestry === null) return;
-    if (isDuplicateSelection(terminal, isSelected)) {
-      setRefusal(messages.destinationDuplicate);
+    const conflict = findOverlap(terminal, ancestry);
+    if (conflict !== null) {
+      setRefusal(formatOverlap(conflict));
       return;
     }
     setRefusal(null);
