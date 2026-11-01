@@ -1,3 +1,15 @@
+# CURRENT — 246-R1 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
+
+Accepted: the existing canonical Shipping authoring screen now has a compact merchant header, no internal publication prose, clear method/region tabs, understandable configured delivery scheduling, readable destination breadcrumbs and rate hierarchy, and 44px minimum authoring hit targets. The real authorized draft loaded on FE3000→Host5088 with DB languages fa-IR/en-US/ru-RU, seven day rows, full-window null slot mode and destination ایران. DOM receipts show no overflow at 1440/1024/390; no Save/publish/PUT occurred and draft revision 2 remained unchanged. Frontend-only; focused 44/44, typecheck and production build green.
+
+State: **ARCHITECT ACCEPTED within issued scope**  
+Active task: `NONE`  
+automaticNextImplementationTask: `NONE`
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 246-R1 EXECUTED/PASS — 2026-11-01
+
 # CURRENT — 246-R1 EXECUTED: complete sales-ready authoring UI + authorized live draft — 2026-11-01
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
