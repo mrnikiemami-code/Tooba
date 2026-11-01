@@ -262,10 +262,14 @@ export function AuthoringGeneralTab({
         ) : null}
       </section>
 
-      <div className="grid items-stretch gap-3 md:grid-cols-2">
-        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
-          <legend className="px-1 text-xs font-black text-gray-900">{messages.freightTitle}</legend>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+      <div className="grid items-start gap-4 md:grid-cols-2">
+        <fieldset className="grid gap-2">
+          <legend className="text-xs font-black text-gray-900">{messages.freightTitle}</legend>
+          <div
+            className="inline-flex max-w-full flex-wrap rounded-xl border border-border bg-surface p-0.5"
+            role="radiogroup"
+            aria-label={messages.freightTitle}
+          >
             {(["Prepaid", "CollectOnDelivery"] as FreightPaymentMode[]).map((mode) => {
               const selected = form.freightPaymentMode === mode;
               return (
@@ -273,13 +277,13 @@ export function AuthoringGeneralTab({
                   key={mode}
                   className={
                     selected
-                      ? "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-3 text-sm font-bold text-gray-900"
-                      : "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-gray-700"
+                      ? "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground focus-within:ring-2 focus-within:ring-primary/40"
+                      : "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-semibold text-gray-700 focus-within:ring-2 focus-within:ring-primary/40"
                   }
                 >
                   <input
                     type="radio"
-                    className="min-h-11 min-w-11 shrink-0 accent-primary"
+                    className="h-4 w-4 shrink-0 accent-primary"
                     name="authoring-freight-payer"
                     value={mode}
                     checked={selected}
@@ -293,13 +297,17 @@ export function AuthoringGeneralTab({
             })}
           </div>
           {serverErrors?.settings ? (
-            <p role="alert" className="mt-1 text-[11px] font-semibold text-danger">{serverErrors.settings}</p>
+            <p role="alert" className="text-[11px] font-semibold text-danger">{serverErrors.settings}</p>
           ) : null}
         </fieldset>
 
-        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
-          <legend className="px-1 text-xs font-black text-gray-900">{messages.calculationTitle}</legend>
-          <div className="mt-2 grid gap-2">
+        <fieldset className="grid gap-2">
+          <legend className="text-xs font-black text-gray-900">{messages.calculationTitle}</legend>
+          <div
+            className="inline-flex max-w-full flex-wrap rounded-xl border border-border bg-surface p-0.5"
+            role="radiogroup"
+            aria-label={messages.calculationTitle}
+          >
             {(["Manual", "CarrierApi", "Free"] as AuthoringCalculationMode[]).map((mode) => {
               const selected = form.calculationMode === mode;
               return (
@@ -307,13 +315,13 @@ export function AuthoringGeneralTab({
                   key={mode}
                   className={
                     selected
-                      ? "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-3 text-sm font-bold text-gray-900"
-                      : "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-gray-700"
+                      ? "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground focus-within:ring-2 focus-within:ring-primary/40"
+                      : "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-semibold text-gray-700 focus-within:ring-2 focus-within:ring-primary/40"
                   }
                 >
                   <input
                     type="radio"
-                    className="min-h-11 min-w-11 shrink-0 accent-primary"
+                    className="h-4 w-4 shrink-0 accent-primary"
                     name="authoring-calculation"
                     value={mode}
                     checked={selected}

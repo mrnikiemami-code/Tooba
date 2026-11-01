@@ -79,7 +79,7 @@ function TimeBoundInput({
         inputMode="numeric"
         placeholder="۰۹:۰۰"
         dir="ltr"
-        className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm tabular-nums disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-h-11 w-[7.5rem] max-w-full rounded-lg border border-border bg-surface px-2 text-sm tabular-nums disabled:cursor-not-allowed disabled:opacity-50"
         value={inputTime(value)}
         disabled={disabled}
         pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
@@ -93,7 +93,7 @@ function TimeBoundInput({
     <input
       type="time"
       dir="ltr"
-      className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+      className="min-h-11 w-[7.5rem] max-w-full rounded-lg border border-border bg-surface px-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
       value={inputTime(value)}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
@@ -276,67 +276,78 @@ export function AuthoringWeekEditor({
             </p>
           ) : null}
 
-          {/* TB-241 values unchanged; TB-246 presents null vs duration as merchant-facing options. */}
+          {/* TB-241 values unchanged; R2: one segmented mode; duration only when hourly. */}
           <fieldset className="grid gap-2" data-testid="shipping-authoring-week-slot-duration">
             <legend className="text-xs font-bold text-gray-800">{messages.weekSlotDuration}</legend>
             {editable ? (
-              <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={messages.weekSlotDuration}>
-                <label
-                  className={
-                    week.slotDurationMinutes === null
-                      ? "flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border-2 border-primary bg-primary/5 px-3 py-2"
-                      : "flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2"
-                  }
-                >
-                  <input
-                    type="radio"
-                    className="min-h-11 min-w-11 shrink-0 accent-primary"
-                    name="shipping-authoring-slot-mode"
-                    checked={week.slotDurationMinutes === null}
-                    onChange={() => onSlotDuration(null)}
-                    data-testid="shipping-authoring-week-slot-full-day"
-                  />
-                  <span className="grid gap-0.5">
-                    <span className="text-sm font-bold text-gray-900">{messages.weekSlotDurationFullDay}</span>
-                    <span className="text-xs text-gray-500">{messages.weekSlotDurationFullDayExample}</span>
-                  </span>
-                </label>
+              <>
                 <div
-                  className={
-                    week.slotDurationMinutes !== null
-                      ? "flex min-h-11 flex-col justify-center gap-1 rounded-xl border-2 border-primary bg-primary/5 px-3 py-2"
-                      : "flex min-h-11 flex-col justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2"
-                  }
+                  className="inline-flex max-w-full flex-wrap rounded-xl border border-border bg-surface p-0.5"
+                  role="radiogroup"
+                  aria-label={messages.weekSlotDuration}
                 >
-                  <span className="text-sm font-bold text-gray-900">{messages.weekSlotDurationHourly}</span>
-                  <select
-                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
-                    value={week.slotDurationMinutes === null ? "" : String(week.slotDurationMinutes)}
-                    data-testid="shipping-authoring-week-slot-duration-select"
-                    onChange={(event) => {
-                      if (event.target.value === "") {
-                        onSlotDuration(null);
-                        return;
-                      }
-                      onSlotDuration(Number(event.target.value));
-                    }}
-                    aria-label={messages.weekSlotDurationHourly}
+                  <label
+                    className={
+                      week.slotDurationMinutes === null
+                        ? "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground focus-within:ring-2 focus-within:ring-primary/40"
+                        : "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-semibold text-gray-700 focus-within:ring-2 focus-within:ring-primary/40"
+                    }
                   >
-                    <option value="">{messages.weekSlotDurationFullDay}</option>
-                    {week.slotDurationMinutes !== null
-                      && !(SLOT_DURATION_OPTIONS as readonly number[]).includes(week.slotDurationMinutes) ? (
+                    <input
+                      type="radio"
+                      className="h-4 w-4 shrink-0 accent-primary"
+                      name="shipping-authoring-slot-mode"
+                      checked={week.slotDurationMinutes === null}
+                      onChange={() => onSlotDuration(null)}
+                      data-testid="shipping-authoring-week-slot-full-day"
+                    />
+                    <span>{messages.weekSlotDurationFullDay}</span>
+                  </label>
+                  <label
+                    className={
+                      week.slotDurationMinutes !== null
+                        ? "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground focus-within:ring-2 focus-within:ring-primary/40"
+                        : "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-semibold text-gray-700 focus-within:ring-2 focus-within:ring-primary/40"
+                    }
+                  >
+                    <input
+                      type="radio"
+                      className="h-4 w-4 shrink-0 accent-primary"
+                      name="shipping-authoring-slot-mode"
+                      checked={week.slotDurationMinutes !== null}
+                      onChange={() => {
+                        if (week.slotDurationMinutes !== null) return;
+                        onSlotDuration(60);
+                      }}
+                      data-testid="shipping-authoring-week-slot-hourly"
+                    />
+                    <span>{messages.weekSlotDurationHourly}</span>
+                  </label>
+                </div>
+                {week.slotDurationMinutes !== null ? (
+                  <label className="grid max-w-xs gap-0.5">
+                    <span className="text-[11px] font-semibold text-gray-500">{messages.weekSlotDurationHourly}</span>
+                    <select
+                      className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+                      value={String(week.slotDurationMinutes)}
+                      data-testid="shipping-authoring-week-slot-duration-select"
+                      onChange={(event) => onSlotDuration(Number(event.target.value))}
+                      aria-label={messages.weekSlotDurationHourly}
+                    >
+                      {!(SLOT_DURATION_OPTIONS as readonly number[]).includes(week.slotDurationMinutes) ? (
                         <option value={String(week.slotDurationMinutes)}>
                           {week.slotDurationMinutes} {messages.weekSlotDurationMinutes}
                         </option>
                       ) : null}
-                    {SLOT_DURATION_OPTIONS.map((minutes) => (
-                      <option key={minutes} value={String(minutes)}>
-                        {minutes} {messages.weekSlotDurationMinutes}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                      {SLOT_DURATION_OPTIONS.map((minutes) => (
+                        <option key={minutes} value={String(minutes)}>
+                          {minutes} {messages.weekSlotDurationMinutes}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+              </>
             ) : (
               <p>
                 <span data-testid="shipping-authoring-week-slot-duration-value">
@@ -346,8 +357,12 @@ export function AuthoringWeekEditor({
                 </span>
               </p>
             )}
-            {editable && week.slotDurationMinutes !== null ? (
-              <p className="text-[11px] text-gray-500">{messages.weekSlotDurationHint}</p>
+            {editable ? (
+              <p className="text-[11px] text-gray-500">
+                {week.slotDurationMinutes === null
+                  ? messages.weekSlotDurationFullDayExample
+                  : messages.weekSlotDurationHint}
+              </p>
             ) : null}
             {issues.some((issue) => issue.code === "slotDurationInvalid") ? (
               <p role="alert" className="text-[11px] font-semibold text-danger">
@@ -356,7 +371,7 @@ export function AuthoringWeekEditor({
             ) : null}
           </fieldset>
 
-          <ul className="mt-2 grid gap-2" data-testid="shipping-authoring-week-days">
+          <ul className="mt-1 divide-y divide-border rounded-xl border border-border bg-surface" data-testid="shipping-authoring-week-days">
             {WEEK_DISPLAY_ORDER.map((weekday) => {
               const day = week.days.find((candidate) => candidate.weekday === weekday);
               if (!day) return null;
@@ -364,50 +379,48 @@ export function AuthoringWeekEditor({
               return (
                 <li
                   key={weekday}
-                  className="rounded-xl border border-border bg-surface px-3 py-2"
+                  className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 px-3 py-1.5"
                   data-testid={`shipping-authoring-week-day-${weekday}`}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-gray-900">{weekdayLabel(weekday, locale)}</span>
-                    {editable ? (
-                      <div className="inline-flex rounded-lg border border-border p-0.5" role="group" aria-label={messages.weekStatusColumn}>
-                        <button
-                          type="button"
-                          className={
-                            day.isWorking
-                              ? "inline-flex min-h-11 items-center rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground"
-                              : "inline-flex min-h-11 items-center rounded-md px-3 text-xs font-bold text-gray-600"
-                          }
-                          aria-pressed={day.isWorking}
-                          data-testid={`shipping-authoring-week-working-${weekday}`}
-                          onClick={() => onDayWorking(weekday, true)}
-                        >
-                          {messages.weekActive}
-                        </button>
-                        <button
-                          type="button"
-                          className={
-                            !day.isWorking
-                              ? "inline-flex min-h-11 items-center rounded-md bg-gray-800 px-3 text-xs font-bold text-white"
-                              : "inline-flex min-h-11 items-center rounded-md px-3 text-xs font-bold text-gray-600"
-                          }
-                          aria-pressed={!day.isWorking}
-                          data-testid={`shipping-authoring-week-closed-${weekday}`}
-                          onClick={() => onDayWorking(weekday, false)}
-                        >
-                          {messages.weekClosed}
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-xs font-semibold text-gray-700">
-                        {day.isWorking ? messages.weekActive : messages.weekClosed}
-                      </span>
-                    )}
-                  </div>
+                  <span className="w-20 shrink-0 text-sm font-bold text-gray-900">{weekdayLabel(weekday, locale)}</span>
+                  {editable ? (
+                    <div className="inline-flex rounded-lg border border-border p-0.5" role="group" aria-label={messages.weekStatusColumn}>
+                      <button
+                        type="button"
+                        className={
+                          day.isWorking
+                            ? "inline-flex min-h-11 items-center rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground"
+                            : "inline-flex min-h-11 items-center rounded-md px-3 text-xs font-bold text-gray-600"
+                        }
+                        aria-pressed={day.isWorking}
+                        data-testid={`shipping-authoring-week-working-${weekday}`}
+                        onClick={() => onDayWorking(weekday, true)}
+                      >
+                        {messages.weekActive}
+                      </button>
+                      <button
+                        type="button"
+                        className={
+                          !day.isWorking
+                            ? "inline-flex min-h-11 items-center rounded-md bg-gray-800 px-3 text-xs font-bold text-white"
+                            : "inline-flex min-h-11 items-center rounded-md px-3 text-xs font-bold text-gray-600"
+                        }
+                        aria-pressed={!day.isWorking}
+                        data-testid={`shipping-authoring-week-closed-${weekday}`}
+                        onClick={() => onDayWorking(weekday, false)}
+                      >
+                        {messages.weekClosed}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-semibold text-gray-700">
+                      {day.isWorking ? messages.weekActive : messages.weekClosed}
+                    </span>
+                  )}
                   {day.isWorking ? (
                     editable ? (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        <label className="grid min-w-0 gap-0.5">
+                      <div className="flex flex-wrap items-end gap-2">
+                        <label className="grid gap-0.5">
                           <span className="text-[11px] font-semibold text-gray-500">{messages.weekFromColumn}</span>
                           <TimeBoundInput
                             value={day.startTime}
@@ -417,7 +430,7 @@ export function AuthoringWeekEditor({
                             onChange={(next) => onDayTime(weekday, "startTime", next)}
                           />
                         </label>
-                        <label className="grid min-w-0 gap-0.5">
+                        <label className="grid gap-0.5">
                           <span className="text-[11px] font-semibold text-gray-500">{messages.weekToColumn}</span>
                           <TimeBoundInput
                             value={day.endTime}
@@ -430,22 +443,15 @@ export function AuthoringWeekEditor({
                       </div>
                     ) : (
                       <p
-                        className="mt-2 text-sm font-semibold text-gray-800"
+                        className="text-sm font-semibold text-gray-800"
                         data-testid={`shipping-authoring-week-range-${weekday}`}
                       >
                         {formatDayRange(day.startTime, day.endTime, locale)}
                       </p>
                     )
-                  ) : (
-                    <p
-                      className="mt-2 text-sm font-semibold text-gray-500"
-                      data-testid={`shipping-authoring-week-bounds-${weekday}`}
-                    >
-                      {messages.weekClosed}
-                    </p>
-                  )}
+                  ) : null}
                   {dayIssue ? (
-                    <p role="alert" className="mt-1 text-xs font-semibold text-danger">
+                    <p role="alert" className="w-full text-xs font-semibold text-danger">
                       {weekIssueMessage(dayIssue.code, messages)}
                     </p>
                   ) : null}

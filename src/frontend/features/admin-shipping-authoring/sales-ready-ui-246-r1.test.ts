@@ -58,7 +58,9 @@ test("screen keeps single header ownership and hides edit-mode publication chrom
   const screen = await readFile(new URL("ui/authoring-screen.tsx", import.meta.url), "utf8");
   const publication = await readFile(new URL("ui/authoring-publication-panel.tsx", import.meta.url), "utf8");
   assert.match(screen, /data-testid="shipping-authoring-page-header"/);
-  assert.match(screen, /data-testid="shipping-authoring-sticky-save"/);
+  assert.match(screen, /data-testid="shipping-authoring-toolbar"/);
+  assert.equal(screen.includes("shipping-authoring-sticky-save"), false);
+  assert.equal(screen.includes("fixed inset-x-0 bottom-0"), false);
   assert.match(screen, /data-testid="shipping-authoring-apply"/);
   assert.match(publication, /mode === "edit"/);
   assert.equal(publication.includes("shipping-authoring-publication-note"), false);
