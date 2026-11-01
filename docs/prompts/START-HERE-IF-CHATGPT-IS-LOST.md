@@ -1,4 +1,11 @@
-# CURRENT — 246-R1 ISSUED: complete Shipping Admin sales-ready UI — 2026-11-01
+# CURRENT — 246-R1 EXECUTED: complete sales-ready authoring UI + authorized live draft — 2026-11-01
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `b577bf7d2`.
+Canonical FE3000→Host5088. Draft `01a17d0d-e033…` rev2 loaded authorized; no save/publish.
+LANDED: 44px hit targets; destination/rate hierarchy; shared slot-duration authority; live CDP proof (آزمایش ارسال۲۳۰, 7 days, ایران, 0 overflow). Focused 44/44 + typecheck + production build. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 246-R1 ISSUED: complete Shipping Admin sales-ready UI — 2026-11-01
 
 Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1`  
 Parent: `TB-SHIPPING-ADMIN-SALES-READY-UI-246`  
@@ -12,7 +19,7 @@ Read `docs/ai/tasks/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1/TASK.md` and `docs/a
 
 # SUPERSEDED — 246 EXECUTED/PARTIAL — 2026-11-01
 
-# CURRENT — 246 EXECUTED: sales-ready Shipping Admin authoring UI — 2026-11-01
+# SUPERSEDED — 246 EXECUTED: sales-ready Shipping Admin authoring UI — 2026-11-01
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `b414e2099`.
