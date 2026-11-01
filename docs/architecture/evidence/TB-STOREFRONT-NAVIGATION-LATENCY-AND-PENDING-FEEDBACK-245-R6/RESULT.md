@@ -1,4 +1,4 @@
-# TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6 — WORKER RESULT
+﻿# TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6 — WORKER RESULT
 
 Status: **PASS** within scope. Stop-State: STOP_FOR_ARCHITECT. automaticNextImplementationTask: NONE.  
 Worker ≠ Architect / Visual ACCEPT.
@@ -33,4 +33,4 @@ Live FE3000→Host5088 cart `01a17b2d…` Active v48 qty18:
 Expected-Base: `a70afe3c5a352c0ad233e6ac4632f504e39dda82`  
 Base (issue FF): `b4d6cedf4325620d789035b1e470db54124590f6`  
 Code-SHA: `99fc13663ff03b30265f9635d718db96f5b28a7f`  
-Evidence-SHA: (filled in pin commit)
+Evidence-SHA: `6d5feb9aa47b849b206b7fda52c6d753513f4164`
