@@ -1,3 +1,19 @@
+# CURRENT — 246-R3 ISSUED: prevent and explain overlapping destinations — 2026-11-01
+
+Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R3`  
+Parent: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2`  
+Expected source base: `cadb45a42201b2e45b7414a7c6af59bc6607a4bc` (fast-forward task docs)  
+State: **ISSUED / ACTIVE — user Save rejected by owned overlap rule**  
+automaticNextImplementationTask: `NONE`
+
+User receipt: Save preserved edits but returned `shipping.authoring.region_selection_overlap`. Source review confirms the frontend checks exact destination identity only and does not preflight verified ancestor/descendant overlap across groups. R3 adds one pure hierarchy authority, blocks invalid Add before mutation, validates the whole proposed tree, identifies both conflicting destination/group owners, maps the known server code to actionable localized Regions copy, and keeps the backend exclusivity rule intact. No automatic deletion or merchant-choice guess.
+
+R2 visual decision remains pending user acceptance; do not declare the 246 chain complete.
+
+Read `docs/ai/tasks/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R3/TASK.md`.
+
+# SUPERSEDED — 246-R2 TECHNICALLY READY; FUNCTIONAL USER DEFECT FOUND — 2026-11-01
+
 # CURRENT — 246-R2 TECHNICALLY READY; USER VISUAL ACCEPT PENDING — 2026-11-01
 
 Implementation task: `NONE`  
