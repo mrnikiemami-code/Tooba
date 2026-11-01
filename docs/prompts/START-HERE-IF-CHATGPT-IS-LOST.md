@@ -1,4 +1,11 @@
-# CURRENT — 246-R2 ISSUED AFTER USER VISUAL REJECTION — 2026-11-01
+# CURRENT — 246-R2 EXECUTED: rebuild rejected authoring layout — 2026-11-01
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `4c88021d6`.
+Canonical FE3000→Host5088. Draft `01a17d0d-e033…` rev2 bytes2852 unchanged (no save/publish).
+LANDED: removed fixed overlay; one sticky content toolbar Save/Cancel; segmented freight/calc/slot; radio glyphs 16px inside 44px labels; hourly-only duration select; compact seven-day rows; live CDP 9339 (آزمایش ارسال۲۳۰, fa/en/ru, ایران, sticky=0, overflow false@1440/1024/390). Focused 50/50 + typecheck + production build. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 246-R2 ISSUED AFTER USER VISUAL REJECTION — 2026-11-01
 
 Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2`  
 Parent: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1`  
