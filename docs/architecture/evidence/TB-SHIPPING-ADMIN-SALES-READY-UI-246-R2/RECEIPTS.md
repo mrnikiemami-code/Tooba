@@ -1,4 +1,4 @@
-# RECEIPTS — TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2
+﻿# RECEIPTS — TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2
 
 ## Identity
 - TaskId: TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2
@@ -6,7 +6,7 @@
 - Expected-Base: 6e4b15cb9788e2204da92c674a7b862a678279ef
 - Base at claim (docs FF): 4c88021d6ffef34a42e31f6e89ff4b858722b5b9
 - Code-SHA: 6e779159d0fe25f8f30b162da6b71c4d2d8fc1b4
-- Evidence-SHA: (filled after evidence pin)
+- Evidence-SHA: c0a385796a8391505973f0a21dfbaffaaa1c2473
 - Canonical FE http://127.0.0.1:3000 → Host 5088 SingleStore/store-alpha/tooba_alpha
 - Draft: 01a17d0d-e033-7000-af43-49a1daa28822 revision 2 / bytes 2852 unchanged
 
