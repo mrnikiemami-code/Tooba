@@ -1,4 +1,11 @@
-# CURRENT — 246-R3 ISSUED: prevent and explain overlapping destinations — 2026-11-01
+# CURRENT — 246-R3 EXECUTED: hierarchical destination exclusivity before Save — 2026-11-01
+
+Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `7048dde03`.
+Canonical FE3000→Host5088. Draft `01a17d0d-e033…` rev2 bytes2852 unchanged (no save/publish).
+LANDED: pure destination-overlap authority; modal blocks overlapping Add; Save disabled on tree overlaps; region_selection_overlap maps to localized Regions copy; live CDP (ایران pick refused without chip mutation). Focused R3+adjacent green + typecheck + production build. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 246-R3 ISSUED: prevent and explain overlapping destinations — 2026-11-01
 
 Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R3`  
 Parent: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2`  
