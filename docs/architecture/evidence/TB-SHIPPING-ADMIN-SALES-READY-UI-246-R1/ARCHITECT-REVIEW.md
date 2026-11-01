@@ -1,3 +1,13 @@
+# USER VISUAL REJECTION / ARCHITECT ACCEPTANCE REVOKED — 2026-11-01
+
+Status: **REJECTED AFTER USER VISUAL REVIEW**
+
+The prior Architect acceptance below is revoked. The user's canonical screenshot shows a viewport-wide fixed save bar covering the form, duplicated Save/Cancel actions, giant radio glyphs caused by applying 44px directly to native controls, contradictory slot controls, and seven oversized repetitive day cards. Passing hit-target and overflow measurements did not establish acceptable composition or visual quality.
+
+Continuation: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2`.
+
+---
+
 # ARCHITECT REVIEW — TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1
 
 Status: **ARCHITECT ACCEPTED within issued scope**
