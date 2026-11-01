@@ -41,4 +41,4 @@ Exact projector on live decoded Host projection: shipping `250000.00`, goods `81
 Expected-Base: `caf49ef762a04c8bb83a25a86a1294e7b81b0c57`  
 Base (issue/docs FF at claim): `d6e07528022ed998aa19e6062f5e84b7081b7b2b`  
 Code-SHA: `44c82ae030b16455df2a2495bdef7a71b3bd07a0`  
-Evidence-SHA: (pin commit after this RESULT)
+Evidence-SHA: `0ded8e136bd001da6075784426bd661207a5eecb`
