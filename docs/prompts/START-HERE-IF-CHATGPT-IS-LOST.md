@@ -1,3 +1,17 @@
+# CURRENT — 246-R1 ISSUED: complete Shipping Admin sales-ready UI — 2026-11-01
+
+Active task: `TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1`  
+Parent: `TB-SHIPPING-ADMIN-SALES-READY-UI-246`  
+Expected base: `d31f6c2385d2a2a95ebb3cf770da7245671582a6`  
+State: **ISSUED / ACTIVE — 246 worker PASS rejected as PARTIAL**  
+automaticNextImplementationTask: `NONE`
+
+Architect review found 246 useful but incomplete: the real draft never loaded (agent session stopped at `loadDenied`), many edit controls remain below the required 44px target, and focused tests did not prove rendered destinations/rates/day states, handler identity or responsive layout. R1 keeps the valid header/copy/schedule work, completes control hierarchy and real component facts, and requires an authorized read-only live acceptance on the same FE3000 route with no save/publish/data mutation.
+
+Read `docs/ai/tasks/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R1/TASK.md` and `docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 246 EXECUTED/PARTIAL — 2026-11-01
+
 # CURRENT — 246 EXECUTED: sales-ready Shipping Admin authoring UI — 2026-11-01
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246/{TASK.md,RESULT.md,RECEIPTS.md}.
