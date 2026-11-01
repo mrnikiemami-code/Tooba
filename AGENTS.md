@@ -1,4 +1,12 @@
-# CURRENT — 245-R5 ISSUED: captured shipping summary exact live totals — 2026-11-01
+# CURRENT — 245-R5 EXECUTED: captured shipping summary exact live totals — 2026-11-01
+
+Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `d6e075280`.
+Canonical FE3000→Host5088. Cart `01a17b2d-e219…` Active v48 preserved.
+LANDED: pure `projectCapturedShippingSummary` (exact BigInt decimal; method by service/option; partial rows; pending hides money; carrier separate); summary DOM testids; Continue still from `resolveShippingContinueState`.
+Live: shipping ۲۵۰٬۰۰۰ / payable ۸۱٬۶۶۱٬۴۶۴ with incomplete recipient blocker; amounts stable after name fill. Focused 73/73 + typecheck + production build. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 245-R5 ISSUED: captured shipping summary exact live totals — 2026-11-01
 
 Active task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5`  
 Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4` (Architect accepted within scope)  
