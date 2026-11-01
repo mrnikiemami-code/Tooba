@@ -1,4 +1,12 @@
-# CURRENT — 245-R6 ISSUED: stale shipping revalidation error + fee-row ownership — 2026-11-01
+﻿# CURRENT — 245-R6 EXECUTED: revalidation advisory vs op errors + fee seller labels — 2026-11-01
+
+Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `b4d6cedf4`.
+Canonical FE3000→Host5088. Cart `01a17b2d-e219…` Active v48 preserved.
+LANDED: revalidation advisory derived (not copied into error); suppressed when captured selection complete; fee rows `seller — method`; R5 arithmetic retained.
+Live: advisory clears after both slots; آرمان/نیلوا — پیشتاز ۱۲۵٬۰۰۰; shipping ۲۵۰٬۰۰۰; recipient blocker only. Focused 80/80 + typecheck + production build. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 245-R6 ISSUED: stale shipping revalidation error + fee-row ownership — 2026-11-01
 
 Active task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6`  
 Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5` (Architect accepted within scope)  
