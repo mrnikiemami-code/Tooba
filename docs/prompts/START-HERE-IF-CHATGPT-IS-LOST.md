@@ -1,4 +1,14 @@
-# CURRENT — 245-R5 EXECUTED: captured shipping summary exact live totals — 2026-11-01
+# CURRENT — 245-R5 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
+
+Accepted: exact captured shipping summary now shows selected group fees and whole-cart shipping/payable immediately from the current confirmed server preview. Incomplete recipient data still blocks Continue without blanking lawful money; destination revalidation hides stale amounts.
+
+State: **ARCHITECT ACCEPTED within issued scope**  
+Active task: `NONE`  
+automaticNextImplementationTask: `NONE`
+
+Read `docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 245-R5 EXECUTED: captured shipping summary exact live totals — 2026-11-01
 
 Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `d6e075280`.
