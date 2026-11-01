@@ -1,4 +1,14 @@
-﻿# CURRENT — 245-R6 EXECUTED: revalidation advisory vs op errors + fee seller labels — 2026-11-01
+# CURRENT — 245-R6 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
+
+Accepted: the stale captured-selection advisory is now derived from current confirmed choices and disappears after lawful reselection; operation/network errors remain separate. Equal shipping methods are labeled by seller/store and the exact 125000 + 125000 = 250000 total remains authoritative.
+
+State: **ARCHITECT ACCEPTED within issued scope**  
+Active task: `NONE`  
+automaticNextImplementationTask: `NONE`
+
+Read `docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 245-R6 EXECUTED: revalidation advisory vs op errors + fee seller labels — 2026-11-01
 
 Read docs/architecture/evidence/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status EXECUTED/PASS within scope, NOT Architect/Visual ACCEPT. Base `b4d6cedf4`.
