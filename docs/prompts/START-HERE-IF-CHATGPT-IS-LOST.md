@@ -1,3 +1,18 @@
+# CURRENT — 246-R2 TECHNICALLY READY; USER VISUAL ACCEPT PENDING — 2026-11-01
+
+Implementation task: `NONE`  
+Decision state: **PENDING_USER_VISUAL_ACCEPT**  
+automaticNextImplementationTask: `NONE`
+
+Independent review confirms the rejected R1 causes are removed: no viewport-fixed overlay, exactly one Save/Cancel, 16px native radio glyphs inside 44px targets, one unambiguous full-window/hourly selector, and seven compact weekday rows with closed-day inputs hidden. Authorized FE3000 live receipts show no overflow at 1440/1024/390; draft revision 2 / 2852 bytes unchanged; no Save/publish/PUT. Focused 50/50, typecheck and production build green.
+
+Do not declare the 246 chain visually accepted until the user directly reviews the open canonical route:
+`http://127.0.0.1:3000/admin/shipping-services/authoring/01a17d0d-e033-7000-af43-49a1daa28822?mode=edit`
+
+Read `docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2/ARCHITECT-REVIEW.md`.
+
+# SUPERSEDED — 246-R2 EXECUTED/PASS — 2026-11-01
+
 # CURRENT — 246-R2 EXECUTED: rebuild rejected authoring layout — 2026-11-01
 
 Read docs/architecture/evidence/TB-SHIPPING-ADMIN-SALES-READY-UI-246-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
