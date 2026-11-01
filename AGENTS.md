@@ -1,4 +1,16 @@
-# CURRENT — 245-R5 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
+# CURRENT — 245-R6 ISSUED: stale shipping revalidation error + fee-row ownership — 2026-11-01
+
+Active task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5` (Architect accepted within scope)  
+Expected base: `a70afe3c5a352c0ad233e6ac4632f504e39dda82`  
+State: **ISSUED / ACTIVE**  
+automaticNextImplementationTask: `NONE`
+
+Measured defect: a projection revalidation advisory is copied into the generic long-lived error state and survives lawful reselection, so a correct 125000 + 125000 = 250000 summary coexists with a stale red “selection invalid” banner. Equal method rows also omit seller/store identity.
+
+Read `docs/ai/tasks/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R6/TASK.md`.
+
+# SUPERSEDED — 245-R5 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-11-01
 
 Accepted: exact captured shipping summary now shows selected group fees and whole-cart shipping/payable immediately from the current confirmed server preview. Incomplete recipient data still blocks Continue without blanking lawful money; destination revalidation hides stale amounts.
 
