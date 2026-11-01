@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Exact money TEXT field and its integer bound sibling.
@@ -65,7 +65,7 @@ export function BoundField({
         type="text"
         inputMode={inputMode}
         dir="ltr"
-        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+        className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
@@ -141,7 +141,7 @@ export function MoneyField({
         type="text"
         inputMode={policy === "integer" ? "numeric" : "decimal"}
         dir="ltr"
-        className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900 aria-[invalid=true]:border-danger"
+        className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900 aria-[invalid=true]:border-danger"
         value={displayMoneyText(value, policy)}
         placeholder={placeholder}
         data-testid={testId}

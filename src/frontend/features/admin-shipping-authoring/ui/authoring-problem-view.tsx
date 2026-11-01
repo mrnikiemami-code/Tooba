@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Presentational problem panels of the authoring editor (kept out of the screen composition).
@@ -116,7 +116,7 @@ export function AuthoringSaveFailurePanel({
       {status === "outcomeUnknown" || commitUncertain ? (
         <button
           type="button"
-          className="mt-2 inline-flex min-h-8 items-center rounded-lg border border-border px-2 text-gray-800"
+          className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-border px-2 text-gray-800"
           data-testid="shipping-authoring-reconcile"
           onClick={onReconcile}
         >

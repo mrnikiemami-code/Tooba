@@ -5,9 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { authoringMessages } from "./messages/authoring-messages.ts";
 import { formatTimeText } from "./ui/authoring-format.ts";
-
-/** Must stay identical to SLOT_DURATION_OPTIONS in authoring-week-editor.tsx (TB-241). */
-const SLOT_DURATION_OPTIONS = [15, 20, 30, 45, 60, 90, 120] as const;
+import { SLOT_DURATION_OPTIONS } from "./model/slot-duration-options.ts";
 
 test("FA copy removes vague Apply and uses merchant Save/Cancel labels", () => {
   const fa = authoringMessages("fa");

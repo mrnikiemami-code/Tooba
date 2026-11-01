@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * ONE modal for adding a delivery destination, with FOUR fixed cascading fields.
@@ -312,7 +312,7 @@ export function AuthoringDestinationModal({
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-2">
             <button
               type="button"
-              className="inline-flex min-h-10 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
+              className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
               data-testid="shipping-authoring-destination-close"
               onClick={onClose}
             >
@@ -320,7 +320,7 @@ export function AuthoringDestinationModal({
             </button>
             <button
               type="button"
-              className="inline-flex min-h-10 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50"
+              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50"
               disabled={!canAdd}
               data-testid="shipping-authoring-destination-add"
               onClick={submit}

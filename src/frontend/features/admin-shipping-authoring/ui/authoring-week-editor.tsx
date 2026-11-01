@@ -16,11 +16,8 @@ import { formatTimeText } from "./authoring-format.ts";
 import { weekdayLabel } from "./authoring-general-tab.tsx";
 import { TIME_ZONE_OPTIONS, isOfferedTimeZone, timeZoneLabel } from "./time-zone-options.ts";
 
-/**
- * TB-241: offered lengths of ONE receiving slot, in minutes. These are the real values the server stores
- * and the storefront splits the day by; the empty choice stays "one full-day window" and is never inferred.
- */
-export const SLOT_DURATION_OPTIONS = [15, 20, 30, 45, 60, 90, 120] as const;
+import { SLOT_DURATION_OPTIONS } from "../model/slot-duration-options.ts";
+export { SLOT_DURATION_OPTIONS };
 
 /** Localized text of one week issue (shared by the editor and the screen's issue summary). */
 export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessages): string {
@@ -127,7 +124,7 @@ function TimeZoneSelect({
   const outsideList = value.trim().length > 0 && !isOfferedTimeZone(value.trim());
   return (
     <select
-      className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+      className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
       value={value}
       data-testid={testId}
       onChange={(event) => onChange(event.target.value)}
@@ -194,7 +191,7 @@ export function AuthoringWeekEditor({
         {editable && week.kind === "configured" && schedule !== null ? (
           <button
             type="button"
-            className="inline-flex min-h-9 items-center rounded-lg px-2 text-[11px] font-semibold text-gray-500 underline-offset-2 hover:underline"
+            className="inline-flex min-h-11 items-center rounded-lg px-2 text-[11px] font-semibold text-gray-500 underline-offset-2 hover:underline"
             data-testid="shipping-authoring-week-reset"
             onClick={onReset}
           >
@@ -220,7 +217,7 @@ export function AuthoringWeekEditor({
               </label>
               <button
                 type="button"
-                className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800 disabled:opacity-50"
+                className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800 disabled:opacity-50"
                 data-testid="shipping-authoring-week-configure"
                 disabled={configureTimeZone.trim().length === 0}
                 onClick={onConfigure}
@@ -230,7 +227,7 @@ export function AuthoringWeekEditor({
               {configureTimeZone.length > 0 ? (
                 <button
                   type="button"
-                  className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+                  className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800"
                   data-testid="shipping-authoring-week-clear-pending"
                   onClick={onReset}
                 >
@@ -287,22 +284,22 @@ export function AuthoringWeekEditor({
                 <label
                   className={
                     week.slotDurationMinutes === null
-                      ? "flex min-h-11 cursor-pointer flex-col justify-center gap-0.5 rounded-xl border-2 border-primary bg-primary/5 px-3 py-2"
-                      : "flex min-h-11 cursor-pointer flex-col justify-center gap-0.5 rounded-xl border border-border bg-surface px-3 py-2"
+                      ? "flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border-2 border-primary bg-primary/5 px-3 py-2"
+                      : "flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2"
                   }
                 >
-                  <span className="flex items-center gap-2 text-sm font-bold text-gray-900">
-                    <input
-                      type="radio"
-                      className="size-4"
-                      name="shipping-authoring-slot-mode"
-                      checked={week.slotDurationMinutes === null}
-                      onChange={() => onSlotDuration(null)}
-                      data-testid="shipping-authoring-week-slot-full-day"
-                    />
-                    {messages.weekSlotDurationFullDay}
+                  <input
+                    type="radio"
+                    className="min-h-11 min-w-11 shrink-0 accent-primary"
+                    name="shipping-authoring-slot-mode"
+                    checked={week.slotDurationMinutes === null}
+                    onChange={() => onSlotDuration(null)}
+                    data-testid="shipping-authoring-week-slot-full-day"
+                  />
+                  <span className="grid gap-0.5">
+                    <span className="text-sm font-bold text-gray-900">{messages.weekSlotDurationFullDay}</span>
+                    <span className="text-xs text-gray-500">{messages.weekSlotDurationFullDayExample}</span>
                   </span>
-                  <span className="ps-6 text-[11px] text-gray-500">{messages.weekSlotDurationFullDayExample}</span>
                 </label>
                 <div
                   className={
@@ -378,8 +375,8 @@ export function AuthoringWeekEditor({
                           type="button"
                           className={
                             day.isWorking
-                              ? "inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground"
-                              : "inline-flex min-h-10 items-center rounded-md px-3 text-xs font-bold text-gray-600"
+                              ? "inline-flex min-h-11 items-center rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground"
+                              : "inline-flex min-h-11 items-center rounded-md px-3 text-xs font-bold text-gray-600"
                           }
                           aria-pressed={day.isWorking}
                           data-testid={`shipping-authoring-week-working-${weekday}`}
@@ -391,8 +388,8 @@ export function AuthoringWeekEditor({
                           type="button"
                           className={
                             !day.isWorking
-                              ? "inline-flex min-h-10 items-center rounded-md bg-gray-800 px-3 text-xs font-bold text-white"
-                              : "inline-flex min-h-10 items-center rounded-md px-3 text-xs font-bold text-gray-600"
+                              ? "inline-flex min-h-11 items-center rounded-md bg-gray-800 px-3 text-xs font-bold text-white"
+                              : "inline-flex min-h-11 items-center rounded-md px-3 text-xs font-bold text-gray-600"
                           }
                           aria-pressed={!day.isWorking}
                           data-testid={`shipping-authoring-week-closed-${weekday}`}

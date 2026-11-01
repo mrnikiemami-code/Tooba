@@ -302,7 +302,7 @@ const fa = {
     "دسترسی مجاز شما در این نصب مالک مارکت‌پلیس است؛ روش‌های فروشگاه از مسیر خودش دیده می‌شوند.",
 
   /* ————— destination modal — four fixed cascading fields (TB-225) ————— */
-  destinationOpenAction: "افزودن منطقه",
+  destinationOpenAction: "افزودن مقصد",
   destinationModalTitle: "افزودن منطقه",
   destinationModalIntro:
     "کشور، استان، شهر و ناحیه را به ترتیب انتخاب کنید. فقط عمیق‌ترین سطحی که انتخاب می‌کنید به‌عنوان یک مقصد ثبت می‌شود.",

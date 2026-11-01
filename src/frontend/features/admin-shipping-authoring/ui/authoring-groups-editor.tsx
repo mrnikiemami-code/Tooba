@@ -132,14 +132,10 @@ export function AuthoringGroupsEditor({
 
   return (
     <div className="grid gap-3" data-testid="shipping-authoring-groups-panel">
-      <div className="grid gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs text-gray-600">
-        <p className="font-bold text-gray-800">{messages.regionsIntro}</p>
-      </div>
-
       {editable ? (
         <button
           type="button"
-          className="inline-flex min-h-8 w-fit items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+          className="inline-flex min-h-11 w-fit items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800"
           data-testid="shipping-authoring-group-add"
           onClick={onAddGroup}
         >
@@ -183,14 +179,14 @@ export function AuthoringGroupsEditor({
                 {group.groupId === null ? messages.newGroupTitle : authoringFormat(messages.groupTitle, { index: formatNumber(position + 1, locale) })}
               </h3>
               <div className="flex flex-wrap items-center gap-1">
-                <span className="text-[11px] text-gray-500">
+                <span className="text-xs text-gray-500">
                   {messages.currencyLabel}: <span dir="ltr">{group.currencyCode ?? messages.groupNoCurrency}</span>
                 </span>
                 {editable ? (
                   <>
                     <button
                       type="button"
-                      className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-gray-700"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
                       data-testid="shipping-authoring-group-up"
                       onClick={() => onMoveGroup(group.key, -1)}
                     >
@@ -198,7 +194,7 @@ export function AuthoringGroupsEditor({
                     </button>
                     <button
                       type="button"
-                      className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-gray-700"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
                       data-testid="shipping-authoring-group-down"
                       onClick={() => onMoveGroup(group.key, 1)}
                     >
@@ -206,7 +202,7 @@ export function AuthoringGroupsEditor({
                     </button>
                     <button
                       type="button"
-                      className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-danger"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-danger/40 px-3 text-xs font-bold text-danger"
                       data-testid="shipping-authoring-group-remove"
                       onClick={() => setPendingRemoval(group.key)}
                     >
@@ -223,7 +219,7 @@ export function AuthoringGroupsEditor({
                 <div className="flex gap-1">
                   <button
                     type="button"
-                    className="inline-flex min-h-7 items-center rounded-lg border border-danger px-2 text-[11px] font-bold text-danger"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-danger px-3 text-xs font-bold text-danger"
                     data-testid="shipping-authoring-group-remove-confirm"
                     onClick={() => {
                       setPendingRemoval(null);
@@ -234,7 +230,7 @@ export function AuthoringGroupsEditor({
                   </button>
                   <button
                     type="button"
-                    className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-gray-700"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
                     data-testid="shipping-authoring-group-remove-cancel"
                     onClick={() => setPendingRemoval(null)}
                   >
@@ -249,7 +245,7 @@ export function AuthoringGroupsEditor({
                 <span className="text-xs font-bold text-gray-700">{messages.groupTitleLabel}</span>
                 <input
                   type="text"
-                  className="min-h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+                  className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
                   value={titleEntry?.title ?? ""}
                   placeholder={storedTitle?.title ?? ""}
                   data-testid="shipping-authoring-group-title"
@@ -284,7 +280,7 @@ export function AuthoringGroupsEditor({
                     return (
                       <li
                         key={areaIdentity(area)}
-                        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-gray-800"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-gray-800"
                         data-testid={`shipping-authoring-area-${area.kind}`}
                       >
                         <span aria-hidden className="text-base leading-none text-gray-500">⌖</span>
@@ -302,7 +298,7 @@ export function AuthoringGroupsEditor({
                         {editable && !isUnresolved ? (
                           <button
                             type="button"
-                            className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg text-sm font-bold text-danger"
+                            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-sm font-bold text-danger"
                             aria-label={messages.removeAreaAction}
                             data-testid="shipping-authoring-area-remove"
                             onClick={() => onRemoveArea(group.key, area)}
@@ -359,11 +355,11 @@ export function AuthoringGroupsEditor({
 
             <div className="mt-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[11px] font-bold text-gray-800">{messages.ratesTitle}</p>
+                <p className="text-xs font-bold text-gray-800">{messages.ratesTitle}</p>
                 {editable ? (
                   <button
                     type="button"
-                    className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800 disabled:opacity-50"
+                    className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800 disabled:opacity-50"
                     data-testid="shipping-authoring-rate-add"
                     disabled={groupRows.length >= RATE_LIMITS.maxRowsPerGroup}
                     onClick={() => {
@@ -436,7 +432,7 @@ export function AuthoringGroupsEditor({
                           <span className="flex items-center gap-1">
                             <button
                               type="button"
-                              className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-gray-700"
+                              className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
                               data-testid="shipping-authoring-rate-row-edit"
                               onClick={() =>
                                 setRateModal({
@@ -453,7 +449,7 @@ export function AuthoringGroupsEditor({
                             </button>
                             <button
                               type="button"
-                              className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-danger"
+                              className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-danger"
                               data-testid="shipping-authoring-rate-row-remove"
                               onClick={() => onRemoveRow(group.key, row.rowKey)}
                             >

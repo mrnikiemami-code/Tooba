@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * One short, actionable message on an EXPLICIT operator action.
@@ -31,7 +31,7 @@ export function AuthoringMessageBox({
         <div className="flex justify-end">
           <button
             type="button"
-            className="inline-flex min-h-9 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800"
+            className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800"
             data-testid={testId ? `${testId}-ok` : undefined}
             onClick={onClose}
           >

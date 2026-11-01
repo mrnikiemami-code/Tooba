@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Presentational GENERAL tab of one existing draft: real type, multilingual name/description, two
@@ -185,8 +185,8 @@ export function AuthoringGeneralTab({
                     // SAME box model in both states: border thickness + height never change on select,
                     // so activating a language tab cannot shift the row geometry.
                     selected
-                      ? "inline-flex min-h-8 items-center gap-1 rounded-lg border border-primary bg-primary px-2.5 text-xs font-bold text-primary-foreground"
-                      : "inline-flex min-h-8 items-center gap-1 rounded-lg border border-border bg-surface px-2.5 text-xs font-bold text-gray-700"
+                      ? "inline-flex min-h-11 items-center gap-1 rounded-lg border border-primary bg-primary px-2.5 text-xs font-bold text-primary-foreground"
+                      : "inline-flex min-h-11 items-center gap-1 rounded-lg border border-border bg-surface px-2.5 text-xs font-bold text-gray-700"
                   }
                   onClick={() => onContentLanguageChange(language.languageId)}
                 >
@@ -279,7 +279,7 @@ export function AuthoringGeneralTab({
                 >
                   <input
                     type="radio"
-                    className="size-4"
+                    className="min-h-11 min-w-11 shrink-0 accent-primary"
                     name="authoring-freight-payer"
                     value={mode}
                     checked={selected}
@@ -313,7 +313,7 @@ export function AuthoringGeneralTab({
                 >
                   <input
                     type="radio"
-                    className="size-4"
+                    className="min-h-11 min-w-11 shrink-0 accent-primary"
                     name="authoring-calculation"
                     value={mode}
                     checked={selected}

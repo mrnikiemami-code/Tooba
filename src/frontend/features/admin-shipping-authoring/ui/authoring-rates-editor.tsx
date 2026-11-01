@@ -122,7 +122,7 @@ export function AreaDeliveryRange({
   const { min, max } = value;
   if (!editable) {
     return (
-      <p className="text-[11px] font-bold text-gray-800" data-testid="shipping-authoring-area-range">
+      <p className="text-xs font-bold text-gray-800" data-testid="shipping-authoring-area-range">
         {messages.deliveryLabel}: <span data-testid="shipping-authoring-area-range-value">{areaRangeSummary(range, locale, messages)}</span>
       </p>
     );
@@ -131,9 +131,9 @@ export function AreaDeliveryRange({
   const missing = range.kind === "uniform" && (range.min === "" || range.max === "");
   const blocking = issue ?? (missing ? "durationRequired" : null);
   return (
-    <div className="rounded-lg border border-border bg-surface px-2 py-1.5" data-testid="shipping-authoring-area-range">
-      <p className="text-[11px] font-bold text-gray-800">{messages.areaRangeTitle}</p>
-      <p className="text-[11px] text-gray-500">{messages.areaRangeHint}</p>
+    <div className="rounded-xl border border-border bg-surface px-3 py-3" data-testid="shipping-authoring-area-range">
+      <p className="text-sm font-bold text-gray-900">{messages.areaRangeTitle}</p>
+      <p className="text-xs text-gray-500">{messages.areaRangeHint}</p>
       <div className="mt-1 grid max-w-xs grid-cols-2 gap-2">
         <BoundField
           label={messages.minLabel}
@@ -241,7 +241,7 @@ export function AuthoringRatesEditor({
       </header>
 
       <div className="mt-2">
-        <p className="text-[11px] font-bold text-gray-800">{messages.areasLabel}</p>
+        <p className="text-xs font-bold text-gray-800">{messages.areasLabel}</p>
         {group.areas.length === 0 ? (
           <p className="text-[11px] text-gray-500">{messages.noAreas}</p>
         ) : (
@@ -262,11 +262,11 @@ export function AuthoringRatesEditor({
 
       <div className="mt-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] font-bold text-gray-800">{messages.ratesTitle}</p>
+          <p className="text-xs font-bold text-gray-800">{messages.ratesTitle}</p>
           {editable ? (
             <button
               type="button"
-              className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800 disabled:opacity-50"
+              className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800 disabled:opacity-50"
               data-testid="shipping-authoring-rate-add"
               disabled={rows.length >= RATE_LIMITS.maxRowsPerGroup}
               onClick={() => {
@@ -324,7 +324,7 @@ export function AuthoringRatesEditor({
                       <span className="flex items-center gap-1">
                         <button
                           type="button"
-                          className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-gray-700"
+                          className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
                           data-testid="shipping-authoring-rate-row-edit"
                           onClick={() =>
                             setModal({
@@ -340,7 +340,7 @@ export function AuthoringRatesEditor({
                         </button>
                         <button
                           type="button"
-                          className="inline-flex min-h-7 items-center rounded-lg border border-border px-2 text-[11px] font-bold text-danger"
+                          className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-danger"
                           data-testid="shipping-authoring-rate-row-remove"
                           onClick={() => onRemoveRow(row.rowKey)}
                         >

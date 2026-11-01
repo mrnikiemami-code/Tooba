@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * ONE searchable destination field of the four fixed cascade fields (TB-227).
@@ -236,7 +236,7 @@ export function AuthoringDestinationField({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-labelledby={labelId}
-        className="flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-surface px-2 text-start text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-border bg-surface px-2 text-start text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={disabled}
         data-testid={testId}
         onClick={() => (open ? close(false) : openPopup())}
@@ -257,7 +257,7 @@ export function AuthoringDestinationField({
             >
               <input
                 ref={searchRef}
-                className="min-h-9 w-full shrink-0 border-b border-border bg-surface px-2 text-sm outline-none"
+                className="min-h-11 w-full shrink-0 border-b border-border bg-surface px-2 text-sm outline-none"
                 placeholder={labels.searchPlaceholder}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * ONE modal for adding or editing a cost row of a delivery area.
@@ -39,12 +39,12 @@ function BoundInput({
 }) {
   return (
     <label className="grid gap-0.5">
-      <span className="text-[11px] font-bold text-gray-700">{label}</span>
+      <span className="text-xs font-bold text-gray-700">{label}</span>
       <input
         type="text"
         inputMode={inputMode}
         dir="ltr"
-        className="min-h-10 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+        className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
         value={value}
         data-testid={testId}
         onChange={(event) => onChange(event.target.value)}
@@ -199,7 +199,7 @@ export function AuthoringRateModal({
           <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-surface pt-2">
             <button
               type="button"
-              className="inline-flex min-h-10 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
+              className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
               data-testid="shipping-authoring-rate-modal-cancel"
               onClick={onClose}
             >
@@ -207,7 +207,7 @@ export function AuthoringRateModal({
             </button>
             <button
               type="button"
-              className="inline-flex min-h-10 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50"
+              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50"
               disabled={!editable || row === null}
               data-testid="shipping-authoring-rate-modal-confirm"
               onClick={confirm}

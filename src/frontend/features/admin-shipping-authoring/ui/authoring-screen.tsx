@@ -568,8 +568,8 @@ export function ShippingAuthoringScreen({
                 <span
                   className={
                     publicationBadge === "published" || publicationBadge === "published-older"
-                      ? "inline-flex min-h-8 items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 text-[11px] font-bold text-emerald-900"
-                      : "inline-flex min-h-8 items-center rounded-full border border-border bg-surface px-2.5 text-[11px] font-bold text-gray-700"
+                      ? "inline-flex min-h-11 items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 text-[11px] font-bold text-emerald-900"
+                      : "inline-flex min-h-11 items-center rounded-full border border-border bg-surface px-2.5 text-[11px] font-bold text-gray-700"
                   }
                   data-testid="shipping-authoring-status-badge"
                 >
@@ -646,7 +646,7 @@ export function ShippingAuthoringScreen({
           <span>{messages.loadError}</span>
           <button
             type="button"
-            className="inline-flex min-h-8 items-center rounded-lg border border-border px-2 text-gray-700"
+            className="inline-flex min-h-11 items-center rounded-lg border border-border px-2 text-gray-700"
             data-testid="shipping-authoring-retry"
             onClick={() => controller.retryLoad()}
           >
@@ -695,8 +695,8 @@ export function ShippingAuthoringScreen({
                 data-testid={`shipping-authoring-tab-${id}`}
                 className={
                   tab === id
-                    ? "-mb-px min-h-10 border-b-2 border-primary px-3 text-sm font-black text-gray-900"
-                    : "-mb-px min-h-10 border-b-2 border-transparent px-3 text-sm font-bold text-gray-500"
+                    ? "-mb-px min-h-11 border-b-2 border-primary px-3 text-sm font-black text-gray-900"
+                    : "-mb-px min-h-11 border-b-2 border-transparent px-3 text-sm font-bold text-gray-500"
                 }
                 onClick={() => setTab(id)}
               >

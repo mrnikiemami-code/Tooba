@@ -102,7 +102,7 @@ function OptionSelect({
     <label className="grid gap-0.5">
       <span className="text-xs font-bold text-gray-600">{label}</span>
       <select
-        className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+        className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
         value={value}
         disabled={disabled}
         data-testid={testId}
@@ -206,13 +206,13 @@ export function AuthoringDestinationPicker({
 
   return (
     <div className="grid gap-2 rounded-lg border border-dashed border-border p-2" data-testid="shipping-authoring-destination-picker">
-      <p className="text-[11px] font-bold text-gray-800">{messages.destinationTitle}</p>
+      <p className="text-xs font-bold text-gray-800">{messages.destinationTitle}</p>
 
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="grid gap-0.5">
           <span className="text-xs font-bold text-gray-600">{messages.destinationLevel}</span>
           <select
-            className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
+            className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
             value={choice.level}
             disabled={disabled}
             data-testid="shipping-authoring-destination-level"
@@ -291,7 +291,7 @@ export function AuthoringDestinationPicker({
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+          className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800"
           disabled={!canAdd}
           data-testid="shipping-authoring-destination-add"
           onClick={() => {
@@ -314,7 +314,7 @@ export function AuthoringDestinationPicker({
         </button>
         <button
           type="button"
-          className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-700"
+          className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-700"
           data-testid="shipping-authoring-destination-clear"
           disabled={disabled}
           onClick={() => setChoice(emptyChoice(choice.level))}
