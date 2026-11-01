@@ -200,13 +200,11 @@ export function AuthoringGeneralTab({
               );
             })}
           </div>
-          <p className="text-[11px] text-gray-500" data-testid="shipping-authoring-translation-summary">
+          <p className="sr-only" data-testid="shipping-authoring-translation-summary">
             {authoringFormat(messages.translationSummary, {
               translated: formatNumber(translatedCount, locale),
               total: formatNumber(document.presentation.contentLanguages.length, locale),
             })}
-            {" · "}
-            {document.presentation.hasDefaultLanguageName ? messages.defaultNamePresent : messages.defaultNameMissing}
           </p>
         </div>
 
@@ -264,52 +262,73 @@ export function AuthoringGeneralTab({
         ) : null}
       </section>
 
-      {/* Two independent settings, equal height, legend and options on a shared baseline. */}
       <div className="grid items-stretch gap-3 md:grid-cols-2">
-        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3">
+        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
           <legend className="px-1 text-xs font-black text-gray-900">{messages.freightTitle}</legend>
-          <div className="mt-1 flex flex-wrap gap-4">
-            {(["Prepaid", "CollectOnDelivery"] as FreightPaymentMode[]).map((mode) => (
-              <label key={mode} className="inline-flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="authoring-freight-payer"
-                  value={mode}
-                  checked={form.freightPaymentMode === mode}
-                  disabled={readOnly}
-                  data-testid={`shipping-authoring-freight-${mode}`}
-                  onChange={() => onFreightPaymentMode(mode)}
-                />
-                {mode === "Prepaid" ? messages.freightPrepaid : messages.freightCollect}
-              </label>
-            ))}
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {(["Prepaid", "CollectOnDelivery"] as FreightPaymentMode[]).map((mode) => {
+              const selected = form.freightPaymentMode === mode;
+              return (
+                <label
+                  key={mode}
+                  className={
+                    selected
+                      ? "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-3 text-sm font-bold text-gray-900"
+                      : "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-gray-700"
+                  }
+                >
+                  <input
+                    type="radio"
+                    className="size-4"
+                    name="authoring-freight-payer"
+                    value={mode}
+                    checked={selected}
+                    disabled={readOnly}
+                    data-testid={`shipping-authoring-freight-${mode}`}
+                    onChange={() => onFreightPaymentMode(mode)}
+                  />
+                  {mode === "Prepaid" ? messages.freightPrepaid : messages.freightCollect}
+                </label>
+              );
+            })}
           </div>
           {serverErrors?.settings ? (
             <p role="alert" className="mt-1 text-[11px] font-semibold text-danger">{serverErrors.settings}</p>
           ) : null}
         </fieldset>
 
-        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3">
+        <fieldset className="flex h-full flex-col rounded-xl border border-border bg-surface-elevated p-3 md:p-4">
           <legend className="px-1 text-xs font-black text-gray-900">{messages.calculationTitle}</legend>
-          <div className="mt-1 flex flex-wrap gap-4">
-            {(["Manual", "CarrierApi", "Free"] as AuthoringCalculationMode[]).map((mode) => (
-              <label key={mode} className="inline-flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="authoring-calculation"
-                  value={mode}
-                  checked={form.calculationMode === mode}
-                  disabled={readOnly}
-                  data-testid={`shipping-authoring-calculation-${mode}`}
-                  onChange={() => onCalculationMode(mode)}
-                />
-                {mode === "Manual"
-                  ? messages.calculationManual
-                  : mode === "CarrierApi"
-                    ? messages.calculationCarrier
-                    : messages.calculationFree}
-              </label>
-            ))}
+          <div className="mt-2 grid gap-2">
+            {(["Manual", "CarrierApi", "Free"] as AuthoringCalculationMode[]).map((mode) => {
+              const selected = form.calculationMode === mode;
+              return (
+                <label
+                  key={mode}
+                  className={
+                    selected
+                      ? "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-primary bg-primary/5 px-3 text-sm font-bold text-gray-900"
+                      : "flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-gray-700"
+                  }
+                >
+                  <input
+                    type="radio"
+                    className="size-4"
+                    name="authoring-calculation"
+                    value={mode}
+                    checked={selected}
+                    disabled={readOnly}
+                    data-testid={`shipping-authoring-calculation-${mode}`}
+                    onChange={() => onCalculationMode(mode)}
+                  />
+                  {mode === "Manual"
+                    ? messages.calculationManual
+                    : mode === "CarrierApi"
+                      ? messages.calculationCarrier
+                      : messages.calculationFree}
+                </label>
+              );
+            })}
           </div>
         </fieldset>
       </div>

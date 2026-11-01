@@ -8,7 +8,6 @@
  * hours, a working day requires a real start/end pair, and an untouched stored `TimeText` (including
  * its seconds/fractions) is never rewritten by simply rendering this component.
  */
-import { useEffect, useState, type CSSProperties } from "react";
 import type { EditorWeeklySchedule } from "../model/editor-document.ts";
 import type { WeekFormState, WeekIssue } from "../model/editor-week.ts";
 import { WEEK_DISPLAY_ORDER, type WeekIssueCode } from "../model/editor-week.ts";
@@ -18,41 +17,10 @@ import { weekdayLabel } from "./authoring-general-tab.tsx";
 import { TIME_ZONE_OPTIONS, isOfferedTimeZone, timeZoneLabel } from "./time-zone-options.ts";
 
 /**
- * The ONE column contract of the seven-day grid. Header and every day row use the same template, so
- * day names, working controls and start/end inputs each share one x position and width.
- */
-const WEEK_COLUMNS_DESKTOP = "minmax(6rem, 1fr) 8.5rem 7.5rem 7.5rem";
-/** Narrow viewport: day + status on the first line, from/to together on the second. */
-const WEEK_COLUMNS_NARROW = "minmax(0, 1fr) auto";
-
-/**
  * TB-241: offered lengths of ONE receiving slot, in minutes. These are the real values the server stores
  * and the storefront splits the day by; the empty choice stays "one full-day window" and is never inferred.
  */
 export const SLOT_DURATION_OPTIONS = [15, 20, 30, 45, 60, 90, 120] as const;
-
-/** True when the week table may use its four desktop columns. */
-function useWideWeekGrid(): boolean {
-  const [wide, setWide] = useState(false);
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 640px)");
-    const sync = () => setWide(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
-  return wide;
-}
-
-/**
- * The paired from/to bounds: on desktop they are two ordinary grid cells (columns 3 and 4), so their
- * x/width stay on the shared column contract; on narrow screens the pair becomes ONE equal-halves line.
- */
-function boundPairStyle(wide: boolean): CSSProperties {
-  return wide
-    ? { display: "contents" }
-    : { gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", columnGap: 8 };
-}
 
 /** Localized text of one week issue (shared by the editor and the screen's issue summary). */
 export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessages): string {
@@ -80,6 +48,64 @@ function inputTime(value: string): string {
   return match ? `${match[1]}:${match[2]}` : value;
 }
 
+/** Western digits → Persian digits for FA display (never mutates the stored value). */
+function toFaDigits(text: string): string {
+  return text.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]!);
+}
+
+/** Readable 24-hour range for FA without AM/PM chrome. */
+function formatDayRange(start: string, end: string, locale: AuthoringLocale): string {
+  const from = formatTimeText(start);
+  const to = formatTimeText(end);
+  const open = locale === "fa" ? `${toFaDigits(from)} تا ${toFaDigits(to)}` : `${from}–${to}`;
+  return open;
+}
+
+/** FA uses a plain 24h text field so the browser never paints AM/PM. */
+function TimeBoundInput({
+  value,
+  locale,
+  disabled,
+  testId,
+  onChange,
+}: {
+  value: string;
+  locale: AuthoringLocale;
+  disabled: boolean;
+  testId: string;
+  onChange: (next: string) => void;
+}) {
+  if (locale === "fa") {
+    return (
+      <input
+        type="text"
+        inputMode="numeric"
+        placeholder="۰۹:۰۰"
+        dir="ltr"
+        className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm tabular-nums disabled:cursor-not-allowed disabled:opacity-50"
+        value={inputTime(value)}
+        disabled={disabled}
+        pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        onChange={(event) => onChange(event.target.value)}
+        data-testid={testId}
+        data-time-format="24h"
+      />
+    );
+  }
+  return (
+    <input
+      type="time"
+      dir="ltr"
+      className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+      value={inputTime(value)}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      data-testid={testId}
+      data-time-format="24h"
+    />
+  );
+}
+
 /**
  * Time-zone chooser: the operator picks a human-labelled entry whose VALUE is the real identifier the
  * server can resolve. A stored identifier outside this list is shown honestly as its own option and is
@@ -101,7 +127,6 @@ function TimeZoneSelect({
   const outsideList = value.trim().length > 0 && !isOfferedTimeZone(value.trim());
   return (
     <select
-      dir="ltr"
       className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
       value={value}
       data-testid={testId}
@@ -157,7 +182,6 @@ export function AuthoringWeekEditor({
 }) {
   const timeZoneIssue = issues.find((issue) => issue.code === "timeZoneRequired" || issue.code === "timeZoneTooLong");
   const configureTimeZone = week.kind === "unconfigured" ? week.pendingTimeZone : "";
-  const wide = useWideWeekGrid();
 
   return (
     <section
@@ -166,11 +190,11 @@ export function AuthoringWeekEditor({
       tabIndex={-1}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-black text-gray-900">{messages.weekTitle}</h3>
+        <h3 className="text-base font-black text-gray-900">{messages.weekTitle}</h3>
         {editable && week.kind === "configured" && schedule !== null ? (
           <button
             type="button"
-            className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+            className="inline-flex min-h-9 items-center rounded-lg px-2 text-[11px] font-semibold text-gray-500 underline-offset-2 hover:underline"
             data-testid="shipping-authoring-week-reset"
             onClick={onReset}
           >
@@ -255,36 +279,69 @@ export function AuthoringWeekEditor({
             </p>
           ) : null}
 
-          {/* TB-241: ONE explicit slot length per method. Choosing a whole number of minutes makes the
-              customer pick real back-to-back slots (9–10, 10–11 …); the empty choice keeps the single
-              full-day window and is never read as 60 minutes. */}
-          <div className="grid gap-0.5" data-testid="shipping-authoring-week-slot-duration">
+          {/* TB-241 values unchanged; TB-246 presents null vs duration as merchant-facing options. */}
+          <fieldset className="grid gap-2" data-testid="shipping-authoring-week-slot-duration">
+            <legend className="text-xs font-bold text-gray-800">{messages.weekSlotDuration}</legend>
             {editable ? (
-              <label className="grid w-full gap-0.5 md:w-72">
-                <span className="text-xs font-bold text-gray-700">{messages.weekSlotDuration}</span>
-                <select
-                  className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs text-gray-900"
-                  value={week.slotDurationMinutes === null ? "" : String(week.slotDurationMinutes)}
-                  data-testid="shipping-authoring-week-slot-duration-select"
-                  onChange={(event) => onSlotDuration(event.target.value === "" ? null : Number(event.target.value))}
+              <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={messages.weekSlotDuration}>
+                <label
+                  className={
+                    week.slotDurationMinutes === null
+                      ? "flex min-h-11 cursor-pointer flex-col justify-center gap-0.5 rounded-xl border-2 border-primary bg-primary/5 px-3 py-2"
+                      : "flex min-h-11 cursor-pointer flex-col justify-center gap-0.5 rounded-xl border border-border bg-surface px-3 py-2"
+                  }
                 >
-                  <option value="">{messages.weekSlotDurationFullDay}</option>
-                  {week.slotDurationMinutes !== null
-                    && !(SLOT_DURATION_OPTIONS as readonly number[]).includes(week.slotDurationMinutes) ? (
-                      <option value={String(week.slotDurationMinutes)}>
-                        {week.slotDurationMinutes} {messages.weekSlotDurationMinutes}
+                  <span className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                    <input
+                      type="radio"
+                      className="size-4"
+                      name="shipping-authoring-slot-mode"
+                      checked={week.slotDurationMinutes === null}
+                      onChange={() => onSlotDuration(null)}
+                      data-testid="shipping-authoring-week-slot-full-day"
+                    />
+                    {messages.weekSlotDurationFullDay}
+                  </span>
+                  <span className="ps-6 text-[11px] text-gray-500">{messages.weekSlotDurationFullDayExample}</span>
+                </label>
+                <div
+                  className={
+                    week.slotDurationMinutes !== null
+                      ? "flex min-h-11 flex-col justify-center gap-1 rounded-xl border-2 border-primary bg-primary/5 px-3 py-2"
+                      : "flex min-h-11 flex-col justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2"
+                  }
+                >
+                  <span className="text-sm font-bold text-gray-900">{messages.weekSlotDurationHourly}</span>
+                  <select
+                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-2 text-sm text-gray-900"
+                    value={week.slotDurationMinutes === null ? "" : String(week.slotDurationMinutes)}
+                    data-testid="shipping-authoring-week-slot-duration-select"
+                    onChange={(event) => {
+                      if (event.target.value === "") {
+                        onSlotDuration(null);
+                        return;
+                      }
+                      onSlotDuration(Number(event.target.value));
+                    }}
+                    aria-label={messages.weekSlotDurationHourly}
+                  >
+                    <option value="">{messages.weekSlotDurationFullDay}</option>
+                    {week.slotDurationMinutes !== null
+                      && !(SLOT_DURATION_OPTIONS as readonly number[]).includes(week.slotDurationMinutes) ? (
+                        <option value={String(week.slotDurationMinutes)}>
+                          {week.slotDurationMinutes} {messages.weekSlotDurationMinutes}
+                        </option>
+                      ) : null}
+                    {SLOT_DURATION_OPTIONS.map((minutes) => (
+                      <option key={minutes} value={String(minutes)}>
+                        {minutes} {messages.weekSlotDurationMinutes}
                       </option>
-                    ) : null}
-                  {SLOT_DURATION_OPTIONS.map((minutes) => (
-                    <option key={minutes} value={String(minutes)}>
-                      {minutes} {messages.weekSlotDurationMinutes}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                    ))}
+                  </select>
+                </div>
+              </div>
             ) : (
               <p>
-                <span className="font-bold">{messages.weekSlotDuration}: </span>
                 <span data-testid="shipping-authoring-week-slot-duration-value">
                   {week.slotDurationMinutes === null
                     ? messages.weekSlotDurationFullDay
@@ -292,31 +349,17 @@ export function AuthoringWeekEditor({
                 </span>
               </p>
             )}
-            {editable ? <p className="text-[11px] text-gray-500">{messages.weekSlotDurationHint}</p> : null}
+            {editable && week.slotDurationMinutes !== null ? (
+              <p className="text-[11px] text-gray-500">{messages.weekSlotDurationHint}</p>
+            ) : null}
             {issues.some((issue) => issue.code === "slotDurationInvalid") ? (
               <p role="alert" className="text-[11px] font-semibold text-danger">
                 {messages.weekSlotDurationInvalid}
               </p>
             ) : null}
-          </div>
+          </fieldset>
 
-          {/* ONE column contract for all seven days: header and every row share the same template,
-              so day labels, status controls and start/end inputs each line up on one x position. */}
-          <div
-            className="mt-1 hidden rounded-lg bg-surface px-2 py-1 text-xs font-bold text-gray-500 sm:grid sm:gap-2"
-            style={{ gridTemplateColumns: WEEK_COLUMNS_DESKTOP }}
-            data-testid="shipping-authoring-week-head"
-            aria-hidden
-          >
-            <span>{messages.weekDayColumn}</span>
-            <span>{messages.weekStatusColumn}</span>
-            <span>{messages.weekFromColumn}</span>
-            <span>{messages.weekToColumn}</span>
-          </div>
-          <ul
-            className="grid gap-1 sm:gap-0 sm:divide-y sm:divide-border sm:rounded-lg sm:bg-surface"
-            data-testid="shipping-authoring-week-days"
-          >
+          <ul className="mt-2 grid gap-2" data-testid="shipping-authoring-week-days">
             {WEEK_DISPLAY_ORDER.map((weekday) => {
               const day = week.days.find((candidate) => candidate.weekday === weekday);
               if (!day) return null;
@@ -324,111 +367,88 @@ export function AuthoringWeekEditor({
               return (
                 <li
                   key={weekday}
-                  className="grid items-center gap-x-2 gap-y-0.5 rounded-lg bg-surface px-2 py-1 sm:rounded-none sm:py-1"
-                  style={{ gridTemplateColumns: wide ? WEEK_COLUMNS_DESKTOP : WEEK_COLUMNS_NARROW, columnGap: 8 }}
+                  className="rounded-xl border border-border bg-surface px-3 py-2"
                   data-testid={`shipping-authoring-week-day-${weekday}`}
                 >
-                  <span className="text-sm font-semibold text-gray-900">{weekdayLabel(weekday, locale)}</span>
-                  {editable ? (
-                    <label className="flex items-center gap-1.5 text-xs text-gray-700">
-                      <input
-                        type="checkbox"
-                        className="size-4 shrink-0"
-                        checked={day.isWorking}
-                        onChange={(event) => onDayWorking(weekday, event.target.checked)}
-                        data-testid={`shipping-authoring-week-working-${weekday}`}
-                      />
-                      <span>{messages.weekWorking}</span>
-                    </label>
-                  ) : (
-                    /* Truthful status column: working/closed as text, the bounds live in their own columns. */
-                    <span className="text-xs font-semibold text-gray-700">
-                      {day.isWorking ? messages.weekWorking : messages.weekClosed}
-                    </span>
-                  )}
-                  {/* Paired bounds. Narrow VIEW: ONE coherent inline range, each label physically next to its
-                      own value. Narrow EDIT: the two equal, accessible time inputs on the second line.
-                      Desktop: the two existing shared header columns, unchanged. */}
-                  {day.isWorking ? (
-                    !editable && !wide ? (
-                      <p
-                        className="flex flex-wrap items-baseline gap-x-1.5 text-xs text-gray-700"
-                        style={{ gridColumn: "1 / -1" }}
-                        data-testid={`shipping-authoring-week-range-${weekday}`}
-                      >
-                        <span className="text-[11px] font-semibold text-gray-500">{messages.weekFromColumn}</span>
-                        <span dir="ltr">{formatTimeText(day.startTime)}</span>
-                        <span aria-hidden className="text-gray-400">
-                          –
-                        </span>
-                        <span className="text-[11px] font-semibold text-gray-500">{messages.weekToColumn}</span>
-                        <span dir="ltr">{formatTimeText(day.endTime)}</span>
-                      </p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-gray-900">{weekdayLabel(weekday, locale)}</span>
+                    {editable ? (
+                      <div className="inline-flex rounded-lg border border-border p-0.5" role="group" aria-label={messages.weekStatusColumn}>
+                        <button
+                          type="button"
+                          className={
+                            day.isWorking
+                              ? "inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground"
+                              : "inline-flex min-h-10 items-center rounded-md px-3 text-xs font-bold text-gray-600"
+                          }
+                          aria-pressed={day.isWorking}
+                          data-testid={`shipping-authoring-week-working-${weekday}`}
+                          onClick={() => onDayWorking(weekday, true)}
+                        >
+                          {messages.weekActive}
+                        </button>
+                        <button
+                          type="button"
+                          className={
+                            !day.isWorking
+                              ? "inline-flex min-h-10 items-center rounded-md bg-gray-800 px-3 text-xs font-bold text-white"
+                              : "inline-flex min-h-10 items-center rounded-md px-3 text-xs font-bold text-gray-600"
+                          }
+                          aria-pressed={!day.isWorking}
+                          data-testid={`shipping-authoring-week-closed-${weekday}`}
+                          onClick={() => onDayWorking(weekday, false)}
+                        >
+                          {messages.weekClosed}
+                        </button>
+                      </div>
                     ) : (
-                      <div style={boundPairStyle(wide)}>
+                      <span className="text-xs font-semibold text-gray-700">
+                        {day.isWorking ? messages.weekActive : messages.weekClosed}
+                      </span>
+                    )}
+                  </div>
+                  {day.isWorking ? (
+                    editable ? (
+                      <div className="mt-2 grid grid-cols-2 gap-2">
                         <label className="grid min-w-0 gap-0.5">
-                          <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
-                          <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
-                            {messages.weekFromColumn}
-                          </span>
-                          {editable ? (
-                            <input
-                              type="time"
-                              dir="ltr"
-                              className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                              value={inputTime(day.startTime)}
-                              disabled={!day.isWorking}
-                              onChange={(event) => onDayTime(weekday, "startTime", event.target.value)}
-                              data-testid={`shipping-authoring-week-start-${weekday}`}
-                            />
-                          ) : (
-                            <span dir="ltr" className="text-xs text-gray-700">
-                              {formatTimeText(day.startTime)}
-                            </span>
-                          )}
+                          <span className="text-[11px] font-semibold text-gray-500">{messages.weekFromColumn}</span>
+                          <TimeBoundInput
+                            value={day.startTime}
+                            locale={locale}
+                            disabled={!day.isWorking}
+                            testId={`shipping-authoring-week-start-${weekday}`}
+                            onChange={(next) => onDayTime(weekday, "startTime", next)}
+                          />
                         </label>
                         <label className="grid min-w-0 gap-0.5">
-                          <span className="sr-only">{weekdayLabel(weekday, locale)}</span>
-                          <span className={wide ? "sr-only" : "text-[11px] font-semibold text-gray-500"}>
-                            {messages.weekToColumn}
-                          </span>
-                          {editable ? (
-                            <input
-                              type="time"
-                              dir="ltr"
-                              className="min-h-8 w-full rounded-lg border border-border bg-surface px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                              value={inputTime(day.endTime)}
-                              disabled={!day.isWorking}
-                              onChange={(event) => onDayTime(weekday, "endTime", event.target.value)}
-                              data-testid={`shipping-authoring-week-end-${weekday}`}
-                            />
-                          ) : (
-                            <span dir="ltr" className="text-xs text-gray-700">
-                              {formatTimeText(day.endTime)}
-                            </span>
-                          )}
+                          <span className="text-[11px] font-semibold text-gray-500">{messages.weekToColumn}</span>
+                          <TimeBoundInput
+                            value={day.endTime}
+                            locale={locale}
+                            disabled={!day.isWorking}
+                            testId={`shipping-authoring-week-end-${weekday}`}
+                            onChange={(next) => onDayTime(weekday, "endTime", next)}
+                          />
                         </label>
                       </div>
+                    ) : (
+                      <p
+                        className="mt-2 text-sm font-semibold text-gray-800"
+                        data-testid={`shipping-authoring-week-range-${weekday}`}
+                      >
+                        {formatDayRange(day.startTime, day.endTime, locale)}
+                      </p>
                     )
-                  ) : wide ? (
-                    /* Desktop keeps the accepted four-column truth: the status column already says closed, so
-                       the From/To cells show one honest dash instead of repeating the word. A narrow closed
-                       day carries ONE Closed badge (the status column) and nothing else — no second line,
-                       dash or empty bounds. */
-                    <span
-                      className="text-xs text-gray-400"
-                      style={{ gridColumn: "3 / 5" }}
+                  ) : (
+                    <p
+                      className="mt-2 text-sm font-semibold text-gray-500"
                       data-testid={`shipping-authoring-week-bounds-${weekday}`}
                     >
-                      —
-                    </span>
-                  ) : null}
+                      {messages.weekClosed}
+                    </p>
+                  )}
                   {dayIssue ? (
-                    <p
-                      role="alert"
-                      className="text-xs font-semibold text-danger"
-                      style={{ gridColumn: "1 / -1" }}
-                    >
+                    <p role="alert" className="mt-1 text-xs font-semibold text-danger">
                       {weekIssueMessage(dayIssue.code, messages)}
                     </p>
                   ) : null}

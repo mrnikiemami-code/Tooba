@@ -271,12 +271,12 @@ export function AuthoringGroupsEditor({
               </p>
             ) : null}
 
-            <div className="mt-2">
-              <p className="text-[11px] font-bold text-gray-800">{messages.areasLabel}</p>
+            <div className="mt-3">
+              <p className="text-xs font-bold text-gray-800">{messages.areasLabel}</p>
               {group.areas.length === 0 ? (
-                <p className="text-[11px] text-gray-500">{messages.noAreas}</p>
+                <p className="mt-1 text-xs text-gray-500">{messages.noAreas}</p>
               ) : (
-                <ul className="mt-1 flex flex-wrap gap-1">
+                <ul className="mt-2 flex flex-wrap gap-2">
                   {group.areas.map((area) => {
                     const segments = index.segmentsOf(area);
                     const label = segments.length > 0 ? segments.join(" › ") : index.labelOf(area);
@@ -284,13 +284,14 @@ export function AuthoringGroupsEditor({
                     return (
                       <li
                         key={areaIdentity(area)}
-                        className="inline-flex items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-[11px] text-gray-700"
+                        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-gray-800"
                         data-testid={`shipping-authoring-area-${area.kind}`}
                       >
-                        <span className="text-gray-500">{messages[AREA_KIND_LABEL_OF[area.kind]]}: </span>
+                        <span aria-hidden className="text-base leading-none text-gray-500">⌖</span>
+                        <span className="sr-only">{messages[AREA_KIND_LABEL_OF[area.kind]]}</span>
                         {/* The verified BREADCRUMB of the pick, never a bare leaf or a raw GUID. */}
                         {label !== null && label.trim().length > 0 ? (
-                          <span dir="auto" data-testid="shipping-authoring-area-breadcrumb">
+                          <span dir="auto" data-testid="shipping-authoring-area-breadcrumb" className="font-semibold">
                             {label}
                           </span>
                         ) : (
@@ -301,7 +302,7 @@ export function AuthoringGroupsEditor({
                         {editable && !isUnresolved ? (
                           <button
                             type="button"
-                            className="text-[11px] font-bold text-danger"
+                            className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg text-sm font-bold text-danger"
                             aria-label={messages.removeAreaAction}
                             data-testid="shipping-authoring-area-remove"
                             onClick={() => onRemoveArea(group.key, area)}
@@ -312,7 +313,7 @@ export function AuthoringGroupsEditor({
                         {editable && isUnresolved ? (
                           <button
                             type="button"
-                            className="text-[11px] font-bold text-danger underline"
+                            className="text-xs font-bold text-danger underline"
                             data-testid="shipping-authoring-area-remove-unresolved"
                             onClick={() => onRemoveArea(group.key, area)}
                           >
@@ -332,10 +333,10 @@ export function AuthoringGroupsEditor({
             </div>
 
             {editable ? (
-              <div className="mt-2">
+              <div className="mt-3">
                 <button
                   type="button"
-                  className="inline-flex min-h-8 items-center rounded-lg border border-border bg-surface px-2 text-[11px] font-bold text-gray-800"
+                  className="inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground"
                   data-testid="shipping-authoring-area-add"
                   onClick={() => setDestinationGroup(group.key)}
                 >

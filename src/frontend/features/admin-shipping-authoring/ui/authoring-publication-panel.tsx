@@ -8,9 +8,8 @@
  * a synchronous in-flight gate, and the stale/unknown latches that only an explicit successful read clears.
  * A publication write never reseeds the editor document, advances the draft revision or discards typed work.
  *
- * Presentation is deliberately small: a status line, the two actions and one honest note. Snapshot ids,
- * selection-version counters and format versions stay OUT of the normal UI — the operator acts on the method,
- * not on transport internals.
+ * TB-246: merchant-facing status lives in the page header badge. This panel no longer shows technical
+ * publication paragraphs; publish/withdraw controls appear only in view mode.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Dialog } from "../../../design-system";
@@ -28,21 +27,32 @@ import {
   initialPublicationState,
   publicationBlockedReason,
   publicationPhase,
-  publicationStateMessage,
   resolveRead,
   resolveWrite,
   type PublicationPanelState,
   type PublicationWrite,
 } from "../model/authoring-publication.ts";
 
-/** Reasons worth one short line next to the actions; the rest are self-evident from the disabled state. */
+/** Concise status for the page header badge (TB-246). */
+export type PublicationBadgeKind = "loading" | "draft" | "published" | "published-older" | "unknown";
+
+/** Reasons worth one short line next to the actions; view-only prose stays out of the UI. */
 const EXPLAINED_REASONS = new Set([
   "publicationUnknownBlock",
   "publicationStaleBlock",
   "publicationNoState",
   "publicationAlreadyCurrent",
-  "publicationViewOnly",
 ]);
+
+function badgeKindOf(state: PublicationPanelState, currentRevision: number | null): PublicationBadgeKind {
+  if (state.read === "idle" || state.read === "loading") return "loading";
+  if (state.read !== "ok" || state.view === null) return "unknown";
+  if (state.view.state === "absent" || state.view.state === "cleared") return "draft";
+  const phase = publicationPhase(state.view, currentRevision);
+  if (phase === "older") return "published-older";
+  if (phase === "current") return "published";
+  return "unknown";
+}
 
 export function AuthoringPublicationPanel({
   draftId,
@@ -51,6 +61,7 @@ export function AuthoringPublicationPanel({
   busy,
   messages,
   onPublished,
+  onBadgeChange,
 }: {
   draftId: string;
   currentRevision: number | null;
@@ -59,6 +70,8 @@ export function AuthoringPublicationPanel({
   messages: AuthoringMessages;
   /** Reported after a confirmed write so the screen can show its own notice; nothing is reloaded here. */
   onPublished: (text: string) => void;
+  /** Feeds the page-header status badge; never rendered as technical paragraphs here. */
+  onBadgeChange?: (kind: PublicationBadgeKind) => void;
 }) {
   const [state, setState] = useState<PublicationPanelState>(initialPublicationState);
   const [confirm, setConfirm] = useState<PublicationWrite | null>(null);
@@ -68,6 +81,10 @@ export function AuthoringPublicationPanel({
   const inFlight = useRef(false);
   const latest = useRef(state);
   latest.current = state;
+
+  useEffect(() => {
+    onBadgeChange?.(badgeKindOf(state, currentRevision));
+  }, [state, currentRevision, onBadgeChange]);
 
   useEffect(() => {
     epoch.current += 1;
@@ -141,40 +158,36 @@ export function AuthoringPublicationPanel({
   const withdrawAvailable = canWithdraw(state, mode, busy, currentRevision);
   const blocked = publicationBlockedReason(state, "publish", mode, busy, currentRevision);
   const explained = blocked !== null && EXPLAINED_REASONS.has(blocked) ? messages[blocked] : null;
-  const view = state.read === "ok" ? state.view : null;
-  const phase = view ? publicationPhase(view, currentRevision) : null;
   const needsRead =
     state.stale || state.unknown || state.read === "error" || state.read === "unavailable" || state.read === "notfound";
 
+  // Edit mode: status feeds the header badge only — no publish/withdraw chrome and no technical paragraphs.
+  if (mode === "edit") {
+    return (
+      <div
+        className="sr-only"
+        data-testid="shipping-authoring-publication"
+        aria-hidden
+      />
+    );
+  }
+
   return (
     <section
-      className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-border bg-surface px-3 py-2"
+      className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1"
       data-testid="shipping-authoring-publication"
       aria-label={messages.publicationTitle}
     >
-      <div className="min-w-0">
-        <p className="text-xs font-black text-gray-900" data-testid="shipping-authoring-publication-status">
-          {messages[publicationStateMessage(state)]}
+      {explained ? (
+        <p role="alert" className="w-full text-[11px] font-semibold text-amber-800" data-testid="shipping-authoring-publication-blocked">
+          {explained}
         </p>
-        {phase === "older" ? (
-          <p className="text-[11px] font-semibold text-amber-800" data-testid="shipping-authoring-publication-older">
-            {messages.publicationSelectedOlder}
-          </p>
-        ) : null}
-        {explained ? (
-          <p role="alert" className="text-[11px] font-semibold text-amber-800" data-testid="shipping-authoring-publication-blocked">
-            {explained}
-          </p>
-        ) : null}
-        <p className="text-[11px] text-gray-500" data-testid="shipping-authoring-publication-note">
-          {messages.publicationNote}
-        </p>
-      </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         {needsRead ? (
           <button
             type="button"
-            className="inline-flex min-h-8 items-center rounded-lg border border-border px-2.5 text-[11px] font-bold text-gray-700 disabled:opacity-50"
+            className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
             data-testid="shipping-authoring-publication-read"
             disabled={state.pending !== null}
             onClick={() => void readStatus()}
@@ -184,7 +197,7 @@ export function AuthoringPublicationPanel({
         ) : null}
         <button
           type="button"
-          className="inline-flex min-h-8 items-center rounded-lg border border-border px-2.5 text-[11px] font-bold text-gray-800 disabled:opacity-40"
+          className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-800 disabled:opacity-40"
           data-testid="shipping-authoring-publication-publish"
           disabled={!publishAvailable}
           onClick={() => setConfirm("publish")}
@@ -193,7 +206,7 @@ export function AuthoringPublicationPanel({
         </button>
         <button
           type="button"
-          className="inline-flex min-h-8 items-center rounded-lg border border-danger/40 px-2.5 text-[11px] font-bold text-danger disabled:opacity-40"
+          className="inline-flex min-h-11 items-center rounded-lg border border-danger/40 px-3 text-xs font-bold text-danger disabled:opacity-40"
           data-testid="shipping-authoring-publication-withdraw"
           disabled={!withdrawAvailable}
           onClick={() => setConfirm("withdraw")}
@@ -217,7 +230,7 @@ export function AuthoringPublicationPanel({
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
-              className="inline-flex min-h-9 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
+              className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
               data-testid="shipping-authoring-publication-confirm-cancel"
               onClick={() => setConfirm(null)}
             >
@@ -225,7 +238,7 @@ export function AuthoringPublicationPanel({
             </button>
             <button
               type="button"
-              className="inline-flex min-h-9 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground"
+              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground"
               data-testid="shipping-authoring-publication-confirm-accept"
               onClick={() => (confirm === null ? undefined : void send(confirm))}
             >

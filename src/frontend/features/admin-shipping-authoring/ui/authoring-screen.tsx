@@ -38,6 +38,7 @@ import {
   type GroupsFormState,
 } from "../model/editor-groups.ts";
 import {
+  nameOf,
   withCalculationMode,
   withDescription,
   withFreightPaymentMode,
@@ -69,7 +70,7 @@ import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
 import { AuthoringLocalIssuesPanel, AuthoringSaveFailurePanel } from "./authoring-problem-view.tsx";
-import { AuthoringPublicationPanel } from "./authoring-publication-panel.tsx";
+import { AuthoringPublicationPanel, type PublicationBadgeKind } from "./authoring-publication-panel.tsx";
 import {
   isRowScoped,
   rateRowKey,
@@ -127,6 +128,7 @@ export function ShippingAuthoringScreen({
   const [types, setTypes] = useState<readonly AuthoringTypeChoice[]>([]);
   const [typesState, setTypesState] = useState<"loading" | "ok" | "error">("loading");
   const [notice, setNotice] = useState<string | null>(null);
+  const [publicationBadge, setPublicationBadge] = useState<PublicationBadgeKind>("loading");
   const [confirmDiscardVisible, setConfirmDiscardVisible] = useState(false);
   const applyRef = useRef(false);
   const exitDestinationRef = useRef<AuthoringExitDestination>("back");
@@ -536,64 +538,93 @@ export function ShippingAuthoringScreen({
     revealServerIssue(serverIssues[0]);
   }, [saveFailure, serverIssues, revealServerIssue]);
 
+  const methodName = form && contentLanguageId ? nameOf(form, contentLanguageId).trim() : "";
+  const badgeLabel =
+    publicationBadge === "published"
+      ? messages.statusBadgePublished
+      : publicationBadge === "published-older"
+        ? messages.statusBadgePublishedOlder
+        : publicationBadge === "draft"
+          ? messages.statusBadgeDraft
+          : null;
+
   return (
-    <div dir={direction} lang={locale} className="mx-auto w-full max-w-6xl space-y-3" data-testid="shipping-authoring-screen">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <button
-            type="button"
-            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-            data-testid="shipping-authoring-back"
-            disabled={busy}
-            onClick={goBack}
-          >
-            {messages.back}
-          </button>
-          <h1 className="truncate text-base font-black text-gray-900">{messages.pageTitle}</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {mode === "view" ? (
+    <div dir={direction} lang={locale} className="mx-auto w-full max-w-5xl space-y-6 pb-24" data-testid="shipping-authoring-screen">
+      <header className="flex flex-col gap-3" data-testid="shipping-authoring-page-header">
+        <button
+          type="button"
+          className="inline-flex min-h-11 w-fit items-center gap-1 rounded-lg border border-border px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
+          data-testid="shipping-authoring-back"
+          disabled={busy}
+          onClick={goBack}
+        >
+          {messages.back}
+        </button>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg font-black text-gray-900">{messages.pageTitle}</h1>
+              {badgeLabel ? (
+                <span
+                  className={
+                    publicationBadge === "published" || publicationBadge === "published-older"
+                      ? "inline-flex min-h-8 items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 text-[11px] font-bold text-emerald-900"
+                      : "inline-flex min-h-8 items-center rounded-full border border-border bg-surface px-2.5 text-[11px] font-bold text-gray-700"
+                  }
+                  data-testid="shipping-authoring-status-badge"
+                >
+                  {badgeLabel}
+                </span>
+              ) : null}
+            </div>
+            {methodName ? (
+              <p className="truncate text-sm font-semibold text-gray-700" data-testid="shipping-authoring-method-name" dir="auto">
+                {methodName}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {mode === "view" ? (
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
+                data-testid="shipping-authoring-edit"
+                onClick={() => setMode("edit")}
+              >
+                {messages.editAction}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
+                data-testid="shipping-authoring-cancel-edit"
+                disabled={busy}
+                onClick={cancelEdit}
+              >
+                {messages.cancelEdit}
+              </button>
+            )}
             <button
               type="button"
-              className="inline-flex min-h-9 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
-              data-testid="shipping-authoring-edit"
-              onClick={() => setMode("edit")}
+              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50"
+              data-testid="shipping-authoring-apply"
+              disabled={!canApply}
+              onClick={() => void apply()}
             >
-              {messages.editAction}
+              {session.save === "saving" ? messages.applying : messages.apply}
             </button>
-          ) : (
-            <button
-              type="button"
-              className="inline-flex min-h-9 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
-              data-testid="shipping-authoring-cancel-edit"
-              disabled={busy}
-              onClick={cancelEdit}
-            >
-              {messages.cancelEdit}
-            </button>
-          )}
-          <button
-            type="button"
-            className="inline-flex min-h-9 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50"
-            data-testid="shipping-authoring-apply"
-            disabled={!canApply}
-            onClick={() => void apply()}
-          >
-            {session.save === "saving" ? messages.applying : messages.apply}
-          </button>
+          </div>
         </div>
       </header>
 
-      {/* Mode notice: the view-mode instruction, or the unapplied-work warning alone. Edit mode has no
-          standing prose of its own — the Apply button state and this warning carry the truth. */}
-      {mode === "view" || session.unsaved ? (
+      {mode === "view" ? (
         <p
           role="note"
           className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-gray-600"
           data-testid="shipping-authoring-mode-banner"
         >
-          {mode === "view" ? messages.viewBanner : messages.unsavedNote}
-          {mode === "view" && session.unsaved ? ` · ${messages.unsavedNote}` : ""}
+          {messages.viewBanner}
+          {session.unsaved ? ` · ${messages.unsavedNote}` : ""}
         </p>
       ) : null}
 
@@ -648,6 +679,7 @@ export function ShippingAuthoringScreen({
           busy={busy}
           messages={messages}
           onPublished={setNotice}
+          onBadgeChange={setPublicationBadge}
         />
       ) : null}
 
@@ -778,7 +810,7 @@ export function ShippingAuthoringScreen({
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
-              className="inline-flex min-h-9 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
+              className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700"
               data-testid="shipping-authoring-discard-cancel"
               onClick={cancelDiscard}
             >
@@ -786,7 +818,7 @@ export function ShippingAuthoringScreen({
             </button>
             <button
               type="button"
-              className="inline-flex min-h-9 items-center rounded-lg bg-danger px-3 text-xs font-bold text-white"
+              className="inline-flex min-h-11 items-center rounded-lg bg-danger px-3 text-xs font-bold text-white"
               data-testid="shipping-authoring-discard-confirm"
               onClick={confirmDiscard}
             >
@@ -795,6 +827,39 @@ export function ShippingAuthoringScreen({
           </div>
         </div>
       </Dialog>
+
+      {mode === "edit" ? (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur"
+          data-testid="shipping-authoring-sticky-save"
+        >
+          <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3">
+            <p className="text-xs font-semibold text-gray-600">
+              {session.unsaved ? messages.stickySaveHint : null}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
+                data-testid="shipping-authoring-sticky-cancel"
+                disabled={busy}
+                onClick={cancelEdit}
+              >
+                {messages.cancelEdit}
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50"
+                data-testid="shipping-authoring-sticky-apply"
+                disabled={!canApply}
+                onClick={() => void apply()}
+              >
+                {session.save === "saving" ? messages.applying : messages.apply}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
