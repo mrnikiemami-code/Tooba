@@ -85,6 +85,10 @@ import {
   resolveShippingContinueState,
 } from "./storefront-shipping-continue-state.ts";
 import { projectCapturedShippingSummary } from "./storefront-shipping-captured-summary.ts";
+import {
+  formatCapturedFeeRowLabel,
+  resolveCapturedRevalidationAdvisory,
+} from "./storefront-shipping-captured-revalidation.ts";
 import { formatExactAmountText } from "./storefront-shipping-format.ts";
 import { StorefrontShippingSingleGroupSection } from "./storefront-shipping-single-group-section.tsx";
 import { resolveShippingUnavailableNotices } from "./storefront-shipping-unavailable-methods.ts";
@@ -233,9 +237,7 @@ export function StorefrontShopeivaShipping() {
       if (trackedKey !== null) {
         commitDestinationRefresh(completeDestinationRefresh(destinationRefreshRef.current, trackedKey));
       }
-      if (page.revalidationMessage) {
-        setError(page.revalidationMessage);
-      }
+      // TB-245-R6: پیام بازاعتبارسنجی به error عملیاتی کپی نمی‌شود؛ advisory از projection جاری + choices مشتق می‌شود.
 
       const clampDate = (candidate: string | null | undefined) => {
         const min = page.minimumDeliveryDate;
@@ -690,6 +692,41 @@ export function StorefrontShopeivaShipping() {
     [projection?.capturedPreview, capturedChoices, capturedPreviewConfirmed],
   );
 
+  /** برچسب فروشنده از خطوط سبد با هویت sellerPartyId؛ نه تطبیق برچسب. */
+  const sellerLabelByPartyId = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const line of cartLines) {
+      if (!line.sellerPartyId || map[line.sellerPartyId]) continue;
+      const label = (line.sellerDisplayName ?? "").trim();
+      if (label) map[line.sellerPartyId] = label;
+    }
+    return map;
+  }, [cartLines]);
+
+  /**
+   * TB-245-R6 — advisory بازاعتبارسنجی فقط وقتی هنوز انتخاب capture‌شده ناقص است.
+   * با کامل‌شدن method/date/slot همه گروه‌ها خاموش می‌شود؛ error شبکه/ذخیره دست نمی‌خورد.
+   */
+  const capturedRevalidationAdvisory = useMemo(
+    () =>
+      resolveCapturedRevalidationAdvisory({
+        confirmed: capturedPreviewConfirmed,
+        preview: projection?.capturedPreview ?? null,
+        choices: capturedChoices,
+        projectionMessage: projection?.revalidationMessage ?? null,
+        sellerLabelByPartyId,
+        locale,
+      }),
+    [
+      capturedPreviewConfirmed,
+      projection?.capturedPreview,
+      projection?.revalidationMessage,
+      capturedChoices,
+      sellerLabelByPartyId,
+      locale,
+    ],
+  );
+
   /**
    * TB-240-R7 — یک مرجع واحد برای روشن‌بودن «ادامه به پرداخت» + دلیل کوتاه مالک آن.
    *
@@ -1030,6 +1067,15 @@ export function StorefrontShopeivaShipping() {
               <StorefrontCheckoutLimitNotice errorCode={limitCode} message={error} />
             </div>
           ) : null}
+          {capturedRevalidationAdvisory ? (
+            <div
+              className="mb-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-700"
+              data-testid="shipping-revalidation-advisory"
+              role="status"
+            >
+              {capturedRevalidationAdvisory.text}
+            </div>
+          ) : null}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <div className="lg:col-span-2 space-y-4">
               {/* (150) آدرس و تحویل گیرنده: استخراج‌شده بدون هیچ تغییر رفتاری/بصری */}
@@ -1169,7 +1215,14 @@ export function StorefrontShopeivaShipping() {
                       <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2.5 mt-1" data-testid="shipping-captured-fee-rows">
                         {capturedSummary.rows.map((row) => (
                           <div key={`captured-fee-${row.groupKey}`} className="flex justify-between gap-2 text-[11px] md:text-xs" data-testid={`shipping-captured-fee-${row.groupKey}`}>
-                            <span className="text-gray-500 truncate">{row.methodLabel}</span>
+                            <span className="text-gray-500 truncate">
+                              {formatCapturedFeeRowLabel({
+                                methodLabel: row.methodLabel,
+                                sellerPartyId: row.sellerPartyId,
+                                sellerLabelByPartyId,
+                                locale,
+                              })}
+                            </span>
                             <span className="font-bold text-gray-800 shrink-0">
                               {formatExactAmountText(row.shippingAmountText, row.currency, locale) ?? "—"}
                             </span>

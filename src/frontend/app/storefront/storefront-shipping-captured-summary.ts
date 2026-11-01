@@ -14,6 +14,8 @@ const EXACT_DECIMAL = /^\d+(\.\d+)?$/;
 
 export type CapturedSummaryFeeRow = {
   groupKey: string;
+  /** هویت پایدار فروشندهٔ گروه برای برچسب نمایشی؛ نه برچسب ترجمه‌شده. */
+  sellerPartyId: string;
   methodLabel: string;
   shippingAmountText: string;
   carrierCollectAmountText: string | null;
@@ -126,8 +128,10 @@ function resolveSelectedFee(
   if (!nonBlank(currency) || currency !== expectedCurrency) return "invalid";
   const carrier = method.carrierCollectAmountText;
   if (carrier != null && (!nonBlank(carrier) || !EXACT_DECIMAL.test(carrier))) return "invalid";
+  if (!nonBlank(group.sellerPartyId)) return "invalid";
   return {
     groupKey: group.groupKey,
+    sellerPartyId: group.sellerPartyId,
     methodLabel: method.methodLabel,
     shippingAmountText: shipping,
     carrierCollectAmountText: carrier,
