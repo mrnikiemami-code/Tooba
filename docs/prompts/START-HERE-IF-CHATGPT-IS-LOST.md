@@ -1,4 +1,16 @@
-# CURRENT — 245-R4 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-10-29
+# CURRENT — 245-R5 ISSUED: captured shipping summary exact live totals — 2026-11-01
+
+Active task: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5`  
+Parent: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R4` (Architect accepted within scope)  
+Expected base: `caf49ef762a04c8bb83a25a86a1294e7b81b0c57`  
+State: **ISSUED / ACTIVE**  
+automaticNextImplementationTask: `NONE`
+
+Measured defect: captured shipping summary hard-codes shipping and payable to `—` even after authoritative method/date/hour selection. Recipient incompleteness must block Continue without hiding exact current selected shipping money.
+
+Read `docs/ai/tasks/TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245-R5/TASK.md`.
+
+# SUPERSEDED — 245-R4 ARCHITECT ACCEPTED; ACTIVE NONE — 2026-10-29
 
 Accepted chain: `TB-STOREFRONT-NAVIGATION-LATENCY-AND-PENDING-FEEDBACK-245` through R4, including R3 province/city selection retention and R4 cart critical-path/visible pending closure.
 
