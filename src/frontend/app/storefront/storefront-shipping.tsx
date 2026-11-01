@@ -84,6 +84,8 @@ import {
   describeShippingContinueBlocker,
   resolveShippingContinueState,
 } from "./storefront-shipping-continue-state.ts";
+import { projectCapturedShippingSummary } from "./storefront-shipping-captured-summary.ts";
+import { formatExactAmountText } from "./storefront-shipping-format.ts";
 import { StorefrontShippingSingleGroupSection } from "./storefront-shipping-single-group-section.tsx";
 import { resolveShippingUnavailableNotices } from "./storefront-shipping-unavailable-methods.ts";
 import {
@@ -675,6 +677,20 @@ export function StorefrontShopeivaShipping() {
   // TB-230: همین پرچم (بالاتر، همراه هماهنگ‌کنندهٔ مقصد) یک‌بار تعریف شده است.
 
   /**
+   * TB-245-R5 — خلاصهٔ مبلغ capture‌شده فقط وقتی هویت مقصد جاری است؛ در pending/failed مخفی.
+   * Continue همچنان فقط از resolveShippingContinueState روشن می‌شود.
+   */
+  const capturedSummary = useMemo(
+    () =>
+      projectCapturedShippingSummary({
+        preview: projection?.capturedPreview ?? null,
+        choices: capturedChoices,
+        confirmed: capturedPreviewConfirmed,
+      }),
+    [projection?.capturedPreview, capturedChoices, capturedPreviewConfirmed],
+  );
+
+  /**
    * TB-240-R7 — یک مرجع واحد برای روشن‌بودن «ادامه به پرداخت» + دلیل کوتاه مالک آن.
    *
    * پیش از این فقط `isValid` وجود داشت و دکمهٔ غیرفعال هیچ توضیحی نداشت؛ کاربر فقط یک دکمهٔ خاکستری
@@ -1117,13 +1133,31 @@ export function StorefrontShopeivaShipping() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">مبلغ کالا</span>
-                      <span className="font-bold">{formatOfferAmount(projection.subtotalExclusiveOfTax, projection.currency)}</span>
+                      <span className="font-bold" data-testid="shipping-summary-goods">
+                        {capturedPreviewActive
+                          ? (capturedSummary.kind === "ready"
+                            ? (formatExactAmountText(capturedSummary.goodsTotalText, capturedSummary.currency, locale) ?? "—")
+                            : formatOfferAmount(projection.subtotalExclusiveOfTax, projection.currency))
+                          : formatOfferAmount(projection.subtotalExclusiveOfTax, projection.currency)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">هزینه ارسال</span>
-                      <span className={`font-bold ${shippingAmount === 0 ? "text-emerald-500" : "text-gray-900"}`}>
+                      <span
+                        className={`font-bold ${
+                          (!capturedPreviewActive && shippingAmount === 0)
+                            || (capturedSummary.kind === "ready" && capturedSummary.shippingIsZero)
+                            ? "text-emerald-500"
+                            : "text-gray-900"
+                        }`}
+                        data-testid="shipping-summary-shipping"
+                      >
                         {capturedPreviewActive
-                          ? "—"
+                          ? (capturedSummary.kind === "ready"
+                            ? (capturedSummary.shippingIsZero
+                              ? (locale === "en" ? "Free" : "رایگان")
+                              : (formatExactAmountText(capturedSummary.shippingTotalText, capturedSummary.currency, locale) ?? "—"))
+                            : "—")
                           : shippingAmount === 0 && (isGroupedCart ? groupSelectionsByMethod.length > 0 : selectedMethod)
                             ? "رایگان"
                             : (isGroupedCart ? allGroupsHaveMethod : selectedMethod)
@@ -1131,10 +1165,42 @@ export function StorefrontShopeivaShipping() {
                               : "—"}
                       </span>
                     </div>
-                    {capturedPreviewActive ? (
+                    {capturedPreviewActive && (capturedSummary.kind === "ready" || capturedSummary.kind === "partial") && capturedSummary.rows.length > 0 ? (
+                      <div className="space-y-1.5 border-t border-dashed border-gray-200 pt-2.5 mt-1" data-testid="shipping-captured-fee-rows">
+                        {capturedSummary.rows.map((row) => (
+                          <div key={`captured-fee-${row.groupKey}`} className="flex justify-between gap-2 text-[11px] md:text-xs" data-testid={`shipping-captured-fee-${row.groupKey}`}>
+                            <span className="text-gray-500 truncate">{row.methodLabel}</span>
+                            <span className="font-bold text-gray-800 shrink-0">
+                              {formatExactAmountText(row.shippingAmountText, row.currency, locale) ?? "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {capturedPreviewActive && capturedSummary.kind === "ready" && capturedSummary.carrierCollectTotalText ? (
+                      <div className="flex justify-between text-[11px] md:text-xs" data-testid="shipping-summary-carrier-collect">
+                        <span className="text-gray-500">{locale === "en" ? "Collect on delivery" : "پرداخت به پیک"}</span>
+                        <span className="font-bold text-gray-800">
+                          {formatExactAmountText(capturedSummary.carrierCollectTotalText, capturedSummary.currency, locale) ?? "—"}
+                        </span>
+                      </div>
+                    ) : null}
+                    {capturedPreviewActive && capturedSummary.kind === "partial" ? (
+                      <p className="text-[10px] text-amber-700" data-testid="shipping-captured-summary-note">
+                        {locale === "en"
+                          ? "Select a delivery method for every group to see the cart shipping total."
+                          : "برای دیدن جمع هزینه ارسال، روش ارسال همه گروه‌ها را انتخاب کنید."}
+                      </p>
+                    ) : null}
+                    {capturedPreviewActive && (capturedSummary.kind === "hidden" || capturedSummary.kind === "unavailable") ? (
                       <p className="text-[10px] text-gray-500" data-testid="shipping-captured-summary-note">
-                        هزینه و تاریخ ارسال در کارت هر گروه نمایش داده می‌شود؛ مبلغ نهایی پس از تکمیل مسیر
-                        انتخاب/ثبت محاسبه می‌شود.
+                        {capturedSummary.kind === "hidden"
+                          ? (locale === "en"
+                            ? "Shipping amounts update after the destination quote is confirmed."
+                            : "مبالغ ارسال پس از تأیید مقصد نمایش داده می‌شوند.")
+                          : (locale === "en"
+                            ? "Selected shipping amounts are unavailable until the current quote is valid."
+                            : "مبالغ انتخاب‌شده تا معتبر بودن پاسخ ارسال نمایش داده نمی‌شوند.")}
                       </p>
                     ) : null}
                     {isGroupedCart && !capturedPreviewActive ? (
@@ -1154,8 +1220,12 @@ export function StorefrontShopeivaShipping() {
                     ) : null}
                     <div className="border-t border-gray-200 pt-2.5 mt-2.5 flex justify-between">
                       <span className="text-sm font-black">قابل پرداخت</span>
-                      <span className="text-base font-black text-primary">
-                        {capturedPreviewActive ? "—" : formatOfferAmount(payable, projection.currency)}
+                      <span className="text-base font-black text-primary" data-testid="shipping-summary-payable">
+                        {capturedPreviewActive
+                          ? (capturedSummary.kind === "ready"
+                            ? (formatExactAmountText(capturedSummary.payableTotalText, capturedSummary.currency, locale) ?? "—")
+                            : "—")
+                          : formatOfferAmount(payable, projection.currency)}
                       </span>
                     </div>
                   </div>
