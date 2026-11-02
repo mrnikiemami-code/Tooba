@@ -5,6 +5,7 @@
 - Task: `TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2`
 - Bridge row: `85819a34-f2e1-46f4-af1c-b54642c46d75`
 - Base-SHA: `84cae82b2cdc5a5f142b850b9fca9a0c352a08a4`
+- Code-SHA: `0a132f421a41ce0650cdb65f2aeda71caa537733`
 - ClaimedAtUtc: `2026-11-02T16:42:03.8972555Z`
 - Channel: `tooba-main` / Worker: `tooba-worker-01`
 

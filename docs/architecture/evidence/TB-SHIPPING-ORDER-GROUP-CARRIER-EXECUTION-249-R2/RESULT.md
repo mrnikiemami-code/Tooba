@@ -6,6 +6,8 @@ NOT Architect ACCEPT, NOT live Tipax ACCEPT, NOT full mandatory disposable-Postg
 
 Parent: `TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1`  
 Base-SHA: `84cae82b2cdc5a5f142b850b9fca9a0c352a08a4`  
+Code-SHA: `0a132f421a41ce0650cdb65f2aeda71caa537733`  
+Evidence-SHA: `0a132f421a41ce0650cdb65f2aeda71caa537733` (this RESULT/RECEIPTS land with Code)  
 Stop-State: `STOP_FOR_ARCHITECT`  
 automaticNextImplementationTask: `NONE`
 
