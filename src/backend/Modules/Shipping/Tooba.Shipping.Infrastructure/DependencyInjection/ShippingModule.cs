@@ -82,6 +82,7 @@ public sealed class ShippingModule : IToobaModule
         services.AddScoped<ICarrierRateProviderRegistry, CarrierRateProviderRegistry>();
         services.AddScoped<ICarrierShipmentProvider, TipaxV4ShipmentProvider>();
         services.AddScoped<ICarrierShipmentProviderRegistry, CarrierShipmentProviderRegistry>();
+        services.AddScoped<IShippingCarrierExecutionReadiness, ShippingCarrierExecutionReadiness>();
         services.AddScoped<IShippingCarrierShipmentOperations, ShippingCarrierShipmentDirectory>();
         services.AddScoped<IShippingRateQuoteLookup, ShippingRateQuoteLookup>();
         // TB-216: the captured-revision Contracts edge. It reads ONE exact owner+draft+revision, proves the

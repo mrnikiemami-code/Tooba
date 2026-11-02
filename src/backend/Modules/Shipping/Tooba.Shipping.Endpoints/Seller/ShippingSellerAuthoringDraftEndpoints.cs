@@ -96,6 +96,7 @@ public static class ShippingSellerAuthoringDraftEndpoints
         group.MapGet("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", GetCarrierBindingAsync);
         group.MapPut("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", ReplaceCarrierBindingAsync);
         group.MapPost("/shipping-services/shipments", CreateCarrierShipmentAsync);
+        group.MapPost("/shipping-services/shipments/package-completion", SaveCarrierShipmentPackageCompletionAsync);
         group.MapGet("/shipping-services/shipments/capabilities", ListCarrierExecutionCapabilitiesAsync);
         group.MapGet("/shipping-services/shipments", ListCarrierShipmentsAsync);
         group.MapGet("/shipping-services/shipments/{operationId:guid}", GetCarrierShipmentAsync);
@@ -668,6 +669,26 @@ public static class ShippingSellerAuthoringDraftEndpoints
         }
 
         return api.From(await sender.Send(new CreateShippingCarrierShipmentCommand(scope, body!), cancellationToken));
+    }
+
+    private static async Task<IResult> SaveCarrierShipmentPackageCompletionAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierShipmentPackageCompletionRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(new SaveShippingCarrierShipmentPackageCompletionCommand(scope, body!), cancellationToken));
     }
 
     private static async Task<IResult> ListCarrierShipmentsAsync(

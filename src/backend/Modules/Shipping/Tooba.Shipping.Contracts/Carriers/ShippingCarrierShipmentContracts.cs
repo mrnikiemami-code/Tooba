@@ -83,6 +83,20 @@ public sealed record ShippingCarrierShipmentPartyInput(
     string LocationCode,
     string? PostalCode = null);
 
+/// <summary>Configured sender hints from account/method binding (nullable until complete).</summary>
+public sealed record ShippingCarrierConfiguredSenderView(
+    string? FullName,
+    string? Mobile,
+    string? AddressLine,
+    string? PostalCode,
+    string? LocationCode);
+
+/// <summary>Latest durable create operation summary for one group.</summary>
+public sealed record ShippingCarrierLatestCreateOperationView(
+    Guid? OperationId,
+    ShippingCarrierShipmentStateView? State,
+    string? ProviderTrackingCode);
+
 /// <summary>Server-authoritative carrier execution capability for one committed shipping group.</summary>
 public sealed record ShippingGroupCarrierExecutionCapabilityView(
     Guid CheckoutId,
@@ -122,7 +136,28 @@ public sealed record ShippingGroupCarrierExecutionCapabilityView(
     bool PaymentLocked,
     bool CanExecuteCarrierShipment,
     string? IneligibilityReasonCode,
-    IReadOnlyList<Guid> OrderLineIds);
+    IReadOnlyList<Guid> OrderLineIds,
+    bool CanCreate,
+    bool CanTrack,
+    bool CanCancel,
+    bool CanLabel,
+    IReadOnlyList<string> BlockReasonCodes,
+    ShippingCarrierConfiguredSenderView ConfiguredSender,
+    bool PackageReady,
+    bool AllowPackageCompletion,
+    bool HasEditableSenderPostal,
+    bool HasEditableSenderContact,
+    ShippingCarrierLatestCreateOperationView? LatestCreateOperation);
+
+/// <summary>Authorized operational package completion without mutating Order accepted evidence.</summary>
+public sealed record ShippingCarrierShipmentPackageCompletionRequest(
+    Guid CheckoutId,
+    Guid ShippingGroupId,
+    decimal WeightGrams,
+    decimal DeclaredValue,
+    decimal LengthCentimeters,
+    decimal WidthCentimeters,
+    decimal HeightCentimeters);
 
 /// <summary>بستهٔ فیزیکی برای ایجاد محموله؛ مبلغ collect جدا از کرایهٔ تسویه است.</summary>
 /// <param name="WeightGrams">وزن به گرم.</param>

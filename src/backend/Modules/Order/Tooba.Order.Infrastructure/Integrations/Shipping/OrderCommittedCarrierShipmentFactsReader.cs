@@ -138,9 +138,11 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(OrderDbContext db) 
         }
         else if (!hasFullProvenance)
         {
-            reason = "package_incomplete";
+            reason = hasQuote ? "package_completion_required" : "package_incomplete";
         }
 
+        // Payment lock and cancelled are the only order-status blocks (see AdminFulfillmentCapabilityProjector).
+        // Other seller-order statuses are not treated as automatically shippable; Shipping readiness owns carrier gates.
         var canExecute = reason is null && hasQuote && hasFullProvenance && ownerPresent;
 
         return new OrderCommittedCarrierShipmentFacts(

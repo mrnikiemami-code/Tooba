@@ -288,7 +288,7 @@ public sealed class ShippingAuthoringOwnerEndpointTests
         // TB-190/191/192 draft routes and the TB-193 weekly schedule routes bring the certified
         // surface to 43 routes; TB-197 adds the choices read plus the assignment read/replace for
         // both audiences, so the certified surface is 53.
-        Assert.Equal(95, harness.Routes.Count);
+        Assert.Equal(97, harness.Routes.Count);
         Assert.Equal(
             ["GET " + AdminPath, "GET " + SellerPath],
             harness.Routes

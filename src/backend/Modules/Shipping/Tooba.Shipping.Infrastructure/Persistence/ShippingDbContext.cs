@@ -95,6 +95,14 @@ public sealed class ShippingDbContext : DbContext
     public DbSet<ShippingCarrierShipmentOperation> CarrierShipmentOperations =>
         Set<ShippingCarrierShipmentOperation>();
 
+    /// <summary>Operational sender completions for committed groups (Shipping-owned).</summary>
+    public DbSet<ShippingCarrierShipmentSenderCompletion> CarrierShipmentSenderCompletions =>
+        Set<ShippingCarrierShipmentSenderCompletion>();
+
+    /// <summary>Operational package completions for legacy accepted quotes (Shipping-owned).</summary>
+    public DbSet<ShippingCarrierShipmentPackageCompletion> CarrierShipmentPackageCompletions =>
+        Set<ShippingCarrierShipmentPackageCompletion>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -956,6 +964,48 @@ public sealed class ShippingDbContext : DbContext
             entity.HasIndex(x => x.DraftId)
                 .IsUnique()
                 .HasDatabaseName("ux_carrier_method_bindings_draft");
+        });
+
+        modelBuilder.Entity<ShippingCarrierShipmentSenderCompletion>(entity =>
+        {
+            entity.ToTable("carrier_shipment_sender_completions");
+            entity.HasKey(x => x.CompletionId);
+            entity.Property(x => x.CompletionId).HasColumnName("completion_id").ValueGeneratedNever();
+            entity.Property(x => x.OwnerKind).HasColumnName("owner_kind").HasConversion<int>();
+            entity.Property(x => x.OwnerTenantId).HasColumnName("owner_tenant_id").HasMaxLength(128);
+            entity.Property(x => x.OwnerSellerPartyId).HasColumnName("owner_seller_party_id");
+            entity.Property(x => x.CheckoutId).HasColumnName("checkout_id");
+            entity.Property(x => x.ShippingGroupId).HasColumnName("shipping_group_id");
+            entity.Property(x => x.FullName).HasColumnName("full_name").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Mobile).HasColumnName("mobile").HasMaxLength(32).IsRequired();
+            entity.Property(x => x.AddressLine).HasColumnName("address_line").HasMaxLength(512).IsRequired();
+            entity.Property(x => x.PostalCode).HasColumnName("postal_code").HasMaxLength(32);
+            entity.Property(x => x.LocationCode).HasColumnName("location_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(x => new { x.OwnerKind, x.OwnerTenantId, x.OwnerSellerPartyId, x.CheckoutId, x.ShippingGroupId })
+                .IsUnique()
+                .HasDatabaseName("ux_carrier_shipment_sender_completions_group");
+        });
+
+        modelBuilder.Entity<ShippingCarrierShipmentPackageCompletion>(entity =>
+        {
+            entity.ToTable("carrier_shipment_package_completions");
+            entity.HasKey(x => x.CompletionId);
+            entity.Property(x => x.CompletionId).HasColumnName("completion_id").ValueGeneratedNever();
+            entity.Property(x => x.OwnerKind).HasColumnName("owner_kind").HasConversion<int>();
+            entity.Property(x => x.OwnerTenantId).HasColumnName("owner_tenant_id").HasMaxLength(128);
+            entity.Property(x => x.OwnerSellerPartyId).HasColumnName("owner_seller_party_id");
+            entity.Property(x => x.CheckoutId).HasColumnName("checkout_id");
+            entity.Property(x => x.ShippingGroupId).HasColumnName("shipping_group_id");
+            entity.Property(x => x.WeightGrams).HasColumnName("weight_grams").HasPrecision(18, 2);
+            entity.Property(x => x.DeclaredValue).HasColumnName("declared_value").HasPrecision(18, 2);
+            entity.Property(x => x.LengthCentimeters).HasColumnName("length_centimeters").HasPrecision(18, 2);
+            entity.Property(x => x.WidthCentimeters).HasColumnName("width_centimeters").HasPrecision(18, 2);
+            entity.Property(x => x.HeightCentimeters).HasColumnName("height_centimeters").HasPrecision(18, 2);
+            entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(x => new { x.OwnerKind, x.OwnerTenantId, x.OwnerSellerPartyId, x.CheckoutId, x.ShippingGroupId })
+                .IsUnique()
+                .HasDatabaseName("ux_carrier_shipment_package_completions_group");
         });
 
         modelBuilder.Entity<ShippingCarrierShipmentOperation>(entity =>

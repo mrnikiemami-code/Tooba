@@ -35,4 +35,9 @@ public interface IShippingCarrierShipmentOperations
         ShippingAuthoringOwnerScope owner,
         Guid operationId,
         CancellationToken cancellationToken);
+
+    Task<Result<ShippingGroupCarrierExecutionCapabilityView>> SavePackageCompletionAsync(
+        ShippingAuthoringOwnerScope owner,
+        ShippingCarrierShipmentPackageCompletionRequest request,
+        CancellationToken cancellationToken);
 }

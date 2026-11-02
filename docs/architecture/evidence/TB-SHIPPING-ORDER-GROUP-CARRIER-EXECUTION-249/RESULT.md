@@ -9,6 +9,10 @@ Base-SHA: `8e73cef67d48fc8acd4ed8dc599040d2d7310130`
 Stop-State: `STOP_FOR_ARCHITECT`  
 automaticNextImplementationTask: `NONE`
 
+## Architect PARTIAL (249-R1 correction)
+
+Independent review found residual defects: misleading capability vs Create readiness, wrong sender labels and recipient postal prefill, methodCode heuristic routing, operation-state CanTrack/CanCancel from provider caps only, refresh hiding errors, no package/sender completion for legacy quotes, seller importing admin-owned UI. Corrected in **TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1** (software pass; deploy pending).
+
 ## Summary
 
 Detached admin/seller carrier forms are removed. CarrierApi create/track/cancel is bound to accepted `order_shipping_groups` with server-authoritative account/service/recipient/destination/package provenance. Manual/Free stay on existing fulfillment shipment workflows. Live Tipax communication remains deferred by user (no credentials requested).

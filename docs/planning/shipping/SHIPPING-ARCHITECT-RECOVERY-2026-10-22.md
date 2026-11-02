@@ -1,7 +1,12 @@
-# CURRENT — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+# CURRENT — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+
+Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+249-R1 closes Architect PARTIAL residuals on 249 (labels, readiness unity, package completion, shared FE). Migration `20261102210000` applied; live Tipax still deferred.
+
+# SUPERSEDED — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 
 Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249/{TASK.md,RESULT.md,RECEIPTS.md}.
-249 supersedes detached admin/seller carrier panels and 248-R1 execution UX gaps; migration applied on canonical tooba_alpha; live Tipax still deferred.
+249 worker PASS then Architect PARTIAL; superseded by 249-R1.
 
 # SUPERSEDED — 248-R1 HANDOFF / PROVIDER ACCEPTANCE DEFERRED — 2026-11-02
 

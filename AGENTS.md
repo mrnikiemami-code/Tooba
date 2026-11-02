@@ -1,4 +1,11 @@
-# CURRENT — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+# CURRENT — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued software/deploy scope, decision **UNIFIED_READINESS_AND_GROUP_EXECUTION_UI_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `c30817c6`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. Migration `20261102210000_CarrierShipmentCompletions` applied after private backup.
+LANDED: unified readiness for capabilities+Create; corrected sender labels/postal; no method-name heuristic; package/sender completions; operation-state track/cancel; shared FE module. Classification **56/97**. Parent 249 Architect PARTIAL residuals closed. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 
 Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued software/deploy scope, decision **GROUP_SCOPED_CARRIER_EXECUTION_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `8e73cef`.

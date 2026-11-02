@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminOrderGroupCarrierExecution } from "../admin/admin-order-group-carrier-execution";
+import { OrderGroupCarrierExecution } from "../../features/order-carrier-execution/order-group-carrier-execution.tsx";
 import {
   DEV_ACTOR_HEADER,
   SELLER_PARTY_HEADER,
@@ -10,9 +10,10 @@ import {
 
 export function SellerOrderGroupCarrierExecution({ checkoutId }: { checkoutId: string }) {
   return (
-    <AdminOrderGroupCarrierExecution
+    <OrderGroupCarrierExecution
       checkoutId={checkoutId}
       apiPrefix="/v1/seller"
+      testIdPrefix="seller-order-group-carrier-execution"
       requestHeaders={() => {
         const headers: Record<string, string> = {
           Accept: "application/json",

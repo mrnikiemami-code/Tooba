@@ -1,9 +1,13 @@
-# CURRENT — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+# CURRENT — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued software/deploy scope, decision **UNIFIED_READINESS_AND_GROUP_EXECUTION_UI_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `c30817c6`.
+Canonical FE3000→Host5088. Migration `20261102210000_CarrierShipmentCompletions` applied. Classification **56/97**. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 
 Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued software/deploy scope, decision **GROUP_SCOPED_CARRIER_EXECUTION_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `8e73cef`.
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. Migration `20261102190000_AddAcceptedCarrierExecutionProvenance` applied after private backup.
-LANDED: execution provenance; capabilities GET; hardened create; per-group admin/seller UI. Classification **55/95**. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS** within software/deploy scope then Architect **PARTIAL** (closed by 249-R1). Base `8e73cef`. Classification **55/95**.
 
 # SUPERSEDED — 248-R1 HANDOFF / PROVIDER ACCEPTANCE DEFERRED — 2026-11-02
 

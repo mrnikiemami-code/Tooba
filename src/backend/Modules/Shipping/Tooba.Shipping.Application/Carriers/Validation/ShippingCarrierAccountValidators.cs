@@ -201,6 +201,32 @@ public sealed class ListShippingGroupCarrierExecutionCapabilitiesQueryValidator
         => RuleFor(x => x.CheckoutId).NotEmpty().WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
 }
 
+public sealed class SaveShippingCarrierShipmentPackageCompletionCommandValidator
+    : AbstractValidator<SaveShippingCarrierShipmentPackageCompletionCommand>
+{
+    public SaveShippingCarrierShipmentPackageCompletionCommandValidator()
+    {
+        RuleFor(x => x.Request.CheckoutId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
+        RuleFor(x => x.Request.ShippingGroupId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.WeightGrams)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.LengthCentimeters)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.WidthCentimeters)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.HeightCentimeters)
+            .GreaterThan(0)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+    }
+}
+
 public sealed class ListShippingCarrierShipmentsQueryValidator : AbstractValidator<ListShippingCarrierShipmentsQuery>
 {
     public ListShippingCarrierShipmentsQueryValidator()

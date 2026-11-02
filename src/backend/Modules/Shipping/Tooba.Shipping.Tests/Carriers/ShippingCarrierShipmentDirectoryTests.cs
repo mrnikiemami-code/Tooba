@@ -174,11 +174,18 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             SuccessCallbackUrl = "https://store.test/ok",
             FailureCallbackUrl = "https://store.test/fail",
         });
+        var accounts = new StubAccounts(configured);
+        var readiness = new ShippingCarrierExecutionReadiness(
+            db,
+            accounts,
+            new StubRegistry(provider),
+            tipax);
         return new ShippingCarrierShipmentDirectory(
             db,
-            new StubAccounts(configured),
+            accounts,
             new StubRegistry(provider),
             new StubFacts(facts),
+            readiness,
             tipax);
     }
 
@@ -335,7 +342,27 @@ public sealed class ShippingCarrierShipmentDirectoryTests
                 "IRR",
                 "user",
                 "pass",
-                null));
+                new ShippingCarrierMethodBindingView(
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    Account,
+                    "tipax",
+                    "7",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    Origin,
+                    "مبدأ",
+                    null,
+                    null,
+                    20m,
+                    15m,
+                    10m,
+                    1,
+                    DateTimeOffset.UtcNow)));
         }
     }
 

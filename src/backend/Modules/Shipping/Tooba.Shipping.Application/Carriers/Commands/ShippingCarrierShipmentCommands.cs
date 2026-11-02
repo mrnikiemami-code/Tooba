@@ -71,3 +71,17 @@ public sealed class LabelShippingCarrierShipmentHandler(IShippingCarrierShipment
         CancellationToken cancellationToken)
         => operations.LabelAsync(request.Owner, request.OperationId, cancellationToken);
 }
+
+public sealed record SaveShippingCarrierShipmentPackageCompletionCommand(
+    ShippingAuthoringOwnerScope Owner,
+    ShippingCarrierShipmentPackageCompletionRequest Request)
+    : IRequest<Result<ShippingGroupCarrierExecutionCapabilityView>>;
+
+public sealed class SaveShippingCarrierShipmentPackageCompletionHandler(IShippingCarrierShipmentOperations operations)
+    : IRequestHandler<SaveShippingCarrierShipmentPackageCompletionCommand, Result<ShippingGroupCarrierExecutionCapabilityView>>
+{
+    public Task<Result<ShippingGroupCarrierExecutionCapabilityView>> Handle(
+        SaveShippingCarrierShipmentPackageCompletionCommand request,
+        CancellationToken cancellationToken)
+        => operations.SavePackageCompletionAsync(request.Owner, request.Request, cancellationToken);
+}

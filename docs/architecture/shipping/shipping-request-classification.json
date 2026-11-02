@@ -800,6 +800,21 @@
       "reason": "Shipment create body is untrusted; eligibility is server-owned."
     },
     {
+      "request": "SaveShippingCarrierShipmentPackageCompletionCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/shipments/package-completion",
+        "POST /v1/seller/shipping-services/shipments/package-completion"
+      ],
+      "handler": "SaveShippingCarrierShipmentPackageCompletionHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "SaveShippingCarrierShipmentPackageCompletionCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Package completion body is untrusted; Order accepted evidence must not change."
+    },
+    {
       "request": "ListShippingGroupCarrierExecutionCapabilitiesQuery",
       "routes": [
         "GET /v1/admin/shipping-services/shipments/capabilities",
@@ -906,11 +921,11 @@
     "ListShippingCarrierAccountsQuery"
   ],
   "totals": {
-    "shippedRoutes": 95,
-    "endpointReachableRequests": 55,
-    "requestValidators": 50,
+    "shippedRoutes": 97,
+    "endpointReachableRequests": 56,
+    "requestValidators": 51,
     "nestedTransportValidators": 6,
-    "declaredValidators": 55
+    "declaredValidators": 56
   },
   "amendments": [
     {
