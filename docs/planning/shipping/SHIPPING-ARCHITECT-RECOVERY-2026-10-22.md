@@ -1,4 +1,20 @@
-# CURRENT — 248-R1 SOFTWARE COMPLETE DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+# CURRENT — 248-R1 HANDOFF / PROVIDER ACCEPTANCE DEFERRED — 2026-11-02
+
+Active implementation: `NONE`
+automaticNextImplementationTask: `NONE`
+Source and worker evidence: `04abe1af87286afb8bf65c839e8a1732be9983f9`
+Worker decision: `SOFTWARE_COMPLETE_DEPLOYED_PROVIDER_UNVERIFIED`
+Architect state: **RECOVERY SYNCHRONIZED; INDEPENDENT CODE ACCEPTANCE NOT YET RECORDED**
+
+The user wants all software installed on the canonical environment and explicitly defers a Tipax account/live test. Do not request credentials, open an automatic follow-up implementation task, or treat absent credentials as unfinished software. The worker reports software and canonical deployment complete; this documentation checkpoint does not independently certify that claim or external-provider behavior.
+
+Canonical target: SarvNewVer source, FE `http://127.0.0.1:3000` → Host `http://127.0.0.1:5088`, SingleStore / store-alpha / `tooba_alpha`. Runtime PIDs and health in worker receipts are point-in-time observations, not current live checks. No alternate database/runtime is the delivery. Provider connectivity is unconfigured; Manual/Free remain available; checked-in gates stay OFF and existing local captured-preview state must not be silently disabled.
+
+Read `docs/architecture/evidence/TB-SHIPPING-CARRIER-CONFIGURATION-AND-CHECKOUT-248-R1/HANDOFF-RECOVERY.md` first, then TASK/RESULT/RECEIPTS and `docs/planning/shipping/CARRIER-ADAPTER-AND-TIPAX-V4-PLAN-2026-11-02.md`. Preserve the Host DataProtection key directory across deployments; do not reset/reseed, reapply recorded migrations blindly, submit the user cart, or create shipments during recovery. Label/PDF is explicitly unsupported by this adapter; do not broaden that into an independently verified claim that Tipax can never support it.
+
+Everything below is historical. Older CURRENT/ACTIVE labels do not override this checkpoint. User visual acceptance and independent architecture review must never be inferred from worker PASS.
+
+# HISTORICAL WORKER RESULT — 248-R1 SOFTWARE COMPLETE DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-CONFIGURATION-AND-CHECKOUT-248-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued software/deploy scope, decision **SOFTWARE_COMPLETE_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `3639acca9`.
