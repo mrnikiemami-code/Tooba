@@ -194,6 +194,36 @@ public sealed class CreateShippingCarrierShipmentCommandValidator
     }
 }
 
+public sealed class SaveShippingCarrierShipmentSenderCompletionCommandValidator
+    : AbstractValidator<SaveShippingCarrierShipmentSenderCompletionCommand>
+{
+    public SaveShippingCarrierShipmentSenderCompletionCommandValidator()
+    {
+        RuleFor(x => x.Request.CheckoutId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
+        RuleFor(x => x.Request.ShippingGroupId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.FullName)
+            .NotEmpty()
+            .MaximumLength(256)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.Mobile)
+            .NotEmpty()
+            .MaximumLength(32)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.AddressLine)
+            .NotEmpty()
+            .MaximumLength(512)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+        RuleFor(x => x.Request.PostalCode)
+            .NotEmpty()
+            .MaximumLength(32)
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
+    }
+}
+
 public sealed class ListShippingGroupCarrierExecutionCapabilitiesQueryValidator
     : AbstractValidator<ListShippingGroupCarrierExecutionCapabilitiesQuery>
 {

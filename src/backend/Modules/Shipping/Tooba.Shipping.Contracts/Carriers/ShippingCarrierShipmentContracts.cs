@@ -159,6 +159,15 @@ public sealed record ShippingCarrierShipmentPackageCompletionRequest(
     decimal WidthCentimeters,
     decimal HeightCentimeters);
 
+/// <summary>Authorized durable sender completion separate from carrier shipment create.</summary>
+public sealed record ShippingCarrierShipmentSenderCompletionRequest(
+    Guid CheckoutId,
+    Guid ShippingGroupId,
+    string FullName,
+    string Mobile,
+    string AddressLine,
+    string PostalCode);
+
 /// <summary>بستهٔ فیزیکی برای ایجاد محموله؛ مبلغ collect جدا از کرایهٔ تسویه است.</summary>
 /// <param name="WeightGrams">وزن به گرم.</param>
 /// <param name="DeclaredValue">ارزش اظهارشده.</param>
@@ -174,19 +183,7 @@ public sealed record ShippingCarrierShipmentPackageInput(
     decimal HeightCentimeters,
     decimal CollectAmount);
 
-/// <summary>ایجاد محموله فقط پس از سفارش متعهد و با فکت‌های پذیرفته‌شده.</summary>
-/// <param name="CheckoutId">سفارش متعهد.</param>
-/// <param name="ShippingGroupId">گروه ارسال متعهد.</param>
-/// <param name="CarrierAccountId">حساب حامل؛ با شاهد سفارش overlay می‌شود.</param>
-/// <param name="ProviderServiceId">کد خدمت provider.</param>
-/// <param name="Sender">فرستنده.</param>
-/// <param name="Recipient">گیرنده؛ فیلدهای خالی از Order پر می‌شوند.</param>
-/// <param name="Package">بسته؛ CollectAmount از شاهد سفارش overlay می‌شود.</param>
-public sealed record ShippingCarrierShipmentCreateRequest(
+/// <summary>Execute carrier shipment create; account, service, sender, package, and recipient are server-owned.</summary>
+public sealed record ShippingCarrierShipmentExecuteRequest(
     Guid CheckoutId,
-    Guid ShippingGroupId,
-    Guid CarrierAccountId,
-    string ProviderServiceId,
-    ShippingCarrierShipmentPartyInput Sender,
-    ShippingCarrierShipmentPartyInput Recipient,
-    ShippingCarrierShipmentPackageInput Package);
+    Guid ShippingGroupId);

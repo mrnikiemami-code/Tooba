@@ -1341,6 +1341,10 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("configuration_version");
 
+                    b.Property<string>("ExecutionInputSnapshotJson")
+                        .HasColumnType("text")
+                        .HasColumnName("execution_input_snapshot_json");
+
                     b.Property<int>("Kind")
                         .HasColumnType("integer")
                         .HasColumnName("kind");

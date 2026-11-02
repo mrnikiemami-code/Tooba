@@ -175,8 +175,8 @@ public sealed class ShippingAuthoringContextEndpointTests
         // the presentation routes, so the surface is 39 routes (TB-193 adds one GET and one PUT
         // weekly-schedule route per audience). TB-197 adds the active type choices read, the current
         // assignment read and the assignment replace, each for both audiences: 49 + 4 editor-document routes = 53.
-        Assert.Equal(97, harness.Routes.Count);
-        Assert.Equal(97, harness.Endpoints.Count);
+        Assert.Equal(99, harness.Routes.Count);
+        Assert.Equal(99, harness.Endpoints.Count);
 
         // The endpoint declares the existing permission and no anonymous/transport binding.
         var source = File.ReadAllText(Path.Combine(

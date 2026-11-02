@@ -71,6 +71,47 @@ public sealed class ShippingCarrierExecutionReadinessTests
     }
 
     [Fact]
+    public async Task Stored_package_completion_clears_package_completion_required_and_allows_create_when_sender_complete()
+    {
+        var db = NewDb();
+        db.CarrierShipmentPackageCompletions.Add(
+            ShippingCarrierShipmentPackageCompletion.Create(
+                Guid.NewGuid(),
+                ShippingDraftOwnerKind.Store,
+                "store-alpha",
+                null,
+                Checkout,
+                Group,
+                1800m,
+                100m,
+                22m,
+                18m,
+                12m,
+                DateTimeOffset.UtcNow));
+        db.CarrierShipmentSenderCompletions.Add(
+            ShippingCarrierShipmentSenderCompletion.Create(
+                Guid.NewGuid(),
+                ShippingDraftOwnerKind.Store,
+                "store-alpha",
+                null,
+                Checkout,
+                Group,
+                "فرستنده",
+                "09120000000",
+                "مبدأ",
+                "1111111111",
+                Origin,
+                DateTimeOffset.UtcNow));
+        await db.SaveChangesAsync();
+
+        var facts = IncompleteProvenanceFacts();
+        var readiness = CreateReadiness(db, configured: true, facts: facts);
+        var view = await readiness.BuildCapabilityAsync(Owner(), facts, CancellationToken.None);
+        Assert.True(view.CanCreate);
+        Assert.DoesNotContain("package_completion_required", view.BlockReasonCodes);
+    }
+
+    [Fact]
     public async Task Existing_create_operation_disallows_second_create()
     {
         var db = NewDb();
@@ -168,6 +209,47 @@ public sealed class ShippingCarrierExecutionReadinessTests
             !canExecute,
             canExecute,
             reason,
+            Array.Empty<Guid>());
+
+    private static OrderCommittedCarrierShipmentFacts IncompleteProvenanceFacts() =>
+        new(
+            Checkout,
+            Group,
+            SellerParty,
+            SellerOrder,
+            "tipax:standard",
+            "Tipax",
+            "CarrierApi",
+            0,
+            "store-alpha",
+            null,
+            "گیرنده",
+            "09121111111",
+            "نشانی",
+            "1111111111",
+            "تهران",
+            "تهران",
+            "IRR",
+            137_500m,
+            0m,
+            true,
+            Account,
+            1,
+            "tipax",
+            "7",
+            "input-1",
+            Origin,
+            Destination,
+            null,
+            2_000_000m,
+            null,
+            null,
+            null,
+            "Paid",
+            false,
+            false,
+            true,
+            "package_completion_required",
             Array.Empty<Guid>());
 
     private sealed class RecordingShipmentProvider : ICarrierShipmentProvider

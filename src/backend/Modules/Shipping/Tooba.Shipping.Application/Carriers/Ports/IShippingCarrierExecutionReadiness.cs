@@ -22,6 +22,6 @@ public interface IShippingCarrierExecutionReadiness
         EvaluateCreateAsync(
             ShippingAuthoringOwnerScope owner,
             OrderCommittedCarrierShipmentFacts facts,
-            ShippingCarrierShipmentPartyInput requestedSender,
+            ShippingCarrierShipmentPartyInput? requestedSender,
             CancellationToken cancellationToken);
 }

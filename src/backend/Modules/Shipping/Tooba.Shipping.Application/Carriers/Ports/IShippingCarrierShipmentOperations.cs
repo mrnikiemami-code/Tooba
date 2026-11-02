@@ -8,7 +8,7 @@ public interface IShippingCarrierShipmentOperations
 {
     Task<Result<ShippingCarrierShipmentOperationView>> CreateAsync(
         ShippingAuthoringOwnerScope owner,
-        ShippingCarrierShipmentCreateRequest request,
+        ShippingCarrierShipmentExecuteRequest request,
         CancellationToken cancellationToken);
 
     Task<Result<IReadOnlyList<ShippingCarrierShipmentOperationView>>> ListAsync(
@@ -39,5 +39,10 @@ public interface IShippingCarrierShipmentOperations
     Task<Result<ShippingGroupCarrierExecutionCapabilityView>> SavePackageCompletionAsync(
         ShippingAuthoringOwnerScope owner,
         ShippingCarrierShipmentPackageCompletionRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<ShippingGroupCarrierExecutionCapabilityView>> SaveSenderCompletionAsync(
+        ShippingAuthoringOwnerScope owner,
+        ShippingCarrierShipmentSenderCompletionRequest request,
         CancellationToken cancellationToken);
 }

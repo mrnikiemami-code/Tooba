@@ -39,6 +39,18 @@ Shipping `20261102210000_CarrierShipmentCompletions` applied; tables `carrier_sh
 
 LIVE TIPAX deferred by user. Sender authority still uses account/binding display when no separate store contact port exists. Worker PASS ≠ Architect ACCEPT.
 
+## Architect PARTIAL (249-R2 correction scope, append-only)
+
+Independent review confirmed R1 software PASS did not establish the working completion→create path:
+
+- `package_completion_required` from Order facts was not cleared after stored package completion, so `CanCreate` stayed false.
+- Track/Cancel mutations did not enforce inactive account / shared operation-state gates used by capabilities.
+- Create accepted client sender rewrites; DisplayName could stand in for sender name; no pre-provider execution snapshot.
+- Order eligibility omitted fulfillment remaining quantity (`fulfillment_exhausted` / unavailable).
+- FE create used placeholder account/service; refresh loop coupled to action status; missing action-level network errors.
+
+Corrected in **TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2** (base `84cae82b2`); see 249-R2 RESULT/RECEIPTS. R1 PASS retained as historical worker/deploy receipt only.
+
 ## Stop
 
 STOP_FOR_ARCHITECT; automaticNext NONE

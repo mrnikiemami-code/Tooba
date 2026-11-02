@@ -41,11 +41,14 @@ export function OrderGroupCarrierExecution({
   const messages = authoringMessages("fa");
   const [capabilities, setCapabilities] = useState<readonly CapabilityRow[]>([]);
   const [shipments, setShipments] = useState<readonly ShipmentView[]>([]);
-  const [status, setStatus] = useState("");
+  const [actionStatus, setActionStatus] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [busyLocks, setBusyLocks] = useState<Record<string, boolean>>({});
   const inFlightRef = useRef(new Set<string>());
+  const refreshSeqRef = useRef(0);
+  const requestHeadersRef = useRef(requestHeaders);
+  requestHeadersRef.current = requestHeaders;
   const [senderByGroup, setSenderByGroup] = useState<Record<string, SenderDraft>>({});
   const [packageByGroup, setPackageByGroup] = useState<Record<string, PackageDraft>>({});
 
@@ -85,8 +88,30 @@ export function OrderGroupCarrierExecution({
           return messages.carrierExecutionBlockOperationSucceeded;
         case "operation_unknown":
           return messages.carrierExecutionBlockOperationUnknown;
+        case "fulfillment_unavailable":
+          return messages.carrierExecutionBlockFulfillmentUnavailable;
+        case "fulfillment_exhausted":
+          return messages.carrierExecutionBlockFulfillmentExhausted;
         default:
           return messages.carrierExecutionBlockGeneric;
+      }
+    },
+    [messages],
+  );
+
+  const shipmentStateLabel = useCallback(
+    (state: ShipmentView["state"]) => {
+      switch (state) {
+        case "Pending":
+          return messages.carrierShipmentStatePending;
+        case "Succeeded":
+          return messages.carrierShipmentStateSucceeded;
+        case "Failed":
+          return messages.carrierShipmentStateFailed;
+        case "Unknown":
+          return messages.carrierShipmentUnknown;
+        default:
+          return messages.carrierShipmentUnknown;
       }
     },
     [messages],
@@ -108,14 +133,16 @@ export function OrderGroupCarrierExecution({
 
   const refresh = useCallback(async (signal?: AbortSignal) => {
     if (!checkoutId) return;
+    const seq = ++refreshSeqRef.current;
     setLoading(true);
     try {
-      const headers = requestHeaders();
+      const headers = requestHeadersRef.current();
       const query = encodeURIComponent(checkoutId);
       const [capRes, shipRes] = await Promise.all([
         fetch(`${apiPrefix}/shipping-services/shipments/capabilities?checkoutId=${query}`, { headers, signal }),
         fetch(`${apiPrefix}/shipping-services/shipments?checkoutId=${query}`, { headers, signal }),
       ]);
+      if (seq !== refreshSeqRef.current) return;
       const capPayload = await readJson(capRes);
       const shipPayload = await readJson(shipRes);
       if (!capRes.ok) {
@@ -145,27 +172,31 @@ export function OrderGroupCarrierExecution({
         return next;
       });
       if (!shipRes.ok) {
-        setStatus(messages.carrierShipmentListFailed);
+        setActionStatus(messages.carrierShipmentListFailed);
       } else {
         const ships = (Array.isArray(shipPayload) ? shipPayload : [])
           .map(decodeShipment)
           .filter((row): row is ShipmentView => row !== null);
         setShipments(ships);
-        if (!status) setStatus("");
       }
     } catch (err) {
-      if ((err as { name?: string }).name !== "AbortError") {
+      if ((err as { name?: string }).name !== "AbortError" && seq === refreshSeqRef.current) {
         setLoadError(messages.carrierSaveFailed);
       }
     } finally {
-      setLoading(false);
+      if (seq === refreshSeqRef.current) {
+        setLoading(false);
+      }
     }
-  }, [apiPrefix, checkoutId, messages, requestHeaders, status]);
+  }, [apiPrefix, checkoutId, messages]);
 
   useEffect(() => {
     const controller = new AbortController();
     void refresh(controller.signal);
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      refreshSeqRef.current += 1;
+    };
   }, [refresh]);
 
   async function post(path: string, body?: unknown): Promise<string | null> {
@@ -219,9 +250,9 @@ export function OrderGroupCarrierExecution({
         <h2 className="text-sm font-black text-gray-900">{messages.carrierExecutionTitle}</h2>
         <p className="mt-0.5 text-[11px] text-gray-500">{messages.carrierExecutionHint}</p>
       </div>
-      {status ? (
+      {actionStatus ? (
         <p className="px-3 pt-2 text-xs font-semibold text-gray-700" data-testid={`${testIdPrefix}-status`}>
-          {status}
+          {actionStatus}
         </p>
       ) : null}
       <div className="space-y-3 p-3">
@@ -345,8 +376,10 @@ export function OrderGroupCarrierExecution({
                           widthCentimeters: Number(pkg.width),
                           heightCentimeters: Number(pkg.height),
                         });
-                        setStatus(failed ?? messages.carrierPackageCompletionSaved);
+                        setActionStatus(failed ?? messages.carrierPackageCompletionSaved);
                         if (!failed) await refresh();
+                      } catch {
+                        setActionStatus(messages.carrierActionFailed);
                       } finally {
                         syncBusy(groupId, false);
                       }
@@ -409,6 +442,36 @@ export function OrderGroupCarrierExecution({
                   <Field id={`sender-origin-${group.shippingGroupId}`} label={messages.carrierOriginCity}>
                     <Input value={group.originLocationCode ?? ""} readOnly dir="ltr" />
                   </Field>
+                  {group.hasEditableSenderContact || group.hasEditableSenderPostal ? (
+                    <button
+                      type="button"
+                      className="min-h-11 self-end rounded-lg border px-3 text-xs font-bold"
+                      disabled={busy}
+                      onClick={async () => {
+                        const groupId = group.shippingGroupId;
+                        if (inFlightRef.current.has(groupId)) return;
+                        syncBusy(groupId, true);
+                        try {
+                          const failed = await post(`${apiPrefix}/shipping-services/shipments/sender-completion`, {
+                            checkoutId,
+                            shippingGroupId: groupId,
+                            fullName: sender.name,
+                            mobile: sender.mobile,
+                            addressLine: sender.address,
+                            postalCode: sender.postalCode,
+                          });
+                          setActionStatus(failed ?? messages.carrierSenderCompletionSaved);
+                          if (!failed) await refresh();
+                        } catch {
+                          setActionStatus(messages.carrierActionFailed);
+                        } finally {
+                          syncBusy(groupId, false);
+                        }
+                      }}
+                    >
+                      {messages.carrierSenderCompletionSave}
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
               {group.canCreate ? (
@@ -425,33 +488,11 @@ export function OrderGroupCarrierExecution({
                       const failed = await post(`${apiPrefix}/shipping-services/shipments`, {
                         checkoutId,
                         shippingGroupId: groupId,
-                        carrierAccountId: "00000000-0000-0000-0000-000000000000",
-                        providerServiceId: "ignored",
-                        sender: {
-                          fullName: sender.name,
-                          mobile: sender.mobile,
-                          addressLine: sender.address,
-                          locationCode: group.originLocationCode,
-                          postalCode: sender.postalCode || null,
-                        },
-                        recipient: {
-                          fullName: group.recipientName,
-                          mobile: group.recipientMobile,
-                          addressLine: group.recipientAddress,
-                          locationCode: group.destinationLocationCode,
-                          postalCode: group.postalCode,
-                        },
-                        package: {
-                          weightGrams: group.weightGrams,
-                          declaredValue: group.declaredValue,
-                          lengthCentimeters: group.lengthCentimeters,
-                          widthCentimeters: group.widthCentimeters,
-                          heightCentimeters: group.heightCentimeters,
-                          collectAmount: 0,
-                        },
                       });
-                      setStatus(failed ?? messages.carrierAccountSaved);
+                      setActionStatus(failed ?? messages.carrierAccountSaved);
                       if (!failed) await refresh();
+                    } catch {
+                      setActionStatus(messages.carrierActionFailed);
                     } finally {
                       syncBusy(groupId, false);
                     }
@@ -468,9 +509,7 @@ export function OrderGroupCarrierExecution({
                     <li key={row.operationId} className="rounded-lg border border-gray-200 bg-white p-2 text-xs">
                       <p dir="ltr">{row.providerTrackingCode ?? row.operationId}</p>
                       <p>
-                        {row.state === "Unknown"
-                          ? messages.carrierShipmentUnknown
-                          : row.state}{" "}
+                        {shipmentStateLabel(row.state)}{" "}
                         {row.providerStatus ?? row.lastErrorCode ?? ""}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
@@ -486,8 +525,10 @@ export function OrderGroupCarrierExecution({
                               const failed = await post(
                                 `${apiPrefix}/shipping-services/shipments/${row.operationId}/track`,
                               );
-                              setStatus(failed ?? messages.carrierTestResult);
+                              setActionStatus(failed ?? messages.carrierTestResult);
                               if (!failed) await refresh();
+                            } catch {
+                              setActionStatus(messages.carrierActionFailed);
                             } finally {
                               syncBusy(groupId, false);
                             }
@@ -507,8 +548,10 @@ export function OrderGroupCarrierExecution({
                               const failed = await post(
                                 `${apiPrefix}/shipping-services/shipments/${row.operationId}/cancel`,
                               );
-                              setStatus(failed ?? messages.carrierTestResult);
+                              setActionStatus(failed ?? messages.carrierTestResult);
                               if (!failed) await refresh();
+                            } catch {
+                              setActionStatus(messages.carrierActionFailed);
                             } finally {
                               syncBusy(groupId, false);
                             }

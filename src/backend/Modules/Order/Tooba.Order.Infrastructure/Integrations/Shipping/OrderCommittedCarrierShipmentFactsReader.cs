@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain.Checkout;
 using Tooba.Order.Domain.Enums;
@@ -9,7 +10,9 @@ namespace Tooba.Order.Infrastructure.Integrations.Shipping;
 /// <summary>
 /// TB-248-R1 / TB-249: committed Order shipping-group facts for carrier shipment create and capabilities.
 /// </summary>
-public sealed class OrderCommittedCarrierShipmentFactsReader(OrderDbContext db) : IOrderCommittedCarrierShipmentFactsReader
+public sealed class OrderCommittedCarrierShipmentFactsReader(
+    OrderDbContext db,
+    IFulfillmentAdminOperations fulfillment) : IOrderCommittedCarrierShipmentFactsReader
 {
     /// <inheritdoc />
     public async Task<OrderCommittedCarrierShipmentFacts?> GetAsync(
@@ -29,7 +32,13 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(OrderDbContext db) 
         }
 
         var group = bundle.Groups.SingleOrDefault(x => x.ShippingGroupId == shippingGroupId);
-        return group is null ? null : Map(group, bundle.Checkout, bundle.SellerOrders);
+        if (group is null)
+        {
+            return null;
+        }
+
+        var fulfillments = await fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        return Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments);
     }
 
     /// <inheritdoc />
@@ -48,9 +57,10 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(OrderDbContext db) 
             return Array.Empty<OrderCommittedCarrierShipmentFacts>();
         }
 
+        var fulfillments = await fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
         return bundle.Groups
             .OrderBy(x => x.ShippingGroupId)
-            .Select(group => Map(group, bundle.Checkout, bundle.SellerOrders))
+            .Select(group => Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments))
             .ToArray();
     }
 
@@ -82,7 +92,8 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(OrderDbContext db) 
     private static OrderCommittedCarrierShipmentFacts Map(
         Domain.Checkout.OrderShippingGroup group,
         Domain.Aggregates.CheckoutGroup checkout,
-        IReadOnlyDictionary<Guid, Domain.Aggregates.SellerOrder> sellerOrders)
+        IReadOnlyDictionary<Guid, Domain.Aggregates.SellerOrder> sellerOrders,
+        IReadOnlyList<FulfillmentSnapshot> fulfillments)
     {
         var evidence = group.AcceptedEvidence;
         var quote = evidence?.CarrierQuote;
@@ -141,9 +152,17 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(OrderDbContext db) 
             reason = hasQuote ? "package_completion_required" : "package_incomplete";
         }
 
-        // Payment lock and cancelled are the only order-status blocks (see AdminFulfillmentCapabilityProjector).
-        // Other seller-order statuses are not treated as automatically shippable; Shipping readiness owns carrier gates.
-        var canExecute = reason is null && hasQuote && hasFullProvenance && ownerPresent;
+        var lineIds = group.Lines.Select(x => x.OrderLineId).OrderBy(x => x).ToArray();
+        if (reason is null && hasQuote && ownerPresent)
+        {
+            var fulfillmentReason = ResolveFulfillmentEligibility(fulfillments, group.SellerOrderId, lineIds);
+            if (fulfillmentReason is not null)
+            {
+                reason = fulfillmentReason;
+            }
+        }
+
+        var canExecute = reason is null && hasQuote && ownerPresent;
 
         return new OrderCommittedCarrierShipmentFacts(
             group.CheckoutId,
@@ -183,7 +202,47 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(OrderDbContext db) 
             paymentLocked,
             canExecute,
             reason,
-            group.Lines.Select(x => x.OrderLineId).OrderBy(x => x).ToArray());
+            lineIds);
+    }
+
+    private static string? ResolveFulfillmentEligibility(
+        IReadOnlyList<FulfillmentSnapshot> fulfillments,
+        Guid sellerOrderId,
+        IReadOnlyList<Guid> orderLineIds)
+    {
+        var snapshot = fulfillments.FirstOrDefault(x => x.SellerOrderId == sellerOrderId);
+        if (snapshot is null)
+        {
+            return "fulfillment_unavailable";
+        }
+
+        if (snapshot.Status is FulfillmentOperationStatus.Delivered
+            or FulfillmentOperationStatus.Cancelled
+            or FulfillmentOperationStatus.Failed)
+        {
+            return "fulfillment_exhausted";
+        }
+
+        var openAllocated = snapshot.Shipments
+            .Where(s => s.Status == ShipmentOperationStatus.Created)
+            .SelectMany(s => s.Items)
+            .GroupBy(i => i.OrderLineId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+        decimal shippableTotal = 0;
+        foreach (var lineId in orderLineIds)
+        {
+            var item = snapshot.Items.FirstOrDefault(x => x.OrderLineId == lineId);
+            if (item is null)
+            {
+                return "fulfillment_unavailable";
+            }
+
+            var allocated = openAllocated.GetValueOrDefault(lineId);
+            shippableTotal += Math.Max(0, item.QuantityPacked - allocated);
+        }
+
+        return shippableTotal <= 0 ? "fulfillment_exhausted" : null;
     }
 
     private sealed record CheckoutBundle(

@@ -18,7 +18,7 @@ No implementation task is active. No account/test is requested now. Live Tipax a
 ## Recovery safeguards
 
 1. Inspect actual main, local edits, process/DB identity and build provenance before touching runtime. Recorded PIDs are historical.
-2. Verify official migration history: Shipping CarrierConfiguration 20261102170000 and CarrierShipmentOperations 20261102180000; Order AddAcceptedCarrierQuoteEvidence 20261102180000. Apply only genuinely pending migrations through the official runner after backup.
+2. Verify official migration history: Shipping CarrierConfiguration 20261102170000, CarrierShipmentOperations 20261102180000, CarrierShipmentCompletions 20261102210000, CarrierShipmentExecutionSnapshot 20261102220000; Order AddAcceptedCarrierQuoteEvidence 20261102180000 (+ accepted execution provenance 20261102190000 when present). Apply only genuinely pending migrations through the official runner after backup.
 3. Preserve App_Data/dataprotection-keys under the actual Host content root and application name Tooba. Moving/rebuilding publish output must not discard keys or orphan existing protected secrets. Verify actual key location and access permissions before a swap.
 4. Preserve user accounts/cart/drafts/rates, tabs and unsaved work. No reset/reseed, guessed merchant data, alternate target handoff or real shipment/payment action.
 5. Do not enable external carrier connectivity or request an account now. Future activation needs real owner credentials, provider references, authoritative origin/package facts and explicit live acceptance. Do not promise real shipment/provider correctness from controlled tests.

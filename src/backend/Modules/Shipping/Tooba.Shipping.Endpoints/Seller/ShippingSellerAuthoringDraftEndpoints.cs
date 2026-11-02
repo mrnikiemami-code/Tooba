@@ -97,6 +97,7 @@ public static class ShippingSellerAuthoringDraftEndpoints
         group.MapPut("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", ReplaceCarrierBindingAsync);
         group.MapPost("/shipping-services/shipments", CreateCarrierShipmentAsync);
         group.MapPost("/shipping-services/shipments/package-completion", SaveCarrierShipmentPackageCompletionAsync);
+        group.MapPost("/shipping-services/shipments/sender-completion", SaveCarrierShipmentSenderCompletionAsync);
         group.MapGet("/shipping-services/shipments/capabilities", ListCarrierExecutionCapabilitiesAsync);
         group.MapGet("/shipping-services/shipments", ListCarrierShipmentsAsync);
         group.MapGet("/shipping-services/shipments/{operationId:guid}", GetCarrierShipmentAsync);
@@ -659,7 +660,7 @@ public static class ShippingSellerAuthoringDraftEndpoints
         CancellationToken cancellationToken)
     {
         var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
-        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierShipmentCreateRequest>(
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierShipmentExecuteRequest>(
             context,
             api,
             cancellationToken);
@@ -689,6 +690,26 @@ public static class ShippingSellerAuthoringDraftEndpoints
         }
 
         return api.From(await sender.Send(new SaveShippingCarrierShipmentPackageCompletionCommand(scope, body!), cancellationToken));
+    }
+
+    private static async Task<IResult> SaveCarrierShipmentSenderCompletionAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierShipmentSenderCompletionRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(new SaveShippingCarrierShipmentSenderCompletionCommand(scope, body!), cancellationToken));
     }
 
     private static async Task<IResult> ListCarrierShipmentsAsync(

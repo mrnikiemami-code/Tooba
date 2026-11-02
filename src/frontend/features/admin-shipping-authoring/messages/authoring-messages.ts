@@ -414,6 +414,14 @@ const fa = {
   carrierPackageDeclaredValue: "ارزش اظهاری",
   carrierPackageCompletionSave: "ذخیرهٔ مشخصات بسته",
   carrierPackageCompletionSaved: "مشخصات بسته ذخیره شد.",
+  carrierSenderCompletionSave: "ذخیرهٔ فرستنده",
+  carrierSenderCompletionSaved: "اطلاعات فرستنده ذخیره شد.",
+  carrierExecutionBlockFulfillmentUnavailable: "وضعیت fulfillment این گروه در دسترس نیست.",
+  carrierExecutionBlockFulfillmentExhausted: "اقلام این گروه برای ارسال حامل باقی‌ماندهٔ قابل ارسال ندارند.",
+  carrierShipmentStatePending: "در انتظار پاسخ",
+  carrierShipmentStateSucceeded: "موفق",
+  carrierShipmentStateFailed: "ناموفق",
+  carrierActionFailed: "عملیات انجام نشد؛ ورودی‌ها حفظ شد.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "افزودن ردیف هزینه",
@@ -846,6 +854,14 @@ const en: Record<AuthoringMessageKey, string> = {
   carrierPackageDeclaredValue: "Declared value",
   carrierPackageCompletionSave: "Save package details",
   carrierPackageCompletionSaved: "Package details saved.",
+  carrierSenderCompletionSave: "Save sender",
+  carrierSenderCompletionSaved: "Sender details saved.",
+  carrierExecutionBlockFulfillmentUnavailable: "Fulfillment state for this group is unavailable.",
+  carrierExecutionBlockFulfillmentExhausted: "No shippable quantity remains for carrier execution on this group.",
+  carrierShipmentStatePending: "Pending",
+  carrierShipmentStateSucceeded: "Succeeded",
+  carrierShipmentStateFailed: "Failed",
+  carrierActionFailed: "Action failed; your inputs were kept.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "Add cost row",

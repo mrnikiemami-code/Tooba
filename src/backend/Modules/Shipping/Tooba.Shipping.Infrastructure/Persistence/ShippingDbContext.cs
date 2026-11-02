@@ -1030,6 +1030,7 @@ public sealed class ShippingDbContext : DbContext
             entity.Property(x => x.LastErrorCode).HasColumnName("last_error_code").HasMaxLength(128);
             entity.Property(x => x.AttemptedAt).HasColumnName("attempted_at");
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
+            entity.Property(x => x.ExecutionInputSnapshotJson).HasColumnName("execution_input_snapshot_json");
             entity.HasIndex(x => x.OperationKey)
                 .IsUnique()
                 .HasDatabaseName("ux_carrier_shipment_operations_key");

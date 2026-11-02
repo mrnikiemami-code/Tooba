@@ -80,6 +80,9 @@ public sealed class ShippingCarrierShipmentOperation
     /// <summary>زمان اتمام یا تهی.</summary>
     public DateTimeOffset? CompletedAt { get; private set; }
 
+    /// <summary>Durable sender/package input persisted before outbound provider create.</summary>
+    public string? ExecutionInputSnapshotJson { get; private set; }
+
     /// <summary>عملیات pending را با کلید پایدار می‌سازد.</summary>
     public static ShippingCarrierShipmentOperation Begin(
         Guid operationId,
@@ -124,6 +127,18 @@ public sealed class ShippingCarrierShipmentOperation
             ConfigurationVersion = configurationVersion,
             AttemptedAt = now,
         };
+    }
+
+    /// <summary>Persists execution input before any outbound provider call.</summary>
+    public void SetExecutionInputSnapshot(string snapshotJson)
+    {
+        var trimmed = (snapshotJson ?? string.Empty).Trim();
+        if (trimmed.Length == 0)
+        {
+            throw new ContractOperationException(ShippingErrorCodes.CarrierShipmentRequestInvalid);
+        }
+
+        ExecutionInputSnapshotJson = trimmed.Length > 8000 ? trimmed[..8000] : trimmed;
     }
 
     /// <summary>پاسخ موفق provider را پایدار می‌کند.</summary>

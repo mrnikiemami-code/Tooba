@@ -1,4 +1,12 @@
-# CURRENT — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+# CURRENT — 249-R2 PARTIAL: gates corrected + deployed; relational proof blocked — 2026-11-02
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PARTIAL** within issued scope, decision **COMPLETION_AND_OPERATION_GATES_CORRECTED_DEPLOYED_RELATIONAL_PROOF_BLOCKED**, NOT Architect/live-provider ACCEPT. Base `84cae82b2`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. Migration `20261102220000_CarrierShipmentExecutionSnapshot` applied after private backup.
+LANDED: completable package/sender unlock after stored completions; shared Track/Cancel/Create operation permissions; authoritative sender-completion + pre-provider execution snapshot; fulfillment exhausted/unavailable eligibility; FE slim create DTO, action catch, non-status refresh, localized states. Classification **57/99**.
+UNMET: disposable PostgreSQL Order+Shipping §4 matrix (`TOOBA_TB249R2_POSTGRES` absent). InMemory path proves unlock. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued software/deploy scope, decision **UNIFIED_READINESS_AND_GROUP_EXECUTION_UI_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `c30817c6`.
