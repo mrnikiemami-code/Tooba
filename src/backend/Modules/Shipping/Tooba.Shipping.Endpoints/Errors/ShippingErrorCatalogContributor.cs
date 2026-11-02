@@ -181,6 +181,24 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.CarrierSecretRequired, "A username and password are required to create a carrier account."),
         D(ShippingErrorCodes.CarrierBindingInvalid, "The CarrierApi method binding is incomplete or inconsistent."),
         D(ShippingErrorCodes.CarrierProviderUnknown, "The carrier provider code is unknown in this installation."),
+        D(ShippingErrorCodes.CarrierUnconfigured, "Carrier connection is not configured."),
+        D(ShippingErrorCodes.CarrierShipmentRequestInvalid, "The carrier shipment request is incomplete."),
+        D(ShippingErrorCodes.CarrierShipmentNotEligible, "The order is not eligible for a carrier shipment."),
+        D(ShippingErrorCodes.CarrierShipmentUnsupported, "This carrier operation is not supported."),
+        new(
+            Code: ShippingErrorCodes.CarrierShipmentNotFound,
+            Classification: ErrorClassification.NotFound,
+            HttpStatus: StatusCodes.Status404NotFound,
+            LocalizationKey: ShippingErrorCodes.CarrierShipmentNotFound,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The carrier shipment operation was not found."),
+        new(
+            Code: ShippingErrorCodes.CarrierShipmentUnknown,
+            Classification: ErrorClassification.Conflict,
+            HttpStatus: StatusCodes.Status409Conflict,
+            LocalizationKey: ShippingErrorCodes.CarrierShipmentUnknown,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The carrier shipment result is unknown and will not be retried."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

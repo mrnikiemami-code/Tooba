@@ -77,6 +77,7 @@ public sealed class ShippingPersistenceModelTests
                 "carrier_method_bindings",
                 "carrier_reference_values",
                 "carrier_secret_materials",
+                "carrier_shipment_operations",
                 "coverage_grants",
                 "method_coverages",
                 "operating_schedules",
@@ -316,6 +317,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE TABLE shipping.carrier_reference_values", script);
         Assert.Contains("CREATE TABLE shipping.carrier_destination_mappings", script);
         Assert.Contains("CREATE TABLE shipping.carrier_method_bindings", script);
+        Assert.Contains("CREATE TABLE shipping.carrier_shipment_operations", script);
         Assert.Contains("CREATE TABLE shipping.outbox_messages", script);
         Assert.Contains("__ef_migrations_history", script);
 
@@ -424,7 +426,7 @@ public sealed class ShippingPersistenceModelTests
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        Assert.Equal(17, migrations.Length);
+        Assert.Equal(18, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -442,6 +444,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_SelectedCapturedRevision", migrations[14], StringComparison.Ordinal);
         Assert.EndsWith("_ReceivingSlotDuration", migrations[15], StringComparison.Ordinal);
         Assert.EndsWith("_CarrierConfiguration", migrations[16], StringComparison.Ordinal);
+        Assert.EndsWith("_CarrierShipmentOperations", migrations[17], StringComparison.Ordinal);
     }
 
     [Fact]

@@ -65,6 +65,8 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             ShippingErrorCodes.SelectedCaptureSnapshotUnavailable,
             ShippingErrorCodes.AuthoringRevisionSnapshotNotFound,
             ShippingErrorCodes.CarrierAccountNotFound,
+            ShippingErrorCodes.CarrierShipmentNotFound,
+            ShippingErrorCodes.CarrierShipmentUnknown,
         };
         var legacy = new ShippingErrorCatalogContributor()
             .Contribute()
@@ -74,7 +76,8 @@ public sealed class ShippingErrorCatalogAndResourcesTests
         // shape, so the legacy set grows from 51 to 53 without changing any existing code.
         // TB-248 adds three CarrierApi 400 codes (secret/binding/provider) on the same legacy contract
         // after excluding the 404 account-not-found descriptor from this set.
-        Assert.Equal(64, legacy.Length);
+        // TB-248-R1 adds four more 400 shipment/unconfigured codes.
+        Assert.Equal(68, legacy.Length);
 
         foreach (var descriptor in legacy)
         {
@@ -130,7 +133,7 @@ public sealed class ShippingErrorCatalogAndResourcesTests
         // capability fact, never a 403 permission verdict about a seller that does not exist.
         Assert.NotEqual(denied.HttpStatus, unavailable.HttpStatus);
         Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status403Forbidden);
-        Assert.Equal(5, descriptors.Count(candidate => candidate.HttpStatus == StatusCodes.Status404NotFound));
+        Assert.Equal(6, descriptors.Count(candidate => candidate.HttpStatus == StatusCodes.Status404NotFound));
 
         // Explicitly classified non-400 codes: 503, 403, four 404s, four 409s; nothing else drifted.
         Assert.Equal(
@@ -147,6 +150,8 @@ public sealed class ShippingErrorCatalogAndResourcesTests
                     ShippingErrorCodes.SelectedCaptureSnapshotUnavailable,
                     ShippingErrorCodes.AuthoringRevisionSnapshotNotFound,
                     ShippingErrorCodes.CarrierAccountNotFound,
+                    ShippingErrorCodes.CarrierShipmentNotFound,
+                    ShippingErrorCodes.CarrierShipmentUnknown,
                 ],
                 StringComparer.Ordinal),
             descriptors

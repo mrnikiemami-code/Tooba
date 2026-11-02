@@ -42,6 +42,12 @@ internal sealed class TipaxV4Options
 
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(8);
 
+    /// <summary>Required for Tipax OmOrder create. Not a live webhook in this task.</summary>
+    public string SuccessCallbackUrl { get; set; } = string.Empty;
+
+    /// <summary>Required for Tipax OmOrder create. Not a live webhook in this task.</summary>
+    public string FailureCallbackUrl { get; set; } = string.Empty;
+
     internal bool IsValid()
         => Enabled
            && Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out _)

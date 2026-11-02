@@ -99,6 +99,7 @@ export interface SellerOrderDetail {
   sellerOrderId: string;
   orderNumber: string;
   sellerPartyId: string;
+  checkoutId: string;
   submittedAt: string;
   status: string;
   paymentState: string;
@@ -476,6 +477,7 @@ export function mapSellerOrderDetail(payload: unknown): SellerOrderDetail | null
     sellerOrderId,
     orderNumber: asString(readProp(item, "orderNumber", "OrderNumber")),
     sellerPartyId: asString(readProp(item, "sellerPartyId", "SellerPartyId")),
+    checkoutId: asString(readProp(item, "checkoutId", "CheckoutId")),
     submittedAt: asString(readProp(item, "submittedAt", "SubmittedAt")),
     status: asString(readProp(item, "status", "Status")),
     paymentState: asString(readProp(item, "paymentState", "PaymentState")),

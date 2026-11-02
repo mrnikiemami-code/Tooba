@@ -176,3 +176,58 @@ public sealed class ReplaceShippingCarrierMethodBindingCommandValidator
             .When(x => x.Request is not null);
     }
 }
+
+public sealed class CreateShippingCarrierShipmentCommandValidator
+    : AbstractValidator<CreateShippingCarrierShipmentCommand>
+{
+    public CreateShippingCarrierShipmentCommandValidator()
+    {
+        RuleFor(x => x.Request).NotNull().WithErrorCode(ShippingValidationCodes.BodyInvalid);
+        RuleFor(x => x.Request.CheckoutId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired)
+            .When(x => x.Request is not null);
+        RuleFor(x => x.Request.ShippingGroupId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired)
+            .When(x => x.Request is not null);
+        RuleFor(x => x.Request.CarrierAccountId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired)
+            .When(x => x.Request is not null);
+        RuleFor(x => x.Request.ProviderServiceId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingReferenceInvalid)
+            .When(x => x.Request is not null);
+    }
+}
+
+public sealed class ListShippingCarrierShipmentsQueryValidator : AbstractValidator<ListShippingCarrierShipmentsQuery>
+{
+    public ListShippingCarrierShipmentsQueryValidator()
+        => RuleFor(x => x.CheckoutId).NotEmpty().WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
+}
+
+public sealed class GetShippingCarrierShipmentCommandValidator : AbstractValidator<GetShippingCarrierShipmentCommand>
+{
+    public GetShippingCarrierShipmentCommandValidator()
+        => RuleFor(x => x.OperationId).NotEmpty().WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
+}
+
+public sealed class TrackShippingCarrierShipmentCommandValidator : AbstractValidator<TrackShippingCarrierShipmentCommand>
+{
+    public TrackShippingCarrierShipmentCommandValidator()
+        => RuleFor(x => x.OperationId).NotEmpty().WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
+}
+
+public sealed class CancelShippingCarrierShipmentCommandValidator : AbstractValidator<CancelShippingCarrierShipmentCommand>
+{
+    public CancelShippingCarrierShipmentCommandValidator()
+        => RuleFor(x => x.OperationId).NotEmpty().WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
+}
+
+public sealed class LabelShippingCarrierShipmentCommandValidator : AbstractValidator<LabelShippingCarrierShipmentCommand>
+{
+    public LabelShippingCarrierShipmentCommandValidator()
+        => RuleFor(x => x.OperationId).NotEmpty().WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
+}

@@ -114,6 +114,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderShippingGroupHistoryReader,
             Integrations.Storefront.OrderShippingGroupHistoryReader>();
         services.AddScoped<Tooba.Order.Contracts.Settlement.IOrderShippingGroupSettlementReader, Integrations.Settlement.OrderShippingGroupSettlementBridge>();
+        services.AddScoped<Tooba.Order.Contracts.Shipping.IOrderCommittedCarrierShipmentFactsReader, Integrations.Shipping.OrderCommittedCarrierShipmentFactsReader>();
         services.AddScoped<Tooba.Order.Contracts.Settlement.IOrderCheckoutSalesChannelSettlementReader, Integrations.Settlement.OrderCheckoutSalesChannelSettlementBridge>();
         services.AddScoped<IOrderNotificationReader, OrderNotificationBridge>();
         services.AddScoped<ICheckoutPaymentAccessReader, CheckoutPaymentAccessBridge>();

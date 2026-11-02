@@ -139,6 +139,7 @@ public sealed class SellerOrderComposer
             order.SellerOrderId,
             order.OrderNumber,
             order.SellerPartyId,
+            order.CheckoutId,
             checkout?.SubmittedAt ?? default,
             order.Status.ToString(),
             order.Status.ToString(),

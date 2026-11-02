@@ -13,6 +13,7 @@ import {
   type HostReadSource,
   type SellerOrderDetail,
 } from "../../seller-api";
+import { SellerCarrierShipmentPanel } from "../../seller-carrier-shipment-panel";
 
 /**
  * جزئیات سفارش فروشنده بدون نشت خطوط فروشندهٔ دیگر.
@@ -120,6 +121,7 @@ export default function VendorOrderDetailPage() {
               {detail.provinceName} {detail.cityName} — {detail.postalAddress} {detail.postalCode}
             </p>
           </section>
+          <SellerCarrierShipmentPanel checkoutId={detail.checkoutId} />
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <h2 className="text-base font-semibold">خطوط این فروشنده</h2>
             <ul className="mt-4 divide-y divide-border">

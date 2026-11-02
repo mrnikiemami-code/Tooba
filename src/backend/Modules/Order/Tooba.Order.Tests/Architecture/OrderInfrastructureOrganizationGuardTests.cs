@@ -60,6 +60,7 @@ public sealed class OrderInfrastructureOrganizationGuardTests
         ("Integrations/Returns/OrderReturnBridge.cs", "Tooba.Order.Infrastructure.Integrations.Returns"),
         ("Integrations/Notifications/OrderNotificationBridge.cs", "Tooba.Order.Infrastructure.Integrations.Notifications"),
         ("Integrations/GridEnrichment/OrderGridEnrichmentBridge.cs", "Tooba.Order.Infrastructure.Integrations.GridEnrichment"),
+        ("Integrations/Shipping/OrderCommittedCarrierShipmentFactsReader.cs", "Tooba.Order.Infrastructure.Integrations.Shipping"),
         ("Admin/Fulfillment/AdminOrderFulfillmentOperations.cs", "Tooba.Order.Infrastructure.Admin.Fulfillment"),
         ("Events/Payment/OrderPaymentSucceededHandler.cs", "Tooba.Order.Infrastructure.Events.Payment"),
         ("Guards/OpenOrderUseCaseGuard.cs", "Tooba.Order.Infrastructure.Guards"),

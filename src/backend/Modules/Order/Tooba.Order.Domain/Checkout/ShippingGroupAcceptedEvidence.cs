@@ -254,6 +254,9 @@ public sealed class ShippingGroupAcceptedEvidence
     /// <summary>حداکثر روزهای تحویل به مشتری در زمان پذیرش (نامعلوم ⇒ null؛ فقط متادیتا).</summary>
     public int? MaximumDeliveryDays { get; private set; }
 
+    /// <summary>شاهد خنثی قیمت حامل؛ برای Manual/Free تهی است.</summary>
+    public ShippingGroupAcceptedCarrierQuote? CarrierQuote { get; private set; }
+
     /// <summary>
     /// شاهد فشرده می‌سازد. هر مقدار ناقص/ناسازگار پیش از هر جهش رد می‌شود؛ هیچ شناسه‌ای
     /// ساخته نمی‌شود، هیچ مبلغی clamp/گرد نمی‌شود و هیچ منطقهٔ زمانی/مالکی جعل نمی‌شود.
@@ -278,7 +281,8 @@ public sealed class ShippingGroupAcceptedEvidence
         long receivingCloseTicks,
         string receivingTimeZone,
         int? minimumDeliveryDays,
-        int? maximumDeliveryDays)
+        int? maximumDeliveryDays,
+        ShippingGroupAcceptedCarrierQuote? carrierQuote = null)
     {
         if (snapshotId == Guid.Empty)
         {
@@ -343,6 +347,8 @@ public sealed class ShippingGroupAcceptedEvidence
             throw new ContractOperationException(ShippingGroupEvidenceFault.CurrencyInvalid);
         }
 
+        carrierQuote?.EnsureCoherentWithCheckoutAmounts(freightAmount, packagingAmount, normalizedCurrency);
+
         if (receivingDate == default)
         {
             throw new ContractOperationException(ShippingGroupEvidenceFault.ReceivingDateInvalid);
@@ -394,6 +400,7 @@ public sealed class ShippingGroupAcceptedEvidence
             ReceivingTimeZone = timeZone,
             MinimumDeliveryDays = minimumDeliveryDays,
             MaximumDeliveryDays = maximumDeliveryDays,
+            CarrierQuote = carrierQuote,
         };
     }
 
@@ -491,4 +498,157 @@ public static class ShippingGroupEvidenceFault
 
     /// <summary>شاهد با تاریخ/پنجرهٔ انتخاب‌شدهٔ گروه نمی‌خواند.</summary>
     public const string ScheduleMismatch = "shipping.group.evidence.schedule.mismatch";
+
+    /// <summary>شاهد حامل ناقص یا با مبالغ تسویه ناسازگار است.</summary>
+    public const string CarrierQuoteInvalid = "shipping.group.evidence.carrier_quote.invalid";
+}
+
+/// <summary>شاهد خنثی قیمت حامل روی گروه پذیرفته‌شده؛ Manual/Free آن را ندارند.</summary>
+public sealed class ShippingGroupAcceptedCarrierQuote
+{
+    /// <summary>حداکثر طول کد provider/خدمت.</summary>
+    public const int MaxProviderCodeLength = 64;
+
+    /// <summary>حداکثر طول هویت ورودی نقل‌قول.</summary>
+    public const int MaxIdentityLength = 128;
+
+    /// <summary>حداکثر طول مرجع صادرشدهٔ provider.</summary>
+    public const int MaxReferenceLength = 128;
+
+    private ShippingGroupAcceptedCarrierQuote()
+    {
+    }
+
+    /// <summary>کد provider خنثی.</summary>
+    public string ProviderCode { get; private set; } = string.Empty;
+
+    /// <summary>شناسهٔ حساب حامل مالک.</summary>
+    public Guid AccountId { get; private set; }
+
+    /// <summary>نسخهٔ پیکربندی حساب در زمان نقل‌قول.</summary>
+    public int ConfigurationVersion { get; private set; }
+
+    /// <summary>کد خدمت provider.</summary>
+    public string ServiceCode { get; private set; } = string.Empty;
+
+    /// <summary>هویت ورودی‌های نقل‌قول؛ شناسهٔ محلی provider نیست.</summary>
+    public string QuoteInputIdentity { get; private set; } = string.Empty;
+
+    /// <summary>ارز نقل‌قول.</summary>
+    public string Currency { get; private set; } = string.Empty;
+
+    /// <summary>مبلغ نهایی provider شامل اجزا.</summary>
+    public decimal FinalAmount { get; private set; }
+
+    /// <summary>جزء حمل.</summary>
+    public decimal TransportationAmount { get; private set; }
+
+    /// <summary>جزء مالیات provider؛ جدا از مالیات فروشگاه.</summary>
+    public decimal TaxAmount { get; private set; }
+
+    /// <summary>جزء بسته‌بندی provider.</summary>
+    public decimal PackagingAmount { get; private set; }
+
+    /// <summary>جزء Pickup.</summary>
+    public decimal PickupAmount { get; private set; }
+
+    /// <summary>جزء تحویل.</summary>
+    public decimal DeliveryAmount { get; private set; }
+
+    /// <summary>زمان صدور نقل‌قول.</summary>
+    public DateTimeOffset IssuedAtUtc { get; private set; }
+
+    /// <summary>پایان تازگی محلی؛ تضمین provider نیست.</summary>
+    public DateTimeOffset FreshUntilUtc { get; private set; }
+
+    /// <summary>مرجع صادرشدهٔ واقعی provider یا تهی.</summary>
+    public string? ProviderReference { get; private set; }
+
+    /// <summary>شاهد حامل را می‌سازد؛ اجزای ناسازگار رد می‌شوند و شناسهٔ محلی به‌عنوان مرجع ثبت نمی‌شود.</summary>
+    public static ShippingGroupAcceptedCarrierQuote Create(
+        string providerCode,
+        Guid accountId,
+        int configurationVersion,
+        string serviceCode,
+        string quoteInputIdentity,
+        string currency,
+        decimal finalAmount,
+        decimal transportationAmount,
+        decimal taxAmount,
+        decimal packagingAmount,
+        decimal pickupAmount,
+        decimal deliveryAmount,
+        DateTimeOffset issuedAtUtc,
+        DateTimeOffset freshUntilUtc,
+        string? providerReference)
+    {
+        var provider = (providerCode ?? string.Empty).Trim();
+        var service = (serviceCode ?? string.Empty).Trim();
+        var identity = (quoteInputIdentity ?? string.Empty).Trim();
+        var normalizedCurrency = (currency ?? string.Empty).Trim().ToUpperInvariant();
+        var reference = string.IsNullOrWhiteSpace(providerReference) ? null : providerReference.Trim();
+        if (provider.Length is 0 or > MaxProviderCodeLength
+            || accountId == Guid.Empty
+            || configurationVersion < 1
+            || service.Length is 0 or > MaxProviderCodeLength
+            || identity.Length is 0 or > MaxIdentityLength
+            || normalizedCurrency.Length != ShippingGroupAcceptedEvidence.MaxCurrencyLength
+            || issuedAtUtc == default
+            || freshUntilUtc <= issuedAtUtc
+            || (reference is { Length: > MaxReferenceLength }))
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.CarrierQuoteInvalid);
+        }
+
+        EnsureComponent(finalAmount);
+        EnsureComponent(transportationAmount);
+        EnsureComponent(taxAmount);
+        EnsureComponent(packagingAmount);
+        EnsureComponent(pickupAmount);
+        EnsureComponent(deliveryAmount);
+        if (finalAmount != transportationAmount + taxAmount + packagingAmount + pickupAmount + deliveryAmount)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.CarrierQuoteInvalid);
+        }
+
+        return new ShippingGroupAcceptedCarrierQuote
+        {
+            ProviderCode = provider,
+            AccountId = accountId,
+            ConfigurationVersion = configurationVersion,
+            ServiceCode = service,
+            QuoteInputIdentity = identity,
+            Currency = normalizedCurrency,
+            FinalAmount = finalAmount,
+            TransportationAmount = transportationAmount,
+            TaxAmount = taxAmount,
+            PackagingAmount = packagingAmount,
+            PickupAmount = pickupAmount,
+            DeliveryAmount = deliveryAmount,
+            IssuedAtUtc = issuedAtUtc,
+            FreshUntilUtc = freshUntilUtc,
+            ProviderReference = reference,
+        };
+    }
+
+    /// <summary>مبالغ شاهد باید با کرایه/بسته‌بندی/ارز تسویه یکی باشد تا بسته‌بندی دوباره جمع نشود.</summary>
+    public void EnsureCoherentWithCheckoutAmounts(decimal freightAmount, decimal packagingAmount, string currency)
+    {
+        if (!string.Equals(Currency, currency, StringComparison.Ordinal)
+            || PackagingAmount != packagingAmount
+            || FinalAmount != freightAmount + packagingAmount)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.CarrierQuoteInvalid);
+        }
+    }
+
+    private static void EnsureComponent(decimal amount)
+    {
+        if (amount < 0m
+            || amount > ShippingGroupAcceptedEvidence.MaxStorableAmount
+            || amount != decimal.Round(amount, 2, MidpointRounding.ToZero))
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.CarrierQuoteInvalid);
+        }
+    }
 }

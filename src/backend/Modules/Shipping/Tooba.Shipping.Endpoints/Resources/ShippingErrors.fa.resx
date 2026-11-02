@@ -240,4 +240,22 @@
   <data name="shipping.carrier.provider_unknown" xml:space="preserve">
     <value>کد ارائه‌دهندهٔ حامل در این نصب ناشناخته است.</value>
   </data>
+  <data name="shipping.carrier.unconfigured" xml:space="preserve">
+    <value>اتصال شرکت حمل تنظیم نشده است</value>
+  </data>
+  <data name="shipping.carrier.shipment.request_invalid" xml:space="preserve">
+    <value>درخواست محمولهٔ حامل ناقص است.</value>
+  </data>
+  <data name="shipping.carrier.shipment.not_eligible" xml:space="preserve">
+    <value>این سفارش برای ارسال به حامل واجد شرایط نیست.</value>
+  </data>
+  <data name="shipping.carrier.shipment.unsupported" xml:space="preserve">
+    <value>این عملیات حامل پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="shipping.carrier.shipment.not_found" xml:space="preserve">
+    <value>عملیات محمولهٔ حامل یافت نشد.</value>
+  </data>
+  <data name="shipping.carrier.shipment.unknown" xml:space="preserve">
+    <value>نتیجهٔ ایجاد محموله نزد حامل مبهم ماند و دوباره تلاش نمی‌شود.</value>
+  </data>
 </root>

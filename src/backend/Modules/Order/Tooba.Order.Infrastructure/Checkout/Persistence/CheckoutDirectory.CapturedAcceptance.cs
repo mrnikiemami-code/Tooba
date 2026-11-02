@@ -416,7 +416,8 @@ public sealed partial class CheckoutDirectory
                 || !string.Equals(
                     quote.ReceivingWeek?.TimeZoneId,
                     evidence.ReceivingTimeZone,
-                    StringComparison.Ordinal))
+                    StringComparison.Ordinal)
+                || !SameCarrierQuote(evidence.CarrierQuote, quote.CarrierQuote, now))
             {
                 throw new ContractOperationException(CapturedConflict);
             }
@@ -440,8 +441,39 @@ public sealed partial class CheckoutDirectory
                 evidence));
         }
 
-        _ = now;
         return new CapturedShippingAcceptance(accepted, stored.CartVersion, stored.SelectionRevision);
+    }
+
+    internal static bool SameCarrierQuote(
+        ShippingGroupAcceptedCarrierQuote? stored,
+        ShippingCapturedCarrierQuoteEvidence? live,
+        DateTimeOffset now)
+    {
+        if (stored is null)
+        {
+            return live is null;
+        }
+
+        if (live is null
+            || !string.Equals(stored.ProviderCode, live.ProviderCode, StringComparison.Ordinal)
+            || stored.AccountId != live.AccountId
+            || stored.ConfigurationVersion != live.ConfigurationVersion
+            || !string.Equals(stored.ServiceCode, live.ServiceCode, StringComparison.Ordinal)
+            || !string.Equals(stored.QuoteInputIdentity, live.QuoteInputIdentity, StringComparison.Ordinal)
+            || stored.FinalAmount != live.FinalAmount
+            || stored.TransportationAmount != live.TransportationAmount
+            || stored.TaxAmount != live.TaxAmount
+            || stored.PackagingAmount != live.PackagingAmount
+            || stored.PickupAmount != live.PickupAmount
+            || stored.DeliveryAmount != live.DeliveryAmount
+            || !string.Equals(stored.Currency, live.CurrencyCode, StringComparison.Ordinal)
+            || !string.Equals(stored.ProviderReference ?? string.Empty, live.ProviderReference ?? string.Empty, StringComparison.Ordinal)
+            || live.FreshUntilUtc < now)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>

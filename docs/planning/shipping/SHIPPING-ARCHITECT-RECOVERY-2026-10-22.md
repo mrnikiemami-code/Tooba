@@ -1,4 +1,12 @@
-# CURRENT — 248 PARTIAL: owner carrier accounts + captured CarrierApi quote; LIVE BLOCKED — 2026-11-02
+# CURRENT — 248-R1 SOFTWARE COMPLETE DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-CONFIGURATION-AND-CHECKOUT-248-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued software/deploy scope, decision **SOFTWARE_COMPLETE_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `3639acca9`.
+Canonical FE3000 PID4072 → Host5088 PID8972 publish-primary SingleStore/store-alpha/tooba_alpha. Migrations `20261102170000_CarrierConfiguration` + `20261102180000_CarrierShipmentOperations` + Order `20261102180000_AddAcceptedCarrierQuoteEvidence` applied after private backup.
+LANDED: Order accepted carrier quote evidence (not money-only); stale/freshness revalidation before commit; provider-neutral shipment create/track/cancel (Tipax V4 OmOrder/Tracking/Cancel); label explicitly unsupported; DataProtection persist keys; authoring unconfigured FA copy; admin/seller shipment panels. Manual/Free remain. Classification 54/93.
+LIVE TIPAX COMMUNICATION DEFERRED BY USER (no test account). Focused Shipping 123/123 + Order 21/21 + FE 11/11 + typecheck/build 0. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 248 PARTIAL: owner carrier accounts + captured CarrierApi quote; LIVE BLOCKED — 2026-11-02
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-CONFIGURATION-AND-CHECKOUT-248/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PARTIAL** within R1–R3, NOT Architect/live-provider ACCEPT. Base `9d3f0ad29`.

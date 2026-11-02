@@ -1314,7 +1314,101 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.ToTable("carrier_method_bindings", "shipping");
                 });
 
-            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValue", b =>
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierShipmentOperation", b =>
+                {
+                    b.Property<Guid>("OperationId")
+                        .ValueGeneratedNever()
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("AttemptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("attempted_at");
+
+                    b.Property<Guid>("CheckoutId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("checkout_id");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<int>("ConfigurationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("configuration_version");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("last_error_code");
+
+                    b.Property<string>("OperationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("operation_key");
+
+                    b.Property<int>("OwnerKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_kind");
+
+                    b.Property<Guid?>("OwnerSellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_seller_party_id");
+
+                    b.Property<string>("OwnerTenantId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("owner_tenant_id");
+
+                    b.Property<string>("ProviderCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_code");
+
+                    b.Property<string>("ProviderOrderId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_order_id");
+
+                    b.Property<string>("ProviderStatus")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("provider_status");
+
+                    b.Property<string>("ProviderTrackingCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_tracking_code");
+
+                    b.Property<Guid>("ShippingGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_group_id");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer")
+                        .HasColumnName("state");
+
+                    b.HasKey("OperationId")
+                        .HasName("pk_carrier_shipment_operations");
+
+                    b.HasIndex("OperationKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_shipment_operations_key");
+
+                    b.ToTable("carrier_shipment_operations", "shipping");
+                });
+
+modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValue", b =>
                 {
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uuid")

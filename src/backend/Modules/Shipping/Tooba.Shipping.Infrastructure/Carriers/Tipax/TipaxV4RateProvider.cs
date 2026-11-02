@@ -317,6 +317,7 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
         TipaxPriceResponse[]? rows,
         string currencyCode)
     {
+        _ = requestId;
         if (rows is null || rows.Length == 0)
         {
             return Array.Empty<CarrierRateOption>();
@@ -352,7 +353,7 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
                 rate.Packing,
                 rate.PickupPrice,
                 rate.DeliveryPrice,
-                $"tipax:{requestId}:{packNumber}:{rate.ServiceId}"));
+                ProviderReference: string.Empty));
         }
     }
 

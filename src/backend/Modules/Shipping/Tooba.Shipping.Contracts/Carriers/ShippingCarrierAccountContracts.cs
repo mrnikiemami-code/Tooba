@@ -62,13 +62,15 @@ public enum ShippingCarrierConnectionTestOutcome
 /// <param name="SupportsRateQuote">پشتیبانی قیمت.</param>
 /// <param name="SupportsReferenceSync">پشتیبانی همگام مرجع.</param>
 /// <param name="SupportsConnectionTest">پشتیبانی آزمون اتصال.</param>
-/// <param name="SupportsShipmentLifecycle">پشتیبانی چرخه محموله (R4؛ اینجا معمولاً false).</param>
+/// <param name="SupportsShipmentLifecycle">ایجاد/رهگیری/لغو محموله وقتی adapter این عملیات را از OpenAPI پیاده کرده باشد.</param>
+/// <param name="SupportsLabel">دانلود لیبل/رسید وقتی OpenAPI provider آن را مستند کرده باشد.</param>
 public sealed record ShippingCarrierProviderCapabilities(
     string ProviderCode,
     bool SupportsRateQuote,
     bool SupportsReferenceSync,
     bool SupportsConnectionTest,
-    bool SupportsShipmentLifecycle);
+    bool SupportsShipmentLifecycle,
+    bool SupportsLabel = false);
 
 /// <summary>نمایهٔ حساب حامل مالک؛ راز هرگز در این DTO نیست.</summary>
 /// <param name="AccountId">شناسهٔ حساب.</param>

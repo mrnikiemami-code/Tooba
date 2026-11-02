@@ -71,9 +71,8 @@ public enum CarrierRateOutcome
 
 /// <summary>A normalized quote option. Provider-specific response types never cross this boundary.</summary>
 /// <remarks>
-/// <see cref="ProviderReference"/> is Shipping-owned carrier quote evidence (provider quote id +
-/// service). Order does not persist a new column for this; checkout money still comes from the
-/// captured quote amounts.
+/// <see cref="ProviderReference"/> is a provider-issued quote/reservation id only. Local request
+/// correlation is never stored here. Checkout money still comes from the captured quote amounts.
 /// </remarks>
 public sealed record CarrierRateOption(
     string ProviderCode,

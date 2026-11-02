@@ -78,7 +78,25 @@ public sealed class OrderShippingGroupHistoryReader : IOrderShippingGroupHistory
                         evidence.ReceivingCloseTicks,
                         evidence.ReceivingTimeZone,
                         evidence.MinimumDeliveryDays,
-                        evidence.MaximumDeliveryDays));
+                        evidence.MaximumDeliveryDays,
+                        evidence.CarrierQuote is null
+                            ? null
+                            : new OrderShippingGroupHistoryCarrierQuote(
+                                evidence.CarrierQuote.ProviderCode,
+                                evidence.CarrierQuote.AccountId,
+                                evidence.CarrierQuote.ConfigurationVersion,
+                                evidence.CarrierQuote.ServiceCode,
+                                evidence.CarrierQuote.QuoteInputIdentity,
+                                evidence.CarrierQuote.Currency,
+                                evidence.CarrierQuote.FinalAmount,
+                                evidence.CarrierQuote.TransportationAmount,
+                                evidence.CarrierQuote.TaxAmount,
+                                evidence.CarrierQuote.PackagingAmount,
+                                evidence.CarrierQuote.PickupAmount,
+                                evidence.CarrierQuote.DeliveryAmount,
+                                evidence.CarrierQuote.IssuedAtUtc,
+                                evidence.CarrierQuote.FreshUntilUtc,
+                                evidence.CarrierQuote.ProviderReference)));
         }).ToArray();
     }
 }

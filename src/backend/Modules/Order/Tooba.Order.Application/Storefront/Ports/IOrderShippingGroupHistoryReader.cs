@@ -60,4 +60,23 @@ public sealed record OrderShippingGroupHistoryEvidence(
     long ReceivingCloseTicks,
     string ReceivingTimeZone,
     int? MinimumDeliveryDays,
-    int? MaximumDeliveryDays);
+    int? MaximumDeliveryDays,
+    OrderShippingGroupHistoryCarrierQuote? CarrierQuote = null);
+
+/// <summary>شاهد حامل ذخیره‌شده؛ تهی یعنی Manual/Free. هیچ تماس حاملی برای ساختن آن نیست.</summary>
+public sealed record OrderShippingGroupHistoryCarrierQuote(
+    string ProviderCode,
+    Guid AccountId,
+    int ConfigurationVersion,
+    string ServiceCode,
+    string QuoteInputIdentity,
+    string Currency,
+    decimal FinalAmount,
+    decimal TransportationAmount,
+    decimal TaxAmount,
+    decimal PackagingAmount,
+    decimal PickupAmount,
+    decimal DeliveryAmount,
+    DateTimeOffset IssuedAtUtc,
+    DateTimeOffset FreshUntilUtc,
+    string? ProviderReference);

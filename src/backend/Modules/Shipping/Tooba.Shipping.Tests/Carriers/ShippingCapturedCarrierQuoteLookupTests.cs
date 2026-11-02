@@ -71,7 +71,52 @@ public sealed class ShippingCapturedCarrierQuoteLookupTests
         Assert.Equal(5_000m, result.Value.PackagingAmount);
         Assert.Equal(137_500m, result.Value.TotalExpenseAmount);
         Assert.Equal(BindingId, result.Value.RateRowId);
+        Assert.NotNull(result.Value.CarrierQuote);
+        Assert.Null(result.Value.CarrierQuote!.ProviderReference);
+        Assert.Equal(137_500m, result.Value.CarrierQuote.FinalAmount);
+        Assert.Equal(5_000m, result.Value.CarrierQuote.PackagingAmount);
+        Assert.Equal(12_500m, result.Value.CarrierQuote.TaxAmount);
         Assert.Equal(1, provider.Calls);
+    }
+
+    [Fact]
+    public async Task Inconsistent_provider_components_are_refused_without_money()
+    {
+        var snapshot = CaptureCarrierDraft();
+        using var context = new ShippingDbContext(new DbContextOptionsBuilder<ShippingDbContext>()
+            .UseInMemoryDatabase($"tb248-inconsistent-{Guid.NewGuid():N}")
+            .Options);
+        context.AuthoringRevisionSnapshots.Add(snapshot);
+        context.SaveChanges();
+
+        var lookup = new ShippingCapturedRevisionQuoteLookup(
+            new ShippingAuthoringDraftDirectory(context),
+            Geography(),
+            new BoundCarrierAccounts(),
+            new FixedRegistry(new BrokenCarrierProvider()),
+            new StubEdition(ToobaEdition.SingleStore),
+            new StubTenant(Tenant),
+            new ModuleCallTracer(),
+            NullLogger<ShippingCapturedRevisionQuoteLookup>.Instance);
+
+        var result = await lookup.QuoteAsync(
+            new ShippingCapturedQuoteLookupRequest(
+                ShippingCapturedQuoteOwnerKind.Store,
+                Tenant,
+                null,
+                snapshot.DraftId,
+                snapshot.SourceRevision,
+                new DestinationIdentifiers(Country, null, CityId),
+                GroupWeightGrams: 1500,
+                GroupItemCount: 1,
+                FinalGroupGoodsAmountAfterDiscountAndTax: 2_000_000m,
+                CurrencyCode: "IRT"),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.IsQuoted);
+        Assert.Null(result.Value.FreightAmount);
+        Assert.Null(result.Value.CarrierQuote);
     }
 
     [Fact]
@@ -287,9 +332,32 @@ public sealed class ShippingCapturedCarrierQuoteLookupTests
                         5_000m,
                         0m,
                         0m,
-                        "tipax:quote:1:7")
+                        string.Empty)
                 ]));
         }
+    }
+
+    private sealed class BrokenCarrierProvider : ICarrierRateProvider
+    {
+        public string ProviderCode => "tipax";
+
+        public Task<CarrierRateResult> QuoteAsync(CarrierRateRequest request, CancellationToken cancellationToken)
+            => Task.FromResult(new CarrierRateResult(
+                CarrierRateOutcome.Quoted,
+                [
+                    new CarrierRateOption(
+                        "tipax",
+                        "7",
+                        "اکسپرس",
+                        "IRT",
+                        137_500m,
+                        120_000m,
+                        12_500m,
+                        4_000m,
+                        0m,
+                        0m,
+                        string.Empty)
+                ]));
     }
 
     private sealed class ControlledGeography : IGeographyPlaceSnapshotReader

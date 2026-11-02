@@ -504,7 +504,8 @@ public sealed class StorefrontCapturedSelectionWriter(
                 slot.ClosesAt.Ticks,
                 quote.ReceivingWeek?.TimeZoneId ?? string.Empty,
                 quote.MinDeliveryDays,
-                quote.MaxDeliveryDays);
+                quote.MaxDeliveryDays,
+                MapCarrierQuote(quote));
         }
         catch (ContractOperationException)
         {
@@ -512,6 +513,31 @@ public sealed class StorefrontCapturedSelectionWriter(
             // clamp/گردکردن/جایگزینی نیست.
             throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
         }
+    }
+
+    private static ShippingGroupAcceptedCarrierQuote? MapCarrierQuote(ShippingCapturedQuoteResult quote)
+    {
+        if (quote.CarrierQuote is not { } carrier)
+        {
+            return null;
+        }
+
+        return ShippingGroupAcceptedCarrierQuote.Create(
+            carrier.ProviderCode,
+            carrier.AccountId,
+            carrier.ConfigurationVersion,
+            carrier.ServiceCode,
+            carrier.QuoteInputIdentity,
+            carrier.CurrencyCode,
+            carrier.FinalAmount,
+            carrier.TransportationAmount,
+            carrier.TaxAmount,
+            carrier.PackagingAmount,
+            carrier.PickupAmount,
+            carrier.DeliveryAmount,
+            carrier.IssuedAtUtc,
+            carrier.FreshUntilUtc,
+            carrier.ProviderReference);
     }
 
     private static long ParseExpectedRevision(string? text)

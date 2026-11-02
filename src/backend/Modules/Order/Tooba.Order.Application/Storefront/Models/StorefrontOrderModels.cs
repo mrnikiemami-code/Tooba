@@ -386,7 +386,26 @@ public sealed record StorefrontShippingGroupHistoryView(
     long ReceivingCloseTicks,
     string ReceivingTimeZone,
     int? MinimumDeliveryDays,
-    int? MaximumDeliveryDays);
+    int? MaximumDeliveryDays,
+    StorefrontShippingGroupHistoryCarrierQuote? CarrierQuote = null);
+
+/// <summary>شاهد حامل ذخیره‌شده روی تاریخچهٔ گروه؛ تهی یعنی Manual/Free و هیچ تماس حاملی نیست.</summary>
+public sealed record StorefrontShippingGroupHistoryCarrierQuote(
+    string ProviderCode,
+    Guid AccountId,
+    int ConfigurationVersion,
+    string ServiceCode,
+    string QuoteInputIdentity,
+    string Currency,
+    decimal FinalAmount,
+    decimal TransportationAmount,
+    decimal TaxAmount,
+    decimal PackagingAmount,
+    decimal PickupAmount,
+    decimal DeliveryAmount,
+    DateTimeOffset IssuedAtUtc,
+    DateTimeOffset FreshUntilUtc,
+    string? ProviderReference);
 
 /// <summary>
 /// ذخیرهٔ انتخاب ارسال. <see cref="ShippingGroups"/> افزایشی و اختیاری است: در نبود آن همان

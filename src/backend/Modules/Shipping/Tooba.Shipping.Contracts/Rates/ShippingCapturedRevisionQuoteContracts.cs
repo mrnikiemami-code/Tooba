@@ -273,6 +273,7 @@ public sealed record ShippingCapturedQuoteLookupRequest(
 /// <param name="MinDeliveryDays">کمینهٔ مدت تحویل ذخیره‌شده یا تهی.</param>
 /// <param name="MaxDeliveryDays">بیشینهٔ مدت تحویل ذخیره‌شده یا تهی.</param>
 /// <param name="ReceivingWeek">برنامهٔ هفتگی ذخیره‌شده یا تهی.</param>
+/// <param name="CarrierQuote">شاهد خنثی قیمت حامل؛ برای Manual/Free تهی است.</param>
 public sealed record ShippingCapturedQuoteResult(
     ShippingCapturedQuoteVerdict Verdict,
     string ReasonCode,
@@ -294,7 +295,8 @@ public sealed record ShippingCapturedQuoteResult(
     Guid? RateRowId,
     int? MinDeliveryDays,
     int? MaxDeliveryDays,
-    ShippingCapturedReceivingWeek? ReceivingWeek)
+    ShippingCapturedReceivingWeek? ReceivingWeek,
+    ShippingCapturedCarrierQuoteEvidence? CarrierQuote = null)
 {
     /// <summary>آیا این نتیجه یک قیمت پولی واقعی است.</summary>
     public bool IsQuoted => Verdict == ShippingCapturedQuoteVerdict.Quoted;
@@ -323,3 +325,24 @@ public interface IShippingCapturedRevisionQuoteLookup
         ShippingCapturedQuoteLookupRequest request,
         CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// شاهد خنثی قیمت حامل. <see cref="ProviderReference"/> فقط وقتی پر است که provider واقعاً شناسه صادر کرده باشد.
+/// FreshUntil سیاست LOCAL توباست اگر provider انقضا نداده باشد.
+/// </summary>
+public sealed record ShippingCapturedCarrierQuoteEvidence(
+    string ProviderCode,
+    Guid AccountId,
+    int ConfigurationVersion,
+    string ServiceCode,
+    string QuoteInputIdentity,
+    string CurrencyCode,
+    decimal FinalAmount,
+    decimal TransportationAmount,
+    decimal TaxAmount,
+    decimal PackagingAmount,
+    decimal PickupAmount,
+    decimal DeliveryAmount,
+    DateTimeOffset IssuedAtUtc,
+    DateTimeOffset FreshUntilUtc,
+    string? ProviderReference);

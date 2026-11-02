@@ -230,9 +230,9 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
         {
             CarrierRateOutcome.Quoted when carrierResult.Options.FirstOrDefault(o =>
                 string.Equals(o.ServiceCode, binding.ProviderServiceId, StringComparison.Ordinal)) is { } exact
-                => Result.Success(MapCarrierQuoted(coverage, snapshot.SnapshotId, exact, binding.BindingId)),
+                => MapQuotedOrReject(coverage, snapshot.SnapshotId, exact, binding, carrierRequest),
             CarrierRateOutcome.Quoted when carrierResult.Options.Count == 1
-                => Result.Success(MapCarrierQuoted(coverage, snapshot.SnapshotId, carrierResult.Options[0], binding.BindingId)),
+                => MapQuotedOrReject(coverage, snapshot.SnapshotId, carrierResult.Options[0], binding, carrierRequest),
             CarrierRateOutcome.Quoted
                 => Result.Success(MapCarrierFailure(
                     ContractVerdict.CarrierNoService,
@@ -312,24 +312,51 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
             cancellationToken);
     }
 
+    private static Result<ShippingCapturedQuoteResult> MapQuotedOrReject(
+        ShippingCapturedRevisionQuote coverage,
+        Guid snapshotId,
+        CarrierRateOption option,
+        CarrierBindingExecution binding,
+        CarrierRateRequest request)
+    {
+        if (option.FinalAmount < 0m
+            || option.TransportationAmount < 0m
+            || option.TaxAmount < 0m
+            || option.PackagingAmount < 0m
+            || option.PickupAmount < 0m
+            || option.DeliveryAmount < 0m
+            || option.FinalAmount
+                != option.TransportationAmount
+                    + option.TaxAmount
+                    + option.PackagingAmount
+                    + option.PickupAmount
+                    + option.DeliveryAmount)
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierTemporarilyUnavailable,
+                ContractReasons.CarrierQuoteUnavailable,
+                coverage));
+        }
+
+        var mapped = MapCarrierQuoted(coverage, snapshotId, option, binding, request);
+        return Result.Success(mapped);
+    }
+
     private static ShippingCapturedQuoteResult MapCarrierQuoted(
         ShippingCapturedRevisionQuote coverage,
         Guid snapshotId,
         CarrierRateOption option,
-        Guid bindingId)
+        CarrierBindingExecution binding,
+        CarrierRateRequest request)
     {
-        var freight = option.TransportationAmount;
         var packaging = option.PackagingAmount;
-        // Tipax FinalAmount already includes tax/packing/pickup/delivery. Use Final as freight authority
-        // and keep packaging component explicit without double-adding tax into packaging.
-        if (option.FinalAmount > 0m)
+        // Final is the authority and already includes tax/packing/pickup/delivery. Freight for
+        // checkout is Final minus packaging so tax is never added a second time into packaging.
+        var freight = option.FinalAmount - packaging;
+        if (freight < 0m)
         {
-            freight = option.FinalAmount - packaging;
-            if (freight < 0m)
-            {
-                freight = option.FinalAmount;
-                packaging = 0m;
-            }
+            freight = option.FinalAmount;
+            packaging = 0m;
         }
 
         var total = freight + packaging;
@@ -338,6 +365,20 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
             : 0m;
         var payable = total - collect;
         var selection = coverage.Selection!;
+        var issued = DateTimeOffset.UtcNow;
+        var identity = CarrierQuoteInputIdentity.Compute(
+            binding.AccountId,
+            binding.Execution.ConfigurationVersion,
+            option.ProviderCode,
+            request.OriginLocationCode,
+            request.DestinationLocationCode,
+            option.ServiceCode,
+            request.WeightGrams,
+            request.DeclaredValue,
+            request.LengthCentimeters,
+            request.WidthCentimeters,
+            request.HeightCentimeters,
+            request.PaymentKind);
         var quoted = new ShippingCapturedRevisionQuote(
             ShippingCapturedQuoteOutcome.Quoted,
             ShippingCapturedQuoteReasonCodes.Quoted,
@@ -350,8 +391,30 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
             payable,
             collect,
             coverage.FreightPayerMode,
-            selection with { RateRowId = bindingId });
-        return Map(quoted, snapshotId);
+            selection with { RateRowId = binding.BindingId });
+        var mapped = Map(quoted, snapshotId);
+        var providerReference = string.IsNullOrWhiteSpace(option.ProviderReference)
+            ? null
+            : option.ProviderReference.Trim();
+        return mapped with
+        {
+            CarrierQuote = new ShippingCapturedCarrierQuoteEvidence(
+                option.ProviderCode,
+                binding.AccountId,
+                binding.Execution.ConfigurationVersion,
+                option.ServiceCode,
+                identity,
+                option.CurrencyCode,
+                option.FinalAmount,
+                option.TransportationAmount,
+                option.TaxAmount,
+                option.PackagingAmount,
+                option.PickupAmount,
+                option.DeliveryAmount,
+                issued,
+                issued.Add(CarrierQuoteLocalFreshness.Window),
+                providerReference)
+        };
     }
 
     private static ShippingCapturedQuoteResult MapCarrierFailure(

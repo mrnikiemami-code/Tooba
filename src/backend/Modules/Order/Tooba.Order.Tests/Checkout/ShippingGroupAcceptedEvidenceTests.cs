@@ -144,7 +144,7 @@ public sealed class ShippingGroupAcceptedEvidenceTests
         AssertFault(ShippingGroupEvidenceFault.SourceRevisionInvalid, () =>
             Evidence(AreaA, RowA, 120_000m, 5_000m, sourceRevision: -1));
         AssertFault(ShippingGroupEvidenceFault.FormatUnsupported, () =>
-            Evidence(AreaA, RowA, 120_000m, 5_000m, formatVersion: 2));
+            Evidence(AreaA, RowA, 120_000m, 5_000m, formatVersion: 3));
         AssertFault(ShippingGroupEvidenceFault.SelectionVersionInvalid, () =>
             Evidence(AreaA, RowA, 120_000m, 5_000m, selection: 0));
         AssertFault(ShippingGroupEvidenceFault.OwnerRequired, () =>
@@ -175,6 +175,50 @@ public sealed class ShippingGroupAcceptedEvidenceTests
             Evidence(AreaA, RowA, 120_000m, 5_000m, minDays: 2, maxDays: null));
         AssertFault(ShippingGroupEvidenceFault.DeliveryDaysInvalid, () =>
             Evidence(AreaA, RowA, 120_000m, 5_000m, minDays: 2, maxDays: 400));
+    }
+
+    [Fact]
+    public void Carrier_quote_evidence_is_kept_on_the_accepted_group_and_rejects_incoherent_components()
+    {
+        var quote = ShippingGroupAcceptedCarrierQuote.Create(
+            "tipax",
+            Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+            1,
+            "7",
+            new string('a', 64),
+            "IRR",
+            137_500m,
+            120_000m,
+            12_500m,
+            5_000m,
+            0m,
+            0m,
+            Now,
+            Now.AddMinutes(15),
+            null);
+        var evidence = Evidence(AreaA, RowA, 132_500m, 5_000m, carrierQuote: quote);
+        Assert.Equal("tipax", evidence.CarrierQuote!.ProviderCode);
+        Assert.Equal(137_500m, evidence.CarrierQuote.FinalAmount);
+        Assert.Null(evidence.CarrierQuote.ProviderReference);
+
+        var fault = Assert.Throws<ContractOperationException>(() =>
+            ShippingGroupAcceptedCarrierQuote.Create(
+                "tipax",
+                Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+                1,
+                "7",
+                new string('a', 64),
+                "IRR",
+                137_500m,
+                120_000m,
+                12_500m,
+                4_000m,
+                0m,
+                0m,
+                Now,
+                Now.AddMinutes(15),
+                null));
+        Assert.Equal(ShippingGroupEvidenceFault.CarrierQuoteInvalid, fault.Code);
     }
 
     [Fact]
@@ -421,7 +465,8 @@ public sealed class ShippingGroupAcceptedEvidenceTests
         long? closeTicks = null,
         string timeZone = "Asia/Tehran",
         int? minDays = 2,
-        int? maxDays = 3) =>
+        int? maxDays = 3,
+        ShippingGroupAcceptedCarrierQuote? carrierQuote = null) =>
         ShippingGroupAcceptedEvidence.Create(
             snapshot ?? Snapshot,
             draftId ?? Draft,
@@ -442,7 +487,8 @@ public sealed class ShippingGroupAcceptedEvidenceTests
             closeTicks ?? CloseTicks,
             timeZone,
             minDays,
-            maxDays);
+            maxDays,
+            carrierQuote);
 
     internal static IReadOnlyList<CartShippingDraftGroup> PlannerGroups(
         decimal standardAmount = 125_000m,

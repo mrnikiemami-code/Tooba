@@ -26,6 +26,7 @@ public sealed record SellerOrderDetailPage(
     Guid SellerOrderId,
     string OrderNumber,
     Guid SellerPartyId,
+    Guid CheckoutId,
     DateTimeOffset SubmittedAt,
     string Status,
     string PaymentState,

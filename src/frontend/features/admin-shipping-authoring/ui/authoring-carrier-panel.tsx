@@ -142,7 +142,11 @@ export function AuthoringCarrierPanel({
             const created = await createCarrierAccount({ displayName, username, password, environment: "Test", isActive: true });
             setBusy(false);
             if (created.kind !== "ok") {
-              setStatus(messages.carrierSaveFailed);
+              setStatus(
+                created.kind === "failure" && "errorCode" in created.failure && created.failure.errorCode === "shipping.carrier.unconfigured"
+                  ? messages.carrierUnconfigured
+                  : messages.carrierSaveFailed,
+              );
               return;
             }
             setAccounts((rows) => [...rows, created.value]);
@@ -161,7 +165,13 @@ export function AuthoringCarrierPanel({
             setBusy(true);
             const tested = await testCarrierConnection(accountId);
             setBusy(false);
-            setStatus(tested.kind === "ok" ? `${messages.carrierTestResult}: ${tested.value}` : messages.carrierSaveFailed);
+            setStatus(
+              tested.kind === "ok"
+                ? `${messages.carrierTestResult}: ${tested.value}`
+                : tested.kind === "failure" && "errorCode" in tested.failure && tested.failure.errorCode === "shipping.carrier.unconfigured"
+                  ? messages.carrierUnconfigured
+                  : messages.carrierSaveFailed,
+            );
           }}
         >
           {messages.carrierTestConnection}

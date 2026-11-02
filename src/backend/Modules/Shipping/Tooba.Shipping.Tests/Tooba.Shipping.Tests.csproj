@@ -38,5 +38,6 @@
          lookup, StoreContext default currency) with controlled fakes; no foreign implementation. -->
     <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
     <ProjectReference Include="..\..\StoreContext\Tooba.StoreContext.Contracts\Tooba.StoreContext.Contracts.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -143,8 +143,8 @@ public sealed class ShippingCarrierAccount
         Environment = environment;
         SecretReference = NormalizeRequired(secretReference, MaxSecretReferenceLength);
         IsActive = isActive;
-        ApiBaseUrl = NormalizeOptional(apiBaseUrl, MaxUrlLength);
-        TokenUrl = NormalizeOptional(tokenUrl, MaxUrlLength);
+        ApiBaseUrl = NormalizeAbsoluteHttpUrl(apiBaseUrl, MaxUrlLength);
+        TokenUrl = NormalizeAbsoluteHttpUrl(tokenUrl, MaxUrlLength);
         CurrencyCode = NormalizeCurrency(currencyCode);
         UpdatedAt = now;
         if (bumpVersion)
@@ -173,6 +173,24 @@ public sealed class ShippingCarrierAccount
 
         var trimmed = value.Trim();
         return trimmed.Length > max ? throw new ArgumentException("Carrier account field is too long.", nameof(value)) : trimmed;
+    }
+
+    private static string? NormalizeAbsoluteHttpUrl(string? value, int max)
+    {
+        var trimmed = NormalizeOptional(value, max);
+        if (trimmed is null)
+        {
+            return null;
+        }
+
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            || !string.IsNullOrEmpty(uri.UserInfo))
+        {
+            throw new ArgumentException("Carrier endpoint URL is invalid.", nameof(value));
+        }
+
+        return trimmed;
     }
 
     private static string? NormalizeTenant(string? tenantId)

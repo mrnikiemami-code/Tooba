@@ -1,4 +1,4 @@
-﻿{
+{
   "module": "Shipping",
   "lockVersion": "ARCH-COMPLETE-002",
   "task": "TB-SHIPPING-ADMIN-BACKEND-AMSC-187-W3",
@@ -580,6 +580,299 @@
       ],
       "transportRule": "route draft id non-empty, expectedRevision positive, regionGroups and methodTranslations present as lists while their optional siblings (weeklySchedule, methodSettings, typeAssignment) are ABSENT-PRESERVES rather than clears; the supplied type wrapper must contain shippingTypeId (JsonRequired) where explicit null clears and Guid.Empty is invalid; owner, seller, edition, tenant, currency, default language and activation authority are never bound from transport",
       "reason": "A whole untrusted composite document plus the shared optimistic-concurrency token are caller-controlled. The stale check wins before any foreign lookup, the complete prospective tree (including new groups with nested rates/titles) is proven before the first tracked mutation, and one own commit advances the root revision once."
+    },
+    {
+      "request": "GetShippingAuthoringPublicationQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/publication",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/publication"
+      ],
+      "handler": "GetShippingAuthoringPublicationHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingAuthoringPublicationQueryValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "authorization:fulfillment.view:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "the route draft id must be non-empty",
+      "reason": "Caller-supplied draft id is projected into the publication read. Selection intent is stored data, not eligibility."
+    },
+    {
+      "request": "PublishShippingAuthoringDraftCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/publication",
+        "POST /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/publication"
+      ],
+      "handler": "PublishShippingAuthoringDraftHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "PublishShippingAuthoringDraftCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedRevision:required-positive:untrusted-caller",
+        "body:expectedSelectionVersion:required-non-negative-present:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route draft id non-empty; expectedRevision positive; expectedSelectionVersion present and non-negative (absence is not version zero)",
+      "reason": "Publication body is untrusted capture+select intent. Missing selection version must not collapse to zero."
+    },
+    {
+      "request": "WithdrawShippingAuthoringPublicationCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/publication/withdraw",
+        "POST /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/publication/withdraw"
+      ],
+      "handler": "WithdrawShippingAuthoringPublicationHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "WithdrawShippingAuthoringPublicationCommandValidator",
+      "inputs": [
+        "route:draftId:required:untrusted-caller",
+        "body:expectedSelectionVersion:required-non-negative-present:untrusted-caller",
+        "authorization:fulfillment.manage:admin-gate-or-seller-whole-owner-grant:authorizer-seam"
+      ],
+      "transportRule": "route draft id non-empty; expectedSelectionVersion present and non-negative",
+      "reason": "Withdraw body is untrusted pointer CAS. A stale version is 409; a repeated clear of the same version is a no-op."
+    },
+    {
+      "request": "ListShippingCarrierAccountsQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/carrier-accounts",
+        "GET /v1/seller/shipping-services/carrier-accounts"
+      ],
+      "handler": "ListShippingCarrierAccountsHandler",
+      "classification": "NO_VALIDATOR_REQUIRED",
+      "validator": null,
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Literal list; owner comes from authorization."
+    },
+    {
+      "request": "UpsertShippingCarrierAccountCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/carrier-accounts",
+        "PUT /v1/admin/shipping-services/carrier-accounts/{accountId:guid}",
+        "POST /v1/seller/shipping-services/carrier-accounts",
+        "PUT /v1/seller/shipping-services/carrier-accounts/{accountId:guid}"
+      ],
+      "handler": "UpsertShippingCarrierAccountHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "UpsertShippingCarrierAccountCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Create/replace share one command; body and optional route id are untrusted."
+    },
+    {
+      "request": "GetShippingCarrierAccountQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/carrier-accounts/{accountId:guid}",
+        "GET /v1/seller/shipping-services/carrier-accounts/{accountId:guid}"
+      ],
+      "handler": "GetShippingCarrierAccountHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingCarrierAccountQueryValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route account id is untrusted."
+    },
+    {
+      "request": "TestShippingCarrierConnectionCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/carrier-accounts/{accountId:guid}/test-connection",
+        "POST /v1/seller/shipping-services/carrier-accounts/{accountId:guid}/test-connection"
+      ],
+      "handler": "TestShippingCarrierConnectionHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "TestShippingCarrierConnectionCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route account id is untrusted."
+    },
+    {
+      "request": "SyncShippingCarrierReferencesCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/carrier-accounts/{accountId:guid}/sync-references",
+        "POST /v1/seller/shipping-services/carrier-accounts/{accountId:guid}/sync-references"
+      ],
+      "handler": "SyncShippingCarrierReferencesHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "SyncShippingCarrierReferencesCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route account id is untrusted."
+    },
+    {
+      "request": "ListShippingCarrierReferencesQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/carrier-accounts/{accountId:guid}/references",
+        "GET /v1/seller/shipping-services/carrier-accounts/{accountId:guid}/references"
+      ],
+      "handler": "ListShippingCarrierReferencesHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ListShippingCarrierReferencesQueryValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route account id is untrusted."
+    },
+    {
+      "request": "ListShippingCarrierDestinationMappingsQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/carrier-accounts/{accountId:guid}/destination-mappings",
+        "GET /v1/seller/shipping-services/carrier-accounts/{accountId:guid}/destination-mappings"
+      ],
+      "handler": "ListShippingCarrierDestinationMappingsHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ListShippingCarrierDestinationMappingsQueryValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route account id is untrusted."
+    },
+    {
+      "request": "UpsertShippingCarrierDestinationMappingCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/carrier-accounts/{accountId:guid}/destination-mappings",
+        "PUT /v1/seller/shipping-services/carrier-accounts/{accountId:guid}/destination-mappings"
+      ],
+      "handler": "UpsertShippingCarrierDestinationMappingHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "UpsertShippingCarrierDestinationMappingCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route account id and mapping body are untrusted."
+    },
+    {
+      "request": "GetShippingCarrierMethodBindingQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding",
+        "GET /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding"
+      ],
+      "handler": "GetShippingCarrierMethodBindingHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingCarrierMethodBindingQueryValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route draft id is untrusted."
+    },
+    {
+      "request": "ReplaceShippingCarrierMethodBindingCommand",
+      "routes": [
+        "PUT /v1/admin/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding",
+        "PUT /v1/seller/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding"
+      ],
+      "handler": "ReplaceShippingCarrierMethodBindingHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ReplaceShippingCarrierMethodBindingCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route draft id and binding body are untrusted."
+    },
+    {
+      "request": "CreateShippingCarrierShipmentCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/shipments",
+        "POST /v1/seller/shipping-services/shipments"
+      ],
+      "handler": "CreateShippingCarrierShipmentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "CreateShippingCarrierShipmentCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Shipment create body is untrusted; eligibility is server-owned."
+    },
+    {
+      "request": "ListShippingCarrierShipmentsQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/shipments",
+        "GET /v1/seller/shipping-services/shipments"
+      ],
+      "handler": "ListShippingCarrierShipmentsHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ListShippingCarrierShipmentsQueryValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "checkoutId query is untrusted."
+    },
+    {
+      "request": "GetShippingCarrierShipmentCommand",
+      "routes": [
+        "GET /v1/admin/shipping-services/shipments/{operationId:guid}",
+        "GET /v1/seller/shipping-services/shipments/{operationId:guid}"
+      ],
+      "handler": "GetShippingCarrierShipmentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "GetShippingCarrierShipmentCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route operation id is untrusted."
+    },
+    {
+      "request": "TrackShippingCarrierShipmentCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/shipments/{operationId:guid}/track",
+        "POST /v1/seller/shipping-services/shipments/{operationId:guid}/track"
+      ],
+      "handler": "TrackShippingCarrierShipmentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "TrackShippingCarrierShipmentCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route operation id is untrusted."
+    },
+    {
+      "request": "CancelShippingCarrierShipmentCommand",
+      "routes": [
+        "POST /v1/admin/shipping-services/shipments/{operationId:guid}/cancel",
+        "POST /v1/seller/shipping-services/shipments/{operationId:guid}/cancel"
+      ],
+      "handler": "CancelShippingCarrierShipmentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "CancelShippingCarrierShipmentCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route operation id is untrusted."
+    },
+    {
+      "request": "LabelShippingCarrierShipmentCommand",
+      "routes": [
+        "GET /v1/admin/shipping-services/shipments/{operationId:guid}/label",
+        "GET /v1/seller/shipping-services/shipments/{operationId:guid}/label"
+      ],
+      "handler": "LabelShippingCarrierShipmentHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "LabelShippingCarrierShipmentCommandValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "Route operation id is untrusted; label is explicitly unsupported."
     }
   ],
   "nestedTransportValidators": [
@@ -594,14 +887,15 @@
     "GetShippingAuthoringContextQuery",
     "GetShippingAuthoringOwnerQuery",
     "GetShippingAuthoringDraftsQuery",
-    "GetShippingAuthoringTypeChoicesQuery"
+    "GetShippingAuthoringTypeChoicesQuery",
+    "ListShippingCarrierAccountsQuery"
   ],
-    "totals": {
-    "shippedRoutes": 53,
-    "endpointReachableRequests": 35,
-    "requestValidators": 31,
+  "totals": {
+    "shippedRoutes": 93,
+    "endpointReachableRequests": 54,
+    "requestValidators": 49,
     "nestedTransportValidators": 6,
-    "declaredValidators": 37
+    "declaredValidators": 55
   },
   "amendments": [
     {
@@ -644,7 +938,12 @@
       "prospectivePreflightProvenance": "Group rates and titles for BRAND-NEW groups are validated against a detached prospective graph built in PreflightEditorDocument, so a PUT that creates a group with nested rows and titles is proven before the first tracked mutation; no group is added and then validated, and no new range/geography/presentation rule engine was introduced.",
       "presenceProvenance": "regionGroups and methodTranslations are required lists ([] is a valid no-op, null/absent is a shape failure). weeklySchedule, methodSettings and typeAssignment are ABSENT-PRESERVES: Shipping adds no new clearing authority for them, and an unconfigured section stays unconfigured. The supplied type wrapper marks shippingTypeId [JsonRequired], explicit null clears with zero catalog lookup, Guid.Empty is invalid, and an omitted wrapper never revalidates the stored id as a new active selection.",
       "noForeignAfterCommitProvenance": "Language registry, currency and every Contracts fact are acquired BEFORE the first tracked mutation; the response is composed from the actually saved root plus those facts, so a catalog or context outage after the commit cannot turn a persisted save into a reported failure."
+    },
+    {
+      "task": "TB-SHIPPING-CARRIER-CONFIGURATION-AND-CHECKOUT-248-R1",
+      "date": "2026-11-02",
+      "scope": "Restore TB-220 publication GET/POST/withdraw rows, classify 248 carrier-account requests, and classify 248-R1 shipment lifecycle requests. No previous row changed classification.",
+      "noValidatorProvenance": "ListShippingCarrierAccountsQuery is constructed with only the authorized owner on a literal route; the endpoint binds no route value, query or body."
     }
   ]
 }
-

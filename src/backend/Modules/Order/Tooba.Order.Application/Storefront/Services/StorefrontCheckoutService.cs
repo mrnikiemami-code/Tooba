@@ -231,7 +231,25 @@ public sealed class StorefrontCheckoutService
                         group.Evidence.ReceivingCloseTicks,
                         group.Evidence.ReceivingTimeZone,
                         group.Evidence.MinimumDeliveryDays,
-                        group.Evidence.MaximumDeliveryDays)))
+                        group.Evidence.MaximumDeliveryDays,
+                        group.Evidence.CarrierQuote is null
+                            ? null
+                            : new StorefrontShippingGroupHistoryCarrierQuote(
+                                group.Evidence.CarrierQuote.ProviderCode,
+                                group.Evidence.CarrierQuote.AccountId,
+                                group.Evidence.CarrierQuote.ConfigurationVersion,
+                                group.Evidence.CarrierQuote.ServiceCode,
+                                group.Evidence.CarrierQuote.QuoteInputIdentity,
+                                group.Evidence.CarrierQuote.Currency,
+                                group.Evidence.CarrierQuote.FinalAmount,
+                                group.Evidence.CarrierQuote.TransportationAmount,
+                                group.Evidence.CarrierQuote.TaxAmount,
+                                group.Evidence.CarrierQuote.PackagingAmount,
+                                group.Evidence.CarrierQuote.PickupAmount,
+                                group.Evidence.CarrierQuote.DeliveryAmount,
+                                group.Evidence.CarrierQuote.IssuedAtUtc,
+                                group.Evidence.CarrierQuote.FreshUntilUtc,
+                                group.Evidence.CarrierQuote.ProviderReference))))
             .ToArray();
 
         return page with { ShippingGroups = views };

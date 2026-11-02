@@ -314,4 +314,22 @@ public static class ShippingErrorCodes
 
     /// <summary>کد provider ناشناخته است یا در این نصب ثبت نشده.</summary>
     public const string CarrierProviderUnknown = "shipping.carrier.provider_unknown";
+
+    /// <summary>اتصال شرکت حمل تنظیم نشده است؛ هیچ درخواست خروجی زده نمی‌شود.</summary>
+    public const string CarrierUnconfigured = "shipping.carrier.unconfigured";
+
+    /// <summary>درخواست چرخهٔ محموله ناقص یا ناسازگار است.</summary>
+    public const string CarrierShipmentRequestInvalid = "shipping.carrier.shipment.request_invalid";
+
+    /// <summary>پیش‌نیاز قانونی ثبت سفارش/fulfillment برای ارسال به حامل برقرار نیست.</summary>
+    public const string CarrierShipmentNotEligible = "shipping.carrier.shipment.not_eligible";
+
+    /// <summary>عملیات حاملی در OpenAPI این provider پشتیبانی نمی‌شود.</summary>
+    public const string CarrierShipmentUnsupported = "shipping.carrier.shipment.unsupported";
+
+    /// <summary>عملیات حاملی پیدا نشد یا متعلق به مالک دیگری است.</summary>
+    public const string CarrierShipmentNotFound = "shipping.carrier.shipment.not_found";
+
+    /// <summary>نتیجهٔ ایجاد محموله نزد provider مبهم ماند و دوباره تلاش نمی‌شود.</summary>
+    public const string CarrierShipmentUnknown = "shipping.carrier.shipment.unknown";
 }

@@ -106,6 +106,12 @@ public static class ShippingAuthoringDraftEndpoints
         group.MapPut("/shipping-services/carrier-accounts/{accountId:guid}/destination-mappings", UpsertCarrierDestinationMappingAsync);
         group.MapGet("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", GetCarrierBindingAsync);
         group.MapPut("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", ReplaceCarrierBindingAsync);
+        group.MapPost("/shipping-services/shipments", CreateCarrierShipmentAsync);
+        group.MapGet("/shipping-services/shipments", ListCarrierShipmentsAsync);
+        group.MapGet("/shipping-services/shipments/{operationId:guid}", GetCarrierShipmentAsync);
+        group.MapPost("/shipping-services/shipments/{operationId:guid}/track", TrackCarrierShipmentAsync);
+        group.MapPost("/shipping-services/shipments/{operationId:guid}/cancel", CancelCarrierShipmentAsync);
+        group.MapGet("/shipping-services/shipments/{operationId:guid}/label", LabelCarrierShipmentAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -653,5 +659,85 @@ public static class ShippingAuthoringDraftEndpoints
         return api.From(await sender.Send(
             new ReplaceShippingCarrierMethodBindingCommand(scope, draftId, body!),
             cancellationToken));
+    }
+
+    private static async Task<IResult> CreateCarrierShipmentAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierShipmentCreateRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(new CreateShippingCarrierShipmentCommand(scope, body!), cancellationToken));
+    }
+
+    private static async Task<IResult> ListCarrierShipmentsAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        _ = Guid.TryParse(context.Request.Query["checkoutId"], out var checkoutId);
+        return api.From(await sender.Send(new ListShippingCarrierShipmentsQuery(scope, checkoutId), cancellationToken));
+    }
+
+    private static async Task<IResult> GetCarrierShipmentAsync(
+        Guid operationId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetShippingCarrierShipmentCommand(scope, operationId), cancellationToken));
+    }
+
+    private static async Task<IResult> TrackCarrierShipmentAsync(
+        Guid operationId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        return api.From(await sender.Send(new TrackShippingCarrierShipmentCommand(scope, operationId), cancellationToken));
+    }
+
+    private static async Task<IResult> CancelCarrierShipmentAsync(
+        Guid operationId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        return api.From(await sender.Send(new CancelShippingCarrierShipmentCommand(scope, operationId), cancellationToken));
+    }
+
+    private static async Task<IResult> LabelCarrierShipmentAsync(
+        Guid operationId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new LabelShippingCarrierShipmentCommand(scope, operationId), cancellationToken));
     }
 }

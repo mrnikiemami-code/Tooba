@@ -16,6 +16,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="8.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="8.0.11" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Shipping.Contracts\Tooba.Shipping.Contracts.csproj" />
@@ -31,6 +32,8 @@
     <!-- Contracts-only seam: the authoritative default currency is the platform-resolved store
          commerce context, never a Shipping-owned mode/currency default. -->
     <ProjectReference Include="..\..\StoreContext\Tooba.StoreContext.Contracts\Tooba.StoreContext.Contracts.csproj" />
+    <!-- Contracts-only seam: committed Order facts for carrier shipment eligibility. -->
+    <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Application\Tooba.Shipping.Application.csproj" />
     <ProjectReference Include="..\Tooba.Shipping.Domain\Tooba.Shipping.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />

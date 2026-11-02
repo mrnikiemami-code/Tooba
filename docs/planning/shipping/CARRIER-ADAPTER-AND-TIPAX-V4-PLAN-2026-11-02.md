@@ -23,11 +23,11 @@ Checkout, Order, Shipping Domain or the storefront.
 
 | Slice | Concrete result | Must stay closed until complete |
 |---|---|---|
-| R1 — carrier account | Owner-scoped carrier profile, secret **reference** (never secret value), connection test, service/payment/packing reference sync | Checkout remains on existing manual/free behavior |
-| R2 — method and geography mapping | Method selects provider + provider service; Geography city gets provider external code; origin address/coordinates become authoritative | No guessed city/service identifiers |
-| R3 — checkout quote | Captured preview calls the neutral rate port, persists exact provider quote evidence/expiry, revalidates before commit, and surfaces typed unavailable/unauthorized/no-service errors | No silent manual fallback and no zero-price fallback |
-| R4 — shipment lifecycle | Provider-neutral create/track/cancel ports plus Tipax order/tracking/cancel adapter and Order-owned provider receipt | No shipment call before committed Order; idempotency required |
-| R5 — operational acceptance | Tipax test account: connection, reference sync, priced cart, stale quote refusal, committed manual-payment Order, shipment create/replay, track/cancel | Production remains disabled until explicit merchant activation |
+| R1 — carrier account | **Software delivered (248 / 248-R1).** Owner-scoped carrier profile, secret **reference** (never secret value), connection test, service/payment/packing reference sync | Live Tipax connection still deferred |
+| R2 — method and geography mapping | **Software delivered (248 / 248-R1).** Method selects provider + provider service; Geography city gets provider external code | No guessed city/service identifiers |
+| R3 — checkout quote | **Software delivered (248-R1).** Captured preview calls the neutral rate port, persists exact provider quote evidence/expiry, revalidates before commit, typed refusals | No silent manual fallback and no zero-price fallback |
+| R4 — shipment lifecycle | **Software delivered (248-R1).** Provider-neutral create/track/cancel; Tipax OmOrder/Tracking/Cancel; label explicitly unsupported; durable operation_key | No shipment call before committed Order; no fake tracking |
+| R5 — operational acceptance | Tipax test account: connection, reference sync, priced cart, stale quote refusal, committed manual-payment Order, shipment create/replay, track/cancel | **Deferred by user — no test account now.** Production remains disabled until explicit merchant activation |
 
 ## Required merchant inputs for activation
 

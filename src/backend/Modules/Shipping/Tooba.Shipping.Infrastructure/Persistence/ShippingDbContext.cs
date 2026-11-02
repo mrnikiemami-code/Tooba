@@ -91,6 +91,10 @@ public sealed class ShippingDbContext : DbContext
     /// <summary>اتصال CarrierApi روی پیش‌نویس.</summary>
     public DbSet<ShippingCarrierMethodBinding> CarrierMethodBindings => Set<ShippingCarrierMethodBinding>();
 
+    /// <summary>عملیات پایدار چرخه محموله حامل (جدا از شاهد مالی Order).</summary>
+    public DbSet<ShippingCarrierShipmentOperation> CarrierShipmentOperations =>
+        Set<ShippingCarrierShipmentOperation>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -952,6 +956,33 @@ public sealed class ShippingDbContext : DbContext
             entity.HasIndex(x => x.DraftId)
                 .IsUnique()
                 .HasDatabaseName("ux_carrier_method_bindings_draft");
+        });
+
+        modelBuilder.Entity<ShippingCarrierShipmentOperation>(entity =>
+        {
+            entity.ToTable("carrier_shipment_operations");
+            entity.HasKey(x => x.OperationId);
+            entity.Property(x => x.OperationId).HasColumnName("operation_id").ValueGeneratedNever();
+            entity.Property(x => x.OperationKey).HasColumnName("operation_key").HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Kind).HasColumnName("kind").HasConversion<int>();
+            entity.Property(x => x.State).HasColumnName("state").HasConversion<int>();
+            entity.Property(x => x.OwnerKind).HasColumnName("owner_kind").HasConversion<int>();
+            entity.Property(x => x.OwnerTenantId).HasColumnName("owner_tenant_id").HasMaxLength(128);
+            entity.Property(x => x.OwnerSellerPartyId).HasColumnName("owner_seller_party_id");
+            entity.Property(x => x.CheckoutId).HasColumnName("checkout_id");
+            entity.Property(x => x.ShippingGroupId).HasColumnName("shipping_group_id");
+            entity.Property(x => x.ProviderCode).HasColumnName("provider_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AccountId).HasColumnName("account_id");
+            entity.Property(x => x.ConfigurationVersion).HasColumnName("configuration_version");
+            entity.Property(x => x.ProviderTrackingCode).HasColumnName("provider_tracking_code").HasMaxLength(64);
+            entity.Property(x => x.ProviderOrderId).HasColumnName("provider_order_id").HasMaxLength(64);
+            entity.Property(x => x.ProviderStatus).HasColumnName("provider_status").HasMaxLength(128);
+            entity.Property(x => x.LastErrorCode).HasColumnName("last_error_code").HasMaxLength(128);
+            entity.Property(x => x.AttemptedAt).HasColumnName("attempted_at");
+            entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(x => x.OperationKey)
+                .IsUnique()
+                .HasDatabaseName("ux_carrier_shipment_operations_key");
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

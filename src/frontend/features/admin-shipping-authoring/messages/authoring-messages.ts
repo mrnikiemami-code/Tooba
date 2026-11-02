@@ -375,6 +375,16 @@ const fa = {
   carrierDestinationCode: "کد شهر خارجی حامل",
   carrierSaveMapping: "ذخیره نگاشت مقصد",
   carrierMappingSaved: "نگاشت مقصد ذخیره شد.",
+  carrierUnconfigured: "اتصال شرکت حمل تنظیم نشده است",
+  carrierLabelUnsupported: "دانلود برچسب این حامل پشتیبانی نمی‌شود.",
+  carrierShipmentTitle: "محموله حامل",
+  carrierShipmentHint: "ایجاد محموله فقط پس از سفارش متعهد و با حساب پیکربندی‌شده. برچسب Tipax در OpenAPI موجود نیست.",
+  carrierShipmentCreate: "ایجاد محموله حامل",
+  carrierShipmentTrack: "پیگیری",
+  carrierShipmentCancel: "لغو محموله",
+  carrierShipmentUnsupported: "این عملیات حامل پشتیبانی نمی‌شود.",
+  carrierShipmentGroupId: "شناسه گروه ارسال",
+  carrierShipmentEmpty: "هنوز محموله‌ای برای این سفارش ثبت نشده است.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "افزودن ردیف هزینه",
@@ -768,6 +778,16 @@ const en: Record<AuthoringMessageKey, string> = {
   carrierDestinationCode: "Carrier external city code",
   carrierSaveMapping: "Save destination mapping",
   carrierMappingSaved: "Destination mapping saved.",
+  carrierUnconfigured: "Carrier connection is not configured.",
+  carrierLabelUnsupported: "Label download is not supported for this carrier.",
+  carrierShipmentTitle: "Carrier shipment",
+  carrierShipmentHint: "Create a shipment only after a committed order and a configured account. Tipax has no documented label route.",
+  carrierShipmentCreate: "Create carrier shipment",
+  carrierShipmentTrack: "Track",
+  carrierShipmentCancel: "Cancel shipment",
+  carrierShipmentUnsupported: "This carrier operation is not supported.",
+  carrierShipmentGroupId: "Shipping group id",
+  carrierShipmentEmpty: "No carrier shipment is recorded for this order yet.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "Add cost row",

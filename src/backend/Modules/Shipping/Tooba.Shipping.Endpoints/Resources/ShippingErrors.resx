@@ -240,4 +240,22 @@
   <data name="shipping.carrier.provider_unknown" xml:space="preserve">
     <value>The carrier provider code is unknown in this installation.</value>
   </data>
+  <data name="shipping.carrier.unconfigured" xml:space="preserve">
+    <value>Carrier connection is not configured.</value>
+  </data>
+  <data name="shipping.carrier.shipment.request_invalid" xml:space="preserve">
+    <value>The carrier shipment request is incomplete.</value>
+  </data>
+  <data name="shipping.carrier.shipment.not_eligible" xml:space="preserve">
+    <value>The order is not eligible for a carrier shipment.</value>
+  </data>
+  <data name="shipping.carrier.shipment.unsupported" xml:space="preserve">
+    <value>This carrier operation is not supported.</value>
+  </data>
+  <data name="shipping.carrier.shipment.not_found" xml:space="preserve">
+    <value>The carrier shipment operation was not found.</value>
+  </data>
+  <data name="shipping.carrier.shipment.unknown" xml:space="preserve">
+    <value>The carrier shipment result is unknown and will not be retried.</value>
+  </data>
 </root>

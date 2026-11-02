@@ -79,7 +79,7 @@ public sealed class TipaxV4RateProviderTests
         Assert.Equal(12_500m, option.TaxAmount);
         Assert.Equal(5_000m, option.PackagingAmount);
         Assert.Equal("IRR", option.CurrencyCode);
-        Assert.Equal("tipax:quote-42:1:7", option.ProviderReference);
+        Assert.Equal(string.Empty, option.ProviderReference);
         Assert.Equal("Bearer token-1", bearer);
 
         Assert.NotNull(priceBody);

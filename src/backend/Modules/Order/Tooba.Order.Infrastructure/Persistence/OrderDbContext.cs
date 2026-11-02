@@ -463,6 +463,37 @@ public sealed class OrderDbContext : DbContext
                     .HasColumnName("accepted_owner_seller_party_id");
             });
         owned.Navigation(x => x.Owner).IsRequired();
+        owned.OwnsOne(
+            x => x.CarrierQuote,
+            carrier =>
+            {
+                carrier.Property(x => x.ProviderCode)
+                    .HasColumnName("accepted_carrier_provider_code")
+                    .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxProviderCodeLength);
+                carrier.Property(x => x.AccountId).HasColumnName("accepted_carrier_account_id");
+                carrier.Property(x => x.ConfigurationVersion).HasColumnName("accepted_carrier_configuration_version");
+                carrier.Property(x => x.ServiceCode)
+                    .HasColumnName("accepted_carrier_service_code")
+                    .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxProviderCodeLength);
+                carrier.Property(x => x.QuoteInputIdentity)
+                    .HasColumnName("accepted_carrier_quote_input_identity")
+                    .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxIdentityLength);
+                carrier.Property(x => x.Currency)
+                    .HasColumnName("accepted_carrier_quote_currency")
+                    .HasMaxLength(ShippingGroupAcceptedEvidence.MaxCurrencyLength);
+                carrier.Property(x => x.FinalAmount).HasColumnName("accepted_carrier_final_amount").HasPrecision(18, 2);
+                carrier.Property(x => x.TransportationAmount).HasColumnName("accepted_carrier_transport_amount").HasPrecision(18, 2);
+                carrier.Property(x => x.TaxAmount).HasColumnName("accepted_carrier_tax_amount").HasPrecision(18, 2);
+                carrier.Property(x => x.PackagingAmount).HasColumnName("accepted_carrier_packaging_component").HasPrecision(18, 2);
+                carrier.Property(x => x.PickupAmount).HasColumnName("accepted_carrier_pickup_amount").HasPrecision(18, 2);
+                carrier.Property(x => x.DeliveryAmount).HasColumnName("accepted_carrier_delivery_amount").HasPrecision(18, 2);
+                carrier.Property(x => x.IssuedAtUtc).HasColumnName("accepted_carrier_issued_at");
+                carrier.Property(x => x.FreshUntilUtc).HasColumnName("accepted_carrier_fresh_until");
+                carrier.Property(x => x.ProviderReference)
+                    .HasColumnName("accepted_carrier_provider_reference")
+                    .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxReferenceLength);
+            });
+        owned.Navigation(x => x.CarrierQuote).IsRequired(false);
     }
 }
 

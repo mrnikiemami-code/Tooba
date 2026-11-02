@@ -66,7 +66,11 @@ public sealed class ShippingModule : IToobaModule
         // The Tipax adapter is fail-closed and performs no network call until its private configuration section
         // is explicitly enabled and complete. Existing Manual/Free behavior is unchanged.
         services.Configure<TipaxV4Options>(configuration.GetSection(TipaxV4Options.SectionName));
-        services.AddDataProtection();
+        var keys = Path.Combine(environment.ContentRootPath, "App_Data", "dataprotection-keys");
+        Directory.CreateDirectory(keys);
+        services.AddDataProtection()
+            .SetApplicationName("Tooba")
+            .PersistKeysToFileSystem(new DirectoryInfo(keys));
         services.AddHttpClient("Shipping.Tipax.Auth");
         services.AddHttpClient("Shipping.Tipax.Api");
         services.AddSingleton<TipaxV4TokenSource>();
@@ -76,6 +80,9 @@ public sealed class ShippingModule : IToobaModule
         services.AddScoped<IShippingCarrierAccountDirectory, ShippingCarrierAccountDirectory>();
         services.AddScoped<ICarrierRateProvider, TipaxV4RateProvider>();
         services.AddScoped<ICarrierRateProviderRegistry, CarrierRateProviderRegistry>();
+        services.AddScoped<ICarrierShipmentProvider, TipaxV4ShipmentProvider>();
+        services.AddScoped<ICarrierShipmentProviderRegistry, CarrierShipmentProviderRegistry>();
+        services.AddScoped<IShippingCarrierShipmentOperations, ShippingCarrierShipmentDirectory>();
         services.AddScoped<IShippingRateQuoteLookup, ShippingRateQuoteLookup>();
         // TB-216: the captured-revision Contracts edge. It reads ONE exact owner+draft+revision, proves the
         // destination path through Geography Contracts and calls the SAME rate authority once. Registered
