@@ -191,15 +191,14 @@ public sealed class CreateShippingCarrierShipmentCommandValidator
             .NotEmpty()
             .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired)
             .When(x => x.Request is not null);
-        RuleFor(x => x.Request.CarrierAccountId)
-            .NotEmpty()
-            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired)
-            .When(x => x.Request is not null);
-        RuleFor(x => x.Request.ProviderServiceId)
-            .NotEmpty()
-            .WithErrorCode(ShippingCarrierValidationCodes.BindingReferenceInvalid)
-            .When(x => x.Request is not null);
     }
+}
+
+public sealed class ListShippingGroupCarrierExecutionCapabilitiesQueryValidator
+    : AbstractValidator<ListShippingGroupCarrierExecutionCapabilitiesQuery>
+{
+    public ListShippingGroupCarrierExecutionCapabilitiesQueryValidator()
+        => RuleFor(x => x.CheckoutId).NotEmpty().WithErrorCode(ShippingCarrierValidationCodes.AccountIdRequired);
 }
 
 public sealed class ListShippingCarrierShipmentsQueryValidator : AbstractValidator<ListShippingCarrierShipmentsQuery>

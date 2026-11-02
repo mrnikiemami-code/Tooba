@@ -107,6 +107,7 @@ public static class ShippingAuthoringDraftEndpoints
         group.MapGet("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", GetCarrierBindingAsync);
         group.MapPut("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", ReplaceCarrierBindingAsync);
         group.MapPost("/shipping-services/shipments", CreateCarrierShipmentAsync);
+        group.MapGet("/shipping-services/shipments/capabilities", ListCarrierExecutionCapabilitiesAsync);
         group.MapGet("/shipping-services/shipments", ListCarrierShipmentsAsync);
         group.MapGet("/shipping-services/shipments/{operationId:guid}", GetCarrierShipmentAsync);
         group.MapPost("/shipping-services/shipments/{operationId:guid}/track", TrackCarrierShipmentAsync);
@@ -691,6 +692,18 @@ public static class ShippingAuthoringDraftEndpoints
         var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
         _ = Guid.TryParse(context.Request.Query["checkoutId"], out var checkoutId);
         return api.From(await sender.Send(new ListShippingCarrierShipmentsQuery(scope, checkoutId), cancellationToken));
+    }
+
+    private static async Task<IResult> ListCarrierExecutionCapabilitiesAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireAdminOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        _ = Guid.TryParse(context.Request.Query["checkoutId"], out var checkoutId);
+        return api.From(await sender.Send(new ListShippingGroupCarrierExecutionCapabilitiesQuery(scope, checkoutId), cancellationToken));
     }
 
     private static async Task<IResult> GetCarrierShipmentAsync(

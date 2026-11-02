@@ -537,6 +537,13 @@ public sealed class StorefrontCapturedSelectionWriter(
             carrier.DeliveryAmount,
             carrier.IssuedAtUtc,
             carrier.FreshUntilUtc,
+            carrier.OriginLocationCode,
+            carrier.DestinationLocationCode,
+            carrier.WeightGrams,
+            carrier.DeclaredValue,
+            carrier.LengthCentimeters,
+            carrier.WidthCentimeters,
+            carrier.HeightCentimeters,
             carrier.ProviderReference);
     }
 

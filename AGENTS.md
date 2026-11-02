@@ -1,4 +1,11 @@
-# CURRENT — 248-R1 HANDOFF / PROVIDER ACCEPTANCE DEFERRED — 2026-11-02
+# CURRENT — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+
+Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued software/deploy scope, decision **GROUP_SCOPED_CARRIER_EXECUTION_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `8e73cef`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. Migration `20261102190000_AddAcceptedCarrierExecutionProvenance` applied after private backup.
+LANDED: accepted carrier execution provenance; expanded committed facts + capabilities GET; hardened create; per-group admin/seller UI (detached panel removed). Classification **55/95**. 248-R1 detached-panel gaps closed. LIVE TIPAX deferred by user. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 248-R1 HANDOFF / PROVIDER ACCEPTANCE DEFERRED — 2026-11-02
 
 Active implementation: `NONE`
 automaticNextImplementationTask: `NONE`

@@ -26,7 +26,7 @@ Checkout, Order, Shipping Domain or the storefront.
 | R1 — carrier account | **Software delivered (248 / 248-R1).** Owner-scoped carrier profile, secret **reference** (never secret value), connection test, service/payment/packing reference sync | Live Tipax connection still deferred |
 | R2 — method and geography mapping | **Software delivered (248 / 248-R1).** Method selects provider + provider service; Geography city gets provider external code | No guessed city/service identifiers |
 | R3 — checkout quote | **Software delivered (248-R1).** Captured preview calls the neutral rate port, persists exact provider quote evidence/expiry, revalidates before commit, typed refusals | No silent manual fallback and no zero-price fallback |
-| R4 — shipment lifecycle | **Software delivered (248-R1).** Provider-neutral create/track/cancel; Tipax OmOrder/Tracking/Cancel; label explicitly unsupported; durable operation_key | No shipment call before committed Order; no fake tracking |
+| R4 — shipment lifecycle | **Software delivered (248-R1 + 249).** Provider-neutral create/track/cancel; Tipax OmOrder/Tracking/Cancel; label explicitly unsupported; durable operation_key; **249** adds execution provenance, capabilities API, server-authoritative per-group admin/seller execution (detached panel withdrawn) | No shipment call before committed Order; no fake tracking; migration `20261102190000` pending apply |
 | R5 — operational acceptance | Tipax test account: connection, reference sync, priced cart, stale quote refusal, committed manual-payment Order, shipment create/replay, track/cancel | **Deferred by user — no test account now.** Production remains disabled until explicit merchant activation |
 
 ## Required merchant inputs for activation

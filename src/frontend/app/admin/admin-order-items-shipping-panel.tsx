@@ -30,6 +30,13 @@ import {
 } from "./admin-order-operations";
 import { sellerQuickActionLabels } from "./admin-order-operations-scope";
 import { parseQuantityInput } from "../../lib/quantity-display";
+import { AdminOrderGroupCarrierExecution } from "./admin-order-group-carrier-execution";
+import {
+  ADMIN_ACTOR_STORAGE_KEY,
+  ADMIN_DEV_ACTOR_HEADER,
+  DEFAULT_ADMIN_ACTOR_ID,
+  adminRequestHeaders,
+} from "../../lib/admin/admin-result.ts";
 
 type Props = {
   detail: AdminOrderDetail;
@@ -828,6 +835,18 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           );
         })}
       </div>
+
+      <AdminOrderGroupCarrierExecution
+        checkoutId={checkoutId}
+        apiPrefix="/v1/admin"
+        requestHeaders={() => {
+          const actor =
+            typeof window === "undefined"
+              ? DEFAULT_ADMIN_ACTOR_ID
+              : window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
+          return { ...adminRequestHeaders(), [ADMIN_DEV_ACTOR_HEADER]: actor };
+        }}
+      />
 
       {modalSeller ? (
         <AdminCreateShipmentModal

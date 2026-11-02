@@ -36,22 +36,49 @@ internal sealed class ShippingCarrierShipmentDirectory(
         }
 
         var facts = await orderFacts.GetAsync(request.CheckoutId, request.ShippingGroupId, cancellationToken);
-        if (facts is null)
+        if (facts is null || !facts.CanExecuteCarrierShipment)
         {
             return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
         }
 
+        if (!ShippingCarrierOwnerScopeMatching.Matches(owner, facts))
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        if (string.IsNullOrWhiteSpace(facts.OriginLocationCode)
+            || string.IsNullOrWhiteSpace(facts.DestinationLocationCode)
+            || facts.WeightGrams is not > 0m
+            || facts.LengthCentimeters is not > 0m
+            || facts.WidthCentimeters is not > 0m
+            || facts.HeightCentimeters is not > 0m
+            || facts.CarrierAccountId is not { } accountId
+            || facts.ConfigurationVersion is not { } configurationVersion
+            || string.IsNullOrWhiteSpace(facts.ProviderServiceCode))
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        var senderLocation = (request.Sender.LocationCode ?? string.Empty).Trim();
+        if (!string.Equals(senderLocation, facts.OriginLocationCode, StringComparison.Ordinal))
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentRequestInvalid);
+        }
+
         var recipient = new ShippingCarrierShipmentPartyInput(
-            string.IsNullOrWhiteSpace(facts.RecipientName) ? request.Recipient.FullName : facts.RecipientName,
-            string.IsNullOrWhiteSpace(facts.RecipientMobile) ? request.Recipient.Mobile : facts.RecipientMobile,
-            string.IsNullOrWhiteSpace(facts.RecipientAddress) ? request.Recipient.AddressLine : facts.RecipientAddress,
-            request.Recipient.LocationCode,
-            facts.PostalCode ?? request.Recipient.PostalCode);
-        var package = request.Package with { CollectAmount = facts.CarrierCollectAmount };
-        var accountId = facts.CarrierAccountId ?? request.CarrierAccountId;
-        var serviceId = string.IsNullOrWhiteSpace(facts.ProviderServiceCode)
-            ? request.ProviderServiceId
-            : facts.ProviderServiceCode;
+            facts.RecipientName,
+            facts.RecipientMobile,
+            facts.RecipientAddress,
+            facts.DestinationLocationCode,
+            facts.PostalCode);
+        var package = new ShippingCarrierShipmentPackageInput(
+            facts.WeightGrams.Value,
+            facts.DeclaredValue ?? 0m,
+            facts.LengthCentimeters.Value,
+            facts.WidthCentimeters.Value,
+            facts.HeightCentimeters.Value,
+            facts.CarrierCollectAmount);
+        var serviceId = facts.ProviderServiceCode;
 
         var domainOwner = ToDomainOwner(owner);
         var context = await accounts.TryResolveExecutionContextAsync(
@@ -63,6 +90,11 @@ internal sealed class ShippingCarrierShipmentDirectory(
         if (context is null || !context.IsActive || string.IsNullOrWhiteSpace(context.Username))
         {
             return Fail(ShippingErrorCodes.CarrierUnconfigured);
+        }
+
+        if (context.ConfigurationVersion != configurationVersion)
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
         }
 
         if (!providers.TryResolve(context.ProviderCode, out var provider) || provider is null)
@@ -145,7 +177,7 @@ internal sealed class ShippingCarrierShipmentDirectory(
                     request.Sender.FullName,
                     request.Sender.Mobile,
                     request.Sender.AddressLine,
-                    request.Sender.LocationCode,
+                    facts.OriginLocationCode,
                     request.Sender.PostalCode),
                 new CarrierShipmentParty(
                     recipient.FullName,

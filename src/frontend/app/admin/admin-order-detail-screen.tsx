@@ -38,7 +38,6 @@ import {
   type AdminSellerFinancial,
 } from "./admin-api";
 import { AdminOrderItemsShippingPanel } from "./admin-order-items-shipping-panel";
-import { AdminCarrierShipmentPanel } from "./admin-carrier-shipment-panel";
 import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { loadAdminOrderOperations } from "./admin-order-operations";
 import { paymentStatusBadge, resolveOrderStatusCard, resolvePaymentStatusCard } from "./admin-order-status-cards";
@@ -672,13 +671,6 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
           </div>
 
           <AdminOrderItemsShippingPanel detail={detail} checkoutId={checkoutId} onCompleted={refresh} />
-          <AdminCarrierShipmentPanel
-            checkoutId={checkoutId}
-            recipientName={detail.recipientName}
-            recipientMobile={detail.contactMobile}
-            recipientAddress={detail.postalAddress}
-            postalCode={detail.postalCode}
-          />
 
           <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50/70 px-3 py-2">

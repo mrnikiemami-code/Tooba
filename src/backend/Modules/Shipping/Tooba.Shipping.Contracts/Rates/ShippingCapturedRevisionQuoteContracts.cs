@@ -345,4 +345,11 @@ public sealed record ShippingCapturedCarrierQuoteEvidence(
     decimal DeliveryAmount,
     DateTimeOffset IssuedAtUtc,
     DateTimeOffset FreshUntilUtc,
+    string OriginLocationCode,
+    string DestinationLocationCode,
+    decimal WeightGrams,
+    decimal DeclaredValue,
+    decimal LengthCentimeters,
+    decimal WidthCentimeters,
+    decimal HeightCentimeters,
     string? ProviderReference);

@@ -413,6 +413,13 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                 option.DeliveryAmount,
                 issued,
                 issued.Add(CarrierQuoteLocalFreshness.Window),
+                request.OriginLocationCode,
+                request.DestinationLocationCode,
+                request.WeightGrams,
+                request.DeclaredValue,
+                request.LengthCentimeters,
+                request.WidthCentimeters,
+                request.HeightCentimeters,
                 providerReference)
         };
     }

@@ -800,6 +800,21 @@
       "reason": "Shipment create body is untrusted; eligibility is server-owned."
     },
     {
+      "request": "ListShippingGroupCarrierExecutionCapabilitiesQuery",
+      "routes": [
+        "GET /v1/admin/shipping-services/shipments/capabilities",
+        "GET /v1/seller/shipping-services/shipments/capabilities"
+      ],
+      "handler": "ListShippingGroupCarrierExecutionCapabilitiesHandler",
+      "classification": "VALIDATOR_REQUIRED",
+      "validator": "ListShippingGroupCarrierExecutionCapabilitiesQueryValidator",
+      "inputs": [
+        "authorization:fulfillment.view-or-manage:authorizer-seam"
+      ],
+      "transportRule": "owner is server-authorized; caller-controlled ids/bodies are validated when present",
+      "reason": "checkoutId query is untrusted."
+    },
+    {
       "request": "ListShippingCarrierShipmentsQuery",
       "routes": [
         "GET /v1/admin/shipping-services/shipments",
@@ -891,9 +906,9 @@
     "ListShippingCarrierAccountsQuery"
   ],
   "totals": {
-    "shippedRoutes": 93,
-    "endpointReachableRequests": 54,
-    "requestValidators": 49,
+    "shippedRoutes": 95,
+    "endpointReachableRequests": 55,
+    "requestValidators": 50,
     "nestedTransportValidators": 6,
     "declaredValidators": 55
   },

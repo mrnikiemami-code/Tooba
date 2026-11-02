@@ -27,6 +27,14 @@ test("items-shipping shell is mounted above financial section", () => {
   assert.ok(panelIdx > 0);
   assert.ok(financeIdx > panelIdx);
   assert.match(detail, /اقلام و ارسال|AdminOrderItemsShippingPanel/);
+  assert.doesNotMatch(detail, /AdminCarrierShipmentPanel/);
+});
+
+test("carrier execution is group-scoped inside items-shipping panel", () => {
+  const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
+  const execution = readFileSync(join(dir, "admin-order-group-carrier-execution.tsx"), "utf8");
+  assert.match(panel, /AdminOrderGroupCarrierExecution/);
+  assert.match(execution, /shipments\/capabilities/);
 });
 
 test("seller groups stay separate and selection cannot cross sellers in one op", () => {

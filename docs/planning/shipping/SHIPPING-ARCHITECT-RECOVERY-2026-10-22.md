@@ -1,4 +1,9 @@
-# CURRENT — 248-R1 HANDOFF / PROVIDER ACCEPTANCE DEFERRED — 2026-11-02
+# CURRENT — 249 ORDER GROUP CARRIER EXECUTION DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+
+Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249/{TASK.md,RESULT.md,RECEIPTS.md}.
+249 supersedes detached admin/seller carrier panels and 248-R1 execution UX gaps; migration applied on canonical tooba_alpha; live Tipax still deferred.
+
+# SUPERSEDED — 248-R1 HANDOFF / PROVIDER ACCEPTANCE DEFERRED — 2026-11-02
 
 Active implementation: `NONE`
 automaticNextImplementationTask: `NONE`

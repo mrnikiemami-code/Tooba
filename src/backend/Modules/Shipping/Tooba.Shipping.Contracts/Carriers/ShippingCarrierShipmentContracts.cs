@@ -83,6 +83,47 @@ public sealed record ShippingCarrierShipmentPartyInput(
     string LocationCode,
     string? PostalCode = null);
 
+/// <summary>Server-authoritative carrier execution capability for one committed shipping group.</summary>
+public sealed record ShippingGroupCarrierExecutionCapabilityView(
+    Guid CheckoutId,
+    Guid ShippingGroupId,
+    Guid SellerPartyId,
+    Guid SellerOrderId,
+    string MethodCode,
+    string MethodLabel,
+    string TransportMode,
+    int OwnerKind,
+    string? OwnerTenantKey,
+    Guid? OwnerSellerPartyId,
+    string RecipientName,
+    string RecipientMobile,
+    string RecipientAddress,
+    string? PostalCode,
+    string ProvinceName,
+    string CityName,
+    string Currency,
+    decimal PayableAtCheckoutAmount,
+    decimal CarrierCollectAmount,
+    bool HasCarrierQuote,
+    Guid? CarrierAccountId,
+    int? ConfigurationVersion,
+    string? ProviderCode,
+    string? ProviderServiceCode,
+    string? QuoteInputIdentity,
+    string? OriginLocationCode,
+    string? DestinationLocationCode,
+    decimal? WeightGrams,
+    decimal? DeclaredValue,
+    decimal? LengthCentimeters,
+    decimal? WidthCentimeters,
+    decimal? HeightCentimeters,
+    string SellerOrderStatus,
+    bool IsCancelled,
+    bool PaymentLocked,
+    bool CanExecuteCarrierShipment,
+    string? IneligibilityReasonCode,
+    IReadOnlyList<Guid> OrderLineIds);
+
 /// <summary>بستهٔ فیزیکی برای ایجاد محموله؛ مبلغ collect جدا از کرایهٔ تسویه است.</summary>
 /// <param name="WeightGrams">وزن به گرم.</param>
 /// <param name="DeclaredValue">ارزش اظهارشده.</param>

@@ -20,6 +20,10 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     private static readonly Guid Checkout = Guid.Parse("11111111-1111-4111-8111-111111111111");
     private static readonly Guid Group = Guid.Parse("22222222-2222-4222-8222-222222222222");
     private static readonly Guid Account = Guid.Parse("33333333-3333-4333-8333-333333333333");
+    private static readonly Guid SellerParty = Guid.Parse("44444444-4444-4444-8444-444444444444");
+    private static readonly Guid SellerOrder = Guid.Parse("55555555-5555-4555-8555-555555555555");
+    private const string Origin = "101";
+    private const string Destination = "202";
 
     [Fact]
     public async Task Unconfigured_account_makes_no_provider_call()
@@ -38,6 +42,61 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     {
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: true, facts: null);
+
+        var result = await directory.CreateAsync(Owner(), ValidRequest(), CancellationToken.None);
+
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
+        Assert.Equal(0, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Ineligible_facts_refuse_create_without_provider_call()
+    {
+        var provider = new RecordingShipmentProvider();
+        var directory = Create(provider, configured: true, facts: ValidFacts(canExecute: false, reason: "payment_locked"));
+
+        var result = await directory.CreateAsync(Owner(), ValidRequest(), CancellationToken.None);
+
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
+        Assert.Equal(0, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Owner_scope_mismatch_is_not_eligible()
+    {
+        var provider = new RecordingShipmentProvider();
+        var directory = Create(provider, configured: true, facts: ValidFacts());
+
+        var result = await directory.CreateAsync(
+            ShippingAuthoringOwnerScope.ForStore("other-store"),
+            ValidRequest(),
+            CancellationToken.None);
+
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
+        Assert.Equal(0, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Sender_origin_tamper_is_request_invalid()
+    {
+        var provider = new RecordingShipmentProvider();
+        var directory = Create(provider, configured: true, facts: ValidFacts());
+        var tampered = ValidRequest() with
+        {
+            Sender = ValidRequest().Sender with { LocationCode = "999" },
+        };
+
+        var result = await directory.CreateAsync(Owner(), tampered, CancellationToken.None);
+
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentRequestInvalid, result.FirstError.Code);
+        Assert.Equal(0, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Configuration_version_mismatch_is_not_eligible()
+    {
+        var provider = new RecordingShipmentProvider();
+        var directory = Create(provider, configured: true, facts: ValidFacts(configurationVersion: 2));
 
         var result = await directory.CreateAsync(Owner(), ValidRequest(), CancellationToken.None);
 
@@ -107,13 +166,13 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         OrderCommittedCarrierShipmentFacts? facts)
     {
         var options = new DbContextOptionsBuilder<ShippingDbContext>()
-            .UseInMemoryDatabase($"tb248r1-ship-{Guid.NewGuid():N}")
+            .UseInMemoryDatabase($"tb249-ship-{Guid.NewGuid():N}")
             .Options;
         var db = new ShippingDbContext(options);
         var tipax = new StaticOptions(new TipaxV4Options
         {
             SuccessCallbackUrl = "https://store.test/ok",
-            FailureCallbackUrl = "https://store.test/fail"
+            FailureCallbackUrl = "https://store.test/fail",
         });
         return new ShippingCarrierShipmentDirectory(
             db,
@@ -125,27 +184,58 @@ public sealed class ShippingCarrierShipmentDirectoryTests
 
     private static ShippingAuthoringOwnerScope Owner() => ShippingAuthoringOwnerScope.ForStore("store-alpha");
 
-    private static OrderCommittedCarrierShipmentFacts ValidFacts() => new(
-        Checkout,
-        Group,
-        "گیرنده",
-        "09121111111",
-        "نشانی",
-        "1111111111",
-        "IRR",
-        137_500m,
-        0m,
-        Account,
-        "7");
+    private static OrderCommittedCarrierShipmentFacts ValidFacts(
+        bool canExecute = true,
+        string? reason = null,
+        int configurationVersion = 1) =>
+        new(
+            Checkout,
+            Group,
+            SellerParty,
+            SellerOrder,
+            "tipax:standard",
+            "Tipax",
+            "CarrierApi",
+            0,
+            "store-alpha",
+            null,
+            "گیرنده",
+            "09121111111",
+            "نشانی",
+            "1111111111",
+            "تهران",
+            "تهران",
+            "IRR",
+            137_500m,
+            0m,
+            true,
+            Account,
+            configurationVersion,
+            "tipax",
+            "7",
+            "input-1",
+            Origin,
+            Destination,
+            1500m,
+            2_000_000m,
+            20m,
+            15m,
+            10m,
+            canExecute ? "Paid" : "PendingPayment",
+            false,
+            !canExecute,
+            canExecute,
+            reason,
+            Array.Empty<Guid>());
 
     private static ShippingCarrierShipmentCreateRequest ValidRequest() => new(
         Checkout,
         Group,
         Account,
         "7",
-        new ShippingCarrierShipmentPartyInput("فرستنده", "09120000000", "مبدأ", "101", "1111111111"),
-        new ShippingCarrierShipmentPartyInput("گیرنده", "09121111111", "مقصد", "202", "2222222222"),
-        new ShippingCarrierShipmentPackageInput(1500m, 2_000_000m, 20m, 15m, 10m, 0m));
+        new ShippingCarrierShipmentPartyInput("فرستنده", "09120000000", "مبدأ", Origin, "1111111111"),
+        new ShippingCarrierShipmentPartyInput("ignored", "ignored", "ignored", "999", "2222222222"),
+        new ShippingCarrierShipmentPackageInput(999m, 1m, 1m, 1m, 1m, 999m));
 
     private sealed class RecordingShipmentProvider : ICarrierShipmentProvider
     {
@@ -157,6 +247,8 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         public Task<CarrierShipmentResult> CreateAsync(CarrierShipmentCreateRequest request, CancellationToken cancellationToken)
         {
             Creates++;
+            Assert.Equal(Destination, request.Recipient.LocationCode);
+            Assert.Equal(1500m, request.Package.WeightGrams);
             return Task.FromResult(Outcome == CarrierShipmentOutcome.Succeeded
                 ? new CarrierShipmentResult(Outcome, TrackingCode: "TRK-1", ProviderOrderId: "ord-1")
                 : CarrierShipmentResult.Failure(Outcome, ShippingErrorCodes.CarrierShipmentUnknown));
@@ -185,6 +277,12 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             Guid shippingGroupId,
             CancellationToken cancellationToken)
             => Task.FromResult(facts);
+
+        public Task<IReadOnlyList<OrderCommittedCarrierShipmentFacts>> ListByCheckoutAsync(
+            Guid checkoutId,
+            CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<OrderCommittedCarrierShipmentFacts>>(
+                facts is null ? Array.Empty<OrderCommittedCarrierShipmentFacts>() : new[] { facts });
     }
 
     private sealed class StubAccounts(bool configured) : IShippingCarrierAccountDirectory

@@ -515,6 +515,9 @@ public sealed class ShippingGroupAcceptedCarrierQuote
     /// <summary>حداکثر طول مرجع صادرشدهٔ provider.</summary>
     public const int MaxReferenceLength = 128;
 
+    /// <summary>حداکثر طول کد مبدأ/مقصد provider.</summary>
+    public const int MaxLocationCodeLength = 64;
+
     private ShippingGroupAcceptedCarrierQuote()
     {
     }
@@ -564,6 +567,27 @@ public sealed class ShippingGroupAcceptedCarrierQuote
     /// <summary>مرجع صادرشدهٔ واقعی provider یا تهی.</summary>
     public string? ProviderReference { get; private set; }
 
+    /// <summary>کد شهر مبدأ provider در زمان نقل‌قول.</summary>
+    public string OriginLocationCode { get; private set; } = string.Empty;
+
+    /// <summary>کد شهر مقصد provider در زمان نقل‌قول.</summary>
+    public string DestinationLocationCode { get; private set; } = string.Empty;
+
+    /// <summary>وزن بسته (گرم) در زمان نقل‌قول.</summary>
+    public decimal WeightGrams { get; private set; }
+
+    /// <summary>ارزش اظهاری بسته در زمان نقل‌قول.</summary>
+    public decimal DeclaredValue { get; private set; }
+
+    /// <summary>طول بسته (سانتی‌متر).</summary>
+    public decimal LengthCentimeters { get; private set; }
+
+    /// <summary>عرض بسته (سانتی‌متر).</summary>
+    public decimal WidthCentimeters { get; private set; }
+
+    /// <summary>ارتفاع بسته (سانتی‌متر).</summary>
+    public decimal HeightCentimeters { get; private set; }
+
     /// <summary>شاهد حامل را می‌سازد؛ اجزای ناسازگار رد می‌شوند و شناسهٔ محلی به‌عنوان مرجع ثبت نمی‌شود.</summary>
     public static ShippingGroupAcceptedCarrierQuote Create(
         string providerCode,
@@ -580,6 +604,13 @@ public sealed class ShippingGroupAcceptedCarrierQuote
         decimal deliveryAmount,
         DateTimeOffset issuedAtUtc,
         DateTimeOffset freshUntilUtc,
+        string originLocationCode,
+        string destinationLocationCode,
+        decimal weightGrams,
+        decimal declaredValue,
+        decimal lengthCentimeters,
+        decimal widthCentimeters,
+        decimal heightCentimeters,
         string? providerReference)
     {
         var provider = (providerCode ?? string.Empty).Trim();
@@ -587,6 +618,8 @@ public sealed class ShippingGroupAcceptedCarrierQuote
         var identity = (quoteInputIdentity ?? string.Empty).Trim();
         var normalizedCurrency = (currency ?? string.Empty).Trim().ToUpperInvariant();
         var reference = string.IsNullOrWhiteSpace(providerReference) ? null : providerReference.Trim();
+        var origin = (originLocationCode ?? string.Empty).Trim();
+        var destination = (destinationLocationCode ?? string.Empty).Trim();
         if (provider.Length is 0 or > MaxProviderCodeLength
             || accountId == Guid.Empty
             || configurationVersion < 1
@@ -595,6 +628,13 @@ public sealed class ShippingGroupAcceptedCarrierQuote
             || normalizedCurrency.Length != ShippingGroupAcceptedEvidence.MaxCurrencyLength
             || issuedAtUtc == default
             || freshUntilUtc <= issuedAtUtc
+            || origin.Length is 0 or > MaxLocationCodeLength
+            || destination.Length is 0 or > MaxLocationCodeLength
+            || weightGrams <= 0m
+            || declaredValue < 0m
+            || lengthCentimeters <= 0m
+            || widthCentimeters <= 0m
+            || heightCentimeters <= 0m
             || (reference is { Length: > MaxReferenceLength }))
         {
             throw new ContractOperationException(ShippingGroupEvidenceFault.CarrierQuoteInvalid);
@@ -627,6 +667,13 @@ public sealed class ShippingGroupAcceptedCarrierQuote
             DeliveryAmount = deliveryAmount,
             IssuedAtUtc = issuedAtUtc,
             FreshUntilUtc = freshUntilUtc,
+            OriginLocationCode = origin,
+            DestinationLocationCode = destination,
+            WeightGrams = weightGrams,
+            DeclaredValue = declaredValue,
+            LengthCentimeters = lengthCentimeters,
+            WidthCentimeters = widthCentimeters,
+            HeightCentimeters = heightCentimeters,
             ProviderReference = reference,
         };
     }

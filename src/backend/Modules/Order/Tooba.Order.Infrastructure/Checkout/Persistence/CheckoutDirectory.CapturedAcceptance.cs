@@ -468,6 +468,13 @@ public sealed partial class CheckoutDirectory
             || stored.DeliveryAmount != live.DeliveryAmount
             || !string.Equals(stored.Currency, live.CurrencyCode, StringComparison.Ordinal)
             || !string.Equals(stored.ProviderReference ?? string.Empty, live.ProviderReference ?? string.Empty, StringComparison.Ordinal)
+            || !string.Equals(stored.OriginLocationCode, live.OriginLocationCode, StringComparison.Ordinal)
+            || !string.Equals(stored.DestinationLocationCode, live.DestinationLocationCode, StringComparison.Ordinal)
+            || stored.WeightGrams != live.WeightGrams
+            || stored.DeclaredValue != live.DeclaredValue
+            || stored.LengthCentimeters != live.LengthCentimeters
+            || stored.WidthCentimeters != live.WidthCentimeters
+            || stored.HeightCentimeters != live.HeightCentimeters
             || live.FreshUntilUtc < now)
         {
             return false;

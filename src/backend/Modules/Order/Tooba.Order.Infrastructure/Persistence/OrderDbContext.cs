@@ -489,6 +489,17 @@ public sealed class OrderDbContext : DbContext
                 carrier.Property(x => x.DeliveryAmount).HasColumnName("accepted_carrier_delivery_amount").HasPrecision(18, 2);
                 carrier.Property(x => x.IssuedAtUtc).HasColumnName("accepted_carrier_issued_at");
                 carrier.Property(x => x.FreshUntilUtc).HasColumnName("accepted_carrier_fresh_until");
+                carrier.Property(x => x.OriginLocationCode)
+                    .HasColumnName("accepted_carrier_origin_location_code")
+                    .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxLocationCodeLength);
+                carrier.Property(x => x.DestinationLocationCode)
+                    .HasColumnName("accepted_carrier_destination_location_code")
+                    .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxLocationCodeLength);
+                carrier.Property(x => x.WeightGrams).HasColumnName("accepted_carrier_weight_grams").HasPrecision(18, 2);
+                carrier.Property(x => x.DeclaredValue).HasColumnName("accepted_carrier_declared_value").HasPrecision(18, 2);
+                carrier.Property(x => x.LengthCentimeters).HasColumnName("accepted_carrier_length_cm").HasPrecision(18, 2);
+                carrier.Property(x => x.WidthCentimeters).HasColumnName("accepted_carrier_width_cm").HasPrecision(18, 2);
+                carrier.Property(x => x.HeightCentimeters).HasColumnName("accepted_carrier_height_cm").HasPrecision(18, 2);
                 carrier.Property(x => x.ProviderReference)
                     .HasColumnName("accepted_carrier_provider_reference")
                     .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxReferenceLength);

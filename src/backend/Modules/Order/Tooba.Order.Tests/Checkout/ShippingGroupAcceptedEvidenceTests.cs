@@ -195,6 +195,13 @@ public sealed class ShippingGroupAcceptedEvidenceTests
             0m,
             Now,
             Now.AddMinutes(15),
+            "101",
+            "202",
+            1500m,
+            2_000_000m,
+            20m,
+            15m,
+            10m,
             null);
         var evidence = Evidence(AreaA, RowA, 132_500m, 5_000m, carrierQuote: quote);
         Assert.Equal("tipax", evidence.CarrierQuote!.ProviderCode);
@@ -217,6 +224,13 @@ public sealed class ShippingGroupAcceptedEvidenceTests
                 0m,
                 Now,
                 Now.AddMinutes(15),
+                "101",
+                "202",
+                1500m,
+                2_000_000m,
+                20m,
+                15m,
+                10m,
                 null));
         Assert.Equal(ShippingGroupEvidenceFault.CarrierQuoteInvalid, fault.Code);
     }

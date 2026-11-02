@@ -28,6 +28,13 @@ public sealed class CheckoutDirectoryCarrierQuoteFreshnessTests
             0m,
             Issued,
             Issued.AddMinutes(15),
+            "101",
+            "202",
+            1500m,
+            2_000_000m,
+            20m,
+            15m,
+            10m,
             null);
 
         var live = Live(Issued.AddMinutes(15), "input-1", 137_500m);
@@ -65,5 +72,12 @@ public sealed class CheckoutDirectoryCarrierQuoteFreshnessTests
             0m,
             Issued,
             freshUntil,
+            "101",
+            "202",
+            1500m,
+            2_000_000m,
+            20m,
+            15m,
+            10m,
             null);
 }

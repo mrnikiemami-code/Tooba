@@ -385,6 +385,15 @@ const fa = {
   carrierShipmentUnsupported: "این عملیات حامل پشتیبانی نمی‌شود.",
   carrierShipmentGroupId: "شناسه گروه ارسال",
   carrierShipmentEmpty: "هنوز محموله‌ای برای این سفارش ثبت نشده است.",
+  carrierExecutionTitle: "اجرای حامل روی گروه‌های سفارش",
+  carrierExecutionHint: "مبدأ، مقصد، بسته و گیرنده از شاهد پذیرفته‌شدهٔ سرور می‌آید؛ فقط فرستنده را وارد کنید.",
+  carrierExecutionBlockPaymentLocked: "تا تسویه/ثبت نهایی پرداخت، ایجاد محموله حامل مجاز نیست.",
+  carrierExecutionBlockCancelled: "این گروه لغو شده و قابل اجرای حامل نیست.",
+  carrierExecutionBlockLegacyIncomplete: "شاهد پذیرفته‌شدهٔ این گروه برای اجرای حامل کامل نیست.",
+  carrierExecutionBlockNotCarrierApi: "این گروه روش حامل خودکار ندارد.",
+  carrierExecutionBlockPackageIncomplete: "ابعاد/وزن شاهد حامل برای اجرا کامل نیست.",
+  carrierExecutionBlockOwnerMissing: "مالک ارسال این گروه برای اجرای حامل مشخص نیست.",
+  carrierExecutionBlockGeneric: "این گروه در وضعیت فعلی قابل اجرای حامل نیست.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "افزودن ردیف هزینه",
@@ -788,6 +797,15 @@ const en: Record<AuthoringMessageKey, string> = {
   carrierShipmentUnsupported: "This carrier operation is not supported.",
   carrierShipmentGroupId: "Shipping group id",
   carrierShipmentEmpty: "No carrier shipment is recorded for this order yet.",
+  carrierExecutionTitle: "Carrier execution by shipping group",
+  carrierExecutionHint: "Destination, package, and recipient come from accepted server evidence; enter sender only.",
+  carrierExecutionBlockPaymentLocked: "Carrier shipment create is blocked until payment is no longer pending.",
+  carrierExecutionBlockCancelled: "This group is cancelled and cannot execute carrier shipment.",
+  carrierExecutionBlockLegacyIncomplete: "Accepted evidence for this group is incomplete for carrier execution.",
+  carrierExecutionBlockNotCarrierApi: "This group does not use CarrierApi shipping.",
+  carrierExecutionBlockPackageIncomplete: "Carrier package evidence is incomplete for execution.",
+  carrierExecutionBlockOwnerMissing: "Shipping owner is missing for carrier execution on this group.",
+  carrierExecutionBlockGeneric: "This group cannot execute carrier shipment in the current state.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "Add cost row",
