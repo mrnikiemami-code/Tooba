@@ -31,7 +31,7 @@ public sealed class ShippingModuleStructureGuardTests
 
     /// <summary>Capability branches proven by the W0/W2 capability map, plus the TB-188 additive read.</summary>
     private static readonly string[] ApplicationCapabilities =
-        ["Authoring", "Operations", "Packaging", "Rates", "Scheduling", "Validation"];
+        ["Authoring", "Carriers", "Operations", "Packaging", "Rates", "Scheduling", "Validation"];
 
     /// <summary>Secondary (technical) axes are allowed only underneath a capability branch.</summary>
     private static readonly string[] ApplicationSecondaryAxes =

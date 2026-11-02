@@ -7,12 +7,16 @@ using Tooba.Persistence;
 using Tooba.ModuleContracts;
 using Tooba.Shipping.Application.Packaging.Ports;
 using Tooba.Shipping.Application.Authoring.Ports;
-using Tooba.Shipping.Application.Rates.Ports;using Tooba.Shipping.Application.Scheduling.Ports;
+using Tooba.Shipping.Application.Carriers.Ports;
+using Tooba.Shipping.Application.Rates.Ports;
+using Tooba.Shipping.Application.Scheduling.Ports;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Contracts.Operations;
 using Tooba.Shipping.Infrastructure.Operations;
 using Tooba.Shipping.Infrastructure.Authoring;
+using Tooba.Shipping.Infrastructure.Carriers;
+using Tooba.Shipping.Infrastructure.Carriers.Tipax;
 using Tooba.Shipping.Infrastructure.Packaging;
 using Tooba.Shipping.Infrastructure.Persistence;
 using Tooba.Shipping.Infrastructure.Rates;
@@ -56,6 +60,16 @@ public sealed class ShippingModule : IToobaModule
         IConfiguration configuration,
         IHostEnvironment environment)
     {
+        // Carrier plug-ins are resolved by an opaque provider code. Tipax is the first adapter; Checkout and
+        // Shipping never switch on Tipax types, so another provider is one registration plus one adapter.
+        // The Tipax adapter is fail-closed and performs no network call until its private configuration section
+        // is explicitly enabled and complete. Existing Manual/Free behavior is unchanged.
+        services.Configure<TipaxV4Options>(configuration.GetSection(TipaxV4Options.SectionName));
+        services.AddHttpClient("Shipping.Tipax.Auth");
+        services.AddHttpClient("Shipping.Tipax.Api");
+        services.AddSingleton<TipaxV4TokenSource>();
+        services.AddScoped<ICarrierRateProvider, TipaxV4RateProvider>();
+        services.AddScoped<ICarrierRateProviderRegistry, CarrierRateProviderRegistry>();
         services.AddScoped<IShippingRateQuoteLookup, ShippingRateQuoteLookup>();
         // TB-216: the captured-revision Contracts edge. It reads ONE exact owner+draft+revision, proves the
         // destination path through Geography Contracts and calls the SAME rate authority once. Registered

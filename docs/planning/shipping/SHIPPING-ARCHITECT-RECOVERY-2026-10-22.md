@@ -1,4 +1,16 @@
-# CURRENT — 246-R3 TECHNICALLY READY; USER FUNCTIONAL / VISUAL ACCEPT PENDING — 2026-11-01
+# CURRENT — 247 CARRIER ADAPTER FOUNDATION + TIPAX V4 PRICING CLIENT — 2026-11-02
+
+Implementation task: `NONE`
+Decision state: **FOUNDATION PASS; CARRIER RUNTIME ACTIVATION NOT YET DELIVERED**
+automaticNextImplementationTask: `NONE`
+
+Provider-neutral `ICarrierRateProvider` + registry are implemented under Shipping Application; Tipax V4 is the first Infrastructure plug-in. The adapter uses the official V4 Pricing request/response, password grant, refresh route, cached token, bounded 401 retry, timeout/cancellation and typed neutral outcomes. It is fail-closed and disabled by default; no secret, schema, migration, endpoint, Checkout activation or business-data write was introduced. Manual/Free behavior is preserved. Focused adapter facts 4/4 and adjacent module/captured-quote facts 27/27 pass.
+
+Activation remains explicitly split into owner carrier account + secret reference, provider service/Geography mapping, captured Checkout quote evidence, shipment lifecycle, then test-account acceptance. Do not claim `CarrierApi` checkout-ready before those slices. Read `docs/planning/shipping/CARRIER-ADAPTER-AND-TIPAX-V4-PLAN-2026-11-02.md` and `docs/architecture/evidence/TB-SHIPPING-CARRIER-ADAPTER-FOUNDATION-247/{TASK.md,RESULT.md,RECEIPTS.md}`.
+
+246-R3 technical acceptance and pending user visual/functional review remain preserved below.
+
+# SUPERSEDED — 246-R3 TECHNICALLY READY; USER FUNCTIONAL / VISUAL ACCEPT PENDING — 2026-11-01
 
 Implementation task: `NONE`  
 Decision state: **PENDING_USER_FUNCTIONAL_AND_VISUAL_ACCEPT**  
