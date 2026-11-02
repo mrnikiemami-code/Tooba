@@ -17,7 +17,26 @@ public sealed record CarrierRateRequest(
     CarrierPaymentKind PaymentKind = CarrierPaymentKind.Prepaid,
     CarrierPickupKind PickupKind = CarrierPickupKind.DoorPickup,
     CarrierDeliveryKind DeliveryKind = CarrierDeliveryKind.DoorDelivery,
-    string? DiscountCode = null);
+    string? DiscountCode = null,
+    CarrierAccountExecution? Account = null);
+
+/// <summary>
+/// اجرای حساب‌محور: راز و شناسه‌های مرجع از پیکربندی مالک می‌آیند، نه از options سراسری.
+/// </summary>
+public sealed record CarrierAccountExecution(
+    Guid AccountId,
+    int ConfigurationVersion,
+    string Username,
+    string Password,
+    string CurrencyCode,
+    string PaymentTypeId,
+    string PickupTypeId,
+    string DistributionTypeId,
+    string PackingId,
+    string PackageContentId,
+    string PackTypeId,
+    string? ApiBaseUrl = null,
+    string? TokenUrl = null);
 
 public enum CarrierPaymentKind
 {
@@ -51,6 +70,11 @@ public enum CarrierRateOutcome
 }
 
 /// <summary>A normalized quote option. Provider-specific response types never cross this boundary.</summary>
+/// <remarks>
+/// <see cref="ProviderReference"/> is Shipping-owned carrier quote evidence (provider quote id +
+/// service). Order does not persist a new column for this; checkout money still comes from the
+/// captured quote amounts.
+/// </remarks>
 public sealed record CarrierRateOption(
     string ProviderCode,
     string ServiceCode,

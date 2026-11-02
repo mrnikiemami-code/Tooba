@@ -61,6 +61,10 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             ShippingErrorCodes.AuthoringRegionPayloadInvalid,
             ShippingErrorCodes.AuthoringRegionGroupNotFound,
             ShippingErrorCodes.AuthoringRateCurrencyMismatch,
+            ShippingErrorCodes.SelectedCaptureConflict,
+            ShippingErrorCodes.SelectedCaptureSnapshotUnavailable,
+            ShippingErrorCodes.AuthoringRevisionSnapshotNotFound,
+            ShippingErrorCodes.CarrierAccountNotFound,
         };
         var legacy = new ShippingErrorCatalogContributor()
             .Contribute()
@@ -68,7 +72,9 @@ public sealed class ShippingErrorCatalogAndResourcesTests
             .ToArray();
         // TB-193 adds two legacy-contract 400/Business/Warning codes for the weekly schedule week/day
         // shape, so the legacy set grows from 51 to 53 without changing any existing code.
-        Assert.Equal(56, legacy.Length);
+        // TB-248 adds three CarrierApi 400 codes (secret/binding/provider) on the same legacy contract
+        // after excluding the 404 account-not-found descriptor from this set.
+        Assert.Equal(64, legacy.Length);
 
         foreach (var descriptor in legacy)
         {
@@ -124,10 +130,9 @@ public sealed class ShippingErrorCatalogAndResourcesTests
         // capability fact, never a 403 permission verdict about a seller that does not exist.
         Assert.NotEqual(denied.HttpStatus, unavailable.HttpStatus);
         Assert.Single(descriptors, candidate => candidate.HttpStatus == StatusCodes.Status403Forbidden);
-        Assert.Equal(3, descriptors.Count(candidate => candidate.HttpStatus == StatusCodes.Status404NotFound));
+        Assert.Equal(5, descriptors.Count(candidate => candidate.HttpStatus == StatusCodes.Status404NotFound));
 
-        // Exactly the seven explicitly classified non-400 codes exist (503, 403, three 404s, two 409s);
-        // nothing else drifted.
+        // Explicitly classified non-400 codes: 503, 403, four 404s, four 409s; nothing else drifted.
         Assert.Equal(
             new HashSet<string>(
                 [
@@ -138,6 +143,10 @@ public sealed class ShippingErrorCatalogAndResourcesTests
                     ShippingErrorCodes.AuthoringDraftRevisionConflict,
                     ShippingErrorCodes.AuthoringRegionGroupNotFound,
                     ShippingErrorCodes.AuthoringRateCurrencyMismatch,
+                    ShippingErrorCodes.SelectedCaptureConflict,
+                    ShippingErrorCodes.SelectedCaptureSnapshotUnavailable,
+                    ShippingErrorCodes.AuthoringRevisionSnapshotNotFound,
+                    ShippingErrorCodes.CarrierAccountNotFound,
                 ],
                 StringComparer.Ordinal),
             descriptors

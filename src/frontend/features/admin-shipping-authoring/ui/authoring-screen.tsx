@@ -73,6 +73,7 @@ import {
 import { hasUnsavedWork, type EditorSaveStatus } from "../session/editor-session.ts";
 import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
 import { useEditorController } from "./use-editor-controller.ts";
+import { AuthoringCarrierPanel } from "./authoring-carrier-panel.tsx";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
@@ -839,6 +840,14 @@ export function ShippingAuthoringScreen({
                 onFreightPaymentMode={(mode2: FreightPaymentMode) => pushEdits(withFreightPaymentMode(form, mode2))}
                 onCalculationMode={(mode2: AuthoringCalculationMode) => pushEdits(withCalculationMode(form, mode2))}
                 onShippingType={(shippingTypeId) => pushEdits(withShippingType(form, shippingTypeId))}
+                carrierSlot={
+                  <AuthoringCarrierPanel
+                    draftId={document.draftId}
+                    revision={document.revision}
+                    readOnly={readOnly}
+                    messages={messages}
+                  />
+                }
                 scheduleSlot={
                   week ? (
                     <AuthoringWeekEditor

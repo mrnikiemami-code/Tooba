@@ -65,6 +65,7 @@ export function AuthoringGeneralTab({
   onCalculationMode,
   onShippingType,
   scheduleSlot,
+  carrierSlot,
 }: {
   document: EditorDocument;
   form: EditorFormState;
@@ -81,6 +82,7 @@ export function AuthoringGeneralTab({
   serverErrors?: Partial<Record<"name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays", string>>;
   /** The ONE method-level schedule component, composed here so the section is not duplicated. */
   scheduleSlot: ReactNode;
+  carrierSlot?: ReactNode;
   onName: (languageId: string, value: string) => void;
   onDescription: (languageId: string, value: string) => void;
   onFreightPaymentMode: (mode: FreightPaymentMode) => void;
@@ -339,6 +341,7 @@ export function AuthoringGeneralTab({
             })}
           </div>
         </fieldset>
+        {form.calculationMode === "CarrierApi" ? carrierSlot : null}
       </div>
 
       {form.freightPaymentMode === null && form.calculationMode === null ? (

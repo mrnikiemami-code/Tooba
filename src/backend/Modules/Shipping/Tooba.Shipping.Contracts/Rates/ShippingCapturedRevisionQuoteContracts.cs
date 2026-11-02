@@ -28,7 +28,7 @@ public enum ShippingCapturedQuoteVerdict
     /// <summary>روش تنظیمات capture‌شده ندارد.</summary>
     NotConfigured = 4,
 
-    /// <summary>حالت محاسبهٔ ذخیره‌شده Manual نیست (CarrierApi/Free هنوز پیاده نشده‌اند).</summary>
+    /// <summary>حالت محاسبهٔ ذخیره‌شده برای این مسیر ناشناخته است.</summary>
     CalculationModeUnavailable = 5,
 
     /// <summary>هیچ گروه ذخیره‌شده‌ای مقصد را پوشش نمی‌دهد.</summary>
@@ -57,6 +57,18 @@ public enum ShippingCapturedQuoteVerdict
 
     /// <summary>دادهٔ capture‌شده ناسازگار است (کران نامعتبر، مبلغ منفی، شبکهٔ ناقص).</summary>
     ConfigurationInvalid = 14,
+
+    /// <summary>حالت CarrierApi است ولی حساب/نگاشت/سرویس حامل برای قیمت‌گیری کامل نیست.</summary>
+    CarrierConfigurationIncomplete = 15,
+
+    /// <summary>حامل احراز هویت را رد کرد یا راز نامعتبر است.</summary>
+    CarrierUnauthorized = 16,
+
+    /// <summary>حامل برای این مسیر/بسته سرویسی برنگرداند.</summary>
+    CarrierNoService = 17,
+
+    /// <summary>حامل موقتاً در دسترس نیست یا مهلت تمام شد.</summary>
+    CarrierTemporarilyUnavailable = 18,
 }
 
 /// <summary>کدهای دلیل پایدار برای نتیجهٔ قیمت‌گذاری بازبینی capture‌شده.</summary>
@@ -82,6 +94,18 @@ public static class ShippingCapturedQuoteVerdictCodes
 
     /// <summary>حالت Free هزینهٔ واقعی را صفر نمی‌کند.</summary>
     public const string FreeNotImplemented = "shipping.captured.quote.free_not_implemented";
+
+    /// <summary>پیکربندی/نگاشت حامل ناقص است.</summary>
+    public const string CarrierConfigurationIncomplete = "shipping.captured.quote.carrier_configuration_incomplete";
+
+    /// <summary>احراز هویت حامل ناموفق بود.</summary>
+    public const string CarrierUnauthorized = "shipping.captured.quote.carrier_unauthorized";
+
+    /// <summary>حامل سرویسی برنگرداند.</summary>
+    public const string CarrierNoService = "shipping.captured.quote.carrier_no_service";
+
+    /// <summary>حامل موقتاً در دسترس نیست.</summary>
+    public const string CarrierTemporarilyUnavailable = "shipping.captured.quote.carrier_temporarily_unavailable";
 
     /// <summary>هیچ گروهی مقصد را پوشش نمی‌دهد.</summary>
     public const string CoverageMissing = "shipping.captured.quote.coverage_missing";
@@ -109,6 +133,18 @@ public static class ShippingCapturedQuoteVerdictCodes
 
     /// <summary>دادهٔ capture‌شده ناسازگار است.</summary>
     public const string ConfigurationInvalid = "shipping.captured.quote.configuration_invalid";
+
+    /// <summary>اتصال CarrierApi روی پیش‌نویس غایب است.</summary>
+    public const string CarrierBindingMissing = "shipping.captured.quote.carrier_binding_missing";
+
+    /// <summary>حساب حامل غیرفعال است یا راز آن با نسخهٔ پیکربندی نمی‌خواند.</summary>
+    public const string CarrierAccountUnavailable = "shipping.captured.quote.carrier_account_unavailable";
+
+    /// <summary>شهر مقصد به کد خارجی حامل نگاشته نشده است.</summary>
+    public const string CarrierDestinationUnmapped = "shipping.captured.quote.carrier_destination_unmapped";
+
+    /// <summary>adapter حامل قیمت نداد (unauthorized/unavailable/no_service/rejected).</summary>
+    public const string CarrierQuoteUnavailable = "shipping.captured.quote.carrier_quote_unavailable";
 }
 
 /// <summary>

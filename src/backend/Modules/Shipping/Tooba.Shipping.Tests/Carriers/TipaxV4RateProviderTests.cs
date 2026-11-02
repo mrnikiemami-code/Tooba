@@ -135,12 +135,71 @@ public sealed class TipaxV4RateProviderTests
             new CarrierRateProviderRegistry([provider, new StubProvider("TIPAX")]));
     }
 
+    [Fact]
+    public async Task Account_quote_does_not_reuse_a_token_after_configuration_version_bump()
+    {
+        var tokenCalls = 0;
+        var seenUsers = new List<string>();
+        var handler = new RecordingHandler(async request =>
+        {
+            if (request.RequestUri!.AbsolutePath.Contains("Token", StringComparison.OrdinalIgnoreCase)
+                && request.Content is not null)
+            {
+                tokenCalls++;
+                var form = await request.Content.ReadAsStringAsync();
+                seenUsers.Add(form);
+                return Json(HttpStatusCode.OK, $$"""{"access_token":"token-{{tokenCalls}}","refresh_token":"r","expires_in":3600}""");
+            }
+
+            return Json(HttpStatusCode.OK, """
+                [{
+                  "packNum":1,
+                  "regularRate":{
+                    "serviceId":7,
+                    "serviceTitle":"اکسپرس",
+                    "transportationCost":120000,
+                    "packing":5000,
+                    "tax":12500,
+                    "finalPrice":137500,
+                    "pickupPrice":0,
+                    "deliveryPrice":0
+                  }
+                }]
+                """);
+        });
+        var provider = CreateProvider(new TipaxV4Options(), handler);
+        var accountA = new CarrierAccountExecution(
+            Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+            1,
+            "merchant-a",
+            "secret-a",
+            "IRR",
+            "11",
+            "21",
+            "31",
+            "1",
+            "2",
+            "3",
+            "https://api.test/",
+            "https://tokens.test/Token");
+        var accountB = accountA with { ConfigurationVersion = 2, Username = "merchant-b", Password = "secret-b" };
+
+        var first = await provider.QuoteAsync(ValidRequest() with { Account = accountA }, CancellationToken.None);
+        var second = await provider.QuoteAsync(ValidRequest() with { Account = accountB }, CancellationToken.None);
+
+        Assert.Equal(CarrierRateOutcome.Quoted, first.Outcome);
+        Assert.Equal(CarrierRateOutcome.Quoted, second.Outcome);
+        Assert.Equal(2, tokenCalls);
+        Assert.Contains("merchant-a", seenUsers[0], StringComparison.Ordinal);
+        Assert.Contains("merchant-b", seenUsers[1], StringComparison.Ordinal);
+    }
+
     private static TipaxV4RateProvider CreateProvider(TipaxV4Options options, HttpMessageHandler handler)
     {
         var factory = new SingleClientFactory(handler);
         var monitor = new StaticOptionsMonitor<TipaxV4Options>(options);
         var tokens = new TipaxV4TokenSource(factory, monitor);
-        return new TipaxV4RateProvider(factory, monitor, tokens);
+        return new TipaxV4RateProvider(factory, monitor, tokens, new TipaxV4AccountTokenSource(factory));
     }
 
     private static TipaxV4Options EnabledOptions() => new()

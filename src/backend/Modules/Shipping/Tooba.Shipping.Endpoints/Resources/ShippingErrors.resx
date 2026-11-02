@@ -228,4 +228,16 @@
   <data name="shipping.selected_capture.owner_scope_unavailable" xml:space="preserve">
     <value>The shipping owner identity cannot be resolved for this request.</value>
   </data>
+  <data name="shipping.carrier.account_not_found" xml:space="preserve">
+    <value>The shipping carrier account was not found.</value>
+  </data>
+  <data name="shipping.carrier.secret_required" xml:space="preserve">
+    <value>A username and password are required to create a carrier account.</value>
+  </data>
+  <data name="shipping.carrier.binding_invalid" xml:space="preserve">
+    <value>The CarrierApi method binding is incomplete or inconsistent.</value>
+  </data>
+  <data name="shipping.carrier.provider_unknown" xml:space="preserve">
+    <value>The carrier provider code is unknown in this installation.</value>
+  </data>
 </root>

@@ -7,6 +7,7 @@ using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
 using Tooba.Shipping.Domain.Authoring;
+using Tooba.Shipping.Domain.Carriers;
 using Tooba.Shipping.Domain.Scheduling;
 
 namespace Tooba.Shipping.Infrastructure.Persistence;
@@ -73,6 +74,22 @@ public sealed class ShippingDbContext : DbContext
 
     /// <summary>Outbox همین ماژول؛ پیروی از اسکلت متعارف DbContext ماژول‌ها، بدون هیچ مصرف فعلی.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+    /// <summary>حساب‌های حامل مالک‌محور (TB-248).</summary>
+    public DbSet<ShippingCarrierAccount> CarrierAccounts => Set<ShippingCarrierAccount>();
+
+    /// <summary>مادهٔ راز رمزنگاری‌شدهٔ حامل؛ فقط ارجاع در حساب.</summary>
+    public DbSet<ShippingCarrierSecretMaterial> CarrierSecretMaterials => Set<ShippingCarrierSecretMaterial>();
+
+    /// <summary>مقادیر مرجع همگام‌شده از provider.</summary>
+    public DbSet<ShippingCarrierReferenceValue> CarrierReferenceValues => Set<ShippingCarrierReferenceValue>();
+
+    /// <summary>نگاشت شهر Geography به کد خارجی حامل.</summary>
+    public DbSet<ShippingCarrierDestinationMapping> CarrierDestinationMappings =>
+        Set<ShippingCarrierDestinationMapping>();
+
+    /// <summary>اتصال CarrierApi روی پیش‌نویس.</summary>
+    public DbSet<ShippingCarrierMethodBinding> CarrierMethodBindings => Set<ShippingCarrierMethodBinding>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -827,6 +844,114 @@ public sealed class ShippingDbContext : DbContext
                 .IsUnique()
                 .AreNullsDistinct(false)
                 .HasDatabaseName("ux_selected_captured_revisions_owner_binding");
+        });
+
+        modelBuilder.Entity<ShippingCarrierAccount>(entity =>
+        {
+            entity.ToTable("carrier_accounts");
+            entity.HasKey(x => x.AccountId);
+            entity.Property(x => x.AccountId).HasColumnName("account_id").ValueGeneratedNever();
+            entity.Property(x => x.OwnerKind).HasColumnName("owner_kind").HasConversion<int>();
+            entity.Property(x => x.OwnerTenantId).HasColumnName("owner_tenant_id").HasMaxLength(128);
+            entity.Property(x => x.OwnerSellerPartyId).HasColumnName("owner_seller_party_id");
+            entity.Property(x => x.ProviderCode).HasColumnName("provider_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Environment).HasColumnName("environment").HasConversion<int>();
+            entity.Property(x => x.SecretReference).HasColumnName("secret_reference").HasMaxLength(128).IsRequired();
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.ConfigurationVersion).HasColumnName("configuration_version");
+            entity.Property(x => x.ApiBaseUrl).HasColumnName("api_base_url").HasMaxLength(256);
+            entity.Property(x => x.TokenUrl).HasColumnName("token_url").HasMaxLength(256);
+            entity.Property(x => x.CurrencyCode).HasColumnName("currency_code").HasMaxLength(3).IsRequired();
+            entity.Property(x => x.LastConnectionOutcome).HasColumnName("last_connection_outcome").HasConversion<int?>();
+            entity.Property(x => x.LastConnectionAt).HasColumnName("last_connection_at");
+            entity.Property(x => x.LastReferenceSyncAt).HasColumnName("last_reference_sync_at");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.SecretReference)
+                .IsUnique()
+                .HasDatabaseName("ux_carrier_accounts_secret_reference");
+            entity.HasIndex(x => new
+                {
+                    x.OwnerKind,
+                    x.OwnerTenantId,
+                    x.OwnerSellerPartyId,
+                    x.ProviderCode,
+                    x.DisplayName,
+                })
+                .IsUnique()
+                .AreNullsDistinct(false)
+                .HasDatabaseName("ux_carrier_accounts_owner_provider_display");
+        });
+
+        modelBuilder.Entity<ShippingCarrierSecretMaterial>(entity =>
+        {
+            entity.ToTable("carrier_secret_materials");
+            entity.HasKey(x => x.SecretReference);
+            entity.Property(x => x.SecretReference).HasColumnName("secret_reference").HasMaxLength(128);
+            entity.Property(x => x.Ciphertext).HasColumnName("ciphertext").IsRequired();
+            entity.Property(x => x.ConfigurationVersion).HasColumnName("configuration_version");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<ShippingCarrierReferenceValue>(entity =>
+        {
+            entity.ToTable("carrier_reference_values");
+            entity.HasKey(x => new { x.AccountId, x.Kind, x.ExternalId });
+            entity.Property(x => x.AccountId).HasColumnName("account_id");
+            entity.Property(x => x.Kind).HasColumnName("kind").HasConversion<int>();
+            entity.Property(x => x.ExternalId).HasColumnName("external_id").HasMaxLength(64);
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.SyncedAt).HasColumnName("synced_at");
+        });
+
+        modelBuilder.Entity<ShippingCarrierDestinationMapping>(entity =>
+        {
+            entity.ToTable("carrier_destination_mappings");
+            entity.HasKey(x => x.MappingId);
+            entity.Property(x => x.MappingId).HasColumnName("mapping_id").ValueGeneratedNever();
+            entity.Property(x => x.AccountId).HasColumnName("account_id");
+            entity.Property(x => x.ProviderCode).HasColumnName("provider_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.GeographyCityId).HasColumnName("geography_city_id");
+            entity.Property(x => x.ExternalLocationCode).HasColumnName("external_location_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Provenance).HasColumnName("provenance").HasMaxLength(128).IsRequired();
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => new { x.AccountId, x.GeographyCityId })
+                .IsUnique()
+                .HasDatabaseName("ux_carrier_destination_mappings_account_city");
+            entity.HasIndex(x => new { x.AccountId, x.ExternalLocationCode })
+                .IsUnique()
+                .HasDatabaseName("ux_carrier_destination_mappings_account_external");
+        });
+
+        modelBuilder.Entity<ShippingCarrierMethodBinding>(entity =>
+        {
+            entity.ToTable("carrier_method_bindings");
+            entity.HasKey(x => x.BindingId);
+            entity.Property(x => x.BindingId).HasColumnName("binding_id").ValueGeneratedNever();
+            entity.Property(x => x.DraftId).HasColumnName("draft_id");
+            entity.Property(x => x.CarrierAccountId).HasColumnName("carrier_account_id");
+            entity.Property(x => x.ProviderCode).HasColumnName("provider_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ProviderServiceId).HasColumnName("provider_service_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PaymentTypeId).HasColumnName("payment_type_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PickupTypeId).HasColumnName("pickup_type_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DistributionTypeId).HasColumnName("distribution_type_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PackingId).HasColumnName("packing_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PackageContentId).HasColumnName("package_content_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PackTypeId).HasColumnName("pack_type_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OriginExternalCityCode).HasColumnName("origin_external_city_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.OriginAddressLine).HasColumnName("origin_address_line").HasMaxLength(512);
+            entity.Property(x => x.OriginLatitude).HasColumnName("origin_latitude").HasPrecision(9, 6);
+            entity.Property(x => x.OriginLongitude).HasColumnName("origin_longitude").HasPrecision(9, 6);
+            entity.Property(x => x.DefaultLengthCentimeters).HasColumnName("default_length_centimeters").HasPrecision(18, 2);
+            entity.Property(x => x.DefaultWidthCentimeters).HasColumnName("default_width_centimeters").HasPrecision(18, 2);
+            entity.Property(x => x.DefaultHeightCentimeters).HasColumnName("default_height_centimeters").HasPrecision(18, 2);
+            entity.Property(x => x.ConfigurationVersion).HasColumnName("configuration_version");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(x => x.DraftId)
+                .IsUnique()
+                .HasDatabaseName("ux_carrier_method_bindings_draft");
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

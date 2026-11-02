@@ -1,4 +1,12 @@
-# CURRENT — 247 CARRIER ADAPTER FOUNDATION + TIPAX V4 PRICING CLIENT — 2026-11-02
+# CURRENT — 248 PARTIAL: owner carrier accounts + captured CarrierApi quote; LIVE BLOCKED — 2026-11-02
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-CONFIGURATION-AND-CHECKOUT-248/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PARTIAL** within R1–R3, NOT Architect/live-provider ACCEPT. Base `9d3f0ad29`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha inspected; Host/FE not rebuilt onto this tree; migration `20261102170000_CarrierConfiguration` not applied.
+LANDED: owner-scoped accounts + DataProtection secret refs; Tipax per-account token cache; connection test/reference sync/Geography mapping/method binding; captured Free=0; CarrierApi through existing quote lookup with typed incomplete/unauth refusals; authoring CarrierApi panel. Manual preserved. R4 not started.
+LIVE PROVIDER ACCEPTANCE BLOCKED BY TEST ACCOUNT. Order accepted evidence remains money-only. Focused 48/48 + persistence 52/52 + FE typecheck/build 0. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 247 CARRIER ADAPTER FOUNDATION + TIPAX V4 PRICING CLIENT — 2026-11-02
 
 Implementation task: `NONE`
 Decision state: **FOUNDATION PASS; CARRIER RUNTIME ACTIVATION NOT YET DELIVERED**

@@ -7,6 +7,7 @@ using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Authoring.Ports;
 using Tooba.Shipping.Contracts.Errors;
 using Tooba.Shipping.Domain.Authoring;
+using Tooba.Shipping.Domain.Carriers;
 using Tooba.Shipping.Infrastructure.Persistence;
 
 namespace Tooba.Shipping.Infrastructure.Authoring;
@@ -742,7 +743,9 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             }
 
             // The whole stored graph is copied from THIS read; capture never bumps draft Revision/UpdatedAt.
-            snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, DateTimeOffset.UtcNow);
+            var carrierBinding = await context.CarrierMethodBindings.AsNoTracking()
+                .SingleOrDefaultAsync(item => item.DraftId == draftId, cancellationToken);
+            snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, DateTimeOffset.UtcNow, carrierBinding: carrierBinding);
             context.AuthoringRevisionSnapshots.Add(snapshot);
             await context.SaveChangesAsync(cancellationToken);
 

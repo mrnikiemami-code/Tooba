@@ -345,15 +345,18 @@ public sealed class ShippingCapturedRevisionQuoteTests
 
         var free = Payload([[Tehran]], [rows], calculationMode: ShippingAuthoringCalculationMode.Free);
         var freeQuote = ShippingRatePolicyEngine.QuoteCapturedRevision(Request(free));
-        Assert.Equal(ShippingCapturedQuoteOutcome.CalculationModeUnavailable, freeQuote.Outcome);
-        Assert.Equal(ShippingCapturedQuoteReasonCodes.FreeNotImplemented, freeQuote.ReasonCode);
-        AssertNoMoney(freeQuote);
+        Assert.Equal(ShippingCapturedQuoteOutcome.Quoted, freeQuote.Outcome);
+        Assert.Equal(0m, freeQuote.FreightAmount);
+        Assert.Equal(0m, freeQuote.PackagingAmount);
+        Assert.Equal(ShippingCapturedQuoteReasonCodes.FreeCalculationRateRowId, freeQuote.Selection!.RateRowId);
 
         var carrier = Payload([[Tehran]], [rows], calculationMode: ShippingAuthoringCalculationMode.CarrierApi);
         var carrierQuote = ShippingRatePolicyEngine.QuoteCapturedRevision(Request(carrier));
-        Assert.Equal(ShippingCapturedQuoteOutcome.CalculationModeUnavailable, carrierQuote.Outcome);
-        Assert.Equal(ShippingCapturedQuoteReasonCodes.CarrierModeUnavailable, carrierQuote.ReasonCode);
-        AssertNoMoney(carrierQuote);
+        Assert.Equal(ShippingCapturedQuoteOutcome.CarrierProviderRequired, carrierQuote.Outcome);
+        Assert.Equal(ShippingCapturedQuoteReasonCodes.CarrierProviderRequired, carrierQuote.ReasonCode);
+        Assert.Null(carrierQuote.FreightAmount);
+        Assert.Null(carrierQuote.PackagingAmount);
+        Assert.NotNull(carrierQuote.Selection);
     }
 
     // ---------------------------------------------------------------- metadata / immutability

@@ -68,9 +68,15 @@ public sealed class ShippingPersistenceModelTests
                 "authoring_method_settings",
                 "authoring_rate_rows",
                 "authoring_region_groups",
+                "authoring_revision_snapshots",
                 "authoring_selected_areas",
                 "authoring_weekly_schedule_days",
                 "authoring_weekly_schedules",
+                "carrier_accounts",
+                "carrier_destination_mappings",
+                "carrier_method_bindings",
+                "carrier_reference_values",
+                "carrier_secret_materials",
                 "coverage_grants",
                 "method_coverages",
                 "operating_schedules",
@@ -78,6 +84,7 @@ public sealed class ShippingPersistenceModelTests
                 "outbox_messages",
                 "packaging_policies",
                 "rate_policies",
+                "selected_captured_revisions",
             },
             model.GetEntityTypes().Select(x => x.GetTableName()).OrderBy(x => x, StringComparer.Ordinal).ToArray());
     }
@@ -304,6 +311,11 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE TABLE shipping.authoring_selected_areas", script);
         Assert.Contains("CREATE TABLE shipping.authoring_weekly_schedules", script);
         Assert.Contains("CREATE TABLE shipping.authoring_weekly_schedule_days", script);
+        Assert.Contains("CREATE TABLE shipping.carrier_accounts", script);
+        Assert.Contains("CREATE TABLE shipping.carrier_secret_materials", script);
+        Assert.Contains("CREATE TABLE shipping.carrier_reference_values", script);
+        Assert.Contains("CREATE TABLE shipping.carrier_destination_mappings", script);
+        Assert.Contains("CREATE TABLE shipping.carrier_method_bindings", script);
         Assert.Contains("CREATE TABLE shipping.outbox_messages", script);
         Assert.Contains("__ef_migrations_history", script);
 
@@ -388,7 +400,7 @@ public sealed class ShippingPersistenceModelTests
         // option-scoped coverage index rebuild and the method coverage identity index, plus the
         // owner-scoped authoring draft binding index. The drops do not emit the modifier, so this
         // counts CREATE statements only.
-        Assert.Equal(9, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
+        Assert.Equal(12, script.Split("NULLS NOT DISTINCT", StringSplitOptions.None).Length - 1);
 
         // The foreign keys in the whole schema are intra-module only: the schedule -> windows cascade,
         // the two authoring draft -> group -> selected-area cascades, the group -> rate-row cascade,
@@ -402,7 +414,7 @@ public sealed class ShippingPersistenceModelTests
         // header -> the seven day rows. TB-194 adds draft -> method settings. No language/registry FK
         // crosses a module schema.
         Assert.Equal(
-            9,
+            13,
             script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
@@ -412,13 +424,7 @@ public sealed class ShippingPersistenceModelTests
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        // Thirteen migrations only: the initial slice, five additive changes (option identity, operating
-        // schedule, weight/count tiers, packaging policy, option-scoped coverage restriction), the D3
-        // authoring draft/group/area addition, the TB-191 group rate-row addition, the TB-191-R1
-        // constraint-parity correction, the TB-193 weekly schedule addition, the TB-194 method-settings
-        // addition and the TB-197 nullable draft shipping-type reference. Asserting the exact count
-        // keeps the schema reviewable as a unit.
-        Assert.Equal(13, migrations.Length);
+        Assert.Equal(17, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -432,6 +438,10 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_AuthoringWeeklySchedule", migrations[10], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringMethodSettings", migrations[11], StringComparison.Ordinal);
         Assert.EndsWith("_AuthoringDraftTypeAssignment", migrations[12], StringComparison.Ordinal);
+        Assert.EndsWith("_AuthoringRevisionSnapshots", migrations[13], StringComparison.Ordinal);
+        Assert.EndsWith("_SelectedCapturedRevision", migrations[14], StringComparison.Ordinal);
+        Assert.EndsWith("_ReceivingSlotDuration", migrations[15], StringComparison.Ordinal);
+        Assert.EndsWith("_CarrierConfiguration", migrations[16], StringComparison.Ordinal);
     }
 
     [Fact]

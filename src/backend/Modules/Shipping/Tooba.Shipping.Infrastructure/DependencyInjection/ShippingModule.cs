@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -65,9 +66,14 @@ public sealed class ShippingModule : IToobaModule
         // The Tipax adapter is fail-closed and performs no network call until its private configuration section
         // is explicitly enabled and complete. Existing Manual/Free behavior is unchanged.
         services.Configure<TipaxV4Options>(configuration.GetSection(TipaxV4Options.SectionName));
+        services.AddDataProtection();
         services.AddHttpClient("Shipping.Tipax.Auth");
         services.AddHttpClient("Shipping.Tipax.Api");
         services.AddSingleton<TipaxV4TokenSource>();
+        services.AddSingleton<TipaxV4AccountTokenSource>();
+        services.AddScoped<TipaxV4AccountClient>();
+        services.AddScoped<IShippingCarrierSecretStore, ShippingCarrierSecretStore>();
+        services.AddScoped<IShippingCarrierAccountDirectory, ShippingCarrierAccountDirectory>();
         services.AddScoped<ICarrierRateProvider, TipaxV4RateProvider>();
         services.AddScoped<ICarrierRateProviderRegistry, CarrierRateProviderRegistry>();
         services.AddScoped<IShippingRateQuoteLookup, ShippingRateQuoteLookup>();

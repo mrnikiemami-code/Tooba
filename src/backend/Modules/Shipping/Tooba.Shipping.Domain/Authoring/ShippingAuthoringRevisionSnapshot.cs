@@ -126,8 +126,30 @@ public sealed record ShippingAuthoringRevisionWeek(
 /// <param name="ShippingTypeId">شناسهٔ نوع انتخاب‌شده یا تهی (خام، بدون بازخوانی کاتالوگ).</param>
 /// <param name="Groups">گروه‌های منطقه‌ای به ترتیب ذخیره‌شده.</param>
 /// <param name="Translations">نام/توضیح هر زبان.</param>
+/// <summary>اتصال CarrierApi ذخیره‌شده در لحظهٔ capture؛ راز حساب هرگز اینجا نیست.</summary>
+public sealed record ShippingAuthoringRevisionCarrierBinding(
+    Guid BindingId,
+    Guid CarrierAccountId,
+    string ProviderCode,
+    string ProviderServiceId,
+    string PaymentTypeId,
+    string PickupTypeId,
+    string DistributionTypeId,
+    string PackingId,
+    string PackageContentId,
+    string PackTypeId,
+    string OriginExternalCityCode,
+    string? OriginAddressLine,
+    decimal? OriginLatitude,
+    decimal? OriginLongitude,
+    decimal DefaultLengthCentimeters,
+    decimal DefaultWidthCentimeters,
+    decimal DefaultHeightCentimeters,
+    int ConfigurationVersion);
+
 /// <param name="MethodSettings">تنظیمات روش یا تهی.</param>
 /// <param name="WeeklySchedule">برنامهٔ هفتگی یا تهی.</param>
+/// <param name="CarrierBinding">اتصال CarrierApi ذخیره‌شده یا تهی.</param>
 public sealed record ShippingAuthoringRevisionPayload(
     int FormatVersion,
     ShippingAuthoringRevisionOwner Owner,
@@ -141,7 +163,8 @@ public sealed record ShippingAuthoringRevisionPayload(
     IReadOnlyList<ShippingAuthoringRevisionGroup> Groups,
     IReadOnlyList<ShippingAuthoringRevisionTranslation> Translations,
     ShippingAuthoringRevisionSettings? MethodSettings,
-    ShippingAuthoringRevisionWeek? WeeklySchedule);
+    ShippingAuthoringRevisionWeek? WeeklySchedule,
+    ShippingAuthoringRevisionCarrierBinding? CarrierBinding = null);
 
 /// <summary>
 /// یک capture تغییرناپذیر از <b>یک</b> بازبینی دقیق پیش‌نویس نویسندگی.
@@ -261,11 +284,12 @@ public sealed class ShippingAuthoringRevisionSnapshot
     public static ShippingAuthoringRevisionSnapshot Capture(
         ShippingAuthoringDraft draft,
         DateTimeOffset now,
-        Guid? snapshotId = null)
+        Guid? snapshotId = null,
+        Domain.Carriers.ShippingCarrierMethodBinding? carrierBinding = null)
     {
         ArgumentNullException.ThrowIfNull(draft);
 
-        var payload = ShippingAuthoringRevisionSnapshotCodec.FromDraft(draft);
+        var payload = ShippingAuthoringRevisionSnapshotCodec.FromDraft(draft, carrierBinding);
         return new ShippingAuthoringRevisionSnapshot
         {
             SnapshotId = snapshotId is { } id && id != Guid.Empty ? id : UuidV7.New(),
@@ -330,7 +354,10 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
 
     /// <summary>کل گراف ذخیره‌شده را به بدنهٔ تایپ‌شده تبدیل می‌کند (بدون خواندن منبع بیرونی).</summary>
     /// <param name="draft">پیش‌نویس با گراف کامل.</param>
-    internal static ShippingAuthoringRevisionPayload FromDraft(ShippingAuthoringDraft draft)
+    /// <param name="carrierBinding">اتصال CarrierApi همین پیش‌نویس یا تهی.</param>
+    internal static ShippingAuthoringRevisionPayload FromDraft(
+        ShippingAuthoringDraft draft,
+        Domain.Carriers.ShippingCarrierMethodBinding? carrierBinding = null)
     {
         var groups = draft.RegionGroups
             .OrderBy(group => group.Order)
@@ -392,6 +419,28 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
             ? ShippingAuthoringRevisionSnapshot.LegacyFormatVersion
             : ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion;
 
+        var capturedBinding = carrierBinding is null
+            ? null
+            : new ShippingAuthoringRevisionCarrierBinding(
+                carrierBinding.BindingId,
+                carrierBinding.CarrierAccountId,
+                carrierBinding.ProviderCode,
+                carrierBinding.ProviderServiceId,
+                carrierBinding.PaymentTypeId,
+                carrierBinding.PickupTypeId,
+                carrierBinding.DistributionTypeId,
+                carrierBinding.PackingId,
+                carrierBinding.PackageContentId,
+                carrierBinding.PackTypeId,
+                carrierBinding.OriginExternalCityCode,
+                carrierBinding.OriginAddressLine,
+                carrierBinding.OriginLatitude,
+                carrierBinding.OriginLongitude,
+                carrierBinding.DefaultLengthCentimeters,
+                carrierBinding.DefaultWidthCentimeters,
+                carrierBinding.DefaultHeightCentimeters,
+                carrierBinding.ConfigurationVersion);
+
         return new ShippingAuthoringRevisionPayload(
             formatVersion,
             new ShippingAuthoringRevisionOwner(
@@ -414,7 +463,8 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
                     translation.Description))
                 .ToArray(),
             settings,
-            week);
+            week,
+            capturedBinding);
     }
 
     /// <summary>بدنه را به JSON پایدار تبدیل می‌کند.</summary>

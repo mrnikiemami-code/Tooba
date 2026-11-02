@@ -228,4 +228,16 @@
   <data name="shipping.selected_capture.owner_scope_unavailable" xml:space="preserve">
     <value>هویت مالک ارسال برای این درخواست قابل تشخیص نیست.</value>
   </data>
+  <data name="shipping.carrier.account_not_found" xml:space="preserve">
+    <value>حساب حامل ارسال یافت نشد.</value>
+  </data>
+  <data name="shipping.carrier.secret_required" xml:space="preserve">
+    <value>برای ایجاد حساب حامل، نام کاربری و رمز الزامی است.</value>
+  </data>
+  <data name="shipping.carrier.binding_invalid" xml:space="preserve">
+    <value>اتصال CarrierApi روی این روش ناقص یا ناسازگار است.</value>
+  </data>
+  <data name="shipping.carrier.provider_unknown" xml:space="preserve">
+    <value>کد ارائه‌دهندهٔ حامل در این نصب ناشناخته است.</value>
+  </data>
 </root>

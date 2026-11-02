@@ -302,4 +302,16 @@ public static class ShippingErrorCodes
 
     /// <summary>ورودی اشاره‌گر انتخاب نامعتبر است (نسخهٔ غیرمثبت، شناسهٔ تهی، سرویس خالی).</summary>
     public const string SelectedCaptureInvalid = "shipping.selected_capture.invalid";
+
+    /// <summary>حساب حامل در محدودهٔ مالک پیدا نشد.</summary>
+    public const string CarrierAccountNotFound = "shipping.carrier.account_not_found";
+
+    /// <summary>نام کاربری و رمز برای ایجاد حساب حامل الزامی است.</summary>
+    public const string CarrierSecretRequired = "shipping.carrier.secret_required";
+
+    /// <summary>اتصال CarrierApi روی پیش‌نویس ناقص یا ناسازگار است.</summary>
+    public const string CarrierBindingInvalid = "shipping.carrier.binding_invalid";
+
+    /// <summary>کد provider ناشناخته است یا در این نصب ثبت نشده.</summary>
+    public const string CarrierProviderUnknown = "shipping.carrier.provider_unknown";
 }

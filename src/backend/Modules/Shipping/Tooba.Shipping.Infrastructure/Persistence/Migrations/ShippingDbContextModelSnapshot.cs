@@ -1044,6 +1044,337 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierAccount", b =>
+                {
+                    b.Property<Guid>("AccountId")
+                        .ValueGeneratedNever()
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("ApiBaseUrl")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("api_base_url");
+
+                    b.Property<int>("ConfigurationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("configuration_version");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("display_name");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset?>("LastConnectionAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_connection_at");
+
+                    b.Property<int?>("LastConnectionOutcome")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_connection_outcome");
+
+                    b.Property<DateTimeOffset?>("LastReferenceSyncAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_reference_sync_at");
+
+                    b.Property<int>("OwnerKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_kind");
+
+                    b.Property<Guid?>("OwnerSellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_seller_party_id");
+
+                    b.Property<string>("OwnerTenantId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("owner_tenant_id");
+
+                    b.Property<string>("ProviderCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_code");
+
+                    b.Property<string>("SecretReference")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("secret_reference");
+
+                    b.Property<string>("TokenUrl")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("token_url");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("AccountId")
+                        .HasName("pk_carrier_accounts");
+
+                    b.HasIndex("SecretReference")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_accounts_secret_reference");
+
+                    b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "ProviderCode", "DisplayName")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_accounts_owner_provider_display");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "ProviderCode", "DisplayName"), false);
+
+                    b.ToTable("carrier_accounts", "shipping");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierDestinationMapping", b =>
+                {
+                    b.Property<Guid>("MappingId")
+                        .ValueGeneratedNever()
+                        .HasColumnType("uuid")
+                        .HasColumnName("mapping_id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("ExternalLocationCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("external_location_code");
+
+                    b.Property<Guid>("GeographyCityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("geography_city_id");
+
+                    b.Property<string>("Provenance")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("provenance");
+
+                    b.Property<string>("ProviderCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_code");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("MappingId")
+                        .HasName("pk_carrier_destination_mappings");
+
+                    b.HasIndex("AccountId", "ExternalLocationCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_destination_mappings_account_external");
+
+                    b.HasIndex("AccountId", "GeographyCityId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_destination_mappings_account_city");
+
+                    b.ToTable("carrier_destination_mappings", "shipping");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierMethodBinding", b =>
+                {
+                    b.Property<Guid>("BindingId")
+                        .ValueGeneratedNever()
+                        .HasColumnType("uuid")
+                        .HasColumnName("binding_id");
+
+                    b.Property<Guid>("CarrierAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("carrier_account_id");
+
+                    b.Property<int>("ConfigurationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("configuration_version");
+
+                    b.Property<decimal>("DefaultHeightCentimeters")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("default_height_centimeters");
+
+                    b.Property<decimal>("DefaultLengthCentimeters")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("default_length_centimeters");
+
+                    b.Property<decimal>("DefaultWidthCentimeters")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("default_width_centimeters");
+
+                    b.Property<string>("DistributionTypeId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("distribution_type_id");
+
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<string>("OriginAddressLine")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("origin_address_line");
+
+                    b.Property<string>("OriginExternalCityCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("origin_external_city_code");
+
+                    b.Property<decimal?>("OriginLatitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)")
+                        .HasColumnName("origin_latitude");
+
+                    b.Property<decimal?>("OriginLongitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)")
+                        .HasColumnName("origin_longitude");
+
+                    b.Property<string>("PackTypeId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("pack_type_id");
+
+                    b.Property<string>("PackageContentId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("package_content_id");
+
+                    b.Property<string>("PackingId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("packing_id");
+
+                    b.Property<string>("PaymentTypeId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("payment_type_id");
+
+                    b.Property<string>("PickupTypeId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("pickup_type_id");
+
+                    b.Property<string>("ProviderCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_code");
+
+                    b.Property<string>("ProviderServiceId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_service_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("BindingId")
+                        .HasName("pk_carrier_method_bindings");
+
+                    b.HasIndex("DraftId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_method_bindings_draft");
+
+                    b.ToTable("carrier_method_bindings", "shipping");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValue", b =>
+                {
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("external_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset>("SyncedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("synced_at");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("title");
+
+                    b.HasKey("AccountId", "Kind", "ExternalId")
+                        .HasName("pk_carrier_reference_values");
+
+                    b.ToTable("carrier_reference_values", "shipping");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierSecretMaterial", b =>
+                {
+                    b.Property<string>("SecretReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("secret_reference");
+
+                    b.Property<byte[]>("Ciphertext")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("ciphertext");
+
+                    b.Property<int>("ConfigurationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("configuration_version");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("SecretReference")
+                        .HasName("pk_carrier_secret_materials");
+
+                    b.ToTable("carrier_secret_materials", "shipping");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraftTranslation", b =>
                 {
                     b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)

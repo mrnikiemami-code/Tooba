@@ -23,8 +23,13 @@ public enum ShippingCapturedQuoteOutcome
     /// <summary>روش هیچ تنظیمات capture‌شده‌ای ندارد؛ «تنظیم‌نشده» هرگز پیش‌فرض نمی‌شود.</summary>
     NotConfigured = 2,
 
-    /// <summary>حالت محاسبهٔ ذخیره‌شده Manual نیست (CarrierApi/Free هنوز پیاده نشده‌اند).</summary>
+    /// <summary>حالت محاسبهٔ ذخیره‌شده برای این مسیر ناشناخته است.</summary>
     CalculationModeUnavailable = 3,
+
+    /// <summary>
+    /// پوشش CarrierApi آماده است؛ لایهٔ Application باید از درز حامل قیمت بگیرد (بدون HTTP در دامنه).
+    /// </summary>
+    CarrierProviderRequired = 15,
 
     /// <summary>هیچ گروه ذخیره‌شده‌ای مسیر مقصد را پوشش نمی‌دهد.</summary>
     CoverageMissing = 4,
@@ -87,8 +92,21 @@ public static class ShippingCapturedQuoteReasonCodes
     /// <summary>حالت محاسبه CarrierApi است و اتصال واقعی حامل وجود ندارد.</summary>
     public const string CarrierModeUnavailable = "shipping.captured.quote.carrier_mode_unavailable";
 
+    /// <summary>
+    /// پوشش/گروه CarrierApi معتبر است؛ قیمت باید از درز Application حامل خوانده شود (دامنه HTTP نمی‌زند).
+    /// </summary>
+    public const string CarrierProviderRequired = "shipping.captured.quote.carrier_provider_required";
+
     /// <summary>حالت محاسبه Free است و صفر کردن هزینهٔ واقعی رایگان‌بودن نمی‌سازد.</summary>
     public const string FreeNotImplemented = "shipping.captured.quote.free_not_implemented";
+
+    /// <summary>شناسهٔ پایدار ردیف مجازی برای حالت Free (بدون ردیف تعرفهٔ دستی).</summary>
+    public static readonly Guid FreeCalculationRateRowId =
+        Guid.Parse("00000000-0000-0000-0000-00000000f2ee");
+
+    /// <summary>شناسهٔ پایدار ردیف مجازی برای حالت CarrierApi پیش از دریافت قیمت حامل.</summary>
+    public static readonly Guid CarrierCalculationRateRowId =
+        Guid.Parse("00000000-0000-0000-0000-00000000ca01");
 
     /// <summary>هیچ گروهی مسیر مقصد را پوشش نمی‌دهد.</summary>
     public const string CoverageMissing = "shipping.captured.quote.coverage_missing";

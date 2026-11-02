@@ -8,9 +8,13 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.Geography.Contracts.Places;
+using Tooba.BuildingBlocks.Results;
 using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Authoring.Ports;
+using Tooba.Shipping.Application.Carriers;
+using Tooba.Shipping.Application.Carriers.Ports;
 using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Contracts.Carriers;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Authoring;
@@ -148,6 +152,8 @@ public sealed class ShippingCapturedQuoteContractsEdgeTests
         var mismatched = await new ShippingCapturedRevisionQuoteLookup(
                 new ShippingAuthoringDraftDirectory(database.Context),
                 storeEdition,
+                new StubCarrierAccounts(),
+                new StubCarrierProviders(),
                 new StubEdition(ToobaEdition.SingleStore),
                 new StubTenant(null),
                 new ModuleCallTracer(),
@@ -162,6 +168,8 @@ public sealed class ShippingCapturedQuoteContractsEdgeTests
         var wrongOwner = await new ShippingCapturedRevisionQuoteLookup(
                 new ShippingAuthoringDraftDirectory(database.Context),
                 marketplaceEdition,
+                new StubCarrierAccounts(),
+                new StubCarrierProviders(),
                 new StubEdition(ToobaEdition.Marketplace),
                 new StubTenant(null),
                 new ModuleCallTracer(),
@@ -271,7 +279,7 @@ public sealed class ShippingCapturedQuoteContractsEdgeTests
     }
 
     [Fact]
-    public async Task An_unconfigured_or_non_manual_capture_is_explicitly_unavailable_not_free()
+    public async Task An_unconfigured_capture_is_explicit_and_free_quotes_zero_without_manual_rows()
     {
         var unconfigured = Snapshot(CityAreaGroup(), Rows(), withSettings: false);
         using var noSettingsDb = new Database(unconfigured);
@@ -287,8 +295,21 @@ public sealed class ShippingCapturedQuoteContractsEdgeTests
         var freeQuote = await Lookup(freeDb, ExtraGeography()).QuoteAsync(
             Request(free.DraftId, free.SourceRevision, new DestinationIdentifiers(Country, null, CityId)),
             CancellationToken.None);
-        Assert.Equal(ShippingCapturedQuoteVerdict.CalculationModeUnavailable, freeQuote.Value.Verdict);
-        AssertNoMoney(freeQuote.Value);
+        Assert.Equal(ShippingCapturedQuoteVerdict.Quoted, freeQuote.Value.Verdict);
+        Assert.Equal(0m, freeQuote.Value.FreightAmount);
+        Assert.Equal(0m, freeQuote.Value.PackagingAmount);
+
+        var carrier = Snapshot(CityAreaGroup(), Rows(), calculationMode: ShippingAuthoringCalculationMode.CarrierApi);
+        using var carrierDb = new Database(carrier);
+        var carrierQuote = await Lookup(carrierDb, ExtraGeography()).QuoteAsync(
+            Request(carrier.DraftId, carrier.SourceRevision, new DestinationIdentifiers(Country, null, CityId)),
+            CancellationToken.None);
+        Assert.Equal(ShippingCapturedQuoteVerdict.CarrierConfigurationIncomplete, carrierQuote.Value.Verdict);
+        Assert.Equal(ShippingCapturedQuoteVerdictCodes.CarrierBindingMissing, carrierQuote.Value.ReasonCode);
+        Assert.False(carrierQuote.Value.IsQuoted);
+        Assert.Null(carrierQuote.Value.FreightAmount);
+        Assert.Null(carrierQuote.Value.PackagingAmount);
+        Assert.Null(carrierQuote.Value.TotalExpenseAmount);
     }
 
     [Fact]
@@ -383,6 +404,8 @@ public sealed class ShippingCapturedQuoteContractsEdgeTests
         => new(
             new ShippingAuthoringDraftDirectory(database.Context),
             geography,
+            new StubCarrierAccounts(),
+            new StubCarrierProviders(),
             new StubEdition(ToobaEdition.SingleStore),
             new StubTenant(Tenant),
             new ModuleCallTracer(),
@@ -702,5 +725,101 @@ public sealed class ShippingCapturedQuoteContractsEdgeTests
 
         public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } =
             new Microsoft.Extensions.FileProviders.NullFileProvider();
+    }
+
+    private sealed class StubCarrierAccounts : IShippingCarrierAccountDirectory
+    {
+        public Task<Result<IReadOnlyList<ShippingCarrierAccountView>>> ListAccountsAsync(
+            ShippingAuthoringOwnerScope owner,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<ShippingCarrierAccountView>> GetAccountAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid accountId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<ShippingCarrierAccountView>> UpsertAccountAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid? accountId,
+            ShippingCarrierAccountUpsertRequest request,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<ShippingCarrierConnectionTestOutcome>> TestConnectionAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid accountId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<IReadOnlyList<ShippingCarrierReferenceValueView>>> SyncReferencesAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid accountId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<IReadOnlyList<ShippingCarrierReferenceValueView>>> ListReferencesAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid accountId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<IReadOnlyList<ShippingCarrierDestinationMappingView>>> ListDestinationMappingsAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid accountId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<ShippingCarrierDestinationMappingView>> UpsertDestinationMappingAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid accountId,
+            ShippingCarrierDestinationMappingUpsertRequest request,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<ShippingCarrierMethodBindingView?>> GetMethodBindingAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid draftId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<ShippingCarrierMethodBindingView>> ReplaceMethodBindingAsync(
+            ShippingAuthoringOwnerScope owner,
+            Guid draftId,
+            ShippingCarrierMethodBindingReplaceRequest request,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<ShippingCarrierAccountExecutionContext?> TryResolveExecutionContextAsync(
+            ShippingDraftOwnerKind ownerKind,
+            string? ownerTenantId,
+            Guid? ownerSellerPartyId,
+            Guid accountId,
+            CancellationToken cancellationToken)
+            => Task.FromResult<ShippingCarrierAccountExecutionContext?>(null);
+
+        public Task<string?> TryResolveDestinationExternalCodeAsync(
+            Guid accountId,
+            Guid geographyCityId,
+            CancellationToken cancellationToken)
+            => Task.FromResult<string?>(null);
+
+        public Task<CarrierBindingExecution?> GetMethodBindingForDraftAsync(
+            Guid draftId,
+            ShippingDraftOwnerKind ownerKind,
+            string? ownerTenantId,
+            Guid? ownerSellerPartyId,
+            CancellationToken cancellationToken)
+            => Task.FromResult<CarrierBindingExecution?>(null);
+    }
+
+    private sealed class StubCarrierProviders : ICarrierRateProviderRegistry
+    {
+        public bool TryResolve(string providerCode, out ICarrierRateProvider? provider)
+        {
+            provider = null;
+            return false;
+        }
     }
 }

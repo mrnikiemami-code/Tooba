@@ -145,6 +145,14 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
         D(ShippingErrorCodes.AuthoringMethodSettingsInvalid, "The method draft settings are not a valid freight payment and calculation choice."),
         D(ShippingErrorCodes.AuthoringTypeAssignmentInvalid, "The draft shipping type selection is not a valid catalog reference."),
         D(ShippingErrorCodes.AuthoringTypeSelectionUnavailable, "The selected shipping type is unknown or not active."),
+        D(ShippingErrorCodes.AuthoringRevisionSnapshotInvalid, "The stored draft revision snapshot payload is not readable."),
+        new(
+            Code: ShippingErrorCodes.AuthoringRevisionSnapshotNotFound,
+            Classification: ErrorClassification.NotFound,
+            HttpStatus: StatusCodes.Status404NotFound,
+            LocalizationKey: ShippingErrorCodes.AuthoringRevisionSnapshotNotFound,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "No captured revision snapshot exists for the requested draft revision."),
         // TB-220: selection conflicts are genuine state conflicts (a stale expected token), never a generic
         // 400/500. All other selection refusals keep the module's explicit Business classification.
         new(
@@ -163,6 +171,16 @@ public sealed class ShippingErrorCatalogContributor : IErrorCatalogContributor
             SafeTitleFallback: "The selected captured revision cannot be proven for this owner."),
         D(ShippingErrorCodes.SelectedCaptureBindingMismatch, "The selected captured revision belongs to another shipping method."),
         D(ShippingErrorCodes.SelectedCaptureInvalid, "The captured revision selection request is not valid."),
+        new(
+            Code: ShippingErrorCodes.CarrierAccountNotFound,
+            Classification: ErrorClassification.NotFound,
+            HttpStatus: StatusCodes.Status404NotFound,
+            LocalizationKey: ShippingErrorCodes.CarrierAccountNotFound,
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "The shipping carrier account was not found."),
+        D(ShippingErrorCodes.CarrierSecretRequired, "A username and password are required to create a carrier account."),
+        D(ShippingErrorCodes.CarrierBindingInvalid, "The CarrierApi method binding is incomplete or inconsistent."),
+        D(ShippingErrorCodes.CarrierProviderUnknown, "The carrier provider code is unknown in this installation."),
     ];
 
     private static ErrorDescriptor D(string code, string fallback) =>

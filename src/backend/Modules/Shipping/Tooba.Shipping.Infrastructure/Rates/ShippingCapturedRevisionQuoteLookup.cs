@@ -5,6 +5,8 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Geography.Contracts.Places;
 using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Authoring.Ports;
+using Tooba.Shipping.Application.Carriers;
+using Tooba.Shipping.Application.Carriers.Ports;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Authoring;
 using Tooba.Shipping.Domain.Rates;
@@ -43,6 +45,8 @@ namespace Tooba.Shipping.Infrastructure.Rates;
 public sealed class ShippingCapturedRevisionQuoteLookup(
     IShippingAuthoringDraftDirectory drafts,
     IGeographyPlaceSnapshotReader snapshots,
+    IShippingCarrierAccountDirectory carrierAccounts,
+    ICarrierRateProviderRegistry carrierProviders,
     ICurrentEdition edition,
     ICurrentTenant tenant,
     IModuleCallTracer moduleCallTracer,
@@ -115,8 +119,271 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                 request.CurrencyCode,
                 ancestors));
 
+        if (quote.Outcome == DomainOutcome.CarrierProviderRequired)
+        {
+            return await QuoteCarrierApiAsync(
+                request,
+                snapshot,
+                payload,
+                quote,
+                cancellationToken);
+        }
+
         return Result.Success(Map(quote, snapshot.SnapshotId));
     }
+
+    private async Task<Result<ShippingCapturedQuoteResult>> QuoteCarrierApiAsync(
+        ShippingCapturedQuoteLookupRequest request,
+        ShippingAuthoringRevisionSnapshot snapshot,
+        ShippingAuthoringRevisionPayload payload,
+        ShippingCapturedRevisionQuote coverage,
+        CancellationToken cancellationToken)
+    {
+        if (coverage.Selection is null)
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierConfigurationIncomplete,
+                ContractReasons.CarrierConfigurationIncomplete,
+                coverage));
+        }
+
+        var binding = await ResolveCarrierBindingAsync(snapshot, payload, cancellationToken);
+        if (binding is null)
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierConfigurationIncomplete,
+                payload.CarrierBinding is null
+                    ? ContractReasons.CarrierBindingMissing
+                    : ContractReasons.CarrierAccountUnavailable,
+                coverage));
+        }
+
+        if (!binding.IsActiveAccount)
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierConfigurationIncomplete,
+                ContractReasons.CarrierAccountUnavailable,
+                coverage));
+        }
+
+        if (request.Destination.CityId is not { } cityId
+            || request.GroupWeightGrams is not { } weight
+            || weight <= 0
+            || request.FinalGroupGoodsAmountAfterDiscountAndTax is not { } goods
+            || goods < 0m)
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierConfigurationIncomplete,
+                ContractReasons.CarrierConfigurationIncomplete,
+                coverage));
+        }
+
+        var destinationCode = await carrierAccounts.TryResolveDestinationExternalCodeAsync(
+            binding.AccountId,
+            cityId,
+            cancellationToken);
+        if (string.IsNullOrWhiteSpace(destinationCode))
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierConfigurationIncomplete,
+                ContractReasons.CarrierDestinationUnmapped,
+                coverage));
+        }
+
+        if (!carrierProviders.TryResolve(binding.ProviderCode, out var provider) || provider is null)
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierConfigurationIncomplete,
+                ContractReasons.CarrierModeUnavailable,
+                coverage));
+        }
+
+        var carrierRequest = new CarrierRateRequest(
+            RequestId: $"{snapshot.SnapshotId:N}:{coverage.Selection.GroupId:N}",
+            OriginLocationCode: binding.OriginExternalCityCode,
+            DestinationLocationCode: destinationCode,
+            ServiceCode: binding.ProviderServiceId,
+            WeightGrams: weight,
+            DeclaredValue: goods,
+            LengthCentimeters: binding.DefaultLengthCentimeters,
+            WidthCentimeters: binding.DefaultWidthCentimeters,
+            HeightCentimeters: binding.DefaultHeightCentimeters,
+            PaymentKind: payload.MethodSettings!.FreightPaymentMode == Contracts.Packaging.ShippingFreightPayerMode.CollectOnDelivery
+                ? CarrierPaymentKind.CollectOnDelivery
+                : CarrierPaymentKind.Prepaid,
+            Account: binding.Execution);
+
+        CarrierRateResult carrierResult;
+        try
+        {
+            carrierResult = await provider.QuoteAsync(carrierRequest, cancellationToken);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierTemporarilyUnavailable,
+                ContractReasons.CarrierTemporarilyUnavailable,
+                coverage));
+        }
+
+        return carrierResult.Outcome switch
+        {
+            CarrierRateOutcome.Quoted when carrierResult.Options.FirstOrDefault(o =>
+                string.Equals(o.ServiceCode, binding.ProviderServiceId, StringComparison.Ordinal)) is { } exact
+                => Result.Success(MapCarrierQuoted(coverage, snapshot.SnapshotId, exact, binding.BindingId)),
+            CarrierRateOutcome.Quoted when carrierResult.Options.Count == 1
+                => Result.Success(MapCarrierQuoted(coverage, snapshot.SnapshotId, carrierResult.Options[0], binding.BindingId)),
+            CarrierRateOutcome.Quoted
+                => Result.Success(MapCarrierFailure(
+                    ContractVerdict.CarrierNoService,
+                    ContractReasons.CarrierNoService,
+                    coverage)),
+            CarrierRateOutcome.Unauthorized
+                => Result.Success(MapCarrierFailure(
+                    ContractVerdict.CarrierUnauthorized,
+                    ContractReasons.CarrierUnauthorized,
+                    coverage)),
+            CarrierRateOutcome.NoService
+                => Result.Success(MapCarrierFailure(
+                    ContractVerdict.CarrierNoService,
+                    ContractReasons.CarrierNoService,
+                    coverage)),
+            CarrierRateOutcome.TemporarilyUnavailable
+                => Result.Success(MapCarrierFailure(
+                    ContractVerdict.CarrierTemporarilyUnavailable,
+                    ContractReasons.CarrierTemporarilyUnavailable,
+                    coverage)),
+            _ => Result.Success(MapCarrierFailure(
+                ContractVerdict.CarrierConfigurationIncomplete,
+                ContractReasons.CarrierConfigurationIncomplete,
+                coverage)),
+        };
+    }
+
+    private async Task<CarrierBindingExecution?> ResolveCarrierBindingAsync(
+        ShippingAuthoringRevisionSnapshot snapshot,
+        ShippingAuthoringRevisionPayload payload,
+        CancellationToken cancellationToken)
+    {
+        if (payload.CarrierBinding is { } captured)
+        {
+            var context = await carrierAccounts.TryResolveExecutionContextAsync(
+                snapshot.OwnerKind,
+                snapshot.OwnerTenantId,
+                snapshot.OwnerSellerPartyId,
+                captured.CarrierAccountId,
+                cancellationToken);
+            if (context is null)
+            {
+                return null;
+            }
+
+            return new CarrierBindingExecution(
+                captured.BindingId,
+                captured.CarrierAccountId,
+                captured.ProviderCode,
+                captured.ProviderServiceId,
+                captured.OriginExternalCityCode,
+                captured.DefaultLengthCentimeters,
+                captured.DefaultWidthCentimeters,
+                captured.DefaultHeightCentimeters,
+                context.IsActive,
+                new CarrierAccountExecution(
+                    context.AccountId,
+                    context.ConfigurationVersion,
+                    context.Username,
+                    context.Password,
+                    context.CurrencyCode,
+                    captured.PaymentTypeId,
+                    captured.PickupTypeId,
+                    captured.DistributionTypeId,
+                    captured.PackingId,
+                    captured.PackageContentId,
+                    captured.PackTypeId,
+                    context.ApiBaseUrl,
+                    context.TokenUrl));
+        }
+
+        return await carrierAccounts.GetMethodBindingForDraftAsync(
+            snapshot.DraftId,
+            snapshot.OwnerKind,
+            snapshot.OwnerTenantId,
+            snapshot.OwnerSellerPartyId,
+            cancellationToken);
+    }
+
+    private static ShippingCapturedQuoteResult MapCarrierQuoted(
+        ShippingCapturedRevisionQuote coverage,
+        Guid snapshotId,
+        CarrierRateOption option,
+        Guid bindingId)
+    {
+        var freight = option.TransportationAmount;
+        var packaging = option.PackagingAmount;
+        // Tipax FinalAmount already includes tax/packing/pickup/delivery. Use Final as freight authority
+        // and keep packaging component explicit without double-adding tax into packaging.
+        if (option.FinalAmount > 0m)
+        {
+            freight = option.FinalAmount - packaging;
+            if (freight < 0m)
+            {
+                freight = option.FinalAmount;
+                packaging = 0m;
+            }
+        }
+
+        var total = freight + packaging;
+        var collect = coverage.FreightPayerMode == Contracts.Packaging.ShippingFreightPayerMode.CollectOnDelivery
+            ? freight
+            : 0m;
+        var payable = total - collect;
+        var selection = coverage.Selection!;
+        var quoted = new ShippingCapturedRevisionQuote(
+            ShippingCapturedQuoteOutcome.Quoted,
+            ShippingCapturedQuoteReasonCodes.Quoted,
+            coverage.ServiceCode,
+            coverage.OptionCode,
+            option.CurrencyCode,
+            freight,
+            packaging,
+            total,
+            payable,
+            collect,
+            coverage.FreightPayerMode,
+            selection with { RateRowId = bindingId });
+        return Map(quoted, snapshotId);
+    }
+
+    private static ShippingCapturedQuoteResult MapCarrierFailure(
+        ContractVerdict verdict,
+        string reason,
+        ShippingCapturedRevisionQuote coverage)
+        => new(
+            verdict,
+            reason,
+            coverage.ServiceCode,
+            coverage.OptionCode,
+            CurrencyCode: null,
+            FreightAmount: null,
+            PackagingAmount: null,
+            TotalExpenseAmount: null,
+            PayableAtCheckoutAmount: null,
+            CarrierCollectAmount: null,
+            Settings: coverage.Selection is null
+                ? null
+                : new ShippingCapturedQuoteSettings(
+                    coverage.Selection.Settings.FreightPaymentMode,
+                    coverage.Selection.Settings.CalculationMode),
+            SnapshotId: null,
+            DraftId: coverage.Selection?.DraftId,
+            SourceRevision: coverage.Selection?.SourceRevision,
+            FormatVersion: coverage.Selection?.FormatVersion,
+            ShippingTypeId: coverage.Selection?.ShippingTypeId,
+            GroupId: coverage.Selection?.GroupId,
+            RateRowId: coverage.Selection?.RateRowId,
+            MinDeliveryDays: null,
+            MaxDeliveryDays: null,
+            ReceivingWeek: null);
 
     /// <summary>
     /// گونهٔ مالک درخواستی را با زمینهٔ trusted همین درخواست می‌سنجد و در صورت انطباق، scope مالک
@@ -406,6 +673,8 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                 ContractVerdict.ConditionNotMatched,
             DomainOutcome.ConditionAmbiguous =>
                 ContractVerdict.ConditionAmbiguous,
+            DomainOutcome.CarrierProviderRequired =>
+                ContractVerdict.CarrierConfigurationIncomplete,
             _ => ContractVerdict.ConfigurationInvalid,
         };
 

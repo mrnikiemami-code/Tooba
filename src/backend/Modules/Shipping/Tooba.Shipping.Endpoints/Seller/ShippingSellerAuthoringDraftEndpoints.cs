@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Shipping.Application.Authoring.Commands;
 using Tooba.Shipping.Application.Authoring.Queries;
+using Tooba.Shipping.Application.Carriers.Commands;
+using Tooba.Shipping.Application.Carriers.Queries;
 using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Contracts.Carriers;
 using Tooba.Shipping.Endpoints.Admin;
 
 namespace Tooba.Shipping.Endpoints.Seller;
@@ -81,6 +84,17 @@ public static class ShippingSellerAuthoringDraftEndpoints
         group.MapPost(
             "/shipping-services/authoring-drafts/{draftId:guid}/publication/withdraw",
             WithdrawPublicationAsync);
+        group.MapGet("/shipping-services/carrier-accounts", ListCarrierAccountsAsync);
+        group.MapPost("/shipping-services/carrier-accounts", CreateCarrierAccountAsync);
+        group.MapGet("/shipping-services/carrier-accounts/{accountId:guid}", GetCarrierAccountAsync);
+        group.MapPut("/shipping-services/carrier-accounts/{accountId:guid}", ReplaceCarrierAccountAsync);
+        group.MapPost("/shipping-services/carrier-accounts/{accountId:guid}/test-connection", TestCarrierConnectionAsync);
+        group.MapPost("/shipping-services/carrier-accounts/{accountId:guid}/sync-references", SyncCarrierReferencesAsync);
+        group.MapGet("/shipping-services/carrier-accounts/{accountId:guid}/references", ListCarrierReferencesAsync);
+        group.MapGet("/shipping-services/carrier-accounts/{accountId:guid}/destination-mappings", ListCarrierDestinationMappingsAsync);
+        group.MapPut("/shipping-services/carrier-accounts/{accountId:guid}/destination-mappings", UpsertCarrierDestinationMappingAsync);
+        group.MapGet("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", GetCarrierBindingAsync);
+        group.MapPut("/shipping-services/authoring-drafts/{draftId:guid}/carrier-binding", ReplaceCarrierBindingAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -447,6 +461,185 @@ public static class ShippingSellerAuthoringDraftEndpoints
 
         return api.From(await sender.Send(
             new WithdrawShippingAuthoringPublicationCommand(scope, draftId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ListCarrierAccountsAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new ListShippingCarrierAccountsQuery(scope), cancellationToken));
+    }
+
+    private static async Task<IResult> CreateCarrierAccountAsync(
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierAccountUpsertRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        var result = await sender.Send(
+            new UpsertShippingCarrierAccountCommand(scope, null, body!),
+            cancellationToken);
+        return result.IsFailure
+            ? api.From(result)
+            : api.Created($"/v1/seller/shipping-services/carrier-accounts/{result.Value.AccountId}", result);
+    }
+
+    private static async Task<IResult> GetCarrierAccountAsync(
+        Guid accountId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetShippingCarrierAccountQuery(scope, accountId), cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceCarrierAccountAsync(
+        Guid accountId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierAccountUpsertRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new UpsertShippingCarrierAccountCommand(scope, accountId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> TestCarrierConnectionAsync(
+        Guid accountId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        return api.From(await sender.Send(new TestShippingCarrierConnectionCommand(scope, accountId), cancellationToken));
+    }
+
+    private static async Task<IResult> SyncCarrierReferencesAsync(
+        Guid accountId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        return api.From(await sender.Send(new SyncShippingCarrierReferencesCommand(scope, accountId), cancellationToken));
+    }
+
+    private static async Task<IResult> ListCarrierReferencesAsync(
+        Guid accountId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new ListShippingCarrierReferencesQuery(scope, accountId), cancellationToken));
+    }
+
+    private static async Task<IResult> ListCarrierDestinationMappingsAsync(
+        Guid accountId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(
+            new ListShippingCarrierDestinationMappingsQuery(scope, accountId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> UpsertCarrierDestinationMappingAsync(
+        Guid accountId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierDestinationMappingUpsertRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new UpsertShippingCarrierDestinationMappingCommand(scope, accountId, body!),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> GetCarrierBindingAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.View, cancellationToken);
+        return api.From(await sender.Send(new GetShippingCarrierMethodBindingQuery(scope, draftId), cancellationToken));
+    }
+
+    private static async Task<IResult> ReplaceCarrierBindingAsync(
+        Guid draftId,
+        MediatR.ISender sender,
+        IShippingAuthoringOwnerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierMethodBindingReplaceRequest>(
+            context,
+            api,
+            cancellationToken);
+        if (failure is not null)
+        {
+            return failure;
+        }
+
+        return api.From(await sender.Send(
+            new ReplaceShippingCarrierMethodBindingCommand(scope, draftId, body!),
             cancellationToken));
     }
 }

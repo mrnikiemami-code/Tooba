@@ -335,20 +335,9 @@ public static class ShippingRatePolicyEngine
         switch (settings.CalculationMode)
         {
             case ShippingAuthoringCalculationMode.CarrierApi:
-                return NotQuoted(
-                    ShippingCapturedQuoteOutcome.CalculationModeUnavailable,
-                    ShippingCapturedQuoteReasonCodes.CarrierModeUnavailable,
-                    serviceCode,
-                    optionCode);
             case ShippingAuthoringCalculationMode.Free:
-                // Freezing the real expense to zero would fabricate a free service; the funder/provider is
-                // future authority, so this is an explicit not-ready answer today.
-                return NotQuoted(
-                    ShippingCapturedQuoteOutcome.CalculationModeUnavailable,
-                    ShippingCapturedQuoteReasonCodes.FreeNotImplemented,
-                    serviceCode,
-                    optionCode);
             case ShippingAuthoringCalculationMode.Manual:
+                // Money branches after the shared destination/group match below.
                 break;
             default:
                 return NotQuoted(
@@ -444,6 +433,65 @@ public static class ShippingRatePolicyEngine
                 ShippingCapturedQuoteReasonCodes.CurrencyMismatch,
                 serviceCode,
                 optionCode);
+        }
+
+        if (settings.CalculationMode == ShippingAuthoringCalculationMode.Free)
+        {
+            // Merchant-selected Free: customer freight/packaging are zero. Manual tariff rows stay stored
+            // on the draft and are not consulted for money in this mode.
+            return new ShippingCapturedRevisionQuote(
+                ShippingCapturedQuoteOutcome.Quoted,
+                ShippingCapturedQuoteReasonCodes.Quoted,
+                serviceCode,
+                optionCode,
+                groupCurrency,
+                0m,
+                0m,
+                0m,
+                0m,
+                0m,
+                settings.FreightPaymentMode,
+                new ShippingCapturedQuoteSelection(
+                    group.GroupId,
+                    ShippingCapturedQuoteReasonCodes.FreeCalculationRateRowId,
+                    payload.DraftId,
+                    payload.SourceRevision,
+                    payload.FormatVersion,
+                    payload.ShippingTypeId,
+                    0,
+                    0,
+                    settings,
+                    payload.WeeklySchedule,
+                    new ShippingCapturedQuoteMatchedConditions(null, null, null)));
+        }
+
+        if (settings.CalculationMode == ShippingAuthoringCalculationMode.CarrierApi)
+        {
+            // Domain never calls HTTP. Application must resolve the carrier binding and quote externally.
+            return new ShippingCapturedRevisionQuote(
+                ShippingCapturedQuoteOutcome.CarrierProviderRequired,
+                ShippingCapturedQuoteReasonCodes.CarrierProviderRequired,
+                serviceCode,
+                optionCode,
+                groupCurrency,
+                null,
+                null,
+                null,
+                null,
+                null,
+                settings.FreightPaymentMode,
+                new ShippingCapturedQuoteSelection(
+                    group.GroupId,
+                    ShippingCapturedQuoteReasonCodes.CarrierCalculationRateRowId,
+                    payload.DraftId,
+                    payload.SourceRevision,
+                    payload.FormatVersion,
+                    payload.ShippingTypeId,
+                    0,
+                    0,
+                    settings,
+                    payload.WeeklySchedule,
+                    new ShippingCapturedQuoteMatchedConditions(null, null, null)));
         }
 
         if (group.RateRows is null || group.RateRows.Count == 0)

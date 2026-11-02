@@ -17,15 +17,18 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IOptionsMonitor<TipaxV4Options> _options;
     private readonly TipaxV4TokenSource _tokenSource;
+    private readonly TipaxV4AccountTokenSource _accountTokens;
 
     public TipaxV4RateProvider(
         IHttpClientFactory httpClientFactory,
         IOptionsMonitor<TipaxV4Options> options,
-        TipaxV4TokenSource tokenSource)
+        TipaxV4TokenSource tokenSource,
+        TipaxV4AccountTokenSource accountTokens)
     {
         _httpClientFactory = httpClientFactory;
         _options = options;
         _tokenSource = tokenSource;
+        _accountTokens = accountTokens;
     }
 
     public string ProviderCode => Code;
@@ -34,6 +37,11 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
         CarrierRateRequest request,
         CancellationToken cancellationToken)
     {
+        if (request.Account is { } account)
+        {
+            return await QuoteForAccountAsync(request, account, cancellationToken);
+        }
+
         var options = _options.CurrentValue;
         if (!options.Enabled)
         {
@@ -58,7 +66,7 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
             return CarrierRateResult.Failure(CarrierRateOutcome.Unauthorized, "carrier.tipax.authentication_failed");
         }
 
-        var first = await SendAsync(request.RequestId, payload!, token, options, cancellationToken);
+        var first = await SendAsync(request.RequestId, payload!, token, options.ApiBaseUrl, options.CurrencyCode, cancellationToken);
         if (first.Outcome != CarrierRateOutcome.Unauthorized)
         {
             return first;
@@ -69,17 +77,75 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
         token = await _tokenSource.GetAsync(cancellationToken);
         return string.IsNullOrWhiteSpace(token)
             ? first
-            : await SendAsync(request.RequestId, payload!, token, options, cancellationToken);
+            : await SendAsync(request.RequestId, payload!, token, options.ApiBaseUrl, options.CurrencyCode, cancellationToken);
+    }
+
+    private async Task<CarrierRateResult> QuoteForAccountAsync(
+        CarrierRateRequest request,
+        CarrierAccountExecution account,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(account.Username) || string.IsNullOrWhiteSpace(account.Password))
+        {
+            return CarrierRateResult.Failure(CarrierRateOutcome.ConfigurationInvalid, "carrier.tipax.configuration_invalid");
+        }
+
+        if (!TryBuildRequest(request, account, out var payload))
+        {
+            return CarrierRateResult.Failure(CarrierRateOutcome.RequestInvalid, "carrier.tipax.request_invalid");
+        }
+
+        var apiBase = string.IsNullOrWhiteSpace(account.ApiBaseUrl)
+            ? "https://omtestapi.tipax.ir"
+            : account.ApiBaseUrl!;
+        var token = await _accountTokens.GetAsync(
+            account.AccountId,
+            account.ConfigurationVersion,
+            apiBase,
+            account.TokenUrl,
+            account.Username,
+            account.Password,
+            cancellationToken);
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return CarrierRateResult.Failure(CarrierRateOutcome.Unauthorized, "carrier.tipax.authentication_failed");
+        }
+
+        var first = await SendAsync(
+            request.RequestId,
+            payload!,
+            token,
+            apiBase,
+            account.CurrencyCode,
+            cancellationToken);
+        if (first.Outcome != CarrierRateOutcome.Unauthorized)
+        {
+            return first;
+        }
+
+        _accountTokens.Invalidate(account.AccountId, account.ConfigurationVersion);
+        token = await _accountTokens.GetAsync(
+            account.AccountId,
+            account.ConfigurationVersion,
+            apiBase,
+            account.TokenUrl,
+            account.Username,
+            account.Password,
+            cancellationToken);
+        return string.IsNullOrWhiteSpace(token)
+            ? first
+            : await SendAsync(request.RequestId, payload!, token, apiBase, account.CurrencyCode, cancellationToken);
     }
 
     private async Task<CarrierRateResult> SendAsync(
         string requestId,
         TipaxPriceRequest payload,
         string token,
-        TipaxV4Options options,
+        string apiBaseUrl,
+        string currencyCode,
         CancellationToken cancellationToken)
     {
-        var url = new Uri(new Uri(EnsureTrailingSlash(options.ApiBaseUrl)), PricingPath);
+        var url = new Uri(new Uri(EnsureTrailingSlash(apiBaseUrl)), PricingPath);
         using var message = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = JsonContent.Create(payload, options: TipaxJsonContext.Default.Options)
@@ -88,7 +154,7 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
         message.Headers.TryAddWithoutValidation("X-Correlation-ID", requestId);
 
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        deadline.CancelAfter(options.Timeout);
+        deadline.CancelAfter(TimeSpan.FromSeconds(8));
         try
         {
             using var response = await _httpClientFactory.CreateClient("Shipping.Tipax.Api")
@@ -115,7 +181,7 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
                 stream,
                 TipaxJsonContext.Default.TipaxPriceResponseArray,
                 deadline.Token);
-            var normalized = Normalize(requestId, rows, options.CurrencyCode);
+            var normalized = Normalize(requestId, rows, currencyCode);
             return normalized.Count == 0
                 ? CarrierRateResult.Failure(CarrierRateOutcome.NoService, "carrier.tipax.no_service")
                 : new CarrierRateResult(CarrierRateOutcome.Quoted, normalized);
@@ -141,23 +207,6 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
         TipaxV4Options options,
         out TipaxPriceRequest? payload)
     {
-        payload = null;
-        if (string.IsNullOrWhiteSpace(request.RequestId)
-            || !int.TryParse(request.OriginLocationCode, NumberStyles.None, CultureInfo.InvariantCulture, out var origin)
-            || !int.TryParse(request.DestinationLocationCode, NumberStyles.None, CultureInfo.InvariantCulture, out var destination)
-            || !int.TryParse(request.ServiceCode, NumberStyles.None, CultureInfo.InvariantCulture, out var service)
-            || origin <= 0
-            || destination <= 0
-            || service <= 0
-            || request.WeightGrams <= 0
-            || request.DeclaredValue < 0
-            || request.LengthCentimeters <= 0
-            || request.WidthCentimeters <= 0
-            || request.HeightCentimeters <= 0)
-        {
-            return false;
-        }
-
         var paymentType = request.PaymentKind switch
         {
             CarrierPaymentKind.Prepaid => options.PrepaidPaymentTypeId,
@@ -177,7 +226,66 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
             CarrierDeliveryKind.BranchPickup => options.BranchDistributionTypeId,
             _ => 0
         };
-        if (paymentType <= 0 || pickupType <= 0 || distributionType <= 0)
+        return TryBuildRequest(
+            request,
+            paymentType.ToString(CultureInfo.InvariantCulture),
+            pickupType.ToString(CultureInfo.InvariantCulture),
+            distributionType.ToString(CultureInfo.InvariantCulture),
+            options.PackingId.ToString(CultureInfo.InvariantCulture),
+            options.PackageContentId.ToString(CultureInfo.InvariantCulture),
+            options.PackType.ToString(CultureInfo.InvariantCulture),
+            out payload);
+    }
+
+    private static bool TryBuildRequest(
+        CarrierRateRequest request,
+        CarrierAccountExecution account,
+        out TipaxPriceRequest? payload)
+        => TryBuildRequest(
+            request,
+            account.PaymentTypeId,
+            account.PickupTypeId,
+            account.DistributionTypeId,
+            account.PackingId,
+            account.PackageContentId,
+            account.PackTypeId,
+            out payload);
+
+    private static bool TryBuildRequest(
+        CarrierRateRequest request,
+        string paymentTypeId,
+        string pickupTypeId,
+        string distributionTypeId,
+        string packingId,
+        string packageContentId,
+        string packTypeId,
+        out TipaxPriceRequest? payload)
+    {
+        payload = null;
+        if (string.IsNullOrWhiteSpace(request.RequestId)
+            || !int.TryParse(request.OriginLocationCode, NumberStyles.None, CultureInfo.InvariantCulture, out var origin)
+            || !int.TryParse(request.DestinationLocationCode, NumberStyles.None, CultureInfo.InvariantCulture, out var destination)
+            || !int.TryParse(request.ServiceCode, NumberStyles.None, CultureInfo.InvariantCulture, out var service)
+            || !int.TryParse(paymentTypeId, NumberStyles.None, CultureInfo.InvariantCulture, out var paymentType)
+            || !int.TryParse(pickupTypeId, NumberStyles.None, CultureInfo.InvariantCulture, out var pickupType)
+            || !int.TryParse(distributionTypeId, NumberStyles.None, CultureInfo.InvariantCulture, out var distributionType)
+            || !int.TryParse(packingId, NumberStyles.None, CultureInfo.InvariantCulture, out var packing)
+            || !int.TryParse(packageContentId, NumberStyles.None, CultureInfo.InvariantCulture, out var packageContent)
+            || !int.TryParse(packTypeId, NumberStyles.None, CultureInfo.InvariantCulture, out var packType)
+            || origin <= 0
+            || destination <= 0
+            || service <= 0
+            || paymentType <= 0
+            || pickupType <= 0
+            || distributionType <= 0
+            || packing < 0
+            || packageContent < 0
+            || packType < 0
+            || request.WeightGrams <= 0
+            || request.DeclaredValue < 0
+            || request.LengthCentimeters <= 0
+            || request.WidthCentimeters <= 0
+            || request.HeightCentimeters <= 0)
         {
             return false;
         }
@@ -191,9 +299,9 @@ internal sealed class TipaxV4RateProvider : ICarrierRateProvider
                 request.LengthCentimeters,
                 request.WidthCentimeters,
                 request.HeightCentimeters,
-                options.PackingId,
-                options.PackageContentId,
-                options.PackType,
+                packing,
+                packageContent,
+                packType,
                 paymentType,
                 pickupType,
                 distributionType,
