@@ -1,8 +1,13 @@
-# CURRENT — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
+# CURRENT — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued FE outcome/uncertainty + mount + deploy scope, decision **CREATE_OUTCOME_CLASSIFICATION_AND_IN_FLIGHT_UNCERTAINTY_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `480241eff`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha (FE redeployed; Host retained). LANDED: uncertain before POST; conservative 5xx/malformed/mismatch classification; reconcile independent of canCreate; exact-occurrence resolution; mount A–D via `test:carrier-mount` **30/30**. No migration. Authorized Manual+payment_locked. LIVE TIPAX deferred (external-only). STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued prebind/recovery + relational + deploy scope, decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `76e609065` (R6 final envelope).
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha redeployed; no new migration. LANDED: client UuidV7 occurrence before first create POST; uncertain create blocks blind resend; remount/retry same id; explicit new parcel only for new occurrence; FE mount 24/24; disposable TB249R7 **3/3** (+ adjacent R6 4/4) then cleaned. Authorized Manual+payment_locked. LIVE TIPAX deferred. R6 Evidence-SHA interim vs final envelope reconciled append-only. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `76e609065`. Ambiguous create-outcome / in-flight marker gaps closed by 249-R8. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
 

@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Field, Input } from "../../design-system/primitives/core";
 import { authoringMessages } from "../admin-shipping-authoring/messages/authoring-messages.ts";
 import { buildCarrierShipmentCreateBody } from "./build-carrier-shipment-create-body.ts";
+import {
+  classifyCarrierShipmentCreateOutcome,
+  decodeAuthoritativeShipmentList,
+  isPreSideEffectRefusalCode,
+  resolveExactOccurrenceFromList,
+} from "./classify-carrier-shipment-create-outcome.ts";
 import { ensurePackageDispatchOccurrence } from "./mint-package-dispatch-occurrence.ts";
 import {
   decodeCapability,
@@ -20,6 +26,11 @@ import {
 import { resolveRetainedPackageDispatchId } from "./retain-package-dispatch-occurrence.ts";
 
 export { buildCarrierShipmentCreateBody } from "./build-carrier-shipment-create-body.ts";
+export {
+  classifyCarrierShipmentCreateOutcome,
+  decodeAuthoritativeShipmentList,
+  resolveExactOccurrenceFromList,
+} from "./classify-carrier-shipment-create-outcome.ts";
 export { ensurePackageDispatchOccurrence, mintPackageDispatchOccurrenceId } from "./mint-package-dispatch-occurrence.ts";
 export { decodeCapability, decodeShipment, isCarrierApiGroup, normalizeShipmentState } from "./order-group-carrier-execution-decode.ts";
 export { resolveRetainedPackageDispatchId } from "./retain-package-dispatch-occurrence.ts";
@@ -42,14 +53,19 @@ export function OrderGroupCarrierExecution({
   checkoutId,
   apiPrefix,
   requestHeaders,
+  ownerContextKey,
   testIdPrefix = "order-group-carrier-execution",
 }: {
   checkoutId: string;
   apiPrefix: "/v1/admin" | "/v1/seller";
   requestHeaders: () => Record<string, string>;
+  /** Authenticated owner/context key for session locator scoping. Fail closed when absent. */
+  ownerContextKey?: string | null;
   testIdPrefix?: string;
 }) {
   const messages = authoringMessages("fa");
+  const ownerKey = typeof ownerContextKey === "string" ? ownerContextKey.trim() : "";
+  const ownerSafe = ownerKey.length > 0 ? ownerKey : null;
   const [capabilities, setCapabilities] = useState<readonly CapabilityRow[]>([]);
   const [shipments, setShipments] = useState<readonly ShipmentView[]>([]);
   const [actionStatus, setActionStatus] = useState("");
@@ -67,7 +83,7 @@ export function OrderGroupCarrierExecution({
   const [packageByGroup, setPackageByGroup] = useState<Record<string, PackageDraft>>({});
   /** Parcel occurrence locator (client UuidV7 prebind or server-held) retained across retry / remount. */
   const [packageDispatchIdByGroup, setPackageDispatchIdByGroup] = useState<Record<string, string>>({});
-  /** Uncertain create: response lost / ambiguous — block blind resend until explicit reconcile. */
+  /** Uncertain create: response lost / ambiguous — block blind resend until exact-occurrence resolve. */
   const [createUncertainByGroup, setCreateUncertainByGroup] = useState<Record<string, boolean>>({});
   const [shipmentsListOk, setShipmentsListOk] = useState(true);
 
@@ -136,6 +152,16 @@ export function OrderGroupCarrierExecution({
     [messages],
   );
 
+  const createRefusalMessage = useCallback(
+    (code: string | null) => {
+      if (code === "shipping.carrier.unconfigured") return messages.carrierUnconfigured;
+      if (code === "shipping.carrier.shipment.unsupported") return messages.carrierShipmentUnsupported;
+      if (code === "shipping.carrier.shipment.unknown") return messages.carrierShipmentUnknown;
+      return messages.carrierSaveFailed;
+    },
+    [messages],
+  );
+
   const syncBusy = useCallback((groupId: string, busy: boolean) => {
     if (busy) {
       inFlightRef.current.add(groupId);
@@ -150,8 +176,12 @@ export function OrderGroupCarrierExecution({
     });
   }, []);
 
-  const refresh = useCallback(async (signal?: AbortSignal): Promise<{ listOk: boolean }> => {
-    if (!checkoutId) return { listOk: false };
+  const refresh = useCallback(async (signal?: AbortSignal): Promise<{
+    listOk: boolean;
+    ships: readonly ShipmentView[];
+    capabilities: readonly CapabilityRow[];
+  }> => {
+    if (!checkoutId) return { listOk: false, ships: [], capabilities: [] };
     const seq = ++refreshSeqRef.current;
     setLoading(true);
     try {
@@ -161,7 +191,9 @@ export function OrderGroupCarrierExecution({
         fetch(`${apiPrefix}/shipping-services/shipments/capabilities?checkoutId=${query}`, { headers, signal }),
         fetch(`${apiPrefix}/shipping-services/shipments?checkoutId=${query}`, { headers, signal }),
       ]);
-      if (seq !== refreshSeqRef.current) return { listOk: shipmentsListOkRef.current };
+      if (seq !== refreshSeqRef.current) {
+        return { listOk: shipmentsListOkRef.current, ships: [], capabilities: [] };
+      }
       const capPayload = await readJson(capRes);
       const shipPayload = await readJson(shipRes);
       if (!capRes.ok) {
@@ -172,7 +204,7 @@ export function OrderGroupCarrierExecution({
         );
         shipmentsListOkRef.current = false;
         setShipmentsListOk(false);
-        return { listOk: false };
+        return { listOk: false, ships: [], capabilities: [] };
       }
       setLoadError(null);
       const caps = (Array.isArray(capPayload) ? capPayload : [])
@@ -192,14 +224,11 @@ export function OrderGroupCarrierExecution({
         }
         return next;
       });
-      const listOk = shipRes.ok;
+      const listDecoded = decodeAuthoritativeShipmentList(shipRes.ok, shipPayload);
+      const listOk = listDecoded.ok;
+      const ships = listDecoded.ok ? listDecoded.ships : [];
       shipmentsListOkRef.current = listOk;
       setShipmentsListOk(listOk);
-      const ships = listOk
-        ? (Array.isArray(shipPayload) ? shipPayload : [])
-            .map(decodeShipment)
-            .filter((row): row is ShipmentView => row !== null)
-        : [];
       if (!listOk) {
         setActionStatus(messages.carrierShipmentListFailed);
       } else {
@@ -210,7 +239,7 @@ export function OrderGroupCarrierExecution({
       const nextUncertain: Record<string, boolean> = { ...createUncertainRef.current };
       for (const row of caps) {
         const groupId = row.shippingGroupId;
-        const stored = readParcelOccurrenceLocator(checkoutId, groupId);
+        const stored = readParcelOccurrenceLocator(ownerSafe, checkoutId, groupId);
         const seededCurrent =
           (typeof prevIds[groupId] === "string" && prevIds[groupId].trim().length > 0
             ? prevIds[groupId]
@@ -236,46 +265,53 @@ export function OrderGroupCarrierExecution({
           createUncertain: priorUncertain,
           listReadOk: listOk,
         });
-        // Uncertain survives remount/auto-refresh until explicit reconcile — list failure is not required.
+        // Auto-refresh never clears uncertainty — only exact-occurrence reconcile / typed refusal / success.
         const stillUncertain = priorUncertain;
         if (stillUncertain) nextUncertain[groupId] = true;
         else delete nextUncertain[groupId];
         if (retained) {
           nextIds[groupId] = retained;
-          writeParcelOccurrenceLocator(checkoutId, groupId, {
+          writeParcelOccurrenceLocator(ownerSafe, checkoutId, groupId, {
             occurrenceId: retained,
             uncertain: stillUncertain,
           });
         } else if (stillUncertain && seededCurrent) {
-          // Never drop a prebound locator while uncertain, even if Succeeded+canCreate would clear.
           nextIds[groupId] = seededCurrent;
-          writeParcelOccurrenceLocator(checkoutId, groupId, {
+          writeParcelOccurrenceLocator(ownerSafe, checkoutId, groupId, {
             occurrenceId: seededCurrent,
             uncertain: true,
           });
+        } else if (!listOk && seededCurrent) {
+          // Failed/invalid list: retain locator and block replacement mint.
+          nextIds[groupId] = seededCurrent;
+          writeParcelOccurrenceLocator(ownerSafe, checkoutId, groupId, {
+            occurrenceId: seededCurrent,
+            uncertain: priorUncertain,
+          });
+          if (priorUncertain) nextUncertain[groupId] = true;
         } else {
           delete nextIds[groupId];
-          clearParcelOccurrenceLocator(checkoutId, groupId);
+          clearParcelOccurrenceLocator(ownerSafe, checkoutId, groupId);
         }
       }
       packageDispatchIdRef.current = nextIds;
       createUncertainRef.current = nextUncertain;
       setPackageDispatchIdByGroup(nextIds);
       setCreateUncertainByGroup(nextUncertain);
-      return { listOk };
+      return { listOk, ships, capabilities: caps };
     } catch (err) {
       if ((err as { name?: string }).name !== "AbortError" && seq === refreshSeqRef.current) {
         setLoadError(messages.carrierSaveFailed);
         shipmentsListOkRef.current = false;
         setShipmentsListOk(false);
       }
-      return { listOk: false };
+      return { listOk: false, ships: [], capabilities: [] };
     } finally {
       if (seq === refreshSeqRef.current) {
         setLoading(false);
       }
     }
-  }, [apiPrefix, checkoutId, messages]);
+  }, [apiPrefix, checkoutId, messages, ownerSafe]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -302,6 +338,9 @@ export function OrderGroupCarrierExecution({
     const payload = await readJson(response);
     if (!response.ok) {
       const code = errorCode(payload);
+      if (response.status >= 500) {
+        return { error: messages.carrierSaveFailed, packageDispatchId: null, outcome: "unknown" };
+      }
       if (code === "shipping.carrier.unconfigured") {
         return { error: messages.carrierUnconfigured, packageDispatchId: null, outcome: "refused" };
       }
@@ -311,15 +350,18 @@ export function OrderGroupCarrierExecution({
       if (code === "shipping.carrier.shipment.unknown") {
         return { error: messages.carrierShipmentUnknown, packageDispatchId: null, outcome: "unknown" };
       }
-      if (code === "shipping.carrier.shipment.intent_conflict") {
+      if (isPreSideEffectRefusalCode(code)) {
         return { error: messages.carrierSaveFailed, packageDispatchId: null, outcome: "refused" };
       }
-      return { error: messages.carrierSaveFailed, packageDispatchId: null, outcome: "refused" };
+      return { error: messages.carrierSaveFailed, packageDispatchId: null, outcome: "unknown" };
     }
     const decoded = decodeShipment(payload);
+    if (!decoded) {
+      return { error: messages.carrierSaveFailed, packageDispatchId: null, outcome: "unknown" };
+    }
     return {
       error: null,
-      packageDispatchId: decoded?.packageDispatchId ?? null,
+      packageDispatchId: decoded.packageDispatchId ?? null,
       outcome: "succeeded",
     };
   }
@@ -329,7 +371,7 @@ export function OrderGroupCarrierExecution({
     packageDispatchIdRef.current = { ...packageDispatchIdRef.current, [groupId]: occurrenceId };
     setCreateUncertainByGroup(createUncertainRef.current);
     setPackageDispatchIdByGroup(packageDispatchIdRef.current);
-    writeParcelOccurrenceLocator(checkoutId, groupId, { occurrenceId, uncertain: true });
+    writeParcelOccurrenceLocator(ownerSafe, checkoutId, groupId, { occurrenceId, uncertain: true });
   }
 
   function clearCreateUncertain(groupId: string, occurrenceId: string | null) {
@@ -338,20 +380,101 @@ export function OrderGroupCarrierExecution({
     createUncertainRef.current = nextUncertain;
     setCreateUncertainByGroup(nextUncertain);
     if (occurrenceId) {
-      writeParcelOccurrenceLocator(checkoutId, groupId, { occurrenceId, uncertain: false });
+      writeParcelOccurrenceLocator(ownerSafe, checkoutId, groupId, { occurrenceId, uncertain: false });
     } else {
-      clearParcelOccurrenceLocator(checkoutId, groupId);
+      clearParcelOccurrenceLocator(ownerSafe, checkoutId, groupId);
     }
+  }
+
+  async function reconcileGroup(groupId: string) {
+    if (inFlightRef.current.has(groupId)) return;
+    syncBusy(groupId, true);
+    try {
+      const result = await refresh();
+      if (!result.listOk) {
+        setActionStatus(messages.carrierShipmentListFailed);
+        return;
+      }
+      const expected =
+        packageDispatchIdRef.current[groupId]
+        ?? packageDispatchIdByGroup[groupId]
+        ?? readParcelOccurrenceLocator(ownerSafe, checkoutId, groupId)?.occurrenceId
+        ?? null;
+      if (!expected) {
+        // No locator to resolve — do not invent success or mint replacement.
+        setActionStatus(messages.carrierCreateReconcileHint);
+        return;
+      }
+      const match = resolveExactOccurrenceFromList({
+        ships: result.ships,
+        occurrenceId: expected,
+        shippingGroupId: groupId,
+      });
+      if (!match) {
+        // Absence ≠ resolved / new occurrence permission — keep locator + uncertainty.
+        markCreateUncertain(groupId, expected);
+        setActionStatus(messages.carrierCreateOutcomeUncertain);
+        return;
+      }
+      const cap = result.capabilities.find((row) => row.shippingGroupId === groupId);
+      const mayMintReplacement =
+        (match.state === "Succeeded" || match.state === "Failed") && cap?.canCreate === true;
+      if (mayMintReplacement) {
+        // Confirmed terminal occurrence + remaining capacity → drop locator so next Create is a new parcel.
+        const nextIds = { ...packageDispatchIdRef.current };
+        delete nextIds[groupId];
+        packageDispatchIdRef.current = nextIds;
+        setPackageDispatchIdByGroup(nextIds);
+        clearCreateUncertain(groupId, null);
+      } else {
+        packageDispatchIdRef.current = {
+          ...packageDispatchIdRef.current,
+          [groupId]: expected,
+        };
+        setPackageDispatchIdByGroup(packageDispatchIdRef.current);
+        clearCreateUncertain(groupId, expected);
+      }
+      // Re-run retain with uncertainty cleared for Pending/Unknown / list sync.
+      await refresh();
+      setActionStatus(messages.carrierCreateReconcile);
+    } catch {
+      setActionStatus(messages.carrierShipmentListFailed);
+    } finally {
+      syncBusy(groupId, false);
+    }
+  }
+
+  function groupNeedsReconcileSurface(
+    group: CapabilityRow,
+    groupShipments: readonly ShipmentView[],
+  ): boolean {
+    if (createUncertainByGroup[group.shippingGroupId] === true) return true;
+    if (!shipmentsListOk) return true;
+    const open = groupShipments.find((s) => s.state === "Pending" || s.state === "Unknown");
+    if (open) return true;
+    const latest = group.latestCreateOperation;
+    if (latest?.state === "Pending" || latest?.state === "Unknown") return true;
+    return false;
   }
 
   if (loadError) {
     return (
       <section
-        className="overflow-hidden rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-900"
+        className="space-y-2 overflow-hidden rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-900"
         data-testid={`${testIdPrefix}-error`}
         dir="rtl"
       >
-        {loadError}
+        <p>{loadError}</p>
+        <button
+          type="button"
+          className="min-h-11 rounded-lg border border-red-300 bg-white px-3 text-xs font-bold text-red-900"
+          data-testid={`${testIdPrefix}-read-retry`}
+          onClick={() => {
+            void refresh();
+          }}
+        >
+          {messages.carrierReadRetry}
+        </button>
       </section>
     );
   }
@@ -401,6 +524,9 @@ export function OrderGroupCarrierExecution({
           const groupShipments = shipments.filter((s) => s.shippingGroupId === group.shippingGroupId);
           const busy = busyLocks[group.shippingGroupId] === true;
           const primaryBlock = group.ineligibilityReasonCode ?? group.blockReasonCodes[0] ?? null;
+          const uncertain = createUncertainByGroup[group.shippingGroupId] === true;
+          const needsReconcile = groupNeedsReconcileSurface(group, groupShipments);
+          const showCreate = group.canCreate && !uncertain;
           return (
             <article
               key={group.shippingGroupId}
@@ -604,7 +730,49 @@ export function OrderGroupCarrierExecution({
                   ) : null}
                 </div>
               ) : null}
-              {group.canCreate ? (
+              <input
+                type="hidden"
+                data-testid={`${testIdPrefix}-package-dispatch-id-${group.shippingGroupId}`}
+                value={packageDispatchIdByGroup[group.shippingGroupId] ?? ""}
+                readOnly
+              />
+              {needsReconcile ? (
+                <div
+                  className="mt-2 space-y-2"
+                  data-testid={
+                    uncertain
+                      ? `${testIdPrefix}-create-uncertain-${group.shippingGroupId}`
+                      : `${testIdPrefix}-reconcile-surface-${group.shippingGroupId}`
+                  }
+                >
+                  {uncertain ? (
+                    <>
+                      <p className="text-[11px] font-semibold text-amber-900">
+                        {messages.carrierCreateOutcomeUncertain}
+                      </p>
+                      <p className="text-[11px] text-gray-500">{messages.carrierCreateReconcileHint}</p>
+                    </>
+                  ) : !shipmentsListOk ? (
+                    <p className="text-[11px] font-semibold text-amber-900">
+                      {messages.carrierShipmentListFailed}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-gray-500">{messages.carrierCreateReconcileHint}</p>
+                  )}
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-lg border px-3 text-xs font-bold"
+                    disabled={busy}
+                    data-testid={`${testIdPrefix}-reconcile-${group.shippingGroupId}`}
+                    onClick={() => {
+                      void reconcileGroup(group.shippingGroupId);
+                    }}
+                  >
+                    {messages.carrierCreateReconcile}
+                  </button>
+                </div>
+              ) : null}
+              {showCreate ? (
                 <div className="mt-2 space-y-2">
                   {!group.allowPackageCompletion ? (
                     <div className="grid gap-2 md:grid-cols-4" data-testid={`${testIdPrefix}-dispatch-package-${group.shippingGroupId}`}>
@@ -659,134 +827,128 @@ export function OrderGroupCarrierExecution({
                       </Field>
                     </div>
                   ) : null}
-                  <input
-                    type="hidden"
-                    data-testid={`${testIdPrefix}-package-dispatch-id-${group.shippingGroupId}`}
-                    value={packageDispatchIdByGroup[group.shippingGroupId] ?? ""}
-                    readOnly
-                  />
-                  {createUncertainByGroup[group.shippingGroupId] ? (
-                    <div className="space-y-2" data-testid={`${testIdPrefix}-create-uncertain-${group.shippingGroupId}`}>
-                      <p className="text-[11px] font-semibold text-amber-900">
-                        {messages.carrierCreateOutcomeUncertain}
-                      </p>
-                      <p className="text-[11px] text-gray-500">{messages.carrierCreateReconcileHint}</p>
-                      <button
-                        type="button"
-                        className="min-h-11 rounded-lg border px-3 text-xs font-bold"
-                        disabled={busy}
-                        data-testid={`${testIdPrefix}-reconcile-${group.shippingGroupId}`}
-                        onClick={async () => {
-                          const groupId = group.shippingGroupId;
-                          if (inFlightRef.current.has(groupId)) return;
-                          syncBusy(groupId, true);
-                          try {
-                            const result = await refresh();
-                            if (!result.listOk) {
-                              setActionStatus(messages.carrierShipmentListFailed);
-                              return;
-                            }
-                            const kept =
-                              packageDispatchIdRef.current[groupId]
-                              ?? packageDispatchIdByGroup[groupId]
-                              ?? null;
-                            clearCreateUncertain(groupId, kept);
-                            setActionStatus(messages.carrierCreateReconcile);
-                          } catch {
-                            setActionStatus(messages.carrierShipmentListFailed);
-                          } finally {
-                            syncBusy(groupId, false);
-                          }
-                        }}
-                      >
-                        {messages.carrierCreateReconcile}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="min-h-11 rounded-lg bg-[#2563EB] px-3 text-xs font-bold text-white disabled:opacity-50"
-                      disabled={busy}
-                      data-testid={`${testIdPrefix}-create-${group.shippingGroupId}`}
-                      onClick={async () => {
-                        const groupId = group.shippingGroupId;
-                        if (inFlightRef.current.has(groupId)) return;
-                        if (createUncertainRef.current[groupId]) return;
-                        syncBusy(groupId, true);
-                        const occurrence = ensurePackageDispatchOccurrence(
-                          packageDispatchIdRef.current[groupId]
-                            ?? packageDispatchIdByGroup[groupId]
-                            ?? readParcelOccurrenceLocator(checkoutId, groupId)?.occurrenceId,
-                        );
-                        packageDispatchIdRef.current = {
-                          ...packageDispatchIdRef.current,
-                          [groupId]: occurrence,
-                        };
-                        setPackageDispatchIdByGroup(packageDispatchIdRef.current);
-                        writeParcelOccurrenceLocator(checkoutId, groupId, {
-                          occurrenceId: occurrence,
-                          uncertain: false,
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-lg bg-[#2563EB] px-3 text-xs font-bold text-white disabled:opacity-50"
+                    disabled={busy || !ownerSafe}
+                    data-testid={`${testIdPrefix}-create-${group.shippingGroupId}`}
+                    onClick={async () => {
+                      const groupId = group.shippingGroupId;
+                      if (inFlightRef.current.has(groupId)) return;
+                      if (createUncertainRef.current[groupId]) return;
+                      if (!ownerSafe) {
+                        setActionStatus(messages.carrierExecutionBlockOwnerMissing);
+                        return;
+                      }
+                      syncBusy(groupId, true);
+                      const occurrence = ensurePackageDispatchOccurrence(
+                        packageDispatchIdRef.current[groupId]
+                          ?? packageDispatchIdByGroup[groupId]
+                          ?? readParcelOccurrenceLocator(ownerSafe, checkoutId, groupId)?.occurrenceId,
+                      );
+                      packageDispatchIdRef.current = {
+                        ...packageDispatchIdRef.current,
+                        [groupId]: occurrence,
+                      };
+                      setPackageDispatchIdByGroup(packageDispatchIdRef.current);
+                      // Persist in-flight/unresolved BEFORE POST can leave the browser.
+                      markCreateUncertain(groupId, occurrence);
+                      try {
+                        const executable = group.executableLines ?? [];
+                        const lines = executable
+                          .filter((line) => typeof line.orderLineId === "string" && Number(line.remainingPackedQuantity) > 0)
+                          .map((line) => ({
+                            orderLineId: line.orderLineId,
+                            quantity: line.remainingPackedQuantity,
+                          }));
+                        const weight = Number(pkg.weight);
+                        const length = Number(pkg.length);
+                        const width = Number(pkg.width);
+                        const height = Number(pkg.height);
+                        const body = buildCarrierShipmentCreateBody({
+                          checkoutId,
+                          shippingGroupId: groupId,
+                          lines,
+                          executableLines: executable,
+                          package:
+                            weight > 0 && length > 0 && width > 0 && height > 0
+                              ? {
+                                  weightGrams: weight,
+                                  lengthCentimeters: length,
+                                  widthCentimeters: width,
+                                  heightCentimeters: height,
+                                }
+                              : null,
+                          packageDispatchId: occurrence,
                         });
+                        delete body.partialWithoutPackage;
+                        let response: Response;
+                        let payload: unknown;
                         try {
-                          const executable = group.executableLines ?? [];
-                          const lines = executable
-                            .filter((line) => typeof line.orderLineId === "string" && Number(line.remainingPackedQuantity) > 0)
-                            .map((line) => ({
-                              orderLineId: line.orderLineId,
-                              quantity: line.remainingPackedQuantity,
-                            }));
-                          const weight = Number(pkg.weight);
-                          const length = Number(pkg.length);
-                          const width = Number(pkg.width);
-                          const height = Number(pkg.height);
-                          const body = buildCarrierShipmentCreateBody({
-                            checkoutId,
-                            shippingGroupId: groupId,
-                            lines,
-                            executableLines: executable,
-                            package:
-                              weight > 0 && length > 0 && width > 0 && height > 0
-                                ? {
-                                    weightGrams: weight,
-                                    lengthCentimeters: length,
-                                    widthCentimeters: width,
-                                    heightCentimeters: height,
-                                  }
-                                : null,
-                            packageDispatchId: occurrence,
+                          response = await fetch(`${apiPrefix}/shipping-services/shipments`, {
+                            method: "POST",
+                            headers: {
+                              ...requestHeaders(),
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(body),
                           });
-                          delete body.partialWithoutPackage;
-                          const result = await post(`${apiPrefix}/shipping-services/shipments`, body);
-                          if (result.outcome === "unknown") {
-                            markCreateUncertain(groupId, occurrence);
-                            setActionStatus(result.error ?? messages.carrierCreateOutcomeUncertain);
-                            return;
-                          }
-                          if (result.packageDispatchId) {
-                            packageDispatchIdRef.current = {
-                              ...packageDispatchIdRef.current,
-                              [groupId]: result.packageDispatchId,
-                            };
-                            setPackageDispatchIdByGroup(packageDispatchIdRef.current);
-                            writeParcelOccurrenceLocator(checkoutId, groupId, {
-                              occurrenceId: result.packageDispatchId,
-                              uncertain: false,
-                            });
-                          }
-                          clearCreateUncertain(groupId, result.packageDispatchId ?? occurrence);
-                          setActionStatus(result.error ?? messages.carrierAccountSaved);
-                          if (!result.error) await refresh();
+                          payload = await readJson(response);
                         } catch {
                           markCreateUncertain(groupId, occurrence);
                           setActionStatus(messages.carrierCreateOutcomeUncertain);
-                        } finally {
-                          syncBusy(groupId, false);
+                          return;
                         }
-                      }}
-                    >
-                      {messages.carrierShipmentCreate}
-                    </button>
-                  )}
+                        const classified = classifyCarrierShipmentCreateOutcome({
+                          httpStatus: response.status,
+                          errorCode: errorCode(payload),
+                          payload,
+                          expectedOccurrenceId: occurrence,
+                          expectedShippingGroupId: groupId,
+                        });
+                        if (classified.outcome === "unknown") {
+                          markCreateUncertain(groupId, occurrence);
+                          setActionStatus(
+                            classified.refusalCode === "shipping.carrier.shipment.unknown"
+                              ? messages.carrierShipmentUnknown
+                              : messages.carrierCreateOutcomeUncertain,
+                          );
+                          return;
+                        }
+                        if (classified.outcome === "refused") {
+                          // Known typed pre-side-effect refusal resolves uncertainty; form stays editable.
+                          clearCreateUncertain(groupId, occurrence);
+                          packageDispatchIdRef.current = {
+                            ...packageDispatchIdRef.current,
+                            [groupId]: occurrence,
+                          };
+                          setPackageDispatchIdByGroup(packageDispatchIdRef.current);
+                          writeParcelOccurrenceLocator(ownerSafe, checkoutId, groupId, {
+                            occurrenceId: occurrence,
+                            uncertain: false,
+                          });
+                          setActionStatus(createRefusalMessage(classified.refusalCode));
+                          return;
+                        }
+                        clearCreateUncertain(groupId, classified.packageDispatchId ?? occurrence);
+                        packageDispatchIdRef.current = {
+                          ...packageDispatchIdRef.current,
+                          [groupId]: classified.packageDispatchId ?? occurrence,
+                        };
+                        setPackageDispatchIdByGroup(packageDispatchIdRef.current);
+                        writeParcelOccurrenceLocator(ownerSafe, checkoutId, groupId, {
+                          occurrenceId: classified.packageDispatchId ?? occurrence,
+                          uncertain: false,
+                        });
+                        setActionStatus(messages.carrierAccountSaved);
+                        await refresh();
+                      } finally {
+                        syncBusy(groupId, false);
+                      }
+                    }}
+                  >
+                    {messages.carrierShipmentCreate}
+                  </button>
                 </div>
               ) : null}
               {groupShipments.length === 0 ? (

@@ -426,6 +426,7 @@ const fa = {
     "نتیجهٔ ایجاد محموله مبهم است؛ تا آشتی وضعیت، ارسال دوباره مسدود است.",
   carrierCreateReconcile: "آشتی وضعیت محموله",
   carrierCreateReconcileHint: "فهرست و قابلیت‌ها را دوباره بخوانید؛ شناسهٔ بسته حفظ می‌شود.",
+  carrierReadRetry: "تلاش مجدد خواندن",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "افزودن ردیف هزینه",
@@ -870,6 +871,7 @@ const en: Record<AuthoringMessageKey, string> = {
     "Create outcome is uncertain; resubmit is blocked until you reconcile status.",
   carrierCreateReconcile: "Reconcile shipment status",
   carrierCreateReconcileHint: "Re-read shipments and capabilities; the parcel occurrence is kept.",
+  carrierReadRetry: "Retry read",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "Add cost row",

@@ -839,6 +839,14 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       <AdminOrderGroupCarrierExecution
         checkoutId={checkoutId}
         apiPrefix="/v1/admin"
+        ownerContextKey={(() => {
+          const actor =
+            typeof window === "undefined"
+              ? DEFAULT_ADMIN_ACTOR_ID
+              : window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
+          const trimmed = typeof actor === "string" ? actor.trim() : "";
+          return trimmed.length > 0 ? `admin:${trimmed}` : null;
+        })()}
         requestHeaders={() => {
           const actor =
             typeof window === "undefined"

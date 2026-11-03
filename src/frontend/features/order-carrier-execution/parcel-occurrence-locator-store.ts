@@ -1,6 +1,7 @@
 /**
- * Client-side parcel occurrence locator/hint scoped to checkout + shipping group.
+ * Client-side parcel occurrence locator/hint scoped to owner + checkout + shipping group.
  * Never authorization — server still validates owner/checkout/group binding.
+ * Fail closed: without a safe owner context key, do not read or write persisted hints.
  */
 
 export type ParcelOccurrenceLocatorHint = {
@@ -8,8 +9,18 @@ export type ParcelOccurrenceLocatorHint = {
   uncertain: boolean;
 };
 
-function storageKey(checkoutId: string, shippingGroupId: string): string {
-  return `tb.carrier.parcel-occurrence.v1:${checkoutId}:${shippingGroupId}`;
+function normalizeOwnerContextKey(ownerContextKey: string | null | undefined): string | null {
+  if (typeof ownerContextKey !== "string") return null;
+  const trimmed = ownerContextKey.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function storageKey(
+  ownerContextKey: string,
+  checkoutId: string,
+  shippingGroupId: string,
+): string {
+  return `tb.carrier.parcel-occurrence.v1:${ownerContextKey}:${checkoutId}:${shippingGroupId}`;
 }
 
 function canUseSessionStorage(): boolean {
@@ -21,12 +32,14 @@ function canUseSessionStorage(): boolean {
 }
 
 export function readParcelOccurrenceLocator(
+  ownerContextKey: string | null | undefined,
   checkoutId: string,
   shippingGroupId: string,
 ): ParcelOccurrenceLocatorHint | null {
-  if (!checkoutId || !shippingGroupId || !canUseSessionStorage()) return null;
+  const owner = normalizeOwnerContextKey(ownerContextKey);
+  if (!owner || !checkoutId || !shippingGroupId || !canUseSessionStorage()) return null;
   try {
-    const raw = sessionStorage.getItem(storageKey(checkoutId, shippingGroupId));
+    const raw = sessionStorage.getItem(storageKey(owner, checkoutId, shippingGroupId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<ParcelOccurrenceLocatorHint>;
     const occurrenceId = typeof parsed.occurrenceId === "string" ? parsed.occurrenceId.trim() : "";
@@ -38,16 +51,18 @@ export function readParcelOccurrenceLocator(
 }
 
 export function writeParcelOccurrenceLocator(
+  ownerContextKey: string | null | undefined,
   checkoutId: string,
   shippingGroupId: string,
   hint: ParcelOccurrenceLocatorHint,
 ): void {
-  if (!checkoutId || !shippingGroupId || !canUseSessionStorage()) return;
+  const owner = normalizeOwnerContextKey(ownerContextKey);
+  if (!owner || !checkoutId || !shippingGroupId || !canUseSessionStorage()) return;
   const occurrenceId = hint.occurrenceId.trim();
   if (!occurrenceId) return;
   try {
     sessionStorage.setItem(
-      storageKey(checkoutId, shippingGroupId),
+      storageKey(owner, checkoutId, shippingGroupId),
       JSON.stringify({ occurrenceId, uncertain: hint.uncertain === true }),
     );
   } catch {
@@ -55,10 +70,15 @@ export function writeParcelOccurrenceLocator(
   }
 }
 
-export function clearParcelOccurrenceLocator(checkoutId: string, shippingGroupId: string): void {
-  if (!checkoutId || !shippingGroupId || !canUseSessionStorage()) return;
+export function clearParcelOccurrenceLocator(
+  ownerContextKey: string | null | undefined,
+  checkoutId: string,
+  shippingGroupId: string,
+): void {
+  const owner = normalizeOwnerContextKey(ownerContextKey);
+  if (!owner || !checkoutId || !shippingGroupId || !canUseSessionStorage()) return;
   try {
-    sessionStorage.removeItem(storageKey(checkoutId, shippingGroupId));
+    sessionStorage.removeItem(storageKey(owner, checkoutId, shippingGroupId));
   } catch {
     /* ignore */
   }

@@ -18,8 +18,9 @@ import {
 } from "./test-dom-harness.ts";
 import { OrderGroupCarrierExecution } from "./order-group-carrier-execution.tsx";
 
-const CHECKOUT = "chk-249r7";
-const GROUP = "grp-249r7";
+const CHECKOUT = "chk-249r8";
+const GROUP = "grp-249r8";
+const OWNER = "admin:test-owner-249r8";
 const PREFIX = "order-group-carrier-execution";
 const OCCURRENCE_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const OP_A = "op-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -374,11 +375,12 @@ function installFetchFixture(options?: {
   };
 }
 
-async function mountCarrier() {
+async function mountCarrier(ownerContextKey: string | null = OWNER) {
   return mount(
     createElement(OrderGroupCarrierExecution, {
       checkoutId: CHECKOUT,
       apiPrefix: "/v1/admin",
+      ownerContextKey,
       requestHeaders: () => ({ Authorization: "Bearer test" }),
       testIdPrefix: PREFIX,
     }),
@@ -540,12 +542,15 @@ test("mount: Unknown track refusal and typed intent_conflict surface in status",
   }
 });
 
-test("mount: Pending occurrence retained across refresh; replay create posts same packageDispatchId", async () => {
+test("mount: Pending canCreate=false exposes reconcile; zero create calls", async () => {
   clearOccurrenceSession();
   const fx = installFetchFixture();
   const pendingId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
   fx.setCapability(
     readyCapability({
+      canCreate: false,
+      blockReasonCodes: ["operation_pending"],
+      ineligibilityReasonCode: "operation_pending",
       latestCreateOperation: {
         operationId: "op-pending",
         state: "Pending",
@@ -577,14 +582,11 @@ test("mount: Pending occurrence retained across refresh; replay create posts sam
       `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`,
     ) as HTMLInputElement;
     assert.equal(retained.value, pendingId);
-
-    fx.setCreateMode("replay");
-    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
-    await waitFor(() => fx.ledger.create === 1);
-    const createBody = fx.ledger.bodies.find((b) => (b as { kind?: string }).kind === "create") as {
-      body: Record<string, unknown>;
-    };
-    assert.equal(createBody.body.packageDispatchId, pendingId);
+    assert.ok(tree.container.querySelector(`[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
+    await click(q(tree.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    await waitFor(() => fx.ledger.shipmentsGet >= 2);
+    assert.equal(fx.ledger.create, 0, "Pending recovery must not substitute Create");
   } finally {
     await tree.unmount();
     fx.restore();
@@ -592,26 +594,19 @@ test("mount: Pending occurrence retained across refresh; replay create posts sam
   }
 });
 
-test("mount R7: lost HTTP after server accept → remount/retry same occurrence → no second allocation", async () => {
+test("mount R8-A: outstanding first POST → unmount/remount → reconcile exact occurrence; no replacement", async () => {
   clearOccurrenceSession();
   let acceptedOccurrence: string | null = null;
+  let releaseCreate: ((value: Response) => void) | null = null;
   let fx!: ReturnType<typeof installFetchFixture>;
   fx = installFetchFixture({
-    onCreate: (body, ledger) => {
+    onCreate: (body) => {
       const occurrence = String(body.packageDispatchId ?? "");
-      assert.match(occurrence, /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
-      if (!acceptedOccurrence) {
-        acceptedOccurrence = occurrence;
-        fx.applyServerAcceptedCreate(occurrence);
-        // Server accepted; HTTP response never reaches the client.
-        throw new TypeError("Failed to fetch");
-      }
-      // Retry / remount recovery with the same occurrence converges — no new provider/allocation.
-      const existing = fx.ships.find((s) => s.packageDispatchId === occurrence);
-      assert.ok(existing, "server already holds the occurrence");
-      assert.equal(occurrence, acceptedOccurrence);
-      ledger.bodies.push({ kind: "create-replay-observed", body });
-      return jsonResponse(200, existing);
+      acceptedOccurrence = occurrence;
+      fx.applyServerAcceptedCreate(occurrence);
+      return new Promise<Response>((resolve) => {
+        releaseCreate = resolve;
+      });
     },
   });
   fx.setCapability(readyCapability({ executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 2 }] }));
@@ -624,20 +619,16 @@ test("mount R7: lost HTTP after server accept → remount/retry same occurrence 
     await waitFor(() =>
       !!tree1.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`),
     );
-    assert.equal(fx.allocationCount, 1);
-    assert.equal(fx.providerCreates, 1);
     const hidden = q(
       tree1.container,
       `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`,
     ) as HTMLInputElement;
     assert.equal(hidden.value, acceptedOccurrence);
-    // Create control replaced by reconcile while uncertain.
     assert.equal(tree1.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
   } finally {
     await tree1.unmount();
   }
 
-  // Remount recovers the same locator from session and still blocks blind create.
   const tree2 = await mountCarrier();
   try {
     await waitFor(() =>
@@ -648,25 +639,282 @@ test("mount R7: lost HTTP after server accept → remount/retry same occurrence 
       `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`,
     ) as HTMLInputElement;
     assert.equal(hidden.value, acceptedOccurrence);
-
     await click(q(tree2.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
-    await waitFor(() => !!tree2.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
-    await click(q(tree2.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
-    await waitFor(() => fx.ledger.create === 2);
-    const second = fx.ledger.bodies.filter((b) => (b as { kind?: string }).kind === "create")[1] as {
-      body: Record<string, unknown>;
-    };
-    assert.equal(second.body.packageDispatchId, acceptedOccurrence);
-    assert.equal(fx.allocationCount, 1, "no second allocation after response-loss recovery");
-    assert.equal(fx.providerCreates, 1, "no second provider call");
+    await waitFor(() => {
+      const status = tree2.container.querySelector(`[data-testid="${PREFIX}-status"]`);
+      return (status?.textContent ?? "").includes("آشتی");
+    });
+    assert.equal(fx.ledger.create, 1, "reconcile must not post create");
+    assert.equal(fx.allocationCount, 1, "no replacement allocation");
+    assert.equal(fx.providerCreates, 1, "no replacement provider call");
+    assert.equal(
+      tree2.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`),
+      null,
+      "exact occurrence success clears uncertainty",
+    );
+    // Create may reappear for remaining qty, but must not auto-resend the resolved occurrence.
+    assert.equal(fx.ledger.create, 1);
   } finally {
     await tree2.unmount();
+    // Resolve abandoned in-flight create only after unmount so it cannot rewrite session hints.
+    if (releaseCreate && acceptedOccurrence) {
+      const row = fx.ships.find((s) => s.packageDispatchId === acceptedOccurrence);
+      releaseCreate(jsonResponse(200, row ?? {}));
+    }
     fx.restore();
     clearOccurrenceSession();
   }
 });
 
-test("mount R7: list fail after uncertain create blocks resubmit and keeps occurrence", async () => {
+test("mount R8-B: 500/network/malformed200/mismatch remain unresolved with original id", async () => {
+  clearOccurrenceSession();
+  const cases: Array<{
+    name: string;
+    seedServer: boolean;
+    onCreate: (body: Record<string, unknown>, fx: ReturnType<typeof installFetchFixture>) => Response | Promise<Response>;
+  }> = [
+    {
+      name: "http500-after-accept",
+      seedServer: true,
+      onCreate: (body, fx) => {
+        fx.applyServerAcceptedCreate(String(body.packageDispatchId ?? ""));
+        return jsonResponse(500, { errorCode: "server.boom" });
+      },
+    },
+    {
+      name: "http502-after-accept",
+      seedServer: true,
+      onCreate: (body, fx) => {
+        fx.applyServerAcceptedCreate(String(body.packageDispatchId ?? ""));
+        return jsonResponse(502, { errorCode: "bad.gateway" });
+      },
+    },
+    {
+      name: "network-loss",
+      seedServer: true,
+      onCreate: (body, fx) => {
+        fx.applyServerAcceptedCreate(String(body.packageDispatchId ?? ""));
+        throw new TypeError("Failed to fetch");
+      },
+    },
+    {
+      name: "malformed-200",
+      seedServer: false,
+      onCreate: () => jsonResponse(200, { totally: "wrong" }),
+    },
+    {
+      name: "mismatched-occurrence",
+      seedServer: false,
+      onCreate: () =>
+        jsonResponse(200, {
+          operationId: "op-other",
+          shippingGroupId: GROUP,
+          state: "Succeeded",
+          canTrack: true,
+          canCancel: false,
+          packageDispatchId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+          providerTrackingCode: "TRK-X",
+          providerStatus: "Created",
+          lastErrorCode: null,
+        }),
+    },
+  ];
+
+  for (const scenario of cases) {
+    clearOccurrenceSession();
+    let fx!: ReturnType<typeof installFetchFixture>;
+    fx = installFetchFixture({
+      onCreate: (body) => scenario.onCreate(body, fx),
+    });
+    fx.setCapability(readyCapability({ executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 1 }] }));
+    const tree = await mountCarrier();
+    try {
+      await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+      await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+      await waitFor(() =>
+        !!tree.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`),
+      );
+      const occurrence = (
+        q(tree.container, `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`) as HTMLInputElement
+      ).value;
+      assert.ok(occurrence.length > 0, scenario.name);
+      assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null, scenario.name);
+
+      if (!scenario.seedServer) {
+        // List has no exact occurrence → reconcile must preserve unresolved locator.
+        await click(q(tree.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+        await waitFor(() =>
+          !!tree.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`),
+        );
+        assert.equal(
+          (q(tree.container, `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`) as HTMLInputElement)
+            .value,
+          occurrence,
+          `${scenario.name} recovery retains original id`,
+        );
+        assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
+      } else {
+        // Authoritative list can later resolve the same id — never mint a replacement meanwhile.
+        assert.equal(
+          (q(tree.container, `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`) as HTMLInputElement)
+            .value,
+          occurrence,
+          `${scenario.name} keeps original id while unresolved`,
+        );
+      }
+    } finally {
+      await tree.unmount();
+      fx.restore();
+      clearOccurrenceSession();
+    }
+  }
+});
+
+test("mount R8-C: Unknown/Pending canCreate=false reconcile; read500/malformed200 stay blocked with retry", async () => {
+  clearOccurrenceSession();
+  const unknownId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+  let listMode: "ok" | "http500" | "malformed200" = "ok";
+  const fx = installFetchFixture({
+    onShipmentsGet: () => {
+      if (listMode === "http500") return jsonResponse(500, { errorCode: "boom" });
+      if (listMode === "malformed200") return jsonResponse(200, { not: "array" });
+      return null;
+    },
+  });
+  fx.setCapability(
+    readyCapability({
+      canCreate: false,
+      blockReasonCodes: ["operation_unknown"],
+      ineligibilityReasonCode: "operation_unknown",
+      latestCreateOperation: {
+        operationId: "op-unknown",
+        state: "Unknown",
+        packageDispatchId: unknownId,
+      },
+    }),
+  );
+  fx.setShipments([
+    {
+      operationId: "op-unknown",
+      shippingGroupId: GROUP,
+      state: "Unknown",
+      canTrack: false,
+      canCancel: false,
+      packageDispatchId: unknownId,
+      providerTrackingCode: null,
+      providerStatus: null,
+      lastErrorCode: "shipping.carrier.shipment.unknown",
+    },
+  ]);
+  const tree = await mountCarrier();
+  try {
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
+    const createsBefore = fx.ledger.create;
+    await click(q(tree.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    await waitFor(() => fx.ledger.shipmentsGet >= 2);
+    assert.equal(fx.ledger.create, createsBefore);
+
+    listMode = "http500";
+    await click(q(tree.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    await waitFor(() => {
+      const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
+      return (status?.textContent ?? "").includes("فهرست محموله‌ها");
+    });
+    assert.ok(tree.container.querySelector(`[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
+
+    listMode = "malformed200";
+    await click(q(tree.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    await waitFor(() => fx.ledger.shipmentsGet >= 4);
+    assert.ok(tree.container.querySelector(`[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
+    assert.equal(fx.ledger.create, 0);
+  } finally {
+    await tree.unmount();
+    fx.restore();
+    clearOccurrenceSession();
+  }
+});
+
+test("mount R8-C loadError exposes explicit read retry", async () => {
+  clearOccurrenceSession();
+  let failCaps = true;
+  const original = globalThis.fetch;
+  let capGets = 0;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(typeof input === "string" || input instanceof URL ? input : input.url);
+    if (url.includes("/shipments/capabilities")) {
+      capGets += 1;
+      if (failCaps) return jsonResponse(500, { errorCode: "boom" });
+      return jsonResponse(200, [capabilityDto(readyCapability())]);
+    }
+    if (url.includes("/shipments?")) return jsonResponse(200, []);
+    return jsonResponse(404, {});
+  }) as typeof fetch;
+  const tree = await mountCarrier();
+  try {
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-error"]`));
+    assert.ok(tree.container.querySelector(`[data-testid="${PREFIX}-read-retry"]`));
+    failCaps = false;
+    await click(q(tree.container, `[data-testid="${PREFIX}-read-retry"]`));
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}"]`));
+    assert.ok(capGets >= 2);
+  } finally {
+    await tree.unmount();
+    globalThis.fetch = original;
+    clearOccurrenceSession();
+  }
+});
+
+test("mount R8-D: typed pre-side-effect refusal editable; success then distinct new parcel", async () => {
+  clearOccurrenceSession();
+  const fx = installFetchFixture();
+  fx.setCapability(readyCapability({ executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 2 }] }));
+  fx.setCreateMode("intent_conflict");
+  const tree = await mountCarrier();
+  try {
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() => fx.ledger.create === 1);
+    await waitFor(() => {
+      const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
+      return (status?.textContent ?? "").length > 0;
+    });
+    // Typed refusal resolves uncertainty — create remains editable (not stuck on reconcile-only).
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`), null);
+
+    fx.setCreateMode("success");
+    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() => fx.ledger.create === 2);
+    await waitFor(() => {
+      const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
+      return (status?.textContent ?? "").includes("حساب حامل ذخیره شد");
+    });
+    const firstSuccess = fx.ledger.bodies.filter((b) => (b as { kind?: string }).kind === "create")[1] as {
+      body: Record<string, unknown>;
+    };
+    const firstId = String(firstSuccess.body.packageDispatchId);
+
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() => fx.ledger.create === 3);
+    const creates = fx.ledger.bodies.filter((b) => (b as { kind?: string }).kind === "create") as Array<{
+      body: Record<string, unknown>;
+    }>;
+    const secondId = String(creates[2].body.packageDispatchId);
+    assert.notEqual(secondId, firstId);
+    assert.equal(fx.allocationCount, 2);
+    assert.equal(fx.providerCreates, 2);
+  } finally {
+    await tree.unmount();
+    fx.restore();
+    clearOccurrenceSession();
+  }
+});
+
+test("mount R7 retained: list fail after uncertain create blocks resubmit and keeps occurrence", async () => {
   clearOccurrenceSession();
   let listFail = false;
   let fx!: ReturnType<typeof installFetchFixture>;
@@ -697,7 +945,6 @@ test("mount R7: list fail after uncertain create blocks resubmit and keeps occur
       const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
       return (status?.textContent ?? "").includes("فهرست محموله‌ها");
     });
-    // Still uncertain — create remains blocked; occurrence unchanged.
     assert.ok(tree.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`));
     assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
     assert.equal(
@@ -705,42 +952,6 @@ test("mount R7: list fail after uncertain create blocks resubmit and keeps occur
         .value,
       occurrence,
     );
-  } finally {
-    await tree.unmount();
-    fx.restore();
-    clearOccurrenceSession();
-  }
-});
-
-test("mount R7: explicit second parcel identical payload mints a different occurrence", async () => {
-  clearOccurrenceSession();
-  const fx = installFetchFixture();
-  fx.setCapability(readyCapability({ executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 2 }] }));
-  const tree = await mountCarrier();
-  try {
-    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
-    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
-    await waitFor(() => fx.ledger.create === 1);
-    await waitFor(() => {
-      const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
-      return (status?.textContent ?? "").includes("حساب حامل ذخیره شد");
-    });
-    const first = fx.ledger.bodies.find((b) => (b as { kind?: string }).kind === "create") as {
-      body: Record<string, unknown>;
-    };
-    const firstId = String(first.body.packageDispatchId);
-    assert.equal(fx.allocationCount, 1);
-
-    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
-    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
-    await waitFor(() => fx.ledger.create === 2);
-    const creates = fx.ledger.bodies.filter((b) => (b as { kind?: string }).kind === "create") as Array<{
-      body: Record<string, unknown>;
-    }>;
-    const secondId = String(creates[1].body.packageDispatchId);
-    assert.notEqual(secondId, firstId);
-    assert.equal(fx.allocationCount, 2);
-    assert.equal(fx.providerCreates, 2);
   } finally {
     await tree.unmount();
     fx.restore();

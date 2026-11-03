@@ -15,6 +15,11 @@ import {
   normalizeShipmentState,
 } from "./order-group-carrier-execution-decode.ts";
 import {
+  classifyCarrierShipmentCreateOutcome,
+  decodeAuthoritativeShipmentList,
+  resolveExactOccurrenceFromList,
+} from "./classify-carrier-shipment-create-outcome.ts";
+import {
   clearParcelOccurrenceLocator,
   readParcelOccurrenceLocator,
   writeParcelOccurrenceLocator,
@@ -24,6 +29,7 @@ import { resolveRetainedPackageDispatchId } from "./retain-package-dispatch-occu
 const dir = dirname(fileURLToPath(import.meta.url));
 const componentSource = readFileSync(join(dir, "order-group-carrier-execution.tsx"), "utf8");
 const decodeSource = readFileSync(join(dir, "order-group-carrier-execution-decode.ts"), "utf8");
+const classifySource = readFileSync(join(dir, "classify-carrier-shipment-create-outcome.ts"), "utf8");
 const adminPanel = readFileSync(
   join(dir, "../../app/admin/admin-order-items-shipping-panel.tsx"),
   "utf8",
@@ -130,7 +136,7 @@ test("mintPackageDispatchOccurrenceId is UuidV7 and ensure retains existing", ()
   assert.match(minted, /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
 });
 
-test("parcel occurrence locator store scopes checkout+group and retains uncertain hint", () => {
+test("parcel occurrence locator store scopes owner+checkout+group and fails closed without owner", () => {
   const memory = new Map<string, string>();
   const g = globalThis as typeof globalThis & { sessionStorage?: Storage };
   const previous = g.sessionStorage;
@@ -149,23 +155,172 @@ test("parcel occurrence locator store scopes checkout+group and retains uncertai
     },
   } as Storage;
   try {
-    clearParcelOccurrenceLocator("chk-r7", "grp-r7");
-    assert.equal(readParcelOccurrenceLocator("chk-r7", "grp-r7"), null);
-    writeParcelOccurrenceLocator("chk-r7", "grp-r7", {
+    clearParcelOccurrenceLocator("owner-a", "chk-r8", "grp-r8");
+    assert.equal(readParcelOccurrenceLocator("owner-a", "chk-r8", "grp-r8"), null);
+    writeParcelOccurrenceLocator(null, "chk-r8", "grp-r8", {
       occurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
       uncertain: true,
     });
-    assert.deepEqual(readParcelOccurrenceLocator("chk-r7", "grp-r7"), {
+    assert.equal(memory.size, 0, "no owner → no persist");
+    assert.equal(readParcelOccurrenceLocator(null, "chk-r8", "grp-r8"), null);
+    writeParcelOccurrenceLocator("owner-a", "chk-r8", "grp-r8", {
       occurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
       uncertain: true,
     });
-    assert.equal(readParcelOccurrenceLocator("chk-other", "grp-r7"), null);
-    clearParcelOccurrenceLocator("chk-r7", "grp-r7");
-    assert.equal(readParcelOccurrenceLocator("chk-r7", "grp-r7"), null);
+    assert.deepEqual(readParcelOccurrenceLocator("owner-a", "chk-r8", "grp-r8"), {
+      occurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+      uncertain: true,
+    });
+    assert.equal(readParcelOccurrenceLocator("owner-b", "chk-r8", "grp-r8"), null);
+    assert.equal(readParcelOccurrenceLocator("owner-a", "chk-other", "grp-r8"), null);
+    clearParcelOccurrenceLocator("owner-a", "chk-r8", "grp-r8");
+    assert.equal(readParcelOccurrenceLocator("owner-a", "chk-r8", "grp-r8"), null);
   } finally {
     if (previous) g.sessionStorage = previous;
     else delete g.sessionStorage;
   }
+});
+
+test("classifyCarrierShipmentCreateOutcome matrix: 5xx/network/malformed/mismatch stay unknown", () => {
+  const base = {
+    expectedOccurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+    expectedShippingGroupId: "grp-1",
+  };
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({ ...base, networkError: true }).outcome,
+    "unknown",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({ ...base, httpStatus: 500, payload: {} }).outcome,
+    "unknown",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({ ...base, httpStatus: 502, payload: {} }).outcome,
+    "unknown",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({
+      ...base,
+      httpStatus: 200,
+      payload: { not: "a shipment" },
+    }).outcome,
+    "unknown",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({
+      ...base,
+      httpStatus: 200,
+      payload: {
+        operationId: "op1",
+        shippingGroupId: "grp-1",
+        state: "Succeeded",
+        packageDispatchId: "bbbbbbbb-bbbb-7bbb-8bbb-bbbbbbbbbbbb",
+      },
+    }).outcome,
+    "unknown",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({
+      ...base,
+      httpStatus: 409,
+      errorCode: "shipping.carrier.shipment.unknown",
+    }).outcome,
+    "unknown",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({
+      ...base,
+      httpStatus: 409,
+      errorCode: "shipping.carrier.shipment.intent_conflict",
+    }).outcome,
+    "refused",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({
+      ...base,
+      httpStatus: 400,
+      errorCode: "shipping.carrier.shipment.request_invalid",
+    }).outcome,
+    "refused",
+  );
+  assert.equal(
+    classifyCarrierShipmentCreateOutcome({
+      ...base,
+      httpStatus: 409,
+      errorCode: "totally.unknown.code",
+    }).outcome,
+    "unknown",
+  );
+  const ok = classifyCarrierShipmentCreateOutcome({
+    ...base,
+    httpStatus: 200,
+    payload: {
+      operationId: "op1",
+      shippingGroupId: "grp-1",
+      state: "Succeeded",
+      packageDispatchId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+    },
+  });
+  assert.equal(ok.outcome, "succeeded");
+  assert.equal(ok.packageDispatchId, "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa");
+});
+
+test("decodeAuthoritativeShipmentList rejects malformed 200 and empty-looking garbage", () => {
+  assert.equal(decodeAuthoritativeShipmentList(false, []).ok, false);
+  assert.equal(decodeAuthoritativeShipmentList(true, { items: [] }).ok, false);
+  assert.equal(decodeAuthoritativeShipmentList(true, [{ bad: true }]).ok, false);
+  const empty = decodeAuthoritativeShipmentList(true, []);
+  assert.equal(empty.ok, true);
+  if (empty.ok) assert.equal(empty.ships.length, 0);
+  const good = decodeAuthoritativeShipmentList(true, [
+    {
+      operationId: "op1",
+      shippingGroupId: "g1",
+      state: "Pending",
+      packageDispatchId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+    },
+  ]);
+  assert.equal(good.ok, true);
+  if (good.ok) assert.equal(good.ships.length, 1);
+});
+
+test("resolveExactOccurrenceFromList requires matching occurrence+group", () => {
+  const ships = [
+    {
+      operationId: "op1",
+      shippingGroupId: "g1",
+      state: "Succeeded" as const,
+      providerTrackingCode: null,
+      providerStatus: null,
+      lastErrorCode: null,
+      canTrack: true,
+      canCancel: false,
+      packageDispatchId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+    },
+  ];
+  assert.ok(
+    resolveExactOccurrenceFromList({
+      ships,
+      occurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+      shippingGroupId: "g1",
+    }),
+  );
+  assert.equal(
+    resolveExactOccurrenceFromList({
+      ships,
+      occurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+      shippingGroupId: "g2",
+    }),
+    null,
+  );
+  assert.equal(
+    resolveExactOccurrenceFromList({
+      ships,
+      occurrenceId: "bbbbbbbb-bbbb-7bbb-8bbb-bbbbbbbbbbbb",
+      shippingGroupId: "g1",
+    }),
+    null,
+  );
 });
 
 test("decodeShipment maps capability flags and state", () => {
@@ -209,24 +364,29 @@ test("completion→ready→execution→tracked/unknown action surface is wired o
   assert.match(componentSource, /group\.canCreate/);
   assert.match(componentSource, /executableLines/);
   assert.match(componentSource, /buildCarrierShipmentCreateBody/);
-  // Every post-action refresh is gated; failures keep drafts and skip refresh.
-  // Explicit reconcile is the only ungated refresh (uncertain-create recovery).
+  assert.match(componentSource, /classifyCarrierShipmentCreateOutcome/);
+  assert.match(componentSource, /resolveExactOccurrenceFromList/);
+  assert.match(componentSource, /decodeAuthoritativeShipmentList/);
+  // package/sender/track/cancel remain gated; create refreshes only after classified success.
   const gatedRefresh = componentSource.match(/if \(!result\.error\) await refresh\(\);/g) ?? [];
-  const reconcileRefresh = componentSource.match(/const result = await refresh\(\);/g) ?? [];
-  const bareRefresh = componentSource.match(/await refresh\(\);/g) ?? [];
-  assert.equal(gatedRefresh.length, 5, "package/sender/create/track/cancel refresh only on success");
-  assert.equal(reconcileRefresh.length, 1, "one explicit reconcile refresh");
-  assert.equal(
-    bareRefresh.length,
-    gatedRefresh.length + reconcileRefresh.length,
-    "no other ungated await refresh after actions",
-  );
+  assert.equal(gatedRefresh.length, 4, "package/sender/track/cancel refresh only on success");
+  assert.match(componentSource, /reconcileGroup/);
+  assert.match(componentSource, /groupNeedsReconcileSurface/);
+  assert.match(componentSource, /showCreate = group\.canCreate && !uncertain/);
+  assert.match(componentSource, /data-testid=\{`\$\{testIdPrefix\}-read-retry`\}/);
 });
 
 test("typed network error/retry preserves draft input and avoids status-driven refetch cascade", () => {
   assert.match(componentSource, /catch \{\s*setActionStatus\(messages\.carrierActionFailed\);\s*\}/);
   assert.match(componentSource, /markCreateUncertain\(groupId, occurrence\)/);
   assert.match(componentSource, /carrierCreateOutcomeUncertain/);
+  // In-flight uncertain is persisted before POST leaves the browser.
+  assert.match(
+    componentSource,
+    /markCreateUncertain\(groupId, occurrence\);\s*try \{\s*const executable/,
+  );
+  assert.match(classifySource, /status >= 500/);
+  assert.match(classifySource, /PRE_SIDE_EFFECT_REFUSAL_CODES/);
   // Draft maps survive refresh: refresh only fills missing group keys.
   assert.match(componentSource, /if \(next\[row\.shippingGroupId\]\) continue;/);
   assert.match(componentSource, /setSenderByGroup/);
@@ -243,7 +403,7 @@ test("same-tick lock and stale-response guard are owned by the shared component"
   assert.match(componentSource, /syncBusy\(groupId, true\)/);
   assert.match(componentSource, /refreshSeqRef = useRef\(0\)/);
   assert.match(componentSource, /const seq = \+\+refreshSeqRef\.current;/);
-  assert.match(componentSource, /if \(seq !== refreshSeqRef\.current\) return \{ listOk:/);
+  assert.match(componentSource, /if \(seq !== refreshSeqRef\.current\) \{\s*return \{ listOk: shipmentsListOkRef/);
   assert.match(componentSource, /refreshSeqRef\.current \+= 1/);
 });
 
@@ -319,7 +479,7 @@ test("create click path posts buildCarrierShipmentCreateBody and keeps Manual nu
   assert.match(componentSource, /ensurePackageDispatchOccurrence/);
   assert.match(componentSource, /packageDispatchId: occurrence/);
   assert.match(componentSource, /resolveRetainedPackageDispatchId/);
-  assert.match(componentSource, /result\.packageDispatchId/);
+  assert.match(componentSource, /classified\.packageDispatchId/);
   assert.match(componentSource, /markCreateUncertain/);
   assert.match(componentSource, /carrierCreateOutcomeUncertain/);
   assert.match(componentSource, /weightGrams: weight/);

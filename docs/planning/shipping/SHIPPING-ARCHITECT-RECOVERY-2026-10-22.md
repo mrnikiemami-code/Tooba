@@ -1,7 +1,12 @@
-# CURRENT — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
+# CURRENT — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
 
-Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
-Worker decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `76e609065` (R6 final pushed envelope; R6 RECEIPTS interim Evidence-SHA `1e4bd4e13` is historical). Closes UI-to-server first-create null-locator gap: client UuidV7 before POST; uncertain/lost response blocks blind new occurrence; remount/retry same id. FE mount 24/24; disposable TB249R7 3/3. Canonical redeployed. Remaining external-only: live Tipax. NOT Architect ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker decision **CREATE_OUTCOME_CLASSIFICATION_AND_IN_FLIGHT_UNCERTAINTY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `480241eff`. Closes R7 residual: persist unresolved before POST; no success from invalid DTO; no refusal from generic 5xx; reconcile UI not gated by canCreate; exact-occurrence resolution. Mount A–D 30/30; FE redeployed. Remaining external-only: live Tipax. NOT Architect ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
+
+Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker PASS for prebind; ambiguous create-outcome / in-flight marker closed by 249-R8.
 
 # SUPERSEDED — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
 

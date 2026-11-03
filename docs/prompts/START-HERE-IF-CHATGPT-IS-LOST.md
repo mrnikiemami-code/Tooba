@@ -1,7 +1,12 @@
-# CURRENT — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
+# CURRENT — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **CREATE_OUTCOME_CLASSIFICATION_AND_IN_FLIGHT_UNCERTAINTY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `480241eff`. Uncertain before POST; conservative 5xx/malformed; reconcile without canCreate; mount 30/30; FE redeployed. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS**, decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `76e609065`. Client occurrence before first POST; lost-response recovery same id; FE 24/24; TB249R7 3/3; canonical redeployed. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `76e609065`. Outcome ambiguity closed by R8. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
 
