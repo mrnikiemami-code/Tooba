@@ -4,7 +4,7 @@
 - Bridge-Task-Row: `438a816d-d101-470b-8d39-36396e746fe2`
 - Expected-Base: `063e100c8f3f60b8d08b08f55b25714d3e551ef6`
 - Code-SHA: 688124f5f045e01eff324f17a328968d7086cf40
-- Evidence-SHA: PENDING_EVIDENCE
+- Evidence-SHA: 6b05177a18062166e8c49d8cf166a49a6c1e6664
 
 ## Runtime
 - FE: `http://127.0.0.1:3000` production Next (PID recorded at handoff)
