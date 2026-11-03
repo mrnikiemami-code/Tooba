@@ -1,4 +1,4 @@
-# RECEIPTS — TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R5
+﻿# RECEIPTS — TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R5
 
 ## Identity
 
@@ -56,5 +56,5 @@ Applied on store-alpha/tooba_alpha (pending=0 readback):
 
 ## Code-SHA / Evidence-SHA
 
-- Code-SHA: CODE_SHA_PENDING
+- Code-SHA: 23f6dbd7a495159510aa3a9eede28b57b3bb4ae6
 - Evidence-SHA: EVIDENCE_SHA_PENDING
