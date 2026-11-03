@@ -426,6 +426,79 @@ public sealed class ShippingCarrierPackageExecutionRelationalTests
         Assert.Equal(2, startBarrier.ParticipantCount);
     }
 
+    /// <summary>
+    /// TB-249-R7: concurrent FIRST create with a shared client-prebound occurrence → one create/allocation.
+    /// Parent disposable-PG agent should filter Category=TB249R7.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "TB249R7")]
+    [Trait("Case", "prebound-concurrent-first-request")]
+    public async Task CaseR7_prebound_concurrent_first_request_one_create_one_allocation()
+    {
+        await using var fxA = await Fixture.CreateAsync(lineQuantity: 2m);
+        await fxA.PrepareSenderAsync();
+        await using var fxB = await Fixture.AttachSiblingAsync(fxA, shareProvider: true, shareRecorder: false);
+        var sharedOccurrence = UuidV7.New();
+
+        using var startBarrier = new Barrier(2);
+        var results = await Task.WhenAll(
+            Task.Run(async () =>
+            {
+                startBarrier.SignalAndWait(TimeSpan.FromSeconds(15));
+                return await fxA.Directory.CreateAsync(
+                    fxA.Owner, fxA.ActorUserId,
+                    new ShippingCarrierShipmentExecuteRequest(
+                        fxA.CheckoutId, fxA.GroupId, PackageDispatchId: sharedOccurrence),
+                    CancellationToken.None);
+            }),
+            Task.Run(async () =>
+            {
+                startBarrier.SignalAndWait(TimeSpan.FromSeconds(15));
+                return await fxB.Directory.CreateAsync(
+                    fxB.Owner, fxB.ActorUserId,
+                    new ShippingCarrierShipmentExecuteRequest(
+                        fxB.CheckoutId, fxB.GroupId, PackageDispatchId: sharedOccurrence),
+                    CancellationToken.None);
+            }));
+
+        Assert.Contains(results, x => x.IsSuccess);
+        Assert.All(results.Where(x => x.IsSuccess), x => Assert.Equal(sharedOccurrence, x.Value.PackageDispatchId));
+        Assert.Equal(1, fxA.Provider.Creates);
+        Assert.Equal(1, await fxA.FulfillmentDb.Shipments.AsNoTracking().CountAsync());
+    }
+
+    /// <summary>
+    /// TB-249-R7 documentation hook: legacy no-locator after Succeeded identical payload mints a NEW
+    /// occurrence (lawful separate parcel). This is NOT response-loss recovery — clients must prebind.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "TB249R7")]
+    [Trait("Case", "legacy-no-locator-not-response-loss-safe")]
+    public async Task CaseR7_legacy_no_locator_after_succeeded_mints_new_occurrence_not_idempotent()
+    {
+        await using var fx = await Fixture.CreateAsync(lineQuantity: 2m);
+        await fx.PrepareSenderAsync();
+        var pkg = new ShippingCarrierShipmentDispatchPackageInput(500m, 10m, 10m, 10m);
+        var lineQty1 = new[] { new ShippingCarrierShipmentLineQuantity(fx.OrderLineId, 1m) };
+
+        var first = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(fx.CheckoutId, fx.GroupId, lineQty1, pkg),
+            CancellationToken.None);
+        Assert.True(first.IsSuccess, first.IsFailure ? first.Errors[0].Code : null);
+        Assert.Equal(1, fx.Provider.Creates);
+
+        // Simulate "lost response then retry without locator": second no-locator create is a NEW parcel.
+        var second = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(fx.CheckoutId, fx.GroupId, lineQty1, pkg),
+            CancellationToken.None);
+        Assert.True(second.IsSuccess, second.IsFailure ? second.Errors[0].Code : null);
+        Assert.NotEqual(first.Value.PackageDispatchId, second.Value.PackageDispatchId);
+        Assert.Equal(2, fx.Provider.Creates);
+        Assert.Equal(2, await fx.FulfillmentDb.Shipments.AsNoTracking().CountAsync());
+    }
+
     [Fact]
     [Trait("Category", "TB249R6")]
     [Trait("Case", "payload-conflict-cross-owner-no-resend")]

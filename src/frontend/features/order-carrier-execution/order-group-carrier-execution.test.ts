@@ -5,11 +5,20 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { buildCarrierShipmentCreateBody } from "./build-carrier-shipment-create-body.ts";
 import {
+  ensurePackageDispatchOccurrence,
+  mintPackageDispatchOccurrenceId,
+} from "./mint-package-dispatch-occurrence.ts";
+import {
   decodeCapability,
   decodeShipment,
   isCarrierApiGroup,
   normalizeShipmentState,
 } from "./order-group-carrier-execution-decode.ts";
+import {
+  clearParcelOccurrenceLocator,
+  readParcelOccurrenceLocator,
+  writeParcelOccurrenceLocator,
+} from "./parcel-occurrence-locator-store.ts";
 import { resolveRetainedPackageDispatchId } from "./retain-package-dispatch-occurrence.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -88,6 +97,77 @@ test("resolveRetainedPackageDispatchId keeps Pending and clears after Succeeded 
   );
 });
 
+test("resolveRetainedPackageDispatchId keeps prebound id when uncertain or list read failed", () => {
+  assert.equal(
+    resolveRetainedPackageDispatchId({
+      current: "prebound-aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+      canCreate: true,
+      openOccurrenceId: null,
+      openState: null,
+      createUncertain: true,
+      listReadOk: false,
+    }),
+    "prebound-aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+  );
+  assert.equal(
+    resolveRetainedPackageDispatchId({
+      current: "prebound-bbbbbbbb-bbbb-7bbb-8bbb-bbbbbbbbbbbb",
+      canCreate: true,
+      openOccurrenceId: null,
+      openState: null,
+      createUncertain: false,
+      listReadOk: false,
+    }),
+    "prebound-bbbbbbbb-bbbb-7bbb-8bbb-bbbbbbbbbbbb",
+  );
+});
+
+test("mintPackageDispatchOccurrenceId is UuidV7 and ensure retains existing", () => {
+  const id = mintPackageDispatchOccurrenceId(1_700_000_000_000);
+  assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  assert.equal(ensurePackageDispatchOccurrence("  keep-me  "), "keep-me");
+  const minted = ensurePackageDispatchOccurrence(null);
+  assert.match(minted, /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+});
+
+test("parcel occurrence locator store scopes checkout+group and retains uncertain hint", () => {
+  const memory = new Map<string, string>();
+  const g = globalThis as typeof globalThis & { sessionStorage?: Storage };
+  const previous = g.sessionStorage;
+  g.sessionStorage = {
+    getItem: (k: string) => memory.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      memory.set(k, v);
+    },
+    removeItem: (k: string) => {
+      memory.delete(k);
+    },
+    clear: () => memory.clear(),
+    key: () => null,
+    get length() {
+      return memory.size;
+    },
+  } as Storage;
+  try {
+    clearParcelOccurrenceLocator("chk-r7", "grp-r7");
+    assert.equal(readParcelOccurrenceLocator("chk-r7", "grp-r7"), null);
+    writeParcelOccurrenceLocator("chk-r7", "grp-r7", {
+      occurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+      uncertain: true,
+    });
+    assert.deepEqual(readParcelOccurrenceLocator("chk-r7", "grp-r7"), {
+      occurrenceId: "aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa",
+      uncertain: true,
+    });
+    assert.equal(readParcelOccurrenceLocator("chk-other", "grp-r7"), null);
+    clearParcelOccurrenceLocator("chk-r7", "grp-r7");
+    assert.equal(readParcelOccurrenceLocator("chk-r7", "grp-r7"), null);
+  } finally {
+    if (previous) g.sessionStorage = previous;
+    else delete g.sessionStorage;
+  }
+});
+
 test("decodeShipment maps capability flags and state", () => {
   const row = decodeShipment({
     operationId: "op1",
@@ -130,14 +210,23 @@ test("completion→ready→execution→tracked/unknown action surface is wired o
   assert.match(componentSource, /executableLines/);
   assert.match(componentSource, /buildCarrierShipmentCreateBody/);
   // Every post-action refresh is gated; failures keep drafts and skip refresh.
+  // Explicit reconcile is the only ungated refresh (uncertain-create recovery).
   const gatedRefresh = componentSource.match(/if \(!result\.error\) await refresh\(\);/g) ?? [];
+  const reconcileRefresh = componentSource.match(/const result = await refresh\(\);/g) ?? [];
   const bareRefresh = componentSource.match(/await refresh\(\);/g) ?? [];
   assert.equal(gatedRefresh.length, 5, "package/sender/create/track/cancel refresh only on success");
-  assert.equal(bareRefresh.length, gatedRefresh.length, "no ungated await refresh after actions");
+  assert.equal(reconcileRefresh.length, 1, "one explicit reconcile refresh");
+  assert.equal(
+    bareRefresh.length,
+    gatedRefresh.length + reconcileRefresh.length,
+    "no other ungated await refresh after actions",
+  );
 });
 
 test("typed network error/retry preserves draft input and avoids status-driven refetch cascade", () => {
   assert.match(componentSource, /catch \{\s*setActionStatus\(messages\.carrierActionFailed\);\s*\}/);
+  assert.match(componentSource, /markCreateUncertain\(groupId, occurrence\)/);
+  assert.match(componentSource, /carrierCreateOutcomeUncertain/);
   // Draft maps survive refresh: refresh only fills missing group keys.
   assert.match(componentSource, /if \(next\[row\.shippingGroupId\]\) continue;/);
   assert.match(componentSource, /setSenderByGroup/);
@@ -154,7 +243,7 @@ test("same-tick lock and stale-response guard are owned by the shared component"
   assert.match(componentSource, /syncBusy\(groupId, true\)/);
   assert.match(componentSource, /refreshSeqRef = useRef\(0\)/);
   assert.match(componentSource, /const seq = \+\+refreshSeqRef\.current;/);
-  assert.match(componentSource, /if \(seq !== refreshSeqRef\.current\) return;/);
+  assert.match(componentSource, /if \(seq !== refreshSeqRef\.current\) return \{ listOk:/);
   assert.match(componentSource, /refreshSeqRef\.current \+= 1/);
 });
 
@@ -227,9 +316,12 @@ test("create body sends Package for partial dispatches and optional packageDispa
 
 test("create click path posts buildCarrierShipmentCreateBody and keeps Manual null", () => {
   assert.match(componentSource, /buildCarrierShipmentCreateBody\(\{/);
-  assert.match(componentSource, /packageDispatchId: packageDispatchIdByGroup\[groupId\]/);
+  assert.match(componentSource, /ensurePackageDispatchOccurrence/);
+  assert.match(componentSource, /packageDispatchId: occurrence/);
   assert.match(componentSource, /resolveRetainedPackageDispatchId/);
   assert.match(componentSource, /result\.packageDispatchId/);
+  assert.match(componentSource, /markCreateUncertain/);
+  assert.match(componentSource, /carrierCreateOutcomeUncertain/);
   assert.match(componentSource, /weightGrams: weight/);
   assert.match(componentSource, /delete body\.partialWithoutPackage/);
   // Simulated create interaction: encode → build → JSON round-trip (events without full React tree).

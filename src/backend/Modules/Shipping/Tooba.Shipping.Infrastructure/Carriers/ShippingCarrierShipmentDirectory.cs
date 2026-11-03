@@ -149,8 +149,9 @@ internal sealed class ShippingCarrierShipmentDirectory(
             selectedLines,
             physicalForFingerprint);
 
-        // No occurrence locator: converge only onto an open Pending/Unknown with the SAME payload
-        // (crash/retry recovery). A Succeeded identical payload must mint a NEW occurrence.
+        // Legacy/nullable no-locator: converge only onto open Pending/Unknown with the SAME payload.
+        // NOT response-loss safe after Succeeded — identical payload then mints a NEW occurrence by design
+        // (separate parcels). Recovery requires a client-prebound PackageDispatchId (TB-249-R7).
         if (requestedOccurrence is null)
         {
             var openMatching = await FindOpenCreateMatchingPayloadAsync(
@@ -165,7 +166,7 @@ internal sealed class ShippingCarrierShipmentDirectory(
             }
         }
 
-        // New parcel occurrence: reuse client-held server id when provided and unknown; else mint UuidV7.
+        // New parcel occurrence: bind client-prebound UuidV7 when provided; else legacy server mint.
         var packageDispatchId = requestedOccurrence ?? ShippingCarrierDispatchIntent.MintOccurrenceId();
         var (operationKey, _) = ShippingCarrierDispatchIntent.Derive(
             packageDispatchId,

@@ -9,13 +9,14 @@ using Tooba.Shipping.Domain.Authoring;
 namespace Tooba.Shipping.Infrastructure.Carriers;
 
 /// <summary>
-/// TB-249-R6: durable parcel OCCURRENCE identity distinct from payload fingerprint.
-/// Operation key = owner-scoped checkout + group + occurrenceId (server-issued UuidV7).
+/// TB-249-R6/R7: durable parcel OCCURRENCE identity distinct from payload fingerprint.
+/// Operation key = owner-scoped checkout + group + occurrenceId (UuidV7).
+/// R7: client may pre-mint the occurrence before first create; server accepts and binds fingerprint.
 /// Payload fingerprint binds lines + physical dims to that occurrence; conflicting reuse refuses.
 /// </summary>
 internal static class ShippingCarrierDispatchIntent
 {
-    /// <summary>Server-issued parcel occurrence / package-dispatch identity.</summary>
+    /// <summary>Parcel occurrence / package-dispatch identity (server mint when client omits locator).</summary>
     public static Guid MintOccurrenceId() => UuidV7.New();
 
     /// <summary>

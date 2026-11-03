@@ -1,7 +1,12 @@
-# CURRENT — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
+# CURRENT — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `76e609065`. Client occurrence before first POST; lost-response recovery same id; FE 24/24; TB249R7 3/3; canonical redeployed. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS**, decision **OCCURRENCE_IDENTITY_WEIGHT_AUTHORITY_AND_MOUNTED_COMPONENT_PROOF_DEPLOYED_PROVIDER_UNVERIFIED**. Base `481ec58bb`. Occurrence≠payload; whole-gram typed weight no legacy heal; mounted carrier/physical FE 18/18; TB249R6 23/23; canonical redeployed. LIVE TIPAX deferred. R5 worker PASS historical. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **OCCURRENCE_IDENTITY_WEIGHT_AUTHORITY_AND_MOUNTED_COMPONENT_PROOF_DEPLOYED_PROVIDER_UNVERIFIED**. Base `481ec58bb`. Final envelope `76e609065`. First-create null locator gap closed by R7. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R5 PASS: durable dispatch claim + product physical specs — 2026-11-03
 

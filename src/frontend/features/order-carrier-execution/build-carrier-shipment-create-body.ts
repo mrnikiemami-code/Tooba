@@ -1,7 +1,8 @@
 /**
  * Builds the Shipping carrier shipment create JSON body.
  * Partial line selections require Package weight/dims; full-remaining may omit Package.
- * packageDispatchId is the server-issued parcel occurrence id; omit to mint, reuse on retry.
+ * packageDispatchId is the parcel occurrence locator (client UuidV7 prebind or server-held).
+ * After FE prebind it must always be present on first create, retry, and recovery.
  */
 export function buildCarrierShipmentCreateBody(input: {
   checkoutId: string;

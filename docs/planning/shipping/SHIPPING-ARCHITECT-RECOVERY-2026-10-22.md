@@ -1,7 +1,12 @@
-# CURRENT — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
+# CURRENT — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
 
-Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
-Worker decision **OCCURRENCE_IDENTITY_WEIGHT_AUTHORITY_AND_MOUNTED_COMPONENT_PROOF_DEPLOYED_PROVIDER_UNVERIFIED** (PASS within software/relational/deploy). Base `481ec58bb`. Closes Architect PARTIAL on R5: distinct identical-parcel occurrence vs replay; typed weight present-invalid never heals via legacy; jsdom-mounted carrier + physical editor proof. Disposable TB249R6 23/23. Canonical FE3000→Host5088 redeployed; no new migration vs R5. Remaining external-only: live Tipax account acceptance deferred by user. NOT Architect ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `76e609065` (R6 final pushed envelope; R6 RECEIPTS interim Evidence-SHA `1e4bd4e13` is historical). Closes UI-to-server first-create null-locator gap: client UuidV7 before POST; uncertain/lost response blocks blind new occurrence; remount/retry same id. FE mount 24/24; disposable TB249R7 3/3. Canonical redeployed. Remaining external-only: live Tipax. NOT Architect ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
+
+Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker PASS for occurrence≠payload, whole-gram weight, mounted FE; first-create response-loss path closed by 249-R7. Final envelope SHA `76e609065`.
 
 # SUPERSEDED — 249-R5 PASS (Architect PARTIAL residuals closed by R6) — 2026-11-03
 

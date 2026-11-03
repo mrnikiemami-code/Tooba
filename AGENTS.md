@@ -1,8 +1,13 @@
-# CURRENT — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
+# CURRENT — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R7/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued prebind/recovery + relational + deploy scope, decision **OCCURRENCE_PREBOUND_BEFORE_CREATE_RESPONSE_LOSS_RECOVERY_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `76e609065` (R6 final envelope).
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha redeployed; no new migration. LANDED: client UuidV7 occurrence before first create POST; uncertain create blocks blind resend; remount/retry same id; explicit new parcel only for new occurrence; FE mount 24/24; disposable TB249R7 **3/3** (+ adjacent R6 4/4) then cleaned. Authorized Manual+payment_locked. LIVE TIPAX deferred. R6 Evidence-SHA interim vs final envelope reconciled append-only. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued A/B/C + relational + deploy scope, decision **OCCURRENCE_IDENTITY_WEIGHT_AUTHORITY_AND_MOUNTED_COMPONENT_PROOF_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `481ec58bb`.
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha redeployed; no new additive migration vs R5. LANDED: parcel occurrence PackageDispatchId distinct from payload fingerprint (identical parcels allocate separately; same occurrence replays; conflict typed); typed WeightGrams whole-grams write + present-invalid never heals via legacy; jsdom-mounted carrier + physical editor proofs (`test:carrier-mount` 18/18). Disposable `tb249r6-pg:15433` TB249R6 **23/23** then cleaned. Authorized Manual+payment_locked. LIVE TIPAX deferred (external-only). R5 worker PASS historical (Architect PARTIAL defects closed here). STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS** within issued A/B/C + relational + deploy scope, decision **OCCURRENCE_IDENTITY_WEIGHT_AUTHORITY_AND_MOUNTED_COMPONENT_PROOF_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `481ec58bb`. Final pushed Evidence/envelope SHA `76e609065` (RECEIPTS interim stamp `1e4bd4e13` historical). First-create null locator recovery gap closed by 249-R7. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R5 PASS: durable dispatch claim + product physical specs — 2026-11-03
 

@@ -422,6 +422,10 @@ const fa = {
   carrierShipmentStateSucceeded: "موفق",
   carrierShipmentStateFailed: "ناموفق",
   carrierActionFailed: "عملیات انجام نشد؛ ورودی‌ها حفظ شد.",
+  carrierCreateOutcomeUncertain:
+    "نتیجهٔ ایجاد محموله مبهم است؛ تا آشتی وضعیت، ارسال دوباره مسدود است.",
+  carrierCreateReconcile: "آشتی وضعیت محموله",
+  carrierCreateReconcileHint: "فهرست و قابلیت‌ها را دوباره بخوانید؛ شناسهٔ بسته حفظ می‌شود.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "افزودن ردیف هزینه",
@@ -862,6 +866,10 @@ const en: Record<AuthoringMessageKey, string> = {
   carrierShipmentStateSucceeded: "Succeeded",
   carrierShipmentStateFailed: "Failed",
   carrierActionFailed: "Action failed; your inputs were kept.",
+  carrierCreateOutcomeUncertain:
+    "Create outcome is uncertain; resubmit is blocked until you reconcile status.",
+  carrierCreateReconcile: "Reconcile shipment status",
+  carrierCreateReconcileHint: "Re-read shipments and capabilities; the parcel occurrence is kept.",
 
   /* ————— rate row modal (TB-225) ————— */
   rateOpenAddAction: "Add cost row",

@@ -6,7 +6,8 @@ import { JSDOM } from "jsdom";
 
 const g = globalThis as typeof globalThis & Record<string, unknown>;
 
-if (!(g as { __tb249r6DomInstalled?: boolean }).__tb249r6DomInstalled) {
+const already = (g as { __tb249r6DomInstalled?: boolean }).__tb249r6DomInstalled;
+if (!already) {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://127.0.0.1:3000/",
     pretendToBeVisual: true,
@@ -28,6 +29,8 @@ if (!(g as { __tb249r6DomInstalled?: boolean }).__tb249r6DomInstalled) {
   define("self", window);
   define("document", window.document);
   define("navigator", window.navigator);
+  define("sessionStorage", window.sessionStorage);
+  define("localStorage", window.localStorage);
   define("HTMLElement", window.HTMLElement);
   define("HTMLInputElement", window.HTMLInputElement);
   define("HTMLButtonElement", window.HTMLButtonElement);
@@ -59,6 +62,19 @@ if (!(g as { __tb249r6DomInstalled?: boolean }).__tb249r6DomInstalled) {
     proto.detachEvent = function detachEvent(name: string, fn: EventListener) {
       this.removeEventListener(name.replace(/^on/i, "").toLowerCase(), fn);
     };
+  }
+} else {
+  const win = g.window as Window | undefined;
+  if (win?.sessionStorage && g.sessionStorage !== win.sessionStorage) {
+    try {
+      Object.defineProperty(g, "sessionStorage", {
+        value: win.sessionStorage,
+        configurable: true,
+        writable: true,
+      });
+    } catch {
+      g.sessionStorage = win.sessionStorage;
+    }
   }
 }
 

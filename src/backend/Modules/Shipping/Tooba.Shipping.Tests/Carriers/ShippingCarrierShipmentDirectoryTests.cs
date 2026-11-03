@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Contracts.Shipping;
@@ -128,6 +129,35 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         Assert.True(second.IsSuccess);
         Assert.Equal(first.Value.OperationId, second.Value.OperationId);
         Assert.Equal(first.Value.PackageDispatchId, second.Value.PackageDispatchId);
+        Assert.Equal(1, provider.Creates);
+    }
+
+    [Fact]
+    [Trait("Category", "TB249R7")]
+    public async Task Client_prebound_occurrence_on_first_create_is_bound_and_replayed()
+    {
+        var provider = new RecordingShipmentProvider();
+        var directory = Create(provider, configured: true, facts: ValidFacts());
+        await PrepareSenderAsync(directory);
+        var prebound = UuidV7.New();
+
+        var first = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(Checkout, Group, PackageDispatchId: prebound),
+            CancellationToken.None);
+        Assert.True(first.IsSuccess, first.IsFailure ? first.FirstError.Code : null);
+        Assert.Equal(prebound, first.Value.PackageDispatchId);
+        Assert.Equal(1, provider.Creates);
+
+        var replay = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(Checkout, Group, PackageDispatchId: prebound),
+            CancellationToken.None);
+        Assert.True(replay.IsSuccess);
+        Assert.Equal(first.Value.OperationId, replay.Value.OperationId);
+        Assert.Equal(prebound, replay.Value.PackageDispatchId);
         Assert.Equal(1, provider.Creates);
     }
 

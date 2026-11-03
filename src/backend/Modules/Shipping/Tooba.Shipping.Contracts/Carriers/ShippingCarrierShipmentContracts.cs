@@ -207,8 +207,11 @@ public sealed record ShippingCarrierShipmentDispatchPackageInput(
 /// <param name="Lines">Exact line quantities for this physical package; empty/null uses all remaining executable lines.</param>
 /// <param name="Package">Per-dispatch weight/dimensions. Required for partial packages; full-remaining may reuse group completion.</param>
 /// <param name="PackageDispatchId">
-/// Optional parcel occurrence locator. Omit to mint a new server occurrence; reuse the returned id on retry.
-/// Validated against owner/checkout/group; payload conflicts refuse.
+/// Parcel occurrence locator. Prefer a client UuidV7 minted before the first create POST so retries
+/// after a lost response reuse the same occurrence. When supplied on first create the server binds the
+/// payload fingerprint to that id (owner/checkout/group scoped); payload conflicts refuse.
+/// Omitting (legacy/nullable) mints a new server occurrence and is NOT response-loss idempotent once a
+/// prior create for the same payload has already Succeeded — clients must not rely on no-locator recovery.
 /// </param>
 public sealed record ShippingCarrierShipmentExecuteRequest(
     Guid CheckoutId,

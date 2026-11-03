@@ -18,11 +18,24 @@ import {
 } from "./test-dom-harness.ts";
 import { OrderGroupCarrierExecution } from "./order-group-carrier-execution.tsx";
 
-const CHECKOUT = "chk-249r6";
-const GROUP = "grp-249r6";
+const CHECKOUT = "chk-249r7";
+const GROUP = "grp-249r7";
 const PREFIX = "order-group-carrier-execution";
 const OCCURRENCE_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const OP_A = "op-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+function clearOccurrenceSession() {
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith("tb.carrier.parcel-occurrence.v1:")) keys.push(key);
+    }
+    for (const key of keys) sessionStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}
 
 type CapState = {
   canCreate: boolean;
@@ -131,8 +144,9 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 function installFetchFixture(options?: {
-  onCreate?: (body: Record<string, unknown>, ledger: RequestLedger) => Response;
+  onCreate?: (body: Record<string, unknown>, ledger: RequestLedger) => Response | Promise<Response>;
   onTrack?: () => Response;
+  onShipmentsGet?: (ledger: RequestLedger) => Response | null;
 }) {
   const ledger: RequestLedger = {
     capabilities: 0,
@@ -148,6 +162,8 @@ function installFetchFixture(options?: {
   let cap = baseCapability();
   let ships: ShipRow[] = [];
   let createMode: "success" | "replay" | "intent_conflict" | "unknown_create" = "success";
+  let allocationCount = 0;
+  let providerCreates = 0;
 
   const original = globalThis.fetch;
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -160,6 +176,8 @@ function installFetchFixture(options?: {
     }
     if (url.includes("/shipments?") && method === "GET" && !url.includes("capabilities")) {
       ledger.shipmentsGet += 1;
+      const override = options?.onShipmentsGet?.(ledger);
+      if (override) return override;
       return jsonResponse(200, ships);
     }
     if (url.endsWith("/shipments/package-completion") && method === "POST") {
@@ -229,32 +247,63 @@ function installFetchFixture(options?: {
         typeof body.packageDispatchId === "string" && body.packageDispatchId.trim().length > 0
           ? body.packageDispatchId.trim()
           : OCCURRENCE_A;
+      const existing = ships.find((s) => s.packageDispatchId === occurrence);
+      if (existing || createMode === "replay") {
+        // same occurrence → same operation; no second allocation/provider
+        const row: ShipRow = {
+          ...(existing ?? {
+            operationId: OP_A,
+            shippingGroupId: GROUP,
+            state: "Succeeded",
+            canTrack: true,
+            canCancel: true,
+            packageDispatchId: occurrence,
+            providerTrackingCode: "TRK-1",
+            providerStatus: "Created",
+            lastErrorCode: null,
+          }),
+          state: "Succeeded",
+          packageDispatchId: occurrence,
+        };
+        ships = ships.some((s) => s.packageDispatchId === occurrence)
+          ? ships.map((s) => (s.packageDispatchId === occurrence ? row : s))
+          : [...ships, row];
+        cap = {
+          ...cap,
+          canCreate: true,
+          latestCreateOperation: {
+            operationId: row.operationId,
+            state: "Succeeded",
+            packageDispatchId: occurrence,
+          },
+        };
+        return jsonResponse(200, row);
+      }
+      allocationCount += 1;
+      providerCreates += 1;
+      const opId = `op-${occurrence}`;
       const row: ShipRow = {
-        operationId: OP_A,
+        operationId: opId,
         shippingGroupId: GROUP,
-        state: createMode === "replay" ? "Succeeded" : "Succeeded",
+        state: "Succeeded",
         canTrack: true,
         canCancel: true,
         packageDispatchId: occurrence,
-        providerTrackingCode: "TRK-1",
+        providerTrackingCode: `TRK-${allocationCount}`,
         providerStatus: "Created",
         lastErrorCode: null,
       };
-      if (createMode === "replay" || ships.some((s) => s.packageDispatchId === occurrence)) {
-        // replay converges on same operation / occurrence
-        ships = [{ ...row, operationId: OP_A, packageDispatchId: occurrence }];
-      } else {
-        ships = [...ships, row];
-      }
+      ships = [...ships, row];
+      const remaining = Math.max(0, (cap.executableLines[0]?.remainingPackedQuantity ?? 1) - 1);
       cap = {
         ...cap,
-        canCreate: true,
+        canCreate: remaining > 0,
         latestCreateOperation: {
-          operationId: OP_A,
+          operationId: opId,
           state: "Succeeded",
           packageDispatchId: occurrence,
         },
-        executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 1 }],
+        executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: remaining }],
       };
       return jsonResponse(200, row);
     }
@@ -272,6 +321,44 @@ function installFetchFixture(options?: {
 
   return {
     ledger,
+    get allocationCount() {
+      return allocationCount;
+    },
+    get providerCreates() {
+      return providerCreates;
+    },
+    get ships() {
+      return ships;
+    },
+    applyServerAcceptedCreate(occurrence: string) {
+      allocationCount += 1;
+      providerCreates += 1;
+      const opId = `op-${occurrence}`;
+      const row: ShipRow = {
+        operationId: opId,
+        shippingGroupId: GROUP,
+        state: "Succeeded",
+        canTrack: true,
+        canCancel: true,
+        packageDispatchId: occurrence,
+        providerTrackingCode: `TRK-${allocationCount}`,
+        providerStatus: "Created",
+        lastErrorCode: null,
+      };
+      ships = [...ships, row];
+      const remaining = Math.max(0, (cap.executableLines[0]?.remainingPackedQuantity ?? 1) - 1);
+      cap = {
+        ...cap,
+        canCreate: remaining > 0,
+        latestCreateOperation: {
+          operationId: opId,
+          state: "Succeeded",
+          packageDispatchId: occurrence,
+        },
+        executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: remaining }],
+      };
+      return row;
+    },
     setCreateMode(mode: typeof createMode) {
       createMode = mode;
     },
@@ -298,7 +385,28 @@ async function mountCarrier() {
   );
 }
 
-test("mount: package → sender → readiness → create retains occurrence id and request counts", async () => {
+function readyCapability(overrides: Partial<CapState> = {}): CapState {
+  return baseCapability({
+    canCreate: true,
+    allowPackageCompletion: false,
+    blockReasonCodes: [],
+    ineligibilityReasonCode: null,
+    weightGrams: 500,
+    lengthCentimeters: 20,
+    widthCentimeters: 15,
+    heightCentimeters: 10,
+    configuredSender: {
+      fullName: "Store",
+      mobile: "09120000000",
+      addressLine: "Addr",
+      postalCode: "1111111111",
+    },
+    ...overrides,
+  });
+}
+
+test("mount: package → sender → readiness → first create already sends stable occurrence", async () => {
+  clearOccurrenceSession();
   const fx = installFetchFixture();
   const tree = await mountCarrier();
   try {
@@ -321,7 +429,6 @@ test("mount: package → sender → readiness → create retains occurrence id a
       const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
       return (status?.textContent ?? "").includes("مشخصات بسته ذخیره شد");
     });
-    // readiness refresh after package completion
     assert.equal(fx.ledger.capabilities, 2);
     assert.equal(fx.ledger.shipmentsGet, 2);
 
@@ -341,7 +448,6 @@ test("mount: package → sender → readiness → create retains occurrence id a
     assert.equal(fx.ledger.shipmentsGet, 3);
 
     await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
-    // draft package dims retained for create body (dispatch fields hidden when completion already done)
     await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
     await waitFor(() => fx.ledger.create === 1);
     await waitFor(() => {
@@ -356,42 +462,25 @@ test("mount: package → sender → readiness → create retains occurrence id a
     };
     assert.equal(createBody.body.shippingGroupId, GROUP);
     assert.equal(createBody.body.checkoutId, CHECKOUT);
-    // First create had no client occurrence → server issued OCCURRENCE_A.
-    assert.equal(createBody.body.packageDispatchId, undefined);
-
-    // After Succeeded+canCreate refresh, retention clears for a NEW parcel (Defect A).
-    // Replay of SAME occurrence is the Pending/Unknown recovery path exercised below via remount.
+    const occurrence = String(createBody.body.packageDispatchId ?? "");
+    assert.match(occurrence, /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    assert.equal(fx.allocationCount, 1);
+    assert.equal(fx.providerCreates, 1);
   } finally {
     await tree.unmount();
     fx.restore();
+    clearOccurrenceSession();
   }
 });
 
 test("mount: same-tick double-click create posts exactly once (inFlight lock)", async () => {
+  clearOccurrenceSession();
   const fx = installFetchFixture();
-  fx.setCapability(
-    baseCapability({
-      canCreate: true,
-      allowPackageCompletion: false,
-      blockReasonCodes: [],
-      ineligibilityReasonCode: null,
-      weightGrams: 500,
-      lengthCentimeters: 20,
-      widthCentimeters: 15,
-      heightCentimeters: 10,
-      configuredSender: {
-        fullName: "Store",
-        mobile: "09120000000",
-        addressLine: "Addr",
-        postalCode: "1111111111",
-      },
-    }),
-  );
+  fx.setCapability(readyCapability());
   const tree = await mountCarrier();
   try {
     await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
     const btn = q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`);
-    // two clicks in one act turn — sync inFlight should drop the second
     await clickBurst(btn, 2);
     await waitFor(() => fx.ledger.create >= 1);
     await flush();
@@ -400,31 +489,16 @@ test("mount: same-tick double-click create posts exactly once (inFlight lock)", 
   } finally {
     await tree.unmount();
     fx.restore();
+    clearOccurrenceSession();
   }
 });
 
 test("mount: Unknown track refusal and typed intent_conflict surface in status", async () => {
+  clearOccurrenceSession();
   const fx = installFetchFixture({
     onTrack: () => jsonResponse(409, { errorCode: "shipping.carrier.shipment.unknown" }),
   });
-  fx.setCapability(
-    baseCapability({
-      canCreate: true,
-      allowPackageCompletion: false,
-      blockReasonCodes: [],
-      ineligibilityReasonCode: null,
-      weightGrams: 500,
-      lengthCentimeters: 20,
-      widthCentimeters: 15,
-      heightCentimeters: 10,
-      configuredSender: {
-        fullName: "Store",
-        mobile: "09120000000",
-        addressLine: "Addr",
-        postalCode: "1111111111",
-      },
-    }),
-  );
+  fx.setCapability(readyCapability({ executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 1 }] }));
   fx.setShipments([
     {
       operationId: OP_A,
@@ -462,32 +536,20 @@ test("mount: Unknown track refusal and typed intent_conflict surface in status",
   } finally {
     await tree.unmount();
     fx.restore();
+    clearOccurrenceSession();
   }
 });
 
 test("mount: Pending occurrence retained across refresh; replay create posts same packageDispatchId", async () => {
+  clearOccurrenceSession();
   const fx = installFetchFixture();
   const pendingId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
   fx.setCapability(
-    baseCapability({
-      canCreate: true,
-      allowPackageCompletion: false,
-      blockReasonCodes: [],
-      ineligibilityReasonCode: null,
-      weightGrams: 500,
-      lengthCentimeters: 20,
-      widthCentimeters: 15,
-      heightCentimeters: 10,
+    readyCapability({
       latestCreateOperation: {
         operationId: "op-pending",
         state: "Pending",
         packageDispatchId: pendingId,
-      },
-      configuredSender: {
-        fullName: "Store",
-        mobile: "09120000000",
-        addressLine: "Addr",
-        postalCode: "1111111111",
       },
     }),
   );
@@ -526,5 +588,162 @@ test("mount: Pending occurrence retained across refresh; replay create posts sam
   } finally {
     await tree.unmount();
     fx.restore();
+    clearOccurrenceSession();
+  }
+});
+
+test("mount R7: lost HTTP after server accept → remount/retry same occurrence → no second allocation", async () => {
+  clearOccurrenceSession();
+  let acceptedOccurrence: string | null = null;
+  let fx!: ReturnType<typeof installFetchFixture>;
+  fx = installFetchFixture({
+    onCreate: (body, ledger) => {
+      const occurrence = String(body.packageDispatchId ?? "");
+      assert.match(occurrence, /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      if (!acceptedOccurrence) {
+        acceptedOccurrence = occurrence;
+        fx.applyServerAcceptedCreate(occurrence);
+        // Server accepted; HTTP response never reaches the client.
+        throw new TypeError("Failed to fetch");
+      }
+      // Retry / remount recovery with the same occurrence converges — no new provider/allocation.
+      const existing = fx.ships.find((s) => s.packageDispatchId === occurrence);
+      assert.ok(existing, "server already holds the occurrence");
+      assert.equal(occurrence, acceptedOccurrence);
+      ledger.bodies.push({ kind: "create-replay-observed", body });
+      return jsonResponse(200, existing);
+    },
+  });
+  fx.setCapability(readyCapability({ executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 2 }] }));
+
+  const tree1 = await mountCarrier();
+  try {
+    await waitFor(() => !!tree1.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await click(q(tree1.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() => fx.ledger.create === 1);
+    await waitFor(() =>
+      !!tree1.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`),
+    );
+    assert.equal(fx.allocationCount, 1);
+    assert.equal(fx.providerCreates, 1);
+    const hidden = q(
+      tree1.container,
+      `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`,
+    ) as HTMLInputElement;
+    assert.equal(hidden.value, acceptedOccurrence);
+    // Create control replaced by reconcile while uncertain.
+    assert.equal(tree1.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
+  } finally {
+    await tree1.unmount();
+  }
+
+  // Remount recovers the same locator from session and still blocks blind create.
+  const tree2 = await mountCarrier();
+  try {
+    await waitFor(() =>
+      !!tree2.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`),
+    );
+    const hidden = q(
+      tree2.container,
+      `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`,
+    ) as HTMLInputElement;
+    assert.equal(hidden.value, acceptedOccurrence);
+
+    await click(q(tree2.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    await waitFor(() => !!tree2.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await click(q(tree2.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() => fx.ledger.create === 2);
+    const second = fx.ledger.bodies.filter((b) => (b as { kind?: string }).kind === "create")[1] as {
+      body: Record<string, unknown>;
+    };
+    assert.equal(second.body.packageDispatchId, acceptedOccurrence);
+    assert.equal(fx.allocationCount, 1, "no second allocation after response-loss recovery");
+    assert.equal(fx.providerCreates, 1, "no second provider call");
+  } finally {
+    await tree2.unmount();
+    fx.restore();
+    clearOccurrenceSession();
+  }
+});
+
+test("mount R7: list fail after uncertain create blocks resubmit and keeps occurrence", async () => {
+  clearOccurrenceSession();
+  let listFail = false;
+  let fx!: ReturnType<typeof installFetchFixture>;
+  fx = installFetchFixture({
+    onCreate: (body) => {
+      const occurrence = String(body.packageDispatchId ?? "");
+      fx.applyServerAcceptedCreate(occurrence);
+      throw new TypeError("Failed to fetch");
+    },
+    onShipmentsGet: () => (listFail ? jsonResponse(500, { errorCode: "shipping.carrier.list_failed" }) : null),
+  });
+  fx.setCapability(readyCapability());
+  const tree = await mountCarrier();
+  try {
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() =>
+      !!tree.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`),
+    );
+    const occurrence = (
+      q(tree.container, `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`) as HTMLInputElement
+    ).value;
+    assert.ok(occurrence.length > 0);
+
+    listFail = true;
+    await click(q(tree.container, `[data-testid="${PREFIX}-reconcile-${GROUP}"]`));
+    await waitFor(() => {
+      const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
+      return (status?.textContent ?? "").includes("فهرست محموله‌ها");
+    });
+    // Still uncertain — create remains blocked; occurrence unchanged.
+    assert.ok(tree.container.querySelector(`[data-testid="${PREFIX}-create-uncertain-${GROUP}"]`));
+    assert.equal(tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`), null);
+    assert.equal(
+      (q(tree.container, `[data-testid="${PREFIX}-package-dispatch-id-${GROUP}"]`) as HTMLInputElement)
+        .value,
+      occurrence,
+    );
+  } finally {
+    await tree.unmount();
+    fx.restore();
+    clearOccurrenceSession();
+  }
+});
+
+test("mount R7: explicit second parcel identical payload mints a different occurrence", async () => {
+  clearOccurrenceSession();
+  const fx = installFetchFixture();
+  fx.setCapability(readyCapability({ executableLines: [{ orderLineId: "ol-1", remainingPackedQuantity: 2 }] }));
+  const tree = await mountCarrier();
+  try {
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() => fx.ledger.create === 1);
+    await waitFor(() => {
+      const status = tree.container.querySelector(`[data-testid="${PREFIX}-status"]`);
+      return (status?.textContent ?? "").includes("حساب حامل ذخیره شد");
+    });
+    const first = fx.ledger.bodies.find((b) => (b as { kind?: string }).kind === "create") as {
+      body: Record<string, unknown>;
+    };
+    const firstId = String(first.body.packageDispatchId);
+    assert.equal(fx.allocationCount, 1);
+
+    await waitFor(() => !!tree.container.querySelector(`[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await click(q(tree.container, `[data-testid="${PREFIX}-create-${GROUP}"]`));
+    await waitFor(() => fx.ledger.create === 2);
+    const creates = fx.ledger.bodies.filter((b) => (b as { kind?: string }).kind === "create") as Array<{
+      body: Record<string, unknown>;
+    }>;
+    const secondId = String(creates[1].body.packageDispatchId);
+    assert.notEqual(secondId, firstId);
+    assert.equal(fx.allocationCount, 2);
+    assert.equal(fx.providerCreates, 2);
+  } finally {
+    await tree.unmount();
+    fx.restore();
+    clearOccurrenceSession();
   }
 });
