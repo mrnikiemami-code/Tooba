@@ -1,4 +1,4 @@
-# RECEIPTS — TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251
+﻿# RECEIPTS — TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251
 
 ## Identity
 
@@ -35,5 +35,5 @@ Host CapturedPreview: local env ON; checked-in OFF. Projection `hasCapturedPrevi
 
 ## Code-SHA / Evidence-SHA
 
-- Code-SHA: CODE_SHA_PENDING
+- Code-SHA: 1ed7800bedc1f16e67e6a81e9d84c4b2e8251ecd
 - Evidence-SHA: EVIDENCE_SHA_PENDING
