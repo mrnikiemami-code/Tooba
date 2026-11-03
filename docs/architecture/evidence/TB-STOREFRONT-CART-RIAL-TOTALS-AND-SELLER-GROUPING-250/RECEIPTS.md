@@ -1,4 +1,4 @@
-# RECEIPTS — TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250
+﻿# RECEIPTS — TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250
 
 ## Identity
 
@@ -38,5 +38,5 @@ Rounding authority: backend `FinancialRounder.MoneyPlaces` (IRR/JPY/KRW=0 else 2
 
 ## Code-SHA / Evidence-SHA
 
-- Code-SHA: CODE_SHA_PENDING
+- Code-SHA: f5570306bf8cc2244b30b34dcf6792f5ece82dac
 - Evidence-SHA: EVIDENCE_SHA_PENDING

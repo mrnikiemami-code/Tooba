@@ -1,4 +1,4 @@
-# RESULT — TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250
+﻿# RESULT — TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250
 
 Status: **PASS** within issued cart money/grouping + mounted proof + canonical deploy scope  
 Decision: **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**  
@@ -6,7 +6,7 @@ NOT Architect ACCEPT, NOT Visual/User ACCEPT, NOT Tipax ACCEPT
 
 Parent: `TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8`  
 Base-SHA: `4ce605905af623edcbce96ca5c46decfdc2d4817`  
-Code-SHA: `CODE_SHA_PENDING`  
+Code-SHA: `f5570306bf8cc2244b30b34dcf6792f5ece82dac`  
 Evidence-SHA: `EVIDENCE_SHA_PENDING`  
 Stop-State: `STOP_FOR_ARCHITECT`  
 automaticNextImplementationTask: `NONE`
