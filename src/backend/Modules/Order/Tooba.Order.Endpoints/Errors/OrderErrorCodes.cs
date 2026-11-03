@@ -16,4 +16,6 @@ public static class OrderErrorCodes
     public const string AcceptedGroupLineForeign = "order.shipment.accepted_group_line_foreign";
     public const string AcceptedGroupQuantityExcess = "order.shipment.accepted_group_quantity_excess";
     public const string AcceptedGroupNotExecutable = "order.shipment.accepted_group_not_executable";
+    public const string CarrierApiUseDedicatedPath = "order.shipment.carrier_api_use_dedicated_path";
+    public const string ProviderMetadataForbidden = "order.shipment.provider_metadata_forbidden";
 }

@@ -68,6 +68,8 @@ public sealed class FulfillmentValidatorBehaviorTests
         Assert.False(Validate(Command(carrierDisplayName: "   "), validator).IsValid);
         Assert.False(Validate(Command(trackingReference: "\t "), validator).IsValid);
         Assert.False(Validate(Command(shippingMethodCode: "  "), validator).IsValid);
+        Assert.False(Validate(Command(omitShippingGroup: true), validator).IsValid);
+        Assert.False(Validate(Command(shippingGroupId: Guid.Empty), validator).IsValid);
         Assert.True(Validate(Command(), validator).IsValid);
     }
 
@@ -144,7 +146,9 @@ public sealed class FulfillmentValidatorBehaviorTests
         IReadOnlyList<ShipmentLineCommand>? lines = null,
         Guid? shipmentId = null,
         string? trackingReference = null,
-        string? shippingMethodCode = null) =>
+        string? shippingMethodCode = null,
+        Guid? shippingGroupId = null,
+        bool omitShippingGroup = false) =>
         new(
             fulfillmentId ?? NonEmpty,
             actorUserId ?? NonEmpty,
@@ -155,7 +159,9 @@ public sealed class FulfillmentValidatorBehaviorTests
             lines,
             shipmentId,
             trackingReference,
-            shippingMethodCode);
+            shippingMethodCode,
+            null,
+            omitShippingGroup ? null : shippingGroupId ?? NonEmpty);
 
     private static FluentValidation.Results.ValidationResult Validate<T>(
         T instance,

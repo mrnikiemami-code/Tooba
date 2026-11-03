@@ -35,7 +35,7 @@
     "test:architecture": "node --experimental-strip-types --test lib/architecture/frontend-source-size.guard.test.ts lib/architecture/frontend-import-boundary.guard.test.ts lib/architecture/frontend-flat-folder.guard.test.ts lib/architecture/frontend-feature-boundary.guard.test.ts lib/architecture/frontend-test-discovery.guard.test.ts lib/architecture/seo-rendering.guard.test.ts",
     "test:admin-languages": "node --experimental-strip-types --test features/admin-languages/admin-languages.characterization.test.ts lib/i18n/language-identity-lock.test.ts",
     "test:discovered": "node scripts/run-discovered-tests.mjs",
-    "test:carrier-mount": "tsx --tsconfig tsconfig.mount-tests.json --test features/order-carrier-execution/order-group-carrier-execution.test.ts features/order-carrier-execution/order-group-carrier-execution.mount.test.ts app/admin/product-physical-specification.mount.test.ts",
+    "test:carrier-mount": "tsx --tsconfig tsconfig.mount-tests.json --test features/order-carrier-execution/order-group-carrier-execution.test.ts features/order-carrier-execution/order-group-carrier-execution.mount.test.ts app/admin/product-physical-specification.mount.test.ts app/admin/admin-create-shipment-modal.mount.test.ts",
     "test:cart-mount": "tsx --tsconfig tsconfig.mount-tests.json --test app/storefront/storefront-cart.mount.test.ts app/storefront/storefront-cart-money.test.ts",
     "test": "npm run test:discovered",
     "test:admin-promotions": "node --experimental-strip-types --test features/admin-promotions/admin-promotions.characterization.test.ts",

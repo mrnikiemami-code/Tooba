@@ -275,7 +275,12 @@ public sealed class AdminOrderDetailComposer
         var shippingGroups = historyGroups.Select(h =>
         {
             factsByGroup.TryGetValue(h.ShippingGroupId, out var facts);
+            var transportMode = facts?.TransportMode
+                ?? (h.Evidence?.CarrierQuote is not null ? "CarrierApi" : "LegacyIncomplete");
+            var isCarrierApi = string.Equals(transportMode, "CarrierApi", StringComparison.Ordinal);
+            // Generic parcel modal is Manual/Free only; CarrierApi uses dedicated Shipping execution UI.
             var eligible = facts is not null
+                && !isCarrierApi
                 && !facts.IsCancelled
                 && !facts.PaymentLocked
                 && facts.ExecutableLines.Count > 0;
@@ -287,6 +292,10 @@ public sealed class AdminOrderDetailComposer
             else if (facts is null)
             {
                 blockFa = "شاهد اجرایی این گروه در دسترس نیست.";
+            }
+            else if (isCarrierApi)
+            {
+                blockFa = "این گروه حامل API است؛ ایجاد مرسوله فقط از پنل اجرای حامل همین گروه انجام می‌شود.";
             }
             else if (facts.IsCancelled)
             {
@@ -326,7 +335,8 @@ public sealed class AdminOrderDetailComposer
                 eligible,
                 blockFa,
                 h.Evidence?.PayableAtCheckoutAmount ?? h.ShippingChargeSnapshot,
-                h.Evidence?.CarrierCollectAmount ?? 0m);
+                h.Evidence?.CarrierCollectAmount ?? 0m,
+                transportMode);
         }).ToList();
 
         return Result.Success(new AdminOrderDetailPage(

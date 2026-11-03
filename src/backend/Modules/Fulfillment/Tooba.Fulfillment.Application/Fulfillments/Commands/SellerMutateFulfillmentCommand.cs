@@ -7,6 +7,9 @@ using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
 using Tooba.Fulfillment.Contracts;
 using Tooba.Fulfillment.Contracts.Errors;
+using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Order.Contracts.Shipping;
+
 namespace Tooba.Fulfillment.Application.Fulfillments.Commands;
 
 /// <summary>Snapshot مجوز که Host از AccessControl می‌سازد.</summary>
@@ -46,13 +49,16 @@ public sealed class SellerMutateFulfillmentHandler
 {
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly ISellerFulfillmentAuthorizer _authorizer;
+    private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups;
 
     public SellerMutateFulfillmentHandler(
         IFulfillmentDirectory fulfillment,
-        ISellerFulfillmentAuthorizer authorizer)
+        ISellerFulfillmentAuthorizer authorizer,
+        IOrderCommittedCarrierShipmentFactsReader committedShippingGroups)
     {
         _fulfillment = fulfillment;
         _authorizer = authorizer;
+        _committedShippingGroups = committedShippingGroups;
     }
 
     public async Task<Result<FulfillmentSnapshot>> Handle(
@@ -77,6 +83,59 @@ public sealed class SellerMutateFulfillmentHandler
             return Result.Failure<FulfillmentSnapshot>(auth.Errors);
         }
 
+        if (request.Kind == SellerFulfillmentMutationKind.CreateShipment)
+        {
+            AcceptedGroupParcelCreateAuthority.BoundCreate bound;
+            try
+            {
+                var checkoutGroups = await _committedShippingGroups.ListByCheckoutAsync(
+                    existing.CheckoutId,
+                    cancellationToken);
+                var selections = request.ShipmentLines is { Count: > 0 }
+                    ? request.ShipmentLines
+                        .Select(x => new AcceptedGroupParcelCreateAuthority.LineQuantity(x.OrderLineId, x.Quantity))
+                        .ToArray()
+                    : null;
+
+                bound = AcceptedGroupParcelCreateAuthority.Bind(
+                    existing.CheckoutId,
+                    existing.SellerOrderId,
+                    existing.SellerPartyId,
+                    existing.FulfillmentId,
+                    request.ShippingGroupId,
+                    request.ShippingMethodCode,
+                    clientServiceCode: null,
+                    clientOptionCode: null,
+                    request.ProviderMetadataJson,
+                    selections,
+                    checkoutGroups);
+            }
+            catch (AcceptedGroupParcelCreateException ex)
+            {
+                // Order-owned refusal codes — surface as Result, not Fulfillment catalog fault.
+                return Result.Failure<FulfillmentSnapshot>(new SemanticError(ex.Code));
+            }
+
+            var registryCode = MapAcceptedMethodToRegistry(
+                bound.AcceptedMethodCode,
+                bound.AcceptedServiceCode,
+                bound.AcceptedOptionCode);
+            var lines = bound.Lines
+                .Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity))
+                .ToArray();
+
+            return await FulfillmentOperation.ExecuteAsync(async () =>
+                (await _fulfillment.CreateShipmentAsync(
+                    request.FulfillmentId,
+                    request.ActorUserId,
+                    bound.CarrierDisplayName,
+                    lines,
+                    cancellationToken,
+                    registryCode,
+                    providerMetadataJson: null,
+                    bound.ShippingGroupId)).Snapshot);
+        }
+
         return await FulfillmentOperation.ExecuteAsync(async () =>
         {
             return request.Kind switch
@@ -85,16 +144,6 @@ public sealed class SellerMutateFulfillmentHandler
                     await _fulfillment.MarkProcessingAsync(request.FulfillmentId, request.ActorUserId, cancellationToken),
                 SellerFulfillmentMutationKind.MarkPacked =>
                     await _fulfillment.MarkPackedAsync(request.FulfillmentId, request.ActorUserId, cancellationToken),
-                SellerFulfillmentMutationKind.CreateShipment =>
-                    (await _fulfillment.CreateShipmentAsync(
-                        request.FulfillmentId,
-                        request.ActorUserId,
-                        request.CarrierDisplayName ?? string.Empty,
-                        request.ShipmentLines ?? [],
-                        cancellationToken,
-                        request.ShippingMethodCode,
-                        request.ProviderMetadataJson,
-                        request.ShippingGroupId)).Snapshot,
                 SellerFulfillmentMutationKind.AssignTracking =>
                     await _fulfillment.AssignTrackingAsync(
                         request.FulfillmentId,
@@ -118,5 +167,46 @@ public sealed class SellerMutateFulfillmentHandler
             };
         });
     }
-}
 
+    private static string? MapAcceptedMethodToRegistry(
+        string acceptedMethodCode,
+        string? acceptedServiceCode,
+        string? acceptedOptionCode)
+    {
+        if (string.IsNullOrWhiteSpace(acceptedMethodCode))
+        {
+            return null;
+        }
+
+        var method = acceptedMethodCode.Trim().Split('\u001f', 2)[0].Trim();
+        var service = string.IsNullOrWhiteSpace(acceptedServiceCode)
+            ? null
+            : acceptedServiceCode.Trim().Split('\u001f', 2)[0].Trim();
+        var option = string.IsNullOrWhiteSpace(acceptedOptionCode)
+            ? null
+            : acceptedOptionCode.Trim().Split('\u001f', 2)[0].Trim();
+
+        string[] candidates =
+        [
+            string.IsNullOrEmpty(service) || string.IsNullOrEmpty(option) ? string.Empty : $"{method}:{service}:{option}",
+            string.IsNullOrEmpty(option) ? string.Empty : $"{method}:{option}",
+            string.IsNullOrEmpty(service) ? string.Empty : $"{method}:{service}",
+            method,
+        ];
+
+        foreach (var candidate in candidates)
+        {
+            if (candidate.Length == 0)
+            {
+                continue;
+            }
+
+            if (ShippingMethodRegistry.Find(candidate) is { } exact)
+            {
+                return exact.Code;
+            }
+        }
+
+        return method;
+    }
+}

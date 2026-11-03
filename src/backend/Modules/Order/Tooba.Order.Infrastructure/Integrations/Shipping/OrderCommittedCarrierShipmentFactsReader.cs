@@ -255,7 +255,9 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             executableLines,
             fulfillmentId,
             groupPackedTotal,
-            packedLineValues);
+            packedLineValues,
+            string.IsNullOrWhiteSpace(group.ServiceCode) ? null : group.ServiceCode.Trim(),
+            string.IsNullOrWhiteSpace(group.OptionCode) ? null : group.OptionCode.Trim());
     }
 
     /// <summary>

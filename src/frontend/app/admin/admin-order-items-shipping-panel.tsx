@@ -846,6 +846,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                         });
                         const canCreateGroup = canCreateBase
                           && group.createParcelEligible
+                          && group.transportMode !== "CarrierApi"
                           && groupSelectedOk;
                         const deliveryBits = [
                           group.deliveryDate,

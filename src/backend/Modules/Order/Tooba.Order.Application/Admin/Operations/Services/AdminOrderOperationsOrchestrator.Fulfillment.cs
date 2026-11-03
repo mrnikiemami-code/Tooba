@@ -217,13 +217,14 @@ public sealed partial class AdminOrderOperationsOrchestrator
             }
         }
 
+        // TB-252-R1: never forward client ProviderMetadataJson — Manual parcel create derives from accepted facts only.
         return (await _fulfillment.CreateShipmentAsync(
             fulfillmentId,
             actorUserId,
             carrier,
             bound.Lines,
             methodCode,
-            request.ProviderMetadataJson,
+            providerMetadataJson: null,
             cancellationToken,
             bound.ShippingGroupId)).Snapshot;
     }

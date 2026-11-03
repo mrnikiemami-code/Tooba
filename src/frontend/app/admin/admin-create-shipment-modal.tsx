@@ -1,23 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Package, Truck } from "lucide-react";
 import { toast } from "react-toastify";
-import { Button, Dialog } from "../../design-system";
+import { Button } from "../../design-system/primitives/core";
+import { Dialog } from "../../design-system/primitives/overlays";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { executeAdminOrderOperation } from "./admin-order-operations";
-import {
-  formatAdminMoney,
-  type AdminAcceptedShippingGroup,
-  type AdminOrderDetail,
-  type AdminOrderLine,
-  type AdminSellerOrder,
+import type {
+  AdminAcceptedShippingGroup,
+  AdminOrderDetail,
+  AdminOrderLine,
+  AdminSellerOrder,
 } from "./admin-api";
 
 export type CreateShipmentLineSelection = {
   line: AdminOrderLine;
   quantity: number;
 };
+
+function formatAdminMoney(amount: number, currency = "IRR"): string {
+  try {
+    return new Intl.NumberFormat("fa-IR", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${amount.toLocaleString("fa-IR")} ${currency}`;
+  }
+}
 
 type Props = {
   open: boolean;
@@ -29,6 +41,8 @@ type Props = {
   selectedLines: CreateShipmentLineSelection[];
   orderDetail?: AdminOrderDetail | null;
   onCompleted?: () => void;
+  /** Test seam — defaults to executeAdminOrderOperation. */
+  operationExecutor?: typeof executeAdminOrderOperation;
 };
 
 function remainingShippable(line: AdminOrderLine): number {
@@ -55,6 +69,7 @@ function ownerLabel(group: AdminAcceptedShippingGroup): string | null {
 
 /**
  * مودال ایجاد مرسوله از یک گروه ارسال پذیرفته‌شده — روش/زمان فقط‌خواندنی.
+ * TB-252-R1: synchronous in-flight gate + try/finally; no providerMetadataJson.
  */
 export function AdminCreateShipmentModal({
   open,
@@ -66,10 +81,14 @@ export function AdminCreateShipmentModal({
   selectedLines,
   orderDetail,
   onCompleted,
+  operationExecutor = executeAdminOrderOperation,
 }: Props) {
   const [lineQty, setLineQty] = useState<Record<string, number>>({});
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inFlightRef = useRef(false);
+  const operationExecutorRef = useRef(operationExecutor);
+  operationExecutorRef.current = operationExecutor;
 
   const groupLineIdSet = useMemo(
     () => new Set(shippingGroup.orderLineIds),
@@ -105,6 +124,8 @@ export function AdminCreateShipmentModal({
     }
     setLineQty(next);
     setError(null);
+    inFlightRef.current = false;
+    setPending(false);
   }, [open, groupLines, presetByLine]);
 
   const selections = useMemo(
@@ -122,35 +143,49 @@ export function AdminCreateShipmentModal({
   const canSubmit =
     Boolean(fulfillmentId)
     && shippingGroup.createParcelEligible
+    && shippingGroup.transportMode !== "CarrierApi"
     && selections.length > 0
     && !pending;
 
   async function submit() {
-    if (!canSubmit || !fulfillmentId) return;
+    if (!fulfillmentId || !canSubmit) return;
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setPending(true);
     setError(null);
-    const result = await executeAdminOrderOperation(checkoutId, {
-      code: "create_shipment",
-      sellerOrderId: sellerOrder.id,
-      fulfillmentId,
-      shippingGroupId: shippingGroup.shippingGroupId,
-      carrierDisplayName: shippingGroup.methodLabel || shippingGroup.methodCode,
-      shippingMethodCode: shippingGroup.methodCode,
-      selections: selections.map((s) => ({
-        orderLineId: s.orderLineId,
-        quantity: s.quantity,
-      })),
-    });
-    setPending(false);
-    if (result.state !== "ok") {
-      const fa = mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa");
+    try {
+      const result = await operationExecutorRef.current(checkoutId, {
+        code: "create_shipment",
+        sellerOrderId: sellerOrder.id,
+        fulfillmentId,
+        shippingGroupId: shippingGroup.shippingGroupId,
+        carrierDisplayName: shippingGroup.methodLabel || shippingGroup.methodCode,
+        shippingMethodCode: shippingGroup.methodCode,
+        selections: selections.map((s) => ({
+          orderLineId: s.orderLineId,
+          quantity: s.quantity,
+        })),
+      });
+      if (result.state !== "ok") {
+        const fa = mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa");
+        setError(fa);
+        toast.error(fa);
+        return;
+      }
+      toast.success("عملیات ایجاد مرسوله انجام شد.");
+      onClose();
+      onCompleted?.();
+    } catch (thrown) {
+      const fa = mapAdminErrorMessage(
+        thrown instanceof Error && thrown.message ? thrown.message : "order.operation.failed",
+        "fa",
+      );
       setError(fa);
       toast.error(fa);
-      return;
+    } finally {
+      inFlightRef.current = false;
+      setPending(false);
     }
-    toast.success("عملیات ایجاد مرسوله انجام شد.");
-    onClose();
-    onCompleted?.();
   }
 
   const responsibility = ownerLabel(shippingGroup);
@@ -261,7 +296,11 @@ export function AdminCreateShipmentModal({
           ) : null}
 
           {error ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
+            <p
+              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+              role="alert"
+              data-testid="admin-create-shipment-error"
+            >
               {error}
             </p>
           ) : null}

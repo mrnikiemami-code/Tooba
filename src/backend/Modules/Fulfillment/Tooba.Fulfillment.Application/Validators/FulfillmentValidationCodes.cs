@@ -79,4 +79,7 @@ public static class FulfillmentValidationCodes
 
     /// <summary>One-level shipping method code must not be blank when supplied.</summary>
     public const string ShippingMethodCodeRequired = "fulfillment.validation.shipping_method_code_required";
+
+    /// <summary>Accepted shipping group id is required for seller create-shipment.</summary>
+    public const string ShippingGroupIdRequired = "fulfillment.validation.shipping_group_id_required";
 }

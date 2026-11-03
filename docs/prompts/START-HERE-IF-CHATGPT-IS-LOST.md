@@ -1,4 +1,12 @@
-# CURRENT — 252 PASS: accepted-group parcel execution UI + server bind — 2026-11-03
+# CURRENT — 252-R1 PASS: transport routing + exact method + modal reliability — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued transport-routing + modal + deploy scope, decision **TRANSPORT_ROUTING_EXACT_METHOD_AND_MODAL_RELIABILITY_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `063e100c8`.
+252 Architect PARTIAL closed: CarrierApi refused on generic create; exact method/option (no prefix); modal sync inFlight; mounted+routing tests; seller group bind. Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 252 PASS (Architect PARTIAL): accepted-group parcel UI + server bind — 2026-11-03
+
+# SUPERSEDED — 252 PASS (Architect PARTIAL): accepted-group parcel execution UI + server bind — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS**, decision **ACCEPTED_GROUP_PARCEL_EXECUTION_UI_AND_SERVER_BIND_DEPLOYED**. Base `7786d4bc0`. Seller→accepted groups→parcel; method catalogue removed; server group bind. Live order `01a1a200-…` two groups read-only. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.

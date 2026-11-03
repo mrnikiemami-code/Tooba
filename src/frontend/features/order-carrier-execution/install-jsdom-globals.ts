@@ -2,7 +2,16 @@
  * Side-effect: install jsdom globals BEFORE react-dom is imported.
  * React caches InputEvent support at module load; without this it falls into IE attachEvent polyfill.
  */
+import Module from "node:module";
 import { JSDOM } from "jsdom";
+
+// Allow CJS require of .css (AppDataGrid) under mount tests without parsing stylesheets.
+const cjs = Module as unknown as { _extensions?: Record<string, (m: NodeModule, filename: string) => void> };
+if (cjs._extensions && typeof cjs._extensions[".css"] !== "function") {
+  cjs._extensions[".css"] = (module) => {
+    (module as { exports: unknown }).exports = {};
+  };
+}
 
 const g = globalThis as typeof globalThis & Record<string, unknown>;
 
@@ -34,6 +43,36 @@ if (!already) {
   define("HTMLElement", window.HTMLElement);
   define("HTMLInputElement", window.HTMLInputElement);
   define("HTMLButtonElement", window.HTMLButtonElement);
+  // jsdom lacks <dialog> showModal/close — polyfill for Dialog mount tests.
+  const dialogProto = (window as unknown as { HTMLDialogElement?: { prototype: HTMLDialogElement } })
+    .HTMLDialogElement?.prototype;
+  if (dialogProto) {
+    if (typeof dialogProto.showModal !== "function") {
+      dialogProto.showModal = function showModal(this: HTMLDialogElement) {
+        this.setAttribute("open", "");
+      };
+    }
+    if (typeof dialogProto.close !== "function") {
+      dialogProto.close = function close(this: HTMLDialogElement) {
+        this.removeAttribute("open");
+      };
+    }
+  } else {
+    class HTMLDialogElementPolyfill extends window.HTMLElement {
+      showModal() {
+        this.setAttribute("open", "");
+      }
+      close() {
+        this.removeAttribute("open");
+      }
+    }
+    define("HTMLDialogElement", HTMLDialogElementPolyfill);
+    try {
+      window.customElements.define("dialog", HTMLDialogElementPolyfill as unknown as CustomElementConstructor);
+    } catch {
+      /* already defined */
+    }
+  }
   define("Node", window.Node);
   define("MutationObserver", window.MutationObserver);
   define("Event", window.Event);

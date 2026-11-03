@@ -250,6 +250,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "در وضعیت فعلی سفارش، ایجاد مرسوله برای این گروه ارسال ممکن نیست.",
     en: "This delivery group cannot create a parcel in the current order state.",
   },
+  "order.shipment.carrier_api_use_dedicated_path": {
+    fa: "این گروه حامل API است؛ ایجاد مرسوله فقط از پنل اجرای حامل همین گروه مجاز است.",
+    en: "This group uses carrier API; create the parcel only from the group carrier execution panel.",
+  },
+  "order.shipment.provider_metadata_forbidden": {
+    fa: "فراسنج‌های ارائه‌دهنده برای ایجاد مرسولهٔ دستی پذیرفته نمی‌شود.",
+    en: "Provider metadata is not accepted for manual parcel create.",
+  },
   "payment.restore.not_manual": {
     fa: "فقط پرداخت کارت‌به‌کارت/دستی قابل بازگردانی است.",
     en: "Only manual or card-to-card payments can be restored.",

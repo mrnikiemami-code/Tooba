@@ -64,7 +64,11 @@ public sealed record OrderCommittedCarrierShipmentFacts(
     /// <summary>Sum of packed quantities across group lines (eligibility / residual accounting).</summary>
     decimal? GroupPackedQuantityTotal = null,
     /// <summary>All packed group lines with unit prices for exact declared/collect allocation.</summary>
-    IReadOnlyList<OrderCommittedCarrierLineValueFact>? GroupPackedLineValues = null);
+    IReadOnlyList<OrderCommittedCarrierLineValueFact>? GroupPackedLineValues = null,
+    /// <summary>Committed catalogue service code (exact identity; not a registry prefix).</summary>
+    string? ServiceCode = null,
+    /// <summary>Committed catalogue option code (exact identity; not a registry prefix).</summary>
+    string? OptionCode = null);
 
 /// <summary>Contracts-only lookup of committed shipping groups. Empty when the order is not committed.</summary>
 public interface IOrderCommittedCarrierShipmentFactsReader

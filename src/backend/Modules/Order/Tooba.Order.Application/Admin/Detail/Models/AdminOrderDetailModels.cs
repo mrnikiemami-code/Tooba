@@ -64,7 +64,9 @@ public sealed record AdminAcceptedShippingGroupView(
     bool CreateParcelEligible,
     string? CreateParcelBlockReasonFa,
     decimal PayableAtCheckoutAmount,
-    decimal CarrierCollectAmount);
+    decimal CarrierCollectAmount,
+    /// <summary>Committed transport mode from Order facts (Manual / CarrierApi / LegacyIncomplete).</summary>
+    string TransportMode);
 
 /// <summary>عضو بسته تجمیعی روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminConsolidatedPackageMemberView(

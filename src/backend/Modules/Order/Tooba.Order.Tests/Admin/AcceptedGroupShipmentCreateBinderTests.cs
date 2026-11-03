@@ -46,6 +46,78 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
     }
 
     [Fact]
+    public void Resolve_refuses_prefix_option_mismatch()
+    {
+        var ex = Assert.Throws<AdminOrderOperationsException>(() =>
+            AcceptedGroupShipmentCreateBinder.Resolve(
+                Snapshot(),
+                Request(GroupA, "post:other", new AdminOrderLineSelection(Line1, 1m)),
+                [Facts(GroupA, "post", Line1, 2m, optionCode: "standard")]));
+        Assert.Equal(AcceptedGroupShipmentCreateBinder.AcceptedGroupMethodMismatch, ex.Code);
+    }
+
+    [Fact]
+    public void Resolve_refuses_carrier_api_transport()
+    {
+        var ex = Assert.Throws<AdminOrderOperationsException>(() =>
+            AcceptedGroupShipmentCreateBinder.Resolve(
+                Snapshot(),
+                Request(GroupA, "tipax:standard", new AdminOrderLineSelection(Line1, 1m)),
+                [Facts(GroupA, "tipax:standard", Line1, 2m, transportMode: "CarrierApi", hasQuote: true)]));
+        Assert.Equal(AcceptedGroupShipmentCreateBinder.CarrierApiUseDedicatedPath, ex.Code);
+    }
+
+    [Fact]
+    public void Resolve_refuses_provider_metadata_override()
+    {
+        var ex = Assert.Throws<AdminOrderOperationsException>(() =>
+            AcceptedGroupShipmentCreateBinder.Resolve(
+                Snapshot(),
+                Request(GroupA, "post", new AdminOrderLineSelection(Line1, 1m), providerMetadata: "{}"),
+                [Facts(GroupA, "post", Line1, 2m)]));
+        Assert.Equal(AcceptedGroupShipmentCreateBinder.ProviderMetadataForbidden, ex.Code);
+    }
+
+    [Fact]
+    public void Resolve_aggregates_duplicate_line_selections()
+    {
+        var bound = AcceptedGroupShipmentCreateBinder.Resolve(
+            Snapshot(),
+            Request(
+                GroupA,
+                "post",
+                null,
+                selections:
+                [
+                    new AdminOrderLineSelection(Line1, 1m),
+                    new AdminOrderLineSelection(Line1, 1m),
+                ]),
+            [Facts(GroupA, "post", Line1, 3m)]);
+
+        Assert.Single(bound.Lines);
+        Assert.Equal(2m, bound.Lines[0].Quantity);
+    }
+
+    [Fact]
+    public void Resolve_refuses_aggregated_excess_quantity()
+    {
+        var ex = Assert.Throws<AdminOrderOperationsException>(() =>
+            AcceptedGroupShipmentCreateBinder.Resolve(
+                Snapshot(),
+                Request(
+                    GroupA,
+                    "post",
+                    null,
+                    selections:
+                    [
+                        new AdminOrderLineSelection(Line1, 2m),
+                        new AdminOrderLineSelection(Line1, 2m),
+                    ]),
+                [Facts(GroupA, "post", Line1, 3m)]));
+        Assert.Equal(AcceptedGroupShipmentCreateBinder.AcceptedGroupQuantityExcess, ex.Code);
+    }
+
+    [Fact]
     public void Resolve_refuses_missing_group_id()
     {
         var ex = Assert.Throws<AdminOrderOperationsException>(() =>
@@ -99,6 +171,17 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
         Assert.Equal(AcceptedGroupShipmentCreateBinder.AcceptedGroupQuantityExcess, ex.Code);
     }
 
+    [Fact]
+    public void Exact_identity_accepts_matching_option_composite()
+    {
+        var bound = AcceptedGroupShipmentCreateBinder.Resolve(
+            Snapshot(),
+            Request(GroupA, "post:standard", new AdminOrderLineSelection(Line1, 1m)),
+            [Facts(GroupA, "post", Line1, 2m, optionCode: "standard")]);
+        Assert.Equal(GroupA, bound.ShippingGroupId);
+        Assert.Equal("post", bound.ShippingMethodCode);
+    }
+
     private static FulfillmentSnapshot Snapshot() =>
         new(
             FulfillmentId,
@@ -123,7 +206,9 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
     private static AdminOrderOperationRequest Request(
         Guid? groupId,
         string? method,
-        AdminOrderLineSelection? selection) =>
+        AdminOrderLineSelection? selection,
+        string? providerMetadata = null,
+        IReadOnlyList<AdminOrderLineSelection>? selections = null) =>
         new(
             "create_shipment",
             SellerOrderId,
@@ -135,9 +220,9 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
             null,
             null,
             null,
-            selection is null ? null : [selection],
+            selections ?? (selection is null ? null : [selection]),
             method,
-            null,
+            providerMetadata,
             null,
             null,
             groupId);
@@ -148,7 +233,11 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
         Guid lineA,
         decimal qtyA,
         Guid? lineB = null,
-        decimal qtyB = 0m)
+        decimal qtyB = 0m,
+        string transportMode = "Manual",
+        bool hasQuote = false,
+        string? optionCode = null,
+        string? serviceCode = null)
     {
         var lines = new List<OrderCommittedCarrierExecutableLine>
         {
@@ -168,7 +257,7 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
             SellerOrderId,
             method,
             "پیشتاز",
-            "Manual",
+            transportMode,
             0,
             "store-alpha",
             null,
@@ -181,7 +270,7 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
             "IRR",
             125000m,
             0m,
-            false,
+            hasQuote,
             null,
             null,
             null,
@@ -197,10 +286,12 @@ public sealed class AcceptedGroupShipmentCreateBinderTests
             "Paid",
             false,
             false,
-            true,
-            null,
+            transportMode == "CarrierApi" && hasQuote,
+            transportMode == "CarrierApi" ? null : "not_carrier_api",
             ids,
             lines,
-            FulfillmentId);
+            FulfillmentId,
+            ServiceCode: serviceCode,
+            OptionCode: optionCode);
     }
 }

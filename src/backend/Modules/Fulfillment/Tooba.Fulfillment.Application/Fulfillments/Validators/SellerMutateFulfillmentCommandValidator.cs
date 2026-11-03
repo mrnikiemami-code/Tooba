@@ -23,6 +23,14 @@ public sealed class SellerMutateFulfillmentCommandValidator : AbstractValidator<
         FulfillmentFluentRules.OptionalNonBlankShape(this, x => x.TrackingReference, FulfillmentValidationCodes.TrackingReferenceShape);
         FulfillmentFluentRules.OptionalNonBlankShape(this, x => x.ShippingMethodCode, FulfillmentValidationCodes.ShippingMethodCodeShape);
 
+        When(x => x.Kind == SellerFulfillmentMutationKind.CreateShipment, () =>
+        {
+            RuleFor(x => x.ShippingGroupId)
+                .NotNull()
+                .Must(id => id is Guid g && g != Guid.Empty)
+                .WithErrorCode(FulfillmentValidationCodes.ShippingGroupIdRequired);
+        });
+
         When(x => x.ShipmentLines is not null, () =>
         {
             RuleFor(x => x.ShipmentLines!)

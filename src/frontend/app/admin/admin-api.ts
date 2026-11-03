@@ -116,6 +116,8 @@ export interface AdminAcceptedShippingGroup {
   createParcelBlockReasonFa: string | null;
   payableAtCheckoutAmount: number;
   carrierCollectAmount: number;
+  /** Committed transport: Manual | CarrierApi | LegacyIncomplete */
+  transportMode: string;
 }
 
 export interface AdminConsolidatedPackageMember {
@@ -677,6 +679,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       createParcelBlockReasonFa: text(prop(row, "createParcelBlockReasonFa", "CreateParcelBlockReasonFa")) || null,
       payableAtCheckoutAmount: number(prop(row, "payableAtCheckoutAmount", "PayableAtCheckoutAmount")),
       carrierCollectAmount: number(prop(row, "carrierCollectAmount", "CarrierCollectAmount")),
+      transportMode: text(prop(row, "transportMode", "TransportMode"), "LegacyIncomplete"),
     }];
   });
   const consolidatedPackages = array(prop(item, "consolidatedPackages", "ConsolidatedPackages")).flatMap((raw): AdminConsolidatedPackage[] => {
