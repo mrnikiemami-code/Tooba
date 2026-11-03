@@ -12,6 +12,11 @@ internal static class ShippingCarrierOperationPermissions
     internal static bool AccountReadyForProvider(ShippingCarrierAccountExecutionContext? context)
         => context is { IsActive: true } && !string.IsNullOrWhiteSpace(context.Username);
 
+    /// <summary>
+    /// Create is account/capability gated; prior Succeeded packages do not permanently close the group.
+    /// Pending/Unknown on any open package still refuse a fresh create (caller adds those reasons).
+    /// Track/Cancel reflect the latest create operation.
+    /// </summary>
     internal static Permissions ForCreateOperation(
         CarrierShipmentCapabilities caps,
         ShippingCarrierAccountExecutionContext? context,
@@ -27,17 +32,18 @@ internal static class ShippingCarrierOperationPermissions
             return new Permissions(caps.CanCreate, false, false);
         }
 
-        return createOp.State switch
+        var (canTrack, canCancel) = createOp.State switch
         {
-            ShippingCarrierShipmentState.Pending => new Permissions(false, false, false),
-            ShippingCarrierShipmentState.Succeeded => new Permissions(
-                false,
+            ShippingCarrierShipmentState.Succeeded => (
                 caps.CanTrack,
                 caps.CanCancel && !string.IsNullOrWhiteSpace(createOp.ProviderTrackingCode)),
-            ShippingCarrierShipmentState.Unknown => new Permissions(false, caps.CanTrack, false),
-            ShippingCarrierShipmentState.Failed => new Permissions(false, caps.CanTrack, false),
-            _ => new Permissions(false, false, false),
+            ShippingCarrierShipmentState.Unknown => (caps.CanTrack, false),
+            ShippingCarrierShipmentState.Failed => (caps.CanTrack, false),
+            ShippingCarrierShipmentState.Pending => (false, false),
+            _ => (false, false),
         };
+
+        return new Permissions(caps.CanCreate, canTrack, canCancel);
     }
 
     internal static bool CanTrackMutation(

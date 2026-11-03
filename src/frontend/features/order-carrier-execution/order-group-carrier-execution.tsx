@@ -485,9 +485,16 @@ export function OrderGroupCarrierExecution({
                     if (inFlightRef.current.has(groupId)) return;
                     syncBusy(groupId, true);
                     try {
+                      const lines = (group.executableLines ?? [])
+                        .filter((line) => typeof line.orderLineId === "string" && Number(line.remainingPackedQuantity) > 0)
+                        .map((line) => ({
+                          orderLineId: line.orderLineId,
+                          quantity: line.remainingPackedQuantity,
+                        }));
                       const failed = await post(`${apiPrefix}/shipping-services/shipments`, {
                         checkoutId,
                         shippingGroupId: groupId,
+                        lines,
                       });
                       setActionStatus(failed ?? messages.carrierAccountSaved);
                       if (!failed) await refresh();

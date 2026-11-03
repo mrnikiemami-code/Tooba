@@ -106,7 +106,8 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         IReadOnlyList<ShipmentLineCommand> items,
         string? shippingMethodCode,
         string? providerMetadataJson,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        Guid? shippingGroupId = null) =>
         MapRequired(await directory.CreateShipmentAsync(
             fulfillmentId,
             actorUserId,
@@ -114,7 +115,8 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             items.Select(x => new AppModels.ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToList(),
             cancellationToken,
             shippingMethodCode,
-            providerMetadataJson));
+            providerMetadataJson,
+            shippingGroupId));
 
     public async Task<FulfillmentSnapshot> CancelShipmentAsync(
         Guid fulfillmentId,
@@ -268,7 +270,8 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             shipment.ShippingMethodLabel,
             shipment.ProviderMetadataJson,
             shipment.ProviderMetadataVersion,
-            shipment.PreviousTrackingReference);
+            shipment.PreviousTrackingReference,
+            shipment.ShippingGroupId);
 
     private static ConsolidatedPackageSnapshot Map(AppModels.ConsolidatedPackageSnapshot package) =>
         new(

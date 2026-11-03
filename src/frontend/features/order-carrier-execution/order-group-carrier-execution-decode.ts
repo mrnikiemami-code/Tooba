@@ -36,6 +36,7 @@ export interface CapabilityRow {
   allowPackageCompletion: boolean;
   hasEditableSenderPostal: boolean;
   hasEditableSenderContact: boolean;
+  executableLines: readonly { orderLineId: string; remainingPackedQuantity: number }[];
 }
 
 export interface ShipmentView {
@@ -120,6 +121,20 @@ export function decodeCapability(row: unknown): CapabilityRow | null {
     allowPackageCompletion: asBool(item.allowPackageCompletion ?? item.AllowPackageCompletion),
     hasEditableSenderPostal: asBool(item.hasEditableSenderPostal ?? item.HasEditableSenderPostal),
     hasEditableSenderContact: asBool(item.hasEditableSenderContact ?? item.HasEditableSenderContact),
+    executableLines: (() => {
+      const raw = item.executableLines ?? item.ExecutableLines;
+      if (!Array.isArray(raw)) return [];
+      return raw
+        .map((entry) => {
+          if (!entry || typeof entry !== "object") return null;
+          const row = entry as Record<string, unknown>;
+          const orderLineId = asString(row.orderLineId ?? row.OrderLineId);
+          const remainingPackedQuantity = asNumber(row.remainingPackedQuantity ?? row.RemainingPackedQuantity);
+          if (!orderLineId || remainingPackedQuantity == null || remainingPackedQuantity <= 0) return null;
+          return { orderLineId, remainingPackedQuantity };
+        })
+        .filter((x): x is { orderLineId: string; remainingPackedQuantity: number } => x != null);
+    })(),
   };
 }
 

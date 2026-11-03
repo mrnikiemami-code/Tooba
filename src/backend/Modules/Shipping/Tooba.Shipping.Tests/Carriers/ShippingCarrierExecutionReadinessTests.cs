@@ -209,7 +209,11 @@ public sealed class ShippingCarrierExecutionReadinessTests
             !canExecute,
             canExecute,
             reason,
-            Array.Empty<Guid>());
+            Array.Empty<Guid>(),
+            canExecute
+                ? new[] { new OrderCommittedCarrierExecutableLine(Guid.Parse("77777777-7777-4777-8777-777777777777"), 2m) }
+                : Array.Empty<OrderCommittedCarrierExecutableLine>(),
+            Guid.Parse("66666666-6666-4666-8666-666666666666"));
 
     private static OrderCommittedCarrierShipmentFacts IncompleteProvenanceFacts() =>
         new(
@@ -248,9 +252,11 @@ public sealed class ShippingCarrierExecutionReadinessTests
             "Paid",
             false,
             false,
-            true,
+            false,
             "package_completion_required",
-            Array.Empty<Guid>());
+            Array.Empty<Guid>(),
+            new[] { new OrderCommittedCarrierExecutableLine(Guid.Parse("77777777-7777-4777-8777-777777777777"), 2m) },
+            Guid.Parse("66666666-6666-4666-8666-666666666666"));
 
     private sealed class RecordingShipmentProvider : ICarrierShipmentProvider
     {

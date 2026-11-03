@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Contracts.Shipping;
 using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Carriers;
@@ -23,6 +24,7 @@ internal sealed class ShippingCarrierShipmentDirectory(
     ICarrierShipmentProviderRegistry providers,
     IOrderCommittedCarrierShipmentFactsReader orderFacts,
     IShippingCarrierExecutionReadiness readiness,
+    IFulfillmentAdminOperations fulfillment,
     IOptionsMonitor<TipaxV4Options> tipaxOptions) : IShippingCarrierShipmentOperations
 {
     public async Task<Result<ShippingCarrierShipmentOperationView>> CreateAsync(
@@ -43,14 +45,20 @@ internal sealed class ShippingCarrierShipmentDirectory(
             return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
         }
 
-        var operationKey = $"create:{request.CheckoutId:N}:{request.ShippingGroupId:N}";
-        var existing = await db.CarrierShipmentOperations
+        // UNKNOWN/Pending package intent is reserved: reconcile the open create, never blind-resend.
+        var openCreate = await db.CarrierShipmentOperations
             .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OperationKey == operationKey, cancellationToken);
-        if (existing is not null)
+            .Where(x => x.CheckoutId == request.CheckoutId
+                        && x.ShippingGroupId == request.ShippingGroupId
+                        && x.Kind == ShippingCarrierShipmentKind.Create
+                        && (x.State == ShippingCarrierShipmentState.Pending
+                            || x.State == ShippingCarrierShipmentState.Unknown))
+            .OrderByDescending(x => x.AttemptedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (openCreate is not null)
         {
-            var existingContext = await ResolveAccountContextAsync(owner, existing.AccountId, cancellationToken);
-            return Result.Success(Map(existing, ResolveCapabilities(existing.ProviderCode), existingContext));
+            var openContext = await ResolveAccountContextAsync(owner, openCreate.AccountId, cancellationToken);
+            return Result.Success(Map(openCreate, ResolveCapabilities(openCreate.ProviderCode), openContext));
         }
 
         var (allowed, failureCode, resolvedSender, resolvedPackage) = await readiness.EvaluateCreateAsync(
@@ -65,9 +73,63 @@ internal sealed class ShippingCarrierShipmentDirectory(
 
         if (facts.CarrierAccountId is not { } accountId
             || facts.ConfigurationVersion is not { } configurationVersion
-            || string.IsNullOrWhiteSpace(facts.ProviderServiceCode))
+            || string.IsNullOrWhiteSpace(facts.ProviderServiceCode)
+            || facts.FulfillmentId is not { } fulfillmentId
+            || facts.ExecutableLines.Count == 0)
         {
             return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        if (!TryResolveLineSelection(facts, request.Lines, out var selectedLines, out var lineFailure))
+        {
+            return Fail(lineFailure ?? ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        FulfillmentSnapshot allocated;
+        try
+        {
+            allocated = await fulfillment.CreateShipmentAsync(
+                fulfillmentId,
+                actorUserId: Guid.Empty,
+                carrierDisplayName: facts.MethodLabel,
+                items: selectedLines.Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToArray(),
+                shippingMethodCode: facts.MethodCode,
+                providerMetadataJson: null,
+                cancellationToken,
+                shippingGroupId: request.ShippingGroupId);
+        }
+        catch
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        var fulfillmentShipment = allocated.Shipments
+            .Where(s => s.Status == ShipmentOperationStatus.Created)
+            .Where(s => s.ShippingGroupId is null || s.ShippingGroupId == request.ShippingGroupId)
+            .OrderByDescending(s => s.CreatedAt)
+            .FirstOrDefault(s => selectedLines.All(sel =>
+                s.Items.Any(i => i.OrderLineId == sel.OrderLineId && i.Quantity == sel.Quantity)));
+        if (fulfillmentShipment is null)
+        {
+            fulfillmentShipment = allocated.Shipments
+                .Where(s => s.Status == ShipmentOperationStatus.Created)
+                .OrderByDescending(s => s.CreatedAt)
+                .FirstOrDefault();
+        }
+
+        if (fulfillmentShipment is null)
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        var operationKey = $"create:{request.CheckoutId:N}:{request.ShippingGroupId:N}:{fulfillmentShipment.ShipmentId:N}";
+        var existing = await db.CarrierShipmentOperations
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.OperationKey == operationKey, cancellationToken);
+        if (existing is not null)
+        {
+            var existingContext = await ResolveAccountContextAsync(owner, existing.AccountId, cancellationToken);
+            return Result.Success(Map(existing, ResolveCapabilities(existing.ProviderCode), existingContext));
         }
 
         var recipient = new ShippingCarrierShipmentPartyInput(
@@ -135,6 +197,9 @@ internal sealed class ShippingCarrierShipmentDirectory(
             .SingleAsync(x => x.OperationId == pending.OperationId, cancellationToken);
         tracked.SetExecutionInputSnapshot(JsonSerializer.Serialize(new
         {
+            FulfillmentId = fulfillmentId,
+            FulfillmentShipmentId = fulfillmentShipment.ShipmentId,
+            Lines = selectedLines.Select(x => new { x.OrderLineId, x.Quantity }).ToArray(),
             resolvedSender.FullName,
             resolvedSender.Mobile,
             resolvedSender.AddressLine,
@@ -195,6 +260,47 @@ internal sealed class ShippingCarrierShipmentDirectory(
         ApplyCreateOutcome(tracked, outcome, DateTimeOffset.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success(Map(tracked, provider.Capabilities, context));
+    }
+
+    private static bool TryResolveLineSelection(
+        OrderCommittedCarrierShipmentFacts facts,
+        IReadOnlyList<ShippingCarrierShipmentLineQuantity>? requested,
+        out IReadOnlyList<ShippingCarrierShipmentLineQuantity> selected,
+        out string? failureCode)
+    {
+        failureCode = null;
+        if (requested is null || requested.Count == 0)
+        {
+            selected = facts.ExecutableLines
+                .Select(x => new ShippingCarrierShipmentLineQuantity(x.OrderLineId, x.RemainingPackedQuantity))
+                .ToArray();
+            return selected.Count > 0;
+        }
+
+        var remaining = facts.ExecutableLines.ToDictionary(x => x.OrderLineId, x => x.RemainingPackedQuantity);
+        var resolved = new List<ShippingCarrierShipmentLineQuantity>();
+        foreach (var line in requested)
+        {
+            if (line.OrderLineId == Guid.Empty || line.Quantity <= 0m)
+            {
+                failureCode = ShippingErrorCodes.CarrierShipmentNotEligible;
+                selected = Array.Empty<ShippingCarrierShipmentLineQuantity>();
+                return false;
+            }
+
+            if (!remaining.TryGetValue(line.OrderLineId, out var available) || line.Quantity > available)
+            {
+                failureCode = ShippingErrorCodes.CarrierShipmentNotEligible;
+                selected = Array.Empty<ShippingCarrierShipmentLineQuantity>();
+                return false;
+            }
+
+            remaining[line.OrderLineId] = available - line.Quantity;
+            resolved.Add(new ShippingCarrierShipmentLineQuantity(line.OrderLineId, line.Quantity));
+        }
+
+        selected = resolved;
+        return selected.Count > 0;
     }
 
     public async Task<Result<ShippingGroupCarrierExecutionCapabilityView>> SavePackageCompletionAsync(

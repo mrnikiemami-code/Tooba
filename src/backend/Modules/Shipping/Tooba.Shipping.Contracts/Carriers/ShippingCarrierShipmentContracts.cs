@@ -147,7 +147,14 @@ public sealed record ShippingGroupCarrierExecutionCapabilityView(
     bool AllowPackageCompletion,
     bool HasEditableSenderPostal,
     bool HasEditableSenderContact,
-    ShippingCarrierLatestCreateOperationView? LatestCreateOperation);
+    ShippingCarrierLatestCreateOperationView? LatestCreateOperation,
+    IReadOnlyList<ShippingCarrierExecutableLineView> ExecutableLines);
+
+/// <summary>Remaining packed line quantity available for the next carrier dispatch.</summary>
+public sealed record ShippingCarrierExecutableLineView(Guid OrderLineId, decimal RemainingPackedQuantity);
+
+/// <summary>Requested line allocation for one physical carrier package/dispatch.</summary>
+public sealed record ShippingCarrierShipmentLineQuantity(Guid OrderLineId, decimal Quantity);
 
 /// <summary>Authorized operational package completion without mutating Order accepted evidence.</summary>
 public sealed record ShippingCarrierShipmentPackageCompletionRequest(
@@ -184,6 +191,10 @@ public sealed record ShippingCarrierShipmentPackageInput(
     decimal CollectAmount);
 
 /// <summary>Execute carrier shipment create; account, service, sender, package, and recipient are server-owned.</summary>
+/// <param name="CheckoutId">Committed checkout.</param>
+/// <param name="ShippingGroupId">Accepted shipping group.</param>
+/// <param name="Lines">Exact line quantities for this physical package; empty/null uses all remaining executable lines.</param>
 public sealed record ShippingCarrierShipmentExecuteRequest(
     Guid CheckoutId,
-    Guid ShippingGroupId);
+    Guid ShippingGroupId,
+    IReadOnlyList<ShippingCarrierShipmentLineQuantity>? Lines = null);

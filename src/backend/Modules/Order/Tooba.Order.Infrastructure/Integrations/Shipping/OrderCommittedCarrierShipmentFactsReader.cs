@@ -8,7 +8,8 @@ using Tooba.Order.Infrastructure.Persistence;
 namespace Tooba.Order.Infrastructure.Integrations.Shipping;
 
 /// <summary>
-/// TB-248-R1 / TB-249: committed Order shipping-group facts for carrier shipment create and capabilities.
+/// TB-248-R1 / TB-249 / TB-249-R3: committed Order shipping-group facts for carrier shipment create and capabilities.
+/// Fulfillment quantity eligibility is independent of package-completion completeness.
 /// </summary>
 public sealed class OrderCommittedCarrierShipmentFactsReader(
     OrderDbContext db,
@@ -37,7 +38,17 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             return null;
         }
 
-        var fulfillments = await fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        IReadOnlyList<FulfillmentSnapshot> fulfillments;
+        try
+        {
+            fulfillments = await fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        }
+        catch
+        {
+            // Fail closed: missing fulfillment authority must not authorize carrier create.
+            fulfillments = Array.Empty<FulfillmentSnapshot>();
+        }
+
         return Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments);
     }
 
@@ -57,7 +68,16 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             return Array.Empty<OrderCommittedCarrierShipmentFacts>();
         }
 
-        var fulfillments = await fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        IReadOnlyList<FulfillmentSnapshot> fulfillments;
+        try
+        {
+            fulfillments = await fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        }
+        catch
+        {
+            fulfillments = Array.Empty<FulfillmentSnapshot>();
+        }
+
         return bundle.Groups
             .OrderBy(x => x.ShippingGroupId)
             .Select(group => Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments))
@@ -126,43 +146,59 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             or SellerOrderStatus.Submitted
             or SellerOrderStatus.ReservationRequested;
 
-        string? reason = null;
+        var lineIds = group.Lines.Select(x => x.OrderLineId).OrderBy(x => x).ToArray();
+
+        // Business / fulfillment constraints accumulate independently of package completeness.
+        string? businessReason = null;
         if (cancelled)
         {
-            reason = "cancelled";
+            businessReason = "cancelled";
         }
         else if (paymentLocked)
         {
-            reason = "payment_locked";
+            businessReason = "payment_locked";
         }
         else if (evidence is null)
         {
-            reason = "legacy_incomplete";
+            businessReason = "legacy_incomplete";
         }
         else if (!ownerPresent)
         {
-            reason = "owner_missing";
+            businessReason = "owner_missing";
         }
         else if (!hasQuote)
         {
-            reason = "not_carrier_api";
-        }
-        else if (!hasFullProvenance)
-        {
-            reason = hasQuote ? "package_completion_required" : "package_incomplete";
+            businessReason = "not_carrier_api";
         }
 
-        var lineIds = group.Lines.Select(x => x.OrderLineId).OrderBy(x => x).ToArray();
-        if (reason is null && hasQuote && ownerPresent)
+        var (fulfillmentReason, executableLines, fulfillmentId) = ResolveFulfillmentEligibility(
+            fulfillments,
+            group.SellerOrderId,
+            group.ShippingGroupId,
+            lineIds);
+
+        if (businessReason is null && hasQuote && ownerPresent)
         {
-            var fulfillmentReason = ResolveFulfillmentEligibility(fulfillments, group.SellerOrderId, lineIds);
             if (fulfillmentReason is not null)
             {
-                reason = fulfillmentReason;
+                businessReason = fulfillmentReason;
             }
         }
+        else if (businessReason is null && (!hasQuote || !ownerPresent))
+        {
+            // Keep executable lines empty when not CarrierApi-ready; still fail closed on missing fulfillment for CarrierApi path only.
+            executableLines = Array.Empty<OrderCommittedCarrierExecutableLine>();
+            fulfillmentId = null;
+        }
 
-        var canExecute = reason is null && hasQuote && ownerPresent;
+        string? completenessReason = null;
+        if (businessReason is null && hasQuote && !hasFullProvenance)
+        {
+            completenessReason = "package_completion_required";
+        }
+
+        var reason = businessReason ?? completenessReason;
+        var canExecute = reason is null && hasQuote && ownerPresent && executableLines.Count > 0;
 
         return new OrderCommittedCarrierShipmentFacts(
             group.CheckoutId,
@@ -202,47 +238,64 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             paymentLocked,
             canExecute,
             reason,
-            lineIds);
+            lineIds,
+            executableLines,
+            fulfillmentId);
     }
 
-    private static string? ResolveFulfillmentEligibility(
-        IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        Guid sellerOrderId,
-        IReadOnlyList<Guid> orderLineIds)
+    /// <summary>
+    /// Computes remaining packed quantities using Fulfillment Created-shipment open allocations.
+    /// Filters open allocations to this shipping group when shipment snapshots expose ShippingGroupId.
+    /// </summary>
+    internal static (string? Reason, IReadOnlyList<OrderCommittedCarrierExecutableLine> Lines, Guid? FulfillmentId)
+        ResolveFulfillmentEligibility(
+            IReadOnlyList<FulfillmentSnapshot> fulfillments,
+            Guid sellerOrderId,
+            Guid shippingGroupId,
+            IReadOnlyList<Guid> orderLineIds)
     {
         var snapshot = fulfillments.FirstOrDefault(x => x.SellerOrderId == sellerOrderId);
         if (snapshot is null)
         {
-            return "fulfillment_unavailable";
+            return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), null);
         }
 
         if (snapshot.Status is FulfillmentOperationStatus.Delivered
             or FulfillmentOperationStatus.Cancelled
             or FulfillmentOperationStatus.Failed)
         {
-            return "fulfillment_exhausted";
+            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId);
         }
 
         var openAllocated = snapshot.Shipments
             .Where(s => s.Status == ShipmentOperationStatus.Created)
+            .Where(s => s.ShippingGroupId is null || s.ShippingGroupId == shippingGroupId)
             .SelectMany(s => s.Items)
             .GroupBy(i => i.OrderLineId)
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
-        decimal shippableTotal = 0;
+        var lines = new List<OrderCommittedCarrierExecutableLine>();
         foreach (var lineId in orderLineIds)
         {
             var item = snapshot.Items.FirstOrDefault(x => x.OrderLineId == lineId);
             if (item is null)
             {
-                return "fulfillment_unavailable";
+                return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId);
             }
 
-            var allocated = openAllocated.GetValueOrDefault(lineId);
-            shippableTotal += Math.Max(0, item.QuantityPacked - allocated);
+            var remaining = item.QuantityPacked - openAllocated.GetValueOrDefault(lineId);
+            if (remaining > 0m)
+            {
+                lines.Add(new OrderCommittedCarrierExecutableLine(lineId, remaining));
+            }
         }
 
-        return shippableTotal <= 0 ? "fulfillment_exhausted" : null;
+        if (lines.Count == 0)
+        {
+            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId);
+        }
+
+        return (null, lines, snapshot.FulfillmentId);
     }
 
     private sealed record CheckoutBundle(

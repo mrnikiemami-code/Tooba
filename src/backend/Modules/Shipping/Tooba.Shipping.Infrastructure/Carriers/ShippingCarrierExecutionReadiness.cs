@@ -186,24 +186,31 @@ internal sealed class ShippingCarrierExecutionReadiness(
             Add("sender_incomplete");
         }
 
-        var operationKey = CreateOperationKey(facts.CheckoutId, facts.ShippingGroupId);
-        var createOp = await db.CarrierShipmentOperations.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OperationKey == operationKey && x.Kind == ShippingCarrierShipmentKind.Create, cancellationToken);
-
-        if (createOp is not null)
+        // Multi-package: remaining packed quantities (Order facts) gate create; do not treat a prior
+        // Succeeded group create as a permanent whole-group hard block.
+        var createOps = await db.CarrierShipmentOperations.AsNoTracking()
+            .Where(x => x.CheckoutId == facts.CheckoutId
+                        && x.ShippingGroupId == facts.ShippingGroupId
+                        && x.Kind == ShippingCarrierShipmentKind.Create)
+            .OrderByDescending(x => x.AttemptedAt)
+            .ToListAsync(cancellationToken);
+        var createOp = createOps.FirstOrDefault();
+        if (createOps.Any(x => x.State == ShippingCarrierShipmentState.Pending))
         {
-            switch (createOp.State)
-            {
-                case ShippingCarrierShipmentState.Pending:
-                    Add("operation_pending");
-                    break;
-                case ShippingCarrierShipmentState.Succeeded:
-                    Add("operation_succeeded");
-                    break;
-                case ShippingCarrierShipmentState.Unknown:
-                    Add("operation_unknown");
-                    break;
-            }
+            Add("operation_pending");
+        }
+        else if (createOps.Any(x => x.State == ShippingCarrierShipmentState.Unknown))
+        {
+            Add("operation_unknown");
+        }
+
+        if (facts.ExecutableLines.Count == 0
+            && string.Equals(facts.TransportMode, "CarrierApi", StringComparison.Ordinal)
+            && facts.HasCarrierQuote)
+        {
+            Add(facts.IneligibilityReasonCode is "fulfillment_unavailable" or "fulfillment_exhausted"
+                ? facts.IneligibilityReasonCode
+                : "fulfillment_exhausted");
         }
 
         RemoveCompletableReasonsWhenSatisfied(reasons, packageReady, senderComplete);
@@ -215,6 +222,7 @@ internal sealed class ShippingCarrierExecutionReadiness(
                         && string.Equals(facts.TransportMode, "CarrierApi", StringComparison.Ordinal)
                         && packageReady
                         && senderComplete
+                        && facts.ExecutableLines.Count > 0
                         && operationPermissions.CanCreate;
         var canTrack = operationPermissions.CanTrack;
         var canCancel = operationPermissions.CanCancel;
@@ -321,7 +329,10 @@ internal sealed class ShippingCarrierExecutionReadiness(
             snapshot.AllowPackageCompletion,
             snapshot.HasEditableSenderPostal,
             snapshot.HasEditableSenderContact,
-            snapshot.LatestCreateOperation);
+            snapshot.LatestCreateOperation,
+            facts.ExecutableLines
+                .Select(x => new ShippingCarrierExecutableLineView(x.OrderLineId, x.RemainingPackedQuantity))
+                .ToArray());
 
     private static bool HasFullPackageFromFacts(OrderCommittedCarrierShipmentFacts facts)
         => facts.WeightGrams is > 0m
@@ -495,9 +506,6 @@ internal sealed class ShippingCarrierExecutionReadiness(
                      && x.OwnerTenantId == owner.TenantId
                      && x.OwnerSellerPartyId == owner.SellerPartyId,
                 cancellationToken);
-
-    private static string CreateOperationKey(Guid checkoutId, Guid shippingGroupId)
-        => $"create:{checkoutId:N}:{shippingGroupId:N}";
 
     private static ShippingDraftOwner ToDomainOwner(ShippingAuthoringOwnerScope owner)
         => owner.Kind switch

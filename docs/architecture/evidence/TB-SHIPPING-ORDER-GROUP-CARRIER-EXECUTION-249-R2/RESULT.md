@@ -46,9 +46,10 @@ Shipping `20261102220000_CarrierShipmentExecutionSnapshot` applied; column `ship
 
 ## Remaining / unmet
 
-- Disposable PostgreSQL Order+Shipping working-path matrix (TASK §4) — **blocked by missing env/target**
-- Concurrent same-tick Create + durable pending-before-provider relational proof — unmet at relational layer
-- Live Tipax / authorized order UI acceptance — deferred / session unavailable
-- Multi-parcel remaining-line representation — still unmet scope (disclosed; one group operation key ≠ parcel split)
+- Disposable PostgreSQL Order+Shipping working-path matrix (TASK §4) — addressed by **249-R3** provisioning (matrix still incomplete there)
+- Concurrent same-tick Create + durable pending-before-provider relational proof — still unmet at relational layer (249-R3)
+- Live Tipax — deferred
+- Authorized order UI — Host admin login proven in **249-R3** (Manual/payment_locked)
+- Multi-parcel remaining-line — software bridge landed in **249-R3** (package-scoped key + executable lines); relational multi-package proof still unmet
 
 STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE

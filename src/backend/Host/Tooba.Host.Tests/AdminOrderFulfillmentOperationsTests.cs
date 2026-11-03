@@ -249,7 +249,7 @@ public sealed class AdminOrderFulfillmentOperationsTests
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> UnpackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
-        public Task<FulfillmentSnapshot> CreateShipmentAsync(Guid fulfillmentId, Guid actorUserId, string carrierDisplayName, IReadOnlyList<ShipmentLineCommand> items, string? shippingMethodCode, string? providerMetadataJson, CancellationToken cancellationToken) =>
+        public Task<FulfillmentSnapshot> CreateShipmentAsync(Guid fulfillmentId, Guid actorUserId, string carrierDisplayName, IReadOnlyList<ShipmentLineCommand> items, string? shippingMethodCode, string? providerMetadataJson, CancellationToken cancellationToken, Guid? shippingGroupId = null) =>
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> CancelShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();

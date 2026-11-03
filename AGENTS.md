@@ -1,10 +1,16 @@
-# CURRENT — 249-R2 PARTIAL: gates corrected + deployed; relational proof blocked — 2026-11-02
+# CURRENT — 249-R3 PARTIAL: quantity-safe bridge deployed; disposable matrix incomplete — 2026-11-02
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PARTIAL**, decision **QUANTITY_SAFE_GATES_AND_PACKAGE_BRIDGE_DEPLOYED_DISPOSABLE_MATRIX_INCOMPLETE**. Base `4ec12a05e`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha redeployed. LANDED: fulfillment eligibility independent of package completion; executable line quantities; fulfillment CreateShipment shippingGroupId bridge; package-scoped carrier operation_key + lines in execution snapshot; FE posts executable lines. Focused Shipping 42/42 + Order eligibility 2/2 + FE 4/4. Disposable `tb249r3-pg:15433` provisioned then cleaned; full §5 relational matrix unmet. Authorized Host admin order/capabilities Manual+payment_locked. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R2 PARTIAL: gates corrected + deployed; relational proof blocked — 2026-11-02
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PARTIAL** within issued scope, decision **COMPLETION_AND_OPERATION_GATES_CORRECTED_DEPLOYED_RELATIONAL_PROOF_BLOCKED**, NOT Architect/live-provider ACCEPT. Base `84cae82b2`.
 Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. Migration `20261102220000_CarrierShipmentExecutionSnapshot` applied after private backup.
 LANDED: completable package/sender unlock after stored completions; shared Track/Cancel/Create operation permissions; authoritative sender-completion + pre-provider execution snapshot; fulfillment exhausted/unavailable eligibility; FE slim create DTO, action catch, non-status refresh, localized states. Classification **57/99**.
-UNMET: disposable PostgreSQL Order+Shipping §4 matrix (`TOOBA_TB249R2_POSTGRES` absent). InMemory path proves unlock. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+UNMET (closed/superseded by R3 attempt): disposable PostgreSQL Order+Shipping §4 matrix. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 

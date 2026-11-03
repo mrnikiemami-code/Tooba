@@ -1,5 +1,8 @@
 namespace Tooba.Order.Contracts.Shipping;
 
+/// <summary>Remaining packed quantity on one accepted group line available for a new dispatch.</summary>
+public sealed record OrderCommittedCarrierExecutableLine(Guid OrderLineId, decimal RemainingPackedQuantity);
+
 /// <summary>
 /// Read-only committed Order facts for a carrier shipment. Shipping never joins Order storage.
 /// </summary>
@@ -41,7 +44,9 @@ public sealed record OrderCommittedCarrierShipmentFacts(
     bool PaymentLocked,
     bool CanExecuteCarrierShipment,
     string? IneligibilityReasonCode,
-    IReadOnlyList<Guid> OrderLineIds);
+    IReadOnlyList<Guid> OrderLineIds,
+    IReadOnlyList<OrderCommittedCarrierExecutableLine> ExecutableLines,
+    Guid? FulfillmentId = null);
 
 /// <summary>Contracts-only lookup of committed shipping groups. Empty when the order is not committed.</summary>
 public interface IOrderCommittedCarrierShipmentFactsReader

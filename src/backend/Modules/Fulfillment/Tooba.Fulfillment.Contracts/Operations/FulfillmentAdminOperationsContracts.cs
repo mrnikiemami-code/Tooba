@@ -83,7 +83,8 @@ public sealed record ShipmentSnapshot(
     string ShippingMethodLabel = "",
     string? ProviderMetadataJson = null,
     int ProviderMetadataVersion = 0,
-    string? PreviousTrackingReference = null);
+    string? PreviousTrackingReference = null,
+    Guid? ShippingGroupId = null);
 
 /// <summary>Fulfillment line projection with per-stage quantities.</summary>
 public sealed record FulfillmentItemSnapshot(
@@ -226,7 +227,8 @@ public interface IFulfillmentAdminOperations
         IReadOnlyList<ShipmentLineCommand> items,
         string? shippingMethodCode,
         string? providerMetadataJson,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? shippingGroupId = null);
 
     /// <summary>Void a shipment before dispatch.</summary>
     Task<FulfillmentSnapshot> CancelShipmentAsync(

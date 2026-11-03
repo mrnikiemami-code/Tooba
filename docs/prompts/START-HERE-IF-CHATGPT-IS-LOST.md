@@ -1,7 +1,12 @@
-# CURRENT — 249-R2 PARTIAL: gates corrected + deployed; relational proof blocked — 2026-11-02
+# CURRENT — 249-R3 PARTIAL: quantity-safe bridge deployed; disposable matrix incomplete — 2026-11-02
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PARTIAL**, decision **QUANTITY_SAFE_GATES_AND_PACKAGE_BRIDGE_DEPLOYED_DISPOSABLE_MATRIX_INCOMPLETE**. Base `4ec12a05e`. Package-scoped carrier create + independent fulfillment eligibility deployed; disposable §5 matrix unmet. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R2 PARTIAL: gates corrected + deployed; relational proof blocked — 2026-11-02
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PARTIAL**, decision **COMPLETION_AND_OPERATION_GATES_CORRECTED_DEPLOYED_RELATIONAL_PROOF_BLOCKED**. Base `84cae82b2`. Migration `20261102220000_CarrierShipmentExecutionSnapshot` applied. Classification **57/99**. Disposable PG §4 proof blocked (env absent). LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PARTIAL**, decision **COMPLETION_AND_OPERATION_GATES_CORRECTED_DEPLOYED_RELATIONAL_PROOF_BLOCKED**. Base `84cae82b2`. Migration `20261102220000_CarrierShipmentExecutionSnapshot` applied. Classification **57/99**.
 
 # SUPERSEDED — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 

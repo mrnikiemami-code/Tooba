@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Contracts.Shipping;
 using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Carriers;
@@ -23,6 +24,8 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     private static readonly Guid Account = Guid.Parse("33333333-3333-4333-8333-333333333333");
     private static readonly Guid SellerParty = Guid.Parse("44444444-4444-4444-8444-444444444444");
     private static readonly Guid SellerOrder = Guid.Parse("55555555-5555-4555-8555-555555555555");
+    private static readonly Guid Fulfillment = Guid.Parse("66666666-6666-4666-8666-666666666666");
+    private static readonly Guid LineA = Guid.Parse("77777777-7777-4777-8777-777777777777");
     private const string Origin = "101";
     private const string Destination = "202";
 
@@ -237,6 +240,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             new StubRegistry(provider),
             new StubFacts(facts),
             readiness,
+            new StubFulfillment(),
             tipax);
         return (directory, db);
     }
@@ -300,7 +304,11 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             !canExecute,
             canExecute,
             reason,
-            Array.Empty<Guid>());
+            new[] { LineA },
+            canExecute
+                ? new[] { new OrderCommittedCarrierExecutableLine(LineA, 2m) }
+                : Array.Empty<OrderCommittedCarrierExecutableLine>(),
+            Fulfillment);
 
     private static ShippingCarrierShipmentExecuteRequest ValidExecuteRequest()
         => new(Checkout, Group);
@@ -342,9 +350,11 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             "Paid",
             false,
             false,
-            true,
+            false,
             "package_completion_required",
-            Array.Empty<Guid>());
+            new[] { LineA },
+            new[] { new OrderCommittedCarrierExecutableLine(LineA, 2m) },
+            Fulfillment);
 
     private sealed class RecordingShipmentProvider : ICarrierShipmentProvider
     {
@@ -396,6 +406,88 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             CancellationToken cancellationToken)
             => Task.FromResult<IReadOnlyList<OrderCommittedCarrierShipmentFacts>>(
                 facts is null ? Array.Empty<OrderCommittedCarrierShipmentFacts>() : new[] { facts });
+    }
+
+    private sealed class StubFulfillment : IFulfillmentAdminOperations
+    {
+        public Task<FulfillmentSnapshot?> GetAsync(Guid fulfillmentId, CancellationToken cancellationToken)
+            => Task.FromResult<FulfillmentSnapshot?>(null);
+        public Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<FulfillmentSnapshot>>(Array.Empty<FulfillmentSnapshot>());
+        public Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+        public Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(IReadOnlyList<Guid> shipmentIds, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+        public IReadOnlyList<ShippingMethodOption> ListEnabledShippingMethods() => Array.Empty<ShippingMethodOption>();
+        public string ResolveShippingMethodLabel(string? code, string? fallbackDisplayName) => fallbackDisplayName ?? code ?? "";
+        public Task<FulfillmentSnapshot> MarkProcessingAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> ProcessSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> UnprocessSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> PackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> UnpackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> CreateShipmentAsync(
+            Guid fulfillmentId,
+            Guid actorUserId,
+            string carrierDisplayName,
+            IReadOnlyList<ShipmentLineCommand> items,
+            string? shippingMethodCode,
+            string? providerMetadataJson,
+            CancellationToken cancellationToken,
+            Guid? shippingGroupId = null)
+        {
+            var shipmentId = Guid.Parse("99999999-9999-4999-8999-999999999999");
+            var shipment = new ShipmentSnapshot(
+                shipmentId,
+                ShipmentOperationStatus.Created,
+                carrierDisplayName,
+                null,
+                null,
+                null,
+                items.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
+                DateTimeOffset.UtcNow,
+                shippingMethodCode ?? "",
+                carrierDisplayName,
+                providerMetadataJson,
+                0,
+                null,
+                shippingGroupId ?? Group);
+            var snapshot = new FulfillmentSnapshot(
+                Fulfillment,
+                SellerOrder,
+                Checkout,
+                SellerParty,
+                FulfillmentOperationStatus.Packed,
+                "r",
+                "0",
+                "p",
+                "c",
+                "a",
+                "1",
+                shippingMethodCode ?? "",
+                carrierDisplayName,
+                items.Select(x => new FulfillmentItemSnapshot(Guid.NewGuid(), x.OrderLineId, x.Quantity, 0, null, x.Quantity, 0)).ToArray(),
+                new[] { shipment },
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow);
+            return Task.FromResult(snapshot);
+        }
+        public Task<FulfillmentSnapshot> CancelShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> AssignTrackingAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, string trackingReference, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> CorrectTrackingAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, string trackingReference, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> DispatchShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<FulfillmentSnapshot> DeliverShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(Guid checkoutId, IReadOnlyList<Guid> shipmentIds, string? shippingMethodCode, string? trackingReference, string? note, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(Guid consolidatedPackageId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ConsolidatedPackageSnapshot> AssignConsolidatedPackageTrackingAsync(Guid consolidatedPackageId, string trackingReference, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ConsolidatedPackageSnapshot> DispatchConsolidatedPackageAsync(Guid consolidatedPackageId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<ConsolidatedPackageSnapshot> DeliverConsolidatedPackageAsync(Guid consolidatedPackageId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task EnsureCreatedForPaidCheckoutAsync(Guid checkoutId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task RebindActiveReservationsFromOrderAsync(Guid checkoutId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task<IReadOnlyDictionary<Guid, decimal>> GetShippedByOrderLineIdsForCheckoutsAsync(IReadOnlyList<Guid> checkoutIds, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyDictionary<Guid, decimal>>(new Dictionary<Guid, decimal>());
     }
 
     private sealed class StubAccounts(bool configured, bool active = true) : IShippingCarrierAccountDirectory
