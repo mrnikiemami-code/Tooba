@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Domain.Rules;
 
 namespace Tooba.Catalog.Domain.Aggregates;
 
@@ -43,6 +44,20 @@ public sealed class CatalogVariant : IHasDomainEvents
     /// تنوع پیش‌فرض محصول؛ حداکثر یکی میان غیرآرشیو.
     /// </summary>
     public bool IsDefault { get; set; }
+
+    /// <summary>
+    /// وزن فیزیکی گونه به گرم؛ null یعنی ارث از محصول.
+    /// </summary>
+    public decimal? WeightGrams { get; private set; }
+
+    /// <summary>طول فیزیکی گونه به سانتی‌متر؛ null یعنی ارث از محصول.</summary>
+    public decimal? LengthCentimeters { get; private set; }
+
+    /// <summary>عرض فیزیکی گونه به سانتی‌متر؛ null یعنی ارث از محصول.</summary>
+    public decimal? WidthCentimeters { get; private set; }
+
+    /// <summary>ارتفاع فیزیکی گونه به سانتی‌متر؛ null یعنی ارث از محصول.</summary>
+    public decimal? HeightCentimeters { get; private set; }
 
     /// <summary>
     /// زمان ایجاد.
@@ -149,6 +164,29 @@ public sealed class CatalogVariant : IHasDomainEvents
     public void UpdateCatalogCodeSeam(string? catalogCodeSeam, DateTimeOffset now)
     {
         CatalogCodeSeam = string.IsNullOrWhiteSpace(catalogCodeSeam) ? null : catalogCodeSeam.Trim();
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// مشخصات فیزیکی گونه را می‌گذارد؛ null روی هر فیلد یعنی ارث از محصول (نه صفر جعلی).
+    /// </summary>
+    public void SetPhysicalSpecification(
+        decimal? weightGrams,
+        decimal? lengthCentimeters,
+        decimal? widthCentimeters,
+        decimal? heightCentimeters,
+        DateTimeOffset now)
+    {
+        CatalogPhysicalSpecification.ValidateOrThrow(
+            weightGrams,
+            lengthCentimeters,
+            widthCentimeters,
+            heightCentimeters);
+
+        WeightGrams = weightGrams;
+        LengthCentimeters = lengthCentimeters;
+        WidthCentimeters = widthCentimeters;
+        HeightCentimeters = heightCentimeters;
         UpdatedAt = now;
     }
 

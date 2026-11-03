@@ -298,7 +298,8 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         CancellationToken cancellationToken,
         string? shippingMethodCode = null,
         string? providerMetadataJson = null,
-        Guid? shippingGroupId = null)
+        Guid? shippingGroupId = null,
+        string? shippingDispatchKey = null)
     {
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
@@ -319,7 +320,11 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             methodCode = definition.Code;
         }
 
+        var normalizedDispatchKey = string.IsNullOrWhiteSpace(shippingDispatchKey)
+            ? null
+            : shippingDispatchKey.Trim();
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        var knownIds = unit.Shipments.Select(x => x.ShipmentId).ToHashSet();
         var shipment = unit.CreateShipment(
             _ids.NewId(),
             () => _ids.NewId(),
@@ -330,11 +335,40 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             methodLabel,
             normalizedMetadata,
             normalizedMetadata is null ? 0 : 1,
-            shippingGroupId);
-        _db.Shipments.Add(shipment);
-        _db.ShipmentItems.AddRange(shipment.Items);
-        await _db.SaveChangesAsync(cancellationToken);
-        _telemetry.RecordShipmentCreated();
+            shippingGroupId,
+            normalizedDispatchKey);
+        if (!knownIds.Contains(shipment.ShipmentId))
+        {
+            _db.Shipments.Add(shipment);
+            _db.ShipmentItems.AddRange(shipment.Items);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException) when (normalizedDispatchKey is not null)
+            {
+                // Concurrent first-insert race on unique dispatch key: reload and reuse winner.
+                _db.ChangeTracker.Clear();
+                unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+                shipment = unit.CreateShipment(
+                    shipment.ShipmentId,
+                    () => _ids.NewId(),
+                    carrierDisplayName,
+                    items.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
+                    _clock.UtcNow,
+                    methodCode,
+                    methodLabel,
+                    normalizedMetadata,
+                    normalizedMetadata is null ? 0 : 1,
+                    shippingGroupId,
+                    normalizedDispatchKey);
+                var snapshotRace = await MapSnapshotAsync(unit, cancellationToken);
+                return new FulfillmentShipmentCreateResult(snapshotRace, shipment.ShipmentId);
+            }
+
+            _telemetry.RecordShipmentCreated();
+        }
+
         var snapshot = await MapSnapshotAsync(unit, cancellationToken);
         return new FulfillmentShipmentCreateResult(snapshot, shipment.ShipmentId);
     }

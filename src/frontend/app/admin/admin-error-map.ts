@@ -198,6 +198,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "ذخیرهٔ اطلاعات محصول ناموفق بود.",
     en: "Saving product details failed.",
   },
+  "workspace.physical_specification.rejected": {
+    fa: "مشخصات فیزیکی نامعتبر است. وزن (گرم) و ابعاد (سانتی‌متر) در صورت ورود باید مثبت باشند.",
+    en: "Physical specification is invalid. Weight (g) and dimensions (cm) must be positive when provided.",
+  },
+  "workspace.quantity.rejected": {
+    fa: "سیاست مقدار نامعتبر است.",
+    en: "Quantity policy is invalid.",
+  },
   "admin.authorization.denied": {
     fa: "دسترسی مجاز نیست.",
     en: "You are not allowed to perform this action.",

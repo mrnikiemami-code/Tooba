@@ -266,23 +266,62 @@ public sealed class CatalogDirectory :
         IReadOnlyCollection<Guid> variantIds,
         CancellationToken cancellationToken)
     {
+        var facts = await GetPhysicalSpecificationsByVariantIdsAsync(variantIds, cancellationToken);
+        var result = new Dictionary<Guid, long?>();
+        foreach (var (variantId, fact) in facts)
+        {
+            if (fact.WeightGrams is not null)
+            {
+                result[variantId] = fact.WeightGrams;
+            }
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, CatalogPhysicalSpecificationFacts>> GetPhysicalSpecificationsByVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
         if (variantIds.Count == 0)
         {
-            return new Dictionary<Guid, long?>();
+            return new Dictionary<Guid, CatalogPhysicalSpecificationFacts>();
         }
 
         var distinct = variantIds.Distinct().ToArray();
         var variantRows = await _db.Variants.AsNoTracking()
             .Where(v => distinct.Contains(v.VariantId))
-            .Select(v => new { v.VariantId, v.ProductId })
+            .Select(v => new
+            {
+                v.VariantId,
+                v.ProductId,
+                v.WeightGrams,
+                v.LengthCentimeters,
+                v.WidthCentimeters,
+                v.HeightCentimeters,
+            })
             .ToListAsync(cancellationToken);
         if (variantRows.Count == 0)
         {
-            return new Dictionary<Guid, long?>();
+            return new Dictionary<Guid, CatalogPhysicalSpecificationFacts>();
         }
 
-        // Load Number definitions that could carry units; semantic identity + IsActive applied in-process
-        // so CatalogShippingWeightGrams remains the single authority (EF cannot call that helper).
+        var productIds = variantRows.Select(v => v.ProductId).Distinct().ToArray();
+        var products = await _db.Products.AsNoTracking()
+            .Where(p => productIds.Contains(p.ProductId))
+            .Select(p => new
+            {
+                p.ProductId,
+                p.WeightGrams,
+                p.LengthCentimeters,
+                p.WidthCentimeters,
+                p.HeightCentimeters,
+            })
+            .ToListAsync(cancellationToken);
+        var productById = products.ToDictionary(p => p.ProductId);
+
+        // Legacy weight attributes remain provenance; composed with typed fields under explicit policy.
         var candidateDefinitions = await _db.AttributeDefinitions.AsNoTracking()
             .Where(d => d.ValueKind == CatalogAttributeValueKind.Number && d.Unit != null)
             .Select(d => new { d.DefinitionId, d.Code, d.ValueKind, d.IsActive, d.Unit })
@@ -302,50 +341,63 @@ public sealed class CatalogDirectory :
             unitByDefinition[definition.DefinitionId] = definition.Unit!.Trim();
         }
 
-        if (unitByDefinition.Count == 0)
+        Dictionary<Guid, IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>> productValuesByProduct = new();
+        Dictionary<Guid, IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>> variantValuesByVariant = new();
+        if (unitByDefinition.Count > 0)
         {
-            return new Dictionary<Guid, long?>();
+            var definitionIds = unitByDefinition.Keys.ToArray();
+            var productValues = await _db.ProductAttributeValues.AsNoTracking()
+                .Where(v => productIds.Contains(v.ProductId) && definitionIds.Contains(v.DefinitionId))
+                .Select(v => new { v.ProductId, v.DefinitionId, v.CanonicalValue })
+                .ToListAsync(cancellationToken);
+            var variantValues = await _db.VariantAttributeValues.AsNoTracking()
+                .Where(v => distinct.Contains(v.VariantId) && definitionIds.Contains(v.DefinitionId))
+                .Select(v => new { v.VariantId, v.DefinitionId, v.CanonicalValue })
+                .ToListAsync(cancellationToken);
+
+            productValuesByProduct = productValues
+                .GroupBy(v => v.ProductId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>)g
+                        .Select(v => (v.DefinitionId, v.CanonicalValue))
+                        .ToArray());
+            variantValuesByVariant = variantValues
+                .GroupBy(v => v.VariantId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>)g
+                        .Select(v => (v.DefinitionId, v.CanonicalValue))
+                        .ToArray());
         }
 
-        var definitionIds = unitByDefinition.Keys.ToArray();
-        var productIds = variantRows.Select(v => v.ProductId).Distinct().ToArray();
-        var productValues = await _db.ProductAttributeValues.AsNoTracking()
-            .Where(v => productIds.Contains(v.ProductId) && definitionIds.Contains(v.DefinitionId))
-            .Select(v => new { v.ProductId, v.DefinitionId, v.CanonicalValue })
-            .ToListAsync(cancellationToken);
-        var variantValues = await _db.VariantAttributeValues.AsNoTracking()
-            .Where(v => distinct.Contains(v.VariantId) && definitionIds.Contains(v.DefinitionId))
-            .Select(v => new { v.VariantId, v.DefinitionId, v.CanonicalValue })
-            .ToListAsync(cancellationToken);
-
-        var productValuesByProduct = productValues
-            .GroupBy(v => v.ProductId)
-            .ToDictionary(
-                g => g.Key,
-                g => (IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>)g
-                    .Select(v => (v.DefinitionId, v.CanonicalValue))
-                    .ToArray());
-        var variantValuesByVariant = variantValues
-            .GroupBy(v => v.VariantId)
-            .ToDictionary(
-                g => g.Key,
-                g => (IReadOnlyList<(Guid DefinitionId, string CanonicalValue)>)g
-                    .Select(v => (v.DefinitionId, v.CanonicalValue))
-                    .ToArray());
-
-        var result = new Dictionary<Guid, long?>();
+        var result = new Dictionary<Guid, CatalogPhysicalSpecificationFacts>();
         foreach (var row in variantRows)
         {
-            productValuesByProduct.TryGetValue(row.ProductId, out var productForRow);
-            variantValuesByVariant.TryGetValue(row.VariantId, out var variantForRow);
-            var grams = CatalogShippingWeightGrams.ResolveEffectiveGrams(
-                unitByDefinition,
-                productForRow ?? Array.Empty<(Guid, string)>(),
-                variantForRow ?? Array.Empty<(Guid, string)>());
-            if (grams is not null)
+            productById.TryGetValue(row.ProductId, out var product);
+            productValuesByProduct.TryGetValue(row.ProductId, out var productAttr);
+            variantValuesByVariant.TryGetValue(row.VariantId, out var variantAttr);
+            long? legacyGrams = null;
+            if (unitByDefinition.Count > 0)
             {
-                result[row.VariantId] = grams;
+                legacyGrams = CatalogShippingWeightGrams.ResolveEffectiveGrams(
+                    unitByDefinition,
+                    productAttr ?? Array.Empty<(Guid, string)>(),
+                    variantAttr ?? Array.Empty<(Guid, string)>());
             }
+
+            var (weight, length, width, height) = CatalogPhysicalSpecification.ResolveEffectiveFacts(
+                product?.WeightGrams,
+                product?.LengthCentimeters,
+                product?.WidthCentimeters,
+                product?.HeightCentimeters,
+                row.WeightGrams,
+                row.LengthCentimeters,
+                row.WidthCentimeters,
+                row.HeightCentimeters,
+                legacyGrams);
+
+            result[row.VariantId] = new CatalogPhysicalSpecificationFacts(weight, length, width, height);
         }
 
         return result;

@@ -47,5 +47,9 @@
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Application\Tooba.Fulfillment.Application.csproj" />
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Domain\Tooba.Fulfillment.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
+    <!-- TB-249-R5: Catalog physical-spec PostgreSQL create/update/query + validator. -->
+    <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Infrastructure\Tooba.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj" />
   </ItemGroup>
 </Project>

@@ -1031,6 +1031,9 @@ public sealed class ShippingDbContext : DbContext
             entity.Property(x => x.AttemptedAt).HasColumnName("attempted_at");
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
             entity.Property(x => x.ExecutionInputSnapshotJson).HasColumnName("execution_input_snapshot_json");
+            entity.Property(x => x.DispatchClaimToken).HasColumnName("dispatch_claim_token");
+            entity.Property(x => x.DispatchClaimExpiresAt).HasColumnName("dispatch_claim_expires_at");
+            entity.Property(x => x.ExternalDispatchAttempted).HasColumnName("external_dispatch_attempted");
             entity.HasIndex(x => x.OperationKey)
                 .IsUnique()
                 .HasDatabaseName("ux_carrier_shipment_operations_key");

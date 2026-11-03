@@ -49,7 +49,7 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             fulfillments = Array.Empty<FulfillmentSnapshot>();
         }
 
-        return Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments);
+        return Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments, bundle.LinePrices);
     }
 
     /// <inheritdoc />
@@ -80,7 +80,7 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
 
         return bundle.Groups
             .OrderBy(x => x.ShippingGroupId)
-            .Select(group => Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments))
+            .Select(group => Map(group, bundle.Checkout, bundle.SellerOrders, fulfillments, bundle.LinePrices))
             .ToArray();
     }
 
@@ -106,14 +106,24 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             .Where(x => x.CheckoutId == checkoutId)
             .ToDictionaryAsync(x => x.SellerOrderId, cancellationToken);
 
-        return new CheckoutBundle(checkout, groups, sellerOrders);
+        var sellerOrderIds = sellerOrders.Keys.ToArray();
+        var linePrices = sellerOrderIds.Length == 0
+            ? new Dictionary<Guid, decimal>()
+            : await db.Lines
+                .AsNoTracking()
+                .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+                .Select(x => new { x.LineId, x.UnitPriceSnapshot })
+                .ToDictionaryAsync(x => x.LineId, x => x.UnitPriceSnapshot, cancellationToken);
+
+        return new CheckoutBundle(checkout, groups, sellerOrders, linePrices);
     }
 
     private static OrderCommittedCarrierShipmentFacts Map(
         Domain.Checkout.OrderShippingGroup group,
         Domain.Aggregates.CheckoutGroup checkout,
         IReadOnlyDictionary<Guid, Domain.Aggregates.SellerOrder> sellerOrders,
-        IReadOnlyList<FulfillmentSnapshot> fulfillments)
+        IReadOnlyList<FulfillmentSnapshot> fulfillments,
+        IReadOnlyDictionary<Guid, decimal> linePrices)
     {
         var evidence = group.AcceptedEvidence;
         var quote = evidence?.CarrierQuote;
@@ -171,11 +181,13 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             businessReason = "not_carrier_api";
         }
 
-        var (fulfillmentReason, executableLines, fulfillmentId, groupPackedTotal) = ResolveFulfillmentEligibility(
-            fulfillments,
-            group.SellerOrderId,
-            group.ShippingGroupId,
-            lineIds);
+        var (fulfillmentReason, executableLines, fulfillmentId, groupPackedTotal, packedLineValues) =
+            ResolveFulfillmentEligibility(
+                fulfillments,
+                group.SellerOrderId,
+                group.ShippingGroupId,
+                lineIds,
+                linePrices);
 
         if (businessReason is null && hasQuote && ownerPresent)
         {
@@ -189,6 +201,7 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             // Keep executable lines empty when not CarrierApi-ready; still fail closed on missing fulfillment for CarrierApi path only.
             executableLines = Array.Empty<OrderCommittedCarrierExecutableLine>();
             fulfillmentId = null;
+            packedLineValues = Array.Empty<OrderCommittedCarrierLineValueFact>();
         }
 
         string? completenessReason = null;
@@ -241,33 +254,45 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             lineIds,
             executableLines,
             fulfillmentId,
-            groupPackedTotal);
+            groupPackedTotal,
+            packedLineValues);
     }
 
     /// <summary>
     /// Computes remaining packed quantities using Fulfillment Created-shipment open allocations.
     /// Filters open allocations to this shipping group when shipment snapshots expose ShippingGroupId.
     /// </summary>
-    internal static (string? Reason, IReadOnlyList<OrderCommittedCarrierExecutableLine> Lines, Guid? FulfillmentId, decimal? GroupPackedQuantityTotal)
+    internal static (
+        string? Reason,
+        IReadOnlyList<OrderCommittedCarrierExecutableLine> Lines,
+        Guid? FulfillmentId,
+        decimal? GroupPackedQuantityTotal,
+        IReadOnlyList<OrderCommittedCarrierLineValueFact> PackedLineValues)
         ResolveFulfillmentEligibility(
             IReadOnlyList<FulfillmentSnapshot> fulfillments,
             Guid sellerOrderId,
             Guid shippingGroupId,
-            IReadOnlyList<Guid> orderLineIds)
+            IReadOnlyList<Guid> orderLineIds,
+            IReadOnlyDictionary<Guid, decimal>? linePrices = null)
     {
+        var prices = linePrices ?? new Dictionary<Guid, decimal>();
         var snapshot = fulfillments.FirstOrDefault(x => x.SellerOrderId == sellerOrderId);
         if (snapshot is null)
         {
-            return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), null, null);
+            return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), null, null,
+                Array.Empty<OrderCommittedCarrierLineValueFact>());
         }
 
         decimal? packedTotal = 0m;
+        var packedValues = new List<OrderCommittedCarrierLineValueFact>(orderLineIds.Count);
         foreach (var lineId in orderLineIds)
         {
             var packedItem = snapshot.Items.FirstOrDefault(x => x.OrderLineId == lineId);
             if (packedItem is not null)
             {
                 packedTotal += packedItem.QuantityPacked;
+                prices.TryGetValue(lineId, out var unitPrice);
+                packedValues.Add(new OrderCommittedCarrierLineValueFact(lineId, packedItem.QuantityPacked, unitPrice));
             }
         }
 
@@ -275,7 +300,8 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             or FulfillmentOperationStatus.Cancelled
             or FulfillmentOperationStatus.Failed)
         {
-            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId, packedTotal);
+            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId,
+                packedTotal, packedValues);
         }
 
         var openAllocated = snapshot.Shipments
@@ -291,26 +317,30 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             var item = snapshot.Items.FirstOrDefault(x => x.OrderLineId == lineId);
             if (item is null)
             {
-                return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId, packedTotal);
+                return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId,
+                    packedTotal, packedValues);
             }
 
+            prices.TryGetValue(lineId, out var unitPrice);
             var remaining = item.QuantityPacked - openAllocated.GetValueOrDefault(lineId);
             if (remaining > 0m)
             {
-                lines.Add(new OrderCommittedCarrierExecutableLine(lineId, remaining));
+                lines.Add(new OrderCommittedCarrierExecutableLine(lineId, remaining, unitPrice, item.QuantityPacked));
             }
         }
 
         if (lines.Count == 0)
         {
-            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId, packedTotal);
+            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId,
+                packedTotal, packedValues);
         }
 
-        return (null, lines, snapshot.FulfillmentId, packedTotal);
+        return (null, lines, snapshot.FulfillmentId, packedTotal, packedValues);
     }
 
     private sealed record CheckoutBundle(
         Domain.Aggregates.CheckoutGroup Checkout,
         IReadOnlyList<Domain.Checkout.OrderShippingGroup> Groups,
-        IReadOnlyDictionary<Guid, Domain.Aggregates.SellerOrder> SellerOrders);
+        IReadOnlyDictionary<Guid, Domain.Aggregates.SellerOrder> SellerOrders,
+        IReadOnlyDictionary<Guid, decimal> LinePrices);
 }

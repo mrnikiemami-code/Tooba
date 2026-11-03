@@ -597,6 +597,22 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<decimal?>("WeightGrams")
+                        .HasColumnType("numeric(18,3)")
+                        .HasColumnName("weight_grams");
+
+                    b.Property<decimal?>("LengthCentimeters")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("length_centimeters");
+
+                    b.Property<decimal?>("WidthCentimeters")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("width_centimeters");
+
+                    b.Property<decimal?>("HeightCentimeters")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("height_centimeters");
+
                     b.HasKey("ProductId")
                         .HasName("pk_products");
 
@@ -891,6 +907,22 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
+
+                    b.Property<decimal?>("WeightGrams")
+                        .HasColumnType("numeric(18,3)")
+                        .HasColumnName("weight_grams");
+
+                    b.Property<decimal?>("LengthCentimeters")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("length_centimeters");
+
+                    b.Property<decimal?>("WidthCentimeters")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("width_centimeters");
+
+                    b.Property<decimal?>("HeightCentimeters")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("height_centimeters");
 
                     b.HasKey("VariantId")
                         .HasName("pk_variants");

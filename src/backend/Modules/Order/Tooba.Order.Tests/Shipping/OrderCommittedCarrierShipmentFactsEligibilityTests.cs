@@ -22,7 +22,7 @@ public sealed class OrderCommittedCarrierShipmentFactsEligibilityTests
             packedB: 1m,
             openAllocations: Array.Empty<(Guid, decimal, Guid?)>());
 
-        var (reason, lines, _, packedTotal) = OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility(
+        var (reason, lines, _, packedTotal, _) = OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility(
             new[] { snapshot },
             SellerOrder,
             Group,
@@ -46,16 +46,18 @@ public sealed class OrderCommittedCarrierShipmentFactsEligibilityTests
                 (LineB, 3m, Guid.Parse("ffffffff-ffff-4fff-8fff-ffffffffffff")),
             ]);
 
-        var (reason, lines, fulfillmentId, packedTotal) = OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility(
-            new[] { snapshot },
-            SellerOrder,
-            Group,
-            new[] { LineA, LineB });
+        var (reason, lines, fulfillmentId, packedTotal, packedValues) =
+            OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility(
+                new[] { snapshot },
+                SellerOrder,
+                Group,
+                new[] { LineA, LineB });
 
         Assert.Null(reason);
         Assert.Equal(FulfillmentId, fulfillmentId);
         Assert.Equal(8m, packedTotal);
         Assert.Equal(2, lines.Count);
+        Assert.Equal(2, packedValues.Count);
         Assert.Contains(lines, x => x.OrderLineId == LineA && x.RemainingPackedQuantity == 3m);
         Assert.Contains(lines, x => x.OrderLineId == LineB && x.RemainingPackedQuantity == 3m);
     }

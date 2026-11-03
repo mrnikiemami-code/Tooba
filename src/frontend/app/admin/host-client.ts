@@ -332,6 +332,22 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
       name: asString(readProp(row, "name", "Name")),
       shortName: asString(readProp(row, "shortName", "ShortName")),
     })),
+    weightGrams: (() => {
+      const raw = readProp(item, "weightGrams", "WeightGrams");
+      return raw == null || raw === "" ? null : asNumber(raw);
+    })(),
+    lengthCentimeters: (() => {
+      const raw = readProp(item, "lengthCentimeters", "LengthCentimeters");
+      return raw == null || raw === "" ? null : asNumber(raw);
+    })(),
+    widthCentimeters: (() => {
+      const raw = readProp(item, "widthCentimeters", "WidthCentimeters");
+      return raw == null || raw === "" ? null : asNumber(raw);
+    })(),
+    heightCentimeters: (() => {
+      const raw = readProp(item, "heightCentimeters", "HeightCentimeters");
+      return raw == null || raw === "" ? null : asNumber(raw);
+    })(),
   };
 }
 
@@ -591,6 +607,54 @@ export async function updateAdminProductQuantityPolicy(
     const view = mapProductWorkspaceView(await response.json());
     if (!view) {
       return { ok: false, errorCode: "workspace.quantity-policy.patch-failed" };
+    }
+    return { ok: true, view };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+/** به‌روزرسانی مشخصات فیزیکی محصول (گرم / سانتی‌متر). فیلد خالی = نامشخص. */
+export async function updateAdminProductPhysicalSpecification(
+  productId: string,
+  input: {
+    weightGrams: number | null;
+    lengthCentimeters: number | null;
+    widthCentimeters: number | null;
+    heightCentimeters: number | null;
+    expectedUpdatedAt: string;
+  },
+  viewScope = false,
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/physical-specification`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        weightGrams: input.weightGrams,
+        lengthCentimeters: input.lengthCentimeters,
+        widthCentimeters: input.widthCentimeters,
+        heightCentimeters: input.heightCentimeters,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+      }),
+    });
+    if (response.status === 409) {
+      return { ok: false, errorCode: "workspace.catalog.stale" };
+    }
+    if (response.status === 403) {
+      return { ok: false, errorCode: "workspace.permission.denied" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "workspace.physical_specification.rejected" };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    if (!view) {
+      return { ok: false, errorCode: "workspace.physical_specification.rejected" };
     }
     return { ok: true, view };
   } catch {

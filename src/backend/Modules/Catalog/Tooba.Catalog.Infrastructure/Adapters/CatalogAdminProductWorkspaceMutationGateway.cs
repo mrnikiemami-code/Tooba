@@ -42,7 +42,11 @@ public sealed class CatalogAdminProductWorkspaceMutationGateway(
                     request.Title,
                     request.Slug,
                     request.CategoryId,
-                    request.Locale)),
+                    request.Locale,
+                    request.WeightGrams,
+                    request.LengthCentimeters,
+                    request.WidthCentimeters,
+                    request.HeightCentimeters)),
             cancellationToken);
     }
 
@@ -105,6 +109,27 @@ public sealed class CatalogAdminProductWorkspaceMutationGateway(
                     request.UnitOfMeasureId,
                     request.DecimalPlaces,
                     request.Step,
+                    request.ExpectedUpdatedAt)),
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<Result> UpdatePhysicalSpecificationAsync(
+        Guid productId,
+        CatalogAdminProductWorkspaceActor actor,
+        CatalogAdminProductWorkspacePhysicalSpecificationRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        BindActor(actor);
+        return sender.Send(
+            new UpdateProductPhysicalSpecificationCommand(
+                productId,
+                new WorkspaceProductPhysicalSpecificationWriteModel(
+                    request.WeightGrams,
+                    request.LengthCentimeters,
+                    request.WidthCentimeters,
+                    request.HeightCentimeters,
                     request.ExpectedUpdatedAt)),
             cancellationToken);
     }

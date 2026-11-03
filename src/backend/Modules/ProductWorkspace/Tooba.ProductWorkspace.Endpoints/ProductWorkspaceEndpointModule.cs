@@ -21,6 +21,7 @@ namespace Tooba.ProductWorkspace.Endpoints;
 /// ProductWorkspace HTTP ownership under <c>/v1/admin/products</c>.
 /// W19: aggregate GET. W26: lifecycle. W27: variant create/patch.
 /// W29: create / catalog-title / core / quantity-policy.
+/// TB-249-R5 Phase B: physical-specification (grams + centimetres).
 /// W30: category / additional categories / brand.
 /// W31: list + grid query.
 /// <para>
@@ -46,6 +47,7 @@ public static class ProductWorkspaceEndpointModule
         group.MapPatch("/{productId:guid}/catalog-title", PatchCatalogTitleAsync);
         group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
         group.MapPatch("/{productId:guid}/quantity-policy", PatchQuantityPolicyAsync);
+        group.MapPatch("/{productId:guid}/physical-specification", PatchPhysicalSpecificationAsync);
         group.MapPut("/{productId:guid}/category", AssignCategoryAsync);
         group.MapPost("/{productId:guid}/categories/additional", AddAdditionalCategoryAsync);
         group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
@@ -226,6 +228,25 @@ public static class ProductWorkspaceEndpointModule
             httpContext,
             cancellationToken,
             actor => new UpdateWorkspaceProductQuantityPolicyCommand(productId, actor, body),
+            p => p.CanEditCatalog,
+            created: false);
+
+    private static Task<IResult> PatchPhysicalSpecificationAsync(
+        Guid productId,
+        CatalogAdminProductWorkspacePhysicalSpecificationRequest body,
+        ISender sender,
+        IProductWorkspaceAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext httpContext,
+        CancellationToken cancellationToken) =>
+        MutateAsync(
+            productId,
+            sender,
+            authorizer,
+            api,
+            httpContext,
+            cancellationToken,
+            actor => new UpdateWorkspaceProductPhysicalSpecificationCommand(productId, actor, body),
             p => p.CanEditCatalog,
             created: false);
 

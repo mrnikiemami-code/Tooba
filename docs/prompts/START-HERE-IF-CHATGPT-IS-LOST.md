@@ -1,7 +1,12 @@
-# CURRENT — 249-R4 PASS: package identity/owner replay + disposable Postgres matrix executed — 2026-11-03
+# CURRENT — 249-R5 PASS: durable dispatch claim + product physical specs — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R5/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **DISPATCH_CLAIM_VALUE_AND_PRODUCT_PHYSICAL_SPEC_DEPLOYED_PROVIDER_UNVERIFIED**. Base `a9af3f400`. Stable intent + exclusive claim + no blind resend; line-value declared/collect; per-dispatch dims; Catalog g/cm physical spec + editor; TB249R5 15/15; canonical migrations applied. LIVE TIPAX deferred. R4 worker PASS historical. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R4 PASS: package identity/owner replay + disposable Postgres matrix executed — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R4/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS**, decision **PACKAGE_IDENTITY_OWNER_REPLAY_AND_POSTGRES_MATRIX_EXECUTED_PROVIDER_UNVERIFIED**. Base `0bb72adf9`. Owner-scoped replay, real actor, intent-before-allocate, exact CreatedShipmentId, scaled package values; disposable TB249R4 17/17 executed then cleaned; canonical FE3000/Host5088 redeployed. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **PACKAGE_IDENTITY_OWNER_REPLAY_AND_POSTGRES_MATRIX_EXECUTED_PROVIDER_UNVERIFIED**. Base `0bb72adf9`. Owner-scoped replay, real actor, intent-before-allocate, exact CreatedShipmentId, scaled package values; disposable TB249R4 17/17 executed then cleaned; canonical FE3000/Host5088 redeployed. Review defects closed by 249-R5. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R3 PARTIAL: quantity-safe bridge deployed; disposable matrix incomplete — 2026-11-02
 

@@ -1,7 +1,21 @@
 namespace Tooba.Order.Contracts.Shipping;
 
 /// <summary>Remaining packed quantity on one accepted group line available for a new dispatch.</summary>
-public sealed record OrderCommittedCarrierExecutableLine(Guid OrderLineId, decimal RemainingPackedQuantity);
+/// <param name="OrderLineId">Accepted order line.</param>
+/// <param name="RemainingPackedQuantity">Packed quantity not yet allocated to an open Created shipment.</param>
+/// <param name="UnitPriceSnapshot">Historical unit price from the committed Order line.</param>
+/// <param name="PackedQuantity">Total packed quantity for the line on the fulfillment unit.</param>
+public sealed record OrderCommittedCarrierExecutableLine(
+    Guid OrderLineId,
+    decimal RemainingPackedQuantity,
+    decimal UnitPriceSnapshot = 0m,
+    decimal PackedQuantity = 0m);
+
+/// <summary>Committed packed line value facts for declared-value / collect allocation.</summary>
+public sealed record OrderCommittedCarrierLineValueFact(
+    Guid OrderLineId,
+    decimal PackedQuantity,
+    decimal UnitPriceSnapshot);
 
 /// <summary>
 /// Read-only committed Order facts for a carrier shipment. Shipping never joins Order storage.
@@ -47,8 +61,10 @@ public sealed record OrderCommittedCarrierShipmentFacts(
     IReadOnlyList<Guid> OrderLineIds,
     IReadOnlyList<OrderCommittedCarrierExecutableLine> ExecutableLines,
     Guid? FulfillmentId = null,
-    /// <summary>Sum of packed quantities across group lines; used to scale declared/collect for partial packages.</summary>
-    decimal? GroupPackedQuantityTotal = null);
+    /// <summary>Sum of packed quantities across group lines (eligibility / residual accounting).</summary>
+    decimal? GroupPackedQuantityTotal = null,
+    /// <summary>All packed group lines with unit prices for exact declared/collect allocation.</summary>
+    IReadOnlyList<OrderCommittedCarrierLineValueFact>? GroupPackedLineValues = null);
 
 /// <summary>Contracts-only lookup of committed shipping groups. Empty when the order is not committed.</summary>
 public interface IOrderCommittedCarrierShipmentFactsReader

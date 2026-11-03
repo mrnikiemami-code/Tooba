@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Domain.Rules;
 
 namespace Tooba.Catalog.Domain.Aggregates;
 
@@ -47,6 +48,20 @@ public sealed class CatalogProduct : IHasDomainEvents
 
     /// <summary>گام اختیاری مقدار.</summary>
     public decimal? QuantityStep { get; private set; }
+
+    /// <summary>
+    /// وزن فیزیکی محصول به گرم؛ null یعنی نامشخص (هرگز ۰ جعلی نیست).
+    /// </summary>
+    public decimal? WeightGrams { get; private set; }
+
+    /// <summary>طول فیزیکی به سانتی‌متر؛ null یعنی نامشخص.</summary>
+    public decimal? LengthCentimeters { get; private set; }
+
+    /// <summary>عرض فیزیکی به سانتی‌متر؛ null یعنی نامشخص.</summary>
+    public decimal? WidthCentimeters { get; private set; }
+
+    /// <summary>ارتفاع فیزیکی به سانتی‌متر؛ null یعنی نامشخص.</summary>
+    public decimal? HeightCentimeters { get; private set; }
 
     /// <summary>
     /// زمان ایجاد.
@@ -215,6 +230,30 @@ public sealed class CatalogProduct : IHasDomainEvents
     public void AssignBrand(Guid? brandId, DateTimeOffset now)
     {
         BrandId = brandId;
+        UpdatedAt = now;
+        _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// مشخصات فیزیکی محصول را می‌گذارد؛ هر فیلد null یعنی نامشخص (پاک‌کردن مقدار قبلی مجاز است).
+    /// </summary>
+    public void SetPhysicalSpecification(
+        decimal? weightGrams,
+        decimal? lengthCentimeters,
+        decimal? widthCentimeters,
+        decimal? heightCentimeters,
+        DateTimeOffset now)
+    {
+        CatalogPhysicalSpecification.ValidateOrThrow(
+            weightGrams,
+            lengthCentimeters,
+            widthCentimeters,
+            heightCentimeters);
+
+        WeightGrams = weightGrams;
+        LengthCentimeters = lengthCentimeters;
+        WidthCentimeters = widthCentimeters;
+        HeightCentimeters = heightCentimeters;
         UpdatedAt = now;
         _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
     }

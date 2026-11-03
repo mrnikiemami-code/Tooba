@@ -231,6 +231,9 @@ public static class CatalogErrorCodes
     /// <summary>Quantity policy update rejected (domain gate).</summary>
     public const string WorkspaceQuantityRejected = "workspace.quantity.rejected";
 
+    /// <summary>Physical specification update rejected (domain gate).</summary>
+    public const string WorkspacePhysicalSpecificationRejected = "workspace.physical_specification.rejected";
+
     /// <summary>
     /// Product category assignment rejected because target is not Level 3.
     /// Canonical code matches <c>CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode</c>.

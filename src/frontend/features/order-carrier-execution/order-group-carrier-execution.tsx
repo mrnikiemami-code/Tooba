@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Field, Input } from "../../design-system";
 import { authoringMessages } from "../admin-shipping-authoring/messages/authoring-messages.ts";
+import { buildCarrierShipmentCreateBody } from "./build-carrier-shipment-create-body.ts";
 import {
   decodeCapability,
   decodeShipment,
@@ -11,6 +12,7 @@ import {
   type ShipmentView,
 } from "./order-group-carrier-execution-decode.ts";
 
+export { buildCarrierShipmentCreateBody } from "./build-carrier-shipment-create-body.ts";
 export { decodeCapability, decodeShipment, isCarrierApiGroup, normalizeShipmentState } from "./order-group-carrier-execution-decode.ts";
 
 async function readJson(response: Response): Promise<unknown> {
@@ -51,6 +53,8 @@ export function OrderGroupCarrierExecution({
   requestHeadersRef.current = requestHeaders;
   const [senderByGroup, setSenderByGroup] = useState<Record<string, SenderDraft>>({});
   const [packageByGroup, setPackageByGroup] = useState<Record<string, PackageDraft>>({});
+  /** Optional untrusted client locator; sent only when the UI holds a non-empty value. */
+  const [packageDispatchIdByGroup, setPackageDispatchIdByGroup] = useState<Record<string, string>>({});
 
   const carrierGroups = useMemo(
     () => capabilities.filter(isCarrierApiGroup),
@@ -475,38 +479,122 @@ export function OrderGroupCarrierExecution({
                 </div>
               ) : null}
               {group.canCreate ? (
-                <button
-                  type="button"
-                  className="mt-2 min-h-11 rounded-lg bg-[#2563EB] px-3 text-xs font-bold text-white disabled:opacity-50"
-                  disabled={busy}
-                  data-testid={`${testIdPrefix}-create-${group.shippingGroupId}`}
-                  onClick={async () => {
-                    const groupId = group.shippingGroupId;
-                    if (inFlightRef.current.has(groupId)) return;
-                    syncBusy(groupId, true);
-                    try {
-                      const lines = (group.executableLines ?? [])
-                        .filter((line) => typeof line.orderLineId === "string" && Number(line.remainingPackedQuantity) > 0)
-                        .map((line) => ({
-                          orderLineId: line.orderLineId,
-                          quantity: line.remainingPackedQuantity,
-                        }));
-                      const failed = await post(`${apiPrefix}/shipping-services/shipments`, {
-                        checkoutId,
-                        shippingGroupId: groupId,
-                        lines,
-                      });
-                      setActionStatus(failed ?? messages.carrierAccountSaved);
-                      if (!failed) await refresh();
-                    } catch {
-                      setActionStatus(messages.carrierActionFailed);
-                    } finally {
-                      syncBusy(groupId, false);
+                <div className="mt-2 space-y-2">
+                  {!group.allowPackageCompletion ? (
+                    <div className="grid gap-2 md:grid-cols-4" data-testid={`${testIdPrefix}-dispatch-package-${group.shippingGroupId}`}>
+                      <Field id={`dispatch-weight-${group.shippingGroupId}`} label={messages.carrierPackageWeight}>
+                        <Input
+                          value={pkg.weight}
+                          onChange={(e) =>
+                            setPackageByGroup((prev) => ({
+                              ...prev,
+                              [group.shippingGroupId]: { ...pkg, weight: e.target.value },
+                            }))
+                          }
+                          dir="ltr"
+                          data-testid={`${testIdPrefix}-dispatch-weight-${group.shippingGroupId}`}
+                        />
+                      </Field>
+                      <Field id={`dispatch-l-${group.shippingGroupId}`} label={messages.carrierPackageLength}>
+                        <Input
+                          value={pkg.length}
+                          onChange={(e) =>
+                            setPackageByGroup((prev) => ({
+                              ...prev,
+                              [group.shippingGroupId]: { ...pkg, length: e.target.value },
+                            }))
+                          }
+                          dir="ltr"
+                        />
+                      </Field>
+                      <Field id={`dispatch-w-${group.shippingGroupId}`} label={messages.carrierPackageWidth}>
+                        <Input
+                          value={pkg.width}
+                          onChange={(e) =>
+                            setPackageByGroup((prev) => ({
+                              ...prev,
+                              [group.shippingGroupId]: { ...pkg, width: e.target.value },
+                            }))
+                          }
+                          dir="ltr"
+                        />
+                      </Field>
+                      <Field id={`dispatch-h-${group.shippingGroupId}`} label={messages.carrierPackageHeight}>
+                        <Input
+                          value={pkg.height}
+                          onChange={(e) =>
+                            setPackageByGroup((prev) => ({
+                              ...prev,
+                              [group.shippingGroupId]: { ...pkg, height: e.target.value },
+                            }))
+                          }
+                          dir="ltr"
+                        />
+                      </Field>
+                    </div>
+                  ) : null}
+                  <input
+                    type="hidden"
+                    data-testid={`${testIdPrefix}-package-dispatch-id-${group.shippingGroupId}`}
+                    value={packageDispatchIdByGroup[group.shippingGroupId] ?? ""}
+                    onChange={(e) =>
+                      setPackageDispatchIdByGroup((prev) => ({
+                        ...prev,
+                        [group.shippingGroupId]: e.target.value,
+                      }))
                     }
-                  }}
-                >
-                  {messages.carrierShipmentCreate}
-                </button>
+                  />
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-lg bg-[#2563EB] px-3 text-xs font-bold text-white disabled:opacity-50"
+                    disabled={busy}
+                    data-testid={`${testIdPrefix}-create-${group.shippingGroupId}`}
+                    onClick={async () => {
+                      const groupId = group.shippingGroupId;
+                      if (inFlightRef.current.has(groupId)) return;
+                      syncBusy(groupId, true);
+                      try {
+                        const executable = group.executableLines ?? [];
+                        const lines = executable
+                          .filter((line) => typeof line.orderLineId === "string" && Number(line.remainingPackedQuantity) > 0)
+                          .map((line) => ({
+                            orderLineId: line.orderLineId,
+                            quantity: line.remainingPackedQuantity,
+                          }));
+                        const weight = Number(pkg.weight);
+                        const length = Number(pkg.length);
+                        const width = Number(pkg.width);
+                        const height = Number(pkg.height);
+                        const body = buildCarrierShipmentCreateBody({
+                          checkoutId,
+                          shippingGroupId: groupId,
+                          lines,
+                          executableLines: executable,
+                          package:
+                            weight > 0 && length > 0 && width > 0 && height > 0
+                              ? {
+                                  weightGrams: weight,
+                                  lengthCentimeters: length,
+                                  widthCentimeters: width,
+                                  heightCentimeters: height,
+                                }
+                              : null,
+                          packageDispatchId: packageDispatchIdByGroup[groupId] ?? null,
+                        });
+                        delete body.partialWithoutPackage;
+                        const failed = await post(`${apiPrefix}/shipping-services/shipments`, body);
+                        setActionStatus(failed ?? messages.carrierAccountSaved);
+                        if (!failed) await refresh();
+                      } catch {
+                        setActionStatus(messages.carrierActionFailed);
+                      } finally {
+                        syncBusy(groupId, false);
+                      }
+                    }}
+                  >
+                    {messages.carrierShipmentCreate}
+                  </button>
+                </div>
               ) : null}
               {groupShipments.length === 0 ? (
                 <p className="mt-2 text-[11px] text-gray-500">{messages.carrierShipmentEmpty}</p>

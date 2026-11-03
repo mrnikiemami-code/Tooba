@@ -194,6 +194,10 @@ public sealed class CatalogAdminProductWorkspaceReadGateway(
             await ResolveUnitCodeAsync(product.UnitOfMeasureId, cancellationToken),
             await ResolveUnitDisplayAsync(product.UnitOfMeasureId, cancellationToken),
             await ListUnitOptionsAsync(product.UnitOfMeasureId, cancellationToken),
+            product.WeightGrams,
+            product.LengthCentimeters,
+            product.WidthCentimeters,
+            product.HeightCentimeters,
             categoryLinks
                 .OrderBy(l => l.Role)
                 .Select(l => categoryNames.GetValueOrDefault(l.CategoryId) ?? "رده")

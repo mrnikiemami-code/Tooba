@@ -83,6 +83,17 @@ public sealed class ShippingCarrierShipmentOperation
     /// <summary>Durable sender/package input persisted before outbound provider create.</summary>
     public string? ExecutionInputSnapshotJson { get; private set; }
 
+    /// <summary>Exclusive dispatch claim token; only the claim holder may invoke provider Create.</summary>
+    public Guid? DispatchClaimToken { get; private set; }
+
+    /// <summary>Claim lease expiry. Expiry alone never proves the carrier did not create.</summary>
+    public DateTimeOffset? DispatchClaimExpiresAt { get; private set; }
+
+    /// <summary>
+    /// True once the operation entered the provider Create path. Resume must never blind-resend.
+    /// </summary>
+    public bool ExternalDispatchAttempted { get; private set; }
+
     /// <summary>عملیات pending را با کلید پایدار می‌سازد.</summary>
     public static ShippingCarrierShipmentOperation Begin(
         Guid operationId,
@@ -141,6 +152,53 @@ public sealed class ShippingCarrierShipmentOperation
         ExecutionInputSnapshotJson = trimmed.Length > 8000 ? trimmed[..8000] : trimmed;
     }
 
+    /// <summary>
+    /// Takes an exclusive short-lived claim for provider dispatch. Losers must not call the provider.
+    /// </summary>
+    public bool TryAcquireDispatchClaim(Guid claimToken, DateTimeOffset now, TimeSpan lease)
+    {
+        if (State != ShippingCarrierShipmentState.Pending || ExternalDispatchAttempted)
+        {
+            return false;
+        }
+
+        if (DispatchClaimToken is { } existing
+            && existing != Guid.Empty
+            && DispatchClaimExpiresAt is { } expires
+            && expires > now
+            && existing != claimToken)
+        {
+            return false;
+        }
+
+        if (claimToken == Guid.Empty || lease <= TimeSpan.Zero)
+        {
+            throw new ContractOperationException(ShippingErrorCodes.CarrierShipmentRequestInvalid);
+        }
+
+        DispatchClaimToken = claimToken;
+        DispatchClaimExpiresAt = now.Add(lease);
+        return true;
+    }
+
+    /// <summary>
+    /// Marks that provider Create may have started. Must be persisted before HTTP; resume never resends.
+    /// </summary>
+    public void MarkExternalDispatchAttempted(DateTimeOffset now)
+    {
+        if (State != ShippingCarrierShipmentState.Pending)
+        {
+            throw new ContractOperationException(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        ExternalDispatchAttempted = true;
+        AttemptedAt = now;
+        if (DispatchClaimExpiresAt is null || DispatchClaimExpiresAt < now)
+        {
+            DispatchClaimExpiresAt = now.Add(TimeSpan.FromMinutes(5));
+        }
+    }
+
     /// <summary>پاسخ موفق provider را پایدار می‌کند.</summary>
     public void Succeed(
         DateTimeOffset now,
@@ -155,6 +213,7 @@ public sealed class ShippingCarrierShipmentOperation
         LastErrorCode = null;
         State = ShippingCarrierShipmentState.Succeeded;
         CompletedAt = now;
+        ClearClaim();
     }
 
     /// <summary>شکست قطعی را پایدار می‌کند.</summary>
@@ -164,15 +223,24 @@ public sealed class ShippingCarrierShipmentOperation
         LastErrorCode = NormalizeRequired(errorCode, MaxErrorLength);
         State = ShippingCarrierShipmentState.Failed;
         CompletedAt = now;
+        ClearClaim();
     }
 
     /// <summary>نتیجهٔ مبهم را پایدار می‌کند تا بدون تصمیم اپراتور تکرار نشود.</summary>
     public void MarkUnknown(DateTimeOffset now, string errorCode)
     {
         EnsurePending();
+        ExternalDispatchAttempted = true;
         LastErrorCode = NormalizeRequired(errorCode, MaxErrorLength);
         State = ShippingCarrierShipmentState.Unknown;
         CompletedAt = now;
+        ClearClaim();
+    }
+
+    private void ClearClaim()
+    {
+        DispatchClaimToken = null;
+        DispatchClaimExpiresAt = null;
     }
 
     /// <summary>وضعیت رهگیری provider را روی عملیات موفق/مبهم می‌نویسد.</summary>

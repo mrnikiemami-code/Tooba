@@ -84,6 +84,14 @@ export interface ProductWorkspaceView {
   unitCode?: string | null;
   unitDisplayName?: string | null;
   units?: { unitOfMeasureId: string; code: string; name: string; shortName: string }[];
+  /** وزن فیزیکی (گرم)؛ null/absent یعنی نامشخص — صفر جعلی نیست. */
+  weightGrams?: number | null;
+  /** طول فیزیکی (سانتی‌متر). */
+  lengthCentimeters?: number | null;
+  /** عرض فیزیکی (سانتی‌متر). */
+  widthCentimeters?: number | null;
+  /** ارتفاع فیزیکی (سانتی‌متر). */
+  heightCentimeters?: number | null;
   translations?: ProductTranslationView[];
   variants: {
     variantId: string;

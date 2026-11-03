@@ -67,7 +67,8 @@ public interface IFulfillmentDirectory
         CancellationToken cancellationToken,
         string? shippingMethodCode = null,
         string? providerMetadataJson = null,
-        Guid? shippingGroupId = null);
+        Guid? shippingGroupId = null,
+        string? shippingDispatchKey = null);
 
     /// <summary>ابطال مرسوله پیش از dispatch.</summary>
     Task<FulfillmentSnapshot> CancelShipmentAsync(

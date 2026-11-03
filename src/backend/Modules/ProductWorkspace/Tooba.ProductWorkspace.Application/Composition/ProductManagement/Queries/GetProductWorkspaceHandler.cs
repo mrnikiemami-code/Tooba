@@ -201,7 +201,11 @@ public sealed class GetProductWorkspaceHandler(
             snapshot.QuantityStep,
             snapshot.UnitCode,
             snapshot.UnitDisplayName,
-            snapshot.Units.Select(u => new UnitOfMeasureOptionView(u.UnitOfMeasureId, u.Code, u.Name, u.ShortName)).ToList()));
+            snapshot.Units.Select(u => new UnitOfMeasureOptionView(u.UnitOfMeasureId, u.Code, u.Name, u.ShortName)).ToList(),
+            snapshot.WeightGrams,
+            snapshot.LengthCentimeters,
+            snapshot.WidthCentimeters,
+            snapshot.HeightCentimeters));
     }
 
     private static ProductHistoryItem MapHistory(CatalogAdminHistoryItem x) =>

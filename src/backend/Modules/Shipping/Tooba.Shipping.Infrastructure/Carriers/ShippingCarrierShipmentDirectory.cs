@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Operations;
@@ -50,52 +51,42 @@ internal sealed class ShippingCarrierShipmentDirectory(
 
         var domainOwner = ToDomainOwner(owner);
 
-        // UNKNOWN/Pending package intent is reserved: reconcile the open create, never blind-resend.
-        var openCreate = await db.CarrierShipmentOperations
-            .Where(x => x.CheckoutId == request.CheckoutId
-                        && x.ShippingGroupId == request.ShippingGroupId
-                        && x.OwnerKind == domainOwner.Kind
-                        && x.OwnerTenantId == domainOwner.TenantId
-                        && x.OwnerSellerPartyId == domainOwner.SellerPartyId
-                        && x.Kind == ShippingCarrierShipmentKind.Create
-                        && (x.State == ShippingCarrierShipmentState.Pending
-                            || x.State == ShippingCarrierShipmentState.Unknown))
-            .OrderByDescending(x => x.AttemptedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (openCreate is not null)
+        if (request.PackageDispatchId is { } locatorId && locatorId != Guid.Empty)
         {
-            if (openCreate.State == ShippingCarrierShipmentState.Unknown)
+            var byLocator = await FindCreateByPackageDispatchIdAsync(domainOwner, request.CheckoutId, request.ShippingGroupId, locatorId, cancellationToken);
+            if (byLocator is not null)
             {
-                var unknownContext = await ResolveAccountContextAsync(owner, openCreate.AccountId, cancellationToken);
-                return Result.Success(Map(openCreate, ResolveCapabilities(openCreate.ProviderCode), unknownContext));
+                return await ReplayOrResumeExistingAsync(owner, actorUserId, facts, byLocator, request, cancellationToken);
             }
-
-            return await ResumePendingCreateAsync(
-                owner,
-                actorUserId,
-                facts,
-                openCreate,
-                cancellationToken);
         }
 
-        var (allowed, failureCode, resolvedSender, resolvedPackage) = await readiness.EvaluateCreateAsync(
+        var (allowed, failureCode, resolvedSender, resolvedPackageBase) = await readiness.EvaluateCreateAsync(
             owner,
             facts,
             requestedSender: null,
             cancellationToken);
-        if (!allowed || resolvedSender is null || resolvedPackage is null)
-        {
-            return Fail(failureCode ?? ShippingErrorCodes.CarrierShipmentNotEligible);
-        }
 
         if (facts.CarrierAccountId is not { } accountId
             || facts.ConfigurationVersion is not { } configurationVersion
             || string.IsNullOrWhiteSpace(facts.ProviderServiceCode)
             || facts.FulfillmentId is not { } fulfillmentId
-            || facts.ExecutableLines.Count == 0
             || string.IsNullOrWhiteSpace(facts.DestinationLocationCode)
             || string.IsNullOrWhiteSpace(facts.OriginLocationCode))
         {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        // After allocate/provider crash, remaining qty may be 0 while a Pending/Unknown create still
+        // owns the durable intent — replay that operation instead of failing closed as exhausted.
+        if (facts.ExecutableLines.Count == 0)
+        {
+            var openCreate = await FindOpenCreateForGroupAsync(
+                domainOwner, request.CheckoutId, request.ShippingGroupId, cancellationToken);
+            if (openCreate is not null)
+            {
+                return await ReplayOrResumeExistingAsync(owner, actorUserId, facts, openCreate, request, cancellationToken);
+            }
+
             return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
         }
 
@@ -104,7 +95,79 @@ internal sealed class ShippingCarrierShipmentDirectory(
             return Fail(lineFailure ?? ShippingErrorCodes.CarrierShipmentNotEligible);
         }
 
-        var scaledPackage = ScalePackageForSelection(resolvedPackage, selectedLines, facts);
+        // Prefer request package; else readiness package; else accepted quote dims for intent replay.
+        var packageBase = resolvedPackageBase
+            ?? (facts.WeightGrams is > 0m
+                && facts.LengthCentimeters is > 0m
+                && facts.WidthCentimeters is > 0m
+                && facts.HeightCentimeters is > 0m
+                ? new ShippingCarrierShipmentPackageInput(
+                    facts.WeightGrams.Value,
+                    0m,
+                    facts.LengthCentimeters.Value,
+                    facts.WidthCentimeters.Value,
+                    facts.HeightCentimeters.Value,
+                    0m)
+                : null);
+        string? physicalFailure = null;
+        ShippingCarrierShipmentPackageInput physicalPackage;
+        if (packageBase is null
+            || !TryResolveDispatchPhysicalPackage(
+                request,
+                selectedLines,
+                facts,
+                packageBase,
+                out physicalPackage,
+                out physicalFailure))
+        {
+            return Fail(physicalFailure ?? failureCode ?? ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
+        var (priorDeclared, priorCollect) = await SumPriorPackageMoneyAsync(
+            domainOwner,
+            request.CheckoutId,
+            request.ShippingGroupId,
+            cancellationToken);
+        var isFinalRemaining = IsFinalRemainingDispatch(facts, selectedLines);
+        var allocatedPackage = ShippingCarrierPackageMoneyAllocator.Allocate(
+            physicalPackage,
+            selectedLines,
+            facts,
+            priorDeclared,
+            priorCollect,
+            isFinalRemaining);
+
+        var (operationKey, packageDispatchId, payloadFingerprint) = ShippingCarrierDispatchIntent.Derive(
+            domainOwner,
+            request.CheckoutId,
+            request.ShippingGroupId,
+            selectedLines,
+            allocatedPackage with { DeclaredValue = 0m, CollectAmount = 0m });
+
+        if (request.PackageDispatchId is { } clientDispatch
+            && clientDispatch != Guid.Empty
+            && clientDispatch != packageDispatchId)
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
+        }
+
+        var existing = await db.CarrierShipmentOperations
+            .SingleOrDefaultAsync(
+                x => x.OperationKey == operationKey
+                     && x.OwnerKind == domainOwner.Kind
+                     && x.OwnerTenantId == domainOwner.TenantId
+                     && x.OwnerSellerPartyId == domainOwner.SellerPartyId,
+                cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayOrResumeExistingAsync(owner, actorUserId, facts, existing, request, cancellationToken);
+        }
+
+        if (!allowed || resolvedSender is null)
+        {
+            return Fail(failureCode ?? ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
         var recipient = new ShippingCarrierShipmentPartyInput(
             facts.RecipientName,
             facts.RecipientMobile,
@@ -123,6 +186,13 @@ internal sealed class ShippingCarrierShipmentDirectory(
             return Fail(ShippingErrorCodes.CarrierUnconfigured);
         }
 
+        if (context.AccountId != accountId
+            || context.ConfigurationVersion != configurationVersion
+            || !string.Equals(context.ProviderCode, facts.ProviderCode, StringComparison.OrdinalIgnoreCase))
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
+        }
+
         if (!providers.TryResolve(context.ProviderCode, out var provider) || provider is null)
         {
             return Fail(ShippingErrorCodes.CarrierProviderUnknown);
@@ -131,23 +201,6 @@ internal sealed class ShippingCarrierShipmentDirectory(
         if (!provider.Capabilities.CanCreate)
         {
             return Fail(ShippingErrorCodes.CarrierShipmentUnsupported);
-        }
-
-        // Durable package/dispatch identity BEFORE contested fulfillment allocation or provider HTTP.
-        var packageDispatchId = UuidV7.New();
-        var operationKey = $"create:{request.CheckoutId:N}:{request.ShippingGroupId:N}:{packageDispatchId:N}";
-        var existing = await db.CarrierShipmentOperations
-            .AsNoTracking()
-            .SingleOrDefaultAsync(
-                x => x.OperationKey == operationKey
-                     && x.OwnerKind == domainOwner.Kind
-                     && x.OwnerTenantId == domainOwner.TenantId
-                     && x.OwnerSellerPartyId == domainOwner.SellerPartyId,
-                cancellationToken);
-        if (existing is not null)
-        {
-            var existingContext = await ResolveAccountContextAsync(owner, existing.AccountId, cancellationToken);
-            return Result.Success(Map(existing, ResolveCapabilities(existing.ProviderCode), existingContext));
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -172,32 +225,30 @@ internal sealed class ShippingCarrierShipmentDirectory(
                 selectedLines,
                 resolvedSender,
                 recipient,
-                facts.OriginLocationCode,
-                facts.ProviderServiceCode,
-                scaledPackage,
+                facts.OriginLocationCode!,
+                facts.ProviderServiceCode!,
+                allocatedPackage,
                 context.AccountId,
                 context.ConfigurationVersion,
                 context.ProviderCode,
-                facts.Currency)));
+                facts.Currency,
+                payloadFingerprint)));
         db.CarrierShipmentOperations.Add(pending);
         try
         {
-            // Pending + immutable execution snapshot in ONE SaveChanges before allocation/provider.
             await db.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException exception) when (IsUnique(exception))
         {
             db.Entry(pending).State = EntityState.Detached;
             var winner = await db.CarrierShipmentOperations
-                .AsNoTracking()
                 .SingleAsync(x => x.OperationKey == operationKey, cancellationToken);
             if (!OwnerMatches(domainOwner, winner))
             {
                 return Fail(ShippingErrorCodes.CarrierShipmentNotFound);
             }
 
-            var winnerContext = await ResolveAccountContextAsync(owner, winner.AccountId, cancellationToken);
-            return Result.Success(Map(winner, provider.Capabilities, winnerContext));
+            return await ReplayOrResumeExistingAsync(owner, actorUserId, facts, winner, request, cancellationToken);
         }
 
         var tracked = await db.CarrierShipmentOperations
@@ -207,13 +258,48 @@ internal sealed class ShippingCarrierShipmentDirectory(
             actorUserId,
             facts,
             tracked,
-            selectedLines,
-            resolvedSender,
-            recipient,
-            scaledPackage,
             context,
             provider,
             cancellationToken);
+    }
+
+    private async Task<Result<ShippingCarrierShipmentOperationView>> ReplayOrResumeExistingAsync(
+        ShippingAuthoringOwnerScope owner,
+        Guid actorUserId,
+        OrderCommittedCarrierShipmentFacts facts,
+        ShippingCarrierShipmentOperation existing,
+        ShippingCarrierShipmentExecuteRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (existing.State == ShippingCarrierShipmentState.Succeeded
+            || existing.State == ShippingCarrierShipmentState.Failed)
+        {
+            var terminalContext = await ResolveAccountContextAsync(owner, existing.AccountId, cancellationToken);
+            return Result.Success(Map(existing, ResolveCapabilities(existing.ProviderCode), terminalContext));
+        }
+
+        if (existing.State == ShippingCarrierShipmentState.Unknown
+            || existing.ExternalDispatchAttempted)
+        {
+            if (existing.State == ShippingCarrierShipmentState.Pending && existing.ExternalDispatchAttempted)
+            {
+                var trackedUnknown = existing;
+                if (db.Entry(trackedUnknown).State == EntityState.Detached)
+                {
+                    trackedUnknown = await db.CarrierShipmentOperations
+                        .SingleAsync(x => x.OperationId == existing.OperationId, cancellationToken);
+                }
+
+                trackedUnknown.MarkUnknown(DateTimeOffset.UtcNow, ShippingErrorCodes.CarrierShipmentUnknown);
+                await db.SaveChangesAsync(cancellationToken);
+                existing = trackedUnknown;
+            }
+
+            var unknownContext = await ResolveAccountContextAsync(owner, existing.AccountId, cancellationToken);
+            return Result.Success(Map(existing, ResolveCapabilities(existing.ProviderCode), unknownContext));
+        }
+
+        return await ResumePendingCreateAsync(owner, actorUserId, facts, existing, request, cancellationToken);
     }
 
     private async Task<Result<ShippingCarrierShipmentOperationView>> ResumePendingCreateAsync(
@@ -221,6 +307,7 @@ internal sealed class ShippingCarrierShipmentDirectory(
         Guid actorUserId,
         OrderCommittedCarrierShipmentFacts facts,
         ShippingCarrierShipmentOperation pending,
+        ShippingCarrierShipmentExecuteRequest request,
         CancellationToken cancellationToken)
     {
         if (!TryReadExecutionSnapshot(pending.ExecutionInputSnapshotJson, out var snapshot) || snapshot is null)
@@ -229,6 +316,53 @@ internal sealed class ShippingCarrierShipmentDirectory(
         }
 
         var domainOwner = ToDomainOwner(owner);
+        var physicalForIntent = snapshot.Package with { DeclaredValue = 0m, CollectAmount = 0m };
+        var hasClientPayload = (request.Lines is { Count: > 0 })
+            || request.Package is not null
+            || (request.PackageDispatchId is { } clientLocator && clientLocator != Guid.Empty);
+        if (hasClientPayload)
+        {
+            IReadOnlyList<ShippingCarrierShipmentLineQuantity> compareLines = snapshot.Lines;
+            if (request.Lines is { Count: > 0 })
+            {
+                if (!TryResolveLineSelection(facts, request.Lines, out var requestedLines, out _))
+                {
+                    return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
+                }
+
+                compareLines = requestedLines;
+            }
+
+            var comparePackage = request.Package is { } reqPkg
+                ? new ShippingCarrierShipmentPackageInput(
+                    reqPkg.WeightGrams,
+                    0m,
+                    reqPkg.LengthCentimeters,
+                    reqPkg.WidthCentimeters,
+                    reqPkg.HeightCentimeters,
+                    0m)
+                : physicalForIntent;
+            var (_, derivedDispatchId, derivedFingerprint) = ShippingCarrierDispatchIntent.Derive(
+                domainOwner,
+                pending.CheckoutId,
+                pending.ShippingGroupId,
+                compareLines,
+                comparePackage);
+            if (!string.IsNullOrWhiteSpace(snapshot.PayloadFingerprint)
+                && !string.Equals(snapshot.PayloadFingerprint, derivedFingerprint, StringComparison.Ordinal))
+            {
+                return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
+            }
+
+            if (request.PackageDispatchId is { } locator
+                && locator != Guid.Empty
+                && locator != snapshot.PackageDispatchId
+                && locator != derivedDispatchId)
+            {
+                return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
+            }
+        }
+
         var context = await accounts.TryResolveExecutionContextAsync(
             domainOwner.Kind,
             domainOwner.TenantId,
@@ -238,6 +372,17 @@ internal sealed class ShippingCarrierShipmentDirectory(
         if (context is null || !context.IsActive || string.IsNullOrWhiteSpace(context.Username))
         {
             return Fail(ShippingErrorCodes.CarrierUnconfigured);
+        }
+
+        // Snapshot account/config/service is authoritative; refuse silent rotation/substitution.
+        if (context.AccountId != snapshot.AccountId
+            || context.ConfigurationVersion != snapshot.ConfigurationVersion
+            || pending.AccountId != snapshot.AccountId
+            || pending.ConfigurationVersion != snapshot.ConfigurationVersion
+            || !string.Equals(context.ProviderCode, snapshot.ProviderCode, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(pending.ProviderCode, snapshot.ProviderCode, StringComparison.OrdinalIgnoreCase))
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
         }
 
         if (!providers.TryResolve(pending.ProviderCode, out var provider) || provider is null)
@@ -257,10 +402,6 @@ internal sealed class ShippingCarrierShipmentDirectory(
             actorUserId,
             facts,
             tracked,
-            snapshot.Lines,
-            snapshot.Sender,
-            snapshot.Recipient,
-            snapshot.Package,
             context,
             provider,
             cancellationToken,
@@ -272,10 +413,6 @@ internal sealed class ShippingCarrierShipmentDirectory(
         Guid actorUserId,
         OrderCommittedCarrierShipmentFacts facts,
         ShippingCarrierShipmentOperation tracked,
-        IReadOnlyList<ShippingCarrierShipmentLineQuantity> selectedLines,
-        ShippingCarrierShipmentPartyInput sender,
-        ShippingCarrierShipmentPartyInput recipient,
-        ShippingCarrierShipmentPackageInput package,
         ShippingCarrierAccountExecutionContext context,
         ICarrierShipmentProvider provider,
         CancellationToken cancellationToken,
@@ -287,7 +424,23 @@ internal sealed class ShippingCarrierShipmentDirectory(
             return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
         }
 
+        if (tracked.ExternalDispatchAttempted)
+        {
+            if (tracked.State == ShippingCarrierShipmentState.Pending)
+            {
+                tracked.MarkUnknown(DateTimeOffset.UtcNow, ShippingErrorCodes.CarrierShipmentUnknown);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            return Result.Success(Map(tracked, provider.Capabilities, context));
+        }
+
         var snapshot = existingSnapshot ?? ReadRequiredSnapshot(tracked);
+        var selectedLines = snapshot.Lines;
+        var sender = snapshot.Sender;
+        var recipient = snapshot.Recipient;
+        var package = snapshot.Package;
+
         Guid fulfillmentShipmentId;
         if (snapshot.FulfillmentShipmentId is { } linkedId && linkedId != Guid.Empty)
         {
@@ -298,8 +451,6 @@ internal sealed class ShippingCarrierShipmentDirectory(
             FulfillmentShipmentCreateResult allocated;
             try
             {
-                // Committed method codes are often "tipax:standard" / "post:standard"; Fulfillment registry
-                // owns the short codes and Tipax/Post metadata. CarrierApi HTTP remains Shipping-owned.
                 var fulfillmentMethodCode = ResolveFulfillmentMethodCode(facts.MethodCode);
                 allocated = await fulfillment.CreateShipmentAsync(
                     fulfillmentId,
@@ -311,7 +462,8 @@ internal sealed class ShippingCarrierShipmentDirectory(
                         ? null
                         : BuildFulfillmentProviderMetadata(fulfillmentMethodCode, facts),
                     cancellationToken,
-                    shippingGroupId: tracked.ShippingGroupId);
+                    shippingGroupId: tracked.ShippingGroupId,
+                    shippingDispatchKey: tracked.OperationKey);
             }
             catch (OperationCanceledException)
             {
@@ -331,56 +483,148 @@ internal sealed class ShippingCarrierShipmentDirectory(
                 return Fail(ShippingErrorCodes.CarrierShipmentNotEligible);
             }
 
-            tracked.SetExecutionInputSnapshot(SerializeExecutionSnapshot(snapshot with
-            {
-                FulfillmentShipmentId = fulfillmentShipmentId,
-            }));
+            snapshot = snapshot with { FulfillmentShipmentId = fulfillmentShipmentId };
+            tracked.SetExecutionInputSnapshot(SerializeExecutionSnapshot(snapshot));
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        var options = tipaxOptions.CurrentValue;
-        var outcome = await provider.CreateAsync(
-            new CarrierShipmentCreateRequest(
-                tracked.OperationKey,
-                context.AccountId,
-                context.ConfigurationVersion,
-                new CarrierAccountExecution(
-                    context.AccountId,
-                    context.ConfigurationVersion,
-                    context.Username,
-                    context.Password,
-                    context.CurrencyCode,
-                    context.MethodBinding?.PaymentTypeId ?? "0",
-                    context.MethodBinding?.PickupTypeId ?? "0",
-                    context.MethodBinding?.DistributionTypeId ?? "0",
-                    context.MethodBinding?.PackingId ?? "0",
-                    context.MethodBinding?.PackageContentId ?? "0",
-                    context.MethodBinding?.PackTypeId ?? "0",
-                    context.ApiBaseUrl,
-                    context.TokenUrl),
-                snapshot.ProviderServiceCode,
-                new CarrierShipmentParty(
-                    sender.FullName,
-                    sender.Mobile,
-                    sender.AddressLine,
-                    snapshot.OriginLocationCode,
-                    sender.PostalCode),
-                new CarrierShipmentParty(
-                    recipient.FullName,
-                    recipient.Mobile,
-                    recipient.AddressLine,
-                    recipient.LocationCode,
-                    recipient.PostalCode),
-                new CarrierShipmentPackage(
-                    package.WeightGrams,
-                    package.DeclaredValue,
-                    package.LengthCentimeters,
-                    package.WidthCentimeters,
-                    package.HeightCentimeters,
-                    package.CollectAmount),
-                options.SuccessCallbackUrl,
-                options.FailureCallbackUrl),
-            cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var claimToken = UuidV7.New();
+        var leaseUntil = now.Add(TimeSpan.FromSeconds(45));
+        var supportsExecuteUpdate = db.Database.IsNpgsql();
+        if (supportsExecuteUpdate)
+        {
+            // Atomic claim across concurrent DbContexts: only one UPDATE wins the lease.
+            var claimed = await db.CarrierShipmentOperations
+                .Where(x => x.OperationId == tracked.OperationId
+                            && x.State == ShippingCarrierShipmentState.Pending
+                            && !x.ExternalDispatchAttempted
+                            && (x.DispatchClaimToken == null
+                                || x.DispatchClaimToken == Guid.Empty
+                                || x.DispatchClaimExpiresAt == null
+                                || x.DispatchClaimExpiresAt <= now))
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(x => x.DispatchClaimToken, claimToken)
+                        .SetProperty(x => x.DispatchClaimExpiresAt, leaseUntil),
+                    cancellationToken);
+            if (claimed != 1)
+            {
+                await db.Entry(tracked).ReloadAsync(cancellationToken);
+                return Result.Success(Map(tracked, provider.Capabilities, context));
+            }
+
+            // Persist "external may have started" BEFORE provider HTTP, outside any long DB transaction.
+            var marked = await db.CarrierShipmentOperations
+                .Where(x => x.OperationId == tracked.OperationId
+                            && x.State == ShippingCarrierShipmentState.Pending
+                            && x.DispatchClaimToken == claimToken
+                            && !x.ExternalDispatchAttempted)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(x => x.ExternalDispatchAttempted, true)
+                        .SetProperty(x => x.AttemptedAt, now)
+                        .SetProperty(x => x.DispatchClaimExpiresAt, now.Add(TimeSpan.FromMinutes(5))),
+                    cancellationToken);
+            if (marked != 1)
+            {
+                await db.Entry(tracked).ReloadAsync(cancellationToken);
+                return Result.Success(Map(tracked, provider.Capabilities, context));
+            }
+
+            await db.Entry(tracked).ReloadAsync(cancellationToken);
+        }
+        else
+        {
+            // InMemory / non-relational test hosts: entity claim + reload verify (no cross-context races in those suites).
+            if (!tracked.TryAcquireDispatchClaim(claimToken, now, TimeSpan.FromSeconds(45)))
+            {
+                return Result.Success(Map(tracked, provider.Capabilities, context));
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+            await db.Entry(tracked).ReloadAsync(cancellationToken);
+            if (tracked.DispatchClaimToken != claimToken || tracked.ExternalDispatchAttempted)
+            {
+                return Result.Success(Map(tracked, provider.Capabilities, context));
+            }
+
+            tracked.MarkExternalDispatchAttempted(now);
+            await db.SaveChangesAsync(cancellationToken);
+            await db.Entry(tracked).ReloadAsync(cancellationToken);
+            if (!tracked.ExternalDispatchAttempted || tracked.DispatchClaimToken != claimToken)
+            {
+                return Result.Success(Map(tracked, provider.Capabilities, context));
+            }
+        }
+
+        CarrierShipmentResult outcome;
+        try
+        {
+            var options = tipaxOptions.CurrentValue;
+            outcome = await provider.CreateAsync(
+                new CarrierShipmentCreateRequest(
+                    tracked.OperationKey,
+                    snapshot.AccountId,
+                    snapshot.ConfigurationVersion,
+                    new CarrierAccountExecution(
+                        context.AccountId,
+                        context.ConfigurationVersion,
+                        context.Username,
+                        context.Password,
+                        context.CurrencyCode,
+                        context.MethodBinding?.PaymentTypeId ?? "0",
+                        context.MethodBinding?.PickupTypeId ?? "0",
+                        context.MethodBinding?.DistributionTypeId ?? "0",
+                        context.MethodBinding?.PackingId ?? "0",
+                        context.MethodBinding?.PackageContentId ?? "0",
+                        context.MethodBinding?.PackTypeId ?? "0",
+                        context.ApiBaseUrl,
+                        context.TokenUrl),
+                    snapshot.ProviderServiceCode,
+                    new CarrierShipmentParty(
+                        sender.FullName,
+                        sender.Mobile,
+                        sender.AddressLine,
+                        snapshot.OriginLocationCode,
+                        sender.PostalCode),
+                    new CarrierShipmentParty(
+                        recipient.FullName,
+                        recipient.Mobile,
+                        recipient.AddressLine,
+                        recipient.LocationCode,
+                        recipient.PostalCode),
+                    new CarrierShipmentPackage(
+                        package.WeightGrams,
+                        package.DeclaredValue,
+                        package.LengthCentimeters,
+                        package.WidthCentimeters,
+                        package.HeightCentimeters,
+                        package.CollectAmount),
+                    options.SuccessCallbackUrl,
+                    options.FailureCallbackUrl),
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            if (tracked.State == ShippingCarrierShipmentState.Pending)
+            {
+                tracked.MarkUnknown(DateTimeOffset.UtcNow, ShippingErrorCodes.CarrierShipmentUnknown);
+                await db.SaveChangesAsync(CancellationToken.None);
+            }
+
+            throw;
+        }
+        catch (Exception)
+        {
+            if (tracked.State == ShippingCarrierShipmentState.Pending)
+            {
+                tracked.MarkUnknown(DateTimeOffset.UtcNow, ShippingErrorCodes.CarrierShipmentUnknown);
+                await db.SaveChangesAsync(CancellationToken.None);
+            }
+
+            throw;
+        }
 
         ApplyCreateOutcome(tracked, outcome, DateTimeOffset.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
@@ -478,47 +722,152 @@ internal sealed class ShippingCarrierShipmentDirectory(
             _ => "{}",
         };
 
-    /// <summary>
-    /// Physical weight/dims stay merchant package facts for this dispatch; declared value and collect
-    /// scale by selected quantity share of group packed totals so partial packages do not each send full collect.
-    /// </summary>
-    private static ShippingCarrierShipmentPackageInput ScalePackageForSelection(
-        ShippingCarrierShipmentPackageInput package,
-        IReadOnlyList<ShippingCarrierShipmentLineQuantity> selected,
-        OrderCommittedCarrierShipmentFacts facts)
+    private async Task<ShippingCarrierShipmentOperation?> FindOpenCreateForGroupAsync(
+        ShippingDraftOwner owner,
+        Guid checkoutId,
+        Guid shippingGroupId,
+        CancellationToken cancellationToken)
     {
-        var selectedQty = selected.Sum(x => x.Quantity);
-        var denominator = facts.GroupPackedQuantityTotal is > 0m
-            ? facts.GroupPackedQuantityTotal.Value
-            : facts.ExecutableLines.Sum(x => x.RemainingPackedQuantity);
-        if (selectedQty <= 0m || denominator <= 0m)
-        {
-            return new ShippingCarrierShipmentPackageInput(
-                package.WeightGrams,
-                0m,
-                package.LengthCentimeters,
-                package.WidthCentimeters,
-                package.HeightCentimeters,
-                0m);
-        }
-
-        var share = selectedQty / denominator;
-        if (share > 1m)
-        {
-            share = 1m;
-        }
-
-        return new ShippingCarrierShipmentPackageInput(
-            package.WeightGrams,
-            RoundMoney(package.DeclaredValue * share),
-            package.LengthCentimeters,
-            package.WidthCentimeters,
-            package.HeightCentimeters,
-            RoundMoney(package.CollectAmount * share));
+        var candidates = await db.CarrierShipmentOperations
+            .Where(x => x.CheckoutId == checkoutId
+                        && x.ShippingGroupId == shippingGroupId
+                        && x.OwnerKind == owner.Kind
+                        && x.OwnerTenantId == owner.TenantId
+                        && x.OwnerSellerPartyId == owner.SellerPartyId
+                        && x.Kind == ShippingCarrierShipmentKind.Create
+                        && (x.State == ShippingCarrierShipmentState.Pending
+                            || x.State == ShippingCarrierShipmentState.Unknown))
+            .OrderByDescending(x => x.AttemptedAt)
+            .Take(8)
+            .ToListAsync(cancellationToken);
+        return candidates.FirstOrDefault();
     }
 
-    private static decimal RoundMoney(decimal value)
-        => decimal.Round(value, 2, MidpointRounding.AwayFromZero);
+    private async Task<ShippingCarrierShipmentOperation?> FindCreateByPackageDispatchIdAsync(
+        ShippingDraftOwner owner,
+        Guid checkoutId,
+        Guid shippingGroupId,
+        Guid packageDispatchId,
+        CancellationToken cancellationToken)
+    {
+        var candidates = await db.CarrierShipmentOperations
+            .Where(x => x.CheckoutId == checkoutId
+                        && x.ShippingGroupId == shippingGroupId
+                        && x.OwnerKind == owner.Kind
+                        && x.OwnerTenantId == owner.TenantId
+                        && x.OwnerSellerPartyId == owner.SellerPartyId
+                        && x.Kind == ShippingCarrierShipmentKind.Create)
+            .OrderByDescending(x => x.AttemptedAt)
+            .Take(32)
+            .ToListAsync(cancellationToken);
+        foreach (var row in candidates)
+        {
+            if (TryReadExecutionSnapshot(row.ExecutionInputSnapshotJson, out var snapshot)
+                && snapshot is not null
+                && snapshot.PackageDispatchId == packageDispatchId)
+            {
+                return row;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryResolveDispatchPhysicalPackage(
+        ShippingCarrierShipmentExecuteRequest request,
+        IReadOnlyList<ShippingCarrierShipmentLineQuantity> selected,
+        OrderCommittedCarrierShipmentFacts facts,
+        ShippingCarrierShipmentPackageInput groupPackage,
+        out ShippingCarrierShipmentPackageInput physical,
+        out string? failureCode)
+    {
+        failureCode = null;
+        if (request.Package is { } dispatchPackage)
+        {
+            if (dispatchPackage.WeightGrams <= 0m
+                || dispatchPackage.LengthCentimeters <= 0m
+                || dispatchPackage.WidthCentimeters <= 0m
+                || dispatchPackage.HeightCentimeters <= 0m)
+            {
+                physical = groupPackage;
+                failureCode = ShippingErrorCodes.CarrierShipmentNotEligible;
+                return false;
+            }
+
+            physical = new ShippingCarrierShipmentPackageInput(
+                dispatchPackage.WeightGrams,
+                0m,
+                dispatchPackage.LengthCentimeters,
+                dispatchPackage.WidthCentimeters,
+                dispatchPackage.HeightCentimeters,
+                0m);
+            return true;
+        }
+
+        // Full remaining dispatch may reuse group-level completion/facts once; partial requires own facts.
+        var selectsAllRemaining = facts.ExecutableLines.Count == selected.Count
+            && facts.ExecutableLines.All(exec =>
+                selected.Any(s => s.OrderLineId == exec.OrderLineId && s.Quantity == exec.RemainingPackedQuantity));
+        if (!selectsAllRemaining)
+        {
+            physical = groupPackage;
+            failureCode = ShippingErrorCodes.CarrierShipmentNotEligible;
+            return false;
+        }
+
+        physical = new ShippingCarrierShipmentPackageInput(
+            groupPackage.WeightGrams,
+            0m,
+            groupPackage.LengthCentimeters,
+            groupPackage.WidthCentimeters,
+            groupPackage.HeightCentimeters,
+            0m);
+        return physical.WeightGrams > 0m
+               && physical.LengthCentimeters > 0m
+               && physical.WidthCentimeters > 0m
+               && physical.HeightCentimeters > 0m;
+    }
+
+    private async Task<(decimal Declared, decimal Collect)> SumPriorPackageMoneyAsync(
+        ShippingDraftOwner owner,
+        Guid checkoutId,
+        Guid shippingGroupId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await db.CarrierShipmentOperations
+            .AsNoTracking()
+            .Where(x => x.CheckoutId == checkoutId
+                        && x.ShippingGroupId == shippingGroupId
+                        && x.OwnerKind == owner.Kind
+                        && x.OwnerTenantId == owner.TenantId
+                        && x.OwnerSellerPartyId == owner.SellerPartyId
+                        && x.Kind == ShippingCarrierShipmentKind.Create
+                        && (x.State == ShippingCarrierShipmentState.Succeeded
+                            || x.State == ShippingCarrierShipmentState.Pending
+                            || x.State == ShippingCarrierShipmentState.Unknown))
+            .ToListAsync(cancellationToken);
+        decimal declared = 0m;
+        decimal collect = 0m;
+        foreach (var row in rows)
+        {
+            if (!TryReadExecutionSnapshot(row.ExecutionInputSnapshotJson, out var snapshot) || snapshot is null)
+            {
+                continue;
+            }
+
+            declared += snapshot.Package.DeclaredValue;
+            collect += snapshot.Package.CollectAmount;
+        }
+
+        return (declared, collect);
+    }
+
+    private static bool IsFinalRemainingDispatch(
+        OrderCommittedCarrierShipmentFacts facts,
+        IReadOnlyList<ShippingCarrierShipmentLineQuantity> selected)
+        => facts.ExecutableLines.Count == selected.Count
+           && facts.ExecutableLines.All(exec =>
+               selected.Any(s => s.OrderLineId == exec.OrderLineId && s.Quantity == exec.RemainingPackedQuantity));
 
     private static bool OwnerMatches(ShippingDraftOwner owner, ShippingCarrierShipmentOperation row)
         => row.OwnerKind == owner.Kind
@@ -563,6 +912,7 @@ internal sealed class ShippingCarrierShipmentDirectory(
             snapshot.ConfigurationVersion,
             snapshot.ProviderCode,
             snapshot.Currency,
+            snapshot.PayloadFingerprint,
         });
 
     private ExecutionSnapshot ReadRequiredSnapshot(ShippingCarrierShipmentOperation tracked)
@@ -645,6 +995,9 @@ internal sealed class ShippingCarrierShipmentDirectory(
             var currency = root.TryGetProperty("Currency", out var currencyEl)
                 ? currencyEl.GetString() ?? string.Empty
                 : string.Empty;
+            var payloadFingerprint = root.TryGetProperty("PayloadFingerprint", out var fpEl)
+                ? fpEl.GetString() ?? string.Empty
+                : string.Empty;
 
             snapshot = new ExecutionSnapshot(
                 packageDispatchId,
@@ -659,7 +1012,8 @@ internal sealed class ShippingCarrierShipmentDirectory(
                 accountId,
                 configurationVersion,
                 providerCode,
-                currency);
+                currency,
+                payloadFingerprint);
             return true;
         }
         catch (JsonException)
@@ -725,7 +1079,8 @@ internal sealed class ShippingCarrierShipmentDirectory(
         Guid AccountId,
         int ConfigurationVersion,
         string ProviderCode,
-        string Currency);
+        string Currency,
+        string PayloadFingerprint = "");
 
     private static bool TryResolveLineSelection(
         OrderCommittedCarrierShipmentFacts facts,

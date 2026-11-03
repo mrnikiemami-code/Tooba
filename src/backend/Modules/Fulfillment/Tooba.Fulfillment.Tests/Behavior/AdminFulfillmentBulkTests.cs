@@ -210,7 +210,7 @@ public sealed class AdminFulfillmentBulkTests
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> UnpackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
-        public Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(Guid fulfillmentId, Guid actorUserId, string carrierDisplayName, IReadOnlyList<ShipmentLineCommand> items, CancellationToken cancellationToken, string? shippingMethodCode = null, string? providerMetadataJson = null, Guid? shippingGroupId = null) =>
+        public Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(Guid fulfillmentId, Guid actorUserId, string carrierDisplayName, IReadOnlyList<ShipmentLineCommand> items, CancellationToken cancellationToken, string? shippingMethodCode = null, string? providerMetadataJson = null, Guid? shippingGroupId = null, string? shippingDispatchKey = null) =>
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> CancelShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();

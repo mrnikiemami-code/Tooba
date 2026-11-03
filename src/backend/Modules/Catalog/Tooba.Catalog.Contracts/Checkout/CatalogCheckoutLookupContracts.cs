@@ -25,14 +25,38 @@ public interface ICatalogCheckoutLookup
     /// Authoritative shipping weight in whole grams keyed by variant id.
     /// </summary>
     /// <remarks>
-    /// Sourced only from <b>active</b> Number definitions whose machine Code is the established
-    /// shipping/product weight identity (<c>weight</c> or <c>*_weight</c>); unit <c>g</c>/<c>kg</c>
-    /// is conversion metadata only. Variant value overrides the same product definition when
-    /// present; a present invalid/conflicting override stays unknown (never healed from product).
-    /// Missing, unparsable, non-positive, overflow, or conflicting effective grams yield a missing
-    /// map entry. Cancellation/provider failure propagates. No invented defaults.
+    /// Resolved by Catalog physical-specification authority: typed <c>WeightGrams</c> composed with
+    /// legacy active Number <c>weight</c>/<c>*_weight</c> attributes (g/kg) under an explicit
+    /// conflict policy (agree / typed-only / legacy-only / fail closed). Variant typed null inherits
+    /// product; present typed variant replaces product. Missing, conflicting, non-positive, or
+    /// overflow yields a missing map entry. No invented defaults. Dimensions are never summed.
     /// </remarks>
     Task<IReadOnlyDictionary<Guid, long?>> GetShippingWeightGramsByVariantIdsAsync(
         IReadOnlyCollection<Guid> variantIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Neutral product physical facts (grams + centimetres) keyed by variant id for Order/Shipping.
+    /// </summary>
+    /// <remarks>
+    /// Catalog-owned only — no foreign persistence. Null fields mean unspecified. Product dimensions
+    /// are per-item facts and must not be summed into parcels; parcel L/W/H remain separate packing
+    /// facts. Method binding default package dimensions must not masquerade as these values.
+    /// </remarks>
+    Task<IReadOnlyDictionary<Guid, CatalogPhysicalSpecificationFacts>> GetPhysicalSpecificationsByVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Catalog-owned physical specification facts for one sellable variant (product + lawful override).
+/// </summary>
+/// <param name="WeightGrams">Whole grams; null when unspecified or fail-closed.</param>
+/// <param name="LengthCentimeters">Length in centimetres; null when unspecified.</param>
+/// <param name="WidthCentimeters">Width in centimetres; null when unspecified.</param>
+/// <param name="HeightCentimeters">Height in centimetres; null when unspecified.</param>
+public sealed record CatalogPhysicalSpecificationFacts(
+    long? WeightGrams,
+    decimal? LengthCentimeters,
+    decimal? WidthCentimeters,
+    decimal? HeightCentimeters);

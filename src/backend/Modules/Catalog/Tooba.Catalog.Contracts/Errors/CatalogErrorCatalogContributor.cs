@@ -161,6 +161,8 @@ public sealed class CatalogErrorCatalogContributor : IErrorCatalogContributor
             "Product slug is missing; save the primary locale first."),
         D(CatalogErrorCodes.WorkspaceQuantityRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Quantity policy update was rejected."),
+        D(CatalogErrorCodes.WorkspacePhysicalSpecificationRejected, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Physical specification update was rejected."),
         D(CatalogErrorCodes.CategoryAssignmentLevelInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Product must be assigned to a Level-3 category."),
         D(CatalogErrorCodes.CategoryChangeInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,

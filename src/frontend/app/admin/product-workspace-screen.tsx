@@ -37,6 +37,7 @@ import {
   mutateAdminProductLifecycle,
   removeAdminProductAdditionalCategory,
   updateAdminProductCore,
+  updateAdminProductPhysicalSpecification,
   updateAdminProductQuantityPolicy,
   type AdminBrandOption,
   type HostReadSource,
@@ -123,6 +124,24 @@ interface GeneralDraft {
   unitOfMeasureId: string;
   quantityDecimalPlaces: string;
   quantityStep: string;
+  weightGrams: string;
+  lengthCentimeters: string;
+  widthCentimeters: string;
+  heightCentimeters: string;
+}
+
+function formatOptionalDecimal(value: number | null | undefined): string {
+  if (value == null) return "";
+  return formatQuantityDisplay(value, 6);
+}
+
+function parseOptionalPositiveDecimal(text: string): { ok: true; value: number | null } | { ok: false } {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return { ok: true, value: null };
+  const normalized = trimmed.replace(",", ".");
+  const num = Number(normalized);
+  if (!Number.isFinite(num) || num <= 0) return { ok: false };
+  return { ok: true, value: num };
 }
 
 function draftFromView(view: ProductWorkspaceView): GeneralDraft {
@@ -134,6 +153,10 @@ function draftFromView(view: ProductWorkspaceView): GeneralDraft {
     unitOfMeasureId: view.unitOfMeasureId ?? view.units?.[0]?.unitOfMeasureId ?? "",
     quantityDecimalPlaces: String(view.quantityDecimalPlaces ?? 0),
     quantityStep: view.quantityStep == null ? "" : formatQuantityDisplay(view.quantityStep, 6),
+    weightGrams: formatOptionalDecimal(view.weightGrams),
+    lengthCentimeters: formatOptionalDecimal(view.lengthCentimeters),
+    widthCentimeters: formatOptionalDecimal(view.widthCentimeters),
+    heightCentimeters: formatOptionalDecimal(view.heightCentimeters),
   };
 }
 
@@ -494,6 +517,44 @@ function ProductWorkspaceScreenInner({
         return;
       }
       saved = qtyResult.view;
+    }
+
+    const weightParsed = parseOptionalPositiveDecimal(activeDraft.weightGrams);
+    const lengthParsed = parseOptionalPositiveDecimal(activeDraft.lengthCentimeters);
+    const widthParsed = parseOptionalPositiveDecimal(activeDraft.widthCentimeters);
+    const heightParsed = parseOptionalPositiveDecimal(activeDraft.heightCentimeters);
+    if (!weightParsed.ok || !lengthParsed.ok || !widthParsed.ok || !heightParsed.ok) {
+      setBusy(false);
+      setError("وزن و ابعاد فیزیکی در صورت ورود باید عدد مثبت باشند (گرم / سانتی‌متر).");
+      return;
+    }
+    const physicalChanged =
+      (weightParsed.value ?? null) !== (current.weightGrams ?? null)
+      || (lengthParsed.value ?? null) !== (current.lengthCentimeters ?? null)
+      || (widthParsed.value ?? null) !== (current.widthCentimeters ?? null)
+      || (heightParsed.value ?? null) !== (current.heightCentimeters ?? null);
+    if (physicalChanged) {
+      const physicalResult = await updateAdminProductPhysicalSpecification(
+        current.productId,
+        {
+          weightGrams: weightParsed.value,
+          lengthCentimeters: lengthParsed.value,
+          widthCentimeters: widthParsed.value,
+          heightCentimeters: heightParsed.value,
+          expectedUpdatedAt: saved.catalogUpdatedAt,
+        },
+        viewScope,
+      );
+      if (!physicalResult.ok) {
+        setBusy(false);
+        if (physicalResult.errorCode === "workspace.catalog.stale") {
+          setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
+          return;
+        }
+        setError(mapAdminErrorMessage(physicalResult.errorCode));
+        return;
+      }
+      saved = physicalResult.view;
     }
 
     setView(saved);
@@ -1112,6 +1173,73 @@ function ProductWorkspaceScreenInner({
                         اعشار ۰ تا ۶. گام خالی مجاز است. اگر گام وارد شود باید مثبت و هم‌دقت با اعشار باشد.
                       </span>
                     </label>
+                    <div
+                      className="rounded-ds border border-border bg-secondary/20 p-3"
+                      data-testid="product-edit-physical-specification"
+                    >
+                      <p className="text-sm font-medium">مشخصات فیزیکی</p>
+                      <p className="mt-1 text-xs text-muted">
+                        خالی = نامشخص. وزن به گرم، ابعاد به سانتی‌متر. ابعاد محصولات با هم جمع نمی‌شوند.
+                      </p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="block text-sm font-medium">
+                          وزن (گرم)
+                          <input
+                            className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base tabular-nums"
+                            value={activeDraft.weightGrams}
+                            inputMode="decimal"
+                            dir="ltr"
+                            data-testid="product-edit-weight-grams"
+                            onChange={(event) => {
+                              setDraft({ ...activeDraft, weightGrams: event.target.value });
+                              markGeneralDirty();
+                            }}
+                          />
+                        </label>
+                        <label className="block text-sm font-medium">
+                          طول (سانتی‌متر)
+                          <input
+                            className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base tabular-nums"
+                            value={activeDraft.lengthCentimeters}
+                            inputMode="decimal"
+                            dir="ltr"
+                            data-testid="product-edit-length-cm"
+                            onChange={(event) => {
+                              setDraft({ ...activeDraft, lengthCentimeters: event.target.value });
+                              markGeneralDirty();
+                            }}
+                          />
+                        </label>
+                        <label className="block text-sm font-medium">
+                          عرض (سانتی‌متر)
+                          <input
+                            className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base tabular-nums"
+                            value={activeDraft.widthCentimeters}
+                            inputMode="decimal"
+                            dir="ltr"
+                            data-testid="product-edit-width-cm"
+                            onChange={(event) => {
+                              setDraft({ ...activeDraft, widthCentimeters: event.target.value });
+                              markGeneralDirty();
+                            }}
+                          />
+                        </label>
+                        <label className="block text-sm font-medium">
+                          ارتفاع (سانتی‌متر)
+                          <input
+                            className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base tabular-nums"
+                            value={activeDraft.heightCentimeters}
+                            inputMode="decimal"
+                            dir="ltr"
+                            data-testid="product-edit-height-cm"
+                            onChange={(event) => {
+                              setDraft({ ...activeDraft, heightCentimeters: event.target.value });
+                              markGeneralDirty();
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
                     <div className="rounded-ds border border-border bg-secondary/30 p-3 text-sm">
                       <p className="font-medium">کد کاتالوگ</p>
                       <p className="mt-1 text-muted">
@@ -1230,6 +1358,22 @@ function ProductWorkspaceScreenInner({
                       <SummaryCard
                         label="اعشار / گام"
                         value={`${view.quantityDecimalPlaces ?? 0}${view.quantityStep == null ? "" : ` / ${formatQuantityDisplay(view.quantityStep, 6)}`}`}
+                        ltr
+                      />
+                      <SummaryCard
+                        label="وزن (گرم)"
+                        value={view.weightGrams == null ? "—" : formatQuantityDisplay(view.weightGrams, 6)}
+                        ltr
+                      />
+                      <SummaryCard
+                        label="ابعاد (سانتی‌متر)"
+                        value={
+                          view.lengthCentimeters == null
+                            && view.widthCentimeters == null
+                            && view.heightCentimeters == null
+                            ? "—"
+                            : `${view.lengthCentimeters == null ? "—" : formatQuantityDisplay(view.lengthCentimeters, 6)}×${view.widthCentimeters == null ? "—" : formatQuantityDisplay(view.widthCentimeters, 6)}×${view.heightCentimeters == null ? "—" : formatQuantityDisplay(view.heightCentimeters, 6)}`
+                        }
                         ltr
                       />
                       <SummaryCard label="آخرین به‌روزرسانی" value={formatJalaliDateTime(view.catalogUpdatedAt)} />

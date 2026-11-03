@@ -41,6 +41,13 @@ public interface ICatalogAdminProductWorkspaceMutationGateway
         CatalogAdminProductWorkspaceQuantityPolicyRequest request,
         CancellationToken cancellationToken);
 
+    /// <summary>Updates product physical specification (grams + centimetres).</summary>
+    Task<Result> UpdatePhysicalSpecificationAsync(
+        Guid productId,
+        CatalogAdminProductWorkspaceActor actor,
+        CatalogAdminProductWorkspacePhysicalSpecificationRequest request,
+        CancellationToken cancellationToken);
+
     /// <summary>Assigns or replaces the product primary category.</summary>
     Task<Result> AssignPrimaryCategoryAsync(
         Guid productId,
@@ -118,7 +125,11 @@ public sealed record CatalogAdminProductWorkspaceCreateRequest(
     string Title,
     string? Slug,
     Guid? CategoryId,
-    string? Locale);
+    string? Locale,
+    decimal? WeightGrams = null,
+    decimal? LengthCentimeters = null,
+    decimal? WidthCentimeters = null,
+    decimal? HeightCentimeters = null);
 
 /// <summary>Body for PATCH .../catalog-title.</summary>
 public sealed record CatalogAdminProductWorkspaceCatalogTitleRequest(
@@ -142,6 +153,14 @@ public sealed record CatalogAdminProductWorkspaceQuantityPolicyRequest(
     Guid UnitOfMeasureId,
     int DecimalPlaces,
     decimal? Step,
+    DateTimeOffset ExpectedUpdatedAt);
+
+/// <summary>Body for PATCH .../physical-specification. Null field = unspecified (clears prior value).</summary>
+public sealed record CatalogAdminProductWorkspacePhysicalSpecificationRequest(
+    decimal? WeightGrams,
+    decimal? LengthCentimeters,
+    decimal? WidthCentimeters,
+    decimal? HeightCentimeters,
     DateTimeOffset ExpectedUpdatedAt);
 
 /// <summary>Body for PUT .../category (primary category assign).</summary>

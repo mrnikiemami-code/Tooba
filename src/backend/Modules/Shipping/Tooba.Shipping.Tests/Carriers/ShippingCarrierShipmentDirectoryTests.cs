@@ -91,41 +91,132 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     }
 
     [Fact]
-    public async Task Open_pending_create_resumes_same_intent_without_new_allocation_key()
+    public async Task Provider_crash_after_external_claim_marks_unknown_and_resume_does_not_resend()
+    {
+        var provider = new RecordingShipmentProvider { ThrowOnCreate = true };
+        var directory = Create(provider, configured: true, facts: ValidFacts());
+        await PrepareSenderAsync(directory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None));
+        Assert.Equal(1, provider.Creates);
+
+        provider.ThrowOnCreate = false;
+        var resume = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
+        Assert.True(resume.IsSuccess);
+        Assert.Equal(ShippingCarrierShipmentStateView.Unknown, resume.Value.State);
+        Assert.Equal(1, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Same_intent_replays_succeeded_operation_without_second_provider_call()
     {
         var provider = new RecordingShipmentProvider();
-        var (directory, db) = CreateWithDb(provider, configured: true, facts: ValidFacts());
+        var directory = Create(provider, configured: true, facts: ValidFacts());
         await PrepareSenderAsync(directory);
 
         var first = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
         Assert.True(first.IsSuccess);
         Assert.Equal(1, provider.Creates);
 
-        var pending = ShippingCarrierShipmentOperation.Begin(
-            Guid.NewGuid(),
-            $"create:{Checkout:N}:{Group:N}:{Guid.NewGuid():N}",
-            ShippingCarrierShipmentKind.Create,
-            ShippingDraftOwnerKind.Store,
-            "store-alpha",
-            null,
-            Checkout,
-            Group,
-            "tipax",
-            Account,
-            1,
-            DateTimeOffset.UtcNow);
-        pending.SetExecutionInputSnapshot(
-            """
-            {"PackageDispatchId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","FulfillmentId":"66666666-6666-4666-8666-666666666666","FulfillmentShipmentId":"99999999-9999-4999-8999-999999999999","Lines":[{"OrderLineId":"77777777-7777-4777-8777-777777777777","Quantity":2}],"Sender":{"FullName":"فرستنده","Mobile":"09120000000","AddressLine":"مبدأ","PostalCode":"1111111111","LocationCode":"101"},"Recipient":{"FullName":"گیرنده","Mobile":"09121111111","AddressLine":"نشانی","PostalCode":"1111111111","LocationCode":"202"},"OriginLocationCode":"101","ProviderServiceCode":"7","Package":{"WeightGrams":1500,"DeclaredValue":2000000,"LengthCentimeters":20,"WidthCentimeters":15,"HeightCentimeters":10,"CollectAmount":0},"AccountId":"33333333-3333-4333-8333-333333333333","ConfigurationVersion":1,"ProviderCode":"tipax","Currency":"IRR"}
-            """);
-        db.CarrierShipmentOperations.Add(pending);
-        await db.SaveChangesAsync();
-
-        var beforeCreates = provider.Creates;
         var second = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
         Assert.True(second.IsSuccess);
-        Assert.Equal(pending.OperationId, second.Value.OperationId);
-        Assert.Equal(beforeCreates + 1, provider.Creates);
+        Assert.Equal(first.Value.OperationId, second.Value.OperationId);
+        Assert.Equal(1, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Partial_dispatch_without_own_package_facts_is_refused()
+    {
+        var provider = new RecordingShipmentProvider();
+        var facts = ValidFacts(lineQuantity: 4m, unitPrice: 100m);
+        var directory = Create(provider, configured: true, facts: facts);
+        await PrepareSenderAsync(directory);
+
+        var result = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(
+                Checkout,
+                Group,
+                new[] { new ShippingCarrierShipmentLineQuantity(LineA, 1m) }),
+            CancellationToken.None);
+
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
+        Assert.Equal(0, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Mixed_line_values_allocate_declared_from_unit_prices_not_quantity_share()
+    {
+        var provider = new RecordingShipmentProvider();
+        var lineB = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1");
+        var facts = new OrderCommittedCarrierShipmentFacts(
+            Checkout,
+            Group,
+            SellerParty,
+            SellerOrder,
+            "tipax:standard",
+            "Tipax",
+            "CarrierApi",
+            0,
+            "store-alpha",
+            null,
+            "گیرنده",
+            "09121111111",
+            "نشانی",
+            "1111111111",
+            "تهران",
+            "تهران",
+            "IRR",
+            137_500m,
+            1_000m,
+            true,
+            Account,
+            1,
+            "tipax",
+            "7",
+            "input-1",
+            Origin,
+            Destination,
+            1500m,
+            0m,
+            20m,
+            15m,
+            10m,
+            "Paid",
+            false,
+            false,
+            true,
+            null,
+            new[] { LineA, lineB },
+            new[]
+            {
+                new OrderCommittedCarrierExecutableLine(LineA, 1m, 100m, 1m),
+                new OrderCommittedCarrierExecutableLine(lineB, 1m, 900m, 1m),
+            },
+            Fulfillment,
+            2m,
+            new[]
+            {
+                new OrderCommittedCarrierLineValueFact(LineA, 1m, 100m),
+                new OrderCommittedCarrierLineValueFact(lineB, 1m, 900m),
+            });
+        var directory = Create(provider, configured: true, facts: facts);
+        await PrepareSenderAsync(directory);
+
+        var cheap = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(
+                Checkout,
+                Group,
+                new[] { new ShippingCarrierShipmentLineQuantity(LineA, 1m) },
+                new ShippingCarrierShipmentDispatchPackageInput(500m, 10m, 10m, 10m)),
+            CancellationToken.None);
+        Assert.True(cheap.IsSuccess, cheap.IsFailure ? cheap.FirstError.Code : null);
+        Assert.Equal(100m, provider.LastPackage!.DeclaredValue);
+        Assert.Equal(100m, provider.LastPackage.CollectAmount);
     }
 
     [Fact]
@@ -284,7 +375,9 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     private static OrderCommittedCarrierShipmentFacts ValidFacts(
         bool canExecute = true,
         string? reason = null,
-        int configurationVersion = 1) =>
+        int configurationVersion = 1,
+        decimal lineQuantity = 2m,
+        decimal unitPrice = 1_000_000m) =>
         new(
             Checkout,
             Group,
@@ -325,10 +418,13 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             reason,
             new[] { LineA },
             canExecute
-                ? new[] { new OrderCommittedCarrierExecutableLine(LineA, 2m) }
+                ? new[] { new OrderCommittedCarrierExecutableLine(LineA, lineQuantity, unitPrice, lineQuantity) }
                 : Array.Empty<OrderCommittedCarrierExecutableLine>(),
             Fulfillment,
-            2m);
+            lineQuantity,
+            canExecute
+                ? new[] { new OrderCommittedCarrierLineValueFact(LineA, lineQuantity, unitPrice) }
+                : Array.Empty<OrderCommittedCarrierLineValueFact>());
 
     private static ShippingCarrierShipmentExecuteRequest ValidExecuteRequest()
         => new(Checkout, Group);
@@ -382,14 +478,22 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         public string ProviderCode => "tipax";
         public int Creates { get; private set; }
         public int Tracks { get; private set; }
+        public bool ThrowOnCreate { get; set; }
+        public CarrierShipmentPackage? LastPackage { get; private set; }
         public CarrierShipmentOutcome Outcome { get; set; } = CarrierShipmentOutcome.Succeeded;
         public CarrierShipmentCapabilities Capabilities { get; } = new("tipax", true, true, true, false);
 
         public Task<CarrierShipmentResult> CreateAsync(CarrierShipmentCreateRequest request, CancellationToken cancellationToken)
         {
             Creates++;
+            LastPackage = request.Package;
             Assert.Equal(Destination, request.Recipient.LocationCode);
             Assert.True(request.Package.WeightGrams > 0m);
+            if (ThrowOnCreate)
+            {
+                throw new InvalidOperationException("provider-crash");
+            }
+
             return Task.FromResult(Outcome == CarrierShipmentOutcome.Succeeded
                 ? new CarrierShipmentResult(Outcome, TrackingCode: "TRK-1", ProviderOrderId: "ord-1")
                 : CarrierShipmentResult.Failure(Outcome, ShippingErrorCodes.CarrierShipmentUnknown));
@@ -454,9 +558,11 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             string? shippingMethodCode,
             string? providerMetadataJson,
             CancellationToken cancellationToken,
-            Guid? shippingGroupId = null)
+            Guid? shippingGroupId = null,
+            string? shippingDispatchKey = null)
         {
             Assert.NotEqual(Guid.Empty, actorUserId);
+            _ = shippingDispatchKey;
             var shipmentId = Guid.Parse("99999999-9999-4999-8999-999999999999");
             var shipment = new ShipmentSnapshot(
                 shipmentId,

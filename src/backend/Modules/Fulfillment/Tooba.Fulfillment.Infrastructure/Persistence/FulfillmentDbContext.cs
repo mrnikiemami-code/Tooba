@@ -167,10 +167,15 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.TrackingReference).HasMaxLength(128);
             entity.Property(x => x.PreviousTrackingReference).HasMaxLength(128);
             entity.Property(x => x.ShippingGroupId);
+            entity.Property(x => x.ShippingDispatchKey).HasMaxLength(128).HasColumnName("shipping_dispatch_key");
             entity.Ignore(x => x.Items);
             entity.HasIndex(x => x.FulfillmentId);
             entity.HasIndex(x => x.ShippingGroupId).HasFilter("shipping_group_id IS NOT NULL");
             entity.HasIndex(x => x.TrackingReference).IsUnique().HasFilter("tracking_reference IS NOT NULL");
+            entity.HasIndex(x => x.ShippingDispatchKey)
+                .IsUnique()
+                .HasFilter("shipping_dispatch_key IS NOT NULL")
+                .HasDatabaseName("ux_shipments_shipping_dispatch_key");
         });
         modelBuilder.Entity<ShipmentItem>(entity =>
         {

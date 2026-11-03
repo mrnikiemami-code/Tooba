@@ -332,4 +332,7 @@ public static class ShippingErrorCodes
 
     /// <summary>نتیجهٔ ایجاد محموله نزد provider مبهم ماند و دوباره تلاش نمی‌شود.</summary>
     public const string CarrierShipmentUnknown = "shipping.carrier.shipment.unknown";
+
+    /// <summary>Same durable dispatch locator/intent with a conflicting payload.</summary>
+    public const string CarrierShipmentIntentConflict = "shipping.carrier.shipment.intent_conflict";
 }

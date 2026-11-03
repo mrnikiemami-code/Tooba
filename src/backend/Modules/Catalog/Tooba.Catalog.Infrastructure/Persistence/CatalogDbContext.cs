@@ -495,6 +495,10 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.SeoTitleSeam).HasMaxLength(256);
             entity.Property(x => x.QuantityDecimalPlaces).HasDefaultValue(0);
             entity.Property(x => x.QuantityStep).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.WeightGrams).HasColumnName("weight_grams").HasColumnType("numeric(18,3)");
+            entity.Property(x => x.LengthCentimeters).HasColumnName("length_centimeters").HasColumnType("numeric(18,2)");
+            entity.Property(x => x.WidthCentimeters).HasColumnName("width_centimeters").HasColumnType("numeric(18,2)");
+            entity.Property(x => x.HeightCentimeters).HasColumnName("height_centimeters").HasColumnType("numeric(18,2)");
             entity.Ignore(x => x.DomainEvents);
             entity.HasOne<CatalogBrand>()
                 .WithMany()
@@ -561,6 +565,10 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.SortOrder).HasDefaultValue(0);
             entity.Property(x => x.IsDefault).HasDefaultValue(false);
+            entity.Property(x => x.WeightGrams).HasColumnName("weight_grams").HasColumnType("numeric(18,3)");
+            entity.Property(x => x.LengthCentimeters).HasColumnName("length_centimeters").HasColumnType("numeric(18,2)");
+            entity.Property(x => x.WidthCentimeters).HasColumnName("width_centimeters").HasColumnType("numeric(18,2)");
+            entity.Property(x => x.HeightCentimeters).HasColumnName("height_centimeters").HasColumnType("numeric(18,2)");
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => new { x.ProductId, x.CombinationFingerprint }).IsUnique();
             entity.HasMany(x => x.AttributeValues).WithOne().HasForeignKey(x => x.VariantId);

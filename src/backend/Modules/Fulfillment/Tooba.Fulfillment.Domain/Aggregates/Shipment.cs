@@ -27,6 +27,11 @@ public sealed class Shipment
     /// </summary>
     public Guid? ShippingGroupId { get; init; }
 
+    /// <summary>
+    /// Durable Shipping dispatch intent key for idempotent create after link-write failure.
+    /// </summary>
+    public string? ShippingDispatchKey { get; init; }
+
     /// <summary>وضعیت محموله.</summary>
     public ShipmentStatus Status { get; private set; }
 
@@ -76,7 +81,8 @@ public sealed class Shipment
         string? shippingMethodLabel = null,
         string? providerMetadataJson = null,
         int providerMetadataVersion = 0,
-        Guid? shippingGroupId = null)
+        Guid? shippingGroupId = null,
+        string? shippingDispatchKey = null)
     {
         if (string.IsNullOrWhiteSpace(carrierDisplayName))
         {
@@ -88,11 +94,20 @@ public sealed class Shipment
             throw new ContractOperationException(FulfillmentShippingGroupFault.IdentityRequired);
         }
 
+        var normalizedDispatchKey = string.IsNullOrWhiteSpace(shippingDispatchKey)
+            ? null
+            : shippingDispatchKey.Trim();
+        if (normalizedDispatchKey is { Length: > 128 })
+        {
+            throw new ContractOperationException("fulfillment.shipment.dispatch_key_invalid");
+        }
+
         var shipment = new Shipment
         {
             ShipmentId = shipmentId,
             FulfillmentId = fulfillmentId,
             ShippingGroupId = shippingGroupId,
+            ShippingDispatchKey = normalizedDispatchKey,
             Status = ShipmentStatus.Created,
             CarrierDisplayName = carrierDisplayName.Trim(),
             ShippingMethodCode = (shippingMethodCode ?? string.Empty).Trim(),

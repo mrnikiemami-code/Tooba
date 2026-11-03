@@ -22,15 +22,17 @@ public sealed class HostAdminAmcW29PwIdentityGuardTests
         var module = File.ReadAllText(Path.Combine(
             root,
             "src/backend/Modules/ProductWorkspace/Tooba.ProductWorkspace.Endpoints/ProductWorkspaceEndpointModule.cs"));
-        Assert.Equal(17, MapRouteRegex.Matches(module).Count);
+        Assert.Equal(18, MapRouteRegex.Matches(module).Count);
         Assert.Contains("MapPost(\"/\", CreateProductAsync)", module, StringComparison.Ordinal);
         Assert.Contains("MapPatch(\"/{productId:guid}/catalog-title\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPatch(\"/{productId:guid}/core\"", module, StringComparison.Ordinal);
         Assert.Contains("MapPatch(\"/{productId:guid}/quantity-policy\"", module, StringComparison.Ordinal);
+        Assert.Contains("MapPatch(\"/{productId:guid}/physical-specification\"", module, StringComparison.Ordinal);
         Assert.Contains("CreateWorkspaceProductCommand", module, StringComparison.Ordinal);
         Assert.Contains("UpdateWorkspaceProductCatalogTitleCommand", module, StringComparison.Ordinal);
         Assert.Contains("UpdateWorkspaceProductCoreCommand", module, StringComparison.Ordinal);
         Assert.Contains("UpdateWorkspaceProductQuantityPolicyCommand", module, StringComparison.Ordinal);
+        Assert.Contains("UpdateWorkspaceProductPhysicalSpecificationCommand", module, StringComparison.Ordinal);
         Assert.Contains("GetProductWorkspaceQuery", module, StringComparison.Ordinal);
         // W3-R1 (TB-TMAR-PRODUCTWORKSPACE-AMSC-001-W3-R1): the successful 201 path must be produced by
         // the canonical ApiResponseFactory.Created, never by a raw Results.Json(..., Status201Created).

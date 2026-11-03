@@ -190,11 +190,22 @@ public sealed record ShippingCarrierShipmentPackageInput(
     decimal HeightCentimeters,
     decimal CollectAmount);
 
+/// <summary>Actual physical package facts for one dispatch; never inferred by summing product dimensions.</summary>
+public sealed record ShippingCarrierShipmentDispatchPackageInput(
+    decimal WeightGrams,
+    decimal LengthCentimeters,
+    decimal WidthCentimeters,
+    decimal HeightCentimeters);
+
 /// <summary>Execute carrier shipment create; account, service, sender, package, and recipient are server-owned.</summary>
 /// <param name="CheckoutId">Committed checkout.</param>
 /// <param name="ShippingGroupId">Accepted shipping group.</param>
 /// <param name="Lines">Exact line quantities for this physical package; empty/null uses all remaining executable lines.</param>
+/// <param name="Package">Per-dispatch weight/dimensions. Required for partial packages; full-remaining may reuse group completion.</param>
+/// <param name="PackageDispatchId">Optional untrusted client locator; server validates against durable intent.</param>
 public sealed record ShippingCarrierShipmentExecuteRequest(
     Guid CheckoutId,
     Guid ShippingGroupId,
-    IReadOnlyList<ShippingCarrierShipmentLineQuantity>? Lines = null);
+    IReadOnlyList<ShippingCarrierShipmentLineQuantity>? Lines = null,
+    ShippingCarrierShipmentDispatchPackageInput? Package = null,
+    Guid? PackageDispatchId = null);

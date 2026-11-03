@@ -242,7 +242,8 @@ public sealed class ShippingCarrierPackageExecutionRelationalTests
             beforeProvider.Owner, beforeProvider.ActorUserId,
             new ShippingCarrierShipmentExecuteRequest(beforeProvider.CheckoutId, beforeProvider.GroupId), CancellationToken.None);
         Assert.True(resume.IsSuccess, resume.IsFailure ? resume.Errors[0].Code : null);
-        Assert.Equal(beforeCreates + 1, beforeProvider.Provider.Creates);
+        Assert.Equal(ShippingCarrierShipmentStateView.Unknown, resume.Value.State);
+        Assert.Equal(beforeCreates, beforeProvider.Provider.Creates);
         Assert.Equal(1, beforeProvider.Recorder.CreatedCount);
     }
 
@@ -776,9 +777,14 @@ internal sealed class StubRegistry(ICarrierShipmentProvider provider) : ICarrier
 internal sealed class StubAccounts(Guid accountId, bool configured, bool active, string origin) : IShippingCarrierAccountDirectory
 {
     private readonly Guid _accountId = accountId;
-    private readonly bool _configured = configured;
-    private readonly bool _active = active;
+    private bool _configured = configured;
+    private bool _active = active;
+    private int _configurationVersion = 1;
     private readonly string _origin = origin;
+
+    public void Disable() => _active = false;
+    public void Unconfigure() => _configured = false;
+    public void RotateConfiguration(int version) => _configurationVersion = version;
 
     public Task<Result<IReadOnlyList<ShippingCarrierAccountView>>> ListAccountsAsync(ShippingAuthoringOwnerScope owner, CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<Result<ShippingCarrierAccountView>> GetAccountAsync(ShippingAuthoringOwnerScope owner, Guid accountId, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -802,12 +808,12 @@ internal sealed class StubAccounts(Guid accountId, bool configured, bool active,
         }
 
         return Task.FromResult<ShippingCarrierAccountExecutionContext?>(new ShippingCarrierAccountExecutionContext(
-            _accountId, "tipax", "Tipax", _active, 1,
+            _accountId, "tipax", "Tipax", _active, _configurationVersion,
             "https://api.test/", "https://tokens.test/Token", "IRR", "user", "pass",
             new ShippingCarrierMethodBindingView(
                 Guid.NewGuid(), Guid.NewGuid(), _accountId, "tipax", "7",
                 "0", "0", "0", "0", "0", "0",
-                _origin, "مبدأ", null, null, 20m, 15m, 10m, 1, DateTimeOffset.UtcNow)));
+                _origin, "مبدأ", null, null, 20m, 15m, 10m, _configurationVersion, DateTimeOffset.UtcNow)));
     }
 }
 
@@ -837,9 +843,13 @@ internal sealed class FixedOrderReader(OrderFulfillmentHandoffSnapshot snapshot)
 internal sealed class RecordingFulfillmentAdmin(IFulfillmentAdminOperations inner) : IFulfillmentAdminOperations
 {
     public bool FailNextCreate { get; set; }
+    /// <summary>After a successful allocate+persist, throw before returning so Shipping cannot link.</summary>
+    public bool FailAfterAllocate { get; set; }
     public Guid LastActorUserId { get; private set; }
     public int CreatedCount { get; private set; }
+    public int AllocateAttempts { get; private set; }
     public decimal AllocatedQuantityTotal { get; private set; }
+    public Guid? LastCreatedShipmentId { get; private set; }
 
     public Task<FulfillmentSnapshot?> GetAsync(Guid fulfillmentId, CancellationToken cancellationToken) => inner.GetAsync(fulfillmentId, cancellationToken);
     public Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) => inner.ListForCheckoutAsync(checkoutId, cancellationToken);
@@ -855,7 +865,8 @@ internal sealed class RecordingFulfillmentAdmin(IFulfillmentAdminOperations inne
 
     public async Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(
         Guid fulfillmentId, Guid actorUserId, string carrierDisplayName, IReadOnlyList<ShipmentLineCommand> items,
-        string? shippingMethodCode, string? providerMetadataJson, CancellationToken cancellationToken, Guid? shippingGroupId = null)
+        string? shippingMethodCode, string? providerMetadataJson, CancellationToken cancellationToken,
+        Guid? shippingGroupId = null, string? shippingDispatchKey = null)
     {
         LastActorUserId = actorUserId;
         if (FailNextCreate)
@@ -864,10 +875,19 @@ internal sealed class RecordingFulfillmentAdmin(IFulfillmentAdminOperations inne
             throw new ContractOperationException("fulfillment.injected.failure");
         }
 
+        AllocateAttempts++;
         var created = await inner.CreateShipmentAsync(
-            fulfillmentId, actorUserId, carrierDisplayName, items, shippingMethodCode, providerMetadataJson, cancellationToken, shippingGroupId);
+            fulfillmentId, actorUserId, carrierDisplayName, items, shippingMethodCode, providerMetadataJson,
+            cancellationToken, shippingGroupId, shippingDispatchKey);
         CreatedCount++;
+        LastCreatedShipmentId = created.CreatedShipmentId;
         AllocatedQuantityTotal += items.Sum(x => x.Quantity);
+        if (FailAfterAllocate)
+        {
+            FailAfterAllocate = false;
+            throw new ContractOperationException("fulfillment.injected.after_allocate");
+        }
+
         return created;
     }
 

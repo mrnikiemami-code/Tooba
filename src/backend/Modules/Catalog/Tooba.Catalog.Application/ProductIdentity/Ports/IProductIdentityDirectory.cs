@@ -3,7 +3,7 @@ using Tooba.Catalog.Application.ProductIdentity.Models;
 
 namespace Tooba.Catalog.Application.ProductIdentity.Ports;
 
-/// <summary>Catalog-owned product identity mutations (create / title / core / quantity policy).</summary>
+/// <summary>Catalog-owned product identity mutations (create / title / core / quantity / physical).</summary>
 public interface IProductIdentityDirectory
 {
     /// <summary>Creates a draft catalog product and assigns its primary category.</summary>
@@ -27,5 +27,18 @@ public interface IProductIdentityDirectory
     Task<Result> UpdateQuantityPolicyAsync(
         Guid productId,
         WorkspaceProductQuantityPolicyWriteModel model,
+        CancellationToken cancellationToken);
+
+    /// <summary>Updates product physical specification with optimistic concurrency.</summary>
+    Task<Result> UpdatePhysicalSpecificationAsync(
+        Guid productId,
+        WorkspaceProductPhysicalSpecificationWriteModel model,
+        CancellationToken cancellationToken);
+
+    /// <summary>Updates variant physical-specification override (null field inherits product).</summary>
+    Task<Result> UpdateVariantPhysicalSpecificationAsync(
+        Guid productId,
+        Guid variantId,
+        WorkspaceVariantPhysicalSpecificationWriteModel model,
         CancellationToken cancellationToken);
 }

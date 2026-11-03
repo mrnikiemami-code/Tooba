@@ -107,7 +107,8 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         string? shippingMethodCode,
         string? providerMetadataJson,
         CancellationToken cancellationToken,
-        Guid? shippingGroupId = null)
+        Guid? shippingGroupId = null,
+        string? shippingDispatchKey = null)
     {
         var created = await directory.CreateShipmentAsync(
             fulfillmentId,
@@ -117,7 +118,8 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             cancellationToken,
             shippingMethodCode,
             providerMetadataJson,
-            shippingGroupId);
+            shippingGroupId,
+            shippingDispatchKey);
         return new FulfillmentShipmentCreateResult(MapRequired(created.Snapshot), created.CreatedShipmentId);
     }
 

@@ -423,8 +423,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         string? shippingMethodCode = null,
         string? shippingMethodLabel = null,
         string? providerMetadataJson = null,
-        int providerMetadataVersion = 0,
-        Guid? shippingGroupId = null)
+            int providerMetadataVersion = 0,
+            Guid? shippingGroupId = null,
+            string? shippingDispatchKey = null)
     {
         EnsureNotTerminal();
         if (Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Failed or FulfillmentStatus.Delivered)
@@ -434,6 +435,19 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
         var normalized = NormalizeSelections(items);
         EnsureShippingGroupScope(normalized, shippingGroupId);
+        var normalizedKey = string.IsNullOrWhiteSpace(shippingDispatchKey) ? null : shippingDispatchKey.Trim();
+        if (normalizedKey is not null)
+        {
+            var existing = _shipments.FirstOrDefault(s =>
+                s.Status == ShipmentStatus.Created
+                && string.Equals(s.ShippingDispatchKey, normalizedKey, StringComparison.Ordinal));
+            if (existing is not null)
+            {
+                EnsureDispatchKeyLinesMatch(existing, normalized);
+                return existing;
+            }
+        }
+
         var shipment = Shipment.Create(
             shipmentId,
             newId,
@@ -447,11 +461,30 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             shippingMethodLabel,
             providerMetadataJson,
             providerMetadataVersion,
-            shippingGroupId);
+            shippingGroupId,
+            normalizedKey);
         _shipments.Add(shipment);
         UpdatedAt = now;
         _domainEvents.Add(new ShipmentCreatedDomainEvent(FulfillmentId, shipment.ShipmentId, SellerOrderId));
         return shipment;
+    }
+
+    private static void EnsureDispatchKeyLinesMatch(
+        Shipment existing,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections)
+    {
+        if (existing.Items.Count != selections.Count)
+        {
+            throw new ContractOperationException("fulfillment.shipment.dispatch_key_conflict");
+        }
+
+        foreach (var selection in selections)
+        {
+            if (!existing.Items.Any(i => i.OrderLineId == selection.OrderLineId && i.Quantity == selection.Quantity))
+            {
+                throw new ContractOperationException("fulfillment.shipment.dispatch_key_conflict");
+            }
+        }
     }
 
     /// <summary>

@@ -346,6 +346,12 @@ internal sealed class FakeCatalogCheckout : ICatalogCheckoutLookup
         IReadOnlyCollection<Guid> variantIds,
         CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<Guid, long?>>(new Dictionary<Guid, long?>());
+
+    public Task<IReadOnlyDictionary<Guid, CatalogPhysicalSpecificationFacts>> GetPhysicalSpecificationsByVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, CatalogPhysicalSpecificationFacts>>(
+            new Dictionary<Guid, CatalogPhysicalSpecificationFacts>());
 }
 
 internal sealed class NoCallCancelGate : ISellerOrderCancelFulfillmentGate

@@ -6,6 +6,7 @@ using Tooba.Catalog.Application.ProductIdentity.Models;
 using Tooba.Catalog.Application.ProductIdentity.Ports;
 using Tooba.Catalog.Contracts.Errors;
 using Tooba.Catalog.Domain;
+using Tooba.Catalog.Domain.Rules;
 using Tooba.Catalog.Infrastructure.Persistence;
 
 namespace Tooba.Catalog.Infrastructure.Directories;
@@ -75,6 +76,27 @@ public sealed class ProductIdentityDirectory : IProductIdentityDirectory
 
         var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [locale] = title };
 
+        var hasPhysical = model.WeightGrams is not null
+            || model.LengthCentimeters is not null
+            || model.WidthCentimeters is not null
+            || model.HeightCentimeters is not null;
+        if (hasPhysical)
+        {
+            try
+            {
+                CatalogPhysicalSpecification.ValidateOrThrow(
+                    model.WeightGrams,
+                    model.LengthCentimeters,
+                    model.WidthCentimeters,
+                    model.HeightCentimeters);
+            }
+            catch (InvalidOperationException)
+            {
+                return Result<Guid>.Failure(
+                    new SemanticError(CatalogErrorCodes.WorkspacePhysicalSpecificationRejected));
+            }
+        }
+
         try
         {
             var product = await _catalogDirectory.CreateProductAsync(
@@ -85,6 +107,19 @@ public sealed class ProductIdentityDirectory : IProductIdentityDirectory
                 cancellationToken);
 
             await _catalogDirectory.AssignCategoryAsync(product.ProductId, categoryId, cancellationToken);
+
+            if (hasPhysical)
+            {
+                var created = await _db.Products.SingleAsync(x => x.ProductId == product.ProductId, cancellationToken);
+                created.SetPhysicalSpecification(
+                    model.WeightGrams,
+                    model.LengthCentimeters,
+                    model.WidthCentimeters,
+                    model.HeightCentimeters,
+                    DateTimeOffset.UtcNow);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
             return Result<Guid>.Success(product.ProductId);
         }
         catch (InvalidOperationException)
@@ -291,6 +326,102 @@ public sealed class ProductIdentityDirectory : IProductIdentityDirectory
 
         await _db.SaveChangesAsync(cancellationToken);
         return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> UpdatePhysicalSpecificationAsync(
+        Guid productId,
+        WorkspaceProductPhysicalSpecificationWriteModel model,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+
+        var product = await _db.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken);
+        if (product is null)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspaceProductMissing));
+        }
+
+        if (product.UpdatedAt != model.ExpectedUpdatedAt)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspaceCatalogStale));
+        }
+
+        try
+        {
+            product.SetPhysicalSpecification(
+                model.WeightGrams,
+                model.LengthCentimeters,
+                model.WidthCentimeters,
+                model.HeightCentimeters,
+                DateTimeOffset.UtcNow);
+        }
+        catch (InvalidOperationException)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspacePhysicalSpecificationRejected));
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        await _catalogDirectory.AppendProductHistoryAsync(
+            productId,
+            ProductHistoryRules.EventGeneralChanged,
+            ProductHistoryRules.SectionGeneral,
+            "مشخصات فیزیکی به‌روز شد",
+            null,
+            FormatPhysicalSummary(model.WeightGrams, model.LengthCentimeters, model.WidthCentimeters, model.HeightCentimeters),
+            cancellationToken);
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> UpdateVariantPhysicalSpecificationAsync(
+        Guid productId,
+        Guid variantId,
+        WorkspaceVariantPhysicalSpecificationWriteModel model,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+
+        var variant = await _db.Variants.SingleOrDefaultAsync(
+            x => x.VariantId == variantId && x.ProductId == productId,
+            cancellationToken);
+        if (variant is null)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspaceProductMissing));
+        }
+
+        try
+        {
+            variant.SetPhysicalSpecification(
+                model.WeightGrams,
+                model.LengthCentimeters,
+                model.WidthCentimeters,
+                model.HeightCentimeters,
+                DateTimeOffset.UtcNow);
+        }
+        catch (InvalidOperationException)
+        {
+            return Result.Failure(new SemanticError(CatalogErrorCodes.WorkspacePhysicalSpecificationRejected));
+        }
+
+        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        product.UpdatedAt = DateTimeOffset.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    private static string FormatPhysicalSummary(
+        decimal? weightGrams,
+        decimal? lengthCentimeters,
+        decimal? widthCentimeters,
+        decimal? heightCentimeters)
+    {
+        static string Fmt(decimal? value, string unit)
+            => value is null ? "—" : $"{value.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)} {unit}";
+
+        return $"وزن: {Fmt(weightGrams, "g")} · ابعاد: {Fmt(lengthCentimeters, "cm")}×{Fmt(widthCentimeters, "cm")}×{Fmt(heightCentimeters, "cm")}";
     }
 
     private async Task UpsertLocalizedTextAsync(

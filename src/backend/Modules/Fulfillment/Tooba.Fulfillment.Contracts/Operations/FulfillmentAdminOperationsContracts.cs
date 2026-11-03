@@ -225,6 +225,7 @@ public interface IFulfillmentAdminOperations
         CancellationToken cancellationToken);
 
     /// <summary>Create a shipment for the given allocations and return its exact identity.</summary>
+    /// <param name="shippingDispatchKey">Optional durable Shipping intent key for idempotent reuse after link-write failure.</param>
     Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
@@ -233,7 +234,8 @@ public interface IFulfillmentAdminOperations
         string? shippingMethodCode,
         string? providerMetadataJson,
         CancellationToken cancellationToken,
-        Guid? shippingGroupId = null);
+        Guid? shippingGroupId = null,
+        string? shippingDispatchKey = null);
 
     /// <summary>Void a shipment before dispatch.</summary>
     Task<FulfillmentSnapshot> CancelShipmentAsync(

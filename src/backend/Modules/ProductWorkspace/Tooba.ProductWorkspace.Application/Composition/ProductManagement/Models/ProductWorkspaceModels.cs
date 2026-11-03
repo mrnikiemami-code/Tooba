@@ -54,7 +54,11 @@ public sealed record ProductWorkspaceView(
     decimal? QuantityStep = null,
     string? UnitCode = null,
     string? UnitDisplayName = null,
-    IReadOnlyList<UnitOfMeasureOptionView>? Units = null);
+    IReadOnlyList<UnitOfMeasureOptionView>? Units = null,
+    decimal? WeightGrams = null,
+    decimal? LengthCentimeters = null,
+    decimal? WidthCentimeters = null,
+    decimal? HeightCentimeters = null);
 
 /// <summary>Unit-of-measure option for Workspace quantity policy.</summary>
 public sealed record UnitOfMeasureOptionView(Guid UnitOfMeasureId, string Code, string Name, string ShortName);
