@@ -4,7 +4,7 @@
 - Bridge-Task-Row: `571d666e-631b-42c4-abf6-412439f89a5e`
 - Expected-Base: `7786d4bc0898b03fcdef6a7bbcba2a1c6950eb82`
 - Code-SHA: 068fb09fc059e3ae1856a0e0829102499290e61c
-- Evidence-SHA: EVIDENCE_SHA_PENDING
+- Evidence-SHA: 1d0631e3c84e4ddfa7118b66436f252d3fc17022
 
 ## Runtime
 - FE: `http://127.0.0.1:3000` production Next (restarted after build)
