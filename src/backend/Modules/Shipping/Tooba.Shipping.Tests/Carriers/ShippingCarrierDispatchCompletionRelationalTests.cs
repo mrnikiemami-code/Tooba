@@ -57,6 +57,8 @@ public sealed class ShippingCarrierDispatchCompletionRelationalTests
         await fxA.PrepareSenderAsync();
         // Separate fulfillment graphs; shared controlled provider so Creates is authoritative.
         await using var fxB = await Fixture.AttachSiblingAsync(fxA, shareProvider: true, shareRecorder: false);
+        // SAME occurrence (server UuidV7) shared by both callers — not payload-derived identity.
+        var sharedOccurrence = UuidV7.New();
 
         using var startBarrier = new Barrier(2);
         var providerGateHits = 0;
@@ -72,14 +74,18 @@ public sealed class ShippingCarrierDispatchCompletionRelationalTests
                 startBarrier.SignalAndWait(TimeSpan.FromSeconds(15));
                 return await fxA.Directory.CreateAsync(
                     fxA.Owner, fxA.ActorUserId,
-                    new ShippingCarrierShipmentExecuteRequest(fxA.CheckoutId, fxA.GroupId), CancellationToken.None);
+                    new ShippingCarrierShipmentExecuteRequest(
+                        fxA.CheckoutId, fxA.GroupId, PackageDispatchId: sharedOccurrence),
+                    CancellationToken.None);
             }),
             Task.Run(async () =>
             {
                 startBarrier.SignalAndWait(TimeSpan.FromSeconds(15));
                 return await fxB.Directory.CreateAsync(
                     fxB.Owner, fxB.ActorUserId,
-                    new ShippingCarrierShipmentExecuteRequest(fxB.CheckoutId, fxB.GroupId), CancellationToken.None);
+                    new ShippingCarrierShipmentExecuteRequest(
+                        fxB.CheckoutId, fxB.GroupId, PackageDispatchId: sharedOccurrence),
+                    CancellationToken.None);
             }));
 
         Assert.Contains(results, x => x.IsSuccess);

@@ -1,7 +1,12 @@
-# CURRENT — 249-R5 PASS: durable dispatch claim + product physical specs — 2026-11-03
+# CURRENT — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **OCCURRENCE_IDENTITY_WEIGHT_AUTHORITY_AND_MOUNTED_COMPONENT_PROOF_DEPLOYED_PROVIDER_UNVERIFIED**. Base `481ec58bb`. Occurrence≠payload; whole-gram typed weight no legacy heal; mounted carrier/physical FE 18/18; TB249R6 23/23; canonical redeployed. LIVE TIPAX deferred. R5 worker PASS historical. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R5 PASS: durable dispatch claim + product physical specs — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R5/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS**, decision **DISPATCH_CLAIM_VALUE_AND_PRODUCT_PHYSICAL_SPEC_DEPLOYED_PROVIDER_UNVERIFIED**. Base `a9af3f400`. Stable intent + exclusive claim + no blind resend; line-value declared/collect; per-dispatch dims; Catalog g/cm physical spec + editor; TB249R5 15/15; canonical migrations applied. LIVE TIPAX deferred. R4 worker PASS historical. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **DISPATCH_CLAIM_VALUE_AND_PRODUCT_PHYSICAL_SPEC_DEPLOYED_PROVIDER_UNVERIFIED**. Base `a9af3f400`. Stable intent + exclusive claim + no blind resend; line-value declared/collect; per-dispatch dims; Catalog g/cm physical spec + editor; TB249R5 15/15; canonical migrations applied. Architect PARTIAL closed by 249-R6. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R4 PASS: package identity/owner replay + disposable Postgres matrix executed — 2026-11-03
 

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.Order.Contracts.Shipping;
@@ -276,7 +277,8 @@ internal sealed class ShippingCarrierExecutionReadiness(
                 : new ShippingCarrierLatestCreateOperationView(
                     createOp.OperationId,
                     (ShippingCarrierShipmentStateView)createOp.State,
-                    createOp.ProviderTrackingCode),
+                    createOp.ProviderTrackingCode,
+                    TryReadPackageDispatchId(createOp.ExecutionInputSnapshotJson)),
             effectivePackage);
     }
 
@@ -509,6 +511,31 @@ internal sealed class ShippingCarrierExecutionReadiness(
                      && x.OwnerTenantId == owner.TenantId
                      && x.OwnerSellerPartyId == owner.SellerPartyId,
                 cancellationToken);
+
+    private static Guid? TryReadPackageDispatchId(string? executionSnapshotJson)
+    {
+        if (string.IsNullOrWhiteSpace(executionSnapshotJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(executionSnapshotJson);
+            if (doc.RootElement.TryGetProperty("PackageDispatchId", out var el)
+                && el.TryGetGuid(out var id)
+                && id != Guid.Empty)
+            {
+                return id;
+            }
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        return null;
+    }
 
     private static ShippingDraftOwner ToDomainOwner(ShippingAuthoringOwnerScope owner)
         => owner.Kind switch

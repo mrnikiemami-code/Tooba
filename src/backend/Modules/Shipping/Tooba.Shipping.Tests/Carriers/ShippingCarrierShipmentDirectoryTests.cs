@@ -109,7 +109,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     }
 
     [Fact]
-    public async Task Same_intent_replays_succeeded_operation_without_second_provider_call()
+    public async Task Same_occurrence_replays_succeeded_operation_without_second_provider_call()
     {
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: true, facts: ValidFacts());
@@ -117,11 +117,98 @@ public sealed class ShippingCarrierShipmentDirectoryTests
 
         var first = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
         Assert.True(first.IsSuccess);
+        Assert.NotNull(first.Value.PackageDispatchId);
         Assert.Equal(1, provider.Creates);
 
-        var second = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
+        var second = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(Checkout, Group, PackageDispatchId: first.Value.PackageDispatchId),
+            CancellationToken.None);
         Assert.True(second.IsSuccess);
         Assert.Equal(first.Value.OperationId, second.Value.OperationId);
+        Assert.Equal(first.Value.PackageDispatchId, second.Value.PackageDispatchId);
+        Assert.Equal(1, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Identical_payload_new_occurrence_allocates_second_parcel()
+    {
+        var provider = new RecordingShipmentProvider();
+        var directory = Create(provider, configured: true, facts: ValidFacts(lineQuantity: 2m));
+        await PrepareSenderAsync(directory);
+        var pkg = new ShippingCarrierShipmentDispatchPackageInput(500m, 10m, 10m, 10m);
+
+        var first = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(
+                Checkout,
+                Group,
+                new[] { new ShippingCarrierShipmentLineQuantity(LineA, 1m) },
+                pkg),
+            CancellationToken.None);
+        Assert.True(first.IsSuccess, first.IsFailure ? first.FirstError.Code : null);
+        Assert.NotNull(first.Value.PackageDispatchId);
+
+        var second = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(
+                Checkout,
+                Group,
+                new[] { new ShippingCarrierShipmentLineQuantity(LineA, 1m) },
+                pkg),
+            CancellationToken.None);
+        Assert.True(second.IsSuccess, second.IsFailure ? second.FirstError.Code : null);
+        Assert.NotEqual(first.Value.OperationId, second.Value.OperationId);
+        Assert.NotEqual(first.Value.PackageDispatchId, second.Value.PackageDispatchId);
+        Assert.Equal(2, provider.Creates);
+
+        var replay = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(
+                Checkout,
+                Group,
+                new[] { new ShippingCarrierShipmentLineQuantity(LineA, 1m) },
+                pkg,
+                first.Value.PackageDispatchId),
+            CancellationToken.None);
+        Assert.True(replay.IsSuccess);
+        Assert.Equal(first.Value.OperationId, replay.Value.OperationId);
+        Assert.Equal(2, provider.Creates);
+    }
+
+    [Fact]
+    public async Task Same_occurrence_conflicting_payload_is_typed_conflict()
+    {
+        var provider = new RecordingShipmentProvider();
+        var directory = Create(provider, configured: true, facts: ValidFacts(lineQuantity: 2m));
+        await PrepareSenderAsync(directory);
+
+        var first = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(
+                Checkout,
+                Group,
+                new[] { new ShippingCarrierShipmentLineQuantity(LineA, 1m) },
+                new ShippingCarrierShipmentDispatchPackageInput(500m, 10m, 10m, 10m)),
+            CancellationToken.None);
+        Assert.True(first.IsSuccess);
+
+        var conflict = await directory.CreateAsync(
+            Owner(),
+            Actor,
+            new ShippingCarrierShipmentExecuteRequest(
+                Checkout,
+                Group,
+                new[] { new ShippingCarrierShipmentLineQuantity(LineA, 1m) },
+                new ShippingCarrierShipmentDispatchPackageInput(900m, 10m, 10m, 10m),
+                first.Value.PackageDispatchId),
+            CancellationToken.None);
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentIntentConflict, conflict.FirstError.Code);
         Assert.Equal(1, provider.Creates);
     }
 
@@ -243,6 +330,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
 
         await PrepareSenderAsync(directory);
         var first = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
+        // Same payload without locator converges onto open Unknown (no-resend); occurrence also works.
         var second = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         Assert.Equal(ShippingCarrierShipmentStateView.Unknown, first.Value.State);

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Tooba.BuildingBlocks;
 using Tooba.Order.Contracts.Shipping;
 using Tooba.Shipping.Contracts.Carriers;
 using Tooba.Shipping.Domain.Authoring;
@@ -8,29 +9,49 @@ using Tooba.Shipping.Domain.Authoring;
 namespace Tooba.Shipping.Infrastructure.Carriers;
 
 /// <summary>
-/// TB-249-R5: durable dispatch intent identity.
-/// Key = owner + checkout + group + canonical sorted lines + per-dispatch physical package hash.
-/// Client PackageDispatchId is only an untrusted locator after server validation.
+/// TB-249-R6: durable parcel OCCURRENCE identity distinct from payload fingerprint.
+/// Operation key = owner-scoped checkout + group + occurrenceId (server-issued UuidV7).
+/// Payload fingerprint binds lines + physical dims to that occurrence; conflicting reuse refuses.
 /// </summary>
 internal static class ShippingCarrierDispatchIntent
 {
+    /// <summary>Server-issued parcel occurrence / package-dispatch identity.</summary>
+    public static Guid MintOccurrenceId() => UuidV7.New();
+
     /// <summary>
-    /// Builds <c>c:{checkout:N}:{group:N}:{fp16}</c> (≤128) and a deterministic PackageDispatchId
-    /// from the same material so concurrent same-intent callers converge on one operation row.
+    /// Builds <c>c:{checkout:N}:{group:N}:{occurrence:N}</c> (≤128) and a payload fingerprint
+    /// from owner + checkout + group + canonical sorted lines + physical package dims.
     /// </summary>
-    public static (string OperationKey, Guid PackageDispatchId, string PayloadFingerprint) Derive(
+    public static (string OperationKey, string PayloadFingerprint) Derive(
+        Guid occurrenceId,
         ShippingDraftOwner owner,
         Guid checkoutId,
         Guid shippingGroupId,
         IReadOnlyList<ShippingCarrierShipmentLineQuantity> lines,
         ShippingCarrierShipmentPackageInput package)
     {
-        var material = BuildMaterial(owner, checkoutId, shippingGroupId, lines, package);
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(material));
-        var fp16 = Convert.ToHexString(hash.AsSpan(0, 8)).ToLowerInvariant();
-        var operationKey = $"c:{checkoutId:N}:{shippingGroupId:N}:{fp16}";
-        var packageDispatchId = CreateDeterministicGuid(hash);
-        return (operationKey, packageDispatchId, Convert.ToHexString(hash).ToLowerInvariant());
+        if (occurrenceId == Guid.Empty)
+        {
+            throw new ArgumentException("Occurrence id is required.", nameof(occurrenceId));
+        }
+
+        var operationKey = BuildOperationKey(checkoutId, shippingGroupId, occurrenceId);
+        var fingerprint = ComputePayloadFingerprint(owner, checkoutId, shippingGroupId, lines, package);
+        return (operationKey, fingerprint);
+    }
+
+    public static string BuildOperationKey(Guid checkoutId, Guid shippingGroupId, Guid occurrenceId)
+        => $"c:{checkoutId:N}:{shippingGroupId:N}:{occurrenceId:N}";
+
+    public static string ComputePayloadFingerprint(
+        ShippingDraftOwner owner,
+        Guid checkoutId,
+        Guid shippingGroupId,
+        IReadOnlyList<ShippingCarrierShipmentLineQuantity> lines,
+        ShippingCarrierShipmentPackageInput package)
+    {
+        var material = BuildPayloadMaterial(owner, checkoutId, shippingGroupId, lines, package);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(material))).ToLowerInvariant();
     }
 
     public static bool PayloadMatches(
@@ -41,12 +62,16 @@ internal static class ShippingCarrierDispatchIntent
         IReadOnlyList<ShippingCarrierShipmentLineQuantity> lines,
         ShippingCarrierShipmentPackageInput package)
     {
-        var material = BuildMaterial(owner, checkoutId, shippingGroupId, lines, package);
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(material))).ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(expectedFingerprint))
+        {
+            return false;
+        }
+
+        var hash = ComputePayloadFingerprint(owner, checkoutId, shippingGroupId, lines, package);
         return string.Equals(expectedFingerprint, hash, StringComparison.Ordinal);
     }
 
-    private static string BuildMaterial(
+    private static string BuildPayloadMaterial(
         ShippingDraftOwner owner,
         Guid checkoutId,
         Guid shippingGroupId,
@@ -71,16 +96,6 @@ internal static class ShippingCarrierDispatchIntent
             .Append(package.WidthCentimeters.ToString("0.####", CultureInfo.InvariantCulture)).Append('|')
             .Append(package.HeightCentimeters.ToString("0.####", CultureInfo.InvariantCulture));
         return sb.ToString();
-    }
-
-    private static Guid CreateDeterministicGuid(byte[] hash)
-    {
-        Span<byte> bytes = stackalloc byte[16];
-        hash.AsSpan(0, 16).CopyTo(bytes);
-        // RFC 4122 variant/version bits → version 5-shaped deterministic UUID.
-        bytes[6] = (byte)((bytes[6] & 0x0F) | 0x50);
-        bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80);
-        return new Guid(bytes);
     }
 }
 

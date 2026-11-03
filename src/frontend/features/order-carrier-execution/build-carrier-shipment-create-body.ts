@@ -1,7 +1,7 @@
 /**
  * Builds the Shipping carrier shipment create JSON body.
  * Partial line selections require Package weight/dims; full-remaining may omit Package.
- * packageDispatchId is an optional untrusted client locator when the UI holds one.
+ * packageDispatchId is the server-issued parcel occurrence id; omit to mint, reuse on retry.
  */
 export function buildCarrierShipmentCreateBody(input: {
   checkoutId: string;

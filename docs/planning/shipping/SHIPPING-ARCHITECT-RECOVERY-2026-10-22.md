@@ -1,4 +1,14 @@
-# CURRENT — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
+# CURRENT — 249-R6 PASS: occurrence identity + whole-gram weight + mounted FE proof — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker decision **OCCURRENCE_IDENTITY_WEIGHT_AUTHORITY_AND_MOUNTED_COMPONENT_PROOF_DEPLOYED_PROVIDER_UNVERIFIED** (PASS within software/relational/deploy). Base `481ec58bb`. Closes Architect PARTIAL on R5: distinct identical-parcel occurrence vs replay; typed weight present-invalid never heals via legacy; jsdom-mounted carrier + physical editor proof. Disposable TB249R6 23/23. Canonical FE3000→Host5088 redeployed; no new migration vs R5. Remaining external-only: live Tipax account acceptance deferred by user. NOT Architect ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R5 PASS (Architect PARTIAL residuals closed by R6) — 2026-11-03
+
+Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker PASS for durable claim/value/physical-spec; Architect review found identical-parcel key collision, typed-weight legacy heal, and missing mounted FE proof — closed by 249-R6.
+
+# SUPERSEDED — 249-R1 UNIFIED READINESS DEPLOYED PROVIDER UNVERIFIED — 2026-11-02
 
 Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 249-R1 closes Architect PARTIAL residuals on 249 (labels, readiness unity, package completion, shared FE). Migration `20261102210000` applied; live Tipax still deferred.

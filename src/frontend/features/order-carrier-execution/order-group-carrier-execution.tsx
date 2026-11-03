@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Field, Input } from "../../design-system";
+import { Field, Input } from "../../design-system/primitives/core";
 import { authoringMessages } from "../admin-shipping-authoring/messages/authoring-messages.ts";
 import { buildCarrierShipmentCreateBody } from "./build-carrier-shipment-create-body.ts";
 import {
@@ -11,9 +11,11 @@ import {
   type CapabilityRow,
   type ShipmentView,
 } from "./order-group-carrier-execution-decode.ts";
+import { resolveRetainedPackageDispatchId } from "./retain-package-dispatch-occurrence.ts";
 
 export { buildCarrierShipmentCreateBody } from "./build-carrier-shipment-create-body.ts";
 export { decodeCapability, decodeShipment, isCarrierApiGroup, normalizeShipmentState } from "./order-group-carrier-execution-decode.ts";
+export { resolveRetainedPackageDispatchId } from "./retain-package-dispatch-occurrence.ts";
 
 async function readJson(response: Response): Promise<unknown> {
   return response.json().catch(() => null);
@@ -53,7 +55,7 @@ export function OrderGroupCarrierExecution({
   requestHeadersRef.current = requestHeaders;
   const [senderByGroup, setSenderByGroup] = useState<Record<string, SenderDraft>>({});
   const [packageByGroup, setPackageByGroup] = useState<Record<string, PackageDraft>>({});
-  /** Optional untrusted client locator; sent only when the UI holds a non-empty value. */
+  /** Server-issued parcel occurrence id retained across double-click / retry / refresh. */
   const [packageDispatchIdByGroup, setPackageDispatchIdByGroup] = useState<Record<string, string>>({});
 
   const carrierGroups = useMemo(
@@ -175,14 +177,39 @@ export function OrderGroupCarrierExecution({
         }
         return next;
       });
+      const ships = shipRes.ok
+        ? (Array.isArray(shipPayload) ? shipPayload : [])
+            .map(decodeShipment)
+            .filter((row): row is ShipmentView => row !== null)
+        : [];
       if (!shipRes.ok) {
         setActionStatus(messages.carrierShipmentListFailed);
       } else {
-        const ships = (Array.isArray(shipPayload) ? shipPayload : [])
-          .map(decodeShipment)
-          .filter((row): row is ShipmentView => row !== null);
         setShipments(ships);
       }
+      setPackageDispatchIdByGroup((prev) => {
+        const next: Record<string, string> = { ...prev };
+        for (const row of caps) {
+          const groupShips = ships.filter((s) => s.shippingGroupId === row.shippingGroupId);
+          const openShip =
+            groupShips.find((s) => s.state === "Pending" || s.state === "Unknown")
+            ?? groupShips[groupShips.length - 1]
+            ?? null;
+          const latest = row.latestCreateOperation;
+          const retained = resolveRetainedPackageDispatchId({
+            current: prev[row.shippingGroupId],
+            canCreate: row.canCreate,
+            openOccurrenceId:
+              openShip?.packageDispatchId
+              ?? latest?.packageDispatchId
+              ?? null,
+            openState: openShip?.state ?? latest?.state ?? null,
+          });
+          if (retained) next[row.shippingGroupId] = retained;
+          else delete next[row.shippingGroupId];
+        }
+        return next;
+      });
     } catch (err) {
       if ((err as { name?: string }).name !== "AbortError" && seq === refreshSeqRef.current) {
         setLoadError(messages.carrierSaveFailed);
@@ -203,7 +230,10 @@ export function OrderGroupCarrierExecution({
     };
   }, [refresh]);
 
-  async function post(path: string, body?: unknown): Promise<string | null> {
+  async function post(
+    path: string,
+    body?: unknown,
+  ): Promise<{ error: string | null; packageDispatchId: string | null }> {
     const response = await fetch(path, {
       method: "POST",
       headers: { ...requestHeaders(), ...(body ? { "Content-Type": "application/json" } : {}) },
@@ -212,12 +242,25 @@ export function OrderGroupCarrierExecution({
     const payload = await readJson(response);
     if (!response.ok) {
       const code = errorCode(payload);
-      if (code === "shipping.carrier.unconfigured") return messages.carrierUnconfigured;
-      if (code === "shipping.carrier.shipment.unsupported") return messages.carrierShipmentUnsupported;
-      if (code === "shipping.carrier.shipment.unknown") return messages.carrierShipmentUnknown;
-      return messages.carrierSaveFailed;
+      if (code === "shipping.carrier.unconfigured") {
+        return { error: messages.carrierUnconfigured, packageDispatchId: null };
+      }
+      if (code === "shipping.carrier.shipment.unsupported") {
+        return { error: messages.carrierShipmentUnsupported, packageDispatchId: null };
+      }
+      if (code === "shipping.carrier.shipment.unknown") {
+        return { error: messages.carrierShipmentUnknown, packageDispatchId: null };
+      }
+      if (code === "shipping.carrier.shipment.intent_conflict") {
+        return { error: messages.carrierSaveFailed, packageDispatchId: null };
+      }
+      return { error: messages.carrierSaveFailed, packageDispatchId: null };
     }
-    return null;
+    const decoded = decodeShipment(payload);
+    return {
+      error: null,
+      packageDispatchId: decoded?.packageDispatchId ?? null,
+    };
   }
 
   if (loadError) {
@@ -366,12 +409,13 @@ export function OrderGroupCarrierExecution({
                     type="button"
                     className="min-h-11 self-end rounded-lg border px-3 text-xs font-bold"
                     disabled={busy}
+                    data-testid={`${testIdPrefix}-package-completion-${group.shippingGroupId}`}
                     onClick={async () => {
                       const groupId = group.shippingGroupId;
                       if (inFlightRef.current.has(groupId)) return;
                       syncBusy(groupId, true);
                       try {
-                        const failed = await post(`${apiPrefix}/shipping-services/shipments/package-completion`, {
+                        const result = await post(`${apiPrefix}/shipping-services/shipments/package-completion`, {
                           checkoutId,
                           shippingGroupId: groupId,
                           weightGrams: Number(pkg.weight),
@@ -380,8 +424,8 @@ export function OrderGroupCarrierExecution({
                           widthCentimeters: Number(pkg.width),
                           heightCentimeters: Number(pkg.height),
                         });
-                        setActionStatus(failed ?? messages.carrierPackageCompletionSaved);
-                        if (!failed) await refresh();
+                        setActionStatus(result.error ?? messages.carrierPackageCompletionSaved);
+                        if (!result.error) await refresh();
                       } catch {
                         setActionStatus(messages.carrierActionFailed);
                       } finally {
@@ -451,12 +495,13 @@ export function OrderGroupCarrierExecution({
                       type="button"
                       className="min-h-11 self-end rounded-lg border px-3 text-xs font-bold"
                       disabled={busy}
+                      data-testid={`${testIdPrefix}-sender-completion-${group.shippingGroupId}`}
                       onClick={async () => {
                         const groupId = group.shippingGroupId;
                         if (inFlightRef.current.has(groupId)) return;
                         syncBusy(groupId, true);
                         try {
-                          const failed = await post(`${apiPrefix}/shipping-services/shipments/sender-completion`, {
+                          const result = await post(`${apiPrefix}/shipping-services/shipments/sender-completion`, {
                             checkoutId,
                             shippingGroupId: groupId,
                             fullName: sender.name,
@@ -464,8 +509,8 @@ export function OrderGroupCarrierExecution({
                             addressLine: sender.address,
                             postalCode: sender.postalCode,
                           });
-                          setActionStatus(failed ?? messages.carrierSenderCompletionSaved);
-                          if (!failed) await refresh();
+                          setActionStatus(result.error ?? messages.carrierSenderCompletionSaved);
+                          if (!result.error) await refresh();
                         } catch {
                           setActionStatus(messages.carrierActionFailed);
                         } finally {
@@ -582,9 +627,15 @@ export function OrderGroupCarrierExecution({
                           packageDispatchId: packageDispatchIdByGroup[groupId] ?? null,
                         });
                         delete body.partialWithoutPackage;
-                        const failed = await post(`${apiPrefix}/shipping-services/shipments`, body);
-                        setActionStatus(failed ?? messages.carrierAccountSaved);
-                        if (!failed) await refresh();
+                        const result = await post(`${apiPrefix}/shipping-services/shipments`, body);
+                        if (result.packageDispatchId) {
+                          setPackageDispatchIdByGroup((prev) => ({
+                            ...prev,
+                            [groupId]: result.packageDispatchId!,
+                          }));
+                        }
+                        setActionStatus(result.error ?? messages.carrierAccountSaved);
+                        if (!result.error) await refresh();
                       } catch {
                         setActionStatus(messages.carrierActionFailed);
                       } finally {
@@ -617,11 +668,11 @@ export function OrderGroupCarrierExecution({
                             if (inFlightRef.current.has(groupId)) return;
                             syncBusy(groupId, true);
                             try {
-                              const failed = await post(
+                              const result = await post(
                                 `${apiPrefix}/shipping-services/shipments/${row.operationId}/track`,
                               );
-                              setActionStatus(failed ?? messages.carrierTestResult);
-                              if (!failed) await refresh();
+                              setActionStatus(result.error ?? messages.carrierTestResult);
+                              if (!result.error) await refresh();
                             } catch {
                               setActionStatus(messages.carrierActionFailed);
                             } finally {
@@ -640,11 +691,11 @@ export function OrderGroupCarrierExecution({
                             if (inFlightRef.current.has(groupId)) return;
                             syncBusy(groupId, true);
                             try {
-                              const failed = await post(
+                              const result = await post(
                                 `${apiPrefix}/shipping-services/shipments/${row.operationId}/cancel`,
                               );
-                              setActionStatus(failed ?? messages.carrierTestResult);
-                              if (!failed) await refresh();
+                              setActionStatus(result.error ?? messages.carrierTestResult);
+                              if (!result.error) await refresh();
                             } catch {
                               setActionStatus(messages.carrierActionFailed);
                             } finally {

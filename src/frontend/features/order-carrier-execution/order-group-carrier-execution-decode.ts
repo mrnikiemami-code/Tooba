@@ -37,6 +37,11 @@ export interface CapabilityRow {
   hasEditableSenderPostal: boolean;
   hasEditableSenderContact: boolean;
   executableLines: readonly { orderLineId: string; remainingPackedQuantity: number }[];
+  latestCreateOperation: {
+    operationId: string | null;
+    state: ShipmentStateName | null;
+    packageDispatchId: string | null;
+  } | null;
 }
 
 export interface ShipmentView {
@@ -48,6 +53,7 @@ export interface ShipmentView {
   lastErrorCode: string | null;
   canTrack: boolean;
   canCancel: boolean;
+  packageDispatchId: string | null;
 }
 
 function asString(value: unknown): string | null {
@@ -135,6 +141,20 @@ export function decodeCapability(row: unknown): CapabilityRow | null {
         })
         .filter((x): x is { orderLineId: string; remainingPackedQuantity: number } => x != null);
     })(),
+    latestCreateOperation: (() => {
+      const raw = item.latestCreateOperation ?? item.LatestCreateOperation;
+      if (!raw || typeof raw !== "object") return null;
+      const row = raw as Record<string, unknown>;
+      const operationId = asString(row.operationId ?? row.OperationId);
+      const stateRaw = row.state ?? row.State;
+      const state =
+        stateRaw == null || stateRaw === ""
+          ? null
+          : normalizeShipmentState(stateRaw);
+      const packageDispatchId = asString(row.packageDispatchId ?? row.PackageDispatchId);
+      if (!operationId && !packageDispatchId && state == null) return null;
+      return { operationId, state, packageDispatchId };
+    })(),
   };
 }
 
@@ -153,6 +173,7 @@ export function decodeShipment(row: unknown): ShipmentView | null {
     lastErrorCode: asString(item.lastErrorCode ?? item.LastErrorCode),
     canTrack: asBool(item.canTrack ?? item.CanTrack),
     canCancel: asBool(item.canCancel ?? item.CanCancel),
+    packageDispatchId: asString(item.packageDispatchId ?? item.PackageDispatchId),
   };
 }
 

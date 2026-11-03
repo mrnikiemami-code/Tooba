@@ -10,6 +10,7 @@ import {
   isCarrierApiGroup,
   normalizeShipmentState,
 } from "./order-group-carrier-execution-decode.ts";
+import { resolveRetainedPackageDispatchId } from "./retain-package-dispatch-occurrence.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const componentSource = readFileSync(join(dir, "order-group-carrier-execution.tsx"), "utf8");
@@ -20,6 +21,14 @@ const adminPanel = readFileSync(
 );
 const adminDetail = readFileSync(join(dir, "../../app/admin/admin-order-detail-screen.tsx"), "utf8");
 const physicalEditor = readFileSync(join(dir, "../../app/admin/product-workspace-screen.tsx"), "utf8");
+const physicalFields = readFileSync(
+  join(dir, "../../app/admin/product-physical-specification-fields.tsx"),
+  "utf8",
+);
+const physicalParsers = readFileSync(
+  join(dir, "../../app/admin/product-physical-specification.ts"),
+  "utf8",
+);
 const hostClient = readFileSync(join(dir, "../../app/admin/host-client.ts"), "utf8");
 
 test("normalizeShipmentState accepts numeric and string enums", () => {
@@ -41,6 +50,44 @@ test("isCarrierApiGroup ignores methodCode heuristics", () => {
   assert.equal(isCarrierApiGroup(api), true);
 });
 
+test("resolveRetainedPackageDispatchId keeps Pending and clears after Succeeded when canCreate", () => {
+  assert.equal(
+    resolveRetainedPackageDispatchId({
+      current: null,
+      canCreate: true,
+      createResponsePackageDispatchId: "11111111-1111-4111-8111-111111111111",
+    }),
+    "11111111-1111-4111-8111-111111111111",
+  );
+  assert.equal(
+    resolveRetainedPackageDispatchId({
+      current: "old",
+      canCreate: false,
+      openOccurrenceId: "22222222-2222-4222-8222-222222222222",
+      openState: "Pending",
+    }),
+    "22222222-2222-4222-8222-222222222222",
+  );
+  assert.equal(
+    resolveRetainedPackageDispatchId({
+      current: "old",
+      canCreate: true,
+      openOccurrenceId: "33333333-3333-4333-8333-333333333333",
+      openState: "Succeeded",
+    }),
+    null,
+  );
+  assert.equal(
+    resolveRetainedPackageDispatchId({
+      current: "keep-unknown",
+      canCreate: false,
+      openOccurrenceId: "44444444-4444-4444-8444-444444444444",
+      openState: "Unknown",
+    }),
+    "44444444-4444-4444-8444-444444444444",
+  );
+});
+
 test("decodeShipment maps capability flags and state", () => {
   const row = decodeShipment({
     operationId: "op1",
@@ -48,11 +95,13 @@ test("decodeShipment maps capability flags and state", () => {
     state: 3,
     canTrack: true,
     canCancel: false,
+    packageDispatchId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
   });
   assert.ok(row);
   assert.equal(row.state, "Unknown");
   assert.equal(row.canTrack, true);
   assert.equal(row.canCancel, false);
+  assert.equal(row.packageDispatchId, "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
 });
 
 test("decodeCapability reads configured sender without recipient postal fallback", () => {
@@ -81,7 +130,7 @@ test("completion→ready→execution→tracked/unknown action surface is wired o
   assert.match(componentSource, /executableLines/);
   assert.match(componentSource, /buildCarrierShipmentCreateBody/);
   // Every post-action refresh is gated; failures keep drafts and skip refresh.
-  const gatedRefresh = componentSource.match(/if \(!failed\) await refresh\(\);/g) ?? [];
+  const gatedRefresh = componentSource.match(/if \(!result\.error\) await refresh\(\);/g) ?? [];
   const bareRefresh = componentSource.match(/await refresh\(\);/g) ?? [];
   assert.equal(gatedRefresh.length, 5, "package/sender/create/track/cancel refresh only on success");
   assert.equal(bareRefresh.length, gatedRefresh.length, "no ungated await refresh after actions");
@@ -179,6 +228,8 @@ test("create body sends Package for partial dispatches and optional packageDispa
 test("create click path posts buildCarrierShipmentCreateBody and keeps Manual null", () => {
   assert.match(componentSource, /buildCarrierShipmentCreateBody\(\{/);
   assert.match(componentSource, /packageDispatchId: packageDispatchIdByGroup\[groupId\]/);
+  assert.match(componentSource, /resolveRetainedPackageDispatchId/);
+  assert.match(componentSource, /result\.packageDispatchId/);
   assert.match(componentSource, /weightGrams: weight/);
   assert.match(componentSource, /delete body\.partialWithoutPackage/);
   // Simulated create interaction: encode → build → JSON round-trip (events without full React tree).
@@ -241,23 +292,23 @@ test("create click path posts buildCarrierShipmentCreateBody and keeps Manual nu
 });
 
 test("physical-spec editor block edit/save/reload surface stays compact with units", () => {
-  assert.match(physicalEditor, /data-testid="product-edit-physical-specification"/);
-  assert.match(physicalEditor, /مشخصات فیزیکی/);
-  assert.match(physicalEditor, /وزن \(گرم\)/);
-  assert.match(physicalEditor, /طول \(سانتی‌متر\)/);
-  assert.match(physicalEditor, /data-testid="product-edit-weight-grams"/);
-  assert.match(physicalEditor, /data-testid="product-edit-length-cm"/);
-  assert.match(physicalEditor, /data-testid="product-edit-width-cm"/);
-  assert.match(physicalEditor, /data-testid="product-edit-height-cm"/);
+  assert.match(physicalEditor, /ProductPhysicalSpecificationFields/);
   assert.match(physicalEditor, /updateAdminProductPhysicalSpecification/);
-  assert.match(physicalEditor, /parseOptionalPositiveDecimal\(activeDraft\.weightGrams\)/);
-  // Save path: dirty → PATCH → reload view into draft (edit/save/reload).
+  assert.match(physicalEditor, /parseOptionalWholeGrams\(activeDraft\.weightGrams\)/);
   assert.match(physicalEditor, /physicalChanged/);
   assert.match(physicalEditor, /physicalResult\.view/);
+  assert.match(physicalEditor, /markGeneralDirty/);
+  assert.match(physicalFields, /data-testid="product-edit-physical-specification"/);
+  assert.match(physicalFields, /مشخصات فیزیکی/);
+  assert.match(physicalFields, /وزن \(گرم\)/);
+  assert.match(physicalFields, /طول \(سانتی‌متر\)/);
+  assert.match(physicalFields, /data-testid="product-edit-weight-grams"/);
+  assert.match(physicalFields, /data-testid="product-edit-length-cm"/);
+  assert.match(physicalFields, /data-testid="product-edit-width-cm"/);
+  assert.match(physicalFields, /data-testid="product-edit-height-cm"/);
+  assert.match(physicalParsers, /parseOptionalWholeGrams/);
+  assert.match(physicalParsers, /Number\.isInteger/);
   assert.match(hostClient, /\/v1\/admin\/products\/\$\{productId\}\/physical-specification/);
   assert.match(hostClient, /method: "PATCH"/);
   assert.match(hostClient, /weightGrams: input\.weightGrams/);
-  // Interaction: typing updates draft + marks dirty (event handlers present).
-  assert.match(physicalEditor, /setDraft\(\{ \.\.\.activeDraft, weightGrams: event\.target\.value \}\)/);
-  assert.match(physicalEditor, /markGeneralDirty\(\)/);
 });

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Tooba.Order.Tests.Checkout;
 
-/// <summary>TB-249-R5 Phase B: Catalog physical-specification authority (g/cm) + legacy weight policy.</summary>
+/// <summary>TB-249-R5/R6: Catalog physical-specification authority (g/cm) + legacy weight policy.</summary>
 public sealed class CatalogPhysicalSpecificationTests
 {
     private static readonly Guid WeightDefId = Guid.Parse("01a05387-d58c-7000-8886-8ec4f64b05c8");
@@ -75,6 +75,13 @@ public sealed class CatalogPhysicalSpecificationTests
                 DateTimeOffset.UtcNow));
         Assert.Throws<InvalidOperationException>(() =>
             product.SetPhysicalSpecification(1.0001m, null, null, null, DateTimeOffset.UtcNow));
+        Assert.Throws<InvalidOperationException>(() =>
+            product.SetPhysicalSpecification(500.5m, null, null, null, DateTimeOffset.UtcNow));
+        Assert.Throws<InvalidOperationException>(() =>
+            product.SetPhysicalSpecification(1.5m, null, null, null, DateTimeOffset.UtcNow));
+        // Trailing-zero whole grams remain valid (JSON 500.0).
+        product.SetPhysicalSpecification(500.0m, null, null, null, DateTimeOffset.UtcNow);
+        Assert.Equal(500.0m, product.WeightGrams);
         Assert.Throws<InvalidOperationException>(() =>
             product.SetPhysicalSpecification(null, -2m, null, null, DateTimeOffset.UtcNow));
         Assert.Throws<InvalidOperationException>(() =>
@@ -155,13 +162,13 @@ public sealed class CatalogPhysicalSpecificationTests
     [Fact]
     public void Typed_and_legacy_agree_when_equal_and_fail_closed_when_conflict()
     {
-        var agree = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(1400L, 1400L);
+        var agree = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(1400m, 1400L);
         Assert.Equal(1400L, agree);
 
-        var conflict = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(1500L, 1400L);
+        var conflict = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(1500m, 1400L);
         Assert.Null(conflict);
 
-        var typedOnly = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(900L, null);
+        var typedOnly = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(900m, null);
         Assert.Equal(900L, typedOnly);
 
         var legacyOnly = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(null, 800L);
@@ -169,10 +176,39 @@ public sealed class CatalogPhysicalSpecificationTests
     }
 
     [Fact]
-    public void Fractional_typed_weight_is_unknown_for_whole_gram_shipping_read()
+    public void Fractional_typed_weight_is_unknown_and_never_falls_through_to_legacy()
     {
+        Assert.Equal(0, CatalogPhysicalSpecification.WeightGramsScale);
         Assert.Null(CatalogPhysicalSpecification.TryToWholeGrams(1.5m));
         Assert.Equal(2L, CatalogPhysicalSpecification.TryToWholeGrams(2m));
+
+        // Defect B: present typed 500.5 + legacy 500 must NOT resolve to 500.
+        var healed = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(500.5m, 500L);
+        Assert.Null(healed);
+
+        var facts = CatalogPhysicalSpecification.ResolveEffectiveFacts(
+            500.5m, null, null, null, null, null, null, null, 500L);
+        Assert.Null(facts.WeightGrams);
+
+        // Product fractional + variant null inherits product → still fail closed (no legacy heal).
+        var inheritedFractional = CatalogPhysicalSpecification.ResolveEffectiveFacts(
+            500.5m, null, null, null,
+            variantWeightGrams: null,
+            variantLengthCentimeters: null,
+            variantWidthCentimeters: null,
+            variantHeightCentimeters: null,
+            legacyAttributeGrams: 500L);
+        Assert.Null(inheritedFractional.WeightGrams);
+
+        // Explicit invalid variant never heals from parent or legacy.
+        var variantInvalid = CatalogPhysicalSpecification.ResolveEffectiveFacts(
+            1000m, null, null, null,
+            variantWeightGrams: 500.5m,
+            variantLengthCentimeters: null,
+            variantWidthCentimeters: null,
+            variantHeightCentimeters: null,
+            legacyAttributeGrams: 1000L);
+        Assert.Null(variantInvalid.WeightGrams);
     }
 
     [Fact]

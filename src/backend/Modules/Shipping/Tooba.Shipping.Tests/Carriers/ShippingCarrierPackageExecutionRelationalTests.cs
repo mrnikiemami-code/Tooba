@@ -316,6 +316,172 @@ public sealed class ShippingCarrierPackageExecutionRelationalTests
         Assert.NotEqual(Guid.Empty, fx.Recorder.LastActorUserId);
     }
 
+    /// <summary>
+    /// TB-249-R6 hook: qty2; parcel A qty1 success; explicit new identical parcel B qty1 success;
+    /// distinct ops; 2 allocations/provider; money/collect conserved; replay adds nothing; third exhausted.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "TB249R6")]
+    [Trait("Case", "identical-occurrence")]
+    public async Task CaseR6_identical_payload_distinct_occurrences_then_exhausted()
+    {
+        await using var fx = await Fixture.CreateAsync(lineQuantity: 2m);
+        await fx.PrepareSenderAsync();
+        var pkg = new ShippingCarrierShipmentDispatchPackageInput(500m, 10m, 10m, 10m);
+        var lineQty1 = new[] { new ShippingCarrierShipmentLineQuantity(fx.OrderLineId, 1m) };
+
+        var parcelA = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(fx.CheckoutId, fx.GroupId, lineQty1, pkg),
+            CancellationToken.None);
+        Assert.True(parcelA.IsSuccess, parcelA.IsFailure ? parcelA.Errors[0].Code : null);
+        Assert.NotNull(parcelA.Value.PackageDispatchId);
+        var declaredA = fx.Provider.LastRequest!.Package.DeclaredValue;
+        var collectA = fx.Provider.LastRequest.Package.CollectAmount;
+
+        var parcelB = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(fx.CheckoutId, fx.GroupId, lineQty1, pkg),
+            CancellationToken.None);
+        Assert.True(parcelB.IsSuccess, parcelB.IsFailure ? parcelB.Errors[0].Code : null);
+        Assert.NotNull(parcelB.Value.PackageDispatchId);
+        Assert.NotEqual(parcelA.Value.OperationId, parcelB.Value.OperationId);
+        Assert.NotEqual(parcelA.Value.PackageDispatchId, parcelB.Value.PackageDispatchId);
+        Assert.Equal(2, fx.Provider.Creates);
+        Assert.Equal(2, fx.Recorder.CreatedCount);
+
+        var declaredB = fx.Provider.LastRequest!.Package.DeclaredValue;
+        var collectB = fx.Provider.LastRequest.Package.CollectAmount;
+        // Identical unit parcels: declared conserved as 100_000 + 100_000; collect residual conserved.
+        Assert.Equal(100_000m, declaredA);
+        Assert.Equal(100_000m, declaredB);
+        Assert.Equal(200_000m, declaredA + declaredB);
+        Assert.Equal(0m, collectA + collectB); // fixture quote collect=0 → residual stays 0 across parcels
+
+        var shippedQty = await fx.FulfillmentDb.ShipmentItems.AsNoTracking().SumAsync(x => (decimal?)x.Quantity) ?? 0m;
+        Assert.Equal(2m, shippedQty);
+
+        var replayA = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(
+                fx.CheckoutId, fx.GroupId, lineQty1, pkg, parcelA.Value.PackageDispatchId),
+            CancellationToken.None);
+        Assert.True(replayA.IsSuccess, replayA.IsFailure ? replayA.Errors[0].Code : null);
+        Assert.Equal(parcelA.Value.OperationId, replayA.Value.OperationId);
+
+        var replayB = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(
+                fx.CheckoutId, fx.GroupId, lineQty1, pkg, parcelB.Value.PackageDispatchId),
+            CancellationToken.None);
+        Assert.True(replayB.IsSuccess, replayB.IsFailure ? replayB.Errors[0].Code : null);
+        Assert.Equal(parcelB.Value.OperationId, replayB.Value.OperationId);
+        Assert.Equal(2, fx.Provider.Creates);
+        Assert.Equal(2, fx.Recorder.CreatedCount);
+
+        var third = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(fx.CheckoutId, fx.GroupId, lineQty1, pkg),
+            CancellationToken.None);
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, third.FirstError.Code);
+        Assert.Equal(2, fx.Provider.Creates);
+        Assert.Equal(2m, await fx.FulfillmentDb.ShipmentItems.AsNoTracking().SumAsync(x => (decimal?)x.Quantity) ?? 0m);
+    }
+
+    [Fact]
+    [Trait("Category", "TB249R6")]
+    [Trait("Case", "barrier-same-occurrence")]
+    public async Task CaseR6_barrier_same_occurrence_one_provider_one_allocation()
+    {
+        await using var fxA = await Fixture.CreateAsync(lineQuantity: 2m);
+        await fxA.PrepareSenderAsync();
+        // Separate DbContexts; shared controlled provider so Creates is authoritative.
+        await using var fxB = await Fixture.AttachSiblingAsync(fxA, shareProvider: true, shareRecorder: false);
+        var sharedOccurrence = UuidV7.New();
+
+        using var startBarrier = new Barrier(2);
+        var results = await Task.WhenAll(
+            Task.Run(async () =>
+            {
+                startBarrier.SignalAndWait(TimeSpan.FromSeconds(15));
+                return await fxA.Directory.CreateAsync(
+                    fxA.Owner, fxA.ActorUserId,
+                    new ShippingCarrierShipmentExecuteRequest(
+                        fxA.CheckoutId, fxA.GroupId, PackageDispatchId: sharedOccurrence),
+                    CancellationToken.None);
+            }),
+            Task.Run(async () =>
+            {
+                startBarrier.SignalAndWait(TimeSpan.FromSeconds(15));
+                return await fxB.Directory.CreateAsync(
+                    fxB.Owner, fxB.ActorUserId,
+                    new ShippingCarrierShipmentExecuteRequest(
+                        fxB.CheckoutId, fxB.GroupId, PackageDispatchId: sharedOccurrence),
+                    CancellationToken.None);
+            }));
+
+        Assert.Contains(results, x => x.IsSuccess);
+        Assert.Equal(1, fxA.Provider.Creates);
+        Assert.Equal(1, await fxA.FulfillmentDb.Shipments.AsNoTracking().CountAsync());
+        Assert.Equal(2, startBarrier.ParticipantCount);
+    }
+
+    [Fact]
+    [Trait("Category", "TB249R6")]
+    [Trait("Case", "payload-conflict-cross-owner-no-resend")]
+    public async Task CaseR6_payload_conflict_cross_owner_pending_unknown_no_blind_resend()
+    {
+        await using var fx = await Fixture.CreateAsync(lineQuantity: 2m);
+        await fx.PrepareSenderAsync();
+        var pkgOk = new ShippingCarrierShipmentDispatchPackageInput(500m, 10m, 10m, 10m);
+        var lineQty1 = new[] { new ShippingCarrierShipmentLineQuantity(fx.OrderLineId, 1m) };
+
+        var first = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(fx.CheckoutId, fx.GroupId, lineQty1, pkgOk),
+            CancellationToken.None);
+        Assert.True(first.IsSuccess, first.IsFailure ? first.Errors[0].Code : null);
+        Assert.Equal(1, fx.Provider.Creates);
+
+        var conflict = await fx.Directory.CreateAsync(
+            fx.Owner, fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(
+                fx.CheckoutId, fx.GroupId, lineQty1,
+                new ShippingCarrierShipmentDispatchPackageInput(900m, 10m, 10m, 10m),
+                first.Value.PackageDispatchId),
+            CancellationToken.None);
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentIntentConflict, conflict.FirstError.Code);
+        Assert.Equal(1, fx.Provider.Creates);
+
+        var crossOwner = await fx.Directory.CreateAsync(
+            ShippingAuthoringOwnerScope.ForStore("other-store"),
+            fx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(
+                fx.CheckoutId, fx.GroupId, lineQty1, pkgOk, first.Value.PackageDispatchId),
+            CancellationToken.None);
+        Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, crossOwner.FirstError.Code);
+        Assert.Equal(1, fx.Provider.Creates);
+
+        // Pending/Unknown never blind-resend: cancel after provider accept, replay stays Unknown.
+        await using var unknownFx = await Fixture.CreateAsync(lineQuantity: 1m);
+        await unknownFx.PrepareSenderAsync();
+        unknownFx.Provider.OnCreate = _ => throw new OperationCanceledException("tb249r6: cancel after provider accept");
+        await Assert.ThrowsAsync<OperationCanceledException>(() => unknownFx.Directory.CreateAsync(
+            unknownFx.Owner, unknownFx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(unknownFx.CheckoutId, unknownFx.GroupId),
+            CancellationToken.None));
+        Assert.Equal(1, unknownFx.Provider.Creates);
+        unknownFx.Provider.OnCreate = null;
+        var before = unknownFx.Provider.Creates;
+        var replay = await unknownFx.Directory.CreateAsync(
+            unknownFx.Owner, unknownFx.ActorUserId,
+            new ShippingCarrierShipmentExecuteRequest(unknownFx.CheckoutId, unknownFx.GroupId),
+            CancellationToken.None);
+        Assert.True(replay.IsSuccess, replay.IsFailure ? replay.Errors[0].Code : null);
+        Assert.Equal(ShippingCarrierShipmentStateView.Unknown, replay.Value.State);
+        Assert.Equal(before, unknownFx.Provider.Creates);
+    }
+
     [Fact]
     [Trait("Category", "TB249R4")]
     [Trait("Case", "10")]
@@ -553,7 +719,10 @@ public sealed class ShippingCarrierPackageExecutionRelationalTests
         /// <summary>
         /// Second independent context graph against the same seeded identities (for concurrent matrix paths).
         /// </summary>
-        public static Task<Fixture> AttachSiblingAsync(Fixture seed)
+        public static Task<Fixture> AttachSiblingAsync(
+            Fixture seed,
+            bool shareProvider = false,
+            bool shareRecorder = false)
         {
             var orderDb = CreateOrderDb(seed.ConnectionString);
             var shippingDb = CreateShippingDb(seed.ConnectionString);
@@ -580,12 +749,12 @@ public sealed class ShippingCarrierPackageExecutionRelationalTests
                 new FulfillmentInstrumentation(),
                 new SystemUtcClock(),
                 new UuidV7IdGenerator());
-            var provider = new RecordingShipmentProvider();
+            var provider = shareProvider ? seed.Provider : new RecordingShipmentProvider();
             var adapter = new FulfillmentAdminOperationsAdapter(
                 fulfillmentDirectory,
                 new FulfillmentShippedQuantityReader(fulfillmentDb),
                 new ShippingMethodsOptions());
-            var recorder = new RecordingFulfillmentAdmin(adapter);
+            var recorder = shareRecorder ? seed.Recorder : new RecordingFulfillmentAdmin(adapter);
             var tipax = new StaticOptions(new TipaxV4Options
             {
                 SuccessCallbackUrl = "https://store.test/ok",

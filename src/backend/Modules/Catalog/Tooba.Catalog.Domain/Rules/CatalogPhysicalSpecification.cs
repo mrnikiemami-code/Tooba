@@ -8,6 +8,8 @@ namespace Tooba.Catalog.Domain.Rules;
 /// Typed fields (<c>WeightGrams</c>, <c>LengthCentimeters</c>, <c>WidthCentimeters</c>,
 /// <c>HeightCentimeters</c>) are the explicit write/read contract. Null means unspecified —
 /// never fabricate 0. Provided values must be positive with bounded precision/overflow.
+/// Typed weight writes require whole grams (no fractional grams). Centimetre dimensions
+/// retain bounded fractional scale.
 /// </para>
 /// <para>
 /// <b>Weight compatibility with legacy attributes:</b> active Number
@@ -15,10 +17,9 @@ namespace Tooba.Catalog.Domain.Rules;
 /// <see cref="CatalogShippingWeightGrams"/>. Resolution policy:
 /// </para>
 /// <list type="bullet">
-/// <item>typed only → typed (whole grams)</item>
-/// <item>legacy only → legacy grams</item>
-/// <item>both present and equal → agreed grams</item>
-/// <item>both present and unequal → unknown (fail closed; no silent preference)</item>
+/// <item>typed absent (null) + legacy → legacy grams</item>
+/// <item>typed present and whole → typed; equal legacy agrees; unequal legacy → unknown</item>
+/// <item>typed present but not whole/usable → unknown (fail closed; NEVER fall through to legacy)</item>
 /// <item>neither → unknown</item>
 /// </list>
 /// <para>
@@ -36,8 +37,11 @@ public static class CatalogPhysicalSpecification
     /// <summary>Upper bound for each dimension in centimetres.</summary>
     public const decimal DimensionCentimetersMaxValue = 1_000_000m;
 
-    /// <summary>Max fractional digits for weight grams.</summary>
-    public const int WeightGramsScale = 3;
+    /// <summary>
+    /// Typed weight fractional digits allowed on write: whole grams only.
+    /// Validation uses truncate-equality (so <c>500.0</c> is accepted; <c>500.5</c> is not).
+    /// </summary>
+    public const int WeightGramsScale = 0;
 
     /// <summary>Max fractional digits for length/width/height centimetres.</summary>
     public const int DimensionCentimetersScale = 2;
@@ -52,11 +56,7 @@ public static class CatalogPhysicalSpecification
         decimal? widthCentimeters,
         decimal? heightCentimeters)
     {
-        ValidateOptionalPositive(
-            weightGrams,
-            WeightGramsMaxValue,
-            WeightGramsScale,
-            "catalog.physical.weight_grams.invalid");
+        ValidateOptionalWholeGrams(weightGrams);
         ValidateOptionalPositive(
             lengthCentimeters,
             DimensionCentimetersMaxValue,
@@ -114,27 +114,31 @@ public static class CatalogPhysicalSpecification
     }
 
     /// <summary>
-    /// Compose typed whole grams with legacy attribute grams under the explicit conflict policy.
+    /// Compose typed weight with legacy attribute grams under the explicit conflict policy.
+    /// Legacy applies only when typed is absent (null). A present but unusable typed value
+    /// fails closed and never falls through to legacy.
     /// </summary>
-    public static long? ResolveEffectiveWeightGrams(long? typedWholeGrams, long? legacyAttributeGrams)
+    public static long? ResolveEffectiveWeightGrams(decimal? typedWeightGrams, long? legacyAttributeGrams)
     {
-        if (typedWholeGrams is null && legacyAttributeGrams is null)
-        {
-            return null;
-        }
-
-        if (typedWholeGrams is null)
+        if (typedWeightGrams is null)
         {
             return legacyAttributeGrams;
         }
 
-        if (legacyAttributeGrams is null)
+        // Present typed: usable whole grams required; never heal from legacy.
+        var typedWhole = TryToWholeGrams(typedWeightGrams);
+        if (typedWhole is null)
         {
-            return typedWholeGrams;
+            return null;
         }
 
-        return typedWholeGrams.Value == legacyAttributeGrams.Value
-            ? typedWholeGrams
+        if (legacyAttributeGrams is null)
+        {
+            return typedWhole;
+        }
+
+        return typedWhole.Value == legacyAttributeGrams.Value
+            ? typedWhole
             : null;
     }
 
@@ -158,12 +162,32 @@ public static class CatalogPhysicalSpecification
             long? legacyAttributeGrams)
     {
         var typedWeight = ResolveTypedWeightGrams(productWeightGrams, variantWeightGrams);
-        var weight = ResolveEffectiveWeightGrams(TryToWholeGrams(typedWeight), legacyAttributeGrams);
+        var weight = ResolveEffectiveWeightGrams(typedWeight, legacyAttributeGrams);
         return (
             weight,
             ResolveTypedDimensionCentimeters(productLengthCentimeters, variantLengthCentimeters),
             ResolveTypedDimensionCentimeters(productWidthCentimeters, variantWidthCentimeters),
             ResolveTypedDimensionCentimeters(productHeightCentimeters, variantHeightCentimeters));
+    }
+
+    private static void ValidateOptionalWholeGrams(decimal? weightGrams)
+    {
+        if (weightGrams is null)
+        {
+            return;
+        }
+
+        var amount = weightGrams.Value;
+        if (amount <= 0m || amount > WeightGramsMaxValue)
+        {
+            throw new InvalidOperationException("catalog.physical.weight_grams.invalid");
+        }
+
+        // Whole grams only — do not use decimal scale bits (500.0 must remain valid).
+        if (amount != decimal.Truncate(amount) || amount > long.MaxValue)
+        {
+            throw new InvalidOperationException("catalog.physical.weight_grams.invalid");
+        }
     }
 
     private static void ValidateOptionalPositive(

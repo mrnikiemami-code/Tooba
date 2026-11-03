@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "plugins": []
+  },
+  "include": [
+    "features/order-carrier-execution/**/*.ts",
+    "features/order-carrier-execution/**/*.tsx",
+    "app/admin/product-physical-specification*.ts",
+    "app/admin/product-physical-specification*.tsx",
+    "design-system/primitives/core.tsx",
+    "design-system/cn.ts",
+    "lib/quantity-display.ts",
+    "features/admin-shipping-authoring/messages/authoring-messages.ts"
+  ]
+}

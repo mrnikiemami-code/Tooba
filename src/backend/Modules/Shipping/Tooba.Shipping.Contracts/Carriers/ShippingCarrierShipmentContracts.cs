@@ -68,7 +68,9 @@ public sealed record ShippingCarrierShipmentOperationView(
     bool CanCancel,
     bool CanLabel,
     DateTimeOffset AttemptedAt,
-    DateTimeOffset? CompletedAt);
+    DateTimeOffset? CompletedAt,
+    /// <summary>Server-issued parcel occurrence id; client must reuse on retry of the same parcel.</summary>
+    Guid? PackageDispatchId = null);
 
 /// <summary>طرف فرستنده یا گیرنده برای ایجاد محموله.</summary>
 /// <param name="FullName">نام کامل.</param>
@@ -95,7 +97,9 @@ public sealed record ShippingCarrierConfiguredSenderView(
 public sealed record ShippingCarrierLatestCreateOperationView(
     Guid? OperationId,
     ShippingCarrierShipmentStateView? State,
-    string? ProviderTrackingCode);
+    string? ProviderTrackingCode,
+    /// <summary>Occurrence id of the latest create; FE recovers Pending/Unknown retries from this.</summary>
+    Guid? PackageDispatchId = null);
 
 /// <summary>Server-authoritative carrier execution capability for one committed shipping group.</summary>
 public sealed record ShippingGroupCarrierExecutionCapabilityView(
@@ -202,7 +206,10 @@ public sealed record ShippingCarrierShipmentDispatchPackageInput(
 /// <param name="ShippingGroupId">Accepted shipping group.</param>
 /// <param name="Lines">Exact line quantities for this physical package; empty/null uses all remaining executable lines.</param>
 /// <param name="Package">Per-dispatch weight/dimensions. Required for partial packages; full-remaining may reuse group completion.</param>
-/// <param name="PackageDispatchId">Optional untrusted client locator; server validates against durable intent.</param>
+/// <param name="PackageDispatchId">
+/// Optional parcel occurrence locator. Omit to mint a new server occurrence; reuse the returned id on retry.
+/// Validated against owner/checkout/group; payload conflicts refuse.
+/// </param>
 public sealed record ShippingCarrierShipmentExecuteRequest(
     Guid CheckoutId,
     Guid ShippingGroupId,

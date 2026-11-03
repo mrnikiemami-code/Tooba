@@ -17,7 +17,7 @@ public sealed class UpdateProductPhysicalSpecificationCommandValidator
         RuleFor(x => x.Model.WeightGrams)
             .Must(BeValidOptionalMeasurement)
             .WithErrorCode(CatalogErrorCodes.WorkspacePhysicalSpecificationRejected)
-            .WithMessage("WeightGrams must be null or a positive value within bounds.");
+            .WithMessage("WeightGrams must be null or a positive whole-gram value within bounds.");
         RuleFor(x => x.Model.LengthCentimeters)
             .Must(BeValidOptionalDimension)
             .WithErrorCode(CatalogErrorCodes.WorkspacePhysicalSpecificationRejected)

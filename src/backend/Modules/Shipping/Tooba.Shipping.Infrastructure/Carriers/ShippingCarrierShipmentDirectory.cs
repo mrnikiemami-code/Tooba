@@ -50,10 +50,14 @@ internal sealed class ShippingCarrierShipmentDirectory(
         }
 
         var domainOwner = ToDomainOwner(owner);
+        var requestedOccurrence = request.PackageDispatchId is { } locatorId && locatorId != Guid.Empty
+            ? locatorId
+            : (Guid?)null;
 
-        if (request.PackageDispatchId is { } locatorId && locatorId != Guid.Empty)
+        if (requestedOccurrence is { } occurrenceLocator)
         {
-            var byLocator = await FindCreateByPackageDispatchIdAsync(domainOwner, request.CheckoutId, request.ShippingGroupId, locatorId, cancellationToken);
+            var byLocator = await FindCreateByPackageDispatchIdAsync(
+                domainOwner, request.CheckoutId, request.ShippingGroupId, occurrenceLocator, cancellationToken);
             if (byLocator is not null)
             {
                 return await ReplayOrResumeExistingAsync(owner, actorUserId, facts, byLocator, request, cancellationToken);
@@ -137,19 +141,39 @@ internal sealed class ShippingCarrierShipmentDirectory(
             priorCollect,
             isFinalRemaining);
 
-        var (operationKey, packageDispatchId, payloadFingerprint) = ShippingCarrierDispatchIntent.Derive(
+        var physicalForFingerprint = allocatedPackage with { DeclaredValue = 0m, CollectAmount = 0m };
+        var payloadFingerprint = ShippingCarrierDispatchIntent.ComputePayloadFingerprint(
             domainOwner,
             request.CheckoutId,
             request.ShippingGroupId,
             selectedLines,
-            allocatedPackage with { DeclaredValue = 0m, CollectAmount = 0m });
+            physicalForFingerprint);
 
-        if (request.PackageDispatchId is { } clientDispatch
-            && clientDispatch != Guid.Empty
-            && clientDispatch != packageDispatchId)
+        // No occurrence locator: converge only onto an open Pending/Unknown with the SAME payload
+        // (crash/retry recovery). A Succeeded identical payload must mint a NEW occurrence.
+        if (requestedOccurrence is null)
         {
-            return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
+            var openMatching = await FindOpenCreateMatchingPayloadAsync(
+                domainOwner,
+                request.CheckoutId,
+                request.ShippingGroupId,
+                payloadFingerprint,
+                cancellationToken);
+            if (openMatching is not null)
+            {
+                return await ReplayOrResumeExistingAsync(owner, actorUserId, facts, openMatching, request, cancellationToken);
+            }
         }
+
+        // New parcel occurrence: reuse client-held server id when provided and unknown; else mint UuidV7.
+        var packageDispatchId = requestedOccurrence ?? ShippingCarrierDispatchIntent.MintOccurrenceId();
+        var (operationKey, _) = ShippingCarrierDispatchIntent.Derive(
+            packageDispatchId,
+            domainOwner,
+            request.CheckoutId,
+            request.ShippingGroupId,
+            selectedLines,
+            physicalForFingerprint);
 
         var existing = await db.CarrierShipmentOperations
             .SingleOrDefaultAsync(
@@ -271,6 +295,11 @@ internal sealed class ShippingCarrierShipmentDirectory(
         ShippingCarrierShipmentExecuteRequest request,
         CancellationToken cancellationToken)
     {
+        if (TryDetectPayloadConflict(ToDomainOwner(owner), existing, request, facts, out var conflict))
+        {
+            return Fail(conflict!);
+        }
+
         if (existing.State == ShippingCarrierShipmentState.Succeeded
             || existing.State == ShippingCarrierShipmentState.Failed)
         {
@@ -316,51 +345,16 @@ internal sealed class ShippingCarrierShipmentDirectory(
         }
 
         var domainOwner = ToDomainOwner(owner);
-        var physicalForIntent = snapshot.Package with { DeclaredValue = 0m, CollectAmount = 0m };
-        var hasClientPayload = (request.Lines is { Count: > 0 })
-            || request.Package is not null
-            || (request.PackageDispatchId is { } clientLocator && clientLocator != Guid.Empty);
-        if (hasClientPayload)
+        if (TryDetectPayloadConflict(domainOwner, pending, request, facts, out var conflictCode))
         {
-            IReadOnlyList<ShippingCarrierShipmentLineQuantity> compareLines = snapshot.Lines;
-            if (request.Lines is { Count: > 0 })
-            {
-                if (!TryResolveLineSelection(facts, request.Lines, out var requestedLines, out _))
-                {
-                    return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
-                }
+            return Fail(conflictCode!);
+        }
 
-                compareLines = requestedLines;
-            }
-
-            var comparePackage = request.Package is { } reqPkg
-                ? new ShippingCarrierShipmentPackageInput(
-                    reqPkg.WeightGrams,
-                    0m,
-                    reqPkg.LengthCentimeters,
-                    reqPkg.WidthCentimeters,
-                    reqPkg.HeightCentimeters,
-                    0m)
-                : physicalForIntent;
-            var (_, derivedDispatchId, derivedFingerprint) = ShippingCarrierDispatchIntent.Derive(
-                domainOwner,
-                pending.CheckoutId,
-                pending.ShippingGroupId,
-                compareLines,
-                comparePackage);
-            if (!string.IsNullOrWhiteSpace(snapshot.PayloadFingerprint)
-                && !string.Equals(snapshot.PayloadFingerprint, derivedFingerprint, StringComparison.Ordinal))
-            {
-                return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
-            }
-
-            if (request.PackageDispatchId is { } locator
-                && locator != Guid.Empty
-                && locator != snapshot.PackageDispatchId
-                && locator != derivedDispatchId)
-            {
-                return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
-            }
+        if (request.PackageDispatchId is { } locator
+            && locator != Guid.Empty
+            && locator != snapshot.PackageDispatchId)
+        {
+            return Fail(ShippingErrorCodes.CarrierShipmentIntentConflict);
         }
 
         var context = await accounts.TryResolveExecutionContextAsync(
@@ -743,6 +737,46 @@ internal sealed class ShippingCarrierShipmentDirectory(
         return candidates.FirstOrDefault();
     }
 
+    /// <summary>
+    /// Crash/retry convergence without occurrence locator: only Pending/Unknown (never Succeeded).
+    /// </summary>
+    private async Task<ShippingCarrierShipmentOperation?> FindOpenCreateMatchingPayloadAsync(
+        ShippingDraftOwner owner,
+        Guid checkoutId,
+        Guid shippingGroupId,
+        string payloadFingerprint,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(payloadFingerprint))
+        {
+            return null;
+        }
+
+        var candidates = await db.CarrierShipmentOperations
+            .Where(x => x.CheckoutId == checkoutId
+                        && x.ShippingGroupId == shippingGroupId
+                        && x.OwnerKind == owner.Kind
+                        && x.OwnerTenantId == owner.TenantId
+                        && x.OwnerSellerPartyId == owner.SellerPartyId
+                        && x.Kind == ShippingCarrierShipmentKind.Create
+                        && (x.State == ShippingCarrierShipmentState.Pending
+                            || x.State == ShippingCarrierShipmentState.Unknown))
+            .OrderByDescending(x => x.AttemptedAt)
+            .Take(32)
+            .ToListAsync(cancellationToken);
+        foreach (var row in candidates)
+        {
+            if (TryReadExecutionSnapshot(row.ExecutionInputSnapshotJson, out var snapshot)
+                && snapshot is not null
+                && string.Equals(snapshot.PayloadFingerprint, payloadFingerprint, StringComparison.Ordinal))
+            {
+                return row;
+            }
+        }
+
+        return null;
+    }
+
     private async Task<ShippingCarrierShipmentOperation?> FindCreateByPackageDispatchIdAsync(
         ShippingDraftOwner owner,
         Guid checkoutId,
@@ -771,6 +805,76 @@ internal sealed class ShippingCarrierShipmentDirectory(
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Same occurrence + different payload ⇒ typed conflict. Empty client payload skips the check (replay).
+    /// </summary>
+    private static bool TryDetectPayloadConflict(
+        ShippingDraftOwner owner,
+        ShippingCarrierShipmentOperation existing,
+        ShippingCarrierShipmentExecuteRequest request,
+        OrderCommittedCarrierShipmentFacts facts,
+        out string? failureCode)
+    {
+        failureCode = null;
+        if (!TryReadExecutionSnapshot(existing.ExecutionInputSnapshotJson, out var snapshot) || snapshot is null)
+        {
+            return false;
+        }
+
+        if (request.PackageDispatchId is { } locator
+            && locator != Guid.Empty
+            && locator != snapshot.PackageDispatchId)
+        {
+            failureCode = ShippingErrorCodes.CarrierShipmentIntentConflict;
+            return true;
+        }
+
+        var hasClientPayload = (request.Lines is { Count: > 0 }) || request.Package is not null;
+        if (!hasClientPayload || string.IsNullOrWhiteSpace(snapshot.PayloadFingerprint))
+        {
+            return false;
+        }
+
+        // Compare the client's stated line quantities to the bound fingerprint.
+        // Do NOT re-check remaining executable qty here — that would refuse lawful locator
+        // replay of a Succeeded occurrence after the group is exhausted (TB-249-R6).
+        IReadOnlyList<ShippingCarrierShipmentLineQuantity> compareLines = snapshot.Lines;
+        if (request.Lines is { Count: > 0 })
+        {
+            if (request.Lines.Any(line => line.OrderLineId == Guid.Empty || line.Quantity <= 0m))
+            {
+                failureCode = ShippingErrorCodes.CarrierShipmentIntentConflict;
+                return true;
+            }
+
+            compareLines = request.Lines;
+        }
+
+        var comparePackage = request.Package is { } reqPkg
+            ? new ShippingCarrierShipmentPackageInput(
+                reqPkg.WeightGrams,
+                0m,
+                reqPkg.LengthCentimeters,
+                reqPkg.WidthCentimeters,
+                reqPkg.HeightCentimeters,
+                0m)
+            : snapshot.Package with { DeclaredValue = 0m, CollectAmount = 0m };
+
+        if (!ShippingCarrierDispatchIntent.PayloadMatches(
+                snapshot.PayloadFingerprint,
+                owner,
+                existing.CheckoutId,
+                existing.ShippingGroupId,
+                compareLines,
+                comparePackage))
+        {
+            failureCode = ShippingErrorCodes.CarrierShipmentIntentConflict;
+            return true;
+        }
+
+        return false;
     }
 
     private static bool TryResolveDispatchPhysicalPackage(
@@ -1518,6 +1622,12 @@ internal sealed class ShippingCarrierShipmentDirectory(
         var permissions = ShippingCarrierOperationPermissions.ForCreateOperation(capabilities, context, createOp);
         var canTrack = permissions.CanTrack;
         var canCancel = permissions.CanCancel;
+        Guid? packageDispatchId = null;
+        if (TryReadExecutionSnapshot(row.ExecutionInputSnapshotJson, out var snapshot) && snapshot is not null)
+        {
+            packageDispatchId = snapshot.PackageDispatchId == Guid.Empty ? null : snapshot.PackageDispatchId;
+        }
+
         return new(
             row.OperationId,
             row.OperationKey,
@@ -1537,7 +1647,8 @@ internal sealed class ShippingCarrierShipmentDirectory(
             canCancel,
             capabilities.CanLabel,
             row.AttemptedAt,
-            row.CompletedAt);
+            row.CompletedAt,
+            packageDispatchId);
     }
 
     private static Result<ShippingCarrierShipmentOperationView> Fail(string code)

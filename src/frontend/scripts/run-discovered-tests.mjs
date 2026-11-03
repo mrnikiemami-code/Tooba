@@ -41,9 +41,23 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-const result = spawnSync(
-  process.execPath,
-  ["--experimental-strip-types", "--test", ...files],
-  { cwd: feRoot, stdio: "inherit", env: process.env },
-);
+// Prefer tsx so mount tests can import .tsx React components (jsdom harness).
+// Fall back to strip-types for environments without tsx.
+const tsxCli = path.join(feRoot, "node_modules", "tsx", "dist", "cli.mjs");
+const mountTsconfig = path.join(feRoot, "tsconfig.mount-tests.json");
+const useTsx = fs.existsSync(tsxCli);
+const tsxArgs = fs.existsSync(mountTsconfig)
+  ? ["--tsconfig", mountTsconfig, "--test", ...files]
+  : ["--test", ...files];
+const result = useTsx
+  ? spawnSync(process.execPath, [tsxCli, ...tsxArgs], {
+      cwd: feRoot,
+      stdio: "inherit",
+      env: process.env,
+    })
+  : spawnSync(process.execPath, ["--experimental-strip-types", "--test", ...files], {
+      cwd: feRoot,
+      stdio: "inherit",
+      env: process.env,
+    });
 process.exit(result.status ?? 1);

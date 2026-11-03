@@ -36,6 +36,10 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "features/order-carrier-execution/install-jsdom-globals.ts",
+    "features/order-carrier-execution/test-dom-harness.ts"
   ]
 }

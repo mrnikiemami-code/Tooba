@@ -199,8 +199,8 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     en: "Saving product details failed.",
   },
   "workspace.physical_specification.rejected": {
-    fa: "مشخصات فیزیکی نامعتبر است. وزن (گرم) و ابعاد (سانتی‌متر) در صورت ورود باید مثبت باشند.",
-    en: "Physical specification is invalid. Weight (g) and dimensions (cm) must be positive when provided.",
+    fa: "مشخصات فیزیکی نامعتبر است. وزن باید عدد صحیح گرم باشد؛ ابعاد (سانتی‌متر) در صورت ورود باید مثبت باشند.",
+    en: "Physical specification is invalid. Weight must be a whole number of grams; dimensions (cm) must be positive when provided.",
   },
   "workspace.quantity.rejected": {
     fa: "سیاست مقدار نامعتبر است.",

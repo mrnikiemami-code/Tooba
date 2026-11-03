@@ -24,7 +24,8 @@ namespace Tooba.Shipping.Tests.Carriers;
 /// TB-249-R5 cases f–g: Catalog physical-spec create/update→PG→query + validator;
 /// legacy/override policy (domain) and Catalog change does not rewrite accepted Order.
 /// </summary>
-[Collection(ShippingCarrierDispatchCompletionRelationalCollection.Name)]
+// Share the package-execution collection so TB249R6 Catalog + package cases never wipe the same DB in parallel.
+[Collection(ShippingCarrierPackageExecutionRelationalCollection.Name)]
 public sealed class CatalogPhysicalSpecificationRelationalTests
 {
     private static readonly SemaphoreSlim MigrationGate = new(1, 1);
@@ -33,6 +34,7 @@ public sealed class CatalogPhysicalSpecificationRelationalTests
 
     [Fact]
     [Trait("Category", "TB249R5")]
+    [Trait("Category", "TB249R6")]
     [Trait("Case", "f")]
     public async Task CaseF_catalog_create_update_pg_query_exact_g_cm_and_validator()
     {
@@ -51,13 +53,14 @@ public sealed class CatalogPhysicalSpecificationRelationalTests
             """);
 
         var product = CatalogProduct.Create(CatalogProductKind.PhysicalGood, "tb249r5-phys", DateTimeOffset.UtcNow);
-        product.SetPhysicalSpecification(1500.5m, 20.5m, 15m, 10.25m, DateTimeOffset.UtcNow);
+        // Weight writes require whole grams; centimetre decimals remain lawful.
+        product.SetPhysicalSpecification(1500m, 20.5m, 15m, 10.25m, DateTimeOffset.UtcNow);
         db.Products.Add(product);
         await db.SaveChangesAsync();
 
         db.ChangeTracker.Clear();
         var reloaded = await db.Products.AsNoTracking().SingleAsync(x => x.ProductId == product.ProductId);
-        Assert.Equal(1500.5m, reloaded.WeightGrams);
+        Assert.Equal(1500m, reloaded.WeightGrams);
         Assert.Equal(20.5m, reloaded.LengthCentimeters);
         Assert.Equal(15m, reloaded.WidthCentimeters);
         Assert.Equal(10.25m, reloaded.HeightCentimeters);
@@ -82,6 +85,12 @@ public sealed class CatalogPhysicalSpecificationRelationalTests
         Assert.False(bad.IsValid);
         Assert.Contains(bad.Errors, e => e.PropertyName.Contains("WeightGrams", StringComparison.Ordinal));
 
+        var fractional = await validator.ValidateAsync(new UpdateProductPhysicalSpecificationCommand(
+            product.ProductId,
+            new WorkspaceProductPhysicalSpecificationWriteModel(500.5m, 10m, 10m, 10m, updated.UpdatedAt)));
+        Assert.False(fractional.IsValid);
+        Assert.Contains(fractional.Errors, e => e.PropertyName.Contains("WeightGrams", StringComparison.Ordinal));
+
         var overflow = await validator.ValidateAsync(new UpdateProductPhysicalSpecificationCommand(
             product.ProductId,
             new WorkspaceProductPhysicalSpecificationWriteModel(
@@ -96,14 +105,38 @@ public sealed class CatalogPhysicalSpecificationRelationalTests
 
     [Fact]
     [Trait("Category", "TB249R5")]
+    [Trait("Category", "TB249R6")]
     [Trait("Case", "g")]
+    [Trait("Case", "weight-regression")]
     public async Task CaseG_legacy_override_policy_and_catalog_change_does_not_rewrite_order()
     {
         // Domain legacy/override policy (authoritative unit path already covered in Order.Tests).
-        var conflict = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(1500L, 1400L);
+        var conflict = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(1500m, 1400L);
         Assert.Null(conflict);
+        var equal = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(500m, 500L);
+        Assert.Equal(500L, equal);
         var legacyOnly = CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(null, 800L);
         Assert.Equal(800L, legacyOnly);
+        // Defect B: typed 500.5 + legacy 500 must NEVER resolve to 500.
+        Assert.Null(CatalogPhysicalSpecification.ResolveEffectiveWeightGrams(500.5m, 500L));
+        Assert.Null(CatalogPhysicalSpecification.ResolveEffectiveFacts(
+            500.5m, null, null, null, null, null, null, null, 500L).WeightGrams);
+        // Variant null inherits product fractional → still fail-closed (no legacy heal).
+        Assert.Null(CatalogPhysicalSpecification.ResolveEffectiveFacts(
+            500.5m, null, null, null,
+            variantWeightGrams: null,
+            variantLengthCentimeters: null,
+            variantWidthCentimeters: null,
+            variantHeightCentimeters: null,
+            legacyAttributeGrams: 500L).WeightGrams);
+        // Explicit invalid variant never heals from parent/legacy.
+        Assert.Null(CatalogPhysicalSpecification.ResolveEffectiveFacts(
+            1000m, null, null, null,
+            variantWeightGrams: 500.5m,
+            variantLengthCentimeters: null,
+            variantWidthCentimeters: null,
+            variantHeightCentimeters: null,
+            legacyAttributeGrams: 1000L).WeightGrams);
         var overrideFacts = CatalogPhysicalSpecification.ResolveEffectiveFacts(
             1000m, 30m, 20m, 10m,
             variantWeightGrams: 1200m,
