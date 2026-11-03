@@ -171,7 +171,7 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             businessReason = "not_carrier_api";
         }
 
-        var (fulfillmentReason, executableLines, fulfillmentId) = ResolveFulfillmentEligibility(
+        var (fulfillmentReason, executableLines, fulfillmentId, groupPackedTotal) = ResolveFulfillmentEligibility(
             fulfillments,
             group.SellerOrderId,
             group.ShippingGroupId,
@@ -240,14 +240,15 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             reason,
             lineIds,
             executableLines,
-            fulfillmentId);
+            fulfillmentId,
+            groupPackedTotal);
     }
 
     /// <summary>
     /// Computes remaining packed quantities using Fulfillment Created-shipment open allocations.
     /// Filters open allocations to this shipping group when shipment snapshots expose ShippingGroupId.
     /// </summary>
-    internal static (string? Reason, IReadOnlyList<OrderCommittedCarrierExecutableLine> Lines, Guid? FulfillmentId)
+    internal static (string? Reason, IReadOnlyList<OrderCommittedCarrierExecutableLine> Lines, Guid? FulfillmentId, decimal? GroupPackedQuantityTotal)
         ResolveFulfillmentEligibility(
             IReadOnlyList<FulfillmentSnapshot> fulfillments,
             Guid sellerOrderId,
@@ -257,14 +258,24 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
         var snapshot = fulfillments.FirstOrDefault(x => x.SellerOrderId == sellerOrderId);
         if (snapshot is null)
         {
-            return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), null);
+            return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), null, null);
+        }
+
+        decimal? packedTotal = 0m;
+        foreach (var lineId in orderLineIds)
+        {
+            var packedItem = snapshot.Items.FirstOrDefault(x => x.OrderLineId == lineId);
+            if (packedItem is not null)
+            {
+                packedTotal += packedItem.QuantityPacked;
+            }
         }
 
         if (snapshot.Status is FulfillmentOperationStatus.Delivered
             or FulfillmentOperationStatus.Cancelled
             or FulfillmentOperationStatus.Failed)
         {
-            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId);
+            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId, packedTotal);
         }
 
         var openAllocated = snapshot.Shipments
@@ -280,7 +291,7 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             var item = snapshot.Items.FirstOrDefault(x => x.OrderLineId == lineId);
             if (item is null)
             {
-                return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId);
+                return ("fulfillment_unavailable", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId, packedTotal);
             }
 
             var remaining = item.QuantityPacked - openAllocated.GetValueOrDefault(lineId);
@@ -292,10 +303,10 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
 
         if (lines.Count == 0)
         {
-            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId);
+            return ("fulfillment_exhausted", Array.Empty<OrderCommittedCarrierExecutableLine>(), snapshot.FulfillmentId, packedTotal);
         }
 
-        return (null, lines, snapshot.FulfillmentId);
+        return (null, lines, snapshot.FulfillmentId, packedTotal);
     }
 
     private sealed record CheckoutBundle(

@@ -42,6 +42,18 @@ public interface IShippingAuthoringOwnerAuthorizer
         HttpContext context,
         string permissionId,
         CancellationToken cancellationToken);
+
+    /// <summary>Admin owner scope plus the authenticated actor used for audit mutations.</summary>
+    Task<(ShippingAuthoringOwnerScope Owner, Guid ActorUserId)> RequireAdminOwnerWithActorAsync(
+        HttpContext context,
+        string permissionId,
+        CancellationToken cancellationToken);
+
+    /// <summary>Seller owner scope plus the authenticated actor used for audit mutations.</summary>
+    Task<(ShippingAuthoringOwnerScope Owner, Guid ActorUserId)> RequireSellerOwnerWithActorAsync(
+        HttpContext context,
+        string permissionId,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -79,20 +91,41 @@ public sealed class ShippingAuthoringOwnerAuthorizer(
         string permissionId,
         CancellationToken cancellationToken)
     {
+        var (owner, _) = await RequireAdminOwnerWithActorAsync(context, permissionId, cancellationToken);
+        return owner;
+    }
+
+    /// <inheritdoc />
+    public async Task<(ShippingAuthoringOwnerScope Owner, Guid ActorUserId)> RequireAdminOwnerWithActorAsync(
+        HttpContext context,
+        string permissionId,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(context);
 
         // همان گیت ادمین و همان مجوز موجود؛ رد/نبود مجوز پیش از هر خواندن business بالا می‌آید.
-        await adminAuthorizer.RequireAuthorizedAsync(context, permissionId, cancellationToken);
+        var actorUserId = await adminAuthorizer.RequireAuthorizedAsync(context, permissionId, cancellationToken);
 
         // همان زمینهٔ trusted همین درخواست؛ این بار برای شکل scope، نه یک مرجع حالت دوم.
         var installation = ShippingInstallationContext.Resolve(edition, tenant);
-        return installation.Edition == ToobaEdition.SingleStore
+        var owner = installation.Edition == ToobaEdition.SingleStore
             ? ShippingAuthoringOwnerScope.ForStore(installation.TenantId!)
             : ShippingAuthoringOwnerScope.ForMarketplace();
+        return (owner, actorUserId);
     }
 
     /// <inheritdoc />
     public async Task<ShippingAuthoringOwnerScope> RequireSellerOwnerAsync(
+        HttpContext context,
+        string permissionId,
+        CancellationToken cancellationToken)
+    {
+        var (owner, _) = await RequireSellerOwnerWithActorAsync(context, permissionId, cancellationToken);
+        return owner;
+    }
+
+    /// <inheritdoc />
+    public async Task<(ShippingAuthoringOwnerScope Owner, Guid ActorUserId)> RequireSellerOwnerWithActorAsync(
         HttpContext context,
         string permissionId,
         CancellationToken cancellationToken)
@@ -145,6 +178,6 @@ public sealed class ShippingAuthoringOwnerAuthorizer(
             throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringOwnerScopeDenied));
         }
 
-        return ShippingAuthoringOwnerScope.ForSeller(sellerPartyId);
+        return (ShippingAuthoringOwnerScope.ForSeller(sellerPartyId), actorUserId);
     }
 }

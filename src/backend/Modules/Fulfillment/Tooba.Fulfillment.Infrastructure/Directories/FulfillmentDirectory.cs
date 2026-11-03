@@ -290,7 +290,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
     }
 
     /// <inheritdoc />
-    public async Task<FulfillmentSnapshot> CreateShipmentAsync(
+    public async Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         string carrierDisplayName,
@@ -335,7 +335,8 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         _db.ShipmentItems.AddRange(shipment.Items);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordShipmentCreated();
-        return await MapSnapshotAsync(unit, cancellationToken);
+        var snapshot = await MapSnapshotAsync(unit, cancellationToken);
+        return new FulfillmentShipmentCreateResult(snapshot, shipment.ShipmentId);
     }
 
     /// <inheritdoc />

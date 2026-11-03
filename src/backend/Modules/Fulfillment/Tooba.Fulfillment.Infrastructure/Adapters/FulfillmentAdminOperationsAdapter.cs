@@ -99,7 +99,7 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         MapRequired(await directory.UnpackSelectionsAsync(
             fulfillmentId, actorUserId, Map(selections), cancellationToken));
 
-    public async Task<FulfillmentSnapshot> CreateShipmentAsync(
+    public async Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         string carrierDisplayName,
@@ -107,8 +107,9 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         string? shippingMethodCode,
         string? providerMetadataJson,
         CancellationToken cancellationToken,
-        Guid? shippingGroupId = null) =>
-        MapRequired(await directory.CreateShipmentAsync(
+        Guid? shippingGroupId = null)
+    {
+        var created = await directory.CreateShipmentAsync(
             fulfillmentId,
             actorUserId,
             carrierDisplayName,
@@ -116,7 +117,9 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             cancellationToken,
             shippingMethodCode,
             providerMetadataJson,
-            shippingGroupId));
+            shippingGroupId);
+        return new FulfillmentShipmentCreateResult(MapRequired(created.Snapshot), created.CreatedShipmentId);
+    }
 
     public async Task<FulfillmentSnapshot> CancelShipmentAsync(
         Guid fulfillmentId,

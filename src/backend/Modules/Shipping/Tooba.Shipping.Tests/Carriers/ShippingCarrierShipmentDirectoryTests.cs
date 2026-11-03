@@ -26,6 +26,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     private static readonly Guid SellerOrder = Guid.Parse("55555555-5555-4555-8555-555555555555");
     private static readonly Guid Fulfillment = Guid.Parse("66666666-6666-4666-8666-666666666666");
     private static readonly Guid LineA = Guid.Parse("77777777-7777-4777-8777-777777777777");
+    private static readonly Guid Actor = Guid.Parse("88888888-8888-4888-8888-888888888888");
     private const string Origin = "101";
     private const string Destination = "202";
 
@@ -35,7 +36,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: false, facts: ValidFacts());
 
-        var result = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var result = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         Assert.Equal(ShippingErrorCodes.CarrierUnconfigured, result.FirstError.Code);
         Assert.Equal(0, provider.Creates);
@@ -47,7 +48,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: true, facts: null);
 
-        var result = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var result = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
         Assert.Equal(0, provider.Creates);
@@ -59,7 +60,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: true, facts: ValidFacts(canExecute: false, reason: "payment_locked"));
 
-        var result = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var result = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
         Assert.Equal(0, provider.Creates);
@@ -71,10 +72,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: true, facts: ValidFacts());
 
-        var result = await directory.CreateAsync(
-            ShippingAuthoringOwnerScope.ForStore("other-store"),
-            ValidExecuteRequest(),
-            CancellationToken.None);
+        var result = await directory.CreateAsync(ShippingAuthoringOwnerScope.ForStore("other-store"), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
         Assert.Equal(0, provider.Creates);
@@ -86,27 +84,48 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: true, facts: ValidFacts(configurationVersion: 2));
 
-        var result = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var result = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, result.FirstError.Code);
         Assert.Equal(0, provider.Creates);
     }
 
     [Fact]
-    public async Task Second_create_replays_the_durable_operation_without_another_outbound_call()
+    public async Task Open_pending_create_resumes_same_intent_without_new_allocation_key()
     {
         var provider = new RecordingShipmentProvider();
-        var directory = Create(provider, configured: true, facts: ValidFacts());
+        var (directory, db) = CreateWithDb(provider, configured: true, facts: ValidFacts());
         await PrepareSenderAsync(directory);
 
-        var first = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
-        var second = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
-
+        var first = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
         Assert.True(first.IsSuccess);
-        Assert.True(second.IsSuccess);
-        Assert.Equal(first.Value.OperationId, second.Value.OperationId);
         Assert.Equal(1, provider.Creates);
-        Assert.Equal("TRK-1", first.Value.ProviderTrackingCode);
+
+        var pending = ShippingCarrierShipmentOperation.Begin(
+            Guid.NewGuid(),
+            $"create:{Checkout:N}:{Group:N}:{Guid.NewGuid():N}",
+            ShippingCarrierShipmentKind.Create,
+            ShippingDraftOwnerKind.Store,
+            "store-alpha",
+            null,
+            Checkout,
+            Group,
+            "tipax",
+            Account,
+            1,
+            DateTimeOffset.UtcNow);
+        pending.SetExecutionInputSnapshot(
+            """
+            {"PackageDispatchId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","FulfillmentId":"66666666-6666-4666-8666-666666666666","FulfillmentShipmentId":"99999999-9999-4999-8999-999999999999","Lines":[{"OrderLineId":"77777777-7777-4777-8777-777777777777","Quantity":2}],"Sender":{"FullName":"فرستنده","Mobile":"09120000000","AddressLine":"مبدأ","PostalCode":"1111111111","LocationCode":"101"},"Recipient":{"FullName":"گیرنده","Mobile":"09121111111","AddressLine":"نشانی","PostalCode":"1111111111","LocationCode":"202"},"OriginLocationCode":"101","ProviderServiceCode":"7","Package":{"WeightGrams":1500,"DeclaredValue":2000000,"LengthCentimeters":20,"WidthCentimeters":15,"HeightCentimeters":10,"CollectAmount":0},"AccountId":"33333333-3333-4333-8333-333333333333","ConfigurationVersion":1,"ProviderCode":"tipax","Currency":"IRR"}
+            """);
+        db.CarrierShipmentOperations.Add(pending);
+        await db.SaveChangesAsync();
+
+        var beforeCreates = provider.Creates;
+        var second = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
+        Assert.True(second.IsSuccess);
+        Assert.Equal(pending.OperationId, second.Value.OperationId);
+        Assert.Equal(beforeCreates + 1, provider.Creates);
     }
 
     [Fact]
@@ -115,7 +134,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var provider = new RecordingShipmentProvider();
         var directory = Create(provider, configured: true, facts: ValidFacts());
         await PrepareSenderAsync(directory);
-        var created = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var created = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         var foreign = await directory.GetAsync(
             ShippingAuthoringOwnerScope.ForStore("other-store"),
@@ -132,8 +151,8 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var directory = Create(provider, configured: true, facts: ValidFacts());
 
         await PrepareSenderAsync(directory);
-        var first = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
-        var second = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var first = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
+        var second = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         Assert.Equal(ShippingCarrierShipmentStateView.Unknown, first.Value.State);
         Assert.Equal(first.Value.OperationId, second.Value.OperationId);
@@ -145,7 +164,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
     {
         var directory = Create(new RecordingShipmentProvider(), configured: true, facts: ValidFacts());
         await PrepareSenderAsync(directory);
-        var created = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var created = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
 
         var label = await directory.LabelAsync(Owner(), created.Value.OperationId, CancellationToken.None);
 
@@ -159,7 +178,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         var facts = IncompleteProvenanceFacts();
         var directory = Create(provider, configured: true, facts: facts);
 
-        var before = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var before = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
         Assert.Equal(ShippingErrorCodes.CarrierShipmentNotEligible, before.FirstError.Code);
         Assert.Equal(0, provider.Creates);
 
@@ -172,7 +191,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         Assert.DoesNotContain("package_completion_required", savedPackage.Value.BlockReasonCodes);
 
         await PrepareSenderAsync(directory);
-        var created = await directory.CreateAsync(Owner(), ValidExecuteRequest(), CancellationToken.None);
+        var created = await directory.CreateAsync(Owner(), Actor, ValidExecuteRequest(), CancellationToken.None);
         Assert.True(created.IsSuccess);
         Assert.Equal(1, provider.Creates);
         Assert.Equal("TRK-1", created.Value.ProviderTrackingCode);
@@ -308,7 +327,8 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             canExecute
                 ? new[] { new OrderCommittedCarrierExecutableLine(LineA, 2m) }
                 : Array.Empty<OrderCommittedCarrierExecutableLine>(),
-            Fulfillment);
+            Fulfillment,
+            2m);
 
     private static ShippingCarrierShipmentExecuteRequest ValidExecuteRequest()
         => new(Checkout, Group);
@@ -354,7 +374,8 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             "package_completion_required",
             new[] { LineA },
             new[] { new OrderCommittedCarrierExecutableLine(LineA, 2m) },
-            Fulfillment);
+            Fulfillment,
+            2m);
 
     private sealed class RecordingShipmentProvider : ICarrierShipmentProvider
     {
@@ -425,7 +446,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
         public Task<FulfillmentSnapshot> UnprocessSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<FulfillmentSnapshot> PackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<FulfillmentSnapshot> UnpackSelectionsAsync(Guid fulfillmentId, Guid actorUserId, IReadOnlyList<FulfillmentSelectionCommand> selections, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<FulfillmentSnapshot> CreateShipmentAsync(
+        public Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(
             Guid fulfillmentId,
             Guid actorUserId,
             string carrierDisplayName,
@@ -435,6 +456,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
             CancellationToken cancellationToken,
             Guid? shippingGroupId = null)
         {
+            Assert.NotEqual(Guid.Empty, actorUserId);
             var shipmentId = Guid.Parse("99999999-9999-4999-8999-999999999999");
             var shipment = new ShipmentSnapshot(
                 shipmentId,
@@ -469,7 +491,7 @@ public sealed class ShippingCarrierShipmentDirectoryTests
                 new[] { shipment },
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow);
-            return Task.FromResult(snapshot);
+            return Task.FromResult(new FulfillmentShipmentCreateResult(snapshot, shipmentId));
         }
         public Task<FulfillmentSnapshot> CancelShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<FulfillmentSnapshot> AssignTrackingAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, string trackingReference, CancellationToken cancellationToken) => throw new NotSupportedException();

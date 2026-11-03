@@ -8,6 +8,7 @@ namespace Tooba.Shipping.Application.Carriers.Commands;
 
 public sealed record CreateShippingCarrierShipmentCommand(
     ShippingAuthoringOwnerScope Owner,
+    Guid ActorUserId,
     ShippingCarrierShipmentExecuteRequest Request)
     : IRequest<Result<ShippingCarrierShipmentOperationView>>;
 
@@ -17,7 +18,7 @@ public sealed class CreateShippingCarrierShipmentHandler(IShippingCarrierShipmen
     public Task<Result<ShippingCarrierShipmentOperationView>> Handle(
         CreateShippingCarrierShipmentCommand request,
         CancellationToken cancellationToken)
-        => operations.CreateAsync(request.Owner, request.Request, cancellationToken);
+        => operations.CreateAsync(request.Owner, request.ActorUserId, request.Request, cancellationToken);
 }
 
 public sealed record GetShippingCarrierShipmentCommand(

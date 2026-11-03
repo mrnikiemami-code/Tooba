@@ -39,5 +39,13 @@
     <ProjectReference Include="..\..\Localization\Tooba.Localization.Contracts\Tooba.Localization.Contracts.csproj" />
     <ProjectReference Include="..\..\StoreContext\Tooba.StoreContext.Contracts\Tooba.StoreContext.Contracts.csproj" />
     <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
+    <!-- TB-249-R4 relational matrix: real Order facts reader + FulfillmentDirectory quantity authority. -->
+    <ProjectReference Include="..\..\Order\Tooba.Order.Infrastructure\Tooba.Order.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Domain\Tooba.Order.Domain.csproj" />
+    <ProjectReference Include="..\..\Offer\Tooba.Offer.Contracts\Tooba.Offer.Contracts.csproj" />
+    <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Infrastructure\Tooba.Fulfillment.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Application\Tooba.Fulfillment.Application.csproj" />
+    <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Domain\Tooba.Fulfillment.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
   </ItemGroup>
 </Project>

@@ -8,6 +8,7 @@ public interface IShippingCarrierShipmentOperations
 {
     Task<Result<ShippingCarrierShipmentOperationView>> CreateAsync(
         ShippingAuthoringOwnerScope owner,
+        Guid actorUserId,
         ShippingCarrierShipmentExecuteRequest request,
         CancellationToken cancellationToken);
 

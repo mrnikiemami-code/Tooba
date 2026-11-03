@@ -117,6 +117,11 @@ public sealed record FulfillmentSnapshot(
     DateTimeOffset UpdatedAt = default,
     string? PreferredTrackingReference = null);
 
+/// <summary>Exact shipment identity created by one CreateShipment allocation.</summary>
+public sealed record FulfillmentShipmentCreateResult(
+    FulfillmentSnapshot Snapshot,
+    Guid CreatedShipmentId);
+
 /// <summary>Member shipment of a consolidated package.</summary>
 public sealed record ConsolidatedPackageMemberSnapshot(
     Guid ConsolidatedPackageMemberId,
@@ -219,8 +224,8 @@ public interface IFulfillmentAdminOperations
         IReadOnlyList<FulfillmentSelectionCommand> selections,
         CancellationToken cancellationToken);
 
-    /// <summary>Create a shipment for the given allocations.</summary>
-    Task<FulfillmentSnapshot> CreateShipmentAsync(
+    /// <summary>Create a shipment for the given allocations and return its exact identity.</summary>
+    Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         string carrierDisplayName,

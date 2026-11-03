@@ -1,8 +1,14 @@
-# CURRENT — 249-R3 PARTIAL: quantity-safe bridge deployed; disposable matrix incomplete — 2026-11-02
+# CURRENT — 249-R4 PASS: package identity/owner replay + disposable Postgres matrix executed — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R4/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued software/relational/deploy scope, decision **PACKAGE_IDENTITY_OWNER_REPLAY_AND_POSTGRES_MATRIX_EXECUTED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `0bb72adf9`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha redeployed. LANDED: owner-scoped Pending/Unknown replay; real actorUserId through create; FulfillmentShipmentCreateResult exact CreatedShipmentId; durable packageDispatchId intent+snapshot before allocate/provider; scaled declared/collect; typed fulfillment refusals; method-code→Fulfillment registry bridge. Disposable `tb249r4-pg:15433` Order+Shipping+Fulfillment migrate + Category TB249R4 **17/17** then cleaned. Focused Shipping 49/49 + Order eligibility 2/2 + FE interaction 8/8. Authorized Host admin order/capabilities Manual+payment_locked. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R3 PARTIAL: quantity-safe bridge deployed; disposable matrix incomplete — 2026-11-02
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PARTIAL**, decision **QUANTITY_SAFE_GATES_AND_PACKAGE_BRIDGE_DEPLOYED_DISPOSABLE_MATRIX_INCOMPLETE**. Base `4ec12a05e`.
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha redeployed. LANDED: fulfillment eligibility independent of package completion; executable line quantities; fulfillment CreateShipment shippingGroupId bridge; package-scoped carrier operation_key + lines in execution snapshot; FE posts executable lines. Focused Shipping 42/42 + Order eligibility 2/2 + FE 4/4. Disposable `tb249r3-pg:15433` provisioned then cleaned; full §5 relational matrix unmet. Authorized Host admin order/capabilities Manual+payment_locked. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha redeployed. LANDED: fulfillment eligibility independent of package completion; executable line quantities; fulfillment CreateShipment shippingGroupId bridge; package-scoped carrier operation_key + lines in execution snapshot; FE posts executable lines. Focused Shipping 42/42 + Order eligibility 2/2 + FE 4/4. Disposable `tb249r3-pg:15433` provisioned then cleaned; full §5 relational matrix unmet (closed by 249-R4). Authorized Host admin order/capabilities Manual+payment_locked. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R2 PARTIAL: gates corrected + deployed; relational proof blocked — 2026-11-02
 

@@ -191,6 +191,9 @@ internal sealed class ShippingCarrierExecutionReadiness(
         var createOps = await db.CarrierShipmentOperations.AsNoTracking()
             .Where(x => x.CheckoutId == facts.CheckoutId
                         && x.ShippingGroupId == facts.ShippingGroupId
+                        && x.OwnerKind == domainOwner.Kind
+                        && x.OwnerTenantId == domainOwner.TenantId
+                        && x.OwnerSellerPartyId == domainOwner.SellerPartyId
                         && x.Kind == ShippingCarrierShipmentKind.Create)
             .OrderByDescending(x => x.AttemptedAt)
             .ToListAsync(cancellationToken);

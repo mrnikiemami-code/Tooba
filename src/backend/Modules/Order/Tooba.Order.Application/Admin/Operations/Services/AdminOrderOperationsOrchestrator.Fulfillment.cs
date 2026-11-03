@@ -224,14 +224,14 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
-        return await _fulfillment.CreateShipmentAsync(
+        return (await _fulfillment.CreateShipmentAsync(
             fulfillmentId,
             actorUserId,
             carrier!,
             lines,
             methodCode,
             request.ProviderMetadataJson,
-            cancellationToken);
+            cancellationToken)).Snapshot;
     }
 
     private async Task<object> CancelShipmentCoreAsync(

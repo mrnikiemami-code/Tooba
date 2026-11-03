@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
@@ -680,14 +680,14 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
             Assert.NotNull(unit);
             await directory.MarkProcessingAsync(unit!.FulfillmentId, actor, CancellationToken.None);
             await directory.MarkPackedAsync(unit.FulfillmentId, actor, CancellationToken.None);
-            var shipped = await directory.CreateShipmentAsync(
+            var shipped = (await directory.CreateShipmentAsync(
                 unit.FulfillmentId,
                 actor,
                 "پست",
                 [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
                 CancellationToken.None,
                 shippingMethodCode: "post",
-                providerMetadataJson: postMeta);
+                providerMetadataJson: postMeta)).Snapshot;
             ready.Add((unit.FulfillmentId, shipped.Shipments.Single().ShipmentId));
         }
 
@@ -706,14 +706,14 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         await directory.CancelShipmentAsync(second.FulfillmentId, second.ShipmentId, actor, CancellationToken.None);
         var unitB = await directory.GetAsync(second.FulfillmentId, CancellationToken.None);
         Assert.NotNull(unitB);
-        var tipax = await directory.CreateShipmentAsync(
+        var tipax = (await directory.CreateShipmentAsync(
             second.FulfillmentId,
             actor,
             "تیپاکس",
             [new ShipmentLineCommand(unitB!.Items[0].OrderLineId, 1)],
             CancellationToken.None,
             shippingMethodCode: "tipax",
-            providerMetadataJson: tipaxMeta);
+            providerMetadataJson: tipaxMeta)).Snapshot;
         var tipaxShipmentId = tipax.Shipments.Single(s => s.Status == ShipmentStatus.Created).ShipmentId;
 
         var mixed = await Assert.ThrowsAsync<ContractOperationException>(() =>
@@ -731,14 +731,14 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         await directory.CancelShipmentAsync(ready[0].FulfillmentId, ready[0].ShipmentId, actor, CancellationToken.None);
         var unitA = await directory.GetAsync(ready[0].FulfillmentId, CancellationToken.None);
         Assert.NotNull(unitA);
-        var tipaxA = await directory.CreateShipmentAsync(
+        var tipaxA = (await directory.CreateShipmentAsync(
             ready[0].FulfillmentId,
             actor,
             "تیپاکس",
             [new ShipmentLineCommand(unitA!.Items[0].OrderLineId, 1)],
             CancellationToken.None,
             shippingMethodCode: "tipax",
-            providerMetadataJson: tipaxMeta);
+            providerMetadataJson: tipaxMeta)).Snapshot;
         var tipaxAId = tipaxA.Shipments.Single(s => s.Status == ShipmentStatus.Created).ShipmentId;
         var created = await directory.CreateConsolidatedPackageAsync(
             checkoutId,

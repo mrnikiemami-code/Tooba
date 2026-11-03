@@ -86,7 +86,7 @@ public sealed class SellerMutateFulfillmentHandler
                 SellerFulfillmentMutationKind.MarkPacked =>
                     await _fulfillment.MarkPackedAsync(request.FulfillmentId, request.ActorUserId, cancellationToken),
                 SellerFulfillmentMutationKind.CreateShipment =>
-                    await _fulfillment.CreateShipmentAsync(
+                    (await _fulfillment.CreateShipmentAsync(
                         request.FulfillmentId,
                         request.ActorUserId,
                         request.CarrierDisplayName ?? string.Empty,
@@ -94,7 +94,7 @@ public sealed class SellerMutateFulfillmentHandler
                         cancellationToken,
                         request.ShippingMethodCode,
                         request.ProviderMetadataJson,
-                        request.ShippingGroupId),
+                        request.ShippingGroupId)).Snapshot,
                 SellerFulfillmentMutationKind.AssignTracking =>
                     await _fulfillment.AssignTrackingAsync(
                         request.FulfillmentId,

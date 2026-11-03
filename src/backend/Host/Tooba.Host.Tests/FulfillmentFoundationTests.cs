@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
@@ -200,12 +200,12 @@ public sealed class FulfillmentFoundationTests : IAsyncLifetime
         var packed = await directory.MarkPackedAsync(created.FulfillmentId, actor, CancellationToken.None);
         Assert.Equal(FulfillmentStatus.Packed, packed.Status);
 
-        var partial = await directory.CreateShipmentAsync(
+        var partial = (await directory.CreateShipmentAsync(
             created.FulfillmentId,
             actor,
             "Post Demo",
             [new ShipmentLineCommand(lineId, 1)],
-            CancellationToken.None);
+            CancellationToken.None)).Snapshot;
         Assert.Single(partial.Shipments);
         var shipmentId = partial.Shipments[0].ShipmentId;
 
@@ -333,18 +333,18 @@ public sealed class FulfillmentFoundationTests : IAsyncLifetime
         await directory.MarkProcessingAsync(fulfillmentA.FulfillmentId, actor, CancellationToken.None);
         await directory.MarkPackedAsync(fulfillmentA.FulfillmentId, actor, CancellationToken.None);
         var lineId = fulfillmentA.Items[0].OrderLineId;
-        var first = await directory.CreateShipmentAsync(
+        var first = (await directory.CreateShipmentAsync(
             fulfillmentA.FulfillmentId,
             actor,
             "Carrier A",
             [new ShipmentLineCommand(lineId, 1)],
-            CancellationToken.None);
-        var second = await directory.CreateShipmentAsync(
+            CancellationToken.None)).Snapshot;
+        var second = (await directory.CreateShipmentAsync(
             fulfillmentA.FulfillmentId,
             actor,
             "Carrier B",
             [new ShipmentLineCommand(lineId, 1)],
-            CancellationToken.None);
+            CancellationToken.None)).Snapshot;
         Assert.Equal(2, second.Shipments.Count);
         Assert.Equal(2, second.Items[0].QuantityOrdered);
     }

@@ -182,6 +182,9 @@ public sealed class CreateShippingCarrierShipmentCommandValidator
 {
     public CreateShippingCarrierShipmentCommandValidator()
     {
+        RuleFor(x => x.ActorUserId)
+            .NotEmpty()
+            .WithErrorCode(ShippingCarrierValidationCodes.BindingAccountRequired);
         RuleFor(x => x.Request).NotNull().WithErrorCode(ShippingValidationCodes.BodyInvalid);
         RuleFor(x => x.Request.CheckoutId)
             .NotEmpty()

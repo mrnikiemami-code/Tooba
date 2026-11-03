@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
@@ -49,12 +49,12 @@ public sealed class FulfillmentCharacterizationTests
         var unit = await db.Fulfillments.SingleAsync();
         await directory.MarkProcessingAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
         await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
-        var snapshot = await directory.CreateShipmentAsync(
+        var snapshot = (await directory.CreateShipmentAsync(
             unit.FulfillmentId,
             Guid.NewGuid(),
             "Post",
             [new ShipmentLineCommand(handoff.Lines[0].OrderLineId, 1)],
-            CancellationToken.None);
+            CancellationToken.None)).Snapshot;
         var shipmentId = snapshot.Shipments.Single().ShipmentId;
         await directory.AssignTrackingAsync(unit.FulfillmentId, shipmentId, Guid.NewGuid(), "TRK-1", CancellationToken.None);
         await directory.DispatchShipmentAsync(unit.FulfillmentId, shipmentId, Guid.NewGuid(), CancellationToken.None);
@@ -97,14 +97,14 @@ public sealed class FulfillmentCharacterizationTests
             Assert.NotNull(unit);
             await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
             await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
-            var shipped = await directory.CreateShipmentAsync(
+            var shipped = (await directory.CreateShipmentAsync(
                 unit.FulfillmentId,
                 Guid.NewGuid(),
                 "پست",
                 [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
                 CancellationToken.None,
                 shippingMethodCode: "post",
-                providerMetadataJson: PostMetadata);
+                providerMetadataJson: PostMetadata)).Snapshot;
             shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
         }
 
@@ -163,14 +163,14 @@ public sealed class FulfillmentCharacterizationTests
             var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
             await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
             await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
-            var shipped = await directory.CreateShipmentAsync(
+            var shipped = (await directory.CreateShipmentAsync(
                 unit.FulfillmentId,
                 Guid.NewGuid(),
                 "پست",
                 [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
                 CancellationToken.None,
                 shippingMethodCode: "post",
-                providerMetadataJson: PostMetadata);
+                providerMetadataJson: PostMetadata)).Snapshot;
             shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
         }
 
@@ -234,14 +234,14 @@ public sealed class FulfillmentCharacterizationTests
             var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
             await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
             await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
-            var shipped = await directory.CreateShipmentAsync(
+            var shipped = (await directory.CreateShipmentAsync(
                 unit.FulfillmentId,
                 Guid.NewGuid(),
                 "پست",
                 [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
                 CancellationToken.None,
                 shippingMethodCode: "post",
-                providerMetadataJson: PostMetadata);
+                providerMetadataJson: PostMetadata)).Snapshot;
             shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
         }
 
@@ -295,14 +295,14 @@ public sealed class FulfillmentCharacterizationTests
             var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
             await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
             await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
-            var shipped = await directory.CreateShipmentAsync(
+            var shipped = (await directory.CreateShipmentAsync(
                 unit.FulfillmentId,
                 Guid.NewGuid(),
                 "پست",
                 [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
                 CancellationToken.None,
                 shippingMethodCode: "post",
-                providerMetadataJson: PostMetadata);
+                providerMetadataJson: PostMetadata)).Snapshot;
             shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
         }
 
@@ -385,14 +385,14 @@ public sealed class FulfillmentCharacterizationTests
             var unit = await directory.GetBySellerOrderAsync(orderId, CancellationToken.None);
             await directory.MarkProcessingAsync(unit!.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
             await directory.MarkPackedAsync(unit.FulfillmentId, Guid.NewGuid(), CancellationToken.None);
-            var shipped = await directory.CreateShipmentAsync(
+            var shipped = (await directory.CreateShipmentAsync(
                 unit.FulfillmentId,
                 Guid.NewGuid(),
                 "پست",
                 [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
                 CancellationToken.None,
                 shippingMethodCode: "post",
-                providerMetadataJson: PostMetadata);
+                providerMetadataJson: PostMetadata)).Snapshot;
             shipmentByOrder[orderId] = shipped.Shipments.Single(x => x.Status == ShipmentStatus.Created).ShipmentId;
         }
 

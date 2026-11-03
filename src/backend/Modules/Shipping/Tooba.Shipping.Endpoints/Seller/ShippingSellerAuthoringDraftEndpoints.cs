@@ -659,7 +659,10 @@ public static class ShippingSellerAuthoringDraftEndpoints
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        var scope = await authorizer.RequireSellerOwnerAsync(context, ShippingAdminPermissions.Manage, cancellationToken);
+        var (scope, actorUserId) = await authorizer.RequireSellerOwnerWithActorAsync(
+            context,
+            ShippingAdminPermissions.Manage,
+            cancellationToken);
         var (body, failure) = await ShippingEndpointBody.ReadAsync<ShippingCarrierShipmentExecuteRequest>(
             context,
             api,
@@ -669,7 +672,9 @@ public static class ShippingSellerAuthoringDraftEndpoints
             return failure;
         }
 
-        return api.From(await sender.Send(new CreateShippingCarrierShipmentCommand(scope, body!), cancellationToken));
+        return api.From(await sender.Send(
+            new CreateShippingCarrierShipmentCommand(scope, actorUserId, body!),
+            cancellationToken));
     }
 
     private static async Task<IResult> SaveCarrierShipmentPackageCompletionAsync(

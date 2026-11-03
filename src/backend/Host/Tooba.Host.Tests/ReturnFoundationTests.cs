@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Tooba.Promotion.Application.Promotions.Ports;
 using Tooba.Promotion.Infrastructure.Queries;
 using Tooba.Promotion.Infrastructure.Messaging;
@@ -223,12 +223,12 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
         Assert.NotNull(fulfillment);
         await fulfillmentDirectory.MarkProcessingAsync(fulfillment!.FulfillmentId, actor, CancellationToken.None);
         await fulfillmentDirectory.MarkPackedAsync(fulfillment.FulfillmentId, actor, CancellationToken.None);
-        var withShipment = await fulfillmentDirectory.CreateShipmentAsync(
+        var withShipment = (await fulfillmentDirectory.CreateShipmentAsync(
             fulfillment.FulfillmentId,
             actor,
             "Post Demo",
             [new ShipmentLineCommand(lineId, 1)],
-            CancellationToken.None);
+            CancellationToken.None)).Snapshot;
         var shipmentId = withShipment.Shipments[0].ShipmentId;
         await fulfillmentDirectory.AssignTrackingAsync(
             fulfillment.FulfillmentId,

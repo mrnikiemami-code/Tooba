@@ -46,7 +46,9 @@ public sealed record OrderCommittedCarrierShipmentFacts(
     string? IneligibilityReasonCode,
     IReadOnlyList<Guid> OrderLineIds,
     IReadOnlyList<OrderCommittedCarrierExecutableLine> ExecutableLines,
-    Guid? FulfillmentId = null);
+    Guid? FulfillmentId = null,
+    /// <summary>Sum of packed quantities across group lines; used to scale declared/collect for partial packages.</summary>
+    decimal? GroupPackedQuantityTotal = null);
 
 /// <summary>Contracts-only lookup of committed shipping groups. Empty when the order is not committed.</summary>
 public interface IOrderCommittedCarrierShipmentFactsReader

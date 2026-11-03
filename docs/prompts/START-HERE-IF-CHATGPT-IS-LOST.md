@@ -1,7 +1,12 @@
-# CURRENT — 249-R3 PARTIAL: quantity-safe bridge deployed; disposable matrix incomplete — 2026-11-02
+# CURRENT — 249-R4 PASS: package identity/owner replay + disposable Postgres matrix executed — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R4/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **PACKAGE_IDENTITY_OWNER_REPLAY_AND_POSTGRES_MATRIX_EXECUTED_PROVIDER_UNVERIFIED**. Base `0bb72adf9`. Owner-scoped replay, real actor, intent-before-allocate, exact CreatedShipmentId, scaled package values; disposable TB249R4 17/17 executed then cleaned; canonical FE3000/Host5088 redeployed. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R3 PARTIAL: quantity-safe bridge deployed; disposable matrix incomplete — 2026-11-02
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PARTIAL**, decision **QUANTITY_SAFE_GATES_AND_PACKAGE_BRIDGE_DEPLOYED_DISPOSABLE_MATRIX_INCOMPLETE**. Base `4ec12a05e`. Package-scoped carrier create + independent fulfillment eligibility deployed; disposable §5 matrix unmet. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PARTIAL**, decision **QUANTITY_SAFE_GATES_AND_PACKAGE_BRIDGE_DEPLOYED_DISPOSABLE_MATRIX_INCOMPLETE**. Base `4ec12a05e`. Package-scoped carrier create + independent fulfillment eligibility deployed; disposable §5 matrix unmet (closed by 249-R4). LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R2 PARTIAL: gates corrected + deployed; relational proof blocked — 2026-11-02
 

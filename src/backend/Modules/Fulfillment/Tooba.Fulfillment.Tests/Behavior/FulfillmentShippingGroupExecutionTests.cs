@@ -57,10 +57,10 @@ public sealed class FulfillmentShippingGroupExecutionTests
             unitId, Guid.NewGuid(), "Tipax", [new ShipmentLineCommand(lineB, 1m)],
             CancellationToken.None, shippingGroupId: groupB);
 
-        Assert.Single(first.Shipments);
-        Assert.Equal(groupA, Assert.Single(first.Shipments, x => x.ShippingGroupId == groupA).ShippingGroupId);
-        Assert.Equal(2, second.Shipments.Count);
-        Assert.Equal(groupB, Assert.Single(second.Shipments, x => x.ShippingGroupId == groupB).ShippingGroupId);
+        Assert.Single(first.Snapshot.Shipments);
+        Assert.Equal(groupA, Assert.Single(first.Snapshot.Shipments, x => x.ShippingGroupId == groupA).ShippingGroupId);
+        Assert.Equal(2, second.Snapshot.Shipments.Count);
+        Assert.Equal(groupB, Assert.Single(second.Snapshot.Shipments, x => x.ShippingGroupId == groupB).ShippingGroupId);
 
         // خط گروه دیگر را نمی‌توان زیر این گروه فرستاد.
         var mixed = await Assert.ThrowsAsync<ContractOperationException>(() => directory.CreateShipmentAsync(
@@ -248,7 +248,7 @@ public sealed class FulfillmentShippingGroupExecutionTests
         var legacy = await directory.CreateShipmentAsync(
             unitId, Guid.NewGuid(), "Post", [new ShipmentLineCommand(lineId, 1m)],
             CancellationToken.None);
-        Assert.Null(Assert.Single(legacy.Shipments).ShippingGroupId);
+        Assert.Null(Assert.Single(legacy.Snapshot.Shipments).ShippingGroupId);
 
         // سفارش بدون گروه‌بندی نباید ادعای گروه کند.
         var bogus = await Assert.ThrowsAsync<ContractOperationException>(() => directory.CreateShipmentAsync(
@@ -308,10 +308,10 @@ public sealed class FulfillmentShippingGroupExecutionTests
         await directory.MarkPackedAsync(unitId, Guid.NewGuid(), CancellationToken.None);
         var groupAShipment = (await directory.CreateShipmentAsync(
             unitId, Guid.NewGuid(), "Post", [new ShipmentLineCommand(lineA, 1m)],
-            CancellationToken.None, shippingGroupId: groupA)).Shipments.Single().ShipmentId;
+            CancellationToken.None, shippingGroupId: groupA)).CreatedShipmentId;
         var groupBShipment = (await directory.CreateShipmentAsync(
             unitId, Guid.NewGuid(), "Tipax", [new ShipmentLineCommand(lineB, 1m)],
-            CancellationToken.None, shippingGroupId: groupB)).Shipments.Single(x => x.ShippingGroupId == groupB).ShipmentId;
+            CancellationToken.None, shippingGroupId: groupB)).CreatedShipmentId;
 
         await directory.AssignTrackingAsync(unitId, groupAShipment, Guid.NewGuid(), "TRK-A", CancellationToken.None);
         await directory.DispatchShipmentAsync(unitId, groupAShipment, Guid.NewGuid(), CancellationToken.None);

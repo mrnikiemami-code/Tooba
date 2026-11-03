@@ -58,8 +58,8 @@ public interface IFulfillmentDirectory
         IReadOnlyList<FulfillmentSelectionCommand> selections,
         CancellationToken cancellationToken);
 
-    /// <summary>محموله می‌سازد.</summary>
-    Task<FulfillmentSnapshot> CreateShipmentAsync(
+    /// <summary>محموله می‌سازد و شناسهٔ دقیق همان محموله را برمی‌گرداند.</summary>
+    Task<FulfillmentShipmentCreateResult> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         string carrierDisplayName,
