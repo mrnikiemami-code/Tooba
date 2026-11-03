@@ -198,11 +198,17 @@ export interface StorefrontCapturedDateSlot {
   intervalText: string | null;
   isEarliest: boolean;
   /**
-   * TB-241: نوبت‌های همان تاریخ از همان capture. برای capture بدون مدت دقیقاً یک نوبت پنجرهٔ کامل
-   * روز است؛ نبود آن (سرور قدیمی/تست) یعنی «بدون زیرنوبت» و همان پنجرهٔ روز معتبر است.
+   * TB-241/251: نوبت‌های همان تاریخ از همان capture.
+   * NULL-duration ⇒ سرور دقیقاً یک نوبت پنجرهٔ کامل می‌فرستد؛ مدت پیکربندی‌شده ⇒ فقط نوبت‌های سرور.
+   * غایب/تهی/نامعتبر هرگز به ساعت ساختگی تبدیل نمی‌شود (slotsStatus جدا گزارش می‌شود).
    */
-  slots?: StorefrontCapturedSlot[];
+  slots: StorefrontCapturedSlot[];
+  /** TB-251: نتیجهٔ رمزگشای نوبت‌ها — جدا از طول آرایه تا UI/Continue بی‌صدا نماند. */
+  slotsStatus: CapturedSlotsStatus;
 }
+
+/** TB-251: وضعیت رمزگشای نوبت‌های یک روز (مالک توضیح/مسدودسازی Continue). */
+export type CapturedSlotsStatus = "ok" | "absent" | "empty" | "malformed";
 
 /** TB-241: یک نوبت تحویل همان تاریخ با هویت پایدار و بازهٔ دقیق سرور. */
 export interface StorefrontCapturedSlot {
@@ -648,13 +654,15 @@ function mapCapturedPreview(value: unknown): StorefrontCapturedPreview | null {
         if (!date || !ISO_DATE.test(date) || availableDates.some((existing) => existing.value === date)) {
           return untrustedPreview();
         }
+        const decodedSlots = decodeCapturedSlots(prop(slot, "slots", "Slots"));
         availableDates.push({
           value: date,
           label: asString(prop(slot, "label", "Label")),
           subLabel: asString(prop(slot, "subLabel", "SubLabel")),
           intervalText: asNonEmptyString(prop(slot, "intervalText", "IntervalText")),
           isEarliest: prop(slot, "isEarliest", "IsEarliest") === true,
-          slots: decodeCapturedSlots(prop(slot, "slots", "Slots")),
+          slots: decodedSlots.slots,
+          slotsStatus: decodedSlots.status,
         });
       }
 
@@ -724,37 +732,58 @@ function asNonEmptyString(value: unknown): string | null {
 }
 
 /**
- * TB-241: نوبت‌های یک تاریخ. غیبت/`null` یا هر نوبت نامعتبر یعنی «هیچ نوبت قابل‌انتخابی نیست»؛
- * هرگز نوبتی ساخته/گرد نمی‌شود و انتخاب ساعت روی چنین روزی مسدود می‌ماند (fail-closed).
+ * TB-241/251: نوبت‌های یک تاریخ.
+ * غیبت / آرایهٔ تهی / شکل نامعتبر از هم جدا می‌شوند؛ هرگز نوبتی ساخته/گرد نمی‌شود.
+ * تیک‌های متنی فقط وقتی پذیرفته می‌شوند که دقیقاً همان عدد صحیح امن باشند (نه حدس/گردکردن).
  */
-function decodeCapturedSlots(raw: unknown): StorefrontCapturedSlot[] {
-  if (raw === undefined || raw === null) return [];
-  if (!Array.isArray(raw)) return [];
+function decodeCapturedSlots(raw: unknown): { status: CapturedSlotsStatus; slots: StorefrontCapturedSlot[] } {
+  if (raw === undefined || raw === null) return { status: "absent", slots: [] };
+  if (!Array.isArray(raw)) return { status: "malformed", slots: [] };
+  if (raw.length === 0) return { status: "empty", slots: [] };
   const slots: StorefrontCapturedSlot[] = [];
   for (const entry of raw) {
     const record = asRecord(entry);
-    if (!record) return [];
+    if (!record) return { status: "malformed", slots: [] };
     const slotKey = asNonEmptyString(prop(record, "slotKey", "SlotKey"));
     const opensAt = asNonEmptyString(prop(record, "opensAt", "OpensAt"));
     const closesAt = asNonEmptyString(prop(record, "closesAt", "ClosesAt"));
-    const startTicks = prop(record, "startTicks", "StartTicks");
-    const endTicks = prop(record, "endTicks", "EndTicks");
+    const startTicks = asSafeIntegerTicks(prop(record, "startTicks", "StartTicks"));
+    const endTicks = asSafeIntegerTicks(prop(record, "endTicks", "EndTicks"));
     if (
       !slotKey
       || !opensAt
       || !closesAt
-      || typeof startTicks !== "number"
-      || typeof endTicks !== "number"
-      || !Number.isSafeInteger(startTicks)
-      || !Number.isSafeInteger(endTicks)
+      || startTicks === null
+      || endTicks === null
       || startTicks >= endTicks
       || slots.some((existing) => existing.slotKey === slotKey)
     ) {
-      return [];
+      return { status: "malformed", slots: [] };
     }
     slots.push({ slotKey, opensAt, closesAt, startTicks, endTicks });
   }
-  return slots;
+  return { status: "ok", slots };
+}
+
+/** تیک زمان‌فقط: عدد JSON امن، یا رشتهٔ ارقام صحیح در بازهٔ SafeInteger — هیچ گردکردنی. */
+function asSafeIntegerTicks(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isSafeInteger(value) ? value : null;
+  }
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (!/^-?\d+$/.test(text)) return null;
+    try {
+      const asBig = BigInt(text);
+      if (asBig > BigInt(Number.MAX_SAFE_INTEGER) || asBig < BigInt(Number.MIN_SAFE_INTEGER)) {
+        return null;
+      }
+      return Number(asBig);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 /**

@@ -2,6 +2,7 @@
  * Host cart JSON → storefront cart page.
  * Host contract: totalsByCurrency + defaultCurrency (no scalar subtotalExclusiveOfTax).
  */
+import { resolveCartGoodsSubtotal } from "./storefront-cart-grouping.ts";
 
 export interface StorefrontCartLine {
   lineId: string;
@@ -143,23 +144,15 @@ export function mapStorefrontCart(payload: unknown): StorefrontCartPage | null {
   );
   const lines = Array.isArray(linesRaw) ? linesRaw.map(mapLine) : [];
 
-  let subtotalExclusiveOfTax: number | null = null;
-  let goodsSubtotalAvailable = false;
-  if (lines.length === 0) {
-    subtotalExclusiveOfTax = 0;
-    goodsSubtotalAvailable = true;
-  } else if (totalsByCurrency.length > 0) {
-    const match =
-      totalsByCurrency.find((row) => row.currency.toUpperCase() === currency.toUpperCase()) ??
-      (totalsByCurrency.length === 1 ? totalsByCurrency[0] : undefined);
-    if (match) {
-      subtotalExclusiveOfTax = match.subtotalExclusiveOfTax;
-      goodsSubtotalAvailable = true;
-    }
-  } else if (legacySubtotal != null) {
-    subtotalExclusiveOfTax = legacySubtotal;
-    goodsSubtotalAvailable = true;
-  }
+  // One authoritative path with resolveCartGoodsSubtotal (exact currency match; no foreign sole-row relabel).
+  const goods = resolveCartGoodsSubtotal({
+    currency,
+    lines,
+    totalsByCurrency,
+    legacySubtotalExclusiveOfTax: legacySubtotal,
+  });
+  const subtotalExclusiveOfTax = goods.state === "known" ? goods.amount : null;
+  const goodsSubtotalAvailable = goods.state === "known";
 
   return {
     cartId,

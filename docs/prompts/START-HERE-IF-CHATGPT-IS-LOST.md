@@ -1,7 +1,12 @@
-# CURRENT — 250 PASS: cart rial totals + seller grouping — 2026-11-03
+# CURRENT — 251 PASS: group delivery calendar closure + currency identity guards — 2026-11-03
+
+Read docs/ai/tasks/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/TASK.md and docs/architecture/evidence/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **GROUP_DELIVERY_CALENDAR_VISIBLE_AND_CURRENCY_IDENTITY_GUARDS_DEPLOYED**. Base `7d916bc7a`. CapturedPreview local ON + slotsStatus blockers; both groups 7×8 calendars. 250 cart grouping ≠ shipping calendar. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 250 PASS: cart rial totals + seller grouping — 2026-11-03
 
 Read docs/ai/tasks/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/TASK.md and docs/architecture/evidence/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS**, decision **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**. Base `4ce605905`. totalsByCurrency + integer IRR + sellerPartyId sections; Active cart DOM 2 sellers nonzero. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**. Base `4ce605905`. Currency identity residuals closed by 251. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
 

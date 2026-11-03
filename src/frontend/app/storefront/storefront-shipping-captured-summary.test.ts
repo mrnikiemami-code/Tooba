@@ -30,6 +30,7 @@ function method(overrides: Partial<StorefrontCapturedPreviewMethod> = {}): Store
         subLabel: "",
         intervalText: "14:00-15:00",
         isEarliest: true,
+        slotsStatus: "ok",
         slots: [
           {
             slotKey: "2026-11-02:1-2",

@@ -37,7 +37,23 @@ function method(overrides: Record<string, unknown> = {}) {
     currency: "IRR",
     earliestEligibleDate: "2026-10-29",
     availableDates: [
-      { value: "2026-10-29", label: "پنجشنبه", subLabel: "۸ آبان", intervalText: "09:00-17:00", isEarliest: true },
+      {
+        value: "2026-10-29",
+        label: "پنجشنبه",
+        subLabel: "۸ آبان",
+        intervalText: "09:00-17:00",
+        isEarliest: true,
+        slotsStatus: "ok" as const,
+        slots: [
+          {
+            slotKey: "2026-10-29:324000000000-612000000000",
+            opensAt: "09:00",
+            closesAt: "17:00",
+            startTicks: 324000000000,
+            endTicks: 612000000000,
+          },
+        ],
+      },
     ],
     unavailableReason: null,
     confirmationSnapshotId: "01a17d0e-0419-7000-b575-f507d2f89abc",
@@ -262,6 +278,7 @@ const SLOT_DAY = {
   subLabel: "۸ آبان",
   intervalText: "09:00-11:00",
   isEarliest: true,
+  slotsStatus: "ok" as const,
   slots: [
     { slotKey: "09:00-10:00", label: "۰۹:۰۰–۱۰:۰۰", startTicks: 324000000000, endTicks: 360000000000 },
     { slotKey: "10:00-11:00", label: "۱۰:۰۰–۱۱:۰۰", startTicks: 360000000000, endTicks: 396000000000 },
@@ -521,6 +538,7 @@ test("zero-slot day rejects a choice carrying ticks and accepts only a tickless 
     subLabel: "۸ آبان",
     intervalText: "09:00-17:00",
     isEarliest: true,
+    slotsStatus: "empty" as const,
     slots: [],
   };
   const zeroPreview = preview({

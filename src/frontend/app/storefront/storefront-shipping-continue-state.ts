@@ -28,6 +28,8 @@ export type ShippingContinueBlockerCode =
   | "group_no_dates"
   | "group_date"
   | "group_slot"
+  | "group_slots_unavailable"
+  | "group_slots_malformed"
   | "method"
   | "schedule";
 
@@ -123,16 +125,24 @@ function capturedGroupBlocker(
         groupKey: group.groupKey,
       };
     }
-    // TB-241: روزی با چند نوبت تا انتخاب صریح ساعت کامل نیست؛ همان تصمیم سرور، نه اعتبارسنج دوم.
+    // TB-241/251: نوبت‌های همان روز — تهی/نامعتبر مالک مسدودسازی است؛ چندنوبتی تا انتخاب صریح کامل نیست.
     const chosenDate = method?.availableDates.find((entry) => entry.value === choice?.date);
-    if (
-      chosenDate
-      && (chosenDate.slots ?? []).length > 1
-      && !(chosenDate.slots ?? []).some(
-        (slot) => slot.startTicks === choice?.slotStartTicks && slot.endTicks === choice?.slotEndTicks,
-      )
-    ) {
-      return { code: "group_slot", groupKey: group.groupKey };
+    if (chosenDate) {
+      const status = chosenDate.slotsStatus ?? ((chosenDate.slots ?? []).length > 0 ? "ok" : "empty");
+      if (status === "malformed") {
+        return { code: "group_slots_malformed", groupKey: group.groupKey };
+      }
+      if (status !== "ok" || (chosenDate.slots ?? []).length === 0) {
+        return { code: "group_slots_unavailable", groupKey: group.groupKey };
+      }
+      if (
+        chosenDate.slots.length > 1
+        && !chosenDate.slots.some(
+          (slot) => slot.startTicks === choice?.slotStartTicks && slot.endTicks === choice?.slotEndTicks,
+        )
+      ) {
+        return { code: "group_slot", groupKey: group.groupKey };
+      }
     }
   }
   // بازتاب‌های تأیید/مبلغ کالا با همان اعتبارسنج موجود بررسی می‌شوند (نه یک کپی دوم).
@@ -214,6 +224,14 @@ export function describeShippingContinueBlocker(
       return fa
         ? `برای ${named} یکی از ساعت‌های تحویل همان روز را انتخاب کنید.`
         : `Choose one delivery time for ${named}.`;
+    case "group_slots_unavailable":
+      return fa
+        ? `برای ${named} ساعت تحویل مجاز این روز اعلام نشده است؛ روش یا مقصد را بررسی کنید.`
+        : `No lawful delivery time was published for ${named} on that day; check the method or destination.`;
+    case "group_slots_malformed":
+      return fa
+        ? `برای ${named} ساعت‌های تحویل این روز قابل تأیید نیست؛ صفحه را تازه کنید.`
+        : `Delivery times for ${named} on that day could not be verified; refresh the page.`;
     case "method":
       return fa ? "روش ارسال هر گروه را انتخاب کنید." : "Choose a shipping method for each group.";
     case "schedule":

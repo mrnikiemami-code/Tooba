@@ -55,10 +55,13 @@ export function capturedSelectionBlocker(
     if (!method) return "incomplete_group";
     const date = method.availableDates.find((slot) => slot.value === choice.date);
     if (!date) return "incomplete_group";
-    // TB-241: روزی که چند نوبت دارد تا انتخاب صریح یک نوبت از همان پاسخ کامل نیست؛ روزی با یک نوبت
-    // همان یک نوبت را دارد و انتخاب تاریخ کافی است.
-    if ((date.slots ?? []).length > 1) {
-      const chosen = (date.slots ?? []).some(
+    // TB-241/251: تهی/نامعتبر ⇒ ادامه مسدود؛ چندنوبتی تا انتخاب صریح؛ تک‌نوبت با انتخاب تاریخ کافی است.
+    const status = date.slotsStatus ?? ((date.slots ?? []).length > 0 ? "ok" : "empty");
+    if (status === "malformed" || status !== "ok" || (date.slots ?? []).length === 0) {
+      return "slot_required";
+    }
+    if (date.slots.length > 1) {
+      const chosen = date.slots.some(
         (slot) => slot.startTicks === choice.slotStartTicks && slot.endTicks === choice.slotEndTicks,
       );
       if (!chosen) return "slot_required";

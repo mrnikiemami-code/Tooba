@@ -413,8 +413,8 @@ function CapturedMethodRow({
             onPick={(value) => pickDate(value)}
           />
 
-          {/* TB-241/242: نوبت‌های همان روز فقط پس از انتخاب تاریخ؛ ظاهر کارت هم‌سبک GroupSchedulePicker. */}
-          {dateChosen && activeDate && activeSlots.length > 0 ? (
+          {/* TB-241/242/251: نوبت‌های همان روز فقط پس از انتخاب تاریخ؛ تهی/نامعتبر هرگز بی‌صدا نمی‌ماند. */}
+          {dateChosen && activeDate && activeSlots.length > 0 && activeDate.slotsStatus === "ok" ? (
             <CapturedSlotPicker
               slots={activeSlots}
               identity={identity}
@@ -431,7 +431,23 @@ function CapturedMethodRow({
             >
               {copy.pickDateFirst}
             </p>
-          ) : null}
+          ) : activeDate?.slotsStatus === "malformed" ? (
+            <p
+              className="mt-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3"
+              data-testid={`shipping-group-captured-slots-malformed-${identity}`}
+              role="status"
+            >
+              {copy.slotsMalformed}
+            </p>
+          ) : (
+            <p
+              className="mt-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3"
+              data-testid={`shipping-group-captured-slots-unavailable-${identity}`}
+              role="status"
+            >
+              {copy.slotsUnavailable}
+            </p>
+          )}
 
           {/* TB-242: یک خلاصهٔ کوتاه فقط وقتی روز+ساعت واقعاً انتخاب شده‌اند؛ پیشنهاد هرگز انتخاب‌شده نیست. */}
           {dateChosen && activeSlot ? (

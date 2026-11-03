@@ -1,0 +1,8 @@
+﻿{
+    "workerId":  "tooba-worker-01",
+    "channelId":  "tooba-main",
+    "expectedBaseSha":  "7d916bc7a8154f77ff2ee734f0d78c6ca54459cd",
+    "claimedAtUtc":  "2026-11-03T14:39:13.8963523",
+    "taskId":  "TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251",
+    "bridgeRowId":  "23852239-7fad-4892-858f-894803f66854"
+}

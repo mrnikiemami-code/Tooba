@@ -1,8 +1,13 @@
-# CURRENT — 250 PASS: cart rial totals + seller grouping — 2026-11-03
+# CURRENT — 251 PASS: group delivery calendar closure + currency identity guards — 2026-11-03
+
+Read docs/ai/tasks/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/TASK.md and docs/architecture/evidence/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued calendar + currency residual + deploy scope, decision **GROUP_DELIVERY_CALENDAR_VISIBLE_AND_CURRENCY_IDENTITY_GUARDS_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `7d916bc7a`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. Measured: CapturedPreview local gates were OFF (projection without calendars) + FE silent empty/malformed slots. LANDED: local CapturedPreview ON (checked-in OFF); slotsStatus ok|absent|empty|malformed + owning blockers; currency exact-match / no mixed seller sum. Active cart both groups 7×8 slots; DOM independent calendars. Cart seller grouping (250) is NOT shipping calendar proof. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 250 PASS: cart rial totals + seller grouping — 2026-11-03
 
 Read docs/ai/tasks/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/TASK.md and docs/architecture/evidence/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued cart money/grouping + mount + deploy scope, decision **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `4ce605905`.
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. LANDED: map `totalsByCurrency` (no silent 0); IRR integer via FinancialRounder places; sellerPartyId sections. Focused money 21/21 + cart-mount 10/10. Live Active cart `01a1a1b2-…` IRR 13824519.72 → ۱۳٬۸۲۴٬۵۲۰ ریال; 2 seller sections; no IRR fraction glyph. No migration/mutation. 249 Tipax remains deferred external-only. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**. Base `4ce605905`. Currency identity residuals closed by 251. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
 

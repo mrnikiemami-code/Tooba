@@ -45,6 +45,10 @@ export type ShippingDeliveryMessages = {
   pickOneHour: string;
   deliveryDay: string;
   pickDateFirst: string;
+  /** TB-251: روز انتخاب‌شده نوبت قابل‌انتخاب ندارد (تهی/نامعتبر/غایب). */
+  slotsUnavailable: string;
+  /** TB-251: شکل نوبت‌های همان روز از سرور قابل اعتماد نیست. */
+  slotsMalformed: string;
   yourChoice: string;
   hourNotChosen: string;
   nearest: string;
@@ -65,6 +69,8 @@ export const faShippingDeliveryMessages: ShippingDeliveryMessages = {
   pickOneHour: "یکی از ساعت‌های بالا را انتخاب کنید.",
   deliveryDay: "روز تحویل",
   pickDateFirst: "ابتدا یکی از روزهای بالا را انتخاب کنید.",
+  slotsUnavailable: "برای این روز ساعت تحویل مجاز اعلام نشده است؛ روش یا مقصد این گروه را بررسی کنید.",
+  slotsMalformed: "ساعت‌های تحویل این روز قابل تأیید نیست؛ صفحه را تازه کنید یا روش دیگری را انتخاب کنید.",
   yourChoice: "انتخاب شما:",
   hourNotChosen: "هنوز ساعت تحویل انتخاب نشده",
   nearest: "نزدیک‌ترین",
@@ -85,6 +91,8 @@ export const enShippingDeliveryMessages: ShippingDeliveryMessages = {
   pickOneHour: "Choose one of the times above.",
   deliveryDay: "Delivery day",
   pickDateFirst: "Choose one of the days above first.",
+  slotsUnavailable: "No lawful delivery times were published for this day; check this group's method or destination.",
+  slotsMalformed: "Delivery times for this day could not be verified; refresh or choose another method.",
   yourChoice: "Your choice:",
   hourNotChosen: "Delivery time not selected yet",
   nearest: "Earliest",

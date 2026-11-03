@@ -33,7 +33,24 @@ const adrs: ShippingAddressCompleteness = {
 };
 
 function slot(value: string, intervalText: string | null, isEarliest = false) {
-  return { value, label: value, subLabel: "", intervalText, isEarliest };
+  // NULL-duration / single full-window day: one server slot (TB-241/251).
+  return {
+    value,
+    label: value,
+    subLabel: "",
+    intervalText,
+    isEarliest,
+    slotsStatus: "ok" as const,
+    slots: [
+      {
+        slotKey: `${value}:324000000000-612000000000`,
+        opensAt: "09:00",
+        closesAt: "17:00",
+        startTicks: 324000000000,
+        endTicks: 612000000000,
+      },
+    ],
+  };
 }
 
 function method(overrides: Partial<StorefrontCapturedPreview["groups"][number]["methods"][number]> = {}) {
@@ -204,6 +221,7 @@ test("captured: a multi-slot day blocks Continue until an offered slot is chosen
     availableDates: [
       {
         ...slot("2026-10-29", "09:00–11:00", true),
+        slotsStatus: "ok",
         slots: [
           { slotKey: "09:00-10:00", opensAt: "09:00", closesAt: "10:00", startTicks: 324000000000, endTicks: 360000000000 },
           { slotKey: "10:00-11:00", opensAt: "10:00", closesAt: "11:00", startTicks: 360000000000, endTicks: 396000000000 },

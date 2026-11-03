@@ -1,7 +1,12 @@
-# CURRENT — 250 PASS: cart rial totals + seller grouping (storefront; Tipax still deferred) — 2026-11-03
+# CURRENT — 251 PASS: group delivery calendar closure (storefront shipping; Tipax still deferred) — 2026-11-03
 
-Read docs/ai/tasks/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/TASK.md and docs/architecture/evidence/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/{TASK.md,RESULT.md,RECEIPTS.md}.
-Worker decision **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**. Base `4ce605905`. User cart report: fractional IRR + fake zero totals + no seller grouping. Root: FE ignored `totalsByCurrency` and defaulted missing scalar subtotal to 0; formatOfferAmount lacked IRR places; flat line list. Fixed on canonical FE3000. Active cart proof: IRR 13824519.72 → ۱۳٬۸۲۴٬۵۲۰ ریال; 2 seller sections. Open external-only Tipax verification unchanged. NOT Visual ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+Read docs/ai/tasks/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/TASK.md and docs/architecture/evidence/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker decision **GROUP_DELIVERY_CALENDAR_VISIBLE_AND_CURRENCY_IDENTITY_GUARDS_DEPLOYED**. Base `7d916bc7a`. User: selecting a method on one shipping group showed no date/hour. Measured: Host CapturedPreview local gates OFF (no calendars) + FE silent empty/malformed slots. Fixed FE slotsStatus + owning blockers; restored Host **local** CapturedPreview ON (checked-in remains OFF). Active cart both groups 7 dates × 8 slots; independent DOM calendars. Do not treat 250 cart seller sections as shipping calendar proof. Open external-only Tipax unchanged. NOT Visual ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 250 PASS: cart rial totals + seller grouping (storefront; Tipax still deferred) — 2026-11-03
+
+Read docs/architecture/evidence/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker PASS for cart money/grouping; currency identity residuals closed by 251. Tipax deferred.
 
 # SUPERSEDED — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
 

@@ -44,10 +44,26 @@ export function groupCartLinesBySeller(lines: readonly StorefrontCartLine[]): St
   }
 
   for (const section of sections) {
-    section.sellerSubtotalExclusiveOfTax = sumExactAmounts(
-      section.lines.map((line) => line.lineAmountExclusiveOfTax),
-    );
-    section.currency = section.lines.find((line) => line.currency)?.currency ?? section.currency;
+    const currencies = [
+      ...new Set(
+        section.lines
+          .map((line) => (line.currency ?? "").trim().toUpperCase())
+          .filter((code) => code.length > 0),
+      ),
+    ];
+    if (currencies.length > 1) {
+      // Mixed currencies: never sum into one monetary subtotal; keep section, mark unavailable.
+      section.sellerSubtotalExclusiveOfTax = null;
+      section.currency = section.lines.find((line) => line.currency?.trim())?.currency?.trim() || section.currency;
+    } else {
+      section.sellerSubtotalExclusiveOfTax = sumExactAmounts(
+        section.lines.map((line) => line.lineAmountExclusiveOfTax),
+      );
+      section.currency =
+        section.lines.find((line) => line.currency?.trim())?.currency?.trim()
+        || currencies[0]
+        || section.currency;
+    }
   }
 
   return sections;
@@ -84,15 +100,20 @@ export function resolveCartGoodsSubtotal(input: {
 
   const totals = input.totalsByCurrency;
   if (totals.length > 0) {
-    const match =
-      totals.find((row) => row.currency.trim().toUpperCase() === currency.toUpperCase()) ??
-      (totals.length === 1 ? totals[0] : undefined);
+    // Exact currency match only — never label a foreign sole row (e.g. USD) as the cart currency.
+    const match = totals.find(
+      (row) => row.currency.trim().toUpperCase() === currency.toUpperCase(),
+    );
     if (
       match &&
       Number.isFinite(match.subtotalExclusiveOfTax) &&
       typeof match.subtotalExclusiveOfTax === "number"
     ) {
-      return { state: "known", amount: match.subtotalExclusiveOfTax, currency: match.currency || currency };
+      return {
+        state: "known",
+        amount: match.subtotalExclusiveOfTax,
+        currency: match.currency.trim() || currency,
+      };
     }
     return { state: "unavailable", currency };
   }
