@@ -7,7 +7,7 @@ NOT Architect ACCEPT, NOT live Tipax ACCEPT, NOT Visual ACCEPT
 Parent: `TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R6`  
 Base-SHA: `76e609065ddc3ac2bd64291117ceaa1a2644bf9a`  
 Code-SHA: `78fe85d8cff9387e8e6b9b15196fe52071f59d1f`  
-Evidence-SHA: `EVIDENCE_SHA_PENDING`  
+Evidence-SHA: `2c4a34afb5b41988e8a2e0b7fda0e3d1fc9291d8`  
 Stop-State: `STOP_FOR_ARCHITECT`  
 automaticNextImplementationTask: `NONE`
 
