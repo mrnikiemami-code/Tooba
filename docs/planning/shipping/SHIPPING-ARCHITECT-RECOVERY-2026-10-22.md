@@ -1,7 +1,12 @@
-# CURRENT — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
+# CURRENT — 250 PASS: cart rial totals + seller grouping (storefront; Tipax still deferred) — 2026-11-03
 
-Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/{TASK.md,RESULT.md,RECEIPTS.md}.
-Worker decision **CREATE_OUTCOME_CLASSIFICATION_AND_IN_FLIGHT_UNCERTAINTY_DEPLOYED_PROVIDER_UNVERIFIED**. Base `480241eff`. Closes R7 residual: persist unresolved before POST; no success from invalid DTO; no refusal from generic 5xx; reconcile UI not gated by canCreate; exact-occurrence resolution. Mount A–D 30/30; FE redeployed. Remaining external-only: live Tipax. NOT Architect ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+Read docs/ai/tasks/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/TASK.md and docs/architecture/evidence/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker decision **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**. Base `4ce605905`. User cart report: fractional IRR + fake zero totals + no seller grouping. Root: FE ignored `totalsByCurrency` and defaulted missing scalar subtotal to 0; formatOfferAmount lacked IRR places; flat line list. Fixed on canonical FE3000. Active cart proof: IRR 13824519.72 → ۱۳٬۸۲۴٬۵۲۰ ریال; 2 seller sections. Open external-only Tipax verification unchanged. NOT Visual ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
+
+Read docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker PASS for create outcome/uncertainty; live Tipax still deferred. Cart money/grouping issue addressed by 250 without erasing 249 software claims.
 
 # SUPERSEDED — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
 

@@ -86,15 +86,7 @@ export function storefrontMediaUrl(assetId: string | null | undefined): string {
       : "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   return `${storefrontHostOrigin()}/v1/storefront/media/${id}`;
 }
-
-/**
- * مبلغ Offer را برای نمایش فارسی قالب می‌کند.
- */
-export function formatOfferAmount(amount: number, currency: string): string {
-  const formatted = new Intl.NumberFormat("fa-IR").format(amount);
-  return currency === "IRR" ? `${formatted} ریال` : `${formatted} ${currency}`;
-}
-
+export { formatOfferAmount } from "./storefront-money.ts";
 function mapCard(value: unknown): StorefrontProductCard | null {
   const item = asRecord(value);
   if (!item) {

@@ -1,0 +1,8 @@
+﻿{
+    "workerId":  "tooba-worker-01",
+    "channelId":  "tooba-main",
+    "expectedBaseSha":  "4ce605905af623edcbce96ca5c46decfdc2d4817",
+    "claimedAtUtc":  "2026-11-03T14:02:45.6120266",
+    "taskId":  "TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250",
+    "bridgeRowId":  "3bdbb075-f387-4f35-a7a0-c5235b3d2818"
+}

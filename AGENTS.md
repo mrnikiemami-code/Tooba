@@ -1,8 +1,13 @@
-# CURRENT — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
+# CURRENT — 250 PASS: cart rial totals + seller grouping — 2026-11-03
+
+Read docs/ai/tasks/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/TASK.md and docs/architecture/evidence/TB-STOREFRONT-CART-RIAL-TOTALS-AND-SELLER-GROUPING-250/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued cart money/grouping + mount + deploy scope, decision **CART_TOTALS_BY_CURRENCY_IRR_INTEGER_AND_SELLER_SECTIONS_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `4ce605905`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. LANDED: map `totalsByCurrency` (no silent 0); IRR integer via FinancialRounder places; sellerPartyId sections. Focused money 21/21 + cart-mount 10/10. Live Active cart `01a1a1b2-…` IRR 13824519.72 → ۱۳٬۸۲۴٬۵۲۰ ریال; 2 seller sections; no IRR fraction glyph. No migration/mutation. 249 Tipax remains deferred external-only. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 249-R8 PASS: create outcome classification + in-flight uncertainty — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-GROUP-CARRIER-EXECUTION-249-R8/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued FE outcome/uncertainty + mount + deploy scope, decision **CREATE_OUTCOME_CLASSIFICATION_AND_IN_FLIGHT_UNCERTAINTY_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `480241eff`.
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha (FE redeployed; Host retained). LANDED: uncertain before POST; conservative 5xx/malformed/mismatch classification; reconcile independent of canCreate; exact-occurrence resolution; mount A–D via `test:carrier-mount` **30/30**. No migration. Authorized Manual+payment_locked. LIVE TIPAX deferred (external-only). STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS** within issued FE outcome/uncertainty + mount + deploy scope, decision **CREATE_OUTCOME_CLASSIFICATION_AND_IN_FLIGHT_UNCERTAINTY_DEPLOYED_PROVIDER_UNVERIFIED**, NOT Architect/live-provider ACCEPT. Base `480241eff`. LIVE TIPAX deferred (external-only). STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 249-R7 PASS: occurrence prebound before first create + response-loss recovery — 2026-11-03
 

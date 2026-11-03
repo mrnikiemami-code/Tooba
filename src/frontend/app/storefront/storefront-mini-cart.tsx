@@ -93,7 +93,12 @@ export function StorefrontMiniCartDrawer({
       void loadStorefrontCart()
         .then((page) => {
           if (mine !== generation) return;
-          setCart(page);
+          setCart((prev) => {
+            if (prev && page && page.version < prev.version) {
+              return prev;
+            }
+            return page;
+          });
           setError(null);
         })
         .catch((cause: unknown) => {
@@ -139,8 +144,13 @@ export function StorefrontMiniCartDrawer({
 
   const lines = cart?.lines ?? [];
   const itemCount = cart?.itemCount ?? 0;
-  const subtotal = cart?.subtotalExclusiveOfTax ?? 0;
   const currency = cart?.currency ?? "IRR";
+  const goodsAvailable = Boolean(cart?.goodsSubtotalAvailable && cart.subtotalExclusiveOfTax != null);
+  const subtotalLabel = goodsAvailable
+    ? formatOfferAmount(cart!.subtotalExclusiveOfTax as number, currency)
+    : locale === "en"
+      ? "Unavailable"
+      : "نامشخص";
 
   return (
     <div
@@ -255,8 +265,14 @@ export function StorefrontMiniCartDrawer({
         {lines.length > 0 ? (
           <div className="p-4 border-t border-gray-200 bg-gray-50" data-testid="mini-cart-footer">
             <div className="flex justify-between font-bold mb-3 text-base">
-              <span className="text-gray-700">جمع کل</span>
-              <span className="text-primary">{formatOfferAmount(subtotal, currency)}</span>
+              <span className="text-gray-700">مبلغ کالا (بدون مالیات)</span>
+              <span
+                className={goodsAvailable ? "text-primary" : "text-amber-700"}
+                data-testid="mini-cart-goods-amount"
+                data-goods-available={goodsAvailable ? "true" : "false"}
+              >
+                {subtotalLabel}
+              </span>
             </div>
             <LocalizedLink
               href="/cart"

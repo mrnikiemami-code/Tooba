@@ -7,19 +7,15 @@ import {
   ChevronLeft,
   CreditCard,
   HeadphonesIcon,
-  Minus,
   Percent,
-  Plus,
   RotateCcw,
   Shield,
   ShieldCheck,
   ShoppingBag,
   Tag,
-  Trash2,
   Truck,
 } from "lucide-react";
-import { formatQuantityDisplay, parseQuantityInput } from "../../lib/quantity-display.ts";
-import { formatOfferAmount, loadStorefrontHome, storefrontMediaUrl } from "./storefront-api.ts";
+import { formatOfferAmount, loadStorefrontHome } from "./storefront-api.ts";
 import {
   CART_CHANGED_EVENT,
   changeCartLineQuantity,
@@ -44,6 +40,7 @@ import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import type { StorefrontProductCard } from "./storefront-model.ts";
 import { pickCartRecommendations } from "./storefront-cart-recommendations.ts";
 import { noteCartOwnerRead } from "./storefront-cart-read-ownership.ts";
+import { StorefrontCartSellerSections } from "./storefront-cart-seller-sections.tsx";
 
 /**
  * سبد خرید با پوستهٔ Shopeiva روی حقیقت Cart Host.
@@ -124,7 +121,12 @@ export function StorefrontShopeivaCart() {
           if (mine !== generation) {
             return;
           }
-          setCart(page);
+          setCart((prev) => {
+            if (prev && page && page.version < prev.version) {
+              return prev;
+            }
+            return page;
+          });
           setError(null);
           setCouponDiscount(null);
         })
@@ -185,7 +187,7 @@ export function StorefrontShopeivaCart() {
       setCouponDiscount(preview.discountAmount);
       setCouponMessage(
         preview.discountAmount > 0
-          ? `تخفیف ${formatOfferAmount(preview.discountAmount, preview.currency)} از Host اعمال شد.`
+          ? `تخفیف ${formatOfferAmount(preview.discountAmount, preview.currency)} اعمال شد.`
           : "این کد برای سبد فعلی قابل اعمال نیست.",
       );
     } catch (cause) {
@@ -217,16 +219,20 @@ export function StorefrontShopeivaCart() {
   }
 
   const itemCount = cart?.itemCount ?? 0;
-  const subtotal = cart?.subtotalExclusiveOfTax ?? 0;
   const currency = cart?.currency ?? "IRR";
+  const goodsAvailable = Boolean(cart?.goodsSubtotalAvailable && cart.subtotalExclusiveOfTax != null);
+  const subtotal = goodsAvailable ? (cart!.subtotalExclusiveOfTax as number) : null;
+  const goodsLabel =
+    subtotal != null ? formatOfferAmount(subtotal, currency) : locale === "en" ? "Unavailable" : "نامشخص";
   const discountPercent =
-    couponDiscount != null && couponDiscount > 0 && subtotal > 0
+    couponDiscount != null && couponDiscount > 0 && subtotal != null && subtotal > 0
       ? Math.min(100, Math.round((couponDiscount / subtotal) * 100))
       : 0;
   const cartProductIds = new Set((cart?.lines ?? []).map((line) => line.productId).filter(Boolean));
   const recommendationCards = recommendations
     .filter((card) => card.inStock && card.primaryOfferId && !cartProductIds.has(card.productId))
     .slice(0, 8);
+  const checkoutBlocked = !goodsAvailable;
 
   return (
     <div className="pb-10 bg-section-surface" data-testid="cart-page" data-storefront-surface-role="section">
@@ -238,7 +244,7 @@ export function StorefrontShopeivaCart() {
         <span className="text-gray-800 font-bold">سبد خرید</span>
       </nav>
 
-      <CartHero itemCount={itemCount} subtotalLabel={formatOfferAmount(subtotal, currency)} discountPercent={discountPercent} />
+      <CartHero itemCount={itemCount} subtotalLabel={goodsLabel} discountPercent={discountPercent} />
 
       <div id="pending-payments">
         <StorefrontPendingPayments
@@ -259,84 +265,15 @@ export function StorefrontShopeivaCart() {
                   {error}
                 </p>
               ) : null}
-              {cart.lines.map((line) => (
-                <div
-                  key={line.lineId}
-                  className="bg-surface rounded-2xl border border-gray-200 p-3 md:p-4 shadow-sm hover:shadow-md transition-all" data-storefront-surface-role="card"
-                  data-testid="cart-line"
-                >
-                  <div className="flex gap-3 md:gap-4">
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={storefrontMediaUrl(line.mediaAssetId)} alt="" className="w-full h-full object-contain p-2" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <Link
-                            href={line.productSlug ? `/products/${line.productSlug}` : "/products"}
-                            className="text-sm md:text-base font-bold text-gray-900 hover:text-primary line-clamp-1"
-                          >
-                            {line.title}
-                          </Link>
-                          <p className="text-[11px] text-gray-500 mt-1">فروشنده: {line.sellerDisplayName}</p>
-                          {line.availability && line.availability !== "Available" ? (
-                            <p className="text-[11px] text-amber-700 mt-1" data-testid="cart-line-availability">
-                              {line.availability === "Unavailable"
-                                ? (locale === "en" ? "Currently unavailable" : "این کالا فعلاً موجود نیست")
-                                : (locale === "en" ? "Limited quantity available" : "موجودی کمتر از تعداد سبد است")}
-                            </p>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void mutate(() => removeCartLine(line.lineId))}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 shrink-0"
-                          title="حذف کالا"
-                          aria-label="حذف کالا"
-                          data-testid="cart-line-remove"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap items-end justify-between gap-2 mt-2">
-                        <div className="flex items-center gap-2">
-                          <CartLineQuantityInput
-                            quantity={line.quantity}
-                            decimalPlaces={line.quantityDecimalPlaces}
-                            step={line.quantityStep}
-                            unitLabel={line.unitDisplayName ?? line.unitCode}
-                            busy={busy}
-                            onCommit={(next) => void mutate(() => changeCartLineQuantity(line.lineId, next))}
-                          />
-                        </div>
-                        <div className="text-left">
-                          {line.unitAmountExclusiveOfTax != null ? (
-                            <p className="text-xs text-gray-500">واحد: {formatOfferAmount(line.unitAmountExclusiveOfTax, line.currency)}</p>
-                          ) : null}
-                          <p className="text-sm font-black text-primary">
-                            {line.lineAmountExclusiveOfTax != null
-                              ? formatOfferAmount(line.lineAmountExclusiveOfTax, line.currency)
-                              : "—"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void mutate(() => removeCartLine(line.lineId))}
-                          className="flex items-center gap-1 text-[10px] md:text-xs text-gray-400 hover:text-red-500"
-                        >
-                          <Trash2 className="w-3 h-3" /> حذف
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
+              <StorefrontCartSellerSections
+                lines={cart.lines}
+                busy={busy}
+                locale={locale === "en" ? "en" : "fa"}
+                onRemove={(lineId) => void mutate(() => removeCartLine(lineId))}
+                onChangeQuantity={(lineId, quantity) =>
+                  void mutate(() => changeCartLineQuantity(lineId, quantity))
+                }
+              />
             </div>
 
             <div className="lg:col-span-1">
@@ -351,21 +288,48 @@ export function StorefrontShopeivaCart() {
                       <span className="text-gray-500">تعداد کالاها</span>
                       <span className="font-bold">{cart.itemCount.toLocaleString("fa-IR")}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between" data-testid="cart-summary-goods">
                       <span className="text-gray-500">مبلغ کالا (بدون مالیات)</span>
-                      <span className="font-bold">{formatOfferAmount(cart.subtotalExclusiveOfTax, cart.currency)}</span>
+                      <span
+                        className={`font-bold ${goodsAvailable ? "" : "text-amber-700"}`}
+                        data-testid="cart-summary-goods-amount"
+                        data-goods-available={goodsAvailable ? "true" : "false"}
+                      >
+                        {goodsLabel}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">هزینه ارسال</span>
                       <span className="font-bold text-gray-500">در تسویه</span>
                     </div>
-                    <div className="border-t border-gray-200 pt-2.5 flex justify-between">
-                      <span className="font-black">قابل پرداخت</span>
-                      <span className="font-black text-primary">
-                        {formatOfferAmount(cart.subtotalExclusiveOfTax, cart.currency)}
+                    <div className="border-t border-gray-200 pt-2.5 flex justify-between" data-testid="cart-summary-pending-final">
+                      <span className="font-black">مبلغ نهایی</span>
+                      <span className="font-black text-gray-500 text-xs md:text-sm">
+                        پس از انتخاب ارسال
                       </span>
                     </div>
                   </div>
+                  {checkoutBlocked ? (
+                    <p
+                      className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-2"
+                      role="status"
+                      data-testid="cart-goods-unavailable"
+                    >
+                      مبلغ کالا در دسترس نیست؛ ادامه به ارسال فعلاً ممکن نیست.
+                    </p>
+                  ) : null}
+                  {checkoutBlocked ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="mt-4 w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-gray-300 text-gray-600 cursor-not-allowed"
+                      data-testid="cart-checkout-cta"
+                      aria-disabled="true"
+                    >
+                      ادامه خرید
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                  ) : (
                   <Link
                     href={checkoutHref}
                     className="mt-4 w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-strong shadow-lg shadow-primary/25"
@@ -374,6 +338,7 @@ export function StorefrontShopeivaCart() {
                     ادامه خرید
                     <ChevronLeft className="w-4 h-4" />
                   </Link>
+                  )}
                   <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-gray-400">
                     <span className="flex items-center gap-1">
                       <Shield className="w-3 h-3" /> پرداخت امن
@@ -432,80 +397,6 @@ export function StorefrontShopeivaCart() {
           </div>
         </section>
       ) : null}
-    </div>
-  );
-}
-
-function CartLineQuantityInput({
-  quantity,
-  decimalPlaces,
-  step,
-  unitLabel,
-  busy,
-  onCommit,
-}: {
-  quantity: number;
-  decimalPlaces: number;
-  step: number | null;
-  unitLabel: string | null;
-  busy: boolean;
-  onCommit: (next: number) => void;
-}) {
-  const [text, setText] = useState(formatQuantityDisplay(quantity, decimalPlaces));
-  useEffect(() => {
-    setText(formatQuantityDisplay(quantity, decimalPlaces));
-  }, [quantity, decimalPlaces]);
-
-  const bump = step && step > 0 ? step : 1;
-  function commit(raw: string) {
-    const parsed = parseQuantityInput(raw);
-    if (parsed == null) {
-      setText(formatQuantityDisplay(quantity, decimalPlaces));
-      return;
-    }
-    onCommit(parsed);
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden" data-testid="cart-line-qty">
-        <button
-          type="button"
-          disabled={busy || quantity <= bump}
-          onClick={() => onCommit(Math.max(bump, quantity - bump))}
-          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
-          aria-label="کاهش"
-        >
-          <Minus className="w-3.5 h-3.5" />
-        </button>
-        <input
-          className="w-16 h-8 text-center text-sm font-bold border-x border-gray-200 bg-surface tabular-nums"
-          value={text}
-          disabled={busy}
-          inputMode="decimal"
-          dir="ltr"
-          aria-label="تعداد"
-          data-testid="cart-line-qty-input"
-          onChange={(event) => setText(event.target.value)}
-          onBlur={() => commit(text)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              commit(text);
-            }
-          }}
-        />
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => onCommit(quantity + bump)}
-          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100"
-          aria-label="افزایش"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </button>
-      </div>
-      {unitLabel ? <span className="text-[11px] text-gray-500">{unitLabel}</span> : null}
     </div>
   );
 }

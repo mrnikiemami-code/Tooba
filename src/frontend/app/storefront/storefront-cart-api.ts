@@ -293,46 +293,16 @@ export function isActiveShoppingCartStatus(status: string | null | undefined): b
   return normalized === "active";
 }
 
-/**
- * خط سبد نمایشی. مبلغ از نقل‌قول Host است.
- */
-export interface StorefrontCartLine {
-  lineId: string;
-  offerId: string;
-  catalogVariantId: string;
-  sellerPartyId: string;
-  productId: string | null;
-  productSlug: string | null;
-  title: string;
-  sellerDisplayName: string;
-  mediaAssetId: string | null;
-  quantity: number;
-  unitAmountExclusiveOfTax: number | null;
-  lineAmountExclusiveOfTax: number | null;
-  currency: string;
-  quotedTaxExclusive: boolean;
-  unitCode: string | null;
-  unitDisplayName: string | null;
-  quantityDecimalPlaces: number;
-  quantityStep: number | null;
-  availability: string;
-}
-
-/**
- * صفحهٔ سبد زنده.
- */
-export interface StorefrontCartPage {
-  cartId: string;
-  version: number;
-  market: string;
-  currency: string;
-  channel: string;
-  itemCount: number;
-  subtotalExclusiveOfTax: number;
-  lines: StorefrontCartLine[];
-  guestSecret: string | null;
-  status: string;
-}
+export type {
+  StorefrontCartCurrencyTotal,
+  StorefrontCartLine,
+  StorefrontCartPage,
+} from "./storefront-cart-map.ts";
+export { mapStorefrontCart } from "./storefront-cart-map.ts";
+import {
+  mapStorefrontCart,
+  type StorefrontCartPage,
+} from "./storefront-cart-map.ts";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -344,87 +314,6 @@ function readProp(record: Record<string, unknown>, camel: string, pascal: string
 
 function asString(value: unknown, fallback = ""): string {
   return value == null ? fallback : String(value);
-}
-
-function asNumber(value: unknown, fallback = 0): number {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function asBoolean(value: unknown, fallback = false): boolean {
-  return typeof value === "boolean" ? value : fallback;
-}
-
-/**
- * JSON سبد Host را نگاشت می‌کند. فیلد price روی Product پذیرفته نمی‌شود.
- */
-export function mapStorefrontCart(payload: unknown): StorefrontCartPage | null {
-  const item = asRecord(payload);
-  if (!item) {
-    return null;
-  }
-  const cartId = asString(readProp(item, "cartId", "CartId"));
-  if (!cartId) {
-    return null;
-  }
-  const linesRaw = readProp(item, "lines", "Lines");
-  const secretRaw = readProp(item, "guestSecret", "GuestSecret");
-  return {
-    cartId,
-    version: asNumber(readProp(item, "version", "Version")),
-    market: asString(readProp(item, "market", "Market"), "IR"),
-    currency: asString(readProp(item, "currency", "Currency"), "IRR"),
-    channel: asString(readProp(item, "channel", "Channel")),
-    itemCount: asNumber(readProp(item, "itemCount", "ItemCount")),
-    subtotalExclusiveOfTax: asNumber(readProp(item, "subtotalExclusiveOfTax", "SubtotalExclusiveOfTax")),
-    guestSecret: secretRaw == null ? null : asString(secretRaw),
-    status: asString(readProp(item, "status", "Status"), "Active"),
-    lines: Array.isArray(linesRaw)
-      ? linesRaw.map((row) => {
-          const line = asRecord(row) ?? {};
-          const productRaw = readProp(line, "productId", "ProductId");
-          const slugRaw = readProp(line, "productSlug", "ProductSlug");
-          const mediaRaw = readProp(line, "mediaAssetId", "MediaAssetId");
-          const unitRaw = readProp(line, "unitAmountExclusiveOfTax", "UnitAmountExclusiveOfTax");
-          const lineRaw = readProp(line, "lineAmountExclusiveOfTax", "LineAmountExclusiveOfTax");
-          return {
-            lineId: asString(readProp(line, "lineId", "LineId")),
-            offerId: asString(readProp(line, "offerId", "OfferId")),
-            catalogVariantId: asString(readProp(line, "catalogVariantId", "CatalogVariantId")),
-            sellerPartyId: asString(readProp(line, "sellerPartyId", "SellerPartyId")),
-            productId: productRaw == null ? null : asString(productRaw),
-            productSlug: slugRaw == null ? null : asString(slugRaw),
-            title: asString(readProp(line, "title", "Title"), "کالا"),
-            sellerDisplayName: asString(readProp(line, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
-            mediaAssetId: mediaRaw == null ? null : asString(mediaRaw),
-            quantity: asNumber(readProp(line, "quantity", "Quantity"), 1),
-            unitAmountExclusiveOfTax: unitRaw == null ? null : asNumber(unitRaw),
-            lineAmountExclusiveOfTax: lineRaw == null ? null : asNumber(lineRaw),
-            currency: asString(readProp(line, "currency", "Currency"), "IRR"),
-            quotedTaxExclusive: asBoolean(readProp(line, "quotedTaxExclusive", "QuotedTaxExclusive"), true),
-            unitCode: (() => {
-              const raw = readProp(line, "unitCode", "UnitCode");
-              const text = asString(raw);
-              return text.length > 0 ? text : null;
-            })(),
-            unitDisplayName: (() => {
-              const raw = readProp(line, "unitDisplayName", "UnitDisplayName");
-              const text = asString(raw);
-              return text.length > 0 ? text : null;
-            })(),
-            quantityDecimalPlaces: asNumber(readProp(line, "quantityDecimalPlaces", "QuantityDecimalPlaces")),
-            quantityStep: (() => {
-              const raw = readProp(line, "quantityStep", "QuantityStep");
-              return raw == null || raw === "" ? null : asNumber(raw);
-            })(),
-            availability: asString(readProp(line, "availability", "Availability"), "Available"),
-          } satisfies StorefrontCartLine;
-        })
-      : [],
-  };
 }
 
 export type StorefrontCartApiErrorMeta = {
