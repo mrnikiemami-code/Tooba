@@ -1,4 +1,9 @@
-# CURRENT — 251 PASS: group delivery calendar closure (storefront shipping; Tipax still deferred) — 2026-11-03
+# CURRENT — 252 PASS: accepted-group parcel execution in order UI (Tipax still deferred) — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/{TASK.md,RESULT.md,RECEIPTS.md}.
+Worker decision **ACCEPTED_GROUP_PARCEL_EXECUTION_UI_AND_SERVER_BIND_DEPLOYED**. Base `7786d4bc0`. Seller sections keep context; accepted delivery groups own method/date/fee/lines; Create parcel binds to `shippingGroupId` with server-derived method (legacy catalogue/ops-menu override removed/guarded). Live read-only handoff order `01a1a200-cbd2-…` shows two پیشتاز groups with distinct dates. CapturedPreview local ON (checked-in OFF). Open external-only Tipax unchanged. NOT Visual ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 251 PASS: group delivery calendar closure (storefront shipping; Tipax still deferred) — 2026-11-03
 
 Read docs/ai/tasks/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/TASK.md and docs/architecture/evidence/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/{TASK.md,RESULT.md,RECEIPTS.md}.
 Worker decision **GROUP_DELIVERY_CALENDAR_VISIBLE_AND_CURRENCY_IDENTITY_GUARDS_DEPLOYED**. Base `7d916bc7a`. User: selecting a method on one shipping group showed no date/hour. Measured: Host CapturedPreview local gates OFF (no calendars) + FE silent empty/malformed slots. Fixed FE slotsStatus + owning blockers; restored Host **local** CapturedPreview ON (checked-in remains OFF). Active cart both groups 7 dates × 8 slots; independent DOM calendars. Do not treat 250 cart seller sections as shipping calendar proof. Open external-only Tipax unchanged. NOT Visual ACCEPT. STOP_FOR_ARCHITECT; automaticNext NONE.

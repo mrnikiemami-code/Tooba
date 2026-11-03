@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { MoreHorizontal, Package, Truck } from "lucide-react";
 import { toast } from "react-toastify";
-import { formatAdminMoney, formatAdminStatus, type AdminOrderDetail, type AdminOrderLine, type AdminSellerOrder, type AdminShipment } from "./admin-api";
+import {
+  formatAdminMoney,
+  formatAdminStatus,
+  type AdminAcceptedShippingGroup,
+  type AdminOrderDetail,
+  type AdminOrderLine,
+  type AdminSellerOrder,
+  type AdminShipment,
+} from "./admin-api";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
 import { AdminConsolidatedPackageSection } from "./admin-consolidated-package-section";
 import {
@@ -127,7 +135,10 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
   const [opsLoaded, setOpsLoaded] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [openKebabLineId, setOpenKebabLineId] = useState<string | null>(null);
-  const [shipmentModalSellerId, setShipmentModalSellerId] = useState<string | null>(null);
+  const [shipmentModalTarget, setShipmentModalTarget] = useState<{
+    seller: AdminSellerOrder;
+    group: AdminAcceptedShippingGroup;
+  } | null>(null);
   const [trackingTarget, setTrackingTarget] = useState<{
     seller: AdminSellerOrder;
     shipment: AdminShipment;
@@ -295,7 +306,6 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       .filter((t): t is string => Boolean(t && t.trim())),
   );
 
-  const modalSeller = detail.sellerOrders.find((s) => s.id === shipmentModalSellerId) ?? null;
 
   return (
     <section
@@ -342,11 +352,12 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
             && Boolean(actionFor(actions, "unpack", seller.id));
           const selectedShippable = hasSelection && !mixedSelection && perLineCaps.length > 0
             && perLineCaps.every((cap) => cap.shipmentEligibleQuantity > 0);
-          const canCreate = !paymentLocked
+          const canCreateBase = !paymentLocked
             && Boolean(actionFor(actions, "create_shipment", seller.id))
             && (hasSelection
               ? selectedShippable
               : (sellerCap?.shipmentCreationPossible ?? seller.lines.some((line) => shippableQty(line) > 0)));
+          const sellerGroups = (detail.shippingGroups ?? []).filter((g) => g.sellerOrderId === seller.id);
           const shipments = seller.shipments ?? [];
           const itemCount = seller.lines.reduce((sum, line) => sum + line.quantity, 0);
           const selectableLines = seller.lines.filter((line) => capabilityFor(seller, line).selectable);
@@ -817,17 +828,74 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       );
                     })()
                   )}
-                  {canCreate ? (
-                    <button
-                      type="button"
-                      disabled={pendingCode !== null}
-                      onClick={() => setShipmentModalSellerId(seller.id)}
-                      className="mt-3 w-full rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                      data-testid={`admin-order-seller-create-shipment-${seller.id}`}
+                  {sellerGroups.length === 0 ? (
+                    <p
+                      className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900"
+                      data-testid={`admin-order-seller-no-accepted-groups-${seller.id}`}
                     >
-                      {hasSelection ? labels.createShipment : "+ ایجاد مرسوله جدید"}
-                    </button>
-                  ) : null}
+                      این سفارش شاهد گروه ارسال پذیرفته‌شده ندارد؛ ایجاد مرسوله از این مسیر در دسترس نیست.
+                    </p>
+                  ) : (
+                    <div className="mt-3 space-y-2" data-testid={`admin-order-seller-accepted-groups-${seller.id}`}>
+                      {sellerGroups.map((group) => {
+                        const groupShipments = shipments.filter((s) => s.shippingGroupId === group.shippingGroupId);
+                        const groupSelectedOk = !hasSelection || selected.every((id) => {
+                          const line = seller.lines.find((l) => lineKey(l) === id);
+                          const lineId = line ? (line.orderLineId || line.id) : id;
+                          return group.orderLineIds.includes(lineId);
+                        });
+                        const canCreateGroup = canCreateBase
+                          && group.createParcelEligible
+                          && groupSelectedOk;
+                        const deliveryBits = [
+                          group.deliveryDate,
+                          group.deliveryTimeWindow,
+                        ].filter((x) => x && String(x).trim());
+                        return (
+                          <div
+                            key={group.shippingGroupId}
+                            className="rounded-lg border border-indigo-100 bg-indigo-50/30 p-2"
+                            data-testid={`admin-order-shipping-group-${group.shippingGroupId}`}
+                          >
+                            <p className="text-[11px] font-black text-indigo-950">
+                              {group.methodLabel || group.methodCode}
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-gray-600">
+                              {deliveryBits.length > 0 ? deliveryBits.join(" · ") : "زمان تحویل ثبت نشده"}
+                              {" · "}
+                              {formatAdminMoney(group.payableAtCheckoutAmount || group.shippingChargeSnapshot, group.currency)}
+                            </p>
+                            {group.ownerKind ? (
+                              <p className="mt-0.5 text-[10px] text-gray-500">مسئولیت: {group.ownerKind}</p>
+                            ) : null}
+                            {groupShipments.length > 0 ? (
+                              <p className="mt-1 text-[10px] text-gray-500">
+                                مرسوله‌های این گروه: {groupShipments.length.toLocaleString("fa-IR")}
+                              </p>
+                            ) : null}
+                            {canCreateGroup ? (
+                              <button
+                                type="button"
+                                disabled={pendingCode !== null}
+                                onClick={() => setShipmentModalTarget({ seller, group })}
+                                className="mt-2 w-full rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                                data-testid={`admin-order-group-create-shipment-${group.shippingGroupId}`}
+                              >
+                                {hasSelection ? labels.createShipment : "+ ایجاد مرسوله این گروه"}
+                              </button>
+                            ) : (
+                              <p className="mt-2 text-[10px] text-amber-800" role="status">
+                                {group.createParcelBlockReasonFa
+                                  ?? (!groupSelectedOk
+                                    ? "انتخاب فعلی شامل اقلام خارج از این گروه است."
+                                    : "ایجاد مرسوله برای این گروه در دسترس نیست.")}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   {!opsLoaded ? <p className="mt-2 text-[11px] text-gray-400">بارگذاری عملیات…</p> : null}
                 </aside>
               </div>
@@ -856,17 +924,19 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
         }}
       />
 
-      {modalSeller ? (
+      {shipmentModalTarget ? (
         <AdminCreateShipmentModal
           open
-          onClose={() => setShipmentModalSellerId(null)}
+          onClose={() => setShipmentModalTarget(null)}
           checkoutId={checkoutId}
-          sellerOrder={modalSeller}
-          fulfillmentId={modalSeller.fulfillmentId}
+          sellerOrder={shipmentModalTarget.seller}
+          fulfillmentId={shipmentModalTarget.seller.fulfillmentId}
+          shippingGroup={shipmentModalTarget.group}
           orderDetail={detail}
-          selectedLines={(selectedBySeller[modalSeller.id] ?? [])
-            .map((id) => modalSeller.lines.find((l) => lineKey(l) === id))
+          selectedLines={(selectedBySeller[shipmentModalTarget.seller.id] ?? [])
+            .map((id) => shipmentModalTarget.seller.lines.find((l) => lineKey(l) === id))
             .filter((l): l is AdminOrderLine => Boolean(l))
+            .filter((line) => shipmentModalTarget.group.orderLineIds.includes(line.orderLineId || line.id))
             .map((line) => ({
               line,
               quantity: Math.min(
@@ -876,7 +946,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
             }))
             .filter((x) => x.quantity > 0)}
           onCompleted={() => {
-            setShipmentModalSellerId(null);
+            setShipmentModalTarget(null);
             onCompleted?.();
           }}
         />

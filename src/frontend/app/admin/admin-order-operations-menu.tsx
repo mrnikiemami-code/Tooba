@@ -159,8 +159,7 @@ export function AdminOrderOperationsMenu({
     if (!action) return;
     setConfirmAction(null);
     if (action.code === "create_shipment") {
-      setCarrierValue("پست");
-      setCarrierAction(action);
+      toast.info("ایجاد مرسوله فقط از کارت گروه ارسال پذیرفته‌شده در بخش اقلام و ارسال انجام می‌شود.");
       return;
     }
     if (requiresTrackingInput(action.code)) {

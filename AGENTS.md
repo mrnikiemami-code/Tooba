@@ -1,4 +1,10 @@
-# CURRENT — 251 PASS: group delivery calendar closure + currency identity guards — 2026-11-03
+# CURRENT — 252 PASS: accepted-group parcel execution UI + server bind — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued group-bound create + order UI + deploy scope, decision **ACCEPTED_GROUP_PARCEL_EXECUTION_UI_AND_SERVER_BIND_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `7786d4bc0`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. LANDED: seller→accepted groups→parcel create; method catalogue removed from create modal; server derives/verifies accepted method + group membership/qty; ops-menu override blocked; admin detail exposes shippingGroups. Live read-only order `01a1a200-…` two groups پیشتاز distinct dates. CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 251 PASS: group delivery calendar closure + currency identity guards — 2026-11-03
 
 Read docs/ai/tasks/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/TASK.md and docs/architecture/evidence/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued calendar + currency residual + deploy scope, decision **GROUP_DELIVERY_CALENDAR_VISIBLE_AND_CURRENCY_IDENTITY_GUARDS_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `7d916bc7a`.

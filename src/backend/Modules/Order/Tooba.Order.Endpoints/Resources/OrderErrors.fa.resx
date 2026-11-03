@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -224,5 +224,26 @@
   </data>
   <data name="storefront.captured_selection.pending_work" xml:space="preserve">
     <value>تغییرات ذخیره‌نشدهٔ دیگری در جریان است. ابتدا آن را کامل کنید و دوباره تلاش کنید.</value>
+  </data>
+  <data name="order.shipment.accepted_group_required" xml:space="preserve">
+    <value>قبل از ایجاد مرسوله باید گروه ارسال پذیرفته‌شده را مشخص کنید.</value>
+  </data>
+  <data name="order.shipment.accepted_group_unavailable" xml:space="preserve">
+    <value>این سفارش شاهد گروه ارسال پذیرفته‌شده ندارد؛ ایجاد مرسوله در دسترس نیست.</value>
+  </data>
+  <data name="order.shipment.accepted_group_foreign" xml:space="preserve">
+    <value>گروه ارسال انتخاب‌شده متعلق به این سفارش فروشنده نیست.</value>
+  </data>
+  <data name="order.shipment.accepted_group_method_mismatch" xml:space="preserve">
+    <value>روش ارسال نمی‌تواند با تعهد پذیرفته‌شدهٔ تحویل متفاوت باشد.</value>
+  </data>
+  <data name="order.shipment.accepted_group_line_foreign" xml:space="preserve">
+    <value>یک یا چند قلم خارج از گروه ارسال پذیرفته‌شده است.</value>
+  </data>
+  <data name="order.shipment.accepted_group_quantity_excess" xml:space="preserve">
+    <value>تعداد درخواستی از مقدار بسته‌بندی‌شدهٔ باقی‌ماندهٔ این گروه بیشتر است.</value>
+  </data>
+  <data name="order.shipment.accepted_group_not_executable" xml:space="preserve">
+    <value>در وضعیت فعلی سفارش، ایجاد مرسوله برای این گروه ارسال ممکن نیست.</value>
   </data>
 </root>

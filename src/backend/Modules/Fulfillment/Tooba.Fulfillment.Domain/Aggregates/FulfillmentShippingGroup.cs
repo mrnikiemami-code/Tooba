@@ -177,6 +177,9 @@ public static class FulfillmentShippingGroupFault
     /// <summary>سفارش گروه‌دار بدون گروه برای محموله.</summary>
     public const string ShipmentGroupRequired = "fulfillment.shipment.shipping_group_required";
 
+    /// <summary>کد روش ارسالی با روش پذیرفته‌شدهٔ گروه یکی نیست.</summary>
+    public const string ShipmentMethodMismatch = "fulfillment.shipment.shipping_group_method_mismatch";
+
     /// <summary>گروه اعلام‌شده در این واحد وجود ندارد.</summary>
     public const string GroupNotFound = "fulfillment.shipment.shipping_group_not_found";
 

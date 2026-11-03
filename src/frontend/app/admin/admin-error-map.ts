@@ -222,6 +222,34 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "انجام عملیات سفارش ناموفق بود.",
     en: "The order operation could not be completed.",
   },
+  "order.shipment.accepted_group_required": {
+    fa: "قبل از ایجاد مرسوله باید گروه ارسال پذیرفته‌شده را مشخص کنید.",
+    en: "Select an accepted delivery group before creating a parcel.",
+  },
+  "order.shipment.accepted_group_unavailable": {
+    fa: "این سفارش شاهد گروه ارسال پذیرفته‌شده ندارد؛ ایجاد مرسوله در دسترس نیست.",
+    en: "This order has no accepted delivery-group evidence; parcel create is unavailable.",
+  },
+  "order.shipment.accepted_group_foreign": {
+    fa: "گروه ارسال انتخاب‌شده متعلق به این سفارش فروشنده نیست.",
+    en: "The selected delivery group does not belong to this seller order.",
+  },
+  "order.shipment.accepted_group_method_mismatch": {
+    fa: "روش ارسال نمی‌تواند با تعهد پذیرفته‌شدهٔ تحویل متفاوت باشد.",
+    en: "Shipping method cannot differ from the accepted delivery commitment.",
+  },
+  "order.shipment.accepted_group_line_foreign": {
+    fa: "یک یا چند قلم خارج از گروه ارسال پذیرفته‌شده است.",
+    en: "One or more lines are outside the accepted delivery group.",
+  },
+  "order.shipment.accepted_group_quantity_excess": {
+    fa: "تعداد درخواستی از مقدار بسته‌بندی‌شدهٔ باقی‌ماندهٔ این گروه بیشتر است.",
+    en: "Requested quantity exceeds remaining packed quantity for this group.",
+  },
+  "order.shipment.accepted_group_not_executable": {
+    fa: "در وضعیت فعلی سفارش، ایجاد مرسوله برای این گروه ارسال ممکن نیست.",
+    en: "This delivery group cannot create a parcel in the current order state.",
+  },
   "payment.restore.not_manual": {
     fa: "فقط پرداخت کارت‌به‌کارت/دستی قابل بازگردانی است.",
     en: "Only manual or card-to-card payments can be restored.",

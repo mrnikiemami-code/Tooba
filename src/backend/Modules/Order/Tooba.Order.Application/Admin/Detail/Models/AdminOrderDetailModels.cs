@@ -40,7 +40,31 @@ public sealed record AdminShipmentView(
     Guid? ActivePackageId = null,
     string? ActivePackageNumber = null,
     string? PackageLockedReasonFa = null,
-    bool CanAddToConsolidatedPackage = false);
+    bool CanAddToConsolidatedPackage = false,
+    Guid? ShippingGroupId = null);
+
+/// <summary>گروه ارسال پذیرفته‌شدهٔ مشتری روی جزئیات سفارش مدیر (فقط‌خواندنی).</summary>
+public sealed record AdminAcceptedShippingGroupView(
+    Guid ShippingGroupId,
+    Guid SellerOrderId,
+    Guid SellerPartyId,
+    string MethodCode,
+    string MethodLabel,
+    string? ServiceCode,
+    string? OptionCode,
+    decimal ShippingChargeSnapshot,
+    string Currency,
+    DateOnly? DeliveryDate,
+    string? DeliveryTimeWindow,
+    string? DeliveryTimeZone,
+    string? OwnerKind,
+    string? OwnerTenantKey,
+    Guid? OwnerSellerPartyId,
+    IReadOnlyList<Guid> OrderLineIds,
+    bool CreateParcelEligible,
+    string? CreateParcelBlockReasonFa,
+    decimal PayableAtCheckoutAmount,
+    decimal CarrierCollectAmount);
 
 /// <summary>عضو بسته تجمیعی روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminConsolidatedPackageMemberView(
@@ -145,7 +169,8 @@ public sealed record AdminOrderDetailPage(
     AdminFinancialSummaryView FinancialSummary,
     AdminPaymentOpsView? Payment = null,
     IReadOnlyList<AdminConsolidatedPackageView>? ConsolidatedPackages = null,
-    AdminReservationCycleAuditView? ReservationCycle = null);
+    AdminReservationCycleAuditView? ReservationCycle = null,
+    IReadOnlyList<AdminAcceptedShippingGroupView>? ShippingGroups = null);
 
 /// <summary>بازرسی عملیاتی پرداخت روی جزئیات سفارش مدیر؛ راز یا payload خام ندارد.</summary>
 public sealed record AdminPaymentOpsView(

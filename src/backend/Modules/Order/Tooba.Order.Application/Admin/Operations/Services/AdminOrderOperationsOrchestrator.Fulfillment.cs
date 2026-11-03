@@ -197,41 +197,35 @@ public sealed partial class AdminOrderOperationsOrchestrator
         CancellationToken cancellationToken)
     {
         var fulfillmentId = RequireFulfillmentId(request);
-        var methodCode = request.ShippingMethodCode?.Trim();
-        var carrier = request.CarrierDisplayName?.Trim();
-        if (string.IsNullOrWhiteSpace(methodCode) && string.IsNullOrWhiteSpace(carrier))
-        {
-            throw new AdminOrderOperationsException("order.operation.invalid");
-        }
+        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
 
+        var checkoutGroups = await _committedShippingGroups.ListByCheckoutAsync(
+            snapshot.CheckoutId,
+            cancellationToken);
+        var bound = AcceptedGroupShipmentCreateBinder.Resolve(snapshot, request, checkoutGroups);
+
+        var methodCode = bound.ShippingMethodCode;
+        var carrier = bound.CarrierDisplayName;
         if (!string.IsNullOrWhiteSpace(methodCode))
         {
             var enabled = _fulfillment.ListEnabledShippingMethods().Any(x =>
                 string.Equals(x.Code, methodCode, StringComparison.OrdinalIgnoreCase));
-            if (!enabled)
+            if (enabled)
             {
-                throw new AdminOrderOperationsException("order.operation.invalid");
+                carrier = _fulfillment.ResolveShippingMethodLabel(methodCode, carrier);
             }
-
-            carrier = _fulfillment.ResolveShippingMethodLabel(methodCode, carrier);
-        }
-
-        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new AdminOrderOperationsException("order.operation.invalid");
-        var lines = ResolveShipmentSelections(snapshot, request.Selections);
-        if (lines.Length == 0)
-        {
-            throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
         return (await _fulfillment.CreateShipmentAsync(
             fulfillmentId,
             actorUserId,
-            carrier!,
-            lines,
+            carrier,
+            bound.Lines,
             methodCode,
             request.ProviderMetadataJson,
-            cancellationToken)).Snapshot;
+            cancellationToken,
+            bound.ShippingGroupId)).Snapshot;
     }
 
     private async Task<object> CancelShipmentCoreAsync(

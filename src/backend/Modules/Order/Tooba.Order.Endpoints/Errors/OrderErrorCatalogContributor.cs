@@ -170,6 +170,20 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "Order authorization service unavailable."),
         D(OrderErrorCodes.OperationDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
             "Order operation denied."),
+        D(OrderErrorCodes.AcceptedGroupRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Accepted delivery group is required."),
+        D(OrderErrorCodes.AcceptedGroupUnavailable, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Accepted delivery group evidence is unavailable."),
+        D(OrderErrorCodes.AcceptedGroupForeign, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Delivery group does not belong to this seller order."),
+        D(OrderErrorCodes.AcceptedGroupMethodMismatch, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Shipping method differs from the accepted commitment."),
+        D(OrderErrorCodes.AcceptedGroupLineForeign, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Line is outside the accepted delivery group."),
+        D(OrderErrorCodes.AcceptedGroupQuantityExcess, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Quantity exceeds remaining packed quantity for the group."),
+        D(OrderErrorCodes.AcceptedGroupNotExecutable, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Delivery group cannot create a parcel in the current state."),
     ];
 
     private static ErrorDescriptor D(

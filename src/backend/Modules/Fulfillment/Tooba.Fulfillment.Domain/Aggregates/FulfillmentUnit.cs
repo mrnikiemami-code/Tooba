@@ -435,6 +435,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
         var normalized = NormalizeSelections(items);
         EnsureShippingGroupScope(normalized, shippingGroupId);
+        EnsureShippingGroupMethod(shippingGroupId, shippingMethodCode);
         var normalizedKey = string.IsNullOrWhiteSpace(shippingDispatchKey) ? null : shippingDispatchKey.Trim();
         if (normalizedKey is not null)
         {
@@ -529,6 +530,35 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             {
                 throw new ContractOperationException(FulfillmentShippingGroupFault.ShipmentGroupMixed);
             }
+        }
+    }
+
+    private void EnsureShippingGroupMethod(Guid? shippingGroupId, string? shippingMethodCode)
+    {
+        if (shippingGroupId is null || string.IsNullOrWhiteSpace(shippingMethodCode))
+        {
+            return;
+        }
+
+        var group = _shippingGroups.FirstOrDefault(x => x.ShippingGroupId == shippingGroupId.Value);
+        if (group is null)
+        {
+            return;
+        }
+
+        var offered = shippingMethodCode.Trim();
+        var accepted = (group.MethodCode ?? string.Empty).Trim();
+        if (accepted.Length == 0)
+        {
+            return;
+        }
+
+        var offeredHead = offered.Split(':', 2)[0].Trim();
+        var acceptedHead = accepted.Split(':', 2)[0].Trim();
+        if (!string.Equals(offered, accepted, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(offeredHead, acceptedHead, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.ShipmentMethodMismatch);
         }
     }
 

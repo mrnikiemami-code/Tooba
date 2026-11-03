@@ -118,6 +118,7 @@ export type AdminOrderOperationRequest = {
   consolidatedPackageId?: string | null;
   shipmentIds?: string[] | null;
   note?: string | null;
+  shippingGroupId?: string | null;
 };
 
 /**
@@ -321,6 +322,7 @@ export async function executeAdminOrderOperation(
         consolidatedPackageId: body.consolidatedPackageId ?? null,
         shipmentIds: body.shipmentIds ?? null,
         note: body.note ?? null,
+        shippingGroupId: body.shippingGroupId ?? null,
         selections: body.selections?.map((s) => ({
           orderLineId: s.orderLineId,
           quantity: s.quantity,

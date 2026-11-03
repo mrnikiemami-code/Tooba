@@ -92,6 +92,30 @@ export interface AdminShipment {
   activePackageNumber?: string | null;
   packageLockedReasonFa?: string | null;
   canAddToConsolidatedPackage?: boolean;
+  shippingGroupId?: string | null;
+}
+
+export interface AdminAcceptedShippingGroup {
+  shippingGroupId: string;
+  sellerOrderId: string;
+  sellerPartyId: string;
+  methodCode: string;
+  methodLabel: string;
+  serviceCode: string | null;
+  optionCode: string | null;
+  shippingChargeSnapshot: number;
+  currency: string;
+  deliveryDate: string | null;
+  deliveryTimeWindow: string | null;
+  deliveryTimeZone: string | null;
+  ownerKind: string | null;
+  ownerTenantKey: string | null;
+  ownerSellerPartyId: string | null;
+  orderLineIds: string[];
+  createParcelEligible: boolean;
+  createParcelBlockReasonFa: string | null;
+  payableAtCheckoutAmount: number;
+  carrierCollectAmount: number;
 }
 
 export interface AdminConsolidatedPackageMember {
@@ -196,6 +220,7 @@ export interface AdminOrderDetail {
   financialSummary: AdminFinancialSummary;
   payment?: AdminPaymentOps | null;
   reservationCycle?: AdminReservationCycleAudit | null;
+  shippingGroups?: AdminAcceptedShippingGroup[];
 }
 
 
@@ -606,6 +631,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
         activePackageNumber: text(prop(row, "activePackageNumber", "ActivePackageNumber")) || null,
         packageLockedReasonFa: text(prop(row, "packageLockedReasonFa", "PackageLockedReasonFa")) || null,
         canAddToConsolidatedPackage: Boolean(prop(row, "canAddToConsolidatedPackage", "CanAddToConsolidatedPackage")),
+        shippingGroupId: text(prop(row, "shippingGroupId", "ShippingGroupId")) || null,
       }];
     });
     return [{
@@ -620,6 +646,37 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       fulfillmentId: text(prop(seller, "fulfillmentId", "FulfillmentId")) || null,
       fulfillmentStatus: text(prop(seller, "fulfillmentStatus", "FulfillmentStatus")) || null,
       shipments,
+    }];
+  });
+  const shippingGroups = array(prop(item, "shippingGroups", "ShippingGroups")).flatMap((raw): AdminAcceptedShippingGroup[] => {
+    const row = record(raw);
+    if (!row) return [];
+    const shippingGroupId = text(prop(row, "shippingGroupId", "ShippingGroupId"));
+    const sellerOrderId = text(prop(row, "sellerOrderId", "SellerOrderId"));
+    if (!shippingGroupId || !sellerOrderId) return [];
+    return [{
+      shippingGroupId,
+      sellerOrderId,
+      sellerPartyId: text(prop(row, "sellerPartyId", "SellerPartyId")),
+      methodCode: text(prop(row, "methodCode", "MethodCode")),
+      methodLabel: text(prop(row, "methodLabel", "MethodLabel"), "—"),
+      serviceCode: text(prop(row, "serviceCode", "ServiceCode")) || null,
+      optionCode: text(prop(row, "optionCode", "OptionCode")) || null,
+      shippingChargeSnapshot: number(prop(row, "shippingChargeSnapshot", "ShippingChargeSnapshot")),
+      currency: text(prop(row, "currency", "Currency"), "IRR"),
+      deliveryDate: text(prop(row, "deliveryDate", "DeliveryDate")) || null,
+      deliveryTimeWindow: text(prop(row, "deliveryTimeWindow", "DeliveryTimeWindow")) || null,
+      deliveryTimeZone: text(prop(row, "deliveryTimeZone", "DeliveryTimeZone")) || null,
+      ownerKind: text(prop(row, "ownerKind", "OwnerKind")) || null,
+      ownerTenantKey: text(prop(row, "ownerTenantKey", "OwnerTenantKey")) || null,
+      ownerSellerPartyId: text(prop(row, "ownerSellerPartyId", "OwnerSellerPartyId")) || null,
+      orderLineIds: array(prop(row, "orderLineIds", "OrderLineIds"))
+        .map((id) => text(id))
+        .filter((id): id is string => Boolean(id)),
+      createParcelEligible: Boolean(prop(row, "createParcelEligible", "CreateParcelEligible")),
+      createParcelBlockReasonFa: text(prop(row, "createParcelBlockReasonFa", "CreateParcelBlockReasonFa")) || null,
+      payableAtCheckoutAmount: number(prop(row, "payableAtCheckoutAmount", "PayableAtCheckoutAmount")),
+      carrierCollectAmount: number(prop(row, "carrierCollectAmount", "CarrierCollectAmount")),
     }];
   });
   const consolidatedPackages = array(prop(item, "consolidatedPackages", "ConsolidatedPackages")).flatMap((raw): AdminConsolidatedPackage[] => {
@@ -713,6 +770,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     financialSummary: mapAdminFinancialSummary(prop(item, "financialSummary", "FinancialSummary")),
     payment: mapAdminPaymentOps(prop(item, "payment", "Payment")),
     reservationCycle: mapAdminReservationCycleAudit(prop(item, "reservationCycle", "ReservationCycle")),
+    shippingGroups,
   };
   return enrichAdminOrderDetail(mapped);
 }

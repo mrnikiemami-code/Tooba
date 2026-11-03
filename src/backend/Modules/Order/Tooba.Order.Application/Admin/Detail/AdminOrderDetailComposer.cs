@@ -6,7 +6,9 @@ using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.Supply.Services;
+using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Payment.Contracts.Admin;
@@ -38,6 +40,8 @@ public sealed class AdminOrderDetailComposer
     private readonly OrderSupplyService _supply;
     private readonly IReservationCycleDirectory _cycles;
     private readonly IClock _clock;
+    private readonly IOrderShippingGroupHistoryReader _shippingGroupHistory;
+    private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups;
 
     public AdminOrderDetailComposer(
         IPartyLookup parties,
@@ -48,7 +52,9 @@ public sealed class AdminOrderDetailComposer
         IReturnAdminOperations returns,
         OrderSupplyService supply,
         IReservationCycleDirectory cycles,
-        IClock clock)
+        IClock clock,
+        IOrderShippingGroupHistoryReader shippingGroupHistory,
+        IOrderCommittedCarrierShipmentFactsReader committedShippingGroups)
     {
         _parties = parties;
         _catalog = catalog;
@@ -59,6 +65,8 @@ public sealed class AdminOrderDetailComposer
         _supply = supply;
         _cycles = cycles;
         _clock = clock;
+        _shippingGroupHistory = shippingGroupHistory;
+        _committedShippingGroups = committedShippingGroups;
     }
 
     /// <summary>صفحهٔ جزئیات را برای Checkout بارگذاری‌شده می‌سازد.</summary>
@@ -166,7 +174,8 @@ public sealed class AdminOrderDetailComposer
                     membership is null
                         ? null
                         : $"این مرسوله عضو بسته تجمیعی {membership.PackageNumber} است و عملیات ارسال از طریق بسته تجمیعی انجام می‌شود.",
-                    canAdd);
+                    canAdd,
+                    s.ShippingGroupId);
             }).ToList()
                 ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();
             return new AdminSellerOrderView(
@@ -260,6 +269,66 @@ public sealed class AdminOrderDetailComposer
                 m.JoinedAt,
                 m.ReleasedAt)).ToList())).ToList();
 
+        var historyGroups = await _shippingGroupHistory.GetForCheckoutAsync(checkoutId, cancellationToken);
+        var factsByGroup = (await _committedShippingGroups.ListByCheckoutAsync(checkoutId, cancellationToken))
+            .ToDictionary(x => x.ShippingGroupId);
+        var shippingGroups = historyGroups.Select(h =>
+        {
+            factsByGroup.TryGetValue(h.ShippingGroupId, out var facts);
+            var eligible = facts is not null
+                && !facts.IsCancelled
+                && !facts.PaymentLocked
+                && facts.ExecutableLines.Count > 0;
+            string? blockFa = null;
+            if (historyGroups.Count == 0)
+            {
+                blockFa = null;
+            }
+            else if (facts is null)
+            {
+                blockFa = "شاهد اجرایی این گروه در دسترس نیست.";
+            }
+            else if (facts.IsCancelled)
+            {
+                blockFa = "سفارش لغو شده است؛ ایجاد مرسوله ممکن نیست.";
+            }
+            else if (facts.PaymentLocked)
+            {
+                blockFa = "پرداخت/وضعیت سفارش اجازهٔ ایجاد مرسوله نمی‌دهد.";
+            }
+            else if (facts.ExecutableLines.Count == 0)
+            {
+                blockFa = "مقدار قابل ارسال باقی‌مانده‌ای در این گروه وجود ندارد.";
+            }
+
+            var deliveryDate = h.Evidence?.ReceivingDate
+                ?? h.RequestedDeliveryDate
+                ?? (DateOnly?)h.MinimumDeliveryDate;
+            var window = FormatReceivingWindow(h.Evidence)
+                ?? h.RequestedDeliveryTimeWindow;
+            return new AdminAcceptedShippingGroupView(
+                h.ShippingGroupId,
+                h.SellerOrderId,
+                h.SellerPartyId,
+                h.MethodCode,
+                h.MethodLabel,
+                h.ServiceCode,
+                h.OptionCode,
+                h.ShippingChargeSnapshot,
+                h.Currency,
+                deliveryDate,
+                window,
+                h.Evidence?.ReceivingTimeZone,
+                h.Evidence?.OwnerKind,
+                h.Evidence?.OwnerTenantKey,
+                h.Evidence?.OwnerSellerPartyId,
+                h.OrderLineIds,
+                eligible,
+                blockFa,
+                h.Evidence?.PayableAtCheckoutAmount ?? h.ShippingChargeSnapshot,
+                h.Evidence?.CarrierCollectAmount ?? 0m);
+        }).ToList();
+
         return Result.Success(new AdminOrderDetailPage(
             group.CheckoutId,
             listItem.Reference,
@@ -286,7 +355,20 @@ public sealed class AdminOrderDetailComposer
             financialSummary,
             paymentView,
             packageViews,
-            reservationAudit));
+            reservationAudit,
+            shippingGroups));
+    }
+
+    private static string? FormatReceivingWindow(OrderShippingGroupHistoryEvidence? evidence)
+    {
+        if (evidence is null)
+        {
+            return null;
+        }
+
+        var open = TimeSpan.FromTicks(evidence.ReceivingOpenTicks);
+        var close = TimeSpan.FromTicks(evidence.ReceivingCloseTicks);
+        return $"{open:hh\\:mm}–{close:hh\\:mm}";
     }
 
     private async Task<OrdersGrid.Models.AdminOrderListItem> MapOrderListItemAsync(

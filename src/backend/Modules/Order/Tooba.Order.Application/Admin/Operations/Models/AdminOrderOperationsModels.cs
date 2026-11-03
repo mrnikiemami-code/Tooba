@@ -80,4 +80,5 @@ public sealed record AdminOrderOperationRequest(
     string? ShippingMethodCode = null,
     string? ProviderMetadataJson = null,
     Guid? ConsolidatedPackageId = null,
-    IReadOnlyList<Guid>? ShipmentIds = null);
+    IReadOnlyList<Guid>? ShipmentIds = null,
+    Guid? ShippingGroupId = null);

@@ -7,6 +7,7 @@ using Tooba.Order.Application.Admin.Operations.Ports;
 using Tooba.Order.Contracts.Admin.Operations;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Payments;
+using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.Operations;
@@ -81,6 +82,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
     private readonly ISettlementOrderAccrualPort _settlement;
     private readonly IAdminOrderOperationsInventoryRecoveryPort _inventoryRecovery;
     private readonly IAdminOrderOperationsSupplyPort _orderSupply;
+    private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups;
     
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
@@ -96,7 +98,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
         IOrderPaymentProjectionPort orderPayments,
         ISettlementOrderAccrualPort settlement,
         IAdminOrderOperationsInventoryRecoveryPort inventoryRecovery,
-        IAdminOrderOperationsSupplyPort orderSupply)
+        IAdminOrderOperationsSupplyPort orderSupply,
+        IOrderCommittedCarrierShipmentFactsReader committedShippingGroups)
     {
         _checkouts = checkouts;
         _fulfillment = fulfillment;
@@ -110,6 +113,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         _settlement = settlement;
         _inventoryRecovery = inventoryRecovery;
         _orderSupply = orderSupply;
+        _committedShippingGroups = committedShippingGroups;
         
     }
 

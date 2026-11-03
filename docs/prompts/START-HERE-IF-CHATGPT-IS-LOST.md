@@ -1,4 +1,9 @@
-# CURRENT — 251 PASS: group delivery calendar closure + currency identity guards — 2026-11-03
+# CURRENT — 252 PASS: accepted-group parcel execution UI + server bind — 2026-11-03
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **ACCEPTED_GROUP_PARCEL_EXECUTION_UI_AND_SERVER_BIND_DEPLOYED**. Base `7786d4bc0`. Seller→accepted groups→parcel; method catalogue removed; server group bind. Live order `01a1a200-…` two groups read-only. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 251 PASS: group delivery calendar closure + currency identity guards — 2026-11-03
 
 Read docs/ai/tasks/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/TASK.md and docs/architecture/evidence/TB-STOREFRONT-GROUP-DELIVERY-CALENDAR-CLOSURE-251/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS**, decision **GROUP_DELIVERY_CALENDAR_VISIBLE_AND_CURRENCY_IDENTITY_GUARDS_DEPLOYED**. Base `7d916bc7a`. CapturedPreview local ON + slotsStatus blockers; both groups 7×8 calendars. 250 cart grouping ≠ shipping calendar. LIVE TIPAX deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
