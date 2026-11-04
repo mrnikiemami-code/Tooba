@@ -1,0 +1,8 @@
+﻿{
+    "workerId":  "tooba-worker-01",
+    "channelId":  "tooba-main",
+    "expectedBaseSha":  "36845985ba2d9a931b65bcec8e936ee23154f674",
+    "claimedAtUtc":  "2026-11-04T16:06:14.5896139Z",
+    "taskId":  "TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R3",
+    "bridgeRowId":  "89db09f3-c8c1-440f-905e-e8e1f928e5df"
+}

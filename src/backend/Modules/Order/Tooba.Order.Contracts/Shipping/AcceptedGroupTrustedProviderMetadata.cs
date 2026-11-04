@@ -4,8 +4,9 @@ using System.Text.Json;
 namespace Tooba.Order.Contracts.Shipping;
 
 /// <summary>
-/// TB-252-R2: trusted method execution metadata from committed Order shipping-group facts.
+/// TB-252-R2/R3: trusted method execution metadata from committed Order shipping-group facts.
 /// Callers must never pass client ProviderMetadataJson into Fulfillment create.
+/// Origin/pickup/collection must come from authoritative sender/collection facts — never recipient destination.
 /// </summary>
 public static class AcceptedGroupTrustedProviderMetadata
 {
@@ -16,8 +17,8 @@ public static class AcceptedGroupTrustedProviderMetadata
 
     /// <summary>
     /// Builds method-specific JSON for Fulfillment ValidateAndNormalize.
-    /// Returns null when the registry method does not need metadata.
-    /// Throws <see cref="AcceptedGroupParcelCreateException"/> when required recipient facts are missing.
+    /// Returns null when the registry method does not need metadata (e.g. store_courier).
+    /// Throws <see cref="AcceptedGroupParcelCreateException"/> when required facts are missing.
     /// </summary>
     public static string? BuildFromFacts(
         string? fulfillmentRegistryMethodCode,
@@ -31,24 +32,27 @@ public static class AcceptedGroupTrustedProviderMetadata
         var code = fulfillmentRegistryMethodCode.Trim();
         var recipientName = Normalize(facts.RecipientName);
         var recipientPhone = Normalize(facts.RecipientMobile);
-        var address = Normalize(facts.RecipientAddress);
+        var destination = Normalize(facts.RecipientAddress);
         var postal = Normalize(facts.PostalCode);
         var province = Normalize(facts.ProvinceName);
         var city = Normalize(facts.CityName);
+        var origin = Normalize(facts.OriginPostalAddress);
+        var collection = Normalize(facts.CollectionLocation);
 
         return code switch
         {
-            "post" => BuildPost(recipientName, recipientPhone, address, postal),
-            "tipax" => BuildTipax(recipientName, recipientPhone, address, postal, province, city),
-            "snapp_courier" => BuildCourier(address, recipientName, recipientPhone),
-            "store_courier" => "{}",
-            "in_person" => BuildInPerson(address, city),
-            _ => "{}",
+            "post" => BuildPost(recipientName, recipientPhone, destination, postal),
+            "tipax" => BuildTipax(recipientName, recipientPhone, destination, postal, province, city),
+            "snapp_courier" => BuildCourier(origin, destination, recipientName, recipientPhone),
+            "store_courier" => null,
+            "in_person" => BuildInPerson(collection),
+            _ => throw new AcceptedGroupParcelCreateException("fulfillment.shipping_method.unsupported"),
         };
     }
 
     /// <summary>
     /// Overlay optional fulfillment-unit recipient fields when Order facts leave a required field empty.
+    /// Does not invent origin/collection from recipient.
     /// </summary>
     public static string? BuildFromFactsWithFallback(
         string? fulfillmentRegistryMethodCode,
@@ -125,9 +129,13 @@ public static class AcceptedGroupTrustedProviderMetadata
             JsonOptions);
     }
 
-    private static string BuildCourier(string? address, string? recipientName, string? recipientPhone)
+    private static string BuildCourier(
+        string? pickupAddress,
+        string? destinationAddress,
+        string? recipientName,
+        string? recipientPhone)
     {
-        if (string.IsNullOrWhiteSpace(address))
+        if (string.IsNullOrWhiteSpace(pickupAddress) || string.IsNullOrWhiteSpace(destinationAddress))
         {
             throw new AcceptedGroupParcelCreateException("fulfillment.shipping.courier.address_required");
         }
@@ -135,23 +143,22 @@ public static class AcceptedGroupTrustedProviderMetadata
         return JsonSerializer.Serialize(
             new
             {
-                pickupAddress = address,
-                destinationAddress = address,
+                pickupAddress,
+                destinationAddress,
                 recipientName,
                 recipientPhone,
             },
             JsonOptions);
     }
 
-    private static string BuildInPerson(string? address, string? city)
+    private static string BuildInPerson(string? collectionLocation)
     {
-        var location = First(address, city);
-        if (string.IsNullOrWhiteSpace(location))
+        if (string.IsNullOrWhiteSpace(collectionLocation))
         {
             throw new AcceptedGroupParcelCreateException("fulfillment.shipping.pickup.location_required");
         }
 
-        return JsonSerializer.Serialize(new { pickupLocation = location }, JsonOptions);
+        return JsonSerializer.Serialize(new { pickupLocation = collectionLocation }, JsonOptions);
     }
 
     private static string? Normalize(string? value)

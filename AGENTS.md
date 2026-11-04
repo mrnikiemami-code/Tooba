@@ -1,8 +1,14 @@
-# CURRENT — 252-R2 PASS: trusted Post recipient metadata + compact localized modal — 2026-11-04
+# CURRENT — 252-R3 PASS: remove recipient-as-origin trusted metadata invent — 2026-11-04
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued origin/collection correction + deploy scope, decision **RECIPIENT_AS_ORIGIN_FALLBACK_REMOVED_FAIL_CLOSED**, NOT Architect/Visual ACCEPT. Base `36845985b`.
+R2 Post trusted recipient + compact UI preserved. R3: snapp_courier/in_person no longer copy recipient into pickup/collection; fail-closed typed codes; store_courier null per validator; unknown unsupported; binder→directory Post wiring. Canonical FE3000→Host5088. CapturedPreview local ON. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 252-R2 PASS: trusted Post recipient metadata + compact localized modal — 2026-11-04
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued Post-metadata + compact UI + deploy scope, decision **TRUSTED_POST_RECIPIENT_METADATA_AND_COMPACT_LOCALIZED_MODAL_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `2c73cd938`.
-User rejected R1: null server metadata → Post `recipient_required` despite displayed recipient; technical UI clutter + duplicate toast. LANDED: trusted server metadata from committed Order/Fulfillment facts through binder→orchestrator/seller→Fulfillment validator/persist; compact Jalali modal/cards; hide Store/store-alpha/Asia/Tehran; one inline error. Real directory Post create 3/3 + transport 4/4 + mount 3/3. Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+User rejected R1: null server metadata → Post `recipient_required` despite displayed recipient; technical UI clutter + duplicate toast. LANDED: trusted server metadata from committed Order/Fulfillment facts through binder→orchestrator/seller→Fulfillment validator/persist; compact Jalali modal/cards; hide Store/store-alpha/Asia/Tehran; one inline error. Real directory Post create 3/3 + transport 4/4 + mount 3/3. Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE. **R3 corrects invented courier/in_person origin from recipient.**
 
 # SUPERSEDED — 252-R1 PASS (user-rejected; closed by R2): transport routing + exact method + modal reliability — 2026-11-03
 

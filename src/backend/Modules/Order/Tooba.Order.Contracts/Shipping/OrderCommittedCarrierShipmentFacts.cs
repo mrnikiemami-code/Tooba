@@ -68,7 +68,17 @@ public sealed record OrderCommittedCarrierShipmentFacts(
     /// <summary>Committed catalogue service code (exact identity; not a registry prefix).</summary>
     string? ServiceCode = null,
     /// <summary>Committed catalogue option code (exact identity; not a registry prefix).</summary>
-    string? OptionCode = null);
+    string? OptionCode = null,
+    /// <summary>
+    /// Authoritative seller/origin postal address for pickup methods (snapp_courier).
+    /// Never derived from recipient destination; null means origin authority is absent.
+    /// </summary>
+    string? OriginPostalAddress = null,
+    /// <summary>
+    /// Authoritative collection/pickup location for in_person.
+    /// Never derived from recipient address/city; null means collection authority is absent.
+    /// </summary>
+    string? CollectionLocation = null);
 
 /// <summary>Contracts-only lookup of committed shipping groups. Empty when the order is not committed.</summary>
 public interface IOrderCommittedCarrierShipmentFactsReader

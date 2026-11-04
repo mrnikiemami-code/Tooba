@@ -262,6 +262,18 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "ارسال پستی نیازمند نشانی گیرنده است.",
     en: "Postal shipping requires a destination address.",
   },
+  "fulfillment.shipping.courier.address_required": {
+    fa: "پیک آنلاین نیازمند نشانی مبدأ و مقصد معتبر است؛ مبدأ را در تنظیمات مبدأ/فرستنده تکمیل کنید.",
+    en: "Online courier requires both origin and destination addresses; complete the seller origin/sender setup.",
+  },
+  "fulfillment.shipping.pickup.location_required": {
+    fa: "تحویل حضوری نیازمند محل دریافت مشخص است؛ محل تحویل را در تنظیمات روش تکمیل کنید.",
+    en: "In-person pickup requires a configured collection location.",
+  },
+  "fulfillment.shipping_method.unsupported": {
+    fa: "این روش ارسال برای ایجاد مرسوله پشتیبانی نمی‌شود.",
+    en: "This shipping method is not supported for parcel create.",
+  },
   "order.shipment.provider_metadata_forbidden": {
     fa: "فراسنج‌های ارائه‌دهنده برای ایجاد مرسولهٔ دستی پذیرفته نمی‌شود.",
     en: "Provider metadata is not accepted for manual parcel create.",

@@ -1,8 +1,12 @@
-# CURRENT — 252-R2 PASS: trusted Post recipient metadata + compact localized modal — 2026-11-04
+# CURRENT — 252-R3 PASS: remove recipient-as-origin trusted metadata invent — 2026-11-04
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS**, decision **RECIPIENT_AS_ORIGIN_FALLBACK_REMOVED_FAIL_CLOSED**. Base `36845985b`. R2 Post path preserved; courier/in_person fail-closed without recipient→origin invent. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 252-R2 PASS: trusted Post recipient metadata + compact localized modal — 2026-11-04
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued Post-metadata + compact UI + deploy scope, decision **TRUSTED_POST_RECIPIENT_METADATA_AND_COMPACT_LOCALIZED_MODAL_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `2c73cd938`.
-User rejected R1 null-metadata Post refusal + technical UI. Trusted server recipient metadata + compact Jalali modal; real Fulfillment create proof; FE3000→Host5088 redeployed; CapturedPreview local ON. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PASS**, decision **TRUSTED_POST_RECIPIENT_METADATA_AND_COMPACT_LOCALIZED_MODAL_DEPLOYED**. Base `2c73cd938`. R3 corrects invented pickup/collection. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 252-R1 PASS (user-rejected; closed by R2): transport routing + exact method + modal reliability — 2026-11-03
 
