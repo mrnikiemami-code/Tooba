@@ -3,8 +3,8 @@
 ## Identity
 - Bridge-Task-Row: `ddb08716-6039-45cc-9fd2-5fbd15a66e34`
 - Expected-Base: `2c73cd938d1b948390c9b0666636171032cc449c`
-- Code-SHA: PENDING_COMMIT
-- Evidence-SHA: PENDING_COMMIT
+- Code-SHA: 96e34482ff2b76abc3e2e41f14688af5463a7d8e
+- Evidence-SHA: PENDING_EVIDENCE_STAMP
 
 ## Runtime
 - FE: `http://127.0.0.1:3000` production Next (`next start -p 3000 -H 127.0.0.1`)
