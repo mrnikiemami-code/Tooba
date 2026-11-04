@@ -61,7 +61,16 @@ public static class AcceptedGroupShipmentCreateBinder
                 .Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity))
                 .ToArray();
 
-            return new BoundCreate(bound.ShippingGroupId, registryCode, bound.CarrierDisplayName, lines);
+            // Trusted server metadata from committed facts — never client ProviderMetadataJson.
+            var facts = checkoutGroups.First(g => g.ShippingGroupId == bound.ShippingGroupId);
+            var trustedMetadata = AcceptedGroupTrustedProviderMetadataBuilder.Build(registryCode, facts, snapshot);
+
+            return new BoundCreate(
+                bound.ShippingGroupId,
+                registryCode,
+                bound.CarrierDisplayName,
+                lines,
+                trustedMetadata);
         }
         catch (AcceptedGroupParcelCreateException ex)
         {
@@ -133,5 +142,6 @@ public static class AcceptedGroupShipmentCreateBinder
         Guid ShippingGroupId,
         string? ShippingMethodCode,
         string CarrierDisplayName,
-        IReadOnlyList<ShipmentLineCommand> Lines);
+        IReadOnlyList<ShipmentLineCommand> Lines,
+        string? TrustedProviderMetadataJson = null);
 }

@@ -7,8 +7,8 @@ using Xunit;
 namespace Tooba.Order.Tests.Admin;
 
 /// <summary>
-/// TB-252-R1: transport routing for generic create_shipment — CarrierApi never reaches Fulfillment create;
-/// Manual binds then creates with null provider metadata.
+/// TB-252-R1/R2: transport routing for generic create_shipment — CarrierApi never reaches Fulfillment create;
+/// Manual binds with trusted server recipient metadata (never client ProviderMetadataJson).
 /// </summary>
 public sealed class AcceptedGroupCreateShipmentTransportRoutingTests
 {
@@ -61,7 +61,7 @@ public sealed class AcceptedGroupCreateShipmentTransportRoutingTests
     }
 
     [Fact]
-    public void Manual_binds_and_invokes_fulfillment_with_null_provider_metadata()
+    public void Manual_binds_trusted_metadata_and_refuses_client_provider_json()
     {
         string? capturedMetadata = "sentinel";
         Guid? capturedGroup = null;
@@ -84,7 +84,7 @@ public sealed class AcceptedGroupCreateShipmentTransportRoutingTests
             null,
             GroupA);
 
-        // Binder itself refuses non-empty metadata (authority). Orchestrator also forces null.
+        // Binder refuses non-empty client metadata (authority). Orchestrator never forwards it.
         var binderRefuse = Assert.Throws<AdminOrderOperationsException>(() =>
             AcceptedGroupShipmentCreateBinder.Resolve(Snapshot(), request, facts));
         Assert.Equal(AcceptedGroupShipmentCreateBinder.ProviderMetadataForbidden, binderRefuse.Code);
@@ -98,18 +98,22 @@ public sealed class AcceptedGroupCreateShipmentTransportRoutingTests
             {
                 var bound = AcceptedGroupShipmentCreateBinder.Resolve(Snapshot(), cleanRequest, facts);
                 capturedGroup = bound.ShippingGroupId;
-                capturedMetadata = null; // mirrors CreateShipmentCoreAsync providerMetadataJson: null
+                capturedMetadata = bound.TrustedProviderMetadataJson;
                 await Task.CompletedTask;
                 return new object();
             });
 
         Assert.True(result.Ok);
         Assert.Equal(GroupA, capturedGroup);
-        Assert.Null(capturedMetadata);
+        Assert.False(string.IsNullOrWhiteSpace(capturedMetadata));
+        Assert.Contains("گیرنده", capturedMetadata!, StringComparison.Ordinal);
+        var normalized = Tooba.Fulfillment.Application.Shipping.ShippingProviderMetadataValidator
+            .ValidateAndNormalize("post", capturedMetadata);
+        Assert.Contains("گیرنده", normalized!, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void CreateShipmentCoreAsync_source_forces_null_provider_metadata()
+    public void CreateShipmentCoreAsync_source_forwards_trusted_not_client_metadata()
     {
         var root = FindRepoRoot();
         var path = Path.Combine(
@@ -124,9 +128,40 @@ public sealed class AcceptedGroupCreateShipmentTransportRoutingTests
             "Services",
             "AdminOrderOperationsOrchestrator.Fulfillment.cs");
         var source = File.ReadAllText(path);
-        Assert.Contains("providerMetadataJson: null", source, StringComparison.Ordinal);
+        Assert.Contains("bound.TrustedProviderMetadataJson", source, StringComparison.Ordinal);
         Assert.DoesNotContain("request.ProviderMetadataJson", source, StringComparison.Ordinal);
         Assert.Contains("AcceptedGroupShipmentCreateBinder.Resolve", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Manual_post_bind_emits_trusted_recipient_metadata_accepted_by_validator()
+    {
+        var facts = MakeFacts(GroupA, "post", "Manual", hasQuote: false);
+        var request = new AdminOrderOperationRequest(
+            "create_shipment",
+            SellerOrderId,
+            FulfillmentId,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            [new AdminOrderLineSelection(Line1, 1m)],
+            "post",
+            null,
+            null,
+            null,
+            GroupA);
+
+        var bound = AcceptedGroupShipmentCreateBinder.Resolve(Snapshot(), request, [facts]);
+        Assert.Equal("post", bound.ShippingMethodCode);
+        Assert.False(string.IsNullOrWhiteSpace(bound.TrustedProviderMetadataJson));
+        Assert.Contains("گیرنده", bound.TrustedProviderMetadataJson!, StringComparison.Ordinal);
+        var normalized = Tooba.Fulfillment.Application.Shipping.ShippingProviderMetadataValidator
+            .ValidateAndNormalize("post", bound.TrustedProviderMetadataJson);
+        Assert.Contains("گیرنده", normalized!, StringComparison.Ordinal);
     }
 
     private static RoutingOutcome SimulateCreateShipmentCore(

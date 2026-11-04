@@ -124,6 +124,27 @@ public sealed class SellerMutateFulfillmentHandler
                 .Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity))
                 .ToArray();
 
+            string? trustedMetadata;
+            try
+            {
+                var facts = (await _committedShippingGroups.ListByCheckoutAsync(
+                    existing.CheckoutId,
+                    cancellationToken)).First(g => g.ShippingGroupId == bound.ShippingGroupId);
+                trustedMetadata = AcceptedGroupTrustedProviderMetadata.BuildFromFactsWithFallback(
+                    registryCode,
+                    facts,
+                    existing.RecipientName,
+                    existing.ContactMobile,
+                    existing.PostalAddress,
+                    existing.PostalCode,
+                    existing.ProvinceName,
+                    existing.CityName);
+            }
+            catch (AcceptedGroupParcelCreateException ex)
+            {
+                return Result.Failure<FulfillmentSnapshot>(new SemanticError(ex.Code));
+            }
+
             return await FulfillmentOperation.ExecuteAsync(async () =>
                 (await _fulfillment.CreateShipmentAsync(
                     request.FulfillmentId,
@@ -132,7 +153,7 @@ public sealed class SellerMutateFulfillmentHandler
                     lines,
                     cancellationToken,
                     registryCode,
-                    providerMetadataJson: null,
+                    providerMetadataJson: trustedMetadata,
                     bound.ShippingGroupId)).Snapshot);
         }
 

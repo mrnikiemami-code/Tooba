@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapPin, Package, Truck } from "lucide-react";
-import { toast } from "react-toastify";
 import { Button } from "../../design-system/primitives/core";
 import { Dialog } from "../../design-system/primitives/overlays";
+import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { executeAdminOrderOperation } from "./admin-order-operations";
 import type {
@@ -29,6 +28,31 @@ function formatAdminMoney(amount: number, currency = "IRR"): string {
   } catch {
     return `${amount.toLocaleString("fa-IR")} ${currency}`;
   }
+}
+
+function formatDeliveryDateFa(isoDate: string | null | undefined): string | null {
+  if (!isoDate || !String(isoDate).trim()) return null;
+  const raw = String(isoDate).trim();
+  const withTime = raw.includes("T") ? raw : `${raw}T12:00:00`;
+  const jalali = formatJalaliDate(withTime, "fa");
+  try {
+    const d = new Date(withTime);
+    if (!Number.isNaN(d.getTime())) {
+      const weekday = new Intl.DateTimeFormat("fa-IR", { weekday: "short" }).format(d);
+      return `${weekday} ${jalali}`;
+    }
+  } catch {
+    /* keep jalali only */
+  }
+  return jalali;
+}
+
+function formatFee(group: AdminAcceptedShippingGroup): string {
+  const amount =
+    group.payableAtCheckoutAmount != null
+      ? group.payableAtCheckoutAmount
+      : group.shippingChargeSnapshot;
+  return formatAdminMoney(amount ?? 0, group.currency || "IRR");
 }
 
 type Props = {
@@ -58,18 +82,9 @@ function addressSummary(detail: AdminOrderDetail | null | undefined): string {
     .join("، ");
 }
 
-function ownerLabel(group: AdminAcceptedShippingGroup): string | null {
-  const kind = (group.ownerKind ?? "").trim().toLowerCase();
-  if (!kind) return null;
-  if (kind === "store") return group.ownerTenantKey ? `مسئولیت: فروشگاه (${group.ownerTenantKey})` : "مسئولیت: فروشگاه";
-  if (kind === "marketplace") return "مسئولیت: مارکت‌پلیس";
-  if (kind === "seller") return "مسئولیت: فروشنده";
-  return `مسئولیت: ${group.ownerKind}`;
-}
-
 /**
  * مودال ایجاد مرسوله از یک گروه ارسال پذیرفته‌شده — روش/زمان فقط‌خواندنی.
- * TB-252-R1: synchronous in-flight gate + try/finally; no providerMetadataJson.
+ * TB-252-R2: compact localized copy; trusted server metadata (no client ProviderMetadataJson); one inline error.
  */
 export function AdminCreateShipmentModal({
   open,
@@ -169,10 +184,8 @@ export function AdminCreateShipmentModal({
       if (result.state !== "ok") {
         const fa = mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa");
         setError(fa);
-        toast.error(fa);
         return;
       }
-      toast.success("عملیات ایجاد مرسوله انجام شد.");
       onClose();
       onCompleted?.();
     } catch (thrown) {
@@ -181,90 +194,70 @@ export function AdminCreateShipmentModal({
         "fa",
       );
       setError(fa);
-      toast.error(fa);
     } finally {
       inFlightRef.current = false;
       setPending(false);
     }
   }
 
-  const responsibility = ownerLabel(shippingGroup);
-  const deliveryBits = [
-    shippingGroup.deliveryDate,
-    shippingGroup.deliveryTimeWindow,
-    shippingGroup.deliveryTimeZone,
-  ].filter((x) => x && String(x).trim());
+  const deliveryDateFa = formatDeliveryDateFa(shippingGroup.deliveryDate);
+  const timeWindow = (shippingGroup.deliveryTimeWindow ?? "").trim();
 
   return (
     <Dialog title="ایجاد مرسوله" open={open} onClose={onClose} showCloseButton={false} size="lg">
       <div className="flex max-h-[min(82vh,40rem)] flex-col text-sm" data-testid="admin-create-shipment-modal">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pe-1">
-          <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-gradient-to-l from-blue-50 to-white p-3">
-            <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
-              <Truck className="size-5" aria-hidden />
-            </span>
-            <div>
-              <p className="text-base font-black text-gray-900">ایجاد مرسوله از گروه پذیرفته‌شده</p>
-              <p className="mt-0.5 text-xs text-gray-600">
-                فروشنده: <strong>{sellerOrder.sellerDisplayName}</strong>
-              </p>
-            </div>
-          </div>
-
-          <div
-            className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3"
-            data-testid="admin-create-shipment-accepted-summary"
-          >
-            <p className="text-xs font-black text-indigo-950">تعهد ارسال (فقط خواندنی)</p>
-            <p className="mt-1 text-sm font-bold text-gray-900">{shippingGroup.methodLabel || shippingGroup.methodCode}</p>
-            {responsibility ? <p className="mt-1 text-xs text-gray-600">{responsibility}</p> : null}
-            <p className="mt-1 text-xs text-gray-700">
-              زمان تحویل:{" "}
-              <strong>{deliveryBits.length > 0 ? deliveryBits.join(" · ") : "—"}</strong>
+          <div data-testid="admin-create-shipment-accepted-summary" className="space-y-1 text-xs text-gray-700">
+            <p className="text-sm font-bold text-gray-900">
+              {shippingGroup.methodLabel || shippingGroup.methodCode}
+              {sellerOrder.sellerDisplayName ? (
+                <span className="ms-2 font-normal text-gray-600">· {sellerOrder.sellerDisplayName}</span>
+              ) : null}
             </p>
-            <p className="mt-1 text-xs text-gray-700">
-              هزینه گروه:{" "}
-              <strong>
-                {formatAdminMoney(shippingGroup.payableAtCheckoutAmount || shippingGroup.shippingChargeSnapshot, shippingGroup.currency)}
-              </strong>
+            <p>
+              {deliveryDateFa ?? "—"}
+              {timeWindow ? (
+                <>
+                  {" · "}
+                  <bdi dir="ltr">{timeWindow}</bdi>
+                </>
+              ) : null}
+              {" · "}
+              {formatFee(shippingGroup)}
             </p>
           </div>
 
           {orderDetail ? (
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3">
-              <div className="flex items-start gap-2">
-                <span className="inline-flex size-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
-                  <MapPin className="size-4" aria-hidden />
-                </span>
-                <div className="text-xs text-gray-700">
-                  <p>
-                    گیرنده: <strong>{orderDetail.recipientName || "—"}</strong>
-                    {orderDetail.contactMobile ? ` · ${orderDetail.contactMobile}` : ""}
-                  </p>
-                  <p className="mt-1">{addressSummary(orderDetail) || "آدرس ثبت‌شده ندارد"}</p>
-                </div>
-              </div>
+            <div className="space-y-0.5 text-xs text-gray-700" data-testid="admin-create-shipment-recipient">
+              <p>
+                <strong>{orderDetail.recipientName || "—"}</strong>
+                {orderDetail.contactMobile ? (
+                  <>
+                    {" · "}
+                    <bdi dir="ltr">{orderDetail.contactMobile}</bdi>
+                  </>
+                ) : null}
+              </p>
+              <p>{addressSummary(orderDetail) || "آدرس ثبت‌شده ندارد"}</p>
             </div>
           ) : null}
 
-          <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="inline-flex size-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-amber-200">
-                <Package className="size-4" aria-hidden />
-              </span>
-              <p className="text-xs font-black text-gray-800">اقلام همین گروه</p>
-            </div>
+          <div>
             {groupLines.length === 0 ? (
               <p className="text-xs text-gray-500">قلم قابل ارسال باقی نمانده است.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+                <li className="grid grid-cols-[1fr_auto] gap-2 bg-gray-50 px-3 py-1.5 text-[11px] font-bold text-gray-600">
+                  <span>قلم</span>
+                  <span>تعداد</span>
+                </li>
                 {groupLines.map(({ line, max }) => {
                   const id = line.orderLineId || line.id;
                   return (
-                    <li key={id} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="min-w-0 flex-1 truncate">{line.title}</span>
+                    <li key={id} className="grid grid-cols-[1fr_auto] items-center gap-2 px-3 py-2 text-xs">
+                      <span className="min-w-0 truncate">{line.title}</span>
                       <label className="inline-flex items-center gap-1 shrink-0">
-                        <span className="text-gray-500">حداکثر {max.toLocaleString("fa-IR")}</span>
+                        <span className="text-gray-400">/{max.toLocaleString("fa-IR")}</span>
                         <input
                           type="number"
                           min={0}
@@ -278,7 +271,7 @@ export function AdminCreateShipmentModal({
                               [id]: Number.isFinite(n) ? Math.min(Math.max(0, n), max) : 0,
                             }));
                           }}
-                          className="w-20 rounded-lg border border-gray-200 px-2 py-1 text-end tabular-nums"
+                          className="w-16 rounded border border-gray-200 px-2 py-1 text-end tabular-nums"
                           data-testid={`admin-create-shipment-qty-${id}`}
                         />
                       </label>
@@ -290,14 +283,14 @@ export function AdminCreateShipmentModal({
           </div>
 
           {!shippingGroup.createParcelEligible && shippingGroup.createParcelBlockReasonFa ? (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">
               {shippingGroup.createParcelBlockReasonFa}
             </p>
           ) : null}
 
           {error ? (
             <p
-              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
               role="alert"
               data-testid="admin-create-shipment-error"
             >

@@ -1,8 +1,14 @@
-# CURRENT — 252-R1 PASS: transport routing + exact method + modal reliability — 2026-11-03
+# CURRENT — 252-R2 PASS: trusted Post recipient metadata + compact localized modal — 2026-11-04
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued Post-metadata + compact UI + deploy scope, decision **TRUSTED_POST_RECIPIENT_METADATA_AND_COMPACT_LOCALIZED_MODAL_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `2c73cd938`.
+User rejected R1 null-metadata Post refusal + technical UI. Trusted server recipient metadata + compact Jalali modal; real Fulfillment create proof; FE3000→Host5088 redeployed; CapturedPreview local ON. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 252-R1 PASS (user-rejected; closed by R2): transport routing + exact method + modal reliability — 2026-11-03
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued transport-routing + modal + deploy scope, decision **TRANSPORT_ROUTING_EXACT_METHOD_AND_MODAL_RELIABILITY_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `063e100c8`.
-252 Architect PARTIAL closed: CarrierApi refused on generic create; exact method/option (no prefix); modal sync inFlight; mounted+routing tests; seller group bind. Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+252 Architect PARTIAL closed then user-rejected on Post recipient_required + clutter; corrected by 252-R2. Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 252 PASS (Architect PARTIAL): accepted-group parcel UI + server bind — 2026-11-03
 

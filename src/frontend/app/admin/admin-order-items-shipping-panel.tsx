@@ -12,6 +12,7 @@ import {
   type AdminSellerOrder,
   type AdminShipment,
 } from "./admin-api";
+import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
 import { AdminConsolidatedPackageSection } from "./admin-consolidated-package-section";
 import {
@@ -848,10 +849,25 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                           && group.createParcelEligible
                           && group.transportMode !== "CarrierApi"
                           && groupSelectedOk;
-                        const deliveryBits = [
-                          group.deliveryDate,
-                          group.deliveryTimeWindow,
-                        ].filter((x) => x && String(x).trim());
+                        const dateRaw = (group.deliveryDate ?? "").trim();
+                        const dateFa = dateRaw
+                          ? formatJalaliDate(
+                              dateRaw.includes("T") ? dateRaw : `${dateRaw}T12:00:00`,
+                              "fa",
+                            )
+                          : null;
+                        const timeWindow = (group.deliveryTimeWindow ?? "").trim();
+                        const feeAmount =
+                          group.payableAtCheckoutAmount != null
+                            ? group.payableAtCheckoutAmount
+                            : group.shippingChargeSnapshot;
+                        const ownerKind = (group.ownerKind ?? "").trim().toLowerCase();
+                        const ownershipLabel =
+                          ownerKind === "marketplace"
+                            ? "ارسال توسط مارکت‌پلیس"
+                            : ownerKind === "seller"
+                              ? "ارسال توسط فروشنده"
+                              : null;
                         return (
                           <div
                             key={group.shippingGroupId}
@@ -862,12 +878,24 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                               {group.methodLabel || group.methodCode}
                             </p>
                             <p className="mt-0.5 text-[10px] text-gray-600">
-                              {deliveryBits.length > 0 ? deliveryBits.join(" · ") : "زمان تحویل ثبت نشده"}
+                              {dateFa || timeWindow ? (
+                                <>
+                                  {dateFa ?? "—"}
+                                  {timeWindow ? (
+                                    <>
+                                      {" · "}
+                                      <bdi dir="ltr">{timeWindow}</bdi>
+                                    </>
+                                  ) : null}
+                                </>
+                              ) : (
+                                "زمان تحویل ثبت نشده"
+                              )}
                               {" · "}
-                              {formatAdminMoney(group.payableAtCheckoutAmount || group.shippingChargeSnapshot, group.currency)}
+                              {formatAdminMoney(feeAmount ?? 0, group.currency)}
                             </p>
-                            {group.ownerKind ? (
-                              <p className="mt-0.5 text-[10px] text-gray-500">مسئولیت: {group.ownerKind}</p>
+                            {ownershipLabel ? (
+                              <p className="mt-0.5 text-[10px] text-gray-500">{ownershipLabel}</p>
                             ) : null}
                             {groupShipments.length > 0 ? (
                               <p className="mt-1 text-[10px] text-gray-500">

@@ -254,6 +254,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "این گروه حامل API است؛ ایجاد مرسوله فقط از پنل اجرای حامل همین گروه مجاز است.",
     en: "This group uses carrier API; create the parcel only from the group carrier execution panel.",
   },
+  "fulfillment.shipping.post.recipient_required": {
+    fa: "ارسال پستی نیازمند نام گیرنده است.",
+    en: "Postal shipping requires a recipient name.",
+  },
+  "fulfillment.shipping.post.address_required": {
+    fa: "ارسال پستی نیازمند نشانی گیرنده است.",
+    en: "Postal shipping requires a destination address.",
+  },
   "order.shipment.provider_metadata_forbidden": {
     fa: "فراسنج‌های ارائه‌دهنده برای ایجاد مرسولهٔ دستی پذیرفته نمی‌شود.",
     en: "Provider metadata is not accepted for manual parcel create.",

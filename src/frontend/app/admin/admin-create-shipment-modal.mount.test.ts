@@ -1,5 +1,5 @@
 /**
- * TB-252-R1 — mount AdminCreateShipmentModal: same-tick single request, thrown error, Manual payload.
+ * TB-252-R2 — mount AdminCreateShipmentModal: compact copy, Jalali date, one inline error, same-tick single request.
  * Run with:
  *   npx tsx --tsconfig tsconfig.mount-tests.json --test app/admin/admin-create-shipment-modal.mount.test.ts
  */
@@ -17,16 +17,21 @@ import {
   waitFor,
 } from "../../features/order-carrier-execution/test-dom-harness.ts";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal.tsx";
-import type { AdminAcceptedShippingGroup, AdminOrderLine, AdminSellerOrder } from "./admin-api.ts";
+import type {
+  AdminAcceptedShippingGroup,
+  AdminOrderDetail,
+  AdminOrderLine,
+  AdminSellerOrder,
+} from "./admin-api.ts";
 import type { AdminOrderOperationRequest } from "./admin-order-operations.ts";
 
-const CHECKOUT = "chk-252r1";
-const SELLER = "so-252r1";
-const FULFILLMENT = "ff-252r1";
-const GROUP_A = "grp-252r1-a";
-const GROUP_B = "grp-252r1-b";
-const LINE_A = "line-252r1-a";
-const LINE_B = "line-252r1-b";
+const CHECKOUT = "chk-252r2";
+const SELLER = "so-252r2";
+const FULFILLMENT = "ff-252r2";
+const GROUP_A = "grp-252r2-a";
+const GROUP_B = "grp-252r2-b";
+const LINE_A = "line-252r2-a";
+const LINE_B = "line-252r2-b";
 
 function line(id: string, title: string, packed: number): AdminOrderLine {
   return {
@@ -56,7 +61,7 @@ function line(id: string, title: string, packed: number): AdminOrderLine {
 function seller(lines: AdminOrderLine[]): AdminSellerOrder {
   return {
     id: SELLER,
-    orderNumber: "TB-252R1",
+    orderNumber: "TB-252R2",
     sellerDisplayName: "فروشگاه آرمان",
     status: "Paid",
     paymentState: "Paid",
@@ -85,7 +90,7 @@ function group(
     shippingChargeSnapshot: 125000,
     currency: "IRR",
     deliveryDate: opts.date ?? "2026-11-05",
-    deliveryTimeWindow: "14:00–15:00",
+    deliveryTimeWindow: "09:00–10:00",
     deliveryTimeZone: "Asia/Tehran",
     ownerKind: "store",
     ownerTenantKey: "store-alpha",
@@ -99,7 +104,37 @@ function group(
   };
 }
 
-test("mount modal Manual: same-tick burst emits one request with group+qty; no method catalogue", async () => {
+function detail(): AdminOrderDetail {
+  return {
+    checkoutId: CHECKOUT,
+    reference: "ref-252r2",
+    createdAt: "2026-11-04T10:00:00Z",
+    status: "Paid",
+    paymentState: "Paid",
+    lineCount: 1,
+    sellerCount: 1,
+    subtotal: 1000,
+    taxAmount: 0,
+    discountAmount: 0,
+    payableAmount: 1000,
+    currency: "IRR",
+    recipientName: "محمد امامی",
+    contactMobile: "09121234567",
+    provinceName: "تهران",
+    cityName: "تهران",
+    postalAddress: "خیابان آزمایش ۱",
+    postalCode: "1234567890",
+    shippingMethodLabel: "پیشتاز",
+    sellerOrders: [],
+    consolidatedPackages: [],
+    sellerFinancials: [],
+    financialEvents: [],
+    financialSummary: {} as AdminOrderDetail["financialSummary"],
+    shippingGroups: [],
+  };
+}
+
+test("mount modal Manual: compact localized summary; same-tick one request; no technical prose", async () => {
   const calls: AdminOrderOperationRequest[] = [];
   let resolveFirst: ((v: { state: "ok" }) => void) | null = null;
   const executor = async (_checkoutId: string, body: AdminOrderOperationRequest) => {
@@ -124,14 +159,23 @@ test("mount modal Manual: same-tick burst emits one request with group+qty; no m
       fulfillmentId: FULFILLMENT,
       shippingGroup: g,
       selectedLines: [],
+      orderDetail: detail(),
       operationExecutor: executor as never,
     }),
   );
 
-  const submit = q(tree.container, '[data-testid="admin-create-shipment-submit"]');
-  assert.equal(tree.container.querySelector('[data-testid="admin-create-shipment-accepted-summary"]')?.textContent?.includes("پیشتاز"), true);
+  const root = q(tree.container, '[data-testid="admin-create-shipment-modal"]');
+  const summary = q(tree.container, '[data-testid="admin-create-shipment-accepted-summary"]');
+  const text = root.textContent ?? "";
+  assert.match(summary.textContent ?? "", /پیشتاز/);
+  assert.match(summary.textContent ?? "", /فروشگاه آرمان/);
+  assert.match(summary.textContent ?? "", /09:00–10:00/);
+  assert.doesNotMatch(text, /گروه پذیرفته‌شده|تعهد ارسال|فقط خواندنی|اقلام همین گروه|store-alpha|Asia\/Tehran|\bStore\b/i);
+  assert.doesNotMatch(text, /2026-11-05/);
+  assert.match(q(tree.container, '[data-testid="admin-create-shipment-recipient"]').textContent ?? "", /محمد امامی/);
   assert.equal(tree.container.querySelector('select, [data-testid*="method-catalogue"]'), null);
 
+  const submit = q(tree.container, '[data-testid="admin-create-shipment-submit"]');
   await clickBurst(submit, 3);
   assert.equal(calls.length, 1);
   assert.equal(calls[0]?.shippingGroupId, GROUP_A);
@@ -146,10 +190,11 @@ test("mount modal Manual: same-tick burst emits one request with group+qty; no m
   await tree.unmount();
 });
 
-test("mount modal: thrown executor shows error, releases pending, preserves qty edits", async () => {
-  const executor = async () => {
-    throw new Error("order.operation.failed");
-  };
+test("mount modal: typed refusal shows one inline error, no toast path; preserves qty", async () => {
+  const executor = async () => ({
+    state: "error" as const,
+    message: "fulfillment.shipping.post.recipient_required",
+  });
   const so = seller([line(LINE_A, "کالا الف", 4)]);
   const g = group(GROUP_A, [LINE_A]);
   const tree = await mount(
@@ -161,6 +206,7 @@ test("mount modal: thrown executor shows error, releases pending, preserves qty 
       fulfillmentId: FULFILLMENT,
       shippingGroup: g,
       selectedLines: [{ line: so.lines[0]!, quantity: 2 }],
+      orderDetail: detail(),
       operationExecutor: executor as never,
     }),
   );
@@ -171,7 +217,11 @@ test("mount modal: thrown executor shows error, releases pending, preserves qty 
   const submit = q(tree.container, '[data-testid="admin-create-shipment-submit"]');
   await click(submit);
   await waitFor(() => Boolean(tree.container.querySelector('[data-testid="admin-create-shipment-error"]')));
-  assert.match(q(tree.container, '[data-testid="admin-create-shipment-error"]').textContent ?? "", /ناموفق|failed|سفارش/i);
+  assert.equal(qq(tree.container, '[data-testid="admin-create-shipment-error"]').length, 1);
+  assert.match(
+    q(tree.container, '[data-testid="admin-create-shipment-error"]').textContent ?? "",
+    /گیرنده|پست|ناموفق|failed|سفارش|خطایی رخ داد/i,
+  );
   assert.equal(submit.hasAttribute("disabled") || (submit as HTMLButtonElement).disabled, false);
   assert.equal(Number(qty.value), 2);
   await tree.unmount();
@@ -196,7 +246,6 @@ test("mount dual Manual groups: distinct summaries; CarrierApi group has no gene
         "div",
         { "data-testid": `admin-order-shipping-group-${GROUP_A}` },
         createElement("p", null, gA.methodLabel),
-        createElement("p", null, `${gA.deliveryDate} · owner ${gA.ownerTenantKey}`),
         createElement("p", null, `lines:${gA.orderLineIds.join(",")}`),
         gA.transportMode !== "CarrierApi" && gA.createParcelEligible
           ? createElement(
@@ -214,7 +263,6 @@ test("mount dual Manual groups: distinct summaries; CarrierApi group has no gene
         "div",
         { "data-testid": `admin-order-shipping-group-${GROUP_B}` },
         createElement("p", null, gB.methodLabel),
-        createElement("p", null, `${gB.deliveryDate} · owner ${gB.ownerTenantKey}`),
         createElement("p", null, `lines:${gB.orderLineIds.join(",")}`),
         gB.transportMode !== "CarrierApi" && gB.createParcelEligible
           ? createElement(
@@ -237,6 +285,7 @@ test("mount dual Manual groups: distinct summaries; CarrierApi group has no gene
             fulfillmentId: FULFILLMENT,
             shippingGroup: gA,
             selectedLines: [],
+            orderDetail: detail(),
             operationExecutor: (async () => ({ state: "ok" as const })) as never,
           })
         : null,
@@ -249,6 +298,7 @@ test("mount dual Manual groups: distinct summaries; CarrierApi group has no gene
             fulfillmentId: FULFILLMENT,
             shippingGroup: gB,
             selectedLines: [],
+            orderDetail: detail(),
             operationExecutor: (async () => ({ state: "ok" as const })) as never,
           })
         : null,
@@ -258,14 +308,15 @@ test("mount dual Manual groups: distinct summaries; CarrierApi group has no gene
   const tree = await mount(createElement(DualFixture));
   const cardA = q(tree.container, `[data-testid="admin-order-shipping-group-${GROUP_A}"]`);
   const cardB = q(tree.container, `[data-testid="admin-order-shipping-group-${GROUP_B}"]`);
-  assert.match(cardA.textContent ?? "", /2026-11-05/);
-  assert.match(cardB.textContent ?? "", /2026-11-07/);
   assert.match(cardA.textContent ?? "", new RegExp(LINE_A));
   assert.match(cardB.textContent ?? "", new RegExp(LINE_B));
+  assert.doesNotMatch(cardA.textContent ?? "", /store-alpha|Asia\/Tehran|\bStore\b/);
   assert.ok(tree.container.querySelector(`[data-testid="admin-order-group-create-shipment-${GROUP_A}"]`));
   assert.equal(tree.container.querySelector(`[data-testid="admin-order-group-create-shipment-${GROUP_B}"]`), null);
   assert.match(q(tree.container, `[data-testid="carrier-block-${GROUP_B}"]`).textContent ?? "", /حامل API/);
   assert.ok(tree.container.querySelector('[data-testid="admin-create-shipment-modal"]'));
   assert.equal(qq(tree.container, '[data-testid="admin-create-shipment-modal"]').length, 1);
+  const modalText = q(tree.container, '[data-testid="admin-create-shipment-modal"]').textContent ?? "";
+  assert.doesNotMatch(modalText, /store-alpha|Asia\/Tehran|گروه پذیرفته‌شده|تعهد ارسال/);
   await tree.unmount();
 });
