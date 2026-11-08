@@ -1,4 +1,10 @@
-# CURRENT — 253-R1 PASS: operational compatibility/readiness + group consolidate + disposable matrix — 2026-11-08
+# CURRENT — 253-R2 PASS: one reviewed Marketplace group workflow + real actor authority + real relational matrix — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued R2 software/relational scope, decision **ONE_GROUP_WORKFLOW_ACTOR_AUTHORITY_AND_REAL_RELATIONAL_MATRIX_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `9532d6c87`; Code `8580097d6`. Evidence docs carry the exact receipts.
+Marketplace-only cross-seller rule preserved; Store never promoted. R2 closes 253-R1's four seams: one reviewed group step, hardened client concurrency/lost-response, real actor authority, real committed-Order relational matrix (disposable TB253R2 **4/4**). Tipax deferred. No canonical redeploy in this slice. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253-R1 PASS: operational compatibility/readiness + group consolidate + disposable matrix — 2026-11-08
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued R1 software/relational/deploy scope, decision **OPERATIONAL_COMPATIBILITY_READINESS_GROUP_CONSOLIDATE_AND_DISPOSABLE_MATRIX_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `1c9bd5d2905`.

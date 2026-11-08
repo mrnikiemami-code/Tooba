@@ -1,4 +1,11 @@
-# CURRENT — 253-R1 PASS: operational compatibility/readiness + group consolidate + disposable matrix — 2026-11-08
+# CURRENT — 253-R2 PASS: one reviewed Marketplace group workflow + real actor authority + real relational matrix — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued R2 software/relational scope, decision **ONE_GROUP_WORKFLOW_ACTOR_AUTHORITY_AND_REAL_RELATIONAL_MATRIX_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `9532d6c87`; Code `8580097d6`.
+LANDED: single `prepare_operational_group` (create/reuse constituent parcels with stable `opgroup:` keys → one common package → `replayed` on retry/twin/lost response); reviewed remaining packed items in the group card; synchronous single-flight `useRef` + inline localized refusal + retained quantities; real `IOrderAdminEffectiveAccessReader` authority in composer/orchestrator/UI; Marketplace owner identity is the proven dispatch origin (Store/Seller still fail closed); disposable `tb253r2-pg:15433` TB253R2 **4/4** on REAL committed Order evidence. Authority+workflow **17/17**, mount **8/8**, typecheck 0, build 0.
+Tipax deferred. No schema/migration/SQL, no Store promotion, no canonical redeploy in this slice. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253-R1 PASS: operational compatibility/readiness + group consolidate + disposable matrix — 2026-11-08
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued R1 software/relational/deploy scope, decision **OPERATIONAL_COMPATIBILITY_READINESS_GROUP_CONSOLIDATE_AND_DISPOSABLE_MATRIX_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `1c9bd5d2905`.
