@@ -135,7 +135,6 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
   const [sellerCaps, setSellerCaps] = useState<Record<string, AdminSellerCapability>>({});
   const [opsLoaded, setOpsLoaded] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
-  const [groupWorkflowErrorFa, setGroupWorkflowErrorFa] = useState<string | null>(null);
   const groupWorkflowInFlight = useRef(false);
   const [openKebabLineId, setOpenKebabLineId] = useState<string | null>(null);
   const [shipmentModalTarget, setShipmentModalTarget] = useState<{
@@ -264,6 +263,13 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       .filter((s) => s.quantity > 0);
   }
 
+  function actionsForSeller(sellerOrderId: string): AdminOrderOperationAction[] {
+    return [
+      ...(opsBySeller[sellerOrderId] ?? []),
+      ...(opsBySeller.__checkout__ ?? []),
+    ];
+  }
+
   async function runSellerOp(
     seller: AdminSellerOrder,
     code: string,
@@ -275,10 +281,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       trackingReference?: string;
     },
   ): Promise<boolean> {
-    const actions = [
-      ...(opsBySeller[seller.id] ?? []),
-      ...(opsBySeller.__checkout__ ?? []),
-    ];
+    const actions = actionsForSeller(seller.id);
     const action = actionFor(actions, code, seller.id, opts?.shipmentId, opts?.orderLineId);
     if (!action) {
       toast.error("این عملیات در وضعیت فعلی برای این فروشنده مجاز نیست.");
@@ -309,6 +312,12 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       .filter((t): t is string => Boolean(t && t.trim())),
   );
 
+  // TB-254: shipping groups whose parcels are displayed (and operated) by the «ارسال سفارش» cards.
+  const operationalGroupShippingGroupIds = new Set<string>();
+  for (const group of detail.operationalDeliveryGroups ?? []) {
+    for (const member of group.members) operationalGroupShippingGroupIds.add(member.shippingGroupId);
+  }
+
 
   return (
     <section
@@ -324,11 +333,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
         <AdminOrderOperationalDeliverySection
           detail={detail}
           pendingCode={pendingCode}
-          selectedBySeller={selectedBySeller}
-          qtyByLine={qtyByLine}
-          shippableQty={shippableQty}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
-          workflowErrorFa={groupWorkflowErrorFa}
           occurrenceScopeKey={(() => {
             // TB-253-R4: retained occurrence scope = viewer/owner, so another admin session can never
             // inherit this checkout's in-flight workflow envelope.
@@ -339,12 +344,27 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
             const trimmed = typeof actor === "string" ? actor.trim() : "";
             return trimmed.length > 0 ? `admin:${trimmed}` : null;
           })()}
+          parcelCapabilities={(seller, shipment) => {
+            // TB-254: this card is the ONE parcel/action owner. A parcel that belongs to a shared
+            // package is operated from the package section, so it exposes no duplicate action here.
+            const packageLocked = Boolean(shipment.packageLockedReasonFa || shipment.activePackageNumber);
+            const actions = actionsForSeller(seller.id);
+            return {
+              canTrack: !packageLocked && Boolean(actionFor(actions, "assign_tracking", seller.id, shipment.shipmentId)),
+              canDispatch: !packageLocked && Boolean(actionFor(actions, "dispatch_shipment", seller.id, shipment.shipmentId)),
+              canDeliver: !packageLocked && Boolean(actionFor(actions, "deliver_shipment", seller.id, shipment.shipmentId)),
+              canCancel: !packageLocked && Boolean(actionFor(actions, "cancel_shipment", seller.id, shipment.shipmentId)),
+            };
+          }}
+          onParcelTrack={(seller, shipment) => setTrackingTarget({ seller, shipment })}
+          onParcelOperation={(seller, code, shipmentId) => {
+            void runSellerOp(seller, code, { shipmentId });
+          }}
           onPrepareOperationalGroup={async (_group, request) => {
             // Synchronous single-flight: same-tick double clicks cannot both enter.
-            if (groupWorkflowInFlight.current) return false;
+            if (groupWorkflowInFlight.current) return { completed: false };
             groupWorkflowInFlight.current = true;
             setPendingCode("prepare_operational_group");
-            setGroupWorkflowErrorFa(null);
             try {
               const result = await executeAdminOrderOperation(checkoutId, {
                 code: "prepare_operational_group",
@@ -355,10 +375,10 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 shippingMethodCode: null,
               });
               if (result.state !== "ok") {
-                setGroupWorkflowErrorFa(
-                  mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
-                );
-                return { completed: false };
+                return {
+                  completed: false,
+                  errorFa: mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
+                };
               }
               toast.success("مرسوله‌ها و بستهٔ مشترک گروه ایجاد شد.");
               onCompleted?.();
@@ -402,6 +422,11 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           const canUnpack = hasSelection && !mixedSelection && bulkCodes.has("unpack")
             && Boolean(actionFor(actions, "unpack", seller.id));
           const shipments = seller.shipments ?? [];
+          // TB-254: one parcel/action owner. Parcels already displayed under their operational group
+          // are NOT repeated here; only legacy shipments without a covered group stay visible.
+          const orphanShipments = shipments.filter(
+            (shipment) => !shipment.shippingGroupId || !operationalGroupShippingGroupIds.has(shipment.shippingGroupId),
+          );
           const itemCount = seller.lines.reduce((sum, line) => sum + line.quantity, 0);
           const selectableLines = seller.lines.filter((line) => capabilityFor(seller, line).selectable);
           const headerStatus = paymentLocked
@@ -424,6 +449,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                     >
                       {formatAdminStatus(headerStatus)}
                     </span>
+                    <span className="text-[11px] font-semibold text-gray-500">آماده‌سازی کالاها</span>
                   </div>
                   <p className="text-xs text-gray-500">
                     {itemCount.toLocaleString("fa-IR")} قلم · {seller.orderNumber}
@@ -507,7 +533,13 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 </div>
               ) : null}
 
-              <div className="grid gap-3 p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.8fr)]">
+              <div
+                className={
+                  orphanShipments.length === 0
+                    ? "grid gap-3 p-3"
+                    : "grid gap-3 p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.8fr)]"
+                }
+              >
                 <div className="overflow-x-auto rounded-lg border border-gray-100" data-testid={`admin-order-seller-lines-scroll-${seller.id}`}>
                   <table className="min-w-[920px] w-full text-sm">
                     <thead className="bg-gray-50 text-xs text-gray-600">
@@ -687,19 +719,20 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                   ) : null}
                 </div>
 
+                {orphanShipments.length > 0 ? (
                 <aside className="rounded-lg border border-gray-100 bg-gray-50/40 p-3" data-testid={`admin-order-seller-shipments-${seller.id}`}>
                   <h4 className="text-xs font-black text-gray-800">
-                    مرسوله‌های این فروشنده
+                    مرسوله‌های مستقل این فروشنده
                   </h4>
-                  {shipments.length === 0 ? (
+                  {orphanShipments.length === 0 ? (
                     <div className="mt-6 flex flex-col items-center gap-2 py-6 text-center text-xs text-gray-500" data-testid={`admin-order-seller-shipments-empty-${seller.id}`}>
                       <Truck className="size-8 text-gray-300" aria-hidden />
                       <p>هنوز مرسوله‌ای ایجاد نشده است.</p>
                     </div>
                   ) : (
                     (() => {
-                      const currentShipments = shipments.filter((s) => !isCancelledLifecycleStatus(s.status));
-                      const cancelledShipments = shipments.filter((s) => isCancelledLifecycleStatus(s.status));
+                      const currentShipments = orphanShipments.filter((s) => !isCancelledLifecycleStatus(s.status));
+                      const cancelledShipments = orphanShipments.filter((s) => isCancelledLifecycleStatus(s.status));
                       const shipmentTab = shipmentTabBySeller[seller.id] ?? "current";
                       const visibleShipments = shipmentTab === "cancelled" ? cancelledShipments : currentShipments;
                       return (
@@ -873,6 +906,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                   )}
                   {!opsLoaded ? <p className="mt-2 text-[11px] text-gray-400">بارگذاری عملیات…</p> : null}
                 </aside>
+                ) : null}
               </div>
             </article>
           );

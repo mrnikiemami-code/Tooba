@@ -1,4 +1,10 @@
-# CURRENT — 253-R6 PASS: error-code no-claim release removed; retained occurrence kept until authoritative resolution — 2026-11-08
+# CURRENT — 254 PASS: inline selection + duplicate shipment presentation removed — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-OPERATIONS-PROFESSIONAL-UI-254/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-OPERATIONS-PROFESSIONAL-UI-254/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued UI/correction + FE deploy scope, decision **REMOVE_AMBIGUOUS_INLINE_SELECTION_AND_DUPLICATE_SHIPMENT_PRESENTATION**, NOT Architect/Visual ACCEPT. Base `8469a82f4`. Canonical FE3000 (PID 30816, BUILD_ID `o7FdiG_1QEjT376HubPBj`) → Host5088 (PID 17344, unchanged) SingleStore/store-alpha/tooba_alpha.
+The normal operational delivery section is now display-only (no checkbox/quantity/reuse/inline selection) with ONE deliberate workflow entry; the new `admin-operational-group-workflow-dialog.tsx` owns quantity review, explicit parcel reuse, single submit, retained-envelope review, reconcile and inline error; `admin-order-items-shipping-panel.tsx` keeps only orphan shipments in the seller aside, so each parcel has exactly one owner. 253-R4/R5/R6 envelope, no-remint and single-flight invariants unchanged. Executed: mount/state 22/22, typecheck 0, build 0, FE3000 restarted on the new build, order `01a1b92d-…` 200; no backend/migration/SQL/data change; size/flat-folder guards pre-existing RED (no rebaselining). Tipax deferred; Store never promoted. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253-R6 PASS: error-code no-claim release removed; retained occurrence kept until authoritative resolution — 2026-11-08
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R6/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued R6 correction/deploy scope, decision **ERROR_CODE_NO_CLAIM_RELEASE_REMOVED_RETAINED_OCCURRENCE_KEPT_UNTIL_AUTHORITATIVE_RESOLUTION**, NOT Architect/Visual ACCEPT. Base `567a531b0`. Canonical FE3000 (PID 33744, BUILD_ID `vr8IyL4HVfMU_ykXjaSyV`) → Host5088 (PID 17344) SingleStore/store-alpha/tooba_alpha.

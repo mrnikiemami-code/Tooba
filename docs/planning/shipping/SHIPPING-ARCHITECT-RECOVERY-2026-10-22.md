@@ -1,4 +1,18 @@
-# CURRENT — 253-R6 PASS: error-code no-claim release removed; retained occurrence kept until authoritative resolution — 2026-11-08
+# CURRENT — 254 PASS: inline selection + duplicate shipment presentation removed — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-ORDER-OPERATIONS-PROFESSIONAL-UI-254/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-OPERATIONS-PROFESSIONAL-UI-254/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued UI/correction + FE deploy scope, decision **REMOVE_AMBIGUOUS_INLINE_SELECTION_AND_DUPLICATE_SHIPMENT_PRESENTATION**, NOT Architect/Visual ACCEPT. Base `8469a82f4`. Canonical FE3000 (PID 30816, BUILD_ID `o7FdiG_1QEjT376HubPBj`) → Host5088 (PID 17344, unchanged) SingleStore/store-alpha/tooba_alpha. Evidence docs carry the exact receipts.
+Marketplace-only cross-seller rule preserved; Store never promoted; origin vs responsibility still distinct.
+The order shipping-operations page no longer mixes review inputs with parcel facts: the operational section is
+display-only with one deliberate workflow entry, the dedicated `admin-operational-group-workflow-dialog.tsx` owns
+quantity review / explicit parcel reuse / submit / retained review / reconcile / inline error, and the seller aside
+keeps only orphan shipments so every covered parcel has exactly one owner and one set of permitted actions.
+253-R4 durable envelope, 253-R5/R6 no-remint/no-code-release and single-flight behaviour are untouched.
+Executed: mount/state 22/22, typecheck 0, build 0 (`o7FdiG_1QEjT376HubPBj`), FE3000 restarted on it, canonical order
+`01a1b92d-…` 200, no backend/migration/SQL/data write. Source-size + flat-folder guards stay pre-existing RED with no
+baseline edit. Tipax deferred; Store never promoted.
+
+# SUPERSEDED — 253-R6 PASS: error-code no-claim release removed; retained occurrence kept until authoritative resolution — 2026-11-08
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R6/{TASK.md,RESULT.md,RECEIPTS.md}, plus the R5 ARCHITECT-REVIEW.
 Status **PASS** within issued R6 correction/deploy scope, decision **ERROR_CODE_NO_CLAIM_RELEASE_REMOVED_RETAINED_OCCURRENCE_KEPT_UNTIL_AUTHORITATIVE_RESOLUTION**, NOT Architect/Visual ACCEPT. Base `567a531b0`. Canonical FE3000 (PID 33744, BUILD_ID `vr8IyL4HVfMU_ykXjaSyV`) → Host5088 (PID 17344) SingleStore/store-alpha/tooba_alpha. Evidence docs carry the exact receipts.
