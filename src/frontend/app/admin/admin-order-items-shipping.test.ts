@@ -33,8 +33,13 @@ test("items-shipping shell is mounted above financial section", () => {
 test("carrier execution is group-scoped inside items-shipping panel", () => {
   const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
   const execution = readFileSync(join(dir, "admin-order-group-carrier-execution.tsx"), "utf8");
+  const feature = readFileSync(
+    join(dir, "..", "..", "features", "order-carrier-execution", "order-group-carrier-execution.tsx"),
+    "utf8",
+  );
   assert.match(panel, /AdminOrderGroupCarrierExecution/);
-  assert.match(execution, /shipments\/capabilities/);
+  assert.match(execution, /order-group-carrier-execution/);
+  assert.match(feature, /shipments\/capabilities/);
 });
 
 test("seller groups stay separate and selection cannot cross sellers in one op", () => {
@@ -259,7 +264,7 @@ test("capability projection drives payment lock and start/pack row actions", () 
   assert.equal(fractional.selectableQuantityMax, 0.75);
   const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
   assert.match(panel, /PAYMENT_LOCKED_BANNER_FA|admin-order-seller-payment-locked-/);
-  assert.match(panel, /admin-order-seller-create-shipment-/);
+  assert.match(panel, /AdminOrderOperationalDeliverySection/);
   assert.equal(PAYMENT_LOCKED_BANNER_FA.includes("پرداخت این بخش از سفارش هنوز تأیید نشده"), true);
 });
 
@@ -269,10 +274,11 @@ test("create shipment modal sends selections without deferred T005 block", () =>
   assert.doesNotMatch(modal, /admin-create-shipment-deferred|به T005 موکول/);
 });
 
-test("optional shipment metadata is omitted, never serialized as undefined", () => {
+test("create shipment modal posts exact group identity without client provider metadata", () => {
   const modal = readFileSync(join(dir, "admin-create-shipment-modal.tsx"), "utf8");
   assert.doesNotMatch(modal, /\?\?\s*undefined/);
-  assert.match(modal, /v !== undefined && v !== ""/);
+  assert.match(modal, /shippingGroupId:\s*shippingGroup\.shippingGroupId/);
+  assert.doesNotMatch(modal, /providerMetadataJson\s*:/);
 });
 
 test("mapAdminOrderDetail maps return deadline fields", () => {

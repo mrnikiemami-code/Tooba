@@ -75,6 +75,15 @@ function remainingShippable(line: AdminOrderLine): number {
   return Math.max(0, packed - allocated);
 }
 
+/** Exact create method head: serviceCode, else methodCode without captured \\u001f / colon tails. */
+export function resolveCreateShipmentMethodCode(group: AdminAcceptedShippingGroup): string {
+  const fromService = (group.serviceCode ?? "").trim();
+  if (fromService) return fromService.split("\u001f")[0]!.split(":")[0]!.trim();
+  const raw = (group.methodCode ?? "").trim();
+  if (!raw) return "";
+  return raw.split("\u001f")[0]!.split(":")[0]!.trim();
+}
+
 function addressSummary(detail: AdminOrderDetail | null | undefined): string {
   if (!detail) return "";
   return [detail.provinceName, detail.cityName, detail.postalAddress, detail.postalCode]
@@ -175,7 +184,8 @@ export function AdminCreateShipmentModal({
         fulfillmentId,
         shippingGroupId: shippingGroup.shippingGroupId,
         carrierDisplayName: shippingGroup.methodLabel || shippingGroup.methodCode,
-        shippingMethodCode: shippingGroup.methodCode,
+        // Prefer service head; strip captured "service\\u001foption" / "service:option" composites.
+        shippingMethodCode: resolveCreateShipmentMethodCode(shippingGroup),
         selections: selections.map((s) => ({
           orderLineId: s.orderLineId,
           quantity: s.quantity,

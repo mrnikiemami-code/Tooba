@@ -7,6 +7,7 @@ using Tooba.Order.Application.Admin.Operations.Ports;
 using Tooba.Order.Contracts.Admin.Operations;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Payments;
+using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.Operations;
@@ -20,6 +21,7 @@ using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
+using Tooba.Order.Application.Storefront.Ports;
 
 namespace Tooba.Order.Application.Admin.Operations.Services;
 
@@ -312,6 +314,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         }
 
         var methodCode = request.ShippingMethodCode?.Trim();
+        await EnsureOperationalConsolidateAllowedAsync(checkoutId, shipmentIds, cancellationToken);
 
         return await _fulfillment.CreateConsolidatedPackageAsync(
             checkoutId,
@@ -321,6 +324,104 @@ public sealed partial class AdminOrderOperationsOrchestrator
             request.Reason,
             actorUserId,
             cancellationToken);
+    }
+
+    /// <summary>
+    /// TB-253: consolidated package mutation must reuse the same Marketplace operational compatibility authority as the UI.
+    /// </summary>
+    private async Task EnsureOperationalConsolidateAllowedAsync(
+        Guid checkoutId,
+        IReadOnlyList<Guid> shipmentIds,
+        CancellationToken cancellationToken)
+    {
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var shipmentById = fulfillments
+            .SelectMany(f => f.Shipments.Select(s => (Fulfillment: f, Shipment: s)))
+            .ToDictionary(x => x.Shipment.ShipmentId);
+
+        var shippingGroupIds = new List<Guid>();
+        foreach (var shipmentId in shipmentIds.Distinct())
+        {
+            if (!shipmentById.TryGetValue(shipmentId, out var row)
+                || row.Shipment.ShippingGroupId is not Guid groupId
+                || groupId == Guid.Empty)
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.ConsolidateIncompatible);
+            }
+
+            shippingGroupIds.Add(groupId);
+        }
+
+        var facts = await _committedShippingGroups.ListByCheckoutAsync(checkoutId, cancellationToken);
+        var history = await _shippingGroupHistory.GetForCheckoutAsync(checkoutId, cancellationToken);
+        var historyById = history.ToDictionary(x => x.ShippingGroupId);
+        var factsById = facts.ToDictionary(x => x.ShippingGroupId);
+
+        var selected = new List<MarketplaceOperationalDeliveryGroupAuthority.GroupFact>();
+        foreach (var groupId in shippingGroupIds.Distinct())
+        {
+            if (!factsById.TryGetValue(groupId, out var fact)
+                || !historyById.TryGetValue(groupId, out var hist))
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.ConsolidateIncompatible);
+            }
+
+            selected.Add(ToOperationalFact(checkoutId, fact, hist));
+        }
+
+        try
+        {
+            MarketplaceOperationalDeliveryGroupAuthority.EnsureConsolidateAllowed(selected);
+        }
+        catch (MarketplaceOperationalDeliveryGroupException ex)
+        {
+            throw new AdminOrderOperationsException(ex.Code);
+        }
+    }
+
+    private static MarketplaceOperationalDeliveryGroupAuthority.GroupFact ToOperationalFact(
+        Guid checkoutId,
+        OrderCommittedCarrierShipmentFacts fact,
+        OrderShippingGroupHistoryRecord hist)
+    {
+        var deliveryDate = hist.Evidence?.ReceivingDate
+            ?? hist.RequestedDeliveryDate
+            ?? (DateOnly?)hist.MinimumDeliveryDate;
+        return new MarketplaceOperationalDeliveryGroupAuthority.GroupFact(
+            fact.ShippingGroupId,
+            checkoutId,
+            fact.SellerOrderId,
+            fact.SellerPartyId,
+            fact.MethodCode,
+            fact.ServiceCode ?? hist.ServiceCode,
+            fact.OptionCode ?? hist.OptionCode,
+            fact.MethodLabel,
+            fact.Currency,
+            fact.PayableAtCheckoutAmount,
+            fact.OwnerKind,
+            fact.OwnerTenantKey,
+            fact.OwnerSellerPartyId,
+            deliveryDate,
+            hist.Evidence?.ReceivingOpenTicks,
+            hist.Evidence?.ReceivingCloseTicks,
+            hist.Evidence?.ReceivingTimeZone,
+            fact.TransportMode,
+            fact.OriginLocationCode,
+            fact.OriginPostalAddress,
+            fact.CarrierAccountId,
+            fact.ProviderCode,
+            fact.ProviderServiceCode,
+            fact.ConfigurationVersion,
+            MarketplaceOperationalDeliveryGroupAuthority.BuildDestinationFingerprint(
+                fact.ProvinceName,
+                fact.CityName,
+                fact.PostalCode,
+                fact.RecipientAddress),
+            fact.OrderLineIds,
+            fact.ExecutableLines.Count > 0 && !fact.IsCancelled && !fact.PaymentLocked,
+            fact.IneligibilityReasonCode);
     }
 
     private async Task<object> CancelConsolidatedPackageCoreAsync(

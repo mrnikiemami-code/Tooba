@@ -1,4 +1,10 @@
-# CURRENT — 252-R3 PASS: remove recipient-as-origin trusted metadata invent — 2026-11-04
+# CURRENT — 253 PARTIAL: Marketplace operational delivery groups authority + UI — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PARTIAL**, decision **OPERATIONAL_DELIVERY_GROUP_AUTHORITY_AND_UI_DEPLOYED_RELATIONAL_MATRIX_UNMET**, NOT Architect/Visual ACCEPT. Base `e33517eb4`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. LANDED: server-owned Marketplace-only cross-seller operational grouping projection; Store never promoted; consolidate create/offer same authority; «ارسال سفارش» operational cards. Authority 8/8 + FE 25/25 + typecheck/build + deploy. Disposable relational consolidate matrix unmet. Live order `01a1b92d-…` Store×3 separate groups. CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 252-R3 PASS: remove recipient-as-origin trusted metadata invent — 2026-11-04
 
 Read docs/ai/tasks/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-ORDER-ACCEPTED-GROUP-SHIPMENT-UI-252-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued origin/collection correction + deploy scope, decision **RECIPIENT_AS_ORIGIN_FALLBACK_REMOVED_FAIL_CLOSED**, NOT Architect/Visual ACCEPT. Base `36845985b`.

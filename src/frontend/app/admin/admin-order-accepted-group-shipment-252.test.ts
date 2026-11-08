@@ -17,11 +17,12 @@ test("252 create modal has no method catalogue reselection", () => {
 
 test("252 panel opens create from accepted group cards", () => {
   const src = readFileSync(join(root, "admin-order-items-shipping-panel.tsx"), "utf8");
-  assert.match(src, /admin-order-shipping-group-/);
-  assert.match(src, /admin-order-group-create-shipment-/);
+  assert.match(src, /AdminOrderOperationalDeliverySection/);
   assert.match(src, /setShipmentModalTarget/);
   assert.doesNotMatch(src, /setShipmentModalSellerId/);
-  assert.match(src, /shippingGroups/);
+  const op = readFileSync(join(root, "admin-order-operational-delivery-section.tsx"), "utf8");
+  assert.match(op, /admin-order-operational-create-/);
+  assert.match(op, /shippingGroups/);
 });
 
 test("252 ops menu no longer opens carrier method override for create_shipment", () => {

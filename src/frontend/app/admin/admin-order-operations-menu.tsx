@@ -237,8 +237,9 @@ export function AdminOrderOperationsMenu({
         open={confirmAction !== null}
         onClose={() => setConfirmAction(null)}
         showCloseButton={false}
+        size="lg"
       >
-        <p className="text-sm text-gray-700">
+        <p className="whitespace-normal break-words text-sm leading-6 text-gray-700 [overflow-wrap:anywhere]">
           {confirmAction?.confirmMessageFa || `اجرای «${confirmAction?.labelFa ?? ""}»؟`}
         </p>
         <div className="mt-4 flex justify-end gap-2">

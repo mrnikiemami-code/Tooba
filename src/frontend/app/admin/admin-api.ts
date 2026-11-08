@@ -120,6 +120,46 @@ export interface AdminAcceptedShippingGroup {
   transportMode: string;
 }
 
+export interface AdminOperationalDeliveryMember {
+  shippingGroupId: string;
+  sellerOrderId: string;
+  sellerPartyId: string;
+  sellerDisplayName: string;
+  orderLineIds: string[];
+  createParcelEligible: boolean;
+  createParcelBlockReasonFa: string | null;
+  transportMode: string;
+  feeAmount: number;
+  currency: string;
+}
+
+export interface AdminOperationalFeeBreakdown {
+  shippingGroupId: string;
+  sellerDisplayName: string;
+  feeAmount: number;
+  currency: string;
+}
+
+/** Server-owned operational delivery projection (TB-253). */
+export interface AdminOperationalDeliveryGroup {
+  operationalGroupKey: string;
+  methodLabel: string;
+  methodCode: string;
+  serviceCode: string | null;
+  optionCode: string | null;
+  deliveryDate: string | null;
+  deliveryTimeWindow: string | null;
+  responsibilityLabelFa: string | null;
+  isCrossSellerMarketplace: boolean;
+  separateReasonFa: string | null;
+  consolidateEligible: boolean;
+  consolidateBlockReasonFa: string | null;
+  combinedFeeTotal: number;
+  currency: string;
+  members: AdminOperationalDeliveryMember[];
+  feeBreakdown: AdminOperationalFeeBreakdown[];
+}
+
 export interface AdminConsolidatedPackageMember {
   shipmentId: string;
   sellerPartyId: string;
@@ -223,6 +263,7 @@ export interface AdminOrderDetail {
   payment?: AdminPaymentOps | null;
   reservationCycle?: AdminReservationCycleAudit | null;
   shippingGroups?: AdminAcceptedShippingGroup[];
+  operationalDeliveryGroups?: AdminOperationalDeliveryGroup[];
 }
 
 
@@ -774,6 +815,68 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     payment: mapAdminPaymentOps(prop(item, "payment", "Payment")),
     reservationCycle: mapAdminReservationCycleAudit(prop(item, "reservationCycle", "ReservationCycle")),
     shippingGroups,
+    operationalDeliveryGroups: array(prop(item, "operationalDeliveryGroups", "OperationalDeliveryGroups")).flatMap(
+      (raw): AdminOperationalDeliveryGroup[] => {
+        const row = record(raw);
+        if (!row) return [];
+        const operationalGroupKey = text(prop(row, "operationalGroupKey", "OperationalGroupKey"));
+        if (!operationalGroupKey) return [];
+        const members = array(prop(row, "members", "Members")).flatMap((memberRaw): AdminOperationalDeliveryMember[] => {
+          const member = record(memberRaw);
+          if (!member) return [];
+          const shippingGroupId = text(prop(member, "shippingGroupId", "ShippingGroupId"));
+          const sellerOrderId = text(prop(member, "sellerOrderId", "SellerOrderId"));
+          if (!shippingGroupId || !sellerOrderId) return [];
+          return [{
+            shippingGroupId,
+            sellerOrderId,
+            sellerPartyId: text(prop(member, "sellerPartyId", "SellerPartyId")),
+            sellerDisplayName: text(prop(member, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
+            orderLineIds: array(prop(member, "orderLineIds", "OrderLineIds"))
+              .map((id) => text(id))
+              .filter((id): id is string => Boolean(id)),
+            createParcelEligible: Boolean(prop(member, "createParcelEligible", "CreateParcelEligible")),
+            createParcelBlockReasonFa:
+              text(prop(member, "createParcelBlockReasonFa", "CreateParcelBlockReasonFa")) || null,
+            transportMode: text(prop(member, "transportMode", "TransportMode"), "LegacyIncomplete"),
+            feeAmount: number(prop(member, "feeAmount", "FeeAmount")),
+            currency: text(prop(member, "currency", "Currency"), "IRR"),
+          }];
+        });
+        return [{
+          operationalGroupKey,
+          methodLabel: text(prop(row, "methodLabel", "MethodLabel"), "—"),
+          methodCode: text(prop(row, "methodCode", "MethodCode")),
+          serviceCode: text(prop(row, "serviceCode", "ServiceCode")) || null,
+          optionCode: text(prop(row, "optionCode", "OptionCode")) || null,
+          deliveryDate: text(prop(row, "deliveryDate", "DeliveryDate")) || null,
+          deliveryTimeWindow: text(prop(row, "deliveryTimeWindow", "DeliveryTimeWindow")) || null,
+          responsibilityLabelFa: text(prop(row, "responsibilityLabelFa", "ResponsibilityLabelFa")) || null,
+          isCrossSellerMarketplace: Boolean(prop(row, "isCrossSellerMarketplace", "IsCrossSellerMarketplace")),
+          separateReasonFa: text(prop(row, "separateReasonFa", "SeparateReasonFa")) || null,
+          consolidateEligible: Boolean(prop(row, "consolidateEligible", "ConsolidateEligible")),
+          consolidateBlockReasonFa:
+            text(prop(row, "consolidateBlockReasonFa", "ConsolidateBlockReasonFa")) || null,
+          combinedFeeTotal: number(prop(row, "combinedFeeTotal", "CombinedFeeTotal")),
+          currency: text(prop(row, "currency", "Currency"), "IRR"),
+          members,
+          feeBreakdown: array(prop(row, "feeBreakdown", "FeeBreakdown")).flatMap(
+            (feeRaw): AdminOperationalFeeBreakdown[] => {
+              const fee = record(feeRaw);
+              if (!fee) return [];
+              const shippingGroupId = text(prop(fee, "shippingGroupId", "ShippingGroupId"));
+              if (!shippingGroupId) return [];
+              return [{
+                shippingGroupId,
+                sellerDisplayName: text(prop(fee, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
+                feeAmount: number(prop(fee, "feeAmount", "FeeAmount")),
+                currency: text(prop(fee, "currency", "Currency"), "IRR"),
+              }];
+            },
+          ),
+        }];
+      },
+    ),
   };
   return enrichAdminOrderDetail(mapped);
 }

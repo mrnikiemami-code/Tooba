@@ -68,6 +68,45 @@ public sealed record AdminAcceptedShippingGroupView(
     /// <summary>Committed transport mode from Order facts (Manual / CarrierApi / LegacyIncomplete).</summary>
     string TransportMode);
 
+/// <summary>عضو یک گروه عملیاتی ارسال (ارجاع به گروه پذیرفته‌شدهٔ پایدار).</summary>
+public sealed record AdminOperationalDeliveryMemberView(
+    Guid ShippingGroupId,
+    Guid SellerOrderId,
+    Guid SellerPartyId,
+    string SellerDisplayName,
+    IReadOnlyList<Guid> OrderLineIds,
+    bool CreateParcelEligible,
+    string? CreateParcelBlockReasonFa,
+    string TransportMode,
+    decimal FeeAmount,
+    string Currency);
+
+/// <summary>شکست هزینهٔ تعهدهای عضو در کارت عملیاتی.</summary>
+public sealed record AdminOperationalFeeBreakdownView(
+    Guid ShippingGroupId,
+    string SellerDisplayName,
+    decimal FeeAmount,
+    string Currency);
+
+/// <summary>گروه عملیاتی ارسال سفارش — projection فقط‌خواندنی روی گروه‌های پذیرفته‌شده.</summary>
+public sealed record AdminOperationalDeliveryGroupView(
+    string OperationalGroupKey,
+    string MethodLabel,
+    string MethodCode,
+    string? ServiceCode,
+    string? OptionCode,
+    DateOnly? DeliveryDate,
+    string? DeliveryTimeWindow,
+    string? ResponsibilityLabelFa,
+    bool IsCrossSellerMarketplace,
+    string? SeparateReasonFa,
+    bool ConsolidateEligible,
+    string? ConsolidateBlockReasonFa,
+    decimal CombinedFeeTotal,
+    string Currency,
+    IReadOnlyList<AdminOperationalDeliveryMemberView> Members,
+    IReadOnlyList<AdminOperationalFeeBreakdownView> FeeBreakdown);
+
 /// <summary>عضو بسته تجمیعی روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminConsolidatedPackageMemberView(
     Guid ShipmentId,
@@ -172,7 +211,8 @@ public sealed record AdminOrderDetailPage(
     AdminPaymentOpsView? Payment = null,
     IReadOnlyList<AdminConsolidatedPackageView>? ConsolidatedPackages = null,
     AdminReservationCycleAuditView? ReservationCycle = null,
-    IReadOnlyList<AdminAcceptedShippingGroupView>? ShippingGroups = null);
+    IReadOnlyList<AdminAcceptedShippingGroupView>? ShippingGroups = null,
+    IReadOnlyList<AdminOperationalDeliveryGroupView>? OperationalDeliveryGroups = null);
 
 /// <summary>بازرسی عملیاتی پرداخت روی جزئیات سفارش مدیر؛ راز یا payload خام ندارد.</summary>
 public sealed record AdminPaymentOpsView(

@@ -546,20 +546,37 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             return;
         }
 
-        var offered = shippingMethodCode.Trim();
-        var accepted = (group.MethodCode ?? string.Empty).Trim();
+        // Captured checkout may persist method as "post\u001f" / "post\u001fstandard" (service+option
+        // composite). CreateShipment registry code is the head token ("post"). Compare after stripping
+        // both unit-separator and colon-prefixed catalogue forms.
+        var offered = NormalizeShippingMethodIdentity(shippingMethodCode);
+        var accepted = NormalizeShippingMethodIdentity(group.MethodCode);
         if (accepted.Length == 0)
         {
             return;
         }
 
-        var offeredHead = offered.Split(':', 2)[0].Trim();
-        var acceptedHead = accepted.Split(':', 2)[0].Trim();
-        if (!string.Equals(offered, accepted, StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(offeredHead, acceptedHead, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(offered, accepted, StringComparison.OrdinalIgnoreCase))
         {
             throw new ContractOperationException(FulfillmentShippingGroupFault.ShipmentMethodMismatch);
         }
+    }
+
+    /// <summary>Head method token from registry, colon catalogue, or captured service\\u001foption forms.</summary>
+    private static string NormalizeShippingMethodIdentity(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return string.Empty;
+        }
+
+        var value = raw.Trim().Split('\u001f', 2)[0].Trim();
+        if (value.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        return value.Split(':', 2)[0].Trim();
     }
 
     /// <summary>ابطال مرسولهٔ پیش از dispatch و آزادسازی تخصیص.</summary>

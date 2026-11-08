@@ -7,6 +7,7 @@ using Tooba.Order.Application.Admin.Operations.Ports;
 using Tooba.Order.Contracts.Admin.Operations;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Payments;
+using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.Operations;
@@ -349,13 +350,14 @@ public sealed partial class AdminOrderOperationsOrchestrator
         }
     }
 
-    private void ProjectConsolidatedPackageActions(
+    private async Task ProjectConsolidatedPackageActionsAsync(
         List<AdminOrderOperationAction> actions,
         AdminOrderOpsCheckoutSnapshot group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ConsolidatedPackageSnapshot> packages,
         IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment,
-        OrderAdminEffectiveAccess effective)
+        OrderAdminEffectiveAccess effective,
+        CancellationToken cancellationToken)
     {
         if (IsCheckoutCancelled(group))
         {
@@ -369,16 +371,42 @@ public sealed partial class AdminOrderOperationsOrchestrator
         }
 
         var permission = Prefer(effective, "order.handle", "fulfillment.manage");
-        var eligibleByMethod = fulfillments
+        var eligibleShipments = fulfillments
             .SelectMany(f => f.Shipments
                 .Where(s => s.Status == ShipmentOperationStatus.Created
                     && s.DispatchedAt is null
                     && !string.IsNullOrWhiteSpace(s.ShippingMethodCode)
+                    && s.ShippingGroupId is Guid
                     && !membershipByShipment.ContainsKey(s.ShipmentId))
-                .Select(s => (f.SellerPartyId, Method: s.ShippingMethodCode.Trim())))
-            .GroupBy(x => x.Method, StringComparer.OrdinalIgnoreCase)
-            .Any(g => g.Select(x => x.SellerPartyId).Distinct().Count() >= 2);
-        if (eligibleByMethod)
+                .Select(s => (f.SellerPartyId, Shipment: s)))
+            .ToList();
+
+        var canOfferCreate = false;
+        if (eligibleShipments.Select(x => x.SellerPartyId).Distinct().Count() >= 2)
+        {
+            var facts = await _committedShippingGroups.ListByCheckoutAsync(group.CheckoutId, cancellationToken);
+            var history = await _shippingGroupHistory.GetForCheckoutAsync(group.CheckoutId, cancellationToken);
+            var historyById = history.ToDictionary(x => x.ShippingGroupId);
+            var factsById = facts.ToDictionary(x => x.ShippingGroupId);
+            var operationalFacts = new List<MarketplaceOperationalDeliveryGroupAuthority.GroupFact>();
+            foreach (var row in eligibleShipments)
+            {
+                var groupId = row.Shipment.ShippingGroupId!.Value;
+                if (!factsById.TryGetValue(groupId, out var fact)
+                    || !historyById.TryGetValue(groupId, out var hist))
+                {
+                    continue;
+                }
+
+                operationalFacts.Add(ToOperationalFact(group.CheckoutId, fact, hist));
+            }
+
+            canOfferCreate = MarketplaceOperationalDeliveryGroupAuthority
+                .Project(operationalFacts)
+                .Any(op => op.IsCrossSellerMarketplace && op.ConsolidateEligible);
+        }
+
+        if (canOfferCreate)
         {
             actions.Add(Action(
                 "create_consolidated_package",

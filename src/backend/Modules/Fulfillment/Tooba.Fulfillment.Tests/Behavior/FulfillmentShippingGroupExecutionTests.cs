@@ -282,6 +282,41 @@ public sealed class FulfillmentShippingGroupExecutionTests
     }
 
     [Fact]
+    public async Task Captured_unit_separator_method_matches_registry_head_on_create()
+    {
+        await using var db = CreateDb();
+        var sellerOrderId = Guid.NewGuid();
+        var sellerPartyId = Guid.NewGuid();
+        var lineId = Guid.NewGuid();
+        var groupId = Guid.NewGuid();
+        // Checkout captured identity may persist as service + U+001F + option (empty).
+        var directory = CreateDirectory(db, new FixedOrderReader(BuildGroupedHandoff(
+            sellerOrderId, sellerPartyId, [(lineId, 1m, null)],
+            [new OrderFulfillmentShippingGroupSnapshot(
+                groupId, sellerOrderId, sellerPartyId, "post\u001f", "post", null, "پیشتاز", null,
+                new DateOnly(2026, 1, 5), null, null, 1, [lineId])])));
+
+        await directory.CreateFromPaidSellerOrdersAsync(Guid.NewGuid(), Guid.NewGuid(), [sellerOrderId], CancellationToken.None);
+        var unitId = (await db.Fulfillments.SingleAsync()).FulfillmentId;
+        await directory.MarkProcessingAsync(unitId, Guid.NewGuid(), CancellationToken.None);
+        await directory.MarkPackedAsync(unitId, Guid.NewGuid(), CancellationToken.None);
+
+        const string trustedPost = """{"recipientName":"آزمایش سفارش","destinationAddress":"تهران"}""";
+        var created = await directory.CreateShipmentAsync(
+            unitId,
+            Guid.NewGuid(),
+            "پیشتاز",
+            [new ShipmentLineCommand(lineId, 1m)],
+            CancellationToken.None,
+            shippingMethodCode: "post",
+            providerMetadataJson: trustedPost,
+            shippingGroupId: groupId);
+
+        Assert.Equal(groupId, Assert.Single(created.Snapshot.Shipments).ShippingGroupId);
+        Assert.Equal("post", Assert.Single(created.Snapshot.Shipments).ShippingMethodCode);
+    }
+
+    [Fact]
     public async Task Each_group_transitions_independently()
     {
         await using var db = CreateDb();

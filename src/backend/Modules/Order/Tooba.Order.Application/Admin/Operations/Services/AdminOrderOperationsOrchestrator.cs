@@ -21,6 +21,7 @@ using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.ReservationCycle.Policies;
 using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
+using Tooba.Order.Application.Storefront.Ports;
 
 namespace Tooba.Order.Application.Admin.Operations.Services;
 
@@ -83,7 +84,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
     private readonly IAdminOrderOperationsInventoryRecoveryPort _inventoryRecovery;
     private readonly IAdminOrderOperationsSupplyPort _orderSupply;
     private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups;
-    
+    private readonly IOrderShippingGroupHistoryReader _shippingGroupHistory;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderOperationsOrchestrator(
@@ -99,7 +100,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
         ISettlementOrderAccrualPort settlement,
         IAdminOrderOperationsInventoryRecoveryPort inventoryRecovery,
         IAdminOrderOperationsSupplyPort orderSupply,
-        IOrderCommittedCarrierShipmentFactsReader committedShippingGroups)
+        IOrderCommittedCarrierShipmentFactsReader committedShippingGroups,
+        IOrderShippingGroupHistoryReader shippingGroupHistory)
     {
         _checkouts = checkouts;
         _fulfillment = fulfillment;
@@ -114,7 +116,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         _inventoryRecovery = inventoryRecovery;
         _orderSupply = orderSupply;
         _committedShippingGroups = committedShippingGroups;
-        
+        _shippingGroupHistory = shippingGroupHistory;
     }
 
     /// <summary>اقدامات مجاز و eligibility مرجوعی یک checkout را برمی‌گرداند.</summary>
@@ -176,7 +178,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
 
         ProjectWholeOrderCancel(actions, group, fulfillments, effective, blockedBySellerPayout);
         ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout, payment?.Status);
-        ProjectConsolidatedPackageActions(actions, group, fulfillments, packages, membershipByShipment, effective);
+        await ProjectConsolidatedPackageActionsAsync(
+            actions, group, fulfillments, packages, membershipByShipment, effective, cancellationToken);
         var recovery = await _inventoryRecovery.AssessAsync(checkoutId, cancellationToken);
         var canConfirmDeposit = payment is { ConfirmDepositEligible: true } && Has(effective, "payment.reconcile");
         ProjectInventoryRecovery(actions, recovery, effective, supply.Status, canConfirmDeposit);

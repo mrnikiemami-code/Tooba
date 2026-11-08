@@ -140,23 +140,25 @@ export function Dialog({
     if (open && !node.open) node.showModal();
     if (!open && node.open) node.close();
   }, [open]);
+  // Native <dialog> defaults to width:fit-content, so long fa copy stays one line and clips.
+  // Cap with max-w + w-full and min-w-0 so paragraphs wrap to the next line inside the box.
   const widthClass =
     size === "xl"
-      ? "w-[min(52rem,calc(100%-2rem))]"
+      ? "w-full max-w-[min(52rem,calc(100vw-2rem))]"
       : size === "lg"
-        ? "w-[min(42rem,calc(100%-2rem))]"
-        : "w-[min(32rem,calc(100%-2rem))]";
+        ? "w-full max-w-[min(42rem,calc(100vw-2rem))]"
+        : "w-full max-w-[min(32rem,calc(100vw-2rem))]";
   return (
     <dialog
       ref={ref}
       onClose={onClose}
       className={cn(
-        "z-[var(--z-modal)] max-h-[90vh] overflow-hidden rounded-ds border border-border bg-surface p-4 shadow-ds",
+        "z-[var(--z-modal)] box-border max-h-[90vh] overflow-x-hidden overflow-y-auto whitespace-normal rounded-ds border border-border bg-surface p-4 shadow-ds",
         widthClass,
       )}
     >
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
-      {children}
+      <div className="min-w-0 w-full whitespace-normal break-words">{children}</div>
       {showCloseButton ? (
         <div className="mt-4 flex justify-end">
           <Button type="button" tone="secondary" onClick={onClose}>

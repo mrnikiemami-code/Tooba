@@ -272,6 +272,12 @@ public sealed class AdminOrderDetailComposer
         var historyGroups = await _shippingGroupHistory.GetForCheckoutAsync(checkoutId, cancellationToken);
         var factsByGroup = (await _committedShippingGroups.ListByCheckoutAsync(checkoutId, cancellationToken))
             .ToDictionary(x => x.ShippingGroupId);
+        var destinationFingerprint = MarketplaceOperationalDeliveryGroupAuthority.BuildDestinationFingerprint(
+            group.ProvinceName,
+            group.CityName,
+            group.PostalCode,
+            group.PostalAddress);
+        var operationalFacts = new List<MarketplaceOperationalDeliveryGroupAuthority.GroupFact>(historyGroups.Count);
         var shippingGroups = historyGroups.Select(h =>
         {
             factsByGroup.TryGetValue(h.ShippingGroupId, out var facts);
@@ -315,6 +321,39 @@ public sealed class AdminOrderDetailComposer
                 ?? (DateOnly?)h.MinimumDeliveryDate;
             var window = FormatReceivingWindow(h.Evidence)
                 ?? h.RequestedDeliveryTimeWindow;
+            var fee = h.Evidence?.PayableAtCheckoutAmount ?? h.ShippingChargeSnapshot;
+            var ownerKind = MarketplaceOperationalDeliveryGroupAuthority.ParseOwnerKind(
+                h.Evidence?.OwnerKind,
+                facts?.OwnerKind);
+            operationalFacts.Add(new MarketplaceOperationalDeliveryGroupAuthority.GroupFact(
+                h.ShippingGroupId,
+                checkoutId,
+                h.SellerOrderId,
+                h.SellerPartyId,
+                h.MethodCode,
+                h.ServiceCode,
+                h.OptionCode,
+                h.MethodLabel,
+                h.Currency,
+                fee,
+                ownerKind,
+                h.Evidence?.OwnerTenantKey ?? facts?.OwnerTenantKey,
+                h.Evidence?.OwnerSellerPartyId ?? facts?.OwnerSellerPartyId,
+                deliveryDate,
+                h.Evidence?.ReceivingOpenTicks,
+                h.Evidence?.ReceivingCloseTicks,
+                h.Evidence?.ReceivingTimeZone,
+                transportMode,
+                facts?.OriginLocationCode,
+                facts?.OriginPostalAddress,
+                facts?.CarrierAccountId ?? h.Evidence?.CarrierQuote?.AccountId,
+                facts?.ProviderCode ?? h.Evidence?.CarrierQuote?.ProviderCode,
+                facts?.ProviderServiceCode ?? h.Evidence?.CarrierQuote?.ServiceCode,
+                facts?.ConfigurationVersion ?? h.Evidence?.CarrierQuote?.ConfigurationVersion,
+                destinationFingerprint,
+                h.OrderLineIds,
+                eligible,
+                blockFa));
             return new AdminAcceptedShippingGroupView(
                 h.ShippingGroupId,
                 h.SellerOrderId,
@@ -334,10 +373,45 @@ public sealed class AdminOrderDetailComposer
                 h.OrderLineIds,
                 eligible,
                 blockFa,
-                h.Evidence?.PayableAtCheckoutAmount ?? h.ShippingChargeSnapshot,
+                fee,
                 h.Evidence?.CarrierCollectAmount ?? 0m,
                 transportMode);
         }).ToList();
+
+        var operationalDeliveryGroups = MarketplaceOperationalDeliveryGroupAuthority
+            .Project(operationalFacts)
+            .Select(op => new AdminOperationalDeliveryGroupView(
+                op.OperationalGroupKey,
+                op.MethodLabel,
+                op.MethodCode,
+                op.ServiceCode,
+                op.OptionCode,
+                op.DeliveryDate,
+                op.DeliveryTimeWindow,
+                op.ResponsibilityLabelFa,
+                op.IsCrossSellerMarketplace,
+                op.SeparateReasonFa,
+                op.ConsolidateEligible,
+                op.ConsolidateBlockReasonFa,
+                op.CombinedFeeTotal,
+                op.Currency,
+                op.Members.Select(m => new AdminOperationalDeliveryMemberView(
+                    m.ShippingGroupId,
+                    m.SellerOrderId,
+                    m.SellerPartyId,
+                    sellerNames.TryGetValue(m.SellerPartyId, out var name) ? name : "فروشنده",
+                    m.OrderLineIds,
+                    m.CreateParcelEligible,
+                    m.CreateParcelBlockReasonFa,
+                    m.TransportMode,
+                    m.FeeAmount,
+                    m.Currency)).ToList(),
+                op.Members.Select(m => new AdminOperationalFeeBreakdownView(
+                    m.ShippingGroupId,
+                    sellerNames.TryGetValue(m.SellerPartyId, out var feeName) ? feeName : "فروشنده",
+                    m.FeeAmount,
+                    m.Currency)).ToList()))
+            .ToList();
 
         return Result.Success(new AdminOrderDetailPage(
             group.CheckoutId,
@@ -366,7 +440,8 @@ public sealed class AdminOrderDetailComposer
             paymentView,
             packageViews,
             reservationAudit,
-            shippingGroups));
+            shippingGroups,
+            operationalDeliveryGroups));
     }
 
     private static string? FormatReceivingWindow(OrderShippingGroupHistoryEvidence? evidence)

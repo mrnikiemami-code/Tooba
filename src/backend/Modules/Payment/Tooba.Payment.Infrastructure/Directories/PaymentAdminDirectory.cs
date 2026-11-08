@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Payment.Application.Models;
-using Tooba.Payment.Contracts.Errors;
 using Tooba.Payment.Application.Ports;
 using Tooba.Payment.Contracts.Returns;
 using Tooba.Payment.Domain.Aggregates;
@@ -108,10 +107,9 @@ public sealed class PaymentAdminDirectory(
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
             ?? throw new ContractOperationException("payment.attempt.missing");
-        if (string.IsNullOrWhiteSpace(attempt.CustomerTransferReference))
-        {
-            throw new ContractOperationException(PaymentErrorCodes.TrackingRequired);
-        }
+        // Admin confirm is allowed for Manual/card-to-card Pending without customer-submitted
+        // transfer evidence. Customer reference remains optional enrichment on the detail page;
+        // the verification txn below is the durable confirm identity.
 
         payment.AttachLoadedAttempt(attempt);
         var allocations = await db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
@@ -352,7 +350,6 @@ public sealed class PaymentAdminDirectory(
             && payment.Status == PaymentStatus.Failed
             && hasManualRejection;
         var unconfirmEligible = manual && payment.Status == PaymentStatus.Succeeded;
-        var evidenceReady = !string.IsNullOrWhiteSpace(attempt?.CustomerTransferReference);
         return new PaymentOperationalSnapshot(
             payment.PaymentId,
             payment.CheckoutId,
@@ -367,7 +364,9 @@ public sealed class PaymentAdminDirectory(
             payment.CompletedAt,
             attempt?.FailureCode,
             payment.Status == PaymentStatus.Pending,
-            ConfirmDepositEligible: manualPending && evidenceReady,
+            // Waiting Manual Pending must expose confirm alongside reject (ops matrix).
+            // Customer transfer evidence is optional; it must not hide confirm_deposit.
+            ConfirmDepositEligible: manualPending,
             RejectDepositEligible: manualPending,
             RestoreDepositEligible: restoreEligible,
             HasManualDepositRejection: hasManualRejection,

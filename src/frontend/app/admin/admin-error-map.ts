@@ -238,6 +238,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "روش ارسال نمی‌تواند با تعهد پذیرفته‌شدهٔ تحویل متفاوت باشد.",
     en: "Shipping method cannot differ from the accepted delivery commitment.",
   },
+  "fulfillment.shipment.shipping_group_method_mismatch": {
+    fa: "روش ارسال با گروه پذیرفته‌شدهٔ این سفارش یکی نیست.",
+    en: "Shipping method does not match this order's accepted delivery group.",
+  },
   "order.shipment.accepted_group_line_foreign": {
     fa: "یک یا چند قلم خارج از گروه ارسال پذیرفته‌شده است.",
     en: "One or more lines are outside the accepted delivery group.",
@@ -497,6 +501,22 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   "inventory.reservation.stock_mismatch": {
     fa: "مصرف رزرو با موجودی هم‌خوان نبود.",
     en: "Reservation consumption did not match stock quantities.",
+  },
+  "order.operational_group.consolidate_not_marketplace": {
+    fa: "تجمیع فقط وقتی ارسال بر عهدهٔ مارکت‌پلیس است مجاز است.",
+    en: "Consolidation is allowed only when Marketplace owns the delivery responsibility.",
+  },
+  "order.operational_group.consolidate_incompatible": {
+    fa: "گروه‌های انتخاب‌شده برای تجمیع سازگار نیستند (مبدأ، روش، روز یا ساعت متفاوت است).",
+    en: "Selected groups are not compatible for consolidation (origin, method, day, or hour differ).",
+  },
+  "order.operational_group.consolidate_requires_multi_seller": {
+    fa: "برای بستهٔ تجمیعی حداقل دو فروشنده لازم است.",
+    en: "A consolidated package requires at least two sellers.",
+  },
+  "order.operational_group.consolidate_carrier_unsupported": {
+    fa: "تجمیع محمولهٔ حامل API بین گروه‌ها پشتیبانی نمی‌شود؛ هر گروه را جداگانه ارسال کنید.",
+    en: "Carrier API consolidation across groups is unsupported; dispatch each group separately.",
   },
   "fulfillment.shipment.locked_by_consolidated_package": {
     fa: "این مرسوله عضو بسته تجمیعی است و عملیات ارسال باید از طریق همان بسته انجام شود.",

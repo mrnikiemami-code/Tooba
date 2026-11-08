@@ -12,9 +12,9 @@ import {
   type AdminSellerOrder,
   type AdminShipment,
 } from "./admin-api";
-import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
 import { AdminConsolidatedPackageSection } from "./admin-consolidated-package-section";
+import { AdminOrderOperationalDeliverySection } from "./admin-order-operational-delivery-section";
 import {
   AdminAssignShipmentTrackingModal,
 } from "./admin-assign-shipment-tracking-modal";
@@ -319,6 +319,14 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       </div>
 
       <div className="space-y-4 p-3 md:p-4">
+        <AdminOrderOperationalDeliverySection
+          detail={detail}
+          pendingCode={pendingCode}
+          selectedBySeller={selectedBySeller}
+          qtyByLine={qtyByLine}
+          shippableQty={shippableQty}
+          onCreateShipment={(target) => setShipmentModalTarget(target)}
+        />
         <AdminConsolidatedPackageSection
           detail={detail}
           checkoutId={checkoutId}
@@ -351,14 +359,6 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
             && Boolean(actionFor(actions, "unprocess", seller.id));
           const canUnpack = hasSelection && !mixedSelection && bulkCodes.has("unpack")
             && Boolean(actionFor(actions, "unpack", seller.id));
-          const selectedShippable = hasSelection && !mixedSelection && perLineCaps.length > 0
-            && perLineCaps.every((cap) => cap.shipmentEligibleQuantity > 0);
-          const canCreateBase = !paymentLocked
-            && Boolean(actionFor(actions, "create_shipment", seller.id))
-            && (hasSelection
-              ? selectedShippable
-              : (sellerCap?.shipmentCreationPossible ?? seller.lines.some((line) => shippableQty(line) > 0)));
-          const sellerGroups = (detail.shippingGroups ?? []).filter((g) => g.sellerOrderId === seller.id);
           const shipments = seller.shipments ?? [];
           const itemCount = seller.lines.reduce((sum, line) => sum + line.quantity, 0);
           const selectableLines = seller.lines.filter((line) => capabilityFor(seller, line).selectable);
@@ -828,102 +828,6 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                         </>
                       );
                     })()
-                  )}
-                  {sellerGroups.length === 0 ? (
-                    <p
-                      className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900"
-                      data-testid={`admin-order-seller-no-accepted-groups-${seller.id}`}
-                    >
-                      این سفارش شاهد گروه ارسال پذیرفته‌شده ندارد؛ ایجاد مرسوله از این مسیر در دسترس نیست.
-                    </p>
-                  ) : (
-                    <div className="mt-3 space-y-2" data-testid={`admin-order-seller-accepted-groups-${seller.id}`}>
-                      {sellerGroups.map((group) => {
-                        const groupShipments = shipments.filter((s) => s.shippingGroupId === group.shippingGroupId);
-                        const groupSelectedOk = !hasSelection || selected.every((id) => {
-                          const line = seller.lines.find((l) => lineKey(l) === id);
-                          const lineId = line ? (line.orderLineId || line.id) : id;
-                          return group.orderLineIds.includes(lineId);
-                        });
-                        const canCreateGroup = canCreateBase
-                          && group.createParcelEligible
-                          && group.transportMode !== "CarrierApi"
-                          && groupSelectedOk;
-                        const dateRaw = (group.deliveryDate ?? "").trim();
-                        const dateFa = dateRaw
-                          ? formatJalaliDate(
-                              dateRaw.includes("T") ? dateRaw : `${dateRaw}T12:00:00`,
-                              "fa",
-                            )
-                          : null;
-                        const timeWindow = (group.deliveryTimeWindow ?? "").trim();
-                        const feeAmount =
-                          group.payableAtCheckoutAmount != null
-                            ? group.payableAtCheckoutAmount
-                            : group.shippingChargeSnapshot;
-                        const ownerKind = (group.ownerKind ?? "").trim().toLowerCase();
-                        const ownershipLabel =
-                          ownerKind === "marketplace"
-                            ? "ارسال توسط مارکت‌پلیس"
-                            : ownerKind === "seller"
-                              ? "ارسال توسط فروشنده"
-                              : null;
-                        return (
-                          <div
-                            key={group.shippingGroupId}
-                            className="rounded-lg border border-indigo-100 bg-indigo-50/30 p-2"
-                            data-testid={`admin-order-shipping-group-${group.shippingGroupId}`}
-                          >
-                            <p className="text-[11px] font-black text-indigo-950">
-                              {group.methodLabel || group.methodCode}
-                            </p>
-                            <p className="mt-0.5 text-[10px] text-gray-600">
-                              {dateFa || timeWindow ? (
-                                <>
-                                  {dateFa ?? "—"}
-                                  {timeWindow ? (
-                                    <>
-                                      {" · "}
-                                      <bdi dir="ltr">{timeWindow}</bdi>
-                                    </>
-                                  ) : null}
-                                </>
-                              ) : (
-                                "زمان تحویل ثبت نشده"
-                              )}
-                              {" · "}
-                              {formatAdminMoney(feeAmount ?? 0, group.currency)}
-                            </p>
-                            {ownershipLabel ? (
-                              <p className="mt-0.5 text-[10px] text-gray-500">{ownershipLabel}</p>
-                            ) : null}
-                            {groupShipments.length > 0 ? (
-                              <p className="mt-1 text-[10px] text-gray-500">
-                                مرسوله‌های این گروه: {groupShipments.length.toLocaleString("fa-IR")}
-                              </p>
-                            ) : null}
-                            {canCreateGroup ? (
-                              <button
-                                type="button"
-                                disabled={pendingCode !== null}
-                                onClick={() => setShipmentModalTarget({ seller, group })}
-                                className="mt-2 w-full rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                                data-testid={`admin-order-group-create-shipment-${group.shippingGroupId}`}
-                              >
-                                {hasSelection ? labels.createShipment : "+ ایجاد مرسوله این گروه"}
-                              </button>
-                            ) : (
-                              <p className="mt-2 text-[10px] text-amber-800" role="status">
-                                {group.createParcelBlockReasonFa
-                                  ?? (!groupSelectedOk
-                                    ? "انتخاب فعلی شامل اقلام خارج از این گروه است."
-                                    : "ایجاد مرسوله برای این گروه در دسترس نیست.")}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
                   )}
                   {!opsLoaded ? <p className="mt-2 text-[11px] text-gray-400">بارگذاری عملیات…</p> : null}
                 </aside>
