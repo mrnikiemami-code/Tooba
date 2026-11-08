@@ -7,6 +7,7 @@ NOT Architect ACCEPT, NOT user Visual ACCEPT, NOT PSP/provider work, no backend/
 
 - Parent: `TB-SHIPPING-ORDER-OPERATIONS-PROFESSIONAL-UI-254`
 - Base: `5a11a4b8f98d00952bdd42fa1ab6da60c1b547f7`
+- Code: `08935f55198078d478a1f250ed8b59387d045525` (this task's source + task/evidence commit)
 - Channel: `tooba-main` · Bridge task row `e5cf0ca8-4ead-4dd3-800f-56cdd7c7afcc`
 - Canonical FE3000 PID 45832 → Host5088 (untouched) SingleStore / store-alpha / `tooba_alpha`
 - Final served BUILD_ID: `eQhOdt4_ez2jEs_E1Ke16` (previous `o7FdiG_1QEjT376HubPBj` now `404`)

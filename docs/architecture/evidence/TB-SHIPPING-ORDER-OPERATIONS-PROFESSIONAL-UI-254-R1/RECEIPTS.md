@@ -1,6 +1,7 @@
 # RECEIPTS — TB-SHIPPING-ORDER-OPERATIONS-PROFESSIONAL-UI-254-R1
 
 Base: `5a11a4b8f98d00952bdd42fa1ab6da60c1b547f7`
+Code-SHA: `08935f55198078d478a1f250ed8b59387d045525` (source + task/evidence; TOP commit follows)
 Bridge row: `e5cf0ca8-4ead-4dd3-800f-56cdd7c7afcc`
 Worker: `tooba-worker-01` · Agent: cursor · Channel: `tooba-main`
 Claim: `2026-11-08T15:47:45Z` · Result written: `2026-11-08T16:2xZ` (elapsed ≈ 35–40 min wall clock, measured from
