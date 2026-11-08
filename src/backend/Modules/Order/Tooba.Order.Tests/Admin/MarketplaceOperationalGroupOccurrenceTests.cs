@@ -495,6 +495,139 @@ public sealed class MarketplaceOperationalGroupOccurrenceTests
         Assert.Equal(2, await fulfillmentVerify.ConsolidatedPackageMembers.CountAsync());
     }
 
+    // ------------------------------------------------------------ TB-253-R5 recovery paths
+
+    [Fact]
+    [Trait("Category", "TB253R5")]
+    [Trait("Case", "G-create-before-member-link")]
+    public async Task G_failure_after_the_parcel_commit_but_before_the_member_link_recovers_that_exact_parcel()
+    {
+        var target = Target();
+        await using var orderDb = await ReadyAsync(target);
+        await using var fulfillmentDb = await ReadyFulfillmentAsync(target);
+        // Two committed/packed units per line: the crashed parcel already consumed one unit of A, so a
+        // remaining-quantity gate would otherwise make the recorded parcel unreachable.
+        var seeded = await SeedCommittedOrderAsync(
+            orderDb, fulfillmentDb, committedQuantity: 2m, packedQuantity: 2m);
+
+        var occurrence = Occurrence("71");
+        var request = ReviewRequest(occurrence, [(seeded.LineA1, 1m), (seeded.LineB, 1m)]);
+
+        // Fault seam: fails EXACTLY on the FIRST Order member-link persistence, i.e. AFTER the
+        // Fulfillment parcel create committed but BEFORE the occurrence member link persisted.
+        var interceptor = new FailFirstMemberLinkInterceptor();
+        await using (var failingDb = NewOrderContext(target, interceptor))
+        {
+            var failing = await CreateFixtureAsync(failingDb, fulfillmentDb);
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                failing.Workflow.PrepareAsync(CheckoutId, request, Actor, CancellationToken.None));
+            Assert.Equal(0, interceptor.Remaining);
+        }
+
+        fulfillmentDb.ChangeTracker.Clear();
+        var afterCrash = await fulfillmentDb.Shipments.AsNoTracking().ToListAsync();
+        Assert.Single(afterCrash);
+        var recordedParcel = afterCrash.Single();
+        Assert.Equal(GroupA1, recordedParcel.ShippingGroupId!.Value);
+        Assert.Contains(
+            MarketplaceOperationalDeliveryGroupAuthority.BuildMemberParcelDispatchKey(
+                CheckoutId, occurrence, GroupA1),
+            recordedParcel.ShippingDispatchKey);
+        Assert.Equal(0, await fulfillmentDb.ConsolidatedPackages.CountAsync());
+
+        var store = new OrderOperationalGroupOccurrenceStore(orderDb, new SystemUtcClock());
+        var afterCrashRecord = await store.GetAsync(occurrence, CancellationToken.None);
+        Assert.NotNull(afterCrashRecord);
+        Assert.False(afterCrashRecord!.Completed);
+        // The parcel exists under the occurrence key but the durable member link does NOT.
+        Assert.Empty(afterCrashRecord.Allocations);
+
+        // Retry the ORIGINAL envelope: the exact recorded parcel is reconciled (never re-created) and
+        // only the genuinely missing member is created.
+        var fixture = await CreateFixtureAsync(orderDb, fulfillmentDb);
+        var recovered = Json(await fixture.Workflow.PrepareAsync(
+            CheckoutId, request, Actor, CancellationToken.None));
+        var recoveredIds = recovered.GetProperty("shipmentIds")
+            .EnumerateArray().Select(x => x.GetGuid()).OrderBy(x => x).ToArray();
+        Assert.Equal(2, recoveredIds.Length);
+        Assert.Contains(recordedParcel.ShipmentId, recoveredIds);
+        var reconciledMember = recovered.GetProperty("members").EnumerateArray()
+            .Single(m => m.GetProperty("shippingGroupId").GetGuid() == GroupA1);
+        Assert.True(reconciledMember.GetProperty("reconciled").GetBoolean());
+        Assert.False(reconciledMember.GetProperty("created").GetBoolean());
+
+        fulfillmentDb.ChangeTracker.Clear();
+        Assert.Equal(2, await fulfillmentDb.Shipments.CountAsync());
+        Assert.Equal(1, await fulfillmentDb.ConsolidatedPackages.CountAsync());
+        Assert.Equal(2, await fulfillmentDb.ConsolidatedPackageMembers.CountAsync());
+
+        var completed = await store.GetAsync(occurrence, CancellationToken.None);
+        Assert.NotNull(completed);
+        Assert.True(completed!.Completed);
+        Assert.Equal(2, completed.Allocations.Count);
+        Assert.Contains(
+            recordedParcel.ShipmentId,
+            completed.Allocations.SelectMany(a => a.CreatedShipmentIds));
+
+        // A CHANGED request under the same occurrence conflicts and adds zero rows.
+        var conflict = await Assert.ThrowsAsync<AdminOrderOperationsException>(() =>
+            fixture.Workflow.PrepareAsync(
+                CheckoutId,
+                ReviewRequest(occurrence, [(seeded.LineA1, 2m), (seeded.LineB, 1m)]),
+                Actor,
+                CancellationToken.None));
+        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.WorkflowIntentConflict, conflict.Code);
+        fulfillmentDb.ChangeTracker.Clear();
+        Assert.Equal(2, await fulfillmentDb.Shipments.CountAsync());
+        Assert.Equal(1, await fulfillmentDb.ConsolidatedPackages.CountAsync());
+        Assert.Equal(2, await orderDb.OperationalGroupOccurrenceMembers.CountAsync());
+    }
+
+    [Fact]
+    [Trait("Category", "TB253R5")]
+    [Trait("Case", "H-evidence-mismatch")]
+    public async Task H_mismatched_occurrence_parcel_evidence_fails_closed_without_a_replacement()
+    {
+        var target = Target();
+        await using var orderDb = await ReadyAsync(target);
+        await using var fulfillmentDb = await ReadyFulfillmentAsync(target);
+        var seeded = await SeedCommittedOrderAsync(
+            orderDb, fulfillmentDb, committedQuantity: 3m, packedQuantity: 3m);
+        var adapter = CreateAdapter(fulfillmentDb);
+        var fulfillment = await LoadFulfillmentIdsAsync(adapter);
+
+        var occurrence = Occurrence("81");
+        var dispatchKey = MarketplaceOperationalDeliveryGroupAuthority.BuildMemberParcelDispatchKey(
+            CheckoutId, occurrence, GroupA1);
+        // A parcel already sits under this occurrence key, but with the WRONG quantity for the envelope.
+        var mismatched = (await adapter.CreateShipmentAsync(
+            fulfillment[OrderA],
+            Actor,
+            "پیشتاز",
+            [new ShipmentLineCommand(seeded.LineA1, 2m)],
+            "post",
+            PostMetadata,
+            CancellationToken.None,
+            GroupA1,
+            dispatchKey)).CreatedShipmentId;
+
+        var fixture = await CreateFixtureAsync(orderDb, fulfillmentDb);
+        var error = await Assert.ThrowsAsync<AdminOrderOperationsException>(() =>
+            fixture.Workflow.PrepareAsync(
+                CheckoutId,
+                ReviewRequest(occurrence, [(seeded.LineA1, 1m), (seeded.LineB, 1m)]),
+                Actor,
+                CancellationToken.None));
+        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.WorkflowIntentConflict, error.Code);
+
+        fulfillmentDb.ChangeTracker.Clear();
+        var shipments = await fulfillmentDb.Shipments.AsNoTracking().ToListAsync();
+        Assert.Single(shipments);
+        Assert.Equal(mismatched, shipments.Single().ShipmentId);
+        Assert.Equal(0, await fulfillmentDb.ConsolidatedPackages.CountAsync());
+        Assert.Equal(0, await orderDb.OperationalGroupOccurrences.CountAsync());
+    }
+
     // ------------------------------------------------------------ infrastructure
 
     private static OrderEvidenceRelationalTestTarget Target() =>
@@ -765,7 +898,9 @@ public sealed class MarketplaceOperationalGroupOccurrenceTests
         return db;
     }
 
-    private static OrderDbContext NewOrderContext(OrderEvidenceRelationalTestTarget target)
+    private static OrderDbContext NewOrderContext(
+        OrderEvidenceRelationalTestTarget target,
+        SaveChangesInterceptor? interceptor = null)
     {
         var builder = new DbContextOptionsBuilder<OrderDbContext>();
         Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(
@@ -773,6 +908,11 @@ public sealed class MarketplaceOperationalGroupOccurrenceTests
             target.ConnectionString,
             OrderDbContext.Schema,
             typeof(OrderDbContext));
+        if (interceptor is not null)
+        {
+            builder.AddInterceptors(interceptor);
+        }
+
         return new OrderDbContext(builder.Options);
     }
 
@@ -817,6 +957,36 @@ public sealed class MarketplaceOperationalGroupOccurrenceTests
         IReadOnlyDictionary<Guid, OrderShippingGroupHistoryRecord> History);
 
     private sealed record SeededLines(Guid LineA1, Guid LineA2, Guid LineB);
+
+    /// <summary>
+    /// TB-253-R5: fails the FIRST persisted Order occurrence member link, i.e. AFTER the Fulfillment
+    /// parcel create committed but BEFORE the durable member link — the exact "create persisted,
+    /// link missing" window. This is deliberately not the common-package checkpoint.
+    /// </summary>
+    private sealed class FailFirstMemberLinkInterceptor : SaveChangesInterceptor
+    {
+        public int Remaining { get; set; } = 1;
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            var context = eventData.Context;
+            if (Remaining > 0
+                && context is not null
+                && context.ChangeTracker.Entries().Any(e =>
+                    e.State == EntityState.Added
+                    && e.Entity.GetType().Name == "OrderOperationalGroupOccurrenceMember"))
+            {
+                Remaining--;
+                throw new InvalidOperationException(
+                    "TB253R5 injected failure on Order member-link persistence after the Fulfillment create.");
+            }
+
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+    }
 
     /// <summary>Fails the SECOND persisted shipment — the crash window between two members.</summary>
     private sealed class FailSecondShipmentSaveInterceptor : SaveChangesInterceptor

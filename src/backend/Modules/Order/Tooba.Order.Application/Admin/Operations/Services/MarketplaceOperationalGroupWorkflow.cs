@@ -284,6 +284,33 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 continue;
             }
 
+            if (member.Kind == MemberPlanKind.ReconcileRecorded)
+            {
+                // R5: link the EXACT parcel recorded under this occurrence key before the remaining-
+                // quantity gate could hide it. No replacement parcel is ever created here.
+                var reconciledLink = await _occurrences.RecordMemberAllocationAsync(
+                    occurrenceId,
+                    new OperationalGroupOccurrenceAllocation(
+                        member.ShippingGroupId,
+                        member.ScannedShipmentIds ?? [],
+                        member.ReuseShipmentIds),
+                    cancellationToken);
+                var reconciledLinkIds = reconciledLink.CreatedShipmentIds
+                    .Concat(reconciledLink.ReusedShipmentIds)
+                    .Distinct()
+                    .ToArray();
+                shipmentIds.AddRange(reconciledLinkIds);
+                parcelResults.Add(new
+                {
+                    shippingGroupId = member.ShippingGroupId,
+                    shipmentIds = reconciledLinkIds,
+                    created = false,
+                    replayed = true,
+                    reconciled = true,
+                });
+                continue;
+            }
+
             // A parcel already written under this occurrence key but not yet recorded (crash between
             // the durable create and the durable member link) is reconciled, never re-created.
             var keyParcels = RecordedOccurrenceParcels(snapshot, member.DispatchKey);
@@ -718,6 +745,45 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 continue;
             }
 
+            // R5: a member whose parcel was durably created under THIS occurrence key but whose durable
+            // member link was never written (crash between the Fulfillment create and the Order link)
+            // must reconcile that EXACT recorded parcel before any remaining-quantity gate. Otherwise the
+            // consumed quantity makes the envelope unsatisfiable and the recorded parcel becomes
+            // unreachable. Only the exact occurrence key is inspected — never open parcels in general —
+            // and mismatched evidence is a typed conflict with zero new allocation.
+            if (recordedAllocation is null)
+            {
+                var occurrenceParcels = RecordedOccurrenceParcels(snapshot, dispatchKey);
+                if (occurrenceParcels.Length > 0)
+                {
+                    if (lines.Length == 0
+                        || !RecordedParcelEvidenceMatches(
+                            snapshot,
+                            occurrenceParcels,
+                            member.ShippingGroupId,
+                            envelope.AcceptedMethodCode,
+                            lines))
+                    {
+                        throw new AdminOrderOperationsException(
+                            MarketplaceOperationalDeliveryGroupAuthority.WorkflowIntentConflict);
+                    }
+
+                    plans.Add(new MemberPlan(
+                        member.ShippingGroupId,
+                        member.SellerOrderId,
+                        dispatchKey,
+                        string.Empty,
+                        facts.MethodCode,
+                        TrustedProviderMetadataJson: null,
+                        lines,
+                        reuse,
+                        MemberPlanKind.ReconcileRecorded,
+                        RecordedAllocation: null,
+                        ScannedShipmentIds: occurrenceParcels));
+                    continue;
+                }
+            }
+
             if (lines.Length == 0 && reuse.Count == 0)
             {
                 throw new AdminOrderOperationsException(
@@ -841,6 +907,33 @@ public sealed class MarketplaceOperationalGroupWorkflow(
             && expected.All(kv => recorded.TryGetValue(kv.Key, out var quantity) && quantity == kv.Value);
     }
 
+    /// <summary>
+    /// R5: the exact recorded occurrence parcels provably belong to this member and match the immutable
+    /// durable envelope (own shipping group, non-cancelled, accepted method, exact per-line quantities).
+    /// </summary>
+    private static bool RecordedParcelEvidenceMatches(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyCollection<Guid> recordedShipmentIds,
+        Guid shippingGroupId,
+        string acceptedMethodCode,
+        IReadOnlyList<ShipmentLineCommand> planned)
+    {
+        var parcels = snapshot.Shipments
+            .Where(s => recordedShipmentIds.Contains(s.ShipmentId))
+            .ToArray();
+        if (parcels.Length == 0) return false;
+        if (parcels.Any(p => p.ShippingGroupId != shippingGroupId)) return false;
+        if (parcels.Any(p => p.Status != ShipmentOperationStatus.Created)) return false;
+        if (!string.IsNullOrWhiteSpace(acceptedMethodCode)
+            && parcels.Any(p => !string.Equals(
+                p.ShippingMethodCode, acceptedMethodCode, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        return RecordedQuantitiesMatch(snapshot, recordedShipmentIds, planned);
+    }
+
     private async Task<ConsolidatedPackageSnapshot?> FindMatchingActivePackageAsync(
         Guid checkoutId,
         IReadOnlyCollection<Guid> shipmentIds,
@@ -863,6 +956,8 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         Create,
         ReuseOnly,
         Replay,
+        /// <summary>R5: the member's parcel already exists under this occurrence key but has no link.</summary>
+        ReconcileRecorded,
     }
 
     private sealed record MemberPlan(
@@ -875,5 +970,6 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         IReadOnlyList<ShipmentLineCommand> Lines,
         IReadOnlyList<Guid> ReuseShipmentIds,
         MemberPlanKind Kind,
-        OperationalGroupOccurrenceAllocation? RecordedAllocation);
+        OperationalGroupOccurrenceAllocation? RecordedAllocation,
+        IReadOnlyList<Guid>? ScannedShipmentIds = null);
 }

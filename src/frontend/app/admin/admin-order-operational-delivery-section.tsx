@@ -16,8 +16,11 @@ import {
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
 import {
   clearOperationalGroupAttempt,
+  isOperationalGroupNoClaimRefusal,
   markOperationalGroupAttemptFailed,
+  operationalGroupRequestFingerprint,
   readOperationalGroupAttempt,
+  releaseOperationalGroupAttemptAfterNoClaimRefusal,
   resolveOperationalGroupAttempt,
   type OperationalGroupAttempt,
 } from "./operational-group-occurrence-store";
@@ -26,6 +29,29 @@ export type OperationalCreateTarget = {
   seller: AdminSellerOrder;
   group: AdminAcceptedShippingGroup;
 };
+
+/**
+ * TB-253-R5: explicit workflow outcome. A boolean/void return keeps meaning "completed" / "unknown".
+ * A typed refusal that proves NO durable claim may carry its code so the caller can take the explicit
+ * safe transition; anything else (network, 5xx, timeout) stays uncertainty.
+ */
+export type OperationalGroupWorkflowOutcome =
+  | { completed: true }
+  | { completed: false; noClaimRefusalCode?: string | null };
+
+function outcomeCompleted(outcome: boolean | OperationalGroupWorkflowOutcome | void): boolean {
+  if (outcome === true) return true;
+  if (outcome && typeof outcome === "object") return outcome.completed === true;
+  return false;
+}
+
+function outcomeNoClaimRefusalCode(
+  outcome: boolean | OperationalGroupWorkflowOutcome | void,
+): string | null {
+  if (!outcome || typeof outcome !== "object" || outcome.completed) return null;
+  const code = outcome.noClaimRefusalCode;
+  return isOperationalGroupNoClaimRefusal(code) ? String(code) : null;
+}
 
 /** TB-253-R2/R3: reviewed input of the one group-level parcel/package workflow. */
 export type OperationalGroupWorkflowRequest = {
@@ -44,7 +70,7 @@ type Props = {
   onPrepareOperationalGroup?: (
     group: AdminOperationalDeliveryGroup,
     request: OperationalGroupWorkflowRequest,
-  ) => Promise<boolean | void> | boolean | void;
+  ) => Promise<boolean | OperationalGroupWorkflowOutcome | void> | boolean | OperationalGroupWorkflowOutcome | void;
   workflowErrorFa?: string | null;
   /**
    * TB-253-R4: viewer/owner scope of a retained workflow occurrence. The prebound envelope is stored
@@ -192,7 +218,7 @@ function OperationalCard({
   onPrepareOperationalGroup?: (
     group: AdminOperationalDeliveryGroup,
     request: OperationalGroupWorkflowRequest,
-  ) => Promise<boolean | void> | boolean | void;
+  ) => Promise<boolean | OperationalGroupWorkflowOutcome | void> | boolean | OperationalGroupWorkflowOutcome | void;
   occurrenceScopeKey?: string | null;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
@@ -211,6 +237,10 @@ function OperationalCard({
   const [retainedAttempt, setRetainedAttempt] = useState<OperationalGroupAttempt | null>(null);
 
   useEffect(() => {
+    // TB-253-R5: a viewer/scope change must drop the previous viewer's in-memory refs — a stale ref is
+    // never authorization, and the retained envelope belongs to the viewer that recorded it.
+    attemptRef.current = null;
+    setReconcileHint(null);
     const recorded = readOperationalGroupAttempt(
       detail.checkoutId,
       group.operationalGroupKey,
@@ -262,6 +292,17 @@ function OperationalCard({
     && group.consolidateEligible
     && actorMayManage
     && pendingCode === null;
+
+  // TB-253-R5: while an unresolved attempt exists it is the ONLY lawful operation for this group.
+  // A changed review is therefore blocked at the state boundary (not merely visually), and the
+  // retained envelope stays untouched until authoritative resolution.
+  const reviewFingerprint = operationalGroupRequestFingerprint({
+    members: group.members.map((member) => member.shippingGroupId),
+    selections,
+    reuseShipmentIds,
+  });
+  const retainedBlocksNewOperation = Boolean(retainedAttempt)
+    && retainedAttempt!.fingerprint !== reviewFingerprint;
 
   return (
     <article
@@ -451,7 +492,7 @@ function OperationalCard({
       {group.isCrossSellerMarketplace && group.consolidateEligible && onPrepareOperationalGroup && actorMayManage ? (
         <button
           type="button"
-          disabled={!canRunWorkflow || selectionCount === 0}
+          disabled={!canRunWorkflow || selectionCount === 0 || retainedBlocksNewOperation}
           onClick={async () => {
             if (!onPrepareOperationalGroup) return;
             // Synchronous single-flight: a same-tick second click cannot mint a second attempt.
@@ -468,6 +509,14 @@ function OperationalCard({
                   reuseShipmentIds,
                 },
               });
+              if (resolution.blockedByRetainedAttempt) {
+                // R5: the retained envelope is unresolved. Nothing is minted or overwritten, and no
+                // request is sent from a corrected review. Only the recorded operation may proceed.
+                attemptRef.current = resolution.attempt;
+                setRetainedAttempt(resolution.attempt);
+                setReconcileHint({ occurrenceId: resolution.occurrenceId });
+                return;
+              }
               attemptRef.current = resolution.attempt;
               const outcome = await onPrepareOperationalGroup(group, {
                 operationalGroupShippingGroupIds: resolution.attempt.members,
@@ -475,7 +524,7 @@ function OperationalCard({
                 reuseShipmentIds: resolution.attempt.reuseShipmentIds,
                 operationalGroupOccurrenceId: resolution.occurrenceId,
               });
-              if (outcome === true) {
+              if (outcomeCompleted(outcome)) {
                 // Completed: the reviewed envelope is done, so the next deliberate run is a NEW one.
                 attemptRef.current = null;
                 setReconcileHint(null);
@@ -485,6 +534,21 @@ function OperationalCard({
                   group.operationalGroupKey,
                   occurrenceScopeKey,
                 );
+                return;
+              }
+
+              // A typed refusal that proves no claim/side effect (thrown before the durable claim) is
+              // the ONLY explicit safe transition back to a correctable review.
+              const noClaimCode = outcomeNoClaimRefusalCode(outcome);
+              if (noClaimCode && releaseOperationalGroupAttemptAfterNoClaimRefusal({
+                checkoutId: detail.checkoutId,
+                operationalGroupKey: group.operationalGroupKey,
+                scopeKey: occurrenceScopeKey,
+                code: noClaimCode,
+              })) {
+                attemptRef.current = null;
+                setRetainedAttempt(null);
+                setReconcileHint(null);
                 return;
               }
 
@@ -504,6 +568,15 @@ function OperationalCard({
         >
           {reconcileHint ? "همگام‌سازی مجدد همان عملیات" : "ایجاد مرسوله‌ها و بستهٔ مشترک این گروه"}
         </button>
+      ) : null}
+      {retainedBlocksNewOperation && retainedAttempt && actorMayManage ? (
+        <p
+          className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-semibold text-amber-900"
+          role="status"
+          data-testid={`admin-order-operational-retained-block-${group.operationalGroupKey}`}
+        >
+          نتیجهٔ عملیات قبلی هنوز نامشخص است؛ تا همگام‌سازی همان عملیات، درخواست جدیدی شروع نمی‌شود.
+        </p>
       ) : null}
       {retainedAttempt && actorMayManage && onPrepareOperationalGroup ? (
         <div
@@ -529,7 +602,7 @@ function OperationalCard({
                   reuseShipmentIds: retainedAttempt.reuseShipmentIds,
                   operationalGroupOccurrenceId: retainedAttempt.occurrenceId,
                 });
-                if (outcome === true) {
+                if (outcomeCompleted(outcome)) {
                   setRetainedAttempt(null);
                   setReconcileHint(null);
                   attemptRef.current = null;
@@ -538,6 +611,18 @@ function OperationalCard({
                     group.operationalGroupKey,
                     occurrenceScopeKey,
                   );
+                  return;
+                }
+                const noClaimCode = outcomeNoClaimRefusalCode(outcome);
+                if (noClaimCode && releaseOperationalGroupAttemptAfterNoClaimRefusal({
+                  checkoutId: detail.checkoutId,
+                  operationalGroupKey: group.operationalGroupKey,
+                  scopeKey: occurrenceScopeKey,
+                  code: noClaimCode,
+                })) {
+                  attemptRef.current = null;
+                  setRetainedAttempt(null);
+                  setReconcileHint(null);
                   return;
                 }
                 markOperationalGroupAttemptFailed({ attempt: retainedAttempt });

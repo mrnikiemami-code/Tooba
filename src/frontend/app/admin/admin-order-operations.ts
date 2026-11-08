@@ -337,7 +337,7 @@ export async function executeAdminOrderOperation(
       }),
     });
     if (response.status === 401 || response.status === 403) {
-      return { state: "denied", data: null, status: response.status, message: "order.operation.denied" };
+      return { state: "denied", data: null, status: response.status, message: "order.operation.denied", code: "order.operation.denied" };
     }
     if (!response.ok) {
       const err = await parseError(response);
@@ -346,11 +346,13 @@ export async function executeAdminOrderOperation(
         data: null,
         status: response.status,
         message: mapOrderOperationError(err.code, err.detail),
+        code: err.code ?? null,
       };
     }
     const payload = await response.json().catch(() => null);
     return { state: "ok", data: payload, status: response.status };
   } catch {
+    // A transport failure has no server code on purpose: it is uncertainty, never "no claim".
     return { state: "error", data: null, status: 0, message: mapOrderOperationError("host-unreachable") };
   }
 }

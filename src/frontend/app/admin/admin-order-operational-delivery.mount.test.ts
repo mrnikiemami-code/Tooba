@@ -677,7 +677,7 @@ test("R4 mounted: the COMPLETE prebound envelope is persisted before the first P
   }
 });
 
-test("R4 mounted: retrying the SAME envelope reconciles it; a CHANGED envelope gets a new occurrence", async () => {
+test("R4/R5 mounted: retrying the SAME envelope reconciles it; a CHANGED envelope is blocked while unresolved", async () => {
   resetR4Attempt();
   const restoreViewer = withR4Viewer();
   const calls = installFetch((call) => {
@@ -707,16 +707,51 @@ test("R4 mounted: retrying the SAME envelope reconciles it; a CHANGED envelope g
     assert.deepEqual(second.body.selections, first.body.selections);
     assert.deepEqual(second.body.reuseShipmentIds, first.body.reuseShipmentIds);
 
-    // Changed review: a different operation, so it must NOT reuse the recorded occurrence.
+    // R5: a CHANGED review while the recorded operation is unresolved must NOT mint a second
+    // operation — the normal Create path is blocked, not merely the extra reconcile button.
+    const recordedBefore = readOperationalGroupAttempt(R4_CHECKOUT, "mp-post-combined", R4_SCOPE);
+    assert.ok(recordedBefore);
     await setInputValue(q(mounted.container, "[data-testid='admin-order-operational-qty-ol1']"), "1");
+    await flush();
+    assert.equal(
+      (prepare as HTMLButtonElement).disabled,
+      true,
+      "the normal create path must be disabled while an unresolved envelope exists",
+    );
+    assert.equal(
+      qq(mounted.container, "[data-testid='admin-order-operational-retained-block-mp-post-combined']").length,
+      1,
+    );
     await click(prepare);
-    await waitFor(() => calls.filter((c) => c.method === "POST").length === 3);
-    const third = calls.filter((c) => c.method === "POST")[2];
-    assert.notEqual(third.body.operationalGroupOccurrenceId, first.body.operationalGroupOccurrenceId);
-    assert.deepEqual(third.body.selections, [
-      { orderLineId: "ol1", quantity: 1 },
-      { orderLineId: "ol2", quantity: 1 },
-    ]);
+    await flush();
+    assert.equal(calls.filter((c) => c.method === "POST").length, 2);
+
+    // The retained request is untouched: no remint, no overwrite.
+    const recordedAfter = readOperationalGroupAttempt(R4_CHECKOUT, "mp-post-combined", R4_SCOPE);
+    assert.equal(recordedAfter!.occurrenceId, recordedBefore!.occurrenceId);
+    assert.deepEqual(recordedAfter!.selections, recordedBefore!.selections);
+    assert.equal(recordedAfter!.fingerprint, recordedBefore!.fingerprint);
+
+    // The same guard holds at the resolver boundary, so no caller can bypass the JSX state.
+    const blocked = resolveOperationalGroupAttempt({
+      checkoutId: R4_CHECKOUT,
+      operationalGroupKey: "mp-post-combined",
+      scopeKey: R4_SCOPE,
+      request: {
+        members: ["g1", "g2"],
+        selections: [
+          { orderLineId: "ol1", quantity: 1 },
+          { orderLineId: "ol2", quantity: 1 },
+        ],
+        reuseShipmentIds: [],
+      },
+    });
+    assert.equal(blocked.blockedByRetainedAttempt, true);
+    assert.equal(blocked.changedRequest, true);
+    assert.equal(blocked.occurrenceId, recordedBefore!.occurrenceId);
+    const stillRecorded = readOperationalGroupAttempt(R4_CHECKOUT, "mp-post-combined", R4_SCOPE);
+    assert.deepEqual(stillRecorded!.selections, recordedBefore!.selections);
+    assert.equal(calls.filter((c) => c.method === "POST").length, 2);
     await mounted.unmount();
   } finally {
     restoreFetch();
@@ -865,5 +900,118 @@ test("R4 mounted: partial server progress + lost response keeps the envelope eve
     restoreFetch();
     restoreViewer();
     clearOperationalGroupAttempt(checkout, groupKey, R4_SCOPE);
+  }
+});
+
+// ---------------------------------------------------------------- TB-253-R5
+
+test("R5 mounted: a viewer switch cannot act on the previous viewer's retained refs", async () => {
+  const checkout = "r5-c1";
+  const groupKey = "mp-post-combined";
+  clearOperationalGroupAttempt(checkout, groupKey, "admin:viewer-a");
+  clearOperationalGroupAttempt(checkout, groupKey, "admin:viewer-b");
+  const restoreViewer = withR4Viewer();
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage();
+    throw new TypeError("connection reset");
+  });
+  try {
+    window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, "viewer-a");
+    const first = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: { ...baseDetail(), checkoutId: checkout },
+        checkoutId: checkout,
+      }),
+    );
+    await waitFor(() => qq(first.container, "[data-testid^='admin-order-operational-prepare-']").length === 1);
+    await click(q(first.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
+    await waitFor(() => qq(first.container, "[data-testid='admin-order-operational-workflow-error']").length === 1);
+    await flush();
+    const viewerARecord = readOperationalGroupAttempt(checkout, groupKey, "admin:viewer-a");
+    assert.ok(viewerARecord);
+    const firstPost = calls.filter((c) => c.method === "POST")[0];
+    await first.unmount();
+
+    // Another admin session sees NO retained envelope and no reconcile action for viewer A.
+    window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, "viewer-b");
+    const second = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: { ...baseDetail(), checkoutId: checkout },
+        checkoutId: checkout,
+      }),
+    );
+    await waitFor(() => qq(second.container, "[data-testid^='admin-order-operational-prepare-']").length === 1);
+    assert.equal(qq(second.container, "[data-testid='admin-order-operational-reconcile-mp-post-combined']").length, 0);
+    assert.equal(qq(second.container, "[data-testid='admin-order-operational-retained-block-mp-post-combined']").length, 0);
+    await click(q(second.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 2);
+    await flush();
+    const secondPost = calls.filter((c) => c.method === "POST")[1];
+    assert.notEqual(secondPost.body.operationalGroupOccurrenceId, firstPost.body.operationalGroupOccurrenceId);
+    assert.equal(readOperationalGroupAttempt(checkout, groupKey, "admin:viewer-a")!.occurrenceId, viewerARecord!.occurrenceId);
+    await second.unmount();
+  } finally {
+    restoreFetch();
+    restoreViewer();
+    clearOperationalGroupAttempt(checkout, groupKey, "admin:viewer-a");
+    clearOperationalGroupAttempt(checkout, groupKey, "admin:viewer-b");
+  }
+});
+
+test("R5 mounted: only a proven no-claim refusal releases the retained envelope", async () => {
+  const detail = baseDetail();
+  const scope = R4_SCOPE;
+  const outcomes: Array<{ completed: false; noClaimRefusalCode?: string | null } | undefined> = [];
+  const seen: string[] = [];
+  clearOperationalGroupAttempt("c1", "mp-post-combined", scope);
+  const mounted = await mount(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      selectedBySeller: {},
+      qtyByLine: {},
+      shippableQty: () => 1,
+      onCreateShipment: () => undefined,
+      occurrenceScopeKey: scope,
+      onPrepareOperationalGroup: (_group, request) => {
+        seen.push(request.operationalGroupOccurrenceId);
+        const next = outcomes.shift();
+        return next;
+      },
+    }),
+  );
+  try {
+    // Transport/unknown outcome (undefined) keeps the envelope.
+    outcomes.push(undefined);
+    await click(q(mounted.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
+    await flush();
+    assert.ok(readOperationalGroupAttempt("c1", "mp-post-combined", scope));
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-reconcile-mp-post-combined']").length, 1);
+
+    // A tcp/5xx-style failure carries no code, so it can never release the envelope.
+    outcomes.push({ completed: false, noClaimRefusalCode: null });
+    await click(q(mounted.container, "[data-testid='admin-order-operational-reconcile-retry-mp-post-combined']"));
+    await flush();
+    assert.ok(readOperationalGroupAttempt("c1", "mp-post-combined", scope));
+    assert.equal(seen.length, 2);
+    assert.equal(seen[0], seen[1]);
+
+    // A typed pre-claim refusal proves there is no claim: explicit safe transition back to a review.
+    outcomes.push({ completed: false, noClaimRefusalCode: "order.operational_group.workflow_group_foreign" });
+    await click(q(mounted.container, "[data-testid='admin-order-operational-reconcile-retry-mp-post-combined']"));
+    await flush();
+    assert.equal(readOperationalGroupAttempt("c1", "mp-post-combined", scope), null);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-reconcile-mp-post-combined']").length, 0);
+
+    // The next deliberate run is a genuinely new occurrence.
+    outcomes.push({ completed: true });
+    await click(q(mounted.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
+    await flush();
+    assert.equal(seen.length, 4);
+    assert.notEqual(seen[3], seen[0]);
+    assert.equal(readOperationalGroupAttempt("c1", "mp-post-combined", scope), null);
+  } finally {
+    await mounted.unmount();
+    clearOperationalGroupAttempt("c1", "mp-post-combined", scope);
   }
 });

@@ -30,4 +30,10 @@ export interface AdminResult<T> {
   data: T | null;
   status: number;
   message?: string;
+  /**
+   * TB-253-R5: raw typed server code when the failure came from a real server response. A transport
+   * failure (network/timeout) has NO code, so it can never be mistaken for a proven-no-side-effect
+   * refusal.
+   */
+  code?: string | null;
 }

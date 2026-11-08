@@ -48,6 +48,12 @@ export type OperationalGroupAttemptResolution = {
   resumingRecordedAttempt: boolean;
   /** True when a previously recorded attempt existed but the reviewed envelope changed. */
   changedRequest: boolean;
+  /**
+   * TB-253-R5: true when a retained unresolved attempt exists and the reviewed request differs.
+   * No new operation may start: only replay/reconcile of the retained envelope is lawful, and the
+   * recorded request/occurrence are returned UNCHANGED (nothing is minted or overwritten).
+   */
+  blockedByRetainedAttempt: boolean;
 };
 
 const VERSION = "v2";
@@ -274,9 +280,13 @@ export function clearOperationalGroupAttempt(
 /**
  * Decides which occurrence this review attempt belongs to.
  *
- * Same reviewed envelope as the recorded attempt → resume/retry THAT occurrence (lost response,
- * 5xx, cancellation). A changed reviewed envelope → a NEW occurrence, because the recorded envelope
- * is immutable server-side. No recorded attempt → a freshly minted occurrence.
+ * TB-253-R5: a retained attempt is UNRESOLVED until an authoritative completion clears it, so it is the
+ * only lawful operation for that group:
+ *  - same reviewed envelope → resume/retry THAT occurrence (lost response, 5xx, cancellation);
+ *  - changed reviewed envelope → BLOCKED: nothing is minted, nothing is overwritten, and the caller must
+ *    replay/reconcile the retained envelope or stay disabled. Minting a second occurrence here would
+ *    abandon real parcels and start a second operation;
+ *  - no retained attempt → a freshly minted occurrence.
  *
  * The decision is persisted before returning, so it survives a remount between decision and POST.
  */
@@ -294,12 +304,35 @@ export function resolveOperationalGroupAttempt(input: {
   const fingerprint = operationalGroupRequestFingerprint({ members, selections, reuseShipmentIds });
 
   const recorded = readOperationalGroupAttempt(checkoutId, operationalGroupKey, scopeKey);
-  const sameEnvelope = Boolean(recorded)
-    && (recorded!.fingerprint.length === 0 || recorded!.fingerprint === fingerprint);
-  const changedRequest = Boolean(recorded) && !sameEnvelope;
+  if (recorded) {
+    const sameEnvelope = recorded.fingerprint.length === 0 || recorded.fingerprint === fingerprint;
+    if (!sameEnvelope) {
+      // R5: no remint. The retained envelope is immutable until authoritative resolution.
+      return {
+        occurrenceId: recorded.occurrenceId,
+        attempt: recorded,
+        resumingRecordedAttempt: false,
+        changedRequest: true,
+        blockedByRetainedAttempt: true,
+      };
+    }
+
+    const resumed: OperationalGroupAttempt = {
+      ...recorded,
+      attempts: recorded.attempts + 1,
+    };
+    writeOperationalGroupAttempt(resumed);
+    return {
+      occurrenceId: resumed.occurrenceId,
+      attempt: resumed,
+      resumingRecordedAttempt: true,
+      changedRequest: false,
+      blockedByRetainedAttempt: false,
+    };
+  }
 
   const attempt: OperationalGroupAttempt = {
-    occurrenceId: sameEnvelope && recorded ? recorded.occurrenceId : mintOperationalGroupOccurrence(),
+    occurrenceId: mintOperationalGroupOccurrence(),
     checkoutId,
     operationalGroupKey,
     scopeKey,
@@ -307,18 +340,58 @@ export function resolveOperationalGroupAttempt(input: {
     members,
     selections,
     reuseShipmentIds,
-    attempts: sameEnvelope && recorded ? recorded.attempts + 1 : 1,
-    lastFailedAtUtc: sameEnvelope && recorded ? recorded.lastFailedAtUtc : null,
-    lastErrorCode: sameEnvelope && recorded ? recorded.lastErrorCode : null,
+    attempts: 1,
+    lastFailedAtUtc: null,
+    lastErrorCode: null,
   };
   writeOperationalGroupAttempt(attempt);
 
   return {
     occurrenceId: attempt.occurrenceId,
     attempt,
-    resumingRecordedAttempt: sameEnvelope,
-    changedRequest,
+    resumingRecordedAttempt: false,
+    changedRequest: false,
+    blockedByRetainedAttempt: false,
   };
+}
+
+/**
+ * TB-253-R5: typed server refusals that are thrown BEFORE the occurrence is durably claimed, so they
+ * prove the operation has no claim and no side effect. Only these permit an explicit safe transition
+ * back to a fresh operation. Network loss, timeouts and 5xx are NEVER in this set.
+ */
+export const OPERATIONAL_GROUP_NO_CLAIM_REFUSAL_CODES: readonly string[] = [
+  "order.operational_group.workflow_occurrence_required",
+  "order.operational_group.workflow_group_foreign",
+  "order.operational_group.consolidate_requires_multi_seller",
+  "order.operational_group.consolidate_incompatible",
+  "order.operation.denied",
+];
+
+/** True when the refusal code proves NO durable claim was made by this operation. */
+export function isOperationalGroupNoClaimRefusal(code: string | null | undefined): boolean {
+  const normalized = coalesce(code);
+  return normalized.length > 0 && OPERATIONAL_GROUP_NO_CLAIM_REFUSAL_CODES.includes(normalized);
+}
+
+/**
+ * Explicit safe transition: only for a typed refusal that proves no claim/side effect. Clears the
+ * retained envelope so the operator may correct the review and start a fresh occurrence.
+ * Returns false (and clears nothing) for any other code, including network/5xx/timeout.
+ */
+export function releaseOperationalGroupAttemptAfterNoClaimRefusal(input: {
+  checkoutId: string;
+  operationalGroupKey: string;
+  scopeKey: string | null | undefined;
+  code: string | null | undefined;
+}): boolean {
+  if (!isOperationalGroupNoClaimRefusal(input.code)) return false;
+  clearOperationalGroupAttempt(
+    input.checkoutId,
+    input.operationalGroupKey,
+    input.scopeKey,
+  );
+  return true;
 }
 
 /**
