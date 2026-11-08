@@ -10,7 +10,7 @@ Canonical target: `D:\Users\User\source\repos\SarvNewVer`, FE `http://127.0.0.1:
 | --- | --- |
 | Expected base | `1dfdecbaf1365c21fbea86ab13922f63b358b74d` |
 | Code commit | 4042e9d95129a1a0f0c40ebb6ed103412377c60e |
-| Evidence commit | EVIDENCE_SHA_PLACEHOLDER |
+| Evidence commit | 7bafc2341d005de52be1ff7a4328a5846477e784 |
 
 ## 1. Source inventory
 
