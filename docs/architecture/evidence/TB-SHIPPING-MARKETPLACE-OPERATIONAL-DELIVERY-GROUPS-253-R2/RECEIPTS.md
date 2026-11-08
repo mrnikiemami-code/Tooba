@@ -117,7 +117,9 @@ npm run build         → success (route table emitted, middleware 34.9 kB, no e
 
 - Source (`Code-SHA`): `8580097d696f5b1fd0f9c8ed9382dea2c912eccc`
   — `feat(shipping): one reviewed Marketplace operational group workflow + real relational proof`
-- Evidence commit: the docs commit carrying this RECEIPTS/RESULT/TASK set, recorded as `Evidence-SHA`.
+- Evidence commit (`Evidence-SHA`): `be5f9c54db2efcba90f5e0b910cbeaa57fdd5a94`
+  — `docs(shipping): 253-R2 evidence, task contract and TOP updates` (complete envelope; the trailing
+  stamp commit only aligns this declared SHA).
 - `git push origin main` then `git fetch` and `HEAD == origin/main` verified before Bridge delivery.
 
 END_TOOBA_WORKER_RECEIPTS
