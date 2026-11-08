@@ -144,3 +144,10 @@ the whole class ran green six consecutive times.
 
 STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE
 END_TOOBA_WORKER_RESULT
+
+## ENVELOPE
+- Base: `2ac19888686b668530b146c7f80702c8edbeb415`
+- Code commit: `b9596f1ae`
+- Evidence envelope commit: `29afccae6781260b1b733c205407bd4c439716d9`
+- `origin/main` parity verified after push (fail-closed).
+

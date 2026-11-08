@@ -134,3 +134,7 @@ profile/tab was touched, closed or automated.
 - No amend/force/reset/stash/rebase.
 
 END_TOOBA_WORKER_RECEIPTS
+
+## 7. Repository (recorded)
+- Code commit `b9596f1ae`; evidence envelope `29afccae6781260b1b733c205407bd4c439716d9`; `HEAD == origin/main` verified.
+
