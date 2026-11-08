@@ -1,8 +1,13 @@
-# CURRENT — 253 PARTIAL: Marketplace operational delivery groups authority + UI — 2026-11-08
+# CURRENT — 253-R1 PASS: operational compatibility/readiness + group consolidate + disposable matrix — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued R1 software/relational/deploy scope, decision **OPERATIONAL_COMPATIBILITY_READINESS_GROUP_CONSOLIDATE_AND_DISPOSABLE_MATRIX_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `1c9bd5d2905`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. LANDED: checkout/currency/authoritative receiving/unknown-transport fail-closed; shared fact mapper; WithConsolidateReadiness; derived accepted method; group-level consolidate UI; disposable `tb253r1-pg:15433` TB253R1 **4/4**. Authority 13/13 + FE mount 4/4 + typecheck/build + deploy. Live order `01a1b92d-…` Store×3 separate (no Store promotion). CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253 PARTIAL: Marketplace operational delivery groups authority + UI — 2026-11-08
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PARTIAL**, decision **OPERATIONAL_DELIVERY_GROUP_AUTHORITY_AND_UI_DEPLOYED_RELATIONAL_MATRIX_UNMET**, NOT Architect/Visual ACCEPT. Base `e33517eb4`.
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha. LANDED: server-owned Marketplace-only cross-seller operational grouping projection; Store never promoted; consolidate create/offer same authority; «ارسال سفارش» operational cards. Authority 8/8 + FE 25/25 + typecheck/build + deploy. Disposable relational consolidate matrix unmet. Live order `01a1b92d-…` Store×3 separate groups. CapturedPreview local ON (checked-in OFF). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+Status **PARTIAL**, decision **OPERATIONAL_DELIVERY_GROUP_AUTHORITY_AND_UI_DEPLOYED_RELATIONAL_MATRIX_UNMET**. Closed by 253-R1 (compat/readiness/workflow/relational). Tipax deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
 
 # SUPERSEDED — 252-R3 PASS: remove recipient-as-origin trusted metadata invent — 2026-11-04
 

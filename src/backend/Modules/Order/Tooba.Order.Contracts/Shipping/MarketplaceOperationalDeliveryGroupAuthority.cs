@@ -185,16 +185,64 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
         }
 
         var projected = Project(distinct);
-        if (projected.Count != 1 || !projected[0].IsCrossSellerMarketplace || !projected[0].ConsolidateEligible)
+        if (projected.Count != 1 || !projected[0].IsCrossSellerMarketplace)
         {
             throw new MarketplaceOperationalDeliveryGroupException(ConsolidateIncompatible);
         }
+    }
+
+    /// <summary>Derives accepted method code from compatible members; rejects client mismatch.</summary>
+    public static string DeriveAcceptedMethodCode(
+        IReadOnlyList<GroupFact> members,
+        string? clientShippingMethodCode)
+    {
+        if (members is null || members.Count == 0)
+        {
+            throw new MarketplaceOperationalDeliveryGroupException(ConsolidateIncompatible);
+        }
+
+        var codes = members
+            .Select(m => NormalizeCode(m.MethodCode))
+            .Where(c => c.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (codes.Count != 1)
+        {
+            throw new MarketplaceOperationalDeliveryGroupException(ConsolidateIncompatible);
+        }
+
+        var accepted = codes[0];
+        var client = NormalizeCode(clientShippingMethodCode);
+        if (!string.IsNullOrEmpty(client) && !string.Equals(client, accepted, StringComparison.Ordinal))
+        {
+            throw new MarketplaceOperationalDeliveryGroupException(ConsolidateIncompatible);
+        }
+
+        // Preserve original casing from first member method code head.
+        var raw = (members[0].MethodCode ?? string.Empty).Trim();
+        return raw.Split('\u001f')[0].Split(':')[0].Trim();
     }
 
     /// <summary>True when both facts share one Marketplace operational merge key.</summary>
     public static bool AreMarketplaceCompatible(GroupFact a, GroupFact b, out string? refusalCode)
     {
         refusalCode = null;
+        if (a.CheckoutId == Guid.Empty
+            || b.CheckoutId == Guid.Empty
+            || a.CheckoutId != b.CheckoutId)
+        {
+            refusalCode = SeparateIncompatibleCommitment;
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(a.Currency)
+            || string.IsNullOrWhiteSpace(b.Currency)
+            || !string.Equals(a.Currency.Trim(), b.Currency.Trim(), StringComparison.Ordinal))
+        {
+            refusalCode = SeparateIncompatibleCommitment;
+            return false;
+        }
+
         if (!IsMarketplaceOwner(a) || !IsMarketplaceOwner(b))
         {
             refusalCode = SeparateSellerResponsibility;
@@ -227,6 +275,12 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
             return false;
         }
 
+        if (!HasAuthoritativeReceivingChoice(a) || !HasAuthoritativeReceivingChoice(b))
+        {
+            refusalCode = SeparateIncompatibleCommitment;
+            return false;
+        }
+
         if (!ExactDispatchIdentity(a, b))
         {
             refusalCode = SeparateIncompatibleCommitment;
@@ -241,6 +295,18 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
 
         return true;
     }
+
+    /// <summary>
+    /// Chosen receiving day/window must be present and bounded; missing values never equal.
+    /// </summary>
+    public static bool HasAuthoritativeReceivingChoice(GroupFact g) =>
+        g.ReceivingDate is not null
+        && g.ReceivingOpenTicks is long open
+        && g.ReceivingCloseTicks is long close
+        && open >= 0
+        && close > open
+        && close <= TimeSpan.TicksPerDay
+        && !string.IsNullOrWhiteSpace(g.ReceivingTimeZone);
 
     /// <summary>True when owner kind is Marketplace with null tenant/seller.</summary>
     public static bool IsMarketplaceOwner(GroupFact g) =>
@@ -365,23 +431,16 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
             }
         }
 
+        // Compatibility projection never claims executable consolidate readiness.
+        // Callers attach shipment/permission readiness separately.
         var consolidateEligible = false;
-        string? consolidateBlock = null;
-        if (isCrossSellerMarketplace)
-        {
-            if (members.Any(m => IsCarrierApi(m.TransportMode)))
-            {
-                consolidateBlock = "تجمیع حامل API بین گروه‌ها پشتیبانی نمی‌شود؛ هر گروه جداگانه ارسال شود.";
-            }
-            else
-            {
-                consolidateEligible = true;
-            }
-        }
-        else
-        {
-            consolidateBlock = separateFa ?? "تجمیع فقط برای ارسال مارکت‌پلیس سازگار مجاز است.";
-        }
+        string? consolidateBlock = isCrossSellerMarketplace
+            ? (members.Any(m => IsCarrierApi(m.TransportMode))
+                ? "تجمیع حامل API بین گروه‌ها پشتیبانی نمی‌شود؛ هر گروه جداگانه ارسال شود."
+                : "برای تجمیع باید مرسوله‌های واجد شرایط همهٔ اعضای گروه آماده باشند.")
+            : (IsStoreOwner(seed) || IsSellerOwner(seed)
+                ? null
+                : separateFa ?? "تجمیع فقط برای ارسال مارکت‌پلیس سازگار مجاز است.");
 
         var window = FormatWindow(seed.ReceivingOpenTicks, seed.ReceivingCloseTicks);
         var responsibility = isMarketplace
@@ -392,17 +451,17 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
                     ? "ارسال فروشگاه"
                     : null;
 
-        var key = string.Join(
-            '|',
-            NormalizeCode(seed.MethodCode),
-            seed.ServiceCode ?? string.Empty,
-            seed.OptionCode ?? string.Empty,
-            seed.ReceivingDate?.ToString("yyyy-MM-dd") ?? string.Empty,
-            seed.ReceivingOpenTicks?.ToString() ?? string.Empty,
-            seed.ReceivingCloseTicks?.ToString() ?? string.Empty,
-            seed.ReceivingTimeZone ?? string.Empty,
-            isMarketplace ? "mp" : seed.SellerPartyId.ToString("N"),
-            TryResolveOriginIdentity(seed, out var origin) ? origin : $"solo:{seed.ShippingGroupId:N}");
+        // Hide routine Store/Seller separation prose from normal cards; keep only actionable Marketplace blockers.
+        if (!isCrossSellerMarketplace && (IsStoreOwner(seed) || IsSellerOwner(seed)))
+        {
+            separateFa = null;
+        }
+
+        var feeTotal = members.All(m => string.Equals(m.Currency.Trim(), seed.Currency.Trim(), StringComparison.Ordinal))
+            ? members.Sum(m => m.FeeAmount)
+            : 0m;
+
+        var key = BuildOperationalGroupKey(members, isMarketplace);
 
         return new OperationalGroup(
             key,
@@ -419,9 +478,108 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
             separateFa,
             consolidateEligible,
             consolidateBlock,
-            members.Sum(m => m.FeeAmount),
+            feeTotal,
             seed.Currency,
             members);
+    }
+
+    /// <summary>
+    /// Deterministic collision-resistant identity scoped to checkout and full compatibility/member set.
+    /// </summary>
+    public static string BuildOperationalGroupKey(IReadOnlyList<GroupFact> members, bool isMarketplace)
+    {
+        var seed = members[0];
+        TryResolveOriginIdentity(seed, out var origin);
+        var memberPart = string.Join(
+            ',',
+            members.Select(m => m.ShippingGroupId).OrderBy(x => x).Select(x => x.ToString("N")));
+        var providerPart = isMarketplace && IsCarrierApi(seed.TransportMode)
+            ? string.Join(
+                ':',
+                seed.CarrierAccountId?.ToString("N") ?? string.Empty,
+                seed.ConfigurationVersion?.ToString() ?? string.Empty,
+                seed.ProviderCode ?? string.Empty,
+                seed.ProviderServiceCode ?? string.Empty)
+            : "manual";
+        return string.Join(
+            '|',
+            seed.CheckoutId.ToString("N"),
+            seed.Currency.Trim(),
+            NormalizeCode(seed.MethodCode),
+            seed.ServiceCode ?? string.Empty,
+            seed.OptionCode ?? string.Empty,
+            seed.ReceivingDate?.ToString("yyyy-MM-dd") ?? string.Empty,
+            seed.ReceivingOpenTicks?.ToString() ?? string.Empty,
+            seed.ReceivingCloseTicks?.ToString() ?? string.Empty,
+            seed.ReceivingTimeZone ?? string.Empty,
+            seed.DestinationFingerprint,
+            isMarketplace ? "mp" : $"seller:{seed.SellerPartyId:N}",
+            string.IsNullOrEmpty(origin) ? $"solo:{memberPart}" : origin,
+            providerPart,
+            memberPart);
+    }
+
+    /// <summary>
+    /// Attaches executable consolidate readiness without changing compatibility membership.
+    /// </summary>
+    public static OperationalGroup WithConsolidateReadiness(
+        OperationalGroup group,
+        bool everyMemberHasEligibleCreatedShipment,
+        bool actorMayManage,
+        bool anyPaymentLocked)
+    {
+        if (!group.IsCrossSellerMarketplace)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa = group.ConsolidateBlockReasonFa,
+            };
+        }
+
+        if (group.Members.Any(m => IsCarrierApi(m.TransportMode)))
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa =
+                    "تجمیع حامل API بین گروه‌ها پشتیبانی نمی‌شود؛ هر گروه جداگانه ارسال شود.",
+            };
+        }
+
+        if (anyPaymentLocked)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa = "پرداخت/وضعیت سفارش اجازهٔ تجمیع نمی‌دهد.",
+            };
+        }
+
+        if (!actorMayManage)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa = "مجوز عملیات تجمیع برای این کاربر فعال نیست.",
+            };
+        }
+
+        if (!everyMemberHasEligibleCreatedShipment)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa =
+                    "برای تجمیع باید مرسولهٔ ایجادشدهٔ واجد شرایط از هر عضو گروه موجود باشد.",
+            };
+        }
+
+        return group with
+        {
+            ConsolidateEligible = true,
+            ConsolidateBlockReasonFa = null,
+        };
     }
 
     private static bool SameMarketplaceOwnerIdentity(GroupFact a, GroupFact b) =>
@@ -437,31 +595,39 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
         && a.ReceivingDate == b.ReceivingDate
         && a.ReceivingOpenTicks == b.ReceivingOpenTicks
         && a.ReceivingCloseTicks == b.ReceivingCloseTicks
-        && string.Equals(NormalizeNullable(a.ReceivingTimeZone), NormalizeNullable(b.ReceivingTimeZone), StringComparison.Ordinal);
+        && string.Equals(
+            NormalizeNullable(a.ReceivingTimeZone),
+            NormalizeNullable(b.ReceivingTimeZone),
+            StringComparison.Ordinal);
 
     private static bool CompatibleTransport(GroupFact a, GroupFact b, out string? refusal)
     {
         refusal = null;
-        var aCarrier = IsCarrierApi(a.TransportMode);
-        var bCarrier = IsCarrierApi(b.TransportMode);
-        if (aCarrier != bCarrier)
+        if (!TryClassifyTransport(a.TransportMode, out var modeA)
+            || !TryClassifyTransport(b.TransportMode, out var modeB))
+        {
+            refusal = SeparateLegacyEvidence;
+            return false;
+        }
+
+        if (modeA != modeB)
         {
             refusal = SeparateIncompatibleCommitment;
             return false;
         }
 
-        if (!aCarrier)
+        if (modeA == TransportKind.LegacyIncomplete)
         {
-            if (string.Equals(a.TransportMode, "LegacyIncomplete", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(b.TransportMode, "LegacyIncomplete", StringComparison.OrdinalIgnoreCase))
-            {
-                refusal = SeparateLegacyEvidence;
-                return false;
-            }
+            refusal = SeparateLegacyEvidence;
+            return false;
+        }
 
+        if (modeA == TransportKind.Manual)
+        {
             return true;
         }
 
+        // CarrierApi: exact provider binding required for display merge; consolidate still refused later.
         if (a.CarrierAccountId is null
             || b.CarrierAccountId is null
             || a.CarrierAccountId != b.CarrierAccountId
@@ -480,6 +646,37 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
         }
 
         return true;
+    }
+
+    private enum TransportKind
+    {
+        Manual,
+        CarrierApi,
+        LegacyIncomplete,
+    }
+
+    private static bool TryClassifyTransport(string? transportMode, out TransportKind kind)
+    {
+        kind = TransportKind.LegacyIncomplete;
+        if (string.Equals(transportMode, "Manual", StringComparison.OrdinalIgnoreCase))
+        {
+            kind = TransportKind.Manual;
+            return true;
+        }
+
+        if (string.Equals(transportMode, "CarrierApi", StringComparison.OrdinalIgnoreCase))
+        {
+            kind = TransportKind.CarrierApi;
+            return true;
+        }
+
+        if (string.Equals(transportMode, "LegacyIncomplete", StringComparison.OrdinalIgnoreCase))
+        {
+            kind = TransportKind.LegacyIncomplete;
+            return true;
+        }
+
+        return false;
     }
 
     private static bool IsCarrierApi(string? transportMode) =>

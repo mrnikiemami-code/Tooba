@@ -4,6 +4,7 @@ import React from "react";
 import { Package } from "lucide-react";
 import {
   formatAdminMoney,
+  formatAdminStatus,
   type AdminAcceptedShippingGroup,
   type AdminOperationalDeliveryGroup,
   type AdminOrderDetail,
@@ -22,6 +23,8 @@ type Props = {
   detail: AdminOrderDetail;
   pendingCode: string | null;
   onCreateShipment: (target: OperationalCreateTarget) => void;
+  /** One group-level consolidate for Marketplace cross-seller cards when server marks eligible. */
+  onConsolidateGroup?: (group: AdminOperationalDeliveryGroup, shipmentIds: string[]) => void;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
   shippableQty: (line: AdminOrderLine) => number;
@@ -62,6 +65,7 @@ export function AdminOrderOperationalDeliverySection({
   detail,
   pendingCode,
   onCreateShipment,
+  onConsolidateGroup,
   selectedBySeller,
   qtyByLine,
   shippableQty,
@@ -95,6 +99,7 @@ export function AdminOrderOperationalDeliverySection({
             detail={detail}
             pendingCode={pendingCode}
             onCreateShipment={onCreateShipment}
+            onConsolidateGroup={onConsolidateGroup}
             selectedBySeller={selectedBySeller}
             qtyByLine={qtyByLine}
             shippableQty={shippableQty}
@@ -110,6 +115,7 @@ function OperationalCard({
   detail,
   pendingCode,
   onCreateShipment,
+  onConsolidateGroup,
   selectedBySeller,
   qtyByLine,
   shippableQty,
@@ -118,10 +124,18 @@ function OperationalCard({
   detail: AdminOrderDetail;
   pendingCode: string | null;
   onCreateShipment: (target: OperationalCreateTarget) => void;
+  onConsolidateGroup?: (group: AdminOperationalDeliveryGroup, shipmentIds: string[]) => void;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
   shippableQty: (line: AdminOrderLine) => number;
 }) {
+  const consolidateShipmentIds = group.members.flatMap((member) => {
+    const seller = resolveSeller(detail, member.sellerOrderId);
+    if (!seller) return [];
+    return memberShipments(seller, member.shippingGroupId)
+      .filter((s) => s.status === "Created" && !s.activePackageNumber && !s.packageLockedReasonFa)
+      .map((s) => s.shipmentId);
+  });
   const dateRaw = (group.deliveryDate ?? "").trim();
   const dateFa = dateRaw
     ? formatJalaliDate(dateRaw.includes("T") ? dateRaw : `${dateRaw}T12:00:00`, "fa")
@@ -161,7 +175,7 @@ function OperationalCard({
           {formatAdminMoney(group.combinedFeeTotal, group.currency)}
           {showFeeBreakdown ? (
             <span className="block text-[10px] font-semibold text-gray-500" dir="rtl">
-              جمع تعهدهای این گروه
+              جمع هزینه ارسال
             </span>
           ) : null}
         </div>
@@ -239,12 +253,23 @@ function OperationalCard({
                 })}
               </ul>
               {shipments.length > 0 ? (
-                <p className="mt-1.5 text-[10px] text-gray-500">
-                  مرسوله: {shipments.length.toLocaleString("fa-IR")}
-                  {shipments[0]?.trackingReference
-                    ? ` · ${shipments[0].trackingReference}`
-                    : ""}
-                </p>
+                <ul className="mt-1.5 space-y-0.5" data-testid={`admin-order-operational-parcels-${member.shippingGroupId}`}>
+                  {shipments.map((shipment) => (
+                    <li
+                      key={shipment.shipmentId}
+                      className="text-[10px] text-gray-600"
+                      data-testid={`admin-order-operational-parcel-${shipment.shipmentId}`}
+                    >
+                      <span className="font-semibold">{formatAdminStatus(shipment.status)}</span>
+                      {shipment.trackingReference ? (
+                        <span className="ms-1 tabular-nums" dir="ltr">{shipment.trackingReference}</span>
+                      ) : null}
+                      {shipment.activePackageNumber ? (
+                        <span className="ms-1 text-emerald-800">· بسته {shipment.activePackageNumber}</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
               ) : null}
               {canCreate && seller && accepted ? (
                 <button
@@ -269,6 +294,17 @@ function OperationalCard({
         })}
       </div>
 
+      {group.isCrossSellerMarketplace && group.consolidateEligible && onConsolidateGroup ? (
+        <button
+          type="button"
+          disabled={pendingCode !== null || consolidateShipmentIds.length < 2}
+          onClick={() => onConsolidateGroup(group, consolidateShipmentIds)}
+          className="mt-2 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 disabled:opacity-50"
+          data-testid={`admin-order-operational-consolidate-${group.operationalGroupKey}`}
+        >
+          ایجاد بسته تجمیعی این گروه
+        </button>
+      ) : null}
       {group.isCrossSellerMarketplace && group.consolidateBlockReasonFa ? (
         <p className="mt-2 text-[10px] text-gray-500" data-testid={`admin-order-operational-consolidate-note-${group.operationalGroupKey}`}>
           {group.consolidateBlockReasonFa}

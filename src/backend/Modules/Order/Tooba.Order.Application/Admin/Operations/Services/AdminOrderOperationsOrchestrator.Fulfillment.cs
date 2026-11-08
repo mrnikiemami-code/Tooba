@@ -313,13 +313,16 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("fulfillment.package.requires_multi_seller");
         }
 
-        var methodCode = request.ShippingMethodCode?.Trim();
-        await EnsureOperationalConsolidateAllowedAsync(checkoutId, shipmentIds, cancellationToken);
+        var acceptedMethod = await EnsureOperationalConsolidateAllowedAsync(
+            checkoutId,
+            shipmentIds,
+            request.ShippingMethodCode,
+            cancellationToken);
 
         return await _fulfillment.CreateConsolidatedPackageAsync(
             checkoutId,
             shipmentIds,
-            string.IsNullOrWhiteSpace(methodCode) ? null : methodCode,
+            acceptedMethod,
             request.TrackingReference,
             request.Reason,
             actorUserId,
@@ -329,9 +332,10 @@ public sealed partial class AdminOrderOperationsOrchestrator
     /// <summary>
     /// TB-253: consolidated package mutation must reuse the same Marketplace operational compatibility authority as the UI.
     /// </summary>
-    private async Task EnsureOperationalConsolidateAllowedAsync(
+    private async Task<string> EnsureOperationalConsolidateAllowedAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> shipmentIds,
+        string? clientShippingMethodCode,
         CancellationToken cancellationToken)
     {
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
@@ -374,6 +378,9 @@ public sealed partial class AdminOrderOperationsOrchestrator
         try
         {
             MarketplaceOperationalDeliveryGroupAuthority.EnsureConsolidateAllowed(selected);
+            return MarketplaceOperationalDeliveryGroupAuthority.DeriveAcceptedMethodCode(
+                selected,
+                clientShippingMethodCode);
         }
         catch (MarketplaceOperationalDeliveryGroupException ex)
         {
@@ -384,45 +391,18 @@ public sealed partial class AdminOrderOperationsOrchestrator
     private static MarketplaceOperationalDeliveryGroupAuthority.GroupFact ToOperationalFact(
         Guid checkoutId,
         OrderCommittedCarrierShipmentFacts fact,
-        OrderShippingGroupHistoryRecord hist)
-    {
-        var deliveryDate = hist.Evidence?.ReceivingDate
-            ?? hist.RequestedDeliveryDate
-            ?? (DateOnly?)hist.MinimumDeliveryDate;
-        return new MarketplaceOperationalDeliveryGroupAuthority.GroupFact(
-            fact.ShippingGroupId,
+        OrderShippingGroupHistoryRecord hist) =>
+        OperationalDeliveryGroupFactMapper.Map(
             checkoutId,
-            fact.SellerOrderId,
-            fact.SellerPartyId,
-            fact.MethodCode,
-            fact.ServiceCode ?? hist.ServiceCode,
-            fact.OptionCode ?? hist.OptionCode,
-            fact.MethodLabel,
-            fact.Currency,
-            fact.PayableAtCheckoutAmount,
-            fact.OwnerKind,
-            fact.OwnerTenantKey,
-            fact.OwnerSellerPartyId,
-            deliveryDate,
-            hist.Evidence?.ReceivingOpenTicks,
-            hist.Evidence?.ReceivingCloseTicks,
-            hist.Evidence?.ReceivingTimeZone,
-            fact.TransportMode,
-            fact.OriginLocationCode,
-            fact.OriginPostalAddress,
-            fact.CarrierAccountId,
-            fact.ProviderCode,
-            fact.ProviderServiceCode,
-            fact.ConfigurationVersion,
+            fact,
+            hist,
             MarketplaceOperationalDeliveryGroupAuthority.BuildDestinationFingerprint(
                 fact.ProvinceName,
                 fact.CityName,
                 fact.PostalCode,
                 fact.RecipientAddress),
-            fact.OrderLineIds,
             fact.ExecutableLines.Count > 0 && !fact.IsCancelled && !fact.PaymentLocked,
             fact.IneligibilityReasonCode);
-    }
 
     private async Task<object> CancelConsolidatedPackageCoreAsync(
         AdminOrderOperationRequest request,

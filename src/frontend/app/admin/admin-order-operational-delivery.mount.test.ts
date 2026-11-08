@@ -154,14 +154,35 @@ function baseDetail(overrides: Partial<AdminOrderDetail> = {}): AdminOrderDetail
 }
 
 test("mounted marketplace operational card shows both sellers under one heading", () => {
+  let consolidateCalls = 0;
+  const detail = baseDetail({
+    sellerOrders: baseDetail().sellerOrders.map((seller, idx) => ({
+      ...seller,
+      shipments: [{
+        shipmentId: `sh${idx + 1}`,
+        status: "Created",
+        carrierDisplayName: "پست",
+        shippingGroupId: idx === 0 ? "g1" : "g2",
+        shippingMethodCode: "post",
+        itemCount: 1,
+        lines: [{ orderLineId: idx === 0 ? "ol1" : "ol2", quantity: 1 }],
+        trackingReference: idx === 0 ? "TRK-A" : null,
+        activePackageNumber: null,
+        packageLockedReasonFa: null,
+      }],
+    })),
+  });
   const html = renderToStaticMarkup(
     createElement(AdminOrderOperationalDeliverySection, {
-      detail: baseDetail(),
+      detail,
       pendingCode: null,
       selectedBySeller: {},
       qtyByLine: {},
       shippableQty: () => 1,
       onCreateShipment: () => undefined,
+      onConsolidateGroup: () => {
+        consolidateCalls += 1;
+      },
     }),
   );
   assert.match(html, /ارسال سفارش/);
@@ -171,8 +192,26 @@ test("mounted marketplace operational card shows both sellers under one heading"
   assert.match(html, /نیلوا/);
   assert.match(html, /شال آرمان/);
   assert.match(html, /پیراهن نیلوا/);
-  assert.match(html, /جمع تعهدهای این گروه/);
-  assert.doesNotMatch(html, /store-alpha|Asia\/Tehran|GUID|tenant/i);
+  assert.match(html, /جمع هزینه ارسال/);
+  assert.match(html, /admin-order-operational-consolidate-mp-post-combined/);
+  assert.match(html, /ایجاد بسته تجمیعی این گروه/);
+  assert.match(html, /admin-order-operational-parcel-sh1/);
+  assert.match(html, /TRK-A/);
+  assert.doesNotMatch(html, /store-alpha|Asia\/Tehran|GUID|tenant|جمع تعهد/i);
+  assert.equal(consolidateCalls, 0);
+});
+
+test("panel wires group-level consolidate without client method override", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { dirname, join } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const panel = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "admin-order-items-shipping-panel.tsx"),
+    "utf8",
+  );
+  assert.match(panel, /onConsolidateGroup/);
+  assert.match(panel, /create_consolidated_package/);
+  assert.match(panel, /shippingMethodCode:\s*null/);
 });
 
 test("mounted seller-owned cards stay independent", () => {

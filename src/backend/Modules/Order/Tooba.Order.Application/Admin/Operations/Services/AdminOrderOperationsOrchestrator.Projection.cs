@@ -401,9 +401,24 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 operationalFacts.Add(ToOperationalFact(group.CheckoutId, fact, hist));
             }
 
-            canOfferCreate = MarketplaceOperationalDeliveryGroupAuthority
-                .Project(operationalFacts)
-                .Any(op => op.IsCrossSellerMarketplace && op.ConsolidateEligible);
+            var projected = MarketplaceOperationalDeliveryGroupAuthority.Project(operationalFacts);
+            canOfferCreate = projected.Any(op =>
+            {
+                if (!op.IsCrossSellerMarketplace)
+                {
+                    return false;
+                }
+
+                var memberIds = op.Members.Select(m => m.ShippingGroupId).ToHashSet();
+                var everyReady = memberIds.All(id =>
+                    eligibleShipments.Any(s => s.Shipment.ShippingGroupId == id));
+                var ready = MarketplaceOperationalDeliveryGroupAuthority.WithConsolidateReadiness(
+                    op,
+                    everyReady,
+                    actorMayManage: true,
+                    anyPaymentLocked: false);
+                return ready.ConsolidateEligible;
+            });
         }
 
         if (canOfferCreate)

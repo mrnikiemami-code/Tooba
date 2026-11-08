@@ -46,5 +46,8 @@ http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf
 - Disposable PostgreSQL relational consolidate matrix (required for unqualified PASS).
 - Live Tipax; Visual/User ACCEPT; Marketplace fixture live UI (canonical order is Store-owned).
 
+## Architect correction (253-R1 issuance)
+253 PARTIAL was not only “missing tests.” Independently reviewed gaps also included incomplete compatibility (checkout/currency/missing receiving identity/unknown transport), incomplete operationalGroupKey, ConsolidateEligible without shipment/permission readiness, missing group-level consolidate workflow (member create only), and client ShippingMethodCode override risk on consolidate. Closed by `TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1`.
+
 STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE
 END_TOOBA_WORKER_RESULT

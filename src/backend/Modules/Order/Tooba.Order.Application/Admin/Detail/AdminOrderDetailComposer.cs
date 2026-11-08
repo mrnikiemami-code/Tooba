@@ -8,6 +8,7 @@ using Tooba.Order.Application.Admin.OrdersGrid;
 using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Party.Contracts.Ports;
@@ -316,42 +317,18 @@ public sealed class AdminOrderDetailComposer
                 blockFa = "مقدار قابل ارسال باقی‌مانده‌ای در این گروه وجود ندارد.";
             }
 
-            var deliveryDate = h.Evidence?.ReceivingDate
+            // Display-only fallback (not used for operational merge identity).
+            var displayDate = h.Evidence?.ReceivingDate
                 ?? h.RequestedDeliveryDate
                 ?? (DateOnly?)h.MinimumDeliveryDate;
             var window = FormatReceivingWindow(h.Evidence)
                 ?? h.RequestedDeliveryTimeWindow;
             var fee = h.Evidence?.PayableAtCheckoutAmount ?? h.ShippingChargeSnapshot;
-            var ownerKind = MarketplaceOperationalDeliveryGroupAuthority.ParseOwnerKind(
-                h.Evidence?.OwnerKind,
-                facts?.OwnerKind);
-            operationalFacts.Add(new MarketplaceOperationalDeliveryGroupAuthority.GroupFact(
-                h.ShippingGroupId,
+            operationalFacts.Add(OperationalDeliveryGroupFactMapper.Map(
                 checkoutId,
-                h.SellerOrderId,
-                h.SellerPartyId,
-                h.MethodCode,
-                h.ServiceCode,
-                h.OptionCode,
-                h.MethodLabel,
-                h.Currency,
-                fee,
-                ownerKind,
-                h.Evidence?.OwnerTenantKey ?? facts?.OwnerTenantKey,
-                h.Evidence?.OwnerSellerPartyId ?? facts?.OwnerSellerPartyId,
-                deliveryDate,
-                h.Evidence?.ReceivingOpenTicks,
-                h.Evidence?.ReceivingCloseTicks,
-                h.Evidence?.ReceivingTimeZone,
-                transportMode,
-                facts?.OriginLocationCode,
-                facts?.OriginPostalAddress,
-                facts?.CarrierAccountId ?? h.Evidence?.CarrierQuote?.AccountId,
-                facts?.ProviderCode ?? h.Evidence?.CarrierQuote?.ProviderCode,
-                facts?.ProviderServiceCode ?? h.Evidence?.CarrierQuote?.ServiceCode,
-                facts?.ConfigurationVersion ?? h.Evidence?.CarrierQuote?.ConfigurationVersion,
+                facts,
+                h,
                 destinationFingerprint,
-                h.OrderLineIds,
                 eligible,
                 blockFa));
             return new AdminAcceptedShippingGroupView(
@@ -364,7 +341,7 @@ public sealed class AdminOrderDetailComposer
                 h.OptionCode,
                 h.ShippingChargeSnapshot,
                 h.Currency,
-                deliveryDate,
+                displayDate,
                 window,
                 h.Evidence?.ReceivingTimeZone,
                 h.Evidence?.OwnerKind,
@@ -378,39 +355,59 @@ public sealed class AdminOrderDetailComposer
                 transportMode);
         }).ToList();
 
+        var eligibleShipmentGroupIds = sellerOrders
+            .SelectMany(s => s.Shipments ?? Array.Empty<AdminShipmentView>())
+            .Where(s => s.ShippingGroupId is Guid
+                && string.Equals(s.Status, "Created", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrWhiteSpace(s.ActivePackageNumber)
+                && string.IsNullOrWhiteSpace(s.PackageLockedReasonFa)
+                && !string.IsNullOrWhiteSpace(s.ShippingMethodCode))
+            .Select(s => s.ShippingGroupId!.Value)
+            .ToHashSet();
+        var paymentLockedAny = factsByGroup.Values.Any(f => f.PaymentLocked);
+
         var operationalDeliveryGroups = MarketplaceOperationalDeliveryGroupAuthority
             .Project(operationalFacts)
-            .Select(op => new AdminOperationalDeliveryGroupView(
-                op.OperationalGroupKey,
-                op.MethodLabel,
-                op.MethodCode,
-                op.ServiceCode,
-                op.OptionCode,
-                op.DeliveryDate,
-                op.DeliveryTimeWindow,
-                op.ResponsibilityLabelFa,
-                op.IsCrossSellerMarketplace,
-                op.SeparateReasonFa,
-                op.ConsolidateEligible,
-                op.ConsolidateBlockReasonFa,
-                op.CombinedFeeTotal,
-                op.Currency,
-                op.Members.Select(m => new AdminOperationalDeliveryMemberView(
-                    m.ShippingGroupId,
-                    m.SellerOrderId,
-                    m.SellerPartyId,
-                    sellerNames.TryGetValue(m.SellerPartyId, out var name) ? name : "فروشنده",
-                    m.OrderLineIds,
-                    m.CreateParcelEligible,
-                    m.CreateParcelBlockReasonFa,
-                    m.TransportMode,
-                    m.FeeAmount,
-                    m.Currency)).ToList(),
-                op.Members.Select(m => new AdminOperationalFeeBreakdownView(
-                    m.ShippingGroupId,
-                    sellerNames.TryGetValue(m.SellerPartyId, out var feeName) ? feeName : "فروشنده",
-                    m.FeeAmount,
-                    m.Currency)).ToList()))
+            .Select(op =>
+            {
+                var everyMemberReady = op.Members.All(m => eligibleShipmentGroupIds.Contains(m.ShippingGroupId));
+                var ready = MarketplaceOperationalDeliveryGroupAuthority.WithConsolidateReadiness(
+                    op,
+                    everyMemberReady,
+                    actorMayManage: true,
+                    anyPaymentLocked: paymentLockedAny);
+                return new AdminOperationalDeliveryGroupView(
+                    ready.OperationalGroupKey,
+                    ready.MethodLabel,
+                    ready.MethodCode,
+                    ready.ServiceCode,
+                    ready.OptionCode,
+                    ready.DeliveryDate,
+                    ready.DeliveryTimeWindow,
+                    ready.ResponsibilityLabelFa,
+                    ready.IsCrossSellerMarketplace,
+                    ready.SeparateReasonFa,
+                    ready.ConsolidateEligible,
+                    ready.ConsolidateBlockReasonFa,
+                    ready.CombinedFeeTotal,
+                    ready.Currency,
+                    ready.Members.Select(m => new AdminOperationalDeliveryMemberView(
+                        m.ShippingGroupId,
+                        m.SellerOrderId,
+                        m.SellerPartyId,
+                        sellerNames.TryGetValue(m.SellerPartyId, out var name) ? name : "فروشنده",
+                        m.OrderLineIds,
+                        m.CreateParcelEligible,
+                        m.CreateParcelBlockReasonFa,
+                        m.TransportMode,
+                        m.FeeAmount,
+                        m.Currency)).ToList(),
+                    ready.Members.Select(m => new AdminOperationalFeeBreakdownView(
+                        m.ShippingGroupId,
+                        sellerNames.TryGetValue(m.SellerPartyId, out var feeName) ? feeName : "فروشنده",
+                        m.FeeAmount,
+                        m.Currency)).ToList());
+            })
             .ToList();
 
         return Result.Success(new AdminOrderDetailPage(

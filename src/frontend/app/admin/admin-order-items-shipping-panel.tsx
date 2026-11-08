@@ -326,6 +326,22 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           qtyByLine={qtyByLine}
           shippableQty={shippableQty}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
+          onConsolidateGroup={async (_group, shipmentIds) => {
+            if (shipmentIds.length < 2 || pendingCode !== null) return;
+            setPendingCode("create_consolidated_package");
+            const result = await executeAdminOrderOperation(checkoutId, {
+              code: "create_consolidated_package",
+              shipmentIds,
+              shippingMethodCode: null,
+            });
+            setPendingCode(null);
+            if (result.state !== "ok") {
+              toast.error(mapAdminErrorMessage(result.message, "fa"));
+              return;
+            }
+            toast.success("بسته تجمیعی ایجاد شد.");
+            onCompleted?.();
+          }}
         />
         <AdminConsolidatedPackageSection
           detail={detail}

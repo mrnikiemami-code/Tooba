@@ -33,7 +33,91 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
         Assert.Single(projected);
         Assert.True(projected[0].IsCrossSellerMarketplace);
         Assert.Equal(2, projected[0].Members.Count);
-        Assert.True(projected[0].ConsolidateEligible);
+        Assert.False(projected[0].ConsolidateEligible);
+        var ready = MarketplaceOperationalDeliveryGroupAuthority.WithConsolidateReadiness(
+            projected[0],
+            everyMemberHasEligibleCreatedShipment: true,
+            actorMayManage: true,
+            anyPaymentLocked: false);
+        Assert.True(ready.ConsolidateEligible);
+        Assert.Null(ready.ConsolidateBlockReasonFa);
+    }
+
+    [Fact]
+    public void Different_checkout_or_currency_never_merge()
+    {
+        var a = Marketplace(GroupA, SellerA, OrderA, LineA, origin: "WH-1");
+        var otherCheckout = a with { CheckoutId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab") };
+        var otherCurrency = a with { Currency = "USD", ShippingGroupId = GroupB, SellerPartyId = SellerB, SellerOrderId = OrderB };
+        Assert.Equal(2, MarketplaceOperationalDeliveryGroupAuthority.Project([a, otherCheckout with { ShippingGroupId = GroupB, SellerPartyId = SellerB, SellerOrderId = OrderB }]).Count);
+        Assert.Equal(2, MarketplaceOperationalDeliveryGroupAuthority.Project([a, otherCurrency]).Count);
+    }
+
+    [Fact]
+    public void Missing_receiving_identity_never_establishes_compatibility()
+    {
+        var a = Marketplace(GroupA, SellerA, OrderA, LineA, origin: "WH-1");
+        var missingDate = a with { ShippingGroupId = GroupB, SellerPartyId = SellerB, SellerOrderId = OrderB, ReceivingDate = null };
+        var missingTz = a with { ShippingGroupId = GroupB, SellerPartyId = SellerB, SellerOrderId = OrderB, ReceivingTimeZone = null };
+        var invalidInterval = a with
+        {
+            ShippingGroupId = GroupB,
+            SellerPartyId = SellerB,
+            SellerOrderId = OrderB,
+            ReceivingOpenTicks = Close,
+            ReceivingCloseTicks = Open,
+        };
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(a, missingDate, out _));
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(a, missingTz, out _));
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(a, invalidInterval, out _));
+        Assert.Equal(2, MarketplaceOperationalDeliveryGroupAuthority.Project([a, missingDate]).Count);
+    }
+
+    [Fact]
+    public void Unknown_transport_mode_fails_closed()
+    {
+        var a = Marketplace(GroupA, SellerA, OrderA, LineA, origin: "WH-1");
+        var unknown = a with
+        {
+            ShippingGroupId = GroupB,
+            SellerPartyId = SellerB,
+            SellerOrderId = OrderB,
+            TransportMode = "SnappCourier",
+        };
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(a, unknown, out var code));
+        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateLegacyEvidence, code);
+    }
+
+    [Fact]
+    public void Operational_keys_are_checkout_scoped_and_stable_under_input_order()
+    {
+        var a = Marketplace(GroupA, SellerA, OrderA, LineA, origin: "WH-1");
+        var b = Marketplace(GroupB, SellerB, OrderB, LineB, origin: "WH-1");
+        var forward = MarketplaceOperationalDeliveryGroupAuthority.Project([a, b]);
+        var reverse = MarketplaceOperationalDeliveryGroupAuthority.Project([b, a]);
+        Assert.Equal(forward[0].OperationalGroupKey, reverse[0].OperationalGroupKey);
+        Assert.Contains(Checkout.ToString("N"), forward[0].OperationalGroupKey, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("IRR", forward[0].OperationalGroupKey, StringComparison.Ordinal);
+
+        var storeA = StoreOwned(GroupA, SellerA, OrderA, LineA, origin: "WH-1");
+        var storeB = StoreOwned(GroupB, SellerB, OrderB, LineB, origin: "WH-1");
+        var stores = MarketplaceOperationalDeliveryGroupAuthority.Project([storeA, storeB]);
+        Assert.Equal(2, stores.Count);
+        Assert.NotEqual(stores[0].OperationalGroupKey, stores[1].OperationalGroupKey);
+    }
+
+    [Fact]
+    public void DeriveAcceptedMethodCode_rejects_client_override()
+    {
+        var members = new[]
+        {
+            Marketplace(GroupA, SellerA, OrderA, LineA, origin: "WH-1"),
+            Marketplace(GroupB, SellerB, OrderB, LineB, origin: "WH-1"),
+        };
+        Assert.Equal("post", MarketplaceOperationalDeliveryGroupAuthority.DeriveAcceptedMethodCode(members, null));
+        Assert.Equal("post", MarketplaceOperationalDeliveryGroupAuthority.DeriveAcceptedMethodCode(members, "post"));
+        Assert.Throws<MarketplaceOperationalDeliveryGroupException>(() =>
+            MarketplaceOperationalDeliveryGroupAuthority.DeriveAcceptedMethodCode(members, "heavy"));
     }
 
     [Fact]
