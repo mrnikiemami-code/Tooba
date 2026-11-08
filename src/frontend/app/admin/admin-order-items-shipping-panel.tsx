@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal, Package, Truck } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -135,6 +135,8 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
   const [sellerCaps, setSellerCaps] = useState<Record<string, AdminSellerCapability>>({});
   const [opsLoaded, setOpsLoaded] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [groupWorkflowErrorFa, setGroupWorkflowErrorFa] = useState<string | null>(null);
+  const groupWorkflowInFlight = useRef(false);
   const [openKebabLineId, setOpenKebabLineId] = useState<string | null>(null);
   const [shipmentModalTarget, setShipmentModalTarget] = useState<{
     seller: AdminSellerOrder;
@@ -326,21 +328,33 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           qtyByLine={qtyByLine}
           shippableQty={shippableQty}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
-          onConsolidateGroup={async (_group, shipmentIds) => {
-            if (shipmentIds.length < 2 || pendingCode !== null) return;
-            setPendingCode("create_consolidated_package");
-            const result = await executeAdminOrderOperation(checkoutId, {
-              code: "create_consolidated_package",
-              shipmentIds,
-              shippingMethodCode: null,
-            });
-            setPendingCode(null);
-            if (result.state !== "ok") {
-              toast.error(mapAdminErrorMessage(result.message, "fa"));
-              return;
+          workflowErrorFa={groupWorkflowErrorFa}
+          onPrepareOperationalGroup={async (_group, request) => {
+            // Synchronous single-flight: same-tick double clicks cannot both enter.
+            if (groupWorkflowInFlight.current) return;
+            groupWorkflowInFlight.current = true;
+            setPendingCode("prepare_operational_group");
+            setGroupWorkflowErrorFa(null);
+            try {
+              const result = await executeAdminOrderOperation(checkoutId, {
+                code: "prepare_operational_group",
+                operationalGroupShippingGroupIds: request.operationalGroupShippingGroupIds,
+                selections: request.selections,
+                reuseShipmentIds: request.reuseShipmentIds,
+                shippingMethodCode: null,
+              });
+              if (result.state !== "ok") {
+                setGroupWorkflowErrorFa(
+                  mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
+                );
+                return;
+              }
+              toast.success("مرسوله‌ها و بستهٔ مشترک گروه ایجاد شد.");
+              onCompleted?.();
+            } finally {
+              groupWorkflowInFlight.current = false;
+              setPendingCode(null);
             }
-            toast.success("بسته تجمیعی ایجاد شد.");
-            onCompleted?.();
           }}
         />
         <AdminConsolidatedPackageSection

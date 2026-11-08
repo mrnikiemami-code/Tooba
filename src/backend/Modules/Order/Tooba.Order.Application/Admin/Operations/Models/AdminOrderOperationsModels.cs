@@ -81,4 +81,8 @@ public sealed record AdminOrderOperationRequest(
     string? ProviderMetadataJson = null,
     Guid? ConsolidatedPackageId = null,
     IReadOnlyList<Guid>? ShipmentIds = null,
-    Guid? ShippingGroupId = null);
+    Guid? ShippingGroupId = null,
+    /// <summary>TB-253-R2: constituent accepted groups of one operational group workflow.</summary>
+    IReadOnlyList<Guid>? OperationalGroupShippingGroupIds = null,
+    /// <summary>TB-253-R2: existing unattached parcels explicitly reviewed for reuse.</summary>
+    IReadOnlyList<Guid>? ReuseShipmentIds = null);

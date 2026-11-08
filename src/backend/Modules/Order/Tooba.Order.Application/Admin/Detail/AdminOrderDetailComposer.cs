@@ -9,6 +9,8 @@ using Tooba.Order.Application.Admin.Supply.Services;
 using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Order.Application.Admin.Operations.Policies;
+using Tooba.Order.Application.Admin.Operations.Services;
+using Tooba.Order.Contracts.Admin.Operations;
 using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Party.Contracts.Ports;
@@ -43,6 +45,7 @@ public sealed class AdminOrderDetailComposer
     private readonly IClock _clock;
     private readonly IOrderShippingGroupHistoryReader _shippingGroupHistory;
     private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups;
+    private readonly IOrderAdminEffectiveAccessReader _access;
 
     public AdminOrderDetailComposer(
         IPartyLookup parties,
@@ -55,7 +58,8 @@ public sealed class AdminOrderDetailComposer
         IReservationCycleDirectory cycles,
         IClock clock,
         IOrderShippingGroupHistoryReader shippingGroupHistory,
-        IOrderCommittedCarrierShipmentFactsReader committedShippingGroups)
+        IOrderCommittedCarrierShipmentFactsReader committedShippingGroups,
+        IOrderAdminEffectiveAccessReader access)
     {
         _parties = parties;
         _catalog = catalog;
@@ -68,11 +72,13 @@ public sealed class AdminOrderDetailComposer
         _clock = clock;
         _shippingGroupHistory = shippingGroupHistory;
         _committedShippingGroups = committedShippingGroups;
+        _access = access;
     }
 
     /// <summary>صفحهٔ جزئیات را برای Checkout بارگذاری‌شده می‌سازد.</summary>
     public async Task<Result<AdminOrderDetailPage>> ComposeAsync(
         CheckoutGroup group,
+        Guid viewerUserId,
         CancellationToken cancellationToken)
     {
         var checkoutId = group.CheckoutId;
@@ -81,6 +87,12 @@ public sealed class AdminOrderDetailComposer
         var variantIds = group.SellerOrders.SelectMany(x => x.Lines)
             .Select(x => x.CatalogVariantId).Distinct().ToList();
         var titles = await _catalog.GetVariantTitlesAsync(variantIds, cancellationToken);
+        var lineTitles = group.SellerOrders
+            .SelectMany(x => x.Lines)
+            .GroupBy(x => x.LineId)
+            .ToDictionary(
+                g => g.Key,
+                g => titles.TryGetValue(g.First().CatalogVariantId, out var title) ? title : "کالای سفارش");
 
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
         var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
@@ -366,16 +378,24 @@ public sealed class AdminOrderDetailComposer
             .ToHashSet();
         var paymentLockedAny = factsByGroup.Values.Any(f => f.PaymentLocked);
 
+        // TB-253-R2: readiness must reflect the actual actor, not a hard-coded true.
+        var actorMayManage = false;
+        if (viewerUserId != Guid.Empty)
+        {
+            var effective = await _access.GetAsync(viewerUserId, cancellationToken);
+            actorMayManage = AdminOrderOperationsOrchestrator.Has(effective, "order.handle")
+                || AdminOrderOperationsOrchestrator.Has(effective, "fulfillment.manage");
+        }
+
         var operationalDeliveryGroups = MarketplaceOperationalDeliveryGroupAuthority
             .Project(operationalFacts)
             .Select(op =>
             {
-                var everyMemberReady = op.Members.All(m => eligibleShipmentGroupIds.Contains(m.ShippingGroupId));
-                var ready = MarketplaceOperationalDeliveryGroupAuthority.WithConsolidateReadiness(
+                var ready = MarketplaceOperationalDeliveryGroupAuthority.WithGroupWorkflowReadiness(
                     op,
-                    everyMemberReady,
-                    actorMayManage: true,
-                    anyPaymentLocked: paymentLockedAny);
+                    eligibleShipmentGroupIds,
+                    actorMayManage,
+                    paymentLockedAny);
                 return new AdminOperationalDeliveryGroupView(
                     ready.OperationalGroupKey,
                     ready.MethodLabel,
@@ -401,12 +421,24 @@ public sealed class AdminOrderDetailComposer
                         m.CreateParcelBlockReasonFa,
                         m.TransportMode,
                         m.FeeAmount,
-                        m.Currency)).ToList(),
+                        m.Currency,
+                        factsByGroup.TryGetValue(m.ShippingGroupId, out var memberFacts)
+                            ? memberFacts.ExecutableLines
+                                .Select(line => new AdminOperationalDeliveryLineView(
+                                    line.OrderLineId,
+                                    lineTitles.TryGetValue(line.OrderLineId, out var lineTitle)
+                                        ? lineTitle
+                                        : "کالای سفارش",
+                                    line.RemainingPackedQuantity,
+                                    line.PackedQuantity))
+                                .ToList()
+                            : Array.Empty<AdminOperationalDeliveryLineView>())).ToList(),
                     ready.Members.Select(m => new AdminOperationalFeeBreakdownView(
                         m.ShippingGroupId,
                         sellerNames.TryGetValue(m.SellerPartyId, out var feeName) ? feeName : "فروشنده",
                         m.FeeAmount,
-                        m.Currency)).ToList());
+                        m.Currency)).ToList(),
+                    actorMayManage);
             })
             .ToList();
 

@@ -35,22 +35,36 @@ internal sealed record OrderEvidenceRelationalTestTarget(string ConnectionString
     public const string ExpectedUser = "tb231";
 
     /// <summary>Reads and validates the configuration, throwing when it is absent or unsafe.</summary>
-    public static OrderEvidenceRelationalTestTarget FromEnvironment()
+    public static OrderEvidenceRelationalTestTarget FromEnvironment() => FromEnvironment(EnvironmentVariable);
+
+    /// <summary>
+    /// Reads and validates another task-owned connection variable against the same disposable
+    /// loopback:15433 host with its own exact database/role identity.
+    /// </summary>
+    public static OrderEvidenceRelationalTestTarget FromEnvironment(
+        string variableName,
+        string expectedDatabase = ExpectedDatabase,
+        string expectedUser = ExpectedUser)
     {
-        var raw = Environment.GetEnvironmentVariable(EnvironmentVariable);
+        var raw = Environment.GetEnvironmentVariable(variableName);
         if (string.IsNullOrWhiteSpace(raw))
         {
             throw new InvalidOperationException(
-                $"{EnvironmentVariable} must point at the disposable {ExpectedHost}:{ExpectedPort}/{ExpectedDatabase} "
+                $"{variableName} must point at the disposable {ExpectedHost}:{ExpectedPort}/{expectedDatabase} "
                 + "instance; the compact order-evidence facts refuse to run (or to report success) without it.");
         }
 
-        return Parse(raw);
+        return Parse(raw, expectedDatabase, expectedUser);
     }
 
     /// <summary>Parses and validates one connection string. Purely offline: never opens a connection.</summary>
     /// <param name="raw">Candidate connection string.</param>
-    public static OrderEvidenceRelationalTestTarget Parse(string? raw)
+    /// <param name="expectedDatabase">Exact task-only database identity.</param>
+    /// <param name="expectedUser">Exact task-only role identity.</param>
+    public static OrderEvidenceRelationalTestTarget Parse(
+        string? raw,
+        string expectedDatabase = ExpectedDatabase,
+        string expectedUser = ExpectedUser)
     {
         if (string.IsNullOrWhiteSpace(raw))
         {
@@ -87,16 +101,16 @@ internal sealed record OrderEvidenceRelationalTestTarget(string ConnectionString
                 $"the order-evidence target port must be exactly {ExpectedPort} (never the shared 5432), not {builder.Port}");
         }
 
-        if (!string.Equals(builder.Database, ExpectedDatabase, StringComparison.Ordinal))
+        if (!string.Equals(builder.Database, expectedDatabase, StringComparison.Ordinal))
         {
             throw new InvalidOperationException(
-                $"the order-evidence target database must be exactly {ExpectedDatabase}, not '{builder.Database}'");
+                $"the order-evidence target database must be exactly {expectedDatabase}, not '{builder.Database}'");
         }
 
-        if (!string.Equals(builder.Username, ExpectedUser, StringComparison.Ordinal))
+        if (!string.Equals(builder.Username, expectedUser, StringComparison.Ordinal))
         {
             throw new InvalidOperationException(
-                $"the order-evidence target user must be exactly {ExpectedUser}, not '{builder.Username}'");
+                $"the order-evidence target user must be exactly {expectedUser}, not '{builder.Username}'");
         }
 
         return new OrderEvidenceRelationalTestTarget(builder.ConnectionString);

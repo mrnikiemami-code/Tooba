@@ -168,17 +168,26 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
     }
 
     [Fact]
-    public void Missing_origin_keeps_groups_separate_with_owned_reason()
+    public void Marketplace_owner_identity_is_a_proven_origin_without_a_location()
     {
+        // TB-253-R2 correction: for Marketplace responsibility the persisted owner IS the committed
+        // dispatch origin, so two compatible sellers merge even though a Marketplace Manual group
+        // carries no pickup location (the buyer/recipient is never copied into it). The old
+        // location-only rule made every real Marketplace Manual group ungroupable.
         var projected = MarketplaceOperationalDeliveryGroupAuthority.Project(
         [
             Marketplace(GroupA, SellerA, OrderA, LineA, origin: null),
             Marketplace(GroupB, SellerB, OrderB, LineB, origin: null),
         ]);
 
-        Assert.Equal(2, projected.Count);
-        Assert.Contains(projected, g =>
-            g.SeparateReasonCode == MarketplaceOperationalDeliveryGroupAuthority.SeparateMissingOrigin);
+        var merged = Assert.Single(projected);
+        Assert.True(merged.IsCrossSellerMarketplace);
+        Assert.Null(merged.SeparateReasonCode);
+
+        Assert.True(MarketplaceOperationalDeliveryGroupAuthority.TryResolveOriginIdentity(
+            Marketplace(GroupA, SellerA, OrderA, LineA, origin: "   "),
+            out var identity));
+        Assert.Equal("marketplace", identity);
     }
 
     [Fact]
@@ -209,13 +218,20 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
     }
 
     [Fact]
-    public void Empty_origin_values_never_compare_equal()
+    public void Store_missing_origin_still_fails_closed()
     {
+        // The Marketplace owner-identity rule must not leak into Store/Seller responsibility: those
+        // still require a real committed location/address and never merge.
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.TryResolveOriginIdentity(
+            StoreOwned(GroupA, SellerA, OrderA, LineA, origin: "   "),
+            out var identity));
+        Assert.Equal(string.Empty, identity);
+
         Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(
-            Marketplace(GroupA, SellerA, OrderA, LineA, origin: "   "),
-            Marketplace(GroupB, SellerB, OrderB, LineB, origin: "   "),
+            StoreOwned(GroupA, SellerA, OrderA, LineA, origin: "   "),
+            StoreOwned(GroupB, SellerB, OrderB, LineB, origin: "   "),
             out var code));
-        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateMissingOrigin, code);
+        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateSellerResponsibility, code);
     }
 
     [Fact]

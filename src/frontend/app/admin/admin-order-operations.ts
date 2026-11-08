@@ -119,6 +119,8 @@ export type AdminOrderOperationRequest = {
   shipmentIds?: string[] | null;
   note?: string | null;
   shippingGroupId?: string | null;
+  operationalGroupShippingGroupIds?: string[] | null;
+  reuseShipmentIds?: string[] | null;
 };
 
 /**
@@ -327,6 +329,8 @@ export async function executeAdminOrderOperation(
           orderLineId: s.orderLineId,
           quantity: s.quantity,
         })) ?? null,
+        operationalGroupShippingGroupIds: body.operationalGroupShippingGroupIds ?? null,
+        reuseShipmentIds: body.reuseShipmentIds ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

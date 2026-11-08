@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Package } from "lucide-react";
 import {
   formatAdminMoney,
   formatAdminStatus,
   type AdminAcceptedShippingGroup,
   type AdminOperationalDeliveryGroup,
+  type AdminOperationalDeliveryMember,
   type AdminOrderDetail,
   type AdminOrderLine,
   type AdminSellerOrder,
@@ -19,12 +20,23 @@ export type OperationalCreateTarget = {
   group: AdminAcceptedShippingGroup;
 };
 
+/** TB-253-R2: reviewed input of the one group-level parcel/package workflow. */
+export type OperationalGroupWorkflowRequest = {
+  operationalGroupShippingGroupIds: string[];
+  selections: Array<{ orderLineId: string; quantity: number }>;
+  reuseShipmentIds: string[];
+};
+
 type Props = {
   detail: AdminOrderDetail;
   pendingCode: string | null;
   onCreateShipment: (target: OperationalCreateTarget) => void;
-  /** One group-level consolidate for Marketplace cross-seller cards when server marks eligible. */
-  onConsolidateGroup?: (group: AdminOperationalDeliveryGroup, shipmentIds: string[]) => void;
+  /** One reviewed group workflow: constituent parcels (create/reuse) + their common package. */
+  onPrepareOperationalGroup?: (
+    group: AdminOperationalDeliveryGroup,
+    request: OperationalGroupWorkflowRequest,
+  ) => void;
+  workflowErrorFa?: string | null;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
   shippableQty: (line: AdminOrderLine) => number;
@@ -57,6 +69,32 @@ function memberShipments(seller: AdminSellerOrder, shippingGroupId: string): Adm
   return (seller.shipments ?? []).filter((s) => s.shippingGroupId === shippingGroupId);
 }
 
+function eligibleReusableParcels(seller: AdminSellerOrder, shippingGroupId: string): AdminShipment[] {
+  return memberShipments(seller, shippingGroupId).filter(
+    (s) => s.status === "Created" && !s.activePackageNumber && !s.packageLockedReasonFa && Boolean(s.shippingMethodCode),
+  );
+}
+
+function memberReviewLines(member: AdminOperationalDeliveryMember): Array<{
+  orderLineId: string;
+  title: string;
+  remaining: number;
+}> {
+  const fromServer = member.lines ?? [];
+  if (fromServer.length > 0) {
+    return fromServer.map((line) => ({
+      orderLineId: line.orderLineId,
+      title: line.title,
+      remaining: Math.max(0, line.remainingPackedQuantity),
+    }));
+  }
+  return member.orderLineIds.map((id) => ({
+    orderLineId: id,
+    title: "کالای سفارش",
+    remaining: 0,
+  }));
+}
+
 /**
  * TB-253: primary «ارسال سفارش» cards from server-owned operationalDeliveryGroups.
  * Does not regroup client-side; only renders the projection.
@@ -65,7 +103,8 @@ export function AdminOrderOperationalDeliverySection({
   detail,
   pendingCode,
   onCreateShipment,
-  onConsolidateGroup,
+  onPrepareOperationalGroup,
+  workflowErrorFa,
   selectedBySeller,
   qtyByLine,
   shippableQty,
@@ -91,6 +130,15 @@ export function AdminOrderOperationalDeliverySection({
           {groups.length.toLocaleString("fa-IR")} گروه عملیاتی
         </span>
       </div>
+      {workflowErrorFa ? (
+        <p
+          className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-900"
+          role="alert"
+          data-testid="admin-order-operational-workflow-error"
+        >
+          {workflowErrorFa}
+        </p>
+      ) : null}
       <div className="space-y-3">
         {groups.map((group) => (
           <OperationalCard
@@ -99,7 +147,7 @@ export function AdminOrderOperationalDeliverySection({
             detail={detail}
             pendingCode={pendingCode}
             onCreateShipment={onCreateShipment}
-            onConsolidateGroup={onConsolidateGroup}
+            onPrepareOperationalGroup={onPrepareOperationalGroup}
             selectedBySeller={selectedBySeller}
             qtyByLine={qtyByLine}
             shippableQty={shippableQty}
@@ -115,7 +163,7 @@ function OperationalCard({
   detail,
   pendingCode,
   onCreateShipment,
-  onConsolidateGroup,
+  onPrepareOperationalGroup,
   selectedBySeller,
   qtyByLine,
   shippableQty,
@@ -124,24 +172,60 @@ function OperationalCard({
   detail: AdminOrderDetail;
   pendingCode: string | null;
   onCreateShipment: (target: OperationalCreateTarget) => void;
-  onConsolidateGroup?: (group: AdminOperationalDeliveryGroup, shipmentIds: string[]) => void;
+  onPrepareOperationalGroup?: (
+    group: AdminOperationalDeliveryGroup,
+    request: OperationalGroupWorkflowRequest,
+  ) => void;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
   shippableQty: (line: AdminOrderLine) => number;
 }) {
-  const consolidateShipmentIds = group.members.flatMap((member) => {
-    const seller = resolveSeller(detail, member.sellerOrderId);
-    if (!seller) return [];
-    return memberShipments(seller, member.shippingGroupId)
-      .filter((s) => s.status === "Created" && !s.activePackageNumber && !s.packageLockedReasonFa)
-      .map((s) => s.shipmentId);
-  });
+  const [excludedParcelIds, setExcludedParcelIds] = useState<Record<string, boolean>>({});
+  const [qtyByOrderLine, setQtyByOrderLine] = useState<Record<string, number>>({});
   const dateRaw = (group.deliveryDate ?? "").trim();
   const dateFa = dateRaw
     ? formatJalaliDate(dateRaw.includes("T") ? dateRaw : `${dateRaw}T12:00:00`, "fa")
     : null;
   const timeWindow = (group.deliveryTimeWindow ?? "").trim();
   const showFeeBreakdown = group.feeBreakdown.length > 1;
+  const actorMayManage = group.actorMayManageOperations !== false;
+
+  const review = useMemo(() => {
+    return group.members.map((member) => {
+      const seller = resolveSeller(detail, member.sellerOrderId);
+      return {
+        member,
+        seller,
+        parcels: seller ? eligibleReusableParcels(seller, member.shippingGroupId) : [],
+        lines: memberReviewLines(member),
+      };
+    });
+  }, [detail, group.members]);
+
+  let selectionCount = 0;
+  const selections: Array<{ orderLineId: string; quantity: number }> = [];
+  const reuseShipmentIds: string[] = [];
+  for (const row of review) {
+    for (const parcel of row.parcels) {
+      if (!excludedParcelIds[parcel.shipmentId]) {
+        reuseShipmentIds.push(parcel.shipmentId);
+        selectionCount += 1;
+      }
+    }
+    for (const line of row.lines) {
+      const value = qtyByOrderLine[line.orderLineId] ?? (row.parcels.length > 0 ? 0 : line.remaining);
+      const qty = Math.max(0, Math.min(value, line.remaining));
+      if (qty > 0) {
+        selections.push({ orderLineId: line.orderLineId, quantity: qty });
+        selectionCount += 1;
+      }
+    }
+  }
+  const canRunWorkflow = Boolean(onPrepareOperationalGroup)
+    && group.isCrossSellerMarketplace
+    && group.consolidateEligible
+    && actorMayManage
+    && pendingCode === null;
 
   return (
     <article
@@ -182,7 +266,10 @@ function OperationalCard({
       </div>
 
       {showFeeBreakdown ? (
-        <ul className="mt-2 space-y-0.5 rounded-lg bg-white/70 px-2 py-1.5 text-[10px] text-gray-600" data-testid={`admin-order-operational-fee-breakdown-${group.operationalGroupKey}`}>
+        <ul
+          className="mt-2 space-y-0.5 rounded-lg bg-white/70 px-2 py-1.5 text-[10px] text-gray-600"
+          data-testid={`admin-order-operational-fee-breakdown-${group.operationalGroupKey}`}
+        >
           {group.feeBreakdown.map((fee) => (
             <li key={fee.shippingGroupId} className="flex justify-between gap-2">
               <span>{fee.sellerDisplayName}</span>
@@ -199,11 +286,13 @@ function OperationalCard({
       ) : null}
 
       <div className="mt-3 space-y-2">
-        {group.members.map((member) => {
-          const seller = resolveSeller(detail, member.sellerOrderId);
+        {group.isCrossSellerMarketplace ? (
+          <p className="text-[11px] font-semibold text-indigo-900" data-testid={`admin-order-operational-review-${group.operationalGroupKey}`}>
+            بازبینی گروه: مرسوله‌های موجود یا مقدار باقی‌ماندهٔ هر عضو را انتخاب کنید.
+          </p>
+        ) : null}
+        {review.map(({ member, seller, parcels, lines }) => {
           const accepted = resolveAcceptedGroup(detail, member.shippingGroupId);
-          const lines = seller ? memberLines(seller, member.orderLineIds) : [];
-          const shipments = seller ? memberShipments(seller, member.shippingGroupId) : [];
           const selected = selectedBySeller[member.sellerOrderId] ?? [];
           const selectionOk = selected.length === 0 || selected.every((id) => {
             const line = seller?.lines.find((l) => lineKey(l) === id);
@@ -214,7 +303,8 @@ function OperationalCard({
             && Boolean(accepted)
             && member.createParcelEligible
             && member.transportMode !== "CarrierApi"
-            && selectionOk;
+            && selectionOk
+            && actorMayManage;
 
           return (
             <div
@@ -228,13 +318,36 @@ function OperationalCard({
                   {formatAdminMoney(member.feeAmount, member.currency)}
                 </p>
               </div>
+
+              {parcels.length > 0 ? (
+                <ul className="mt-1.5 space-y-1" data-testid={`admin-order-operational-reuse-${member.shippingGroupId}`}>
+                  {parcels.map((parcel) => (
+                    <li key={parcel.shipmentId} className="flex items-center gap-2 text-[11px] text-gray-700">
+                      <input
+                        type="checkbox"
+                        className="size-4 shrink-0"
+                        checked={!excludedParcelIds[parcel.shipmentId]}
+                        onChange={(event) => {
+                          const checked = event.currentTarget.checked;
+                          setExcludedParcelIds((prev) => ({ ...prev, [parcel.shipmentId]: !checked }));
+                        }}
+                        aria-label={`استفاده از مرسولهٔ موجود ${parcel.shipmentId}`}
+                        data-testid={`admin-order-operational-reuse-parcel-${parcel.shipmentId}`}
+                      />
+                      <span className="min-w-0 flex-1 truncate font-semibold">مرسولهٔ آمادهٔ موجود</span>
+                      <span className="tabular-nums text-gray-500">
+                        {parcel.itemCount.toLocaleString("fa-IR")} قلم
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
               <ul className="mt-1.5 space-y-1">
                 {lines.map((line) => {
-                  const key = lineKey(line);
-                  const remaining = shippableQty(line);
-                  const selectedQty = selected.includes(key)
-                    ? Math.min(qtyByLine[key] ?? remaining, remaining)
-                    : remaining;
+                  const key = line.orderLineId;
+                  const defaultValue = parcels.length > 0 ? 0 : line.remaining;
+                  const value = Math.max(0, Math.min(qtyByOrderLine[key] ?? defaultValue, line.remaining));
                   return (
                     <li
                       key={key}
@@ -245,32 +358,37 @@ function OperationalCard({
                         <Package className="size-3" aria-hidden />
                       </span>
                       <span className="min-w-0 flex-1 truncate font-semibold">{line.title}</span>
+                      {line.remaining > 0 ? (
+                        <input
+                          type="number"
+                          min={0}
+                          max={line.remaining}
+                          value={value}
+                          onChange={(event) => {
+                            const next = Math.max(0, Math.min(Number(event.currentTarget.value) || 0, line.remaining));
+                            setQtyByOrderLine((prev) => ({ ...prev, [key]: next }));
+                          }}
+                          aria-label={`مقدار ${line.title}`}
+                          className="w-14 rounded border border-gray-200 px-1 py-0.5 text-center tabular-nums"
+                          data-testid={`admin-order-operational-qty-${key}`}
+                        />
+                      ) : (
+                        <span className="tabular-nums text-gray-500">۰</span>
+                      )}
                       <span className="tabular-nums text-gray-500">
-                        باقی {selectedQty.toLocaleString("fa-IR")}
+                        از {line.remaining.toLocaleString("fa-IR")}
                       </span>
                     </li>
                   );
                 })}
               </ul>
-              {shipments.length > 0 ? (
-                <ul className="mt-1.5 space-y-0.5" data-testid={`admin-order-operational-parcels-${member.shippingGroupId}`}>
-                  {shipments.map((shipment) => (
-                    <li
-                      key={shipment.shipmentId}
-                      className="text-[10px] text-gray-600"
-                      data-testid={`admin-order-operational-parcel-${shipment.shipmentId}`}
-                    >
-                      <span className="font-semibold">{formatAdminStatus(shipment.status)}</span>
-                      {shipment.trackingReference ? (
-                        <span className="ms-1 tabular-nums" dir="ltr">{shipment.trackingReference}</span>
-                      ) : null}
-                      {shipment.activePackageNumber ? (
-                        <span className="ms-1 text-emerald-800">· بسته {shipment.activePackageNumber}</span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+
+              {parcels.length === 0 && lines.every((line) => line.remaining === 0) ? (
+                <p className="mt-1.5 text-[10px] text-amber-800" role="status">
+                  مقدار بسته‌بندی‌شدهٔ باقی‌مانده‌ای برای این عضو نیست.
+                </p>
               ) : null}
+
               {canCreate && seller && accepted ? (
                 <button
                   type="button"
@@ -279,35 +397,53 @@ function OperationalCard({
                   className="mt-2 w-full rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                   data-testid={`admin-order-operational-create-${member.shippingGroupId}`}
                 >
-                  + ایجاد مرسوله
+                  + ایجاد مرسولهٔ مستقل
                 </button>
-              ) : (
+              ) : member.createParcelEligible === false && parcels.length === 0 ? (
                 <p className="mt-2 text-[10px] text-amber-800" role="status">
                   {member.createParcelBlockReasonFa
                     ?? (!selectionOk
                       ? "انتخاب فعلی شامل اقلام خارج از این گروه است."
                       : "ایجاد مرسوله برای این بخش در دسترس نیست.")}
                 </p>
-              )}
+              ) : null}
             </div>
           );
         })}
       </div>
 
-      {group.isCrossSellerMarketplace && group.consolidateEligible && onConsolidateGroup ? (
+      {group.isCrossSellerMarketplace && group.consolidateEligible && onPrepareOperationalGroup && actorMayManage ? (
         <button
           type="button"
-          disabled={pendingCode !== null || consolidateShipmentIds.length < 2}
-          onClick={() => onConsolidateGroup(group, consolidateShipmentIds)}
+          disabled={!canRunWorkflow || selectionCount === 0}
+          onClick={() => {
+            if (!canRunWorkflow) return;
+            onPrepareOperationalGroup(group, {
+              operationalGroupShippingGroupIds: group.members.map((m) => m.shippingGroupId),
+              selections,
+              reuseShipmentIds,
+            });
+          }}
           className="mt-2 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 disabled:opacity-50"
-          data-testid={`admin-order-operational-consolidate-${group.operationalGroupKey}`}
+          data-testid={`admin-order-operational-prepare-${group.operationalGroupKey}`}
         >
-          ایجاد بسته تجمیعی این گروه
+          ایجاد مرسوله‌ها و بستهٔ مشترک این گروه
         </button>
       ) : null}
       {group.isCrossSellerMarketplace && group.consolidateBlockReasonFa ? (
-        <p className="mt-2 text-[10px] text-gray-500" data-testid={`admin-order-operational-consolidate-note-${group.operationalGroupKey}`}>
+        <p
+          className="mt-2 text-[10px] text-gray-500"
+          data-testid={`admin-order-operational-consolidate-note-${group.operationalGroupKey}`}
+        >
           {group.consolidateBlockReasonFa}
+        </p>
+      ) : null}
+      {group.isCrossSellerMarketplace && !actorMayManage ? (
+        <p
+          className="mt-2 text-[10px] text-gray-500"
+          data-testid={`admin-order-operational-no-authority-${group.operationalGroupKey}`}
+        >
+          مجوز عملیات تجمیع برای این کاربر فعال نیست.
         </p>
       ) : null}
     </article>

@@ -382,27 +382,28 @@ public sealed partial class AdminOrderOperationsOrchestrator
             .ToList();
 
         var canOfferCreate = false;
+        var facts = await _committedShippingGroups.ListByCheckoutAsync(group.CheckoutId, cancellationToken);
+        var history = await _shippingGroupHistory.GetForCheckoutAsync(group.CheckoutId, cancellationToken);
+        var historyById = history.ToDictionary(x => x.ShippingGroupId);
+        var operationalFacts = new List<MarketplaceOperationalDeliveryGroupAuthority.GroupFact>();
+        foreach (var row in facts)
+        {
+            if (historyById.TryGetValue(row.ShippingGroupId, out var hist))
+            {
+                operationalFacts.Add(ToOperationalFact(group.CheckoutId, row, hist));
+            }
+        }
+
+        var projectedAll = MarketplaceOperationalDeliveryGroupAuthority.Project(operationalFacts);
+        var eligibleGroupIds = eligibleShipments
+            .Where(s => s.Shipment.ShippingGroupId is Guid)
+            .Select(s => s.Shipment.ShippingGroupId!.Value)
+            .ToHashSet();
+        var anyPaymentLocked = facts.Any(f => f.PaymentLocked);
+
         if (eligibleShipments.Select(x => x.SellerPartyId).Distinct().Count() >= 2)
         {
-            var facts = await _committedShippingGroups.ListByCheckoutAsync(group.CheckoutId, cancellationToken);
-            var history = await _shippingGroupHistory.GetForCheckoutAsync(group.CheckoutId, cancellationToken);
-            var historyById = history.ToDictionary(x => x.ShippingGroupId);
-            var factsById = facts.ToDictionary(x => x.ShippingGroupId);
-            var operationalFacts = new List<MarketplaceOperationalDeliveryGroupAuthority.GroupFact>();
-            foreach (var row in eligibleShipments)
-            {
-                var groupId = row.Shipment.ShippingGroupId!.Value;
-                if (!factsById.TryGetValue(groupId, out var fact)
-                    || !historyById.TryGetValue(groupId, out var hist))
-                {
-                    continue;
-                }
-
-                operationalFacts.Add(ToOperationalFact(group.CheckoutId, fact, hist));
-            }
-
-            var projected = MarketplaceOperationalDeliveryGroupAuthority.Project(operationalFacts);
-            canOfferCreate = projected.Any(op =>
+            canOfferCreate = projectedAll.Any(op =>
             {
                 if (!op.IsCrossSellerMarketplace)
                 {
@@ -410,15 +411,37 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 }
 
                 var memberIds = op.Members.Select(m => m.ShippingGroupId).ToHashSet();
-                var everyReady = memberIds.All(id =>
-                    eligibleShipments.Any(s => s.Shipment.ShippingGroupId == id));
+                var everyReady = memberIds.All(id => eligibleGroupIds.Contains(id));
                 var ready = MarketplaceOperationalDeliveryGroupAuthority.WithConsolidateReadiness(
                     op,
                     everyReady,
                     actorMayManage: true,
-                    anyPaymentLocked: false);
+                    anyPaymentLocked);
                 return ready.ConsolidateEligible;
             });
+        }
+
+        // TB-253-R2: one group-level workflow from reviewed remaining packed items and/or reusable parcels.
+        var workflowReady = projectedAll.Any(op =>
+            op.IsCrossSellerMarketplace
+            && MarketplaceOperationalDeliveryGroupAuthority.WithGroupWorkflowReadiness(
+                op,
+                eligibleGroupIds,
+                actorMayManage: true,
+                anyPaymentLocked).ConsolidateEligible);
+        if (workflowReady)
+        {
+            actions.Add(Action(
+                "prepare_operational_group",
+                "ایجاد مرسوله‌ها و بستهٔ مشترک",
+                "Prepare group parcels and common package",
+                null,
+                null,
+                null,
+                null,
+                permission,
+                true,
+                "مرسوله‌های اعضای این گروه و بستهٔ مشترک آن‌ها ایجاد شود؟"));
         }
 
         if (canOfferCreate)

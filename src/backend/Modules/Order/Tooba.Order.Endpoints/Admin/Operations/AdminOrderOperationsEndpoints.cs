@@ -20,6 +20,7 @@ using Tooba.Order.Application.Admin.Operations.Commands.DispatchShipment;
 using Tooba.Order.Application.Admin.Operations.Commands.MarkFulfillmentPacked;
 using Tooba.Order.Application.Admin.Operations.Commands.MarkFulfillmentProcessing;
 using Tooba.Order.Application.Admin.Operations.Commands.PackFulfillmentSelected;
+using Tooba.Order.Application.Admin.Operations.Commands.PrepareOperationalGroup;
 using Tooba.Order.Application.Admin.Operations.Commands.RecoverInventoryReservation;
 using Tooba.Order.Application.Admin.Operations.Commands.RejectDeposit;
 using Tooba.Order.Application.Admin.Operations.Commands.RejectReturn;
@@ -112,6 +113,7 @@ internal static class AdminOrderOperationsEndpoints
             "reject_return" => await sender.Send(new RejectReturnCommand(checkoutId, actor, request), ct),
             "retry_refund" => await sender.Send(new RetryRefundCommand(checkoutId, actor, request), ct),
             "create_consolidated_package" => await sender.Send(new CreateConsolidatedPackageCommand(checkoutId, actor, request), ct),
+            "prepare_operational_group" => await sender.Send(new PrepareOperationalGroupCommand(checkoutId, actor, request), ct),
             "cancel_consolidated_package" => await sender.Send(new CancelConsolidatedPackageCommand(checkoutId, actor, request), ct),
             "assign_consolidated_package_tracking" => await sender.Send(new AssignConsolidatedPackageTrackingCommand(checkoutId, actor, request), ct),
             "dispatch_consolidated_package" => await sender.Send(new DispatchConsolidatedPackageCommand(checkoutId, actor, request), ct),

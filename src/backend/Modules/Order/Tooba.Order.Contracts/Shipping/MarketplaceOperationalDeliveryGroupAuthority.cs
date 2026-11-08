@@ -1,3 +1,7 @@
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
+
 namespace Tooba.Order.Contracts.Shipping;
 
 /// <summary>
@@ -45,6 +49,15 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
 
     /// <summary>Refusal: CarrierApi cross-group consolidation unsupported.</summary>
     public const string ConsolidateCarrierUnsupported = "order.operational_group.consolidate_carrier_unsupported";
+
+    /// <summary>Refusal: requested member set is not one compatible Marketplace group.</summary>
+    public const string WorkflowGroupForeign = "order.operational_group.workflow_foreign";
+
+    /// <summary>Refusal: workflow needs at least one parcel or remaining quantity per member.</summary>
+    public const string WorkflowSelectionRequired = "order.operational_group.workflow_selection_required";
+
+    /// <summary>Refusal: a reused parcel does not belong to this group/checkout or is already packaged.</summary>
+    public const string WorkflowShipmentForeign = "order.operational_group.workflow_shipment_foreign";
 
     /// <summary>One accepted shipping group fact surface for projection/mutation.</summary>
     public sealed record GroupFact(
@@ -384,6 +397,17 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
             return true;
         }
 
+        // TB-253-R2: for Marketplace responsibility the committed dispatch origin IS the marketplace
+        // operator — that ownership is persisted accepted evidence, not a guess. Manual Marketplace
+        // groups carry no pickup location (and must never copy the buyer/recipient into it), so a
+        // location-only rule made every real Marketplace Manual group ungroupable. Store/Seller still
+        // require a real committed location/address; anything else stays unproven.
+        if (IsMarketplaceOwner(g))
+        {
+            identity = "marketplace";
+            return true;
+        }
+
         identity = string.Empty;
         return false;
     }
@@ -580,6 +604,114 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
             ConsolidateEligible = true,
             ConsolidateBlockReasonFa = null,
         };
+    }
+
+    /// <summary>
+    /// TB-253-R2: readiness for the one coherent group workflow (create/reuse constituent parcels,
+    /// then their common package). A member is creatable when it still holds remaining packed quantity
+    /// for a new parcel or already owns an eligible unattached parcel that can be reused.
+    /// </summary>
+    public static OperationalGroup WithGroupWorkflowReadiness(
+        OperationalGroup group,
+        IReadOnlySet<Guid> eligibleShipmentGroupIds,
+        bool actorMayManage,
+        bool anyPaymentLocked)
+    {
+        if (!group.IsCrossSellerMarketplace)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa = group.ConsolidateBlockReasonFa,
+            };
+        }
+
+        if (group.Members.Any(m => IsCarrierApi(m.TransportMode)))
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa =
+                    "تجمیع حامل API بین گروه‌ها پشتیبانی نمی‌شود؛ هر گروه جداگانه ارسال شود.",
+            };
+        }
+
+        if (anyPaymentLocked)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa = "پرداخت/وضعیت سفارش اجازهٔ تجمیع نمی‌دهد.",
+            };
+        }
+
+        if (!actorMayManage)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa = "مجوز عملیات تجمیع برای این کاربر فعال نیست.",
+            };
+        }
+
+        var everyMemberCreatable = group.Members.All(m =>
+            (m.CreateParcelEligible && m.CreateParcelBlockReasonFa is null)
+            || eligibleShipmentGroupIds.Contains(m.ShippingGroupId));
+        if (!everyMemberCreatable)
+        {
+            return group with
+            {
+                ConsolidateEligible = false,
+                ConsolidateBlockReasonFa =
+                    "هر عضو گروه باید مرسولهٔ آمادهٔ قابل استفاده یا مقدار بسته‌بندی‌شدهٔ باقیمانده داشته باشد.",
+            };
+        }
+
+        return group with
+        {
+            ConsolidateEligible = true,
+            ConsolidateBlockReasonFa = null,
+        };
+    }
+
+    /// <summary>
+    /// Stable operation identity for one constituent parcel allocation.
+    /// Same checkout/group/lines always produce the same key; changed quantities produce a new key.
+    /// </summary>
+    public static string BuildMemberParcelDispatchKey(
+        Guid checkoutId,
+        Guid shippingGroupId,
+        IReadOnlyList<GroupLineQuantity> lines)
+    {
+        var canonical = string.Join(
+            ';',
+            (lines ?? Array.Empty<GroupLineQuantity>())
+                .OrderBy(x => x.OrderLineId)
+                .Select(x => $"{x.OrderLineId:N}:{x.Quantity.ToString("0.####", CultureInfo.InvariantCulture)}"));
+        return "opgroup:" + Hash($"{checkoutId:N}|{shippingGroupId:N}|{canonical}");
+    }
+
+    /// <summary>Stable locator returned to the caller for retry/remount reconciliation.</summary>
+    public static string BuildWorkflowOperationLocator(
+        Guid checkoutId,
+        IReadOnlyList<Guid> memberShippingGroupIds)
+    {
+        var members = string.Join(
+            ',',
+            (memberShippingGroupIds ?? Array.Empty<Guid>())
+                .Distinct()
+                .OrderBy(x => x)
+                .Select(x => x.ToString("N")));
+        return "opg_" + Hash($"{checkoutId:N}|{members}");
+    }
+
+    /// <summary>Line quantity used for operation-key identity.</summary>
+    public sealed record GroupLineQuantity(Guid OrderLineId, decimal Quantity);
+
+    private static string Hash(string payload)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
+        return Convert.ToHexString(bytes).ToLowerInvariant()[..40];
     }
 
     private static bool SameMarketplaceOwnerIdentity(GroupFact a, GroupFact b) =>

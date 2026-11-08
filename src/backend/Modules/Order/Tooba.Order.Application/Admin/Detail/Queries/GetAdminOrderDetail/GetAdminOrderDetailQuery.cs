@@ -38,6 +38,6 @@ public sealed class GetAdminOrderDetailHandler(
                 cancellationToken);
         }
 
-        return await composer.ComposeAsync(group, cancellationToken);
+        return await composer.ComposeAsync(group, request.ViewerUserId, cancellationToken);
     }
 }

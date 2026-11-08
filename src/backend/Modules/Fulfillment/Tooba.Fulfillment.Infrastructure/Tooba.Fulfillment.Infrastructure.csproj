@@ -10,6 +10,8 @@
   <ItemGroup>
     <!-- TB-249-R4 relational matrix composes the real admin adapter against a disposable Postgres target. -->
     <InternalsVisibleTo Include="Tooba.Shipping.Tests" />
+    <!-- TB-253-R2 composes the production admin adapter over the real directory on a disposable target. -->
+    <InternalsVisibleTo Include="Tooba.Order.Tests" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">

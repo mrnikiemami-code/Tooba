@@ -392,17 +392,18 @@ public sealed partial class AdminOrderOperationsOrchestrator
         Guid checkoutId,
         OrderCommittedCarrierShipmentFacts fact,
         OrderShippingGroupHistoryRecord hist) =>
-        OperationalDeliveryGroupFactMapper.Map(
-            checkoutId,
-            fact,
-            hist,
-            MarketplaceOperationalDeliveryGroupAuthority.BuildDestinationFingerprint(
-                fact.ProvinceName,
-                fact.CityName,
-                fact.PostalCode,
-                fact.RecipientAddress),
-            fact.ExecutableLines.Count > 0 && !fact.IsCancelled && !fact.PaymentLocked,
-            fact.IneligibilityReasonCode);
+        AdminOrderOperationalFacts.ToFact(checkoutId, fact, hist);
+
+    /// <summary>
+    /// TB-253-R2: one coherent Marketplace operational group workflow; the workflow service owns
+    /// access, compatibility, parcel allocation identity and common package binding.
+    /// </summary>
+    private Task<object> PrepareOperationalGroupCoreAsync(
+        Guid checkoutId,
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        _operationalGroupWorkflow.PrepareAsync(checkoutId, request, actorUserId, cancellationToken);
 
     private async Task<object> CancelConsolidatedPackageCoreAsync(
         AdminOrderOperationRequest request,

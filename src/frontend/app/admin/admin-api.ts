@@ -120,6 +120,13 @@ export interface AdminAcceptedShippingGroup {
   transportMode: string;
 }
 
+export interface AdminOperationalDeliveryLine {
+  orderLineId: string;
+  title: string;
+  remainingPackedQuantity: number;
+  packedQuantity: number;
+}
+
 export interface AdminOperationalDeliveryMember {
   shippingGroupId: string;
   sellerOrderId: string;
@@ -131,6 +138,7 @@ export interface AdminOperationalDeliveryMember {
   transportMode: string;
   feeAmount: number;
   currency: string;
+  lines?: AdminOperationalDeliveryLine[] | null;
 }
 
 export interface AdminOperationalFeeBreakdown {
@@ -158,6 +166,7 @@ export interface AdminOperationalDeliveryGroup {
   currency: string;
   members: AdminOperationalDeliveryMember[];
   feeBreakdown: AdminOperationalFeeBreakdown[];
+  actorMayManageOperations?: boolean;
 }
 
 export interface AdminConsolidatedPackageMember {
@@ -841,6 +850,18 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
             transportMode: text(prop(member, "transportMode", "TransportMode"), "LegacyIncomplete"),
             feeAmount: number(prop(member, "feeAmount", "FeeAmount")),
             currency: text(prop(member, "currency", "Currency"), "IRR"),
+            lines: array(prop(member, "lines", "Lines")).flatMap((lineRaw) => {
+              const line = record(lineRaw);
+              if (!line) return [];
+              const orderLineId = text(prop(line, "orderLineId", "OrderLineId"));
+              if (!orderLineId) return [];
+              return [{
+                orderLineId,
+                title: text(prop(line, "title", "Title"), "کالای سفارش"),
+                remainingPackedQuantity: number(prop(line, "remainingPackedQuantity", "RemainingPackedQuantity")),
+                packedQuantity: number(prop(line, "packedQuantity", "PackedQuantity")),
+              }];
+            }),
           }];
         });
         return [{
@@ -874,6 +895,10 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
               }];
             },
           ),
+          actorMayManageOperations: (() => {
+            const raw = prop(row, "actorMayManageOperations", "ActorMayManageOperations");
+            return raw === undefined || raw === null ? true : Boolean(raw);
+          })(),
         }];
       },
     ),

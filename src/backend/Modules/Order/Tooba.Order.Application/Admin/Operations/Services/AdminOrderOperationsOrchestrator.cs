@@ -58,6 +58,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         "dispatch_shipment",
         "deliver_shipment",
         "create_consolidated_package",
+        "prepare_operational_group",
         "cancel_consolidated_package",
         "assign_consolidated_package_tracking",
         "dispatch_consolidated_package",
@@ -85,6 +86,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
     private readonly IAdminOrderOperationsSupplyPort _orderSupply;
     private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups;
     private readonly IOrderShippingGroupHistoryReader _shippingGroupHistory;
+    private readonly MarketplaceOperationalGroupWorkflow _operationalGroupWorkflow;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderOperationsOrchestrator(
@@ -117,6 +119,11 @@ public sealed partial class AdminOrderOperationsOrchestrator
         _orderSupply = orderSupply;
         _committedShippingGroups = committedShippingGroups;
         _shippingGroupHistory = shippingGroupHistory;
+        _operationalGroupWorkflow = new MarketplaceOperationalGroupWorkflow(
+            fulfillment,
+            committedShippingGroups,
+            shippingGroupHistory,
+            access);
     }
 
     /// <summary>اقدامات مجاز و eligibility مرجوعی یک checkout را برمی‌گرداند.</summary>

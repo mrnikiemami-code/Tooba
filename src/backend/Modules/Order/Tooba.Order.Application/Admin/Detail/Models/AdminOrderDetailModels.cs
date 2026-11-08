@@ -68,6 +68,13 @@ public sealed record AdminAcceptedShippingGroupView(
     /// <summary>Committed transport mode from Order facts (Manual / CarrierApi / LegacyIncomplete).</summary>
     string TransportMode);
 
+/// <summary>TB-253-R2: one constituent line shown in the group review with its remaining packed quantity.</summary>
+public sealed record AdminOperationalDeliveryLineView(
+    Guid OrderLineId,
+    string Title,
+    decimal RemainingPackedQuantity,
+    decimal PackedQuantity);
+
 /// <summary>عضو یک گروه عملیاتی ارسال (ارجاع به گروه پذیرفته‌شدهٔ پایدار).</summary>
 public sealed record AdminOperationalDeliveryMemberView(
     Guid ShippingGroupId,
@@ -79,7 +86,8 @@ public sealed record AdminOperationalDeliveryMemberView(
     string? CreateParcelBlockReasonFa,
     string TransportMode,
     decimal FeeAmount,
-    string Currency);
+    string Currency,
+    IReadOnlyList<AdminOperationalDeliveryLineView>? Lines = null);
 
 /// <summary>شکست هزینهٔ تعهدهای عضو در کارت عملیاتی.</summary>
 public sealed record AdminOperationalFeeBreakdownView(
@@ -105,7 +113,9 @@ public sealed record AdminOperationalDeliveryGroupView(
     decimal CombinedFeeTotal,
     string Currency,
     IReadOnlyList<AdminOperationalDeliveryMemberView> Members,
-    IReadOnlyList<AdminOperationalFeeBreakdownView> FeeBreakdown);
+    IReadOnlyList<AdminOperationalFeeBreakdownView> FeeBreakdown,
+    /// <summary>TB-253-R2: actual actor authority for parcel/package mutations.</summary>
+    bool ActorMayManageOperations = false);
 
 /// <summary>عضو بسته تجمیعی روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminConsolidatedPackageMemberView(

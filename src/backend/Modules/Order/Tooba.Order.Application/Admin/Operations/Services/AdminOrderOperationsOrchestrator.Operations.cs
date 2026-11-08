@@ -327,6 +327,19 @@ public sealed partial class AdminOrderOperationsOrchestrator
             _ => CreateConsolidatedPackageCoreAsync(checkoutId, request, actorUserId, cancellationToken),
             cancellationToken));
 
+    public Task<Result<object>> PrepareOperationalGroupAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "prepare_operational_group",
+            _ => PrepareOperationalGroupCoreAsync(checkoutId, request, actorUserId, cancellationToken),
+            cancellationToken));
+
     public Task<Result<object>> CancelConsolidatedPackageAsync(
         Guid checkoutId,
         Guid actorUserId,
