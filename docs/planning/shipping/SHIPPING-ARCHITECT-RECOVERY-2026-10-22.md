@@ -1,4 +1,24 @@
-# CURRENT — 253-R4 PASS: immutable occurrence envelope + explicit reuse-only + prebound request preservation — 2026-11-08
+# CURRENT — 253-R5 PASS: blocked unresolved remint + recorded-parcel reconciliation before the remaining gate — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R5/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued R5 correction/deploy scope, decision **UNRESOLVED_REMINT_BLOCKED_AT_STATE_BOUNDARY_AND_RECORDED_OCCURRENCE_PARCEL_RECONCILED_BEFORE_REMAINING_GATE**, NOT Architect/Visual ACCEPT. Base `1dfdecbaf`. Evidence docs carry the exact receipts.
+Marketplace-only cross-seller rule preserved; Store never promoted; origin vs responsibility still distinct.
+R5 closes the two recovery paths R4 left partial. (A) A retained attempt is UNRESOLVED until an authoritative
+completion clears it, so `resolveOperationalGroupAttempt` never mints a second occurrence: a changed review returns
+`blockedByRetainedAttempt` with the recorded occurrence and complete envelope byte-identical, the normal Create path is
+disabled at both the JSX and the resolver boundary, and the only exit is an explicit safe transition for a typed
+refusal that proves NO claim (pre-claim codes only; network/5xx/timeout carry no server code and can never release it).
+(B) `BuildPlan` now inspects the exact occurrence DispatchKey BEFORE the remaining-quantity gate for a member with no
+durable link, accepts only parcels whose own group/method/quantities equal the immutable envelope, plans them as
+`ReconcileRecorded` and links exactly those ids — never sweeping open parcels and never creating a replacement;
+mismatched evidence is a typed conflict with zero writes. Disposable `tb253r5-pg:15433`: TB253R5 **2/2** with a real
+fault seam failing exactly on Order member-link persistence AFTER the Fulfillment create committed, plus the
+parcel-evidence mismatch; adjacent TB253R4 **6/6**; authority/workflow **34/34**; FE mount **17/17**;
+typecheck/build/publish 0. Migration `20261108153000_AddOperationalGroupOccurrences` unchanged, DataProtection
+preserved. Live order `01a1b92d-…` admin read-only: 3 Store groups, no Marketplace claim. Tipax deferred.
+STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253-R4 PASS (Architect PARTIAL): immutable occurrence envelope + explicit reuse-only + prebound request preservation — 2026-11-08
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued R4 correction/deploy scope, decision **IMMUTABLE_OCCURRENCE_ENVELOPE_EXPLICIT_REUSE_ONLY_AND_PREBOUND_REQUEST_PRESERVATION_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `8617161188232acfc4f70d6e363b906e85e14953`. Evidence docs carry the exact receipts.
