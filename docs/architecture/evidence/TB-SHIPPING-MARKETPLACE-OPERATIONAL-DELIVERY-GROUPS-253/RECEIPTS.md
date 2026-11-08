@@ -32,3 +32,9 @@
 
 ## Review URL
 http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf
+
+## SHAs
+- Base: e33517eb45b319ee77f53efb3256b91ad4451b4e
+- Code: e899c72ba3992b2538163fc1dcbf587d21d96ab6
+- Evidence(interim Code stamp): c488059d1f142ffa70b2acd67e06df0268244aee
+
