@@ -1,3 +1,19 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4
+Parent-Task: TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Status: PASS
+Decision: IMMUTABLE_OCCURRENCE_ENVELOPE_EXPLICIT_REUSE_ONLY_AND_PREBOUND_REQUEST_PRESERVATION_DEPLOYED
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 8617161188232acfc4f70d6e363b906e85e14953
+Base-SHA: 8617161188232acfc4f70d6e363b906e85e14953
+Code-SHA: 30c6fafd7d2a89a5ad9b7482f186c7b7d786f2c3
+Evidence-SHA: cde923bde2499187ca96195713119565b80e888f
+automaticNextImplementationTask: NONE
+
 # RESULT — TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4
 
 Task: `TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4`
@@ -12,8 +28,8 @@ Not Architect ACCEPT. Not Visual ACCEPT. Not live-provider acceptance.
 | Item | Value |
 | --- | --- |
 | Expected base SHA | `8617161188232acfc4f70d6e363b906e85e14953` |
-| Code commit | stamped in `RECEIPTS.md` |
-| Evidence commit | stamped in `RECEIPTS.md` |
+| Code commit | `30c6fafd7d2a89a5ad9b7482f186c7b7d786f2c3` |
+| Evidence commit | `cde923bde2499187ca96195713119565b80e888f` (envelope HEAD; the RECEIPTS table records the pre-stamp evidence commit it was amended from) |
 | Repo / branch | `SarvNewVer` / `main`, local == `origin/main` |
 | Canonical URL | `http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf` (read-only) |
 | Edition / DB | SingleStore / `store-alpha` / `tooba_alpha` |
@@ -121,3 +137,4 @@ No business SQL, no reset/reseed, no accepted-history rewrite, no manual DDL.
 
 `STOP_FOR_ARCHITECT`
 `automaticNextImplementationTask: NONE`
+END_TOOBA_WORKER_RESULT
