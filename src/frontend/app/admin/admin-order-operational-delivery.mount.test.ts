@@ -531,6 +531,158 @@ test("TB-254 mounted: a Store-owned group with existing parcels has no selection
   }
 });
 
+// ---------------------------------------------------------------- TB-254-R1 readability / package owner
+
+test("TB-254-R1 mounted: a shared package has ONE owner row and no duplicate locked-child action", async () => {
+  resetGroupScope(CHECKOUT);
+  installFetch((call) => {
+    if (call.method === "GET") {
+      return operationsPage([
+        shipmentAction("dispatch_shipment", "so1", "sh1"),
+        shipmentAction("dispatch_shipment", "so2", "sh2"),
+      ]);
+    }
+    return postResponse(200, { ok: true });
+  });
+  try {
+    const detail = withParcels(baseDetail(), false);
+    // Both member parcels joined the SAME consolidated package.
+    detail.sellerOrders = detail.sellerOrders.map((seller) => ({
+      ...seller,
+      shipments: (seller.shipments ?? []).map((shipment) => ({
+        ...shipment,
+        activePackageNumber: "PKG-9",
+        packageLockedReasonFa: "این مرسوله در بستهٔ مشترک است.",
+      })),
+    }));
+
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail,
+        checkoutId: CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(mounted.container, PREPARE_SELECTOR).length === 1);
+    await flush();
+
+    // Exactly ONE package owner row for the shared package…
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-package-lock-PKG-9']").length, 1);
+    // …and the locked children expose no competing lifecycle action.
+    for (const id of ["sh1", "sh2"]) {
+      assert.equal(qq(mounted.container, `[data-testid='admin-order-operational-parcel-${id}']`).length, 0);
+      assert.equal(qq(mounted.container, `[data-testid='admin-order-shipment-dispatch-${id}']`).length, 0);
+      assert.equal(qq(mounted.container, `[data-testid='admin-order-shipment-card-${id}']`).length, 0);
+    }
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-254-R1 mounted: essential item titles wrap instead of truncating (group card + dialog)", async () => {
+  resetGroupScope(CHECKOUT);
+  installFetch((call) => {
+    if (call.method === "GET") return operationsPage();
+    return postResponse(200, { ok: true });
+  });
+  try {
+    const longTitle = "شال پشمی بافت‌دستی طرح ترمه با حاشیهٔ ابریشمی و جعبهٔ هدیهٔ چرمی — مدل زمستانهٔ ویژه";
+    const detail = baseDetail();
+    detail.operationalDeliveryGroups = detail.operationalDeliveryGroups!.map((group) => ({
+      ...group,
+      members: group.members.map((member) => ({
+        ...member,
+        lines: member.lines?.map((line) => ({ ...line, title: longTitle })),
+      })),
+    }));
+    detail.sellerOrders = detail.sellerOrders.map((seller) => ({
+      ...seller,
+      lines: seller.lines.map((line) => ({ ...line, title: longTitle })),
+    }));
+
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail, checkoutId: CHECKOUT }),
+    );
+    await openGroupDialog(mounted.container);
+
+    // Group card title: full identification, no ellipsis class, wraps to the next line.
+    const cardTitle = q(mounted.container, "[data-testid='admin-order-operational-item-ol1'] span");
+    assert.equal(cardTitle.textContent, longTitle);
+    assert.ok(!cardTitle.className.includes("truncate"));
+    assert.ok(cardTitle.className.includes("break-words"));
+
+    // Dialog review title: same contract.
+    const dialogTitle = q(mounted.container, `[data-testid='admin-order-operational-line-ol1'] span`);
+    assert.equal(dialogTitle.textContent, longTitle);
+    assert.ok(!dialogTitle.className.includes("truncate"));
+    assert.ok(dialogTitle.className.includes("break-words"));
+
+    // The review quantity input is a 44px target, not a compact 28px box.
+    const qty = q(mounted.container, QTY_OL1_SELECTOR) as HTMLInputElement;
+    assert.ok(qty.className.includes("min-h-11"));
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-254-R1 mounted: a retained envelope keeps its recorded titles after partial progress", async () => {
+  resetR4Attempt();
+  const restoreViewer = withR4Viewer();
+  installFetch((call) => {
+    if (call.method === "GET") return operationsPage();
+    return postResponse(500, { error: { code: "order.operation.failed" } });
+  });
+  try {
+    const first = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: { ...baseDetail(), checkoutId: R4_CHECKOUT },
+        checkoutId: R4_CHECKOUT,
+      }),
+    );
+    await openGroupDialog(first.container);
+    await submitGroupDialog(first.container);
+    await waitFor(() => qq(first.container, RETAINED_OPEN_SELECTOR).length === 1);
+    await first.unmount();
+
+    // Partial server progress: every packed quantity is now consumed, so the fresh review rows are
+    // empty. The RECORDED request must still be readable (titles + quantities), not "کالای سفارش".
+    const progressed = baseDetail();
+    progressed.operationalDeliveryGroups = progressed.operationalDeliveryGroups!.map((group) => ({
+      ...group,
+      members: group.members.map((member) => ({
+        ...member,
+        lines: member.lines?.map((line) => ({ ...line, remainingPackedQuantity: 0 })),
+      })),
+    }));
+    const second = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: { ...progressed, checkoutId: R4_CHECKOUT },
+        checkoutId: R4_CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(second.container, RETAINED_OPEN_SELECTOR).length === 1);
+    await click(q(second.container, RETAINED_OPEN_SELECTOR));
+    await flush();
+
+    const line1 = q(second.container, "[data-testid='admin-order-operational-retained-line-ol1']");
+    const line2 = q(second.container, "[data-testid='admin-order-operational-retained-line-ol2']");
+    assert.match(line1.textContent ?? "", /شال آرمان/);
+    assert.match(line1.textContent ?? "", /۲/);
+    assert.match(line2.textContent ?? "", /پیراهن نیلوا/);
+    assert.doesNotMatch(line1.textContent ?? "", /کالای سفارش/);
+    // The page outside the dialog still owns no review input.
+    const outside = outsideDialogs(second.container.innerHTML);
+    assert.doesNotMatch(outside, /inputmode="decimal"/);
+    assert.doesNotMatch(outside, /type="checkbox"/);
+    await second.unmount();
+  } finally {
+    restoreFetch();
+    restoreViewer();
+    resetR4Attempt();
+  }
+});
+
 // ---------------------------------------------------------------- TB-253-R2 behaviour via the dialog
 
 test("mounted: reviewed quantities produce exactly one group request across two sellers", async () => {

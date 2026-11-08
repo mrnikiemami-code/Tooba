@@ -1,30 +1,40 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "../../design-system/primitives/core";
-import { Dialog } from "../../design-system/primitives/overlays";
-import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
-import {
-  formatAdminMoney,
-  formatAdminStatus,
-  type AdminOperationalDeliveryGroup,
-  type AdminShipment,
-} from "./admin-api";
-import type { OperationalGroupAttempt } from "./operational-group-occurrence-store";
+import { Button } from "../../../design-system/primitives/core";
+import { Dialog } from "../../../design-system/primitives/overlays";
+import { formatJalaliDate } from "../../../design-system/app-data-grid/jalali";
 
 /**
- * TB-254: the ONE purposeful Marketplace group workflow surface.
+ * TB-254/TB-254-R1 — the ONE purposeful Marketplace operational-group workflow surface.
  *
- * The normal page only displays parcels and their permitted next action. Creating the constituent
- * parcels + the common package — and explicitly reusing an existing parcel — happens here, inside a
- * clearly titled dialog, so a normal Store/Seller card never shows an unexplained checkbox or a
- * quantity field.
+ * The normal order page only displays parcels and their permitted next action. Creating the
+ * constituent parcels + the common package — and explicitly reusing an existing parcel — happens
+ * here, inside a clearly titled dialog, so a normal Store/Seller card never shows an unexplained
+ * checkbox or a quantity field.
+ *
+ * Ownership (FRONTEND-ARCHITECTURE-STANDARD): this module is the feature-owned use-case surface for
+ * the order operational group workflow. It deliberately declares its own narrow input contract
+ * instead of importing an app/page client: the page passes the facts it already holds and the
+ * display formatters it already uses. That keeps the feature independent of `app/admin/*` internals
+ * and free of a duplicated status/money dictionary.
  *
  * TB-253-R4/R5/R6 behaviour is unchanged: the reviewed envelope (members + exact quantities +
- * explicitly chosen reuse parcels) is what the caller prebinds to one occurrence. While an attempt is
- * unresolved the dialog is read-only and can only replay that recorded envelope; closing the dialog
- * never cancels the server operation and never erases the occurrence.
+ * explicitly chosen reuse parcels) is what the caller prebinds to one occurrence. While an attempt
+ * is unresolved the dialog is read-only and can only replay that recorded envelope; closing the
+ * dialog never cancels the server operation and never erases the occurrence.
  */
+
+/** Display facts of the operational group this workflow belongs to. */
+export type OperationalGroupWorkflowGroup = {
+  operationalGroupKey: string;
+  methodLabel: string;
+  methodCode: string;
+  deliveryDate: string | null;
+  deliveryTimeWindow: string | null;
+  combinedFeeTotal: number;
+  currency: string;
+};
 
 export type OperationalGroupDialogLine = {
   orderLineId: string;
@@ -33,12 +43,19 @@ export type OperationalGroupDialogLine = {
   remaining: number;
 };
 
+/** Existing parcel of a member group that MAY be reused in the common package. */
+export type OperationalGroupDialogParcel = {
+  shipmentId: string;
+  itemCount: number;
+  status: string;
+  trackingReference?: string | null;
+};
+
 export type OperationalGroupDialogRow = {
   memberShippingGroupId: string;
   sellerDisplayName: string;
   lines: OperationalGroupDialogLine[];
-  /** Existing parcels of this member group that MAY be reused in the common package. */
-  parcels: AdminShipment[];
+  parcels: OperationalGroupDialogParcel[];
 };
 
 export type OperationalGroupDialogRequest = {
@@ -46,9 +63,25 @@ export type OperationalGroupDialogRequest = {
   reuseShipmentIds: string[];
 };
 
-type Props = {
+/**
+ * The recorded, unresolved envelope. Structural subset of the page-owned attempt record: the dialog
+ * reads the recorded request only and never re-derives it from the current rows.
+ */
+export type RetainedOperationalGroupEnvelope = {
+  occurrenceId: string;
+  selections: ReadonlyArray<{ orderLineId: string; quantity: number }>;
+  reuseShipmentIds: ReadonlyArray<string>;
+};
+
+/** Display formatters owned by the page boundary (no duplicated status/money dictionary here). */
+export type OperationalGroupWorkflowFormatters = {
+  formatMoney: (amount: number, currency: string) => string;
+  formatStatus: (status: string) => string;
+};
+
+type Props = OperationalGroupWorkflowFormatters & {
   open: boolean;
-  group: AdminOperationalDeliveryGroup;
+  group: OperationalGroupWorkflowGroup;
   rows: OperationalGroupDialogRow[];
   pending: boolean;
   errorFa: string | null;
@@ -56,7 +89,13 @@ type Props = {
    * The recorded envelope of an unresolved operation. When present the dialog is READ-ONLY and its
    * only action replays exactly that request (no new occurrence, no edited quantities).
    */
-  retainedAttempt: OperationalGroupAttempt | null;
+  retainedAttempt: RetainedOperationalGroupEnvelope | null;
+  /**
+   * TB-254-R1: titles of EVERY line of the group (including lines whose packed quantity is already
+   * consumed). A retained summary must stay readable after partial server progress, so recorded
+   * selections are never hidden behind a zero-remaining row.
+   */
+  lineTitles?: Record<string, string>;
   onClose: () => void;
   onSubmit: (request: OperationalGroupDialogRequest) => void;
 };
@@ -76,7 +115,7 @@ function jalaliDay(isoDate: string | null | undefined): string | null {
   return formatJalaliDate(raw.includes("T") ? raw : `${raw}T12:00:00`, "fa");
 }
 
-function parcelLabel(parcel: AdminShipment, index: number): string {
+function parcelLabel(parcel: OperationalGroupDialogParcel, index: number): string {
   const count = parcel.itemCount > 0 ? `${parcel.itemCount.toLocaleString("fa-IR")} قلم` : "بدون قلم";
   return `مرسولهٔ ${(index + 1).toLocaleString("fa-IR")} · ${count}`;
 }
@@ -88,6 +127,9 @@ export function AdminOperationalGroupWorkflowDialog({
   pending,
   errorFa,
   retainedAttempt,
+  lineTitles,
+  formatMoney,
+  formatStatus,
   onClose,
   onSubmit,
 }: Props) {
@@ -155,13 +197,16 @@ export function AdminOperationalGroupWorkflowDialog({
     [reusedParcelIds, retainedAttempt],
   );
 
-  const lineTitleById = useMemo(() => {
+  const rowLineTitles = useMemo(() => {
     const map = new Map<string, string>();
     for (const row of rows) {
       for (const line of row.lines) map.set(line.orderLineId, line.title);
     }
     return map;
   }, [rows]);
+
+  const titleOf = (orderLineId: string): string =>
+    lineTitles?.[orderLineId] ?? rowLineTitles.get(orderLineId) ?? "کالای سفارش";
 
   const parcelCount = rows.reduce((sum, row) => sum + row.parcels.length, 0);
   const remainingLines = rows.flatMap((row) => row.lines).filter((line) => line.remaining > 0);
@@ -196,7 +241,7 @@ export function AdminOperationalGroupWorkflowDialog({
             className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700"
             data-testid={`admin-order-operational-dialog-summary-${group.operationalGroupKey}`}
           >
-            <p className="text-sm font-bold text-gray-900">{group.methodLabel || group.methodCode}</p>
+            <p className="break-words text-sm font-bold text-gray-900">{group.methodLabel || group.methodCode}</p>
             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>{day ?? "تاریخ تحویل نامشخص"}</span>
               {timeWindow ? (
@@ -206,7 +251,7 @@ export function AdminOperationalGroupWorkflowDialog({
                 </>
               ) : null}
               <span aria-hidden>·</span>
-              <span dir="ltr">{formatAdminMoney(group.combinedFeeTotal, group.currency)}</span>
+              <span dir="ltr">{formatMoney(group.combinedFeeTotal, group.currency)}</span>
             </p>
             <p className="mt-1 text-gray-500">
               روش ارسال، تاریخ و ساعت انتخاب مشتری است و تغییر نمی‌کند.
@@ -223,7 +268,7 @@ export function AdminOperationalGroupWorkflowDialog({
                 data-testid={`admin-order-operational-dialog-member-${row.memberShippingGroupId}`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-sm font-bold text-gray-900">{row.sellerDisplayName}</h4>
+                  <h4 className="min-w-0 break-words text-sm font-bold text-gray-900">{row.sellerDisplayName}</h4>
                   <span className="text-xs text-gray-500">
                     {`${row.lines.length.toLocaleString("fa-IR")} کالا · ${row.parcels.length.toLocaleString("fa-IR")} مرسوله`}
                   </span>
@@ -239,12 +284,12 @@ export function AdminOperationalGroupWorkflowDialog({
                           <li key={parcel.shipmentId}>
                             <label
                               htmlFor={inputId}
-                              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-gray-100 px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                              className="flex min-h-11 cursor-pointer items-start gap-2 rounded-md border border-gray-100 px-2 py-2 text-xs text-gray-700 hover:bg-gray-50"
                             >
                               <input
                                 id={inputId}
                                 type="checkbox"
-                                className="size-4 shrink-0"
+                                className="mt-0.5 size-4 shrink-0"
                                 checked={reusedParcelIds.includes(parcel.shipmentId)}
                                 disabled={pending || Boolean(retainedAttempt)}
                                 onChange={(event) => {
@@ -257,14 +302,14 @@ export function AdminOperationalGroupWorkflowDialog({
                                 }}
                                 data-testid={`admin-order-operational-reuse-parcel-${parcel.shipmentId}`}
                               />
-                              <span className="min-w-0 flex-1 truncate font-semibold">
+                              <span className="min-w-0 flex-1 break-words font-semibold leading-6">
                                 {parcelLabel(parcel, index)}
                               </span>
                               <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600">
-                                {formatAdminStatus(parcel.status)}
+                                {formatStatus(parcel.status)}
                               </span>
                               {parcel.trackingReference ? (
-                                <bdi dir="ltr" className="shrink-0 text-[11px] text-gray-500">
+                                <bdi dir="ltr" className="shrink-0 text-[11px] leading-6 text-gray-500">
                                   {parcel.trackingReference}
                                 </bdi>
                               ) : null}
@@ -294,12 +339,12 @@ export function AdminOperationalGroupWorkflowDialog({
                         return (
                           <li
                             key={line.orderLineId}
-                            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2 py-1.5"
+                            className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 px-2 py-2"
                             data-testid={`admin-order-operational-line-${line.orderLineId}`}
                           >
-                            <span className="min-w-0 truncate text-sm text-gray-800">{line.title}</span>
-                            <label className="inline-flex shrink-0 items-center gap-1 text-xs text-gray-500">
-                              <span>از {quantityText(max)}</span>
+                            <span className="min-w-0 break-words text-sm leading-6 text-gray-800">{line.title}</span>
+                            <label className="inline-flex min-h-11 shrink-0 items-center gap-1 text-xs text-gray-500">
+                              <span className="whitespace-nowrap">از {quantityText(max)}</span>
                               <input
                                 inputMode="decimal"
                                 dir="ltr"
@@ -316,7 +361,7 @@ export function AdminOperationalGroupWorkflowDialog({
                                   }));
                                 }}
                                 aria-label={`مقدار ${line.title}`}
-                                className="w-16 rounded border border-gray-200 px-2 py-1 text-center tabular-nums disabled:bg-gray-50 disabled:opacity-70"
+                                className="min-h-11 w-16 rounded border border-gray-200 px-2 text-center tabular-nums disabled:bg-gray-50 disabled:opacity-70"
                                 data-testid={`admin-order-operational-qty-${line.orderLineId}`}
                               />
                             </label>
@@ -337,18 +382,29 @@ export function AdminOperationalGroupWorkflowDialog({
               role="status"
             >
               <p className="font-bold">درخواست ثبت‌شده نگه داشته شده است.</p>
-              <p className="mt-1 leading-6">
-                {`${retainedAttempt.selections
-                  .map(
-                    (selection) =>
-                      `${lineTitleById.get(selection.orderLineId) ?? "کالای سفارش"} × ${quantityText(selection.quantity)}`,
-                  )
-                  .join("، ") || "بدون کالای جدید"}${
-                  retainedAttempt.reuseShipmentIds.length > 0
-                    ? ` · ${retainedAttempt.reuseShipmentIds.length.toLocaleString("fa-IR")} مرسولهٔ موجود`
-                    : ""
-                }`}
-              </p>
+              {retainedAttempt.selections.length > 0 ? (
+                <ul className="mt-1 space-y-0.5">
+                  {retainedAttempt.selections.map((selection) => (
+                    <li
+                      key={selection.orderLineId}
+                      className="flex items-start justify-between gap-2 leading-6"
+                      data-testid={`admin-order-operational-retained-line-${selection.orderLineId}`}
+                    >
+                      <span className="min-w-0 break-words">{titleOf(selection.orderLineId)}</span>
+                      <span className="shrink-0 whitespace-nowrap tabular-nums">
+                        {`× ${quantityText(selection.quantity)}`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 leading-6">بدون کالای جدید</p>
+              )}
+              {retainedAttempt.reuseShipmentIds.length > 0 ? (
+                <p className="mt-1 leading-6">
+                  {`${retainedAttempt.reuseShipmentIds.length.toLocaleString("fa-IR")} مرسولهٔ موجود نیز در همین درخواست است.`}
+                </p>
+              ) : null}
             </div>
           ) : null}
 
@@ -363,7 +419,7 @@ export function AdminOperationalGroupWorkflowDialog({
           ) : null}
         </div>
 
-        <div className="mt-3 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+        <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
           <Button
             type="button"
             tone="secondary"

@@ -25,7 +25,7 @@ import {
   AdminOperationalGroupWorkflowDialog,
   type OperationalGroupDialogRequest,
   type OperationalGroupDialogRow,
-} from "./admin-operational-group-workflow-dialog";
+} from "../../features/order-operational-groups";
 
 export type OperationalCreateTarget = {
   seller: AdminSellerOrder;
@@ -182,6 +182,22 @@ function buildDialogRows(detail: AdminOrderDetail, group: AdminOperationalDelive
 }
 
 /**
+ * TB-254-R1: titles of EVERY line of the group, regardless of remaining packed quantity. A retained
+ * request must stay readable after partial server progress consumed the remaining quantity.
+ */
+function groupLineTitles(detail: AdminOrderDetail, group: AdminOperationalDeliveryGroup): Record<string, string> {
+  const titles: Record<string, string> = {};
+  for (const member of group.members) {
+    if (member.lines && member.lines.length > 0) {
+      for (const line of member.lines) titles[line.orderLineId] = line.title;
+      continue;
+    }
+    for (const line of groupItems(detail, member)) titles[lineKey(line)] = line.title;
+  }
+  return titles;
+}
+
+/**
  * TB-253/TB-254: «ارسال سفارش» — one card per server-owned operational delivery group.
  *
  * This component is DISPLAY + contextual actions only. It never regroups client-side and it never
@@ -293,6 +309,7 @@ function OperationalCard({
   const hasRetained = Boolean(retainedAttempt);
   const workflowBlocked = !group.consolidateEligible || !actorMayManage || !onPrepareOperationalGroup;
   const dialogRows = useMemo(() => buildDialogRows(detail, group), [detail, group]);
+  const lineTitleMap = useMemo(() => groupLineTitles(detail, group), [detail, group]);
   const canRunWorkflow = Boolean(onPrepareOperationalGroup)
     && group.isCrossSellerMarketplace
     && group.consolidateEligible
@@ -399,7 +416,7 @@ function OperationalCard({
           >
             {group.feeBreakdown.map((fee) => (
               <li key={fee.shippingGroupId} className="flex items-center justify-between gap-2">
-                <span className="truncate">{fee.sellerDisplayName}</span>
+                <span className="min-w-0 break-words pe-2">{fee.sellerDisplayName}</span>
                 <span className="shrink-0 tabular-nums">{formatAdminMoney(fee.feeAmount, fee.currency)}</span>
               </li>
             ))}
@@ -498,6 +515,9 @@ function OperationalCard({
           pending={pending}
           errorFa={errorFa}
           retainedAttempt={retainedAttempt}
+          lineTitles={lineTitleMap}
+          formatMoney={formatAdminMoney}
+          formatStatus={formatAdminStatus}
           onClose={() => setDialogOpen(false)}
           onSubmit={(request) => {
             void runWorkflow(request);
@@ -548,10 +568,10 @@ function GroupItems({
                   {items.map((line) => (
                     <li
                       key={lineKey(line)}
-                      className="flex items-center justify-between gap-2 px-3 py-2"
+                      className="flex items-start justify-between gap-2 px-3 py-2"
                       data-testid={`admin-order-operational-item-${lineKey(line)}`}
                     >
-                      <span className="min-w-0 flex-1 truncate text-sm text-gray-800">{line.title}</span>
+                      <span className="min-w-0 flex-1 break-words text-sm leading-6 text-gray-800">{line.title}</span>
                       <span className="shrink-0 text-xs tabular-nums text-gray-600">
                         {`${quantityText(line.quantity)} عدد`}
                       </span>
