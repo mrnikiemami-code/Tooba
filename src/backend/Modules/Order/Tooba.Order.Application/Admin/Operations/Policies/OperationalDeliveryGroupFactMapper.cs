@@ -67,6 +67,7 @@ public static class OperationalDeliveryGroupFactMapper
             destinationFingerprint,
             history.OrderLineIds,
             createParcelEligible,
-            createParcelBlockReasonFa);
+            createParcelBlockReasonFa,
+            history.OriginContext);
     }
 }

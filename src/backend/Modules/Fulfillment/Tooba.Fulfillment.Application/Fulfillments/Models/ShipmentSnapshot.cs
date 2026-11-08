@@ -20,7 +20,9 @@ public sealed record ShipmentSnapshot(
     string? ProviderMetadataJson = null,
     int ProviderMetadataVersion = 0,
     string? PreviousTrackingReference = null,
-    Guid? ShippingGroupId = null);
+    Guid? ShippingGroupId = null,
+    /// <summary>TB-253-R3: occurrence-scoped durable allocation key recorded on the shipment.</summary>
+    string? ShippingDispatchKey = null);
 
 /// <summary>
 /// snapshot گروه ارسال پذیرفته‌شدهٔ یک واحد fulfillment؛ عضویت خطوط برای تصمیم‌گیری canonical است.

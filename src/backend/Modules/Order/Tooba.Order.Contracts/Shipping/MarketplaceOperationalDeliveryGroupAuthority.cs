@@ -59,6 +59,18 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
     /// <summary>Refusal: a reused parcel does not belong to this group/checkout or is already packaged.</summary>
     public const string WorkflowShipmentForeign = "order.operational_group.workflow_shipment_foreign";
 
+    /// <summary>Refusal: the workflow occurrence must be prebound by the caller before any mutation.</summary>
+    public const string WorkflowOccurrenceRequired = "order.operational_group.workflow_occurrence_required";
+
+    /// <summary>Refusal: the same occurrence was replayed with a different selection/reuse membership.</summary>
+    public const string WorkflowIntentConflict = "order.operational_group.workflow_intent_conflict";
+
+    /// <summary>Refusal: a requested line/quantity is unknown, duplicated or outside the reviewed group.</summary>
+    public const string WorkflowSelectionInvalid = "order.operational_group.workflow_selection_invalid";
+
+    /// <summary>Typed unresolved state: allocations recorded but the common package is not yet observable.</summary>
+    public const string WorkflowPending = "order.operational_group.workflow_pending";
+
     /// <summary>One accepted shipping group fact surface for projection/mutation.</summary>
     public sealed record GroupFact(
         Guid ShippingGroupId,
@@ -88,7 +100,13 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
         string DestinationFingerprint,
         IReadOnlyList<Guid> OrderLineIds,
         bool CreateParcelEligible,
-        string? CreateParcelBlockReasonFa);
+        string? CreateParcelBlockReasonFa,
+        /// <summary>
+        /// TB-253-R3: committed dispatch-origin context captured with the accepted group. This is the
+        /// only proven origin seam; owner/responsibility, tenant key, carrier city code and recipient
+        /// address are never a substitute for it.
+        /// </summary>
+        string? OriginContext = null);
 
     /// <summary>Projected operational delivery group (immutable accepted groups as members).</summary>
     public sealed record OperationalGroup(
@@ -378,15 +396,22 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
     }
 
     /// <summary>
-    /// Origin identity must be a non-empty committed dispatch origin.
-    /// Empty values never compare equal.
+    /// Origin identity must be a non-empty PROVEN physical dispatch origin.
     /// </summary>
+    /// <remarks>
+    /// TB-253-R3 restored rule: responsibility is not origin. An organization responsible for
+    /// sending may operate several warehouses, so the owner/marketplace identity can never stand in
+    /// for a physical origin, and <c>OriginLocationCode</c> alone is a carrier city code (city
+    /// granularity) — two warehouses in one city must not be silently equated. Only a committed
+    /// physical origin address establishes a proven, warehouse-grade identity; everything else
+    /// (missing, city-only, blank) stays unproven and never compares equal.
+    /// </remarks>
     public static bool TryResolveOriginIdentity(GroupFact g, out string identity)
     {
-        var location = NormalizeNullable(g.OriginLocationCode);
-        if (!string.IsNullOrEmpty(location))
+        var context = NormalizeNullable(g.OriginContext);
+        if (!string.IsNullOrEmpty(context))
         {
-            identity = "loc:" + location;
+            identity = "ctx:" + context;
             return true;
         }
 
@@ -394,17 +419,6 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
         if (!string.IsNullOrEmpty(postal))
         {
             identity = "addr:" + postal;
-            return true;
-        }
-
-        // TB-253-R2: for Marketplace responsibility the committed dispatch origin IS the marketplace
-        // operator — that ownership is persisted accepted evidence, not a guess. Manual Marketplace
-        // groups carry no pickup location (and must never copy the buyer/recipient into it), so a
-        // location-only rule made every real Marketplace Manual group ungroupable. Store/Seller still
-        // require a real committed location/address; anything else stays unproven.
-        if (IsMarketplaceOwner(g))
-        {
-            identity = "marketplace";
             return true;
         }
 
@@ -436,7 +450,8 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
             else if (isMarketplace && !TryResolveOriginIdentity(seed, out _))
             {
                 separateCode = SeparateMissingOrigin;
-                separateFa = "مبدأ ارسال ثبت‌شده نیست؛ گروه‌ها جدا نگه داشته شدند.";
+                separateFa =
+                    "مبدأ فیزیکی ارسال (نشانی انبار) برای این گروه ثبت نشده است؛ تا ثبت مبدأ، این گروه با گروه‌های دیگر تجمیع نمی‌شود.";
             }
             else if (string.Equals(seed.TransportMode, "LegacyIncomplete", StringComparison.OrdinalIgnoreCase))
             {
@@ -675,38 +690,56 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
     }
 
     /// <summary>
-    /// Stable operation identity for one constituent parcel allocation.
-    /// Same checkout/group/lines always produce the same key; changed quantities produce a new key.
+    /// Stable durable allocation key for ONE constituent parcel of ONE workflow occurrence.
     /// </summary>
+    /// <remarks>
+    /// TB-253-R3: the key is occurrence-scoped and payload-free. Quantity is deliberately NOT part of
+    /// the identity — a payload hash let a deliberate second identical package masquerade as a retry of
+    /// the first, and let a changed selection silently allocate again. With an occurrence key:
+    /// same occurrence + same lines replays the recorded parcel; same occurrence + changed lines is a
+    /// typed intent conflict at the owning dispatch-key boundary; a new occurrence allocates a new
+    /// parcel even for identical quantities.
+    /// </remarks>
     public static string BuildMemberParcelDispatchKey(
         Guid checkoutId,
-        Guid shippingGroupId,
-        IReadOnlyList<GroupLineQuantity> lines)
+        Guid occurrenceId,
+        Guid shippingGroupId)
     {
-        var canonical = string.Join(
-            ';',
-            (lines ?? Array.Empty<GroupLineQuantity>())
-                .OrderBy(x => x.OrderLineId)
-                .Select(x => $"{x.OrderLineId:N}:{x.Quantity.ToString("0.####", CultureInfo.InvariantCulture)}"));
-        return "opgroup:" + Hash($"{checkoutId:N}|{shippingGroupId:N}|{canonical}");
+        if (checkoutId == Guid.Empty || occurrenceId == Guid.Empty || shippingGroupId == Guid.Empty)
+        {
+            throw new MarketplaceOperationalDeliveryGroupException(WorkflowOccurrenceRequired);
+        }
+
+        return "opgroup:" + Hash($"{checkoutId:N}|{occurrenceId:N}|{shippingGroupId:N}");
     }
 
-    /// <summary>Stable locator returned to the caller for retry/remount reconciliation.</summary>
-    public static string BuildWorkflowOperationLocator(
+    /// <summary>
+    /// Stable locator echoed to the caller. It names the operation OCCURRENCE — never a payload or a
+    /// group display identity — so retry/remount reconciliation targets the same recorded allocation.
+    /// </summary>
+    public static string BuildWorkflowOperationLocator(Guid occurrenceId)
+    {
+        if (occurrenceId == Guid.Empty)
+        {
+            throw new MarketplaceOperationalDeliveryGroupException(WorkflowOccurrenceRequired);
+        }
+
+        return "opg_" + occurrenceId.ToString("N");
+    }
+
+    /// <summary>
+    /// True when the shipment's recorded occurrence key belongs to this exact checkout/group/occurrence.
+    /// </summary>
+    public static bool IsOccurrenceParcelKey(
+        string? dispatchKey,
         Guid checkoutId,
-        IReadOnlyList<Guid> memberShippingGroupIds)
-    {
-        var members = string.Join(
-            ',',
-            (memberShippingGroupIds ?? Array.Empty<Guid>())
-                .Distinct()
-                .OrderBy(x => x)
-                .Select(x => x.ToString("N")));
-        return "opg_" + Hash($"{checkoutId:N}|{members}");
-    }
-
-    /// <summary>Line quantity used for operation-key identity.</summary>
-    public sealed record GroupLineQuantity(Guid OrderLineId, decimal Quantity);
+        Guid occurrenceId,
+        Guid shippingGroupId) =>
+        !string.IsNullOrWhiteSpace(dispatchKey)
+        && string.Equals(
+            dispatchKey,
+            BuildMemberParcelDispatchKey(checkoutId, occurrenceId, shippingGroupId),
+            StringComparison.Ordinal);
 
     private static string Hash(string payload)
     {

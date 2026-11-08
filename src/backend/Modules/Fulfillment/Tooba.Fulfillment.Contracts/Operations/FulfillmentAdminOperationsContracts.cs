@@ -84,7 +84,12 @@ public sealed record ShipmentSnapshot(
     string? ProviderMetadataJson = null,
     int ProviderMetadataVersion = 0,
     string? PreviousTrackingReference = null,
-    Guid? ShippingGroupId = null);
+    Guid? ShippingGroupId = null,
+    /// <summary>
+    /// TB-253-R3: durable occurrence-scoped allocation key recorded on the shipment itself.
+    /// Recovery reads exact recorded parcels by this key instead of guessing by aggregate quantity.
+    /// </summary>
+    string? ShippingDispatchKey = null);
 
 /// <summary>Fulfillment line projection with per-stage quantities.</summary>
 public sealed record FulfillmentItemSnapshot(

@@ -36,7 +36,12 @@ public sealed record OrderShippingGroupHistoryRecord(
     int LeadDays,
     string State,
     IReadOnlyList<Guid> OrderLineIds,
-    OrderShippingGroupHistoryEvidence? Evidence);
+    OrderShippingGroupHistoryEvidence? Evidence,
+    /// <summary>
+    /// TB-253-R3: committed dispatch-origin context of this accepted group (Order storage only).
+    /// It is provenance captured with acceptance; responsibility/owner identity never stands for it.
+    /// </summary>
+    string? OriginContext = null);
 
 /// <summary>شاهد فشردهٔ پذیرفته‌شدهٔ همان گروه، بدون هیچ تفسیر/بازمحاسبه.</summary>
 public sealed record OrderShippingGroupHistoryEvidence(

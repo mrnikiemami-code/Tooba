@@ -168,26 +168,73 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
     }
 
     [Fact]
-    public void Marketplace_owner_identity_is_a_proven_origin_without_a_location()
+    public void Marketplace_missing_origin_stays_unproven_and_separate()
     {
-        // TB-253-R2 correction: for Marketplace responsibility the persisted owner IS the committed
-        // dispatch origin, so two compatible sellers merge even though a Marketplace Manual group
-        // carries no pickup location (the buyer/recipient is never copied into it). The old
-        // location-only rule made every real Marketplace Manual group ungroupable.
+        // TB-253-R3 restores the approved rule: responsibility is NOT origin. An organization that is
+        // responsible for sending may run several warehouses, so Marketplace ownership can never stand
+        // in for a physical dispatch origin. Missing origin stays unproven and the groups stay separate
+        // with an actionable reason.
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.TryResolveOriginIdentity(
+            Marketplace(GroupA, SellerA, OrderA, LineA, origin: null),
+            out var identity));
+        Assert.Equal(string.Empty, identity);
+
         var projected = MarketplaceOperationalDeliveryGroupAuthority.Project(
         [
             Marketplace(GroupA, SellerA, OrderA, LineA, origin: null),
             Marketplace(GroupB, SellerB, OrderB, LineB, origin: null),
         ]);
 
+        Assert.Equal(2, projected.Count);
+        Assert.All(projected, g => Assert.False(g.IsCrossSellerMarketplace));
+        Assert.All(projected, g =>
+            Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateMissingOrigin, g.SeparateReasonCode));
+        Assert.All(projected, g => Assert.False(string.IsNullOrWhiteSpace(g.SeparateReasonFa)));
+
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(
+            Marketplace(GroupA, SellerA, OrderA, LineA, origin: null),
+            Marketplace(GroupB, SellerB, OrderB, LineB, origin: null),
+            out var code));
+        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateMissingOrigin, code);
+    }
+
+    [Fact]
+    public void Same_city_code_is_not_a_proven_warehouse_identity()
+    {
+        // OriginLocationCode is a carrier city code (city granularity). Two warehouses in one city must
+        // never be silently equated, so a shared city code alone is not compatibility.
+        var a = Marketplace(GroupA, SellerA, OrderA, LineA, origin: null, cityCode: "101");
+        var b = Marketplace(GroupB, SellerB, OrderB, LineB, origin: null, cityCode: "101");
+
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.TryResolveOriginIdentity(a, out _));
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(a, b, out var code));
+        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateMissingOrigin, code);
+        Assert.Equal(2, MarketplaceOperationalDeliveryGroupAuthority.Project([a, b]).Count);
+    }
+
+    [Fact]
+    public void Different_proven_origins_stay_separate()
+    {
+        var a = Marketplace(GroupA, SellerA, OrderA, LineA, origin: "WH-1 / Tehran", cityCode: "101");
+        var b = Marketplace(GroupB, SellerB, OrderB, LineB, origin: "WH-2 / Tehran", cityCode: "101");
+
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.AreMarketplaceCompatible(a, b, out var code));
+        Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateIncompatibleCommitment, code);
+        Assert.Equal(2, MarketplaceOperationalDeliveryGroupAuthority.Project([a, b]).Count);
+    }
+
+    [Fact]
+    public void Same_proven_origin_groups_merge()
+    {
+        var projected = MarketplaceOperationalDeliveryGroupAuthority.Project(
+        [
+            Marketplace(GroupA, SellerA, OrderA, LineA, origin: "WH-1 / Tehran", cityCode: "101"),
+            Marketplace(GroupB, SellerB, OrderB, LineB, origin: "WH-1 / Tehran", cityCode: "101"),
+        ]);
+
         var merged = Assert.Single(projected);
         Assert.True(merged.IsCrossSellerMarketplace);
         Assert.Null(merged.SeparateReasonCode);
-
-        Assert.True(MarketplaceOperationalDeliveryGroupAuthority.TryResolveOriginIdentity(
-            Marketplace(GroupA, SellerA, OrderA, LineA, origin: "   "),
-            out var identity));
-        Assert.Equal("marketplace", identity);
     }
 
     [Fact]
@@ -220,8 +267,7 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
     [Fact]
     public void Store_missing_origin_still_fails_closed()
     {
-        // The Marketplace owner-identity rule must not leak into Store/Seller responsibility: those
-        // still require a real committed location/address and never merge.
+        // Store/Seller responsibility never merges and never gains an invented origin.
         Assert.False(MarketplaceOperationalDeliveryGroupAuthority.TryResolveOriginIdentity(
             StoreOwned(GroupA, SellerA, OrderA, LineA, origin: "   "),
             out var identity));
@@ -232,6 +278,33 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
             StoreOwned(GroupB, SellerB, OrderB, LineB, origin: "   "),
             out var code));
         Assert.Equal(MarketplaceOperationalDeliveryGroupAuthority.SeparateSellerResponsibility, code);
+    }
+
+    [Fact]
+    public void Occurrence_keys_are_payload_free_and_new_occurrences_are_distinct()
+    {
+        var checkout = Guid.Parse("01a1c253-0000-7000-8000-0000000000a1");
+        var group = Guid.Parse("01a1c253-0000-7000-8000-000000000201");
+        var occurrence = Guid.Parse("01a1c253-0000-7000-8000-0000000000c1");
+        var next = Guid.Parse("01a1c253-0000-7000-8000-0000000000c2");
+
+        var first = MarketplaceOperationalDeliveryGroupAuthority.BuildMemberParcelDispatchKey(
+            checkout, occurrence, group);
+        var replay = MarketplaceOperationalDeliveryGroupAuthority.BuildMemberParcelDispatchKey(
+            checkout, occurrence, group);
+        var second = MarketplaceOperationalDeliveryGroupAuthority.BuildMemberParcelDispatchKey(
+            checkout, next, group);
+
+        Assert.Equal(first, replay);
+        Assert.NotEqual(first, second);
+        Assert.StartsWith("opgroup:", first, StringComparison.Ordinal);
+        Assert.True(MarketplaceOperationalDeliveryGroupAuthority.IsOccurrenceParcelKey(
+            first, checkout, occurrence, group));
+        Assert.False(MarketplaceOperationalDeliveryGroupAuthority.IsOccurrenceParcelKey(
+            first, checkout, next, group));
+        Assert.Throws<MarketplaceOperationalDeliveryGroupException>(() =>
+            MarketplaceOperationalDeliveryGroupAuthority.BuildMemberParcelDispatchKey(
+                checkout, Guid.Empty, group));
     }
 
     [Fact]
@@ -256,7 +329,8 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
         DateOnly? day = null,
         long? open = null,
         string transport = "Manual",
-        Guid? account = null) =>
+        Guid? account = null,
+        string? cityCode = null) =>
         MakeFact(
             groupId,
             sellerPartyId,
@@ -270,7 +344,8 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
             origin,
             ownerTenant: null,
             ownerSeller: null,
-            account: account);
+            account: account,
+            cityCode: cityCode);
 
     private static MarketplaceOperationalDeliveryGroupAuthority.GroupFact SellerOwned(
         Guid groupId,
@@ -324,7 +399,8 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
         string? origin,
         string? ownerTenant,
         Guid? ownerSeller,
-        Guid? account = null) =>
+        Guid? account = null,
+        string? cityCode = null) =>
         new(
             groupId,
             Checkout,
@@ -344,7 +420,7 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
             Close,
             "Asia/Tehran",
             transport,
-            origin,
+            cityCode,
             null,
             account,
             account is null ? null : "tipax",
@@ -353,5 +429,6 @@ public sealed class MarketplaceOperationalDeliveryGroupAuthorityTests
             Dest,
             [lineId],
             true,
-            null);
+            null,
+            origin);
 }

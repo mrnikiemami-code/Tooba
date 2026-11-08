@@ -332,6 +332,12 @@ test("mounted: reviewed quantities produce exactly one group request across two 
     ]);
     assert.deepEqual(posts[0].body.reuseShipmentIds, []);
     assert.equal(posts[0].body.shippingMethodCode, null);
+    const occurrence = posts[0].body.operationalGroupOccurrenceId;
+    assert.equal(typeof occurrence, "string");
+    assert.match(
+      String(occurrence),
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
     await mounted.unmount();
   } finally {
     restoreFetch();
@@ -361,6 +367,84 @@ test("mounted: same-tick double click performs exactly one mutation", async () =
     release?.();
     await flush();
     await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("mounted: retry keeps the prebound occurrence; a completed run mints a new one", async () => {
+  let attempts = 0;
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage();
+    attempts += 1;
+    if (attempts === 1) {
+      return postResponse(409, { error: { code: "order.operational_group.workflow_pending" } });
+    }
+    return postResponse(200, { ok: true, code: "prepare_operational_group" });
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: baseDetail(),
+        checkoutId: CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid^='admin-order-operational-prepare-']").length === 1);
+    const prepare = () => q(mounted.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']");
+    await click(prepare());
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-operational-workflow-error']").length === 1);
+    await flush();
+    await click(prepare());
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 2);
+    const posts = calls.filter((c) => c.method === "POST");
+    assert.equal(posts[0].body.operationalGroupOccurrenceId, posts[1].body.operationalGroupOccurrenceId);
+
+    // The successful second attempt finished the occurrence: the next deliberate run is a new one.
+    await flush();
+    await click(prepare());
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 3);
+    const third = calls.filter((c) => c.method === "POST")[2];
+    assert.notEqual(third.body.operationalGroupOccurrenceId, posts[0].body.operationalGroupOccurrenceId);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("mounted: remount after a lost response reuses the same prebound occurrence", async () => {
+  let attempt = 0;
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage();
+    attempt += 1;
+    if (attempt === 1) throw new TypeError("network down");
+    return postResponse(200, { ok: true, code: "prepare_operational_group" });
+  });
+  try {
+    const first = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: baseDetail(),
+        checkoutId: CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(first.container, "[data-testid^='admin-order-operational-prepare-']").length === 1);
+    await click(q(first.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
+    await waitFor(() => qq(first.container, "[data-testid='admin-order-operational-workflow-error']").length === 1);
+    await first.unmount();
+
+    // Remount: the reviewed request and its occurrence survive the mount boundary.
+    const second = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: baseDetail(),
+        checkoutId: CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(second.container, "[data-testid^='admin-order-operational-prepare-']").length === 1);
+    await click(q(second.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 2);
+    const posts = calls.filter((c) => c.method === "POST");
+    assert.equal(posts[0].body.operationalGroupOccurrenceId, posts[1].body.operationalGroupOccurrenceId);
+    assert.deepEqual(posts[0].body.selections, posts[1].body.selections);
+    await second.unmount();
   } finally {
     restoreFetch();
   }

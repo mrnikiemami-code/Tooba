@@ -40,7 +40,8 @@ public sealed partial class FulfillmentDirectory
                 shipment.ProviderMetadataJson,
                 shipment.ProviderMetadataVersion,
                 shipment.PreviousTrackingReference,
-                shipment.ShippingGroupId));
+                shipment.ShippingGroupId,
+                shipment.ShippingDispatchKey));
         }
 
         var groupSnapshots = await BuildShippingGroupSnapshotsAsync(unit.FulfillmentId, items, cancellationToken);

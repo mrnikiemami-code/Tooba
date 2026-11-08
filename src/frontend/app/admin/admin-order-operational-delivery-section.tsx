@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Package } from "lucide-react";
 import {
   formatAdminMoney,
@@ -14,17 +14,25 @@ import {
   type AdminShipment,
 } from "./admin-api";
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
+import {
+  clearOperationalGroupOccurrence,
+  mintOperationalGroupOccurrence,
+  readOperationalGroupOccurrence,
+  writeOperationalGroupOccurrence,
+} from "./operational-group-occurrence-store";
 
 export type OperationalCreateTarget = {
   seller: AdminSellerOrder;
   group: AdminAcceptedShippingGroup;
 };
 
-/** TB-253-R2: reviewed input of the one group-level parcel/package workflow. */
+/** TB-253-R2/R3: reviewed input of the one group-level parcel/package workflow. */
 export type OperationalGroupWorkflowRequest = {
   operationalGroupShippingGroupIds: string[];
   selections: Array<{ orderLineId: string; quantity: number }>;
   reuseShipmentIds: string[];
+  /** Prebound BEFORE the first mutation; retained on retry, renewed only after success. */
+  operationalGroupOccurrenceId: string;
 };
 
 type Props = {
@@ -35,7 +43,7 @@ type Props = {
   onPrepareOperationalGroup?: (
     group: AdminOperationalDeliveryGroup,
     request: OperationalGroupWorkflowRequest,
-  ) => void;
+  ) => Promise<boolean | void> | boolean | void;
   workflowErrorFa?: string | null;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
@@ -175,13 +183,16 @@ function OperationalCard({
   onPrepareOperationalGroup?: (
     group: AdminOperationalDeliveryGroup,
     request: OperationalGroupWorkflowRequest,
-  ) => void;
+  ) => Promise<boolean | void> | boolean | void;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
   shippableQty: (line: AdminOrderLine) => number;
 }) {
   const [excludedParcelIds, setExcludedParcelIds] = useState<Record<string, boolean>>({});
   const [qtyByOrderLine, setQtyByOrderLine] = useState<Record<string, number>>({});
+  // Prebound occurrence: minted before the first mutation, retained across retries/remounts, and
+  // renewed only after a successful completion so a deliberate second run is a new operation.
+  const occurrenceRef = useRef<string | null>(null);
   const dateRaw = (group.deliveryDate ?? "").trim();
   const dateFa = dateRaw
     ? formatJalaliDate(dateRaw.includes("T") ? dateRaw : `${dateRaw}T12:00:00`, "fa")
@@ -416,13 +427,27 @@ function OperationalCard({
         <button
           type="button"
           disabled={!canRunWorkflow || selectionCount === 0}
-          onClick={() => {
+          onClick={async () => {
             if (!canRunWorkflow) return;
-            onPrepareOperationalGroup(group, {
+            const occurrence = occurrenceRef.current
+              ?? readOperationalGroupOccurrence(detail.checkoutId, group.operationalGroupKey)
+              ?? mintOperationalGroupOccurrence();
+            occurrenceRef.current = occurrence;
+            writeOperationalGroupOccurrence(
+              detail.checkoutId,
+              group.operationalGroupKey,
+              occurrence,
+            );
+            const outcome = await onPrepareOperationalGroup(group, {
               operationalGroupShippingGroupIds: group.members.map((m) => m.shippingGroupId),
               selections,
               reuseShipmentIds,
+              operationalGroupOccurrenceId: occurrence,
             });
+            if (outcome !== false) {
+              occurrenceRef.current = null;
+              clearOperationalGroupOccurrence(detail.checkoutId, group.operationalGroupKey);
+            }
           }}
           className="mt-2 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 disabled:opacity-50"
           data-testid={`admin-order-operational-prepare-${group.operationalGroupKey}`}

@@ -85,4 +85,10 @@ public sealed record AdminOrderOperationRequest(
     /// <summary>TB-253-R2: constituent accepted groups of one operational group workflow.</summary>
     IReadOnlyList<Guid>? OperationalGroupShippingGroupIds = null,
     /// <summary>TB-253-R2: existing unattached parcels explicitly reviewed for reuse.</summary>
-    IReadOnlyList<Guid>? ReuseShipmentIds = null);
+    IReadOnlyList<Guid>? ReuseShipmentIds = null,
+    /// <summary>
+    /// TB-253-R3: the workflow occurrence this request belongs to. Prebound by the client before the
+    /// first mutation and retained on retry/remount; same occurrence replays, a new occurrence is an
+    /// explicit new operation.
+    /// </summary>
+    Guid? OperationalGroupOccurrenceId = null);

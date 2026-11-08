@@ -96,7 +96,8 @@ public sealed class OrderShippingGroupHistoryReader : IOrderShippingGroupHistory
                                 evidence.CarrierQuote.DeliveryAmount,
                                 evidence.CarrierQuote.IssuedAtUtc,
                                 evidence.CarrierQuote.FreshUntilUtc,
-                                evidence.CarrierQuote.ProviderReference)));
+                                evidence.CarrierQuote.ProviderReference)),
+                group.OriginContext);
         }).ToArray();
     }
 }

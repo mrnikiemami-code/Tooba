@@ -121,6 +121,8 @@ export type AdminOrderOperationRequest = {
   shippingGroupId?: string | null;
   operationalGroupShippingGroupIds?: string[] | null;
   reuseShipmentIds?: string[] | null;
+  /** TB-253-R3: prebound workflow occurrence; retry replays, a new id is a new operation. */
+  operationalGroupOccurrenceId?: string | null;
 };
 
 /**
@@ -331,6 +333,7 @@ export async function executeAdminOrderOperation(
         })) ?? null,
         operationalGroupShippingGroupIds: body.operationalGroupShippingGroupIds ?? null,
         reuseShipmentIds: body.reuseShipmentIds ?? null,
+        operationalGroupOccurrenceId: body.operationalGroupOccurrenceId ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

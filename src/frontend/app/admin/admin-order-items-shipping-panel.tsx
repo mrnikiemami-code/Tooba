@@ -331,7 +331,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           workflowErrorFa={groupWorkflowErrorFa}
           onPrepareOperationalGroup={async (_group, request) => {
             // Synchronous single-flight: same-tick double clicks cannot both enter.
-            if (groupWorkflowInFlight.current) return;
+            if (groupWorkflowInFlight.current) return false;
             groupWorkflowInFlight.current = true;
             setPendingCode("prepare_operational_group");
             setGroupWorkflowErrorFa(null);
@@ -341,16 +341,18 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 operationalGroupShippingGroupIds: request.operationalGroupShippingGroupIds,
                 selections: request.selections,
                 reuseShipmentIds: request.reuseShipmentIds,
+                operationalGroupOccurrenceId: request.operationalGroupOccurrenceId,
                 shippingMethodCode: null,
               });
               if (result.state !== "ok") {
                 setGroupWorkflowErrorFa(
                   mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
                 );
-                return;
+                return false;
               }
               toast.success("مرسوله‌ها و بستهٔ مشترک گروه ایجاد شد.");
               onCompleted?.();
+              return true;
             } finally {
               groupWorkflowInFlight.current = false;
               setPendingCode(null);

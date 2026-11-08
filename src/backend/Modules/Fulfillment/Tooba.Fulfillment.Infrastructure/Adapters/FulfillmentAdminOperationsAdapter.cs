@@ -276,7 +276,8 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             shipment.ProviderMetadataJson,
             shipment.ProviderMetadataVersion,
             shipment.PreviousTrackingReference,
-            shipment.ShippingGroupId);
+            shipment.ShippingGroupId,
+            shipment.ShippingDispatchKey);
 
     private static ConsolidatedPackageSnapshot Map(AppModels.ConsolidatedPackageSnapshot package) =>
         new(
