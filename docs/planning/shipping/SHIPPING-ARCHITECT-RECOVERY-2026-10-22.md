@@ -1,4 +1,19 @@
-# CURRENT — 253-R5 PASS: blocked unresolved remint + recorded-parcel reconciliation before the remaining gate — 2026-11-08
+# CURRENT — 253-R6 PASS: error-code no-claim release removed; retained occurrence kept until authoritative resolution — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R6/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R6/{TASK.md,RESULT.md,RECEIPTS.md}, plus the R5 ARCHITECT-REVIEW.
+Status **PASS** within issued R6 correction/deploy scope, decision **ERROR_CODE_NO_CLAIM_RELEASE_REMOVED_RETAINED_OCCURRENCE_KEPT_UNTIL_AUTHORITATIVE_RESOLUTION**, NOT Architect/Visual ACCEPT. Base `567a531b0`. Canonical FE3000 (PID 33744, BUILD_ID `vr8IyL4HVfMU_ykXjaSyV`) → Host5088 (PID 17344) SingleStore/store-alpha/tooba_alpha. Evidence docs carry the exact receipts.
+Marketplace-only cross-seller rule preserved; Store never promoted; origin vs responsibility still distinct.
+R6 deletes the rejected unsafe release: a bare server code is NOT proof that an occurrence was never durably
+claimed (those checks run before the occurrence read/claim, and an earlier request may already have persisted a
+constituent parcel). Every refusal (denied / consolidate_incompatible / consolidate_requires_multi_seller /
+foreign / occurrence_required), 5xx, timeout, transport loss and undefined outcome keeps the exact recorded
+occurrence/members/selections/reuse ids/fingerprint; only an authoritative completion clears it; no structured
+server no-claim proof was built and the UI does not claim editable/new-operation recovery. R5's accepted fixes
+(changed-review remint blocked; recorded occurrence parcel reconciled before the remaining-quantity gate) stand.
+Proof: FE mount/state 18/18, typecheck 0, build 0, FE restarted (frontend-only), no new migration, DataProtection
+untouched, checked-in gates OFF, local CapturedPreview ON, read-only order 200. Tipax deferred. STOP_FOR_ARCHITECT.
+
+# SUPERSEDED — 253-R5 PASS (Architect PARTIAL): blocked unresolved remint + recorded-parcel reconciliation before the remaining gate — 2026-11-08
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R5/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R5/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued R5 correction/deploy scope, decision **UNRESOLVED_REMINT_BLOCKED_AT_STATE_BOUNDARY_AND_RECORDED_OCCURRENCE_PARCEL_RECONCILED_BEFORE_REMAINING_GATE**, NOT Architect/Visual ACCEPT. Base `1dfdecbaf`. Evidence docs carry the exact receipts.
