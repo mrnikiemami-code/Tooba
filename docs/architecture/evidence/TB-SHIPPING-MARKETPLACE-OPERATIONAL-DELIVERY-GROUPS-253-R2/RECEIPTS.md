@@ -123,3 +123,9 @@ npm run build         → success (route table emitted, middleware 34.9 kB, no e
 - `git push origin main` then `git fetch` and `HEAD == origin/main` verified before Bridge delivery.
 
 END_TOOBA_WORKER_RECEIPTS
+
+## ARCHITECT CORRECTION (2026-11-08)
+
+R2 receipts retained as-is; the PASS envelope above is superseded by the R3 correction recorded in
+`RESULT.md` / `../TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/`. No R2 artifact was rewritten.
+

@@ -1,4 +1,13 @@
-# CURRENT — 253-R2 PASS: one reviewed Marketplace group workflow + real actor authority + real relational matrix — 2026-11-08
+# CURRENT — 253-R3 PASS: occurrence-bound parcel identity + whole-plan preflight + canonical deploy — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued R3 correction/deploy scope, decision **OCCURRENCE_BOUND_ALLOCATION_WHOLE_PLAN_PREFLIGHT_AND_CANONICAL_DEPLOYMENT**, NOT Architect/Visual ACCEPT. Base `2ac198886`.
+Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha (`store-alpha-canonical-tb253r3`, BUILD_ID `b-jSPMIvyhKxNpaZ1CDZL`). Marketplace responsibility is NOT origin any more (physical context/address only); prebound occurrence GUID + `opgroup:{hash(checkout|occurrence|group)}` key (no payload) gives exact replay for one occurrence and distinct parcels for the next; whole-plan preflight before the first write; typed `WorkflowIntentConflict`. Disposable TB253R3 **9/9** on real Order evidence; authority+workflow 26/26; mount 10/10; typecheck/build/publish 0. Live order `01a1b92d-…` admin read-only: 3 Store groups, no Marketplace claim. Tipax deferred. No schema/migration/SQL. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253-R2 PASS (Architect PARTIAL): one Marketplace group workflow + actor authority — 2026-11-08
+
+R2 was rejected for restoring a `marketplace`-identity origin fallback, payload-based occurrence hashing, in-loop
+member validation and no deployment. Correction: `TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3`.
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R2/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **PASS** within issued R2 software/relational scope, decision **ONE_GROUP_WORKFLOW_ACTOR_AUTHORITY_AND_REAL_RELATIONAL_MATRIX_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `9532d6c87`; Code `8580097d6`.

@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R2
 Parent-Task: TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R1
@@ -91,3 +91,29 @@ Order evidence) relational matrix. R2 closes exactly those seams and nothing els
 
 STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE
 END_TOOBA_WORKER_RESULT
+
+---
+
+## ARCHITECT CORRECTION (2026-11-08) — R2 PASS not accepted; superseded by R3
+
+The R2 decision \ONE_GROUP_WORKFLOW_ACTOR_AUTHORITY_AND_REAL_RELATIONAL_MATRIX_DEPLOYED\ was reviewed and
+**rejected as PARTIAL**. Findings, each reproduced in source:
+
+1. **Unauthorized rule change.** \TryResolveOriginIdentity\ gained an \identity = "marketplace"\ fallback that
+   treats Marketplace *responsibility* as physical dispatch origin. Responsibility is not origin; Marketplace-owned
+   groups therefore never surfaced a missing-origin state. Reverted in R3 (origin = logical context + postal address
+   only, with a Marketplace-specific test proving the address is still required).
+2. **Payload-based occurrence hashing.** \BuildMemberParcelDispatchKey\ folded item/quantity payload into the
+   dispatch hash. Two identical subsequent partial pack actions collide on one provider occurrence, so a genuinely
+   new allocation can never be created. Replaced in R3 by a prebound occurrence GUID scoped as
+   `opgroup:{hash(checkout|occurrence|group)}`.
+3. **Partial-written validation.** `BuildPlan` silently filtered unusable members and foreign reuse ids and only
+   validated each member inside the write loop, so a refusal could leave committed member parcels behind. R3
+   validates the *whole* plan before the first write.
+4. **Not deployed.** No canonical Host/FE build was produced, so no authorized read on the real order existed.
+
+Correction task: `TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3`.
+See `../TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/RESULT.md` for the replacement evidence.
+
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE
+
