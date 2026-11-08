@@ -356,43 +356,16 @@ export function resolveOperationalGroupAttempt(input: {
 }
 
 /**
- * TB-253-R5: typed server refusals that are thrown BEFORE the occurrence is durably claimed, so they
- * prove the operation has no claim and no side effect. Only these permit an explicit safe transition
- * back to a fresh operation. Network loss, timeouts and 5xx are NEVER in this set.
+ * TB-253-R6: a bare error code proves only that THIS HTTP request was refused before its own claim
+ * attempt — it does NOT prove that the recorded occurrence was never claimed by an earlier request.
+ * A previous request can claim the occurrence, persist a constituent parcel, then fail; a retry of the
+ * same occurrence can hit an authority/compatibility/foreign refusal that is evaluated BEFORE the
+ * server reads the occurrence. Therefore no client-side code list may clear a retained envelope.
+ *
+ * There is deliberately NO release helper here. Only an authoritative completed result (or a
+ * structured server proof that this exact occurrence has no durable claim/progress) may clear it, and
+ * no such server proof exists yet, so every refusal/uncertainty keeps the exact recorded request.
  */
-export const OPERATIONAL_GROUP_NO_CLAIM_REFUSAL_CODES: readonly string[] = [
-  "order.operational_group.workflow_occurrence_required",
-  "order.operational_group.workflow_group_foreign",
-  "order.operational_group.consolidate_requires_multi_seller",
-  "order.operational_group.consolidate_incompatible",
-  "order.operation.denied",
-];
-
-/** True when the refusal code proves NO durable claim was made by this operation. */
-export function isOperationalGroupNoClaimRefusal(code: string | null | undefined): boolean {
-  const normalized = coalesce(code);
-  return normalized.length > 0 && OPERATIONAL_GROUP_NO_CLAIM_REFUSAL_CODES.includes(normalized);
-}
-
-/**
- * Explicit safe transition: only for a typed refusal that proves no claim/side effect. Clears the
- * retained envelope so the operator may correct the review and start a fresh occurrence.
- * Returns false (and clears nothing) for any other code, including network/5xx/timeout.
- */
-export function releaseOperationalGroupAttemptAfterNoClaimRefusal(input: {
-  checkoutId: string;
-  operationalGroupKey: string;
-  scopeKey: string | null | undefined;
-  code: string | null | undefined;
-}): boolean {
-  if (!isOperationalGroupNoClaimRefusal(input.code)) return false;
-  clearOperationalGroupAttempt(
-    input.checkoutId,
-    input.operationalGroupKey,
-    input.scopeKey,
-  );
-  return true;
-}
 
 /**
  * Records the failed outcome of one attempt while KEEPING the envelope for reconcile/retry.

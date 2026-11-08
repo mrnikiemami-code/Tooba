@@ -958,11 +958,19 @@ test("R5 mounted: a viewer switch cannot act on the previous viewer's retained r
   }
 });
 
-test("R5 mounted: only a proven no-claim refusal releases the retained envelope", async () => {
+// ---------------------------------------------------------------- TB-253-R6
+
+test("R6 state: a refused operation keeps the exact envelope and blocks a changed review", async () => {
   const detail = baseDetail();
   const scope = R4_SCOPE;
-  const outcomes: Array<{ completed: false; noClaimRefusalCode?: string | null } | undefined> = [];
-  const seen: string[] = [];
+  type SentEnvelope = {
+    occurrenceId: string;
+    members: string[];
+    selections: Array<{ orderLineId: string; quantity: number }>;
+    reuseShipmentIds: string[];
+  };
+  const sent: SentEnvelope[] = [];
+  const outcomes: Array<boolean | { completed: boolean } | undefined> = [];
   clearOperationalGroupAttempt("c1", "mp-post-combined", scope);
   const mounted = await mount(
     createElement(AdminOrderOperationalDeliverySection, {
@@ -974,44 +982,133 @@ test("R5 mounted: only a proven no-claim refusal releases the retained envelope"
       onCreateShipment: () => undefined,
       occurrenceScopeKey: scope,
       onPrepareOperationalGroup: (_group, request) => {
-        seen.push(request.operationalGroupOccurrenceId);
-        const next = outcomes.shift();
-        return next;
+        sent.push({
+          occurrenceId: request.operationalGroupOccurrenceId,
+          members: [...request.operationalGroupShippingGroupIds],
+          selections: request.selections.map((s) => ({ ...s })),
+          reuseShipmentIds: [...request.reuseShipmentIds],
+        });
+        return outcomes.shift();
       },
     }),
   );
   try {
-    // Transport/unknown outcome (undefined) keeps the envelope.
-    outcomes.push(undefined);
+    // First operation is refused (a denial carries no proof that the occurrence was never claimed).
+    outcomes.push({ completed: false });
     await click(q(mounted.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
     await flush();
-    assert.ok(readOperationalGroupAttempt("c1", "mp-post-combined", scope));
+    const recorded = readOperationalGroupAttempt("c1", "mp-post-combined", scope);
+    assert.ok(recorded, "the refused envelope must be retained");
+    const occurrenceId = recorded!.occurrenceId;
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].occurrenceId, occurrenceId);
     assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-reconcile-mp-post-combined']").length, 1);
 
-    // A tcp/5xx-style failure carries no code, so it can never release the envelope.
-    outcomes.push({ completed: false, noClaimRefusalCode: null });
+    // A changed review may not start a new operation and may not touch the recorded envelope.
+    await setInputValue(q(mounted.container, "[data-testid='admin-order-operational-qty-ol1']"), "1");
+    await flush();
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-retained-block-mp-post-combined']").length, 1);
+    const blockedPrepare = q(
+      mounted.container,
+      "[data-testid='admin-order-operational-prepare-mp-post-combined']",
+    ) as HTMLButtonElement;
+    assert.equal(blockedPrepare.disabled, true);
+    await click(blockedPrepare);
+    await flush();
+    assert.equal(sent.length, 1, "a changed review must not send a new request");
+    const afterChange = readOperationalGroupAttempt("c1", "mp-post-combined", scope);
+    assert.ok(afterChange);
+    assert.equal(afterChange!.occurrenceId, occurrenceId);
+    assert.deepEqual(afterChange!.selections, recorded!.selections);
+    assert.deepEqual(afterChange!.members, recorded!.members);
+    assert.equal(afterChange!.fingerprint, recorded!.fingerprint);
+
+    // The exact recorded envelope is still reconcilable even though the current review differs.
+    outcomes.push({ completed: false });
     await click(q(mounted.container, "[data-testid='admin-order-operational-reconcile-retry-mp-post-combined']"));
     await flush();
+    assert.equal(sent.length, 2);
+    assert.equal(sent[1].occurrenceId, occurrenceId);
+    assert.deepEqual(sent[1].selections, recorded!.selections);
+    assert.deepEqual(sent[1].members, recorded!.members);
     assert.ok(readOperationalGroupAttempt("c1", "mp-post-combined", scope));
-    assert.equal(seen.length, 2);
-    assert.equal(seen[0], seen[1]);
 
-    // A typed pre-claim refusal proves there is no claim: explicit safe transition back to a review.
-    outcomes.push({ completed: false, noClaimRefusalCode: "order.operational_group.workflow_group_foreign" });
+    // Only an authoritative completion clears it.
+    outcomes.push({ completed: true });
     await click(q(mounted.container, "[data-testid='admin-order-operational-reconcile-retry-mp-post-combined']"));
     await flush();
     assert.equal(readOperationalGroupAttempt("c1", "mp-post-combined", scope), null);
     assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-reconcile-mp-post-combined']").length, 0);
 
-    // The next deliberate run is a genuinely new occurrence.
-    outcomes.push({ completed: true });
+    // The next deliberate action is a genuinely new occurrence.
+    outcomes.push({ completed: false });
     await click(q(mounted.container, "[data-testid='admin-order-operational-prepare-mp-post-combined']"));
     await flush();
-    assert.equal(seen.length, 4);
-    assert.notEqual(seen[3], seen[0]);
-    assert.equal(readOperationalGroupAttempt("c1", "mp-post-combined", scope), null);
+    assert.equal(sent.length, 4);
+    assert.notEqual(sent[3].occurrenceId, occurrenceId);
+    assert.ok(readOperationalGroupAttempt("c1", "mp-post-combined", scope));
   } finally {
     await mounted.unmount();
     clearOperationalGroupAttempt("c1", "mp-post-combined", scope);
+  }
+});
+
+test("R6 mounted: denial/compatibility/foreign refusals and transport loss keep the same occurrence", async () => {
+  const checkout = R4_CHECKOUT;
+  const groupKey = "mp-post-combined";
+  resetR4Attempt();
+  const restoreViewer = withR4Viewer();
+  const codes = [
+    "order.operation.denied",
+    "order.operational_group.consolidate_incompatible",
+    "order.operational_group.workflow_group_foreign",
+  ];
+  let step = 0;
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage();
+    step += 1;
+    if (step === 1) return postResponse(403, { error: { code: codes[0] } });
+    if (step === 2) return postResponse(409, { error: { code: codes[1] } });
+    if (step === 3) return postResponse(409, { error: { code: codes[2] } });
+    if (step === 4) return postResponse(500, { error: { code: "order.operation.failed" } });
+    throw new TypeError("network down");
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: { ...baseDetail(), checkoutId: checkout },
+        checkoutId: checkout,
+      }),
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid^='admin-order-operational-prepare-']").length === 1);
+    const prepare = "[data-testid='admin-order-operational-prepare-mp-post-combined']";
+    const seenOccurrences: unknown[] = [];
+
+    for (let index = 1; index <= 5; index += 1) {
+      await click(q(mounted.container, prepare));
+      await waitFor(() => calls.filter((c) => c.method === "POST").length === index);
+      await flush();
+      const posts = calls.filter((c) => c.method === "POST");
+      seenOccurrences.push(posts[index - 1].body.operationalGroupOccurrenceId);
+      const retained = readOperationalGroupAttempt(checkout, groupKey, R4_SCOPE);
+      assert.ok(retained, `attempt ${index} must remain retained`);
+      assert.equal(retained!.occurrenceId, seenOccurrences[0]);
+      assert.equal(qq(mounted.container, `[data-testid='admin-order-operational-reconcile-${groupKey}']`).length, 1);
+    }
+
+    // Every refusal and the transport loss replayed the SAME recorded occurrence and envelope.
+    assert.equal(new Set(seenOccurrences).size, 1);
+    const finalRecord = readOperationalGroupAttempt(checkout, groupKey, R4_SCOPE);
+    assert.ok(finalRecord);
+    assert.deepEqual([...finalRecord!.members].sort(), ["g1", "g2"]);
+    assert.deepEqual(finalRecord!.selections, [
+      { orderLineId: "ol1", quantity: 2 },
+      { orderLineId: "ol2", quantity: 1 },
+    ]);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+    restoreViewer();
+    resetR4Attempt();
   }
 });

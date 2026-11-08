@@ -16,11 +16,9 @@ import {
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
 import {
   clearOperationalGroupAttempt,
-  isOperationalGroupNoClaimRefusal,
   markOperationalGroupAttemptFailed,
   operationalGroupRequestFingerprint,
   readOperationalGroupAttempt,
-  releaseOperationalGroupAttemptAfterNoClaimRefusal,
   resolveOperationalGroupAttempt,
   type OperationalGroupAttempt,
 } from "./operational-group-occurrence-store";
@@ -31,26 +29,18 @@ export type OperationalCreateTarget = {
 };
 
 /**
- * TB-253-R5: explicit workflow outcome. A boolean/void return keeps meaning "completed" / "unknown".
- * A typed refusal that proves NO durable claim may carry its code so the caller can take the explicit
- * safe transition; anything else (network, 5xx, timeout) stays uncertainty.
+ * TB-253-R5/R6: explicit workflow outcome. A boolean/void return keeps meaning "completed" / "unknown".
+ * No refusal code is accepted as proof of "nothing happened": the retained envelope is only cleared by
+ * an authoritative completion.
  */
 export type OperationalGroupWorkflowOutcome =
   | { completed: true }
-  | { completed: false; noClaimRefusalCode?: string | null };
+  | { completed: false };
 
 function outcomeCompleted(outcome: boolean | OperationalGroupWorkflowOutcome | void): boolean {
   if (outcome === true) return true;
   if (outcome && typeof outcome === "object") return outcome.completed === true;
   return false;
-}
-
-function outcomeNoClaimRefusalCode(
-  outcome: boolean | OperationalGroupWorkflowOutcome | void,
-): string | null {
-  if (!outcome || typeof outcome !== "object" || outcome.completed) return null;
-  const code = outcome.noClaimRefusalCode;
-  return isOperationalGroupNoClaimRefusal(code) ? String(code) : null;
 }
 
 /** TB-253-R2/R3: reviewed input of the one group-level parcel/package workflow. */
@@ -537,24 +527,10 @@ function OperationalCard({
                 return;
               }
 
-              // A typed refusal that proves no claim/side effect (thrown before the durable claim) is
-              // the ONLY explicit safe transition back to a correctable review.
-              const noClaimCode = outcomeNoClaimRefusalCode(outcome);
-              if (noClaimCode && releaseOperationalGroupAttemptAfterNoClaimRefusal({
-                checkoutId: detail.checkoutId,
-                operationalGroupKey: group.operationalGroupKey,
-                scopeKey: occurrenceScopeKey,
-                code: noClaimCode,
-              })) {
-                attemptRef.current = null;
-                setRetainedAttempt(null);
-                setReconcileHint(null);
-                return;
-              }
-
-              // Failure / 5xx / lost response / cancellation: KEEP the exact envelope and offer a
-              // reconcile of that same occurrence. A cancelled or thrown call is uncertainty, never a
-              // reason to mint a new operation.
+              // TB-253-R6: failure / 5xx / lost response / cancellation / ANY typed refusal keeps the
+              // exact envelope. A bare error code never proves the occurrence is unclaimed, so there is
+              // no automatic transition back to a fresh operation here; only an authoritative completed
+              // result clears it.
               markOperationalGroupAttemptFailed({ attempt: resolution.attempt });
               attemptRef.current = resolution.attempt;
               setRetainedAttempt(resolution.attempt);
@@ -575,7 +551,7 @@ function OperationalCard({
           role="status"
           data-testid={`admin-order-operational-retained-block-${group.operationalGroupKey}`}
         >
-          نتیجهٔ عملیات قبلی هنوز نامشخص است؛ تا همگام‌سازی همان عملیات، درخواست جدیدی شروع نمی‌شود.
+          درخواست ثبت‌شدهٔ این گروه نگه داشته شده است؛ پیش از همگام‌سازی همان عملیات، درخواست جدیدی شروع نمی‌شود.
         </p>
       ) : null}
       {retainedAttempt && actorMayManage && onPrepareOperationalGroup ? (
@@ -613,18 +589,7 @@ function OperationalCard({
                   );
                   return;
                 }
-                const noClaimCode = outcomeNoClaimRefusalCode(outcome);
-                if (noClaimCode && releaseOperationalGroupAttemptAfterNoClaimRefusal({
-                  checkoutId: detail.checkoutId,
-                  operationalGroupKey: group.operationalGroupKey,
-                  scopeKey: occurrenceScopeKey,
-                  code: noClaimCode,
-                })) {
-                  attemptRef.current = null;
-                  setRetainedAttempt(null);
-                  setReconcileHint(null);
-                  return;
-                }
+                // TB-253-R6: no code-based release. Any refusal keeps the same recorded envelope.
                 markOperationalGroupAttemptFailed({ attempt: retainedAttempt });
                 setReconcileHint({ occurrenceId: retainedAttempt.occurrenceId });
               } finally {

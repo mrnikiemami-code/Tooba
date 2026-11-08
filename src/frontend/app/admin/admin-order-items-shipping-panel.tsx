@@ -358,9 +358,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 setGroupWorkflowErrorFa(
                   mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
                 );
-                // TB-253-R5: only a real server code is forwarded; a transport loss has none, so it
-                // stays "unknown" and keeps the retained envelope.
-                return { completed: false, noClaimRefusalCode: result.code ?? null };
+                return { completed: false };
               }
               toast.success("مرسوله‌ها و بستهٔ مشترک گروه ایجاد شد.");
               onCompleted?.();
