@@ -10,8 +10,8 @@ Decision: ERROR_CODE_NO_CLAIM_RELEASE_REMOVED_RETAINED_OCCURRENCE_KEPT_UNTIL_AUT
 Stop-State: STOP_FOR_ARCHITECT
 Expected-Base-SHA: 567a531b0c27be281405ffe9da523c06c5f31f8d
 Base-SHA: 567a531b0c27be281405ffe9da523c06c5f31f8d
-Code-SHA: stamped in the R6 result envelope
-Evidence-SHA: stamped in the R6 result envelope
+Code-SHA: e9b135df9abec1543c2aa0aa6fab9552513c01cc
+Evidence-SHA: 0a61f9fe17add3df4394bfb27d8205a2ad120c86
 automaticNextImplementationTask: NONE
 
 # RESULT — TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R6

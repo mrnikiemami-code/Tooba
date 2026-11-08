@@ -10,8 +10,8 @@ Canonical target: `D:\Users\User\source\repos\SarvNewVer`, FE `http://127.0.0.1:
 | --- | --- |
 | Expected base | `567a531b0c27be281405ffe9da523c06c5f31f8d` |
 | Base | `567a531b0c27be281405ffe9da523c06c5f31f8d` |
-| Code commit | stamped after this evidence commit |
-| Evidence commit | stamped in the R6 worker result |
+| Code commit | `e9b135df9abec1543c2aa0aa6fab9552513c01cc` |
+| Evidence commit | `0a61f9fe17add3df4394bfb27d8205a2ad120c86` |
 
 ## 1. Source inventory
 
