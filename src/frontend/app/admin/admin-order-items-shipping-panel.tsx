@@ -329,6 +329,16 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           shippableQty={shippableQty}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
           workflowErrorFa={groupWorkflowErrorFa}
+          occurrenceScopeKey={(() => {
+            // TB-253-R4: retained occurrence scope = viewer/owner, so another admin session can never
+            // inherit this checkout's in-flight workflow envelope.
+            const actor =
+              typeof window === "undefined"
+                ? DEFAULT_ADMIN_ACTOR_ID
+                : window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
+            const trimmed = typeof actor === "string" ? actor.trim() : "";
+            return trimmed.length > 0 ? `admin:${trimmed}` : null;
+          })()}
           onPrepareOperationalGroup={async (_group, request) => {
             // Synchronous single-flight: same-tick double clicks cannot both enter.
             if (groupWorkflowInFlight.current) return false;

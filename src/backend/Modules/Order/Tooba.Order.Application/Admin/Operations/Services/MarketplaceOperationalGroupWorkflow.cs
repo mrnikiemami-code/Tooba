@@ -11,7 +11,7 @@ using Tooba.Order.Contracts.Shipping;
 namespace Tooba.Order.Application.Admin.Operations.Services;
 
 /// <summary>
-/// TB-253-R2/R3: one coherent Marketplace operational group workflow.
+/// TB-253-R2/R3/R4: one coherent Marketplace operational group workflow.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,11 +20,16 @@ namespace Tooba.Order.Application.Admin.Operations.Services;
 /// the constituent parcels of ONE prebound workflow occurrence and their common package.
 /// </para>
 /// <para>
-/// R3 corrections: the occurrence is prebound by the caller and is the only allocation identity
-/// (payload hashes are no longer used, so a deliberate second identical package is never mistaken for
-/// a retry). Every requested line and reuse parcel must be accounted for before the first write, so a
-/// bad later member can never leave an earlier member allocated. Recovery reads the recorded parcels
-/// by their occurrence key instead of sweeping currently-open parcels by aggregate quantity.
+/// R3 restored occurrence identity (payload hashes are never the allocation identity) and made every
+/// requested line/reuse parcel accounted for before the first write.
+/// </para>
+/// <para>
+/// R4 corrects the recovery contract: the COMPLETE reviewed envelope (actor scope, checkout, member
+/// set, per-line quantities, explicit reuse ids, accepted method) is durably claimed before any
+/// allocation. Same occurrence + different envelope is a typed conflict even when the changed member
+/// was never allocated; same occurrence + same envelope replays the exact recorded links without
+/// depending on current remaining quantities. Explicit reuse-only execution never calls the create
+/// binder, and reuse ownership is resolved by the shipment's own shipping group.
 /// </para>
 /// <para>
 /// The workflow owns its authority check so the caller cannot bypass it by projecting a ready action:
@@ -35,7 +40,8 @@ public sealed class MarketplaceOperationalGroupWorkflow(
     IFulfillmentAdminOperations fulfillment,
     IOrderCommittedCarrierShipmentFactsReader committedShippingGroups,
     IOrderShippingGroupHistoryReader shippingGroupHistory,
-    IOrderAdminEffectiveAccessReader access)
+    IOrderAdminEffectiveAccessReader access,
+    IOrderOperationalGroupOccurrenceStore occurrences)
 {
     /// <summary>Bounded attempts to observe a concurrently created common package.</summary>
     private const int PackageObservationAttempts = 3;
@@ -44,6 +50,7 @@ public sealed class MarketplaceOperationalGroupWorkflow(
     private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups = committedShippingGroups;
     private readonly IOrderShippingGroupHistoryReader _shippingGroupHistory = shippingGroupHistory;
     private readonly IOrderAdminEffectiveAccessReader _access = access;
+    private readonly IOrderOperationalGroupOccurrenceStore _occurrences = occurrences;
 
     public async Task<object> PrepareAsync(
         Guid checkoutId,
@@ -149,61 +156,97 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 MarketplaceOperationalDeliveryGroupAuthority.WorkflowShipmentForeign);
         }
 
-        // 1. Build and validate the COMPLETE plan before any write.
-        var activeMemberships = requestedReuse.Length == 0
-            ? new Dictionary<Guid, ActivePackageMembershipSnapshot>()
-            : (await _fulfillment.GetActiveMembershipByShipmentIdsAsync(requestedReuse, cancellationToken))
-                .Where(x => x.PackageStatus is not ConsolidatedPackageOperationStatus.Cancelled)
-                .GroupBy(x => x.ShipmentId)
-                .ToDictionary(g => g.Key, g => g.First());
+        // 1. Build the COMPLETE immutable envelope and claim it durably BEFORE any allocation. The
+        //    claim also proves that a later call under this occurrence carries the exact same request.
+        var envelope = BuildEnvelope(
+            occurrenceId,
+            checkoutId,
+            actorUserId,
+            match,
+            acceptedMethod,
+            request,
+            requestedReuse,
+            fulfillments);
+        var fingerprint = OperationalGroupOccurrenceEnvelopeCodec.Fingerprint(envelope);
+
+        // A brand-new occurrence must not be frozen by an invalid plan: prove the whole plan fits
+        // before claiming it, so a typed refusal leaves no claimed row behind. An EXISTING occurrence
+        // is never re-validated against remaining quantity here, because its own recorded allocations
+        // lawfully consumed that quantity.
+        var known = await _occurrences.GetAsync(occurrenceId, cancellationToken);
+        if (known is null)
+        {
+            var probe = new OperationalGroupOccurrenceRecord(
+                occurrenceId,
+                checkoutId,
+                actorUserId,
+                match.OperationalGroupKey,
+                fingerprint,
+                EnvelopeJson: string.Empty,
+                Completed: false,
+                ConsolidatedPackageId: null,
+                PackageNumber: null,
+                ShippingMethodCode: acceptedMethod,
+                Allocations: []);
+            _ = BuildPlan(
+                checkoutId,
+                occurrenceId,
+                match,
+                fulfillments,
+                factsById,
+                envelope,
+                probe,
+                await LoadActiveMembershipsAsync(envelope, cancellationToken));
+        }
+
+        var occurrence = await _occurrences.ClaimAsync(envelope, fingerprint, cancellationToken);
+
+        if (occurrence.CheckoutId != checkoutId
+            || occurrence.ActorUserId != actorUserId
+            || !string.Equals(occurrence.OperationalGroupKey, match.OperationalGroupKey, StringComparison.Ordinal)
+            || !string.Equals(occurrence.EnvelopeFingerprint, fingerprint, StringComparison.Ordinal))
+        {
+            // Same occurrence, different actor/group/envelope — including a change to a member that was
+            // never allocated or to the reuse set. Refused BEFORE any new write.
+            throw new AdminOrderOperationsException(
+                MarketplaceOperationalDeliveryGroupAuthority.WorkflowIntentConflict);
+        }
+
+        if (occurrence.Completed)
+        {
+            return await ReplayCompletedAsync(
+                checkoutId,
+                match,
+                occurrence,
+                fulfillments,
+                cancellationToken);
+        }
+
+        // 2. Build and validate the COMPLETE plan from the DURABLE envelope (never from current
+        //    remaining quantity guesses) before any member write.
+        var activeMemberships = await LoadActiveMembershipsAsync(envelope, cancellationToken);
         var plan = BuildPlan(
             checkoutId,
             occurrenceId,
             match,
             fulfillments,
             factsById,
-            request,
-            requestedReuse,
+            envelope,
+            occurrence,
             activeMemberships);
 
-        // 2. Execute the pre-validated plan. Each member allocation is bound to the occurrence key, so a
-        //    retry/remount replays the recorded parcel and a changed request is a typed conflict.
+        // 3. Execute the pre-validated plan. Each member allocation is bound to the occurrence key and
+        //    recorded durably immediately, so a failure after member A still recovers A's exact parcel.
         var shipmentIds = new List<Guid>();
         var parcelResults = new List<object>(plan.Count);
         foreach (var member in plan)
         {
             var snapshot = fulfillments.First(x => x.SellerOrderId == member.SellerOrderId);
-            var recorded = RecordedOccurrenceParcels(snapshot, member.DispatchKey);
 
-            if (member.Lines.Count == 0)
+            if (member.RecordedAllocation is { } recorded)
             {
-                if (recorded.Length == 0)
-                {
-                    throw new AdminOrderOperationsException(
-                        MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionRequired);
-                }
-
-                shipmentIds.AddRange(recorded);
-                parcelResults.Add(new
-                {
-                    shippingGroupId = member.ShippingGroupId,
-                    shipmentIds = recorded,
-                    created = false,
-                    replayed = true,
-                });
-                continue;
-            }
-
-            if (recorded.Length > 0)
-            {
-                // Same occurrence: the recorded parcel must represent exactly this reviewed request.
-                if (!RecordedQuantitiesMatch(snapshot, recorded, member.Lines))
-                {
-                    throw new AdminOrderOperationsException(
-                        MarketplaceOperationalDeliveryGroupAuthority.WorkflowIntentConflict);
-                }
-
-                var replayedIds = recorded.Concat(member.ReuseShipmentIds)
+                var replayedIds = recorded.CreatedShipmentIds
+                    .Concat(recorded.ReusedShipmentIds)
                     .Distinct()
                     .ToArray();
                 shipmentIds.AddRange(replayedIds);
@@ -211,6 +254,64 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 {
                     shippingGroupId = member.ShippingGroupId,
                     shipmentIds = replayedIds,
+                    created = false,
+                    replayed = true,
+                });
+                continue;
+            }
+
+            if (member.Kind == MemberPlanKind.ReuseOnly)
+            {
+                // Explicit reuse-only: exactly the reviewed reusable parcels, NEVER a create binder call
+                // and never a new parcel.
+                var recordedReuse = await _occurrences.RecordMemberAllocationAsync(
+                    occurrenceId,
+                    new OperationalGroupOccurrenceAllocation(
+                        member.ShippingGroupId,
+                        CreatedShipmentIds: [],
+                        member.ReuseShipmentIds),
+                    cancellationToken);
+                var reuseIds = recordedReuse.ReusedShipmentIds.Distinct().ToArray();
+                shipmentIds.AddRange(reuseIds);
+                parcelResults.Add(new
+                {
+                    shippingGroupId = member.ShippingGroupId,
+                    shipmentIds = reuseIds,
+                    created = false,
+                    replayed = false,
+                    reused = true,
+                });
+                continue;
+            }
+
+            // A parcel already written under this occurrence key but not yet recorded (crash between
+            // the durable create and the durable member link) is reconciled, never re-created.
+            var keyParcels = RecordedOccurrenceParcels(snapshot, member.DispatchKey);
+            if (keyParcels.Length > 0)
+            {
+                if (member.Lines.Count == 0
+                    || !RecordedQuantitiesMatch(snapshot, keyParcels, member.Lines))
+                {
+                    throw new AdminOrderOperationsException(
+                        MarketplaceOperationalDeliveryGroupAuthority.WorkflowIntentConflict);
+                }
+
+                var reconciled = await _occurrences.RecordMemberAllocationAsync(
+                    occurrenceId,
+                    new OperationalGroupOccurrenceAllocation(
+                        member.ShippingGroupId,
+                        keyParcels,
+                        member.ReuseShipmentIds),
+                    cancellationToken);
+                var reconciledIds = reconciled.CreatedShipmentIds
+                    .Concat(reconciled.ReusedShipmentIds)
+                    .Distinct()
+                    .ToArray();
+                shipmentIds.AddRange(reconciledIds);
+                parcelResults.Add(new
+                {
+                    shippingGroupId = member.ShippingGroupId,
+                    shipmentIds = reconciledIds,
                     created = false,
                     replayed = true,
                 });
@@ -239,6 +340,7 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                     ? Array.Empty<Guid>()
                     : RecordedOccurrenceParcels(reloaded, member.DispatchKey);
                 if (reconciled.Length == 0
+                    || member.Lines.Count == 0
                     || !RecordedQuantitiesMatch(reloaded!, reconciled, member.Lines))
                 {
                     throw new AdminOrderOperationsException(
@@ -248,8 +350,16 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 createdShipmentId = reconciled[0];
             }
 
-            var memberIds = new[] { createdShipmentId }
-                .Concat(member.ReuseShipmentIds)
+            var recordedCreate = await _occurrences.RecordMemberAllocationAsync(
+                occurrenceId,
+                new OperationalGroupOccurrenceAllocation(
+                    member.ShippingGroupId,
+                    [createdShipmentId],
+                    member.ReuseShipmentIds),
+                cancellationToken);
+
+            var memberIds = recordedCreate.CreatedShipmentIds
+                .Concat(recordedCreate.ReusedShipmentIds)
                 .Distinct()
                 .ToArray();
             shipmentIds.AddRange(memberIds);
@@ -268,7 +378,7 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 MarketplaceOperationalDeliveryGroupAuthority.ConsolidateRequiresMultiSeller);
         }
 
-        // 3. The common package. An already-member/duplicate refusal means this exact occurrence (or a
+        // 4. The common package. An already-member/duplicate refusal means this exact occurrence (or a
         //    concurrent twin of it) already owns the package; resolve THAT package, never another one.
         ConsolidatedPackageSnapshot? package = null;
         var replayed = false;
@@ -306,6 +416,13 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
         }
 
+        await _occurrences.RecordCompletedAsync(
+            occurrenceId,
+            package.ConsolidatedPackageId,
+            package.PackageNumber,
+            package.ShippingMethodCode ?? acceptedMethod,
+            cancellationToken);
+
         return new
         {
             ok = true,
@@ -323,17 +440,102 @@ public sealed class MarketplaceOperationalGroupWorkflow(
     }
 
     /// <summary>
-    /// Builds and fully validates the immutable per-member plan. No fulfillment write happens here.
+    /// Reads a COMPLETED occurrence's exact recorded result. No allocation, no remaining-quantity gate,
+    /// no create-readiness gate — a completed operation is answered from its own durable links.
     /// </summary>
-    private static IReadOnlyList<MemberPlan> BuildPlan(
+    private async Task<object> ReplayCompletedAsync(
         Guid checkoutId,
-        Guid occurrenceId,
         MarketplaceOperationalDeliveryGroupAuthority.OperationalGroup match,
+        OperationalGroupOccurrenceRecord occurrence,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyDictionary<Guid, OrderCommittedCarrierShipmentFacts> factsById,
+        CancellationToken cancellationToken)
+    {
+        if (occurrence.ConsolidatedPackageId is not Guid packageId
+            || string.IsNullOrWhiteSpace(occurrence.PackageNumber))
+        {
+            throw new AdminOrderOperationsException(
+                MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+        }
+
+        var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
+        var package = packages.FirstOrDefault(p =>
+            p.ConsolidatedPackageId == packageId
+            && p.Status is ConsolidatedPackageOperationStatus.Created
+                or ConsolidatedPackageOperationStatus.Dispatched);
+        if (package is null)
+        {
+            throw new AdminOrderOperationsException(
+                MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+        }
+
+        var memberResults = new List<object>(match.Members.Count);
+        var shipmentIds = new List<Guid>();
+        foreach (var member in match.Members.OrderBy(m => m.ShippingGroupId))
+        {
+            var allocation = occurrence.Allocations
+                .FirstOrDefault(a => a.ShippingGroupId == member.ShippingGroupId)
+                ?? throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+            var ids = allocation.CreatedShipmentIds
+                .Concat(allocation.ReusedShipmentIds)
+                .Distinct()
+                .ToArray();
+            if (ids.Length == 0)
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+            }
+
+            // The recorded ids must still be real, non-cancelled parcels of that member's fulfillment.
+            var snapshot = fulfillments.FirstOrDefault(x => x.SellerOrderId == member.SellerOrderId)
+                ?? throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+            if (ids.Any(id => snapshot.Shipments.All(s =>
+                    s.ShipmentId != id || s.Status == ShipmentOperationStatus.Cancelled)))
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+            }
+
+            shipmentIds.AddRange(ids);
+            memberResults.Add(new
+            {
+                shippingGroupId = member.ShippingGroupId,
+                shipmentIds = ids,
+                created = false,
+                replayed = true,
+            });
+        }
+
+        return new
+        {
+            ok = true,
+            code = "prepare_operational_group",
+            operationalGroupKey = match.OperationalGroupKey,
+            operationLocator = MarketplaceOperationalDeliveryGroupAuthority.BuildWorkflowOperationLocator(
+                occurrence.OccurrenceId),
+            occurrenceId = occurrence.OccurrenceId,
+            consolidatedPackageId = packageId,
+            packageNumber = occurrence.PackageNumber,
+            shippingMethodCode = package.ShippingMethodCode ?? occurrence.ShippingMethodCode,
+            shipmentIds = shipmentIds.Distinct().ToArray(),
+            members = memberResults,
+            replayed = true,
+        };
+    }
+
+    /// <summary>
+    /// Builds the immutable reviewed envelope: exact member set, per-line quantities and reuse ids.
+    /// </summary>
+    private static OperationalGroupOccurrenceEnvelope BuildEnvelope(
+        Guid occurrenceId,
+        Guid checkoutId,
+        Guid actorUserId,
+        MarketplaceOperationalDeliveryGroupAuthority.OperationalGroup match,
+        string acceptedMethod,
         AdminOrderOperationRequest request,
         IReadOnlyList<Guid> requestedReuse,
-        IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> activeMemberships)
+        IReadOnlyList<FulfillmentSnapshot> fulfillments)
     {
         var selections = (request.Selections ?? Array.Empty<AdminOrderLineSelection>()).ToArray();
         if (selections.Any(s => s.OrderLineId == Guid.Empty || s.Quantity <= 0m))
@@ -342,9 +544,7 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionInvalid);
         }
 
-        if (selections
-            .GroupBy(s => s.OrderLineId)
-            .Any(g => g.Count() > 1))
+        if (selections.GroupBy(s => s.OrderLineId).Any(g => g.Count() > 1))
         {
             throw new AdminOrderOperationsException(
                 MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionInvalid);
@@ -363,21 +563,23 @@ public sealed class MarketplaceOperationalGroupWorkflow(
             }
         }
 
-        // Every requested line must belong to exactly one intended member of this exact group.
         if (selections.Any(s => !membership.ContainsKey(s.OrderLineId)))
         {
             throw new AdminOrderOperationsException(
                 MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionInvalid);
         }
 
-        // Every requested reuse parcel must be accounted for exactly once and belong to this checkout.
+        // Reuse ownership is the shipment's OWN shipping group — never sellerOrderId alone, because one
+        // seller may hold several accepted groups in the same seller order.
         var reuseOwner = new Dictionary<Guid, Guid>();
         foreach (var reuseId in requestedReuse)
         {
             var owners = match.Members
                 .Where(m => fulfillments
                     .Where(f => f.SellerOrderId == m.SellerOrderId)
-                    .Any(f => f.Shipments.Any(s => s.ShipmentId == reuseId)))
+                    .Any(f => f.Shipments.Any(s =>
+                        s.ShipmentId == reuseId
+                        && s.ShippingGroupId == m.ShippingGroupId)))
                 .Select(m => m.ShippingGroupId)
                 .Distinct()
                 .ToArray();
@@ -390,96 +592,173 @@ public sealed class MarketplaceOperationalGroupWorkflow(
             reuseOwner[reuseId] = owners[0];
         }
 
-        var plans = new List<MemberPlan>(match.Members.Count);
-        foreach (var member in match.Members)
+        var members = new List<OperationalGroupOccurrenceMember>(match.Members.Count);
+        foreach (var member in match.Members.OrderBy(m => m.ShippingGroupId))
         {
+            members.Add(new OperationalGroupOccurrenceMember(
+                member.ShippingGroupId,
+                selections
+                    .Where(s => membership[s.OrderLineId] == member.ShippingGroupId)
+                    .OrderBy(s => s.OrderLineId)
+                    .Select(s => new OperationalGroupOccurrenceSelection(s.OrderLineId, s.Quantity))
+                    .ToArray(),
+                requestedReuse
+                    .Where(id => reuseOwner[id] == member.ShippingGroupId)
+                    .OrderBy(id => id)
+                    .ToArray()));
+        }
+
+        return new OperationalGroupOccurrenceEnvelope(
+            occurrenceId,
+            checkoutId,
+            actorUserId,
+            match.OperationalGroupKey,
+            acceptedMethod,
+            members);
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot>> LoadActiveMembershipsAsync(
+        OperationalGroupOccurrenceEnvelope envelope,
+        CancellationToken cancellationToken)
+    {
+        var reuseIds = envelope.Members
+            .SelectMany(m => m.ReuseShipmentIds)
+            .Distinct()
+            .ToArray();
+        if (reuseIds.Length == 0)
+        {
+            return new Dictionary<Guid, ActivePackageMembershipSnapshot>();
+        }
+
+        return (await _fulfillment.GetActiveMembershipByShipmentIdsAsync(reuseIds, cancellationToken))
+            .Where(x => x.PackageStatus is not ConsolidatedPackageOperationStatus.Cancelled)
+            .GroupBy(x => x.ShipmentId)
+            .ToDictionary(g => g.Key, g => g.First());
+    }
+
+    /// <summary>
+    /// Builds and fully validates the immutable per-member plan. No fulfillment write happens here.
+    /// </summary>
+    private static IReadOnlyList<MemberPlan> BuildPlan(
+        Guid checkoutId,
+        Guid occurrenceId,
+        MarketplaceOperationalDeliveryGroupAuthority.OperationalGroup match,
+        IReadOnlyList<FulfillmentSnapshot> fulfillments,
+        IReadOnlyDictionary<Guid, OrderCommittedCarrierShipmentFacts> factsById,
+        OperationalGroupOccurrenceEnvelope envelope,
+        OperationalGroupOccurrenceRecord occurrence,
+        IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> activeMemberships)
+    {
+        // Reuse ids already recorded for THIS exact occurrence are the reconciliation case allowed to
+        // reference an already-packaged parcel; anything else packaged is foreign.
+        var recordedReuse = occurrence.Allocations
+            .SelectMany(a => a.ReusedShipmentIds)
+            .ToHashSet();
+
+        var plans = new List<MemberPlan>(match.Members.Count);
+        foreach (var member in match.Members.OrderBy(m => m.ShippingGroupId))
+        {
+            var envelopeMember = envelope.Members.First(m => m.ShippingGroupId == member.ShippingGroupId);
             var snapshot = fulfillments.FirstOrDefault(x => x.SellerOrderId == member.SellerOrderId)
                 ?? throw new AdminOrderOperationsException("order.operation.invalid");
             var facts = factsById[member.ShippingGroupId];
-            if (facts.ExecutableLines is null)
-            {
-                throw new AdminOrderOperationsException(
-                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionRequired);
-            }
 
             var dispatchKey = MarketplaceOperationalDeliveryGroupAuthority.BuildMemberParcelDispatchKey(
                 checkoutId,
                 occurrenceId,
                 member.ShippingGroupId);
-            var recorded = RecordedOccurrenceParcels(snapshot, dispatchKey);
-            var isReplay = recorded.Length > 0;
+            var recordedAllocation = occurrence.Allocations
+                .FirstOrDefault(a => a.ShippingGroupId == member.ShippingGroupId);
 
-            var remaining = facts.ExecutableLines
-                .GroupBy(x => x.OrderLineId)
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.RemainingPackedQuantity));
-
-            var memberSelections = selections
-                .Where(s => membership[s.OrderLineId] == member.ShippingGroupId)
+            var lines = envelopeMember.Selections
+                .Select(s => new ShipmentLineCommand(s.OrderLineId, s.Quantity))
                 .ToArray();
+            var reuse = envelopeMember.ReuseShipmentIds;
 
-            // Remaining packed quantity gates only a FIRST allocation. A replay re-presents quantities
-            // this occurrence already consumed, so it is resolved from its recorded parcels; a changed
-            // request on the same occurrence is a typed conflict instead of a stale-quantity refusal.
-            if (!isReplay)
+            foreach (var reuseId in reuse)
             {
-                if (memberSelections.Length == 0 && !reuseOwner.Values.Contains(member.ShippingGroupId))
-                {
-                    throw new AdminOrderOperationsException(
-                        MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionRequired);
-                }
-
-                if (memberSelections.Any(s =>
-                        !remaining.TryGetValue(s.OrderLineId, out var left) || s.Quantity > left))
-                {
-                    throw new AdminOrderOperationsException(
-                        MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionInvalid);
-                }
-            }
-
-            var memberReuse = requestedReuse
-                .Where(id => reuseOwner[id] == member.ShippingGroupId)
-                .ToArray();
-            foreach (var reuseId in memberReuse)
-            {
-                var shipment = snapshot.Shipments.First(s => s.ShipmentId == reuseId);
-                if (shipment.ShippingGroupId != member.ShippingGroupId
+                var shipment = snapshot.Shipments.FirstOrDefault(s => s.ShipmentId == reuseId);
+                if (shipment is null
+                    || shipment.ShippingGroupId != member.ShippingGroupId
                     || shipment.Status != ShipmentOperationStatus.Created
                     || shipment.DispatchedAt is not null
-                    || string.IsNullOrWhiteSpace(shipment.ShippingMethodCode)
-                    || activeMemberships.ContainsKey(reuseId))
+                    || string.IsNullOrWhiteSpace(shipment.ShippingMethodCode))
+                {
+                    throw new AdminOrderOperationsException(
+                        MarketplaceOperationalDeliveryGroupAuthority.WorkflowShipmentForeign);
+                }
+
+                if (activeMemberships.ContainsKey(reuseId) && !recordedReuse.Contains(reuseId))
                 {
                     throw new AdminOrderOperationsException(
                         MarketplaceOperationalDeliveryGroupAuthority.WorkflowShipmentForeign);
                 }
             }
 
-            MemberPlan plan;
-            if (isReplay)
+            if (recordedAllocation is not null)
             {
-                // No create will happen: the recorded parcels are the authority. Lines are only used to
-                // prove the re-presented request still matches what this occurrence actually allocated.
-                var carrierLabel = string.IsNullOrWhiteSpace(facts.MethodLabel)
-                    ? facts.MethodCode.Trim()
-                    : facts.MethodLabel.Trim();
-                plan = new MemberPlan(
+                if (recordedAllocation.CreatedShipmentIds.Count == 0
+                    && recordedAllocation.ReusedShipmentIds.Count == 0)
+                {
+                    throw new AdminOrderOperationsException(
+                        MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+                }
+
+                plans.Add(new MemberPlan(
                     member.ShippingGroupId,
                     member.SellerOrderId,
                     dispatchKey,
-                    carrierLabel,
+                    string.Empty,
                     facts.MethodCode,
                     TrustedProviderMetadataJson: null,
-                    memberSelections
-                        .Select(s => new ShipmentLineCommand(s.OrderLineId, s.Quantity))
-                        .ToArray(),
-                    memberReuse);
-                plans.Add(plan);
+                    Lines: [],
+                    ReuseShipmentIds: [],
+                    MemberPlanKind.Replay,
+                    recordedAllocation));
                 continue;
+            }
+
+            if (lines.Length == 0 && reuse.Count == 0)
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionRequired);
+            }
+
+            if (lines.Length == 0)
+            {
+                // Explicit reuse-only: no line selection exists, so the create binder must not be called
+                // (it would invent a selection or refuse an exhausted member).
+                plans.Add(new MemberPlan(
+                    member.ShippingGroupId,
+                    member.SellerOrderId,
+                    dispatchKey,
+                    string.Empty,
+                    facts.MethodCode,
+                    TrustedProviderMetadataJson: null,
+                    Lines: [],
+                    reuse,
+                    MemberPlanKind.ReuseOnly,
+                    RecordedAllocation: null));
+                continue;
+            }
+
+            // First allocation of new quantity: remaining packed quantity is authoritative.
+            var remaining = facts.ExecutableLines?
+                .GroupBy(x => x.OrderLineId)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.RemainingPackedQuantity))
+                ?? throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionRequired);
+            if (lines.Any(s =>
+                    !remaining.TryGetValue(s.OrderLineId, out var left) || s.Quantity > left))
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionInvalid);
             }
 
             var bound = AcceptedGroupShipmentCreateBinder.Resolve(
                 snapshot,
                 new AdminOrderOperationRequest(
-                    request.Code,
+                    "prepare_operational_group",
                     member.SellerOrderId,
                     snapshot.FulfillmentId,
                     null,
@@ -489,17 +768,20 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                     null,
                     null,
                     null,
-                    memberSelections,
+                    lines
+                        .Select(x => new AdminOrderLineSelection(x.OrderLineId, x.Quantity))
+                        .ToArray(),
                     null,
                     null,
                     null,
                     null,
                     member.ShippingGroupId,
                     null,
+                    null,
                     null),
                 factsById.Values.ToArray());
 
-            if (memberSelections.Length > 0 && bound.Lines.Count == 0)
+            if (bound.Lines.Count == 0)
             {
                 throw new AdminOrderOperationsException(
                     MarketplaceOperationalDeliveryGroupAuthority.WorkflowSelectionRequired);
@@ -513,7 +795,9 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 bound.ShippingMethodCode,
                 bound.TrustedProviderMetadataJson,
                 bound.Lines,
-                memberReuse));
+                reuse,
+                MemberPlanKind.Create,
+                RecordedAllocation: null));
         }
 
         return plans;
@@ -574,6 +858,13 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 .SequenceEqual(expected));
     }
 
+    private enum MemberPlanKind
+    {
+        Create,
+        ReuseOnly,
+        Replay,
+    }
+
     private sealed record MemberPlan(
         Guid ShippingGroupId,
         Guid SellerOrderId,
@@ -582,5 +873,7 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         string? ShippingMethodCode,
         string? TrustedProviderMetadataJson,
         IReadOnlyList<ShipmentLineCommand> Lines,
-        IReadOnlyList<Guid> ReuseShipmentIds);
+        IReadOnlyList<Guid> ReuseShipmentIds,
+        MemberPlanKind Kind,
+        OperationalGroupOccurrenceAllocation? RecordedAllocation);
 }

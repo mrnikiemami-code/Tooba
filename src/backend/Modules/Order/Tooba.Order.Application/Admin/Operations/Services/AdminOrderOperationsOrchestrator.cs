@@ -103,7 +103,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
         IAdminOrderOperationsInventoryRecoveryPort inventoryRecovery,
         IAdminOrderOperationsSupplyPort orderSupply,
         IOrderCommittedCarrierShipmentFactsReader committedShippingGroups,
-        IOrderShippingGroupHistoryReader shippingGroupHistory)
+        IOrderShippingGroupHistoryReader shippingGroupHistory,
+        IOrderOperationalGroupOccurrenceStore operationalGroupOccurrences)
     {
         _checkouts = checkouts;
         _fulfillment = fulfillment;
@@ -123,7 +124,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
             fulfillment,
             committedShippingGroups,
             shippingGroupHistory,
-            access);
+            access,
+            operationalGroupOccurrences);
     }
 
     /// <summary>اقدامات مجاز و eligibility مرجوعی یک checkout را برمی‌گرداند.</summary>

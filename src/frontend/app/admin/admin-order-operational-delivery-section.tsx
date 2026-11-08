@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Package } from "lucide-react";
 import {
   formatAdminMoney,
@@ -15,10 +15,11 @@ import {
 } from "./admin-api";
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
 import {
-  clearOperationalGroupOccurrence,
-  mintOperationalGroupOccurrence,
-  readOperationalGroupOccurrence,
-  writeOperationalGroupOccurrence,
+  clearOperationalGroupAttempt,
+  markOperationalGroupAttemptFailed,
+  readOperationalGroupAttempt,
+  resolveOperationalGroupAttempt,
+  type OperationalGroupAttempt,
 } from "./operational-group-occurrence-store";
 
 export type OperationalCreateTarget = {
@@ -45,6 +46,11 @@ type Props = {
     request: OperationalGroupWorkflowRequest,
   ) => Promise<boolean | void> | boolean | void;
   workflowErrorFa?: string | null;
+  /**
+   * TB-253-R4: viewer/owner scope of a retained workflow occurrence. The prebound envelope is stored
+   * per checkout/group/scope, so another admin session can never inherit it.
+   */
+  occurrenceScopeKey?: string | null;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
   shippableQty: (line: AdminOrderLine) => number;
@@ -113,6 +119,7 @@ export function AdminOrderOperationalDeliverySection({
   onCreateShipment,
   onPrepareOperationalGroup,
   workflowErrorFa,
+  occurrenceScopeKey,
   selectedBySeller,
   qtyByLine,
   shippableQty,
@@ -156,6 +163,7 @@ export function AdminOrderOperationalDeliverySection({
             pendingCode={pendingCode}
             onCreateShipment={onCreateShipment}
             onPrepareOperationalGroup={onPrepareOperationalGroup}
+            occurrenceScopeKey={occurrenceScopeKey}
             selectedBySeller={selectedBySeller}
             qtyByLine={qtyByLine}
             shippableQty={shippableQty}
@@ -172,6 +180,7 @@ function OperationalCard({
   pendingCode,
   onCreateShipment,
   onPrepareOperationalGroup,
+  occurrenceScopeKey,
   selectedBySeller,
   qtyByLine,
   shippableQty,
@@ -184,15 +193,31 @@ function OperationalCard({
     group: AdminOperationalDeliveryGroup,
     request: OperationalGroupWorkflowRequest,
   ) => Promise<boolean | void> | boolean | void;
+  occurrenceScopeKey?: string | null;
   selectedBySeller: Record<string, string[]>;
   qtyByLine: Record<string, number>;
   shippableQty: (line: AdminOrderLine) => number;
 }) {
   const [excludedParcelIds, setExcludedParcelIds] = useState<Record<string, boolean>>({});
   const [qtyByOrderLine, setQtyByOrderLine] = useState<Record<string, number>>({});
-  // Prebound occurrence: minted before the first mutation, retained across retries/remounts, and
-  // renewed only after a successful completion so a deliberate second run is a new operation.
-  const occurrenceRef = useRef<string | null>(null);
+  // TB-253-R4: the retained attempt of this checkout/group/scope. It keeps the COMPLETE reviewed
+  // envelope across a lost response, so retry reconciles the recorded occurrence; a changed review
+  // automatically becomes a NEW occurrence instead of a typed server-side intent conflict.
+  const attemptRef = useRef<OperationalGroupAttempt | null>(null);
+  const inFlightRef = useRef(false);
+  const [reconcileHint, setReconcileHint] = useState<{ occurrenceId: string } | null>(null);
+  // TB-253-R4: a retained envelope survives remounts and projected-quantity changes, so an explicit
+  // reconcile of THAT operation stays available even when no fresh create is currently ready.
+  const [retainedAttempt, setRetainedAttempt] = useState<OperationalGroupAttempt | null>(null);
+
+  useEffect(() => {
+    const recorded = readOperationalGroupAttempt(
+      detail.checkoutId,
+      group.operationalGroupKey,
+      occurrenceScopeKey,
+    );
+    setRetainedAttempt(recorded);
+  }, [detail.checkoutId, group.operationalGroupKey, occurrenceScopeKey]);
   const dateRaw = (group.deliveryDate ?? "").trim();
   const dateFa = dateRaw
     ? formatJalaliDate(dateRaw.includes("T") ? dateRaw : `${dateRaw}T12:00:00`, "fa")
@@ -428,32 +453,112 @@ function OperationalCard({
           type="button"
           disabled={!canRunWorkflow || selectionCount === 0}
           onClick={async () => {
-            if (!canRunWorkflow) return;
-            const occurrence = occurrenceRef.current
-              ?? readOperationalGroupOccurrence(detail.checkoutId, group.operationalGroupKey)
-              ?? mintOperationalGroupOccurrence();
-            occurrenceRef.current = occurrence;
-            writeOperationalGroupOccurrence(
-              detail.checkoutId,
-              group.operationalGroupKey,
-              occurrence,
-            );
-            const outcome = await onPrepareOperationalGroup(group, {
-              operationalGroupShippingGroupIds: group.members.map((m) => m.shippingGroupId),
-              selections,
-              reuseShipmentIds,
-              operationalGroupOccurrenceId: occurrence,
-            });
-            if (outcome !== false) {
-              occurrenceRef.current = null;
-              clearOperationalGroupOccurrence(detail.checkoutId, group.operationalGroupKey);
+            if (!onPrepareOperationalGroup) return;
+            // Synchronous single-flight: a same-tick second click cannot mint a second attempt.
+            if (!canRunWorkflow || selectionCount === 0 || inFlightRef.current) return;
+            inFlightRef.current = true;
+            try {
+              const resolution = resolveOperationalGroupAttempt({
+                checkoutId: detail.checkoutId,
+                operationalGroupKey: group.operationalGroupKey,
+                scopeKey: occurrenceScopeKey,
+                request: {
+                  members: group.members.map((m) => m.shippingGroupId),
+                  selections,
+                  reuseShipmentIds,
+                },
+              });
+              attemptRef.current = resolution.attempt;
+              const outcome = await onPrepareOperationalGroup(group, {
+                operationalGroupShippingGroupIds: resolution.attempt.members,
+                selections: resolution.attempt.selections,
+                reuseShipmentIds: resolution.attempt.reuseShipmentIds,
+                operationalGroupOccurrenceId: resolution.occurrenceId,
+              });
+              if (outcome === true) {
+                // Completed: the reviewed envelope is done, so the next deliberate run is a NEW one.
+                attemptRef.current = null;
+                setReconcileHint(null);
+                setRetainedAttempt(null);
+                clearOperationalGroupAttempt(
+                  detail.checkoutId,
+                  group.operationalGroupKey,
+                  occurrenceScopeKey,
+                );
+                return;
+              }
+
+              // Failure / 5xx / lost response / cancellation: KEEP the exact envelope and offer a
+              // reconcile of that same occurrence. A cancelled or thrown call is uncertainty, never a
+              // reason to mint a new operation.
+              markOperationalGroupAttemptFailed({ attempt: resolution.attempt });
+              attemptRef.current = resolution.attempt;
+              setRetainedAttempt(resolution.attempt);
+              setReconcileHint({ occurrenceId: resolution.occurrenceId });
+            } finally {
+              inFlightRef.current = false;
             }
           }}
           className="mt-2 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 disabled:opacity-50"
           data-testid={`admin-order-operational-prepare-${group.operationalGroupKey}`}
         >
-          ایجاد مرسوله‌ها و بستهٔ مشترک این گروه
+          {reconcileHint ? "همگام‌سازی مجدد همان عملیات" : "ایجاد مرسوله‌ها و بستهٔ مشترک این گروه"}
         </button>
+      ) : null}
+      {retainedAttempt && actorMayManage && onPrepareOperationalGroup ? (
+        <div
+          className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50/60 px-2.5 py-1.5"
+          data-testid={`admin-order-operational-reconcile-${group.operationalGroupKey}`}
+          title={retainedAttempt.occurrenceId}
+        >
+          <p className="text-[10px] font-semibold text-emerald-900" role="status">
+            نتیجهٔ عملیات نامشخص است؛ تلاش دوباره همان عملیات ثبت‌شده را همگام می‌کند و مرسولهٔ تازه نمی‌سازد.
+          </p>
+          <button
+            type="button"
+            disabled={pendingCode !== null}
+            onClick={async () => {
+              // Reconcile the RETAINED envelope, independent of projected remaining quantity or of a
+              // currently-enabled create action.
+              if (pendingCode !== null || inFlightRef.current) return;
+              inFlightRef.current = true;
+              try {
+                const outcome = await onPrepareOperationalGroup(group, {
+                  operationalGroupShippingGroupIds: retainedAttempt.members,
+                  selections: retainedAttempt.selections,
+                  reuseShipmentIds: retainedAttempt.reuseShipmentIds,
+                  operationalGroupOccurrenceId: retainedAttempt.occurrenceId,
+                });
+                if (outcome === true) {
+                  setRetainedAttempt(null);
+                  setReconcileHint(null);
+                  attemptRef.current = null;
+                  clearOperationalGroupAttempt(
+                    detail.checkoutId,
+                    group.operationalGroupKey,
+                    occurrenceScopeKey,
+                  );
+                  return;
+                }
+                markOperationalGroupAttemptFailed({ attempt: retainedAttempt });
+                setReconcileHint({ occurrenceId: retainedAttempt.occurrenceId });
+              } finally {
+                inFlightRef.current = false;
+              }
+            }}
+            className="mt-1 w-full rounded-md border border-emerald-300 bg-white px-2 py-1 text-[11px] font-bold text-emerald-900 disabled:opacity-50"
+            data-testid={`admin-order-operational-reconcile-retry-${group.operationalGroupKey}`}
+          >
+            همگام‌سازی مجدد همان عملیات
+          </button>
+          <p
+            className="mt-1 text-[10px] text-emerald-800"
+            data-testid={`admin-order-operational-reconcile-envelope-${group.operationalGroupKey}`}
+            dir="ltr"
+          >
+            {`${retainedAttempt.members.length} ${retainedAttempt.selections.length} ${retainedAttempt.reuseShipmentIds.length}`}
+          </p>
+        </div>
       ) : null}
       {group.isCrossSellerMarketplace && group.consolidateBlockReasonFa ? (
         <p

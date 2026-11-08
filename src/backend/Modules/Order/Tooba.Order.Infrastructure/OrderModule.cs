@@ -82,6 +82,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Admin.OrdersGrid.Ports.IAdminOrderSupplyStatusReader, Admin.OrdersGrid.AdminOrderSupplyStatusReader>();
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsInventoryRecoveryPort, Admin.Operations.AdminOrderOperationsInventoryRecoveryAdapter>();
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsSupplyPort, Admin.Operations.AdminOrderOperationsSupplyAdapter>();
+        services.AddScoped<Application.Admin.Operations.Ports.IOrderOperationalGroupOccurrenceStore, Admin.Operations.OrderOperationalGroupOccurrenceStore>();
         services.AddScoped<Application.Admin.Operations.Services.AdminOrderOperationsOrchestrator>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
 

@@ -78,6 +78,13 @@ public sealed class OrderDbContext : DbContext
     /// <summary>عضویت خطوط سفارش در گروه‌های ارسال پایدار (M2).</summary>
     public DbSet<OrderShippingGroupLine> OrderShippingGroupLines => Set<OrderShippingGroupLine>();
 
+    /// <summary>TB-253-R4: ادعای پایدار پاکت تغییرناپذیر گردش‌کار گروه عملیاتی.</summary>
+    public DbSet<OrderOperationalGroupOccurrence> OperationalGroupOccurrences => Set<OrderOperationalGroupOccurrence>();
+
+    /// <summary>TB-253-R4: پیوند دقیق تخصیص هر عضو به همان occurrence.</summary>
+    public DbSet<OrderOperationalGroupOccurrenceMember> OperationalGroupOccurrenceMembers =>
+        Set<OrderOperationalGroupOccurrenceMember>();
+
 
     /// <summary>مشاهده‌های Admin برای قفل حذف یادداشت.</summary>
     public DbSet<CheckoutAdminViewAck> AdminViewAcks => Set<CheckoutAdminViewAck>();
@@ -255,6 +262,32 @@ public sealed class OrderDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.OrderLineId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<OrderOperationalGroupOccurrence>(entity =>
+        {
+            entity.ToTable("order_operational_group_occurrences");
+            entity.HasKey(x => x.OccurrenceId);
+            entity.Property(x => x.OccurrenceId).ValueGeneratedNever();
+            entity.Property(x => x.OperationalGroupKey).HasMaxLength(1024);
+            entity.Property(x => x.EnvelopeFingerprint).HasMaxLength(64);
+            entity.Property(x => x.EnvelopeJson).HasColumnType("text");
+            entity.Property(x => x.State).HasMaxLength(32);
+            entity.Property(x => x.PackageNumber).HasMaxLength(64);
+            entity.Property(x => x.ShippingMethodCode).HasMaxLength(128);
+            entity.HasIndex(x => x.CheckoutId);
+            entity.HasMany<OrderOperationalGroupOccurrenceMember>()
+                .WithOne()
+                .HasForeignKey(x => x.OccurrenceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<OrderOperationalGroupOccurrenceMember>(entity =>
+        {
+            entity.ToTable("order_operational_group_occurrence_members");
+            entity.HasKey(x => new { x.OccurrenceId, x.ShippingGroupId });
+            entity.Property(x => x.OccurrenceId).ValueGeneratedNever();
+            entity.Property(x => x.ShippingGroupId).ValueGeneratedNever();
+            entity.Property(x => x.ShipmentIdsJson).HasColumnType("text");
+            entity.Property(x => x.ReusedShipmentIdsJson).HasColumnType("text");
         });
         modelBuilder.Entity<SellerOrder>(entity =>
         {

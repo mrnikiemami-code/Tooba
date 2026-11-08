@@ -23,6 +23,7 @@ using Tooba.Order.Domain;
 using Tooba.Order.Domain.Aggregates;
 using Tooba.Order.Domain.Checkout;
 using Tooba.Order.Domain.Enums;
+using Tooba.Order.Infrastructure.Admin.Operations;
 using Tooba.Order.Infrastructure.Integrations.Fulfillment;
 using Tooba.Order.Infrastructure.Integrations.Shipping;
 using Tooba.Order.Infrastructure.Integrations.Storefront;
@@ -581,7 +582,8 @@ public sealed class MarketplaceOperationalGroupWorkflowRelationalTests
             adapter,
             factsReader,
             historyReader,
-            new ControlledAccessReader(allowManage));
+            new ControlledAccessReader(allowManage),
+            new OrderOperationalGroupOccurrenceStore(orderDb, new SystemUtcClock()));
         var facts = await factsReader.ListByCheckoutAsync(CheckoutId, CancellationToken.None);
         var history = await historyReader.GetForCheckoutAsync(CheckoutId, CancellationToken.None);
         return new Fixture(
@@ -785,7 +787,9 @@ public sealed class MarketplaceOperationalGroupWorkflowRelationalTests
         var db = NewOrderContext(target);
         await db.Database.MigrateAsync();
         await db.Database.ExecuteSqlRawAsync(
-            "DELETE FROM \"order\".order_shipping_group_lines;"
+            "DELETE FROM \"order\".order_operational_group_occurrence_members;"
+            + "DELETE FROM \"order\".order_operational_group_occurrences;"
+            + "DELETE FROM \"order\".order_shipping_group_lines;"
             + "DELETE FROM \"order\".order_shipping_groups;"
             + "DELETE FROM \"order\".checkout_processes;"
             + "DELETE FROM \"order\".order_lines;"
