@@ -1,8 +1,25 @@
-# CURRENT — 253-R3 PASS: occurrence-bound parcel identity + whole-plan preflight + canonical deploy — 2026-11-08
+# CURRENT — 253-R4 PASS: immutable occurrence envelope + explicit reuse-only + prebound request preservation — 2026-11-08
 
-Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued R3 correction/deploy scope, decision **OCCURRENCE_BOUND_ALLOCATION_WHOLE_PLAN_PREFLIGHT_AND_CANONICAL_DEPLOYMENT**, NOT Architect/Visual ACCEPT. Base `2ac198886`.
-Canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha (`store-alpha-canonical-tb253r3`, BUILD_ID `b-jSPMIvyhKxNpaZ1CDZL`). Marketplace responsibility is NOT origin any more (physical context/address only); prebound occurrence GUID + `opgroup:{hash(checkout|occurrence|group)}` key (no payload) gives exact replay for one occurrence and distinct parcels for the next; whole-plan preflight before the first write; typed `WorkflowIntentConflict`. Disposable TB253R3 **9/9** on real Order evidence; authority+workflow 26/26; mount 10/10; typecheck/build/publish 0. Live order `01a1b92d-…` admin read-only: 3 Store groups, no Marketplace claim. Tipax deferred. No schema/migration/SQL. STOP_FOR_ARCHITECT; automaticNext NONE.
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued R4 correction/deploy scope, decision **IMMUTABLE_OCCURRENCE_ENVELOPE_EXPLICIT_REUSE_ONLY_AND_PREBOUND_REQUEST_PRESERVATION_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `8617161188232acfc4f70d6e363b906e85e14953`.
+Canonical FE3000 (PID 41724, BUILD_ID `Pa2w5BmMJCuC-79qEVcv_`) → Host5088 (PID 29240) SingleStore/store-alpha/tooba_alpha.
+R4 closes the three seams R3 left open: (A) one durable COMPLETE envelope (actor scope, checkout, member set, exact
+line quantities, explicit reuse ids, accepted method) claimed before the first allocation — additive
+`order_operational_group_occurrences` / `_members` migration `20261108153000_AddOperationalGroupOccurrences`, so the
+same occurrence with any changed envelope is a typed `workflow_intent_conflict` before any write while an identical
+next occurrence stays a distinct occurrence; (B) explicit `Create`/`ReuseOnly`/`Replay` plans — reuse-only never calls
+the create binder, creates zero parcels, and reuse ownership resolves by `shipment.ShippingGroupId`; (C) the FE keeps
+the full attempt (members/selections/reuse ids/occurrence/fingerprint) per checkout+viewer scope+group before the first
+POST and replays that same envelope on 5xx/network/cancellation even when create readiness is false. Disposable
+`tb253r4-pg:15433`: TB253R4 **6/6** + TB253R3+R4 **15/15** on separate task databases; authority/workflow **32/32**;
+FE mount **15/15**; typecheck/build/publish 0. Live order `01a1b92d-…` admin read-only: 3 Store groups, no Marketplace
+claim. CapturedPreview local ON (checked-in OFF); DataProtection keys preserved. Tipax deferred; Store never promoted.
+STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253-R3 PASS: occurrence-bound parcel identity + whole-plan preflight + canonical deploy — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/{TASK.md,RESULT.md,RECEIPTS.md,ARCHITECT-REVIEW.md}.
+Status **PASS** within issued R3 correction/deploy scope, decision **OCCURRENCE_BOUND_ALLOCATION_WHOLE_PLAN_PREFLIGHT_AND_CANONICAL_DEPLOYMENT**, NOT Architect/Visual ACCEPT. Base `2ac198886`. Closed as PARTIAL by 253-R4 for whole-envelope persistence, explicit reuse-only and partial-progress remount; origin/preflight/occurrence-vs-payload/deploy work retained.
 
 # SUPERSEDED — 253-R2 PASS (Architect PARTIAL): one Marketplace group workflow + actor authority — 2026-11-08
 

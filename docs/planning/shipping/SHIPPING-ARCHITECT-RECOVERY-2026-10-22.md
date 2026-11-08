@@ -1,13 +1,22 @@
-# CURRENT — 253-R3 PASS: occurrence-bound parcel identity + whole-plan preflight + canonical deploy — 2026-11-08
+# CURRENT — 253-R4 PASS: immutable occurrence envelope + explicit reuse-only + prebound request preservation — 2026-11-08
 
-Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/{TASK.md,RESULT.md,RECEIPTS.md}.
-Status **PASS** within issued R3 correction/deploy scope, decision **OCCURRENCE_BOUND_ALLOCATION_WHOLE_PLAN_PREFLIGHT_AND_CANONICAL_DEPLOYMENT**, NOT Architect/Visual ACCEPT. Base `2ac198886`. Evidence docs carry the exact receipts.
-Marketplace-only cross-seller rule preserved; Store never promoted. R3 closes 253-R2's four seams: origin is physical
-context/address again (Marketplace responsibility never stands in for it), allocation identity is a prebound occurrence
-GUID rather than a payload hash, the whole plan is validated before the first write, and the slice is deployed on the
-canonical FE3000→Host5088 SingleStore/store-alpha/tooba_alpha with an authorized read-only live review. Disposable
-TB253R3 **9/9** on real committed Order evidence (A–E); authority+workflow 26/26; mount 10/10; typecheck/build/publish 0.
-Tipax deferred. No schema/migration/SQL. STOP_FOR_ARCHITECT; automaticNext NONE.
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R4/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within issued R4 correction/deploy scope, decision **IMMUTABLE_OCCURRENCE_ENVELOPE_EXPLICIT_REUSE_ONLY_AND_PREBOUND_REQUEST_PRESERVATION_DEPLOYED**, NOT Architect/Visual ACCEPT. Base `8617161188232acfc4f70d6e363b906e85e14953`. Evidence docs carry the exact receipts.
+Marketplace-only cross-seller rule preserved; Store never promoted; origin vs responsibility still distinct.
+R4 closes R3's three residual seams: the complete immutable envelope (authority scope, checkout, member set, exact
+line quantities, explicit reuse ids, accepted method) is durably claimed before the first allocation and any changed
+envelope under the same occurrence is a typed conflict before a write; `ReuseOnly` no longer reaches the create binder
+and reuse ownership is the shipment's own shipping group; the FE persists and replays the complete prebound attempt
+across loss/failure/remount while actor scope prevents cross-viewer inheritance. Additive migration
+`20261108153000_AddOperationalGroupOccurrences` applied to `tooba_alpha` after a private backup. Disposable
+`tb253r4-pg:15433`: TB253R4 **6/6** + TB253R3+R4 **15/15**; authority/workflow **32/32**; FE mount **15/15**;
+typecheck/build/publish 0. Live order `01a1b92d-…` admin read-only: 3 Store groups, no Marketplace claim. Tipax
+deferred. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 253-R3 PASS: occurrence-bound parcel identity + whole-plan preflight + canonical deploy — 2026-11-08
+
+Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-OPERATIONAL-DELIVERY-GROUPS-253-R3/{TASK.md,RESULT.md,RECEIPTS.md,ARCHITECT-REVIEW.md}.
+Status **PASS** within issued R3 correction/deploy scope, decision **OCCURRENCE_BOUND_ALLOCATION_WHOLE_PLAN_PREFLIGHT_AND_CANONICAL_DEPLOYMENT**, NOT Architect/Visual ACCEPT. Base `2ac198886`. Closed as PARTIAL by 253-R4 for whole-envelope persistence, explicit reuse-only and partial-progress remount; origin/preflight/occurrence-vs-payload/deploy work retained.
 
 # SUPERSEDED — 253-R2 PASS (Architect PARTIAL): one Marketplace group workflow + actor authority — 2026-11-08
 
