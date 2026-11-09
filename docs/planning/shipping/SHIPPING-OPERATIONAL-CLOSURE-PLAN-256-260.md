@@ -1,3 +1,11 @@
+# CURRENT — 256 USER TRIAL; Architect PARTIAL; no next task — 2026-11-09
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256/ARCHITECT-REVIEW.md first, then the closure plan.
+256 code/evidence c58e87e5e is deployed per worker and authoring UI is ready for user trial, NOT full scheduling acceptance. Open: absent carrier calendar still allows new null-plan acceptance; nowUTC is not proof of preparation readiness; exact-arrival-only backward rule needs review; no visible operational dispatch row/canonical plan.
+User requires a TEST OPPORTUNITY after EACH correction. Await USER FEEDBACK before issuing even a repair task. 257–260 remain NOT ISSUED; no automatic continuation from worker PASS.
+User prohibits extra/disposable databases. Worker reported a 15433/order_tb231 relational run contrary to latest direction; do not repeat, cleanup not verified. Canonical tooba_alpha and FE3000/Host5088 only. No automatic user-order mutation.
+Review existing draft /admin/shipping-services/authoring/01a17d0d-e033-7000-af43-49a1daa28822?mode=edit (carrier unconfigured); task-owned draft 01a1beed-d7df-7000-bfc8-0185ea61afe3. Trial starts with tabs/copy/independent edit; old published service does not gain cutoff until valid configured publication. Preserve prior history/255 parked/Tipax deferred.
+
 # Shipping operational closure plan — 2026-11-09
 
 Status: APPROVED PRODUCT DIRECTION; implementation NOT complete.
@@ -6,7 +14,7 @@ Reviewed source base: 69bb2e2ab1e81e673a5119d740c94ff3b4949489.
 This document supersedes conversational guesses about missing delivery durations. Durations EXIST; the gaps are their semantics/application and the missing dispatch plan.
 
 ## Read first after chat recovery
-Read this plan, the CURRENT top of the three recovery files, then ONLY the active task and its result. Do not replay old tasks or issue all stages at once. After each result independently inspect affected code/evidence, accept or issue a bounded repair, then release the next stage.
+Read this plan, the CURRENT top of the three recovery files, then ONLY the active task and its result. Do not replay old tasks or issue all stages at once. After each result independently inspect affected code/evidence, hand the visible correction to the user, and WAIT for user feedback before issuing a repair or next stage.
 255 is BLOCKED and now PARKED by user. No edition/database switch was authorized. Do not spend the next task trying to create the Marketplace test order.
 
 ## Existing work — preserve, do not rebuild
