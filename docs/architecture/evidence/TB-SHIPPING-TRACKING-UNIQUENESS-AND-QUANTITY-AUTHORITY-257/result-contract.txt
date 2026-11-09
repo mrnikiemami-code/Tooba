@@ -1,0 +1,58 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257
+Parent-Task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: 662254a1efe2a1eb42534b7f9ccb9f2a28e6c55f
+Code-SHA: 798cf01d31e0c3da267d595b0c56db6eab44602e
+Merge-SHA: e888eb3ae3210b7f61853de777a4f95944952114
+Evidence-SHA: f06a97eb04944057e48301c92e40558d1b758cd8
+Result-Contract: docs/architecture/evidence/TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257/result-contract.txt
+Elapsed: approx 2 h 40 m of worker time
+Status: PASS
+Decision: WHOLE_PARCEL_DETERMINISTIC_INTERNAL_TRACKING_WITH_DB_BOUNDED_RETRY_AND_ONE_PACKED_MINUS_SHIPPED_MINUS_OPEN_QUANTITY_AUTHORITY
+Scope: the first TWO of the five remaining defects only (automatic tracking uniqueness, truthful remaining parcel quantity). Defects 3-5 (non-delivery/return/resend, shared-group common-or-separate parcels, due workqueue/shared operational order view) are NOT ISSUED and were not touched.
+
+ROOT-CAUSE-1 (automatic tracking generated a used code):
+`src/frontend/app/admin/admin-assign-shipment-tracking-modal.tsx` built the «تولید خودکار» suggestion locally as `TRK-` + `shipmentId.replace(non-alnum).slice(0,8).toUpperCase()` — the FIRST EIGHT HEX characters of the UUIDv7 shipment id, one 32-bit bucket that changes about every 65 seconds. Two parcels created in the same minute therefore received the SAME candidate. The button only fills the input; «ثبت کد رهگیری» posts that value through the ordinary assignment command, so the second parcel hit the real PostgreSQL unique index `ix_shipments_tracking_reference` and failed duplicate. Pressing Generate again re-derived the SAME deterministic value, which is why regenerating could never recover. The server had no automatic-allocation seam at all (candidate generation lived only in the browser), so no retry, reconciliation or reserve guarantee could exist.
+
+FIX-1:
+New `Tooba.Fulfillment.Contracts.Operations.FulfillmentInternalTrackingReference`: `ForShipment(shipmentId, attempt=0)` = `TRK-` + the WHOLE 32-character shipment identity (bounded `-N` retries, `MaxAllocationAttempts=5`, `MaxLength=128` = the real column ceiling), deterministic per parcel, `IsCanonicalSuggestion` marks attempt 0 as "automatic intent". New owning seam `IFulfillmentAdminOperations.AssignAutomaticTrackingAsync` → `FulfillmentAdminOperationsAdapter` → `FulfillmentDirectory.AssignAutomaticTrackingAsync`: (a) an existing reference is reconciled unchanged (never replaces a real code), (b) a candidate already owned by another parcel is skipped, (c) a real collision — `DbUpdateException` whose `PostgresException` is `23505` with `ConstraintName = ix_shipments_tracking_reference` — reverts ONLY that tracking assignment and moves to the next bounded candidate in the same scoped context, (d) every other persistence failure propagates unchanged (proven with a synthetic `23503` on a different index), (e) exhausted attempts fail closed with the existing `fulfillment.tracking.duplicate`. Both admin routes send canonical intent there (`AdminOrderOperationsOrchestrator.Fulfillment.cs`, `AdminOrderFulfillmentOperations.cs`); operator-typed values keep the strict inline + server duplicate validation; provider (CarrierApi/Tipax) identifiers are never overwritten or faked; no live provider call. Frontend mirrors the whole-id rule, the button restores this parcel's canonical candidate and the modal has a synchronous same-tick single-flight ref so a click burst sends exactly one request, retaining the operator value on refusal with one inline message.
+
+ROOT-CAUSE-2 (shipped items still offered as a new parcel):
+`Tooba.Order.Infrastructure/Integrations/Shipping/OrderCommittedCarrierShipmentFactsReader.cs` `ResolveFulfillmentEligibility` computed `remaining = item.QuantityPacked - openAllocated` and never subtracted `item.QuantityShipped`. A packed1/shipped1 group therefore still produced one executable line with `createParcelEligible=true`, while the owning create command refused and the create modal had nothing to select. Four further local copies of the same rule existed (order-detail composer, capability projector, orchestrator rules/projection, work-queue filters).
+
+FIX-2:
+New `Tooba.Fulfillment.Contracts.Operations.FulfillmentPackedQuantityAuthority`: `RemainingPackedQuantity(packed, shipped, openAllocated) = max(0, packed - shipped - openCreatedAllocations)`, `OpenAllocatedQuantity(...)` reading the same authoritative Fulfillment shipments (Created only, group-scoped). Now used by the facts reader, `AdminOrderDetailComposer`, `AdminFulfillmentCapabilityProjector`, `AdminOrderOperationsOrchestrator` rules/projection/fulfillment, `AdminOrderFulfillmentOperations` and `AdminFulfillmentQueueFilters`. ExecutableLines, remainingPackedQuantity, createParcelEligible and the owning blockers now agree; wholly shipped → no create; partial shipped + open allocation → only the real remainder; cancelled pre-dispatch allocation releases only its reservation; delivery never makes shipped quantity available again; sibling groups stay isolated. 249/253 exact-occurrence replay/reconcile still runs BEFORE these remaining-quantity gates (not modified), money and accepted evidence untouched. No migration, no schema change, no manual SQL, no backfill, no baseline/allow-list edit.
+
+PROOF:
+- Pure A+B authority: `dotnet test Tooba.Fulfillment.Tests --filter FullyQualifiedName~TrackingAndRemainingQuantityAuthority257` — 10/10 (2000 parcels in one bucket distinct, retry deterministic and bounded, canonical-only predicate, packed3/shipped1/open1 → 1, all shipped → 0, cancelled releases, sibling isolation).
+- REAL storage on the one canonical database `tooba_alpha` only: `--filter FullyQualifiedName~AutomaticTrackingRelational257` — 4/4. A: two parcels of a task fixture got TRK-48F8B04993AA45C395CA57DA83430882 / TRK-BC653D3D37C641E296953638332C1779, re-assigning the first returned the same code, raw rows carry exactly those values. B: canonical candidate already owned by another parcel → target got TRK-D2ECBC9B84FA4B0B94C36D1BC36B3B7F-1, squatter kept the canonical one. C: injected `23505` on `ix_shipments_tracking_reference` retried to attempt 1 and the parcel ended tracked. D: injected `23503` on another index propagated unchanged, parcel stayed untracked. E: two independent DbContexts allocating in parallel persisted two distinct valid codes. Fixtures are task-labelled (`TB257-A/B/C/D/E1/E2`), created through production domain/application paths, ids recorded in `tb257-relational.txt`; no user order/parcel/tracking/published method written, nothing deleted.
+- Order facts/eligibility: `OrderCommittedCarrierShipmentFactsEligibility` — 5/5 (wholly shipped exhausted with no executable line, partial shipment offers only packed−shipped−open, cancelled allocation releases, sibling group isolation, package-incomplete exhaustion preserved).
+- Host admin routing seam: `AdminOrderFulfillmentOperationsTests` — 6/6.
+- Mounted frontend: `app/admin/admin-create-shipment-modal.mount.test.ts` — 7/7 (4 are TB-257: whole-id suggestion, one request per burst, retained input + inline refusal, autofill restores the canonical candidate); `app/admin/admin-order-operational-delivery.mount.test.ts` — 27/27 (253/254/256 preserved); `tsc --noEmit` 0; `npm run build` 0; `dotnet publish` 0.
+- Canonical read-only console on the known review order `01a1b92d-e97e-7000-999a-143350d0edaf` (fresh-profile headless Chrome, no click, no screenshot, no mutation): BEFORE — 3 operational groups, every line «ارسال‌شده», one parcel per group (`TRK-01A1B93F`, `TRK-01A1B942`, `TRK-01A1B9423`) and THREE dead-end «ایجاد مرسوله» entries. AFTER — the same 3 groups, the same lines/statuses/parcels/tracking codes and ZERO create entries, no horizontal overflow, rtl. Captures: dom-order-before.json / dom-order-after.json.
+- Guards: `frontend-source-size` remains the same pre-existing 18-finding family and `frontend-flat-folder` the same 11 app/admin files; this task added no finding (its mount cases were added to the already-counted `admin-create-shipment-modal.mount.test.ts`).
+
+DEPLOY / RUNTIME:
+Host republished to `artifacts/publish-primary` and restarted: PID 21536 → 38976, `/health` 200, Edition SingleStore, tenant `store-alpha`, deployment `store-alpha-canonical-tb256` → `tooba_alpha`. Frontend rebuilt and restarted: PID 20404 → 44384, served BUILD_ID `KRvftNHH3cYhdoBybBqej`, chunk `/_next/static/chunks/6411-fdb48bcccfc432f7.js` 200 with the new derivation. One database (`tooba_alpha`, 127.0.0.1:5432); no disposable/test/parallel/Docker PostgreSQL and no port 15433; no migration/DDL/business SQL; no edition/connection/port switch; DataProtection preserved (key hash prefix B6985A10085AC272 before and after); CapturedPreview local ON / checked-in OFF; 255 parked; live Tipax deferred. No user order, parcel, tracking, payment, publication or cart was mutated; the review order was read-only.
+
+LEDGER:
+- save prerequisite (256-R2): CLOSED within scope.
+- issue 1 automatic tracking uniqueness: FIXED within scope (A).
+- issue 2 truthful remaining quantity: FIXED within scope (B).
+- issue 3 non-delivery/return/resend: PENDING 258, NOT ISSUED.
+- issue 4 shared-group common-or-separate parcels: PENDING 259, NOT ISSUED.
+- issue 5 due workqueue/shared operational order view: PENDING 260, NOT ISSUED.
+
+LIMITS:
+Automatic uniqueness is the existing DB unique index plus a server-owned deterministic candidate and bounded retry — not a new global numbering service, not a reservation table, not a stress test (concurrency proven with two real independent contexts). Historical short tracking codes were not backfilled or rewritten. No live Tipax/post waybill, no provider identifier issued. Unrelated module suites were not run. Not Architect ACCEPT and not user VISUAL/FUNCTIONAL ACCEPT.
+
+TOP/documentation updated: AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md, docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md, docs/planning/shipping/SHIPPING-OPERATIONAL-CLOSURE-PLAN-256-260.md; TASK/RESULT/RECEIPTS persisted under docs/ai/tasks and docs/architecture/evidence for this task id.
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

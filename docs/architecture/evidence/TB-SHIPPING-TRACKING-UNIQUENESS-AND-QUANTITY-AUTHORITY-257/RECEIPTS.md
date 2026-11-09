@@ -165,7 +165,8 @@ No screenshot; DOM/HTTP facts only. DataProtection preserved. CapturedPreview lo
 ```text
 798cf01d3  257: whole-parcel automatic internal tracking with bounded DB retry, and one packed-shipped-open quantity authority
 e888eb3ae  Merge remote-tracking branch 'origin/main'   (docs descendants; TASK.md resolved to the origin version)
-<DOCS-SHA> 257: record worker result, receipts and TOP/closure-plan ledger
+f06a97eb0  257: record worker result, receipts and TOP/closure-plan ledger   (Evidence-SHA)
+next        257: record the worker result contract  (the commit carrying result-contract.txt; latest on origin/main)
 ```
 
 Local `main` == `origin/main` after the final push; no force, amend, reset, stash or rebase.
