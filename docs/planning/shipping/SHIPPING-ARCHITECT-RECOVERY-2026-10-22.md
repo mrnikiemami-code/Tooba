@@ -1,4 +1,15 @@
-# CURRENT — 255 BLOCKED: Marketplace responsibility is unreachable in the current SingleStore installation — 2026-11-09
+# CURRENT — 256 issued: carrier acceptance schedule, MAX delivery calendar and dispatch plan — 2026-11-09
+
+Read docs/planning/shipping/SHIPPING-OPERATIONAL-CLOSURE-PLAN-256-260.md FIRST. It is the durable Architect plan: existing capabilities, verified defects vs user-reported issues, locked decisions, exact sequential stages and recovery instructions.
+Only active/issued task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256; parent TB-SHIPPING-MARKETPLACE-MULTISELLER-TEST-ORDER-255. Issued does NOT mean claimed/started/completed. Await its worker result; independently review before the next task. Stages 257–260 are planned, NOT issued.
+User PARKED 255/environment work. No Marketplace edition/database switch is authorized; preserve current SingleStore/store-alpha/tooba_alpha, FE3000→Host5088.
+Approved NOW: separate weekly carrier acceptance hours from customer receiving hours; one-time copy button; 2–3 duration uses MAX 3 for new availability; closing-time cutoff moves handoff to next valid acceptance; derive/store new accepted-group dispatch plan using real readiness/calendar/timezone facts, no preparation double count and no rewrite/backfill of historical accepted commitments.
+Do not confuse existing PreparationDays/LeadDays or RequestedPickupAtUtc evaluation with an implemented per-order dispatch plan.
+Remaining: tracking generator duplicates (USER-REPORTED, root cause unverified); shipped quantity missing from remaining calculation; non-delivery/return/resend absent; shared-group workflow forces common package rather than optional independent parcels; due queue/shared operational order view incomplete.
+Preserve existing order processing/packing/parcel/tracking/dispatch/delivery logic; no parallel workflow. Preserve 249/253 occurrence/envelope/no-remint authority, 254-R1 single parcel owner/readability, immutable money, Marketplace-only proven-origin grouping. Live Tipax deferred, user visual acceptance pending.
+Planning/recovery update only so far: no product fix, migration, restart or live order mutation performed by Architect. Existing history below remains historical. TB185 and retained unrelated issues unchanged.
+
+# PARKED — 255 BLOCKED: Marketplace responsibility is unreachable in the current SingleStore installation — 2026-11-09
 
 Read docs/ai/tasks/TB-SHIPPING-MARKETPLACE-MULTISELLER-TEST-ORDER-255/TASK.md and docs/architecture/evidence/TB-SHIPPING-MARKETPLACE-MULTISELLER-TEST-ORDER-255/{TASK.md,RESULT.md,RECEIPTS.md}.
 Status **BLOCKED before creation** — environment barrier, decision **MARKETPLACE_OWNER_KIND_UNREACHABLE_IN_CURRENT_SINGLESTORE_CANONICAL_INSTALLATION_ENVIRONMENT_DECISION_REQUIRED**, NOT PASS/PARTIAL, NOT Architect/Visual ACCEPT. Base == HEAD == origin/main `ab4ebd3ee`; **Code-SHA NONE** (no source change).
