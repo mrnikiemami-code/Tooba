@@ -147,6 +147,10 @@ function isDirty(edits: EditorEdits): boolean {
   if (edits.regionGroups !== undefined) return true;
   if (edits.methodTranslations !== undefined) return true;
   if (edits.weeklySchedule !== undefined) return true;
+  // TB-256-R2: the carrier-acceptance calendar is an INDEPENDENT serializable capability. Omitting it
+  // here made a carrier-only edit look like "no changes" to `selectApplyRequest`, so the one PUT was
+  // never sent while the screen (which uses the raw local-dirty signal) still enabled Save.
+  if (edits.carrierSchedule !== undefined) return true;
   if (edits.methodSettings !== undefined) return true;
   return edits.typeAssignment !== undefined;
 }

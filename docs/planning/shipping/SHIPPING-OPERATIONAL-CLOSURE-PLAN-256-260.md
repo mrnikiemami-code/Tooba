@@ -1,4 +1,13 @@
-# CURRENT — 256-R1 PASS (worker); user trial then Architect review — 2026-11-09
+# CURRENT — 256-R2 PASS (worker): the calendar Save now writes; next is the five-item ledger — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2/{RESULT.md,RECEIPTS.md,dom/*}.
+256-R2 repairs the only user-reported blocker on the accepted two-tab form: «ذخیره نمی کنه». Measured root cause — the frontend session's serializable-patch predicate `isDirty()` omitted the TB-256 `carrierSchedule`, so a carrier-only patch was classified `no-changes` and the click sent ZERO PUT while Save looked enabled; a reload restored the old calendar. The repair counts the carrier calendar in that predicate (matching `intentHasEdits`); nothing else changed.
+Proven on canonical FE3000 → Host5088 / SingleStore / store-alpha / `tooba_alpha` with FOUR real Save presses and reloads on the task-owned draft `01a1beed-…` (revisions 3→8): carrier-only, customer-only retaining the carrier week, one-time copy + independent carrier edit, and the final restore. User draft `01a17d0d-…` stayed read-only at revision 2. New save suite 4/4, session 23/23, carrier 10/10, tabs 3/3, mount 6/6, typecheck 0, build 0, FE restarted on BUILD_ID `uXwhPh0ZnBqFWcpxujHPd`; no migration, no backend change.
+USER DIRECTION: tabs accepted; sequential continuation authorized — close the FIVE remaining issues stage by stage with one Architect review per result; no separate appearance approval after every correction, and no worker self-start.
+NEXT (only after Architect reviews this result): the five-item ledger — tracking-generator uniqueness, correct remaining quantity, non-delivery/return/resend, shared-group common-or-separate parcels, due workqueue/shared operational order view. Planned 257 (first two), 258, 259, 260 remain NOT ISSUED. 255 parked; Tipax deferred.
+HARD RULE: one database only — `tooba_alpha` on the canonical FE3000/Host5088 instance. No disposable/test/parallel database, no port 15433, no Docker PostgreSQL, in this task or any later one.
+
+# SUPERSEDED — 256-R1 PASS (worker); user trial then Architect review — 2026-11-09
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{RESULT.md,RECEIPTS.md,dom/*}.
 256-R1 closes the four open items from the 256 Architect PARTIAL: real underlined tabs with ARIA + RTL roving keyboard and presentation-only switching; concise copy; new commitments fail closed without a configured carrier acceptance calendar while stored legacy null-plan evidence stays readable; latest handoff accepted when its conservative arrival is on or before the chosen receiving date; and «موعد ارسال» rendered as its own read-only operational row separated from «تحویل مشتری».

@@ -1,0 +1,113 @@
+{
+  "phase": "after",
+  "route": "http://127.0.0.1:3000/admin/shipping-services/authoring/01a1beed-d7df-7000-bfc8-0185ea61afe3?mode=edit",
+  "ready": true,
+  "target": "14:00",
+  "loaded": {
+    "applyPresent": true,
+    "applyDisabled": true,
+    "applyLabel": "ذخیره تغییرات",
+    "unsavedHint": false,
+    "loadError": null,
+    "modeBanner": null
+  },
+  "before": {
+    "tabSelected": "true",
+    "open": "10:00",
+    "close": "13:00",
+    "dayRows": 7,
+    "timeZone": "Asia/Tehran"
+  },
+  "edited": {
+    "supported": true,
+    "inputValue": "14:00",
+    "applyDisabled": false,
+    "unsavedHint": true,
+    "carrierIssues": []
+  },
+  "clicked": {
+    "clicked": true,
+    "disabledAfterClick": true,
+    "labelAfterClick": "ذخیره تغییرات"
+  },
+  "afterClick": {
+    "applyDisabled": true,
+    "applyLabel": "ذخیره تغییرات",
+    "anyStatusNotice": "تغییرات ذخیره شد (بازبینی 4).",
+    "errorTexts": [],
+    "unsavedHint": false,
+    "modeBanner": "حالت مشاهده — برای تغییر، دکمهٔ ویرایش را بزنید.",
+    "closeValue": null
+  },
+  "putCountBefore": 0,
+  "putCountAfter": 1,
+  "puts": [
+    {
+      "status": 200,
+      "bodyKeys": [
+        "expectedRevision",
+        "regionGroups",
+        "methodTranslations",
+        "carrierSchedule"
+      ],
+      "bodyCarrier": {
+        "timeZoneId": "Asia/Tehran",
+        "days": [
+          {
+            "weekday": 1,
+            "isWorking": true,
+            "startTime": "09:00:00",
+            "endTime": "17:00:00"
+          },
+          {
+            "weekday": 2,
+            "isWorking": true,
+            "startTime": "09:00:00",
+            "endTime": "17:00:00"
+          },
+          {
+            "weekday": 3,
+            "isWorking": true,
+            "startTime": "10:00:00",
+            "endTime": "14:00:00"
+          },
+          {
+            "weekday": 4,
+            "isWorking": true,
+            "startTime": "09:00:00",
+            "endTime": "17:00:00"
+          },
+          {
+            "weekday": 5,
+            "isWorking": false,
+            "startTime": null,
+            "endTime": null
+          },
+          {
+            "weekday": 6,
+            "isWorking": true,
+            "startTime": "09:00:00",
+            "endTime": "17:00:00"
+          },
+          {
+            "weekday": 7,
+            "isWorking": true,
+            "startTime": "09:00:00",
+            "endTime": "17:00:00"
+          }
+        ]
+      },
+      "expectedRevision": 3,
+      "hasWeeklySchedule": false,
+      "responseSnippet": "{\"draftId\":\"01a1beed-d7df-7000-bfc8-0185ea61afe3\",\"owner\":{\"ownerKind\":\"Store\"},\"serviceCode\":\"tipax\",\"optionCode\":\"standard\",\"revision\":4,\"createdAt\":\"2026-11-09T06:10:20.767614+00:00\",\"updatedAt\":\"2026-11-09T22:30:13.2593683+00:00\",\"type\":{\"draftId\":\"01a1beed-d7df-7000-bfc8-0185ea61afe3\",\"revision\":4,\"resolution\":\"Unconfigured\"},\"presentation\":{\"draftId\":\"01a1beed-d7df-7000-bfc8-0185ea61afe3\",\"r"
+    }
+  ],
+  "documentGets": 2,
+  "consoleErrors": [],
+  "afterReload": {
+    "open": "10:00",
+    "close": "14:00",
+    "dayRows": 7,
+    "applyDisabled": true
+  }
+}

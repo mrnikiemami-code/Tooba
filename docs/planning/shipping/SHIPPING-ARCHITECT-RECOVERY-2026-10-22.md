@@ -1,4 +1,19 @@
-# CURRENT — 256-R1 EXECUTED: real tabs + concise copy + bounded scheduling gaps — 2026-11-09
+# CURRENT — 256-R2 EXECUTED: the two-calendar Save now really saves — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2/{RESULT.md,RECEIPTS.md,dom/*} and the closure plan.
+Worker PASS within the issued save-repair scope, NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT. Base `9543b149e` (== issued expected base).
+MEASURED DEFECT (reproduced before any change, real browser, task-owned draft at revision 3): after a carrier-only edit the Save button was ENABLED, the click produced **0 PUT**, no notice, no alert, and a reload restored the old values. The failure stage is the CLIENT Apply gate, not a disabled button, not server validation, not transport loss and not rehydration.
+ROOT CAUSE: `features/admin-shipping-authoring/session/editor-session.ts` `isDirty()` — the predicate that decides whether the one PUT may be sent — listed `regionGroups`, `methodTranslations`, `weeklySchedule`, `methodSettings`, `typeAssignment` but not the TB-256 `carrierSchedule`. The screen's `canApply` used the composed intent plus the raw local-dirty signal, so it enabled Save while `selectApplyRequest` answered `no-changes`, and `apply()` returns silently for any outcome other than `sent`. The user's own draft is exactly this branch: revision 2, no carrier calendar, one resolved Country group — configure/copy then save.
+REPAIR (one cohesive change, smallest owning seam): `isDirty()` now counts `carrierSchedule`, matching `intentHasEdits`; a comment records why. No new endpoint, no parallel state machine, no revision/owner relaxation, no suppressed validation, no UI/copy/layout change, no delivery-calculation change.
+PROVEN with FOUR real Save presses + reloads on canonical FE3000 → Host5088 / SingleStore / store-alpha / `tooba_alpha`, task-owned draft `01a1beed-d7df-7000-bfc8-0185ea61afe3` (Store / tipax / standard), revisions 3→8: (a) carrier-only (PUT 200, body carries `carrierSchedule` and NOT `weeklySchedule`), (b) customer-only retaining the carrier week (PUT 200 with `weeklySchedule` only), (c) one-time copy + independent carrier edit (customer week untouched), (d) restore of the documented carrier week. The user's draft stayed read-only at revision 2 (`updatedAt` 2026-10-27) — never written, never published.
+Deploy: FE rebuilt and restarted on the canonical 3000 (PID 38148 → 20404, served BUILD_ID `uXwhPh0ZnBqFWcpxujHPd`); Host 5088 untouched (PID 21536); no migration, no backend change, no new database; DataProtection preserved; CapturedPreview local ON / checked-in OFF.
+Proof set: new `authoring-save-carrier-only-256-r2.test.ts` 4/4; session suite 23/23; carrier schedule 10/10; timing tabs 3/3; carrier mount 6/6; typecheck 0; build 0.
+USER DIRECTION (recorded, supersedes the older per-correction user-wait gate): tabs accepted; sequential continuation authorized — save first, then the five remaining defects stage by stage, one Architect review per result, no separate appearance approval after each correction. Worker still executes only the issued task.
+FIVE-ITEM LEDGER (open, NOT issued): tracking uniqueness; correct remaining quantity; non-delivery/return/resend; shared-group common-or-separate parcels; due workqueue/shared operational order view. Planned 257 (first two), 258, 259, 260 remain NOT ISSUED.
+NEXT: Architect review of this result, then the user's own save on the review route; automaticNext NONE. 255 parked, Tipax deferred.
+Single-database rule (applies to every future task, no exception): `tooba_alpha` on canonical FE3000/Host5088 only; no disposable/test/parallel DB, no 15433, no Docker PostgreSQL.
+
+# SUPERSEDED — 256-R1 EXECUTED: real tabs + concise copy + bounded scheduling gaps — 2026-11-09
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{RESULT.md,RECEIPTS.md} and the closure plan.
 Worker PASS within the issued scope, NOT Architect/Visual ACCEPT. Base `162a319ad`; same FE3000/Host5088 SingleStore store-alpha `tooba_alpha`, no new migration.

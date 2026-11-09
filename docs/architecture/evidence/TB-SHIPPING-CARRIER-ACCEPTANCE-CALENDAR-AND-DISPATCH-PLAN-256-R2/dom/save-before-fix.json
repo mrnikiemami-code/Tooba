@@ -1,0 +1,53 @@
+{
+  "phase": "before",
+  "route": "http://127.0.0.1:3000/admin/shipping-services/authoring/01a1beed-d7df-7000-bfc8-0185ea61afe3?mode=edit",
+  "ready": true,
+  "target": "14:00",
+  "loaded": {
+    "applyPresent": true,
+    "applyDisabled": true,
+    "applyLabel": "ذخیره تغییرات",
+    "unsavedHint": false,
+    "loadError": null,
+    "modeBanner": null
+  },
+  "before": {
+    "tabSelected": "true",
+    "open": "10:00",
+    "close": "13:00",
+    "dayRows": 7,
+    "timeZone": "Asia/Tehran"
+  },
+  "edited": {
+    "supported": true,
+    "inputValue": "14:00",
+    "applyDisabled": false,
+    "unsavedHint": true,
+    "carrierIssues": []
+  },
+  "clicked": {
+    "clicked": true,
+    "disabledAfterClick": false,
+    "labelAfterClick": "ذخیره تغییرات"
+  },
+  "afterClick": {
+    "applyDisabled": false,
+    "applyLabel": "ذخیره تغییرات",
+    "anyStatusNotice": null,
+    "errorTexts": [],
+    "unsavedHint": true,
+    "modeBanner": null,
+    "closeValue": "14:00"
+  },
+  "putCountBefore": 0,
+  "putCountAfter": 0,
+  "puts": [],
+  "documentGets": 2,
+  "consoleErrors": [],
+  "afterReload": {
+    "open": "10:00",
+    "close": "13:00",
+    "dayRows": 7,
+    "applyDisabled": true
+  }
+}

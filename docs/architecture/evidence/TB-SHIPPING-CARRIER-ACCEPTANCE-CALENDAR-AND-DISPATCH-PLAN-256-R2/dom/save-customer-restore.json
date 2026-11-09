@@ -1,0 +1,202 @@
+{
+  "scenario": "customer-restore",
+  "route": "http://127.0.0.1:3000/admin/shipping-services/authoring/01a1beed-d7df-7000-bfc8-0185ea61afe3?mode=edit",
+  "ready": true,
+  "before": {
+    "applyDisabled": true,
+    "unsavedHint": false,
+    "status": null,
+    "alerts": [],
+    "carrierRows": 7,
+    "customerRows": 7,
+    "carrier": [
+      {
+        "weekday": 1,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 2,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 3,
+        "accepting": "true",
+        "open": "10:00",
+        "close": "14:00"
+      },
+      {
+        "weekday": 4,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 5,
+        "accepting": "false",
+        "open": null,
+        "close": null
+      },
+      {
+        "weekday": 6,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 7,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      }
+    ],
+    "customer": [
+      {
+        "weekday": 1,
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 2,
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 3,
+        "open": "10:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 4,
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 5,
+        "open": "09:00",
+        "close": "17:00"
+      }
+    ]
+  },
+  "editStep": {
+    "scenario": "customer-restore",
+    "edited": "customer.weekday3.open=09:00",
+    "ok": true,
+    "readBack": "09:00"
+  },
+  "beforeClick": {
+    "applyDisabled": false,
+    "unsavedHint": true,
+    "alerts": []
+  },
+  "afterClick": {
+    "applyDisabled": true,
+    "status": "تغییرات ذخیره شد (بازبینی 6).",
+    "alerts": [],
+    "modeBanner": "حالت مشاهده — برای تغییر، دکمهٔ ویرایش را بزنید."
+  },
+  "putCount": 1,
+  "puts": [
+    {
+      "status": 200,
+      "bodyKeys": [
+        "expectedRevision",
+        "regionGroups",
+        "methodTranslations",
+        "weeklySchedule"
+      ],
+      "expectedRevision": 5,
+      "carrierDay3": null,
+      "carrierDay5": null,
+      "hasWeeklySchedule": true,
+      "weeklyDay3": {
+        "weekday": 3,
+        "isWorking": true,
+        "startTime": "09:00:00",
+        "endTime": "17:00:00"
+      }
+    }
+  ],
+  "afterReload": {
+    "applyDisabled": true,
+    "unsavedHint": false,
+    "status": null,
+    "alerts": [],
+    "carrierRows": 7,
+    "customerRows": 7,
+    "carrier": [
+      {
+        "weekday": 1,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 2,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 3,
+        "accepting": "true",
+        "open": "10:00",
+        "close": "14:00"
+      },
+      {
+        "weekday": 4,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 5,
+        "accepting": "false",
+        "open": null,
+        "close": null
+      },
+      {
+        "weekday": 6,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 7,
+        "accepting": "true",
+        "open": "09:00",
+        "close": "17:00"
+      }
+    ],
+    "customer": [
+      {
+        "weekday": 1,
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 2,
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 3,
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 4,
+        "open": "09:00",
+        "close": "17:00"
+      },
+      {
+        "weekday": 5,
+        "open": "09:00",
+        "close": "17:00"
+      }
+    ]
+  }
+}

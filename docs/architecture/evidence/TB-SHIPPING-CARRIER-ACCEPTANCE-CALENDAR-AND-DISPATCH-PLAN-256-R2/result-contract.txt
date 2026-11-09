@@ -1,0 +1,18 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2
+Parent-Task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Repository: mrnikiemami-code/Tooba / Branch: main
+Mode: REPRODUCE_AND_REPAIR_REAL_AUTHORING_SAVE_WITH_INDEPENDENT_CALENDAR_READBACK
+Status: PASS within the issued save-repair scope — NOT Architect review, NOT user visual/functional acceptance, NOT live Tipax
+Decision: CARRIER_ONLY_SCHEDULE_PATCH_OMITTED_FROM_SERIALIZABLE_EDIT_PREDICATE_REPAIRED_AND_REAL_BROWSER_SAVE_ROUNDTRIP_PROVEN
+Base-SHA: 9543b149e1d27210f823fafb94f80cd707b818be (== issued Expected-Base-SHA)
+Code-SHA / Evidence-SHA: recorded by the task commit (see RECEIPTS §R1–R9)
+Root-Cause: frontend session serializable-patch predicate (isDirty) omitted carrierSchedule, so the ONE PUT was gated as "no-changes" while the screen still enabled Save → zero request, no error, reload lost the edit
+Proof: real headless browser Save on task-owned draft 01a1beed-… revisions 3→8 (4 PUT 200 + 4 reloads), user draft 01a17d0d-… untouched at revision 2
+Evidence: docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2/{TASK.md,RESULT.md,RECEIPTS.md,dom/*}
+Review-URL: http://127.0.0.1:3000/admin/shipping-services/authoring/01a17d0d-e033-7000-af43-49a1daa28822?mode=edit
+automaticNextImplementationTask: NONE
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
