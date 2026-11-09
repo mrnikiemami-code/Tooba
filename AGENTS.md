@@ -1,3 +1,11 @@
+# CURRENT — 256-R1 issued after user trial feedback — 2026-11-09
+
+Only active/issued task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1. Read its docs/ai/tasks/.../TASK.md and 256/ARCHITECT-REVIEW.md. Expected base 639947fc5573a3ae29ec1662d117c7d75e40b856; subsequent task/docs commits are legitimate descendants, not unrelated divergence.
+User tested authoring, rejected button-like calendar navigation and repetitive technical copy, authorized this correction and progress to next meaningful test. Implement true underlined tabs + concise professional form, bounded new-acceptance/feasibility/projection corrections in task scope. Do not start 257–260.
+LATEST non-negotiable: same tooba_alpha and FE3000/Host5088 only; NO disposable/test/parallel DB or 15433/Docker DB. Prior 256 exception is not permission.
+After worker result: Architect reviews, then user tests corrected tabs/calendar behavior. Stop for user feedback at this milestone; no automatic next stage. Issued is not claimed/started/accepted.
+255 parked, Tipax deferred, immutable accepted history/money and existing occurrence/recovery invariants preserved.
+
 # CURRENT — 256 USER TRIAL; Architect PARTIAL; no next task — 2026-11-09
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256/ARCHITECT-REVIEW.md first, then the closure plan.
