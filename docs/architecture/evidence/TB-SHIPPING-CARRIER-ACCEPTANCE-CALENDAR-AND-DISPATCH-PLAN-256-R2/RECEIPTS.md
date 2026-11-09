@@ -160,3 +160,33 @@ GET 01a17d0d-…/editor-document  revision=2  updatedAt=2026-10-27T11:10:28.5611
 - Pre-existing `frontend-source-size` 18-finding family; no baseline file edited by this task.
 - `slotDurationMinutes` is `null` on the user's own draft (full-window legacy shape) — unrelated to
   this save defect and deliberately not changed.
+
+## R10. Commit, push and final state
+
+```text
+Base-SHA (issued)                     9543b149e1d27210f823fafb94f80cd707b818be
+Code-SHA (repair + tests + evidence)  fc526c019db73f413e0c41e2d57f958bc114299b   2026-11-10T02:05:44+03:30
+Reconciliation merge (docs only)      9219a582ed40d7c9824fec0af48590fe27f9365e   merges origin/main 5 docs commits
+git push origin main                  e2cbda84b..9219a582e  main -> main
+git status -sb                        ## main...origin/main   (local == origin/main, clean)
+```
+
+The push required reconciling five documentation commits that origin/main had advanced while this task ran
+(AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md, both shipping planning records and this task's
+own TASK.md). Only documentation banners/ledger text conflicted; no code file, test, script or evidence
+JSON was in conflict. The resolution keeps this task's CURRENT banner on top and marks the earlier
+issue banners SUPERSEDED, so no unrelated work was overwritten, dropped or force-pushed. Normal
+merge+push only — no force/amend/reset/stash/rebase.
+
+Runtime at result time, re-verified after the push:
+
+```text
+FE    http://127.0.0.1:3000/fa        200      PID 20404   BUILD_ID uXwhPh0ZnBqFWcpxujHPd
+Host  http://127.0.0.1:5088/health    200 {"status":"ok"}   PID 21536 (unchanged, not rebuilt)
+```
+
+Elapsed: claimed 2026-11-09T22:18:20Z → result 2026-11-10T02:12Z ≈ 3.9 h wall clock, single worker,
+one task at a time.
+
+The evidence envelope commit is the commit that adds this §R10 (its full 40-char SHA is carried by the
+Bridge worker result, so no self-referential placeholder is needed here).

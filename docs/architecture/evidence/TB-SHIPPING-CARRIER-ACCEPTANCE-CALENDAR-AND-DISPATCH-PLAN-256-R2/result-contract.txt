@@ -8,7 +8,8 @@ Mode: REPRODUCE_AND_REPAIR_REAL_AUTHORING_SAVE_WITH_INDEPENDENT_CALENDAR_READBAC
 Status: PASS within the issued save-repair scope — NOT Architect review, NOT user visual/functional acceptance, NOT live Tipax
 Decision: CARRIER_ONLY_SCHEDULE_PATCH_OMITTED_FROM_SERIALIZABLE_EDIT_PREDICATE_REPAIRED_AND_REAL_BROWSER_SAVE_ROUNDTRIP_PROVEN
 Base-SHA: 9543b149e1d27210f823fafb94f80cd707b818be (== issued Expected-Base-SHA)
-Code-SHA / Evidence-SHA: recorded by the task commit (see RECEIPTS §R1–R9)
+Code-SHA: fc526c019db73f413e0c41e2d57f958bc114299b
+Evidence-SHA: the commit that adds RECEIPTS §R10 to this envelope (full SHA carried by the Bridge worker result)
 Root-Cause: frontend session serializable-patch predicate (isDirty) omitted carrierSchedule, so the ONE PUT was gated as "no-changes" while the screen still enabled Save → zero request, no error, reload lost the edit
 Proof: real headless browser Save on task-owned draft 01a1beed-… revisions 3→8 (4 PUT 200 + 4 reloads), user draft 01a17d0d-… untouched at revision 2
 Evidence: docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2/{TASK.md,RESULT.md,RECEIPTS.md,dom/*}
