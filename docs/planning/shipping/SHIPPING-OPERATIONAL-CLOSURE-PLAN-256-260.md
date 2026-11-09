@@ -58,6 +58,8 @@ Read this plan, the CURRENT top of the three recovery files, then ONLY the activ
 | 4 | TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259 (NOT ISSUED) | optional consolidation vs independent parcels within existing compatible group | positive Marketplace controlled fixture both paths, retry/concurrency; preserve envelope identity |
 | 5 | TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260 (NOT ISSUED) | due today/overdue/status queue, exact locator, shared operational view | accurate filters/time boundaries + no duplicate actions/UI; user handoff |
 
+Stage 1 status (2026-11-09): `TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256` executed — worker **PASS within scope** (base `de4924373`, code `fe5eb2f9b`), NOT Architect/Visual ACCEPT. Carrier acceptance week is independent from the customer week, receiving feasibility uses MAX with a half-open carrier cutoff, and new accepted groups persist a durable planned dispatch (legacy rows stay explicit null). Evidence: `docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256/{RESULT.md,RECEIPTS.md}`. Stages 2–5 remain NOT ISSUED; 255 parked.
+
 IDs after 256 are reservations, not execution authorization. Narrow repair tasks may use 256-R1 etc. Only issue next stage after actual result and independent review. No endless broad proof loop.
 
 ## Environment, proof and deployment boundaries
