@@ -253,6 +253,15 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
+        // TB-257: the canonical server suggestion is not a stateless guess — submitting it takes the owning
+        // automatic allocation path, which is deterministic per parcel and retries bounded fresh candidates on a
+        // real database collision. Anything the operator typed is a manual reference with strict duplicate rules.
+        if (FulfillmentInternalTrackingReference.IsCanonicalSuggestion(request.TrackingReference, shipmentId))
+        {
+            return await _fulfillment.AssignAutomaticTrackingAsync(
+                fulfillmentId, shipmentId, actorUserId, cancellationToken);
+        }
+
         return await _fulfillment.AssignTrackingAsync(
             fulfillmentId,
             shipmentId,

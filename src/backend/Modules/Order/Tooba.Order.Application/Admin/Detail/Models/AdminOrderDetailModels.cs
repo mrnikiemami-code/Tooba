@@ -41,7 +41,12 @@ public sealed record AdminShipmentView(
     string? ActivePackageNumber = null,
     string? PackageLockedReasonFa = null,
     bool CanAddToConsolidatedPackage = false,
-    Guid? ShippingGroupId = null);
+    Guid? ShippingGroupId = null,
+    /// <summary>
+    /// TB-257: server-owned automatic tracking suggestion for this parcel (null once it already has a reference).
+    /// Submitting it unchanged takes the owning automatic allocation; it is never a client-side guess.
+    /// </summary>
+    string? SuggestedTrackingReference = null);
 
 /// <summary>گروه ارسال پذیرفته‌شدهٔ مشتری روی جزئیات سفارش مدیر (فقط‌خواندنی).</summary>
 public sealed record AdminAcceptedShippingGroupView(

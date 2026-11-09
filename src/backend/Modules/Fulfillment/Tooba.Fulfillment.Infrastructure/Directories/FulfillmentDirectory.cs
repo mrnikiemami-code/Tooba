@@ -9,6 +9,7 @@ using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Observability;
 using Tooba.Order.Contracts.Fulfillment;
+using TrackingReference = Tooba.Fulfillment.Contracts.Operations.FulfillmentInternalTrackingReference;
 
 namespace Tooba.Fulfillment.Infrastructure.Directories;
 
@@ -406,6 +407,95 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             trackingReference,
             cancellationToken);
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// TB-257: the candidate is owned by the server and is derived from the whole parcel identity, so a
+    /// deterministic operator "auto" value can never be shared by two parcels. The real uniqueness scope is the
+    /// database unique index; a collision (another parcel already owns the candidate) moves to the next bounded
+    /// candidate inside this same scoped context instead of returning the same failing value. A parcel that
+    /// already carries a code is reconciled unchanged — a deliberate retry, double click or lost response never
+    /// replaces a real reference.
+    /// </remarks>
+    public async Task<FulfillmentSnapshot> AssignAutomaticTrackingAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        var shipment = unit.Shipments.SingleOrDefault(x => x.ShipmentId == shipmentId)
+            ?? throw new ContractOperationException("fulfillment.shipment.not_found");
+
+        if (!string.IsNullOrWhiteSpace(shipment.TrackingReference))
+        {
+            // Reconcile the existing assignment; never silently replace a real reference.
+            return await MapSnapshotAsync(unit, cancellationToken);
+        }
+
+        var originalUnitUpdatedAt = unit.UpdatedAt;
+        for (var attempt = 0; attempt < TrackingReference.MaxAllocationAttempts; attempt++)
+        {
+            var candidate = TrackingReference.ForShipment(shipmentId, attempt);
+            var normalized = candidate.ToLowerInvariant();
+            var taken = await _db.Shipments.AsNoTracking()
+                .AnyAsync(
+                    x => x.ShipmentId != shipmentId
+                        && x.TrackingReference != null
+                        && x.TrackingReference.ToLower() == normalized,
+                    cancellationToken);
+            if (taken)
+            {
+                continue;
+            }
+
+            unit.AssignTracking(shipmentId, candidate, _clock.UtcNow);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (IsTrackingReferenceUniqueViolation(ex))
+            {
+                // A concurrent writer won the same candidate after our read; drop only this assignment and try
+                // the next bounded candidate. Unrelated persistence failures are never swallowed.
+                RestoreUntrackedShipment(unit, shipment, originalUnitUpdatedAt);
+                continue;
+            }
+
+            _telemetry.RecordTrackingAssigned();
+            return await MapSnapshotAsync(unit, cancellationToken);
+        }
+
+        throw new ContractOperationException("fulfillment.tracking.duplicate");
+    }
+
+    /// <summary>
+    /// Reverts only the failed tracking assignment so the next bounded candidate can be attempted in this same
+    /// tracked context. Nothing else of the unit is altered by this operation.
+    /// </summary>
+    private void RestoreUntrackedShipment(FulfillmentUnit unit, Shipment shipment, DateTimeOffset unitUpdatedAt)
+    {
+        var shipmentEntry = _db.Entry(shipment);
+        shipmentEntry.Property(x => x.TrackingReference).CurrentValue = null;
+        shipmentEntry.Property(x => x.TrackingReference).IsModified = true;
+        var unitEntry = _db.Entry(unit);
+        unitEntry.Property(x => x.UpdatedAt).CurrentValue = unitUpdatedAt;
+        unitEntry.Property(x => x.UpdatedAt).IsModified = true;
+    }
+
+    /// <summary>
+    /// Exact uniqueness fault of <c>ix_shipments_tracking_reference</c> only (SQLSTATE 23505 on that index);
+    /// lookalike indexes and every other <see cref="DbUpdateException"/> keep their original meaning.
+    /// </summary>
+    private static bool IsTrackingReferenceUniqueViolation(DbUpdateException exception)
+        => exception.InnerException is Npgsql.PostgresException
+        {
+            SqlState: Npgsql.PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "ix_shipments_tracking_reference",
+        };
 
     private async Task<FulfillmentSnapshot> AssignTrackingCoreAsync(
         Guid fulfillmentId,

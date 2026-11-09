@@ -85,6 +85,17 @@ public interface IFulfillmentDirectory
         string trackingReference,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// TB-257: assigns the server-owned internal reference to a parcel that has none yet. A parcel that already
+    /// carries a code is returned unchanged (reconcile, never replace). Collisions are retried internally with a
+    /// bounded fresh candidate against the real database unique index.
+    /// </summary>
+    Task<FulfillmentSnapshot> AssignAutomaticTrackingAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
     /// <summary>کد رهگیری را پیش از dispatch اصلاح می‌کند.</summary>
     Task<FulfillmentSnapshot> CorrectTrackingAsync(
         Guid fulfillmentId,

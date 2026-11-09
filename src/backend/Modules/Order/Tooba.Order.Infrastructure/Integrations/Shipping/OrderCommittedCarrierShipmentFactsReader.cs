@@ -306,13 +306,6 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
                 packedTotal, packedValues);
         }
 
-        var openAllocated = snapshot.Shipments
-            .Where(s => s.Status == ShipmentOperationStatus.Created)
-            .Where(s => s.ShippingGroupId is null || s.ShippingGroupId == shippingGroupId)
-            .SelectMany(s => s.Items)
-            .GroupBy(i => i.OrderLineId)
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
-
         var lines = new List<OrderCommittedCarrierExecutableLine>();
         foreach (var lineId in orderLineIds)
         {
@@ -324,7 +317,10 @@ public sealed class OrderCommittedCarrierShipmentFactsReader(
             }
 
             prices.TryGetValue(lineId, out var unitPrice);
-            var remaining = item.QuantityPacked - openAllocated.GetValueOrDefault(lineId);
+            // TB-257: ONE owning rule (packed − shipped − open Created allocations of this group). The previous
+            // formula subtracted only open allocations, so an already shipped parcel still advertised an
+            // executable remainder the owning create command then refused.
+            var remaining = FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(snapshot, item, shippingGroupId);
             if (remaining > 0m)
             {
                 lines.Add(new OrderCommittedCarrierExecutableLine(lineId, remaining, unitPrice, item.QuantityPacked));

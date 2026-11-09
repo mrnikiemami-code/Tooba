@@ -257,6 +257,16 @@ public interface IFulfillmentAdminOperations
         string trackingReference,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// TB-257: allocate the server-owned internal tracking reference to a parcel that has none. Deterministic per
+    /// parcel, reconciled on retry, retried internally on a real database collision.
+    /// </summary>
+    Task<FulfillmentSnapshot> AssignAutomaticTrackingAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
     /// <summary>Correct a tracking reference before dispatch.</summary>
     Task<FulfillmentSnapshot> CorrectTrackingAsync(
         Guid fulfillmentId,

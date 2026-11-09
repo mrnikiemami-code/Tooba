@@ -17,6 +17,10 @@ import {
   waitFor,
 } from "../../features/order-carrier-execution/test-dom-harness.ts";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal.tsx";
+import {
+  AdminAssignShipmentTrackingModal,
+  suggestShipmentTracking,
+} from "./admin-assign-shipment-tracking-modal.tsx";
 import type {
   AdminAcceptedShippingGroup,
   AdminOrderDetail,
@@ -318,5 +322,155 @@ test("mount dual Manual groups: distinct summaries; CarrierApi group has no gene
   assert.equal(qq(tree.container, '[data-testid="admin-create-shipment-modal"]').length, 1);
   const modalText = q(tree.container, '[data-testid="admin-create-shipment-modal"]').textContent ?? "";
   assert.doesNotMatch(modalText, /store-alpha|Asia\/Tehran|گروه پذیرفته‌شده|تعهد ارسال/);
+  await tree.unmount();
+});
+
+// ---------------------------------------------------------------------------------------------
+// TB-257 A — the operator tracking modal: whole-parcel suggestion, same-tick single flight, and
+// inline refusal of a code already present in this order (no request at all).
+// ---------------------------------------------------------------------------------------------
+
+const TB257_SHIPMENT: AdminShipment = {
+  shipmentId: "019a5c2e-4f10-7000-8000-000000000001",
+  status: "Created",
+  carrierDisplayName: "پست",
+  trackingReference: null,
+  itemCount: 1,
+  lines: [{ orderLineId: "line-257-a", quantity: 1 }],
+};
+
+const TB257_OTHER_SHIPMENT: AdminShipment = {
+  ...TB257_SHIPMENT,
+  shipmentId: "019a5c2e-4f11-7000-8000-000000000002",
+};
+
+const TB257_SELLER: AdminSellerOrder = {
+  id: "so-257",
+  orderNumber: "SO-257",
+  sellerDisplayName: "فروشگاه آرمان",
+  status: "Paid",
+  paymentState: "Paid",
+  payableAmount: 1000,
+  currency: "IRR",
+  lines: [],
+  fulfillmentId: "ff-257",
+  fulfillmentStatus: "ReadyToFulfill",
+  shipments: [TB257_SHIPMENT],
+};
+
+test("TB-257 static: the suggestion uses the WHOLE parcel id, so parcels in one minute differ", () => {
+  const first = suggestShipmentTracking(TB257_SHIPMENT.shipmentId);
+  const second = suggestShipmentTracking(TB257_OTHER_SHIPMENT.shipmentId);
+
+  // The old rule kept only the first eight characters — one ~65 second bucket shared by both parcels.
+  assert.equal(
+    TB257_SHIPMENT.shipmentId.replace(/[^A-Za-z0-9]/g, "").slice(0, 8),
+    TB257_OTHER_SHIPMENT.shipmentId.replace(/[^A-Za-z0-9]/g, "").slice(0, 8),
+  );
+  assert.match(first, /^TRK-[0-9A-F]{32}$/);
+  assert.notEqual(first, second);
+  assert.equal(first, suggestShipmentTracking(TB257_SHIPMENT.shipmentId));
+});
+
+test("TB-257 mounted: canonical suggestion, exactly one request per burst, input retained on refusal", async () => {
+  let calls = 0;
+  let release: (() => void) | null = null;
+  const submitted: string[] = [];
+  const tree = await mount(
+    createElement(AdminAssignShipmentTrackingModal, {
+      open: true,
+      seller: TB257_SELLER,
+      shipment: TB257_SHIPMENT,
+      pending: false,
+      existingTrackingCodes: [],
+      onClose: () => undefined,
+      onSubmit: async (trackingReference: string) => {
+        calls += 1;
+        submitted.push(trackingReference);
+        if (calls === 1) {
+          await new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          return false;
+        }
+        return true;
+      },
+    }),
+  );
+
+  const input = q(tree.container, '[data-testid="admin-shipment-tracking-input"]') as HTMLInputElement;
+  assert.equal(input.value, suggestShipmentTracking(TB257_SHIPMENT.shipmentId));
+
+  await clickBurst(q(tree.container, '[data-testid="admin-shipment-tracking-submit"]'), 3);
+  assert.equal(calls, 1);
+  assert.equal(submitted[0], suggestShipmentTracking(TB257_SHIPMENT.shipmentId));
+
+  release?.();
+  await flush();
+  assert.equal(
+    (q(tree.container, '[data-testid="admin-shipment-tracking-input"]') as HTMLInputElement).value,
+    suggestShipmentTracking(TB257_SHIPMENT.shipmentId),
+  );
+  assert.match(q(tree.container, '[data-testid="admin-shipment-tracking-error"]').textContent ?? "", /ناموفق/);
+  await tree.unmount();
+});
+
+test("TB-257 mounted: a code already used in this order is refused inline and sends nothing", async () => {
+  let calls = 0;
+  const tree = await mount(
+    createElement(AdminAssignShipmentTrackingModal, {
+      open: true,
+      seller: TB257_SELLER,
+      shipment: TB257_SHIPMENT,
+      pending: false,
+      existingTrackingCodes: ["TRK-ABC"],
+      onClose: () => undefined,
+      onSubmit: async () => {
+        calls += 1;
+        return true;
+      },
+    }),
+  );
+
+  const input = q(tree.container, '[data-testid="admin-shipment-tracking-input"]') as HTMLInputElement;
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  setter?.call(input, " trk-abc ");
+  input.dispatchEvent(new Event("input", { bubbles: true }) as never);
+  await flush();
+
+  await click(q(tree.container, '[data-testid="admin-shipment-tracking-submit"]'));
+  await flush();
+
+  assert.equal(calls, 0);
+  assert.match(q(tree.container, '[data-testid="admin-shipment-tracking-error"]').textContent ?? "", /قبلاً ثبت/);
+  await tree.unmount();
+});
+
+test("TB-257 mounted: the automatic button restores this parcel's canonical candidate", async () => {
+  const tree = await mount(
+    createElement(AdminAssignShipmentTrackingModal, {
+      open: true,
+      seller: TB257_SELLER,
+      shipment: TB257_OTHER_SHIPMENT,
+      pending: false,
+      existingTrackingCodes: [],
+      onClose: () => undefined,
+      onSubmit: async () => true,
+    }),
+  );
+
+  const input = q(tree.container, '[data-testid="admin-shipment-tracking-input"]') as HTMLInputElement;
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  setter?.call(input, "OPERATOR-CODE");
+  input.dispatchEvent(new Event("input", { bubbles: true }) as never);
+  await flush();
+  assert.equal(input.value, "OPERATOR-CODE");
+
+  await click(q(tree.container, '[data-testid="admin-shipment-tracking-autofill"]'));
+  await flush();
+  assert.equal(
+    (q(tree.container, '[data-testid="admin-shipment-tracking-input"]') as HTMLInputElement).value,
+    suggestShipmentTracking(TB257_OTHER_SHIPMENT.shipmentId),
+  );
   await tree.unmount();
 });

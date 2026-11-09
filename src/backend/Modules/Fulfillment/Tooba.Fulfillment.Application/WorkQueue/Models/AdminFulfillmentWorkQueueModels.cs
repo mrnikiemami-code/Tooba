@@ -1,6 +1,7 @@
-using Tooba.Fulfillment.Application.Fulfillments.Models;
+﻿using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
+using QuantityAuthority = Tooba.Fulfillment.Contracts.Operations.FulfillmentPackedQuantityAuthority;
 
 namespace Tooba.Fulfillment.Application.WorkQueue.Models;
 
@@ -247,6 +248,8 @@ public static class AdminFulfillmentQueueFilters
         IReadOnlyList<FulfillmentItemSnapshot> items,
         IReadOnlyList<ShipmentSnapshot> shipments)
     {
+        // TB-257: ONE owning rule (packed − shipped − open Created). Packing a line that is already shipped must
+        // never look like a new shippable remainder.
         foreach (var item in items)
         {
             var openAllocated = shipments
@@ -254,7 +257,8 @@ public static class AdminFulfillmentQueueFilters
                 .SelectMany(s => s.Items)
                 .Where(line => line.OrderLineId == item.OrderLineId)
                 .Sum(line => line.Quantity);
-            if (item.QuantityPacked > item.QuantityShipped + openAllocated)
+            if (QuantityAuthority.RemainingPackedQuantity(
+                    item.QuantityPacked, item.QuantityShipped, openAllocated) > 0m)
             {
                 return true;
             }
@@ -272,7 +276,8 @@ public static class AdminFulfillmentQueueFilters
                 .SelectMany(s => s.Items)
                 .Where(line => line.OrderLineId == item.OrderLineId)
                 .Sum(line => line.Quantity);
-            if (item.QuantityPacked > openAllocated + item.QuantityShipped)
+            if (QuantityAuthority.RemainingPackedQuantity(
+                    item.QuantityPacked, item.QuantityShipped, openAllocated) > 0m)
             {
                 return true;
             }

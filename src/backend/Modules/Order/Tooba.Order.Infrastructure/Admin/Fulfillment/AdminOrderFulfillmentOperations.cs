@@ -242,6 +242,13 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
             return Fail(linked.ErrorCode);
         }
 
+        // TB-257: submitting the canonical server suggestion is an automatic allocation, not a literal manual code.
+        if (FulfillmentInternalTrackingReference.IsCanonicalSuggestion(request.TrackingReference, shipmentId))
+        {
+            await _fulfillment.AssignAutomaticTrackingAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
+            return Ok();
+        }
+
         await _fulfillment.AssignTrackingAsync(
             fulfillmentId,
             shipmentId,
@@ -314,13 +321,10 @@ public sealed class AdminOrderFulfillmentOperations : IAdminOrderFulfillmentOper
         snapshot.Items
             .Select(item =>
             {
-                var open = snapshot.Shipments
-                    .Where(s => s.Status != ShipmentOperationStatus.Cancelled)
-                    .SelectMany(s => s.Items)
-                    .Where(line => line.OrderLineId == item.OrderLineId)
-                    .Sum(line => line.Quantity);
-                var remaining = item.QuantityPacked - item.QuantityShipped - open;
-                return remaining > 0
+                // TB-257: ONE owning rule. Counting every non-cancelled shipment here subtracted dispatched
+                // parcels twice (they are already in QuantityShipped) and ignored the real open-allocation scope.
+                var remaining = FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(snapshot, item);
+                return remaining > 0m
                     ? new ShipmentLineCommand(item.OrderLineId, remaining)
                     : null;
             })

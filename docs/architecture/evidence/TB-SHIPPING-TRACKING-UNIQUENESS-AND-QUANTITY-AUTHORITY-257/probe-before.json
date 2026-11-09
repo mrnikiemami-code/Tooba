@@ -1,0 +1,32 @@
+﻿{
+  "url": "http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf",
+  "title": "Tooba Admin Product Workspace",
+  "bodyText": "مرکز عملیات توبا\n\nپنل مدیریت · سفارش‌ها و پرداخت\n\nدسترسی مدیر\n\nعملیات\n\nداشبورد\nسفارش‌ها و پرداخت\nارسال و تحویل\nسرویس ارسال\nمرجوعی‌ها و بازگشت وجه\nاستوری‌ها\nترکیب صفحهٔ خانه\nصفحات فروشگاه\nمنوها\n\nمحتوا\n\nمقالات\nدسته‌بندی مقالات\nنویسندگان\nراهنمای محتوا\n\nمالی\n\nدریافت‌ها\nتسویه فروشندگان\nپرداخت به فروشندگان\n\nکاتالوگ / دسته‌بندی‌ها\n\nمدیریت دسته‌بندی‌ها\nویژگی‌ها و فیلترها\nواحدهای اندازه‌گیری\n\nمحصولات\n\nفهرست محصولات\nافزودن محصول\n\nبازار\n\nفروشندگان\nمشتریان\n\nنظارت\n\nنظرات\nتیکت پشتیبانی\nکارت هدیه\nکیف پول مشتریان\nپروموشن‌ها\nکمپین‌های فروش\n\nسامانه\n\nتنظیمات\nزبان‌ها\nکنترل دسترسی\n\nخانه / سفارش‌ها / جزئیات سفارش\n\nجزئیات سفارش\n\nTB-20261108032236-01-e12f51 / TB-20261108032236-02-5c39a7\n\nبازگشت\nعملیات سفارش\nچاپ فاکتور\nچاپ رسید پرداخت\nوضعیت تأمین سفارش\nتکمیل‌شده\n\nموجودی موردنیاز این سفارش تأمین و تکمیل شده است.\n\nتعداد اقلام\n\n۴ قلم\n\nتعداد فروشنده\n\n۲ فروشنده\n\nمبلغ کل سفارش\n\n۲۶٬۸۰۴٬۴۰۱٫۸۸ ریال\n\nوضعیت پرداخت\n\nموفق\n\nوضعیت سفارش\n\nپرداخت‌شده\nاطلاعات مشتری و ارسال\n\nآزمایش سفارش\n\n09121234567\n\nتهران، تهران\nخیابان ولیعصر پلاک ۱\n\nکد پستی: 1234567890 · ارسال\n\nاطلاعات پرداخت\nدرگاه\nکارت به کارت\nشناسه تراکنش\nmanual-confirm-01a1b92dec427000a83c7d65fe15defb-01a1b92dec447000a2ab74b34547e0b2\nوضعیت درگاه\nموفق\nتاریخ پرداخت\n۱۴۰۵",
+  "testids": [
+    "admin-order-operational-delivery",
+    "admin-order-operational-summary",
+    "admin-order-operational-group-01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e1700097a193f3bc3bcf0c|manual|01a1b92db7e1700097a193f3bc3bcf0c",
+    "admin-order-operational-items-01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e1700097a193f3bc3bcf0c|manual|01a1b92db7e1700097a193f3bc3bcf0c",
+    "admin-order-operational-member-01a1b92d-b7e1-7000-97a1-93f3bc3bcf0c",
+    "admin-order-operational-item-01a1b92d-e9af-7000-a6a4-2a284431d450",
+    "admin-order-operational-item-01a1b92d-e9b3-7000-93b0-382057028f0a",
+    "admin-order-operational-parcels-01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e1700097a193f3bc3bcf0c|manual|01a1b92db7e1700097a193f3bc3bcf0c",
+    "admin-order-operational-create-01a1b92d-b7e1-7000-97a1-93f3bc3bcf0c",
+    "admin-order-operational-parcel-01a1b93f-71d4-7000-9500-e21af4a160e3",
+    "admin-order-operational-group-01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a0ffff000170008000000000000001|solo:01a1b92db7e27000bfd6800eaf211fa9|manual|01a1b92db7e27000bfd6800eaf211fa9",
+    "admin-order-operational-items-01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a0ffff000170008000000000000001|solo:01a1b92db7e27000bfd6800eaf211fa9|manual|01a1b92db7e27000bfd6800eaf211fa9",
+    "admin-order-operational-member-01a1b92d-b7e2-7000-bfd6-800eaf211fa9",
+    "admin-order-operational-item-01a1b92d-e9bc-7000-8adb-0daf811307fa",
+    "admin-order-operational-parcels-01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a0ffff000170008000000000000001|solo:01a1b92db7e27000bfd6800eaf211fa9|manual|01a1b92db7e27000bfd6800eaf211fa9",
+    "admin-order-operational-create-01a1b92d-b7e2-7000-bfd6-800eaf211fa9",
+    "admin-order-operational-parcel-01a1b942-ea82-7000-b34b-2df4be8d62bc",
+    "admin-order-operational-group-01a1b92de97e7000999a143350d0edaf|IRR|post\u001fstandard|post|standard|2026-11-10|324000000000|612000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e27000a5185d5718aee482|manual|01a1b92db7e27000a5185d5718aee482",
+    "admin-order-operational-items-01a1b92de97e7000999a143350d0edaf|IRR|post\u001fstandard|post|standard|2026-11-10|324000000000|612000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e27000a5185d5718aee482|manual|01a1b92db7e27000a5185d5718aee482",
+    "admin-order-operational-member-01a1b92d-b7e2-7000-a518-5d5718aee482",
+    "admin-order-operational-item-01a1b92d-e9b7-7000-8807-ea1910ba4c93",
+    "admin-order-operational-parcels-01a1b92de97e7000999a143350d0edaf|IRR|post\u001fstandard|post|standard|2026-11-10|324000000000|612000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e27000a5185d5718aee482|manual|01a1b92db7e27000a5185d5718aee482",
+    "admin-order-operational-create-01a1b92d-b7e2-7000-a518-5d5718aee482",
+    "admin-order-operational-parcel-01a1b942-beef-7000-972d-99a79c68dc30",
+    "admin-order-operational-history"
+  ]
+}

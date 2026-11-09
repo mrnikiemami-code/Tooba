@@ -148,6 +148,14 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         MapRequired(await directory.CorrectTrackingAsync(
             fulfillmentId, shipmentId, actorUserId, trackingReference, cancellationToken));
 
+    public async Task<FulfillmentSnapshot> AssignAutomaticTrackingAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        MapRequired(await directory.AssignAutomaticTrackingAsync(
+            fulfillmentId, shipmentId, actorUserId, cancellationToken));
+
     public async Task<FulfillmentSnapshot> DispatchShipmentAsync(
         Guid fulfillmentId,
         Guid shipmentId,

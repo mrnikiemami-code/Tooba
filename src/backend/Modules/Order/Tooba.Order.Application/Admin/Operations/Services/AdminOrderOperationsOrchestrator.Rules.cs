@@ -263,21 +263,11 @@ public sealed partial class AdminOrderOperationsOrchestrator
         ?? throw new AdminOrderOperationsException("order.operation.invalid");
 
     /// <summary>
-    /// آیا هنوز تعدادی برای ایجاد محمولهٔ جدید باقی مانده (با احتساب محمولهٔ Created باز و packed).
+    /// TB-257: آیا هنوز تعدادی برای ایجاد محمولهٔ جدید باقی مانده — همان محاسبهٔ مالک در Fulfillment
+    /// (<c>packed − shipped − open Created</c>) تا مجوز عملیات و شاهد اجرایی هرگز دو فرمول جدا نداشته باشند.
     /// </summary>
     private static bool HasUnallocatedShipmentQuantity(FulfillmentSnapshot fulfillment)
-    {
-        foreach (var item in fulfillment.Items)
-        {
-            var openAllocated = OpenAllocated(fulfillment, item.OrderLineId);
-            if (item.QuantityPacked > item.QuantityShipped + openAllocated)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => FulfillmentPackedQuantityAuthority.HasRemainingPackedQuantity(fulfillment);
 
     private static bool HasProcessableQuantity(FulfillmentSnapshot fulfillment) =>
         fulfillment.Items.Any(x => x.QuantityOrdered > x.QuantityProcessing);
@@ -286,18 +276,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         fulfillment.Items.Any(x => x.QuantityProcessing > x.QuantityPacked);
 
     private static bool HasUnpackableQuantity(FulfillmentSnapshot fulfillment) =>
-        fulfillment.Items.Any(item =>
-        {
-            var blocking = OpenAllocated(fulfillment, item.OrderLineId) + item.QuantityShipped;
-            return item.QuantityPacked > blocking;
-        });
-
-    private static decimal OpenAllocated(FulfillmentSnapshot fulfillment, Guid orderLineId) =>
-        fulfillment.Shipments
-            .Where(s => s.Status == ShipmentOperationStatus.Created)
-            .SelectMany(s => s.Items)
-            .Where(line => line.OrderLineId == orderLineId)
-            .Sum(line => line.Quantity);
+        fulfillment.Items.Any(item => FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(fulfillment, item) > 0);
 
     private static IReadOnlyList<FulfillmentSelectionCommand> ResolvePackSelections(
         FulfillmentSnapshot snapshot,
@@ -381,8 +360,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             return snapshot.Items
                 .Select(item =>
                 {
-                    var blocking = OpenAllocated(snapshot, item.OrderLineId) + item.QuantityShipped;
-                    var unpackable = item.QuantityPacked - blocking;
+                    var unpackable = FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(snapshot, item);
                     return unpackable > 0
                         ? new FulfillmentSelectionCommand(item.OrderLineId, unpackable)
                         : null;
@@ -394,8 +372,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
 
         return NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
         {
-            var blocking = OpenAllocated(snapshot, item.OrderLineId) + item.QuantityShipped;
-            var unpackable = item.QuantityPacked - blocking;
+            var unpackable = FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(snapshot, item);
             if (qty > unpackable)
             {
                 throw new AdminOrderOperationsException("order.operation.invalid");
@@ -412,8 +389,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             return snapshot.Items
                 .Select(item =>
                 {
-                    var open = OpenAllocated(snapshot, item.OrderLineId);
-                    var remaining = item.QuantityPacked - item.QuantityShipped - open;
+                    var remaining = FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(snapshot, item);
                     return remaining > 0
                         ? new ShipmentLineCommand(item.OrderLineId, remaining)
                         : null;
@@ -425,8 +401,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
 
         var normalized = NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
         {
-            var open = OpenAllocated(snapshot, item.OrderLineId);
-            var remaining = item.QuantityPacked - item.QuantityShipped - open;
+            var remaining = FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(snapshot, item);
             if (qty > remaining)
             {
                 throw new AdminOrderOperationsException("order.operation.invalid");
@@ -484,8 +459,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 return false;
             }
 
-            var blocking = OpenAllocated(snapshot, item.OrderLineId) + item.QuantityShipped;
-            if (item.QuantityPacked <= blocking)
+            if (FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(snapshot, item) <= 0)
             {
                 return false;
             }

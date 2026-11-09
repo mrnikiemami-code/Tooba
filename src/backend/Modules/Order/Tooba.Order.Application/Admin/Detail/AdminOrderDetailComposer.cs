@@ -126,11 +126,10 @@ public sealed class AdminOrderDetailComposer
                 shippedByLine.TryGetValue(line.LineId, out var shipped);
                 packedByLine.TryGetValue(line.LineId, out var packed);
                 processingByLine.TryGetValue(line.LineId, out var processing);
-                var openAllocated = fulfillment?.Shipments
-                    .Where(s => s.Status == ShipmentOperationStatus.Created)
-                    .SelectMany(s => s.Items)
-                    .Where(i => i.OrderLineId == line.LineId)
-                    .Sum(i => i.Quantity) ?? 0;
+                // TB-257: ONE owning allocation reading instead of a fourth local formula.
+                var openAllocated = fulfillment is null
+                    ? 0m
+                    : FulfillmentPackedQuantityAuthority.OpenAllocatedQuantity(fulfillment, line.LineId);
                 var deliverySlices = Array.Empty<(decimal Quantity, DateTimeOffset DeliveredAt)>();
                 if (fulfillment is not null)
                 {
@@ -188,7 +187,10 @@ public sealed class AdminOrderDetailComposer
                         ? null
                         : $"این مرسوله عضو بسته تجمیعی {membership.PackageNumber} است و عملیات ارسال از طریق بسته تجمیعی انجام می‌شود.",
                     canAdd,
-                    s.ShippingGroupId);
+                    s.ShippingGroupId,
+                    string.IsNullOrWhiteSpace(s.TrackingReference)
+                        ? FulfillmentInternalTrackingReference.ForShipment(s.ShipmentId)
+                        : null);
             }).ToList()
                 ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();
             return new AdminSellerOrderView(

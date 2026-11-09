@@ -59,16 +59,13 @@ public static class AdminFulfillmentCapabilityProjector
             var packed = item?.QuantityPacked ?? 0;
             var processing = item?.QuantityProcessing ?? 0;
             var shipped = item?.QuantityShipped ?? 0;
-            var openAllocated = fulfillment.Shipments
-                .Where(s => s.Status == ShipmentOperationStatus.Created)
-                .SelectMany(s => s.Items)
-                .Where(i => i.OrderLineId == line.LineId)
-                .Sum(i => i.Quantity);
+            var openAllocated = FulfillmentPackedQuantityAuthority.OpenAllocatedQuantity(fulfillment, line.LineId);
             var ordered = item?.QuantityOrdered ?? line.Quantity;
             var processable = Math.Max(0, ordered - processing);
             var packable = Math.Max(0, processing - packed);
-            var unpackable = Math.Max(0, packed - openAllocated - shipped);
-            var shippable = Math.Max(0, packed - openAllocated);
+            // TB-257: one owning rule; remaining packed excludes BOTH open Created allocations and shipped.
+            var unpackable = FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(packed, shipped, openAllocated);
+            var shippable = unpackable;
             var row = new List<string>();
             var bulk = new List<string>();
 

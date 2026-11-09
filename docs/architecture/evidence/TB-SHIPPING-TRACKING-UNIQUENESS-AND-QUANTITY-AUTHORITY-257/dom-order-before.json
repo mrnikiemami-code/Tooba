@@ -1,0 +1,67 @@
+﻿{
+  "label": "before-fix",
+  "route": "http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf",
+  "ready": true,
+  "failedRequests": [
+    {
+      "status": 400,
+      "url": "http://localhost:3000/fa"
+    }
+  ],
+  "facts": {
+    "groupCount": 3,
+    "groups": [
+      {
+        "key": "01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e1700097a193f3bc3bcf0c|manual|01a1b92db7e1700097a193f3bc3bcf0c",
+        "createEntries": [
+          "admin-order-operational-create-01a1b92d-b7e1-7000-97a1-93f3bc3bcf0c"
+        ],
+        "prepareEntries": [],
+        "items": [
+          "نایک شلوار مردانه سری 1 ۱ عدد ارسال‌شده",
+          "نایک پیراهن مردانه سری 1 ۱ عدد ارسال‌شده"
+        ],
+        "members": [
+          "نایک شلوار مردانه سری 1 ۱ عدد ارسال‌شده نایک پیراهن مردانه سری 1 ۱ عدد ارسال‌شده"
+        ],
+        "parcels": [
+          "مرسولهٔ ۱ پست · ۲ قلم ارسال‌شده کد رهگیری: TRK-01A1B93F ثبت تحویل"
+        ]
+      },
+      {
+        "key": "01a1b92de97e7000999a143350d0edaf|IRR|post|post||2026-11-09|504000000000|540000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a0ffff000170008000000000000001|solo:01a1b92db7e27000bfd6800eaf211fa9|manual|01a1b92db7e27000bfd6800eaf211fa9",
+        "createEntries": [
+          "admin-order-operational-create-01a1b92d-b7e2-7000-bfd6-800eaf211fa9"
+        ],
+        "prepareEntries": [],
+        "items": [
+          "نایک شلوار مردانه سری 1 ۱ عدد ارسال‌شده"
+        ],
+        "members": [
+          "نایک شلوار مردانه سری 1 ۱ عدد ارسال‌شده"
+        ],
+        "parcels": [
+          "مرسولهٔ ۱ پست · ۱ قلم ارسال‌شده کد رهگیری: TRK-01A1B942 ثبت تحویل"
+        ]
+      },
+      {
+        "key": "01a1b92de97e7000999a143350d0edaf|IRR|post\u001fstandard|post|standard|2026-11-10|324000000000|612000000000|Asia/Tehran|تهران\u001fتهران\u001f1234567890\u001fخیابان ولیعصر پلاک ۱|seller:01a030d140cb70008abe6d31739956c5|solo:01a1b92db7e27000a5185d5718aee482|manual|01a1b92db7e27000a5185d5718aee482",
+        "createEntries": [
+          "admin-order-operational-create-01a1b92d-b7e2-7000-a518-5d5718aee482"
+        ],
+        "prepareEntries": [],
+        "items": [
+          "سامسونگ هدفون سری 1 ۱ عدد ارسال‌شده"
+        ],
+        "members": [
+          "سامسونگ هدفون سری 1 ۱ عدد ارسال‌شده"
+        ],
+        "parcels": [
+          "مرسولهٔ ۱ پست · ۱ قلم ارسال‌شده کد رهگیری: TRK-01A1B9423 ثبت تحویل"
+        ]
+      }
+    ],
+    "overflowX": -15,
+    "dir": "rtl"
+  }
+}

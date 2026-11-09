@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button, Dialog } from "../../design-system";
 import type { AdminSellerOrder, AdminShipment } from "./admin-api";
+
+/** پیشوند کد رهگیری داخلی (غیر حاملی) — هم‌ارز `FulfillmentInternalTrackingReference.Prefix`. */
+export const TRACKING_REFERENCE_PREFIX = "TRK-";
 
 type Props = {
   open: boolean;
@@ -15,9 +18,16 @@ type Props = {
   onSubmit: (trackingReference: string) => Promise<boolean>;
 };
 
+/**
+ * TB-257: پیشنهاد کد باید از «کل» شناسه مرسوله ساخته شود، نه از پیشوند کوتاه آن.
+ * پیشوند هشت‌کاراکتری قبلی فقط هر ~۶۵ ثانیه تغییر می‌کرد، پس دو مرسوله در یک دقیقه
+ * کد یکسان می‌گرفتند و ثبت دومی روی یکتایی `ix_shipments_tracking_reference` می‌خورد.
+ * این تابع آینهٔ `FulfillmentInternalTrackingReference.ForShipment` در بک‌اند است؛
+ * همان مرسوله همیشه همان پیشنهاد را می‌دهد تا تلاش مجدد/دوبار کلیک همان کد را بازیابی کند.
+ */
 export function suggestShipmentTracking(shipmentId: string): string {
-  const suffix = shipmentId.replace(/[^A-Za-z0-9]/g, "").slice(0, 8).toUpperCase();
-  return `TRK-${suffix || Date.now().toString(36).toUpperCase()}`;
+  const core = shipmentId.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  return `${TRACKING_REFERENCE_PREFIX}${core || ""}`;
 }
 
 /**
@@ -35,6 +45,11 @@ export function AdminAssignShipmentTrackingModal({
   const suggested = suggestShipmentTracking(shipment.shipmentId);
   const [value, setValue] = useState(suggested);
   const [error, setError] = useState<string | null>(null);
+  // TB-257: same-tick single flight. The parent's `pending` flag only flips after an await, so a burst of clicks in
+  // one tick could post the same parcel several times; the ref closes that window synchronously.
+  const inFlight = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+  const busy = pending || submitting;
 
   function isDuplicate(code: string): boolean {
     const normalized = code.trim().toLowerCase();
@@ -91,14 +106,15 @@ export function AdminAssignShipmentTrackingModal({
           </p>
         ) : null}
         <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" tone="secondary" onClick={onClose} disabled={pending}>
+          <Button type="button" tone="secondary" onClick={onClose} disabled={busy}>
             انصراف
           </Button>
           <Button
             type="button"
-            disabled={pending || !value.trim()}
+            disabled={busy || !value.trim()}
             data-testid="admin-shipment-tracking-submit"
             onClick={() => {
+              if (inFlight.current || pending) return;
               const trimmed = value.trim();
               if (!trimmed) {
                 setError("کد رهگیری الزامی است.");
@@ -108,12 +124,19 @@ export function AdminAssignShipmentTrackingModal({
                 setError("این کد رهگیری قبلاً ثبت شده است. کد دیگری وارد کنید.");
                 return;
               }
-              void onSubmit(trimmed).then((ok) => {
-                if (!ok) {
-                  // Toast از والد آمده؛ مدال باز می‌ماند تا کاربر کد را اصلاح کند.
-                  setError((prev) => prev ?? "ثبت کد رهگیری ناموفق بود. کد را بررسی کنید.");
-                }
-              });
+              inFlight.current = true;
+              setSubmitting(true);
+              void onSubmit(trimmed)
+                .then((ok) => {
+                  if (!ok) {
+                    // Toast از والد آمده؛ مدال باز می‌ماند تا کاربر کد را اصلاح کند.
+                    setError((prev) => prev ?? "ثبت کد رهگیری ناموفق بود. کد را بررسی کنید.");
+                  }
+                })
+                .finally(() => {
+                  inFlight.current = false;
+                  setSubmitting(false);
+                });
             }}
           >
             ثبت کد رهگیری

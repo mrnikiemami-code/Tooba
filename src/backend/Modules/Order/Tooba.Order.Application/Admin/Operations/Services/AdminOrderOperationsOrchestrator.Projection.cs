@@ -153,8 +153,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
                     "بازگشت از بسته‌بندی برای اقلام تخصیص‌نشده؟"));
                 foreach (var item in fulfillment.Items)
                 {
-                    var blocking = OpenAllocated(fulfillment, item.OrderLineId) + item.QuantityShipped;
-                    if (item.QuantityPacked <= blocking)
+                    if (FulfillmentPackedQuantityAuthority.RemainingPackedQuantity(fulfillment, item) <= 0)
                     {
                         continue;
                     }

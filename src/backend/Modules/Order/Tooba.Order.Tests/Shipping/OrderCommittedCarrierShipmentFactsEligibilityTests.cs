@@ -62,6 +62,123 @@ public sealed class OrderCommittedCarrierShipmentFactsEligibilityTests
         Assert.Contains(lines, x => x.OrderLineId == LineB && x.RemainingPackedQuantity == 3m);
     }
 
+    // ---- TB-257 B: shipped quantity is really consumed -----------------------------------------
+
+    [Fact]
+    public void Wholly_shipped_group_is_exhausted_and_offers_no_executable_line()
+    {
+        // The reported defect: packed 1 / shipped 1 with no open allocation still advertised a line.
+        var snapshot = SnapshotShipped(
+            FulfillmentOperationStatus.Dispatched,
+            packed: 1m,
+            shipped: 1m,
+            shipments:
+            [
+                (ShipmentOperationStatus.Dispatched, (LineA, 1m)),
+            ]);
+
+        var (reason, lines, fulfillmentId, packedTotal, packedValues) =
+            OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility(
+                new[] { snapshot },
+                SellerOrder,
+                Group,
+                new[] { LineA });
+
+        Assert.Equal("fulfillment_exhausted", reason);
+        Assert.Empty(lines);
+        Assert.Equal(FulfillmentId, fulfillmentId);
+        Assert.Equal(1m, packedTotal);
+        Assert.Single(packedValues);
+    }
+
+    [Fact]
+    public void Partial_shipment_with_an_open_allocation_offers_only_the_real_remainder()
+    {
+        var snapshot = SnapshotShipped(
+            FulfillmentOperationStatus.Dispatched,
+            packed: 5m,
+            shipped: 2m,
+            shipments:
+            [
+                (ShipmentOperationStatus.Created, (LineA, 1m)),
+                (ShipmentOperationStatus.Dispatched, (LineA, 2m)),
+            ]);
+
+        var (reason, lines, _, _, _) = OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility(
+            new[] { snapshot },
+            SellerOrder,
+            Group,
+            new[] { LineA });
+
+        Assert.Null(reason);
+        var line = Assert.Single(lines);
+        Assert.Equal(LineA, line.OrderLineId);
+        Assert.Equal(2m, line.RemainingPackedQuantity);
+        Assert.Equal(5m, line.PackedQuantity);    }
+
+    [Fact]
+    public void Cancelled_pre_dispatch_allocation_releases_its_remainder()
+    {
+        var snapshot = SnapshotShipped(
+            FulfillmentOperationStatus.Packed,
+            packed: 3m,
+            shipped: 0m,
+            shipments:
+            [
+                (ShipmentOperationStatus.Cancelled, (LineA, 3m)),
+            ]);
+
+        var (reason, lines, _, _, _) = OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility(
+            new[] { snapshot },
+            SellerOrder,
+            Group,
+            new[] { LineA });
+
+        Assert.Null(reason);
+        Assert.Equal(3m, Assert.Single(lines).RemainingPackedQuantity);
+    }
+
+    private static FulfillmentSnapshot SnapshotShipped(
+        FulfillmentOperationStatus status,
+        decimal packed,
+        decimal shipped,
+        IReadOnlyList<(ShipmentOperationStatus Status, (Guid LineId, decimal Quantity) Line)> shipments)
+        => new(
+            FulfillmentId,
+            SellerOrder,
+            Guid.Parse("99999999-9999-4999-8999-999999999999"),
+            Guid.Parse("88888888-8888-4888-8888-888888888888"),
+            status,
+            "r",
+            "0",
+            "p",
+            "c",
+            "a",
+            "1",
+            "m",
+            "m",
+            new[]
+            {
+                new FulfillmentItemSnapshot(Guid.NewGuid(), LineA, packed, shipped, null, packed, 0),
+            },
+            shipments.Select((s, index) => new ShipmentSnapshot(
+                Guid.Parse($"20000000-0000-4000-8000-{index:D12}"),
+                s.Status,
+                "carrier",
+                null,
+                null,
+                null,
+                new[] { new ShipmentLineSnapshot(s.Line.LineId, s.Line.Quantity) },
+                DateTimeOffset.UtcNow,
+                "m",
+                "m",
+                null,
+                0,
+                null,
+                Group)).ToArray(),
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow);
+
     private static FulfillmentSnapshot Snapshot(
         FulfillmentOperationStatus status,
         decimal packedA,
