@@ -1,3 +1,11 @@
+# CURRENT — 257 ISSUED; 256-R2 save repair accepted within scope — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257/TASK.md.
+Source review accepts carrierSchedule addition to editor-session.isDirty with focused regression and worker real PUT/GET/reload receipts on existing task-owned draft. This is not direct Architect live-browser or whole scheduling/user acceptance.
+Only active/issued task: TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257 (parent256-R2, expected base662254a1e; issue/docs descendants legitimate). Targets issue1 automatic tracking collision (root cause to diagnose) + issue2 source-confirmed missing shipped subtraction in OrderCommittedCarrierShipmentFactsReader.ResolveFulfillmentEligibility.
+Ledger: save prerequisite CLOSED within scope; tracking PENDING257; remaining quantity PENDING257; return/resend PENDING258; shared/common-or-separate packing PENDING259; due queue/shared operational view PENDING260. 258–260 NOT ISSUED.
+Standing user authorization: sequential one result -> Architect review -> next task, no pause for user per defect; final handoff after all five. Worker executes ONE task then stops.
+Same tooba_alpha, FE3000/Host5088 only, no temporary/parallel/disposable database. No user-order/tracking/payment mutation, no live Tipax, no edition switch. Preserve 249/253 exact-occurrence replay before remaining gate; do not fix first-allocation quantity by breaking recovery.
 # CURRENT — 256-R2 worker result PASS: the two-calendar Save actually saves — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2/{RESULT.md,RECEIPTS.md,dom/*}.
