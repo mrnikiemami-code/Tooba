@@ -7,6 +7,14 @@ USER DIRECTION: tabs accepted; sequential continuation authorized — close the 
 NEXT (only after Architect reviews this result): the five-item ledger — tracking-generator uniqueness, correct remaining quantity, non-delivery/return/resend, shared-group common-or-separate parcels, due workqueue/shared operational order view. Planned 257 (first two), 258, 259, 260 remain NOT ISSUED. 255 parked; Tipax deferred.
 HARD RULE: one database only — `tooba_alpha` on the canonical FE3000/Host5088 instance. No disposable/test/parallel database, no port 15433, no Docker PostgreSQL, in this task or any later one.
 
+# SUPERSEDED — 256-R2 issued (completed by the worker result above) — 2026-11-09
+
+User accepted timing-tab appearance but reports SAVE FAILS. Active issued task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2; read its TASK.md. Expected code/evidence base 9543b149e; newer issue/docs descendants are legitimate. Issued is not claimed/completed.
+LATEST USER OVERRIDE: continue one task at a time, wait for actual worker result and Architect review, then issue the next; do not pause for user after every defect. Stop for meaningful user handoff after the FIVE remaining defects, following save prerequisite.
+Ledger: save prerequisite 256-R2 IN PROGRESS/ISSUED (not fixed); 1 tracking uniqueness PENDING; 2 remaining quantity PENDING (both planned257); 3 non-delivery/return/resend PENDING258; 4 common-or-independent parcels in shared group PENDING259; 5 due queue/shared operational view PENDING260. 257–260 NOT ISSUED yet. Worker must STOP after its single received task.
+Only tooba_alpha, FE3000/Host5088; NO extra DB including disposable tests. Real UI SAVE proof on existing task-owned draft 01a1beed-d7df-7000-bfc8-0185ea61afe3 authorized, no user's service save/publication or order mutation. Preserve approved tabs and concise copy. 255 parked/Tipax deferred.
+The latest instruction supersedes older user-test-every-fix pauses below; do not lose this through chat recovery. Never claim save works until actual PUT + fresh GET + reload prove it.
+
 # SUPERSEDED — 256-R1 PASS (worker); user trial then Architect review — 2026-11-09
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{RESULT.md,RECEIPTS.md,dom/*}.

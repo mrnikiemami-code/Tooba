@@ -13,6 +13,14 @@ FIVE-ITEM LEDGER (open, NOT issued): tracking uniqueness; correct remaining quan
 NEXT: Architect review of this result, then the user's own save on the review route; automaticNext NONE. 255 parked, Tipax deferred.
 Single-database rule (applies to every future task, no exception): `tooba_alpha` on canonical FE3000/Host5088 only; no disposable/test/parallel DB, no 15433, no Docker PostgreSQL.
 
+# SUPERSEDED — 256-R2 issued (completed by the worker result above) — 2026-11-09
+
+User accepted timing-tab appearance but reports SAVE FAILS. Active issued task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R2; read its TASK.md. Expected code/evidence base 9543b149e; newer issue/docs descendants are legitimate. Issued is not claimed/completed.
+LATEST USER OVERRIDE: continue one task at a time, wait for actual worker result and Architect review, then issue the next; do not pause for user after every defect. Stop for meaningful user handoff after the FIVE remaining defects, following save prerequisite.
+Ledger: save prerequisite 256-R2 IN PROGRESS/ISSUED (not fixed); 1 tracking uniqueness PENDING; 2 remaining quantity PENDING (both planned257); 3 non-delivery/return/resend PENDING258; 4 common-or-independent parcels in shared group PENDING259; 5 due queue/shared operational view PENDING260. 257–260 NOT ISSUED yet. Worker must STOP after its single received task.
+Only tooba_alpha, FE3000/Host5088; NO extra DB including disposable tests. Real UI SAVE proof on existing task-owned draft 01a1beed-d7df-7000-bfc8-0185ea61afe3 authorized, no user's service save/publication or order mutation. Preserve approved tabs and concise copy. 255 parked/Tipax deferred.
+The latest instruction supersedes older user-test-every-fix pauses below; do not lose this through chat recovery. Never claim save works until actual PUT + fresh GET + reload prove it.
+
 # SUPERSEDED — 256-R1 EXECUTED: real tabs + concise copy + bounded scheduling gaps — 2026-11-09
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{RESULT.md,RECEIPTS.md} and the closure plan.
