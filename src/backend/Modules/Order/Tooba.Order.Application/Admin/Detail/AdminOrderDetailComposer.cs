@@ -377,6 +377,7 @@ public sealed class AdminOrderDetailComposer
             .Select(s => s.ShippingGroupId!.Value)
             .ToHashSet();
         var paymentLockedAny = factsByGroup.Values.Any(f => f.PaymentLocked);
+        var historyByGroupId = historyGroups.ToDictionary(h => h.ShippingGroupId);
 
         // TB-253-R2: readiness must reflect the actual actor, not a hard-coded true.
         var actorMayManage = false;
@@ -438,7 +439,8 @@ public sealed class AdminOrderDetailComposer
                         sellerNames.TryGetValue(m.SellerPartyId, out var feeName) ? feeName : "فروشنده",
                         m.FeeAmount,
                         m.Currency)).ToList(),
-                    actorMayManage);
+                    actorMayManage,
+                    ResolvePlannedDispatch(ready.Members, historyByGroupId));
             })
             .ToList();
 
@@ -483,6 +485,59 @@ public sealed class AdminOrderDetailComposer
         var open = TimeSpan.FromTicks(evidence.ReceivingOpenTicks);
         var close = TimeSpan.FromTicks(evidence.ReceivingCloseTicks);
         return $"{open:hh\\:mm}–{close:hh\\:mm}";
+    }
+
+    /// <summary>
+    /// TB-256-R1: موعد ارسال کارت عملیاتی فقط از برنامهٔ پذیرفته‌شده خوانده می‌شود (هیچ بازمحاسبه با
+    /// تنظیمات جاری). وقتی اعضا موعدهای متفاوت دارند، زودترین موعد نمایش داده می‌شود و تعداد برنامه‌های
+    /// متفاوت هم گزارش می‌شود تا یک واقعیت جعلی ساخته نشود.
+    /// </summary>
+    private static AdminPlannedDispatchView? ResolvePlannedDispatch(
+        IReadOnlyList<MarketplaceOperationalDeliveryGroupAuthority.GroupFact> members,
+        IReadOnlyDictionary<Guid, OrderShippingGroupHistoryRecord> historyByGroupId)
+    {
+        var plans = new List<OrderShippingGroupHistoryDispatchPlan>();
+        foreach (var member in members)
+        {
+            if (!historyByGroupId.TryGetValue(member.ShippingGroupId, out var history)
+                || history.Evidence?.PlannedDispatch is not { } plan)
+            {
+                continue;
+            }
+
+            plans.Add(plan);
+        }
+
+        if (plans.Count == 0)
+        {
+            return null;
+        }
+
+        var distinct = plans
+            .GroupBy(
+                plan => string.Join(
+                    '\u001f',
+                    plan.HandoffDate.ToString("yyyy-MM-dd"),
+                    plan.OpenTicks,
+                    plan.CloseTicks,
+                    plan.TimeZone),
+                StringComparer.Ordinal)
+            .Select(group => group.First())
+            .OrderBy(plan => plan.HandoffDate)
+            .ThenBy(plan => plan.OpenTicks)
+            .ToList();
+
+        var chosen = distinct[0];
+        var open = TimeSpan.FromTicks(chosen.OpenTicks);
+        var close = TimeSpan.FromTicks(chosen.CloseTicks);
+
+        return new AdminPlannedDispatchView(
+            chosen.HandoffDate,
+            $"{open:hh\\:mm}–{close:hh\\:mm}",
+            chosen.TimeZone,
+            chosen.TransportWorkingDays,
+            chosen.PolicyVersion,
+            distinct.Count);
     }
 
     private async Task<OrdersGrid.Models.AdminOrderListItem> MapOrderListItemAsync(

@@ -167,6 +167,18 @@ export interface AdminOperationalDeliveryGroup {
   members: AdminOperationalDeliveryMember[];
   feeBreakdown: AdminOperationalFeeBreakdown[];
   actorMayManageOperations?: boolean;
+  /**
+   * TB-256-R1: durable planned dispatch (carrier handoff) kept distinct from the customer delivery
+   * date/window. Null means the accepted evidence carries no plan (historical/legacy group).
+   */
+  plannedDispatch?: {
+    handoffDate: string;
+    handoffTimeWindow: string;
+    handoffTimeZone: string | null;
+    transportWorkingDays: number;
+    policyVersion: number;
+    distinctVariants: number;
+  } | null;
 }
 
 export interface AdminConsolidatedPackageMember {
@@ -898,6 +910,20 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
           actorMayManageOperations: (() => {
             const raw = prop(row, "actorMayManageOperations", "ActorMayManageOperations");
             return raw === undefined || raw === null ? true : Boolean(raw);
+          })(),
+          plannedDispatch: (() => {
+            const dispatch = record(prop(row, "plannedDispatch", "PlannedDispatch"));
+            if (!dispatch) return null;
+            const handoffDate = text(prop(dispatch, "handoffDate", "HandoffDate")) || null;
+            if (!handoffDate) return null;
+            return {
+              handoffDate,
+              handoffTimeWindow: text(prop(dispatch, "handoffTimeWindow", "HandoffTimeWindow")) || "—",
+              handoffTimeZone: text(prop(dispatch, "handoffTimeZone", "HandoffTimeZone")) || null,
+              transportWorkingDays: number(prop(dispatch, "transportWorkingDays", "TransportWorkingDays")),
+              policyVersion: number(prop(dispatch, "policyVersion", "PolicyVersion")),
+              distinctVariants: number(prop(dispatch, "distinctVariants", "DistinctVariants")),
+            };
           })(),
         }];
       },

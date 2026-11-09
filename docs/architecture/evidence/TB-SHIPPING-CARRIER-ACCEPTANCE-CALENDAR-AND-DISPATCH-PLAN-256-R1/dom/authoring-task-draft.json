@@ -1,0 +1,187 @@
+﻿{
+  "route": "http://127.0.0.1:3000/admin/shipping-services/authoring/01a1beed-d7df-7000-bfc8-0185ea61afe3?mode=edit",
+  "ready": true,
+  "failedRequests": [
+    {
+      "status": 400,
+      "url": "http://localhost:3000/fa"
+    }
+  ],
+  "consoleErrors": [],
+  "initial": {
+    "listCount": 2,
+    "listLabels": [
+      "ویرایش روش ارسال",
+      "زمان‌بندی ارسال"
+    ],
+    "pageTabs": [
+      {
+        "id": "shipping-authoring-tab-general",
+        "testid": "shipping-authoring-tab-general",
+        "text": "اطلاعات روش",
+        "ariaSelected": "true",
+        "tabIndex": 0,
+        "ariaControls": "shipping-authoring-panel-general",
+        "panelExists": true,
+        "panelHidden": false,
+        "panelLabelledBy": "shipping-authoring-tab-general",
+        "role": "tab",
+        "height": 44,
+        "borderBottomWidth": "2px",
+        "borderBottomColor": "rgb(37, 99, 235)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "fontWeight": "900"
+      },
+      {
+        "id": "shipping-authoring-tab-regions",
+        "testid": "shipping-authoring-tab-regions",
+        "text": "مناطق و تعرفه‌ها",
+        "ariaSelected": "false",
+        "tabIndex": -1,
+        "ariaControls": "shipping-authoring-panel-regions",
+        "panelExists": true,
+        "panelHidden": true,
+        "panelLabelledBy": "shipping-authoring-tab-regions",
+        "role": "tab",
+        "height": 44,
+        "borderBottomWidth": "2px",
+        "borderBottomColor": "rgba(0, 0, 0, 0)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "fontWeight": "700"
+      }
+    ],
+    "timingTabs": [
+      {
+        "id": "shipping-authoring-timing-tab-customer",
+        "testid": "shipping-authoring-timing-tab-customer",
+        "text": "تحویل به مشتری",
+        "ariaSelected": "true",
+        "tabIndex": 0,
+        "ariaControls": "shipping-authoring-timing-panel-customer",
+        "panelExists": true,
+        "panelHidden": false,
+        "panelLabelledBy": "shipping-authoring-timing-tab-customer",
+        "role": "tab",
+        "height": 44,
+        "borderBottomWidth": "2px",
+        "borderBottomColor": "rgb(37, 99, 235)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "fontWeight": "900"
+      },
+      {
+        "id": "shipping-authoring-timing-tab-carrier",
+        "testid": "shipping-authoring-timing-tab-carrier",
+        "text": "پذیرش حامل",
+        "ariaSelected": "false",
+        "tabIndex": -1,
+        "ariaControls": "shipping-authoring-timing-panel-carrier",
+        "panelExists": true,
+        "panelHidden": true,
+        "panelLabelledBy": "shipping-authoring-timing-tab-carrier",
+        "role": "tab",
+        "height": 44,
+        "borderBottomWidth": "2px",
+        "borderBottomColor": "rgba(0, 0, 0, 0)",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "fontWeight": "700"
+      }
+    ],
+    "panelCount": 4,
+    "customerDayRows": 7,
+    "carrierDayRows": 7,
+    "carrierUnconfigured": false,
+    "copyActionCount": 1,
+    "copyActionVisible": false,
+    "timingSectionTextLength": 1304,
+    "forbiddenCopyHits": [],
+    "hasEmojiOrIconOnlyTab": false,
+    "overflowX": -15
+  },
+  "editStep": {
+    "supported": true,
+    "beforeClosedPressed": "false",
+    "afterClosedPressed": "false",
+    "afterWorkingPressed": "true"
+  },
+  "switchToCarrier": {
+    "customerSelected": "true",
+    "customerPanelHidden": true,
+    "carrierPanelHidden": false,
+    "carrierRows": 7,
+    "customerRowsStillMounted": 7,
+    "copyVisible": {
+      "height": 44,
+      "width": 191,
+      "disabled": false,
+      "text": "کپی از ساعات تحویل مشتری"
+    },
+    "copyHint": "منطقهٔ زمانی—تهران (ایران) — Asia/Tehranدوبی (امارات) — Asia/Dubaiمسقط (عمان) — Asia/Muscatریاض (عربستان) — Asia/Riyadhکابل (افغانستان) — Asia/Kabulبغداد (عراق)",
+    "carrierRowsVisible": 7,
+    "activeTabTabIndexes": [
+      {
+        "id": "shipping-authoring-timing-tab-customer",
+        "selected": "false",
+        "tabIndex": -1
+      },
+      {
+        "id": "shipping-authoring-timing-tab-carrier",
+        "selected": "true",
+        "tabIndex": 0
+      }
+    ]
+  },
+  "backToCustomer": {
+    "editedStatePreserved": true,
+    "restoredBaseline": true,
+    "customerPanelHidden": false
+  },
+  "keyboard": {
+    "rtl": true,
+    "afterArrow": "shipping-authoring-timing-tab-carrier",
+    "afterHome": "shipping-authoring-timing-tab-customer",
+    "selected": [
+      "true",
+      "false"
+    ]
+  },
+  "responsive": {
+    "390": {
+      "overflowX": 0,
+      "tabs": [
+        {
+          "text": "تحویل به مشتری",
+          "height": 44,
+          "width": 136
+        },
+        {
+          "text": "پذیرش حامل",
+          "height": 44,
+          "width": 108
+        }
+      ],
+      "pageWidth": 390,
+      "docWidth": 390
+    },
+    "1024": {
+      "overflowX": -15,
+      "tabs": [
+        {
+          "text": "تحویل به مشتری",
+          "height": 44,
+          "width": 136
+        },
+        {
+          "text": "پذیرش حامل",
+          "height": 44,
+          "width": 108
+        }
+      ],
+      "pageWidth": 1024,
+      "docWidth": 1009
+    }
+  }
+}

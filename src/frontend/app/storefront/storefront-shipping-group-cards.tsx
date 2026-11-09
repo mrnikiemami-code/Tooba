@@ -253,6 +253,14 @@ const CAPTURED_REASON_TEXT: Record<string, string> = {
   "storefront.captured_preview.destination_pending": "در حال محاسبهٔ ارسال برای مقصد جدید…",
   "storefront.captured_preview.destination_failed": "ارسال این مقصد محاسبه نشد؛ قیمت مقصد قبلی نمایش داده نمی‌شود.",
   "storefront.captured_preview.untrusted": "پاسخ ارسال این سبد قابل اتکا نیست؛ دوباره تلاش کنید.",
+  // TB-256-R1: a new delivery commitment needs the independent carrier acceptance schedule. This is the
+  // single actionable blocker shown instead of silently offering dates from an incomplete calendar.
+  "storefront.captured_group.carrier_schedule_missing":
+    "برنامهٔ «پذیرش حامل» این روش ارسال تنظیم نشده است؛ تا تکمیل آن در تنظیمات ارسال، زمان تحویل قابل انتخاب نیست.",
+  // TB-256-R1: the carrier calendar exists but is itself unusable (invalid day/zone, no working day or no
+  // feasible handoff inside the horizon). Still one actionable blocker for the merchant, never a guessed date.
+  "storefront.captured_group.carrier_schedule_invalid":
+    "برنامهٔ «پذیرش حامل» این روش ارسال معتبر نیست؛ تا اصلاح آن در تنظیمات ارسال، زمان تحویل قابل انتخاب نیست.",
 };
 
 function capturedReasonText(code: string | null): string {

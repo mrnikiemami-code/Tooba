@@ -201,6 +201,18 @@ public static class StorefrontCapturedGroupProjectionReasons
     /// <summary>TB-256: بیشینهٔ روزهای تحویل ذخیره نشده/خارج از محدوده/کمتر از کمینه است.</summary>
     public const string MaximumDeliveryDaysInvalid = "storefront.captured_group.maximum_delivery_days_invalid";
 
+    /// <summary>
+    /// TB-256-R1: برنامهٔ پذیرش حامل برای این روش پیکربندی نشده است؛ تعهد/تاریخ تحویل جدید ساخته
+    /// نمی‌شود و این کد به‌عنوان مانع قابل‌اقدام به مشتری نشان داده می‌شود.
+    /// </summary>
+    public const string CarrierScheduleMissing = "storefront.captured_group.carrier_schedule_missing";
+
+    /// <summary>
+    /// TB-256-R1: برنامهٔ پذیرش حامل وجود دارد اما خودش معتبر/قابل استفاده نیست (روز یا منطقهٔ زمانی
+    /// نامعتبر، هیچ روز کاری، یا موعد پذیرش ممکنی در افق نیست). هیچ تاریخ تحویلی حدس زده نمی‌شود.
+    /// </summary>
+    public const string CarrierScheduleInvalid = "storefront.captured_group.carrier_schedule_invalid";
+
     /// <summary>تعداد تاریخ‌های درخواستی خارج از محدودهٔ صریح تقویم است.</summary>
     public const string AvailableDateCountInvalid = "storefront.captured_group.available_date_count_invalid";
 

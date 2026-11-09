@@ -115,7 +115,29 @@ public sealed record AdminOperationalDeliveryGroupView(
     IReadOnlyList<AdminOperationalDeliveryMemberView> Members,
     IReadOnlyList<AdminOperationalFeeBreakdownView> FeeBreakdown,
     /// <summary>TB-253-R2: actual actor authority for parcel/package mutations.</summary>
-    bool ActorMayManageOperations = false);
+    bool ActorMayManageOperations = false,
+    /// <summary>
+    /// TB-256-R1: durable planned dispatch (carrier handoff) of this operational group, kept distinct from
+    /// the customer receiving date/time. Null means no accepted group in this card carries a plan.
+    /// </summary>
+    AdminPlannedDispatchView? PlannedDispatch = null);
+
+/// <summary>
+/// TB-256-R1: موعد ارسال (پذیرش حامل) یک گروه عملیاتی — فقط از شاهد پذیرفته‌شده، بدون بازمحاسبه.
+/// </summary>
+/// <param name="HandoffDate">روز تحویل بسته به حامل (تاریخ محلی حامل).</param>
+/// <param name="HandoffTimeWindow">بازهٔ پذیرش همان روز به وقت محلی حامل.</param>
+/// <param name="HandoffTimeZone">منطقهٔ زمانی همان بازه.</param>
+/// <param name="TransportWorkingDays">MAX روز کاری حملِ مؤثر هنگام پذیرش.</param>
+/// <param name="PolicyVersion">نسخهٔ سیاست زمان‌بندیِ ثبت‌شده.</param>
+/// <param name="DistinctVariants">تعداد برنامه‌های متفاوت اعضای این کارت (۱ = یک موعد مشترک).</param>
+public sealed record AdminPlannedDispatchView(
+    DateOnly HandoffDate,
+    string HandoffTimeWindow,
+    string HandoffTimeZone,
+    int TransportWorkingDays,
+    int PolicyVersion,
+    int DistinctVariants);
 
 /// <summary>عضو بسته تجمیعی روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminConsolidatedPackageMemberView(

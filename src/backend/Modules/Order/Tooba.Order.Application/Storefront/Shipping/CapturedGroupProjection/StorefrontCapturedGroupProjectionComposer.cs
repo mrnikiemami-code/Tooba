@@ -63,7 +63,12 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
                     .ToArray()),
             cancellationToken);
 
-        return await _core.ComposeFromFactsAsync(command, request.Groups, facts, cancellationToken);
+        return await _core.ComposeFromFactsAsync(
+            command,
+            request.Groups,
+            facts,
+            cancellationToken,
+            requirePlannedDispatch: true);
     }
 
     /// <summary>
@@ -74,6 +79,11 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
     /// این مسیر عمداً <b>هیچ</b> فراخوانی به <see cref="ICheckoutShippingGroupGoodsFactsReader"/>،
     /// Preview/Submit یا Pricing/Promotion/Tax ندارد: فکت‌ها از خطوط <c>SellerOrder</c> همان submit
     /// ساخته شده‌اند و فقط اعتبارسنجی/ترکیب می‌شوند. ورودی فقط داخلی و متعلق به Order است.
+    /// <para>
+    /// <b>TB-256-R1:</b> این overload فقط برای <b>بازاعتبارسنجی/خوانایی شاهد پذیرفته‌شده</b> است، بنابراین
+    /// با <c>requirePlannedDispatch: false</c> اجرا می‌شود: شاهدی که خودش تقویم حامل ندارد قابل خواندن
+    /// می‌ماند، اما هیچ تعهد جدیدی از این مسیر ساخته نمی‌شود.
+    /// </para>
     /// </remarks>
     /// <param name="request">درخواست با فرمان checkout و برنامهٔ گروه/نامزد.</param>
     /// <param name="facts">فکت‌های ساخته‌شده از خطوط سفارش همان submit.</param>
@@ -89,6 +99,7 @@ public sealed class StorefrontCapturedGroupProjectionComposer(
                 StorefrontCapturedGroupProjectionReasons.PlanInvalid),
             request.Groups,
             facts,
-            cancellationToken);
+            cancellationToken,
+            requirePlannedDispatch: false);
     }
 }

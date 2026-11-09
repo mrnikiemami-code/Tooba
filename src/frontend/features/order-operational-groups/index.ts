@@ -10,6 +10,14 @@
  */
 export { AdminOperationalGroupWorkflowDialog } from "./ui/admin-operational-group-workflow-dialog.tsx";
 
+// TB-256-R1: the group's customer-delivery vs planned-carrier-handoff rows (display-only).
+export { OperationalDeliveryTimeline } from "./ui/operational-delivery-timeline.tsx";
+
+export type {
+  OperationalDeliveryTimelineProps,
+  OperationalPlannedDispatchFact,
+} from "./ui/operational-delivery-timeline.tsx";
+
 export type {
   OperationalGroupDialogLine,
   OperationalGroupDialogParcel,

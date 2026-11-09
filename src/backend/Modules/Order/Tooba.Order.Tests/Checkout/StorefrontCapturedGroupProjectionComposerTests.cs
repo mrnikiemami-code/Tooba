@@ -198,13 +198,14 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
             CancellationToken.None);
 
         // TB-256: هر گروه MAX خودش را مبنا می‌گیرد (تهران ۴، UTC ۷) و منطقهٔ زمانی مستقل می‌ماند.
-        // تهران: یکشنبه ۲۵ ۰۰:۳۰ → چهار روز کاری: دوشنبه ۲۶، سه‌شنبه ۲۷، چهارشنبه ۲۸، پنجشنبه ۲۹.
+        // تهران: یکشنبه ۲۵ ۰۰:۳۰ → پذیرش همان روز ۰۹:۰۰؛ چهار روز کاری بعد: ۲۶، ۲۷، ۲۸، ۲۹.
         Assert.Equal(
             new DateOnly(2026, 10, 29),
             result.Groups[0].Candidates[0].Receiving!.EarliestEligibleDate);
-        // UTC: شنبه ۲۴ → هفت روز کاری بعد: یکشنبه ۲۵ تا شنبه ۳۱.
+        // UTC: شنبه ۲۴ ۲۱:۰۰ از ساعت بسته‌شدن گذشته است، پس پذیرش یکشنبه ۲۵ است؛ هفت روز کاری بعد
+        // (۲۶ تا ۱) ⇒ ۱ نوامبر. انتخاب «پس از بسته‌شدن همان روز ارسال نشود» عمدی است.
         Assert.Equal(
-            new DateOnly(2026, 10, 31),
+            new DateOnly(2026, 11, 1),
             result.Groups[1].Candidates[0].Receiving!.EarliestEligibleDate);
 
         Assert.Equal(4, result.Groups[0].Candidates[0].OwnerResult!.MaxDeliveryDays);
@@ -408,20 +409,36 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
         Assert.Equal(StorefrontCapturedGroupProjectionReasons.ReceivingWeekMissing, missing.Receiving!.UnavailableReason);
         Assert.False(missing.Receiving.HasAvailableDates);
 
+        // TB-256-R1: the customer week is the subject here, so a VALID carrier week is supplied explicitly;
+        // otherwise the carrier-level reason would mask the customer-week validation.
+        var validCarrier = Week("UTC", Enumerable.Range(1, 7).Select(day => (day, 9, 0, 17, 0)).ToArray());
+
         var badZone = await ComposeSingle(
             composer, harness, shipping,
-            request => Quoted(request, 1_000m, 0m, week: Week("Not/AZone", (1, 9, 0, 12, 0))));
-        Assert.Equal(StorefrontCapturedGroupProjectionReasons.ReceivingTimeZoneInvalid, badZone.Receiving!.UnavailableReason);
+            request => Quoted(
+                request, 1_000m, 0m,
+                week: Week("Not/AZone", (1, 9, 0, 12, 0)),
+                carrierWeek: CarrierWeek(validCarrier)));
+        Assert.Equal(
+            StorefrontCapturedGroupProjectionReasons.ReceivingTimeZoneInvalid,
+            badZone.Receiving!.UnavailableReason);
 
         var badInterval = await ComposeSingle(
             composer, harness, shipping,
-            request => Quoted(request, 1_000m, 0m, week: Week("UTC", (1, 12, 0, 9, 0))));
-        Assert.Equal(StorefrontCapturedGroupProjectionReasons.ReceivingWeekInvalid, badInterval.Receiving!.UnavailableReason);
+            request => Quoted(
+                request, 1_000m, 0m,
+                week: Week("UTC", (1, 12, 0, 9, 0)),
+                carrierWeek: CarrierWeek(validCarrier)));
+        Assert.Equal(
+            StorefrontCapturedGroupProjectionReasons.ReceivingWeekInvalid,
+            badInterval.Receiving!.UnavailableReason);
 
         var allClosed = await ComposeSingle(
             composer, harness, shipping,
-            request => Quoted(request, 1_000m, 0m, week: Week("UTC")));
-        Assert.Equal(StorefrontCapturedGroupProjectionReasons.NoWorkingDays, allClosed.Receiving!.UnavailableReason);
+            request => Quoted(request, 1_000m, 0m, week: Week("UTC"), carrierWeek: CarrierWeek(validCarrier)));
+        Assert.Equal(
+            StorefrontCapturedGroupProjectionReasons.NoWorkingDays,
+            allClosed.Receiving!.UnavailableReason);
         Assert.Null(allClosed.Receiving.EarliestEligibleDate);
 
         var missingMinimum = await ComposeSingle(
@@ -450,6 +467,30 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
         Assert.All(
             new[] { missing, badZone, badInterval, allClosed, missingMinimum, missingMaximum, invertedMaximum },
             candidate => Assert.Equal(StorefrontCapturedCandidateOutcome.Quoted, candidate.Outcome));
+    }
+
+    /// <summary>
+    /// TB-256-R1 (gap A): a NEW commitment without an independent carrier acceptance calendar is blocked by
+    /// its own owning reason; the lawful money stays quoted and no calendar is invented from customer hours.
+    /// </summary>
+    [Fact]
+    public async Task New_commitment_without_a_carrier_calendar_is_blocked_by_its_own_reason()
+    {
+        using var harness = new ShippingGroupGoodsFactsHarness();
+        harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
+        var shipping = new RecordingCapturedQuoteLookup();
+        var composer = Create(harness, shipping);
+
+        var missingCarrier = await ComposeSingle(
+            composer, harness, shipping,
+            request => Quoted(request, 1_000m, 0m, week: Week("UTC"), deriveCarrierWeek: false));
+
+        Assert.Equal(
+            StorefrontCapturedGroupProjectionReasons.CarrierScheduleMissing,
+            missingCarrier.Receiving!.UnavailableReason);
+        Assert.False(missingCarrier.Receiving.HasAvailableDates);
+        Assert.Null(missingCarrier.Receiving.EarliestEligibleDate);
+        Assert.Equal(StorefrontCapturedCandidateOutcome.Quoted, missingCarrier.Outcome);
     }
 
     /// <summary>
@@ -585,9 +626,17 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
         int? maxDays = 4,
         ShippingCapturedReceivingWeek? week = null,
         Guid? groupId = null,
-        Guid? rateRowId = null)
+        Guid? rateRowId = null,
+        // TB-256-R1: a NEW commitment needs an independent carrier acceptance calendar. Null here means
+        // "derive it from the receiving week" (same zone/days/hours) so ordinary tests exercise the planned
+        // path; pass an explicit value to test a different carrier calendar, and pass `deriveCarrierWeek:
+        // false` to exercise the explicit no-carrier compatibility case.
+        ShippingCapturedCarrierWeek? carrierWeek = null,
+        bool deriveCarrierWeek = true)
     {
         var total = freight + packaging;
+        var carrier = carrierWeek
+            ?? (deriveCarrierWeek && week is not null ? CarrierWeek(week) : null);
         return new ShippingCapturedQuoteResult(
             ShippingCapturedQuoteVerdict.Quoted,
             ShippingCapturedQuoteVerdictCodes.Quoted,
@@ -611,8 +660,21 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
             RateRowId: rateRowId ?? RowA,
             MinDeliveryDays: minDays,
             MaxDeliveryDays: maxDays,
-            ReceivingWeek: week);
+            ReceivingWeek: week,
+            CarrierWeek: carrier);
     }
+
+    /// <summary>TB-256-R1: a carrier acceptance week mirroring an existing receiving week.</summary>
+    private static ShippingCapturedCarrierWeek CarrierWeek(ShippingCapturedReceivingWeek week) =>
+        new(
+            week.TimeZoneId,
+            week.Days
+                .Select(day => new ShippingCapturedCarrierWeekDay(
+                    day.Weekday,
+                    day.IsWorking,
+                    day.StartTime,
+                    day.EndTime))
+                .ToArray());
 
     /// <summary>
     /// هفته با روزهای کاری مشخص (ISO ۱..۷) و ساعت همان روز؛ بقیهٔ روزها تعطیل‌اند.

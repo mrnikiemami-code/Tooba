@@ -1,0 +1,20 @@
+﻿{
+  "route": "http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf",
+  "ready": true,
+  "failedRequests": [
+    {
+      "status": 400,
+      "url": "http://localhost:3000/fa"
+    }
+  ],
+  "facts": {
+    "deliverySection": true,
+    "emptyState": false,
+    "groupCount": 3,
+    "customerDeliveryLabels": 3,
+    "plannedDispatchLabels": 0,
+    "plannedDispatchNodes": 0,
+    "overflowX": -15,
+    "dir": "rtl"
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, Clock, Package, Truck } from "lucide-react";
+import { Package, Truck } from "lucide-react";
 import {
   formatAdminMoney,
   formatAdminStatus,
@@ -23,6 +23,7 @@ import {
 } from "./operational-group-occurrence-store";
 import {
   AdminOperationalGroupWorkflowDialog,
+  OperationalDeliveryTimeline,
   type OperationalGroupDialogRequest,
   type OperationalGroupDialogRow,
 } from "../../features/order-operational-groups";
@@ -303,6 +304,8 @@ function OperationalCard({
 
   const day = jalaliDay(group.deliveryDate);
   const timeWindow = (group.deliveryTimeWindow ?? "").trim();
+  const plannedDispatch = group.plannedDispatch ?? null;
+  const handoffDay = jalaliDay(plannedDispatch?.handoffDate ?? null);
   const showFeeBreakdown = group.feeBreakdown.length > 1;
   const actorMayManage = group.actorMayManageOperations !== false;
   const multiMember = group.members.length > 1;
@@ -383,19 +386,14 @@ function OperationalCard({
               {group.isCrossSellerMarketplace ? "ارسال مشترک مارکت‌پلیس" : "ارسال مستقل"}
             </span>
           </div>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600">
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="size-3.5 shrink-0 text-gray-400" aria-hidden />
-              {day ?? "تاریخ تحویل نامشخص"}
-            </span>
-            {timeWindow ? (
-              <span className="inline-flex items-center gap-1">
-                <Clock className="size-3.5 shrink-0 text-gray-400" aria-hidden />
-                <bdi dir="ltr">{timeWindow}</bdi>
-              </span>
-            ) : null}
-            {group.responsibilityLabelFa ? <span>{group.responsibilityLabelFa}</span> : null}
-          </p>
+          <OperationalDeliveryTimeline
+            groupKey={group.operationalGroupKey}
+            deliveryDateLabel={day}
+            deliveryTimeWindow={timeWindow}
+            responsibilityLabelFa={group.responsibilityLabelFa}
+            plannedDispatch={plannedDispatch}
+            handoffDateLabel={handoffDay}
+          />
           <p className="mt-1 text-xs text-gray-500">
             {multiMember
               ? `${group.members.length.toLocaleString("fa-IR")} فروشنده در این گروه`

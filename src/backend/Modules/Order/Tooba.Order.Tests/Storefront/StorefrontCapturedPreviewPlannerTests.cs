@@ -751,7 +751,11 @@ public class StorefrontCapturedPreviewPlannerTests
         decimal packaging,
         ShippingCapturedReceivingWeek? week,
         string serviceCode = "post",
-        string? optionCode = "standard") =>
+        string? optionCode = "standard",
+        // TB-256-R1: a NEW commitment needs the independent carrier acceptance calendar; by default the
+        // fixture derives it from the customer week so the planned path (not the legacy one) is exercised.
+        ShippingCapturedCarrierWeek? carrierWeek = null,
+        bool deriveCarrierWeek = true) =>
         new(
             ShippingCapturedQuoteVerdict.Quoted,
             ShippingCapturedQuoteVerdictCodes.Quoted,
@@ -775,7 +779,19 @@ public class StorefrontCapturedPreviewPlannerTests
             RateRowId: Guid.NewGuid(),
             MinDeliveryDays: 2,
             MaxDeliveryDays: 4,
-            ReceivingWeek: week);
+            ReceivingWeek: week,
+            CarrierWeek: carrierWeek
+                ?? (deriveCarrierWeek && week is not null
+                    ? new ShippingCapturedCarrierWeek(
+                        week.TimeZoneId,
+                        week.Days
+                            .Select(day => new ShippingCapturedCarrierWeekDay(
+                                day.Weekday,
+                                day.IsWorking,
+                                day.StartTime,
+                                day.EndTime))
+                            .ToArray())
+                    : null));
 
     /// <summary>هفتهٔ کاری کنترل‌شده (ISO ۱..۷) برای اثبات بازهٔ همان روز.</summary>
     private static ShippingCapturedReceivingWeek Week(

@@ -1,4 +1,12 @@
-# CURRENT — 256 USER TRIAL; Architect PARTIAL; no next task — 2026-11-09
+# CURRENT — 256-R1 PASS (worker); user trial then Architect review — 2026-11-09
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{RESULT.md,RECEIPTS.md,dom/*}.
+256-R1 closes the four open items from the 256 Architect PARTIAL: real underlined tabs with ARIA + RTL roving keyboard and presentation-only switching; concise copy; new commitments fail closed without a configured carrier acceptance calendar while stored legacy null-plan evidence stays readable; latest handoff accepted when its conservative arrival is on or before the chosen receiving date; and «موعد ارسال» rendered as its own read-only operational row separated from «تحویل مشتری».
+Runtime unchanged (FE3000 BUILD_ID `pz_oynTTa4nZUOPrjSPOm` → Host5088 SingleStore / store-alpha / `tooba_alpha`), no new migration, user draft revision 2 untouched, task draft revision 3.
+NEXT: user trial on `/admin/shipping-services/authoring/01a17d0d-e033-7000-af43-49a1daa28822?mode=edit`, then Architect review. Cutoff examples are code/fixture-proven only (that method has no configured carrier week) — do not shift the clock. 257–260 remain NOT ISSUED; no automatic next task; 255 parked; Tipax deferred.
+HARD RULE: one database only — `tooba_alpha` on the canonical FE3000/Host5088 instance. No disposable/test/parallel database, no port 15433, no Docker PostgreSQL, in this task or any later one.
+
+# SUPERSEDED — 256 USER TRIAL; Architect PARTIAL; no next task — 2026-11-09
 
 Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256/ARCHITECT-REVIEW.md first, then the closure plan.
 256 code/evidence c58e87e5e is deployed per worker and authoring UI is ready for user trial, NOT full scheduling acceptance. Open: absent carrier calendar still allows new null-plan acceptance; nowUTC is not proof of preparation readiness; exact-arrival-only backward rule needs review; no visible operational dispatch row/canonical plan.

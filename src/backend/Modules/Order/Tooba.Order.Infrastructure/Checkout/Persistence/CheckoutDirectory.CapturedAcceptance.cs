@@ -376,7 +376,10 @@ public sealed partial class CheckoutDirectory
             command,
             capturedPlans,
             facts,
-            cancellationToken);
+            cancellationToken,
+            // TB-256-R1: acceptance revalidation must still READ historical evidence whose stored plan is
+            // null (no carrier calendar at commit time); the strict-new-commitment gate lives on preview.
+            requirePlannedDispatch: false);
 
         // مقایسهٔ کامل شاهد ذخیره‌شده با نقل‌قول/تقویم همین لحظه؛ هیچ مقداری بازنویسی نمی‌شود.
         var accepted = new List<OrderShippingGroupPlan>(groups.Length);
@@ -401,12 +404,15 @@ public sealed partial class CheckoutDirectory
 
             // TB-256: the dispatch plan is recomputed from the SAME live schedule/authority. A changed
             // carrier calendar/revision (or an expired same-day acceptance) can never be accepted from the
-            // previously stored plan, and historical/legacy groups resolve to an explicit null plan.
+            // previously stored plan. TB-256-R1: a stored NULL plan is the explicit compatibility marker for
+            // historical evidence, so only then may a live absence also be null; a stored plan always needs a
+            // live plan.
             if (!StorefrontPlannedDispatchResolver.TryResolve(
                     quote,
                     evidence.ReceivingDate,
                     out var liveDispatch,
-                    out _))
+                    out _,
+                    allowAbsentCarrierSchedule: evidence.PlannedDispatch is null))
             {
                 throw new ContractOperationException(CapturedConflict);
             }

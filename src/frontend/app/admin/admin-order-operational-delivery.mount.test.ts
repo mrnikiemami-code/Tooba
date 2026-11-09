@@ -18,6 +18,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import test from "node:test";
 import {
   mapAdminOrderDetail,
+  type AdminOperationalDeliveryGroup,
   type AdminOrderDetail,
 } from "./admin-api.ts";
 import { AdminOrderOperationalDeliverySection } from "./admin-order-operational-delivery-section.tsx";
@@ -1524,4 +1525,64 @@ test("R6 mounted: denial/compatibility/foreign refusals and transport loss keep 
     restoreViewer();
     resetR4Attempt();
   }
+});
+
+
+/* ───────────────────────────── TB-256-R1: planned dispatch ───────────────────────────── */
+
+function withPlannedDispatch(
+  detail: AdminOrderDetail,
+  planned: AdminOperationalDeliveryGroup["plannedDispatch"],
+): AdminOrderDetail {
+  return {
+    ...detail,
+    operationalDeliveryGroups: detail.operationalDeliveryGroups.map((group) => ({
+      ...group,
+      plannedDispatch: planned,
+    })),
+  };
+}
+
+test("TB-256-R1 static: «موعد ارسال» is a SEPARATE row from the customer delivery promise", () => {
+  const detail = withPlannedDispatch(baseDetail(), {
+    handoffDate: "2026-11-07",
+    handoffTimeWindow: "09:00–17:00",
+    handoffTimeZone: "Asia/Tehran",
+    transportWorkingDays: 3,
+    policyVersion: 1,
+    distinctVariants: 2,
+  });
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+    }),
+  );
+
+  // Both facts render; the handoff row carries its own testid and its own date.
+  assert.match(html, /تحویل مشتری:/);
+  assert.match(html, /موعد ارسال:/);
+  assert.ok(html.includes(`admin-order-operational-planned-dispatch-${GROUP_KEY}`));
+  assert.match(html, /۰۹:۰۰–۱۷:۰۰|09:00–17:00/);
+  assert.match(html, /۳ روز کاری حمل|3 روز کاری حمل/);
+  assert.match(html, /زودترین از ۲ برنامه|زودترین از 2 برنامه/);
+  // The carrier time zone is never shown as customer copy.
+  assert.doesNotMatch(html, /Asia\/Tehran/);
+});
+
+test("TB-256-R1 static: a historical group without a plan renders no «موعد ارسال» row", () => {
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: withPlannedDispatch(baseDetail(), null),
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+    }),
+  );
+
+  assert.match(html, /تحویل مشتری:/);
+  assert.doesNotMatch(html, /موعد ارسال:/);
+  assert.ok(!html.includes("admin-order-operational-planned-dispatch-"));
 });

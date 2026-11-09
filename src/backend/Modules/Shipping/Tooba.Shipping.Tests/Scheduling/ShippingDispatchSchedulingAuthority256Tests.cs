@@ -186,11 +186,122 @@ public sealed class ShippingDispatchSchedulingAuthority256Tests
         Assert.Equal(new DateOnly(2026, 11, 12),
             ShippingDispatchSchedulingAuthority.AdvanceTransportDays(carrier, latest.Value.Date, 3));
 
-        // A date that transport working days can never land on (Saturday is closed) is refused, not subtracted.
-        var impossible = ShippingDispatchSchedulingAuthority.ResolveLatestHandoffForReceivingDate(
+        // TB-256-R1: "on or before" — a customer date the carrier is CLOSED on is reachable from an earlier
+        // handoff whose conservative arrival is before the chosen date. It is not rejected for that reason.
+        var saturday = ShippingDispatchSchedulingAuthority.ResolveLatestHandoffForReceivingDate(
             new DateOnly(2026, 11, 14), carrier, transportWorkingDays: 1);
-        Assert.False(impossible.IsSuccess);
-        Assert.Equal(ShippingDispatchSchedulingReasons.NoFeasibleHandoff, impossible.ReasonCode);
+        Assert.True(saturday.IsSuccess);
+        Assert.Equal(new DateOnly(2026, 11, 12), saturday.Value!.Date); // Thu handoff, Fri arrival, Sat delivery
+        Assert.True(ShippingDispatchSchedulingAuthority.AdvanceTransportDays(carrier, saturday.Value.Date, 1)
+            <= new DateOnly(2026, 11, 14));
+
+        // A receiving date that is earlier than the first possible arrival is filtered by the calendar
+        // (it never becomes an offered date), not by the pure backward rule inventing a past handoff.
+        var plan = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
+            Utc_(2026, 11, 9, 8, 0), carrier, carrier, transportWorkingDays: 3, horizonDates: 5, customerSlotMinutes: null);
+        Assert.True(plan.IsSuccess);
+        Assert.All(plan.Value!.Dates, date => Assert.True(date.Date >= new DateOnly(2026, 11, 12)));
+
+        // No carrier working day at all is the one genuine no-handoff case, with its own stable reason.
+        Assert.Equal(ShippingDispatchSchedulingReasons.NoCarrierWorkingDay,
+            ShippingDispatchSchedulingAuthority.ResolveLatestHandoffForReceivingDate(
+                new DateOnly(2026, 11, 14), AllClosed(Utc), transportWorkingDays: 1).ReasonCode);
+    }
+
+    [Fact]
+    public void E2_latest_handoff_is_the_latest_one_whose_arrival_is_on_or_before_the_date()
+    {
+        var carrier = Week(Utc, [1, 2, 3, 4, 5], Nine, Seventeen);
+        var from = new DateOnly(2026, 11, 9);
+        for (var offset = 0; offset < 40; offset++)
+        {
+            var sameDay = ShippingDispatchSchedulingAuthority.ResolveLatestHandoffForReceivingDate(
+                from.AddDays(offset), carrier, transportWorkingDays: 0);
+            Assert.True(sameDay.IsSuccess);
+
+            var three = ShippingDispatchSchedulingAuthority.ResolveLatestHandoffForReceivingDate(
+                from.AddDays(offset), carrier, transportWorkingDays: 3);
+            Assert.True(three.IsSuccess);
+
+            foreach (var resolved in new[] { sameDay.Value!, three.Value! })
+            {
+                var days = resolved == sameDay.Value ? 0 : 3;
+                var arrival = ShippingDispatchSchedulingAuthority.AdvanceTransportDays(carrier, resolved.Date, days);
+
+                // Forward arrival never overshoots the chosen customer date…
+                Assert.True(arrival <= from.AddDays(offset));
+
+                // …and the NEXT working handoff would overshoot it: this is the latest feasible one.
+                var nextWorking = AdvanceToNextWorkingDay(carrier, resolved.Date);
+                if (nextWorking <= from.AddDays(offset))
+                {
+                    Assert.True(
+                        ShippingDispatchSchedulingAuthority.AdvanceTransportDays(carrier, nextWorking, days) > from.AddDays(offset));
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void E3_zero_day_elapsed_slots_compare_real_instants_across_different_time_zones()
+    {
+        // Carrier 09:00–17:00 Asia/Tehran = 05:30–13:30 UTC. Customer 06:00–12:00 UTC, 60-minute slots.
+        var carrier = Week("Asia/Tehran", [1, 2, 3, 4, 5], Nine, Seventeen);
+        var customer = Week(Utc, [1, 2, 3, 4, 5], new TimeOnly(6, 0), new TimeOnly(12, 0));
+
+        // 2026-11-09 05:00 UTC = 08:30 Tehran (before opening). Handoff opens 09:00 Tehran = 05:30 UTC.
+        var plan = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
+            Utc_(2026, 11, 9, 5, 0), carrier, customer, transportWorkingDays: 0, horizonDates: 1, customerSlotMinutes: 60);
+
+        Assert.True(plan.IsSuccess);
+        var date = Assert.Single(plan.Value!.Dates);
+        Assert.Equal(new DateOnly(2026, 11, 9), date.Date);
+        // The 06:00 UTC slot is after the 05:30 UTC handoff opening and after readiness: it stays offered.
+        // Comparing carrier clock values (09:00) with customer clock values would have dropped it.
+        Assert.Equal(new TimeOnly(6, 0), date.Slots[0].OpensAt);
+        Assert.Contains(date.Slots, slot => slot.OpensAt == new TimeOnly(6, 0));
+    }
+
+    [Fact]
+    public void E4_sparse_carrier_week_and_maximum_duration_stay_bounded_and_fail_closed_without_throwing()
+    {
+        // One carrier working day per week (Monday) — the worst supported shape.
+        var carrier = Week(Utc, [1], Nine, Seventeen);
+        var customer = Week(Utc, [1, 2, 3, 4, 5], Nine, Seventeen);
+
+        // MAX supported duration: the forward count and the backward search both stay bounded.
+        var maxDays = ShippingDispatchSchedulingAuthority.MaxTransportWorkingDays;
+        var maxDate = new DateOnly(2026, 11, 9).AddDays(maxDays * 7);
+        var latest = ShippingDispatchSchedulingAuthority.ResolveLatestHandoffForReceivingDate(maxDate, carrier, maxDays);
+        Assert.True(latest.IsSuccess);
+        Assert.Equal(maxDate.DayOfWeek, latest.Value!.Date.DayOfWeek);
+        Assert.Equal(maxDate, ShippingDispatchSchedulingAuthority.AdvanceTransportDays(carrier, latest.Value.Date, maxDays));
+
+        // The calendar itself never throws for the same bounds; it either produces dates or fails closed.
+        var plan = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
+            Utc_(2026, 11, 9, 8, 0),
+            carrier,
+            customer,
+            maxDays,
+            ShippingDispatchSchedulingAuthority.MaxHorizonDates,
+            customerSlotMinutes: null);
+        Assert.True(plan.IsSuccess);
+        Assert.NotEmpty(plan.Value!.Dates);
+    }
+
+    private static DateOnly AdvanceToNextWorkingDay(ShippingSchedulingWeekView carrier, DateOnly date)
+    {
+        for (var offset = 1; offset <= 7; offset++)
+        {
+            var candidate = date.AddDays(offset);
+            var iso = candidate.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)candidate.DayOfWeek;
+            if (carrier.Days.Single(day => day.Weekday == iso).IsWorking)
+            {
+                return candidate;
+            }
+        }
+
+        throw new InvalidOperationException("week_without_working_day");
     }
 
     [Fact]

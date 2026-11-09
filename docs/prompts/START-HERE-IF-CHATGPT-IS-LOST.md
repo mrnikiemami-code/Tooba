@@ -1,4 +1,11 @@
-# CURRENT — 256-R1 issued after user trial feedback — 2026-11-09
+# CURRENT — 256-R1 worker result PASS (tabs + copy + bounded scheduling corrections) — 2026-11-09
+
+Read docs/ai/tasks/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{RESULT.md,RECEIPTS.md,dom/*}.
+Status PASS within the issued scope (NOT Architect/Visual ACCEPT): real underlined General/Regions-style tabs with full ARIA + RTL roving keyboard, presentation-only switching, concise operator copy, NEW commitments blocked without a configured carrier acceptance calendar while stored legacy null-plan evidence stays readable, latest handoff accepted when its conservative arrival is on or before the chosen receiving date, and «موعد ارسال» exposed as its own read-only operational row.
+Canonical runtime unchanged: FE3000 PID 38148 BUILD_ID `pz_oynTTa4nZUOPrjSPOm` → Host5088 PID 21536 / SingleStore / store-alpha / tooba_alpha; no new migration; DataProtection preserved; CapturedPreview local ON / checked-in OFF. User draft `01a17d0d…` revision 2 untouched; task draft `01a1beed…` revision 3.
+NEXT: user trial on `http://127.0.0.1:3000/admin/shipping-services/authoring/01a17d0d-e033-7000-af43-49a1daa28822?mode=edit`, then Architect review. The cutoff matrix is code/fixture-proven because that method has no configured carrier week — do not clock-shift to reproduce. 255 parked, Tipax deferred, 257–260 NOT issued, no automatic next task. Single `tooba_alpha` only, forever: no disposable/test/parallel DB, no 15433/Docker DB.
+
+# SUPERSEDED — 256-R1 issued after user trial feedback — 2026-11-09
 
 Only active/issued task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1. Read its docs/ai/tasks/.../TASK.md and 256/ARCHITECT-REVIEW.md. Expected base 639947fc5573a3ae29ec1662d117c7d75e40b856; subsequent task/docs commits are legitimate descendants, not unrelated divergence.
 User tested authoring, rejected button-like calendar navigation and repetitive technical copy, authorized this correction and progress to next meaningful test. Implement true underlined tabs + concise professional form, bounded new-acceptance/feasibility/projection corrections in task scope. Do not start 257–260.

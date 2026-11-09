@@ -39,11 +39,16 @@ public sealed class StorefrontCapturedGroupCompositionCore(
     /// <param name="groups">برنامهٔ گروه/نامزد.</param>
     /// <param name="facts">فکت‌های ساخته‌شده از منبع Order.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
+    /// <param name="requirePlannedDispatch">
+    /// <c>true</c> برای <b>دسترس‌پذیری جدید</b>: بدون برنامهٔ پذیرش حامل هیچ تاریخ تحویلی ساخته نمی‌شود.
+    /// <c>false</c> فقط برای خوانایی/بازاعتبارسنجی شاهد تاریخی است که خودش تقویم حامل ندارد.
+    /// </param>
     public async Task<StorefrontCapturedGroupProjectionResult> ComposeFromFactsAsync(
         SubmitCheckoutCommand command,
         IReadOnlyList<StorefrontCapturedGroupPlan>? groups,
         CheckoutShippingGroupGoodsFactsResult facts,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool requirePlannedDispatch = true)
     {
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(facts);
@@ -51,17 +56,19 @@ public sealed class StorefrontCapturedGroupCompositionCore(
 
         // مرجع سبد/نسخه فقط فرمان مورداعتماد است؛ فکت نمی‌تواند سبد خودش را «تأیید» کند.
         ValidateFacts(facts, command.CartId, command.ExpectedCartVersion, plan);
-        return await ComposeValidatedAsync(plan, facts, cancellationToken);
+
+        // یک خواندن ساعت سرور برای کل ترکیب؛ تبدیل به تاریخ محلی هر روش جدا انجام می‌شود.
+        var nowUtc = clock.UtcNow;
+        return await ComposeValidatedAsync(plan, facts, nowUtc, cancellationToken, requirePlannedDispatch);
     }
 
     private async Task<StorefrontCapturedGroupProjectionResult> ComposeValidatedAsync(
         List<StorefrontCapturedGroupPlan> plan,
         CheckoutShippingGroupGoodsFactsResult facts,
-        CancellationToken cancellationToken)
+        DateTimeOffset nowUtc,
+        CancellationToken cancellationToken,
+        bool requirePlannedDispatch)
     {
-        // یک خواندن ساعت سرور برای کل ترکیب؛ تبدیل به تاریخ محلی هر روش جدا انجام می‌شود.
-        var nowUtc = clock.UtcNow;
-
         var groups = new List<StorefrontCapturedGroupProjection>(plan.Count);
         for (var index = 0; index < plan.Count; index++)
         {
@@ -71,7 +78,12 @@ public sealed class StorefrontCapturedGroupCompositionCore(
             foreach (var candidate in planGroup.Candidates)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                candidates.Add(await ComposeCandidateAsync(candidate, groupFacts, nowUtc, cancellationToken));
+                candidates.Add(await ComposeCandidateAsync(
+                    candidate,
+                    groupFacts,
+                    nowUtc,
+                    requirePlannedDispatch,
+                    cancellationToken));
             }
 
             groups.Add(new StorefrontCapturedGroupProjection(
@@ -98,6 +110,7 @@ public sealed class StorefrontCapturedGroupCompositionCore(
         StorefrontCapturedCandidatePlan candidate,
         CheckoutShippingGroupGoodsFacts groupFacts,
         DateTimeOffset nowUtc,
+        bool requirePlannedDispatch,
         CancellationToken cancellationToken)
     {
         // اندازهٔ فیزیکی همان‌جا که منبع Order می‌گوید ناشناخته است ناشناخته می‌ماند؛ هیچ تبدیل
@@ -138,7 +151,7 @@ public sealed class StorefrontCapturedGroupCompositionCore(
             return Unavailable(candidate, StorefrontCapturedGroupProjectionReasons.BindingMismatch);
         }
 
-        var receiving = BuildReceiving(candidate, quote, nowUtc);
+        var receiving = BuildReceiving(candidate, quote, nowUtc, requirePlannedDispatch);
         return new StorefrontCapturedCandidateProjection(
             candidate,
             StorefrontCapturedCandidateOutcome.Quoted,
@@ -154,7 +167,8 @@ public sealed class StorefrontCapturedGroupCompositionCore(
     private static StorefrontCapturedReceivingDates? BuildReceiving(
         StorefrontCapturedCandidatePlan candidate,
         ShippingCapturedQuoteResult quote,
-        DateTimeOffset nowUtc)
+        DateTimeOffset nowUtc,
+        bool requirePlannedDispatch)
     {
         if (quote.ReceivingWeek is null)
         {
@@ -188,22 +202,37 @@ public sealed class StorefrontCapturedGroupCompositionCore(
             return NoDates(StorefrontCapturedGroupProjectionReasons.MaximumDeliveryDaysInvalid);
         }
 
-        if (quote.CarrierWeek is { } carrierWeek)
+        // TB-256 / TB-256-R1: a NEW availability commitment requires the independent carrier acceptance
+        // calendar. Without it there is no defensible handoff, so no delivery date is invented from the
+        // customer week. Compatibility (historical accepted evidence with a null plan) is an explicit opt-in.
+        if (quote.CarrierWeek is not { } carrierWeek)
         {
-            // TB-256: the independent carrier acceptance calendar is present, so the SAME pure authority
-            // resolves the handoff cutoff, counts MAX transport working days and filters customer days.
-            return BuildPlannedReceiving(candidate, quote, carrierWeek, maximumDays, nowUtc);
+            return requirePlannedDispatch
+                ? NoDates(StorefrontCapturedGroupProjectionReasons.CarrierScheduleMissing)
+                : BuildLegacyReceiving(candidate, quote, maximumDays, nowUtc);
         }
 
-        // Legacy captured packages without an authored carrier calendar keep the 213 calendar mechanics
-        // (no invented cutoff/handoff) but honour the TB-256 commitment rule: the first customer dates
-        // come from MAX, never MIN.
-        if (!TryBuildWeek(quote.ReceivingWeek, out var week))
+        // TB-256: the independent carrier acceptance calendar is present, so the SAME pure authority
+        // resolves the handoff cutoff, counts MAX transport working days and filters customer days.
+        return BuildPlannedReceiving(candidate, quote, carrierWeek, maximumDays, nowUtc);
+    }
+
+    /// <summary>
+    /// مسیر سازگاری برای شاهد <b>تاریخی</b> بدون تقویم حامل: همان مکانیک ۲۱۳ (بدون cutoff/موعد حدسی)
+    /// اما با قاعدهٔ تعهد TB-256 (MAX نه MIN). این مسیر هرگز برای تعهد جدید استفاده نمی‌شود.
+    /// </summary>
+    private static StorefrontCapturedReceivingDates? BuildLegacyReceiving(
+        StorefrontCapturedCandidatePlan candidate,
+        ShippingCapturedQuoteResult quote,
+        int maximumDays,
+        DateTimeOffset nowUtc)
+    {
+        if (!TryBuildWeek(quote.ReceivingWeek!, out var week))
         {
             return NoDates(StorefrontCapturedGroupProjectionReasons.ReceivingWeekInvalid);
         }
 
-        if (!TryResolveTimeZone(quote.ReceivingWeek.TimeZoneId, out var timeZone))
+        if (!TryResolveTimeZone(quote.ReceivingWeek!.TimeZoneId, out var timeZone))
         {
             return NoDates(StorefrontCapturedGroupProjectionReasons.ReceivingTimeZoneInvalid);
         }
@@ -261,7 +290,9 @@ public sealed class StorefrontCapturedGroupCompositionCore(
         if (!plan.IsSuccess)
         {
             // Failed scheduling carries its own stable reason; no approximated calendar is produced.
-            return NoDates(plan.ReasonCode);
+            // The one authority's codes are translated into this projection's own stable vocabulary so the
+            // storefront keeps a single, actionable blocker per cause instead of a raw downstream code.
+            return NoDates(MapSchedulingReason(plan.ReasonCode));
         }
 
         var slots = new List<StorefrontShippingReceivingSlot>();
@@ -281,6 +312,27 @@ public sealed class StorefrontCapturedGroupCompositionCore(
 
     private static StorefrontCapturedReceivingDates NoDates(string reason) =>
         new(null, Array.Empty<StorefrontShippingReceivingSlot>(), reason);
+
+    /// <summary>
+    /// TB-256: کدهای پایدار «یک مرجع زمان‌بندی» را به واژگان پایدار همین projection نگاشت می‌کند تا
+    /// فروشگاه برای هر علت دقیقاً یک مانع قابل‌اقدام داشته باشد (بدون کد خام ماژول دیگر).
+    /// </summary>
+    private static string MapSchedulingReason(string reasonCode) => reasonCode switch
+    {
+        ShippingDispatchSchedulingReasons.CustomerWeekInvalid
+            => StorefrontCapturedGroupProjectionReasons.ReceivingWeekInvalid,
+        ShippingDispatchSchedulingReasons.CustomerTimeZoneUnresolvable
+            => StorefrontCapturedGroupProjectionReasons.ReceivingTimeZoneInvalid,
+        ShippingDispatchSchedulingReasons.NoCustomerWorkingDay
+            => StorefrontCapturedGroupProjectionReasons.NoWorkingDays,
+        ShippingDispatchSchedulingReasons.TransportDaysInvalid
+            => StorefrontCapturedGroupProjectionReasons.MaximumDeliveryDaysInvalid,
+        ShippingDispatchSchedulingReasons.HorizonInvalid
+            => StorefrontCapturedGroupProjectionReasons.AvailableDateCountInvalid,
+        // Every remaining failure belongs to the carrier acceptance calendar itself (invalid/duplicate
+        // week, unresolvable zone, no working day, unusable slot or no feasible handoff).
+        _ => StorefrontCapturedGroupProjectionReasons.CarrierScheduleInvalid,
+    };
 
     /// <summary>
     /// هفتهٔ ذخیره‌شده را به مدل محاسبهٔ 213 نگاشت می‌کند؛ ISO ۱..۷ => دوشنبه..یکشنبه. روز تعطیل بازه

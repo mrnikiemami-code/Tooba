@@ -15,6 +15,12 @@ import { loadAuthoringTypeChoices, type AuthoringTypeChoice } from "../api/autho
 import type { EditorTransportFailure } from "../api/editor-document-api.ts";
 import { authoringMessages, authoringFormat, type AuthoringLocale, type AuthoringMessages } from "../messages/authoring-messages.ts";
 import { formatNumber } from "./authoring-format.ts";
+import {
+  isTimingTabKey,
+  nextTimingTabIndex,
+  TIMING_TAB_IDS,
+  type TimingTabId,
+} from "./timing-tab-navigation.ts";
 import type {
   AuthoringCalculationMode,
   EditorDocument,
@@ -103,6 +109,10 @@ import {
 const TABS = ["general", "regions"] as const;
 type ScreenTab = (typeof TABS)[number];
 
+/** TB-256-R1: the two independent timing calendars, shown as standard underlined tabs. */
+const TIMING_TABS = TIMING_TAB_IDS;
+type TimingTab = TimingTabId;
+
 const AREA_KIND_KEYS = {
   Country: "areaCountry",
   AdministrativeArea: "areaAdministrativeArea",
@@ -138,7 +148,7 @@ export function ShippingAuthoringScreen({
   /** TB-256: the independent carrier-acceptance calendar draft. */
   const [carrier, setCarrier] = useState<CarrierWeekFormState | null>(null);
   /** Which of the two independent timing calendars is shown (presentation only). */
-  const [timingTab, setTimingTab] = useState<"customer" | "carrier">("customer");
+  const [timingTab, setTimingTab] = useState<TimingTab>("customer");
   /** Verified ancestry of terminals the operator picked in THIS session (reset with the drafts). */
   const [pickedFacts, setPickedFacts] = useState<ReadonlyMap<string, ResolvedAreaAncestry>>(new Map());
   /** Localized labels of those same picks, so a fresh chip never shows "name unavailable". */
@@ -165,6 +175,42 @@ export function ShippingAuthoringScreen({
   const mutationBlocked = useRef(true);
   mutationBlocked.current = mode !== "edit" || session.save === "saving" || session.reconcile === "pending";
   const blockedNow = useCallback(() => mutationBlocked.current, []);
+
+  /**
+   * TB-256-R1: standard tablist keyboard behaviour (automatic activation), direction-aware so ArrowRight
+   * moves to the previous tab in RTL and to the next tab in LTR. Only presentation changes.
+   */
+  const onTimingTabKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!isTimingTabKey(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+    const rtl = event.currentTarget.closest("[dir]")?.getAttribute("dir") === "rtl";
+    const target = TIMING_TABS[nextTimingTabIndex(TIMING_TABS.indexOf(timingTab), event.key, rtl)]!;
+    setTimingTab(target);
+    requestAnimationFrame(() => {
+      globalThis.document
+        .querySelector<HTMLElement>(`#shipping-authoring-timing-tab-${target}`)
+        ?.focus();
+    });
+  };
+
+  /** Same roving model for the page-level General/Regions tablist so keyboard behaviour stays uniform. */
+  const onPageTabKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!isTimingTabKey(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+    const rtl = event.currentTarget.closest("[dir]")?.getAttribute("dir") === "rtl";
+    const target = TABS[nextTimingTabIndex(TABS.indexOf(tab), event.key, rtl, TABS.length)]!;
+    setTab(target);
+    requestAnimationFrame(() => {
+      globalThis.document.querySelector<HTMLElement>(`#shipping-authoring-tab-${target}`)?.focus();
+    });
+  };
+
   const activeLanguageIds = useMemo(
     () => (document ? document.presentation.contentLanguages.map((language) => language.languageId) : []),
     [document],
@@ -805,13 +851,21 @@ export function ShippingAuthoringScreen({
 
       {document && index ? (
         <>
-          <div role="tablist" aria-label={messages.pageTitle} className="flex flex-wrap gap-1 border-b border-border">
+          <div
+            role="tablist"
+            aria-label={messages.pageTitle}
+            className="flex flex-wrap gap-1 border-b border-border"
+            onKeyDown={onPageTabKeyDown}
+          >
             {TABS.map((id) => (
               <button
                 key={id}
+                id={`shipping-authoring-tab-${id}`}
                 type="button"
                 role="tab"
                 aria-selected={tab === id}
+                aria-controls={`shipping-authoring-panel-${id}`}
+                tabIndex={tab === id ? 0 : -1}
                 data-testid={`shipping-authoring-tab-${id}`}
                 className={
                   tab === id
@@ -871,7 +925,13 @@ export function ShippingAuthoringScreen({
 
           {intent ? <AuthoringLocalIssuesPanel issues={intent.issues} groupProblems={groupProblems} messages={messages} /> : null}
 
-          <div role="tabpanel" hidden={tab !== "general"} data-testid="shipping-authoring-panel-general">
+          <div
+            role="tabpanel"
+            id="shipping-authoring-panel-general"
+            aria-labelledby="shipping-authoring-tab-general"
+            hidden={tab !== "general"}
+            data-testid="shipping-authoring-panel-general"
+          >
             {form ? (
               <AuthoringGeneralTab
                 document={document}
@@ -902,43 +962,42 @@ export function ShippingAuthoringScreen({
                 scheduleSlot={
                   week && carrier ? (
                     <div className="grid gap-2">
-                      {/* TB-256: two INDEPENDENT calendars, one visible at a time; the tab is presentation only. */}
+                      {/* TB-256-R1: the two INDEPENDENT calendars are standard underlined tabs (same pattern
+                          as General/Regions). Switching is presentation only: both editors stay mounted, no
+                          schedule is disabled, and no edit is reset. */}
                       <div
-                        className="inline-flex max-w-full flex-wrap rounded-xl border border-border bg-surface p-0.5"
+                        className="flex flex-wrap gap-1 border-b border-border"
                         role="tablist"
-                        aria-label={messages.timingTabHint}
+                        aria-label={messages.timingTabListLabel}
+                        onKeyDown={onTimingTabKeyDown}
                       >
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={timingTab === "customer"}
-                          className={
-                            timingTab === "customer"
-                              ? "inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground"
-                              : "inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-gray-700"
-                          }
-                          data-testid="shipping-authoring-timing-tab-customer"
-                          onClick={() => setTimingTab("customer")}
-                        >
-                          {messages.timingTabCustomer}
-                        </button>
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={timingTab === "carrier"}
-                          className={
-                            timingTab === "carrier"
-                              ? "inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground"
-                              : "inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-gray-700"
-                          }
-                          data-testid="shipping-authoring-timing-tab-carrier"
-                          onClick={() => setTimingTab("carrier")}
-                        >
-                          {messages.timingTabCarrier}
-                        </button>
+                        {TIMING_TABS.map((id) => (
+                          <button
+                            key={id}
+                            id={`shipping-authoring-timing-tab-${id}`}
+                            type="button"
+                            role="tab"
+                            aria-selected={timingTab === id}
+                            aria-controls={`shipping-authoring-timing-panel-${id}`}
+                            tabIndex={timingTab === id ? 0 : -1}
+                            data-testid={`shipping-authoring-timing-tab-${id}`}
+                            className={
+                              timingTab === id
+                                ? "-mb-px min-h-11 border-b-2 border-primary px-3 text-sm font-black text-gray-900"
+                                : "-mb-px min-h-11 border-b-2 border-transparent px-3 text-sm font-bold text-gray-500"
+                            }
+                            onClick={() => setTimingTab(id)}
+                          >
+                            {id === "customer" ? messages.timingTabCustomer : messages.timingTabCarrier}
+                          </button>
+                        ))}
                       </div>
-                      <p className="text-[11px] text-gray-500">{messages.timingTabHint}</p>
-                      {timingTab === "customer" ? (
+                      <div
+                        id="shipping-authoring-timing-panel-customer"
+                        role="tabpanel"
+                        aria-labelledby="shipping-authoring-timing-tab-customer"
+                        hidden={timingTab !== "customer"}
+                      >
                         <AuthoringWeekEditor
                           schedule={document.weeklySchedule}
                           week={week}
@@ -955,7 +1014,13 @@ export function ShippingAuthoringScreen({
                           onDayTime={(weekday, bound, value) => changeWeek(withDayTime(week, weekday, bound, value))}
                           onReset={() => changeWeek(resetWeek(document.weeklySchedule))}
                         />
-                      ) : (
+                      </div>
+                      <div
+                        id="shipping-authoring-timing-panel-carrier"
+                        role="tabpanel"
+                        aria-labelledby="shipping-authoring-timing-tab-carrier"
+                        hidden={timingTab !== "carrier"}
+                      >
                         <AuthoringCarrierWeekEditor
                           schedule={document.carrierSchedule ?? null}
                           carrier={carrier}
@@ -980,14 +1045,20 @@ export function ShippingAuthoringScreen({
                           onCopyFromCustomer={() => changeCarrier(copyCarrierWeekFromCustomer(carrier, week))}
                           onReset={() => changeCarrier(resetCarrierWeek(document.carrierSchedule ?? null))}
                         />
-                      )}
+                      </div>
                     </div>
                   ) : null
                 }
               />
             ) : null}
           </div>
-          <div role="tabpanel" hidden={tab !== "regions"} data-testid="shipping-authoring-panel-regions">
+          <div
+            role="tabpanel"
+            id="shipping-authoring-panel-regions"
+            aria-labelledby="shipping-authoring-tab-regions"
+            hidden={tab !== "regions"}
+            data-testid="shipping-authoring-panel-regions"
+          >
             <AuthoringGroupsEditor
               document={document}
               index={index}

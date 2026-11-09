@@ -1006,8 +1006,27 @@ public sealed class StorefrontCapturedSelectionWriterTests
         decimal packaging,
         Guid? areaGroup = null,
         Guid? rateRow = null,
-        ShippingCapturedReceivingWeek? week = null) =>
-        new(
+        ShippingCapturedReceivingWeek? week = null,
+        // TB-256-R1: a NEW commitment needs an independent carrier acceptance calendar, so ordinary fixtures
+        // derive one from the customer week. Pass `carrierWeek` for a different calendar, or
+        // `deriveCarrierWeek: false` to exercise the explicit missing-carrier compatibility path.
+        ShippingCapturedCarrierWeek? carrierWeek = null,
+        bool deriveCarrierWeek = true)
+    {
+        var receiving = week ?? Week();
+        var carrier = carrierWeek
+            ?? (deriveCarrierWeek
+                ? new ShippingCapturedCarrierWeek(
+                    receiving.TimeZoneId,
+                    receiving.Days
+                        .Select(day => new ShippingCapturedCarrierWeekDay(
+                            day.Weekday,
+                            day.IsWorking,
+                            day.StartTime,
+                            day.EndTime))
+                        .ToArray())
+                : null);
+        return new ShippingCapturedQuoteResult(
             ShippingCapturedQuoteVerdict.Quoted,
             ShippingCapturedQuoteVerdictCodes.Quoted,
             "post",
@@ -1030,7 +1049,9 @@ public sealed class StorefrontCapturedSelectionWriterTests
             RateRowId: rateRow ?? RateRow,
             MinDeliveryDays: 2,
             MaxDeliveryDays: 4,
-            ReceivingWeek: week ?? Week());
+            ReceivingWeek: receiving,
+            CarrierWeek: carrier);
+    }
 
     private static ShippingCapturedReceivingWeek Week(
         int[]? openIsos = null,

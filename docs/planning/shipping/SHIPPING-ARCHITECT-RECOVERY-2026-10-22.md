@@ -1,4 +1,14 @@
-# CURRENT — 256-R1 issued after user trial feedback — 2026-11-09
+# CURRENT — 256-R1 EXECUTED: real tabs + concise copy + bounded scheduling gaps — 2026-11-09
+
+Read docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{RESULT.md,RECEIPTS.md} and the closure plan.
+Worker PASS within the issued scope, NOT Architect/Visual ACCEPT. Base `162a319ad`; same FE3000/Host5088 SingleStore store-alpha `tooba_alpha`, no new migration.
+LANDED: underline tabs (no pill), ARIA + RTL roving keyboard, presentation-only switching with mounted editors and preserved local edits; concise operator copy; new commitments require a configured carrier acceptance schedule (`carrier_schedule_missing/invalid`) while stored legacy null-plan evidence stays readable; latest handoff accepted when arrival ≤ chosen receiving date (bounded search, instant-based zero-day slots, readiness counted once); `plannedDispatch` exposed and «موعد ارسال» rendered as a separate operational row (historical null → no row).
+Proof: shipping authority 11/11, carrier requirement 3/3, composer 12/12, tabs 3/3, operational mount 27/27, typecheck/build 0; module-wide pre-existing failure sets identical to base (Shipping 9, Order 33); `frontend-source-size` unchanged pre-existing family.
+Authorized read-only DOM on both the review draft and the configured task draft: 2×44px tabs, 2px underline, correct ARIA, edits preserved, copy 44×191, no forbidden technical copy, no overflow 1440/1024/390; operational order 3 groups with 0 plan rows.
+NEXT: user trial of the corrected tabs/calendar, then Architect review. Cutoff examples are code/fixture-proven (that method has no carrier week) — do not alter the machine clock. 255 parked, Tipax deferred, 257–260 NOT issued, automaticNext NONE.
+Single-database rule (applies to every future task, no exception): `tooba_alpha` on canonical FE3000/Host5088 only; no disposable/test/parallel DB, no 15433, no Docker PostgreSQL.
+
+# SUPERSEDED — 256-R1 issued after user trial feedback — 2026-11-09
 
 Only active/issued task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1. Read its docs/ai/tasks/.../TASK.md and 256/ARCHITECT-REVIEW.md. Expected base 639947fc5573a3ae29ec1662d117c7d75e40b856; subsequent task/docs commits are legitimate descendants, not unrelated divergence.
 User tested authoring, rejected button-like calendar navigation and repetitive technical copy, authorized this correction and progress to next meaningful test. Implement true underlined tabs + concise professional form, bounded new-acceptance/feasibility/projection corrections in task scope. Do not start 257–260.

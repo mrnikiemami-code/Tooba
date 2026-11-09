@@ -218,8 +218,19 @@ public static class ShippingDispatchSchedulingAuthority
     /// آخرین روز پذیرش ممکن برای یک تاریخ تحویل انتخاب‌شده، با همان مرجع رو‌به‌جلوی حمل.
     /// </summary>
     /// <remarks>
-    /// جست‌وجوی رو‌به‌عقب کران‌دار است و هر کاندید با همان تابع رو‌به‌جلوی
-    /// (<see cref="AdvanceTransportDays"/>) اعتبارسنجی می‌شود؛ تفریق تقویمی ساده هرگز انجام نمی‌شود.
+    /// <para>
+    /// <b>«در یا پیش از» تاریخ تحویل.</b> کاندیدی پذیرفته می‌شود که رسیدن محافظه‌کارانهٔ رو‌به‌جلویش
+    /// (<see cref="AdvanceTransportDays"/>) <b>روی یا پیش از</b> <paramref name="receivingDate"/>
+    /// باشد. بنابراین روزی که حامل در همان تاریخ تحویل تعطیل است رد نمی‌شود؛ بسته زودتر رسیده و در
+    /// روز تحویل مشتری آزاد می‌شود. تفریق تقویمی ساده هرگز انجام نمی‌شود.
+    /// </para>
+    /// <para>
+    /// <b>جست‌وجوی یکنوا.</b> از آخرین روز کاری حامل پیش از تاریخ تحویل شروع می‌کنیم و هر قدم، هم
+    /// کاندید و هم تاریخ رسیدن را یک روز کاری به عقب می‌برد (نگاشت دقیق بین دو دنبالهٔ روز کاری).
+    /// رسیدن نسبت به روز پذیرش یکنواست، پس نخستین کاندیدی که شرط «در یا پیش از» را برآورده کند
+    /// آخرین موعد معتبر است. تعداد قدم‌ها حداکثر همان روزهای حمل است و هیچ اسکن درهم‌تنیدهٔ
+    /// O(N²) لازم نیست.
+    /// </para>
     /// </remarks>
     /// <param name="receivingDate">تاریخ تحویل انتخاب‌شده.</param>
     /// <param name="carrierWeek">برنامهٔ پذیرش حامل.</param>
@@ -240,33 +251,74 @@ public static class ShippingDispatchSchedulingAuthority
             return ShippingSchedulingResult<ShippingHandoffPlan>.Failure(weekReason);
         }
 
-        var bound = transportWorkingDays + MaxHandoffSearchDays;
-        for (var offset = 0; offset <= bound; offset++)
+        if (!week.HasWorkingDay)
         {
-            var candidate = receivingDate.AddDays(-offset);
-            if (!week.TryGet(candidate.DayOfWeek, out var day) || !day.IsWorking)
+            return ShippingSchedulingResult<ShippingHandoffPlan>.Failure(
+                ShippingDispatchSchedulingReasons.NoCarrierWorkingDay);
+        }
+
+        // Latest carrier working day on or before the chosen receiving date.
+        if (!TryFindWorkingDay(week, receivingDate, minDaysBack: 0, out var candidate, out var candidateDay))
+        {
+            return ShippingSchedulingResult<ShippingHandoffPlan>.Failure(
+                ShippingDispatchSchedulingReasons.NoFeasibleHandoff);
+        }
+
+        var arrival = AdvanceTransportDays(week, candidate, transportWorkingDays);
+
+        // Arrival is monotonic in the handoff day: stepping the handoff back one working day steps the
+        // arrival back exactly one working day. At most MAX transport days are needed, and the guard keeps
+        // the loop bounded even for a hostile week shape.
+        var guard = transportWorkingDays + 7;
+        for (var step = 0; step <= guard; step++)
+        {
+            if (arrival <= receivingDate)
             {
-                continue;
+                return ShippingSchedulingResult<ShippingHandoffPlan>.Success(
+                    new ShippingHandoffPlan(candidate, candidateDay.OpensAt, candidateDay.ClosesAt));
             }
 
-            // The candidate is accepted ONLY when the SAME forward rule lands exactly on the chosen date.
-            if (AdvanceTransportDays(week, candidate, transportWorkingDays) != receivingDate)
+            if (!TryFindWorkingDay(week, candidate, minDaysBack: 1, out var previousCandidate, out var previousDay)
+                || !TryFindWorkingDay(week, arrival, minDaysBack: 1, out var previousArrival, out _))
             {
-                if (transportWorkingDays == 0 && candidate == receivingDate)
-                {
-                    return ShippingSchedulingResult<ShippingHandoffPlan>.Success(
-                        new ShippingHandoffPlan(candidate, day.OpensAt, day.ClosesAt));
-                }
-
-                continue;
+                return ShippingSchedulingResult<ShippingHandoffPlan>.Failure(
+                    ShippingDispatchSchedulingReasons.NoFeasibleHandoff);
             }
 
-            return ShippingSchedulingResult<ShippingHandoffPlan>.Success(
-                new ShippingHandoffPlan(candidate, day.OpensAt, day.ClosesAt));
+            candidate = previousCandidate;
+            candidateDay = previousDay;
+            arrival = previousArrival;
         }
 
         return ShippingSchedulingResult<ShippingHandoffPlan>.Failure(
             ShippingDispatchSchedulingReasons.NoFeasibleHandoff);
+    }
+
+    /// <summary>
+    /// نزدیک‌ترین روز کاری حامل در بازهٔ صفر تا هفت روز <b>پیش از</b> تاریخ مرجع؛
+    /// <paramref name="minDaysBack"/> صفر یعنی «همان روز یا پیش‌تر» و یک یعنی «فقط پیش‌تر».
+    /// </summary>
+    private static bool TryFindWorkingDay(
+        Week week,
+        DateOnly date,
+        int minDaysBack,
+        out DateOnly found,
+        out DayWindow window)
+    {
+        // A cyclic week always contains a working day within seven consecutive dates.
+        for (var offset = minDaysBack; offset <= 7; offset++)
+        {
+            var candidate = date.AddDays(-offset);
+            if (week.TryGet(candidate.DayOfWeek, out window))
+            {
+                found = candidate;
+                return true;
+            }
+        }
+
+        found = default;
+        window = default;
+        return false;
     }
 
     /// <summary>
@@ -339,9 +391,6 @@ public static class ShippingDispatchSchedulingAuthority
 
         var handoffPlan = handoff.Value!;
         var earliest = AdvanceTransportDays(carrier, handoffPlan.Date, transportWorkingDays);
-        var nowLocal = TimeZoneInfo.ConvertTime(nowUtc, customerZone);
-        var nowLocalDate = DateOnly.FromDateTime(nowLocal.DateTime);
-        var nowLocalTime = TimeOnly.FromDateTime(nowLocal.DateTime);
 
         if (horizonDates == 0)
         {
@@ -384,10 +433,28 @@ public static class ShippingDispatchSchedulingAuthority
             if (transportWorkingDays == 0 && date == handoffPlan.Date)
             {
                 // Same-day: never offer a customer slot that already started before readiness/handoff.
-                var floor = nowLocalDate == date && nowLocalTime > handoffPlan.OpensAt
-                    ? nowLocalTime
-                    : handoffPlan.OpensAt;
-                slots = slots.Where(slot => slot.OpensAt >= floor).ToArray();
+                // The carrier window and the customer week may use different time zones, so real instants
+                // are compared — carrier clock values are never compared with customer clock values.
+                if (!TryResolveCarrierZone(carrierWeek.TimeZoneId, out var carrierZone)
+                    || !TryToUtcInstant(handoffPlan.Date, handoffPlan.OpensAt, carrierZone, out var handoffOpensUtc))
+                {
+                    return ShippingSchedulingResult<ShippingReceivingCalendarPlan>.Failure(
+                        ShippingDispatchSchedulingReasons.CarrierTimeZoneUnresolvable);
+                }
+
+                var floorUtc = handoffOpensUtc > nowUtc ? handoffOpensUtc : nowUtc;
+                var offered = new List<ShippingSchedulingWindow>(slots.Count);
+                foreach (var slot in slots)
+                {
+                    // An unresolvable local slot instant (DST gap) is never offered.
+                    if (TryToUtcInstant(slot.Date, slot.OpensAt, customerZone, out var slotOpensUtc)
+                        && slotOpensUtc >= floorUtc)
+                    {
+                        offered.Add(slot);
+                    }
+                }
+
+                slots = offered;
             }
 
             if (slots.Count == 0)
@@ -445,9 +512,12 @@ public static class ShippingDispatchSchedulingAuthority
             throw new ArgumentException("carrier_week_without_working_day", nameof(week));
         }
 
+        // Derived bound, not an arbitrary widening: a cyclic week has at least one working day in any
+        // seven consecutive dates, so N counted days need at most 7*N calendar days (plus a small delta).
+        var guard = checked((transportWorkingDays * 7L) + 8L);
         var counted = 0;
         var cursor = fromLocalDate.AddDays(1);
-        for (var guard = 0; guard <= MaxHandoffSearchDays * 8; guard++)
+        for (long steps = 0; steps <= guard; steps++)
         {
             if (week.TryGet(cursor.DayOfWeek, out var day) && day.IsWorking)
             {
@@ -462,6 +532,30 @@ public static class ShippingDispatchSchedulingAuthority
         }
 
         throw new ArgumentOutOfRangeException(nameof(transportWorkingDays));
+    }
+
+    /// <summary>
+    /// یک تاریخ/ساعت محلی را به لحظهٔ واقعی UTC تبدیل می‌کند؛ ساعت ناموجود (شکاف DST) قابل اثبات نیست
+    /// و <c>false</c> برمی‌گرداند تا مصرف‌کننده محافظه‌کارانه آن نوبت را ارائه نکند.
+    /// </summary>
+    private static bool TryToUtcInstant(
+        DateOnly date,
+        TimeOnly time,
+        TimeZoneInfo timeZone,
+        out DateTimeOffset instant)
+    {
+        instant = default;
+        try
+        {
+            var local = DateTime.SpecifyKind(date.ToDateTime(time), DateTimeKind.Unspecified);
+            var utc = TimeZoneInfo.ConvertTimeToUtc(local, timeZone);
+            instant = new DateTimeOffset(utc, TimeSpan.Zero);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 
     /// <summary>

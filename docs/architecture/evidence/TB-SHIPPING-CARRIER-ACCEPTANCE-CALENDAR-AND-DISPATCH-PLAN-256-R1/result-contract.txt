@@ -1,0 +1,16 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1
+Parent-Task: TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Repository: mrnikiemami-code/Tooba / Branch: main
+Mode: REPAIR_REJECTED_TIMING_TABS_COPY_AND_BOUNDED_SCHEDULING_GAPS
+Status: PASS within the issued scope — NOT Architect review, NOT user visual acceptance, NOT live Tipax
+Decision: REAL_UNDERLINED_TIMING_TABS_CONCISE_OPERATOR_COPY_AND_BOUNDED_NEW_ACCEPTANCE_FEASIBILITY_CORRECTIONS
+Base-SHA: 162a319ad3d0ded796e5a474d1b269c26fa81be2
+Issued-Expected-Base: 639947fc5573a3ae29ec1662d117c7d75e40b856 (ancestor; issue/handoff doc commits are its descendants)
+Code-SHA / Evidence-SHA: recorded by the task commit (see RECEIPTS §7)
+Evidence: docs/architecture/evidence/TB-SHIPPING-CARRIER-ACCEPTANCE-CALENDAR-AND-DISPATCH-PLAN-256-R1/{TASK.md,RESULT.md,RECEIPTS.md,dom/*}
+automaticNextImplementationTask: NONE
+STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
