@@ -96,7 +96,18 @@ public sealed class OrderShippingGroupHistoryReader : IOrderShippingGroupHistory
                                 evidence.CarrierQuote.DeliveryAmount,
                                 evidence.CarrierQuote.IssuedAtUtc,
                                 evidence.CarrierQuote.FreshUntilUtc,
-                                evidence.CarrierQuote.ProviderReference)),
+                                evidence.CarrierQuote.ProviderReference),
+                        evidence.PlannedDispatch is null
+                            ? null
+                            : new OrderShippingGroupHistoryDispatchPlan(
+                                evidence.PlannedDispatch.HandoffDate,
+                                evidence.PlannedDispatch.HandoffOpenTicks,
+                                evidence.PlannedDispatch.HandoffCloseTicks,
+                                evidence.PlannedDispatch.HandoffTimeZone,
+                                evidence.PlannedDispatch.TransportWorkingDays,
+                                evidence.PlannedDispatch.PolicyVersion,
+                                evidence.PlannedDispatch.ScheduleSnapshotId,
+                                evidence.PlannedDispatch.ScheduleSourceRevision)),
                 group.OriginContext);
         }).ToArray();
     }

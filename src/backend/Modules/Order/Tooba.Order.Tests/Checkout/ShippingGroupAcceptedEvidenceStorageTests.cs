@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Order.Domain.Checkout;
+using Tooba.Order.Infrastructure.Integrations.Storefront;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Persistence;
 using Xunit;
@@ -141,6 +142,11 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
         Assert.Equal(groups[0].ShippingGroupId, first.ShippingGroupId);
         Assert.Equal(ShippingGroupAcceptedEvidenceTests.OrderLineId(1), first.Lines.Single().OrderLineId);
         Assert.Equal(ShippingGroupAcceptedEvidenceTests.OrderLineId(2), second.Lines.Single().OrderLineId);
+
+        // TB-256: بستهٔ بدون تقویم پذیرش حامل در درزِ خواندن هم «نامشخص» است، نه برنامهٔ حدسی.
+        var projected = await new OrderShippingGroupHistoryReader(read).GetForCheckoutAsync(checkoutId, default);
+        Assert.Equal(2, projected.Count);
+        Assert.All(projected, group => Assert.Null(group.Evidence!.PlannedDispatch));
     }
 
     [Fact]
@@ -493,6 +499,20 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
         var intact = await ReadEvidenceAsync(db, groupId);
         Assert.NotNull(intact?.PlannedDispatch);
         Assert.Equal(receivingDate.AddDays(-2), intact!.PlannedDispatch!.HandoffDate);
+
+        // TB-256: همان واقعیت‌ها از درزِ فقط-خواندنی گروه‌های سفارش هم بیرون می‌آید (مصرف‌کنندهٔ بعدی).
+        var projected = await new OrderShippingGroupHistoryReader(db).GetForCheckoutAsync(checkoutId, default);
+        var projectedGroup = Assert.Single(projected);
+        Assert.NotNull(projectedGroup.Evidence?.PlannedDispatch);
+        Assert.Equal(receivingDate.AddDays(-2), projectedGroup.Evidence!.PlannedDispatch!.HandoffDate);
+        Assert.Equal(new TimeOnly(9, 0).Ticks, projectedGroup.Evidence.PlannedDispatch.OpenTicks);
+        Assert.Equal(new TimeOnly(17, 0).Ticks, projectedGroup.Evidence.PlannedDispatch.CloseTicks);
+        Assert.Equal("Asia/Tehran", projectedGroup.Evidence.PlannedDispatch.TimeZone);
+        Assert.Equal(2, projectedGroup.Evidence.PlannedDispatch.TransportWorkingDays);
+        Assert.Equal(1, projectedGroup.Evidence.PlannedDispatch.PolicyVersion);
+        Assert.Equal(ShippingGroupAcceptedEvidenceTests.Snapshot, projectedGroup.Evidence.PlannedDispatch.ScheduleSnapshotId);
+        Assert.Equal(41_000L, projectedGroup.Evidence.PlannedDispatch.ScheduleSourceRevision);
+        Assert.Equal(receivingDate, projectedGroup.Evidence.ReceivingDate);
     }
 
     private static async Task<ShippingGroupAcceptedEvidence?> ReadEvidenceAsync(OrderDbContext db, Guid groupId)

@@ -66,7 +66,26 @@ public sealed record OrderShippingGroupHistoryEvidence(
     string ReceivingTimeZone,
     int? MinimumDeliveryDays,
     int? MaximumDeliveryDays,
-    OrderShippingGroupHistoryCarrierQuote? CarrierQuote = null);
+    OrderShippingGroupHistoryCarrierQuote? CarrierQuote = null,
+    /// <summary>
+    /// TB-256: برنامهٔ ارسال (پذیرش حامل) که هنگام همین پذیرش ثبت شده است. تهی یعنی «نامشخص» —
+    /// بستهٔ قدیمی یا حاملی که تقویم پذیرش ندارد؛ هیچ برنامه‌ای از تنظیمات جاری بازمحاسبه نمی‌شود.
+    /// </summary>
+    OrderShippingGroupHistoryDispatchPlan? PlannedDispatch = null);
+
+/// <summary>
+/// TB-256: برنامهٔ ارسال پایدارِ یک گروه پذیرفته‌شده، عیناً از Order storage (بدون بازمحاسبه).
+/// روز دست‌به‌حامل‌سپاری + بازهٔ پذیرش همان روز + مرجع زمان‌بندی قابل تکرار.
+/// </summary>
+public sealed record OrderShippingGroupHistoryDispatchPlan(
+    DateOnly HandoffDate,
+    long OpenTicks,
+    long CloseTicks,
+    string TimeZone,
+    int TransportWorkingDays,
+    int PolicyVersion,
+    Guid ScheduleSnapshotId,
+    long ScheduleSourceRevision);
 
 /// <summary>شاهد حامل ذخیره‌شده؛ تهی یعنی Manual/Free. هیچ تماس حاملی برای ساختن آن نیست.</summary>
 public sealed record OrderShippingGroupHistoryCarrierQuote(
