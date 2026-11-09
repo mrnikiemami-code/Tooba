@@ -178,6 +178,29 @@ public sealed record ShippingCapturedReceivingWeek(
     IReadOnlyList<ShippingCapturedReceivingWeekDay> Days,
     int? SlotDurationMinutes = null);
 
+/// <summary>
+/// TB-256: یک روز تقویم <b>پذیرش حامل</b> ذخیره‌شده؛ بازهٔ نیم‌باز محلی همان روز.
+/// </summary>
+/// <param name="Weekday">روز هفتهٔ ISO (۱ تا ۷).</param>
+/// <param name="IsWorking">پرچم پذیرش ذخیره‌شده.</param>
+/// <param name="OpensAt">شروع پذیرش ذخیره‌شده یا تهی.</param>
+/// <param name="ClosesAt">پایان پذیرش (شامل نیست) یا تهی.</param>
+public sealed record ShippingCapturedCarrierWeekDay(
+    int Weekday,
+    bool IsWorking,
+    TimeOnly? OpensAt,
+    TimeOnly? ClosesAt);
+
+/// <summary>
+/// TB-256: برنامهٔ هفتگی مستقل <b>پذیرش حامل</b> که در همان capture ذخیره شده است. این تقویم هیچ
+/// رابطه‌ای با ساعت تحویل مشتری ندارد و غیبت آن برای بسته‌های قدیمی یعنی «پیکربندی‌نشده».
+/// </summary>
+/// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی پذیرش.</param>
+/// <param name="Days">روزهای ذخیره‌شده.</param>
+public sealed record ShippingCapturedCarrierWeek(
+    string TimeZoneId,
+    IReadOnlyList<ShippingCapturedCarrierWeekDay> Days);
+
 /// <summary>تنظیمات ذخیره‌شدهٔ روش که به قیمت مربوط است.</summary>
 /// <param name="FreightPaymentMode">طرف پرداخت کرایه.</param>
 /// <param name="CalculationMode">حالت محاسبه.</param>
@@ -274,6 +297,7 @@ public sealed record ShippingCapturedQuoteLookupRequest(
 /// <param name="MaxDeliveryDays">بیشینهٔ مدت تحویل ذخیره‌شده یا تهی.</param>
 /// <param name="ReceivingWeek">برنامهٔ هفتگی ذخیره‌شده یا تهی.</param>
 /// <param name="CarrierQuote">شاهد خنثی قیمت حامل؛ برای Manual/Free تهی است.</param>
+/// <param name="CarrierWeek">TB-256: تقویم مستقل پذیرش حامل ذخیره‌شده یا تهی.</param>
 public sealed record ShippingCapturedQuoteResult(
     ShippingCapturedQuoteVerdict Verdict,
     string ReasonCode,
@@ -296,7 +320,8 @@ public sealed record ShippingCapturedQuoteResult(
     int? MinDeliveryDays,
     int? MaxDeliveryDays,
     ShippingCapturedReceivingWeek? ReceivingWeek,
-    ShippingCapturedCarrierQuoteEvidence? CarrierQuote = null)
+    ShippingCapturedCarrierQuoteEvidence? CarrierQuote = null,
+    ShippingCapturedCarrierWeek? CarrierWeek = null)
 {
     /// <summary>آیا این نتیجه یک قیمت پولی واقعی است.</summary>
     public bool IsQuoted => Verdict == ShippingCapturedQuoteVerdict.Quoted;

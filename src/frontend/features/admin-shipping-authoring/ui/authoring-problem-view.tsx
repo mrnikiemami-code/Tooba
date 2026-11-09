@@ -14,6 +14,7 @@ import type { GroupIssue } from "../model/editor-groups.ts";
 import type { EditorSaveStatus } from "../session/editor-session.ts";
 import { areaRangeIssueMessage, rowIssueMessage } from "./rate-issue-messages.ts";
 import { weekIssueMessage } from "./authoring-week-editor.tsx";
+import { carrierIssueMessage } from "./authoring-carrier-week-editor.tsx";
 import type { ServerFieldIssue } from "./server-field-error.ts";
 
 /** Localized prose of one typed transport failure (raw server codes never become prose). */
@@ -146,6 +147,7 @@ export function AuthoringLocalIssuesPanel({
       ...issues.rates.map((issue) => rowIssueMessage(issue.code, messages)),
       ...issues.areaRanges.map((issue) => areaRangeIssueMessage(issue.code, messages)),
       ...issues.week.map((issue) => weekIssueMessage(issue.code, messages)),
+      ...issues.carrier.map((issue) => carrierIssueMessage(issue.code, messages)),
     ]),
   );
   if (lines.length === 0) return null;

@@ -113,6 +113,17 @@ export interface EditorWeeklySchedule {
   readonly slotDurationMinutes?: number | null;
 }
 
+/**
+ * TB-256: stored CARRIER-ACCEPTANCE calendar (`null` = unconfigured).
+ *
+ * This is a schedule in its own right: it never inherits the customer delivery week and carries no
+ * receiving-slot length. `startTime`/`endTime` are the carrier's own open/close bounds.
+ */
+export interface EditorCarrierSchedule {
+  readonly timeZoneId: string;
+  readonly days: readonly EditorScheduleDay[];
+}
+
 /** Stored method settings (`null` = unconfigured; no implicit Prepaid/Manual). */
 export interface EditorMethodSettings {
   readonly freightPaymentMode: FreightPaymentMode;
@@ -189,6 +200,11 @@ export interface EditorDocument {
   readonly settings: EditorMethodSettings | null;
   readonly presentation: EditorPresentation;
   readonly weeklySchedule: EditorWeeklySchedule | null;
+  /**
+   * TB-256: independent carrier-acceptance calendar. `null` or ABSENT both mean "not configured":
+   * a document encoded before this section existed stays readable and never gains an invented week.
+   */
+  readonly carrierSchedule?: EditorCarrierSchedule | null;
   readonly regionGroups: readonly EditorRegionGroup[];
   /**
    * Additive destination facts of the same read snapshot, or `null` when the server did not supply the

@@ -15,6 +15,8 @@ import { createEditorForm } from "./editor-form.ts";
 import { createGroupsForm } from "./editor-groups.ts";
 import { createRatesForm } from "./editor-rates.ts";
 import { createWeekForm } from "./editor-week.ts";
+import type { CarrierWeekFormState } from "./editor-carrier-week.ts";
+import { createCarrierWeekForm } from "./editor-carrier-week.ts";
 
 /** All local drafts of one confirmed document. */
 export interface AuthoringDrafts {
@@ -22,11 +24,13 @@ export interface AuthoringDrafts {
   readonly groups: GroupsFormState;
   readonly rates: RatesFormState;
   readonly week: WeekFormState;
+  /** TB-256: the independent carrier-acceptance calendar draft. */
+  readonly carrier: CarrierWeekFormState;
 }
 
 /**
- * Seeds General, the ordered group collection (areas + titles), rate rows and the weekly schedule
- * from the SAME confirmed baseline.
+ * Seeds General, the ordered group collection (areas + titles), rate rows, the weekly schedule and
+ * the independent carrier calendar from the SAME confirmed baseline.
  *
  * @param document Confirmed document.
  * @param activeLanguageIds Active content language ids of the registry, in registry order.
@@ -40,6 +44,7 @@ export function seedAuthoringDrafts(
     groups: createGroupsForm(document, activeLanguageIds),
     rates: createRatesForm(document),
     week: createWeekForm(document.weeklySchedule),
+    carrier: createCarrierWeekForm(document.carrierSchedule ?? null),
   };
 }
 

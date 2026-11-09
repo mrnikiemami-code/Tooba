@@ -538,6 +538,26 @@ public sealed class OrderDbContext : DbContext
                     .HasMaxLength(ShippingGroupAcceptedCarrierQuote.MaxReferenceLength);
             });
         owned.Navigation(x => x.CarrierQuote).IsRequired(false);
+
+        // TB-256: the planned dispatch (carrier handoff) is a compact owned value with explicit
+        // provenance columns. Every column is nullable so historical groups without a carrier calendar
+        // keep decoding as "no planned dispatch".
+        owned.OwnsOne(
+            x => x.PlannedDispatch,
+            dispatch =>
+            {
+                dispatch.Property(x => x.HandoffDate).HasColumnName("accepted_dispatch_handoff_date");
+                dispatch.Property(x => x.HandoffOpenTicks).HasColumnName("accepted_dispatch_open_ticks");
+                dispatch.Property(x => x.HandoffCloseTicks).HasColumnName("accepted_dispatch_close_ticks");
+                dispatch.Property(x => x.HandoffTimeZone)
+                    .HasColumnName("accepted_dispatch_time_zone")
+                    .HasMaxLength(ShippingGroupAcceptedEvidence.MaxTimeZoneLength);
+                dispatch.Property(x => x.TransportWorkingDays).HasColumnName("accepted_dispatch_transport_days");
+                dispatch.Property(x => x.PolicyVersion).HasColumnName("accepted_dispatch_policy_version");
+                dispatch.Property(x => x.ScheduleSnapshotId).HasColumnName("accepted_dispatch_snapshot_id");
+                dispatch.Property(x => x.ScheduleSourceRevision).HasColumnName("accepted_dispatch_source_revision");
+            });
+        owned.Navigation(x => x.PlannedDispatch).IsRequired(false);
     }
 }
 

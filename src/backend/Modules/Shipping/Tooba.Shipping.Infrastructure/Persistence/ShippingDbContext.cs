@@ -738,6 +738,60 @@ public sealed class ShippingDbContext : DbContext
             entity.Property(x => x.IsWorking).IsRequired();
         });
 
+        // TB-256 independent CARRIER ACCEPTANCE calendar for the same draft/method. It is a sibling of
+        // the customer delivery week, never derived from it: a missing header is the explicit
+        // UNCONFIGURED state and produces no acceptance hours, and a seven-closed week is seven real
+        // rows. No slot duration is imposed on acceptance.
+        modelBuilder.Entity<ShippingAuthoringCarrierSchedule>(entity =>
+        {
+            entity.ToTable("authoring_carrier_schedules", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_carrier_schedules_timezone_length",
+                    $"char_length(btrim(time_zone_id)) > 0 AND char_length(time_zone_id) <= {ShippingRatePolicyLimits.TimeZoneIdMaxLength.ToString(CultureInfo.InvariantCulture)}");
+            });
+            entity.HasKey(x => x.DraftId);
+            entity.Property(x => x.DraftId).ValueGeneratedNever();
+            entity.Property(x => x.TimeZoneId).IsRequired().HasMaxLength(ShippingRatePolicyLimits.TimeZoneIdMaxLength);
+            entity.Property(x => x.UpdatedAt).IsRequired();
+
+            // ONE acceptance calendar per draft/method.
+            entity.HasOne<ShippingAuthoringDraft>()
+                .WithOne(draft => draft.CarrierSchedule)
+                .HasForeignKey<ShippingAuthoringCarrierSchedule>(schedule => schedule.DraftId)
+                .HasConstraintName("fk_authoring_carrier_schedules_draft")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Navigation(x => x.Days).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.HasMany(x => x.Days)
+                .WithOne()
+                .HasForeignKey(day => day.DraftId)
+                .HasConstraintName("fk_authoring_carrier_schedule_days_schedule")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ShippingAuthoringCarrierScheduleDay>(entity =>
+        {
+            entity.ToTable("authoring_carrier_schedule_days", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_carrier_schedule_days_weekday_range",
+                    $"weekday BETWEEN {ShippingOperatingWindow.MinWeekday} AND {ShippingOperatingWindow.MaxWeekday}");
+                table.HasCheckConstraint(
+                    "ck_authoring_carrier_schedule_days_hours_paired",
+                    "(opens_at IS NULL) = (closes_at IS NULL)");
+                table.HasCheckConstraint(
+                    "ck_authoring_carrier_schedule_days_range",
+                    "opens_at IS NULL OR closes_at > opens_at");
+                table.HasCheckConstraint(
+                    "ck_authoring_carrier_schedule_days_working_hours",
+                    "is_working = FALSE OR (opens_at IS NOT NULL AND closes_at IS NOT NULL)");
+            });
+            entity.HasKey(x => new { x.DraftId, x.Weekday });
+            entity.Property(x => x.DraftId).IsRequired();
+            entity.Property(x => x.IsWorking).IsRequired();
+        });
+
         modelBuilder.Entity<ShippingAuthoringSelectedArea>(entity =>
         {
             entity.ToTable("authoring_selected_areas", table =>
@@ -780,7 +834,8 @@ public sealed class ShippingDbContext : DbContext
                 table.HasCheckConstraint(
                     "ck_authoring_revision_snapshots_format_version_known",
                     $"format_version IN ({ShippingAuthoringRevisionSnapshot.LegacyFormatVersion}, "
-                    + $"{ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion})");
+                    + $"{ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion}, "
+                    + $"{ShippingAuthoringRevisionSnapshot.CarrierAcceptanceFormatVersion})");
                 table.HasCheckConstraint(
                     "ck_authoring_revision_snapshots_tenant_not_blank",
                     "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");

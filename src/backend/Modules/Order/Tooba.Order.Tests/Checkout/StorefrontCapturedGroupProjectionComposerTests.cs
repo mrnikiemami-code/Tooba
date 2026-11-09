@@ -109,18 +109,20 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
         Assert.Equal(2, harness.Taxes.Calls);
         Assert.Equal(1, clock.Reads);
 
-        // تقویم از هفتهٔ همان روش و کمینهٔ ذخیره‌شده (بدون آماده‌سازی فروشنده) ساخته شد.
-        Assert.Equal(new DateOnly(2026, 10, 27), firstQuote.Receiving!.EarliestEligibleDate);
+        // TB-256: تقویم از هفتهٔ همان روش و MAX روزهای ذخیره‌شده (بدون آماده‌سازی فروشنده) ساخته می‌شود:
+        // شنبه ۲۴ + چهار روز کاری (یکشنبه ۲۵، سه‌شنبه ۲۷، شنبه ۳۱، یکشنبه ۱ آبان) ⇒ ۱ نوامبر.
+        Assert.Equal(new DateOnly(2026, 11, 1), firstQuote.Receiving!.EarliestEligibleDate);
         Assert.Equal(3, firstQuote.Receiving.AvailableDates.Count);
-        Assert.Equal(new TimeOnly(8, 30), firstQuote.Receiving.AvailableDates[0].OpensAt);
-        Assert.Equal(new TimeOnly(11, 0), firstQuote.Receiving.AvailableDates[0].ClosesAt);
+        Assert.Equal(new TimeOnly(10, 15), firstQuote.Receiving.AvailableDates[0].OpensAt);
+        Assert.Equal(new TimeOnly(13, 45), firstQuote.Receiving.AvailableDates[0].ClosesAt);
     }
 
     /// <summary>
-    /// کمینه ۲ با شنبه/یکشنبه کاری، دوشنبه تعطیل: زودترین تاریخ سه‌شنبه است و هر روز ساعت خودش را دارد.
+    /// TB-256: MAX=۴ با شنبه/یکشنبه/سه‌شنبه کاری و تعطیلی بقیه روزها: زودترین تاریخ یکشنبه ۱ نوامبر است و
+    /// هر روز ساعت خودش را دارد (MIN=۲ دیگر مبنا نیست).
     /// </summary>
     [Fact]
-    public async Task Minimum_two_working_days_skips_closed_monday_and_keeps_each_days_own_hours()
+    public async Task Maximum_four_working_days_skips_closed_days_and_keeps_each_days_own_hours()
     {
         using var harness = new ShippingGroupGoodsFactsHarness();
         harness.Carts.Cart = harness.Cart(harness.Line(LineA, OfferA, 100m));
@@ -143,33 +145,33 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
 
         var candidate = Assert.Single(Assert.Single(result.Groups).Candidates);
         var receiving = candidate.Receiving!;
-        Assert.Equal(new DateOnly(2026, 10, 27), receiving.EarliestEligibleDate);
+        Assert.Equal(new DateOnly(2026, 11, 1), receiving.EarliestEligibleDate);
         Assert.Null(receiving.UnavailableReason);
         Assert.Equal(
             [
-                new DateOnly(2026, 10, 27),
-                new DateOnly(2026, 10, 31),
                 new DateOnly(2026, 11, 1),
+                new DateOnly(2026, 11, 3),
+                new DateOnly(2026, 11, 7),
             ],
             receiving.AvailableDates.Select(slot => slot.Date).ToArray());
 
         // ساعت هر روز همان ذخیرهٔ همان روز است؛ هیچ بازهٔ ثابت ۹ تا ۱۲ ساخته نمی‌شود.
-        Assert.Equal(new TimeOnly(8, 30), receiving.AvailableDates[0].OpensAt);
-        Assert.Equal(new TimeOnly(9, 0), receiving.AvailableDates[1].OpensAt);
-        Assert.Equal(new TimeOnly(10, 15), receiving.AvailableDates[2].OpensAt);
-        Assert.Equal(new TimeOnly(13, 45), receiving.AvailableDates[2].ClosesAt);
+        Assert.Equal(new TimeOnly(10, 15), receiving.AvailableDates[0].OpensAt);
+        Assert.Equal(new TimeOnly(8, 30), receiving.AvailableDates[1].OpensAt);
+        Assert.Equal(new TimeOnly(9, 0), receiving.AvailableDates[2].OpensAt);
+        Assert.Equal(new TimeOnly(12, 0), receiving.AvailableDates[2].ClosesAt);
 
-        // حداکثر مدت فقط متادیتا می‌ماند.
+        // حداکثر مدت همان مبنای تقویم است و حداقل فقط متادیتا می‌ماند.
         Assert.Equal(4, candidate.OwnerResult!.MaxDeliveryDays);
         Assert.Equal(2, candidate.OwnerResult.MinDeliveryDays);
     }
 
     /// <summary>
-    /// یک لحظهٔ UTC با منطقهٔ زمانی هر گروه به تاریخ محلی متفاوت تبدیل می‌شود و کمینهٔ هر گروه
-    /// مستقل است (بدون max/آماده‌سازی مشترک).
+    /// TB-256: یک لحظهٔ UTC با منطقهٔ زمانی هر گروه به تاریخ محلی متفاوت تبدیل می‌شود و MAX هر گروه
+    /// مستقل است (بدون آماده‌سازی مشترک).
     /// </summary>
     [Fact]
-    public async Task Utc_instant_maps_to_each_groups_own_local_date_and_minimum()
+    public async Task Utc_instant_maps_to_each_groups_own_local_date_and_maximum()
     {
         using var harness = new ShippingGroupGoodsFactsHarness();
         harness.Carts.Cart = harness.Cart(
@@ -195,13 +197,14 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
                 ]),
             CancellationToken.None);
 
-        // تهران: یکشنبه 25 → اولین روز کاری بعدی دوشنبه 26.
+        // TB-256: هر گروه MAX خودش را مبنا می‌گیرد (تهران ۴، UTC ۷) و منطقهٔ زمانی مستقل می‌ماند.
+        // تهران: یکشنبه ۲۵ ۰۰:۳۰ → چهار روز کاری: دوشنبه ۲۶، سه‌شنبه ۲۷، چهارشنبه ۲۸، پنجشنبه ۲۹.
         Assert.Equal(
-            new DateOnly(2026, 10, 26),
+            new DateOnly(2026, 10, 29),
             result.Groups[0].Candidates[0].Receiving!.EarliestEligibleDate);
-        // UTC: شنبه 24 → سه روز کاری بعد: یکشنبه 25، دوشنبه 26، سه‌شنبه 27.
+        // UTC: شنبه ۲۴ → هفت روز کاری بعد: یکشنبه ۲۵ تا شنبه ۳۱.
         Assert.Equal(
-            new DateOnly(2026, 10, 27),
+            new DateOnly(2026, 10, 31),
             result.Groups[1].Candidates[0].Receiving!.EarliestEligibleDate);
 
         Assert.Equal(4, result.Groups[0].Candidates[0].OwnerResult!.MaxDeliveryDays);
@@ -428,9 +431,24 @@ public sealed class StorefrontCapturedGroupProjectionComposerTests
             StorefrontCapturedGroupProjectionReasons.MinimumDeliveryDaysInvalid,
             missingMinimum.Receiving!.UnavailableReason);
 
+        // TB-256: MAX اجباری است و هرگز با MIN جایگزین نمی‌شود؛ جفت ناسازگار MAX<MIN هم رد می‌شود.
+        var missingMaximum = await ComposeSingle(
+            composer, harness, shipping,
+            request => Quoted(request, 1_000m, 0m, week: Week("UTC"), maxDays: null));
+        Assert.Equal(
+            StorefrontCapturedGroupProjectionReasons.MaximumDeliveryDaysInvalid,
+            missingMaximum.Receiving!.UnavailableReason);
+
+        var invertedMaximum = await ComposeSingle(
+            composer, harness, shipping,
+            request => Quoted(request, 1_000m, 0m, week: Week("UTC"), minDays: 3, maxDays: 2));
+        Assert.Equal(
+            StorefrontCapturedGroupProjectionReasons.MaximumDeliveryDaysInvalid,
+            invertedMaximum.Receiving!.UnavailableReason);
+
         // در همهٔ این حالت‌ها قیمت پولی معتبر بود و تقویم جدا گزارش شد.
         Assert.All(
-            new[] { missing, badZone, badInterval, allClosed, missingMinimum },
+            new[] { missing, badZone, badInterval, allClosed, missingMinimum, missingMaximum, invertedMaximum },
             candidate => Assert.Equal(StorefrontCapturedCandidateOutcome.Quoted, candidate.Outcome));
     }
 

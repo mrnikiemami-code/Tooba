@@ -718,7 +718,18 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                             day.StartTime,
                             day.EndTime))
                         .ToList(),
-                    week.SlotDurationMinutes));
+                    week.SlotDurationMinutes),
+            CarrierWeek: selection?.CarrierSchedule is { } carrier
+                ? new ShippingCapturedCarrierWeek(
+                    carrier.TimeZoneId,
+                    carrier.Days
+                        .Select(day => new ShippingCapturedCarrierWeekDay(
+                            day.Weekday,
+                            day.IsWorking,
+                            day.OpensAt,
+                            day.ClosesAt))
+                        .ToList())
+                : null);
     }
 
     private static ContractVerdict MapOutcome(DomainOutcome outcome)

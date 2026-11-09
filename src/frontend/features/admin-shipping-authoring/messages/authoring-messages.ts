@@ -446,6 +446,27 @@ const fa = {
     "این مبلغ ذخیره‌شده کسری غیرصفر دارد و با ورودی ریال صحیح نمایش داده نمی‌شود؛ مقدار ذخیره‌شده دست‌نخورده می‌ماند.",
   rateInheritAreaDuration: "بازهٔ تحویل از خود محدودهٔ ارسال گرفته می‌شود.",
   rateOrderedSummary: "ردیف‌های هزینه",
+  timingTabCustomer: "تحویل به مشتری",
+  timingTabCarrier: "پذیرش حامل",
+  timingTabHint: "این دو تقویم مستقل‌اند؛ تغییر یکی، دیگری را تغییر نمی‌دهد.",
+  carrierWeekTitle: "زمان‌بندی پذیرش حامل",
+  carrierHint: "این بازه‌ها فقط زمان تحویل بسته به حامل است، نه وعدهٔ رسیدن به مشتری.",
+  carrierWeekUnconfigured: "زمان‌بندی پذیرش حامل پیکربندی نشده است؛ تحویل به حامل تا آن زمان زمان‌بندی‌شده نیست.",
+  carrierConfigureAction: "پیکربندی پذیرش حامل",
+  carrierCopyAction: "کپی از ساعات تحویل مشتری",
+  carrierCopyHint: "این کپی فقط یک‌بار انجام می‌شود؛ پس از آن دو تقویم کاملاً مستقل‌اند.",
+  carrierCopyUnavailable: "برای کپی، ابتدا زمان‌بندی تحویل مشتری را کامل و اصلاح‌شده پیکربندی کنید.",
+  carrierPendingTimeZoneUnapplied:
+    "منطقهٔ زمانی نوشته شده هنوز پیکربندی نشده است؛ برای ذخیره، «پیکربندی پذیرش حامل» را بزنید یا آن را پاک کنید.",
+  carrierOpenColumn: "پذیرش از",
+  carrierCloseColumn: "پذیرش تا",
+  carrierAccepting: "پذیرش",
+  carrierNotAccepting: "بدون پذیرش",
+  fieldCarrierTimeZoneLabel: "منطقهٔ زمانی پذیرش حامل",
+  fieldCarrierDaysLabel: "روزها و ساعات پذیرش حامل",
+  carrierDayHoursRequired: "برای روز پذیرش، ساعت شروع و پایان الزامی است.",
+  carrierDayTimeInvalid: "ساعت‌های پذیرش باید معتبر و هر دو با هم باشند.",
+  carrierDayRangeInvalid: "پایان بازهٔ پذیرش باید بعد از شروع آن باشد.",
 } as const;
 
 export type AuthoringMessageKey = keyof typeof fa;
@@ -891,6 +912,29 @@ const en: Record<AuthoringMessageKey, string> = {
     "This stored amount has a non-zero fraction and is not shown as a whole-rial input; the stored value stays untouched.",
   rateInheritAreaDuration: "The delivery range comes from the delivery area itself.",
   rateOrderedSummary: "Cost rows",
+  timingTabCustomer: "Customer delivery",
+  timingTabCarrier: "Carrier acceptance",
+  timingTabHint: "These two calendars are independent; changing one never changes the other.",
+  carrierWeekTitle: "Carrier acceptance schedule",
+  carrierHint: "These windows are when the parcel is handed to the carrier, not the customer promise.",
+  carrierWeekUnconfigured:
+    "Carrier acceptance is not configured; hand-off to the carrier is not scheduled until it is.",
+  carrierConfigureAction: "Configure carrier acceptance",
+  carrierCopyAction: "Copy from customer delivery hours",
+  carrierCopyHint: "This copies once; afterwards both calendars are fully independent.",
+  carrierCopyUnavailable:
+    "To copy, configure the customer delivery schedule first and make it issue-free.",
+  carrierPendingTimeZoneUnapplied:
+    "The typed time zone is not configured yet; press “Configure carrier acceptance” to save it or clear it.",
+  carrierOpenColumn: "Accepting from",
+  carrierCloseColumn: "Accepting to",
+  carrierAccepting: "Accepting",
+  carrierNotAccepting: "Not accepting",
+  fieldCarrierTimeZoneLabel: "Carrier acceptance time zone",
+  fieldCarrierDaysLabel: "Carrier acceptance days and hours",
+  carrierDayHoursRequired: "An acceptance day requires both an open and a close time.",
+  carrierDayTimeInvalid: "Acceptance times must be valid and both present.",
+  carrierDayRangeInvalid: "Acceptance close must be after its open.",
 };
 
 export type AuthoringMessages = Record<AuthoringMessageKey, string>;

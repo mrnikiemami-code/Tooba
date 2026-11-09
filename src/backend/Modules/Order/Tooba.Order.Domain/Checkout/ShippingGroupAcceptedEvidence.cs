@@ -166,10 +166,16 @@ public sealed class ShippingGroupAcceptedEvidence
     /// </summary>
     public const int SlotDurationFormatVersion = 2;
 
-    /// <summary>آیا این نسخهٔ قالب شاهد قابل پذیرش است (فقط ۱ و ۲).</summary>
+    /// <summary>
+    /// TB-256: نسخهٔ قالبی که تقویم مستقل پذیرش حامل را نیز در بر می‌گیرد. فقط برای خواندن/پذیرش
+    /// پشتیبانی می‌شود و هیچ ردیف قدیمی با آن بازنویسی نمی‌شود.
+    /// </summary>
+    public const int CarrierScheduleFormatVersion = 3;
+
+    /// <summary>آیا این نسخهٔ قالب شاهد قابل پذیرش است (فقط ۱، ۲ و ۳).</summary>
     /// <param name="formatVersion">نسخهٔ قالب.</param>
     public static bool IsSupportedFormat(int formatVersion)
-        => formatVersion is SupportedFormatVersion or SlotDurationFormatVersion;
+        => formatVersion is SupportedFormatVersion or SlotDurationFormatVersion or CarrierScheduleFormatVersion;
 
     /// <summary>حداکثر طول کد ارز.</summary>
     public const int MaxCurrencyLength = 3;
@@ -258,6 +264,11 @@ public sealed class ShippingGroupAcceptedEvidence
     public ShippingGroupAcceptedCarrierQuote? CarrierQuote { get; private set; }
 
     /// <summary>
+    /// TB-256: برنامهٔ ارسال (پذیرش حامل) این گروه یا <c>null</c> برای گروه‌های تاریخی/بدون تقویم حامل.
+    /// </summary>
+    public ShippingGroupPlannedDispatch? PlannedDispatch { get; private set; }
+
+    /// <summary>
     /// شاهد فشرده می‌سازد. هر مقدار ناقص/ناسازگار پیش از هر جهش رد می‌شود؛ هیچ شناسه‌ای
     /// ساخته نمی‌شود، هیچ مبلغی clamp/گرد نمی‌شود و هیچ منطقهٔ زمانی/مالکی جعل نمی‌شود.
     /// </summary>
@@ -282,7 +293,8 @@ public sealed class ShippingGroupAcceptedEvidence
         string receivingTimeZone,
         int? minimumDeliveryDays,
         int? maximumDeliveryDays,
-        ShippingGroupAcceptedCarrierQuote? carrierQuote = null)
+        ShippingGroupAcceptedCarrierQuote? carrierQuote = null,
+        ShippingGroupPlannedDispatch? plannedDispatch = null)
     {
         if (snapshotId == Guid.Empty)
         {
@@ -371,11 +383,16 @@ public sealed class ShippingGroupAcceptedEvidence
         {
             throw new ContractOperationException(ShippingGroupEvidenceFault.DeliveryDaysInvalid);
         }
-
         if (minimumDeliveryDays is { } min && maximumDeliveryDays is { } max
             && (min < 0 || max < min || max > MaximumDeliveryDaysBound))
         {
             throw new ContractOperationException(ShippingGroupEvidenceFault.DeliveryDaysInvalid);
+        }
+
+        // TB-256: a planned handoff can never be AFTER the accepted customer receiving date.
+        if (plannedDispatch is { } dispatch && dispatch.HandoffDate > receivingDate)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
         }
 
         return new ShippingGroupAcceptedEvidence
@@ -401,6 +418,7 @@ public sealed class ShippingGroupAcceptedEvidence
             MinimumDeliveryDays = minimumDeliveryDays,
             MaximumDeliveryDays = maximumDeliveryDays,
             CarrierQuote = carrierQuote,
+            PlannedDispatch = plannedDispatch,
         };
     }
 
@@ -501,6 +519,102 @@ public static class ShippingGroupEvidenceFault
 
     /// <summary>شاهد حامل ناقص یا با مبالغ تسویه ناسازگار است.</summary>
     public const string CarrierQuoteInvalid = "shipping.group.evidence.carrier_quote.invalid";
+
+    /// <summary>TB-256: برنامهٔ ارسال (پذیرش حامل) ناقص/ناسازگار است.</summary>
+    public const string DispatchPlanInvalid = "shipping.group.evidence.dispatch_plan.invalid";
+}
+
+/// <summary>
+/// TB-256: برنامهٔ <b>ارسال</b> پذیرفته‌شدهٔ یک گروه — روز و بازهٔ تحویل بسته به حامل همراه provenance
+/// کامل. این یک <b>برنامه</b> است، نه رخداد: هیچ ارسال/مرسوله‌ای ساخته نمی‌شود.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>مستقل از تحویل مشتری.</b> بازهٔ پذیرش از تقویم حامل می‌آید و تاریخ تحویل مشتری از تقویم مشتری؛
+/// هیچ‌کدام جای دیگری نوشته نمی‌شود.
+/// </para>
+/// <para>
+/// <b>قابل بازتولید.</b> نسخهٔ سیاست، تعداد روز حمل استفاده‌شده، شناسه و بازبینی snapshot مبدأ و
+/// شناسهٔ منطقهٔ زمانی همان‌جا ذخیره می‌شوند تا همان محاسبه دوباره قابل اثبات باشد.
+/// </para>
+/// </remarks>
+public sealed class ShippingGroupPlannedDispatch
+{
+    /// <summary>سازندهٔ EF.</summary>
+    private ShippingGroupPlannedDispatch()
+    {
+    }
+
+    /// <summary>روز محلی پذیرش بسته توسط حامل.</summary>
+    public DateOnly HandoffDate { get; private set; }
+
+    /// <summary>تیکِ شروع بازهٔ پذیرش همان روز.</summary>
+    public long HandoffOpenTicks { get; private set; }
+
+    /// <summary>تیکِ پایان بازهٔ پذیرش (شامل نیست).</summary>
+    public long HandoffCloseTicks { get; private set; }
+
+    /// <summary>منطقهٔ زمانی پذیرش.</summary>
+    public string HandoffTimeZone { get; private set; } = string.Empty;
+
+    /// <summary>تعداد روز کاری حمل شمرده‌شده بعد از روز پذیرش.</summary>
+    public int TransportWorkingDays { get; private set; }
+
+    /// <summary>نسخهٔ سیاست محاسبه که این برنامه را ساخت.</summary>
+    public int PolicyVersion { get; private set; }
+
+    /// <summary>شناسهٔ snapshot مبدأ (تقویم حامل استفاده‌شده).</summary>
+    public Guid ScheduleSnapshotId { get; private set; }
+
+    /// <summary>بازبینی مبدأ همان snapshot.</summary>
+    public long ScheduleSourceRevision { get; private set; }
+
+    /// <summary>برنامهٔ ارسال را می‌سازد؛ هر مقدار ناقص/ناسازگار پیش از ذخیره رد می‌شود.</summary>
+    public static ShippingGroupPlannedDispatch Create(
+        DateOnly handoffDate,
+        long handoffOpenTicks,
+        long handoffCloseTicks,
+        string handoffTimeZone,
+        int transportWorkingDays,
+        int policyVersion,
+        Guid scheduleSnapshotId,
+        long scheduleSourceRevision)
+    {
+        if (handoffDate == default
+            || handoffOpenTicks < 0
+            || handoffOpenTicks >= handoffCloseTicks
+            || handoffCloseTicks > ShippingGroupAcceptedEvidence.MaxTimeOfDayTicks)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
+        }
+
+        var timeZone = (handoffTimeZone ?? string.Empty).Trim();
+        if (timeZone.Length == 0 || timeZone.Length > ShippingGroupAcceptedEvidence.MaxTimeZoneLength)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
+        }
+
+        if (transportWorkingDays < 0
+            || transportWorkingDays > ShippingGroupAcceptedEvidence.MaximumDeliveryDaysBound
+            || policyVersion < 1
+            || scheduleSnapshotId == Guid.Empty
+            || scheduleSourceRevision <= 0)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
+        }
+
+        return new ShippingGroupPlannedDispatch
+        {
+            HandoffDate = handoffDate,
+            HandoffOpenTicks = handoffOpenTicks,
+            HandoffCloseTicks = handoffCloseTicks,
+            HandoffTimeZone = timeZone,
+            TransportWorkingDays = transportWorkingDays,
+            PolicyVersion = policyVersion,
+            ScheduleSnapshotId = scheduleSnapshotId,
+            ScheduleSourceRevision = scheduleSourceRevision,
+        };
+    }
 }
 
 /// <summary>شاهد خنثی قیمت حامل روی گروه پذیرفته‌شده؛ Manual/Free آن را ندارند.</summary>

@@ -18,6 +18,13 @@ import {
   type AreaRangeDrafts,
 } from "./editor-area-range.ts";
 import { buildWeeklyScheduleEdit, weekDirty, weekIssues, type WeekFormState, type WeekIssue } from "./editor-week.ts";
+import {
+  buildCarrierScheduleEdit,
+  carrierWeekDirty,
+  carrierWeekIssues,
+  type CarrierIssue,
+  type CarrierWeekFormState,
+} from "./editor-carrier-week.ts";
 
 /** All local blocking problems of the composed intent. */
 export interface AuthoringIntentIssues {
@@ -25,6 +32,8 @@ export interface AuthoringIntentIssues {
   readonly groups: readonly GroupIssue[];
   readonly rates: readonly RateRowIssue[];
   readonly week: readonly WeekIssue[];
+  /** TB-256: blocking problems of the independent carrier-acceptance calendar. */
+  readonly carrier: readonly CarrierIssue[];
   /** Typed shared delivery ranges that cannot be applied (partial/invalid, or with no row to live in). */
   readonly areaRanges: readonly AreaRangeDraftIssue[];
 }
@@ -44,6 +53,7 @@ export function hasNoIssues(issues: AuthoringIntentIssues): boolean {
     issues.groups.length === 0 &&
     issues.rates.length === 0 &&
     issues.week.length === 0 &&
+    issues.carrier.length === 0 &&
     issues.areaRanges.length === 0
   );
 }
@@ -65,6 +75,7 @@ export function buildAuthoringIntent(
   week: WeekFormState,
   groups: GroupsFormState | null = null,
   areaRanges: AreaRangeDrafts | null = null,
+  carrier: CarrierWeekFormState | null = null,
 ): AuthoringIntent {
   const generalResult = buildEditorEdits(document, general);
   const regionGroups =
@@ -72,11 +83,13 @@ export function buildAuthoringIntent(
       ? buildGroupsEdits(document, baselineGroups(document), rates)
       : buildGroupsEdits(document, groups, rates);
   const weeklySchedule = buildWeeklyScheduleEdit(document.weeklySchedule, week);
+  const carrierSchedule = carrier === null ? undefined : buildCarrierScheduleEdit(document.carrierSchedule ?? null, carrier);
 
   const edits: EditorEdits = {
     ...generalResult.edits,
     ...(regionGroups === undefined ? {} : { regionGroups }),
     ...(weeklySchedule === undefined ? {} : { weeklySchedule }),
+    ...(carrierSchedule === undefined ? {} : { carrierSchedule }),
   };
 
   const rateIssues: readonly RateRowIssue[] =
@@ -95,6 +108,7 @@ export function buildAuthoringIntent(
       groups: groups === null ? [] : groupIssues(groups),
       rates: rateIssues,
       week: weekIssues(week),
+      carrier: carrier === null ? [] : carrierWeekIssues(carrier),
       areaRanges:
         areaRanges === null ? [] : areaRangeDraftIssues(areaRanges, (groupKey) => rates[groupKey]),
     },
@@ -102,6 +116,7 @@ export function buildAuthoringIntent(
       formHasLocalChanges(document, general) ||
       ratesDirty(document, rates) ||
       weekDirty(document.weeklySchedule, week) ||
+      (carrier !== null && carrierWeekDirty(document.carrierSchedule ?? null, carrier)) ||
       (groups !== null && groupsDirty(document, groups)) ||
       (areaRanges !== null && areaRangeDraftsDirty(document, areaRanges, rates)),
   };
@@ -125,6 +140,7 @@ export function intentHasEdits(edits: EditorEdits): boolean {
     edits.methodSettings !== undefined ||
     edits.typeAssignment !== undefined ||
     edits.regionGroups !== undefined ||
-    edits.weeklySchedule !== undefined
+    edits.weeklySchedule !== undefined ||
+    edits.carrierSchedule !== undefined
   );
 }

@@ -356,7 +356,7 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
         await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
             $"UPDATE \"order\".order_shipping_groups SET accepted_receiving_close_ticks = 324001234567 WHERE shipping_group_id = {groupId}"));
         await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE \"order\".order_shipping_groups SET accepted_format_version = 2 WHERE shipping_group_id = {groupId}"));
+            $"UPDATE \"order\".order_shipping_groups SET accepted_format_version = 4 WHERE shipping_group_id = {groupId}"));
         await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
             $"UPDATE \"order\".order_shipping_groups SET accepted_owner_seller_party_id = {ShippingGroupAcceptedEvidenceTests.SellerA} WHERE shipping_group_id = {groupId}"));
 
@@ -402,6 +402,107 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
     }
 
     [Fact]
+    public async Task Planned_dispatch_roundtrips_losslessly_and_the_database_refuses_incoherent_plans()
+    {
+        var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
+        var checkoutId = Guid.Parse("01a17d0e-6666-7000-9000-000000000001");
+        var sellerOrderA = Guid.Parse("01a17d0e-6666-7000-9000-0000000000a1");
+        var orderLineA = ShippingGroupAcceptedEvidenceTests.OrderLineId(1);
+        var receivingDate = new DateOnly(2026, 10, 29);
+
+        var groups = ShippingGroupAcceptedEvidenceTests.PlannerGroups()
+            .Where(group => group.SellerPartyId == ShippingGroupAcceptedEvidenceTests.SellerA)
+            .ToArray();
+        var plan = ShippingGroupPlannedDispatch.Create(
+            receivingDate.AddDays(-2),
+            new TimeOnly(9, 0).Ticks,
+            new TimeOnly(17, 0).Ticks,
+            "Asia/Tehran",
+            transportWorkingDays: 2,
+            policyVersion: 1,
+            scheduleSnapshotId: ShippingGroupAcceptedEvidenceTests.Snapshot,
+            scheduleSourceRevision: 41_000L);
+        groups[0].ReplaceAcceptedEvidence(
+            ShippingGroupAcceptedEvidenceTests.Evidence(
+                ShippingGroupAcceptedEvidenceTests.AreaA,
+                ShippingGroupAcceptedEvidenceTests.RowA,
+                freight: 120_000m,
+                packaging: 5_000m,
+                payable: groups[0].ShippingAmount,
+                date: receivingDate,
+                formatVersion: ShippingGroupAcceptedEvidence.CarrierScheduleFormatVersion,
+                plannedDispatch: plan),
+            ShippingGroupAcceptedEvidenceTests.Now);
+
+        Guid groupId;
+        await using (var write = CreateContext(target.ConnectionString))
+        {
+            await write.Database.MigrateAsync();
+            await ResetAsync(write);
+            await InsertOwnersAsync(write, checkoutId, sellerOrderA, Guid.Empty);
+            await InsertOrderLineAsync(write, orderLineA, sellerOrderA, ShippingGroupAcceptedEvidenceTests.SellerA);
+
+            var materialized = OrderShippingGroupMaterializer.Materialize(
+                [ShippingGroupAcceptedEvidenceTests.Plan(groups[0])],
+                [(orderLineA, ShippingGroupAcceptedEvidenceTests.SellerA)],
+                new Dictionary<Guid, Guid> { [ShippingGroupAcceptedEvidenceTests.SellerA] = sellerOrderA },
+                new Dictionary<Guid, Guid> { [ShippingGroupAcceptedEvidenceTests.CartLineA] = orderLineA },
+                checkoutId,
+                ShippingGroupAcceptedEvidenceTests.Now);
+
+            write.AddRange(materialized);
+            await write.SaveChangesAsync();
+            groupId = materialized[0].ShippingGroupId;
+        }
+
+        await using var db = CreateContext(target.ConnectionString);
+        db.ChangeTracker.Clear();
+        var stored = await db.OrderShippingGroups.SingleAsync(x => x.ShippingGroupId == groupId);
+        var storedPlan = stored.AcceptedEvidence!.PlannedDispatch;
+        Assert.NotNull(storedPlan);
+        Assert.Equal(receivingDate.AddDays(-2), storedPlan!.HandoffDate);
+        Assert.Equal(new TimeOnly(9, 0).Ticks, storedPlan.HandoffOpenTicks);
+        Assert.Equal(new TimeOnly(17, 0).Ticks, storedPlan.HandoffCloseTicks);
+        Assert.Equal("Asia/Tehran", storedPlan.HandoffTimeZone);
+        Assert.Equal(2, storedPlan.TransportWorkingDays);
+        Assert.Equal(1, storedPlan.PolicyVersion);
+        Assert.Equal(ShippingGroupAcceptedEvidenceTests.Snapshot, storedPlan.ScheduleSnapshotId);
+        Assert.Equal(41_000L, storedPlan.ScheduleSourceRevision);
+        // تعهد مشتری دست‌نخورده است؛ برنامهٔ ارسال جای آن ننشسته.
+        Assert.Equal(receivingDate, stored.AcceptedEvidence.ReceivingDate);
+        Assert.Equal(120_000m, stored.AcceptedEvidence.FreightAmount);
+
+        // هیچ ردیف نیمه‌کامل/ناسازگاری در پایگاه‌داده نمی‌ماند؛ CHECKها مستقل از سازندهٔ دامنه.
+        await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"order\".order_shipping_groups SET accepted_dispatch_time_zone = NULL WHERE shipping_group_id = {groupId}"));
+        await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"order\".order_shipping_groups SET accepted_dispatch_open_ticks = accepted_dispatch_close_ticks WHERE shipping_group_id = {groupId}"));
+        await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"order\".order_shipping_groups SET accepted_dispatch_handoff_date = accepted_receiving_date + 1 WHERE shipping_group_id = {groupId}"));
+        await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"order\".order_shipping_groups SET accepted_dispatch_source_revision = 0 WHERE shipping_group_id = {groupId}"));
+        await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"order\".order_shipping_groups SET accepted_dispatch_transport_days = 366 WHERE shipping_group_id = {groupId}"));
+        await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"order\".order_shipping_groups SET accepted_dispatch_policy_version = 0 WHERE shipping_group_id = {groupId}"));
+
+        // برنامهٔ ارسال نمی‌تواند بدون شاهد پذیرفته‌شدهٔ هسته باقی بماند.
+        await AssertCheckViolationAsync(db, () => db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"order\".order_shipping_groups SET accepted_snapshot_id = NULL WHERE shipping_group_id = {groupId}"));
+
+        var intact = await ReadEvidenceAsync(db, groupId);
+        Assert.NotNull(intact?.PlannedDispatch);
+        Assert.Equal(receivingDate.AddDays(-2), intact!.PlannedDispatch!.HandoffDate);
+    }
+
+    private static async Task<ShippingGroupAcceptedEvidence?> ReadEvidenceAsync(OrderDbContext db, Guid groupId)
+    {
+        db.ChangeTracker.Clear();
+        var group = await db.OrderShippingGroups.SingleAsync(x => x.ShippingGroupId == groupId);
+        return group.AcceptedEvidence;
+    }
+
+    [Fact]
     public async Task Evidence_storage_is_compact_scalars_with_lossless_types_on_both_tables()
     {
         var target = OrderEvidenceRelationalTestTarget.FromEnvironment();
@@ -415,12 +516,13 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
                  })
         {
             // مدل زمان اجرا در برابر ستون‌های واقعی همان جدول: همان مجموعه، نه کمتر و نه بیشتر.
+            // TB-256: تعداد ستون‌ها ثابت دستی نیست (شاهد حامل و برنامهٔ ارسال هر دو افزوده شده‌اند)؛
+            // برابری مجموعهٔ مدل با اطلاعات واقعی همان تضمین است.
             var modelledColumns = ModelEvidenceColumns(db, clrType);
-            Assert.Equal(22, modelledColumns.Count);
+            Assert.NotEmpty(modelledColumns);
             var evidenceColumns = await db.Database
                 .SqlQuery<string>($"SELECT column_name::text AS \"Value\" FROM information_schema.columns WHERE table_schema = 'order' AND table_name = {table} AND column_name LIKE 'accepted\\_%' ORDER BY column_name")
                 .ToListAsync();
-            Assert.Equal(22, evidenceColumns.Count);
             Assert.Equal(modelledColumns.OrderBy(x => x, StringComparer.Ordinal), evidenceColumns);
 
             var structured = await db.Database
@@ -449,6 +551,7 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
                 .ToListAsync();
             Assert.Contains($"ck_{table}_accepted_evidence_complete", constraints);
             Assert.Contains($"ck_{table}_accepted_evidence_shape", constraints);
+            Assert.Contains($"ck_{table}_accepted_dispatch_plan", constraints);
         }
 
         var snapshotIndex = await db.Database
@@ -805,10 +908,10 @@ public sealed class ShippingGroupAcceptedEvidenceStorageTests
             columns.Add(property.GetColumnName());
         }
 
-        var owner = evidence.FindNavigation(nameof(ShippingGroupAcceptedEvidence.Owner))?.TargetEntityType;
-        if (owner is not null)
+        // شاهد مالک، قیمت حامل و برنامهٔ ارسال همه owned روی همان جدول‌اند.
+        foreach (var navigation in evidence.GetNavigations())
         {
-            foreach (var property in owner.GetProperties().Where(x => !x.IsShadowProperty()))
+            foreach (var property in navigation.TargetEntityType.GetProperties().Where(x => !x.IsShadowProperty()))
             {
                 columns.Add(property.GetColumnName());
             }

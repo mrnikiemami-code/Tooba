@@ -183,6 +183,34 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 scheduleDays = days;
             }
 
+            IReadOnlyList<ShippingAuthoringDraft.CarrierScheduleDayInput>? carrierDays = null;
+            if (request.Request.CarrierSchedule is { } carrier)
+            {
+                if (carrier.Days is null)
+                {
+                    return Result.Failure<ShippingAuthoringEditorDocumentItem>(
+                        new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+                }
+
+                var acceptanceDays = new List<ShippingAuthoringDraft.CarrierScheduleDayInput>(carrier.Days.Count);
+                foreach (var day in carrier.Days)
+                {
+                    if (day is null || day.IsWorking is not { } isWorking)
+                    {
+                        return Result.Failure<ShippingAuthoringEditorDocumentItem>(
+                            new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+                    }
+
+                    acceptanceDays.Add(new ShippingAuthoringDraft.CarrierScheduleDayInput(
+                        day.Weekday,
+                        isWorking,
+                        day.StartTime,
+                        day.EndTime));
+                }
+
+                carrierDays = acceptanceDays;
+            }
+
             var groups = new List<ShippingAuthoringDraft.EditorGroupInput>(domainGroups.Count);            for (var index = 0; index < domainGroups.Count; index++)
             {
                 var source = request.Request.RegionGroups[index];
@@ -208,7 +236,10 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 request.Request.MethodSettings?.CalculationMode,
                 includeType,
                 typeId,
-                request.Request.WeeklySchedule?.SlotDurationMinutes);
+                request.Request.WeeklySchedule?.SlotDurationMinutes,
+                request.Request.CarrierSchedule is not null,
+                request.Request.CarrierSchedule?.TimeZoneId,
+                carrierDays);
 
             // (6) Destination facts for the WHOLE submitted tree are acquired here — before the first
             // tracked mutation and therefore before the commit — so the response can be composed

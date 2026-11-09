@@ -40,7 +40,7 @@ export function weekIssueMessage(code: WeekIssueCode, messages: AuthoringMessage
 }
 
 /** `HH:mm` for a `time` input: an untouched stored token is shown truncated but never rewritten. */
-function inputTime(value: string): string {
+export function inputTime(value: string): string {
   const match = /^([01][0-9]|2[0-3]):([0-5][0-9])/.exec(value);
   return match ? `${match[1]}:${match[2]}` : value;
 }
@@ -51,7 +51,7 @@ function toFaDigits(text: string): string {
 }
 
 /** Readable 24-hour range for FA without AM/PM chrome. */
-function formatDayRange(start: string, end: string, locale: AuthoringLocale): string {
+export function formatDayRange(start: string, end: string, locale: AuthoringLocale): string {
   const from = formatTimeText(start);
   const to = formatTimeText(end);
   const open = locale === "fa" ? `${toFaDigits(from)} تا ${toFaDigits(to)}` : `${from}–${to}`;
@@ -59,7 +59,7 @@ function formatDayRange(start: string, end: string, locale: AuthoringLocale): st
 }
 
 /** FA uses a plain 24h text field so the browser never paints AM/PM. */
-function TimeBoundInput({
+export function TimeBoundInput({
   value,
   locale,
   disabled,
@@ -108,7 +108,7 @@ function TimeBoundInput({
  * server can resolve. A stored identifier outside this list is shown honestly as its own option and is
  * never rewritten or silently replaced.
  */
-function TimeZoneSelect({
+export function TimeZoneSelect({
   value,
   locale,
   messages,

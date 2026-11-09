@@ -4,6 +4,7 @@ using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
 using Tooba.Shipping.Contracts.Rates;
+using Tooba.Shipping.Contracts.Scheduling;
 
 namespace Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 
@@ -147,8 +148,8 @@ public sealed class StorefrontCapturedGroupCompositionCore(
     }
 
     /// <summary>
-    /// تقویم دریافت همین نامزد را از هفتهٔ <b>ذخیره‌شدهٔ همان روش</b> و کمینهٔ روزهای ذخیره‌شده می‌سازد.
-    /// هیچ آماده‌سازی فروشنده دوباره اضافه نمی‌شود و هیچ بازهٔ ثابتی ساخته نمی‌شود.
+    /// تقویم دریافت همین نامزد را از تقویم <b>مستقل پذیرش حامل</b> (در صورت وجود) و MAX روزهای
+    /// ذخیره‌شده می‌سازد. هیچ آماده‌سازی فروشنده دوباره اضافه نمی‌شود و هیچ بازهٔ ثابتی ساخته نمی‌شود.
     /// </summary>
     private static StorefrontCapturedReceivingDates? BuildReceiving(
         StorefrontCapturedCandidatePlan candidate,
@@ -166,6 +167,13 @@ public sealed class StorefrontCapturedGroupCompositionCore(
             return NoDates(StorefrontCapturedGroupProjectionReasons.AvailableDateCountInvalid);
         }
 
+        if (quote.MaxDeliveryDays is not int maximumDays
+            || maximumDays < 0
+            || maximumDays > StorefrontShippingCalculator.MaxReceivingWorkingDayOffset)
+        {
+            return NoDates(StorefrontCapturedGroupProjectionReasons.MaximumDeliveryDaysInvalid);
+        }
+
         if (quote.MinDeliveryDays is not int minimumDays
             || minimumDays < 0
             || minimumDays > StorefrontShippingCalculator.MaxReceivingWorkingDayOffset)
@@ -173,6 +181,23 @@ public sealed class StorefrontCapturedGroupCompositionCore(
             return NoDates(StorefrontCapturedGroupProjectionReasons.MinimumDeliveryDaysInvalid);
         }
 
+        // TB-256: MAX is the commitment. A stored pair where MAX < MIN is incoherent evidence, never
+        // silently clamped down to MIN.
+        if (maximumDays < minimumDays)
+        {
+            return NoDates(StorefrontCapturedGroupProjectionReasons.MaximumDeliveryDaysInvalid);
+        }
+
+        if (quote.CarrierWeek is { } carrierWeek)
+        {
+            // TB-256: the independent carrier acceptance calendar is present, so the SAME pure authority
+            // resolves the handoff cutoff, counts MAX transport working days and filters customer days.
+            return BuildPlannedReceiving(candidate, quote, carrierWeek, maximumDays, nowUtc);
+        }
+
+        // Legacy captured packages without an authored carrier calendar keep the 213 calendar mechanics
+        // (no invented cutoff/handoff) but honour the TB-256 commitment rule: the first customer dates
+        // come from MAX, never MIN.
         if (!TryBuildWeek(quote.ReceivingWeek, out var week))
         {
             return NoDates(StorefrontCapturedGroupProjectionReasons.ReceivingWeekInvalid);
@@ -189,10 +214,10 @@ public sealed class StorefrontCapturedGroupCompositionCore(
         StorefrontShippingReceivingCalendar calendar;
         try
         {
-            // همین محاسبهٔ پذیرفته‌شدهٔ 213: offset = کمینهٔ روزهای ذخیره‌شده، بدون افزایش آماده‌سازی.
+            // TB-256: offset = MAX days. No double preparation and no fixed window.
             calendar = StorefrontShippingCalculator.BuildCustomerReceivingCalendar(
                 referenceLocalDate,
-                minimumDays,
+                maximumDays,
                 week,
                 candidate.AvailableDateCount,
                 week.SlotDurationMinutes);
@@ -210,6 +235,47 @@ public sealed class StorefrontCapturedGroupCompositionCore(
         return new StorefrontCapturedReceivingDates(
             calendar.EarliestEligibleDate,
             calendar.AvailableDates,
+            UnavailableReason: null);
+    }
+
+    /// <summary>
+    /// TB-256: تقویم مشتری با مرجع <b>یکتای</b> زمان‌بندی — اولین پذیرش ممکن حامل، شمارش MAX روز کاری
+    /// حمل روی روزهای کاری <b>حامل</b> و سپس فیلتر تاریخ/نوبت‌های مشتری. خروجی همان فهرست مسطح
+    /// نوبت‌های ۲۱۳ است تا مصرف‌کننده‌های موجود دست‌نخورده بمانند.
+    /// </summary>
+    private static StorefrontCapturedReceivingDates BuildPlannedReceiving(
+        StorefrontCapturedCandidatePlan candidate,
+        ShippingCapturedQuoteResult quote,
+        ShippingCapturedCarrierWeek carrierWeek,
+        int maximumDays,
+        DateTimeOffset nowUtc)
+    {
+        var plan = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
+            nowUtc,
+            StorefrontShippingSchedulingMapping.ToSchedulingWeek(carrierWeek),
+            StorefrontShippingSchedulingMapping.ToSchedulingWeek(quote.ReceivingWeek!),
+            maximumDays,
+            candidate.AvailableDateCount,
+            quote.ReceivingWeek!.SlotDurationMinutes);
+
+        if (!plan.IsSuccess)
+        {
+            // Failed scheduling carries its own stable reason; no approximated calendar is produced.
+            return NoDates(plan.ReasonCode);
+        }
+
+        var slots = new List<StorefrontShippingReceivingSlot>();
+        foreach (var date in plan.Value!.Dates)
+        {
+            foreach (var slot in date.Slots)
+            {
+                slots.Add(new StorefrontShippingReceivingSlot(slot.Date, slot.OpensAt, slot.ClosesAt));
+            }
+        }
+
+        return new StorefrontCapturedReceivingDates(
+            plan.Value.EarliestEligibleDate,
+            slots,
             UnavailableReason: null);
     }
 

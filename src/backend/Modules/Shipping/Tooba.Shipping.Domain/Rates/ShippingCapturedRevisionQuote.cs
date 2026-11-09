@@ -265,7 +265,8 @@ public sealed record ShippingCapturedQuoteSelection(
     int MaxDeliveryDays,
     ShippingAuthoringRevisionSettings Settings,
     ShippingAuthoringRevisionWeek? WeeklySchedule,
-    ShippingCapturedQuoteMatchedConditions Conditions);
+    ShippingCapturedQuoteMatchedConditions Conditions,
+    ShippingAuthoringRevisionCarrierWeek? CarrierSchedule = null);
 
 /// <summary>
 /// نتیجهٔ قطعی قیمت‌گذاری یک بازبینی capture‌شده.

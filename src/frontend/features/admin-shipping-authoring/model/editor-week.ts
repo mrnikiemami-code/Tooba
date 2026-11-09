@@ -208,6 +208,19 @@ function canonicalTime(value: string, edited: boolean): TimeText | null {
   return STORED_TIME.test(value) ? value : null;
 }
 
+/**
+ * Canonical wire times of ONE local day draft, using each bound's own provenance.
+ *
+ * Exported so the independent carrier calendar can copy a lawful customer week ONCE without
+ * re-implementing (or loosening) the stored-token rules.
+ */
+export function canonicalScheduleTimes(day: ScheduleDayDraft): {
+  readonly start: TimeText | null;
+  readonly end: TimeText | null;
+} {
+  return { start: canonicalTime(day.startTime, day.startEdited), end: canonicalTime(day.endTime, day.endEdited) };
+}
+
 /** All blocking week issues, or `[]` when the state is serializable. */
 export function weekIssues(state: WeekFormState): readonly WeekIssue[] {
   if (state.kind === "unconfigured") {

@@ -296,6 +296,12 @@ public sealed class ShippingAuthoringDraft
     public ShippingAuthoringWeeklySchedule? WeeklySchedule { get; private set; }
 
     /// <summary>
+    /// TB-256: برنامهٔ هفتگی <b>پذیرش حامل</b> همین روش؛ مستقل از برنامهٔ تحویل مشتری. تهی یعنی
+    /// صریحاً <b>پیکربندی‌نشده</b> و هیچ ساعت پذیرشی استنتاج نمی‌شود.
+    /// </summary>
+    public ShippingAuthoringCarrierSchedule? CarrierSchedule { get; private set; }
+
+    /// <summary>
     /// تنظیمات روش همین پیش‌نویس: زمان پرداخت کرایه و حالت محاسبه، دو انتخاب مستقل روی ریشهٔ روش.
     /// تهی یعنی صریحاً <b>تنظیم‌نشده</b> و نه <c>Manual</c>/<c>Prepaid</c>.
     /// </summary>
@@ -1090,6 +1096,145 @@ public sealed class ShippingAuthoringDraft
         return true;
     }
 
+    /// <summary>یک روز پیشنهادی برنامهٔ پذیرش حامل در ورودی پیش‌سنجی.</summary>
+    /// <param name="Weekday">روز هفتهٔ ISO ۱..۷.</param>
+    /// <param name="IsWorking">آیا حامل این روز بسته می‌پذیرد.</param>
+    /// <param name="StartTime">شروع بازهٔ پذیرش.</param>
+    /// <param name="EndTime">پایان بازهٔ پذیرش (شامل نیست).</param>
+    public sealed record CarrierScheduleDayInput(int Weekday, bool IsWorking, TimeOnly? StartTime, TimeOnly? EndTime);
+
+    /// <summary>یک روز تأییدشدهٔ برنامهٔ پذیرش حامل همراه ردیف موجود (برای به‌روزرسانی در جا).</summary>
+    /// <param name="Existing">ردیف tracked فعلی همان روز؛ تهی یعنی روز تازه.</param>
+    /// <param name="Weekday">روز هفتهٔ ISO ۱..۷.</param>
+    /// <param name="IsWorking">آیا حامل این روز بسته می‌پذیرد.</param>
+    /// <param name="StartTime">شروع بازهٔ پذیرش نرمال‌شده.</param>
+    /// <param name="EndTime">پایان بازهٔ پذیرش نرمال‌شده.</param>
+    public sealed record CarrierScheduleDayAssignment(
+        ShippingAuthoringCarrierScheduleDay? Existing,
+        int Weekday,
+        bool IsWorking,
+        TimeOnly? StartTime,
+        TimeOnly? EndTime);
+
+    /// <summary>برنامهٔ کامل و تأییدشدهٔ جایگزینی تقویم پذیرش حامل (بدون هیچ تغییر روی aggregate).</summary>
+    /// <param name="TimeZoneId">منطقهٔ زمانی نرمال‌شده و قابل‌حل.</param>
+    /// <param name="Days">دقیقاً هفت روز.</param>
+    public sealed record CarrierSchedulePlan(
+        string TimeZoneId,
+        IReadOnlyList<CarrierScheduleDayAssignment> Days)
+    {
+        /// <summary>آیا این جایگزینی دست‌کم یک تغییر واقعی دارد؛ PUT یکسان بازبینی/زمان را تغییر نمی‌دهد.</summary>
+        public bool HasChanges { get; init; }
+    }
+
+    /// <summary>
+    /// کل تقویم پذیرش حامل را <b>بدون هیچ تغییر</b> می‌سنجد. همین قاعدهٔ سخت‌گیرانهٔ تقویم تحویل
+    /// مشتری اعمال می‌شود (هفت روز دقیق، روز یکتا، جفت ساعت) اما <b>مستقل</b>: هیچ ساعتی از تقویم
+    /// تحویل مشتری خوانده یا استنتاج نمی‌شود و هیچ مدت نوبتی روی پذیرش تحمیل نمی‌گردد.
+    /// </summary>
+    /// <param name="timeZoneId">شناسهٔ منطقهٔ زمانی از بدنه.</param>
+    /// <param name="days">مجموعهٔ هفت‌روزهٔ پیشنهادی.</param>
+    public CarrierSchedulePlan PreflightCarrierSchedule(
+        string? timeZoneId,
+        IReadOnlyList<CarrierScheduleDayInput> days)
+    {
+        ArgumentNullException.ThrowIfNull(days);
+
+        var normalizedTimeZone = ShippingScheduleRules.NormalizeTimeZone(timeZoneId);
+        if (days.Count != ShippingAuthoringCarrierSchedule.DaysPerWeek)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+
+        var existingByWeekday = CarrierSchedule is { } schedule
+            ? schedule.Days.ToDictionary(day => day.Weekday)
+            : new Dictionary<int, ShippingAuthoringCarrierScheduleDay>();
+        var seen = new HashSet<int>();
+        var assignments = new List<CarrierScheduleDayAssignment>(ShippingAuthoringCarrierSchedule.DaysPerWeek);
+        foreach (var day in days)
+        {
+            if (day is null)
+            {
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+            }
+
+            var weekday = ShippingOperatingWindow.NormalizeWeekday(day.Weekday);
+            if (!seen.Add(weekday))
+            {
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+            }
+
+            existingByWeekday.TryGetValue(weekday, out var existing);
+            var (start, end) = NormalizeDayHours(
+                day.IsWorking,
+                day.StartTime,
+                day.EndTime,
+                existing is { } row ? (row.OpensAt, row.ClosesAt) : null);
+            assignments.Add(new CarrierScheduleDayAssignment(existing, weekday, day.IsWorking, start, end));
+        }
+
+        if (seen.Count != ShippingAuthoringCarrierSchedule.DaysPerWeek)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+
+        var unchanged = CarrierSchedule is { } current
+                         && string.Equals(current.TimeZoneId, normalizedTimeZone, StringComparison.Ordinal)
+                         && assignments.All(assignment => assignment.Existing is { } row
+                                                          && row.Matches(
+                                                              assignment.IsWorking,
+                                                              assignment.StartTime,
+                                                              assignment.EndTime));
+        return new CarrierSchedulePlan(normalizedTimeZone, assignments)
+        {
+            HasChanges = !unchanged,
+        };
+    }
+
+    /// <summary>
+    /// تقویم پذیرش حامل پیش‌سنجی‌شده را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا نیست؛ ورودی باید از
+    /// <see cref="PreflightCarrierSchedule"/> آمده باشد. جایگزینی کامل تقویم یک واحد افزایش بازبینی
+    /// ریشه است و PUT یکسان بازبینی/زمان را تغییر نمی‌دهد.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyCarrierSchedule(CarrierSchedulePlan plan, DateTimeOffset now)
+    {
+        if (!ApplyCarrierScheduleCore(plan, now))
+        {
+            return;
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>هستهٔ مشترک جایگزینی تقویم پذیرش بدون افزایش بازبینی/زمان؛ no-op چیزی نمی‌نویسد.</summary>
+    private bool ApplyCarrierScheduleCore(CarrierSchedulePlan plan, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!plan.HasChanges)
+        {
+            return false;
+        }
+
+        if (CarrierSchedule is { } schedule)
+        {
+            schedule.Apply(plan.TimeZoneId, plan.Days, now);
+        }
+        else
+        {
+            CarrierSchedule = ShippingAuthoringCarrierSchedule.Create(
+                DraftId,
+                plan.TimeZoneId,
+                plan.Days,
+                now);
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// ساعت‌های یک روز را تعیین می‌کند: روز کاری هر دو ساعت را می‌خواهد، روز تعطیل با هر دو تهی جفت
     /// ذخیره‌شده را حفظ می‌کند، و یک ساعت تنها یا بدون جفت معتبر رد می‌شود.
@@ -1099,6 +1244,16 @@ public sealed class ShippingAuthoringDraft
         TimeOnly? startTime,
         TimeOnly? endTime,
         ShippingAuthoringScheduleDay? existing)
+        => NormalizeDayHours(isWorking, startTime, endTime, existing is { } day ? (day.StartTime, day.EndTime) : null);
+
+    /// <summary>
+    /// هستهٔ مشترک نرمال‌سازی ساعت روز برای هر دو تقویم (تحویل مشتری و پذیرش حامل): یک قاعده، دو مالک.
+    /// </summary>
+    private static (TimeOnly? Start, TimeOnly? End) NormalizeDayHours(
+        bool isWorking,
+        TimeOnly? startTime,
+        TimeOnly? endTime,
+        (TimeOnly? Start, TimeOnly? End)? existing)
     {
         if (isWorking)
         {
@@ -1113,7 +1268,7 @@ public sealed class ShippingAuthoringDraft
 
         if (startTime is null && endTime is null)
         {
-            return existing is { } kept ? (kept.StartTime, kept.EndTime) : (null, null);
+            return existing is { } kept ? (kept.Start, kept.End) : (null, null);
         }
 
         if (startTime is not { } closedStart || endTime is not { } closedEnd)
@@ -1324,6 +1479,10 @@ public sealed class ShippingAuthoringDraft
     /// <param name="CalculationMode">حالت محاسبه.</param>
     /// <param name="ReplaceTypeAssignment">آیا بستهٔ انتخاب نوع در این سند ارائه شده است.</param>
     /// <param name="ShippingTypeId">شناسهٔ نوع یا تهی برای پاک‌کردن.</param>
+    /// <param name="SlotDurationMinutes">TB-241: مدت اختیاری هر نوبت تحویل به دقیقه.</param>
+    /// <param name="ReplaceCarrierSchedule">TB-256: آیا تقویم پذیرش حامل در این سند ارائه شده است.</param>
+    /// <param name="CarrierTimeZoneId">منطقهٔ زمانی تقویم پذیرش.</param>
+    /// <param name="CarrierDays">هفت روز تقویم پذیرش.</param>
     public sealed record EditorDocumentInput(
         IReadOnlyList<EditorGroupInput> Groups,
         IReadOnlyList<MethodTranslationInput> MethodTranslations,
@@ -1335,7 +1494,10 @@ public sealed class ShippingAuthoringDraft
         ShippingAuthoringCalculationMode? CalculationMode,
         bool ReplaceTypeAssignment,
         Guid? ShippingTypeId,
-        int? SlotDurationMinutes = null);
+        int? SlotDurationMinutes = null,
+        bool ReplaceCarrierSchedule = false,
+        string? CarrierTimeZoneId = null,
+        IReadOnlyList<CarrierScheduleDayInput>? CarrierDays = null);
 
     /// <summary>برنامهٔ تأییدشدهٔ ردیف‌های یک گروه در سند ویرایشگر.</summary>
     /// <param name="GroupKey">شناسهٔ پایدار گروه مقصد (موجود یا تازه).</param>
@@ -1377,7 +1539,11 @@ public sealed class ShippingAuthoringDraft
             || Titles.Any(title => title.Changed)
             || Schedule?.HasChanges == true
             || Settings?.HasChanges == true
-            || Type?.HasChanges == true;
+            || Type?.HasChanges == true
+            || CarrierSchedule?.HasChanges == true;
+
+        /// <summary>TB-256: تقویم پذیرش حامل پیش‌سنجی‌شده یا تهی وقتی در سند ارائه نشده است.</summary>
+        public CarrierSchedulePlan? CarrierSchedule { get; init; }
     }
 
     /// <summary>
@@ -1450,6 +1616,9 @@ public sealed class ShippingAuthoringDraft
         var schedule = input.ReplaceWeeklySchedule
             ? PreflightWeeklySchedule(input.TimeZoneId, input.ScheduleDays ?? [], input.SlotDurationMinutes)
             : null;
+        var carrierSchedule = input.ReplaceCarrierSchedule
+            ? PreflightCarrierSchedule(input.CarrierTimeZoneId, input.CarrierDays ?? [])
+            : null;
         var settings = input.ReplaceMethodSettings
             ? PreflightMethodSettings(input.FreightPaymentMode, input.CalculationMode)
             : null;
@@ -1463,7 +1632,10 @@ public sealed class ShippingAuthoringDraft
             titles,
             schedule,
             settings,
-            type);
+            type)
+        {
+            CarrierSchedule = carrierSchedule,
+        };
     }
 
     /// <summary>
@@ -1505,6 +1677,11 @@ public sealed class ShippingAuthoringDraft
         if (plan.Schedule is { } schedule)
         {
             ApplyWeeklyScheduleCore(schedule, now);
+        }
+
+        if (plan.CarrierSchedule is { } carrierSchedule)
+        {
+            ApplyCarrierScheduleCore(carrierSchedule, now);
         }
 
         if (plan.Settings is { } settings)

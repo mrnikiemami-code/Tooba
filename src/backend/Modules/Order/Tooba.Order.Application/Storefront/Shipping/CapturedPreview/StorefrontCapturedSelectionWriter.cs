@@ -5,6 +5,7 @@ using Tooba.Geography.Contracts.Places;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Ports;
 using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Shipping;
 using Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 using Tooba.Order.Domain;
 using Tooba.Order.Domain.Checkout;
@@ -505,7 +506,8 @@ public sealed class StorefrontCapturedSelectionWriter(
                 quote.ReceivingWeek?.TimeZoneId ?? string.Empty,
                 quote.MinDeliveryDays,
                 quote.MaxDeliveryDays,
-                MapCarrierQuote(quote));
+                MapCarrierQuote(quote),
+                ResolvePlannedDispatch(quote, slot));
         }
         catch (ContractOperationException)
         {
@@ -513,6 +515,25 @@ public sealed class StorefrontCapturedSelectionWriter(
             // clamp/گردکردن/جایگزینی نیست.
             throw Refuse(StorefrontCapturedSelectionReasons.Unavailable);
         }
+    }
+
+    /// <summary>
+    /// TB-256: برنامهٔ <b>ارسال</b> همین گروه برای تاریخ تحویل انتخاب‌شده از همان مرجع مشترک. تقویم حامل
+    /// غایب (بستهٔ قدیمی/تنظیم‌نشده) یعنی <c>null</c> صریح، نه حدس؛ هر شکست محاسبه انتخاب را رد می‌کند.
+    /// </summary>
+    private static ShippingGroupPlannedDispatch? ResolvePlannedDispatch(
+        ShippingCapturedQuoteResult quote,
+        StorefrontShippingReceivingSlot slot)
+    {
+        if (!StorefrontPlannedDispatchResolver.TryResolve(quote, slot.Date, out var plan, out var reasonCode))
+        {
+            throw Refuse(
+                reasonCode == StorefrontPlannedDispatchResolver.NoFeasibleHandoff
+                    ? StorefrontCapturedSelectionReasons.SlotUnavailable
+                    : StorefrontCapturedSelectionReasons.Unavailable);
+        }
+
+        return plan;
     }
 
     private static ShippingGroupAcceptedCarrierQuote? MapCarrierQuote(ShippingCapturedQuoteResult quote)

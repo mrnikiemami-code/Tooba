@@ -90,6 +90,17 @@ export interface WeeklyScheduleEdit {
   readonly slotDurationMinutes?: number | null;
 }
 
+/**
+ * TB-256: explicit full replacement of the CARRIER-ACCEPTANCE calendar.
+ *
+ * Same day shape as the weekly schedule but no slot length: carrier acceptance has no customer slot
+ * concept. Copying customer hours is a one-time UI action, never a link between the two calendars.
+ */
+export interface CarrierScheduleEdit {
+  readonly timeZoneId: string;
+  readonly days: readonly ScheduleDayEdit[];
+}
+
 /** Explicit full replacement of both independent settings. */
 export interface MethodSettingsEdit {
   readonly freightPaymentMode: FreightPaymentMode;
@@ -104,13 +115,15 @@ export interface TypeAssignmentEdit {
 /**
  * Local edit intent of one editor session.
  *
- * Absence (`undefined`) of `weeklySchedule`, `methodSettings` or `typeAssignment` means PRESERVE;
- * a supplied object replaces it, and only `typeAssignment: {shippingTypeId: null}` clears a type.
+ * Absence (`undefined`) of `weeklySchedule`, `carrierSchedule`, `methodSettings` or
+ * `typeAssignment` means PRESERVE; a supplied object replaces it, and only
+ * `typeAssignment: {shippingTypeId: null}` clears a type.
  */
 export interface EditorEdits {
   readonly regionGroups?: readonly RegionGroupEdit[];
   readonly methodTranslations?: readonly MethodTranslationEdit[];
   readonly weeklySchedule?: WeeklyScheduleEdit;
+  readonly carrierSchedule?: CarrierScheduleEdit;
   readonly methodSettings?: MethodSettingsEdit;
   readonly typeAssignment?: TypeAssignmentEdit;
 }

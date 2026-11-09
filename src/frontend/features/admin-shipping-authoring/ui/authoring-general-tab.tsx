@@ -79,7 +79,12 @@ export function AuthoringGeneralTab({
   nameIssueLanguageIds: readonly string[];
   settingsIncomplete: boolean;
   /** Server reasons placed on their OWN field (`name`, `description`, `settings`, `type`, week…). */
-  serverErrors?: Partial<Record<"name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays", string>>;
+  serverErrors?: Partial<
+    Record<
+      "name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays" | "carrierTimeZone" | "carrierDays",
+      string
+    >
+  >;
   /** The ONE method-level schedule component, composed here so the section is not duplicated. */
   scheduleSlot: ReactNode;
   carrierSlot?: ReactNode;

@@ -77,6 +77,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.MethodSettings)
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
+            .Include(candidate => candidate.CarrierSchedule)
+            .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         return draft is null
             ? Result.Failure<ShippingAuthoringDraft>(new SemanticError(ShippingErrorCodes.AuthoringDraftNotFound))
@@ -206,6 +208,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.MethodSettings)
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
+            .Include(candidate => candidate.CarrierSchedule)
+            .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         if (draft is null)
         {
@@ -305,6 +309,15 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             await RollbackAsync(transaction, cancellationToken);
             return Result.Failure<ShippingAuthoringDraft>(
                 new SemanticError(ShippingErrorCodes.AuthoringRegionPayloadInvalid));
+        }
+        catch (DbUpdateException exception) when (IsCheckViolation(exception, "authoring_carrier_schedule_days")
+                                                    || IsCheckViolation(exception, "authoring_carrier_schedules"))
+        {
+            // TB-256: the acceptance tables' CHECK constraints mirror the domain guards; a violation is a
+            // rejected payload, never a silent normalization of a weekday, an hour pair or a timezone.
+            await RollbackAsync(transaction, cancellationToken);
+            return Result.Failure<ShippingAuthoringDraft>(
+                new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
         }
         catch
         {
@@ -475,6 +488,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         var draft = await Scoped(ToDomainOwner(owner))
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
+            .Include(candidate => candidate.CarrierSchedule)
+            .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         if (draft is null)
         {
@@ -615,6 +630,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.Translations)
             .Include(candidate => candidate.MethodSettings)
             .Include(candidate => candidate.WeeklySchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            .Include(candidate => candidate.CarrierSchedule)
             .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         if (draft is null)
@@ -880,6 +897,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.Translations)
             .Include(candidate => candidate.MethodSettings)
             .Include(candidate => candidate.WeeklySchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            .Include(candidate => candidate.CarrierSchedule)
             .ThenInclude(schedule => schedule!.Days);
 
     /// <summary>

@@ -50,8 +50,8 @@ public sealed class StorefrontPublicCommitEdgeTests
     /// <summary>همان تاریخ/تیک‌های کسری ۱۰۰نانوثانیه‌ای که دانهٔ مشترک ۲۳۳ می‌کارد.</summary>
     private static class Window
     {
-        internal static readonly DateOnly DateA = new(2026, 10, 27);
-        internal static readonly DateOnly DateB = new(2026, 10, 28);
+        internal static readonly DateOnly DateA = new(2026, 10, 28);
+        internal static readonly DateOnly DateB = new(2026, 10, 29);
         internal static readonly long OpenTicksA = new TimeOnly(9, 0, 0).Ticks + 1_234_567L;
         internal static readonly long CloseTicksA = new TimeOnly(17, 0, 0).Ticks + 7_654_321L;
         internal static readonly long OpenTicksB = new TimeOnly(10, 0, 0).Ticks + 5_000_000L;
@@ -344,8 +344,8 @@ public sealed class StorefrontPublicCommitEdgeTests
         Assert.Equal(75m, sellerGroup.ShippingChargeSnapshot);
         Assert.Equal(CapturedFinalSubmitIntegrationTests.RowA, platformGroup.AcceptedEvidence.RateRowId);
         Assert.Equal(CapturedFinalSubmitIntegrationTests.RowB, sellerGroup.AcceptedEvidence.RateRowId);
-        Assert.Equal(new DateOnly(2026, 10, 27), platformGroup.AcceptedEvidence.ReceivingDate);
-        Assert.Equal(new DateOnly(2026, 10, 28), sellerGroup.AcceptedEvidence.ReceivingDate);
+        Assert.Equal(new DateOnly(2026, 10, 28), platformGroup.AcceptedEvidence.ReceivingDate);
+        Assert.Equal(new DateOnly(2026, 10, 29), sellerGroup.AcceptedEvidence.ReceivingDate);
         Assert.Equal(CapturedFinalSubmitIntegrationTests.OpenTicksA, platformGroup.AcceptedEvidence.ReceivingOpenTicks);
         Assert.Equal(CapturedFinalSubmitIntegrationTests.OpenTicksB, sellerGroup.AcceptedEvidence.ReceivingOpenTicks);
     }

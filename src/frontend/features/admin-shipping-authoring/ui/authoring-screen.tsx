@@ -71,11 +71,22 @@ import {
   type WeekFormState,
 } from "../model/editor-week.ts";
 import { hasUnsavedWork, type EditorSaveStatus } from "../session/editor-session.ts";
+import {
+  configureCarrierWeek,
+  copyCarrierWeekFromCustomer,
+  resetCarrierWeek,
+  withCarrierDayTime,
+  withCarrierDayWorking,
+  withCarrierPendingTimeZone,
+  withCarrierTimeZone,
+  type CarrierWeekFormState,
+} from "../model/editor-carrier-week.ts";
 import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
 import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringCarrierPanel } from "./authoring-carrier-panel.tsx";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
+import { AuthoringCarrierWeekEditor } from "./authoring-carrier-week-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
 import { AuthoringLocalIssuesPanel, AuthoringSaveFailurePanel } from "./authoring-problem-view.tsx";
 import { AuthoringPublicationPanel, type PublicationBadgeKind } from "./authoring-publication-panel.tsx";
@@ -124,6 +135,10 @@ export function ShippingAuthoringScreen({
   /** The operator's OWN typed shared delivery range per area: the ONE form state of that control. */
   const [areaRanges, setAreaRanges] = useState<AreaRangeDrafts>({});
   const [week, setWeek] = useState<WeekFormState | null>(null);
+  /** TB-256: the independent carrier-acceptance calendar draft. */
+  const [carrier, setCarrier] = useState<CarrierWeekFormState | null>(null);
+  /** Which of the two independent timing calendars is shown (presentation only). */
+  const [timingTab, setTimingTab] = useState<"customer" | "carrier">("customer");
   /** Verified ancestry of terminals the operator picked in THIS session (reset with the drafts). */
   const [pickedFacts, setPickedFacts] = useState<ReadonlyMap<string, ResolvedAreaAncestry>>(new Map());
   /** Localized labels of those same picks, so a fresh chip never shows "name unavailable". */
@@ -165,6 +180,7 @@ export function ShippingAuthoringScreen({
     setRates(drafts.rates);
     setAreaRanges(createAreaRangeDrafts(source));
     setWeek(drafts.week);
+    setCarrier(drafts.carrier);
     setPickedFacts(new Map());
     setPickedLabels(new Map());
   }, []);
@@ -233,8 +249,11 @@ export function ShippingAuthoringScreen({
     [index, pickedFacts],
   );
   const intent = useMemo(
-    () => (document && form && week ? buildAuthoringIntent(document, form, rates, week, groups, areaRanges) : null),
-    [areaRanges, document, form, rates, week, groups],
+    () =>
+      document && form && week
+        ? buildAuthoringIntent(document, form, rates, week, groups, areaRanges, carrier)
+        : null,
+    [areaRanges, carrier, document, form, rates, week, groups],
   );
 
   /** ONE dispatch: sets the local drafts and hands the controller a SINGLE composed patch. */
@@ -245,6 +264,7 @@ export function ShippingAuthoringScreen({
       nextRates: RatesFormState,
       nextWeek: WeekFormState,
       nextAreaRanges: AreaRangeDrafts = areaRanges,
+      nextCarrier: CarrierWeekFormState | null = carrier,
     ) => {
       if (blockedNow()) return;
       setForm(nextForm);
@@ -252,11 +272,20 @@ export function ShippingAuthoringScreen({
       setRates(nextRates);
       setAreaRanges(nextAreaRanges);
       setWeek(nextWeek);
+      setCarrier(nextCarrier);
       if (!document) return;
-      const composed = buildAuthoringIntent(document, nextForm, nextRates, nextWeek, nextGroups, nextAreaRanges);
+      const composed = buildAuthoringIntent(
+        document,
+        nextForm,
+        nextRates,
+        nextWeek,
+        nextGroups,
+        nextAreaRanges,
+        nextCarrier,
+      );
       controller.edit(composed.edits, composed.localDirty);
     },
-    [areaRanges, blockedNow, controller, document],
+    [areaRanges, blockedNow, carrier, controller, document],
   );
 
   const pushEdits = useCallback(
@@ -375,6 +404,18 @@ export function ShippingAuthoringScreen({
     [commit, form, groups, rates],
   );
 
+  /**
+   * TB-256: the carrier calendar is edited through the SAME single dispatch, so a pending customer-week
+   * or rate edit is never dropped when the operator switches calendars.
+   */
+  const changeCarrier = useCallback(
+    (nextCarrier: CarrierWeekFormState) => {
+      if (!form || !week) return;
+      commit(form, groups, rates, week, areaRanges, nextCarrier);
+    },
+    [areaRanges, commit, form, groups, rates, week],
+  );
+
   const busy = session.save === "saving" || session.reconcile === "pending";
   const readOnly = mode === "view" || busy;
   const blockedByFacts = document && index ? !index.available : false;
@@ -409,7 +450,8 @@ export function ShippingAuthoringScreen({
   const formIssues = intent?.issues.general ?? [];
   const groupProblems = intent?.issues.groups ?? [];
   const rateRowIssues = intent?.issues.rates ?? [];
-  const weekProblemIssues = intent?.issues.week ?? [];  const nameIssueLanguageIds = formIssues.flatMap((issue) =>
+  const weekProblemIssues = intent?.issues.week ?? [];
+  const carrierProblemIssues = intent?.issues.carrier ?? [];  const nameIssueLanguageIds = formIssues.flatMap((issue) =>
     issue.code === "nameRequired" ? [issue.languageId] : [],
   );
   const settingsIncomplete = formIssues.some((issue) => issue.code === "settingsIncomplete");
@@ -458,6 +500,7 @@ export function ShippingAuthoringScreen({
         setRates({});
         setAreaRanges({});
         setWeek(null);
+        setCarrier(null);
         setPickedFacts(new Map());
         setPickedLabels(new Map());
       } else {
@@ -541,7 +584,12 @@ export function ShippingAuthoringScreen({
   const serverCodes = useMemo(() => (saveFailure ? serverErrorCodes(saveFailure) : []), [saveFailure]);
   /** Reasons that belong next to their own field (not in the summary prose). */
   const fieldServerErrors = useMemo(() => {
-    const map: Partial<Record<"name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays", string>> = {};
+    const map: Partial<
+      Record<
+        "name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays" | "carrierTimeZone" | "carrierDays",
+        string
+      >
+    > = {};
     for (const issue of serverIssues) {
       if (issue.target === "unknown" || issue.target === "regions" || issue.target === "rates") continue;
       if (map[issue.target] === undefined) map[issue.target] = issue.reason;
@@ -566,6 +614,9 @@ export function ShippingAuthoringScreen({
    */
   const revealServerIssue = useCallback((issue: ServerFieldIssue) => {
     setTab(targetTab(issue.target));
+    // TB-256: the rejected field can live in either independent calendar, so its own tab is revealed.
+    if (issue.target === "carrierTimeZone" || issue.target === "carrierDays") setTimingTab("carrier");
+    if (issue.target === "weekTimeZone" || issue.target === "weekDays") setTimingTab("customer");
     window.requestAnimationFrame(() => {
       if (issue.target === "regions" && destinationOverlaps.length > 0) {
         const first = destinationOverlaps[0]!;
@@ -849,23 +900,88 @@ export function ShippingAuthoringScreen({
                   />
                 }
                 scheduleSlot={
-                  week ? (
-                    <AuthoringWeekEditor
-                      schedule={document.weeklySchedule}
-                      week={week}
-                      issues={weekProblemIssues}
-                      editable={!readOnly && !busy}
-                      locale={locale}
-                      messages={messages}
-                      serverErrors={{ timeZone: fieldServerErrors.weekTimeZone, days: fieldServerErrors.weekDays }}
-                      onPendingTimeZone={(value) => changeWeek(withPendingTimeZone(week, value))}
-                      onConfigure={() => changeWeek(configureWeek(week))}
-                      onTimeZone={(value) => changeWeek(withTimeZone(week, value))}
-                      onSlotDuration={(minutes) => changeWeek(withSlotDuration(week, minutes))}
-                      onDayWorking={(weekday, isWorking) => changeWeek(withDayWorking(week, weekday, isWorking))}
-                      onDayTime={(weekday, bound, value) => changeWeek(withDayTime(week, weekday, bound, value))}
-                      onReset={() => changeWeek(resetWeek(document.weeklySchedule))}
-                    />
+                  week && carrier ? (
+                    <div className="grid gap-2">
+                      {/* TB-256: two INDEPENDENT calendars, one visible at a time; the tab is presentation only. */}
+                      <div
+                        className="inline-flex max-w-full flex-wrap rounded-xl border border-border bg-surface p-0.5"
+                        role="tablist"
+                        aria-label={messages.timingTabHint}
+                      >
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={timingTab === "customer"}
+                          className={
+                            timingTab === "customer"
+                              ? "inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground"
+                              : "inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-gray-700"
+                          }
+                          data-testid="shipping-authoring-timing-tab-customer"
+                          onClick={() => setTimingTab("customer")}
+                        >
+                          {messages.timingTabCustomer}
+                        </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={timingTab === "carrier"}
+                          className={
+                            timingTab === "carrier"
+                              ? "inline-flex min-h-11 items-center rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground"
+                              : "inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-gray-700"
+                          }
+                          data-testid="shipping-authoring-timing-tab-carrier"
+                          onClick={() => setTimingTab("carrier")}
+                        >
+                          {messages.timingTabCarrier}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-gray-500">{messages.timingTabHint}</p>
+                      {timingTab === "customer" ? (
+                        <AuthoringWeekEditor
+                          schedule={document.weeklySchedule}
+                          week={week}
+                          issues={weekProblemIssues}
+                          editable={!readOnly && !busy}
+                          locale={locale}
+                          messages={messages}
+                          serverErrors={{ timeZone: fieldServerErrors.weekTimeZone, days: fieldServerErrors.weekDays }}
+                          onPendingTimeZone={(value) => changeWeek(withPendingTimeZone(week, value))}
+                          onConfigure={() => changeWeek(configureWeek(week))}
+                          onTimeZone={(value) => changeWeek(withTimeZone(week, value))}
+                          onSlotDuration={(minutes) => changeWeek(withSlotDuration(week, minutes))}
+                          onDayWorking={(weekday, isWorking) => changeWeek(withDayWorking(week, weekday, isWorking))}
+                          onDayTime={(weekday, bound, value) => changeWeek(withDayTime(week, weekday, bound, value))}
+                          onReset={() => changeWeek(resetWeek(document.weeklySchedule))}
+                        />
+                      ) : (
+                        <AuthoringCarrierWeekEditor
+                          schedule={document.carrierSchedule ?? null}
+                          carrier={carrier}
+                          issues={carrierProblemIssues}
+                          editable={!readOnly && !busy}
+                          locale={locale}
+                          messages={messages}
+                          customerConfigured={week.kind === "configured"}
+                          serverErrors={{
+                            timeZone: fieldServerErrors.carrierTimeZone,
+                            days: fieldServerErrors.carrierDays,
+                          }}
+                          onPendingTimeZone={(value) => changeCarrier(withCarrierPendingTimeZone(carrier, value))}
+                          onConfigure={() => changeCarrier(configureCarrierWeek(carrier))}
+                          onTimeZone={(value) => changeCarrier(withCarrierTimeZone(carrier, value))}
+                          onDayWorking={(weekday, isWorking) =>
+                            changeCarrier(withCarrierDayWorking(carrier, weekday, isWorking))
+                          }
+                          onDayTime={(weekday, bound, value) =>
+                            changeCarrier(withCarrierDayTime(carrier, weekday, bound, value))
+                          }
+                          onCopyFromCustomer={() => changeCarrier(copyCarrierWeekFromCustomer(carrier, week))}
+                          onReset={() => changeCarrier(resetCarrierWeek(document.carrierSchedule ?? null))}
+                        />
+                      )}
+                    </div>
                   ) : null
                 }
               />

@@ -112,6 +112,28 @@ public sealed record ShippingAuthoringRevisionWeek(
     int? SlotDurationMinutes = null);
 
 /// <summary>
+/// TB-256: یک روز برنامهٔ <b>پذیرش حامل</b> ذخیره‌شده؛ ساعت‌های روز تعطیل هم حفظ می‌شوند.
+/// </summary>
+/// <param name="Weekday">روز هفتهٔ ISO.</param>
+/// <param name="IsWorking">پرچم پذیرش ذخیره‌شده.</param>
+/// <param name="OpensAt">ساعت شروع پذیرش یا تهی.</param>
+/// <param name="ClosesAt">ساعت پایان پذیرش (شامل نیست) یا تهی.</param>
+public sealed record ShippingAuthoringRevisionCarrierWeekDay(
+    int Weekday,
+    bool IsWorking,
+    TimeOnly? OpensAt,
+    TimeOnly? ClosesAt);
+
+/// <summary>برنامهٔ پذیرش حامل ذخیره‌شده با منطقهٔ زمانی و زمان آخرین نوشتن.</summary>
+/// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی ذخیره‌شده.</param>
+/// <param name="UpdatedAt">زمان آخرین نوشتن برنامه.</param>
+/// <param name="Days">دقیقاً هفت روز ذخیره‌شده.</param>
+public sealed record ShippingAuthoringRevisionCarrierWeek(
+    string TimeZoneId,
+    DateTimeOffset UpdatedAt,
+    IReadOnlyList<ShippingAuthoringRevisionCarrierWeekDay> Days);
+
+/// <summary>
 /// بدنهٔ تایپ‌شدهٔ یک capture کامل از بازبینی پیش‌نویس. این record فقط واقعیت‌های <b>ذخیره‌شدهٔ</b>
 /// همان aggregate است: هیچ کاتالوگ/جغرافیا/زبان یا فکت تازه در capture خوانده نمی‌شود.
 /// </summary>
@@ -150,6 +172,7 @@ public sealed record ShippingAuthoringRevisionCarrierBinding(
 /// <param name="MethodSettings">تنظیمات روش یا تهی.</param>
 /// <param name="WeeklySchedule">برنامهٔ هفتگی یا تهی.</param>
 /// <param name="CarrierBinding">اتصال CarrierApi ذخیره‌شده یا تهی.</param>
+/// <param name="CarrierAcceptance">TB-256: برنامهٔ پذیرش حامل ذخیره‌شده یا تهی.</param>
 public sealed record ShippingAuthoringRevisionPayload(
     int FormatVersion,
     ShippingAuthoringRevisionOwner Owner,
@@ -164,7 +187,8 @@ public sealed record ShippingAuthoringRevisionPayload(
     IReadOnlyList<ShippingAuthoringRevisionTranslation> Translations,
     ShippingAuthoringRevisionSettings? MethodSettings,
     ShippingAuthoringRevisionWeek? WeeklySchedule,
-    ShippingAuthoringRevisionCarrierBinding? CarrierBinding = null);
+    ShippingAuthoringRevisionCarrierBinding? CarrierBinding = null,
+    ShippingAuthoringRevisionCarrierWeek? CarrierAcceptance = null);
 
 /// <summary>
 /// یک capture تغییرناپذیر از <b>یک</b> بازبینی دقیق پیش‌نویس نویسندگی.
@@ -191,13 +215,19 @@ public sealed class ShippingAuthoringRevisionSnapshot
     /// </summary>
     public const int SlotDurationFormatVersion = 2;
 
-    /// <summary>نسخهٔ قالبی که نویسندهٔ فعلی برای capture تازه به کار می‌برد (بدون‌مدت=۱، بادمت=۲).</summary>
-    public const int CurrentFormatVersion = SlotDurationFormatVersion;
+    /// <summary>
+    /// TB-256: نسخهٔ قالبی که تقویم مستقل پذیرش حامل را نیز در بر می‌گیرد. یک capture دارای این تقویم
+    /// هرگز با نسخهٔ ۱/۲ نوشته نمی‌شود، پس خوانندهٔ قدیمی نمی‌تواند آن را بی‌صدا حذف کند.
+    /// </summary>
+    public const int CarrierAcceptanceFormatVersion = 3;
 
-    /// <summary>آیا این نسخهٔ قالب برای خواندن پشتیبانی می‌شود (فقط ۱ و ۲).</summary>
+    /// <summary>نسخهٔ قالبی که نویسندهٔ فعلی برای capture تازه به کار می‌برد.</summary>
+    public const int CurrentFormatVersion = CarrierAcceptanceFormatVersion;
+
+    /// <summary>آیا این نسخهٔ قالب برای خواندن پشتیبانی می‌شود (۱، ۲ یا ۳).</summary>
     /// <param name="formatVersion">نسخهٔ قالب.</param>
     public static bool IsSupportedFormatVersion(int formatVersion)
-        => formatVersion is LegacyFormatVersion or SlotDurationFormatVersion;
+        => formatVersion is LegacyFormatVersion or SlotDurationFormatVersion or CarrierAcceptanceFormatVersion;
 
     private ShippingAuthoringRevisionSnapshot()
     {
@@ -415,9 +445,27 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
                 schedule.SlotDurationMinutes)
             : null;
 
-        var formatVersion = week?.SlotDurationMinutes is null
-            ? ShippingAuthoringRevisionSnapshot.LegacyFormatVersion
-            : ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion;
+        var carrierAcceptance = draft.CarrierSchedule is { } carrierSchedule
+            ? new ShippingAuthoringRevisionCarrierWeek(
+                carrierSchedule.TimeZoneId,
+                carrierSchedule.UpdatedAt,
+                carrierSchedule.Days
+                    .OrderBy(day => day.Weekday)
+                    .Select(day => new ShippingAuthoringRevisionCarrierWeekDay(
+                        day.Weekday,
+                        day.IsWorking,
+                        day.OpensAt,
+                        day.ClosesAt))
+                    .ToArray())
+            : null;
+
+        // The format version is a real contract: a body carrying the acceptance calendar is version 3,
+        // otherwise the TB-241 duration split between 1 and 2 is preserved exactly.
+        var formatVersion = carrierAcceptance is not null
+            ? ShippingAuthoringRevisionSnapshot.CarrierAcceptanceFormatVersion
+            : week?.SlotDurationMinutes is null
+                ? ShippingAuthoringRevisionSnapshot.LegacyFormatVersion
+                : ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion;
 
         var capturedBinding = carrierBinding is null
             ? null
@@ -464,7 +512,8 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
                 .ToArray(),
             settings,
             week,
-            capturedBinding);
+            capturedBinding,
+            carrierAcceptance);
     }
 
     /// <summary>بدنه را به JSON پایدار تبدیل می‌کند.</summary>
@@ -592,11 +641,15 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
                 Reject();
             }
 
-            // TB-241: the slot duration is part of the versioned contract, not a free extra. A version-1
-            // body must stay a full-day window and a version-2 body must carry a real 1..1440 duration.
-            var durationValid = payload.FormatVersion == ShippingAuthoringRevisionSnapshot.LegacyFormatVersion
-                ? week.SlotDurationMinutes is null
-                : week.SlotDurationMinutes is >= 1 and <= 1440;
+            // TB-241/TB-256: the slot duration is part of the versioned contract, not a free extra.
+            // Version 1 must stay a full-day window; versions 2 and 3 must carry a real 1..1440 duration
+            // when one is present, and version 3 also allows the legacy full-day window.
+            var durationValid = payload.FormatVersion switch
+            {
+                ShippingAuthoringRevisionSnapshot.LegacyFormatVersion => week.SlotDurationMinutes is null,
+                ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion => week.SlotDurationMinutes is >= 1 and <= 1440,
+                _ => week.SlotDurationMinutes is null or (>= 1 and <= 1440),
+            };
             if (!durationValid)
             {
                 Reject();
@@ -610,8 +663,60 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
                 }
             }
         }
+
+        // TB-256: the independent acceptance calendar belongs to version 3 only; an older version that
+        // carries it is a corrupt row, never a silently ignored extra.
+        var acceptance = payload.CarrierAcceptance;
+        if (payload.FormatVersion == ShippingAuthoringRevisionSnapshot.CarrierAcceptanceFormatVersion)
+        {
+            if (acceptance is null
+                || string.IsNullOrWhiteSpace(acceptance.TimeZoneId)
+                || acceptance.Days is null
+                || acceptance.Days.Count != ShippingAuthoringCarrierSchedule.DaysPerWeek)
+            {
+                Reject();
+            }
+
+            var seenWeekdays = new HashSet<int>();
+            foreach (var day in acceptance.Days)
+            {
+                if (day is null
+                    || day.Weekday is < 1 or > 7
+                    || !seenWeekdays.Add(day.Weekday)
+                    || !CarrierDayHoursCoherent(day))
+                {
+                    Reject();
+                }
+            }
+
+            if (seenWeekdays.Count != ShippingAuthoringCarrierSchedule.DaysPerWeek)
+            {
+                Reject();
+            }
+        }
+        else if (payload.CarrierAcceptance is not null)
+        {
+            Reject();
+        }
     }
 
+    /// <summary>جفت ساعت و بازهٔ نیم‌باز پذیرش همان قاعدهٔ ذخیره‌سازی است، نه یک استنتاج تازه.</summary>
+    private static bool CarrierDayHoursCoherent(ShippingAuthoringRevisionCarrierWeekDay day)
+    {
+        if (day.IsWorking && (day.OpensAt is null || day.ClosesAt is null))
+        {
+            return false;
+        }
+
+        if (day.OpensAt is null || day.ClosesAt is null)
+        {
+            return day.OpensAt is null && day.ClosesAt is null;
+        }
+
+        return day.ClosesAt > day.OpensAt;
+    }
+
+    [System.Diagnostics.CodeAnalysis.DoesNotReturn]
     private static void Reject()
         => throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringRevisionSnapshotInvalid));
 }

@@ -31,6 +31,24 @@ public sealed record ShippingAuthoringEditorScheduleItem(
     IReadOnlyList<ShippingAuthoringEditorScheduleDayItem> Days,
     int? SlotDurationMinutes = null);
 
+/// <summary>TB-256: تقویم ذخیره‌شدهٔ پذیرش حامل در سند ویرایشگر (مستقل از تقویم تحویل مشتری).</summary>
+/// <param name="TimeZoneId">منطقهٔ زمانی پذیرش.</param>
+/// <param name="Days">هفت روز پذیرش.</param>
+public sealed record ShippingAuthoringEditorCarrierScheduleItem(
+    string TimeZoneId,
+    IReadOnlyList<ShippingAuthoringEditorCarrierScheduleDayItem> Days);
+
+/// <summary>یک روز تقویم پذیرش حامل در سند ویرایشگر.</summary>
+/// <param name="Weekday">روز هفتهٔ ISO.</param>
+/// <param name="IsWorking">پرچم صریح پذیرش/تعطیل.</param>
+/// <param name="StartTime">ساعت شروع پذیرش یا تهی.</param>
+/// <param name="EndTime">ساعت پایان پذیرش یا تهی.</param>
+public sealed record ShippingAuthoringEditorCarrierScheduleDayItem(
+    int Weekday,
+    bool IsWorking,
+    TimeOnly? StartTime,
+    TimeOnly? EndTime);
+
 /// <summary>عنوان ذخیره‌شدهٔ یک گروه برای یک زبان (متن خام، بدون fallback).</summary>
 /// <param name="LanguageId">شناسهٔ زبان.</param>
 /// <param name="Title">عنوان ذخیره‌شده.</param>
@@ -93,4 +111,10 @@ public sealed record ShippingAuthoringEditorDocumentItem(
     /// <see cref="RegionGroups"/> در هر حالت دست‌نخورده می‌ماند؛ حتی وقتی هویت <c>Unresolved</c> است.
     /// </remarks>
     public IReadOnlyList<ShippingAuthoringDestinationFactItem> DestinationFacts { get; init; } = [];
+
+    /// <summary>
+    /// TB-256: تقویم مستقل پذیرش حامل یا <c>null</c> یعنی <b>پیکربندی‌نشده</b>. هیچ ساعتی از تقویم
+    /// تحویل مشتری استنتاج نمی‌شود.
+    /// </summary>
+    public ShippingAuthoringEditorCarrierScheduleItem? CarrierSchedule { get; init; }
 }

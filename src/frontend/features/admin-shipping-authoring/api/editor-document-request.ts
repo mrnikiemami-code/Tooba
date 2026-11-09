@@ -241,6 +241,19 @@ export function buildEditorDocumentBody(
       slotDurationMinutes,
     };
   }
+  if (edits.carrierSchedule) {
+    // TB-256: seven ISO days, no slot length — the carrier calendar is its own schedule.
+    if (edits.carrierSchedule.days.length !== 7) throw new Error("editor_request_invalid:carrier-days");
+    body.carrierSchedule = {
+      timeZoneId: edits.carrierSchedule.timeZoneId,
+      days: edits.carrierSchedule.days.map((day) => ({
+        weekday: day.weekday,
+        isWorking: day.isWorking,
+        startTime: time(day.startTime, "startTime"),
+        endTime: time(day.endTime, "endTime"),
+      })),
+    };
+  }
   if (edits.methodSettings) {
     body.methodSettings = {
       freightPaymentMode: edits.methodSettings.freightPaymentMode,

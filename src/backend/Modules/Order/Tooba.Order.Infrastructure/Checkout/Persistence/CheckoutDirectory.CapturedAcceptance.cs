@@ -11,6 +11,7 @@ using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Checkout.Process;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Shipping;
 using Tooba.Order.Application.Storefront.Shipping.CapturedGroupProjection;
 using Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
 using Tooba.Order.Domain;
@@ -397,6 +398,19 @@ public sealed partial class CheckoutDirectory
                     available.Date == evidence.ReceivingDate
                     && available.OpensAt.Ticks == evidence.ReceivingOpenTicks
                     && available.ClosesAt.Ticks == evidence.ReceivingCloseTicks);
+
+            // TB-256: the dispatch plan is recomputed from the SAME live schedule/authority. A changed
+            // carrier calendar/revision (or an expired same-day acceptance) can never be accepted from the
+            // previously stored plan, and historical/legacy groups resolve to an explicit null plan.
+            if (!StorefrontPlannedDispatchResolver.TryResolve(
+                    quote,
+                    evidence.ReceivingDate,
+                    out var liveDispatch,
+                    out _))
+            {
+                throw new ContractOperationException(CapturedConflict);
+            }
+
             if (slot is null
                 || !string.Equals(quote.CurrencyCode, evidence.Currency, StringComparison.Ordinal)
                 // ارجاع‌های نقل‌قول باید همان بازبینی/پیش‌نویس/نسخهٔ قالب شاهد ذخیره‌شده باشند.
@@ -417,7 +431,8 @@ public sealed partial class CheckoutDirectory
                     quote.ReceivingWeek?.TimeZoneId,
                     evidence.ReceivingTimeZone,
                     StringComparison.Ordinal)
-                || !SameCarrierQuote(evidence.CarrierQuote, quote.CarrierQuote, now))
+                || !SameCarrierQuote(evidence.CarrierQuote, quote.CarrierQuote, now)
+                || !SamePlannedDispatch(evidence.PlannedDispatch, liveDispatch))
             {
                 throw new ContractOperationException(CapturedConflict);
             }
@@ -442,6 +457,29 @@ public sealed partial class CheckoutDirectory
         }
 
         return new CapturedShippingAcceptance(accepted, stored.CartVersion, stored.SelectionRevision);
+    }
+
+    /// <summary>
+    /// TB-256: برنامهٔ ارسال ذخیره‌شده باید <b>دقیقاً</b> همان برنامهٔ قابل بازتولید از تقویم زندهٔ همان
+    /// لحظه باشد؛ <c>null</c> فقط با <c>null</c> می‌خواند (بستهٔ تاریخی/بدون تقویم حامل).
+    /// </summary>
+    internal static bool SamePlannedDispatch(
+        ShippingGroupPlannedDispatch? stored,
+        ShippingGroupPlannedDispatch? live)
+    {
+        if (stored is null || live is null)
+        {
+            return stored is null && live is null;
+        }
+
+        return stored.HandoffDate == live.HandoffDate
+            && stored.HandoffOpenTicks == live.HandoffOpenTicks
+            && stored.HandoffCloseTicks == live.HandoffCloseTicks
+            && string.Equals(stored.HandoffTimeZone, live.HandoffTimeZone, StringComparison.Ordinal)
+            && stored.TransportWorkingDays == live.TransportWorkingDays
+            && stored.PolicyVersion == live.PolicyVersion
+            && stored.ScheduleSnapshotId == live.ScheduleSnapshotId
+            && stored.ScheduleSourceRevision == live.ScheduleSourceRevision;
     }
 
     internal static bool SameCarrierQuote(

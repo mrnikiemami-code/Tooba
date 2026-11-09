@@ -62,6 +62,8 @@ public sealed class ShippingPersistenceModelTests
         Assert.Equal(
             new[]
             {
+                "authoring_carrier_schedule_days",
+                "authoring_carrier_schedules",
                 "authoring_draft_translations",
                 "authoring_drafts",
                 "authoring_group_titles",
@@ -78,6 +80,8 @@ public sealed class ShippingPersistenceModelTests
                 "carrier_reference_values",
                 "carrier_secret_materials",
                 "carrier_shipment_operations",
+                "carrier_shipment_package_completions",
+                "carrier_shipment_sender_completions",
                 "coverage_grants",
                 "method_coverages",
                 "operating_schedules",
@@ -312,6 +316,8 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE TABLE shipping.authoring_selected_areas", script);
         Assert.Contains("CREATE TABLE shipping.authoring_weekly_schedules", script);
         Assert.Contains("CREATE TABLE shipping.authoring_weekly_schedule_days", script);
+        Assert.Contains("CREATE TABLE IF NOT EXISTS shipping.authoring_carrier_schedules", script);
+        Assert.Contains("CREATE TABLE IF NOT EXISTS shipping.authoring_carrier_schedule_days", script);
         Assert.Contains("CREATE TABLE shipping.carrier_accounts", script);
         Assert.Contains("CREATE TABLE shipping.carrier_secret_materials", script);
         Assert.Contains("CREATE TABLE shipping.carrier_reference_values", script);
@@ -387,9 +393,16 @@ public sealed class ShippingPersistenceModelTests
                      "ck_authoring_weekly_schedule_days_hours_paired",
                      "ck_authoring_weekly_schedule_days_range",
                      "ck_authoring_weekly_schedule_days_working_hours",
+                     "ck_authoring_carrier_schedules_timezone_length",
+                     "ck_authoring_carrier_schedule_days_weekday_range",
+                     "ck_authoring_carrier_schedule_days_hours_paired",
+                     "ck_authoring_carrier_schedule_days_range",
+                     "ck_authoring_carrier_schedule_days_working_hours",
                      "fk_authoring_weekly_schedules_draft",
                      "fk_authoring_method_settings_draft",
                      "fk_authoring_weekly_schedule_days_schedule",
+                     "fk_authoring_carrier_schedules_draft",
+                     "fk_authoring_carrier_schedule_days_schedule",
                      "ix_authoring_rate_rows_group",
                  })
         {
@@ -416,7 +429,7 @@ public sealed class ShippingPersistenceModelTests
         // header -> the seven day rows. TB-194 adds draft -> method settings. No language/registry FK
         // crosses a module schema.
         Assert.Equal(
-            13,
+            15,
             script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
@@ -426,7 +439,7 @@ public sealed class ShippingPersistenceModelTests
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        Assert.Equal(18, migrations.Length);
+        Assert.Equal(22, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -445,6 +458,10 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_ReceivingSlotDuration", migrations[15], StringComparison.Ordinal);
         Assert.EndsWith("_CarrierConfiguration", migrations[16], StringComparison.Ordinal);
         Assert.EndsWith("_CarrierShipmentOperations", migrations[17], StringComparison.Ordinal);
+        Assert.EndsWith("_CarrierShipmentCompletions", migrations[18], StringComparison.Ordinal);
+        Assert.EndsWith("_CarrierShipmentExecutionSnapshot", migrations[19], StringComparison.Ordinal);
+        Assert.EndsWith("_CarrierShipmentDispatchClaim", migrations[20], StringComparison.Ordinal);
+        Assert.EndsWith("_AddCarrierAcceptanceSchedule", migrations[21], StringComparison.Ordinal);
     }
 
     [Fact]

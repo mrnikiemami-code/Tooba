@@ -14,6 +14,7 @@ import type {
   AuthoringCalculationMode,
   AuthoringOwnerKind,
   AuthoringTypeResolution,
+  EditorCarrierSchedule,
   EditorContentLanguage,
   EditorDestinationFact,
   EditorDestinationWriteShape,
@@ -173,6 +174,7 @@ export function decodeEditorDocument(node: JsonNode, expectedDraftId: string): D
       settings: decodeSettings(root.get("settings")),
       presentation: decodePresentation(object(required(root, "presentation"), "presentation")),
       weeklySchedule: decodeSchedule(root.get("weeklySchedule")),
+      carrierSchedule: decodeCarrierSchedule(root.get("carrierSchedule")),
       regionGroups: array(required(root, "regionGroups"), "regionGroups").map((group, index) =>
         decodeGroup(group, `regionGroups[${index}]`),
       ),
@@ -243,25 +245,44 @@ function decodeSettings(node: JsonNode | undefined): EditorMethodSettings | null
 function decodeSchedule(node: JsonNode | undefined): EditorWeeklySchedule | null {
   if (node === undefined || node.kind === "null") return null;
   const fields = object(node, "weeklySchedule");
-  const days = array(required(fields, "days"), "weeklySchedule.days").map((day, index): EditorScheduleDay => {
-    const item = object(day, `weeklySchedule.days[${index}]`);
-    const weekday = integer(required(item, "weekday"), "weeklySchedule.days.weekday");
-    if (weekday < 1 || weekday > 7) fail("weeklySchedule.days.weekday:range");
-    return {
-      weekday,
-      isWorking: flag(required(item, "isWorking"), "weeklySchedule.days.isWorking"),
-      startTime: optionalTime(item.get("startTime"), "weeklySchedule.days.startTime"),
-      endTime: optionalTime(item.get("endTime"), "weeklySchedule.days.endTime"),
-    };
-  });
-  const weekdays = new Set(days.map((day) => day.weekday));
-  if (weekdays.size !== days.length) fail("weeklySchedule.days:duplicate");
-  if (days.length !== 7) fail("weeklySchedule.days:count");
+  const days = decodeScheduleDays(fields, "weeklySchedule");
   return {
     timeZoneId: text(required(fields, "timeZoneId"), "weeklySchedule.timeZoneId"),
     days,
     slotDurationMinutes: optionalSlotDuration(fields.get("slotDurationMinutes")),
   };
+}
+
+/**
+ * TB-256: the independent carrier-acceptance calendar. Absent/null means NOT configured — never seven
+ * implicit working days and never an inference from the customer week.
+ */
+function decodeCarrierSchedule(node: JsonNode | undefined): EditorCarrierSchedule | null {
+  if (node === undefined || node.kind === "null") return null;
+  const fields = object(node, "carrierSchedule");
+  return {
+    timeZoneId: text(required(fields, "timeZoneId"), "carrierSchedule.timeZoneId"),
+    days: decodeScheduleDays(fields, "carrierSchedule"),
+  };
+}
+
+/** Exactly seven unique ISO days with an explicit working flag and optional stored times. */
+function decodeScheduleDays(fields: ReadonlyMap<string, JsonNode>, path: string): readonly EditorScheduleDay[] {
+  const days = array(required(fields, "days"), `${path}.days`).map((day, index): EditorScheduleDay => {
+    const item = object(day, `${path}.days[${index}]`);
+    const weekday = integer(required(item, "weekday"), `${path}.days.weekday`);
+    if (weekday < 1 || weekday > 7) fail(`${path}.days.weekday:range`);
+    return {
+      weekday,
+      isWorking: flag(required(item, "isWorking"), `${path}.days.isWorking`),
+      startTime: optionalTime(item.get("startTime"), `${path}.days.startTime`),
+      endTime: optionalTime(item.get("endTime"), `${path}.days.endTime`),
+    };
+  });
+  const weekdays = new Set(days.map((day) => day.weekday));
+  if (weekdays.size !== days.length) fail(`${path}.days:duplicate`);
+  if (days.length !== 7) fail(`${path}.days:count`);
+  return days;
 }
 
 /**

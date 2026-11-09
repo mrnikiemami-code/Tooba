@@ -170,6 +170,18 @@ internal static class ShippingAuthoringEditorDocumentComposition
                 .ToArray())
         {
             DestinationFacts = destinationFacts ?? [],
+            CarrierSchedule = draft.CarrierSchedule is { } carrier
+                ? new ShippingAuthoringEditorCarrierScheduleItem(
+                    carrier.TimeZoneId,
+                    carrier.Days
+                        .OrderBy(day => day.Weekday)
+                        .Select(day => new ShippingAuthoringEditorCarrierScheduleDayItem(
+                            day.Weekday,
+                            day.IsWorking,
+                            day.OpensAt,
+                            day.ClosesAt))
+                        .ToArray())
+                : null,
         };
     }
 

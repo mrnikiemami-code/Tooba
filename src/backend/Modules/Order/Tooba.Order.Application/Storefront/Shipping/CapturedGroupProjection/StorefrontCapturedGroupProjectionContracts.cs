@@ -198,6 +198,9 @@ public static class StorefrontCapturedGroupProjectionReasons
     /// <summary>کمینهٔ روزهای تحویل ذخیره نشده یا خارج از محدودهٔ محاسبه است.</summary>
     public const string MinimumDeliveryDaysInvalid = "storefront.captured_group.minimum_delivery_days_invalid";
 
+    /// <summary>TB-256: بیشینهٔ روزهای تحویل ذخیره نشده/خارج از محدوده/کمتر از کمینه است.</summary>
+    public const string MaximumDeliveryDaysInvalid = "storefront.captured_group.maximum_delivery_days_invalid";
+
     /// <summary>تعداد تاریخ‌های درخواستی خارج از محدودهٔ صریح تقویم است.</summary>
     public const string AvailableDateCountInvalid = "storefront.captured_group.available_date_count_invalid";
 

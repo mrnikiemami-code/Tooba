@@ -462,7 +462,8 @@ public static class ShippingRatePolicyEngine
                     0,
                     settings,
                     payload.WeeklySchedule,
-                    new ShippingCapturedQuoteMatchedConditions(null, null, null)));
+                    new ShippingCapturedQuoteMatchedConditions(null, null, null),
+                    payload.CarrierAcceptance));
         }
 
         if (settings.CalculationMode == ShippingAuthoringCalculationMode.CarrierApi)
@@ -491,7 +492,8 @@ public static class ShippingRatePolicyEngine
                     0,
                     settings,
                     payload.WeeklySchedule,
-                    new ShippingCapturedQuoteMatchedConditions(null, null, null)));
+                    new ShippingCapturedQuoteMatchedConditions(null, null, null),
+                    payload.CarrierAcceptance));
         }
 
         if (group.RateRows is null || group.RateRows.Count == 0)
@@ -624,7 +626,8 @@ public static class ShippingRatePolicyEngine
                 winner.MaxDeliveryDays,
                 settings,
                 payload.WeeklySchedule,
-                new ShippingCapturedQuoteMatchedConditions(winnerWeight, winnerCount, winnerMerchandise)));
+                new ShippingCapturedQuoteMatchedConditions(winnerWeight, winnerCount, winnerMerchandise),
+                payload.CarrierAcceptance));
     }
 
     private static ShippingCapturedRevisionQuote NotQuoted(

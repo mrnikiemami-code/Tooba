@@ -77,8 +77,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
     private static readonly Guid CityId = Guid.Parse("e3451206-e503-51a8-9100-0000000000d3");
     internal static readonly Guid SavedAddressId = Guid.Parse("01a17d13-0000-7000-8000-0000000000f1");
     private static readonly DateTimeOffset Now = new(2026, 10, 25, 9, 30, 0, TimeSpan.Zero);
-    private static readonly DateOnly DateA = new(2026, 10, 27); // سه‌شنبه
-    private static readonly DateOnly DateB = new(2026, 10, 28); // چهارشنبه
+    // TB-256: MAX روزهای تحویل مبناست؛ با Now=یکشنبه ۲۵ و MAX=3 اولین تاریخ کاری چهارشنبه ۲۸ است.
+    private static readonly DateOnly DateA = new(2026, 10, 28); // چهارشنبه
+    private static readonly DateOnly DateB = new(2026, 10, 29); // پنجشنبه
     internal static readonly long OpenTicksA = new TimeOnly(9, 0, 0).Ticks + 1_234_567L;
     private static readonly long CloseTicksA = new TimeOnly(17, 0, 0).Ticks + 7_654_321L;
     internal static readonly long OpenTicksB = new TimeOnly(10, 0, 0).Ticks + 5_000_000L;
@@ -814,8 +815,9 @@ public sealed class CapturedFinalSubmitIntegrationTests
             Enumerable.Range(1, 7)
                 .Select(iso => iso switch
                 {
-                    2 => new ShippingCapturedReceivingWeekDay(iso, true, At(OpenTicksA), At(CloseTicksA)),
-                    3 => new ShippingCapturedReceivingWeekDay(iso, true, At(OpenTicksB), At(CloseTicksB)),
+                    // TB-256: با MAX=3 تاریخ‌های منتخب چهارشنبه/پنجشنبه‌اند؛ همان دو روز ساعت کسری دارند.
+                    3 => new ShippingCapturedReceivingWeekDay(iso, true, At(OpenTicksA), At(CloseTicksA)),
+                    4 => new ShippingCapturedReceivingWeekDay(iso, true, At(OpenTicksB), At(CloseTicksB)),
                     _ => new ShippingCapturedReceivingWeekDay(iso, true, new TimeOnly(9, 0), new TimeOnly(17, 0)),
                 })
                 .ToArray());

@@ -49,6 +49,19 @@ public sealed record ShippingAuthoringEditorScheduleWrite(
     int? SlotDurationMinutes = null);
 
 /// <summary>
+/// TB-256: تقویم مستقل <b>پذیرش حامل</b> در سند ویرایشگر: منطقهٔ زمانی صریح و دقیقاً هفت روز.
+/// </summary>
+/// <remarks>
+/// ساختار روزها همان <see cref="ShippingAuthoringScheduleDayWrite"/> است، اما این تقویم هیچ رابطه‌ای با
+/// تقویم تحویل مشتری ندارد: هیچ ساعتی کپی/استنتاج نمی‌شود و هیچ مدت نوبتی روی پذیرش تحمیل نمی‌گردد.
+/// </remarks>
+/// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی پذیرش.</param>
+/// <param name="Days">هفت روز ISO ساعات پذیرش.</param>
+public sealed record ShippingAuthoringEditorCarrierScheduleWrite(
+    string TimeZoneId,
+    IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days);
+
+/// <summary>
 /// تنظیمات روش در سند ویرایشگر: زمان پرداخت کرایه و حالت محاسبه، دو انتخاب مستقل و صریح.
 /// </summary>
 /// <param name="FreightPaymentMode">زمان پرداخت کرایه.</param>
@@ -115,4 +128,7 @@ public sealed record ShippingAuthoringEditorDocumentReplaceRequest
 
     /// <summary>انتخاب نوع اختیاری.</summary>
     public ShippingAuthoringEditorTypeWrite? TypeAssignment { get; init; }
+
+    /// <summary>TB-256: تقویم پذیرش حامل اختیاری؛ غایب یعنی حفظ مقدار فعلی.</summary>
+    public ShippingAuthoringEditorCarrierScheduleWrite? CarrierSchedule { get; init; }
 }
