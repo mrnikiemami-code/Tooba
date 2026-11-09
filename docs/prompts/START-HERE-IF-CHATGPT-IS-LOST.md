@@ -1,3 +1,13 @@
+# CURRENT — 258 ISSUED; tracking and remaining quantity ACCEPTED within257 scope — 2026-11-10
+
+Read257/ARCHITECT-REVIEW.md under docs/architecture/evidence/TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257/ and docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258/TASK.md.
+Only active/issued: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258; expected reviewed base4a3a241d2f75e0081a8ed8a375a061a4f987694b (new review/issue docs legitimate descendants). Not claimed/started/completed by Architect.
+257 bounded source/proof review accepted: full-id automatic tracking + server exact-index bounded collision retry; shared packed−shipped−open allocation authority and dead-end create removal. Historical/user tracking unchanged; provider verification not implied.
+Ledger save256-R2 accepted; issues1tracking and2quantity CLOSED within scope;3return/resend PENDING258 issued;4packing choice PENDING259 not issued;5due queue PENDING260 not issued.
+258 requires genuine non-delivery/return receipt before new quantity-safe resend, original history retained, no fake Delivered/cancel/refund/restock or duplicate inventory consume; shared-package ownership respected. Read exact task for scope/proof.
+User standing instruction: sequential actual result -> Architect review -> next task; no individual user-wait pause, final five-defect handoff. Worker only one task then STOP.
+ONE DB tooba_alpha / FE3000→Host5088 only, no disposable/parallel DB. User orders read-only; task-owned controlled production-path fixture only. Preserve256 timing/save and249/253 durable replay safeguards;255 parked/Tipax deferred.
+
 # CURRENT — 257 worker result PASS: unique automatic tracking + truthful remaining quantity — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257/TASK.md and docs/architecture/evidence/TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257/{RESULT.md,RECEIPTS.md,result-contract.txt,dom-order-before.json,dom-order-after.json,tb257-relational.txt}.
