@@ -1,3 +1,14 @@
+# CURRENT — Architect review 258 PARTIAL; 258-R1 ISSUED — 2026-11-10
+
+NEXT/ONLY task: docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/TASK.md.
+Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258/ARCHITECT-REVIEW.md first.
+Independent source review at00917021d0d63c8e6f5f5c8992eb1a40e15a1601 found four unclosed invariants: early resend-key replay skips intent validation; dialog reopen/lines refresh remints an unresolved operation; return capacity pools different source parcels and collapses immediate lineage; receipt cannot split one line into usable+damaged.
+258 worker PASS is demoted to PARTIAL for issue3, not Architect/user ACCEPT. Preserve its valid transitions and proofs; repair only these seams in258-R1, then STOP_FOR_ARCHITECT. No parallel worker/automatic next task.
+LEDGER: save256-R2 closed; issue1 tracking and issue2 quantity accepted257 (2/5); issue3 open258-R1; issue4 common-or-separate parcels259 NOT ISSUED; issue5 due queue/shared operational view260 NOT ISSUED. User authorized sequential work, final handoff after all five; no per-task user acceptance pause.
+Only same tooba_alpha/5432 + FE3000/Host5088 SingleStore/store-alpha. Task-labelled production-path fixtures permitted, real user orders read-only; no additional DB/Docker/15433, reset/reseed/business SQL, edition switch.255 parked, Tipax deferred. Preserve keys/CapturedPreview and approved calendar/save. Older CURRENT blocks below are historical and superseded by this block.
+
+---
+
 # CURRENT — 258 WORKER RESULT PASS: post-dispatch non-delivery, physical origin receipt and quantity-safe resend — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258/TASK.md and docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,dom/tb258-dom.json,tb258-relational.txt}.
