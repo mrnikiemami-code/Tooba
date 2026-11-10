@@ -313,4 +313,103 @@
   <data name="shipping_type.body.malformed" xml:space="preserve">
     <value>بدنهٔ درخواست نوع ارسال، JSON قابل‌استفاده نیست.</value>
   </data>
+  <data name="fulfillment.nondelivery.reason_required" xml:space="preserve">
+    <value>دلیل عدم تحویل الزامی است.</value>
+  </data>
+  <data name="fulfillment.nondelivery.reason_invalid" xml:space="preserve">
+    <value>دلیل عدم تحویل پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="fulfillment.nondelivery.note_invalid" xml:space="preserve">
+    <value>توضیح عدم تحویل بیش از حد مجاز است.</value>
+  </data>
+  <data name="fulfillment.nondelivery.after_delivered" xml:space="preserve">
+    <value>مرسولهٔ تحویل‌شده را نمی‌توان عدم تحویل ثبت کرد.</value>
+  </data>
+  <data name="fulfillment.nondelivery.invalid_status" xml:space="preserve">
+    <value>ثبت عدم تحویل فقط برای مرسولهٔ ارسال‌شده مجاز است.</value>
+  </data>
+  <data name="fulfillment.nondelivery.already_returning" xml:space="preserve">
+    <value>این مرسوله در مسیر برگشت به مبدأ است.</value>
+  </data>
+  <data name="fulfillment.nondelivery.conflict" xml:space="preserve">
+    <value>برای این مرسوله عدم تحویل دیگری ثبت شده است.</value>
+  </data>
+  <data name="fulfillment.nondelivery.actor_required" xml:space="preserve">
+    <value>اپراتور ثبت عدم تحویل مشخص نیست.</value>
+  </data>
+  <data name="fulfillment.return.already_received" xml:space="preserve">
+    <value>این مرسوله قبلاً در مبدأ دریافت شده است.</value>
+  </data>
+  <data name="fulfillment.return.invalid_status" xml:space="preserve">
+    <value>شروع برگشت در وضعیت فعلی مرسوله مجاز نیست.</value>
+  </data>
+  <data name="fulfillment.return.receipt_invalid_status" xml:space="preserve">
+    <value>تأیید دریافت فقط برای مرسولهٔ در مسیر برگشت مجاز است.</value>
+  </data>
+  <data name="fulfillment.return.shipment_required" xml:space="preserve">
+    <value>مرسولهٔ برگشتی مشخص نیست.</value>
+  </data>
+  <data name="fulfillment.return.actor_required" xml:space="preserve">
+    <value>اپراتور دریافت‌کننده مشخص نیست.</value>
+  </data>
+  <data name="fulfillment.return.note_invalid" xml:space="preserve">
+    <value>توضیح رسید دریافت بیش از حد مجاز است.</value>
+  </data>
+  <data name="fulfillment.return.receipt_items_required" xml:space="preserve">
+    <value>دست‌کم یک قلم دریافتی لازم است.</value>
+  </data>
+  <data name="fulfillment.return.receipt_qty_positive" xml:space="preserve">
+    <value>مقدار دریافتی باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.return.receipt_line_duplicate" xml:space="preserve">
+    <value>یک قلم با همان وضعیت دو بار ثبت شده است.</value>
+  </data>
+  <data name="fulfillment.return.receipt_line_foreign" xml:space="preserve">
+    <value>قلم دریافتی به این مرسوله تعلق ندارد.</value>
+  </data>
+  <data name="fulfillment.return.receipt_qty_exceeds" xml:space="preserve">
+    <value>مقدار دریافتی از مقدار این مرسوله بیشتر است.</value>
+  </data>
+  <data name="fulfillment.return.receipt_condition_invalid" xml:space="preserve">
+    <value>وضعیت فیزیکی دریافتی پشتیبانی نمی‌شود.</value>
+  </data>
+  <data name="fulfillment.return.receipt_already_recorded" xml:space="preserve">
+    <value>رسید دریافت این مرسوله قبلاً ثبت شده است.</value>
+  </data>
+  <data name="fulfillment.return.receipt_conflict" xml:space="preserve">
+    <value>رسید دریافت دیگری برای این مرسوله ثبت شده است.</value>
+  </data>
+  <data name="fulfillment.resend.original_required" xml:space="preserve">
+    <value>مرسولهٔ مبدأ ارسال مجدد مشخص نیست.</value>
+  </data>
+  <data name="fulfillment.resend.original_not_returned" xml:space="preserve">
+    <value>ارسال مجدد فقط از مرسولهٔ دریافت‌شده در مبدأ ممکن است.</value>
+  </data>
+  <data name="fulfillment.resend.method_mismatch" xml:space="preserve">
+    <value>ارسال مجدد باید همان روش ارسال پذیرفته‌شده را حفظ کند.</value>
+  </data>
+  <data name="fulfillment.resend.line_foreign" xml:space="preserve">
+    <value>قلم ارسال مجدد به مرسولهٔ مبدأ تعلق ندارد.</value>
+  </data>
+  <data name="fulfillment.resend.exceeds_returned" xml:space="preserve">
+    <value>مقدار ارسال مجدد از ظرفیت سالم همین مرسوله بیشتر است.</value>
+  </data>
+  <data name="fulfillment.resend.concurrency_conflict" xml:space="preserve">
+    <value>ظرفیت برگشتی هم‌زمان تغییر کرد؛ همان درخواست را دوباره بفرستید.</value>
+  </data>
+  <data name="fulfillment.resend.occurrence_required" xml:space="preserve">
+    <value>شناسهٔ رخداد ارسال مجدد الزامی است.</value>
+  </data>
+  <data name="fulfillment.resend.intent_conflict" xml:space="preserve">
+    <value>این رخداد ارسال مجدد برای درخواست دیگری ثبت شده است.</value>
+  </data>
+  <data name="fulfillment.resend.occurrence_cancelled" xml:space="preserve">
+    <value>این رخداد ارسال مجدد ابطال شده است؛ رخداد جدید لازم است.</value>
+  </data>
+  <data name="fulfillment.resend.actor_required" xml:space="preserve">
+    <value>اپراتور ارسال مجدد مشخص نیست.</value>
+  </data>
+  <data name="fulfillment.shipment.dispatch_key_invalid" xml:space="preserve">
+    <value>شناسهٔ رخداد معتبر نیست.</value>
+  </data>
 </root>

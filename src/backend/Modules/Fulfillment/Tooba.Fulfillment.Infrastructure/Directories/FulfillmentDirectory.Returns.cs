@@ -27,11 +27,10 @@ public sealed partial class FulfillmentDirectory
         string? note,
         CancellationToken cancellationToken)
     {
-        _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
-        unit.RecordShipmentNonDelivery(shipmentId, reason, note, _clock.UtcNow);
+        unit.RecordShipmentNonDelivery(shipmentId, reason, note, actorUserId, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordTransition("shipment_nondelivery");
         return await MapSnapshotAsync(unit, cancellationToken);
@@ -44,11 +43,10 @@ public sealed partial class FulfillmentDirectory
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
-        unit.StartShipmentReturn(shipmentId, _clock.UtcNow);
+        unit.StartShipmentReturn(shipmentId, actorUserId, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordTransition("shipment_return_started");
         return await MapSnapshotAsync(unit, cancellationToken);
@@ -118,7 +116,6 @@ public sealed partial class FulfillmentDirectory
         CancellationToken cancellationToken,
         string? shippingDispatchKey = null)
     {
-        _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
         for (var attempt = 0; attempt < ResendAllocationAttempts; attempt++)
@@ -130,25 +127,31 @@ public sealed partial class FulfillmentDirectory
                 IsolationLevel.Serializable,
                 cancellationToken);
             var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
-            var existingByKey = FindResendByDispatchKey(unit, shippingDispatchKey);
-            if (existingByKey is not null)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                return new FulfillmentShipmentCreateResult(
-                    await MapSnapshotAsync(unit, cancellationToken),
-                    existingByKey.ShipmentId);
-            }
 
+            var recordedIds = unit.Shipments.Select(x => x.ShipmentId).ToHashSet();
+
+            // The owning aggregate replays a recorded occurrence BEFORE its capacity gate and refuses a changed
+            // intent, so a lost response never mints a second parcel and a new request never inherits the old one.
             var shipment = unit.CreateResendShipment(
                 _ids.NewId(),
                 () => _ids.NewId(),
                 originalShipmentId,
+                actorUserId,
                 string.Empty,
                 items.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
                 _clock.UtcNow,
                 null,
                 null,
                 shippingDispatchKey);
+
+            if (recordedIds.Contains(shipment.ShipmentId))
+            {
+                // A replayed occurrence: nothing new was allocated for this exact reviewed intent.
+                await transaction.RollbackAsync(cancellationToken);
+                return new FulfillmentShipmentCreateResult(
+                    await MapSnapshotAsync(unit, cancellationToken),
+                    shipment.ShipmentId);
+            }
 
             _db.Shipments.Add(shipment);
             _db.ShipmentItems.AddRange(shipment.Items);
@@ -199,20 +202,6 @@ public sealed partial class FulfillmentDirectory
         {
             // The data provider completed the transaction when the failing statement aborted it.
         }
-    }
-
-    private static Shipment? FindResendByDispatchKey(FulfillmentUnit unit, string? shippingDispatchKey)
-    {
-        var key = string.IsNullOrWhiteSpace(shippingDispatchKey) ? null : shippingDispatchKey.Trim();
-        if (key is null)
-        {
-            return null;
-        }
-
-        return unit.Shipments.FirstOrDefault(s =>
-            s.IsResend
-            && s.Status != ShipmentStatus.Cancelled
-            && string.Equals(s.ShippingDispatchKey, key, StringComparison.Ordinal));
     }
 
     private static void EnsureReceiptMatches(

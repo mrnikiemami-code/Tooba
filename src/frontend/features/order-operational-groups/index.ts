@@ -20,6 +20,20 @@ export type {
   PostDispatchReceiptLine,
 } from "./ui/post-dispatch-exception-dialog.tsx";
 
+// TB-258-R1: the retained reviewed request (viewer/checkout/fulfillment/parcel/mode scoped).
+export {
+  clearPostDispatchAttempt,
+  markPostDispatchAttemptFailed,
+  mintPostDispatchOccurrence,
+  readPostDispatchAttempt,
+  writePostDispatchAttempt,
+} from "./session/post-dispatch-attempt-store.ts";
+
+export type {
+  PostDispatchAttempt,
+  PostDispatchAttemptScope,
+} from "./session/post-dispatch-attempt-store.ts";
+
 // TB-256-R1: the group's customer-delivery vs planned-carrier-handoff rows (display-only).
 export { OperationalDeliveryTimeline } from "./ui/operational-delivery-timeline.tsx";
 

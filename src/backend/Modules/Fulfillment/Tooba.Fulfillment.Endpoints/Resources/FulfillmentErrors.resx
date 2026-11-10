@@ -313,4 +313,103 @@
   <data name="shipping_type.body.malformed" xml:space="preserve">
     <value>The shipping type request body is not a usable JSON object.</value>
   </data>
+  <data name="fulfillment.nondelivery.reason_required" xml:space="preserve">
+    <value>A non-delivery reason is required.</value>
+  </data>
+  <data name="fulfillment.nondelivery.reason_invalid" xml:space="preserve">
+    <value>The non-delivery reason is not supported.</value>
+  </data>
+  <data name="fulfillment.nondelivery.note_invalid" xml:space="preserve">
+    <value>The non-delivery note is too long.</value>
+  </data>
+  <data name="fulfillment.nondelivery.after_delivered" xml:space="preserve">
+    <value>A delivered parcel cannot be recorded as non-delivered.</value>
+  </data>
+  <data name="fulfillment.nondelivery.invalid_status" xml:space="preserve">
+    <value>Non-delivery requires a dispatched parcel.</value>
+  </data>
+  <data name="fulfillment.nondelivery.already_returning" xml:space="preserve">
+    <value>This parcel is already returning to origin.</value>
+  </data>
+  <data name="fulfillment.nondelivery.conflict" xml:space="preserve">
+    <value>A different non-delivery fact is already recorded for this parcel.</value>
+  </data>
+  <data name="fulfillment.nondelivery.actor_required" xml:space="preserve">
+    <value>The non-delivery operator is required.</value>
+  </data>
+  <data name="fulfillment.return.already_received" xml:space="preserve">
+    <value>This parcel was already received at origin.</value>
+  </data>
+  <data name="fulfillment.return.invalid_status" xml:space="preserve">
+    <value>The return cannot start in this parcel state.</value>
+  </data>
+  <data name="fulfillment.return.receipt_invalid_status" xml:space="preserve">
+    <value>The origin receipt requires a returning parcel.</value>
+  </data>
+  <data name="fulfillment.return.shipment_required" xml:space="preserve">
+    <value>The returned parcel is required.</value>
+  </data>
+  <data name="fulfillment.return.actor_required" xml:space="preserve">
+    <value>The receiving operator is required.</value>
+  </data>
+  <data name="fulfillment.return.note_invalid" xml:space="preserve">
+    <value>The receipt note is too long.</value>
+  </data>
+  <data name="fulfillment.return.receipt_items_required" xml:space="preserve">
+    <value>At least one received line is required.</value>
+  </data>
+  <data name="fulfillment.return.receipt_qty_positive" xml:space="preserve">
+    <value>Received quantity must be positive.</value>
+  </data>
+  <data name="fulfillment.return.receipt_line_duplicate" xml:space="preserve">
+    <value>The same line and condition was recorded twice.</value>
+  </data>
+  <data name="fulfillment.return.receipt_line_foreign" xml:space="preserve">
+    <value>The received line does not belong to this parcel.</value>
+  </data>
+  <data name="fulfillment.return.receipt_qty_exceeds" xml:space="preserve">
+    <value>Received quantity exceeds what this parcel carried.</value>
+  </data>
+  <data name="fulfillment.return.receipt_condition_invalid" xml:space="preserve">
+    <value>The received condition is not supported.</value>
+  </data>
+  <data name="fulfillment.return.receipt_already_recorded" xml:space="preserve">
+    <value>The origin receipt of this parcel is already recorded.</value>
+  </data>
+  <data name="fulfillment.return.receipt_conflict" xml:space="preserve">
+    <value>A different origin receipt is already recorded for this parcel.</value>
+  </data>
+  <data name="fulfillment.resend.original_required" xml:space="preserve">
+    <value>The returned source parcel is required.</value>
+  </data>
+  <data name="fulfillment.resend.original_not_returned" xml:space="preserve">
+    <value>Only a physically received parcel can be resent.</value>
+  </data>
+  <data name="fulfillment.resend.method_mismatch" xml:space="preserve">
+    <value>The resend must keep the accepted shipping method.</value>
+  </data>
+  <data name="fulfillment.resend.line_foreign" xml:space="preserve">
+    <value>The resent line does not belong to the source parcel.</value>
+  </data>
+  <data name="fulfillment.resend.exceeds_returned" xml:space="preserve">
+    <value>The resend exceeds the usable quantity received from this parcel.</value>
+  </data>
+  <data name="fulfillment.resend.concurrency_conflict" xml:space="preserve">
+    <value>The returned capacity changed concurrently; retry the same request.</value>
+  </data>
+  <data name="fulfillment.resend.occurrence_required" xml:space="preserve">
+    <value>A resend occurrence is required.</value>
+  </data>
+  <data name="fulfillment.resend.intent_conflict" xml:space="preserve">
+    <value>This resend occurrence was recorded for a different request.</value>
+  </data>
+  <data name="fulfillment.resend.occurrence_cancelled" xml:space="preserve">
+    <value>This resend occurrence was cancelled; start a new one.</value>
+  </data>
+  <data name="fulfillment.resend.actor_required" xml:space="preserve">
+    <value>The resend operator is required.</value>
+  </data>
+  <data name="fulfillment.shipment.dispatch_key_invalid" xml:space="preserve">
+    <value>The occurrence key is not valid.</value>
+  </data>
 </root>

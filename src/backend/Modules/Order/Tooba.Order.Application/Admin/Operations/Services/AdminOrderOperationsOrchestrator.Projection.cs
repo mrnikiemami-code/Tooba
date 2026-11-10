@@ -334,7 +334,9 @@ public sealed partial class AdminOrderOperationsOrchestrator
 
                 if (shipment.Status == ShipmentOperationStatus.Returned
                     && shipment.ReturnReceipt is not null
-                    && fulfillment.Items.Any(x => x.ResendableQuantity > 0)
+                    // TB-258-R1: capacity is the source parcel's own received usable quantity, so a sibling returned
+                    // parcel can never make this one resendable.
+                    && shipment.Items.Any(x => x.ResendableQuantity > 0)
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(

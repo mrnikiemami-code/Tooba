@@ -396,6 +396,10 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
                     b.Property<DateTimeOffset?>("DeliveredAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("delivered_at");
@@ -411,6 +415,10 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("NonDeliveredAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("non_delivered_at");
+
+                    b.Property<Guid?>("NonDeliveredByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("non_delivered_by_user_id");
 
                     b.Property<string>("NonDeliveryNote")
                         .HasMaxLength(512)
@@ -429,6 +437,10 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ReturnStartedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("return_started_at");
+
+                    b.Property<Guid?>("ReturnStartedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_started_by_user_id");
 
                     b.Property<DateTimeOffset?>("ReturnedAt")
                         .HasColumnType("timestamp with time zone")
@@ -599,6 +611,10 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ShipmentReturnReceiptId")
                         .HasDatabaseName("ix_shipment_return_receipt_items_shipment_return_receipt_id");
+
+                    b.HasIndex("ShipmentReturnReceiptId", "OrderLineId", "Condition")
+                        .IsUnique()
+                        .HasDatabaseName("ux_shipment_return_receipt_items_line_condition");
 
                     b.ToTable("shipment_return_receipt_items", "fulfillment");
                 });

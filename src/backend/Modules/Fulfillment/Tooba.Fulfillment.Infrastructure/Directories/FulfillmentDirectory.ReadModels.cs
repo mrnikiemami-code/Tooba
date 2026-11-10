@@ -21,13 +21,47 @@ public sealed partial class FulfillmentDirectory
             .Where(x => x.FulfillmentId == unit.FulfillmentId)
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
+        var receipts = await _db.ShipmentReturnReceipts.AsNoTracking()
+            .Where(x => x.FulfillmentId == unit.FulfillmentId)
+            .ToListAsync(cancellationToken);
+        var receiptItems = receipts.Count == 0
+            ? []
+            : await _db.ShipmentReturnReceiptItems.AsNoTracking()
+                .Where(x => receipts.Select(r => r.ShipmentReturnReceiptId).Contains(x.ShipmentReturnReceiptId))
+                .ToListAsync(cancellationToken);
+        var receiptShipment = receipts.ToDictionary(r => r.ShipmentReturnReceiptId, r => r.ShipmentId);
+        var itemsByReceipt = receiptItems
+            .GroupBy(x => x.ShipmentReturnReceiptId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<ShipmentReturnReceiptItem>)g.ToArray());
+        // All parcel lines are read once: the resend commitment of a source parcel must be visible while building the
+        // snapshot of an earlier parcel, so per-parcel lazy loading cannot be used here.
+        var allShipmentItems = shipments.Count == 0
+            ? []
+            : await _db.ShipmentItems.AsNoTracking()
+                .Where(x => shipments.Select(s => s.ShipmentId).Contains(x.ShipmentId))
+                .ToListAsync(cancellationToken);
+        var shipmentItemsByShipment = allShipmentItems
+            .GroupBy(x => x.ShipmentId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<ShipmentItem>)g.ToArray());
         var shipmentSnapshots = new List<ShipmentSnapshot>(shipments.Count);
         foreach (var shipment in shipments)
         {
-            var shipmentItems = await _db.ShipmentItems.AsNoTracking()
-                .Where(x => x.ShipmentId == shipment.ShipmentId)
-                .ToListAsync(cancellationToken);
-            var receipt = await LoadReceiptSnapshotAsync(shipment.ShipmentId, cancellationToken);
+            var shipmentItems = shipmentItemsByShipment.TryGetValue(shipment.ShipmentId, out var loadedItems)
+                ? loadedItems
+                : [];
+            var receipt = receipts.SingleOrDefault(x => x.ShipmentId == shipment.ShipmentId);
+            var receiptSnapshot = receipt is null
+                ? null
+                : new ShipmentReturnReceiptSnapshot(
+                    receipt.ShipmentReturnReceiptId,
+                    receipt.ReceivedAt,
+                    receipt.ReceivedByUserId,
+                    receipt.Note,
+                    (itemsByReceipt.TryGetValue(receipt.ShipmentReturnReceiptId, out var receivedItems)
+                            ? receivedItems
+                            : [])
+                        .Select(x => new ShipmentReturnReceiptLineSnapshot(x.OrderLineId, x.Quantity, x.Condition))
+                        .ToArray());
             shipmentSnapshots.Add(new ShipmentSnapshot(
                 shipment.ShipmentId,
                 shipment.Status,
@@ -35,7 +69,19 @@ public sealed partial class FulfillmentDirectory
                 shipment.TrackingReference,
                 shipment.DispatchedAt,
                 shipment.DeliveredAt,
-                shipmentItems.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
+                // TB-258-R1: the resend capacity of a line is specific to THIS physically received source parcel.
+                shipmentItems
+                    .Select(x => new ShipmentLineSnapshot(
+                        x.OrderLineId,
+                        x.Quantity,
+                        SourceResendableQuantity(
+                            receiptItems,
+                            receiptShipment,
+                            shipmentItemsByShipment,
+                            shipments,
+                            shipment.ShipmentId,
+                            x.OrderLineId)))
+                    .ToArray(),
                 shipment.CreatedAt,
                 shipment.ShippingMethodCode,
                 shipment.ShippingMethodLabel,
@@ -50,18 +96,10 @@ public sealed partial class FulfillmentDirectory
                 shipment.NonDeliveredAt,
                 shipment.ReturnStartedAt,
                 shipment.ReturnedAt,
-                receipt));
+                receiptSnapshot));
         }
 
         var groupSnapshots = await BuildShippingGroupSnapshotsAsync(unit.FulfillmentId, items, cancellationToken);
-        var receipts = await _db.ShipmentReturnReceipts.AsNoTracking()
-            .Where(x => x.FulfillmentId == unit.FulfillmentId)
-            .ToListAsync(cancellationToken);
-        var receiptItems = receipts.Count == 0
-            ? []
-            : await _db.ShipmentReturnReceiptItems.AsNoTracking()
-                .Where(x => receipts.Select(r => r.ShipmentReturnReceiptId).Contains(x.ShipmentReturnReceiptId))
-                .ToListAsync(cancellationToken);
 
         return new FulfillmentSnapshot(
             unit.FulfillmentId,
@@ -96,35 +134,41 @@ public sealed partial class FulfillmentDirectory
             ShippingGroups: groupSnapshots.Count == 0 ? null : groupSnapshots);
     }
 
-    private async Task<ShipmentReturnReceiptSnapshot?> LoadReceiptSnapshotAsync(
-        Guid shipmentId,
-        CancellationToken cancellationToken)
-    {
-        var receipt = await _db.ShipmentReturnReceipts.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.ShipmentId == shipmentId, cancellationToken);
-        if (receipt is null)
-        {
-            return null;
-        }
-
-        var items = await _db.ShipmentReturnReceiptItems.AsNoTracking()
-            .Where(x => x.ShipmentReturnReceiptId == receipt.ShipmentReturnReceiptId)
-            .OrderBy(x => x.OrderLineId)
-            .ToListAsync(cancellationToken);
-        return new ShipmentReturnReceiptSnapshot(
-            receipt.ShipmentReturnReceiptId,
-            receipt.ReceivedAt,
-            receipt.ReceivedByUserId,
-            receipt.Note,
-            items.Select(x => new ShipmentReturnReceiptLineSnapshot(x.OrderLineId, x.Quantity, x.Condition)).ToArray());
-    }
-
     private static decimal UsableReturnedQuantity(
         IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
         Guid orderLineId) =>
         receiptItems
             .Where(x => x.OrderLineId == orderLineId && x.Condition == ReturnReceiptCondition.Usable)
             .Sum(x => x.Quantity);
+
+    /// <summary>
+    /// TB-258-R1: usable capacity of ONE physically received source parcel for one line, minus its OWN non-cancelled
+    /// resend parcels. Another parcel's receipt can never fund this source.
+    /// </summary>
+    private static decimal SourceResendableQuantity(
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        IReadOnlyDictionary<Guid, Guid> receiptShipment,
+        IReadOnlyDictionary<Guid, IReadOnlyList<ShipmentItem>> shipmentItemsByShipment,
+        IReadOnlyList<Shipment> shipments,
+        Guid sourceShipmentId,
+        Guid orderLineId)
+    {
+        var usable = receiptItems
+            .Where(x => x.OrderLineId == orderLineId
+                && x.Condition == ReturnReceiptCondition.Usable
+                && receiptShipment.TryGetValue(x.ShipmentReturnReceiptId, out var owner)
+                && owner == sourceShipmentId)
+            .Sum(x => x.Quantity);
+        var committed = shipments
+            .Where(s => s.IsResend
+                && s.Status != ShipmentStatus.Cancelled
+                && s.ResendOfShipmentId == sourceShipmentId)
+            .SelectMany(s => shipmentItemsByShipment.TryGetValue(s.ShipmentId, out var items) ? items : [])
+            .Where(x => x.OrderLineId == orderLineId)
+            .Sum(x => x.Quantity);
+        var remaining = usable - committed;
+        return remaining > 0m ? remaining : 0m;
+    }
 
     private static decimal ResendCommittedQuantity(
         IReadOnlyList<ShipmentSnapshot> shipments,

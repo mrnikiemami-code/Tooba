@@ -362,14 +362,16 @@ public sealed partial class AdminOrderOperationsOrchestrator
         }
 
         var lines = new List<ReturnReceiptLineCommand>(items.Count);
-        var seen = new HashSet<Guid>();
+        var seen = new HashSet<(Guid OrderLineId, int Condition)>();
         foreach (var item in items)
         {
             if (item is null
                 || item.OrderLineId == Guid.Empty
                 || item.Quantity <= 0m
                 || item.Condition is not (0 or 1)
-                || !seen.Add(item.OrderLineId))
+                // TB-258-R1: one parcel line may come back split across conditions, so the duplicate authority is
+                // the (line, condition) pair; the aggregate validates the SUM against the parcel quantity.
+                || !seen.Add((item.OrderLineId, item.Condition)))
             {
                 throw new AdminOrderOperationsException("order.operation.invalid");
             }

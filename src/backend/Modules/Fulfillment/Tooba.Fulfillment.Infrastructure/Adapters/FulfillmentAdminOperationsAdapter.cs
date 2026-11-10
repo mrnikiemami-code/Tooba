@@ -339,7 +339,9 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             shipment.TrackingReference,
             shipment.DispatchedAt,
             shipment.DeliveredAt,
-            shipment.Items.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToList(),
+            shipment.Items
+                .Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity, x.ResendableQuantity))
+                .ToList(),
             shipment.CreatedAt,
             shipment.ShippingMethodCode,
             shipment.ShippingMethodLabel,

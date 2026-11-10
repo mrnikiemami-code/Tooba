@@ -180,6 +180,10 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.NonDeliveryReason).HasMaxLength(64);
             entity.Property(x => x.NonDeliveryNote).HasMaxLength(512);
             entity.Property(x => x.ResendOfShipmentId).HasColumnName("resend_of_shipment_id");
+            // TB-258-R1: durable operator identity of the post-dispatch facts (never a client-supplied claim).
+            entity.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id");
+            entity.Property(x => x.NonDeliveredByUserId).HasColumnName("non_delivered_by_user_id");
+            entity.Property(x => x.ReturnStartedByUserId).HasColumnName("return_started_by_user_id");
             entity.Ignore(x => x.Items);
             entity.Ignore(x => x.IsResend);
             entity.HasIndex(x => x.FulfillmentId);
@@ -212,6 +216,11 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.Condition).HasConversion<string>().HasMaxLength(32);
             entity.HasIndex(x => x.ShipmentReturnReceiptId);
+            // TB-258-R1: a parcel line may come back split across conditions, so exactly-once is the
+            // (receipt, line, condition) triple — never the line alone.
+            entity.HasIndex(x => new { x.ShipmentReturnReceiptId, x.OrderLineId, x.Condition })
+                .IsUnique()
+                .HasDatabaseName("ux_shipment_return_receipt_items_line_condition");
         });
         modelBuilder.Entity<ShipmentItem>(entity =>
         {

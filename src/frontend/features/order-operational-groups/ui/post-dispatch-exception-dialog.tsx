@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../../../design-system/primitives/core";
 import { Dialog } from "../../../design-system/primitives/overlays";
+import {
+  clearPostDispatchAttempt,
+  markPostDispatchAttemptFailed,
+  mintPostDispatchOccurrence,
+  readPostDispatchAttempt,
+  writePostDispatchAttempt,
+  type PostDispatchAttempt,
+  type PostDispatchAttemptScope,
+} from "../session/post-dispatch-attempt-store.ts";
 
 /**
  * TB-258 — the ONE purposeful post-dispatch exception surface.
@@ -63,11 +72,20 @@ type Props = {
   /** Human label of the parcel (number/short id) used in the dialog copy and test ids. */
   parcelLabel: string;
   parcelKey: string;
+  /**
+   * TB-258-R1: viewer + checkout + fulfillment + source parcel + mode. The reviewed request is retained
+   * under exactly this scope, so a remount restores it and another viewer never inherits it.
+   */
+  attemptScope: PostDispatchAttemptScope;
   lines: PostDispatchParcelLine[];
   pending: boolean;
   errorFa?: string | null;
   onClose: () => void;
-  onSubmit: (request: PostDispatchExceptionRequest) => void;
+  /**
+   * Sends the reviewed request. Returning true means the server AUTHORITATIVELY completed it (only then
+   * is the retained envelope cleared); anything else keeps the exact request for reconcile/retry.
+   */
+  onSubmit: (request: PostDispatchExceptionRequest) => Promise<boolean> | boolean;
 };
 
 type ReceiptDraft = { quantity: string; condition: 0 | 1 };
@@ -90,6 +108,40 @@ function clampQuantity(value: number, max: number): number {
 }
 
 /**
+ * TB-258-R1: read-only description of a retained reviewed request. It is rendered from the RECORDED
+ * envelope (not from fresh capacity), so a review can still be reconciled after the parcel changed.
+ */
+function describeRetained(
+  request: PostDispatchExceptionRequest,
+  lines: PostDispatchParcelLine[],
+): Array<{ key: string; text: string }> {
+  const titleOf = (orderLineId: string) =>
+    lines.find((line) => line.orderLineId === orderLineId)?.title ?? orderLineId.slice(0, 8);
+
+  if (request.code === "record_non_delivery") {
+    const label = POST_DISPATCH_NON_DELIVERY_REASONS.find((option) => option.code === request.reason)?.labelFa
+      ?? request.reason;
+    return [{ key: "reason", text: `دلیل: ${label}` }];
+  }
+
+  if (request.code === "record_return_receipt") {
+    return request.receiptItems.map((item) => ({
+      key: `${item.orderLineId}:${item.condition}`,
+      text: `${titleOf(item.orderLineId)} · ${item.quantity.toLocaleString("fa-IR")} · ${item.condition === 0 ? "سالم" : "آسیب‌دیده"}`,
+    }));
+  }
+
+  if (request.code === "resend_shipment") {
+    return request.selections.map((selection) => ({
+      key: selection.orderLineId,
+      text: `${titleOf(selection.orderLineId)} · ${selection.quantity.toLocaleString("fa-IR")}`,
+    }));
+  }
+
+  return [];
+}
+
+/**
  * Review surface for one post-dispatch exception. Quantities start at the exact remaining capacity the
  * server reported, so confirming without edits is the documented lawful action and no number is invented.
  */
@@ -98,18 +150,45 @@ export function PostDispatchExceptionDialog({
   mode,
   parcelLabel,
   parcelKey,
+  attemptScope,
   lines,
   pending,
   errorFa,
   onClose,
   onSubmit,
 }: Props) {
+  const scope = useMemo<PostDispatchAttemptScope>(
+    () => ({
+      viewerScopeKey: attemptScope.viewerScopeKey ?? null,
+      checkoutId: attemptScope.checkoutId,
+      fulfillmentId: attemptScope.fulfillmentId,
+      sourceShipmentId: attemptScope.sourceShipmentId,
+      mode,
+    }),
+    [
+      attemptScope.viewerScopeKey,
+      attemptScope.checkoutId,
+      attemptScope.fulfillmentId,
+      attemptScope.sourceShipmentId,
+      mode,
+    ],
+  );
+  const scopeSignature = `${scope.viewerScopeKey ?? ""}|${scope.checkoutId}|${scope.fulfillmentId}|${scope.sourceShipmentId}|${scope.mode}`;
+
   const [reason, setReason] = useState<string>(POST_DISPATCH_NON_DELIVERY_REASONS[0]!.code);
   const [note, setNote] = useState("");
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, ReceiptDraft>>({});
   const [resendDrafts, setResendDrafts] = useState<Record<string, string>>({});
   const [idempotencyKey, setIdempotencyKey] = useState<string>("");
   const [localErrorFa, setLocalErrorFa] = useState<string | null>(null);
+  /** TB-258-R1: an unresolved reviewed request that must be reconciled verbatim before anything new. */
+  const [retained, setRetained] = useState<PostDispatchAttempt | null>(null);
+  /** Which review scope is already initialized — a lines rerender must never reset an open review. */
+  const [initializedScope, setInitializedScope] = useState<string | null>(null);
+  /** Synchronous single-flight: two same-tick submits can never send two mutations. */
+  const submitInFlight = useRef(false);
+  const linesRef = useRef(lines);
+  linesRef.current = lines;
 
   const resendCandidates = useMemo(
     () => lines.filter((line) => line.resendableQuantity > 0),
@@ -117,19 +196,31 @@ export function PostDispatchExceptionDialog({
   );
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setInitializedScope(null);
+      return;
+    }
+
+    // Same reviewed surface: keep every edit, the key and the in-flight envelope untouched.
+    if (initializedScope === scopeSignature) return;
+
     setLocalErrorFa(null);
+    const recorded = readPostDispatchAttempt(scope);
+    setInitializedScope(scopeSignature);
+    if (recorded) {
+      // Close/reopen/remount restores the EXACT reviewed request instead of minting another occurrence.
+      setRetained(recorded);
+      return;
+    }
+
+    setRetained(null);
     setNote("");
     setReason(POST_DISPATCH_NON_DELIVERY_REASONS[0]!.code);
-    // A fresh occurrence per opened review: a retried submit replays this exact key, a new review is new.
-    setIdempotencyKey(
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `tb258-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
-    );
+    // A fresh occurrence per newly reviewed action: a retried submit replays this exact key.
+    setIdempotencyKey(mintPostDispatchOccurrence());
 
     const receipt: Record<string, ReceiptDraft> = {};
-    for (const line of lines) {
+    for (const line of linesRef.current) {
       receipt[line.orderLineId] = {
         quantity: String(line.parcelQuantity),
         condition: 0,
@@ -138,11 +229,11 @@ export function PostDispatchExceptionDialog({
     setReceiptDrafts(receipt);
 
     const resend: Record<string, string> = {};
-    for (const line of lines) {
+    for (const line of linesRef.current) {
       resend[line.orderLineId] = line.resendableQuantity > 0 ? String(line.resendableQuantity) : "0";
     }
     setResendDrafts(resend);
-  }, [open, mode, parcelKey, lines]);
+  }, [open, scopeSignature, scope, initializedScope]);
 
   const receiptTotal = useMemo(
     () => lines.reduce((sum, line) => sum + clampQuantity(toNumber(receiptDrafts[line.orderLineId]?.quantity ?? "0"), line.parcelQuantity), 0),
@@ -154,19 +245,50 @@ export function PostDispatchExceptionDialog({
     [resendCandidates, resendDrafts],
   );
 
+  async function send(request: PostDispatchExceptionRequest) {
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
+    setLocalErrorFa(null);
+    // The COMPLETE reviewed request is persisted BEFORE the first mutation, so an uncertain outcome can
+    // only reconcile this exact envelope instead of creating a second operation.
+    const envelope = writePostDispatchAttempt({
+      scope,
+      request,
+      attempts: (retained?.attempts ?? 0) + 1,
+    });
+    try {
+      const accepted = await onSubmit(request);
+      if (accepted) {
+        // Authoritative completion: only now may a deliberate new occurrence be minted.
+        clearPostDispatchAttempt(scope);
+        setRetained(null);
+        return;
+      }
+      if (envelope) setRetained(markPostDispatchAttemptFailed(scope, envelope));
+    } finally {
+      submitInFlight.current = false;
+    }
+  }
+
   function submit() {
+    // An unresolved recorded request may only be reconciled verbatim — never replaced or reminted.
+    if (retained) {
+      void send(retained.request);
+      return;
+    }
+
     setLocalErrorFa(null);
     if (mode === "record_non_delivery") {
       if (!POST_DISPATCH_NON_DELIVERY_REASONS.some((option) => option.code === reason)) {
         setLocalErrorFa("دلیل عدم تحویل را انتخاب کنید.");
         return;
       }
-      onSubmit({ code: "record_non_delivery", reason, note: note.trim() || null });
+      void send({ code: "record_non_delivery", reason, note: note.trim() || null });
       return;
     }
 
     if (mode === "start_return") {
-      onSubmit({ code: "start_return" });
+      void send({ code: "start_return" });
       return;
     }
 
@@ -186,7 +308,7 @@ export function PostDispatchExceptionDialog({
         setLocalErrorFa("دست‌کم یک قلم باید مقدار دریافتی داشته باشد.");
         return;
       }
-      onSubmit({ code: "record_return_receipt", receiptItems, note: note.trim() || null });
+      void send({ code: "record_return_receipt", receiptItems, note: note.trim() || null });
       return;
     }
 
@@ -204,11 +326,12 @@ export function PostDispatchExceptionDialog({
       setLocalErrorFa("دست‌کم یک قلم برای ارسال مجدد انتخاب کنید.");
       return;
     }
-    onSubmit({ code: "resend_shipment", selections, idempotencyKey });
+    void send({ code: "resend_shipment", selections, idempotencyKey });
   }
 
-  const submitLabel =
-    mode === "record_non_delivery"
+  const submitLabel = retained
+    ? "ارسال دوبارهٔ همان درخواست"
+    : mode === "record_non_delivery"
       ? "ثبت عدم تحویل"
       : mode === "start_return"
         ? "شروع برگشت"
@@ -218,8 +341,9 @@ export function PostDispatchExceptionDialog({
 
   const disabled =
     pending
-    || (mode === "record_return_receipt" && receiptTotal <= 0)
-    || (mode === "resend_shipment" && resendTotal <= 0);
+    || (!retained
+      && ((mode === "record_return_receipt" && receiptTotal <= 0)
+        || (mode === "resend_shipment" && resendTotal <= 0)));
 
   return (
     <Dialog open={open} onClose={onClose} showCloseButton={false} size="md" title={MODE_TITLE[mode]}>
@@ -232,7 +356,27 @@ export function PostDispatchExceptionDialog({
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pe-1">
           <p className="text-xs leading-6 text-gray-600">{`مرسولهٔ ${parcelLabel}`}</p>
 
-          {mode === "record_non_delivery" ? (
+          {retained ? (
+            <div
+              className="space-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2"
+              data-testid={`admin-order-post-dispatch-retained-${parcelKey}`}
+            >
+              <p className="text-xs font-bold text-amber-900">
+                پاسخ قطعی این درخواست ثبت نشده است. همان درخواست قبلی حفظ شده و فقط همان قابل ارسال دوباره است.
+              </p>
+              {describeRetained(retained.request, lines).map((row) => (
+                <p key={row.key} className="break-words text-xs text-amber-900">{row.text}</p>
+              ))}
+              {retained.request.code === "record_non_delivery" && retained.request.note ? (
+                <p className="break-words text-xs text-amber-900">{`توضیح: ${retained.request.note}`}</p>
+              ) : null}
+              {retained.request.code === "record_return_receipt" && retained.request.note ? (
+                <p className="break-words text-xs text-amber-900">{`توضیح: ${retained.request.note}`}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {!retained && mode === "record_non_delivery" ? (
             <>
               <p className="text-xs leading-6 text-gray-600">
                 عدم تحویل بدون حذف سابقهٔ ارسال و کد رهگیری ثبت می‌شود. مشتری تحویل‌شده محسوب نمی‌شود و ابطال پیش از ارسال به کار نمی‌رود.
@@ -273,13 +417,13 @@ export function PostDispatchExceptionDialog({
             </>
           ) : null}
 
-          {mode === "start_return" ? (
+          {!retained && mode === "start_return" ? (
             <p className="text-xs leading-6 text-gray-600">
               با شروع برگشت، مرسوله در مسیر بازگشت به مبدأ ثبت می‌شود. تأیید دریافت در مبدأ مرحلهٔ بعدی است و تنها مقدار سالم دریافتی قابل ارسال مجدد است.
             </p>
           ) : null}
 
-          {mode === "record_return_receipt" ? (
+          {!retained && mode === "record_return_receipt" ? (
             <>
               <p className="text-xs leading-6 text-gray-600">
                 فقط مقدار «سالم» دریافتی ظرفیت ارسال مجدد می‌سازد. اقلام آسیب‌دیده ثبت می‌شوند اما قابل ارسال مجدد نیستند.
@@ -339,7 +483,7 @@ export function PostDispatchExceptionDialog({
             </>
           ) : null}
 
-          {mode === "resend_shipment" ? (
+          {!retained && mode === "resend_shipment" ? (
             <>
               <p className="text-xs leading-6 text-gray-600">
                 ارسال مجدد فقط از ظرفیت اقلام سالم دریافتی در مبدأ تأمین می‌شود و باقیماندهٔ بسته‌بندی انبار را مصرف نمی‌کند.

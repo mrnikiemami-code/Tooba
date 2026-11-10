@@ -710,6 +710,41 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             .Sum(x => x.Quantity);
 
     /// <summary>
+    /// TB-258-R1: physically received USABLE quantity of ONE source parcel's own origin receipt. Capacity belongs
+    /// to the parcel that physically came back, so units received from parcel A can never fund a resend sourced
+    /// from parcel B. Damaged units and non-delivery records contribute nothing.
+    /// </summary>
+    public decimal ReturnedUsableQuantity(Guid sourceShipmentId, Guid orderLineId) =>
+        _returnReceipts
+            .Where(r => r.ShipmentId == sourceShipmentId)
+            .SelectMany(r => r.Items)
+            .Where(x => x.OrderLineId == orderLineId && x.Condition == ReturnReceiptCondition.Usable)
+            .Sum(x => x.Quantity);
+
+    /// <summary>
+    /// TB-258-R1: capacity of ONE source parcel already committed to its OWN non-cancelled resend parcels. A
+    /// cancelled pre-dispatch resend releases only this source's capacity once; a dispatched/delivered resend
+    /// keeps it consumed. A resend of a resend commits against its immediate source, so a returned resend funds
+    /// exactly one next cycle.
+    /// </summary>
+    public decimal ResendCommittedQuantity(Guid sourceShipmentId, Guid orderLineId) =>
+        _shipments
+            .Where(s => s.IsResend
+                && s.Status != ShipmentStatus.Cancelled
+                && s.ResendOfShipmentId == sourceShipmentId)
+            .SelectMany(s => s.Items)
+            .Where(x => x.OrderLineId == orderLineId)
+            .Sum(x => x.Quantity);
+
+    /// <summary>TB-258-R1: remaining capacity of ONE source parcel available for a new resend of that line.</summary>
+    public decimal ResendableQuantity(Guid sourceShipmentId, Guid orderLineId)
+    {
+        var remaining = ReturnedUsableQuantity(sourceShipmentId, orderLineId)
+            - ResendCommittedQuantity(sourceShipmentId, orderLineId);
+        return remaining > 0m ? remaining : 0m;
+    }
+
+    /// <summary>
     /// TB-258: physically received USABLE quantity of one line across every origin receipt of this unit. Damaged
     /// receipts contribute nothing and a non-delivery alone contributes nothing.
     /// </summary>
@@ -721,7 +756,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
     /// <summary>
     /// TB-258: returned capacity already committed to resend parcels that were not cancelled. A cancelled
-    /// pre-dispatch resend releases its own capacity once; a dispatched/delivered resend keeps it consumed.
+    /// pre-dispatch resend releases its own source capacity once; a dispatched/delivered resend keeps it consumed.
     /// </summary>
     public decimal ResendCommittedQuantity(Guid orderLineId) =>
         _shipments
@@ -739,6 +774,13 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
     /// <summary>TB-258: true when at least one line still carries resendable returned capacity.</summary>
     public bool HasResendableQuantity() => _items.Any(x => ResendableQuantity(x.OrderLineId) > 0m);
+
+    /// <summary>TB-258-R1: true when ONE returned source parcel still carries resendable capacity.</summary>
+    public bool HasResendableQuantity(Guid sourceShipmentId)
+    {
+        var source = _shipments.SingleOrDefault(x => x.ShipmentId == sourceShipmentId);
+        return source is not null && source.Items.Any(x => ResendableQuantity(sourceShipmentId, x.OrderLineId) > 0m);
+    }
 
     private FulfillmentItem RequireItem(Guid orderLineId) =>
         _items.SingleOrDefault(x => x.OrderLineId == orderLineId)
@@ -812,10 +854,15 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     }
 
     /// <summary>TB-258: records a courier non-delivery attempt on a dispatched parcel.</summary>
-    public void RecordShipmentNonDelivery(Guid shipmentId, string reason, string? note, DateTimeOffset now)
+    public void RecordShipmentNonDelivery(
+        Guid shipmentId,
+        string reason,
+        string? note,
+        Guid actorUserId,
+        DateTimeOffset now)
     {
         var shipment = RequireShipment(shipmentId);
-        shipment.RecordNonDelivery(reason, note, now);
+        shipment.RecordNonDelivery(reason, note, actorUserId, now);
         if (Status is not (FulfillmentStatus.Delivered or FulfillmentStatus.Cancelled or FulfillmentStatus.Failed))
         {
             Status = FulfillmentStatus.InTransit;
@@ -826,10 +873,10 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     }
 
     /// <summary>TB-258: the carrier started bringing the failed parcel back to origin.</summary>
-    public void StartShipmentReturn(Guid shipmentId, DateTimeOffset now)
+    public void StartShipmentReturn(Guid shipmentId, Guid actorUserId, DateTimeOffset now)
     {
         var shipment = RequireShipment(shipmentId);
-        shipment.StartReturn(now);
+        shipment.StartReturn(actorUserId, now);
         UpdatedAt = now;
     }
 
@@ -884,13 +931,16 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     }
 
     /// <summary>
-    /// TB-258: creates a NEW parcel occurrence for returned goods. It reuses the accepted shipping group/method of
-    /// the original, consumes only physically received usable capacity, and never the fresh packed remainder.
+    /// TB-258-R1: creates a NEW parcel occurrence for goods physically received back at origin. The occurrence key
+    /// is a prebound reviewed intent: replaying it returns the EXACT recorded parcel, while a changed source,
+    /// group/method or quantity under the same key is a typed conflict instead of a different intent's parcel.
+    /// Capacity is the physically received usable quantity of THIS source parcel, never another parcel's receipt.
     /// </summary>
     public Shipment CreateResendShipment(
         Guid shipmentId,
         Func<Guid> newId,
         Guid originalShipmentId,
+        Guid actorUserId,
         string carrierDisplayName,
         IReadOnlyList<(Guid OrderLineId, decimal Quantity)> items,
         DateTimeOffset now,
@@ -899,41 +949,47 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         string? shippingDispatchKey)
     {
         EnsureNotTerminal();
+
+        // A resend must carry a trustworthy occurrence: a blank key would make a retried request allocate again.
+        var occurrenceKey = string.IsNullOrWhiteSpace(shippingDispatchKey) ? null : shippingDispatchKey.Trim();
+        if (occurrenceKey is null)
+        {
+            throw new ContractOperationException("fulfillment.resend.occurrence_required");
+        }
+
         var original = RequireShipment(originalShipmentId);
         if (original.Status != ShipmentStatus.Returned)
         {
             throw new ContractOperationException("fulfillment.resend.original_not_returned");
         }
 
-        if (original.IsResend && original.ResendOfShipmentId is Guid ancestor)
-        {
-            // A resend of a resend is still judged against the original receipt capacity of its own chain root.
-            original = RequireShipment(ancestor);
-        }
-
         var normalized = NormalizeSelections(items);
         EnsureShippingGroupScope(normalized, original.ShippingGroupId);
-        EnsureShippingGroupMethod(original.ShippingGroupId, shippingMethodCode);
+
+        var effectiveMethodCode = string.IsNullOrWhiteSpace(shippingMethodCode)
+            ? original.ShippingMethodCode
+            : shippingMethodCode;
+        EnsureShippingGroupMethod(original.ShippingGroupId, effectiveMethodCode);
         if (!string.Equals(
                 NormalizeShippingMethodIdentity(original.ShippingMethodCode),
-                NormalizeShippingMethodIdentity(shippingMethodCode ?? original.ShippingMethodCode),
+                NormalizeShippingMethodIdentity(effectiveMethodCode),
                 StringComparison.OrdinalIgnoreCase))
         {
             throw new ContractOperationException("fulfillment.resend.method_mismatch");
         }
 
-        var normalizedKey = string.IsNullOrWhiteSpace(shippingDispatchKey) ? null : shippingDispatchKey.Trim();
-        if (normalizedKey is not null)
+        // Owning replay BEFORE any capacity gate: the recorded parcel is the authority for this occurrence, so a
+        // retry after the source units were already consumed still returns it, and a changed request never does.
+        var recorded = _shipments.FirstOrDefault(s =>
+            s.IsResend && string.Equals(s.ShippingDispatchKey, occurrenceKey, StringComparison.Ordinal));
+        if (recorded is not null)
         {
-            var existing = _shipments.FirstOrDefault(s =>
-                s.IsResend
-                && s.Status != ShipmentStatus.Cancelled
-                && string.Equals(s.ShippingDispatchKey, normalizedKey, StringComparison.Ordinal));
-            if (existing is not null)
-            {
-                EnsureDispatchKeyLinesMatch(existing, normalized);
-                return existing;
-            }
+            return ReplayRecordedResend(recorded, original, normalized, effectiveMethodCode);
+        }
+
+        if (actorUserId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.resend.actor_required");
         }
 
         foreach (var line in normalized)
@@ -943,7 +999,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
                 throw new ContractOperationException("fulfillment.resend.line_foreign");
             }
 
-            if (line.Quantity > ResendableQuantity(line.OrderLineId))
+            // TB-258-R1: capacity belongs to THIS physically returned source parcel, so a sibling returned parcel's
+            // units can never be borrowed to satisfy this source.
+            if (line.Quantity > ResendableQuantity(original.ShipmentId, line.OrderLineId))
             {
                 throw new ContractOperationException("fulfillment.resend.exceeds_returned");
             }
@@ -957,14 +1015,69 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             string.IsNullOrWhiteSpace(carrierDisplayName) ? original.CarrierDisplayName : carrierDisplayName,
             normalized,
             now,
-            string.IsNullOrWhiteSpace(shippingMethodCode) ? original.ShippingMethodCode : shippingMethodCode,
+            effectiveMethodCode,
             string.IsNullOrWhiteSpace(shippingMethodLabel) ? original.ShippingMethodLabel : shippingMethodLabel,
             original.ShippingGroupId,
-            normalizedKey);
+            occurrenceKey,
+            actorUserId);
         _shipments.Add(shipment);
         UpdatedAt = now;
         _domainEvents.Add(new ShipmentCreatedDomainEvent(FulfillmentId, shipment.ShipmentId, SellerOrderId));
         return shipment;
+    }
+
+    /// <summary>
+    /// TB-258-R1: an already recorded occurrence only answers the SAME reviewed intent. A different source parcel,
+    /// group/method or quantity is a typed conflict (zero new writes) — never the old parcel under a new request.
+    /// A cancelled recorded resend keeps its history and cannot be silently recreated by the same key.
+    /// </summary>
+    private static Shipment ReplayRecordedResend(
+        Shipment recorded,
+        Shipment original,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> requested,
+        string effectiveMethodCode)
+    {
+        if (recorded.Status == ShipmentStatus.Cancelled)
+        {
+            throw new ContractOperationException("fulfillment.resend.occurrence_cancelled");
+        }
+
+        var sameSource = recorded.ResendOfShipmentId == original.ShipmentId;
+        var sameGroup = recorded.ShippingGroupId == original.ShippingGroupId;
+        var sameMethod = string.Equals(
+            NormalizeShippingMethodIdentity(recorded.ShippingMethodCode),
+            NormalizeShippingMethodIdentity(effectiveMethodCode),
+            StringComparison.OrdinalIgnoreCase);
+        var sameLines = LinesMatch(recorded, requested);
+        if (!sameSource || !sameGroup || !sameMethod || !sameLines)
+        {
+            throw new ContractOperationException("fulfillment.resend.intent_conflict");
+        }
+
+        return recorded;
+    }
+
+    private static bool LinesMatch(
+        Shipment recorded,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> requested)
+    {
+        if (recorded.Items.Count != requested.Count)
+        {
+            return false;
+        }
+
+        var recordedMap = recorded.Items
+            .GroupBy(x => x.OrderLineId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+        foreach (var line in requested)
+        {
+            if (!recordedMap.TryGetValue(line.OrderLineId, out var quantity) || quantity != line.Quantity)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>ردیابی را idempotent ثبت می‌کند.</summary>

@@ -459,6 +459,7 @@ function OperationalCard({
             multiMember={multiMember}
             pending={pending}
             actorMayManage={actorMayManage}
+            viewerScopeKey={occurrenceScopeKey}
             parcelCapabilities={parcelCapabilities}
             onParcelTrack={onParcelTrack}
             onParcelOperation={onParcelOperation}
@@ -625,6 +626,7 @@ function GroupParcels({
   multiMember,
   pending,
   actorMayManage,
+  viewerScopeKey,
   parcelCapabilities,
   onParcelTrack,
   onParcelOperation,
@@ -636,6 +638,8 @@ function GroupParcels({
   multiMember: boolean;
   pending: boolean;
   actorMayManage: boolean;
+  /** TB-258-R1: viewer/owner scope of the retained post-dispatch request. */
+  viewerScopeKey?: string | null;
   parcelCapabilities?: Props["parcelCapabilities"];
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
@@ -650,6 +654,7 @@ function GroupParcels({
   } | null>(null);
   const [exceptionErrorFa, setExceptionErrorFa] = useState<string | null>(null);
   const [exceptionPending, setExceptionPending] = useState(false);
+  const exceptionSubmitInFlight = useRef(false);
 
   const exceptionLines = useMemo<PostDispatchParcelLine[]>(() => {
     if (!exception) return [];
@@ -673,20 +678,25 @@ function GroupParcels({
     });
   }, [exception]);
 
-  async function submitException(request: PostDispatchExceptionRequest) {
-    if (!exception || !onParcelException) return;
+  async function submitException(request: PostDispatchExceptionRequest): Promise<boolean> {
+    if (!exception || !onParcelException) return false;
+    // Synchronous single-flight: a second same-tick press can never send a second mutation.
+    if (exceptionSubmitInFlight.current) return false;
+    exceptionSubmitInFlight.current = true;
     setExceptionPending(true);
     setExceptionErrorFa(null);
     try {
       const accepted = await onParcelException(exception.seller, exception.shipment.shipmentId, request);
       if (accepted) {
         setException(null);
-        return;
+        return true;
       }
       setExceptionErrorFa(
         "ثبت نشد. اگر خطای سرور نمایش داده شد همان را بررسی کنید؛ این پنجره حذف نشده تا دوباره تلاش کنید.",
       );
+      return false;
     } finally {
+      exceptionSubmitInFlight.current = false;
       setExceptionPending(false);
     }
   }
@@ -949,6 +959,13 @@ function GroupParcels({
           mode={exception.mode}
           parcelLabel={exception.shipment.trackingReference || exception.shipment.shipmentId.slice(0, 8)}
           parcelKey={exception.shipment.shipmentId}
+          attemptScope={{
+            viewerScopeKey: viewerScopeKey ?? null,
+            checkoutId: detail.checkoutId,
+            fulfillmentId: exception.seller.fulfillmentId ?? exception.seller.id,
+            sourceShipmentId: exception.shipment.shipmentId,
+            mode: exception.mode,
+          }}
           lines={exceptionLines}
           pending={exceptionPending || pending}
           errorFa={exceptionErrorFa}
@@ -956,9 +973,7 @@ function GroupParcels({
             setException(null);
             setExceptionErrorFa(null);
           }}
-          onSubmit={(request) => {
-            void submitException(request);
-          }}
+          onSubmit={submitException}
         />
       ) : null}
     </section>

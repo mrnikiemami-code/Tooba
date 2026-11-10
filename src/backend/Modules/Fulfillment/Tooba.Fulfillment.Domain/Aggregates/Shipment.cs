@@ -77,6 +77,15 @@ public sealed class Shipment
     /// <summary>TB-258: when the origin receipt was confirmed.</summary>
     public DateTimeOffset? ReturnedAt { get; private set; }
 
+    /// <summary>TB-258-R1: durable operator identity of the creating request (server-side actor).</summary>
+    public Guid? CreatedByUserId { get; init; }
+
+    /// <summary>TB-258-R1: durable operator identity that recorded the non-delivery attempt.</summary>
+    public Guid? NonDeliveredByUserId { get; private set; }
+
+    /// <summary>TB-258-R1: durable operator identity that started the physical return.</summary>
+    public Guid? ReturnStartedByUserId { get; private set; }
+
     /// <summary>
     /// TB-258: the failed/returned original this parcel resends. Null for an original parcel, so a resend can
     /// never be mistaken for a first dispatch and its history stays linked.
@@ -192,11 +201,17 @@ public sealed class Shipment
         string? shippingMethodCode,
         string? shippingMethodLabel,
         Guid? shippingGroupId,
-        string? shippingDispatchKey)
+        string? shippingDispatchKey,
+        Guid actorUserId)
     {
         if (resendOfShipmentId == Guid.Empty)
         {
             throw new ContractOperationException("fulfillment.resend.original_required");
+        }
+
+        if (actorUserId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.resend.actor_required");
         }
 
         if (string.IsNullOrWhiteSpace(carrierDisplayName))
@@ -209,10 +224,17 @@ public sealed class Shipment
             throw new ContractOperationException(FulfillmentShippingGroupFault.IdentityRequired);
         }
 
+        // A resend occurrence is a prebound reviewed intent: without it a retried/re-opened request could allocate
+        // a second parcel, so a blank key is a typed refusal rather than a non-idempotent fallback.
         var normalizedDispatchKey = string.IsNullOrWhiteSpace(shippingDispatchKey)
             ? null
             : shippingDispatchKey.Trim();
-        if (normalizedDispatchKey is { Length: > 128 })
+        if (normalizedDispatchKey is null)
+        {
+            throw new ContractOperationException("fulfillment.resend.occurrence_required");
+        }
+
+        if (normalizedDispatchKey.Length > 128)
         {
             throw new ContractOperationException("fulfillment.shipment.dispatch_key_invalid");
         }
@@ -225,6 +247,7 @@ public sealed class Shipment
             ShippingDispatchKey = normalizedDispatchKey,
             ResendOfShipmentId = resendOfShipmentId,
             Status = ShipmentStatus.Created,
+            CreatedByUserId = actorUserId,
             CarrierDisplayName = carrierDisplayName.Trim(),
             ShippingMethodCode = (shippingMethodCode ?? string.Empty).Trim(),
             ShippingMethodLabel = string.IsNullOrWhiteSpace(shippingMethodLabel)
@@ -335,8 +358,13 @@ public sealed class Shipment
     /// TB-258: records a courier non-delivery attempt after dispatch. It neither pretends delivery nor cancels the
     /// parcel: the goods have physically left the warehouse and stay in the shipped side of every quantity reader.
     /// </summary>
-    internal void RecordNonDelivery(string reason, string? note, DateTimeOffset now)
+    internal void RecordNonDelivery(string reason, string? note, Guid actorUserId, DateTimeOffset now)
     {
+        if (actorUserId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.nondelivery.actor_required");
+        }
+
         var normalizedReason = (reason ?? string.Empty).Trim();
         if (normalizedReason.Length == 0)
         {
@@ -371,18 +399,25 @@ public sealed class Shipment
                     throw new ContractOperationException("fulfillment.nondelivery.conflict");
                 }
 
+                // An exact replay is the same operator fact: never reattribute it to another actor.
                 return;
         }
 
         Status = ShipmentStatus.NonDelivered;
         NonDeliveryReason = normalizedReason;
         NonDeliveryNote = trimmedNote;
+        NonDeliveredByUserId = actorUserId;
         NonDeliveredAt = now;
     }
 
     /// <summary>TB-258: the carrier started bringing the failed parcel back.</summary>
-    internal void StartReturn(DateTimeOffset now)
+    internal void StartReturn(Guid actorUserId, DateTimeOffset now)
     {
+        if (actorUserId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.return.actor_required");
+        }
+
         if (Status == ShipmentStatus.Returning)
         {
             return;
@@ -399,6 +434,7 @@ public sealed class Shipment
         }
 
         Status = ShipmentStatus.Returning;
+        ReturnStartedByUserId = actorUserId;
         ReturnStartedAt = now;
     }
 

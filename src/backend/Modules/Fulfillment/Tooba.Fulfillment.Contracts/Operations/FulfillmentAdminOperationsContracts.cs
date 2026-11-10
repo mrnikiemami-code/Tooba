@@ -76,7 +76,15 @@ public enum ConsolidatedPackageOperationStatus
 }
 
 /// <summary>One order line allocated into a shipment.</summary>
-public sealed record ShipmentLineSnapshot(Guid OrderLineId, decimal Quantity);
+/// <param name="OrderLineId">Owning order line.</param>
+/// <param name="Quantity">Quantity allocated into this shipment.</param>
+/// <param name="ResendableQuantity">
+/// TB-258-R1: usable quantity physically received back on THIS parcel for this line, minus its own resend parcels.
+/// </param>
+public sealed record ShipmentLineSnapshot(
+    Guid OrderLineId,
+    decimal Quantity,
+    decimal ResendableQuantity = 0);
 
 /// <summary>Shipment projection for admin operations. Field order mirrors the wire contract.</summary>
 public sealed record ShipmentSnapshot(

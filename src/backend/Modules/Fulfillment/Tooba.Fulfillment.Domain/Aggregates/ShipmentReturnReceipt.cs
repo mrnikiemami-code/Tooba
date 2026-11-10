@@ -84,7 +84,10 @@ public sealed class ShipmentReturnReceipt
             CreatedAt = now,
         };
 
-        var seen = new HashSet<Guid>();
+        // TB-258-R1: a single parcel line may physically come back SPLIT across conditions (3 units = 2 usable + 1
+        // damaged), so the duplicate authority is the (line, condition) pair, never the line alone.
+        var seen = new HashSet<(Guid OrderLineId, ReturnReceiptCondition Condition)>();
+        var perLineTotals = new Dictionary<Guid, decimal>();
         foreach (var item in items)
         {
             if (item.Quantity <= 0m)
@@ -92,7 +95,7 @@ public sealed class ShipmentReturnReceipt
                 throw new ContractOperationException("fulfillment.return.receipt_qty_positive");
             }
 
-            if (!seen.Add(item.OrderLineId))
+            if (!seen.Add((item.OrderLineId, item.Condition)))
             {
                 throw new ContractOperationException("fulfillment.return.receipt_line_duplicate");
             }
@@ -100,9 +103,12 @@ public sealed class ShipmentReturnReceipt
             var shippedLine = shipmentItems.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)
                 ?? throw new ContractOperationException("fulfillment.return.receipt_line_foreign");
 
-            // Receipt can never exceed what that parcel actually carried: a fabricated larger quantity must not
-            // manufacture resend capacity.
-            if (item.Quantity > shippedLine.Quantity)
+            // Receipt of ALL conditions together can never exceed what that parcel actually carried: a fabricated
+            // larger quantity must not manufacture resend capacity.
+            var total = perLineTotals.TryGetValue(item.OrderLineId, out var running) ? running : 0m;
+            total += item.Quantity;
+            perLineTotals[item.OrderLineId] = total;
+            if (total > shippedLine.Quantity)
             {
                 throw new ContractOperationException("fulfillment.return.receipt_qty_exceeds");
             }

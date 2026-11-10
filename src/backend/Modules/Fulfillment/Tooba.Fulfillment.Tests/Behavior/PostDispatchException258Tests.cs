@@ -22,6 +22,7 @@ public sealed class PostDispatchException258Tests
     private static readonly DateTimeOffset T2 = T0.AddHours(2);
     private static readonly DateTimeOffset T3 = T0.AddHours(3);
     private static readonly DateTimeOffset T4 = T0.AddHours(4);
+    private static readonly Guid Actor = Guid.Parse("018f2580-0000-7000-8000-0000000000a1");
 
     private sealed record Fixture(
         FulfillmentUnit Unit,
@@ -102,8 +103,7 @@ public sealed class PostDispatchException258Tests
         fixture.Unit.RecordShipmentNonDelivery(
             fixture.ShipmentId,
             "customer_unavailable",
-            "مشتری پاسخ نداد",
-            T1);
+            "مشتری پاسخ نداد", Actor, T1);
 
         var parcel = Parcel(fixture, fixture.ShipmentId);
         Assert.Equal(ShipmentStatus.NonDelivered, parcel.Status);
@@ -126,12 +126,15 @@ public sealed class PostDispatchException258Tests
     public void Non_delivery_replay_is_idempotent_but_a_changed_reason_is_a_conflict()
     {
         var fixture = DispatchedParcel();
-        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, T1);
-        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, T2);
+        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, Actor,
+            T1);
+        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, Actor,
+            T2);
         Assert.Equal(T1, Parcel(fixture, fixture.ShipmentId).NonDeliveredAt);
 
         var conflict = Assert.Throws<ContractOperationException>(() =>
-            fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "address_not_found", null, T3));
+            fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "address_not_found", null, Actor,
+            T3));
         Assert.Equal("fulfillment.nondelivery.conflict", conflict.Code);
     }
 
@@ -139,8 +142,10 @@ public sealed class PostDispatchException258Tests
     public void A_genuine_later_delivery_may_resolve_non_delivery_but_never_a_returning_parcel()
     {
         var fixture = DispatchedParcel();
-        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "customer_unavailable", null, T1);
-        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, T2);
+        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "customer_unavailable", null, Actor,
+            T1);
+        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, Actor,
+            T2);
 
         var refused = Assert.Throws<ContractOperationException>(() =>
             fixture.Unit.ApplyShipmentDelivered(fixture.ShipmentId, T3));
@@ -164,7 +169,8 @@ public sealed class PostDispatchException258Tests
             "پیشتاز",
             shippingGroupId: created.ShippingGroupId);
         var preDispatch = Assert.Throws<ContractOperationException>(() =>
-            created.Unit.RecordShipmentNonDelivery(preDispatchShipment.ShipmentId, "other", null, T1));
+            created.Unit.RecordShipmentNonDelivery(preDispatchShipment.ShipmentId, "other", null, Actor,
+            T1));
         Assert.Equal("fulfillment.nondelivery.invalid_status", preDispatch.Code);
 
         var delivered = DispatchedParcel();
@@ -173,7 +179,8 @@ public sealed class PostDispatchException258Tests
         Assert.Equal(2m, delivered.Unit.DeliveredQuantity(delivered.LineA));
 
         var afterDelivered = Assert.Throws<ContractOperationException>(() =>
-            delivered.Unit.RecordShipmentNonDelivery(delivered.ShipmentId, "other", null, T3));
+            delivered.Unit.RecordShipmentNonDelivery(delivered.ShipmentId, "other", null, Actor,
+            T3));
         Assert.Equal("fulfillment.nondelivery.after_delivered", afterDelivered.Code);
         Assert.Equal(ShipmentStatus.Delivered, Parcel(delivered, delivered.ShipmentId).Status);
         Assert.NotNull(Parcel(delivered, delivered.ShipmentId).DeliveredAt);
@@ -188,15 +195,18 @@ public sealed class PostDispatchException258Tests
     {
         var fixture = DispatchedParcel();
         var tooEarly = Assert.Throws<ContractOperationException>(() =>
-            fixture.Unit.StartShipmentReturn(fixture.ShipmentId, T1));
+            fixture.Unit.StartShipmentReturn(fixture.ShipmentId, Actor,
+            T1));
         Assert.Equal("fulfillment.return.invalid_status", tooEarly.Code);
 
         var receiptTooEarly = Assert.Throws<ContractOperationException>(() =>
             Receipt(fixture.Unit, fixture.ShipmentId, [(fixture.LineA, 1m, ReturnReceiptCondition.Usable)], T1));
         Assert.Equal("fulfillment.return.receipt_invalid_status", receiptTooEarly.Code);
 
-        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, T1);
-        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, T2);
+        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, Actor,
+            T1);
+        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, Actor,
+            T2);
         Assert.Equal(ShipmentStatus.Returning, Parcel(fixture, fixture.ShipmentId).Status);
         Assert.Equal(T2, Parcel(fixture, fixture.ShipmentId).ReturnStartedAt);
         // Returning still grants nothing: the goods have not physically arrived.
@@ -209,8 +219,10 @@ public sealed class PostDispatchException258Tests
     public void Origin_receipt_makes_only_usable_units_resendable_and_rejects_excess_or_foreign_lines()
     {
         var fixture = DispatchedParcel();
-        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, T1);
-        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, T2);
+        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "refused", null, Actor,
+            T1);
+        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, Actor,
+            T2);
 
         var exceeds = Assert.Throws<ContractOperationException>(() =>
             Receipt(fixture.Unit, fixture.ShipmentId, [(fixture.LineA, 3m, ReturnReceiptCondition.Usable)], T3));
@@ -220,13 +232,23 @@ public sealed class PostDispatchException258Tests
             Receipt(fixture.Unit, fixture.ShipmentId, [(Guid.NewGuid(), 1m, ReturnReceiptCondition.Usable)], T3));
         Assert.Equal("fulfillment.return.receipt_line_foreign", foreign.Code);
 
+        // TB-258-R1: the duplicate authority is (line, condition); the SAME line+condition twice is refused.
         var duplicate = Assert.Throws<ContractOperationException>(() =>
             Receipt(
                 fixture.Unit,
                 fixture.ShipmentId,
-                [(fixture.LineA, 1m, ReturnReceiptCondition.Usable), (fixture.LineA, 1m, ReturnReceiptCondition.Damaged)],
+                [(fixture.LineA, 1m, ReturnReceiptCondition.Usable), (fixture.LineA, 1m, ReturnReceiptCondition.Usable)],
                 T3));
         Assert.Equal("fulfillment.return.receipt_line_duplicate", duplicate.Code);
+
+        // A mixed-condition receipt that EXCEEDS what this parcel carried is refused as a whole.
+        var mixedExcess = Assert.Throws<ContractOperationException>(() =>
+            Receipt(
+                fixture.Unit,
+                fixture.ShipmentId,
+                [(fixture.LineA, 2m, ReturnReceiptCondition.Usable), (fixture.LineA, 1m, ReturnReceiptCondition.Damaged)],
+                T3));
+        Assert.Equal("fulfillment.return.receipt_qty_exceeds", mixedExcess.Code);
 
         var zero = Assert.Throws<ContractOperationException>(() =>
             Receipt(fixture.Unit, fixture.ShipmentId, [(fixture.LineA, 0m, ReturnReceiptCondition.Usable)], T3));
@@ -269,6 +291,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -296,6 +319,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -308,6 +332,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(Guid.NewGuid(), 1m)],
             T4,
@@ -326,6 +351,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -352,6 +378,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -370,6 +397,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -388,6 +416,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -396,34 +425,41 @@ public sealed class PostDispatchException258Tests
             "tb258-resend-G");
         fixture.Unit.AssignTracking(firstResend.ShipmentId, "TRK-TB258-R2", T4);
         fixture.Unit.ApplyShipmentDispatched(firstResend.ShipmentId, T4);
-        fixture.Unit.RecordShipmentNonDelivery(firstResend.ShipmentId, "refused", null, T4);
-        fixture.Unit.StartShipmentReturn(firstResend.ShipmentId, T4);
+        fixture.Unit.RecordShipmentNonDelivery(firstResend.ShipmentId, "refused", null, Actor,
+            T4);
+        fixture.Unit.StartShipmentReturn(firstResend.ShipmentId, Actor,
+            T4);
         Receipt(fixture.Unit, firstResend.ShipmentId, [(fixture.LineA, 1m, ReturnReceiptCondition.Usable)], T4);
 
-        // The same physical unit came back a second time, so exactly one usable unit is in hand again: the chain is
-        // judged against REAL receipts (2 usable ever received, 1 already committed), never against the root alone.
+        // The same physical unit came back a second time, so exactly one usable unit is in hand again.
         Assert.Equal(2m, fixture.Unit.ReturnedUsableQuantity(fixture.LineA));
         Assert.Equal(1m, fixture.Unit.ResendableQuantity(fixture.LineA));
+        // TB-258-R1: the FIRST source is fully committed by the live resend, so it can never fund a second branch.
+        Assert.Equal(0m, fixture.Unit.ResendableQuantity(fixture.ShipmentId, fixture.LineA));
+        Assert.Equal(1m, fixture.Unit.ResendableQuantity(firstResend.ShipmentId, fixture.LineA));
 
         var secondResend = fixture.Unit.CreateResendShipment(
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             firstResend.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
             null,
             null,
             "tb258-resend-H");
-        // A resend chain stays rooted at the parcel whose receipt funds it, so capacity can never fork between
-        // siblings of the same physical return: a resend of a resend links to the same chain root.
-        Assert.Equal(fixture.ShipmentId, secondResend.ResendOfShipmentId);
+        // TB-258-R1: immediate physical lineage is preserved — the next resend links the parcel that physically came
+        // back, never an ancestor it cannot draw capacity from.
+        Assert.Equal(firstResend.ShipmentId, secondResend.ResendOfShipmentId);
         Assert.Equal(fixture.ShippingGroupId, secondResend.ShippingGroupId);
+        Assert.Equal(0m, fixture.Unit.ResendableQuantity(firstResend.ShipmentId, fixture.LineA));
         Assert.Equal(0m, fixture.Unit.ResendableQuantity(fixture.LineA));
         var blocked = Assert.Throws<ContractOperationException>(() => fixture.Unit.CreateResendShipment(
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -443,6 +479,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -453,6 +490,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T4,
@@ -472,6 +510,7 @@ public sealed class PostDispatchException258Tests
             Guid.NewGuid(),
             () => Guid.NewGuid(),
             fixture.ShipmentId,
+            Actor,
             string.Empty,
             [(fixture.LineA, 1m)],
             T1,
@@ -513,8 +552,10 @@ public sealed class PostDispatchException258Tests
     private static Fixture ReturnedWithUsableCapacity()
     {
         var fixture = DispatchedParcel();
-        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "customer_unavailable", null, T1);
-        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, T2);
+        fixture.Unit.RecordShipmentNonDelivery(fixture.ShipmentId, "customer_unavailable", null, Actor,
+            T1);
+        fixture.Unit.StartShipmentReturn(fixture.ShipmentId, Actor,
+            T2);
         Receipt(fixture.Unit, fixture.ShipmentId, [(fixture.LineA, 1m, ReturnReceiptCondition.Usable)], T3);
         return fixture;
     }

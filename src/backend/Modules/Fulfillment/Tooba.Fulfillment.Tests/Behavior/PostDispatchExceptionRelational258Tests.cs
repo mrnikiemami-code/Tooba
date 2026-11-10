@@ -552,6 +552,258 @@ public sealed class PostDispatchExceptionRelational258Tests
         return (fulfillmentId, created.CreatedShipmentId);
     }
 
+    // ------------------------------------------------------------------ G/H/I: TB-258-R1 corrections
+
+    /// <summary>
+    /// R1-A on real storage: one occurrence answers only ITS reviewed intent. Retrying it returns the exact
+    /// recorded parcel even after the source capacity is consumed, a changed quantity/source is a typed
+    /// conflict with zero new rows, and a blank key is refused instead of allocating.
+    /// </summary>
+    [Fact]
+    public async Task G_one_occurrence_replays_its_exact_intent_and_never_answers_a_changed_request()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateDispatchedFixtureAsync("G", returnedUsable: true);
+        await using var lease = fixture.NewDirectory();
+        var key = $"tb258r1-G-{fixture.ShipmentId:N}";
+
+        var created = await lease.Directory.CreateResendShipmentAsync(
+            fixture.FulfillmentId,
+            fixture.ActorUserId,
+            fixture.ShipmentId,
+            [new AppModels.ShipmentLineCommand(fixture.LineAId, 1m)],
+            CancellationToken.None,
+            key);
+        Assert.Equal(1, await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipments where resend_of_shipment_id = @id",
+            ("id", fixture.ShipmentId)));
+
+        // Same occurrence + same intent: the recorded parcel, even though its capacity is already committed.
+        var replay = await lease.Directory.CreateResendShipmentAsync(
+            fixture.FulfillmentId,
+            fixture.ActorUserId,
+            fixture.ShipmentId,
+            [new AppModels.ShipmentLineCommand(fixture.LineAId, 1m)],
+            CancellationToken.None,
+            key);
+        Assert.Equal(created.CreatedShipmentId, replay.CreatedShipmentId);
+
+        // Same occurrence + a DIFFERENT quantity is a typed conflict, never the old parcel.
+        var changed = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            lease.Directory.CreateResendShipmentAsync(
+                fixture.FulfillmentId,
+                fixture.ActorUserId,
+                fixture.ShipmentId,
+                [new AppModels.ShipmentLineCommand(fixture.LineAId, 0.5m)],
+                CancellationToken.None,
+                key));
+        Assert.Equal("fulfillment.resend.intent_conflict", changed.Code);
+
+        // A blank occurrence would be a non-idempotent fallback, so it is refused outright.
+        var blank = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            lease.Directory.CreateResendShipmentAsync(
+                fixture.FulfillmentId,
+                fixture.ActorUserId,
+                fixture.ShipmentId,
+                [new AppModels.ShipmentLineCommand(fixture.LineAId, 1m)],
+                CancellationToken.None,
+                "   "));
+        Assert.Equal("fulfillment.resend.occurrence_required", blank.Code);
+
+        Assert.Equal(1, await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipments where resend_of_shipment_id = @id",
+            ("id", fixture.ShipmentId)));
+
+        // The resend parcels carry the operator who created them, readable from storage after the fact.
+        Assert.Equal(fixture.ActorUserId, await RawNullableGuidAsync(
+            fixture.Target,
+            "select created_by_user_id from fulfillment.shipments where shipment_id = @id",
+            ("id", created.CreatedShipmentId)));
+
+        fixture.Record(_output, $"G resend={created.CreatedShipmentId} replay=same intentConflicts=2 rows=1");
+    }
+
+    /// <summary>
+    /// R1-B on real storage: capacity belongs to the physically received source parcel. Two parcels of the
+    /// SAME order line each carrying one returned unit can never fund a two-unit resend from one of them,
+    /// and each keeps its own immediate ancestry.
+    /// </summary>
+    [Fact]
+    public async Task H_two_returned_sources_of_one_line_cannot_lend_capacity_to_each_other()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateDispatchedFixtureAsync("H", splitIntoTwoParcels: true);
+        await using var lease = fixture.NewDirectory();
+
+        async Task ReturnOneAsync(Guid shipmentId)
+        {
+            await lease.Directory.RecordNonDeliveryAsync(
+                fixture.FulfillmentId, shipmentId, fixture.ActorUserId, "refused", "TB258R1-H", CancellationToken.None);
+            await lease.Directory.StartReturnAsync(
+                fixture.FulfillmentId, shipmentId, fixture.ActorUserId, CancellationToken.None);
+            await lease.Directory.RecordReturnReceiptAsync(
+                fixture.FulfillmentId,
+                shipmentId,
+                fixture.ActorUserId,
+                [new AppModels.ReturnReceiptLineCommand(fixture.LineAId, 1m, ReturnReceiptCondition.Usable)],
+                "TB258R1-H",
+                CancellationToken.None);
+        }
+
+        var firstSource = fixture.ShipmentIds[0];
+        var secondSource = fixture.ShipmentIds[1];
+        await ReturnOneAsync(firstSource);
+        await ReturnOneAsync(secondSource);
+
+        // Two usable units exist on the order line, but only ONE of them belongs to the first parcel.
+        var borrow = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            lease.Directory.CreateResendShipmentAsync(
+                fixture.FulfillmentId,
+                fixture.ActorUserId,
+                firstSource,
+                [new AppModels.ShipmentLineCommand(fixture.LineAId, 2m)],
+                CancellationToken.None,
+                $"tb258r1-H-borrow-{firstSource:N}"));
+        Assert.Equal("fulfillment.resend.exceeds_returned", borrow.Code);
+        Assert.Equal(0, await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipments where resend_of_shipment_id = @id",
+            ("id", firstSource)));
+
+        var fromFirst = await lease.Directory.CreateResendShipmentAsync(
+            fixture.FulfillmentId,
+            fixture.ActorUserId,
+            firstSource,
+            [new AppModels.ShipmentLineCommand(fixture.LineAId, 1m)],
+            CancellationToken.None,
+            $"tb258r1-H-a-{firstSource:N}");
+        var fromSecond = await lease.Directory.CreateResendShipmentAsync(
+            fixture.FulfillmentId,
+            fixture.ActorUserId,
+            secondSource,
+            [new AppModels.ShipmentLineCommand(fixture.LineAId, 1m)],
+            CancellationToken.None,
+            $"tb258r1-H-b-{secondSource:N}");
+        Assert.NotEqual(fromFirst.CreatedShipmentId, fromSecond.CreatedShipmentId);
+
+        var snapshot = await lease.Directory.GetAsync(fixture.FulfillmentId, CancellationToken.None);
+        Assert.NotNull(snapshot);
+        // Immediate ancestry, never replaced by the root parcel.
+        Assert.Equal(firstSource, snapshot.Shipments.Single(x => x.ShipmentId == fromFirst.CreatedShipmentId).ResendOfShipmentId);
+        Assert.Equal(secondSource, snapshot.Shipments.Single(x => x.ShipmentId == fromSecond.CreatedShipmentId).ResendOfShipmentId);
+        // Each source is now fully consumed by its OWN resend.
+        Assert.Equal(0m, snapshot.Shipments
+            .Single(x => x.ShipmentId == firstSource).Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
+        Assert.Equal(0m, snapshot.Shipments
+            .Single(x => x.ShipmentId == secondSource).Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
+
+        var exhausted = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            lease.Directory.CreateResendShipmentAsync(
+                fixture.FulfillmentId,
+                fixture.ActorUserId,
+                firstSource,
+                [new AppModels.ShipmentLineCommand(fixture.LineAId, 1m)],
+                CancellationToken.None,
+                $"tb258r1-H-again-{firstSource:N}"));
+        Assert.Equal("fulfillment.resend.exceeds_returned", exhausted.Code);
+
+        fixture.Record(_output,
+            $"H first={firstSource}->{fromFirst.CreatedShipmentId} second={secondSource}->{fromSecond.CreatedShipmentId}");
+    }
+
+    /// <summary>
+    /// R1-C on real storage: one parcel line split across conditions (usable + damaged) persists exactly,
+    /// grants only its usable quantity, and cannot be replayed with different quantities.
+    /// </summary>
+    [Fact]
+    public async Task I_one_parcel_line_may_be_received_split_across_conditions_and_grants_only_the_usable_part()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateDispatchedFixtureAsync("I");
+        await using var lease = fixture.NewDirectory();
+        await lease.Directory.RecordNonDeliveryAsync(
+            fixture.FulfillmentId, fixture.ShipmentId, fixture.ActorUserId, "refused", "TB258R1-I", CancellationToken.None);
+        await lease.Directory.StartReturnAsync(
+            fixture.FulfillmentId, fixture.ShipmentId, fixture.ActorUserId, CancellationToken.None);
+
+        var receipt = await lease.Directory.RecordReturnReceiptAsync(
+            fixture.FulfillmentId,
+            fixture.ShipmentId,
+            fixture.ActorUserId,
+            [
+                new AppModels.ReturnReceiptLineCommand(fixture.LineAId, 1m, ReturnReceiptCondition.Usable),
+                new AppModels.ReturnReceiptLineCommand(fixture.LineAId, 1m, ReturnReceiptCondition.Damaged),
+                new AppModels.ReturnReceiptLineCommand(fixture.LineBId, 1m, ReturnReceiptCondition.Usable),
+            ],
+            "TB258R1-I mixed receipt",
+            CancellationToken.None);
+
+        var parcel = receipt.Shipments.Single(x => x.ShipmentId == fixture.ShipmentId);
+        Assert.Equal(3, parcel.ReturnReceipt!.Items.Count);
+        // 2 units of lineA physically came back, but only 1 of them is resendable.
+        Assert.Equal(1m, parcel.Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
+        Assert.Equal(3, await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipment_return_receipt_items i "
+            + "join fulfillment.shipment_return_receipts r on r.shipment_return_receipt_id = i.shipment_return_receipt_id "
+            + "where r.shipment_id = @id",
+            ("id", fixture.ShipmentId)));
+
+        // The owning path persisted the operator identity, so the audit trail is durable and not an ignored argument.
+        Assert.Equal(fixture.ActorUserId, await RawNullableGuidAsync(
+            fixture.Target,
+            "select received_by_user_id from fulfillment.shipment_return_receipts where shipment_id = @id",
+            ("id", fixture.ShipmentId)));
+        Assert.Equal(fixture.ActorUserId, await RawNullableGuidAsync(
+            fixture.Target,
+            "select non_delivered_by_user_id from fulfillment.shipments where shipment_id = @id",
+            ("id", fixture.ShipmentId)));
+        Assert.Equal(fixture.ActorUserId, await RawNullableGuidAsync(
+            fixture.Target,
+            "select return_started_by_user_id from fulfillment.shipments where shipment_id = @id",
+            ("id", fixture.ShipmentId)));
+
+        var resend = await lease.Directory.CreateResendShipmentAsync(
+            fixture.FulfillmentId,
+            fixture.ActorUserId,
+            fixture.ShipmentId,
+            [new AppModels.ShipmentLineCommand(fixture.LineAId, 1m)],
+            CancellationToken.None,
+            $"tb258r1-I-{fixture.ShipmentId:N}");
+        Assert.NotEqual(Guid.Empty, resend.CreatedShipmentId);
+
+        var overReceived = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            lease.Directory.RecordReturnReceiptAsync(
+                fixture.FulfillmentId,
+                fixture.ShipmentId,
+                fixture.ActorUserId,
+                [new AppModels.ReturnReceiptLineCommand(fixture.LineAId, 2m, ReturnReceiptCondition.Damaged)],
+                "TB258R1-I changed",
+                CancellationToken.None));
+        Assert.Contains(overReceived.Code, new[]
+        {
+            "fulfillment.return.receipt_already_recorded",
+            "fulfillment.return.receipt_conflict",
+        });
+
+        fixture.Record(_output,
+            $"I receiptLines=3 lineAusable=1 resend={resend.CreatedShipmentId} changedReceiptRefused={overReceived.Code}");
+    }
+
     // ---- fixture -------------------------------------------------------------------------------
 
     private sealed record Fixture(
@@ -794,6 +1046,28 @@ public sealed class PostDispatchExceptionRelational258Tests
         }
 
         return Convert.ToInt32(await command.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Reads one nullable uuid column straight from storage, so a task-labelled fact proves the operator identity the
+    /// owning path actually persisted (never an ignored in-memory actor argument).
+    /// </summary>
+    private static async Task<Guid?> RawNullableGuidAsync(
+        NpgsqlConnectionStringBuilder target,
+        string sql,
+        params (string Name, object Value)[] parameters)
+    {
+        await using var connection = new NpgsqlConnection(target.ConnectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        foreach (var parameter in parameters)
+        {
+            command.Parameters.AddWithValue(parameter.Name, parameter.Value);
+        }
+
+        var value = await command.ExecuteScalarAsync();
+        return value is null or DBNull ? null : (Guid)value;
     }
 
     /// <summary>Holds both concurrent writers inside their save so the serializable allocation guard is real.</summary>

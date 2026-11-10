@@ -41,6 +41,11 @@ import {
   readOperationalGroupAttempt,
   resolveOperationalGroupAttempt,
 } from "./operational-group-occurrence-store.ts";
+import {
+  PostDispatchExceptionDialog,
+  readPostDispatchAttempt,
+  type PostDispatchExceptionRequest,
+} from "../../features/order-operational-groups/index.ts";
 import { ADMIN_ACTOR_STORAGE_KEY } from "../../lib/admin/admin-result.ts";
 
 const CHECKOUT = "c1";
@@ -1862,4 +1867,174 @@ test("TB-258 mounted: a refused exception keeps the review open with one inline 
   } finally {
     restoreFetch();
   }
+});
+
+/* ──────────────────── TB-258-R1: retained reviewed request safety ─────────────────── */
+
+function resetPostDispatchAttempts() {
+  for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+    const key = sessionStorage.key(index);
+    if (key && key.startsWith("tb.post-dispatch-attempt.")) sessionStorage.removeItem(key);
+  }
+}
+
+const R1_SCOPE = {
+  viewerScopeKey: "admin:r1-viewer-a",
+  checkoutId: "c-r1",
+  fulfillmentId: "f-r1",
+  sourceShipmentId: "sh-r1",
+  mode: "resend_shipment" as const,
+};
+
+function r1Lines(resendableQuantity: number) {
+  return [{
+    orderLineId: "ol1",
+    title: "شال آرمان",
+    parcelQuantity: 2,
+    resendableQuantity,
+    returnedUsableQuantity: 2,
+    returnedDamagedQuantity: 0,
+  }];
+}
+
+function r1Dialog(
+  lines: ReturnType<typeof r1Lines>,
+  onSubmit: (request: PostDispatchExceptionRequest) => Promise<boolean>,
+  scope: typeof R1_SCOPE = R1_SCOPE,
+) {
+  return createElement(PostDispatchExceptionDialog, {
+    open: true,
+    mode: scope.mode,
+    parcelLabel: "TRK-R1",
+    parcelKey: scope.sourceShipmentId,
+    attemptScope: scope,
+    lines,
+    pending: false,
+    errorFa: null,
+    onClose: () => undefined,
+    onSubmit,
+  });
+}
+
+test("TB-258-R1 mounted: a lines refresh never resets the open review or mints a new occurrence", async () => {
+  resetPostDispatchAttempts();
+  const requests: PostDispatchExceptionRequest[] = [];
+  const submit = async (request: PostDispatchExceptionRequest) => {
+    requests.push(request);
+    return true;
+  };
+  const mounted = await mount(r1Dialog(r1Lines(2), submit));
+  await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']").length === 1);
+
+  // The operator edits the reviewed quantity away from the default.
+  await setInputValue(q(mounted.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']"), "1");
+
+  // A harmless rerender with a NEW lines array (same facts) must not recreate the review.
+  await mounted.rerender(r1Dialog([...r1Lines(2)], submit));
+  await flush();
+  const qty = q(mounted.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']") as HTMLInputElement;
+  assert.equal(qty.value, "1", "the edited quantity survives a lines reference change");
+  assert.ok(
+    !qq(mounted.container, `[data-testid='admin-order-post-dispatch-retained-sh-r1']`).length,
+    "an untouched open review is not a retained attempt",
+  );
+
+  await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']"));
+  await flush();
+  assert.equal(requests.length, 1);
+  assert.deepEqual(requests[0], {
+    code: "resend_shipment",
+    selections: [{ orderLineId: "ol1", quantity: 1 }],
+    idempotencyKey: (requests[0] as { idempotencyKey: string }).idempotencyKey,
+  });
+  assert.ok(String((requests[0] as { idempotencyKey: string }).idempotencyKey).length > 0);
+  // Completion cleared the envelope, so a deliberate next review is a new occurrence.
+  assert.equal(readPostDispatchAttempt(R1_SCOPE), null);
+  await mounted.unmount();
+});
+
+test("TB-258-R1 mounted: two same-tick submits send exactly one mutation with one occurrence", async () => {
+  resetPostDispatchAttempts();
+  const requests: PostDispatchExceptionRequest[] = [];
+  const submit = async (request: PostDispatchExceptionRequest) => {
+    requests.push(request);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    return true;
+  };
+  const mounted = await mount(r1Dialog(r1Lines(2), submit));
+  await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']").length === 1);
+  await clickBurst(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']"), 3);
+  await waitFor(() => requests.length >= 1);
+  await flush();
+  assert.equal(requests.length, 1, "one reviewed action is one mutation");
+  await mounted.unmount();
+});
+
+test("TB-258-R1 mounted: uncertain outcome + remount + consumed capacity reconciles the EXACT saved request", async () => {
+  resetPostDispatchAttempts();
+  const requests: PostDispatchExceptionRequest[] = [];
+  let accept = false;
+  const submit = async (request: PostDispatchExceptionRequest) => {
+    requests.push(request);
+    return accept;
+  };
+
+  const first = await mount(r1Dialog(r1Lines(2), submit));
+  await waitFor(() => qq(first.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']").length === 1);
+  await setInputValue(q(first.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']"), "2");
+  await click(q(first.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']"));
+  await flush();
+  assert.equal(requests.length, 1, "the request really left the browser");
+  // Network loss / 5xx: the review is retained instead of being thrown away.
+  assert.ok(qq(first.container, "[data-testid='admin-order-post-dispatch-retained-sh-r1']").length === 1);
+  const recorded = readPostDispatchAttempt(R1_SCOPE);
+  assert.ok(recorded, "the complete envelope is durable before/after the mutation");
+  assert.deepEqual(recorded!.request.selections, [{ orderLineId: "ol1", quantity: 2 }]);
+  await first.unmount();
+
+  // Remount after the parcel changed: fresh usable capacity is now 0 (partial progress server-side).
+  const second = await mount(r1Dialog(r1Lines(0), submit));
+  await waitFor(() => qq(second.container, "[data-testid='admin-order-post-dispatch-retained-sh-r1']").length === 1);
+  assert.equal(
+    qq(second.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']").length,
+    0,
+    "a changed review cannot replace the unresolved attempt",
+  );
+
+  accept = true;
+  await click(q(second.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']"));
+  await waitFor(() => requests.length === 2);
+  await flush();
+  assert.deepEqual(requests[1], requests[0], "reconcile submits the SAME occurrence and payload verbatim");
+  assert.equal(readPostDispatchAttempt(R1_SCOPE), null, "authoritative completion clears the envelope");
+  await second.unmount();
+});
+
+test("TB-258-R1 store: another viewer never inherits the retained request", async () => {
+  resetPostDispatchAttempts();
+  let accept = false;
+  const submit = async () => accept;
+  const viewerA = await mount(r1Dialog(r1Lines(2), submit));
+  await waitFor(() => qq(viewerA.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']").length === 1);
+  await click(q(viewerA.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']"));
+  await flush();
+  assert.ok(readPostDispatchAttempt(R1_SCOPE));
+  await viewerA.unmount();
+
+  const viewerBScope = { ...R1_SCOPE, viewerScopeKey: "admin:r1-viewer-b" };
+  accept = true;
+  const viewerB = await mount(r1Dialog(r1Lines(2), submit, viewerBScope));
+  await waitFor(() => qq(viewerB.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']").length === 1);
+  assert.equal(
+    qq(viewerB.container, "[data-testid='admin-order-post-dispatch-retained-sh-r1']").length,
+    0,
+    "viewer B reviews its own request",
+  );
+  assert.equal(readPostDispatchAttempt({ ...R1_SCOPE, viewerScopeKey: "admin:r1-viewer-b" }), null);
+  await click(q(viewerB.container, "[data-testid='admin-order-post-dispatch-submit-sh-r1']"));
+  await flush();
+  // Viewer B's completed review never touched viewer A's retained envelope.
+  assert.ok(readPostDispatchAttempt(R1_SCOPE));
+  await viewerB.unmount();
+  resetPostDispatchAttempts();
 });

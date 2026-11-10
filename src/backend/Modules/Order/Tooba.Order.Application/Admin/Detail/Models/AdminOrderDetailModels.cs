@@ -31,7 +31,15 @@ public sealed record AdminOrderLineView(
     decimal? DeliveredQuantity = null);
 
 /// <summary>خط تخصیص‌یافته در مرسولهٔ فروشنده.</summary>
-public sealed record AdminShipmentLineView(Guid OrderLineId, decimal Quantity);
+/// <param name="OrderLineId">خط سفارش.</param>
+/// <param name="Quantity">مقدار تخصیص‌یافته در این مرسوله.</param>
+/// <param name="ResendableQuantity">
+/// TB-258-R1: capacity physically received back on THIS parcel for this line and not yet resent from it.
+/// </param>
+public sealed record AdminShipmentLineView(
+    Guid OrderLineId,
+    decimal Quantity,
+    decimal ResendableQuantity = 0);
 
 /// <summary>کارت مرسولهٔ یک فروشنده روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminShipmentView(
