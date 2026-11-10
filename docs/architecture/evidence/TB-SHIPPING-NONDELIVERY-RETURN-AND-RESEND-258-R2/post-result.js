@@ -1,27 +1,38 @@
-// Posts the TB-258-R2 worker result, completes the claimed task row and returns the heartbeat to Idle.
+// Posts the TB-258-R2 worker result, completes the task row and returns the heartbeat to Idle.
 // Run ONLY after every code/doc/commit/push step of this task is finished.
 const fs = require("node:fs");
 const path = require("node:path");
 const body = fs.readFileSync(path.join(__dirname, "result-contract.txt"), "utf8");
 const TASK_ROW = "bae9b687-2111-4e2c-abcf-f0c8497a71cb";
+const BASE = "http://127.0.0.1:17321";
+const post = async (url, payload) => {
+  const r = await fetch(BASE + url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: payload === undefined ? undefined : JSON.stringify(payload),
+  });
+  const text = await r.text();
+  console.log(url, r.status, text.slice(0, 400));
+  return r.status;
+};
 (async () => {
-  const r = await fetch("http://127.0.0.1:17321/api/results", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ taskId: TASK_ROW, channelId: "tooba-main", workerId: "tooba-worker-01", agentType: "cursor", content: body }),
+  await post("/api/workers/heartbeat", {
+    workerId: "tooba-worker-01",
+    channelId: "tooba-main",
+    agentType: "cursor",
+    status: "Working",
   });
-  console.log("result", r.status, (await r.text()).slice(0, 300));
-  if (r.status >= 300) return;
-  const c = await fetch(`http://127.0.0.1:17321/api/tasks/${TASK_ROW}/complete`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ workerId: "tooba-worker-01" }),
+  const s = await post("/api/results", {
+    channelId: "tooba-main",
+    taskId: TASK_ROW,
+    content: body,
   });
-  console.log("complete", c.status, (await c.text()).slice(0, 160));
-  const hb = await fetch("http://127.0.0.1:17321/api/workers/heartbeat", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ workerId: "tooba-worker-01", channelId: "tooba-main", agentType: "cursor", status: "Idle" }),
+  if (s >= 300) return;
+  await post(`/api/tasks/${TASK_ROW}/complete`, undefined);
+  await post("/api/workers/heartbeat", {
+    workerId: "tooba-worker-01",
+    channelId: "tooba-main",
+    agentType: "cursor",
+    status: "Idle",
   });
-  console.log("hb", hb.status);
 })();

@@ -15,7 +15,7 @@ Expected-Base-Relation: ANCESTOR_OF_BASE (issue/review/recovery doc commits are 
 Code-SHA: ce4eb7956b806b71669dfd6781d07dc489a10664
 Evidence-SHA: 13112af098c976982c7b7b4897cfca7ccfd8b014
 Merge-SHA: NONE (no merge commit; two fast-forward commits on main)
-HEAD: main == origin/main after the evidence push (this contract's own follow-up commit is the tip; fast-forward, no force, no amend)
+HEAD: main == origin/main at handoff (fast-forward pushes only; no force, no amend, no rebase)
 Stop-State: STOP_FOR_ARCHITECT
 automaticNextImplementationTask: NONE
 
