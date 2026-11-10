@@ -1,3 +1,14 @@
+# CURRENT —260 review PARTIAL; bounded260-R1 ISSUED —2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/ARCHITECT-REVIEW.md.
+Only task docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md.
+Concrete source defect: queue still one FulfillmentUnit/seller row, classifies all seller plans with aggregate pending, targets earliest group regardless of actual work. Already dispatched today group can falsely make tomorrow pending group overdue; separate parcels collapse/common parent duplicates. Target summary also labels Created parcel no-work when remaining allocation0.
+Keep accepted pure timing/finance-free shared UI. Fix physical row identity + own plan/status/locator/count/paging; focused A–E only, no whole-suite/base parity/green repeat/screenshot loop. No261.
+Ledger save closed; issues1–4 accepted (4/5); issue5 PARTIAL260-R1. Final user handoff after correction review; no claim completed5/5 yet.
+Same tooba_alpha5432,3000/5088 SingleStore/store-alpha; no extra DB/Docker/15433/edition switch. User rows read-only, minimal labelled production-path fixtures permitted. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Older CURRENT superseded.
+
+---
+
 # CURRENT — 260 WORKER RESULT PASS: durable due dispatch work queue + finance-free shared operational order view — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/TASK.md and
