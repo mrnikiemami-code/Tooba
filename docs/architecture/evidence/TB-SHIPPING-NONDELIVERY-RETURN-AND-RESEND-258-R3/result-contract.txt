@@ -1,4 +1,4 @@
-BEGIN_TOOBA_WORKER_RESULT
+﻿BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3
 Parent-Task: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2
 Channel: tooba-main
@@ -10,9 +10,9 @@ Status: PASS
 Decision: CANCELLED_INTENT_EXACT_IDENTITY_BEFORE_RESULT_AND_NEW_SEND_REFUSED_WITHOUT_RELOAD_DURABLE_ENVELOPE
 Base-SHA: a56814cb7ea97126bcab08da45b1886449fd3bab
 Work-Base-SHA: 5104375d5
-Code-SHA: <in task commit>
-Merge-SHA: <in task commit>
-Evidence-SHA: <in task commit>
+Code-SHA: a0d6fc9394db93486fd36868bddbc5bfbab63407
+Merge-SHA: a0d6fc9394db93486fd36868bddbc5bfbab63407
+Evidence-SHA: a0d6fc9394db93486fd36868bddbc5bfbab63407
 HEAD: == origin/main after the task commit
 Stop-State: STOP_FOR_ARCHITECT
 automaticNextImplementationTask: NONE

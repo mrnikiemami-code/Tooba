@@ -1,4 +1,4 @@
-# RESULT — TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3
+﻿# RESULT — TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3
 
 Status: **PASS** within the issued two-gap repair scope.
 Decision: **CANCELLED_INTENT_EXACT_IDENTITY_BEFORE_RESULT_AND_NEW_SEND_REFUSED_WITHOUT_RELOAD_DURABLE_ENVELOPE**.
@@ -7,7 +7,7 @@ This is NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT.
 
 - Expected base: `a56814cb7ea97126bcab08da45b1886449fd3bab`
 - Working-tree base: `5104375d5` (Architect issue/docs commits only; expected base is an ancestor)
-- Code/evidence SHA: recorded in the task commit
+- Code/evidence SHA: `a0d6fc9394db93486fd36868bddbc5bfbab63407` (code + evidence; this SHA-bearing note is a follow-up docs commit)
 - Worker: one, no parallel task. `STOP_FOR_ARCHITECT`; automaticNext NONE.
 
 ## A. A cancelled occurrence answers only its EXACT intent
