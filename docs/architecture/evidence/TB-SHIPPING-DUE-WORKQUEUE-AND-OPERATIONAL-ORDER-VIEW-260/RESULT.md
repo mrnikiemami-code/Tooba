@@ -185,3 +185,22 @@ Frontend
 * `src/frontend/app/admin/admin-order-operations-view.mount.test.ts` (new)
 
 No schema, no migration, no Host/global CSS redesign, no `app/admin` flat-folder file, no new page framework.
+
+## 8. Final user handoff — trial route and checklist (five repaired defects)
+
+**Start here:** `http://127.0.0.1:3000/fa/admin/fulfillments` (queue) → «عملیات ارسال» on any row →
+`…/operations` (shared finance-free view) → «بازگشت به صف کار» keeps the filter.
+
+| # | Defect | Where to look | What to expect | Honest limit |
+| --- | --- | --- | --- | --- |
+| 1 | Tracking generator duplicates | queue row → order operations → parcel card → «تولید خودکار» → «ثبت کد رهگیری» | one whole-identity `TRK-<32 hex>` code per parcel; a second parcel never receives the same code; a taken code retries itself instead of repeating | no live Tipax / no provider waybill; historical short codes are not backfilled |
+| 2 | Wrong remaining quantity | order operations → group card and «ایجاد مرسوله» | `packed − shipped − open` only; a wholly shipped group shows no executable line and **no** dead-end create entry | — |
+| 3 | No non-delivery / return / resend | dispatched parcel card → «ثبت عدم تحویل» → «برگشت به مبدأ» → «تأیید دریافت در مبدأ» → «ارسال مجدد» | history/tracking preserved; only physically received usable quantity is resendable, once; resend is a NEW linked parcel | origin receipt is a one-time final receipt; damaged grants no saleable stock; a parent PACKAGE return stays explicitly locked/unsupported |
+| 4 | Shared group forced one common package | compatible group → «آماده‌سازی ارسال گروه» | two choices «یک بستهٔ مشترک» / «مرسوله‌های جدا»; separate = member parcels, zero package rows, still complete | no arbitrary bin-packing/optimizer; one reviewed parcel per selected member |
+| 5 | No due queue / no shared operational view | `/fa/admin/fulfillments` (tabs + counts, «موعد ارسال», «اقدام بعدی») and the operations route | server buckets from the durable accepted plan only; customer promise shown separately; one action entry per row; same operational components, no finance panels | existing canonical orders carry no accepted plan → they truthfully show «موعد ارسال مشخص نشده»; plan-bearing classification is proven by the tag tests/fixtures, not by a live plan-bearing checkout |
+
+Widths to try: 1440 / 1024 / 390 (RTL, no horizontal document overflow, 44px targets in the queue and the
+operational frame). Legacy read-only reference order: `01a1b92d-e97e-7000-999a-143350d0edaf`.
+
+Not claimed by this handoff: Architect ACCEPT, user visual/functional acceptance, live provider behaviour, or a
+live Marketplace multi-seller checkout.

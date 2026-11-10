@@ -1,0 +1,6 @@
+# Architect review — 259 — ACCEPT within issue4 scope
+2026-11-10; independently reviewed main bb18f62d294e81ce86b8a09ae3eb8e2b5c84c873, owning workflow/occurrence completion/public orchestration and reported focused relational/mounted evidence.
+Accepted: packing mode is immutable occurrence intent; common preserves package result; separate persists explicit Completed with exact member links and no package; public recorded reconciliation precedes fresh readiness with current actor/group/fingerprint verification. Historical common envelope compatibility retained. One compatible operational group is independent of physical packing.
+This is source/evidence acceptance, not independent Windows test execution, user visual acceptance, live Marketplace checkout or carrier proof. Positive Marketplace fixtures are controlled domain/application evidence in canonical SingleStore DB; no Store owner promotion.
+Retain limits: one constituent parcel per member, locked package child refusal, no parent non-delivery/return lifecycle, no live Tipax. No blocking source defect identified within issued packing-choice scope. Do not broaden/retest without concrete regression.
+Ledger save closed; issues1–3 accepted; issue4 accepted259 (4/5). Next ONLY260. Final user handoff after review260. No test loops.
