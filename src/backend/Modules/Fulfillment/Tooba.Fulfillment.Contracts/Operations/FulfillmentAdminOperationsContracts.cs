@@ -48,6 +48,15 @@ public enum ShipmentOperationStatus
 
     /// <summary>Cancelled.</summary>
     Cancelled = 5,
+
+    /// <summary>TB-258: post-dispatch non-delivery attempt recorded (not delivered, not cancelled).</summary>
+    NonDelivered = 6,
+
+    /// <summary>TB-258: the carrier is physically returning the parcel to origin.</summary>
+    Returning = 7,
+
+    /// <summary>TB-258: origin receipt confirmed; received usable quantity may be resent.</summary>
+    Returned = 8,
 }
 
 /// <summary>Consolidated package status exposed through the admin operations contract.</summary>
@@ -89,7 +98,86 @@ public sealed record ShipmentSnapshot(
     /// TB-253-R3: durable occurrence-scoped allocation key recorded on the shipment itself.
     /// Recovery reads exact recorded parcels by this key instead of guessing by aggregate quantity.
     /// </summary>
-    string? ShippingDispatchKey = null);
+    string? ShippingDispatchKey = null,
+    /// <summary>TB-258: the failed/returned original this parcel resends; null for a first dispatch.</summary>
+    Guid? ResendOfShipmentId = null,
+    /// <summary>TB-258: non-delivery reason code recorded by an operator (internal fact, not a provider code).</summary>
+    string? NonDeliveryReason = null,
+    /// <summary>TB-258: operator note of the non-delivery attempt.</summary>
+    string? NonDeliveryNote = null,
+    /// <summary>TB-258: server-recorded non-delivery time.</summary>
+    DateTimeOffset? NonDeliveredAt = null,
+    /// <summary>TB-258: when the carrier started returning the parcel.</summary>
+    DateTimeOffset? ReturnStartedAt = null,
+    /// <summary>TB-258: when the origin receipt was confirmed.</summary>
+    DateTimeOffset? ReturnedAt = null,
+    /// <summary>TB-258: recorded physical origin receipt (null until the parcel is received back).</summary>
+    ReturnReceiptSnapshot? ReturnReceipt = null);
+
+/// <summary>TB-258: physical condition of a received returned line; only Usable may be resent.</summary>
+public enum ReturnReceiptCondition
+{
+    /// <summary>Received and physically usable.</summary>
+    Usable = 0,
+
+    /// <summary>Received but damaged / not resendable.</summary>
+    Damaged = 1,
+}
+
+/// <summary>TB-258: the recorded origin receipt of one returned parcel.</summary>
+public sealed record ReturnReceiptSnapshot(
+    Guid ReceivedReceiptId,
+    DateTimeOffset ReceivedAt,
+    Guid ReceivedByUserId,
+    string? Note,
+    IReadOnlyList<ReturnReceiptLineSnapshot> Items)
+{
+    /// <summary>Physically usable received quantity of the whole receipt.</summary>
+    public decimal UsableQuantity => Items
+        .Where(x => x.Condition == ReturnReceiptCondition.Usable)
+        .Sum(x => x.Quantity);
+}
+
+/// <summary>TB-258: one received line of an origin receipt.</summary>
+public sealed record ReturnReceiptLineSnapshot(
+    Guid OrderLineId,
+    decimal Quantity,
+    ReturnReceiptCondition Condition);
+
+/// <summary>TB-258: one physically received line submitted with an origin receipt.</summary>
+public sealed record ReturnReceiptLineCommand(
+    Guid OrderLineId,
+    decimal Quantity,
+    ReturnReceiptCondition Condition = ReturnReceiptCondition.Usable);
+
+/// <summary>TB-258: operator reason codes for a post-dispatch non-delivery attempt.</summary>
+public static class FulfillmentNonDeliveryReasons
+{
+    /// <summary>Customer was not reachable at the address.</summary>
+    public const string CustomerUnavailable = "customer_unavailable";
+
+    /// <summary>Address could not be located.</summary>
+    public const string AddressNotFound = "address_not_found";
+
+    /// <summary>Recipient refused to accept the parcel.</summary>
+    public const string Refused = "refused";
+
+    /// <summary>Any other documented operational reason.</summary>
+    public const string Other = "other";
+
+    /// <summary>The complete allowed set; the server rejects anything else.</summary>
+    public static readonly IReadOnlyList<string> All =
+    [
+        CustomerUnavailable,
+        AddressNotFound,
+        Refused,
+        Other,
+    ];
+
+    /// <summary>True when the code is one of the server-owned reasons.</summary>
+    public static bool IsKnown(string? reason) =>
+        reason is not null && All.Contains(reason.Trim(), StringComparer.Ordinal);
+}
 
 /// <summary>Fulfillment line projection with per-stage quantities.</summary>
 public sealed record FulfillmentItemSnapshot(
@@ -99,7 +187,16 @@ public sealed record FulfillmentItemSnapshot(
     decimal QuantityShipped,
     Guid? ReservationId,
     decimal QuantityPacked = 0,
-    decimal QuantityProcessing = 0);
+    decimal QuantityProcessing = 0,
+    Guid? ShippingGroupId = null,
+    /// <summary>TB-258: physically received usable returned quantity of this line.</summary>
+    decimal ReturnedUsableQuantity = 0,
+    /// <summary>TB-258: returned capacity committed to non-cancelled resend parcels.</summary>
+    decimal ResendCommittedQuantity = 0,
+    /// <summary>TB-258: returned capacity still available for a new resend parcel (separate from packed remainder).</summary>
+    decimal ResendableQuantity = 0,
+    /// <summary>TB-258: quantity actually delivered (derived from delivered parcels, not from shipped).</summary>
+    decimal DeliveredQuantity = 0);
 
 /// <summary>Seller fulfillment projection for admin operations.</summary>
 public sealed record FulfillmentSnapshot(
@@ -288,6 +385,49 @@ public interface IFulfillmentAdminOperations
         Guid shipmentId,
         Guid actorUserId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-258: record a post-dispatch courier non-delivery attempt. Internal audited fact — never a provider
+    /// cancellation, never a fake delivery and never a cancel-after-dispatch shortcut.
+    /// </summary>
+    Task<FulfillmentSnapshot> RecordNonDeliveryAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string reason,
+        string? note,
+        CancellationToken cancellationToken);
+
+    /// <summary>TB-258: the carrier started bringing the failed parcel back to origin.</summary>
+    Task<FulfillmentSnapshot> StartReturnAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-258: confirm the physical origin receipt exactly once. Only usable received quantity becomes resendable;
+    /// an identical replay reconciles, a different payload is a typed conflict.
+    /// </summary>
+    Task<FulfillmentSnapshot> RecordReturnReceiptAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        IReadOnlyList<ReturnReceiptLineCommand> items,
+        string? note,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-258: allocate a NEW resend parcel occurrence for returned goods against the recorded origin receipt,
+    /// reusing the accepted shipping group/method of the original and never the fresh packed remainder.
+    /// </summary>
+    Task<FulfillmentShipmentCreateResult> CreateResendShipmentAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        Guid originalShipmentId,
+        IReadOnlyList<ShipmentLineCommand> items,
+        CancellationToken cancellationToken,
+        string? shippingDispatchKey = null);
 
     /// <summary>Create a multi-seller consolidated package.</summary>
     Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(

@@ -24,8 +24,12 @@ import {
 import {
   AdminOperationalGroupWorkflowDialog,
   OperationalDeliveryTimeline,
+  PostDispatchExceptionDialog,
   type OperationalGroupDialogRequest,
   type OperationalGroupDialogRow,
+  type PostDispatchExceptionMode,
+  type PostDispatchExceptionRequest,
+  type PostDispatchParcelLine,
 } from "../../features/order-operational-groups";
 
 export type OperationalCreateTarget = {
@@ -39,6 +43,14 @@ export type OperationalParcelCapabilities = {
   canDispatch: boolean;
   canDeliver: boolean;
   canCancel: boolean;
+  /** TB-258: the dispatched, not-yet-delivered parcel may be recorded as non-delivered. */
+  canRecordNonDelivery: boolean;
+  /** TB-258: a recorded non-delivery may start the physical return to origin. */
+  canStartReturn: boolean;
+  /** TB-258: a returning parcel may confirm its physical origin receipt. */
+  canRecordReturnReceipt: boolean;
+  /** TB-258: usable returned quantity may fund a new resend parcel. */
+  canResend: boolean;
 };
 
 /**
@@ -88,13 +100,27 @@ type Props = {
   parcelCapabilities?: (seller: AdminSellerOrder, shipment: AdminShipment) => OperationalParcelCapabilities;
   onParcelTrack?: (seller: AdminSellerOrder, shipment: AdminShipment) => void;
   onParcelOperation?: (seller: AdminSellerOrder, code: string, shipmentId: string) => void;
+  /**
+   * TB-258: the reviewed post-dispatch exception (non-delivery / return / origin receipt / resend).
+   * Returns true only when the server accepted it; a refusal keeps the review open with the server text.
+   */
+  onParcelException?: (
+    seller: AdminSellerOrder,
+    shipmentId: string,
+    request: PostDispatchExceptionRequest,
+  ) => Promise<boolean> | boolean;
 };
 
+/** No permitted action: a cancelled, package-owned, or pending parcel exposes nothing here. */
 const NO_PARCEL_ACTIONS: OperationalParcelCapabilities = {
   canTrack: false,
   canDispatch: false,
   canDeliver: false,
   canCancel: false,
+  canRecordNonDelivery: false,
+  canStartReturn: false,
+  canRecordReturnReceipt: false,
+  canResend: false,
 };
 
 function lineKey(line: AdminOrderLine): string {
@@ -214,6 +240,7 @@ export function AdminOrderOperationalDeliverySection({
   parcelCapabilities,
   onParcelTrack,
   onParcelOperation,
+  onParcelException,
 }: Props) {
   const groups = detail.operationalDeliveryGroups ?? [];
   if (groups.length === 0) {
@@ -259,6 +286,7 @@ export function AdminOrderOperationalDeliverySection({
             parcelCapabilities={parcelCapabilities}
             onParcelTrack={onParcelTrack}
             onParcelOperation={onParcelOperation}
+            onParcelException={onParcelException}
           />
         ))}
       </div>
@@ -276,6 +304,7 @@ function OperationalCard({
   parcelCapabilities,
   onParcelTrack,
   onParcelOperation,
+  onParcelException,
 }: {
   group: AdminOperationalDeliveryGroup;
   detail: AdminOrderDetail;
@@ -286,6 +315,7 @@ function OperationalCard({
   parcelCapabilities?: Props["parcelCapabilities"];
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
+  onParcelException?: Props["onParcelException"];
 }) {
   /** TB-253-R4: retained attempt of this checkout/group/scope; it survives remounts. */
   const [retainedAttempt, setRetainedAttempt] = useState<OperationalGroupAttempt | null>(null);
@@ -432,6 +462,7 @@ function OperationalCard({
             parcelCapabilities={parcelCapabilities}
             onParcelTrack={onParcelTrack}
             onParcelOperation={onParcelOperation}
+            onParcelException={onParcelException}
             onCreateShipment={onCreateShipment}
           />
         </div>
@@ -597,6 +628,7 @@ function GroupParcels({
   parcelCapabilities,
   onParcelTrack,
   onParcelOperation,
+  onParcelException,
   onCreateShipment,
 }: {
   detail: AdminOrderDetail;
@@ -607,8 +639,67 @@ function GroupParcels({
   parcelCapabilities?: Props["parcelCapabilities"];
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
+  onParcelException?: Props["onParcelException"];
   onCreateShipment: (target: OperationalCreateTarget) => void;
 }) {
+  /** TB-258: the ONE open post-dispatch review; it is bound to one parcel and one mode at a time. */
+  const [exception, setException] = useState<{
+    seller: AdminSellerOrder;
+    shipment: AdminShipment;
+    mode: PostDispatchExceptionMode;
+  } | null>(null);
+  const [exceptionErrorFa, setExceptionErrorFa] = useState<string | null>(null);
+  const [exceptionPending, setExceptionPending] = useState(false);
+
+  const exceptionLines = useMemo<PostDispatchParcelLine[]>(() => {
+    if (!exception) return [];
+    const sellerLines = new Map(exception.seller.lines.map((line) => [lineKey(line), line]));
+    return exception.shipment.lines.map((line) => {
+      const source = sellerLines.get(line.orderLineId);
+      return {
+        orderLineId: line.orderLineId,
+        title: source?.title ?? "قلم سفارش",
+        parcelQuantity: line.quantity,
+        resendableQuantity: Math.max(0, source?.resendableQuantity ?? 0),
+        returnedUsableQuantity: Math.max(0, source?.returnedUsableQuantity ?? 0),
+        returnedDamagedQuantity: Math.max(
+          0,
+          (exception.shipment.returnReceiptLines ?? [])
+            .filter((r) => r.orderLineId === line.orderLineId)
+            .filter((r) => r.condition === "Damaged" || r.condition === "1")
+            .reduce((sum, r) => sum + r.quantity, 0),
+        ),
+      };
+    });
+  }, [exception]);
+
+  async function submitException(request: PostDispatchExceptionRequest) {
+    if (!exception || !onParcelException) return;
+    setExceptionPending(true);
+    setExceptionErrorFa(null);
+    try {
+      const accepted = await onParcelException(exception.seller, exception.shipment.shipmentId, request);
+      if (accepted) {
+        setException(null);
+        return;
+      }
+      setExceptionErrorFa(
+        "ثبت نشد. اگر خطای سرور نمایش داده شد همان را بررسی کنید؛ این پنجره حذف نشده تا دوباره تلاش کنید.",
+      );
+    } finally {
+      setExceptionPending(false);
+    }
+  }
+
+  function openException(
+    seller: AdminSellerOrder,
+    shipment: AdminShipment,
+    mode: PostDispatchExceptionMode,
+  ) {
+    setExceptionErrorFa(null);
+    setException({ seller, shipment, mode });
+  }
+
   const rows = group.members.flatMap((member) => {
     const seller = resolveSeller(detail, member.sellerOrderId);
     if (!seller) return [];
@@ -769,6 +860,69 @@ function GroupParcels({
                     ) : null}
                   </div>
                 ) : null}
+                {onParcelException && (
+                  caps.canRecordNonDelivery
+                  || caps.canStartReturn
+                  || caps.canRecordReturnReceipt
+                  || caps.canResend
+                ) ? (
+                  <div
+                    className="mt-2 flex flex-wrap gap-1.5 border-t border-gray-100 pt-2"
+                    data-testid={`admin-order-post-dispatch-actions-${parcel.shipmentId}`}
+                  >
+                    {caps.canRecordNonDelivery ? (
+                      <button
+                        type="button"
+                        disabled={pending || exceptionPending}
+                        onClick={() => openException(row.seller, parcel, "record_non_delivery")}
+                        className="min-h-11 rounded-lg border border-amber-300 px-3 text-xs font-bold text-amber-900 disabled:opacity-50"
+                        data-testid={`admin-order-post-dispatch-nondelivery-${parcel.shipmentId}`}
+                      >
+                        ثبت عدم تحویل
+                      </button>
+                    ) : null}
+                    {caps.canStartReturn ? (
+                      <button
+                        type="button"
+                        disabled={pending || exceptionPending}
+                        onClick={() => openException(row.seller, parcel, "start_return")}
+                        className="min-h-11 rounded-lg border border-gray-200 px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
+                        data-testid={`admin-order-post-dispatch-start-return-${parcel.shipmentId}`}
+                      >
+                        شروع برگشت به مبدأ
+                      </button>
+                    ) : null}
+                    {caps.canRecordReturnReceipt ? (
+                      <button
+                        type="button"
+                        disabled={pending || exceptionPending}
+                        onClick={() => openException(row.seller, parcel, "record_return_receipt")}
+                        className="min-h-11 rounded-lg border border-gray-200 px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
+                        data-testid={`admin-order-post-dispatch-receipt-${parcel.shipmentId}`}
+                      >
+                        تأیید دریافت در مبدأ
+                      </button>
+                    ) : null}
+                    {caps.canResend ? (
+                      <button
+                        type="button"
+                        disabled={pending || exceptionPending}
+                        onClick={() => openException(row.seller, parcel, "resend_shipment")}
+                        className="min-h-11 rounded-lg bg-[#2563EB] px-3 text-xs font-bold text-white disabled:opacity-50"
+                        data-testid={`admin-order-post-dispatch-resend-${parcel.shipmentId}`}
+                      >
+                        ارسال مجدد
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+                {parcel.nonDeliveredAt || parcel.returnedAt || parcel.resendOfShipmentId ? (
+                  <p className="mt-1 text-[11px] text-gray-500" data-testid={`admin-order-post-dispatch-facts-${parcel.shipmentId}`}>
+                    {parcel.resendOfShipmentId ? "مرسولهٔ ارسال مجدد · " : ""}
+                    {parcel.nonDeliveredAt ? "عدم تحویل ثبت شده" : ""}
+                    {parcel.returnedAt ? " · دریافت در مبدأ تأیید شده" : ""}
+                  </p>
+                ) : null}
               </li>
             );
           })}
@@ -788,6 +942,25 @@ function GroupParcels({
           ))}
         </ul>
       )}
+
+      {exception ? (
+        <PostDispatchExceptionDialog
+          open
+          mode={exception.mode}
+          parcelLabel={exception.shipment.trackingReference || exception.shipment.shipmentId.slice(0, 8)}
+          parcelKey={exception.shipment.shipmentId}
+          lines={exceptionLines}
+          pending={exceptionPending || pending}
+          errorFa={exceptionErrorFa}
+          onClose={() => {
+            setException(null);
+            setExceptionErrorFa(null);
+          }}
+          onSubmit={(request) => {
+            void submitException(request);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

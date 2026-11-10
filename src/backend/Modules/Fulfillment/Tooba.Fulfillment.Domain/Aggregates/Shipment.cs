@@ -62,6 +62,30 @@ public sealed class Shipment
     /// <summary>زمان تحویل.</summary>
     public DateTimeOffset? DeliveredAt { get; private set; }
 
+    /// <summary>TB-258: reason code of the recorded non-delivery attempt.</summary>
+    public string? NonDeliveryReason { get; private set; }
+
+    /// <summary>TB-258: operator note of the non-delivery attempt.</summary>
+    public string? NonDeliveryNote { get; private set; }
+
+    /// <summary>TB-258: when the courier reported the non-delivery attempt.</summary>
+    public DateTimeOffset? NonDeliveredAt { get; private set; }
+
+    /// <summary>TB-258: when the carrier started physically returning the parcel to origin.</summary>
+    public DateTimeOffset? ReturnStartedAt { get; private set; }
+
+    /// <summary>TB-258: when the origin receipt was confirmed.</summary>
+    public DateTimeOffset? ReturnedAt { get; private set; }
+
+    /// <summary>
+    /// TB-258: the failed/returned original this parcel resends. Null for an original parcel, so a resend can
+    /// never be mistaken for a first dispatch and its history stays linked.
+    /// </summary>
+    public Guid? ResendOfShipmentId { get; init; }
+
+    /// <summary>TB-258: a resend parcel consumes returned capacity, never the packed remainder.</summary>
+    public bool IsResend => ResendOfShipmentId is not null;
+
     /// <summary>زمان ایجاد.</summary>
     public DateTimeOffset CreatedAt { get; init; }
 
@@ -121,8 +145,10 @@ public sealed class Shipment
         foreach (var item in items)
         {
             var remaining = fulfillmentItems.Single(x => x.OrderLineId == item.OrderLineId);
+            // TB-258: a Created RESEND parcel is funded by returned capacity, not by the packed remainder, so it is
+            // never counted as an open first allocation here.
             var openAllocated = existingShipments
-                .Where(s => s.Status == ShipmentStatus.Created)
+                .Where(s => s.Status == ShipmentStatus.Created && !s.IsResend)
                 .SelectMany(s => s.Items)
                 .Where(x => x.OrderLineId == item.OrderLineId)
                 .Sum(x => x.Quantity);
@@ -148,6 +174,70 @@ public sealed class Shipment
     {
         _items.Clear();
         _items.AddRange(items);
+    }
+
+    /// <summary>
+    /// TB-258: creates a resend parcel bound to the failed/returned original. Quantity is validated by the owning
+    /// unit against the physically received usable capacity, so the packed/ordered guards of a first allocation
+    /// are deliberately not applied here — the returned goods already left the warehouse once.
+    /// </summary>
+    internal static Shipment CreateResend(
+        Guid shipmentId,
+        Func<Guid> newId,
+        Guid fulfillmentId,
+        Guid resendOfShipmentId,
+        string carrierDisplayName,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> items,
+        DateTimeOffset now,
+        string? shippingMethodCode,
+        string? shippingMethodLabel,
+        Guid? shippingGroupId,
+        string? shippingDispatchKey)
+    {
+        if (resendOfShipmentId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.resend.original_required");
+        }
+
+        if (string.IsNullOrWhiteSpace(carrierDisplayName))
+        {
+            throw new ContractOperationException("fulfillment.shipment.carrier_required");
+        }
+
+        if (shippingGroupId == Guid.Empty)
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.IdentityRequired);
+        }
+
+        var normalizedDispatchKey = string.IsNullOrWhiteSpace(shippingDispatchKey)
+            ? null
+            : shippingDispatchKey.Trim();
+        if (normalizedDispatchKey is { Length: > 128 })
+        {
+            throw new ContractOperationException("fulfillment.shipment.dispatch_key_invalid");
+        }
+
+        var shipment = new Shipment
+        {
+            ShipmentId = shipmentId,
+            FulfillmentId = fulfillmentId,
+            ShippingGroupId = shippingGroupId,
+            ShippingDispatchKey = normalizedDispatchKey,
+            ResendOfShipmentId = resendOfShipmentId,
+            Status = ShipmentStatus.Created,
+            CarrierDisplayName = carrierDisplayName.Trim(),
+            ShippingMethodCode = (shippingMethodCode ?? string.Empty).Trim(),
+            ShippingMethodLabel = string.IsNullOrWhiteSpace(shippingMethodLabel)
+                ? carrierDisplayName.Trim()
+                : shippingMethodLabel.Trim(),
+            CreatedAt = now,
+        };
+        foreach (var item in items)
+        {
+            shipment._items.Add(ShipmentItem.Create(newId(), shipment.ShipmentId, item.OrderLineId, item.Quantity));
+        }
+
+        return shipment;
     }
 
     internal void AssignTracking(string trackingReference, DateTimeOffset now)
@@ -230,13 +320,103 @@ public sealed class Shipment
             return;
         }
 
-        if (Status is not (ShipmentStatus.Dispatched or ShipmentStatus.InTransit))
+        // TB-258: a genuine later delivery may resolve a recorded non-delivery (the customer was reached on a
+        // retry). It can never resolve a parcel the carrier is physically bringing back.
+        if (Status is not (ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.NonDelivered))
         {
             throw new ContractOperationException("fulfillment.deliver.invalid_status");
         }
 
         Status = ShipmentStatus.Delivered;
         DeliveredAt = now;
+    }
+
+    /// <summary>
+    /// TB-258: records a courier non-delivery attempt after dispatch. It neither pretends delivery nor cancels the
+    /// parcel: the goods have physically left the warehouse and stay in the shipped side of every quantity reader.
+    /// </summary>
+    internal void RecordNonDelivery(string reason, string? note, DateTimeOffset now)
+    {
+        var normalizedReason = (reason ?? string.Empty).Trim();
+        if (normalizedReason.Length == 0)
+        {
+            throw new ContractOperationException("fulfillment.nondelivery.reason_required");
+        }
+
+        if (normalizedReason.Length > 64)
+        {
+            throw new ContractOperationException("fulfillment.nondelivery.reason_invalid");
+        }
+
+        var trimmedNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        if (trimmedNote is { Length: > 512 })
+        {
+            throw new ContractOperationException("fulfillment.nondelivery.note_invalid");
+        }
+
+        switch (Status)
+        {
+            case ShipmentStatus.Delivered:
+                throw new ContractOperationException("fulfillment.nondelivery.after_delivered");
+            case ShipmentStatus.Cancelled:
+            case ShipmentStatus.Created:
+                throw new ContractOperationException("fulfillment.nondelivery.invalid_status");
+            case ShipmentStatus.Returning:
+            case ShipmentStatus.Returned:
+                throw new ContractOperationException("fulfillment.nondelivery.already_returning");
+            case ShipmentStatus.NonDelivered:
+                if (!string.Equals(NonDeliveryReason, normalizedReason, StringComparison.Ordinal)
+                    || !string.Equals(NonDeliveryNote, trimmedNote, StringComparison.Ordinal))
+                {
+                    throw new ContractOperationException("fulfillment.nondelivery.conflict");
+                }
+
+                return;
+        }
+
+        Status = ShipmentStatus.NonDelivered;
+        NonDeliveryReason = normalizedReason;
+        NonDeliveryNote = trimmedNote;
+        NonDeliveredAt = now;
+    }
+
+    /// <summary>TB-258: the carrier started bringing the failed parcel back.</summary>
+    internal void StartReturn(DateTimeOffset now)
+    {
+        if (Status == ShipmentStatus.Returning)
+        {
+            return;
+        }
+
+        if (Status == ShipmentStatus.Returned)
+        {
+            throw new ContractOperationException("fulfillment.return.already_received");
+        }
+
+        if (Status != ShipmentStatus.NonDelivered)
+        {
+            throw new ContractOperationException("fulfillment.return.invalid_status");
+        }
+
+        Status = ShipmentStatus.Returning;
+        ReturnStartedAt = now;
+    }
+
+    /// <summary>TB-258: origin receipt confirmed; the parcel is now eligible for controlled resend capacity.</summary>
+    internal void EnsureReturned(DateTimeOffset now)
+    {
+        if (Status == ShipmentStatus.Returned)
+        {
+            return;
+        }
+
+        if (Status != ShipmentStatus.Returning)
+        {
+            throw new ContractOperationException("fulfillment.return.receipt_invalid_status");
+        }
+
+        Status = ShipmentStatus.Returned;
+        ReturnedAt = now;
     }
 
     internal void CancelPreDispatch(DateTimeOffset now)

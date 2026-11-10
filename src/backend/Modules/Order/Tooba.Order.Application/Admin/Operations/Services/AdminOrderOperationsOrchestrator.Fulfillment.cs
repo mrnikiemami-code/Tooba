@@ -310,6 +310,131 @@ public sealed partial class AdminOrderOperationsOrchestrator
         return await _fulfillment.DeliverShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
     }
 
+    /// <summary>TB-258: post-dispatch non-delivery is an internal audited fact, never a provider action.</summary>
+    private async Task<object> RecordNonDeliveryCoreAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentId = RequireFulfillmentId(request);
+        var shipmentId = RequireShipmentId(request);
+        var reason = (request.Reason ?? string.Empty).Trim();
+        if (!FulfillmentNonDeliveryReasons.IsKnown(reason))
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        return await _fulfillment.RecordNonDeliveryAsync(
+            fulfillmentId,
+            shipmentId,
+            actorUserId,
+            reason,
+            request.Note,
+            cancellationToken);
+    }
+
+    /// <summary>TB-258: the carrier started the physical return of the failed parcel to origin.</summary>
+    private async Task<object> StartReturnCoreAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentId = RequireFulfillmentId(request);
+        var shipmentId = RequireShipmentId(request);
+        return await _fulfillment.StartReturnAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
+    }
+
+    /// <summary>
+    /// TB-258: confirms the physical origin receipt. Only the received usable quantity can fund a resend, so the
+    /// submitted lines and conditions are validated here and the owning Fulfillment aggregate stays authoritative.
+    /// </summary>
+    private async Task<object> RecordReturnReceiptCoreAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentId = RequireFulfillmentId(request);
+        var shipmentId = RequireShipmentId(request);
+        var items = request.ReceiptItems;
+        if (items is not { Count: > 0 })
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var lines = new List<ReturnReceiptLineCommand>(items.Count);
+        var seen = new HashSet<Guid>();
+        foreach (var item in items)
+        {
+            if (item is null
+                || item.OrderLineId == Guid.Empty
+                || item.Quantity <= 0m
+                || item.Condition is not (0 or 1)
+                || !seen.Add(item.OrderLineId))
+            {
+                throw new AdminOrderOperationsException("order.operation.invalid");
+            }
+
+            lines.Add(new ReturnReceiptLineCommand(
+                item.OrderLineId,
+                item.Quantity,
+                item.Condition == 0 ? ReturnReceiptCondition.Usable : ReturnReceiptCondition.Damaged));
+        }
+
+        return await _fulfillment.RecordReturnReceiptAsync(
+            fulfillmentId,
+            shipmentId,
+            actorUserId,
+            lines,
+            request.Note,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// TB-258: allocates a new resend parcel for goods physically received back at origin. The request shipment is
+    /// the RETURNED original parcel; its accepted group/method is reused by the owning aggregate, and the client
+    /// idempotency key becomes the dispatch key so a retried request can never mint a second parcel.
+    /// </summary>
+    private async Task<object> ResendShipmentCoreAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentId = RequireFulfillmentId(request);
+        var originalShipmentId = RequireShipmentId(request);
+        var selections = request.Selections;
+        if (selections is not { Count: > 0 })
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var lines = new List<ShipmentLineCommand>(selections.Count);
+        var seen = new HashSet<Guid>();
+        foreach (var selection in selections)
+        {
+            if (selection is null
+                || selection.OrderLineId == Guid.Empty
+                || selection.Quantity <= 0m
+                || !seen.Add(selection.OrderLineId))
+            {
+                throw new AdminOrderOperationsException("order.operation.invalid");
+            }
+
+            lines.Add(new ShipmentLineCommand(selection.OrderLineId, selection.Quantity));
+        }
+
+        var dispatchKey = string.IsNullOrWhiteSpace(request.IdempotencyKey)
+            ? null
+            : request.IdempotencyKey.Trim();
+
+        return (await _fulfillment.CreateResendShipmentAsync(
+            fulfillmentId,
+            actorUserId,
+            originalShipmentId,
+            lines,
+            cancellationToken,
+            dispatchKey)).Snapshot;
+    }
+
     private async Task<object> CreateConsolidatedPackageCoreAsync(
         Guid checkoutId,
         AdminOrderOperationRequest request,

@@ -91,4 +91,17 @@ public sealed record AdminOrderOperationRequest(
     /// first mutation and retained on retry/remount; same occurrence replays, a new occurrence is an
     /// explicit new operation.
     /// </summary>
-    Guid? OperationalGroupOccurrenceId = null);
+    Guid? OperationalGroupOccurrenceId = null,
+    /// <summary>TB-258: optional operator note recorded with a non-delivery attempt or origin receipt.</summary>
+    string? Note = null,
+    /// <summary>
+    /// TB-258: the physically received lines of one origin receipt, each with its own condition. Only usable
+    /// quantity funds a later resend; damaged/missing quantity never does.
+    /// </summary>
+    IReadOnlyList<AdminReturnReceiptLineSelection>? ReceiptItems = null);
+
+/// <summary>TB-258: one physically received line submitted with an origin receipt.</summary>
+public sealed record AdminReturnReceiptLineSelection(
+    Guid OrderLineId,
+    decimal Quantity,
+    int Condition = 0);

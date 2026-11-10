@@ -408,6 +408,32 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("fulfillment_id");
 
+                    b.Property<DateTimeOffset?>("NonDeliveredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("non_delivered_at");
+
+                    b.Property<string>("NonDeliveryNote")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("non_delivery_note");
+
+                    b.Property<string>("NonDeliveryReason")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("non_delivery_reason");
+
+                    b.Property<Guid?>("ResendOfShipmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("resend_of_shipment_id");
+
+                    b.Property<DateTimeOffset?>("ReturnStartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("return_started_at");
+
+                    b.Property<DateTimeOffset?>("ReturnedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("returned_at");
+
                     b.Property<string>("PreviousTrackingReference")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -461,6 +487,10 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_shipments_shipping_group_id")
                         .HasFilter("shipping_group_id IS NOT NULL");
 
+                    b.HasIndex("ResendOfShipmentId")
+                        .HasDatabaseName("ix_shipments_resend_of_shipment_id")
+                        .HasFilter("resend_of_shipment_id IS NOT NULL");
+
                     b.HasIndex("TrackingReference")
                         .IsUnique()
                         .HasDatabaseName("ix_shipments_tracking_reference")
@@ -494,6 +524,83 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_shipment_items_shipment_id");
 
                     b.ToTable("shipment_items", "fulfillment");
+                });
+
+            modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShipmentReturnReceipt", b =>
+                {
+                    b.Property<Guid>("ShipmentReturnReceiptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_return_receipt_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("FulfillmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("note");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("received_at");
+
+                    b.Property<Guid>("ReceivedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("received_by_user_id");
+
+                    b.Property<Guid>("ShipmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_id");
+
+                    b.HasKey("ShipmentReturnReceiptId")
+                        .HasName("pk_shipment_return_receipts");
+
+                    b.HasIndex("FulfillmentId")
+                        .HasDatabaseName("ix_shipment_return_receipts_fulfillment_id");
+
+                    b.HasIndex("ShipmentId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_shipment_return_receipts_shipment");
+
+                    b.ToTable("shipment_return_receipts", "fulfillment");
+                });
+
+            modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShipmentReturnReceiptItem", b =>
+                {
+                    b.Property<Guid>("ShipmentReturnReceiptItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_return_receipt_item_id");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("condition");
+
+                    b.Property<Guid>("OrderLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_line_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("ShipmentReturnReceiptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_return_receipt_id");
+
+                    b.HasKey("ShipmentReturnReceiptItemId")
+                        .HasName("pk_shipment_return_receipt_items");
+
+                    b.HasIndex("ShipmentReturnReceiptId")
+                        .HasDatabaseName("ix_shipment_return_receipt_items_shipment_return_receipt_id");
+
+                    b.ToTable("shipment_return_receipt_items", "fulfillment");
                 });
 
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.ShippingMethod", b =>

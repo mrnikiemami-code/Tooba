@@ -44,6 +44,12 @@ public sealed class FulfillmentDbContext : DbContext
     /// </summary>
     public DbSet<ShipmentItem> ShipmentItems => Set<ShipmentItem>();
 
+    /// <summary>TB-258: رسیدهای دریافت در مبدأ مرسوله‌های برگشتی.</summary>
+    public DbSet<ShipmentReturnReceipt> ShipmentReturnReceipts => Set<ShipmentReturnReceipt>();
+
+    /// <summary>TB-258: خطوط هر رسید دریافت.</summary>
+    public DbSet<ShipmentReturnReceiptItem> ShipmentReturnReceiptItems => Set<ShipmentReturnReceiptItem>();
+
     /// <summary>
     /// گروه‌های ارسال پذیرفته‌شدهٔ مالک Fulfillment.
     /// </summary>
@@ -119,6 +125,9 @@ public sealed class FulfillmentDbContext : DbContext
             // می‌ساخت که هیچ‌گاه در اسکیمای مهاجرت‌شده وجود ندارد و هر SaveChanges را با
             // PostgresException 42703 می‌شکست. کلید واقعی همان ستون اسکالر FulfillmentId است.
             entity.Ignore(x => x.ShippingGroups);
+            // TB-258: same rule for the read-only origin receipts — they are loaded/persisted through their own
+            // DbSet, so an inferred navigation would add the same phantom shadow FK to the receipts table.
+            entity.Ignore(x => x.ReturnReceipts);
             entity.HasIndex(x => x.SellerOrderId).IsUnique();
             entity.HasIndex(x => x.SellerPartyId);
             entity.HasIndex(x => x.CheckoutId);
@@ -168,14 +177,41 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.PreviousTrackingReference).HasMaxLength(128);
             entity.Property(x => x.ShippingGroupId);
             entity.Property(x => x.ShippingDispatchKey).HasMaxLength(128).HasColumnName("shipping_dispatch_key");
+            entity.Property(x => x.NonDeliveryReason).HasMaxLength(64);
+            entity.Property(x => x.NonDeliveryNote).HasMaxLength(512);
+            entity.Property(x => x.ResendOfShipmentId).HasColumnName("resend_of_shipment_id");
             entity.Ignore(x => x.Items);
+            entity.Ignore(x => x.IsResend);
             entity.HasIndex(x => x.FulfillmentId);
             entity.HasIndex(x => x.ShippingGroupId).HasFilter("shipping_group_id IS NOT NULL");
+            entity.HasIndex(x => x.ResendOfShipmentId).HasFilter("resend_of_shipment_id IS NOT NULL");
             entity.HasIndex(x => x.TrackingReference).IsUnique().HasFilter("tracking_reference IS NOT NULL");
             entity.HasIndex(x => x.ShippingDispatchKey)
                 .IsUnique()
                 .HasFilter("shipping_dispatch_key IS NOT NULL")
                 .HasDatabaseName("ux_shipments_shipping_dispatch_key");
+        });
+        modelBuilder.Entity<ShipmentReturnReceipt>(entity =>
+        {
+            entity.ToTable("shipment_return_receipts");
+            entity.HasKey(x => x.ShipmentReturnReceiptId);
+            entity.Property(x => x.ShipmentReturnReceiptId).ValueGeneratedNever();
+            entity.Property(x => x.Note).HasMaxLength(512);
+            entity.Ignore(x => x.Items);
+            // TB-258: one physical receipt per returned parcel — the database is the exactly-once authority.
+            entity.HasIndex(x => x.ShipmentId)
+                .IsUnique()
+                .HasDatabaseName("ux_shipment_return_receipts_shipment");
+            entity.HasIndex(x => x.FulfillmentId);
+        });
+        modelBuilder.Entity<ShipmentReturnReceiptItem>(entity =>
+        {
+            entity.ToTable("shipment_return_receipt_items");
+            entity.HasKey(x => x.ShipmentReturnReceiptItemId);
+            entity.Property(x => x.ShipmentReturnReceiptItemId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.Condition).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => x.ShipmentReturnReceiptId);
         });
         modelBuilder.Entity<ShipmentItem>(entity =>
         {

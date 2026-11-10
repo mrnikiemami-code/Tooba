@@ -462,6 +462,78 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "ابطال مرسوله در این وضعیت مجاز نیست.",
     en: "The shipment cannot be voided in the current state.",
   },
+  "fulfillment.nondelivery.reason_required": {
+    fa: "دلیل عدم تحویل را انتخاب کنید.",
+    en: "Select a non-delivery reason.",
+  },
+  "fulfillment.nondelivery.reason_invalid": {
+    fa: "دلیل عدم تحویل معتبر نیست.",
+    en: "The non-delivery reason is not valid.",
+  },
+  "fulfillment.nondelivery.note_invalid": {
+    fa: "توضیح عدم تحویل بیش از حد مجاز است.",
+    en: "The non-delivery note is too long.",
+  },
+  "fulfillment.nondelivery.after_delivered": {
+    fa: "برای مرسولهٔ تحویل‌شده عدم تحویل ثبت نمی‌شود.",
+    en: "A delivered parcel cannot be marked non-delivered.",
+  },
+  "fulfillment.nondelivery.invalid_status": {
+    fa: "ثبت عدم تحویل در وضعیت فعلی مرسوله مجاز نیست.",
+    en: "Non-delivery is not allowed in the current parcel state.",
+  },
+  "fulfillment.nondelivery.already_returning": {
+    fa: "این مرسوله در مسیر برگشت به مبدأ است.",
+    en: "This parcel is already returning to origin.",
+  },
+  "fulfillment.nondelivery.conflict": {
+    fa: "این مرسوله پیش‌تر به‌عنوان عدم تحویل ثبت شده است.",
+    en: "This parcel is already recorded as non-delivered.",
+  },
+  "fulfillment.return.invalid_status": {
+    fa: "شروع برگشت در وضعیت فعلی مرسوله مجاز نیست.",
+    en: "Starting the return is not allowed in the current parcel state.",
+  },
+  "fulfillment.return.already_received": {
+    fa: "دریافت این مرسوله در مبدأ قبلاً تأیید شده است.",
+    en: "The origin receipt of this parcel is already confirmed.",
+  },
+  "fulfillment.return.receipt_invalid_status": {
+    fa: "تأیید دریافت در مبدأ در وضعیت فعلی مرسوله مجاز نیست.",
+    en: "The origin receipt is not allowed in the current parcel state.",
+  },
+  "fulfillment.return.receipt_already_recorded": {
+    fa: "رسید دریافت این مرسوله قبلاً ثبت شده است.",
+    en: "A receipt is already recorded for this parcel.",
+  },
+  "fulfillment.return.receipt_conflict": {
+    fa: "رسید ثبت‌شده با اطلاعات ارسالی هم‌خوان نیست.",
+    en: "The recorded receipt does not match the submitted lines.",
+  },
+  "fulfillment.resend.original_required": {
+    fa: "مرسولهٔ مرجوعی برای ارسال مجدد مشخص نیست.",
+    en: "The returned original parcel is missing.",
+  },
+  "fulfillment.resend.original_not_returned": {
+    fa: "ارسال مجدد فقط پس از تأیید دریافت در مبدأ ممکن است.",
+    en: "A resend requires a confirmed origin receipt.",
+  },
+  "fulfillment.resend.method_mismatch": {
+    fa: "روش ارسال مجدد با روش پذیرفته‌شدهٔ اولیه هم‌خوان نیست.",
+    en: "The resend method does not match the original accepted method.",
+  },
+  "fulfillment.resend.line_foreign": {
+    fa: "این قلم در مرسولهٔ مرجوعی وجود ندارد.",
+    en: "This line does not belong to the returned parcel.",
+  },
+  "fulfillment.resend.exceeds_returned": {
+    fa: "تعداد ارسال مجدد از مقدار سالم دریافتی بیشتر است.",
+    en: "The resend quantity exceeds the usable received quantity.",
+  },
+  "fulfillment.resend.concurrency_conflict": {
+    fa: "ظرفیت برگشتی هم‌زمان تغییر کرد؛ فهرست را تازه‌سازی کنید و دوباره تلاش کنید.",
+    en: "The returned capacity changed concurrently; refresh and try again.",
+  },
   "fulfillment.allocation.conflict": {
     fa: "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
     en: "The quantity exceeds remaining allocatable packed amount.",

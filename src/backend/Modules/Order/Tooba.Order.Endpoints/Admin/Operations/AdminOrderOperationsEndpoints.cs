@@ -24,9 +24,13 @@ using Tooba.Order.Application.Admin.Operations.Commands.PrepareOperationalGroup;
 using Tooba.Order.Application.Admin.Operations.Commands.RecoverInventoryReservation;
 using Tooba.Order.Application.Admin.Operations.Commands.RejectDeposit;
 using Tooba.Order.Application.Admin.Operations.Commands.RejectReturn;
+using Tooba.Order.Application.Admin.Operations.Commands.RecordNonDelivery;
+using Tooba.Order.Application.Admin.Operations.Commands.RecordReturnReceipt;
 using Tooba.Order.Application.Admin.Operations.Commands.RequestReturn;
+using Tooba.Order.Application.Admin.Operations.Commands.ResendShipment;
 using Tooba.Order.Application.Admin.Operations.Commands.RestoreCancelledOrder;
 using Tooba.Order.Application.Admin.Operations.Commands.RestoreDeposit;
+using Tooba.Order.Application.Admin.Operations.Commands.StartReturn;
 using Tooba.Order.Application.Admin.Operations.Commands.RetryRefund;
 using Tooba.Order.Application.Admin.Operations.Commands.UnconfirmDeposit;
 using Tooba.Order.Application.Admin.Operations.Commands.UnpackFulfillment;
@@ -87,6 +91,7 @@ internal static class AdminOrderOperationsEndpoints
         var actor = await auth.RequireAdminAsync(context, ct);
         var request = body ?? new AdminOrderOperationRequest(
             string.Empty, null, null, null, null, null, null, null, null, null);
+
         var code = (request.Code ?? string.Empty).Trim().ToLowerInvariant();
         var result = code switch
         {
@@ -118,6 +123,10 @@ internal static class AdminOrderOperationsEndpoints
             "assign_consolidated_package_tracking" => await sender.Send(new AssignConsolidatedPackageTrackingCommand(checkoutId, actor, request), ct),
             "dispatch_consolidated_package" => await sender.Send(new DispatchConsolidatedPackageCommand(checkoutId, actor, request), ct),
             "deliver_consolidated_package" => await sender.Send(new DeliverConsolidatedPackageCommand(checkoutId, actor, request), ct),
+            "record_non_delivery" => await sender.Send(new RecordNonDeliveryCommand(checkoutId, actor, request), ct),
+            "start_return" => await sender.Send(new StartReturnCommand(checkoutId, actor, request), ct),
+            "record_return_receipt" => await sender.Send(new RecordReturnReceiptCommand(checkoutId, actor, request), ct),
+            "resend_shipment" => await sender.Send(new ResendShipmentCommand(checkoutId, actor, request), ct),
             _ => Result.Failure<object>(new SemanticError("order.operation.invalid")),
         };
         return api.From(result);

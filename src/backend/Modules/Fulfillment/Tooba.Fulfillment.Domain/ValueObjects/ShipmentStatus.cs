@@ -25,4 +25,13 @@ public enum ShipmentStatus
 
     /// <summary>لغو شده.</summary>
     Cancelled = 5,
+
+    /// <summary>TB-258: courier recorded a non-delivery attempt after dispatch (not delivered, not cancelled).</summary>
+    NonDelivered = 6,
+
+    /// <summary>TB-258: the carrier is physically bringing the parcel back to origin.</summary>
+    Returning = 7,
+
+    /// <summary>TB-258: origin receipt confirmed; only physically usable received quantity becomes resendable.</summary>
+    Returned = 8,
 }

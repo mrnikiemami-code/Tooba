@@ -53,6 +53,13 @@ public static class FulfillmentPackedQuantityAuthority
                 continue;
             }
 
+            // TB-258: a resend parcel is funded by physically received returned capacity, not by the packed
+            // remainder. Counting it here would shrink an unrelated fresh remainder and hide real packed stock.
+            if (shipment.ResendOfShipmentId is not null)
+            {
+                continue;
+            }
+
             if (shippingGroupId is Guid groupId
                 && shipment.ShippingGroupId is Guid shipmentGroupId
                 && shipmentGroupId != groupId)

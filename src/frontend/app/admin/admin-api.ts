@@ -72,6 +72,12 @@ export interface AdminOrderLine {
   returnDeadlineDisplay: string | null;
   returnRemainingDisplay: string | null;
   returnStatusCode: string | null;
+  /** TB-258: physically received usable returned quantity of this line. */
+  returnedUsableQuantity?: number | null;
+  /** TB-258: returned capacity still available for a new resend parcel. */
+  resendableQuantity?: number | null;
+  /** TB-258: quantity actually delivered through delivered parcels. */
+  deliveredQuantity?: number | null;
 }
 
 export interface AdminShipmentLine {
@@ -93,6 +99,27 @@ export interface AdminShipment {
   packageLockedReasonFa?: string | null;
   canAddToConsolidatedPackage?: boolean;
   shippingGroupId?: string | null;
+  /** TB-258: the failed/returned original parcel this one resends. */
+  resendOfShipmentId?: string | null;
+  /** TB-258: recorded post-dispatch non-delivery reason code. */
+  nonDeliveryReason?: string | null;
+  /** TB-258: operator note of the non-delivery attempt. */
+  nonDeliveryNote?: string | null;
+  /** TB-258: server-recorded non-delivery time. */
+  nonDeliveredAt?: string | null;
+  /** TB-258: when the carrier started returning the parcel. */
+  returnStartedAt?: string | null;
+  /** TB-258: when the physical origin receipt was confirmed. */
+  returnedAt?: string | null;
+  /** TB-258: recorded physical origin receipt lines with their condition. */
+  returnReceiptLines?: AdminReturnReceiptLine[] | null;
+}
+
+/** TB-258: one physically received line of an origin receipt. */
+export interface AdminReturnReceiptLine {
+  orderLineId: string;
+  quantity: number;
+  condition: string;
 }
 
 export interface AdminAcceptedShippingGroup {
@@ -648,6 +675,9 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       const allocatedRaw = prop(line, "quantityAllocated", "QuantityAllocated");
       const isReturnableRaw = prop(line, "isReturnable", "IsReturnable");
       const windowRaw = prop(line, "returnWindowDays", "ReturnWindowDays");
+      const returnedUsableRaw = prop(line, "returnedUsableQuantity", "ReturnedUsableQuantity");
+      const resendableRaw = prop(line, "resendableQuantity", "ResendableQuantity");
+      const deliveredRaw = prop(line, "deliveredQuantity", "DeliveredQuantity");
       return [{
         id: orderLineId || offerId,
         orderLineId,
@@ -669,6 +699,9 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
         returnDeadlineDisplay: text(prop(line, "returnDeadlineDisplay", "ReturnDeadlineDisplay")) || null,
         returnRemainingDisplay: text(prop(line, "returnRemainingDisplay", "ReturnRemainingDisplay")) || null,
         returnStatusCode: text(prop(line, "returnStatusCode", "ReturnStatusCode")) || null,
+        returnedUsableQuantity: returnedUsableRaw == null || returnedUsableRaw === "" ? null : number(returnedUsableRaw),
+        resendableQuantity: resendableRaw == null || resendableRaw === "" ? null : number(resendableRaw),
+        deliveredQuantity: deliveredRaw == null || deliveredRaw === "" ? null : number(deliveredRaw),
       }];
     });
     const shipments = array(prop(seller, "shipments", "Shipments")).flatMap((raw): AdminShipment[] => {
@@ -696,6 +729,25 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
         packageLockedReasonFa: text(prop(row, "packageLockedReasonFa", "PackageLockedReasonFa")) || null,
         canAddToConsolidatedPackage: Boolean(prop(row, "canAddToConsolidatedPackage", "CanAddToConsolidatedPackage")),
         shippingGroupId: text(prop(row, "shippingGroupId", "ShippingGroupId")) || null,
+        resendOfShipmentId: text(prop(row, "resendOfShipmentId", "ResendOfShipmentId")) || null,
+        nonDeliveryReason: text(prop(row, "nonDeliveryReason", "NonDeliveryReason")) || null,
+        nonDeliveryNote: text(prop(row, "nonDeliveryNote", "NonDeliveryNote")) || null,
+        nonDeliveredAt: text(prop(row, "nonDeliveredAt", "NonDeliveredAt")) || null,
+        returnStartedAt: text(prop(row, "returnStartedAt", "ReturnStartedAt")) || null,
+        returnedAt: text(prop(row, "returnedAt", "ReturnedAt")) || null,
+        returnReceiptLines: array(prop(row, "returnReceiptLines", "ReturnReceiptLines")).flatMap(
+          (receiptRaw): AdminReturnReceiptLine[] => {
+            const receiptLine = record(receiptRaw);
+            if (!receiptLine) return [];
+            const orderLineId = text(prop(receiptLine, "orderLineId", "OrderLineId"));
+            if (!orderLineId) return [];
+            return [{
+              orderLineId,
+              quantity: number(prop(receiptLine, "quantity", "Quantity")),
+              condition: text(prop(receiptLine, "condition", "Condition"), "Usable"),
+            }];
+          },
+        ),
       }];
     });
     return [{

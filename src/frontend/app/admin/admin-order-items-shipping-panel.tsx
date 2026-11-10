@@ -354,11 +354,51 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
               canDispatch: !packageLocked && Boolean(actionFor(actions, "dispatch_shipment", seller.id, shipment.shipmentId)),
               canDeliver: !packageLocked && Boolean(actionFor(actions, "deliver_shipment", seller.id, shipment.shipmentId)),
               canCancel: !packageLocked && Boolean(actionFor(actions, "cancel_shipment", seller.id, shipment.shipmentId)),
+              // TB-258: post-dispatch exceptions are projected by the server for exactly this parcel,
+              // so the card never invents an exit that the owning command would refuse.
+              canRecordNonDelivery:
+                !packageLocked && Boolean(actionFor(actions, "record_non_delivery", seller.id, shipment.shipmentId)),
+              canStartReturn:
+                !packageLocked && Boolean(actionFor(actions, "start_return", seller.id, shipment.shipmentId)),
+              canRecordReturnReceipt:
+                !packageLocked && Boolean(actionFor(actions, "record_return_receipt", seller.id, shipment.shipmentId)),
+              canResend:
+                !packageLocked && Boolean(actionFor(actions, "resend_shipment", seller.id, shipment.shipmentId)),
             };
           }}
           onParcelTrack={(seller, shipment) => setTrackingTarget({ seller, shipment })}
           onParcelOperation={(seller, code, shipmentId) => {
             void runSellerOp(seller, code, { shipmentId });
+          }}
+          onParcelException={async (seller, shipmentId, request) => {
+            const actions = actionsForSeller(seller.id);
+            const action = actionFor(actions, request.code, seller.id, shipmentId);
+            if (!action) {
+              toast.error("این عملیات در وضعیت فعلی برای این مرسوله مجاز نیست.");
+              return false;
+            }
+            setPendingCode(`${seller.id}:${request.code}:${shipmentId}`);
+            const result = await executeAdminOrderOperation(checkoutId, {
+              ...orderOperationBodyFromAction(action),
+              shipmentId,
+              ...(request.code === "record_non_delivery"
+                ? { reason: request.reason, note: request.note }
+                : {}),
+              ...(request.code === "record_return_receipt"
+                ? { receiptItems: request.receiptItems, note: request.note }
+                : {}),
+              ...(request.code === "resend_shipment"
+                ? { selections: request.selections, idempotencyKey: request.idempotencyKey }
+                : {}),
+            });
+            setPendingCode(null);
+            if (result.state !== "ok") {
+              toast.error(result.message ?? mapAdminErrorMessage("order.operation.failed", "fa"));
+              return false;
+            }
+            toast.success(`عملیات ${action.labelFa} انجام شد.`);
+            onCompleted?.();
+            return true;
           }}
           onPrepareOperationalGroup={async (_group, request) => {
             // Synchronous single-flight: same-tick double clicks cannot both enter.

@@ -22,7 +22,13 @@ public sealed record AdminOrderLineView(
     string? ReturnDeadlineDisplay = null,
     string? ReturnRemainingDisplay = null,
     string? ReturnStatusCode = null,
-    decimal? QuantityProcessing = null);
+    decimal? QuantityProcessing = null,
+    /// <summary>TB-258: physically received usable returned quantity of this line.</summary>
+    decimal? ReturnedUsableQuantity = null,
+    /// <summary>TB-258: returned capacity still available for a new resend parcel.</summary>
+    decimal? ResendableQuantity = null,
+    /// <summary>TB-258: quantity actually delivered through delivered parcels.</summary>
+    decimal? DeliveredQuantity = null);
 
 /// <summary>خط تخصیص‌یافته در مرسولهٔ فروشنده.</summary>
 public sealed record AdminShipmentLineView(Guid OrderLineId, decimal Quantity);
@@ -46,7 +52,24 @@ public sealed record AdminShipmentView(
     /// TB-257: server-owned automatic tracking suggestion for this parcel (null once it already has a reference).
     /// Submitting it unchanged takes the owning automatic allocation; it is never a client-side guess.
     /// </summary>
-    string? SuggestedTrackingReference = null);
+    string? SuggestedTrackingReference = null,
+    /// <summary>TB-258: the failed/returned original parcel this one resends.</summary>
+    Guid? ResendOfShipmentId = null,
+    /// <summary>TB-258: recorded post-dispatch non-delivery reason code.</summary>
+    string? NonDeliveryReason = null,
+    /// <summary>TB-258: operator note of the non-delivery attempt.</summary>
+    string? NonDeliveryNote = null,
+    /// <summary>TB-258: server-recorded non-delivery time.</summary>
+    DateTimeOffset? NonDeliveredAt = null,
+    /// <summary>TB-258: when the carrier started returning the parcel.</summary>
+    DateTimeOffset? ReturnStartedAt = null,
+    /// <summary>TB-258: when the physical origin receipt was confirmed.</summary>
+    DateTimeOffset? ReturnedAt = null,
+    /// <summary>TB-258: recorded physical origin receipt lines with their condition.</summary>
+    IReadOnlyList<AdminReturnReceiptLineView>? ReturnReceiptLines = null);
+
+/// <summary>TB-258: one physically received line of an origin receipt.</summary>
+public sealed record AdminReturnReceiptLineView(Guid OrderLineId, decimal Quantity, string Condition);
 
 /// <summary>گروه ارسال پذیرفته‌شدهٔ مشتری روی جزئیات سفارش مدیر (فقط‌خواندنی).</summary>
 public sealed record AdminAcceptedShippingGroupView(

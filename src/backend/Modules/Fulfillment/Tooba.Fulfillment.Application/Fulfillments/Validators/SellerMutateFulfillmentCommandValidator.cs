@@ -31,6 +31,19 @@ public sealed class SellerMutateFulfillmentCommandValidator : AbstractValidator<
                 .WithErrorCode(FulfillmentValidationCodes.ShippingGroupIdRequired);
         });
 
+        When(x => x.ReturnReceiptLines is not null, () =>
+        {
+            RuleFor(x => x.ReturnReceiptLines!)
+                .Must(lines => lines.All(line => line is not null))
+                .WithErrorCode(FulfillmentValidationCodes.ShipmentLinesNoNullItems);
+
+            RuleFor(x => x.ReturnReceiptLines!)
+                .Must(lines => lines.All(
+                    line => line is null
+                        || (line.OrderLineId != Guid.Empty && line.Quantity > 0m)))
+                .WithErrorCode(FulfillmentValidationCodes.ShipmentLineQuantityPositive);
+        });
+
         When(x => x.ShipmentLines is not null, () =>
         {
             RuleFor(x => x.ShipmentLines!)

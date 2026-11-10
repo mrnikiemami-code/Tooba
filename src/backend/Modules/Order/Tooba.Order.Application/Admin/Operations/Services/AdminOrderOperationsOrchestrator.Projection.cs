@@ -284,6 +284,70 @@ public sealed partial class AdminOrderOperationsOrchestrator
                         Prefer(effective, "order.handle", "fulfillment.manage"),
                         true,
                         "تحویل مرسوله ثبت شود؟"));
+
+                    // TB-258: a dispatched parcel that was not delivered keeps its dispatch history and gets an
+                    // explicit non-delivery fact instead of a fake delivery or a post-dispatch cancellation.
+                    actions.Add(Action(
+                        "record_non_delivery",
+                        "ثبت عدم تحویل",
+                        "Record non-delivery",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "عدم تحویل مرسوله ثبت شود؟ ارسال و کد رهگیری حفظ می‌شود."));
+                }
+
+                if (shipment.Status == ShipmentOperationStatus.NonDelivered
+                    && HasAny(effective, "order.handle", "fulfillment.manage"))
+                {
+                    actions.Add(Action(
+                        "start_return",
+                        "شروع برگشت به مبدأ",
+                        "Start return",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "برگشت مرسوله به مبدأ ثبت شود؟"));
+                }
+
+                if (shipment.Status == ShipmentOperationStatus.Returning
+                    && HasAny(effective, "order.handle", "fulfillment.manage"))
+                {
+                    actions.Add(Action(
+                        "record_return_receipt",
+                        "تأیید دریافت در مبدأ",
+                        "Confirm origin receipt",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "دریافت فیزیکی مرسوله در مبدأ تأیید شود؟"));
+                }
+
+                if (shipment.Status == ShipmentOperationStatus.Returned
+                    && shipment.ReturnReceipt is not null
+                    && fulfillment.Items.Any(x => x.ResendableQuantity > 0)
+                    && HasAny(effective, "order.handle", "fulfillment.manage"))
+                {
+                    actions.Add(Action(
+                        "resend_shipment",
+                        "ارسال مجدد",
+                        "Resend shipment",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "مرسولهٔ جدید برای اقلام سالم دریافتی ایجاد شود؟"));
                 }
             }
         }

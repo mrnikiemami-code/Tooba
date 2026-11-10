@@ -13,13 +13,15 @@
  */
 import "../../features/order-carrier-execution/install-jsdom-globals.ts";
 import assert from "node:assert/strict";
-import { createElement } from "react";
+import { act, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import test from "node:test";
 import {
   mapAdminOrderDetail,
   type AdminOperationalDeliveryGroup,
   type AdminOrderDetail,
+  type AdminOrderLine,
+  type AdminShipment,
 } from "./admin-api.ts";
 import { AdminOrderOperationalDeliverySection } from "./admin-order-operational-delivery-section.tsx";
 import { AdminOrderItemsShippingPanel } from "./admin-order-items-shipping-panel.tsx";
@@ -1585,4 +1587,279 @@ test("TB-256-R1 static: a historical group without a plan renders no «موعد 
   assert.match(html, /تحویل مشتری:/);
   assert.doesNotMatch(html, /موعد ارسال:/);
   assert.ok(!html.includes("admin-order-operational-planned-dispatch-"));
+});
+
+/* ──────────────────────── TB-258: post-dispatch exception lifecycle ─────────────────────── */
+
+const NO_CAPS = {
+  canTrack: false,
+  canDispatch: false,
+  canDeliver: false,
+  canCancel: false,
+  canRecordNonDelivery: false,
+  canStartReturn: false,
+  canRecordReturnReceipt: false,
+  canResend: false,
+};
+
+/** A textarea ignores the input-element value setter, so its own prototype setter is used. */
+async function setTextAreaValue(target: Element, value: string): Promise<void> {
+  const area = target as HTMLTextAreaElement;
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
+    if (setter) setter.call(area, value);
+    area.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await flush();
+}
+
+/**
+ * A dispatched group parcel (`sh1` = so1/g1 with 2 units, `sh2` = so2/g2 with 1 unit).
+ * The exception facts are server data here; the card only renders what it is given.
+ */
+function withExceptionParcel(
+  detail: AdminOrderDetail,
+  shipment: Partial<AdminShipment> = {},
+  line: Partial<AdminOrderLine> = {},
+): AdminOrderDetail {
+  return {
+    ...detail,
+    sellerOrders: detail.sellerOrders.map((seller, idx) => ({
+      ...seller,
+      lines: seller.lines.map((item) => ({ ...item, ...line })),
+      shipments: [{
+        shipmentId: `sh${idx + 1}`,
+        status: "Dispatched",
+        carrierDisplayName: "پست",
+        shippingGroupId: idx === 0 ? "g1" : "g2",
+        shippingMethodCode: "post",
+        itemCount: 1,
+        lines: [{ orderLineId: idx === 0 ? "ol1" : "ol2", quantity: idx === 0 ? 2 : 1 }],
+        trackingReference: `TRK-000${idx + 1}`,
+        activePackageNumber: null,
+        packageLockedReasonFa: null,
+        ...(idx === 0 ? shipment : {}),
+      }],
+    })),
+  };
+}
+
+test("TB-258 static: only the post-dispatch action the server projected is actionable", () => {
+  const detail = withExceptionParcel(baseDetail());
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: (_seller, shipment) =>
+        shipment.shipmentId === "sh1" ? { ...NO_CAPS, canRecordNonDelivery: true } : NO_CAPS,
+    }),
+  );
+
+  // A dispatched, not-yet-delivered parcel offers exactly the non-delivery exit…
+  assert.ok(html.includes("admin-order-post-dispatch-nondelivery-sh1"));
+  assert.match(html, /ثبت عدم تحویل/);
+  // …and nothing the projector did not permit for that parcel.
+  assert.ok(!html.includes("admin-order-post-dispatch-start-return-sh1"));
+  assert.ok(!html.includes("admin-order-post-dispatch-receipt-sh1"));
+  assert.ok(!html.includes("admin-order-post-dispatch-resend-sh1"));
+  // A parcel with no permitted exception has no exception row at all.
+  assert.ok(!html.includes("admin-order-post-dispatch-actions-sh2"));
+});
+
+test("TB-258 static: a returned parcel with usable capacity offers resend; facts stay readable", () => {
+  const detail = withExceptionParcel(
+    baseDetail(),
+    { status: "Returned", nonDeliveredAt: "2026-11-08T10:00:00Z", returnedAt: "2026-11-09T10:00:00Z" },
+    { returnedUsableQuantity: 1, resendableQuantity: 1, deliveredQuantity: 0 },
+  );
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: (_seller, shipment) =>
+        shipment.shipmentId === "sh1" ? { ...NO_CAPS, canResend: true } : NO_CAPS,
+    }),
+  );
+
+  assert.ok(html.includes("admin-order-post-dispatch-resend-sh1"));
+  assert.match(html, /ارسال مجدد/);
+  assert.ok(html.includes("admin-order-post-dispatch-facts-sh1"));
+  assert.match(html, /عدم تحویل ثبت شده/);
+  assert.match(html, /دریافت در مبدأ تأیید شده/);
+});
+
+test("TB-258 mounted: non-delivery posts one explicit reason and keeps the dispatch history", async () => {
+  resetGroupScope(CHECKOUT);
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("record_non_delivery", "so1", "sh1")]);
+    return postResponse(200, { ok: true });
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: withExceptionParcel(baseDetail()),
+        checkoutId: CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-nondelivery-sh1']").length === 1);
+    // The tracking code of the dispatched parcel is still displayed (nothing is erased).
+    assert.match(q(mounted.container, "[data-testid='admin-order-operational-parcel-sh1']").innerHTML, /TRK-0001/);
+
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-nondelivery-sh1']"));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length === 1);
+    const dialog = q(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']");
+    assert.equal(dialog.getAttribute("data-mode"), "record_non_delivery");
+    assert.ok(dialog.closest("dialog"), "the review is a real dialog");
+
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-reason-refused'] input"));
+    await setTextAreaValue(
+      q(mounted.container, "[data-testid='admin-order-post-dispatch-note-sh1']"),
+      "مشتری درب منزل نبود",
+    );
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+
+    const posts = calls.filter((c) => c.method === "POST");
+    assert.equal(posts.length, 1);
+    assert.equal(posts[0].body.code, "record_non_delivery");
+    assert.equal(posts[0].body.shipmentId, "sh1");
+    assert.equal(posts[0].body.reason, "refused");
+    assert.equal(posts[0].body.note, "مشتری درب منزل نبود");
+    assert.equal(posts[0].body.trackingReference, null);
+    // The successful exit closes the review.
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length === 0);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-258 mounted: origin receipt records per-line quantity AND condition", async () => {
+  resetGroupScope(CHECKOUT);
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("record_return_receipt", "so1", "sh1")]);
+    return postResponse(200, { ok: true });
+  });
+  try {
+    const detail = withExceptionParcel(
+      baseDetail(),
+      { status: "Returning" },
+      { returnedUsableQuantity: 0, resendableQuantity: 0 },
+    );
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail, checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-sh1']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-sh1']"));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-line-ol1']").length === 1);
+
+    // The review starts at the exact parcel quantity — no invented number.
+    const qty = q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-qty-ol1']") as HTMLInputElement;
+    assert.equal(qty.value, "2");
+    // Damaged units are recorded but must never fund a resend.
+    const condition = q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-condition-ol1']") as HTMLSelectElement;
+    await act(async () => {
+      condition.value = "1";
+      condition.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await flush();
+
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+    const posts = calls.filter((c) => c.method === "POST");
+    assert.equal(posts[0].body.code, "record_return_receipt");
+    assert.equal(posts[0].body.shipmentId, "sh1");
+    assert.deepEqual(posts[0].body.receiptItems, [{ orderLineId: "ol1", quantity: 2, condition: 1 }]);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-258 mounted: resend is bounded by usable received quantity and replays one stable key", async () => {
+  resetGroupScope(CHECKOUT);
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resend_shipment", "so1", "sh1")]);
+    return postResponse(200, { ok: true });
+  });
+  try {
+    // 2 units left the warehouse, only 1 came back usable.
+    const detail = withExceptionParcel(
+      baseDetail(),
+      { status: "Returned", returnedAt: "2026-11-09T10:00:00Z" },
+      { returnedUsableQuantity: 1, resendableQuantity: 1, deliveredQuantity: 0 },
+    );
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail, checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-resend-sh1']").length === 1);
+
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-resend-sh1']"));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-resend-line-ol1']").length === 1);
+    const qty = q(mounted.container, "[data-testid='admin-order-post-dispatch-resend-qty-ol1']") as HTMLInputElement;
+    assert.equal(qty.value, "1", "the default is the exact usable capacity, not the original parcel quantity");
+    assert.equal(qty.max, "1");
+    // Attempting more than the usable capacity is clamped by the review, never sent.
+    await setInputValue(qty, "5");
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+    const first = calls.filter((c) => c.method === "POST")[0];
+    assert.equal(first.body.code, "resend_shipment");
+    assert.deepEqual(first.body.selections, [{ orderLineId: "ol1", quantity: 1 }]);
+    assert.equal(typeof first.body.idempotencyKey, "string");
+    assert.ok(String(first.body.idempotencyKey).length > 0);
+
+    // A NEW review is a new occurrence: the previous key is never silently reused.
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length === 0);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-resend-sh1']"));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 2);
+    const second = calls.filter((c) => c.method === "POST")[1];
+    assert.notEqual(second.body.idempotencyKey, first.body.idempotencyKey);
+    assert.deepEqual(second.body.selections, first.body.selections);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-258 mounted: a refused exception keeps the review open with one inline error", async () => {
+  resetGroupScope(CHECKOUT);
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("record_non_delivery", "so1", "sh1")]);
+    return postResponse(409, { error: { code: "order.shipment.non_delivery_transition_invalid" } });
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: withExceptionParcel(baseDetail()),
+        checkoutId: CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-nondelivery-sh1']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-nondelivery-sh1']"));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+
+    // Refused: exactly one request, the review stays open, and the error is inside the review.
+    assert.equal(calls.filter((c) => c.method === "POST").length, 1);
+    const error = q(mounted.container, "[data-testid='admin-order-post-dispatch-error-sh1']");
+    assert.ok(error.closest("dialog"));
+    assert.ok(qq(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']").length === 1);
+    // No fake delivery: the parcel still shows no delivered fact.
+    assert.ok(!q(mounted.container, "[data-testid='admin-order-operational-parcel-sh1']").innerHTML.includes("تحویل‌شده"));
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
 });

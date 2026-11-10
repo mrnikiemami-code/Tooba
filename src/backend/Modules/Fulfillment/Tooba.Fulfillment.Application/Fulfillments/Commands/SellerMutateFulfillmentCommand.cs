@@ -30,7 +30,13 @@ public sealed record SellerMutateFulfillmentCommand(
     string? TrackingReference = null,
     string? ShippingMethodCode = null,
     string? ProviderMetadataJson = null,
-    Guid? ShippingGroupId = null) : IRequest<Result<FulfillmentSnapshot>>;
+    Guid? ShippingGroupId = null,
+    /// <summary>TB-258: server-owned non-delivery reason code.</summary>
+    string? NonDeliveryReason = null,
+    /// <summary>TB-258: optional operator note for the non-delivery attempt or the origin receipt.</summary>
+    string? Note = null,
+    /// <summary>TB-258: physically received lines of one origin receipt, with condition per line.</summary>
+    IReadOnlyList<ReturnReceiptLineCommand>? ReturnReceiptLines = null) : IRequest<Result<FulfillmentSnapshot>>;
 
 /// <summary>نوع جهش فروشنده.</summary>
 public enum SellerFulfillmentMutationKind
@@ -41,6 +47,14 @@ public enum SellerFulfillmentMutationKind
     AssignTracking,
     Dispatch,
     Deliver,
+    /// <summary>TB-258: record a post-dispatch non-delivery attempt.</summary>
+    RecordNonDelivery,
+    /// <summary>TB-258: the carrier started returning the failed parcel.</summary>
+    StartReturn,
+    /// <summary>TB-258: confirm the physical origin receipt.</summary>
+    RecordReturnReceipt,
+    /// <summary>TB-258: allocate a new resend parcel for usable returned goods.</summary>
+    CreateResendShipment,
 }
 
 /// <summary>Handler جهش فروشنده — STABLE_CODES_ONLY via FulfillmentOperation.</summary>
@@ -157,6 +171,12 @@ public sealed class SellerMutateFulfillmentHandler
                     bound.ShippingGroupId)).Snapshot);
         }
 
+        if (request.Kind == SellerFulfillmentMutationKind.RecordNonDelivery
+            && !Tooba.Fulfillment.Contracts.Operations.FulfillmentNonDeliveryReasons.IsKnown(request.NonDeliveryReason))
+        {
+            return Result.Failure<FulfillmentSnapshot>(new SemanticError(FulfillmentErrorCodes.Rejected));
+        }
+
         return await FulfillmentOperation.ExecuteAsync(async () =>
         {
             return request.Kind switch
@@ -184,6 +204,35 @@ public sealed class SellerMutateFulfillmentHandler
                         request.ShipmentId ?? Guid.Empty,
                         request.ActorUserId,
                         cancellationToken),
+                SellerFulfillmentMutationKind.RecordNonDelivery =>
+                    await _fulfillment.RecordNonDeliveryAsync(
+                        request.FulfillmentId,
+                        request.ShipmentId ?? Guid.Empty,
+                        request.ActorUserId,
+                        request.NonDeliveryReason ?? string.Empty,
+                        request.Note,
+                        cancellationToken),
+                SellerFulfillmentMutationKind.StartReturn =>
+                    await _fulfillment.StartReturnAsync(
+                        request.FulfillmentId,
+                        request.ShipmentId ?? Guid.Empty,
+                        request.ActorUserId,
+                        cancellationToken),
+                SellerFulfillmentMutationKind.RecordReturnReceipt =>
+                    await _fulfillment.RecordReturnReceiptAsync(
+                        request.FulfillmentId,
+                        request.ShipmentId ?? Guid.Empty,
+                        request.ActorUserId,
+                        request.ReturnReceiptLines ?? [],
+                        request.Note,
+                        cancellationToken),
+                SellerFulfillmentMutationKind.CreateResendShipment =>
+                    (await _fulfillment.CreateResendShipmentAsync(
+                        request.FulfillmentId,
+                        request.ActorUserId,
+                        request.ShipmentId ?? Guid.Empty,
+                        request.ShipmentLines ?? [],
+                        cancellationToken)).Snapshot,
                 _ => throw FulfillmentErrors.SemanticFault(FulfillmentErrorCodes.Rejected),
             };
         });

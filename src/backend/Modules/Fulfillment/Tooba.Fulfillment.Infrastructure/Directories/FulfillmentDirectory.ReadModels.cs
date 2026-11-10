@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Domain.Aggregates;
+using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 
 namespace Tooba.Fulfillment.Infrastructure.Directories;
@@ -26,6 +27,7 @@ public sealed partial class FulfillmentDirectory
             var shipmentItems = await _db.ShipmentItems.AsNoTracking()
                 .Where(x => x.ShipmentId == shipment.ShipmentId)
                 .ToListAsync(cancellationToken);
+            var receipt = await LoadReceiptSnapshotAsync(shipment.ShipmentId, cancellationToken);
             shipmentSnapshots.Add(new ShipmentSnapshot(
                 shipment.ShipmentId,
                 shipment.Status,
@@ -41,10 +43,25 @@ public sealed partial class FulfillmentDirectory
                 shipment.ProviderMetadataVersion,
                 shipment.PreviousTrackingReference,
                 shipment.ShippingGroupId,
-                shipment.ShippingDispatchKey));
+                shipment.ShippingDispatchKey,
+                shipment.ResendOfShipmentId,
+                shipment.NonDeliveryReason,
+                shipment.NonDeliveryNote,
+                shipment.NonDeliveredAt,
+                shipment.ReturnStartedAt,
+                shipment.ReturnedAt,
+                receipt));
         }
 
         var groupSnapshots = await BuildShippingGroupSnapshotsAsync(unit.FulfillmentId, items, cancellationToken);
+        var receipts = await _db.ShipmentReturnReceipts.AsNoTracking()
+            .Where(x => x.FulfillmentId == unit.FulfillmentId)
+            .ToListAsync(cancellationToken);
+        var receiptItems = receipts.Count == 0
+            ? []
+            : await _db.ShipmentReturnReceiptItems.AsNoTracking()
+                .Where(x => receipts.Select(r => r.ShipmentReturnReceiptId).Contains(x.ShipmentReturnReceiptId))
+                .ToListAsync(cancellationToken);
 
         return new FulfillmentSnapshot(
             unit.FulfillmentId,
@@ -68,12 +85,74 @@ public sealed partial class FulfillmentDirectory
                 x.ReservationId,
                 x.QuantityPacked,
                 x.QuantityProcessing,
-                x.ShippingGroupId)).ToArray(),
+                x.ShippingGroupId,
+                UsableReturnedQuantity(receiptItems, x.OrderLineId),
+                ResendCommittedQuantity(shipmentSnapshots, x.OrderLineId),
+                ResendableQuantity(receiptItems, shipmentSnapshots, x.OrderLineId),
+                DeliveredQuantity(shipmentSnapshots, x.OrderLineId))).ToArray(),
             shipmentSnapshots,
             unit.CreatedAt,
             unit.UpdatedAt,
             ShippingGroups: groupSnapshots.Count == 0 ? null : groupSnapshots);
     }
+
+    private async Task<ShipmentReturnReceiptSnapshot?> LoadReceiptSnapshotAsync(
+        Guid shipmentId,
+        CancellationToken cancellationToken)
+    {
+        var receipt = await _db.ShipmentReturnReceipts.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.ShipmentId == shipmentId, cancellationToken);
+        if (receipt is null)
+        {
+            return null;
+        }
+
+        var items = await _db.ShipmentReturnReceiptItems.AsNoTracking()
+            .Where(x => x.ShipmentReturnReceiptId == receipt.ShipmentReturnReceiptId)
+            .OrderBy(x => x.OrderLineId)
+            .ToListAsync(cancellationToken);
+        return new ShipmentReturnReceiptSnapshot(
+            receipt.ShipmentReturnReceiptId,
+            receipt.ReceivedAt,
+            receipt.ReceivedByUserId,
+            receipt.Note,
+            items.Select(x => new ShipmentReturnReceiptLineSnapshot(x.OrderLineId, x.Quantity, x.Condition)).ToArray());
+    }
+
+    private static decimal UsableReturnedQuantity(
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        Guid orderLineId) =>
+        receiptItems
+            .Where(x => x.OrderLineId == orderLineId && x.Condition == ReturnReceiptCondition.Usable)
+            .Sum(x => x.Quantity);
+
+    private static decimal ResendCommittedQuantity(
+        IReadOnlyList<ShipmentSnapshot> shipments,
+        Guid orderLineId) =>
+        shipments
+            .Where(s => s.ResendOfShipmentId is not null && s.Status != ShipmentStatus.Cancelled)
+            .SelectMany(s => s.Items)
+            .Where(x => x.OrderLineId == orderLineId)
+            .Sum(x => x.Quantity);
+
+    private static decimal ResendableQuantity(
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        IReadOnlyList<ShipmentSnapshot> shipments,
+        Guid orderLineId)
+    {
+        var remaining = UsableReturnedQuantity(receiptItems, orderLineId)
+            - ResendCommittedQuantity(shipments, orderLineId);
+        return remaining > 0m ? remaining : 0m;
+    }
+
+    private static decimal DeliveredQuantity(
+        IReadOnlyList<ShipmentSnapshot> shipments,
+        Guid orderLineId) =>
+        shipments
+            .Where(s => s.Status == ShipmentStatus.Delivered)
+            .SelectMany(s => s.Items)
+            .Where(x => x.OrderLineId == orderLineId)
+            .Sum(x => x.Quantity);
 
     /// <summary>
     /// snapshot گروه‌های واحد را با عضویت خطوط همان واحد می‌سازد؛ ترتیب پایدار بر اساس شناسهٔ گروه.

@@ -609,7 +609,13 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         }
 
         unit.ApplyShipmentDispatched(shipmentId, _clock.UtcNow);
-        await ConsumeInventoryForShipmentAsync(unit, shipment, cancellationToken);
+        if (!shipment.IsResend)
+        {
+            // TB-258: the reservation was already consumed for the first dispatch of these goods. A resend must not
+            // consume/commit the same reservation a second time.
+            await ConsumeInventoryForShipmentAsync(unit, shipment, cancellationToken);
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordDispatched();
         return await MapSnapshotAsync(unit, cancellationToken);
@@ -670,9 +676,19 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         }
 
         var shippingGroups = await _db.ShippingGroups.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync(cancellationToken);
+        var receipts = await _db.ShipmentReturnReceipts.Where(x => x.FulfillmentId == fulfillmentId).ToListAsync(cancellationToken);
+        foreach (var receipt in receipts)
+        {
+            var receiptItems = await _db.ShipmentReturnReceiptItems
+                .Where(x => x.ShipmentReturnReceiptId == receipt.ShipmentReturnReceiptId)
+                .ToListAsync(cancellationToken);
+            receipt.AttachLoadedItems(receiptItems);
+        }
+
         unit.AttachLoadedItems(items);
         unit.AttachLoadedShipments(shipments);
         unit.AttachLoadedShippingGroups(shippingGroups);
+        unit.AttachLoadedReturnReceipts(receipts);
         return unit;
     }
 

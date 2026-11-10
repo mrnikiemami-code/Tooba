@@ -170,6 +170,63 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         CancellationToken cancellationToken) =>
         MapRequired(await directory.DeliverShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken));
 
+    /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> RecordNonDeliveryAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string reason,
+        string? note,
+        CancellationToken cancellationToken) =>
+        MapRequired(await directory.RecordNonDeliveryAsync(
+            fulfillmentId, shipmentId, actorUserId, reason, note, cancellationToken));
+
+    /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> StartReturnAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        MapRequired(await directory.StartReturnAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken));
+
+    /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> RecordReturnReceiptAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        IReadOnlyList<ReturnReceiptLineCommand> items,
+        string? note,
+        CancellationToken cancellationToken) =>
+        MapRequired(await directory.RecordReturnReceiptAsync(
+            fulfillmentId,
+            shipmentId,
+            actorUserId,
+            items.Select(x => new AppModels.ReturnReceiptLineCommand(
+                x.OrderLineId,
+                x.Quantity,
+                (Domain.ValueObjects.ReturnReceiptCondition)x.Condition)).ToList(),
+            note,
+            cancellationToken));
+
+    /// <inheritdoc />
+    public async Task<FulfillmentShipmentCreateResult> CreateResendShipmentAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        Guid originalShipmentId,
+        IReadOnlyList<ShipmentLineCommand> items,
+        CancellationToken cancellationToken,
+        string? shippingDispatchKey = null)
+    {
+        var created = await directory.CreateResendShipmentAsync(
+            fulfillmentId,
+            actorUserId,
+            originalShipmentId,
+            items.Select(x => new AppModels.ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToList(),
+            cancellationToken,
+            shippingDispatchKey);
+        return new FulfillmentShipmentCreateResult(MapRequired(created.Snapshot), created.CreatedShipmentId);
+    }
+
     public async Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> shipmentIds,
@@ -262,7 +319,12 @@ internal sealed class FulfillmentAdminOperationsAdapter(
                         x.QuantityShipped,
                         x.ReservationId,
                         x.QuantityPacked,
-                        x.QuantityProcessing))
+                        x.QuantityProcessing,
+                        x.ShippingGroupId,
+                        x.ReturnedUsableQuantity,
+                        x.ResendCommittedQuantity,
+                        x.ResendableQuantity,
+                        x.DeliveredQuantity))
                     .ToList(),
                 snapshot.Shipments.Select(Map).ToList(),
                 snapshot.CreatedAt,
@@ -285,7 +347,26 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             shipment.ProviderMetadataVersion,
             shipment.PreviousTrackingReference,
             shipment.ShippingGroupId,
-            shipment.ShippingDispatchKey);
+            shipment.ShippingDispatchKey,
+            shipment.ResendOfShipmentId,
+            shipment.NonDeliveryReason,
+            shipment.NonDeliveryNote,
+            shipment.NonDeliveredAt,
+            shipment.ReturnStartedAt,
+            shipment.ReturnedAt,
+            shipment.ReturnReceipt is null
+                ? null
+                : new ReturnReceiptSnapshot(
+                    shipment.ReturnReceipt.ShipmentReturnReceiptId,
+                    shipment.ReturnReceipt.ReceivedAt,
+                    shipment.ReturnReceipt.ReceivedByUserId,
+                    shipment.ReturnReceipt.Note,
+                    shipment.ReturnReceipt.Items
+                        .Select(x => new ReturnReceiptLineSnapshot(
+                            x.OrderLineId,
+                            x.Quantity,
+                            (ReturnReceiptCondition)x.Condition))
+                        .ToList()));
 
     private static ConsolidatedPackageSnapshot Map(AppModels.ConsolidatedPackageSnapshot package) =>
         new(

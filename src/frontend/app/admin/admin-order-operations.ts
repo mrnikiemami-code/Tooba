@@ -123,6 +123,8 @@ export type AdminOrderOperationRequest = {
   reuseShipmentIds?: string[] | null;
   /** TB-253-R3: prebound workflow occurrence; retry replays, a new id is a new operation. */
   operationalGroupOccurrenceId?: string | null;
+  /** TB-258: per-line physical receipt facts of one origin receipt (only usable quantity is resendable). */
+  receiptItems?: Array<{ orderLineId: string; quantity: number; condition: number }> | null;
 };
 
 /**
@@ -334,6 +336,11 @@ export async function executeAdminOrderOperation(
         operationalGroupShippingGroupIds: body.operationalGroupShippingGroupIds ?? null,
         reuseShipmentIds: body.reuseShipmentIds ?? null,
         operationalGroupOccurrenceId: body.operationalGroupOccurrenceId ?? null,
+        receiptItems: body.receiptItems?.map((line) => ({
+          orderLineId: line.orderLineId,
+          quantity: line.quantity,
+          condition: line.condition,
+        })) ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

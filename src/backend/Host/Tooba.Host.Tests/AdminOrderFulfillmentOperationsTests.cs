@@ -261,6 +261,26 @@ public sealed class AdminOrderFulfillmentOperationsTests
             throw new NotImplementedException();
         public Task<FulfillmentSnapshot> DeliverShipmentAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
+        public Task<FulfillmentSnapshot> RecordNonDeliveryAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, string reason, string? note, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<FulfillmentSnapshot> StartReturnAsync(Guid fulfillmentId, Guid shipmentId, Guid actorUserId, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<FulfillmentSnapshot> RecordReturnReceiptAsync(
+            Guid fulfillmentId,
+            Guid shipmentId,
+            Guid actorUserId,
+            IReadOnlyList<Tooba.Fulfillment.Contracts.Operations.ReturnReceiptLineCommand> items,
+            string? note,
+            CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<Tooba.Fulfillment.Contracts.Operations.FulfillmentShipmentCreateResult> CreateResendShipmentAsync(
+            Guid fulfillmentId,
+            Guid actorUserId,
+            Guid originalShipmentId,
+            IReadOnlyList<Tooba.Fulfillment.Contracts.Operations.ShipmentLineCommand> items,
+            CancellationToken cancellationToken,
+            string? shippingDispatchKey = null) =>
+            throw new NotImplementedException();
         public Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(Guid checkoutId, IReadOnlyList<Guid> shipmentIds, string? shippingMethodCode, string? trackingReference, string? note, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(Guid consolidatedPackageId, Guid actorUserId, CancellationToken cancellationToken) =>

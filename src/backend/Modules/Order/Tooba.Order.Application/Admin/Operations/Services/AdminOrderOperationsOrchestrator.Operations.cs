@@ -314,6 +314,60 @@ public sealed partial class AdminOrderOperationsOrchestrator
             _ => DeliverCoreAsync(request, actorUserId, cancellationToken),
             cancellationToken));
 
+    // --- TB-258: post-dispatch non-delivery / physical return / quantity-safe resend ---
+
+    public Task<Result<object>> RecordNonDeliveryAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "record_non_delivery",
+            _ => RecordNonDeliveryCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> StartReturnAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "start_return",
+            _ => StartReturnCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> RecordReturnReceiptAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "record_return_receipt",
+            _ => RecordReturnReceiptCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
+    public Task<Result<object>> ResendShipmentAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunProjectedCoreAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "resend_shipment",
+            _ => ResendShipmentCoreAsync(request, actorUserId, cancellationToken),
+            cancellationToken));
+
     public Task<Result<object>> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         Guid actorUserId,

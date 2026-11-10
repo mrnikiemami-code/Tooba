@@ -14,4 +14,12 @@ public sealed record FulfillmentItemSnapshot(
     Guid? ReservationId,
     decimal QuantityPacked = 0,
     decimal QuantityProcessing = 0,
-    Guid? ShippingGroupId = null);
+    Guid? ShippingGroupId = null,
+    /// <summary>TB-258: physically received usable returned quantity of this line.</summary>
+    decimal ReturnedUsableQuantity = 0,
+    /// <summary>TB-258: returned capacity already committed to non-cancelled resend parcels.</summary>
+    decimal ResendCommittedQuantity = 0,
+    /// <summary>TB-258: returned capacity still available for a new resend parcel.</summary>
+    decimal ResendableQuantity = 0,
+    /// <summary>TB-258: quantity actually delivered to the customer (derived from delivered parcels).</summary>
+    decimal DeliveredQuantity = 0);

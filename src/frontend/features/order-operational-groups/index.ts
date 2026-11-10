@@ -10,6 +10,16 @@
  */
 export { AdminOperationalGroupWorkflowDialog } from "./ui/admin-operational-group-workflow-dialog.tsx";
 
+// TB-258: the one post-dispatch exception surface (non-delivery, return, origin receipt, resend).
+export { PostDispatchExceptionDialog, POST_DISPATCH_NON_DELIVERY_REASONS } from "./ui/post-dispatch-exception-dialog.tsx";
+
+export type {
+  PostDispatchExceptionMode,
+  PostDispatchExceptionRequest,
+  PostDispatchParcelLine,
+  PostDispatchReceiptLine,
+} from "./ui/post-dispatch-exception-dialog.tsx";
+
 // TB-256-R1: the group's customer-delivery vs planned-carrier-handoff rows (display-only).
 export { OperationalDeliveryTimeline } from "./ui/operational-delivery-timeline.tsx";
 

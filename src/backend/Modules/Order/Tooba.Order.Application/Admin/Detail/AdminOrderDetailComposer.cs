@@ -119,6 +119,13 @@ public sealed class AdminOrderDetailComposer
                 ?? new Dictionary<Guid, decimal>();
             var processingByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityProcessing)
                 ?? new Dictionary<Guid, decimal>();
+            // TB-258: returned capacity is its own authority; never derived from packed/shipped here.
+            var returnedUsableByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.ReturnedUsableQuantity)
+                ?? new Dictionary<Guid, decimal>();
+            var resendableByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.ResendableQuantity)
+                ?? new Dictionary<Guid, decimal>();
+            var deliveredByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.DeliveredQuantity)
+                ?? new Dictionary<Guid, decimal>();
 
             var lines = order.Lines.Select(line =>
             {
@@ -162,7 +169,10 @@ public sealed class AdminOrderDetailComposer
                     returnUi.DeadlineDisplay,
                     returnUi.RemainingDisplay,
                     returnUi.StatusCode,
-                    fulfillment is null ? null : processing);
+                    fulfillment is null ? null : processing,
+                    fulfillment is null ? null : (returnedUsableByLine.TryGetValue(line.LineId, out var returnedUsable) ? returnedUsable : 0m),
+                    fulfillment is null ? null : (resendableByLine.TryGetValue(line.LineId, out var resendable) ? resendable : 0m),
+                    fulfillment is null ? null : (deliveredByLine.TryGetValue(line.LineId, out var delivered) ? delivered : 0m));
             }).ToList();
             var shipments = fulfillment?.Shipments.Select(s =>
             {
@@ -190,7 +200,21 @@ public sealed class AdminOrderDetailComposer
                     s.ShippingGroupId,
                     string.IsNullOrWhiteSpace(s.TrackingReference)
                         ? FulfillmentInternalTrackingReference.ForShipment(s.ShipmentId)
-                        : null);
+                        : null,
+                    s.ResendOfShipmentId,
+                    s.NonDeliveryReason,
+                    s.NonDeliveryNote,
+                    s.NonDeliveredAt,
+                    s.ReturnStartedAt,
+                    s.ReturnedAt,
+                    s.ReturnReceipt is null
+                        ? null
+                        : s.ReturnReceipt.Items
+                            .Select(i => new AdminReturnReceiptLineView(
+                                i.OrderLineId,
+                                i.Quantity,
+                                i.Condition.ToString()))
+                            .ToList());
             }).ToList()
                 ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();
             return new AdminSellerOrderView(

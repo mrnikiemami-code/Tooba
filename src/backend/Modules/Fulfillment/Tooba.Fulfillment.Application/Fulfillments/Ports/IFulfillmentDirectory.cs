@@ -119,6 +119,49 @@ public interface IFulfillmentDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// TB-258: records a courier non-delivery attempt on a dispatched parcel. It is an internal audited fact — no
+    /// provider cancellation, no fake delivery and no cancel-after-dispatch shortcut.
+    /// </summary>
+    Task<FulfillmentSnapshot> RecordNonDeliveryAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string reason,
+        string? note,
+        CancellationToken cancellationToken);
+
+    /// <summary>TB-258: the carrier started physically returning the failed parcel to origin.</summary>
+    Task<FulfillmentSnapshot> StartReturnAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-258: confirms the physical origin receipt. Only the received USABLE quantity becomes resend capacity, the
+    /// receipt is recorded exactly once per parcel, and a repeated identical submission reconciles it.
+    /// </summary>
+    Task<FulfillmentSnapshot> RecordReturnReceiptAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        IReadOnlyList<ReturnReceiptLineCommand> items,
+        string? note,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-258: allocates a NEW parcel occurrence for returned goods against the recorded origin receipt, reusing the
+    /// accepted shipping group/method of the original and never the fresh packed remainder.
+    /// </summary>
+    Task<FulfillmentShipmentCreateResult> CreateResendShipmentAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        Guid originalShipmentId,
+        IReadOnlyList<ShipmentLineCommand> items,
+        CancellationToken cancellationToken,
+        string? shippingDispatchKey = null);
+
+    /// <summary>
     /// fulfillment شروع‌نشده را پس از برگشت تأیید پرداخت حذف می‌کند.
     /// </summary>
     Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken);
