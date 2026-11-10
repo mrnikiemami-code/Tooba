@@ -1,4 +1,34 @@
-# CURRENT — issue3 ACCEPT within scope; task259 ISSUED — 2026-11-10
+# CURRENT — 259 WORKER RESULT PASS: operator packing choice — 2026-11-10
+
+Read docs/ai/tasks/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/{TASK.md,RESULT.md,RECEIPTS.md}.
+Status **PASS** within the issued issue-4 scope, decision
+**OPTIONAL_COMMON_PACKAGE_OR_INDEPENDENT_PARCELS_INSIDE_ONE_SERVER_OWNED_COMPATIBLE_GROUP_WITH_THE_CHOICE_INSIDE_THE_IMMUTABLE_OCCURRENCE_ENVELOPE** —
+NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT the five-defect completion.
+Base `fbf24b6aec`; code `4c71a668e`; evidence SHA in the task evidence commit; single worker, no parallel task.
+Inside ONE compatible Marketplace operational group the operator now chooses «یک بستهٔ مشترک» (common, one
+package, unchanged) or «مرسوله‌های جدا» (separate: exact independent member parcels, ZERO package rows; a null
+consolidated package id is that shape's recorded RESULT). The choice is part of the immutable durable
+occurrence envelope/fingerprint before ANY allocation; a common envelope stays byte-identical to TB-253-R4 so
+historical occurrences replay unchanged; same occurrence + changed mode/quantity/reuse is
+`order.operational_group.workflow_intent_conflict` with zero writes and an unknown token is
+`workflow_packing_mode_invalid`. The public command reconciles an exact recorded occurrence (both shapes)
+before fresh readiness while re-checking the current actor/checkout/group; absent occurrence still passes the
+ordinary gate. No new table/column, NO migration. FE: two server-projected 44px choices in the ONE dialog,
+choice part of the retained envelope (read-only + changed choice refused while unresolved), and a complete
+envelope that cannot be read back from sessionStorage refuses the NEW send with one inline message and zero
+POST.
+Proof: 259 relational 7/7 on real `tooba_alpha` (ids in `tb259-relational.txt`); mounted real
+section/panel/dialog 45/45; retained Fulfillment 257/258 40/40, Order 258 replay 9/9, Order architecture guard
+1/1; whole Order suite base 96/613/709 → current 96/620/716 with 0 identity drift (identical pre-existing
+failures, not a green claim); typecheck 0; build 0; publish 0. Host PID 24396 `/health` 200; FE PID 43948
+BUILD_ID `UZ3uUgVwd1cDuJ1wXVeJA` `/fa` 200 (previous build 404). One DB `tooba_alpha`/SingleStore/store-alpha,
+no extra DB/15433/edition switch, DataProtection + CapturedPreview preserved, user rows read-only, 255 parked,
+Tipax deferred.
+LEDGER: save closed; issues1/2 accepted257; issue3 accepted258-R3; **issue4 pending Architect review of 259**;
+issue5 task260 **NOT ISSUED**. STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — issue3 ACCEPT within scope; task259 ISSUED — 2026-11-10
 
 Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/ARCHITECT-REVIEW.md.
 Source review at fbf24b6aec52a62960227d57a40f3bbe45879e04 confirms full cancelled intent check before result and readback-durable first-send guard.258 internal non-delivery/final physical receipt/source-safe resend accepted within scope; user visual/live provider acceptance NOT claimed. Existing parent-package exception refusal remains an honest limit.

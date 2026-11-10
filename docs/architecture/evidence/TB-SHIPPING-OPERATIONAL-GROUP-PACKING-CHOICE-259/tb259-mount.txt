@@ -1,0 +1,17 @@
+﻿TB-259 mounted proof on the REAL operational section + panel + workflow dialog (final run)
+  command : npx tsx --tsconfig tsconfig.mount-tests.json --test app/admin/admin-order-operational-delivery.mount.test.ts
+  result  : tests 45 / pass 45 / fail 0  (41 retained cases + 5 TB-259 cases, one of them added during this task)
+
+✔ TB-259 mounted: the operator chooses «مرسوله‌های جدا» and that exact choice is reviewed, durable before the POST and posted (22.6891ms)
+✔ TB-259 mounted: a separate result with no consolidated package is authoritative completion, never pending (19.0235ms)
+✔ TB-259 mounted: while an attempt is unresolved the recorded choice is read-only and a changed packing choice is refused (25.4495ms)
+✔ TB-259 mounted: an envelope that cannot be retained refuses the NEW send and sends nothing (21.7844ms)
+✔ TB-259 static: only the packing choices the server projected are offered for the group (1.9834ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4178.8305

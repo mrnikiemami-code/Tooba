@@ -1,0 +1,18 @@
+﻿TB-259 — relational proof on the ONE canonical database (final delivered code, after the last edit)
+  database : tooba_alpha @ 127.0.0.1:5432 (Username=admin)
+  command  : TB259_CONNECTION=<tooba_alpha> dotnet test .../Tooba.Order.Tests --filter FullyQualifiedName~MarketplaceOperationalPackingChoice259Tests
+  result   : Passed 7 / Failed 0
+
+A common        checkout=ff6fe0ab-4b60-4a19-8c91-9ba37469b3b7 occurrence=0a265206-8c63-4a78-a0ad-b40f60de7dd3 parcels=2 packages=1 package=01a1c5c2-e849-7000-be13-fdbae54ccb9e
+B separate      checkout=33eb7a6f-d426-4275-b07e-d440e6584634 occurrence=d174bf2e-e1e2-47ca-b2c2-a7faa4108896 parcels=2 packages=0 publicReplay=ok(gate would refuse) absentOccurrence=order.operation.invalid
+C conflict      checkout=024c1fbe-20be-4db8-b43e-17b0c1f5c3bc occurrence=c1afb247-9715-4c1c-84f9-bae3e1e70c8d changedMode=conflict changedQuantity=conflict publicChangedMode=conflict unknownToken=workflow_packing_mode_invalid rows=2
+C2 common       checkout=ab9a77af-cb32-40a6-8a42-d5b74c687226 occurrence=02487741-9641-424b-b36f-cad0329fdf63 linked=1 parcels=2 replayedFirst=01a1c5c2-e320-7000-be1f-992743aaf009 packages=1
+C2 separate     checkout=ebdde42c-153c-4602-bf49-7a18a536a050 occurrence=9f393d47-59bf-457d-955b-fcd96abba0b1 linked=1 parcels=2 replayedFirst=01a1c5c2-e542-7000-bc4c-72b412fb92b3 packages=0
+C3 concurrency  checkout=277cb10f-be8f-4dc0-a9f6-894cb659ff13 occurrence=c05c9c5f-6b7b-42b8-9047-a4ec8e5dfda3 parcels=2 packages=0 ids=01a1c5c2-e942-7000-a387-17b155ee882f,01a1c5c2-e964-7000-a01b-ec7fb74a88ff
+D authority     checkout=b5d533ea-88cd-4224-ada6-3684572ccda5 foreignGroup=workflow_foreign foreignReuse=workflow_shipment_foreign storeOwned=workflow_foreign denied=order.operation.denied storeCheckout=1dc806c3-796b-49ff-b5e8-aee8b7aee42c
+
+Earlier run of the same cases (same code shape, recorded before the removal of one unused Contracts
+constant) produced the same shapes: A parcels=2 packages=1; B parcels=2 packages=0; C rows=2 with three
+conflict/mode refusals; C2 both completion shapes replaying the exact first id; C3 one parcel set from two
+independent contexts; D four authority refusals. Fixture ids of that run are intentionally not repeated
+here — the authoritative record is the final run above.

@@ -1,0 +1,44 @@
+TB-259 — Order test-suite parity against the expected base (NOT a green claim; it is an identical-failure claim)
+
+Environment
+  ONE database: tooba_alpha @ 127.0.0.1:5432 (Username=admin, Database=tooba_alpha)
+  current worktree: D:\Users\User\source\repos\SarvNewVer  (HEAD 436c067a0 + this task's working changes)
+  base worktree : D:\temp\tb259-base  (git worktree at fbf24b6aec52a62960227d57a40f3bbe45879e04)
+  command (both): dotnet test src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj -c Release
+                 --logger "trx;LogFileName=<name>.trx"
+  TB259_CONNECTION was set ONLY for the current worktree run (the TB-259 relational cases live only there).
+
+Summary
+  base    : Failed 96 / Passed 613 / Total 709
+  current : Failed 96 / Passed 620 / Total 716     (+7 = the seven TB-259 cases, all passing)
+
+Failed-test identity diff (trx testName sets)
+  only-in-current : 0
+  only-in-base    : 0
+
+Meaning
+  The 96 failures are the SAME pre-existing failures at base and after this task. They are
+  environment-refusing relational classes that require a disposable PostgreSQL instance
+  (for example "TOOBA_TB253R3_ORDER_POSTGRES must point at the disposable 127.0.0.1:15433/order_tb253r3
+  instance"), plus the previously known discretionary-PostgreSQL/coupon classes. This task is forbidden
+  from creating any disposable/parallel database, so those classes refuse to run by design and are NOT
+  re-baselined here.
+
+One finding fixed during the task (not shipped as a known failure)
+  OrderAdminOperationsArchitectureGuardTests.Application_ops_has_no_central_ExecuteAsync_dispatcher
+  was red after the first refactor because the extracted private plan runner was named ExecuteAsync
+  (the guard forbids that token anywhere under Order/Admin/Operations). Renamed to RunReviewedPlanAsync;
+  the guard is green in the final run recorded above and no guard text or baseline was edited.
+
+Final re-run on the delivered code (cur3.trx, after removing one unused Contracts constant)
+  base    (D:\temp\tb259-res\base.trx)  : Failed 96 / Passed 613 / Total 709
+  current (D:\temp\tb259-res\cur3.trx)  : Failed 96 / Passed 620 / Total 716
+  only-in-current : 0
+  only-in-base    : 0
+  => the same 96 failures, same identities, on the exact code that was built, published and served.
+
+Distinct focused runs (not part of the counts above)
+  MarketplaceOperationalPackingChoice259Tests                        : 7/7 pass (real tooba_alpha)
+  AdminOrderPostDispatchReplayTests (258 public command regression)  : 9/9 pass
+  Fulfillment PostDispatchException (258) + AutomaticTracking (257)  : 40/40 pass
+  OrderAdminOperationsArchitectureGuardTests (no central ExecuteAsync dispatcher) : 1/1 pass

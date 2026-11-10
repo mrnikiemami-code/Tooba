@@ -1,0 +1,56 @@
+TB-259 RESULT CONTRACT — operator packing choice inside ONE compatible operational group
+
+Decision
+  OPTIONAL_COMMON_PACKAGE_OR_INDEPENDENT_PARCELS_INSIDE_ONE_SERVER_OWNED_COMPATIBLE_GROUP_WITH_THE_CHOICE_INSIDE_THE_IMMUTABLE_OCCURRENCE_ENVELOPE
+
+Scope
+  ONE owning workflow (MarketplaceOperationalGroupWorkflow). No parallel service, no parallel occurrence
+  store, no new endpoint, no schema change.
+
+Choice surface (backend authority)
+  OperationalGroupPackingMode { Common = 0, Separate = 1 }
+  OperationalGroupPackingModes.TryParse(token): "" / "common" -> Common, "separate" -> Separate,
+  anything else -> FALSE (typed refusal order.operational_group.workflow_packing_mode_invalid), never a
+  silent fallback.
+
+Envelope / fingerprint (compatibility rule)
+  CanonicalEnvelopeJson emits "packingMode":"separate" ONLY for Separate. A Common envelope stays
+  byte-identical to the TB-253-R4 envelope, so every already recorded occurrence keeps its historical
+  fingerprint and replays unchanged. ReadPackingMode(legacy json without the token) = Common.
+  => Historical occurrences are never reinterpreted; a legacy row means common-package semantics.
+
+Durable state machine
+  claim (before any allocation) -> per-member durable link -> completion:
+    Common   : RecordCompletedAsync(occurrenceId, consolidatedPackageId, packageNumber, method)
+    Separate : RecordCompletedSeparateAsync(occurrenceId, method)      [ConsolidatedPackageId stays NULL]
+  A completed Separate occurrence is COMPLETE by its own durable constituent links. packageId = null is
+  the recorded RESULT, never evidence of incompleteness (server read, public command response and the
+  mounted FE completion branch all treat it as completion and clear the retained review).
+
+Identity rules (each proven by a real relational case)
+  same occurrence + same envelope (members/selections/reuse/choice)          -> exact recorded replay, zero writes
+  same occurrence + changed choice / quantity / reuse / source membership    -> workflow_intent_conflict, zero writes
+  same occurrence + unknown packing token                                   -> workflow_packing_mode_invalid, zero writes
+  a NEW occurrence while fresh readiness disappeared                        -> ordinary projection gate (order.operation.invalid)
+  recorded occurrence whose readiness disappeared                           -> public command still answers the record
+  provider/metadata + accepted method derive from committed evidence; the choice never re-quotes money.
+
+One result shape per new operation
+  Common   : exactly 2 constituent parcels + 1 consolidated package + 2 package members
+  Separate : exactly 2 constituent parcels + 0 packages + 0 members; each parcel has its own lifecycle
+  Both     : one operational group card / one action owner; no fee recalculation by packing choice.
+
+Client (reviewed envelope)
+  The choice is a first-class field of the retained reviewed envelope in sessionStorage
+  (tb.operational-group-attempt.v2:{checkout}:{scope}:{group}). The complete envelope is written and
+  READ BACK before the first POST; a non-durable write refuses the NEW send with one inline message and
+  sends nothing. While an attempt is unresolved the recorded choice is read-only (radios disabled) and a
+  changed choice is blocked at the resolver boundary; only the recorded envelope may reconcile.
+
+Refusals / non-goals preserved
+  Store/Seller ownership is never promoted: a Store-owned checkout does not project a cross-seller
+  Marketplace operational group and is refused at the projection boundary with zero writes.
+  Foreign group, sibling-group parcel reuse, unauthorized actor are refused before writes.
+  CarrierApi stays the dedicated provider path; no live Tipax call, no fabricated Manual fallback.
+  257 packed-minus-shipped-minus-open, 258 source-safe resend capacity, reservations, money, accepted
+  scheduling evidence and historical tracking are untouched.
