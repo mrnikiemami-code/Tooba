@@ -1,0 +1,12 @@
+# Architect review — 258 — PARTIAL / correction required
+Reviewed main 00917021d0d63c8e6f5f5c8992eb1a40e15a1601 on 2026-11-10; worker evidence ee0efd4c3e6b01d79b945b214555c025284360b1.
+Independent source review, not a live runtime or test execution claim.
+
+Accepted direction: explicit non-delivery -> returning -> physical receipt -> new resend; pre-dispatch cancel remains separate; no fake Delivered; preserved original dispatch and money; same canonical DB. Reported proof is useful but does not close the following source-visible invariants.
+
+1. FulfillmentDirectory.Returns.cs CreateResendShipmentAsync returns FindResendByDispatchKey before validating originalShipmentId or requested line quantities. A key reused with a different payload returns success for a different intent. Null/blank keys also remain allowed. The domain's later quantity comparison cannot protect this early return. Require a prebound, validated exact intent and typed conflict before replay; cancelled-key handling must be explicit.
+2. post-dispatch-exception-dialog.tsx effect depends on [open, mode, parcelKey, lines] and mints a fresh key/reset on every opening or lines reference change. No retained complete resend envelope survives close/remount/unknown response. Lost response + reopen may create another allocation. Preserve the exact reviewed request and occurrence until authoritative resolution, including when fresh readiness becomes false.
+3. FulfillmentUnit.cs ReturnedUsableQuantity/ResendCommittedQuantity pool all parcels of an order line; CreateResendShipment replaces a returned resend with its ancestor before capacity checks. Two returned source parcels each carrying one unit may allow a two-unit resend from just one source, and immediate physical lineage is lost. Capacity must belong to the specific physically received source parcel, with immediate resend ancestry and conservation through repeated return cycles.
+4. ShipmentReturnReceipt.cs rejects a repeated orderLineId even when condition differs. One three-unit parcel line cannot be recorded as two usable plus one damaged. Support exact mixed-condition quantities, validate the SUM against that source parcel, and update dialog/read projections/replay accordingly.
+
+Issue3 is PARTIAL, not closed. Issues1/2 remain accepted within257; save prerequisite256-R2 remains closed. Next authorized task is258-R1 only.259/260 remain NOT ISSUED;255 parked; live Tipax deferred. Same tooba_alpha/3000/5088, no extra DB or edition switch. User final handoff is after all five defects, not now.
