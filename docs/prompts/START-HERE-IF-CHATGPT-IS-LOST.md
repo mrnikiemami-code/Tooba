@@ -1,3 +1,14 @@
+# CURRENT — issue3 ACCEPT within scope; task259 ISSUED — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/ARCHITECT-REVIEW.md.
+Source review at fbf24b6aec52a62960227d57a40f3bbe45879e04 confirms full cancelled intent check before result and readback-durable first-send guard.258 internal non-delivery/final physical receipt/source-safe resend accepted within scope; user visual/live provider acceptance NOT claimed. Existing parent-package exception refusal remains an honest limit.
+ONLY task now docs/ai/tasks/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/TASK.md: same compatible Marketplace operational group, deliberate common package OR independent member parcels; packing mode bound in durable complete occurrence before allocation; separate completion valid without package; exact replay/current authority/recovery/one action owner mandatory.
+Ledger save closed; issues1/2 accepted257; issue3 accepted258-R3 (3/5); issue4 task259 ISSUED; issue5 task260 NOT ISSUED. One worker/task, STOP_FOR_ARCHITECT, final user handoff after five.
+Same tooba_alpha5432 + FE3000/Host5088 SingleStore/store-alpha only; NO extra DB/Docker/15433/edition switch. Positive Marketplace controlled committed-domain fixtures allowed IN SAME DB, never promote user Store orders or claim live Marketplace checkout.255 parked; Tipax deferred. Preserve keys/CapturedPreview/calendars and real user business rows read-only.
+Older CURRENT blocks below superseded by this one.
+
+---
+
 # CURRENT — 258-R3 WORKER RESULT PASS (pending Architect review) — 2026-11-10
 
 Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb258-relational.txt,tb258r3-orchestrator-relational.txt}.
