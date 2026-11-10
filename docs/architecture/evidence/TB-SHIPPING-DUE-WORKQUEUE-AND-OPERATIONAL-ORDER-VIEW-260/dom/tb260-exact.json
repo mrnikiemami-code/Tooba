@@ -1,0 +1,143 @@
+{
+  "pages": [
+    {
+      "name": "queue-row-locator",
+      "width": 1440,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/64677682-ccd0-43ce-b3c8-20b804a2e273/operations?fulfillmentId=01a1c5c2-ee27-7000-9809-a00147d07c82&from=queue&filter=dispatch_unspecified",
+        "dir": "rtl",
+        "innerWidth": 1440,
+        "docScrollWidth": 1425,
+        "state": "ready",
+        "targetCards": 1,
+        "targetKeys": [
+          "|manual|04a9a65f6c6d48a8bc6df6c20fc7f853"
+        ],
+        "targetTexts": [
+          "پیشتازآمادهٔ اقدامموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-12 · 09:00–10:00مرسوله‌هابدون مرسوله"
+        ],
+        "nullPlan": 1,
+        "financeHits": [],
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "backHref": "/admin/fulfillments?filter=dispatch_unspecified",
+        "minAction": 28,
+        "below44": 3
+      }
+    },
+    {
+      "name": "queue-row-locator",
+      "width": 1024,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/64677682-ccd0-43ce-b3c8-20b804a2e273/operations?fulfillmentId=01a1c5c2-ee27-7000-9809-a00147d07c82&from=queue&filter=dispatch_unspecified",
+        "dir": "rtl",
+        "innerWidth": 1024,
+        "docScrollWidth": 1009,
+        "state": "ready",
+        "targetCards": 1,
+        "targetKeys": [
+          "|manual|04a9a65f6c6d48a8bc6df6c20fc7f853"
+        ],
+        "targetTexts": [
+          "پیشتازآمادهٔ اقدامموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-12 · 09:00–10:00مرسوله‌هابدون مرسوله"
+        ],
+        "nullPlan": 1,
+        "financeHits": [],
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "backHref": "/admin/fulfillments?filter=dispatch_unspecified",
+        "minAction": 28,
+        "below44": 3
+      }
+    },
+    {
+      "name": "queue-row-locator",
+      "width": 390,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/64677682-ccd0-43ce-b3c8-20b804a2e273/operations?fulfillmentId=01a1c5c2-ee27-7000-9809-a00147d07c82&from=queue&filter=dispatch_unspecified",
+        "dir": "rtl",
+        "innerWidth": 390,
+        "docScrollWidth": 375,
+        "state": "ready",
+        "targetCards": 1,
+        "targetKeys": [
+          "|manual|04a9a65f6c6d48a8bc6df6c20fc7f853"
+        ],
+        "targetTexts": [
+          "پیشتازآمادهٔ اقدامموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-12 · 09:00–10:00مرسوله‌هابدون مرسوله"
+        ],
+        "nullPlan": 1,
+        "financeHits": [],
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "backHref": "/admin/fulfillments?filter=dispatch_unspecified",
+        "minAction": 28,
+        "below44": 3
+      }
+    },
+    {
+      "name": "legacy-group-locator",
+      "width": 1440,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf/operations?from=queue&shippingGroupId=01a1b92db7e1700097a193f3bc3bcf0c&filter=dispatch_unspecified",
+        "dir": "rtl",
+        "innerWidth": 1440,
+        "docScrollWidth": 1425,
+        "state": "ready",
+        "targetCards": 0,
+        "targetKeys": [],
+        "targetTexts": [],
+        "nullPlan": 0,
+        "financeHits": [],
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "backHref": "/admin/fulfillments?filter=dispatch_unspecified",
+        "minAction": 44,
+        "below44": 0
+      }
+    },
+    {
+      "name": "legacy-group-locator",
+      "width": 1024,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf/operations?from=queue&shippingGroupId=01a1b92db7e1700097a193f3bc3bcf0c&filter=dispatch_unspecified",
+        "dir": "rtl",
+        "innerWidth": 1024,
+        "docScrollWidth": 1009,
+        "state": "ready",
+        "targetCards": 0,
+        "targetKeys": [],
+        "targetTexts": [],
+        "nullPlan": 0,
+        "financeHits": [],
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "backHref": "/admin/fulfillments?filter=dispatch_unspecified",
+        "minAction": 44,
+        "below44": 0
+      }
+    },
+    {
+      "name": "legacy-group-locator",
+      "width": 390,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf/operations?from=queue&shippingGroupId=01a1b92db7e1700097a193f3bc3bcf0c&filter=dispatch_unspecified",
+        "dir": "rtl",
+        "innerWidth": 390,
+        "docScrollWidth": 375,
+        "state": "ready",
+        "targetCards": 0,
+        "targetKeys": [],
+        "targetTexts": [],
+        "nullPlan": 0,
+        "financeHits": [],
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "backHref": "/admin/fulfillments?filter=dispatch_unspecified",
+        "minAction": 44,
+        "below44": 0
+      }
+    }
+  ],
+  "ok": true
+}

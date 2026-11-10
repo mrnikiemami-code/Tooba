@@ -1,0 +1,13 @@
+{
+  "buildHint": [
+    "http://127.0.0.1:3000/_next/static/chunks/4bd1b696-100b9d70ed4e49c1.js",
+    "http://127.0.0.1:3000/_next/static/chunks/1255-d3668eefd1b4a69b.js",
+    "http://127.0.0.1:3000/_next/static/chunks/main-app-f286d2ff84072b60.js",
+    "http://127.0.0.1:3000/_next/static/chunks/polyfills-42372ed130431b0a.js"
+  ],
+  "bucket": "<div role=\"gridcell\" col-id=\"dispatchBucket\" tabindex=\"-1\" class=\"ag-cell ag-cell-not-inline-editing ag-cell-normal-height ag-cell-value\" aria-colindex=\"10\" style=\"right: 982px; width: 190px;\"><span class=\"inline-flex flex-wrap items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold bg-slate-50 text-slate-600\">Today<span class=\"font-medium opacity-80\"> · Open</span></span></div>",
+  "plan": "<div role=\"gridcell\" col-id=\"dispatchDeadline\" tabindex=\"-1\" class=\"ag-cell ag-cell-not-inline-editing ag-cell-normal-height ag-cell-value\" aria-colindex=\"11\" style=\"right: 1172px; width: 210px;\"><span class=\"block break-words text-xs font-semibold\" data-testid=\"admin-fulfillment-plan-90ee28ba-3358-4b5f-bce1-546353fe7bc4\">2026-11-10 · 00:00–23:59 (Asia/Tehran)</span></div>",
+  "receiving": "<div role=\"gridcell\" col-id=\"customerReceiving\" tabindex=\"-1\" class=\"ag-cell ag-cell-not-inline-editing ag-cell-normal-height ag-cell-value\" aria-colindex=\"12\" style=\"right: 1382px; width: 180px;\"><span class=\"block break-words text-xs\" data-testid=\"admin-fulfillment-receiving-90ee28ba-3358-4b5f-bce1-546353fe7bc4\">2026-11-10 · 09:00-17:00</span></div>",
+  "nextStep": "<div role=\"gridcell\" col-id=\"nextStep\" tabindex=\"-1\" class=\"ag-cell ag-cell-not-inline-editing ag-cell-normal-height ag-cell-value\" aria-colindex=\"13\" style=\"right: 1562px; width: 200px;\"><span class=\"block break-words text-xs\" data-testid=\"admin-fulfillment-next-step-90ee28ba-3358-4b5f-bce1-546353fe7bc4\"><span class=\"font-semibold\">شروع پردازش</span></span></div>",
+  "ok": true
+}

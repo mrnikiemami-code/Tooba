@@ -1,4 +1,47 @@
-# CURRENT — 259 WORKER RESULT PASS: operator packing choice — 2026-11-10
+# CURRENT — 260 WORKER RESULT PASS: durable due dispatch queue + finance-free shared operational order view — 2026-11-10
+
+Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb260-relational.txt,dom/tb260-dom.json}.
+Status **PASS** within the issued issue-5 scope, decision
+**DURABLE_ACCEPTED_DISPATCH_TIMING_QUEUE_WITH_FULL_SET_COUNTS_EXACT_LOCATOR_AND_FINANCE_FREE_SHARED_OPERATIONAL_VIEW** —
+NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT by itself the five-defect completion.
+Base `bb18f62d2`; code `f3c15173c`; evidence SHA in the task evidence commit; single worker, no parallel task.
+`/admin/fulfillments` is now a dispatch work queue: ONE pure server authority
+`AdminFulfillmentDispatchTimingAuthority.Classify(pending, inTransit, plans, nowUtc)` consumes ONLY the
+Order-owned durable accepted `PlannedDispatch` (TB-256 evidence via the Contracts-only
+`OrderDispatchPlanFactsBridge`); customer promise and current shipping settings are never inputs and the browser
+computes no date/bucket. Half-open `[open, close)` in the accepted carrier zone; mutually exclusive
+`Overdue`/`Today`(`Open`,`TodayNotOpen`)/`Upcoming`/`Unspecified`/`InTransit`/`NotQueued`; five truthful quick
+tabs («سررسیدشده» = today-open+overdue, «ارسال امروز», «عقب‌افتاده», «آینده», «موعد ارسال مشخص نشده») whose
+counts come from the SAME engine over the SAME filtered set as the page. New columns «بُعد زمانی ارسال» /
+«موعد ارسال» / «تحویل مشتری» / «اقدام بعدی»; timing columns are sortable-only (the query policy REJECTS a column
+filter instead of ignoring it). Exactly ONE «عملیات ارسال» entry per row → exact target
+`/admin/orders/{checkoutId}/operations?fulfillmentId=…&shippingGroupId=…&from=queue&filter=…`. The new
+finance-free route renders the SAME `AdminOrderItemsShippingPanel` / `AdminOrderOperationalDeliverySection` the
+full order page renders (one component, one action owner, existing dialogs) with zero payment/settlement/refund/
+wallet/seller-share surface, an explicit notice when a locator no longer resolves, and a preserved `filter` back
+link. A group with no accepted plan renders «موعد ارسال مشخص نشده»/«مشخص نشده» — never derived or backfilled.
+No migration, no schema change, no second operational UI.
+Proof: A `AdminFulfillmentDispatchTiming260Tests` 15/15; B `AdminFulfillmentWorkQueueDispatch260RelationalTests`
+1/1 on REAL `tooba_alpha` (`TB260-174243 … bucketA=Today/open rowB=Unspecified rowC=NotQueued
+counts=active2/today1/overdue0/upcoming0/unspecified1/transit0/due1 … pages=3x1 distinct=3 writes=0`); B′
+`fulfillment-work-queue-260.test.ts` 4/4; C `admin-order-operations-view.mount.test.ts` 4/4; D read-only
+canonical browser (task-owned headless Chrome, GET only) at 1440/1024/390 — tabs 44px, rtl, no document
+overflow, counts `0/4/4/0/496`, `?filter=dispatch_today` → exactly 4 rows, Persian badges/plan cells with no raw
+enum leak, exact locator from real row `64677682-…` → one target card and `financeHits: []`, unresolvable
+locator → 0 targets with an explicit notice, legacy order `01a1b92d-…` → 3 cards all truthfully
+«موعد ارسال مشخص نشده», `below44: 0`. Typecheck 0; production build 0; publish 0. No migration applied. Host
+PID 27312 `/health` 200 + `/health/ready` 200; FE PID 11948 BUILD_ID `OknVRb0IHssj09ZCN_TtH` `/fa` 200 (previous
+build 404). One DB `tooba_alpha`/SingleStore/`store-alpha-canonical`/`store-alpha`, no extra DB/15433/edition
+switch, DataProtection + CapturedPreview preserved, user rows read-only, task-labelled `TB260-*` fixtures only,
+255 parked, Tipax deferred.
+LEDGER: save closed; issues1/2 accepted257; issue3 accepted258-R3; **issue4 pending Architect review of 259**;
+**issue5 pending Architect review of 260**. Honest limits: pre-existing legacy fixture checkouts carrying
+`SalesChannel='Web'` still answer 500 on admin order detail (that view degrades honestly with zero mutation
+entry; mapping untouched); plan-bearing proof is fixture-derived; two pre-existing smaller surfaces unchanged
+(32px grid row icons, 28px per-line kebab). STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 259 WORKER RESULT PASS: operator packing choice — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/{TASK.md,RESULT.md,RECEIPTS.md}.

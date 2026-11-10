@@ -1,0 +1,83 @@
+TB-260 RESULT CONTRACT — due dispatch work queue + shared finance-free operational order view
+
+Decision
+  DURABLE_ACCEPTED_DISPATCH_TIMING_QUEUE_WITH_FULL_SET_COUNTS_EXACT_LOCATOR_AND_FINANCE_FREE_SHARED_OPERATIONAL_VIEW
+
+Scope
+  ONLY issue 5 of the five-defect ledger. No new lifecycle, no second operational UI, no new page framework,
+  no schema change, no migration, no change to 256 scheduling authority, 257 quantity authority, 258 exception
+  flow or 259 packing choice. One worker, one task, STOP_FOR_ARCHITECT.
+
+Timing authority (one pure rule)
+  AdminFulfillmentDispatchTimingAuthority.Classify(pending, inTransit, plans, explicit nowUtc)
+    input = Order-owned durable accepted PlannedDispatch only (IOrderDispatchPlanFactsReader over the TB-256
+            accepted-plan read model); the customer receiving date is NEVER an input.
+    window = [open, close) in the accepted carrier zone, converted to instants.
+  Buckets (mutually exclusive):
+    Overdue     now >= close, or handoff day already past
+    Today       handoff day == today in the carrier zone (Open or TodayNotOpen)
+    Upcoming    handoff day strictly future
+    Unspecified pending work with NO accepted plan (historical/legacy)
+    InTransit   nothing left to prepare but a parcel is dispatched/in-transit/non-delivered
+    NotQueued   delivered/cancelled with no open parcel
+  Filters (deliberately overlapping, server-evaluated):
+    dispatch_due        today-open + overdue            (سررسیدشده)
+    dispatch_today      the whole today bucket          (ارسال امروز)
+    dispatch_overdue    overdue only                    (عقب‌افتاده)
+    dispatch_upcoming   strictly future                 (آینده)
+    dispatch_unspecified no accepted plan                (موعد ارسال مشخص نشده)
+  Counts are computed by the SAME engine over the SAME search/column-filtered set as the page, independent of
+  the selected quick tab. Priority: overdue (earliest deadline first) -> today -> upcoming -> unspecified ->
+  in-transit, tie-broken by handoff instant then row id.
+
+Queue identity / target
+  One row per physical work unit. Exactly ONE «عملیات ارسال» entry per row, no bulk dispatch, no duplicated
+  child actions, no seller-aside duplicate. The entry carries locators only:
+    /admin/orders/{checkoutId}/operations?fulfillmentId=…&shippingGroupId=…&from=queue&filter=…
+  The selected quick filter travels with it so «بازگشت به صف کار» restores the same queue view.
+  Timing columns are sortable server-side and deliberately NOT column-filterable: the query policy rejects a
+  filter on dispatchBucket/dispatchDeadline instead of accepting and silently ignoring it.
+
+Server-side wire contract
+  Bucket and window state are PascalCase wire names (Today, TodayNotOpen, InTransit, NotQueued, None, …).
+  The client normalises the token before any label is rendered (normalizeDispatchToken); an unknown token is
+  shown verbatim rather than guessed, never a raw enum in the operator UI.
+
+Shared operational view
+  Route /admin/orders/[checkoutId]/operations renders OrderOperationsView (target facts + recipient frame)
+  around the SAME AdminOrderItemsShippingPanel / AdminOrderOperationalDeliverySection the full order page
+  renders: one component, one action owner, server capabilities, existing dialogs, retained envelopes.
+  Absent financial surfaces: payment, settlement, refund, wallet, seller share.
+  Exact target: the locator resolves to the matching group(s); an unresolvable locator is reported explicitly.
+  A group with no accepted plan renders «موعد ارسال مشخص نشده» — never a derived or invented date.
+
+Proven facts
+  A  AdminFulfillmentDispatchTiming260Tests 15/15 (exact open/close, day before/after, cross-zone midnight,
+     null plan, cancelled/delivered, due-but-not-ready).
+  B  AdminFulfillmentWorkQueueDispatch260RelationalTests 1/1 on REAL tooba_alpha through the real Contracts
+     bridge: bucket/row classification, tab filters, counts, 3-row paging with stable distinct order, writes=0.
+  B' fulfillment-work-queue-260.test.ts 4/4 (mapping, null-plan honesty, server counts, server-owned filter ids,
+     PascalCase token normalisation).
+  C  admin-order-operations-view.mount.test.ts 4/4 (exact target + no financial surface, unresolvable locator,
+     null plan never invented, authority decides the mutation entry, retained attempt stays reconcilable).
+  D  Read-only canonical browser (GET only, task-owned Chrome profile, 1440/1024/390): queue tabs 44px and
+     RTL with no document overflow; Persian labels with server tones and no raw enum leak; exact locator →
+     one target card, finance-free, 44px frame controls; legacy order 01a1b92d → 3 groups all truthfully
+     «موعد ارسال مشخص نشده», finance-free, no overflow at the three widths.
+
+Deployment
+  No migration added or applied. Host republished to artifacts\publish-primary (PID 27312, /health 200).
+  FE rebuilt and restarted (PID 11948, BUILD_ID OknVRb0IHssj09ZCN_TtH, /fa 200, previous BUILD_ID 404).
+  ONE database tooba_alpha @ 127.0.0.1:5432, SingleStore / store-alpha-canonical / store-alpha.
+  DataProtection key and CapturedPreview state unchanged; no DDL/business SQL/reset/reseed/backfill.
+
+Known limits
+  Legacy fixture orders whose checkout row carries SalesChannel='Web' (a value the Offer enum does not define)
+  still answer 500 on the admin order detail — pre-existing data condition, not touched here; the operational
+  view degrades honestly with no mutation entry. Plan-bearing proof is fixture-derived (no live plan-bearing
+  real checkout). Pre-existing compact icon buttons (32px grid row actions, 28px per-line kebab) were not
+  restyled. No live Tipax/provider call; 255 parked.
+
+Stop
+  STOP_FOR_ARCHITECT — automaticNextImplementationTask: NONE. This is not Architect ACCEPT, not user
+  VISUAL/FUNCTIONAL ACCEPT, and not by itself the completion of the five-defect ledger.

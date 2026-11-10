@@ -1,0 +1,224 @@
+{
+  "at": "2026-11-10T17:26:52.607Z",
+  "samples": [
+    {
+      "moved": 0,
+      "headers": [
+        "actions",
+        "ag-Grid-SelectionColumn",
+        "orderReference",
+        "sellerDisplayName",
+        "primaryShipmentId",
+        "quantityOrdered",
+        "shippingMethodLabel",
+        "status",
+        "dispatchBucket",
+        "dispatchDeadline"
+      ],
+      "plan": [
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+        "—",
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)"
+      ],
+      "receiving": [],
+      "nextStep": [],
+      "bucket": [
+        "Today · Open",
+        "Unspecified · None",
+        "Today · Open"
+      ],
+      "scrollLefts": [
+        0,
+        null,
+        null
+      ]
+    },
+    {
+      "moved": -400,
+      "headers": [
+        "actions",
+        "orderReference",
+        "sellerDisplayName",
+        "primaryShipmentId",
+        "quantityOrdered",
+        "shippingMethodLabel",
+        "status",
+        "dispatchBucket",
+        "dispatchDeadline",
+        "customerReceiving",
+        "nextStep"
+      ],
+      "plan": [
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+        "—",
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)"
+      ],
+      "receiving": [
+        "2026-11-10 · 09:00-17:00",
+        "—",
+        "2026-11-10 · 09:00-17:00"
+      ],
+      "nextStep": [
+        "شروع پردازش",
+        "شروع پردازش",
+        "شروع پردازش"
+      ],
+      "bucket": [
+        "Today · Open",
+        "Unspecified · None",
+        "Today · Open"
+      ],
+      "scrollLefts": [
+        -400,
+        null,
+        null
+      ]
+    },
+    {
+      "moved": -900,
+      "headers": [
+        "actions",
+        "shippingMethodLabel",
+        "status",
+        "dispatchBucket",
+        "dispatchDeadline",
+        "customerReceiving",
+        "nextStep",
+        "trackingSummary",
+        "recipientName",
+        "cityName",
+        "createdAt"
+      ],
+      "plan": [
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+        "—",
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)"
+      ],
+      "receiving": [
+        "2026-11-10 · 09:00-17:00",
+        "—",
+        "2026-11-10 · 09:00-17:00"
+      ],
+      "nextStep": [
+        "شروع پردازش",
+        "شروع پردازش",
+        "شروع پردازش"
+      ],
+      "bucket": [
+        "Today · Open",
+        "Unspecified · None",
+        "Today · Open"
+      ],
+      "scrollLefts": [
+        -900,
+        null,
+        null
+      ]
+    },
+    {
+      "moved": 400,
+      "headers": [
+        "actions",
+        "ag-Grid-SelectionColumn",
+        "orderReference",
+        "sellerDisplayName",
+        "primaryShipmentId",
+        "quantityOrdered",
+        "shippingMethodLabel",
+        "status",
+        "dispatchBucket",
+        "dispatchDeadline"
+      ],
+      "plan": [
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+        "—",
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)"
+      ],
+      "receiving": [],
+      "nextStep": [],
+      "bucket": [
+        "Today · Open",
+        "Unspecified · None",
+        "Today · Open"
+      ],
+      "scrollLefts": [
+        0,
+        null,
+        null
+      ]
+    },
+    {
+      "moved": 900,
+      "headers": [
+        "actions",
+        "ag-Grid-SelectionColumn",
+        "orderReference",
+        "sellerDisplayName",
+        "primaryShipmentId",
+        "quantityOrdered",
+        "shippingMethodLabel",
+        "status",
+        "dispatchBucket",
+        "dispatchDeadline"
+      ],
+      "plan": [
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+        "—",
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)"
+      ],
+      "receiving": [],
+      "nextStep": [],
+      "bucket": [
+        "Today · Open",
+        "Unspecified · None",
+        "Today · Open"
+      ],
+      "scrollLefts": [
+        0,
+        null,
+        null
+      ]
+    },
+    {
+      "moved": -1600,
+      "headers": [
+        "actions",
+        "dispatchBucket",
+        "dispatchDeadline",
+        "customerReceiving",
+        "nextStep",
+        "trackingSummary",
+        "recipientName",
+        "cityName",
+        "createdAt",
+        "updatedAt"
+      ],
+      "plan": [
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+        "—",
+        "2026-11-10 · 00:00–23:59 (Asia/Tehran)"
+      ],
+      "receiving": [
+        "2026-11-10 · 09:00-17:00",
+        "—",
+        "2026-11-10 · 09:00-17:00"
+      ],
+      "nextStep": [
+        "شروع پردازش",
+        "شروع پردازش",
+        "شروع پردازش"
+      ],
+      "bucket": [
+        "Today · Open",
+        "Unspecified · None",
+        "Today · Open"
+      ],
+      "scrollLefts": [
+        -1341,
+        null,
+        null
+      ]
+    }
+  ],
+  "ok": true
+}

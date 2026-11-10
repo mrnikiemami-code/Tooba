@@ -1,0 +1,26 @@
+{
+  "small": [
+    {
+      "tag": "BUTTON",
+      "testid": "admin-order-line-kebab-01a1c5c2-ee16-7000-8832-fffbdee87d4b",
+      "h": 28,
+      "cls": "inline-flex size-7 items-center justify-center rounded-full border border-gray-200 text-gr",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "testid": "admin-order-line-kebab-01a1c5c2-ee16-7000-bd72-22dcc78c292e",
+      "h": 28,
+      "cls": "inline-flex size-7 items-center justify-center rounded-full border border-gray-200 text-gr",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "testid": "admin-order-line-kebab-01a1c5c2-ee16-7000-b2c2-9f361a0c1a4a",
+      "h": 28,
+      "cls": "inline-flex size-7 items-center justify-center rounded-full border border-gray-200 text-gr",
+      "text": ""
+    }
+  ],
+  "ok": true
+}

@@ -1,0 +1,16 @@
+{
+  "url": "http://127.0.0.1:3000/fa/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=a838597a-10ee-4674-9e99-21b4d8b667fd&from=queue&shippingGroupId=96d38fe3-c845-4d68-b26d-ebd41ae812fe&filter=dispatch_today",
+  "snapshot": {
+    "main": true,
+    "state": "error",
+    "errorText": "سفارش خوانده نشد.\n\nadmin.http.500\n\nتلاش مجدد",
+    "missingTarget": "",
+    "targets": 0,
+    "panel": false,
+    "back": "/admin/fulfillments?filter=dispatch_today",
+    "status": [
+      "http://127.0.0.1:3000/v1/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc"
+    ]
+  },
+  "ok": true
+}

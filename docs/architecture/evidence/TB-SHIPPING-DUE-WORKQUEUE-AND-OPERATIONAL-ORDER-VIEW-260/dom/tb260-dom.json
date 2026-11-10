@@ -1,0 +1,433 @@
+{
+  "generatedAt": "2026-11-10T17:36:13.912Z",
+  "widths": [
+    1440,
+    1024,
+    390
+  ],
+  "pages": [
+    {
+      "name": "queue",
+      "width": 1440,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/fulfillments",
+        "dir": "rtl",
+        "innerWidth": 1440,
+        "docScrollWidth": 1425,
+        "bodyScrollWidth": 1425,
+        "selectedDispatchTab": null,
+        "dispatchTabs": [
+          {
+            "label": "سررسیدشده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "ارسال امروز",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "عقب‌افتاده",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "آینده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "موعد ارسال مشخص نشده",
+            "count": "496",
+            "h": 44
+          }
+        ],
+        "counts": [
+          "۰",
+          "۴",
+          "۴",
+          "۰",
+          "۴۹۶"
+        ],
+        "statusTabCount": 9,
+        "rowCount": 10,
+        "rowIconMinHeight": 32,
+        "tabMinHeight": 44,
+        "bucketBadges": [
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "موعد ارسال مشخص نشده",
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "موعد ارسال مشخص نشده"
+        ],
+        "planCells": [
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+          "مشخص نشده",
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+          "مشخص نشده"
+        ],
+        "receivings": [
+          "2026-11-10 · 09:00-17:00",
+          "—",
+          "2026-11-10 · 09:00-17:00",
+          "—"
+        ],
+        "nextSteps": [
+          "شروع پردازش",
+          "شروع پردازش",
+          "شروع پردازش",
+          "شروع پردازش"
+        ],
+        "hrefs": [
+          "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=a838597a-10ee-4674-9e99-21b4d8b667fd&from=queue&shippingGroupId=96d38fe3-c845-4d68-b26d-ebd41ae812fe",
+          "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=ec1adc4d-918d-44db-a726-432d5cf2476f&from=queue"
+        ],
+        "latinLeak": false,
+        "hasEmptyState": false
+      }
+    },
+    {
+      "name": "queue",
+      "width": 1024,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/fulfillments",
+        "dir": "rtl",
+        "innerWidth": 1024,
+        "docScrollWidth": 1009,
+        "bodyScrollWidth": 1009,
+        "selectedDispatchTab": null,
+        "dispatchTabs": [
+          {
+            "label": "سررسیدشده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "ارسال امروز",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "عقب‌افتاده",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "آینده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "موعد ارسال مشخص نشده",
+            "count": "496",
+            "h": 44
+          }
+        ],
+        "counts": [
+          "۰",
+          "۴",
+          "۴",
+          "۰",
+          "۴۹۶"
+        ],
+        "statusTabCount": 9,
+        "rowCount": 10,
+        "rowIconMinHeight": 32,
+        "tabMinHeight": 44,
+        "bucketBadges": [
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "موعد ارسال مشخص نشده",
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "موعد ارسال مشخص نشده"
+        ],
+        "planCells": [
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+          "مشخص نشده",
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+          "مشخص نشده"
+        ],
+        "receivings": [
+          "2026-11-10 · 09:00-17:00",
+          "—",
+          "2026-11-10 · 09:00-17:00",
+          "—"
+        ],
+        "nextSteps": [],
+        "hrefs": [
+          "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=a838597a-10ee-4674-9e99-21b4d8b667fd&from=queue&shippingGroupId=96d38fe3-c845-4d68-b26d-ebd41ae812fe",
+          "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=ec1adc4d-918d-44db-a726-432d5cf2476f&from=queue"
+        ],
+        "latinLeak": false,
+        "hasEmptyState": false
+      }
+    },
+    {
+      "name": "queue",
+      "width": 390,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/fulfillments",
+        "dir": "rtl",
+        "innerWidth": 390,
+        "docScrollWidth": 375,
+        "bodyScrollWidth": 375,
+        "selectedDispatchTab": null,
+        "dispatchTabs": [
+          {
+            "label": "سررسیدشده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "ارسال امروز",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "عقب‌افتاده",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "آینده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "موعد ارسال مشخص نشده",
+            "count": "496",
+            "h": 44
+          }
+        ],
+        "counts": [
+          "۰",
+          "۴",
+          "۴",
+          "۰",
+          "۴۹۶"
+        ],
+        "statusTabCount": 9,
+        "rowCount": 10,
+        "rowIconMinHeight": 32,
+        "tabMinHeight": 44,
+        "bucketBadges": [
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "موعد ارسال مشخص نشده",
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "موعد ارسال مشخص نشده"
+        ],
+        "planCells": [],
+        "receivings": [],
+        "nextSteps": [],
+        "hrefs": [
+          "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=a838597a-10ee-4674-9e99-21b4d8b667fd&from=queue&shippingGroupId=96d38fe3-c845-4d68-b26d-ebd41ae812fe",
+          "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=ec1adc4d-918d-44db-a726-432d5cf2476f&from=queue"
+        ],
+        "latinLeak": false,
+        "hasEmptyState": false
+      }
+    },
+    {
+      "name": "queue-filtered",
+      "width": 1440,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/fulfillments?filter=dispatch_today",
+        "dir": "rtl",
+        "innerWidth": 1440,
+        "docScrollWidth": 1425,
+        "bodyScrollWidth": 1425,
+        "selectedDispatchTab": "ارسال امروز",
+        "dispatchTabs": [
+          {
+            "label": "سررسیدشده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "ارسال امروز",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "عقب‌افتاده",
+            "count": "4",
+            "h": 44
+          },
+          {
+            "label": "آینده",
+            "count": "0",
+            "h": 44
+          },
+          {
+            "label": "موعد ارسال مشخص نشده",
+            "count": "496",
+            "h": 44
+          }
+        ],
+        "counts": [
+          "۰",
+          "۴",
+          "۴",
+          "۰",
+          "۴۹۶"
+        ],
+        "statusTabCount": 9,
+        "rowCount": 4,
+        "rowIconMinHeight": 32,
+        "tabMinHeight": 44,
+        "bucketBadges": [
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "ارسال امروز · بازهٔ تحویل باز است",
+          "ارسال امروز · بازهٔ تحویل باز است"
+        ],
+        "planCells": [
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)",
+          "2026-11-10 · 00:00–23:59 (Asia/Tehran)"
+        ],
+        "receivings": [
+          "2026-11-10 · 09:00-17:00",
+          "2026-11-10 · 09:00-17:00",
+          "2026-11-10 · 09:00-17:00",
+          "2026-11-10 · 09:00-17:00"
+        ],
+        "nextSteps": [
+          "شروع پردازش",
+          "شروع پردازش",
+          "شروع پردازش",
+          "شروع پردازش"
+        ],
+        "hrefs": [
+          "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=a838597a-10ee-4674-9e99-21b4d8b667fd&from=queue&shippingGroupId=96d38fe3-c845-4d68-b26d-ebd41ae812fe&filter=dispatch_today",
+          "/admin/orders/2029bc02-e8c9-437e-a0e6-fc1611270895/operations?fulfillmentId=90ee28ba-3358-4b5f-bce1-546353fe7bc4&from=queue&shippingGroupId=d3d49b89-9f8e-4c47-bd25-2e32b7d0765b&filter=dispatch_today"
+        ],
+        "latinLeak": false,
+        "hasEmptyState": false
+      }
+    },
+    {
+      "name": "queue-exact-locator",
+      "width": 1440,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=a838597a-10ee-4674-9e99-21b4d8b667fd&from=queue&shippingGroupId=96d38fe3-c845-4d68-b26d-ebd41ae812fe&filter=dispatch_today",
+        "dir": "rtl",
+        "innerWidth": 1440,
+        "docScrollWidth": 1440,
+        "mainScrollWidth": 1120,
+        "hasOperationalPanel": false,
+        "hasShippingPanel": false,
+        "state": "error",
+        "targetCards": 0,
+        "targetTexts": [],
+        "nullPlanCards": 0,
+        "missingTarget": false,
+        "financeHits": [],
+        "backHref": "/admin/fulfillments?filter=dispatch_today",
+        "fullOrderLink": "/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc",
+        "actionCount": 3,
+        "actionMinHeight": 44,
+        "below44": 0,
+        "targetWrap": null
+      }
+    },
+    {
+      "name": "legacy-operations-all",
+      "width": 1440,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf/operations?from=queue",
+        "dir": "rtl",
+        "innerWidth": 1440,
+        "docScrollWidth": 1425,
+        "mainScrollWidth": 1105,
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "state": "ready",
+        "targetCards": 3,
+        "targetTexts": [
+          "پیشتازکار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-09 · 14:00–15:00مرسوله‌ها۱ مرسوله · ۱ در مسیر",
+          "پیشتازکار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-09 · 14:00–15:00مرسوله‌ها۱ مرسوله · ۱ در مسیر",
+          "آزمایش ارسال۲۳۰کار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-10 · 09:00–17:00مرسوله‌ها۱ مرسوله · ۱ در مسیر"
+        ],
+        "nullPlanCards": 3,
+        "missingTarget": false,
+        "financeHits": [],
+        "backHref": "/admin/fulfillments",
+        "fullOrderLink": "/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf",
+        "actionCount": 8,
+        "actionMinHeight": 44,
+        "below44": 0,
+        "targetWrap": {
+          "overflowWrap": "break-word",
+          "wordBreak": "normal"
+        }
+      }
+    },
+    {
+      "name": "legacy-operations-all",
+      "width": 1024,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf/operations?from=queue",
+        "dir": "rtl",
+        "innerWidth": 1024,
+        "docScrollWidth": 1009,
+        "mainScrollWidth": 689,
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "state": "ready",
+        "targetCards": 3,
+        "targetTexts": [
+          "پیشتازکار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-09 · 14:00–15:00مرسوله‌ها۱ مرسوله · ۱ در مسیر",
+          "پیشتازکار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-09 · 14:00–15:00مرسوله‌ها۱ مرسوله · ۱ در مسیر",
+          "آزمایش ارسال۲۳۰کار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-10 · 09:00–17:00مرسوله‌ها۱ مرسوله · ۱ در مسیر"
+        ],
+        "nullPlanCards": 3,
+        "missingTarget": false,
+        "financeHits": [],
+        "backHref": "/admin/fulfillments",
+        "fullOrderLink": "/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf",
+        "actionCount": 8,
+        "actionMinHeight": 44,
+        "below44": 0,
+        "targetWrap": {
+          "overflowWrap": "break-word",
+          "wordBreak": "normal"
+        }
+      }
+    },
+    {
+      "name": "legacy-operations-all",
+      "width": 390,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf/operations?from=queue",
+        "dir": "rtl",
+        "innerWidth": 390,
+        "docScrollWidth": 375,
+        "mainScrollWidth": 343,
+        "hasOperationalPanel": true,
+        "hasShippingPanel": true,
+        "state": "ready",
+        "targetCards": 3,
+        "targetTexts": [
+          "پیشتازکار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-09 · 14:00–15:00مرسوله‌ها۱ مرسوله · ۱ در مسیر",
+          "پیشتازکار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-09 · 14:00–15:00مرسوله‌ها۱ مرسوله · ۱ در مسیر",
+          "آزمایش ارسال۲۳۰کار فیزیکی باقی نماندهموعد ارسالموعد ارسال مشخص نشدهتحویل مشتری2026-11-10 · 09:00–17:00مرسوله‌ها۱ مرسوله · ۱ در مسیر"
+        ],
+        "nullPlanCards": 3,
+        "missingTarget": false,
+        "financeHits": [],
+        "backHref": "/admin/fulfillments",
+        "fullOrderLink": "/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf",
+        "actionCount": 8,
+        "actionMinHeight": 44,
+        "below44": 0,
+        "targetWrap": {
+          "overflowWrap": "break-word",
+          "wordBreak": "normal"
+        }
+      }
+    }
+  ],
+  "exactLocatorUrl": "http://127.0.0.1:3000/fa/admin/orders/1857e08c-e425-4cc9-8d6a-4ad907f9befc/operations?fulfillmentId=a838597a-10ee-4674-9e99-21b4d8b667fd&from=queue&shippingGroupId=96d38fe3-c845-4d68-b26d-ebd41ae812fe&filter=dispatch_today",
+  "ok": true
+}
