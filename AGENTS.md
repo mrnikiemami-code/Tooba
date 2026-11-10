@@ -1,3 +1,16 @@
+# CURRENT —259 ACCEPT within issue4 scope; FINAL planned task260 ISSUED —2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/ARCHITECT-REVIEW.md.
+Source/evidence review bb18f62d294e81ce86b8a09ae3eb8e2b5c84c873 accepts immutable packing choice and explicit separate Completed without package; common path/history preserved. No live Marketplace checkout/visual/provider acceptance claimed.
+ONLY next task docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/TASK.md.
+Outcome: /admin/fulfillments due/overdue/today/upcoming/unspecified work from DURABLE accepted dispatch plan, customer promise separate; genuine server pagination/counts, exact target, SAME shared operational order UI without financial panels. Preserve lifecycle/readiness/permission/recovery and one package action owner.
+Ledger save closed; issues1–3 accepted; issue4 accepted259 (4/5); issue5 task260 ISSUED pending result/review. No261/automatic next. Final user handoff after260 review.
+USER NO-LOOP RULE: only affected focused checks once; no whole module/base parity, screenshot matrix or repeated successful tests. New repair only for a concrete material defect.
+Only canonical tooba_alpha5432 and3000/5088 SingleStore/store-alpha; no extra DB/Docker/15433/edition switch. Real user rows read-only; minimal labelled production-path fixtures allowed. Legacy null dispatch stays explicitly unspecified, never backfill from customer date/current settings. Preserve keys/CapturedPreview.255 parked; Tipax deferred. Parent-package return still unsupported/locked.
+Older CURRENT blocks superseded.
+
+---
+
 # CURRENT — 259 WORKER RESULT PASS: operator packing choice (common package or independent parcels) — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/TASK.md and
