@@ -355,32 +355,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
     {
         var fulfillmentId = RequireFulfillmentId(request);
         var shipmentId = RequireShipmentId(request);
-        var items = request.ReceiptItems;
-        if (items is not { Count: > 0 })
-        {
-            throw new AdminOrderOperationsException("order.operation.invalid");
-        }
-
-        var lines = new List<ReturnReceiptLineCommand>(items.Count);
-        var seen = new HashSet<(Guid OrderLineId, int Condition)>();
-        foreach (var item in items)
-        {
-            if (item is null
-                || item.OrderLineId == Guid.Empty
-                || item.Quantity <= 0m
-                || item.Condition is not (0 or 1)
-                // TB-258-R1: one parcel line may come back split across conditions, so the duplicate authority is
-                // the (line, condition) pair; the aggregate validates the SUM against the parcel quantity.
-                || !seen.Add((item.OrderLineId, item.Condition)))
-            {
-                throw new AdminOrderOperationsException("order.operation.invalid");
-            }
-
-            lines.Add(new ReturnReceiptLineCommand(
-                item.OrderLineId,
-                item.Quantity,
-                item.Condition == 0 ? ReturnReceiptCondition.Usable : ReturnReceiptCondition.Damaged));
-        }
+        var lines = BuildReceiptItems(request);
 
         return await _fulfillment.RecordReturnReceiptAsync(
             fulfillmentId,
@@ -403,6 +378,162 @@ public sealed partial class AdminOrderOperationsOrchestrator
     {
         var fulfillmentId = RequireFulfillmentId(request);
         var originalShipmentId = RequireShipmentId(request);
+        var lines = BuildResendLines(request);
+
+        var dispatchKey = string.IsNullOrWhiteSpace(request.IdempotencyKey)
+            ? null
+            : request.IdempotencyKey.Trim();
+
+        return (await _fulfillment.CreateResendShipmentAsync(
+            fulfillmentId,
+            actorUserId,
+            originalShipmentId,
+            lines,
+            cancellationToken,
+            dispatchKey)).Snapshot;
+    }
+
+    /// <summary>
+    /// TB-258-R2: every post-dispatch exception command runs here. An EXACT recorded intent recovered after a lost
+    /// response is answered from the owning durable facts even when the fresh projection no longer offers the
+    /// action; anything else must still pass the ordinary current-projection gate, so an absent record can never
+    /// become a new allocation. Current actor permission, the checkout/fulfillment/parcel relationship and the
+    /// shipment identity are re-checked on EVERY request, including a replay.
+    /// </summary>
+    private async Task<object> RunPostDispatchExceptionAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        string expectedCode,
+        Func<AdminOrderOperationRequest, Task<object>> execute,
+        CancellationToken cancellationToken)
+    {
+        var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+        EnsureCancelledDoesNotBlock(group, expectedCode);
+
+        // Authorization is evaluated before any evidence read: a retained browser envelope is never authorization.
+        if (!HasAny(effective, "order.handle", "fulfillment.manage"))
+        {
+            throw new AdminOrderOperationsException("order.operation.denied");
+        }
+
+        var fulfillmentId = RequireFulfillmentId(request);
+        var shipmentId = RequireShipmentId(request);
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var owned = fulfillments.FirstOrDefault(x => x.FulfillmentId == fulfillmentId)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        if (owned.Shipments.All(x => x.ShipmentId != shipmentId))
+        {
+            // The parcel must belong to this checkout AND to the requested fulfillment — never a forged pair.
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var intent = BuildPostDispatchIntent(expectedCode, fulfillmentId, shipmentId, request);
+        var recorded = await _fulfillment.ReconcilePostDispatchIntentAsync(intent, cancellationToken);
+        switch (recorded.State)
+        {
+            case PostDispatchIntentState.Recorded:
+            case PostDispatchIntentState.ResolvedCancelled:
+                // The authoritative owning state of THIS exact reviewed request. Nothing is written and no actor
+                // or timestamp is reattributed. A resolved cancellation is a historical fact, never recreated.
+                return recorded.Snapshot
+                    ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            case PostDispatchIntentState.Conflict:
+                throw new AdminOrderOperationsException(
+                    recorded.ConflictCode ?? "order.operation.invalid");
+        }
+
+        await EnsureProjectedActionAllowedAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            expectedCode,
+            effective,
+            allowReturnLifecycleFallback: false,
+            cancellationToken);
+        return await execute(request);
+    }
+
+    /// <summary>TB-258-R2: the exact reviewed intent, built with the same validation the owning command applies.</summary>
+    private static PostDispatchIntent BuildPostDispatchIntent(
+        string expectedCode,
+        Guid fulfillmentId,
+        Guid shipmentId,
+        AdminOrderOperationRequest request)
+    {
+        if (string.Equals(expectedCode, "record_non_delivery", StringComparison.OrdinalIgnoreCase))
+        {
+            return new PostDispatchIntent(
+                PostDispatchIntentKind.RecordNonDelivery,
+                fulfillmentId,
+                shipmentId,
+                (request.Reason ?? string.Empty).Trim(),
+                request.Note);
+        }
+
+        if (string.Equals(expectedCode, "start_return", StringComparison.OrdinalIgnoreCase))
+        {
+            return new PostDispatchIntent(
+                PostDispatchIntentKind.StartReturn,
+                fulfillmentId,
+                shipmentId);
+        }
+
+        if (string.Equals(expectedCode, "record_return_receipt", StringComparison.OrdinalIgnoreCase))
+        {
+            return new PostDispatchIntent(
+                PostDispatchIntentKind.RecordReturnReceipt,
+                fulfillmentId,
+                shipmentId,
+                ReceiptItems: BuildReceiptItems(request));
+        }
+
+        return new PostDispatchIntent(
+            PostDispatchIntentKind.ResendShipment,
+            fulfillmentId,
+            shipmentId,
+            ResendItems: BuildResendLines(request),
+            OccurrenceKey: string.IsNullOrWhiteSpace(request.IdempotencyKey)
+                ? null
+                : request.IdempotencyKey.Trim());
+    }
+
+    /// <summary>TB-258: one parcel line may come back split across conditions, so the pair is the duplicate authority.</summary>
+    private static IReadOnlyList<ReturnReceiptLineCommand> BuildReceiptItems(AdminOrderOperationRequest request)
+    {
+        var items = request.ReceiptItems;
+        if (items is not { Count: > 0 })
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var lines = new List<ReturnReceiptLineCommand>(items.Count);
+        var seen = new HashSet<(Guid OrderLineId, int Condition)>();
+        foreach (var item in items)
+        {
+            if (item is null
+                || item.OrderLineId == Guid.Empty
+                || item.Quantity <= 0m
+                || item.Condition is not (0 or 1)
+                || !seen.Add((item.OrderLineId, item.Condition)))
+            {
+                throw new AdminOrderOperationsException("order.operation.invalid");
+            }
+
+            lines.Add(new ReturnReceiptLineCommand(
+                item.OrderLineId,
+                item.Quantity,
+                item.Condition == 0 ? ReturnReceiptCondition.Usable : ReturnReceiptCondition.Damaged));
+        }
+
+        return lines;
+    }
+
+    /// <summary>TB-258: canonical resend lines — positive, non-duplicated, server-priced quantities.</summary>
+    private static IReadOnlyList<ShipmentLineCommand> BuildResendLines(AdminOrderOperationRequest request)
+    {
         var selections = request.Selections;
         if (selections is not { Count: > 0 })
         {
@@ -424,17 +555,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             lines.Add(new ShipmentLineCommand(selection.OrderLineId, selection.Quantity));
         }
 
-        var dispatchKey = string.IsNullOrWhiteSpace(request.IdempotencyKey)
-            ? null
-            : request.IdempotencyKey.Trim();
-
-        return (await _fulfillment.CreateResendShipmentAsync(
-            fulfillmentId,
-            actorUserId,
-            originalShipmentId,
-            lines,
-            cancellationToken,
-            dispatchKey)).Snapshot;
+        return lines;
     }
 
     private async Task<object> CreateConsolidatedPackageCoreAsync(

@@ -149,6 +149,47 @@ export function readPostDispatchAttempt(scope: PostDispatchAttemptScope): PostDi
   return recorded;
 }
 
+/** Every post-dispatch mode, in lifecycle order. The mode is the last component of the storage key. */
+export const POST_DISPATCH_MODES: ReadonlyArray<PostDispatchExceptionMode> = [
+  "record_non_delivery",
+  "start_return",
+  "record_return_receipt",
+  "resend_shipment",
+];
+
+/**
+ * TB-258-R2: every envelope still retained for ONE parcel — across modes — for this viewer scope.
+ *
+ * The parcel card uses this to keep ONE recoverable entry visible after a refresh or after the fresh
+ * projection stopped offering the action: the reviewed request is still owed a reconciliation even
+ * when no ordinary action button exists any more. Newest first, so the card shows the live obligation.
+ */
+export function listPostDispatchAttemptsForParcel(input: {
+  viewerScopeKey?: string | null;
+  checkoutId: string;
+  fulfillmentId: string;
+  sourceShipmentId: string;
+}): PostDispatchAttempt[] {
+  const attempts: PostDispatchAttempt[] = [];
+  for (const mode of POST_DISPATCH_MODES) {
+    const recorded = readPostDispatchAttempt({
+      viewerScopeKey: input.viewerScopeKey ?? null,
+      checkoutId: input.checkoutId,
+      fulfillmentId: input.fulfillmentId,
+      sourceShipmentId: input.sourceShipmentId,
+      mode,
+    });
+    if (recorded) attempts.push(recorded);
+  }
+
+  return attempts.sort((left, right) => {
+    const leftAt = left.lastFailedAtUtc ?? "";
+    const rightAt = right.lastFailedAtUtc ?? "";
+    if (leftAt === rightAt) return right.attempts - left.attempts;
+    return rightAt.localeCompare(leftAt);
+  });
+}
+
 /** Persists the COMPLETE reviewed request BEFORE the first POST. */
 export function writePostDispatchAttempt(input: {
   scope: PostDispatchAttemptScope;

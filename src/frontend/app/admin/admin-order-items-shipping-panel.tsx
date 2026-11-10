@@ -46,6 +46,10 @@ import {
   DEFAULT_ADMIN_ACTOR_ID,
   adminRequestHeaders,
 } from "../../lib/admin/admin-result.ts";
+import {
+  POST_DISPATCH_MODE_LABEL_FA,
+  readPostDispatchAttempt,
+} from "../../features/order-operational-groups";
 
 type Props = {
   detail: AdminOrderDetail;
@@ -318,6 +322,17 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
     for (const member of group.members) operationalGroupShippingGroupIds.add(member.shippingGroupId);
   }
 
+  // TB-253-R4 / TB-258-R1: retained workflow scope = viewer/owner, so another admin session can never
+  // inherit this checkout's in-flight group workflow or post-dispatch request envelope.
+  const viewerScopeKey = (() => {
+    const actor =
+      typeof window === "undefined"
+        ? DEFAULT_ADMIN_ACTOR_ID
+        : window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
+    const trimmed = typeof actor === "string" ? actor.trim() : "";
+    return trimmed.length > 0 ? `admin:${trimmed}` : null;
+  })();
+
 
   return (
     <section
@@ -334,16 +349,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           detail={detail}
           pendingCode={pendingCode}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
-          occurrenceScopeKey={(() => {
-            // TB-253-R4: retained occurrence scope = viewer/owner, so another admin session can never
-            // inherit this checkout's in-flight workflow envelope.
-            const actor =
-              typeof window === "undefined"
-                ? DEFAULT_ADMIN_ACTOR_ID
-                : window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
-            const trimmed = typeof actor === "string" ? actor.trim() : "";
-            return trimmed.length > 0 ? `admin:${trimmed}` : null;
-          })()}
+          occurrenceScopeKey={viewerScopeKey}
           parcelCapabilities={(seller, shipment) => {
             // TB-254: this card is the ONE parcel/action owner. A parcel that belongs to a shared
             // package is operated from the package section, so it exposes no duplicate action here.
@@ -374,12 +380,33 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
             const actions = actionsForSeller(seller.id);
             const action = actionFor(actions, request.code, seller.id, shipmentId);
             if (!action) {
-              toast.error("این عملیات در وضعیت فعلی برای این مرسوله مجاز نیست.");
-              return false;
+              // TB-258-R2: the fresh projection no longer offers this action. The ONLY thing that may be
+              // sent then is the EXACT retained reviewed request of this viewer/parcel/mode — an absent
+              // record never becomes a new allocation, and the server re-checks authority and ownership.
+              const recorded = readPostDispatchAttempt({
+                viewerScopeKey,
+                checkoutId,
+                fulfillmentId: seller.fulfillmentId ?? seller.id,
+                sourceShipmentId: shipmentId,
+                mode: request.code,
+              });
+              if (!recorded || JSON.stringify(recorded.request) !== JSON.stringify(request)) {
+                toast.error("این عملیات در وضعیت فعلی برای این مرسوله مجاز نیست.");
+                return false;
+              }
             }
             setPendingCode(`${seller.id}:${request.code}:${shipmentId}`);
             const result = await executeAdminOrderOperation(checkoutId, {
-              ...orderOperationBodyFromAction(action),
+              ...(action
+                ? orderOperationBodyFromAction(action)
+                : {
+                  code: request.code,
+                  sellerOrderId: seller.id,
+                  fulfillmentId: seller.fulfillmentId ?? seller.id,
+                  shipmentId,
+                  returnRequestId: null,
+                  consolidatedPackageId: null,
+                }),
               shipmentId,
               ...(request.code === "record_non_delivery"
                 ? { reason: request.reason, note: request.note }
@@ -396,7 +423,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
               toast.error(result.message ?? mapAdminErrorMessage("order.operation.failed", "fa"));
               return false;
             }
-            toast.success(`عملیات ${action.labelFa} انجام شد.`);
+            toast.success(`عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`);
             onCompleted?.();
             return true;
           }}

@@ -23,10 +23,13 @@ import {
 } from "./operational-group-occurrence-store";
 import {
   AdminOperationalGroupWorkflowDialog,
+  listPostDispatchAttemptsForParcel,
   OperationalDeliveryTimeline,
+  POST_DISPATCH_MODE_LABEL_FA,
   PostDispatchExceptionDialog,
   type OperationalGroupDialogRequest,
   type OperationalGroupDialogRow,
+  type PostDispatchAttempt,
   type PostDispatchExceptionMode,
   type PostDispatchExceptionRequest,
   type PostDispatchParcelLine,
@@ -620,6 +623,16 @@ function GroupItems({
   );
 }
 
+/** The modes the fresh projection still offers as ordinary buttons. */
+function permittedExceptionModes(caps: OperationalParcelCapabilities): PostDispatchExceptionMode[] {
+  const modes: PostDispatchExceptionMode[] = [];
+  if (caps.canRecordNonDelivery) modes.push("record_non_delivery");
+  if (caps.canStartReturn) modes.push("start_return");
+  if (caps.canRecordReturnReceipt) modes.push("record_return_receipt");
+  if (caps.canResend) modes.push("resend_shipment");
+  return modes;
+}
+
 function GroupParcels({
   detail,
   group,
@@ -710,6 +723,27 @@ function GroupParcels({
     setException({ seller, shipment, mode });
   }
 
+  /**
+   * TB-258-R2: the ONE retained review still owed for this parcel, when the fresh projection no longer
+   * offers its action. The store re-checks viewer/checkout/fulfillment/parcel/mode, so another viewer's
+   * or another parcel's envelope can never surface here. This is a RECOVERY entry, never authorization:
+   * the server still validates the actor and the exact recorded intent.
+   */
+  function retainedReviewFor(
+    seller: AdminSellerOrder,
+    shipment: AdminShipment,
+    projected: OperationalParcelCapabilities,
+  ): PostDispatchAttempt | null {
+    const permitted = permittedExceptionModes(projected);
+    const retained = listPostDispatchAttemptsForParcel({
+      viewerScopeKey: viewerScopeKey ?? null,
+      checkoutId: detail.checkoutId,
+      fulfillmentId: seller.fulfillmentId ?? seller.id,
+      sourceShipmentId: shipment.shipmentId,
+    });
+    return retained.find((attempt) => !permitted.includes(attempt.mode)) ?? null;
+  }
+
   const rows = group.members.flatMap((member) => {
     const seller = resolveSeller(detail, member.sellerOrderId);
     if (!seller) return [];
@@ -773,9 +807,15 @@ function GroupParcels({
           {standalone.map((row, index) => {
             const parcel = row.shipment;
             const cancelled = isCancelledShipment(parcel.status);
-            const caps = cancelled || pending
+            const projectedCaps = cancelled
               ? NO_PARCEL_ACTIONS
               : parcelCapabilities?.(row.seller, parcel) ?? NO_PARCEL_ACTIONS;
+            const caps = cancelled || pending ? NO_PARCEL_ACTIONS : projectedCaps;
+            // TB-258-R2: a retained reviewed request keeps ONE recovery entry even after the projection
+            // stopped offering the action (refresh, state transition, exhausted capacity).
+            const retainedReview = onParcelException && !cancelled
+              ? retainedReviewFor(row.seller, parcel, projectedCaps)
+              : null;
             return (
               <li
                 key={parcel.shipmentId}
@@ -924,6 +964,25 @@ function GroupParcels({
                         ارسال مجدد
                       </button>
                     ) : null}
+                  </div>
+                ) : null}
+                {retainedReview ? (
+                  <div
+                    className="mt-2 flex flex-wrap items-center gap-2 border-t border-amber-100 pt-2"
+                    data-testid={`admin-order-post-dispatch-reconcile-row-${parcel.shipmentId}`}
+                  >
+                    <button
+                      type="button"
+                      disabled={exceptionPending}
+                      onClick={() => openException(row.seller, parcel, retainedReview.mode)}
+                      className="min-h-11 rounded-lg border border-amber-300 bg-amber-50 px-3 text-xs font-bold text-amber-900 disabled:opacity-50"
+                      data-testid={`admin-order-post-dispatch-reconcile-${parcel.shipmentId}`}
+                    >
+                      {`پیگیری «${POST_DISPATCH_MODE_LABEL_FA[retainedReview.mode]}»`}
+                    </button>
+                    <span className="break-words text-[11px] text-amber-800">
+                      پاسخ قطعی این درخواست ثبت نشده است؛ همان درخواست قبلی حفظ شده و فقط همان ارسال می‌شود.
+                    </span>
                   </div>
                 ) : null}
                 {parcel.nonDeliveredAt || parcel.returnedAt || parcel.resendOfShipmentId ? (

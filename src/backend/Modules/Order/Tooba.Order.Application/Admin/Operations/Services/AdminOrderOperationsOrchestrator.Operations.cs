@@ -321,7 +321,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         Guid actorUserId,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken) =>
-        RunOperationAsync(() => RunProjectedCoreAsync(
+        RunOperationAsync(() => RunPostDispatchExceptionAsync(
             checkoutId,
             actorUserId,
             request,
@@ -334,7 +334,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         Guid actorUserId,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken) =>
-        RunOperationAsync(() => RunProjectedCoreAsync(
+        RunOperationAsync(() => RunPostDispatchExceptionAsync(
             checkoutId,
             actorUserId,
             request,
@@ -347,7 +347,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         Guid actorUserId,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken) =>
-        RunOperationAsync(() => RunProjectedCoreAsync(
+        RunOperationAsync(() => RunPostDispatchExceptionAsync(
             checkoutId,
             actorUserId,
             request,
@@ -360,7 +360,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         Guid actorUserId,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken) =>
-        RunOperationAsync(() => RunProjectedCoreAsync(
+        RunOperationAsync(() => RunPostDispatchExceptionAsync(
             checkoutId,
             actorUserId,
             request,

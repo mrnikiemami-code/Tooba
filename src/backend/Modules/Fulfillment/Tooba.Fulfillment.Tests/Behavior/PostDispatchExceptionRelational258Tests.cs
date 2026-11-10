@@ -804,6 +804,262 @@ public sealed class PostDispatchExceptionRelational258Tests
             $"I receiptLines=3 lineAusable=1 resend={resend.CreatedShipmentId} changedReceiptRefused={overReceived.Code}");
     }
 
+    // ------------------------------------------------------------------ J: TB-258-R2 recorded-intent replay
+
+    /// <summary>
+    /// R2 on real storage: the read-only recorded-intent lookup answers ONLY an exact durable fact of this
+    /// parcel. It writes nothing, it never stands in for the owning command, and a changed intent is a typed
+    /// conflict while an absent one stays <c>NotRecorded</c> so the ordinary gate remains authoritative.
+    /// </summary>
+    [Fact]
+    public async Task J_recorded_intent_lookup_answers_only_the_exact_durable_fact_and_writes_nothing()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateDispatchedFixtureAsync("J");
+        await using var lease = fixture.NewDirectory();
+        var directory = lease.Directory;
+        var shipmentsBefore = await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipments where fulfillment_id = @id",
+            ("id", fixture.FulfillmentId));
+        var receiptsBefore = await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipment_return_receipts where shipment_id = @id",
+            ("id", fixture.ShipmentId));
+
+        // 1) Nothing recorded yet: the lookup reports NotRecorded and invents nothing.
+        var beforeNonDelivery = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.NonDelivery(fixture.FulfillmentId, fixture.ShipmentId, "refused", "TB258R2-J"),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.NotRecorded, beforeNonDelivery.State);
+        Assert.Null(beforeNonDelivery.Snapshot);
+
+        await directory.RecordNonDeliveryAsync(
+            fixture.FulfillmentId, fixture.ShipmentId, fixture.ActorUserId, "refused", "TB258R2-J", CancellationToken.None);
+
+        // The EXACT reviewed non-delivery is answered from the durable fact…
+        var recordedNonDelivery = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.NonDelivery(fixture.FulfillmentId, fixture.ShipmentId, "refused", "TB258R2-J"),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.Recorded, recordedNonDelivery.State);
+        Assert.Equal(fixture.ShipmentId, recordedNonDelivery.RecordedShipmentId);
+        Assert.Equal(
+            ShipmentStatus.NonDelivered,
+            recordedNonDelivery.Snapshot!.Shipments.Single(x => x.ShipmentId == fixture.ShipmentId).Status);
+
+        // …while a DIFFERENT note is a typed conflict, never a silent re-attribution of the same fact.
+        var conflictingNonDelivery = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.NonDelivery(fixture.FulfillmentId, fixture.ShipmentId, "refused", "note changed"),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.Conflict, conflictingNonDelivery.State);
+        Assert.Equal("fulfillment.nondelivery.conflict", conflictingNonDelivery.ConflictCode);
+
+        // 2) The return start is only recorded once the carrier really started it.
+        var beforeReturn = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.ReturnStart(fixture.FulfillmentId, fixture.ShipmentId),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.NotRecorded, beforeReturn.State);
+        await directory.StartReturnAsync(
+            fixture.FulfillmentId, fixture.ShipmentId, fixture.ActorUserId, CancellationToken.None);
+        var recordedReturn = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.ReturnStart(fixture.FulfillmentId, fixture.ShipmentId),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.Recorded, recordedReturn.State);
+
+        // 3) A receipt line split across conditions answers only its exact recorded quantities.
+        var receiptItems = new[]
+        {
+            new AppModels.ReturnReceiptLineCommand(fixture.LineAId, 1m, ReturnReceiptCondition.Usable),
+            new AppModels.ReturnReceiptLineCommand(fixture.LineAId, 1m, ReturnReceiptCondition.Damaged),
+            new AppModels.ReturnReceiptLineCommand(fixture.LineBId, 1m, ReturnReceiptCondition.Usable),
+        };
+        var beforeReceipt = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Receipt(fixture.FulfillmentId, fixture.ShipmentId, receiptItems),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.NotRecorded, beforeReceipt.State);
+
+        await directory.RecordReturnReceiptAsync(
+            fixture.FulfillmentId,
+            fixture.ShipmentId,
+            fixture.ActorUserId,
+            receiptItems,
+            "TB258R2-J receipt",
+            CancellationToken.None);
+
+        var recordedReceipt = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Receipt(fixture.FulfillmentId, fixture.ShipmentId, receiptItems),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.Recorded, recordedReceipt.State);
+        var receiptParcel = recordedReceipt.Snapshot!.Shipments.Single(x => x.ShipmentId == fixture.ShipmentId);
+        Assert.Equal(ShipmentStatus.Returned, receiptParcel.Status);
+        // The mixed condition split is preserved exactly as recorded.
+        Assert.Equal(3, receiptParcel.ReturnReceipt!.Items.Count);
+        Assert.Equal(1m, receiptParcel.Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
+
+        var conflictingReceipt = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Receipt(
+                fixture.FulfillmentId,
+                fixture.ShipmentId,
+                [new AppModels.ReturnReceiptLineCommand(fixture.LineAId, 2m, ReturnReceiptCondition.Usable)]),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.Conflict, conflictingReceipt.State);
+        Assert.Equal("fulfillment.return.receipt_conflict", conflictingReceipt.ConflictCode);
+
+        // 4) The resend occurrence answers its exact key/source/quantity — and a cancelled one keeps its history.
+        var resendKey = $"tb258r2-J-{fixture.ShipmentId:N}";
+        var resendItems = new[] { new AppModels.ShipmentLineCommand(fixture.LineAId, 1m) };
+        var beforeResend = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Resend(fixture.FulfillmentId, fixture.ShipmentId, resendKey, resendItems),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.NotRecorded, beforeResend.State);
+
+        var resend = await directory.CreateResendShipmentAsync(
+            fixture.FulfillmentId,
+            fixture.ActorUserId,
+            fixture.ShipmentId,
+            resendItems,
+            CancellationToken.None,
+            resendKey);
+
+        var recordedResend = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Resend(fixture.FulfillmentId, fixture.ShipmentId, resendKey, resendItems),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.Recorded, recordedResend.State);
+        Assert.Equal(resend.CreatedShipmentId, recordedResend.RecordedShipmentId);
+
+        var changedResend = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Resend(
+                fixture.FulfillmentId,
+                fixture.ShipmentId,
+                resendKey,
+                [new AppModels.ShipmentLineCommand(fixture.LineAId, 2m)]),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.Conflict, changedResend.State);
+        Assert.Equal("fulfillment.resend.intent_conflict", changedResend.ConflictCode);
+
+        var blankKey = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Resend(fixture.FulfillmentId, fixture.ShipmentId, "   ", resendItems),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.NotRecorded, blankKey.State);
+
+        await directory.CancelShipmentAsync(
+            fixture.FulfillmentId, resend.CreatedShipmentId, fixture.ActorUserId, CancellationToken.None);
+        var cancelledResend = await directory.ReconcilePostDispatchIntentAsync(
+            AppModels.PostDispatchIntent.Resend(fixture.FulfillmentId, fixture.ShipmentId, resendKey, resendItems),
+            CancellationToken.None);
+        Assert.Equal(AppModels.PostDispatchIntentRecord.ResolvedCancelled, cancelledResend.State);
+        Assert.Equal(resend.CreatedShipmentId, cancelledResend.RecordedShipmentId);
+
+        // The lookup itself wrote nothing: the owning rows are exactly the ones the real commands created.
+        Assert.Equal(shipmentsBefore + 1, await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipments where fulfillment_id = @id",
+            ("id", fixture.FulfillmentId)));
+        Assert.Equal(receiptsBefore + 1, await RawScalarAsync(
+            fixture.Target,
+            "select count(*) from fulfillment.shipment_return_receipts where shipment_id = @id",
+            ("id", fixture.ShipmentId)));
+        Assert.Equal("Cancelled", await RawShipmentStatusAsync(fixture.Target, resend.CreatedShipmentId));
+
+        fixture.Record(
+            _output,
+            $"J nondelivery=recorded/conflict return=recorded receipt=recorded(3 lines)/conflict "
+            + $"resend={resend.CreatedShipmentId}:recorded/conflict/blank:NotRecorded/cancelled:ResolvedCancelled rowsUnchanged=true");
+    }
+
+    // ------------------------------------------------------------------ K: TB-258-R2 mixed receipt on real storage
+
+    /// <summary>
+    /// R2 on real storage: ONE parcel line whose carried quantity is 3 is received as سالم۲ + آسیب‌دیده۱ — a single
+    /// final receipt with two condition rows that grants exactly 2 resendable units. A submitted total ABOVE the
+    /// carried quantity (سالم۳ + آسیب‌دیده۱ = ۴) is a typed refusal with no clamping and no persisted receipt.
+    /// </summary>
+    [Fact]
+    public async Task K_one_line_received_two_usable_one_damaged_grants_two_and_an_over_total_receipt_is_refused()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        // ---- the lawful split: 2 usable + 1 damaged of a 3-unit line ----
+        var lawful = await CreateDispatchedFixtureAsync("K-ok", lineAQuantity: 3m);
+        await using (var lease = lawful.NewDirectory())
+        {
+            await lease.Directory.RecordNonDeliveryAsync(
+                lawful.FulfillmentId, lawful.ShipmentId, lawful.ActorUserId, "refused", "TB258R2-K", CancellationToken.None);
+            await lease.Directory.StartReturnAsync(
+                lawful.FulfillmentId, lawful.ShipmentId, lawful.ActorUserId, CancellationToken.None);
+
+            var snapshot = await lease.Directory.RecordReturnReceiptAsync(
+                lawful.FulfillmentId,
+                lawful.ShipmentId,
+                lawful.ActorUserId,
+                [
+                    new AppModels.ReturnReceiptLineCommand(lawful.LineAId, 2m, ReturnReceiptCondition.Usable),
+                    new AppModels.ReturnReceiptLineCommand(lawful.LineAId, 1m, ReturnReceiptCondition.Damaged),
+                ],
+                "TB258R2-K mixed",
+                CancellationToken.None);
+
+            var parcel = snapshot.Shipments.Single(x => x.ShipmentId == lawful.ShipmentId);
+            Assert.Equal(ShipmentStatus.Returned, parcel.Status);
+            Assert.Equal(2, parcel.ReturnReceipt!.Items.Count);
+            Assert.Equal(2m, parcel.ReturnReceipt.UsableQuantity);
+            // Only the usable part becomes resend capacity.
+            Assert.Equal(2m, parcel.Items.Single(x => x.OrderLineId == lawful.LineAId).ResendableQuantity);
+            Assert.Equal(2, await RawScalarAsync(
+                lawful.Target,
+                "select count(*) from fulfillment.shipment_return_receipt_items i "
+                + "join fulfillment.shipment_return_receipts r on r.shipment_return_receipt_id = i.shipment_return_receipt_id "
+                + "where r.shipment_id = @id",
+                ("id", lawful.ShipmentId)));
+        }
+
+        // ---- the over-total: 3 usable + 1 damaged = 4 against a line that carried 3 ----
+        var over = await CreateDispatchedFixtureAsync("K-over", lineAQuantity: 3m);
+        await using (var lease = over.NewDirectory())
+        {
+            await lease.Directory.RecordNonDeliveryAsync(
+                over.FulfillmentId, over.ShipmentId, over.ActorUserId, "refused", "TB258R2-K", CancellationToken.None);
+            await lease.Directory.StartReturnAsync(
+                over.FulfillmentId, over.ShipmentId, over.ActorUserId, CancellationToken.None);
+
+            var refusal = await Assert.ThrowsAsync<ContractOperationException>(() =>
+                lease.Directory.RecordReturnReceiptAsync(
+                    over.FulfillmentId,
+                    over.ShipmentId,
+                    over.ActorUserId,
+                    [
+                        new AppModels.ReturnReceiptLineCommand(over.LineAId, 3m, ReturnReceiptCondition.Usable),
+                        new AppModels.ReturnReceiptLineCommand(over.LineAId, 1m, ReturnReceiptCondition.Damaged),
+                    ],
+                    "TB258R2-K over",
+                    CancellationToken.None));
+            Assert.Equal("fulfillment.return.receipt_qty_exceeds", refusal.Code);
+
+            // No clamping was applied and nothing was persisted: the parcel is still only Returning.
+            var after = await lease.Directory.GetAsync(over.FulfillmentId, CancellationToken.None);
+            var parcel = after!.Shipments.Single(x => x.ShipmentId == over.ShipmentId);
+            Assert.Equal(ShipmentStatus.Returning, parcel.Status);
+            Assert.Null(parcel.ReturnReceipt);
+            Assert.Equal(0m, parcel.Items.Single(x => x.OrderLineId == over.LineAId).ResendableQuantity);
+            Assert.Equal(0, await RawScalarAsync(
+                over.Target,
+                "select count(*) from fulfillment.shipment_return_receipts where shipment_id = @id",
+                ("id", over.ShipmentId)));
+        }
+
+        lawful.Record(
+            _output,
+            $"K mixed=usable2+damaged1:grants2 overTotal=4:refused(fulfillment.return.receipt_qty_exceeds) "
+            + $"source={lawful.ShipmentId} overSource={over.ShipmentId} clamped=false persisted=false");
+    }
+
     // ---- fixture -------------------------------------------------------------------------------
 
     private sealed record Fixture(
@@ -873,7 +1129,8 @@ public sealed class PostDispatchExceptionRelational258Tests
         string tag,
         bool splitIntoTwoParcels = false,
         bool dispatch = true,
-        bool returnedUsable = false)
+        bool returnedUsable = false,
+        decimal lineAQuantity = 2m)
     {
         var target = new NpgsqlConnectionStringBuilder(Connection!);
         var fulfillmentId = Guid.NewGuid();
@@ -908,7 +1165,7 @@ public sealed class PostDispatchExceptionRelational258Tests
             "1234567890",
             "post",
             "پیشتاز",
-            [(lineA, 2m, (Guid?)null), (lineB, 1m, (Guid?)null)],
+            [(lineA, lineAQuantity, (Guid?)null), (lineB, 1m, (Guid?)null)],
             now,
             [
                 new FulfillmentShippingGroupPlan(
@@ -944,7 +1201,7 @@ public sealed class PostDispatchExceptionRelational258Tests
             fulfillmentId,
             actorUserId,
             [
-                new AppModels.FulfillmentSelectionCommand(lineA, 2m),
+                new AppModels.FulfillmentSelectionCommand(lineA, lineAQuantity),
                 new AppModels.FulfillmentSelectionCommand(lineB, 1m),
             ],
             CancellationToken.None);
@@ -983,7 +1240,7 @@ public sealed class PostDispatchExceptionRelational258Tests
                 actorUserId,
                 "پست",
                 [
-                    new AppModels.ShipmentLineCommand(lineA, 2m),
+                    new AppModels.ShipmentLineCommand(lineA, lineAQuantity),
                     new AppModels.ShipmentLineCommand(lineB, 1m),
                 ],
                 CancellationToken.None,

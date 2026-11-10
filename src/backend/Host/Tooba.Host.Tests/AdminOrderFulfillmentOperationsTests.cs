@@ -281,6 +281,10 @@ public sealed class AdminOrderFulfillmentOperationsTests
             CancellationToken cancellationToken,
             string? shippingDispatchKey = null) =>
             throw new NotImplementedException();
+        public Task<Tooba.Fulfillment.Contracts.Operations.PostDispatchIntentResult> ReconcilePostDispatchIntentAsync(
+            Tooba.Fulfillment.Contracts.Operations.PostDispatchIntent intent,
+            CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
         public Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(Guid checkoutId, IReadOnlyList<Guid> shipmentIds, string? shippingMethodCode, string? trackingReference, string? note, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(Guid consolidatedPackageId, Guid actorUserId, CancellationToken cancellationToken) =>

@@ -1042,19 +1042,164 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             throw new ContractOperationException("fulfillment.resend.occurrence_cancelled");
         }
 
+        if (!RecordedResendAnswersIntent(recorded, original, requested, effectiveMethodCode))
+        {
+            throw new ContractOperationException("fulfillment.resend.intent_conflict");
+        }
+
+        return recorded;
+    }
+
+    /// <summary>
+    /// TB-258-R2: ONE recorded-intent authority. A recorded occurrence answers a request only when its source
+    /// parcel, accepted group/method and canonical per-line quantities are identical.
+    /// </summary>
+    private static bool RecordedResendAnswersIntent(
+        Shipment recorded,
+        Shipment original,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> requested,
+        string effectiveMethodCode)
+    {
+        if (recorded.Status == ShipmentStatus.Cancelled)
+        {
+            return false;
+        }
+
         var sameSource = recorded.ResendOfShipmentId == original.ShipmentId;
         var sameGroup = recorded.ShippingGroupId == original.ShippingGroupId;
         var sameMethod = string.Equals(
             NormalizeShippingMethodIdentity(recorded.ShippingMethodCode),
             NormalizeShippingMethodIdentity(effectiveMethodCode),
             StringComparison.OrdinalIgnoreCase);
-        var sameLines = LinesMatch(recorded, requested);
-        if (!sameSource || !sameGroup || !sameMethod || !sameLines)
+        return sameSource && sameGroup && sameMethod && LinesMatch(recorded, requested);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // TB-258-R2: READ-ONLY exact recorded-intent resolution.
+    //
+    // The public admin command must answer an exact reviewed intent recovered after a lost response even when
+    // the FRESH projection no longer offers that action. These resolvers answer only from durable facts of this
+    // unit, never write, never consume capacity and never authorize anything: the caller still enforces the
+    // current actor permission, the checkout/fulfillment/parcel relationship and (for a genuinely new command)
+    // the current projection gate. When nothing is recorded, `NotRecorded` keeps the ordinary gate authoritative,
+    // so an absent record can never turn a readiness failure into a new allocation.
+    // ---------------------------------------------------------------------------------------------
+
+    /// <summary>TB-258-R2: read-only outcome of an exact recorded post-dispatch intent lookup.</summary>
+    public enum RecordedPostDispatchState
+    {
+        /// <summary>No durable fact answers this exact intent.</summary>
+        NotRecorded = 0,
+
+        /// <summary>The exact intent is already recorded; nothing may be written or repeated.</summary>
+        Recorded = 1,
+
+        /// <summary>A durable fact exists but answers a different intent (typed conflict, zero writes).</summary>
+        Conflict = 2,
+
+        /// <summary>A recorded occurrence exists and was cancelled; the retry resolves that history, writing nothing.</summary>
+        ResolvedCancelled = 3,
+    }
+
+    /// <summary>TB-258-R2: exact recorded-intent lookup answer.</summary>
+    public sealed record RecordedPostDispatchIntent(
+        RecordedPostDispatchState State,
+        Shipment? Shipment = null,
+        string? ConflictCode = null);
+
+    /// <summary>TB-258-R2: is this exact non-delivery attempt already the recorded operator fact of the parcel?</summary>
+    public RecordedPostDispatchIntent ResolveRecordedNonDelivery(Guid shipmentId, string? reason, string? note)
+    {
+        var shipment = _shipments.FirstOrDefault(x => x.ShipmentId == shipmentId);
+        if (shipment is null
+            || shipment.Status is not (ShipmentStatus.NonDelivered or ShipmentStatus.Returning or ShipmentStatus.Returned))
         {
-            throw new ContractOperationException("fulfillment.resend.intent_conflict");
+            return new RecordedPostDispatchIntent(RecordedPostDispatchState.NotRecorded);
         }
 
-        return recorded;
+        var normalizedReason = (reason ?? string.Empty).Trim();
+        var trimmedNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        var sameFact = string.Equals(shipment.NonDeliveryReason, normalizedReason, StringComparison.Ordinal)
+            && string.Equals(shipment.NonDeliveryNote, trimmedNote, StringComparison.Ordinal);
+        return sameFact
+            ? new RecordedPostDispatchIntent(RecordedPostDispatchState.Recorded, shipment)
+            : new RecordedPostDispatchIntent(
+                RecordedPostDispatchState.Conflict,
+                null,
+                "fulfillment.nondelivery.conflict");
+    }
+
+    /// <summary>TB-258-R2: has the physical return of this parcel already been started?</summary>
+    public RecordedPostDispatchIntent ResolveRecordedReturnStart(Guid shipmentId)
+    {
+        var shipment = _shipments.FirstOrDefault(x => x.ShipmentId == shipmentId);
+        return shipment is not null && shipment.Status is ShipmentStatus.Returning or ShipmentStatus.Returned
+            ? new RecordedPostDispatchIntent(RecordedPostDispatchState.Recorded, shipment)
+            : new RecordedPostDispatchIntent(RecordedPostDispatchState.NotRecorded);
+    }
+
+    /// <summary>TB-258-R2: is this exact origin receipt already recorded for the parcel?</summary>
+    public RecordedPostDispatchIntent ResolveRecordedReturnReceipt(
+        Guid shipmentId,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity, ReturnReceiptCondition Condition)>? items)
+    {
+        var shipment = _shipments.FirstOrDefault(x => x.ShipmentId == shipmentId);
+        var recorded = _returnReceipts.FirstOrDefault(x => x.ShipmentId == shipmentId);
+        if (recorded is not null)
+        {
+            return recorded.MatchesItems(items ?? [])
+                ? new RecordedPostDispatchIntent(RecordedPostDispatchState.Recorded, shipment)
+                : new RecordedPostDispatchIntent(
+                    RecordedPostDispatchState.Conflict,
+                    null,
+                    "fulfillment.return.receipt_conflict");
+        }
+
+        return shipment?.Status == ShipmentStatus.Returned
+            ? new RecordedPostDispatchIntent(
+                RecordedPostDispatchState.Conflict,
+                null,
+                "fulfillment.return.receipt_already_recorded")
+            : new RecordedPostDispatchIntent(RecordedPostDispatchState.NotRecorded);
+    }
+
+    /// <summary>TB-258-R2: is this exact resend occurrence already recorded for this source parcel?</summary>
+    public RecordedPostDispatchIntent ResolveRecordedResendIntent(
+        string? occurrenceKey,
+        Guid originalShipmentId,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)>? items)
+    {
+        var key = string.IsNullOrWhiteSpace(occurrenceKey) ? null : occurrenceKey.Trim();
+        if (key is null)
+        {
+            // A blank key is not a recorded occurrence. The owning command still refuses it as
+            // `fulfillment.resend.occurrence_required`; it is never silently replayed as some other intent.
+            return new RecordedPostDispatchIntent(RecordedPostDispatchState.NotRecorded);
+        }
+
+        var recorded = _shipments.FirstOrDefault(s =>
+            s.IsResend && string.Equals(s.ShippingDispatchKey, key, StringComparison.Ordinal));
+        var original = _shipments.FirstOrDefault(x => x.ShipmentId == originalShipmentId);
+        if (recorded is null || original is null)
+        {
+            return new RecordedPostDispatchIntent(RecordedPostDispatchState.NotRecorded);
+        }
+
+        if (recorded.Status == ShipmentStatus.Cancelled)
+        {
+            return new RecordedPostDispatchIntent(RecordedPostDispatchState.ResolvedCancelled, recorded);
+        }
+
+        var requested = NormalizeSelections(items ?? []);
+        var effectiveMethodCode = string.IsNullOrWhiteSpace(recorded.ShippingMethodCode)
+            ? original.ShippingMethodCode
+            : recorded.ShippingMethodCode;
+        return RecordedResendAnswersIntent(recorded, original, requested, effectiveMethodCode)
+            ? new RecordedPostDispatchIntent(RecordedPostDispatchState.Recorded, recorded)
+            : new RecordedPostDispatchIntent(
+                RecordedPostDispatchState.Conflict,
+                null,
+                "fulfillment.resend.intent_conflict");
     }
 
     private static bool LinesMatch(

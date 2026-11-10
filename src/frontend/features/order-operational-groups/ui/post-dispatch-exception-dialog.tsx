@@ -88,14 +88,28 @@ type Props = {
   onSubmit: (request: PostDispatchExceptionRequest) => Promise<boolean> | boolean;
 };
 
-type ReceiptDraft = { quantity: string; condition: 0 | 1 };
+/**
+ * TB-258-R2: one parcel line can come back SPLIT across physical conditions, so the operator records the
+ * usable and the damaged quantity side by side in the same review. The server receipt is keyed on
+ * (line, condition) and validates the SUM against what that parcel line carried.
+ */
+type ReceiptDraft = { usable: string; damaged: string };
 
-const MODE_TITLE: Record<PostDispatchExceptionMode, string> = {
+/** One inline refusal of the reviewed receipt. Never a silent clamp: the operator sees what to fix. */
+type ReceiptIssue = { orderLineId: string | null; messageFa: string };
+
+/**
+ * The ONE shared display copy of each post-dispatch exit. The parcel card, the reconcile entry and the
+ * review dialog all name the same action the same way.
+ */
+export const POST_DISPATCH_MODE_LABEL_FA: Record<PostDispatchExceptionMode, string> = {
   record_non_delivery: "ثبت عدم تحویل",
   start_return: "شروع برگشت به مبدأ",
   record_return_receipt: "تأیید دریافت در مبدأ",
   resend_shipment: "ارسال مجدد",
 };
+
+const MODE_TITLE: Record<PostDispatchExceptionMode, string> = POST_DISPATCH_MODE_LABEL_FA;
 
 function toNumber(value: string): number {
   const parsed = Number(value.replace(/[^\d.]/g, ""));
@@ -105,6 +119,48 @@ function toNumber(value: string): number {
 function clampQuantity(value: number, max: number): number {
   if (value <= 0) return 0;
   return max > 0 ? Math.min(value, max) : 0;
+}
+
+/** A review quantity is either a non-negative decimal or unparsable — never guessed, never truncated. */
+function parseReceiptQuantity(value: string | undefined): number | null {
+  const normalized = (value ?? "").trim();
+  if (!normalized) return 0;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+/**
+ * The reviewed receipt must be representable in one request: positive-condition quantities only, and per
+ * line the usable + damaged SUM may never exceed the quantity that parcel line actually carried.
+ */
+function receiptIssues(
+  lines: PostDispatchParcelLine[],
+  drafts: Record<string, ReceiptDraft>,
+): ReceiptIssue[] {
+  const issues: ReceiptIssue[] = [];
+  let recorded = 0;
+  for (const line of lines) {
+    const draft = drafts[line.orderLineId];
+    const usable = parseReceiptQuantity(draft?.usable);
+    const damaged = parseReceiptQuantity(draft?.damaged);
+    if (usable === null || damaged === null) {
+      issues.push({ orderLineId: line.orderLineId, messageFa: "مقدار واردشده معتبر نیست." });
+      continue;
+    }
+    recorded += usable + damaged;
+    if (usable + damaged > line.parcelQuantity) {
+      issues.push({
+        orderLineId: line.orderLineId,
+        messageFa: "مجموع «سالم» و «آسیب‌دیده» از مقدار این قلم در مرسوله بیشتر است.",
+      });
+    }
+  }
+
+  if (issues.length === 0 && recorded <= 0) {
+    issues.push({ orderLineId: null, messageFa: "دست‌کم یک قلم سالم یا آسیب‌دیده باید در رسید ثبت شود." });
+  }
+
+  return issues;
 }
 
 /**
@@ -222,8 +278,8 @@ export function PostDispatchExceptionDialog({
     const receipt: Record<string, ReceiptDraft> = {};
     for (const line of linesRef.current) {
       receipt[line.orderLineId] = {
-        quantity: String(line.parcelQuantity),
-        condition: 0,
+        usable: String(line.parcelQuantity),
+        damaged: "0",
       };
     }
     setReceiptDrafts(receipt);
@@ -235,8 +291,24 @@ export function PostDispatchExceptionDialog({
     setResendDrafts(resend);
   }, [open, scopeSignature, scope, initializedScope]);
 
+  const receiptProblems = useMemo(
+    () => receiptIssues(lines, receiptDrafts),
+    [lines, receiptDrafts],
+  );
+
+  const receiptProblemByLine = useMemo(() => {
+    const byLine = new Map<string, string>();
+    for (const issue of receiptProblems) {
+      if (issue.orderLineId) byLine.set(issue.orderLineId, issue.messageFa);
+    }
+    return byLine;
+  }, [receiptProblems]);
+
   const receiptTotal = useMemo(
-    () => lines.reduce((sum, line) => sum + clampQuantity(toNumber(receiptDrafts[line.orderLineId]?.quantity ?? "0"), line.parcelQuantity), 0),
+    () => lines.reduce((sum, line) => {
+      const draft = receiptDrafts[line.orderLineId];
+      return sum + (parseReceiptQuantity(draft?.usable) ?? 0) + (parseReceiptQuantity(draft?.damaged) ?? 0);
+    }, 0),
     [lines, receiptDrafts],
   );
 
@@ -293,17 +365,21 @@ export function PostDispatchExceptionDialog({
     }
 
     if (mode === "record_return_receipt") {
-      if (receiptTotal <= 0) {
-        setLocalErrorFa("دست‌کم یک قلم سالم یا آسیب‌دیده باید در رسید ثبت شود.");
+      // Explicit, not clamped: an over-count or an unparsable quantity is refused inline and never sent.
+      const issues = receiptIssues(lines, receiptDrafts);
+      if (issues.length > 0) {
+        setLocalErrorFa(issues[0]!.messageFa);
         return;
       }
-      const receiptItems: PostDispatchReceiptLine[] = lines
-        .map((line) => ({
-          orderLineId: line.orderLineId,
-          quantity: clampQuantity(toNumber(receiptDrafts[line.orderLineId]?.quantity ?? "0"), line.parcelQuantity),
-          condition: (receiptDrafts[line.orderLineId]?.condition ?? 0) as 0 | 1,
-        }))
-        .filter((line) => line.quantity > 0);
+
+      const receiptItems: PostDispatchReceiptLine[] = [];
+      for (const line of lines) {
+        const draft = receiptDrafts[line.orderLineId];
+        const usable = parseReceiptQuantity(draft?.usable) ?? 0;
+        const damaged = parseReceiptQuantity(draft?.damaged) ?? 0;
+        if (usable > 0) receiptItems.push({ orderLineId: line.orderLineId, quantity: usable, condition: 0 });
+        if (damaged > 0) receiptItems.push({ orderLineId: line.orderLineId, quantity: damaged, condition: 1 });
+      }
       if (receiptItems.length === 0) {
         setLocalErrorFa("دست‌کم یک قلم باید مقدار دریافتی داشته باشد.");
         return;
@@ -342,7 +418,7 @@ export function PostDispatchExceptionDialog({
   const disabled =
     pending
     || (!retained
-      && ((mode === "record_return_receipt" && receiptTotal <= 0)
+      && ((mode === "record_return_receipt" && receiptProblems.length > 0)
         || (mode === "resend_shipment" && resendTotal <= 0)));
 
   return (
@@ -426,11 +502,12 @@ export function PostDispatchExceptionDialog({
           {!retained && mode === "record_return_receipt" ? (
             <>
               <p className="text-xs leading-6 text-gray-600">
-                فقط مقدار «سالم» دریافتی ظرفیت ارسال مجدد می‌سازد. اقلام آسیب‌دیده ثبت می‌شوند اما قابل ارسال مجدد نیستند.
+                برای هر قلم، مقدار «سالم» و مقدار «آسیب‌دیده» را جدا ثبت کنید. فقط مقدار «سالم» دریافتی ظرفیت ارسال مجدد می‌سازد؛ اقلام آسیب‌دیده ثبت می‌شوند اما قابل ارسال مجدد نیستند.
               </p>
               <ul className="space-y-2">
                 {lines.map((line) => {
-                  const draft = receiptDrafts[line.orderLineId] ?? { quantity: "0", condition: 0 as 0 | 1 };
+                  const draft = receiptDrafts[line.orderLineId] ?? { usable: "0", damaged: "0" };
+                  const lineProblem = receiptProblemByLine.get(line.orderLineId);
                   return (
                     <li
                       key={line.orderLineId}
@@ -439,47 +516,64 @@ export function PostDispatchExceptionDialog({
                     >
                       <p className="break-words text-sm text-gray-800">{line.title}</p>
                       <p className="mt-0.5 text-[11px] text-gray-500">{`در این مرسوله: ${line.parcelQuantity.toLocaleString("fa-IR")}`}</p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
                         <label className="flex items-center gap-1.5 text-xs text-gray-700">
-                          <span>دریافتی</span>
+                          <span>سالم</span>
                           <input
                             type="number"
                             inputMode="decimal"
                             min={0}
                             max={line.parcelQuantity}
                             step="any"
-                            value={draft.quantity}
+                            value={draft.usable}
                             disabled={pending}
                             onChange={(event) =>
                               setReceiptDrafts((previous) => ({
                                 ...previous,
-                                [line.orderLineId]: { ...draft, quantity: event.target.value },
+                                [line.orderLineId]: { ...draft, usable: event.target.value },
                               }))
                             }
                             className="min-h-11 w-24 rounded-lg border border-gray-200 px-2 text-sm tabular-nums"
-                            data-testid={`admin-order-post-dispatch-receipt-qty-${line.orderLineId}`}
+                            data-testid={`admin-order-post-dispatch-receipt-usable-${line.orderLineId}`}
                           />
                         </label>
-                        <select
-                          value={draft.condition}
-                          disabled={pending}
-                          onChange={(event) =>
-                            setReceiptDrafts((previous) => ({
-                              ...previous,
-                              [line.orderLineId]: { ...draft, condition: Number(event.target.value) === 1 ? 1 : 0 },
-                            }))
-                          }
-                          className="min-h-11 rounded-lg border border-gray-200 px-2 text-sm"
-                          data-testid={`admin-order-post-dispatch-receipt-condition-${line.orderLineId}`}
-                        >
-                          <option value={0}>سالم</option>
-                          <option value={1}>آسیب‌دیده</option>
-                        </select>
+                        <label className="flex items-center gap-1.5 text-xs text-gray-700">
+                          <span>آسیب‌دیده</span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            max={line.parcelQuantity}
+                            step="any"
+                            value={draft.damaged}
+                            disabled={pending}
+                            onChange={(event) =>
+                              setReceiptDrafts((previous) => ({
+                                ...previous,
+                                [line.orderLineId]: { ...draft, damaged: event.target.value },
+                              }))
+                            }
+                            className="min-h-11 w-24 rounded-lg border border-gray-200 px-2 text-sm tabular-nums"
+                            data-testid={`admin-order-post-dispatch-receipt-damaged-${line.orderLineId}`}
+                          />
+                        </label>
                       </div>
+                      {lineProblem ? (
+                        <p
+                          className="mt-1 text-[11px] font-bold text-red-700"
+                          role="alert"
+                          data-testid={`admin-order-post-dispatch-receipt-line-error-${line.orderLineId}`}
+                        >
+                          {lineProblem}
+                        </p>
+                      ) : null}
                     </li>
                   );
                 })}
               </ul>
+              <p className="text-[11px] text-gray-500" data-testid={`admin-order-post-dispatch-receipt-total-${parcelKey}`}>
+                {`مجموع ثبت‌شده: ${receiptTotal.toLocaleString("fa-IR")}`}
+              </p>
             </>
           ) : null}
 

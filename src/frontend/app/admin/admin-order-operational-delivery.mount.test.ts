@@ -44,6 +44,7 @@ import {
 import {
   PostDispatchExceptionDialog,
   readPostDispatchAttempt,
+  writePostDispatchAttempt,
   type PostDispatchExceptionRequest,
 } from "../../features/order-operational-groups/index.ts";
 import { ADMIN_ACTOR_STORAGE_KEY } from "../../lib/admin/admin-result.ts";
@@ -346,6 +347,19 @@ function postResponse(status: number, payload: unknown) {
     status,
     headers: { "content-type": "application/json" },
   });
+}
+
+/**
+ * Tests share one jsdom sessionStorage, so a post-dispatch envelope retained by a previous case must be
+ * cleared explicitly instead of leaking a reconcile entry into the next mount. The fixture's fulfillment
+ * id is the seller order id (the detail carries no fulfillmentId).
+ */
+function clearPostDispatchForParcel(shipmentId: string, fulfillmentId = "so1") {
+  for (const mode of ["record_non_delivery", "start_return", "record_return_receipt", "resend_shipment"] as const) {
+    sessionStorage.removeItem(
+      `tb.post-dispatch-attempt.v1:${CHECKOUT}:__viewer__:${fulfillmentId}:${shipmentId}:${mode}`,
+    );
+  }
 }
 
 // ---------------------------------------------------------------- TB-254 display
@@ -1744,8 +1758,9 @@ test("TB-258 mounted: non-delivery posts one explicit reason and keeps the dispa
   }
 });
 
-test("TB-258 mounted: origin receipt records per-line quantity AND condition", async () => {
+test("TB-258-R2 mounted: origin receipt splits ONE line into usable and damaged quantities", async () => {
   resetGroupScope(CHECKOUT);
+  clearPostDispatchForParcel("sh1");
   const calls = installFetch((call) => {
     if (call.method === "GET") return operationsPage([shipmentAction("record_return_receipt", "so1", "sh1")]);
     return postResponse(200, { ok: true });
@@ -1763,16 +1778,108 @@ test("TB-258 mounted: origin receipt records per-line quantity AND condition", a
     await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-sh1']"));
     await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-line-ol1']").length === 1);
 
-    // The review starts at the exact parcel quantity — no invented number.
-    const qty = q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-qty-ol1']") as HTMLInputElement;
-    assert.equal(qty.value, "2");
-    // Damaged units are recorded but must never fund a resend.
-    const condition = q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-condition-ol1']") as HTMLSelectElement;
-    await act(async () => {
-      condition.value = "1";
-      condition.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    // Both physical conditions are reviewed on the SAME line. The default is the exact parcel quantity
+    // as usable and zero damaged — no invented number, no silent split.
+    const usable = q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-usable-ol1']") as HTMLInputElement;
+    const damaged = q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-damaged-ol1']") as HTMLInputElement;
+    assert.equal(usable.value, "2");
+    assert.equal(damaged.value, "0");
+
+    // 2 usable + 1 damaged would be 3 units out of a 2-unit line: refused inline, nothing is sent and
+    // nothing is silently clamped down to a representable number.
+    await setInputValue(damaged, "1");
+    await waitFor(
+      () => qq(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-line-error-ol1']").length === 1,
+    );
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
     await flush();
+    assert.equal(calls.filter((c) => c.method === "POST").length, 0, "an over-count must never be posted");
+    assert.equal(
+      (q(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-damaged-ol1']") as HTMLInputElement).value,
+      "1",
+      "the reviewed number is kept for correction, not rewritten",
+    );
+
+    // The representable split: 1 usable + 1 damaged of the same 2-unit line in ONE request.
+    await setInputValue(usable, "1");
+    await waitFor(
+      () => qq(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-line-error-ol1']").length === 0,
+    );
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+    const posts = calls.filter((c) => c.method === "POST");
+    assert.equal(posts[0].body.code, "record_return_receipt");
+    assert.equal(posts[0].body.shipmentId, "sh1");
+    assert.deepEqual(posts[0].body.receiptItems, [
+      { orderLineId: "ol1", quantity: 1, condition: 0 },
+      { orderLineId: "ol1", quantity: 1, condition: 1 },
+    ]);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+    clearPostDispatchForParcel("sh1");
+  }
+});
+
+test("TB-258-R2 mounted: an unresolved recorded request keeps ONE recovery entry after the action vanishes", async () => {
+  resetGroupScope(CHECKOUT);
+  clearPostDispatchForParcel("sh1");
+  // The fresh projection offers NOTHING for this parcel: the ordinary receipt button is gone.
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([]);
+    return postResponse(200, { ok: true });
+  });
+  try {
+    const detail = withExceptionParcel(
+      baseDetail(),
+      { status: "Returning" },
+      { returnedUsableQuantity: 0, resendableQuantity: 0 },
+    );
+    const seller = detail.sellerOrders[0]!;
+    const recorded: PostDispatchExceptionRequest = {
+      code: "record_return_receipt",
+      receiptItems: [
+        { orderLineId: "ol1", quantity: 1, condition: 0 },
+        { orderLineId: "ol1", quantity: 1, condition: 1 },
+      ],
+      note: "بازگشت با یک قلم آسیب‌دیده",
+    };
+    // A previous attempt lost its response, so the exact envelope is still retained for this parcel.
+    writePostDispatchAttempt({
+      scope: {
+        viewerScopeKey: null,
+        checkoutId: CHECKOUT,
+        fulfillmentId: seller.fulfillmentId ?? seller.id,
+        sourceShipmentId: "sh1",
+        mode: "record_return_receipt",
+      },
+      request: recorded,
+    });
+
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail, checkoutId: CHECKOUT }),
+    );
+
+    // The normal action is NOT projected…
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-receipt-sh1']").length === 0);
+    // …but the parcel still exposes exactly one concise recovery entry for the recorded request.
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-reconcile-sh1']").length === 1);
+    const recovery = q(mounted.container, "[data-testid='admin-order-post-dispatch-reconcile-sh1']");
+    assert.match(recovery.textContent ?? "", /تأیید دریافت در مبدأ/);
+    assert.ok(
+      qq(mounted.container, "[data-testid='admin-order-post-dispatch-reconcile-row-sh1']").length === 1,
+      "exactly one recovery row per parcel",
+    );
+
+    // It restores the EXACT recorded review instead of minting a new one.
+    await click(recovery);
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length === 1);
+    assert.equal(
+      q(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").getAttribute("data-mode"),
+      "record_return_receipt",
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-retained-sh1']").length === 1);
 
     await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
     await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
@@ -1780,11 +1887,50 @@ test("TB-258 mounted: origin receipt records per-line quantity AND condition", a
     const posts = calls.filter((c) => c.method === "POST");
     assert.equal(posts[0].body.code, "record_return_receipt");
     assert.equal(posts[0].body.shipmentId, "sh1");
-    assert.deepEqual(posts[0].body.receiptItems, [{ orderLineId: "ol1", quantity: 2, condition: 1 }]);
+    // The same reviewed request is replayed verbatim — not a new allocation, not a changed quantity.
+    assert.deepEqual(posts[0].body.receiptItems, recorded.code === "record_return_receipt" ? recorded.receiptItems : []);
+    assert.equal(posts[0].body.note, "بازگشت با یک قلم آسیب‌دیده");
+
+    // Authoritative completion clears it: the stale entry disappears and never comes back.
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-reconcile-sh1']").length === 0);
+    assert.equal(
+      readPostDispatchAttempt({
+        viewerScopeKey: null,
+        checkoutId: CHECKOUT,
+        fulfillmentId: seller.fulfillmentId ?? seller.id,
+        sourceShipmentId: "sh1",
+        mode: "record_return_receipt",
+      }),
+      null,
+    );
     await mounted.unmount();
   } finally {
     restoreFetch();
+    clearPostDispatchForParcel("sh1");
   }
+});
+
+test("TB-258-R2 static: no recorded request means no recovery entry, and no invented action", () => {
+  clearPostDispatchForParcel("sh1");
+  const detail = withExceptionParcel(
+    baseDetail(),
+    { status: "Returning" },
+    { returnedUsableQuantity: 0, resendableQuantity: 0 },
+  );
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: () => NO_CAPS,
+    }),
+  );
+
+  // Nothing was recorded for this parcel, so the card offers no post-dispatch exit at all.
+  assert.ok(!html.includes("admin-order-post-dispatch-reconcile-sh1"));
+  assert.ok(!html.includes("admin-order-post-dispatch-receipt-sh1"));
+  assert.ok(!html.includes("admin-order-post-dispatch-actions-sh1"));
 });
 
 test("TB-258 mounted: resend is bounded by usable received quantity and replays one stable key", async () => {

@@ -135,6 +135,25 @@ public sealed class ShipmentReturnReceipt
         _items.Clear();
         _items.AddRange(items);
     }
+
+    /// <summary>
+    /// TB-258-R2: ONE canonical comparison authority for a recorded receipt. A replay answers only when the
+    /// submitted (line, condition, quantity) set is identical to the recorded one, regardless of input order.
+    /// </summary>
+    public bool MatchesItems(IReadOnlyList<(Guid OrderLineId, decimal Quantity, ReturnReceiptCondition Condition)> requested)
+    {
+        var recorded = _items
+            .Select(x => (x.OrderLineId, x.Quantity, x.Condition))
+            .OrderBy(x => x.OrderLineId)
+            .ThenBy(x => x.Condition)
+            .ToArray();
+        var incoming = requested
+            .Select(x => (x.OrderLineId, x.Quantity, x.Condition))
+            .OrderBy(x => x.OrderLineId)
+            .ThenBy(x => x.Condition)
+            .ToArray();
+        return recorded.Length == incoming.Length && recorded.SequenceEqual(incoming);
+    }
 }
 
 

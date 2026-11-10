@@ -208,20 +208,71 @@ public sealed partial class FulfillmentDirectory
         ShipmentReturnReceipt receipt,
         IReadOnlyList<ReturnReceiptLineCommand> requested)
     {
-        var recorded = receipt.Items
-            .Select(x => (x.OrderLineId, x.Quantity, x.Condition))
-            .OrderBy(x => x.OrderLineId)
-            .ThenBy(x => x.Condition)
-            .ToArray();
-        var incoming = requested
-            .Select(x => (x.OrderLineId, x.Quantity, x.Condition))
-            .OrderBy(x => x.OrderLineId)
-            .ThenBy(x => x.Condition)
-            .ToArray();
-        if (recorded.Length != incoming.Length || !recorded.SequenceEqual(incoming))
+        // TB-258-R2: the canonical comparison lives on the receipt itself, so the read-only reconcile answer and
+        // the mutating replay can never disagree about what "the same receipt" means.
+        var same = receipt.MatchesItems(
+            requested.Select(x => (x.OrderLineId, x.Quantity, x.Condition)).ToArray());
+        if (!same)
         {
             throw new ContractOperationException("fulfillment.return.receipt_conflict");
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<PostDispatchIntentRecord> ReconcilePostDispatchIntentAsync(
+        PostDispatchIntent intent,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+        if (intent.FulfillmentId == Guid.Empty || intent.ShipmentId == Guid.Empty)
+        {
+            return new PostDispatchIntentRecord(PostDispatchIntentRecord.NotRecorded);
+        }
+
+        // READ-ONLY: no mutate guard, no SaveChanges, no transaction. This answers "did this exact reviewed
+        // intent already happen in the owning durable state?" and nothing else.
+        var unit = await LoadMutableAsync(intent.FulfillmentId, cancellationToken);
+
+        var recorded = intent.Kind switch
+        {
+            PostDispatchIntentKind.RecordNonDelivery =>
+                unit.ResolveRecordedNonDelivery(intent.ShipmentId, intent.Reason, intent.Note),
+            PostDispatchIntentKind.StartReturn =>
+                unit.ResolveRecordedReturnStart(intent.ShipmentId),
+            PostDispatchIntentKind.RecordReturnReceipt =>
+                unit.ResolveRecordedReturnReceipt(
+                    intent.ShipmentId,
+                    (intent.ReceiptItems ?? [])
+                        .Select(x => (x.OrderLineId, x.Quantity, x.Condition))
+                        .ToArray()),
+            PostDispatchIntentKind.ResendShipment =>
+                unit.ResolveRecordedResendIntent(
+                    intent.OccurrenceKey,
+                    intent.ShipmentId,
+                    (intent.ResendItems ?? [])
+                        .Select(x => (x.OrderLineId, x.Quantity))
+                        .ToArray()),
+            _ => new FulfillmentUnit.RecordedPostDispatchIntent(
+                FulfillmentUnit.RecordedPostDispatchState.NotRecorded),
+        };
+
+        var state = recorded.State switch
+        {
+            FulfillmentUnit.RecordedPostDispatchState.Recorded => PostDispatchIntentRecord.Recorded,
+            FulfillmentUnit.RecordedPostDispatchState.ResolvedCancelled => PostDispatchIntentRecord.ResolvedCancelled,
+            FulfillmentUnit.RecordedPostDispatchState.Conflict => PostDispatchIntentRecord.Conflict,
+            _ => PostDispatchIntentRecord.NotRecorded,
+        };
+        if (state == PostDispatchIntentRecord.NotRecorded)
+        {
+            return new PostDispatchIntentRecord(state);
+        }
+
+        return new PostDispatchIntentRecord(
+            state,
+            await MapSnapshotAsync(unit, cancellationToken),
+            recorded.Shipment?.ShipmentId,
+            recorded.ConflictCode);
     }
 
     /// <summary>Exact uniqueness fault of the per-parcel receipt index only.</summary>

@@ -275,6 +275,68 @@ public sealed record ShipmentLineCommand(Guid OrderLineId, decimal Quantity);
 /// <summary>Enabled store shipping method exposed for admin shipment creation.</summary>
 public sealed record ShippingMethodOption(string Code, string LabelFa, string ProviderKind);
 
+/// <summary>TB-258-R2: which reviewed post-dispatch intent is being reconciled against durable facts.</summary>
+public enum PostDispatchIntentKind
+{
+    /// <summary>A recorded courier non-delivery attempt.</summary>
+    RecordNonDelivery = 0,
+
+    /// <summary>A recorded physical return to origin.</summary>
+    StartReturn = 1,
+
+    /// <summary>A recorded physical origin receipt (exact per-line quantities and conditions).</summary>
+    RecordReturnReceipt = 2,
+
+    /// <summary>A recorded resend allocation occurrence.</summary>
+    ResendShipment = 3,
+}
+
+/// <summary>TB-258-R2: the answer of the read-only recorded-intent lookup.</summary>
+public enum PostDispatchIntentState
+{
+    /// <summary>
+    /// No durable fact answers this exact intent. The ordinary fresh-command projection/readiness gate stays
+    /// authoritative, so an absent record can never become a new allocation.
+    /// </summary>
+    NotRecorded = 0,
+
+    /// <summary>This exact reviewed intent is already durably recorded; nothing is written and nothing is repeated.</summary>
+    Recorded = 1,
+
+    /// <summary>
+    /// A recorded occurrence exists but was cancelled. The retry resolves that historical cancellation instead of
+    /// recreating it, and writes nothing.
+    /// </summary>
+    ResolvedCancelled = 2,
+
+    /// <summary>A durable fact exists but answers a DIFFERENT intent; zero writes and a typed conflict.</summary>
+    Conflict = 3,
+}
+
+/// <summary>
+/// TB-258-R2: the exact reviewed post-dispatch intent a client is asking to reconcile. It is evidence about what
+/// the operator reviewed, never authorization and never a capacity claim.
+/// </summary>
+public sealed record PostDispatchIntent(
+    PostDispatchIntentKind Kind,
+    Guid FulfillmentId,
+    Guid ShipmentId,
+    string? Reason = null,
+    string? Note = null,
+    IReadOnlyList<ReturnReceiptLineCommand>? ReceiptItems = null,
+    IReadOnlyList<ShipmentLineCommand>? ResendItems = null,
+    string? OccurrenceKey = null);
+
+/// <summary>
+/// TB-258-R2: read-only answer of <see cref="IFulfillmentAdminOperations.ReconcilePostDispatchIntentAsync"/>.
+/// <see cref="Snapshot"/> is the owning durable state at read time.
+/// </summary>
+public sealed record PostDispatchIntentResult(
+    PostDispatchIntentState State,
+    FulfillmentSnapshot? Snapshot = null,
+    Guid? RecordedShipmentId = null,
+    string? ConflictCode = null);
+
 /// <summary>
 /// Fulfillment operations required by admin order lifecycle, exposed without owner
 /// Application/Domain types. Implemented by Fulfillment.Infrastructure.
@@ -436,6 +498,18 @@ public interface IFulfillmentAdminOperations
         IReadOnlyList<ShipmentLineCommand> items,
         CancellationToken cancellationToken,
         string? shippingDispatchKey = null);
+
+    /// <summary>
+    /// TB-258-R2: READ-ONLY exact recorded-intent lookup for the post-dispatch exception path.
+    /// It answers whether THIS exact reviewed intent is already durably recorded in the owning unit, so a lost
+    /// response can be reconciled through the public command after the fresh projected action disappeared.
+    /// It never writes, never allocates, never stands in for authorization and never weakens a readiness gate:
+    /// when it answers <see cref="PostDispatchIntentState.NotRecorded"/> the caller must still run the ordinary
+    /// current-projection gate, so a readiness failure can never turn into a new allocation.
+    /// </summary>
+    Task<PostDispatchIntentResult> ReconcilePostDispatchIntentAsync(
+        PostDispatchIntent intent,
+        CancellationToken cancellationToken);
 
     /// <summary>Create a multi-seller consolidated package.</summary>
     Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(

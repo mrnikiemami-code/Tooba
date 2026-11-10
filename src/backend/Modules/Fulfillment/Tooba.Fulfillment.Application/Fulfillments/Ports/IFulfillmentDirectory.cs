@@ -162,6 +162,16 @@ public interface IFulfillmentDirectory
         string? shippingDispatchKey = null);
 
     /// <summary>
+    /// TB-258-R2: READ-ONLY exact recorded-intent lookup for the post-dispatch exception path. It answers whether
+    /// this exact reviewed intent is already a durable fact of the owning unit, so a lost response can be
+    /// reconciled through the public command after the fresh projected action disappeared. It never writes,
+    /// never allocates, never authorizes and never weakens a readiness gate.
+    /// </summary>
+    Task<PostDispatchIntentRecord> ReconcilePostDispatchIntentAsync(
+        PostDispatchIntent intent,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// fulfillment شروع‌نشده را پس از برگشت تأیید پرداخت حذف می‌کند.
     /// </summary>
     Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken);

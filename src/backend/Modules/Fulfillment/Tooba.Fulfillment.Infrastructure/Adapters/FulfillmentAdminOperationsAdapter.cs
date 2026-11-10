@@ -227,6 +227,50 @@ internal sealed class FulfillmentAdminOperationsAdapter(
         return new FulfillmentShipmentCreateResult(MapRequired(created.Snapshot), created.CreatedShipmentId);
     }
 
+    /// <inheritdoc />
+    public async Task<PostDispatchIntentResult> ReconcilePostDispatchIntentAsync(
+        PostDispatchIntent intent,
+        CancellationToken cancellationToken)
+    {
+        var recorded = await directory.ReconcilePostDispatchIntentAsync(
+            intent.Kind switch
+            {
+                PostDispatchIntentKind.RecordNonDelivery =>
+                    AppModels.PostDispatchIntent.NonDelivery(intent.FulfillmentId, intent.ShipmentId, intent.Reason, intent.Note),
+                PostDispatchIntentKind.StartReturn =>
+                    AppModels.PostDispatchIntent.ReturnStart(intent.FulfillmentId, intent.ShipmentId),
+                PostDispatchIntentKind.RecordReturnReceipt =>
+                    AppModels.PostDispatchIntent.Receipt(
+                        intent.FulfillmentId,
+                        intent.ShipmentId,
+                        (intent.ReceiptItems ?? [])
+                            .Select(x => new AppModels.ReturnReceiptLineCommand(
+                                x.OrderLineId,
+                                x.Quantity,
+                                (Domain.ValueObjects.ReturnReceiptCondition)x.Condition))
+                            .ToList()),
+                _ => AppModels.PostDispatchIntent.Resend(
+                    intent.FulfillmentId,
+                    intent.ShipmentId,
+                    intent.OccurrenceKey,
+                    (intent.ResendItems ?? [])
+                        .Select(x => new AppModels.ShipmentLineCommand(x.OrderLineId, x.Quantity))
+                        .ToList()),
+            },
+            cancellationToken);
+        return new PostDispatchIntentResult(
+            recorded.State switch
+            {
+                AppModels.PostDispatchIntentRecord.Conflict => PostDispatchIntentState.Conflict,
+                AppModels.PostDispatchIntentRecord.Recorded => PostDispatchIntentState.Recorded,
+                AppModels.PostDispatchIntentRecord.ResolvedCancelled => PostDispatchIntentState.ResolvedCancelled,
+                _ => PostDispatchIntentState.NotRecorded,
+            },
+            Map(recorded.Snapshot),
+            recorded.RecordedShipmentId,
+            recorded.ConflictCode);
+    }
+
     public async Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> shipmentIds,

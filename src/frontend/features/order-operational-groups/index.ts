@@ -11,7 +11,11 @@
 export { AdminOperationalGroupWorkflowDialog } from "./ui/admin-operational-group-workflow-dialog.tsx";
 
 // TB-258: the one post-dispatch exception surface (non-delivery, return, origin receipt, resend).
-export { PostDispatchExceptionDialog, POST_DISPATCH_NON_DELIVERY_REASONS } from "./ui/post-dispatch-exception-dialog.tsx";
+export {
+  PostDispatchExceptionDialog,
+  POST_DISPATCH_MODE_LABEL_FA,
+  POST_DISPATCH_NON_DELIVERY_REASONS,
+} from "./ui/post-dispatch-exception-dialog.tsx";
 
 export type {
   PostDispatchExceptionMode,
@@ -23,9 +27,11 @@ export type {
 // TB-258-R1: the retained reviewed request (viewer/checkout/fulfillment/parcel/mode scoped).
 export {
   clearPostDispatchAttempt,
+  listPostDispatchAttemptsForParcel,
   markPostDispatchAttemptFailed,
   mintPostDispatchOccurrence,
   readPostDispatchAttempt,
+  POST_DISPATCH_MODES,
   writePostDispatchAttempt,
 } from "./session/post-dispatch-attempt-store.ts";
 
