@@ -317,18 +317,32 @@ export function PostDispatchExceptionDialog({
     [resendCandidates, resendDrafts],
   );
 
+  /**
+   * TB-258-R3: a NEW mutation is refused unless the COMPLETE reviewed request is reload-durable. The message
+   * is actionable and the reviewed values stay in the form, so the operator can retry after freeing storage.
+   */
+  const STORAGE_NOT_DURABLE_FA =
+    "ذخیرهٔ مطمئن این درخواست در این مرورگر ممکن نشد؛ برای جلوگیری از ارسال تکراری، درخواست ارسال نشد. حافظهٔ مرورگر را آزاد کنید و دوباره تلاش کنید.";
+
   async function send(request: PostDispatchExceptionRequest) {
     if (submitInFlight.current) return;
     submitInFlight.current = true;
     setLocalErrorFa(null);
-    // The COMPLETE reviewed request is persisted BEFORE the first mutation, so an uncertain outcome can
-    // only reconcile this exact envelope instead of creating a second operation.
-    const envelope = writePostDispatchAttempt({
-      scope,
-      request,
-      attempts: (retained?.attempts ?? 0) + 1,
-    });
     try {
+      // The COMPLETE reviewed request is persisted BEFORE the first mutation, so an uncertain outcome can
+      // only reconcile this exact envelope instead of creating a second operation. A memory-only write does
+      // not survive a reload, so it can NEVER authorize a POST: the boundary fails closed here.
+      const persisted = writePostDispatchAttempt({
+        scope,
+        request,
+        attempts: (retained?.attempts ?? 0) + 1,
+      });
+      if (!persisted || !persisted.durable) {
+        setLocalErrorFa(STORAGE_NOT_DURABLE_FA);
+        return;
+      }
+      const attempt = persisted.attempt;
+
       const accepted = await onSubmit(request);
       if (accepted) {
         // Authoritative completion: only now may a deliberate new occurrence be minted.
@@ -336,7 +350,7 @@ export function PostDispatchExceptionDialog({
         setRetained(null);
         return;
       }
-      if (envelope) setRetained(markPostDispatchAttemptFailed(scope, envelope));
+      setRetained(markPostDispatchAttemptFailed(scope, attempt));
     } finally {
       submitInFlight.current = false;
     }

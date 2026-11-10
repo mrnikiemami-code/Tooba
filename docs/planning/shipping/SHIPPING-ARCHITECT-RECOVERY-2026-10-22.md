@@ -1,4 +1,14 @@
-# CURRENT — 258-R2 review PARTIAL; bounded258-R3 ISSUED — 2026-11-10
+# CURRENT — 258-R3 WORKER RESULT PASS (pending Architect review) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb258-relational.txt,tb258r3-orchestrator-relational.txt}.
+Worker 258-R3 PASS within the issued two-gap repair scope: decision CANCELLED_INTENT_EXACT_IDENTITY_BEFORE_RESULT_AND_NEW_SEND_REFUSED_WITHOUT_RELOAD_DURABLE_ENVELOPE. Base a56814cb7 (work base 5104375d5 is its docs descendant). NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT.
+LANDED: (A) RecordedResendAnswersIntent is a PURE shared identity predicate with no cancelled short-circuit; the read-only reconcile and the mutating replay decide AFTER it, so a changed source/quantity under a cancelled key is fulfillment.resend.intent_conflict with zero writes and only the exact intent resolves cancelled / keeps its history. (B) the retained-envelope store returns {attempt,durable} (durable only after a read-back-verified sessionStorage write, probed per call) and dialog.send() refuses a NEW mutation with ONE concise inline message and zero fetch when the complete envelope is not reload-durable, keeping the review values; a durable envelope is never cleared or replaced by a memory-only shadow.
+Proven: Fulfillment PostDispatchException pure 12/12 + relational 11/11 on real tooba_alpha; Order public command AdminOrderPostDispatchReplay 9/9 (new relational: exact=resolvedCancelled, changedSource=conflict, changedQuantity=conflict, rows unchanged); mounted real section/panel 40/40 (throwing storage -> inline refusal + ZERO POST, restored storage -> one send whose raw envelope is verified at POST time); typecheck 0; build 0; backend build 0; publish 0; no migration. Host PID 32080 /health 200; FE PID 47852 BUILD_ID Ljnu38AmJOn-eqg7FcKKq /fa 200, previous build 404.
+LEDGER: save256-R2 closed; issues1/2 accepted257 (2/5); issue3 pending Architect review of 258-R3; 259/260 NOT ISSUED. One worker/task. Same tooba_alpha5432 + FE3000/Host5088 SingleStore/store-alpha only. 255 parked, live Tipax deferred.
+
+---
+
+# SUPERSEDED — 258-R2 review PARTIAL; bounded 258-R3 ISSUED — 2026-11-10
 
 Only task: docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/TASK.md.
 Review docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/ARCHITECT-REVIEW.md.

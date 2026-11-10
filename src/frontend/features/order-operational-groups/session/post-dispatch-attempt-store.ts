@@ -47,13 +47,11 @@ const VERSION = "v1";
 const DEFAULT_SCOPE = "__viewer__";
 
 /**
- * In-memory mirror used ONLY when sessionStorage is unusable (private mode, quota, a throwing shim).
- * It keeps the exact request alive for this mount so a close/reopen inside one page session still
- * reconciles it instead of blindly minting a second operation. It is never consulted while
- * sessionStorage is healthy, so a cleared storage can never resurrect a stale envelope.
+ * TB-258-R1/R3: in-memory mirror used only as a same-mount convenience. It is deliberately NOT durability:
+ * it does not survive a document reload, so it can never authorize a NEW mutation. Only a successful
+ * sessionStorage write is reload-durable — see `PostDispatchAttemptWrite.durable`.
  */
 const memoryFallback = new Map<string, PostDispatchAttempt>();
-let storageBroken = false;
 
 function coalesce(value: string | null | undefined): string {
   return typeof value === "string" ? value.trim() : "";
@@ -84,13 +82,17 @@ function storageKey(scope: PostDispatchAttemptScope): string {
   ].join(":");
 }
 
-function canUseSessionStorage(): boolean {
-  if (storageBroken) return false;
+/**
+ * TB-258-R3: probe on EVERY call, never latch. A transient storage failure must not permanently disable
+ * durability for the rest of the page session — a restored storage can and must serve the next attempt.
+ */
+function sessionStorageApi(): Storage | null {
   try {
-    return typeof sessionStorage !== "undefined" && typeof sessionStorage.getItem === "function";
+    const api = typeof sessionStorage === "undefined" ? null : sessionStorage;
+    if (!api || typeof api.getItem !== "function" || typeof api.setItem !== "function") return null;
+    return api;
   } catch {
-    storageBroken = true;
-    return false;
+    return null;
   }
 }
 
@@ -110,9 +112,10 @@ export function mintPostDispatchOccurrence(): string {
 }
 
 function readStored(key: string): PostDispatchAttempt | null {
-  if (!canUseSessionStorage()) return memoryFallback.get(key) ?? null;
+  const api = sessionStorageApi();
+  if (!api) return memoryFallback.get(key) ?? null;
   try {
-    const raw = sessionStorage.getItem(key);
+    const raw = api.getItem(key);
     if (typeof raw !== "string" || raw.trim().length === 0) return null;
     const parsed = JSON.parse(raw) as Partial<PostDispatchAttempt> | null;
     if (!parsed || typeof parsed !== "object" || !parsed.request || !parsed.mode) return null;
@@ -127,7 +130,7 @@ function readStored(key: string): PostDispatchAttempt | null {
       lastFailedAtUtc: coalesce(parsed.lastFailedAtUtc) || null,
     };
   } catch {
-    storageBroken = true;
+    // A throwing/quota-broken storage is not a record. The in-memory mirror is the only same-mount source.
     return memoryFallback.get(key) ?? null;
   }
 }
@@ -190,13 +193,29 @@ export function listPostDispatchAttemptsForParcel(input: {
   });
 }
 
-/** Persists the COMPLETE reviewed request BEFORE the first POST. */
+/**
+ * TB-258-R3: the outcome of persisting a reviewed request. `durable` is true ONLY when the COMPLETE
+ * envelope is in storage that survives a full document reload (sessionStorage, verified by read-back).
+ * A memory-only write is never durability, so a NEW mutation must be refused (see the dialog's send
+ * boundary) instead of risking a second allocation after the reload loses the map.
+ */
+export type PostDispatchAttemptWrite = {
+  attempt: PostDispatchAttempt;
+  durable: boolean;
+};
+
+/**
+ * Persists the COMPLETE reviewed request BEFORE the first POST.
+ *
+ * Returns `null` only when the scope itself is incomplete. Otherwise the caller MUST inspect `durable`
+ * and refuse a new mutation when it is false — that is the send boundary, not styling.
+ */
 export function writePostDispatchAttempt(input: {
   scope: PostDispatchAttemptScope;
   request: PostDispatchExceptionRequest;
   attempts?: number;
   lastFailedAtUtc?: string | null;
-}): PostDispatchAttempt | null {
+}): PostDispatchAttemptWrite | null {
   const normalized = normalizeScope(input.scope);
   if (!normalized) return null;
   const attempt: PostDispatchAttempt = {
@@ -210,31 +229,41 @@ export function writePostDispatchAttempt(input: {
     lastFailedAtUtc: input.lastFailedAtUtc ?? null,
   };
   const key = storageKey(normalized);
-  if (canUseSessionStorage()) {
+  const api = sessionStorageApi();
+  if (api) {
     try {
-      sessionStorage.setItem(key, JSON.stringify(attempt));
-      memoryFallback.delete(key);
-      return attempt;
+      const serialized = JSON.stringify(attempt);
+      api.setItem(key, serialized);
+      // Read-back: a storage that silently drops the write is NOT durable either.
+      if (api.getItem(key) === serialized) {
+        memoryFallback.delete(key);
+        return { attempt, durable: true };
+      }
     } catch {
-      // Storage refused (quota / private mode): the in-memory mirror keeps this mount authoritative.
-      storageBroken = true;
+      // Storage refused (quota / private mode / throwing shim): fall through to the memory-only mirror.
     }
   }
   memoryFallback.set(key, attempt);
-  return attempt;
+  return { attempt, durable: false };
 }
 
-/** Clears the envelope ONLY after an authoritative completion of this exact review. */
+/**
+ * Clears the envelope ONLY after an authoritative completion of this exact review.
+ *
+ * TB-258-R3: a write failure, an unknown outcome or an error code never clears it, and a durable record
+ * that could not be rewritten is left in place rather than replaced by a memory-only shadow.
+ */
 export function clearPostDispatchAttempt(scope: PostDispatchAttemptScope): void {
   const normalized = normalizeScope(scope);
   if (!normalized) return;
   const key = storageKey(normalized);
   memoryFallback.delete(key);
-  if (!canUseSessionStorage()) return;
+  const api = sessionStorageApi();
+  if (!api) return;
   try {
-    sessionStorage.removeItem(key);
+    api.removeItem(key);
   } catch {
-    storageBroken = true;
+    // A throwing storage cannot hold a durable record to clear; nothing else to do.
   }
 }
 
@@ -248,5 +277,5 @@ export function markPostDispatchAttemptFailed(
     request: attempt.request,
     attempts: attempt.attempts + 1,
     lastFailedAtUtc: new Date().toISOString(),
-  }) ?? attempt;
+  })?.attempt ?? attempt;
 }

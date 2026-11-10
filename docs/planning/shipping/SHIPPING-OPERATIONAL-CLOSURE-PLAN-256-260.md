@@ -1,4 +1,15 @@
-# CURRENT — 258-R2 review PARTIAL; bounded258-R3 ISSUED — 2026-11-10
+# CURRENT — 258-R3 WORKER RESULT PASS (pending Architect review) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb258-relational.txt,tb258r3-orchestrator-relational.txt}.
+Stage 258-R3 (issue3) now has a worker result: decision CANCELLED_INTENT_EXACT_IDENTITY_BEFORE_RESULT_AND_NEW_SEND_REFUSED_WITHOUT_RELOAD_DURABLE_ENVELOPE. PASS inside the issued two-gap scope only — NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, and NOT the five-defect completion.
+A — RecordedResendAnswersIntent is a PURE shared identity predicate (source parcel, accepted group, effective method, canonical per-line quantities) with no cancelled short-circuit; the read-only reconcile and the mutating replay both decide AFTER it, so a changed source or quantity under a cancelled occurrence key is `fulfillment.resend.intent_conflict` with zero writes, while only the exact recorded intent resolves `ResolvedCancelled` / keeps `fulfillment.resend.occurrence_cancelled` history. Actor permission, checkout/fulfillment/parcel ownership and the one parcel action owner are unchanged.
+B — the retained post-dispatch envelope store returns `{attempt,durable}`: durable ONLY after a `sessionStorage.setItem` verified by read-back, probed per call (no permanent broken latch); `dialog.send()` refuses a NEW mutation with ONE concise actionable inline message and ZERO fetch when the full envelope is not reload-durable, keeping the reviewed values; a durable envelope is never cleared or replaced by a memory-only shadow; single-flight and viewer-scope isolation retained.
+Proof: PostDispatchException pure 12/12 + relational 11/11 on real tooba_alpha; Order public command AdminOrderPostDispatchReplay 9/9 (new relational: exact=resolvedCancelled, changedSource=conflict, changedQuantity=conflict, rows unchanged, cancelled parcel still Cancelled); mounted real section/panel 40/40 (throwing storage -> inline refusal + ZERO POST, restored storage -> exactly one send whose raw envelope is verified at POST time); typecheck 0; production build 0; backend build 0; publish 0; no migration. Host PID 32080 /health 200 (SingleStore store-alpha -> tooba_alpha); FE PID 47852 BUILD_ID Ljnu38AmJOn-eqg7FcKKq /fa 200, previous build 404.
+LEDGER: save256-R2 closed; issues1/2 accepted257 (2/5); issue3 pending Architect review of 258-R3; issue4 common-or-separate parcels259 NOT ISSUED; issue5 due queue/shared view260 NOT ISSUED. Next stage is issued by the Architect only after review; one worker/task, no automatic continuation.
+
+---
+
+# SUPERSEDED — 258-R2 review PARTIAL; bounded 258-R3 ISSUED — 2026-11-10
 
 Only task: docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/TASK.md.
 Review docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/ARCHITECT-REVIEW.md.

@@ -1027,9 +1027,11 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     }
 
     /// <summary>
-    /// TB-258-R1: an already recorded occurrence only answers the SAME reviewed intent. A different source parcel,
-    /// group/method or quantity is a typed conflict (zero new writes) — never the old parcel under a new request.
-    /// A cancelled recorded resend keeps its history and cannot be silently recreated by the same key.
+    /// TB-258-R1/R3: an already recorded occurrence only answers the SAME reviewed intent. Identity is validated
+    /// FIRST, so a different source parcel, group/method or quantity is a typed conflict (zero new writes) — never
+    /// the old parcel under a new request, and never a "cancelled" answer for an intent that was never recorded.
+    /// A cancelled occurrence is a RESULT STATE of an exact intent: it keeps its history and cannot be silently
+    /// recreated by the same key.
     /// </summary>
     private static Shipment ReplayRecordedResend(
         Shipment recorded,
@@ -1037,14 +1039,14 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         IReadOnlyList<(Guid OrderLineId, decimal Quantity)> requested,
         string effectiveMethodCode)
     {
-        if (recorded.Status == ShipmentStatus.Cancelled)
-        {
-            throw new ContractOperationException("fulfillment.resend.occurrence_cancelled");
-        }
-
         if (!RecordedResendAnswersIntent(recorded, original, requested, effectiveMethodCode))
         {
             throw new ContractOperationException("fulfillment.resend.intent_conflict");
+        }
+
+        if (recorded.Status == ShipmentStatus.Cancelled)
+        {
+            throw new ContractOperationException("fulfillment.resend.occurrence_cancelled");
         }
 
         return recorded;
@@ -1052,7 +1054,8 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
     /// <summary>
     /// TB-258-R2: ONE recorded-intent authority. A recorded occurrence answers a request only when its source
-    /// parcel, accepted group/method and canonical per-line quantities are identical.
+    /// parcel, accepted group/method and canonical per-line quantities are identical. Cancellation is a state,
+    /// not an exemption: the caller decides what an identity match on a cancelled occurrence means.
     /// </summary>
     private static bool RecordedResendAnswersIntent(
         Shipment recorded,
@@ -1060,11 +1063,6 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         IReadOnlyList<(Guid OrderLineId, decimal Quantity)> requested,
         string effectiveMethodCode)
     {
-        if (recorded.Status == ShipmentStatus.Cancelled)
-        {
-            return false;
-        }
-
         var sameSource = recorded.ResendOfShipmentId == original.ShipmentId;
         var sameGroup = recorded.ShippingGroupId == original.ShippingGroupId;
         var sameMethod = string.Equals(
@@ -1185,21 +1183,24 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             return new RecordedPostDispatchIntent(RecordedPostDispatchState.NotRecorded);
         }
 
-        if (recorded.Status == ShipmentStatus.Cancelled)
-        {
-            return new RecordedPostDispatchIntent(RecordedPostDispatchState.ResolvedCancelled, recorded);
-        }
-
+        // TB-258-R3: exact identity is validated BEFORE choosing Recorded vs ResolvedCancelled. A changed source
+        // or quantity under the key of a cancelled parcel is a typed conflict with zero writes — cancelled
+        // history is a result state of an exact intent, never an exemption from identity validation.
         var requested = NormalizeSelections(items ?? []);
         var effectiveMethodCode = string.IsNullOrWhiteSpace(recorded.ShippingMethodCode)
             ? original.ShippingMethodCode
             : recorded.ShippingMethodCode;
-        return RecordedResendAnswersIntent(recorded, original, requested, effectiveMethodCode)
-            ? new RecordedPostDispatchIntent(RecordedPostDispatchState.Recorded, recorded)
-            : new RecordedPostDispatchIntent(
+        if (!RecordedResendAnswersIntent(recorded, original, requested, effectiveMethodCode))
+        {
+            return new RecordedPostDispatchIntent(
                 RecordedPostDispatchState.Conflict,
                 null,
                 "fulfillment.resend.intent_conflict");
+        }
+
+        return recorded.Status == ShipmentStatus.Cancelled
+            ? new RecordedPostDispatchIntent(RecordedPostDispatchState.ResolvedCancelled, recorded)
+            : new RecordedPostDispatchIntent(RecordedPostDispatchState.Recorded, recorded);
     }
 
     private static bool LinesMatch(

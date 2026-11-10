@@ -362,6 +362,21 @@ function clearPostDispatchForParcel(shipmentId: string, fulfillmentId = "so1") {
   }
 }
 
+/**
+ * TB-258-R3: the RAW sessionStorage envelope for one parcel, read from real storage (never the store's
+ * in-memory mirror). Non-null proves the reviewed request was reload-durable at that moment.
+ */
+function durablePostDispatchEnvelope(checkoutId: string, shipmentId: string, fulfillmentId = "so1"): string | null {
+  const prefix = `tb.post-dispatch-attempt.v1:${checkoutId}:`;
+  for (let index = 0; index < sessionStorage.length; index += 1) {
+    const key = sessionStorage.key(index);
+    if (!key || !key.startsWith(prefix) || !key.includes(`:${fulfillmentId}:${shipmentId}:`)) continue;
+    const raw = sessionStorage.getItem(key);
+    if (raw && raw.includes(shipmentId)) return raw;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------- TB-254 display
 
 test("TB-254 static render: the group card is display-only and owns no inline selection control", () => {
@@ -1905,6 +1920,83 @@ test("TB-258-R2 mounted: an unresolved recorded request keeps ONE recovery entry
     );
     await mounted.unmount();
   } finally {
+    restoreFetch();
+    clearPostDispatchForParcel("sh1");
+  }
+});
+
+test("TB-258-R3 mounted: a storage that cannot persist the intent refuses the NEW send and sends nothing", async () => {
+  resetGroupScope(CHECKOUT);
+  clearPostDispatchForParcel("sh1");
+  /** Set by the fetch stub: proves the envelope was ALREADY reload-durable when the POST left the browser. */
+  let envelopeAtPost: string | null = null;
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("record_non_delivery", "so1", "sh1")]);
+    envelopeAtPost = durablePostDispatchEnvelope("c1", "sh1");
+    return postResponse(200, { ok: true });
+  });
+  const originalStorage = globalThis.sessionStorage;
+  const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
+  const broken = {
+    getItem() { throw new Error("storage disabled"); },
+    setItem() { throw new Error("storage disabled"); },
+    removeItem() { throw new Error("storage disabled"); },
+    clear() { throw new Error("storage disabled"); },
+    key() { throw new Error("storage disabled"); },
+    get length(): number { throw new Error("storage disabled"); },
+  } as unknown as Storage;
+  const installStorage = (value: Storage) => {
+    Object.defineProperty(globalThis, "sessionStorage", { configurable: true, writable: true, value });
+  };
+  const restoreStorage = () => {
+    if (originalDescriptor) Object.defineProperty(globalThis, "sessionStorage", originalDescriptor);
+    else installStorage(originalStorage);
+  };
+
+  try {
+    installStorage(broken);
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: withExceptionParcel(baseDetail()), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-nondelivery-sh1']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-nondelivery-sh1']"));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-reason-refused'] input"));
+
+    // A memory-only envelope does not survive a reload, so the send boundary must refuse it outright.
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await flush();
+    assert.equal(
+      calls.filter((c) => c.method === "POST").length,
+      0,
+      "an intent that is not reload-durable must never reach the network",
+    );
+    const refusal = q(mounted.container, "[data-testid='admin-order-post-dispatch-error-sh1']");
+    assert.match(refusal.textContent ?? "", /ارسال نشد/);
+    // The reviewed values and the open review are kept for a corrected retry.
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length, 1);
+    assert.equal(
+      (q(mounted.container, "[data-testid='admin-order-post-dispatch-reason-refused'] input") as HTMLInputElement).checked,
+      true,
+      "the reviewed reason is retained, not reset",
+    );
+
+    // Storage restored: exactly one deliberate send, and its envelope was durable BEFORE the request left.
+    restoreStorage();
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+    const posts = calls.filter((c) => c.method === "POST");
+    assert.equal(posts.length, 1);
+    assert.equal(posts[0].body.code, "record_non_delivery");
+    assert.equal(posts[0].body.shipmentId, "sh1");
+    assert.equal(posts[0].body.reason, "refused");
+    assert.ok(envelopeAtPost, "the complete envelope must already be reload-durable when the POST is made");
+    assert.match(envelopeAtPost, /record_non_delivery/);
+    assert.match(envelopeAtPost, /refused/);
+    await mounted.unmount();
+  } finally {
+    restoreStorage();
     restoreFetch();
     clearPostDispatchForParcel("sh1");
   }

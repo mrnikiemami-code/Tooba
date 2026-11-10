@@ -1,0 +1,11 @@
+C original=02e22950-2431-4fe8-b05f-8de4a50e1b5b cancelledResend=ffb931a9-a71a-43a6-8bb4-19c7d0c62e31
+A original=ba23e6d6-770c-4150-83f4-d89c12d30ab0 resend=1bfff3a6-72ee-4058-84e0-4aebbd9e50a5 lineA=799d9baf-2312-409d-aa5a-fa90c5e39a36 lineB=9cae9a25-4549-4415-b2d1-8c9b2723b7a6
+D winner=38cd152f-4349-4b9a-8bea-2697537cdee3 loserKey=tb258-D-left resendRows=1 replay=same
+H first=c0445c91-0320-4ecc-9d2f-41da3327709a->8887c410-1b07-48c7-8602-668dfa20d831 second=ada173d8-f994-4ac5-a612-e968e1f53ce2->eaa8f2d0-2a4a-481c-a3bc-89b93eed1dcb
+G resend=15603a35-6641-4a16-a563-60dba8ccfbb6 replay=same intentConflicts=2 rows=1
+I receiptLines=3 lineAusable=1 resend=1db25137-07a7-4596-bdd0-6be8fd892faf changedReceiptRefused=fulfillment.return.receipt_conflict
+K mixed=usable2+damaged1:grants2 overTotal=4:refused(fulfillment.return.receipt_qty_exceeds) source=8579d74b-5f66-44c4-b6ea-2a9802ab5cc4 overSource=1b38fca9-7239-4757-b84d-4028164ff5d9 clamped=false persisted=false
+E first=006eaa9f-d543-4832-9014-10ddfb5975b0 secondInTransit=1bac5e34-c9c5-4b33-bee8-b254aacea0ba delivered=1
+F package=1390a681-891b-4bd4-a087-261820c76009 members=fc9c4d49-b415-4a8f-a2e7-9f9db5ffa53a,ca37a4fb-c7ba-47ce-b2e1-072d602d58f4 locked=refused
+J nondelivery=recorded/conflict return=recorded receipt=recorded(3 lines)/conflict resend=ed5abf1b-e7c4-4faa-a83a-c9c4f8efa342:recorded/conflict/blank:NotRecorded/cancelled:ResolvedCancelled rowsUnchanged=true
+B delivered=c911115a-33c5-4838-b5f4-223d490532db preDispatch=4b10c172-db72-4d56-b3d9-25556d2bf956

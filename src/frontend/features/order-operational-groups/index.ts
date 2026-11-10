@@ -38,6 +38,7 @@ export {
 export type {
   PostDispatchAttempt,
   PostDispatchAttemptScope,
+  PostDispatchAttemptWrite,
 } from "./session/post-dispatch-attempt-store.ts";
 
 // TB-256-R1: the group's customer-delivery vs planned-carrier-handoff rows (display-only).

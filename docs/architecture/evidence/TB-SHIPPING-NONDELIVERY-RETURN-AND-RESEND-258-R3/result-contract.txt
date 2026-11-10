@@ -1,0 +1,67 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3
+Parent-Task: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS
+Decision: CANCELLED_INTENT_EXACT_IDENTITY_BEFORE_RESULT_AND_NEW_SEND_REFUSED_WITHOUT_RELOAD_DURABLE_ENVELOPE
+Base-SHA: a56814cb7ea97126bcab08da45b1886449fd3bab
+Work-Base-SHA: 5104375d5
+Code-SHA: <in task commit>
+Merge-SHA: <in task commit>
+Evidence-SHA: <in task commit>
+HEAD: == origin/main after the task commit
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Scope-A: ResolveRecordedResendIntent validates full source/group/method/canonical-quantity identity BEFORE the
+Recorded/ResolvedCancelled decision; RecordedResendAnswersIntent is now a pure shared identity predicate used by both
+the read-only reconcile and the mutating replay; changed source or quantity under a cancelled key is
+fulfillment.resend.intent_conflict with zero writes; exact intent still resolves cancelled; blank key stays NotRecorded;
+actor/checkout/fulfillment/parcel authority unchanged.
+Scope-B: writePostDispatchAttempt returns {attempt,durable}; durable only after a read-back-verified sessionStorage
+write; the send boundary refuses a NEW mutation with ONE concise inline operator message and keeps the review values
+when the complete envelope is not reload-durable; storage is probed per call (no permanent broken latch); a durable
+envelope is never cleared or replaced by a memory-only shadow; single-flight and viewer-scope isolation retained.
+
+Proof: Fulfillment pure 12/12; Fulfillment relational on real tooba_alpha 11/11; Order public-command 9/9 (7 pure + 2
+relational, new case exact=resolvedCancelled / changedSource=conflict / changedQuantity=conflict, rows unchanged);
+mounted real panel/dialog 40/40 (new storage case: zero POST + visible refusal, then one durable send verified at POST
+time); typecheck 0; production build 0; dotnet build 0 errors; publish 0.
+Changed paths:
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/FulfillmentUnit.cs
+  src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/PostDispatchException258R1Tests.cs
+  src/backend/Modules/Order/Tooba.Order.Tests/Admin/AdminOrderPostDispatchReplayTests.cs
+  src/frontend/features/order-operational-groups/session/post-dispatch-attempt-store.ts
+  src/frontend/features/order-operational-groups/ui/post-dispatch-exception-dialog.tsx
+  src/frontend/features/order-operational-groups/index.ts
+  src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts
+  docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/TASK.md (verbatim, unchanged from issue)
+  docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/{TASK.md,RESULT.md,RECEIPTS.md,
+    result-contract.txt,tb258-relational.txt,tb258r3-orchestrator-relational.txt}
+  AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md,
+  docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md,
+  docs/planning/shipping/SHIPPING-OPERATIONAL-CLOSURE-PLAN-256-260.md
+
+Fixture-IDs (real tooba_alpha, task-labelled):
+  tb258r3-orchestrator-relational.txt: H fulfillment=dc4a1ded-ff2e-4417-a62f-c19dc38b8a9f
+    checkout=709b756d-c185-40ea-aedd-73f0cb44f04c source=3569b590-2014-44bf-aee1-0ae21a50ee75
+    cancelledResend=382e81c3-dc96-4ea0-adfe-6a17946dcc5c key=tb258r3-cancelled-<source>
+  tb258-relational.txt: A–K retained lifecycle/relational fixtures (ids in the file).
+
+Runtime: Host PID 32080 /health 200 (republished); FE PID 47852 BUILD_ID Ljnu38AmJOn-eqg7FcKKq /fa 200, previous
+BUILD_ID 404; served chunk 9127-ec36efb7727c0afc.js carries the read-back durability branch.
+One database tooba_alpha @127.0.0.1:5432, SingleStore/store-alpha/tenant-alpha; no migration; no disposable/15433/Docker
+DB; no edition/connection/port/appsettings change; DataProtection key file unchanged; CapturedPreview untouched
+(local ON / checked-in OFF); no business SQL/reset/reseed/backfill; user order/cart/parcel/payment/service rows
+read-only; no provider call/credential/fake waybill.
+
+Limits: no live Tipax/post waybill; origin receipt is a one-time final receipt; no Inventory/Returns contract write;
+package safety is a refusal for a locked child (parent workflow is 259); concurrency proven with two real contexts +
+DB guards, not a stress test; in-memory mirror is explicitly NOT claimed as reload durability.
+Worker PASS != Architect/user acceptance.
+LEDGER: issue3 pending Architect review; 259/260 NOT ISSUED; five-defect completion not claimed.
+END_TOOBA_WORKER_RESULT

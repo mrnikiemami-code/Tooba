@@ -424,8 +424,118 @@ public sealed class AdminOrderPostDispatchReplayTests
             + $"rows=shipments{shipmentsAfterFirst}/receipts{receiptsAfterFirst}");
     }
 
+    /// <summary>
+    /// TB-258-R3 on real storage through the PUBLIC command: a resend recorded and then cancelled pre-dispatch is
+    /// history. The exact retained request resolves that cancelled occurrence with zero writes, while the SAME key
+    /// with a different source parcel or a different quantity is a typed conflict — cancellation is never an
+    /// exemption from exact identity validation.
+    /// </summary>
+    [Fact]
+    public async Task Relational_cancelled_occurrence_answers_only_its_exact_intent_through_the_public_command()
+    {
+        var connection = Environment.GetEnvironmentVariable(RelationalEnvVar);
+        if (string.IsNullOrWhiteSpace(connection))
+        {
+            return;
+        }
+
+        var target = new NpgsqlConnectionStringBuilder(connection);
+        var fixture = await CreateDispatchedFixtureAsync(target);
+        var ports = new Ports("order.handle");
+        var orders = new CheckoutReaderFake(
+            fixture.CheckoutId, fixture.SellerOrderId, fixture.SellerPartyId, fixture.LineAId);
+        var key = $"tb258r3-cancelled-{fixture.ShipmentId:N}";
+
+        Guid resendShipmentId;
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var orchestrator = Build(NewAdapter(db), ports, orders);
+
+            Assert.True((await orchestrator.RecordNonDeliveryAsync(
+                fixture.CheckoutId,
+                ActorId,
+                NonDeliveryRequestFor(fixture, "customer_unavailable", "TB258R3 relational"),
+                CancellationToken.None)).IsSuccess);
+            Assert.True((await orchestrator.StartReturnAsync(
+                fixture.CheckoutId, ActorId, ReturnStartRequest(fixture), CancellationToken.None)).IsSuccess);
+            Assert.True((await orchestrator.RecordReturnReceiptAsync(
+                fixture.CheckoutId,
+                ActorId,
+                ReceiptRequestFor(fixture, new AdminReturnReceiptLineSelection(fixture.LineAId, 2m, 0)),
+                CancellationToken.None)).IsSuccess);
+
+            var resend = await orchestrator.ResendShipmentAsync(
+                fixture.CheckoutId,
+                ActorId,
+                ResendRequest(fixture, fixture.LineAId, 1m, key),
+                CancellationToken.None);
+            Assert.True(resend.IsSuccess, resend.IsSuccess ? string.Empty : resend.FirstError?.Code);
+            resendShipmentId = await RawScalarGuidAsync(
+                target,
+                "select shipment_id from fulfillment.shipments where resend_of_shipment_id = @id",
+                ("id", fixture.ShipmentId))
+                ?? throw new InvalidOperationException("the resend parcel was not persisted");
+
+            // A pre-dispatch cancellation through the owning production command: history, not a delete.
+            await NewAdapter(db).CancelShipmentAsync(
+                fixture.FulfillmentId, resendShipmentId, ActorId, CancellationToken.None);
+            Assert.Equal("Cancelled", await RawShipmentStatusAsync(target, resendShipmentId));
+        }
+
+        var shipmentsBefore = await CountShipmentsAsync(target, fixture.FulfillmentId);
+        var receiptsBefore = await CountReceiptsAsync(target, fixture.ShipmentId);
+        var resendsBefore = await CountResendShipmentsAsync(target, fixture.ShipmentId);
+
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var orchestrator = Build(NewAdapter(db), ports, orders);
+
+            // The exact retained request answers the cancelled occurrence — the parcel is not recreated.
+            var exact = await orchestrator.ResendShipmentAsync(
+                fixture.CheckoutId,
+                ActorId,
+                ResendRequest(fixture, fixture.LineAId, 1m, key),
+                CancellationToken.None);
+            Assert.True(exact.IsSuccess, exact.IsSuccess ? string.Empty : exact.FirstError?.Code);
+            var exactSnapshot = Assert.IsType<FulfillmentSnapshot>(exact.Value);
+            var cancelledParcel = exactSnapshot.Shipments.Single(x => x.ShipmentId == resendShipmentId);
+            Assert.Equal(ShipmentOperationStatus.Cancelled, cancelledParcel.Status);
+
+            // Same key, DIFFERENT source parcel: a typed conflict, never the cancelled answer.
+            var changedSource = await orchestrator.ResendShipmentAsync(
+                fixture.CheckoutId,
+                ActorId,
+                ResendRequestFrom(fixture, resendShipmentId, fixture.LineAId, 1m, key),
+                CancellationToken.None);
+            Assert.False(changedSource.IsSuccess);
+            Assert.Equal("fulfillment.resend.intent_conflict", changedSource.FirstError.Code);
+
+            // Same key, DIFFERENT quantity: the same typed conflict.
+            var changedQuantity = await orchestrator.ResendShipmentAsync(
+                fixture.CheckoutId,
+                ActorId,
+                ResendRequest(fixture, fixture.LineAId, 2m, key),
+                CancellationToken.None);
+            Assert.False(changedQuantity.IsSuccess);
+            Assert.Equal("fulfillment.resend.intent_conflict", changedQuantity.FirstError.Code);
+        }
+
+        // Nothing was written or reallocated by the reconcile or the two conflicts.
+        Assert.Equal(shipmentsBefore, await CountShipmentsAsync(target, fixture.FulfillmentId));
+        Assert.Equal(receiptsBefore, await CountReceiptsAsync(target, fixture.ShipmentId));
+        Assert.Equal(resendsBefore, await CountResendShipmentsAsync(target, fixture.ShipmentId));
+        Assert.Equal("Cancelled", await RawShipmentStatusAsync(target, resendShipmentId));
+
+        RecordEvidence(
+            $"H cancel fulfillment={fixture.FulfillmentId} checkout={fixture.CheckoutId} "
+            + $"source={fixture.ShipmentId} cancelledResend={resendShipmentId} key={key} "
+            + "exact=resolvedCancelled changedSource=conflict changedQuantity=conflict "
+            + $"rows=shipments{shipmentsBefore}/receipts{receiptsBefore}/resends{resendsBefore}",
+            "tb258r3-orchestrator-relational.txt");
+    }
+
     /// <summary>Task-labelled evidence of the public-command run; nothing runs without the directory.</summary>
-    private static void RecordEvidence(string line)
+    private static void RecordEvidence(string line, string fileName = "tb258r2-orchestrator-relational.txt")
     {
         var directory = Environment.GetEnvironmentVariable("TB258_EVIDENCE_DIR");
         if (string.IsNullOrWhiteSpace(directory))
@@ -435,7 +545,7 @@ public sealed class AdminOrderPostDispatchReplayTests
 
         Directory.CreateDirectory(directory);
         File.AppendAllText(
-            Path.Combine(directory, "tb258r2-orchestrator-relational.txt"),
+            Path.Combine(directory, fileName),
             line + Environment.NewLine);
     }
 
@@ -983,11 +1093,20 @@ public sealed class AdminOrderPostDispatchReplayTests
         Guid lineId,
         decimal quantity,
         string key) =>
+        ResendRequestFrom(fixture, fixture.ShipmentId, lineId, quantity, key);
+
+    /// <summary>TB-258-R3: the same reviewed resend against an explicitly chosen source parcel.</summary>
+    private static AdminOrderOperationRequest ResendRequestFrom(
+        RelationalFixture fixture,
+        Guid sourceShipmentId,
+        Guid lineId,
+        decimal quantity,
+        string key) =>
         new(
             "resend_shipment",
             fixture.SellerOrderId,
             fixture.FulfillmentId,
-            fixture.ShipmentId,
+            sourceShipmentId,
             ReturnRequestId: null,
             CarrierDisplayName: null,
             TrackingReference: null,
@@ -1157,6 +1276,15 @@ public sealed class AdminOrderPostDispatchReplayTests
         await RawScalarAsync(
             target,
             "select count(*) from fulfillment.shipment_return_receipts where shipment_id = @id",
+            ("id", shipmentId));
+
+    /// <summary>TB-258-R3: the resend parcels funded by one returned source parcel.</summary>
+    private static async Task<int> CountResendShipmentsAsync(
+        NpgsqlConnectionStringBuilder target,
+        Guid shipmentId) =>
+        await RawScalarAsync(
+            target,
+            "select count(*) from fulfillment.shipments where resend_of_shipment_id = @id",
             ("id", shipmentId));
 
     private static async Task<string?> RawShipmentStatusAsync(

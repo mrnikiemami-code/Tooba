@@ -209,6 +209,54 @@ public sealed class PostDispatchException258R1Tests
         Assert.Equal(0m, fixture.Unit.ResendableQuantity(fixture.FirstParcelId, fixture.LineA));
     }
 
+    /// <summary>
+    /// TB-258-R3: cancellation is a RESULT STATE of an exact intent, never an exemption from identity validation.
+    /// A changed source or quantity sent under the key of a cancelled parcel must be a typed conflict — the shared
+    /// authority answers it before any cancelled/recorded decision, and the mutating replay agrees.
+    /// </summary>
+    [Fact]
+    public void A_cancelled_occurrence_answers_only_its_exact_source_and_quantities()
+    {
+        var fixture = TwoParcelsOneLine();
+        ReturnParcel(fixture.Unit, fixture.FirstParcelId, [(fixture.LineA, 1m, ReturnReceiptCondition.Usable)]);
+        ReturnParcel(fixture.Unit, fixture.SecondParcelId, [(fixture.LineA, 1m, ReturnReceiptCondition.Usable)]);
+        var first = Resend(fixture.Unit, fixture.FirstParcelId, "tb258r3-cxl-1", [(fixture.LineA, 1m)]);
+        fixture.Unit.CancelShipment(first.ShipmentId, T4);
+
+        // The exact reviewed intent resolves to its cancelled history without writing anything.
+        var exact = fixture.Unit.ResolveRecordedResendIntent(
+            "tb258r3-cxl-1", fixture.FirstParcelId, [(fixture.LineA, 1m)]);
+        Assert.Equal(FulfillmentUnit.RecordedPostDispatchState.ResolvedCancelled, exact.State);
+        Assert.Equal(first.ShipmentId, exact.Shipment!.ShipmentId);
+
+        // Same key, DIFFERENT quantity: a conflict, never a cancelled answer for an intent that never happened.
+        var changedQuantity = fixture.Unit.ResolveRecordedResendIntent(
+            "tb258r3-cxl-1", fixture.FirstParcelId, [(fixture.LineA, 0.5m)]);
+        Assert.Equal(FulfillmentUnit.RecordedPostDispatchState.Conflict, changedQuantity.State);
+        Assert.Equal("fulfillment.resend.intent_conflict", changedQuantity.ConflictCode);
+
+        // Same key, DIFFERENT source parcel: the same typed conflict, and no other parcel is claimed.
+        var changedSource = fixture.Unit.ResolveRecordedResendIntent(
+            "tb258r3-cxl-1", fixture.SecondParcelId, [(fixture.LineA, 1m)]);
+        Assert.Equal(FulfillmentUnit.RecordedPostDispatchState.Conflict, changedSource.State);
+        Assert.Equal("fulfillment.resend.intent_conflict", changedSource.ConflictCode);
+
+        // The mutating replay uses the SAME authority: exactly the same codes, in the same order.
+        var replayChangedSource = Assert.Throws<ContractOperationException>(() =>
+            Resend(fixture.Unit, fixture.SecondParcelId, "tb258r3-cxl-1", [(fixture.LineA, 1m)]));
+        Assert.Equal("fulfillment.resend.intent_conflict", replayChangedSource.Code);
+
+        var replayExact = Assert.Throws<ContractOperationException>(() =>
+            Resend(fixture.Unit, fixture.FirstParcelId, "tb258r3-cxl-1", [(fixture.LineA, 1m)]));
+        Assert.Equal("fulfillment.resend.occurrence_cancelled", replayExact.Code);
+
+        // Nothing was written: one recorded resend, cancelled, and both sources keep their own released capacity.
+        Assert.Single(fixture.Unit.Shipments, x => x.IsResend);
+        Assert.Equal(ShipmentStatus.Cancelled, Parcel(fixture.Unit, first.ShipmentId).Status);
+        Assert.Equal(1m, fixture.Unit.ResendableQuantity(fixture.FirstParcelId, fixture.LineA));
+        Assert.Equal(1m, fixture.Unit.ResendableQuantity(fixture.SecondParcelId, fixture.LineA));
+    }
+
     // ------------------------------------------------------------------ B: per-source capacity
 
     [Fact]
