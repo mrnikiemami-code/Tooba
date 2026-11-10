@@ -9,7 +9,7 @@ Branch: main
 Base-SHA: 00917021d0d63c8e6f5f5c8992eb1a40e15a1601
 Code-SHA: a37e2646930dcc8ca4e0ce4ef65c3e46c23e2a6d
 Merge-SHA: none required (linear main; the review/issue doc commits are ancestors of the base)
-Evidence-SHA: {EVIDENCE_SHA}
+Evidence-SHA: 2ad5477623cfd2e939393659dc67462ef453aa53
 Result-Contract: docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/result-contract.txt
 Status: PASS
 Decision: OWNING_RESEND_OCCURRENCE_REPLAY_SOURCE_PARCEL_CAPACITY_AND_MIXED_CONDITION_ORIGIN_RECEIPT_REPAIRED
