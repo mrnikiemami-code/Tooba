@@ -1,0 +1,12 @@
+C original=a38b3247-cd35-47f2-bc7e-00c21eb82711 cancelledResend=aaf39dca-51d6-4494-a1f6-b4b4c1187755
+A original=15233595-fd55-4db1-9c7a-88a2db012c8c resend=96ff794a-59e4-4920-9a1f-c09c089bcd73 lineA=11461b5e-0de1-41e1-a1f3-77eb2ff74929 lineB=fcd81121-2b93-4fdc-b420-f99d2fe4ed94
+D winner=7d3e8885-22d9-452d-8dea-f7f2c81c45ce loserKey=tb258-D-left resendRows=1 replay=same
+E first=341770a3-374c-464b-88f0-cf03c9b59c64 secondInTransit=9848bbb7-e141-47c6-8704-47b2016c9dcf delivered=1
+F package=01caabb8-c9dc-47d4-a4dc-1d2b6bdaec4e members=a6be5b54-b8e5-40b2-a7f9-b1b59d83d923,a8e3d7b2-83ba-440d-9380-20fd37ef1a9c locked=refused
+B delivered=6eeb072b-76d3-44e7-88f1-5e687c438162 preDispatch=05fe99a3-4ee2-4999-966f-6d0b201d18bc
+C original=1c4e7960-0dd0-4d46-9320-fdc535f7fcbd cancelledResend=0782421b-51d0-4fe8-910a-1b542406fb50
+A original=f8a8da59-f044-4ac0-bab8-e8424d9fcc53 resend=97dbdc29-0a2d-47d6-a881-92bc9aa5dbeb lineA=7ccb6365-1a19-405e-943d-5effaa03cea5 lineB=37f0ac00-8008-48ac-8c82-a957e25422a5
+D winner=be83e3e7-de56-455e-a165-2e62f5f796be loserKey=tb258-D-right resendRows=1 replay=same
+E first=7b93682f-8497-4dd2-874b-70be5bec2040 secondInTransit=198d67e3-4b4e-4dbe-882f-60aac0658874 delivered=1
+F package=680429ad-a653-4dc1-a3d0-23f27131b7f7 members=c737f064-8898-4f6a-a708-c3397ca47f90,7d8f7f9e-ef63-412c-9e0f-8d1602e82da8 locked=refused
+B delivered=aaf92994-0b92-41dc-a4c5-43feee88d5e0 preDispatch=c28b3c29-6ae0-4e5f-b6a8-72adf9d2b887

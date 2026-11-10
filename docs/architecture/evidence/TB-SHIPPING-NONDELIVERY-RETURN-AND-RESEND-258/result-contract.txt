@@ -1,0 +1,100 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258
+Parent-Task: TB-SHIPPING-TRACKING-UNIQUENESS-AND-QUANTITY-AUTHORITY-257
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: 4a3a241d2f75e0081a8ed8a375a061a4f987694b
+Code-SHA: 6bb99afe9b0a5ac80e12d298dee4d92e2af86441
+Evidence-SHA: EVIDENCE_SHA_PLACEHOLDER
+Result-Contract: docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258/result-contract.txt
+Status: PASS
+Decision: POST_DISPATCH_NON_DELIVERY_PHYSICAL_RETURN_RECEIPT_AND_QUANTITY_SAFE_LINKED_RESEND
+Scope: ONLY issue 3 of the five-defect ledger (non-delivery / physical return / origin receipt / quantity-safe
+    resend). Issues 1 and 2 were accepted within 257; issues 4 (shared-group common-or-separate parcels) and 5
+    (due workqueue / shared operational order view) are NOT ISSUED and were not touched. This is NOT the five-defect
+    completion, NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT.
+
+MEASURED DEFECT (before this task):
+    A dispatched parcel offered only «ثبت تحویل» and the pre-dispatch «لغو». A courier return could not be recorded,
+    there was no durable origin receipt, and no lawful resend parcel could exist. Marking Delivered would have been a
+    lie, and using the cancel path after dispatch would have erased the shipped truth.
+
+TRANSITIONS (parcel level, additive):
+    Dispatched/InTransit -> «ثبت عدم تحویل» -> NonDelivered -> «برگشت به مبدأ» -> Returning
+      -> «تأیید دریافت در مبدأ» -> Returned (+ durable ShipmentReturnReceipt, per-line Usable/Damaged)
+      -> «ارسال مجدد» -> NEW parcel (ResendOfShipmentId = original, Created) -> existing track/dispatch/deliver.
+    A later genuine delivery may resolve a non-delivery; Delivered never becomes NonDelivered; Created cannot skip
+    dispatch; return needs a recorded non-delivery; receipt needs Returning; resend needs a physical receipt.
+    Customer RMA after a successful delivery stays a separate existing path; no universal cancel-after-dispatch.
+
+QUANTITY / INVENTORY CONSERVATION:
+    ReturnedUsableQuantity = Σ usable receipt lines (damaged/missing contribute ZERO).
+    ResendCommittedQuantity = Σ non-cancelled resend parcel lines (a cancelled pre-dispatch resend releases once).
+    ResendableQuantity = max(0, usableReturned − resendCommitted).
+    OpenAllocatedQuantity ignores Created resend parcels, so a resend never shrinks the fresh 257 packed remainder.
+    DeliveredQuantity counts Delivered parcels only; a delivered resend counts once; one other in-transit parcel
+    keeps the whole unit not-delivered. No lifetime-shipped decrement, no ordered/packed inflation, no second
+    reservation consume, no settlement/financial movement, no money change.
+
+AUTHORITY / WIRING:
+    New operations `record_non_delivery`, `start_return`, `record_return_receipt`, `resend_shipment` on the existing
+    owner (Order orchestrator -> Fulfillment directory), with validators, typed errors, localization, admin/seller
+    projection and `RunProjectedCoreAsync` authorization. Capability projection exposes canRecordNonDelivery /
+    canStartReturn / canRecordReturnReceipt / canResend for exactly the eligible parcel. Replay reconciles an
+    identical receipt (`fulfillment.return.receipt_conflict` on a changed one), `shippingDispatchKey` returns the same
+    resend parcel, and a real serialization failure yields `fulfillment.resend.concurrency_conflict`. A child locked
+    in an active consolidated package is refused (`fulfillment.shipment.package_locked`), never silently unlocked.
+
+SCHEMA (additive, applied by the repository MigrationRunner after private backup):
+    fulfillment 20261110120000_AddShipmentNonDeliveryAndReturnReceipt: shipments.non_delivery_reason /
+    non_delivery_note / non_delivered_at / return_started_at / returned_at / resend_of_shipment_id (+ partial index),
+    shipment_return_receipts (unique per parcel `ux_shipment_return_receipts_shipment`),
+    shipment_return_receipt_items (order_line_id, quantity numeric(18,6), condition). Historical rows keep
+    null/default values and are not marked returned.
+
+PROOF:
+    - Fulfillment 258 pure 13/13; REAL tooba_alpha relational 6/6 (A-F, two runs with task-labelled TB258-A…F
+      fixtures, ids in tb258-relational.txt, nothing deleted).
+    - Host admin seam AdminOrderFulfillmentOperationsTests 6/6.
+    - Mounted operational section 33/33 (6 are TB-258).
+    - `tsc --noEmit` 0; production build 0; `dotnet publish` 0.
+    - Authorized read-only DOM on 01a1b92d-e97e-7000-999a-143350d0edaf: 3 groups / 3 parcels, every shipped parcel
+      exposes «ثبت تحویل» AND the new «ثبت عدم تحویل» at 44px, no return/resend exit before a recorded return,
+      0 overflow, rtl. No click, no mutation, no screenshot. dom/tb258-dom.json.
+
+RUNTIME:
+    FE 127.0.0.1:3000 PID 10304 (BUILD_ID 8ck4YFJYTlUDkk9CZp87c) -> Host 127.0.0.1:5088 PID 5184
+    (artifacts/publish-primary, /health 200), SingleStore / store-alpha / tenant-alpha -> tooba_alpha @
+    127.0.0.1:5432 only. MigrationRunner plan: Fulfillment current=20261110120000_AddShipmentNonDeliveryAndReturnReceipt
+    pendingCount=0, every module pendingCount=0. No disposable/test/parallel/Docker DB, no 15433, no edition/
+    connection/port/appsettings change, no DataProtection or session-store write, no manual DDL/business SQL/reset/
+    reseed/backfill. CapturedPreview local ON / checked-in OFF; 255 parked; live Tipax deferred.
+
+LEDGER:
+    save prerequisite (256-R2): CLOSED within scope.
+    issue 1 automatic tracking uniqueness: FIXED within 257.
+    issue 2 truthful remaining quantity: FIXED within 257.
+    issue 3 non-delivery/return/resend: IMPLEMENTED — pending Architect review of this result.
+    issue 4 shared-group common-or-separate parcels: PENDING 259, NOT ISSUED.
+    issue 5 due workqueue/shared operational order view: PENDING 260, NOT ISSUED.
+
+LIMITS:
+    No live Tipax/post waybill, no provider cancel/label/return state (non-delivery/return/receipt are audited
+    internal operator facts). No Inventory/Returns contract write: damage is a durable receipt fact that drives resend
+    capacity, but no saleable-stock increase is emitted while the goods remain reserved for this order. Package
+    safety is a refusal for a locked child, not a parent-level return workflow (issue-4 territory). Concurrency is
+    proven with two real independent contexts plus the database unique/serializable guards, not a stress test.
+    Task fixtures remain in tooba_alpha (task-labelled, never deleted). Unrelated suites were not run; pre-existing
+    unrelated reds were not re-baselined.
+
+TOP/documentation updated: AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md,
+    docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md,
+    docs/planning/shipping/SHIPPING-OPERATIONAL-CLOSURE-PLAN-256-260.md; TASK/RESULT/RECEIPTS persisted under
+    docs/ai/tasks and docs/architecture/evidence for this task id.
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

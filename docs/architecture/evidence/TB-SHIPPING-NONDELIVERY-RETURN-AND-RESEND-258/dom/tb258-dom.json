@@ -1,0 +1,70 @@
+{
+  "route": "http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf",
+  "capturedAt": "2026-11-10T04:04:20.159Z",
+  "facts": {
+    "ready": true,
+    "empty": false,
+    "denial": null,
+    "groupCount": 3,
+    "summary": "۳ گروه ارسال · ۳ مرسوله",
+    "parcelCount": 3,
+    "parcels": [
+      {
+        "shipmentId": "01a1b93f-71d4-7000-9500-e21af4a160e3",
+        "text": "مرسولهٔ ۱ پست · ۲ قلم ارسال‌شده کد رهگیری: TRK-01A1B93F ثبت تحویل ثبت عدم تحویل",
+        "postDispatchActions": [
+          {
+            "testid": "admin-order-shipment-deliver-01a1b93f-71d4-7000-9500-e21af4a160e3",
+            "text": "ثبت تحویل",
+            "rect": 44
+          },
+          {
+            "testid": "admin-order-post-dispatch-nondelivery-01a1b93f-71d4-7000-9500-e21af4a160e3",
+            "text": "ثبت عدم تحویل",
+            "rect": 44
+          }
+        ],
+        "actionWrapper": true
+      },
+      {
+        "shipmentId": "01a1b942-ea82-7000-b34b-2df4be8d62bc",
+        "text": "مرسولهٔ ۱ پست · ۱ قلم ارسال‌شده کد رهگیری: TRK-01A1B942 ثبت تحویل ثبت عدم تحویل",
+        "postDispatchActions": [
+          {
+            "testid": "admin-order-shipment-deliver-01a1b942-ea82-7000-b34b-2df4be8d62bc",
+            "text": "ثبت تحویل",
+            "rect": 44
+          },
+          {
+            "testid": "admin-order-post-dispatch-nondelivery-01a1b942-ea82-7000-b34b-2df4be8d62bc",
+            "text": "ثبت عدم تحویل",
+            "rect": 44
+          }
+        ],
+        "actionWrapper": true
+      },
+      {
+        "shipmentId": "01a1b942-beef-7000-972d-99a79c68dc30",
+        "text": "مرسولهٔ ۱ پست · ۱ قلم ارسال‌شده کد رهگیری: TRK-01A1B9423 ثبت تحویل ثبت عدم تحویل",
+        "postDispatchActions": [
+          {
+            "testid": "admin-order-shipment-deliver-01a1b942-beef-7000-972d-99a79c68dc30",
+            "text": "ثبت تحویل",
+            "rect": 44
+          },
+          {
+            "testid": "admin-order-post-dispatch-nondelivery-01a1b942-beef-7000-972d-99a79c68dc30",
+            "text": "ثبت عدم تحویل",
+            "rect": 44
+          }
+        ],
+        "actionWrapper": true
+      }
+    ],
+    "postDispatchButtonCount": 3,
+    "dialogOpen": false,
+    "overflowX": 0,
+    "dir": "rtl",
+    "url": "http://127.0.0.1:3000/admin/orders/01a1b92d-e97e-7000-999a-143350d0edaf"
+  }
+}
