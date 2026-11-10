@@ -1,4 +1,16 @@
-# CURRENT — 258-R1 Architect review PARTIAL; 258-R2 ISSUED — 2026-11-10
+# CURRENT — 258-R2 WORKER RESULT PASS (pending Architect review) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb258-relational.txt,tb258r2-orchestrator-relational.txt}.
+Stage 258-R2 (issue3) now has a worker result at base 0a9d42705 (expected base 29d3ce3688 is an ancestor): decision PUBLIC_COMMAND_EXACT_INTENT_RECONCILE_REAL_PAGE_RETAINED_RECOVERY_ENTRY_AND_SINGLE_REQUEST_MIXED_CONDITION_RECEIPT. PASS inside the issued three-gap scope only — NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, and NOT the five-defect completion.
+A — the four public post-dispatch operations now check current actor authority, checkout/fulfillment/parcel ownership and the exact built intent, then reconcile the owning durable facts (Recorded / ResolvedCancelled answer with zero writes and no actor/time reattribution, Conflict is typed) BEFORE the unchanged projection gate; only NotRecorded falls through, so an absent record never becomes a new allocation.
+B — the real parcel card reads the retained viewer/checkout/fulfillment/parcel/mode envelopes and keeps ONE contextual reconcile entry when the fresh projection stopped offering the action; the panel posts the recorded body only when byte-identical.
+C — the origin-receipt dialog records explicit «سالم» and «آسیب‌دیده» per line in ONE request with inline invalid/excess/zero refusals and no clamp.
+Proof: PostDispatchException 35/35 (real tooba_alpha, incl. exact-intent read-only + mixed receipt grants2/refuses4 without clamp), Order public command 8/8 (incl. one relational crossing the formerly blocking gate), mounted real section/panel 39/39, typecheck 0, production build 0, backend build 0, publish 0, no new migration, host PID 34180 /health 200, FE BUILD_ID mdzGQu5f7TP39KSWV_eKU /fa 200.
+LEDGER: save256-R2 closed; issues1/2 accepted257 (2/5); issue3 pending Architect review of 258-R2; issue4 common-or-separate parcels259 NOT ISSUED; issue5 due queue/shared view260 NOT ISSUED. Next stage is issued by the Architect only after review; one worker/task, no automatic continuation.
+
+---
+
+# SUPERSEDED — 258-R1 Architect review PARTIAL; 258-R2 ISSUED — 2026-11-10
 
 ONLY next worker task: docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/TASK.md.
 Review: docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/ARCHITECT-REVIEW.md.

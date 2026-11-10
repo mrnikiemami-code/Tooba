@@ -1,0 +1,182 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2
+Parent-Task: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS
+Scope-Status: PASS_WITHIN_ISSUED_THREE_GAP_SCOPE_NOT_ARCHITECT_ACCEPT_NOT_USER_ACCEPT
+Decision: PUBLIC_COMMAND_EXACT_INTENT_RECONCILE_REAL_PAGE_RETAINED_RECOVERY_ENTRY_AND_SINGLE_REQUEST_MIXED_CONDITION_RECEIPT
+Base-SHA: 0a9d42705a3e4a8cd07d5ead1988daf2ff991d25
+Expected-Base-SHA: 29d3ce3688e58273e92e51fe1b1c782e485ebc1b
+Expected-Base-Relation: ANCESTOR_OF_BASE (issue/review/recovery doc commits are legitimate descendants)
+Code-SHA: ce4eb7956b806b71669dfd6781d07dc489a10664
+Evidence-SHA: see the dedicated evidence commit on top of Code-SHA (AGENTS.md CURRENT block and this folder)
+HEAD: see `git rev-parse HEAD` after the evidence push; branch main fast-forwarded to origin/main (no force)
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+--- READ FIRST ---
+docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/TASK.md
+docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/{TASK.md,RESULT.md,RECEIPTS.md,tb258-relational.txt,tb258r2-orchestrator-relational.txt}
+
+--- CONFIRMED ROOT CAUSES (measured, not guessed) ---
+A. AdminOrderOperationsOrchestrator.Operations.cs sent record_non_delivery / start_return / record_return_receipt /
+   resend_shipment into RunProjectedCoreAsync, whose EnsureProjectedActionAllowedAsync requires the action to exist in
+   the CURRENT projection. After a resend consumed source capacity, or a receipt moved Returning -> Returned, that
+   action disappeared, so an exact retry of a LOST RESPONSE was rejected before the owning Fulfillment replay could
+   answer it. The durable fact existed; the public command could not reach it.
+B. admin-order-operational-delivery-section.tsx mounted the exception dialog only from a normal action button, and
+   those buttons exist only while canRecordNonDelivery / canStartReturn / canRecordReturnReceipt / canResend are true.
+   The section never read the retained attempt store, so after a refresh or partial/full progress the operator had no
+   visible way back to the reviewed request still owed an answer.
+C. post-dispatch-exception-dialog.tsx modelled a receipt line as one quantity + one condition selector and emitted ONE
+   item per line, so the ordinary "2 usable + 1 damaged" physical receipt for one parcel line was unreachable in the
+   UI even though the domain already accepted it.
+
+--- LANDED (A) public-command exact-intent reconcile ---
+New narrow read-only contract Tooba.Fulfillment.Contracts.Operations.PostDispatchIntent / PostDispatchIntentKind /
+PostDispatchIntentState (NotRecorded | Recorded | ResolvedCancelled | Conflict) / PostDispatchIntentResult and
+IFulfillmentAdminOperations.ReconcilePostDispatchIntentAsync, implemented by FulfillmentAdminOperationsAdapter ->
+FulfillmentDirectory.Returns.cs -> new FulfillmentUnit resolvers ResolveRecordedNonDelivery /
+ResolveRecordedReturnStart / ResolveRecordedReturnReceipt / ResolveRecordedResendIntent.
+ONE orchestrator seam RunPostDispatchExceptionAsync now serves all four public operations and, in order:
+ 1. loads the checkout and the CURRENT actor's effective access - a retained browser envelope is never authorization
+    (order.operation.denied);
+ 2. requires the parcel to belong to THIS checkout AND the requested fulfillment (order.operation.invalid otherwise);
+ 3. builds the exact reviewed intent with the same validation the mutation uses (shared BuildReceiptItems /
+    BuildResendLines), so replay and mutation cannot disagree about the request;
+ 4. asks the owning durable facts: Recorded / ResolvedCancelled return the authoritative snapshot with ZERO writes and
+    no actor/time reattribution (a cancelled recorded resend is history, never recreated); Conflict raises the typed
+    fulfillment.nondelivery.conflict / fulfillment.return.receipt_conflict /
+    fulfillment.return.receipt_already_recorded / fulfillment.resend.intent_conflict;
+ 5. ONLY NotRecorded falls through to the unchanged EnsureProjectedActionAllowedAsync (allowReturnLifecycleFallback
+    false) and then the real mutation - an absent record can never turn a readiness failure into a new allocation.
+Receipt identity now has ONE authority (ShipmentReturnReceipt.MatchesItems) shared by the mutating replay and the
+read-only answer; resend identity stays one authority (RecordedResendAnswersIntent). No global guard was removed, no
+client flag is trusted as authorization, no bare error text is used as proof, no generic idempotency framework added.
+
+--- LANDED (B) one real-page retained recovery entry ---
+features/order-operational-groups/session/post-dispatch-attempt-store.ts gained POST_DISPATCH_MODES and
+listPostDispatchAttemptsForParcel (newest obligation first), exported through the feature index (no app/admin import).
+admin-order-operational-delivery-section.tsx computes permittedExceptionModes(projected caps) and renders exactly ONE
+contextual "پیگیری «…»" row at 44px plus one concise sentence for the retained envelope whose mode the fresh projection
+no longer offers. admin-order-items-shipping-panel.tsx re-reads the SAME viewer/checkout/fulfillment/parcel/mode
+envelope when the action vanished and posts the exact recorded request body only when it is byte-identical; otherwise
+the existing refusal stands. Viewer scope is computed once and shared with the group-workflow occurrence scope. One
+parcel/action owner kept; no new page, no raw diagnostics, no seller-aside duplicate, no inline selection clutter.
+
+--- LANDED (C) usable + damaged in ONE request ---
+post-dispatch-exception-dialog.tsx ReceiptDraft is { usable, damaged } with explicit «سالم» / «آسیب‌دیده» numeric inputs,
+a live total, and per-line inline refusals: non-parsable quantity, usable+damaged > that parcel line's carried quantity,
+and a zero-total guard. No Math.min clamp and no silent rewrite: reviewed numbers are sent exactly or refused inline.
+Zero categories are omitted; "usable 2 + damaged 1" emits TWO items of the SAME line in ONE request (condition 0 qty 2,
+condition 1 qty 1) and durable capacity grants exactly 2. POST_DISPATCH_MODE_LABEL_FA is the single shared display copy.
+
+--- PROOF (integration layers that actually executed) ---
+Fulfillment owning facts (REAL PostgreSQL tooba_alpha, TB258_CONNECTION, task-labelled TB258-* fixtures):
+  dotnet test src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Tooba.Fulfillment.Tests.csproj
+    --filter FullyQualifiedName~PostDispatchException
+  -> Passed 35/35 (retained 258 lifecycle 13 + R1 11 + relational A-K 11)
+  new J: exact recorded-intent lookup answers only the exact durable fact, writes nothing (rowsUnchanged=true),
+         blank occurrence key = NotRecorded (never a silent replay), cancelled resend = ResolvedCancelled;
+  new K: usable2+damaged1 grants 2; total 4 refused with fulfillment.return.receipt_qty_exceeds, no clamp,
+         nothing persisted.
+Order public command through the production adapter:
+  dotnet test src/backend/Modules/Order/Tooba.Order.Tests/Tooba.Order.Tests.csproj
+    --filter FullyQualifiedName~AdminOrderPostDispatchReplay
+  -> Passed 8/8 (7 pure + Relational_public_command_replays_a_lost_resend_and_receipt_from_real_owning_storage)
+  Cases: exact recorded non-delivery answers without the projection gate; exact recorded receipt replays the same
+  mixed-condition lines; changed intent is a typed conflict with no second allocation; an actor without
+  order.handle/fulfillment.manage cannot replay; a parcel of another fulfillment is refused; an absent record still
+  goes through the projection gate and allocates nothing; an absent record for a still-actionable parcel runs the
+  ordinary command once.
+Mounted real section + real panel:
+  npx tsx --tsconfig tsconfig.mount-tests.json --test app/admin/admin-order-operational-delivery.mount.test.ts
+  -> 39/39 (3 new TB-258-R2: origin receipt splits ONE line into usable and damaged quantities; an unresolved recorded
+     request keeps ONE recovery entry after the action vanishes; no recorded request means no entry/invented action).
+  npx tsc --noEmit -> 0 ; npm run build -> 0 ; dotnet build src/backend/Tooba.slnx -c Release -> 0 errors ; publish -> 0.
+
+Fixture ids (exact, task-labelled):
+tb258-relational.txt
+  A original=25e5b971-9864-45e1-a4bf-c570269af5ab resend=9f2fe1bc-ea13-4d8e-96f1-c958d421eefc lineA=ceb881af-8d1d-44dd-91b0-a02dafb2b650 lineB=513c4c82-a349-4555-a8b6-b641f5697117
+  B delivered=cc41ad17-0ee6-449b-b158-52c7e6da20af preDispatch=9f30917e-e107-410a-bc0b-03c13d11db43
+  C original=5c25fb3b-1483-4341-b23a-c5c175cccac4 cancelledResend=13d5af21-d807-4e96-b50b-d87a956ffb01
+  D winner=470e7cb5-62d3-4dbb-b7c7-64b13cac0623 loserKey=tb258-D-left resendRows=1 replay=same
+  E first=aee8d16d-d3e1-4377-b08d-8633501b8a09 secondInTransit=3aea1446-0050-46dd-a0d1-f1ff5605168c delivered=1
+  F package=fa8b5568-bb15-4044-bfc2-dfcf689ed11b members=66609150-1402-4fdf-af1e-2fbbf9e8eced,4eb672d2-5938-4b9b-8f23-e82e1a6cd172 locked=refused
+  G resend=fb6f9557-ee21-4220-83be-f1e83842b915 replay=same intentConflicts=2 rows=1
+  H first=b5adeb82-7ca2-40ec-81b7-8d83a5ffcf02->ef9ed448-4884-4c17-8a6c-03ed392d6641 second=bc063a12-0797-4190-b499-1d367ee9a61f->5a7ed3ef-d667-4185-a052-b5d9e3656011
+  I receiptLines=3 lineAusable=1 resend=f69a0f72-73eb-420f-afd7-f764e6c70668 changedReceiptRefused=fulfillment.return.receipt_conflict
+  J nondelivery=recorded/conflict return=recorded receipt=recorded(3 lines)/conflict resend=20fdbeda-6602-45bc-a0db-bc619ff48e52:recorded/conflict/blank:NotRecorded/cancelled:ResolvedCancelled rowsUnchanged=true
+  K mixed=usable2+damaged1:grants2 overTotal=4:refused(fulfillment.return.receipt_qty_exceeds) source=ea01f733-a492-4568-8ae0-93dd52d6c983 overSource=f05e1c0c-1b59-4f05-91ea-bf99d1f36fe5 clamped=false persisted=false
+tb258r2-orchestrator-relational.txt
+  G orchestration fulfillment=185b0ab7-560e-4e5a-8720-dcbbd3324930 checkout=ce4f6824-574b-4ada-85c1-d2cb35dce18c source=4ea48680-67fd-4850-8385-c7003931a470 resend=973e2c2e-ef46-4a64-ad4e-8a9d42bbab7b receipt=5fb240a1-6056-4f17-b664-9b69c7a39997 lifecycle=public-command replay=exact(sameParcel) changed=conflict foreign=refused rows=shipments2/receipts1
+
+--- RUNTIME / DEPLOY ---
+FE   PID 3024   node node_modules/next/dist/bin/next start -p 3000 -H 127.0.0.1
+     BUILD_ID mdzGQu5f7TP39KSWV_eKU   GET /fa 200
+     GET /_next/static/mdzGQu5f7TP39KSWV_eKU/_buildManifest.js 200 ; previous build otEqpbYA0ejFbfq-8pTRE 404
+Host PID 34180  artifacts/publish-primary/Tooba.Host.exe   GET /health 200
+     Edition SingleStore / DeploymentId store-alpha-canonical / Tenant store-alpha -> tooba_alpha
+DB   ONE database tooba_alpha @ 127.0.0.1:5432 ; no disposable/test/parallel/Docker DB, no 15433, no edition/
+     connection/port change
+Migr NO new migration (no Migrations file in the code commit); nothing re-applied
+DP   App_Data/dataprotection-keys/key-d82e31a6-0269-4818-8766-c8267198bde9.xml unchanged
+Cfg  CapturedPreview local ON (Enabled/SelectionEnabled/CheckoutEnabled, AvailableDateCount=7) / checked-in OFF
+Note 01a1b92d-e97e-7000-999a-143350d0edaf was not mutated; no user order/cart/payment/parcel/service write; no
+     manual DDL/business SQL/reset/reseed/backfill; no provider call, no credentials, no fake waybill (live Tipax
+     remains deferred); 255 remains parked.
+
+--- CHANGED PATHS ---
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Fulfillments/Models/PostDispatchIntent.cs (new)
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Fulfillments/Ports/IFulfillmentDirectory.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Contracts/Operations/FulfillmentAdminOperationsContracts.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/FulfillmentUnit.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/ShipmentReturnReceipt.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Adapters/FulfillmentAdminOperationsAdapter.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.Returns.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/PostDispatchExceptionRelational258Tests.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/AdminFulfillmentBulkTests.cs
+src/backend/Modules/Order/Tooba.Order.Application/Admin/Operations/Services/AdminOrderOperationsOrchestrator.Fulfillment.cs
+src/backend/Modules/Order/Tooba.Order.Application/Admin/Operations/Services/AdminOrderOperationsOrchestrator.Operations.cs
+src/backend/Modules/Order/Tooba.Order.Tests/Admin/AdminOrderPostDispatchReplayTests.cs (new)
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Carriers/ShippingCarrierPackageExecutionRelationalTests.cs
+src/backend/Modules/Shipping/Tooba.Shipping.Tests/Carriers/ShippingCarrierShipmentDirectoryTests.cs
+src/backend/Host/Tooba.Host.Tests/AdminOrderFulfillmentOperationsTests.cs
+src/frontend/app/admin/admin-order-operational-delivery-section.tsx
+src/frontend/app/admin/admin-order-items-shipping-panel.tsx
+src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts
+src/frontend/features/order-operational-groups/index.ts
+src/frontend/features/order-operational-groups/session/post-dispatch-attempt-store.ts
+src/frontend/features/order-operational-groups/ui/post-dispatch-exception-dialog.tsx
+docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/* (this evidence)
+AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md,
+docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md,
+docs/planning/shipping/SHIPPING-OPERATIONAL-CLOSURE-PLAN-256-260.md (status/ledger only)
+
+--- WHAT THIS PROVES / DOES NOT PROVE ---
+Proves: the four post-dispatch public commands can answer an EXACT reviewed intent recovered after a lost response
+even when fresh readiness disappeared, while a genuinely new command still passes authority, ownership and the
+ordinary projection gate; the real parcel card keeps ONE visible recovery entry; the operator can record usable and
+damaged quantities for one parcel line in ONE request with explicit refusals instead of a clamp.
+Does NOT prove / claim: Architect acceptance or user visual/functional acceptance; a lower-level directory test was
+NOT used as the public-endpoint proof (the Order relational case goes through the orchestrator and production
+adapter); a manually opened dialog was NOT the real-page proof (the mounted real section + real panel is); no live
+Tipax/post waybill; no incremental receipt; no Inventory/Returns/saleable-stock integration; no parent-level shared
+package workflow (issue 4 = 259, NOT ISSUED); no stress test (two real contexts + DB guards only).
+
+--- LEDGER ---
+save prerequisite CLOSED within scope
+issue1 tracking FIXED 257
+issue2 remaining quantity FIXED 257
+issue3 non-delivery/return/resend REPAIRED again by 258-R2 - PENDING ARCHITECT REVIEW OF THIS RESULT
+issue4 shared-group common-or-separate parcels PENDING 259 - NOT ISSUED
+issue5 due workqueue / shared operational order view PENDING 260 - NOT ISSUED
+Five-defect completion NOT claimed. 259/260 are NOT issued and no automatic next task is proposed.
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

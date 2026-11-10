@@ -1,0 +1,1 @@
+G orchestration fulfillment=185b0ab7-560e-4e5a-8720-dcbbd3324930 checkout=ce4f6824-574b-4ada-85c1-d2cb35dce18c source=4ea48680-67fd-4850-8385-c7003931a470 resend=973e2c2e-ef46-4a64-ad4e-8a9d42bbab7b receipt=5fb240a1-6056-4f17-b664-9b69c7a39997 lifecycle=public-command replay=exact(sameParcel) changed=conflict foreign=refused rows=shipments2/receipts1

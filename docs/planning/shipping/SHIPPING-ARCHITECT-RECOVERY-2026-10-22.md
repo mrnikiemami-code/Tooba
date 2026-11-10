@@ -1,4 +1,15 @@
-# CURRENT — 258-R1 Architect review PARTIAL; 258-R2 ISSUED — 2026-11-10
+# CURRENT — 258-R2 WORKER RESULT PASS (pending Architect review) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb258-relational.txt,tb258r2-orchestrator-relational.txt}.
+Worker258-R2 PASS within the issued three-gap scope: decision PUBLIC_COMMAND_EXACT_INTENT_RECONCILE_REAL_PAGE_RETAINED_RECOVERY_ENTRY_AND_SINGLE_REQUEST_MIXED_CONDITION_RECEIPT. Base 0a9d42705 (expected base 29d3ce3688 is an ancestor). NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT.
+LANDED: (A) the four public post-dispatch operations now pass one narrow seam that checks current actor authority, checkout/fulfillment/parcel ownership and the exact built intent, then asks the owning facts through a read-only reconcile (Recorded/ResolvedCancelled answer the exact intent with zero writes and no actor/time reattribution; Conflict is typed; ONLY NotRecorded falls through to the unchanged projection gate and the real mutation). Receipt identity is one authority shared by replay and reconcile. (B) the real parcel card reads the retained viewer/checkout/fulfillment/parcel/mode envelopes and keeps ONE contextual reconcile entry when the fresh projection stopped offering the action; the panel posts the exact recorded body only when it is byte-identical; a retained value is never authorization. (C) the origin-receipt dialog records explicit «سالم» and «آسیب‌دیده» per line in ONE request with inline invalid/excess/zero refusals and no clamp.
+Proven: Fulfillment PostDispatchException 35/35 on real tooba_alpha (incl. new J exact-intent read-only and K usable2+damaged1=>grants2 / total4 refused without clamp); Order public command AdminOrderPostDispatchReplay 8/8 (incl. one relational crossing the formerly blocking gate); mounted real section/panel 39/39; typecheck 0; production build 0; backend build 0; publish 0. No new migration. Host PID 34180 /health 200 (SingleStore store-alpha tooba_alpha), FE PID 3024 BUILD_ID mdzGQu5f7TP39KSWV_eKU /fa 200, old build 404. DataProtection unchanged, CapturedPreview local ON / checked-in OFF, review order 01a1b92d not mutated.
+LEDGER: save256-R2 closed; issues1/2 accepted257 (2/5); issue3 pending Architect review of 258-R2; issue4 common-or-separate parcels259 NOT ISSUED; issue5 due queue/shared view260 NOT ISSUED. One worker/task; no automatic next task; final handoff after all five defects.
+ONLY the Architect issues the next task after reviewing this result. Same tooba_alpha5432 + FE3000/Host5088 SingleStore/store-alpha only; no extra DB/Docker/15433, edition switch, raw business SQL/reset/reseed.255 parked, live Tipax deferred.
+
+---
+
+# SUPERSEDED — 258-R1 Architect review PARTIAL; 258-R2 ISSUED — 2026-11-10
 
 ONLY next worker task: docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/TASK.md.
 Review: docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/ARCHITECT-REVIEW.md.
