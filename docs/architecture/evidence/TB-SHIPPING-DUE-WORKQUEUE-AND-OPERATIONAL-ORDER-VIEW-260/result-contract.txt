@@ -8,6 +8,14 @@ Scope
   no schema change, no migration, no change to 256 scheduling authority, 257 quantity authority, 258 exception
   flow or 259 packing choice. One worker, one task, STOP_FOR_ARCHITECT.
 
+Commit identity
+  Base-SHA    bb18f62d294e81ce86b8a09ae3eb8e2b5c84c873   (issued expected base)
+  Code-SHA    f3c15173cc36b95e53172d618c0ef7f8d41c5d94   feat(shipping): durable dispatch due queue and
+                                                          finance-free shared operational order view
+  Evidence    b4ba1ed91231300cb0b85baed93246d7601f2591   docs(shipping): TB-260 evidence, receipts and ledger
+  Merge      6ec3ce97b75b81ef8735a8ecbd43cb7b60e9d68b   merge with the issued final task + 259 acceptance
+  HEAD == origin/main == 6ec3ce97b; clean worktree; no force/reset/amend/stash/rebase.
+
 Timing authority (one pure rule)
   AdminFulfillmentDispatchTimingAuthority.Classify(pending, inTransit, plans, explicit nowUtc)
     input = Order-owned durable accepted PlannedDispatch only (IOrderDispatchPlanFactsReader over the TB-256
@@ -66,10 +74,15 @@ Proven facts
      «موعد ارسال مشخص نشده», finance-free, no overflow at the three widths.
 
 Deployment
-  No migration added or applied. Host republished to artifacts\publish-primary (PID 27312, /health 200).
-  FE rebuilt and restarted (PID 11948, BUILD_ID OknVRb0IHssj09ZCN_TtH, /fa 200, previous BUILD_ID 404).
-  ONE database tooba_alpha @ 127.0.0.1:5432, SingleStore / store-alpha-canonical / store-alpha.
+  No migration added or applied. Host republished to artifacts\publish-primary (PID 27312, /health 200,
+  /health/ready 200). FE rebuilt and restarted (PID 11948, BUILD_ID OknVRb0IHssj09ZCN_TtH, /fa 200, previous
+  BUILD_ID 404). ONE database tooba_alpha @ 127.0.0.1:5432, SingleStore / store-alpha-canonical / store-alpha.
   DataProtection key and CapturedPreview state unchanged; no DDL/business SQL/reset/reseed/backfill.
+
+User handoff (final milestone, no new task proposed)
+  Route: /fa/admin/fulfillments -> «عملیات ارسال» on a row -> /fa/admin/orders/{checkoutId}/operations ->
+  «بازگشت به صف کار» (filter preserved). RESULT.md §8 carries the five-defect checklist with the honest
+  fixture-vs-live limit of each item, the three trial widths, and the legacy read-only reference order.
 
 Known limits
   Legacy fixture orders whose checkout row carries SalesChannel='Web' (a value the Offer enum does not define)
