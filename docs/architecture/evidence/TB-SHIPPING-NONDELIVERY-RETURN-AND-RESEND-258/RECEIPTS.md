@@ -131,7 +131,18 @@ postDispatchButtonCount=3 (no return/resend exit before a recorded return)
 
 Full capture: `dom/tb258-dom.json`.
 
-## 7. Disclosures
+## 8. Commits
+
+```
+base                 4a3a241d2f75e0081a8ed8a375a061a4f987694b   (== issued expected base)
+code                 6bb99afe9b0a5ac80e12d298dee4d92e2af86441   258: record post-dispatch non-delivery, origin return receipt and quantity-safe resend
+merge                407150afe                                   merge of the six issue/review docs commits (docs only)
+evidence             ee0efd4c3e6b01d79b945b214555c025284360b1   258: record worker result, receipts, DOM capture and TOP/closure-plan ledger
+```
+
+Pushed to `origin/main`; local `main` == `origin/main` after the push. No force/amend/reset/stash/rebase.
+
+## 9. Disclosures
 
 - The `capabilities` 499 above is a probe-side cancellation; re-running with the async wait returned 3 parcels with
   both intended actions.

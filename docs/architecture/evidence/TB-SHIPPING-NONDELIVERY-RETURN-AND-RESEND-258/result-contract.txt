@@ -8,7 +8,8 @@ Repository: mrnikiemami-code/Tooba
 Branch: main
 Base-SHA: 4a3a241d2f75e0081a8ed8a375a061a4f987694b
 Code-SHA: 6bb99afe9b0a5ac80e12d298dee4d92e2af86441
-Evidence-SHA: EVIDENCE_SHA_PLACEHOLDER
+Merge-SHA: 407150afe (merge of the six issue/review docs commits onto the code commit)
+Evidence-SHA: ee0efd4c3e6b01d79b945b214555c025284360b1
 Result-Contract: docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258/result-contract.txt
 Status: PASS
 Decision: POST_DISPATCH_NON_DELIVERY_PHYSICAL_RETURN_RECEIPT_AND_QUANTITY_SAFE_LINKED_RESEND
