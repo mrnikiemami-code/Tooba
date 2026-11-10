@@ -1,0 +1,138 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1
+Parent-Task: TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Base-SHA: 00917021d0d63c8e6f5f5c8992eb1a40e15a1601
+Code-SHA: a37e2646930dcc8ca4e0ce4ef65c3e46c23e2a6d
+Merge-SHA: none required (linear main; the review/issue doc commits are ancestors of the base)
+Evidence-SHA: {EVIDENCE_SHA}
+Result-Contract: docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/result-contract.txt
+Status: PASS
+Decision: OWNING_RESEND_OCCURRENCE_REPLAY_SOURCE_PARCEL_CAPACITY_AND_MIXED_CONDITION_ORIGIN_RECEIPT_REPAIRED
+Scope: ONLY the four concrete gaps of the 258 Architect review (A exact prebound resend intent + owning replay before the
+    capacity gate; B retained full client request through an uncertain outcome; C source-parcel capacity and immediate
+    physical return lineage; D mixed usable/damaged receipt for one parcel line). 258's lawful transitions, 257
+    quantity/tracking authority, the single parcel action owner and the locked-package refusal are preserved. This is
+    NOT the five-defect completion, NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT. Issues 4
+    (shared-group common-or-separate parcels) and 5 (due workqueue / shared operational order view) are NOT ISSUED
+    and were not touched.
+
+MEASURED DEFECTS (source-confirmed before repair):
+    A FulfillmentDirectory.Returns.cs returned ANY existing resend that carried the dispatch key BEFORE comparing the
+      requested source/group/quantity, and a blank key silently took a non-idempotent path — so a changed request
+      could receive another intent's parcel and a missing key could allocate twice.
+    B post-dispatch-exception-dialog.tsx reset its drafts and minted a fresh occurrence in an effect keyed on
+      [open, mode, parcelKey, lines]; a lines rerender, a close/reopen or a remount after an uncertain response could
+      therefore produce a SECOND operation.
+    C FulfillmentUnit.ReturnedUsableQuantity/ResendCommittedQuantity pooled one order line across every receipt of the
+      unit, and CreateResendShipment replaced a returned resend with its chain root — so parcel A could borrow parcel
+      B's returned units and the immediate physical lineage was lost.
+    D ShipmentReturnReceipt de-duplicated by OrderLineId alone, so one parcel line could not be received as
+      usable+damaged (3 units = 2 usable + 1 damaged).
+
+LANDED:
+    A + C — `FulfillmentUnit.CreateResendShipment` now requires a non-empty occurrence
+      (`fulfillment.resend.occurrence_required`), replays a RECORDED occurrence BEFORE any capacity gate, and answers
+      that occurrence only for the SAME source parcel, shipping group, effective method and canonical per-line
+      quantities (`fulfillment.resend.intent_conflict` otherwise, zero new rows). A cancelled recorded resend keeps its
+      history and is `fulfillment.resend.occurrence_cancelled` — never silently recreated. An empty server actor is
+      refused (`fulfillment.resend.actor_required`). Capacity is now `ReturnedUsableQuantity(sourceShipmentId, line)`
+      and `ResendCommittedQuantity(sourceShipmentId, line)` with `ResendableQuantity(sourceShipmentId, line)`, so a
+      sibling returned parcel contributes nothing; a resend of a resend links its IMMEDIATE returned source
+      (`ResendOfShipmentId`) and the ancestor chain stays readable (no root substitution, no double customer delivery).
+      The directory no longer pre-empts the aggregate: it diffs the shipment-id set and treats an already-recorded id
+      as a pure replay (rollback, no allocation). Fresh 257 packed−shipped−open quantity is untouched, resend never
+      consumes the inventory reservation twice, no ordered/packed inflation, no lifetime-shipped decrement.
+    B — new feature-owned `features/order-operational-groups/session/post-dispatch-attempt-store.ts` persists the
+      COMPLETE reviewed envelope (code + selections/receipt lines + note + occurrence key + attempts) scoped to
+      viewerScopeKey:checkoutId:fulfillmentId:sourceShipmentId:mode BEFORE the first POST. The dialog initialises once
+      per scope signature, so a lines rerender never resets an open review or mints another occurrence; a synchronous
+      `useRef` single-flight guarantees one mutation per same-tick submit; ANY non-authoritative outcome
+      (timeout/network/5xx/typed refusal) retains the exact envelope; close/reopen/remount restores it and offers a
+      read-only description plus ONE submit that reconciles it verbatim — even when fresh capacity is now false. Only
+      an authoritative completion clears it, and only then may a new review mint a new occurrence. A viewer switch
+      never inherits another viewer's attempt; unavailable storage degrades to "no retained review" and never to a
+      blind remint. One concise inline localized error; no raw diagnostics, no extra page, no input outside the dialog.
+    D — `ShipmentReturnReceipt` now de-duplicates on `(OrderLineId, Condition)` and validates the SUM across conditions
+      against what THIS parcel line actually carried, so usable2 + damaged1 on a 3-unit line is representable and
+      grants exactly 2 resendable units; a duplicate (line, condition), a foreign line, a non-positive quantity and an
+      aggregate excess are all typed refusals. Replay compares the complete canonical receipt
+      (`fulfillment.return.receipt_conflict` on any changed quantity/condition) and a changed receipt adds no capacity.
+    Durable operator audit — a new additive fulfillment migration records `created_by_user_id`,
+      `non_delivered_by_user_id`, `return_started_by_user_id` on `fulfillment.shipments` plus the exact-once index
+      `ux_shipment_return_receipt_items_line_condition`; the previously ignored actor arguments are now persisted, and
+      the exact replay of a non-delivery no longer reattributes the operator fact.
+    Secondary readers — the admin detail composer, the operational-group projection (`ResendableQuantity` per parcel
+      line, `canResend` only when THAT parcel still has capacity) and the dialog lines were pointed at the same source
+      authority; no public contract shape or locked visual was changed.
+
+SCHEMA (additive, applied by the repository MigrationRunner after a private backup):
+    fulfillment 20261110160000_AddShipmentReturnOperatorAudit. Historical parcels/receipts keep NULL actor columns and
+    remain readable; no receipt, accepted evidence, tracking code or money was rewritten, backfilled or reseeded.
+
+PROOF:
+    - Fulfillment 258 pure 24/24 (retained PostDispatchException258Tests 13/13 + new PostDispatchException258R1Tests
+      11/11); the `PostDispatchException` filter as a whole 33/33.
+    - REAL tooba_alpha relational 9/9 (A–I) in PostDispatchExceptionRelational258Tests, three recorded runs, fixtures
+      task-labelled TB258-* with exact ids in tb258-relational.txt; nothing deleted, no user row read or written.
+      A covered: same occurrence + same intent replay after the source units were consumed (zero new allocation),
+      changed source and changed quantity under the same key → intent conflict with zero new rows, missing key refusal,
+      cancelled recorded occurrence handled explicitly.
+      C covered: two returned sources of one line cannot borrow (H), successive physical return/resend cycles keep the
+      immediate link (H), pre-dispatch cancellation releases only its own source once (C), independent contexts cannot
+      overdraw one source (D).
+      D covered: usable2+damaged1 on one 3-unit line persists/reads back and grants 2 (I), aggregate excess / duplicate
+      condition / foreign line refused, exact replay accepted vs changed receipt `fulfillment.return.receipt_conflict`.
+      E covered: mounted dialog facts — lines rerender preserves edits and key, one same-tick submit, uncertain outcome
+      + remount + consumed capacity reconciles the EXACT saved payload, changed review blocked, viewer isolation,
+      completion then a deliberately distinct next occurrence.
+    - Durable operator audit verified by reading the raw DB columns (`received_by_user_id`, `created_by_user_id`,
+      `non_delivered_by_user_id`, `return_started_by_user_id`) — not by trusting the passed argument.
+    - Mounted operational delivery suite 37/37 (7 are TB-258-R1); `tsc --noEmit` 0; production build 0;
+      `dotnet publish` 0.
+    - Full Fulfillment module on HEAD 393/412 and on a clean worktree of the base 379/398 — the same 19 pre-existing
+      failures (identical names), so no new red and no re-baseline.
+    - Authorized read-only DOM on 01a1b92d-e97e-7000-999a-143350d0edaf (fresh-profile headless Chrome, GET-only): 3
+      groups / 3 parcels, every dispatched parcel exposes exactly «ثبت تحویل» + «ثبت عدم تحویل» at 44px, no
+      return/resend exit before a recorded return, duplicate test ids 0, overflow-x 0, dir rtl. No click, no mutation,
+      no screenshot. dom/tb258r1-dom.json.
+
+RUNTIME:
+    FE 127.0.0.1:3000 PID 41812 (BUILD_ID UvDFu9r8dErn3rqFmyyHX) -> Host 127.0.0.1:5088 PID 6336
+    (artifacts/publish-primary, /health 200), SingleStore / store-alpha / tenant-alpha -> tooba_alpha @
+    127.0.0.1:5432 ONLY. MigrationRunner plan: Fulfillment current=20261110160000_AddShipmentReturnOperatorAudit
+    pendingCount=0 and every module pendingCount=0. No disposable/test/parallel/Docker DB, no 15433, no edition/
+    connection/port/appsettings change, no DataProtection or session-store write, no manual DDL/business SQL/reset/
+    reseed/backfill. CapturedPreview local ON / checked-in OFF; 255 parked; live Tipax deferred (no provider call,
+    no fake waybill).
+
+LEDGER:
+    save prerequisite (256-R2): CLOSED within scope.
+    issue 1 automatic tracking uniqueness: FIXED within 257.
+    issue 2 truthful remaining quantity: FIXED within 257.
+    issue 3 non-delivery/return/resend: REPAIRED by 258-R1 — pending Architect review of this result.
+    issue 4 shared-group common-or-separate parcels: PENDING 259, NOT ISSUED.
+    issue 5 due workqueue/shared operational order view: PENDING 260, NOT ISSUED.
+
+LIMITS:
+    No live Tipax/post waybill and no provider cancel/label/return state (non-delivery, return and receipt remain
+    audited internal operator facts). No Inventory/Returns contract write: damage stays a durable receipt fact that
+    grants no resend capacity, but no saleable-stock increase is emitted while the goods stay reserved for this order.
+    The origin receipt is still a ONE-TIME final receipt (concise operator wording; incremental receipt is not
+    claimed). Package safety remains a refusal for a locked child, not a parent-level return workflow (issue-4
+    territory). Concurrency is proven with two real independent contexts plus the serializable/unique guards, not a
+    stress test. Task fixtures remain in tooba_alpha (task-labelled, never deleted). Unrelated suites were not run;
+    pre-existing unrelated reds were not re-baselined.
+
+TOP/documentation updated: AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md,
+    docs/planning/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md,
+    docs/planning/shipping/SHIPPING-OPERATIONAL-CLOSURE-PLAN-256-260.md; TASK/RESULT/RECEIPTS persisted under
+    docs/ai/tasks and docs/architecture/evidence for this task id.
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

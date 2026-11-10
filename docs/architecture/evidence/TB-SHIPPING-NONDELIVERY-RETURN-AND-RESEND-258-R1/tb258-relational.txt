@@ -1,0 +1,65 @@
+TB-258-R1 relational evidence — PostDispatchExceptionRelational258Tests against the ONE canonical database.
+Target: Host=127.0.0.1;Port=5432;Database=tooba_alpha (SingleStore / store-alpha / tenant-alpha). No disposable DB.
+Command: dotnet test ... --filter FullyQualifiedName~PostDispatchExceptionRelational258Tests
+Env: TB258_CONNECTION=<tooba_alpha> TB258_EVIDENCE_DIR=<this evidence folder>
+Every row is created through the production domain/application path, is task-labelled (TB258-*), and is never deleted.
+User order 01a1b92d-e97e-7000-999a-143350d0edaf is never read or written by these fixtures.
+
+RUN 3 (latest, executed immediately before the evidence commit) — 9/9 passed in 2 s, ids below
+C original=c1ae1695-0a45-4efa-8302-2fd16d024d71 cancelledResend=b886bc80-24bd-45c4-9c58-b884f790a82e
+A original=eb4ffeaa-5ceb-44ff-b711-e49f66eb5cec resend=357d2760-0d7f-4e5a-b9f7-6c34f39ddac1 lineA=c4df3ec4-07cf-47fd-9aa2-7c3a693502d7 lineB=612c4040-0b66-413a-a8c4-c0b6548e532b
+D winner=d3383a19-ef3e-4612-8bf2-487ddb4e3aed loserKey=tb258-D-left resendRows=1 replay=same
+H first=9add30d6-1587-4c06-ba9d-8331b5935f52->d91951e1-e85d-410e-b76a-0dc790974a92 second=d374ec95-8256-40ed-b137-516670ee4182->e751edb7-7113-4e49-b263-78a10353721e
+G resend=30be144c-8735-49a9-ae6a-bc1bef70ad03 replay=same intentConflicts=2 rows=1
+I receiptLines=3 lineAusable=1 resend=dc0ce8c4-5782-4cef-8dd4-ef7e57f5a816 changedReceiptRefused=fulfillment.return.receipt_conflict
+E first=795cbc3d-c682-4335-ac2c-0f4e4cba06b5 secondInTransit=d5c07f6a-8d85-45e1-b028-0f67e1feea57 delivered=1
+F package=5bbfa304-56a9-4c90-9211-501050aee84c members=76b26a86-91af-43e9-98f0-841597394137,2d8dde0e-1758-4a07-a283-20ae4999c9cd locked=refused
+B delivered=8551d9b1-e863-4dae-883a-3fcf07ed7f7e preDispatch=a6c4f8b7-a664-4179-b611-17706502bc88
+
+RUN 2 — 9/9 passed, ids below
+C original=0dc03c3f-c6b5-4907-9dd0-37bfe7967caf cancelledResend=7e76b5a8-6276-4cfd-be6f-74030b80dc76
+A original=46e9b661-542e-401c-a354-043d7448acf7 resend=9c3e8511-90ec-4a01-8775-b5d783e8d311 lineA=1f9668c9-a016-4ff3-bc4c-52fc30f920f2 lineB=3853d9d4-2a06-4a3b-83a5-5c8f70e5128e
+D winner=a58af92a-1979-496e-96b2-1b3a46cb065c loserKey=tb258-D-right resendRows=1 replay=same
+H first=2005c2a9-1e1f-4466-b95e-a89bd2029efc->cbfb8b76-5224-45eb-90cc-c2a90f9211ba second=08a71d8f-700e-492e-9e3c-8089ee3520ce->3444ce26-66a6-466d-b0e5-285f5ce0ceb0
+G resend=ed5629e3-8854-41c1-a9c9-8f391efa4ab1 replay=same intentConflicts=2 rows=1
+I receiptLines=3 lineAusable=1 resend=87990ec8-d594-4bc3-8563-fd92eaf2aab1 changedReceiptRefused=fulfillment.return.receipt_conflict
+E first=eac61923-9ca0-4189-8e4b-abd957e1bed2 secondInTransit=bfff2d0b-1e47-455f-83e6-600655e2cd4a delivered=1
+F package=5eb85afb-77ee-4775-98e9-76a704154de8 members=d7e6d08f-ece1-4d45-91e1-36bcacb22901,f5711fb6-4926-4901-b796-de504e49e2dd locked=refused
+B delivered=a423b83e-c513-47c4-bfe8-d9c245b425b3 preDispatch=32691c3f-14bc-43c0-bb8e-eab88bac6703
+
+RUN 1 — first execution of the repaired suite — 9/9 passed, ids below
+C original=68d53841-ead0-4082-bc34-46eb751d4453 cancelledResend=a9efa466-e331-4665-b638-6176d97ec425
+A original=90196240-dbfa-4839-91c1-25eade9747d2 resend=930bb79c-a632-4b04-a291-f7a40bbf32a0 lineA=4e562920-4cad-40a0-862b-fe47d3372bb4 lineB=0a8d076e-3d76-465b-8a3d-38ce1510139d
+D winner=40ca4b51-7ba2-481d-ada1-e4f019980497 loserKey=tb258-D-right resendRows=1 replay=same
+H first=6eec0334-636f-46f3-9241-95ab84c37a30->9e3b61c4-1991-4f34-a673-4b9e06c37b3f second=7c035939-a329-4f68-9f92-09f06389edd4->7076d1e9-c0bf-4cb0-945d-966913d17c02
+G resend=80858a4a-547f-470e-a630-bb2dd64634b7 replay=same intentConflicts=2 rows=1
+I receiptLines=3 lineAusable=1 resend=d311e19d-8995-49b5-9b36-f1bec2fe6038 changedReceiptRefused=fulfillment.return.receipt_conflict
+E first=356db36d-6aea-456e-b4fd-eaffe0fc8ef4 secondInTransit=e7a4a0d2-a7ff-49d1-bc01-d0a134710c68 delivered=1
+F package=cf6231ad-f524-4f5b-a59d-7ba7bbf564a4 members=3250a102-b679-474d-a269-7033c6940b02,1aae6f61-7c67-4b76-833d-c92355583600 locked=refused
+B delivered=be664be5-1afc-4cdd-8632-28c4ec9435b1 preDispatch=1747c6d1-102b-41db-89fc-933e7140daab
+
+READING OF THE FIELDS
+A = dispatched->non-delivery->return->mixed receipt->resend->track->dispatch->deliver with the original history kept.
+B = Delivered cannot be undelivered; a foreign or pre-dispatch parcel is refused.
+C = non-delivery alone grants nothing; a cancelled recorded resend keeps its occurrence and cannot be recreated silently.
+D = two real independent contexts cannot consume the same returned unit; the losing key allocates nothing; replay returns one parcel.
+E = a delivered resend counts once while one other in-transit parcel keeps the unit undelivered.
+F = a child locked in an active consolidated package is refused, never silently unlocked.
+G = one occurrence replays its EXACT intent; two changed requests under that occurrence conflict with zero new rows.
+H = two returned sources of ONE order line cannot lend capacity to each other (source-parcel isolation).
+I = one 3-unit parcel line received as usable+damaged split grants only the usable part; a changed receipt conflicts.
+C original=07e75d09-86df-4cd6-8d55-dc73c89bf5ee cancelledResend=d9b19389-1507-4cd1-b5a1-e40da36fe255
+A original=0c291e20-6612-4b14-8fad-b084703052c3 resend=fef9f953-5764-422e-a0d4-c5e6e0259a3e lineA=d9985d45-2298-4e8c-9909-4a03c9432592 lineB=35bfb52c-0d70-4e82-a43e-9edbdc08c5eb
+D winner=b6de2fa8-4673-4435-9f38-5d5532069772 loserKey=tb258-D-right resendRows=1 replay=same
+H first=dbf6a1da-7a73-4166-b2af-80e8cdb3ab19->cc34f5d6-4f5f-43b9-8643-31a5c198edbc second=2c9ec19d-f5df-4f81-b8e4-dd7f1b37efa8->e93c5f12-2043-4583-b6b8-682d3c517943
+G resend=9e045e08-1a02-493d-90aa-99f824e64a8f replay=same intentConflicts=2 rows=1
+I receiptLines=3 lineAusable=1 resend=a6821f3d-e364-4a9d-934e-09f234005a37 changedReceiptRefused=fulfillment.return.receipt_conflict
+E first=87769e6e-efe1-4c31-a1f3-6a3a23ba6ea1 secondInTransit=1ad1dc18-0f6b-4bdb-bfc7-55189de2062f delivered=1
+F package=7ee08951-a816-4c79-874e-3d897333ce58 members=0b322e9b-0abb-4faa-8c4d-ca7bea4080b8,0c53248a-481e-420b-b7d9-e7f272ced352 locked=refused
+B delivered=3adf6082-e0b6-4f89-b232-2581134a1f24 preDispatch=f6bd03da-dbda-455c-aa85-970bf79f941c
+C original=8f34e62e-e58a-47fc-8a43-66b95d1f108a cancelledResend=895d6cdc-d9dd-4971-a671-3baa85ab309a
+A original=8c6f4eed-0c28-4e23-9766-72165bfce9aa resend=d3fea3b3-d572-4523-90aa-39d7afb79c5a lineA=5fb6fe72-2522-4aa4-b68b-589420fbe2c6 lineB=596c3b8a-bf56-46c0-ae18-c132adfa2b66
+D winner=46ee5a55-4f97-4808-8767-fa661b63fee0 loserKey=tb258-D-right resendRows=1 replay=same
+E first=6fcedfa4-ba6f-44b2-a5be-71ff9152d587 secondInTransit=0fd08e06-7e40-4010-b972-2832fb27fae4 delivered=1
+F package=f6ee9d5a-5b5b-49be-9c81-17132743f6c0 members=81082250-d55f-4a5b-bfce-13dbd8ee729f,ad003720-c6b7-4f77-a041-ed327240957d locked=refused
+B delivered=14651afb-79fd-493c-abb9-49be0bec22f3 preDispatch=7aa69f18-a51d-4b9f-a638-5ff1eb469c23
