@@ -68,6 +68,9 @@ public static class MarketplaceOperationalDeliveryGroupAuthority
     /// <summary>Refusal: a requested line/quantity is unknown, duplicated or outside the reviewed group.</summary>
     public const string WorkflowSelectionInvalid = "order.operational_group.workflow_selection_invalid";
 
+    /// <summary>TB-259: refusal — the packing choice is not a supported operator choice.</summary>
+    public const string WorkflowPackingModeInvalid = "order.operational_group.workflow_packing_mode_invalid";
+
     /// <summary>Typed unresolved state: allocations recorded but the common package is not yet observable.</summary>
     public const string WorkflowPending = "order.operational_group.workflow_pending";
 

@@ -15,7 +15,12 @@ public sealed record AdminOrderOperationAction(
     bool RequiresConfirm,
     string? ConfirmMessageFa,
     Guid? OrderLineId = null,
-    Guid? ConsolidatedPackageId = null);
+    Guid? ConsolidatedPackageId = null,
+    /// <summary>
+    /// TB-259: packing choices the SERVER permits for this action, in operator order. The UI renders
+    /// exactly these choices and never decides availability itself.
+    /// </summary>
+    IReadOnlyList<string>? PackingModes = null);
 
 /// <summary>قابلیت lifecycle یک خط — منبع انتخاب/کebab/مرسوله.</summary>
 public sealed record AdminOrderLineCapability(
@@ -98,7 +103,13 @@ public sealed record AdminOrderOperationRequest(
     /// TB-258: the physically received lines of one origin receipt, each with its own condition. Only usable
     /// quantity funds a later resend; damaged/missing quantity never does.
     /// </summary>
-    IReadOnlyList<AdminReturnReceiptLineSelection>? ReceiptItems = null);
+    IReadOnlyList<AdminReturnReceiptLineSelection>? ReceiptItems = null,
+    /// <summary>
+    /// TB-259: the operator's reviewed physical packing choice inside one compatible group:
+    /// «common» (one common package) or «separate» (independent member parcels). A changed choice under
+    /// the same occurrence is a typed intent conflict; an absent value means the legacy common package.
+    /// </summary>
+    string? OperationalGroupPackingMode = null);
 
 /// <summary>TB-258: one physically received line submitted with an origin receipt.</summary>
 public sealed record AdminReturnReceiptLineSelection(

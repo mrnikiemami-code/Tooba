@@ -306,6 +306,7 @@ function resetGroupScope(checkout: string, scopeKey: string | null = null) {
 
 function operationsPage(
   extraActions: Array<Record<string, unknown>> = [],
+  packingModes?: string[],
 ) {
   return new Response(
     JSON.stringify({
@@ -318,6 +319,7 @@ function operationsPage(
           requiredPermission: "order.handle",
           requiresConfirm: true,
           confirmMessageFa: "تأیید؟",
+          ...(packingModes ? { packingModes } : {}),
         },
         ...extraActions,
       ],
@@ -2275,4 +2277,284 @@ test("TB-258-R1 store: another viewer never inherits the retained request", asyn
   assert.ok(readPostDispatchAttempt(R1_SCOPE));
   await viewerB.unmount();
   resetPostDispatchAttempts();
+});
+
+/* ──────────────────── TB-259: operator physical packing choice ──────────────────── */
+
+const PACKING_COMMON_SELECTOR = `[data-testid='admin-order-operational-packing-common-${GROUP_KEY}']`;
+const PACKING_SEPARATE_SELECTOR = `[data-testid='admin-order-operational-packing-separate-${GROUP_KEY}']`;
+const PACKING_FIELDSET_SELECTOR = `[data-testid='admin-order-operational-packing-${GROUP_KEY}']`;
+const RETAINED_PACKING_SELECTOR = `[data-testid='admin-order-operational-retained-packing-${GROUP_KEY}']`;
+const PACKING_KEY = `tb.operational-group-attempt.v2:${CHECKOUT}:__group__:${GROUP_KEY}`;
+
+/** The RAW retained envelope of this checkout/group/scope, read from real sessionStorage. */
+function rawGroupEnvelope(checkoutId: string = CHECKOUT, groupKey: string = GROUP_KEY): string | null {
+  return sessionStorage.getItem(`tb.operational-group-attempt.v2:${checkoutId}:__group__:${groupKey}`);
+}
+
+function separateResult(shipmentIds: string[] = ["sh-a", "sh-b"]) {
+  return {
+    replayed: false,
+    packingMode: "separate",
+    consolidatedPackageId: null,
+    packageNumber: null,
+    shipmentIds,
+  };
+}
+
+function commonResult(packageId = "pkg-1", shipmentIds: string[] = ["sh-a", "sh-b"]) {
+  return {
+    replayed: false,
+    packingMode: "common",
+    consolidatedPackageId: packageId,
+    packageNumber: "MP-1",
+    shipmentIds,
+  };
+}
+
+test("TB-259 mounted: the operator chooses «مرسوله‌های جدا» and that exact choice is reviewed, durable before the POST and posted", async () => {
+  resetGroupScope(CHECKOUT);
+  let envelopeAtPost: string | null = null;
+  let bodyAtPost: Record<string, unknown> | null = null;
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([], ["common", "separate"]);
+    envelopeAtPost = rawGroupEnvelope();
+    bodyAtPost = call.body;
+    return postResponse(200, separateResult());
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: baseDetail(), checkoutId: CHECKOUT }),
+    );
+    await openGroupDialog(mounted.container);
+
+    // Both server-projected choices are offered in ONE explicit fieldset; the safe default is the
+    // existing common package and nothing is preselected silently other than that.
+    assert.ok(insideDialog(q(mounted.container, PACKING_FIELDSET_SELECTOR)));
+    assert.equal(qq(mounted.container, PACKING_COMMON_SELECTOR).length, 1);
+    assert.equal(qq(mounted.container, PACKING_SEPARATE_SELECTOR).length, 1);
+    assert.equal(
+      (q(mounted.container, PACKING_COMMON_SELECTOR!) as HTMLInputElement).checked,
+      true,
+      "common is the unchanged default",
+    );
+
+    await click(q(mounted.container, PACKING_SEPARATE_SELECTOR));
+    await flush();
+    assert.equal((q(mounted.container, PACKING_SEPARATE_SELECTOR!) as HTMLInputElement).checked, true);
+
+    await submitGroupDialog(mounted.container);
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+
+    // The reviewed choice travels in the request AND was durably retained before the first POST.
+    assert.equal(bodyAtPost!.operationalGroupPackingMode, "separate");
+    assert.ok(envelopeAtPost, "the complete envelope must be persisted before the mutation");
+    const parsed = JSON.parse(envelopeAtPost!) as Record<string, unknown>;
+    assert.equal(parsed.packingMode, "separate");
+    assert.equal(parsed.occurrenceId, bodyAtPost!.operationalGroupOccurrenceId);
+    assert.deepEqual([...(parsed.members as string[])].sort(), ["g1", "g2"]);
+
+    // A separate completion is COMPLETE: no common package id exists and nothing is left pending.
+    assert.equal(rawGroupEnvelope(), null, "the reviewed envelope is finished, not pending");
+    assert.equal(qq(mounted.container, WORKFLOW_ERROR_SELECTOR).length, 0);
+    assert.equal(qq(mounted.container, `[data-testid='admin-order-operational-reconcile-${GROUP_KEY}']`).length, 0);
+    assert.equal(
+      q(mounted.container, DIALOG_ROOT_SELECTOR)?.closest("dialog")?.hasAttribute("open") ?? false,
+      false,
+      "the dialog closes on completion",
+    );
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+    resetGroupScope(CHECKOUT);
+  }
+});
+
+test("TB-259 mounted: a separate result with no consolidated package is authoritative completion, never pending", async () => {
+  resetGroupScope(CHECKOUT);
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([], ["common", "separate"]);
+    return postResponse(200, separateResult(["sh-1", "sh-2"]));
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: baseDetail(), checkoutId: CHECKOUT }),
+    );
+    await openGroupDialog(mounted.container);
+    await click(q(mounted.container, PACKING_SEPARATE_SELECTOR));
+    await flush();
+    await submitGroupDialog(mounted.container);
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+
+    // Had null `consolidatedPackageId` been read as "incomplete", this envelope would stay retained and
+    // a reconcile entry would appear. Exactly one send happened and nothing was retained.
+    assert.equal(calls.filter((c) => c.method === "POST").length, 1);
+    assert.equal(rawGroupEnvelope(), null);
+    assert.equal(readOperationalGroupAttempt(CHECKOUT, GROUP_KEY, null), null);
+    assert.equal(qq(mounted.container, `[data-testid='admin-order-operational-retained-${GROUP_KEY}']`).length, 0);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+    resetGroupScope(CHECKOUT);
+  }
+});
+
+test("TB-259 mounted: while an attempt is unresolved the recorded choice is read-only and a changed packing choice is refused", async () => {
+  resetGroupScope(CHECKOUT);
+  let accept = false;
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([], ["common", "separate"]);
+    if (accept) return postResponse(200, commonResult());
+    return postResponse(500, { error: { code: "order.operation.failed" } });
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: baseDetail(), checkoutId: CHECKOUT }),
+    );
+    await openGroupDialog(mounted.container);
+    await submitGroupDialog(mounted.container);
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+
+    // The recorded common choice is now read-only: the radios are disabled and the retained label says so.
+    assert.ok(rawGroupEnvelope());
+    assert.equal((q(mounted.container, PACKING_COMMON_SELECTOR!) as HTMLInputElement).disabled, true);
+    assert.equal((q(mounted.container, PACKING_SEPARATE_SELECTOR!) as HTMLInputElement).disabled, true);
+    assert.ok(insideDialog(q(mounted.container, RETAINED_PACKING_SELECTOR)));
+
+    // At the state boundary the SAME members/selections with a different packing choice are blocked:
+    // the choice is part of the reviewed identity, so it can never silently replace the record.
+    const blocked = resolveOperationalGroupAttempt({
+      checkoutId: CHECKOUT,
+      operationalGroupKey: GROUP_KEY,
+      scopeKey: null,
+      request: {
+        members: ["g1", "g2"],
+        selections: [
+          { orderLineId: "ol1", quantity: 2 },
+          { orderLineId: "ol2", quantity: 1 },
+        ],
+        reuseShipmentIds: [],
+        packingMode: "separate",
+      },
+    });
+    assert.equal(blocked.blockedByRetainedAttempt, true);
+    assert.equal(blocked.attempt?.packingMode, "common");
+    assert.equal(calls.filter((c) => c.method === "POST").length, 1, "a changed review sends nothing");
+
+    // Replaying the recorded envelope (unchanged common choice) still completes it.
+    accept = true;
+    await click(q(mounted.container, RECONCILE_RETRY_SELECTOR));
+    await flush();
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 2);
+    await flush();
+    const replayed = calls.filter((c) => c.method === "POST")[1];
+    assert.equal(replayed.body.operationalGroupPackingMode, "common");
+    assert.equal(rawGroupEnvelope(), null);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+    resetGroupScope(CHECKOUT);
+  }
+});
+
+test("TB-259 mounted: an envelope that cannot be retained refuses the NEW send and sends nothing", async () => {
+  resetGroupScope(CHECKOUT);
+  /** Set by the fetch stub: proves the chosen packing mode was already reload-durable when the POST left. */
+  let envelopeAtPost: string | null = null;
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([], ["common", "separate"]);
+    envelopeAtPost = rawGroupEnvelope();
+    return postResponse(200, separateResult());
+  });
+  const originalStorage = globalThis.sessionStorage;
+  const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
+  const installStorage = (value: Storage) => {
+    Object.defineProperty(globalThis, "sessionStorage", { configurable: true, writable: true, value });
+  };
+  const restoreStorage = () => {
+    if (originalDescriptor) Object.defineProperty(globalThis, "sessionStorage", originalDescriptor);
+    else installStorage(originalStorage);
+  };
+  const broken = {
+    getItem() { throw new Error("storage disabled"); },
+    setItem() { throw new Error("storage disabled"); },
+    removeItem() { throw new Error("storage disabled"); },
+    clear() { throw new Error("storage disabled"); },
+    key() { throw new Error("storage disabled"); },
+    get length(): number { throw new Error("storage disabled"); },
+  } as unknown as Storage;
+
+  try {
+    installStorage(broken);
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: baseDetail(), checkoutId: CHECKOUT }),
+    );
+    await openGroupDialog(mounted.container);
+    await click(q(mounted.container, PACKING_SEPARATE_SELECTOR));
+    await flush();
+
+    // A memory-only envelope does not survive a reload, so the send boundary must refuse it outright:
+    // a lost response would otherwise be indistinguishable from a brand-new operation.
+    await submitGroupDialog(mounted.container);
+    await flush();
+    assert.equal(
+      calls.filter((c) => c.method === "POST").length,
+      0,
+      "an envelope that is not reload-durable must never reach the network",
+    );
+    const refusal = q(mounted.container, WORKFLOW_ERROR_SELECTOR);
+    assert.match(refusal.textContent ?? "", /ارسال نشد/);
+    // The reviewed choice and the open review are kept for a corrected retry.
+    assert.ok(insideDialog(q(mounted.container, DIALOG_ROOT_SELECTOR)));
+    assert.equal((q(mounted.container, PACKING_SEPARATE_SELECTOR!) as HTMLInputElement).checked, true);
+
+    // Storage restored: exactly one deliberate send, with the reviewed choice durable BEFORE the request.
+    restoreStorage();
+    await submitGroupDialog(mounted.container);
+    await waitFor(() => calls.filter((c) => c.method === "POST").length === 1);
+    await flush();
+    const posts = calls.filter((c) => c.method === "POST");
+    assert.equal(posts.length, 1);
+    assert.equal(posts[0].body.operationalGroupPackingMode, "separate");
+    assert.ok(envelopeAtPost, "the complete reviewed envelope must already be durable when the POST is made");
+    assert.equal((JSON.parse(envelopeAtPost!) as Record<string, unknown>).packingMode, "separate");
+    assert.equal(rawGroupEnvelope(), null, "the completed separate operation is finished, not pending");
+    await mounted.unmount();
+  } finally {
+    restoreStorage();
+    restoreFetch();
+    resetGroupScope(CHECKOUT);
+  }
+});
+
+test("TB-259 static: only the packing choices the server projected are offered for the group", () => {
+  const detail = baseDetail();
+  const separateOnly = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+      packingModes: ["separate"],
+    }),
+  );
+  assert.match(separateOnly, /admin-order-operational-packing-separate-mp-post-combined/);
+  assert.doesNotMatch(separateOnly, /admin-order-operational-packing-common-mp-post-combined/);
+
+  const both = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+      packingModes: ["common", "separate"],
+    }),
+  );
+  assert.match(both, /admin-order-operational-packing-common-mp-post-combined/);
+  assert.match(both, /admin-order-operational-packing-separate-mp-post-combined/);
+  // The card itself stays display-only: the choice lives in the reviewed dialog.
+  assert.equal((outsideDialogs(both).match(/type="radio"/g) ?? []).length, 0);
 });

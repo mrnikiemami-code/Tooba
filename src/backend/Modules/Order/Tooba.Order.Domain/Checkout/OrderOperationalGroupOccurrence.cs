@@ -103,7 +103,27 @@ public sealed class OrderOperationalGroupOccurrence
         UpdatedAtUtc = now;
     }
 
-    /// <summary>Records the common package result once; a replayed result is never overwritten.</summary>
+    /// <summary>
+    /// TB-259: records a completed SEPARATE packing occurrence. No package id/number exists, and that
+    /// absence is the recorded result of this completion shape — not pending work.
+    /// </summary>
+    public void CompleteSeparate(string shippingMethodCode, DateTimeOffset now)
+    {
+        if (State == CompletedState)
+        {
+            return;
+        }
+
+        ConsolidatedPackageId = null;
+        PackageNumber = null;
+        ShippingMethodCode = shippingMethodCode;
+        State = CompletedState;
+        UpdatedAtUtc = now;
+    }
+
+    /// <summary>
+    /// Records the common package result once; a replayed result is never overwritten.
+    /// </summary>
     public void Complete(
         Guid consolidatedPackageId,
         string packageNumber,

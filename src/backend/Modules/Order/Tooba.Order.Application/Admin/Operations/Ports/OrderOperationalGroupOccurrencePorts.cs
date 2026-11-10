@@ -5,6 +5,52 @@ using System.Text.Json;
 
 namespace Tooba.Order.Application.Admin.Operations.Ports;
 
+/// <summary>
+/// TB-259: the operator's physical packing choice for one compatible operational delivery group.
+/// </summary>
+/// <remarks>
+/// Grouping is not physical packaging. Inside the SAME server-owned compatible group the operator may
+/// deliberately pack the constituent member parcels into ONE common package, or keep independent
+/// parcels. The choice is part of the immutable occurrence envelope and is persisted with it.
+/// </remarks>
+public enum OperationalGroupPackingMode
+{
+    /// <summary>Constituent parcels are consolidated into ONE common package (historical behaviour).</summary>
+    Common = 0,
+
+    /// <summary>Constituent parcels stay independent; no consolidated package is created.</summary>
+    Separate = 1,
+}
+
+/// <summary>TB-259: canonical wire tokens of the packing choice.</summary>
+public static class OperationalGroupPackingModes
+{
+    public const string Common = "common";
+    public const string Separate = "separate";
+
+    /// <summary>Parses the operator token; blank/unknown is refused instead of guessed.</summary>
+    public static bool TryParse(string? token, out OperationalGroupPackingMode mode)
+    {
+        switch ((token ?? string.Empty).Trim().ToLowerInvariant())
+        {
+            case "":
+            case Common:
+                mode = OperationalGroupPackingMode.Common;
+                return true;
+            case Separate:
+                mode = OperationalGroupPackingMode.Separate;
+                return true;
+            default:
+                mode = OperationalGroupPackingMode.Common;
+                return false;
+        }
+    }
+
+    /// <summary>Wire token of a mode.</summary>
+    public static string Token(OperationalGroupPackingMode mode) =>
+        mode == OperationalGroupPackingMode.Separate ? Separate : Common;
+}
+
 /// <summary>TB-253-R4: one reviewed line quantity inside an immutable occurrence envelope.</summary>
 public sealed record OperationalGroupOccurrenceSelection(Guid OrderLineId, decimal Quantity);
 
@@ -28,7 +74,12 @@ public sealed record OperationalGroupOccurrenceEnvelope(
     Guid ActorUserId,
     string OperationalGroupKey,
     string AcceptedMethodCode,
-    IReadOnlyList<OperationalGroupOccurrenceMember> Members);
+    IReadOnlyList<OperationalGroupOccurrenceMember> Members,
+    /// <summary>
+    /// TB-259: the packing choice belongs to the same immutable envelope, so a changed choice is a
+    /// typed conflict rather than a silent re-allocation. Defaults to the legacy common package.
+    /// </summary>
+    OperationalGroupPackingMode PackingMode = OperationalGroupPackingMode.Common);
 
 /// <summary>TB-253-R4: exact durable constituent link of one occurrence member.</summary>
 public sealed record OperationalGroupOccurrenceAllocation(
@@ -48,7 +99,12 @@ public sealed record OperationalGroupOccurrenceRecord(
     Guid? ConsolidatedPackageId,
     string? PackageNumber,
     string? ShippingMethodCode,
-    IReadOnlyList<OperationalGroupOccurrenceAllocation> Allocations);
+    IReadOnlyList<OperationalGroupOccurrenceAllocation> Allocations,
+    /// <summary>
+    /// TB-259: packing choice read back from the durable envelope. A legacy row without a recorded
+    /// choice means the historical common-package semantics — never a reinterpretation.
+    /// </summary>
+    OperationalGroupPackingMode PackingMode = OperationalGroupPackingMode.Common);
 
 /// <summary>
 /// Durable claim/read port for the immutable occurrence envelope and its exact constituent links.
@@ -78,6 +134,16 @@ public interface IOrderOperationalGroupOccurrenceStore
         Guid occurrenceId,
         Guid consolidatedPackageId,
         string packageNumber,
+        string shippingMethodCode,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-259: records a completed SEPARATE packing occurrence. It deliberately carries no package id:
+    /// a completed separate operation is complete by its own exact constituent links, and its
+    /// <c>ConsolidatedPackageId</c> staying null is the recorded result — never evidence of incompleteness.
+    /// </summary>
+    Task RecordCompletedSeparateAsync(
+        Guid occurrenceId,
         string shippingMethodCode,
         CancellationToken cancellationToken);
 
@@ -128,9 +194,61 @@ public static class OperationalGroupOccurrenceEnvelopeCodec
         });
     }
 
-    /// <summary>Stable SHA-256 fingerprint of <see cref="CanonicalJson"/>.</summary>
+    /// <summary>
+    /// Canonical JSON of the whole envelope including the TB-259 packing choice.
+    /// </summary>
+    /// <remarks>
+    /// The choice is emitted ONLY for <see cref="OperationalGroupPackingMode.Separate"/>, so a common
+    /// mode envelope is byte-identical to a TB-253-R4 envelope and every already recorded occurrence
+    /// keeps its exact historical fingerprint and replays unchanged. Legacy rows therefore mean
+    /// common-package semantics explicitly rather than by reinterpretation.
+    /// </remarks>
+    public static string CanonicalEnvelopeJson(OperationalGroupOccurrenceEnvelope envelope)
+    {
+        var head = CanonicalJson(envelope);
+        if (envelope.PackingMode != OperationalGroupPackingMode.Separate)
+        {
+            return head;
+        }
+
+        // The serialized object always ends with '}', so appending one member keeps valid JSON and a
+        // stable property order.
+        return head[..^1] + ",\"packingMode\":\"" + OperationalGroupPackingModes.Separate + "\"}";
+    }
+
+    /// <summary>TB-259: reads the recorded packing choice; a legacy row means the common package.</summary>
+    public static OperationalGroupPackingMode ReadPackingMode(string? envelopeJson)
+    {
+        if (string.IsNullOrWhiteSpace(envelopeJson))
+        {
+            return OperationalGroupPackingMode.Common;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(envelopeJson);
+            if (document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("packingMode", out var value)
+                && value.ValueKind == JsonValueKind.String
+                && string.Equals(
+                    value.GetString(),
+                    OperationalGroupPackingModes.Separate,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return OperationalGroupPackingMode.Separate;
+            }
+        }
+        catch (JsonException)
+        {
+            // A malformed historical envelope cannot claim a separate result.
+        }
+
+        return OperationalGroupPackingMode.Common;
+    }
+
+    /// <summary>Stable SHA-256 fingerprint of <see cref="CanonicalEnvelopeJson"/>.</summary>
     public static string Fingerprint(OperationalGroupOccurrenceEnvelope envelope) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(CanonicalJson(envelope))))
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(CanonicalEnvelopeJson(envelope))))
             .ToLowerInvariant();
 
     /// <summary>Invariant quantity text, so 2m and 2.0m can never differ by serialization accident.</summary>

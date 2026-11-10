@@ -126,6 +126,22 @@ function isCancelledLifecycleStatus(status: string | null | undefined): boolean 
   return status === "Cancelled" || status === "Canceled";
 }
 
+/**
+ * TB-259: the packing choices the SERVER projected for the group workflow. The section renders exactly
+ * these; when the projection carries none (older response) the dialog offers the two server-defined
+ * choices, and the owning command still validates the request.
+ */
+function packingModesForGroupWorkflow(
+  opsBySeller: Record<string, AdminOrderOperationAction[]>,
+): Array<"common" | "separate"> | null {
+  const action = (opsBySeller.__checkout__ ?? []).find((a) => a.code === "prepare_operational_group");
+  if (!action?.packingModes || action.packingModes.length === 0) return null;
+  const modes = action.packingModes.filter(
+    (mode): mode is "common" | "separate" => mode === "common" || mode === "separate",
+  );
+  return modes.length > 0 ? modes : null;
+}
+
 type ShipmentListTab = "current" | "cancelled";
 
 /**
@@ -350,6 +366,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           pendingCode={pendingCode}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
           occurrenceScopeKey={viewerScopeKey}
+          packingModes={packingModesForGroupWorkflow(opsBySeller)}
           parcelCapabilities={(seller, shipment) => {
             // TB-254: this card is the ONE parcel/action owner. A parcel that belongs to a shared
             // package is operated from the package section, so it exposes no duplicate action here.
@@ -439,6 +456,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 selections: request.selections,
                 reuseShipmentIds: request.reuseShipmentIds,
                 operationalGroupOccurrenceId: request.operationalGroupOccurrenceId,
+                operationalGroupPackingMode: request.packingMode,
                 shippingMethodCode: null,
               });
               if (result.state !== "ok") {
@@ -447,7 +465,11 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                   errorFa: mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
                 };
               }
-              toast.success("مرسوله‌ها و بستهٔ مشترک گروه ایجاد شد.");
+              toast.success(
+                request.packingMode === "separate"
+                  ? "مرسوله‌های جداگانهٔ اعضای گروه ایجاد شد."
+                  : "مرسوله‌ها و بستهٔ مشترک گروه ایجاد شد.",
+              );
               onCompleted?.();
               return { completed: true };
             } finally {

@@ -83,6 +83,8 @@ export type OperationalGroupWorkflowRequest = {
   reuseShipmentIds: string[];
   /** Prebound BEFORE the first mutation; retained on retry, renewed only after success. */
   operationalGroupOccurrenceId: string;
+  /** TB-259: the reviewed physical packing choice, recorded in the same immutable envelope. */
+  packingMode: "common" | "separate";
 };
 
 type Props = {
@@ -99,6 +101,11 @@ type Props = {
    * per checkout/group/scope, so another admin session can never inherit it.
    */
   occurrenceScopeKey?: string | null;
+  /**
+   * TB-259: the packing choices the SERVER projected for this group's prepare action. The dialog renders
+   * exactly these; a missing projection falls back to the two server-defined choices.
+   */
+  packingModes?: readonly ("common" | "separate")[] | null;
   /** TB-254: exactly one parcel/action owner — the group card shows the permitted next action. */
   parcelCapabilities?: (seller: AdminSellerOrder, shipment: AdminShipment) => OperationalParcelCapabilities;
   onParcelTrack?: (seller: AdminSellerOrder, shipment: AdminShipment) => void;
@@ -240,6 +247,7 @@ export function AdminOrderOperationalDeliverySection({
   onCreateShipment,
   onPrepareOperationalGroup,
   occurrenceScopeKey,
+  packingModes,
   parcelCapabilities,
   onParcelTrack,
   onParcelOperation,
@@ -286,6 +294,7 @@ export function AdminOrderOperationalDeliverySection({
             onCreateShipment={onCreateShipment}
             onPrepareOperationalGroup={onPrepareOperationalGroup}
             occurrenceScopeKey={occurrenceScopeKey}
+            packingModes={packingModes}
             parcelCapabilities={parcelCapabilities}
             onParcelTrack={onParcelTrack}
             onParcelOperation={onParcelOperation}
@@ -304,6 +313,7 @@ function OperationalCard({
   onCreateShipment,
   onPrepareOperationalGroup,
   occurrenceScopeKey,
+  packingModes,
   parcelCapabilities,
   onParcelTrack,
   onParcelOperation,
@@ -315,6 +325,7 @@ function OperationalCard({
   onCreateShipment: (target: OperationalCreateTarget) => void;
   onPrepareOperationalGroup?: Props["onPrepareOperationalGroup"];
   occurrenceScopeKey?: string | null;
+  packingModes?: Props["packingModes"];
   parcelCapabilities?: Props["parcelCapabilities"];
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
@@ -365,6 +376,7 @@ function OperationalCard({
           members: group.members.map((member) => member.shippingGroupId),
           selections: request.selections,
           reuseShipmentIds: request.reuseShipmentIds,
+          packingMode: request.packingMode,
         },
       });
       if (resolution.blockedByRetainedAttempt) {
@@ -374,12 +386,22 @@ function OperationalCard({
         setErrorFa("درخواست ثبت‌شدهٔ قبلی هنوز تعیین تکلیف نشده است؛ همان عملیات را پیگیری کنید.");
         return;
       }
+      if (!resolution.durable) {
+        // TB-259: a NEW operation may only be sent when its complete reviewed envelope (including the
+        // packing choice) is retained for reload/remount. Otherwise a lost response would be
+        // indistinguishable from a fresh operation and could allocate a second parcel set.
+        setErrorFa(
+          "ذخیرهٔ مطمئن این درخواست در این مرورگر ممکن نشد؛ برای جلوگیری از ارسال تکراری، درخواست ارسال نشد. ذخیره‌سازی مرورگر را بررسی و دوباره تلاش کنید.",
+        );
+        return;
+      }
       setRetainedAttempt(resolution.attempt);
       const outcome = await onPrepareOperationalGroup(group, {
         operationalGroupShippingGroupIds: resolution.attempt.members,
         selections: resolution.attempt.selections,
         reuseShipmentIds: resolution.attempt.reuseShipmentIds,
         operationalGroupOccurrenceId: resolution.occurrenceId,
+        packingMode: resolution.attempt.packingMode,
       });
       if (outcomeCompleted(outcome)) {
         // Completed: the reviewed envelope is done, so the next deliberate run is a NEW one.
@@ -549,6 +571,7 @@ function OperationalCard({
           errorFa={errorFa}
           retainedAttempt={retainedAttempt}
           lineTitles={lineTitleMap}
+          allowedPackingModes={packingModes ?? undefined}
           formatMoney={formatAdminMoney}
           formatStatus={formatAdminStatus}
           onClose={() => setDialogOpen(false)}

@@ -52,7 +52,70 @@ public sealed class MarketplaceOperationalGroupWorkflow(
     private readonly IOrderAdminEffectiveAccessReader _access = access;
     private readonly IOrderOperationalGroupOccurrenceStore _occurrences = occurrences;
 
+    /// <summary>
+    /// TB-259: public exact-intent reconciliation of ONE recorded occurrence.
+    /// </summary>
+    /// <remarks>
+    /// A recorded occurrence is answered from its own durable links BEFORE any fresh readiness
+    /// projection, because partial progress may already have consumed the remaining quantities that
+    /// projection relies on. Current actor/checkout/group authority is re-checked EVERY time — a
+    /// retained value is never authorization. A different checkout is not disclosed; any other changed
+    /// request under this occurrence is a typed conflict with zero writes. A missing occurrence returns
+    /// null so the caller must pass the ordinary projection gate: there is no broad bypass.
+    /// </remarks>
+    public async Task<object?> TryReconcileRecordedAsync(
+        Guid checkoutId,
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var occurrenceId = request.OperationalGroupOccurrenceId ?? Guid.Empty;
+        if (occurrenceId == Guid.Empty)
+        {
+            return null;
+        }
+
+        var known = await _occurrences.GetAsync(occurrenceId, cancellationToken);
+        if (known is null)
+        {
+            return null;
+        }
+
+        var resolved = await ResolveAsync(checkoutId, request, actorUserId, cancellationToken);
+        if (known.CheckoutId != checkoutId)
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        if (known.ActorUserId != actorUserId
+            || !string.Equals(
+                known.OperationalGroupKey,
+                resolved.Match.OperationalGroupKey,
+                StringComparison.Ordinal)
+            || !string.Equals(known.EnvelopeFingerprint, resolved.Fingerprint, StringComparison.Ordinal))
+        {
+            throw new AdminOrderOperationsException(
+                MarketplaceOperationalDeliveryGroupAuthority.WorkflowIntentConflict);
+        }
+
+        return await RunReviewedPlanAsync(checkoutId, request, actorUserId, resolved, cancellationToken);
+    }
+
     public async Task<object> PrepareAsync(
+        Guid checkoutId,
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveAsync(checkoutId, request, actorUserId, cancellationToken);
+        return await RunReviewedPlanAsync(checkoutId, request, actorUserId, resolved, cancellationToken);
+    }
+
+    /// <summary>
+    /// Validates the current actor, the requested constituent groups, the accepted method and builds the
+    /// COMPLETE immutable envelope — with no write of any kind.
+    /// </summary>
+    private async Task<ResolvedAttempt> ResolveAsync(
         Guid checkoutId,
         AdminOrderOperationRequest request,
         Guid actorUserId,
@@ -65,6 +128,16 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         {
             throw new AdminOrderOperationsException(
                 MarketplaceOperationalDeliveryGroupAuthority.WorkflowOccurrenceRequired);
+        }
+
+        // TB-259: the physical packing choice is reviewed with the request. An unknown token is a typed
+        // refusal — never a silent fallback to one of the two lawful choices.
+        if (!OperationalGroupPackingModes.TryParse(
+                request.OperationalGroupPackingMode,
+                out var packingMode))
+        {
+            throw new AdminOrderOperationsException(
+                MarketplaceOperationalDeliveryGroupAuthority.WorkflowPackingModeInvalid);
         }
 
         var requestedIds = (request.OperationalGroupShippingGroupIds ?? Array.Empty<Guid>())
@@ -166,8 +239,38 @@ public sealed class MarketplaceOperationalGroupWorkflow(
             acceptedMethod,
             request,
             requestedReuse,
-            fulfillments);
+            fulfillments,
+            packingMode);
         var fingerprint = OperationalGroupOccurrenceEnvelopeCodec.Fingerprint(envelope);
+
+        return new ResolvedAttempt(
+            match,
+            factsById,
+            fulfillments,
+            acceptedMethod,
+            envelope,
+            fingerprint);
+    }
+
+    /// <summary>
+    /// Claims (or reads) the exact occurrence and executes the pre-validated plan with the reviewed
+    /// physical packing choice.
+    /// </summary>
+    private async Task<object> RunReviewedPlanAsync(
+        Guid checkoutId,
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        ResolvedAttempt resolved,
+        CancellationToken cancellationToken)
+    {
+        var match = resolved.Match;
+        var factsById = resolved.FactsById;
+        var fulfillments = resolved.Fulfillments;
+        var acceptedMethod = resolved.AcceptedMethodCode;
+        var envelope = resolved.Envelope;
+        var fingerprint = resolved.Fingerprint;
+        var occurrenceId = envelope.OccurrenceId;
+        var separate = envelope.PackingMode == OperationalGroupPackingMode.Separate;
 
         // A brand-new occurrence must not be frozen by an invalid plan: prove the whole plan fits
         // before claiming it, so a typed refusal leaves no claimed row behind. An EXISTING occurrence
@@ -405,6 +508,34 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 MarketplaceOperationalDeliveryGroupAuthority.ConsolidateRequiresMultiSeller);
         }
 
+        if (separate)
+        {
+            // TB-259: SEPARATE packing — the reviewed member parcels stay independent. There is
+            // deliberately no package write and no package id: this completion shape is complete by its
+            // own exact constituent links, and a null package id is its recorded result.
+            await _occurrences.RecordCompletedSeparateAsync(
+                occurrenceId,
+                acceptedMethod,
+                cancellationToken);
+
+            return new
+            {
+                ok = true,
+                code = "prepare_operational_group",
+                packingMode = OperationalGroupPackingModes.Separate,
+                operationalGroupKey = match.OperationalGroupKey,
+                operationLocator = MarketplaceOperationalDeliveryGroupAuthority.BuildWorkflowOperationLocator(
+                    occurrenceId),
+                occurrenceId,
+                consolidatedPackageId = (Guid?)null,
+                packageNumber = (string?)null,
+                shippingMethodCode = acceptedMethod,
+                shipmentIds = distinctShipments,
+                members = parcelResults,
+                replayed = false,
+            };
+        }
+
         // 4. The common package. An already-member/duplicate refusal means this exact occurrence (or a
         //    concurrent twin of it) already owns the package; resolve THAT package, never another one.
         ConsolidatedPackageSnapshot? package = null;
@@ -454,8 +585,10 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         {
             ok = true,
             code = "prepare_operational_group",
+            packingMode = OperationalGroupPackingModes.Common,
             operationalGroupKey = match.OperationalGroupKey,
-            operationLocator = MarketplaceOperationalDeliveryGroupAuthority.BuildWorkflowOperationLocator(occurrenceId),
+            operationLocator = MarketplaceOperationalDeliveryGroupAuthority.BuildWorkflowOperationLocator(
+                occurrenceId),
             occurrenceId,
             consolidatedPackageId = package.ConsolidatedPackageId,
             packageNumber = package.PackageNumber,
@@ -477,22 +610,30 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         CancellationToken cancellationToken)
     {
-        if (occurrence.ConsolidatedPackageId is not Guid packageId
-            || string.IsNullOrWhiteSpace(occurrence.PackageNumber))
-        {
-            throw new AdminOrderOperationsException(
-                MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
-        }
+        var separate = occurrence.PackingMode == OperationalGroupPackingMode.Separate;
 
-        var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
-        var package = packages.FirstOrDefault(p =>
-            p.ConsolidatedPackageId == packageId
-            && p.Status is ConsolidatedPackageOperationStatus.Created
-                or ConsolidatedPackageOperationStatus.Dispatched);
-        if (package is null)
+        // TB-259: only the COMMON shape needs a package. A completed separate occurrence is complete by
+        // its own exact constituent links — a null package id is its result, never "pending".
+        ConsolidatedPackageSnapshot? package = null;
+        if (!separate)
         {
-            throw new AdminOrderOperationsException(
-                MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+            if (occurrence.ConsolidatedPackageId is not Guid packageId
+                || string.IsNullOrWhiteSpace(occurrence.PackageNumber))
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+            }
+
+            var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
+            package = packages.FirstOrDefault(p =>
+                p.ConsolidatedPackageId == packageId
+                && p.Status is ConsolidatedPackageOperationStatus.Created
+                    or ConsolidatedPackageOperationStatus.Dispatched);
+            if (package is null)
+            {
+                throw new AdminOrderOperationsException(
+                    MarketplaceOperationalDeliveryGroupAuthority.WorkflowPending);
+            }
         }
 
         var memberResults = new List<object>(match.Members.Count);
@@ -538,13 +679,14 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         {
             ok = true,
             code = "prepare_operational_group",
+            packingMode = OperationalGroupPackingModes.Token(occurrence.PackingMode),
             operationalGroupKey = match.OperationalGroupKey,
             operationLocator = MarketplaceOperationalDeliveryGroupAuthority.BuildWorkflowOperationLocator(
                 occurrence.OccurrenceId),
             occurrenceId = occurrence.OccurrenceId,
-            consolidatedPackageId = packageId,
+            consolidatedPackageId = package?.ConsolidatedPackageId,
             packageNumber = occurrence.PackageNumber,
-            shippingMethodCode = package.ShippingMethodCode ?? occurrence.ShippingMethodCode,
+            shippingMethodCode = package?.ShippingMethodCode ?? occurrence.ShippingMethodCode,
             shipmentIds = shipmentIds.Distinct().ToArray(),
             members = memberResults,
             replayed = true,
@@ -562,7 +704,8 @@ public sealed class MarketplaceOperationalGroupWorkflow(
         string acceptedMethod,
         AdminOrderOperationRequest request,
         IReadOnlyList<Guid> requestedReuse,
-        IReadOnlyList<FulfillmentSnapshot> fulfillments)
+        IReadOnlyList<FulfillmentSnapshot> fulfillments,
+        OperationalGroupPackingMode packingMode)
     {
         var selections = (request.Selections ?? Array.Empty<AdminOrderLineSelection>()).ToArray();
         if (selections.Any(s => s.OrderLineId == Guid.Empty || s.Quantity <= 0m))
@@ -641,7 +784,8 @@ public sealed class MarketplaceOperationalGroupWorkflow(
             actorUserId,
             match.OperationalGroupKey,
             acceptedMethod,
-            members);
+            members,
+            packingMode);
     }
 
     private async Task<IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot>> LoadActiveMembershipsAsync(
@@ -950,6 +1094,14 @@ public sealed class MarketplaceOperationalGroupWorkflow(
                 .OrderBy(x => x)
                 .SequenceEqual(expected));
     }
+
+    private sealed record ResolvedAttempt(
+        MarketplaceOperationalDeliveryGroupAuthority.OperationalGroup Match,
+        IReadOnlyDictionary<Guid, OrderCommittedCarrierShipmentFacts> FactsById,
+        IReadOnlyList<FulfillmentSnapshot> Fulfillments,
+        string AcceptedMethodCode,
+        OperationalGroupOccurrenceEnvelope Envelope,
+        string Fingerprint);
 
     private enum MemberPlanKind
     {

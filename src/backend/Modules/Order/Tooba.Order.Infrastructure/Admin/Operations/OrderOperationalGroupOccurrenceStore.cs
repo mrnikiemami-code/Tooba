@@ -35,7 +35,7 @@ internal sealed class OrderOperationalGroupOccurrenceStore(OrderDbContext db, IC
             envelope.ActorUserId,
             envelope.OperationalGroupKey,
             envelopeFingerprint,
-            OperationalGroupOccurrenceEnvelopeCodec.CanonicalJson(envelope),
+            OperationalGroupOccurrenceEnvelopeCodec.CanonicalEnvelopeJson(envelope),
             envelope.AcceptedMethodCode,
             clock.UtcNow);
         db.OperationalGroupOccurrences.Add(entity);
@@ -119,6 +119,23 @@ internal sealed class OrderOperationalGroupOccurrenceStore(OrderDbContext db, IC
     }
 
     /// <inheritdoc />
+    public async Task RecordCompletedSeparateAsync(
+        Guid occurrenceId,
+        string shippingMethodCode,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.OperationalGroupOccurrences
+            .SingleOrDefaultAsync(x => x.OccurrenceId == occurrenceId, cancellationToken);
+        if (entity is null)
+        {
+            throw new InvalidOperationException("order.operational_group.occurrence.claim_missing");
+        }
+
+        entity.CompleteSeparate(shippingMethodCode, clock.UtcNow);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<OperationalGroupOccurrenceRecord?> GetAsync(
         Guid occurrenceId,
         CancellationToken cancellationToken)
@@ -147,7 +164,8 @@ internal sealed class OrderOperationalGroupOccurrenceStore(OrderDbContext db, IC
             entity.ConsolidatedPackageId,
             entity.PackageNumber,
             entity.ShippingMethodCode,
-            members.Select(ToAllocation).ToArray());
+            members.Select(ToAllocation).ToArray(),
+            OperationalGroupOccurrenceEnvelopeCodec.ReadPackingMode(entity.EnvelopeJson));
     }
 
     private async Task MarkInProgressAsync(Guid occurrenceId, CancellationToken cancellationToken)

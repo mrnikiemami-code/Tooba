@@ -6,6 +6,12 @@ import { Dialog } from "../../../design-system/primitives/overlays";
 import { formatJalaliDate } from "../../../design-system/app-data-grid/jalali";
 
 /**
+ * TB-259: the two lawful physical packing choices of ONE compatible group. Declared here as a narrow
+ * feature-owned contract instead of importing the page's session module.
+ */
+export type OperationalGroupPackingMode = "common" | "separate";
+
+/**
  * TB-254/TB-254-R1 — the ONE purposeful Marketplace operational-group workflow surface.
  *
  * The normal order page only displays parcels and their permitted next action. Creating the
@@ -61,6 +67,8 @@ export type OperationalGroupDialogRow = {
 export type OperationalGroupDialogRequest = {
   selections: Array<{ orderLineId: string; quantity: number }>;
   reuseShipmentIds: string[];
+  /** TB-259: the reviewed physical packing choice of this operation. */
+  packingMode: OperationalGroupPackingMode;
 };
 
 /**
@@ -71,6 +79,8 @@ export type RetainedOperationalGroupEnvelope = {
   occurrenceId: string;
   selections: ReadonlyArray<{ orderLineId: string; quantity: number }>;
   reuseShipmentIds: ReadonlyArray<string>;
+  /** TB-259: the recorded packing choice; a retained operation is replayed with exactly this choice. */
+  packingMode: OperationalGroupPackingMode;
 };
 
 /** Display formatters owned by the page boundary (no duplicated status/money dictionary here). */
@@ -96,6 +106,11 @@ type Props = OperationalGroupWorkflowFormatters & {
    * selections are never hidden behind a zero-remaining row.
    */
   lineTitles?: Record<string, string>;
+  /**
+   * TB-259: the physical packing choices the SERVER offers for this group. The dialog renders exactly
+   * these; it never invents availability.
+   */
+  allowedPackingModes?: readonly OperationalGroupPackingMode[];
   onClose: () => void;
   onSubmit: (request: OperationalGroupDialogRequest) => void;
 };
@@ -128,6 +143,7 @@ export function AdminOperationalGroupWorkflowDialog({
   errorFa,
   retainedAttempt,
   lineTitles,
+  allowedPackingModes,
   formatMoney,
   formatStatus,
   onClose,
@@ -135,6 +151,13 @@ export function AdminOperationalGroupWorkflowDialog({
 }: Props) {
   const [qtyByLine, setQtyByLine] = useState<Record<string, number>>({});
   const [reusedParcelIds, setReusedParcelIds] = useState<string[]>([]);
+  const [packingMode, setPackingMode] = useState<OperationalGroupPackingMode>("common");
+
+  const packingChoices = useMemo<readonly OperationalGroupPackingMode[]>(() => {
+    const offered = (allowedPackingModes ?? ["common", "separate"])
+      .filter((mode) => mode === "common" || mode === "separate");
+    return offered.length > 0 ? [...new Set(offered)] : ["common"];
+  }, [allowedPackingModes]);
 
   const reviewSignature = rows
     .map(
@@ -156,6 +179,7 @@ export function AdminOperationalGroupWorkflowDialog({
       }
       setQtyByLine(nextQty);
       setReusedParcelIds([...retainedAttempt.reuseShipmentIds]);
+      setPackingMode(retainedAttempt.packingMode);
       return;
     }
     const nextQty: Record<string, number> = {};
@@ -168,6 +192,7 @@ export function AdminOperationalGroupWorkflowDialog({
     setQtyByLine(nextQty);
     // No arbitrary default sweeping of unseen parcels: reuse is an explicit choice.
     setReusedParcelIds([]);
+    setPackingMode("common");
     // The dependency list is intentionally the server-projection signature + retained occurrence.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reviewSignature, retainedId, group.operationalGroupKey]);
@@ -213,9 +238,11 @@ export function AdminOperationalGroupWorkflowDialog({
   const consolidatingOnly = remainingLines.length === 0 && parcelCount > 0;
   const title = retainedAttempt
     ? "پیگیری عملیات ثبت‌شده"
-    : consolidatingOnly
-      ? "تجمیع مرسوله‌ها"
-      : "آماده‌سازی ارسال گروه";
+    : packingMode === "separate"
+      ? "آماده‌سازی ارسال جداگانه"
+      : consolidatingOnly
+        ? "تجمیع مرسوله‌ها"
+        : "آماده‌سازی ارسال گروه";
 
   const nothingSelected = selections.length === 0 && reuseShipmentIds.length === 0;
   const canSubmit = !pending && !nothingSelected;
@@ -233,8 +260,10 @@ export function AdminOperationalGroupWorkflowDialog({
             {retainedAttempt
               ? "این درخواست ثبت شده و نتیجهٔ قطعی آن دریافت نشده است. فقط همین درخواست قابل پیگیری است و درخواست تازه‌ای ساخته نمی‌شود."
               : consolidatingOnly
-                ? "مرسوله‌های ساخته‌شدهٔ این گروه را انتخاب کنید تا در یک بستهٔ مشترک ارسال شوند."
-                : "کالاهای باقی‌مانده و مرسوله‌های موجود این گروه را بررسی کنید؛ مرسوله‌ها و بستهٔ مشترک یک‌جا ساخته می‌شوند."}
+                ? packingMode === "separate"
+                  ? "مرسوله‌های ساخته‌شدهٔ این گروه را انتخاب کنید تا هر عضو مرسولهٔ مستقل خود را داشته باشد."
+                  : "مرسوله‌های ساخته‌شدهٔ این گروه را انتخاب کنید تا در یک بستهٔ مشترک ارسال شوند."
+                : "کالاهای باقی‌مانده و مرسوله‌های موجود این گروه را بررسی کنید؛ بسته‌بندی فیزیکی را هم انتخاب کنید."}
           </p>
 
           <div
@@ -258,6 +287,54 @@ export function AdminOperationalGroupWorkflowDialog({
             </p>
           </div>
 
+          <fieldset
+            className="rounded-lg border border-gray-200 bg-white p-3"
+            data-testid={`admin-order-operational-packing-${group.operationalGroupKey}`}
+          >
+            <legend className="px-1 text-xs font-bold text-gray-700">بسته‌بندی فیزیکی این گروه</legend>
+            <div className="mt-1 grid gap-2 sm:grid-cols-2">
+              {packingChoices.map((mode) => {
+                const inputId = `opgroup-packing-${mode}-${group.operationalGroupKey}`;
+                const selected = packingMode === mode;
+                return (
+                  <label
+                    key={mode}
+                    htmlFor={inputId}
+                    className={`flex min-h-11 cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 ${
+                      selected ? "border-gray-400 bg-gray-50" : "border-gray-200 bg-white hover:bg-gray-50"
+                    } ${pending || retainedAttempt ? "cursor-default opacity-90" : ""}`}
+                  >
+                    <input
+                      id={inputId}
+                      type="radio"
+                      name={`opgroup-packing-${group.operationalGroupKey}`}
+                      className="mt-0.5 size-4 shrink-0"
+                      checked={selected}
+                      disabled={pending || Boolean(retainedAttempt)}
+                      onChange={() => setPackingMode(mode)}
+                      data-testid={`admin-order-operational-packing-${mode}-${group.operationalGroupKey}`}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block break-words text-sm font-bold text-gray-900">
+                        {mode === "separate" ? "مرسوله‌های جدا" : "یک بستهٔ مشترک"}
+                      </span>
+                      <span className="mt-0.5 block break-words text-[11px] leading-5 text-gray-600">
+                        {mode === "separate"
+                          ? "هر عضو مرسولهٔ مستقل با رهگیری و ارسال جداگانه دارد؛ بستهٔ مشترکی ساخته نمی‌شود."
+                          : "مرسوله‌های اعضا یک‌جا فرستاده می‌شوند و یک بستهٔ مشترک با یک اقدام ارسال دارد."}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-[11px] leading-5 text-gray-500">
+              {retainedAttempt
+                ? "این انتخاب در همان درخواست ثبت‌شده است و تغییر نمی‌کند."
+                : "گروه ارسال و هزینهٔ ثبت‌شده تغییری نمی‌کند؛ فقط بسته‌بندی فیزیکی انتخاب می‌شود."}
+            </p>
+          </fieldset>
+
           {rows.map((row) => {
             const rowParcelIds = new Set(row.parcels.map((parcel) => parcel.shipmentId));
             const rowReuse = reuseShipmentIds.filter((id) => rowParcelIds.has(id));
@@ -276,7 +353,9 @@ export function AdminOperationalGroupWorkflowDialog({
 
                 {row.parcels.length > 0 ? (
                   <fieldset className="mt-2">
-                    <legend className="mb-1 text-xs font-bold text-gray-700">افزودن به بستهٔ مشترک</legend>
+                    <legend className="mb-1 text-xs font-bold text-gray-700">
+                      {packingMode === "separate" ? "مرسوله‌های موجود این عضو" : "افزودن به بستهٔ مشترک"}
+                    </legend>
                     <ul className="space-y-1">
                       {row.parcels.map((parcel, index) => {
                         const inputId = `opgroup-reuse-${parcel.shipmentId}`;
@@ -321,7 +400,9 @@ export function AdminOperationalGroupWorkflowDialog({
                     <p className="mt-1 text-[11px] text-gray-500">
                       {rowReuse.length === 0
                         ? "هیچ مرسوله‌ای انتخاب نشده است."
-                        : `${rowReuse.length.toLocaleString("fa-IR")} مرسوله برای بستهٔ مشترک انتخاب شد.`}
+                        : packingMode === "separate"
+                          ? `${rowReuse.length.toLocaleString("fa-IR")} مرسوله به‌عنوان مرسولهٔ همین عضو ثبت می‌شود.`
+                          : `${rowReuse.length.toLocaleString("fa-IR")} مرسوله برای بستهٔ مشترک انتخاب شد.`}
                     </p>
                   </fieldset>
                 ) : null}
@@ -382,6 +463,14 @@ export function AdminOperationalGroupWorkflowDialog({
               role="status"
             >
               <p className="font-bold">درخواست ثبت‌شده نگه داشته شده است.</p>
+              <p
+                className="mt-1 leading-6"
+                data-testid={`admin-order-operational-retained-packing-${group.operationalGroupKey}`}
+              >
+                {retainedAttempt.packingMode === "separate"
+                  ? "بسته‌بندی ثبت‌شده: مرسوله‌های جدا"
+                  : "بسته‌بندی ثبت‌شده: یک بستهٔ مشترک"}
+              </p>
               {retainedAttempt.selections.length > 0 ? (
                 <ul className="mt-1 space-y-0.5">
                   {retainedAttempt.selections.map((selection) => (
@@ -437,15 +526,19 @@ export function AdminOperationalGroupWorkflowDialog({
                 ? `admin-order-operational-reconcile-retry-${group.operationalGroupKey}`
                 : `admin-order-operational-dialog-submit-${group.operationalGroupKey}`
             }
-            onClick={() => onSubmit({ selections, reuseShipmentIds })}
+            onClick={() => onSubmit({ selections, reuseShipmentIds, packingMode })}
           >
             {pending
               ? "در حال ارسال…"
               : retainedAttempt
                 ? "همگام‌سازی مجدد همین عملیات"
-                : consolidatingOnly
-                  ? "ایجاد بستهٔ مشترک"
-                  : "ایجاد مرسوله‌ها و بستهٔ مشترک"}
+                : packingMode === "separate"
+                  ? consolidatingOnly
+                    ? "ثبت مرسوله‌های جداگانه"
+                    : "ایجاد مرسوله‌های جداگانه"
+                  : consolidatingOnly
+                    ? "ایجاد بستهٔ مشترک"
+                    : "ایجاد مرسوله‌ها و بستهٔ مشترک"}
           </Button>
         </div>
       </div>

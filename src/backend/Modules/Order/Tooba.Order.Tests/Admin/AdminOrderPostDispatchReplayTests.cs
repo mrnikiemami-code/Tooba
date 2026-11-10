@@ -852,6 +852,11 @@ public sealed class AdminOrderPostDispatchReplayTests
             string shippingMethodCode,
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
+        public Task RecordCompletedSeparateAsync(
+            Guid occurrenceId,
+            string shippingMethodCode,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<Tooba.Order.Application.Admin.Operations.Ports.OperationalGroupOccurrenceRecord?> GetAsync(
             Guid occurrenceId,
             CancellationToken cancellationToken) =>

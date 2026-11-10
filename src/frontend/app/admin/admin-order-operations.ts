@@ -34,6 +34,8 @@ export type AdminOrderOperationAction = {
   returnRequestId: string | null;
   orderLineId?: string | null;
   consolidatedPackageId?: string | null;
+  /** TB-259: packing choices the server permits for this action (common/separate). */
+  packingModes?: string[] | null;
   requiredPermission: string;
   requiresConfirm: boolean;
   confirmMessageFa: string | null;
@@ -123,6 +125,8 @@ export type AdminOrderOperationRequest = {
   reuseShipmentIds?: string[] | null;
   /** TB-253-R3: prebound workflow occurrence; retry replays, a new id is a new operation. */
   operationalGroupOccurrenceId?: string | null;
+  /** TB-259: the reviewed physical packing choice of one operational group operation. */
+  operationalGroupPackingMode?: string | null;
   /** TB-258: per-line physical receipt facts of one origin receipt (only usable quantity is resendable). */
   receiptItems?: Array<{ orderLineId: string; quantity: number; condition: number }> | null;
 };
@@ -170,6 +174,11 @@ function mapAction(raw: unknown): AdminOrderOperationAction | null {
     returnRequestId: asString(row.returnRequestId) ?? asString(row.ReturnRequestId),
     orderLineId: asString(row.orderLineId) ?? asString(row.OrderLineId),
     consolidatedPackageId: asString(row.consolidatedPackageId) ?? asString(row.ConsolidatedPackageId),
+    packingModes: Array.isArray(row.packingModes ?? row.PackingModes)
+      ? ((row.packingModes ?? row.PackingModes) as unknown[])
+        .map((mode) => asString(mode))
+        .filter((mode): mode is string => Boolean(mode))
+      : null,
     requiredPermission: asString(row.requiredPermission) ?? asString(row.RequiredPermission) ?? "",
     requiresConfirm: Boolean(row.requiresConfirm ?? row.RequiresConfirm),
     confirmMessageFa: asString(row.confirmMessageFa) ?? asString(row.ConfirmMessageFa),
@@ -336,6 +345,7 @@ export async function executeAdminOrderOperation(
         operationalGroupShippingGroupIds: body.operationalGroupShippingGroupIds ?? null,
         reuseShipmentIds: body.reuseShipmentIds ?? null,
         operationalGroupOccurrenceId: body.operationalGroupOccurrenceId ?? null,
+        operationalGroupPackingMode: body.operationalGroupPackingMode ?? null,
         receiptItems: body.receiptItems?.map((line) => ({
           orderLineId: line.orderLineId,
           quantity: line.quantity,

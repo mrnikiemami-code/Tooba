@@ -386,13 +386,44 @@ public sealed partial class AdminOrderOperationsOrchestrator
         Guid actorUserId,
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken) =>
-        RunOperationAsync(() => RunProjectedCoreAsync(
+        RunOperationAsync(() => RunOperationalGroupAsync(checkoutId, actorUserId, request, cancellationToken));
+
+    /// <summary>
+    /// TB-259: exact recorded-occurrence reconciliation BEFORE the fresh readiness projection.
+    /// </summary>
+    /// <remarks>
+    /// The workflow re-checks the current actor, the checkout and the exact group/envelope itself, so this
+    /// seam can never be used as an authority bypass. A first attempt, a new occurrence or any changed
+    /// request still passes the ordinary projected-action gate.
+    /// </remarks>
+    private async Task<object> RunOperationalGroupAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        EnsureCancelledDoesNotBlock(group, "prepare_operational_group");
+
+        var reconciled = await _operationalGroupWorkflow.TryReconcileRecordedAsync(
+            checkoutId,
+            request,
+            actorUserId,
+            cancellationToken);
+        if (reconciled is not null)
+        {
+            return reconciled;
+        }
+
+        return await RunProjectedCoreAsync(
             checkoutId,
             actorUserId,
             request,
             "prepare_operational_group",
             _ => PrepareOperationalGroupCoreAsync(checkoutId, request, actorUserId, cancellationToken),
-            cancellationToken));
+            cancellationToken);
+    }
 
     public Task<Result<object>> CancelConsolidatedPackageAsync(
         Guid checkoutId,

@@ -498,15 +498,21 @@ public sealed partial class AdminOrderOperationsOrchestrator
         {
             actions.Add(Action(
                 "prepare_operational_group",
-                "ایجاد مرسوله‌ها و بستهٔ مشترک",
-                "Prepare group parcels and common package",
+                "آماده‌سازی ارسال گروه",
+                "Prepare group shipment",
                 null,
                 null,
                 null,
                 null,
                 permission,
                 true,
-                "مرسوله‌های اعضای این گروه و بستهٔ مشترک آن‌ها ایجاد شود؟"));
+                "مرسوله‌های اعضای این گروه آماده شوند؟",
+                packingModes:
+                [
+                    // TB-259: the server offers BOTH physical packing choices for one compatible group.
+                    OperationalGroupPackingModes.Common,
+                    OperationalGroupPackingModes.Separate,
+                ]));
         }
 
         if (canOfferCreate)

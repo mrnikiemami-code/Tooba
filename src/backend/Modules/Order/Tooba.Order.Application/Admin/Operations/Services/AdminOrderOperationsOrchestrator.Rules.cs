@@ -591,7 +591,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
         bool requiresConfirm,
         string? confirmMessageFa,
         Guid? orderLineId = null,
-        Guid? consolidatedPackageId = null) =>
+        Guid? consolidatedPackageId = null,
+        IReadOnlyList<string>? packingModes = null) =>
         new(
             code,
             labelFa,
@@ -604,5 +605,6 @@ public sealed partial class AdminOrderOperationsOrchestrator
             requiresConfirm,
             confirmMessageFa,
             orderLineId,
-            consolidatedPackageId);
+            consolidatedPackageId,
+            packingModes);
 }

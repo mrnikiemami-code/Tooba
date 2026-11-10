@@ -21,11 +21,32 @@ export type OperationalGroupOccurrenceSelection = {
   quantity: number;
 };
 
+/**
+ * TB-259: the operator's reviewed physical packing choice inside ONE compatible group.
+ * «common» creates the constituent parcels and ONE common package; «separate» creates the constituent
+ * parcels as independent shipments. Both are lawful, deliberate choices for the same group.
+ */
+export type OperationalGroupPackingMode = "common" | "separate";
+
+export const OPERATIONAL_GROUP_PACKING_MODES: readonly OperationalGroupPackingMode[] = [
+  "common",
+  "separate",
+];
+
+/** Normalizes a stored/typed token; anything unknown falls back to the historical common package. */
+export function normalizeOperationalGroupPackingMode(
+  value: string | null | undefined,
+): OperationalGroupPackingMode {
+  return String(value ?? "").trim().toLowerCase() === "separate" ? "separate" : "common";
+}
+
 /** The exact reviewed request persisted before the first mutation. */
 export type OperationalGroupOccurrenceRequest = {
   members: string[];
   selections: OperationalGroupOccurrenceSelection[];
   reuseShipmentIds: string[];
+  /** TB-259: part of the immutable envelope, so changing it is a genuinely different operation. */
+  packingMode: OperationalGroupPackingMode;
 };
 
 /** Durable client record of one prebound workflow occurrence. */
@@ -54,6 +75,12 @@ export type OperationalGroupAttemptResolution = {
    * recorded request/occurrence are returned UNCHANGED (nothing is minted or overwritten).
    */
   blockedByRetainedAttempt: boolean;
+  /**
+   * TB-259: true only when the complete reviewed envelope is provably retained for reload/remount.
+   * A NEW operation whose envelope could not be persisted must not send: a lost response would then be
+   * indistinguishable from a fresh operation and could remint a second allocation.
+   */
+  durable: boolean;
 };
 
 const VERSION = "v2";
@@ -131,6 +158,9 @@ export function operationalGroupRequestFingerprint(
     members: canonicalIds(request.members),
     selections: canonicalSelections(request.selections).map((s) => [s.orderLineId, s.quantity]),
     reuse: canonicalIds(request.reuseShipmentIds),
+    // TB-259: the packing choice is part of the reviewed envelope, so switching it is a new operation
+    // and can never be silently reconciled into the other shape.
+    packing: normalizeOperationalGroupPackingMode(request.packingMode),
   });
   // FNV-1a 64-bit-ish hash in two 32-bit lanes; collision-free enough for a session key and never a
   // security boundary (the server owns authority).
@@ -170,10 +200,12 @@ export function writeOperationalGroupOccurrence(
       members: [],
       selections: [],
       reuseShipmentIds: [],
+      packingMode: "common",
     }),
     members: existing?.members ?? [],
     selections: existing?.selections ?? [],
     reuseShipmentIds: existing?.reuseShipmentIds ?? [],
+    packingMode: existing?.packingMode ?? "common",
     attempts: existing?.attempts ?? 0,
     lastFailedAtUtc: existing?.lastFailedAtUtc ?? null,
     lastErrorCode: existing?.lastErrorCode ?? null,
@@ -220,6 +252,7 @@ export function readOperationalGroupAttempt(
       members: canonicalIds(parsed.members ?? []),
       selections,
       reuseShipmentIds: canonicalIds(parsed.reuseShipmentIds ?? []),
+      packingMode: normalizeOperationalGroupPackingMode(parsed.packingMode),
       attempts: Number.isFinite(parsed.attempts) ? Math.max(0, Number(parsed.attempts)) : 0,
       lastFailedAtUtc: coalesce(parsed.lastFailedAtUtc) || null,
       lastErrorCode: coalesce(parsed.lastErrorCode) || null,
@@ -234,30 +267,35 @@ export function readOperationalGroupAttempt(
   }
 }
 
-/** Persists the COMPLETE prebound envelope BEFORE the first mutation. */
-export function writeOperationalGroupAttempt(attempt: OperationalGroupAttempt): void {
+/**
+ * Persists the COMPLETE prebound envelope BEFORE the first mutation.
+ * Returns true only when the exact serialized envelope was written AND read back: anything else is
+ * "not durable" and the caller must refuse a NEW send rather than risk a remint after reload.
+ */
+export function writeOperationalGroupAttempt(attempt: OperationalGroupAttempt): boolean {
   if (!attempt.checkoutId
     || !attempt.operationalGroupKey
     || !attempt.occurrenceId
     || !canUseSessionStorage()) {
-    return;
+    return false;
   }
   try {
-    sessionStorage.setItem(
-      storageKey(
-        attempt.checkoutId,
-        attempt.operationalGroupKey,
-        normalizeScopeKey(attempt.scopeKey),
-      ),
-      JSON.stringify({
-        ...attempt,
-        members: canonicalIds(attempt.members),
-        selections: canonicalSelections(attempt.selections),
-        reuseShipmentIds: canonicalIds(attempt.reuseShipmentIds),
-      }),
+    const key = storageKey(
+      attempt.checkoutId,
+      attempt.operationalGroupKey,
+      normalizeScopeKey(attempt.scopeKey),
     );
+    const serialized = JSON.stringify({
+      ...attempt,
+      members: canonicalIds(attempt.members),
+      selections: canonicalSelections(attempt.selections),
+      reuseShipmentIds: canonicalIds(attempt.reuseShipmentIds),
+      packingMode: normalizeOperationalGroupPackingMode(attempt.packingMode),
+    });
+    sessionStorage.setItem(key, serialized);
+    return sessionStorage.getItem(key) === serialized;
   } catch {
-    /* quota / private mode — the in-memory attempt remains authoritative for this mount */
+    return false;
   }
 }
 
@@ -294,14 +332,22 @@ export function resolveOperationalGroupAttempt(input: {
   checkoutId: string;
   operationalGroupKey: string;
   scopeKey: string | null | undefined;
-  request: OperationalGroupOccurrenceRequest;
+  request: Omit<OperationalGroupOccurrenceRequest, "packingMode"> & {
+    packingMode?: OperationalGroupPackingMode;
+  };
 }): OperationalGroupAttemptResolution {
   const { checkoutId, operationalGroupKey } = input;
   const scopeKey = normalizeScopeKey(input.scopeKey);
   const members = canonicalIds(input.request.members);
   const selections = canonicalSelections(input.request.selections);
   const reuseShipmentIds = canonicalIds(input.request.reuseShipmentIds);
-  const fingerprint = operationalGroupRequestFingerprint({ members, selections, reuseShipmentIds });
+  const packingMode = normalizeOperationalGroupPackingMode(input.request.packingMode);
+  const fingerprint = operationalGroupRequestFingerprint({
+    members,
+    selections,
+    reuseShipmentIds,
+    packingMode,
+  });
 
   const recorded = readOperationalGroupAttempt(checkoutId, operationalGroupKey, scopeKey);
   if (recorded) {
@@ -314,6 +360,7 @@ export function resolveOperationalGroupAttempt(input: {
         resumingRecordedAttempt: false,
         changedRequest: true,
         blockedByRetainedAttempt: true,
+        durable: true,
       };
     }
 
@@ -321,13 +368,16 @@ export function resolveOperationalGroupAttempt(input: {
       ...recorded,
       attempts: recorded.attempts + 1,
     };
-    writeOperationalGroupAttempt(resumed);
+    const durable = writeOperationalGroupAttempt(resumed);
     return {
       occurrenceId: resumed.occurrenceId,
       attempt: resumed,
       resumingRecordedAttempt: true,
       changedRequest: false,
       blockedByRetainedAttempt: false,
+      // The recorded envelope was READ BACK from storage, so it is already durable; the refreshed
+      // attempt counter is cosmetic and cannot make an otherwise recorded operation unsafe.
+      durable: true,
     };
   }
 
@@ -340,11 +390,12 @@ export function resolveOperationalGroupAttempt(input: {
     members,
     selections,
     reuseShipmentIds,
+    packingMode,
     attempts: 1,
     lastFailedAtUtc: null,
     lastErrorCode: null,
   };
-  writeOperationalGroupAttempt(attempt);
+  const durable = writeOperationalGroupAttempt(attempt);
 
   return {
     occurrenceId: attempt.occurrenceId,
@@ -352,6 +403,7 @@ export function resolveOperationalGroupAttempt(input: {
     resumingRecordedAttempt: false,
     changedRequest: false,
     blockedByRetainedAttempt: false,
+    durable,
   };
 }
 
