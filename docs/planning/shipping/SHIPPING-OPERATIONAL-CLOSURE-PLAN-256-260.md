@@ -1,4 +1,13 @@
-# CURRENT —259 ACCEPT within issue4 scope; FINAL planned task260 ISSUED —2026-11-10
+﻿# CURRENT — 260-R1 PASS: the due queue is one row per physical work unit — 2026-11-10
+
+Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb260r1-relational.txt,tb260r1-queue-api.txt}.
+Stage 260-R1 repaired the issue-5 defect found in 260: the queue had one row per `FulfillmentUnit` (a seller summary) with a single whole-unit `pending` flag and `Earliest(plans)` as its group, which collapsed distinct parcels, duplicated a consolidated package across sellers, lent one group's plan to a sibling and marked Created/tracked parcels «no work». Now `AdminFulfillmentWorkUnitProjection` emits exactly one row per physical unit — unallocated accepted `Group`, existing `Parcel` (incl. TB-259 separate and TB-258 resend parcels), ONE active `Package` across its locked members with no child rows, and a `Fulfillment` history row only when nothing physical is open — identified solely by `AdminFulfillmentWorkUnitKinds.Key`. Plans and pending/in-transit flags bind to the exact group/parcel/package facts (no cross-group lending), each row reports its own scope quantity/remainder, the single action entry carries an exact `shippingGroupId`/`shipmentId`/`packageId` that the shared route resolves or reports unresolved, and `readinessOf` follows the focused unit so a Created parcel is real work. No migration, no new page, no second operational UI; TB-256 scheduling, 257 quantity/tracking, 258 exception/resend capacity, 259 packing choice, reservations, money and accepted evidence untouched.
+Proof: pure 5/5; real `tooba_alpha` relational 5/5 (A defect case + A2 no-lending; B distinct keys/paging; C one package row/no child rows/separate parcels; D no phantom remainder); FE queue contract 6/6 + shared view mount 5/5 + NEW mounted real route 3/3; live canonical read-only query `total=919`, page1 `Group 8 / Parcel 11 / Package 1`, counts `670/5/5/0/25/640/249`, `dispatch_today → 5`; typecheck 0; production build 0 (`MoBhYSN-pLcFMKWSta7ls`); solution build 0 errors; publish 0. Host PID 20052 (`/health`+`/health/ready` 200), FE PID 28184 (`/fa` 200).
+Ledger: save prerequisite CLOSED within scope; issue1 tracking FIXED 257; issue2 remaining quantity FIXED 257; issue3 non-delivery/return/resend ACCEPTED 258-R3; issue4 common-or-separate packing ACCEPTED 259 (4/5); **issue5 repaired by 260-R1 — pending Architect review**. No 261, no automatic next. Final user handoff after this review.
+Canonical only: `tooba_alpha` @ 5432, FE3000 → Host5088, SingleStore / `store-alpha`; no disposable/Docker/15433 DB, no edition switch; user business rows read-only; task-labelled `TB260R1-*` fixtures through production paths; 255 parked; live Tipax deferred; keys and CapturedPreview preserved.
+
+# SUPERSEDED —259 ACCEPT within issue4 scope; task260 ISSUED —2026-11-10
 
 Read docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/ARCHITECT-REVIEW.md.
 Source/evidence review bb18f62d294e81ce86b8a09ae3eb8e2b5c84c873 accepts immutable packing choice and explicit separate Completed without package; common path/history preserved. No live Marketplace checkout/visual/provider acceptance claimed.
@@ -250,3 +259,4 @@ Necessary additive local-dev migrations authorized within the active issued task
 Preserve DataProtection and local CapturedPreview ON/7 dates, checked-in OFF.
 Focused tests once, relational proof for new durable invariants; no screenshots. Live authorized DOM read-only, never shell200 as acceptance. Controlled fixture writes must not hit user orders.
 TB185 paused/default-OFF; retain 238 unknown22001, 227 mobile note, 225-R1 lost local edits.
+

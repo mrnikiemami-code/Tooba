@@ -23,6 +23,8 @@ export default async function AdminOrderOperationsPage({
       checkoutId={checkoutId}
       fulfillmentId={pick("fulfillmentId")}
       shippingGroupId={pick("shippingGroupId")}
+      shipmentId={pick("shipmentId")}
+      packageId={pick("packageId")}
       fromQueue={pick("from") === "queue"}
       backFilter={pick("filter")}
     />

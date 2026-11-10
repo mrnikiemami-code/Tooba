@@ -1,4 +1,13 @@
-# CURRENT — 260 WORKER RESULT PASS: durable due dispatch queue + finance-free shared operational order view — 2026-11-10
+﻿# CURRENT — 260-R1 WORKER RESULT PASS: physical work rows, own plan, exact locator, truthful readiness — 2026-11-10
+
+Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb260r1-relational.txt,tb260r1-queue-api.txt}.
+Status **PASS** within the issued repair scope, decision **ONE_ROW_PER_PHYSICAL_WORK_UNIT_WITH_ITS_OWN_ACCEPTED_PLAN_EXACT_GROUP_PARCEL_PACKAGE_LOCATOR_AND_TRUTHFUL_TARGET_READINESS** — NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT the five-defect completion. Base `a5de61258`; code/evidence SHA in the task commits; HEAD == origin/main after the ledger commit.
+Issue5 repair landed: `AdminFulfillmentWorkUnitProjection` now emits ONE row per physical work unit — unallocated accepted `Group`, existing `Parcel` (including TB-259 separate and TB-258 resend parcels), ONE active `Package` across its locked members (no child rows), and a `Fulfillment` history row only when nothing physical is open. `AdminFulfillmentWorkUnitKinds.Key` (`group:`/`parcel:`/`package:`/`fulfillment:`) is the only row identity for the grid, sort tie-break, paging and row test id. Plans bind by `(SellerOrderId, ShippingGroupId)` so a dispatched sibling's plan can never make a Created sibling due and a Created resend stays `Unspecified`; every row reports its own scope quantity (`packed − shipped − open Created`). The single «عملیات ارسال» entry carries the exact `shippingGroupId`/`shipmentId`/`packageId`; the shared route resolves it or reports it unresolved, and `readinessOf` follows the focused unit, so a Created/tracked parcel is real work, never «کار فیزیکی باقی نمانده». The fulfillment-level kebab is no longer offered from scoped rows (one action owner). No migration, no new page, no second operational UI; TB-256/257/258/259 authority, money and accepted evidence untouched.
+Proof: pure 5/5; real `tooba_alpha` relational 5/5 (A defect case `targetB=groupB` + A2 no-lending; B `2` distinct keys/paging `2x1`; C `1` package row / `0` child rows / separate `2`; D `4` rows with no phantom remainder); frontend queue contract 6/6, shared view mount 5/5, NEW mounted real route 3/3; live canonical read-only query `total=919`, page1 20 distinct keys (Group 8 / Parcel 11 / Package 1), counts `670/5/5/0/25/640/249`, `dispatch_today → 5`, paging 1-size distinct; typecheck 0; build 0 (BUILD_ID `MoBhYSN-pLcFMKWSta7ls`); solution build 0 errors; publish 0; Host PID **20052** (`/health`+`/health/ready` 200, SingleStore), FE PID **28184** (`/fa` 200, old chunk 404). Ledger: issues1–2 accepted 257, issue3 accepted 258-R3, issue4 accepted 259 (4/5), **issue5 repaired 260-R1 pending Architect review**; 260 remains without user acceptance; 255 parked; Tipax deferred.
+STOP_FOR_ARCHITECT; automaticNext NONE.
+
+# SUPERSEDED — 260 WORKER RESULT PASS: durable due dispatch queue + finance-free shared operational order view — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb260-relational.txt,dom/tb260-dom.json}.
@@ -4135,6 +4144,7 @@ PRODUCT_FULLY_READY = NO
 ```
 
 Evidence for current task: `docs/evidence/TB-P07-T001-R5/` (Admin+Seller UI/UX polish; Shopeiva vendor fidelity; DataGrid/AC UX; manual visual supervision). Flags: T001/R1/R2/R3/R4 = SUPERSEDED; R5 = AWAITING_ARCHITECT_ACCEPT; `CURRENT_FOCUS` = UI_UX_ONLY; `ADMIN_UI` = PRIORITY_1; `SELLER_UI` = PRIORITY_2; `BACKEND_FEATURE_EXPANSION` = FROZEN; `CATEGORY_ATTRIBUTE_*` / `PRODUCT_VARIANT_AXES` / `VARIANT_COMBINATION_FOUNDATION` = LIVE (kept); `FULL_VARIANT_MATRIX` = DEFERRED; `FACETED_SEARCH_INTEGRATION` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Do **not** claim `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, `PRODUCTION_GO_LIVE_READY`, `SELLER_PANEL_COMPLETE`, or `FULL_VARIANT_MATRIX_LIVE`.
+
 
 
 

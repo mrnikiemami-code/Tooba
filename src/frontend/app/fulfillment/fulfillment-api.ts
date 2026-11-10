@@ -102,7 +102,27 @@ export interface FulfillmentListRow {
   nextStepLabelFa: string;
   nextStepBlockerFa: string | null;
   pendingDispatch: boolean;
+  /**
+   * TB-260-R1: the row IS one physical work unit, so `id` is the stable discriminated work-unit key
+   * (`group:{id}` / `parcel:{id}` / `package:{id}` / `fulfillment:{id}`) — never a seller order id that two
+   * rows of the same order could share. `workUnitState` is that unit's own physical state.
+   */
+  workUnitKey: string;
+  workUnitKind: string;
+  workUnitState: string;
+  /** Exact parcel locator when this row is one physical parcel. */
+  targetShipmentId: string | null;
+  /** Exact consolidated-package locator when this row is one active common package. */
+  targetPackageId: string | null;
+  targetPackageNumber: string | null;
+  /** Lines/quantity physically owned by THIS row's scope (never the whole seller order). */
+  scopeLineCount: number;
+  scopeQuantity: number;
+  scopeRemainingQuantity: number;
 }
+
+/** TB-260-R1: the physical scopes a queue row can own. */
+export type FulfillmentWorkUnitKind = "group" | "parcel" | "package" | "fulfillment";
 
 /** TB-260: honest counts of the whole filtered queue set (not of the current page). */
 export type { FulfillmentQueueCounts } from "./fulfillment-work-queue-dispatch.ts";
@@ -150,10 +170,18 @@ export const FULFILLMENT_BULK_ACTION_LABELS: Record<string, { fa: string; en: st
 };
 
 /** نمایش مقدار صف کار بدون صفر ذخیره‌سازی و بدون جمع واحدهای ناهمگن به‌عنوان یک واحد. */
-export function formatFulfillmentQueueQuantity(row: Pick<FulfillmentListRow, "itemCount" | "quantityOrdered" | "quantityShipped">): string {
-  const lines = row.itemCount.toLocaleString("fa-IR");
-  const ordered = formatQuantityDisplay(row.quantityOrdered);
-  const remaining = formatQuantityDisplay(Math.max(0, row.quantityOrdered - row.quantityShipped));
+export function formatFulfillmentQueueQuantity(
+  row: Pick<FulfillmentListRow, "itemCount" | "quantityOrdered" | "quantityShipped">
+    & Partial<Pick<FulfillmentListRow, "scopeLineCount" | "scopeQuantity" | "scopeRemainingQuantity">>,
+): string {
+  // TB-260-R1: a physical work-unit row reports ITS OWN lines/quantity/remainder; the whole seller order's
+  // totals would double-count the same quantity across two parcels of one order.
+  const scoped = (row.scopeLineCount ?? 0) > 0;
+  const lines = (scoped ? row.scopeLineCount! : row.itemCount).toLocaleString("fa-IR");
+  const ordered = formatQuantityDisplay(scoped ? row.scopeQuantity! : row.quantityOrdered);
+  const remaining = formatQuantityDisplay(
+    scoped ? row.scopeRemainingQuantity ?? 0 : Math.max(0, row.quantityOrdered - row.quantityShipped),
+  );
   return `${lines} قلم · مقدار ${ordered} · باقی ${remaining}`;
 }
 
@@ -309,8 +337,15 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
       const availableActionCodes = Array.isArray(codesRaw)
         ? codesRaw.map((c) => text(c)).filter(Boolean)
         : [];
+      const workUnitKey = text(prop(item, "workUnitKey", "WorkUnitKey"));
+      // TB-260-R1: the server token is PascalCase ("Group"/"Parcel"/…); the client compares ONE canonical
+      // lowercase value so a kind check can never silently fail on casing.
+      const workUnitKind = text(prop(item, "workUnitKind", "WorkUnitKind"), "group").toLowerCase();
       return [{
-        id: fulfillmentId,
+        // TB-260-R1: the physical work-unit key IS the row identity. Two parcels of one seller order must not
+        // share an id (a grid keyed by FulfillmentId would collapse them); FulfillmentId is only a fallback
+        // for payloads that predate work-unit scoping.
+        id: workUnitKey || fulfillmentId,
         fulfillmentId,
         sellerOrderId: text(prop(item, "sellerOrderId", "SellerOrderId")),
         checkoutId: text(prop(item, "checkoutId", "CheckoutId")),
@@ -346,6 +381,15 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
         nextStepLabelFa: text(prop(item, "nextStepLabelFa", "NextStepLabelFa")),
         nextStepBlockerFa: nullableText(prop(item, "nextStepBlockerFa", "NextStepBlockerFa")),
         pendingDispatch: prop(item, "pendingDispatch", "PendingDispatch") === true,
+        workUnitKey: workUnitKey || `fulfillment:${fulfillmentId}`,
+        workUnitKind,
+        workUnitState: text(prop(item, "workUnitState", "WorkUnitState")),
+        targetShipmentId: nullableText(prop(item, "targetShipmentId", "TargetShipmentId")),
+        targetPackageId: nullableText(prop(item, "targetPackageId", "TargetPackageId")),
+        targetPackageNumber: nullableText(prop(item, "targetPackageNumber", "TargetPackageNumber")),
+        scopeLineCount: number(prop(item, "scopeLineCount", "ScopeLineCount")),
+        scopeQuantity: number(prop(item, "scopeQuantity", "ScopeQuantity")),
+        scopeRemainingQuantity: number(prop(item, "scopeRemainingQuantity", "ScopeRemainingQuantity")),
       }];
     }
 
@@ -391,6 +435,15 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
       nextStepLabelFa: "",
       nextStepBlockerFa: null,
       pendingDispatch: false,
+      workUnitKey: `fulfillment:${snapshot.fulfillmentId}`,
+      workUnitKind: "fulfillment",
+      workUnitState: snapshot.status,
+      targetShipmentId: null,
+      targetPackageId: null,
+      targetPackageNumber: null,
+      scopeLineCount: snapshot.items.length,
+      scopeQuantity: snapshot.items.reduce((sum, row) => sum + row.quantityOrdered, 0),
+      scopeRemainingQuantity: 0,
     }];
   });
 }

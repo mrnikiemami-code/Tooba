@@ -79,6 +79,47 @@ const shippingMethodEnumOptions = [
   { value: "in_person", label: "تحویل حضوری" },
 ];
 
+/**
+ * TB-260-R1: the row's scope, in operator words. A seller order can now appear several times (one row per
+ * physical work unit), so the row must say WHAT it owns — an unallocated group, one parcel or one package.
+ */
+const WORK_UNIT_KIND_LABELS: Record<string, string> = {
+  group: "گروه ارسال",
+  parcel: "مرسوله",
+  package: "بستهٔ تجمیعی",
+  fulfillment: "سابقهٔ ارسال",
+};
+
+const WORK_UNIT_STATE_LABELS: Record<string, string> = {
+  Created: "در انتظار ارسال به حامل",
+  Dispatched: "ارسال‌شده به حامل",
+  InTransit: "در مسیر تحویل",
+  Delivered: "تحویل‌شده",
+  Failed: "ناموفق",
+  Cancelled: "لغو‌شده",
+  NonDelivered: "عدم تحویل",
+  Returning: "در حال برگشت به مبدأ",
+  Returned: "برگشت به مبدأ",
+};
+
+/** The physical state of THIS work unit (never the whole seller order's aggregate status). */
+function workUnitStateLabel(row: FulfillmentListRow): string {
+  const state = row.workUnitState || "";
+  if (state && WORK_UNIT_STATE_LABELS[state]) return WORK_UNIT_STATE_LABELS[state];
+  if (row.workUnitKind === "group") {
+    return row.workUnitState === "Ungrouped" ? "بدون گروه پذیرش" : "آمادهٔ اقدام عملیاتی";
+  }
+  return state || formatFulfillmentStatus(row.status);
+}
+
+/** What this row owns, in operator words — the row is ONE physical unit, not a seller order. */
+function workUnitKindLabel(row: FulfillmentListRow): string {
+  const kind = WORK_UNIT_KIND_LABELS[row.workUnitKind] ?? row.workUnitKind;
+  if (row.targetPackageNumber) return `${kind} ${row.targetPackageNumber}`;
+  if (row.workUnitKind === "group" && !row.targetShippingGroupId) return `${kind} (بدون گروه پذیرش)`;
+  return kind;
+}
+
 const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
   {
     id: "open-operations",
@@ -86,7 +127,11 @@ const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
     icon: PackageCheck,
     href: (row) => {
       const query = new URLSearchParams({ fulfillmentId: row.fulfillmentId, from: "queue" });
+      // TB-260-R1: the locator is the EXACT physical target of this row — a group, a parcel or a package.
+      // Sending only the seller's earliest group is how the wrong work used to be opened.
       if (row.targetShippingGroupId) query.set("shippingGroupId", row.targetShippingGroupId);
+      if (row.targetShipmentId) query.set("shipmentId", row.targetShipmentId);
+      if (row.targetPackageId) query.set("packageId", row.targetPackageId);
       // Carry the active quick filter so «بازگشت به صف کار» returns to the same queue view.
       if (typeof window !== "undefined") {
         const active = new URLSearchParams(window.location.search).get("filter");
@@ -94,14 +139,14 @@ const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
       }
       return `/admin/orders/${row.checkoutId}/operations?${query.toString()}`;
     },
-    testId: (row) => `admin-fulfillment-open-operations-${row.fulfillmentId}`,
+    testId: (row) => `admin-fulfillment-open-operations-${row.id}`,
   },
   {
     id: "view-order",
     label: "مشاهده سفارش",
     icon: Eye,
     href: (row) => `/admin/orders/${row.checkoutId}`,
-    testId: (row) => `admin-fulfillment-view-order-${row.fulfillmentId}`,
+    testId: (row) => `admin-fulfillment-view-order-${row.id}`,
   },
 ];
 
@@ -244,9 +289,24 @@ export function AdminFulfillmentWorkQueueScreen() {
       id: "status",
       header: "وضعیت عملیاتی",
       accessor: (row) => row.status,
-      cell: (row) => (
-        <span className={fulfillmentStatusBadgeClass(row.status)}>{formatFulfillmentStatus(row.status)}</span>
-      ),
+      cell: (row) => {
+        // TB-260-R1: the badge describes THIS physical unit. A seller order can now have several rows, so a
+        // package/parcel row must never reprint the seller-wide status (a Created parcel under a Dispatched
+        // fulfillment would otherwise look dispatched, and «موعد ارسال» would contradict the badge).
+        const history = row.workUnitKind === "fulfillment";
+        return (
+          <span className="flex flex-col gap-0.5" data-testid={`admin-fulfillment-work-unit-${row.id}`}>
+            <span className={fulfillmentStatusBadgeClass(history ? row.status : row.workUnitState || row.status)}>
+              {history ? formatFulfillmentStatus(row.status) : workUnitStateLabel(row)}
+            </span>
+            {!history && row.workUnitKind ? (
+              <span className="text-[11px] text-muted" data-testid={`admin-fulfillment-work-scope-${row.id}`}>
+                {workUnitKindLabel(row)}
+              </span>
+            ) : null}
+          </span>
+        );
+      },
       width: 150,
       minWidth: 120,
       filterKind: "status",
@@ -269,7 +329,7 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "موعد ارسال",
       accessor: (row) => row.plannedHandoffDate ?? "",
       cell: (row) => (
-        <span className="block break-words text-xs font-semibold" data-testid={`admin-fulfillment-plan-${row.fulfillmentId}`}>
+        <span className="block break-words text-xs font-semibold" data-testid={`admin-fulfillment-plan-${row.id}`}>
           {formatPlannedHandoff(row)}
         </span>
       ),
@@ -282,7 +342,7 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "تحویل مشتری",
       accessor: (row) => row.customerReceivingDate ?? "",
       cell: (row) => (
-        <span className="block break-words text-xs" data-testid={`admin-fulfillment-receiving-${row.fulfillmentId}`}>
+        <span className="block break-words text-xs" data-testid={`admin-fulfillment-receiving-${row.id}`}>
           {formatCustomerReceiving(row)}
         </span>
       ),
@@ -295,7 +355,7 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "اقدام بعدی",
       accessor: (row) => row.nextStepLabelFa,
       cell: (row) => (
-        <span className="block break-words text-xs" data-testid={`admin-fulfillment-next-step-${row.fulfillmentId}`}>
+        <span className="block break-words text-xs" data-testid={`admin-fulfillment-next-step-${row.id}`}>
           {row.nextStepLabelFa ? (
             <span className="font-semibold">{row.nextStepLabelFa}</span>
           ) : (
@@ -368,9 +428,15 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "عملیات",
       accessor: () => "",
       cell: (row) => (
-        <span className="inline-flex items-center gap-1" data-testid={`admin-fulfillment-ops-${row.fulfillmentId}`}>
+        <span className="inline-flex items-center gap-1" data-testid={`admin-fulfillment-ops-${row.id}`}>
           <AppGridRowActionsCell row={row} actions={viewActions} compact />
-          {row.availableActionCodes.length > 0 ? (
+          {/*
+            TB-260-R1: the per-fulfillment action menu is a fulfilment-level command surface. A row that owns only
+            ONE group / parcel / package must not offer it, otherwise a scoped row could execute a sibling's
+            operation (or the wrong parcel's dispatch). Such a row's single action owner is «عملیات ارسال», which
+            opens the exact target. History rows (kind = fulfillment) keep the menu when the server allows actions.
+          */}
+          {row.workUnitKind === "fulfillment" && row.availableActionCodes.length > 0 ? (
             <AdminOrderOperationsMenu
               checkoutId={row.checkoutId}
               label="عملیات"
@@ -379,7 +445,7 @@ export function AdminFulfillmentWorkQueueScreen() {
               scope="fulfillment-queue"
               fulfillmentId={row.fulfillmentId}
               onCompleted={refresh}
-              testId={`admin-fulfillment-kebab-${row.fulfillmentId}`}
+              testId={`admin-fulfillment-kebab-${row.id}`}
             />
           ) : null}
         </span>

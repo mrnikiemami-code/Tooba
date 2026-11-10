@@ -17,7 +17,7 @@ import {
   mapFulfillmentQueueCounts,
   normalizeDispatchToken,
 } from "./fulfillment-work-queue-dispatch.ts";
-import { mapFulfillmentList } from "./fulfillment-api.ts";
+import { mapFulfillmentList, formatFulfillmentQueueQuantity } from "./fulfillment-api.ts";
 
 const ROW = {
   fulfillmentId: "11111111-1111-1111-1111-111111111111",
@@ -130,4 +130,64 @@ test("quick filters use the exact ids the Fulfillment module declares", () => {
     plannedHandoffWindow: "10:00–13:00",
     plannedHandoffTimeZone: "Asia/Tehran",
   }), "2026-11-10 · 10:00–13:00 (Asia/Tehran)");
+});
+
+test("TB-260-R1: two physical work units of ONE seller order keep distinct row ids and exact locators", () => {
+  const parcel = {
+    ...ROW,
+    workUnitKey: "parcel:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    workUnitKind: "Parcel",
+    workUnitState: "Created",
+    targetShipmentId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    targetShippingGroupId: "55555555-5555-5555-5555-555555555555",
+    targetPackageId: null,
+    targetPackageNumber: null,
+    scopeLineCount: 1,
+    scopeQuantity: 1,
+    scopeRemainingQuantity: 0,
+  };
+  const packageRow = {
+    ...ROW,
+    workUnitKey: "package:bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    workUnitKind: "Package",
+    workUnitState: "Created",
+    targetShipmentId: null,
+    targetShippingGroupId: null,
+    targetPackageId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    targetPackageNumber: "MP-BBBBBBBBBBBB",
+    scopeLineCount: 2,
+    scopeQuantity: 2,
+    scopeRemainingQuantity: 0,
+  };
+
+  const rows = mapFulfillmentList([parcel, packageRow]);
+  assert.equal(rows.length, 2);
+  assert.notEqual(rows[0]!.id, rows[1]!.id);
+  assert.equal(rows[0]!.id, "parcel:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+  assert.equal(rows[1]!.id, "package:bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+  // The server token is PascalCase; the client keeps ONE canonical lowercase kind for its checks.
+  assert.equal(rows[0]!.workUnitKind, "parcel");
+  assert.equal(rows[1]!.workUnitKind, "package");
+  assert.equal(rows[0]!.fulfillmentId, rows[1]!.fulfillmentId);
+  assert.equal(rows[0]!.targetShipmentId, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+  assert.equal(rows[1]!.targetPackageId, "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+  assert.equal(rows[1]!.targetPackageNumber, "MP-BBBBBBBBBBBB");
+});
+
+test("TB-260-R1: the quantity cell reports THIS work unit's scope, never the whole seller order", () => {
+  const [scoped] = mapFulfillmentList([{
+    ...ROW,
+    workUnitKey: "group:cccccccc-cccc-cccc-cccc-cccccccccccc",
+    workUnitKind: "Group",
+    scopeLineCount: 1,
+    scopeQuantity: 4,
+    scopeRemainingQuantity: 2,
+  }]);
+  assert.ok(scoped);
+  assert.equal(formatFulfillmentQueueQuantity(scoped), "۱ قلم · مقدار 4 · باقی 2");
+  // A payload without scope keeps the pre-existing whole-row calculation (no invented numbers).
+  assert.equal(
+    formatFulfillmentQueueQuantity({ itemCount: 2, quantityOrdered: 5, quantityShipped: 1 }),
+    "۲ قلم · مقدار 5 · باقی 4",
+  );
 });

@@ -223,6 +223,33 @@ test("a group with no accepted plan never invents a dispatch date", () => {
   assert.ok(html.includes("در انتظار بسته‌بندی"));
 });
 
+test("TB-260-R1: a package work row names the exact package it targets", () => {
+  const html = renderToStaticMarkup(
+    createElement(OrderOperationsView, {
+      checkoutId: CHECKOUT,
+      reference: "ORD-260",
+      state: "ready",
+      errorMessage: null,
+      onRetry: () => {},
+      backHref: "/admin/fulfillments",
+      fullOrderHref: `/admin/orders/${CHECKOUT}`,
+      recipientName: "سارا",
+      recipientMobile: "09120000000",
+      destinationLine: "تهران، تهران، خیابان ولیعصر، پلاک ۱",
+      methodLabel: "پیشتاز",
+      targetRequested: true,
+      targets: [targetFact({ readinessLabel: "در انتظار ثبت کد رهگیری بسته", readinessTone: "ready" })],
+      targetPackageNumber: "MP-260R1PACK",
+    }),
+  );
+  // The package is the single physical action owner, so its exact number is shown — not a seller summary.
+  assert.ok(html.includes('data-testid="admin-order-operations-target-package"'));
+  assert.ok(html.includes("MP-260R1PACK"));
+  // A Created package awaiting tracking is real work: the readiness line must never say "nothing left".
+  assert.ok(html.includes("در انتظار ثبت کد رهگیری بسته"));
+  assert.ok(!html.includes("کار فیزیکی باقی نمانده"));
+});
+
 test("mounted: authority decides the mutation entry; retained attempt stays reconcilable", async () => {
   const detail = baseDetail();
   const calls: string[] = [];

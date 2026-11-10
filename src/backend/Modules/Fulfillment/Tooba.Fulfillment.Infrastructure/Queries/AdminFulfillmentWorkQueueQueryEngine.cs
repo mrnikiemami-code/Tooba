@@ -168,14 +168,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             return ([], timingFilter);
         }
 
-        var planFacts = await _dispatchPlans.ListPlannedForSellerOrdersAsync(
-            units.Select(x => x.SellerOrderId).Distinct().ToList(),
-            cancellationToken);
-        var plansBySellerOrder = planFacts
-            .GroupBy(plan => plan.SellerOrderId)
-            .ToDictionary(group => group.Key, group => (IReadOnlyList<OrderAcceptedGroupDispatchPlanFact>)group.ToList());
-
-        var rows = await MapPageAsync(units, plansBySellerOrder, _clock.UtcNow, cancellationToken);
+        var rows = await MapPageAsync(units, _clock.UtcNow, cancellationToken);
         return (rows.ToList(), timingFilter);
     }
 
@@ -465,7 +458,9 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
                 .OrderBy(row => AdminFulfillmentDispatchTimingAuthority.PriorityRank(ParseBucket(row.DispatchBucket)))
                 .ThenBy(row => row.DispatchDeadlineUtc ?? DateTimeOffset.MaxValue)
                 .ThenBy(row => row.PlannedHandoffDate ?? DateOnly.MaxValue)
-                .ThenBy(row => row.FulfillmentId)
+                // TB-260-R1: the physical work-unit key is the tie-break, so two parcels of one seller order can
+                // never swap places (or collapse) between two identical pages.
+                .ThenBy(row => row.WorkUnitKey, StringComparer.Ordinal)
                 .ToList();
         }
 
@@ -490,7 +485,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
                 asc),
             _ => Order(rows, row => row.UpdatedAt, asc),
         };
-        return ordered.ThenBy(row => row.FulfillmentId).ToList();
+        return ordered.ThenBy(row => row.WorkUnitKey, StringComparer.Ordinal).ToList();
     }
 
     private static IOrderedEnumerable<AdminFulfillmentWorkQueueRow> Order<TKey>(
@@ -504,9 +499,18 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             ? bucket
             : AdminFulfillmentDispatchBucket.NotQueued;
 
+    /// <summary>
+    /// TB-260-R1: loads the physical facts of the filtered units — plus the COMPLETE member set of any active
+    /// common package that touches them — and projects exactly ONE row per physical work unit.
+    /// </summary>
+    /// <remarks>
+    /// The unit set answers <i>which</i> work is in scope; it never becomes the row identity. Two parcels of one
+    /// seller order are two rows with two locators, and a common package is one row for all of its locked members.
+    /// No plan is fetched per row: the durable Order plan is bound to its own accepted group and handed to the
+    /// single timing authority together with that unit's own physical state.
+    /// </remarks>
     private async Task<IReadOnlyList<AdminFulfillmentWorkQueueRow>> MapPageAsync(
         List<FulfillmentUnit> rows,
-        IReadOnlyDictionary<Guid, IReadOnlyList<OrderAcceptedGroupDispatchPlanFact>> plansBySellerOrder,
         DateTimeOffset nowUtc,
         CancellationToken cancellationToken)
     {
@@ -516,8 +520,6 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         }
 
         var ids = rows.Select(x => x.FulfillmentId).ToList();
-        var sellerIds = rows.Select(x => x.SellerPartyId).Distinct().ToList();
-        var sellerOrderIds = rows.Select(x => x.SellerOrderId).Distinct().ToList();
 
         var items = await _db.Items.AsNoTracking()
             .Where(x => ids.Contains(x.FulfillmentId))
@@ -527,146 +529,267 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
         var shipmentIds = shipments.Select(x => x.ShipmentId).ToList();
-        var shipmentItems = shipmentIds.Count == 0
+
+        // A package row must describe the whole physical package: membership is resolved for the loaded parcels,
+        // then every ACTIVE member of those packages is loaded even when its seller order did not match the
+        // filter. Otherwise one package would be split into partial rows (and inflated counts).
+        var membership = shipmentIds.Count == 0
+            ? []
+            : await _db.ConsolidatedPackageMembers.AsNoTracking()
+                .Where(x => shipmentIds.Contains(x.ShipmentId) && x.ReleasedAt == null)
+                .ToListAsync(cancellationToken);
+        var packageIds = membership.Select(x => x.ConsolidatedPackageId).Distinct().ToList();
+        var packageHeaders = packageIds.Count == 0
+            ? []
+            : await _db.ConsolidatedPackages.AsNoTracking()
+                .Where(x => packageIds.Contains(x.ConsolidatedPackageId)
+                    && x.Status != ConsolidatedPackageStatus.Cancelled)
+                .OrderBy(x => x.PackageNumber)
+                .ToListAsync(cancellationToken);
+        var activePackageIds = packageHeaders.Select(x => x.ConsolidatedPackageId).ToHashSet();
+        var packageMembers = activePackageIds.Count == 0
+            ? []
+            : await _db.ConsolidatedPackageMembers.AsNoTracking()
+                .Where(x => activePackageIds.Contains(x.ConsolidatedPackageId) && x.ReleasedAt == null)
+                .ToListAsync(cancellationToken);
+
+        var memberShipmentIds = packageMembers.Select(x => x.ShipmentId).Distinct().ToList();
+        var memberFulfillmentIds = packageMembers.Select(x => x.FulfillmentId).Distinct().ToList();
+        var extraShipments = memberShipmentIds.Count == 0
+            ? []
+            : await _db.Shipments.AsNoTracking()
+                .Where(x => memberShipmentIds.Contains(x.ShipmentId))
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+        var extraUnits = memberFulfillmentIds.Count == 0
+            ? []
+            : await _db.Fulfillments.AsNoTracking()
+                .Where(x => memberFulfillmentIds.Contains(x.FulfillmentId))
+                .ToListAsync(cancellationToken);
+
+        var allShipments = shipments
+            .Concat(extraShipments)
+            .GroupBy(x => x.ShipmentId)
+            .Select(g => g.First())
+            .ToList();
+        var allShipmentIds = allShipments.Select(x => x.ShipmentId).ToList();
+        var shipmentItems = allShipmentIds.Count == 0
             ? []
             : await _db.ShipmentItems.AsNoTracking()
-                .Where(x => shipmentIds.Contains(x.ShipmentId))
+                .Where(x => allShipmentIds.Contains(x.ShipmentId))
                 .ToListAsync(cancellationToken);
+        var shipmentItemsBy = shipmentItems.GroupBy(x => x.ShipmentId).ToDictionary(g => g.Key, g => g.ToList());
+
+        // TB-258: a resend parcel is only offered when its OWN source parcel still has received-usable capacity
+        // that no live resend has consumed (same rule as the owning aggregate, read-only here).
+        var returnReceipts = allShipments.Any(x => x.Status == ShipmentStatus.Returned)
+            ? await _db.ShipmentReturnReceipts.AsNoTracking()
+                .Where(x => allShipmentIds.Contains(x.ShipmentId))
+                .ToListAsync(cancellationToken)
+            : [];
+        var returnReceiptIds = returnReceipts.Select(x => x.ShipmentReturnReceiptId).ToList();
+        var returnReceiptItems = returnReceiptIds.Count == 0
+            ? []
+            : await _db.ShipmentReturnReceiptItems.AsNoTracking()
+                .Where(x => returnReceiptIds.Contains(x.ShipmentReturnReceiptId))
+                .ToListAsync(cancellationToken);
+        var resendableBySourceLine = BuildResendableCapacity(allShipments, returnReceipts, returnReceiptItems, shipmentItemsBy);
+
+        var unitById = rows.ToDictionary(x => x.FulfillmentId);
+        foreach (var extra in extraUnits.Where(x => !unitById.ContainsKey(x.FulfillmentId)))
+        {
+            unitById[extra.FulfillmentId] = extra;
+        }
+
+        var sellerOrderIds = unitById.Values.Select(x => x.SellerOrderId).Distinct().ToList();
+        var sellerIds = rows.Select(x => x.SellerPartyId)
+            .Concat(extraUnits.Select(x => x.SellerPartyId))
+            .Distinct()
+            .ToList();
         var sellerNameBy = await _parties.GetDisplayNamesAsync(sellerIds, cancellationToken);
         var orderNumberBy = await _orders.GetOrderNumbersAsync(sellerOrderIds, cancellationToken);
 
-        var itemsBy = items.GroupBy(x => x.FulfillmentId).ToDictionary(g => g.Key, g => g.ToList());
-        var shipmentsBy = shipments.GroupBy(x => x.FulfillmentId).ToDictionary(g => g.Key, g => g.ToList());
-        var shipmentItemsBy = shipmentItems.GroupBy(x => x.ShipmentId).ToDictionary(g => g.Key, g => g.ToList());
+        var planFacts = await _dispatchPlans.ListPlannedForSellerOrdersAsync(sellerOrderIds, cancellationToken);
+        var plansByGroup = planFacts
+            .GroupBy(plan => (plan.SellerOrderId, plan.ShippingGroupId))
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<OrderAcceptedGroupDispatchPlanFact>)group.ToList());
 
-        return rows.Select(unit =>
+        var itemsBy = items.GroupBy(x => x.FulfillmentId).ToDictionary(g => g.Key, g => g.ToList());
+        var shipmentSnapshotsBy = allShipments
+            .GroupBy(x => x.FulfillmentId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<ShipmentSnapshot>)g
+                    .OrderBy(x => x.CreatedAt)
+                    .Select(shipment => ToShipmentSnapshot(
+                        shipment,
+                        shipmentItemsBy.TryGetValue(shipment.ShipmentId, out var lines) ? lines : []))
+                    .ToList());
+
+        var units = rows.Select(unit =>
         {
             itemsBy.TryGetValue(unit.FulfillmentId, out var itemList);
-            shipmentsBy.TryGetValue(unit.FulfillmentId, out var shipmentList);
-            itemList ??= [];
-            shipmentList ??= [];
-            var shipmentSnapshots = shipmentList.Select(shipment =>
+            shipmentSnapshotsBy.TryGetValue(unit.FulfillmentId, out var shipmentSnapshots);
+            return ToSnapshot(unit, itemList ?? [], shipmentSnapshots ?? []);
+        }).ToList();
+
+        var packages = new Dictionary<Guid, AdminFulfillmentPackageWorkFacts>();
+        foreach (var header in packageHeaders)
+        {
+            var members = new List<AdminFulfillmentPackageMemberFacts>();
+            foreach (var member in packageMembers.Where(x => x.ConsolidatedPackageId == header.ConsolidatedPackageId))
             {
+                var shipment = allShipments.FirstOrDefault(x => x.ShipmentId == member.ShipmentId);
+                if (shipment is null)
+                {
+                    continue;
+                }
+
                 shipmentItemsBy.TryGetValue(shipment.ShipmentId, out var lines);
                 lines ??= [];
-                return new ShipmentSnapshot(
-                    shipment.ShipmentId,
+                unitById.TryGetValue(member.FulfillmentId, out var memberUnit);
+                members.Add(new AdminFulfillmentPackageMemberFacts(
+                    member.ShipmentId,
+                    member.FulfillmentId,
+                    member.SellerPartyId,
+                    memberUnit?.SellerOrderId ?? Guid.Empty,
+                    shipment.ShippingGroupId,
                     shipment.Status,
-                    shipment.CarrierDisplayName,
-                    shipment.TrackingReference,
-                    shipment.DispatchedAt,
-                    shipment.DeliveredAt,
-                    lines.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
-                    shipment.CreatedAt,
-                    shipment.ShippingMethodCode,
-                    shipment.ShippingMethodLabel);
-            }).ToArray();
-            var itemSnapshots = itemList.Select(x => new FulfillmentItemSnapshot(
+                    lines.Select(x => x.OrderLineId).Distinct().Count(),
+                    lines.Sum(x => x.Quantity)));
+            }
+
+            if (members.Count == 0)
+            {
+                continue;
+            }
+
+            packages[header.ConsolidatedPackageId] = new AdminFulfillmentPackageWorkFacts(
+                header.ConsolidatedPackageId,
+                header.PackageNumber,
+                header.CheckoutId,
+                header.Status,
+                header.ShippingMethodCode,
+                header.ShippingMethodLabel,
+                header.TrackingReference,
+                header.CreatedAt,
+                header.UpdatedAt,
+                header.DispatchedAt,
+                members);
+        }
+
+        var packageIdByShipment = packageMembers
+            .Where(x => activePackageIds.Contains(x.ConsolidatedPackageId))
+            .GroupBy(x => x.ShipmentId)
+            .ToDictionary(g => g.Key, g => g.First().ConsolidatedPackageId);
+
+        return AdminFulfillmentWorkUnitProjection.Build(new AdminFulfillmentWorkUnitContext(
+            units,
+            plansByGroup,
+            packages,
+            packageIdByShipment,
+            resendableBySourceLine,
+            sellerNameBy,
+            orderNumberBy,
+            nowUtc));
+    }
+
+    private static ShipmentSnapshot ToShipmentSnapshot(Shipment shipment, IReadOnlyList<ShipmentItem> lines) =>
+        new(
+            shipment.ShipmentId,
+            shipment.Status,
+            shipment.CarrierDisplayName,
+            shipment.TrackingReference,
+            shipment.DispatchedAt,
+            shipment.DeliveredAt,
+            lines.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
+            shipment.CreatedAt,
+            shipment.ShippingMethodCode,
+            shipment.ShippingMethodLabel,
+            shipment.ProviderMetadataJson,
+            shipment.ProviderMetadataVersion,
+            shipment.PreviousTrackingReference,
+            shipment.ShippingGroupId,
+            shipment.ShippingDispatchKey,
+            shipment.ResendOfShipmentId,
+            shipment.NonDeliveryReason,
+            shipment.NonDeliveryNote,
+            shipment.NonDeliveredAt,
+            shipment.ReturnStartedAt,
+            shipment.ReturnedAt);
+
+    private static FulfillmentSnapshot ToSnapshot(
+        FulfillmentUnit unit,
+        IReadOnlyList<FulfillmentItem> itemList,
+        IReadOnlyList<ShipmentSnapshot> shipmentSnapshots) =>
+        new(
+            unit.FulfillmentId,
+            unit.SellerOrderId,
+            unit.CheckoutId,
+            unit.SellerPartyId,
+            unit.Status,
+            unit.RecipientName,
+            unit.ContactMobile,
+            unit.ProvinceName,
+            unit.CityName,
+            unit.PostalAddress,
+            unit.PostalCode,
+            unit.ShippingMethodCode,
+            unit.ShippingMethodLabel,
+            itemList.Select(x => new FulfillmentItemSnapshot(
                 x.FulfillmentItemId,
                 x.OrderLineId,
                 x.QuantityOrdered,
                 x.QuantityShipped,
                 x.ReservationId,
                 x.QuantityPacked,
-                x.QuantityProcessing)).ToArray();
-            var snapshot = new FulfillmentSnapshot(
-                unit.FulfillmentId,
-                unit.SellerOrderId,
-                unit.CheckoutId,
-                unit.SellerPartyId,
-                unit.Status,
-                unit.RecipientName,
-                unit.ContactMobile,
-                unit.ProvinceName,
-                unit.CityName,
-                unit.PostalAddress,
-                unit.PostalCode,
-                unit.ShippingMethodCode,
-                unit.ShippingMethodLabel,
-                itemSnapshots,
-                shipmentSnapshots,
-                unit.CreatedAt,
-                unit.UpdatedAt);
-            var tracking = shipmentSnapshots
-                .Select(s => s.TrackingReference)
-                .Where(t => !string.IsNullOrWhiteSpace(t))
-                .Cast<string>()
-                .ToArray();
-            var primaryShipment = shipmentSnapshots
-                .OrderByDescending(s => s.Status == ShipmentStatus.Created)
-                .ThenByDescending(s => s.CreatedAt)
-                .FirstOrDefault();
-            var methodLabel = ShippingMethodRegistry.ResolveLabel(
-                unit.ShippingMethodCode,
-                string.IsNullOrWhiteSpace(unit.ShippingMethodLabel) ? null : unit.ShippingMethodLabel);
-            orderNumberBy.TryGetValue(unit.SellerOrderId, out var orderNumber);
-            var orderReference = !string.IsNullOrWhiteSpace(orderNumber)
-                ? orderNumber!
-                : string.Empty;
-            sellerNameBy.TryGetValue(unit.SellerPartyId, out var sellerName);
+                x.QuantityProcessing,
+                x.ShippingGroupId)).ToArray(),
+            shipmentSnapshots,
+            unit.CreatedAt,
+            unit.UpdatedAt);
 
-            plansBySellerOrder.TryGetValue(unit.SellerOrderId, out var plans);
-            plans ??= [];
-            var pending = AdminFulfillmentQueueFilters.HasPendingDispatchWork(
-                unit.Status,
-                itemSnapshots,
-                shipmentSnapshots);
-            var inTransit = AdminFulfillmentQueueFilters.HasOpenTransitParcels(shipmentSnapshots);
-            var timing = AdminFulfillmentDispatchTimingAuthority.Classify(pending, inTransit, plans, nowUtc);
-            var actionCodes = AdminFulfillmentQueueFilters.ProjectActionCodes(snapshot);
-            var next = AdminFulfillmentNextStep.Resolve(actionCodes);
-            var actionable = timing.Bucket is AdminFulfillmentDispatchBucket.Overdue
-                or AdminFulfillmentDispatchBucket.Today
-                or AdminFulfillmentDispatchBucket.Upcoming
-                or AdminFulfillmentDispatchBucket.Unspecified;
-            var nextStepLabel = next.LabelFa;
-            var blocker = actionable && next.Code.Length == 0
-                ? "اقدام مجاز فعلی برای این ردیف وجود ندارد؛ وضعیت پرداخت/مالکیت/گروه را بررسی کنید."
-                : null;
+    /// <summary>
+    /// (source parcel, order line) → still resendable quantity: physically received USABLE units minus what live
+    /// resend parcels already committed. Mirrors the owning TB-258 quantities without writing or re-deriving money.
+    /// </summary>
+    private static Dictionary<(Guid ShipmentId, Guid OrderLineId), decimal> BuildResendableCapacity(
+        IReadOnlyList<Shipment> shipments,
+        IReadOnlyList<ShipmentReturnReceipt> receipts,
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        IReadOnlyDictionary<Guid, List<ShipmentItem>> shipmentItemsBy)
+    {
+        var usableByLine = new Dictionary<(Guid, Guid), decimal>();
+        var receiptSource = receipts.ToDictionary(x => x.ShipmentReturnReceiptId, x => x.ShipmentId);
+        foreach (var item in receiptItems)
+        {
+            if (item.Condition != ReturnReceiptCondition.Usable
+                || !receiptSource.TryGetValue(item.ShipmentReturnReceiptId, out var sourceShipmentId))
+            {
+                continue;
+            }
 
-            return new AdminFulfillmentWorkQueueRow(
-                unit.FulfillmentId,
-                unit.SellerOrderId,
-                unit.CheckoutId,
-                unit.SellerPartyId,
-                string.IsNullOrWhiteSpace(sellerName) ? "فروشنده" : sellerName,
-                orderReference,
-                AdminFulfillmentQueueFilters.ComposeOperationalStatus(snapshot),
-                unit.RecipientName,
-                unit.CityName,
-                unit.ShippingMethodCode,
-                methodLabel,
-                itemSnapshots.Length,
-                itemSnapshots.Sum(x => x.QuantityOrdered),
-                itemSnapshots.Sum(x => x.QuantityShipped),
-                shipmentSnapshots.Length,
-                primaryShipment?.ShipmentId.ToString(),
-                tracking.Length == 0 ? "" : string.Join(" · ", tracking),
-                unit.CreatedAt,
-                unit.UpdatedAt,
-                actionCodes,
-                AdminFulfillmentDispatchBucketNames.Of(timing.Bucket),
-                AdminFulfillmentDispatchBucketNames.Of(timing.WindowState),
-                timing.HandoffDate,
-                string.IsNullOrWhiteSpace(timing.HandoffTimeWindow) ? null : timing.HandoffTimeWindow,
-                string.IsNullOrWhiteSpace(timing.HandoffTimeZone) ? null : timing.HandoffTimeZone,
-                timing.DistinctPlanVariants,
-                timing.DeadlineUtc,
-                Earliest(plans)?.CustomerReceivingDate,
-                Earliest(plans)?.CustomerReceivingTimeWindow,
-                Earliest(plans)?.ShippingGroupId,
-                next.Code,
-                nextStepLabel,
-                blocker,
-                pending);
-        }).ToList();
+            var key = (sourceShipmentId, item.OrderLineId);
+            usableByLine[key] = (usableByLine.TryGetValue(key, out var current) ? current : 0m) + item.Quantity;
+        }
+
+        foreach (var resend in shipments.Where(x => x.ResendOfShipmentId is not null && x.Status != ShipmentStatus.Cancelled))
+        {
+            if (!shipmentItemsBy.TryGetValue(resend.ShipmentId, out var lines))
+            {
+                continue;
+            }
+
+            foreach (var line in lines)
+            {
+                var key = (resend.ResendOfShipmentId!.Value, line.OrderLineId);
+                if (usableByLine.TryGetValue(key, out var usable))
+                {
+                    usableByLine[key] = usable - line.Quantity;
+                }
+            }
+        }
+
+        return usableByLine;
     }
-
-    private static OrderAcceptedGroupDispatchPlanFact? Earliest(
-        IReadOnlyList<OrderAcceptedGroupDispatchPlanFact> plans) =>
-        plans
-            .OrderBy(plan => plan.HandoffDate)
-            .ThenBy(plan => plan.HandoffOpenTicks)
-            .ThenBy(plan => plan.ShippingGroupId)
-            .FirstOrDefault();
 }

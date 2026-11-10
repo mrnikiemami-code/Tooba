@@ -1,0 +1,14 @@
+﻿GET /v1/admin/dev-context -> actor=01a036c2-970e-7000-8eb7-94bf5cc2d8db tenant=store-alpha
+filter=dispatch_today total=5 items=5
+  group:33c1324e-55da-4ea1-8c28-ea0cc8ec8c7c kind=Group state=Group grp=33c1324e-55da-4ea1-8c28-ea0cc8ec8c7c shp= pkg= bucket=Today plan=2026-11-10 next=mark_processing
+  group:96d38fe3-c845-4d68-b26d-ebd41ae812fe kind=Group state=Group grp=96d38fe3-c845-4d68-b26d-ebd41ae812fe shp= pkg= bucket=Today plan=2026-11-10 next=mark_processing
+  group:d3d49b89-9f8e-4c47-bd25-2e32b7d0765b kind=Group state=Group grp=d3d49b89-9f8e-4c47-bd25-2e32b7d0765b shp= pkg= bucket=Today plan=2026-11-10 next=mark_processing
+  group:a20929c2-1406-4f96-9a0b-d6e9c5ea3591 kind=Group state=Group grp=a20929c2-1406-4f96-9a0b-d6e9c5ea3591 shp= pkg= bucket=Today plan=2026-11-10 next=mark_processing
+  group:dc43873d-69ed-4880-8d24-609efa302b23 kind=Group state=Group grp=dc43873d-69ed-4880-8d24-609efa302b23 shp= pkg= bucket=Today plan=2026-11-10 next=mark_processing
+
+paging pageSize=1 (no filter):
+  page 1: group:2c550347-8c06-4a2b-b4f6-c7c77ab6e058 (total 919)
+  page 2: parcel:a44aa20e-ecf3-4964-b828-bf1fc4a72eac (total 919)
+  page 3: group:079023e9-7763-4924-969e-67421a574d40 (total 919)
+
+defect case (seller order with dispatched-today group A + pending group B): see tb260r1-relational.txt Case A/A2 for the fixture-level proof.

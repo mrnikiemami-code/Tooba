@@ -1,4 +1,10 @@
-# CURRENT —259 ACCEPT within issue4 scope; FINAL planned task260 ISSUED —2026-11-10
+﻿# CURRENT — 260-R1 PASS: physical work-unit rows in the dispatch queue — 2026-11-10
+
+Only review target: docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,tb260r1-relational.txt,tb260r1-queue-api.txt} (task: docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md).
+Issue5 repair: the queue now emits ONE row per physical work unit (unallocated accepted group / existing parcel / ONE active package across locked members / history row), keyed `group:`/`parcel:`/`package:`/`fulfillment:`, with plans bound by `(SellerOrderId, ShippingGroupId)` so no plan is lent across groups, exact `shippingGroupId`/`shipmentId`/`packageId` locators, and readiness that treats a Created parcel as real work. Proven 5/5 pure, 5/5 real `tooba_alpha` relational, 6/6 queue contract + 5/5 shared view mount + 3/3 mounted real route, live canonical query `919` rows / `670` active (`dispatch_today 5`), typecheck/build/publish 0; no migration. Host PID 20052, FE PID 28184 BUILD_ID `MoBhYSN-pLcFMKWSta7ls`.
+Ledger: issues1–2 accepted 257; issue3 accepted 258-R3; issue4 accepted 259 (4/5); **issue5 repaired 260-R1 — pending Architect review**; no five-defect completion, no next task. 255 parked, Tipax deferred, single `tooba_alpha` + FE3000/Host5088.
+
+# SUPERSEDED —259 ACCEPT within issue4 scope; FINAL planned task260 ISSUED —2026-11-10
 
 Read docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/ARCHITECT-REVIEW.md.
 Source/evidence review bb18f62d294e81ce86b8a09ae3eb8e2b5c84c873 accepts immutable packing choice and explicit separate Completed without package; common path/history preserved. No live Marketplace checkout/visual/provider acceptance claimed.
@@ -5185,6 +5191,7 @@ ActivityListener، enrichment هندلر) اجرا نشد. جزئیات: docs/ar
 یک harness واقعی DI/EFInMemory هم ثبت‌های scoped، خواندن واقعی چهار محور، فعالیت تودرتو/کورلیشن و
 انتشار استثنا/لغو را اثبات می‌کند؛ enrichment هندلر هم در harness اندپوینت اثبات شد.
 production بایت‌به‌بایت تغییر نکرد. جزئیات: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2/RESULT.md
+
 
 
 

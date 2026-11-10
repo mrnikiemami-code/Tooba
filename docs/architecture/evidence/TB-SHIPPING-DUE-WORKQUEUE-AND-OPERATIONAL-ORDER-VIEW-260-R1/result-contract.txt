@@ -1,0 +1,55 @@
+PIPELINE-RESULT: BRIDGE-WAKE-V1
+Task-ID: TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1
+Parent-Task: TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Mode: REPAIR_PHYSICAL_WORK_ROW_PLAN_SCOPE_EXACT_LOCATOR_AND_TARGET_READINESS
+Status: PASS
+Decision: ONE_ROW_PER_PHYSICAL_WORK_UNIT_WITH_ITS_OWN_ACCEPTED_PLAN_EXACT_GROUP_PARCEL_PACKAGE_LOCATOR_AND_TRUTHFUL_TARGET_READINESS
+Not-Claimed: Architect ACCEPT, user VISUAL/FUNCTIONAL ACCEPT, five-defect completion
+Base-SHA: a5de61258f71ce5cceef30729a35ffac0751a972
+Code-SHA: see the code commit that carries this file
+Evidence-SHA: see the following evidence/ledger commit
+HEAD==origin/main: after the ledger commit
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+CONFIRMED DEFECT (measured, not guessed)
+AdminFulfillmentWorkQueueQueryEngine.MapPageAsync returned one row per FulfillmentUnit (seller summary) with ONE whole-unit pending flag and Earliest(plans) as the target group. Measured consequences: a seller order whose group A was dispatched today and whose group B was still pending advertised the whole unit as pending with group A's plan (B never Upcoming, locator always A); two Created parcels of one seller order collapsed into one FulfillmentId-keyed row; one cross-seller common package was reprinted per seller (duplicated action owner, inflated counts); readinessOf only read remainingPackedQuantity, so a Created/tracked parcel awaiting dispatch was labelled «کار فیزیکی باقی نمانده».
+
+LANDED
+1) New owning seam AdminFulfillmentWorkUnitProjection builds rows from existing Fulfillment facts plus the Contracts-only IOrderDispatchPlanFactsReader (no cross-module DbContext, no plan average): Group = one accepted group that still owns its own processing/packing/parcel remainder; Parcel = one existing non-cancelled un-locked physical parcel (including TB-259 separate parcels and TB-258 resend parcels); Package = ONE active common package across all locked members with no child physical rows; Fulfillment = history row of a unit with no open physical work. AdminFulfillmentWorkUnitKinds.Key(kind,id) → group:{id}/parcel:{id}/package:{id}/fulfillment:{id} is the ONLY row identity (grid id, sort tie-break, page boundary, test id), so two parcels of one order can never share an id.
+2) Scoped plan binding: plans are mapped once per page by (SellerOrderId, ShippingGroupId); a row reads only its own group's plan, so a dispatched sibling's plan cannot make a Created sibling due. A Created resend parcel (ResendOfShipmentId != null) carries no first-dispatch plan and stays Unspecified. Each row reports its own scopeLineCount/scopeQuantity/scopeRemainingQuantity (packed − shipped − open Created, reusing TB-257 FulfillmentPackedQuantityAuthority), so no quantity is double-counted; the package row aggregates members for display only. Counts and quick tabs remain computed by the SAME engine over the SAME search/column-filtered set, now over the corrected physical rows.
+3) Exact locator + truthful readiness: the single «عملیات ارسال» entry carries /admin/orders/{checkoutId}/operations?fulfillmentId=…&shippingGroupId=…&shipmentId=…&packageId=…&from=queue&filter=…. The shared route resolves, never guesses: stale shipmentId/packageId → zero target cards + explicit unresolved notice. readinessOf follows the focused unit (Created+tracked آمادهٔ ارسال به حامل; Created w/o tracking در انتظار ثبت کد رهگیری; Dispatched/InTransit در مسیر — در انتظار ثبت تحویل; NonDelivered/Returning/Returned/Delivered/Cancelled truthfully; packages equivalent), so zero fresh-creation remainder no longer means no physical work. Because a scoped row can only represent its own unit, the fulfillment-level kebab is no longer offered from Group/Parcel/Package rows (their single action owner is the exact target entry); history rows keep it. The status badge shows THAT unit's state plus what the row owns. Work-unit kind tokens stay PascalCase on the wire and are normalised once on the client.
+No migration/schema/lifecycle/new page/second operational UI; 249/253 occurrence replay, 254-R1 single action owner, 256 scheduling/save, 257 quantity/tracking, 258 exception/resend capacity, 259 immutable packing mode, reservations, money and accepted evidence untouched.
+
+FOCUSED PROOF (real tooba_alpha:5432, task-labelled fixtures, ids in tb260r1-relational.txt)
+Pure: AdminFulfillmentWorkUnitIdentity260R1Tests 5/5.
+Relational AdminFulfillmentWorkUnitProjection260R1RelationalTests 5/5 through the real Order/Fulfillment contexts and Contracts bridge:
+  A  rows=2 parcel=InTransit/9fc0c94d group=Upcoming/2c550347 counts=active1/today0/overdue0/upcoming1/unspecified0/transit1/due0 targetB=groupB  (the exact defect case: no lending, B keeps its own bucket+locator)
+  A2 rows=2 noPlanGroup=Unspecified/null plannedGroup=Upcoming/handoff+2 noLending=true
+  B  rows=2 distinctKeys=2 locators=e9a720f8,f9033fb4 bucket=Upcoming plan=shared-own-group pageSize1=2x1 groupRow=0
+  C  packageRows=1 kind=Package locator=aa8e6a4c number=MP-AA8E6A4C680F childParcelRows=0 scopeQty=2 counts=active1/upcoming1 separateRows=2
+  D  rows=4 groupRemaining=2 openParcelScope=0 resendBucket=Unspecified resendPlan=null returnedResendable=0 returnedBlocker=true total=4
+Frontend: fulfillment-work-queue-260.test.ts 6/6 (2 new R1: distinct ids/kinds/locators for two units of one order; the quantity cell reports the row's own scope) + fulfillment-api.test.ts 6/6; admin-order-operations-view.mount.test.ts 5/5 (new: exact package number + Created-awaiting-tracking is real work); NEW admin-order-operations-route.mount.test.ts 3/3 mounting the REAL route component: Created-without-tracking = «در انتظار ثبت کد رهگیری» and never «کار فیزیکی باقی نمانده», parcel locator resolves to ITS OWN group only, tracked parcel = «آمادهٔ ارسال به حامل», package locator shows both member groups + MP-260R1PKG, stale parcel/package locator = explicit unresolved notice, SAME items/operational panels, zero financial markers.
+Live canonical read-only query (deployed Host, /v1/admin/dev-context then POST work-queue/query, zero writes): total=919, page1 20 rows with 20 distinct keys (Group 8 / Parcel 11 / Package 1), counts totalActive=670 due=5 today=5 overdue=0 upcoming=25 unspecified=640 inTransit=249 (670+249=919), filter=dispatch_today → exactly 5 rows each pointing at its own group, pageSize=1 → pages group:2c550347 / parcel:a44aa20e / group:079023e9 with total 919 each. Page 1 shows the repaired defect case as two rows of ONE seller order (group:2c550347 Upcoming own locator; parcel:a44aa20e Dispatched own locator) and exactly one package:aa8e6a4c row with no locked-child duplicate.
+Build: npm typecheck 0; npm build 0 (BUILD_ID MoBhYSN-pLcFMKWSta7ls); dotnet build src\backend\Tooba.slnx -c Release 0 errors; publish 0.
+
+DEPLOY
+No migration added and none applied. Host republished to artifacts\publish-primary and restarted: PID 20052, /health 200, /health/ready 200 (edition SingleStore). FE rebuilt and restarted: PID 28184, BUILD_ID MoBhYSN-pLcFMKWSta7ls, /fa 200, previous chunk 7825-19f75933ca8b9455.js 404, served chunk 992-24accfc967f39328.js 200 carrying «بدون گروه پذیرش». ONE database tooba_alpha @ 127.0.0.1:5432, SingleStore / store-alpha; no disposable/test/parallel/Docker DB, no 15433, no edition/connection/port/appsettings change; DataProtection and CapturedPreview unchanged (local ON / checked-in OFF); no manual DDL/business SQL/reset/reseed/backfill; user order/cart/parcel/payment rows read-only; only task-labelled TB260R1-* fixtures via production paths; 255 parked; live Tipax deferred.
+
+LIMITS (disclosed)
+No screenshots/DOM matrix (read-only DOM was optional); real UI proof is the mounted real route/view plus the live API, and the accepted TB-260 appearance is unchanged. Canonical 919 rows / 670 active include the task-labelled TB-260/R1 fixtures, not a production baseline. Plan-bearing classification remains fixture-derived (no live plan-bearing real checkout; TB-256/259 forbid invented dates). A returned parcel with exhausted capacity truthfully offers no action; a Delivered package owns no row and its members fall back only when no active package row covers them. Concurrency/recovery inherited from 249/253/257/258/259, not re-stressed. The known legacy 500 on admin order detail for pre-existing fixtures with SalesChannel='Web' is untouched; the operational view degrades honestly.
+
+LEDGER
+Save prerequisite CLOSED within scope; issue1 tracking FIXED 257; issue2 remaining quantity FIXED 257; issue3 non-delivery/return/resend ACCEPTED 258-R3 within internal-operator scope; issue4 common-or-separate packing ACCEPTED 259 within scope (4/5); issue5 due workqueue/shared operational order view REPAIRED by 260-R1 — pending Architect review of this result. No five-defect completion claimed. No new task proposed.
+
+EVIDENCE
+docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb260r1-relational.txt,tb260r1-queue-api.txt}
+docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE

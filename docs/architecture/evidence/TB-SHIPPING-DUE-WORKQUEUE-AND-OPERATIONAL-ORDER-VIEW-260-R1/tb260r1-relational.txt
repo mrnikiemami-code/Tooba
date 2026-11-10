@@ -1,0 +1,5 @@
+TB260R1-C1-182828 caseC packageRows=1 kind=Package locator=aa8e6a4c-680f-460f-9a8d-83a4478c8112 number=MP-AA8E6A4C680F childParcelRows=0 scopeQty=2 counts=active1/upcoming1 separateRows=2
+TB260R1-B-182829 caseB rows=2 distinctKeys=2 locators=e9a720f8-f6fe-4b74-b299-8e05282b2406,f9033fb4-140f-4094-b7d3-70438c1ad50d bucket=Upcoming plan=shared-own-group pageSize1=2x1 groupRow=0
+TB260R1-D-182829 caseD rows=4 groupRemaining=2 openParcelScope=0 resendBucket=Unspecified resendPlan=null returnedResendable=0 returnedBlocker=true total=4
+TB260R1-A2-182829 caseA2 rows=2 noPlanGroup=Unspecified/null plannedGroup=Upcoming/handoff+2 noLending=true
+TB260R1-A-182830 caseA rows=2 parcel=InTransit/9fc0c94d-d0f8-4b9b-a24c-9f41fadc1ba4 group=Upcoming/2c550347-8c06-4a2b-b4f6-c7c77ab6e058 counts=active1/today0/overdue0/upcoming1/unspecified0/transit1/due0 targetB=groupB

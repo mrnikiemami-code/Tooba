@@ -88,9 +88,16 @@ public static class AdminFulfillmentNextStep
         ("mark_processing", "شروع پردازش"),
         ("mark_packed", "بسته‌بندی"),
         ("assign_tracking", "ثبت کد رهگیری"),
-        ("correct_tracking", "اصلاح کد رهگیری"),
-        ("create_shipment", "ایجاد مرسوله"),
+        // TB-260-R1: once a Created parcel HAS a tracking code its physical next step is the carrier handoff;
+        // «اصلاح کد رهگیری» is a correction, not the outstanding operation.
         ("dispatch_shipment", "ارسال به حامل"),
+        ("correct_tracking", "اصلاح کد رهگیری"),
+        // TB-260-R1: a consolidated common package owns its own tracking/dispatch/delivery commands, so the
+        // package row's next step is the package command — never a locked member parcel's command.
+        ("assign_consolidated_package_tracking", "ثبت کد رهگیری بسته"),
+        ("dispatch_consolidated_package", "ارسال بستهٔ تجمیعی"),
+        ("deliver_consolidated_package", "تحویل بستهٔ تجمیعی"),
+        ("create_shipment", "ایجاد مرسوله"),
         ("deliver_shipment", "ثبت تحویل"),
         ("record_non_delivery", "ثبت عدم تحویل"),
         ("start_return", "برگشت به مبدأ"),

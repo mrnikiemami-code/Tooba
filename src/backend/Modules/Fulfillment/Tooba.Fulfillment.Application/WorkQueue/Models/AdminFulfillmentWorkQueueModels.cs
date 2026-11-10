@@ -62,7 +62,50 @@ public sealed record AdminFulfillmentWorkQueueRow(
     // TB-260: why no next step is offered while the row is still active work.
     string? NextStepBlockerFa = null,
     // TB-260: true when physical preparation/dispatch work still exists on this row.
-    bool PendingDispatch = false);
+    bool PendingDispatch = false,
+    // TB-260-R1: stable discriminated identity of ONE physical work unit (group/parcel/package/fulfillment).
+    // It is the ONLY row identity: two parcels of one seller order never share it, and it is the key used for
+    // selection, sorting tie-breaks, paging and the exact operational target locator.
+    string WorkUnitKey = "",
+    // TB-260-R1: <see cref="AdminFulfillmentWorkUnitKinds"/> token of this row's physical scope.
+    string WorkUnitKind = AdminFulfillmentWorkUnitKinds.Group,
+    // TB-260-R1: the physical state OF THIS work unit (parcel status, package status, or fulfillment status).
+    string WorkUnitState = "",
+    // TB-260-R1: exact parcel locator when this row IS one physical parcel.
+    Guid? TargetShipmentId = null,
+    // TB-260-R1: exact consolidated-package locator when this row IS one physical common package.
+    Guid? TargetPackageId = null,
+    // TB-260-R1: human package number (MP-…) of the package locator.
+    string? TargetPackageNumber = null,
+    // TB-260-R1: lines physically owned by THIS work-unit scope (never the whole seller order).
+    int ScopeLineCount = 0,
+    // TB-260-R1: quantity physically owned by THIS work-unit scope.
+    decimal ScopeQuantity = 0,
+    // TB-260-R1: quantity of this scope still eligible for a NEW parcel (packed − shipped − open Created).
+    decimal ScopeRemainingQuantity = 0);
+
+/// <summary>
+/// TB-260-R1: the physical scopes a queue row can own. A row is ONE work unit, never a whole seller order:
+/// an accepted group that still needs a parcel, one existing parcel, one active common package, or — only for
+/// finished/history rows that own no physical unit — the fulfillment itself.
+/// </summary>
+public static class AdminFulfillmentWorkUnitKinds
+{
+    /// <summary>An accepted shipping group whose lines still need process/pack/parcel work.</summary>
+    public const string Group = "Group";
+
+    /// <summary>One existing physical parcel (independent or from TB-259 separate packing).</summary>
+    public const string Parcel = "Parcel";
+
+    /// <summary>One active consolidated common package spanning its locked members.</summary>
+    public const string Package = "Package";
+
+    /// <summary>No physical unit is open (delivered/cancelled/failed history row).</summary>
+    public const string Fulfillment = "Fulfillment";
+
+    /// <summary>The stable, discriminated row key of one physical work unit.</summary>
+    public static string Key(string kind, Guid id) => $"{kind.ToLowerInvariant()}:{id:D}";
+}
 
 /// <summary>
 /// فیلترهای سریع صف کار بر اساس وضعیت واقعی دامنه — بدون SLA ساختگی.
@@ -300,6 +343,125 @@ public static class AdminFulfillmentQueueFilters
         }
 
         return codes.Distinct(StringComparer.Ordinal).ToArray();
+    }
+
+    /// <summary>
+    /// TB-260-R1: the exact operations ONE physical parcel permits, derived from its own lifecycle only. A parcel
+    /// row never borrows a sibling parcel's exit, so a Created parcel cannot offer «ثبت تحویل» and a delivered one
+    /// cannot offer «ارسال».
+    /// </summary>
+    /// <remarks>
+    /// For a returned parcel the ONLY forward exit is a new resend parcel, and a resend needs physically received
+    /// usable capacity (<paramref name="hasResendableCapacity"/>), so an emptied/committed parcel truthfully offers
+    /// no action instead of promising one the command would refuse.
+    /// </remarks>
+    public static IReadOnlyList<string> ProjectParcelActionCodes(
+        ShipmentStatus status,
+        bool hasTracking,
+        bool hasDispatchedAt,
+        bool hasResendableCapacity)
+    {
+        var codes = new List<string>();
+        switch (status)
+        {
+            case ShipmentStatus.Created:
+                codes.Add("cancel_shipment");
+                if (!hasTracking)
+                {
+                    codes.Add("assign_tracking");
+                }
+                else if (!hasDispatchedAt)
+                {
+                    codes.Add("correct_tracking");
+                    codes.Add("dispatch_shipment");
+                }
+
+                break;
+            case ShipmentStatus.Dispatched:
+            case ShipmentStatus.InTransit:
+                codes.Add("deliver_shipment");
+                codes.Add("record_non_delivery");
+                break;
+            case ShipmentStatus.NonDelivered:
+                // The courier already reported a failed attempt: the next physical step is the return, while a
+                // late genuine delivery stays reachable inside the shared operational view.
+                codes.Add("start_return");
+                break;
+            case ShipmentStatus.Returning:
+                codes.Add("record_return_receipt");
+                break;
+            case ShipmentStatus.Returned:
+                if (hasResendableCapacity)
+                {
+                    codes.Add("resend_shipment");
+                }
+
+                break;
+            default:
+                break;
+        }
+
+        return codes;
+    }
+
+    /// <summary>
+    /// TB-260-R1: the exact operations ONE consolidated common package permits. A locked member parcel exposes
+    /// nothing of its own, so the package is the single action owner of the physical unit.
+    /// </summary>
+    public static IReadOnlyList<string> ProjectPackageActionCodes(
+        ConsolidatedPackageStatus status,
+        bool hasTracking)
+    {
+        return status switch
+        {
+            ConsolidatedPackageStatus.Created => hasTracking
+                ? ["cancel_consolidated_package", "dispatch_consolidated_package"]
+                : ["cancel_consolidated_package", "assign_consolidated_package_tracking", "dispatch_consolidated_package"],
+            ConsolidatedPackageStatus.Dispatched => ["deliver_consolidated_package"],
+            _ => [],
+        };
+    }
+
+    /// <summary>
+    /// TB-260-R1: the work an accepted group still owns for its OWN lines — processing, packing, or the remainder
+    /// that is still eligible for a new parcel. None of these can be satisfied by a different group's work, so an
+    /// already-dispatched sibling can never make this group look finished.
+    /// </summary>
+    public static bool HasGroupScopeWork(
+        IReadOnlyList<FulfillmentItemSnapshot> groupItems,
+        IReadOnlyList<ShipmentSnapshot> groupShipments)
+    {
+        if (HasProcessableQuantity(groupItems) || HasPackableQuantity(groupItems))
+        {
+            return true;
+        }
+
+        foreach (var item in groupItems)
+        {
+            if (ScopeRemainingPackedQuantity(item, groupShipments) > 0m)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// TB-260-R1: remaining quantity of ONE line inside ONE Scope = packed − shipped − open Created first
+    /// allocations, reusing the single TB-257 quantity authority (never a second formula).
+    /// </summary>
+    public static decimal ScopeRemainingPackedQuantity(
+        FulfillmentItemSnapshot item,
+        IReadOnlyList<ShipmentSnapshot> scopeShipments)
+    {
+        var openAllocated = scopeShipments
+            .Where(s => s.Status == ShipmentStatus.Created && s.ResendOfShipmentId is null)
+            .SelectMany(s => s.Items)
+            .Where(line => line.OrderLineId == item.OrderLineId)
+            .Sum(line => line.Quantity);
+        return QuantityAuthority.RemainingPackedQuantity(
+            item.QuantityPacked, item.QuantityShipped, openAllocated);
     }
 
     /// <summary>سازگاری انتخاب چندتایی برای یک کد عملیات — همان فروشنده + همه دارای کد.</summary>

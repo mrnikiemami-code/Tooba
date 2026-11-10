@@ -45,6 +45,11 @@ export interface OrderOperationsViewProps {
   targetRequested: boolean;
   /** The exact group(s) the locator resolved to, in server order. Empty means the locator no longer exists. */
   targets: OrderOperationsTargetFact[];
+  /**
+   * TB-260-R1: the exact consolidated package number when the queue row pointed at one. The package is the
+   * single physical action owner of its locked member parcels, so it is named explicitly here.
+   */
+  targetPackageNumber?: string | null;
   /** The canonical operational panel owned by the caller (same component the full order page renders). */
   children?: ReactNode;
 }
@@ -106,6 +111,7 @@ export function OrderOperationsView({
   methodLabel,
   targetRequested,
   targets,
+  targetPackageNumber,
   children,
 }: OrderOperationsViewProps) {
   return (
@@ -172,7 +178,18 @@ export function OrderOperationsView({
               className="rounded-2xl border border-border bg-surface-elevated p-4 shadow-sm"
               data-testid="admin-order-operations-target"
             >
-              <h2 className="text-sm font-bold">گروه هدف</h2>
+              <h2 className="text-sm font-bold">
+                گروه یا بستهٔ هدف
+                {targetPackageNumber ? (
+                  <span
+                    className="mr-2 rounded-full bg-secondary px-2 py-0.5 font-mono text-[11px] font-semibold text-foreground"
+                    dir="ltr"
+                    data-testid="admin-order-operations-target-package"
+                  >
+                    {targetPackageNumber}
+                  </span>
+                ) : null}
+              </h2>
               {targets.length > 0 ? (
                 <ul className="mt-2 grid gap-2 lg:grid-cols-2">
                   {targets.map((target) => (
@@ -181,8 +198,8 @@ export function OrderOperationsView({
                 </ul>
               ) : (
                 <p className="mt-2 text-sm text-muted" data-testid="admin-order-operations-target-missing">
-                  گروه یا مرسولهٔ انتخاب‌شده در این سفارش پیدا نشد؛ ممکن است وضعیت آن تغییر کرده باشد. فهرست کامل
-                  عملیات ارسال این سفارش در ادامه آمده است.
+                  گروه، مرسوله یا بستهٔ انتخاب‌شده در این سفارش پیدا نشد؛ ممکن است وضعیت آن تغییر کرده باشد. فهرست
+                  کامل عملیات ارسال این سفارش در ادامه آمده است.
                 </p>
               )}
             </section>
