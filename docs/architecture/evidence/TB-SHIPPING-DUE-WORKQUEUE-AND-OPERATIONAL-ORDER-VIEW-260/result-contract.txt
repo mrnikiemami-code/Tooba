@@ -13,8 +13,10 @@ Commit identity
   Code-SHA    f3c15173cc36b95e53172d618c0ef7f8d41c5d94   feat(shipping): durable dispatch due queue and
                                                           finance-free shared operational order view
   Evidence    b4ba1ed91231300cb0b85baed93246d7601f2591   docs(shipping): TB-260 evidence, receipts and ledger
-  Merge      6ec3ce97b75b81ef8735a8ecbd43cb7b60e9d68b   merge with the issued final task + 259 acceptance
-  HEAD == origin/main == 6ec3ce97b; clean worktree; no force/reset/amend/stash/rebase.
+  Merge       6ec3ce97b75b81ef8735a8ecbd43cb7b60e9d68b   merge with the issued final task + 259 acceptance
+  Ledger      first ledger commit 840bd4b15792e41d73d5e6756f55e6b924110e18 (this contract + bridge poster);
+              the commit that carries this file is the last one before the result.
+  HEAD == origin/main at result time; clean worktree; no force/reset/amend/stash/rebase.
 
 Timing authority (one pure rule)
   AdminFulfillmentDispatchTimingAuthority.Classify(pending, inTransit, plans, explicit nowUtc)
