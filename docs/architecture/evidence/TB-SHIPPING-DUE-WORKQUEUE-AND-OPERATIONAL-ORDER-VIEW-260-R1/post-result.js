@@ -28,7 +28,7 @@ const post = async (url, payload) => {
     content: body,
   });
   if (s >= 300) return;
-  await post(/api/tasks//complete, undefined);
+  await post(`/api/tasks/${TASK_ROW}/complete`, undefined);
   await post("/api/workers/heartbeat", {
     workerId: "tooba-worker-01",
     channelId: "tooba-main",
