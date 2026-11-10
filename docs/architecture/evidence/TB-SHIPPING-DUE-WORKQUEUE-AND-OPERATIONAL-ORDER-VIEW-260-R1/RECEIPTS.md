@@ -102,3 +102,10 @@ earliest plan and a single locator.
 No click, no POST outside the read-only grid query, no business mutation, no user order/parcel/payment write; every
 fixture is task-labelled `TB260R1-*` and was created through the production domain paths by the relational case above.
 The canonical `919` rows and the counts include those labelled fixtures (disclosed, not a production baseline).
+
+## Commits
+
+- Base (issued expected): `a5de61258f71ce5cceef30729a35ffac0751a972`
+- Code + evidence: `d70fbfe80`
+- Ledger + merge of the issued/review docs (`origin/main a50dd95b2`): `d631ba5e3`
+- After the ledger commit HEAD == `origin/main` (verified `git status -sb` = `## main...origin/main`), no rebase/reset/force, no unrelated overwrite.
