@@ -1,3 +1,14 @@
+# CURRENT — 258-R2 review PARTIAL; bounded258-R3 ISSUED — 2026-11-10
+
+Only task: docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R3/TASK.md.
+Review docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/ARCHITECT-REVIEW.md.
+Accepted: public reconcile/current actor+ownership gate, actual retained entry, mixed receipt UI, source capacity/immediate lineage/audit. Do NOT redo.
+Remaining TWO: cancelled resend reconcile returns ResolvedCancelled before exact intent comparison; failed sessionStorage silently falls back to memory and still sends first POST (reload can remint).258-R3 only: compare full intent before cancelled result; refuse NEW send when complete envelope is not durably retained. No new framework or broad testing.
+LEDGER save256-R2 closed; issues1/2 accepted257 (2/5); issue3 PARTIAL258-R3;259 common/separate parcels and260 due queue NOT ISSUED. One worker, STOP_FOR_ARCHITECT; sequential continuation, final user handoff after five.
+Same canonical tooba_alpha/5432 and3000/5088, SingleStore/store-alpha; no extra DB/Docker/15433 or edition switch. Real user rows read-only; labelled production-path fixtures allowed. Preserve keys/CapturedPreview.255 parked; live Tipax deferred. Older CURRENT blocks superseded.
+
+---
+
 # CURRENT — 258-R2 WORKER RESULT PASS: public-command exact-intent reconcile, real-page retained recovery entry, single-request mixed receipt — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/TASK.md and docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb258-relational.txt,tb258r2-orchestrator-relational.txt}.
