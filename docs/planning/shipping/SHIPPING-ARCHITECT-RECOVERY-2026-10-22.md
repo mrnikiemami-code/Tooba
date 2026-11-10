@@ -4,7 +4,18 @@ Only review target: docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPE
 Issue5 repair: the queue now emits ONE row per physical work unit (unallocated accepted group / existing parcel / ONE active package across locked members / history row), keyed `group:`/`parcel:`/`package:`/`fulfillment:`, with plans bound by `(SellerOrderId, ShippingGroupId)` so no plan is lent across groups, exact `shippingGroupId`/`shipmentId`/`packageId` locators, and readiness that treats a Created parcel as real work. Proven 5/5 pure, 5/5 real `tooba_alpha` relational, 6/6 queue contract + 5/5 shared view mount + 3/3 mounted real route, live canonical query `919` rows / `670` active (`dispatch_today 5`), typecheck/build/publish 0; no migration. Host PID 20052, FE PID 28184 BUILD_ID `MoBhYSN-pLcFMKWSta7ls`.
 Ledger: issues1–2 accepted 257; issue3 accepted 258-R3; issue4 accepted 259 (4/5); **issue5 repaired 260-R1 — pending Architect review**; no five-defect completion, no next task. 255 parked, Tipax deferred, single `tooba_alpha` + FE3000/Host5088.
 
-# SUPERSEDED —259 ACCEPT within issue4 scope; FINAL planned task260 ISSUED —2026-11-10
+# SUPERSEDED — 260 review PARTIAL; bounded 260-R1 ISSUED (now answered by the 260-R1 worker result above) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/ARCHITECT-REVIEW.md.
+Only task docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md.
+Concrete source defect: queue still one FulfillmentUnit/seller row, classifies all seller plans with aggregate pending, targets earliest group regardless of actual work. Already dispatched today group can falsely make tomorrow pending group overdue; separate parcels collapse/common parent duplicates. Target summary also labels Created parcel no-work when remaining allocation0.
+Keep accepted pure timing/finance-free shared UI. Fix physical row identity + own plan/status/locator/count/paging; focused A–E only, no whole-suite/base parity/green repeat/screenshot loop. No261.
+Ledger save closed; issues1–4 accepted (4/5); issue5 PARTIAL260-R1. Final user handoff after correction review; no claim completed5/5 yet.
+Same tooba_alpha5432,3000/5088 SingleStore/store-alpha; no extra DB/Docker/15433/edition switch. User rows read-only, minimal labelled production-path fixtures permitted. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Older CURRENT superseded.
+
+---
+
+# CURRENT —259 ACCEPT within issue4 scope; FINAL planned task260 ISSUED —2026-11-10
 
 Read docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/ARCHITECT-REVIEW.md.
 Source/evidence review bb18f62d294e81ce86b8a09ae3eb8e2b5c84c873 accepts immutable packing choice and explicit separate Completed without package; common path/history preserved. No live Marketplace checkout/visual/provider acceptance claimed.
@@ -5191,6 +5202,7 @@ ActivityListener، enrichment هندلر) اجرا نشد. جزئیات: docs/ar
 یک harness واقعی DI/EFInMemory هم ثبت‌های scoped، خواندن واقعی چهار محور، فعالیت تودرتو/کورلیشن و
 انتشار استثنا/لغو را اثبات می‌کند؛ enrichment هندلر هم در harness اندپوینت اثبات شد.
 production بایت‌به‌بایت تغییر نکرد. جزئیات: docs/architecture/evidence/TB-SHIPPING-ADMIN-DESTINATION-READ-HYDRATION-201-R2/RESULT.md
+
 
 
 

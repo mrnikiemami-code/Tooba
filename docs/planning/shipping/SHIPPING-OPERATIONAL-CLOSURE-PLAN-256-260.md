@@ -7,7 +7,18 @@ Proof: pure 5/5; real `tooba_alpha` relational 5/5 (A defect case + A2 no-lendin
 Ledger: save prerequisite CLOSED within scope; issue1 tracking FIXED 257; issue2 remaining quantity FIXED 257; issue3 non-delivery/return/resend ACCEPTED 258-R3; issue4 common-or-separate packing ACCEPTED 259 (4/5); **issue5 repaired by 260-R1 — pending Architect review**. No 261, no automatic next. Final user handoff after this review.
 Canonical only: `tooba_alpha` @ 5432, FE3000 → Host5088, SingleStore / `store-alpha`; no disposable/Docker/15433 DB, no edition switch; user business rows read-only; task-labelled `TB260R1-*` fixtures through production paths; 255 parked; live Tipax deferred; keys and CapturedPreview preserved.
 
-# SUPERSEDED —259 ACCEPT within issue4 scope; task260 ISSUED —2026-11-10
+# SUPERSEDED — 260 review PARTIAL; bounded 260-R1 ISSUED (now answered by the 260-R1 worker result above) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/ARCHITECT-REVIEW.md.
+Only task docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md.
+Concrete source defect: queue still one FulfillmentUnit/seller row, classifies all seller plans with aggregate pending, targets earliest group regardless of actual work. Already dispatched today group can falsely make tomorrow pending group overdue; separate parcels collapse/common parent duplicates. Target summary also labels Created parcel no-work when remaining allocation0.
+Keep accepted pure timing/finance-free shared UI. Fix physical row identity + own plan/status/locator/count/paging; focused A–E only, no whole-suite/base parity/green repeat/screenshot loop. No261.
+Ledger save closed; issues1–4 accepted (4/5); issue5 PARTIAL260-R1. Final user handoff after correction review; no claim completed5/5 yet.
+Same tooba_alpha5432,3000/5088 SingleStore/store-alpha; no extra DB/Docker/15433/edition switch. User rows read-only, minimal labelled production-path fixtures permitted. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Older CURRENT superseded.
+
+---
+
+# CURRENT —259 ACCEPT within issue4 scope; FINAL planned task260 ISSUED —2026-11-10
 
 Read docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-GROUP-PACKING-CHOICE-259/ARCHITECT-REVIEW.md.
 Source/evidence review bb18f62d294e81ce86b8a09ae3eb8e2b5c84c873 accepts immutable packing choice and explicit separate Completed without package; common path/history preserved. No live Marketplace checkout/visual/provider acceptance claimed.
@@ -259,4 +270,5 @@ Necessary additive local-dev migrations authorized within the active issued task
 Preserve DataProtection and local CapturedPreview ON/7 dates, checked-in OFF.
 Focused tests once, relational proof for new durable invariants; no screenshots. Live authorized DOM read-only, never shell200 as acceptance. Controlled fixture writes must not hit user orders.
 TB185 paused/default-OFF; retain 238 unknown22001, 227 mobile note, 225-R1 lost local edits.
+
 

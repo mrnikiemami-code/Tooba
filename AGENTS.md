@@ -9,7 +9,18 @@ Deploy: NO migration added and none applied. Host republished to `artifacts/publ
 LEDGER: save prerequisite CLOSED within scope; **issue1 tracking FIXED 257**; **issue2 remaining quantity FIXED 257**; **issue3 non-delivery/return/resend ACCEPTED 258-R3 within internal-operator scope**; **issue4 common-or-separate packing ACCEPTED 259 within scope (4/5)**; **issue5 due workqueue/shared operational order view REPAIRED by 260-R1 — pending Architect review of this result**. Known limits: no screenshots/DOM matrix (read-only DOM optional; proof = mounted real route/view + live API, accepted TB-260 appearance unchanged); canonical 919 rows / 670 active include the task-labelled TB-260/R1 fixtures (not a production baseline); plan-bearing classification remains fixture-derived (no live plan-bearing real checkout; TB-256/259 forbid invented dates); a returned parcel with exhausted capacity truthfully offers no action and a Delivered package owns no row; concurrency/recovery inherited from 249/253/257/258/259, not re-stressed; the known legacy 500 on admin order detail for pre-existing `SalesChannel='Web'` fixtures is untouched and the operational view degrades honestly.
 STOP_FOR_ARCHITECT; automaticNext NONE.
 
-# SUPERSEDED — 260 WORKER RESULT PASS: durable due dispatch work queue + finance-free shared operational order view — 2026-11-10
+# SUPERSEDED — 260 review PARTIAL; bounded 260-R1 ISSUED (now answered by the 260-R1 worker result above) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/ARCHITECT-REVIEW.md.
+Only task docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md.
+Concrete source defect: queue still one FulfillmentUnit/seller row, classifies all seller plans with aggregate pending, targets earliest group regardless of actual work. Already dispatched today group can falsely make tomorrow pending group overdue; separate parcels collapse/common parent duplicates. Target summary also labels Created parcel no-work when remaining allocation0.
+Keep accepted pure timing/finance-free shared UI. Fix physical row identity + own plan/status/locator/count/paging; focused A–E only, no whole-suite/base parity/green repeat/screenshot loop. No261.
+Ledger save closed; issues1–4 accepted (4/5); issue5 PARTIAL260-R1. Final user handoff after correction review; no claim completed5/5 yet.
+Same tooba_alpha5432,3000/5088 SingleStore/store-alpha; no extra DB/Docker/15433/edition switch. User rows read-only, minimal labelled production-path fixtures permitted. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Older CURRENT superseded.
+
+---
+
+# CURRENT — 260 WORKER RESULT PASS: durable due dispatch work queue + finance-free shared operational order view — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb260-relational.txt,dom/tb260-dom.json,dom/tb260-exact.json,dom/tb260-cell-dump.json,dom/harness}.
@@ -4559,6 +4570,7 @@ explicit product-owner decision.
 - `docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md`
 - `docs/PROJECT-STATE.md`
 - `docs/ROADMAP.md`
+
 
 
 

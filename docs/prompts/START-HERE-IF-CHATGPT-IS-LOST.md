@@ -7,7 +7,18 @@ Issue5 repair landed: `AdminFulfillmentWorkUnitProjection` now emits ONE row per
 Proof: pure 5/5; real `tooba_alpha` relational 5/5 (A defect case `targetB=groupB` + A2 no-lending; B `2` distinct keys/paging `2x1`; C `1` package row / `0` child rows / separate `2`; D `4` rows with no phantom remainder); frontend queue contract 6/6, shared view mount 5/5, NEW mounted real route 3/3; live canonical read-only query `total=919`, page1 20 distinct keys (Group 8 / Parcel 11 / Package 1), counts `670/5/5/0/25/640/249`, `dispatch_today → 5`, paging 1-size distinct; typecheck 0; build 0 (BUILD_ID `MoBhYSN-pLcFMKWSta7ls`); solution build 0 errors; publish 0; Host PID **20052** (`/health`+`/health/ready` 200, SingleStore), FE PID **28184** (`/fa` 200, old chunk 404). Ledger: issues1–2 accepted 257, issue3 accepted 258-R3, issue4 accepted 259 (4/5), **issue5 repaired 260-R1 pending Architect review**; 260 remains without user acceptance; 255 parked; Tipax deferred.
 STOP_FOR_ARCHITECT; automaticNext NONE.
 
-# SUPERSEDED — 260 WORKER RESULT PASS: durable due dispatch queue + finance-free shared operational order view — 2026-11-10
+# SUPERSEDED — 260 review PARTIAL; bounded 260-R1 ISSUED (now answered by the 260-R1 worker result above) — 2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/ARCHITECT-REVIEW.md.
+Only task docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md.
+Concrete source defect: queue still one FulfillmentUnit/seller row, classifies all seller plans with aggregate pending, targets earliest group regardless of actual work. Already dispatched today group can falsely make tomorrow pending group overdue; separate parcels collapse/common parent duplicates. Target summary also labels Created parcel no-work when remaining allocation0.
+Keep accepted pure timing/finance-free shared UI. Fix physical row identity + own plan/status/locator/count/paging; focused A–E only, no whole-suite/base parity/green repeat/screenshot loop. No261.
+Ledger save closed; issues1–4 accepted (4/5); issue5 PARTIAL260-R1. Final user handoff after correction review; no claim completed5/5 yet.
+Same tooba_alpha5432,3000/5088 SingleStore/store-alpha; no extra DB/Docker/15433/edition switch. User rows read-only, minimal labelled production-path fixtures permitted. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Older CURRENT superseded.
+
+---
+
+# CURRENT — 260 WORKER RESULT PASS: durable due dispatch queue + finance-free shared operational order view — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb260-relational.txt,dom/tb260-dom.json}.
@@ -4144,6 +4155,7 @@ PRODUCT_FULLY_READY = NO
 ```
 
 Evidence for current task: `docs/evidence/TB-P07-T001-R5/` (Admin+Seller UI/UX polish; Shopeiva vendor fidelity; DataGrid/AC UX; manual visual supervision). Flags: T001/R1/R2/R3/R4 = SUPERSEDED; R5 = AWAITING_ARCHITECT_ACCEPT; `CURRENT_FOCUS` = UI_UX_ONLY; `ADMIN_UI` = PRIORITY_1; `SELLER_UI` = PRIORITY_2; `BACKEND_FEATURE_EXPANSION` = FROZEN; `CATEGORY_ATTRIBUTE_*` / `PRODUCT_VARIANT_AXES` / `VARIANT_COMBINATION_FOUNDATION` = LIVE (kept); `FULL_VARIANT_MATRIX` = DEFERRED; `FACETED_SEARCH_INTEGRATION` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Do **not** claim `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, `PRODUCTION_GO_LIVE_READY`, `SELLER_PANEL_COMPLETE`, or `FULL_VARIANT_MATRIX_LIVE`.
+
 
 
 
