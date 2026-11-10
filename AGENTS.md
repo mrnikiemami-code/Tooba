@@ -1,3 +1,14 @@
+# CURRENT — 258-R1 Architect review PARTIAL; 258-R2 ISSUED — 2026-11-10
+
+ONLY next worker task: docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R2/TASK.md.
+Review: docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/ARCHITECT-REVIEW.md.
+Source review29d3ce3688e58273e92e51fe1b1c782e485ebc1b accepts source-parcel capacity, immediate lineage, aggregate exact-intent replay, mixed-condition DOMAIN validation and audit. Three integrated gaps remain: public RunProjectedCoreAsync gate prevents replay after readiness disappears; actual parcel card has no retained-attempt entry independent of fresh action; receipt UI still emits one condition per line and cannot enter usable2+damaged1.
+Do NOT repeat accepted backend work or claim isolated directory/open-dialog tests prove public API/real-page recovery.258-R2 closes these three seams only, then STOP_FOR_ARCHITECT; no automatic next implementation.
+LEDGER: save256-R2 closed; issues1/2 accepted257 (2/5); issue3 PARTIAL258-R2; issue4 common-or-separate parcels259 NOT ISSUED; issue5 due queue/shared view260 NOT ISSUED. User wants sequential continuation and final handoff after five defects, no acceptance pause now.
+Same tooba_alpha5432, FE3000/Host5088 SingleStore/store-alpha only; no extra DB/Docker/15433, edition switch, raw business SQL/reset/reseed. User business rows read-only; minimal labelled production-path fixtures permitted. Preserve keys/CapturedPreview and approved calendars.255 parked, live Tipax deferred. Older CURRENT blocks below are historical and superseded.
+
+---
+
 # CURRENT — 258-R1 WORKER RESULT PASS: owning resend replay, source-parcel capacity, mixed-condition receipt — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/TASK.md and docs/architecture/evidence/TB-SHIPPING-NONDELIVERY-RETURN-AND-RESEND-258-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb258-relational.txt,dom/tb258r1-dom.json}.
