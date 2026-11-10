@@ -1,5 +1,6 @@
 using Tooba.Fulfillment.Contracts.Shipping;
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Application.WorkQueue.Models;
@@ -9,31 +10,104 @@ using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Order.Contracts.Shipping;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence.Grid;
 
 namespace Tooba.Fulfillment.Infrastructure.Queries;
 
-/// <summary>پرس‌وجوی DB-native صف کار ارسال و تحویل Admin با batch map و بدون N+1.</summary>
+/// <summary>
+/// پرس‌وجوی DB-native صف کار ارسال و تحویل Admin با batch map و بدون N+1.
+/// </summary>
+/// <remarks>
+/// TB-260: the queue is dispatch-aware. It joins the Fulfillment-owned physical facts with the Order-owned
+/// <b>durable accepted dispatch plan</b> through <see cref="IOrderDispatchPlanFactsReader"/> (Contracts only,
+/// no cross-module DbContext, no Shipping settings lookup, no browser date arithmetic) and classifies every
+/// row with the single pure <see cref="AdminFulfillmentDispatchTimingAuthority"/>.
+/// </remarks>
 public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWorkQueueQuery
 {
     private readonly FulfillmentDbContext _db;
     private readonly IPartyLookup _parties;
     private readonly IOrderGridEnrichmentReader _orders;
+    private readonly IOrderDispatchPlanFactsReader _dispatchPlans;
+    private readonly IClock _clock;
 
     /// <summary>موتور صف کار را به DbContextها وصل می‌کند.</summary>
     public AdminFulfillmentWorkQueueQueryEngine(
         FulfillmentDbContext db,
         IPartyLookup parties,
-        IOrderGridEnrichmentReader orders)
+        IOrderGridEnrichmentReader orders,
+        IOrderDispatchPlanFactsReader dispatchPlans,
+        IClock clock)
     {
         _db = db;
         _parties = parties;
         _orders = orders;
+        _dispatchPlans = dispatchPlans;
+        _clock = clock;
     }
 
     /// <summary>صفحه‌بندی و فیلتر صف کار را اجرا می‌کند.</summary>
     public async Task<GridPageResponse<AdminFulfillmentWorkQueueRow>> QueryAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var (rows, timingFilter) = await ClassifyAsync(request, cancellationToken);
+        var filtered = timingFilter is null
+            ? rows
+            : rows.Where(row => MatchesTiming(row, timingFilter)).ToList();
+
+        var ordered = ApplySort(filtered, request);
+        var page = Math.Max(1, request.Page);
+        var size = Math.Max(1, request.PageSize);
+        var items = ordered.Skip((page - 1) * size).Take(size).ToList();
+        return new GridPageResponse<AdminFulfillmentWorkQueueRow>(items, page, size, ordered.Count);
+    }
+
+    /// <summary>TB-260: counts of the whole filtered set, never of one page.</summary>
+    public async Task<AdminFulfillmentWorkQueueCounts> CountAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var (rows, _) = await ClassifyAsync(request, cancellationToken);
+        // TB-260: counts always describe the set produced by search/column filters, INDEPENDENT of the
+        // selected quick dispatch tab. Otherwise selecting «سررسیدشده» would zero every other tab's badge.
+        return new AdminFulfillmentWorkQueueCounts(
+            rows.Count(row => row.PendingDispatch),
+            rows.Count(row => IsDue(row)),
+            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Today),
+            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Overdue),
+            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Upcoming),
+            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Unspecified),
+            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.InTransit));
+    }
+
+    private static bool IsDue(AdminFulfillmentWorkQueueRow row) =>
+        row.DispatchBucket is AdminFulfillmentDispatchBucketNames.Today or AdminFulfillmentDispatchBucketNames.Overdue
+        && row.HandoffWindowState is AdminFulfillmentDispatchBucketNames.WindowOpen
+            or AdminFulfillmentDispatchBucketNames.WindowClosed;
+
+    private static bool MatchesTiming(AdminFulfillmentWorkQueueRow row, string filter) =>
+        filter.ToLowerInvariant() switch
+        {
+            AdminFulfillmentDispatchTimingAuthority.FilterDue => IsDue(row),
+            AdminFulfillmentDispatchTimingAuthority.FilterToday =>
+                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Today,
+            AdminFulfillmentDispatchTimingAuthority.FilterOverdue =>
+                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Overdue,
+            AdminFulfillmentDispatchTimingAuthority.FilterUpcoming =>
+                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Upcoming,
+            AdminFulfillmentDispatchTimingAuthority.FilterUnspecified =>
+                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Unspecified,
+            _ => true,
+        };
+
+    /// <summary>
+    /// Applies search/filters in SQL, then classifies the whole filtered set in memory. Timing must be
+    /// evaluated by ONE authority over complete rows, so a page can never be filtered after paging.
+    /// </summary>
+    private async Task<(List<AdminFulfillmentWorkQueueRow> Rows, string? TimingFilter)> ClassifyAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
@@ -54,9 +128,32 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
                 || matchingOrderIds.Contains(x.SellerOrderId));
         }
 
+        string? timingFilter = null;
+        var queueFilterRequested = false;
         foreach (var filter in request.Filters)
         {
+            if (filter.Field == "queueFilter")
+            {
+                queueFilterRequested = true;
+                var raw = (filter.Values?.FirstOrDefault() ?? filter.Value ?? string.Empty).Trim();
+                if (AdminFulfillmentDispatchTimingAuthority.IsTimingFilter(raw))
+                {
+                    // TB-260: timing is classified from the accepted plan, never from a SQL status alone.
+                    timingFilter = string.Equals(raw, AdminFulfillmentQueueFilters.All, StringComparison.OrdinalIgnoreCase)
+                        ? null
+                        : raw.ToLowerInvariant();
+                    continue;
+                }
+            }
+
             q = await ApplyFilterAsync(q, filter, cancellationToken);
+        }
+
+        if (!queueFilterRequested)
+        {
+            // TB-260: the DEFAULT queue is live work, not an order archive. Finished rows stay reachable
+            // through the explicit delivered/problem/history quick filters, which set queueFilter.
+            q = q.Where(x => x.Status != FulfillmentStatus.Cancelled && x.Status != FulfillmentStatus.Delivered);
         }
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
@@ -65,13 +162,21 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             q = q.Where(x => advancedIds.Contains(x.FulfillmentId));
         }
 
-        var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("updatedAt", "desc");
-        return await EfGridQuery.PageAsync(
-            q,
-            request,
-            filtered => Order(filtered, sort),
-            MapPageAsync,
+        var units = await q.ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            return ([], timingFilter);
+        }
+
+        var planFacts = await _dispatchPlans.ListPlannedForSellerOrdersAsync(
+            units.Select(x => x.SellerOrderId).Distinct().ToList(),
             cancellationToken);
+        var plansBySellerOrder = planFacts
+            .GroupBy(plan => plan.SellerOrderId)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<OrderAcceptedGroupDispatchPlanFact>)group.ToList());
+
+        var rows = await MapPageAsync(units, plansBySellerOrder, _clock.UtcNow, cancellationToken);
+        return (rows.ToList(), timingFilter);
     }
 
     private async Task<HashSet<Guid>?> EvaluateAdvancedAsync(
@@ -344,68 +449,65 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             .ToList();
     }
 
-    private IQueryable<FulfillmentUnit> Order(IQueryable<FulfillmentUnit> source, GridSortRequest sort)
+    /// <summary>
+    /// Default queue order is the dispatch priority (overdue earliest deadline first, then today, then
+    /// upcoming, then unspecified, then in-transit) with a deterministic id tie-break. An explicit column
+    /// sort still wins, because an operator who asked for a column must get that column.
+    /// </summary>
+    private static List<AdminFulfillmentWorkQueueRow> ApplySort(
+        List<AdminFulfillmentWorkQueueRow> rows,
+        GridQueryRequest request)
     {
-        var asc = sort.Direction == "asc";
-        if (sort.Field == "shipmentCount")
+        var sort = request.Sort.FirstOrDefault();
+        if (sort is null || string.IsNullOrWhiteSpace(sort.Field))
         {
-            var counts = _db.Shipments.AsNoTracking()
-                .GroupBy(x => x.FulfillmentId)
-                .Select(g => new { FulfillmentId = g.Key, Count = g.Count() });
-            var joined = from u in source
-                         join c in counts on u.FulfillmentId equals c.FulfillmentId into cj
-                         from c in cj.DefaultIfEmpty()
-                         select new { Unit = u, Count = c != null ? c.Count : 0 };
-            var ordered = asc
-                ? joined.OrderBy(x => x.Count).ThenBy(x => x.Unit.FulfillmentId)
-                : joined.OrderByDescending(x => x.Count).ThenBy(x => x.Unit.FulfillmentId);
-            return ordered.Select(x => x.Unit);
+            return rows
+                .OrderBy(row => AdminFulfillmentDispatchTimingAuthority.PriorityRank(ParseBucket(row.DispatchBucket)))
+                .ThenBy(row => row.DispatchDeadlineUtc ?? DateTimeOffset.MaxValue)
+                .ThenBy(row => row.PlannedHandoffDate ?? DateOnly.MaxValue)
+                .ThenBy(row => row.FulfillmentId)
+                .ToList();
         }
 
-        return sort.Field switch
+        var asc = sort.Direction == "asc";
+        IOrderedEnumerable<AdminFulfillmentWorkQueueRow> ordered = sort.Field switch
         {
-            "fulfillmentId" => asc
-                ? source.OrderBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.FulfillmentId),
-            "checkoutId" => asc
-                ? source.OrderBy(x => x.CheckoutId).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.CheckoutId).ThenBy(x => x.FulfillmentId),
-            "orderReference" => OrderByOrderNumber(source, asc),
-            "cityName" => asc
-                ? source.OrderBy(x => x.CityName).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.CityName).ThenBy(x => x.FulfillmentId),
-            "status" => asc
-                ? source.OrderBy(x => x.Status).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.Status).ThenBy(x => x.FulfillmentId),
-            "shippingMethodCode" or "shippingMethodLabel" => asc
-                ? source.OrderBy(x => x.ShippingMethodLabel).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.ShippingMethodLabel).ThenBy(x => x.FulfillmentId),
-            "sellerPartyId" or "sellerDisplayName" => asc
-                ? source.OrderBy(x => x.SellerPartyId).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.SellerPartyId).ThenBy(x => x.FulfillmentId),
-            "recipientName" => asc
-                ? source.OrderBy(x => x.RecipientName).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.RecipientName).ThenBy(x => x.FulfillmentId),
-            "createdAt" => asc
-                ? source.OrderBy(x => x.CreatedAt).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.CreatedAt).ThenBy(x => x.FulfillmentId),
-            "updatedAt" => asc
-                ? source.OrderBy(x => x.UpdatedAt).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.UpdatedAt).ThenBy(x => x.FulfillmentId),
-            _ => asc
-                ? source.OrderBy(x => x.UpdatedAt).ThenBy(x => x.FulfillmentId)
-                : source.OrderByDescending(x => x.UpdatedAt).ThenBy(x => x.FulfillmentId),
+            "fulfillmentId" => Order(rows, row => row.FulfillmentId, asc),
+            "checkoutId" => Order(rows, row => row.CheckoutId, asc),
+            "orderReference" => Order(rows, row => row.SellerOrderId, asc),
+            "cityName" => Order(rows, row => row.CityName, asc),
+            "status" => Order(rows, row => row.Status, asc),
+            "shippingMethodCode" or "shippingMethodLabel" => Order(rows, row => row.ShippingMethodLabel, asc),
+            "sellerPartyId" or "sellerDisplayName" => Order(rows, row => row.SellerPartyId, asc),
+            "recipientName" => Order(rows, row => row.RecipientName, asc),
+            "shipmentCount" => Order(rows, row => row.ShipmentCount, asc),
+            "createdAt" => Order(rows, row => row.CreatedAt, asc),
+            "updatedAt" => Order(rows, row => row.UpdatedAt, asc),
+            "dispatchDeadline" => Order(rows, row => row.DispatchDeadlineUtc ?? DateTimeOffset.MaxValue, asc),
+            "dispatchBucket" => Order(
+                rows,
+                row => AdminFulfillmentDispatchTimingAuthority.PriorityRank(ParseBucket(row.DispatchBucket)),
+                asc),
+            _ => Order(rows, row => row.UpdatedAt, asc),
         };
+        return ordered.ThenBy(row => row.FulfillmentId).ToList();
     }
 
-    private IQueryable<FulfillmentUnit> OrderByOrderNumber(IQueryable<FulfillmentUnit> source, bool asc) =>
-        // Cross-module EF join removed; SellerOrderId is a stable proxy. MapPage still shows OrderNumber.
-        asc
-            ? source.OrderBy(x => x.SellerOrderId).ThenBy(x => x.FulfillmentId)
-            : source.OrderByDescending(x => x.SellerOrderId).ThenBy(x => x.FulfillmentId);
+    private static IOrderedEnumerable<AdminFulfillmentWorkQueueRow> Order<TKey>(
+        IEnumerable<AdminFulfillmentWorkQueueRow> rows,
+        Func<AdminFulfillmentWorkQueueRow, TKey> key,
+        bool asc) =>
+        asc ? rows.OrderBy(key) : rows.OrderByDescending(key);
+
+    private static AdminFulfillmentDispatchBucket ParseBucket(string value) =>
+        Enum.TryParse<AdminFulfillmentDispatchBucket>(value, true, out var bucket)
+            ? bucket
+            : AdminFulfillmentDispatchBucket.NotQueued;
 
     private async Task<IReadOnlyList<AdminFulfillmentWorkQueueRow>> MapPageAsync(
         List<FulfillmentUnit> rows,
+        IReadOnlyDictionary<Guid, IReadOnlyList<OrderAcceptedGroupDispatchPlanFact>> plansBySellerOrder,
+        DateTimeOffset nowUtc,
         CancellationToken cancellationToken)
     {
         if (rows.Count == 0)
@@ -502,6 +604,26 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
                 ? orderNumber!
                 : string.Empty;
             sellerNameBy.TryGetValue(unit.SellerPartyId, out var sellerName);
+
+            plansBySellerOrder.TryGetValue(unit.SellerOrderId, out var plans);
+            plans ??= [];
+            var pending = AdminFulfillmentQueueFilters.HasPendingDispatchWork(
+                unit.Status,
+                itemSnapshots,
+                shipmentSnapshots);
+            var inTransit = AdminFulfillmentQueueFilters.HasOpenTransitParcels(shipmentSnapshots);
+            var timing = AdminFulfillmentDispatchTimingAuthority.Classify(pending, inTransit, plans, nowUtc);
+            var actionCodes = AdminFulfillmentQueueFilters.ProjectActionCodes(snapshot);
+            var next = AdminFulfillmentNextStep.Resolve(actionCodes);
+            var actionable = timing.Bucket is AdminFulfillmentDispatchBucket.Overdue
+                or AdminFulfillmentDispatchBucket.Today
+                or AdminFulfillmentDispatchBucket.Upcoming
+                or AdminFulfillmentDispatchBucket.Unspecified;
+            var nextStepLabel = next.LabelFa;
+            var blocker = actionable && next.Code.Length == 0
+                ? "اقدام مجاز فعلی برای این ردیف وجود ندارد؛ وضعیت پرداخت/مالکیت/گروه را بررسی کنید."
+                : null;
+
             return new AdminFulfillmentWorkQueueRow(
                 unit.FulfillmentId,
                 unit.SellerOrderId,
@@ -522,7 +644,29 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
                 tracking.Length == 0 ? "" : string.Join(" · ", tracking),
                 unit.CreatedAt,
                 unit.UpdatedAt,
-                AdminFulfillmentQueueFilters.ProjectActionCodes(snapshot));
+                actionCodes,
+                AdminFulfillmentDispatchBucketNames.Of(timing.Bucket),
+                AdminFulfillmentDispatchBucketNames.Of(timing.WindowState),
+                timing.HandoffDate,
+                string.IsNullOrWhiteSpace(timing.HandoffTimeWindow) ? null : timing.HandoffTimeWindow,
+                string.IsNullOrWhiteSpace(timing.HandoffTimeZone) ? null : timing.HandoffTimeZone,
+                timing.DistinctPlanVariants,
+                timing.DeadlineUtc,
+                Earliest(plans)?.CustomerReceivingDate,
+                Earliest(plans)?.CustomerReceivingTimeWindow,
+                Earliest(plans)?.ShippingGroupId,
+                next.Code,
+                nextStepLabel,
+                blocker,
+                pending);
         }).ToList();
     }
+
+    private static OrderAcceptedGroupDispatchPlanFact? Earliest(
+        IReadOnlyList<OrderAcceptedGroupDispatchPlanFact> plans) =>
+        plans
+            .OrderBy(plan => plan.HandoffDate)
+            .ThenBy(plan => plan.HandoffOpenTicks)
+            .ThenBy(plan => plan.ShippingGroupId)
+            .FirstOrDefault();
 }

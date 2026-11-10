@@ -16,6 +16,7 @@ import {
   type HostReadSource,
 } from "../vendor-panel/seller-api.ts";
 import { formatQuantityDisplay } from "../../lib/quantity-display.ts";
+import { readDispatchCountsFromPayload, type FulfillmentQueueCounts } from "./fulfillment-work-queue-dispatch.ts";
 
 export interface FulfillmentShipmentLine {
   orderLineId: string;
@@ -82,7 +83,29 @@ export interface FulfillmentListRow {
   createdAt: string;
   updatedAt: string;
   availableActionCodes: string[];
+  /**
+   * TB-260: server-classified dispatch timing. These values are copied straight from the queue projection —
+   * the browser never derives a deadline, a bucket or a "today" from its own clock or from current shipping
+   * settings. Older payloads (no timing) map to the "unspecified" defaults below.
+   */
+  dispatchBucket: string;
+  handoffWindowState: string;
+  plannedHandoffDate: string | null;
+  plannedHandoffWindow: string | null;
+  plannedHandoffTimeZone: string | null;
+  handoffPlanVariants: number;
+  dispatchDeadlineUtc: string | null;
+  customerReceivingDate: string | null;
+  customerReceivingWindow: string | null;
+  targetShippingGroupId: string | null;
+  nextStepCode: string;
+  nextStepLabelFa: string;
+  nextStepBlockerFa: string | null;
+  pendingDispatch: boolean;
 }
+
+/** TB-260: honest counts of the whole filtered queue set (not of the current page). */
+export type { FulfillmentQueueCounts } from "./fulfillment-work-queue-dispatch.ts";
 
 export type FulfillmentQueueFilter =
   | "all"
@@ -93,7 +116,12 @@ export type FulfillmentQueueFilter =
   | "missing_tracking"
   | "in_transit"
   | "delivered"
-  | "problem";
+  | "problem"
+  | "dispatch_due"
+  | "dispatch_today"
+  | "dispatch_overdue"
+  | "dispatch_upcoming"
+  | "dispatch_unspecified";
 
 export const FULFILLMENT_QUEUE_FILTERS: Array<{ id: FulfillmentQueueFilter; labelFa: string; labelEn: string }> = [
   { id: "all", labelFa: "همه", labelEn: "All" },
@@ -304,6 +332,20 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
         createdAt: text(prop(item, "createdAt", "CreatedAt")),
         updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
         availableActionCodes,
+        dispatchBucket: text(prop(item, "dispatchBucket", "DispatchBucket"), "unspecified"),
+        handoffWindowState: text(prop(item, "handoffWindowState", "HandoffWindowState"), "none"),
+        plannedHandoffDate: nullableText(prop(item, "plannedHandoffDate", "PlannedHandoffDate")),
+        plannedHandoffWindow: nullableText(prop(item, "plannedHandoffWindow", "PlannedHandoffWindow")),
+        plannedHandoffTimeZone: nullableText(prop(item, "plannedHandoffTimeZone", "PlannedHandoffTimeZone")),
+        handoffPlanVariants: number(prop(item, "handoffPlanVariants", "HandoffPlanVariants")),
+        dispatchDeadlineUtc: nullableText(prop(item, "dispatchDeadlineUtc", "DispatchDeadlineUtc")),
+        customerReceivingDate: nullableText(prop(item, "customerReceivingDate", "CustomerReceivingDate")),
+        customerReceivingWindow: nullableText(prop(item, "customerReceivingWindow", "CustomerReceivingWindow")),
+        targetShippingGroupId: nullableText(prop(item, "targetShippingGroupId", "TargetShippingGroupId")),
+        nextStepCode: text(prop(item, "nextStepCode", "NextStepCode")),
+        nextStepLabelFa: text(prop(item, "nextStepLabelFa", "NextStepLabelFa")),
+        nextStepBlockerFa: nullableText(prop(item, "nextStepBlockerFa", "NextStepBlockerFa")),
+        pendingDispatch: prop(item, "pendingDispatch", "PendingDispatch") === true,
       }];
     }
 
@@ -335,6 +377,20 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
       createdAt: "",
       updatedAt: "",
       availableActionCodes: [],
+      dispatchBucket: "not_queued",
+      handoffWindowState: "none",
+      plannedHandoffDate: null,
+      plannedHandoffWindow: null,
+      plannedHandoffTimeZone: null,
+      handoffPlanVariants: 0,
+      dispatchDeadlineUtc: null,
+      customerReceivingDate: null,
+      customerReceivingWindow: null,
+      targetShippingGroupId: null,
+      nextStepCode: "",
+      nextStepLabelFa: "",
+      nextStepBlockerFa: null,
+      pendingDispatch: false,
     }];
   });
 }
@@ -614,6 +670,25 @@ export function queryAdminFulfillmentsGrid(
     const rows = mapFulfillmentList([item]);
     return rows[0] ?? null;
   });
+}
+
+/**
+ * TB-260: the same GridQuery call, but also returns the SERVER-owned full-set counts that accompany the page.
+ * The browser never recomputes them from a page of rows — a count that only covered the page would lie.
+ */
+export function queryAdminFulfillmentsWorkQueue(
+  query: GridServerQuery,
+): Promise<AdminGridQueryResult<FulfillmentListRow> & { meta?: FulfillmentQueueCounts }> {
+  return postAdminGridQuery(
+    "/v1/admin/fulfillments/work-queue/query",
+    query,
+    adminActorHeader(),
+    (item) => {
+      const rows = mapFulfillmentList([item]);
+      return rows[0] ?? null;
+    },
+    readDispatchCountsFromPayload,
+  );
 }
 
 /** اجرای گروهی عملیات صف کار — همان فرمان‌های Order Operations. */

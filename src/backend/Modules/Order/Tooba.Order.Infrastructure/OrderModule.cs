@@ -116,6 +116,8 @@ public sealed class OrderModule : IToobaModule
             Integrations.Storefront.OrderShippingGroupHistoryReader>();
         services.AddScoped<Tooba.Order.Contracts.Settlement.IOrderShippingGroupSettlementReader, Integrations.Settlement.OrderShippingGroupSettlementBridge>();
         services.AddScoped<Tooba.Order.Contracts.Shipping.IOrderCommittedCarrierShipmentFactsReader, Integrations.Shipping.OrderCommittedCarrierShipmentFactsReader>();
+        // TB-260: durable accepted dispatch plans for the operational due queue (Contracts-only read seam).
+        services.AddScoped<Tooba.Order.Contracts.Shipping.IOrderDispatchPlanFactsReader, Integrations.DispatchPlan.OrderDispatchPlanFactsBridge>();
         services.AddScoped<Tooba.Order.Contracts.Settlement.IOrderCheckoutSalesChannelSettlementReader, Integrations.Settlement.OrderCheckoutSalesChannelSettlementBridge>();
         services.AddScoped<IOrderNotificationReader, OrderNotificationBridge>();
         services.AddScoped<ICheckoutPaymentAccessReader, CheckoutPaymentAccessBridge>();

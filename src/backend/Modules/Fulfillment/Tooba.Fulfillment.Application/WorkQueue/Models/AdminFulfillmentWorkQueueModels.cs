@@ -8,6 +8,12 @@ namespace Tooba.Fulfillment.Application.WorkQueue.Models;
 /// <summary>
 /// ردیف صف کار ارسال و تحویل Admin — fulfillment/seller-group نه Customer Order خام.
 /// </summary>
+/// <remarks>
+/// TB-260: each row also carries the accepted dispatch timing (plan, bucket, deadline and the exact
+/// operational-group locator) so the queue can answer "what must be handed to the carrier now" without
+/// reading Shipping settings in the browser. Every timing field is additive and defaults to "unknown" so
+/// older callers keep working.
+/// </remarks>
 public sealed record AdminFulfillmentWorkQueueRow(
     Guid FulfillmentId,
     Guid SellerOrderId,
@@ -28,7 +34,35 @@ public sealed record AdminFulfillmentWorkQueueRow(
     string TrackingSummary,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    IReadOnlyList<string> AvailableActionCodes);
+    IReadOnlyList<string> AvailableActionCodes,
+    // TB-260: mutually exclusive dispatch bucket (<c>Overdue</c>/<c>Today</c>/…).
+    string DispatchBucket = AdminFulfillmentDispatchBucketNames.NotQueued,
+    // TB-260: position versus the accepted half-open handoff window.
+    string HandoffWindowState = AdminFulfillmentDispatchBucketNames.WindowNone,
+    // TB-260: accepted handoff day (carrier calendar), null when no plan exists.
+    DateOnly? PlannedHandoffDate = null,
+    // TB-260: accepted handoff window text <c>hh:mm–hh:mm</c>.
+    string? PlannedHandoffWindow = null,
+    // TB-260: accepted carrier time zone id.
+    string? PlannedHandoffTimeZone = null,
+    // TB-260: number of distinct plans among this row's accepted groups (1 = one plan).
+    int HandoffPlanVariants = 0,
+    // TB-260: accepted close instant in UTC (the dispatch deadline), null when no plan exists.
+    DateTimeOffset? DispatchDeadlineUtc = null,
+    // TB-260: customer receiving date — a commitment, never the dispatch deadline.
+    DateOnly? CustomerReceivingDate = null,
+    // TB-260: customer receiving time window text.
+    string? CustomerReceivingWindow = null,
+    // TB-260: accepted shipping group of the actionable plan (exact view target).
+    Guid? TargetShippingGroupId = null,
+    // TB-260: the truthful next operation code for this row, empty when none is permitted.
+    string NextStepCode = "",
+    // TB-260: Persian label of <see cref="NextStepCode"/>.
+    string NextStepLabelFa = "",
+    // TB-260: why no next step is offered while the row is still active work.
+    string? NextStepBlockerFa = null,
+    // TB-260: true when physical preparation/dispatch work still exists on this row.
+    bool PendingDispatch = false);
 
 /// <summary>
 /// فیلترهای سریع صف کار بر اساس وضعیت واقعی دامنه — بدون SLA ساختگی.
@@ -53,6 +87,16 @@ public static class AdminFulfillmentQueueFilters
     public const string Delivered = "delivered";
     /// <summary>مشکل‌دار.</summary>
     public const string Problem = "problem";
+    /// <summary>TB-260: pending work whose accepted handoff window has opened (including overdue).</summary>
+    public const string DispatchDue = AdminFulfillmentDispatchTimingAuthority.FilterDue;
+    /// <summary>TB-260: pending work whose accepted handoff day is today (carrier zone).</summary>
+    public const string DispatchToday = AdminFulfillmentDispatchTimingAuthority.FilterToday;
+    /// <summary>TB-260: pending work at/after the accepted close instant or a past handoff day.</summary>
+    public const string DispatchOverdue = AdminFulfillmentDispatchTimingAuthority.FilterOverdue;
+    /// <summary>TB-260: pending work with a strictly future accepted handoff day.</summary>
+    public const string DispatchUpcoming = AdminFulfillmentDispatchTimingAuthority.FilterUpcoming;
+    /// <summary>TB-260: pending work whose accepted evidence carries no plan.</summary>
+    public const string DispatchUnspecified = AdminFulfillmentDispatchTimingAuthority.FilterUnspecified;
 
     /// <summary>کدهای شناخته‌شدهٔ فیلتر سریع.</summary>
     public static readonly HashSet<string> Known = new(StringComparer.OrdinalIgnoreCase)
@@ -66,7 +110,46 @@ public static class AdminFulfillmentQueueFilters
         InTransit,
         Delivered,
         Problem,
+        DispatchDue,
+        DispatchToday,
+        DispatchOverdue,
+        DispatchUpcoming,
+        DispatchUnspecified,
     };
+
+    /// <summary>
+    /// TB-260: physical work state of one fulfillment row. A row is <b>pending dispatch work</b> while any
+    /// preparation/parcel step is still open (a Created parcel is dispatch work even when nothing else is
+    /// left, exactly like TB-257 quantity authority). Delivered/cancelled rows are never pending.
+    /// </summary>
+    public static bool HasPendingDispatchWork(
+        FulfillmentStatus status,
+        IReadOnlyList<FulfillmentItemSnapshot> items,
+        IReadOnlyList<ShipmentSnapshot> shipments)
+    {
+        if (status is FulfillmentStatus.Cancelled or FulfillmentStatus.Delivered)
+        {
+            return false;
+        }
+
+        if (HasProcessableQuantity(items)
+            || HasPackableQuantity(items)
+            || HasUnallocatedShipmentQuantity(items, shipments))
+        {
+            return true;
+        }
+
+        // An open Created parcel still needs tracking and/or a carrier handoff.
+        return shipments.Any(s => s.Status == ShipmentStatus.Created);
+    }
+
+    /// <summary>TB-260: a parcel is physically out of the warehouse (in transit bucket).</summary>
+    public static bool HasOpenTransitParcels(IEnumerable<ShipmentSnapshot> shipments) =>
+        shipments.Any(s => s.Status is ShipmentStatus.Dispatched
+            or ShipmentStatus.InTransit
+            or ShipmentStatus.NonDelivered
+            or ShipmentStatus.Returning
+            or ShipmentStatus.Returned);
 
     /// <summary>
     /// آیا واحد با فیلتر سریع هم‌خوان است (پس از بارگذاری shipments برای missing_tracking/needs_action).
@@ -308,3 +391,30 @@ public sealed record AdminFulfillmentWorkQueueBulkResult(
     int Succeeded,
     string? ErrorCode,
     string? ErrorMessage);
+
+/// <summary>
+/// TB-260: honest counts of the SAME filtered set the queue pages through. <see cref="TotalActive"/> is the
+/// number of rows that still carry pending dispatch work (Today + Overdue + Upcoming + Unspecified), the
+/// timing buckets are mutually exclusive, <see cref="Due"/> is their overlapping «سررسیدشده» subset
+/// (Today-open + Overdue), and InTransit is reported separately because "in the carrier's hands" is a state,
+/// not an outstanding preparation task. No physical parcel/package shape can inflate a count.
+/// </summary>
+public sealed record AdminFulfillmentWorkQueueCounts(
+    int TotalActive,
+    int Due,
+    int Today,
+    int Overdue,
+    int Upcoming,
+    int Unspecified,
+    int InTransit);
+
+/// <summary>
+/// TB-260: one queue page plus the bucket counts of the whole filtered set it was cut from. Field names
+/// stay compatible with the shared grid page (<c>items/page/pageSize/totalCount</c>).
+/// </summary>
+public sealed record AdminFulfillmentWorkQueuePage(
+    IReadOnlyList<AdminFulfillmentWorkQueueRow> Items,
+    int Page,
+    int PageSize,
+    int TotalCount,
+    AdminFulfillmentWorkQueueCounts DispatchCounts);

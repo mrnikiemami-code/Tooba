@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { Eye } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Eye, PackageCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   AppDataGrid,
@@ -23,10 +23,20 @@ import {
   formatFulfillmentShipmentSummary,
   formatFulfillmentStatus,
   fulfillmentStatusBadgeClass,
-  queryAdminFulfillmentsGrid,
+  queryAdminFulfillmentsWorkQueue,
   type FulfillmentListRow,
   type FulfillmentQueueFilter,
 } from "../fulfillment/fulfillment-api";
+import {
+  FULFILLMENT_DISPATCH_FILTERS,
+  FULFILLMENT_EMPTY_QUEUE_COUNTS,
+  formatCustomerReceiving,
+  formatDispatchBucketLabel,
+  formatHandoffWindowLabel,
+  formatPlannedHandoff,
+  normalizeDispatchToken,
+  type FulfillmentQueueCounts,
+} from "../fulfillment/fulfillment-work-queue-dispatch";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { ADMIN_FULFILLMENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
@@ -71,6 +81,22 @@ const shippingMethodEnumOptions = [
 
 const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
   {
+    id: "open-operations",
+    label: "عملیات ارسال",
+    icon: PackageCheck,
+    href: (row) => {
+      const query = new URLSearchParams({ fulfillmentId: row.fulfillmentId, from: "queue" });
+      if (row.targetShippingGroupId) query.set("shippingGroupId", row.targetShippingGroupId);
+      // Carry the active quick filter so «بازگشت به صف کار» returns to the same queue view.
+      if (typeof window !== "undefined") {
+        const active = new URLSearchParams(window.location.search).get("filter");
+        if (active) query.set("filter", active);
+      }
+      return `/admin/orders/${row.checkoutId}/operations?${query.toString()}`;
+    },
+    testId: (row) => `admin-fulfillment-open-operations-${row.fulfillmentId}`,
+  },
+  {
     id: "view-order",
     label: "مشاهده سفارش",
     icon: Eye,
@@ -79,6 +105,52 @@ const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
   },
 ];
 
+function dispatchCountFor(filter: FulfillmentQueueFilter, counts: FulfillmentQueueCounts): number {
+  switch (filter) {
+    case "dispatch_overdue":
+      return counts.overdue;
+    case "dispatch_today":
+      return counts.today;
+    case "dispatch_due":
+      return counts.due;
+    case "dispatch_upcoming":
+      return counts.upcoming;
+    case "dispatch_unspecified":
+      return counts.unspecified;
+    case "in_transit":
+      return counts.inTransit;
+    default:
+      return 0;
+  }
+}
+
+/** بُعد زمانی سرور را با رنگ و متن کوتاه نشان می‌دهد؛ مقدار ناشناس نیز صادقانه برچسب می‌خورد. */
+function dispatchBucketBadge(row: FulfillmentListRow) {
+  const bucket = normalizeDispatchToken(row.dispatchBucket);
+  const windowState = normalizeDispatchToken(row.handoffWindowState);
+  const tone =
+    bucket === "overdue"
+      ? "bg-rose-50 text-rose-700"
+      : bucket === "today"
+        ? "bg-amber-50 text-amber-800"
+        : bucket === "upcoming"
+          ? "bg-sky-50 text-sky-800"
+          : bucket === "in_transit"
+            ? "bg-indigo-50 text-indigo-800"
+            : bucket === "unspecified"
+              ? "bg-slate-100 text-slate-700"
+              : "bg-slate-50 text-slate-600";
+  const windowHint = row.pendingDispatch && windowState !== "none" && windowState !== ""
+    ? ` · ${formatHandoffWindowLabel(windowState)}`
+    : "";
+  return (
+    <span className={`inline-flex flex-wrap items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}>
+      {formatDispatchBucketLabel(row.dispatchBucket)}
+      {windowHint ? <span className="font-medium opacity-80">{windowHint}</span> : null}
+    </span>
+  );
+}
+
 /**
  * صف کار عملیاتی ارسال و تحویل — AppDataGrid + فیلتر سریع سروری + kebab + bulk سازگار.
  * Orders UI را دست نمی‌زند؛ فقط همین صفحه.
@@ -86,10 +158,27 @@ const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
 export function AdminFulfillmentWorkQueueScreen() {
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_FULFILLMENT_GRID_VIEW_KEY), []);
   const [queueFilter, setQueueFilter] = useState<FulfillmentQueueFilter>("all");
+  const [counts, setCounts] = useState<FulfillmentQueueCounts>(FULFILLMENT_EMPTY_QUEUE_COUNTS);
   const [denied, setDenied] = useState(false);
   const [gridError, setGridError] = useState<string>();
   const [reloadToken, setReloadToken] = useState(0);
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  // TB-260: returning from the operational view restores the exact quick filter the operator left.
+  useEffect(() => {
+    const raw = new URLSearchParams(window.location.search).get("filter");
+    if (!raw) return;
+    const known = [...FULFILLMENT_QUEUE_FILTERS, ...FULFILLMENT_DISPATCH_FILTERS].some((tab) => tab.id === raw);
+    if (known) setQueueFilter(raw as FulfillmentQueueFilter);
+  }, []);
+
+  const selectFilter = useCallback((id: FulfillmentQueueFilter) => {
+    setQueueFilter(id);
+    const url = new URL(window.location.href);
+    if (id === "all") url.searchParams.delete("filter");
+    else url.searchParams.set("filter", id);
+    window.history.replaceState({}, "", url.toString());
+  }, []);
 
   const columns = useMemo((): GridColumnDef<FulfillmentListRow>[] => [
     {
@@ -163,6 +252,63 @@ export function AdminFulfillmentWorkQueueScreen() {
       filterKind: "status",
       enumOptions: fulfillmentStatusEnumOptions,
       sortable: true,
+    },
+    {
+      id: "dispatchBucket",
+      header: "بُعد زمانی ارسال",
+      accessor: (row) => normalizeDispatchToken(row.dispatchBucket),
+      cell: (row) => dispatchBucketBadge(row),
+      width: 190,
+      minWidth: 150,
+      // Timing is filtered by the server-authoritative quick tabs (full-set counts), so the column is
+      // sortable but deliberately not a second, silently-ignored filter surface.
+      sortable: true,
+    },
+    {
+      id: "dispatchDeadline",
+      header: "موعد ارسال",
+      accessor: (row) => row.plannedHandoffDate ?? "",
+      cell: (row) => (
+        <span className="block break-words text-xs font-semibold" data-testid={`admin-fulfillment-plan-${row.fulfillmentId}`}>
+          {formatPlannedHandoff(row)}
+        </span>
+      ),
+      width: 210,
+      minWidth: 160,
+      sortable: true,
+    },
+    {
+      id: "customerReceiving",
+      header: "تحویل مشتری",
+      accessor: (row) => row.customerReceivingDate ?? "",
+      cell: (row) => (
+        <span className="block break-words text-xs" data-testid={`admin-fulfillment-receiving-${row.fulfillmentId}`}>
+          {formatCustomerReceiving(row)}
+        </span>
+      ),
+      width: 180,
+      minWidth: 140,
+      sortable: false,
+    },
+    {
+      id: "nextStep",
+      header: "اقدام بعدی",
+      accessor: (row) => row.nextStepLabelFa,
+      cell: (row) => (
+        <span className="block break-words text-xs" data-testid={`admin-fulfillment-next-step-${row.fulfillmentId}`}>
+          {row.nextStepLabelFa ? (
+            <span className="font-semibold">{row.nextStepLabelFa}</span>
+          ) : (
+            <span className="text-muted">—</span>
+          )}
+          {row.nextStepBlockerFa ? (
+            <span className="mt-0.5 block text-[11px] text-amber-800">{row.nextStepBlockerFa}</span>
+          ) : null}
+        </span>
+      ),
+      width: 200,
+      minWidth: 150,
+      sortable: false,
     },
     {
       id: "trackingSummary",
@@ -258,7 +404,10 @@ export function AdminFulfillmentWorkQueueScreen() {
         filters.shippingMethodCode = filters.shippingMethodLabel;
         delete filters.shippingMethodLabel;
       }
-      return queryAdminFulfillmentsGrid({ ...query, filters });
+      const response = await queryAdminFulfillmentsWorkQueue({ ...query, filters });
+      // Counts come from the server for the WHOLE filtered set; a page-local tally would be a lie.
+      if (response.meta) setCounts(response.meta);
+      return response;
     },
     [queueFilter],
   );
@@ -332,7 +481,44 @@ export function AdminFulfillmentWorkQueueScreen() {
       <PageHeading title="ارسال و تحویل" />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex flex-col gap-3 border-b border-border px-4 py-3 md:px-5">
-          <div className="flex flex-wrap gap-2" data-testid="admin-fulfillment-queue-filters" role="tablist">
+          <div className="flex flex-wrap gap-2" data-testid="admin-fulfillment-queue-dispatch-filters" role="tablist" aria-label="بُعد زمانی ارسال">
+            {FULFILLMENT_DISPATCH_FILTERS.map((tab) => {
+              const active = queueFilter === tab.id;
+              const badge = dispatchCountFor(tab.id, counts);
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  data-testid={`admin-fulfillment-queue-filter-${tab.id}`}
+                  data-count={badge}
+                  className={
+                    active
+                      ? "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground"
+                      : "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted hover:bg-secondary"
+                  }
+                  onClick={() => {
+                    selectFilter(tab.id);
+                    refresh();
+                  }}
+                >
+                  <span>{tab.labelFa}</span>
+                  <span
+                    className={
+                      active
+                        ? "rounded-full bg-primary-foreground/20 px-1.5 py-0.5 text-[11px] tabular-nums"
+                        : "rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-foreground"
+                    }
+                    data-testid={`admin-fulfillment-queue-count-${tab.id}`}
+                  >
+                    {badge.toLocaleString("fa-IR")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-2" data-testid="admin-fulfillment-queue-filters" role="tablist" aria-label="وضعیت عملیاتی">
             {FULFILLMENT_QUEUE_FILTERS.map((tab) => {
               const active = queueFilter === tab.id;
               return (
@@ -344,11 +530,11 @@ export function AdminFulfillmentWorkQueueScreen() {
                   data-testid={`admin-fulfillment-queue-filter-${tab.id}`}
                   className={
                     active
-                      ? "rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
-                      : "rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-muted hover:bg-secondary"
+                      ? "inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground"
+                      : "inline-flex min-h-11 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted hover:bg-secondary"
                   }
                   onClick={() => {
-                    setQueueFilter(tab.id);
+                    selectFilter(tab.id);
                     refresh();
                   }}
                 >

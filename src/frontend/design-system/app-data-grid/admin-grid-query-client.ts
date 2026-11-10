@@ -10,13 +10,19 @@ export type AdminGridQueryResult<TRow> = {
 
 type AdminGridHeaders = Record<string, string>;
 
-/** POST helper for module-owned Admin GridQuery endpoints. */
-export async function postAdminGridQuery<TItem, TRow extends { id: string }>(
+/**
+ * POST helper for module-owned Admin GridQuery endpoints.
+ *
+ * An optional `mapMeta` reads module-owned page metadata the shared page shape does not carry (for example
+ * full-set bucket counts next to the page). It stays optional so every existing caller is unchanged.
+ */
+export async function postAdminGridQuery<TItem, TRow extends { id: string }, TMeta = undefined>(
   path: string,
   query: GridServerQuery,
   headers: AdminGridHeaders,
   mapRow: (item: unknown) => TRow | null,
-): Promise<AdminGridQueryResult<TRow>> {
+  mapMeta?: (payload: unknown) => TMeta,
+): Promise<AdminGridQueryResult<TRow> & { meta?: TMeta }> {
   try {
     const response = await fetch(path, {
       method: "POST",
@@ -59,7 +65,7 @@ export async function postAdminGridQuery<TItem, TRow extends { id: string }>(
         return row;
       },
     );
-    return { source: "host", page };
+    return { source: "host", page, meta: mapMeta ? mapMeta(payload) : undefined };
   } catch {
     return { source: "error", page: { rows: [], total: 0 }, message: "host-unreachable" };
   }

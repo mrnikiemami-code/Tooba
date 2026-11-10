@@ -58,3 +58,11 @@ export type {
   OperationalGroupWorkflowGroup,
   RetainedOperationalGroupEnvelope,
 } from "./ui/admin-operational-group-workflow-dialog.tsx";
+
+// TB-260: the finance-free frame of the shared operational order view (queue row and full order page).
+export { OrderOperationsView } from "./ui/order-operations-view.tsx";
+
+export type {
+  OrderOperationsTargetFact,
+  OrderOperationsViewProps,
+} from "./ui/order-operations-view.tsx";

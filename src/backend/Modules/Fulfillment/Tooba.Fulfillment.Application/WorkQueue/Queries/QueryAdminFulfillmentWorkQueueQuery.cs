@@ -19,6 +19,17 @@ public sealed class AdminFulfillmentGridQueryPolicy : IGridQueryPolicy
         "shipmentCount", "status", "queueFilter", "createdAt", "updatedAt",
     };
 
+    /// <summary>
+    /// TB-260: the dispatch timeline columns are server-classified, so they may be sorted by the owning
+    /// projection but are deliberately <b>not</b> filterable here — timing is filtered by the
+    /// server-authoritative quick tabs, and a filter the engine cannot honour is rejected instead of
+    /// being silently ignored while the grid looks filtered.
+    /// </summary>
+    private static readonly HashSet<string> SortableOnlyFields = new(StringComparer.Ordinal)
+    {
+        "dispatchDeadline", "dispatchBucket",
+    };
+
     private static readonly Dictionary<string, HashSet<string>> OperatorsByField = new(StringComparer.Ordinal)
     {
         ["orderReference"] = GridQueryOperators.Text,
@@ -45,7 +56,8 @@ public sealed class AdminFulfillmentGridQueryPolicy : IGridQueryPolicy
             GridQueryPolicyBase.DefaultMaxPageSize, GridQueryPolicyBase.DefaultDefaultPageSize);
         var search = GridQueryPolicyBase.NormalizeSearch(request.Search);
         var sorts = (request.Sort ?? [])
-            .Where(s => !string.IsNullOrWhiteSpace(s.Field) && AllowedFields.Contains(s.Field.Trim()))
+            .Where(s => !string.IsNullOrWhiteSpace(s.Field)
+                && (AllowedFields.Contains(s.Field.Trim()) || SortableOnlyFields.Contains(s.Field.Trim())))
             .Select(s => new GridSortRequest(
                 s.Field.Trim(),
                 string.Equals(s.Direction, "asc", StringComparison.OrdinalIgnoreCase) ? "asc" : "desc"))
@@ -98,25 +110,34 @@ public sealed class AdminFulfillmentGridQueryPolicy : IGridQueryPolicy
 }
 
 public sealed record QueryAdminFulfillmentWorkQueueQuery(GridQueryRequest Request)
-    : IRequest<Result<GridPageResponse<AdminFulfillmentWorkQueueRow>>>;
+    : IRequest<Result<AdminFulfillmentWorkQueuePage>>;
 
 public sealed class QueryAdminFulfillmentWorkQueueHandler
-    : IRequestHandler<QueryAdminFulfillmentWorkQueueQuery, Result<GridPageResponse<AdminFulfillmentWorkQueueRow>>>
+    : IRequestHandler<QueryAdminFulfillmentWorkQueueQuery, Result<AdminFulfillmentWorkQueuePage>>
 {
     private readonly IAdminFulfillmentWorkQueueQuery _query;
     public QueryAdminFulfillmentWorkQueueHandler(IAdminFulfillmentWorkQueueQuery query) => _query = query;
 
-    public async Task<Result<GridPageResponse<AdminFulfillmentWorkQueueRow>>> Handle(
+    public async Task<Result<AdminFulfillmentWorkQueuePage>> Handle(
         QueryAdminFulfillmentWorkQueueQuery request, CancellationToken cancellationToken)
     {
         try
         {
             var normalized = AdminFulfillmentGridQueryPolicy.Instance.Normalize(request.Request);
-            return Result.Success(await _query.QueryAsync(normalized, cancellationToken));
+            var page = await _query.QueryAsync(normalized, cancellationToken);
+            // TB-260: the counts describe the SAME filtered set the page came from, so a tab can never
+            // show "3" while the paged list holds items the count never saw.
+            var counts = await _query.CountAsync(normalized, cancellationToken);
+            return Result.Success(new AdminFulfillmentWorkQueuePage(
+                page.Items,
+                page.Page,
+                page.PageSize,
+                page.TotalCount,
+                counts));
         }
         catch (GridQueryValidationException ex)
         {
-            return Result.Failure<GridPageResponse<AdminFulfillmentWorkQueueRow>>(new SemanticError(ex.ErrorCode));
+            return Result.Failure<AdminFulfillmentWorkQueuePage>(new SemanticError(ex.ErrorCode));
         }
     }
 }

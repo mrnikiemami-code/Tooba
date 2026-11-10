@@ -28,6 +28,14 @@ public interface IAdminFulfillmentWorkQueueQuery
     Task<BuildingBlocks.Grid.GridPageResponse<WorkQueue.Models.AdminFulfillmentWorkQueueRow>> QueryAsync(
         BuildingBlocks.Grid.GridQueryRequest request,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-260: counts of the SAME filtered set (dispatch timing buckets) so tab counts never describe a
+    /// single fetched page.
+    /// </summary>
+    Task<WorkQueue.Models.AdminFulfillmentWorkQueueCounts> CountAsync(
+        BuildingBlocks.Grid.GridQueryRequest request,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>خواندن shipped quantities برای OrderSupply بدون FulfillmentDbContext در Host.</summary>
