@@ -1,0 +1,6 @@
+# Architect review — 258-R3 — ACCEPT within bounded issue3 scope
+2026-11-10. Independently reviewed source main fbf24b6aec52a62960227d57a40f3bbe45879e04, worker commit a0d6fc9394db93486fd36868bddbc5bfbab63407 and reported focused evidence.
+Confirmed source: ResolveRecordedResendIntent evaluates shared full identity before Recorded/ResolvedCancelled; writePostDispatchAttempt reports durability only after exact storage readback; dialog send refuses POST when durable=false. Earlier R2 public reconcile/current authority, real retained entry and mixed-condition receipt remain the accepted basis.
+Issue3 non-delivery/physical final receipt/source-safe resend is accepted within delivered internal-operator scope. This is source/evidence review, not independent Windows test execution, live provider acceptance or user visual acceptance.
+Limits retained: one final receipt, no saleable-stock/RMA integration, no live Tipax, locked consolidated child refuses independent exceptions (no parent return workflow claim). Do not reopen accepted work without a concrete regression.
+Ledger: save prerequisite closed; issues1/2 accepted257; issue3 accepted258-R3 (3/5). Next issue4 task259 only;260 not issued. Same canonical DB/environment;255 parked. Final handoff after five defects.
