@@ -121,6 +121,22 @@ export interface AdminShipment {
   returnedAt?: string | null;
   /** TB-258: recorded physical origin receipt lines with their condition. */
   returnReceiptLines?: AdminReturnReceiptLine[] | null;
+  /**
+   * TB-262-R1: the durable damaged-goods decisions of THIS returned parcel, straight from the server. They keep a
+   * recorded-but-incomplete replacement actionable after a reload, without any local hint.
+   */
+  damagedResolutions?: AdminDamagedResolution[] | null;
+}
+
+/** TB-262-R1: one durable damaged-goods decision of a returned parcel (server-owned facts). */
+export interface AdminDamagedResolution {
+  damagedGoodsResolutionId: string;
+  orderLineId: string;
+  quantity: number;
+  outcome: string;
+  status: string;
+  occurrenceKey: string;
+  replacementShipmentId?: string | null;
 }
 
 /** TB-258: one physically received line of an origin receipt. */
@@ -792,6 +808,26 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
               orderLineId,
               quantity: number(prop(receiptLine, "quantity", "Quantity")),
               condition: text(prop(receiptLine, "condition", "Condition"), "Usable"),
+            }];
+          },
+        ),
+        // TB-262-R1: the server-owned durable decisions of this parcel, mapped with the EXACT occurrence key so a
+        // pending replacement can be resumed verbatim after a reload.
+        damagedResolutions: array(prop(row, "damagedResolutions", "DamagedResolutions")).flatMap(
+          (resolutionRaw): AdminDamagedResolution[] => {
+            const resolution = record(resolutionRaw);
+            if (!resolution) return [];
+            const resolutionId = text(prop(resolution, "damagedGoodsResolutionId", "DamagedGoodsResolutionId"));
+            const orderLineId = text(prop(resolution, "orderLineId", "OrderLineId"));
+            if (!resolutionId || !orderLineId) return [];
+            return [{
+              damagedGoodsResolutionId: resolutionId,
+              orderLineId,
+              quantity: number(prop(resolution, "quantity", "Quantity")),
+              outcome: text(prop(resolution, "outcome", "Outcome")),
+              status: text(prop(resolution, "status", "Status")),
+              occurrenceKey: text(prop(resolution, "occurrenceKey", "OccurrenceKey")),
+              replacementShipmentId: text(prop(resolution, "replacementShipmentId", "ReplacementShipmentId")) || null,
             }];
           },
         ),

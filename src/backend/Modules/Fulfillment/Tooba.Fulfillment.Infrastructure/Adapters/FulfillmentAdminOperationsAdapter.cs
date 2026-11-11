@@ -338,7 +338,8 @@ internal sealed class FulfillmentAdminOperationsAdapter(
                     recorded.Resolution.UpdatedAt,
                     recorded.Resolution.ReplacementReservationId,
                     recorded.Resolution.ReplacementShipmentId,
-                    recorded.Resolution.Note),
+                    recorded.Resolution.Note,
+                    recorded.Resolution.OccurrenceKey),
             recorded.ConflictCode);
     }
 

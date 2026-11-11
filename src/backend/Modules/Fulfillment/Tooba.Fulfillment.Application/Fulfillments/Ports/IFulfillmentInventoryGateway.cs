@@ -58,13 +58,13 @@ public interface IFulfillmentInventoryGateway
     /// <summary>
     /// TB-262: رزرو موجودی سالم برای یک تصمیم جایگزینی. هویت کالا/فروشنده فقط از رزرو فروش اصلیِ متعهد
     /// استخراج می‌شود، نه از کلاینت. نبود موجودی خطای نوع‌دار می‌دهد و رزروی باقی نمی‌گذارد.
+    /// نگهداشتِ بدون انقضا از همان اولین ثبتِ پایدار در Inventory اعمال می‌شود؛ این امضا هیچ TTL نمی‌پذیرد.
     /// </summary>
     Task<FulfillmentReplacementReservation> ReserveReplacementReservationAsync(
         Guid originalReservationId,
         decimal quantity,
         string reservationKey,
         string externalReference,
-        DateTimeOffset expiresAt,
         CancellationToken cancellationToken) =>
         throw new NotSupportedException(
             "fulfillment.inventory.replacement_reserve_not_supported: a damaged-goods replacement needs the "

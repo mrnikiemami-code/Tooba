@@ -216,7 +216,12 @@ public sealed record DamagedResolutionSnapshot(
     DateTimeOffset UpdatedAt,
     Guid? ReplacementReservationId = null,
     Guid? ReplacementShipmentId = null,
-    string? Note = null);
+    string? Note = null,
+    /// <summary>
+    /// TB-262-R1: the exact reviewed occurrence identity. It is server-owned evidence, so a reloaded page can resume
+    /// the SAME recorded decision instead of minting a new incompatible one.
+    /// </summary>
+    string OccurrenceKey = "");
 
 /// <summary>TB-262: answer of one damaged-goods decision command.</summary>
 /// <param name="BlockerCode">

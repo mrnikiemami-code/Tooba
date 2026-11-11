@@ -2743,6 +2743,12 @@ function damagedDialog(
   lines: ReturnType<typeof damagedLines>,
   onSubmit: (request: PostDispatchExceptionRequest) => Promise<boolean>,
   scope: typeof DAMAGED_SCOPE = DAMAGED_SCOPE,
+  resume: {
+    orderLineId: string;
+    quantity: number;
+    outcome: "replacement" | "referral";
+    occurrenceKey: string;
+  } | null = null,
 ) {
   return createElement(PostDispatchExceptionDialog, {
     open: true,
@@ -2753,6 +2759,7 @@ function damagedDialog(
     lines,
     pending: false,
     errorFa: null,
+    damagedResume: resume,
     onClose: () => undefined,
     onSubmit,
   });
@@ -2847,4 +2854,80 @@ test("TB-262 mounted: an uncertain decision is retained and reconciles the EXACT
   assert.deepEqual(requests[1], requests[0], "reconcile submits the same occurrence and payload verbatim");
   assert.equal(readPostDispatchAttempt(DAMAGED_SCOPE), null);
   await second.unmount();
+});
+
+test("TB-262-R1 mounted: a server-recorded pending decision resumes with its OWN occurrence key", async () => {
+  resetPostDispatchAttempts();
+  const requests: PostDispatchExceptionRequest[] = [];
+  let rawAtPost: string | null = null;
+  const submit = async (request: PostDispatchExceptionRequest) => {
+    rawAtPost = durablePostDispatchEnvelope("c-damaged", "sh-damaged", "f-damaged");
+    requests.push(request);
+    return true;
+  };
+
+  // The damaged unit is ALREADY committed to a durable decision (the outstanding quantity is 0), so the reload has
+  // no local envelope and no leftover quantity: only the server-owned fact may drive the continuation.
+  const mounted = await mount(
+    damagedDialog(damagedLines(0), submit, DAMAGED_SCOPE, {
+      orderLineId: "ol1",
+      quantity: 1,
+      outcome: "replacement",
+      occurrenceKey: "occ-tb262r1-recorded",
+    }),
+  );
+  await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-damaged']").length === 1);
+  await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-damaged']"));
+  await flush();
+
+  assert.equal(requests.length, 1, "a pending decision is continued, not re-reviewed");
+  const request = requests[0] as Extract<PostDispatchExceptionRequest, { code: "resolve_damaged_goods" }>;
+  assert.equal(request.code, "resolve_damaged_goods");
+  assert.equal(request.orderLineId, "ol1");
+  assert.equal(request.quantity, 1);
+  assert.equal(request.outcome, "replacement");
+  assert.equal(request.idempotencyKey, "occ-tb262r1-recorded", "the recorded occurrence is reused verbatim");
+  assert.ok(rawAtPost, "the complete envelope is reload-durable BEFORE the mutation");
+  assert.equal(readPostDispatchAttempt(DAMAGED_SCOPE), null, "authoritative completion clears the envelope");
+  await mounted.unmount();
+});
+
+test("TB-262-R1 static: a pending damaged decision is a durable sentence with a resume entry", () => {
+  const detail = withExceptionParcel(
+    baseDetail(),
+    {
+      status: "Returned",
+      returnedAt: "2026-11-09T10:00:00Z",
+      returnReceiptLines: [{ orderLineId: "ol1", quantity: 1, condition: "Damaged" }],
+      lines: [{ orderLineId: "ol1", quantity: 2, outstandingDamagedQuantity: 0 }],
+      damagedResolutions: [{
+        damagedGoodsResolutionId: "dgr-1",
+        orderLineId: "ol1",
+        quantity: 1,
+        outcome: "Replacement",
+        status: "Reserved",
+        occurrenceKey: "occ-tb262r1-recorded",
+        replacementShipmentId: null,
+      }],
+    },
+    { outstandingDamagedQuantity: 0 },
+  );
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: (_seller, shipment) =>
+        shipment.shipmentId === "sh1" ? { ...NO_CAPS, canResolveDamagedGoods: true } : NO_CAPS,
+    }),
+  );
+
+  // The server-owned fact states what is true: the decision exists and its stock is held for this active order.
+  assert.ok(html.includes("admin-order-post-dispatch-damaged-decision-dgr-1"));
+  assert.match(html, /موجودی سالم برای همین سفارش نگه داشته شده/);
+  // …and the ONE entry continues it instead of pretending a replacement parcel already exists.
+  assert.ok(html.includes("admin-order-post-dispatch-damaged-action-sh1"));
+  assert.match(html, /ادامهٔ تعیین تکلیف کالای آسیب‌دیده/);
+  assert.doesNotMatch(html, /مرسولهٔ جایگزین ساخته شده است/);
 });

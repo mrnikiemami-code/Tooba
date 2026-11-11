@@ -86,7 +86,10 @@ public sealed partial class InventoryDirectory : IDamagedReplacementInventoryPor
             request.Quantity,
             request.ExternalReference,
             reservationKey,
-            request.ExpiresAt,
+            // TB-262-R1: ATOMIC paid-order retention. The purpose-bound replacement hold is created with NO expiry
+            // from its first durable commit, so a crash before the Fulfillment link cannot leave active-order stock
+            // expirable and no default/caller TTL can reintroduce one for this purpose.
+            expiresAt: null,
             cancellationToken);
 
         return new DamagedReplacementReservationResult(

@@ -80,7 +80,22 @@ public sealed record AdminShipmentView(
     /// <summary>TB-258: when the physical origin receipt was confirmed.</summary>
     DateTimeOffset? ReturnedAt = null,
     /// <summary>TB-258: recorded physical origin receipt lines with their condition.</summary>
-    IReadOnlyList<AdminReturnReceiptLineView>? ReturnReceiptLines = null);
+    IReadOnlyList<AdminReturnReceiptLineView>? ReturnReceiptLines = null,
+    /// <summary>
+    /// TB-262-R1: the durable damaged-goods decisions of THIS returned parcel, so a reloaded page can show a pending
+    /// decision and resume its EXACT recorded occurrence from server-owned facts.
+    /// </summary>
+    IReadOnlyList<AdminDamagedResolutionView>? DamagedResolutions = null);
+
+/// <summary>TB-262-R1: server-owned durable damaged-goods decision of one returned parcel.</summary>
+public sealed record AdminDamagedResolutionView(
+    Guid DamagedGoodsResolutionId,
+    Guid OrderLineId,
+    decimal Quantity,
+    string Outcome,
+    string Status,
+    string OccurrenceKey,
+    Guid? ReplacementShipmentId = null);
 
 /// <summary>TB-258: one physically received line of an origin receipt.</summary>
 public sealed record AdminReturnReceiptLineView(Guid OrderLineId, decimal Quantity, string Condition);

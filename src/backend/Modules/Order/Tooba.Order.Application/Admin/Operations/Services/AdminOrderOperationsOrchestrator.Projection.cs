@@ -354,14 +354,23 @@ public sealed partial class AdminOrderOperationsOrchestrator
 
                 // TB-262: damaged units are never resend capacity, and they are not a resolved fact either. Each
                 // unresolved damaged unit of THIS returned parcel needs ONE deliberate operator decision.
+                // TB-262-R1: a decision that is durably recorded but still OWES its replacement parcel (no stock yet,
+                // crash/cancelled attempt) stays actionable from the SERVER-OWNED facts, even after the outstanding
+                // damaged quantity has been consumed by that very decision — so a reload can resume the exact
+                // recorded occurrence instead of forcing a new incompatible decision.
+                var pendingDamagedReplacement = shipment.DamagedResolutions?.Any(x =>
+                    x.Outcome == DamagedResolutionOutcome.Replacement
+                    && x.Status is DamagedResolutionStatus.Recorded or DamagedResolutionStatus.Reserved
+                    && x.ReplacementShipmentId is null) == true;
+                var outstandingDamaged = shipment.Items.Any(x => x.OutstandingDamagedQuantity > 0m);
                 if (shipment.Status == ShipmentOperationStatus.Returned
                     && shipment.ReturnReceipt is not null
-                    && shipment.Items.Any(x => x.OutstandingDamagedQuantity > 0m)
+                    && (outstandingDamaged || pendingDamagedReplacement)
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
                         "resolve_damaged_goods",
-                        "تعیین تکلیف کالای آسیب‌دیده",
+                        outstandingDamaged ? "تعیین تکلیف کالای آسیب‌دیده" : "ادامهٔ تعیین تکلیف کالای آسیب‌دیده",
                         "Resolve damaged goods",
                         order.SellerOrderId,
                         fulfillment.FulfillmentId,
@@ -369,7 +378,9 @@ public sealed partial class AdminOrderOperationsOrchestrator
                         null,
                         Prefer(effective, "order.handle", "fulfillment.manage"),
                         true,
-                        "تصمیم کالای آسیب‌دیده (جایگزینی از موجودی سالم یا ارجاع) ثبت شود؟"));
+                        outstandingDamaged
+                            ? "تصمیم کالای آسیب‌دیده (جایگزینی از موجودی سالم یا ارجاع) ثبت شود؟"
+                            : "همان تصمیم ثبت‌شدهٔ کالای آسیب‌دیده ادامه یابد تا مرسولهٔ جایگزین ساخته شود؟"));
                 }
             }
         }

@@ -318,4 +318,52 @@ public sealed class DamagedResolution262Tests
         Assert.Equal(DamagedResolutionStatus.Cancelled, resolution.Status);
         Assert.Empty(fixture.Unit.ReleaseReplacementStockForOrderCancel(T6.AddMinutes(2)));
     }
+
+    /// <summary>
+    /// TB-262-R1 (B): the parcel-cancellation retention is EXACT association work. Replaying the cancellation of an
+    /// OLD parcel after a retry created its new linked parcel must not detach the new link, advance the attempt or
+    /// free the held allocation — otherwise a stale request could mint a second parcel against the same hold.
+    /// </summary>
+    [Fact]
+    public void A_stale_cancel_replay_never_detaches_the_new_replacement_parcel()
+    {
+        var fixture = ReturnedParcel(usableA: 2m, damagedA: 1m);
+        var resolution = fixture.Unit.RecordDamagedResolution(
+            Guid.NewGuid(), fixture.ShipmentId, fixture.LineA, 1m, DamagedResolutionOutcome.Replacement,
+            "occ-stale", Actor, null, T4);
+        var reservationId = Guid.NewGuid();
+        fixture.Unit.AttachDamagedResolutionReservation(resolution.DamagedGoodsResolutionId, reservationId, T5);
+
+        var first = fixture.Unit.CreateReplacementShipment(
+            Guid.NewGuid(), () => Guid.NewGuid(), resolution.DamagedGoodsResolutionId, Actor, string.Empty, T5);
+        fixture.Unit.CancelShipment(first.ShipmentId, T5.AddMinutes(1));
+        fixture.Unit.RetainReplacementStockForCancelledParcel(first.ShipmentId, T5.AddMinutes(1));
+        Assert.Equal(2, resolution.Attempt);
+
+        var second = fixture.Unit.CreateReplacementShipment(
+            Guid.NewGuid(), () => Guid.NewGuid(), resolution.DamagedGoodsResolutionId, Actor, string.Empty, T6);
+        Assert.NotEqual(first.ShipmentId, second.ShipmentId);
+        Assert.Equal(second.ShipmentId, resolution.ReplacementShipmentId);
+        Assert.Equal(DamagedResolutionStatus.Fulfilled, resolution.Status);
+
+        // A replayed cancellation of the OLD (already cancelled) parcel is a no-op — twice, and after the retry.
+        fixture.Unit.RetainReplacementStockForCancelledParcel(first.ShipmentId, T6.AddMinutes(1));
+        fixture.Unit.RetainReplacementStockForCancelledParcel(first.ShipmentId, T6.AddMinutes(2));
+
+        Assert.Equal(second.ShipmentId, resolution.ReplacementShipmentId);
+        Assert.Equal(2, resolution.Attempt);
+        Assert.Equal(DamagedResolutionStatus.Fulfilled, resolution.Status);
+        Assert.Equal(reservationId, resolution.ReplacementReservationId);
+        // Exactly ONE live replacement parcel owns the held units; the stale replay created nothing.
+        Assert.Single(fixture.Unit.Shipments.Where(x => x.IsReplacement && x.Status != ShipmentStatus.Cancelled));
+
+        // Cancelling the CURRENT parcel is still the one valid detach, and it advances the attempt exactly once.
+        fixture.Unit.CancelShipment(second.ShipmentId, T6.AddMinutes(3));
+        fixture.Unit.RetainReplacementStockForCancelledParcel(second.ShipmentId, T6.AddMinutes(3));
+        Assert.Null(resolution.ReplacementShipmentId);
+        Assert.Equal(3, resolution.Attempt);
+        Assert.Equal(DamagedResolutionStatus.Reserved, resolution.Status);
+        Assert.Equal(reservationId, resolution.ReplacementReservationId);
+        Assert.True(resolution.AwaitsReplacementParcel);
+    }
 }

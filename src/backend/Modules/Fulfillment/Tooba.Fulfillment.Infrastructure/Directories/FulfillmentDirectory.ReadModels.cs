@@ -295,7 +295,8 @@ public sealed partial class FulfillmentDirectory
             resolution.UpdatedAt,
             resolution.ReplacementReservationId,
             resolution.ReplacementShipmentId,
-            resolution.Note);
+            resolution.Note,
+            resolution.OccurrenceKey);
 
     /// <summary>
     /// snapshot گروه‌های واحد را با عضویت خطوط همان واحد می‌سازد؛ ترتیب پایدار بر اساس شناسهٔ گروه.

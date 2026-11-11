@@ -82,7 +82,9 @@ public sealed record DamagedResolutionSnapshot(
     DateTimeOffset UpdatedAt,
     Guid? ReplacementReservationId = null,
     Guid? ReplacementShipmentId = null,
-    string? Note = null);
+    string? Note = null,
+    /// <summary>TB-262-R1: exact reviewed occurrence identity, so a pending decision can be resumed after reload.</summary>
+    string OccurrenceKey = "");
 
 /// <summary>
 /// snapshot گروه ارسال پذیرفته‌شدهٔ یک واحد fulfillment؛ عضویت خطوط برای تصمیم‌گیری canonical است.

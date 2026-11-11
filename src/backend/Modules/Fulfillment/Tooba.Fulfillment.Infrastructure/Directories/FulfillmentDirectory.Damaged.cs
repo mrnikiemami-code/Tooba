@@ -106,12 +106,10 @@ public sealed partial class FulfillmentDirectory
                     resolution.Quantity,
                     resolution.ReservationKey,
                     $"damaged-resolution:{resolution.DamagedGoodsResolutionId:N}",
-                    _clock.UtcNow.AddDays(7),
                     cancellationToken);
-                // RETENTION RULE: this hold belongs to the ACTIVE paid order, so its TTL is cleared (ExpiresAt=null)
-                // exactly like the other paid-order reservations. A hold timeout can therefore never release it while
-                // the order is active; only the owning order cancellation releases it, once.
-                await _inventory.CommitReservationForPaidOrderAsync(reserved.ReservationId, cancellationToken);
+                // RETENTION RULE (TB-262-R1): the hold is ALREADY a non-expiring paid-order reservation from its first
+                // durable commit inside Inventory, so there is no separate "commit" step and no crash window in which
+                // active-order stock could expire. Only an authorized order cancellation releases it, once.
                 await AttachDamagedReservationAsync(
                     fulfillmentId,
                     resolution.DamagedGoodsResolutionId,
@@ -220,9 +218,9 @@ public sealed partial class FulfillmentDirectory
                 resolution.UpdatedAt,
                 resolution.ReplacementReservationId,
                 resolution.ReplacementShipmentId,
-                resolution.Note),
-            state == FulfillmentDamagedIntentRecord.Conflict ? FulfillmentErrorCodes.DamagedIntentConflict : null);
-    }
+                resolution.Note,
+                resolution.OccurrenceKey),
+            state == FulfillmentDamagedIntentRecord.Conflict ? FulfillmentErrorCodes.DamagedIntentConflict : null);    }
 
     private async Task<FulfillmentDamagedResolution> ResultAsync(
         FulfillmentUnit unit,

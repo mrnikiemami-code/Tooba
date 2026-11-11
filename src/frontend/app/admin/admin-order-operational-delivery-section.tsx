@@ -7,6 +7,7 @@ import {
   formatAdminShipmentStatus,
   formatAdminStatus,
   type AdminAcceptedShippingGroup,
+  type AdminDamagedResolution,
   type AdminOperationalDeliveryGroup,
   type AdminOperationalDeliveryMember,
   type AdminOrderDetail,
@@ -682,9 +683,41 @@ function GroupItems({
   );
 }
 
+/**
+ * TB-262-R1: a durable damaged decision that still OWES its replacement parcel. The server owns this fact, so the
+ * UI never guesses it from leftover quantities (the outstanding damaged quantity is already consumed by the decision).
+ */
+function isPendingDamageResolution(resolution: AdminDamagedResolution): boolean {
+  return resolution.outcome === "Replacement"
+    && (resolution.status === "Recorded" || resolution.status === "Reserved")
+    && !resolution.replacementShipmentId;
+}
+
+/** TB-262-R1: durable, non-transient state sentence of one damaged decision (never a success banner). */
+function damagedDecisionText(resolution: AdminDamagedResolution): string {
+  if (resolution.outcome === "Referral") {
+    return "ارجاع کالای آسیب‌دیده ثبت شد — در انتظار بررسی خدمات مشتری.";
+  }
+
+  if (resolution.replacementShipmentId) {
+    return "جایگزینی از موجودی سالم ثبت شد و مرسولهٔ جایگزین ساخته شده است.";
+  }
+
+  if (isPendingDamageResolution(resolution)) {
+    return resolution.status === "Reserved"
+      ? "جایگزینی ثبت شد و موجودی سالم برای همین سفارش نگه داشته شده؛ مرسولهٔ جایگزین هنوز ساخته نشده است."
+      : "جایگزینی ثبت شد؛ موجودی سالم هنوز تأمین نشده و مرسولهٔ جایگزین ساخته نشده است.";
+  }
+
+  if (resolution.status === "Cancelled") {
+    return "تصمیم جایگزینی این قلم پیش از ارسال لغو شده است.";
+  }
+
+  return "";
+}
+
 /** The modes the fresh projection still offers as ordinary buttons. */
-function permittedExceptionModes(caps: OperationalParcelCapabilities): PostDispatchExceptionMode[] {
-  const modes: PostDispatchExceptionMode[] = [];
+function permittedExceptionModes(caps: OperationalParcelCapabilities): PostDispatchExceptionMode[] {  const modes: PostDispatchExceptionMode[] = [];
   if (caps.canRecordNonDelivery) modes.push("record_non_delivery");
   if (caps.canStartReturn) modes.push("start_return");
   if (caps.canRecordReturnReceipt) modes.push("record_return_receipt");
@@ -891,6 +924,10 @@ function GroupParcels({
             // TB-261: the honest physical facts of THIS parcel's own receipt and ITS own resend.
             const receipt = receiptTotals(parcel);
             const resendChild = resendByOriginalId.get(parcel.shipmentId) ?? null;
+            // TB-262-R1: the server-owned durable damaged decisions of this parcel. A recorded decision that still
+            // owes its replacement parcel stays resumable even after the outstanding quantity was consumed by it.
+            const damagedDecisions = parcel.damagedResolutions ?? [];
+            const pendingDamage = damagedDecisions.find(isPendingDamageResolution) ?? null;
             return (
               <li
                 key={parcel.shipmentId}
@@ -1050,7 +1087,9 @@ function GroupParcels({
                         className="min-h-11 rounded-lg border border-amber-300 px-3 text-xs font-bold text-amber-900 disabled:opacity-50"
                         data-testid={`admin-order-post-dispatch-damaged-action-${parcel.shipmentId}`}
                       >
-                        تعیین تکلیف کالای آسیب‌دیده
+                        {pendingDamage && receipt.outstanding === 0
+                          ? "ادامهٔ تعیین تکلیف کالای آسیب‌دیده"
+                          : "تعیین تکلیف کالای آسیب‌دیده"}
                       </button>
                     ) : null}
                   </div>
@@ -1086,6 +1125,17 @@ function GroupParcels({
                             {`${quantityText(receipt.outstanding)} قلم آسیب‌دیده — نیازمند تعیین تکلیف`}
                           </p>
                         ) : null}
+                        {damagedDecisions.map((decision) => {
+                          const text = damagedDecisionText(decision);
+                          return text ? (
+                            <p
+                              key={decision.damagedGoodsResolutionId}
+                              data-testid={`admin-order-post-dispatch-damaged-decision-${decision.damagedGoodsResolutionId}`}
+                            >
+                              {text}
+                            </p>
+                          ) : null;
+                        })}
                         {receipt.usable > 0 && !caps.canResend ? (
                           <p data-testid={`admin-order-post-dispatch-capacity-consumed-${parcel.shipmentId}`}>
                             {resendChild
@@ -1156,6 +1206,21 @@ function GroupParcels({
           lines={exceptionLines}
           pending={exceptionPending || pending}
           errorFa={exceptionErrorFa}
+          damagedResume={
+            exception.mode === "resolve_damaged_goods"
+              ? (() => {
+                const pending = (exception.shipment.damagedResolutions ?? []).find(isPendingDamageResolution);
+                return pending
+                  ? {
+                    orderLineId: pending.orderLineId,
+                    quantity: pending.quantity,
+                    outcome: pending.outcome === "Referral" ? "referral" : "replacement",
+                    occurrenceKey: pending.occurrenceKey,
+                  }
+                  : null;
+              })()
+              : null
+          }
           onClose={() => {
             setException(null);
             setExceptionErrorFa(null);

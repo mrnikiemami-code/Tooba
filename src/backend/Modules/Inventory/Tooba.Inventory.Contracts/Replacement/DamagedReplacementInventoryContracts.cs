@@ -12,17 +12,16 @@ namespace Tooba.Inventory.Contracts.Replacement;
 /// <param name="Quantity">Explicit healthy quantity to reserve.</param>
 /// <param name="ReservationKey">Durable purpose-bound idempotency key of THIS replacement decision (stable across attempts, so a retry rebinds the same held allocation).</param>
 /// <param name="ExternalReference">Audit reference, e.g. the damaged-goods decision identity.</param>
-/// <param name="ExpiresAt">
-/// Safety-net expiry for the window BEFORE the hold is linked to an active order. Fulfillment clears it on attach
-/// (<c>ExpiresAt = null</c>), exactly like other paid-order reservations, so the expired-hold reclaimer can never
-/// release stock that the active order still owes; only an authorized order cancellation releases it, once.
-/// </param>
+/// <remarks>
+/// TB-262-R1: the hold is created with NO expiry from its FIRST durable commit. It belongs to the active order until
+/// dispatch consumes it or an authorized order cancellation releases it, so no caller-supplied or default TTL can
+/// reintroduce an expiring hold for this purpose (a crash between reserve and link can never let a timeout free it).
+/// </remarks>
 public sealed record DamagedReplacementReservationRequest(
     Guid OriginalReservationId,
     decimal Quantity,
     string ReservationKey,
-    string ExternalReference,
-    DateTimeOffset ExpiresAt);
+    string ExternalReference);
 
 /// <summary>TB-262: the exact healthy-stock reservation acquired for one replacement decision.</summary>
 public sealed record DamagedReplacementReservationResult(

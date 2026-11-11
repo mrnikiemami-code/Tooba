@@ -229,9 +229,18 @@ public sealed class DamagedGoodsResolution
     /// واحدهای آسیب‌دیده غیرقابل‌فروش و تعهد مشتری پابرجا می‌ماند.
     /// </para>
     /// </summary>
-    internal void RetainStockBeforeDispatch(DateTimeOffset now)
+    /// <param name="cancelledShipmentId">The parcel whose cancellation was requested (never any other parcel).</param>
+    internal void RetainStockBeforeDispatch(Guid cancelledShipmentId, DateTimeOffset now)
     {
-        if (Status == DamagedResolutionStatus.Cancelled)
+        if (Status == DamagedResolutionStatus.Cancelled || cancelledShipmentId == Guid.Empty)
+        {
+            return;
+        }
+
+        // EXACT association: only the CURRENT live linked parcel may detach its allocation. A replayed cancel of an
+        // already cancelled parcel (or of an OLD parcel that a later retry replaced) is a no-op — it must never erase
+        // the NEW link, advance the attempt or free the held stock.
+        if (ReplacementShipmentId is not { } current || current != cancelledShipmentId)
         {
             return;
         }
@@ -243,6 +252,15 @@ public sealed class DamagedGoodsResolution
             : DamagedResolutionStatus.Reserved;
         UpdatedAt = now;
     }
+
+    /// <summary>
+    /// TB-262-R1: does this decision still own open replacement work (durable decision without a live parcel)?
+    /// It is the server-owned fact that lets an operator resume the EXACT recorded decision after a reload.
+    /// </summary>
+    public bool AwaitsReplacementParcel =>
+        Outcome == DamagedResolutionOutcome.Replacement
+        && Status is DamagedResolutionStatus.Recorded or DamagedResolutionStatus.Reserved
+        && ReplacementShipmentId is null;
 
     /// <summary>
     /// لغو مجاز و مالکانهٔ خود سفارش: تنها همین رخداد می‌تواند رزرو سالمِ مصرف‌نشدهٔ این تصمیم را یک‌بار آزاد کند.

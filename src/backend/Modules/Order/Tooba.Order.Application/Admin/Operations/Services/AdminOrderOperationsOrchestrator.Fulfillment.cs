@@ -432,14 +432,40 @@ public sealed partial class AdminOrderOperationsOrchestrator
             cancellationToken);
         switch (recorded.State)
         {
-            case PostDispatchIntentState.Recorded:
-            case PostDispatchIntentState.ResolvedCancelled:
-                // The authoritative owning state of THIS exact reviewed request: nothing is written and no actor or
-                // timestamp is reattributed. A resolved cancellation is history, never recreated.
-                return recorded.Snapshot
-                    ?? throw new AdminOrderOperationsException("order.operation.invalid");
             case PostDispatchIntentState.Conflict:
                 throw new AdminOrderOperationsException(recorded.ConflictCode ?? "order.operation.invalid");
+            case PostDispatchIntentState.ResolvedCancelled:
+                // Historical cancellation: never resurrected and never recreated, answered with zero writes.
+                return recorded.Snapshot
+                    ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            case PostDispatchIntentState.Recorded:
+                var resolution = recorded.Resolution
+                    ?? throw new AdminOrderOperationsException("order.operation.invalid");
+                // A COMPLETED decision answers its exact recorded state: the linked replacement parcel, or a referral
+                // that is explicitly still awaiting handling (never a financial or delivery completion).
+                var completed = resolution.Status == DamagedResolutionStatus.Fulfilled
+                    || resolution.Outcome == DamagedResolutionOutcome.Referral;
+                if (completed)
+                {
+                    return recorded.Snapshot
+                        ?? throw new AdminOrderOperationsException("order.operation.invalid");
+                }
+
+                // TB-262-R1: an EXACT recorded but INCOMPLETE replacement is continued by the owning execution
+                // (recorded decision + its own reservation + its parcel attempt), so a retry can never answer "ok"
+                // with no parcel, never records a second decision and never reserves a second unit. The durable
+                // decision is the authority here; the fresh projection is not required because the outstanding
+                // damaged quantity is already consumed by that very decision.
+                return await ResolveDamagedGoodsCoreAsync(
+                    fulfillmentId,
+                    shipmentId,
+                    orderLineId,
+                    quantity,
+                    outcome,
+                    occurrenceKey,
+                    actorUserId,
+                    request,
+                    cancellationToken);
         }
 
         await EnsureProjectedActionAllowedAsync(

@@ -12,6 +12,7 @@ using Tooba.Fulfillment.Infrastructure.Observability;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Ports;
+using Tooba.Inventory.Contracts.Replacement;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Infrastructure.Directories;
@@ -370,6 +371,151 @@ public sealed class DamagedGoodsResolution262RelationalTests
             + $"holds=1 rows=1");
     }
 
+    /// <summary>
+    /// TB-262-R1 (B): cancelling the OLD replacement parcel again AFTER a retry created a new live parcel must be a
+    /// NO-OP for the decision — the current link, the order-bound hold and the single allocation all survive, verified
+    /// from an INDEPENDENT context (a stale request replayed later, not the same open aggregate).
+    /// </summary>
+    [Fact]
+    public async Task F_stale_cancellation_replay_never_detaches_the_current_replacement()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("F", usableA: 1m, damagedA: 1m, onHand: 10m);
+        var occurrence = $"tb262-f-replacement-{fixture.SourceShipmentId:N}";
+
+        Guid firstParcel;
+        Guid retainedReservation;
+        await using (var lease = fixture.NewDirectory())
+        {
+            var resolved = await lease.Directory.ResolveDamagedGoodsAsync(
+                fixture.FulfillmentId, fixture.ActorUserId, fixture.SourceShipmentId, fixture.LineAId, 1m,
+                DamagedResolutionOutcome.Replacement, occurrence, null, CancellationToken.None);
+            firstParcel = resolved.ReplacementShipmentId!.Value;
+            retainedReservation = resolved.ReplacementReservationId!.Value;
+            await lease.Directory.CancelShipmentAsync(
+                fixture.FulfillmentId, firstParcel, fixture.ActorUserId, CancellationToken.None);
+        }
+
+        // The retry rebinds the SAME hold and creates a NEW live parcel, so the cancelled one is history.
+        Guid secondParcel;
+        await using (var lease = fixture.NewDirectory())
+        {
+            var retried = await lease.Directory.ResolveDamagedGoodsAsync(
+                fixture.FulfillmentId, fixture.ActorUserId, fixture.SourceShipmentId, fixture.LineAId, 1m,
+                DamagedResolutionOutcome.Replacement, occurrence, null, CancellationToken.None);
+            Assert.NotNull(retried.ReplacementShipmentId);
+            Assert.NotEqual(firstParcel, retried.ReplacementShipmentId);
+            Assert.Equal(retainedReservation, retried.ReplacementReservationId);
+            secondParcel = retried.ReplacementShipmentId!.Value;
+        }
+
+        // An INDEPENDENT context replays the old cancellation (twice) — the exact stale request the browser may retry.
+        await using (var stale = fixture.NewDirectory())
+        {
+            await stale.Directory.CancelShipmentAsync(
+                fixture.FulfillmentId, firstParcel, fixture.ActorUserId, CancellationToken.None);
+            await stale.Directory.CancelShipmentAsync(
+                fixture.FulfillmentId, firstParcel, fixture.ActorUserId, CancellationToken.None);
+        }
+
+        await using var reader = fixture.NewDirectory();
+        var reconciled = await reader.Directory.ReconcileDamagedResolutionAsync(
+            fixture.FulfillmentId, fixture.SourceShipmentId, fixture.LineAId, 1m,
+            DamagedResolutionOutcome.Replacement, occurrence, CancellationToken.None);
+        Assert.Equal(AppModels.FulfillmentDamagedIntentRecord.Recorded, reconciled.State);
+        // The CURRENT attempt is untouched: same live parcel, same hold, one decision, one allocation.
+        Assert.Equal(secondParcel, reconciled.Resolution!.ReplacementShipmentId);
+        Assert.Equal(retainedReservation, reconciled.Resolution.ReplacementReservationId);
+        Assert.Equal(DamagedResolutionStatus.Fulfilled, reconciled.Resolution.Status);
+        Assert.Equal(1, await ResolutionRowCountAsync(fixture));
+        Assert.Equal(1, await ReplacementReservationRowCountAsync(fixture));
+        Assert.Equal(StockReservationStatus.Held, await ReservationStatusAsync(fixture, retainedReservation));
+        Assert.Equal(1m, (await StockAsync(fixture)).Reserved);
+
+        // The stale replay never advanced the attempt: the exact occurrence still answers the CURRENT parcel.
+        var replay = await reader.Directory.ResolveDamagedGoodsAsync(
+            fixture.FulfillmentId, fixture.ActorUserId, fixture.SourceShipmentId, fixture.LineAId, 1m,
+            DamagedResolutionOutcome.Replacement, occurrence, null, CancellationToken.None);
+        Assert.Equal(secondParcel, replay.ReplacementShipmentId);
+        Assert.Equal(retainedReservation, replay.ReplacementReservationId);
+        Assert.Equal(1, await ResolutionRowCountAsync(fixture));
+        Assert.Equal(1, await ReplacementReservationRowCountAsync(fixture));
+        Assert.Equal(1m, (await StockAsync(fixture)).Reserved);
+
+        fixture.Record(
+            _output,
+            $"F firstParcel={firstParcel} resumedParcel={secondParcel} staleCancelReplay=noDetach "
+            + $"linked={reconciled.Resolution.ReplacementShipmentId} hold={retainedReservation} reserved=1 rows=1 holds=1");
+    }
+
+    /// <summary>
+    /// TB-262-R1 (C): the replacement hold is non-expiring from its FIRST durable Inventory commit — BEFORE any
+    /// Fulfillment link exists — so the expired-hold reclaimer can never return active-order stock to saleable
+    /// availability. Replaying the same purpose-bound key returns that exact hold instead of reserving a second unit.
+    /// </summary>
+    [Fact]
+    public async Task G_the_replacement_hold_is_non_expiring_from_its_first_durable_commit()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("G", usableA: 1m, damagedA: 1m, onHand: 10m);
+        var reservationKey = $"damage-replacement:{Guid.NewGuid():N}";
+        var request = new DamagedReplacementReservationRequest(
+            fixture.OriginalReservationId,
+            1m,
+            reservationKey,
+            $"damaged-resolution:{Guid.NewGuid():N}");
+
+        Guid reservationId;
+        await using (var inventoryDb = CreateInventoryDb(Connection))
+        {
+            var inventory = NewInventoryDirectory(inventoryDb);
+
+            // The owning Inventory seam is called DIRECTLY: no Fulfillment link/commit has happened yet, which is
+            // exactly the crash window the old "reserve with TTL, then clear it" sequence left open.
+            var reserved = await inventory.ReserveForDamagedReplacementAsync(request, CancellationToken.None);
+            reservationId = reserved.ReservationId;
+            Assert.Equal("Held", reserved.Status);
+        }
+
+        // The FIRST durable state already has no expiry and exactly one live hold for this purpose.
+        Assert.Null(await ReservationExpiresAtAsync(fixture, reservationId));
+        Assert.Equal(StockReservationStatus.Held, await ReservationStatusAsync(fixture, reservationId));
+        Assert.Equal(1, await ReplacementReservationRowCountAsync(fixture));
+        Assert.Equal(1m, (await StockAsync(fixture)).Reserved);
+
+        // An exact retry answers the SAME hold (no second reservation for one allocation).
+        await using (var inventoryDb = CreateInventoryDb(Connection))
+        {
+            var inventory = NewInventoryDirectory(inventoryDb);
+            var again = await inventory.ReserveForDamagedReplacementAsync(request, CancellationToken.None);
+            Assert.Equal(reservationId, again.ReservationId);
+            Assert.Equal(1, await ReplacementReservationRowCountAsync(fixture));
+        }
+
+        // The real reclaimer can only ever select `expires_at IS NOT NULL AND expires_at <= now`. The predicate is
+        // evaluated READ-ONLY here (the global batch job is a shared-table background operation and is not re-run
+        // against the canonical database), with a clock FAR past any TTL.
+        Assert.Equal(0, await ReclaimerCandidateRowsAsync(fixture, reservationId, DateTimeOffset.UtcNow.AddDays(400)));
+
+        Assert.Equal(StockReservationStatus.Held, await ReservationStatusAsync(fixture, reservationId));
+        Assert.Null(await ReservationExpiresAtAsync(fixture, reservationId));
+        Assert.Equal(1, await ReplacementReservationRowCountAsync(fixture));
+        Assert.Equal(1m, (await StockAsync(fixture)).Reserved);
+
+        fixture.Record(
+            _output,
+            $"G reservation={reservationId} key={reservationKey} firstCommitExpiresAt=null retry=same "
+            + "reclaimerCandidate=0 reserved=1 holds=1");
+    }
+
     // ------------------------------------------------------------------ E: concurrency
 
     [Fact]
@@ -506,6 +652,33 @@ public sealed class DamagedGoodsResolution262RelationalTests
         ToobaNpgsql.ConfigureModuleContext(
             options, connectionString, InventoryDbContext.Schema, typeof(InventoryDbContext));
         return new InventoryDbContext(options.Options);
+    }
+
+    private static InventoryDirectory NewInventoryDirectory(InventoryDbContext db) =>
+        new(
+            db,
+            new OpenInventoryGuard(),
+            new UnusedOfferLookup(),
+            new UnusedCatalogLookup(),
+            new SystemUtcClock(),
+            new UuidV7IdGenerator(),
+            new ModuleCallTracer());
+
+    /// <summary>
+    /// The exact rows <c>ReleaseExpiredHoldsAsync</c> could select for this reservation at that clock: it only touches
+    /// <c>Held</c> holds with a non-null expiry already elapsed, so a purpose-bound order hold is never a candidate.
+    /// </summary>
+    private static async Task<int> ReclaimerCandidateRowsAsync(
+        Fixture fixture,
+        Guid reservationId,
+        DateTimeOffset utcNow)
+    {
+        await using var db = CreateInventoryDb(fixture.Connection);
+        return await db.Reservations.AsNoTracking()
+            .CountAsync(x => x.ReservationId == reservationId
+                && x.Status == StockReservationStatus.Held
+                && x.ExpiresAt != null
+                && x.ExpiresAt <= utcNow);
     }
 
     private static FulfillmentDbContext CreateFulfillmentDb(

@@ -64,7 +64,6 @@ public sealed class FulfillmentInventoryGateway : IFulfillmentInventoryGateway
         decimal quantity,
         string reservationKey,
         string externalReference,
-        DateTimeOffset expiresAt,
         CancellationToken cancellationToken)
     {
         var reserved = await _replacementInventory.ReserveForDamagedReplacementAsync(
@@ -72,8 +71,7 @@ public sealed class FulfillmentInventoryGateway : IFulfillmentInventoryGateway
                 originalReservationId,
                 quantity,
                 reservationKey,
-                externalReference,
-                expiresAt),
+                externalReference),
             cancellationToken);
         return new FulfillmentReplacementReservation(
             reserved.ReservationId,

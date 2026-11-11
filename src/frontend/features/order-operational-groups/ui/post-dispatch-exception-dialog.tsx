@@ -111,6 +111,17 @@ type Props = {
   lines: PostDispatchParcelLine[];
   pending: boolean;
   errorFa?: string | null;
+  /**
+   * TB-262-R1: an EXACT damaged decision that is durably recorded but still owes its replacement parcel. The
+   * server-owned facts (line, quantity, outcome, occurrence key) are replayed verbatim, so a reload can continue
+   * that decision instead of minting a new incompatible one.
+   */
+  damagedResume?: {
+    orderLineId: string;
+    quantity: number;
+    outcome: DamagedResolutionOutcomeCode;
+    occurrenceKey: string;
+  } | null;
   onClose: () => void;
   /**
    * Sends the reviewed request. Returning true means the server AUTHORITATIVELY completed it (only then
@@ -253,6 +264,7 @@ export function PostDispatchExceptionDialog({
   lines,
   pending,
   errorFa,
+  damagedResume,
   onClose,
   onSubmit,
 }: Props) {
@@ -319,7 +331,9 @@ export function PostDispatchExceptionDialog({
     setNote("");
     setReason(POST_DISPATCH_NON_DELIVERY_REASONS[0]!.code);
     // A fresh occurrence per newly reviewed action: a retried submit replays this exact key.
-    setIdempotencyKey(mintPostDispatchOccurrence());
+    // TB-262-R1: a RECORDED pending decision reuses its OWN key, so the continuation answers that exact record.
+    const resumeKey = mode === "resolve_damaged_goods" ? damagedResume?.occurrenceKey ?? null : null;
+    setIdempotencyKey(resumeKey ?? mintPostDispatchOccurrence());
 
     const receipt: Record<string, ReceiptDraft> = {};
     for (const line of linesRef.current) {
@@ -337,15 +351,18 @@ export function PostDispatchExceptionDialog({
     setResendDrafts(resend);
 
     // TB-262: the damaged review starts at this parcel's own remaining damaged quantity, never a guess.
-    setDamagedOutcome("replacement");
+    const resumeDamage = mode === "resolve_damaged_goods" ? damagedResume ?? null : null;
+    setDamagedOutcome(resumeDamage?.outcome ?? "replacement");
     const damaged: Record<string, string> = {};
     for (const line of linesRef.current) {
-      damaged[line.orderLineId] = line.damagedOutstandingQuantity > 0
-        ? String(line.damagedOutstandingQuantity)
-        : "0";
+      damaged[line.orderLineId] = resumeDamage && resumeDamage.orderLineId === line.orderLineId
+        ? String(resumeDamage.quantity)
+        : line.damagedOutstandingQuantity > 0
+          ? String(line.damagedOutstandingQuantity)
+          : "0";
     }
     setDamagedDrafts(damaged);
-  }, [open, scopeSignature, scope, initializedScope]);
+  }, [open, scopeSignature, scope, initializedScope, mode, damagedResume]);
 
   const receiptProblems = useMemo(
     () => receiptIssues(lines, receiptDrafts),
@@ -379,17 +396,28 @@ export function PostDispatchExceptionDialog({
     () => lines.filter((line) => line.damagedOutstandingQuantity > 0),
     [lines],
   );
+  /** TB-262-R1: a recorded decision continued verbatim — it owns its line, quantity, outcome and occurrence key. */
+  const resumeDamage = mode === "resolve_damaged_goods" ? damagedResume ?? null : null;
+  const resumeLine = resumeDamage
+    ? lines.find((line) => line.orderLineId === resumeDamage.orderLineId) ?? null
+    : null;
   const [damagedLineId, setDamagedLineId] = useState<string | null>(null);
-  const damagedLine = damagedCandidates.find((line) => line.orderLineId === damagedLineId)
-    ?? damagedCandidates[0]
-    ?? null;
-  const damagedQuantity = damagedLine
-    ? parseReceiptQuantity(damagedDrafts[damagedLine.orderLineId] ?? "")
-    : 0;
-  const damagedInvalid = damagedLine === null
-    || damagedQuantity === null
-    || damagedQuantity <= 0
-    || damagedQuantity > damagedLine.damagedOutstandingQuantity;
+  const damagedLine = resumeDamage
+    ? null
+    : damagedCandidates.find((line) => line.orderLineId === damagedLineId)
+      ?? damagedCandidates[0]
+      ?? null;
+  const damagedQuantity = resumeDamage
+    ? resumeDamage.quantity
+    : damagedLine
+      ? parseReceiptQuantity(damagedDrafts[damagedLine.orderLineId] ?? "")
+      : 0;
+  const damagedInvalid = resumeDamage
+    ? false
+    : damagedLine === null
+      || damagedQuantity === null
+      || damagedQuantity <= 0
+      || damagedQuantity > damagedLine.damagedOutstandingQuantity;
 
   /**
    * TB-258-R3: a NEW mutation is refused unless the COMPLETE reviewed request is reload-durable. The message
@@ -477,6 +505,19 @@ export function PostDispatchExceptionDialog({
     }
 
     if (mode === "resolve_damaged_goods") {
+      // TB-262-R1: an EXACT recorded decision is continued with its own line/quantity/outcome/key. No new
+      // decision is composed and no new occurrence is minted, so the server answers that same durable record.
+      if (resumeDamage) {
+        void send({
+          code: "resolve_damaged_goods",
+          orderLineId: resumeDamage.orderLineId,
+          quantity: resumeDamage.quantity,
+          outcome: resumeDamage.outcome,
+          note: note.trim() || null,
+          idempotencyKey: resumeDamage.occurrenceKey,
+        });
+        return;
+      }
       if (damagedLine === null) {
         setLocalErrorFa("قلمی با کالای آسیب‌دیدهٔ تعیین‌نشده در این مرسوله باقی نمانده است.");
         return;
@@ -754,7 +795,18 @@ export function PostDispatchExceptionDialog({
               <p className="text-xs leading-6 text-gray-600">
                 کالای آسیب‌دیدهٔ دریافت‌شده در مبدأ فروختنی نیست و موجودی انبار را افزایش نمی‌دهد. برای هر قلم فقط به اندازهٔ باقیماندهٔ آسیب‌دیدهٔ همان مرسوله می‌توان یک بار تعیین تکلیف ثبت کرد.
               </p>
-              {damagedCandidates.length === 0 ? (
+              {resumeDamage ? (
+                <div
+                  className="space-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                  data-testid={`admin-order-post-dispatch-damaged-resume-${parcelKey}`}
+                >
+                  <p className="font-bold">همان تصمیم ثبت‌شده ادامه می‌یابد؛ تصمیم، رزرو یا رخداد تازه‌ای ساخته نمی‌شود.</p>
+                  <p className="break-words">
+                    {`${resumeLine?.title ?? resumeDamage.orderLineId.slice(0, 8)} · مقدار ${resumeDamage.quantity.toLocaleString("fa-IR")} · ${DAMAGED_RESOLUTION_OUTCOMES.find((option) => option.code === resumeDamage.outcome)?.labelFa ?? resumeDamage.outcome}`}
+                  </p>
+                </div>
+              ) : null}
+              {!resumeDamage && damagedCandidates.length === 0 ? (
                 <p
                   className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
                   data-testid={`admin-order-post-dispatch-damaged-empty-${parcelKey}`}
@@ -763,6 +815,8 @@ export function PostDispatchExceptionDialog({
                 </p>
               ) : (
                 <>
+                  {resumeDamage ? null : (
+                    <>
                   {damagedCandidates.length > 1 ? (
                     <fieldset className="space-y-1.5">
                       <legend className="mb-1 text-xs font-bold text-gray-700">قلم کالای آسیب‌دیده</legend>
@@ -840,6 +894,8 @@ export function PostDispatchExceptionDialog({
                       </label>
                     ))}
                   </fieldset>
+                    </>
+                  )}
 
                   <label className="block space-y-1">
                     <span className="text-xs font-bold text-gray-700">توضیح (اختیاری)</span>

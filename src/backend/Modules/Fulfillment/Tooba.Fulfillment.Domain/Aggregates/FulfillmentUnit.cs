@@ -1036,7 +1036,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             return;
         }
 
-        resolution.RetainStockBeforeDispatch(now);
+        resolution.RetainStockBeforeDispatch(replacementShipmentId, now);
         UpdatedAt = now;
     }
 

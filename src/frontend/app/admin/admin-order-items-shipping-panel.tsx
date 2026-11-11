@@ -454,7 +454,13 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
               toast.error(result.message ?? mapAdminErrorMessage("order.operation.failed", "fa"));
               return false;
             }
-            toast.success(`عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`);
+            toast.success(
+              request.code === "resolve_damaged_goods"
+                ? request.outcome === "referral"
+                  ? "ارجاع کالای آسیب‌دیده ثبت شد — در انتظار بررسی."
+                  : "جایگزینی کالای آسیب‌دیده ثبت شد."
+                : `عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`,
+            );
             onCompleted?.();
             return true;
           }}

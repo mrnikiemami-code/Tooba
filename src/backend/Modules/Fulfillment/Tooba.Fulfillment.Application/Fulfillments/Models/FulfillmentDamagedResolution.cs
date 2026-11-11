@@ -56,4 +56,6 @@ public sealed record DamagedGoodsResolutionRecord(
     DateTimeOffset UpdatedAt,
     Guid? ReplacementReservationId,
     Guid? ReplacementShipmentId,
-    string? Note);
+    string? Note,
+    /// <summary>TB-262-R1: the exact reviewed occurrence identity, so a reloaded page can resume THIS decision.</summary>
+    string OccurrenceKey = "");

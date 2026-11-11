@@ -494,8 +494,9 @@ public sealed class AdminOrderPostDispatchReplayTests
             Assert.Equal(ShipmentOperationStatus.Created, replacement.Status);
             Assert.Equal(1m, replacement.Items.Single(x => x.OrderLineId == fixture.LineAId).Quantity);
             Assert.Equal(1, inventory.ReserveCalls);
-            // The hold is bound to the ACTIVE order, so its TTL was cleared exactly once for this new reservation.
-            Assert.Equal(1, inventory.CommitCalls);
+            // TB-262-R1: the replacement hold is a NON-EXPIRING paid-order reservation from its FIRST durable commit
+            // inside Inventory, so there is no separate "clear the TTL" step that could be lost in a crash.
+            Assert.Equal(0, inventory.CommitCalls);
             // The damaged unit is committed; the healthy returned capacity of the same line is untouched.
             Assert.Equal(0m, snapshot.Items.Single(x => x.OrderLineId == fixture.LineAId).OutstandingDamagedQuantity);
             Assert.Equal(1m, snapshot.Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
@@ -597,6 +598,220 @@ public sealed class AdminOrderPostDispatchReplayTests
             + "changedQuantity=conflict changedOutcome=conflict foreign=refused denied=denied "
             + $"rows=shipments{shipmentsBefore}/decisions{decisionsBefore}",
             "tb262-orchestrator-relational.txt");
+    }
+
+    /// <summary>
+    /// TB-262-R1 on real storage through the PUBLIC command: an INCOMPLETE damaged replacement (decision recorded,
+    /// healthy stock unavailable, so no hold and no parcel) is a pending conversation, not a completed one. A retry
+    /// must continue the SAME recorded decision instead of answering it as a snapshot, a pre-dispatch parcel
+    /// cancellation must keep the order-bound hold (so a starved gateway still resumes with ZERO new reservation),
+    /// and replaying the OLD cancelled parcel's cancellation must never detach the NEW live replacement attempt.
+    /// </summary>
+    [Fact]
+    public async Task Relational_pending_damaged_replacement_resumes_after_a_cancelled_attempt_with_the_retained_hold()
+    {
+        var connection = Environment.GetEnvironmentVariable(RelationalEnvVar);
+        if (string.IsNullOrWhiteSpace(connection))
+        {
+            return;
+        }
+
+        var target = new NpgsqlConnectionStringBuilder(connection);
+        var fixture = await CreateDispatchedFixtureAsync(
+            target,
+            new ReplacementInventoryGateway(),
+            lineAReservationId: Guid.NewGuid(),
+            lineBReservationId: Guid.NewGuid());
+        var ports = new Ports("order.handle");
+        var orders = new CheckoutReaderFake(
+            fixture.CheckoutId, fixture.SellerOrderId, fixture.SellerPartyId, fixture.LineAId);
+        var key = $"TB262R1-resume-{Guid.NewGuid():N}";
+
+        // ---- the origin receipt is recorded ONCE: line A returns 1 healthy + 1 damaged ---------------------------
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var orchestrator = Build(NewAdapter(db), ports, orders);
+
+            Assert.True((await orchestrator.RecordNonDeliveryAsync(
+                fixture.CheckoutId,
+                ActorId,
+                NonDeliveryRequestFor(fixture, "customer_unavailable", "TB262R1 resume"),
+                CancellationToken.None)).IsSuccess);
+            Assert.True((await orchestrator.StartReturnAsync(
+                fixture.CheckoutId, ActorId, ReturnStartRequest(fixture), CancellationToken.None)).IsSuccess);
+            Assert.True((await orchestrator.RecordReturnReceiptAsync(
+                fixture.CheckoutId,
+                ActorId,
+                ReceiptRequestFor(fixture,
+                    new AdminReturnReceiptLineSelection(fixture.LineAId, 1m, 0),
+                    new AdminReturnReceiptLineSelection(fixture.LineAId, 1m, 1),
+                    new AdminReturnReceiptLineSelection(fixture.LineBId, 1m, 1)),
+                CancellationToken.None)).IsSuccess);
+        }
+
+        // ---- A: healthy stock is gone, so the FIRST public attempt is an honest blocker with NO parcel ----------
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var starved = new StarvedReplacementInventoryGateway();
+            var orchestrator = Build(NewDamagedAdapter(db, starved), ports, orders);
+
+            var pending = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", key),
+                CancellationToken.None);
+            Assert.False(pending.IsSuccess);
+            Assert.Equal("fulfillment.damage.replacement_unavailable", pending.FirstError.Code);
+            Assert.Equal(1, starved.ReserveAttempts);
+        }
+
+        // The decision survived its own failure and no parcel was invented for it.
+        Assert.Equal(1, await CountDamagedResolutionsAsync(target, fixture.FulfillmentId));
+        Assert.Equal(1, await CountShipmentsAsync(target, fixture.FulfillmentId));
+
+        // ---- A: a retry in a NEW context CONTINUES the pending decision instead of answering a snapshot --------
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var starved = new StarvedReplacementInventoryGateway();
+            var orchestrator = Build(NewDamagedAdapter(db, starved), ports, orders);
+
+            var stillPending = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", key),
+                CancellationToken.None);
+            Assert.False(stillPending.IsSuccess);
+            Assert.Equal("fulfillment.damage.replacement_unavailable", stillPending.FirstError.Code);
+            Assert.Equal(1, starved.ReserveAttempts);
+        }
+
+        Assert.Equal(1, await CountDamagedResolutionsAsync(target, fixture.FulfillmentId));
+        Assert.Equal(1, await CountShipmentsAsync(target, fixture.FulfillmentId));
+
+        // ---- the SAME recorded intent now finds healthy stock and completes with its own hold + parcel ----------
+        Guid firstParcel;
+        Guid retainedReservation;
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var inventory = new ReplacementInventoryGateway();
+            var orchestrator = Build(NewDamagedAdapter(db, inventory), ports, orders);
+
+            var resolved = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", key),
+                CancellationToken.None);
+            Assert.True(resolved.IsSuccess, resolved.IsSuccess ? string.Empty : resolved.FirstError?.Code);
+            var snapshot = Assert.IsType<FulfillmentSnapshot>(resolved.Value);
+            var decision = snapshot.Shipments
+                .Single(x => x.ShipmentId == fixture.ShipmentId).DamagedResolutions!
+                .Single(x => x.OrderLineId == fixture.LineAId);
+            Assert.Equal(DamagedResolutionStatus.Fulfilled, decision.Status);
+            Assert.Equal(inventory.ReservationId, decision.ReplacementReservationId);
+            firstParcel = decision.ReplacementShipmentId!.Value;
+            retainedReservation = decision.ReplacementReservationId!.Value;
+            Assert.Equal(1, inventory.ReserveCalls);
+            Assert.Equal(0, inventory.CommitCalls);
+            Assert.Equal("Created", await RawShipmentStatusAsync(target, firstParcel));
+        }
+
+        // ---- cancelling the CREATED replacement parcel releases ONLY the parcel allocation -----------------------
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var inventory = new ReplacementInventoryGateway();
+            var adapter = NewDamagedAdapter(db, inventory);
+
+            await adapter.CancelShipmentAsync(
+                fixture.FulfillmentId, firstParcel, ActorId, CancellationToken.None);
+            // The ORDER is still active: a parcel cancellation is not an order cancellation, so NOTHING is released.
+            Assert.Equal(0, inventory.ReleaseCalls);
+        }
+
+        Assert.Equal("Cancelled", await RawShipmentStatusAsync(target, firstParcel));
+        Assert.Equal(1, await CountDamagedResolutionsAsync(target, fixture.FulfillmentId));
+
+        // ---- the retry RESUMES on the RETAINED hold: a starved gateway proves no second reservation is made -----
+        Guid secondParcel;
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var starved = new StarvedReplacementInventoryGateway();
+            var orchestrator = Build(NewDamagedAdapter(db, starved), ports, orders);
+
+            var resumed = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", key),
+                CancellationToken.None);
+            Assert.True(resumed.IsSuccess, resumed.IsSuccess ? string.Empty : resumed.FirstError?.Code);
+            var snapshot = Assert.IsType<FulfillmentSnapshot>(resumed.Value);
+            var decision = snapshot.Shipments
+                .Single(x => x.ShipmentId == fixture.ShipmentId).DamagedResolutions!
+                .Single(x => x.OrderLineId == fixture.LineAId);
+            Assert.Equal(DamagedResolutionOutcome.Replacement, decision.Outcome);
+            Assert.Equal(DamagedResolutionStatus.Fulfilled, decision.Status);
+            // The SAME purpose-bound hold, a genuinely NEW parcel — never a second reservation for one allocation.
+            Assert.Equal(retainedReservation, decision.ReplacementReservationId);
+            Assert.NotNull(decision.ReplacementShipmentId);
+            secondParcel = decision.ReplacementShipmentId!.Value;
+            Assert.NotEqual(firstParcel, secondParcel);
+            Assert.Equal(0, starved.ReserveAttempts);
+            Assert.Equal(0, starved.ReleaseCalls);
+            Assert.Equal(
+                retainedReservation,
+                snapshot.Shipments.Single(x => x.ShipmentId == secondParcel).ReplacementReservationId);
+            Assert.Equal("Created", await RawShipmentStatusAsync(target, secondParcel));
+        }
+
+        // One decision, one retained allocation, and the source parcel plus TWO replacement attempts (one cancelled).
+        Assert.Equal(1, await CountDamagedResolutionsAsync(target, fixture.FulfillmentId));
+        Assert.Equal(3, await CountShipmentsAsync(target, fixture.FulfillmentId));
+
+        // ---- replaying the OLD parcel's cancellation is a NO-OP for the NEW live attempt ------------------------
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var inventory = new ReplacementInventoryGateway();
+            var adapter = NewDamagedAdapter(db, inventory);
+
+            // The owning seam accepts the idempotent replay (the parcel is already Cancelled); the TB-262-R1
+            // association guard is what keeps it from detaching the CURRENT live replacement attempt.
+            await adapter.CancelShipmentAsync(
+                fixture.FulfillmentId, firstParcel, ActorId, CancellationToken.None);
+            Assert.Equal("Cancelled", await RawShipmentStatusAsync(target, firstParcel));
+            // The stale cancellation never detached the current attempt and never advanced it.
+            Assert.Equal("Created", await RawShipmentStatusAsync(target, secondParcel));
+            Assert.Equal(0, inventory.ReleaseCalls);
+        }
+
+        // The public exact-intent replay still answers the SAME live replacement for the SAME decision.
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var orchestrator = Build(NewAdapter(db), ports, orders);
+            var replayed = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", key),
+                CancellationToken.None);
+            Assert.True(replayed.IsSuccess, replayed.IsSuccess ? string.Empty : replayed.FirstError?.Code);
+            var snapshot = Assert.IsType<FulfillmentSnapshot>(replayed.Value);
+            var decision = snapshot.Shipments
+                .Single(x => x.ShipmentId == fixture.ShipmentId).DamagedResolutions!
+                .Single(x => x.OrderLineId == fixture.LineAId);
+            Assert.Equal(DamagedResolutionStatus.Fulfilled, decision.Status);
+            Assert.Equal(secondParcel, decision.ReplacementShipmentId);
+            Assert.Equal(retainedReservation, decision.ReplacementReservationId);
+        }
+
+        Assert.Equal(1, await CountDamagedResolutionsAsync(target, fixture.FulfillmentId));
+        Assert.Equal(3, await CountShipmentsAsync(target, fixture.FulfillmentId));
+        Assert.Equal("Created", await RawShipmentStatusAsync(target, secondParcel));
+
+        RecordEvidence(
+            $"I damagedPending fulfillment={fixture.FulfillmentId} checkout={fixture.CheckoutId} "
+            + $"source={fixture.ShipmentId} key={key} firstAttempt=replacement_unavailable(zeroParcel) "
+            + $"retry=pendingResume firstParcel={firstParcel} retainedReservation={retainedReservation} "
+            + $"cancelledParcel=allocationOnly(noRelease) resumedParcel={secondParcel} secondReserve=0 "
+            + "staleCancelReplay=noDetach rows=shipments3/decisions1 state=Created",
+            "tb262r1-orchestrator-relational.txt");
     }
 
     /// <summary>
@@ -1641,6 +1856,9 @@ public sealed class AdminOrderPostDispatchReplayTests
 
         public int CommitCalls { get; private set; }
 
+        /// <summary>TB-262-R1: proves a parcel cancellation never releases the order-bound hold.</summary>
+        public int ReleaseCalls { get; private set; }
+
         /// <summary>
         /// TB-262 RETENTION RULE: the NEW replacement hold is committed for the ACTIVE paid order (its TTL is cleared),
         /// so no hold timeout can ever return the stock to saleable availability. The committed SALE reservation is
@@ -1669,15 +1887,19 @@ public sealed class AdminOrderPostDispatchReplayTests
             return Task.CompletedTask;
         }
 
-        public Task ReleaseReplacementReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException("TB-262 fixture does not cancel a replacement.");
+        public Task ReleaseReplacementReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+        {
+            // TB-262-R1: an active order must never get its retained replacement stock back into saleable availability
+            // through a parcel cancellation, so this is counted rather than silently ignored.
+            ReleaseCalls++;
+            return Task.CompletedTask;
+        }
 
         public Task<FulfillmentReplacementReservation> ReserveReplacementReservationAsync(
             Guid originalReservationId,
             decimal quantity,
             string reservationKey,
             string externalReference,
-            DateTimeOffset expiresAt,
             CancellationToken cancellationToken)
         {
             // The replacement is funded from the committed SALE reservation's own offer/stock context, never from a
@@ -1712,5 +1934,52 @@ public sealed class AdminOrderPostDispatchReplayTests
 
         public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
             throw new NotSupportedException("TB-258-R2 fixture does not touch inventory.");
+    }
+
+    /// <summary>
+    /// TB-262-R1: an Inventory seam with NO healthy stock for this offer. It reports exactly what the owning
+    /// Inventory contract reports (<c>inventory.supply.unavailable</c>) and leaves no hold behind, so a resumed
+    /// replacement that still succeeds proves the retained order-bound hold was reused, not re-reserved.
+    /// </summary>
+    private sealed class StarvedReplacementInventoryGateway
+        : Tooba.Fulfillment.Application.Fulfillments.Ports.IFulfillmentInventoryGateway
+    {
+        public int ReserveAttempts { get; private set; }
+
+        public int ReleaseCalls { get; private set; }
+
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException("TB-262-R1 starved fixture never commits a hold.");
+
+        public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException("TB-262-R1 starved fixture never consumes a hold.");
+
+        public Task ReleaseReplacementReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+        {
+            ReleaseCalls++;
+            return Task.CompletedTask;
+        }
+
+        public Task<FulfillmentReplacementReservation> ReserveReplacementReservationAsync(
+            Guid originalReservationId,
+            decimal quantity,
+            string reservationKey,
+            string externalReference,
+            CancellationToken cancellationToken)
+        {
+            ReserveAttempts++;
+            throw new ContractOperationException(
+                Tooba.Inventory.Contracts.Errors.InventoryErrorCodes.SupplyUnavailable);
+        }
+
+        /// <summary>The retained hold is still live and unexpired: the only release path is an order cancellation.</summary>
+        public Task<FulfillmentReplacementReservation?> FindReplacementReservationAsync(
+            Guid reservationId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<FulfillmentReplacementReservation?>(
+                reservationId == Guid.Empty
+                    ? null
+                    : new FulfillmentReplacementReservation(
+                        reservationId, Guid.NewGuid(), Guid.NewGuid(), 1m, "Held"));
     }
 }

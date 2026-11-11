@@ -227,7 +227,19 @@ public sealed class AdminOrderDetailComposer
                                 i.OrderLineId,
                                 i.Quantity,
                                 i.Condition.ToString()))
-                            .ToList());
+                            .ToList(),
+                    s.DamagedResolutions is { Count: > 0 } resolutions
+                        ? resolutions
+                            .Select(r => new AdminDamagedResolutionView(
+                                r.DamagedGoodsResolutionId,
+                                r.OrderLineId,
+                                r.Quantity,
+                                r.Outcome.ToString(),
+                                r.Status.ToString(),
+                                r.OccurrenceKey,
+                                r.ReplacementShipmentId))
+                            .ToList()
+                        : null);
             }).ToList()
                 ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();
             return new AdminSellerOrderView(
