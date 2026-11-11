@@ -1,0 +1,2 @@
+﻿TB-262 focused proof transcript
+Passed!  - Failed:     0, Passed:    43, Skipped:     0, Total:    43, Duration: 4 s - Tooba.Fulfillment.Tests.dll (net8.0)

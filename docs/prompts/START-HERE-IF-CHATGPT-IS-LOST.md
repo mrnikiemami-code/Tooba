@@ -1,4 +1,17 @@
-# CURRENT — 261 WORKER RESULT PASS: one transient toast, contextual carrier-return language, parcel-truthful line status, proven refusal reason — 2026-11-11
+# CURRENT — 262 WORKER RESULT PASS: owned damaged-receipt decision + healthy-stock replacement — 2026-11-11
+
+Read docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-design.md,tb262-relational.txt}.
+Status **PASS** within the issued scope, decision **OWNED_DAMAGED_RECEIPT_DECISION_AND_HEALTHY_STOCK_REPLACEMENT_WITH_QUANTITY_CONSERVATION**, NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT. Base `4cf6bfbe0`; code `f1ce02d7d`.
+LANDED: Fulfillment owns a durable `DamagedGoodsResolution` per returned parcel line (`Replacement` | `Referral`; `Recorded`/`Reserved`/`Fulfilled`/`Cancelled`; unique `(fulfillment_id, occurrence_key)`) with `ReceiptDamaged − DamagedCommitted = OutstandingDamaged`, damaged units never usable/resend capacity and never a saleable-stock increase; Inventory exposes ONE narrow `IDamagedReplacementInventoryPort` that resolves the offer from the ORIGINAL sale reservation, reserves healthy stock idempotently per `damage-replacement:{resolutionId}:{attempt}`, and returns a typed blocker with no leaked hold; Order owns `resolve_damaged_goods`, the 44px «تعیین تکلیف کالای آسیب‌دیده» entry, `canResolveDamagedGoods`, per-line `damagedQuantity`/`outstandingDamagedQuantity`, and the public `ReconcileDamagedIntentAsync` exact-replay/conflict answer that survives the action disappearing. The NEW hold is consumed once at dispatch; a pre-dispatch cancel releases only its own hold; the original consumed sale reservation is untouched.
+Proven: 7/7 Fulfillment 262 pure; 36/36 258 post-dispatch retained; 6/6 Host 262 relational on real `tooba_alpha` (A–E + D2: onHand 10→8 for sale+replacement, `consumed=1 reserved=0`, replay=same, cancel-retry new ids, no-stock zero parcel/zero hold, one concurrency winner); 10/10 Order public replay; 52/52 FE mounted real section/panel/dialog (durable-before-send, zero-POST over-quantity, exact retained reconcile); typecheck 0; backend build 0; FE build 0. Host PID 45212 (`/health`+`/health/ready` 200); FE PID 13608 BUILD_ID `2t3xzbGoosGy7zATxS-Xh`.
+DEPLOY: additive migration `fulfillment 20261111123000_AddDamagedGoodsResolution` via MigrationRunner after private backup `D:\temp\tb262-backup\tooba_alpha-pre-tb262.dump`; all modules `pendingCount=0`. Same one `tooba_alpha`/SingleStore/`store-alpha`, no extra DB/edition, keys/CapturedPreview preserved, no manual SQL, user rows + screenshot fixture read-only, task-labelled `TB262-*` fixtures only.
+LEDGER: 261 PASS pending Architect review; **262 PASS pending Architect review**. A `Referral` stays an honest pending customer-service/financial item — no refund automation. Parent-package damage/return orchestration still unsupported (TB-258 child lock preserved). No "all complete" claim: user acceptance remains pending an actual trial. 255 parked; Tipax deferred.
+STOP_FOR_ARCHITECT; automaticNext NONE.
+
+---
+
+# SUPERSEDED — 261 WORKER RESULT PASS: one transient toast, contextual carrier-return language, parcel-truthful line status, proven refusal reason — 2026-11-11
 
 Read docs/ai/tasks/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb261-live-fixture.txt,damage-resolution-262-handoff.md}.
