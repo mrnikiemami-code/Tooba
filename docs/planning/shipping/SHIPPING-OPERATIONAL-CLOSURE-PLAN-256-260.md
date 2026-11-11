@@ -1,3 +1,15 @@
+# CURRENT — FIVE-DEFECT MILESTONE ACCEPTED WITHIN SCOPE; WAIT FOR USER TRIAL —2026-11-10
+
+Read docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/ARCHITECT-REVIEW.md.
+Independent source/evidence review ee1040ab41e59defb906fbfdc714f6fed5d7cb22 confirms scoped physical work rows/accepted plans/exact parcel-package locators and truthful target readiness.260-R1 accepted within issue5 scope; no independent Windows execution or user visual acceptance claimed.
+FINAL ledger5/5: tracking uniqueness257; remaining quantity257; internal non-delivery/final origin receipt/source-safe resend258-R3; common-or-separate packing259; due queue/shared finance-free operational order view260-R1. Save256-R2 prerequisite closed.
+NO NEXT TASK / NO261 / NO AUTOMATIC IMPLEMENTATION. STOP and await meaningful user trial; no broad repeated test/screenshot loops.
+Trial http://127.0.0.1:3000/fa/admin/fulfillments -> عملیات ارسال on exact row -> shared operational panel without finance -> back. Legacy null plans stay unspecified; canonical totals include labelled task fixtures and are not production metrics.
+Honest limits remain: positive plan/cross-seller proof fixture-derived, not live Marketplace checkout;255 parked/SingleStore; Tipax deferred; common-package parent return unsupported/locked child refusal; one final receipt/no saleable-stock integration; legacy SalesChannel Web fixture500 unchanged.
+Same tooba_alpha5432 + FE3000/Host5088 only; preserve keys/CapturedPreview. User business rows read-only unless user explicitly tests a chosen action. Older CURRENT blocks below superseded.
+
+---
+
 ﻿# CURRENT — 260-R1 PASS: the due queue is one row per physical work unit — 2026-11-10
 
 Read docs/ai/tasks/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/TASK.md and
