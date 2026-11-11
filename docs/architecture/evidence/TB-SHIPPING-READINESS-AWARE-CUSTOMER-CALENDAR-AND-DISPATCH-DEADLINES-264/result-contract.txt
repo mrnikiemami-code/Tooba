@@ -1,0 +1,37 @@
+TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264
+BRIDGE-WAKE-V1 / Channel tooba-main / Worker tooba-worker-01 / agent cursor
+
+Expected-Base-SHA: 04c8099bbf7c26d781fc097c96a51ab3fe99b3f5
+Base-SHA          : 04c8099bbf7c26d781fc097c96a51ab3fe99b3f5   (verified ancestor of the result commit)
+Code-SHA          : ab77c12e0e4cee6a9a5b034c506a84ff70aaf1f4   (implementation + focused tests)
+Evidence-SHA      : PENDING (documentation commit, set by the follow-up docs commit)
+Merge/HEAD-SHA    : PENDING (HEAD == origin/main after push)
+
+Mode              : PREPARATION_AND_CARRIER_TRANSFER_READINESS_TO_FEASIBLE_CUSTOMER_DATES_AND_DURABLE_OPERATIONAL_DEADLINES
+Status            : PASS within the issued scope
+Decision          : EXPLICIT_OWNED_PREPARATION_AND_TRANSFER_POLICY_WITH_ONE_FORWARD_BACKWARD_AUTHORITY_DURABLE_POLICY_V2_DEADLINES_AND_PREPARATION_AWARE_EXISTING_QUEUE
+Policy versions   : 1 = legacy (8 dispatch columns, no deadlines, never retro-labelled)
+                    2 = preparation-aware (13 dispatch columns: 3 instants + 2 minute inputs, ordered)
+Migration         : order 20261111233000_AddPreparationAwareDispatchDeadlines (additive, applied by the
+                    repository MigrationRunner after private backup tooba_alpha-pre-tb264.dump)
+Database          : tooba_alpha @ 127.0.0.1:5432 (SingleStore, store-alpha) — the only database used
+Runtime           : Host 5088 PID 6276 (health/ready ok) ; FE 3000 PID 41488 BUILD_ID Hou23ETYm3l_DFIPdinpW
+Stop-State        : STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+Next planned task : 265 Returns linkage — NOT ISSUED
+
+Proof of record
+  ShippingDispatchSchedulingAuthority264Tests                      7/7
+  ShippingCapturedRevisionQuoteTests (11 retained + 2 TB-264)     13/13
+  AdminFulfillmentPreparationTiming264Tests                        6/6
+  AdminDispatchPreparation264RelationalTests (real DB)             1/1
+  AdminFulfillmentWorkUnitProjection260R1RelationalTests (real DB) 6/6  (5 retained + new TB-264 case E)
+  admin-order-operational-delivery.mount.test.ts                   60/60 (2 TB-264 + retained)
+  authoring-timing-264.test.ts                                     4/4
+  tsc --noEmit                                                     0 errors
+  next build                                                       0 errors
+  MigrationRunner plan --tenant store-alpha                        Order head = the migration, pending []
+  Partial-triple check constraint                                  SQLSTATE 23514 refused
+
+NOT claimed: Architect ACCEPT, user VISUAL/FUNCTIONAL ACCEPT, "shipping complete", a live paid checkout by
+the worker, Returns/financial integration, Returns linkage (265), any provider/Tipax call.

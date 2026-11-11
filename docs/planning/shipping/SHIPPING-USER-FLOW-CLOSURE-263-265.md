@@ -3,7 +3,7 @@ Latest user instruction: fix the defects, issue sequential tasks, review each re
 262-R1 accepted ONLY its three repair seams; new user trial reopens functional acceptance.
 
 ## Sequence
-1. **263 WORKER PASS — pending Architect review** — TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263.
+1. **263 ACCEPTED within scope** — TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263.
    Reproduced on the read-only screenshot record: the durable decision existed (`Recorded`) but the admin projection
    dropped its `occurrenceKey`, so the resume posted a blank key and the owner answered the deterministic 409
    `fulfillment.damage.resolution_occurrence_required`; every non-ok answer was then presented as an unknown response.
@@ -11,9 +11,15 @@ Latest user instruction: fix the defects, issue sequential tasks, review each re
    existing Toast for confirmed success; existing MessageBox for a blocking refusal; all `fulfillment.damage.*`
    localized). See docs/architecture/evidence/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/RESULT.md.
    No financial or calendar feature was added.
-2. **264 PLANNED / NOT ISSUED** — readiness-aware shipping calendar and operational start deadlines. Current 256 policy assumes nowUTC is goods readiness; user explicitly rejects that assumption. Inspect actual existing per-item/offer/seller preparation inputs and operational working calendar before adding settings; don't invent duplicate lead-time fields. Model readiness (processing/packing), transfer to carrier, actual acceptance window/pickup cutoff, MAX transport working days and independent customer receiving window. If window is opening hours it is not an invented fixed pickup appointment. Preparation cannot run through closed warehouse hours unless explicit policy allows it. Before ordering, offer customer dates ONLY from first feasible handoff after readiness+transfer; max2–3=>3. At carrier close exactly => next acceptance; 16:59 can also miss today's 17:00 when preparation/transfer takes time. No double counting: existing authoritative preparation time plus only distinct missing transfer/buffer.
- For chosen customer date, derive latest feasible carrier handoff AND latest preparation start using same authority, save accepted evidence and queue from durable facts (no current-config recomputation of old orders). Customer promise stays separate. Multi-item common group readiness is constrained by all required members, not summed parallel preparation blindly. Separate parcels retain own work scope. Revalidate availability at acceptance; historical plans remain explicit legacy/unknown, not fabricated/backfilled.
- Acceptance examples: 14:00+2h feasible before17,16:00+2h misses17; weekday noon-close, closed warehouse/carrier/customer day, cross-zone, chosen later date; queue shows when preparation must start and handoff deadline. Task naming after repository inspection; user test at milestone.
+2. **264 WORKER PASS — pending Architect review** — TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264.
+   The physical preparation/transfer pair is now an explicit owned authoring policy carried through the captured
+   quote; ONE forward/backward authority turns the trusted eligibility instant into feasible carrier handoffs and
+   customer dates and derives latest preparation-start / transfer-departure / handoff-deadline instants; the
+   policy-v2 triple persists in accepted evidence behind an additive all-or-nothing constraint (v1 stays readable);
+   the existing finance-free queue gains its own preparation state/due filter and the shared operations timeline
+   shows the deadlines beside the customer promise. No second queue/settings app, no money change.
+   See docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/RESULT.md.
+   Boundary: acceptance proven through the production resolver + real DB + actual queue query, NOT a live paid checkout.
 3. **265 PLANNED / NOT ISSUED** — connect courier-origin return to EXISTING Returns flow. Inspect Returns eligibility/finance/inventory APIs (delivered-customer RMA may currently refuse never-delivered source). Reuse Contracts and owning processes, no parallel refund module or fake Delivered. Three routes: resend same healthy goods; healthy-stock replacement with distinct reservation; create linked Returns case with existing origin receipt reused. Cover usable as well as damaged quantities. One source quantity cannot fund simultaneous resend/replacement/refund branches; concurrent/retry exact authority.
  Latest reservation rule: opening a case alone doesn't release. Approved return plus owning cancellation of relevant order-line obligation releases only its unconsumed held stock once, blocks further send for that quantity; consumed original reservation isn't released or resurrected. Existing whole-order post-dispatch cancellation restriction must not be bypassed; explicitly integrate line obligation policy instead. Already-dispatched replacement needs physical recall/receipt, cannot be treated as unused hold. Refund amount/approval/execution remains Returns/Settlement/Payment-owned; damaged disposition isn't saleable restock. Referral in262 is NOT this integration. Preserve case audit links and exact replay, no double receive/refund. Scope/issue after actual code review and263/264 results.
 
