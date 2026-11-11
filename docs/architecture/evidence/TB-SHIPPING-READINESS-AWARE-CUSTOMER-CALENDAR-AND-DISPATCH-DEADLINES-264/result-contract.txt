@@ -5,7 +5,7 @@ Expected-Base-SHA: 04c8099bbf7c26d781fc097c96a51ab3fe99b3f5
 Base-SHA          : 04c8099bbf7c26d781fc097c96a51ab3fe99b3f5   (verified ancestor of the result commit)
 Code-SHA          : ab77c12e0e4cee6a9a5b034c506a84ff70aaf1f4   (implementation + focused tests)
 Evidence-SHA      : a2347c623924e7e9190fa3088327b907141ff77d
-Merge/HEAD-SHA    : PENDING (HEAD == origin/main after push)
+Merge/HEAD-SHA    : e966e5bc0 (merge of origin/main docs commits 04c8099bb..fc0060750; HEAD == origin/main after push)
 
 Mode              : PREPARATION_AND_CARRIER_TRANSFER_READINESS_TO_FEASIBLE_CUSTOMER_DATES_AND_DURABLE_OPERATIONAL_DEADLINES
 Status            : PASS within the issued scope
