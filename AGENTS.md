@@ -1,4 +1,20 @@
-# CURRENT —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
+# CURRENT — 262-R1 WORKER RESULT PASS: pending replacement resumes, stale cancel is inert, hold never expires — 2026-11-11
+
+Read docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md (verbatim, user rule intact) and
+docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb262r1-orchestrator-relational.txt,tb262-relational.txt}.
+Status **PASS** within the issued repair scope, decision **PENDING_REPLACEMENT_RESUMES_THROUGH_OWNING_EXECUTION_ASSOCIATION_SPECIFIC_IDEMPOTENT_CANCEL_AND_ATOMIC_NON_EXPIRING_ORDER_HOLD**, NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT "all shipping problems fixed", NOT refund/financial automation. Base `a67e514e0`; code `e6cb0378e`; evidence/merge SHA in `result-contract.txt`; single worker, one task, no historical agent resumed.
+LANDED (A, Order owns the public command) `RunDamagedResolutionAsync` now answers `recorded.Snapshot` ONLY for a genuinely terminal decision (`Status == Fulfilled` or `Outcome == Referral`) and CONTINUES every other `Recorded` state — the durable no-stock decision and the `Reserved` decision whose parcel write never landed — through `ResolveDamagedGoodsCoreAsync` with the CURRENT actor/checkout/fulfillment/source checks; no second decision, no second reservation, no silent success, and an absent record still passes the ordinary projection gate. Starved stock stays the typed pending blocker, healthy stock arriving completes the SAME occurrence with its own hold and one linked parcel, and a genuinely gone hold is `fulfillment.damage.reservation_conflict` instead of a silent second reservation. `OccurrenceKey` is now on `DamagedResolutionSnapshot`/`DamagedGoodsResolutionRecord` → `AdminShipmentView.DamagedResolutions` → `admin-api.ts`, so a reload with no local hint continues the EXACT recorded decision through the existing dialog (`damagedResume`, quantity/outcome/key replayed verbatim) and the section's ONE 44px entry reads «ادامهٔ تعیین تکلیف کالای آسیب‌دیده» beside the durable decision sentence.
+LANDED (B, Fulfillment owns the transition) `DamagedGoodsResolution.RetainStockBeforeDispatch(Guid cancelledShipmentId, now)` returns unless `ReplacementShipmentId == cancelledShipmentId`: only the FIRST valid pre-dispatch cancellation of the CURRENT parcel detaches that allocation and advances the parcel attempt once, a replay is a no-op, and a replay of an OLD parcel after a retry preserves the new link, attempt, held reservation and quantities. Public actor/ownership/package-lock guards and `Shipment.CancelPreDispatch` semantics unchanged; NO Inventory release on parcel cancel; one live parcel per resolution is enforced by the aggregate link + attempt-scoped dispatch key, never by hiding UI.
+LANDED (C, Inventory owns the hold) `DamagedReplacementReservationRequest` no longer carries an expiry, `InventoryDirectory.ReserveForDamagedReplacementAsync` passes `expiresAt:null` into the existing atomic `ReserveAsync`, the gateway signature lost `expiresAt` and the separate `CommitReservationForPaidOrderAsync` post-step is gone — the purpose-bound hold (`damage-replacement:{resolutionId:N}`) is non-expiring from its FIRST durable commit, so a crash between reserve and link leaves exactly ONE recoverable hold and `ReleaseExpiredHoldsAsync` (only `expires_at IS NOT NULL`) can never free active-order stock. Only an authorized ORDER cancellation releases the unconsumed hold once.
+Proven (focused, one DB, task-labelled fixtures): Fulfillment `DamagedResolution262Tests` **8/8** (new stale-cancel-replay case) + retained `PostDispatchException` **36/36**; Host `DamagedGoodsResolution262` on REAL `tooba_alpha` **8/8** (A–E retained + new **F** stale-cancel replay from an INDEPENDENT context and new **G** atomic non-expiry at the owning Inventory seam, reclaimer predicate matching 0 rows at now+400d); Order `AdminOrderPostDispatchReplay` through the PUBLIC command on REAL storage **11/11** (new **I**: starved attempt → blocker with zero parcel; retry still pending; healthy stock → same occurrence completes; cancel → allocation only, `ReleaseCalls=0`; retry resumes the RETAINED hold with `secondReserve=0` and a NEW parcel; stale old-parcel cancel → no detach; exact public replay answers the live parcel; `rows=shipments3/decisions1`); FE mounted real section/dialog **54/54** (2 new R1), typecheck 0, production build 0, solution build 0.
+Deploy: NO migration added or applied (no schema change). Host republished to `artifacts/publish-primary` and restarted (old PID 30928 stopped → **36116**, `/health` 200, `/health/ready` 200 → SingleStore); FE rebuilt and restarted (PID **30688**, BUILD_ID `HH5Ghzd51vaj3oewQY1qF`, `/fa` 200, served chunk `7825-cec5013e3aaa3dc7.js` carries the resume copy). ONE database `tooba_alpha` @ 127.0.0.1:5432; no disposable/test/parallel/Docker DB, no 15433, no edition/connection/port/appsettings change; DataProtection/CapturedPreview unchanged (local ON / checked-in OFF); no raw business SQL/manual DDL/reset/reseed/backfill; user and screenshot rows read-only; no provider call, no fake waybill; 255 parked; live Tipax deferred.
+Known limits: `Referral` stays an honest pending customer-service/financial item; the authorized ORDER-cancellation release branch is still unreachable for an already-dispatched parcel (reported, not redesigned — the hold simply stays with the active order); parent consolidated-package damage/return orchestration unsupported and the TB-258 child lock preserved; concurrency/recovery proven with independent real contexts + durable guards, not a stress test; no live user trial/screenshot matrix; one exploratory invocation of the shared global reclaimer ran once before the committed case switched to the identical read-only predicate (no order-bound hold is a candidate; later invocation released 0).
+**261 PASS pending Architect review; 262 PASS pending Architect review; 262-R1 PASS pending Architect review of this result.** STOP_FOR_ARCHITECT; automaticNext NONE.
+
+---
+
+# SUPERSEDED —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
+
 
 Read docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/ARCHITECT-REVIEW.md.
 Task docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md.
@@ -13,7 +29,7 @@ Older CURRENT blocks superseded.
 
 ---
 
-# CURRENT — 262 WORKER RESULT PASS (RETENTION REVISION): owned damaged-receipt decision + order-bound replacement hold — 2026-11-11
+# SUPERSEDED — 262 WORKER RESULT PASS (RETENTION REVISION): owned damaged-receipt decision + order-bound replacement hold — 2026-11-11
 
 Read docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/TASK.md (it now carries the USER OVERRIDE) and
 docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-design.md,tb262-domain.txt,tb262-relational.txt,tb262-migration-plan.txt}.
@@ -28,7 +44,7 @@ STOP_FOR_ARCHITECT; automaticNext NONE.
 
 ---
 
-# CURRENT USER OVERRIDE — ORDER RESERVATION RETAINED UNTIL ORDER CANCELLATION —2026-11-11
+# USER OVERRIDE — ORDER RESERVATION RETAINED UNTIL ORDER CANCELLATION —2026-11-11 (RULE STILL IN FORCE; block superseded by the newer CURRENT above)
 
 ## USER OVERRIDE — RESERVATION RETENTION —2026-11-11
 Latest explicit user rule: «تا سفارش لغو نشده نباید ازاد بشه رزرو».
