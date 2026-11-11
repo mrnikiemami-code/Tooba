@@ -13,8 +13,8 @@ automaticNextImplementationTask: NONE
 
 Base-SHA: a67e514ead76a058788add1be571512791db6646
 Code-SHA: e6cb0378edaf0986c8f7c1f656494ed6e8abc569
-Evidence-SHA: <the commit that adds this folder>
-Merge-SHA: <HEAD == origin/main after the evidence commits>
+Evidence-SHA: 84cb0dcc9794d0bdca127e61bc8f0029a76d913d
+Merge-SHA: HEAD == origin/main at report time (the finalize commit that carries this file; exact value in the Bridge payload)
 
 NOT_CLAIMED: Architect ACCEPT, user VISUAL/FUNCTIONAL ACCEPT, "all shipping problems fixed",
 refund/financial automation, reachable post-dispatch whole-order cancellation, parent common-package
