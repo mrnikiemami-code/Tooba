@@ -1,0 +1,109 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263
+Parent-Task: TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS_WITHIN_ISSUED_SCOPE
+Decision: SERVER_KNOWN_PENDING_AND_DETERMINISTIC_REFUSAL_DISTINGUISHED_FROM_UNKNOWN_WITH_OWNING_OCCURRENCE_PROJECTION_AND_EXISTING_TOAST_MESSAGEBOX
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Base-SHA: 7117d6d4977b14f0a37c4eda1c4950967bb29a44
+Work-Base-SHA: 56e7e9c56da061598a1f6aac1aec851b07e6046d
+Code-SHA: 6849408a043a705f0419db373d4b181f1b3c39c4
+Evidence-SHA: the commit that adds this file (exact value in the Bridge payload)
+Merge-SHA: HEAD == origin/main after the finalize commit (exact value in the Bridge payload)
+
+NOT_CLAIMED: Architect ACCEPT, user VISUAL/FUNCTIONAL ACCEPT, "shipping complete", Returns or financial
+integration, calendar readiness (264), live provider (Tipax) behaviour, any mutation of the user's rows.
+
+## Reproduction (read-only, zero writes, before the repair was deployed)
+Order 13feece0-4890-4e45-b92f-4d4b1a5e0c97 / fulfillment 3ce14fb8-6453-44c0-b364-0f919c8bf2e0 / returned
+parcel a44aa20e-ecf3-4964-b828-bf1fc4a72eac (Returned; receipt 1 x Damaged on line
+8e0a897b-07a7-45c7-a34b-1ec0fb9ae7c5) carries durable decision 01a1cbc2-b96d-7000-8c78-d12e172ff327
+(Replacement, Recorded, quantity 1, outstanding 0). The operations projection offered
+«ادامهٔ تعیین تکلیف کالای آسیب‌دیده» but returned occurrenceKey "". The dialog posted a blank
+idempotencyKey; FulfillmentUnit line 875 answers the deterministic 409
+fulfillment.damage.resolution_occurrence_required (a re-composed decision on the committed unit is
+fulfillment.damage.exceeds_outstanding, line 911). Every non-ok answer was then rendered as an UNKNOWN
+response (amber "نتیجهٔ قطعی…مشخص نشد" + generic red «خطای سرور را بررسی کنید … این پنجره را نبندید»).
+The same misclassification hid the known-pending fulfillment.damage.replacement_unavailable no-stock state.
+
+## Repair (owning seams only)
+A. FulfillmentAdminOperationsAdapter forwards OccurrenceKey into DamagedResolutionSnapshot, so a reload
+   resumes the EXACT recorded decision. After the rebuilt Host the same read-only record reports
+   occurrenceKey a3618153-0e89-4205-bb30-3dcb90c9688f; decision/rows unchanged, zero writes.
+B. ONE pure classification completed|pending|refused|unknown in
+   features/order-operational-groups/post-dispatch-outcome.ts: ok -> completed; denied -> refused
+   (blocking); no status / 5xx -> unknown; fulfillment.damage.replacement_unavailable -> pending; other
+   deterministic 4xx -> refused with the exact localized reason. Only completed clears the retained
+   attempt; pending/refused keep source/quantity/outcome/occurrence (no second decision, no second hold).
+C. Feedback reuses the existing app primitives: react-toastify toast.success once per confirmed action
+   (never on GET/reload), the existing design-system MessageBox for a blocking refusal (renders nothing
+   while closed; AuthoringMessageBox delegates to it), a compact sky-blue durable pending block inside the
+   same review, amber only for true uncertainty, field errors adjacent. Verbose technical copy removed.
+D. All 26 fulfillment.damage.* codes localized in admin-error-map.ts; no raw enum reaches the operator.
+E. Closing is safe; reopen restores the exact envelope read-only, a NEW send is refused while unresolved,
+   and the recorded attempt is re-read when the projection stops offering the action; no auto-POST loop.
+
+## Proof (focused, one canonical DB, one run per check)
+Independent execution (Host 5088, real tooba_alpha, GET only): occurrenceKey "" ->
+a3618153-0e89-4205-bb30-3dcb90c9688f.
+Order AdminOrderPostDispatchReplay PUBLIC command on real storage 11/11: no stock ->
+replacement_unavailable with zero parcel/hold; retry stays pending; healthy stock completes the SAME
+occurrence with one linked parcel + one non-expiring hold; cancel -> allocation only (ReleaseCalls=0);
+retry rebinds the retained hold (secondReserve=0); stale cancel detaches nothing; exact public replay
+answers the live parcel; its by-design receipt line (fulfillment ac758945-093f-4285-9e70-00e1cad0c700,
+checkout f8dfba61-831e-4cd8-bf83-ea99fc644e7f, rows shipments2/receipts1) appended to the retained
+262-R1 evidence file.
+Fulfillment DamagedResolution262Tests 8/8. Host DamagedGoodsResolution262Relational 8/8 on real
+tooba_alpha. Mounted real section/panel/dialog 58/58 (4 new TB-263 cases: one toast + close on
+completion; sky-blue pending with the SAME key replayed; transport loss keeps the envelope and reopens
+read-only; denial closes into exactly ONE MessageBox with no duplicate surface). admin-error-map.test
+6/6. Solution build 0 errors. FE typecheck 0. Production build 0.
+
+## Runtime / deploy
+No migration added or applied (no schema change). Host republished to artifacts/publish-primary and
+restarted (previous PID 7056 stopped): PID 6216, /health 200, /health/ready 200 -> SingleStore.
+FE rebuilt and restarted (previous PID 45964 stopped): PID 43700, BUILD_ID iyES24s7U0oBnc8uyG4_S,
+/fa 200, the read-only operations route 200, served chunks 1323-b2ed9262639c7262.js and
+7825-0780d97d33f9949c.js carry the durable-pending copy.
+ONE database tooba_alpha @ 127.0.0.1:5432 (Edition SingleStore, tenant store-alpha); no
+disposable/test/parallel/Docker DB, no 15433, no edition/connection/port/appsettings change;
+DataProtection/CapturedPreview unchanged (local ON / checked-in OFF); no manual DDL/business SQL/reset/
+reseed/backfill; user and screenshot rows read-only; task-labelled fixtures only; no provider call, no
+fake waybill; 255 parked; live Tipax deferred.
+
+## Changed paths
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Adapters/FulfillmentAdminOperationsAdapter.cs
+src/frontend/app/admin/admin-error-map.ts
+src/frontend/app/admin/admin-order-items-shipping-panel.tsx
+src/frontend/app/admin/admin-order-operational-delivery-section.tsx
+src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts
+src/frontend/design-system/index.ts
+src/frontend/design-system/primitives/overlays.tsx
+src/frontend/features/admin-shipping-authoring/ui/authoring-message-box.tsx
+src/frontend/features/order-operational-groups/index.ts
+src/frontend/features/order-operational-groups/post-dispatch-outcome.ts
+src/frontend/features/order-operational-groups/session/post-dispatch-attempt-store.ts
+src/frontend/features/order-operational-groups/ui/post-dispatch-exception-dialog.tsx
+scripts/tb263-probe.mjs
+docs/architecture/evidence/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/*
+docs/ai/tasks/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/TASK.md
+docs/planning/shipping/SHIPPING-USER-FLOW-CLOSURE-263-265.md
+AGENTS.md
+
+## Limits (explicit)
+No live click/mutation on the user's screenshot record (before/after proof is GET-only) and healthy-stock
+completion is proven through the owning public command on task-labelled fixtures on the same database.
+The worker did not run the user trial and produced no screenshot matrix. A Referral stays an honest
+pending customer-service item; Returns linkage is 265 and is NOT implemented. 264 (readiness-aware
+calendar) is NOT implemented. Concurrency/recovery proven with independent real contexts and DB guards,
+not a stress test.
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT
