@@ -1,4 +1,17 @@
-# CURRENT — 262-R1 ARCHITECT ACCEPT WITHIN SCOPE; STOP FOR USER TRIAL — 2026-11-11
+# CURRENT — ONLY 263 ISSUED; 264/265 PLANNED, NOT ISSUED — 2026-11-11
+
+User reopened functional acceptance: replacement dialog is stuck and technical/duplicated notifications are unacceptable. Existing Toast AND MessageBox are the UI authorities.
+Read docs/planning/shipping/SHIPPING-USER-FLOW-CLOSURE-263-265.md and docs/ai/tasks/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/TASK.md.
+263: reproduce actual response using screenshot records READ-ONLY and minimal task fixture; fix owning replacement continuation as needed; boolean false must not classify all pending/refusals as unknown. Reuse existing Toast/MessageBox, safe retained exact intent, no auto POST loop.
+264 NOT ISSUED: prep/transfer readiness + carrier acceptance + MAX transit -> feasible customer dates; durable latest prep start and carrier handoff deadlines. nowUTC is NOT assumed goods-ready.
+265 NOT ISSUED: connect courier return to existing Returns with three routes: resend same usable goods / healthy-stock replacement reservation / linked Returns case. No parallel refunds.
+LATEST reservation-policy clarification supersedes blanket "whole order cancellation only": case creation alone does not release; approved return with owning cancellation of corresponding order-line obligation may release that quantity's unconsumed hold once and prevents competing send/replacement. Consumed original reservation never released/recreated. This integration is PLANNED265, not implemented263; current parcel cancel/retry/timeout still retains hold.
+One worker/task; wait for result, architect review then next. No parallel implementation, no repeated broad/green-test loops. Same one DB/ports/user-data protections; never run global mutating expiry reclaimer test.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. Earlier CURRENTs below are historical.
+
+---
+
+# SUPERSEDED — previous acceptance checkpoint
 
 Authoritative review: docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/ARCHITECT-REVIEW.md.
 Independent source/evidence review closes ONLY the three 262 blockers: pending recorded replacement resumes through the owning public execution; obsolete/repeated parcel cancellation cannot detach the current replacement; purpose-bound replacement hold is non-expiring from the first Inventory commit. Server-recorded occurrence supports reload continuation.
