@@ -1,4 +1,16 @@
-# CURRENT — 264 WORKER RESULT PASS: physical preparation/transfer policy, one forward/backward authority, durable deadlines in the existing queue — 2026-11-11
+# CURRENT — 264 PARTIAL; ONLY 264-R1 ISSUED; 265 NOT ISSUED — 2026-11-12
+
+Read docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R1/TASK.md.
+Concrete review gaps: zero preparation allowed forward but rejected backward/DB; selected customer window/zone missing from backward deadlines (zero-transit10–11 vs carrier17 close); silent24/7 preparation and instant-ready new-commitment fallback; missing real authoring save/publish/selection handoff.
+Only264-R1 fixes these original-scope seams A–D, retaining existing timing owner/evidence/queue. No265 implementation until result reviewed.263 remains accepted within scope, user acceptance pending.
+One worker/task, no delegation/full-suite/base-parity/repeated-green/screenshots. Same canonical tooba_alpha5432/FE3000/Host5088 SingleStore. Minimal labelled owning-path fixtures only, user/screenshot rows read-only, no extra DB/reset/reseed/global reclaimer. Additive correction migration only via runner+backup; old accepted plans not recomputed.
+Messaging existing Toast/MessageBox; active-order hold retained through parcel cancel/return/retry/timeout, dispatch consumes once. Future approved Returns+owning line-obligation cancellation release belongs265; opening case alone not release.
+Plan SHIPPING-USER-FLOW-CLOSURE-263-265.md. Preserve DataProtection/CapturedPreview;255 parked/Tipax deferred.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Prior CURRENTs below superseded.
+
+---
+
+# SUPERSEDED — prior stage status
 
 Read docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/{TASK.md,RESULT.md,RECEIPTS.md,ownership-design.md,result-contract.txt,tb264-relational.txt,tb264-queue.txt}.
