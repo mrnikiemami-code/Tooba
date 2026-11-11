@@ -1,3 +1,20 @@
+# CURRENT USER OVERRIDE — ORDER RESERVATION RETAINED UNTIL ORDER CANCELLATION —2026-11-11
+
+## USER OVERRIDE — RESERVATION RETENTION —2026-11-11
+Latest explicit user rule: «تا سفارش لغو نشده نباید ازاد بشه رزرو».
+This supersedes conflicting release-on-parcel-cancellation wording in the original262 issue.
+While the ORDER is active, canceling a parcel/replacement attempt, non-delivery, return receipt, damage, retry failure, hold timeout or stopping the replacement workflow MUST NOT release its held stock back to saleable availability. Keep the purpose-bound reservation attached to this order for re-preparation/replacement; do not create a second reservation for the same retained allocation.
+Cancelling a Created replacement parcel releases only its PARCEL ALLOCATION, NOT the Inventory stock reservation. A later legitimate attempt reuses/rebinds that same held order stock with exact occurrence history; canceled occurrence itself is not silently recreated.
+Only an owning authorized ORDER cancellation (or an explicitly authorized order-line cancellation through the established order policy) can release the corresponding unconsumed order reservation, once. Do not interpret parcel cancellation as order cancellation. No new line-cancellation capability is authorized here.
+Normal dispatch CONSUMES the appropriate reservation once; consume is not release. Never resurrect/release an already-consumed original reservation or pretend physically damaged stock remains healthy availability.
+Replacement reserve-before-link failures retain/reconcile the held stock for the active order; no automatic compensation that returns it to saleable stock. Pre-reservation refusal/no-stock creates no hold. Duplicate attempts cannot leak extra holds; recover exact existing reservation id through owning evidence.
+Scope the retention to order-bound fulfillment/replacement reservations; do not rewrite unrelated abandoned-cart policy as a shortcut. Any existing active-order expiry path that would defeat the rule must be identified and corrected in the owning policy or reported as a concrete blocker.
+Focused proof: cancel replacement parcel while order active -> saleable availability does not increase, same held reservation remains; next attempt reuses it; retry/concurrency no extra hold; actual authorized order cancellation releases unconsumed hold exactly once; dispatch consumes new replacement hold once and never releases consumed original stock.
+
+Active task262 remains the ONLY task; read updated TASK.md before continuing. This is a user steering correction, not a new task or approval pause. Preserve prior issued artifact as history; latest override takes precedence. Record it in262 evidence and proof. No user-data mutation, no extra database, no test loop.
+
+---
+
 # CURRENT —261 ACCEPT within correction scope;262 ISSUED —2026-11-11
 
 Read261/ARCHITECT-REVIEW.md under docs/architecture/evidence/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/.
