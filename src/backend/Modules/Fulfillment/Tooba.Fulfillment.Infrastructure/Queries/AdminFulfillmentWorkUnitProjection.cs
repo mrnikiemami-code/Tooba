@@ -463,7 +463,12 @@ internal static class AdminFulfillmentWorkUnitProjection
             targetPackageNumber,
             scopeLineCount,
             scopeQuantity,
-            scopeRemaining);
+            scopeRemaining,
+            timing.PreparationStartUtc,
+            timing.TransferDepartureUtc,
+            timing.HandoffDeadlineUtc,
+            AdminFulfillmentPreparationStateNames.Of(timing.PreparationState),
+            timing.PolicyVersion);
     }
 
     /// <summary>

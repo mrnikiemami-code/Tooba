@@ -89,15 +89,49 @@ public static class StorefrontPlannedDispatchResolver
         }
 
         var handoff = latest.Value!;
+
+        // TB-264: when the method declares its physical preparation/transfer allowance, the durable plan
+        // also carries the backward-derived deadlines. They are purely date+policy facts, so a later
+        // revalidation of the SAME accepted plan reproduces them exactly.
+        var preparationMinutes = quote.Settings?.PreparationMinutes;
+        var handoffMinutes = quote.Settings?.HandoffMinutes;
+        var timingConfigured = preparationMinutes is not null && handoffMinutes is not null;
+
+        ShippingHandoffDeadlines? deadlines = null;
+        if (timingConfigured)
+        {
+            var resolved = ShippingDispatchSchedulingAuthority.ResolvePreparationDeadlines(
+                receivingDate,
+                StorefrontShippingSchedulingMapping.ToSchedulingWeek(carrierWeek),
+                maximumDays,
+                preparationMinutes!.Value,
+                handoffMinutes!.Value);
+
+            if (!resolved.IsSuccess)
+            {
+                reasonCode = NoFeasibleHandoff;
+                return false;
+            }
+
+            deadlines = resolved.Value!;
+        }
+
         plan = ShippingGroupPlannedDispatch.Create(
             handoff.Date,
             handoff.OpensAt.Ticks,
             handoff.ClosesAt.Ticks,
             carrierWeek.TimeZoneId,
             maximumDays,
-            ShippingDispatchSchedulingAuthority.PolicyVersion,
+            timingConfigured
+                ? ShippingDispatchSchedulingAuthority.PreparationAwarePolicyVersion
+                : ShippingDispatchSchedulingAuthority.PolicyVersion,
             snapshotId,
-            sourceRevision);
+            sourceRevision,
+            deadlines?.PreparationStartUtc,
+            deadlines?.TransferDepartureUtc,
+            deadlines?.HandoffDeadlineUtc,
+            timingConfigured ? preparationMinutes : null,
+            timingConfigured ? handoffMinutes : null);
 
         return true;
     }

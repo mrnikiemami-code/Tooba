@@ -258,7 +258,11 @@ public enum ShippingAuthoringCalculationMode
 /// <param name="ExpectedRevision">بازبینی ریشهٔ پیش‌نویس که کلاینت دیده است.</param>
 /// <param name="FreightPaymentMode">زمان پرداخت کرایه؛ حضور آن اجباری است.</param>
 /// <param name="CalculationMode">حالت محاسبهٔ کرایه؛ حضور آن اجباری است.</param>
+/// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه؛ تهی یعنی تنظیم‌نشده.</param>
+/// <param name="HandoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه؛ تهی یعنی تنظیم‌نشده.</param>
 public sealed record ShippingAuthoringMethodSettingsReplaceRequest(
     long ExpectedRevision,
     ShippingFreightPayerMode? FreightPaymentMode,
-    ShippingAuthoringCalculationMode? CalculationMode);
+    ShippingAuthoringCalculationMode? CalculationMode,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);

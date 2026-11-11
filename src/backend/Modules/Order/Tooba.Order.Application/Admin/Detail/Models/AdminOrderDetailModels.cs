@@ -194,7 +194,13 @@ public sealed record AdminPlannedDispatchView(
     string HandoffTimeZone,
     int TransportWorkingDays,
     int PolicyVersion,
-    int DistinctVariants);
+    int DistinctVariants,
+    // TB-264: operational deadlines of the SAME chosen plan (UTC), null for legacy policy-v1 plans.
+    DateTimeOffset? PreparationStartUtc = null,
+    DateTimeOffset? TransferDepartureUtc = null,
+    DateTimeOffset? HandoffDeadlineUtc = null,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);
 
 /// <summary>عضو بسته تجمیعی روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminConsolidatedPackageMemberView(

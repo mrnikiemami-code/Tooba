@@ -34,6 +34,8 @@ import {
   formatDispatchBucketLabel,
   formatHandoffWindowLabel,
   formatPlannedHandoff,
+  formatPreparationDeadlines,
+  formatPreparationState,
   normalizeDispatchToken,
   type FulfillmentQueueCounts,
 } from "../fulfillment/fulfillment-work-queue-dispatch";
@@ -152,6 +154,8 @@ const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
 
 function dispatchCountFor(filter: FulfillmentQueueFilter, counts: FulfillmentQueueCounts): number {
   switch (filter) {
+    case "dispatch_preparation_due":
+      return counts.preparationDue;
     case "dispatch_overdue":
       return counts.overdue;
     case "dispatch_today":
@@ -188,10 +192,17 @@ function dispatchBucketBadge(row: FulfillmentListRow) {
   const windowHint = row.pendingDispatch && windowState !== "none" && windowState !== ""
     ? ` · ${formatHandoffWindowLabel(windowState)}`
     : "";
+  // TB-264: preparation urgency is server derived; it is surfaced beside the bucket so a row whose
+  // preparation should already have started can never look comfortably «آینده».
+  const preparationToken = normalizeDispatchToken(row.preparationState);
+  const preparationHint = preparationToken === "overdue" || preparationToken === "handoff_missed"
+    ? ` · ${formatPreparationState(row.preparationState)}`
+    : "";
   return (
     <span className={`inline-flex flex-wrap items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}>
       {formatDispatchBucketLabel(row.dispatchBucket)}
       {windowHint ? <span className="font-medium opacity-80">{windowHint}</span> : null}
+      {preparationHint ? <span className="font-medium opacity-80">{preparationHint}</span> : null}
     </span>
   );
 }
@@ -336,6 +347,19 @@ export function AdminFulfillmentWorkQueueScreen() {
       width: 210,
       minWidth: 160,
       sortable: true,
+    },
+    {
+      id: "operationalDeadlines",
+      header: "مهلت‌های عملیاتی",
+      accessor: (row) => row.preparationStartUtc ?? "",
+      cell: (row) => (
+        <span className="block break-words text-[11px] text-muted" data-testid={`admin-fulfillment-deadlines-${row.id}`}>
+          {formatPreparationDeadlines(row)}
+        </span>
+      ),
+      width: 240,
+      minWidth: 170,
+      sortable: false,
     },
     {
       id: "customerReceiving",

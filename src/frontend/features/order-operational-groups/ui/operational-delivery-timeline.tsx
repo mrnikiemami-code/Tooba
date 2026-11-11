@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, Truck } from "lucide-react";
+import { CalendarDays, Clock, PackageCheck, Truck } from "lucide-react";
 
 /**
  * TB-256-R1: the TWO facts an operational group carries, rendered side by side and never merged:
@@ -25,6 +25,13 @@ export type OperationalDeliveryTimelineProps = {
   plannedDispatch: OperationalPlannedDispatchFact | null;
   /** Already-localized (Jalali) handoff date label, or null when the plan has no date. */
   handoffDateLabel: string | null;
+  /**
+   * TB-264: already-formatted operational deadlines (carrier zone) of the SAME plan. All three are null
+   * for a legacy policy-v1 plan, in which case the row is not rendered at all.
+   */
+  preparationStartLabel?: string | null;
+  transferDepartureLabel?: string | null;
+  handoffDeadlineLabel?: string | null;
 };
 
 export function OperationalDeliveryTimeline({
@@ -34,8 +41,12 @@ export function OperationalDeliveryTimeline({
   responsibilityLabelFa,
   plannedDispatch,
   handoffDateLabel,
+  preparationStartLabel,
+  transferDepartureLabel,
+  handoffDeadlineLabel,
 }: OperationalDeliveryTimelineProps) {
   const timeWindow = deliveryTimeWindow.trim();
+  const hasDeadlines = Boolean(preparationStartLabel || transferDepartureLabel || handoffDeadlineLabel);
   return (
     <>
       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600">
@@ -75,6 +86,37 @@ export function OperationalDeliveryTimeline({
           {plannedDispatch.distinctVariants > 1 ? (
             <span className="text-gray-500">
               {`(زودترین از ${plannedDispatch.distinctVariants.toLocaleString("fa-IR")} برنامه)`}
+            </span>
+          ) : null}
+        </p>
+      ) : null}
+      {plannedDispatch && hasDeadlines ? (
+        /*
+         * TB-264: the operational deadlines of the SAME accepted plan, printed in the carrier time zone.
+         * They never replace the customer promise above, and a legacy policy-v1 plan has no deadlines and
+         * therefore renders no row at all instead of an invented one.
+         */
+        <p
+          className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600"
+          data-testid={`admin-order-operational-deadlines-${groupKey}`}
+        >
+          <span className="font-bold text-gray-700">مهلت‌های عملیاتی:</span>
+          {preparationStartLabel ? (
+            <span className="inline-flex items-center gap-1">
+              <PackageCheck className="size-3.5 shrink-0 text-gray-400" aria-hidden />
+              {`آماده‌سازی از ${preparationStartLabel}`}
+            </span>
+          ) : null}
+          {transferDepartureLabel ? (
+            <span className="inline-flex items-center gap-1">
+              <Truck className="size-3.5 shrink-0 text-gray-400" aria-hidden />
+              {`حرکت به سمت حامل ${transferDepartureLabel}`}
+            </span>
+          ) : null}
+          {handoffDeadlineLabel ? (
+            <span className="inline-flex items-center gap-1">
+              <Clock className="size-3.5 shrink-0 text-gray-400" aria-hidden />
+              {`آخرین مهلت تحویل به حامل ${handoffDeadlineLabel}`}
             </span>
           ) : null}
         </p>

@@ -28,7 +28,10 @@ public sealed record OrderAcceptedGroupDispatchPlanFact(
     int TransportWorkingDays,
     int PolicyVersion,
     DateOnly? CustomerReceivingDate,
-    string? CustomerReceivingTimeWindow);
+    string? CustomerReceivingTimeWindow,
+    DateTimeOffset? PreparationStartUtc = null,
+    DateTimeOffset? TransferDepartureUtc = null,
+    DateTimeOffset? HandoffDeadlineUtc = null);
 
 /// <summary>
 /// TB-260: Contracts-only lookup of durable dispatch plans owned by Order. Fulfillment never joins Order

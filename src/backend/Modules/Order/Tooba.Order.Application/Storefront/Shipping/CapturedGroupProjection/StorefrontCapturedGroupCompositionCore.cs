@@ -279,13 +279,20 @@ public sealed class StorefrontCapturedGroupCompositionCore(
         int maximumDays,
         DateTimeOffset nowUtc)
     {
+        // TB-264: an explicit physical timing policy is counted ONCE before the first possible carrier
+        // acceptance. A method without one keeps the historical reference instant (policy v1).
+        var preparationMinutes = quote.Settings?.PreparationMinutes;
+        var handoffMinutes = quote.Settings?.HandoffMinutes;
+
         var plan = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
             nowUtc,
             StorefrontShippingSchedulingMapping.ToSchedulingWeek(carrierWeek),
             StorefrontShippingSchedulingMapping.ToSchedulingWeek(quote.ReceivingWeek!),
             maximumDays,
             candidate.AvailableDateCount,
-            quote.ReceivingWeek!.SlotDurationMinutes);
+            quote.ReceivingWeek!.SlotDurationMinutes,
+            preparationMinutes,
+            handoffMinutes);
 
         if (!plan.IsSuccess)
         {

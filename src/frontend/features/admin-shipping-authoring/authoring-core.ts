@@ -119,7 +119,9 @@ export {
   withCalculationMode,
   withDescription,
   withFreightPaymentMode,
+  withHandoffMinutes,
   withName,
+  withPreparationMinutes,
   withShippingType,
 } from "./model/editor-form.ts";
 

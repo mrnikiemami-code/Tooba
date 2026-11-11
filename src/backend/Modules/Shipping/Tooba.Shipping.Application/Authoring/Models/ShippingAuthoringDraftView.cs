@@ -186,9 +186,13 @@ public sealed record ShippingAuthoringWeeklyScheduleItem(
 /// <param name="IsConfigured">آیا تنظیمات صریحاً نوشته شده است.</param>
 /// <param name="FreightPaymentMode">زمان پرداخت کرایه یا تهی در حالت تنظیم‌نشده.</param>
 /// <param name="CalculationMode">حالت محاسبهٔ کرایه یا تهی در حالت تنظیم‌نشده.</param>
+/// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه یا تهی.</param>
+/// <param name="HandoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه یا تهی.</param>
 public sealed record ShippingAuthoringMethodSettingsItem(
     Guid DraftId,
     long Revision,
     bool IsConfigured,
     ShippingFreightPayerMode? FreightPaymentMode,
-    ShippingAuthoringCalculationMode? CalculationMode);
+    ShippingAuthoringCalculationMode? CalculationMode,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);

@@ -553,7 +553,9 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         long expectedRevision,
         Tooba.Shipping.Contracts.Packaging.ShippingFreightPayerMode? freightPaymentMode,
         Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode? calculationMode,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int? preparationMinutes = null,
+        int? handoffMinutes = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
 
@@ -578,7 +580,11 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             // Both choices are preflighted before the first mutation, so a rejected payload leaves this
             // aggregate, its tracker, its revision and every other capability untouched. The settings row
             // and the root revision share ONE implicit SaveChanges.
-            var plan = draft.PreflightMethodSettings(freightPaymentMode, calculationMode);
+            var plan = draft.PreflightMethodSettings(
+                freightPaymentMode,
+                calculationMode,
+                preparationMinutes,
+                handoffMinutes);
             draft.ApplyMethodSettings(plan, DateTimeOffset.UtcNow);
             if (plan.HasChanges)
             {

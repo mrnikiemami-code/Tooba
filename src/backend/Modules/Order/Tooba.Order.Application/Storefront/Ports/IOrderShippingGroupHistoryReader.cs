@@ -85,7 +85,13 @@ public sealed record OrderShippingGroupHistoryDispatchPlan(
     int TransportWorkingDays,
     int PolicyVersion,
     Guid ScheduleSnapshotId,
-    long ScheduleSourceRevision);
+    long ScheduleSourceRevision,
+    // TB-264: backward-derived operational deadlines (UTC). Null for legacy policy-v1 plans.
+    DateTimeOffset? PreparationStartUtc = null,
+    DateTimeOffset? TransferDepartureUtc = null,
+    DateTimeOffset? HandoffDeadlineUtc = null,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);
 
 /// <summary>شاهد حامل ذخیره‌شده؛ تهی یعنی Manual/Free. هیچ تماس حاملی برای ساختن آن نیست.</summary>
 public sealed record OrderShippingGroupHistoryCarrierQuote(

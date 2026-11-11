@@ -21,6 +21,23 @@ import { formatNumber } from "./authoring-format.ts";
 
 const WEEKDAY_ANCHOR = Date.UTC(2024, 0, 1); // 2024-01-01 was a Monday (ISO weekday 1).
 
+/** TB-264: hard contract bounds — 7 days of preparation and 24 hours of transfer. */
+const MAX_PREPARATION_MINUTES = 7 * 24 * 60;
+const MAX_HANDOFF_MINUTES = 24 * 60;
+
+/**
+ * Parses one timing input WITHOUT coercion: an empty field is an explicit `null`, and a non-integer or
+ * out-of-range entry keeps the previous value so a typed "1.5" or "99999" never silently becomes 1 or 10080.
+ */
+export function parseMinutesInput(raw: string, max: number, previous: number | null): number | null {
+  const text = raw.trim();
+  if (text.length === 0) return null;
+  if (!/^[0-9]+$/.test(text)) return previous;
+  const value = Number(text);
+  if (!Number.isSafeInteger(value) || value < 0 || value > max) return previous;
+  return value;
+}
+
 /** Localized weekday name of an ISO weekday (1 = Monday) in the interface locale. */
 export function weekdayLabel(weekday: number, locale: AuthoringLocale): string {
   const date = new Date(WEEKDAY_ANCHOR + (weekday - 1) * 86_400_000);
@@ -58,11 +75,14 @@ export function AuthoringGeneralTab({
   typeChoicesState,
   nameIssueLanguageIds,
   settingsIncomplete,
+  timingIncomplete,
   serverErrors,
   onName,
   onDescription,
   onFreightPaymentMode,
   onCalculationMode,
+  onPreparationMinutes,
+  onHandoffMinutes,
   onShippingType,
   scheduleSlot,
   carrierSlot,
@@ -78,6 +98,8 @@ export function AuthoringGeneralTab({
   typeChoicesState: "loading" | "ok" | "error";
   nameIssueLanguageIds: readonly string[];
   settingsIncomplete: boolean;
+  /** TB-264: one half of the physical timing pair is filled and the other is empty. */
+  timingIncomplete: boolean;
   /** Server reasons placed on their OWN field (`name`, `description`, `settings`, `type`, week…). */
   serverErrors?: Partial<
     Record<
@@ -92,6 +114,8 @@ export function AuthoringGeneralTab({
   onDescription: (languageId: string, value: string) => void;
   onFreightPaymentMode: (mode: FreightPaymentMode) => void;
   onCalculationMode: (mode: AuthoringCalculationMode) => void;
+  onPreparationMinutes: (minutes: number | null) => void;
+  onHandoffMinutes: (minutes: number | null) => void;
   onShippingType: (shippingTypeId: string | null) => void;
 }) {
   const readOnly = mode === "view";
@@ -348,6 +372,70 @@ export function AuthoringGeneralTab({
         </fieldset>
         {form.calculationMode === "CarrierApi" ? carrierSlot : null}
       </div>
+
+      {/* TB-264: physical timing policy — two elapsed durations in MINUTES, deliberately independent of the
+          lead/transit days and of the customer receiving window. Both-or-none is enforced locally. */}
+      <section
+        className="rounded-xl border border-border bg-surface-elevated p-3 md:p-4"
+        data-testid="shipping-authoring-timing"
+      >
+        <p className="text-xs font-black text-gray-900">{messages.timingTitle}</p>
+        <p className="mt-1 text-[11px] text-gray-600">{messages.timingHint}</p>
+        <div className="mt-2 grid gap-3 md:grid-cols-2">
+          <Field
+            id="authoring-preparation-minutes"
+            label={messages.preparationMinutesLabel}
+            hint={messages.preparationMinutesHint}
+          >
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={MAX_PREPARATION_MINUTES}
+              step={1}
+              dir="ltr"
+              value={form.preparationMinutes === null ? "" : String(form.preparationMinutes)}
+              disabled={readOnly}
+              data-testid="shipping-authoring-preparation-minutes"
+              onChange={(event) =>
+                onPreparationMinutes(
+                  parseMinutesInput(event.target.value, MAX_PREPARATION_MINUTES, form.preparationMinutes),
+                )
+              }
+            />
+          </Field>
+          <Field
+            id="authoring-handoff-minutes"
+            label={messages.handoffMinutesLabel}
+            hint={messages.handoffMinutesHint}
+          >
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={MAX_HANDOFF_MINUTES}
+              step={1}
+              dir="ltr"
+              value={form.handoffMinutes === null ? "" : String(form.handoffMinutes)}
+              disabled={readOnly}
+              data-testid="shipping-authoring-handoff-minutes"
+              onChange={(event) =>
+                onHandoffMinutes(parseMinutesInput(event.target.value, MAX_HANDOFF_MINUTES, form.handoffMinutes))
+              }
+            />
+          </Field>
+        </div>
+        {timingIncomplete ? (
+          <p role="alert" className="mt-2 text-[11px] font-semibold text-danger" data-testid="shipping-authoring-timing-pair">
+            {messages.timingPairRequired}
+          </p>
+        ) : null}
+        {form.preparationMinutes === null && form.handoffMinutes === null ? (
+          <p className="mt-2 text-[11px] text-gray-500" data-testid="shipping-authoring-timing-blank">
+            {messages.timingNotConfigured}
+          </p>
+        ) : null}
+      </section>
 
       {form.freightPaymentMode === null && form.calculationMode === null ? (
         <p className="text-[11px] text-gray-500">{messages.settingsBlank}</p>

@@ -1,4 +1,5 @@
-﻿using Tooba.Geography.Contracts.Places;
+﻿using Tooba.BuildingBlocks;
+using Tooba.Geography.Contracts.Places;
 using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
@@ -450,6 +451,89 @@ public sealed class ShippingCapturedRevisionQuoteTests
         Assert.Equal(ShippingReasonCodes.ServiceNotPriced, unpriced.ReasonCode);
     }
 
+    // ---------------------------------------------------------------- TB-264 physical timing policy
+
+    /// <summary>
+    /// TB-264: زمان فیزیکی ذخیره‌شده باید از مسیر واقعی capture/preflight عبور کند و در payload همان
+    /// بازبینی (و در انتخاب قیمت) قابل خواندن باشد؛ غیبت آن هرگز صفر نمی‌شود.
+    /// </summary>
+    [Fact]
+    public void The_physical_timing_pair_survives_capture_and_reaches_the_quote_selection()
+    {
+        var payload = Payload(
+            [[Tehran]],
+            [
+                [
+                    Row(null, 0, null, 1, null, null, null, 100_000.00m, 4_000.00m, 1, 3),
+                ],
+            ],
+            preparationMinutes: 240,
+            handoffMinutes: 90);
+
+        Assert.Equal(240, payload.MethodSettings!.PreparationMinutes);
+        Assert.Equal(90, payload.MethodSettings.HandoffMinutes);
+
+        var quote = ShippingRatePolicyEngine.QuoteCapturedRevision(
+            Request(payload, weightGrams: 1_500, itemCount: 1));
+
+        Assert.True(quote.IsQuoted, quote.ReasonCode);
+        Assert.Equal(240, quote.Selection!.Settings.PreparationMinutes);
+        Assert.Equal(90, quote.Selection.Settings.HandoffMinutes);
+
+        // A legacy revision without the pair stays "not configured" — never zero, never inferred.
+        var legacy = Payload(
+            [[Tehran]],
+            [
+                [
+                    Row(null, 0, null, 1, null, null, null, 100_000.00m, 4_000.00m, 1, 3),
+                ],
+            ]);
+
+        Assert.Null(legacy.MethodSettings!.PreparationMinutes);
+        Assert.Null(legacy.MethodSettings.HandoffMinutes);
+        Assert.Null(ShippingRatePolicyEngine
+            .QuoteCapturedRevision(Request(legacy, weightGrams: 1_500, itemCount: 1))
+            .Selection!.Settings.PreparationMinutes);
+    }
+
+    [Fact]
+    public void A_half_configured_or_out_of_range_timing_policy_is_refused_before_any_write()
+    {
+        var complete = Draft([[Tehran]]);
+        Assert.Throws<SemanticException>(() => complete.PreflightMethodSettings(
+            ShippingFreightPayerMode.Prepaid,
+            ShippingAuthoringCalculationMode.Manual,
+            preparationMinutes: 120));
+        Assert.Throws<SemanticException>(() => complete.PreflightMethodSettings(
+            ShippingFreightPayerMode.Prepaid,
+            ShippingAuthoringCalculationMode.Manual,
+            handoffMinutes: 60));
+        Assert.Throws<SemanticException>(() => complete.PreflightMethodSettings(
+            ShippingFreightPayerMode.Prepaid,
+            ShippingAuthoringCalculationMode.Manual,
+            preparationMinutes: 7 * 24 * 60 + 1,
+            handoffMinutes: 60));
+        Assert.Throws<SemanticException>(() => complete.PreflightMethodSettings(
+            ShippingFreightPayerMode.Prepaid,
+            ShippingAuthoringCalculationMode.Manual,
+            preparationMinutes: 60,
+            handoffMinutes: 24 * 60 + 1));
+        Assert.Throws<SemanticException>(() => complete.PreflightMethodSettings(
+            ShippingFreightPayerMode.Prepaid,
+            ShippingAuthoringCalculationMode.Manual,
+            preparationMinutes: -1,
+            handoffMinutes: 60));
+
+        // Explicit zero is a real operator statement and is allowed for both halves.
+        var plan = complete.PreflightMethodSettings(
+            ShippingFreightPayerMode.Prepaid,
+            ShippingAuthoringCalculationMode.Manual,
+            preparationMinutes: 0,
+            handoffMinutes: 0);
+        Assert.Equal(0, plan.PreparationMinutes);
+        Assert.Equal(0, plan.HandoffMinutes);
+    }
+
     // ---------------------------------------------------------------- fixtures
 
     private static ShippingAuthoringDraft Draft(
@@ -459,7 +543,9 @@ public sealed class ShippingCapturedRevisionQuoteTests
         ShippingAuthoringCalculationMode calculationMode = ShippingAuthoringCalculationMode.Manual,
         bool withSettings = true,
         bool withSchedule = false,
-        string currency = "IRT")
+        string currency = "IRT",
+        int? preparationMinutes = null,
+        int? handoffMinutes = null)
     {
         var draft = ShippingAuthoringDraft.Create(
             ShippingDraftOwner.ForStore("tb215-store"),
@@ -505,7 +591,7 @@ public sealed class ShippingCapturedRevisionQuoteTests
         if (withSettings)
         {
             draft.ApplyMethodSettings(
-                draft.PreflightMethodSettings(payerMode, calculationMode),
+                draft.PreflightMethodSettings(payerMode, calculationMode, preparationMinutes, handoffMinutes),
                 Now.AddMinutes(9));
         }
 
@@ -520,10 +606,21 @@ public sealed class ShippingCapturedRevisionQuoteTests
         ShippingAuthoringCalculationMode calculationMode = ShippingAuthoringCalculationMode.Manual,
         bool withSettings = true,
         bool withSchedule = false,
-        string currency = "IRT")
+        string currency = "IRT",
+        int? preparationMinutes = null,
+        int? handoffMinutes = null)
         => ShippingAuthoringRevisionSnapshot
             .Capture(
-                Draft(areaGroups, rowsPerGroup, payerMode, calculationMode, withSettings, withSchedule, currency),
+                Draft(
+                    areaGroups,
+                    rowsPerGroup,
+                    payerMode,
+                    calculationMode,
+                    withSettings,
+                    withSchedule,
+                    currency,
+                    preparationMinutes,
+                    handoffMinutes),
                 Now.AddHours(1))
             .ReadPayload();
 

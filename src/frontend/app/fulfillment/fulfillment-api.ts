@@ -103,6 +103,15 @@ export interface FulfillmentListRow {
   nextStepBlockerFa: string | null;
   pendingDispatch: boolean;
   /**
+   * TB-264: operational deadlines carried by the accepted plan (policy v2+). All three are nullable for
+   * legacy policy-v1 plans; `preparationState` is the server's own urgency classification of them.
+   */
+  preparationStartUtc: string | null;
+  transferDepartureUtc: string | null;
+  handoffDeadlineUtc: string | null;
+  preparationState: string;
+  dispatchPolicyVersion: number;
+  /**
    * TB-260-R1: the row IS one physical work unit, so `id` is the stable discriminated work-unit key
    * (`group:{id}` / `parcel:{id}` / `package:{id}` / `fulfillment:{id}`) — never a seller order id that two
    * rows of the same order could share. `workUnitState` is that unit's own physical state.
@@ -141,7 +150,8 @@ export type FulfillmentQueueFilter =
   | "dispatch_today"
   | "dispatch_overdue"
   | "dispatch_upcoming"
-  | "dispatch_unspecified";
+  | "dispatch_unspecified"
+  | "dispatch_preparation_due";
 
 export const FULFILLMENT_QUEUE_FILTERS: Array<{ id: FulfillmentQueueFilter; labelFa: string; labelEn: string }> = [
   { id: "all", labelFa: "همه", labelEn: "All" },
@@ -203,9 +213,9 @@ function text(value: unknown, fallback = ""): string {
   return value == null ? fallback : String(value);
 }
 
-function number(value: unknown): number {
+function number(value: unknown, fallback = 0): number {
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function nullableText(value: unknown): string | null {
@@ -376,6 +386,11 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
         dispatchDeadlineUtc: nullableText(prop(item, "dispatchDeadlineUtc", "DispatchDeadlineUtc")),
         customerReceivingDate: nullableText(prop(item, "customerReceivingDate", "CustomerReceivingDate")),
         customerReceivingWindow: nullableText(prop(item, "customerReceivingWindow", "CustomerReceivingWindow")),
+        preparationStartUtc: nullableText(prop(item, "preparationStartUtc", "PreparationStartUtc")),
+        transferDepartureUtc: nullableText(prop(item, "transferDepartureUtc", "TransferDepartureUtc")),
+        handoffDeadlineUtc: nullableText(prop(item, "handoffDeadlineUtc", "HandoffDeadlineUtc")),
+        preparationState: text(prop(item, "preparationState", "PreparationState"), "none"),
+        dispatchPolicyVersion: number(prop(item, "dispatchPolicyVersion", "DispatchPolicyVersion"), 1),
         targetShippingGroupId: nullableText(prop(item, "targetShippingGroupId", "TargetShippingGroupId")),
         nextStepCode: text(prop(item, "nextStepCode", "NextStepCode")),
         nextStepLabelFa: text(prop(item, "nextStepLabelFa", "NextStepLabelFa")),
@@ -430,6 +445,11 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
       dispatchDeadlineUtc: null,
       customerReceivingDate: null,
       customerReceivingWindow: null,
+      preparationStartUtc: null,
+      transferDepartureUtc: null,
+      handoffDeadlineUtc: null,
+      preparationState: "none",
+      dispatchPolicyVersion: 1,
       targetShippingGroupId: null,
       nextStepCode: "",
       nextStepLabelFa: "",

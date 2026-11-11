@@ -1287,7 +1287,9 @@ public sealed class ShippingAuthoringDraft
     /// <param name="CalculationMode">حالت محاسبهٔ کرایه.</param>
     public sealed record MethodSettingsPlan(
         ShippingFreightPayerMode FreightPaymentMode,
-        ShippingAuthoringCalculationMode CalculationMode)
+        ShippingAuthoringCalculationMode CalculationMode,
+        int? PreparationMinutes = null,
+        int? HandoffMinutes = null)
     {
         /// <summary>
         /// آیا این جایگزینی دست‌کم یک تغییر واقعی دارد. یک PUT یکسان (همان دو انتخاب) یک no-op
@@ -1315,7 +1317,9 @@ public sealed class ShippingAuthoringDraft
     /// <param name="calculationMode">حالت محاسبه از بدنه.</param>
     public MethodSettingsPlan PreflightMethodSettings(
         ShippingFreightPayerMode? freightPaymentMode,
-        ShippingAuthoringCalculationMode? calculationMode)
+        ShippingAuthoringCalculationMode? calculationMode,
+        int? preparationMinutes = null,
+        int? handoffMinutes = null)
     {
         if (freightPaymentMode is not { } freight
             || !Enum.IsDefined(freight)
@@ -1325,9 +1329,21 @@ public sealed class ShippingAuthoringDraft
             throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringMethodSettingsInvalid));
         }
 
+        // TB-264: the physical timing policy is an explicit pair. Both absent means "not configured yet"
+        // (legacy behaviour preserved); one absent is an incomplete policy and never becomes zero.
+        if ((preparationMinutes is null) != (handoffMinutes is null)
+            || preparationMinutes is < 0 or > ShippingAuthoringMethodSettings.MaxPreparationMinutes
+            || handoffMinutes is < 0 or > ShippingAuthoringMethodSettings.MaxHandoffMinutes)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringMethodSettingsInvalid));
+        }
+
         var unchanged = MethodSettings is { } current
-                        && current.Matches(freight, calculation);
-        return new MethodSettingsPlan(freight, calculation) { HasChanges = !unchanged };
+                        && current.Matches(freight, calculation, preparationMinutes, handoffMinutes);
+        return new MethodSettingsPlan(freight, calculation, preparationMinutes, handoffMinutes)
+        {
+            HasChanges = !unchanged,
+        };
     }
 
     /// <summary>
@@ -1428,7 +1444,12 @@ public sealed class ShippingAuthoringDraft
 
         if (MethodSettings is { } settings)
         {
-            settings.Apply(plan.FreightPaymentMode, plan.CalculationMode, now);
+            settings.Apply(
+                plan.FreightPaymentMode,
+                plan.CalculationMode,
+                now,
+                plan.PreparationMinutes,
+                plan.HandoffMinutes);
         }
         else
         {
@@ -1436,7 +1457,9 @@ public sealed class ShippingAuthoringDraft
                 DraftId,
                 plan.FreightPaymentMode,
                 plan.CalculationMode,
-                now);
+                now,
+                plan.PreparationMinutes,
+                plan.HandoffMinutes);
         }
 
         return true;
@@ -1497,7 +1520,9 @@ public sealed class ShippingAuthoringDraft
         int? SlotDurationMinutes = null,
         bool ReplaceCarrierSchedule = false,
         string? CarrierTimeZoneId = null,
-        IReadOnlyList<CarrierScheduleDayInput>? CarrierDays = null);
+        IReadOnlyList<CarrierScheduleDayInput>? CarrierDays = null,
+        int? PreparationMinutes = null,
+        int? HandoffMinutes = null);
 
     /// <summary>برنامهٔ تأییدشدهٔ ردیف‌های یک گروه در سند ویرایشگر.</summary>
     /// <param name="GroupKey">شناسهٔ پایدار گروه مقصد (موجود یا تازه).</param>
@@ -1620,7 +1645,11 @@ public sealed class ShippingAuthoringDraft
             ? PreflightCarrierSchedule(input.CarrierTimeZoneId, input.CarrierDays ?? [])
             : null;
         var settings = input.ReplaceMethodSettings
-            ? PreflightMethodSettings(input.FreightPaymentMode, input.CalculationMode)
+            ? PreflightMethodSettings(
+                input.FreightPaymentMode,
+                input.CalculationMode,
+                input.PreparationMinutes,
+                input.HandoffMinutes)
             : null;
         var type = input.ReplaceTypeAssignment ? PreflightTypeAssignment(input.ShippingTypeId) : null;
 

@@ -134,13 +134,17 @@ public interface IShippingAuthoringDraftDirectory
     /// <param name="freightPaymentMode">زمان پرداخت کرایه؛ غیبت آن نامعتبر است.</param>
     /// <param name="calculationMode">حالت محاسبهٔ کرایه؛ غیبت آن نامعتبر است.</param>
     /// <param name="cancellationToken">توکن لغو.</param>
+    /// <param name="preparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه یا تهی برای تنظیم‌نشده.</param>
+    /// <param name="handoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه یا تهی برای تنظیم‌نشده.</param>
     Task<Result<ShippingAuthoringDraft>> ReplaceMethodSettingsAsync(
         ShippingAuthoringOwnerScope owner,
         Guid draftId,
         long expectedRevision,
         Tooba.Shipping.Contracts.Packaging.ShippingFreightPayerMode? freightPaymentMode,
         Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode? calculationMode,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        int? preparationMinutes = null,
+        int? handoffMinutes = null);
 
     /// <summary>
     /// انتخاب اختیاری نوع ارسال ریشهٔ روش یک پیش‌نویس همین مالک را در <b>یک</b> SaveChanges ضمنی

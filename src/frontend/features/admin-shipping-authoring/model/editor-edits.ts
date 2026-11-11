@@ -105,6 +105,12 @@ export interface CarrierScheduleEdit {
 export interface MethodSettingsEdit {
   readonly freightPaymentMode: FreightPaymentMode;
   readonly calculationMode: AuthoringCalculationMode;
+  /**
+   * TB-264: physical timing policy sent as a PAIR. Both `null` clears it back to "not configured";
+   * omitting them entirely preserves the stored pair (older writers stay valid).
+   */
+  readonly preparationMinutes?: number | null;
+  readonly handoffMinutes?: number | null;
 }
 
 /** Explicit type selection intent: `{shippingTypeId: null}` clears, a value selects. */

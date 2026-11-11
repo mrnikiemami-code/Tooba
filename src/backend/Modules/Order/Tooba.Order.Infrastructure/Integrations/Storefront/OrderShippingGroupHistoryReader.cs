@@ -107,7 +107,12 @@ public sealed class OrderShippingGroupHistoryReader : IOrderShippingGroupHistory
                                 evidence.PlannedDispatch.TransportWorkingDays,
                                 evidence.PlannedDispatch.PolicyVersion,
                                 evidence.PlannedDispatch.ScheduleSnapshotId,
-                                evidence.PlannedDispatch.ScheduleSourceRevision)),
+                                evidence.PlannedDispatch.ScheduleSourceRevision,
+                                evidence.PlannedDispatch.PreparationStartUtc,
+                                evidence.PlannedDispatch.TransferDepartureUtc,
+                                evidence.PlannedDispatch.HandoffDeadlineUtc,
+                                evidence.PlannedDispatch.PreparationMinutes,
+                                evidence.PlannedDispatch.HandoffMinutes)),
                 group.OriginContext);
         }).ToArray();
     }

@@ -82,7 +82,17 @@ public sealed record AdminFulfillmentWorkQueueRow(
     // TB-260-R1: quantity physically owned by THIS work-unit scope.
     decimal ScopeQuantity = 0,
     // TB-260-R1: quantity of this scope still eligible for a NEW parcel (packed − shipped − open Created).
-    decimal ScopeRemainingQuantity = 0);
+    decimal ScopeRemainingQuantity = 0,
+    // TB-264: latest instant at which physical preparation must start (null for legacy policy-v1 plans).
+    DateTimeOffset? PreparationStartUtc = null,
+    // TB-264: latest instant at which the parcel must leave the seller toward the carrier.
+    DateTimeOffset? TransferDepartureUtc = null,
+    // TB-264: latest carrier acceptance instant (the dispatch deadline).
+    DateTimeOffset? HandoffDeadlineUtc = null,
+    // TB-264: server-derived preparation urgency (<see cref="AdminFulfillmentPreparationState"/> token).
+    string PreparationState = AdminFulfillmentPreparationStateNames.None,
+    // TB-264: accepted timing policy version (1 = no operational deadlines).
+    int DispatchPolicyVersion = 1);
 
 /// <summary>
 /// TB-260-R1: the physical scopes a queue row can own. A row is ONE work unit, never a whole seller order:
@@ -140,6 +150,8 @@ public static class AdminFulfillmentQueueFilters
     public const string DispatchUpcoming = AdminFulfillmentDispatchTimingAuthority.FilterUpcoming;
     /// <summary>TB-260: pending work whose accepted evidence carries no plan.</summary>
     public const string DispatchUnspecified = AdminFulfillmentDispatchTimingAuthority.FilterUnspecified;
+    /// <summary>TB-264: pending work whose physical preparation should already have started.</summary>
+    public const string DispatchPreparationDue = AdminFulfillmentDispatchTimingAuthority.FilterPreparationDue;
 
     /// <summary>کدهای شناخته‌شدهٔ فیلتر سریع.</summary>
     public static readonly HashSet<string> Known = new(StringComparer.OrdinalIgnoreCase)
@@ -158,6 +170,7 @@ public static class AdminFulfillmentQueueFilters
         DispatchOverdue,
         DispatchUpcoming,
         DispatchUnspecified,
+        DispatchPreparationDue,
     };
 
     /// <summary>
@@ -575,7 +588,9 @@ public sealed record AdminFulfillmentWorkQueueCounts(
     int Overdue,
     int Upcoming,
     int Unspecified,
-    int InTransit);
+    int InTransit,
+    // TB-264: overlapping «شروع آماده‌سازی رسیده» subset of TotalActive.
+    int PreparationDue = 0);
 
 /// <summary>
 /// TB-260: one queue page plus the bucket counts of the whole filtered set it was cut from. Field names

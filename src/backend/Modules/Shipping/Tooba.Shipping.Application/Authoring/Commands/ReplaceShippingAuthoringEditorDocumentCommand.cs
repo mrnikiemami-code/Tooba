@@ -239,7 +239,9 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 request.Request.WeeklySchedule?.SlotDurationMinutes,
                 request.Request.CarrierSchedule is not null,
                 request.Request.CarrierSchedule?.TimeZoneId,
-                carrierDays);
+                carrierDays,
+                request.Request.MethodSettings?.PreparationMinutes,
+                request.Request.MethodSettings?.HandoffMinutes);
 
             // (6) Destination facts for the WHOLE submitted tree are acquired here — before the first
             // tracked mutation and therefore before the commit — so the response can be composed

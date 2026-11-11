@@ -64,6 +64,9 @@ public sealed class OrderDispatchPlanFactsBridge : IOrderDispatchPlanFactsReader
                 x.AcceptedEvidence.PlannedDispatch.HandoffTimeZone,
                 x.AcceptedEvidence.PlannedDispatch.TransportWorkingDays,
                 x.AcceptedEvidence.PlannedDispatch.PolicyVersion,
+                x.AcceptedEvidence.PlannedDispatch.PreparationStartUtc,
+                x.AcceptedEvidence.PlannedDispatch.TransferDepartureUtc,
+                x.AcceptedEvidence.PlannedDispatch.HandoffDeadlineUtc,
             })
             .ToListAsync(cancellationToken);
 
@@ -82,7 +85,10 @@ public sealed class OrderDispatchPlanFactsBridge : IOrderDispatchPlanFactsReader
                 x.TransportWorkingDays,
                 x.PolicyVersion,
                 x.RequestedDeliveryDate,
-                x.RequestedDeliveryTimeWindow))
+                x.RequestedDeliveryTimeWindow,
+                x.PreparationStartUtc,
+                x.TransferDepartureUtc,
+                x.HandoffDeadlineUtc))
             .ToArray();
     }
 }

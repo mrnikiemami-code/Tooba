@@ -556,6 +556,13 @@ public sealed class OrderDbContext : DbContext
                 dispatch.Property(x => x.PolicyVersion).HasColumnName("accepted_dispatch_policy_version");
                 dispatch.Property(x => x.ScheduleSnapshotId).HasColumnName("accepted_dispatch_snapshot_id");
                 dispatch.Property(x => x.ScheduleSourceRevision).HasColumnName("accepted_dispatch_source_revision");
+                // TB-264: backward-derived operational deadlines (UTC). Nullable so historical groups and
+                // methods without an explicit timing policy keep decoding as "no deadline".
+                dispatch.Property(x => x.PreparationStartUtc).HasColumnName("accepted_dispatch_preparation_start_utc");
+                dispatch.Property(x => x.TransferDepartureUtc).HasColumnName("accepted_dispatch_transfer_departure_utc");
+                dispatch.Property(x => x.HandoffDeadlineUtc).HasColumnName("accepted_dispatch_handoff_deadline_utc");
+                dispatch.Property(x => x.PreparationMinutes).HasColumnName("accepted_dispatch_preparation_minutes");
+                dispatch.Property(x => x.HandoffMinutes).HasColumnName("accepted_dispatch_handoff_minutes");
             });
         owned.Navigation(x => x.PlannedDispatch).IsRequired(false);
     }

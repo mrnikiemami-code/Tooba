@@ -206,7 +206,9 @@ public sealed record ShippingCapturedCarrierWeek(
 /// <param name="CalculationMode">حالت محاسبه.</param>
 public sealed record ShippingCapturedQuoteSettings(
     ShippingFreightPayerMode FreightPaymentMode,
-    ShippingAuthoringCalculationMode CalculationMode);
+    ShippingAuthoringCalculationMode CalculationMode,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);
 
 /// <summary>
 /// گونهٔ مالکِ درخواستی در درز Contracts. این یک <b>هویت داده</b> است، نه مجوز: انطباق آن با زمینهٔ

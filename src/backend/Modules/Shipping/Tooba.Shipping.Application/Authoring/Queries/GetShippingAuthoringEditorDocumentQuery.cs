@@ -120,7 +120,9 @@ internal static class ShippingAuthoringEditorDocumentComposition
             draft.MethodSettings is { } settings
                 ? new ShippingAuthoringEditorSettingsItem(
                     settings.FreightPaymentMode,
-                    settings.CalculationMode)
+                    settings.CalculationMode,
+                    settings.PreparationMinutes,
+                    settings.HandoffMinutes)
                 : null,
             ShippingAuthoringPresentationWorkflow.Map(draft, context),
             draft.WeeklySchedule is { } schedule

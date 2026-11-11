@@ -222,6 +222,27 @@ function jalaliDay(isoDate: string | null | undefined): string | null {
   return formatJalaliDate(raw.includes("T") ? raw : `${raw}T12:00:00`, "fa");
 }
 
+/**
+ * TB-264: renders one operational deadline instant in the CARRIER time zone (the zone the accepted
+ * plan was computed in), so an operator never reads a handoff deadline against their own clock. A
+ * missing/invalid instant yields null (no invented deadline), and an unusable zone id degrades to the
+ * operator's local zone instead of throwing.
+ */
+function carrierDeadlineLabel(isoUtc: string | null | undefined, zone: string | null): string | null {
+  const raw = (isoUtc ?? "").trim();
+  if (!raw) return null;
+  const when = new Date(raw);
+  if (Number.isNaN(when.getTime())) return null;
+  const base: Intl.DateTimeFormatOptions = { dateStyle: "short", timeStyle: "short" };
+  let formatted: string;
+  try {
+    formatted = new Intl.DateTimeFormat("fa-IR", zone ? { ...base, timeZone: zone } : base).format(when);
+  } catch {
+    formatted = new Intl.DateTimeFormat("fa-IR", base).format(when);
+  }
+  return zone ? `${formatted} (${zone})` : formatted;
+}
+
 function quantityText(value: number): string {
   return value.toLocaleString("fa-IR", { maximumFractionDigits: 3 });
 }
@@ -397,6 +418,10 @@ function OperationalCard({
   const timeWindow = (group.deliveryTimeWindow ?? "").trim();
   const plannedDispatch = group.plannedDispatch ?? null;
   const handoffDay = jalaliDay(plannedDispatch?.handoffDate ?? null);
+  const deadlineZone = plannedDispatch?.handoffTimeZone ?? null;
+  const preparationStartLabel = carrierDeadlineLabel(plannedDispatch?.preparationStartUtc, deadlineZone);
+  const transferDepartureLabel = carrierDeadlineLabel(plannedDispatch?.transferDepartureUtc, deadlineZone);
+  const handoffDeadlineLabel = carrierDeadlineLabel(plannedDispatch?.handoffDeadlineUtc, deadlineZone);
   const showFeeBreakdown = group.feeBreakdown.length > 1;
   const actorMayManage = group.actorMayManageOperations !== false;
   const multiMember = group.members.length > 1;
@@ -495,6 +520,9 @@ function OperationalCard({
             responsibilityLabelFa={group.responsibilityLabelFa}
             plannedDispatch={plannedDispatch}
             handoffDateLabel={handoffDay}
+            preparationStartLabel={preparationStartLabel}
+            transferDepartureLabel={transferDepartureLabel}
+            handoffDeadlineLabel={handoffDeadlineLabel}
           />
           <p className="mt-1 text-xs text-gray-500">
             {multiMember

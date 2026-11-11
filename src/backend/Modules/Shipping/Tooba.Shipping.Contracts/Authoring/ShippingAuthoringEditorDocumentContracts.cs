@@ -66,9 +66,13 @@ public sealed record ShippingAuthoringEditorCarrierScheduleWrite(
 /// </summary>
 /// <param name="FreightPaymentMode">زمان پرداخت کرایه.</param>
 /// <param name="CalculationMode">حالت محاسبه.</param>
+/// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه یا تهی.</param>
+/// <param name="HandoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه یا تهی.</param>
 public sealed record ShippingAuthoringEditorSettingsWrite(
     ShippingFreightPayerMode? FreightPaymentMode,
-    ShippingAuthoringCalculationMode? CalculationMode);
+    ShippingAuthoringCalculationMode? CalculationMode,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);
 
 /// <summary>
 /// بستهٔ اختیاری انتخاب نوع در سند ویرایشگر. حضور خود بسته یعنی «این بخش در سند است»؛ نبودِ بسته

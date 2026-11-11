@@ -236,9 +236,22 @@ function decodeShippingType(node: JsonNode): EditorShippingType {
 function decodeSettings(node: JsonNode | undefined): EditorMethodSettings | null {
   if (node === undefined || node.kind === "null") return null;
   const fields = object(node, "settings");
+  // TB-264: the physical timing policy is an explicit PAIR. Absent means "not configured" (legacy), and a
+  // one-sided policy is untrusted input rather than a silently defaulted zero.
+  const preparationMinutes = optionalInteger(fields.get("preparationMinutes"), "settings.preparationMinutes");
+  const handoffMinutes = optionalInteger(fields.get("handoffMinutes"), "settings.handoffMinutes");
+  if ((preparationMinutes === null) !== (handoffMinutes === null)) fail("settings:timing-pair");
+  if (preparationMinutes !== null && (preparationMinutes < 0 || preparationMinutes > 10080)) {
+    fail("settings.preparationMinutes:range");
+  }
+  if (handoffMinutes !== null && (handoffMinutes < 0 || handoffMinutes > 1440)) {
+    fail("settings.handoffMinutes:range");
+  }
   return {
     freightPaymentMode: variant(fields.get("freightPaymentMode"), "settings.freightPaymentMode", PAYER_MODES),
     calculationMode: variant(fields.get("calculationMode"), "settings.calculationMode", CALCULATION_MODES),
+    preparationMinutes,
+    handoffMinutes,
   };
 }
 

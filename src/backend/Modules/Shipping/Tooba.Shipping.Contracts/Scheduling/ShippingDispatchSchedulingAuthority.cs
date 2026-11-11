@@ -52,6 +52,34 @@ public sealed record ShippingReceivingCalendarPlan(
     DateOnly? EarliestEligibleDate,
     IReadOnlyList<ShippingReceivingDateAvailability> Dates);
 
+/// <summary>
+/// TB-264: موعدهای عملیاتی مشتق از یک تاریخ تحویل انتخاب‌شده — همه به UTC و همه قابل اثبات با همان
+/// قاعدهٔ رو‌به‌جلوی حمل.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>سه واقعیت جدا.</b> <paramref name="HandoffDeadlineUtc"/> لحظهٔ <b>بسته‌شدن</b> پنجرهٔ پذیرش است و
+/// <b>شامل نیست</b> (باید «پیش از» آن برسید)؛ <paramref name="TransferDepartureUtc"/> آخرین لحظهٔ
+/// حرکت به‌سوی حامل و <paramref name="PreparationStartUtc"/> آخرین لحظهٔ شروع آماده‌سازی است.
+/// </para>
+/// <para>
+/// <b>هیچ ادعای قرار دقیق.</b> این‌ها موعدهای مشتق از پنجرهٔ پذیرش‌اند، نه نوبت رزروشدهٔ حامل.
+/// </para>
+/// </remarks>
+/// <param name="Handoff">پنجرهٔ محلی پذیرش همان روز (نیم‌باز).</param>
+/// <param name="HandoffDeadlineUtc">لحظهٔ بسته‌شدن پنجرهٔ پذیرش؛ خودِ این لحظه دیر است.</param>
+/// <param name="TransferDepartureUtc">آخرین لحظهٔ حرکت به‌سوی حامل.</param>
+/// <param name="PreparationStartUtc">آخرین لحظهٔ شروع آماده‌سازی فیزیکی.</param>
+/// <param name="PreparationMinutes">زمان آماده‌سازی استفاده‌شده (دقیقه).</param>
+/// <param name="HandoffMinutes">زمان انتقال/تحویل به حامل استفاده‌شده (دقیقه).</param>
+public sealed record ShippingHandoffDeadlines(
+    ShippingHandoffPlan Handoff,
+    DateTimeOffset HandoffDeadlineUtc,
+    DateTimeOffset TransferDepartureUtc,
+    DateTimeOffset PreparationStartUtc,
+    int PreparationMinutes,
+    int HandoffMinutes);
+
 /// <summary>دلیل قطعی یک محاسبهٔ زمان‌بندی؛ رشتهٔ پایدار، نه متن کاربر.</summary>
 public static class ShippingDispatchSchedulingReasons
 {
@@ -90,6 +118,18 @@ public static class ShippingDispatchSchedulingReasons
 
     /// <summary>هیچ تاریخ تحویل معتبری با نوبت باقی‌مانده وجود ندارد.</summary>
     public const string NoReceivingDate = "shipping.scheduling.no_receiving_date";
+
+    /// <summary>TB-264: زمان آماده‌سازی منفی یا بزرگ‌تر از کران صریح است.</summary>
+    public const string PreparationMinutesInvalid = "shipping.scheduling.preparation_minutes_invalid";
+
+    /// <summary>TB-264: زمان انتقال به حامل منفی یا بزرگ‌تر از کران صریح است.</summary>
+    public const string HandoffMinutesInvalid = "shipping.scheduling.handoff_minutes_invalid";
+
+    /// <summary>TB-264: فقط یکی از دو زمان آماده‌سازی/انتقال اعلام شد؛ سیاست ناقص است.</summary>
+    public const string TimingPolicyIncomplete = "shipping.scheduling.timing_policy_incomplete";
+
+    /// <summary>TB-264: لحظهٔ موعد روی این runtime قابل اثبات نیست (شکاف DST).</summary>
+    public const string DeadlineUnprovable = "shipping.scheduling.deadline_unprovable";
 }
 
 /// <summary>نتیجهٔ قطعی یک محاسبهٔ زمان‌بندی: مقدار یا کد دلیل پایدار، هرگز هر دو/هیچ‌کدام.</summary>
@@ -135,6 +175,18 @@ public static class ShippingDispatchSchedulingAuthority
 {
     /// <summary>نسخهٔ سیاست محاسبه؛ روی شاهد پذیرش ذخیره می‌شود تا بازتولید ممکن باشد.</summary>
     public const int PolicyVersion = 1;
+
+    /// <summary>
+    /// TB-264: نسخهٔ سیاستی که زمان آماده‌سازی و انتقال به حامل را پیش از پذیرش حامل می‌سنجد.
+    /// طرح‌های قدیمی نسخهٔ ۱ را دست‌نخورده نگه می‌دارند و هرگز بازبرچسب نمی‌شوند.
+    /// </summary>
+    public const int PreparationAwarePolicyVersion = 2;
+
+    /// <summary>TB-264: کران صریح زمان آماده‌سازی فیزیکی (هفت روز کامل).</summary>
+    public const int MaxPreparationMinutes = 7 * 24 * 60;
+
+    /// <summary>TB-264: کران صریح زمان انتقال/تحویل بسته به حامل (یک روز کامل).</summary>
+    public const int MaxHandoffMinutes = 24 * 60;
 
     /// <summary>کران صریح تعداد روز حمل (هم‌ارز کران پذیرفته‌شدهٔ دامنه).</summary>
     public const int MaxTransportWorkingDays = 365;
@@ -295,6 +347,91 @@ public static class ShippingDispatchSchedulingAuthority
     }
 
     /// <summary>
+    /// TB-264: موعدهای عملیاتی یک تاریخ تحویل انتخاب‌شده — آخرین لحظهٔ پذیرش حامل (نیم‌باز)، آخرین حرکت
+    /// به‌سوی حامل و آخرین شروع آماده‌سازی — با همان قاعدهٔ رو‌به‌جویی حمل.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>معکوس، نه حدسی.</b> ابتدا آخرین پنجرهٔ پذیرش ممکن برای همان تاریخ تحویل پیدا می‌شود، سپس زمان
+    /// انتقال و آماده‌سازی <b>یک‌بار</b> از همان لحظهٔ بسته‌شدن کم می‌شوند. هیچ تاریخ/ساعت دیگری ساخته
+    /// نمی‌شود و هیچ نوبت رزروشده‌ای ادعا نمی‌شود.
+    /// </para>
+    /// <para>
+    /// <b>لحظهٔ بسته‌شدن شامل نیست.</b> موعد پذیرش، لحظهٔ <c>close</c> است و مصرف‌کننده باید آن را
+    /// «پیش از» نمایش دهد؛ این تابع خودش هیچ ادعای «در لحظهٔ close» نمی‌سازد.
+    /// </para>
+    /// </remarks>
+    /// <param name="receivingDate">تاریخ تحویل انتخاب‌شدهٔ مشتری.</param>
+    /// <param name="carrierWeek">برنامهٔ پذیرش حامل.</param>
+    /// <param name="transportWorkingDays">روزهای کاری حمل بعد از روز پذیرش (۰ مجاز).</param>
+    /// <param name="preparationMinutes">زمان آماده‌سازی فیزیکی (دقیقه).</param>
+    /// <param name="handoffMinutes">زمان انتقال/تحویل به حامل (دقیقه).</param>
+    public static ShippingSchedulingResult<ShippingHandoffDeadlines> ResolvePreparationDeadlines(
+        DateOnly receivingDate,
+        ShippingSchedulingWeekView carrierWeek,
+        int transportWorkingDays,
+        int preparationMinutes,
+        int handoffMinutes)
+    {
+        if (preparationMinutes < 0 || preparationMinutes > MaxPreparationMinutes)
+        {
+            return ShippingSchedulingResult<ShippingHandoffDeadlines>.Failure(
+                ShippingDispatchSchedulingReasons.PreparationMinutesInvalid);
+        }
+
+        if (handoffMinutes < 0 || handoffMinutes > MaxHandoffMinutes)
+        {
+            return ShippingSchedulingResult<ShippingHandoffDeadlines>.Failure(
+                ShippingDispatchSchedulingReasons.HandoffMinutesInvalid);
+        }
+
+        var latest = ResolveLatestHandoffForReceivingDate(receivingDate, carrierWeek, transportWorkingDays);
+        if (!latest.IsSuccess)
+        {
+            return ShippingSchedulingResult<ShippingHandoffDeadlines>.Failure(latest.ReasonCode);
+        }
+
+        if (!TryResolveCarrierZone(carrierWeek.TimeZoneId, out var carrierZone))
+        {
+            return ShippingSchedulingResult<ShippingHandoffDeadlines>.Failure(
+                ShippingDispatchSchedulingReasons.CarrierTimeZoneUnresolvable);
+        }
+
+        var handoff = latest.Value!;
+
+        // A local instant that does not exist (DST gap) is never presented as a deadline.
+        if (!TryToUtcInstant(handoff.Date, handoff.OpensAt, carrierZone, out var opensUtc)
+            || !TryToUtcInstant(handoff.Date, handoff.ClosesAt, carrierZone, out var closesUtc)
+            || closesUtc <= opensUtc)
+        {
+            return ShippingSchedulingResult<ShippingHandoffDeadlines>.Failure(
+                ShippingDispatchSchedulingReasons.DeadlineUnprovable);
+        }
+
+        var transferDeparture = closesUtc.AddMinutes(-handoffMinutes);
+        var preparationStart = transferDeparture.AddMinutes(-preparationMinutes);
+
+        // The derived start must still be provably before the exclusive close; a hostile offset never
+        // produces a deadline that sits at/after acceptance close.
+        if (!(preparationStart < transferDeparture
+              && transferDeparture <= closesUtc
+              && preparationStart < closesUtc))
+        {
+            return ShippingSchedulingResult<ShippingHandoffDeadlines>.Failure(
+                ShippingDispatchSchedulingReasons.DeadlineUnprovable);
+        }
+
+        return ShippingSchedulingResult<ShippingHandoffDeadlines>.Success(
+            new ShippingHandoffDeadlines(
+                handoff,
+                closesUtc,
+                transferDeparture,
+                preparationStart,
+                preparationMinutes,
+                handoffMinutes));
+    }
+
+    /// <summary>
     /// نزدیک‌ترین روز کاری حامل در بازهٔ صفر تا هفت روز <b>پیش از</b> تاریخ مرجع؛
     /// <paramref name="minDaysBack"/> صفر یعنی «همان روز یا پیش‌تر» و یک یعنی «فقط پیش‌تر».
     /// </summary>
@@ -337,7 +474,9 @@ public static class ShippingDispatchSchedulingAuthority
         ShippingSchedulingWeekView customerWeek,
         int transportWorkingDays,
         int horizonDates,
-        int? customerSlotMinutes)
+        int? customerSlotMinutes,
+        int? preparationMinutes = null,
+        int? handoffMinutes = null)
     {
         if (transportWorkingDays < 0 || transportWorkingDays > MaxTransportWorkingDays)
         {
@@ -356,6 +495,30 @@ public static class ShippingDispatchSchedulingAuthority
             return ShippingSchedulingResult<ShippingReceivingCalendarPlan>.Failure(
                 ShippingDispatchSchedulingReasons.SlotDurationInvalid);
         }
+
+        // TB-264: preparation and transfer are counted ONCE, before the first possible carrier acceptance.
+        // A method without an explicit timing policy keeps the historical reference instant (policy v1).
+        if ((preparationMinutes is null) != (handoffMinutes is null))
+        {
+            return ShippingSchedulingResult<ShippingReceivingCalendarPlan>.Failure(
+                ShippingDispatchSchedulingReasons.TimingPolicyIncomplete);
+        }
+
+        if (preparationMinutes is < 0 or > MaxPreparationMinutes)
+        {
+            return ShippingSchedulingResult<ShippingReceivingCalendarPlan>.Failure(
+                ShippingDispatchSchedulingReasons.PreparationMinutesInvalid);
+        }
+
+        if (handoffMinutes is < 0 or > MaxHandoffMinutes)
+        {
+            return ShippingSchedulingResult<ShippingReceivingCalendarPlan>.Failure(
+                ShippingDispatchSchedulingReasons.HandoffMinutesInvalid);
+        }
+
+        var handoffReadyUtc = preparationMinutes is { } prep && handoffMinutes is { } travel
+            ? nowUtc.AddMinutes(prep + travel)
+            : nowUtc;
 
         if (!TryBuildWeek(
                 customerWeek,
@@ -378,7 +541,7 @@ public static class ShippingDispatchSchedulingAuthority
                 ShippingDispatchSchedulingReasons.CustomerTimeZoneUnresolvable);
         }
 
-        var handoff = ResolveFirstHandoff(nowUtc, carrierWeek);
+        var handoff = ResolveFirstHandoff(handoffReadyUtc, carrierWeek);
         if (!handoff.IsSuccess)
         {
             return ShippingSchedulingResult<ShippingReceivingCalendarPlan>.Failure(handoff.ReasonCode);
@@ -442,7 +605,7 @@ public static class ShippingDispatchSchedulingAuthority
                         ShippingDispatchSchedulingReasons.CarrierTimeZoneUnresolvable);
                 }
 
-                var floorUtc = handoffOpensUtc > nowUtc ? handoffOpensUtc : nowUtc;
+                var floorUtc = handoffOpensUtc > handoffReadyUtc ? handoffOpensUtc : handoffReadyUtc;
                 var offered = new List<ShippingSchedulingWindow>(slots.Count);
                 foreach (var slot in slots)
                 {

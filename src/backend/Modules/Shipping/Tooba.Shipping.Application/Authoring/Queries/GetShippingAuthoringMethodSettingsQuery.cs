@@ -55,6 +55,8 @@ internal static class ShippingAuthoringMethodSettingsWorkflow
             draft.Revision,
             settings is not null,
             settings?.FreightPaymentMode,
-            settings?.CalculationMode);
+            settings?.CalculationMode,
+            settings?.PreparationMinutes,
+            settings?.HandoffMinutes);
     }
 }

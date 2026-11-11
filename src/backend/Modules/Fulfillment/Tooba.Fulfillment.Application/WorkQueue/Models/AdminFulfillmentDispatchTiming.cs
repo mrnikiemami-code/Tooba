@@ -135,7 +135,57 @@ public sealed record AdminFulfillmentDispatchTiming(
     DateOnly? HandoffDate,
     string HandoffTimeWindow,
     string? HandoffTimeZone,
-    int DistinctPlanVariants);
+    int DistinctPlanVariants,
+    // TB-264: operational preparation state relative to the SAME accepted plan and the SAME injected now.
+    AdminFulfillmentPreparationState PreparationState = AdminFulfillmentPreparationState.None,
+    // TB-264: latest instant at which physical preparation must start (policy v2+, else null).
+    DateTimeOffset? PreparationStartUtc = null,
+    // TB-264: latest instant at which the parcel must leave the seller toward the carrier.
+    DateTimeOffset? TransferDepartureUtc = null,
+    // TB-264: latest carrier acceptance instant = the dispatch deadline (same instant as <see cref="DeadlineUtc"/>).
+    DateTimeOffset? HandoffDeadlineUtc = null,
+    // TB-264: accepted timing policy version (1 = no operational deadlines, 2+ = preparation-aware).
+    int PolicyVersion = 1);
+
+/// <summary>
+/// TB-264: where physical preparation sits relative to the accepted operational deadlines. It is derived
+/// server-side from the accepted plan and an injected <c>nowUtc</c>; the browser never computes it.
+/// </summary>
+public enum AdminFulfillmentPreparationState
+{
+    /// <summary>No plan, or the accepted plan carries no preparation deadline.</summary>
+    None = 0,
+    /// <summary>Physical work is already done (parcel dispatched or later): nothing to prepare.</summary>
+    NotApplicable = 1,
+    /// <summary>Preparation may still wait: <c>now &lt; preparationStart</c> and not today.</summary>
+    Upcoming = 2,
+    /// <summary>Preparation starts today (carrier zone) and its start instant is still ahead.</summary>
+    Today = 3,
+    /// <summary>Preparation should already be underway (<c>now &gt;= preparationStart</c>).</summary>
+    Overdue = 4,
+    /// <summary>The carrier acceptance deadline already passed: the accepted date is no longer reachable.</summary>
+    HandoffMissed = 5,
+}
+
+/// <summary>TB-264: wire-stable names of <see cref="AdminFulfillmentPreparationState"/>.</summary>
+public static class AdminFulfillmentPreparationStateNames
+{
+    /// <inheritdoc cref="AdminFulfillmentPreparationState.None" />
+    public const string None = "None";
+    /// <inheritdoc cref="AdminFulfillmentPreparationState.NotApplicable" />
+    public const string NotApplicable = "NotApplicable";
+    /// <inheritdoc cref="AdminFulfillmentPreparationState.Upcoming" />
+    public const string Upcoming = "Upcoming";
+    /// <inheritdoc cref="AdminFulfillmentPreparationState.Today" />
+    public const string Today = "Today";
+    /// <inheritdoc cref="AdminFulfillmentPreparationState.Overdue" />
+    public const string Overdue = "Overdue";
+    /// <inheritdoc cref="AdminFulfillmentPreparationState.HandoffMissed" />
+    public const string HandoffMissed = "HandoffMissed";
+
+    /// <summary>The canonical name of one preparation state.</summary>
+    public static string Of(AdminFulfillmentPreparationState state) => state.ToString();
+}
 
 /// <summary>
 /// TB-260: <b>ONE</b> pure authority that answers "where does this work sit in the accepted dispatch
@@ -172,6 +222,9 @@ public static class AdminFulfillmentDispatchTimingAuthority
     /// <summary>«موعد ارسال مشخص نشده» — pending work whose accepted evidence carries no plan.</summary>
     public const string FilterUnspecified = "dispatch_unspecified";
 
+    /// <summary>TB-264: «شروع آماده‌سازی رسیده/گذشته» — pending work whose preparation must already have started.</summary>
+    public const string FilterPreparationDue = "dispatch_preparation_due";
+
     /// <summary>All dispatch-timing filters.</summary>
     public static readonly IReadOnlyList<string> TimingFilters =
     [
@@ -180,6 +233,7 @@ public static class AdminFulfillmentDispatchTimingAuthority
         FilterOverdue,
         FilterUpcoming,
         FilterUnspecified,
+        FilterPreparationDue,
     ];
 
     /// <summary>Is this one of the dispatch-timing filters owned here?</summary>
@@ -230,7 +284,14 @@ public static class AdminFulfillmentDispatchTimingAuthority
                 transit?.HandoffDate,
                 transit is null ? string.Empty : Window(transit),
                 transit?.HandoffTimeZone,
-                plans.Count);
+                plans.Count,
+                transit is null
+                    ? AdminFulfillmentPreparationState.None
+                    : AdminFulfillmentPreparationState.NotApplicable,
+                transit?.PreparationStartUtc,
+                transit?.TransferDepartureUtc,
+                transit?.HandoffDeadlineUtc,
+                transit?.PolicyVersion ?? 1);
         }
 
         if (plans.Count == 0)
@@ -283,7 +344,51 @@ public static class AdminFulfillmentDispatchTimingAuthority
             plan.HandoffDate,
             Window(plan),
             plan.HandoffTimeZone,
-            plans.Count);
+            plans.Count,
+            PreparationStateOf(plan, nowUtc, notApplicable: false),
+            plan.PreparationStartUtc,
+            plan.TransferDepartureUtc,
+            plan.HandoffDeadlineUtc ?? deadline,
+            plan.PolicyVersion);
+    }
+
+    /// <summary>
+    /// TB-264: ONE pure derivation of physical-preparation urgency from the accepted plan and the injected
+    /// <c>nowUtc</c>. <paramref name="notApplicable"/> is true when the physical work is already done (a
+    /// dispatched/in-transit parcel), so a stale preparation deadline can never demand preparation again.
+    /// </summary>
+    public static AdminFulfillmentPreparationState PreparationStateOf(
+        OrderAcceptedGroupDispatchPlanFact plan,
+        DateTimeOffset nowUtc,
+        bool notApplicable)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        if (notApplicable)
+        {
+            return AdminFulfillmentPreparationState.NotApplicable;
+        }
+
+        if (plan.PreparationStartUtc is null)
+        {
+            return AdminFulfillmentPreparationState.None;
+        }
+
+        var handoffDeadline = plan.HandoffDeadlineUtc ?? Instants(plan).DeadlineUtc;
+        if (nowUtc >= handoffDeadline)
+        {
+            return AdminFulfillmentPreparationState.HandoffMissed;
+        }
+
+        if (nowUtc >= plan.PreparationStartUtc.Value)
+        {
+            return AdminFulfillmentPreparationState.Overdue;
+        }
+
+        var today = LocalDate(nowUtc, plan.HandoffTimeZone);
+        var preparationLocalDate = LocalDate(plan.PreparationStartUtc.Value, plan.HandoffTimeZone);
+        return preparationLocalDate <= today
+            ? AdminFulfillmentPreparationState.Today
+            : AdminFulfillmentPreparationState.Upcoming;
     }
 
     /// <summary>Does a classified row belong to the requested dispatch-timing filter?</summary>
@@ -295,17 +400,34 @@ public static class AdminFulfillmentDispatchTimingAuthority
             return true;
         }
 
+        var preparationDue = IsPreparationDue(timing);
         return filter!.Trim().ToLowerInvariant() switch
         {
-            FilterDue => timing.Bucket is AdminFulfillmentDispatchBucket.Today or AdminFulfillmentDispatchBucket.Overdue
+            // TB-264: «سررسیدشده» is prep-aware — a row whose preparation must already have started is due now
+            // even when the handoff window has not opened yet, so it can never look comfortably upcoming.
+            FilterDue => preparationDue
+                || timing.Bucket is AdminFulfillmentDispatchBucket.Today or AdminFulfillmentDispatchBucket.Overdue
                 && timing.WindowState is AdminFulfillmentHandoffWindowState.Open
                     or AdminFulfillmentHandoffWindowState.Closed,
             FilterToday => timing.Bucket == AdminFulfillmentDispatchBucket.Today,
             FilterOverdue => timing.Bucket == AdminFulfillmentDispatchBucket.Overdue,
             FilterUpcoming => timing.Bucket == AdminFulfillmentDispatchBucket.Upcoming,
             FilterUnspecified => timing.Bucket == AdminFulfillmentDispatchBucket.Unspecified,
+            FilterPreparationDue => preparationDue,
             _ => true,
         };
+    }
+
+    /// <summary>
+    /// TB-264: true when the accepted plan says physical preparation should already be underway (or the
+    /// carrier deadline has passed). Legacy policy-v1 plans have no preparation deadline, so they are never
+    /// claimed as preparation-due.
+    /// </summary>
+    public static bool IsPreparationDue(AdminFulfillmentDispatchTiming timing)
+    {
+        ArgumentNullException.ThrowIfNull(timing);
+        return timing.PreparationState is AdminFulfillmentPreparationState.Overdue
+            or AdminFulfillmentPreparationState.HandoffMissed;
     }
 
     /// <summary>

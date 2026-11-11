@@ -26,13 +26,21 @@ export interface EditorFormState {
   readonly descriptions: Readonly<Record<string, string | null>>;
   readonly freightPaymentMode: FreightPaymentMode | null;
   readonly calculationMode: AuthoringCalculationMode | null;
+  /**
+   * TB-264: physical preparation time in minutes (`null` = not configured). It is edited and written as
+   * an explicit PAIR with {@link handoffMinutes}; a one-sided value is a local issue, never a zero.
+   */
+  readonly preparationMinutes: number | null;
+  /** TB-264: transfer/handoff allowance to the carrier in minutes (`null` = not configured). */
+  readonly handoffMinutes: number | null;
   readonly typeSelection: TypeSelection;
 }
 
 /** Local reason an intent cannot be serialized safely (localized by the screen). */
 export type EditorFormIssue =
   | { readonly code: "nameRequired"; readonly languageId: string }
-  | { readonly code: "settingsIncomplete" };
+  | { readonly code: "settingsIncomplete" }
+  | { readonly code: "timingIncomplete" };
 
 function languageKey(languageId: string): string {
   return languageId.toLowerCase();
@@ -61,6 +69,8 @@ export function createEditorForm(document: EditorDocument): EditorFormState {
     descriptions,
     freightPaymentMode: document.settings?.freightPaymentMode ?? null,
     calculationMode: document.settings?.calculationMode ?? null,
+    preparationMinutes: document.settings?.preparationMinutes ?? null,
+    handoffMinutes: document.settings?.handoffMinutes ?? null,
     typeSelection: { kind: "preserve" },
   };
 }
@@ -100,6 +110,19 @@ export function withCalculationMode(
   mode: AuthoringCalculationMode,
 ): EditorFormState {
   return { ...form, calculationMode: mode };
+}
+
+/**
+ * TB-264: physical preparation time in minutes. `null` clears the pair member; the pair is validated on
+ * Apply, so the operator can type one side first without a half-written policy being sent.
+ */
+export function withPreparationMinutes(form: EditorFormState, minutes: number | null): EditorFormState {
+  return { ...form, preparationMinutes: minutes };
+}
+
+/** TB-264: transfer/handoff allowance in minutes (the other half of the same explicit pair). */
+export function withHandoffMinutes(form: EditorFormState, minutes: number | null): EditorFormState {
+  return { ...form, handoffMinutes: minutes };
 }
 
 /** Selecting a real id emits `select`; choosing the empty option is an EXPLICIT clear. */
@@ -144,7 +167,9 @@ function normalizeDescription(value: string | null): string | null {
 function settingsEqualBaseline(document: EditorDocument, form: EditorFormState): boolean {
   return (
     form.freightPaymentMode === (document.settings?.freightPaymentMode ?? null) &&
-    form.calculationMode === (document.settings?.calculationMode ?? null)
+    form.calculationMode === (document.settings?.calculationMode ?? null) &&
+    form.preparationMinutes === (document.settings?.preparationMinutes ?? null) &&
+    form.handoffMinutes === (document.settings?.handoffMinutes ?? null)
   );
 }
 
@@ -189,11 +214,17 @@ export function buildEditorEdits(
   if (!settingsEqualBaseline(document, form)) {
     if (form.freightPaymentMode === null || form.calculationMode === null) {
       issues.push({ code: "settingsIncomplete" });
+    } else if ((form.preparationMinutes === null) !== (form.handoffMinutes === null)) {
+      // TB-264: the physical timing policy is an explicit pair — both values or neither.
+      issues.push({ code: "timingIncomplete" });
     } else {
       // Once a settings write exists it carries BOTH axes, so the untouched axis is preserved.
+      // The timing pair is written verbatim, including an explicit `null` pair that clears the policy.
       methodSettings = {
         freightPaymentMode: form.freightPaymentMode,
         calculationMode: form.calculationMode,
+        preparationMinutes: form.preparationMinutes,
+        handoffMinutes: form.handoffMinutes,
       };
     }
   }

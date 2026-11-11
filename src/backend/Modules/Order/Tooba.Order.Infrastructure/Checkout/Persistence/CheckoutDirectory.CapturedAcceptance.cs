@@ -485,7 +485,12 @@ public sealed partial class CheckoutDirectory
             && stored.TransportWorkingDays == live.TransportWorkingDays
             && stored.PolicyVersion == live.PolicyVersion
             && stored.ScheduleSnapshotId == live.ScheduleSnapshotId
-            && stored.ScheduleSourceRevision == live.ScheduleSourceRevision;
+            && stored.ScheduleSourceRevision == live.ScheduleSourceRevision
+            && stored.PreparationStartUtc == live.PreparationStartUtc
+            && stored.TransferDepartureUtc == live.TransferDepartureUtc
+            && stored.HandoffDeadlineUtc == live.HandoffDeadlineUtc
+            && stored.PreparationMinutes == live.PreparationMinutes
+            && stored.HandoffMinutes == live.HandoffMinutes;
     }
 
     internal static bool SameCarrierQuote(

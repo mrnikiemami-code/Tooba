@@ -87,7 +87,9 @@ public sealed record ShippingAuthoringRevisionTranslation(Guid LanguageId, strin
 public sealed record ShippingAuthoringRevisionSettings(
     ShippingFreightPayerMode FreightPaymentMode,
     ShippingAuthoringCalculationMode CalculationMode,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);
 
 /// <summary>یک روز برنامهٔ ذخیره‌شده، شامل ساعت‌های به‌یاد‌ماندهٔ روز تعطیل.</summary>
 /// <param name="Weekday">روز هفتهٔ ISO.</param>
@@ -427,7 +429,9 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
             ? new ShippingAuthoringRevisionSettings(
                 methodSettings.FreightPaymentMode,
                 methodSettings.CalculationMode,
-                methodSettings.UpdatedAt)
+                methodSettings.UpdatedAt,
+                methodSettings.PreparationMinutes,
+                methodSettings.HandoffMinutes)
             : null;
 
         var week = draft.WeeklySchedule is { } schedule
@@ -629,7 +633,12 @@ internal static class ShippingAuthoringRevisionSnapshotCodec
         }
 
         if (payload.MethodSettings is { } settings
-            && (!Enum.IsDefined(settings.FreightPaymentMode) || !Enum.IsDefined(settings.CalculationMode)))
+            && (!Enum.IsDefined(settings.FreightPaymentMode)
+                || !Enum.IsDefined(settings.CalculationMode)
+                // TB-264: the physical timing policy is a complete pair or absent; a half policy is corrupt.
+                || (settings.PreparationMinutes is null) != (settings.HandoffMinutes is null)
+                || settings.PreparationMinutes is < 0 or > ShippingAuthoringMethodSettings.MaxPreparationMinutes
+                || settings.HandoffMinutes is < 0 or > ShippingAuthoringMethodSettings.MaxHandoffMinutes))
         {
             Reject();
         }

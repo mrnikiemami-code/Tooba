@@ -255,10 +255,18 @@ export function buildEditorDocumentBody(
     };
   }
   if (edits.methodSettings) {
-    body.methodSettings = {
+    const methodSettings: { [key: string]: JsonWrite } = {
       freightPaymentMode: edits.methodSettings.freightPaymentMode,
       calculationMode: edits.methodSettings.calculationMode,
     };
+    // TB-264: the physical timing pair is written only when the caller supplies it; a supplied `null`
+    // pair is an explicit "clear the policy" and must reach the server as null, not be dropped.
+    if (edits.methodSettings.preparationMinutes !== undefined
+      || edits.methodSettings.handoffMinutes !== undefined) {
+      methodSettings.preparationMinutes = edits.methodSettings.preparationMinutes ?? null;
+      methodSettings.handoffMinutes = edits.methodSettings.handoffMinutes ?? null;
+    }
+    body.methodSettings = methodSettings;
   }
   if (edits.typeAssignment) {
     // `shippingTypeId` is [JsonRequired] on the server: an explicit null MUST stay in the body.

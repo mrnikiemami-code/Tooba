@@ -56,7 +56,9 @@ import {
   withCalculationMode,
   withDescription,
   withFreightPaymentMode,
+  withHandoffMinutes,
   withName,
+  withPreparationMinutes,
   withShippingType,
   type EditorFormState,
 } from "../model/editor-form.ts";
@@ -496,6 +498,7 @@ export function ShippingAuthoringScreen({
     issue.code === "nameRequired" ? [issue.languageId] : [],
   );
   const settingsIncomplete = formIssues.some((issue) => issue.code === "settingsIncomplete");
+  const timingIncomplete = formIssues.some((issue) => issue.code === "timingIncomplete");
   const hasIntent = intent !== null && intentHasEdits(intent.edits);
   const canApply =
     !readOnly &&
@@ -933,11 +936,14 @@ export function ShippingAuthoringScreen({
                 typeChoicesState={typesState}
                 nameIssueLanguageIds={nameIssueLanguageIds}
                 settingsIncomplete={settingsIncomplete}
+                timingIncomplete={timingIncomplete}
                 serverErrors={fieldServerErrors}
                 onName={(languageId, value) => pushEdits(withName(form, languageId, value))}
                 onDescription={(languageId, value) => pushEdits(withDescription(form, languageId, value))}
                 onFreightPaymentMode={(mode2: FreightPaymentMode) => pushEdits(withFreightPaymentMode(form, mode2))}
                 onCalculationMode={(mode2: AuthoringCalculationMode) => pushEdits(withCalculationMode(form, mode2))}
+                onPreparationMinutes={(minutes) => pushEdits(withPreparationMinutes(form, minutes))}
+                onHandoffMinutes={(minutes) => pushEdits(withHandoffMinutes(form, minutes))}
                 onShippingType={(shippingTypeId) => pushEdits(withShippingType(form, shippingTypeId))}
                 carrierSlot={
                   <AuthoringCarrierPanel

@@ -80,13 +80,20 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Overdue),
             rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Upcoming),
             rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Unspecified),
-            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.InTransit));
+            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.InTransit),
+            rows.Count(row => IsPreparationDue(row)));
     }
 
     private static bool IsDue(AdminFulfillmentWorkQueueRow row) =>
-        row.DispatchBucket is AdminFulfillmentDispatchBucketNames.Today or AdminFulfillmentDispatchBucketNames.Overdue
+        IsPreparationDue(row)
+        || row.DispatchBucket is AdminFulfillmentDispatchBucketNames.Today or AdminFulfillmentDispatchBucketNames.Overdue
         && row.HandoffWindowState is AdminFulfillmentDispatchBucketNames.WindowOpen
             or AdminFulfillmentDispatchBucketNames.WindowClosed;
+
+    /// <summary>TB-264: preparation must already have started (server derived, never a browser date).</summary>
+    private static bool IsPreparationDue(AdminFulfillmentWorkQueueRow row) =>
+        row.PreparationState is AdminFulfillmentPreparationStateNames.Overdue
+            or AdminFulfillmentPreparationStateNames.HandoffMissed;
 
     private static bool MatchesTiming(AdminFulfillmentWorkQueueRow row, string filter) =>
         filter.ToLowerInvariant() switch
@@ -100,6 +107,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
                 row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Upcoming,
             AdminFulfillmentDispatchTimingAuthority.FilterUnspecified =>
                 row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Unspecified,
+            AdminFulfillmentDispatchTimingAuthority.FilterPreparationDue => IsPreparationDue(row),
             _ => true,
         };
 
@@ -456,6 +464,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         {
             return rows
                 .OrderBy(row => AdminFulfillmentDispatchTimingAuthority.PriorityRank(ParseBucket(row.DispatchBucket)))
+                .ThenBy(row => IsPreparationDue(row) ? 0 : 1)
                 .ThenBy(row => row.DispatchDeadlineUtc ?? DateTimeOffset.MaxValue)
                 .ThenBy(row => row.PlannedHandoffDate ?? DateOnly.MaxValue)
                 // TB-260-R1: the physical work-unit key is the tie-break, so two parcels of one seller order can

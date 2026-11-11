@@ -540,6 +540,12 @@ public static class ShippingGroupEvidenceFault
 /// </remarks>
 public sealed class ShippingGroupPlannedDispatch
 {
+    /// <summary>TB-264: بیشینهٔ زمان آماده‌سازی (هفت روز) — هم‌ارز کران Contracts.</summary>
+    public const int MaxPreparationMinutes = 7 * 24 * 60;
+
+    /// <summary>TB-264: بیشینهٔ زمان انتقال/تحویل به حامل (یک روز) — هم‌ارز کران Contracts.</summary>
+    public const int MaxHandoffMinutes = 24 * 60;
+
     /// <summary>سازندهٔ EF.</summary>
     private ShippingGroupPlannedDispatch()
     {
@@ -569,6 +575,28 @@ public sealed class ShippingGroupPlannedDispatch
     /// <summary>بازبینی مبدأ همان snapshot.</summary>
     public long ScheduleSourceRevision { get; private set; }
 
+    /// <summary>
+    /// TB-264: آخرین لحظهٔ شروع آماده‌سازی فیزیکی (UTC) یا تهی برای طرح‌های قدیمی/بدون سیاست زمانی.
+    /// </summary>
+    public DateTimeOffset? PreparationStartUtc { get; private set; }
+
+    /// <summary>TB-264: آخرین لحظهٔ حرکت به‌سوی حامل (UTC) یا تهی.</summary>
+    public DateTimeOffset? TransferDepartureUtc { get; private set; }
+
+    /// <summary>
+    /// TB-264: لحظهٔ <b>بسته‌شدن</b> پنجرهٔ پذیرش حامل (UTC، شامل نیست) یا تهی. مصرف‌کننده باید آن را
+    /// «پیش از» نمایش دهد و هرگز ادعای «در همان لحظه» نسازد.
+    /// </summary>
+    public DateTimeOffset? HandoffDeadlineUtc { get; private set; }
+
+    /// <summary>
+    /// TB-264: زمان آماده‌سازی فیزیکی پذیرفته‌شده به دقیقه (همراه همان سیاست) یا تهی برای طرح قدیمی.
+    /// </summary>
+    public int? PreparationMinutes { get; private set; }
+
+    /// <summary>TB-264: زمان انتقال/تحویل به حامل پذیرفته‌شده به دقیقه یا تهی برای طرح قدیمی.</summary>
+    public int? HandoffMinutes { get; private set; }
+
     /// <summary>برنامهٔ ارسال را می‌سازد؛ هر مقدار ناقص/ناسازگار پیش از ذخیره رد می‌شود.</summary>
     public static ShippingGroupPlannedDispatch Create(
         DateOnly handoffDate,
@@ -578,7 +606,12 @@ public sealed class ShippingGroupPlannedDispatch
         int transportWorkingDays,
         int policyVersion,
         Guid scheduleSnapshotId,
-        long scheduleSourceRevision)
+        long scheduleSourceRevision,
+        DateTimeOffset? preparationStartUtc = null,
+        DateTimeOffset? transferDepartureUtc = null,
+        DateTimeOffset? handoffDeadlineUtc = null,
+        int? preparationMinutes = null,
+        int? handoffMinutes = null)
     {
         if (handoffDate == default
             || handoffOpenTicks < 0
@@ -603,6 +636,35 @@ public sealed class ShippingGroupPlannedDispatch
             throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
         }
 
+        // TB-264: the three operational deadlines are an all-or-nothing triple. A policy-aware plan
+        // (version 2+) MUST carry them; a legacy plan (version 1) must not pretend to have them.
+        var hasAnyDeadline = preparationStartUtc is not null
+                             || transferDepartureUtc is not null
+                             || handoffDeadlineUtc is not null;
+        var hasAllDeadlines = preparationStartUtc is not null
+                              && transferDepartureUtc is not null
+                              && handoffDeadlineUtc is not null;
+        if (hasAnyDeadline != hasAllDeadlines
+            || (policyVersion >= 2) != hasAllDeadlines
+            || (hasAllDeadlines
+                && !(preparationStartUtc!.Value < transferDepartureUtc!.Value
+                     && transferDepartureUtc.Value <= handoffDeadlineUtc!.Value)))
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
+        }
+
+        // TB-264: the persisted readiness INPUTS are an explicit pair too. A policy-aware plan stores both
+        // allowances, a legacy plan stores neither, and the bounds are the same ones the authoring policy and
+        // the scheduling authority enforce. A half pair is not a policy.
+        if ((preparationMinutes is null) != (handoffMinutes is null)
+            || (hasAllDeadlines && preparationMinutes is null)
+            || (!hasAllDeadlines && preparationMinutes is not null)
+            || preparationMinutes is < 0 or > MaxPreparationMinutes
+            || handoffMinutes is < 0 or > MaxHandoffMinutes)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
+        }
+
         return new ShippingGroupPlannedDispatch
         {
             HandoffDate = handoffDate,
@@ -613,6 +675,11 @@ public sealed class ShippingGroupPlannedDispatch
             PolicyVersion = policyVersion,
             ScheduleSnapshotId = scheduleSnapshotId,
             ScheduleSourceRevision = scheduleSourceRevision,
+            PreparationStartUtc = preparationStartUtc,
+            TransferDepartureUtc = transferDepartureUtc,
+            HandoffDeadlineUtc = handoffDeadlineUtc,
+            PreparationMinutes = preparationMinutes,
+            HandoffMinutes = handoffMinutes,
         };
     }
 }

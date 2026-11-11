@@ -128,6 +128,13 @@ export interface EditorCarrierSchedule {
 export interface EditorMethodSettings {
   readonly freightPaymentMode: FreightPaymentMode;
   readonly calculationMode: AuthoringCalculationMode;
+  /**
+   * TB-264: physical preparation time in minutes, or `null` when the method has no timing policy.
+   * It is an explicit PAIR with {@link handoffMinutes}: both present or both absent, never one.
+   */
+  readonly preparationMinutes?: number | null;
+  /** TB-264: transfer/handoff allowance to the carrier in minutes (pair with preparation). */
+  readonly handoffMinutes?: number | null;
 }
 
 /** One catalog translation of the assigned shipping type. */

@@ -697,7 +697,9 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                 ? null
                 : new ShippingCapturedQuoteSettings(
                     selection.Settings.FreightPaymentMode,
-                    selection.Settings.CalculationMode),
+                    selection.Settings.CalculationMode,
+                    selection.Settings.PreparationMinutes,
+                    selection.Settings.HandoffMinutes),
             snapshotId,
             selection?.DraftId,
             selection?.SourceRevision,

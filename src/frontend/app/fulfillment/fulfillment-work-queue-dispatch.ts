@@ -17,6 +17,8 @@ export interface FulfillmentQueueCounts {
   upcoming: number;
   unspecified: number;
   inTransit: number;
+  /** TB-264: rows whose physical preparation must already have started. */
+  preparationDue: number;
 }
 
 export const FULFILLMENT_EMPTY_QUEUE_COUNTS: FulfillmentQueueCounts = {
@@ -27,6 +29,7 @@ export const FULFILLMENT_EMPTY_QUEUE_COUNTS: FulfillmentQueueCounts = {
   upcoming: 0,
   unspecified: 0,
   inTransit: 0,
+  preparationDue: 0,
 };
 
 function field(value: unknown, camel: string, pascal: string): unknown {
@@ -53,6 +56,7 @@ export function mapFulfillmentQueueCounts(value: unknown): FulfillmentQueueCount
     upcoming: amount("upcoming", "Upcoming"),
     unspecified: amount("unspecified", "Unspecified"),
     inTransit: amount("inTransit", "InTransit"),
+    preparationDue: amount("preparationDue", "PreparationDue"),
   };
 }
 
@@ -61,6 +65,7 @@ export function mapFulfillmentQueueCounts(value: unknown): FulfillmentQueueCount
  * then everything still ahead, then the rows whose accepted evidence carries no plan at all.
  */
 export const FULFILLMENT_DISPATCH_FILTERS: Array<{ id: FulfillmentQueueFilter; labelFa: string; labelEn: string }> = [
+  { id: "dispatch_preparation_due", labelFa: "شروع آماده‌سازی رسیده", labelEn: "Preparation due" },
   { id: "dispatch_overdue", labelFa: "سررسیدشده", labelEn: "Overdue" },
   { id: "dispatch_today", labelFa: "ارسال امروز", labelEn: "Due today" },
   { id: "dispatch_due", labelFa: "عقب‌افتاده", labelEn: "Backlog" },
@@ -133,4 +138,63 @@ export function formatCustomerReceiving(
 /** Reads the module-owned `dispatchCounts` block out of a raw GridQuery payload. */
 export function readDispatchCountsFromPayload(payload: unknown): FulfillmentQueueCounts {
   return mapFulfillmentQueueCounts(field(payload, "dispatchCounts", "DispatchCounts"));
+}
+
+/**
+ * TB-264: server-classified physical-preparation urgency. `None` means the accepted plan carries no
+ * preparation deadline (legacy policy v1), so the operator is told nothing rather than an invented one.
+ */
+export const FULFILLMENT_PREPARATION_STATE_LABELS: Record<string, { fa: string; en: string }> = {
+  none: { fa: "بدون موعد آماده‌سازی", en: "No preparation deadline" },
+  not_applicable: { fa: "آماده‌سازی انجام شده", en: "Preparation done" },
+  upcoming: { fa: "آماده‌سازی در آینده", en: "Preparation upcoming" },
+  today: { fa: "شروع آماده‌سازی امروز", en: "Preparation starts today" },
+  overdue: { fa: "شروع آماده‌سازی رسیده", en: "Preparation due now" },
+  handoff_missed: { fa: "موعد تحویل به حامل گذشته", en: "Handoff deadline passed" },
+};
+
+export function formatPreparationState(state: string | null | undefined): string {
+  if (!state) return FULFILLMENT_PREPARATION_STATE_LABELS.none.fa;
+  return FULFILLMENT_PREPARATION_STATE_LABELS[normalizeDispatchToken(state)]?.fa ?? state;
+}
+
+/**
+ * TB-264: one operational deadline in the accepted carrier zone. The instant is produced by the server
+ * from the accepted policy; this function only renders it and never shifts it.
+ */
+export function formatOperationalDeadline(utc: string | null | undefined, timeZone?: string | null): string {
+  if (!utc) return "—";
+  const parsed = new Date(utc);
+  if (Number.isNaN(parsed.getTime())) return utc;
+  try {
+    return new Intl.DateTimeFormat("fa-IR", {
+      timeZone: timeZone || "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(parsed);
+  } catch {
+    return utc;
+  }
+}
+
+/** «آماده‌سازی تا … · خروج تا … · تحویل به حامل تا …» — absent deadlines stay explicitly «—». */
+export function formatPreparationDeadlines(
+  row: Pick<
+    FulfillmentListRow,
+    "preparationStartUtc" | "transferDepartureUtc" | "handoffDeadlineUtc" | "plannedHandoffTimeZone"
+  >,
+): string {
+  if (!row.preparationStartUtc && !row.transferDepartureUtc && !row.handoffDeadlineUtc) {
+    return "—";
+  }
+  const zone = row.plannedHandoffTimeZone;
+  return [
+    `آماده‌سازی تا ${formatOperationalDeadline(row.preparationStartUtc, zone)}`,
+    `خروج تا ${formatOperationalDeadline(row.transferDepartureUtc, zone)}`,
+    `تحویل به حامل تا ${formatOperationalDeadline(row.handoffDeadlineUtc, zone)}`,
+  ].join(" · ");
 }

@@ -640,7 +640,164 @@ public sealed class AdminFulfillmentWorkUnitProjection260R1RelationalTests
             + $"returnedResendable=0 returnedBlocker=true total={page.TotalCount}");
     }
 
+    // ---------------------------------------------------------------- E (TB-264)
+
+    /// <summary>
+    /// TB-264 on REAL storage: a preparation-aware accepted plan (policy v2) is read by the owning bridge,
+    /// and the ACTUAL queue query reports its own operational deadlines plus a server-derived preparation
+    /// state — independent of the handoff bucket. A legacy policy-v1 sibling in the same checkout keeps
+    /// null deadlines and is never claimed as preparation-due.
+    /// </summary>
+    [Fact]
+    public async Task Case_E_a_preparation_aware_plan_reaches_the_real_queue_with_its_own_deadlines()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var target = CanonicalTarget();
+        var now = DateTimeOffset.UtcNow;
+        var carrierToday = AdminFulfillmentDispatchTimingAuthority.LocalDate(now, "Asia/Tehran");
+        var carrierTomorrow = carrierToday.AddDays(1);
+        var tag = $"TB264-E-{DateTime.UtcNow:HHmmss}";
+
+        var checkoutId = Guid.NewGuid();
+        var seller = Guid.NewGuid();
+        var sellerOrder = Guid.NewGuid();
+        var lineReady = Guid.NewGuid();
+        var lineLegacy = Guid.NewGuid();
+        var cartReady = Guid.NewGuid();
+        var cartLegacy = Guid.NewGuid();
+        var groupReady = Guid.NewGuid();
+        var groupLegacy = Guid.NewGuid();
+
+        await using var orderDb = NewOrderDb(target);
+        await using var fulfillmentDb = NewFulfillmentDb(target);
+
+        await InsertCheckoutAsync(orderDb, checkoutId, tag, now);
+        await InsertSellerOrderAsync(orderDb, sellerOrder, checkoutId, $"{tag}-1", seller);
+        await InsertOrderLineAsync(orderDb, lineReady, sellerOrder, seller);
+        await InsertOrderLineAsync(orderDb, lineLegacy, sellerOrder, seller);
+
+        // The physical preparation should ALREADY be underway, while the carrier handoff is still ahead:
+        // the two facts are independent, and the queue must show both without inventing either.
+        var preparationStart = now.AddMinutes(-30);
+        var transferDeparture = now.AddMinutes(30);
+        var handoffDeadline = new DateTimeOffset(carrierTomorrow.ToDateTime(new TimeOnly(17, 0)), TimeSpan.FromHours(3.5)).ToUniversalTime();
+        var ready = ShippingGroupPlannedDispatch.Create(
+            carrierTomorrow,
+            new TimeOnly(9, 0).Ticks,
+            new TimeOnly(17, 0).Ticks,
+            "Asia/Tehran",
+            transportWorkingDays: 2,
+            policyVersion: Tooba.Shipping.Contracts.Scheduling.ShippingDispatchSchedulingAuthority.PreparationAwarePolicyVersion,
+            scheduleSnapshotId: Guid.NewGuid(),
+            scheduleSourceRevision: 11,
+            preparationStartUtc: preparationStart,
+            transferDepartureUtc: transferDeparture,
+            handoffDeadlineUtc: handoffDeadline,
+            preparationMinutes: 120,
+            handoffMinutes: 45);
+
+        var legacy = ShippingGroupPlannedDispatch.Create(
+            carrierTomorrow,
+            new TimeOnly(9, 0).Ticks,
+            new TimeOnly(17, 0).Ticks,
+            "Asia/Tehran",
+            transportWorkingDays: 1,
+            policyVersion: Tooba.Shipping.Contracts.Scheduling.ShippingDispatchSchedulingAuthority.PolicyVersion,
+            scheduleSnapshotId: Guid.NewGuid(),
+            scheduleSourceRevision: 4);
+
+        var materialized = OrderShippingGroupMaterializer.Materialize(
+            [
+                Plan(groupReady, seller, cartReady, Evidence(carrierTomorrow, ready), carrierTomorrow),
+                Plan(groupLegacy, seller, cartLegacy, Evidence(carrierTomorrow, legacy), carrierTomorrow),
+            ],
+            [(lineReady, seller), (lineLegacy, seller)],
+            new Dictionary<Guid, Guid> { [seller] = sellerOrder },
+            new Dictionary<Guid, Guid> { [cartReady] = lineReady, [cartLegacy] = lineLegacy },
+            checkoutId,
+            now);
+        orderDb.AddRange(materialized);
+        await orderDb.SaveChangesAsync();
+
+        // Both groups are still physically unprepared work (packed, no parcel at all).
+        var unit = BuildUnit(
+            Guid.NewGuid(), checkoutId, seller, sellerOrder, $"{tag} E",
+            [(lineReady, 1m, groupReady), (lineLegacy, 1m, groupLegacy)], now);
+        unit.MarkProcessing(now);
+        unit.MarkPacked(now);
+        Persist(fulfillmentDb, unit);
+        await fulfillmentDb.SaveChangesAsync();
+        fulfillmentDb.ChangeTracker.Clear();
+
+        var engine = Engine(fulfillmentDb, orderDb, now);
+        var page = await engine.QueryAsync(Request(1, 25, tag), CancellationToken.None);
+        Assert.Equal(2, page.TotalCount);
+
+        var readyRow = page.Items.Single(x => x.TargetShippingGroupId == groupReady);
+        Assert.Equal(AdminFulfillmentDispatchBucketNames.Upcoming, readyRow.DispatchBucket);
+        Assert.Equal(AdminFulfillmentPreparationStateNames.Overdue, readyRow.PreparationState);
+        // Storage keeps microseconds; the durable instants must survive the roundtrip losslessly otherwise.
+        Assert.Equal(Micro(preparationStart), Micro(readyRow.PreparationStartUtc));
+        Assert.Equal(Micro(transferDeparture), Micro(readyRow.TransferDepartureUtc));
+        Assert.Equal(Micro(handoffDeadline), Micro(readyRow.HandoffDeadlineUtc));
+        // The accepted carrier acceptance instant IS the operational dispatch deadline of this row.
+        Assert.Equal(Micro(handoffDeadline), Micro(readyRow.DispatchDeadlineUtc));
+        Assert.Equal(carrierTomorrow, readyRow.PlannedHandoffDate);
+
+        var legacyRow = page.Items.Single(x => x.TargetShippingGroupId == groupLegacy);
+        Assert.Equal(AdminFulfillmentPreparationStateNames.None, legacyRow.PreparationState);
+        // A legacy policy-v1 plan carries NO preparation/transfer deadline. Its carrier acceptance instant is
+        // still its own accepted close (the dispatch deadline the queue always reported) — nothing is invented
+        // from the customer promise, and no preparation start is claimed.
+        Assert.Null(legacyRow.PreparationStartUtc);
+        Assert.Null(legacyRow.TransferDepartureUtc);
+        Assert.Equal(
+            Micro(new DateTimeOffset(carrierTomorrow.ToDateTime(new TimeOnly(17, 0)), TimeSpan.FromHours(3.5)).ToUniversalTime()),
+            Micro(legacyRow.HandoffDeadlineUtc));
+
+        // Server-side filters: preparation-due is its OWN fact and never redefines the dispatch buckets.
+        var due = await engine.QueryAsync(
+            Request(1, 25, tag, AdminFulfillmentDispatchTimingAuthority.FilterPreparationDue),
+            CancellationToken.None);
+        Assert.Equal(1, due.TotalCount);
+        Assert.Equal(groupReady, due.Items.Single().TargetShippingGroupId);
+
+        var upcoming = await engine.QueryAsync(
+            Request(1, 25, tag, AdminFulfillmentDispatchTimingAuthority.FilterUpcoming),
+            CancellationToken.None);
+        Assert.Equal(2, upcoming.TotalCount);
+
+        var counts = await engine.CountAsync(Request(1, 1, tag), CancellationToken.None);
+        Assert.Equal(2, counts.TotalActive);
+        Assert.Equal(2, counts.Upcoming);
+        Assert.Equal(1, counts.PreparationDue);
+
+        var line = $"{tag} checkout={checkoutId} rows=2 bucket=Upcoming prep=Overdue "
+            + $"prepStart={preparationStart:O} transfer={transferDeparture:O} handoffDeadline={handoffDeadline:O} "
+            + $"legacyPrep=None legacyDeadlines=null preparationDue={counts.PreparationDue} "
+            + $"filterPreparationDue={due.TotalCount} filterUpcoming={upcoming.TotalCount} locator=group:{groupReady}";
+        _output.WriteLine(line);
+        var evidenceDirectory = Environment.GetEnvironmentVariable("TB264_EVIDENCE_DIR");
+        if (!string.IsNullOrWhiteSpace(evidenceDirectory))
+        {
+            Directory.CreateDirectory(evidenceDirectory);
+            await File.AppendAllTextAsync(
+                Path.Combine(evidenceDirectory, "tb264-queue.txt"),
+                line + Environment.NewLine);
+        }
+    }
+
     // ---------------------------------------------------------------- helpers
+
+    /// <summary>Storage keeps microseconds; compare instants at that precision, never coarser.</summary>
+    private static DateTimeOffset? Micro(DateTimeOffset? value) =>
+        value is null
+            ? null
+            : new DateTimeOffset(value.Value.Ticks - (value.Value.Ticks % 10), value.Value.Offset);
 
     private static (string Host, int Port, string Database) CanonicalTarget()
     {

@@ -588,7 +588,12 @@ public sealed class AdminOrderDetailComposer
             chosen.TimeZone,
             chosen.TransportWorkingDays,
             chosen.PolicyVersion,
-            distinct.Count);
+            distinct.Count,
+            chosen.PreparationStartUtc,
+            chosen.TransferDepartureUtc,
+            chosen.HandoffDeadlineUtc,
+            chosen.PreparationMinutes,
+            chosen.HandoffMinutes);
     }
 
     private async Task<OrdersGrid.Models.AdminOrderListItem> MapOrderListItemAsync(

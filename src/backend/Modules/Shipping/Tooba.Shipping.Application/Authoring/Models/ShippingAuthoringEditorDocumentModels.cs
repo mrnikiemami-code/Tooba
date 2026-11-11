@@ -7,9 +7,13 @@ namespace Tooba.Shipping.Application.Authoring.Models;
 /// <summary>تنظیمات روش در سند ویرایشگر: دو انتخاب مستقل و صریح.</summary>
 /// <param name="FreightPaymentMode">زمان پرداخت کرایه.</param>
 /// <param name="CalculationMode">حالت محاسبه.</param>
+/// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی (دقیقه) یا تهی برای تنظیم‌نشده.</param>
+/// <param name="HandoffMinutes">TB-264: زمان انتقال به حامل (دقیقه) یا تهی برای تنظیم‌نشده.</param>
 public sealed record ShippingAuthoringEditorSettingsItem(
     ShippingFreightPayerMode FreightPaymentMode,
-    ShippingAuthoringCalculationMode CalculationMode);
+    ShippingAuthoringCalculationMode CalculationMode,
+    int? PreparationMinutes = null,
+    int? HandoffMinutes = null);
 
 /// <summary>یک روز برنامه در سند ویرایشگر.</summary>
 /// <param name="Weekday">روز هفتهٔ ISO.</param>

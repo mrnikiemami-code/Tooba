@@ -230,6 +230,15 @@ export interface AdminOperationalDeliveryGroup {
     transportWorkingDays: number;
     policyVersion: number;
     distinctVariants: number;
+    /**
+     * TB-264: operational deadlines of the SAME accepted plan (ISO UTC instants). All three are null
+     * for a legacy policy-v1 plan, so the UI renders no deadline row rather than an invented one.
+     */
+    preparationStartUtc?: string | null;
+    transferDepartureUtc?: string | null;
+    handoffDeadlineUtc?: string | null;
+    preparationMinutes?: number | null;
+    handoffMinutes?: number | null;
   } | null;
 }
 
@@ -1059,6 +1068,11 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
               transportWorkingDays: number(prop(dispatch, "transportWorkingDays", "TransportWorkingDays")),
               policyVersion: number(prop(dispatch, "policyVersion", "PolicyVersion")),
               distinctVariants: number(prop(dispatch, "distinctVariants", "DistinctVariants")),
+              preparationStartUtc: text(prop(dispatch, "preparationStartUtc", "PreparationStartUtc")) || null,
+              transferDepartureUtc: text(prop(dispatch, "transferDepartureUtc", "TransferDepartureUtc")) || null,
+              handoffDeadlineUtc: text(prop(dispatch, "handoffDeadlineUtc", "HandoffDeadlineUtc")) || null,
+              preparationMinutes: optionalNumber(prop(dispatch, "preparationMinutes", "PreparationMinutes")),
+              handoffMinutes: optionalNumber(prop(dispatch, "handoffMinutes", "HandoffMinutes")),
             };
           })(),
         }];

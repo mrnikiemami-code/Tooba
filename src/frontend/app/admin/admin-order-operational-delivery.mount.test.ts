@@ -3134,3 +3134,65 @@ test("TB-263 mounted: a denied submission closes the review into the ONE existin
   }
 });
 
+/* ───────────────────────── TB-264: operational preparation deadlines ───────────────────────── */
+
+test("TB-264 static: a preparation-aware plan shows its own deadline row in the carrier zone", () => {
+  const detail = withPlannedDispatch(baseDetail(), {
+    handoffDate: "2026-11-12",
+    handoffTimeWindow: "09:00–17:00",
+    handoffTimeZone: "Asia/Tehran",
+    transportWorkingDays: 2,
+    policyVersion: 2,
+    distinctVariants: 1,
+    preparationStartUtc: "2026-11-12T11:15:00+00:00",
+    transferDepartureUtc: "2026-11-12T12:45:00+00:00",
+    handoffDeadlineUtc: "2026-11-12T13:30:00+00:00",
+    preparationMinutes: 90,
+    handoffMinutes: 45,
+  });
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+    }),
+  );
+
+  // The deadlines are a THIRD fact: never merged into the customer promise nor into the handoff row.
+  assert.ok(html.includes(`admin-order-operational-deadlines-${GROUP_KEY}`));
+  assert.match(html, /مهلت‌های عملیاتی:/);
+  assert.match(html, /آماده‌سازی از/);
+  assert.match(html, /حرکت به سمت حامل/);
+  assert.match(html, /آخرین مهلت تحویل به حامل/);
+  // The instant is printed in the carrier zone it was computed in, labelled with that zone.
+  assert.match(html, /\(Asia\/Tehran\)/);
+});
+
+test("TB-264 static: a legacy policy-v1 plan renders no deadline row and invents none", () => {
+  const detail = withPlannedDispatch(baseDetail(), {
+    handoffDate: "2026-11-12",
+    handoffTimeWindow: "09:00–17:00",
+    handoffTimeZone: "Asia/Tehran",
+    transportWorkingDays: 2,
+    policyVersion: 1,
+    distinctVariants: 1,
+    preparationStartUtc: null,
+    transferDepartureUtc: null,
+    handoffDeadlineUtc: null,
+    preparationMinutes: null,
+    handoffMinutes: null,
+  });
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+    }),
+  );
+
+  assert.match(html, /موعد ارسال:/);
+  assert.ok(!html.includes("admin-order-operational-deadlines-"));
+  assert.doesNotMatch(html, /مهلت‌های عملیاتی:/);
+});

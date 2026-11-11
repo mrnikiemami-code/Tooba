@@ -141,7 +141,11 @@ export function AuthoringLocalIssuesPanel({
   const lines = Array.from(
     new Set([
       ...issues.general.map((issue) =>
-        issue.code === "nameRequired" ? messages.nameRequired : messages.settingsIncomplete,
+        issue.code === "nameRequired"
+          ? messages.nameRequired
+          : issue.code === "timingIncomplete"
+            ? messages.timingPairRequired
+            : messages.settingsIncomplete,
       ),
       ...groupProblems.map((issue) => groupIssueText(issue, messages)),
       ...issues.rates.map((issue) => rowIssueMessage(issue.code, messages)),
