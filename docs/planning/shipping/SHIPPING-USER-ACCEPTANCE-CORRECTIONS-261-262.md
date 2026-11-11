@@ -1,3 +1,18 @@
+# CURRENT —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
+
+Read docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/ARCHITECT-REVIEW.md.
+Task docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md.
+Three SOURCE-CONFIRMED gaps at a67e514ead76a058788add1be571512791db6646:
+1 RunDamagedResolutionAsync returns snapshot for recorded incomplete/no-stock/reserved decision; public retry doesn't continue and UI may clear envelope with no parcel.
+2 old CancelShipment retry unconditionally detaches resolution link/increments attempt, can erase newer replacement allocation.
+3 reserve starts with7day TTL then separate paid commit clears it; crash before commit leaves active-order stock expirable.
+Preserve correct262 architecture/UI; ONLY targeted public resume/pending recovery, idempotent current-parcel cancel, atomic non-expiring Inventory hold. User retention rule: active ORDER holds never released by parcel cancel/return/timeout; dispatch consumes once. No broad tests/base parity/green loops/screenshots, no extra DB.
+261 accepted within correction scope, user acceptance reopened.262 PARTIAL pending262-R1; not all shipping complete, no automatic next.
+Same tooba_alpha5432/3000/5088 SingleStore; user/screenshot rows read-only; labelled production-path fixtures permitted. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Parent-package return/financial automation remain unsupported, no policy redesign.
+Older CURRENT blocks superseded.
+
+---
+
 # CURRENT USER OVERRIDE — ORDER RESERVATION RETAINED UNTIL ORDER CANCELLATION —2026-11-11
 
 ## USER OVERRIDE — RESERVATION RETENTION —2026-11-11
