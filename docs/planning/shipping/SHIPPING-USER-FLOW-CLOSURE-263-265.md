@@ -3,7 +3,7 @@ Latest user instruction: fix the defects, issue sequential tasks, review each re
 262-R1 accepted ONLY its three repair seams; new user trial reopens functional acceptance.
 
 ## Sequence
-1. **263 ACCEPTED within scope** — TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263.
+1. **263 ACCEPTED within issued scope — user functional acceptance pending** — TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263.
    Reproduced on the read-only screenshot record: the durable decision existed (`Recorded`) but the admin projection
    dropped its `occurrenceKey`, so the resume posted a blank key and the owner answered the deterministic 409
    `fulfillment.damage.resolution_occurrence_required`; every non-ok answer was then presented as an unknown response.
@@ -11,8 +11,10 @@ Latest user instruction: fix the defects, issue sequential tasks, review each re
    existing Toast for confirmed success; existing MessageBox for a blocking refusal; all `fulfillment.damage.*`
    localized). See docs/architecture/evidence/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/RESULT.md.
    No financial or calendar feature was added.
-2. **264 WORKER PASS — pending Architect review** — TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264.
-   The physical preparation/transfer pair is now an explicit owned authoring policy carried through the captured
+2. **264 WORKER PASS — pending Architect review** — TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264 — readiness-aware shipping calendar and operational start deadlines. Current 256 policy assumes nowUTC is goods readiness; user explicitly rejects that assumption. Inspect actual existing per-item/offer/seller preparation inputs and operational working calendar before adding settings; don't invent duplicate lead-time fields. Model readiness (processing/packing), transfer to carrier, actual acceptance window/pickup cutoff, MAX transport working days and independent customer receiving window. If window is opening hours it is not an invented fixed pickup appointment. Preparation cannot run through closed warehouse hours unless explicit policy allows it. Before ordering, offer customer dates ONLY from first feasible handoff after readiness+transfer; max2–3=>3. At carrier close exactly => next acceptance; 16:59 can also miss today's 17:00 when preparation/transfer takes time. No double counting: existing authoritative preparation time plus only distinct missing transfer/buffer.
+   For chosen customer date, derive latest feasible carrier handoff AND latest preparation start using same authority, save accepted evidence and queue from durable facts (no current-config recomputation of old orders). Customer promise stays separate. Multi-item common group readiness is constrained by all required members, not summed parallel preparation blindly. Separate parcels retain own work scope. Revalidate availability at acceptance; historical plans remain explicit legacy/unknown, not fabricated/backfilled.
+   Acceptance examples: 14:00+2h feasible before17,16:00+2h misses17; weekday noon-close, closed warehouse/carrier/customer day, cross-zone, chosen later date; queue shows when preparation must start and handoff deadline.
+   Worker result: the physical preparation/transfer pair is now an explicit owned authoring policy carried through the captured
    quote; ONE forward/backward authority turns the trusted eligibility instant into feasible carrier handoffs and
    customer dates and derives latest preparation-start / transfer-departure / handoff-deadline instants; the
    policy-v2 triple persists in accepted evidence behind an additive all-or-nothing constraint (v1 stays readable);

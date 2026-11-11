@@ -1,5 +1,13 @@
 # CURRENT — 263 ACCEPTED within scope; 264 WORKER PASS pending review; 265 NOT ISSUED — 2026-11-11
 
+Review: docs/architecture/evidence/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/ARCHITECT-REVIEW.md.263 accepted source/evidence within issued scope; user functional acceptance pending. No263 repair loop.
+ONLY task docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/TASK.md.
+264 delivers complete readiness inputs/save/publish -> feasible customer calendar/acceptance -> durable latest preparation start/carrier handoff -> existing queue/shared view. Existing PreparationDays is not ignored or double-counted; actual authority must be traced. nowUTC is NOT assumed physically ready. Practical preparation/transfer allowance, working calendars/units explicit, MAX transport and [open,close) retained, historical plans unchanged.
+User messaging: existing Toast for transient confirmed outcome, existing MessageBox for blocking acknowledgement, field validation local. No technical sticky/error duplication. Preserve263 exact occurrence/retained recovery.
+Reservation rule: parcel cancel/return/retry/timeout never releases active-order hold; dispatch consumes once. FUTURE265 approved Returns + owning corresponding line-obligation cancellation may release only unconsumed quantity once; opening case alone doesn't. No consumed sale resurrection/refund bypass.
+
+---
+
 Read docs/planning/shipping/SHIPPING-USER-FLOW-CLOSURE-263-265.md, docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/{RESULT.md,RECEIPTS.md,ownership-design.md,result-contract.txt}.
 263 ACCEPTED within its correction scope (operator feedback + owning replacement continuation).
