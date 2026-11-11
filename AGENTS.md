@@ -1,4 +1,17 @@
-# CURRENT — 263 WORKER RESULT PASS: stuck replacement reproduced and repaired; known pending / refusal / unknown are now different facts — 2026-11-11
+# CURRENT — 263 ACCEPTED WITHIN SCOPE; ONLY 264 ISSUED — 2026-11-11
+
+Review: docs/architecture/evidence/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/ARCHITECT-REVIEW.md.263 accepted source/evidence within issued scope; user functional acceptance pending. No263 repair loop.
+ONLY task docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/TASK.md.
+264 delivers complete readiness inputs/save/publish -> feasible customer calendar/acceptance -> durable latest preparation start/carrier handoff -> existing queue/shared view. Existing PreparationDays is not ignored or double-counted; actual authority must be traced. nowUTC is NOT assumed physically ready. Practical preparation/transfer allowance, working calendars/units explicit, MAX transport and [open,close) retained, historical plans unchanged.
+Plan docs/planning/shipping/SHIPPING-USER-FLOW-CLOSURE-263-265.md.265 Returns integration remains PLANNED/NOT ISSUED. No parallel implementation/no automatic next. Review264 result then next.
+User messaging: existing Toast for transient confirmed outcome, existing MessageBox for blocking acknowledgement, field validation local. No technical sticky/error duplication. Preserve263 exact occurrence/retained recovery.
+Reservation rule: parcel cancel/return/retry/timeout never releases active-order hold; dispatch consumes once. FUTURE265 approved Returns + owning corresponding line-obligation cancellation may release only unconsumed quantity once; opening case alone doesn't. No consumed sale resurrection/refund bypass.
+One worker/task; same tooba_alpha5432 FE3000 Host5088 SingleStore; minimal labelled owning-path fixtures only; user rows read-only; no new DB/global expiry mutation/reset/reseed. Preserve DataProtection/CapturedPreview;255 parked/Tipax deferred.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Previous CURRENT blocks below are superseded historical records.
+
+---
+
+# SUPERSEDED — prior stage status
 
 Read docs/ai/tasks/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-REPLACEMENT-RECOVERY-AND-OPERATOR-FEEDBACK-263/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt}.
