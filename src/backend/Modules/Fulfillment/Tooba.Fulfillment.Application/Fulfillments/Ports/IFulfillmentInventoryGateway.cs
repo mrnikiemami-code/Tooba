@@ -46,7 +46,9 @@ public interface IFulfillmentInventoryGateway
             + "must be consumed with its durable decision identity; there is no unkeyed fallback.");
 
     /// <summary>
-    /// TB-262: آزادسازی رزرو اختصاصی یک جایگزینِ ابطال‌شده پیش از ارسال. فقط رزرو Held همان تلاش آزاد می‌شود.
+    /// TB-262 RETENTION RULE: آزادسازی رزرو سالمِ جایگزینی فقط با لغو مالکانهٔ خود سفارش مجاز است.
+    /// ابطال یک مرسولهٔ جایگزین پیش از ارسال رزرو را آزاد نمی‌کند (موجودی به سفارش فعال گره خورده و در تلاش
+    /// بعدی بازمی‌بندد). فقط رزرو Held و مصرف‌نشده یک‌بار آزاد می‌شود.
     /// </summary>
     Task ReleaseReplacementReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
         throw new NotSupportedException(

@@ -140,8 +140,14 @@ public sealed class DamagedGoodsResolution
         };
     }
 
-    /// <summary>کلید تکرارناپذیری رزرو سالمِ همین تلاش.</summary>
-    public string ReservationKey => $"damage-replacement:{DamagedGoodsResolutionId:N}:{Attempt}";
+    /// <summary>
+    /// کلید تکرارناپذیری رزرو سالم این تصمیم.
+    /// <para>
+    /// RETENTION RULE: the key is STABLE across attempts. The hold belongs to the active ORDER, so cancelling a
+    /// replacement parcel or retrying the decision must reuse this exact allocation instead of reserving a second unit.
+    /// </para>
+    /// </summary>
+    public string ReservationKey => $"damage-replacement:{DamagedGoodsResolutionId:N}";
 
     /// <summary>کلید پایدار مصرف‌کنندهٔ رزرو جایگزینی در زمان ارسال.</summary>
     public string ReservationConsumerKey => $"damage-replacement:{DamagedGoodsResolutionId:N}";
@@ -216,10 +222,14 @@ public sealed class DamagedGoodsResolution
     }
 
     /// <summary>
-    /// ابطال پیش از ارسال: رزرو اختصاصی همین تلاش آزاد می‌شود و تصمیم به حالت «نیازمند موجودی» برمی‌گردد.
-    /// مقدار آسیب‌دیده غیرقابل‌فروش می‌ماند و تعهد مشتری پابرجاست.
+    /// ابطال مرسولهٔ جایگزین پیش از ارسال: فقط تخصیص همین مرسوله برداشته می‌شود.
+    /// <para>
+    /// RETENTION RULE (explicit user rule «تا سفارش لغو نشده نباید آزاد بشه رزرو»): رزرو موجودی سالم به سفارش فعال
+    /// گره خورده و آزاد نمی‌شود. تصمیم صرفاً مرسولهٔ باطل‌شده را رها می‌کند و تلاش بعدی همان رزرو را بازمی‌بندد.
+    /// واحدهای آسیب‌دیده غیرقابل‌فروش و تعهد مشتری پابرجا می‌ماند.
+    /// </para>
     /// </summary>
-    internal void ReleaseBeforeDispatch(DateTimeOffset now)
+    internal void RetainStockBeforeDispatch(DateTimeOffset now)
     {
         if (Status == DamagedResolutionStatus.Cancelled)
         {
@@ -227,9 +237,22 @@ public sealed class DamagedGoodsResolution
         }
 
         Attempt += 1;
-        ReplacementReservationId = null;
         ReplacementShipmentId = null;
-        Status = DamagedResolutionStatus.Recorded;
+        Status = ReplacementReservationId is null
+            ? DamagedResolutionStatus.Recorded
+            : DamagedResolutionStatus.Reserved;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// لغو مجاز و مالکانهٔ خود سفارش: تنها همین رخداد می‌تواند رزرو سالمِ مصرف‌نشدهٔ این تصمیم را یک‌بار آزاد کند.
+    /// مقدار آسیب‌دیده همچنان غیرقابل‌فروش می‌ماند و تاریخچهٔ تصمیم پاک نمی‌شود.
+    /// </summary>
+    internal void MarkOrderCancelled(DateTimeOffset now)
+    {
+        ReplacementShipmentId = null;
+        ReplacementReservationId = null;
+        Status = DamagedResolutionStatus.Cancelled;
         UpdatedAt = now;
     }
 

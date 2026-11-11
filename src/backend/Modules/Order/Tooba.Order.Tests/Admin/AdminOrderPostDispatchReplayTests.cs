@@ -494,6 +494,8 @@ public sealed class AdminOrderPostDispatchReplayTests
             Assert.Equal(ShipmentOperationStatus.Created, replacement.Status);
             Assert.Equal(1m, replacement.Items.Single(x => x.OrderLineId == fixture.LineAId).Quantity);
             Assert.Equal(1, inventory.ReserveCalls);
+            // The hold is bound to the ACTIVE order, so its TTL was cleared exactly once for this new reservation.
+            Assert.Equal(1, inventory.CommitCalls);
             // The damaged unit is committed; the healthy returned capacity of the same line is untouched.
             Assert.Equal(0m, snapshot.Items.Single(x => x.OrderLineId == fixture.LineAId).OutstandingDamagedQuantity);
             Assert.Equal(1m, snapshot.Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
@@ -1637,8 +1639,19 @@ public sealed class AdminOrderPostDispatchReplayTests
 
         public int OriginalConsumeCalls { get; private set; }
 
-        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException("TB-262 fixture keeps the committed sale reservation untouched.");
+        public int CommitCalls { get; private set; }
+
+        /// <summary>
+        /// TB-262 RETENTION RULE: the NEW replacement hold is committed for the ACTIVE paid order (its TTL is cleared),
+        /// so no hold timeout can ever return the stock to saleable availability. The committed SALE reservation is
+        /// never touched here.
+        /// </summary>
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken)
+        {
+            Assert.Equal(ReservationId, reservationId);
+            CommitCalls++;
+            return Task.CompletedTask;
+        }
 
         public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken)
         {

@@ -21,12 +21,18 @@ New Contracts-only seam: `Tooba.Inventory.Contracts.Replacement.IDamagedReplacem
   reservation** id handed over by Fulfillment (`ReserveForDamagedReplacementAsync(originalReservationId, …)`), so a
   caller cannot substitute a different SKU/seller/location.
 * The hold uses Inventory's **existing** stock/reservation concurrency primitives and a deterministic
-  `ReservationKey` (`damage-replacement:{resolutionId:N}:{attempt}`). An exact retry therefore reconciles the same
-  hold instead of reserving twice; a released attempt bumps `Attempt`, so the next attempt cannot silently reuse a
-  released hold.
+  `ReservationKey` (`damage-replacement:{resolutionId:N}`, **stable across attempts**). An exact retry therefore
+  reconciles the same hold instead of reserving twice, and a retry after a cancelled parcel **rebinds the retained
+  allocation** instead of reserving a second unit.
+* RETENTION RULE (2026-11-11 user override «تا سفارش لغو نشده نباید آزاد بشه رزرو»): the hold belongs to the ACTIVE
+  order. As soon as it is acquired Fulfillment commits it for the paid order (`ExpiresAt = null`), exactly like the
+  other paid-order reservations, so the expired-hold reclaimer (`ReleaseExpiredHoldsAsync`, which only touches
+  `expires_at IS NOT NULL`) can never return this stock to saleable availability while the order lives.
 * Unavailable healthy stock is a typed `inventory.replacement.unavailable` blocker **with no hold left behind**.
 * `ConsumeReplacementReservationAsync` is called only by the existing dispatch path, exactly once, for a replacement
   parcel (`Shipment.IsReplacement`). The original first-sale reservation is never consumed or released again.
+* `ReleaseReplacementReservationAsync` is reachable **only** from an authorized ORDER cancellation
+  (`AbortForCheckoutCancelAsync`), never from a parcel cancellation.
 
 ## 3. Quantity conservation
 
@@ -45,8 +51,17 @@ ResendableQuantity(line)  = ReturnedUsableQuantity(line) − ResendCommittedQuan
   `fulfillment.damage.exceeds_outstanding`.
 * The original sale already consumed stock, so damage **must not** decrement stock again and **must not** raise
   saleable stock. `RestockFromReturnAsync` (refund-time, condition-less) is deliberately **not** invoked.
-* A cancelled pre-dispatch replacement releases only its own new reservation and returns the decision to
-  "still owes a replacement" (status `Recorded`, `Attempt + 1`); the damaged units stay non-saleable and bound.
+* A cancelled pre-dispatch replacement detaches **only its parcel allocation**; the healthy-stock hold stays attached
+  to the active order (`status Reserved`, `Attempt + 1`) and the next legitimate attempt rebinds the same
+  reservation. The damaged units stay non-saleable and bound. A cancelled occurrence is never silently recreated.
+* Only an authorized ORDER cancellation releases the unconsumed replacement holds of that checkout, exactly once
+  (`fulfillment.damage` decisions become `Cancelled`, the reservation is released, stock returns to saleable
+  availability). Parcel cancellation is never treated as order cancellation.
+* Dispatch consumes the replacement hold exactly once; consume is not release, and an already-consumed original sale
+  reservation is never resurrected.
+* Identified active-order expiry path: `InventoryDirectory.ReleaseExpiredHoldsAsync` (PostgreSQL `FOR UPDATE SKIP
+  LOCKED` reclaimer). It was defeated for this hold by clearing the TTL on attach — no policy rewrite of the
+  abandoned-cart path was needed.
 
 ## 4. Identity / idempotency
 

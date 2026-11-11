@@ -108,6 +108,10 @@ public sealed partial class FulfillmentDirectory
                     $"damaged-resolution:{resolution.DamagedGoodsResolutionId:N}",
                     _clock.UtcNow.AddDays(7),
                     cancellationToken);
+                // RETENTION RULE: this hold belongs to the ACTIVE paid order, so its TTL is cleared (ExpiresAt=null)
+                // exactly like the other paid-order reservations. A hold timeout can therefore never release it while
+                // the order is active; only the owning order cancellation releases it, once.
+                await _inventory.CommitReservationForPaidOrderAsync(reserved.ReservationId, cancellationToken);
                 await AttachDamagedReservationAsync(
                     fulfillmentId,
                     resolution.DamagedGoodsResolutionId,
@@ -124,6 +128,24 @@ public sealed partial class FulfillmentDirectory
                     unit,
                     resolution,
                     FulfillmentErrorCodes.DamagedReplacementUnavailable,
+                    cancellationToken);
+            }
+        }
+        else
+        {
+            // RETENTION RULE: a cancelled parcel allocation never releases the order-bound hold, so a retry REBINDS
+            // that exact allocation instead of reserving a second unit. A hold that is genuinely gone is a typed,
+            // honest blocker — never a silent second reservation for the same damaged units.
+            var retained = await _inventory.FindReplacementReservationAsync(
+                resolution.ReplacementReservationId.Value,
+                cancellationToken);
+            if (retained is null
+                || !string.Equals(retained.Status, "Held", StringComparison.OrdinalIgnoreCase))
+            {
+                return await ResultAsync(
+                    unit,
+                    resolution,
+                    FulfillmentErrorCodes.DamagedReservationConflict,
                     cancellationToken);
             }
         }

@@ -250,7 +250,7 @@ public sealed class DamagedGoodsResolution262RelationalTests
     // ------------------------------------------------------------------ D: cancellation, blockers and failure windows
 
     [Fact]
-    public async Task D_cancel_releases_only_the_new_hold_and_no_stock_leaves_zero_parcel()
+    public async Task D_cancel_retains_the_order_bound_hold_and_no_stock_leaves_zero_parcel()
     {
         if (Connection is null)
         {
@@ -267,32 +267,44 @@ public sealed class DamagedGoodsResolution262RelationalTests
         var firstReservation = resolved.ReplacementReservationId!.Value;
         var firstParcel = resolved.ReplacementShipmentId!.Value;
         Assert.Equal(1m, (await StockAsync(fixture)).Reserved);
+        // The hold is bound to the ACTIVE order: its TTL is cleared, so the expired-hold reclaimer can never free it.
+        Assert.Null(await ReservationExpiresAtAsync(fixture, firstReservation));
 
         var cancelled = await lease.Directory.CancelShipmentAsync(
             fixture.FulfillmentId, firstParcel, fixture.ActorUserId, CancellationToken.None);
         Assert.Equal(
             ShipmentStatus.Cancelled,
             cancelled.Shipments.Single(x => x.ShipmentId == firstParcel).Status);
-        // Only the NEW hold was released; the damaged source stays returned and non-saleable.
-        Assert.Equal(StockReservationStatus.Released, await ReservationStatusAsync(fixture, firstReservation));
-        Assert.Equal((9m, 0m), await StockAsync(fixture));
+        // RETENTION RULE («تا سفارش لغو نشده نباید آزاد بشه رزرو»): cancelling the PARCEL is not cancelling the ORDER,
+        // so the held stock is NOT released and saleable availability does not increase.
+        Assert.Equal(StockReservationStatus.Held, await ReservationStatusAsync(fixture, firstReservation));
+        Assert.Equal((9m, 1m), await StockAsync(fixture));
         Assert.Equal(
             ShipmentStatus.Returned,
             cancelled.Shipments.Single(x => x.ShipmentId == fixture.SourceShipmentId).Status);
         Assert.Equal(1m, cancelled.Items.Single(x => x.OrderLineId == fixture.LineAId).DamagedQuantity);
 
-        // The decision still OWES a replacement: a retry with the same occurrence acquires a NEW hold + parcel.
+        // The decision still OWES a replacement: the retry REBINDS the same retained allocation (no second hold) and
+        // creates a NEW parcel, so a cancelled occurrence is never silently recreated.
         var retried = await lease.Directory.ResolveDamagedGoodsAsync(
             fixture.FulfillmentId, fixture.ActorUserId, fixture.SourceShipmentId, fixture.LineAId, 1m,
             DamagedResolutionOutcome.Replacement, occurrence, null, CancellationToken.None);
         Assert.NotNull(retried.ReplacementShipmentId);
         Assert.NotEqual(firstParcel, retried.ReplacementShipmentId);
-        Assert.NotEqual(firstReservation, retried.ReplacementReservationId);
+        Assert.Equal(firstReservation, retried.ReplacementReservationId);
         Assert.Equal(1m, (await StockAsync(fixture)).Reserved);
         Assert.Equal(1, await ResolutionRowCountAsync(fixture));
+        Assert.Equal(1, await ReplacementReservationRowCountAsync(fixture));
         Assert.Equal(
             firstParcel,
             cancelled.Shipments.Single(x => x.ShipmentId == firstParcel).ShipmentId);
+
+        // A second cancellation of the retried parcel still keeps the hold (retries cannot leak or double-hold).
+        await lease.Directory.CancelShipmentAsync(
+            fixture.FulfillmentId, retried.ReplacementShipmentId!.Value, fixture.ActorUserId, CancellationToken.None);
+        Assert.Equal(StockReservationStatus.Held, await ReservationStatusAsync(fixture, firstReservation));
+        Assert.Equal((9m, 1m), await StockAsync(fixture));
+        Assert.Equal(1, await ReplacementReservationRowCountAsync(fixture));
 
         // No healthy stock: a precise blocker, zero parcel, zero leaked hold, and the decision stays recorded so the
         // SAME unresolved intent can be retried safely.
@@ -311,8 +323,8 @@ public sealed class DamagedGoodsResolution262RelationalTests
 
         fixture.Record(
             _output,
-            $"D first={firstParcel} released=1 retry={retried.ReplacementShipmentId} "
-            + $"retryReservation={retried.ReplacementReservationId} blocked={blocked.DamagedGoodsResolutionId} "
+            $"D first={firstParcel} retained=1 heldReserved=1 retriedParcelOnly={retried.ReplacementShipmentId} "
+            + $"retryReservation={retried.ReplacementReservationId} sameHold=1 blocked={blocked.DamagedGoodsResolutionId} "
             + $"blocker={blocked.BlockerCode} starvedParcels=1 starvedHolds=0");
     }
 
@@ -435,6 +447,19 @@ public sealed class DamagedGoodsResolution262RelationalTests
         return await db.Reservations.AsNoTracking()
             .Where(x => x.ReservationId == reservationId)
             .Select(x => x.Status)
+            .SingleAsync();
+    }
+
+    /// <summary>
+    /// TB-262 RETENTION RULE: the purpose-bound hold of an ACTIVE order has no TTL, so the expired-hold reclaimer
+    /// (<c>ReleaseExpiredHoldsAsync</c> only touches <c>expires_at IS NOT NULL</c>) can never free it.
+    /// </summary>
+    private static async Task<DateTimeOffset?> ReservationExpiresAtAsync(Fixture fixture, Guid reservationId)
+    {
+        await using var db = CreateInventoryDb(fixture.Connection);
+        return await db.Reservations.AsNoTracking()
+            .Where(x => x.ReservationId == reservationId)
+            .Select(x => x.ExpiresAt)
             .SingleAsync();
     }
 

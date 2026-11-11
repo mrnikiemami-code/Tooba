@@ -25,6 +25,7 @@ public sealed class DamagedResolution262Tests
     private static readonly DateTimeOffset T3 = T0.AddHours(3);
     private static readonly DateTimeOffset T4 = T0.AddHours(4);
     private static readonly DateTimeOffset T5 = T0.AddHours(5);
+    private static readonly DateTimeOffset T6 = T0.AddHours(6);
     private static readonly Guid Actor = Guid.Parse("018f2620-0000-7000-8000-0000000000a1");
 
     private sealed record Fixture(
@@ -281,7 +282,7 @@ public sealed class DamagedResolution262Tests
     }
 
     [Fact]
-    public void Cancelling_a_pre_dispatch_replacement_releases_only_its_own_hold()
+    public void Cancelling_a_pre_dispatch_replacement_retains_the_hold_until_the_order_is_cancelled()
     {
         var fixture = ReturnedParcel(usableA: 2m, damagedA: 1m);
         var resolution = fixture.Unit.RecordDamagedResolution(
@@ -293,19 +294,28 @@ public sealed class DamagedResolution262Tests
             Guid.NewGuid(), () => Guid.NewGuid(), resolution.DamagedGoodsResolutionId, Actor, string.Empty, T5);
 
         fixture.Unit.CancelShipment(replacement.ShipmentId, T5.AddMinutes(1));
-        var released = fixture.Unit.DetachReplacementReservationForCancel(replacement.ShipmentId, T5.AddMinutes(1));
+        fixture.Unit.RetainReplacementStockForCancelledParcel(replacement.ShipmentId, T5.AddMinutes(1));
 
-        Assert.Equal(reservationId, released);
-        Assert.Null(resolution.ReplacementReservationId);
+        // RETENTION RULE: the order is still active, so the purpose-bound hold must NOT become saleable again.
+        Assert.Equal(reservationId, resolution.ReplacementReservationId);
         Assert.Null(resolution.ReplacementShipmentId);
-        // The decision still OWES a replacement (it is not silently completed), but its next attempt must acquire a
-        // NEW reservation instead of reusing the released one.
-        Assert.Equal(DamagedResolutionStatus.Recorded, resolution.Status);
+        // Still OWES the replacement, with the hold retained and a fresh attempt pending.
+        Assert.Equal(DamagedResolutionStatus.Reserved, resolution.Status);
         Assert.Equal(2, resolution.Attempt);
         // The damaged unit stays bound to that pending decision, and the healthy returned capacity was never touched.
         Assert.Equal(0m, fixture.Unit.OutstandingDamagedQuantity(fixture.ShipmentId, fixture.LineA));
         Assert.Equal(2m, fixture.Unit.ResendableQuantity(fixture.LineA));
-        // Releasing twice has no second effect (nothing else to release).
-        Assert.Null(fixture.Unit.DetachReplacementReservationForCancel(replacement.ShipmentId, T5.AddMinutes(2)));
+        // A retry rebinds the SAME retained allocation instead of reserving a second unit.
+        var retried = fixture.Unit.CreateReplacementShipment(
+            Guid.NewGuid(), () => Guid.NewGuid(), resolution.DamagedGoodsResolutionId, Actor, string.Empty, T6);
+        Assert.Equal(reservationId, retried.ReplacementReservationId);
+        Assert.Equal(3, fixture.Unit.Shipments.Count);
+
+        // Only cancelling the owning ORDER releases the unconsumed hold, exactly once.
+        var released = fixture.Unit.ReleaseReplacementStockForOrderCancel(T6.AddMinutes(1));
+        Assert.Equal(new[] { reservationId }, released);
+        Assert.Null(resolution.ReplacementReservationId);
+        Assert.Equal(DamagedResolutionStatus.Cancelled, resolution.Status);
+        Assert.Empty(fixture.Unit.ReleaseReplacementStockForOrderCancel(T6.AddMinutes(2)));
     }
 }

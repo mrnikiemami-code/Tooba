@@ -38,8 +38,28 @@ Schema added by the migration (additive only): nullable `fulfillment.shipments.d
 replacement_reservation_id,replacement_shipment_id}` and unique
 `ux_damaged_goods_resolutions_fulfillment_occurrence (fulfillment_id, occurrence_key)`.
 
-## 4. Focused proofs
+## 3.1 RETENTION REVISION — files changed for the 2026-11-11 user override
 
+```
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/DamagedGoodsResolution.cs
+  ReservationKey                      damage-replacement:{resolutionId:N}          (stable across attempts)
+  ReleaseBeforeDispatch               -> RetainStockBeforeDispatch  (parcel detached, hold kept, Attempt+1)
+  new MarkOrderCancelled              only reachable from the authorized order cancellation
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/FulfillmentUnit.cs
+  DetachReplacementReservationForCancel -> RetainReplacementStockForCancelledParcel (no release)
+  new ReleaseReplacementStockForOrderCancel (returns the unconsumed hold ids, exactly once)
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.cs
+  CancelShipmentAsync                 retains the hold, no inventory release
+  AbortForCheckoutCancelAsync         releases the unconsumed replacement holds once, after the domain abort
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.Damaged.cs
+  Reserve path                        CommitReservationForPaidOrderAsync -> ExpiresAt = NULL
+  Retry path                          re-reads the retained hold and requires Held, else typed conflict
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/.../IFulfillmentInventoryGateway.cs   doc only
+src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Replacement/DamagedReplacementInventoryContracts.cs  doc only
+```
+No schema/migration, no endpoint, no UI, no money change. `tb262-domain.txt` keeps the domain fact list.
+
+## 4. Focused proofs
 ```
 dotnet build src/backend/Tooba.slnx -c Release            0 Error(s)   (53 NuGet-NU1900 offline warnings)
 
@@ -65,7 +85,17 @@ cd src/frontend; npx tsc --noEmit                       exit 0, no output
 cd src/frontend; npx tsx --tsconfig tsconfig.mount-tests.json --test \
   app/admin/admin-order-operational-delivery.mount.test.ts
   tests 52 / pass 52 / fail 0
-cd src/frontend; npm run build                          exit 0, BUILD_ID 2t3xzbGoosGy7zATxS-Xh
+```
+
+RETENTION REVISION (2026-11-11 user override) — the same affected checks were re-run once after the change:
+
+```
+Fulfillment  DamagedResolution262Tests + PostDispatchException258*     43/43  (7 pure + 36 retained)
+Host         DamagedGoodsResolution262RelationalTests on tooba_alpha    6/6   (D rewritten for retention)
+Order        AdminOrderPostDispatchReplayTests                         10/10  (fake gateway now asserts the
+                                                                               commit-for-paid-order call)
+FE           tsc --noEmit                                              0
+FE           mount test                                                52/52  (unchanged, no FE source change)
 ```
 
 TB-262 mounted cases (inside the 52):
@@ -83,22 +113,32 @@ appended lines are new task-labelled fixture rows, no historical line was edited
 ## 5. Read-only database ledger (after the work)
 
 ```
-fulfillment.damaged_goods_resolutions   37 rows, every occurrence_key starts with 'tb262-'
-                                        Fulfilled 29 / Reserved 2 / Recorded 6 / Cancelled 0
-fulfillment.shipments                   35 rows with damaged_resolution_id NOT NULL
-inventory.reservations                  Consumed 57 / Held 38 / Released 44
+fulfillment.damaged_goods_resolutions   47 rows, every occurrence_key starts with 'tb262-'
+                                        Fulfilled 34 / Recorded 10 / Reserved 3 / Cancelled 0
+inventory.reservations                  Consumed 65 / Held 42 / Released 44
+inventory.reservations (Held)           18 with no TTL, 24 with TTL
+                                        of the 28 'damage-replacement:' keys, 4 are live no-TTL holds
+                                        damaged-resolution:01a1cae6dd7e… / …dc8f… / …db82… / …df52…
+fulfillment.__ef_migrations_history     head 20261111123000_AddDamagedGoodsResolution (unchanged)
 ```
 
 ## 6. Deploy
 
 ```
 dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Release -o artifacts/publish-primary   exit 0
-host started from artifacts/publish-primary (PID 45212)
+host restarted from artifacts/publish-primary (PID 30928, previous PID 45212 stopped first)
 GET http://127.0.0.1:5088/health        200
 GET http://127.0.0.1:5088/health/ready  200
   {"status":"ready","checks":{"edition":"SingleStore","postgresql":"configured",
    "authorization":"inmemory","messaging-transport":"postgresql-sql","messaging":"Healthy"}}
+```
 
+FE is unchanged by the retention revision (no frontend source change): the running next process (PID 13608) still
+serves BUILD_ID `2t3xzbGoosGy7zATxS-Xh` and `/fa` answers 200.
+
+The earlier deploy (first result) for the record:
+
+```
 cd src/frontend; npm run build            BUILD_ID 2t3xzbGoosGy7zATxS-Xh
 next start -p 3000 -H 127.0.0.1           PID 13608
 GET http://127.0.0.1:3000/fa              200

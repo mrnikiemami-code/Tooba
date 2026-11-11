@@ -1018,27 +1018,48 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     }
 
     /// <summary>
-    /// TB-262: cancelling a replacement before dispatch releases ONLY its own new healthy-stock reservation and puts
-    /// the decision back to "still owes a replacement". The damaged units stay non-saleable and unresolved.
-    /// Returns the reservation that the caller must release exactly once.
+    /// TB-262: cancelling a replacement before dispatch releases ONLY that parcel allocation. RETENTION RULE: the
+    /// purpose-bound healthy-stock reservation stays attached to the ACTIVE ORDER, so nothing is released here and the
+    /// next legitimate attempt rebinds the same held allocation. The damaged units stay non-saleable and unresolved.
     /// </summary>
-    public Guid? DetachReplacementReservationForCancel(Guid replacementShipmentId, DateTimeOffset now)
+    public void RetainReplacementStockForCancelledParcel(Guid replacementShipmentId, DateTimeOffset now)
     {
         var shipment = RequireShipment(replacementShipmentId);
         if (!shipment.IsReplacement || shipment.DamagedResolutionId is not { } resolutionId)
         {
-            return null;
+            return;
         }
 
         var resolution = FindDamagedResolution(resolutionId);
         if (resolution is null || resolution.Status == DamagedResolutionStatus.Cancelled)
         {
-            return null;
+            return;
         }
 
-        var released = resolution.ReplacementReservationId;
-        resolution.ReleaseBeforeDispatch(now);
+        resolution.RetainStockBeforeDispatch(now);
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// TB-262 RETENTION RULE: only the owning authorized ORDER cancellation releases the unconsumed healthy-stock
+    /// reservations of this checkout's replacement decisions, exactly once. Returns the ids the caller must release.
+    /// </summary>
+    public IReadOnlyList<Guid> ReleaseReplacementStockForOrderCancel(DateTimeOffset now)
+    {
+        var released = new List<Guid>();
+        foreach (var resolution in _damagedResolutions.ToList())
+        {
+            if (resolution.ReplacementReservationId is not { } reservationId
+                || resolution.Status == DamagedResolutionStatus.Cancelled)
+            {
+                continue;
+            }
+
+            released.Add(reservationId);
+            resolution.MarkOrderCancelled(now);
+            UpdatedAt = now;
+        }
+
         return released;
     }
 

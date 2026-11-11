@@ -385,16 +385,12 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
-        // TB-262: a replacement that is cancelled before dispatch releases ONLY its own new healthy-stock
-        // reservation once. The damaged source stays non-saleable and keeps its unresolved obligation, so the
-        // decision can be retried deliberately instead of silently recreating a parcel.
+        // TB-262 RETENTION RULE («تا سفارش لغو نشده نباید آزاد بشه رزرو»): cancelling a replacement parcel detaches
+        // ONLY that parcel allocation. Its purpose-bound healthy-stock reservation stays held for the ACTIVE order,
+        // so saleable availability does not increase and the next legitimate attempt rebinds the same allocation.
         unit.CancelShipment(shipmentId, _clock.UtcNow);
-        var releasedReplacementReservation = unit.DetachReplacementReservationForCancel(shipmentId, _clock.UtcNow);
+        unit.RetainReplacementStockForCancelledParcel(shipmentId, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
-        if (releasedReplacementReservation is { } reservationId)
-        {
-            await _inventory.ReleaseReplacementReservationAsync(reservationId, cancellationToken);
-        }
 
         _telemetry.RecordTransition("shipment_cancelled");
         return await MapSnapshotAsync(unit, cancellationToken);
@@ -845,12 +841,20 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             throw new ContractOperationException("fulfillment.cancel.already_dispatched");
         }
 
+        var releasedReplacementReservations = new List<Guid>();
         foreach (var unit in loaded)
         {
             unit.AbortForOrderCancel(now);
+            // TB-262 RETENTION RULE: an authorized ORDER cancellation is the ONLY event that may release the
+            // unconsumed healthy-stock reservations of this checkout's replacement decisions — exactly once.
+            releasedReplacementReservations.AddRange(unit.ReleaseReplacementStockForOrderCancel(now));
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+        foreach (var reservationId in releasedReplacementReservations)
+        {
+            await _inventory.ReleaseReplacementReservationAsync(reservationId, cancellationToken);
+        }
     }
 
     /// <inheritdoc />

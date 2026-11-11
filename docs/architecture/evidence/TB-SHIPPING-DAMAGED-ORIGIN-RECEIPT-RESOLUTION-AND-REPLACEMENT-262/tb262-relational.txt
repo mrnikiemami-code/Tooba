@@ -1,15 +1,16 @@
 # TB-262 relational matrix — REAL tooba_alpha @ 127.0.0.1:5432 (SingleStore / store-alpha)
-# Command: dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj -c Release \
-#          --filter "FullyQualifiedName~DamagedGoodsResolution262RelationalTests" --logger "console;verbosity=detailed"
-# Result: Failed: 0, Passed: 6, Skipped: 0, Total: 6
+# Command: $env:TB262_CONNECTION="Host=127.0.0.1;Port=5432;Username=admin;Password=123456;Database=tooba_alpha"
+#          dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj -c Release \
+#            --filter "FullyQualifiedName~DamagedGoodsResolution262RelationalTests"
+# Result (retention revision, USER OVERRIDE «تا سفارش لغو نشده نباید آزاد بشه رزرو»): Failed: 0, Passed: 6, Skipped: 0, Total: 6
 # Fixtures are task-labelled TB262-* rows written through the production application paths only.
 
-A fulfillment=1a83370e-a167-4c8c-9e4c-a1469dee08c7 source=01a1cac8-c4df-7000-89cf-90721fc2233b lineA=11d0a715-3a0c-43d7-b1fe-d27c225ef5f3 resendableA=0 damagedA=1 outstandingA=1 onHand=9 reserved=0
-B fulfillment=be237007-bfa2-40a0-9650-34e6f641dfcd source=01a1cac8-c68b-7000-9481-7a8992f20849 resendable=2 damaged=1 reserved=1 replacement=01a1cac8-c79a-7000-98cb-183d964517a1 reservation=01a1cac8-c767-7000-8fce-0c81a927cf41 rows=1
-C fulfillment=eba7dce5-c3d2-4887-a1b2-a765e4ae17eb source=01a1cac8-c1fc-7000-bdf8-76afaf31013b replacement=01a1cac8-c3e4-7000-b73c-53af3f5c5838 reservation=01a1cac8-c3a7-7000-a327-a8fa9f7b557f original=4270219d-d5bb-48b6-98bb-85301c45f113 consumed=1 onHand=8 reserved=0 delivered=1 replay=same
-D first=01a1cac8-ca79-7000-9644-2f5f05a62ffd released=1 retry=01a1cac8-cae2-7000-8e60-ea62820dedf3 retryReservation=01a1cac8-caca-7000-bdd2-889b934b7e1f blocked=01a1cac8-cb94-7000-aea4-56758a8e6b83 blocker=fulfillment.damage.replacement_unavailable starvedParcels=1 starvedHolds=0
-D2 recoveredReservation=01a1cac8-c8dd-7000-ba91-1377ee8dd34f parcel=01a1cac8-c90c-7000-a917-a7ff2c73fa2f holds=1 rows=1
-E winner=01a1cac8-c637-7000-92b7-da51bc9d9f88 loser=fulfillment.damage.concurrency_conflict rows=1 holds=1
+C fulfillment=e8fa3140-3724-4582-b59f-0fd356efcdf9 source=01a1cae6-d715-7000-8810-44858a60b6f6 replacement=01a1cae6-d98e-7000-a413-024cefb6d516 reservation=01a1cae6-d961-7000-a227-0e914f350be7 original=34ef72c8-cf3d-436b-bba4-768bc0817ef6 consumed=1 onHand=8 reserved=0 delivered=1 replay=same
+A fulfillment=ac88901d-ac77-4f13-ab45-8175a7cac2c5 source=01a1cae6-da7b-7000-88ca-bf6b74699cd1 lineA=14b30ba8-95c9-4784-96a0-5386fd5c78e1 resendableA=0 damagedA=1 outstandingA=1 onHand=9 reserved=0
+E winner=01a1cae6-dbb7-7000-a397-c73b9248ab56 loser=fulfillment.damage.concurrency_conflict rows=1 holds=1
+B fulfillment=625f4446-ff5e-40ec-b7f5-b9aebe2bf378 source=01a1cae6-dc10-7000-80c5-ad0b347cf0e7 resendable=2 damaged=1 reserved=1 replacement=01a1cae6-dcc2-7000-b78d-c08f6e049e0f reservation=01a1cae6-dca2-7000-b372-78ac2a31c04f rows=1
+D first=01a1cae6-dda7-7000-b305-d601aa73b250 retained=1 heldReserved=1 retriedParcelOnly=01a1cae6-dde4-7000-9656-6c1b53a5c87a retryReservation=01a1cae6-dd89-7000-b717-619478c305e7 sameHold=1 blocked=01a1cae6-decb-7000-91f7-a412fc78261b blocker=fulfillment.damage.replacement_unavailable starvedParcels=1 starvedHolds=0
+D2 recoveredReservation=01a1cae6-df5e-7000-a8ce-946c5ade021d parcel=01a1cae6-df8f-7000-8dca-e0a1cbf606d4 holds=1 rows=1
 
 # Reading of the A–E invariants (each line is asserted in the test, not inferred):
 # A damaged1 => resendableA=0 (damaged is never usable capacity), outstandingA=1 (the unit still owes a decision),
@@ -20,21 +21,13 @@ E winner=01a1cac8-c637-7000-92b7-da51bc9d9f88 loser=fulfillment.damage.concurren
 #   consumed exactly once (consumed=1, reserved=0, onHand 10 -> 8 for 1 sale + 1 replacement), the ORIGINAL sale
 #   reservation stays consumed and untouched, delivered=1 counts the physical customer unit once, and the exact
 #   occurrence replays the same parcel after fresh readiness is gone (replay=same).
-# D cancelling a Created replacement releases only its OWN new hold (released=1) and creates no new parcel; the retry
-#   after cancellation acquires a genuinely NEW hold+parcel (different ids); no healthy stock leaves a zero-parcel
-#   decision (starvedParcels=1 blocker=fulfillment.damage.replacement_unavailable starvedHolds=0).
+# D RETENTION RULE: cancelling a Created replacement parcel detaches ONLY that parcel allocation. The purpose-bound
+#   hold stays Held (heldReserved=1, reserved stays 1, saleable availability does NOT increase), its TTL is cleared so
+#   the expired-hold reclaimer cannot free it, and the retry after the cancellation REBINDS the exact same reservation
+#   (sameHold=1, one live replacement hold row) while creating a genuinely new parcel (retriedParcelOnly != first).
+#   A second cancellation of the retried parcel keeps the same held allocation (no leak, no second hold). No healthy
+#   stock leaves a zero-parcel decision (starvedParcels=1 blocker=fulfillment.damage.replacement_unavailable
+#   starvedHolds=0).
 # D2 a fault between the new hold and the parcel recovers the EXACT recorded hold and parcel (holds=1 rows=1).
 # E two independent contexts cannot resolve one damaged unit twice: exactly one winner, one typed
 #   fulfillment.damage.concurrency_conflict loser, rows=1 decision and holds=1 reservation.
-C fulfillment=a68299c9-5ce8-41a9-a466-f0430ec429fa source=01a1cad1-9965-7000-a973-565fb0a7d01f replacement=01a1cad1-9b46-7000-b0a1-6749608a9d1f reservation=01a1cad1-9b20-7000-b683-efc62599953e original=d4c6edd3-dd21-40ca-9c88-dfb131ecdf87 consumed=1 onHand=8 reserved=0 delivered=1 replay=same
-A fulfillment=0043f78f-0666-458c-8322-eba5a01e282b source=01a1cad1-9cdf-7000-a3d4-0e0a3c35f179 lineA=0ce83a76-ddcb-4453-984c-0bf28037de5d resendableA=0 damagedA=1 outstandingA=1 onHand=9 reserved=0
-E winner=01a1cad1-9e2c-7000-a43f-7ed91f2759ba loser=fulfillment.damage.concurrency_conflict rows=1 holds=1
-B fulfillment=245727fb-ca51-4ef7-9653-973c3f0d978a source=01a1cad1-9e7a-7000-9f76-40d03709f606 resendable=2 damaged=1 reserved=1 replacement=01a1cad1-9fe4-7000-9fae-f4b124bf8f09 reservation=01a1cad1-9fcb-7000-b86c-6adad7918148 rows=1
-D2 recoveredReservation=01a1cad1-a169-7000-b34a-2f6244f18bc4 parcel=01a1cad1-a19e-7000-b901-8ce9ad4473b4 holds=1 rows=1
-D first=01a1cad1-a27f-7000-9686-38ad11b93b57 released=1 retry=01a1cad1-a2eb-7000-bbf4-d5b2daba5c73 retryReservation=01a1cad1-a2d0-7000-9df5-1d2688cc1edf blocked=01a1cad1-a3c0-7000-b1fe-25b189e23254 blocker=fulfillment.damage.replacement_unavailable starvedParcels=1 starvedHolds=0
-C fulfillment=fd2b0787-7c10-44a1-9f09-0039b307ff8c source=01a1cad7-a931-7000-8007-8bdefc7561a8 replacement=01a1cad7-aa9e-7000-9cf3-fb72fffa756c reservation=01a1cad7-aa86-7000-979e-447cc438971f original=4ab8e8cf-75df-4654-978e-cd513d63388a consumed=1 onHand=8 reserved=0 delivered=1 replay=same
-A fulfillment=d12b9584-10cd-432d-aa98-f8f5eae13ac2 source=01a1cad7-ab7d-7000-908c-b70598335d2f lineA=1a2d2079-122d-43f7-b194-3a46b345d606 resendableA=0 damagedA=1 outstandingA=1 onHand=9 reserved=0
-E winner=01a1cad7-aca2-7000-9937-2c12d4e7a56c loser=fulfillment.damage.concurrency_conflict rows=1 holds=1
-B fulfillment=a11b124c-2891-4f82-889e-f8b6fd24af1b source=01a1cad7-acf0-7000-b225-ad12aa1192ef resendable=2 damaged=1 reserved=1 replacement=01a1cad7-adce-7000-becc-6625dec9fd82 reservation=01a1cad7-adba-7000-8392-b9d859bb0963 rows=1
-D2 recoveredReservation=01a1cad7-ae70-7000-8867-5b3e61f380e8 parcel=01a1cad7-ae9c-7000-81e1-f27960714fff holds=1 rows=1
-D first=01a1cad7-af3f-7000-8d6c-bc39e620be12 released=1 retry=01a1cad7-af9f-7000-a39c-b40e5a656ebe retryReservation=01a1cad7-af81-7000-a43f-278631249f2f blocked=01a1cad7-b043-7000-86ed-c069521f4e30 blocker=fulfillment.damage.replacement_unavailable starvedParcels=1 starvedHolds=0

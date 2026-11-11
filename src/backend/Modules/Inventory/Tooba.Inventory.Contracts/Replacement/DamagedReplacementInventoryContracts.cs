@@ -10,9 +10,13 @@ namespace Tooba.Inventory.Contracts.Replacement;
 /// </summary>
 /// <param name="OriginalReservationId">The committed sale reservation of the ordered line (evidence only, never reused).</param>
 /// <param name="Quantity">Explicit healthy quantity to reserve.</param>
-/// <param name="ReservationKey">Durable purpose-bound idempotency key of THIS reservation attempt.</param>
+/// <param name="ReservationKey">Durable purpose-bound idempotency key of THIS replacement decision (stable across attempts, so a retry rebinds the same held allocation).</param>
 /// <param name="ExternalReference">Audit reference, e.g. the damaged-goods decision identity.</param>
-/// <param name="ExpiresAt">Self-healing expiry so an abandoned attempt can never leak a hold forever.</param>
+/// <param name="ExpiresAt">
+/// Safety-net expiry for the window BEFORE the hold is linked to an active order. Fulfillment clears it on attach
+/// (<c>ExpiresAt = null</c>), exactly like other paid-order reservations, so the expired-hold reclaimer can never
+/// release stock that the active order still owes; only an authorized order cancellation releases it, once.
+/// </param>
 public sealed record DamagedReplacementReservationRequest(
     Guid OriginalReservationId,
     decimal Quantity,
@@ -31,7 +35,9 @@ public sealed record DamagedReplacementReservationResult(
 /// <summary>
 /// TB-262: the MINIMAL Inventory-owned capability for a linked paid-order replacement. It reuses Inventory's existing
 /// atomic availability/reservation primitives; it never converts damaged goods into saleable stock, never touches the
-/// original consumed sale reservation, and never invokes the refund-only return restock path.
+/// original consumed sale reservation, and never invokes the refund-only return restock path. RETENTION RULE: a hold it
+/// creates belongs to the ACTIVE order until dispatch consumes it or an authorized order cancellation releases it —
+/// cancelling a replacement parcel, retrying the decision or a hold timeout never returns it to saleable availability.
 /// </summary>
 public interface IDamagedReplacementInventoryPort
 {
