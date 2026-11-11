@@ -1,10 +1,10 @@
-TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264
+﻿TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264
 BRIDGE-WAKE-V1 / Channel tooba-main / Worker tooba-worker-01 / agent cursor
 
 Expected-Base-SHA: 04c8099bbf7c26d781fc097c96a51ab3fe99b3f5
 Base-SHA          : 04c8099bbf7c26d781fc097c96a51ab3fe99b3f5   (verified ancestor of the result commit)
 Code-SHA          : ab77c12e0e4cee6a9a5b034c506a84ff70aaf1f4   (implementation + focused tests)
-Evidence-SHA      : PENDING (documentation commit, set by the follow-up docs commit)
+Evidence-SHA      : a2347c623924e7e9190fa3088327b907141ff77d
 Merge/HEAD-SHA    : PENDING (HEAD == origin/main after push)
 
 Mode              : PREPARATION_AND_CARRIER_TRANSFER_READINESS_TO_FEASIBLE_CUSTOMER_DATES_AND_DURABLE_OPERATIONAL_DEADLINES
