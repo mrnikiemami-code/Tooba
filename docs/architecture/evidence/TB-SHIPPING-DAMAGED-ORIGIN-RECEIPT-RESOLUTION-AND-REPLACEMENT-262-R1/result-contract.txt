@@ -1,0 +1,133 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1
+Parent-Task: TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS_WITHIN_ISSUED_REPAIR_SCOPE
+Decision: PENDING_REPLACEMENT_RESUMES_THROUGH_OWNING_EXECUTION_ASSOCIATION_SPECIFIC_IDEMPOTENT_CANCEL_AND_ATOMIC_NON_EXPIRING_ORDER_HOLD
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Base-SHA: a67e514ead76a058788add1be571512791db6646
+Code-SHA: e6cb0378edaf0986c8f7c1f656494ed6e8abc569
+Evidence-SHA: <the commit that adds this folder>
+Merge-SHA: <HEAD == origin/main after the evidence commits>
+
+NOT_CLAIMED: Architect ACCEPT, user VISUAL/FUNCTIONAL ACCEPT, "all shipping problems fixed",
+refund/financial automation, reachable post-dispatch whole-order cancellation, parent common-package
+damage/return orchestration, live provider (Tipax) behaviour.
+
+## A — public command resumes an INCOMPLETE recorded replacement
+Defect: RunDamagedResolutionAsync answered recorded.Snapshot for ANY Recorded intent, so a durable
+no-stock decision or a Reserved decision without a live parcel looked like a completed success (fresh
+projection then offered nothing, and the UI cleared its retained envelope while the damaged unit was
+already committed to the decision).
+Repair (Order owns the public command; Fulfillment owns the continuation ladder):
+- completed = Status == Fulfilled OR Outcome == Referral -> exact recorded snapshot, zero writes.
+- every other Recorded state continues through ResolveDamagedGoodsCoreAsync with the CURRENT actor,
+  checkout, fulfillment and source parcel; no second decision, no second reservation, no silent
+  success; an absent record still passes the ordinary projection gate.
+- stock still unavailable -> typed fulfillment.damage.replacement_unavailable (pending), no parcel,
+  no leaked hold; healthy stock arriving -> the SAME occurrence reserves/continues once and returns the
+  actual linked parcel; a genuinely gone hold -> typed fulfillment.damage.reservation_conflict.
+- ResolvedCancelled stays historical; changed intent/quantity/outcome stays a typed conflict with zero
+  writes (fulfillment.damage.resolution_intent_conflict).
+Server-owned resumability: OccurrenceKey is exposed on DamagedResolutionSnapshot /
+DamagedGoodsResolutionRecord, carried to AdminShipmentView.DamagedResolutions and admin-api.ts, so a
+reload with no local hint can continue the EXACT recorded decision (existing dialog, damagedResume
+prop, quantity/outcome/occurrence replayed verbatim; the section renames its ONE 44px entry to
+«ادامهٔ تعیین تکلیف کالای آسیب‌دیده» and states the durable decision).
+
+## B — a stale cancellation cannot detach the current replacement
+DamagedGoodsResolution.RetainStockBeforeDispatch(Guid cancelledShipmentId, DateTimeOffset now) returns
+unless ReplacementShipmentId == cancelledShipmentId. Only the FIRST valid pre-dispatch cancellation of
+the CURRENT parcel detaches that allocation and advances the parcel attempt once; a replay of the same
+cancelled parcel is a no-op; a replay of an OLD parcel after a retry preserves the new link, attempt,
+held reservation and quantities. Shipment.CancelPreDispatch keeps its own idempotence and typed
+refusals; public actor/ownership/package-lock guards unchanged; NO Inventory release on parcel cancel.
+One live parcel per resolution remains enforced by the aggregate link + attempt-scoped dispatch key
+unique index (not by hiding UI).
+
+## C — non-expiring order hold from the FIRST durable Inventory commit
+DamagedReplacementReservationRequest no longer carries an expiry; InventoryDirectory
+.ReserveForDamagedReplacementAsync passes expiresAt:null into the existing atomic ReserveAsync
+primitive; IFulfillmentInventoryGateway.ReserveReplacementReservationAsync lost expiresAt; the separate
+CommitReservationForPaidOrderAsync post-step is gone. The purpose-bound hold
+(damage-replacement:{resolutionId:N}) is therefore non-expiring from its first durable commit and a
+crash between reserve and link leaves exactly ONE recoverable hold that the exact-key retry reuses.
+ReleaseExpiredHoldsAsync only selects expires_at IS NOT NULL, so active-order stock can never be freed
+by a hold timeout. Only an authorized ORDER cancellation may release the unconsumed hold once.
+
+## Proof (focused, one canonical DB, task-labelled fixtures)
+Fulfillment DamagedResolution262Tests 8/8 (new stale-cancel-replay case).
+Fulfillment retained PostDispatchException 36/36.
+Host DamagedGoodsResolution262 relational on REAL tooba_alpha 8/8 (A/B/C/D/D2/E retained + new F
+stale-cancel replay verified from an independent context + new G atomic non-expiry at the owning
+Inventory seam with the reclaimer predicate matching 0 rows at now+400d).
+Order AdminOrderPostDispatchReplay PUBLIC command on REAL tooba_alpha 11/11 (10 retained + new I:
+starved first attempt -> blocker with zero parcel; retry still pending; healthy stock -> same occurrence
+completes; cancel parcel -> allocation only, no release; retry resumes on the RETAINED hold with
+secondReserve=0 and a NEW parcel; stale old-parcel cancel replay -> no detach; exact public replay
+answers the live parcel; rows=shipments3/decisions1).
+Frontend mounted real section/dialog 54/54 (52 retained + 2 R1), typecheck 0, production build 0.
+Solution build 0 errors.
+Fixture ids: tb262r1-orchestrator-relational.txt (public path I), tb262-relational.txt (F, G).
+
+## Runtime / deploy
+No migration added and none applied (no schema change). Host republished to artifacts/publish-primary and
+restarted (previous PID 30928 stopped): PID 36116, /health 200, /health/ready 200 -> SingleStore.
+FE rebuilt and restarted: PID 30688, BUILD_ID HH5Ghzd51vaj3oewQY1qF, /fa 200, served chunk
+7825-cec5013e3aaa3dc7.js carries «ادامهٔ تعیین تکلیف کالای آسیب‌دیده».
+ONE database tooba_alpha @ 127.0.0.1:5432; no disposable/test/parallel/Docker DB, no 15433, no
+edition/connection/port/appsettings change; DataProtection/CapturedPreview unchanged (local ON /
+checked-in OFF); no raw business SQL/manual DDL/reset/reseed/backfill; user and screenshot rows
+read-only; no provider call; no fake waybill; 255 parked; live Tipax deferred.
+
+## Changed paths
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/DamagedGoodsResolution.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Domain/Aggregates/FulfillmentUnit.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Fulfillments/Models/FulfillmentDamagedResolution.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Fulfillments/Models/ShipmentSnapshot.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Application/Fulfillments/Ports/IFulfillmentInventoryGateway.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Contracts/Operations/FulfillmentAdminOperationsContracts.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Adapters/FulfillmentAdminOperationsAdapter.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.Damaged.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Directories/FulfillmentDirectory.ReadModels.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Gateways/FulfillmentInventoryGateway.cs
+src/backend/Modules/Fulfillment/Tooba.Fulfillment.Tests/Behavior/DamagedResolution262Tests.cs
+src/backend/Modules/Inventory/Tooba.Inventory.Contracts/Replacement/DamagedReplacementInventoryContracts.cs
+src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.Replacement.cs
+src/backend/Modules/Order/Tooba.Order.Application/Admin/Detail/AdminOrderDetailComposer.cs
+src/backend/Modules/Order/Tooba.Order.Application/Admin/Detail/Models/AdminOrderDetailModels.cs
+src/backend/Modules/Order/Tooba.Order.Application/Admin/Operations/Services/AdminOrderOperationsOrchestrator.Fulfillment.cs
+src/backend/Modules/Order/Tooba.Order.Application/Admin/Operations/Services/AdminOrderOperationsOrchestrator.Projection.cs
+src/backend/Modules/Order/Tooba.Order.Tests/Admin/AdminOrderPostDispatchReplayTests.cs
+src/frontend/app/admin/admin-api.ts
+src/frontend/app/admin/admin-order-items-shipping-panel.tsx
+src/frontend/app/admin/admin-order-operational-delivery-section.tsx
+src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts
+src/frontend/features/order-operational-groups/ui/post-dispatch-exception-dialog.tsx
+docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/*
+docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md
+AGENTS.md
+START-HERE-IF-CHATGPT-IS-LOST.md
+docs/architecture/shipping/SHIPPING-ARCHITECT-RECOVERY-2026-10-22.md
+docs/planning/shipping/SHIPPING-USER-ACCEPTANCE-CORRECTIONS-261-262.md
+
+## Limits (explicit)
+Referral remains an honest pending customer-service/financial item (no money moved). The authorized
+ORDER-cancellation release branch remains unreachable for an order that already dispatched a parcel,
+so a real damaged-receipt hold simply stays with the active order (reported, not redesigned). Parent
+consolidated-package damage/return orchestration still unsupported and the TB-258 child lock preserved.
+Concurrency/recovery proven with independent real contexts and durable guards, not a stress test. No
+live user trial, no screenshot matrix, no provider/Tipax call. One exploratory Host invocation of the
+shared global reclaimer (+400 days) ran once before the committed case switched to the identical
+read-only selection predicate; no order-bound hold is ever a candidate and the subsequent invocation
+released 0 rows.
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

@@ -1,4 +1,17 @@
-# CURRENT —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
+# CURRENT — 262-R1 WORKER RESULT PASS: pending replacement resumes, stale cancel is inert, hold never expires — 2026-11-11
+
+Read docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md (verbatim) and
+docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb262r1-orchestrator-relational.txt,tb262-relational.txt}.
+Status **PASS** within the issued repair scope, decision **PENDING_REPLACEMENT_RESUMES_THROUGH_OWNING_EXECUTION_ASSOCIATION_SPECIFIC_IDEMPOTENT_CANCEL_AND_ATOMIC_NON_EXPIRING_ORDER_HOLD**; NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT all-shipping-complete. Base `a67e514e0`; code `e6cb0378e`.
+A: a durable no-stock decision or a `Reserved` decision with no live parcel is CONTINUED through the owning execution by the public command (starved stock = typed pending blocker; healthy stock completes the SAME occurrence with its real parcel and no second decision/hold); `OccurrenceKey` reaches the admin detail so a reload resumes the exact recorded decision in the existing dialog.
+B: `RetainStockBeforeDispatch(cancelledShipmentId, now)` ignores any cancellation that is not the CURRENT replacement link, so a stale replay of an old parcel keeps the new parcel, the attempt and the order-bound hold; no Inventory release on parcel cancel.
+C: the purpose-bound hold is created with `expires_at NULL` atomically in Inventory on its FIRST durable commit (no caller TTL, no separate paid-commit step); a crash before the Fulfillment link leaves one recoverable non-expiring hold and the reclaimer can never free active-order stock.
+Proven: Fulfillment 262 **8/8** + retained 258 **36/36**; Host relational **8/8** (new F stale-cancel replay from an independent context, new G atomic non-expiry, reclaimer predicate 0 rows at now+400d); Order PUBLIC command **11/11** (new I pending-resume with `secondReserve=0`, same reservation, new parcel, stale cancel no-detach); FE mounted **54/54**, typecheck 0, builds 0. No migration added/applied. Host PID 36116, FE PID 30688 BUILD_ID `HH5Ghzd51vaj3oewQY1qF`. Same tooba_alpha5432 / 3000+5088 SingleStore; user/screenshot rows read-only; 255 parked; Tipax deferred; parent-package return and financial automation still unsupported.
+**261 PASS pending Architect review; 262 PASS pending Architect review; 262-R1 PASS pending Architect review.** STOP_FOR_ARCHITECT; automaticNext NONE.
+
+---
+
+# SUPERSEDED —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
 
 Read docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/ARCHITECT-REVIEW.md.
 Task docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md.
@@ -13,7 +26,7 @@ Older CURRENT blocks superseded.
 
 ---
 
-# CURRENT — 262 WORKER RESULT PASS (RETENTION REVISION): owned damaged-receipt decision + order-bound replacement hold — 2026-11-11
+# SUPERSEDED — 262 WORKER RESULT PASS (RETENTION REVISION): owned damaged-receipt decision + order-bound replacement hold — 2026-11-11
 
 Read docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/TASK.md (it carries the USER OVERRIDE) and
 docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-design.md,tb262-domain.txt,tb262-relational.txt,tb262-migration-plan.txt}.

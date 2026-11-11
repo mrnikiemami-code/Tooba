@@ -1,4 +1,17 @@
-# CURRENT —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
+# CURRENT — 262-R1 WORKER RESULT PASS: pending replacement resumes, stale cancel is inert, hold never expires — 2026-11-11
+
+Read docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md (verbatim) and
+docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb262r1-orchestrator-relational.txt,tb262-relational.txt}.
+Status **PASS** within the issued repair scope, decision **PENDING_REPLACEMENT_RESUMES_THROUGH_OWNING_EXECUTION_ASSOCIATION_SPECIFIC_IDEMPOTENT_CANCEL_AND_ATOMIC_NON_EXPIRING_ORDER_HOLD**; NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT all-shipping-complete. Base `a67e514e0`; code `e6cb0378e`; evidence/merge SHA in `result-contract.txt`.
+A: `RunDamagedResolutionAsync` answers a snapshot only for `Fulfilled`/`Referral`; a durable no-stock decision or a `Reserved` decision without a live parcel CONTINUES through the owning execution with the current actor/checkout/parcel checks (no second decision/hold, starved stock stays a typed pending blocker, healthy stock completes the same occurrence with its real parcel). `OccurrenceKey` reaches the admin detail so a reload with no local hint resumes the exact recorded decision in the existing dialog («ادامهٔ تعیین تکلیف کالای آسیب‌دیده»).
+B: `RetainStockBeforeDispatch(cancelledShipmentId, now)` ignores any cancellation that is not the CURRENT replacement link, so a stale replay of an old parcel keeps the new parcel, the attempt and the order-bound hold (no Inventory release).
+C: the purpose-bound hold is created with `expires_at NULL` atomically in Inventory on its FIRST durable commit (no caller TTL, no separate paid-commit step), so a crash before the Fulfillment link leaves one recoverable non-expiring hold and the reclaimer can never free active-order stock.
+Proven on the canonical DB: Fulfillment 262 **8/8** + retained 258 **36/36**; Host relational **8/8** (new F stale-cancel replay from an independent context, new G atomic non-expiry with reclaimer predicate matching 0 rows at now+400d); Order PUBLIC command **11/11** (new I: pending→resume→retained hold, `secondReserve=0`, same reservation, new parcel, stale cancel no-detach, `rows=shipments3/decisions1`); FE mounted **54/54** (2 new R1), typecheck 0, builds 0. No migration added/applied. Host PID 36116 `/health`+`/health/ready` 200; FE PID 30688 BUILD_ID `HH5Ghzd51vaj3oewQY1qF` (`/fa` 200). Same tooba_alpha5432 / 3000+5088 SingleStore; user/screenshot rows read-only; 255 parked; Tipax deferred; parent-package return and financial automation still unsupported.
+**261 PASS pending Architect review; 262 PASS pending Architect review; 262-R1 PASS pending Architect review.** STOP_FOR_ARCHITECT; automaticNext NONE.
+
+---
+
+# SUPERSEDED —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
 
 Read docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/ARCHITECT-REVIEW.md.
 Task docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md.
@@ -13,7 +26,7 @@ Older CURRENT blocks superseded.
 
 ---
 
-# CURRENT — 262 WORKER RESULT PASS (RETENTION REVISION): owned damaged-receipt decision + order-bound replacement hold — 2026-11-11
+# SUPERSEDED — 262 WORKER RESULT PASS (RETENTION REVISION): owned damaged-receipt decision + order-bound replacement hold — 2026-11-11
 
 Read docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/TASK.md (it carries the USER OVERRIDE) and
 docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-design.md,tb262-domain.txt,tb262-relational.txt,tb262-migration-plan.txt}.
@@ -25,7 +38,7 @@ Known limits: `Referral` pending with no financial write; the order-cancel relea
 STOP_FOR_ARCHITECT; automaticNext NONE.
 
 ---
-# CURRENT USER OVERRIDE — ORDER RESERVATION RETAINED UNTIL ORDER CANCELLATION —2026-11-11
+# USER OVERRIDE — ORDER RESERVATION RETAINED UNTIL ORDER CANCELLATION —2026-11-11 (RULE STILL IN FORCE; block superseded by the newer CURRENT above)
 
 ## USER OVERRIDE — RESERVATION RETENTION —2026-11-11
 Latest explicit user rule: «تا سفارش لغو نشده نباید ازاد بشه رزرو».
