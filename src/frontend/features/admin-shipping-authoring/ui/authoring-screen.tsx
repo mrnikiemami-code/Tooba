@@ -10,6 +10,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import { Dialog } from "../../../design-system";
 import { loadAuthoringTypeChoices, type AuthoringTypeChoice } from "../api/authoring-lookup-api.ts";
 import type { EditorTransportFailure } from "../api/editor-document-api.ts";
@@ -160,7 +161,6 @@ export function ShippingAuthoringScreen({
   const [contentLanguageId, setContentLanguageId] = useState<string>("");
   const [types, setTypes] = useState<readonly AuthoringTypeChoice[]>([]);
   const [typesState, setTypesState] = useState<"loading" | "ok" | "error">("loading");
-  const [notice, setNotice] = useState<string | null>(null);
   const [publicationBadge, setPublicationBadge] = useState<PublicationBadgeKind>("loading");
   const [confirmDiscardVisible, setConfirmDiscardVisible] = useState(false);
   const applyRef = useRef(false);
@@ -247,11 +247,6 @@ export function ShippingAuthoringScreen({
     // operator's pending local edits for review against the new confirmed baseline.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formSeed]);
-
-  // A stale success notice never survives a fresh read.
-  useEffect(() => {
-    if (session.load === "loading") setNotice(null);
-  }, [session.load]);
 
   useEffect(() => {
     let current = true;
@@ -517,11 +512,12 @@ export function ShippingAuthoringScreen({
   const apply = useCallback(async () => {
     if (applyRef.current || !resolver) return;
     applyRef.current = true;
-    setNotice(null);
     try {
       const outcome = await controller.apply(resolver);
       if (outcome.status !== "sent") return;
-      setNotice(authoringFormat(messages.saved, { revision: controller.getState().savedRevision ?? "" }));
+      // TB-261: a confirmed save reports ONCE as a transient toast — no persistent success strip that a
+      // reload or a re-render could replay.
+      toast.success(authoringFormat(messages.saved, { revision: controller.getState().savedRevision ?? "" }));
       setMode("view");
     } finally {
       applyRef.current = false;
@@ -559,7 +555,6 @@ export function ShippingAuthoringScreen({
         controller.edit({});
       }
       setMode("view");
-      setNotice(null);
     },
     [activeLanguageIds, controller, document, router, session.commitUncertain],
   );
@@ -794,12 +789,6 @@ export function ShippingAuthoringScreen({
         </p>
       ) : null}
 
-      {notice ? (
-        <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
-          {notice}
-        </p>
-      ) : null}
-
       {session.load === "loading" ? <p className="text-xs text-gray-500">{messages.entryLoading}</p> : null}
       {session.load === "denied" ? (
         <p role="alert" className="text-xs font-semibold text-danger">{messages.loadDenied}</p>
@@ -844,7 +833,6 @@ export function ShippingAuthoringScreen({
           mode={mode}
           busy={busy}
           messages={messages}
-          onPublished={setNotice}
           onBadgeChange={setPublicationBadge}
         />
       ) : null}

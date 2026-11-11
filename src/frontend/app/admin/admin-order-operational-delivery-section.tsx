@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Package, Truck } from "lucide-react";
 import {
   formatAdminMoney,
+  formatAdminShipmentStatus,
   formatAdminStatus,
   type AdminAcceptedShippingGroup,
   type AdminOperationalDeliveryGroup,
@@ -158,6 +159,31 @@ function isCancelledShipment(status: string | null | undefined): boolean {
 
 function isPackageLocked(parcel: AdminShipment): boolean {
   return Boolean(parcel.activePackageNumber || parcel.packageLockedReasonFa);
+}
+
+function isCarrierException(status: string | null | undefined): boolean {
+  return status === "NonDelivered" || status === "Returning" || status === "Returned";
+}
+
+/**
+ * TB-261: the physical condition totals of an origin receipt. The server records one receipt line per
+ * (line, condition); only «سالم» funds a resend, and «آسیب‌دیده» stays an explicit unresolved requirement.
+ */
+function receiptTotals(parcel: AdminShipment): { usable: number; damaged: number } {
+  let usable = 0;
+  let damaged = 0;
+  for (const line of parcel.returnReceiptLines ?? []) {
+    const condition = (line.condition ?? "").trim();
+    if (condition === "Damaged" || condition === "1") damaged += line.quantity;
+    else usable += line.quantity;
+  }
+  return { usable, damaged };
+}
+
+/** Short, human identity of another parcel of the same group (no raw GUID in operator copy). */
+function parcelShortId(parcel: AdminShipment | null | undefined, fallbackId: string): string {
+  const label = (parcel?.trackingReference ?? "").trim();
+  return label || fallbackId.slice(0, 8);
 }
 
 function remainingPacked(line: AdminOrderLine): number {
@@ -632,7 +658,7 @@ function GroupItems({
                         {`${quantityText(line.quantity)} عدد`}
                       </span>
                       <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600">
-                        {formatAdminStatus(line.operationalStatus ?? "NotApplicable")}
+                        {formatAdminShipmentStatus(line.operationalStatus ?? "NotApplicable")}
                       </span>
                     </li>
                   ))}
@@ -773,6 +799,16 @@ function GroupParcels({
     return memberShipments(seller, member.shippingGroupId).map((shipment) => ({ member, seller, shipment }));
   });
 
+  /**
+   * TB-261: a returned parcel's usable capacity can already be committed to ITS OWN resend parcel. Naming
+   * that existing parcel is the honest answer to «چرا ارسال مجدد نیست؟» — and it forbids a duplicate.
+   */
+  const resendByOriginalId = new Map<string, AdminShipment>();
+  for (const row of rows) {
+    const originalId = row.shipment.resendOfShipmentId;
+    if (originalId) resendByOriginalId.set(originalId, row.shipment);
+  }
+
   const standalone = rows.filter((row) => !isPackageLocked(row.shipment));
   const locked = rows.filter((row) => isPackageLocked(row.shipment));
   const lockedPackages = new Map<string, number>();
@@ -839,6 +875,9 @@ function GroupParcels({
             const retainedReview = onParcelException && !cancelled
               ? retainedReviewFor(row.seller, parcel, projectedCaps)
               : null;
+            // TB-261: the honest physical facts of THIS parcel's own receipt and ITS own resend.
+            const receipt = receiptTotals(parcel);
+            const resendChild = resendByOriginalId.get(parcel.shipmentId) ?? null;
             return (
               <li
                 key={parcel.shipmentId}
@@ -867,10 +906,12 @@ function GroupParcels({
                     className={
                       cancelled
                         ? "shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700"
-                        : "shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700"
+                        : isCarrierException(parcel.status)
+                          ? "shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900"
+                          : "shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700"
                     }
                   >
-                    {formatAdminStatus(parcel.status)}
+                    {formatAdminShipmentStatus(parcel.status)}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-gray-600">
@@ -1006,6 +1047,45 @@ function GroupParcels({
                     <span className="break-words text-[11px] text-amber-800">
                       پاسخ قطعی این درخواست ثبت نشده است؛ همان درخواست قبلی حفظ شده و فقط همان ارسال می‌شود.
                     </span>
+                  </div>
+                ) : null}
+                {isCarrierException(parcel.status) ? (
+                  <div
+                    className="mt-2 space-y-1 rounded-lg border border-amber-100 bg-amber-50/60 px-2.5 py-1.5 text-[11px] text-amber-900"
+                    data-testid={`admin-order-parcel-exception-${parcel.shipmentId}`}
+                  >
+                    {parcel.status === "Returned" ? (
+                      <>
+                        {receipt.damaged > 0 ? (
+                          <p data-testid={`admin-order-post-dispatch-damaged-${parcel.shipmentId}`}>
+                            {`${quantityText(receipt.damaged)} قلم آسیب‌دیده — نیازمند تعیین تکلیف`}
+                          </p>
+                        ) : null}
+                        {receipt.usable > 0 && !caps.canResend ? (
+                          <p data-testid={`admin-order-post-dispatch-capacity-consumed-${parcel.shipmentId}`}>
+                            {resendChild
+                              ? `ظرفیت سالم دریافتی این مرسوله در مرسولهٔ ارسال مجدد ${parcelShortId(resendChild, resendChild.shipmentId)} مصرف شده است.`
+                              : "ظرفیت سالم دریافتی این مرسوله در دسترس نیست؛ تا تعیین تکلیف، ارسال مجدد ممکن نیست."}
+                          </p>
+                        ) : null}
+                        {resendChild && !caps.canResend ? (
+                          <p className="flex flex-wrap items-center gap-1">
+                            <span>پیگیری ارسال مجدد:</span>
+                            <bdi dir="ltr" className="font-semibold">
+                              {parcelShortId(resendChild, resendChild.shipmentId)}
+                            </bdi>
+                            <span>{`· ${formatAdminShipmentStatus(resendChild.status)}`}</span>
+                          </p>
+                        ) : null}
+                        {receipt.usable === 0 && receipt.damaged === 0 && !resendChild ? (
+                          <p>رسید فیزیکی این مرسوله بدون مقدار سالم یا آسیب‌دیده ثبت شده است.</p>
+                        ) : null}
+                      </>
+                    ) : parcel.status === "NonDelivered" ? (
+                      <p>عدم تحویل ثبت شده است؛ مرحلهٔ بعد شروع برگشت به مبدأ است.</p>
+                    ) : (
+                      <p>مرسوله در مسیر برگشت به مبدأ است؛ تأیید دریافت فیزیکی مرحلهٔ بعدی است.</p>
+                    )}
                   </div>
                 ) : null}
                 {parcel.nonDeliveredAt || parcel.returnedAt || parcel.resendOfShipmentId ? (

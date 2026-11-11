@@ -2558,3 +2558,161 @@ test("TB-259 static: only the packing choices the server projected are offered f
   // The card itself stays display-only: the choice lives in the reviewed dialog.
   assert.equal((outsideDialogs(both).match(/type="radio"/g) ?? []).length, 0);
 });
+
+/**
+ * TB-261 — the user's screenshot, exactly as the server reports it: the ONLY parcel of `sh1` came back at
+ * origin and its receipt is 1 «آسیب‌دیده», so `resendableQuantity` is genuinely 0 and «ارسال مجدد» must NOT
+ * appear. The defect was never the refusal - it was the silence: a stale «در مسیر تحویل» label and no reason.
+ */
+test("TB-261 static: a damaged origin receipt localizes the carrier return and states why resend is absent", () => {
+  const detail = withExceptionParcel(
+    baseDetail(),
+    {
+      status: "Returned",
+      nonDeliveryReason: "refused",
+      nonDeliveredAt: "2026-11-11T10:48:04Z",
+      returnStartedAt: "2026-11-11T10:48:15Z",
+      returnedAt: "2026-11-11T10:48:33Z",
+      returnReceiptLines: [{ orderLineId: "ol1", quantity: 2, condition: "Damaged" }],
+    },
+    { returnedUsableQuantity: 0, resendableQuantity: 0, deliveredQuantity: 0 },
+  );
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: () => NO_CAPS,
+    }),
+  );
+
+  // The carrier exception is named in operator Persian, never as a raw enum and never as customer «مرجوعی».
+  assert.match(html, /دریافت‌شده در مبدأ/);
+  assert.ok(!html.includes(">Returned<"), "a raw carrier enum must never reach the operator");
+  assert.ok(!html.includes("مرجوعی"), "a carrier return is not the customer RMA vocabulary");
+  // The honest reason is non-empty: the damaged units are an explicit unresolved requirement (TB-262).
+  assert.ok(html.includes("admin-order-post-dispatch-damaged-sh1"));
+  assert.match(html, /آسیب‌دیده — نیازمند تعیین تکلیف/);
+  // Damaged goods fund nothing: no resend control is offered and no raw reason is invented.
+  assert.ok(!html.includes("admin-order-post-dispatch-resend-sh1"));
+  // The unrelated sibling parcel of the same seller keeps ITS OWN state.
+  const sibling = html.slice(html.indexOf("admin-order-operational-parcel-sh2"));
+  assert.match(sibling, /ارسال‌شده به حامل/);
+  assert.doesNotMatch(sibling, /دریافت‌شده در مبدأ/);
+});
+
+/** A returned parcel whose usable capacity was already spent on ITS OWN resend parcel. */
+function withResendChild(detail: AdminOrderDetail, child: Partial<AdminShipment> = {}): AdminOrderDetail {
+  return {
+    ...detail,
+    sellerOrders: detail.sellerOrders.map((seller, idx) =>
+      idx !== 0
+        ? seller
+        : {
+            ...seller,
+            shipments: [
+              ...(seller.shipments ?? []),
+              {
+                shipmentId: "sh1-resend",
+                status: "Created",
+                carrierDisplayName: "پست",
+                shippingGroupId: "g1",
+                shippingMethodCode: "post",
+                shippingMethodLabel: "پیشتاز",
+                itemCount: 2,
+                lines: [{ orderLineId: "ol1", quantity: 2 }],
+                trackingReference: null,
+                activePackageNumber: null,
+                packageLockedReasonFa: null,
+                resendOfShipmentId: "sh1",
+                ...child,
+              },
+            ],
+          },
+    ),
+  };
+}
+
+test("TB-261 static: consumed usable capacity names the existing resend parcel instead of a dead end", () => {
+  const detail = withResendChild(
+    withExceptionParcel(
+      baseDetail(),
+      {
+        status: "Returned",
+        returnedAt: "2026-11-09T10:00:00Z",
+        returnReceiptLines: [{ orderLineId: "ol1", quantity: 2, condition: "Usable" }],
+      },
+      { returnedUsableQuantity: 2, resendableQuantity: 0, deliveredQuantity: 0 },
+    ),
+    { trackingReference: "TRK-RESEND-1" },
+  );
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: () => NO_CAPS,
+    }),
+  );
+
+  // Capacity is spent, so no second resend may be offered for the same source…
+  assert.ok(!html.includes("admin-order-post-dispatch-resend-sh1"));
+  // …and the operator is told exactly where it went, with the child's own truthful state.
+  assert.ok(html.includes("admin-order-post-dispatch-capacity-consumed-sh1"));
+  assert.match(html, /مصرف شده است/);
+  assert.match(html, /TRK-RESEND-1/);
+  assert.match(html, /پیگیری ارسال مجدد/);
+  assert.ok(!html.includes("آسیب‌دیده — نیازمند تعیین تکلیف"), "a healthy receipt must not invent damage");
+});
+
+test("TB-261 static: positive own usable capacity offers exactly one deliberate resend", () => {
+  const detail = withExceptionParcel(
+    baseDetail(),
+    {
+      status: "Returned",
+      returnedAt: "2026-11-09T10:00:00Z",
+      returnReceiptLines: [{ orderLineId: "ol1", quantity: 2, condition: "Usable" }],
+    },
+    { returnedUsableQuantity: 2, resendableQuantity: 2, deliveredQuantity: 0 },
+  );
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: (_seller, shipment) =>
+        shipment.shipmentId === "sh1" ? { ...NO_CAPS, canResend: true } : NO_CAPS,
+    }),
+  );
+
+  assert.ok(html.includes("admin-order-post-dispatch-resend-sh1"));
+  assert.match(html, /ارسال مجدد/);
+  // Only the server-projected parcel gets the control; the sibling is untouched.
+  assert.ok(!html.includes("admin-order-post-dispatch-resend-sh2"));
+  assert.ok(!html.includes("admin-order-post-dispatch-capacity-consumed-sh1"));
+});
+
+test("TB-261 static: a mixed line reports its own parcels, never one parcel's stale state", () => {
+  const detail = withExceptionParcel(baseDetail());
+  const withLineStates: AdminOrderDetail = {
+    ...detail,
+    sellerOrders: detail.sellerOrders.map((seller) => ({
+      ...seller,
+      lines: seller.lines.map((line) => ({
+        ...line,
+        operationalStatus: line.orderLineId === "ol1" ? "Returned" : "InTransit",
+      })),
+    })),
+  };
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderItemsShippingPanel, { detail: withLineStates, checkoutId: CHECKOUT }),
+  );
+  const returnedLine = html.slice(html.indexOf("admin-order-line-status-ol1"));
+  const movingLine = html.slice(html.indexOf("admin-order-line-status-ol2"));
+  assert.match(returnedLine, /دریافت‌شده در مبدأ/);
+  assert.doesNotMatch(returnedLine.slice(0, 200), /در مسیر تحویل/);
+  assert.match(movingLine, /در مسیر تحویل/);
+});

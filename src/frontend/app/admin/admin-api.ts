@@ -604,6 +604,30 @@ export function formatAdminStatus(status: string): string {
   return labels[status] ?? (status || "نامشخص");
 }
 
+/**
+ * TB-261 — Persian label of a PHYSICAL shipment/parcel state.
+ *
+ * A parcel received back at origin is not a customer return: «مرجوعی» stays the vocabulary of the
+ * delivered-customer RMA domain inside {@link formatAdminStatus}. A carrier exception inside the shipping
+ * lifecycle has its own meaning, and an operator must never be shown a raw English enum instead.
+ */
+export function formatAdminShipmentStatus(status: string | null | undefined): string {
+  const labels: Record<string, string> = {
+    Created: "ایجادشده",
+    Dispatched: "ارسال‌شده به حامل",
+    InTransit: "در مسیر تحویل",
+    PartialDispatched: "ارسال جزئی",
+    Delivered: "تحویل‌شده",
+    Failed: "ناموفق",
+    Cancelled: "لغو شده",
+    NonDelivered: "تحویل ناموفق",
+    Returning: "در حال برگشت به مبدأ",
+    Returned: "دریافت‌شده در مبدأ",
+  };
+  const key = (status ?? "").trim();
+  return labels[key] ?? formatAdminStatus(key);
+}
+
 /** تاریخ Host را بدون نمایش شناسهٔ فنی به قالب فارسی تبدیل می‌کند. */
 export function formatAdminDate(value: string | null | undefined): string {
   if (!value) return "—";

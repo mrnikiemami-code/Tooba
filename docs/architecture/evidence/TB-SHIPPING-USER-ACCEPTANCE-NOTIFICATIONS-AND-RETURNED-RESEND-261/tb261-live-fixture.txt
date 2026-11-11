@@ -1,0 +1,57 @@
+TB-261 read-only root-cause evidence — the user's screenshot fixture
+===================================================================
+Channel: tooba-main. ONE database `tooba_alpha` @127.0.0.1:5432 (SingleStore / store-alpha).
+Read-only: GET only, through the Development admin seam (`X-Tooba-Dev-Actor-User-Id` from GET
+/v1/admin/dev-context). NO write, NO mutation of this fixture or of any user row.
+
+Fixture
+-------
+checkout        13feece0-4890-4e45-b92f-4d4b1a5e0c97
+fulfillment     3ce14fb8-6453-44c0-b364-0f919c8bf2e0
+shippingGroup   2c550347-8c06-4a2b-b4f6-c7c77ab6e058 (sibling line still travelling)
+shippingGroup   9fc0c94d-d0f8-4b9b-a24c-9f41fadc1ba4 (the parcel that came back)
+
+Parcels as returned by GET /v1/admin/orders/{checkoutId}
+--------------------------------------------------------
+a44aa20e-ecf3-4964-b828-bf1fc4a72eac  group=9fc0c94d-…  status=Returned   resendOf=(none)
+    returnReceiptLines = [ { orderLineId: 8e0a897b-07a7-45c7-a34b-1ec0fb9ae7c5,
+                             quantity: 1.000000, condition: Damaged } ]
+01a1ca38-80a6-7000-9d20-36644851fae7  group=2c550347-…  status=Dispatched resendOf=(none)
+    returnReceiptLines = []
+
+Line facts (the SAME payload the operator screen reads)
+-------------------------------------------------------
+line 8e0a897b-07a7-45c7-a34b-1ec0fb9ae7c5 packed=1 shipped=1 returnedUsable=0 resendable=0
+line e4f00cd4-3fdd-45a5-ba8a-c69ccd840fed packed=1 shipped=1 returnedUsable=0 resendable=0
+
+ROOT CAUSE (measured, not guessed)
+----------------------------------
+1. The origin receipt of the returned parcel is 1 unit in condition `Damaged`.
+   `ReturnedUsableQuantity` counts `Usable` only and `ResendableQuantity = usable − committed`,
+   therefore the parcel legitimately owns ZERO resendable capacity. «ارسال مجدد» is correctly NOT
+   offered — the absence of the button was NOT the bug.
+2. The real defects the user saw were presentational and derived:
+   - the parcel/line badge said «مرجوعی» (generic admin `formatAdminStatus`) and, on the line, the
+     stale travelling state «در مسیر تحویل», because `LineOperationalStatus` ignored the physical
+     parcels that carry the line;
+   - nothing explained WHY there is no resend action, so the operator hit a dead end.
+
+BEFORE this task (host build in service at the time of the report)
+-----------------------------------------------------------------
+line 8e0a897b-… op=InTransit    <-- WRONG: its only parcel is Returned
+line e4f00cd4-… op=InTransit    <-- correct, its parcel is Dispatched
+
+AFTER this task (republished host, identical read-only GET, zero writes)
+-----------------------------------------------------------------------
+line 8e0a897b-… usable=0 resendable=0 op=Returned  <-- follows its physical parcel
+line e4f00cd4-… usable=0 resendable=0 op=InTransit <-- unrelated sibling preserved
+a44aa20e-… status=Returned receipts=[8e0a897b-…/q1.000000/Damaged]
+01a1ca38-… status=Dispatched receipts=[]
+
+So with the fix the same fixture reads: the returned parcel is «دریافت‌شده در مبدأ», its line is
+`Returned`, the sibling travelling line is untouched, and the target/parcel readiness states
+«دریافت‌شده در مبدأ — اقلام آسیب‌دیده نیازمند تعیین تکلیف» instead of inventing a resend or claiming
+«کار فیزیکی باقی نمانده».
+
+No `ReturnReceiptLine` was created, changed or deleted by this task. The damaged unit remains exactly
+the unresolved requirement handed to TB-262 (see damage-resolution-262-handoff.md).

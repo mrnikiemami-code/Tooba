@@ -10,6 +10,10 @@ using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Order.Domain;
 using Xunit;
 
+using ContractShipmentOperationStatus = Tooba.Fulfillment.Contracts.Operations.ShipmentOperationStatus;
+using ContractShipmentSnapshot = Tooba.Fulfillment.Contracts.Operations.ShipmentSnapshot;
+using ContractShipmentLineSnapshot = Tooba.Fulfillment.Contracts.Operations.ShipmentLineSnapshot;
+
 namespace Tooba.Host.Tests;
 
 /// <summary>TB-P09-T010: lifecycle sequence, exact selection, bulk homogeneity.</summary>
@@ -191,6 +195,113 @@ public sealed class AdminFulfillmentScopeSequenceTests
     }
 
     [Fact]
+    public void Line_status_follows_the_parcels_that_actually_carry_it()
+    {
+        // TB-261: the screenshot defect — a fully shipped line whose only parcel came back at origin kept a
+        // stale «in transit» state, so the operator saw a carrier return labelled as a customer return.
+        var lineId = Guid.NewGuid();
+        var fulfillment = Snapshot(
+            FulfillmentStatus.InTransit,
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 1, 0, null, 1, 1)])
+            .ToContracts() with
+        {
+            Shipments = [Shipment(ContractShipmentOperationStatus.Returned, lineId, 1)],
+        };
+        var parcels = AdminOrderDetailFulfillmentStatus.ParcelsOfLine(fulfillment, lineId);
+        Assert.Single(parcels);
+        Assert.Equal(
+            "Returned",
+            AdminOrderDetailFulfillmentStatus.LineOperationalStatus(SellerOrderStatus.Paid, fulfillment, 1, 1, 1, 1, parcels));
+
+        // A sibling parcel still moving must not be overwritten by the returned one.
+        var mixed = fulfillment with
+        {
+            Shipments =
+            [
+                Shipment(ContractShipmentOperationStatus.Returned, lineId, 1),
+                Shipment(ContractShipmentOperationStatus.InTransit, lineId, 1),
+            ],
+        };
+        Assert.Equal(
+            "Mixed",
+            AdminOrderDetailFulfillmentStatus.LineOperationalStatus(
+                SellerOrderStatus.Paid,
+                mixed,
+                2,
+                2,
+                2,
+                2,
+                AdminOrderDetailFulfillmentStatus.ParcelsOfLine(mixed, lineId)));
+
+        // Only a replacement being prepared is open, so that is the honest state of the line.
+        var resending = fulfillment with
+        {
+            Shipments =
+            [
+                Shipment(ContractShipmentOperationStatus.Returned, lineId, 1),
+                Shipment(ContractShipmentOperationStatus.Created, lineId, 1, resendOf: Guid.NewGuid()),
+            ],
+        };
+        Assert.Equal(
+            "Created",
+            AdminOrderDetailFulfillmentStatus.LineOperationalStatus(
+                SellerOrderStatus.Paid,
+                resending,
+                1,
+                1,
+                1,
+                1,
+                AdminOrderDetailFulfillmentStatus.ParcelsOfLine(resending, lineId)));
+
+        // Not fully shipped: the exception never hides the quantity that still awaits dispatch.
+        var partial = Snapshot(
+            FulfillmentStatus.Dispatched,
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 2, 0, null, 1, 1)])
+            .ToContracts() with
+        {
+            Shipments = [Shipment(ContractShipmentOperationStatus.Returned, lineId, 1)],
+        };
+        Assert.Equal(
+            "PartialDispatched",
+            AdminOrderDetailFulfillmentStatus.LineOperationalStatus(
+                SellerOrderStatus.Paid,
+                partial,
+                0,
+                2,
+                1,
+                1,
+                AdminOrderDetailFulfillmentStatus.ParcelsOfLine(partial, lineId)));
+
+        // Delivered plus returned is a genuinely mixed line, never one parcel's state.
+        var deliveredAndReturned = fulfillment with
+        {
+            Shipments =
+            [
+                Shipment(ContractShipmentOperationStatus.Delivered, lineId, 1),
+                Shipment(ContractShipmentOperationStatus.Returned, lineId, 1),
+            ],
+        };
+        Assert.Equal(
+            "Mixed",
+            AdminOrderDetailFulfillmentStatus.LineOperationalStatus(
+                SellerOrderStatus.Paid,
+                deliveredAndReturned,
+                2,
+                2,
+                2,
+                2,
+                AdminOrderDetailFulfillmentStatus.ParcelsOfLine(deliveredAndReturned, lineId)));
+
+        // A cancelled parcel carries no goods, so it can never describe the line.
+        var cancelledOnly = Guid.NewGuid();
+        var cancelled = fulfillment with
+        {
+            Shipments = [Shipment(ContractShipmentOperationStatus.Cancelled, cancelledOnly, 1)],
+        };
+        Assert.Empty(AdminOrderDetailFulfillmentStatus.ParcelsOfLine(cancelled, cancelledOnly));
+    }
+
+    [Fact]
     public void Composer_source_keeps_pack_behind_processing()
     {
         var root = FindRepoRoot();
@@ -239,6 +350,21 @@ public sealed class AdminFulfillmentScopeSequenceTests
             "پست",
             items,
             []);
+
+    private static ContractShipmentSnapshot Shipment(
+        ContractShipmentOperationStatus status,
+        Guid lineId,
+        decimal quantity,
+        Guid? resendOf = null) =>
+        new(
+            ShipmentId: Guid.NewGuid(),
+            Status: status,
+            CarrierDisplayName: "پست",
+            TrackingReference: null,
+            DispatchedAt: null,
+            DeliveredAt: null,
+            Items: [new ContractShipmentLineSnapshot(lineId, quantity)],
+            ResendOfShipmentId: resendOf);
 
     private static string FindRepoRoot()
     {

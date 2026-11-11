@@ -12,6 +12,7 @@
  * publication paragraphs; publish/withdraw controls appear only in view mode.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import { Dialog } from "../../../design-system";
 import {
   loadAuthoringPublication,
@@ -60,7 +61,6 @@ export function AuthoringPublicationPanel({
   mode,
   busy,
   messages,
-  onPublished,
   onBadgeChange,
 }: {
   draftId: string;
@@ -68,8 +68,6 @@ export function AuthoringPublicationPanel({
   mode: "view" | "edit";
   busy: boolean;
   messages: AuthoringMessages;
-  /** Reported after a confirmed write so the screen can show its own notice; nothing is reloaded here. */
-  onPublished: (text: string) => void;
   /** Feeds the page-header status badge; never rendered as technical paragraphs here. */
   onBadgeChange?: (kind: PublicationBadgeKind) => void;
 }) {
@@ -133,7 +131,9 @@ export function AuthoringPublicationPanel({
         if (mine !== epoch.current) return;
         setState((current) => resolveWrite(current, outcome));
         if (outcome.kind === "ok") {
-          onPublished(
+          // TB-261: ONE transient confirmation, shown once. It is not part of any persisted state, so a
+          // reload or a re-render can never replay it.
+          toast.success(
             action === "publish"
               ? authoringFormat(messages.publicationPublished, { revision: String(outcome.view.currentDraftRevision) })
               : messages.publicationDidWithdraw,
@@ -150,7 +150,6 @@ export function AuthoringPublicationPanel({
       messages.publicationDidWithdraw,
       messages.publicationPublished,
       mode,
-      onPublished,
     ],
   );
 

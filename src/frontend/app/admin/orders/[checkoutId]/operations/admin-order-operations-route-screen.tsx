@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -37,6 +37,30 @@ function parcelsOfGroup(group: AdminOperationalDeliveryGroup, detail: AdminOrder
   );
 }
 
+/** TB-261: the server-owned returned capacity/damage facts of ONE parcel, read from the owning detail. */
+function parcelReturnFacts(
+  parcel: AdminShipment,
+  detail: AdminOrderDetail,
+): { resendable: number; damaged: number; linkedResend: AdminShipment | null } {
+  const lines = new Map<string, { resendableQuantity?: number | null }>();
+  for (const seller of detail.sellerOrders) {
+    for (const line of seller.lines ?? []) lines.set(line.orderLineId ?? "", line);
+  }
+  const resendable = (parcel.lines ?? []).reduce((sum, line) => {
+    const source = lines.get(line.orderLineId);
+    return sum + Math.max(0, source?.resendableQuantity ?? 0);
+  }, 0);
+  const damaged = (parcel.returnReceiptLines ?? [])
+    .filter((receipt) => {
+      const condition = (receipt.condition ?? "").trim();
+      return condition === "Damaged" || condition === "1";
+    })
+    .reduce((sum, receipt) => sum + receipt.quantity, 0);
+  const linkedResend =
+    shipmentsOf(detail).find((candidate) => candidate.resendOfShipmentId === parcel.shipmentId) ?? null;
+  return { resendable, damaged, linkedResend };
+}
+
 function parcelSummary(
   groups: AdminOperationalDeliveryGroup[],
   detail: AdminOrderDetail,
@@ -45,13 +69,17 @@ function parcelSummary(
   const parcels = groups.flatMap((group) => parcelsOfGroup(group, detail));
   const unique = Array.from(new Map(parcels.map((parcel) => [parcel.shipmentId, parcel])).values());
   if (unique.length === 0) return "بدون مرسوله";
-  const inTransit = unique.filter((parcel) =>
-    ["Dispatched", "InTransit", "NonDelivered", "Returning", "Returned"].includes(parcel.status)).length;
+  // TB-261: a carrier return is NOT «در مسیر». Each physical group is counted in its own words so the
+  // summary can never claim a parcel is still travelling after it came back to origin.
+  const moving = unique.filter((parcel) => ["Dispatched", "InTransit"].includes(parcel.status)).length;
+  const exceptions = unique.filter((parcel) =>
+    ["NonDelivered", "Returning", "Returned"].includes(parcel.status)).length;
   const delivered = unique.filter((parcel) => parcel.status === "Delivered").length;
-  const created = unique.length - inTransit - delivered;
+  const created = unique.length - moving - exceptions - delivered;
   const parts = [`${unique.length.toLocaleString("fa-IR")} مرسوله`];
   if (created > 0) parts.push(`${created.toLocaleString("fa-IR")} در انتظار ارسال`);
-  if (inTransit > 0) parts.push(`${inTransit.toLocaleString("fa-IR")} در مسیر`);
+  if (moving > 0) parts.push(`${moving.toLocaleString("fa-IR")} در مسیر`);
+  if (exceptions > 0) parts.push(`${exceptions.toLocaleString("fa-IR")} بازگشتی/در مبدأ`);
   if (delivered > 0) parts.push(`${delivered.toLocaleString("fa-IR")} تحویل‌شده`);
   return focusedPackageNumber ? `بستهٔ تجمیعی ${focusedPackageNumber} · ${parts.join(" · ")}` : parts.join(" · ");
 }
@@ -59,7 +87,7 @@ function parcelSummary(
 type Readiness = Pick<OrderOperationsTargetFact, "readinessLabel" | "readinessTone">;
 
 /** Truthful state of ONE physical parcel — a Created/tracked parcel is real work, not "nothing left". */
-function parcelReadiness(parcel: AdminShipment): Readiness {
+function parcelReadiness(parcel: AdminShipment, detail: AdminOrderDetail): Readiness {
   switch (parcel.status) {
     case "Created":
       return parcel.trackingReference
@@ -69,11 +97,19 @@ function parcelReadiness(parcel: AdminShipment): Readiness {
     case "InTransit":
       return { readinessLabel: "در مسیر تحویل — در انتظار ثبت تحویل", readinessTone: "ready" };
     case "NonDelivered":
-      return { readinessLabel: "عدم تحویل ثبت شده — برگشت به مبدأ", readinessTone: "blocked" };
+      return { readinessLabel: "تحویل ناموفق — در انتظار بازگشت به مبدأ", readinessTone: "blocked" };
     case "Returning":
-      return { readinessLabel: "در حال برگشت — در انتظار تأیید دریافت در مبدأ", readinessTone: "ready" };
-    case "Returned":
-      return { readinessLabel: "در مبدأ دریافت شد", readinessTone: "done" };
+      return { readinessLabel: "در حال برگشت به مبدأ — در انتظار تأیید دریافت", readinessTone: "ready" };
+    case "Returned": {
+      // TB-261: a parcel physically back at origin still owns real work. Whether that is a resend or a
+      // damaged-goods determination is an owning fact of ITS OWN receipt, never "no physical work left".
+      const { resendable, damaged, linkedResend } = parcelReturnFacts(parcel, detail);
+      if (resendable > 0) return { readinessLabel: "آمادهٔ ارسال مجدد", readinessTone: "ready" };
+      if (linkedResend) return { readinessLabel: "ارسال مجدد ثبت شده — پیگیری مرسولهٔ جدید", readinessTone: "ready" };
+      return damaged > 0
+        ? { readinessLabel: "دریافت‌شده در مبدأ — اقلام آسیب‌دیده نیازمند تعیین تکلیف", readinessTone: "blocked" }
+        : { readinessLabel: "دریافت‌شده در مبدأ — ظرفیت سالمی برای ارسال مجدد نمانده", readinessTone: "blocked" };
+    }
     case "Delivered":
       return { readinessLabel: "تحویل شد", readinessTone: "done" };
     case "Cancelled":
@@ -117,7 +153,7 @@ function readinessOf(
   focus: { shipment: AdminShipment | null; packageId: string | null },
 ): Readiness {
   if (focus.shipment) {
-    return parcelReadiness(focus.shipment);
+    return parcelReadiness(focus.shipment, detail);
   }
   if (focus.packageId) {
     const fromPackage = packageReadiness(focus.packageId, detail);
@@ -128,8 +164,8 @@ function readinessOf(
   if (parcels.some((parcel) => ["NonDelivered", "Returning"].includes(parcel.status))) {
     const returning = parcels.find((parcel) => parcel.status === "Returning");
     return returning
-      ? parcelReadiness(returning)
-      : { readinessLabel: "عدم تحویل ثبت شده — برگشت به مبدأ", readinessTone: "blocked" };
+      ? parcelReadiness(returning, detail)
+      : { readinessLabel: "تحویل ناموفق — در انتظار بازگشت به مبدأ", readinessTone: "blocked" };
   }
 
   const remaining = group.members.reduce(
@@ -147,13 +183,23 @@ function readinessOf(
   }
 
   const created = parcels.find((parcel) => parcel.status === "Created");
-  if (created) return parcelReadiness(created);
+  if (created) return parcelReadiness(created, detail);
 
   const moving = parcels.find((parcel) => ["Dispatched", "InTransit"].includes(parcel.status));
-  if (moving) return parcelReadiness(moving);
+  if (moving) return parcelReadiness(moving, detail);
 
   if (parcels.length > 0 && parcels.every((parcel) => parcel.status === "Delivered")) {
     return { readinessLabel: "تحویل شد", readinessTone: "done" };
+  }
+
+  /**
+   * TB-261: goods physically received back at origin are real remaining work — a resend when own usable
+   * capacity survives, otherwise an explicit damaged-goods determination. Zero fresh-creation remainder
+   * must never be reported as «کار فیزیکی باقی نمانده».
+   */
+  const returned = parcels.filter((parcel) => parcel.status === "Returned");
+  if (returned.length > 0 && returned.length === parcels.length) {
+    return parcelReadiness(returned[0]!, detail);
   }
 
   return { readinessLabel: "کار فیزیکی باقی نمانده", readinessTone: "done" };

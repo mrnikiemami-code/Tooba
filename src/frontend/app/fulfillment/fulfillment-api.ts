@@ -481,6 +481,10 @@ export function formatShipmentStatus(status: string): string {
     Delivered: "تحویل شده",
     Failed: "ناموفق",
     Cancelled: "لغو شده",
+    // TB-261: the carrier exception lifecycle has its own operator words; «مرجوعی» stays the customer RMA.
+    NonDelivered: "تحویل ناموفق",
+    Returning: "در حال برگشت به مبدأ",
+    Returned: "دریافت‌شده در مبدأ",
   };
   return labels[status] ?? (status || "نامشخص");
 }

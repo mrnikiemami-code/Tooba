@@ -1,0 +1,1 @@
+H cancel fulfillment=7ca99a04-af8e-4c8e-a6bf-2368025f4515 checkout=ce4430ea-477f-489a-9f20-9822cf1082f1 source=6171ffee-d084-4c6e-b649-373579485461 cancelledResend=4a55ffda-f7e8-4daa-8cfc-a1a8dcff2160 key=tb258r3-cancelled-6171ffeed0844c6eb649373579485461 exact=resolvedCancelled changedSource=conflict changedQuantity=conflict rows=shipments2/receipts1/resends1

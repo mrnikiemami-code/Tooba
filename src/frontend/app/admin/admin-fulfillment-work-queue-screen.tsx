@@ -97,9 +97,9 @@ const WORK_UNIT_STATE_LABELS: Record<string, string> = {
   Delivered: "تحویل‌شده",
   Failed: "ناموفق",
   Cancelled: "لغو‌شده",
-  NonDelivered: "عدم تحویل",
+  NonDelivered: "تحویل ناموفق",
   Returning: "در حال برگشت به مبدأ",
-  Returned: "برگشت به مبدأ",
+  Returned: "دریافت‌شده در مبدأ",
 };
 
 /** The physical state of THIS work unit (never the whole seller order's aggregate status). */

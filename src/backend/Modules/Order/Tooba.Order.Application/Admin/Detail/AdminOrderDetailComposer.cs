@@ -160,7 +160,15 @@ public sealed class AdminOrderDetailComposer
                     fulfillment is null ? null : shipped,
                     null,
                     AdminOrderDetailFulfillmentStatus.LineOperationalStatus(
-                        order.Status, fulfillment, packed, line.Quantity, processing, shipped),
+                        order.Status,
+                        fulfillment,
+                        packed,
+                        line.Quantity,
+                        processing,
+                        shipped,
+                        fulfillment is null
+                            ? null
+                            : AdminOrderDetailFulfillmentStatus.ParcelsOfLine(fulfillment, line.LineId)),
                     fulfillment is null ? null : packed,
                     fulfillment is null ? null : openAllocated + shipped,
                     line.IsReturnableSnapshot,

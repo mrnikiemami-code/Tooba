@@ -252,3 +252,114 @@ test("mounted: a stale parcel/package locator is reported instead of showing ano
     await packaged.unmount();
   });
 });
+
+/** TB-261: the user's real shape — one parcel came back damaged while its sibling is still travelling. */
+function returnedPayload(): Record<string, unknown> {
+  const payload = detailPayload() as Record<string, unknown>;
+  const seller = (payload.sellerOrders as Array<Record<string, unknown>>)[0]!;
+  seller.lines = [
+    {
+      orderLineId: "ol1",
+      offerId: "o1",
+      productTitle: "شال آرمان",
+      quantity: 2,
+      quantityPacked: 2,
+      quantityAllocated: 2,
+      quantityShipped: 2,
+      // The server composes the line from the parcels that actually carry it: one returned, one moving.
+      operationalStatus: "Mixed",
+      unitAmount: 1000,
+      linePayable: 2000,
+      currency: "IRR",
+      returnedUsableQuantity: 0,
+      resendableQuantity: 0,
+      deliveredQuantity: 0,
+    },
+  ];
+  seller.shipments = [
+    {
+      shipmentId: PARCEL_ONE,
+      status: "Returned",
+      carrierDisplayName: "پست",
+      trackingReference: "TRK-260R1-1",
+      shippingGroupId: GROUP_ONE_ID,
+      shippingMethodCode: "post",
+      itemCount: 1,
+      lines: [{ orderLineId: "ol1", quantity: 1, resendableQuantity: 0 }],
+      nonDeliveryReason: "other",
+      nonDeliveredAt: "2026-11-11T10:48:04Z",
+      returnStartedAt: "2026-11-11T10:48:15Z",
+      returnedAt: "2026-11-11T10:48:33Z",
+      returnReceiptLines: [{ orderLineId: "ol1", quantity: 1, condition: "Damaged" }],
+    },
+    {
+      shipmentId: PARCEL_TWO,
+      status: "Dispatched",
+      carrierDisplayName: "پست",
+      trackingReference: "TRK-260R1-2",
+      shippingGroupId: GROUP_TWO_ID,
+      shippingMethodCode: "post",
+      itemCount: 1,
+      lines: [{ orderLineId: "ol1", quantity: 1, resendableQuantity: 0 }],
+    },
+  ];
+  return payload;
+}
+
+async function withReturnedDetail<T>(run: () => Promise<T>): Promise<T> {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes(`/v1/admin/orders/${CHECKOUT}`)) {
+      return new Response(JSON.stringify(returnedPayload()), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ actions: [], lineCapabilities: [], sellerCapabilities: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+  try {
+    return await run();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+test("TB-261 mounted: a returned parcel refreshes the target, the parcel and the line without touching its sibling", async () => {
+  await withReturnedDetail(async () => {
+    const mounted = await mount(route({ shipmentId: PARCEL_ONE }));
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-operations-target-${GROUP_ONE}']`).length === 1);
+    await flush();
+    const html = mounted.container.innerHTML;
+
+    // The focused target names the physical truth and never claims there is no work left.
+    assert.ok(html.includes("دریافت‌شده در مبدأ — اقلام آسیب‌دیده نیازمند تعیین تکلیف"));
+    assert.ok(!html.includes("کار فیزیکی باقی نمانده"));
+    // The parcel card is localized, and the carrier exception is not the customer RMA word.
+    assert.match(html, /دریافت‌شده در مبدأ/);
+    const parcelOneCard = html.slice(
+      html.indexOf(`admin-order-operational-parcel-${PARCEL_ONE}`),
+      html.indexOf(`admin-order-operational-parcel-${PARCEL_TWO}`),
+    );
+    assert.ok(parcelOneCard.length > 0, "the focused parcel card must be rendered");
+    assert.ok(!parcelOneCard.includes("مرجوعی"), "a carrier return is not the customer RMA vocabulary");
+    assert.ok(!parcelOneCard.includes(">Returned<"), "a raw carrier enum must never reach the operator");
+    // The damaged unit is an explicit unresolved requirement, and no resend is fabricated.
+    assert.ok(html.includes(`admin-order-post-dispatch-damaged-${PARCEL_ONE}`));
+    assert.ok(!html.includes(`admin-order-post-dispatch-resend-${PARCEL_ONE}`));
+    // The line that BOTH parcels carry reports the mixed physical outcome instead of one parcel's state.
+    const lineCell = mounted.container.innerHTML.slice(
+      mounted.container.innerHTML.indexOf("admin-order-line-status-ol1"),
+    );
+    assert.match(lineCell.slice(0, 120), /ترکیبی/);
+    // The unrelated sibling parcel kept its own truthful state and its own tracking code.
+    const sibling = html.slice(html.indexOf(`admin-order-operational-parcel-${PARCEL_TWO}`));
+    assert.match(sibling, /ارسال‌شده به حامل/);
+    assert.match(sibling, /TRK-260R1-2/);
+    assert.doesNotMatch(sibling, /دریافت‌شده در مبدأ/);
+    await mounted.unmount();
+  });
+});
