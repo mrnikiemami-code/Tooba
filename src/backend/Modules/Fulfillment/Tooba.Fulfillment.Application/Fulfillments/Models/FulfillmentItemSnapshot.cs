@@ -22,4 +22,8 @@ public sealed record FulfillmentItemSnapshot(
     /// <summary>TB-258: returned capacity still available for a new resend parcel.</summary>
     decimal ResendableQuantity = 0,
     /// <summary>TB-258: quantity actually delivered to the customer (derived from delivered parcels).</summary>
-    decimal DeliveredQuantity = 0);
+    decimal DeliveredQuantity = 0,
+    /// <summary>TB-262: damaged quantity physically received back on this line across its source parcels.</summary>
+    decimal DamagedQuantity = 0,
+    /// <summary>TB-262: damaged quantity of this line that still awaits a durable resolution decision.</summary>
+    decimal OutstandingDamagedQuantity = 0);

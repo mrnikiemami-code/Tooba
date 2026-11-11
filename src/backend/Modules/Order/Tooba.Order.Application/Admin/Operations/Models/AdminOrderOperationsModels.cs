@@ -109,7 +109,16 @@ public sealed record AdminOrderOperationRequest(
     /// «common» (one common package) or «separate» (independent member parcels). A changed choice under
     /// the same occurrence is a typed intent conflict; an absent value means the legacy common package.
     /// </summary>
-    string? OperationalGroupPackingMode = null);
+    string? OperationalGroupPackingMode = null,
+    /// <summary>TB-262: the returned parcel line whose damaged quantity is being resolved.</summary>
+    Guid? OrderLineId = null,
+    /// <summary>TB-262: the damaged quantity this decision covers (bounded by the source parcel's own remainder).</summary>
+    decimal? Quantity = null,
+    /// <summary>
+    /// TB-262: the reviewed damaged-goods outcome — <c>replacement</c> (new healthy-stock reservation and a linked
+    /// replacement parcel) or <c>referral</c> (left for customer service / existing financial handling).
+    /// </summary>
+    string? DamagedOutcome = null);
 
 /// <summary>TB-258: one physically received line submitted with an origin receipt.</summary>
 public sealed record AdminReturnReceiptLineSelection(

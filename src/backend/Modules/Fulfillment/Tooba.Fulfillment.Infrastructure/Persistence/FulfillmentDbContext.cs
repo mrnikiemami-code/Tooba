@@ -50,6 +50,9 @@ public sealed class FulfillmentDbContext : DbContext
     /// <summary>TB-258: خطوط هر رسید دریافت.</summary>
     public DbSet<ShipmentReturnReceiptItem> ShipmentReturnReceiptItems => Set<ShipmentReturnReceiptItem>();
 
+    /// <summary>TB-262: تصمیم‌های پایدار تعیین تکلیف کالای آسیب‌دیده.</summary>
+    public DbSet<DamagedGoodsResolution> DamagedResolutions => Set<DamagedGoodsResolution>();
+
     /// <summary>
     /// گروه‌های ارسال پذیرفته‌شدهٔ مالک Fulfillment.
     /// </summary>
@@ -128,6 +131,8 @@ public sealed class FulfillmentDbContext : DbContext
             // TB-258: same rule for the read-only origin receipts — they are loaded/persisted through their own
             // DbSet, so an inferred navigation would add the same phantom shadow FK to the receipts table.
             entity.Ignore(x => x.ReturnReceipts);
+            // TB-262: same rule for the resolved damaged-goods decisions.
+            entity.Ignore(x => x.DamagedResolutions);
             entity.HasIndex(x => x.SellerOrderId).IsUnique();
             entity.HasIndex(x => x.SellerPartyId);
             entity.HasIndex(x => x.CheckoutId);
@@ -180,15 +185,21 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.NonDeliveryReason).HasMaxLength(64);
             entity.Property(x => x.NonDeliveryNote).HasMaxLength(512);
             entity.Property(x => x.ResendOfShipmentId).HasColumnName("resend_of_shipment_id");
+            // TB-262: the damaged-goods decision and the replacement's own healthy-stock reservation.
+            entity.Property(x => x.DamagedResolutionId).HasColumnName("damaged_resolution_id");
+            entity.Property(x => x.ReplacementReservationId).HasColumnName("replacement_reservation_id");
             // TB-258-R1: durable operator identity of the post-dispatch facts (never a client-supplied claim).
             entity.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id");
             entity.Property(x => x.NonDeliveredByUserId).HasColumnName("non_delivered_by_user_id");
             entity.Property(x => x.ReturnStartedByUserId).HasColumnName("return_started_by_user_id");
             entity.Ignore(x => x.Items);
             entity.Ignore(x => x.IsResend);
+            entity.Ignore(x => x.IsReplacement);
+            entity.Ignore(x => x.IsReturnFunded);
             entity.HasIndex(x => x.FulfillmentId);
             entity.HasIndex(x => x.ShippingGroupId).HasFilter("shipping_group_id IS NOT NULL");
             entity.HasIndex(x => x.ResendOfShipmentId).HasFilter("resend_of_shipment_id IS NOT NULL");
+            entity.HasIndex(x => x.DamagedResolutionId).HasFilter("damaged_resolution_id IS NOT NULL");
             entity.HasIndex(x => x.TrackingReference).IsUnique().HasFilter("tracking_reference IS NOT NULL");
             entity.HasIndex(x => x.ShippingDispatchKey)
                 .IsUnique()
@@ -221,6 +232,30 @@ public sealed class FulfillmentDbContext : DbContext
             entity.HasIndex(x => new { x.ShipmentReturnReceiptId, x.OrderLineId, x.Condition })
                 .IsUnique()
                 .HasDatabaseName("ux_shipment_return_receipt_items_line_condition");
+        });
+        modelBuilder.Entity<DamagedGoodsResolution>(entity =>
+        {
+            entity.ToTable("damaged_goods_resolutions");
+            entity.HasKey(x => x.DamagedGoodsResolutionId);
+            entity.Property(x => x.DamagedGoodsResolutionId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.Outcome).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.OccurrenceKey).HasMaxLength(128);
+            entity.Property(x => x.Note).HasMaxLength(512);
+            entity.Property(x => x.Attempt).HasDefaultValue(1).ValueGeneratedNever();
+            entity.Ignore(x => x.ReservationKey);
+            entity.Ignore(x => x.ReservationConsumerKey);
+            entity.Ignore(x => x.AwaitsHealthyStock);
+            entity.HasIndex(x => x.FulfillmentId);
+            entity.HasIndex(x => x.ShipmentId);
+            // TB-262: one durable decision per reviewed occurrence inside its owning unit. A retry answers the
+            // recorded decision instead of recording a second one for the same damaged units.
+            entity.HasIndex(x => new { x.FulfillmentId, x.OccurrenceKey })
+                .IsUnique()
+                .HasDatabaseName("ux_damaged_goods_resolutions_fulfillment_occurrence");
+            entity.HasIndex(x => x.ReplacementShipmentId).HasFilter("replacement_shipment_id IS NOT NULL");
+            entity.HasIndex(x => x.ReplacementReservationId).HasFilter("replacement_reservation_id IS NOT NULL");
         });
         modelBuilder.Entity<ShipmentItem>(entity =>
         {

@@ -158,6 +158,7 @@ export const POST_DISPATCH_MODES: ReadonlyArray<PostDispatchExceptionMode> = [
   "start_return",
   "record_return_receipt",
   "resend_shipment",
+  "resolve_damaged_goods",
 ];
 
 /**

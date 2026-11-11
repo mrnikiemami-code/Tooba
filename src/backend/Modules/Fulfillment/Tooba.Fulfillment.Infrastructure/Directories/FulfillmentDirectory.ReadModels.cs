@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Fulfillment.Application.Fulfillments.Models;
 using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
@@ -30,6 +30,13 @@ public sealed partial class FulfillmentDirectory
                 .Where(x => receipts.Select(r => r.ShipmentReturnReceiptId).Contains(x.ShipmentReturnReceiptId))
                 .ToListAsync(cancellationToken);
         var receiptShipment = receipts.ToDictionary(r => r.ShipmentReturnReceiptId, r => r.ShipmentId);
+        // TB-262: the durable damaged-goods decisions of this unit, read once so every parcel/line can report its own.
+        var resolutions = await _db.DamagedResolutions.AsNoTracking()
+            .Where(x => x.FulfillmentId == unit.FulfillmentId)
+            .ToListAsync(cancellationToken);
+        var resolutionsByShipment = resolutions
+            .GroupBy(x => x.ShipmentId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<DamagedGoodsResolution>)g.ToArray());
         var itemsByReceipt = receiptItems
             .GroupBy(x => x.ShipmentReturnReceiptId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ShipmentReturnReceiptItem>)g.ToArray());
@@ -70,6 +77,8 @@ public sealed partial class FulfillmentDirectory
                 shipment.DispatchedAt,
                 shipment.DeliveredAt,
                 // TB-258-R1: the resend capacity of a line is specific to THIS physically received source parcel.
+                // TB-262: the damaged quantity of THIS parcel line and what it still owes a decision are separate
+                // facts, so a damaged unit can never be read as usable capacity.
                 shipmentItems
                     .Select(x => new ShipmentLineSnapshot(
                         x.OrderLineId,
@@ -79,6 +88,13 @@ public sealed partial class FulfillmentDirectory
                             receiptShipment,
                             shipmentItemsByShipment,
                             shipments,
+                            shipment.ShipmentId,
+                            x.OrderLineId),
+                        SourceDamagedQuantity(receiptItems, receiptShipment, shipment.ShipmentId, x.OrderLineId),
+                        SourceOutstandingDamagedQuantity(
+                            receiptItems,
+                            receiptShipment,
+                            resolutionsByShipment,
                             shipment.ShipmentId,
                             x.OrderLineId)))
                     .ToArray(),
@@ -96,7 +112,15 @@ public sealed partial class FulfillmentDirectory
                 shipment.NonDeliveredAt,
                 shipment.ReturnStartedAt,
                 shipment.ReturnedAt,
-                receiptSnapshot));
+                receiptSnapshot,
+                shipment.DamagedResolutionId,
+                shipment.ReplacementReservationId,
+                shipment.IsReplacement,
+                (resolutionsByShipment.TryGetValue(shipment.ShipmentId, out var parcelResolutions)
+                        ? parcelResolutions
+                        : [])
+                    .Select(MapDamagedResolution)
+                    .ToArray()));
         }
 
         var groupSnapshots = await BuildShippingGroupSnapshotsAsync(unit.FulfillmentId, items, cancellationToken);
@@ -127,7 +151,9 @@ public sealed partial class FulfillmentDirectory
                 UsableReturnedQuantity(receiptItems, x.OrderLineId),
                 ResendCommittedQuantity(shipmentSnapshots, x.OrderLineId),
                 ResendableQuantity(receiptItems, shipmentSnapshots, x.OrderLineId),
-                DeliveredQuantity(shipmentSnapshots, x.OrderLineId))).ToArray(),
+                DeliveredQuantity(shipmentSnapshots, x.OrderLineId),
+                DamagedReturnedQuantity(receiptItems, x.OrderLineId),
+                OutstandingDamagedQuantity(receiptItems, resolutions, x.OrderLineId))).ToArray(),
             shipmentSnapshots,
             unit.CreatedAt,
             unit.UpdatedAt,
@@ -174,7 +200,11 @@ public sealed partial class FulfillmentDirectory
         IReadOnlyList<ShipmentSnapshot> shipments,
         Guid orderLineId) =>
         shipments
-            .Where(s => s.ResendOfShipmentId is not null && s.Status != ShipmentStatus.Cancelled)
+            // TB-262: a replacement parcel is funded by its OWN healthy-stock reservation, so it must never consume the
+            // returned usable capacity of its damaged source (that would make one repair eat a real resend).
+            .Where(s => s.ResendOfShipmentId is not null
+                && s.DamagedResolutionId is null
+                && s.Status != ShipmentStatus.Cancelled)
             .SelectMany(s => s.Items)
             .Where(x => x.OrderLineId == orderLineId)
             .Sum(x => x.Quantity);
@@ -197,6 +227,75 @@ public sealed partial class FulfillmentDirectory
             .SelectMany(s => s.Items)
             .Where(x => x.OrderLineId == orderLineId)
             .Sum(x => x.Quantity);
+
+    /// <summary>TB-262: damaged quantity of ONE source parcel line, physically received back at origin.</summary>
+    private static decimal SourceDamagedQuantity(
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        IReadOnlyDictionary<Guid, Guid> receiptShipment,
+        Guid sourceShipmentId,
+        Guid orderLineId) =>
+        receiptItems
+            .Where(x => x.OrderLineId == orderLineId
+                && x.Condition == ReturnReceiptCondition.Damaged
+                && receiptShipment.TryGetValue(x.ShipmentReturnReceiptId, out var owner)
+                && owner == sourceShipmentId)
+            .Sum(x => x.Quantity);
+
+    /// <summary>TB-262: damaged quantity of ONE source parcel line still awaiting a durable decision.</summary>
+    private static decimal SourceOutstandingDamagedQuantity(
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        IReadOnlyDictionary<Guid, Guid> receiptShipment,
+        IReadOnlyDictionary<Guid, IReadOnlyList<DamagedGoodsResolution>> resolutionsByShipment,
+        Guid sourceShipmentId,
+        Guid orderLineId)
+    {
+        var damaged = SourceDamagedQuantity(receiptItems, receiptShipment, sourceShipmentId, orderLineId);
+        var committed = resolutionsByShipment.TryGetValue(sourceShipmentId, out var resolutions)
+            ? resolutions
+                .Where(r => r.OrderLineId == orderLineId && r.Status != DamagedResolutionStatus.Cancelled)
+                .Sum(r => r.Quantity)
+            : 0m;
+        var remaining = damaged - committed;
+        return remaining > 0m ? remaining : 0m;
+    }
+
+    /// <summary>TB-262: damaged quantity of one line across every source parcel of the unit.</summary>
+    private static decimal DamagedReturnedQuantity(
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        Guid orderLineId) =>
+        receiptItems
+            .Where(x => x.OrderLineId == orderLineId && x.Condition == ReturnReceiptCondition.Damaged)
+            .Sum(x => x.Quantity);
+
+    /// <summary>TB-262: damaged quantity of one line still awaiting a durable decision.</summary>
+    private static decimal OutstandingDamagedQuantity(
+        IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
+        IReadOnlyList<DamagedGoodsResolution> resolutions,
+        Guid orderLineId)
+    {
+        var damaged = DamagedReturnedQuantity(receiptItems, orderLineId);
+        var committed = resolutions
+            .Where(r => r.OrderLineId == orderLineId && r.Status != DamagedResolutionStatus.Cancelled)
+            .Sum(r => r.Quantity);
+        var remaining = damaged - committed;
+        return remaining > 0m ? remaining : 0m;
+    }
+
+    private static DamagedResolutionSnapshot MapDamagedResolution(DamagedGoodsResolution resolution) =>
+        new(
+            resolution.DamagedGoodsResolutionId,
+            resolution.ShipmentId,
+            resolution.ShipmentReturnReceiptId,
+            resolution.OrderLineId,
+            resolution.Quantity,
+            resolution.Outcome,
+            resolution.Status,
+            resolution.DecidedByUserId,
+            resolution.CreatedAt,
+            resolution.UpdatedAt,
+            resolution.ReplacementReservationId,
+            resolution.ReplacementShipmentId,
+            resolution.Note);
 
     /// <summary>
     /// snapshot گروه‌های واحد را با عضویت خطوط همان واحد می‌سازد؛ ترتیب پایدار بر اساس شناسهٔ گروه.
@@ -233,3 +332,5 @@ public sealed partial class FulfillmentDirectory
             .ToArray();
     }
 }
+
+

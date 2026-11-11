@@ -281,6 +281,21 @@ public sealed class AdminOrderFulfillmentOperationsTests
             CancellationToken cancellationToken,
             string? shippingDispatchKey = null) =>
             throw new NotImplementedException();
+        public Task<Tooba.Fulfillment.Contracts.Operations.DamagedResolutionResult> ResolveDamagedGoodsAsync(
+            Guid fulfillmentId,
+            Guid actorUserId,
+            Guid shipmentId,
+            Guid orderLineId,
+            decimal quantity,
+            Tooba.Fulfillment.Contracts.Operations.DamagedResolutionOutcome outcome,
+            string? occurrenceKey,
+            string? note,
+            CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<Tooba.Fulfillment.Contracts.Operations.DamagedResolutionIntentResult> ReconcileDamagedResolutionAsync(
+            Tooba.Fulfillment.Contracts.Operations.DamagedResolutionIntent intent,
+            CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
         public Task<Tooba.Fulfillment.Contracts.Operations.PostDispatchIntentResult> ReconcilePostDispatchIntentAsync(
             Tooba.Fulfillment.Contracts.Operations.PostDispatchIntent intent,
             CancellationToken cancellationToken) =>

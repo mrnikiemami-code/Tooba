@@ -36,10 +36,16 @@ public sealed record AdminOrderLineView(
 /// <param name="ResendableQuantity">
 /// TB-258-R1: capacity physically received back on THIS parcel for this line and not yet resent from it.
 /// </param>
+/// <param name="DamagedQuantity">TB-262: damaged quantity physically received back on THIS parcel for this line.</param>
+/// <param name="OutstandingDamagedQuantity">
+/// TB-262: damaged quantity of THIS parcel line that still owes a durable replacement/referral decision.
+/// </param>
 public sealed record AdminShipmentLineView(
     Guid OrderLineId,
     decimal Quantity,
-    decimal ResendableQuantity = 0);
+    decimal ResendableQuantity = 0,
+    decimal DamagedQuantity = 0,
+    decimal OutstandingDamagedQuantity = 0);
 
 /// <summary>کارت مرسولهٔ یک فروشنده روی جزئیات سفارش مدیر.</summary>
 public sealed record AdminShipmentView(

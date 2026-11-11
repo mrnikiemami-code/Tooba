@@ -181,6 +181,84 @@
   <data name="fulfillment.package.tracking_required" xml:space="preserve">
     <value>کد رهگیری بسته الزامی است.</value>
   </data>
+  <data name="fulfillment.damage.resolution_ids_required" xml:space="preserve">
+    <value>شناسه‌های تصمیم کالای آسیب‌دیده کامل نیست.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_qty_positive" xml:space="preserve">
+    <value>مقدار آسیب‌دیده باید بزرگ‌تر از صفر باشد.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_outcome_invalid" xml:space="preserve">
+    <value>نوع تصمیم انتخاب‌شده برای کالای آسیب‌دیده معتبر نیست.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_actor_required" xml:space="preserve">
+    <value>ثبت تصمیم کالای آسیب‌دیده به اپراتور بازبین نیاز دارد.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_occurrence_required" xml:space="preserve">
+    <value>تصمیم کالای آسیب‌دیده به شناسهٔ درخواست بازبینی‌شده نیاز دارد.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_note_invalid" xml:space="preserve">
+    <value>یادداشت اپراتور بیش از حد مجاز طولانی است.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_intent_conflict" xml:space="preserve">
+    <value>این درخواست با تصمیم ثبت‌شدهٔ کالای آسیب‌دیده یکسان نیست.</value>
+  </data>
+  <data name="fulfillment.damage.source_not_returned" xml:space="preserve">
+    <value>این مرسوله هنوز در مبدأ دریافت فیزیکی نشده است.</value>
+  </data>
+  <data name="fulfillment.damage.receipt_missing" xml:space="preserve">
+    <value>برای این مرسوله رسید دریافت در مبدأ ثبت نشده است.</value>
+  </data>
+  <data name="fulfillment.damage.line_foreign" xml:space="preserve">
+    <value>این خط سفارش به مرسولهٔ انتخاب‌شده تعلق ندارد.</value>
+  </data>
+  <data name="fulfillment.damage.no_damaged_quantity" xml:space="preserve">
+    <value>این خط مرسوله مقدار آسیب‌دیده ندارد.</value>
+  </data>
+  <data name="fulfillment.damage.exceeds_outstanding" xml:space="preserve">
+    <value>مقدار واردشده از مقدار آسیب‌دیدهٔ تعیین‌تکلیف‌نشدهٔ همین مرسوله بیشتر است.</value>
+  </data>
+  <data name="fulfillment.damage.obligation_already_settled" xml:space="preserve">
+    <value>این اقلام به مشتری تحویل شده‌اند؛ جایگزینی برای آن‌ها قابل تأمین نیست.</value>
+  </data>
+  <data name="fulfillment.damage.replacement_unavailable" xml:space="preserve">
+    <value>در حال حاضر موجودی سالم این کالا برای جایگزینی کافی نیست.</value>
+  </data>
+  <data name="fulfillment.damage.original_reservation_missing" xml:space="preserve">
+    <value>کالای سفارش از رزرو فروش اصلی قابل اثبات نیست.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_cancelled" xml:space="preserve">
+    <value>این تصمیم کالای آسیب‌دیده پیش از ارسال لغو شده است.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_not_replacement" xml:space="preserve">
+    <value>این تصمیم از نوع جایگزینی نیست.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_not_open" xml:space="preserve">
+    <value>این تصمیم کالای آسیب‌دیده دیگر باز نیست.</value>
+  </data>
+  <data name="fulfillment.damage.resolution_not_found" xml:space="preserve">
+    <value>تصمیم کالای آسیب‌دیده پیدا نشد.</value>
+  </data>
+  <data name="fulfillment.damage.reservation_required" xml:space="preserve">
+    <value>جایگزینی به رزرو اختصاصی موجودی سالم نیاز دارد.</value>
+  </data>
+  <data name="fulfillment.damage.reservation_conflict" xml:space="preserve">
+    <value>رزرو دیگری به این جایگزینی متصل شده است.</value>
+  </data>
+  <data name="fulfillment.damage.replacement_conflict" xml:space="preserve">
+    <value>مرسولهٔ جایگزین دیگری به این تصمیم متصل شده است.</value>
+  </data>
+  <data name="fulfillment.damage.replacement_missing" xml:space="preserve">
+    <value>مرسولهٔ جایگزین متصل به این تصمیم پیدا نشد.</value>
+  </data>
+  <data name="fulfillment.damage.replacement_source_required" xml:space="preserve">
+    <value>جایگزینی به مرسولهٔ آسیب‌دیدهٔ مبدأ نیاز دارد.</value>
+  </data>
+  <data name="fulfillment.damage.replacement_occurrence_required" xml:space="preserve">
+    <value>جایگزینی به شناسهٔ درخواست بازبینی‌شده نیاز دارد.</value>
+  </data>
+  <data name="fulfillment.damage.concurrency_conflict" xml:space="preserve">
+    <value>اپراتور دیگری این اقلام آسیب‌دیده را تعیین تکلیف کرد؛ صفحه را تازه کنید و دوباره بررسی کنید.</value>
+  </data>
   <data name="fulfillment.shipping_method.unsupported" xml:space="preserve">
     <value>روش ارسال پشتیبانی نمی‌شود.</value>
   </data>

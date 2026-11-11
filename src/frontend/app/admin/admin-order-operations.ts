@@ -129,6 +129,12 @@ export type AdminOrderOperationRequest = {
   operationalGroupPackingMode?: string | null;
   /** TB-258: per-line physical receipt facts of one origin receipt (only usable quantity is resendable). */
   receiptItems?: Array<{ orderLineId: string; quantity: number; condition: number }> | null;
+  /** TB-262: the returned parcel line whose damaged quantity is being resolved. */
+  orderLineId?: string | null;
+  /** TB-262: the damaged quantity this decision covers. */
+  quantity?: number | null;
+  /** TB-262: reviewed damaged-goods outcome — `replacement` or `referral`. */
+  damagedOutcome?: string | null;
 };
 
 /**
@@ -351,6 +357,9 @@ export async function executeAdminOrderOperation(
           quantity: line.quantity,
           condition: line.condition,
         })) ?? null,
+        orderLineId: body.orderLineId ?? null,
+        quantity: body.quantity ?? null,
+        damagedOutcome: body.damagedOutcome ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

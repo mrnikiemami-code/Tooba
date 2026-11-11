@@ -351,6 +351,26 @@ public sealed partial class AdminOrderOperationsOrchestrator
                         true,
                         "مرسولهٔ جدید برای اقلام سالم دریافتی ایجاد شود؟"));
                 }
+
+                // TB-262: damaged units are never resend capacity, and they are not a resolved fact either. Each
+                // unresolved damaged unit of THIS returned parcel needs ONE deliberate operator decision.
+                if (shipment.Status == ShipmentOperationStatus.Returned
+                    && shipment.ReturnReceipt is not null
+                    && shipment.Items.Any(x => x.OutstandingDamagedQuantity > 0m)
+                    && HasAny(effective, "order.handle", "fulfillment.manage"))
+                {
+                    actions.Add(Action(
+                        "resolve_damaged_goods",
+                        "تعیین تکلیف کالای آسیب‌دیده",
+                        "Resolve damaged goods",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "تصمیم کالای آسیب‌دیده (جایگزینی از موجودی سالم یا ارجاع) ثبت شود؟"));
+                }
             }
         }
 

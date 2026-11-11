@@ -81,10 +81,16 @@ public enum ConsolidatedPackageOperationStatus
 /// <param name="ResendableQuantity">
 /// TB-258-R1: usable quantity physically received back on THIS parcel for this line, minus its own resend parcels.
 /// </param>
+/// <param name="DamagedQuantity">TB-262: damaged quantity physically received back on THIS parcel for this line.</param>
+/// <param name="OutstandingDamagedQuantity">
+/// TB-262: damaged quantity of this parcel line that still awaits a durable resolution decision.
+/// </param>
 public sealed record ShipmentLineSnapshot(
     Guid OrderLineId,
     decimal Quantity,
-    decimal ResendableQuantity = 0);
+    decimal ResendableQuantity = 0,
+    decimal DamagedQuantity = 0,
+    decimal OutstandingDamagedQuantity = 0);
 
 /// <summary>Shipment projection for admin operations. Field order mirrors the wire contract.</summary>
 public sealed record ShipmentSnapshot(
@@ -120,7 +126,19 @@ public sealed record ShipmentSnapshot(
     /// <summary>TB-258: when the origin receipt was confirmed.</summary>
     DateTimeOffset? ReturnedAt = null,
     /// <summary>TB-258: recorded physical origin receipt (null until the parcel is received back).</summary>
-    ReturnReceiptSnapshot? ReturnReceipt = null);
+    ReturnReceiptSnapshot? ReturnReceipt = null,
+    /// <summary>
+    /// TB-262: the damaged-goods decision that funds this REPLACEMENT parcel (null for every other parcel).
+    /// </summary>
+    Guid? DamagedResolutionId = null,
+    /// <summary>
+    /// TB-262: this parcel's OWN purpose-bound healthy-stock reservation (already consumed after dispatch).
+    /// </summary>
+    Guid? ReplacementReservationId = null,
+    /// <summary>TB-262: true only for a parcel created by an authorized damaged-goods replacement decision.</summary>
+    bool IsReplacement = false,
+    /// <summary>TB-262: durable damaged-goods decisions that belong to THIS returned parcel.</summary>
+    IReadOnlyList<DamagedResolutionSnapshot>? DamagedResolutions = null);
 
 /// <summary>TB-258: physical condition of a received returned line; only Usable may be resent.</summary>
 public enum ReturnReceiptCondition
@@ -157,6 +175,61 @@ public sealed record ReturnReceiptLineCommand(
     Guid OrderLineId,
     decimal Quantity,
     ReturnReceiptCondition Condition = ReturnReceiptCondition.Usable);
+
+/// <summary>TB-262: the operator's reviewed decision for physically damaged returned goods.</summary>
+public enum DamagedResolutionOutcome
+{
+    /// <summary>Replace the SAME ordered item from healthy stock under a new purpose-bound reservation.</summary>
+    Replacement = 0,
+
+    /// <summary>No replacement now; leave the item as a pending customer-service / financial referral.</summary>
+    Referral = 1,
+}
+
+/// <summary>TB-262: durable state of one damaged-goods decision.</summary>
+public enum DamagedResolutionStatus
+{
+    /// <summary>Decision recorded; a replacement still owes healthy stock (or the item is a pending referral).</summary>
+    Recorded = 0,
+
+    /// <summary>The replacement's own healthy-stock reservation is linked and held.</summary>
+    Reserved = 1,
+
+    /// <summary>The linked replacement parcel exists.</summary>
+    Fulfilled = 2,
+
+    /// <summary>The operator explicitly released the pending replacement before dispatch.</summary>
+    Cancelled = 3,
+}
+
+/// <summary>TB-262: one durable damaged-goods decision exposed to the admin operations read model.</summary>
+public sealed record DamagedResolutionSnapshot(
+    Guid DamagedGoodsResolutionId,
+    Guid ShipmentId,
+    Guid ShipmentReturnReceiptId,
+    Guid OrderLineId,
+    decimal Quantity,
+    DamagedResolutionOutcome Outcome,
+    DamagedResolutionStatus Status,
+    Guid DecidedByUserId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    Guid? ReplacementReservationId = null,
+    Guid? ReplacementShipmentId = null,
+    string? Note = null);
+
+/// <summary>TB-262: answer of one damaged-goods decision command.</summary>
+/// <param name="BlockerCode">
+/// A precise typed blocker when the decision is durably recorded but its replacement cannot be created now
+/// (for example no healthy stock of the same offer). The decision is NEVER rolled back and no reservation is leaked.
+/// </param>
+public sealed record DamagedResolutionResult(
+    FulfillmentSnapshot Snapshot,
+    Guid DamagedGoodsResolutionId,
+    DamagedResolutionStatus Status,
+    Guid? ReplacementReservationId = null,
+    Guid? ReplacementShipmentId = null,
+    string? BlockerCode = null);
 
 /// <summary>TB-258: operator reason codes for a post-dispatch non-delivery attempt.</summary>
 public static class FulfillmentNonDeliveryReasons
@@ -204,7 +277,11 @@ public sealed record FulfillmentItemSnapshot(
     /// <summary>TB-258: returned capacity still available for a new resend parcel (separate from packed remainder).</summary>
     decimal ResendableQuantity = 0,
     /// <summary>TB-258: quantity actually delivered (derived from delivered parcels, not from shipped).</summary>
-    decimal DeliveredQuantity = 0);
+    decimal DeliveredQuantity = 0,
+    /// <summary>TB-262: damaged quantity physically received back on this line across its source parcels.</summary>
+    decimal DamagedQuantity = 0,
+    /// <summary>TB-262: damaged quantity of this line that still awaits a durable resolution decision.</summary>
+    decimal OutstandingDamagedQuantity = 0);
 
 /// <summary>Seller fulfillment projection for admin operations.</summary>
 public sealed record FulfillmentSnapshot(
@@ -335,6 +412,22 @@ public sealed record PostDispatchIntentResult(
     PostDispatchIntentState State,
     FulfillmentSnapshot? Snapshot = null,
     Guid? RecordedShipmentId = null,
+    string? ConflictCode = null);
+
+/// <summary>TB-262: the exact reviewed damaged-goods decision a client asks to reconcile.</summary>
+public sealed record DamagedResolutionIntent(
+    Guid FulfillmentId,
+    Guid ShipmentId,
+    Guid OrderLineId,
+    decimal Quantity,
+    DamagedResolutionOutcome Outcome,
+    string? OccurrenceKey);
+
+/// <summary>TB-262: read-only answer of the recorded damaged-goods decision lookup.</summary>
+public sealed record DamagedResolutionIntentResult(
+    PostDispatchIntentState State,
+    FulfillmentSnapshot? Snapshot = null,
+    DamagedResolutionSnapshot? Resolution = null,
     string? ConflictCode = null);
 
 /// <summary>
@@ -509,6 +602,36 @@ public interface IFulfillmentAdminOperations
     /// </summary>
     Task<PostDispatchIntentResult> ReconcilePostDispatchIntentAsync(
         PostDispatchIntent intent,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-262: record the operator's reviewed decision for a DAMAGED quantity of one returned parcel line and, for a
+    /// replacement, reserve NEW healthy stock of the same offer and create the linked replacement parcel.
+    ///
+    /// Damaged units never become resend capacity and never return to saleable stock. The decision is durable and
+    /// idempotent per occurrence key: an exact retry answers the recorded decision and its exact reservation/parcel,
+    /// a changed intent is a typed conflict with zero writes. When no healthy stock is available the decision is kept
+    /// and a precise <see cref="DamagedResolutionResult.BlockerCode"/> is returned with zero parcel and no leaked
+    /// reservation, so the same unresolved intent can be retried safely.
+    /// </summary>
+    Task<DamagedResolutionResult> ResolveDamagedGoodsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        Guid shipmentId,
+        Guid orderLineId,
+        decimal quantity,
+        DamagedResolutionOutcome outcome,
+        string? occurrenceKey,
+        string? note,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-262: READ-ONLY exact-intent lookup of a recorded damaged-goods decision, so a lost response can be
+    /// reconciled through the public command after the fresh projected action disappeared. It never writes, never
+    /// allocates and never stands in for authorization.
+    /// </summary>
+    Task<DamagedResolutionIntentResult> ReconcileDamagedResolutionAsync(
+        DamagedResolutionIntent intent,
         CancellationToken cancellationToken);
 
     /// <summary>Create a multi-seller consolidated package.</summary>

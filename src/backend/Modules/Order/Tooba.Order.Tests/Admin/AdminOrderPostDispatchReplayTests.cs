@@ -425,6 +425,179 @@ public sealed class AdminOrderPostDispatchReplayTests
     }
 
     /// <summary>
+    /// TB-262 on real owning storage through the PUBLIC command: the damaged decision of a physically returned parcel
+    /// line is durable, its replacement is funded by its OWN new reservation, and an exact retry is answered even
+    /// after the fresh projection no longer offers the action. A changed quantity/outcome is a typed conflict with
+    /// zero writes, a foreign checkout is refused and an actor without post-dispatch authority is denied.
+    /// </summary>
+    [Fact]
+    public async Task Relational_damaged_decision_replays_through_the_public_command_after_the_action_disappears()
+    {
+        var connection = Environment.GetEnvironmentVariable(RelationalEnvVar);
+        if (string.IsNullOrWhiteSpace(connection))
+        {
+            return;
+        }
+
+        var target = new NpgsqlConnectionStringBuilder(connection);
+        var inventory = new ReplacementInventoryGateway();
+        var fixture = await CreateDispatchedFixtureAsync(
+            target,
+            inventory,
+            lineAReservationId: Guid.NewGuid(),
+            lineBReservationId: Guid.NewGuid());
+        var ports = new Ports("order.handle");
+        var orders = new CheckoutReaderFake(
+            fixture.CheckoutId, fixture.SellerOrderId, fixture.SellerPartyId, fixture.LineAId);
+        var keyA = $"tb262-damaged-a-{fixture.ShipmentId:N}";
+        var keyB = $"tb262-damaged-b-{fixture.ShipmentId:N}";
+
+        Guid replacementShipmentId;
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var orchestrator = Build(NewDamagedAdapter(db, inventory), ports, orders);
+
+            Assert.True((await orchestrator.RecordNonDeliveryAsync(
+                fixture.CheckoutId,
+                ActorId,
+                NonDeliveryRequestFor(fixture, "customer_unavailable", "TB262 relational"),
+                CancellationToken.None)).IsSuccess);
+            Assert.True((await orchestrator.StartReturnAsync(
+                fixture.CheckoutId, ActorId, ReturnStartRequest(fixture), CancellationToken.None)).IsSuccess);
+            // Line A comes back as 1 healthy + 1 damaged; line B as 1 damaged. Both parcels of physical truth belong
+            // to the SAME returned source parcel.
+            Assert.True((await orchestrator.RecordReturnReceiptAsync(
+                fixture.CheckoutId,
+                ActorId,
+                ReceiptRequestFor(fixture,
+                    new AdminReturnReceiptLineSelection(fixture.LineAId, 1m, 0),
+                    new AdminReturnReceiptLineSelection(fixture.LineAId, 1m, 1),
+                    new AdminReturnReceiptLineSelection(fixture.LineBId, 1m, 1)),
+                CancellationToken.None)).IsSuccess);
+
+            // The fresh projection offers the damaged decision for exactly this returned parcel.
+            var before = await orchestrator.ListAsync(fixture.CheckoutId, ActorId, CancellationToken.None);
+            Assert.Contains(before.Value.Actions, a =>
+                a.Code == "resolve_damaged_goods" && a.ShipmentId == fixture.ShipmentId);
+
+            var resolved = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", keyA),
+                CancellationToken.None);
+            Assert.True(resolved.IsSuccess, resolved.IsSuccess ? string.Empty : resolved.FirstError?.Code);
+            var snapshot = Assert.IsType<FulfillmentSnapshot>(resolved.Value);
+            var replacement = snapshot.Shipments.Single(x => x.IsReplacement);
+            replacementShipmentId = replacement.ShipmentId;
+            Assert.Equal(inventory.ReservationId, replacement.ReplacementReservationId);
+            Assert.Equal(fixture.ShipmentId, replacement.ResendOfShipmentId);
+            Assert.Equal(ShipmentOperationStatus.Created, replacement.Status);
+            Assert.Equal(1m, replacement.Items.Single(x => x.OrderLineId == fixture.LineAId).Quantity);
+            Assert.Equal(1, inventory.ReserveCalls);
+            // The damaged unit is committed; the healthy returned capacity of the same line is untouched.
+            Assert.Equal(0m, snapshot.Items.Single(x => x.OrderLineId == fixture.LineAId).OutstandingDamagedQuantity);
+            Assert.Equal(1m, snapshot.Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
+
+            // A referral binds the unit without allocating anything and without pretending it was resolved.
+            var referral = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineBId, 1m, "referral", keyB),
+                CancellationToken.None);
+            Assert.True(referral.IsSuccess, referral.IsSuccess ? string.Empty : referral.FirstError?.Code);
+            var referralSnapshot = Assert.IsType<FulfillmentSnapshot>(referral.Value);
+            var referralDecision = referralSnapshot.Shipments
+                .Single(x => x.ShipmentId == fixture.ShipmentId).DamagedResolutions!
+                .Single(x => x.OrderLineId == fixture.LineBId);
+            Assert.Equal(DamagedResolutionOutcome.Referral, referralDecision.Outcome);
+            Assert.Equal(DamagedResolutionStatus.Recorded, referralDecision.Status);
+            Assert.Null(referralDecision.ReplacementReservationId);
+            Assert.Null(referralDecision.ReplacementShipmentId);
+            Assert.Equal(1, inventory.ReserveCalls);
+
+            // Both damaged units are committed, so the fresh projection no longer offers the action at all.
+            var after = await orchestrator.ListAsync(fixture.CheckoutId, ActorId, CancellationToken.None);
+            Assert.DoesNotContain(after.Value.Actions, a => a.Code == "resolve_damaged_goods");
+        }
+
+        var shipmentsBefore = await CountShipmentsAsync(target, fixture.FulfillmentId);
+        var decisionsBefore = await CountDamagedResolutionsAsync(target, fixture.FulfillmentId);
+        Assert.Equal(2, shipmentsBefore);
+        Assert.Equal(2, decisionsBefore);
+
+        // ---- the response was lost: a NEW context replays the EXACT reviewed decision with zero writes ----------
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var orchestrator = Build(NewDamagedAdapter(db, inventory), ports, orders);
+
+            var replayed = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", keyA),
+                CancellationToken.None);
+            Assert.True(replayed.IsSuccess, replayed.IsSuccess ? string.Empty : replayed.FirstError?.Code);
+            var replayedSnapshot = Assert.IsType<FulfillmentSnapshot>(replayed.Value);
+            Assert.Contains(replayedSnapshot.Shipments, x => x.ShipmentId == replacementShipmentId);
+            // No second reservation and no second parcel: the recorded decision is answered, never re-executed.
+            Assert.Equal(1, inventory.ReserveCalls);
+            Assert.Equal(shipmentsBefore, await CountShipmentsAsync(target, fixture.FulfillmentId));
+
+            // The same occurrence with a DIFFERENT quantity, and with a DIFFERENT outcome, are typed conflicts.
+            var changedQuantity = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 2m, "replacement", keyA),
+                CancellationToken.None);
+            Assert.False(changedQuantity.IsSuccess);
+            Assert.Equal("fulfillment.damage.resolution_intent_conflict", changedQuantity.FirstError.Code);
+
+            var changedOutcome = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "referral", keyA),
+                CancellationToken.None);
+            Assert.False(changedOutcome.IsSuccess);
+            Assert.Equal("fulfillment.damage.resolution_intent_conflict", changedOutcome.FirstError.Code);
+
+            // A foreign checkout cannot borrow this returned parcel even with the recorded occurrence.
+            var foreign = await orchestrator.ResolveDamagedGoodsAsync(
+                fixture.ForeignCheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", keyA),
+                CancellationToken.None);
+            Assert.False(foreign.IsSuccess);
+            Assert.Equal("order.operation.invalid", foreign.FirstError.Code);
+        }
+
+        // An actor without the post-dispatch authority is denied before any evidence read.
+        await using (var db = NewFulfillmentDb(target))
+        {
+            var denied = Build(NewDamagedAdapter(db, inventory), new Ports("order.cancel"), orders);
+            var result = await denied.ResolveDamagedGoodsAsync(
+                fixture.CheckoutId,
+                ActorId,
+                DamagedRequest(fixture, fixture.LineAId, 1m, "replacement", keyA),
+                CancellationToken.None);
+            Assert.False(result.IsSuccess);
+            Assert.Equal("order.operation.denied", result.FirstError.Code);
+        }
+
+        // Nothing above wrote: exactly the two first-request decisions and the one replacement parcel exist.
+        Assert.Equal(shipmentsBefore, await CountShipmentsAsync(target, fixture.FulfillmentId));
+        Assert.Equal(decisionsBefore, await CountDamagedResolutionsAsync(target, fixture.FulfillmentId));
+        Assert.Equal(1, inventory.ReserveCalls);
+        Assert.Equal("Created", await RawShipmentStatusAsync(target, replacementShipmentId));
+
+        RecordEvidence(
+            $"H damaged fulfillment={fixture.FulfillmentId} checkout={fixture.CheckoutId} "
+            + $"source={fixture.ShipmentId} replacement={replacementShipmentId} keyA={keyA} keyB={keyB} "
+            + "replacementReservation=own referral=noAllocation replay=exact(zeroWrites) "
+            + "changedQuantity=conflict changedOutcome=conflict foreign=refused denied=denied "
+            + $"rows=shipments{shipmentsBefore}/decisions{decisionsBefore}",
+            "tb262-orchestrator-relational.txt");
+    }
+
+    /// <summary>
     /// TB-258-R3 on real storage through the PUBLIC command: a resend recorded and then cancelled pre-dispatch is
     /// history. The exact retained request resolves that cancelled occurrence with zero writes, while the SAME key
     /// with a different source parcel or a different quantity is a typed conflict — cancellation is never an
@@ -951,6 +1124,26 @@ public sealed class AdminOrderPostDispatchReplayTests
             return Task.FromResult(new FulfillmentShipmentCreateResult(_current, Guid.NewGuid()));
         }
 
+        public Task<DamagedResolutionResult> ResolveDamagedGoodsAsync(
+            Guid fulfillmentId,
+            Guid actorUserId,
+            Guid shipmentId,
+            Guid orderLineId,
+            decimal quantity,
+            DamagedResolutionOutcome outcome,
+            string? occurrenceKey,
+            string? note,
+            CancellationToken cancellationToken)
+        {
+            MutationCalls++;
+            return Task.FromResult(new DamagedResolutionResult(_current, Guid.NewGuid(), DamagedResolutionStatus.Recorded));
+        }
+
+        public Task<DamagedResolutionIntentResult> ReconcileDamagedResolutionAsync(
+            DamagedResolutionIntent intent,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new DamagedResolutionIntentResult(PostDispatchIntentState.NotRecorded));
+
         public Task<FulfillmentSnapshot> MarkProcessingAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
@@ -1148,7 +1341,51 @@ public sealed class AdminOrderPostDispatchReplayTests
             new FulfillmentShippedQuantityReader(db),
             new ShippingMethodsOptions());
 
-    private static async Task<RelationalFixture> CreateDispatchedFixtureAsync(NpgsqlConnectionStringBuilder target)
+    /// <summary>
+    /// TB-262: the SAME production adapter, but with an Inventory gateway that represents the replacement reservation
+    /// seam (the real Inventory-owned port is proven by the Fulfillment relational matrix).
+    /// </summary>
+    private static IFulfillmentAdminOperations NewDamagedAdapter(
+        FulfillmentDbContext db,
+        IFulfillmentInventoryGateway inventoryGateway) =>
+        new FulfillmentAdminOperationsAdapter(
+            new FulfillmentDirectory(
+                db,
+                new OpenFulfillmentUseCaseGuard(),
+                new UnusedOrderReader(),
+                inventoryGateway,
+                new FulfillmentInstrumentation(),
+                new FixedRelationalClock(),
+                new RelationalIdGenerator()),
+            new FulfillmentShippedQuantityReader(db),
+            new ShippingMethodsOptions());
+
+    private static AdminOrderOperationRequest DamagedRequest(
+        RelationalFixture fixture,
+        Guid lineId,
+        decimal quantity,
+        string outcome,
+        string key) =>
+        new(
+            "resolve_damaged_goods",
+            fixture.SellerOrderId,
+            fixture.FulfillmentId,
+            fixture.ShipmentId,
+            ReturnRequestId: null,
+            CarrierDisplayName: null,
+            TrackingReference: null,
+            Reason: null,
+            IdempotencyKey: key,
+            ReturnItems: null,
+            OrderLineId: lineId,
+            Quantity: quantity,
+            DamagedOutcome: outcome);
+
+    private static async Task<RelationalFixture> CreateDispatchedFixtureAsync(
+        NpgsqlConnectionStringBuilder target,
+        IFulfillmentInventoryGateway? inventoryGateway = null,
+        Guid? lineAReservationId = null,
+        Guid? lineBReservationId = null)
     {
         var fulfillmentId = Guid.NewGuid();
         var checkoutId = Guid.NewGuid();
@@ -1176,7 +1413,7 @@ public sealed class AdminOrderPostDispatchReplayTests
             "1234567890",
             "post",
             "پیشتاز",
-            [(lineA, 2m, (Guid?)null), (lineB, 1m, (Guid?)null)],
+            [(lineA, 2m, lineAReservationId), (lineB, 1m, lineBReservationId)],
             now,
             [
                 new FulfillmentShippingGroupPlan(
@@ -1202,7 +1439,7 @@ public sealed class AdminOrderPostDispatchReplayTests
             db,
             new OpenFulfillmentUseCaseGuard(),
             new UnusedOrderReader(),
-            new UnusedInventoryGateway(),
+            inventoryGateway ?? new UnusedInventoryGateway(),
             new FulfillmentInstrumentation(),
             new FixedRelationalClock(),
             new RelationalIdGenerator());
@@ -1292,6 +1529,15 @@ public sealed class AdminOrderPostDispatchReplayTests
             "select count(*) from fulfillment.shipments where resend_of_shipment_id = @id",
             ("id", shipmentId));
 
+    /// <summary>TB-262: the durable damaged-goods decisions of one fulfillment unit.</summary>
+    private static async Task<int> CountDamagedResolutionsAsync(
+        NpgsqlConnectionStringBuilder target,
+        Guid fulfillmentId) =>
+        await RawScalarAsync(
+            target,
+            "select count(*) from fulfillment.damaged_goods_resolutions where fulfillment_id = @id",
+            ("id", fulfillmentId));
+
     private static async Task<string?> RawShipmentStatusAsync(
         NpgsqlConnectionStringBuilder target,
         Guid shipmentId) =>
@@ -1376,6 +1622,73 @@ public sealed class AdminOrderPostDispatchReplayTests
             Guid actorUserId,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException("TB-258-R2 fixture does not read orders.");
+    }
+
+    /// <summary>
+    /// TB-262: the damaged-replacement Inventory seam as the owning contracts describe it. Only the replacement
+    /// reservation is exercised; the original sale reservation is consumed once by the first dispatch.
+    /// </summary>
+    private sealed class ReplacementInventoryGateway
+        : Tooba.Fulfillment.Application.Fulfillments.Ports.IFulfillmentInventoryGateway
+    {
+        public Guid ReservationId { get; } = Guid.NewGuid();
+
+        public int ReserveCalls { get; private set; }
+
+        public int OriginalConsumeCalls { get; private set; }
+
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException("TB-262 fixture keeps the committed sale reservation untouched.");
+
+        public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+        {
+            OriginalConsumeCalls++;
+            return Task.CompletedTask;
+        }
+
+        public Task ConsumeReplacementReservationAsync(
+            Guid reservationId,
+            string consumerKey,
+            CancellationToken cancellationToken)
+        {
+            Assert.Equal(ReservationId, reservationId);
+            Assert.False(string.IsNullOrWhiteSpace(consumerKey));
+            return Task.CompletedTask;
+        }
+
+        public Task ReleaseReplacementReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException("TB-262 fixture does not cancel a replacement.");
+
+        public Task<FulfillmentReplacementReservation> ReserveReplacementReservationAsync(
+            Guid originalReservationId,
+            decimal quantity,
+            string reservationKey,
+            string externalReference,
+            DateTimeOffset expiresAt,
+            CancellationToken cancellationToken)
+        {
+            // The replacement is funded from the committed SALE reservation's own offer/stock context, never from a
+            // client-supplied identity, and the external reference carries the durable decision id.
+            Assert.NotEqual(Guid.Empty, originalReservationId);
+            Assert.True(quantity > 0m);
+            Assert.False(string.IsNullOrWhiteSpace(reservationKey));
+            Assert.StartsWith("damaged-resolution:", externalReference);
+            ReserveCalls++;
+            return Task.FromResult(new FulfillmentReplacementReservation(
+                ReservationId,
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                quantity,
+                "Held"));
+        }
+
+        public Task<FulfillmentReplacementReservation?> FindReplacementReservationAsync(
+            Guid reservationId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<FulfillmentReplacementReservation?>(
+                reservationId == ReservationId
+                    ? new FulfillmentReplacementReservation(ReservationId, Guid.NewGuid(), Guid.NewGuid(), 1m, "Held")
+                    : null);
     }
 
     private sealed class UnusedInventoryGateway

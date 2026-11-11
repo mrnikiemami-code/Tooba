@@ -148,6 +148,104 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.ToTable("consolidated_package_members", "fulfillment");
                 });
 
+            modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.DamagedGoodsResolution", b =>
+                {
+                    b.Property<Guid>("DamagedGoodsResolutionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("damaged_goods_resolution_id");
+
+                    b.Property<int>("Attempt")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("attempt");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("DecidedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by_user_id");
+
+                    b.Property<Guid>("FulfillmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("OccurrenceKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("occurrence_key");
+
+                    b.Property<Guid>("OrderLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_line_id");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("outcome");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid?>("ReplacementReservationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("replacement_reservation_id");
+
+                    b.Property<Guid?>("ReplacementShipmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("replacement_shipment_id");
+
+                    b.Property<Guid>("ShipmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_id");
+
+                    b.Property<Guid>("ShipmentReturnReceiptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipment_return_receipt_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("DamagedGoodsResolutionId")
+                        .HasName("pk_damaged_goods_resolutions");
+
+                    b.HasIndex("FulfillmentId")
+                        .HasDatabaseName("ix_damaged_goods_resolutions_fulfillment_id");
+
+                    b.HasIndex("ReplacementReservationId")
+                        .HasDatabaseName("ix_damaged_goods_resolutions_replacement_reservation_id")
+                        .HasFilter("replacement_reservation_id IS NOT NULL");
+
+                    b.HasIndex("ReplacementShipmentId")
+                        .HasDatabaseName("ix_damaged_goods_resolutions_replacement_shipment_id")
+                        .HasFilter("replacement_shipment_id IS NOT NULL");
+
+                    b.HasIndex("ShipmentId")
+                        .HasDatabaseName("ix_damaged_goods_resolutions_shipment_id");
+
+                    b.HasIndex("FulfillmentId", "OccurrenceKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_damaged_goods_resolutions_fulfillment_occurrence");
+
+                    b.ToTable("damaged_goods_resolutions", "fulfillment");
+                });
+
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.FulfillmentItem", b =>
                 {
                     b.Property<Guid>("FulfillmentItemId")
@@ -400,6 +498,10 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_user_id");
 
+                    b.Property<Guid?>("DamagedResolutionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("damaged_resolution_id");
+
                     b.Property<DateTimeOffset?>("DeliveredAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("delivered_at");
@@ -430,6 +532,24 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("non_delivery_reason");
 
+                    b.Property<string>("PreviousTrackingReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("previous_tracking_reference");
+
+                    b.Property<string>("ProviderMetadataJson")
+                        .HasColumnType("text")
+                        .HasColumnName("provider_metadata_json");
+
+                    b.Property<int>("ProviderMetadataVersion")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("provider_metadata_version");
+
+                    b.Property<Guid?>("ReplacementReservationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("replacement_reservation_id");
+
                     b.Property<Guid?>("ResendOfShipmentId")
                         .HasColumnType("uuid")
                         .HasColumnName("resend_of_shipment_id");
@@ -446,19 +566,10 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("returned_at");
 
-                    b.Property<string>("PreviousTrackingReference")
+                    b.Property<string>("ShippingDispatchKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
-                        .HasColumnName("previous_tracking_reference");
-
-                    b.Property<string>("ProviderMetadataJson")
-                        .HasColumnType("text")
-                        .HasColumnName("provider_metadata_json");
-
-                    b.Property<int>("ProviderMetadataVersion")
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("provider_metadata_version");
+                        .HasColumnName("shipping_dispatch_key");
 
                     b.Property<Guid?>("ShippingGroupId")
                         .HasColumnType("uuid")
@@ -492,16 +603,25 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.HasKey("ShipmentId")
                         .HasName("pk_shipments");
 
+                    b.HasIndex("DamagedResolutionId")
+                        .HasDatabaseName("ix_shipments_damaged_resolution_id")
+                        .HasFilter("damaged_resolution_id IS NOT NULL");
+
                     b.HasIndex("FulfillmentId")
                         .HasDatabaseName("ix_shipments_fulfillment_id");
-
-                    b.HasIndex("ShippingGroupId")
-                        .HasDatabaseName("ix_shipments_shipping_group_id")
-                        .HasFilter("shipping_group_id IS NOT NULL");
 
                     b.HasIndex("ResendOfShipmentId")
                         .HasDatabaseName("ix_shipments_resend_of_shipment_id")
                         .HasFilter("resend_of_shipment_id IS NOT NULL");
+
+                    b.HasIndex("ShippingDispatchKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_shipments_shipping_dispatch_key")
+                        .HasFilter("shipping_dispatch_key IS NOT NULL");
+
+                    b.HasIndex("ShippingGroupId")
+                        .HasDatabaseName("ix_shipments_shipping_group_id")
+                        .HasFilter("shipping_group_id IS NOT NULL");
 
                     b.HasIndex("TrackingReference")
                         .IsUnique()

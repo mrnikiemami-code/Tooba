@@ -36,7 +36,15 @@ public sealed record ShipmentSnapshot(
     /// <summary>TB-258: when origin receipt was confirmed.</summary>
     DateTimeOffset? ReturnedAt = null,
     /// <summary>TB-258: the immutable origin receipt of this parcel (null until physically received).</summary>
-    ShipmentReturnReceiptSnapshot? ReturnReceipt = null);
+    ShipmentReturnReceiptSnapshot? ReturnReceipt = null,
+    /// <summary>TB-262: the damaged-goods decision that created this parcel, when it is a replacement.</summary>
+    Guid? DamagedResolutionId = null,
+    /// <summary>TB-262: this parcel's OWN purpose-bound healthy-stock reservation (already consumed after dispatch).</summary>
+    Guid? ReplacementReservationId = null,
+    /// <summary>TB-262: true only for a parcel created by an authorized damaged-goods replacement decision.</summary>
+    bool IsReplacement = false,
+    /// <summary>TB-262: durable damaged-goods decisions that belong to THIS returned parcel.</summary>
+    IReadOnlyList<DamagedResolutionSnapshot>? DamagedResolutions = null);
 
 /// <summary>TB-258: the recorded physical origin receipt of one returned parcel.</summary>
 public sealed record ShipmentReturnReceiptSnapshot(
@@ -57,6 +65,24 @@ public sealed record ShipmentReturnReceiptLineSnapshot(
     Guid OrderLineId,
     decimal Quantity,
     ReturnReceiptCondition Condition);
+
+/// <summary>
+/// TB-262: one durable damaged-goods decision of a returned parcel, as the owning unit reports it.
+/// </summary>
+public sealed record DamagedResolutionSnapshot(
+    Guid DamagedGoodsResolutionId,
+    Guid ShipmentId,
+    Guid ShipmentReturnReceiptId,
+    Guid OrderLineId,
+    decimal Quantity,
+    DamagedResolutionOutcome Outcome,
+    DamagedResolutionStatus Status,
+    Guid DecidedByUserId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    Guid? ReplacementReservationId = null,
+    Guid? ReplacementShipmentId = null,
+    string? Note = null);
 
 /// <summary>
 /// snapshot گروه ارسال پذیرفته‌شدهٔ یک واحد fulfillment؛ عضویت خطوط برای تصمیم‌گیری canonical است.

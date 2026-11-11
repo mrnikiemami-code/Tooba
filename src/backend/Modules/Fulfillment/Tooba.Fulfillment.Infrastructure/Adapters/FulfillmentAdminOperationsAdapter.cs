@@ -271,6 +271,77 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             recorded.ConflictCode);
     }
 
+    public async Task<DamagedResolutionResult> ResolveDamagedGoodsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        Guid shipmentId,
+        Guid orderLineId,
+        decimal quantity,
+        DamagedResolutionOutcome outcome,
+        string? occurrenceKey,
+        string? note,
+        CancellationToken cancellationToken)
+    {
+        var resolved = await directory.ResolveDamagedGoodsAsync(
+            fulfillmentId,
+            actorUserId,
+            shipmentId,
+            orderLineId,
+            quantity,
+            (Domain.ValueObjects.DamagedResolutionOutcome)outcome,
+            occurrenceKey,
+            note,
+            cancellationToken);
+        return new DamagedResolutionResult(
+            MapRequired(resolved.Snapshot),
+            resolved.DamagedGoodsResolutionId,
+            (DamagedResolutionStatus)resolved.Status,
+            resolved.ReplacementReservationId,
+            resolved.ReplacementShipmentId,
+            resolved.BlockerCode);
+    }
+
+    public async Task<DamagedResolutionIntentResult> ReconcileDamagedResolutionAsync(
+        DamagedResolutionIntent intent,
+        CancellationToken cancellationToken)
+    {
+        var recorded = await directory.ReconcileDamagedResolutionAsync(
+            intent.FulfillmentId,
+            intent.ShipmentId,
+            intent.OrderLineId,
+            intent.Quantity,
+            (Domain.ValueObjects.DamagedResolutionOutcome)intent.Outcome,
+            intent.OccurrenceKey,
+            cancellationToken);
+        return new DamagedResolutionIntentResult(
+            recorded.State switch
+            {
+                AppModels.FulfillmentDamagedIntentRecord.Conflict => PostDispatchIntentState.Conflict,
+                AppModels.FulfillmentDamagedIntentRecord.Recorded => PostDispatchIntentState.Recorded,
+                AppModels.FulfillmentDamagedIntentRecord.ResolvedCancelled =>
+                    PostDispatchIntentState.ResolvedCancelled,
+                _ => PostDispatchIntentState.NotRecorded,
+            },
+            Map(recorded.Snapshot),
+            recorded.Resolution is null
+                ? null
+                : new DamagedResolutionSnapshot(
+                    recorded.Resolution.DamagedGoodsResolutionId,
+                    recorded.Resolution.ShipmentId,
+                    recorded.Resolution.ShipmentReturnReceiptId,
+                    recorded.Resolution.OrderLineId,
+                    recorded.Resolution.Quantity,
+                    (DamagedResolutionOutcome)recorded.Resolution.Outcome,
+                    (DamagedResolutionStatus)recorded.Resolution.Status,
+                    recorded.Resolution.DecidedByUserId,
+                    recorded.Resolution.CreatedAt,
+                    recorded.Resolution.UpdatedAt,
+                    recorded.Resolution.ReplacementReservationId,
+                    recorded.Resolution.ReplacementShipmentId,
+                    recorded.Resolution.Note),
+            recorded.ConflictCode);
+    }
+
     public async Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> shipmentIds,
@@ -368,7 +439,10 @@ internal sealed class FulfillmentAdminOperationsAdapter(
                         x.ReturnedUsableQuantity,
                         x.ResendCommittedQuantity,
                         x.ResendableQuantity,
-                        x.DeliveredQuantity))
+                        x.DeliveredQuantity,
+                        // TB-262: damaged custody and the quantity that still owes a decision are per-line facts.
+                        x.DamagedQuantity,
+                        x.OutstandingDamagedQuantity))
                     .ToList(),
                 snapshot.Shipments.Select(Map).ToList(),
                 snapshot.CreatedAt,
@@ -384,7 +458,13 @@ internal sealed class FulfillmentAdminOperationsAdapter(
             shipment.DispatchedAt,
             shipment.DeliveredAt,
             shipment.Items
-                .Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity, x.ResendableQuantity))
+                .Select(x => new ShipmentLineSnapshot(
+                    x.OrderLineId,
+                    x.Quantity,
+                    x.ResendableQuantity,
+                    // TB-262: this parcel line's own damaged custody and remaining damaged obligation.
+                    x.DamagedQuantity,
+                    x.OutstandingDamagedQuantity))
                 .ToList(),
             shipment.CreatedAt,
             shipment.ShippingMethodCode,
@@ -412,7 +492,29 @@ internal sealed class FulfillmentAdminOperationsAdapter(
                             x.OrderLineId,
                             x.Quantity,
                             (ReturnReceiptCondition)x.Condition))
-                        .ToList()));
+                        .ToList()),
+            // TB-262: the damaged-goods state of THIS parcel and the replacement it produced.
+            shipment.DamagedResolutionId,
+            shipment.ReplacementReservationId,
+            shipment.IsReplacement,
+            shipment.DamagedResolutions is null || shipment.DamagedResolutions.Count == 0
+                ? null
+                : shipment.DamagedResolutions
+                    .Select(x => new DamagedResolutionSnapshot(
+                        x.DamagedGoodsResolutionId,
+                        x.ShipmentId,
+                        x.ShipmentReturnReceiptId,
+                        x.OrderLineId,
+                        x.Quantity,
+                        (DamagedResolutionOutcome)x.Outcome,
+                        (DamagedResolutionStatus)x.Status,
+                        x.DecidedByUserId,
+                        x.CreatedAt,
+                        x.UpdatedAt,
+                        x.ReplacementReservationId,
+                        x.ReplacementShipmentId,
+                        x.Note))
+                    .ToList());
 
     private static ConsolidatedPackageSnapshot Map(AppModels.ConsolidatedPackageSnapshot package) =>
         new(

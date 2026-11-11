@@ -388,6 +388,10 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 !packageLocked && Boolean(actionFor(actions, "record_return_receipt", seller.id, shipment.shipmentId)),
               canResend:
                 !packageLocked && Boolean(actionFor(actions, "resend_shipment", seller.id, shipment.shipmentId)),
+              // TB-262: damaged units received back are never resend capacity; each one needs its own
+              // deliberate decision, which the server projects for exactly this returned parcel.
+              canResolveDamagedGoods:
+                !packageLocked && Boolean(actionFor(actions, "resolve_damaged_goods", seller.id, shipment.shipmentId)),
             };
           }}
           onParcelTrack={(seller, shipment) => setTrackingTarget({ seller, shipment })}
@@ -434,6 +438,15 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 : {}),
               ...(request.code === "resend_shipment"
                 ? { selections: request.selections, idempotencyKey: request.idempotencyKey }
+                : {}),
+              ...(request.code === "resolve_damaged_goods"
+                ? {
+                  orderLineId: request.orderLineId,
+                  quantity: request.quantity,
+                  damagedOutcome: request.outcome,
+                  note: request.note,
+                  idempotencyKey: request.idempotencyKey,
+                }
                 : {}),
             });
             setPendingCode(null);

@@ -215,11 +215,15 @@ internal static class AdminFulfillmentWorkUnitProjection
         var timing = AdminFulfillmentDispatchTimingAuthority.Classify(pending, inTransit, plans, context.NowUtc);
         var resendable = shipment.Status == ShipmentStatus.Returned
             && shipment.Items.Any(line => ResendableOf(context, shipment.ShipmentId, line.OrderLineId) > 0m);
+        // TB-262: a physically received DAMAGED unit is never resend capacity and is not a resolved fact either.
+        var outstandingDamaged = shipment.Status == ShipmentStatus.Returned
+            && shipment.Items.Any(line => line.OutstandingDamagedQuantity > 0m);
         var codes = AdminFulfillmentQueueFilters.ProjectParcelActionCodes(
             shipment.Status,
             !string.IsNullOrWhiteSpace(shipment.TrackingReference),
             shipment.DispatchedAt is not null,
-            resendable);
+            resendable,
+            outstandingDamaged);
         var methodCode = string.IsNullOrWhiteSpace(shipment.ShippingMethodCode)
             ? unit.ShippingMethodCode
             : shipment.ShippingMethodCode;

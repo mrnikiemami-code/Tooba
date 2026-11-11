@@ -15,6 +15,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     private readonly List<Shipment> _shipments = [];
     private readonly List<FulfillmentShippingGroup> _shippingGroups = [];
     private readonly List<ShipmentReturnReceipt> _returnReceipts = [];
+    private readonly List<DamagedGoodsResolution> _damagedResolutions = [];
 
     private FulfillmentUnit()
     {
@@ -79,6 +80,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
     /// <summary>TB-258: origin receipts of returned parcels of this unit.</summary>
     public IReadOnlyList<ShipmentReturnReceipt> ReturnReceipts => _returnReceipts;
+
+    /// <summary>TB-262: durable damaged-goods decisions of this unit.</summary>
+    public IReadOnlyList<DamagedGoodsResolution> DamagedResolutions => _damagedResolutions;
 
     /// <summary>آیا سفارش این واحد گروه‌بندی ارسال پذیرفته‌شده دارد.</summary>
     public bool HasShippingGroups => _shippingGroups.Count > 0;
@@ -236,6 +240,13 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     {
         _returnReceipts.Clear();
         _returnReceipts.AddRange(receipts);
+    }
+
+    /// <summary>TB-262: تصمیم‌های آسیب‌دیدگی بارگذاری‌شده را وصل می‌کند.</summary>
+    public void AttachLoadedDamagedResolutions(IEnumerable<DamagedGoodsResolution> resolutions)
+    {
+        _damagedResolutions.Clear();
+        _damagedResolutions.AddRange(resolutions);
     }
 
     /// <summary>همهٔ باقیمانده را وارد پردازش می‌کند.</summary>
@@ -696,7 +707,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     /// </summary>
     public decimal OpenAllocatedQuantity(Guid orderLineId) =>
         _shipments
-            .Where(s => s.Status == ShipmentStatus.Created && !s.IsResend)
+            .Where(s => s.Status == ShipmentStatus.Created && !s.IsReturnFunded)
             .SelectMany(s => s.Items)
             .Where(x => x.OrderLineId == orderLineId)
             .Sum(x => x.Quantity);
@@ -782,6 +793,307 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         return source is not null && source.Items.Any(x => ResendableQuantity(sourceShipmentId, x.OrderLineId) > 0m);
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // TB-262: damaged-goods capacity and durable decisions.
+    //
+    // DAMAGED units are the exact complement of usable capacity: they are physically received, they never fund a
+    // resend, they never raise saleable stock (the original sale already consumed them) and they are not a reason to
+    // decrement stock a second time. Each damaged unit is resolved by exactly ONE durable decision so one unit can
+    // never fund both a replacement and a refund/another replacement.
+    // ---------------------------------------------------------------------------------------------
+
+    /// <summary>TB-262: physically received DAMAGED quantity of ONE source parcel line.</summary>
+    public decimal ReceiptDamagedQuantity(Guid sourceShipmentId, Guid orderLineId) =>
+        _returnReceipts
+            .Where(r => r.ShipmentId == sourceShipmentId)
+            .SelectMany(r => r.Items)
+            .Where(x => x.OrderLineId == orderLineId && x.Condition == ReturnReceiptCondition.Damaged)
+            .Sum(x => x.Quantity);
+
+    /// <summary>
+    /// TB-262: damaged quantity of ONE source parcel line already bound to a non-cancelled decision. A cancelled
+    /// decision releases its units back to unresolved; a recorded/replacement decision keeps them committed.
+    /// </summary>
+    public decimal DamagedCommittedQuantity(Guid sourceShipmentId, Guid orderLineId) =>
+        _damagedResolutions
+            .Where(r => r.ShipmentId == sourceShipmentId
+                && r.OrderLineId == orderLineId
+                && r.Status != DamagedResolutionStatus.Cancelled)
+            .Sum(r => r.Quantity);
+
+    /// <summary>TB-262: damaged quantity of ONE source parcel line still awaiting a decision.</summary>
+    public decimal OutstandingDamagedQuantity(Guid sourceShipmentId, Guid orderLineId)
+    {
+        var remaining = ReceiptDamagedQuantity(sourceShipmentId, orderLineId)
+            - DamagedCommittedQuantity(sourceShipmentId, orderLineId);
+        return remaining > 0m ? remaining : 0m;
+    }
+
+    /// <summary>TB-262: outstanding damaged quantity of one line across every source parcel of this unit.</summary>
+    public decimal OutstandingDamagedQuantity(Guid orderLineId) =>
+        _returnReceipts
+            .Select(r => r.ShipmentId)
+            .Distinct()
+            .Sum(shipmentId => OutstandingDamagedQuantity(shipmentId, orderLineId));
+
+    /// <summary>TB-262: true when at least one returned parcel still owes a damaged-goods decision.</summary>
+    public bool HasOutstandingDamagedQuantity(Guid sourceShipmentId) =>
+        _returnReceipts
+            .Where(r => r.ShipmentId == sourceShipmentId)
+            .SelectMany(r => r.Items)
+            .Any(x => x.Condition == ReturnReceiptCondition.Damaged
+                && OutstandingDamagedQuantity(sourceShipmentId, x.OrderLineId) > 0m);
+
+    /// <summary>TB-262: the durable decision with this identity, if any.</summary>
+    public DamagedGoodsResolution? FindDamagedResolution(Guid resolutionId) =>
+        _damagedResolutions.SingleOrDefault(x => x.DamagedGoodsResolutionId == resolutionId);
+
+    /// <summary>
+    /// TB-262: records the operator's reviewed decision for a damaged quantity of ONE source parcel line.
+    ///
+    /// A recorded occurrence answers only the EXACT same intent (source parcel, line, quantity, outcome): the retry
+    /// after a lost response returns the recorded decision, a changed intent is a typed conflict with zero writes,
+    /// and the recorded decision is never silently re-attributed or re-created. The quantity is bounded by THIS
+    /// source parcel's own outstanding damaged quantity, so a sibling parcel's damaged units can never be borrowed.
+    /// </summary>
+    public DamagedGoodsResolution RecordDamagedResolution(
+        Guid resolutionId,
+        Guid shipmentId,
+        Guid orderLineId,
+        decimal quantity,
+        DamagedResolutionOutcome outcome,
+        string? occurrenceKey,
+        Guid actorUserId,
+        string? note,
+        DateTimeOffset now)
+    {
+        EnsureNotTerminal();
+
+        var key = string.IsNullOrWhiteSpace(occurrenceKey) ? null : occurrenceKey.Trim();
+        if (key is null)
+        {
+            throw new ContractOperationException("fulfillment.damage.resolution_occurrence_required");
+        }
+
+        var recorded = _damagedResolutions.FirstOrDefault(x =>
+            string.Equals(x.OccurrenceKey, key, StringComparison.Ordinal));
+        if (recorded is not null)
+        {
+            if (!recorded.AnswersIntent(shipmentId, orderLineId, quantity, outcome))
+            {
+                throw new ContractOperationException("fulfillment.damage.resolution_intent_conflict");
+            }
+
+            return recorded;
+        }
+
+        var shipment = RequireShipment(shipmentId);
+        if (shipment.Status != ShipmentStatus.Returned)
+        {
+            throw new ContractOperationException("fulfillment.damage.source_not_returned");
+        }
+
+        var receipt = _returnReceipts.SingleOrDefault(x => x.ShipmentId == shipmentId)
+            ?? throw new ContractOperationException("fulfillment.damage.receipt_missing");
+
+        if (!shipment.Items.Any(x => x.OrderLineId == orderLineId))
+        {
+            throw new ContractOperationException("fulfillment.damage.line_foreign");
+        }
+
+        if (ReceiptDamagedQuantity(shipmentId, orderLineId) <= 0m)
+        {
+            throw new ContractOperationException("fulfillment.damage.no_damaged_quantity");
+        }
+
+        if (quantity > OutstandingDamagedQuantity(shipmentId, orderLineId))
+        {
+            throw new ContractOperationException("fulfillment.damage.exceeds_outstanding");
+        }
+
+        // The customer must still be owed these units: a decision can never manufacture an obligation that the paid
+        // order no longer carries (ordered quantity already fully delivered to the customer).
+        var item = RequireItem(orderLineId);
+        var stillOwed = item.QuantityOrdered - DeliveredQuantity(orderLineId);
+        if (quantity > stillOwed)
+        {
+            throw new ContractOperationException("fulfillment.damage.obligation_already_settled");
+        }
+
+        var resolution = DamagedGoodsResolution.Record(
+            resolutionId,
+            FulfillmentId,
+            shipmentId,
+            receipt.ShipmentReturnReceiptId,
+            orderLineId,
+            quantity,
+            outcome,
+            key,
+            actorUserId,
+            note,
+            now);
+        _damagedResolutions.Add(resolution);
+        UpdatedAt = now;
+        return resolution;
+    }
+
+    /// <summary>TB-262: links the replacement's OWN healthy-stock reservation to its decision.</summary>
+    public void AttachDamagedResolutionReservation(Guid resolutionId, Guid reservationId, DateTimeOffset now)
+    {
+        var resolution = FindDamagedResolution(resolutionId)
+            ?? throw new ContractOperationException("fulfillment.damage.resolution_not_found");
+        resolution.AttachReservation(reservationId, now);
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// TB-262: creates the linked replacement parcel for an ALREADY reserved damaged-goods decision. The parcel is
+    /// funded by the decision's own new reservation, keeps the accepted group/method of the damaged source and never
+    /// touches returned capacity, the packed remainder or the original sale reservation.
+    /// </summary>
+    public Shipment CreateReplacementShipment(
+        Guid shipmentId,
+        Func<Guid> newId,
+        Guid resolutionId,
+        Guid actorUserId,
+        string carrierDisplayName,
+        DateTimeOffset now)
+    {
+        EnsureNotTerminal();
+
+        var resolution = FindDamagedResolution(resolutionId)
+            ?? throw new ContractOperationException("fulfillment.damage.resolution_not_found");
+        if (resolution.Outcome != DamagedResolutionOutcome.Replacement)
+        {
+            throw new ContractOperationException("fulfillment.damage.resolution_not_replacement");
+        }
+
+        if (resolution.Status == DamagedResolutionStatus.Cancelled)
+        {
+            throw new ContractOperationException("fulfillment.damage.resolution_cancelled");
+        }
+
+        if (resolution.ReplacementShipmentId is { } existingId)
+        {
+            return _shipments.SingleOrDefault(x => x.ShipmentId == existingId)
+                ?? throw new ContractOperationException("fulfillment.damage.replacement_missing");
+        }
+
+        if (resolution.ReplacementReservationId is not { } reservationId)
+        {
+            throw new ContractOperationException("fulfillment.damage.reservation_required");
+        }
+
+        var original = RequireShipment(resolution.ShipmentId);
+        var items = new[] { (resolution.OrderLineId, resolution.Quantity) };
+
+        // The parcel's dispatch key stays bound to the reviewed occurrence, but it is ATTEMPT-scoped: an exact replay
+        // of the same occurrence keeps its key (so the recorded parcel is reused), while a retry after an explicit
+        // pre-dispatch cancellation is genuinely a NEW parcel and must never collide with the cancelled one.
+        var dispatchKey = resolution.Attempt == 1
+            ? resolution.OccurrenceKey
+            : $"attempt{resolution.Attempt}:{resolution.DamagedGoodsResolutionId:N}";
+
+        var shipment = Shipment.CreateReplacement(
+            shipmentId,
+            newId,
+            FulfillmentId,
+            original.ShipmentId,
+            resolution.DamagedGoodsResolutionId,
+            reservationId,
+            string.IsNullOrWhiteSpace(carrierDisplayName) ? original.CarrierDisplayName : carrierDisplayName,
+            items,
+            now,
+            original.ShippingMethodCode,
+            original.ShippingMethodLabel,
+            original.ShippingGroupId,
+            dispatchKey,
+            actorUserId);
+
+        _shipments.Add(shipment);
+        resolution.MarkFulfilled(shipment.ShipmentId, now);
+        UpdatedAt = now;
+        _domainEvents.Add(new ShipmentCreatedDomainEvent(FulfillmentId, shipment.ShipmentId, SellerOrderId));
+        return shipment;
+    }
+
+    /// <summary>
+    /// TB-262: cancelling a replacement before dispatch releases ONLY its own new healthy-stock reservation and puts
+    /// the decision back to "still owes a replacement". The damaged units stay non-saleable and unresolved.
+    /// Returns the reservation that the caller must release exactly once.
+    /// </summary>
+    public Guid? DetachReplacementReservationForCancel(Guid replacementShipmentId, DateTimeOffset now)
+    {
+        var shipment = RequireShipment(replacementShipmentId);
+        if (!shipment.IsReplacement || shipment.DamagedResolutionId is not { } resolutionId)
+        {
+            return null;
+        }
+
+        var resolution = FindDamagedResolution(resolutionId);
+        if (resolution is null || resolution.Status == DamagedResolutionStatus.Cancelled)
+        {
+            return null;
+        }
+
+        var released = resolution.ReplacementReservationId;
+        resolution.ReleaseBeforeDispatch(now);
+        UpdatedAt = now;
+        return released;
+    }
+
+    /// <summary>TB-262: read-only answer for one exact reviewed damaged-goods decision.</summary>
+    public RecordedDamagedResolution ResolveRecordedDamagedResolution(
+        string? occurrenceKey,
+        Guid shipmentId,
+        Guid orderLineId,
+        decimal quantity,
+        DamagedResolutionOutcome outcome)
+    {
+        var key = string.IsNullOrWhiteSpace(occurrenceKey) ? null : occurrenceKey.Trim();
+        if (key is null)
+        {
+            return new RecordedDamagedResolution(RecordedDamagedResolutionState.NotRecorded, null);
+        }
+
+        var recorded = _damagedResolutions.FirstOrDefault(x =>
+            string.Equals(x.OccurrenceKey, key, StringComparison.Ordinal));
+        if (recorded is null)
+        {
+            return new RecordedDamagedResolution(RecordedDamagedResolutionState.NotRecorded, null);
+        }
+
+        if (!recorded.AnswersIntent(shipmentId, orderLineId, quantity, outcome))
+        {
+            return new RecordedDamagedResolution(RecordedDamagedResolutionState.Conflict, null);
+        }
+
+        return recorded.Status == DamagedResolutionStatus.Cancelled
+            ? new RecordedDamagedResolution(RecordedDamagedResolutionState.ResolvedCancelled, recorded)
+            : new RecordedDamagedResolution(RecordedDamagedResolutionState.Recorded, recorded);
+    }
+
+    /// <summary>TB-262: state of one recorded damaged-goods decision lookup.</summary>
+    public enum RecordedDamagedResolutionState
+    {
+        /// <summary>No durable decision answers this exact intent.</summary>
+        NotRecorded = 0,
+
+        /// <summary>The exact reviewed decision is recorded.</summary>
+        Recorded = 1,
+
+        /// <summary>The exact reviewed decision was explicitly cancelled before dispatch.</summary>
+        ResolvedCancelled = 2,
+
+        /// <summary>A decision exists under this occurrence but answers a different intent.</summary>
+        Conflict = 3,
+    }
+
+    /// <summary>TB-262: outcome of the read-only damaged-goods decision lookup.</summary>
+    public sealed record RecordedDamagedResolution(
+        RecordedDamagedResolutionState State,
+        DamagedGoodsResolution? Resolution);
+
     private FulfillmentItem RequireItem(Guid orderLineId) =>
         _items.SingleOrDefault(x => x.OrderLineId == orderLineId)
         ?? throw new ContractOperationException("fulfillment.order_line.not_found");
@@ -820,7 +1132,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         // TB-258: a resend moves returned goods a second time for the same order line. It consumes returned
         // capacity (see ResendCommittedQuantity) and must never inflate the first-dispatch counter, otherwise the
         // lifetime shipped quantity would exceed the ordered quantity and every remaining-quantity reader breaks.
-        if (!shipment.IsResend)
+        // TB-262: a replacement parcel moves NEW healthy stock for units that already shipped once, so it must not
+        // inflate that counter either.
+        if (!shipment.IsReturnFunded)
         {
             foreach (var item in shipment.Items)
             {

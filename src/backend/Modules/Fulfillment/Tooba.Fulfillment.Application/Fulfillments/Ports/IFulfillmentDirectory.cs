@@ -172,6 +172,36 @@ public interface IFulfillmentDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// TB-262: records the durable operator decision for a DAMAGED quantity of one returned parcel line. For a
+    /// replacement it also reserves NEW healthy stock of the same ordered offer and creates the linked replacement
+    /// parcel. Damaged units never become resend capacity and never return to saleable stock; the decision is
+    /// idempotent per occurrence key and bounded by the source parcel's own outstanding damaged quantity.
+    /// </summary>
+    Task<FulfillmentDamagedResolution> ResolveDamagedGoodsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        Guid shipmentId,
+        Guid orderLineId,
+        decimal quantity,
+        DamagedResolutionOutcome outcome,
+        string? occurrenceKey,
+        string? note,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-262: READ-ONLY exact-intent lookup of a recorded damaged-goods decision. It never writes, never reserves,
+    /// never allocates and never authorizes; it only lets a lost response be reconciled through the public command.
+    /// </summary>
+    Task<FulfillmentDamagedIntentRecord> ReconcileDamagedResolutionAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid orderLineId,
+        decimal quantity,
+        DamagedResolutionOutcome outcome,
+        string? occurrenceKey,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// fulfillment شروع‌نشده را پس از برگشت تأیید پرداخت حذف می‌کند.
     /// </summary>
     Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken);

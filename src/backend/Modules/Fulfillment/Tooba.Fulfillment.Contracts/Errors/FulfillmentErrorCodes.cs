@@ -189,6 +189,85 @@ public static class FulfillmentErrorCodes
     /// <summary>Package tracking is required.</summary>
     public const string PackageTrackingRequired = "fulfillment.package.tracking_required";
 
+    // ---- TB-262: damaged-goods resolution and healthy replacement -------------------------
+    /// <summary>The damaged-goods decision is missing every required identity.</summary>
+    public const string DamagedIdsRequired = "fulfillment.damage.resolution_ids_required";
+
+    /// <summary>The decided damaged quantity must be positive.</summary>
+    public const string DamagedQuantityPositive = "fulfillment.damage.resolution_qty_positive";
+
+    /// <summary>The chosen damaged-goods outcome is not one of the server-owned outcomes.</summary>
+    public const string DamagedOutcomeInvalid = "fulfillment.damage.resolution_outcome_invalid";
+
+    /// <summary>A damaged-goods decision needs the reviewing server-side actor.</summary>
+    public const string DamagedActorRequired = "fulfillment.damage.resolution_actor_required";
+
+    /// <summary>A damaged-goods decision needs its durable occurrence identity.</summary>
+    public const string DamagedOccurrenceRequired = "fulfillment.damage.resolution_occurrence_required";
+
+    /// <summary>The operator note of a damaged-goods decision is too long.</summary>
+    public const string DamagedNoteInvalid = "fulfillment.damage.resolution_note_invalid";
+
+    /// <summary>The same occurrence was replayed with a different source, line, quantity or outcome.</summary>
+    public const string DamagedIntentConflict = "fulfillment.damage.resolution_intent_conflict";
+
+    /// <summary>The source parcel was not physically returned, so it carries no damaged goods.</summary>
+    public const string DamagedSourceNotReturned = "fulfillment.damage.source_not_returned";
+
+    /// <summary>The source parcel has no recorded origin receipt.</summary>
+    public const string DamagedReceiptMissing = "fulfillment.damage.receipt_missing";
+
+    /// <summary>The order line does not belong to the damaged source parcel.</summary>
+    public const string DamagedLineForeign = "fulfillment.damage.line_foreign";
+
+    /// <summary>The source parcel line carries no damaged quantity.</summary>
+    public const string DamagedQuantityMissing = "fulfillment.damage.no_damaged_quantity";
+
+    /// <summary>The decided quantity exceeds this source parcel's own outstanding damaged quantity.</summary>
+    public const string DamagedExceedsOutstanding = "fulfillment.damage.exceeds_outstanding";
+
+    /// <summary>The customer obligation is already settled, so a replacement cannot be funded.</summary>
+    public const string DamagedObligationSettled = "fulfillment.damage.obligation_already_settled";
+
+    /// <summary>No healthy stock of the same offer is available for the replacement.</summary>
+    public const string DamagedReplacementUnavailable = "fulfillment.damage.replacement_unavailable";
+
+    /// <summary>The ordered line has no committed sale reservation, so the offer cannot be proven.</summary>
+    public const string DamagedOriginalReservationMissing = "fulfillment.damage.original_reservation_missing";
+
+    /// <summary>The damaged-goods decision was explicitly cancelled before dispatch.</summary>
+    public const string DamagedResolutionCancelled = "fulfillment.damage.resolution_cancelled";
+
+    /// <summary>The damaged-goods decision is not a replacement decision.</summary>
+    public const string DamagedNotReplacement = "fulfillment.damage.resolution_not_replacement";
+
+    /// <summary>The damaged-goods decision is not open for this transition.</summary>
+    public const string DamagedNotOpen = "fulfillment.damage.resolution_not_open";
+
+    /// <summary>The damaged-goods decision was not found.</summary>
+    public const string DamagedResolutionNotFound = "fulfillment.damage.resolution_not_found";
+
+    /// <summary>The replacement's own healthy-stock reservation is required.</summary>
+    public const string DamagedReservationRequired = "fulfillment.damage.reservation_required";
+
+    /// <summary>A different replacement reservation is already linked to this decision.</summary>
+    public const string DamagedReservationConflict = "fulfillment.damage.reservation_conflict";
+
+    /// <summary>A different replacement parcel is already linked to this decision.</summary>
+    public const string DamagedReplacementConflict = "fulfillment.damage.replacement_conflict";
+
+    /// <summary>The linked replacement parcel could not be found.</summary>
+    public const string DamagedReplacementMissing = "fulfillment.damage.replacement_missing";
+
+    /// <summary>The replacement needs its damaged source identity.</summary>
+    public const string DamagedReplacementSourceRequired = "fulfillment.damage.replacement_source_required";
+
+    /// <summary>The replacement needs its durable occurrence identity.</summary>
+    public const string DamagedReplacementOccurrenceRequired = "fulfillment.damage.replacement_occurrence_required";
+
+    /// <summary>A concurrent operator resolved the same damaged units first.</summary>
+    public const string DamagedConcurrencyConflict = "fulfillment.damage.concurrency_conflict";
+
     // ---- Shipping method -----------------------------------------------------------------
     /// <summary>Shipping method is unsupported.</summary>
     public const string ShippingMethodUnsupported = "fulfillment.shipping_method.unsupported";

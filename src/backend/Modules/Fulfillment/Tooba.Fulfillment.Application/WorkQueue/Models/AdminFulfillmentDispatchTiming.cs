@@ -103,6 +103,8 @@ public static class AdminFulfillmentNextStep
         ("start_return", "برگشت به مبدأ"),
         ("record_return_receipt", "تأیید دریافت در مبدأ"),
         ("resend_shipment", "ارسال مجدد"),
+        // TB-262: damaged received units are not resend capacity; their decision is its own physical next step.
+        ("resolve_damaged_goods", "تعیین تکلیف کالای آسیب‌دیده"),
     ];
 
     /// <summary>First permitted operation in physical progression, or none.</summary>

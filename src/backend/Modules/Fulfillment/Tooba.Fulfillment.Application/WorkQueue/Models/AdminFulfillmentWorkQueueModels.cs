@@ -359,7 +359,8 @@ public static class AdminFulfillmentQueueFilters
         ShipmentStatus status,
         bool hasTracking,
         bool hasDispatchedAt,
-        bool hasResendableCapacity)
+        bool hasResendableCapacity,
+        bool hasOutstandingDamagedQuantity = false)
     {
         var codes = new List<string>();
         switch (status)
@@ -394,6 +395,12 @@ public static class AdminFulfillmentQueueFilters
                 if (hasResendableCapacity)
                 {
                     codes.Add("resend_shipment");
+                }
+
+                // TB-262: a physically received DAMAGED unit is never resend capacity and is not resolved either.
+                if (hasOutstandingDamagedQuantity)
+                {
+                    codes.Add("resolve_damaged_goods");
                 }
 
                 break;

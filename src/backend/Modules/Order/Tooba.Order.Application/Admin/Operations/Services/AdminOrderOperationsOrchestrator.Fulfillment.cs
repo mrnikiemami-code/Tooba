@@ -394,6 +394,136 @@ public sealed partial class AdminOrderOperationsOrchestrator
     }
 
     /// <summary>
+    /// TB-262: records the reviewed decision for a DAMAGED quantity of one returned parcel line. This runs the same
+    /// post-dispatch gate as non-delivery/return/resend: current actor permission, the checkout/fulfillment/parcel
+    /// relationship, and the exact reviewed intent are re-checked on every request — and an EXACT recorded decision
+    /// is answered from the owning durable facts after a lost response. Damaged units are never resend capacity.
+    /// </summary>
+    private async Task<object> RunDamagedResolutionAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+        EnsureCancelledDoesNotBlock(group, "resolve_damaged_goods");
+
+        // Authorization is evaluated before any evidence read: a retained browser envelope is never authorization.
+        if (!HasAny(effective, "order.handle", "fulfillment.manage"))
+        {
+            throw new AdminOrderOperationsException("order.operation.denied");
+        }
+
+        var fulfillmentId = RequireFulfillmentId(request);
+        var shipmentId = RequireShipmentId(request);
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var owned = fulfillments.FirstOrDefault(x => x.FulfillmentId == fulfillmentId)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        if (owned.Shipments.All(x => x.ShipmentId != shipmentId))
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var (orderLineId, quantity, outcome, occurrenceKey) = BuildDamagedIntent(request);
+        var recorded = await _fulfillment.ReconcileDamagedResolutionAsync(
+            new DamagedResolutionIntent(fulfillmentId, shipmentId, orderLineId, quantity, outcome, occurrenceKey),
+            cancellationToken);
+        switch (recorded.State)
+        {
+            case PostDispatchIntentState.Recorded:
+            case PostDispatchIntentState.ResolvedCancelled:
+                // The authoritative owning state of THIS exact reviewed request: nothing is written and no actor or
+                // timestamp is reattributed. A resolved cancellation is history, never recreated.
+                return recorded.Snapshot
+                    ?? throw new AdminOrderOperationsException("order.operation.invalid");
+            case PostDispatchIntentState.Conflict:
+                throw new AdminOrderOperationsException(recorded.ConflictCode ?? "order.operation.invalid");
+        }
+
+        await EnsureProjectedActionAllowedAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            "resolve_damaged_goods",
+            effective,
+            allowReturnLifecycleFallback: false,
+            cancellationToken);
+
+        return await ResolveDamagedGoodsCoreAsync(
+            fulfillmentId,
+            shipmentId,
+            orderLineId,
+            quantity,
+            outcome,
+            occurrenceKey,
+            actorUserId,
+            request,
+            cancellationToken);
+    }
+
+    /// <summary>TB-262: the exact reviewed damaged-goods intent, validated before any owner call.</summary>
+    private static (Guid OrderLineId, decimal Quantity, DamagedResolutionOutcome Outcome, string OccurrenceKey)
+        BuildDamagedIntent(AdminOrderOperationRequest request)
+    {
+        if (request.OrderLineId is not { } orderLineId || orderLineId == Guid.Empty)
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        if (request.Quantity is not { } quantity || quantity <= 0m)
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var outcome = (request.DamagedOutcome ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "replacement" => DamagedResolutionOutcome.Replacement,
+            "referral" => DamagedResolutionOutcome.Referral,
+            _ => throw new AdminOrderOperationsException("order.operation.invalid"),
+        };
+
+        // The reviewed occurrence is mandatory: without it the owning aggregate cannot answer a retry exactly.
+        var key = string.IsNullOrWhiteSpace(request.IdempotencyKey)
+            ? throw new AdminOrderOperationsException("order.operation.invalid")
+            : request.IdempotencyKey.Trim();
+
+        return (orderLineId, quantity, outcome, key);
+    }
+
+    private async Task<object> ResolveDamagedGoodsCoreAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid orderLineId,
+        decimal quantity,
+        DamagedResolutionOutcome outcome,
+        string occurrenceKey,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var resolved = await _fulfillment.ResolveDamagedGoodsAsync(
+            fulfillmentId,
+            actorUserId,
+            shipmentId,
+            orderLineId,
+            quantity,
+            outcome,
+            occurrenceKey,
+            request.Note,
+            cancellationToken);
+        if (!string.IsNullOrWhiteSpace(resolved.BlockerCode))
+        {
+            // The decision IS durable; only the replacement could not be funded now. The actionable reason is
+            // surfaced instead of a generic failure, and no hold/parcel was left behind.
+            throw new AdminOrderOperationsException(resolved.BlockerCode);
+        }
+
+        return resolved.Snapshot;
+    }
+
+    /// <summary>
     /// TB-258-R2: every post-dispatch exception command runs here. An EXACT recorded intent recovered after a lost
     /// response is answered from the owning durable facts even when the fresh projection no longer offers the
     /// action; anything else must still pass the ordinary current-projection gate, so an absent record can never

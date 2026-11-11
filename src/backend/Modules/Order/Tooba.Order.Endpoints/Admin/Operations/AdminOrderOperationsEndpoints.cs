@@ -28,6 +28,7 @@ using Tooba.Order.Application.Admin.Operations.Commands.RecordNonDelivery;
 using Tooba.Order.Application.Admin.Operations.Commands.RecordReturnReceipt;
 using Tooba.Order.Application.Admin.Operations.Commands.RequestReturn;
 using Tooba.Order.Application.Admin.Operations.Commands.ResendShipment;
+using Tooba.Order.Application.Admin.Operations.Commands.ResolveDamagedGoods;
 using Tooba.Order.Application.Admin.Operations.Commands.RestoreCancelledOrder;
 using Tooba.Order.Application.Admin.Operations.Commands.RestoreDeposit;
 using Tooba.Order.Application.Admin.Operations.Commands.StartReturn;
@@ -127,6 +128,7 @@ internal static class AdminOrderOperationsEndpoints
             "start_return" => await sender.Send(new StartReturnCommand(checkoutId, actor, request), ct),
             "record_return_receipt" => await sender.Send(new RecordReturnReceiptCommand(checkoutId, actor, request), ct),
             "resend_shipment" => await sender.Send(new ResendShipmentCommand(checkoutId, actor, request), ct),
+            "resolve_damaged_goods" => await sender.Send(new ResolveDamagedGoodsCommand(checkoutId, actor, request), ct),
             _ => Result.Failure<object>(new SemanticError("order.operation.invalid")),
         };
         return api.From(result);

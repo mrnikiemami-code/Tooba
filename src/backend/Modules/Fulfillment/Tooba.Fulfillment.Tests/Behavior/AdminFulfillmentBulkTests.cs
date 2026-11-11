@@ -234,6 +234,10 @@ public sealed class AdminFulfillmentBulkTests
             throw new NotImplementedException();
         public Task<PostDispatchIntentRecord> ReconcilePostDispatchIntentAsync(PostDispatchIntent intent, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
+        public Task<FulfillmentDamagedResolution> ResolveDamagedGoodsAsync(Guid fulfillmentId, Guid actorUserId, Guid shipmentId, Guid orderLineId, decimal quantity, DamagedResolutionOutcome outcome, string? occurrenceKey, string? note, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
+        public Task<FulfillmentDamagedIntentRecord> ReconcileDamagedResolutionAsync(Guid fulfillmentId, Guid shipmentId, Guid orderLineId, decimal quantity, DamagedResolutionOutcome outcome, string? occurrenceKey, CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
         public Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
         public Task EnsureCreatedForPaidCheckoutAsync(Guid checkoutId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) =>

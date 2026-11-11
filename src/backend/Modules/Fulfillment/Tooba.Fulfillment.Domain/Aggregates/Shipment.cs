@@ -92,8 +92,34 @@ public sealed class Shipment
     /// </summary>
     public Guid? ResendOfShipmentId { get; init; }
 
-    /// <summary>TB-258: a resend parcel consumes returned capacity, never the packed remainder.</summary>
-    public bool IsResend => ResendOfShipmentId is not null;
+    /// <summary>
+    /// TB-262: the damaged-goods decision that funds a REPLACEMENT parcel. Null for every parcel that is not a
+    /// replacement, so a replacement can never be mistaken for a healthy returned-goods resend.
+    /// </summary>
+    public Guid? DamagedResolutionId { get; init; }
+
+    /// <summary>
+    /// TB-262: the replacement's OWN purpose-bound healthy-stock reservation. It is consumed exactly once at
+    /// dispatch and released exactly once if the replacement is cancelled before dispatch. The original sale
+    /// reservation is never re-used, re-consumed or released by this parcel.
+    /// </summary>
+    public Guid? ReplacementReservationId { get; init; }
+
+    /// <summary>
+    /// TB-258: a resend parcel consumes returned usable capacity, never the packed remainder. TB-262: a replacement
+    /// parcel is NOT a resend — it is funded by its own new healthy-stock reservation — so the two capacities can
+    /// never be confused by a capacity reader.
+    /// </summary>
+    public bool IsResend => ResendOfShipmentId is not null && DamagedResolutionId is null;
+
+    /// <summary>TB-262: a replacement parcel created from an authorized damaged-goods decision.</summary>
+    public bool IsReplacement => DamagedResolutionId is not null;
+
+    /// <summary>
+    /// TB-262: true for every parcel whose units already left the warehouse once (healthy resend or replacement).
+    /// These parcels never inflate the first-dispatch counters and never shrink the fresh packed remainder.
+    /// </summary>
+    public bool IsReturnFunded => IsResend || IsReplacement;
 
     /// <summary>زمان ایجاد.</summary>
     public DateTimeOffset CreatedAt { get; init; }
@@ -157,7 +183,7 @@ public sealed class Shipment
             // TB-258: a Created RESEND parcel is funded by returned capacity, not by the packed remainder, so it is
             // never counted as an open first allocation here.
             var openAllocated = existingShipments
-                .Where(s => s.Status == ShipmentStatus.Created && !s.IsResend)
+                .Where(s => s.Status == ShipmentStatus.Created && !s.IsReturnFunded)
                 .SelectMany(s => s.Items)
                 .Where(x => x.OrderLineId == item.OrderLineId)
                 .Sum(x => x.Quantity);
@@ -246,6 +272,95 @@ public sealed class Shipment
             ShippingGroupId = shippingGroupId,
             ShippingDispatchKey = normalizedDispatchKey,
             ResendOfShipmentId = resendOfShipmentId,
+            Status = ShipmentStatus.Created,
+            CreatedByUserId = actorUserId,
+            CarrierDisplayName = carrierDisplayName.Trim(),
+            ShippingMethodCode = (shippingMethodCode ?? string.Empty).Trim(),
+            ShippingMethodLabel = string.IsNullOrWhiteSpace(shippingMethodLabel)
+                ? carrierDisplayName.Trim()
+                : shippingMethodLabel.Trim(),
+            CreatedAt = now,
+        };
+        foreach (var item in items)
+        {
+            shipment._items.Add(ShipmentItem.Create(newId(), shipment.ShipmentId, item.OrderLineId, item.Quantity));
+        }
+
+        return shipment;
+    }
+
+    /// <summary>
+    /// TB-262: creates a REPLACEMENT parcel for damaged goods under an authorized damaged-goods decision.
+    ///
+    /// It is deliberately not a resend: the units come from NEW healthy stock under the replacement's own
+    /// purpose-bound reservation, so the first-dispatch packed/ordered guards are not applied here (those units were
+    /// already counted once for the original parcel) and no returned usable capacity is consumed. Lineage keeps the
+    /// immediate damaged source parcel AND the exact resolution/reservation.
+    /// </summary>
+    /// <param name="shippingGroupId">Accepted group of the damaged source, preserved unchanged.</param>
+    internal static Shipment CreateReplacement(
+        Guid shipmentId,
+        Func<Guid> newId,
+        Guid fulfillmentId,
+        Guid damagedSourceShipmentId,
+        Guid damagedResolutionId,
+        Guid replacementReservationId,
+        string carrierDisplayName,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> items,
+        DateTimeOffset now,
+        string? shippingMethodCode,
+        string? shippingMethodLabel,
+        Guid? shippingGroupId,
+        string? shippingDispatchKey,
+        Guid actorUserId)
+    {
+        if (damagedSourceShipmentId == Guid.Empty || damagedResolutionId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.damage.replacement_source_required");
+        }
+
+        if (replacementReservationId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.damage.reservation_required");
+        }
+
+        if (actorUserId == Guid.Empty)
+        {
+            throw new ContractOperationException("fulfillment.damage.resolution_actor_required");
+        }
+
+        if (string.IsNullOrWhiteSpace(carrierDisplayName))
+        {
+            throw new ContractOperationException("fulfillment.shipment.carrier_required");
+        }
+
+        if (shippingGroupId == Guid.Empty)
+        {
+            throw new ContractOperationException(FulfillmentShippingGroupFault.IdentityRequired);
+        }
+
+        var normalizedDispatchKey = string.IsNullOrWhiteSpace(shippingDispatchKey)
+            ? null
+            : shippingDispatchKey.Trim();
+        if (normalizedDispatchKey is null)
+        {
+            throw new ContractOperationException("fulfillment.damage.replacement_occurrence_required");
+        }
+
+        if (normalizedDispatchKey.Length > 128)
+        {
+            throw new ContractOperationException("fulfillment.shipment.dispatch_key_invalid");
+        }
+
+        var shipment = new Shipment
+        {
+            ShipmentId = shipmentId,
+            FulfillmentId = fulfillmentId,
+            ShippingGroupId = shippingGroupId,
+            ShippingDispatchKey = normalizedDispatchKey,
+            ResendOfShipmentId = damagedSourceShipmentId,
+            DamagedResolutionId = damagedResolutionId,
+            ReplacementReservationId = replacementReservationId,
             Status = ShipmentStatus.Created,
             CreatedByUserId = actorUserId,
             CarrierDisplayName = carrierDisplayName.Trim(),

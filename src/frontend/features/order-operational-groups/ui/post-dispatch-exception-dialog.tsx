@@ -30,7 +30,28 @@ export type PostDispatchExceptionMode =
   | "record_non_delivery"
   | "start_return"
   | "record_return_receipt"
-  | "resend_shipment";
+  | "resend_shipment"
+  | "resolve_damaged_goods";
+
+/** TB-262: the two outcomes the server accepts for damaged goods received back at origin. */
+export type DamagedResolutionOutcomeCode = "replacement" | "referral";
+
+export const DAMAGED_RESOLUTION_OUTCOMES: ReadonlyArray<{
+  code: DamagedResolutionOutcomeCode;
+  labelFa: string;
+  hintFa: string;
+}> = [
+  {
+    code: "replacement",
+    labelFa: "جایگزینی از موجودی سالم",
+    hintFa: "همین کالا از موجودی سالم با رزرو تازه تأمین و در مرسوله‌ای جدا ارسال می‌شود؛ کالای آسیب‌دیده فروختنی نمی‌شود.",
+  },
+  {
+    code: "referral",
+    labelFa: "ارجاع به خدمات مشتری",
+    hintFa: "تصمیم مالی/خدماتی بعدی بر عهدهٔ خدمات مشتری است؛ هیچ بازپرداخت یا موجودی خودکاری ثبت نمی‌شود.",
+  },
+];
 
 /** One line of the parcel this exception applies to, with the returned capacity that funds a resend. */
 export type PostDispatchParcelLine = {
@@ -44,6 +65,8 @@ export type PostDispatchParcelLine = {
   returnedUsableQuantity: number;
   /** Already recorded damaged received quantity of this line. */
   returnedDamagedQuantity: number;
+  /** TB-262: damaged quantity of this parcel line that still needs a durable decision. */
+  damagedOutstandingQuantity: number;
 };
 
 /** Server-owned non-delivery reasons (labels are display copy only). */
@@ -64,7 +87,15 @@ export type PostDispatchExceptionRequest =
   | { code: "record_non_delivery"; reason: string; note: string | null }
   | { code: "start_return" }
   | { code: "record_return_receipt"; receiptItems: PostDispatchReceiptLine[]; note: string | null }
-  | { code: "resend_shipment"; selections: Array<{ orderLineId: string; quantity: number }>; idempotencyKey: string };
+  | { code: "resend_shipment"; selections: Array<{ orderLineId: string; quantity: number }>; idempotencyKey: string }
+  | {
+    code: "resolve_damaged_goods";
+    orderLineId: string;
+    quantity: number;
+    outcome: DamagedResolutionOutcomeCode;
+    note: string | null;
+    idempotencyKey: string;
+  };
 
 type Props = {
   open: boolean;
@@ -107,6 +138,7 @@ export const POST_DISPATCH_MODE_LABEL_FA: Record<PostDispatchExceptionMode, stri
   start_return: "شروع برگشت به مبدأ",
   record_return_receipt: "تأیید دریافت در مبدأ",
   resend_shipment: "ارسال مجدد",
+  resolve_damaged_goods: "تعیین تکلیف کالای آسیب‌دیده",
 };
 
 const MODE_TITLE: Record<PostDispatchExceptionMode, string> = POST_DISPATCH_MODE_LABEL_FA;
@@ -194,6 +226,17 @@ function describeRetained(
     }));
   }
 
+  if (request.code === "resolve_damaged_goods") {
+    const outcomeLabel = DAMAGED_RESOLUTION_OUTCOMES.find((option) => option.code === request.outcome)?.labelFa
+      ?? request.outcome;
+    return [
+      {
+        key: request.orderLineId,
+        text: `${titleOf(request.orderLineId)} · ${request.quantity.toLocaleString("fa-IR")} · ${outcomeLabel}`,
+      },
+    ];
+  }
+
   return [];
 }
 
@@ -237,6 +280,9 @@ export function PostDispatchExceptionDialog({
   const [resendDrafts, setResendDrafts] = useState<Record<string, string>>({});
   const [idempotencyKey, setIdempotencyKey] = useState<string>("");
   const [localErrorFa, setLocalErrorFa] = useState<string | null>(null);
+  /** TB-262: the reviewed damaged-goods outcome and its per-line quantity draft. */
+  const [damagedOutcome, setDamagedOutcome] = useState<DamagedResolutionOutcomeCode>("replacement");
+  const [damagedDrafts, setDamagedDrafts] = useState<Record<string, string>>({});
   /** TB-258-R1: an unresolved reviewed request that must be reconciled verbatim before anything new. */
   const [retained, setRetained] = useState<PostDispatchAttempt | null>(null);
   /** Which review scope is already initialized — a lines rerender must never reset an open review. */
@@ -289,6 +335,16 @@ export function PostDispatchExceptionDialog({
       resend[line.orderLineId] = line.resendableQuantity > 0 ? String(line.resendableQuantity) : "0";
     }
     setResendDrafts(resend);
+
+    // TB-262: the damaged review starts at this parcel's own remaining damaged quantity, never a guess.
+    setDamagedOutcome("replacement");
+    const damaged: Record<string, string> = {};
+    for (const line of linesRef.current) {
+      damaged[line.orderLineId] = line.damagedOutstandingQuantity > 0
+        ? String(line.damagedOutstandingQuantity)
+        : "0";
+    }
+    setDamagedDrafts(damaged);
   }, [open, scopeSignature, scope, initializedScope]);
 
   const receiptProblems = useMemo(
@@ -316,6 +372,24 @@ export function PostDispatchExceptionDialog({
     () => resendCandidates.reduce((sum, line) => sum + clampQuantity(toNumber(resendDrafts[line.orderLineId] ?? "0"), line.resendableQuantity), 0),
     [resendCandidates, resendDrafts],
   );
+
+  // TB-262: only a line that still OWES a damaged decision is reviewable, and one reviewed request resolves
+  // exactly one line so its occurrence identity stays exact.
+  const damagedCandidates = useMemo(
+    () => lines.filter((line) => line.damagedOutstandingQuantity > 0),
+    [lines],
+  );
+  const [damagedLineId, setDamagedLineId] = useState<string | null>(null);
+  const damagedLine = damagedCandidates.find((line) => line.orderLineId === damagedLineId)
+    ?? damagedCandidates[0]
+    ?? null;
+  const damagedQuantity = damagedLine
+    ? parseReceiptQuantity(damagedDrafts[damagedLine.orderLineId] ?? "")
+    : 0;
+  const damagedInvalid = damagedLine === null
+    || damagedQuantity === null
+    || damagedQuantity <= 0
+    || damagedQuantity > damagedLine.damagedOutstandingQuantity;
 
   /**
    * TB-258-R3: a NEW mutation is refused unless the COMPLETE reviewed request is reload-durable. The message
@@ -402,21 +476,54 @@ export function PostDispatchExceptionDialog({
       return;
     }
 
-    if (resendTotal <= 0) {
-      setLocalErrorFa("مقدار قابل ارسال مجدد از اقلام سالم دریافتی صفر است.");
+    if (mode === "resolve_damaged_goods") {
+      if (damagedLine === null) {
+        setLocalErrorFa("قلمی با کالای آسیب‌دیدهٔ تعیین‌نشده در این مرسوله باقی نمانده است.");
+        return;
+      }
+      if (damagedQuantity === null || damagedQuantity <= 0) {
+        setLocalErrorFa("مقدار کالای آسیب‌دیده باید عددی بزرگ‌تر از صفر باشد.");
+        return;
+      }
+      if (damagedQuantity > damagedLine.damagedOutstandingQuantity) {
+        setLocalErrorFa(
+          `مقدار تعیین تکلیف از باقیماندهٔ آسیب‌دیدهٔ این قلم (${damagedLine.damagedOutstandingQuantity.toLocaleString("fa-IR")}) بیشتر است.`,
+        );
+        return;
+      }
+      if (!DAMAGED_RESOLUTION_OUTCOMES.some((option) => option.code === damagedOutcome)) {
+        setLocalErrorFa("نتیجهٔ تعیین تکلیف کالای آسیب‌دیده را انتخاب کنید.");
+        return;
+      }
+      void send({
+        code: "resolve_damaged_goods",
+        orderLineId: damagedLine.orderLineId,
+        quantity: damagedQuantity,
+        outcome: damagedOutcome,
+        note: note.trim() || null,
+        idempotencyKey,
+      });
       return;
     }
-    const selections = resendCandidates
-      .map((line) => ({
-        orderLineId: line.orderLineId,
-        quantity: clampQuantity(toNumber(resendDrafts[line.orderLineId] ?? "0"), line.resendableQuantity),
-      }))
-      .filter((line) => line.quantity > 0);
-    if (selections.length === 0) {
-      setLocalErrorFa("دست‌کم یک قلم برای ارسال مجدد انتخاب کنید.");
-      return;
+
+    if (mode === "resend_shipment") {
+      if (resendTotal <= 0) {
+        setLocalErrorFa("مقدار قابل ارسال مجدد از اقلام سالم دریافتی صفر است.");
+        return;
+      }
+
+      const selections = resendCandidates
+        .map((line) => ({
+          orderLineId: line.orderLineId,
+          quantity: clampQuantity(toNumber(resendDrafts[line.orderLineId] ?? "0"), line.resendableQuantity),
+        }))
+        .filter((line) => line.quantity > 0);
+      if (selections.length === 0) {
+        setLocalErrorFa("دست‌کم یک قلم برای ارسال مجدد انتخاب کنید.");
+        return;
+      }
+      void send({ code: "resend_shipment", selections, idempotencyKey });
     }
-    void send({ code: "resend_shipment", selections, idempotencyKey });
   }
 
   const submitLabel = retained
@@ -427,13 +534,16 @@ export function PostDispatchExceptionDialog({
         ? "شروع برگشت"
         : mode === "record_return_receipt"
           ? "تأیید دریافت در مبدأ"
-          : "ایجاد مرسولهٔ ارسال مجدد";
+          : mode === "resolve_damaged_goods"
+            ? "ثبت تعیین تکلیف"
+            : "ایجاد مرسولهٔ ارسال مجدد";
 
   const disabled =
     pending
     || (!retained
       && ((mode === "record_return_receipt" && receiptProblems.length > 0)
-        || (mode === "resend_shipment" && resendTotal <= 0)));
+        || (mode === "resend_shipment" && resendTotal <= 0)
+        || (mode === "resolve_damaged_goods" && damagedInvalid)));
 
   return (
     <Dialog open={open} onClose={onClose} showCloseButton={false} size="md" title={MODE_TITLE[mode]}>
@@ -635,6 +745,115 @@ export function PostDispatchExceptionDialog({
                     </li>
                   ))}
                 </ul>
+              )}
+            </>
+          ) : null}
+
+          {!retained && mode === "resolve_damaged_goods" ? (
+            <>
+              <p className="text-xs leading-6 text-gray-600">
+                کالای آسیب‌دیدهٔ دریافت‌شده در مبدأ فروختنی نیست و موجودی انبار را افزایش نمی‌دهد. برای هر قلم فقط به اندازهٔ باقیماندهٔ آسیب‌دیدهٔ همان مرسوله می‌توان یک بار تعیین تکلیف ثبت کرد.
+              </p>
+              {damagedCandidates.length === 0 ? (
+                <p
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                  data-testid={`admin-order-post-dispatch-damaged-empty-${parcelKey}`}
+                >
+                  کالای آسیب‌دیدهٔ تعیین‌نشده‌ای برای این مرسوله باقی نمانده است.
+                </p>
+              ) : (
+                <>
+                  {damagedCandidates.length > 1 ? (
+                    <fieldset className="space-y-1.5">
+                      <legend className="mb-1 text-xs font-bold text-gray-700">قلم کالای آسیب‌دیده</legend>
+                      {damagedCandidates.map((line) => (
+                        <label
+                          key={line.orderLineId}
+                          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm text-gray-800"
+                          data-testid={`admin-order-post-dispatch-damaged-line-${line.orderLineId}`}
+                        >
+                          <input
+                            type="radio"
+                            name={`damaged-line-${parcelKey}`}
+                            value={line.orderLineId}
+                            checked={damagedLine?.orderLineId === line.orderLineId}
+                            disabled={pending}
+                            onChange={() => setDamagedLineId(line.orderLineId)}
+                            className="size-4"
+                          />
+                          <span className="break-words">
+                            {`${line.title} · باقیماندهٔ آسیب‌دیده: ${line.damagedOutstandingQuantity.toLocaleString("fa-IR")}`}
+                          </span>
+                        </label>
+                      ))}
+                    </fieldset>
+                  ) : (
+                    <p className="break-words text-sm text-gray-800">{damagedLine?.title}</p>
+                  )}
+
+                  {damagedLine ? (
+                    <label className="block space-y-1">
+                      <span className="text-xs font-bold text-gray-700">
+                        {`مقدار آسیب‌دیدهٔ تعیین‌شده (حداکثر ${damagedLine.damagedOutstandingQuantity.toLocaleString("fa-IR")})`}
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        max={damagedLine.damagedOutstandingQuantity}
+                        step="any"
+                        value={damagedDrafts[damagedLine.orderLineId] ?? ""}
+                        disabled={pending}
+                        onChange={(event) =>
+                          setDamagedDrafts((previous) => ({
+                            ...previous,
+                            [damagedLine.orderLineId]: event.target.value,
+                          }))
+                        }
+                        className="min-h-11 w-28 rounded-lg border border-gray-200 px-2 text-sm tabular-nums"
+                        data-testid={`admin-order-post-dispatch-damaged-qty-${parcelKey}`}
+                      />
+                    </label>
+                  ) : null}
+
+                  <fieldset className="space-y-1.5">
+                    <legend className="mb-1 text-xs font-bold text-gray-700">نتیجهٔ تعیین تکلیف</legend>
+                    {DAMAGED_RESOLUTION_OUTCOMES.map((option) => (
+                      <label
+                        key={option.code}
+                        className="flex min-h-11 cursor-pointer items-start gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800"
+                        data-testid={`admin-order-post-dispatch-damaged-outcome-${option.code}`}
+                      >
+                        <input
+                          type="radio"
+                          name={`damaged-outcome-${parcelKey}`}
+                          value={option.code}
+                          checked={damagedOutcome === option.code}
+                          disabled={pending}
+                          onChange={() => setDamagedOutcome(option.code)}
+                          className="mt-1 size-4"
+                        />
+                        <span className="space-y-0.5">
+                          <span className="block font-bold">{option.labelFa}</span>
+                          <span className="block text-xs leading-5 text-gray-600">{option.hintFa}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
+
+                  <label className="block space-y-1">
+                    <span className="text-xs font-bold text-gray-700">توضیح (اختیاری)</span>
+                    <textarea
+                      value={note}
+                      disabled={pending}
+                      onChange={(event) => setNote(event.target.value)}
+                      maxLength={500}
+                      rows={2}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      data-testid={`admin-order-post-dispatch-damaged-note-${parcelKey}`}
+                    />
+                  </label>
+                </>
               )}
             </>
           ) : null}

@@ -196,7 +196,12 @@ public sealed class AdminOrderDetailComposer
                     s.CarrierDisplayName,
                     s.TrackingReference,
                     s.Items.Sum(i => i.Quantity),
-                    s.Items.Select(i => new AdminShipmentLineView(i.OrderLineId, i.Quantity, i.ResendableQuantity)).ToList(),
+                    s.Items.Select(i => new AdminShipmentLineView(
+                        i.OrderLineId,
+                        i.Quantity,
+                        i.ResendableQuantity,
+                        i.DamagedQuantity,
+                        i.OutstandingDamagedQuantity)).ToList(),
                     string.IsNullOrWhiteSpace(s.ShippingMethodCode) ? null : s.ShippingMethodCode,
                     string.IsNullOrWhiteSpace(s.ShippingMethodLabel) ? null : s.ShippingMethodLabel,
                     membership?.ConsolidatedPackageId,

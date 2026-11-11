@@ -15,4 +15,8 @@ namespace Tooba.Fulfillment.Application.Fulfillments.Models;
 public sealed record ShipmentLineSnapshot(
     Guid OrderLineId,
     decimal Quantity,
-    decimal ResendableQuantity = 0);
+    decimal ResendableQuantity = 0,
+    /// <summary>TB-262: the damaged quantity physically received back on THIS parcel for this line.</summary>
+    decimal DamagedQuantity = 0,
+    /// <summary>TB-262: the damaged quantity of this parcel line that still awaits a durable decision.</summary>
+    decimal OutstandingDamagedQuantity = 0);

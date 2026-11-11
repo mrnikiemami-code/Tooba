@@ -78,11 +78,19 @@ export interface AdminOrderLine {
   resendableQuantity?: number | null;
   /** TB-258: quantity actually delivered through delivered parcels. */
   deliveredQuantity?: number | null;
+  /** TB-262: damaged quantity physically received back on this line. */
+  damagedQuantity?: number | null;
+  /** TB-262: damaged quantity of this line that still awaits a durable resolution decision. */
+  outstandingDamagedQuantity?: number | null;
 }
 
 export interface AdminShipmentLine {
   orderLineId: string;
   quantity: number;
+  /** TB-262: damaged quantity physically received back on this parcel line. */
+  damagedQuantity?: number | null;
+  /** TB-262: damaged quantity of this parcel line that still awaits a decision. */
+  outstandingDamagedQuantity?: number | null;
 }
 
 export interface AdminShipment {
@@ -702,6 +710,8 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       const returnedUsableRaw = prop(line, "returnedUsableQuantity", "ReturnedUsableQuantity");
       const resendableRaw = prop(line, "resendableQuantity", "ResendableQuantity");
       const deliveredRaw = prop(line, "deliveredQuantity", "DeliveredQuantity");
+      const damagedRaw = prop(line, "damagedQuantity", "DamagedQuantity");
+      const outstandingDamagedRaw = prop(line, "outstandingDamagedQuantity", "OutstandingDamagedQuantity");
       return [{
         id: orderLineId || offerId,
         orderLineId,
@@ -726,6 +736,10 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
         returnedUsableQuantity: returnedUsableRaw == null || returnedUsableRaw === "" ? null : number(returnedUsableRaw),
         resendableQuantity: resendableRaw == null || resendableRaw === "" ? null : number(resendableRaw),
         deliveredQuantity: deliveredRaw == null || deliveredRaw === "" ? null : number(deliveredRaw),
+        damagedQuantity: damagedRaw == null || damagedRaw === "" ? null : number(damagedRaw),
+        outstandingDamagedQuantity: outstandingDamagedRaw == null || outstandingDamagedRaw === ""
+          ? null
+          : number(outstandingDamagedRaw),
       }];
     });
     const shipments = array(prop(seller, "shipments", "Shipments")).flatMap((raw): AdminShipment[] => {
@@ -744,7 +758,16 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
           if (!line) return [];
           const orderLineId = text(prop(line, "orderLineId", "OrderLineId"));
           if (!orderLineId) return [];
-          return [{ orderLineId, quantity: number(prop(line, "quantity", "Quantity")) }];
+          const damagedRawLine = prop(line, "damagedQuantity", "DamagedQuantity");
+          const outstandingDamagedRawLine = prop(line, "outstandingDamagedQuantity", "OutstandingDamagedQuantity");
+          return [{
+            orderLineId,
+            quantity: number(prop(line, "quantity", "Quantity")),
+            damagedQuantity: damagedRawLine == null || damagedRawLine === "" ? null : number(damagedRawLine),
+            outstandingDamagedQuantity: outstandingDamagedRawLine == null || outstandingDamagedRawLine === ""
+              ? null
+              : number(outstandingDamagedRawLine),
+          }];
         }),
         shippingMethodCode: text(prop(row, "shippingMethodCode", "ShippingMethodCode")) || null,
         shippingMethodLabel: text(prop(row, "shippingMethodLabel", "ShippingMethodLabel")) || null,

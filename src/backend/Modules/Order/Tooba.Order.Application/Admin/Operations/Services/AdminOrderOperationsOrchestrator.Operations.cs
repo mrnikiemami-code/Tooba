@@ -368,6 +368,17 @@ public sealed partial class AdminOrderOperationsOrchestrator
             _ => ResendShipmentCoreAsync(request, actorUserId, cancellationToken),
             cancellationToken));
 
+    public Task<Result<object>> ResolveDamagedGoodsAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunDamagedResolutionAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            cancellationToken));
+
     public Task<Result<object>> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         Guid actorUserId,

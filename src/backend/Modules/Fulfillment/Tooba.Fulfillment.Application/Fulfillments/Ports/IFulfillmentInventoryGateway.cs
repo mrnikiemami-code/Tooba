@@ -35,7 +35,55 @@ public interface IFulfillmentInventoryGateway
     /// رزرو Held سفارش پرداخت‌شده را از TTL سبد خارج می‌کند (ExpiresAt=null). Idempotent.
     /// </summary>
     Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-262: مصرف رزرو اختصاصی یک مرسولهٔ جایگزینِ کالای آسیب‌دیده با هویت پایدار تصمیم. مسیر بدون کلید
+    /// عمداً وجود ندارد تا dispatch یک جایگزین هرگز موجودی را دوباره کسر نکند.
+    /// </summary>
+    Task ConsumeReplacementReservationAsync(Guid reservationId, string consumerKey, CancellationToken cancellationToken) =>
+        throw new NotSupportedException(
+            "fulfillment.inventory.replacement_consume_not_supported: a damaged-goods replacement reservation "
+            + "must be consumed with its durable decision identity; there is no unkeyed fallback.");
+
+    /// <summary>
+    /// TB-262: آزادسازی رزرو اختصاصی یک جایگزینِ ابطال‌شده پیش از ارسال. فقط رزرو Held همان تلاش آزاد می‌شود.
+    /// </summary>
+    Task ReleaseReplacementReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
+        throw new NotSupportedException(
+            "fulfillment.inventory.replacement_release_not_supported: a cancelled damaged-goods replacement "
+            + "must release only its own new reservation through the Inventory contract seam.");
+
+    /// <summary>
+    /// TB-262: رزرو موجودی سالم برای یک تصمیم جایگزینی. هویت کالا/فروشنده فقط از رزرو فروش اصلیِ متعهد
+    /// استخراج می‌شود، نه از کلاینت. نبود موجودی خطای نوع‌دار می‌دهد و رزروی باقی نمی‌گذارد.
+    /// </summary>
+    Task<FulfillmentReplacementReservation> ReserveReplacementReservationAsync(
+        Guid originalReservationId,
+        decimal quantity,
+        string reservationKey,
+        string externalReference,
+        DateTimeOffset expiresAt,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException(
+            "fulfillment.inventory.replacement_reserve_not_supported: a damaged-goods replacement needs the "
+            + "Inventory-owned purpose-bound reservation seam.");
+
+    /// <summary>TB-262: خواندن یک رزرو جایگزینی برای بازیابی پاسخ نامطمئن.</summary>
+    Task<FulfillmentReplacementReservation?> FindReplacementReservationAsync(
+        Guid reservationId,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException(
+            "fulfillment.inventory.replacement_find_not_supported: a damaged-goods replacement needs the "
+            + "Inventory-owned reservation read seam.");
 }
+
+/// <summary>TB-262: رزرو سالمِ اختصاصی یک جایگزینی که Inventory مالک آن است.</summary>
+public sealed record FulfillmentReplacementReservation(
+    Guid ReservationId,
+    Guid StockItemId,
+    Guid OfferId,
+    decimal Quantity,
+    string Status);
 
 /// <summary>
 /// مالک واحد قالب <c>consumer_key</c> برای مصرف رزرو در مسیر بستهٔ تجمیعی.

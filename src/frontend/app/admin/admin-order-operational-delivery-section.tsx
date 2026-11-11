@@ -55,6 +55,8 @@ export type OperationalParcelCapabilities = {
   canRecordReturnReceipt: boolean;
   /** TB-258: usable returned quantity may fund a new resend parcel. */
   canResend: boolean;
+  /** TB-262: damaged units received back on this parcel still owe one deliberate decision each. */
+  canResolveDamagedGoods: boolean;
 };
 
 /**
@@ -132,6 +134,7 @@ const NO_PARCEL_ACTIONS: OperationalParcelCapabilities = {
   canStartReturn: false,
   canRecordReturnReceipt: false,
   canResend: false,
+  canResolveDamagedGoods: false,
 };
 
 function lineKey(line: AdminOrderLine): string {
@@ -169,7 +172,7 @@ function isCarrierException(status: string | null | undefined): boolean {
  * TB-261: the physical condition totals of an origin receipt. The server records one receipt line per
  * (line, condition); only «سالم» funds a resend, and «آسیب‌دیده» stays an explicit unresolved requirement.
  */
-function receiptTotals(parcel: AdminShipment): { usable: number; damaged: number } {
+function receiptTotals(parcel: AdminShipment): { usable: number; damaged: number; outstanding: number } {
   let usable = 0;
   let damaged = 0;
   for (const line of parcel.returnReceiptLines ?? []) {
@@ -177,7 +180,14 @@ function receiptTotals(parcel: AdminShipment): { usable: number; damaged: number
     if (condition === "Damaged" || condition === "1") damaged += line.quantity;
     else usable += line.quantity;
   }
-  return { usable, damaged };
+  // TB-262: what still owes a decision is the server's OWN per-parcel remaining damaged quantity. When the
+  // server did not project it at all there is no resolution concept for this row, so the receipt total is
+  // the honest statement; a projected zero must never be rewritten back to «needs a decision».
+  const projected = (parcel.lines ?? []).filter((line) => line.outstandingDamagedQuantity != null);
+  const outstanding = projected.length > 0
+    ? projected.reduce((sum, line) => sum + Math.max(0, line.outstandingDamagedQuantity ?? 0), 0)
+    : damaged;
+  return { usable, damaged, outstanding };
 }
 
 /** Short, human identity of another parcel of the same group (no raw GUID in operator copy). */
@@ -679,6 +689,7 @@ function permittedExceptionModes(caps: OperationalParcelCapabilities): PostDispa
   if (caps.canStartReturn) modes.push("start_return");
   if (caps.canRecordReturnReceipt) modes.push("record_return_receipt");
   if (caps.canResend) modes.push("resend_shipment");
+  if (caps.canResolveDamagedGoods) modes.push("resolve_damaged_goods");
   return modes;
 }
 
@@ -736,6 +747,8 @@ function GroupParcels({
             .filter((r) => r.condition === "Damaged" || r.condition === "1")
             .reduce((sum, r) => sum + r.quantity, 0),
         ),
+        // TB-262: this parcel's OWN remaining damaged units; a sibling parcel can never lend or borrow.
+        damagedOutstandingQuantity: Math.max(0, line.outstandingDamagedQuantity ?? 0),
       };
     });
   }, [exception]);
@@ -979,6 +992,7 @@ function GroupParcels({
                   || caps.canStartReturn
                   || caps.canRecordReturnReceipt
                   || caps.canResend
+                  || caps.canResolveDamagedGoods
                 ) ? (
                   <div
                     className="mt-2 flex flex-wrap gap-1.5 border-t border-gray-100 pt-2"
@@ -1028,6 +1042,17 @@ function GroupParcels({
                         ارسال مجدد
                       </button>
                     ) : null}
+                    {caps.canResolveDamagedGoods ? (
+                      <button
+                        type="button"
+                        disabled={pending || exceptionPending}
+                        onClick={() => openException(row.seller, parcel, "resolve_damaged_goods")}
+                        className="min-h-11 rounded-lg border border-amber-300 px-3 text-xs font-bold text-amber-900 disabled:opacity-50"
+                        data-testid={`admin-order-post-dispatch-damaged-action-${parcel.shipmentId}`}
+                      >
+                        تعیین تکلیف کالای آسیب‌دیده
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
                 {retainedReview ? (
@@ -1056,9 +1081,9 @@ function GroupParcels({
                   >
                     {parcel.status === "Returned" ? (
                       <>
-                        {receipt.damaged > 0 ? (
+                        {receipt.outstanding > 0 ? (
                           <p data-testid={`admin-order-post-dispatch-damaged-${parcel.shipmentId}`}>
-                            {`${quantityText(receipt.damaged)} قلم آسیب‌دیده — نیازمند تعیین تکلیف`}
+                            {`${quantityText(receipt.outstanding)} قلم آسیب‌دیده — نیازمند تعیین تکلیف`}
                           </p>
                         ) : null}
                         {receipt.usable > 0 && !caps.canResend ? (

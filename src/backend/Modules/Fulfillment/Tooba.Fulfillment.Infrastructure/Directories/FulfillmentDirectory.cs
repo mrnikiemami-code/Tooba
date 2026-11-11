@@ -385,8 +385,17 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        // TB-262: a replacement that is cancelled before dispatch releases ONLY its own new healthy-stock
+        // reservation once. The damaged source stays non-saleable and keeps its unresolved obligation, so the
+        // decision can be retried deliberately instead of silently recreating a parcel.
         unit.CancelShipment(shipmentId, _clock.UtcNow);
+        var releasedReplacementReservation = unit.DetachReplacementReservationForCancel(shipmentId, _clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+        if (releasedReplacementReservation is { } reservationId)
+        {
+            await _inventory.ReleaseReplacementReservationAsync(reservationId, cancellationToken);
+        }
+
         _telemetry.RecordTransition("shipment_cancelled");
         return await MapSnapshotAsync(unit, cancellationToken);
     }
@@ -609,7 +618,22 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         }
 
         unit.ApplyShipmentDispatched(shipmentId, _clock.UtcNow);
-        if (!shipment.IsResend)
+        if (shipment.IsReplacement)
+        {
+            // TB-262: the replacement consumes its OWN new healthy-stock reservation exactly once. The original sale
+            // reservation of these units was already consumed by the first dispatch and is never touched again.
+            if (shipment.ReplacementReservationId is { } replacementReservationId)
+            {
+                var resolution = shipment.DamagedResolutionId is { } resolutionId
+                    ? unit.FindDamagedResolution(resolutionId)
+                    : null;
+                await _inventory.ConsumeReplacementReservationAsync(
+                    replacementReservationId,
+                    resolution?.ReservationConsumerKey ?? $"damage-replacement:{replacementReservationId:N}",
+                    cancellationToken);
+            }
+        }
+        else if (!shipment.IsResend)
         {
             // TB-258: the reservation was already consumed for the first dispatch of these goods. A resend must not
             // consume/commit the same reservation a second time.
@@ -689,6 +713,11 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         unit.AttachLoadedShipments(shipments);
         unit.AttachLoadedShippingGroups(shippingGroups);
         unit.AttachLoadedReturnReceipts(receipts);
+        // TB-262: durable damaged-goods decisions are loaded through their own DbSet, exactly like receipts.
+        var resolutions = await _db.DamagedResolutions
+            .Where(x => x.FulfillmentId == fulfillmentId)
+            .ToListAsync(cancellationToken);
+        unit.AttachLoadedDamagedResolutions(resolutions);
         return unit;
     }
 

@@ -2716,3 +2716,135 @@ test("TB-261 static: a mixed line reports its own parcels, never one parcel's st
   assert.doesNotMatch(returnedLine.slice(0, 200), /در مسیر تحویل/);
   assert.match(movingLine, /در مسیر تحویل/);
 });
+
+// ---------------------------------------------------------------- TB-262 damaged-goods resolution
+
+const DAMAGED_SCOPE = {
+  viewerScopeKey: "admin:damaged-viewer-a",
+  checkoutId: "c-damaged",
+  fulfillmentId: "f-damaged",
+  sourceShipmentId: "sh-damaged",
+  mode: "resolve_damaged_goods" as const,
+};
+
+function damagedLines(outstanding: number) {
+  return [{
+    orderLineId: "ol1",
+    title: "شال آرمان",
+    parcelQuantity: 3,
+    resendableQuantity: 0,
+    returnedUsableQuantity: 2,
+    returnedDamagedQuantity: 1,
+    damagedOutstandingQuantity: outstanding,
+  }];
+}
+
+function damagedDialog(
+  lines: ReturnType<typeof damagedLines>,
+  onSubmit: (request: PostDispatchExceptionRequest) => Promise<boolean>,
+  scope: typeof DAMAGED_SCOPE = DAMAGED_SCOPE,
+) {
+  return createElement(PostDispatchExceptionDialog, {
+    open: true,
+    mode: "resolve_damaged_goods" as const,
+    parcelLabel: "TRK-DMG",
+    parcelKey: scope.sourceShipmentId,
+    attemptScope: scope,
+    lines,
+    pending: false,
+    errorFa: null,
+    onClose: () => undefined,
+    onSubmit,
+  });
+}
+
+test("TB-262 mounted: one reviewed damaged decision is durable before the POST and posts exactly once", async () => {
+  resetPostDispatchAttempts();
+  const requests: PostDispatchExceptionRequest[] = [];
+  let rawAtPost: string | null = null;
+  const submit = async (request: PostDispatchExceptionRequest) => {
+    rawAtPost = durablePostDispatchEnvelope("c-damaged", "sh-damaged", "f-damaged");
+    requests.push(request);
+    return true;
+  };
+
+  const mounted = await mount(damagedDialog(damagedLines(1), submit));
+  await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-qty-sh-damaged']").length === 1);
+  await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement'] input"));
+  await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-damaged']"));
+  await flush();
+
+  assert.equal(requests.length, 1, "one reviewed decision is one mutation");
+  const request = requests[0] as Extract<PostDispatchExceptionRequest, { code: "resolve_damaged_goods" }>;
+  assert.equal(request.code, "resolve_damaged_goods");
+  assert.equal(request.orderLineId, "ol1");
+  assert.equal(request.quantity, 1);
+  assert.equal(request.outcome, "replacement");
+  assert.ok(request.idempotencyKey.length > 0);
+  assert.ok(rawAtPost, "the complete envelope is reload-durable BEFORE the mutation");
+  assert.ok(String(rawAtPost).includes("resolve_damaged_goods"));
+  assert.equal(readPostDispatchAttempt(DAMAGED_SCOPE), null, "authoritative completion clears the envelope");
+  await mounted.unmount();
+});
+
+test("TB-262 mounted: a quantity above this parcel's own damaged remainder is refused with zero POST", async () => {
+  resetPostDispatchAttempts();
+  const requests: PostDispatchExceptionRequest[] = [];
+  const submit = async (request: PostDispatchExceptionRequest) => {
+    requests.push(request);
+    return true;
+  };
+
+  const mounted = await mount(damagedDialog(damagedLines(1), submit));
+  await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-qty-sh-damaged']").length === 1);
+  await setInputValue(q(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-qty-sh-damaged']"), "2");
+  await flush();
+  assert.equal(
+    qq(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-damaged']").length,
+    1,
+  );
+  const submitButton = q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh-damaged']") as HTMLButtonElement;
+  assert.equal(submitButton.disabled, true, "an over-quantity review cannot be sent");
+  await click(submitButton);
+  await flush();
+  assert.equal(requests.length, 0, "nothing leaves the browser");
+  assert.equal(readPostDispatchAttempt(DAMAGED_SCOPE), null);
+  await mounted.unmount();
+});
+
+test("TB-262 mounted: an uncertain decision is retained and reconciles the EXACT reviewed payload", async () => {
+  resetPostDispatchAttempts();
+  const requests: PostDispatchExceptionRequest[] = [];
+  let accept = false;
+  const submit = async (request: PostDispatchExceptionRequest) => {
+    requests.push(request);
+    return accept;
+  };
+
+  const first = await mount(damagedDialog(damagedLines(1), submit));
+  await waitFor(() => qq(first.container, "[data-testid='admin-order-post-dispatch-damaged-qty-sh-damaged']").length === 1);
+  await click(q(first.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-referral'] input"));
+  await click(q(first.container, "[data-testid='admin-order-post-dispatch-submit-sh-damaged']"));
+  await flush();
+  assert.equal(requests.length, 1);
+  assert.ok(qq(first.container, "[data-testid='admin-order-post-dispatch-retained-sh-damaged']").length === 1);
+  assert.ok(readPostDispatchAttempt(DAMAGED_SCOPE), "the exact decision stays durable while unresolved");
+  await first.unmount();
+
+  // The fresh projection no longer offers anything; the retained review is the ONLY thing that may be sent.
+  const second = await mount(damagedDialog(damagedLines(0), submit));
+  await waitFor(() => qq(second.container, "[data-testid='admin-order-post-dispatch-retained-sh-damaged']").length === 1);
+  assert.equal(
+    qq(second.container, "[data-testid='admin-order-post-dispatch-damaged-qty-sh-damaged']").length,
+    0,
+    "a changed review cannot replace the unresolved attempt",
+  );
+
+  accept = true;
+  await click(q(second.container, "[data-testid='admin-order-post-dispatch-submit-sh-damaged']"));
+  await waitFor(() => requests.length === 2);
+  await flush();
+  assert.deepEqual(requests[1], requests[0], "reconcile submits the same occurrence and payload verbatim");
+  assert.equal(readPostDispatchAttempt(DAMAGED_SCOPE), null);
+  await second.unmount();
+});
