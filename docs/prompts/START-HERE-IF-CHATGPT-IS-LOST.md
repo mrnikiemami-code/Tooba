@@ -1,3 +1,15 @@
+# CURRENT — USER TRIAL REJECTED;261 ISSUED /262 PLANNED —2026-11-11
+
+Read docs/planning/shipping/SHIPPING-USER-ACCEPTANCE-CORRECTIONS-261-262.md and docs/ai/tasks/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/TASK.md.
+User now authorizes correction; this SUPERSEDES prior 'NO261 / wait for trial' instruction. Earlier five defects accepted within source/evidence scope, not user ACCEPT; actual trial reopened completion. Do not say all shipping problems fixed.
+LATEST UI RULE: transient action notifications use ONE existing Toast behavior; no persistent success banners/reload repetition. Durable state/blockers/uncertain reconciliation and field errors remain appropriately contextual; no duplicate notification for same outcome. Overrides prior no-toast task convention.
+261 ONLY: authoring/shipping notification consistency; contextual Persian carrier states (Returning=در حال برگشت به مبدأ; Returned=دریافت‌شده در مبدأ, distinct from customer RMA); synchronized target/card/line summary; diagnose actual missing healthy resend and repair lawful positive path, preserve current actor/payment/inventory/package rules and exact occurrence recovery.
+READ-ONLY screenshot fixture checkout13feece0-4890-4e45-b92f-4d4b1a5e0c97 / fulfillment3ce14fb8-6453-44c0-b364-0f919c8bf2e0 / group2c550347-8c06-4a2b-b4f6-c7c77ab6e058. Missing-button cause not yet proven; don't guess from expired reservation banner.
+262 PLANNED NOT ISSUED: damaged-goods quarantine/explicit healthy-stock replacement/reservation+linked quantity accounting, no automatic refund/extra charge/usable conversion. Persist owning Inventory/Returns seams from261 for next issue; damage currently grants0 usable resend and is not a complete resolution.
+One worker/result/review then next task. No broad tests/base parity/screenshot/green-repeat loops. Same tooba_alpha5432 /3000/5088 SingleStore only; no extra DB/edition; real user rows and screenshot fixtures read-only, labelled production-path fixtures permitted. Keys/CapturedPreview preserved;255 parked/Tipax deferred. Older CURRENT blocks historical/superseded.
+
+---
+
 # CURRENT — FIVE-DEFECT MILESTONE ACCEPTED WITHIN SCOPE; WAIT FOR USER TRIAL —2026-11-10
 
 Read docs/architecture/evidence/TB-SHIPPING-DUE-WORKQUEUE-AND-OPERATIONAL-ORDER-VIEW-260-R1/ARCHITECT-REVIEW.md.
