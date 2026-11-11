@@ -386,8 +386,8 @@ public sealed class AdminFulfillmentWorkQueueDispatch260RelationalTests
              INSERT INTO "order".checkouts
                  (checkout_id, idempotency_key, cart_id, mode, buyer_party_id, placed_by_user_id, market, currency, channel, created_at, submitted_at)
              VALUES
-                 ({checkoutId}, {tag}, {Guid.NewGuid()}, {"SingleStore"}, {Guid.NewGuid()},
-                  {Guid.NewGuid()}, {"IR"}, {"IRR"}, {"Web"}, {now}, {now})
+                 ({checkoutId}, {tag}, {Guid.NewGuid()}, {"OnlinePurchase"}, {Guid.NewGuid()},
+                  {Guid.NewGuid()}, {"IR"}, {"IRR"}, {"Marketplace"}, {now}, {now})
              """);
 
     private static async Task InsertSellerOrderAsync(
@@ -397,7 +397,7 @@ public sealed class AdminFulfillmentWorkQueueDispatch260RelationalTests
              INSERT INTO "order".seller_orders
                  (seller_order_id, checkout_id, order_number, seller_party_id, status, subtotal_snapshot, tax_snapshot, discount_snapshot, grand_total_snapshot, currency)
              VALUES
-                 ({sellerOrderId}, {checkoutId}, {orderNumber}, {sellerPartyId}, {"Placed"}, {0m}, {0m}, {0m}, {0m}, {"IRR"})
+                 ({sellerOrderId}, {checkoutId}, {orderNumber}, {sellerPartyId}, {"Paid"}, {0m}, {0m}, {0m}, {0m}, {"IRR"})
              """);
 
     private static async Task InsertOrderLineAsync(
@@ -446,6 +446,8 @@ public sealed class AdminFulfillmentWorkQueueDispatch260RelationalTests
             Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 }
+
+
 
 
 
