@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import { act, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import test from "node:test";
+import { toast } from "react-toastify";
 import {
   mapAdminOrderDetail,
   type AdminOperationalDeliveryGroup,
@@ -2931,3 +2932,205 @@ test("TB-262-R1 static: a pending damaged decision is a durable sentence with a 
   assert.match(html, /ادامهٔ تعیین تکلیف کالای آسیب‌دیده/);
   assert.doesNotMatch(html, /مرسولهٔ جایگزین ساخته شده است/);
 });
+
+/* ──────────────────── TB-263: known pending / refused / unknown are DIFFERENT facts ─────────────────── */
+
+/**
+ * The screenshot fixture as a COMMITTED task fixture: one returned damaged parcel whose durable decision is
+ * recorded but whose replacement parcel does not exist yet. Nothing here is read from the user's order.
+ */
+function damagedReturnDetail(): AdminOrderDetail {
+  return withExceptionParcel(
+    baseDetail(),
+    {
+      status: "Returned",
+      returnedAt: "2026-11-09T10:00:00Z",
+      returnReceiptLines: [{ orderLineId: "ol1", quantity: 1, condition: "Damaged" }],
+      lines: [{ orderLineId: "ol1", quantity: 2, outstandingDamagedQuantity: 1 }],
+      damagedResolutions: [{
+        damagedGoodsResolutionId: "dgr-tb263",
+        orderLineId: "ol1",
+        quantity: 1,
+        outcome: "Replacement",
+        status: "Recorded",
+        occurrenceKey: "occ-tb263-recorded",
+        replacementShipmentId: null,
+      }],
+    },
+    { outstandingDamagedQuantity: 1 },
+  );
+}
+
+/** The shared toast object, observed instead of installing a second notification system. */
+function spyOnSuccess(): { messages: string[]; restore: () => void } {
+  const target = toast as unknown as { success: (message: unknown, options?: unknown) => unknown };
+  const original = target.success;
+  const messages: string[] = [];
+  target.success = (message: unknown) => {
+    messages.push(String(message));
+    return 1;
+  };
+  return { messages, restore: () => { target.success = original; } };
+}
+
+function damagedPanel(onCompleted?: () => void) {
+  return createElement(AdminOrderItemsShippingPanel, {
+    detail: damagedReturnDetail(),
+    checkoutId: CHECKOUT,
+    ...(onCompleted ? { onCompleted } : {}),
+  });
+}
+
+async function openDamagedReview(container: HTMLElement): Promise<void> {
+  await waitFor(
+    () => qq(container, "[data-testid='admin-order-post-dispatch-damaged-action-sh1']").length === 1,
+  );
+  await click(q(container, "[data-testid='admin-order-post-dispatch-damaged-action-sh1']"));
+  await waitFor(
+    () => qq(container, "[data-testid='admin-order-post-dispatch-submit-sh1']").length === 1,
+  );
+}
+
+test("TB-263 mounted: an authoritative completion closes the review with exactly ONE toast and no uncertainty", async () => {
+  resetPostDispatchAttempts();
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", "sh1")]);
+    return postResponse(200, { ok: true });
+  });
+  const spy = spyOnSuccess();
+  try {
+    let completed = 0;
+    const mounted = await mount(damagedPanel(() => { completed += 1; }));
+    await openDamagedReview(mounted.container);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((call) => call.method === "POST").length === 1);
+    await flush();
+
+    assert.equal(spy.messages.length, 1, "a confirmed action reports exactly once");
+    assert.match(spy.messages[0]!, /آسیب‌دیده/);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length, 0);
+    // No amber "unknown" notice, no red duplicate and no blocking box for a success.
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-retained-sh1']").length, 0);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-error-sh1']").length, 0);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-blocking']").length, 0);
+    assert.ok(completed >= 1, "the owning facts are refreshed once");
+    assert.equal(durablePostDispatchEnvelope(CHECKOUT, "sh1", "so1"), null, "only a completion clears the envelope");
+    await mounted.unmount();
+  } finally {
+    spy.restore();
+    restoreFetch();
+  }
+});
+
+test("TB-263 mounted: a durably recorded decision awaiting healthy stock is PENDING, never an unknown response", async () => {
+  resetPostDispatchAttempts();
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", "sh1")]);
+    return postResponse(409, { errorCode: "fulfillment.damage.replacement_unavailable" });
+  });
+  const spy = spyOnSuccess();
+  try {
+    const mounted = await mount(damagedPanel());
+    await openDamagedReview(mounted.container);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((call) => call.method === "POST").length === 1);
+    await flush();
+
+    const pending = q(mounted.container, "[data-testid='admin-order-post-dispatch-pending-sh1']");
+    assert.match(pending.textContent ?? "", /موجودی سالم این کالا برای جایگزینی کافی نیست/);
+    assert.match(pending.textContent ?? "", /تصمیم ثبت‌شده حفظ شده است/);
+    // The old misinformation is gone: not a lost response, not a red duplicate, not a toast.
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-retained-sh1']").length, 0);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-error-sh1']").length, 0);
+    assert.equal(spy.messages.length, 0, "a pending decision is not a completed action");
+    // The reviewed decision stays replayable VERBATIM: a retry cannot mint a second decision or hold.
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((call) => call.method === "POST").length === 2);
+    await flush();
+    const posts = calls.filter((call) => call.method === "POST");
+    assert.equal(posts[0]!.body.idempotencyKey, "occ-tb263-recorded");
+    assert.equal(posts[1]!.body.idempotencyKey, posts[0]!.body.idempotencyKey);
+    assert.equal(posts[1]!.body.quantity, 1);
+    assert.equal(posts[1]!.body.damagedOutcome, "replacement");
+    await mounted.unmount();
+  } finally {
+    spy.restore();
+    restoreFetch();
+  }
+});
+
+test("TB-263 mounted: a genuine transport loss keeps the exact envelope and says so concisely", async () => {
+  resetPostDispatchAttempts();
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", "sh1")]);
+    throw new Error("network down");
+  });
+  const spy = spyOnSuccess();
+  try {
+    const mounted = await mount(damagedPanel());
+    await openDamagedReview(mounted.container);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((call) => call.method === "POST").length === 1);
+    await flush();
+
+    const retained = q(mounted.container, "[data-testid='admin-order-post-dispatch-retained-sh1']");
+    assert.match(retained.textContent ?? "", /نتیجهٔ قطعی این درخواست مشخص نشد/);
+    // No instruction to inspect the server and no "do not close this window" copy remains.
+    assert.doesNotMatch(retained.textContent ?? "", /خطای سرور|حذف نکنید|پنجره را نبندید/);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-pending-sh1']").length, 0);
+    assert.equal(spy.messages.length, 0);
+
+    // Closing is safe: the same reviewed request is still there, and a retry replays the SAME occurrence.
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-close-sh1']"));
+    await flush();
+    await openDamagedReview(mounted.container);
+    const reopened = q(mounted.container, "[data-testid='admin-order-post-dispatch-retained-sh1']");
+    assert.match(reopened.textContent ?? "", /نتیجهٔ قطعی این درخواست مشخص نشد/);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((call) => call.method === "POST").length === 2);
+    await flush();
+    const posts = calls.filter((call) => call.method === "POST");
+    assert.equal(posts[1]!.body.idempotencyKey, posts[0]!.body.idempotencyKey);
+    await mounted.unmount();
+  } finally {
+    spy.restore();
+    restoreFetch();
+  }
+});
+
+test("TB-263 mounted: a denied submission closes the review into the ONE existing MessageBox, with no duplicate surface", async () => {
+  resetPostDispatchAttempts();
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", "sh1")]);
+    return postResponse(403, { errorCode: "order.operation.denied" });
+  });
+  const spy = spyOnSuccess();
+  try {
+    const mounted = await mount(damagedPanel());
+    await openDamagedReview(mounted.container);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((call) => call.method === "POST").length === 1);
+    await flush();
+
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length, 0);
+    const box = q(mounted.container, "[data-testid='admin-order-post-dispatch-blocking']");
+    assert.match(box.textContent ?? "", /مجوز انجام این عملیات وجود ندارد/);
+    // Exactly one blocking surface and nothing else repeating the same reason.
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-blocking']").length, 1);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-blocking-ok']").length, 1);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-error-sh1']").length, 0);
+    assert.equal(spy.messages.length, 0);
+    // The exact reviewed envelope is retained, so no decision/hold can be minted by a later review.
+    const raw = durablePostDispatchEnvelope(CHECKOUT, "sh1", "so1");
+    assert.ok(raw);
+    assert.equal(JSON.parse(raw!).request.idempotencyKey, "occ-tb263-recorded");
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-blocking-ok']"));
+    await flush();
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-blocking']").length, 0);
+    await mounted.unmount();
+  } finally {
+    spy.restore();
+    restoreFetch();
+  }
+});
+

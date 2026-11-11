@@ -514,7 +514,11 @@ internal sealed class FulfillmentAdminOperationsAdapter(
                         x.UpdatedAt,
                         x.ReplacementReservationId,
                         x.ReplacementShipmentId,
-                        x.Note))
+                        x.Note,
+                        // TB-263: the durable decision's OWN occurrence key must reach the operator surface.
+                        // Without it a reload cannot resume the recorded decision and the review mints a new
+                        // key, which the owning aggregate correctly refuses as a second decision.
+                        x.OccurrenceKey))
                     .ToList());
 
     private static ConsolidatedPackageSnapshot Map(AppModels.ConsolidatedPackageSnapshot package) =>

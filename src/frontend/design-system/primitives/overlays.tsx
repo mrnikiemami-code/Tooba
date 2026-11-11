@@ -171,6 +171,49 @@ export function Dialog({
 }
 
 /**
+ * یک پیام کوتاه و قابل‌اقدام روی یک اقدام صریح اپراتور.
+ *
+ * برای خطای مسدودکنندهٔ عملیات (رد صلاحیت، تعارض با وضعیت ثبت‌شده) استفاده می‌شود: یک مودال،
+ * یک اقدام بستن، بدون هشدار دائمی کنار فرم. هرگز به‌ازای هر کلید یا هر بارگذاری باز نمی‌شود.
+ */
+export function MessageBox({
+  open,
+  title,
+  text,
+  closeLabel = "باشه",
+  testId,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  text: string;
+  closeLabel?: string;
+  testId?: string;
+  onClose: () => void;
+}) {
+  // Nothing is rendered while closed: an always-present empty <dialog> would be a second modal surface
+  // in the DOM and would break "one visible feedback surface" ownership on the page.
+  if (!open) return null;
+  return (
+    <Dialog open onClose={onClose} title={title} showCloseButton={false}>
+      <div className="space-y-3 text-sm text-gray-700" data-testid={testId}>
+        <p className="break-words">{text}</p>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            tone="secondary"
+            onClick={onClose}
+            data-testid={testId ? `${testId}-ok` : undefined}
+          >
+            {closeLabel}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+/**
  * کشو با قرارگیری منطقی: در RTL از inline-start (راست) باز می‌شود نه left ثابت.
  * باز شدن با انتقال کوتاه و لایهٔ فشرده برای کاهش فضای خالی بزرگ.
  */

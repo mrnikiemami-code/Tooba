@@ -24,6 +24,22 @@ export type {
   PostDispatchReceiptLine,
 } from "./ui/post-dispatch-exception-dialog.tsx";
 
+// TB-263: the ONE semantic classification of a submitted review (completed / pending / refused / unknown).
+export {
+  classifyPostDispatchResult,
+  completedPostDispatchOutcome,
+  isPendingPostDispatchCode,
+  normalizePostDispatchOutcome,
+  POST_DISPATCH_OUTCOME_MESSAGE_FA,
+  unknownPostDispatchOutcome,
+} from "./post-dispatch-outcome.ts";
+
+export type {
+  PostDispatchResultFacts,
+  PostDispatchSubmitOutcome,
+  PostDispatchSubmitOutcomeKind,
+} from "./post-dispatch-outcome.ts";
+
 // TB-258-R1: the retained reviewed request (viewer/checkout/fulfillment/parcel/mode scoped).
 export {
   clearPostDispatchAttempt,

@@ -538,6 +538,112 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "ظرفیت برگشتی هم‌زمان تغییر کرد؛ فهرست را تازه‌سازی کنید و دوباره تلاش کنید.",
     en: "The returned capacity changed concurrently; refresh and try again.",
   },
+  // TB-263: the damaged-goods decision family. Every code the owning aggregate can answer with must have a
+  // concise operator sentence, so a known refusal is never presented as an unknown result.
+  "fulfillment.damage.replacement_unavailable": {
+    fa: "موجودی سالم این کالا برای جایگزینی کافی نیست؛ تصمیم ثبت شد و با رسیدن موجودی سالم همان تصمیم ادامه می‌یابد.",
+    en: "No healthy stock for the replacement right now; the decision is recorded and continues when stock arrives.",
+  },
+  "fulfillment.damage.original_reservation_missing": {
+    fa: "رزرو فروش اصلی این کالا قابل اثبات نیست؛ جایگزینی بدون آن انجام نمی‌شود.",
+    en: "The original sale reservation cannot be proven; the replacement does not proceed without it.",
+  },
+  "fulfillment.damage.reservation_conflict": {
+    fa: "رزرو دیگری به این جایگزینی متصل شده است؛ وضعیت مرسوله را تازه‌سازی کنید.",
+    en: "Another reservation is already attached to this replacement; refresh the parcel state.",
+  },
+  "fulfillment.damage.replacement_conflict": {
+    fa: "مرسولهٔ جایگزین دیگری به این تصمیم متصل شده است؛ وضعیت مرسوله را تازه‌سازی کنید.",
+    en: "Another replacement parcel is already attached to this decision; refresh the parcel state.",
+  },
+  "fulfillment.damage.resolution_intent_conflict": {
+    fa: "این درخواست با تصمیم ثبت‌شدهٔ کالای آسیب‌دیده یکسان نیست؛ همان تصمیم ثبت‌شده را ادامه دهید.",
+    en: "This request differs from the recorded damaged-goods decision; continue that recorded decision.",
+  },
+  "fulfillment.damage.exceeds_outstanding": {
+    fa: "مقدار واردشده از مقدار آسیب‌دیدهٔ تعیین‌تکلیف‌نشدهٔ همین مرسوله بیشتر است.",
+    en: "The quantity exceeds this parcel line's outstanding damaged quantity.",
+  },
+  "fulfillment.damage.no_damaged_quantity": {
+    fa: "این قلم مرسوله مقدار آسیب‌دیده ندارد.",
+    en: "This parcel line carries no damaged quantity.",
+  },
+  "fulfillment.damage.obligation_already_settled": {
+    fa: "این اقلام به مشتری تحویل شده‌اند؛ جایگزینی برای آن‌ها قابل تأمین نیست.",
+    en: "These units were delivered to the customer; no replacement can be provided for them.",
+  },
+  "fulfillment.damage.source_not_returned": {
+    fa: "این مرسوله هنوز در مبدأ دریافت فیزیکی نشده است.",
+    en: "This parcel has not been physically received back at origin yet.",
+  },
+  "fulfillment.damage.receipt_missing": {
+    fa: "برای این مرسوله رسید دریافت در مبدأ ثبت نشده است.",
+    en: "No origin receipt is recorded for this parcel.",
+  },
+  "fulfillment.damage.line_foreign": {
+    fa: "این قلم سفارش به مرسولهٔ انتخاب‌شده تعلق ندارد.",
+    en: "This order line does not belong to the selected parcel.",
+  },
+  "fulfillment.damage.resolution_cancelled": {
+    fa: "این تصمیم کالای آسیب‌دیده پیش از ارسال لغو شده است.",
+    en: "This damaged-goods decision was cancelled before dispatch.",
+  },
+  "fulfillment.damage.resolution_not_open": {
+    fa: "این تصمیم کالای آسیب‌دیده دیگر باز نیست؛ وضعیت مرسوله را تازه‌سازی کنید.",
+    en: "This damaged-goods decision is no longer open; refresh the parcel state.",
+  },
+  "fulfillment.damage.resolution_not_replacement": {
+    fa: "این تصمیم از نوع جایگزینی نیست.",
+    en: "This decision is not a replacement.",
+  },
+  "fulfillment.damage.resolution_not_found": {
+    fa: "تصمیم کالای آسیب‌دیده پیدا نشد؛ صفحه را تازه‌سازی کنید.",
+    en: "The damaged-goods decision was not found; refresh the page.",
+  },
+  "fulfillment.damage.replacement_missing": {
+    fa: "مرسولهٔ جایگزین متصل به این تصمیم پیدا نشد؛ صفحه را تازه‌سازی کنید.",
+    en: "The replacement parcel linked to this decision was not found; refresh the page.",
+  },
+  "fulfillment.damage.reservation_required": {
+    fa: "جایگزینی به رزرو اختصاصی موجودی سالم نیاز دارد.",
+    en: "The replacement needs its own healthy-stock reservation.",
+  },
+  "fulfillment.damage.replacement_source_required": {
+    fa: "جایگزینی به مرسولهٔ آسیب‌دیدهٔ مبدأ نیاز دارد.",
+    en: "The replacement needs the damaged source parcel.",
+  },
+  "fulfillment.damage.replacement_occurrence_required": {
+    fa: "جایگزینی به شناسهٔ درخواست بازبینی‌شده نیاز دارد.",
+    en: "The replacement needs the reviewed request identity.",
+  },
+  "fulfillment.damage.resolution_occurrence_required": {
+    fa: "تعیین تکلیف کالای آسیب‌دیده به شناسهٔ درخواست بازبینی‌شده نیاز دارد.",
+    en: "The damaged-goods decision needs the reviewed request identity.",
+  },
+  "fulfillment.damage.resolution_ids_required": {
+    fa: "شناسه‌های تصمیم کالای آسیب‌دیده کامل نیست.",
+    en: "The damaged-goods decision identifiers are incomplete.",
+  },
+  "fulfillment.damage.resolution_qty_positive": {
+    fa: "مقدار آسیب‌دیده باید بزرگ‌تر از صفر باشد.",
+    en: "The damaged quantity must be greater than zero.",
+  },
+  "fulfillment.damage.resolution_outcome_invalid": {
+    fa: "نوع تصمیم انتخاب‌شده برای کالای آسیب‌دیده معتبر نیست.",
+    en: "The selected damaged-goods outcome is not valid.",
+  },
+  "fulfillment.damage.resolution_actor_required": {
+    fa: "ثبت تصمیم کالای آسیب‌دیده به اپراتور بازبین نیاز دارد.",
+    en: "Recording a damaged-goods decision needs the reviewing operator.",
+  },
+  "fulfillment.damage.resolution_note_invalid": {
+    fa: "یادداشت اپراتور بیش از حد مجاز طولانی است.",
+    en: "The operator note is too long.",
+  },
+  "fulfillment.damage.concurrency_conflict": {
+    fa: "اپراتور دیگری این اقلام آسیب‌دیده را تعیین تکلیف کرد؛ صفحه را تازه کنید و دوباره بررسی کنید.",
+    en: "Another operator resolved these damaged units; refresh and review again.",
+  },
   "fulfillment.allocation.conflict": {
     fa: "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
     en: "The quantity exceeds remaining allocatable packed amount.",

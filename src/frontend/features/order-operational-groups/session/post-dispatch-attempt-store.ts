@@ -30,6 +30,9 @@ export type PostDispatchAttemptScope = {
   mode: PostDispatchExceptionMode;
 };
 
+/** TB-263: the semantic kind of the last attempt, so a reopen never re-labels a known fact as uncertain. */
+export type PostDispatchAttemptOutcomeKind = "pending" | "refused" | "unknown";
+
 /** Durable client record of one prebound post-dispatch request. */
 export type PostDispatchAttempt = {
   viewerScopeKey: string;
@@ -41,6 +44,14 @@ export type PostDispatchAttempt = {
   request: PostDispatchExceptionRequest;
   attempts: number;
   lastFailedAtUtc: string | null;
+  /**
+   * TB-263: what the server actually said about the last attempt. `pending` means the decision is durably
+   * recorded and still owed, `refused` a deterministic refusal, `unknown` a genuinely uncertain outcome.
+   * A legacy record without it is read as `unknown` (the safe reading), never as pending or completed.
+   */
+  lastOutcomeKind?: PostDispatchAttemptOutcomeKind | null;
+  /** Localized reason of that last attempt, so a reload shows the same truthful sentence. */
+  lastMessageFa?: string | null;
 };
 
 const VERSION = "v1";
@@ -111,6 +122,10 @@ export function mintPostDispatchOccurrence(): string {
   return mintId();
 }
 
+function readOutcomeKind(value: unknown): PostDispatchAttemptOutcomeKind | null {
+  return value === "pending" || value === "refused" || value === "unknown" ? value : null;
+}
+
 function readStored(key: string): PostDispatchAttempt | null {
   const api = sessionStorageApi();
   if (!api) return memoryFallback.get(key) ?? null;
@@ -128,6 +143,8 @@ function readStored(key: string): PostDispatchAttempt | null {
       request: parsed.request,
       attempts: Number.isFinite(parsed.attempts) ? Math.max(0, Number(parsed.attempts)) : 0,
       lastFailedAtUtc: coalesce(parsed.lastFailedAtUtc) || null,
+      lastOutcomeKind: readOutcomeKind(parsed.lastOutcomeKind),
+      lastMessageFa: coalesce(parsed.lastMessageFa) || null,
     };
   } catch {
     // A throwing/quota-broken storage is not a record. The in-memory mirror is the only same-mount source.
@@ -216,6 +233,8 @@ export function writePostDispatchAttempt(input: {
   request: PostDispatchExceptionRequest;
   attempts?: number;
   lastFailedAtUtc?: string | null;
+  lastOutcomeKind?: PostDispatchAttemptOutcomeKind | null;
+  lastMessageFa?: string | null;
 }): PostDispatchAttemptWrite | null {
   const normalized = normalizeScope(input.scope);
   if (!normalized) return null;
@@ -228,6 +247,8 @@ export function writePostDispatchAttempt(input: {
     request: input.request,
     attempts: Math.max(1, input.attempts ?? 1),
     lastFailedAtUtc: input.lastFailedAtUtc ?? null,
+    lastOutcomeKind: readOutcomeKind(input.lastOutcomeKind),
+    lastMessageFa: coalesce(input.lastMessageFa) || null,
   };
   const key = storageKey(normalized);
   const api = sessionStorageApi();
@@ -272,11 +293,14 @@ export function clearPostDispatchAttempt(scope: PostDispatchAttemptScope): void 
 export function markPostDispatchAttemptFailed(
   scope: PostDispatchAttemptScope,
   attempt: PostDispatchAttempt,
+  outcome?: { kind: PostDispatchAttemptOutcomeKind; messageFa?: string | null },
 ): PostDispatchAttempt {
   return writePostDispatchAttempt({
     scope,
     request: attempt.request,
     attempts: attempt.attempts + 1,
     lastFailedAtUtc: new Date().toISOString(),
+    lastOutcomeKind: outcome?.kind ?? "unknown",
+    lastMessageFa: outcome?.messageFa ?? null,
   })?.attempt ?? attempt;
 }

@@ -16,6 +16,7 @@ import {
   type AdminShipment,
 } from "./admin-api";
 import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
+import { MessageBox } from "../../design-system";
 import {
   clearOperationalGroupAttempt,
   markOperationalGroupAttemptFailed,
@@ -25,6 +26,7 @@ import {
 } from "./operational-group-occurrence-store";
 import {
   AdminOperationalGroupWorkflowDialog,
+  normalizePostDispatchOutcome,
   listPostDispatchAttemptsForParcel,
   OperationalDeliveryTimeline,
   POST_DISPATCH_MODE_LABEL_FA,
@@ -35,6 +37,7 @@ import {
   type PostDispatchExceptionMode,
   type PostDispatchExceptionRequest,
   type PostDispatchParcelLine,
+  type PostDispatchSubmitOutcome,
 } from "../../features/order-operational-groups";
 
 export type OperationalCreateTarget = {
@@ -115,14 +118,17 @@ type Props = {
   onParcelTrack?: (seller: AdminSellerOrder, shipment: AdminShipment) => void;
   onParcelOperation?: (seller: AdminSellerOrder, code: string, shipmentId: string) => void;
   /**
-   * TB-258: the reviewed post-dispatch exception (non-delivery / return / origin receipt / resend).
-   * Returns true only when the server accepted it; a refusal keeps the review open with the server text.
+   * TB-258: the reviewed post-dispatch exception (non-delivery / return / origin receipt / resend /
+   * damaged-goods decision). It answers the SERVER's semantic outcome: only `completed` closes the review;
+   * a pending decision, a deterministic refusal and an unknown answer are different facts.
    */
   onParcelException?: (
     seller: AdminSellerOrder,
     shipmentId: string,
     request: PostDispatchExceptionRequest,
-  ) => Promise<boolean> | boolean;
+  ) => Promise<PostDispatchSubmitOutcome | boolean> | PostDispatchSubmitOutcome | boolean;
+  /** TB-263: owning facts changed (a blocking refusal) — the caller re-reads the authoritative detail. */
+  onFactsChanged?: () => void;
 };
 
 /** No permitted action: a cancelled, package-owned, or pending parcel exposes nothing here. */
@@ -289,6 +295,7 @@ export function AdminOrderOperationalDeliverySection({
   onParcelTrack,
   onParcelOperation,
   onParcelException,
+  onFactsChanged,
 }: Props) {
   const groups = detail.operationalDeliveryGroups ?? [];
   if (groups.length === 0) {
@@ -336,6 +343,7 @@ export function AdminOrderOperationalDeliverySection({
             onParcelTrack={onParcelTrack}
             onParcelOperation={onParcelOperation}
             onParcelException={onParcelException}
+            onFactsChanged={onFactsChanged}
           />
         ))}
       </div>
@@ -355,6 +363,7 @@ function OperationalCard({
   onParcelTrack,
   onParcelOperation,
   onParcelException,
+  onFactsChanged,
 }: {
   group: AdminOperationalDeliveryGroup;
   detail: AdminOrderDetail;
@@ -367,6 +376,7 @@ function OperationalCard({
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
   onParcelException?: Props["onParcelException"];
+  onFactsChanged?: Props["onFactsChanged"];
 }) {
   /** TB-253-R4: retained attempt of this checkout/group/scope; it survives remounts. */
   const [retainedAttempt, setRetainedAttempt] = useState<OperationalGroupAttempt | null>(null);
@@ -526,6 +536,7 @@ function OperationalCard({
             onParcelTrack={onParcelTrack}
             onParcelOperation={onParcelOperation}
             onParcelException={onParcelException}
+            onFactsChanged={onFactsChanged}
             onCreateShipment={onCreateShipment}
           />
         </div>
@@ -716,6 +727,21 @@ function damagedDecisionText(resolution: AdminDamagedResolution): string {
   return "";
 }
 
+/**
+ * TB-263: the retained recovery entry states the TRUE last outcome. A durably recorded pending decision is
+ * never described as a lost response, and a deterministic refusal is never described as uncertain.
+ */
+function retainedAttemptNoteFa(attempt: PostDispatchAttempt): string {
+  if (attempt.lastOutcomeKind === "pending") {
+    return attempt.lastMessageFa?.trim()
+      || "تصمیم ثبت شد و در انتظار تکمیل است؛ همان درخواست ادامه می‌یابد.";
+  }
+  if (attempt.lastOutcomeKind === "refused") {
+    return attempt.lastMessageFa?.trim() || "این درخواست پذیرفته نشد؛ دلیل آن در همان پنجره آمده است.";
+  }
+  return "پاسخ قطعی این درخواست ثبت نشده است؛ همان درخواست قبلی حفظ شده و فقط همان ارسال می‌شود.";
+}
+
 /** The modes the fresh projection still offers as ordinary buttons. */
 function permittedExceptionModes(caps: OperationalParcelCapabilities): PostDispatchExceptionMode[] {  const modes: PostDispatchExceptionMode[] = [];
   if (caps.canRecordNonDelivery) modes.push("record_non_delivery");
@@ -737,6 +763,7 @@ function GroupParcels({
   onParcelTrack,
   onParcelOperation,
   onParcelException,
+  onFactsChanged,
   onCreateShipment,
 }: {
   detail: AdminOrderDetail;
@@ -750,6 +777,7 @@ function GroupParcels({
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
   onParcelException?: Props["onParcelException"];
+  onFactsChanged?: Props["onFactsChanged"];
   onCreateShipment: (target: OperationalCreateTarget) => void;
 }) {
   /** TB-258: the ONE open post-dispatch review; it is bound to one parcel and one mode at a time. */
@@ -758,7 +786,12 @@ function GroupParcels({
     shipment: AdminShipment;
     mode: PostDispatchExceptionMode;
   } | null>(null);
-  const [exceptionErrorFa, setExceptionErrorFa] = useState<string | null>(null);
+  /**
+   * TB-263: the ONE blocking feedback surface. A refusal that ends the review (authority, ownership, a
+   * conflict with recorded state) is acknowledged in the existing MessageBox — never stacked over the
+   * review dialog and never duplicated by a toast or an inline paragraph.
+   */
+  const [blockingMessageFa, setBlockingMessageFa] = useState<string | null>(null);
   const [exceptionPending, setExceptionPending] = useState(false);
   const exceptionSubmitInFlight = useRef(false);
 
@@ -786,23 +819,31 @@ function GroupParcels({
     });
   }, [exception]);
 
-  async function submitException(request: PostDispatchExceptionRequest): Promise<boolean> {
-    if (!exception || !onParcelException) return false;
+  async function submitException(request: PostDispatchExceptionRequest): Promise<PostDispatchSubmitOutcome> {
+    if (!exception || !onParcelException) return normalizePostDispatchOutcome(false);
     // Synchronous single-flight: a second same-tick press can never send a second mutation.
-    if (exceptionSubmitInFlight.current) return false;
+    if (exceptionSubmitInFlight.current) return normalizePostDispatchOutcome(false);
     exceptionSubmitInFlight.current = true;
     setExceptionPending(true);
-    setExceptionErrorFa(null);
     try {
-      const accepted = await onParcelException(exception.seller, exception.shipment.shipmentId, request);
-      if (accepted) {
-        setException(null);
-        return true;
-      }
-      setExceptionErrorFa(
-        "ثبت نشد. اگر خطای سرور نمایش داده شد همان را بررسی کنید؛ این پنجره حذف نشده تا دوباره تلاش کنید.",
+      const outcome = normalizePostDispatchOutcome(
+        await onParcelException(exception.seller, exception.shipment.shipmentId, request),
       );
-      return false;
+      if (outcome.kind === "completed") {
+        setException(null);
+        return outcome;
+      }
+      if (outcome.kind === "refused" && outcome.blocking) {
+        // The review cannot proceed: close it (the exact envelope stays retained and replayable) and put
+        // the ONE exact reason on the existing blocking surface.
+        setException(null);
+        setBlockingMessageFa(outcome.messageFa);
+        onFactsChanged?.();
+        return outcome;
+      }
+      // `pending` and inline `refused` keep the review open with one truthful inline surface; `unknown`
+      // keeps it open with the retained-envelope notice. The dialog owns that single surface.
+      return outcome;
     } finally {
       exceptionSubmitInFlight.current = false;
       setExceptionPending(false);
@@ -814,7 +855,6 @@ function GroupParcels({
     shipment: AdminShipment,
     mode: PostDispatchExceptionMode,
   ) {
-    setExceptionErrorFa(null);
     setException({ seller, shipment, mode });
   }
 
@@ -1109,7 +1149,7 @@ function GroupParcels({
                       {`پیگیری «${POST_DISPATCH_MODE_LABEL_FA[retainedReview.mode]}»`}
                     </button>
                     <span className="break-words text-[11px] text-amber-800">
-                      پاسخ قطعی این درخواست ثبت نشده است؛ همان درخواست قبلی حفظ شده و فقط همان ارسال می‌شود.
+                      {retainedAttemptNoteFa(retainedReview)}
                     </span>
                   </div>
                 ) : null}
@@ -1205,7 +1245,7 @@ function GroupParcels({
           }}
           lines={exceptionLines}
           pending={exceptionPending || pending}
-          errorFa={exceptionErrorFa}
+          errorFa={null}
           damagedResume={
             exception.mode === "resolve_damaged_goods"
               ? (() => {
@@ -1223,11 +1263,22 @@ function GroupParcels({
           }
           onClose={() => {
             setException(null);
-            setExceptionErrorFa(null);
           }}
           onSubmit={submitException}
         />
       ) : null}
+
+      {/*
+        TB-263: the existing blocking surface (design-system MessageBox). It is raised ONLY when the review
+        was closed, so nothing is stacked over an open review and the same reason is never shown twice.
+      */}
+      <MessageBox
+        open={blockingMessageFa !== null}
+        title="این درخواست انجام نشد"
+        text={blockingMessageFa ?? ""}
+        testId="admin-order-post-dispatch-blocking"
+        onClose={() => setBlockingMessageFa(null)}
+      />
     </section>
   );
 }

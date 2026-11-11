@@ -10,8 +10,13 @@ import {
   readPostDispatchAttempt,
   writePostDispatchAttempt,
   type PostDispatchAttempt,
+  type PostDispatchAttemptOutcomeKind,
   type PostDispatchAttemptScope,
 } from "../session/post-dispatch-attempt-store.ts";
+import {
+  normalizePostDispatchOutcome,
+  type PostDispatchSubmitOutcome,
+} from "../post-dispatch-outcome.ts";
 
 /**
  * TB-258 — the ONE purposeful post-dispatch exception surface.
@@ -124,10 +129,13 @@ type Props = {
   } | null;
   onClose: () => void;
   /**
-   * Sends the reviewed request. Returning true means the server AUTHORITATIVELY completed it (only then
-   * is the retained envelope cleared); anything else keeps the exact request for reconcile/retry.
+   * Sends the reviewed request and answers how the SERVER answered it. Only `completed` is authoritative:
+   * the review closes and only then is the retained envelope cleared. `pending` (durably recorded, still
+   * owed), `refused` (deterministic reason) and `unknown` (no answer) keep the exact envelope.
    */
-  onSubmit: (request: PostDispatchExceptionRequest) => Promise<boolean> | boolean;
+  onSubmit: (
+    request: PostDispatchExceptionRequest,
+  ) => Promise<PostDispatchSubmitOutcome | boolean> | PostDispatchSubmitOutcome | boolean;
 };
 
 /**
@@ -297,6 +305,11 @@ export function PostDispatchExceptionDialog({
   const [damagedDrafts, setDamagedDrafts] = useState<Record<string, string>>({});
   /** TB-258-R1: an unresolved reviewed request that must be reconciled verbatim before anything new. */
   const [retained, setRetained] = useState<PostDispatchAttempt | null>(null);
+  /**
+   * TB-263: what the server said about the LAST attempt of this review. `pending` and `refused` are known
+   * facts and must never be rendered as an uncertain/lost response; `unknown` is the only uncertain case.
+   */
+  const [lastOutcome, setLastOutcome] = useState<PostDispatchSubmitOutcome | null>(null);
   /** Which review scope is already initialized — a lines rerender must never reset an open review. */
   const [initializedScope, setInitializedScope] = useState<string | null>(null);
   /** Synchronous single-flight: two same-tick submits can never send two mutations. */
@@ -324,10 +337,23 @@ export function PostDispatchExceptionDialog({
     if (recorded) {
       // Close/reopen/remount restores the EXACT reviewed request instead of minting another occurrence.
       setRetained(recorded);
+      // TB-263: a reopen shows the SAME truthful state of the last attempt instead of resetting to
+      // "unknown". A legacy record without a recorded kind is read as uncertain (the safe reading).
+      setLastOutcome(
+        recorded.lastOutcomeKind
+          ? {
+            kind: recorded.lastOutcomeKind,
+            messageFa: recorded.lastMessageFa ?? "",
+            code: null,
+            blocking: false,
+          }
+          : null,
+      );
       return;
     }
 
     setRetained(null);
+    setLastOutcome(null);
     setNote("");
     setReason(POST_DISPATCH_NON_DELIVERY_REASONS[0]!.code);
     // A fresh occurrence per newly reviewed action: a retried submit replays this exact key.
@@ -430,6 +456,9 @@ export function PostDispatchExceptionDialog({
     if (submitInFlight.current) return;
     submitInFlight.current = true;
     setLocalErrorFa(null);
+    // A new deliberate submit clears the PREVIOUS attempt's wording; the envelope itself is untouched
+    // until the server answers this exact request.
+    setLastOutcome(null);
     try {
       // The COMPLETE reviewed request is persisted BEFORE the first mutation, so an uncertain outcome can
       // only reconcile this exact envelope instead of creating a second operation. A memory-only write does
@@ -445,14 +474,29 @@ export function PostDispatchExceptionDialog({
       }
       const attempt = persisted.attempt;
 
-      const accepted = await onSubmit(request);
-      if (accepted) {
+      let outcome: PostDispatchSubmitOutcome;
+      try {
+        outcome = normalizePostDispatchOutcome(await onSubmit(request));
+      } catch {
+        // A throwing submit is an UNKNOWN answer, never a completed or refused one.
+        outcome = normalizePostDispatchOutcome(false);
+      }
+
+      if (outcome.kind === "completed") {
         // Authoritative completion: only now may a deliberate new occurrence be minted.
         clearPostDispatchAttempt(scope);
         setRetained(null);
+        setLastOutcome(null);
         return;
       }
-      setRetained(markPostDispatchAttemptFailed(scope, attempt));
+
+      // TB-263: pending/refused/unknown all keep the exact envelope (no remint, no second decision), and
+      // the recorded KIND is persisted so a reload shows the same truthful state.
+      setLastOutcome(outcome);
+      setRetained(markPostDispatchAttemptFailed(scope, attempt, {
+        kind: outcome.kind as PostDispatchAttemptOutcomeKind,
+        messageFa: outcome.messageFa,
+      }));
     } finally {
       submitInFlight.current = false;
     }
@@ -579,6 +623,15 @@ export function PostDispatchExceptionDialog({
             ? "ثبت تعیین تکلیف"
             : "ایجاد مرسولهٔ ارسال مجدد";
 
+  /**
+   * TB-263: ONE inline surface. Local field validation wins, then the deterministic server reason of the
+   * last attempt (refused), then any caller-supplied message. A pending decision and an uncertain outcome
+   * are never duplicated here — they own their own single block above.
+   */
+  const inlineErrorFa = localErrorFa
+    ?? (lastOutcome?.kind === "refused" ? lastOutcome.messageFa : null)
+    ?? errorFa;
+
   const disabled =
     pending
     || (!retained
@@ -597,13 +650,13 @@ export function PostDispatchExceptionDialog({
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pe-1">
           <p className="text-xs leading-6 text-gray-600">{`مرسولهٔ ${parcelLabel}`}</p>
 
-          {retained ? (
+          {retained && (!lastOutcome || lastOutcome.kind === "unknown") ? (
             <div
               className="space-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2"
               data-testid={`admin-order-post-dispatch-retained-${parcelKey}`}
             >
               <p className="text-xs font-bold text-amber-900">
-                پاسخ قطعی این درخواست ثبت نشده است. همان درخواست قبلی حفظ شده و فقط همان قابل ارسال دوباره است.
+                نتیجهٔ قطعی این درخواست مشخص نشد. همان درخواست حفظ شده است و فقط همان قابل ارسال دوباره است.
               </p>
               {describeRetained(retained.request, lines).map((row) => (
                 <p key={row.key} className="break-words text-xs text-amber-900">{row.text}</p>
@@ -614,6 +667,27 @@ export function PostDispatchExceptionDialog({
               {retained.request.code === "record_return_receipt" && retained.request.note ? (
                 <p className="break-words text-xs text-amber-900">{`توضیح: ${retained.request.note}`}</p>
               ) : null}
+            </div>
+          ) : null}
+
+          {/*
+            TB-263: a durably recorded decision that cannot finish yet is a KNOWN pending business state,
+            never an unknown response. It is stated once, with the reviewed facts, and it continues later.
+          */}
+          {retained && lastOutcome?.kind === "pending" ? (
+            <div
+              className="space-y-1.5 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2"
+              data-testid={`admin-order-post-dispatch-pending-${parcelKey}`}
+            >
+              <p className="break-words text-xs font-bold text-sky-900">
+                {lastOutcome.messageFa || "تصمیم ثبت شد ولی هنوز کامل نشده است."}
+              </p>
+              <p className="text-xs leading-6 text-sky-900">
+                تصمیم ثبت‌شده حفظ شده است؛ تصمیم، رزرو یا رخداد تازه‌ای ساخته نمی‌شود و همان تصمیم هر زمان که امکانش فراهم شود ادامه می‌یابد.
+              </p>
+              {describeRetained(retained.request, lines).map((row) => (
+                <p key={row.key} className="break-words text-xs text-sky-900">{row.text}</p>
+              ))}
             </div>
           ) : null}
 
@@ -914,15 +988,15 @@ export function PostDispatchExceptionDialog({
             </>
           ) : null}
 
-          {localErrorFa || errorFa ? (
+          {inlineErrorFa ? (
             <p className="text-xs font-bold text-red-700" role="alert" data-testid={`admin-order-post-dispatch-error-${parcelKey}`}>
-              {localErrorFa ?? errorFa}
+              {inlineErrorFa}
             </p>
           ) : null}
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
-          <Button type="button" tone="secondary" disabled={pending} onClick={onClose}>
+          <Button type="button" tone="secondary" disabled={pending} onClick={onClose} data-testid={`admin-order-post-dispatch-close-${parcelKey}`}>
             بستن
           </Button>
           <Button

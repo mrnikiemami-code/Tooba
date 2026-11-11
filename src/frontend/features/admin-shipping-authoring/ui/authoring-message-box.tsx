@@ -3,11 +3,11 @@
 /**
  * One short, actionable message on an EXPLICIT operator action.
  *
- * It reuses the existing design-system `Dialog` (one modal, one close action) instead of turning a
- * rejection into a permanent red paragraph next to the form, and it is never raised per keystroke: the
- * caller opens it only when the operator submitted something.
+ * TB-263: the single implementation now lives in the design system (`MessageBox`), so the order operations
+ * surfaces and the shipping authoring surfaces reuse ONE blocking-message component instead of two copies.
+ * This module keeps the feature-local name and props the authoring screens already use.
  */
-import { Dialog } from "../../../design-system";
+import { MessageBox } from "../../../design-system";
 
 export function AuthoringMessageBox({
   open,
@@ -25,20 +25,13 @@ export function AuthoringMessageBox({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={open} onClose={onClose} title={title} showCloseButton={false}>
-      <div className="space-y-3 text-sm text-gray-700" data-testid={testId}>
-        <p>{text}</p>
-        <div className="flex justify-end">
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-3 text-xs font-bold text-gray-800"
-            data-testid={testId ? `${testId}-ok` : undefined}
-            onClick={onClose}
-          >
-            {closeLabel}
-          </button>
-        </div>
-      </div>
-    </Dialog>
+    <MessageBox
+      open={open}
+      title={title}
+      text={text}
+      closeLabel={closeLabel}
+      testId={testId}
+      onClose={onClose}
+    />
   );
 }

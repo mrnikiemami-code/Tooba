@@ -48,6 +48,8 @@ import {
   adminRequestHeaders,
 } from "../../lib/admin/admin-result.ts";
 import {
+  classifyPostDispatchResult,
+  completedPostDispatchOutcome,
   POST_DISPATCH_MODE_LABEL_FA,
   readPostDispatchAttempt,
 } from "../../features/order-operational-groups";
@@ -365,6 +367,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
         <AdminOrderOperationalDeliverySection
           detail={detail}
           pendingCode={pendingCode}
+          onFactsChanged={onCompleted}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
           occurrenceScopeKey={viewerScopeKey}
           packingModes={packingModesForGroupWorkflow(opsBySeller)}
@@ -413,56 +416,73 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 mode: request.code,
               });
               if (!recorded || JSON.stringify(recorded.request) !== JSON.stringify(request)) {
-                toast.error("این عملیات در وضعیت فعلی برای این مرسوله مجاز نیست.");
-                return false;
+                // TB-263: a deterministic refusal, stated ONCE by the review surface (or by the blocking
+                // MessageBox when it ends the review). No toast, no second copy of the same reason.
+                return {
+                  kind: "refused",
+                  code: "order.operation.invalid",
+                  messageFa: mapAdminErrorMessage("order.operation.invalid", "fa"),
+                  blocking: true,
+                } as const;
               }
             }
             setPendingCode(`${seller.id}:${request.code}:${shipmentId}`);
-            const result = await executeAdminOrderOperation(checkoutId, {
-              ...(action
-                ? orderOperationBodyFromAction(action)
-                : {
-                  code: request.code,
-                  sellerOrderId: seller.id,
-                  fulfillmentId: seller.fulfillmentId ?? seller.id,
-                  shipmentId,
-                  returnRequestId: null,
-                  consolidatedPackageId: null,
-                }),
-              shipmentId,
-              ...(request.code === "record_non_delivery"
-                ? { reason: request.reason, note: request.note }
-                : {}),
-              ...(request.code === "record_return_receipt"
-                ? { receiptItems: request.receiptItems, note: request.note }
-                : {}),
-              ...(request.code === "resend_shipment"
-                ? { selections: request.selections, idempotencyKey: request.idempotencyKey }
-                : {}),
-              ...(request.code === "resolve_damaged_goods"
-                ? {
-                  orderLineId: request.orderLineId,
-                  quantity: request.quantity,
-                  damagedOutcome: request.outcome,
-                  note: request.note,
-                  idempotencyKey: request.idempotencyKey,
-                }
-                : {}),
-            });
-            setPendingCode(null);
-            if (result.state !== "ok") {
-              toast.error(result.message ?? mapAdminErrorMessage("order.operation.failed", "fa"));
-              return false;
+            try {
+              const result = await executeAdminOrderOperation(checkoutId, {
+                ...(action
+                  ? orderOperationBodyFromAction(action)
+                  : {
+                    code: request.code,
+                    sellerOrderId: seller.id,
+                    fulfillmentId: seller.fulfillmentId ?? seller.id,
+                    shipmentId,
+                    returnRequestId: null,
+                    consolidatedPackageId: null,
+                  }),
+                shipmentId,
+                ...(request.code === "record_non_delivery"
+                  ? { reason: request.reason, note: request.note }
+                  : {}),
+                ...(request.code === "record_return_receipt"
+                  ? { receiptItems: request.receiptItems, note: request.note }
+                  : {}),
+                ...(request.code === "resend_shipment"
+                  ? { selections: request.selections, idempotencyKey: request.idempotencyKey }
+                  : {}),
+                ...(request.code === "resolve_damaged_goods"
+                  ? {
+                    orderLineId: request.orderLineId,
+                    quantity: request.quantity,
+                    damagedOutcome: request.outcome,
+                    note: request.note,
+                    idempotencyKey: request.idempotencyKey,
+                  }
+                  : {}),
+              });
+              if (result.state !== "ok") {
+                // TB-263: the server's answer is a FACT, not a lost response. A durably recorded decision
+                // awaiting healthy stock is `pending`, an exact refusal is `refused`, and only a transport
+                // loss / 5xx is `unknown`. Exactly one toast is raised — on confirmed completion only.
+                return classifyPostDispatchResult({
+                  ok: false,
+                  denied: result.state === "denied",
+                  status: result.status,
+                  code: result.code ?? null,
+                  messageFa: mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
+                });
+              }
+              toast.success(
+                request.code === "resolve_damaged_goods"
+                  ? request.outcome === "referral"
+                    ? "ارجاع کالای آسیب‌دیده ثبت شد — در انتظار بررسی."
+                    : "جایگزینی کالای آسیب‌دیده ثبت شد."
+                  : `عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`,
+              );
+              onCompleted?.();
+              return completedPostDispatchOutcome();
+            } finally {
+              setPendingCode(null);
             }
-            toast.success(
-              request.code === "resolve_damaged_goods"
-                ? request.outcome === "referral"
-                  ? "ارجاع کالای آسیب‌دیده ثبت شد — در انتظار بررسی."
-                  : "جایگزینی کالای آسیب‌دیده ثبت شد."
-                : `عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`,
-            );
-            onCompleted?.();
-            return true;
           }}
           onPrepareOperationalGroup={async (_group, request) => {
             // Synchronous single-flight: same-tick double clicks cannot both enter.
