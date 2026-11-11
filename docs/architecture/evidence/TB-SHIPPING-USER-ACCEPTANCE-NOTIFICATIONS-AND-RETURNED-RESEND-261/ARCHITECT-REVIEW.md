@@ -1,0 +1,6 @@
+# Architect review261 — ACCEPT within issued correction scope
+2026-11-11. Source reviewed at4cf6bfbe084f7c4834205f6033064202bae2cf17; no independent Windows runtime/test execution claimed.
+Confirmed contextual carrier labels separate from customer RMA; publication success uses existing Toast; line projection reads own parcel outcomes instead of stale aggregate status. Reported read-only screenshot facts identify1 Damaged/0 Usable, so missing healthy resend was lawful, not a reservation-lock inference. Source projection still requires positive own usable capacity. Focused mounted/command evidence supports healthy path and damaged explanation.
+261 accepted within notification/vocabulary/healthy resend explanation scope, NOT final user acceptance and NOT damaged resolution.262 must implement owning damage decision/replacement, not re-run261 or label damage usable. Handoff contains a wording error: usable2+damaged1 after allocating usable resend2 leaves usable remaining0, NOT2; enforce conserved remainder in262.
+Known lifecycle/display limits outside correction remain disclosed. Source lineage and full customer-delivered completion must be validated for replacements; do not reuse simplistic display status as inventory authority.
+Next ONLY262. Same canonical DB, no broad loops/provider/user business mutation. Latest Toast directive persists.
