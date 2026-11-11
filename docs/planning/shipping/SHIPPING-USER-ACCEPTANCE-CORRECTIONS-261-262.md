@@ -1,4 +1,18 @@
-# CURRENT —262 review PARTIAL; ONLY262-R1 ISSUED —2026-11-11
+# CURRENT — 262-R1 ARCHITECT ACCEPT WITHIN SCOPE; STOP FOR USER TRIAL — 2026-11-11
+
+Authoritative review: docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/ARCHITECT-REVIEW.md.
+Independent source/evidence review closes ONLY the three 262 blockers: pending recorded replacement resumes through the owning public execution; obsolete/repeated parcel cancellation cannot detach the current replacement; purpose-bound replacement hold is non-expiring from the first Inventory commit. Server-recorded occurrence supports reload continuation.
+262-R1 is ACCEPTED within this correction scope. User visual/functional acceptance remains PENDING. Do not claim all shipping work complete. No new implementation task, no 262-R2, no repeated green/broad test loop without a concrete reproduced defect.
+STOP_FOR_USER_TRIAL; automaticNextImplementationTask: NONE.
+Binding user rule: until authorized ORDER cancellation, unconsumed order-bound replacement stock remains reserved. Parcel cancel/return/retry/timeout never releases it; dispatch consumes once. Do not resurrect or consume the original sale reservation twice.
+Reclaimer disclosure reviewed: raw relational receipts record both exploratory global calls as reclaimerReleased=0; committed proof uses read-only candidate selection. Do NOT repeat a global mutating reclaimer test on the canonical shared DB.
+Trial: /fa/admin/fulfillments -> exact operations target -> damaged receipt decision/replacement -> cancel Created parcel -> continue using the SAME retained hold; reload must resume the recorded decision. Use existing react-toastify for confirmed success and Persian carrier-return vocabulary.
+Limits remain explicit: referral is pending, no financial automation; parent common-package damage/return unsupported; post-dispatch whole-order cancellation unavailable; live Tipax deferred; 255 parked. One canonical tooba_alpha only, same runtime/ports, preserve user data/DataProtection/CapturedPreview.
+Previous CURRENT entries below are historical and superseded by this block.
+
+---
+
+# SUPERSEDED — previous worker/review status
 
 Read docs/architecture/evidence/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/ARCHITECT-REVIEW.md.
 Task docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262-R1/TASK.md.
