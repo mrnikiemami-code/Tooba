@@ -1,3 +1,17 @@
+# CURRENT —261 ACCEPT within correction scope;262 ISSUED —2026-11-11
+
+Read261/ARCHITECT-REVIEW.md under docs/architecture/evidence/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/.
+Source/evidence review4cf6bfbe084f7c4834205f6033064202bae2cf17 confirms contextual carrier vocabulary, existing Toast and own-parcel line status. Screenshot source1 Damaged/0 Usable: no healthy resend is CORRECT, reservation banner was not the cause.261 accepted within notification/status/healthy capacity explanation scope; user acceptance NOT claimed.
+ONLY task docs/ai/tasks/TB-SHIPPING-DAMAGED-ORIGIN-RECEIPT-RESOLUTION-AND-REPLACEMENT-262/TASK.md.
+262: durable source-scoped damage decision + non-saleable custody + explicit same-item replacement via NEW Inventory-owned healthy reservation and linked parcel; original sale reservation never consumed twice. Exact occurrence/recovery/concurrency/current authority. No-stock honest blocker/pending referral, no fake completed refund or damaged→usable. Customer obligation/lineage/queue statuses conserve units.
+Correct handoff typo: usable2+damaged1 after healthy resend2 leaves usable remaining0, NOT2; replacement funds damaged1 only from separately reserved healthy stock.
+Read SHIPPING-USER-ACCEPTANCE-CORRECTIONS-261-262.md. Earlier5/5 is historical source/evidence milestone; user trial reopened completion.261 accepted;262 active pending result/review. One worker/task, STOP_FOR_ARCHITECT; no automatic next/all-complete claim.
+Toast rule persists; no persistent transient-success banners. Durable blockers/field validation/reconcile context retained; no duplicate same-outcome messaging.
+Same tooba_alpha5432, FE3000/Host5088 SingleStore/store-alpha ONLY; no extra DB/Docker/15433/edition change. User/screenshot rows read-only; minimal labelled production-path fixtures and necessary backed-up additive owning migrations authorized. Preserve keys/CapturedPreview;255 parked/Tipax deferred; common-package parent exception still unsupported/locked. No broad tests/base parity/green loops/screenshots.
+Older CURRENT blocks superseded.
+
+---
+
 # User acceptance correction plan —261–262 —2026-11-11
 
 The previous five-defect milestone was accepted within code/evidence scope, NOT user acceptance. User trial rejected: persistent success banners instead of common Toast, English Returning/etc, returned-to-origin mislabeled customer return, stale group/line/target status, no visible healthy resend, and damaged goods dead end. Do not continue claiming 'all shipping complete'.
