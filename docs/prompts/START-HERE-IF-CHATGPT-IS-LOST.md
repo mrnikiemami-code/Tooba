@@ -1,4 +1,17 @@
-# CURRENT — USER TRIAL REJECTED;261 ISSUED /262 PLANNED —2026-11-11
+# CURRENT — 261 WORKER RESULT PASS: one transient toast, contextual carrier-return language, parcel-truthful line status, proven refusal reason — 2026-11-11
+
+Read docs/ai/tasks/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb261-live-fixture.txt,damage-resolution-262-handoff.md}.
+Status **PASS** within the issued correction scope, decision **ONE_EXISTING_TRANSIENT_TOAST_FOR_COMPLETED_ACTIONS_CONTEXTUAL_CARRIER_RETURN_VOCABULARY_PARCEL_TRUTHFUL_LINE_STATUS_AND_TRUTHFUL_DAMAGED_CAPACITY_EXPLANATION_WITH_DAMAGED_RESOLUTION_HANDED_TO_262**, NOT Architect ACCEPT and NOT user VISUAL/FUNCTIONAL ACCEPT.
+LANDED: authoring save/publish/withdraw show ONE existing `react-toastify` transient toast and the persistent success strips are gone; carrier exceptions are named «تحویل ناموفق» / «در حال برگشت به مبدأ» / «دریافت‌شده در مبدأ» while customer «مرجوعی» stays in Returns; order line status now follows the physical parcels carrying it (`Returned`/`Mixed`/preparation/`PartialDispatched`, siblings preserved); the shared operations route states an honest reason when no resend exists and names the existing child resend when capacity was spent.
+ROOT CAUSE: the screenshot fixture's absent resend is CORRECT — receipt `1 Damaged` → usable `0` → resendable `0`. The defects were the stale «در مسیر تحویل» line badge and the silence; both repaired. With real usable capacity exactly ONE deliberate reviewed resend exists and creates a `Created` parcel with immediate lineage under the retained envelope.
+Proven: 36/36 Fulfillment post-dispatch on real `tooba_alpha`; 14/14 host line-follows-parcels; 15/15 Order detail/replay; 1/1 toast mount; 49/49 operational delivery mount; 4/4 mounted real route; typecheck 0; build 0; publish 0. Host PID 32736 (`/health`+`/health/ready` 200); FE PID 39388 BUILD_ID `Iyke7WwKot_a3oQOuWbjJ`. Same one `tooba_alpha`/SingleStore/`store-alpha`, no migration, keys/CapturedPreview preserved, no user row written.
+LEDGER: user acceptance reopened by the trial; 261 PASS pending Architect review; **262 damaged resolution PLANNED NOT ISSUED** with owning seams recorded (no quarantine seam, no replacement-reservation command, no damaged→customer/financial decision link; restock port must not carry damaged goods). No "all complete" claim. 255 parked; Tipax deferred.
+STOP_FOR_ARCHITECT; automaticNext NONE.
+
+---
+
+# SUPERSEDED — USER TRIAL REJECTED;261 ISSUED /262 PLANNED —2026-11-11
 
 Read docs/planning/shipping/SHIPPING-USER-ACCEPTANCE-CORRECTIONS-261-262.md and docs/ai/tasks/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/TASK.md.
 User now authorizes correction; this SUPERSEDES prior 'NO261 / wait for trial' instruction. Earlier five defects accepted within source/evidence scope, not user ACCEPT; actual trial reopened completion. Do not say all shipping problems fixed.

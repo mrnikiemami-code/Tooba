@@ -1,4 +1,14 @@
-# CURRENT — USER TRIAL REJECTED;261 ISSUED /262 PLANNED —2026-11-11
+# CURRENT — 261 WORKER RESULT PASS: notification/wording/refresh/refusal-reason correction landed; 262 damaged resolution still open — 2026-11-11
+
+Read docs/architecture/evidence/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/{RESULT.md,RECEIPTS.md,result-contract.txt,tb261-live-fixture.txt,damage-resolution-262-handoff.md} and docs/planning/shipping/SHIPPING-USER-ACCEPTANCE-CORRECTIONS-261-262.md.
+The five-defect milestone (257/258-R3/259/260-R1) remains accepted only within source/evidence scope; the user's actual trial reopened acceptance. **261 PASS within its correction scope pending Architect review**: ONE existing transient Toast for completed authoring actions (no persistent success strip, no reload replay), contextual carrier-return Persian vocabulary («تحویل ناموفق» / «در حال برگشت به مبدأ» / «دریافت‌شده در مبدأ») distinct from customer «مرجوعی», line status derived from the physical parcels that carry it, and the shared operations route stating an honest non-empty reason for a refused resend (or naming the existing child resend).
+The screenshot fixture's missing «ارسال مجدد» is now PROVEN correct: origin receipt `1 Damaged` → usable `0` → resendable `0`. The live read-only before/after shows only the line badge corrected (`InTransit` → `Returned`) with the fixture's rows untouched. With real usable capacity exactly one deliberate reviewed resend exists and creates a `Created` parcel with immediate lineage under the retained envelope.
+**262 damaged-goods resolution is PLANNED, NOT ISSUED, NOT implemented.** Its owning seams and gaps are recorded; nothing claims damage is resolved. Do not say "all shipping complete".
+One worker/result/review then the next task. Same `tooba_alpha`/5432 + FE3000/Host5088 SingleStore/`store-alpha` only; keys/CapturedPreview preserved; 255 parked; Tipax deferred.
+
+---
+
+# SUPERSEDED — USER TRIAL REJECTED;261 ISSUED /262 PLANNED —2026-11-11
 
 Read docs/planning/shipping/SHIPPING-USER-ACCEPTANCE-CORRECTIONS-261-262.md and docs/ai/tasks/TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261/TASK.md.
 User now authorizes correction; this SUPERSEDES prior 'NO261 / wait for trial' instruction. Earlier five defects accepted within source/evidence scope, not user ACCEPT; actual trial reopened completion. Do not say all shipping problems fixed.

@@ -1,4 +1,4 @@
-TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261 — WORKER RESULT
+﻿TB-SHIPPING-USER-ACCEPTANCE-NOTIFICATIONS-AND-RETURNED-RESEND-261 — WORKER RESULT
 ====================================================================================
 Status: **PASS** within the issued correction scope.
 Decision: **ONE_EXISTING_TRANSIENT_TOAST_FOR_COMPLETED_ACTIONS_CONTEXTUAL_CARRIER_RETURN_VOCABULARY_PARCEL_TRUTHFUL_LINE_STATUS_AND_TRUTHFUL_DAMAGED_CAPACITY_EXPLANATION_WITH_DAMAGED_RESOLUTION_HANDED_TO_262**
@@ -10,8 +10,8 @@ Base / SHA
 ----------
 Expected-Base-SHA     66242d2dd4c8b3a5d8ecb9e87083e34f914bfbbd (ancestor of HEAD, verified)
 Work base HEAD        0d1481e4d5463951a88efa9d107ae5877d553e4d  (docs issue commit for this task)
-Code+evidence SHA     __CODE_SHA__
-Evidence/merge SHA    __MERGE_SHA__
+Code+evidence SHA     a011587d6018f60cae22e60f55dfc359c41ee44c
+Evidence/merge SHA    LEDGER_COMMIT_FOLLOWS_HEAD_EQ_ORIGIN_MAIN
 Branch                main
 Single worker, no parallel task, no other worker resumed.
 
