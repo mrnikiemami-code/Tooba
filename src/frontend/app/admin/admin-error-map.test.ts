@@ -108,6 +108,17 @@ test("parseAdminProblemErrorCode prefers stable errorCode never title", () => {
   assert.ok(!normalizeAdminClientError({ title: "Bad Request" }, 400, "fa").includes("Bad Request"));
 });
 
+test("a missing admin order is presented as Persian copy, never as a machine code", () => {
+  const fa = mapAdminErrorMessage("admin.order.missing", "fa");
+  assert.equal(fa, "سفارشی با این شناسه پیدا نشد. ممکن است حذف شده باشد یا نشانی آن درست نباشد.");
+  assert.ok(/[\u0600-\u06ff]/.test(fa));
+  assert.ok(!isTechnicalAdminErrorText(fa));
+  assert.equal(
+    mapAdminErrorMessage("admin.order.missing", "en"),
+    "No order was found with this identifier; it may have been removed or the address is wrong.",
+  );
+});
+
 test("content article update and media errors are humanized", () => {
   assert.equal(
     mapAdminErrorMessage("localization.language.inactive", "fa"),
@@ -115,7 +126,7 @@ test("content article update and media errors are humanized", () => {
   );
   assert.equal(
     mapAdminErrorMessage("content.category.language_mismatch", "fa"),
-    "دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.",
+    "زبان دسته‌بندی باید با زبان مقاله یکسان باشد.",
   );
   assert.equal(
     mapAdminErrorMessage("content.article.media_not_found", "en"),

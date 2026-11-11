@@ -27,6 +27,15 @@
   <data name="order.receipt.unavailable" xml:space="preserve">
     <value>رسید پرداخت این سفارش در دسترس نیست.</value>
   </data>
+  <data name="admin.order.missing" xml:space="preserve">
+    <value>سفارشی با این شناسه پیدا نشد.</value>
+  </data>
+  <data name="order.shipment.carrier_api_use_dedicated_path" xml:space="preserve">
+    <value>این گروه حامل API است؛ ایجاد مرسوله فقط از مسیر اجرای حامل همین گروه مجاز است.</value>
+  </data>
+  <data name="order.shipment.provider_metadata_forbidden" xml:space="preserve">
+    <value>فراسنج‌های ارائه‌دهنده برای ایجاد مرسولهٔ دستی پذیرفته نمی‌شود.</value>
+  </data>
   <data name="checkout.missing" xml:space="preserve">
     <value>سفارش پیدا نشد.</value>
   </data>

@@ -6,11 +6,13 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Catalog.Contracts.Errors;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
+using Tooba.Order.Application.Admin.Detail.Errors;
 using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
 using Tooba.Order.Application.ReservationCycle.Contracts;
 using Tooba.Order.Application.Seller;
 using Tooba.Order.Application.Storefront;
+using Tooba.Order.Application.Storefront.Shipping.CapturedPreview;
 using Tooba.Order.Endpoints;
 using Tooba.Order.Endpoints.Errors;
 using Tooba.Order.Endpoints.Resources;
@@ -71,9 +73,50 @@ public sealed class OrderEndpointPresentationTests
         ReservationPolicyErrors.SellerDenied,
     ];
 
+    /// <summary>
+    /// Codes the Order presentation layer registers besides the groups above: the accepted-group
+    /// shipment gate, the admin order-detail descriptor and the TB-241-R1 captured-selection/preview
+    /// codes. They are listed here explicitly (not reflected) because the reason classes intentionally
+    /// also declare codes owned by other modules.
+    /// </summary>
+    private static readonly string[] ShipmentGateCodes =
+    [
+        OrderErrorCodes.AcceptedGroupRequired,
+        OrderErrorCodes.AcceptedGroupUnavailable,
+        OrderErrorCodes.AcceptedGroupForeign,
+        OrderErrorCodes.AcceptedGroupMethodMismatch,
+        OrderErrorCodes.AcceptedGroupLineForeign,
+        OrderErrorCodes.AcceptedGroupQuantityExcess,
+        OrderErrorCodes.AcceptedGroupNotExecutable,
+        OrderErrorCodes.CarrierApiUseDedicatedPath,
+        OrderErrorCodes.ProviderMetadataForbidden,
+    ];
+
+    private static readonly string[] CapturedCodes =
+    [
+        StorefrontCapturedSelectionReasons.Disabled,
+        StorefrontCapturedSelectionReasons.IntentInvalid,
+        StorefrontCapturedSelectionReasons.Unavailable,
+        StorefrontCapturedSelectionReasons.DateUnavailable,
+        StorefrontCapturedSelectionReasons.SlotUnavailable,
+        StorefrontCapturedSelectionReasons.Conflict,
+        StorefrontCapturedSelectionReasons.DestinationUnverified,
+        StorefrontCapturedSelectionReasons.EvidencePresent,
+        StorefrontCapturedPreviewReasons.PreviewNotReady,
+    ];
+
     private static readonly string[] AllCodes =
-        CompletenessCodes.Concat(StorefrontCodes).Concat(CustomerCodes).Concat(SellerCodes)
-            .Concat(AdminPanelCodes).Concat(ReservationPolicyCodes).ToArray();
+        CompletenessCodes
+            .Concat([AdminOrderDetailErrors.Missing])
+            .Concat(StorefrontCodes)
+            .Concat(CustomerCodes)
+            .Concat(SellerCodes)
+            .Concat(AdminPanelCodes)
+            .Concat(ReservationPolicyCodes)
+            .Concat(ShipmentGateCodes)
+            .Concat(CapturedCodes)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
 
     /// <summary>
     /// Cross-cutting codes consumed by Order but canonically owned by FoundationErrorCatalogContributor.

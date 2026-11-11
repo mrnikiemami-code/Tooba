@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Order.Application;
 using Tooba.Order.Application.Admin.Completeness.Errors;
+using Tooba.Order.Application.Admin.Detail.Errors;
 using Tooba.Order.Application.Admin.Settings.ReservationPolicy;
 using Tooba.Order.Application.Customer;
 using Tooba.Order.Application.ReservationCycle.Contracts;
@@ -27,6 +28,11 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "Invoice is not available for this order."),
         D(AdminOrderCompletenessErrors.ReceiptUnavailable, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Payment receipt is not available for this order."),
+
+        // Admin order detail: an absent Checkout is a missing RESOURCE (404), never a generic 400 —
+        // the detail handler produces this code and this catalog owns its descriptor.
+        D(AdminOrderDetailErrors.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
+            "Order was not found."),
 
         // Storefront checkout
         D(StorefrontOrderErrors.CheckoutMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
@@ -184,6 +190,10 @@ public sealed class OrderErrorCatalogContributor : IErrorCatalogContributor
             "Quantity exceeds remaining packed quantity for the group."),
         D(OrderErrorCodes.AcceptedGroupNotExecutable, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "Delivery group cannot create a parcel in the current state."),
+        D(OrderErrorCodes.CarrierApiUseDedicatedPath, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "This group uses a carrier API; create the parcel from that group's carrier execution path."),
+        D(OrderErrorCodes.ProviderMetadataForbidden, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Provider metadata is not accepted for manual parcel create."),
     ];
 
     private static ErrorDescriptor D(

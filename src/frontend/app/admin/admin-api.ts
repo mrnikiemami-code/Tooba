@@ -19,6 +19,7 @@ import {
   type AdminLoadState,
   type AdminResult,
 } from "../../lib/admin/admin-result.ts";
+import { parseAdminProblemErrorCode } from "./admin-error-map.ts";
 export {
   ADMIN_DEV_ACTOR_HEADER,
   ADMIN_ACTOR_STORAGE_KEY,
@@ -1247,11 +1248,14 @@ async function read(path: string): Promise<AdminResult<unknown>> {
       return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
     }
     if (!response.ok) {
-      return { state: "error", data: null, status: response.status, message: `admin.http.${response.status}` };
+      // کد پایدار سرور حفظ می‌شود؛ ساختن «admin.http.400» قرارداد typed سرور را دور می‌ریخت و
+      // کد ماشینی خام به اپراتور می‌رسید. نگاشت به متن فقط در لایهٔ نمایش انجام می‌شود.
+      const code = parseAdminProblemErrorCode(payload, response.status);
+      return { state: "error", data: null, status: response.status, message: code, code };
     }
     return { state: "ok", data: payload, status: response.status };
   } catch {
-    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+    return { state: "error", data: null, status: 0, message: "host-unreachable", code: null };
   }
 }
 

@@ -9,6 +9,7 @@ import {
   type AdminShipment,
 } from "../../../admin-api";
 import { AdminOrderItemsShippingPanel } from "../../../admin-order-items-shipping-panel";
+import { mapAdminErrorMessage } from "../../../admin-error-map";
 import {
   OrderOperationsView,
   type OrderOperationsTargetFact,
@@ -356,7 +357,7 @@ export function AdminOrderOperationsRouteScreen({
       checkoutId={checkoutId}
       reference={detail?.reference ?? ""}
       state={viewState}
-      errorMessage={result.message ?? null}
+      errorMessage={result.message ? mapAdminErrorMessage(result.message, "fa") : null}
       onRetry={() => setReloadToken((value) => value + 1)}
       backHref={backFilter ? `/admin/fulfillments?filter=${encodeURIComponent(backFilter)}` : "/admin/fulfillments"}
       fullOrderHref={`/admin/orders/${checkoutId}`}

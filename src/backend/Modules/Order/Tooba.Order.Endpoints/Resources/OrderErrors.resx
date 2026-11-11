@@ -27,6 +27,15 @@
   <data name="order.receipt.unavailable" xml:space="preserve">
     <value>Payment receipt is not available for this order.</value>
   </data>
+  <data name="admin.order.missing" xml:space="preserve">
+    <value>No order was found with this identifier.</value>
+  </data>
+  <data name="order.shipment.carrier_api_use_dedicated_path" xml:space="preserve">
+    <value>This group uses a carrier API; create the parcel from that group's carrier execution path.</value>
+  </data>
+  <data name="order.shipment.provider_metadata_forbidden" xml:space="preserve">
+    <value>Provider metadata is not accepted for manual parcel create.</value>
+  </data>
   <data name="checkout.missing" xml:space="preserve">
     <value>Checkout was not found.</value>
   </data>

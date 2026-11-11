@@ -582,7 +582,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
       <OrderSupplyCard supply={supply} />
 
       {result.state === "error" ? (
-        <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+        <ErrorState title="سفارش خوانده نشد" detail={mapAdminErrorMessage(result.message, "fa")} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : detail ? (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">

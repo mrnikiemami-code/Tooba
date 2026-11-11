@@ -11,6 +11,7 @@ import {
   formatOrderSellerLabel,
   enrichAdminOrderDetail,
   mapAdminOrderDetail,
+  loadAdminOrderDetail,
 } from "./admin-api.ts";
 
 test("maps live dashboard, order, seller and customer DTOs", () => {
@@ -198,4 +199,37 @@ test("admin requests negotiate the display locale so Host error text stays in UI
   assert.equal(headers["Accept-Language"], "fa-IR");
   assert.equal(adminHeaders({ "content-type": "application/json" })["Accept-Language"], "fa-IR");
   assert.ok(ADMIN_DEV_ACTOR_HEADER in headers);
+});
+
+test("keeps the server's typed problem code instead of inventing an HTTP status code", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(
+    JSON.stringify({ type: "about:blank", title: "سفارشی با این شناسه پیدا نشد.", status: 404, errorCode: "admin.order.missing" }),
+    { status: 404, headers: { "Content-Type": "application/problem+json" } },
+  )) as typeof fetch;
+  try {
+    const result = await loadAdminOrderDetail("00000000-0000-0000-0000-000000000000");
+    assert.equal(result.state, "error");
+    assert.equal(result.status, 404);
+    // Contract: the transport carries the stable machine code; the presenter localizes it.
+    assert.equal(result.message, "admin.order.missing");
+    assert.equal(result.code, "admin.order.missing");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("falls back to the internal HTTP marker only when the server sent no typed code", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({ title: "Bad Request" }), {
+    status: 400,
+    headers: { "Content-Type": "application/problem+json" },
+  })) as typeof fetch;
+  try {
+    const result = await loadAdminOrders();
+    assert.equal(result.state, "error");
+    assert.equal(result.message, "admin.http.400");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

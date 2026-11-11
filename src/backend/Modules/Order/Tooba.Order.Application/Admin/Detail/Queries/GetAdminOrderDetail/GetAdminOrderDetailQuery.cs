@@ -1,6 +1,7 @@
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Order.Application.Admin.Detail.Errors;
 using Tooba.Order.Application.Admin.Detail.Models;
 using Tooba.Order.Application.Admin.Detail.Ports;
 
@@ -17,8 +18,6 @@ public sealed class GetAdminOrderDetailHandler(
     IClock clock)
     : IRequestHandler<GetAdminOrderDetailQuery, Result<AdminOrderDetailPage>>
 {
-    public const string MissingErrorCode = "admin.order.missing";
-
     public async Task<Result<AdminOrderDetailPage>> Handle(
         GetAdminOrderDetailQuery request,
         CancellationToken cancellationToken)
@@ -26,7 +25,7 @@ public sealed class GetAdminOrderDetailHandler(
         var group = await store.GetCheckoutAsync(request.CheckoutId, cancellationToken);
         if (group is null)
         {
-            return Result.Failure<AdminOrderDetailPage>(new SemanticError(MissingErrorCode));
+            return Result.Failure<AdminOrderDetailPage>(new SemanticError(AdminOrderDetailErrors.Missing));
         }
 
         if (request.ViewerUserId != Guid.Empty)

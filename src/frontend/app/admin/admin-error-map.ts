@@ -218,6 +218,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
     en: "This operation is not valid for the current order state.",
   },
+  "admin.order.missing": {
+    fa: "سفارشی با این شناسه پیدا نشد. ممکن است حذف شده باشد یا نشانی آن درست نباشد.",
+    en: "No order was found with this identifier; it may have been removed or the address is wrong.",
+  },
   "order.operation.failed": {
     fa: "انجام عملیات سفارش ناموفق بود.",
     en: "The order operation could not be completed.",

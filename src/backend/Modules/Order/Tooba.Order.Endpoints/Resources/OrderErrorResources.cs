@@ -29,6 +29,8 @@ public sealed class OrderErrorResourceSet : IErrorResourceSet
         || localizationKey.StartsWith("pending.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.StartsWith("customer.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.StartsWith("seller.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("admin.order.", StringComparison.OrdinalIgnoreCase)
+        || localizationKey.StartsWith("admin.order.", StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(StorefrontOrderErrors.PaymentMissing, StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(StorefrontOrderErrors.PaymentRejected, StringComparison.OrdinalIgnoreCase)
         || localizationKey.Equals(CustomerOrderErrors.SupplyUnavailable, StringComparison.OrdinalIgnoreCase)
