@@ -1,4 +1,15 @@
-# CURRENT — 264-R1 WORKER RESULT PASS: explicit zeros, window-constrained backward plan, explicit processing week, connected capture proof — 2026-11-12
+# CURRENT — ONLY 264-R2 DELIVERY CLOSURE ISSUED; 265 NOT ISSUED — 2026-11-12
+
+Read264-R1/ARCHITECT-REVIEW.md under docs/architecture/evidence and docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/TASK.md.
+Retain264-R1 source corrections (zero/window/explicit processing policy). User handoff incomplete: changed FE not rebuilt/served; positive storefront selection->accepted evidence->queue not proven. Only narrow delivery closure, no scheduler rewrite/broad green loop.
+IMPORTANT audit: draft01a17d0d-e033-7000-af43-49a1daa28822 is USER-owned. R1 PUT/publish on it was not a task fixture and violated read-only scope. No further writes/blind rollback; document exact mutations honestly. Fresh positive proof uses truly labelled independent minimal task fixtures through owning production paths; creating required task-only compatible offer/stock/method/cart IS explicitly authorized on same DB, not user rows.
+One worker/task, actual authoring Save/reload/publication + new served FE build + positive dates/selection + exact queue/operations review URL.265 remains planned NOT ISSUED. No all-complete/user ACCEPT claim.
+Same canonical tooba_alpha5432/3000/5088 SingleStore; no additional DB/edition switch/reset/reseed/global reclaimer. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Existing Toast/MessageBox and retained reservation/occurrence rules unchanged.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Prior CURRENTs below superseded.
+
+---
+
+# SUPERSEDED — previous result status
 
 Read docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R1/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/{R1-RESULT.md,R1-RECEIPTS.md,tb264r1-connected-proof.txt,tb264r1-storefront-projection.txt}.
