@@ -1,0 +1,37 @@
+TB-264-R1 result contract
+=========================
+
+task            TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R1
+bridgeTaskId    bb759779-9f49-4d09-8f77-0aae31abe04c
+status          PASS within the issued R1 correction scope (NOT Architect ACCEPT, NOT user acceptance)
+decision        NON_DECREASING_EXPLICIT_ZERO_ALLOWANCES_WINDOW_CONSTRAINED_BACKWARD_PLAN_EXPLICIT_PROCESSING_WEEK_AND_CONNECTED_CAPTURE_PROOF
+base            740d58d3ac57a9e96609ff61093a862b9940b64d (verified ancestor)
+code            424ea7232bcb9642e6843291e81a1102f2671bad
+evidence        b657c2829e1488784070fd37bdd7129fcf41ee22
+pushed          origin/main == b657c2829e1488784070fd37bdd7129fcf41ee22 (740d58d3a..b657c2829)
+
+migrations      shipping 20261112120000_AddProcessingHoursAndTimingPolicy   (applied by repository runner)
+                "order" 20261112130000_RelaxPreparationDispatchZeroAllowances (applied by repository runner)
+db              tooba_alpha @ 127.0.0.1:5432, SingleStore, tenant store-alpha (only database used)
+runtime         Host 5088 -> PID 8964 (/health 200, /health/ready 200), FE 3000 BUILD_ID Hou23ETYm3l_DFIPdinpW PID 41488
+
+proof           Shipping  32/32  (ShippingDispatchSchedulingAuthority264R1Tests + ShippingCapturedRevisionQuoteTests
+                                + ShippingDispatchSchedulingAuthority264Tests)
+                Order      2/2  (AdminDispatchPreparation264R1RelationalTests, real tooba_alpha)
+                connected  PUT editor-document 200 rev5/rev6 -> POST publication 200 selectedFormatVersion 4,
+                           snapshot 01a1cd2d-dc41-7000-abf0-322ca18255c4, selection v5;
+                           persisted body FormatVersion 4, prep/handoff/mode 240/60/WorkingWeek,
+                           ProcessingHours Asia/Tehran 6 working of 7, CarrierAcceptance Asia/Tehran 7 days;
+                           pre-fix capture 01a1cd1e-2251-7000-982d-567c6f3af9bf = format_version 3 / ProcessingHours null
+                storefront POST /v1/storefront/shipping/projection (task-labelled guest cart 01a1cd1f-6dba-7000-bc2d-311dbdd8a9ee)
+                           -> seller group quoted from seller-owned capture 01a186f7-dd7a-7000-95e9-3c8243e01991
+                           (rev 10 / selection 11), availableDates [] , reason
+                           storefront.captured_group.carrier_schedule_missing (no invented date, no borrowed method)
+                build      dotnet publish Tooba.Host + solution: 0 errors
+
+limits          no Store-owned in-stock offer exists and a seller's own shipping configuration is user data, so no
+                live positive customer-date/selection write was produced; the positive chain is proven by the 32
+                focused facts plus the format-4 payload the same authority consumes.
+                265 (courier-origin return <-> existing Returns linkage) remains NOT ISSUED.
+
+stop            STOP_FOR_ARCHITECT; automaticNext NONE.
