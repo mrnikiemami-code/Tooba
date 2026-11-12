@@ -8,7 +8,9 @@ decision        NON_DECREASING_EXPLICIT_ZERO_ALLOWANCES_WINDOW_CONSTRAINED_BACKW
 base            740d58d3ac57a9e96609ff61093a862b9940b64d (verified ancestor)
 code            424ea7232bcb9642e6843291e81a1102f2671bad
 evidence        b657c2829e1488784070fd37bdd7129fcf41ee22
-pushed          origin/main == b657c2829e1488784070fd37bdd7129fcf41ee22 (740d58d3a..b657c2829)
+pushed          origin/main after evidence commit b657c2829e1488784070fd37bdd7129fcf41ee22
+contract        a33c1bbf63608a4260ad884b58d04dd7d7b21ba9 (this file; the final main head is reported by the
+                bridge result, never self-referenced here)
 
 migrations      shipping 20261112120000_AddProcessingHoursAndTimingPolicy   (applied by repository runner)
                 "order" 20261112130000_RelaxPreparationDispatchZeroAllowances (applied by repository runner)
