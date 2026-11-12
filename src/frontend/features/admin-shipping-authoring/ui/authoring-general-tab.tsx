@@ -14,6 +14,7 @@ import type {
   EditorDocument,
   EditorShippingType,
   FreightPaymentMode,
+  PreparationProcessingMode,
 } from "../model/editor-document.ts";
 import { descriptionOf, nameOf, selectedShippingTypeValue, type EditorFormState } from "../model/editor-form.ts";
 import type { AuthoringTypeChoice } from "../api/authoring-lookup-api.ts";
@@ -76,6 +77,8 @@ export function AuthoringGeneralTab({
   nameIssueLanguageIds,
   settingsIncomplete,
   timingIncomplete,
+  preparationModeRequired = false,
+  preparationModeWithoutTiming = false,
   serverErrors,
   onName,
   onDescription,
@@ -83,6 +86,7 @@ export function AuthoringGeneralTab({
   onCalculationMode,
   onPreparationMinutes,
   onHandoffMinutes,
+  onPreparationMode,
   onShippingType,
   scheduleSlot,
   carrierSlot,
@@ -100,10 +104,23 @@ export function AuthoringGeneralTab({
   settingsIncomplete: boolean;
   /** TB-264: one half of the physical timing pair is filled and the other is empty. */
   timingIncomplete: boolean;
+  /** TB-264-R1: a declared pair with no chosen processing basis. */
+  preparationModeRequired?: boolean;
+  /** TB-264-R1: a chosen basis without any declared physical policy. */
+  preparationModeWithoutTiming?: boolean;
   /** Server reasons placed on their OWN field (`name`, `description`, `settings`, `type`, week…). */
   serverErrors?: Partial<
     Record<
-      "name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays" | "carrierTimeZone" | "carrierDays",
+      | "name"
+      | "description"
+      | "settings"
+      | "type"
+      | "weekTimeZone"
+      | "weekDays"
+      | "carrierTimeZone"
+      | "carrierDays"
+      | "processingTimeZone"
+      | "processingDays",
       string
     >
   >;
@@ -116,6 +133,8 @@ export function AuthoringGeneralTab({
   onCalculationMode: (mode: AuthoringCalculationMode) => void;
   onPreparationMinutes: (minutes: number | null) => void;
   onHandoffMinutes: (minutes: number | null) => void;
+  /** TB-264-R1: the explicit processing basis of the pair. */
+  onPreparationMode: (mode: PreparationProcessingMode | null) => void;
   onShippingType: (shippingTypeId: string | null) => void;
 }) {
   const readOnly = mode === "view";
@@ -430,6 +449,61 @@ export function AuthoringGeneralTab({
             {messages.timingPairRequired}
           </p>
         ) : null}
+        {/* TB-264-R1: the pair has NO implicit meaning — 24/7 must be chosen on purpose. */}
+        <fieldset className="mt-3 grid gap-1" disabled={readOnly}>
+          <legend className="text-xs font-bold text-gray-700">{messages.preparationModeLabel}</legend>
+          <p className="text-[11px] text-gray-500">{messages.preparationModeHint}</p>
+          <div className="flex flex-wrap gap-1" data-testid="shipping-authoring-preparation-mode">
+            {(["WorkingWeek", "Continuous"] as PreparationProcessingMode[]).map((mode) => {
+              const selected = form.preparationMode === mode;
+              return (
+                <label
+                  key={mode}
+                  className={
+                    selected
+                      ? "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground focus-within:ring-2 focus-within:ring-primary/40"
+                      : "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-semibold text-gray-700 focus-within:ring-2 focus-within:ring-primary/40"
+                  }
+                >
+                  <input
+                    type="radio"
+                    className="h-4 w-4 shrink-0 accent-primary"
+                    name="authoring-preparation-mode"
+                    value={mode}
+                    checked={selected}
+                    disabled={readOnly}
+                    data-testid={`shipping-authoring-preparation-mode-${mode}`}
+                    onChange={() => onPreparationMode(mode)}
+                  />
+                  {mode === "WorkingWeek"
+                    ? messages.preparationModeWorkingWeek
+                    : messages.preparationModeContinuous}
+                </label>
+              );
+            })}
+            <span className="inline-flex min-h-11 items-center px-1 text-[11px] text-gray-500">
+              {form.preparationMode === null ? messages.preparationModeUnset : ""}
+            </span>
+          </div>
+          {preparationModeRequired ? (
+            <p
+              role="alert"
+              className="text-[11px] font-semibold text-danger"
+              data-testid="shipping-authoring-preparation-mode-required"
+            >
+              {messages.preparationModeRequired}
+            </p>
+          ) : null}
+          {preparationModeWithoutTiming ? (
+            <p
+              role="alert"
+              className="text-[11px] font-semibold text-danger"
+              data-testid="shipping-authoring-preparation-mode-orphan"
+            >
+              {messages.preparationModeWithoutTiming}
+            </p>
+          ) : null}
+        </fieldset>
         {form.preparationMinutes === null && form.handoffMinutes === null ? (
           <p className="mt-2 text-[11px] text-gray-500" data-testid="shipping-authoring-timing-blank">
             {messages.timingNotConfigured}

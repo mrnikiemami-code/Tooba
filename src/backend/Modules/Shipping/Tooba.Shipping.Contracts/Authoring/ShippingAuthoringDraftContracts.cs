@@ -242,6 +242,22 @@ public enum ShippingAuthoringCalculationMode
 }
 
 /// <summary>
+/// TB-264-R1: معنای <b>صریح</b> زمان آماده‌سازی فیزیکی. «تنظیم‌نشده» یک حالت واقعی است و هرگز به
+/// کارکرد پیوسته یا آمادهٔ همین لحظه تفسیر نمی‌شود.
+/// </summary>
+public enum ShippingAuthoringPreparationProcessingMode
+{
+    /// <summary>سیاست زمان پردازش تنظیم نشده است؛ تعهد جدید با آن ساخته نمی‌شود.</summary>
+    Unspecified = 0,
+
+    /// <summary>آماده‌سازی فقط داخل هفتهٔ کاری پردازشِ صریح شمرده می‌شود.</summary>
+    WorkingWeek = 1,
+
+    /// <summary>کارکرد پیوستهٔ ۲۴/۷ که اپراتور صریحاً انتخاب کرده است؛ آماده‌سازی سپری‌شده است.</summary>
+    Continuous = 2,
+}
+
+/// <summary>
 /// بدنهٔ جایگزینی تنظیمات روش یک پیش‌نویس: بازبینی ریشه و دو انتخاب مستقل.
 /// </summary>
 /// <remarks>
@@ -260,9 +276,11 @@ public enum ShippingAuthoringCalculationMode
 /// <param name="CalculationMode">حالت محاسبهٔ کرایه؛ حضور آن اجباری است.</param>
 /// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه؛ تهی یعنی تنظیم‌نشده.</param>
 /// <param name="HandoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه؛ تهی یعنی تنظیم‌نشده.</param>
+/// <param name="PreparationMode">TB-264-R1: معنای صریح زمان پردازش؛ تهی یعنی تنظیم‌نشده.</param>
 public sealed record ShippingAuthoringMethodSettingsReplaceRequest(
     long ExpectedRevision,
     ShippingFreightPayerMode? FreightPaymentMode,
     ShippingAuthoringCalculationMode? CalculationMode,
     int? PreparationMinutes = null,
-    int? HandoffMinutes = null);
+    int? HandoffMinutes = null,
+    ShippingAuthoringPreparationProcessingMode? PreparationMode = null);

@@ -59,7 +59,8 @@ public sealed class ReplaceShippingAuthoringMethodSettingsHandler(IShippingAutho
                 request.Request.CalculationMode,
                 cancellationToken,
                 request.Request.PreparationMinutes,
-                request.Request.HandoffMinutes);
+                request.Request.HandoffMinutes,
+                request.Request.PreparationMode);
             return replaced.IsFailure
                 ? Result.Failure<ShippingAuthoringMethodSettingsItem>(replaced.Errors)
                 : Result.Success(ShippingAuthoringMethodSettingsWorkflow.Map(replaced.Value));

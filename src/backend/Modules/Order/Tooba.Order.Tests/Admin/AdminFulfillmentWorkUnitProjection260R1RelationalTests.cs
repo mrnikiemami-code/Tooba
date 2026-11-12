@@ -682,9 +682,11 @@ public sealed class AdminFulfillmentWorkUnitProjection260R1RelationalTests
 
         // The physical preparation should ALREADY be underway, while the carrier handoff is still ahead:
         // the two facts are independent, and the queue must show both without inventing either.
-        var preparationStart = now.AddMinutes(-30);
-        var transferDeparture = now.AddMinutes(30);
+        // TB-264-R1 keeps transfer ELAPSED (exactly handoffMinutes before the close) while preparation is
+        // WORKING time, so a long preparation span legitimately starts days before the same close.
         var handoffDeadline = new DateTimeOffset(carrierTomorrow.ToDateTime(new TimeOnly(17, 0)), TimeSpan.FromHours(3.5)).ToUniversalTime();
+        var transferDeparture = handoffDeadline.AddMinutes(-1440);
+        var preparationStart = transferDeparture.AddDays(-3);
         var ready = ShippingGroupPlannedDispatch.Create(
             carrierTomorrow,
             new TimeOnly(9, 0).Ticks,
@@ -697,8 +699,8 @@ public sealed class AdminFulfillmentWorkUnitProjection260R1RelationalTests
             preparationStartUtc: preparationStart,
             transferDepartureUtc: transferDeparture,
             handoffDeadlineUtc: handoffDeadline,
-            preparationMinutes: 120,
-            handoffMinutes: 45);
+            preparationMinutes: 4320,
+            handoffMinutes: 1440);
 
         var legacy = ShippingGroupPlannedDispatch.Create(
             carrierTomorrow,

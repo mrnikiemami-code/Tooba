@@ -136,6 +136,7 @@ public interface IShippingAuthoringDraftDirectory
     /// <param name="cancellationToken">توکن لغو.</param>
     /// <param name="preparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه یا تهی برای تنظیم‌نشده.</param>
     /// <param name="handoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه یا تهی برای تنظیم‌نشده.</param>
+    /// <param name="preparationMode">TB-264-R1: معنای صریح زمان پردازش یا تهی برای تنظیم‌نشده.</param>
     Task<Result<ShippingAuthoringDraft>> ReplaceMethodSettingsAsync(
         ShippingAuthoringOwnerScope owner,
         Guid draftId,
@@ -144,7 +145,8 @@ public interface IShippingAuthoringDraftDirectory
         Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode? calculationMode,
         CancellationToken cancellationToken,
         int? preparationMinutes = null,
-        int? handoffMinutes = null);
+        int? handoffMinutes = null,
+        Tooba.Shipping.Contracts.Authoring.ShippingAuthoringPreparationProcessingMode? preparationMode = null);
 
     /// <summary>
     /// انتخاب اختیاری نوع ارسال ریشهٔ روش یک پیش‌نویس همین مالک را در <b>یک</b> SaveChanges ضمنی

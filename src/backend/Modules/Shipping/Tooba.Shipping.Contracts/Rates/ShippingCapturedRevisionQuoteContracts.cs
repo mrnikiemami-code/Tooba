@@ -201,14 +201,42 @@ public sealed record ShippingCapturedCarrierWeek(
     string TimeZoneId,
     IReadOnlyList<ShippingCapturedCarrierWeekDay> Days);
 
+/// <summary>
+/// TB-264-R1: یک روز هفتهٔ کاری <b>پردازش</b> ذخیره‌شده؛ بازهٔ نیم‌باز محلی همان روز.
+/// </summary>
+/// <param name="Weekday">روز هفتهٔ ISO (۱ تا ۷).</param>
+/// <param name="IsWorking">آیا انبار این روز کار می‌کند.</param>
+/// <param name="OpensAt">شروع بازهٔ کاری یا تهی.</param>
+/// <param name="ClosesAt">پایان بازهٔ کاری (شامل نیست) یا تهی.</param>
+public sealed record ShippingCapturedProcessingWeekDay(
+    int Weekday,
+    bool IsWorking,
+    TimeOnly? OpensAt,
+    TimeOnly? ClosesAt);
+
+/// <summary>
+/// TB-264-R1: هفتهٔ کاری <b>پردازش انبار</b> ذخیره‌شده در همان capture. غیبت آن یعنی سیاست زمانی
+/// ناقص؛ هیچ ساعتی از تقویم مشتری/حامل کپی یا استنتاج نمی‌شود.
+/// </summary>
+/// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی پردازش.</param>
+/// <param name="Days">روزهای ذخیره‌شده.</param>
+public sealed record ShippingCapturedProcessingWeek(
+    string TimeZoneId,
+    IReadOnlyList<ShippingCapturedProcessingWeekDay> Days);
+
 /// <summary>تنظیمات ذخیره‌شدهٔ روش که به قیمت مربوط است.</summary>
 /// <param name="FreightPaymentMode">طرف پرداخت کرایه.</param>
 /// <param name="CalculationMode">حالت محاسبه.</param>
+/// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی یا تهی.</param>
+/// <param name="HandoffMinutes">TB-264: زمان انتقال/تحویل به حامل یا تهی.</param>
+/// <param name="ProcessingMode">TB-264-R1: معنای صریح زمان پردازش یا تنظیم‌نشده.</param>
 public sealed record ShippingCapturedQuoteSettings(
     ShippingFreightPayerMode FreightPaymentMode,
     ShippingAuthoringCalculationMode CalculationMode,
     int? PreparationMinutes = null,
-    int? HandoffMinutes = null);
+    int? HandoffMinutes = null,
+    ShippingAuthoringPreparationProcessingMode ProcessingMode =
+        ShippingAuthoringPreparationProcessingMode.Unspecified);
 
 /// <summary>
 /// گونهٔ مالکِ درخواستی در درز Contracts. این یک <b>هویت داده</b> است، نه مجوز: انطباق آن با زمینهٔ
@@ -300,6 +328,7 @@ public sealed record ShippingCapturedQuoteLookupRequest(
 /// <param name="ReceivingWeek">برنامهٔ هفتگی ذخیره‌شده یا تهی.</param>
 /// <param name="CarrierQuote">شاهد خنثی قیمت حامل؛ برای Manual/Free تهی است.</param>
 /// <param name="CarrierWeek">TB-256: تقویم مستقل پذیرش حامل ذخیره‌شده یا تهی.</param>
+/// <param name="ProcessingWeek">TB-264-R1: هفتهٔ کاری پردازش انبار ذخیره‌شده یا تهی.</param>
 public sealed record ShippingCapturedQuoteResult(
     ShippingCapturedQuoteVerdict Verdict,
     string ReasonCode,
@@ -323,7 +352,8 @@ public sealed record ShippingCapturedQuoteResult(
     int? MaxDeliveryDays,
     ShippingCapturedReceivingWeek? ReceivingWeek,
     ShippingCapturedCarrierQuoteEvidence? CarrierQuote = null,
-    ShippingCapturedCarrierWeek? CarrierWeek = null)
+    ShippingCapturedCarrierWeek? CarrierWeek = null,
+    ShippingCapturedProcessingWeek? ProcessingWeek = null)
 {
     /// <summary>آیا این نتیجه یک قیمت پولی واقعی است.</summary>
     public bool IsQuoted => Verdict == ShippingCapturedQuoteVerdict.Quoted;

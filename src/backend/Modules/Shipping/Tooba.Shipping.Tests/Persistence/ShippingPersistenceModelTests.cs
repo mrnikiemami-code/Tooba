@@ -68,6 +68,8 @@ public sealed class ShippingPersistenceModelTests
                 "authoring_drafts",
                 "authoring_group_titles",
                 "authoring_method_settings",
+                "authoring_processing_schedule_days",
+                "authoring_processing_schedules",
                 "authoring_rate_rows",
                 "authoring_region_groups",
                 "authoring_revision_snapshots",
@@ -318,6 +320,8 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("CREATE TABLE shipping.authoring_weekly_schedule_days", script);
         Assert.Contains("CREATE TABLE IF NOT EXISTS shipping.authoring_carrier_schedules", script);
         Assert.Contains("CREATE TABLE IF NOT EXISTS shipping.authoring_carrier_schedule_days", script);
+        Assert.Contains("CREATE TABLE IF NOT EXISTS shipping.authoring_processing_schedules", script);
+        Assert.Contains("CREATE TABLE IF NOT EXISTS shipping.authoring_processing_schedule_days", script);
         Assert.Contains("CREATE TABLE shipping.carrier_accounts", script);
         Assert.Contains("CREATE TABLE shipping.carrier_secret_materials", script);
         Assert.Contains("CREATE TABLE shipping.carrier_reference_values", script);
@@ -404,6 +408,18 @@ public sealed class ShippingPersistenceModelTests
                      "fk_authoring_carrier_schedules_draft",
                      "fk_authoring_carrier_schedule_days_schedule",
                      "ix_authoring_rate_rows_group",
+                     "ck_authoring_method_settings_preparation_pair",
+                     "ck_authoring_method_settings_preparation_minutes_range",
+                     "ck_authoring_method_settings_handoff_minutes_range",
+                     "ck_authoring_method_settings_preparation_mode",
+                     "ck_authoring_method_settings_preparation_mode_paired",
+                     "ck_authoring_processing_schedules_timezone_length",
+                     "ck_authoring_processing_schedule_days_weekday_range",
+                     "ck_authoring_processing_schedule_days_hours_paired",
+                     "ck_authoring_processing_schedule_days_range",
+                     "ck_authoring_processing_schedule_days_working_hours",
+                     "fk_authoring_processing_schedules_draft",
+                     "fk_authoring_processing_schedule_days_schedule",
                  })
         {
             Assert.Contains(constraint, script);
@@ -426,10 +442,11 @@ public sealed class ShippingPersistenceModelTests
         Assert.Contains("REFERENCES shipping.authoring_region_groups", script);
         // TB-192 adds exactly two more intra-module cascades: draft -> method translations and
         // group -> optional titles. TB-193 adds two more: draft -> weekly schedule header and
-        // header -> the seven day rows. TB-194 adds draft -> method settings. No language/registry FK
-        // crosses a module schema.
+        // header -> the seven day rows. TB-194 adds draft -> method settings. TB-264-R1 adds the
+        // draft -> processing week header and header -> the seven processing day rows. No language/
+        // registry FK crosses a module schema.
         Assert.Equal(
-            15,
+            17,
             script.Split("FOREIGN KEY", StringSplitOptions.None).Length - 1);
     }
 
@@ -439,7 +456,7 @@ public sealed class ShippingPersistenceModelTests
         using var context = CreateContext();
         var migrations = context.Database.GetMigrations().ToArray();
 
-        Assert.Equal(22, migrations.Length);
+        Assert.Equal(23, migrations.Length);
         Assert.EndsWith("_InitialShipping", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_OptionLevelRatePolicy", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_OperatingSchedule", migrations[2], StringComparison.Ordinal);
@@ -462,6 +479,7 @@ public sealed class ShippingPersistenceModelTests
         Assert.EndsWith("_CarrierShipmentExecutionSnapshot", migrations[19], StringComparison.Ordinal);
         Assert.EndsWith("_CarrierShipmentDispatchClaim", migrations[20], StringComparison.Ordinal);
         Assert.EndsWith("_AddCarrierAcceptanceSchedule", migrations[21], StringComparison.Ordinal);
+        Assert.EndsWith("_AddProcessingHoursAndTimingPolicy", migrations[22], StringComparison.Ordinal);
     }
 
     [Fact]

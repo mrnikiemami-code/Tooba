@@ -25,6 +25,13 @@ import {
   type CarrierIssue,
   type CarrierWeekFormState,
 } from "./editor-carrier-week.ts";
+import {
+  buildProcessingScheduleEdit,
+  processingWeekDirty,
+  processingWeekIssues,
+  type ProcessingIssue,
+  type ProcessingWeekFormState,
+} from "./editor-processing-week.ts";
 
 /** All local blocking problems of the composed intent. */
 export interface AuthoringIntentIssues {
@@ -34,6 +41,8 @@ export interface AuthoringIntentIssues {
   readonly week: readonly WeekIssue[];
   /** TB-256: blocking problems of the independent carrier-acceptance calendar. */
   readonly carrier: readonly CarrierIssue[];
+  /** TB-264-R1: blocking problems of the independent warehouse-processing calendar. */
+  readonly processing: readonly ProcessingIssue[];
   /** Typed shared delivery ranges that cannot be applied (partial/invalid, or with no row to live in). */
   readonly areaRanges: readonly AreaRangeDraftIssue[];
 }
@@ -54,6 +63,7 @@ export function hasNoIssues(issues: AuthoringIntentIssues): boolean {
     issues.rates.length === 0 &&
     issues.week.length === 0 &&
     issues.carrier.length === 0 &&
+    issues.processing.length === 0 &&
     issues.areaRanges.length === 0
   );
 }
@@ -76,6 +86,7 @@ export function buildAuthoringIntent(
   groups: GroupsFormState | null = null,
   areaRanges: AreaRangeDrafts | null = null,
   carrier: CarrierWeekFormState | null = null,
+  processing: ProcessingWeekFormState | null = null,
 ): AuthoringIntent {
   const generalResult = buildEditorEdits(document, general);
   const regionGroups =
@@ -84,12 +95,15 @@ export function buildAuthoringIntent(
       : buildGroupsEdits(document, groups, rates);
   const weeklySchedule = buildWeeklyScheduleEdit(document.weeklySchedule, week);
   const carrierSchedule = carrier === null ? undefined : buildCarrierScheduleEdit(document.carrierSchedule ?? null, carrier);
+  const processingSchedule =
+    processing === null ? undefined : buildProcessingScheduleEdit(document.processingSchedule ?? null, processing);
 
   const edits: EditorEdits = {
     ...generalResult.edits,
     ...(regionGroups === undefined ? {} : { regionGroups }),
     ...(weeklySchedule === undefined ? {} : { weeklySchedule }),
     ...(carrierSchedule === undefined ? {} : { carrierSchedule }),
+    ...(processingSchedule === undefined ? {} : { processingSchedule }),
   };
 
   const rateIssues: readonly RateRowIssue[] =
@@ -109,6 +123,7 @@ export function buildAuthoringIntent(
       rates: rateIssues,
       week: weekIssues(week),
       carrier: carrier === null ? [] : carrierWeekIssues(carrier),
+      processing: processing === null ? [] : crossProcessingIssues(document, general, processing),
       areaRanges:
         areaRanges === null ? [] : areaRangeDraftIssues(areaRanges, (groupKey) => rates[groupKey]),
     },
@@ -117,9 +132,30 @@ export function buildAuthoringIntent(
       ratesDirty(document, rates) ||
       weekDirty(document.weeklySchedule, week) ||
       (carrier !== null && carrierWeekDirty(document.carrierSchedule ?? null, carrier)) ||
+      (processing !== null && processingWeekDirty(document.processingSchedule ?? null, processing)) ||
       (groups !== null && groupsDirty(document, groups)) ||
       (areaRanges !== null && areaRangeDraftsDirty(document, areaRanges, rates)),
   };
+}
+
+/**
+ * TB-264-R1: working-week preparation needs a real processing calendar.
+ *
+ * The pair + `WorkingWeek` mode is a promise to count preparation inside stored hours, so a method that
+ * declares it while NEITHER the baseline NOR this PUT carries a processing week is blocked locally
+ * instead of reaching the server and failing there.
+ */
+function crossProcessingIssues(
+  document: EditorDocument,
+  general: EditorFormState,
+  processing: ProcessingWeekFormState,
+): readonly ProcessingIssue[] {
+  const issues = processingWeekIssues(processing);
+  if (issues.length > 0) return issues;
+  if (general.preparationMode !== "WorkingWeek") return [];
+  if (general.preparationMinutes === null || general.preparationMinutes <= 0) return [];
+  const configuredNow = processing.kind === "configured" || document.processingSchedule != null;
+  return configuredNow ? [] : [{ code: "workingWeekRequiresProcessingWeek", weekday: null }];
 }
 
 /** Baseline collection as an ordered draft (existing keys/ids only). */
@@ -141,6 +177,7 @@ export function intentHasEdits(edits: EditorEdits): boolean {
     edits.typeAssignment !== undefined ||
     edits.regionGroups !== undefined ||
     edits.weeklySchedule !== undefined ||
-    edits.carrierSchedule !== undefined
+    edits.carrierSchedule !== undefined ||
+    edits.processingSchedule !== undefined
   );
 }

@@ -72,7 +72,13 @@ test("R202-01 configured but untouched settings emit no wrapper; changing one ax
 
   const changed = withCalculationMode(base, "Free");
   const built = buildEditorEdits(document, changed);
-  assert.deepEqual(built.edits.methodSettings, { freightPaymentMode: "Prepaid", calculationMode: "Free" });
+  assert.deepEqual(built.edits.methodSettings, {
+    freightPaymentMode: "Prepaid",
+    calculationMode: "Free",
+    preparationMinutes: null,
+    handoffMinutes: null,
+    preparationMode: null,
+  });
   assert.equal(formHasLocalChanges(document, changed), true);
 
   // Reverting every value to the confirmed baseline is clean again — no phantom dirty state.

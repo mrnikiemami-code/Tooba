@@ -9,11 +9,14 @@ namespace Tooba.Shipping.Application.Authoring.Models;
 /// <param name="CalculationMode">حالت محاسبه.</param>
 /// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی (دقیقه) یا تهی برای تنظیم‌نشده.</param>
 /// <param name="HandoffMinutes">TB-264: زمان انتقال به حامل (دقیقه) یا تهی برای تنظیم‌نشده.</param>
+/// <param name="PreparationMode">TB-264-R1: معنای صریح زمان پردازش یا تنظیم‌نشده.</param>
 public sealed record ShippingAuthoringEditorSettingsItem(
     ShippingFreightPayerMode FreightPaymentMode,
     ShippingAuthoringCalculationMode CalculationMode,
     int? PreparationMinutes = null,
-    int? HandoffMinutes = null);
+    int? HandoffMinutes = null,
+    ShippingAuthoringPreparationProcessingMode PreparationMode =
+        ShippingAuthoringPreparationProcessingMode.Unspecified);
 
 /// <summary>یک روز برنامه در سند ویرایشگر.</summary>
 /// <param name="Weekday">روز هفتهٔ ISO.</param>
@@ -48,6 +51,24 @@ public sealed record ShippingAuthoringEditorCarrierScheduleItem(
 /// <param name="StartTime">ساعت شروع پذیرش یا تهی.</param>
 /// <param name="EndTime">ساعت پایان پذیرش یا تهی.</param>
 public sealed record ShippingAuthoringEditorCarrierScheduleDayItem(
+    int Weekday,
+    bool IsWorking,
+    TimeOnly? StartTime,
+    TimeOnly? EndTime);
+
+/// <summary>TB-264-R1: هفتهٔ کاری ذخیره‌شدهٔ پردازش انبار در سند ویرایشگر (مستقل از دو تقویم دیگر).</summary>
+/// <param name="TimeZoneId">منطقهٔ زمانی پردازش.</param>
+/// <param name="Days">هفت روز پردازش.</param>
+public sealed record ShippingAuthoringEditorProcessingScheduleItem(
+    string TimeZoneId,
+    IReadOnlyList<ShippingAuthoringEditorProcessingScheduleDayItem> Days);
+
+/// <summary>یک روز هفتهٔ پردازش در سند ویرایشگر.</summary>
+/// <param name="Weekday">روز هفتهٔ ISO.</param>
+/// <param name="IsWorking">پرچم صریح کاری/تعطیل.</param>
+/// <param name="StartTime">ساعت شروع پردازش یا تهی.</param>
+/// <param name="EndTime">ساعت پایان پردازش یا تهی.</param>
+public sealed record ShippingAuthoringEditorProcessingScheduleDayItem(
     int Weekday,
     bool IsWorking,
     TimeOnly? StartTime,
@@ -121,4 +142,10 @@ public sealed record ShippingAuthoringEditorDocumentItem(
     /// تحویل مشتری استنتاج نمی‌شود.
     /// </summary>
     public ShippingAuthoringEditorCarrierScheduleItem? CarrierSchedule { get; init; }
+
+    /// <summary>
+    /// TB-264-R1: هفتهٔ کاری <b>پردازش انبار</b> یا <c>null</c> یعنی <b>پیکربندی‌نشده</b>؛ هیچ ساعتی از
+    /// تقویم مشتری/حامل استنتاج نمی‌شود.
+    /// </summary>
+    public ShippingAuthoringEditorProcessingScheduleItem? ProcessingSchedule { get; init; }
 }

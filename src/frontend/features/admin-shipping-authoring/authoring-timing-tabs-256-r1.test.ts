@@ -43,23 +43,25 @@ test("TB-256-R1: switching timing tabs is presentation only — both editors sta
 });
 
 test("TB-256-R1: keyboard navigation is direction-aware and wraps", () => {
-  assert.equal(TIMING_TAB_IDS.length, 2);
+  // TB-264-R1 added the independent processing calendar as a THIRD tab in the same tablist.
+  assert.deepEqual([...TIMING_TAB_IDS], ["customer", "carrier", "processing"]);
 
   // LTR: ArrowRight moves forward, ArrowLeft backward.
   assert.equal(nextTimingTabIndex(0, "ArrowRight", false), 1);
-  assert.equal(nextTimingTabIndex(1, "ArrowLeft", false), 0);
+  assert.equal(nextTimingTabIndex(1, "ArrowRight", false), 2);
+  assert.equal(nextTimingTabIndex(2, "ArrowLeft", false), 1);
 
   // RTL: the SAME physical keys move the other way in reading order.
   assert.equal(nextTimingTabIndex(0, "ArrowLeft", true), 1);
-  assert.equal(nextTimingTabIndex(1, "ArrowRight", true), 0);
+  assert.equal(nextTimingTabIndex(2, "ArrowRight", true), 1);
 
   // Both directions wrap instead of stopping at the edge.
-  assert.equal(nextTimingTabIndex(1, "ArrowRight", false), 0);
-  assert.equal(nextTimingTabIndex(0, "ArrowLeft", false), 1);
+  assert.equal(nextTimingTabIndex(2, "ArrowRight", false), 0);
+  assert.equal(nextTimingTabIndex(0, "ArrowLeft", false), 2);
 
   // Home/End mean first/last in ANY direction.
-  assert.equal(nextTimingTabIndex(1, "Home", true), 0);
-  assert.equal(nextTimingTabIndex(0, "End", false), 1);
+  assert.equal(nextTimingTabIndex(2, "Home", true), 0);
+  assert.equal(nextTimingTabIndex(0, "End", false), 2);
 
   // Keys the tablist does not own keep their default behaviour (no focus move).
   assert.equal(isTimingTabKey("Enter"), false);

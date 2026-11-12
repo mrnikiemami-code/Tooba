@@ -151,6 +151,8 @@ function isDirty(edits: EditorEdits): boolean {
   // here made a carrier-only edit look like "no changes" to `selectApplyRequest`, so the one PUT was
   // never sent while the screen (which uses the raw local-dirty signal) still enabled Save.
   if (edits.carrierSchedule !== undefined) return true;
+  // TB-264-R1: the warehouse-processing calendar is the same kind of independent capability.
+  if (edits.processingSchedule !== undefined) return true;
   if (edits.methodSettings !== undefined) return true;
   return edits.typeAssignment !== undefined;
 }

@@ -302,6 +302,12 @@ public sealed class ShippingAuthoringDraft
     public ShippingAuthoringCarrierSchedule? CarrierSchedule { get; private set; }
 
     /// <summary>
+    /// TB-264-R1: هفتهٔ کاری <b>پردازش انبار</b> همین روش؛ مستقل از هر دو تقویم دیگر. تهی یعنی صریحاً
+    /// <b>پیکربندی‌نشده</b> و هیچ ساعت کاری انبار استنتاج نمی‌شود.
+    /// </summary>
+    public ShippingAuthoringProcessingSchedule? ProcessingSchedule { get; private set; }
+
+    /// <summary>
     /// تنظیمات روش همین پیش‌نویس: زمان پرداخت کرایه و حالت محاسبه، دو انتخاب مستقل روی ریشهٔ روش.
     /// تهی یعنی صریحاً <b>تنظیم‌نشده</b> و نه <c>Manual</c>/<c>Prepaid</c>.
     /// </summary>
@@ -1236,6 +1242,146 @@ public sealed class ShippingAuthoringDraft
     }
 
     /// <summary>
+    /// TB-264-R1: یک روز هفتهٔ کاری پردازش پیشنهادی (همان شکل تقویم پذیرش حامل).
+    /// </summary>
+    /// <param name="Weekday">روز هفتهٔ ISO ۱..۷.</param>
+    /// <param name="IsWorking">آیا انبار این روز کار می‌کند.</param>
+    /// <param name="StartTime">شروع بازهٔ کاری.</param>
+    /// <param name="EndTime">پایان بازهٔ کاری (شامل نیست).</param>
+    public sealed record ProcessingScheduleDayInput(int Weekday, bool IsWorking, TimeOnly? StartTime, TimeOnly? EndTime);
+
+    /// <summary>TB-264-R1: یک روز تأییدشدهٔ هفتهٔ پردازش همراه ردیف موجود.</summary>
+    /// <param name="Existing">ردیف tracked فعلی همان روز؛ تهی یعنی روز تازه.</param>
+    /// <param name="Weekday">روز هفتهٔ ISO ۱..۷.</param>
+    /// <param name="IsWorking">آیا انبار این روز کار می‌کند.</param>
+    /// <param name="StartTime">شروع بازهٔ کاری نرمال‌شده.</param>
+    /// <param name="EndTime">پایان بازهٔ کاری نرمال‌شده.</param>
+    public sealed record ProcessingScheduleDayAssignment(
+        ShippingAuthoringProcessingScheduleDay? Existing,
+        int Weekday,
+        bool IsWorking,
+        TimeOnly? StartTime,
+        TimeOnly? EndTime);
+
+    /// <summary>TB-264-R1: هفتهٔ کامل و تأییدشدهٔ جایگزینی پردازش (بدون هیچ تغییر روی aggregate).</summary>
+    /// <param name="TimeZoneId">منطقهٔ زمانی نرمال‌شده و قابل‌حل.</param>
+    /// <param name="Days">دقیقاً هفت روز.</param>
+    public sealed record ProcessingSchedulePlan(
+        string TimeZoneId,
+        IReadOnlyList<ProcessingScheduleDayAssignment> Days)
+    {
+        /// <summary>آیا این جایگزینی دست‌کم یک تغییر واقعی دارد؛ PUT یکسان بازبینی/زمان را تغییر نمی‌دهد.</summary>
+        public bool HasChanges { get; init; }
+    }
+
+    /// <summary>
+    /// TB-264-R1: کل هفتهٔ کاری پردازش انبار را <b>بدون هیچ تغییر</b> می‌سنجد. همان قاعدهٔ سخت‌گیرانهٔ
+    /// تقویم‌های دیگر (هفت روز دقیق، روز یکتا، جفت ساعت) اما کاملاً <b>مستقل</b>: هیچ ساعتی از تقویم
+    /// مشتری یا حامل خوانده/استنتاج نمی‌شود.
+    /// </summary>
+    /// <param name="timeZoneId">شناسهٔ منطقهٔ زمانی از بدنه.</param>
+    /// <param name="days">مجموعهٔ هفت‌روزهٔ پیشنهادی.</param>
+    public ProcessingSchedulePlan PreflightProcessingSchedule(
+        string? timeZoneId,
+        IReadOnlyList<ProcessingScheduleDayInput> days)
+    {
+        ArgumentNullException.ThrowIfNull(days);
+
+        var normalizedTimeZone = ShippingScheduleRules.NormalizeTimeZone(timeZoneId);
+        if (days.Count != ShippingAuthoringProcessingSchedule.DaysPerWeek)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+
+        var existingByWeekday = ProcessingSchedule is { } schedule
+            ? schedule.Days.ToDictionary(day => day.Weekday)
+            : new Dictionary<int, ShippingAuthoringProcessingScheduleDay>();
+        var seen = new HashSet<int>();
+        var assignments = new List<ProcessingScheduleDayAssignment>(ShippingAuthoringProcessingSchedule.DaysPerWeek);
+        foreach (var day in days)
+        {
+            if (day is null)
+            {
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+            }
+
+            var weekday = ShippingOperatingWindow.NormalizeWeekday(day.Weekday);
+            if (!seen.Add(weekday))
+            {
+                throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+            }
+
+            existingByWeekday.TryGetValue(weekday, out var existing);
+            var (start, end) = NormalizeDayHours(
+                day.IsWorking,
+                day.StartTime,
+                day.EndTime,
+                existing is { } row ? (row.OpensAt, row.ClosesAt) : null);
+            assignments.Add(new ProcessingScheduleDayAssignment(existing, weekday, day.IsWorking, start, end));
+        }
+
+        if (seen.Count != ShippingAuthoringProcessingSchedule.DaysPerWeek)
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringScheduleWeekdaySetInvalid));
+        }
+
+        var unchanged = ProcessingSchedule is { } current
+                         && string.Equals(current.TimeZoneId, normalizedTimeZone, StringComparison.Ordinal)
+                         && assignments.All(assignment => assignment.Existing is { } row
+                                                          && row.Matches(
+                                                              assignment.IsWorking,
+                                                              assignment.StartTime,
+                                                              assignment.EndTime));
+        return new ProcessingSchedulePlan(normalizedTimeZone, assignments)
+        {
+            HasChanges = !unchanged,
+        };
+    }
+
+    /// <summary>
+    /// TB-264-R1: هفتهٔ پردازش پیش‌سنجی‌شده را اعمال می‌کند. هیچ اعتبارسنجی‌ای اینجا نیست؛ ورودی باید از
+    /// <see cref="PreflightProcessingSchedule"/> آمده باشد.
+    /// </summary>
+    /// <param name="plan">برنامهٔ معتبر.</param>
+    /// <param name="now">زمان UTC.</param>
+    public void ApplyProcessingSchedule(ProcessingSchedulePlan plan, DateTimeOffset now)
+    {
+        if (!ApplyProcessingScheduleCore(plan, now))
+        {
+            return;
+        }
+
+        Revision = checked(Revision + 1);
+        UpdatedAt = now;
+    }
+
+    /// <summary>TB-264-R1: هستهٔ مشترک جایگزینی هفتهٔ پردازش بدون افزایش بازبینی/زمان.</summary>
+    private bool ApplyProcessingScheduleCore(ProcessingSchedulePlan plan, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!plan.HasChanges)
+        {
+            return false;
+        }
+
+        if (ProcessingSchedule is { } schedule)
+        {
+            schedule.Apply(plan.TimeZoneId, plan.Days, now);
+        }
+        else
+        {
+            ProcessingSchedule = ShippingAuthoringProcessingSchedule.Create(
+                DraftId,
+                plan.TimeZoneId,
+                plan.Days,
+                now);
+        }
+
+        return true;
+    }
+
+    /// <summary>
     /// ساعت‌های یک روز را تعیین می‌کند: روز کاری هر دو ساعت را می‌خواهد، روز تعطیل با هر دو تهی جفت
     /// ذخیره‌شده را حفظ می‌کند، و یک ساعت تنها یا بدون جفت معتبر رد می‌شود.
     /// </summary>
@@ -1289,7 +1435,9 @@ public sealed class ShippingAuthoringDraft
         ShippingFreightPayerMode FreightPaymentMode,
         ShippingAuthoringCalculationMode CalculationMode,
         int? PreparationMinutes = null,
-        int? HandoffMinutes = null)
+        int? HandoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode PreparationMode =
+            ShippingAuthoringPreparationProcessingMode.Unspecified)
     {
         /// <summary>
         /// آیا این جایگزینی دست‌کم یک تغییر واقعی دارد. یک PUT یکسان (همان دو انتخاب) یک no-op
@@ -1319,7 +1467,8 @@ public sealed class ShippingAuthoringDraft
         ShippingFreightPayerMode? freightPaymentMode,
         ShippingAuthoringCalculationMode? calculationMode,
         int? preparationMinutes = null,
-        int? handoffMinutes = null)
+        int? handoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode? preparationMode = null)
     {
         if (freightPaymentMode is not { } freight
             || !Enum.IsDefined(freight)
@@ -1338,9 +1487,23 @@ public sealed class ShippingAuthoringDraft
             throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringMethodSettingsInvalid));
         }
 
+        // TB-264-R1: the PROCESSING meaning is explicit too. Absent means "not configured yet" and is only
+        // legal while the physical pair itself is absent; a declared pair without a processing mode could
+        // silently become 24/7 and must be refused.
+        var mode = preparationMode
+                   ?? (preparationMinutes is null
+                       ? ShippingAuthoringPreparationProcessingMode.Unspecified
+                       : throw new SemanticException(
+                           new SemanticError(ShippingErrorCodes.AuthoringMethodSettingsInvalid)));
+        if (!Enum.IsDefined(mode)
+            || (preparationMinutes is null && mode != ShippingAuthoringPreparationProcessingMode.Unspecified))
+        {
+            throw new SemanticException(new SemanticError(ShippingErrorCodes.AuthoringMethodSettingsInvalid));
+        }
+
         var unchanged = MethodSettings is { } current
-                        && current.Matches(freight, calculation, preparationMinutes, handoffMinutes);
-        return new MethodSettingsPlan(freight, calculation, preparationMinutes, handoffMinutes)
+                        && current.Matches(freight, calculation, preparationMinutes, handoffMinutes, mode);
+        return new MethodSettingsPlan(freight, calculation, preparationMinutes, handoffMinutes, mode)
         {
             HasChanges = !unchanged,
         };
@@ -1449,7 +1612,8 @@ public sealed class ShippingAuthoringDraft
                 plan.CalculationMode,
                 now,
                 plan.PreparationMinutes,
-                plan.HandoffMinutes);
+                plan.HandoffMinutes,
+                plan.PreparationMode);
         }
         else
         {
@@ -1459,7 +1623,8 @@ public sealed class ShippingAuthoringDraft
                 plan.CalculationMode,
                 now,
                 plan.PreparationMinutes,
-                plan.HandoffMinutes);
+                plan.HandoffMinutes,
+                plan.PreparationMode);
         }
 
         return true;
@@ -1522,7 +1687,11 @@ public sealed class ShippingAuthoringDraft
         string? CarrierTimeZoneId = null,
         IReadOnlyList<CarrierScheduleDayInput>? CarrierDays = null,
         int? PreparationMinutes = null,
-        int? HandoffMinutes = null);
+        int? HandoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode? PreparationMode = null,
+        bool ReplaceProcessingSchedule = false,
+        string? ProcessingTimeZoneId = null,
+        IReadOnlyList<ProcessingScheduleDayInput>? ProcessingDays = null);
 
     /// <summary>برنامهٔ تأییدشدهٔ ردیف‌های یک گروه در سند ویرایشگر.</summary>
     /// <param name="GroupKey">شناسهٔ پایدار گروه مقصد (موجود یا تازه).</param>
@@ -1565,10 +1734,16 @@ public sealed class ShippingAuthoringDraft
             || Schedule?.HasChanges == true
             || Settings?.HasChanges == true
             || Type?.HasChanges == true
-            || CarrierSchedule?.HasChanges == true;
+            || CarrierSchedule?.HasChanges == true
+            || ProcessingSchedule?.HasChanges == true;
 
         /// <summary>TB-256: تقویم پذیرش حامل پیش‌سنجی‌شده یا تهی وقتی در سند ارائه نشده است.</summary>
         public CarrierSchedulePlan? CarrierSchedule { get; init; }
+
+        /// <summary>
+        /// TB-264-R1: هفتهٔ کاری پردازش پیش‌سنجی‌شده یا تهی وقتی در سند ارائه نشده است.
+        /// </summary>
+        public ProcessingSchedulePlan? ProcessingSchedule { get; init; }
     }
 
     /// <summary>
@@ -1649,7 +1824,11 @@ public sealed class ShippingAuthoringDraft
                 input.FreightPaymentMode,
                 input.CalculationMode,
                 input.PreparationMinutes,
-                input.HandoffMinutes)
+                input.HandoffMinutes,
+                input.PreparationMode)
+            : null;
+        var processingSchedule = input.ReplaceProcessingSchedule
+            ? PreflightProcessingSchedule(input.ProcessingTimeZoneId, input.ProcessingDays ?? [])
             : null;
         var type = input.ReplaceTypeAssignment ? PreflightTypeAssignment(input.ShippingTypeId) : null;
 
@@ -1664,6 +1843,7 @@ public sealed class ShippingAuthoringDraft
             type)
         {
             CarrierSchedule = carrierSchedule,
+            ProcessingSchedule = processingSchedule,
         };
     }
 
@@ -1711,6 +1891,11 @@ public sealed class ShippingAuthoringDraft
         if (plan.CarrierSchedule is { } carrierSchedule)
         {
             ApplyCarrierScheduleCore(carrierSchedule, now);
+        }
+
+        if (plan.ProcessingSchedule is { } processingSchedule)
+        {
+            ApplyProcessingScheduleCore(processingSchedule, now);
         }
 
         if (plan.Settings is { } settings)

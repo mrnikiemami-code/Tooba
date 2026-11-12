@@ -254,6 +254,19 @@ export function buildEditorDocumentBody(
       })),
     };
   }
+  if (edits.processingSchedule) {
+    // TB-264-R1: the warehouse-processing week is its own schedule: same seven ISO days, no slots.
+    if (edits.processingSchedule.days.length !== 7) throw new Error("editor_request_invalid:processing-days");
+    body.processingSchedule = {
+      timeZoneId: edits.processingSchedule.timeZoneId,
+      days: edits.processingSchedule.days.map((day) => ({
+        weekday: day.weekday,
+        isWorking: day.isWorking,
+        startTime: time(day.startTime, "startTime"),
+        endTime: time(day.endTime, "endTime"),
+      })),
+    };
+  }
   if (edits.methodSettings) {
     const methodSettings: { [key: string]: JsonWrite } = {
       freightPaymentMode: edits.methodSettings.freightPaymentMode,
@@ -265,6 +278,11 @@ export function buildEditorDocumentBody(
       || edits.methodSettings.handoffMinutes !== undefined) {
       methodSettings.preparationMinutes = edits.methodSettings.preparationMinutes ?? null;
       methodSettings.handoffMinutes = edits.methodSettings.handoffMinutes ?? null;
+    }
+    // TB-264-R1: the pair has no implicit meaning. A supplied mode travels verbatim; a cleared pair
+    // clears its mode too instead of leaving a stale one behind.
+    if (edits.methodSettings.preparationMode !== undefined) {
+      methodSettings.preparationMode = edits.methodSettings.preparationMode ?? null;
     }
     body.methodSettings = methodSettings;
   }

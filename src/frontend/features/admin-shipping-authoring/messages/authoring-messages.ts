@@ -476,6 +476,35 @@ const fa = {
   carrierDayHoursRequired: "برای روز پذیرش، ساعت شروع و پایان الزامی است.",
   carrierDayTimeInvalid: "ساعت‌های پذیرش باید معتبر و هر دو با هم باشند.",
   carrierDayRangeInvalid: "پایان بازهٔ پذیرش باید بعد از شروع آن باشد.",
+  timingTabProcessing: "آماده‌سازی انبار",
+  processingWeekTitle: "زمان‌بندی آماده‌سازی انبار",
+  processingHint:
+    "دقیقه‌های آماده‌سازی فقط داخل این ساعات شمرده می‌شود؛ هیچ ساعتی از تقویم مشتری یا حامل به ارث نمی‌رسد.",
+  processingWeekUnconfigured: "ساعات آماده‌سازی انبار هنوز پیکربندی نشده است.",
+  processingConfigureAction: "پیکربندی ساعات آماده‌سازی",
+  processingCopyAction: "کپی از ساعات تحویل مشتری",
+  processingCopyHint: "فقط یک‌بار کپی می‌شود.",
+  processingCopyUnavailable: "برای کپی، ابتدا زمان‌بندی تحویل مشتری را کامل و اصلاح‌شده پیکربندی کنید.",
+  processingPendingTimeZoneUnapplied:
+    "منطقهٔ زمانی نوشته شده هنوز پیکربندی نشده است؛ برای ذخیره، «پیکربندی ساعات آماده‌سازی» را بزنید یا آن را پاک کنید.",
+  processingOpenColumn: "آماده‌سازی از",
+  processingCloseColumn: "آماده‌سازی تا",
+  processingWorking: "کاری",
+  processingNotWorking: "تعطیل",
+  fieldProcessingTimeZoneLabel: "منطقهٔ زمانی آماده‌سازی انبار",
+  fieldProcessingDaysLabel: "روزها و ساعات آماده‌سازی انبار",
+  processingDayHoursRequired: "برای روز کاری آماده‌سازی، ساعت شروع و پایان الزامی است.",
+  processingDayTimeInvalid: "ساعت‌های آماده‌سازی باید معتبر و هر دو با هم باشند.",
+  processingDayRangeInvalid: "پایان بازهٔ آماده‌سازی باید بعد از شروع آن باشد.",
+  preparationModeLabel: "مبنای شمردن زمان آماده‌سازی",
+  preparationModeHint: "برای سیاست زمان‌بندی، این مبنا باید صریح انتخاب شود؛ هیچ پیش‌فرض شبانه‌روزی وجود ندارد.",
+  preparationModeUnset: "انتخاب نشده",
+  preparationModeWorkingWeek: "ساعات کاری انبار",
+  preparationModeContinuous: "کارکرد پیوستهٔ ۲۴/۷",
+  preparationModeRequired: "برای ثبت سیاست زمان‌بندی، مبنای شمردن زمان آماده‌سازی را انتخاب کنید.",
+  preparationModeWithoutTiming: "مبنای آماده‌سازی بدون زمان آماده‌سازی/انتقال معنا ندارد؛ زمان‌ها را هم وارد کنید یا مبنا را پاک کنید.",
+  workingWeekRequiresProcessingWeek:
+    "برای «ساعات کاری انبار» باید ساعات آماده‌سازی در همین ذخیره پیکربندی شده باشد.",
 } as const;
 
 export type AuthoringMessageKey = keyof typeof fa;
@@ -952,6 +981,36 @@ const en: Record<AuthoringMessageKey, string> = {
   carrierDayHoursRequired: "An acceptance day requires both an open and a close time.",
   carrierDayTimeInvalid: "Acceptance times must be valid and both present.",
   carrierDayRangeInvalid: "Acceptance close must be after its open.",
+  timingTabProcessing: "Warehouse preparation",
+  processingWeekTitle: "Warehouse preparation schedule",
+  processingHint:
+    "Preparation minutes are counted inside these hours only; no hour is inherited from the customer or carrier calendar.",
+  processingWeekUnconfigured: "Warehouse preparation hours are not configured yet.",
+  processingConfigureAction: "Configure preparation hours",
+  processingCopyAction: "Copy from the customer delivery hours",
+  processingCopyHint: "Copied once only.",
+  processingCopyUnavailable: "Configure a complete, error-free customer delivery schedule first.",
+  processingPendingTimeZoneUnapplied:
+    "The typed time zone is not configured yet; press «Configure preparation hours» to save it, or clear it.",
+  processingOpenColumn: "Preparing from",
+  processingCloseColumn: "Preparing until",
+  processingWorking: "Working",
+  processingNotWorking: "Closed",
+  fieldProcessingTimeZoneLabel: "Warehouse preparation time zone",
+  fieldProcessingDaysLabel: "Warehouse preparation days and hours",
+  processingDayHoursRequired: "A working preparation day requires both an open and a close time.",
+  processingDayTimeInvalid: "Preparation times must both be valid and supplied together.",
+  processingDayRangeInvalid: "Preparation close must be after its open.",
+  preparationModeLabel: "Basis for counting preparation time",
+  preparationModeHint: "A timing policy requires this basis to be chosen explicitly; there is no 24/7 default.",
+  preparationModeUnset: "Not chosen",
+  preparationModeWorkingWeek: "Warehouse working hours",
+  preparationModeContinuous: "Continuous 24/7 operation",
+  preparationModeRequired: "Choose the basis for counting preparation time before saving a timing policy.",
+  preparationModeWithoutTiming:
+    "A preparation basis without a preparation/transfer time is meaningless; fill the times or clear the basis.",
+  workingWeekRequiresProcessingWeek:
+    "«Warehouse working hours» needs preparation hours configured in this same save.",
 };
 
 export type AuthoringMessages = Record<AuthoringMessageKey, string>;

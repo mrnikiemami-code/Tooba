@@ -188,6 +188,7 @@ public sealed record ShippingAuthoringWeeklyScheduleItem(
 /// <param name="CalculationMode">حالت محاسبهٔ کرایه یا تهی در حالت تنظیم‌نشده.</param>
 /// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه یا تهی.</param>
 /// <param name="HandoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه یا تهی.</param>
+/// <param name="PreparationMode">TB-264-R1: معنای صریح زمان پردازش یا تنظیم‌نشده.</param>
 public sealed record ShippingAuthoringMethodSettingsItem(
     Guid DraftId,
     long Revision,
@@ -195,4 +196,6 @@ public sealed record ShippingAuthoringMethodSettingsItem(
     ShippingFreightPayerMode? FreightPaymentMode,
     ShippingAuthoringCalculationMode? CalculationMode,
     int? PreparationMinutes = null,
-    int? HandoffMinutes = null);
+    int? HandoffMinutes = null,
+    ShippingAuthoringPreparationProcessingMode PreparationMode =
+        ShippingAuthoringPreparationProcessingMode.Unspecified);

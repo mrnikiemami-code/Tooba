@@ -1,4 +1,4 @@
-using Tooba.Shipping.Contracts.Authoring;
+﻿using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Domain.Aggregates;
@@ -463,7 +463,8 @@ public static class ShippingRatePolicyEngine
                     settings,
                     payload.WeeklySchedule,
                     new ShippingCapturedQuoteMatchedConditions(null, null, null),
-                    payload.CarrierAcceptance));
+                    payload.CarrierAcceptance,
+                    payload.ProcessingHours));
         }
 
         if (settings.CalculationMode == ShippingAuthoringCalculationMode.CarrierApi)
@@ -493,7 +494,8 @@ public static class ShippingRatePolicyEngine
                     settings,
                     payload.WeeklySchedule,
                     new ShippingCapturedQuoteMatchedConditions(null, null, null),
-                    payload.CarrierAcceptance));
+                    payload.CarrierAcceptance,
+                    payload.ProcessingHours));
         }
 
         if (group.RateRows is null || group.RateRows.Count == 0)
@@ -627,7 +629,8 @@ public static class ShippingRatePolicyEngine
                 settings,
                 payload.WeeklySchedule,
                 new ShippingCapturedQuoteMatchedConditions(winnerWeight, winnerCount, winnerMerchandise),
-                payload.CarrierAcceptance));
+                payload.CarrierAcceptance,
+                payload.ProcessingHours));
     }
 
     private static ShippingCapturedRevisionQuote NotQuoted(

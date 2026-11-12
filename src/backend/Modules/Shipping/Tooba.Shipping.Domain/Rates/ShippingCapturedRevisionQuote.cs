@@ -266,7 +266,8 @@ public sealed record ShippingCapturedQuoteSelection(
     ShippingAuthoringRevisionSettings Settings,
     ShippingAuthoringRevisionWeek? WeeklySchedule,
     ShippingCapturedQuoteMatchedConditions Conditions,
-    ShippingAuthoringRevisionCarrierWeek? CarrierSchedule = null);
+    ShippingAuthoringRevisionCarrierWeek? CarrierSchedule = null,
+    ShippingAuthoringRevisionProcessingWeek? ProcessingSchedule = null);
 
 /// <summary>
 /// نتیجهٔ قطعی قیمت‌گذاری یک بازبینی capture‌شده.

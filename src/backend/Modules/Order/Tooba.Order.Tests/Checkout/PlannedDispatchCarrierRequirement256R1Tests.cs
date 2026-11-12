@@ -1,5 +1,6 @@
-using Tooba.Order.Application.Storefront.Shipping;
+﻿using Tooba.Order.Application.Storefront.Shipping;
 using Tooba.Shipping.Contracts.Rates;
+using Tooba.Shipping.Contracts.Scheduling;
 using Xunit;
 
 namespace Tooba.Order.Tests.Checkout;
@@ -13,12 +14,21 @@ public sealed class PlannedDispatchCarrierRequirement256R1Tests
     private static readonly DateOnly ReceivingDate = new(2026, 11, 12);
     private static readonly Guid Snapshot = Guid.Parse("01a17d0e-0419-7000-b575-f507d2f89abc");
 
+    /// <summary>۱۱:۰۰ تا ۱۳:۰۰ محلی؛ بازهٔ انتخاب‌شدهٔ مشتری برای همان تاریخ.</summary>
+    private static readonly long WindowOpensTicks = new TimeOnly(11, 0).Ticks;
+
+    /// <summary>۱۳:۰۰ محلی؛ پایان بازهٔ انتخاب‌شده.</summary>
+    private static readonly long WindowClosesTicks = new TimeOnly(13, 0).Ticks;
+
     [Fact]
     public void A_new_commitment_without_a_carrier_calendar_is_refused_with_its_own_reason()
     {
         var resolved = StorefrontPlannedDispatchResolver.TryResolve(
             Quote(carrierWeek: null),
             ReceivingDate,
+            WindowOpensTicks,
+            WindowClosesTicks,
+            StorefrontPlannedDispatchResolver.CurrentPolicyVersion,
             out var plan,
             out var reason);
 
@@ -33,6 +43,9 @@ public sealed class PlannedDispatchCarrierRequirement256R1Tests
         var resolved = StorefrontPlannedDispatchResolver.TryResolve(
             Quote(carrierWeek: null),
             ReceivingDate,
+            WindowOpensTicks,
+            WindowClosesTicks,
+            StorefrontPlannedDispatchResolver.CurrentPolicyVersion,
             out var plan,
             out var reason,
             allowAbsentCarrierSchedule: true);
@@ -48,6 +61,9 @@ public sealed class PlannedDispatchCarrierRequirement256R1Tests
         var resolved = StorefrontPlannedDispatchResolver.TryResolve(
             Quote(carrierWeek: CarrierWeek("UTC", (1, 9, 0, 17), (2, 9, 0, 17), (3, 9, 0, 17), (4, 9, 0, 17), (5, 9, 0, 17))),
             ReceivingDate,
+            WindowOpensTicks,
+            WindowClosesTicks,
+            ShippingDispatchSchedulingAuthority.PolicyVersion,
             out var plan,
             out var reason);
 

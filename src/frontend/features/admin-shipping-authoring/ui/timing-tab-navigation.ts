@@ -1,12 +1,12 @@
 /**
- * TB-256-R1: the two scheduling tabs are ordinary tabs, so their keyboard model is pure arithmetic
+ * TB-256-R1/TB-264-R1: the scheduling tabs are ordinary tabs, so their keyboard model is pure arithmetic
  * (no DOM, no state) and can be proven directly.
  *
  * Direction matters: in a right-to-left document `ArrowLeft` moves FORWARD in reading order and
  * `ArrowRight` moves BACKWARD, which is the opposite of the left-to-right mapping. `Home`/`End` always
  * mean the first/last tab.
  */
-export const TIMING_TAB_IDS = ["customer", "carrier"] as const;
+export const TIMING_TAB_IDS = ["customer", "carrier", "processing"] as const;
 
 export type TimingTabId = (typeof TIMING_TAB_IDS)[number];
 

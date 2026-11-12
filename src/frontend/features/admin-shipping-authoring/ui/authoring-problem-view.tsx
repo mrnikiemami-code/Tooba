@@ -10,11 +10,13 @@
 import type { EditorTransportFailure } from "../api/editor-document-api.ts";
 import { authoringFormat, type AuthoringMessageKey, type AuthoringMessages } from "../messages/authoring-messages.ts";
 import type { AuthoringIntentIssues } from "../model/authoring-intent.ts";
+import type { EditorFormIssue } from "../model/editor-form.ts";
 import type { GroupIssue } from "../model/editor-groups.ts";
 import type { EditorSaveStatus } from "../session/editor-session.ts";
 import { areaRangeIssueMessage, rowIssueMessage } from "./rate-issue-messages.ts";
 import { weekIssueMessage } from "./authoring-week-editor.tsx";
 import { carrierIssueMessage } from "./authoring-carrier-week-editor.tsx";
+import { processingIssueMessage } from "./authoring-processing-week-editor.tsx";
 import type { ServerFieldIssue } from "./server-field-error.ts";
 
 /** Localized prose of one typed transport failure (raw server codes never become prose). */
@@ -128,6 +130,22 @@ export function AuthoringSaveFailurePanel({
   );
 }
 
+/** One localized General blocking reason (the same words the fields show). */
+function generalIssueMessage(code: EditorFormIssue["code"], messages: AuthoringMessages): string {
+  switch (code) {
+    case "nameRequired":
+      return messages.nameRequired;
+    case "timingIncomplete":
+      return messages.timingPairRequired;
+    case "preparationModeRequired":
+      return messages.preparationModeRequired;
+    case "preparationModeWithoutTiming":
+      return messages.preparationModeWithoutTiming;
+    case "settingsIncomplete":
+      return messages.settingsIncomplete;
+  }
+}
+
 /** The local issues that block Apply, in the same words the fields use. */
 export function AuthoringLocalIssuesPanel({
   issues,
@@ -140,18 +158,13 @@ export function AuthoringLocalIssuesPanel({
 }) {
   const lines = Array.from(
     new Set([
-      ...issues.general.map((issue) =>
-        issue.code === "nameRequired"
-          ? messages.nameRequired
-          : issue.code === "timingIncomplete"
-            ? messages.timingPairRequired
-            : messages.settingsIncomplete,
-      ),
+      ...issues.general.map((issue) => generalIssueMessage(issue.code, messages)),
       ...groupProblems.map((issue) => groupIssueText(issue, messages)),
       ...issues.rates.map((issue) => rowIssueMessage(issue.code, messages)),
       ...issues.areaRanges.map((issue) => areaRangeIssueMessage(issue.code, messages)),
       ...issues.week.map((issue) => weekIssueMessage(issue.code, messages)),
       ...issues.carrier.map((issue) => carrierIssueMessage(issue.code, messages)),
+      ...issues.processing.map((issue) => processingIssueMessage(issue.code, messages)),
     ]),
   );
   if (lines.length === 0) return null;

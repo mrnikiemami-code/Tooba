@@ -124,6 +124,20 @@ export interface EditorCarrierSchedule {
   readonly days: readonly EditorScheduleDay[];
 }
 
+/**
+ * TB-264-R1: stored WAREHOUSE-PROCESSING calendar (`null` = unconfigured).
+ *
+ * Separate from both other weeks: preparation minutes are counted inside these hours only. A missing
+ * calendar never means "always open" — continuous 24/7 work is an explicit processing mode.
+ */
+export interface EditorProcessingSchedule {
+  readonly timeZoneId: string;
+  readonly days: readonly EditorScheduleDay[];
+}
+
+/** TB-264-R1: explicit meaning of the preparation minutes (server enum, sent verbatim). */
+export type PreparationProcessingMode = "Unspecified" | "WorkingWeek" | "Continuous";
+
 /** Stored method settings (`null` = unconfigured; no implicit Prepaid/Manual). */
 export interface EditorMethodSettings {
   readonly freightPaymentMode: FreightPaymentMode;
@@ -135,6 +149,11 @@ export interface EditorMethodSettings {
   readonly preparationMinutes?: number | null;
   /** TB-264: transfer/handoff allowance to the carrier in minutes (pair with preparation). */
   readonly handoffMinutes?: number | null;
+  /**
+   * TB-264-R1: explicit meaning of the preparation minutes. Absent/`Unspecified` with a declared pair
+   * is a refusal, never an implicit 24/7 default.
+   */
+  readonly preparationMode?: PreparationProcessingMode;
 }
 
 /** One catalog translation of the assigned shipping type. */
@@ -212,6 +231,11 @@ export interface EditorDocument {
    * a document encoded before this section existed stays readable and never gains an invented week.
    */
   readonly carrierSchedule?: EditorCarrierSchedule | null;
+  /**
+   * TB-264-R1: independent warehouse-processing calendar. `null` or ABSENT both mean "not configured":
+   * no processing hour is invented and preparation is never counted as unrestricted.
+   */
+  readonly processingSchedule?: EditorProcessingSchedule | null;
   readonly regionGroups: readonly EditorRegionGroup[];
   /**
    * Additive destination facts of the same read snapshot, or `null` when the server did not supply the

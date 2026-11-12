@@ -525,10 +525,20 @@ public sealed class StorefrontCapturedSelectionWriter(
         ShippingCapturedQuoteResult quote,
         StorefrontShippingReceivingSlot slot)
     {
-        if (!StorefrontPlannedDispatchResolver.TryResolve(quote, slot.Date, out var plan, out var reasonCode))
+        // TB-264-R1: the accepted customer window and the current policy version travel into the SAME
+        // backward authority, so a zero-day handoff can never be scheduled after the customer's window.
+        if (!StorefrontPlannedDispatchResolver.TryResolve(
+                quote,
+                slot.Date,
+                slot.OpensAt.Ticks,
+                slot.ClosesAt.Ticks,
+                StorefrontPlannedDispatchResolver.CurrentPolicyVersion,
+                out var plan,
+                out var reasonCode))
         {
             throw Refuse(
-                reasonCode == StorefrontPlannedDispatchResolver.NoFeasibleHandoff
+                reasonCode is StorefrontPlannedDispatchResolver.NoFeasibleHandoff
+                    or StorefrontPlannedDispatchResolver.TimingPolicyUnconfigured
                     ? StorefrontCapturedSelectionReasons.SlotUnavailable
                     : StorefrontCapturedSelectionReasons.Unavailable);
         }

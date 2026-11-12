@@ -448,7 +448,7 @@ test("204-07 raw invalid work stays dirty+blocked; discard reseeds groups with t
   const screen = read("ui/authoring-screen.tsx");
   assert.match(screen, /setGroups\(drafts\.groups\)/, "the confirmed seed restores the whole collection");
   assert.match(screen, /setPickedFacts\(new Map\(\)\)/, "a discard clears staged/verified picker facts");
-  assert.match(screen, /buildAuthoringIntent\(document, form, rates, week, groups, areaRanges, carrier\)/, "the screen composes the group draft, the typed area ranges and the independent carrier calendar");
+  assert.match(screen, /buildAuthoringIntent\(document, form, rates, week, groups, areaRanges, carrier, processing\)/, "the screen composes the group draft, the typed area ranges, the independent carrier calendar and the processing calendar");
   assert.match(screen, /composeAncestryResolver\(index\.resolver, pickedFacts\)/, "retained + picked facts feed one resolver");
   assert.match(screen, /withGroupAreaAdded\(groups, groupKey, area\)/, "the picker's Add uses the same group helper");
   assert.equal((screen.match(/controller\.edit\(/g) ?? []).length, 2, "edits flow through the ONE composed dispatch (+ cancel reset)");

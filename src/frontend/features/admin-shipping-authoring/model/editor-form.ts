@@ -11,6 +11,7 @@ import type {
   EditorDocument,
   EditorMethodTranslation,
   FreightPaymentMode,
+  PreparationProcessingMode,
 } from "./editor-document.ts";
 import type { EditorEdits, MethodSettingsEdit, MethodTranslationEdit } from "./editor-edits.ts";
 
@@ -33,6 +34,11 @@ export interface EditorFormState {
   readonly preparationMinutes: number | null;
   /** TB-264: transfer/handoff allowance to the carrier in minutes (`null` = not configured). */
   readonly handoffMinutes: number | null;
+  /**
+   * TB-264-R1: the explicit MEANING of the pair — `null` until the operator chooses. It is never
+   * defaulted to 24/7, and a declared pair without a chosen mode is a local issue.
+   */
+  readonly preparationMode: PreparationProcessingMode | null;
   readonly typeSelection: TypeSelection;
 }
 
@@ -40,7 +46,9 @@ export interface EditorFormState {
 export type EditorFormIssue =
   | { readonly code: "nameRequired"; readonly languageId: string }
   | { readonly code: "settingsIncomplete" }
-  | { readonly code: "timingIncomplete" };
+  | { readonly code: "timingIncomplete" }
+  | { readonly code: "preparationModeRequired" }
+  | { readonly code: "preparationModeWithoutTiming" };
 
 function languageKey(languageId: string): string {
   return languageId.toLowerCase();
@@ -71,8 +79,15 @@ export function createEditorForm(document: EditorDocument): EditorFormState {
     calculationMode: document.settings?.calculationMode ?? null,
     preparationMinutes: document.settings?.preparationMinutes ?? null,
     handoffMinutes: document.settings?.handoffMinutes ?? null,
+    // `Unspecified` is the server's «not chosen yet»; the form shows it as an explicit blank.
+    preparationMode: notChosen(document.settings?.preparationMode),
     typeSelection: { kind: "preserve" },
   };
+}
+
+/** Server `Unspecified`/absent is a real blank state, never a chosen mode. */
+function notChosen(mode: PreparationProcessingMode | undefined): PreparationProcessingMode | null {
+  return mode === undefined || mode === "Unspecified" ? null : mode;
 }
 
 /** Name text currently shown for one language (stored baseline or typed). */
@@ -125,6 +140,14 @@ export function withHandoffMinutes(form: EditorFormState, minutes: number | null
   return { ...form, handoffMinutes: minutes };
 }
 
+/** TB-264-R1: the explicit meaning of the preparation minutes; `null` returns to «not chosen». */
+export function withPreparationMode(
+  form: EditorFormState,
+  mode: PreparationProcessingMode | null,
+): EditorFormState {
+  return { ...form, preparationMode: mode };
+}
+
 /** Selecting a real id emits `select`; choosing the empty option is an EXPLICIT clear. */
 export function withShippingType(form: EditorFormState, shippingTypeId: string | null): EditorFormState {
   return {
@@ -169,7 +192,8 @@ function settingsEqualBaseline(document: EditorDocument, form: EditorFormState):
     form.freightPaymentMode === (document.settings?.freightPaymentMode ?? null) &&
     form.calculationMode === (document.settings?.calculationMode ?? null) &&
     form.preparationMinutes === (document.settings?.preparationMinutes ?? null) &&
-    form.handoffMinutes === (document.settings?.handoffMinutes ?? null)
+    form.handoffMinutes === (document.settings?.handoffMinutes ?? null) &&
+    form.preparationMode === notChosen(document.settings?.preparationMode)
   );
 }
 
@@ -217,6 +241,13 @@ export function buildEditorEdits(
     } else if ((form.preparationMinutes === null) !== (form.handoffMinutes === null)) {
       // TB-264: the physical timing policy is an explicit pair — both values or neither.
       issues.push({ code: "timingIncomplete" });
+    } else if (form.preparationMinutes !== null && form.preparationMode === null) {
+      // TB-264-R1: a declared pair has NO implicit meaning; the operator must choose the processing
+      // basis instead of inheriting a silent 24/7 default.
+      issues.push({ code: "preparationModeRequired" });
+    } else if (form.preparationMinutes === null && form.preparationMode !== null) {
+      // A processing mode without a physical policy would be stored as a meaning-less setting.
+      issues.push({ code: "preparationModeWithoutTiming" });
     } else {
       // Once a settings write exists it carries BOTH axes, so the untouched axis is preserved.
       // The timing pair is written verbatim, including an explicit `null` pair that clears the policy.
@@ -225,6 +256,7 @@ export function buildEditorEdits(
         calculationMode: form.calculationMode,
         preparationMinutes: form.preparationMinutes,
         handoffMinutes: form.handoffMinutes,
+        preparationMode: form.preparationMode,
       };
     }
   }

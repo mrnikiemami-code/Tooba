@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using Tooba.BuildingBlocks;
@@ -78,6 +78,11 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
             .Include(candidate => candidate.CarrierSchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            // TB-264-R1: the warehouse processing week must travel with the SAME draft read. Without it
+            // publication capture silently degrades an EXISTING processing schedule to format 3
+            // («آمادهٔ همین لحظه») instead of the explicit format 4 physical timing policy.
+            .Include(candidate => candidate.ProcessingSchedule)
             .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         return draft is null
@@ -209,6 +214,10 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
             .Include(candidate => candidate.CarrierSchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            // TB-264-R1: the processing week is part of the complete authored graph, so an editor save
+            // that only touches timing can never drop it from the same root snapshot.
+            .Include(candidate => candidate.ProcessingSchedule)
             .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         if (draft is null)
@@ -555,7 +564,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
         Tooba.Shipping.Contracts.Authoring.ShippingAuthoringCalculationMode? calculationMode,
         CancellationToken cancellationToken,
         int? preparationMinutes = null,
-        int? handoffMinutes = null)
+        int? handoffMinutes = null,
+        Tooba.Shipping.Contracts.Authoring.ShippingAuthoringPreparationProcessingMode? preparationMode = null)
     {
         ArgumentNullException.ThrowIfNull(owner);
 
@@ -584,7 +594,8 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
                 freightPaymentMode,
                 calculationMode,
                 preparationMinutes,
-                handoffMinutes);
+                handoffMinutes,
+                preparationMode);
             draft.ApplyMethodSettings(plan, DateTimeOffset.UtcNow);
             if (plan.HasChanges)
             {
@@ -638,6 +649,10 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
             .Include(candidate => candidate.CarrierSchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            // TB-264-R1: the processing week belongs to the same authored graph, so a type/settings/row
+            // write can never make the persisted physical timing policy look absent on readback.
+            .Include(candidate => candidate.ProcessingSchedule)
             .ThenInclude(schedule => schedule!.Days)
             .SingleOrDefaultAsync(candidate => candidate.DraftId == draftId, cancellationToken);
         if (draft is null)
@@ -905,6 +920,11 @@ public sealed class ShippingAuthoringDraftDirectory(ShippingDbContext context) :
             .Include(candidate => candidate.WeeklySchedule)
             .ThenInclude(schedule => schedule!.Days)
             .Include(candidate => candidate.CarrierSchedule)
+            .ThenInclude(schedule => schedule!.Days)
+            // TB-264-R1: the capture graph is the ONE place the published body is built from, so the
+            // warehouse processing week must be part of it; otherwise an existing processing schedule is
+            // captured as absent and the body claims format 3 («آمادهٔ همین لحظه») forever.
+            .Include(candidate => candidate.ProcessingSchedule)
             .ThenInclude(schedule => schedule!.Days);
 
     /// <summary>

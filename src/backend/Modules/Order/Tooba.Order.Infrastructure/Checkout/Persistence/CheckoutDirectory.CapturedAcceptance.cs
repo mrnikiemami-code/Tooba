@@ -407,9 +407,16 @@ public sealed partial class CheckoutDirectory
             // previously stored plan. TB-256-R1: a stored NULL plan is the explicit compatibility marker for
             // historical evidence, so only then may a live absence also be null; a stored plan always needs a
             // live plan.
+            // TB-264-R1: revalidation uses the policy version RECORDED with the evidence (never silently
+            // upgraded), and the accepted customer window is passed into the same backward authority.
+            var storedPolicyVersion = evidence.PlannedDispatch?.PolicyVersion
+                                      ?? StorefrontPlannedDispatchResolver.CurrentPolicyVersion;
             if (!StorefrontPlannedDispatchResolver.TryResolve(
                     quote,
                     evidence.ReceivingDate,
+                    evidence.ReceivingOpenTicks,
+                    evidence.ReceivingCloseTicks,
+                    storedPolicyVersion,
                     out var liveDispatch,
                     out _,
                     allowAbsentCarrierSchedule: evidence.PlannedDispatch is null))

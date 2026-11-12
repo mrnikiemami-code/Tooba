@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Strict decoder for the shipping authoring editor document response.
  *
  * Every required scalar/object/array is validated before the document is exposed. Nothing is
@@ -15,6 +15,8 @@ import type {
   AuthoringOwnerKind,
   AuthoringTypeResolution,
   EditorCarrierSchedule,
+  EditorProcessingSchedule,
+  PreparationProcessingMode,
   EditorContentLanguage,
   EditorDestinationFact,
   EditorDestinationWriteShape,
@@ -43,6 +45,7 @@ const OWNER_KINDS: readonly AuthoringOwnerKind[] = ["Store", "Marketplace", "Sel
 const RESOLUTIONS: readonly AuthoringTypeResolution[] = ["Unconfigured", "Active", "Inactive", "Missing"];
 const PAYER_MODES: readonly FreightPaymentMode[] = ["Prepaid", "CollectOnDelivery"];
 const CALCULATION_MODES: readonly AuthoringCalculationMode[] = ["Manual", "CarrierApi", "Free"];
+const PREPARATION_MODES: readonly PreparationProcessingMode[] = ["Unspecified", "WorkingWeek", "Continuous"];
 const GUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const ZERO_GUID = "00000000-0000-0000-0000-000000000000";
 const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
@@ -175,6 +178,7 @@ export function decodeEditorDocument(node: JsonNode, expectedDraftId: string): D
       presentation: decodePresentation(object(required(root, "presentation"), "presentation")),
       weeklySchedule: decodeSchedule(root.get("weeklySchedule")),
       carrierSchedule: decodeCarrierSchedule(root.get("carrierSchedule")),
+      processingSchedule: decodeProcessingSchedule(root.get("processingSchedule")),
       regionGroups: array(required(root, "regionGroups"), "regionGroups").map((group, index) =>
         decodeGroup(group, `regionGroups[${index}]`),
       ),
@@ -252,6 +256,22 @@ function decodeSettings(node: JsonNode | undefined): EditorMethodSettings | null
     calculationMode: variant(fields.get("calculationMode"), "settings.calculationMode", CALCULATION_MODES),
     preparationMinutes,
     handoffMinutes,
+    preparationMode: optionalPreparationMode(fields.get("preparationMode")),
+  };
+}
+
+/** TB-264-R1: absent/"Unspecified" is preserved verbatim; an unknown token is refused, never defaulted. */
+function optionalPreparationMode(node: JsonNode | undefined): PreparationProcessingMode | undefined {
+  if (node === undefined || node.kind === "null") return undefined;
+  return variant(node, "settings.preparationMode", PREPARATION_MODES);
+}
+
+function decodeProcessingSchedule(node: JsonNode | undefined): EditorProcessingSchedule | null {
+  if (node === undefined || node.kind === "null") return null;
+  const fields = object(node, "processingSchedule");
+  return {
+    timeZoneId: text(required(fields, "timeZoneId"), "processingSchedule.timeZoneId"),
+    days: decodeScheduleDays(fields, "processingSchedule"),
   };
 }
 

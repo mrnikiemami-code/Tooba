@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Editable intent for ONE existing shipping authoring draft.
  *
  * This is deliberately NOT a copy of the read document: a write may only carry what the editor
@@ -11,6 +11,7 @@ import type {
   AuthoringCalculationMode,
   DecimalText,
   FreightPaymentMode,
+  PreparationProcessingMode,
   SelectedAreaRead,
   TimeText,
 } from "./editor-document.ts";
@@ -101,6 +102,17 @@ export interface CarrierScheduleEdit {
   readonly days: readonly ScheduleDayEdit[];
 }
 
+/**
+ * TB-264-R1: explicit full replacement of the WAREHOUSE-PROCESSING calendar.
+ *
+ * Same day shape as the other weeks and no slot length: counting preparation inside these hours is the
+ * only thing this calendar is for.
+ */
+export interface ProcessingScheduleEdit {
+  readonly timeZoneId: string;
+  readonly days: readonly ScheduleDayEdit[];
+}
+
 /** Explicit full replacement of both independent settings. */
 export interface MethodSettingsEdit {
   readonly freightPaymentMode: FreightPaymentMode;
@@ -111,6 +123,11 @@ export interface MethodSettingsEdit {
    */
   readonly preparationMinutes?: number | null;
   readonly handoffMinutes?: number | null;
+  /**
+   * TB-264-R1: explicit meaning of the pair. Required whenever the pair is present; `null` when the
+   * pair itself is cleared.
+   */
+  readonly preparationMode?: PreparationProcessingMode | null;
 }
 
 /** Explicit type selection intent: `{shippingTypeId: null}` clears, a value selects. */
@@ -130,6 +147,7 @@ export interface EditorEdits {
   readonly methodTranslations?: readonly MethodTranslationEdit[];
   readonly weeklySchedule?: WeeklyScheduleEdit;
   readonly carrierSchedule?: CarrierScheduleEdit;
+  readonly processingSchedule?: ProcessingScheduleEdit;
   readonly methodSettings?: MethodSettingsEdit;
   readonly typeAssignment?: TypeAssignmentEdit;
 }

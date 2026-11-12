@@ -24,6 +24,8 @@ export type ServerFieldTarget =
   | "weekDays"
   | "carrierTimeZone"
   | "carrierDays"
+  | "processingTimeZone"
+  | "processingDays"
   | "regions"
   | "rates"
   | "unknown";
@@ -85,6 +87,8 @@ const STATIC_TEST_ID: Readonly<Record<ServerFieldTarget, string | null>> = {
   weekDays: "shipping-authoring-week",
   carrierTimeZone: "shipping-authoring-carrier-timezone",
   carrierDays: "shipping-authoring-carrier-week",
+  processingTimeZone: "shipping-authoring-processing-timezone",
+  processingDays: "shipping-authoring-processing-week",
   regions: "shipping-authoring-groups-panel",
   rates: "shipping-authoring-rate-row-edit",
   unknown: null,
@@ -204,6 +208,25 @@ function parseProperty(property: string): ParsedPath | null {
       testId: STATIC_TEST_ID.carrierDays,
     };
   }
+  // TB-264-R1: the processing calendar is its own section, so its rejections never land on another week.
+  if (first.name === "processingSchedule") {
+    if (last.name === "timeZoneId") {
+      return {
+        target: "processingTimeZone",
+        segment: last.name,
+        groupIndex: null,
+        rowIndex: null,
+        testId: STATIC_TEST_ID.processingTimeZone,
+      };
+    }
+    return {
+      target: "processingDays",
+      segment: last.name,
+      groupIndex: null,
+      rowIndex: null,
+      testId: STATIC_TEST_ID.processingDays,
+    };
+  }
   if (first.name === "methodTranslations") {
     const target: ServerFieldTarget = last.name === "description" ? "description" : "name";
     return { target, segment: last.name, groupIndex: null, rowIndex: null, testId: STATIC_TEST_ID[target] };
@@ -236,6 +259,10 @@ export function targetFieldLabel(target: ServerFieldTarget, messages: AuthoringM
       return messages.fieldCarrierTimeZoneLabel;
     case "carrierDays":
       return messages.fieldCarrierDaysLabel;
+    case "processingTimeZone":
+      return messages.fieldProcessingTimeZoneLabel;
+    case "processingDays":
+      return messages.fieldProcessingDaysLabel;
     case "regions":
       return messages.fieldRegionsLabel;
     case "rates":

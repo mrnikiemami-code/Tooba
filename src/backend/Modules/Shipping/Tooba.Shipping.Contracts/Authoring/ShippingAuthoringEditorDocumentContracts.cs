@@ -62,17 +62,32 @@ public sealed record ShippingAuthoringEditorCarrierScheduleWrite(
     IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days);
 
 /// <summary>
+/// TB-264-R1: هفتهٔ کاری مستقل <b>پردازش انبار</b> در سند ویرایشگر: منطقهٔ زمانی صریح و دقیقاً هفت روز.
+/// </summary>
+/// <remarks>
+/// این برنامه سومین تقویم مستقل است: نه ساعت تحویل مشتری و نه ساعت پذیرش حامل هرگز به آن کپی/استنتاج
+/// نمی‌شود. نبودش یعنی «پیکربندی‌نشده»؛ هفت روز تعطیل یک انتخاب صریح و متفاوت است.
+/// </remarks>
+/// <param name="TimeZoneId">شناسهٔ منطقهٔ زمانی پردازش.</param>
+/// <param name="Days">هفت روز ISO ساعات پردازش.</param>
+public sealed record ShippingAuthoringEditorProcessingScheduleWrite(
+    string TimeZoneId,
+    IReadOnlyList<ShippingAuthoringScheduleDayWrite> Days);
+
+/// <summary>
 /// تنظیمات روش در سند ویرایشگر: زمان پرداخت کرایه و حالت محاسبه، دو انتخاب مستقل و صریح.
 /// </summary>
 /// <param name="FreightPaymentMode">زمان پرداخت کرایه.</param>
 /// <param name="CalculationMode">حالت محاسبه.</param>
 /// <param name="PreparationMinutes">TB-264: زمان آماده‌سازی فیزیکی به دقیقه یا تهی.</param>
 /// <param name="HandoffMinutes">TB-264: زمان انتقال/تحویل به حامل به دقیقه یا تهی.</param>
+/// <param name="PreparationMode">TB-264-R1: معنای صریح زمان پردازش (هفتهٔ کاری یا ۲۴/۷).</param>
 public sealed record ShippingAuthoringEditorSettingsWrite(
     ShippingFreightPayerMode? FreightPaymentMode,
     ShippingAuthoringCalculationMode? CalculationMode,
     int? PreparationMinutes = null,
-    int? HandoffMinutes = null);
+    int? HandoffMinutes = null,
+    ShippingAuthoringPreparationProcessingMode? PreparationMode = null);
 
 /// <summary>
 /// بستهٔ اختیاری انتخاب نوع در سند ویرایشگر. حضور خود بسته یعنی «این بخش در سند است»؛ نبودِ بسته
@@ -135,4 +150,7 @@ public sealed record ShippingAuthoringEditorDocumentReplaceRequest
 
     /// <summary>TB-256: تقویم پذیرش حامل اختیاری؛ غایب یعنی حفظ مقدار فعلی.</summary>
     public ShippingAuthoringEditorCarrierScheduleWrite? CarrierSchedule { get; init; }
+
+    /// <summary>TB-264-R1: هفتهٔ کاری پردازش اختیاری؛ غایب یعنی حفظ مقدار فعلی.</summary>
+    public ShippingAuthoringEditorProcessingScheduleWrite? ProcessingSchedule { get; init; }
 }

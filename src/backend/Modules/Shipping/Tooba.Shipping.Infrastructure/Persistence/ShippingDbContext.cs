@@ -692,11 +692,30 @@ public sealed class ShippingDbContext : DbContext
                 table.HasCheckConstraint(
                     "ck_authoring_method_settings_calculation_mode",
                     $"calculation_mode IN ({(int)ShippingAuthoringCalculationMode.Manual}, {(int)ShippingAuthoringCalculationMode.CarrierApi}, {(int)ShippingAuthoringCalculationMode.Free})");
+                // TB-264: the physical pair is all-or-nothing and bounded; absence is a real state and is
+                // never read as zero. TB-264-R1: a declared pair always carries its explicit processing
+                // meaning, and an absent pair cannot carry one either.
+                table.HasCheckConstraint(
+                    "ck_authoring_method_settings_preparation_pair",
+                    $"(preparation_minutes IS NULL) = (handoff_minutes IS NULL)");
+                table.HasCheckConstraint(
+                    "ck_authoring_method_settings_preparation_minutes_range",
+                    $"preparation_minutes IS NULL OR preparation_minutes BETWEEN 0 AND {ShippingAuthoringMethodSettings.MaxPreparationMinutes.ToString(CultureInfo.InvariantCulture)}");
+                table.HasCheckConstraint(
+                    "ck_authoring_method_settings_handoff_minutes_range",
+                    $"handoff_minutes IS NULL OR handoff_minutes BETWEEN 0 AND {ShippingAuthoringMethodSettings.MaxHandoffMinutes.ToString(CultureInfo.InvariantCulture)}");
+                table.HasCheckConstraint(
+                    "ck_authoring_method_settings_preparation_mode",
+                    $"preparation_mode IN ({(int)ShippingAuthoringPreparationProcessingMode.Unspecified}, {(int)ShippingAuthoringPreparationProcessingMode.WorkingWeek}, {(int)ShippingAuthoringPreparationProcessingMode.Continuous})");
+                table.HasCheckConstraint(
+                    "ck_authoring_method_settings_preparation_mode_paired",
+                    $"(preparation_minutes IS NULL) = (preparation_mode = {(int)ShippingAuthoringPreparationProcessingMode.Unspecified})");
             });
             entity.HasKey(x => x.DraftId);
             entity.Property(x => x.DraftId).ValueGeneratedNever();
             entity.Property(x => x.FreightPaymentMode).HasConversion<int>().IsRequired();
             entity.Property(x => x.CalculationMode).HasConversion<int>().IsRequired();
+            entity.Property(x => x.PreparationMode).HasConversion<int>().IsRequired();
             entity.Property(x => x.UpdatedAt).IsRequired();
 
             // ONE settings row per draft/method: the draft key is the real invariant, so a second row for
@@ -792,6 +811,60 @@ public sealed class ShippingDbContext : DbContext
             entity.Property(x => x.IsWorking).IsRequired();
         });
 
+        // TB-264-R1 independent PROCESSING (warehouse working) week for the same draft/method. It is a
+        // sibling of the customer week and the carrier acceptance week, never derived from either: a
+        // missing header is the explicit UNCONFIGURED state (no closed hours are invented), a seven-closed
+        // week is seven real rows, and continuous 24/7 operation is a separate explicit operator choice.
+        modelBuilder.Entity<ShippingAuthoringProcessingSchedule>(entity =>
+        {
+            entity.ToTable("authoring_processing_schedules", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_processing_schedules_timezone_length",
+                    $"char_length(btrim(time_zone_id)) > 0 AND char_length(time_zone_id) <= {ShippingRatePolicyLimits.TimeZoneIdMaxLength.ToString(CultureInfo.InvariantCulture)}");
+            });
+            entity.HasKey(x => x.DraftId);
+            entity.Property(x => x.DraftId).ValueGeneratedNever();
+            entity.Property(x => x.TimeZoneId).IsRequired().HasMaxLength(ShippingRatePolicyLimits.TimeZoneIdMaxLength);
+            entity.Property(x => x.UpdatedAt).IsRequired();
+
+            // ONE processing calendar per draft/method.
+            entity.HasOne<ShippingAuthoringDraft>()
+                .WithOne(draft => draft.ProcessingSchedule)
+                .HasForeignKey<ShippingAuthoringProcessingSchedule>(schedule => schedule.DraftId)
+                .HasConstraintName("fk_authoring_processing_schedules_draft")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Navigation(x => x.Days).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.HasMany(x => x.Days)
+                .WithOne()
+                .HasForeignKey(day => day.DraftId)
+                .HasConstraintName("fk_authoring_processing_schedule_days_schedule")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ShippingAuthoringProcessingScheduleDay>(entity =>
+        {
+            entity.ToTable("authoring_processing_schedule_days", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_authoring_processing_schedule_days_weekday_range",
+                    $"weekday BETWEEN {ShippingOperatingWindow.MinWeekday} AND {ShippingOperatingWindow.MaxWeekday}");
+                table.HasCheckConstraint(
+                    "ck_authoring_processing_schedule_days_hours_paired",
+                    "(opens_at IS NULL) = (closes_at IS NULL)");
+                table.HasCheckConstraint(
+                    "ck_authoring_processing_schedule_days_range",
+                    "opens_at IS NULL OR closes_at > opens_at");
+                table.HasCheckConstraint(
+                    "ck_authoring_processing_schedule_days_working_hours",
+                    "is_working = FALSE OR (opens_at IS NOT NULL AND closes_at IS NOT NULL)");
+            });
+            entity.HasKey(x => new { x.DraftId, x.Weekday });
+            entity.Property(x => x.DraftId).IsRequired();
+            entity.Property(x => x.IsWorking).IsRequired();
+        });
+
         modelBuilder.Entity<ShippingAuthoringSelectedArea>(entity =>
         {
             entity.ToTable("authoring_selected_areas", table =>
@@ -835,7 +908,8 @@ public sealed class ShippingDbContext : DbContext
                     "ck_authoring_revision_snapshots_format_version_known",
                     $"format_version IN ({ShippingAuthoringRevisionSnapshot.LegacyFormatVersion}, "
                     + $"{ShippingAuthoringRevisionSnapshot.SlotDurationFormatVersion}, "
-                    + $"{ShippingAuthoringRevisionSnapshot.CarrierAcceptanceFormatVersion})");
+                    + $"{ShippingAuthoringRevisionSnapshot.CarrierAcceptanceFormatVersion}, "
+                    + $"{ShippingAuthoringRevisionSnapshot.ProcessingHoursFormatVersion})");
                 table.HasCheckConstraint(
                     "ck_authoring_revision_snapshots_tenant_not_blank",
                     "owner_tenant_id IS NULL OR char_length(owner_tenant_id) > 0");

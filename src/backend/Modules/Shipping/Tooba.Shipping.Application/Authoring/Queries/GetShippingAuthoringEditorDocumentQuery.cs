@@ -122,7 +122,8 @@ internal static class ShippingAuthoringEditorDocumentComposition
                     settings.FreightPaymentMode,
                     settings.CalculationMode,
                     settings.PreparationMinutes,
-                    settings.HandoffMinutes)
+                    settings.HandoffMinutes,
+                    settings.PreparationMode)
                 : null,
             ShippingAuthoringPresentationWorkflow.Map(draft, context),
             draft.WeeklySchedule is { } schedule
@@ -178,6 +179,18 @@ internal static class ShippingAuthoringEditorDocumentComposition
                     carrier.Days
                         .OrderBy(day => day.Weekday)
                         .Select(day => new ShippingAuthoringEditorCarrierScheduleDayItem(
+                            day.Weekday,
+                            day.IsWorking,
+                            day.OpensAt,
+                            day.ClosesAt))
+                        .ToArray())
+                : null,
+            ProcessingSchedule = draft.ProcessingSchedule is { } processing
+                ? new ShippingAuthoringEditorProcessingScheduleItem(
+                    processing.TimeZoneId,
+                    processing.Days
+                        .OrderBy(day => day.Weekday)
+                        .Select(day => new ShippingAuthoringEditorProcessingScheduleDayItem(
                             day.Weekday,
                             day.IsWorking,
                             day.OpensAt,

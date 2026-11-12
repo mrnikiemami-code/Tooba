@@ -468,10 +468,14 @@ public sealed class ShippingCapturedRevisionQuoteTests
                 ],
             ],
             preparationMinutes: 240,
-            handoffMinutes: 90);
+            handoffMinutes: 90,
+            preparationMode: ShippingAuthoringPreparationProcessingMode.Continuous);
 
         Assert.Equal(240, payload.MethodSettings!.PreparationMinutes);
         Assert.Equal(90, payload.MethodSettings.HandoffMinutes);
+        Assert.Equal(
+            ShippingAuthoringPreparationProcessingMode.Continuous,
+            payload.MethodSettings.PreparationMode);
 
         var quote = ShippingRatePolicyEngine.QuoteCapturedRevision(
             Request(payload, weightGrams: 1_500, itemCount: 1));
@@ -524,14 +528,24 @@ public sealed class ShippingCapturedRevisionQuoteTests
             preparationMinutes: -1,
             handoffMinutes: 60));
 
+        // TB-264-R1: a declared pair without an explicit processing meaning could silently become 24/7,
+        // so it is refused exactly like a half-configured pair.
+        Assert.Throws<SemanticException>(() => complete.PreflightMethodSettings(
+            ShippingFreightPayerMode.Prepaid,
+            ShippingAuthoringCalculationMode.Manual,
+            preparationMinutes: 120,
+            handoffMinutes: 60));
+
         // Explicit zero is a real operator statement and is allowed for both halves.
         var plan = complete.PreflightMethodSettings(
             ShippingFreightPayerMode.Prepaid,
             ShippingAuthoringCalculationMode.Manual,
             preparationMinutes: 0,
-            handoffMinutes: 0);
+            handoffMinutes: 0,
+            preparationMode: ShippingAuthoringPreparationProcessingMode.Continuous);
         Assert.Equal(0, plan.PreparationMinutes);
         Assert.Equal(0, plan.HandoffMinutes);
+        Assert.Equal(ShippingAuthoringPreparationProcessingMode.Continuous, plan.PreparationMode);
     }
 
     // ---------------------------------------------------------------- fixtures
@@ -545,7 +559,8 @@ public sealed class ShippingCapturedRevisionQuoteTests
         bool withSchedule = false,
         string currency = "IRT",
         int? preparationMinutes = null,
-        int? handoffMinutes = null)
+        int? handoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode? preparationMode = null)
     {
         var draft = ShippingAuthoringDraft.Create(
             ShippingDraftOwner.ForStore("tb215-store"),
@@ -591,7 +606,7 @@ public sealed class ShippingCapturedRevisionQuoteTests
         if (withSettings)
         {
             draft.ApplyMethodSettings(
-                draft.PreflightMethodSettings(payerMode, calculationMode, preparationMinutes, handoffMinutes),
+                draft.PreflightMethodSettings(payerMode, calculationMode, preparationMinutes, handoffMinutes, preparationMode),
                 Now.AddMinutes(9));
         }
 
@@ -608,7 +623,8 @@ public sealed class ShippingCapturedRevisionQuoteTests
         bool withSchedule = false,
         string currency = "IRT",
         int? preparationMinutes = null,
-        int? handoffMinutes = null)
+        int? handoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode? preparationMode = null)
         => ShippingAuthoringRevisionSnapshot
             .Capture(
                 Draft(
@@ -620,7 +636,8 @@ public sealed class ShippingCapturedRevisionQuoteTests
                     withSchedule,
                     currency,
                     preparationMinutes,
-                    handoffMinutes),
+                    handoffMinutes,
+                    preparationMode),
                 Now.AddHours(1))
             .ReadPayload();
 

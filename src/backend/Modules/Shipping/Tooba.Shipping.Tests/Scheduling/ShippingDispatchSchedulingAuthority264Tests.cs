@@ -45,14 +45,14 @@ public sealed class ShippingDispatchSchedulingAuthority264Tests
         // earliest customer DATE is tomorrow even though acceptance itself is feasible today.
         var today = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
             Utc_(2026, 11, 9, 14, 0), carrier, customer, transportWorkingDays: 0, horizonDates: 1, customerSlotMinutes: null,
-            preparationMinutes: 60, handoffMinutes: 60);
+            preparationMinutes: 60, handoffMinutes: 60, processingContinuous: true);
         Assert.True(today.IsSuccess);
         Assert.Equal(new DateOnly(2026, 11, 9), FirstHandoffDay(Utc_(2026, 11, 9, 14, 0), carrier));
         Assert.Equal(new DateOnly(2026, 11, 10), today.Value!.EarliestEligibleDate);
 
         var tomorrow = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
             Utc_(2026, 11, 9, 16, 0), carrier, customer, transportWorkingDays: 0, horizonDates: 1, customerSlotMinutes: null,
-            preparationMinutes: 60, handoffMinutes: 60);
+            preparationMinutes: 60, handoffMinutes: 60, processingContinuous: true);
         Assert.True(tomorrow.IsSuccess);
         Assert.Equal(new DateOnly(2026, 11, 10), tomorrow.Value!.EarliestEligibleDate);
     }
@@ -67,7 +67,7 @@ public sealed class ShippingDispatchSchedulingAuthority264Tests
 
         var calendared = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
             Utc_(2026, 11, 11, 10, 30), carrier, customer, transportWorkingDays: 0, horizonDates: 1,
-            customerSlotMinutes: null, preparationMinutes: 60, handoffMinutes: 60);
+            customerSlotMinutes: null, preparationMinutes: 60, handoffMinutes: 60, processingContinuous: true);
 
         // 10:30 + 2h = 12:30 is past Wednesday close, so Wednesday is not offered even though the
         // customer calendar is open to 17:00.

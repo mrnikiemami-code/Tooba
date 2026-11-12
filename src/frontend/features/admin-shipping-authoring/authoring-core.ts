@@ -106,7 +106,12 @@ export {
   unresolvedSelections,
 } from "./model/editor-destination-ancestry.ts";
 
-export type { EditorFormIssue, EditorFormState, TypeSelection } from "./model/editor-form.ts";
+export type {
+  EditorFormIssue,
+  EditorFormState,
+  TypeSelection,
+} from "./model/editor-form.ts";
+export type { PreparationProcessingMode } from "./model/editor-document.ts";
 export {
   buildEditorEdits,
   createEditorForm,
@@ -122,6 +127,7 @@ export {
   withHandoffMinutes,
   withName,
   withPreparationMinutes,
+  withPreparationMode,
   withShippingType,
 } from "./model/editor-form.ts";
 

@@ -211,6 +211,35 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 carrierDays = acceptanceDays;
             }
 
+            IReadOnlyList<ShippingAuthoringDraft.ProcessingScheduleDayInput>? processingDays = null;
+            if (request.Request.ProcessingSchedule is { } processing)
+            {
+                if (processing.Days is null)
+                {
+                    return Result.Failure<ShippingAuthoringEditorDocumentItem>(
+                        new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+                }
+
+                var processingInputs =
+                    new List<ShippingAuthoringDraft.ProcessingScheduleDayInput>(processing.Days.Count);
+                foreach (var day in processing.Days)
+                {
+                    if (day is null || day.IsWorking is not { } processingWorking)
+                    {
+                        return Result.Failure<ShippingAuthoringEditorDocumentItem>(
+                            new SemanticError(ShippingErrorCodes.AuthoringScheduleDayInvalid));
+                    }
+
+                    processingInputs.Add(new ShippingAuthoringDraft.ProcessingScheduleDayInput(
+                        day.Weekday,
+                        processingWorking,
+                        day.StartTime,
+                        day.EndTime));
+                }
+
+                processingDays = processingInputs;
+            }
+
             var groups = new List<ShippingAuthoringDraft.EditorGroupInput>(domainGroups.Count);            for (var index = 0; index < domainGroups.Count; index++)
             {
                 var source = request.Request.RegionGroups[index];
@@ -241,7 +270,11 @@ public sealed class ReplaceShippingAuthoringEditorDocumentHandler(
                 request.Request.CarrierSchedule?.TimeZoneId,
                 carrierDays,
                 request.Request.MethodSettings?.PreparationMinutes,
-                request.Request.MethodSettings?.HandoffMinutes);
+                request.Request.MethodSettings?.HandoffMinutes,
+                request.Request.MethodSettings?.PreparationMode,
+                request.Request.ProcessingSchedule is not null,
+                request.Request.ProcessingSchedule?.TimeZoneId,
+                processingDays);
 
             // (6) Destination facts for the WHOLE submitted tree are acquired here — before the first
             // tracked mutation and therefore before the commit — so the response can be composed

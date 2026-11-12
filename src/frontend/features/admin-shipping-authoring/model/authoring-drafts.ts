@@ -17,6 +17,8 @@ import { createRatesForm } from "./editor-rates.ts";
 import { createWeekForm } from "./editor-week.ts";
 import type { CarrierWeekFormState } from "./editor-carrier-week.ts";
 import { createCarrierWeekForm } from "./editor-carrier-week.ts";
+import type { ProcessingWeekFormState } from "./editor-processing-week.ts";
+import { createProcessingWeekForm } from "./editor-processing-week.ts";
 
 /** All local drafts of one confirmed document. */
 export interface AuthoringDrafts {
@@ -26,6 +28,8 @@ export interface AuthoringDrafts {
   readonly week: WeekFormState;
   /** TB-256: the independent carrier-acceptance calendar draft. */
   readonly carrier: CarrierWeekFormState;
+  /** TB-264-R1: the independent warehouse-processing calendar draft. */
+  readonly processing: ProcessingWeekFormState;
 }
 
 /**
@@ -45,6 +49,7 @@ export function seedAuthoringDrafts(
     rates: createRatesForm(document),
     week: createWeekForm(document.weeklySchedule),
     carrier: createCarrierWeekForm(document.carrierSchedule ?? null),
+    processing: createProcessingWeekForm(document.processingSchedule ?? null),
   };
 }
 

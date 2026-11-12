@@ -18,11 +18,17 @@ namespace Tooba.Shipping.Domain.Authoring;
 /// ستون اجباری‌اند، پس یک مقدار تهی هرگز به مقدار صفر enum تبدیل نمی‌شود.
 /// </para>
 /// <para>
-/// <b>TB-264: زمان فیزیکی، نه روز تقویمی.</b> <see cref="PreparationMinutes"/> زمان سپری‌شدهٔ
-/// آماده‌سازی فیزیکی و <see cref="HandoffMinutes"/> زمان سپری‌شدهٔ انتقال/تحویل به حامل است. هر دو
-/// <b>دقیقه</b>اند و صفرشان فقط وقتی معنا دارد که اپراتور صریحاً صفر نوشته باشد؛ مقدار تهی یعنی
-/// «سیاست زمان‌بندی تنظیم نشده» و هرگز به «آمادهٔ همین لحظه» تفسیر نمی‌شود. این دو مقدار هیچ
-/// رابطه‌ای با روزهای حمل (Lead/Transit) ندارند و یک‌بار شمرده می‌شوند.
+/// <b>TB-264: زمان فیزیکی، نه روز تقویمی.</b> <see cref="PreparationMinutes"/> زمان آماده‌سازی
+/// فیزیکی و <see cref="HandoffMinutes"/> زمان انتقال/تحویل به حامل است. هر دو <b>دقیقه</b>اند و
+/// صفرشان فقط وقتی معنا دارد که اپراتور صریحاً صفر نوشته باشد؛ مقدار تهی یعنی «سیاست زمان‌بندی تنظیم
+/// نشده» و هرگز به «آمادهٔ همین لحظه» تفسیر نمی‌شود. این دو مقدار هیچ رابطه‌ای با روزهای حمل
+/// (Lead/Transit) ندارند و یک‌بار شمرده می‌شوند.
+/// </para>
+/// <para>
+/// <b>TB-264-R1: معنای صریح زمان پردازش.</b> <see cref="PreparationMode"/> می‌گوید آماده‌سازی
+/// <b>کجا</b> شمرده می‌شود: داخل هفتهٔ کاری پردازش، یا کارکرد پیوستهٔ ۲۴/۷ که اپراتور صریحاً انتخاب
+/// کرده است. مقدار <c>Unspecified</c> یعنی سیاست ناقص؛ تعهد جدید با آن ساخته نمی‌شود و هرگز به
+/// کارکرد شبانه‌روزی پیش‌فرض تبدیل نمی‌گردد. انتقال به حامل همیشه سپری‌شده و یک‌بار است.
 /// </para>
 /// </remarks>
 public sealed class ShippingAuthoringMethodSettings
@@ -49,8 +55,14 @@ public sealed class ShippingAuthoringMethodSettings
     /// <summary>TB-264: زمان سپری‌شدهٔ آماده‌سازی فیزیکی به دقیقه؛ تهی یعنی سیاست تنظیم نشده.</summary>
     public int? PreparationMinutes { get; private set; }
 
-    /// <summary>TB-264: زمان سپری‌شدهٔ انتقال/تحویل به حامل به دقیقه؛ تهی یعنی سیاست تنظیم نشده.</summary>
+    /// <summary>TB-264: زمان انتقال/تحویل به حامل به دقیقه؛ تهی یعنی سیاست تنظیم نشده.</summary>
     public int? HandoffMinutes { get; private set; }
+
+    /// <summary>
+    /// TB-264-R1: معنای صریح زمان آماده‌سازی (هفتهٔ کاری پردازش یا کارکرد پیوستهٔ ۲۴/۷)؛
+    /// <c>Unspecified</c> یعنی سیاست ناقص.
+    /// </summary>
+    public ShippingAuthoringPreparationProcessingMode PreparationMode { get; private set; }
 
     /// <summary>زمان آخرین جایگزینی UTC.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -61,7 +73,9 @@ public sealed class ShippingAuthoringMethodSettings
         ShippingAuthoringCalculationMode calculationMode,
         DateTimeOffset now,
         int? preparationMinutes = null,
-        int? handoffMinutes = null)
+        int? handoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode preparationMode =
+            ShippingAuthoringPreparationProcessingMode.Unspecified)
         => new()
         {
             DraftId = draftId,
@@ -69,6 +83,7 @@ public sealed class ShippingAuthoringMethodSettings
             CalculationMode = calculationMode,
             PreparationMinutes = preparationMinutes,
             HandoffMinutes = handoffMinutes,
+            PreparationMode = preparationMode,
             UpdatedAt = now,
         };
 
@@ -77,12 +92,15 @@ public sealed class ShippingAuthoringMethodSettings
         ShippingAuthoringCalculationMode calculationMode,
         DateTimeOffset now,
         int? preparationMinutes = null,
-        int? handoffMinutes = null)
+        int? handoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode preparationMode =
+            ShippingAuthoringPreparationProcessingMode.Unspecified)
     {
         FreightPaymentMode = freightPaymentMode;
         CalculationMode = calculationMode;
         PreparationMinutes = preparationMinutes;
         HandoffMinutes = handoffMinutes;
+        PreparationMode = preparationMode;
         UpdatedAt = now;
     }
 
@@ -90,14 +108,24 @@ public sealed class ShippingAuthoringMethodSettings
         ShippingFreightPayerMode freightPaymentMode,
         ShippingAuthoringCalculationMode calculationMode,
         int? preparationMinutes = null,
-        int? handoffMinutes = null)
+        int? handoffMinutes = null,
+        ShippingAuthoringPreparationProcessingMode preparationMode =
+            ShippingAuthoringPreparationProcessingMode.Unspecified)
         => FreightPaymentMode == freightPaymentMode
            && CalculationMode == calculationMode
            && PreparationMinutes == preparationMinutes
-           && HandoffMinutes == handoffMinutes;
+           && HandoffMinutes == handoffMinutes
+           && PreparationMode == preparationMode;
 
     /// <summary>
     /// TB-264: آیا سیاست زمان‌بندی فیزیکی به‌طور کامل تنظیم شده است (هر دو مقدار با هم).
     /// </summary>
     public bool HasTimingPolicy => PreparationMinutes is not null && HandoffMinutes is not null;
+
+    /// <summary>
+    /// TB-264-R1: آیا سیاست فیزیکی <b>کامل و قابل‌تعهد</b> است — جفت زمان‌ها به‌همراه معنای صریح زمان
+    /// پردازش. سیاست ناقص تعهد جدید نمی‌سازد و هیچ پیش‌فرض شبانه‌روزی ندارد.
+    /// </summary>
+    public bool HasCommittableTimingPolicy =>
+        HasTimingPolicy && PreparationMode != ShippingAuthoringPreparationProcessingMode.Unspecified;
 }

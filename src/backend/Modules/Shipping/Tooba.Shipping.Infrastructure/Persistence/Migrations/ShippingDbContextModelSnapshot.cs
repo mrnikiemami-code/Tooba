@@ -621,6 +621,18 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("freight_payment_mode");
 
+                    b.Property<int?>("HandoffMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("handoff_minutes");
+
+                    b.Property<int?>("PreparationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("preparation_minutes");
+
+                    b.Property<int>("PreparationMode")
+                        .HasColumnType("integer")
+                        .HasColumnName("preparation_mode");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -633,6 +645,78 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_authoring_method_settings_calculation_mode", "calculation_mode IN (0, 1, 2)");
 
                             t.HasCheckConstraint("ck_authoring_method_settings_freight_mode", "freight_payment_mode IN (0, 1)");
+
+                            t.HasCheckConstraint("ck_authoring_method_settings_handoff_minutes_range", "handoff_minutes IS NULL OR handoff_minutes BETWEEN 0 AND 1440");
+
+                            t.HasCheckConstraint("ck_authoring_method_settings_preparation_minutes_range", "preparation_minutes IS NULL OR preparation_minutes BETWEEN 0 AND 10080");
+
+                            t.HasCheckConstraint("ck_authoring_method_settings_preparation_mode", "preparation_mode IN (0, 1, 2)");
+
+                            t.HasCheckConstraint("ck_authoring_method_settings_preparation_mode_paired", "(preparation_minutes IS NULL) = (preparation_mode = 0)");
+
+                            t.HasCheckConstraint("ck_authoring_method_settings_preparation_pair", "(preparation_minutes IS NULL) = (handoff_minutes IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringProcessingSchedule", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("time_zone_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("DraftId")
+                        .HasName("pk_authoring_processing_schedules");
+
+                    b.ToTable("authoring_processing_schedules", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_processing_schedules_timezone_length", "char_length(btrim(time_zone_id)) > 0 AND char_length(time_zone_id) <= 64");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringProcessingScheduleDay", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("draft_id");
+
+                    b.Property<int>("Weekday")
+                        .HasColumnType("integer")
+                        .HasColumnName("weekday");
+
+                    b.Property<TimeOnly?>("ClosesAt")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("closes_at");
+
+                    b.Property<bool>("IsWorking")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_working");
+
+                    b.Property<TimeOnly?>("OpensAt")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("opens_at");
+
+                    b.HasKey("DraftId", "Weekday")
+                        .HasName("pk_authoring_processing_schedule_days");
+
+                    b.ToTable("authoring_processing_schedule_days", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_authoring_processing_schedule_days_hours_paired", "(opens_at IS NULL) = (closes_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_authoring_processing_schedule_days_range", "opens_at IS NULL OR closes_at > opens_at");
+
+                            t.HasCheckConstraint("ck_authoring_processing_schedule_days_weekday_range", "weekday BETWEEN 1 AND 7");
+
+                            t.HasCheckConstraint("ck_authoring_processing_schedule_days_working_hours", "is_working = FALSE OR (opens_at IS NOT NULL AND closes_at IS NOT NULL)");
                         });
                 });
 
@@ -828,7 +912,7 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
 
                     b.ToTable("authoring_revision_snapshots", "shipping", t =>
                         {
-                            t.HasCheckConstraint("ck_authoring_revision_snapshots_format_version_known", "format_version IN (1, 2, 3)");
+                            t.HasCheckConstraint("ck_authoring_revision_snapshots_format_version_known", "format_version IN (1, 2, 3, 4)");
 
                             t.HasCheckConstraint("ck_authoring_revision_snapshots_owner_coherent", "((owner_kind = 0 AND owner_tenant_id IS NOT NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 1 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NULL) OR (owner_kind = 2 AND owner_tenant_id IS NULL AND owner_seller_party_id IS NOT NULL))");
 
@@ -1010,106 +1094,9 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>
-                {
-                    b.Property<Guid>("ScheduleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("schedule_id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("OptionCode")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("option_code");
-
-                    b.Property<string>("ServiceCode")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("service_code");
-
-                    b.Property<string>("TimeZoneId")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("time_zone_id");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("ScheduleId")
-                        .HasName("pk_operating_schedules");
-
-                    b.HasIndex("ServiceCode", "OptionCode")
-                        .IsUnique()
-                        .HasDatabaseName("ux_operating_schedules_service_option");
-
-                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode"), false);
-
-                    b.ToTable("operating_schedules", "shipping", t =>
-                        {
-                            t.HasCheckConstraint("ck_operating_schedules_option_code_canonical", "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
-
-                            t.HasCheckConstraint("ck_operating_schedules_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
-
-                            t.HasCheckConstraint("ck_operating_schedules_timezone_canonical", "char_length(time_zone_id) > 0 AND time_zone_id = btrim(time_zone_id)");
-                        });
-                });
-
-            modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingWindow", b =>
-                {
-                    b.Property<Guid>("WindowId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("window_id");
-
-                    b.Property<int?>("Capacity")
-                        .HasColumnType("integer")
-                        .HasColumnName("capacity");
-
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("end_time");
-
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("start_time");
-
-                    b.Property<int>("Weekday")
-                        .HasColumnType("integer")
-                        .HasColumnName("weekday");
-
-                    b.Property<Guid>("schedule_id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("schedule_id");
-
-                    b.HasKey("WindowId")
-                        .HasName("pk_operating_windows");
-
-                    b.HasIndex("schedule_id", "Weekday")
-                        .HasDatabaseName("ix_operating_windows_schedule_weekday");
-
-                    b.ToTable("operating_windows", "shipping", t =>
-                        {
-                            t.HasCheckConstraint("ck_operating_windows_capacity_positive", "capacity IS NULL OR (capacity > 0 AND capacity <= 1000000)");
-
-                            t.HasCheckConstraint("ck_operating_windows_range_half_open", "end_time > start_time");
-
-                            t.HasCheckConstraint("ck_operating_windows_weekday_iso_range", "weekday >= 1 AND weekday <= 7");
-                        });
-                });
-
             modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierAccount", b =>
                 {
                     b.Property<Guid>("AccountId")
-                        .ValueGeneratedNever()
                         .HasColumnType("uuid")
                         .HasColumnName("account_id");
 
@@ -1211,7 +1198,6 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierDestinationMapping", b =>
                 {
                     b.Property<Guid>("MappingId")
-                        .ValueGeneratedNever()
                         .HasColumnType("uuid")
                         .HasColumnName("mapping_id");
 
@@ -1262,7 +1248,6 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierMethodBinding", b =>
                 {
                     b.Property<Guid>("BindingId")
-                        .ValueGeneratedNever()
                         .HasColumnType("uuid")
                         .HasColumnName("binding_id");
 
@@ -1376,10 +1361,70 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.ToTable("carrier_method_bindings", "shipping");
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValue", b =>
+                {
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("external_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset>("SyncedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("synced_at");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("title");
+
+                    b.HasKey("AccountId", "Kind", "ExternalId")
+                        .HasName("pk_carrier_reference_values");
+
+                    b.ToTable("carrier_reference_values", "shipping");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierSecretMaterial", b =>
+                {
+                    b.Property<string>("SecretReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("secret_reference");
+
+                    b.Property<byte[]>("Ciphertext")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("ciphertext");
+
+                    b.Property<int>("ConfigurationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("configuration_version");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("SecretReference")
+                        .HasName("pk_carrier_secret_materials");
+
+                    b.ToTable("carrier_secret_materials", "shipping");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierShipmentOperation", b =>
                 {
                     b.Property<Guid>("OperationId")
-                        .ValueGeneratedNever()
                         .HasColumnType("uuid")
                         .HasColumnName("operation_id");
 
@@ -1403,9 +1448,21 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("configuration_version");
 
+                    b.Property<DateTimeOffset?>("DispatchClaimExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dispatch_claim_expires_at");
+
+                    b.Property<Guid?>("DispatchClaimToken")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dispatch_claim_token");
+
                     b.Property<string>("ExecutionInputSnapshotJson")
                         .HasColumnType("text")
                         .HasColumnName("execution_input_snapshot_json");
+
+                    b.Property<bool>("ExternalDispatchAttempted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("external_dispatch_attempted");
 
                     b.Property<int>("Kind")
                         .HasColumnType("integer")
@@ -1474,65 +1531,256 @@ namespace Tooba.Shipping.Infrastructure.Persistence.Migrations
                     b.ToTable("carrier_shipment_operations", "shipping");
                 });
 
-modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValue", b =>
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierShipmentPackageCompletion", b =>
                 {
-                    b.Property<Guid>("AccountId")
+                    b.Property<Guid>("CompletionId")
                         .HasColumnType("uuid")
-                        .HasColumnName("account_id");
+                        .HasColumnName("completion_id");
 
-                    b.Property<int>("Kind")
+                    b.Property<Guid>("CheckoutId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("checkout_id");
+
+                    b.Property<DateTimeOffset>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<decimal>("DeclaredValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("declared_value");
+
+                    b.Property<decimal>("HeightCentimeters")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("height_centimeters");
+
+                    b.Property<decimal>("LengthCentimeters")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("length_centimeters");
+
+                    b.Property<int>("OwnerKind")
                         .HasColumnType("integer")
-                        .HasColumnName("kind");
+                        .HasColumnName("owner_kind");
 
-                    b.Property<string>("ExternalId")
+                    b.Property<Guid?>("OwnerSellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_seller_party_id");
+
+                    b.Property<string>("OwnerTenantId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("owner_tenant_id");
+
+                    b.Property<Guid>("ShippingGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_group_id");
+
+                    b.Property<decimal>("WeightGrams")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("weight_grams");
+
+                    b.Property<decimal>("WidthCentimeters")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("width_centimeters");
+
+                    b.HasKey("CompletionId")
+                        .HasName("pk_carrier_shipment_package_completions");
+
+                    b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "CheckoutId", "ShippingGroupId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_shipment_package_completions_group");
+
+                    b.ToTable("carrier_shipment_package_completions", "shipping");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierShipmentSenderCompletion", b =>
+                {
+                    b.Property<Guid>("CompletionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("completion_id");
+
+                    b.Property<string>("AddressLine")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("address_line");
+
+                    b.Property<Guid>("CheckoutId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("checkout_id");
+
+                    b.Property<DateTimeOffset>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("full_name");
+
+                    b.Property<string>("LocationCode")
+                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
-                        .HasColumnName("external_id");
+                        .HasColumnName("location_code");
+
+                    b.Property<string>("Mobile")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("mobile");
+
+                    b.Property<int>("OwnerKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_kind");
+
+                    b.Property<Guid?>("OwnerSellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_seller_party_id");
+
+                    b.Property<string>("OwnerTenantId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("owner_tenant_id");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("postal_code");
+
+                    b.Property<Guid>("ShippingGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shipping_group_id");
+
+                    b.HasKey("CompletionId")
+                        .HasName("pk_carrier_shipment_sender_completions");
+
+                    b.HasIndex("OwnerKind", "OwnerTenantId", "OwnerSellerPartyId", "CheckoutId", "ShippingGroupId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_carrier_shipment_sender_completions_group");
+
+                    b.ToTable("carrier_shipment_sender_completions", "shipping");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", b =>
+                {
+                    b.Property<Guid>("ScheduleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("schedule_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
-                    b.Property<DateTimeOffset>("SyncedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("synced_at");
+                    b.Property<string>("OptionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("option_code");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("ServiceCode")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("title");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("service_code");
 
-                    b.HasKey("AccountId", "Kind", "ExternalId")
-                        .HasName("pk_carrier_reference_values");
-
-                    b.ToTable("carrier_reference_values", "shipping");
-                });
-
-            modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierSecretMaterial", b =>
-                {
-                    b.Property<string>("SecretReference")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("secret_reference");
-
-                    b.Property<byte[]>("Ciphertext")
+                    b.Property<string>("TimeZoneId")
                         .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("ciphertext");
-
-                    b.Property<int>("ConfigurationVersion")
-                        .HasColumnType("integer")
-                        .HasColumnName("configuration_version");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("time_zone_id");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.HasKey("SecretReference")
-                        .HasName("pk_carrier_secret_materials");
+                    b.HasKey("ScheduleId")
+                        .HasName("pk_operating_schedules");
 
-                    b.ToTable("carrier_secret_materials", "shipping");
+                    b.HasIndex("ServiceCode", "OptionCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_operating_schedules_service_option");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ServiceCode", "OptionCode"), false);
+
+                    b.ToTable("operating_schedules", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_operating_schedules_option_code_canonical", "option_code IS NULL OR (char_length(option_code) > 0 AND option_code = btrim(option_code))");
+
+                            t.HasCheckConstraint("ck_operating_schedules_service_code_canonical", "char_length(service_code) > 0 AND service_code = btrim(service_code)");
+
+                            t.HasCheckConstraint("ck_operating_schedules_timezone_canonical", "char_length(time_zone_id) > 0 AND time_zone_id = btrim(time_zone_id)");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingWindow", b =>
+                {
+                    b.Property<Guid>("WindowId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("window_id");
+
+                    b.Property<int?>("Capacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("capacity");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("end_time");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start_time");
+
+                    b.Property<int>("Weekday")
+                        .HasColumnType("integer")
+                        .HasColumnName("weekday");
+
+                    b.Property<Guid>("schedule_id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("schedule_id");
+
+                    b.HasKey("WindowId")
+                        .HasName("pk_operating_windows");
+
+                    b.HasIndex("schedule_id", "Weekday")
+                        .HasDatabaseName("ix_operating_windows_schedule_weekday");
+
+                    b.ToTable("operating_windows", "shipping", t =>
+                        {
+                            t.HasCheckConstraint("ck_operating_windows_capacity_positive", "capacity IS NULL OR (capacity > 0 AND capacity <= 1000000)");
+
+                            t.HasCheckConstraint("ck_operating_windows_range_half_open", "end_time > start_time");
+
+                            t.HasCheckConstraint("ck_operating_windows_weekday_iso_range", "weekday >= 1 AND weekday <= 7");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
+                        .WithOne("CarrierSchedule")
+                        .HasForeignKey("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", "DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_carrier_schedules_draft");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierScheduleDay", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", null)
+                        .WithMany("Days")
+                        .HasForeignKey("DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_carrier_schedule_days_schedule");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraftTranslation", b =>
@@ -1553,6 +1801,26 @@ modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValu
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_authoring_method_settings_draft");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringProcessingSchedule", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
+                        .WithOne("ProcessingSchedule")
+                        .HasForeignKey("Tooba.Shipping.Domain.Authoring.ShippingAuthoringProcessingSchedule", "DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_processing_schedules_draft");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringProcessingScheduleDay", b =>
+                {
+                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringProcessingSchedule", null)
+                        .WithMany("Days")
+                        .HasForeignKey("DraftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_authoring_processing_schedule_days_schedule");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRateRow", b =>
@@ -1615,26 +1883,6 @@ modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValu
                         .HasConstraintName("fk_authoring_weekly_schedules_draft");
                 });
 
-            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", b =>
-                {
-                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", null)
-                        .WithOne("CarrierSchedule")
-                        .HasForeignKey("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", "DraftId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_authoring_carrier_schedules_draft");
-                });
-
-            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierScheduleDay", b =>
-                {
-                    b.HasOne("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", null)
-                        .WithMany("Days")
-                        .HasForeignKey("DraftId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_authoring_carrier_schedule_days_schedule");
-                });
-
             modelBuilder.Entity("Tooba.Shipping.Domain.Scheduling.ShippingOperatingWindow", b =>
                 {
                     b.HasOne("Tooba.Shipping.Domain.Scheduling.ShippingOperatingSchedule", null)
@@ -1645,17 +1893,29 @@ modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValu
                         .HasConstraintName("fk_operating_windows_operating_schedules_schedule_id");
                 });
 
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", b =>
+                {
+                    b.Navigation("Days");
+                });
+
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringDraft", b =>
                 {
                     b.Navigation("CarrierSchedule");
 
                     b.Navigation("MethodSettings");
 
+                    b.Navigation("ProcessingSchedule");
+
                     b.Navigation("RegionGroups");
 
                     b.Navigation("Translations");
 
                     b.Navigation("WeeklySchedule");
+                });
+
+            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringProcessingSchedule", b =>
+                {
+                    b.Navigation("Days");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringRegionGroup", b =>
@@ -1665,11 +1925,6 @@ modelBuilder.Entity("Tooba.Shipping.Domain.Carriers.ShippingCarrierReferenceValu
                     b.Navigation("RateRows");
 
                     b.Navigation("Titles");
-                });
-
-            modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringCarrierSchedule", b =>
-                {
-                    b.Navigation("Days");
                 });
 
             modelBuilder.Entity("Tooba.Shipping.Domain.Authoring.ShippingAuthoringWeeklySchedule", b =>

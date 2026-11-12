@@ -645,15 +645,22 @@ public sealed class ShippingGroupPlannedDispatch
                               && transferDepartureUtc is not null
                               && handoffDeadlineUtc is not null;
         if (hasAnyDeadline != hasAllDeadlines
-            || (policyVersion >= 2) != hasAllDeadlines
-            || (hasAllDeadlines
-                && !(preparationStartUtc!.Value < transferDepartureUtc!.Value
-                     && transferDepartureUtc.Value <= handoffDeadlineUtc!.Value)))
+            || (policyVersion >= 2) != hasAllDeadlines)
         {
             throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
         }
 
-        // TB-264: the persisted readiness INPUTS are an explicit pair too. A policy-aware plan stores both
+        // TB-264-R1 (gap A): the three instants are NON-DECREASING. A strict ordering rejected the explicit
+        // zero allowances that authoring and the forward calendar accept (0/0 and 0/30). Equality is legal
+        // only where the matching allowance is zero, and the acceptance close stays exclusive.
+        if (hasAllDeadlines
+            && !(preparationStartUtc!.Value <= transferDepartureUtc!.Value
+                 && transferDepartureUtc.Value <= handoffDeadlineUtc!.Value))
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
+        }
+
+        // TB-264-R1: the persisted readiness INPUTS are an explicit pair too. A policy-aware plan stores both
         // allowances, a legacy plan stores neither, and the bounds are the same ones the authoring policy and
         // the scheduling authority enforce. A half pair is not a policy.
         if ((preparationMinutes is null) != (handoffMinutes is null)
@@ -661,6 +668,16 @@ public sealed class ShippingGroupPlannedDispatch
             || (!hasAllDeadlines && preparationMinutes is not null)
             || preparationMinutes is < 0 or > MaxPreparationMinutes
             || handoffMinutes is < 0 or > MaxHandoffMinutes)
+        {
+            throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
+        }
+
+        // TB-264-R1: transfer to the carrier is ELAPSED time by definition, so the stored instants must
+        // differ by exactly the stored allowance. Preparation is working time inside the configured
+        // processing week and its elapsed span therefore cannot be checked here (0 minutes must be equal).
+        if (hasAllDeadlines
+            && (transferDepartureUtc!.Value != handoffDeadlineUtc!.Value.AddMinutes(-handoffMinutes!.Value)
+                || (preparationMinutes is 0 && preparationStartUtc!.Value != transferDepartureUtc.Value)))
         {
             throw new ContractOperationException(ShippingGroupEvidenceFault.DispatchPlanInvalid);
         }

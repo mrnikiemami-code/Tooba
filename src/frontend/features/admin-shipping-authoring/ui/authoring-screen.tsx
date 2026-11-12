@@ -59,6 +59,7 @@ import {
   withHandoffMinutes,
   withName,
   withPreparationMinutes,
+  withPreparationMode,
   withShippingType,
   type EditorFormState,
 } from "../model/editor-form.ts";
@@ -67,8 +68,7 @@ import {
   withRemovedRow,
   type RateRowDraft,
   type RatesFormState,
-} from "../model/editor-rates.ts";
-import { areaRangeEdit, createAreaRangeDrafts, inheritedAreaRange, type AreaRangeDrafts } from "../model/editor-area-range.ts";
+} from "../model/editor-rates.ts";import { areaRangeEdit, createAreaRangeDrafts, inheritedAreaRange, type AreaRangeDrafts } from "../model/editor-area-range.ts";
 import {
   configureWeek,
   resetWeek,
@@ -90,12 +90,23 @@ import {
   withCarrierTimeZone,
   type CarrierWeekFormState,
 } from "../model/editor-carrier-week.ts";
+import {
+  configureProcessingWeek,
+  copyProcessingWeekFromCustomer,
+  resetProcessingWeek,
+  withProcessingDayTime,
+  withProcessingDayWorking,
+  withProcessingPendingTimeZone,
+  withProcessingTimeZone,
+  type ProcessingWeekFormState,
+} from "../model/editor-processing-week.ts";
 import { planAuthoringExit, type AuthoringExitDestination } from "./authoring-exit.ts";
 import { useEditorController } from "./use-editor-controller.ts";
 import { AuthoringCarrierPanel } from "./authoring-carrier-panel.tsx";
 import { AuthoringGeneralTab } from "./authoring-general-tab.tsx";
 import { AuthoringWeekEditor } from "./authoring-week-editor.tsx";
 import { AuthoringCarrierWeekEditor } from "./authoring-carrier-week-editor.tsx";
+import { AuthoringProcessingWeekEditor } from "./authoring-processing-week-editor.tsx";
 import { AuthoringGroupsEditor } from "./authoring-groups-editor.tsx";
 import { AuthoringLocalIssuesPanel, AuthoringSaveFailurePanel } from "./authoring-problem-view.tsx";
 import { AuthoringPublicationPanel, type PublicationBadgeKind } from "./authoring-publication-panel.tsx";
@@ -112,7 +123,7 @@ import {
 const TABS = ["general", "regions"] as const;
 type ScreenTab = (typeof TABS)[number];
 
-/** TB-256-R1: the two independent timing calendars, shown as standard underlined tabs. */
+/** TB-256-R1/TB-264-R1: the three independent scheduling calendars, shown as standard underlined tabs. */
 const TIMING_TABS = TIMING_TAB_IDS;
 type TimingTab = TimingTabId;
 
@@ -150,6 +161,8 @@ export function ShippingAuthoringScreen({
   const [week, setWeek] = useState<WeekFormState | null>(null);
   /** TB-256: the independent carrier-acceptance calendar draft. */
   const [carrier, setCarrier] = useState<CarrierWeekFormState | null>(null);
+  /** TB-264-R1: the independent warehouse-processing calendar draft. */
+  const [processing, setProcessing] = useState<ProcessingWeekFormState | null>(null);
   /** Which of the two independent timing calendars is shown (presentation only). */
   const [timingTab, setTimingTab] = useState<TimingTab>("customer");
   /** Verified ancestry of terminals the operator picked in THIS session (reset with the drafts). */
@@ -229,6 +242,7 @@ export function ShippingAuthoringScreen({
     setAreaRanges(createAreaRangeDrafts(source));
     setWeek(drafts.week);
     setCarrier(drafts.carrier);
+    setProcessing(drafts.processing);
     setPickedFacts(new Map());
     setPickedLabels(new Map());
   }, []);
@@ -294,9 +308,9 @@ export function ShippingAuthoringScreen({
   const intent = useMemo(
     () =>
       document && form && week
-        ? buildAuthoringIntent(document, form, rates, week, groups, areaRanges, carrier)
+        ? buildAuthoringIntent(document, form, rates, week, groups, areaRanges, carrier, processing)
         : null,
-    [areaRanges, carrier, document, form, rates, week, groups],
+    [areaRanges, carrier, document, form, rates, week, groups, processing],
   );
 
   /** ONE dispatch: sets the local drafts and hands the controller a SINGLE composed patch. */
@@ -308,6 +322,7 @@ export function ShippingAuthoringScreen({
       nextWeek: WeekFormState,
       nextAreaRanges: AreaRangeDrafts = areaRanges,
       nextCarrier: CarrierWeekFormState | null = carrier,
+      nextProcessing: ProcessingWeekFormState | null = processing,
     ) => {
       if (blockedNow()) return;
       setForm(nextForm);
@@ -316,6 +331,7 @@ export function ShippingAuthoringScreen({
       setAreaRanges(nextAreaRanges);
       setWeek(nextWeek);
       setCarrier(nextCarrier);
+      setProcessing(nextProcessing);
       if (!document) return;
       const composed = buildAuthoringIntent(
         document,
@@ -325,10 +341,11 @@ export function ShippingAuthoringScreen({
         nextGroups,
         nextAreaRanges,
         nextCarrier,
+        nextProcessing,
       );
       controller.edit(composed.edits, composed.localDirty);
     },
-    [areaRanges, blockedNow, carrier, controller, document],
+    [areaRanges, blockedNow, carrier, processing, controller, document],
   );
 
   const pushEdits = useCallback(
@@ -459,6 +476,18 @@ export function ShippingAuthoringScreen({
     [areaRanges, commit, form, groups, rates, week],
   );
 
+  /**
+   * TB-264-R1: the processing calendar is edited through the SAME single dispatch, so pending customer,
+   * carrier or rate work is never dropped when the operator switches calendars.
+   */
+  const changeProcessing = useCallback(
+    (nextProcessing: ProcessingWeekFormState) => {
+      if (!form || !week) return;
+      commit(form, groups, rates, week, areaRanges, carrier, nextProcessing);
+    },
+    [areaRanges, carrier, commit, form, groups, rates, week],
+  );
+
   const busy = session.save === "saving" || session.reconcile === "pending";
   const readOnly = mode === "view" || busy;
   const blockedByFacts = document && index ? !index.available : false;
@@ -494,11 +523,15 @@ export function ShippingAuthoringScreen({
   const groupProblems = intent?.issues.groups ?? [];
   const rateRowIssues = intent?.issues.rates ?? [];
   const weekProblemIssues = intent?.issues.week ?? [];
-  const carrierProblemIssues = intent?.issues.carrier ?? [];  const nameIssueLanguageIds = formIssues.flatMap((issue) =>
+  const carrierProblemIssues = intent?.issues.carrier ?? [];
+  const processingProblemIssues = intent?.issues.processing ?? [];
+  const nameIssueLanguageIds = formIssues.flatMap((issue) =>
     issue.code === "nameRequired" ? [issue.languageId] : [],
   );
   const settingsIncomplete = formIssues.some((issue) => issue.code === "settingsIncomplete");
   const timingIncomplete = formIssues.some((issue) => issue.code === "timingIncomplete");
+  const preparationModeRequired = formIssues.some((issue) => issue.code === "preparationModeRequired");
+  const preparationModeWithoutTiming = formIssues.some((issue) => issue.code === "preparationModeWithoutTiming");
   const hasIntent = intent !== null && intentHasEdits(intent.edits);
   const canApply =
     !readOnly &&
@@ -630,7 +663,16 @@ export function ShippingAuthoringScreen({
   const fieldServerErrors = useMemo(() => {
     const map: Partial<
       Record<
-        "name" | "description" | "settings" | "type" | "weekTimeZone" | "weekDays" | "carrierTimeZone" | "carrierDays",
+        | "name"
+        | "description"
+        | "settings"
+        | "type"
+        | "weekTimeZone"
+        | "weekDays"
+        | "carrierTimeZone"
+        | "carrierDays"
+        | "processingTimeZone"
+        | "processingDays",
         string
       >
     > = {};
@@ -660,6 +702,7 @@ export function ShippingAuthoringScreen({
     setTab(targetTab(issue.target));
     // TB-256: the rejected field can live in either independent calendar, so its own tab is revealed.
     if (issue.target === "carrierTimeZone" || issue.target === "carrierDays") setTimingTab("carrier");
+    if (issue.target === "processingTimeZone" || issue.target === "processingDays") setTimingTab("processing");
     if (issue.target === "weekTimeZone" || issue.target === "weekDays") setTimingTab("customer");
     window.requestAnimationFrame(() => {
       if (issue.target === "regions" && destinationOverlaps.length > 0) {
@@ -937,6 +980,8 @@ export function ShippingAuthoringScreen({
                 nameIssueLanguageIds={nameIssueLanguageIds}
                 settingsIncomplete={settingsIncomplete}
                 timingIncomplete={timingIncomplete}
+                preparationModeRequired={preparationModeRequired}
+                preparationModeWithoutTiming={preparationModeWithoutTiming}
                 serverErrors={fieldServerErrors}
                 onName={(languageId, value) => pushEdits(withName(form, languageId, value))}
                 onDescription={(languageId, value) => pushEdits(withDescription(form, languageId, value))}
@@ -944,6 +989,7 @@ export function ShippingAuthoringScreen({
                 onCalculationMode={(mode2: AuthoringCalculationMode) => pushEdits(withCalculationMode(form, mode2))}
                 onPreparationMinutes={(minutes) => pushEdits(withPreparationMinutes(form, minutes))}
                 onHandoffMinutes={(minutes) => pushEdits(withHandoffMinutes(form, minutes))}
+                onPreparationMode={(mode2) => pushEdits(withPreparationMode(form, mode2))}
                 onShippingType={(shippingTypeId) => pushEdits(withShippingType(form, shippingTypeId))}
                 carrierSlot={
                   <AuthoringCarrierPanel
@@ -954,7 +1000,7 @@ export function ShippingAuthoringScreen({
                   />
                 }
                 scheduleSlot={
-                  week && carrier ? (
+                  week && carrier && processing ? (
                     <div className="grid gap-2">
                       {/* TB-256-R1: the two INDEPENDENT calendars are standard underlined tabs (same pattern
                           as General/Regions). Switching is presentation only: both editors stay mounted, no
@@ -982,7 +1028,11 @@ export function ShippingAuthoringScreen({
                             }
                             onClick={() => setTimingTab(id)}
                           >
-                            {id === "customer" ? messages.timingTabCustomer : messages.timingTabCarrier}
+                            {id === "customer"
+                              ? messages.timingTabCustomer
+                              : id === "carrier"
+                                ? messages.timingTabCarrier
+                                : messages.timingTabProcessing}
                           </button>
                         ))}
                       </div>
@@ -1038,6 +1088,43 @@ export function ShippingAuthoringScreen({
                           }
                           onCopyFromCustomer={() => changeCarrier(copyCarrierWeekFromCustomer(carrier, week))}
                           onReset={() => changeCarrier(resetCarrierWeek(document.carrierSchedule ?? null))}
+                        />
+                      </div>
+                      <div
+                        id="shipping-authoring-timing-panel-processing"
+                        role="tabpanel"
+                        aria-labelledby="shipping-authoring-timing-tab-processing"
+                        hidden={timingTab !== "processing"}
+                      >
+                        <AuthoringProcessingWeekEditor
+                          schedule={document.processingSchedule ?? null}
+                          processing={processing}
+                          issues={processingProblemIssues}
+                          editable={!readOnly && !busy}
+                          locale={locale}
+                          messages={messages}
+                          customerConfigured={week.kind === "configured"}
+                          serverErrors={{
+                            timeZone: fieldServerErrors.processingTimeZone,
+                            days: fieldServerErrors.processingDays,
+                          }}
+                          onPendingTimeZone={(value) =>
+                            changeProcessing(withProcessingPendingTimeZone(processing, value))
+                          }
+                          onConfigure={() => changeProcessing(configureProcessingWeek(processing))}
+                          onTimeZone={(value) => changeProcessing(withProcessingTimeZone(processing, value))}
+                          onDayWorking={(weekday, isWorking) =>
+                            changeProcessing(withProcessingDayWorking(processing, weekday, isWorking))
+                          }
+                          onDayTime={(weekday, bound, value) =>
+                            changeProcessing(withProcessingDayTime(processing, weekday, bound, value))
+                          }
+                          onCopyFromCustomer={() =>
+                            changeProcessing(copyProcessingWeekFromCustomer(processing, week))
+                          }
+                          onReset={() =>
+                            changeProcessing(resetProcessingWeek(document.processingSchedule ?? null))
+                          }
                         />
                       </div>
                     </div>

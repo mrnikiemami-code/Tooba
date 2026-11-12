@@ -2,6 +2,7 @@ using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Shipping.Application.Authoring.Models;
 using Tooba.Shipping.Application.Authoring.Ports;
+using Tooba.Shipping.Contracts.Authoring;
 
 namespace Tooba.Shipping.Application.Authoring.Queries;
 
@@ -57,6 +58,7 @@ internal static class ShippingAuthoringMethodSettingsWorkflow
             settings?.FreightPaymentMode,
             settings?.CalculationMode,
             settings?.PreparationMinutes,
-            settings?.HandoffMinutes);
+            settings?.HandoffMinutes,
+            settings?.PreparationMode ?? ShippingAuthoringPreparationProcessingMode.Unspecified);
     }
 }

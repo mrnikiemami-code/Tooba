@@ -699,7 +699,8 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                     selection.Settings.FreightPaymentMode,
                     selection.Settings.CalculationMode,
                     selection.Settings.PreparationMinutes,
-                    selection.Settings.HandoffMinutes),
+                    selection.Settings.HandoffMinutes,
+                    selection.Settings.PreparationMode),
             snapshotId,
             selection?.DraftId,
             selection?.SourceRevision,
@@ -726,6 +727,17 @@ public sealed class ShippingCapturedRevisionQuoteLookup(
                     carrier.TimeZoneId,
                     carrier.Days
                         .Select(day => new ShippingCapturedCarrierWeekDay(
+                            day.Weekday,
+                            day.IsWorking,
+                            day.OpensAt,
+                            day.ClosesAt))
+                        .ToList())
+                : null,
+            ProcessingWeek: selection?.ProcessingSchedule is { } processing
+                ? new ShippingCapturedProcessingWeek(
+                    processing.TimeZoneId,
+                    processing.Days
+                        .Select(day => new ShippingCapturedProcessingWeekDay(
                             day.Weekday,
                             day.IsWorking,
                             day.OpensAt,

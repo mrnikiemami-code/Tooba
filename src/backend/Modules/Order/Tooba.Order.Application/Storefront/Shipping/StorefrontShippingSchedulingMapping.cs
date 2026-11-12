@@ -28,6 +28,15 @@ public static class StorefrontShippingSchedulingMapping
                 .Select(day => new ShippingSchedulingDayView(day.Weekday, day.IsWorking, day.OpensAt, day.ClosesAt))
                 .ToArray());
 
+    /// <summary>TB-264-R1: تقویم کاری پردازش انبار (مستقل از حامل و مشتری).</summary>
+    /// <param name="week">تقویم ذخیره‌شدهٔ پردازش.</param>
+    public static ShippingSchedulingWeekView ToSchedulingWeek(ShippingCapturedProcessingWeek week) =>
+        new(
+            week.TimeZoneId,
+            week.Days
+                .Select(day => new ShippingSchedulingDayView(day.Weekday, day.IsWorking, day.OpensAt, day.ClosesAt))
+                .ToArray());
+
     /// <summary>تقویم تحویل مشتری.</summary>
     /// <param name="week">تقویم ذخیره‌شدهٔ مشتری.</param>
     public static ShippingSchedulingWeekView ToSchedulingWeek(ShippingCapturedReceivingWeek week) =>
