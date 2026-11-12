@@ -1,0 +1,23 @@
+﻿# TB-264-R1 connected proof (read-only, canonical tooba_alpha)
+utc_now = 2026-11-12T00:37:21.2216708+00:00
+
+## Migrations (ef history heads)
+shipping.__ef_migrations_history head = 20261112120000_AddProcessingHoursAndTimingPolicy
+order.__ef_migrations_history head    = 20261112130000_RelaxPreparationDispatchZeroAllowances
+
+## Draft 01a17d0d-e033-7000-af43-49a1daa28822
+draft revision = 6
+method settings prep/handoff/mode = 240/60/1
+processing week tz/working days = Asia/Tehran/6
+
+## Selected capture (store owner, post/standard)
+snapshot/selection/sourceRevision/formatVersion = 01a1cd2d-dc41-7000-abf0-322ca18255c4 / v5 / rev6 / fmt4
+
+## Published payload facts (the body the storefront quote reads)
+payloadFormatVersion = 4
+prep/handoff/mode = 240/60/1
+processing hours tz/working = Asia/Tehran/6
+carrier acceptance tz/days = Asia/Tehran/7
+
+## Pre-fix capture kept as history (same draft, revision 4, captured before the include fix)
+snapshot 01a1cd1e-2251-7000-982d-567c6f3af9bf format_version/ProcessingHours = 3 / null

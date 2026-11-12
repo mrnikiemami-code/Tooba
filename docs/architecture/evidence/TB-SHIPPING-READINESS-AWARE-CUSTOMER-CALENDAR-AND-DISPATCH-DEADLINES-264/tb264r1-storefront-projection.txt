@@ -1,0 +1,76 @@
+# TB-264-R1 live storefront projection (canonical install: Host 5088 + Next 3000 + tooba_alpha)
+
+All calls are task-labelled fixtures: cart `01a1cd1f-6dba-7000-bc2d-311dbdd8a9ee` (guest cart created
+through the real storefront API), one line `01a1cd20-7b99-7000-a79a-f22c3684190f`
+(offer `0442a1fa-1d95-4b24-b9d9-129fc19942d2`, seller `فروشگاه آرمان`, 1 × 8,702,542 IRR).
+No user cart/order/parcel was read or written.
+
+## 1. Guest cart created through the real endpoint
+
+    POST /v1/storefront/cart  {}                    -> 200
+    {"cartId":"01a1cd1f-6dba-7000-bc2d-311dbdd8a9ee","version":1,...,"guestSecret":"bf7c…e36b"}
+
+## 2. One line added through the real endpoint
+
+    POST /v1/storefront/cart/{cartId}/lines?expectedVersion=1  {"offerId":"0442a1fa-…","quantity":1}  -> 200
+    {"version":3,"itemCount":1,"lines":[{"lineId":"01a1cd20-…","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5",...}]}
+
+## 3. Projection (no destination) — the captured preview refuses to invent a destination
+
+    POST /v1/storefront/shipping/projection {"cartId":…,"provinceName":"تهران","language":"fa-IR"} -> 200
+    "capturedPreview": {"groups":[{"groupKey":"cap|platform|store|01a030d140cb70008abe6d31739956c5|01a16f436b4a700086704c16e14c6345",
+      "methods":[], "unavailableReason":"storefront.captured_preview.destination_required"}]}
+
+(The admin bearer token was used as the checkout actor because the canonical storefront identity policy
+requires a signed-in actor; the cart itself stayed a guest cart with its own secret. No guest-checkout
+policy was changed.)
+
+## 4. Projection with the authoritative destination (Iran `e3451206-e503-51a8-91ad-afa9ab70e330`)
+
+    POST /v1/storefront/shipping/projection {"cartId":…,"provinceName":"تهران","language":"fa-IR",
+      "methodCode":"post:standard","destination":{"countryId":"e3451206-e503-51a8-91ad-afa9ab70e330"}} -> 200
+
+    "capturedPreview": {
+      "enabled": true, "currency": "IRR", "selectionEnabled": true, "checkoutEnabled": true,
+      "snapshotId": "01a186f7-dd7a-7000-95e9-3c8243e01991",
+      "selectionVersion": 11,
+      "groups": [{
+        "groupKey": "cap|platform|store|01a030d140cb70008abe6d31739956c5|01a16f436b4a700086704c16e14c6345",
+        "typeLabel": "عادی",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "cartLineIds": ["01a1cd20-7b99-7000-a79a-f22c3684190f"],
+        "finalGoodsAmountAfterDiscountAndTax": "9485771",
+        "methods": [{
+          "methodLabel": "پیشتاز",
+          "serviceCode": "post",
+          "freightAmount": "120000.00",
+          "packagingAmount": "5000.00",
+          "payableAtCheckoutAmount": "125000.00",
+          "carrierCollectAmount": "0",
+          "currency": "IRR",
+          "availableDates": [],
+          "unavailableReason": "storefront.captured_group.carrier_schedule_missing",
+          "confirmationSnapshotId": "01a186f7-dd7a-7000-95e9-3c8243e01991",
+          "confirmationSourceRevision": "10",
+          "confirmationSelectionVersion": "11",
+          "confirmationAreaGroupId": "01a16f4e-1c41-7000-8e7a-e54b0b29ae5b",
+          "confirmationRateRowId": "01a16f4e-1c45-7000-a8d4-696c0c388a3f"
+        }]
+      }]
+    }
+
+Reading of that live answer, stated without invention:
+
+* The seller group is quoted from the **seller-owned** selected capture
+  (`01a186f7-…`, source revision 10, selection version 11), NOT from the Store-owned
+  `post/standard` method that this task saved and published. A buyer cart never borrows another
+  owner's method — the owner boundary is intact.
+* That seller capture has no carrier acceptance week, so the storefront produces
+  `availableDates: []` with `storefront.captured_group.carrier_schedule_missing`. It refuses to
+  invent a customer date rather than falling back to the old `leadDays` estimate.
+* Consequence for issue D: the canonical catalog has no **Store-owned** in-stock offer, so a live
+  positive customer-date row for the Store-owned method could not be minted without writing a seller's
+  real shipping configuration or a new Store offer. Neither is authorised, so it was not done. The
+  positive calendar/deadline chain is proven by the 12 authority facts plus the 13 capture/quote facts
+  (Shipping 32/32 green) and by the format-4 payload above, which is exactly the input that authority
+  consumes (see `tb264r1-connected-proof.txt`).

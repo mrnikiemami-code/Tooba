@@ -34,6 +34,16 @@ Latest user instruction: fix the defects, issue sequential tasks, review each re
    shows the deadlines beside the customer promise. No second queue/settings app, no money change.
    See docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264/RESULT.md.
    Boundary: acceptance proven through the production resolver + real DB + actual queue query, NOT a live paid checkout.
+   R1 correction (Architect gaps A–D): explicit `0/0`, `0/30`, `30/0` allowances are planned with a non-decreasing
+   triple; the chosen customer date/window/zone now constrains the same backward authority so a same-day plan can
+   never hand over a carrier close later than the window opens; the warehouse processing week is an explicit stored
+   policy (`WorkingWeek` vs deliberate `Continuous`, format 4) and a timing pair without it is refused instead of
+   being read as "ready now"; and the capture graph bug that dropped an existing processing week from the published
+   body was found and fixed on the canonical install (pre-fix capture `01a1cd1e-…` = format 3/null, post-fix
+   `01a1cd2d-dc41-…` = format 4 with Asia/Tehran 6-working-of-7). Live storefront projection on a task-labelled
+   guest cart quotes the SELLER-owned capture and truthfully returns no dates for it. Positive customer-date
+   creation has no Store-owned offer to run on, so it is proven by the authority/capture facts, not a live checkout.
+   See .../264/R1-RESULT.md, R1-RECEIPTS.md, tb264r1-connected-proof.txt, tb264r1-storefront-projection.txt.
 3. **265 PLANNED / NOT ISSUED** — connect courier-origin return to EXISTING Returns flow. Inspect Returns eligibility/finance/inventory APIs (delivered-customer RMA may currently refuse never-delivered source). Reuse Contracts and owning processes, no parallel refund module or fake Delivered. Three routes: resend same healthy goods; healthy-stock replacement with distinct reservation; create linked Returns case with existing origin receipt reused. Cover usable as well as damaged quantities. One source quantity cannot fund simultaneous resend/replacement/refund branches; concurrent/retry exact authority.
  Latest reservation rule: opening a case alone doesn't release. Approved return plus owning cancellation of relevant order-line obligation releases only its unconsumed held stock once, blocks further send for that quantity; consumed original reservation isn't released or resurrected. Existing whole-order post-dispatch cancellation restriction must not be bypassed; explicitly integrate line obligation policy instead. Already-dispatched replacement needs physical recall/receipt, cannot be treated as unused hold. Refund amount/approval/execution remains Returns/Settlement/Payment-owned; damaged disposition isn't saleable restock. Referral in262 is NOT this integration. Preserve case audit links and exact replay, no double receive/refund. Scope/issue after actual code review and263/264 results.
 

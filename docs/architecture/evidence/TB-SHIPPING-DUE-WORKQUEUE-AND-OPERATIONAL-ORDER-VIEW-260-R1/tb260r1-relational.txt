@@ -3,3 +3,18 @@ TB260R1-B-182829 caseB rows=2 distinctKeys=2 locators=e9a720f8-f6fe-4b74-b299-8e
 TB260R1-D-182829 caseD rows=4 groupRemaining=2 openParcelScope=0 resendBucket=Unspecified resendPlan=null returnedResendable=0 returnedBlocker=true total=4
 TB260R1-A2-182829 caseA2 rows=2 noPlanGroup=Unspecified/null plannedGroup=Upcoming/handoff+2 noLending=true
 TB260R1-A-182830 caseA rows=2 parcel=InTransit/9fc0c94d-d0f8-4b9b-a24c-9f41fadc1ba4 group=Upcoming/2c550347-8c06-4a2b-b4f6-c7c77ab6e058 counts=active1/today0/overdue0/upcoming1/unspecified0/transit1/due0 targetB=groupB
+TB260R1-C1-235442 caseC packageRows=1 kind=Package locator=15dd0753-296c-48df-af82-f9999976cc8b number=MP-15DD0753296C childParcelRows=0 scopeQty=2 counts=active1/upcoming1 separateRows=2
+TB260R1-B-235444 caseB rows=2 distinctKeys=2 locators=ba2f7836-2416-4e17-8650-cb1aa495bfcf,1b28b303-9d4f-4390-a7fb-7eb22d8b7943 bucket=Upcoming plan=shared-own-group pageSize1=2x1 groupRow=0
+TB260R1-D-235444 caseD rows=4 groupRemaining=2 openParcelScope=0 resendBucket=Unspecified resendPlan=null returnedResendable=0 returnedBlocker=true total=4
+TB260R1-A2-235444 caseA2 rows=2 noPlanGroup=Unspecified/null plannedGroup=Upcoming/handoff+2 noLending=true
+TB260R1-A-235444 caseA rows=2 parcel=InTransit/727b0ebb-e61b-473c-a8ee-ab9f2852a24e group=Upcoming/4f8d287b-4c62-4952-9b08-c4fe48e784a5 counts=active1/today0/overdue0/upcoming1/unspecified0/transit1/due0 targetB=groupB
+TB260R1-C1-235454 caseC packageRows=1 kind=Package locator=c5498ec5-0189-47db-9cdf-b8bac67adbdb number=MP-C5498EC50189 childParcelRows=0 scopeQty=2 counts=active1/upcoming1 separateRows=2
+TB260R1-B-235456 caseB rows=2 distinctKeys=2 locators=37e1071a-f746-4167-ade5-9a655865fc07,771309b8-bc28-4215-95a4-9e02a0f36d53 bucket=Upcoming plan=shared-own-group pageSize1=2x1 groupRow=0
+TB260R1-D-235456 caseD rows=4 groupRemaining=2 openParcelScope=0 resendBucket=Unspecified resendPlan=null returnedResendable=0 returnedBlocker=true total=4
+TB260R1-A2-235456 caseA2 rows=2 noPlanGroup=Unspecified/null plannedGroup=Upcoming/handoff+2 noLending=true
+TB260R1-A-235456 caseA rows=2 parcel=InTransit/3c74bd00-0d60-4738-9226-ac8c51e49736 group=Upcoming/bdd42bac-140c-42fe-abe9-1f3963bb9ac7 counts=active1/today0/overdue0/upcoming1/unspecified0/transit1/due0 targetB=groupB
+TB260R1-C1-235550 caseC packageRows=1 kind=Package locator=4f15b95c-c1d4-4ca7-b1cf-b380e2ab1ea8 number=MP-4F15B95CC1D4 childParcelRows=0 scopeQty=2 counts=active1/upcoming1 separateRows=2
+TB260R1-B-235551 caseB rows=2 distinctKeys=2 locators=ba26b770-365c-48d7-bf9d-c85e646a74a5,78e6c32e-7155-4a72-b529-e51f9aaa678e bucket=Upcoming plan=shared-own-group pageSize1=2x1 groupRow=0
+TB260R1-D-235551 caseD rows=4 groupRemaining=2 openParcelScope=0 resendBucket=Unspecified resendPlan=null returnedResendable=0 returnedBlocker=true total=4
+TB260R1-A2-235552 caseA2 rows=2 noPlanGroup=Unspecified/null plannedGroup=Upcoming/handoff+2 noLending=true
+TB260R1-A-235552 caseA rows=2 parcel=InTransit/d51fd606-b4d9-47cc-8963-86ef26efe897 group=Upcoming/1232f748-ff12-4368-9086-b08cb9449110 counts=active1/today0/overdue0/upcoming1/unspecified0/transit1/due0 targetB=groupB
