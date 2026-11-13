@@ -1,4 +1,16 @@
-# CURRENT — 264-R2 DELIVERED (pending Architect review); 265 NOT ISSUED — 2026-11-13
+# CURRENT — 264/R1/R2 ACCEPTED WITHIN SCOPE; MOBILE OPEN; 265 NOT ISSUED — 2026-11-13
+
+Read264-R2/ARCHITECT-REVIEW.md under docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/.
+Commit473cc23c62b29ebb67202ad2ecd8486c4d1594ae is pushed/retrievable; former transport blocker CLOSED. Source/evidence review accepts bounded timing and connected delivery corrections; user visual/functional acceptance pending. No scheduler repair/test loop needed.
+Worker-proven real form save/reload/publish -> format4 quote with processing policy -> public selection/commit -> durable policy3 -> existing queue. Checkout01a1d511-adbb-7000-8575-d3b957453d76 is PendingPayment; Fulfillment factory fixture is disclosed, not live paid/provider proof.
+User mobile screenshot remains OPEN: authoring title/action header squeezes vertically, responsive form/tabs/actions need attention. User said no next task before R2 result; do not mark mobile fixed from desktop proof.
+265 Returns linkage PLANNED/NOT ISSUED: inspect owning existing Returns before issue. Three paths, per-source quantity exclusivity, approved return+owning line-obligation cancellation release only unconsumed hold once; case creation alone not release. No financial automation accepted.
+R1 user-service mutation audit retained; no blind restore/further user writes. Same oneDB/ports, preserve keys/CapturedPreview;255 parked/Tipax deferred. No new task issued by this review.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Prior CURRENT blocks below superseded.
+
+---
+
+# SUPERSEDED — prior delivery status
 
 264-R2 closed the delivery gap: changed FE rebuilt/served (`BUILD_ID ILzh0yMqPr3RDrjGp3wYE`, PID 48780 on 3000),
 real authoring Save→reload→Publish on the operator form (revision 8 / selection 5 / snapshot `01a1d50f-…`), a
