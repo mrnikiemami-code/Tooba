@@ -14,7 +14,8 @@ automaticNextImplementationTask  NONE
 base            c60458a9524c0d5fd42ea0e805e3212073f7ec41
 expected base   18c291d7eb4ebec2cb5c7b6a5c97cf2a721f11fb  (verified ancestor, 5 docs-only commits behind)
 code            b7cd528192832b92b4c89436a6a6e48d0e06268d
-evidence        see git log for this task's evidence commit (this contract commits with it)
+evidence        642fead3360f64539b79211cc0b729e42cb5b8fe  (TASK/RESULT/RECEIPTS/dom harness + TOP docs)
+merge           this result-contract commit; HEAD == origin/main after the push (recorded in the Bridge result)
 worktreeBase    main; no force/reset/amend/stash/rebase/unrelated overwrite
 
 root cause (measured, not assumed)
