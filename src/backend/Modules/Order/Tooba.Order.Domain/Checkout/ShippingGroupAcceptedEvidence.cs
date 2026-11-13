@@ -172,10 +172,21 @@ public sealed class ShippingGroupAcceptedEvidence
     /// </summary>
     public const int CarrierScheduleFormatVersion = 3;
 
-    /// <summary>آیا این نسخهٔ قالب شاهد قابل پذیرش است (فقط ۱، ۲ و ۳).</summary>
+    /// <summary>
+    /// TB-264-R2: نسخهٔ قالبی که <b>هفتهٔ کاری پردازش انبار</b> را نیز در بر می‌گیرد. نویسندهٔ canonical
+    /// capture بعد از ۲۶۴-R۱ دیگر هرگز نسخهٔ ۳ برای روش دارای هفتهٔ پردازش نمی‌نویسد، پس نبودِ این نسخه
+    /// همهٔ انتخاب‌های واقعی مشتری را با «قیمت‌نشده» رد می‌کرد. خود هفته در شاهد ذخیره نمی‌شود؛ معنای
+    /// زمانی از نسخهٔ سیاستِ برنامهٔ ارسال می‌آید و رد‌یف‌های ۱/۲/۳ دقیقاً معنای قبلی خود را دارند.
+    /// </summary>
+    public const int ProcessingScheduleFormatVersion = 4;
+
+    /// <summary>آیا این نسخهٔ قالب شاهد قابل پذیرش است (فقط ۱، ۲، ۳ و ۴).</summary>
     /// <param name="formatVersion">نسخهٔ قالب.</param>
     public static bool IsSupportedFormat(int formatVersion)
-        => formatVersion is SupportedFormatVersion or SlotDurationFormatVersion or CarrierScheduleFormatVersion;
+        => formatVersion is SupportedFormatVersion
+            or SlotDurationFormatVersion
+            or CarrierScheduleFormatVersion
+            or ProcessingScheduleFormatVersion;
 
     /// <summary>حداکثر طول کد ارز.</summary>
     public const int MaxCurrencyLength = 3;

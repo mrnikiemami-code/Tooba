@@ -64,3 +64,13 @@
 No frontend source changed in the R1 round; the FE timing tabs and `preparationMode` contract shipped with
 the earlier 264 round and its suites (`authoring-timing-264`, `authoring-timing-tabs-256-r1`,
 `authoring-lifecycle-202-r1`, `shipping-groups-204`) are part of the same working tree.
+
+---
+
+## APPENDED AUDIT NOTE (2026-11-13, TB-264-R2)
+
+The `PUT`/publication receipts above were executed against `01a17d0d-e033-7000-af43-49a1daa28822`, which is the
+**user's** review draft, not a task fixture. They are kept verbatim as history but must not be read as authorised
+fixture writes. Mutations (from these receipts + a read-only DB check): revisions `3 → 4 → 5 → 6` and publication
+selections `3 → 4 → 5`; settings after the restore `240 / 60 / WorkingWeek`; the state before R1 is unknown.
+No rollback, no republication, no deletion was performed, and TB-264-R2 did not write this draft at all.

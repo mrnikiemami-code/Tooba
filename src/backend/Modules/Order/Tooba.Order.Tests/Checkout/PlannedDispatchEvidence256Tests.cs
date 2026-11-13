@@ -15,12 +15,16 @@ public sealed class PlannedDispatchEvidence256Tests
     private static readonly Guid Snapshot = Guid.Parse("01a17d0e-0419-7000-b575-f507d2f89abc");
 
     [Fact]
-    public void Format_versions_one_two_and_three_are_readable_and_four_is_refused()
+    public void Format_versions_one_to_four_are_readable_and_anything_else_is_refused()
     {
         Assert.True(ShippingGroupAcceptedEvidence.IsSupportedFormat(1));
         Assert.True(ShippingGroupAcceptedEvidence.IsSupportedFormat(2));
         Assert.True(ShippingGroupAcceptedEvidence.IsSupportedFormat(ShippingGroupAcceptedEvidence.CarrierScheduleFormatVersion));
-        Assert.False(ShippingGroupAcceptedEvidence.IsSupportedFormat(4));
+        // TB-264-R2: the canonical capture writer emits 4 for a method with an explicit processing week, so
+        // a real customer selection must be acceptable. Unknown/absent versions are still refused.
+        Assert.True(ShippingGroupAcceptedEvidence.IsSupportedFormat(
+            ShippingGroupAcceptedEvidence.ProcessingScheduleFormatVersion));
+        Assert.False(ShippingGroupAcceptedEvidence.IsSupportedFormat(5));
         Assert.False(ShippingGroupAcceptedEvidence.IsSupportedFormat(0));
 
         // Legacy versions remain acceptable and carry no dispatch plan (never backfilled with a guess).

@@ -1,4 +1,18 @@
-# CURRENT — ONLY 264-R2 DELIVERY CLOSURE ISSUED; 265 NOT ISSUED — 2026-11-12
+# CURRENT — 264-R2 DELIVERED (pending Architect review); 265 NOT ISSUED — 2026-11-13
+
+264-R2 closed the delivery gap: changed FE rebuilt/served (`BUILD_ID ILzh0yMqPr3RDrjGp3wYE`, PID 48780 on 3000),
+real authoring Save→reload→Publish on the operator form (revision 8 / selection 5 / snapshot `01a1d50f-…`), a
+positive storefront calendar from that same capture, the public selection writer saving durable policy-3
+deadlines, a real public-commit checkout `01a1d511-adbb-7000-8575-d3b957453d76`, and the existing admin queue
+answering exactly those instants. Evidence under
+docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/.
+NOT Architect ACCEPT, NOT user acceptance, NOT a paid checkout. The USER review draft `01a17d0d-…` was read-only
+this round (R1 mutations disclosed in an appended audit note, no rollback). `265` remains **NOT ISSUED**.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+---
+
+# SUPERSEDED — 264-R2 ISSUED, delivery closure only — 2026-11-12
 
 Read264-R1/ARCHITECT-REVIEW.md under docs/architecture/evidence and docs/ai/tasks/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/TASK.md.
 Retain264-R1 source corrections (zero/window/explicit processing policy). User handoff incomplete: changed FE not rebuilt/served; positive storefront selection->accepted evidence->queue not proven. Only narrow delivery closure, no scheduler rewrite/broad green loop.

@@ -1,0 +1,84 @@
+TB-264-R2 result contract
+=========================
+
+task            TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2
+bridgeTaskId    56f72e02-a654-4b1a-a670-a012b5485f98
+channel         tooba-main
+status          PASS within the issued delivery-closure scope
+                (NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT paid checkout, NOT all-complete)
+decision        DELIVERED_CHANGED_FRONTEND_WITH_REAL_AUTHORING_SAVE_RELOAD_PUBLISH_AND_ONE_POSITIVE_STOREFRONT_SELECTION_TO_ACCEPTED_POLICY3_TO_QUEUE_CHAIN
+stopState       STOP_FOR_ARCHITECT
+automaticNextImplementationTask  NONE
+
+base            c9d87308b8c5e3ec7347a984a42ce5b0a44c40fa
+code/evidence   see git log for this task's commits (result contract itself is the last commit)
+worktreeBase    main; no force/reset/amend/stash/rebase
+
+retained R1 corrections (unchanged this round)
+  A  non-decreasing PreparationStartUtc <= TransferDepartureUtc <= HandoffDeadlineUtc, explicit zero allowances
+  B  ShippingReceivingCommitment(date, opens, closes, zone) constrains the backward plan, WindowAwarePolicyVersion 3
+  C  explicit warehouse processing week (WorkingWeek vs deliberate Continuous), format 4, no silent "ready now"
+  D  CaptureGraphQuery loads ProcessingSchedule so capture persists the week
+
+delivered this round
+  FE   rebuilt from changed sources, BUILD_ID ILzh0yMqPr3RDrjGp3wYE, canonical Next on 3000 restarted
+       (PID 17440 -> 48780), /fa 200, served chunk 6899-61d97f4a6a9808f2.js carries «زمان آماده‌سازی» and the
+       WorkingWeek/Continuous control, served chunk 6138-ded12a4885f63d10.js carries processingSchedule
+  FE   one copy addition: storefront.captured_group.processing_schedule_missing / _invalid now named in Persian
+
+positive chain (canonical tooba_alpha, Host 5088, Next 3000)
+  authoring  draft 01a1cd43-b98d-7000-b2a9-a35ab39d8058
+             real form Save: handoff 75->80, Thursday processing close 18:00->17:30
+             PUT editor-document 200 -> revision 8; reload shows 80 and ۰۹:۰۰ تا ۱۷:۳۰
+             real Publish + confirm -> selectionVersion 5, snapshot 01a1d50f-5275-7000-b050-dda3aedd1838,
+             sourceRevision 8, format 4, selectedMatchesCurrentDraftRevision true
+  projection cart 01a1d511-4c3f-7000-8d46-78a053510edb -> 7 dates 2026-11-16..22, hourly slots,
+             confirmation snapshot == published snapshot
+  selection  PUT /v1/storefront/shipping/selection 200, selectionRevision 1,
+             group 01a1d511-7412-7000-a5a7-2d42aef7c393, 2026-11-16 09:00-10:00
+  commit     POST /v1/storefront/shipping/commit 200 -> checkout 01a1d511-adbb-7000-8575-d3b957453d76,
+             sellerOrder 01a1d511-adce-7000-8819-0185f673c4bf, TB-20261113132108-01-320e47
+  durable    policy 3, prep 2026-11-14T09:30Z, transfer 2026-11-14T15:10Z, handoff 2026-11-14T16:30Z,
+             prepMin 300, handMin 80, receiving 2026-11-16, zone Asia/Tehran
+  queue      POST /v1/admin/fulfillments/work-queue/query -> key group:01a1d511-7412-7000-a5a7-2d42aef7c393,
+             bucket Upcoming, policyV 3, same three instants, carrier 2026-11-14 08:00–20:00 Asia/Tehran,
+             customer 2026-11-16 09:00-10:00, preparationState Upcoming, next mark_processing
+  locator    /fa/admin/orders/01a1d511-adbb-7000-8575-d3b957453d76/operations
+             ?fulfillmentId=9fe40e71-23cb-4014-8a35-e4c3231c9dab
+             &shippingGroupId=01a1d511-7412-7000-a5a7-2d42aef7c393&from=queue
+
+fixtures (task-labelled; user review draft NOT touched)
+  draft            01a1cd43-b98d-7000-b2a9-a35ab39d8058   (tipax/express, Store-owned)
+  earlier draft run revision 7 / selection 4 snapshot 01a1cdb9-362b-7000-accb-e513873c093f (this round, history kept)
+  customers        09992642003 (registered this round) and 09992642001
+  carts            01a1d511-4c3f-7000-8d46-78a053510edb, 01a1d510-0738-7000-83f9-69b61f54eff8
+  checkouts        01a1d511-adbb-7000-8575-d3b957453d76, 01a1cdba-7d2d-7000-a800-4b6d216eb0e3
+  fulfillment      created through production FulfillmentUnit.CreateFromPaidOrder for the same seller order/group
+  user draft       01a17d0d-e033-7000-af43-49a1daa28822 read-only this round (revision 6, 240/60 WorkingWeek)
+
+disclosed boundary
+  no live paid checkout (no payment provider call); the accepted plan is authoritative Order data from the
+  public path, and the only fixture layer is the Fulfillment unit built through the owning production factory
+
+checks (each once)
+  AdminPreparationConnected264R2Tests on real tooba_alpha   2/2 passed
+  FE authoring-timing-264 + authoring-general-ui +
+     storefront-shipping-unavailable-methods                22/22 passed
+  tsc --noEmit                                              0
+  npm run build                                             0
+  /health 200, /health/ready 200 (SingleStore)
+
+reported, not fixed
+  storefront-shipping-group-schedule.test.ts stale regex against unmodified storefront-shipping.tsx
+  legacy SalesChannel='Web' admin order detail 500
+
+environment
+  ONE DB tooba_alpha 5432 SingleStore store-alpha; Next 3000 / Host 5088; no disposable/test/Docker DB,
+  no 15433, no edition/connection/port change; no migration added/applied this round; no manual DDL/business
+  SQL/reset/reseed/backfill/global reclaimer; user rows read-only; keys + CapturedPreview preserved
+  (local ON 7 dates / checked-in OFF); 255 parked; live Tipax deferred; 265 NOT ISSUED
+
+known limits
+  Fulfillment unit is a disclosed production-factory fixture (no paid order)
+  authoring proof is DOM/network evidence, not a screenshot deliverable
+  preparation week is a warehouse processing window, not a carrier booking

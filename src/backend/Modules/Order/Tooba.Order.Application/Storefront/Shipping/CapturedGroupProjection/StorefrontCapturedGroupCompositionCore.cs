@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Order.Application.Checkout.Contracts;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
+using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Contracts.Scheduling;
 
@@ -284,6 +285,18 @@ public sealed class StorefrontCapturedGroupCompositionCore(
         var preparationMinutes = quote.Settings?.PreparationMinutes;
         var handoffMinutes = quote.Settings?.HandoffMinutes;
 
+        // TB-264-R2: the customer calendar consumes the SAME processing semantics the capture recorded.
+        // Omitting the captured processing week made every WorkingWeek method answer «timing policy
+        // unconfigured» on the storefront (mapped to a misleading carrier-schedule reason) even though the
+        // operator had saved and published a real warehouse week. The authority remains the single
+        // decider; this only supplies the stored evidence to it, exactly like the selection writer does.
+        var processingMode = quote.Settings?.ProcessingMode
+                             ?? ShippingAuthoringPreparationProcessingMode.Unspecified;
+        var processingWeek = processingMode == ShippingAuthoringPreparationProcessingMode.WorkingWeek
+            && quote.ProcessingWeek is { } storedProcessingWeek
+                ? StorefrontShippingSchedulingMapping.ToSchedulingWeek(storedProcessingWeek)
+                : null;
+
         var plan = ShippingDispatchSchedulingAuthority.BuildReceivingCalendar(
             nowUtc,
             StorefrontShippingSchedulingMapping.ToSchedulingWeek(carrierWeek),
@@ -292,7 +305,9 @@ public sealed class StorefrontCapturedGroupCompositionCore(
             candidate.AvailableDateCount,
             quote.ReceivingWeek!.SlotDurationMinutes,
             preparationMinutes,
-            handoffMinutes);
+            handoffMinutes,
+            processingWeek,
+            processingContinuous: processingMode == ShippingAuthoringPreparationProcessingMode.Continuous);
 
         if (!plan.IsSuccess)
         {
@@ -336,6 +351,18 @@ public sealed class StorefrontCapturedGroupCompositionCore(
             => StorefrontCapturedGroupProjectionReasons.MaximumDeliveryDaysInvalid,
         ShippingDispatchSchedulingReasons.HorizonInvalid
             => StorefrontCapturedGroupProjectionReasons.AvailableDateCountInvalid,
+        // TB-264-R2: preparation/processing evidence is NOT the carrier's calendar. A method whose
+        // timing policy is absent or unusable must say so, never blame the carrier acceptance week.
+        ShippingDispatchSchedulingReasons.TimingPolicyUnconfigured
+            or ShippingDispatchSchedulingReasons.TimingPolicyIncomplete
+            => StorefrontCapturedGroupProjectionReasons.ProcessingScheduleMissing,
+        ShippingDispatchSchedulingReasons.ProcessingWeekInvalid
+            or ShippingDispatchSchedulingReasons.NoProcessingWorkingDay
+            or ShippingDispatchSchedulingReasons.ProcessingTimeZoneUnresolvable
+            or ShippingDispatchSchedulingReasons.PreparationMinutesInvalid
+            or ShippingDispatchSchedulingReasons.HandoffMinutesInvalid
+            or ShippingDispatchSchedulingReasons.PreparationSearchExhausted
+            => StorefrontCapturedGroupProjectionReasons.ProcessingScheduleInvalid,
         // Every remaining failure belongs to the carrier acceptance calendar itself (invalid/duplicate
         // week, unresolvable zone, no working day, unusable slot or no feasible handoff).
         _ => StorefrontCapturedGroupProjectionReasons.CarrierScheduleInvalid,

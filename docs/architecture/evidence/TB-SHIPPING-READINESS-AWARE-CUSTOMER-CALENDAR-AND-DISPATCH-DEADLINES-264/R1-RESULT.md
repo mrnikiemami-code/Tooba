@@ -93,3 +93,36 @@ snapshots `01a1cd1e-…` / `01a1cd2d-7601-…` / `01a1cd2d-dc41-…`.
 * `259`–`263` behaviour is untouched; `265` (courier-origin return ↔ Returns linkage) remains **NOT ISSUED**.
 * The preparation week is a warehouse processing window, not a claim about carrier booking; no slot is
   reserved anywhere.
+
+---
+
+## APPENDED AUDIT NOTE (2026-11-13, TB-264-R2) — two statements above are wrong
+
+This note corrects the record. The raw text above is left as written; nothing was rolled back or republished.
+
+**(1) `01a17d0d-e033-7000-af43-49a1daa28822` is the USER's review draft, not a task fixture.** Calling it a
+task-labelled fixture was wrong, and R1 wrote it without authority. Exact mutations, read from the canonical DB
+now (read-only) plus the R1 receipts:
+
+| Item | Value |
+|---|---|
+| Draft | `01a17d0d-e033-7000-af43-49a1daa28822` (`post/standard`) |
+| Revision before R1 | `3` (snapshot `01a1ca36-1bdd-7000-ad3b-23b4d4f3c7ce`, format 3, 2026-11-11 10:45:06Z) — created before R1 |
+| R1 wrote | `PUT editor-document` → revision 4 (snapshot `01a1cd1e-2251-7000-982d-567c6f3af9bf`, format 3, 2026-11-12 00:17:46Z), then value 300 → revision 5 (snapshot `01a1cd2d-7601-7000-a896-156f68e0a8d5`, format 4, 00:34:31Z), then restore → revision 6 (snapshot `01a1cd2d-dc41-7000-abf0-322ca18255c4`, format 4, 00:34:57Z) |
+| R1 published | selection versions 3 → 4 → 5 on that draft (per R1 receipts); publication selections before 3 are **unknown** — they were not recorded |
+| Current state (2026-11-13, read-only) | revision `6`, settings `preparationMinutes 240 / handoffMinutes 60 / preparationMode WorkingWeek`, 6 snapshots (rev 2…6), newest `01a1cd2d-dc41-…` |
+| Values before R1 | **unknown** — no pre-write snapshot of the user's settings/week was taken |
+
+Nothing was deleted, backfilled or "restored" to an earlier snapshot: the user's publication history is intact and
+this task does not claim the draft was untouched. The user may have edited it afterwards; this task only read it.
+
+**(2) The frontend was NOT unchanged in R1.** `424ea723` contains new authoring processing-mode/week/editor and
+session sources, so the "FE unchanged" line above is unsupported. The runtime really was still serving the old
+`BUILD_ID Hou23ETYm3l_DFIPdinpW`, which is a **delivery gap**, not evidence that the UI lacked the controls.
+That gap is closed in TB-264-R2: the changed FE was rebuilt and the canonical Next process restarted onto it
+(`BUILD_ID ILzh0yMqPr3RDrjGp3wYE`), and the real form Save → reload → publish path was exercised on it.
+
+**(3) The missing positive chain is also closed.** A genuinely separate task-labelled method/capture/offer/cart
+produced a positive storefront calendar, the public selection writer saved it, the public commit boundary produced
+a real Order checkout with durable policy-3 deadlines, and the existing admin queue answers exactly those
+instants. See `../TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/`.

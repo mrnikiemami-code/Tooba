@@ -216,6 +216,18 @@ public static class StorefrontCapturedGroupProjectionReasons
     /// <summary>تعداد تاریخ‌های درخواستی خارج از محدودهٔ صریح تقویم است.</summary>
     public const string AvailableDateCountInvalid = "storefront.captured_group.available_date_count_invalid";
 
+    /// <summary>
+    /// TB-264-R2: این روش سیاست زمانی فیزیکی دارد اما شاهد هفتهٔ کاری پردازش ذخیره نشده است؛ تعهد
+    /// جدید ساخته نمی‌شود. این کد هرگز به تقویم پذیرش حامل نسبت داده نمی‌شود.
+    /// </summary>
+    public const string ProcessingScheduleMissing = "storefront.captured_group.processing_schedule_missing";
+
+    /// <summary>
+    /// TB-264-R2: هفتهٔ کاری پردازش ذخیره شده اما معتبر/قابل استفاده نیست (روز یا منطقهٔ زمانی نامعتبر،
+    /// هیچ روز کاری، یا مدت آماده‌سازی خارج از کران). هیچ تاریخ تحویلی حدس زده نمی‌شود.
+    /// </summary>
+    public const string ProcessingScheduleInvalid = "storefront.captured_group.processing_schedule_invalid";
+
     /// <summary>هیچ روز کاری در هفته نیست؛ تاریخ قابل ارائه وجود ندارد.</summary>
     public const string NoWorkingDays = "storefront.captured_group.no_working_days";
 }

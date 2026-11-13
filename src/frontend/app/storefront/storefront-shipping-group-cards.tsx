@@ -261,6 +261,14 @@ const CAPTURED_REASON_TEXT: Record<string, string> = {
   // feasible handoff inside the horizon). Still one actionable blocker for the merchant, never a guessed date.
   "storefront.captured_group.carrier_schedule_invalid":
     "برنامهٔ «پذیرش حامل» این روش ارسال معتبر نیست؛ تا اصلاح آن در تنظیمات ارسال، زمان تحویل قابل انتخاب نیست.",
+  // TB-264-R2: a method with a physical timing policy but no stored warehouse processing week is a
+  // preparation blocker — it is never reported as a carrier-calendar problem and never becomes «ready now».
+  "storefront.captured_group.processing_schedule_missing":
+    "زمان آماده‌سازی این روش ارسال بدون «ساعات کاری پردازش» ذخیره شده است؛ تا تکمیل آن در تنظیمات ارسال، زمان تحویل قابل انتخاب نیست.",
+  // TB-264-R2: the stored processing week itself is unusable (invalid day/zone, no working day, out-of-range
+  // preparation). One actionable blocker; the storefront still invents no delivery date.
+  "storefront.captured_group.processing_schedule_invalid":
+    "«ساعات کاری پردازش» این روش ارسال معتبر نیست؛ تا اصلاح آن در تنظیمات ارسال، زمان تحویل قابل انتخاب نیست.",
 };
 
 function capturedReasonText(code: string | null): string {
