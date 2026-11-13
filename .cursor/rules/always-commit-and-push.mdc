@@ -13,3 +13,13 @@ Applies to every code or evidence change made in this repository.
    in the report. Never claim a push that did not happen.
 5. Push parity is part of the result: a report that says the work landed must also say whether `origin/main` was
    updated, or why it could not be.
+
+## Network note (this machine, verified 2026-11-13)
+
+Direct GitHub access is blocked here (github.com:443 / :22 / ssh.github.com:443 all closed). A local proxy listens
+on `127.0.0.1:10808` (HTTP + SOCKS5) and does reach GitHub. This repo therefore carries a scoped setting:
+
+    git config --local "http.https://github.com.proxy" "socks5h://127.0.0.1:10808"
+
+Use that scoped form (never a global proxy) so other hosts and repos stay direct. If a push still fails, test with
+`curl.exe -x socks5h://127.0.0.1:10808 https://github.com` before touching any git state.
