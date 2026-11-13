@@ -1,4 +1,51 @@
-# CURRENT — 264/R1/R2 ACCEPTED WITHIN SCOPE; MOBILE OPEN; 265 NOT ISSUED — 2026-11-13
+# CURRENT ARCHITECT RECOVERY — MOBILE ONLY 264-R3 ACTIVE; THEN265 — 2026-11-13
+
+## Read first; exact current state
+ONLY issued implementation task: docs/ai/tasks/TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3/TASK.md.
+One worker/task, result then Architect review. Do not run265 in parallel. No scheduler repair or broad repeated tests.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| Calendar256/save256-R2 | closed within scope | customer/carrier weeks distinct; max transport, cutoff, own save capability |
+| Tracking/quantity257 | closed within scope | server unique tracking, packed minus shipped minus open allocation |
+| Non-delivery/return/resend258-R3 | accepted internal-operator scope | receipt condition/source-safe resend; retained exact occurrence |
+| Common/separate packing259 | accepted within scope | deliberate immutable packing mode; parent package exception flow still unsupported |
+| Queue260-R1 | accepted within scope | exact physical Group/Parcel/Package identities and own-group plan/locator |
+| Feedback/damage261–263 | accepted within scope | existing Toast/MessageBox; Persian states; healthy-stock replacement and retained pending decision; referral is NOT Returns |
+| Scheduling264/R1/R2 | ACCEPTED within scope | source fixes + real authoring Save/reload/Publish + public positive projection/selection/commit + stored policy3->queue |
+| Mobile264-R3 | ISSUED, not yet implemented/accepted | screenshot title squeezed vertically by back/title/actions flex row; existing authoring UI responsive correction ONLY |
+| Returns265 | PLANNED, NOT ISSUED | next after mobile result; owning integration design below |
+
+264 evidence/review: docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/ARCHITECT-REVIEW.md.473cc23c62b29ebb67202ad2ecd8486c4d1594ae now PUSHED; transport issue CLOSED. Later always-commit-and-push rule retained. Worker Windows runs are evidence, not Architect independent runtime execution; user functional acceptance pending.
+264 fixture checkout01a1d511-adbb-7000-8575-d3b957453d76 is PendingPayment. Factory Fulfillment fixture is disclosed; don't claim real paid/provider test. Source policy3 preserves customer window and preparation week. No reopening or new task merely to rerun green cases.
+
+## Active mobile delivery
+Task-owned authoring review01a1cd43-b98d-7000-b2a9-a35ab39d8058. Repair readable title/status/name and action rows at360/390, retain desktop compactness, verify real shell content width, no document overflow, >=44px primary actions. Check actual customer/carrier/processing tabs/day fields/dialogs. FE-only/typecheck/build/serve; no backend/data mutation. One result then review/user visual checkpoint.
+
+## Next265 — prior inspection findings, not implemented
+Source independently read at18c291d7:
+- ReturnEligibilityEvaluator requires IsPaid and LastDeliveredAt and uses delivered quantities/customer return-window snapshot. Existing path therefore does NOT admit never-delivered courier-origin receipt; do not fake Delivered or disable the global customer eligibility rule.
+- ReturnDirectory.ApproveAsync starts refund via existing Payment/Wallet paths. ExecuteRefundAsync then calls RestockConsumedReservationAsync for each reservation-bearing item on success.
+- ReturnItemSnapshot has quantity/reservation but no physical condition/source receipt. ReturnInventoryGateway delegates to Inventory.RestockFromReturnAsync, no condition parameter. Blind reuse could turn damaged goods into saleable stock.
+- ReturnAdminOperations existing creation/approval/refund/history is the owning workflow. Need narrow typed courier-origin reason/source linkage via Contracts and quantity authority, not a parallel refund service.
+When issuing265, inspect remaining Order/Fulfillment/Inventory ownership and exact approval/cancellation seams FIRST; this is not a worker discovery-only task. Design complete connected path and user trial.
+
+## Three business paths and reservation rule (latest user decision)
+1 Healthy SAME returned units -> resend using source Usable capacity; no fresh sale reservation.
+2 New healthy-stock replacement -> own purpose-bound reservation + immediate source/resolution link, no damaged-as-usable conversion.
+3 Create linked Returns case -> existing Returns approval/refund/disposition workflow, own receipt reused (no second physical receipt). Opening case alone never releases stock.
+Source quantity may fund only ONE active branch. Requested case must claim/block competing send quantity durably; rejection/cancel releases only that claim if owning policy permits, not a stock release. Approval with owning cancellation of corresponding order-line obligation releases ONLY relevant unconsumed held reservation once; consumed original sale stock is not "released". Don't bypass whole-order already-dispatched cancellation rule; explicit line-obligation integration needed. Already-dispatched replacement cannot be treated as held unused stock; return/recall policy required.
+Financial amounts/destination/customer identity belong to existing Returns/Order/Payment/Wallet snapshots (never operator-as-refund-beneficiary); do not auto-refund on button Create. Approval/refund retries/lost responses need durable identity/reconciliation, no double refund or two branches. Failed refund remains approved obligation, not permission to resend. Healthy restock vs damaged disposition explicit; never saleable restock of damaged units or double count receipt/reservation.
+No financial integration is claimed today. Parent-package returns/damage remain deferred, no silent child unlock.265 not issued yet.
+
+## Audit/environment/stop
+R1 incorrectly wrote USER draft01a17d0d-e033-7000-af43-49a1daa28822 and labelled it fixture; audit corrected in264/R1-RESULT and RECEIPTS. Do NOT write/restore/re-publish it. It remains user's service, not task data. Mobile read-only proof uses separate labelled draft; future fixtures must be genuinely independent.
+One canonical tooba_alpha5432, FE3000 Host5088 SingleStore/store-alpha. No new DB/disposable/Docker/15433/edition switch/reset/reseed/raw business SQL/global reclaimer. Preserve DataProtection/CapturedPreview localON7dates checked-inOFF.255 parked/Tipax deferred. No provider/money/user-data mutation authorized by mobile task.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. All earlier CURRENT blocks below are superseded historical records; this block governs current order/scope.
+
+---
+
+# SUPERSEDED — prior checkpoint
 
 Read264-R2/ARCHITECT-REVIEW.md under docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/.
 Commit473cc23c62b29ebb67202ad2ecd8486c4d1594ae is pushed/retrievable; former transport blocker CLOSED. Source/evidence review accepts bounded timing and connected delivery corrections; user visual/functional acceptance pending. No scheduler repair/test loop needed.
