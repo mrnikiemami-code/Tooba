@@ -1,8 +1,9 @@
-# CURRENT ARCHITECT RECOVERY — MOBILE ONLY 264-R3 ACTIVE; THEN265 — 2026-11-13
+# CURRENT — 264-R3 WORKER RESULT PASS: mobile authoring header readable, timing form usable — 2026-11-13
 
 ## Read first; exact current state
-ONLY issued implementation task: docs/ai/tasks/TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3/TASK.md.
-One worker/task, result then Architect review. Do not run265 in parallel. No scheduler repair or broad repeated tests.
+Read docs/ai/tasks/TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt}.
+Status **PASS** within the issued responsive-presentation scope, decision **MOBILE_IDENTITY_ROW_WITH_UNCLIPPED_TITLE_AND_OWN_BOUNDED_METHOD_ROW_UNCHANGED_DESKTOP_HEADER_ONE_SAVE_OWNER_ZERO_DOCUMENT_OVERFLOW**, NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT. 264/R1/R2 scheduling/connected delivery stays ACCEPTED and was not reopened. 265 remains PLANNED, NOT ISSUED.
 
 | Area | State | What this means |
 | --- | --- | --- |
@@ -13,14 +14,18 @@ One worker/task, result then Architect review. Do not run265 in parallel. No sch
 | Queue260-R1 | accepted within scope | exact physical Group/Parcel/Package identities and own-group plan/locator |
 | Feedback/damage261–263 | accepted within scope | existing Toast/MessageBox; Persian states; healthy-stock replacement and retained pending decision; referral is NOT Returns |
 | Scheduling264/R1/R2 | ACCEPTED within scope | source fixes + real authoring Save/reload/Publish + public positive projection/selection/commit + stored policy3->queue |
-| Mobile264-R3 | ISSUED, not yet implemented/accepted | screenshot title squeezed vertically by back/title/actions flex row; existing authoring UI responsive correction ONLY |
+| Mobile264-R3 | PASS pending Architect/user visual review | identity block owns a full mobile row, title 1 line, method in its own bounded row, header static below lg; desktop compact row and one Save owner unchanged |
 | Returns265 | PLANNED, NOT ISSUED | next after mobile result; owning integration design below |
 
 264 evidence/review: docs/architecture/evidence/TB-SHIPPING-READINESS-AWARE-CUSTOMER-CALENDAR-AND-DISPATCH-DEADLINES-264-R2/ARCHITECT-REVIEW.md.473cc23c62b29ebb67202ad2ecd8486c4d1594ae now PUSHED; transport issue CLOSED. Later always-commit-and-push rule retained. Worker Windows runs are evidence, not Architect independent runtime execution; user functional acceptance pending.
 264 fixture checkout01a1d511-adbb-7000-8575-d3b957453d76 is PendingPayment. Factory Fulfillment fixture is disclosed; don't claim real paid/provider test. Source policy3 preserves customer window and preparation week. No reopening or new task merely to rerun green cases.
 
-## Active mobile delivery
-Task-owned authoring review01a1cd43-b98d-7000-b2a9-a35ab39d8058. Repair readable title/status/name and action rows at360/390, retain desktop compactness, verify real shell content width, no document overflow, >=44px primary actions. Check actual customer/carrier/processing tabs/day fields/dialogs. FE-only/typecheck/build/serve; no backend/data mutation. One result then review/user visual checkpoint.
+## Delivered mobile correction (264-R3) — pending review
+Measured root cause on the served page: one `flex-wrap` row held back182px + toolbar178px beside a `min-w-0 flex-1` identity block, and the real authoring content is only281px wide at360 (311px at390), so the block collapsed to65/95px → title65/95px in3/2 vertical word lines, method clipped, header222/198px sticky. Now the identity block is `w-full min-w-0 grow md:w-auto` (own row below md), the title is `min-w-0 shrink-0 leading-6`, the method name is `w-full min-w-0 truncate md:w-auto` + title attribute (own bounded row below md), and the header is `lg:sticky` only. ONE Save owner/callback/dirty/disabled, tab strip, day+minute editors, single Toast, MessageBox for blocking decisions unchanged.
+Measured read-only on the served build at360/390/1440: title151px/1line at both mobile widths, identity255/285px, method unclipped255/285px, header194px static on mobile and62px sticky at1440, 0 document overflow, 0 off-screen controls, 0 buttons/links under44px, all seven day rows in the week/carrier/processing editors intact with 0 overflow, 0 text inputs under90px and none under28px. Task-owned draft01a1cd43… read only (tab switches only, no save/publish/discard/data write); user service01a17d0d… untouched. FE-only: typecheck0, build0, BUILD_ID `Ex36QU4MPjSKfm8VUlqDC` chunk `6138-3bc417f144f96c81.js`, Next PID37012 on3000, Host5088 untouched.
+Reported not fixed: `tailwind.config.ts` content globs are `./app`, `./design-system`, `./lib` only — a class used solely inside `features/**` is never emitted, so feature-level responsive utilities must be re-verified in the DOM.
+
+Base `c60458a95`; code `b7cd52819`; evidence/merge SHA in result-contract.txt; single worker, one task, no delegation, no historical agent resumed. One DB tooba_alpha5432 SingleStore store-alpha; Next3000 (PID37012) / Host5088; no migration, schema, backend, API or locale change; no save/publish/discard/data mutation; user draft01a17d0d read-only; keys+CapturedPreview preserved; 255 parked, Tipax deferred. 264 scheduling stays ACCEPTED; this mobile correction needs Architect review and the user's own visual check. STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
 
 ## Next265 — prior inspection findings, not implemented
 Source independently read at18c291d7:

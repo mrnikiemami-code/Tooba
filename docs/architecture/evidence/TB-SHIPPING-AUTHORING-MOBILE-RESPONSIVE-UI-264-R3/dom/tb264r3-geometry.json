@@ -1,0 +1,727 @@
+{
+  "generatedAt": "2026-11-13T15:16:46.967Z",
+  "url": "http://127.0.0.1:3000/fa/admin/shipping-services/authoring/01a1cd43-b98d-7000-b2a9-a35ab39d8058",
+  "widths": [
+    {
+      "width": 360,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/shipping-services/authoring/01a1cd43-b98d-7000-b2a9-a35ab39d8058",
+        "title_text": "ویرایش روش ارسال",
+        "dir": "rtl",
+        "viewport": {
+          "innerWidth": 360,
+          "clientWidth": 345
+        },
+        "shell": {
+          "screen": {
+            "x": 32,
+            "y": 97,
+            "w": 281,
+            "h": 1966,
+            "top": 97,
+            "bottom": 2063,
+            "left": 32,
+            "right": 313
+          },
+          "screenScrollWidth": 281
+        },
+        "header": {
+          "rect": {
+            "x": 32,
+            "y": 97,
+            "w": 281,
+            "h": 194,
+            "top": 97,
+            "bottom": 291,
+            "left": 32,
+            "right": 313
+          },
+          "position": "static"
+        },
+        "identity": {
+          "x": 45,
+          "y": 158,
+          "w": 255,
+          "h": 72,
+          "top": 158,
+          "bottom": 230,
+          "left": 45,
+          "right": 300
+        },
+        "title": {
+          "rect": {
+            "x": 149,
+            "y": 168,
+            "w": 151,
+            "h": 24,
+            "top": 168,
+            "bottom": 192,
+            "left": 149,
+            "right": 300
+          },
+          "lines": 1,
+          "lineHeight": 24,
+          "scrollWidth": 151,
+          "clientWidth": 151
+        },
+        "badge": {
+          "text": "منتشرشده",
+          "rect": {
+            "x": 61,
+            "y": 158,
+            "w": 80,
+            "h": 44,
+            "top": 158,
+            "bottom": 202,
+            "left": 61,
+            "right": 141
+          }
+        },
+        "method": {
+          "text": "TB264R2 تیپاکس اکسپرس آزمایشی",
+          "rect": {
+            "x": 45,
+            "y": 210,
+            "w": 255,
+            "h": 20,
+            "top": 210,
+            "bottom": 230,
+            "left": 45,
+            "right": 300
+          },
+          "clipped": false,
+          "hasTitleAttr": true
+        },
+        "toolbar": {
+          "rect": {
+            "x": 122,
+            "y": 238,
+            "w": 178,
+            "h": 44,
+            "top": 238,
+            "bottom": 282,
+            "left": 122,
+            "right": 300
+          },
+          "children": [
+            {
+              "t": "ویرایش",
+              "r": {
+                "x": 232,
+                "y": 238,
+                "w": 68,
+                "h": 44,
+                "top": 238,
+                "bottom": 282,
+                "left": 232,
+                "right": 300
+              }
+            },
+            {
+              "t": "ذخیره تغییرات",
+              "r": {
+                "x": 122,
+                "y": 238,
+                "w": 102,
+                "h": 44,
+                "top": 238,
+                "bottom": 282,
+                "left": 122,
+                "right": 224
+              }
+            }
+          ],
+          "collidesWithHeader": false
+        },
+        "headerButtons": [
+          {
+            "t": "بازگشت به فهرست روش‌ها",
+            "h": 44,
+            "w": 182
+          },
+          {
+            "t": "ویرایش",
+            "h": 44,
+            "w": 68
+          },
+          {
+            "t": "ذخیره تغییرات",
+            "h": 44,
+            "w": 102
+          }
+        ],
+        "headerBtnMinHeight": 44,
+        "doc": {
+          "scrollWidth": 345,
+          "clientWidth": 345,
+          "overflow": 0,
+          "bodyScrollWidth": 345
+        },
+        "clickable": {
+          "count": 27,
+          "below44": 9,
+          "offscreen": 0
+        },
+        "inputs": {
+          "count": 11,
+          "minWidth": 16,
+          "narrow": 7,
+          "shortH": 7
+        },
+        "tabs": {
+          "count": 2,
+          "active": "اطلاعات روش",
+          "heights": [
+            44,
+            44
+          ]
+        },
+        "timingTabs": {
+          "count": 3,
+          "labels": [
+            "تحویل به مشتری",
+            "پذیرش حامل",
+            "آماده‌سازی انبار"
+          ]
+        },
+        "dayRows": {
+          "count": 7,
+          "overflow": [],
+          "clippedH": [],
+          "first": [
+            {
+              "id": "shipping-authoring-week-day-6",
+              "w": 253,
+              "h": 32,
+              "right": 299
+            },
+            {
+              "id": "shipping-authoring-week-day-7",
+              "w": 253,
+              "h": 33,
+              "right": 299
+            },
+            {
+              "id": "shipping-authoring-week-day-1",
+              "w": 253,
+              "h": 33,
+              "right": 299
+            },
+            {
+              "id": "shipping-authoring-week-day-2",
+              "w": 253,
+              "h": 33,
+              "right": 299
+            },
+            {
+              "id": "shipping-authoring-week-day-3",
+              "w": 253,
+              "h": 33,
+              "right": 299
+            },
+            {
+              "id": "shipping-authoring-week-day-4",
+              "w": 253,
+              "h": 33,
+              "right": 299
+            },
+            {
+              "id": "shipping-authoring-week-day-5",
+              "w": 253,
+              "h": 33,
+              "right": 299
+            }
+          ]
+        },
+        "labels": {
+          "count": 12,
+          "bound": 5
+        },
+        "unsavedHint": null,
+        "applyDisabled": true,
+        "editVisible": true
+      }
+    },
+    {
+      "width": 390,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/shipping-services/authoring/01a1cd43-b98d-7000-b2a9-a35ab39d8058",
+        "title_text": "ویرایش روش ارسال",
+        "dir": "rtl",
+        "viewport": {
+          "innerWidth": 390,
+          "clientWidth": 375
+        },
+        "shell": {
+          "screen": {
+            "x": 32,
+            "y": 97,
+            "w": 311,
+            "h": 1934,
+            "top": 97,
+            "bottom": 2031,
+            "left": 32,
+            "right": 343
+          },
+          "screenScrollWidth": 311
+        },
+        "header": {
+          "rect": {
+            "x": 32,
+            "y": 97,
+            "w": 311,
+            "h": 194,
+            "top": 97,
+            "bottom": 291,
+            "left": 32,
+            "right": 343
+          },
+          "position": "static"
+        },
+        "identity": {
+          "x": 45,
+          "y": 158,
+          "w": 285,
+          "h": 72,
+          "top": 158,
+          "bottom": 230,
+          "left": 45,
+          "right": 330
+        },
+        "title": {
+          "rect": {
+            "x": 179,
+            "y": 168,
+            "w": 151,
+            "h": 24,
+            "top": 168,
+            "bottom": 192,
+            "left": 179,
+            "right": 330
+          },
+          "lines": 1,
+          "lineHeight": 24,
+          "scrollWidth": 151,
+          "clientWidth": 151
+        },
+        "badge": {
+          "text": "منتشرشده",
+          "rect": {
+            "x": 91,
+            "y": 158,
+            "w": 80,
+            "h": 44,
+            "top": 158,
+            "bottom": 202,
+            "left": 91,
+            "right": 171
+          }
+        },
+        "method": {
+          "text": "TB264R2 تیپاکس اکسپرس آزمایشی",
+          "rect": {
+            "x": 45,
+            "y": 210,
+            "w": 285,
+            "h": 20,
+            "top": 210,
+            "bottom": 230,
+            "left": 45,
+            "right": 330
+          },
+          "clipped": false,
+          "hasTitleAttr": true
+        },
+        "toolbar": {
+          "rect": {
+            "x": 152,
+            "y": 238,
+            "w": 178,
+            "h": 44,
+            "top": 238,
+            "bottom": 282,
+            "left": 152,
+            "right": 330
+          },
+          "children": [
+            {
+              "t": "ویرایش",
+              "r": {
+                "x": 262,
+                "y": 238,
+                "w": 68,
+                "h": 44,
+                "top": 238,
+                "bottom": 282,
+                "left": 262,
+                "right": 330
+              }
+            },
+            {
+              "t": "ذخیره تغییرات",
+              "r": {
+                "x": 152,
+                "y": 238,
+                "w": 102,
+                "h": 44,
+                "top": 238,
+                "bottom": 282,
+                "left": 152,
+                "right": 254
+              }
+            }
+          ],
+          "collidesWithHeader": false
+        },
+        "headerButtons": [
+          {
+            "t": "بازگشت به فهرست روش‌ها",
+            "h": 44,
+            "w": 182
+          },
+          {
+            "t": "ویرایش",
+            "h": 44,
+            "w": 68
+          },
+          {
+            "t": "ذخیره تغییرات",
+            "h": 44,
+            "w": 102
+          }
+        ],
+        "headerBtnMinHeight": 44,
+        "doc": {
+          "scrollWidth": 375,
+          "clientWidth": 375,
+          "overflow": 0,
+          "bodyScrollWidth": 375
+        },
+        "clickable": {
+          "count": 27,
+          "below44": 9,
+          "offscreen": 0
+        },
+        "inputs": {
+          "count": 11,
+          "minWidth": 16,
+          "narrow": 7,
+          "shortH": 7
+        },
+        "tabs": {
+          "count": 2,
+          "active": "اطلاعات روش",
+          "heights": [
+            44,
+            44
+          ]
+        },
+        "timingTabs": {
+          "count": 3,
+          "labels": [
+            "تحویل به مشتری",
+            "پذیرش حامل",
+            "آماده‌سازی انبار"
+          ]
+        },
+        "dayRows": {
+          "count": 7,
+          "overflow": [],
+          "clippedH": [],
+          "first": [
+            {
+              "id": "shipping-authoring-week-day-6",
+              "w": 283,
+              "h": 32,
+              "right": 329
+            },
+            {
+              "id": "shipping-authoring-week-day-7",
+              "w": 283,
+              "h": 33,
+              "right": 329
+            },
+            {
+              "id": "shipping-authoring-week-day-1",
+              "w": 283,
+              "h": 33,
+              "right": 329
+            },
+            {
+              "id": "shipping-authoring-week-day-2",
+              "w": 283,
+              "h": 33,
+              "right": 329
+            },
+            {
+              "id": "shipping-authoring-week-day-3",
+              "w": 283,
+              "h": 33,
+              "right": 329
+            },
+            {
+              "id": "shipping-authoring-week-day-4",
+              "w": 283,
+              "h": 33,
+              "right": 329
+            },
+            {
+              "id": "shipping-authoring-week-day-5",
+              "w": 283,
+              "h": 33,
+              "right": 329
+            }
+          ]
+        },
+        "labels": {
+          "count": 12,
+          "bound": 5
+        },
+        "unsavedHint": null,
+        "applyDisabled": true,
+        "editVisible": true
+      }
+    },
+    {
+      "width": 1440,
+      "metrics": {
+        "url": "http://127.0.0.1:3000/fa/admin/shipping-services/authoring/01a1cd43-b98d-7000-b2a9-a35ab39d8058",
+        "title_text": "ویرایش روش ارسال",
+        "dir": "rtl",
+        "viewport": {
+          "innerWidth": 1440,
+          "clientWidth": 1425
+        },
+        "shell": {
+          "screen": {
+            "x": 73,
+            "y": 121,
+            "w": 1024,
+            "h": 1508,
+            "top": 121,
+            "bottom": 1629,
+            "left": 73,
+            "right": 1097
+          },
+          "screenScrollWidth": 1024
+        },
+        "header": {
+          "rect": {
+            "x": 73,
+            "y": 121,
+            "w": 1024,
+            "h": 62,
+            "top": 121,
+            "bottom": 183,
+            "left": 73,
+            "right": 1097
+          },
+          "position": "sticky"
+        },
+        "identity": {
+          "x": 271,
+          "y": 130,
+          "w": 622,
+          "h": 44,
+          "top": 130,
+          "bottom": 174,
+          "left": 271,
+          "right": 893
+        },
+        "title": {
+          "rect": {
+            "x": 742,
+            "y": 140,
+            "w": 151,
+            "h": 24,
+            "top": 140,
+            "bottom": 164,
+            "left": 742,
+            "right": 893
+          },
+          "lines": 1,
+          "lineHeight": 24,
+          "scrollWidth": 151,
+          "clientWidth": 151
+        },
+        "badge": {
+          "text": "منتشرشده",
+          "rect": {
+            "x": 654,
+            "y": 130,
+            "w": 80,
+            "h": 44,
+            "top": 130,
+            "bottom": 174,
+            "left": 654,
+            "right": 734
+          }
+        },
+        "method": {
+          "text": "TB264R2 تیپاکس اکسپرس آزمایشی",
+          "rect": {
+            "x": 401,
+            "y": 142,
+            "w": 245,
+            "h": 20,
+            "top": 142,
+            "bottom": 162,
+            "left": 401,
+            "right": 646
+          },
+          "clipped": false,
+          "hasTitleAttr": true
+        },
+        "toolbar": {
+          "rect": {
+            "x": 86,
+            "y": 130,
+            "w": 178,
+            "h": 44,
+            "top": 130,
+            "bottom": 174,
+            "left": 86,
+            "right": 263
+          },
+          "children": [
+            {
+              "t": "ویرایش",
+              "r": {
+                "x": 195,
+                "y": 130,
+                "w": 68,
+                "h": 44,
+                "top": 130,
+                "bottom": 174,
+                "left": 195,
+                "right": 263
+              }
+            },
+            {
+              "t": "ذخیره تغییرات",
+              "r": {
+                "x": 86,
+                "y": 130,
+                "w": 102,
+                "h": 44,
+                "top": 130,
+                "bottom": 174,
+                "left": 86,
+                "right": 187
+              }
+            }
+          ],
+          "collidesWithHeader": false
+        },
+        "headerButtons": [
+          {
+            "t": "بازگشت به فهرست روش‌ها",
+            "h": 44,
+            "w": 182
+          },
+          {
+            "t": "ویرایش",
+            "h": 44,
+            "w": 68
+          },
+          {
+            "t": "ذخیره تغییرات",
+            "h": 44,
+            "w": 102
+          }
+        ],
+        "headerBtnMinHeight": 44,
+        "doc": {
+          "scrollWidth": 1425,
+          "clientWidth": 1425,
+          "overflow": 0,
+          "bodyScrollWidth": 1425
+        },
+        "clickable": {
+          "count": 59,
+          "below44": 41,
+          "offscreen": 0
+        },
+        "inputs": {
+          "count": 11,
+          "minWidth": 16,
+          "narrow": 7,
+          "shortH": 7
+        },
+        "tabs": {
+          "count": 2,
+          "active": "اطلاعات روش",
+          "heights": [
+            44,
+            44
+          ]
+        },
+        "timingTabs": {
+          "count": 3,
+          "labels": [
+            "تحویل به مشتری",
+            "پذیرش حامل",
+            "آماده‌سازی انبار"
+          ]
+        },
+        "dayRows": {
+          "count": 7,
+          "overflow": [],
+          "clippedH": [],
+          "first": [
+            {
+              "id": "shipping-authoring-week-day-6",
+              "w": 988,
+              "h": 32,
+              "right": 1079
+            },
+            {
+              "id": "shipping-authoring-week-day-7",
+              "w": 988,
+              "h": 33,
+              "right": 1079
+            },
+            {
+              "id": "shipping-authoring-week-day-1",
+              "w": 988,
+              "h": 33,
+              "right": 1079
+            },
+            {
+              "id": "shipping-authoring-week-day-2",
+              "w": 988,
+              "h": 33,
+              "right": 1079
+            },
+            {
+              "id": "shipping-authoring-week-day-3",
+              "w": 988,
+              "h": 33,
+              "right": 1079
+            },
+            {
+              "id": "shipping-authoring-week-day-4",
+              "w": 988,
+              "h": 33,
+              "right": 1079
+            },
+            {
+              "id": "shipping-authoring-week-day-5",
+              "w": 988,
+              "h": 33,
+              "right": 1079
+            }
+          ]
+        },
+        "labels": {
+          "count": 12,
+          "bound": 5
+        },
+        "unsavedHint": null,
+        "applyDisabled": true,
+        "editVisible": true
+      }
+    }
+  ],
+  "ok": true
+}

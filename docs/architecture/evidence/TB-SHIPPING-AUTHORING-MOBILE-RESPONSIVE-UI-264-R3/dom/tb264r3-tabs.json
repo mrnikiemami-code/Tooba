@@ -1,0 +1,499 @@
+{
+  "generatedAt": "2026-11-13T15:18:23.647Z",
+  "url": "http://127.0.0.1:3000/fa/admin/shipping-services/authoring/01a1cd43-b98d-7000-b2a9-a35ab39d8058",
+  "cases": [
+    {
+      "width": 360,
+      "steps": [
+        {
+          "step": "general",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "تحویل به مشتری",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-week-day-6",
+              "shipping-authoring-week-day-7",
+              "shipping-authoring-week-day-1",
+              "shipping-authoring-week-day-2",
+              "shipping-authoring-week-day-3",
+              "shipping-authoring-week-day-4",
+              "shipping-authoring-week-day-5"
+            ],
+            "rowWidths": [
+              253,
+              253,
+              253,
+              253,
+              253,
+              253,
+              253
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:255x44",
+              "text:255x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:255x44",
+              "number:255x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "timing-customer",
+          "clicked": "clicked:shipping-authoring-timing-tab-customer",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "تحویل به مشتری",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-week-day-6",
+              "shipping-authoring-week-day-7",
+              "shipping-authoring-week-day-1",
+              "shipping-authoring-week-day-2",
+              "shipping-authoring-week-day-3",
+              "shipping-authoring-week-day-4",
+              "shipping-authoring-week-day-5"
+            ],
+            "rowWidths": [
+              253,
+              253,
+              253,
+              253,
+              253,
+              253,
+              253
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:255x44",
+              "text:255x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:255x44",
+              "number:255x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "timing-carrier",
+          "clicked": "clicked:shipping-authoring-timing-tab-carrier",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "پذیرش حامل",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-carrier-day-6",
+              "shipping-authoring-carrier-day-7",
+              "shipping-authoring-carrier-day-1",
+              "shipping-authoring-carrier-day-2",
+              "shipping-authoring-carrier-day-3",
+              "shipping-authoring-carrier-day-4",
+              "shipping-authoring-carrier-day-5"
+            ],
+            "rowWidths": [
+              253,
+              253,
+              253,
+              253,
+              253,
+              253,
+              253
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:255x44",
+              "text:255x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:255x44",
+              "number:255x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "timing-processing",
+          "clicked": "clicked:shipping-authoring-timing-tab-processing",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "آماده‌سازی انبار",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-processing-day-6",
+              "shipping-authoring-processing-day-7",
+              "shipping-authoring-processing-day-1",
+              "shipping-authoring-processing-day-2",
+              "shipping-authoring-processing-day-3",
+              "shipping-authoring-processing-day-4",
+              "shipping-authoring-processing-day-5"
+            ],
+            "rowWidths": [
+              253,
+              253,
+              253,
+              253,
+              253,
+              253,
+              253
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:255x44",
+              "text:255x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:255x44",
+              "number:255x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "regions",
+          "clicked": "clicked:shipping-authoring-tab-regions",
+          "state": {
+            "activeMainTab": "مناطق و تعرفه‌ها",
+            "activeTimingTab": "آماده‌سازی انبار",
+            "timingTabHeights": [
+              0,
+              0,
+              0
+            ],
+            "rows": 0,
+            "rowIds": [],
+            "rowWidths": [],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 0,
+            "inputKinds": [],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 0,
+            "labelsBound": 0,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "steps": [
+        {
+          "step": "general",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "تحویل به مشتری",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-week-day-6",
+              "shipping-authoring-week-day-7",
+              "shipping-authoring-week-day-1",
+              "shipping-authoring-week-day-2",
+              "shipping-authoring-week-day-3",
+              "shipping-authoring-week-day-4",
+              "shipping-authoring-week-day-5"
+            ],
+            "rowWidths": [
+              283,
+              283,
+              283,
+              283,
+              283,
+              283,
+              283
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:285x44",
+              "text:285x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:285x44",
+              "number:285x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "timing-customer",
+          "clicked": "clicked:shipping-authoring-timing-tab-customer",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "تحویل به مشتری",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-week-day-6",
+              "shipping-authoring-week-day-7",
+              "shipping-authoring-week-day-1",
+              "shipping-authoring-week-day-2",
+              "shipping-authoring-week-day-3",
+              "shipping-authoring-week-day-4",
+              "shipping-authoring-week-day-5"
+            ],
+            "rowWidths": [
+              283,
+              283,
+              283,
+              283,
+              283,
+              283,
+              283
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:285x44",
+              "text:285x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:285x44",
+              "number:285x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "timing-carrier",
+          "clicked": "clicked:shipping-authoring-timing-tab-carrier",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "پذیرش حامل",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-carrier-day-6",
+              "shipping-authoring-carrier-day-7",
+              "shipping-authoring-carrier-day-1",
+              "shipping-authoring-carrier-day-2",
+              "shipping-authoring-carrier-day-3",
+              "shipping-authoring-carrier-day-4",
+              "shipping-authoring-carrier-day-5"
+            ],
+            "rowWidths": [
+              283,
+              283,
+              283,
+              283,
+              283,
+              283,
+              283
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:285x44",
+              "text:285x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:285x44",
+              "number:285x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "timing-processing",
+          "clicked": "clicked:shipping-authoring-timing-tab-processing",
+          "state": {
+            "activeMainTab": "اطلاعات روش",
+            "activeTimingTab": "آماده‌سازی انبار",
+            "timingTabHeights": [
+              44,
+              44,
+              44
+            ],
+            "rows": 7,
+            "rowIds": [
+              "shipping-authoring-processing-day-6",
+              "shipping-authoring-processing-day-7",
+              "shipping-authoring-processing-day-1",
+              "shipping-authoring-processing-day-2",
+              "shipping-authoring-processing-day-3",
+              "shipping-authoring-processing-day-4",
+              "shipping-authoring-processing-day-5"
+            ],
+            "rowWidths": [
+              283,
+              283,
+              283,
+              283,
+              283,
+              283,
+              283
+            ],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 11,
+            "inputKinds": [
+              "select-one:285x44",
+              "text:285x44",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "radio:16x16",
+              "number:285x44",
+              "number:285x44",
+              "radio:16x16",
+              "radio:16x16"
+            ],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 12,
+            "labelsBound": 5,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        },
+        {
+          "step": "regions",
+          "clicked": "clicked:shipping-authoring-tab-regions",
+          "state": {
+            "activeMainTab": "مناطق و تعرفه‌ها",
+            "activeTimingTab": "آماده‌سازی انبار",
+            "timingTabHeights": [
+              0,
+              0,
+              0
+            ],
+            "rows": 0,
+            "rowIds": [],
+            "rowWidths": [],
+            "rowOverflow": [],
+            "rowOffscreen": 0,
+            "inputs": 0,
+            "inputKinds": [],
+            "textInputsNarrow": 0,
+            "textInputsClippedH": 0,
+            "labels": 0,
+            "labelsBound": 0,
+            "docOverflow": 0,
+            "buttonMinHeight": 44
+          }
+        }
+      ]
+    }
+  ],
+  "ok": true
+}

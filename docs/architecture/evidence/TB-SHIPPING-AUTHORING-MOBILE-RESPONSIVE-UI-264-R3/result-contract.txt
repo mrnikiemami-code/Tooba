@@ -1,0 +1,84 @@
+TB-264-R3 result contract
+=========================
+
+task            TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3
+bridgeTaskId    409dc572-7aac-4481-9861-f24829695872
+channel         tooba-main
+status          PASS within the issued responsive-presentation scope
+                (NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT a scheduler change,
+                 NOT a Returns task, NOT "shipping complete")
+decision        MOBILE_IDENTITY_ROW_WITH_UNCLIPPED_TITLE_AND_OWN_BOUNDED_METHOD_ROW_UNCHANGED_DESKTOP_HEADER_ONE_SAVE_OWNER_ZERO_DOCUMENT_OVERFLOW
+stopState       STOP_FOR_ARCHITECT
+automaticNextImplementationTask  NONE
+
+base            c60458a9524c0d5fd42ea0e805e3212073f7ec41
+expected base   18c291d7eb4ebec2cb5c7b6a5c97cf2a721f11fb  (verified ancestor, 5 docs-only commits behind)
+code            b7cd528192832b92b4c89436a6a6e48d0e06268d
+evidence        see git log for this task's evidence commit (this contract commits with it)
+worktreeBase    main; no force/reset/amend/stash/rebase/unrelated overwrite
+
+root cause (measured, not assumed)
+  shipping-authoring-page-header was one flex-wrap row: back 182px + toolbar 178px + min-w-0 flex-1 identity.
+  Real admin-shell content width is 281px at a 360px viewport and 311px at 390px, so the shrinkable
+  identity block collapsed:
+    360: identity 65px  -> title 65px wide, 3 word-column lines (72px), method clipped, header 222px sticky
+    390: identity 95px  -> title 95px wide, 2 lines (48px),               method clipped, header 198px sticky
+
+delivered (one file, presentation only)
+  identity block      min-w-0 flex-1 -> w-full min-w-0 grow md:w-auto   (own full row below md)
+  title               min-w-0 shrink-0 leading-6                        (cannot be crushed, one line)
+  method name         w-full min-w-0 truncate md:w-auto + title attr    (own bounded row below md)
+  header              sticky -> lg:sticky                               (never swallows a narrow viewport)
+  unchanged           ONE Save owner/callback/dirty predicate/disabled state, tab strip, day + minute
+                      editors, single Toast, MessageBox for blocking decisions, local field validation,
+                      RTL/locale direction, underlined tabs, desktop compact row
+
+measured after (read-only, authenticated headless Chrome, real shell)
+  route   /fa/admin/shipping-services/authoring/01a1cd43-b98d-7000-b2a9-a35ab39d8058
+  width  360                  390                  1440
+  content 281px               311px                1024px
+  identity 255px own row      285px own row        622px inline
+  title   151px / 1 line      151px / 1 line       151px / 1 line
+  method  255px unclipped     285px unclipped      245px inline unclipped
+  header  194px static        194px static         62px sticky
+  overflow 0                  0                    0
+  offscreen 0                 0                    0
+  <44px actions 0             0                    0
+  tabs    info/regions 44px; timing tabs (customer/carrier/processing) 44px each
+  day rows 7 in each of week/carrier/processing editors: 0 overflowing, 0 offscreen, 0 collapsed
+  text inputs narrower than 90px: 0   shorter than 28px: 0
+  (only sub-90px fields are the seven pre-existing 16x16 working/closed radios, unchanged)
+
+checks (each once)
+  tsc --noEmit                                            0
+  npm run build                                           0, BUILD_ID Ex36QU4MPjSKfm8VUlqDC
+  authoring suite 33 files                                274/274 passed
+  sales-ready-ui-246-r1 + -r2                             13/13 passed
+  authoring-carrier-calendar.mount + tb261-notification.mount   7/7 passed
+  /fa 200; _next/static/Ex36QU4MPjSKfm8VUlqDC/_buildManifest.js 200
+  chunk 6138-3bc417f144f96c81.js 200 and carries shipping-authoring-page-header, lg:sticky, md:w-auto
+  Host /health 200 (backend untouched, not restarted)
+
+emitted-CSS constraint (reported, not "fixed")
+  tailwind.config.ts content = ./app, ./design-system, ./lib only; features/** is NOT scanned, so a
+  utility class that appears nowhere outside a feature file is never emitted. The correction uses only
+  already-emitted classes (each present once in 69e1de4d01ca9cf4.css) and was confirmed in the DOM.
+
+environment
+  ONE DB tooba_alpha 5432 SingleStore store-alpha; Next 3000 (PID 37012), Host 5088 (untouched);
+  no new/disposable/test/Docker DB, no 15433, no edition/connection/port/appsettings change;
+  no migration/schema/API/locale-registry/scheduling change; no manual DDL/business SQL/reset/reseed/
+  backfill/global reclaimer; no provider call, no fake waybill; keys + CapturedPreview preserved
+  (local ON / checked-in OFF); 255 parked; live Tipax deferred; 265 NOT ISSUED
+
+no-write statement
+  no save, publication, withdraw, discard write, mode change or data mutation of any kind; task draft
+  01a1cd43-b98d-7000-b2a9-a35ab39d8058 used read-only for layout inspection; user service draft
+  01a17d0d-e033-7000-af43-49a1daa28822 never opened for writing, not saved/published/restored/rewritten
+
+known limits
+  presentation scope only; no scheduling authority/capture/queue/selection/reservation re-proven
+  header is deliberately NOT sticky below lg (a sticky 194px header would consume a narrow viewport)
+  mobile header is three explicit rows (back / identity / actions) at 194px, not a single line
+  evidence is DOM geometry + served-asset identity, not a screenshot artifact; user visual acceptance
+  pending; other admin pages not re-laid-out; 265 (courier-origin return <-> Returns) not started

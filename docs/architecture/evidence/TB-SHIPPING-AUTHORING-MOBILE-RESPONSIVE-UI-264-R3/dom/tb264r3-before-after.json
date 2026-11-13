@@ -1,0 +1,341 @@
+{
+  "generatedAt": "2026-11-13T15:17:29.397Z",
+  "url": "http://127.0.0.1:3000/fa/admin/shipping-services/authoring/01a1cd43-b98d-7000-b2a9-a35ab39d8058",
+  "cases": [
+    {
+      "width": 360,
+      "after": {
+        "header": {
+          "x": 32,
+          "y": 97,
+          "w": 281,
+          "h": 194,
+          "left": 32,
+          "right": 313
+        },
+        "position": "static",
+        "identity": {
+          "x": 45,
+          "y": 158,
+          "w": 255,
+          "h": 72,
+          "left": 45,
+          "right": 300
+        },
+        "title": {
+          "rect": {
+            "x": 149,
+            "y": 168,
+            "w": 151,
+            "h": 24,
+            "left": 149,
+            "right": 300
+          },
+          "lines": 1,
+          "text": "ویرایش روش ارسال"
+        },
+        "method": {
+          "rect": {
+            "x": 45,
+            "y": 210,
+            "w": 255,
+            "h": 20,
+            "left": 45,
+            "right": 300
+          },
+          "text": "TB264R2 تیپاکس اکسپرس آزمایشی",
+          "clipped": false
+        },
+        "docOverflow": 0,
+        "subActions": [],
+        "smallInputs": [
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          }
+        ]
+      },
+      "before": {
+        "header": {
+          "x": 32,
+          "y": 97,
+          "w": 281,
+          "h": 222,
+          "left": 32,
+          "right": 313
+        },
+        "position": "sticky",
+        "identity": {
+          "x": 45,
+          "y": 106,
+          "w": 65,
+          "h": 152,
+          "left": 45,
+          "right": 110
+        },
+        "title": {
+          "rect": {
+            "x": 45,
+            "y": 106,
+            "w": 65,
+            "h": 72,
+            "left": 45,
+            "right": 110
+          },
+          "lines": 3,
+          "text": "ویرایش روش ارسال"
+        },
+        "method": {
+          "rect": {
+            "x": 45,
+            "y": 238,
+            "w": 65,
+            "h": 20,
+            "left": 45,
+            "right": 110
+          },
+          "text": "TB264R2 تیپاکس اکسپرس آزمایشی",
+          "clipped": true
+        },
+        "docOverflow": 0,
+        "subActions": [],
+        "smallInputs": [
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          }
+        ]
+      }
+    },
+    {
+      "width": 390,
+      "after": {
+        "header": {
+          "x": 32,
+          "y": 97,
+          "w": 311,
+          "h": 194,
+          "left": 32,
+          "right": 343
+        },
+        "position": "static",
+        "identity": {
+          "x": 45,
+          "y": 158,
+          "w": 285,
+          "h": 72,
+          "left": 45,
+          "right": 330
+        },
+        "title": {
+          "rect": {
+            "x": 179,
+            "y": 168,
+            "w": 151,
+            "h": 24,
+            "left": 179,
+            "right": 330
+          },
+          "lines": 1,
+          "text": "ویرایش روش ارسال"
+        },
+        "method": {
+          "rect": {
+            "x": 45,
+            "y": 210,
+            "w": 285,
+            "h": 20,
+            "left": 45,
+            "right": 330
+          },
+          "text": "TB264R2 تیپاکس اکسپرس آزمایشی",
+          "clipped": false
+        },
+        "docOverflow": 0,
+        "subActions": [],
+        "smallInputs": [
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          }
+        ]
+      },
+      "before": {
+        "header": {
+          "x": 32,
+          "y": 97,
+          "w": 311,
+          "h": 198,
+          "left": 32,
+          "right": 343
+        },
+        "position": "sticky",
+        "identity": {
+          "x": 45,
+          "y": 106,
+          "w": 95,
+          "h": 128,
+          "left": 45,
+          "right": 140
+        },
+        "title": {
+          "rect": {
+            "x": 45,
+            "y": 106,
+            "w": 95,
+            "h": 48,
+            "left": 45,
+            "right": 140
+          },
+          "lines": 2,
+          "text": "ویرایش روش ارسال"
+        },
+        "method": {
+          "rect": {
+            "x": 45,
+            "y": 214,
+            "w": 95,
+            "h": 20,
+            "left": 45,
+            "right": 140
+          },
+          "text": "TB264R2 تیپاکس اکسپرس آزمایشی",
+          "clipped": true
+        },
+        "docOverflow": 0,
+        "subActions": [],
+        "smallInputs": [
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          },
+          {
+            "type": "radio",
+            "w": 16,
+            "h": 16
+          }
+        ]
+      }
+    }
+  ],
+  "ok": true
+}
