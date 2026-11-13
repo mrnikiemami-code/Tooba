@@ -1,0 +1,15 @@
+# Always commit, always push
+
+Applies to every code or evidence change made in this repository.
+
+1. **Commit before you finish.** Never leave a completed unit of work uncommitted. One logical change per commit,
+   with a real message (scope + what changed). Do not stage unrelated files.
+2. **Push before you report.** After committing, immediately run `git push origin main`, then `git fetch origin`
+   and confirm `HEAD == origin/main` and a clean tree.
+3. **Never force, never rewrite.** No `push --force`, no `commit --amend` on pushed commits, no rebase/rewrite of
+   shared history, no silent stash or discard of unrelated work.
+4. **If the network refuses**, retry a few times over a couple of minutes, then: keep the commits local, create a
+   bundle backup (`git bundle create <path> main`), and state the exact blocker (error text, host/port, attempts)
+   in the report. Never claim a push that did not happen.
+5. Push parity is part of the result: a report that says the work landed must also say whether `origin/main` was
+   updated, or why it could not be.
