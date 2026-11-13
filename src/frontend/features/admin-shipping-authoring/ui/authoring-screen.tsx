@@ -749,8 +749,12 @@ export function ShippingAuthoringScreen({
 
   return (
     <div dir={direction} lang={locale} className="mx-auto w-full max-w-5xl space-y-4 pb-8" data-testid="shipping-authoring-screen">
+      {/* TB-264-R3: the identity block wraps onto its own full-width row when the back/action buttons do
+          not fit, so the Persian title can never be squeezed into vertical word columns; from `md` the
+          compact single row returns. The sticky header is applied only from `lg`, where the compact row
+          exists — it can never swallow a narrow viewport. */}
       <header
-        className="sticky top-0 z-20 space-y-2 rounded-xl border border-border bg-surface px-3 py-2 shadow-sm"
+        className="lg:sticky top-0 z-20 space-y-2 rounded-xl border border-border bg-surface px-3 py-2 shadow-sm"
         data-testid="shipping-authoring-page-header"
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -763,9 +767,9 @@ export function ShippingAuthoringScreen({
           >
             {messages.back}
           </button>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-base font-black text-gray-900">{messages.pageTitle}</h1>
+          <div className="w-full min-w-0 grow md:w-auto">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h1 className="min-w-0 shrink-0 text-base font-black leading-6 text-gray-900">{messages.pageTitle}</h1>
               {badgeLabel ? (
                 <span
                   className={
@@ -779,7 +783,12 @@ export function ShippingAuthoringScreen({
                 </span>
               ) : null}
               {methodName ? (
-                <span className="truncate text-sm font-semibold text-gray-700" data-testid="shipping-authoring-method-name" dir="auto">
+                <span
+                  className="w-full min-w-0 truncate text-sm font-semibold text-gray-700 md:w-auto"
+                  data-testid="shipping-authoring-method-name"
+                  dir="auto"
+                  title={methodName}
+                >
                   {methodName}
                 </span>
               ) : null}
