@@ -239,6 +239,15 @@ public sealed class AdminOrderDetailComposer
                                 r.OccurrenceKey,
                                 r.ReplacementShipmentId))
                             .ToList()
+                        : null,
+                    s.CourierReturnCases is { Count: > 0 } courierCases
+                        ? courierCases
+                            .Select(c => new AdminCourierReturnCaseView(
+                                c.ClaimId,
+                                c.ReturnRequestId,
+                                c.Status.ToString(),
+                                c.LinkedAt))
+                            .ToList()
                         : null);
             }).ToList()
                 ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();

@@ -241,6 +241,137 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.ToTable("courier_return_claims", "fulfillment");
                 });
 
+            modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.CourierReturnClaimAllocation", b =>
+                {
+                    b.Property<Guid>("AllocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("allocation_id");
+
+                    b.Property<Guid?>("CancelledReplacementShipmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cancelled_replacement_shipment_id");
+
+                    b.Property<Guid>("ClaimId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("claim_id");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("condition");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("DamagedResolutionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("damaged_resolution_id");
+
+                    b.Property<Guid?>("HeldReservationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("held_reservation_id");
+
+                    b.Property<Guid>("OrderLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_line_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<decimal>("ReleasedQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("released_quantity");
+
+                    b.Property<Guid>("SourceReceiptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_receipt_id");
+
+                    b.Property<Guid>("SourceShipmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_shipment_id");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("state");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("AllocationId")
+                        .HasName("pk_courier_return_claim_allocations");
+
+                    b.HasIndex("CancelledReplacementShipmentId")
+                        .HasDatabaseName("ix_courier_return_claim_alloc_cancelled_parcel")
+                        .HasFilter("cancelled_replacement_shipment_id IS NOT NULL");
+
+                    b.HasIndex("ClaimId")
+                        .HasDatabaseName("ix_courier_return_claim_allocations_claim_id");
+
+                    b.HasIndex("HeldReservationId")
+                        .HasDatabaseName("ix_courier_return_claim_allocations_held_reservation_id")
+                        .HasFilter("held_reservation_id IS NOT NULL");
+
+                    b.ToTable("courier_return_claim_allocations", "fulfillment");
+                });
+
+            modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.CourierReturnClaimLineRecord", b =>
+                {
+                    b.Property<Guid>("ClaimLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("claim_line_id");
+
+                    b.Property<string>("ActiveKey")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("active_key");
+
+                    b.Property<Guid>("ClaimId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("claim_id");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("condition");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("OrderLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_line_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("ClaimLineId")
+                        .HasName("pk_courier_return_claim_lines");
+
+                    b.HasIndex("ActiveKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_courier_return_claim_lines_active_key")
+                        .HasFilter("active_key IS NOT NULL");
+
+                    b.HasIndex("ClaimId")
+                        .HasDatabaseName("ix_courier_return_claim_lines_claim_id");
+
+                    b.ToTable("courier_return_claim_lines", "fulfillment");
+                });
+
             modelBuilder.Entity("Tooba.Fulfillment.Domain.Aggregates.DamagedGoodsResolution", b =>
                 {
                     b.Property<Guid>("DamagedGoodsResolutionId")

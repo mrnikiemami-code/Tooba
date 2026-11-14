@@ -237,7 +237,8 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             && request.ClosurePhase < CourierOriginClosurePhase.RefundReleased
             && request.Status is ReturnRequestStatus.Approved
                 or ReturnRequestStatus.RefundProcessing
-                or ReturnRequestStatus.RefundFailed)
+                or ReturnRequestStatus.RefundFailed
+                or ReturnRequestStatus.Completed)
         {
             // TB-265: a previous approval already recorded its durable phases (approval + money attempt). A refused
             // closure or a lost money answer must be RESUMED, never re-approved or duplicated: the same recorded
@@ -250,6 +251,16 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 return await MapSnapshotAsync(request, cancellationToken);
             }
 
+            if (request.Status == ReturnRequestStatus.Completed)
+            {
+                // TB-265-R1: money already succeeded and the obligation is closed, so ONLY the unfinished physical
+                // disposition is retried here. No second money attempt is created.
+                await SettlePhysicalDispositionAsync(request, cancellationToken);
+                MarkRefundReleasedWhenFullyDisposed(request);
+                await _db.SaveChangesAsync(cancellationToken);
+                return await MapSnapshotAsync(request, cancellationToken);
+            }
+
             var pending = request.RefundAttempts
                 .OrderByDescending(x => x.CreatedAt)
                 .FirstOrDefault(x => x.Status == RefundAttemptStatus.Pending)
@@ -257,7 +268,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             await ExecuteRefundAsync(request, pending, cancellationToken);
             if (request.Status == ReturnRequestStatus.Completed)
             {
-                request.MarkRefundReleased(_clock.UtcNow);
+                MarkRefundReleasedWhenFullyDisposed(request);
             }
 
             await _db.SaveChangesAsync(cancellationToken);
@@ -288,7 +299,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         await ExecuteRefundAsync(request, attempt, cancellationToken);
         if (request.Origin == ReturnOrigin.CourierOrigin && request.Status == ReturnRequestStatus.Completed)
         {
-            request.MarkRefundReleased(_clock.UtcNow);
+            MarkRefundReleasedWhenFullyDisposed(request);
         }
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -301,19 +312,33 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         _ = command.Reason;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
+
+        // TB-265-R1: only a case that was never approved can be rejected. A case already refunding/approved keeps
+        // its obligation and its claim; releasing its branch here would free capacity a live (or completed) case
+        // still owns and would let the same units fund a second branch.
         if (request.Status == ReturnRequestStatus.Requested)
         {
             request.Reject(_clock.UtcNow);
             await _db.SaveChangesAsync(cancellationToken);
             _telemetry.RecordRejected();
+
+            // Releasing the source branch AFTER the durable reject is the only lawful release of this claim.
+            await ReleaseCourierOriginClaimAsync(
+                request, nameof(ReturnRequestStatus.Rejected), command.ActorUserId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
         }
 
-        // TB-265: rejecting a courier-origin case releases ONLY its source-branch claim, so the same received
-        // quantity becomes lawfully available again. The active order's stock hold is untouched. The call is
-        // idempotent, so a retry after a partial failure still lands exactly once.
-        await ReleaseCourierOriginClaimAsync(request, nameof(ReturnRequestStatus.Rejected), command.ActorUserId, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
-        return await MapSnapshotAsync(request, cancellationToken);
+        if (request.Status is ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled)
+        {
+            // Exact terminal replay: finish any still-pending claim release, and never touch money or stock.
+            await ReleaseCourierOriginClaimAsync(
+                request, request.Status.ToString(), command.ActorUserId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
+
+        throw new ContractOperationException("return.reject.invalid_state");
     }
 
     /// <inheritdoc />
@@ -321,6 +346,19 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
+
+        if (request.Origin == ReturnOrigin.CourierOrigin
+            && request.Status == ReturnRequestStatus.Completed
+            && request.ClosurePhase < CourierOriginClosurePhase.RefundReleased)
+        {
+            // TB-265-R1: the money already succeeded; retry ONLY the unfinished physical disposition with the same
+            // per-item identity. No new refund attempt and no new idempotency key is minted here.
+            await SettlePhysicalDispositionAsync(request, cancellationToken);
+            MarkRefundReleasedWhenFullyDisposed(request);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
+
         if (request.Status != ReturnRequestStatus.RefundFailed)
         {
             throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
@@ -361,8 +399,8 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 attempt.MarkSucceeded($"wallet-refund:{request.ReturnRequestId:D}", now);
                 request.MarkRefundSucceeded(now);
                 _telemetry.RecordRefundSucceeded();
-                await SettlePhysicalDispositionAsync(request, cancellationToken);
-
+                await _db.SaveChangesAsync(cancellationToken);
+                await TrySettlePhysicalDispositionAsync(request, cancellationToken);
                 return;
             }
 
@@ -377,10 +415,12 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 attempt.MarkSucceeded(result.ProviderReference ?? $"refund-{attempt.RefundAttemptId:N}", now);
                 request.MarkRefundSucceeded(now);
                 _telemetry.RecordRefundSucceeded();
-                await SettlePhysicalDispositionAsync(request, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+                await TrySettlePhysicalDispositionAsync(request, cancellationToken);
             }
             else
             {
+                // A proven terminal refusal is a real failed money attempt.
                 attempt.MarkFailed(result.FailureCode ?? "REFUND_FAILED", now);
                 request.MarkRefundFailed(now);
                 _telemetry.RecordRefundFailed();
@@ -388,10 +428,41 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Refund gateway failed for return {ReturnRequestId}", request.ReturnRequestId);
-            attempt.MarkFailed("GATEWAY_ERROR", now);
-            request.MarkRefundFailed(now);
-            _telemetry.RecordRefundFailed();
+            // TB-265-R1: an UNKNOWN/transport outcome is not a failure. The durable attempt and its idempotency key
+            // are retained, the case stays RefundProcessing, and the existing resume path reconciles the SAME
+            // attempt instead of minting a second refund key over a possibly completed refund.
+            _logger.LogWarning(ex, "Refund outcome unknown for return {ReturnRequestId}", request.ReturnRequestId);
+        }
+    }
+
+    /// <summary>
+    /// TB-265-R1: the money phase is only recorded as finished when every received line also has its physical
+    /// disposition. A failed/pending restock keeps the case <c>Completed</c> with <c>StockSettled</c>, so the
+    /// disposition-only retry stays reachable and no second refund attempt is ever minted for it.
+    /// </summary>
+    private void MarkRefundReleasedWhenFullyDisposed(ReturnRequest request)
+    {
+        if (request.Items.Any(x => x.Disposition == ReturnItemDisposition.None))
+        {
+            return;
+        }
+
+        request.MarkRefundReleased(_clock.UtcNow);
+    }
+
+    /// <summary>
+    /// TB-265-R1: the physical disposition is a separate owner phase from money. Its failure can never change a
+    /// successful refund into a failed one; the unfinished item stays explicitly pending for a disposition-only retry.
+    /// </summary>
+    private async Task TrySettlePhysicalDispositionAsync(ReturnRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SettlePhysicalDispositionAsync(request, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Physical disposition pending for return {ReturnRequestId}", request.ReturnRequestId);
         }
     }
 

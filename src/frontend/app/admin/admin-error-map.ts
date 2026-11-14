@@ -1140,6 +1140,70 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   "menu.target.required": { fa: "مقصد را از فهرست انتخاب کنید.", en: "Choose a destination from the list." },
   "menu.target.missing": { fa: "مقصد انتخاب‌شده در این فروشگاه نیست.", en: "The selected destination is not in this store." },
   "menu.header.ineligible": { fa: "فقط منوی فعال قابل انتخاب است.", en: "Only an enabled menu can be selected." },
+  "returns.courier_origin.source_required": {
+    fa: "برای پروندهٔ مرجوعی مبدأ پیک، مرسوله و رسید دریافت مبدأ لازم است.",
+    en: "A courier-origin return requires the source shipment and its receipt.",
+  },
+  "returns.courier_origin.claim_required": {
+    fa: "ادعای دریافت مبدأ پیدا نشد؛ رسید و خطوط ادعا را بررسی کنید.",
+    en: "The source claim was not found; check the receipt and claim lines.",
+  },
+  "returns.courier_origin.occurrence_required": {
+    fa: "شناسهٔ رویداد این مرجوعی لازم است.",
+    en: "The occurrence key of this return is required.",
+  },
+  "returns.validation.items_empty": {
+    fa: "حداقل یک قلم برای مرجوعی لازم است.",
+    en: "At least one item is required.",
+  },
+  "returns.validation.quantity_invalid": {
+    fa: "مقدار مرجوعی معتبر نیست.",
+    en: "The returned quantity is not valid.",
+  },
+  "returns.refund.retry": {
+    fa: "بازگشت وجه ناتمام مانده است؛ تلاش مجدد بازگشت وجه را تکرار کنید.",
+    en: "The refund is unfinished; retry the refund.",
+  },
+  "returns.refund.failed": {
+    fa: "بازگشت وجه ناموفق بود؛ پرونده برای تلاش مجدد باز می‌ماند.",
+    en: "The refund failed; the case stays open for retry.",
+  },
+  "fulfillment.returns.replacement_claimed_by_case": {
+    fa: "این مرسولهٔ جایگزین به یک پروندهٔ مرجوعی باز درخواست‌شده تعلق دارد و تا تعیین تکلیف پرونده ارسال نمی‌شود.",
+    en: "This replacement parcel belongs to an open requested return case and cannot be dispatched until the case is resolved.",
+  },
+  "fulfillment.returns.replacement_already_dispatched": {
+    fa: "مرسولهٔ جایگزین قبلاً ارسال شده است.",
+    en: "The replacement parcel has already been dispatched.",
+  },
+  "fulfillment.returns.source_not_received": {
+    fa: "مرسولهٔ مبدأ هنوز در مبدأ دریافت نشده است.",
+    en: "The source shipment has not been received at origin yet.",
+  },
+  "fulfillment.returns.claim_quantity_exceeded": {
+    fa: "مقدار ادعا از مقدار سالم قابل مرجوع بیشتر است.",
+    en: "The claimed quantity exceeds the usable quantity available for return.",
+  },
+  "fulfillment.returns.claim_condition_invalid": {
+    fa: "وضعیت کالای ادعاشده معتبر نیست.",
+    en: "The claimed item condition is not valid.",
+  },
+  "fulfillment.returns.claim_already_approved": {
+    fa: "این ادعا قبلاً تأیید شده است.",
+    en: "This claim has already been approved.",
+  },
+  "fulfillment.returns.claim_case_conflict": {
+    fa: "این ادعا به پروندهٔ مرجوعی دیگری متصل است.",
+    en: "This claim is linked to a different return case.",
+  },
+  "fulfillment.returns.claim_concurrency_conflict": {
+    fa: "هم‌زمانی در ثبت ادعا رخ داد؛ دوباره تلاش کنید.",
+    en: "A concurrency conflict occurred while recording the claim; try again.",
+  },
+  "fulfillment.returns.replacement_partial_claim_unsupported": {
+    fa: "ادعای بخشی از یک مرسولهٔ جایگزین پشتیبانی نمی‌شود.",
+    en: "A partial claim of a replacement parcel is not supported.",
+  },
 };
 
 const TECHNICAL_UI_PATTERNS = [

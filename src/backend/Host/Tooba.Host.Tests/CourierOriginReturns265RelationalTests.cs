@@ -26,6 +26,7 @@ using Tooba.Offer.Contracts.Ports;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Returns;
 using Tooba.Order.Infrastructure.Integrations.Returns;
+using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Contracts.Returns;
 using Tooba.Persistence;
 using Tooba.Returns.Application.ReturnRequests.Commands;
@@ -387,6 +388,300 @@ public sealed class CourierOriginReturns265RelationalTests
             + $"claimRefused=replacement_already_dispatched reservation=Consumed releasedHeld=0");
     }
 
+    // ------------------------------------------------------------------ G: durable Order closure across contexts
+
+    [Fact]
+    public async Task G_the_order_owned_closure_is_a_durable_row_readable_from_an_independent_context()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("G", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+        await using var returns = fixture.NewReturns();
+
+        var created = await returns.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId, fixture.SourceShipmentId, fixture.ActorUserId,
+            $"tb265-g-1-{fixture.FulfillmentId:N}", $"courier-return:tb265-g-1-{fixture.FulfillmentId:N}",
+            "بستن تعهد خط", [(fixture.LineAId, 1m, ReturnItemCondition.Usable)], CancellationToken.None);
+        Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+        var caseId = created.Snapshot!.ReturnRequestId;
+        var claimId = created.ClaimId;
+        Assert.NotEqual(Guid.Empty, claimId);
+
+        // Before approval nothing is closed: creating a case is not a closure.
+        await using (var before = fixture.NewLease())
+        {
+            Assert.Null(await before.Obligations.GetClosureAsync(caseId, fixture.LineAId, CancellationToken.None));
+            Assert.Equal(0m, await before.Obligations.GetClosedQuantityAsync(fixture.LineAId, CancellationToken.None));
+        }
+
+        var approved = await returns.Directory.ApproveAsync(
+            new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId), CancellationToken.None);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, approved.ClosurePhase);
+
+        // The closure is a real Order row, answered by an INDEPENDENT context (not the approval's DbContext).
+        await using (var independent = fixture.NewLease())
+        {
+            var closure = await independent.Obligations.GetClosureAsync(caseId, fixture.LineAId, CancellationToken.None);
+            Assert.NotNull(closure);
+            Assert.Equal(1m, closure!.Quantity);
+            Assert.Equal(claimId, closure.SourceClaimId);
+            Assert.Equal(fixture.SellerOrderId, closure.SellerOrderId);
+            Assert.NotEqual(Guid.Empty, closure.ClosureId);
+            Assert.Equal(1m, await independent.Obligations.GetClosedQuantityAsync(fixture.LineAId, CancellationToken.None));
+        }
+
+        // Same case line asking for a different quantity/claim is a typed conflict with zero writes.
+        await using (var again = fixture.NewLease())
+        {
+            var conflict = await again.Obligations.CloseLineObligationAsync(
+                new OrderLineObligationClosureRequest(
+                    fixture.SellerOrderId, fixture.CheckoutId, fixture.LineAId, 2m, caseId,
+                    Guid.NewGuid(), fixture.ActorUserId),
+                CancellationToken.None);
+            Assert.False(conflict.Closed);
+            Assert.Equal(OrderReturnObligationClosure.IntentConflictCode, conflict.BlockerCode);
+            Assert.Equal(1m, await again.Obligations.GetClosedQuantityAsync(fixture.LineAId, CancellationToken.None));
+        }
+
+        fixture.Record(
+            _output,
+            $"G fulfillment={fixture.FulfillmentId} case={caseId} claim={claimId} closureQty=1 "
+            + $"independentRead=true conflict=closure_intent_conflict reserved=1");
+    }
+
+    // ------------------------------------------------------------------ H: a claimed replacement cannot leave
+
+    [Fact]
+    public async Task H_a_requested_case_freezes_dispatch_of_its_claimed_replacement_parcel()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("H", usableA: 0m, damagedA: 1m, dispatchA: 3m);
+        await using var returns = fixture.NewReturns();
+
+        var replacement = await returns.Fulfillment.ResolveReplacementAsync(fixture);
+        var replacementShipmentId = replacement.ReplacementShipmentId!.Value;
+        await returns.Lease.Directory.AssignTrackingAsync(
+            fixture.FulfillmentId, replacementShipmentId, fixture.ActorUserId,
+            $"TRK-TB265-H-{replacementShipmentId:N}", CancellationToken.None);
+
+        var created = await returns.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId, fixture.SourceShipmentId, fixture.ActorUserId,
+            $"tb265-h-1-{fixture.FulfillmentId:N}", $"courier-return:tb265-h-1-{fixture.FulfillmentId:N}",
+            "ادعای مرسولهٔ جایگزین", [(fixture.LineAId, 1m, ReturnItemCondition.Damaged)], CancellationToken.None);
+        Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+
+        // The owning dispatch transition refuses: the case still asks for exactly these units.
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(() =>
+            returns.Lease.Directory.DispatchShipmentAsync(
+                fixture.FulfillmentId, replacementShipmentId, fixture.ActorUserId, CancellationToken.None));
+        Assert.Equal("fulfillment.returns.replacement_claimed_by_case", refused.Code);
+        Assert.Equal(ShipmentStatus.Created, await ShipmentStatusAsync(fixture, replacementShipmentId));
+
+        // Rejecting the requested case releases ONLY its claim, and the parcel becomes lawful to send again.
+        var rejected = await returns.Directory.RejectAsync(
+            new RejectReturnCommand(created.Snapshot!.ReturnRequestId, fixture.ActorUserId,
+                fixture.SellerPartyId, "tb265-h reject"),
+            CancellationToken.None);
+        Assert.Equal(ReturnRequestStatus.Rejected, rejected.Status);
+
+        var dispatched = await returns.Lease.Directory.DispatchShipmentAsync(
+            fixture.FulfillmentId, replacementShipmentId, fixture.ActorUserId, CancellationToken.None);
+        Assert.Equal(ShipmentStatus.Dispatched,
+            dispatched.Shipments.Single(x => x.ShipmentId == replacementShipmentId).Status);
+
+        fixture.Record(
+            _output,
+            $"H fulfillment={fixture.FulfillmentId} case={created.Snapshot.ReturnRequestId} "
+            + $"replacementParcel={replacementShipmentId} dispatchWhileRequested=replacement_claimed_by_case "
+            + $"afterReject=Dispatched");
+    }
+
+    // ------------------------------------------------------------------ I: a lost claim link is repaired
+
+    [Fact]
+    public async Task I_an_exact_retry_repairs_a_case_whose_claim_link_was_lost()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("I", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+
+        var idempotencyKey = $"tb265-i-1-{fixture.FulfillmentId:N}";
+        var occurrenceKey = $"courier-return:tb265-i-1-{fixture.FulfillmentId:N}";
+        Guid caseId;
+        Guid claimId;
+        await using (var first = fixture.NewReturns())
+        {
+            var created = await first.Directory.CreateCourierOriginAsync(
+                fixture.FulfillmentId, fixture.SourceShipmentId, fixture.ActorUserId,
+                idempotencyKey, occurrenceKey, "بازیابی پیوند", [(fixture.LineAId, 1m, ReturnItemCondition.Usable)],
+                CancellationToken.None);
+            Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+            caseId = created.Snapshot!.ReturnRequestId;
+            claimId = created.ClaimId;
+        }
+
+        // Reproduce the durable state a crash between "case saved" and "claim linked" leaves behind, from an
+        // INDEPENDENT context (a request boundary), so no in-memory identity can hide a missing link.
+        await using (var db = CreateFulfillmentDb(fixture.Connection))
+        {
+            await db.Database.ExecuteSqlAsync(
+                $"UPDATE fulfillment.courier_return_claims SET return_request_id = NULL WHERE courier_return_claim_id = {claimId}",
+                CancellationToken.None);
+        }
+
+        await using var returns = fixture.NewReturns();
+        var retry = await returns.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId, fixture.SourceShipmentId, fixture.ActorUserId,
+            idempotencyKey, occurrenceKey, "بازیابی پیوند", [(fixture.LineAId, 1m, ReturnItemCondition.Usable)],
+            CancellationToken.None);
+
+        Assert.True(retry.AlreadyExisted);
+        Assert.Null(retry.Conflict);
+        Assert.Equal(caseId, retry.Snapshot!.ReturnRequestId);
+
+        var claim = await returns.Lease.Source.GetClaimAsync(claimId, CancellationToken.None);
+        Assert.Equal(caseId, claim!.ReturnRequestId);
+        var cases = await returns.Lease.FulfillmentDb.CourierReturnClaims.AsNoTracking()
+            .CountAsync(x => x.FulfillmentId == fixture.FulfillmentId, CancellationToken.None);
+        Assert.Equal(1, cases);
+
+        fixture.Record(
+            _output,
+            $"I fulfillment={fixture.FulfillmentId} case={caseId} claim={claimId} "
+            + $"linkRepaired=true duplicates=0");
+    }
+
+    // ------------------------------------------------------------------ J: one atomic, serialized partial release
+
+    [Fact]
+    public async Task J_two_contexts_can_never_release_more_than_the_held_quantity()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("J", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+
+        // A dedicated Held reservation: the fixture's original sale is Consumed by dispatch, and consume is not
+        // release. This is the same shape a still-active order hold has when its line obligation closes.
+        var stockItemId = Guid.NewGuid();
+        var offerId = Guid.NewGuid();
+        var reservationId = Guid.NewGuid();
+        var now = new DateTimeOffset(2026, 11, 13, 7, 0, 0, TimeSpan.Zero);
+        await using (var seed = CreateInventoryDb(fixture.Connection))
+        {
+            var position = StockPosition.Open(stockItemId, offerId, Guid.NewGuid(), Guid.NewGuid(), now);
+            position.SyncQuantities(10m, 3m, now);
+            var hold = StockReservation.Hold(
+                reservationId, stockItemId, 3m, "TB265-J hold", $"tb265-j-{reservationId:N}", now, null);
+            seed.Positions.Add(position);
+            seed.Reservations.Add(hold);
+            await seed.SaveChangesAsync();
+        }
+
+        await using var left = fixture.NewLease();
+        await using var right = fixture.NewLease();
+
+        var results = await Task.WhenAll(
+            left.Release.ReleaseUnconsumedHeldAsync(
+                reservationId, 2m, $"tb265-j-left-{reservationId:N}", CancellationToken.None),
+            right.Release.ReleaseUnconsumedHeldAsync(
+                reservationId, 2m, $"tb265-j-right-{reservationId:N}", CancellationToken.None));
+
+        // Serialized on the reservation row: the second context can only release what still remains.
+        var total = results.Sum(x => x.ReleasedQuantity);
+        Assert.Equal(3m, total);
+        Assert.Contains(results, x => x.ReleasedQuantity == 2m);
+        Assert.Contains(results, x => x.ReleasedQuantity == 1m);
+
+        await using (var db = CreateInventoryDb(fixture.Connection))
+        {
+            var reservation = await db.Reservations.AsNoTracking()
+                .SingleAsync(x => x.ReservationId == reservationId);
+            Assert.Equal(0m, reservation.Quantity);
+            Assert.Equal(StockReservationStatus.Released, reservation.Status);
+
+            // Availability grew by exactly the released quantity; the physical unit's OnHand never moved.
+            var position = await db.Positions.AsNoTracking()
+                .SingleAsync(x => x.StockItemId == stockItemId);
+            Assert.Equal(0m, position.Reserved);
+            Assert.Equal(10m, position.OnHand);
+            Assert.Equal(2, await db.ReturnRestockInbox.AsNoTracking()
+                .CountAsync(x => x.ReservationId == reservationId));
+        }
+
+        // Exact replay of the same key answers the recorded amount and writes nothing.
+        var replay = await left.Release.ReleaseUnconsumedHeldAsync(
+            reservationId, 2m, $"tb265-j-left-{reservationId:N}", CancellationToken.None);
+        var recorded = results.Single(x => x.ReleasedQuantity == 2m).ReleasedQuantity;
+        Assert.Equal(recorded, replay.ReleasedQuantity);
+        Assert.Equal("Replayed", replay.Status);
+
+        fixture.Record(
+            _output,
+            $"J fulfillment={fixture.FulfillmentId} reservation={reservationId} held=3 "
+            + $"released=2+1 total=3 reserved=0 onHand=10 inbox=2 replay=Replayed consumedSale=Consumed");
+    }
+
+    // ------------------------------------------------------------------ K: money and disposition are separate
+
+    [Fact]
+    public async Task K_a_successful_refund_with_a_failed_restock_retries_only_the_disposition()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("K", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+        await using var returns = fixture.NewReturns();
+
+        var created = await returns.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId, fixture.SourceShipmentId, fixture.ActorUserId,
+            $"tb265-k-1-{fixture.FulfillmentId:N}", $"courier-return:tb265-k-1-{fixture.FulfillmentId:N}",
+            "جدایی پول و کالا", [(fixture.LineAId, 1m, ReturnItemCondition.Usable)], CancellationToken.None);
+        Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+        var caseId = created.Snapshot!.ReturnRequestId;
+
+        returns.Recorder.FailNext = true;
+        var approved = await returns.Directory.ApproveAsync(
+            new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId), CancellationToken.None);
+
+        // Money succeeded once; the physical disposition is honestly still pending and the phase did NOT advance
+        // past StockSettled, so the case is retryable without minting a second refund attempt.
+        Assert.Equal(1, returns.RefundCalls);
+        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        Assert.Equal(CourierOriginClosurePhase.StockSettled, approved.ClosurePhase);
+        Assert.NotNull(approved.StockSettledAt);
+        Assert.Equal(ReturnItemDisposition.None, Assert.Single(approved.Items).Disposition);
+        Assert.Empty(returns.Restocked);
+
+        var retried = await returns.Directory.RetryRefundAsync(
+            new RetryReturnRefundCommand(caseId, fixture.ActorUserId), CancellationToken.None);
+
+        // Disposition-only retry: no second refund, exactly one restock, and the phase finally completes.
+        Assert.Equal(1, returns.RefundCalls);
+        Assert.Single(returns.Restocked);
+        Assert.Equal(ReturnItemDisposition.SaleableRestock, Assert.Single(retried.Items).Disposition);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, retried.ClosurePhase);
+
+        fixture.Record(
+            _output,
+            $"K fulfillment={fixture.FulfillmentId} case={caseId} refundCalls=1 refundsAfterRetry=1 "
+            + $"restocks=1 pendingDispositionRetried=true phase=RefundReleased");
+    }
+
     // ================================================================== fixture and helpers
 
     private sealed record Fixture(
@@ -418,6 +713,7 @@ public sealed class CourierOriginReturns265RelationalTests
         {
             var fulfillmentDb = CreateFulfillmentDb(Connection);
             var inventoryDb = CreateInventoryDb(Connection);
+            var orderDb = CreateOrderDb(Connection);
             var inventory = NewInventoryDirectory(inventoryDb);
             var gateway = new FulfillmentInventoryGateway(
                 inventory, new OrderInventoryLifecycleAdapter(inventory), inventory);
@@ -431,9 +727,14 @@ public sealed class CourierOriginReturns265RelationalTests
                 new UuidV7IdGenerator());
             var release = new InventoryReturnObligationRelease(
                 inventoryDb, new OpenInventoryGuard(), new SystemUtcClock());
+            // TB-265-R1: the Order-owned durable closure is the real authority, so the fixture wires the production
+            // implementation over a real OrderDbContext of the same canonical database.
+            var obligations = new OrderReturnObligationClosure(
+                new FixtureOrderReader(this), orderDb, new SystemUtcClock(), new UuidV7IdGenerator());
             var source = new CourierReturnSourceDirectory(
-                fulfillmentDb, new OpenFulfillmentUseCaseGuard(), release, new SystemUtcClock(), new UuidV7IdGenerator());
-            return new Lease(fulfillmentDb, inventoryDb, directory, source);
+                fulfillmentDb, new OpenFulfillmentUseCaseGuard(), release, obligations,
+                new SystemUtcClock(), new UuidV7IdGenerator());
+            return new Lease(fulfillmentDb, inventoryDb, orderDb, directory, source, obligations, release);
         }
 
         public ReturnsLease NewReturns()
@@ -441,12 +742,6 @@ public sealed class CourierOriginReturns265RelationalTests
             var lease = NewLease();
             var returnsDb = CreateReturnsDb(Connection);
             var inventoryDb = CreateInventoryDb(Connection);
-            var inventory = NewInventoryDirectory(inventoryDb);
-            var release = new InventoryReturnObligationRelease(
-                inventoryDb, new OpenInventoryGuard(), new SystemUtcClock());
-            var source = new CourierReturnSourceDirectory(
-                CreateFulfillmentDb(Connection), new OpenFulfillmentUseCaseGuard(), release,
-                new SystemUtcClock(), new UuidV7IdGenerator());
             var recorder = new RecordingReturnInventoryGateway();
             var payments = new ControlledPayment();
             var refunds = new ControlledRefundGateway();
@@ -464,10 +759,11 @@ public sealed class CourierOriginReturns265RelationalTests
                 NullLogger<ReturnDirectory>.Instance,
                 new SystemUtcClock(),
                 new UuidV7IdGenerator(),
-                source,
-                new OrderReturnObligationClosure(new FixtureOrderReader(this)),
+                lease.Source,
+                lease.Obligations,
                 fulfillmentAdmin);
-            return new ReturnsLease(lease, returnsDb, inventoryDb, directory, recorder, refunds, source, fulfillmentAdmin);
+            return new ReturnsLease(
+                lease, returnsDb, inventoryDb, directory, recorder, refunds, lease.Source, fulfillmentAdmin);
         }
 
         public void Record(ITestOutputHelper output, string line)
@@ -487,14 +783,21 @@ public sealed class CourierOriginReturns265RelationalTests
     private sealed class Lease(
         FulfillmentDbContext fulfillmentDb,
         InventoryDbContext inventoryDb,
+        OrderDbContext orderDb,
         FulfillmentDirectory directory,
-        CourierReturnSourceDirectory source) : IAsyncDisposable
+        CourierReturnSourceDirectory source,
+        IOrderReturnObligationClosure obligations,
+        InventoryReturnObligationRelease release) : IAsyncDisposable
     {
         public FulfillmentDirectory Directory { get; } = directory;
         public CourierReturnSourceDirectory Source { get; } = source;
+        public IOrderReturnObligationClosure Obligations { get; } = obligations;
+        public InventoryReturnObligationRelease Release { get; } = release;
+        public FulfillmentDbContext FulfillmentDb { get; } = fulfillmentDb;
 
         public async ValueTask DisposeAsync()
         {
+            await orderDb.DisposeAsync();
             await inventoryDb.DisposeAsync();
             await fulfillmentDb.DisposeAsync();
         }
@@ -597,6 +900,17 @@ public sealed class CourierOriginReturns265RelationalTests
             await db.SaveChangesAsync();
         }
 
+        await using (var orderDb = CreateOrderDb(connection))
+        {
+            // The durable closure has a real FK to the owning order line, so the task fixture seeds the exact
+            // identities its read snapshot reports (no business rule is faked and no user order is touched).
+            await InsertCheckoutAsync(orderDb, checkoutId, $"TB265-{tag}-{checkoutId:N}", now);
+            await InsertSellerOrderAsync(orderDb, sellerOrderId, checkoutId,
+                $"TB265-{tag}-{sellerOrderId:N}", sellerPartyId);
+            await InsertOrderLineAsync(orderDb, lineA, sellerOrderId, sellerPartyId, 3m);
+            await InsertOrderLineAsync(orderDb, lineB, sellerOrderId, sellerPartyId, 1m);
+        }
+
         var fixture = new Fixture(
             connection, fulfillmentId, checkoutId, sellerOrderId, sellerPartyId, lineA, lineB,
             Guid.Empty, actorUserId, stockItemId, offerId, reservationA);
@@ -659,12 +973,50 @@ public sealed class CourierOriginReturns265RelationalTests
         return new InventoryDbContext(options.Options);
     }
 
-    private static FulfillmentDbContext CreateFulfillmentDb(string connectionString)
-    {
+    private static async Task InsertCheckoutAsync(
+        OrderDbContext db, Guid checkoutId, string idempotencyKey, DateTimeOffset now) =>
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO "order".checkouts
+                 (checkout_id, idempotency_key, cart_id, mode, buyer_party_id, placed_by_user_id, market, currency, channel, created_at, submitted_at)
+             VALUES
+                 ({checkoutId}, {idempotencyKey}, {Guid.NewGuid()}, {"OnlinePurchase"}, {Guid.NewGuid()},
+                  {Guid.NewGuid()}, {"IR"}, {"IRR"}, {"Marketplace"}, {now}, {now})
+             """);
+
+    private static async Task InsertSellerOrderAsync(
+        OrderDbContext db, Guid sellerOrderId, Guid checkoutId, string orderNumber, Guid sellerPartyId) =>
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO "order".seller_orders
+                 (seller_order_id, checkout_id, order_number, seller_party_id, status, subtotal_snapshot, tax_snapshot, discount_snapshot, grand_total_snapshot, currency)
+             VALUES
+                 ({sellerOrderId}, {checkoutId}, {orderNumber}, {sellerPartyId}, {"Paid"}, {0m}, {0m}, {0m}, {0m}, {"IRR"})
+             """);
+
+    private static async Task InsertOrderLineAsync(
+        OrderDbContext db, Guid orderLineId, Guid sellerOrderId, Guid sellerPartyId, decimal quantity) =>
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO "order".order_lines
+                 (line_id, seller_order_id, offer_id, catalog_variant_id, seller_party_id, quantity, unit_price_snapshot, line_total_snapshot, currency, tax_exclusive, price_id)
+             VALUES
+                 ({orderLineId}, {sellerOrderId}, {Guid.NewGuid()}, {Guid.NewGuid()}, {sellerPartyId}, {quantity}, {1000m}, {1000m}, {"IRR"}, {true}, {Guid.NewGuid()})
+             """);
+
+    private static FulfillmentDbContext CreateFulfillmentDb(string connectionString)    {
         var options = new DbContextOptionsBuilder<FulfillmentDbContext>();
         ToobaNpgsql.ConfigureModuleContext(
             options, connectionString, FulfillmentDbContext.Schema, typeof(FulfillmentDbContext));
         return new FulfillmentDbContext(options.Options);
+    }
+
+    private static OrderDbContext CreateOrderDb(string connectionString)
+    {
+        var options = new DbContextOptionsBuilder<OrderDbContext>();
+        ToobaNpgsql.ConfigureModuleContext(
+            options, connectionString, OrderDbContext.Schema, typeof(OrderDbContext));
+        return new OrderDbContext(options.Options);
     }
 
     private static InventoryDirectory NewInventoryDirectory(InventoryDbContext db) =>
@@ -710,9 +1062,18 @@ public sealed class CourierOriginReturns265RelationalTests
     {
         public List<(Guid ReservationId, decimal Quantity)> Calls { get; } = [];
 
+        /// <summary>TB-265-R1: reproduces a transport/lost outcome of the owning restock (no confirmation).</summary>
+        public bool FailNext { get; set; }
+
         public Task RestockConsumedReservationAsync(
             Guid reservationId, decimal quantity, string idempotencyKey, CancellationToken cancellationToken)
         {
+            if (FailNext)
+            {
+                FailNext = false;
+                throw new InvalidOperationException("tb265 simulated restock transport loss");
+            }
+
             Calls.Add((reservationId, quantity));
             return Task.CompletedTask;
         }

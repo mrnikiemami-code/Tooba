@@ -85,6 +85,11 @@ public sealed class OrderDbContext : DbContext
     public DbSet<OrderOperationalGroupOccurrenceMember> OperationalGroupOccurrenceMembers =>
         Set<OrderOperationalGroupOccurrenceMember>();
 
+    /// <summary>TB-265-R1: fact پایدار بسته‌شدن تعهد تحویل خط سفارش با تأیید پروندهٔ مرجوعی مبدأ پیک.</summary>
+    public DbSet<OrderLineObligationClosureRecord> ReturnObligationClosures =>
+        Set<OrderLineObligationClosureRecord>();
+
+
 
     /// <summary>مشاهده‌های Admin برای قفل حذف یادداشت.</summary>
     public DbSet<CheckoutAdminViewAck> AdminViewAcks => Set<CheckoutAdminViewAck>();
@@ -289,6 +294,24 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.ShipmentIdsJson).HasColumnType("text");
             entity.Property(x => x.ReusedShipmentIdsJson).HasColumnType("text");
         });
+        modelBuilder.Entity<OrderLineObligationClosureRecord>(entity =>
+        {
+            entity.ToTable("order_line_obligation_closures");
+            entity.HasKey(x => x.ClosureId);
+            entity.Property(x => x.ClosureId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
+            // TB-265-R1: the durable close instant column name owned by the additive migration.
+            entity.Property(x => x.ClosedAt).HasColumnName("closed_at_utc");
+            entity.HasIndex(x => new { x.OrderLineId, x.ReturnRequestId, x.SourceClaimId }).IsUnique()
+                .HasDatabaseName("ux_order_line_obligation_closures_line_case_claim");
+            entity.HasIndex(x => x.OrderLineId);
+            entity.HasIndex(x => x.SellerOrderId);
+            entity.HasOne<OrderLine>()
+                .WithMany()
+                .HasForeignKey(x => x.OrderLineId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<SellerOrder>(entity =>
         {
             entity.ToTable("seller_orders");

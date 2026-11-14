@@ -106,10 +106,32 @@ export function ReturnDetailCard({
           </div>
         </div>
       ) : null}
+      {snapshot.origin === "CourierOrigin" ? (
+        <div className="rounded-xl border border-sky-200 bg-sky-50 p-3" data-testid="return-courier-origin">
+          <p className="text-[10px] text-sky-700">منشأ پرونده</p>
+          <p className="mt-1 text-sm font-bold text-sky-900">
+            {snapshot.sourceShipmentId
+              ? `مرجوعی مرسولهٔ دریافت‌شده در مبدأ — ${snapshot.sourceShipmentId.slice(0, 8)}`
+              : "مرجوعی مرسولهٔ دریافت‌شده در مبدأ"}
+          </p>
+          <p className="mt-1 text-[11px] text-sky-800">
+            {`مرحلهٔ بستن پرونده: ${formatCourierClosurePhase(snapshot.closurePhase)}`}
+            {snapshot.releasedHeldQuantity && snapshot.releasedHeldQuantity > 0
+              ? ` · آزادشده از رزرو: ${snapshot.releasedHeldQuantity.toLocaleString("fa-IR")}`
+              : ""}
+          </p>
+        </div>
+      ) : null}
       <ul className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
         {snapshot.items.map((item) => (
-          <li key={item.returnItemId} className="p-3 flex items-center justify-between text-sm hover:bg-gray-50 transition-colors">
+          <li key={item.returnItemId} className="p-3 flex flex-wrap items-center justify-between gap-2 text-sm hover:bg-gray-50 transition-colors">
             <span className="text-gray-600">خط {item.orderLineId.slice(0, 8)}</span>
+            <span className="text-[11px] text-gray-600">
+              {`وضعیت کالا: ${formatReturnCondition(item.condition)}`}
+              {item.dispositionCondition
+                ? ` · تعیین تکلیف: ${formatReturnDisposition(item.dispositionCondition)}`
+                : ""}
+            </span>
             <span className="font-bold">× {item.quantity.toLocaleString("fa-IR")}</span>
           </li>
         ))}
@@ -144,6 +166,34 @@ export function ReturnDetailCard({
       ) : null}
     </div>
   );
+}
+
+/** TB-265: Persian label of the physical condition of a received unit (never a raw enum). */
+function formatReturnCondition(condition: string | undefined): string {
+  return condition === "Damaged" ? "آسیب‌دیده" : "سالم";
+}
+
+/** TB-265: Persian label of the recorded physical disposition of a returned unit. */
+function formatReturnDisposition(disposition: string): string {
+  if (disposition === "DamagedNonSaleable") return "آسیب‌دیده — غیرقابل عرضه";
+  if (disposition === "SaleableRestock") return "سالم — بازگشت به موجودی فروش";
+  return "در انتظار تعیین تکلیف";
+}
+
+/** TB-265: Persian label of the durable courier-origin approval phase. */
+function formatCourierClosurePhase(phase: string | undefined): string {
+  switch (phase) {
+    case "ObligationClosed":
+      return "تعهد خط سفارش بسته شد";
+    case "StockSettled":
+      return "وضعیت موجودی تسویه شد";
+    case "RefundProcessing":
+      return "در حال بازگشت وجه";
+    case "RefundReleased":
+      return "تکمیل شد";
+    default:
+      return "ثبت‌شده";
+  }
 }
 
 function splitReturnReason(reason: string | null): [string, string] {

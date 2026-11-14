@@ -6,6 +6,7 @@ using Tooba.Fulfillment.Domain.Aggregates;
 using Tooba.Fulfillment.Domain.ValueObjects;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Inventory.Contracts.Returns;
+using Tooba.Order.Contracts.Returns;
 using DomainClaimCondition = Tooba.Fulfillment.Domain.ValueObjects.CourierReturnClaimCondition;
 using DomainClaimLine = Tooba.Fulfillment.Domain.ValueObjects.CourierReturnClaimLine;
 using DomainClaimStatus = Tooba.Fulfillment.Domain.ValueObjects.CourierReturnClaimStatus;
@@ -20,26 +21,36 @@ namespace Tooba.Fulfillment.Infrastructure.Returns;
 /// writer of that claim, and it releases a claim only for the owning durable decision (reject/cancel) or as part of an
 /// approval settlement.
 /// </para>
+/// <para>
+/// TB-265-R1: the claim is stored twice on purpose — as the reviewed payload (replay identity) and as one
+/// <see cref="CourierReturnClaimLineRecord"/> per line carrying its own active capacity key, so the database refuses a
+/// competing active claim of the same (receipt, line, condition) quantity even from another process. Approval
+/// settlement materialises one <see cref="CourierReturnClaimAllocation"/> per claimed quantity BEFORE any parcel or
+/// stock effect, so the cancelled replacement and the released hold are always the exact source of that line.
+/// </para>
 /// </summary>
 public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSource
 {
     private readonly FulfillmentDbContext _db;
     private readonly IFulfillmentUseCaseGuard _guard;
     private readonly IInventoryReturnObligationRelease _inventoryRelease;
+    private readonly IOrderReturnObligationClosure _obligations;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
 
-    /// <summary>Wires the directory to the owning Fulfillment schema and the narrow Inventory release seam.</summary>
+    /// <summary>Wires the directory to the owning Fulfillment schema and the narrow Inventory/Order seams.</summary>
     public CourierReturnSourceDirectory(
         FulfillmentDbContext db,
         IFulfillmentUseCaseGuard guard,
         IInventoryReturnObligationRelease inventoryRelease,
+        IOrderReturnObligationClosure obligations,
         IClock clock,
         IIdGenerator ids)
     {
         _db = db;
         _guard = guard;
         _inventoryRelease = inventoryRelease;
+        _obligations = obligations;
         _clock = clock;
         _ids = ids;
     }
@@ -52,11 +63,13 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
         // TB-265: capacity is a SHARED pool, so the free-quantity check and the claim insert must be one serialized
-        // decision. The fulfillment row lock makes two independent contexts (or two operators) queue behind each
-        // other instead of both passing the check and overdrawing the same received units.
+        // decision. Serializable isolation is the SAME protocol the resend/replacement writers already use, so a
+        // concurrent resend/replacement/dispatch and this claim cannot both commit against the same received units.
+        // The row lock additionally serializes two claims of the same unit.
         var ownsTransaction = _db.Database.CurrentTransaction is null;
         await using var transaction = ownsTransaction
-            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            ? await _db.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken)
             : null;
         if (ownsTransaction)
         {
@@ -129,6 +142,7 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
             }
         }
 
+        var now = _clock.UtcNow;
         var claim = CourierReturnClaim.Create(
             _ids.NewId(),
             command.FulfillmentId,
@@ -137,8 +151,22 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
             command.ActorUserId,
             command.OccurrenceKey,
             ToDomain(command.Lines),
-            _clock.UtcNow);
+            now);
         _db.CourierReturnClaims.Add(claim);
+
+        // TB-265-R1: one durable line row per claimed (line, condition). Its active key collides in the database if
+        // another still-open claim already holds that exact received quantity.
+        foreach (var line in claim.Lines)
+        {
+            _db.CourierReturnClaimLines.Add(CourierReturnClaimLineRecord.Create(
+                _ids.NewId(),
+                claim.CourierReturnClaimId,
+                claim.ShipmentReturnReceiptId,
+                line.OrderLineId,
+                line.Condition,
+                line.Quantity,
+                now));
+        }
 
         try
         {
@@ -154,13 +182,22 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
 
             // The unique occurrence/active-key guards are the real concurrency safety: a racing context loses here
             // and reads the winning durable fact instead of overdrawing the same received quantity.
-            _db.Entry(claim).State = EntityState.Detached;
+            _db.ChangeTracker.Clear();
             var winner = await _db.CourierReturnClaims.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.FulfillmentId == command.FulfillmentId
                                            && x.OccurrenceKey == command.OccurrenceKey, cancellationToken);
-            return winner is not null
-                   && winner.AnswersIntent(command.FulfillmentId, command.ShipmentId, ToDomain(command.Lines))
-                ? new CourierReturnClaimResult(Map(winner))
+            if (winner is not null)
+            {
+                return winner.AnswersIntent(command.FulfillmentId, command.ShipmentId, ToDomain(command.Lines))
+                    ? new CourierReturnClaimResult(Map(winner))
+                    : new CourierReturnClaimResult(null, "fulfillment.returns.claim_intent_conflict");
+            }
+
+            var orderLineIds = command.Lines.Select(l => l.OrderLineId).ToArray();
+            var capacityConflict = await _db.CourierReturnClaimLines.AsNoTracking()
+                .AnyAsync(x => x.ActiveKey != null && orderLineIds.Contains(x.OrderLineId), cancellationToken);
+            return capacityConflict
+                ? new CourierReturnClaimResult(null, "fulfillment.returns.claim_quantity_exceeded")
                 : new CourierReturnClaimResult(null, "fulfillment.returns.claim_concurrency_conflict");
         }
 
@@ -172,9 +209,21 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
         bool ownsTransaction,
         CancellationToken cancellationToken)
     {
-        if (ownsTransaction && transaction is not null)
+        if (!ownsTransaction || transaction is null)
+        {
+            return;
+        }
+
+        try
         {
             await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Npgsql.PostgresException ex) when (ex.SqlState == Npgsql.PostgresErrorCodes.SerializationFailure)
+        {
+            // A concurrent resend/replacement/dispatch committed against the same received units first. Nothing of
+            // this intent was written, so the caller gets a typed conflict instead of a half-claimed capacity.
+            await transaction.RollbackAsync(cancellationToken);
+            throw new ContractOperationException("fulfillment.returns.claim_concurrency_conflict", ex);
         }
     }
 
@@ -228,7 +277,19 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
                 : throw new ContractOperationException("fulfillment.returns.claim_release_state_invalid");
 
         var claim = await LoadClaimAsync(claimId, cancellationToken);
-        claim.Release(status, _clock.UtcNow);
+        var now = _clock.UtcNow;
+        claim.Release(status, now);
+
+        // TB-265-R1: releasing the branch frees the per-line capacity keys in the same durable unit as the claim
+        // status, so the same received quantity may lawfully be claimed by a new case afterwards.
+        var lines = await _db.CourierReturnClaimLines
+            .Where(x => x.ClaimId == claimId)
+            .ToListAsync(cancellationToken);
+        foreach (var line in lines)
+        {
+            line.ReleaseCapacity(now);
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
         return new CourierReturnClaimResult(Map(claim));
     }
@@ -240,92 +301,246 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
+        _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
+
+        // TB-265-R1: settlement mutates the aggregate (cancelling the replacement parcel) and releases stock, so it
+        // must be serialized with a competing claim/dispatch of the same unit and be one durable unit itself.
+        var ownsTransaction = _db.Database.CurrentTransaction is null;
+        await using var transaction = ownsTransaction
+            ? await _db.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken)
+            : null;
+
         var claim = await LoadClaimAsync(claimId, cancellationToken);
+        if (ownsTransaction)
+        {
+            await _db.Database.ExecuteSqlAsync(
+                $"SELECT 1 FROM fulfillment.fulfillments WHERE fulfillment_id = {claim.FulfillmentId} FOR UPDATE",
+                cancellationToken);
+        }
+
+        var allocations = await _db.CourierReturnClaimAllocations
+            .Where(x => x.ClaimId == claimId)
+            .OrderBy(x => x.CreatedAt)
+            .ThenBy(x => x.AllocationId)
+            .ToListAsync(cancellationToken);
 
         // Durable replay: a settled claim answers its recorded result and writes nothing.
         if (claim.SettledAt is not null)
         {
-            return new CourierReturnSettlement(
-                claim.CourierReturnClaimId,
-                true,
-                claim.ReleasedHeldQuantity,
-                Claim: Map(claim));
+            await CommitAsync(transaction, ownsTransaction, cancellationToken);
+            return BuildSettlement(claim, allocations, blocker: null, settled: true);
+        }
+
+        // Order owns the delivery obligation. Fulfillment never decides on its own that a line no longer owes a
+        // delivery, and it never closes the obligation implicitly when the case is merely requested.
+        foreach (var group in claim.Lines.GroupBy(x => x.OrderLineId))
+        {
+            var closure = await _obligations.GetClosureAsync(returnRequestId, group.Key, cancellationToken);
+            if (closure is null || closure.Quantity < group.Sum(x => x.Quantity))
+            {
+                await CommitAsync(transaction, ownsTransaction, cancellationToken);
+                return BuildSettlement(claim, allocations, "order.return.closure_missing", settled: false);
+            }
         }
 
         var unit = await LoadMutableAsync(claim.FulfillmentId, cancellationToken);
         var now = _clock.UtcNow;
 
-        Guid? cancelledReplacementShipmentId = null;
-        Guid? closedReplacementResolutionId = null;
-        Guid? heldReservationId = null;
-
-        // A recorded replacement branch for the same returned units must be closed by an explicit owning linkage;
-        // an already dispatched/in-transit replacement is NOT unused held stock and is refused instead.
-        foreach (var resolution in unit.DamagedResolutions
-                     .Where(x => x.Status != DamagedResolutionStatus.Cancelled
-                                 && claim.Lines.Any(l => l.Condition == DomainClaimCondition.Damaged
-                                                         && l.OrderLineId == x.OrderLineId)))
+        if (allocations.Count == 0)
         {
-            if (resolution.ReplacementShipmentId is { } replacementShipmentId)
+            // Record the exact source allocation BEFORE any side effect. A crash after this point resumes with the
+            // same parcel/hold identity instead of re-planning against a changed unit.
+            allocations = Plan(unit, claim, now);
+            _db.CourierReturnClaimAllocations.AddRange(allocations);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        foreach (var allocation in allocations.Where(x => x.State == CourierReturnAllocationState.Pending))
+        {
+            if (allocation.CancelledReplacementShipmentId is { } parcelId)
             {
-                var replacement = unit.Shipments.SingleOrDefault(x => x.ShipmentId == replacementShipmentId);
+                var replacement = unit.Shipments.SingleOrDefault(x => x.ShipmentId == parcelId);
                 if (replacement is null || replacement.Status != ShipmentStatus.Created)
                 {
-                    return new CourierReturnSettlement(
-                        claim.CourierReturnClaimId,
-                        false,
-                        BlockerCode: "fulfillment.returns.replacement_already_dispatched",
-                        Claim: Map(claim));
+                    // An already dispatched replacement is a live customer obligation, not unused held stock.
+                    await _db.SaveChangesAsync(cancellationToken);
+                    await CommitAsync(transaction, ownsTransaction, cancellationToken);
+                    return BuildSettlement(
+                        claim, allocations, "fulfillment.returns.replacement_already_dispatched", settled: false);
                 }
 
-                unit.CancelShipment(replacementShipmentId, now);
-                cancelledReplacementShipmentId = replacementShipmentId;
+                unit.CancelShipment(parcelId, now);
+                allocation.MarkBranchClosed(parcelId, now);
+                await _db.SaveChangesAsync(cancellationToken);
             }
 
-            if (resolution.ReplacementReservationId is { } replacementReservationId)
+            if (allocation.DamagedResolutionId is { } resolutionId
+                && unit.DamagedResolutions.SingleOrDefault(x => x.DamagedGoodsResolutionId == resolutionId)
+                    is { } resolution)
             {
-                heldReservationId ??= replacementReservationId;
                 resolution.MarkReturnCaseSettled(now);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        foreach (var allocation in allocations.Where(x => x.State == CourierReturnAllocationState.Pending))
+        {
+            decimal released = 0m;
+            if (allocation.HeldReservationId is { } reservationId)
+            {
+                // ONE release per allocation, keyed by the allocation: two claimed lines sharing a reservation each
+                // release their OWN amount, and a lost response replays the same recorded amount.
+                var result = await _inventoryRelease.ReleaseUnconsumedHeldAsync(
+                    reservationId,
+                    allocation.Quantity,
+                    $"courier-return-hold-release:{allocation.AllocationId:N}",
+                    cancellationToken);
+                released = result.ReleasedQuantity;
             }
 
-            closedReplacementResolutionId ??= resolution.DamagedGoodsResolutionId;
-        }
-
-        if (heldReservationId is null)
-        {
-            // Fall back to the line's own binding; after dispatch this reservation is Consumed, and releasing a
-            // consumed reservation is a documented no-op that never resurrects the original sale.
-            heldReservationId = unit.Items
-                .Where(x => claim.Lines.Any(l => l.OrderLineId == x.OrderLineId))
-                .Select(x => x.ReservationId)
-                .FirstOrDefault(x => x is not null);
-        }
-
-        var requestedReleaseQuantity = claim.Lines.Sum(x => x.Quantity);
-        decimal released = 0m;
-        if (heldReservationId is { } reservationId && requestedReleaseQuantity > 0m)
-        {
-            var result = await _inventoryRelease.ReleaseUnconsumedHeldAsync(
-                reservationId,
-                requestedReleaseQuantity,
-                $"courier-return-hold-release:{claim.CourierReturnClaimId:N}",
-                cancellationToken);
-            released = result.ReleasedQuantity;
+            allocation.MarkReleased(released, now);
         }
 
         claim.MarkApproved(returnRequestId, now);
-        claim.MarkSettled(released, now);
+        claim.MarkSettled(allocations.Sum(x => x.ReleasedQuantity), now);
+
+        // The approved case permanently consumes the capacity; clearing the per-line keys keeps the rows as durable
+        // history without blocking a genuinely new lawful claim of other received units.
+        var lineRows = await _db.CourierReturnClaimLines
+            .Where(x => x.ClaimId == claimId)
+            .ToListAsync(cancellationToken);
+        foreach (var line in lineRows)
+        {
+            line.ReleaseCapacity(now);
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
+        await CommitAsync(transaction, ownsTransaction, cancellationToken);
+
+        return BuildSettlement(claim, allocations, blocker: null, settled: true);
+    }
+
+    /// <summary>
+    /// Builds the exact per-quantity allocations of this claim with ZERO writes. Every claimed line is answered by its
+    /// OWN source: remaining damaged units go to their own recorded decision (own replacement parcel + own hold), and a
+    /// usable unit goes to its own line hold. A decision that already dispatched is refused, never treated as unused.
+    /// </summary>
+    private List<CourierReturnClaimAllocation> Plan(FulfillmentUnit unit, CourierReturnClaim claim, DateTimeOffset now)
+    {
+        var allocations = new List<CourierReturnClaimAllocation>();
+        foreach (var line in claim.Lines)
+        {
+            var remaining = line.Quantity;
+            if (line.Condition == DomainClaimCondition.Damaged)
+            {
+                var resolutions = unit.DamagedResolutions
+                    .Where(x => x.ShipmentId == claim.ShipmentId
+                                && x.ShipmentReturnReceiptId == claim.ShipmentReturnReceiptId
+                                && x.OrderLineId == line.OrderLineId
+                                && x.Status != DamagedResolutionStatus.Cancelled)
+                    .OrderBy(x => x.CreatedAt)
+                    .ToList();
+
+                foreach (var resolution in resolutions)
+                {
+                    if (remaining <= 0m)
+                    {
+                        break;
+                    }
+
+                    if (resolution.Quantity > remaining)
+                    {
+                        // Splitting one durable decision across two branches would release a hold another branch
+                        // still owes; refuse instead of silently overdrawing it.
+                        throw new ContractOperationException("fulfillment.returns.replacement_partial_claim_unsupported");
+                    }
+
+                    if (resolution.ReplacementShipmentId is { } parcelId)
+                    {
+                        var parcel = unit.Shipments.SingleOrDefault(x => x.ShipmentId == parcelId);
+                        if (parcel is null || parcel.Status != ShipmentStatus.Created)
+                        {
+                            throw new ContractOperationException("fulfillment.returns.replacement_already_dispatched");
+                        }
+                    }
+
+                    allocations.Add(CourierReturnClaimAllocation.Plan(
+                        _ids.NewId(),
+                        claim.CourierReturnClaimId,
+                        claim.ShipmentId,
+                        claim.ShipmentReturnReceiptId,
+                        line.OrderLineId,
+                        line.Condition,
+                        resolution.Quantity,
+                        resolution.DamagedGoodsResolutionId,
+                        resolution.ReplacementShipmentId,
+                        resolution.ReplacementReservationId,
+                        now));
+                    remaining -= resolution.Quantity;
+                }
+
+                if (remaining > 0m)
+                {
+                    // Damaged units with no recorded replacement decision: nothing was reserved and nothing may be
+                    // made saleable, so this allocation releases exactly zero and stays an honest physical fact.
+                    allocations.Add(CourierReturnClaimAllocation.Plan(
+                        _ids.NewId(),
+                        claim.CourierReturnClaimId,
+                        claim.ShipmentId,
+                        claim.ShipmentReturnReceiptId,
+                        line.OrderLineId,
+                        line.Condition,
+                        remaining,
+                        damagedResolutionId: null,
+                        cancelledReplacementShipmentId: null,
+                        heldReservationId: null,
+                        now));
+                }
+
+                continue;
+            }
+
+            // A usable unit that came back: its own line hold is the only hold it may release. After a dispatch that
+            // reservation is Consumed, so the owning release answers 0 and never resurrects the original sale.
+            var item = unit.Items.SingleOrDefault(x => x.OrderLineId == line.OrderLineId);
+            allocations.Add(CourierReturnClaimAllocation.Plan(
+                _ids.NewId(),
+                claim.CourierReturnClaimId,
+                claim.ShipmentId,
+                claim.ShipmentReturnReceiptId,
+                line.OrderLineId,
+                line.Condition,
+                line.Quantity,
+                damagedResolutionId: null,
+                cancelledReplacementShipmentId: null,
+                heldReservationId: item?.ReservationId,
+                now));
+        }
+
+        return allocations;
+    }
+
+    private static CourierReturnSettlement BuildSettlement(
+        CourierReturnClaim claim,
+        IReadOnlyList<CourierReturnClaimAllocation> allocations,
+        string? blocker,
+        bool settled)
+    {
+        var released = claim.SettledAt is not null
+            ? claim.ReleasedHeldQuantity
+            : allocations.Sum(x => x.ReleasedQuantity);
 
         return new CourierReturnSettlement(
             claim.CourierReturnClaimId,
-            true,
+            settled,
             released,
-            cancelledReplacementShipmentId,
-            closedReplacementResolutionId,
-            heldReservationId,
-            Claim: Map(claim));
+            allocations.Select(x => x.CancelledReplacementShipmentId).FirstOrDefault(x => x is not null),
+            allocations.Select(x => x.DamagedResolutionId).FirstOrDefault(x => x is not null),
+            allocations.Select(x => x.HeldReservationId).FirstOrDefault(x => x is not null),
+            blocker,
+            Map(claim));
     }
 
     private async Task<CourierReturnClaim> LoadClaimAsync(Guid claimId, CancellationToken cancellationToken) =>
@@ -371,6 +586,17 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
             .ToListAsync(cancellationToken);
         unit.AttachLoadedReturnCapacityClaims(claims.SelectMany(x => x.Lines.Select(l =>
             new ReturnedCapacityClaim(x.ShipmentId, l.OrderLineId, l.Quantity, l.Condition))).ToArray());
+        // TB-265-R1: the send path needs the source identity of a REQUESTED claim to refuse dispatching a
+        // replacement parcel whose damaged units the case is still asking back.
+        unit.AttachLoadedCourierReturnClaims(claims.SelectMany(x => x.Lines.Select(l =>
+            new CourierReturnClaimBinding(
+                x.CourierReturnClaimId,
+                x.ShipmentId,
+                x.ShipmentReturnReceiptId,
+                x.Status == DomainClaimStatus.Approved,
+                l.OrderLineId,
+                l.Condition,
+                l.Quantity))).ToArray());
         return unit;
     }
 

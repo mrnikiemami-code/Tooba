@@ -127,6 +127,19 @@ export interface AdminShipment {
    * recorded-but-incomplete replacement actionable after a reload, without any local hint.
    */
   damagedResolutions?: AdminDamagedResolution[] | null;
+  /**
+   * TB-265-R1: Returns cases this returned parcel's received quantity already funds. The persisted (claim → case)
+   * link survives a reload, so the parcel card can open the EXACT case instead of offering the create entry again.
+   */
+  courierReturnCases?: AdminCourierReturnCase[] | null;
+}
+
+/** TB-265-R1: one persisted courier-origin claim linked to an existing Returns case. */
+export interface AdminCourierReturnCase {
+  claimId: string;
+  returnRequestId: string;
+  status: string;
+  linkedAt?: string | null;
 }
 
 /** TB-262-R1: one durable damaged-goods decision of a returned parcel (server-owned facts). */
@@ -838,6 +851,23 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
               status: text(prop(resolution, "status", "Status")),
               occurrenceKey: text(prop(resolution, "occurrenceKey", "OccurrenceKey")),
               replacementShipmentId: text(prop(resolution, "replacementShipmentId", "ReplacementShipmentId")) || null,
+            }];
+          },
+        ),
+        // TB-265-R1: the persisted claim → case links of this returned parcel, so the parcel card never offers a
+        // duplicate create after a reload and can navigate to the exact existing case.
+        courierReturnCases: array(prop(row, "courierReturnCases", "CourierReturnCases")).flatMap(
+          (caseRaw): AdminCourierReturnCase[] => {
+            const linked = record(caseRaw);
+            if (!linked) return [];
+            const claimId = text(prop(linked, "claimId", "ClaimId"));
+            const returnRequestId = text(prop(linked, "returnRequestId", "ReturnRequestId"));
+            if (!claimId || !returnRequestId) return [];
+            return [{
+              claimId,
+              returnRequestId,
+              status: text(prop(linked, "status", "Status"), "Requested"),
+              linkedAt: text(prop(linked, "linkedAt", "LinkedAt")) || null,
             }];
           },
         ),

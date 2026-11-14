@@ -722,6 +722,17 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             .ToListAsync(cancellationToken);
         unit.AttachLoadedReturnCapacityClaims(claims.SelectMany(x => x.Lines.Select(l =>
             new ReturnedCapacityClaim(x.ShipmentId, l.OrderLineId, l.Quantity, l.Condition))).ToArray());
+        // TB-265-R1: the dispatch path also needs the source identity of a REQUESTED claim, so a Created replacement
+        // parcel whose damaged units a case still asks back cannot leave the warehouse.
+        unit.AttachLoadedCourierReturnClaims(claims.SelectMany(x => x.Lines.Select(l =>
+            new CourierReturnClaimBinding(
+                x.CourierReturnClaimId,
+                x.ShipmentId,
+                x.ShipmentReturnReceiptId,
+                x.Status == CourierReturnClaimStatus.Approved,
+                l.OrderLineId,
+                l.Condition,
+                l.Quantity))).ToArray());
         return unit;
     }
 

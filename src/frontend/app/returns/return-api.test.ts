@@ -42,6 +42,75 @@ test("mapReturnSnapshot maps host PascalCase payload", () => {
   assert.equal(snapshot?.destination, "Wallet");
 });
 
+test("mapReturnSnapshot keeps courier-origin source, phases and per-item condition", () => {
+  const snapshot = mapReturnSnapshot({
+    ReturnRequestId: "r9",
+    SellerOrderId: "so9",
+    CheckoutId: "c9",
+    SellerPartyId: "s9",
+    RequestedByUserId: "u9",
+    Status: "Completed",
+    Reason: "مرجوعی مبدأ",
+    Currency: "IRR",
+    RefundAmount: 1000,
+    PaymentId: "p9",
+    Origin: "CourierOrigin",
+    SourceFulfillmentId: "f9",
+    SourceShipmentId: "sh9",
+    SourceReceiptId: "rc9",
+    SourceClaimId: "cl9",
+    ClosurePhase: "RefundReleased",
+    ObligationClosedAt: "2026-11-14T00:00:00Z",
+    StockSettledAt: "2026-11-14T00:00:00Z",
+    ReleasedHeldQuantity: 1,
+    CreatedAt: "2026-11-14T00:00:00Z",
+    UpdatedAt: "2026-11-14T00:00:00Z",
+    Items: [{
+      ReturnItemId: "ri9",
+      OrderLineId: "ol9",
+      Quantity: 1,
+      UnitPriceSnapshot: 1000,
+      Currency: "IRR",
+      ReservationId: "rs9",
+      Condition: "Damaged",
+      DispositionCondition: "DamagedNonSaleable",
+      SourceShipmentId: "sh9",
+      SourceReceiptId: "rc9",
+    }],
+    RefundAttempts: [],
+  });
+  assert.ok(snapshot);
+  assert.equal(snapshot?.origin, "CourierOrigin");
+  assert.equal(snapshot?.sourceClaimId, "cl9");
+  assert.equal(snapshot?.closurePhase, "RefundReleased");
+  assert.equal(snapshot?.releasedHeldQuantity, 1);
+  assert.equal(snapshot?.items[0]?.condition, "Damaged");
+  assert.equal(snapshot?.items[0]?.dispositionCondition, "DamagedNonSaleable");
+});
+
+test("mapReturnSnapshot defaults ordinary customer returns to their existing meaning", () => {
+  const snapshot = mapReturnSnapshot({
+    returnRequestId: "r10",
+    sellerOrderId: "so10",
+    checkoutId: "c10",
+    sellerPartyId: "s10",
+    requestedByUserId: "u10",
+    status: "Requested",
+    reason: null,
+    currency: "IRR",
+    refundAmount: 0,
+    paymentId: null,
+    createdAt: "2026-11-14T00:00:00Z",
+    updatedAt: "2026-11-14T00:00:00Z",
+    items: [],
+    refundAttempts: [],
+  });
+  assert.ok(snapshot);
+  assert.equal(snapshot?.origin, "CustomerDelivered");
+  assert.equal(snapshot?.closurePhase, "None");
+  assert.equal(snapshot?.sourceClaimId, null);
+});
+
 test("mapReturnSnapshot defaults destination to OriginalPayment", () => {
   const snapshot = mapReturnSnapshot({
     returnRequestId: "r2",

@@ -18,6 +18,8 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     private readonly List<DamagedGoodsResolution> _damagedResolutions = [];
     // TB-265: capacity already claimed by an existing courier-origin Returns case (never granted twice).
     private readonly List<ReturnedCapacityClaim> _returnCapacityClaims = [];
+    /// <summary>TB-265-R1: active courier-origin claims with their exact source/phase (send-path guard).</summary>
+    private readonly List<CourierReturnClaimBinding> _courierReturnClaims = [];
 
     private FulfillmentUnit()
     {
@@ -268,6 +270,42 @@ public sealed class FulfillmentUnit : IHasDomainEvents
                         && c.OrderLineId == orderLineId
                         && c.Condition == condition)
             .Sum(c => c.Quantity);
+
+    /// <summary>
+    /// TB-265-R1: attaches the ACTIVE courier-origin claims of this unit with their exact source parcel/receipt and
+    /// durable phase. Capacity math only needs the reduced <see cref="ReturnedCapacityClaim"/>; the send path also
+    /// needs the source identity, because a Created replacement parcel of an already-claimed damaged unit must not
+    /// leave the warehouse while the case is still being reviewed.
+    /// </summary>
+    public void AttachLoadedCourierReturnClaims(IEnumerable<CourierReturnClaimBinding> claims)
+    {
+        _courierReturnClaims.Clear();
+        _courierReturnClaims.AddRange(claims.Where(x => x.Quantity > 0m));
+    }
+
+    /// <summary>
+    /// TB-265-R1: the parcel is a replacement of a damaged decision whose exact source quantity is claimed by a
+    /// still-REQUESTED courier-origin case. Dispatching it would ship goods the customer is asking to return, so the
+    /// owning dispatch transition refuses instead of silently competing with the case.
+    /// </summary>
+    public DamagedGoodsResolution? ClaimedReplacementSource(Guid shipmentId)
+    {
+        var resolution = _damagedResolutions
+            .FirstOrDefault(x => x.ReplacementShipmentId == shipmentId
+                                 && x.Status != DamagedResolutionStatus.Cancelled);
+        if (resolution is null)
+        {
+            return null;
+        }
+
+        var requested = _courierReturnClaims.Any(x => !x.Approved
+                                                     && x.ShipmentId == resolution.ShipmentId
+                                                     && x.ReceiptId == resolution.ShipmentReturnReceiptId
+                                                     && x.OrderLineId == resolution.OrderLineId
+                                                     && x.Condition == CourierReturnClaimCondition.Damaged);
+        return requested ? resolution : null;
+    }
+
 
     /// <summary>همهٔ باقیمانده را وارد پردازش می‌کند.</summary>
     public void MarkProcessing(DateTimeOffset now)
@@ -1216,6 +1254,22 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     public void ApplyShipmentDispatched(Guid shipmentId, DateTimeOffset now)
     {
         var shipment = RequireShipment(shipmentId);
+
+        // TB-265-R1: a replacement parcel of damaged units that an active (requested) courier-origin case already
+        // claimed must not leave the warehouse. The refusal is the owning transition's, so a direct command and the
+        // shared UI both hit the same rule.
+        if (ClaimedReplacementSource(shipmentId) is { } claimed)
+        {
+            throw new ContractOperationException("fulfillment.returns.replacement_claimed_by_case")
+            {
+                Data =
+                {
+                    ["claimSourceShipmentId"] = claimed.ShipmentId,
+                    ["claimOrderLineId"] = claimed.OrderLineId,
+                },
+            };
+        }
+
         var wasDispatched = shipment.DispatchedAt is not null;
         shipment.EnsureDispatched(now);
 

@@ -131,6 +131,13 @@ public sealed partial class FulfillmentDirectory
                         ? parcelResolutions
                         : [])
                     .Select(MapDamagedResolution)
+                    .ToArray(),
+                // TB-265-R1: only a claim that is durably LINKED to a case is a navigation target.
+                capacityClaims
+                    .Where(x => x.ShipmentId == shipment.ShipmentId && x.ReturnRequestId is not null)
+                    .Select(x => new CourierReturnCaseSnapshot(
+                        x.CourierReturnClaimId, x.ReturnRequestId!.Value,
+                        (Tooba.Fulfillment.Contracts.Returns.CourierReturnClaimStatus)(int)x.Status, x.UpdatedAt))
                     .ToArray()));
         }
 

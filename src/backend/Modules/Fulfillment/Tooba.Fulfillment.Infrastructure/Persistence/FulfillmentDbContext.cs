@@ -56,6 +56,12 @@ public sealed class FulfillmentDbContext : DbContext
     /// <summary>TB-265: exclusive source-quantity claims that fund courier-origin Returns cases.</summary>
     public DbSet<CourierReturnClaim> CourierReturnClaims => Set<CourierReturnClaim>();
 
+    /// <summary>TB-265-R1: per-line rows of a claim; each carries its OWN active capacity key.</summary>
+    public DbSet<CourierReturnClaimLineRecord> CourierReturnClaimLines => Set<CourierReturnClaimLineRecord>();
+
+    /// <summary>TB-265-R1: durable per-quantity allocations of an approved claim (source-exact closure).</summary>
+    public DbSet<CourierReturnClaimAllocation> CourierReturnClaimAllocations => Set<CourierReturnClaimAllocation>();
+
     /// <summary>
     /// گروه‌های ارسال پذیرفته‌شدهٔ مالک Fulfillment.
     /// </summary>
@@ -286,6 +292,42 @@ public sealed class FulfillmentDbContext : DbContext
                 .IsUnique()
                 .HasFilter("active_key IS NOT NULL")
                 .HasDatabaseName("ux_courier_return_claims_active_key");
+        });
+        modelBuilder.Entity<CourierReturnClaimLineRecord>(entity =>
+        {
+            entity.ToTable("courier_return_claim_lines");
+            entity.HasKey(x => x.ClaimLineId);
+            entity.Property(x => x.ClaimLineId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.Condition).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.ActiveKey).HasMaxLength(256);
+            entity.HasIndex(x => x.ClaimId)
+                .HasDatabaseName("ix_courier_return_claim_lines_claim_id");
+            // TB-265-R1: the real per-line exclusivity authority. Two active claims of the SAME
+            // (receipt, line, condition) quantity collide here; a terminal claim clears its key so the
+            // released quantity may lawfully be claimed again.
+            entity.HasIndex(x => x.ActiveKey)
+                .IsUnique()
+                .HasFilter("active_key IS NOT NULL")
+                .HasDatabaseName("ux_courier_return_claim_lines_active_key");
+        });
+        modelBuilder.Entity<CourierReturnClaimAllocation>(entity =>
+        {
+            entity.ToTable("courier_return_claim_allocations");
+            entity.HasKey(x => x.AllocationId);
+            entity.Property(x => x.AllocationId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.ReleasedQuantity).HasPrecision(18, 6);
+            entity.Property(x => x.Condition).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.State).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => x.ClaimId)
+                .HasDatabaseName("ix_courier_return_claim_allocations_claim_id");
+            entity.HasIndex(x => x.HeldReservationId)
+                .HasFilter("held_reservation_id IS NOT NULL")
+                .HasDatabaseName("ix_courier_return_claim_allocations_held_reservation_id");
+            entity.HasIndex(x => x.CancelledReplacementShipmentId)
+                .HasFilter("cancelled_replacement_shipment_id IS NOT NULL")
+                .HasDatabaseName("ix_courier_return_claim_alloc_cancelled_parcel");
         });
         modelBuilder.Entity<ShipmentItem>(entity =>
         {

@@ -1165,6 +1165,16 @@ function GroupParcels({
                           : "تعیین تکلیف کالای آسیب‌دیده"}
                       </button>
                     ) : null}
+                    {parcel.courierReturnCases?.map((linkedCase) => (
+                      <a
+                        key={linkedCase.claimId}
+                        href={`/fa/admin/returns/${linkedCase.returnRequestId}`}
+                        className="inline-flex min-h-11 items-center rounded-lg border border-sky-300 bg-sky-50 px-3 text-xs font-bold text-sky-800"
+                        data-testid={`admin-order-post-dispatch-courier-case-${parcel.shipmentId}-${linkedCase.claimId}`}
+                      >
+                        مشاهدهٔ پروندهٔ مرجوعی
+                      </a>
+                    ))}
                     {caps.canCreateCourierReturn ? (
                       <button
                         type="button"

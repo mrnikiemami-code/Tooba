@@ -138,7 +138,19 @@ public sealed record ShipmentSnapshot(
     /// <summary>TB-262: true only for a parcel created by an authorized damaged-goods replacement decision.</summary>
     bool IsReplacement = false,
     /// <summary>TB-262: durable damaged-goods decisions that belong to THIS returned parcel.</summary>
-    IReadOnlyList<DamagedResolutionSnapshot>? DamagedResolutions = null);
+    IReadOnlyList<DamagedResolutionSnapshot>? DamagedResolutions = null,
+    /// <summary>
+    /// TB-265-R1: the Returns cases this returned parcel's received quantity already funds. It is the persisted link
+    /// (claim → case), so a reloaded parcel card can open the EXACT case instead of offering the create entry again.
+    /// </summary>
+    IReadOnlyList<CourierReturnCaseSnapshot>? CourierReturnCases = null);
+
+/// <summary>TB-265-R1: one durable courier-origin claim that is linked to an existing Returns case.</summary>
+public sealed record CourierReturnCaseSnapshot(
+    Guid ClaimId,
+    Guid ReturnRequestId,
+    Tooba.Fulfillment.Contracts.Returns.CourierReturnClaimStatus Status,
+    DateTimeOffset LinkedAt);
 
 /// <summary>TB-258: physical condition of a received returned line; only Usable may be resent.</summary>
 public enum ReturnReceiptCondition

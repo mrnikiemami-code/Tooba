@@ -85,7 +85,19 @@ public sealed record AdminShipmentView(
     /// TB-262-R1: the durable damaged-goods decisions of THIS returned parcel, so a reloaded page can show a pending
     /// decision and resume its EXACT recorded occurrence from server-owned facts.
     /// </summary>
-    IReadOnlyList<AdminDamagedResolutionView>? DamagedResolutions = null);
+    IReadOnlyList<AdminDamagedResolutionView>? DamagedResolutions = null,
+    /// <summary>
+    /// TB-265-R1: Returns cases this returned parcel already funds. The parcel card shows ONE «مشاهدهٔ پروندهٔ مرجوعی»
+    /// per linked case after a reload, instead of asking the operator to create it again.
+    /// </summary>
+    IReadOnlyList<AdminCourierReturnCaseView>? CourierReturnCases = null);
+
+/// <summary>TB-265-R1: persisted link from a returned parcel to an existing Returns case.</summary>
+public sealed record AdminCourierReturnCaseView(
+    Guid ClaimId,
+    Guid ReturnRequestId,
+    string Status,
+    DateTimeOffset LinkedAt);
 
 /// <summary>TB-262-R1: server-owned durable damaged-goods decision of one returned parcel.</summary>
 public sealed record AdminDamagedResolutionView(

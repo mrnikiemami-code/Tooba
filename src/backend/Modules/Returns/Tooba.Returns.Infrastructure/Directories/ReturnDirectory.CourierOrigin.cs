@@ -41,6 +41,43 @@ public sealed partial class ReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.QuantityExceeded);
         }
 
+        // TB-265-R1: the paid/ownership/line preflight happens BEFORE a durable claim exists. A case that can never
+        // be created must not strand the source capacity of a physically received parcel.
+        var fulfillmentSnapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.FulfillmentMissing);
+
+        var orderContext = await _orders.GetReturnContextAsync(fulfillmentSnapshot.SellerOrderId, cancellationToken)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
+
+        if (!orderContext.IsPaid)
+        {
+            // A courier-origin case needs a real paid order: no fake delivery, no unpaid refund.
+            throw new ContractOperationException(ReturnsErrorCodes.NotPaid);
+        }
+
+        if (orderContext.PlacedByUserId == Guid.Empty)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.NotOwner);
+        }
+
+        var lineSnapshots = new List<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId, ReturnItemCondition Condition)>();
+        foreach (var item in items)
+        {
+            var orderLine = orderContext.Lines.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)
+                ?? throw new ContractOperationException(ReturnsErrorCodes.LineMissing);
+            if (item.Quantity > orderLine.Quantity)
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.QuantityExceeded);
+            }
+
+            lineSnapshots.Add((
+                item.OrderLineId,
+                item.Quantity,
+                orderLine.UnitPriceSnapshot,
+                orderLine.ReservationId,
+                item.Condition));
+        }
+
         var claimResult = await _courierSource.ClaimAsync(
             new CreateCourierReturnClaimCommand(
                 fulfillmentId,
@@ -76,45 +113,15 @@ public sealed partial class ReturnDirectory
         {
             if (existingByKey.SourceClaimId == claim.ClaimId)
             {
-                return (await MapSnapshotAsync(existingByKey, cancellationToken), claim.ClaimId, true, null);
+                // TB-265-R1: the case was created but the claim link did not land (crash/lost response). An exact
+                // retry REPAIRS the missing link instead of returning a case that is forever unlinked.
+                await _courierSource.LinkCaseAsync(
+                    claim.ClaimId, existingByKey.ReturnRequestId, actorUserId, cancellationToken);
+                var repaired = await LoadMutableAsync(existingByKey.ReturnRequestId, cancellationToken);
+                return (await MapSnapshotAsync(repaired, cancellationToken), claim.ClaimId, true, null);
             }
 
             return (null, claim.ClaimId, false, "return.courier_origin.idempotency_conflict");
-        }
-
-        var fulfillmentSnapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
-            ?? throw new ContractOperationException(ReturnsErrorCodes.FulfillmentMissing);
-
-        var orderContext = await _orders.GetReturnContextAsync(fulfillmentSnapshot.SellerOrderId, cancellationToken)
-            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
-
-        if (!orderContext.IsPaid)
-        {
-            // A courier-origin case needs a real paid order: no fake delivery, no unpaid refund.
-            throw new ContractOperationException(ReturnsErrorCodes.NotPaid);
-        }
-
-        if (orderContext.PlacedByUserId == Guid.Empty)
-        {
-            throw new ContractOperationException(ReturnsErrorCodes.NotOwner);
-        }
-
-        var lineSnapshots = new List<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId, ReturnItemCondition Condition)>();
-        foreach (var item in items)
-        {
-            var orderLine = orderContext.Lines.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)
-                ?? throw new ContractOperationException(ReturnsErrorCodes.LineMissing);
-            if (item.Quantity > orderLine.Quantity)
-            {
-                throw new ContractOperationException(ReturnsErrorCodes.QuantityExceeded);
-            }
-
-            lineSnapshots.Add((
-                item.OrderLineId,
-                item.Quantity,
-                orderLine.UnitPriceSnapshot,
-                orderLine.ReservationId,
-                item.Condition));
         }
 
         var now = _clock.UtcNow;
@@ -246,11 +253,24 @@ public sealed partial class ReturnDirectory
 
             if (item.Condition == ReturnItemCondition.Damaged)
             {
+                var entry = _db.Entry(item);
                 item.MarkDisposition(ReturnItemDisposition.DamagedNonSaleable);
+                try
+                {
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+                catch
+                {
+                    entry.State = EntityState.Unchanged;
+                    throw;
+                }
+
                 continue;
             }
 
-            item.MarkDisposition(ReturnItemDisposition.SaleableRestock);
+            // TB-265-R1: the owning restock is called BEFORE the disposition is marked, with the SAME per-item
+            // identity on every retry. A failed restock therefore leaves the item explicitly pending instead of
+            // persisting a false SaleableRestock.
             if (item.ReservationId is { } reservationId)
             {
                 await _inventory.RestockConsumedReservationAsync(
@@ -259,9 +279,19 @@ public sealed partial class ReturnDirectory
                     $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
                     cancellationToken);
             }
-        }
 
-        await _db.SaveChangesAsync(cancellationToken);
+            var itemEntry = _db.Entry(item);
+            item.MarkDisposition(ReturnItemDisposition.SaleableRestock);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch
+            {
+                itemEntry.State = EntityState.Unchanged;
+                throw;
+            }
+        }
     }
 
     /// <summary>Releases ONLY the source-branch claim of a rejected/cancelled courier-origin case.</summary>

@@ -60,7 +60,24 @@ public sealed record OrderLineObligationClosureResult(
     decimal ClosedQuantity,
     decimal RemainingDeliverableQuantity,
     Guid? HeldReservationId = null,
-    string? BlockerCode = null);
+    string? BlockerCode = null,
+    Guid? ClosureId = null);
+
+/// <summary>
+/// TB-265-R1: the durable Order-owned closure fact of one approved courier-origin case line. It is a real row in
+/// <c>order.order_line_obligation_closures</c>, not a computed number: a retried approval answers the same row, and the
+/// cumulative closed quantity of a line never exceeds what the line still owed.
+/// </summary>
+public sealed record OrderLineObligationClosureSnapshot(
+    Guid ClosureId,
+    Guid SellerOrderId,
+    Guid CheckoutId,
+    Guid OrderLineId,
+    Guid ReturnRequestId,
+    Guid SourceClaimId,
+    decimal Quantity,
+    Guid ActorUserId,
+    DateTimeOffset ClosedAt);
 
 /// <summary>
 /// TB-265: Order-owned authority over the remaining customer delivery obligation of a line. Returns never decides
@@ -72,4 +89,13 @@ public interface IOrderReturnObligationClosure
     Task<OrderLineObligationClosureResult> CloseLineObligationAsync(
         OrderLineObligationClosureRequest request,
         CancellationToken cancellationToken);
+
+    /// <summary>Reads the durable closure recorded for this exact case line (null when nothing was closed yet).</summary>
+    Task<OrderLineObligationClosureSnapshot?> GetClosureAsync(
+        Guid returnRequestId,
+        Guid orderLineId,
+        CancellationToken cancellationToken);
+
+    /// <summary>Total quantity already durably closed for this order line across every approved case.</summary>
+    Task<decimal> GetClosedQuantityAsync(Guid orderLineId, CancellationToken cancellationToken);
 }

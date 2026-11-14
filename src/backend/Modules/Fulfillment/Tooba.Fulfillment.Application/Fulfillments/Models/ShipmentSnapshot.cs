@@ -44,7 +44,9 @@ public sealed record ShipmentSnapshot(
     /// <summary>TB-262: true only for a parcel created by an authorized damaged-goods replacement decision.</summary>
     bool IsReplacement = false,
     /// <summary>TB-262: durable damaged-goods decisions that belong to THIS returned parcel.</summary>
-    IReadOnlyList<DamagedResolutionSnapshot>? DamagedResolutions = null);
+    IReadOnlyList<DamagedResolutionSnapshot>? DamagedResolutions = null,
+    /// <summary>TB-265-R1: courier-origin Returns cases durably linked to this parcel's received quantity.</summary>
+    IReadOnlyList<CourierReturnCaseSnapshot>? CourierReturnCases = null);
 
 /// <summary>TB-258: the recorded physical origin receipt of one returned parcel.</summary>
 public sealed record ShipmentReturnReceiptSnapshot(

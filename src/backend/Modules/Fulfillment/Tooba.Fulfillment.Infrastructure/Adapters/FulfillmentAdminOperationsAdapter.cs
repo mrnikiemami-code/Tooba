@@ -519,6 +519,13 @@ internal sealed class FulfillmentAdminOperationsAdapter(
                         // Without it a reload cannot resume the recorded decision and the review mints a new
                         // key, which the owning aggregate correctly refuses as a second decision.
                         x.OccurrenceKey))
+                    .ToList(),
+            // TB-265-R1: a parcel's linked courier-origin case is a navigation target for the operator.
+            shipment.CourierReturnCases is null || shipment.CourierReturnCases.Count == 0
+                ? null
+                : shipment.CourierReturnCases
+                    .Select(x => new CourierReturnCaseSnapshot(
+                        x.ClaimId, x.ReturnRequestId, x.Status, x.UpdatedAt))
                     .ToList());
 
     private static ConsolidatedPackageSnapshot Map(AppModels.ConsolidatedPackageSnapshot package) =>

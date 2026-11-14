@@ -21,6 +21,14 @@ export interface ReturnItem {
   unitPriceSnapshot: number;
   currency: string;
   reservationId: string | null;
+  /** TB-265: physical condition of the received unit (Usable/Damaged), server-owned. */
+  condition?: string;
+  /** TB-265: recorded physical disposition once the owning restock/non-saleable decision is durable. */
+  dispositionCondition?: string | null;
+  /** TB-265: the returned parcel this unit physically came back on. */
+  sourceShipmentId?: string | null;
+  /** TB-265: the single origin receipt that is reused, never re-received. */
+  sourceReceiptId?: string | null;
 }
 
 export interface RefundAttempt {
@@ -58,6 +66,17 @@ export interface ReturnSnapshot {
   updatedAt: string;
   items: ReturnItem[];
   refundAttempts: RefundAttempt[];
+  /** TB-265: courier-origin case source facts (CustomerDelivered for the existing customer RMA flow). */
+  origin?: string;
+  sourceFulfillmentId?: string | null;
+  sourceShipmentId?: string | null;
+  sourceReceiptId?: string | null;
+  sourceClaimId?: string | null;
+  /** TB-265: durable approval phase — obligation, stock, money — never inferred on the client. */
+  closurePhase?: string;
+  obligationClosedAt?: string | null;
+  stockSettledAt?: string | null;
+  releasedHeldQuantity?: number;
 }
 
 export interface ReturnListRow {
@@ -122,6 +141,10 @@ function mapReturnItem(value: unknown): ReturnItem | null {
     unitPriceSnapshot: number(prop(item, "unitPriceSnapshot", "UnitPriceSnapshot")),
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     reservationId: nullableText(prop(item, "reservationId", "ReservationId")),
+    condition: text(prop(item, "condition", "Condition"), "Usable"),
+    dispositionCondition: nullableText(prop(item, "dispositionCondition", "DispositionCondition")),
+    sourceShipmentId: nullableText(prop(item, "sourceShipmentId", "SourceShipmentId")),
+    sourceReceiptId: nullableText(prop(item, "sourceReceiptId", "SourceReceiptId")),
   };
 }
 
@@ -175,6 +198,15 @@ export function mapReturnSnapshot(value: unknown): ReturnSnapshot | null {
     refundAttempts: Array.isArray(attemptsRaw)
       ? attemptsRaw.map(mapRefundAttempt).filter((row): row is RefundAttempt => row !== null)
       : [],
+    origin: text(prop(item, "origin", "Origin"), "CustomerDelivered"),
+    sourceFulfillmentId: nullableText(prop(item, "sourceFulfillmentId", "SourceFulfillmentId")),
+    sourceShipmentId: nullableText(prop(item, "sourceShipmentId", "SourceShipmentId")),
+    sourceReceiptId: nullableText(prop(item, "sourceReceiptId", "SourceReceiptId")),
+    sourceClaimId: nullableText(prop(item, "sourceClaimId", "SourceClaimId")),
+    closurePhase: text(prop(item, "closurePhase", "ClosurePhase"), "None"),
+    obligationClosedAt: nullableText(prop(item, "obligationClosedAt", "ObligationClosedAt")),
+    stockSettledAt: nullableText(prop(item, "stockSettledAt", "StockSettledAt")),
+    releasedHeldQuantity: number(prop(item, "releasedHeldQuantity", "ReleasedHeldQuantity")),
   };
 }
 
