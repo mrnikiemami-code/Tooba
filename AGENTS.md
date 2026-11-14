@@ -1,3 +1,9 @@
+# CURRENT — ONLY 265-R2 ISSUED; CLOSE REMAINING GAPS THEN USER TRIAL — 2026-11-14
+
+Task: docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R2/TASK.md
+Expected base a0e1f24e55f14f8bc366c9018da9f117e718aca8. 265-R1 remains PARTIAL per its ARCHITECT-REVIEW.md. One worker, one task: exact Inventory release replay identity; serialized Returns approve/reject and completed replay; partial replacement-return conservation; actual operator navigation and safe user handoff. No scheduling/mobile redesign, broad test loops or additional tasks. Same canonical database and existing Toast/MessageBox. STOP_FOR_ARCHITECT, automaticNext NONE. User tests after review; no Architect/user/all-shipping acceptance claimed.
+Earlier CURRENT banners below are historical and superseded.
+
 # CURRENT ARCHITECT REVIEW — 265-R1 PARTIAL, NOT ACCEPTED — 2026-11-14
 
 Read docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/ARCHITECT-REVIEW.md before the worker result below. Source review confirmed remaining issued-scope gaps: Inventory key-only replay lacks reservation/requested-quantity identity; Returns approve/reject lacks a common serialized decision and completed approval replay; partial replacement claim is accepted then settlement refuses AFTER Order closure. Positive operator/navigation/mobile handoff was not executed. Worker PASS is not Architect acceptance. No new implementation task issued by this review; automatic next NONE. Do not restart accepted scheduling/mobile or broad test loops. Earlier CURRENT banners below are historical worker reports, superseded by this review.
