@@ -1,3 +1,8 @@
+# CURRENT — TB266-R1 NEW CAPTURED ORDER B READY FOR USER TRIAL; STOP — 2026-11-14
+
+Read docs/architecture/evidence/TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1/ARCHITECT-REVIEW.md and user-trial.md. User must use checkout01a1db2f-e36e-7000-b7d3-afb2fe86e81a, fulfillment01a1db2f-eb79-7000-b084-3d6b4add0fbb (Packed1, accepted group, create visible); NOT old266 uncaptured Packed order. Worker browser A completed create→internal tracking→dispatch; B retained actionable. No next task, automaticNext NONE, await user feedback. No live provider/user/all-shipping acceptance.
+Audit correction: prior266 wiped reservation journal and manually zeroed Reserved, contrary to earlier owner-safe cleanup claim; owner mapping/history UNVERIFIED, backups preserved. No repeat cleanup/restore/stock write. Read review limits, no broad test/polish loop. Earlier CURRENT banners superseded.
+
 # CURRENT — 266-R1 WORKER RESULT PASS: dead end was an uncaptured historical order, now stated truthfully; real browser create→track→dispatch proven; second coherent order left actionable — 2026-11-14
 
 Read docs/ai/tasks/TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1/TASK.md and
