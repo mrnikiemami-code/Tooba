@@ -1,4 +1,4 @@
-# CURRENT — 265 WORKER RESULT PASS: courier-origin Returns case, one source claim, phased approval closure, condition-safe stock — 2026-11-13
+﻿# CURRENT — 265 WORKER RESULT PASS: courier-origin Returns case, one source claim, phased approval closure, condition-safe stock — 2026-11-13
 
 ## Read first; exact current state
 Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/TASK.md and
@@ -18,7 +18,37 @@ LANDED — Fulfillment owns the claim (`fulfillment.courier_return_claims` + lin
 PROVEN ONCE EACH — Fulfillment `CourierReturnClaim265Tests` 7/7; Returns `CourierOriginReturns265Tests` 5/5; Inventory `ReturnObligationRelease265Tests` 5/5; Order `AdminOrderPostDispatchReplayTests` 16/16 (11 retained TB-258-R3 + 5 new TB-265); Host `CourierOriginReturns265RelationalTests` 6/6 on real `tooba_alpha` (A create+replay+isolation `claim=01a1d80d-c3b0-…`; B two contexts `winners=1 refusals=1 free=0`; C reject releases only the branch claim; D approve `phase=RefundReleased releasedHeld=0 refunds=1 restocks=1 SaleableRestock`; E deliberate switch from a retained replacement `damagedDisposition=DamagedNonSaleable restocks=0`; F dispatched replacement refuses); FE mount 62/62 (2 new); `tsc` 0; `next build` 0 BUILD_ID `wqPY0iLLazeSDXeSeyTtu`; Host build 0; publish 0. Host PID 37424 on 5088 `/health`+`/health/ready` 200; Next PID 20232 on 3000 `/fa` 200, served chunk `7825-dadcc8101dfd6099.js` carries the new copy; live read-only admin projection GET 200 through the Development dev-actor seam.
 LIMITS — no real provider refund/wallet credit/money movement (approval proof uses the owning orchestration with task-owned payment/wallet ports plus real durable rows); no worker browser click-through of the create flow (mounted real dialog + live projection instead, user trial pending); parent consolidated-package return/damage still unsupported and the child stays locked; already dispatched/in-transit/delivered replacement cannot be redirected or refunded as unused stock; concurrency proven with two independent real contexts + DB guards, not a stress test.
 Environment — ONE canonical `tooba_alpha` 5432 SingleStore `store-alpha`, Host 5088, Next 3000; additive migrations applied by the repository MigrationRunner after private backup `D:\temp\tb265-backup\tooba_alpha-pre-tb265.dump`; all 33 modules `pendingMigrations: []` (Fulfillment head `20261113162906_AddCourierReturnClaims`, Returns head `20261113174500_NormalizeCourierOriginColumnNames`); no disposable/Docker/15433 DB, no edition/connection/port change, no manual DDL/business SQL/reset/reseed/backfill/global reclaimer; DataProtection + CapturedPreview unchanged (local ON / checked-in OFF); user and screenshot rows read-only (user method `01a17d0d-…` untouched); all new rows are task-labelled `TB265-…`; 255 parked, live Tipax deferred.
-STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. 265 result awaits Architect review and the user's own trial; no all-complete claim. The block below is superseded historical record.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. 265 result awaits Architect review and the user's own trial; no all-complete claim. The blocks below are superseded historical records.
+
+---
+
+# SUPERSEDED — 265 ISSUE / ARCHITECT RECOVERY CHECKPOINT — 2026-11-13 (historical)
+
+## Exact current position
+Active task: docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/TASK.md.
+Parent264-R3 mobile accepted by independent source/evidence review in docs/architecture/evidence/TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3/ARCHITECT-REVIEW.md. User visual acceptance still pending, not claimed.
+264/R1/R2 timing/positive public selection->durable policy3->queue accepted; do not reopen.263 notifications/pending recovery accepted.257 quantity/tracking,258 source-safe return/resend and262 healthy-stock replacement are retained.
+ONLY265 now implements remaining courier-origin -> existing Returns business path. One worker/task, result then review; no delegation or automatic next. Don't create another mobile polish/scheduling/test task without concrete defect.
+
+##265 owning design — read TASK, don't improvise shortcuts
+Architect inspected current ReturnEligibilityEvaluator (Paid+Delivered), ReturnDirectory (Approve immediately starts existing refund, refund success unconditionally restocks), ReturnItem (no receipt/condition), OrderReturnContracts (read-only), Order Returns orchestrator, Inventory lifecycle/return Contracts, and Fulfillment damaged directory.
+Add explicit CourierOrigin source on existing Returns and narrow Contracts; preserve customer-delivered RMA rules. No fake Delivered/global eligibility bypass.
+Three routes: same usable goods resend; separate healthy-stock replacement hold; linked Returns case reusing actual origin receipt. Fulfillment source authority must prevent same quantity funding competing branches. Requested claims quantity but does NOT release stock/start refund.
+Approved courier case + owning cancellation of corresponding Order-line obligation closes sending, releases ONLY relevant unconsumed held quantity once, THEN existing Returns refund can proceed. Partial sibling holds untouched, consumed original sale never released/recreated. Failed/unknown refund doesn't reopen delivery or remint attempts. Durable per-phase identity/reconcile mandatory; direct Returns approval routes cannot bypass closure.
+Condition-aware goods disposition: healthy may restock once under existing policy; damaged NEVER unconditional saleable restock. No new quarantine platform. Actual customer/payment beneficiary, never operator wallet/client total.
+Existing pending Referral/Replacement can deliberately redirect through audited source branch linkage; Created replacement may be cancelled retaining hold until approval; already-dispatched replacement refuses unsafe refund/release shortcut. Parent-package child locks stay, no silent unlock.
+Actual public create/case link/Returns screens, existing Toast/MessageBox, retained exact envelope; one action owner; mobile390 and desktop usability retained. Financial verification uses controlled task ports, not real user/provider money.
+No all-shipping-complete/user ACCEPT until review and user trial.
+
+## Environment/audit/backlog
+One tooba_alpha5432, FE3000->Host5088 SingleStore; minimal genuine TB265 fixture writes through owning paths allowed, user/screenshot rows read-only. User draft01a17d0d-... remains user-owned; R1 writes are audited, no blind restore. No extra DB/reset/reseed/businessSQL/manualDDL/global reclaimer. Additive migrations only runner+backup. Preserve keys/CapturedPreview,255 parked/Tipax deferred.
+Tailwind content features glob missing is verified existing build-surface backlog; mobile fix reused emitted utilities.265 must verify production CSS, no silent global style expansion/extra test loop.
+Existing limitations: parent common-package exceptions/provider not covered.264 queue fixture unpaid with disclosed Fulfillment factory layer. No fresh scheduler tests required by265.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Prior CURRENT blocks below are superseded historical records; this is the authoritative continuation point.
+
+---
+
+# SUPERSEDED — prior worker/architect checkpoint
 
 ---
 
@@ -4892,6 +4922,7 @@ explicit product-owner decision.
 - `docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md`
 - `docs/PROJECT-STATE.md`
 - `docs/ROADMAP.md`
+
 
 
 

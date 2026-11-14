@@ -1,11 +1,41 @@
-# CURRENT — 265 WORKER RESULT PASS: courier-origin Returns case, one source claim, phased approval closure, condition-safe stock — 2026-11-13
+﻿# CURRENT — 265 WORKER RESULT PASS: courier-origin Returns case, one source claim, phased approval closure, condition-safe stock — 2026-11-13
 
 Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-design.md,tb265-relational.txt}.
 Status **PASS** within the issued scope, decision **COURIER_ORIGIN_CASE_AS_THIRD_LAWFUL_OUTCOME_WITH_ONE_FULFILLMENT_SOURCE_CLAIM_PHASED_APPROVAL_CLOSURE_AND_CONDITION_AWARE_DISPOSITION** — NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT a live paid/provider refund. 264/R1/R2 scheduling and 264-R3 mobile remain accepted within scope and were not reopened; 265 is implemented and its result awaits review.
 Courier-origin case = third lawful outcome beside resend and replacement, linked to the EXISTING Returns review/approval/refund workflow. Fulfillment `CourierReturnClaim` (+ filtered unique `ActiveKey`) is the ONE source-quantity authority; usable and damaged are separate pools and one pool never funds two branches. Approval is phased and idempotent (`None → ObligationClosed → StockSettled → RefundReleased`): Order closes only the exact line obligation, Inventory releases only the unconsumed held quantity of that closed obligation once, disposition is `SaleableRestock` or `DamagedNonSaleable` (damaged never becomes saleable), and the existing refund path runs only after closure. Creating `Requested` moves no money and releases no stock. Already-dispatched replacement, parent package and unpaid cases refuse explicitly.
 Proven once each: Fulfillment 7/7, Returns 5/5, Inventory 5/5, Order post-dispatch replay 16/16 (5 new), Host relational A–F 6/6 on `tooba_alpha`, FE mount 62/62 (2 new), `tsc` 0, `next build` 0, Host build/publish 0. Runtime: Host 5088 PID 37424 (`/health`+`/health/ready` 200), Next 3000 PID 20232 (BUILD_ID `wqPY0iLLazeSDXeSeyTtu`, chunk `7825-dadcc8101dfd6099.js` carries «ایجاد پروندهٔ مرجوعی»). One canonical DB, additive migrations via the repository MigrationRunner after private backup, all modules pending 0, user and screenshot rows read-only, task rows `TB265-…`. Limits: no real money movement, no worker browser click-through (user trial pending), parent package still unsupported, dispatched replacement refuses, concurrency proven by two contexts + DB guards not by a stress test.
-STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. The block below is superseded historical record.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. The blocks below are superseded historical records.
+
+---
+
+# SUPERSEDED — 265 ISSUE / ARCHITECT RECOVERY CHECKPOINT — 2026-11-13 (historical)
+
+## Exact current position
+Active task: docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/TASK.md.
+Parent264-R3 mobile accepted by independent source/evidence review in docs/architecture/evidence/TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3/ARCHITECT-REVIEW.md. User visual acceptance still pending, not claimed.
+264/R1/R2 timing/positive public selection->durable policy3->queue accepted; do not reopen.263 notifications/pending recovery accepted.257 quantity/tracking,258 source-safe return/resend and262 healthy-stock replacement are retained.
+ONLY265 now implements remaining courier-origin -> existing Returns business path. One worker/task, result then review; no delegation or automatic next. Don't create another mobile polish/scheduling/test task without concrete defect.
+
+##265 owning design — read TASK, don't improvise shortcuts
+Architect inspected current ReturnEligibilityEvaluator (Paid+Delivered), ReturnDirectory (Approve immediately starts existing refund, refund success unconditionally restocks), ReturnItem (no receipt/condition), OrderReturnContracts (read-only), Order Returns orchestrator, Inventory lifecycle/return Contracts, and Fulfillment damaged directory.
+Add explicit CourierOrigin source on existing Returns and narrow Contracts; preserve customer-delivered RMA rules. No fake Delivered/global eligibility bypass.
+Three routes: same usable goods resend; separate healthy-stock replacement hold; linked Returns case reusing actual origin receipt. Fulfillment source authority must prevent same quantity funding competing branches. Requested claims quantity but does NOT release stock/start refund.
+Approved courier case + owning cancellation of corresponding Order-line obligation closes sending, releases ONLY relevant unconsumed held quantity once, THEN existing Returns refund can proceed. Partial sibling holds untouched, consumed original sale never released/recreated. Failed/unknown refund doesn't reopen delivery or remint attempts. Durable per-phase identity/reconcile mandatory; direct Returns approval routes cannot bypass closure.
+Condition-aware goods disposition: healthy may restock once under existing policy; damaged NEVER unconditional saleable restock. No new quarantine platform. Actual customer/payment beneficiary, never operator wallet/client total.
+Existing pending Referral/Replacement can deliberately redirect through audited source branch linkage; Created replacement may be cancelled retaining hold until approval; already-dispatched replacement refuses unsafe refund/release shortcut. Parent-package child locks stay, no silent unlock.
+Actual public create/case link/Returns screens, existing Toast/MessageBox, retained exact envelope; one action owner; mobile390 and desktop usability retained. Financial verification uses controlled task ports, not real user/provider money.
+No all-shipping-complete/user ACCEPT until review and user trial.
+
+## Environment/audit/backlog
+One tooba_alpha5432, FE3000->Host5088 SingleStore; minimal genuine TB265 fixture writes through owning paths allowed, user/screenshot rows read-only. User draft01a17d0d-... remains user-owned; R1 writes are audited, no blind restore. No extra DB/reset/reseed/businessSQL/manualDDL/global reclaimer. Additive migrations only runner+backup. Preserve keys/CapturedPreview,255 parked/Tipax deferred.
+Tailwind content features glob missing is verified existing build-surface backlog; mobile fix reused emitted utilities.265 must verify production CSS, no silent global style expansion/extra test loop.
+Existing limitations: parent common-package exceptions/provider not covered.264 queue fixture unpaid with disclosed Fulfillment factory layer. No fresh scheduler tests required by265.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Prior CURRENT blocks below are superseded historical records; this is the authoritative continuation point.
+
+---
+
+# SUPERSEDED — prior worker/architect checkpoint
 
 ---
 
@@ -4410,6 +4440,8 @@ PRODUCT_FULLY_READY = NO
 ```
 
 Evidence for current task: `docs/evidence/TB-P07-T001-R5/` (Admin+Seller UI/UX polish; Shopeiva vendor fidelity; DataGrid/AC UX; manual visual supervision). Flags: T001/R1/R2/R3/R4 = SUPERSEDED; R5 = AWAITING_ARCHITECT_ACCEPT; `CURRENT_FOCUS` = UI_UX_ONLY; `ADMIN_UI` = PRIORITY_1; `SELLER_UI` = PRIORITY_2; `BACKEND_FEATURE_EXPANSION` = FROZEN; `CATEGORY_ATTRIBUTE_*` / `PRODUCT_VARIANT_AXES` / `VARIANT_COMBINATION_FOUNDATION` = LIVE (kept); `FULL_VARIANT_MATRIX` = DEFERRED; `FACETED_SEARCH_INTEGRATION` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Do **not** claim `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, `PRODUCTION_GO_LIVE_READY`, `SELLER_PANEL_COMPLETE`, or `FULL_VARIANT_MATRIX_LIVE`.
+
+
 
 
 
