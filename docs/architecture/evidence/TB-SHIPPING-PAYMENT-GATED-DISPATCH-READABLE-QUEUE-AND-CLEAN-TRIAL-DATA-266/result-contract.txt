@@ -16,3 +16,6 @@ trial=PendingPayment 01a1daaf-21bc-7000-b5d1-1dd42a194dcf | Ready 01a1daa2-430d-
 stop=STOP_FOR_ARCHITECT
 automaticNextImplementationTask=NONE
 
+base_sha=2d31e4bab8ce852db5df0d63628bc1a696a492c5
+code_sha=0012e227e111652224b0a4e4f518821ee3bc2123
+evidence_sha=0012e227e111652224b0a4e4f518821ee3bc2123
