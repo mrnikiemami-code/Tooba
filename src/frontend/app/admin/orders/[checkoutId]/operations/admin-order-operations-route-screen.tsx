@@ -9,6 +9,11 @@ import {
   type AdminResult,
   type AdminShipment,
 } from "../../../admin-api";
+import {
+  operationalDayLabel,
+  operationalTimeWindowLabel,
+  operationalTimeZoneLabel,
+} from "../../../../../lib/operational-format";
 import { AdminOrderItemsShippingPanel } from "../../../admin-order-items-shipping-panel";
 import { mapAdminErrorMessage } from "../../../admin-error-map";
 import {
@@ -119,7 +124,8 @@ function parcelReadiness(parcel: AdminShipment, detail: AdminOrderDetail): Readi
     case "Failed":
       return { readinessLabel: "مرسوله ناموفق", readinessTone: "blocked" };
     default:
-      return { readinessLabel: "کار فیزیکی باقی نمانده", readinessTone: "done" };
+      // TB-267: never a verdict the facts do not support — an unmapped status is shown as itself.
+      return { readinessLabel: formatAdminShipmentStatus(parcel.status), readinessTone: "ready" };
   }
 }
 
@@ -141,7 +147,8 @@ function packageReadiness(
     case "Cancelled":
       return { readinessLabel: "بسته لغو شده", readinessTone: "blocked" };
     default:
-      return { readinessLabel: "کار فیزیکی باقی نمانده", readinessTone: "done" };
+      // TB-267: show the package's real status instead of a verdict the facts do not support.
+      return { readinessLabel: formatAdminShipmentStatus(pack.status), readinessTone: "ready" };
   }
 }
 
@@ -204,7 +211,17 @@ function readinessOf(
     return parcelReadiness(returned[0]!, detail);
   }
 
-  return { readinessLabel: "کار فیزیکی باقی نمانده", readinessTone: "done" };
+  /**
+   * TB-267: zero fresh-creation remainder is a statement about OPEN WORK, not about the customer promise.
+   * It never claims a delivery or an obligation is complete — only that this group carries no open parcel.
+   */
+  const openWork = parcels.some((parcel) =>
+    ["Created", "Dispatched", "InTransit", "NonDelivered", "Returning"].includes(parcel.status));
+  if (!openWork) {
+    return { readinessLabel: "کار عملیاتی بازِ این گروه باقی نمانده است", readinessTone: "done" };
+  }
+
+  return { readinessLabel: "وضعیت مرسوله‌های این گروه نیازمند بررسی است", readinessTone: "blocked" };
 }
 
 function toTargetFact(
@@ -212,24 +229,20 @@ function toTargetFact(
   detail: AdminOrderDetail,
   focus: { shipment: AdminShipment | null; packageId: string | null },
 ): OrderOperationsTargetFact {
-  const delivery = [group.deliveryDate, group.deliveryTimeWindow].filter(Boolean).join(" · ");
-  const plan = group.plannedDispatch
-    ? [
-        group.plannedDispatch.handoffDate,
-        group.plannedDispatch.handoffTimeWindow,
-        group.plannedDispatch.handoffTimeZone ? `(${group.plannedDispatch.handoffTimeZone})` : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : null;
+  const plan = group.plannedDispatch ?? null;
   const focusedPackageNumber = focus.packageId
     ? (detail.consolidatedPackages ?? []).find((item) => item.consolidatedPackageId === focus.packageId)?.packageNumber ?? null
     : null;
   return {
     groupKey: group.operationalGroupKey,
     methodLabel: group.methodLabel,
-    customerDeliverySummary: delivery,
-    plannedDispatchSummary: plan,
+    scopeLabel: group.isCrossSellerMarketplace ? "ارسال مشترک مارکت‌پلیس" : "ارسال مستقل",
+    // TB-267: one Persian date shape everywhere (Jalali), windows isolated as their own range.
+    customerDeliveryDateLabel: operationalDayLabel(group.deliveryDate),
+    customerDeliveryTimeWindow: operationalTimeWindowLabel(group.deliveryTimeWindow),
+    plannedDispatchDateLabel: plan ? operationalDayLabel(plan.handoffDate) : null,
+    plannedDispatchTimeWindow: plan ? operationalTimeWindowLabel(plan.handoffTimeWindow) : null,
+    plannedDispatchTimeZoneLabel: plan ? operationalTimeZoneLabel(plan.handoffTimeZone) : null,
     parcelSummary: parcelSummary([group], detail, focusedPackageNumber),
     ...readinessOf(group, detail, focus),
   };
@@ -356,11 +369,9 @@ export function AdminOrderOperationsRouteScreen({
     // locator that resolved to nothing stays an honest not-found, never a different unit's card.
     if (!fulfillmentId || shippingGroupId || shipmentId || packageId) return [];
     if (!targetSellerOrderIds || targetSellerOrderIds.size === 0) return [];
-    const delivery = (detail.shippingGroups ?? [])
-      .filter((group) => targetSellerOrderIds.has(group.sellerOrderId))
-      .map((group) => [group.deliveryDate, group.deliveryTimeWindow].filter(Boolean).join(" · "))
-      .filter(Boolean)
-      .join(" | ");
+    const captured = (detail.shippingGroups ?? []).filter((group) => targetSellerOrderIds.has(group.sellerOrderId));
+    // TB-267: one human date shape; the unit's own first captured commitment is used, never a joined ISO string.
+    const firstCommitment = captured[0] ?? null;
     return detail.sellerOrders
       .filter((seller) => targetSellerOrderIds.has(seller.id))
       .map((seller): OrderOperationsTargetFact => {
@@ -370,8 +381,12 @@ export function AdminOrderOperationsRouteScreen({
         return {
           groupKey: `fulfillment:${seller.fulfillmentId ?? seller.id}`,
           methodLabel: detail.shippingMethodLabel ?? "",
-          customerDeliverySummary: delivery,
-          plannedDispatchSummary: null,
+          scopeLabel: null,
+          customerDeliveryDateLabel: operationalDayLabel(firstCommitment?.deliveryDate ?? null),
+          customerDeliveryTimeWindow: operationalTimeWindowLabel(firstCommitment?.deliveryTimeWindow ?? ""),
+          plannedDispatchDateLabel: null,
+          plannedDispatchTimeWindow: null,
+          plannedDispatchTimeZoneLabel: null,
           parcelSummary: parcels.length === 0
             ? "بدون مرسولهٔ ساخته‌شده"
             : parcels.length === open.length
@@ -427,6 +442,8 @@ export function AdminOrderOperationsRouteScreen({
         <AdminOrderItemsShippingPanel
           detail={detail}
           checkoutId={checkoutId}
+          // TB-267: this route is the finance-free operational surface — no fee, price or total column here.
+          financeFree
           onCompleted={() => setReloadToken((value) => value + 1)}
         />
       ) : null}

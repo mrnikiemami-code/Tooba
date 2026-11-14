@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal, Package, Truck } from "lucide-react";
@@ -58,6 +58,11 @@ type Props = {
   detail: AdminOrderDetail;
   checkoutId: string;
   onCompleted?: () => void;
+  /**
+   * TB-267: the finance-free operational route renders the SAME panel without money. Prices, line totals and
+   * group fees are suppressed here only; the full order page keeps its required financial display.
+   */
+  financeFree?: boolean;
 };
 
 type QtyMap = Record<string, number>;
@@ -103,7 +108,13 @@ function allocationSummary(line: AdminOrderLine): string {
   const s = shipped ?? 0;
   const a = allocated ?? s;
   const remaining = Math.max(0, line.quantity - a);
-  return `بسته‌بندی ${p.toLocaleString("fa-IR")} · تخصیص ${a.toLocaleString("fa-IR")} · ارسال ${s.toLocaleString("fa-IR")} · باقی ${remaining.toLocaleString("fa-IR")}`;
+  // TB-267: each counter names what it counts, so the cell reads as copy instead of a numeric code.
+  return [
+    `بسته‌شده ${p.toLocaleString("fa-IR")}`,
+    `تخصیص‌یافته ${a.toLocaleString("fa-IR")}`,
+    `ارسال‌شده ${s.toLocaleString("fa-IR")}`,
+    `باقی‌مانده ${remaining.toLocaleString("fa-IR")}`,
+  ].join(" · ");
 }
 
 function returnSummary(line: AdminOrderLine): string {
@@ -150,7 +161,7 @@ type ShipmentListTab = "current" | "cancelled";
 /**
  * بخش اقلام و ارسال — گروه‌بندی فروشنده، انتخاب خط/تعداد، کارت مرسوله، مودال ایجاد.
  */
-export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }: Props) {
+export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, financeFree = false }: Props) {
   const [selectedBySeller, setSelectedBySeller] = useState<Record<string, string[]>>({});
   const [qtyByLine, setQtyByLine] = useState<QtyMap>({});
   const [opsBySeller, setOpsBySeller] = useState<Record<string, AdminOrderOperationAction[]>>({});
@@ -366,6 +377,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       <div className="space-y-4 p-3 md:p-4">
         <AdminOrderOperationalDeliverySection
           detail={detail}
+          financeFree={financeFree}
           pendingCode={pendingCode}
           onFactsChanged={onCompleted}
           onCreateShipment={(target) => setShipmentModalTarget(target)}
@@ -587,14 +599,13 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-3 py-2.5">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-black text-gray-900">{seller.sellerDisplayName}</h3>
+                    <h3 className="text-sm font-bold text-gray-900">{seller.sellerDisplayName}</h3>
                     <span
-                      className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-800"
+                      className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800"
                       data-testid={`admin-order-seller-status-${seller.id}`}
                     >
                       {formatAdminStatus(headerStatus)}
                     </span>
-                    <span className="text-[11px] font-semibold text-gray-500">آماده‌سازی کالاها</span>
                   </div>
                   <p className="text-xs text-gray-500">
                     {itemCount.toLocaleString("fa-IR")} قلم · {seller.orderNumber}
@@ -686,7 +697,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                 }
               >
                 <div className="overflow-x-auto rounded-lg border border-gray-100" data-testid={`admin-order-seller-lines-scroll-${seller.id}`}>
-                  <table className="min-w-[920px] w-full text-sm">
+                  <table className={`w-full text-sm ${financeFree ? "min-w-[760px]" : "min-w-[920px]"}`}>
                     <thead className="bg-gray-50 text-xs text-gray-600">
                       <tr>
                         <th className="px-2 py-2 text-right">
@@ -704,8 +715,8 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                         <th className="px-2 py-2 text-right">محصول</th>
                         <th className="px-2 py-2 text-right">تعداد</th>
                         <th className="px-2 py-2 text-right">انتخاب تعداد</th>
-                        <th className="px-2 py-2 text-right">قیمت</th>
-                        <th className="px-2 py-2 text-right">جمع</th>
+                        {financeFree ? null : <th className="px-2 py-2 text-right">قیمت</th>}
+                        {financeFree ? null : <th className="px-2 py-2 text-right">جمع</th>}
                         <th className="px-2 py-2 text-right">وضعیت</th>
                         <th className="px-2 py-2 text-right">تخصیص ارسال</th>
                         <th className="px-2 py-2 text-right">مهلت مرجوعی</th>
@@ -780,18 +791,22 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                 <span className="text-xs text-gray-400">{line.quantity.toLocaleString("fa-IR")}</span>
                               )}
                             </td>
-                            <td className="px-2 py-2 tabular-nums text-xs">{formatAdminMoney(line.unitAmount, line.currency)}</td>
-                            <td className="px-2 py-2 tabular-nums text-xs font-semibold">{formatAdminMoney(line.linePayable, line.currency)}</td>
+                            {financeFree ? null : (
+                              <td className="px-2 py-2 tabular-nums text-xs">{formatAdminMoney(line.unitAmount, line.currency)}</td>
+                            )}
+                            {financeFree ? null : (
+                              <td className="px-2 py-2 tabular-nums text-xs font-semibold">{formatAdminMoney(line.linePayable, line.currency)}</td>
+                            )}
                             <td className="px-2 py-2">
                               <span
-                                className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-800"
+                                className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800"
                                 data-testid={`admin-order-line-status-${key}`}
                               >
                                 {formatAdminShipmentStatus(line.operationalStatus || seller.fulfillmentStatus || seller.status)}
                               </span>
                             </td>
-                            <td className="px-2 py-2 text-[11px] text-gray-600">{allocationSummary(line)}</td>
-                            <td className="px-2 py-2 text-[11px] text-gray-700" data-testid={`admin-order-line-return-${key}`}>
+                            <td className="px-2 py-2 text-xs text-gray-600">{allocationSummary(line)}</td>
+                            <td className="px-2 py-2 text-xs text-gray-700" data-testid={`admin-order-line-return-${key}`}>
                               {returnSummary(line)}
                             </td>
                             <td className="relative px-2 py-2">
@@ -898,8 +913,8 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                               data-testid={`admin-order-seller-shipment-tab-current-${seller.id}`}
                               className={
                                 shipmentTab === "current"
-                                  ? "flex-1 rounded-md bg-blue-50 px-2 py-1.5 text-[11px] font-bold text-blue-800"
-                                  : "flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-50"
+                                  ? "flex-1 rounded-md bg-blue-50 px-2 py-1.5 text-xs font-bold text-blue-800"
+                                  : "flex-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
                               }
                               onClick={() => setShipmentTabBySeller((prev) => ({ ...prev, [seller.id]: "current" }))}
                             >
@@ -915,8 +930,8 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                               data-testid={`admin-order-seller-shipment-tab-cancelled-${seller.id}`}
                               className={
                                 shipmentTab === "cancelled"
-                                  ? "flex-1 rounded-md bg-red-50 px-2 py-1.5 text-[11px] font-bold text-red-700"
-                                  : "flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-50"
+                                  ? "flex-1 rounded-md bg-red-50 px-2 py-1.5 text-xs font-bold text-red-700"
+                                  : "flex-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
                               }
                               onClick={() => setShipmentTabBySeller((prev) => ({ ...prev, [seller.id]: "cancelled" }))}
                             >
@@ -928,7 +943,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                           </div>
                           {visibleShipments.length === 0 ? (
                             <div
-                              className="mt-4 py-4 text-center text-[11px] text-gray-500"
+                              className="mt-4 py-4 text-center text-xs text-gray-500"
                               data-testid={`admin-order-seller-shipments-tab-empty-${seller.id}-${shipmentTab}`}
                             >
                               {shipmentTab === "cancelled"
@@ -961,40 +976,31 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                     data-testid={`admin-order-shipment-card-${shipment.shipmentId}`}
                                     data-cancelled={shipmentCancelled ? "true" : undefined}
                                   >
-                                    <div className="flex items-start justify-between gap-2">
-                                      <div>
-                                        <p className="font-mono text-[11px] text-gray-500" dir="ltr">
-                                          {shipment.trackingReference
-                                            ? shipment.trackingReference
-                                            : `مرسوله · ${shipment.itemCount.toLocaleString("fa-IR")} قلم`}
+                                    <div className="flex flex-wrap items-start justify-between gap-2">
+                                      <div className="min-w-0">
+                                        <p className="break-all font-mono text-xs text-gray-500" dir="ltr">
+                                          {shipment.trackingReference || "بدون کد رهگیری"}
                                         </p>
-                                        <p className="mt-0.5 text-xs font-bold text-gray-900">{shipment.carrierDisplayName}</p>
-                                        <p className="text-[11px] text-gray-500">
+                                        <p className="mt-0.5 truncate text-xs font-bold text-gray-900">{shipment.carrierDisplayName}</p>
+                                        <p className="text-xs text-gray-500">
                                           {shipment.itemCount.toLocaleString("fa-IR")} قلم
                                         </p>
                                       </div>
                                       <span
                                         className={
                                           shipmentCancelled
-                                            ? "rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600"
+                                            ? "shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600"
                                             : ["NonDelivered", "Returning", "Returned"].includes(shipment.status)
-                                              ? "rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900"
-                                              : "rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700"
+                                              ? "shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900"
+                                              : "shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700"
                                         }
                                       >
                                         {formatAdminShipmentStatus(shipment.status)}
                                       </span>
                                     </div>
-                                    {shipment.trackingReference ? (
-                                      <p className="mt-2 text-[11px] text-gray-600" dir="ltr">
-                                        رهگیری: {shipment.trackingReference}
-                                      </p>
-                                    ) : (
-                                      <p className="mt-2 text-[11px] text-gray-400">کد رهگیری ثبت نشده</p>
-                                    )}
                                     {shipment.packageLockedReasonFa || shipment.activePackageNumber ? (
                                       <p
-                                        className="mt-2 rounded border border-indigo-100 bg-indigo-50/70 px-2 py-1.5 text-[11px] font-semibold text-indigo-900"
+                                        className="mt-2 rounded border border-indigo-100 bg-indigo-50/70 px-2 py-1.5 text-xs font-semibold text-indigo-900"
                                         data-testid={`admin-order-shipment-package-lock-${shipment.shipmentId}`}
                                       >
                                         {shipment.packageLockedReasonFa
@@ -1005,7 +1011,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                       {canTrack ? (
                                         <button
                                           type="button"
-                                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                                          className="rounded border border-gray-200 min-h-8 rounded px-2 py-1 text-xs font-bold text-gray-700 disabled:opacity-50"
                                           disabled={pendingCode !== null}
                                           data-testid={`admin-order-shipment-assign-tracking-${shipment.shipmentId}`}
                                           onClick={() => setTrackingTarget({ seller, shipment })}
@@ -1016,7 +1022,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                       {canDispatch ? (
                                         <button
                                           type="button"
-                                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                                          className="rounded border border-gray-200 min-h-8 rounded px-2 py-1 text-xs font-bold text-gray-700 disabled:opacity-50"
                                           disabled={pendingCode !== null}
                                           onClick={() => void runSellerOp(seller, "dispatch_shipment", { shipmentId: shipment.shipmentId })}
                                         >
@@ -1026,7 +1032,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                       {canDeliver ? (
                                         <button
                                           type="button"
-                                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                                          className="rounded border border-gray-200 min-h-8 rounded px-2 py-1 text-xs font-bold text-gray-700 disabled:opacity-50"
                                           disabled={pendingCode !== null}
                                           onClick={() => void runSellerOp(seller, "deliver_shipment", { shipmentId: shipment.shipmentId })}
                                         >
@@ -1036,7 +1042,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                       {canCancel ? (
                                         <button
                                           type="button"
-                                          className="rounded border border-red-200 px-2 py-1 text-[10px] font-bold text-red-700 disabled:opacity-50"
+                                          className="rounded border border-red-200 min-h-8 rounded px-2 py-1 text-xs font-bold text-red-700 disabled:opacity-50"
                                           disabled={pendingCode !== null}
                                           data-testid={`admin-order-shipment-cancel-${shipment.shipmentId}`}
                                           onClick={() => void runSellerOp(seller, "cancel_shipment", { shipmentId: shipment.shipmentId })}
@@ -1054,7 +1060,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       );
                     })()
                   )}
-                  {!opsLoaded ? <p className="mt-2 text-[11px] text-gray-400">بارگذاری عملیات…</p> : null}
+                  {!opsLoaded ? <p className="mt-2 text-xs text-gray-400">بارگذاری عملیات…</p> : null}
                 </aside>
                 ) : null}
               </div>

@@ -1640,8 +1640,9 @@ test("TB-256-R1 static: «موعد ارسال» is a SEPARATE row from the custo
   );
 
   // Both facts render; the handoff row carries its own testid and its own date.
-  assert.match(html, /تحویل مشتری:/);
-  assert.match(html, /موعد ارسال:/);
+  // TB-267: labels are professional row labels (no trailing colon) and the carrier row names its owner.
+  assert.match(html, /تحویل مشتری<\/dt>/);
+  assert.match(html, /موعد ارسال حامل<\/dt>/);
   assert.ok(html.includes(`admin-order-operational-planned-dispatch-${GROUP_KEY}`));
   assert.match(html, /۰۹:۰۰–۱۷:۰۰|09:00–17:00/);
   assert.match(html, /۳ روز کاری حمل|3 روز کاری حمل/);
@@ -1660,8 +1661,8 @@ test("TB-256-R1 static: a historical group without a plan renders no «موعد 
     }),
   );
 
-  assert.match(html, /تحویل مشتری:/);
-  assert.doesNotMatch(html, /موعد ارسال:/);
+  assert.match(html, /تحویل مشتری<\/dt>/);
+  assert.doesNotMatch(html, /موعد ارسال حامل<\/dt>/);
   assert.ok(!html.includes("admin-order-operational-planned-dispatch-"));
 });
 
@@ -3200,12 +3201,13 @@ test("TB-264 static: a preparation-aware plan shows its own deadline row in the 
 
   // The deadlines are a THIRD fact: never merged into the customer promise nor into the handoff row.
   assert.ok(html.includes(`admin-order-operational-deadlines-${GROUP_KEY}`));
-  assert.match(html, /مهلت‌های عملیاتی:/);
+  assert.match(html, /مهلت‌های عملیاتی/);
   assert.match(html, /آماده‌سازی از/);
-  assert.match(html, /حرکت به سمت حامل/);
+  assert.match(html, /خروج به سوی حامل/);
   assert.match(html, /آخرین مهلت تحویل به حامل/);
-  // The instant is printed in the carrier zone it was computed in, labelled with that zone.
-  assert.match(html, /\(Asia\/Tehran\)/);
+  // TB-267: the instants are labelled ONCE with a human zone name; the raw zone id never reaches the operator.
+  assert.match(html, /به وقت تهران/);
+  assert.doesNotMatch(html, /Asia\/Tehran/);
 });
 
 test("TB-264 static: a legacy policy-v1 plan renders no deadline row and invents none", () => {
@@ -3231,9 +3233,9 @@ test("TB-264 static: a legacy policy-v1 plan renders no deadline row and invents
     }),
   );
 
-  assert.match(html, /موعد ارسال:/);
+  assert.match(html, /موعد ارسال حامل<\/dt>/);
   assert.ok(!html.includes("admin-order-operational-deadlines-"));
-  assert.doesNotMatch(html, /مهلت‌های عملیاتی:/);
+  assert.doesNotMatch(html, /مهلت‌های عملیاتی/);
 });
 
 /* ──────────────────── TB-265: courier-origin receipt → EXISTING returns case ─────────────────── */

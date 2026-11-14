@@ -15,7 +15,11 @@ import {
   type AdminSellerOrder,
   type AdminShipment,
 } from "./admin-api";
-import { formatJalaliDate } from "../../design-system/app-data-grid/jalali";
+import {
+  operationalDayLabel,
+  operationalInstantLabel,
+  operationalTimeZoneLabel,
+} from "../../lib/operational-format";
 import { MessageBox } from "../../design-system";
 import {
   clearOperationalGroupAttempt,
@@ -98,6 +102,11 @@ export type OperationalGroupWorkflowRequest = {
 
 type Props = {
   detail: AdminOrderDetail;
+  /**
+   * TB-267: the finance-free operational route renders this SAME section without money. Group fees and the
+   * fee breakdown are suppressed here only; the full order page keeps its required financial display.
+   */
+  financeFree?: boolean;
   pendingCode: string | null;
   onCreateShipment: (target: OperationalCreateTarget) => void;
   /** One reviewed group workflow: constituent parcels (create/reuse) + their common package. */
@@ -200,12 +209,6 @@ function receiptTotals(parcel: AdminShipment): { usable: number; damaged: number
   return { usable, damaged, outstanding };
 }
 
-/** Short, human identity of another parcel of the same group (no raw GUID in operator copy). */
-function parcelShortId(parcel: AdminShipment | null | undefined, fallbackId: string): string {
-  const label = (parcel?.trackingReference ?? "").trim();
-  return label || fallbackId.slice(0, 8);
-}
-
 function remainingPacked(line: AdminOrderLine): number {
   const packed = line.quantityPacked ?? 0;
   const allocated = line.quantityAllocated ?? line.quantityShipped ?? 0;
@@ -219,31 +222,21 @@ function groupItems(detail: AdminOrderDetail, member: AdminOperationalDeliveryMe
   return seller.lines.filter((line) => ids.has(lineKey(line)));
 }
 
+/**
+ * TB-267: one Persian date shape for every accepted date on this surface (Jalali long month, Persian digits),
+ * so the target frame and the group card can never show the same promise in two different calendars.
+ */
 function jalaliDay(isoDate: string | null | undefined): string | null {
-  const raw = (isoDate ?? "").trim();
-  if (!raw) return null;
-  return formatJalaliDate(raw.includes("T") ? raw : `${raw}T12:00:00`, "fa");
+  return operationalDayLabel(isoDate);
 }
 
 /**
- * TB-264: renders one operational deadline instant in the CARRIER time zone (the zone the accepted
- * plan was computed in), so an operator never reads a handoff deadline against their own clock. A
- * missing/invalid instant yields null (no invented deadline), and an unusable zone id degrades to the
- * operator's local zone instead of throwing.
+ * TB-267: one operational deadline instant in the CARRIER time zone, in the same Persian shape as the dates
+ * above. A missing/invalid instant yields null (no invented deadline), and the zone is named once by the
+ * caller instead of being repeated after every timestamp.
  */
 function carrierDeadlineLabel(isoUtc: string | null | undefined, zone: string | null): string | null {
-  const raw = (isoUtc ?? "").trim();
-  if (!raw) return null;
-  const when = new Date(raw);
-  if (Number.isNaN(when.getTime())) return null;
-  const base: Intl.DateTimeFormatOptions = { dateStyle: "short", timeStyle: "short" };
-  let formatted: string;
-  try {
-    formatted = new Intl.DateTimeFormat("fa-IR", zone ? { ...base, timeZone: zone } : base).format(when);
-  } catch {
-    formatted = new Intl.DateTimeFormat("fa-IR", base).format(when);
-  }
-  return zone ? `${formatted} (${zone})` : formatted;
+  return operationalInstantLabel(isoUtc, zone);
 }
 
 function quantityText(value: number): string {
@@ -310,6 +303,7 @@ function groupLineTitles(detail: AdminOrderDetail, group: AdminOperationalDelive
  */
 export function AdminOrderOperationalDeliverySection({
   detail,
+  financeFree = false,
   pendingCode,
   onCreateShipment,
   onPrepareOperationalGroup,
@@ -377,6 +371,7 @@ export function AdminOrderOperationalDeliverySection({
             key={group.operationalGroupKey}
             group={group}
             detail={detail}
+            financeFree={financeFree}
             pendingCode={pendingCode}
             onCreateShipment={onCreateShipment}
             onPrepareOperationalGroup={onPrepareOperationalGroup}
@@ -397,6 +392,7 @@ export function AdminOrderOperationalDeliverySection({
 function OperationalCard({
   group,
   detail,
+  financeFree,
   pendingCode,
   onCreateShipment,
   onPrepareOperationalGroup,
@@ -410,6 +406,7 @@ function OperationalCard({
 }: {
   group: AdminOperationalDeliveryGroup;
   detail: AdminOrderDetail;
+  financeFree: boolean;
   pendingCode: string | null;
   onCreateShipment: (target: OperationalCreateTarget) => void;
   onPrepareOperationalGroup?: Props["onPrepareOperationalGroup"];
@@ -527,11 +524,11 @@ function OperationalCard({
       data-cross-seller={group.isCrossSellerMarketplace ? "true" : "false"}
       dir="rtl"
     >
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 bg-gray-50/60 px-3 py-2.5 md:px-4">
-        <div className="min-w-0">
+      <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-gray-100 bg-gray-50/60 px-3 py-3 md:px-4">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h4 className="text-sm font-black text-gray-900">{group.methodLabel || "روش ارسال ثبت نشده"}</h4>
-            <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-gray-600 ring-1 ring-gray-200">
+            <h4 className="text-base font-semibold text-gray-900">{group.methodLabel || "روش ارسال ثبت نشده"}</h4>
+            <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
               {group.isCrossSellerMarketplace ? "ارسال مشترک مارکت‌پلیس" : "ارسال مستقل"}
             </span>
           </div>
@@ -545,21 +542,24 @@ function OperationalCard({
             preparationStartLabel={preparationStartLabel}
             transferDepartureLabel={transferDepartureLabel}
             handoffDeadlineLabel={handoffDeadlineLabel}
+            timeZoneLabel={operationalTimeZoneLabel(deadlineZone)}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-gray-500">
             {multiMember
               ? `${group.members.length.toLocaleString("fa-IR")} فروشنده در این گروه`
               : group.members[0]?.sellerDisplayName ?? "فروشنده نامشخص"}
           </p>
         </div>
-        <div className="text-start">
-          <p className="text-sm font-bold tabular-nums text-gray-900">{formatAdminMoney(group.combinedFeeTotal, group.currency)}</p>
-          <p className="text-[11px] text-gray-500">{showFeeBreakdown ? "جمع هزینهٔ ارسال گروه" : "هزینهٔ ارسال"}</p>
-        </div>
+        {financeFree ? null : (
+          <div className="text-start">
+            <p className="text-sm font-bold tabular-nums text-gray-900">{formatAdminMoney(group.combinedFeeTotal, group.currency)}</p>
+            <p className="text-xs text-gray-500">{showFeeBreakdown ? "جمع هزینهٔ ارسال گروه" : "هزینهٔ ارسال"}</p>
+          </div>
+        )}
       </header>
 
       <div className="space-y-3 px-3 py-3 md:px-4">
-        {showFeeBreakdown ? (
+        {showFeeBreakdown && !financeFree ? (
           <ul
             className="space-y-0.5 rounded-lg border border-gray-100 bg-gray-50/60 px-2.5 py-1.5 text-xs text-gray-600"
             data-testid={`admin-order-operational-fee-breakdown-${group.operationalGroupKey}`}
@@ -573,23 +573,23 @@ function OperationalCard({
           </ul>
         ) : null}
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <GroupItems detail={detail} group={group} multiMember={multiMember} />
-          <GroupParcels
-            detail={detail}
-            group={group}
-            multiMember={multiMember}
-            pending={pending}
-            actorMayManage={actorMayManage}
-            viewerScopeKey={occurrenceScopeKey}
-            parcelCapabilities={parcelCapabilities}
-            onParcelTrack={onParcelTrack}
-            onParcelOperation={onParcelOperation}
-            onParcelException={onParcelException}
-            onFactsChanged={onFactsChanged}
-            onCreateShipment={onCreateShipment}
-          />
-        </div>
+        {/* TB-267: contents are a compact full-width list and parcels are full-width cards below, so a
+            one-line product summary can never reserve half the card while parcel history is squeezed. */}
+        <GroupItems detail={detail} group={group} multiMember={multiMember} />
+        <GroupParcels
+          detail={detail}
+          group={group}
+          multiMember={multiMember}
+          pending={pending}
+          actorMayManage={actorMayManage}
+          viewerScopeKey={occurrenceScopeKey}
+          parcelCapabilities={parcelCapabilities}
+          onParcelTrack={onParcelTrack}
+          onParcelOperation={onParcelOperation}
+          onParcelException={onParcelException}
+          onFactsChanged={onFactsChanged}
+          onCreateShipment={onCreateShipment}
+        />
 
         {group.separateReasonFa ? (
           <p className="text-xs text-gray-600" role="status">
@@ -628,7 +628,7 @@ function OperationalCard({
           >
             <div className="min-w-0">
               <p className="text-xs font-bold text-amber-900">نتیجهٔ عملیات ثبت‌شده هنوز مشخص نیست.</p>
-              <p className="mt-0.5 text-[11px] text-amber-800">
+              <p className="mt-0.5 text-xs text-amber-800">
                 {`${retainedAttempt.selections.length.toLocaleString("fa-IR")} کالا · ${retainedAttempt.reuseShipmentIds.length.toLocaleString("fa-IR")} مرسولهٔ موجود · همین درخواست تکرار می‌شود و مرسولهٔ تازه ساخته نمی‌شود.`}
               </p>
             </div>
@@ -699,8 +699,8 @@ function GroupItems({
 
   return (
     <section className="min-w-0" data-testid={`admin-order-operational-items-${group.operationalGroupKey}`}>
-      <h5 className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-gray-700">
-        <Package className="size-3.5 text-gray-400" aria-hidden />
+      <h5 className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-gray-800">
+        <Package className="size-4 shrink-0 text-gray-400" aria-hidden />
         کالاهای این گروه
       </h5>
       {totalItems === 0 ? (
@@ -729,7 +729,7 @@ function GroupItems({
                       <span className="shrink-0 text-xs tabular-nums text-gray-600">
                         {`${quantityText(line.quantity)} عدد`}
                       </span>
-                      <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600">
+                      <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
                         {formatAdminShipmentStatus(line.operationalStatus ?? "NotApplicable")}
                       </span>
                     </li>
@@ -846,6 +846,22 @@ function GroupParcels({
   const [exceptionPending, setExceptionPending] = useState(false);
   const exceptionSubmitInFlight = useRef(false);
 
+  /**
+   * TB-267: the parcel whose tracking code was just copied. Purely local presentation acknowledgement —
+   * copying an already-projected reference changes nothing and calls no endpoint.
+   */
+  const [copiedTrackingId, setCopiedTrackingId] = useState<string | null>(null);
+  function copyTracking(shipmentId: string, value: string) {
+    if (!value) return;
+    void navigator.clipboard?.writeText(value).then(
+      () => {
+        setCopiedTrackingId(shipmentId);
+        window.setTimeout(() => setCopiedTrackingId((current) => (current === shipmentId ? null : current)), 2000);
+      },
+      () => undefined,
+    );
+  }
+
   const exceptionLines = useMemo<PostDispatchParcelLine[]>(() => {
     if (!exception) return [];
     const sellerLines = new Map(exception.seller.lines.map((line) => [lineKey(line), line]));
@@ -945,8 +961,9 @@ function GroupParcels({
     const originalId = row.shipment.resendOfShipmentId;
     if (originalId) resendByOriginalId.set(originalId, row.shipment);
   }
-
   const standalone = rows.filter((row) => !isPackageLocked(row.shipment));
+  /** TB-267: the human parcel number an operator sees, so a relationship names «مرسولهٔ ۲», not a raw code. */
+  const parcelNumber = new Map(standalone.map((row, index) => [row.shipment.shipmentId, index + 1]));
   const locked = rows.filter((row) => isPackageLocked(row.shipment));
   const lockedPackages = new Map<string, number>();
   for (const row of locked) {
@@ -968,8 +985,8 @@ function GroupParcels({
   return (
     <section className="min-w-0" data-testid={`admin-order-operational-parcels-${group.operationalGroupKey}`}>
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-        <h5 className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-          <Truck className="size-3.5 text-gray-400" aria-hidden />
+        <h5 className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
+          <Truck className="size-4 shrink-0 text-gray-400" aria-hidden />
           مرسوله‌ها
         </h5>
         {standaloneMembers.length > 0 ? (
@@ -1029,14 +1046,32 @@ function GroupParcels({
                 }
                 data-testid={`admin-order-operational-parcel-${parcel.shipmentId}`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900">
-                      {`مرسولهٔ ${(index + 1).toLocaleString("fa-IR")}`}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <p className="text-sm font-bold text-gray-900">
+                        {`مرسولهٔ ${(index + 1).toLocaleString("fa-IR")}`}
+                      </p>
                       {multiMember ? (
-                        <span className="ms-2 text-xs font-normal text-gray-500">{row.member.sellerDisplayName}</span>
+                        <span className="text-xs text-gray-500">{row.member.sellerDisplayName}</span>
                       ) : null}
-                    </p>
+                      {/* TB-267: the source/replacement relationship is ONE human label, not a repeated code. */}
+                      {resendChild ? (
+                        <span
+                          className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800 ring-1 ring-sky-200"
+                          data-testid={`admin-order-operational-parcel-resend-link-${parcel.shipmentId}`}
+                        >
+                          {`ارسال مجدد در مرسولهٔ ${(parcelNumber.get(resendChild.shipmentId) ?? 0).toLocaleString("fa-IR")} · ${formatAdminShipmentStatus(resendChild.status)}`}
+                        </span>
+                      ) : parcel.resendOfShipmentId && parcelNumber.has(parcel.resendOfShipmentId) ? (
+                        <span
+                          className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800 ring-1 ring-sky-200"
+                          data-testid={`admin-order-operational-parcel-resend-of-${parcel.shipmentId}`}
+                        >
+                          {`ارسال مجدد از مرسولهٔ ${(parcelNumber.get(parcel.resendOfShipmentId) ?? 0).toLocaleString("fa-IR")}`}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-0.5 text-xs text-gray-500">
                       {parcel.carrierDisplayName}
                       {" · "}
@@ -1046,27 +1081,41 @@ function GroupParcels({
                   <span
                     className={
                       cancelled
-                        ? "shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700"
+                        ? "shrink-0 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700"
                         : isCarrierException(parcel.status)
-                          ? "shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900"
-                          : "shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700"
+                          ? "shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900"
+                          : "shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700"
                     }
                   >
                     {formatAdminShipmentStatus(parcel.status)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-gray-600">
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-gray-100 pt-2">
+                  <span className="text-xs text-gray-500">کد رهگیری</span>
                   {parcel.trackingReference ? (
                     <>
-                      <span className="text-gray-500">کد رهگیری: </span>
-                      <bdi dir="ltr" className="font-semibold">
+                      <bdi
+                        dir="ltr"
+                        className="select-all break-all font-mono text-sm font-semibold text-gray-900"
+                        data-testid={`admin-order-parcel-tracking-${parcel.shipmentId}`}
+                      >
                         {parcel.trackingReference}
                       </bdi>
+                      {/* TB-267: the existing clipboard pattern, in place, with a local "copied" acknowledgement. */}
+                      <button
+                        type="button"
+                        onClick={() => copyTracking(parcel.shipmentId, parcel.trackingReference ?? "")}
+                        className="min-h-11 rounded-lg border border-gray-200 px-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50"
+                        aria-label="کپی کد رهگیری"
+                        data-testid={`admin-order-parcel-copy-tracking-${parcel.shipmentId}`}
+                      >
+                        {copiedTrackingId === parcel.shipmentId ? "کپی شد" : "کپی"}
+                      </button>
                     </>
                   ) : (
-                    <span className="text-gray-500">کد رهگیری ثبت نشده است.</span>
+                    <span className="text-xs text-gray-500">ثبت نشده است</span>
                   )}
-                </p>
+                </div>
                 {caps.canTrack || caps.canDispatch || caps.canDeliver || caps.canCancel ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {caps.canTrack ? (
@@ -1221,14 +1270,14 @@ function GroupParcels({
                     >
                       {`پیگیری «${POST_DISPATCH_MODE_LABEL_FA[retainedReview.mode]}»`}
                     </button>
-                    <span className="break-words text-[11px] text-amber-800">
+                    <span className="break-words text-xs text-amber-800">
                       {retainedAttemptNoteFa(retainedReview)}
                     </span>
                   </div>
                 ) : null}
                 {isCarrierException(parcel.status) ? (
                   <div
-                    className="mt-2 space-y-1 rounded-lg border border-amber-100 bg-amber-50/60 px-2.5 py-1.5 text-[11px] text-amber-900"
+                    className="mt-2 space-y-1.5 rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs leading-6 text-amber-900"
                     data-testid={`admin-order-parcel-exception-${parcel.shipmentId}`}
                   >
                     {parcel.status === "Returned" ? (
@@ -1252,18 +1301,26 @@ function GroupParcels({
                         {receipt.usable > 0 && !caps.canResend ? (
                           <p data-testid={`admin-order-post-dispatch-capacity-consumed-${parcel.shipmentId}`}>
                             {resendChild
-                              ? `ظرفیت سالم دریافتی این مرسوله در مرسولهٔ ارسال مجدد ${parcelShortId(resendChild, resendChild.shipmentId)} مصرف شده است.`
+                              ? `ظرفیت سالم این مرسوله در ارسال مجدد (مرسولهٔ ${(parcelNumber.get(resendChild.shipmentId) ?? 0).toLocaleString("fa-IR")}) مصرف شده است.`
                               : "ظرفیت سالم دریافتی این مرسوله در دسترس نیست؛ تا تعیین تکلیف، ارسال مجدد ممکن نیست."}
                           </p>
                         ) : null}
                         {resendChild && !caps.canResend ? (
-                          <p className="flex flex-wrap items-center gap-1">
-                            <span>پیگیری ارسال مجدد:</span>
-                            <bdi dir="ltr" className="font-semibold">
-                              {parcelShortId(resendChild, resendChild.shipmentId)}
-                            </bdi>
-                            <span>{`· ${formatAdminShipmentStatus(resendChild.status)}`}</span>
-                          </p>
+                          <details className="mt-0.5">
+                            <summary className="inline-flex min-h-11 cursor-pointer items-center text-sky-800 underline decoration-dotted underline-offset-2">
+                              {`پیگیری ارسال مجدد: مرسولهٔ ${(parcelNumber.get(resendChild.shipmentId) ?? 0).toLocaleString("fa-IR")}`}
+                            </summary>
+                            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-gray-700">
+                              {resendChild.trackingReference ? (
+                                <bdi dir="ltr" className="select-all break-all font-mono text-xs">
+                                  {resendChild.trackingReference}
+                                </bdi>
+                              ) : (
+                                <span>کد رهگیری ثبت نشده است</span>
+                              )}
+                              <span>{`· ${formatAdminShipmentStatus(resendChild.status)}`}</span>
+                            </p>
+                          </details>
                         ) : null}
                         {receipt.usable === 0 && receipt.damaged === 0 && !resendChild ? (
                           <p>رسید فیزیکی این مرسوله بدون مقدار سالم یا آسیب‌دیده ثبت شده است.</p>
@@ -1276,13 +1333,22 @@ function GroupParcels({
                     )}
                   </div>
                 ) : null}
-                {parcel.nonDeliveredAt || parcel.returnedAt || parcel.resendOfShipmentId ? (
-                  <p className="mt-1 text-[11px] text-gray-500" data-testid={`admin-order-post-dispatch-facts-${parcel.shipmentId}`}>
-                    {parcel.resendOfShipmentId ? "مرسولهٔ ارسال مجدد · " : ""}
-                    {parcel.nonDeliveredAt ? "عدم تحویل ثبت شده" : ""}
-                    {parcel.returnedAt ? " · دریافت در مبدأ تأیید شده" : ""}
-                  </p>
-                ) : null}
+                {(() => {
+                  /*
+                   * TB-267: this line state the parcel's own EXCEPTION history only. The resend relationship is
+                   * already a human chip beside the parcel name, so repeating it here produced a dangling
+                   * «مرسولهٔ ارسال مجدد ·» with no fact after it. No separator is emitted without a fact.
+                   */
+                  const facts: string[] = [];
+                  if (parcel.nonDeliveredAt) facts.push("عدم تحویل ثبت شده");
+                  if (parcel.returnedAt) facts.push("دریافت در مبدأ تأیید شده");
+                  if (facts.length === 0) return null;
+                  return (
+                    <p className="mt-1 text-xs text-gray-500" data-testid={`admin-order-post-dispatch-facts-${parcel.shipmentId}`}>
+                      {facts.join(" · ")}
+                    </p>
+                  );
+                })()}
               </li>
             );
           })}

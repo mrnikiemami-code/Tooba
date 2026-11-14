@@ -117,8 +117,13 @@ function targetFact(overrides: Partial<OrderOperationsTargetFact> = {}): OrderOp
   return {
     groupKey: GROUP_KEY,
     methodLabel: "پیشتاز",
-    customerDeliverySummary: "۱۰ آبان ۱۴۰۵ · 14:00–15:00",
-    plannedDispatchSummary: "۱۱ آبان ۱۴۰۵ · 10:00–13:00 · (Asia/Tehran)",
+    scopeLabel: null,
+    // TB-267: the view receives structured facts, so no pre-joined sentence can smuggle a raw zone id back in.
+    customerDeliveryDateLabel: "۱۰ آبان ۱۴۰۵",
+    customerDeliveryTimeWindow: "14:00–15:00",
+    plannedDispatchDateLabel: "۱۱ آبان ۱۴۰۵",
+    plannedDispatchTimeWindow: "10:00–13:00",
+    plannedDispatchTimeZoneLabel: "به وقت تهران",
     parcelSummary: "بدون مرسوله",
     readinessLabel: "آمادهٔ اقدام",
     readinessTone: "ready",
@@ -188,8 +193,13 @@ test("queue locator is explicit, and the frame contains no financial surface", (
 
   // Exact target, with the accepted plan and the customer commitment kept apart.
   assert.ok(html.includes(`data-testid="admin-order-operations-target-${GROUP_KEY}"`));
-  assert.ok(html.includes("۱۱ آبان ۱۴۰۵ · 10:00–13:00"));
-  assert.ok(html.includes("۱۰ آبان ۱۴۰۵ · 14:00–15:00"));
+  assert.ok(html.includes("۱۱ آبان ۱۴۰۵"));
+  assert.match(html, /10:00–13:00/);
+  assert.ok(html.includes("۱۰ آبان ۱۴۰۵"));
+  assert.match(html, /14:00–15:00/);
+  // TB-267: the plan's zone is one human label, never the raw IANA id.
+  assert.ok(html.includes("به وقت تهران"));
+  assert.ok(!html.includes("Asia/Tehran"));
   // The SAME operational section the full order page renders is what this view shows.
   assert.ok(html.includes('data-testid="admin-order-items-shipping"'));
   assert.ok(html.includes('data-testid="admin-order-operational-delivery"'));
@@ -216,7 +226,15 @@ test("a group with no accepted plan never invents a dispatch date", () => {
     view({
       state: "ready",
       targetRequested: true,
-      targets: [targetFact({ plannedDispatchSummary: null, readinessLabel: "در انتظار بسته‌بندی", readinessTone: "blocked" })],
+      targets: [
+        targetFact({
+          plannedDispatchDateLabel: null,
+          plannedDispatchTimeWindow: null,
+          plannedDispatchTimeZoneLabel: null,
+          readinessLabel: "در انتظار بسته‌بندی",
+          readinessTone: "blocked",
+        }),
+      ],
     }),
   );
   assert.ok(html.includes("موعد ارسال مشخص نشده"));
