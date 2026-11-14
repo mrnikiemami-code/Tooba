@@ -1,0 +1,67 @@
+TB-267 result contract
+=======================
+
+Task              : TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267
+Channel           : tooba-main
+Worker            : tooba-worker-01 (cursor), single worker, one task, no delegation, no historical agent resumed
+Mode              : PRESENTATION_ONLY_PROFESSIONAL_OPERATIONAL_ORDER_LAYOUT_AND_OPERATOR_COPY
+Status            : PASS within the issued presentation-only scope
+Decision          : PROFESSIONAL_OPERATIONAL_ORDER_LAYOUT_WITH_HUMANIZED_PERSIAN_OPERATOR_COPY_FINANCE_FREE_SHIPPING_ROUTE_AND_ZERO_FUNCTIONAL_CHANGE
+Acceptance        : NOT Architect ACCEPT, NOT user VISUAL ACCEPT, no all-shipping/carrier/financial claim
+Next              : STOP_FOR_ARCHITECT ; automaticNextImplementationTask = NONE
+
+git
+---
+issued expected base : bf9aa8fccad50d984c54f7bacd8cbcea3bcfc1a6
+actual work base     : 500c6583c19633d394e9c123d2db5703b16ce11b   (the two doc commits that issue TB-267 sit on the expected base; verified ancestor of HEAD)
+code commit          : ea497b0bfb6547798eea5a562bb499e4278cb225   (8 files: 7 modified + 1 new pure formatter module; 651 insertions, 321 deletions)
+evidence commit      : the commit that contains this file (A2, docs-only) — final HEAD, verify with `git rev-parse HEAD`
+origin parity        : final HEAD == origin/main after push (recorded in RECEIPTS/git log; no force push)
+
+scope
+-----
+presentation + operator copy only.
+  backend / endpoint / contract / capability / validator / handler : UNCHANGED
+  schema / migration / DDL / business SQL / data write         : NONE
+  mutation order / retained envelope / action ownership         : UNCHANGED
+  Tailwind config / global typography / sidebar / grid sweep    : UNCHANGED
+  screenshots committed                                         : NONE (forbidden by the task; the two PNGs were removed)
+
+changed files
+-------------
+  M src/frontend/app/admin/admin-order-items-shipping-panel.tsx
+  M src/frontend/app/admin/admin-order-operational-delivery-section.tsx
+  M src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts
+  M src/frontend/app/admin/admin-order-operations-view.mount.test.ts
+  M src/frontend/app/admin/orders/[checkoutId]/operations/admin-order-operations-route-screen.tsx
+  M src/frontend/features/order-operational-groups/ui/operational-delivery-timeline.tsx
+  M src/frontend/features/order-operational-groups/ui/order-operations-view.tsx
+  A src/frontend/lib/operational-format.ts
+
+verification (once each, after the final change)
+------------------------------------------------
+  npx tsc --noEmit                                            0 diagnostics
+  mounted delivery + operations-view suites                   68 / 68 pass
+  mounted operations-route suite                               5 / 5  pass
+  npm run build                                               0 errors, BUILD_ID EwxE4g90_VArF5iXhm6oO
+  served _buildManifest.js / chunk 7825-7e11809067fa2056.js   200 / 200
+  live served route 1440                                       overflow 0, clipped 0, controls<44px 0, text<12px 0
+  live served route 1024                                       2 columns 379/260, overflow 0
+  live served route 390                                        stacked 332/332, overflow 0, offscreen 0
+  copy audit (served text)                                     Asia/Tehran 0, ISO 0, GUID 0, «به وقت تهران» 2
+  finance audit shipping-only route                            money terms 0
+  finance audit full order page                                مبلغ کل / قابل پرداخت / ناخالص present
+
+runtime
+-------
+  FE Next 3000 restarted on BUILD_ID EwxE4g90_VArF5iXhm6oO (PID 12896)
+  Host 5088 untouched ; ONE tooba_alpha 5432 SingleStore ; no migration ; no DB write
+  user Order 01a1db2f-e36e-7000-b7d3-afb2fe86e81a read-only (GET only)
+
+known limits
+------------
+  - no functional re-exercise of the route was performed (by design); no create/dispatch/deliver/return/refund/cancel/save/publish anywhere
+  - "before" metrics are static source counts at base + the architect's description of the rejected screenshot, not a re-render of the previous bundle
+  - tailwind.config.ts still does not scan features/**; feature-level utilities must be confirmed in the served DOM (the two-column utility used here was already emitted)
+  - stored fixture names (TB264R2/TB266R1) are business data and were deliberately not sanitised
+  - untracked prior-run scratch scripts scripts/tb266r1-*.mjs remain and are not part of this change set

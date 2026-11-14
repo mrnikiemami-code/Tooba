@@ -1,4 +1,23 @@
-# CURRENT — 266-R1 PASS: uncaptured historical order explained truthfully, real browser create→track→dispatch proven, second order actionable — 2026-11-14
+# CURRENT — 267 PASS (presentation only): compact professional operational order surface, human Persian copy, finance-free shipping route, zero functional change — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267/{RESULT.md,RECEIPTS.md,result-contract.txt,layout-before-after-metrics.md,copy-changes.md,user-review.md}.
+Status **PASS** within the issued presentation-only scope, NOT Architect ACCEPT and NOT user visual acceptance. The user's
+functional feedback stands («بقیه اش کار کرد»): nothing functional was re-exercised and the exercised Order B
+`01a1db2f-e36e-…` stayed read-only, still `Returned` source + `Delivered` resend, deliberately not reset to Packed.
+The rejected surface was repaired where it actually failed: two independent full-width cards became ONE overview frame
+(target 671 / recipient 384 at 1440, stacked 332/332 at 390); `text-[10px]`/`text-[11px]` microtext went 7+27 → 0; raw
+`Asia/Tehran`, ISO dates and GUIDs in operator copy are now 0 / 0 / 0 with «به وقت تهران» printed once per surface;
+the deadline triple is a labelled 3-column block owned by the group card only; parcels are full-width cards whose
+source↔resend relationship reads «ارسال مجدد در مرسولهٔ ۲ · تحویلشده» with the technical code behind an explicit
+details control; tracking has its own line and a 44px copy button; and the shipping-only route is finance-free while the
+full order page keeps its money display. `tsc` 0, mounted 68/68 + route 5/5, `next build` 0
+(`BUILD_ID EwxE4g90_VArF5iXhm6oO`), FE restarted on 3000, Host untouched. STOP_FOR_ARCHITECT;
+automaticNextImplementationTask:NONE. Earlier banners below are historical.
+
+---
+
+# SUPERSEDED — 266-R1 PASS: uncaptured historical order explained truthfully, real browser create→track→dispatch proven, second order actionable — 2026-11-14
 
 Read docs/ai/tasks/TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,root-cause.md,browser-control-handoff.md,browser-live-verification.txt,payment-dispatch-proof.md,cleanup-audit-266.md,user-trial.md}.
