@@ -1,0 +1,40 @@
+TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1
+channel=tooba-main
+worker=tooba-worker-01
+parent=TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266
+expected_base=f4ca3cd4cc5b4f5c9e9cc0fb0eb818a09affcd9b (verified ancestor of work head)
+work_head=4d35ec1533e8b3304b3b819ee32ef6ac86ab1dec
+code_sha=9d2ed5efa8ca623825ef416e24f651a9913b6c47
+evidence_sha=9d2ed5efa8ca623825ef416e24f651a9913b6c47
+contract_note=code+evidence+AGENTS/START-HERE land in code_sha; this contract file lands in the follow-up metadata commit recorded in RESULT.md §Repository
+status=PASS within issued scope
+decision=PACKED_ORDER_DEAD_END_DIAGNOSED_AND_TRUTHFULLY_EXPLAINED_REAL_BROWSER_CREATE_TRACK_DISPATCH_PROVEN_ON_ONE_COHERENT_CAPTURED_ORDER_AND_A_SECOND_COHERENT_ORDER_LEFT_ACTIONABLE
+not_claimed=Architect acceptance / user visual-functional acceptance / carrier-provider waybill / shipping complete
+
+database=tooba_alpha@127.0.0.1:5432 SingleStore store-alpha (the only database used)
+host=5088 pid=12752 (health 200, health/ready 200 -> SingleStore)
+frontend=3000 pid=38224 BUILD_ID=a07UMunhlqua0X_aHt-f5 (port/framework unchanged)
+migration=none-added-and-none-applied
+
+root_cause=checkout 01a1daa2-519d-7000-bb9c-c4d0150a1971 has 0 order.order_shipping_groups (legacy "ارسال پیش‌فرض فروشگاه"); the operations projection is quantity/paid based and advertises create_shipment while the delivery section needs an accepted captured group, and SellerMutateFulfillmentCommandValidator refuses CreateShipment without one (fulfillment.validation.shipping_group_id_required)
+repair=admin-order-operational-delivery-section.tsx empty-projection split: admin-order-operational-delivery-no-captured-group (permanent truth) vs admin-order-operational-delivery-empty (transient), no invented group/snapshot/timezone/commit
+
+trial_a=checkout 01a1db20-ae31-7000-91d1-0b63649ac5c3 ref TB-20261114173514-01-73cd8a fulfillment 01a1db25-7931-7000-9811-b473e938af48 group 01a1db20-ad98-7000-aa76-261f77230a71 line 01a1db20-ae48-7000-9d9b-97c8ff926390 shipment 01a1db2c-5f9f-7000-8149-360bcbc27c3a tracking TRK-01A1DB2C5F9F70008149360BCBC27C3A state Dispatched
+trial_b=checkout 01a1db2f-e36e-7000-b7d3-afb2fe86e81a ref TB-20261114175151-01-7d5f59 fulfillment 01a1db2f-eb79-7000-b084-3d6b4add0fbb group 01a1db2f-e351-7000-a516-71ab5b815d1c line 01a1db2f-e379-7000-80f5-91d1401c225c state Packed shipments 0 create_shipment live
+trial_window=customer 2026-11-17 09:00-10:00 Asia/Tehran, handoff 2026-11-15 08:00-20:00, policy v3 prep 300 handoff 80, prepStart 09:30Z transfer 15:10Z handoffDeadline 16:30Z
+browser=real controls on the served build: -> ایجاد مرسوله (modal confirm) -> ثبت کد رهگیری (internal TRK) -> ارسال (confirm); end state re-verified after final build (در مسیر تحویل, tracking shown, 0 create buttons)
+browser_order_b=one create button 102x44, document overflow 0, shipments 0
+
+tests=PaymentAuthorizedSupplyGate266 7/7 (3 new: existing-parcel dispatch / bulk selections / consolidated package); admin-order-operational-delivery.mount 63/63 (1 new); tsc 0; next build 0
+new_negative_cases=Dispatch_after_payment_authority_lost_is_refused_without_dispatch_or_consumption | Bulk_group_selections_after_payment_authority_lost_are_refused_without_writing | Consolidated_package_with_unpaid_member_refuses_dispatch_and_writes_nothing
+payment_gate_code=fulfillment.order.payment_not_authorized (existing parcel stays Created, DispatchedAt null, ConsumeCalls 0)
+
+counts_after=checkouts6 seller_orders6 fulfillments5 order_shipping_groups2 shipments1 payments5 reservations9 held4 settlement_entries0 stock_positions3577 total_reserved4
+backup_set=4 dumps preserved and pg_restore --list validated (1425 TOC lines each), restore command documented not executed
+cleanup_repeated=NO
+cleanup_unverified=per-reservation owner mapping before the wipe; any owner-safe-release inference from total_reserved; per-table affected-row counts of the historical run
+user_draft_01a17d0d=read-only, never written
+user_handoff=docs/architecture/evidence/TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1/user-trial.md (one URL, three controls, expected result, order title, internal TRK meaning)
+
+stop=STOP_FOR_ARCHITECT
+automaticNextImplementationTask=NONE

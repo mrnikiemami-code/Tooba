@@ -167,6 +167,18 @@ mapping before the wipe, and any owner-safe-release inference from the surviving
   Development trial, not a provider-paid order.
 - Parent consolidated-package return/damage workflow and live Tipax remain deferred; `255` parked.
 
+## 12. Repository
+
+| Field | SHA |
+| --- | --- |
+| expected base | `f4ca3cd4cc5b4f5c9e9cc0fb0eb818a09affcd9b` (verified ancestor) |
+| work head before this task's commit | `4d35ec1533e8b3304b3b819ee32ef6ac86ab1dec` (== `origin/main` at round start) |
+| code + evidence commit | `9d2ed5efa8ca623825ef416e24f651a9913b6c47` |
+| metadata commit (`result-contract.txt` + this section) | recorded in `result-contract.txt` `contract_note` after the push |
+
+Branch `main`, remote `origin https://github.com/mrnikiemami-code/Tooba.git`, pushed normally.
+
+
 ## 11. User handoff
 
 `user-trial.md` — one starting URL, the three controls in order, the expected result of each, the order title
