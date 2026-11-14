@@ -1,0 +1,57 @@
+TB-265 result contract
+======================
+
+task: TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265
+taskRecordId: a0bbc3f8-ca1f-47dd-80e8-da3bbe3c273b
+channel: tooba-main
+worker: tooba-worker-01
+baseSha: 7c32cdc2955d9c0b0c1dd4eef8b961b9a4acb904
+codeSha: SEALED_IN_COMMIT_1
+evidenceSha: SEALED_IN_COMMIT_2
+headEqualsOriginMain: true (after push)
+
+decision: COURIER_ORIGIN_CASE_AS_THIRD_LAWFUL_OUTCOME_WITH_ONE_FULFILLMENT_SOURCE_CLAIM_PHASED_APPROVAL_CLOSURE_AND_CONDITION_AWARE_DISPOSITION
+status: PASS_WITHIN_ISSUED_SCOPE
+architectAccept: NOT_CLAIMED
+userVisualFunctionalAccept: NOT_CLAIMED
+stopState: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+database: tooba_alpha @ 127.0.0.1:5432 (SingleStore, tenant store-alpha, deployment dev-singlestore)
+migrationsAdded:
+  fulfillment 20261113162906_AddCourierReturnClaims
+  returns     20261113162816_AddCourierOriginReturnsLinkage
+  returns     20261113174500_NormalizeCourierOriginColumnNames
+migrationApply: repository Tooba.MigrationRunner, private backup D:\temp\tb265-backup\tooba_alpha-pre-tb265.dump
+allModulesPendingMigrations: 0
+
+runtime:
+  host: 127.0.0.1:5088 PID 37424, /health 200, /health/ready 200
+  frontend: 127.0.0.1:3000 PID 20232, BUILD_ID wqPY0iLLazeSDXeSeyTtu, /fa 200
+  servedChunk: 7825-dadcc8101dfd6099.js (carries «ایجاد پروندهٔ مرجوعی»)
+
+checksPassedOnce:
+  Fulfillment CourierReturnClaim265Tests: 7/7
+  Returns CourierOriginReturns265Tests: 5/5
+  Inventory ReturnObligationRelease265Tests: 5/5
+  Order AdminOrderPostDispatchReplayTests: 16/16 (11 retained + 5 new TB-265)
+  Host CourierOriginReturns265RelationalTests (real tooba_alpha): 6/6 (A-F)
+  Frontend admin-order-operational-delivery.mount.test.ts: 62/62 (2 new TB-265)
+  tsc --noEmit: 0
+  next build: 0
+  dotnet build Tooba.Host: 0 errors
+  dotnet publish artifacts/publish-primary: 0 errors
+
+releaseRule:
+  create(Requested): claims source quantity only; no money, no stock release, no order cancellation
+  reject/cancel(Requested): releases only that branch claim; order stock hold retained
+  approve: ObligationClosed -> StockSettled -> RefundReleased, each idempotent; Inventory releases only the
+           unconsumed held quantity assigned to the closed obligation, once; existing refund then runs
+  consume != release; original consumed sale reservation never released/recreated
+
+disclosedLimits:
+  no real provider refund/wallet credit/money movement
+  no worker browser click-through of the create flow (mounted component + live projection instead)
+  parent consolidated-package return/damage still unsupported (explicit refusal, child locked)
+  already dispatched/in-transit/delivered replacement refuses any unused-stock shortcut
+  concurrency proven with two independent real contexts + DB guards, not a stress test

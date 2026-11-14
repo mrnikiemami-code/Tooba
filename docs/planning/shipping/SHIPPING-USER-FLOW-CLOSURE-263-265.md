@@ -1,4 +1,30 @@
-# CURRENT — 264-R3 WORKER RESULT PASS: mobile authoring header readable, timing form usable — 2026-11-13
+# CURRENT — 265 WORKER RESULT PASS: courier-origin Returns case, one source claim, phased approval closure, condition-safe stock — 2026-11-13
+
+Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-design.md,tb265-relational.txt}.
+Status **PASS** within the issued scope, decision **COURIER_ORIGIN_CASE_AS_THIRD_LAWFUL_OUTCOME_WITH_ONE_FULFILLMENT_SOURCE_CLAIM_PHASED_APPROVAL_CLOSURE_AND_CONDITION_AWARE_DISPOSITION** — NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT a live paid/provider refund. 264/R1/R2 scheduling and 264-R3 mobile stay accepted within scope and were not reopened.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| Calendar256/save256-R2 | closed within scope | customer/carrier weeks distinct; max transport, cutoff, own save capability |
+| Tracking/quantity257 | closed within scope | server unique tracking, packed minus shipped minus open allocation |
+| Non-delivery/return/resend258-R3 | accepted internal-operator scope | receipt condition/source-safe resend; retained exact occurrence |
+| Common/separate packing259 | accepted within scope | deliberate immutable packing mode; parent package exception flow still unsupported |
+| Queue260-R1 | accepted within scope | exact physical Group/Parcel/Package identities and own-group plan/locator |
+| Feedback/damage261–263 | accepted within scope | existing Toast/MessageBox; Persian states; healthy-stock replacement and retained pending decision; referral is NOT Returns |
+| Scheduling264/R1/R2 | ACCEPTED within scope | source fixes + real authoring Save/reload/Publish + public positive projection/selection/commit + stored policy3->queue |
+| Mobile264-R3 | PASS pending Architect/user visual review | identity block owns a full mobile row, title 1 line, method in its own bounded row, header static below lg; desktop compact row and one Save owner unchanged |
+| Returns265 | PASS pending Architect/user review | courier-origin case as third lawful outcome, one Fulfillment source claim, phased approval closure, condition-aware disposition |
+
+## Delivered Returns linkage (265) — pending review
+`create_courier_return` is an ordinary Order post-dispatch command (`return.manage` decided before any evidence read) that claims the exact reviewed quantity in Fulfillment (`fulfillment.courier_return_claims` + lines, filtered unique `ActiveKey`, per-line remainder = receipt − resend − replacement − case claims), then creates the case in the EXISTING Returns workflow with `Origin`, source fulfillment/parcel/receipt/claim/occurrence linkage and `ClosurePhase`. Usable and damaged quantity are separate pools; `usable 2 + damaged 1` of one line works, the same pool cannot fund two branches (`fulfillment.returns.claim_quantity_exceeded`), and damaged units committed to an already dispatched replacement are refused (`fulfillment.returns.replacement_already_dispatched`). Approval is phased and idempotent `None → ObligationClosed → StockSettled → RefundReleased`: Order closes only the exact line obligation (no historical ordered/packed/dispatched decrement, no whole-order `already_dispatched` weakening), Inventory releases only the unconsumed held quantity of that closed obligation once, disposition is `SaleableRestock` or `DamagedNonSaleable` (damaged never becomes saleable), and only then does the existing refund path run. Creating `Requested` moves no money, releases no stock, cancels no order; reject/cancel releases only the branch claim. FE: one contextual «ایجاد پروندهٔ مرجوعی» / «مشاهدهٔ پروندهٔ مرجوعی» in the existing shared dialog with retained durable envelope, one Toast, existing MessageBox for approval, no finance panel on the finance-free view.
+Proven once each: Fulfillment 7/7, Returns 5/5, Inventory 5/5, Order post-dispatch replay 16/16 (5 new), Host relational A–F 6/6 on real `tooba_alpha`, FE mount 62/62 (2 new), `tsc` 0, `next build` 0, Host build/publish 0. Runtime Host 5088 (PID 37424, `/health`+`/health/ready` 200), Next 3000 (PID 20232, BUILD_ID `wqPY0iLLazeSDXeSeyTtu`). Additive migrations applied by the repository MigrationRunner after private backup; all 33 modules pending 0; user/screenshot rows read-only; task rows `TB265-…`. Limits: no real money movement, no worker browser click-through (user trial pending), parent package still unsupported, dispatched replacement refuses, concurrency proven by two contexts + DB guards.
+
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. The block below is superseded historical record.
+
+---
+
+# SUPERSEDED — 264-R3 WORKER RESULT PASS: mobile authoring header readable, timing form usable — 2026-11-13
 
 ## Read first; exact current state
 Read docs/ai/tasks/TB-SHIPPING-AUTHORING-MOBILE-RESPONSIVE-UI-264-R3/TASK.md and

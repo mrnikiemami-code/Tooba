@@ -1,0 +1,6 @@
+A fulfillment=3cf3f7f5-3314-4efc-a76b-42725b913f0e shipment=01a1d80d-c17f-7000-8320-4cb2a167e608 claim=01a1d80d-c3b0-7000-919c-d7ea7bce084a status=Requested lines=2/1 resendableA=0 outstandingDamagedA=0 resendableB=1 claims=1 onHandDelta=0
+F fulfillment=cba26f51-9091-459a-832c-6b9eb8db4cd0 replacementParcel=01a1d80d-c6e1-7000-9370-880b6865818c status=Dispatched claimRefused=replacement_already_dispatched reservation=Consumed releasedHeld=0
+E fulfillment=6a0ac1c8-aa37-4ec4-a666-248609f65444 case=01a1d80d-c9a6-7000-860a-649b8b12709c replacementParcel=01a1d80d-c8eb-7000-a7cd-ba00193b21c9 cancelled=Cancelled releasedHeld=1 heldReservation=Released damagedDisposition=DamagedNonSaleable restocks=0 onHand=7 refunds=1
+B fulfillment=092cf0ab-b65b-437e-b2dd-c22653c475a0 shipment=01a1d80d-cb0b-7000-a731-89d20b8fa130 winners=1 refusals=1 claimedTotal=2 free=0
+D fulfillment=1a65a92b-8cdb-488b-8b4b-bbc520ff1950 case=01a1d80d-cd16-7000-80e4-ba4e55b6c6e5 status=Completed phase=RefundReleased releasedHeld=0 refunds=1 restocks=1 disposition=SaleableRestock onHand=7 reservation=Consumed
+C fulfillment=7aaf6101-0b4b-49f7-b8f4-c9269993c96e claim=01a1d80d-ce85-7000-9533-4dd83ae93e66 status=Rejected resendableA=2 outstandingDamagedA=1 reClaim=01a1d80d-ceab-7000-83ff-7f70a3ac32c4
