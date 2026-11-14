@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-11-14T16:20:00Z",
+  "target": "http://127.0.0.1:3000/fa/admin/fulfillments",
+  "buildId": "yuIokX6A6PV337VQbzU1k",
+  "source": "Chrome DevTools Protocol geometry reads on the served production build",
+  "desktop1440": {
+    "viewportWidth": 1440,
+    "headerRowHeight": 48,
+    "dataRowHeights": [64, 64, 64],
+    "cellsOverflowingVertically": 0,
+    "units": [
+      "بدون گروه پذیرش گروه ارسال",
+      "بدون گروه پذیرش گروه ارسال",
+      "بدون گروه پذیرش گروه ارسال"
+    ],
+    "badgesClipped": 0,
+    "documentHorizontalOverflow": 0
+  },
+  "mobile390": {
+    "viewportWidth": 390,
+    "headerRowHeight": 48,
+    "dataRowHeights": [64, 64, 64],
+    "cellsOverflowingVertically": 0,
+    "visibleColumns": [
+      { "name": "عملیات", "width": 120 },
+      { "name": "سفارش", "width": 160 },
+      { "name": "فروشنده", "width": 160 },
+      { "name": "مرسوله", "width": 110 }
+    ],
+    "documentHorizontalOverflow": 0,
+    "note": "Below the grid breakpoint the remaining columns (quantity, method, operational status, timing, deadlines) are reached by the grid's own scoped horizontal scroll, which the task explicitly allows; the desktop column widths are not crushed."
+  },
+  "readabilityRepairs": [
+    "AppDataGrid gained a supported rowHeight prop; the work queue renders 64px rows so a badge plus its scope label never clip.",
+    "The operational-status cell keeps badge and scope on ONE non-wrapping line; the scope truncates with a title tooltip instead of wrapping into 3-4 lines.",
+    "workUnitKindLabel no longer repeats «(بدون گروه پذیرش)» under a badge that already says «بدون گروه پذیرش».",
+    "The order column keeps the human order reference (e.g. TB-20261114151709-01-2d8281), not a UUID tail."
+  ]
+}

@@ -92,19 +92,22 @@ test("a row without timing stays truthful instead of inventing a bucket or a dat
 });
 
 test("counts are read from the server's dispatchCounts and default to zero, never to a page tally", () => {
+  // TB-264 added the server-owned `preparationDue` count; this contract carries it verbatim.
   assert.deepEqual(mapFulfillmentQueueCounts({ totalActive: 3, due: 1, today: 1, overdue: 0, upcoming: 1, unspecified: 1, inTransit: 2 }), {
-    totalActive: 3, due: 1, today: 1, overdue: 0, upcoming: 1, unspecified: 1, inTransit: 2,
+    totalActive: 3, due: 1, today: 1, overdue: 0, upcoming: 1, unspecified: 1, inTransit: 2, preparationDue: 0,
   });
   assert.deepEqual(mapFulfillmentQueueCounts({ TotalActive: 1, Due: 1, Today: 1, Overdue: 0, Upcoming: 0, Unspecified: 0, InTransit: 0 }), {
-    totalActive: 1, due: 1, today: 1, overdue: 0, upcoming: 0, unspecified: 0, inTransit: 0,
+    totalActive: 1, due: 1, today: 1, overdue: 0, upcoming: 0, unspecified: 0, inTransit: 0, preparationDue: 0,
   });
   assert.deepEqual(mapFulfillmentQueueCounts(null), {
-    totalActive: 0, due: 0, today: 0, overdue: 0, upcoming: 0, unspecified: 0, inTransit: 0,
+    totalActive: 0, due: 0, today: 0, overdue: 0, upcoming: 0, unspecified: 0, inTransit: 0, preparationDue: 0,
   });
 });
 
 test("quick filters use the exact ids the Fulfillment module declares", () => {
   assert.deepEqual(FULFILLMENT_DISPATCH_FILTERS.map((tab) => tab.id), [
+    // TB-264 added the preparation-due bucket; the queue now declares six server-authoritative tabs.
+    "dispatch_preparation_due",
     "dispatch_overdue",
     "dispatch_today",
     "dispatch_due",

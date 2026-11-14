@@ -337,6 +337,11 @@ public sealed partial class FulfillmentDirectory
                 throw new ContractOperationException("fulfillment.package.member_state_changed");
             }
 
+            // TB-266: a member that is actually being dispatched now needs authoritative payment/supply
+            // authorization; the check lives in this write-free validation phase so a package with any
+            // unauthorized member can never be partially dispatched.
+            await EnsureSupplyPaymentAuthorizedAsync(unit.SellerOrderId, cancellationToken);
+
             string? generatedCode = null;
             if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
                 && !string.IsNullOrWhiteSpace(package.TrackingReference))

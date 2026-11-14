@@ -442,6 +442,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "ارسال یافت نشد.",
     en: "Fulfillment was not found.",
   },
+  "fulfillment.order.not_found": {
+    fa: "سفارش مرتبط با این ارسال یافت نشد.",
+    en: "The seller order behind this fulfillment was not found.",
+  },
+  "fulfillment.order.payment_not_authorized": {
+    fa: "این سفارش هنوز پرداخت/تأمین تأییدشده ندارد؛ آماده‌سازی و ارسال فیزیکی پس از تأیید پرداخت ممکن است.",
+    en: "This order has no confirmed payment/supply authorization yet; physical preparation and dispatch require payment confirmation.",
+  },
   "fulfillment.dispatch.invalid_state": {
     fa: "ارسال در وضعیت فعلی مرسوله مجاز نیست.",
     en: "Dispatch is not allowed in the current shipment state.",

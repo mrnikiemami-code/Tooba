@@ -134,3 +134,12 @@ supported. `admin-error-map.test.ts` asserts all four facts.
 - A returned parcel whose capacity is entirely consumed truthfully offers no action; the parent consolidated-package return
   workflow remains unsupported.
 - This is a worker PASS pending Architect review; it is not user acceptance and not "all shipping fixed".
+
+---
+
+## AUDIT CORRECTION appended by TB-266 (2026-11-14)
+
+The fixture-construction statement in this result was too strong. The relational cases in this folder built a Paid seller order by direct SQL, inserted a checkout without an owning payment confirmation, and constructed FulfillmentUnit.CreateFromPaidOrder(...) in-process. They prove the aggregate, the claim and the closure policy — **not** that an unpaid checkout can reach dispatch, and **not** that the paid state came from the owning payment path. The durable closure/claim/decision invariants themselves are unaffected.
+
+The full correction and the TB-266 counter-evidence (live unpaid order with no fulfillment, plus the ulfillment.order.payment_not_authorized guard) are in
+\docs/architecture/evidence/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/audit-correction-265.md\.

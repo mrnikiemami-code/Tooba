@@ -1,4 +1,14 @@
-# CURRENT — 265-R1 WORKER RESULT PASS: durable Order closure, source-exact claim settlement, atomic partial release, money/disposition recovery — 2026-11-14
+# CURRENT — 266 WORKER RESULT PASS: payment-gated supply, readable queue, resolving locator, clean four-order trial set — 2026-11-14
+
+Read docs/ai/tasks/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/{RESULT.md,RECEIPTS.md,result-contract.txt,audit-correction-265.md}.
+Status **PASS** within the issued repair scope, NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT real-provider paid proof. Base `2d31e4bab8ce852db5df0d63628bc1a696a492c5`.
+Physical supply now requires `IOrderFulfillmentReader.GetHandoffAsync(...).IsPaid` at every owning seam and raises `fulfillment.order.payment_not_authorized` before any effect; Order projection offers physical actions only for `SellerOrderStatus.Paid`. Queue uses the shared grid at real 64px rows with badge+scope on one line (0 clipped cells at 390/1440, 0 document overflow). A coarse fulfillment locator from a lawful queue row now resolves to that exact unit instead of «پیدا نشد», while a stale precise locator stays honest. The developmental order dataset was cleaned with four private backups and owner-aware dependency-ordered transactions, leaving exactly the four coherent trial orders; protected catalog/accounts/settings and `total_reserved` are unchanged. The overstated 265 fixture claim is corrected in `audit-correction-265.md`. STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+Earlier banners below are historical and superseded.
+
+---
+
+# SUPERSEDED — 265-R1 WORKER RESULT PASS: durable Order closure, source-exact claim settlement, atomic partial release, money/disposition recovery — 2026-11-14
 
 Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb265-relational.txt,tb265-behavior.txt,tb265-fulfillment.txt,tb265-plan.txt}.

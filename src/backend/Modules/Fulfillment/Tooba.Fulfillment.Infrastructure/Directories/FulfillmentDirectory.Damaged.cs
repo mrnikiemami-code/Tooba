@@ -45,6 +45,13 @@ public sealed partial class FulfillmentDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
+        // TB-266: a replacement is new physical work funded from healthy stock, so it needs the same authoritative
+        // order-level payment/supply authorization as any other new dispatch. Checked before the decision is recorded
+        // so an unauthorized order can never gain a hold or a parcel through this path either.
+        var authorizationUnit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        await EnsureSupplyPaymentAuthorizedAsync(authorizationUnit.SellerOrderId, cancellationToken);
+        _db.ChangeTracker.Clear();
+
         // 1) The durable decision comes FIRST and is committed before anything is reserved, so a decision can never be
         //    lost because stock happened to be unavailable, and an exact retry can never record a second decision.
         var (unit, resolutionId) = await RecordDamagedDecisionAsync(

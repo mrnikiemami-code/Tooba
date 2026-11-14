@@ -1,0 +1,64 @@
+﻿[
+    {
+        "checkoutId":  "01a1daaf-21bc-7000-b5d1-1dd42a194dcf",
+        "reference":  "TB-20261114153112-01-6aa876",
+        "status":  "PendingPayment",
+        "paymentState":  "PendingPayment",
+        "supplyStatus":  null,
+        "actions":  [
+                        "cancel|"
+                    ],
+        "fulfillments":  [
+                             null
+                         ]
+    },
+    {
+        "checkoutId":  "01a1daa2-430d-7000-87db-c4f586104050",
+        "reference":  "TB-20261114151709-01-2d8281",
+        "status":  "Paid",
+        "paymentState":  "Paid",
+        "supplyStatus":  null,
+        "actions":  [
+                        "mark_processing|",
+                        "mark_processing|01a1daa2-431a-7000-9da1-eb0405144a00",
+                        "cancel|"
+                    ],
+        "fulfillments":  [
+                             "01a1daa2-48be-7000-baa8-53a8d4d6872a"
+                         ]
+    },
+    {
+        "checkoutId":  "01a1daa2-4a2d-7000-9086-c0e309939070",
+        "reference":  "TB-20261114151711-01-b558d5",
+        "status":  "Paid",
+        "paymentState":  "Paid",
+        "supplyStatus":  null,
+        "actions":  [
+                        "mark_packed|",
+                        "pack_selected|",
+                        "pack_selected|01a1daa2-4a53-7000-8c3a-83ab8497b958",
+                        "unprocess|01a1daa2-4a53-7000-8c3a-83ab8497b958",
+                        "unprocess|",
+                        "cancel|"
+                    ],
+        "fulfillments":  [
+                             "01a1daa2-50e6-7000-a834-6c3151fc33c7"
+                         ]
+    },
+    {
+        "checkoutId":  "01a1daa2-519d-7000-bb9c-c4d0150a1971",
+        "reference":  "TB-20261114151713-01-cfbc30",
+        "status":  "Paid",
+        "paymentState":  "Paid",
+        "supplyStatus":  null,
+        "actions":  [
+                        "unpack|",
+                        "unpack|01a1daa2-51a8-7000-adb5-cb67d03d3047",
+                        "create_shipment|",
+                        "cancel|"
+                    ],
+        "fulfillments":  [
+                             "01a1daa2-5929-7000-98a4-32f0a306553e"
+                         ]
+    }
+]

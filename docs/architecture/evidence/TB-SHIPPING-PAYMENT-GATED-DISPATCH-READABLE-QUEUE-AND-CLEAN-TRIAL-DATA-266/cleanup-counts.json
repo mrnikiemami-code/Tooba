@@ -1,0 +1,61 @@
+﻿{
+  "capturedAt": "2026-11-14T16:22:00Z",
+  "database": "tooba_alpha@127.0.0.1:5432 (SingleStore, tenant store-alpha)",
+  "method": "read-only SQL count query through the already-running postgres client container; no DDL, no business write",
+  "afterFinalCleanup": {
+    "checkouts": 4,
+    "seller_orders": 4,
+    "order_lines": 4,
+    "order_shipping_groups": 0,
+    "fulfillments": 3,
+    "shipments": 0,
+    "shipment_return_receipts": 0,
+    "courier_return_claims": 0,
+    "consolidated_packages": 0,
+    "damaged_goods_resolutions": 0,
+    "return_requests": 0,
+    "reservations": 6,
+    "payments": 3,
+    "carts": 8,
+    "settlement_entries": 0,
+    "stock_positions": 3577,
+    "total_reserved": 3,
+    "offers": 3223,
+    "parties": 10,
+    "identity_users": 86,
+    "shipping_methods": 7,
+    "shipping_drafts": 4
+  },
+  "protectedUnchanged": {
+    "stock_positions": 3577,
+    "offers": 3223,
+    "parties": 10,
+    "identity_users": 86,
+    "shipping_methods": 7,
+    "shipping_drafts": 4,
+    "settlement_entries": 0
+  },
+  "reservationAccounting": "6 reservation rows = 3 Held for the three paid trial orders (total_reserved=3) + 3 Released rows from the unpaid order's reacquire cycle. No order-bound hold belongs to a deleted order and no Reserved counter was zeroed by hand.",
+  "finalScopedDeletion": {
+    "transaction": "single psql transaction, ON_ERROR_STOP on",
+    "deleted": [
+      "fulfillment.items 1",
+      "fulfillment.fulfillments 1",
+      "order.order_lines 1",
+      "order.seller_orders 1",
+      "order.checkouts 1",
+      "payment.attempts 1",
+      "payment.payments 1",
+      "cart.carts 1"
+    ],
+    "deletedIds": {
+      "checkoutId": "01a1daa2-4238-7000-9f99-534974cf6b31",
+      "sellerOrderId": "01a1daa2-4240-7000-a9ea-49dedb445188",
+      "fulfillmentId": "01a1daa8-0e8b-7000-8436-a5fa448f9d34",
+      "paymentId": "01a1daa2-426f-7000-a718-4c427dd335b1",
+      "cartId": "01a1daa2-41a0-7000-a58d-597ed45270c5"
+    },
+    "reason": "cancelled repair fixture from this task's own earlier failed unpaid attempt; the user asked to leave only a few coherent test orders",
+    "zeroOtherEffect": "total_reserved stayed 3 and every protected count above stayed identical"
+  }
+}

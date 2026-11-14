@@ -1,6 +1,17 @@
 # Tooba — Recovery Context
 
-## Current Shipping handoff — 2026-10-29 (TB-243, original-store complete handoff on primary 3000/5088)
+## Current pointer — 2026-11-14 (TB-266 payment-gated supply, readable queue, clean trial set)
+
+Authoritative reading: root `AGENTS.md` CURRENT banner and
+`docs/architecture/evidence/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/RESULT.md`.
+Physical fulfillment now requires the owning `IsPaid` handoff before any effect (`fulfillment.order.payment_not_authorized`);
+the work queue renders the shared grid at 64px rows with unclipped badges; a lawful fulfillment-only queue locator resolves to its
+exact unit; the developmental order dataset was backed up and cleaned, leaving four coherent trial orders
+(`PendingPayment 01a1daaf-…`, `Ready 01a1daa2-430d-…`, `Processing 01a1daa2-4a2d-…`, `Packed 01a1daa2-519d-…`).
+One canonical `tooba_alpha` @5432 SingleStore, Host 5088, FE 3000 (`yuIokX6A6PV337VQbzU1k`). No migration was added.
+STOP_FOR_ARCHITECT; next step is the user's own trial.
+
+## Superseded handoff — 2026-10-29 (TB-243, original-store complete handoff on primary 3000/5088)
 
 Live pointer: docs/architecture/evidence/TB-SHIPPING-ORIGINAL-STORE-COMPLETE-HANDOFF-243/RESULT.md and root AGENTS.md.
 PRIMARY http://127.0.0.1:3000 → Host 5088 SingleStore/store-alpha/tooba_alpha (Code 7ea79556f).

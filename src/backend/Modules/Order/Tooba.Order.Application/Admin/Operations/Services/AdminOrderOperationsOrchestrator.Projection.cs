@@ -40,7 +40,15 @@ public sealed partial class AdminOrderOperationsOrchestrator
     {
         if (order.Status != SellerOrderStatus.Cancelled && fulfillment is not null)
         {
-            if (HasProcessableQuantity(fulfillment)
+            // TB-266: new physical work (processing, packing, parcel creation, individual/consolidated dispatch) is only
+            // offered once the order carries authoritative supply/payment authorization — `SellerOrderStatus.Paid`,
+            // which is written solely by the owning payment confirmation/manual-verification path. A pending-payment
+            // order keeps read-only visibility of what is already recorded, but never a new dispatch action; the
+            // fulfillment aggregate enforces the same rule, so hiding the action is not the only guard.
+            var supplyAuthorized = order.Status == SellerOrderStatus.Paid;
+
+            if (supplyAuthorized
+                && HasProcessableQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
                 actions.Add(Action(
@@ -71,7 +79,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 }
             }
 
-            if (HasPackableQuantity(fulfillment)
+            if (supplyAuthorized
+                && HasPackableQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
                 actions.Add(Action(
@@ -173,7 +182,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 }
             }
 
-            if (fulfillment.Status is not (FulfillmentOperationStatus.Cancelled or FulfillmentOperationStatus.Failed or FulfillmentOperationStatus.Delivered)
+            if (supplyAuthorized
+                && fulfillment.Status is not (FulfillmentOperationStatus.Cancelled or FulfillmentOperationStatus.Failed or FulfillmentOperationStatus.Delivered)
                 && HasUnallocatedShipmentQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
@@ -249,7 +259,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
                         "کد رهگیری مرسوله اصلاح شود؟ مقدار قبلی در تاریخچه می‌ماند."));
                 }
 
-                if (!string.IsNullOrWhiteSpace(shipment.TrackingReference)
+                if (supplyAuthorized
+                    && !string.IsNullOrWhiteSpace(shipment.TrackingReference)
                     && shipment.DispatchedAt is null
                     && shipment.Status is ShipmentOperationStatus.Created
                     && !lockedByPackage
@@ -592,6 +603,18 @@ public sealed partial class AdminOrderOperationsOrchestrator
 
         foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageOperationStatus.Created))
         {
+            // TB-266: dispatching a consolidated package physically moves stock for every member seller, so it is only
+            // offered when each member seller's order carries authoritative payment/supply authorization. The
+            // fulfillment aggregate enforces the same rule per member before any reservation is consumed.
+            var memberParties = package.Members
+                .Where(m => m.ReleasedAt is null)
+                .Select(m => m.SellerPartyId)
+                .ToHashSet();
+            var packageSupplyAuthorized = memberParties.Count > 0
+                && memberParties.All(party => group.SellerOrders.Any(o =>
+                    o.SellerPartyId == party
+                    && o.Status == SellerOrderStatus.Paid));
+
             actions.Add(Action(
                 "cancel_consolidated_package",
                 "ابطال بسته تجمیعی",
@@ -620,18 +643,21 @@ public sealed partial class AdminOrderOperationsOrchestrator
                     consolidatedPackageId: package.ConsolidatedPackageId));
             }
 
-            actions.Add(Action(
-                "dispatch_consolidated_package",
-                "ارسال بسته تجمیعی",
-                "Dispatch consolidated package",
-                null,
-                null,
-                null,
-                null,
-                permission,
-                true,
-                $"ارسال مرکزی بسته {package.PackageNumber} ثبت شود؟",
-                consolidatedPackageId: package.ConsolidatedPackageId));
+            if (packageSupplyAuthorized)
+            {
+                actions.Add(Action(
+                    "dispatch_consolidated_package",
+                    "ارسال بسته تجمیعی",
+                    "Dispatch consolidated package",
+                    null,
+                    null,
+                    null,
+                    null,
+                    permission,
+                    true,
+                    $"ارسال مرکزی بسته {package.PackageNumber} ثبت شود؟",
+                    consolidatedPackageId: package.ConsolidatedPackageId));
+            }
         }
 
         foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageOperationStatus.Dispatched))

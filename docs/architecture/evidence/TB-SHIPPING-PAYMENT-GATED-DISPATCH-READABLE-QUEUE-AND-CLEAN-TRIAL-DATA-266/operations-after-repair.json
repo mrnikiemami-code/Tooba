@@ -1,0 +1,70 @@
+{
+  "unpaid": {
+    "checkoutId": "01a1daaf-21bc-7000-b5d1-1dd42a194dcf",
+    "orderStatus": "PendingPayment",
+    "paymentState": "PendingPayment",
+    "fulfillmentIds": [
+      null
+    ],
+    "actions": [
+      "cancel: "
+    ],
+    "supplyStatus": "AvailableForReacquire"
+  },
+  "ready": {
+    "checkoutId": "01a1daa2-430d-7000-87db-c4f586104050",
+    "orderStatus": "Paid",
+    "paymentState": "Paid",
+    "fulfillmentIds": [
+      "01a1daa2-48be-7000-baa8-53a8d4d6872a"
+    ],
+    "actions": [
+      "mark_processing: ",
+      "mark_processing: ",
+      "cancel: "
+    ],
+    "supplyStatus": "Reserved"
+  },
+  "processing": {
+    "checkoutId": "01a1daa2-4a2d-7000-9086-c0e309939070",
+    "orderStatus": "Paid",
+    "paymentState": "Paid",
+    "fulfillmentIds": [
+      "01a1daa2-50e6-7000-a834-6c3151fc33c7"
+    ],
+    "actions": [
+      "mark_packed: ",
+      "pack_selected: ",
+      "pack_selected: ",
+      "unprocess: ",
+      "unprocess: ",
+      "cancel: "
+    ],
+    "supplyStatus": "Reserved"
+  },
+  "packed": {
+    "checkoutId": "01a1daa2-519d-7000-bb9c-c4d0150a1971",
+    "orderStatus": "Paid",
+    "paymentState": "Paid",
+    "fulfillmentIds": [
+      "01a1daa2-5929-7000-98a4-32f0a306553e"
+    ],
+    "actions": [
+      "unpack: ",
+      "unpack: ",
+      "create_shipment: ",
+      "cancel: "
+    ],
+    "supplyStatus": "Reserved"
+  },
+  "cancelledRepair": {
+    "checkoutId": "01a1daa2-4238-7000-9f99-534974cf6b31",
+    "orderStatus": "Cancelled",
+    "paymentState": "Cancelled",
+    "fulfillmentIds": [
+      "01a1daa8-0e8b-7000-8436-a5fa448f9d34"
+    ],
+    "actions": [],
+    "supplyStatus": "NotApplicable"
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  formatAdminShipmentStatus,
   loadAdminOrderDetail,
   type AdminOrderDetail,
   type AdminOperationalDeliveryGroup,
@@ -273,7 +274,9 @@ export function AdminOrderOperationsRouteScreen({
     if (!detail || !fulfillmentId) return null;
     return new Set(
       detail.sellerOrders
-        .filter((seller) => (seller.fulfillmentId ?? seller.id) === fulfillmentId)
+        // TB-266: accept BOTH identities a locator may carry — the seller order's own fulfillment id, and the seller
+        // order id itself (older queue links) — instead of only `fulfillmentId ?? id`.
+        .filter((seller) => seller.fulfillmentId === fulfillmentId || (seller.fulfillmentId ?? seller.id) === fulfillmentId)
         .map((seller) => seller.id),
     );
   }, [detail, fulfillmentId]);
@@ -330,8 +333,59 @@ export function AdminOrderOperationsRouteScreen({
       // A fulfillment locator that resolves to nothing must not silently become "the whole order".
       return !fulfillmentId;
     });
+    // TB-266: a COARSE fulfillment-only locator (no group/parcel/package identity) that no longer matches any
+    // seller order used to resolve to an empty target list, so a valid queue row could dead-end on
+    // «گروه… پیدا نشد». A coarse hint is a hint: when it resolves nothing, the order's own operational groups are
+    // still shown. A PRECISE locator that matches nothing keeps the honest not-found message.
+    if (matched.length === 0 && fulfillmentId && !shippingGroupId && !shipmentId && !packageId) {
+      return groups.map((group) => toTargetFact(group, detail, focus));
+    }
     return matched.map((group) => toTargetFact(group, detail, focus));
   }, [detail, focus, fulfillmentId, packageId, shipmentId, shippingGroupId, targetSellerOrderIds]);
+
+  /**
+   * TB-266: a lawful queue row can point at a seller FULFILLMENT unit that has no Order-captured shipping group
+   * yet (`workUnitKey = group:{fulfillmentId}`, `workUnitState = Ungrouped`). Such a row is exact, not stale, so
+   * the target card names that one fulfillment unit — the same unit the work queue grouped — instead of the
+   * «پیدا نشد» message. Nothing is invented: the summary comes from the seller order the locator matched, and a
+   * locator that matches no seller order still resolves to nothing.
+   */
+  const sellerTargets = useMemo((): OrderOperationsTargetFact[] => {
+    if (!detail || targets.length > 0) return [];
+    // Only a COARSE fulfillment-only locator may fall back to the seller unit. A precise parcel/package/group
+    // locator that resolved to nothing stays an honest not-found, never a different unit's card.
+    if (!fulfillmentId || shippingGroupId || shipmentId || packageId) return [];
+    if (!targetSellerOrderIds || targetSellerOrderIds.size === 0) return [];
+    const delivery = (detail.shippingGroups ?? [])
+      .filter((group) => targetSellerOrderIds.has(group.sellerOrderId))
+      .map((group) => [group.deliveryDate, group.deliveryTimeWindow].filter(Boolean).join(" · "))
+      .filter(Boolean)
+      .join(" | ");
+    return detail.sellerOrders
+      .filter((seller) => targetSellerOrderIds.has(seller.id))
+      .map((seller): OrderOperationsTargetFact => {
+        const parcels = seller.shipments ?? [];
+        const open = parcels.filter((parcel) => parcel.status !== "Delivered" && parcel.status !== "Returned");
+        const state = seller.fulfillmentStatus || seller.status;
+        return {
+          groupKey: `fulfillment:${seller.fulfillmentId ?? seller.id}`,
+          methodLabel: detail.shippingMethodLabel ?? "",
+          customerDeliverySummary: delivery,
+          plannedDispatchSummary: null,
+          parcelSummary: parcels.length === 0
+            ? "بدون مرسولهٔ ساخته‌شده"
+            : parcels.length === open.length
+              ? `${parcels.length.toLocaleString("fa-IR")} مرسوله — ${formatAdminShipmentStatus(open[0]!.status)}`
+              : `${parcels.length.toLocaleString("fa-IR")} مرسوله — ${open.length.toLocaleString("fa-IR")} باز`,
+          readinessLabel: formatAdminShipmentStatus(state),
+          readinessTone: state === "Delivered" || state === "Cancelled"
+            ? "done"
+            : seller.status === "Paid"
+              ? "ready"
+              : "blocked",
+        };
+      });
+  }, [detail, fulfillmentId, packageId, shipmentId, shippingGroupId, targetSellerOrderIds, targets.length]);
 
   const focusedPackageNumber = useMemo(
     () => (packageId
@@ -366,7 +420,7 @@ export function AdminOrderOperationsRouteScreen({
       destinationLine={destinationLine}
       methodLabel={detail?.shippingMethodLabel}
       targetRequested={targetRequested}
-      targets={targets}
+      targets={targets.length > 0 ? targets : sellerTargets}
       targetPackageNumber={focusedPackageNumber}
     >
       {detail ? (

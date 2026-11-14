@@ -1,0 +1,18 @@
+TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266
+base=2d31e4bab8ce852db5df0d63628bc1a696a492c5
+channel=tooba-main
+worker=tooba-worker-01
+database=tooba_alpha@127.0.0.1:5432 SingleStore store-alpha
+host=5088 pid=20368 (health/ready 200 -> SingleStore), republished after the gate change
+frontend=3000 BUILD_ID=yuIokX6A6PV337VQbzU1k pid=25852
+decision=AUTHORITATIVE_PAYMENT_GATED_PHYSICAL_SUPPLY_READABLE_64PX_QUEUE_RESOLVING_FULFILLMENT_LOCATOR_AND_BACKED_UP_OWNER_AWARE_ORDER_CLEANUP_LEAVING_FOUR_COHERENT_TRIAL_ORDERS
+payment_gate=fulfillment.order.payment_not_authorized from IOrderFulfillmentReader.GetHandoffAsync(...).IsPaid
+migration=none-added
+tests=PaymentAuthorizedSupplyGate266 4/4; operations-route mount 5/5; queue/returns client 17/17; tsc 0; build 0
+cleanup_backup=D:\temp\tb266-backup\tooba_alpha-pre-tb266.dump sha256=07AD46F5B6CBDAD16D152F23407645A0C81197DE942E96AEFCAB251E2395C8C1
+final_cleanup_backup=D:\temp\tb266-backup\tooba_alpha-pre-tb266-final-cleanup.dump sha256=FDFD25BFBBC853CADD9FE050725690BE93C8D4E9AA7C04BCBF31513B0391F1DE
+counts_after=checkouts4 seller_orders4 order_lines4 fulfillments3 shipments0 returns0 reservations6 total_reserved3 payments3 stock_positions3577 offers3223 parties10 users86 methods7 drafts4
+trial=PendingPayment 01a1daaf-21bc-7000-b5d1-1dd42a194dcf | Ready 01a1daa2-430d-7000-87db-c4f586104050 | Processing 01a1daa2-4a2d-7000-9086-c0e309939070 | Packed 01a1daa2-519d-7000-bb9c-c4d0150a1971
+stop=STOP_FOR_ARCHITECT
+automaticNextImplementationTask=NONE
+

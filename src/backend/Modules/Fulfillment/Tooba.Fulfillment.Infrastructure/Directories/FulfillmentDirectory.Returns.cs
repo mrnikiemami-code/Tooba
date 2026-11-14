@@ -118,6 +118,12 @@ public sealed partial class FulfillmentDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
+        // TB-266: a resend is new physical work, so the order must still be supply/payment authorized. Checked once,
+        // before any allocation attempt writes anything.
+        var authorizationUnit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        await EnsureSupplyPaymentAuthorizedAsync(authorizationUnit.SellerOrderId, cancellationToken);
+        _db.ChangeTracker.Clear();
+
         for (var attempt = 0; attempt < ResendAllocationAttempts; attempt++)
         {
             // Serializable is the allocation guard: two independent operators may both read the same returned

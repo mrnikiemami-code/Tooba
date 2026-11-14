@@ -1,0 +1,50 @@
+{
+  "createdAt": "2026-11-14T15:17:08.960Z",
+  "host": "http://127.0.0.1:5088",
+  "scenarios": [
+    {
+      "key": "unpaid-awaiting-payment",
+      "checkoutId": "01a1daa2-4238-7000-9f99-534974cf6b31",
+      "paymentId": "01a1daa2-426f-7000-a718-4c427dd335b1",
+      "shipmentId": null,
+      "label": "سفارش ۱ — در انتظار پرداخت (بدون مجوز آماده‌سازی/ارسال)",
+      "projectedActions": [
+        "cancel"
+      ],
+      "physicalPreparationRefusal": null,
+      "fulfillmentIds": [],
+      "reviewUrl": "http://127.0.0.1:3000/fa/admin/orders/01a1daa2-4238-7000-9f99-534974cf6b31/operations"
+    },
+    {
+      "key": "paid-ready-for-preparation",
+      "checkoutId": "01a1daa2-430d-7000-87db-c4f586104050",
+      "paymentId": "01a1daa2-4341-7000-afae-deba18bfed75",
+      "fulfillmentId": "01a1daa2-48be-7000-baa8-53a8d4d6872a",
+      "paymentState": "Paid",
+      "label": "سفارش ۲ — پرداخت‌شده و آمادهٔ آماده‌سازی",
+      "reviewUrl": "http://127.0.0.1:3000/fa/admin/orders/01a1daa2-430d-7000-87db-c4f586104050/operations"
+    },
+    {
+      "key": "paid-processing",
+      "checkoutId": "01a1daa2-4a2d-7000-9086-c0e309939070",
+      "paymentId": "01a1daa2-4adc-7000-97ba-ebc67edfdc4c",
+      "fulfillmentId": "01a1daa2-50e6-7000-a834-6c3151fc33c7",
+      "label": "سفارش ۳ — پرداخت‌شده و در حال آماده‌سازی",
+      "reviewUrl": "http://127.0.0.1:3000/fa/admin/orders/01a1daa2-4a2d-7000-9086-c0e309939070/operations"
+    },
+    {
+      "key": "paid-packed",
+      "checkoutId": "01a1daa2-519d-7000-bb9c-c4d0150a1971",
+      "paymentId": "01a1daa2-51cf-7000-97f9-4e9981e1e34c",
+      "fulfillmentId": "01a1daa2-5929-7000-98a4-32f0a306553e",
+      "label": "سفارش ۴ — پرداخت‌شده و بسته‌بندی‌شده",
+      "reviewUrl": "http://127.0.0.1:3000/fa/admin/orders/01a1daa2-519d-7000-bb9c-c4d0150a1971/operations"
+    }
+  ],
+  "customers": {
+    "unpaid": "01a1da9c-7119-7000-b227-2a696bf68ae3",
+    "ready": "01a1da9c-716c-7000-b00d-935f08195f69",
+    "resend": "01a1da9c-71c6-7000-8366-5a1a796f4eeb",
+    "damaged": "01a1da9c-721c-7000-9260-c2d0a155a34f"
+  }
+}

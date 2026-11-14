@@ -1,4 +1,5 @@
 ﻿using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Fulfillment.Contracts.Errors;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
@@ -54,6 +55,23 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         _telemetry = telemetry;
         _clock = clock;
         _ids = ids;
+    }
+
+    /// <summary>
+    /// TB-266: تنها مجوز پرداخت/تأمین برای کار فیزیکیِ <b>جدید</b>. وضعیت <c>Paid</c> سفارش، تصویر پایدار
+    /// تأیید پرداخت است که فقط از رویداد تأییدشدهٔ پرداخت (یا تأیید واریز دستی توسط مالک Payment) نوشته می‌شود؛
+    /// هیچ مسیر دیگری آن را نمی‌سازد. این درز پیش از هر نوشتن/مصرف موجودی اجرا می‌شود تا سفارش پرداخت‌نشده هرگز
+    /// آماده‌سازی یا ارسال تازه نگیرد، و همان قرارداد باریک موجود (<see cref="IOrderFulfillmentReader"/>) است
+    /// که مسیر ساخت fulfillment هم استفاده می‌کند — بدون DbContext پرداخت و بدون منبع حقیقت دوم.
+    /// </summary>
+    private async Task EnsureSupplyPaymentAuthorizedAsync(Guid sellerOrderId, CancellationToken cancellationToken)
+    {
+        var handoff = await _orders.GetHandoffAsync(sellerOrderId, cancellationToken)
+            ?? throw new ContractOperationException(FulfillmentErrorCodes.OrderNotFound);
+        if (!handoff.IsPaid)
+        {
+            throw new ContractOperationException(FulfillmentErrorCodes.OrderPaymentNotAuthorized);
+        }
     }
 
     /// <summary>
@@ -197,6 +215,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        await EnsureSupplyPaymentAuthorizedAsync(unit.SellerOrderId, cancellationToken);
         unit.MarkProcessing(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordTransition("processing");
@@ -213,6 +232,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        await EnsureSupplyPaymentAuthorizedAsync(unit.SellerOrderId, cancellationToken);
         unit.ProcessSelections(
             selections.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
             _clock.UtcNow);
@@ -248,6 +268,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        await EnsureSupplyPaymentAuthorizedAsync(unit.SellerOrderId, cancellationToken);
         unit.MarkPacked(_clock.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordTransition("packed");
@@ -264,6 +285,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        await EnsureSupplyPaymentAuthorizedAsync(unit.SellerOrderId, cancellationToken);
         unit.PackSelections(
             selections.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
             _clock.UtcNow);
@@ -325,6 +347,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             ? null
             : shippingDispatchKey.Trim();
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        await EnsureSupplyPaymentAuthorizedAsync(unit.SellerOrderId, cancellationToken);
         var knownIds = unit.Shipments.Select(x => x.ShipmentId).ToHashSet();
         var shipment = unit.CreateShipment(
             _ids.NewId(),
@@ -612,6 +635,10 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         {
             return await MapSnapshotAsync(unit, cancellationToken);
         }
+
+        // TB-266: an exact replay of an already-dispatched shipment above still answers its recorded fact; a NEW
+        // dispatch requires authoritative payment/supply authorization before any stock is consumed.
+        await EnsureSupplyPaymentAuthorizedAsync(unit.SellerOrderId, cancellationToken);
 
         unit.ApplyShipmentDispatched(shipmentId, _clock.UtcNow);
         if (shipment.IsReplacement)

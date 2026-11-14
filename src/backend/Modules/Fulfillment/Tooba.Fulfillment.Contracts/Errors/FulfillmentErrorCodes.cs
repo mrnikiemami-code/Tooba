@@ -22,6 +22,13 @@ public static class FulfillmentErrorCodes
     /// <summary>Source order is not paid.</summary>
     public const string OrderNotPaid = "fulfillment.order.not_paid";
 
+    /// <summary>
+    /// TB-266: the source order carries no authoritative payment/supply authorization, so new physical work
+    /// (processing, packing, parcel creation, individual/consolidated/resend dispatch) is refused before any write.
+    /// Distinct from <see cref="OrderNotPaid"/> so an operator gets a payment instruction instead of a generic refusal.
+    /// </summary>
+    public const string OrderPaymentNotAuthorized = "fulfillment.order.payment_not_authorized";
+
     /// <summary>Order line was not found.</summary>
     public const string OrderLineNotFound = "fulfillment.order_line.not_found";
 

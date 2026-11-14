@@ -253,6 +253,53 @@ test("mounted: a stale parcel/package locator is reported instead of showing ano
   });
 });
 
+/**
+ * TB-266: the queue's own group unit is the seller FULFILLMENT when the order has no captured shipping group yet
+ * (`workUnitKey = group:{fulfillmentId}`). That lawful row used to dead-end on «گروه… پیدا نشد».
+ */
+function ungroupedPayload(): Record<string, unknown> {
+  const payload = detailPayload() as Record<string, unknown>;
+  payload.shippingGroups = [];
+  payload.operationalDeliveryGroups = [];
+  return payload;
+}
+
+async function withUngroupedDetail<T>(run: () => Promise<T>): Promise<T> {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes(`/v1/admin/orders/${CHECKOUT}`)) {
+      return new Response(JSON.stringify(ungroupedPayload()), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ actions: [], lineCapabilities: [], sellerCapabilities: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+  try {
+    return await run();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+test("TB-266 mounted: a lawful fulfillment-only queue locator resolves to that exact unit, never «پیدا نشد»", async () => {
+  await withUngroupedDetail(async () => {
+    const mounted = await mount(route({}));
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-operations-target-fulfillment:${FULFILLMENT}']`).length === 1);
+    await flush();
+    const html = mounted.container.innerHTML;
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-operations-target-missing']").length, 0);
+    assert.ok(html.includes(`admin-order-operations-target-fulfillment:${FULFILLMENT}`));
+    assert.ok(html.includes("مرسوله"), "the card names the unit's real parcels");
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-items-shipping']").length, 1);
+    await mounted.unmount();
+  });
+});
+
 /** TB-261: the user's real shape — one parcel came back damaged while its sibling is still travelling. */
 function returnedPayload(): Record<string, unknown> {
   const payload = detailPayload() as Record<string, unknown>;

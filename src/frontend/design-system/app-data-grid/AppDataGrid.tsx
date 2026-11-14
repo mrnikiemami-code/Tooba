@@ -91,6 +91,12 @@ export interface AppDataGridProps<T extends { id: string }> {
   statusFilterOptions?: StatusFilterOption[];
   /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */
   pageSelectionOnly?: boolean;
+  /**
+   * TB-266: ارتفاع ردیف برای گریدهایی که سلولشان بیش از یک عنصر تک‌خطی دارد. پیش‌فرض ۵۶ (و ۵۲ در موبایل) برای
+   * یک برچسب کوتاه کافی است، اما ارتفاع ثابت باعث بریدگی عمودی محتوا می‌شود؛ این گزینه فقط همان گرید را
+   * بلندتر می‌کند و رفتار گریدهای دیگر را تغییر نمی‌دهد.
+   */
+  rowHeight?: number;
 }
 
 const PAGE_SIZES = [10, 20, 25, 50, 100, 1000];
@@ -120,6 +126,7 @@ export function AppDataGrid<T extends { id: string }>({
   defaultQuery = DEFAULT_GRID_QUERY,
   externalFilterFields = [],
   statusFilterOptions = [],
+  rowHeight = GRID_ROW_HEIGHT,
 }: AppDataGridProps<T>) {
   const capabilities = useMemo(() => resolveAppGridCapabilities(capabilitiesInput), [capabilitiesInput]);
   const messages = useMemo(
@@ -953,7 +960,7 @@ export function AppDataGrid<T extends { id: string }>({
       <div data-app-grid-viewport className="ag-theme-quartz ag-theme-tooba w-full">
         <AgGridReact<T>
           theme="legacy"
-          rowHeight={GRID_ROW_HEIGHT}
+          rowHeight={rowHeight}
           headerHeight={GRID_HEADER_HEIGHT}
           popupParent={popupParent ?? undefined}
           rowData={loading ? [] : rows}

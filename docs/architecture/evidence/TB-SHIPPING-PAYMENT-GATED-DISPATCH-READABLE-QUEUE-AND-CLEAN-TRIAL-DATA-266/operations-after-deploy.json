@@ -1,0 +1,38 @@
+{
+  "unpaid": {
+    "status": 200,
+    "actions": [
+      "mark_processing",
+      "mark_processing",
+      "cancel"
+    ]
+  },
+  "ready": {
+    "status": 200,
+    "actions": [
+      "mark_processing",
+      "mark_processing",
+      "cancel"
+    ]
+  },
+  "processing": {
+    "status": 200,
+    "actions": [
+      "mark_packed",
+      "pack_selected",
+      "pack_selected",
+      "unprocess",
+      "unprocess",
+      "cancel"
+    ]
+  },
+  "packed": {
+    "status": 200,
+    "actions": [
+      "unpack",
+      "unpack",
+      "create_shipment",
+      "cancel"
+    ]
+  }
+}

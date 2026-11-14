@@ -1,0 +1,26 @@
+{
+  "createdAt": "2026-11-14T15:31:12.065Z",
+  "host": "http://127.0.0.1:5088",
+  "scenarios": [
+    {
+      "key": "unpaid-awaiting-payment",
+      "checkoutId": "01a1daaf-21bc-7000-b5d1-1dd42a194dcf",
+      "paymentId": null,
+      "paymentAttempted": false,
+      "shipmentId": null,
+      "label": "سفارش ۱ — در انتظار پرداخت (بدون مجوز آماده‌سازی/ارسال)",
+      "projectedActions": [
+        "cancel"
+      ],
+      "physicalPreparationRefusal": null,
+      "fulfillmentIds": [],
+      "reviewUrl": "http://127.0.0.1:3000/fa/admin/orders/01a1daaf-21bc-7000-b5d1-1dd42a194dcf/operations"
+    }
+  ],
+  "customers": {
+    "unpaid": "01a1da9c-7119-7000-b227-2a696bf68ae3",
+    "ready": "01a1da9c-716c-7000-b00d-935f08195f69",
+    "resend": "01a1da9c-71c6-7000-8366-5a1a796f4eeb",
+    "damaged": "01a1da9c-721c-7000-9260-c2d0a155a34f"
+  }
+}

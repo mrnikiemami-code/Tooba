@@ -118,7 +118,8 @@ function workUnitStateLabel(row: FulfillmentListRow): string {
 function workUnitKindLabel(row: FulfillmentListRow): string {
   const kind = WORK_UNIT_KIND_LABELS[row.workUnitKind] ?? row.workUnitKind;
   if (row.targetPackageNumber) return `${kind} ${row.targetPackageNumber}`;
-  if (row.workUnitKind === "group" && !row.targetShippingGroupId) return `${kind} (بدون گروه پذیرش)`;
+  // TB-266: the state badge beside this label already says «بدون گروه پذیرش», so the scope repeats only the
+  // unit kind instead of stacking the same words twice inside a single non-wrapping line.
   return kind;
 }
 
@@ -199,10 +200,15 @@ function dispatchBucketBadge(row: FulfillmentListRow) {
     ? ` · ${formatPreparationState(row.preparationState)}`
     : "";
   return (
-    <span className={`inline-flex flex-wrap items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}>
-      {formatDispatchBucketLabel(row.dispatchBucket)}
-      {windowHint ? <span className="font-medium opacity-80">{windowHint}</span> : null}
-      {preparationHint ? <span className="font-medium opacity-80">{preparationHint}</span> : null}
+    // TB-266: the bucket pill stays on ONE line — wrapping its hints inside a fixed row height was what pushed the
+    // pill's text out of the cell. The full sentence is kept as a tooltip.
+    <span
+      className={`inline-flex max-w-full min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}
+      title={`${formatDispatchBucketLabel(row.dispatchBucket)}${windowHint}${preparationHint}`}
+    >
+      <span className="shrink-0">{formatDispatchBucketLabel(row.dispatchBucket)}</span>
+      {windowHint ? <span className="truncate font-medium opacity-80">{windowHint}</span> : null}
+      {preparationHint ? <span className="shrink-0 font-medium opacity-80">{preparationHint}</span> : null}
     </span>
   );
 }
@@ -304,22 +310,35 @@ export function AdminFulfillmentWorkQueueScreen() {
         // TB-260-R1: the badge describes THIS physical unit. A seller order can now have several rows, so a
         // package/parcel row must never reprint the seller-wide status (a Created parcel under a Dispatched
         // fulfillment would otherwise look dispatched, and «موعد ارسال» would contradict the badge).
+        // TB-266: this cell used to stack the badge over a wrapping scope label inside a fixed row height, which
+        // clipped the badge vertically (and at 390px pushed the scope into 3–4 word-wrapped lines). Both items now
+        // share ONE non-wrapping line: the badge keeps its full height and the scope truncates with a tooltip.
         const history = row.workUnitKind === "fulfillment";
+        const scope = history ? "" : workUnitKindLabel(row);
         return (
-          <span className="flex flex-col gap-0.5" data-testid={`admin-fulfillment-work-unit-${row.id}`}>
-            <span className={fulfillmentStatusBadgeClass(history ? row.status : row.workUnitState || row.status)}>
+          <span
+            className="flex w-full min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap"
+            data-testid={`admin-fulfillment-work-unit-${row.id}`}
+          >
+            <span
+              className={`${fulfillmentStatusBadgeClass(history ? row.status : row.workUnitState || row.status)} shrink-0 whitespace-nowrap`}
+            >
               {history ? formatFulfillmentStatus(row.status) : workUnitStateLabel(row)}
             </span>
-            {!history && row.workUnitKind ? (
-              <span className="text-[11px] text-muted" data-testid={`admin-fulfillment-work-scope-${row.id}`}>
-                {workUnitKindLabel(row)}
+            {scope ? (
+              <span
+                className="min-w-0 truncate text-[11px] leading-4 text-muted"
+                title={scope}
+                data-testid={`admin-fulfillment-work-scope-${row.id}`}
+              >
+                {scope}
               </span>
             ) : null}
           </span>
         );
       },
-      width: 150,
-      minWidth: 120,
+      width: 200,
+      minWidth: 150,
       filterKind: "status",
       enumOptions: fulfillmentStatusEnumOptions,
       sortable: true,
@@ -340,7 +359,11 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "موعد ارسال",
       accessor: (row) => row.plannedHandoffDate ?? "",
       cell: (row) => (
-        <span className="block break-words text-xs font-semibold" data-testid={`admin-fulfillment-plan-${row.id}`}>
+        <span
+          className="block truncate text-xs font-semibold"
+          title={formatPlannedHandoff(row)}
+          data-testid={`admin-fulfillment-plan-${row.id}`}
+        >
           {formatPlannedHandoff(row)}
         </span>
       ),
@@ -353,7 +376,11 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "مهلت‌های عملیاتی",
       accessor: (row) => row.preparationStartUtc ?? "",
       cell: (row) => (
-        <span className="block break-words text-[11px] text-muted" data-testid={`admin-fulfillment-deadlines-${row.id}`}>
+        <span
+          className="block truncate text-[11px] text-muted"
+          title={formatPreparationDeadlines(row)}
+          data-testid={`admin-fulfillment-deadlines-${row.id}`}
+        >
           {formatPreparationDeadlines(row)}
         </span>
       ),
@@ -366,7 +393,11 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "تحویل مشتری",
       accessor: (row) => row.customerReceivingDate ?? "",
       cell: (row) => (
-        <span className="block break-words text-xs" data-testid={`admin-fulfillment-receiving-${row.id}`}>
+        <span
+          className="block truncate text-xs"
+          title={formatCustomerReceiving(row)}
+          data-testid={`admin-fulfillment-receiving-${row.id}`}
+        >
           {formatCustomerReceiving(row)}
         </span>
       ),
@@ -379,19 +410,25 @@ export function AdminFulfillmentWorkQueueScreen() {
       header: "اقدام بعدی",
       accessor: (row) => row.nextStepLabelFa,
       cell: (row) => (
-        <span className="block break-words text-xs" data-testid={`admin-fulfillment-next-step-${row.id}`}>
+        // TB-266: label and blocker share ONE non-wrapping line; the blocker keeps its warning tone without adding a
+        // second wrapped line inside the fixed row height.
+        <span
+          className="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-xs"
+          title={[row.nextStepLabelFa, row.nextStepBlockerFa].filter(Boolean).join(" — ")}
+          data-testid={`admin-fulfillment-next-step-${row.id}`}
+        >
           {row.nextStepLabelFa ? (
-            <span className="font-semibold">{row.nextStepLabelFa}</span>
+            <span className="shrink-0 font-semibold">{row.nextStepLabelFa}</span>
           ) : (
             <span className="text-muted">—</span>
           )}
           {row.nextStepBlockerFa ? (
-            <span className="mt-0.5 block text-[11px] text-amber-800">{row.nextStepBlockerFa}</span>
+            <span className="min-w-0 truncate text-[11px] text-amber-800">{row.nextStepBlockerFa}</span>
           ) : null}
         </span>
       ),
-      width: 200,
-      minWidth: 150,
+      width: 220,
+      minWidth: 160,
       sortable: false,
     },
     {
@@ -638,7 +675,7 @@ export function AdminFulfillmentWorkQueueScreen() {
           {gridError ? (
             <ErrorState title="فروشگاه در دسترس نیست" detail={gridError} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
-            <AppDataGrid<FulfillmentListRow> {...gridProps} bulkActions={bulkActions} />
+            <AppDataGrid<FulfillmentListRow> {...gridProps} rowHeight={64} bulkActions={bulkActions} />
           )}
         </div>
       </section>
