@@ -1,3 +1,7 @@
+# CURRENT — TB266 PARTIAL; BASIC FOUR-ORDER USER TRIAL AVAILABLE — 2026-11-14
+
+Read docs/architecture/evidence/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/ARCHITECT-REVIEW.md. Source repairs and geometry evidence support basic queue/preparation trial. Full task NOT ACCEPTED: no dispatch/package/bulk payment gate behavior tests (four tests only process/create with InMemory reader); zero accepted shipping groups/shipments/returns in four-order set; cleanup owner-aware audit incomplete in committed receipts. Deletion has already happened, do not repeat or silently restore it. Preserve backups and history. No new task issued/automaticNext NONE. No all-shipping-fixed or user acceptance. Await user trial/explicit bounded follow-up, no broad rerun loop. Earlier CURRENT worker-PASS banner superseded.
+
 # CURRENT — 266 WORKER RESULT PASS: payment-gated supply, readable 64px queue, resolving fulfillment locator, clean four-order trial set — 2026-11-14
 
 Read docs/ai/tasks/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/TASK.md and docs/architecture/evidence/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,audit-correction-265.md,cleanup-counts.json,queue-readability.json,queue-after-final-cleanup.json,operations-after-final-cleanup.json,trial-fixtures.json,trial-unpaid.json}.
