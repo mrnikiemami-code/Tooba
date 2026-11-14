@@ -1,3 +1,22 @@
+# CURRENT ARCHITECT RECOVERY — 265 PARTIAL; ONLY265-R1 ISSUED — 2026-11-14
+
+Read docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/TASK.md.
+265 worker PASS is NOT accepted: source-confirmed owning/recovery gaps A–E below. One worker/task repair, no new product stage/delegation/broad test loop.
+
+A OrderReturnObligationClosure only reads and returns Closed=true: ZERO durable Order write/cumulative closure. Must persist case/source/line identity and actual readers consume it.
+B Fulfillment settlement matches all resolutions by line, not source parcel, cancels whole Created parcels, sums whole claim against FIRST hold. Must scope/map exact source/partial quantity/multiple holds; protect competing send while Requested; real shared branch concurrency and package guard. Paid validation after claim and case-before-link retry also need exact recoverable phase.
+C Inventory ExecuteUpdate Reserved happens outside transaction encompassing reservation/inbox SaveChanges; crash releases availability without identity. Replay key alone doesn't validate requested reservation/quantity. Fix atomic owning partial release/exact result.
+D Reject can release claim despite case already approval/refund processing; successful refund then disposition error may become refund failure/new retry key; item marked disposed BEFORE stock call. Separate authoritative money outcome from physical work, serialize approval/reject, preserve exact unknown attempt, completed replay, disposition-only recovery. Both public entry routes enforce.
+E Current UI Create exists but real View-case/read detail origin/phase/condition wiring and localization incomplete. Need one actual task-owned create->existing Returns case->approval controlled-finance handoff, not unpaid/no-action GET.
+
+Retain useful265 origin/claim/Contracts structure, accepted timing264 and mobile264-R3/notifications263; no fresh scheduler/mobile perfection task. Financial/user acceptance NOT claimed. New tests justified ONLY by these concrete introduced seams; no full-module/base parity/green repetition.
+Three paths binding: healthy same-unit resend / newly reserved healthy replacement / linked existing Returns. Requested claims selected qty but no stock release/refund; approved owning obligation cancellation releases ONLY relevant unconsumed hold once before existing refund. Consumed original sale untouched, damaged never saleable, siblings/unselected quantities retained. Unknown money stays exact attempt; stock error never causes another refund.
+One canonical tooba_alpha5432 FE3000/Host5088 SingleStore, minimal independent TB265 fixtures only. User/screenshot/method01a17d0d... READ-ONLY, no extra DB/reset/reseed/businessSQL/global reclaimer; additive runner migrations+backup only. Preserve keys/CapturedPreview;255 parked/Tipax deferred. Parent-package workflow unsupported but locked-child command guard required.
+Result must report real owning facts/phase boundaries/public UI and exact review URLs with controlled-finance limit. One result then Architect review. No new task until result.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Earlier CURRENT banners below superseded; do not recover by treating original265 PASS as acceptance.
+
+---
+
 ﻿# CURRENT — 265 WORKER RESULT PASS: courier-origin Returns case, one source claim, phased approval closure, condition-safe stock — 2026-11-13
 
 Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/TASK.md and
