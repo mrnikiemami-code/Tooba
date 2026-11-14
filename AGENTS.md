@@ -1,3 +1,7 @@
+# CURRENT — TB267 REVIEWED FOR VISUAL HANDOFF; WAIT FOR USER — 2026-11-15
+
+Read docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267/ARCHITECT-REVIEW.md and user-review.md. Presentation-only source/evidence review complete; READY_FOR_USER_VISUAL_REVIEW, not visual acceptance. Same exercised OrderB stays read-only, Returned source/Delivered resend; no new task/automaticNext NONE. User previously said functionality worked; do not reopen payment/scheduler/Returns/quantity or reset data. Served build EwxE4g90_VArF5iXhm6oO reports readable structured layout390/1024/1440. No independent architect runtime/pixel verification claimed; await user look. Earlier CURRENT banners superseded.
+
 # CURRENT — 267 WORKER RESULT PASS (PRESENTATION ONLY): compact professional operational order surface, human Persian copy, finance-free shipping route, zero functional change — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267/TASK.md and
