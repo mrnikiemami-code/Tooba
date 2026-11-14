@@ -1,3 +1,7 @@
+# CURRENT ARCHITECT REVIEW — 265-R1 PARTIAL, NOT ACCEPTED — 2026-11-14
+
+Read docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/ARCHITECT-REVIEW.md before the worker result below. Source review confirmed remaining issued-scope gaps: Inventory key-only replay lacks reservation/requested-quantity identity; Returns approve/reject lacks a common serialized decision and completed approval replay; partial replacement claim is accepted then settlement refuses AFTER Order closure. Positive operator/navigation/mobile handoff was not executed. Worker PASS is not Architect acceptance. No new implementation task issued by this review; automatic next NONE. Do not restart accepted scheduling/mobile or broad test loops. Earlier CURRENT banners below are historical worker reports, superseded by this review.
+
 # CURRENT — 265-R1 WORKER RESULT PASS: durable Order closure, source-exact claim settlement, atomic partial release, money/disposition recovery — 2026-11-14
 
 Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/TASK.md and
