@@ -1,4 +1,4 @@
-TB-265 result contract
+﻿TB-265 result contract
 ======================
 
 task: TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265
@@ -6,8 +6,8 @@ taskRecordId: a0bbc3f8-ca1f-47dd-80e8-da3bbe3c273b
 channel: tooba-main
 worker: tooba-worker-01
 baseSha: 7c32cdc2955d9c0b0c1dd4eef8b961b9a4acb904
-codeSha: SEALED_IN_COMMIT_1
-evidenceSha: SEALED_IN_COMMIT_2
+codeSha: bf5ebe5e4
+evidenceSha: 6e5ced6a0
 headEqualsOriginMain: true (after push)
 
 decision: COURIER_ORIGIN_CASE_AS_THIRD_LAWFUL_OUTCOME_WITH_ONE_FULFILLMENT_SOURCE_CLAIM_PHASED_APPROVAL_CLOSURE_AND_CONDITION_AWARE_DISPOSITION
@@ -55,3 +55,4 @@ disclosedLimits:
   parent consolidated-package return/damage still unsupported (explicit refusal, child locked)
   already dispatched/in-transit/delivered replacement refuses any unused-stock shortcut
   concurrency proven with two independent real contexts + DB guards, not a stress test
+
