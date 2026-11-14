@@ -1,0 +1,69 @@
+TB-266-R1 live served-page verification (browser, read-only)
+Captured: 2026-11-14 after the final production build
+Served build: BUILD_ID a07UMunhlqua0X_aHt-f5 (next start on 3000, PID 38224) -> Host 5088 (PID 12752)
+Method: browser navigate + Runtime.evaluate on the served page (no POST issued for these reads)
+
+=== 1. The reported dead-end order (0 captured groups) ===
+URL: /fa/admin/orders/01a1daa2-519d-7000-bb9c-c4d0150a1971/operations?fulfillmentId=01a1daa2-5929-7000-98a4-32f0a306553e&from=queue
+
+document.querySelector('[data-testid="admin-order-operational-delivery-no-captured-group"]'):
+"این سفارش گروه ارسال ثبت‌شده ندارد؛ زمان ایجاد آن، انتخاب روش و بازهٔ تحویل مشتری ثبت نشده است.
+ برای همین ایجاد مرسوله برای این سفارش ممکن نیست و بارگذاری دوباره هم آن را تغییر نمی‌دهد.
+ آزمایش کامل ایجاد مرسوله را روی سفارشی انجام دهید که گروه ارسال ثبت‌شده دارد."
+
+document.querySelector('[data-testid="admin-order-operational-delivery-empty"]'): null
+textual buttons (non-empty label, incl. any «ایجاد مرسوله»): []   // icon-only buttons are excluded by this probe
+
+Page text (excerpt):
+"عملیات ارسال سفارش / TB-20261114151713-01-cfbc30
+ گروه یا بستهٔ هدف / ارسال پیش‌فرض فروشگاه / بسته‌بندی‌شده / موعد ارسال مشخص نشده / تحویل مشتری — /
+ مرسوله‌ها / بدون مرسولهٔ ساخته‌شده
+ اقلام و ارسال
+ <the no-captured-group sentence above>
+ فروشگاه آرمان / بسته‌بندی‌شده / ۱ قلم …
+ ۱ / بوش اسپیکر سری 6 / ۱ / ۱٬۶۲۱٬۹۲۷ ریال / ۱٬۷۶۷٬۹۰۰ ریال / بسته‌بندی‌شده /
+ بسته‌بندی ۱ · تخصیص ۰ · ارسال ۰ · باقی ۱"
+
+=== 2. Trial order B — left actionable for the user (Packed) ===
+URL: /fa/admin/orders/01a1db2f-e36e-7000-b7d3-afb2fe86e81a/operations?fulfillmentId=01a1db2f-eb79-7000-b084-3d6b4add0fbb&from=queue
+
+visible buttons (text, width, height):
+  [{"text":"ایجاد مرسوله","w":102,"h":44,"visible":true}]
+document overflow: 0
+
+Owning API for the same order (read-only):
+  actions: unpack (group), unpack (line), create_shipment, cancel
+  lineCapabilities[0]: selectable true, selectableQuantityMax 1, rowActionCodes ["unpack"],
+                       bulkActionCodes ["unpack","create_shipment"], shipmentEligibleQuantity 1
+  sellerCapabilities[0]: selectionAllowed true, paymentLocked false, shipmentCreationPossible true
+  supplyStatus "Reserved"
+  shipping-groups: groupCount 1, member createParcelEligible true, remainingPackedQuantity 1,
+                   deliveryDate 2026-11-17 window 09:00–10:00,
+                   plannedDispatch handoff 2026-11-15 08:00–20:00 Asia/Tehran, policyVersion 3,
+                   preparationStartUtc 2026-11-15T09:30:00Z, transferDepartureUtc 2026-11-15T15:10:00Z,
+                   handoffDeadlineUtc 2026-11-15T16:30:00Z, preparationMinutes 300, handoffMinutes 80
+  shipments: []
+
+=== 3. Trial order A — worker's completed create -> track -> dispatch ===
+URL: /fa/admin/orders/01a1db20-ae31-7000-91d1-0b63649ac5c3/operations?fulfillmentId=01a1db25-7931-7000-9811-b473e938af48&from=queue
+
+hasTracking: true
+hasDispatched: true
+create buttons: 0
+
+Page text (excerpt):
+"عملیات ارسال سفارش / TB-20261114173514-01-73cd8a
+ گروه یا بستهٔ هدف / TB264R2 تیپاکس اکسپرس آزمایشی
+ در مسیر تحویل — در انتظار ثبت تحویل
+ موعد ارسال / 2026-11-15 · 08:00–20:00 · (Asia/Tehran)
+ تحویل مشتری / 2026-11-17 · 09:00–10:00
+ مرسوله‌ها / ۱ مرسوله · ۱ در مسیر
+ …
+ اقلام و ارسال / ارسال سفارش / ۱ گروه ارسال · ۱ مرسوله
+ مهلت‌های عملیاتی: آماده‌سازی از ۱۴۰۵/۸/۲۴, ۱۳:۰۰ … / حرکت به سمت حامل ۱۴۰۵/۸/۲۴, ۱۸:۴۰ … /
+ آخرین مهلت تحویل به حامل ۱۴۰۵/۸/۲۴, ۲۰:۰۰ …
+ کالاهای این گروه / لنوو اولترابوک مدل 2 / ۱ عدد / ارسال‌شده به حامل
+ مرسولهٔ ۱ / تیپاکس · ۱ قلم / ارسال‌شده به حامل
+ کد رهگیری: TRK-01A1DB2C5F9F70008149360BCBC27C3A
+ ثبت تحویل / ثبت عدم تحویل
+ … / ارسال‌شده به حامل / بسته‌بندی ۱ · تخصیص ۱ · ارسال ۱ · باقی ۰"

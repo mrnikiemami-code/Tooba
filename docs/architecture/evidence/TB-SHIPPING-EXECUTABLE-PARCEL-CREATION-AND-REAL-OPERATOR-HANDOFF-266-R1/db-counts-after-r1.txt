@@ -1,0 +1,16 @@
+﻿           k           |    v     
+-----------------------+----------
+ carts                 | 56
+ checkouts             | 6
+ fulfillments          | 5
+ order_shipping_groups | 2
+ payments              | 5
+ reservations          | 9
+ reservations_held     | 4
+ seller_orders         | 6
+ settlement_entries    | 0
+ shipments             | 1
+ stock_positions       | 3577
+ total_reserved        | 4.000000
+(12 rows)
+

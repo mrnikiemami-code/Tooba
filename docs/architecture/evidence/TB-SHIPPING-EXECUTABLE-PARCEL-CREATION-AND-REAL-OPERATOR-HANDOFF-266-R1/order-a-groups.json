@@ -1,0 +1,56 @@
+﻿{
+ "status": "Paid",
+ "paymentState": "Paid",
+ "shippingMethodLabel": "TB264R2 تیپاکس اکسپرس آزمایشی",
+ "groupCount": 1,
+ "groups": [
+  {
+   "key": "01a1db20ae31700091d10b63649ac5c3|IRR|tipax\u001fexpress|tipax|express|2026-11-17|324000000000|360000000000|Asia/Tehran|تهران\u001fتهران\u001f1969764511\u001fخیابان ولیعصر، پلاک ۱، واحد ۲|seller:01a030d140cb70008abe6d31739956c5|solo:01a1db20ad987000aa76261f77230a71|manual|01a1db20ad987000aa76261f77230a71",
+   "methodLabel": "TB264R2 تیپاکس اکسپرس آزمایشی",
+   "methodCode": "tipax\u001fexpress",
+   "deliveryDate": "2026-11-17",
+   "window": "09:00–10:00",
+   "responsibility": "ارسال فروشگاه",
+   "plannedDispatch": {
+    "handoffDate": "2026-11-15",
+    "handoffTimeWindow": "08:00–20:00",
+    "handoffTimeZone": "Asia/Tehran",
+    "transportWorkingDays": 2,
+    "policyVersion": 3,
+    "distinctVariants": 1,
+    "preparationStartUtc": "2026-11-15T09:30:00+00:00",
+    "transferDepartureUtc": "2026-11-15T15:10:00+00:00",
+    "handoffDeadlineUtc": "2026-11-15T16:30:00+00:00",
+    "preparationMinutes": 300,
+    "handoffMinutes": 80
+   },
+   "members": [
+    {
+     "shippingGroupId": "01a1db20-ad98-7000-aa76-261f77230a71",
+     "sellerOrderId": "01a1db20-ae44-7000-b652-c57ccb82dc94",
+     "createParcelEligible": false,
+     "blockReason": "مقدار قابل ارسال باقی‌مانده‌ای در این گروه وجود ندارد.",
+     "transportMode": "Manual",
+     "lines": []
+    }
+   ]
+  }
+ ],
+ "shipments": [
+  {
+   "shipmentId": "01a1db2c-5f9f-7000-8149-360bcbc27c3a",
+   "status": "Dispatched",
+   "tracking": "TRK-01A1DB2C5F9F70008149360BCBC27C3A",
+   "group": "01a1db20-ad98-7000-aa76-261f77230a71"
+  }
+ ],
+ "lineStatuses": [
+  {
+   "orderLineId": "01a1db20-ae48-7000-9d9b-97c8ff926390",
+   "operationalStatus": "Dispatched",
+   "packed": 1,
+   "processing": 1,
+   "allocated": 1
+  }
+ ]
+}

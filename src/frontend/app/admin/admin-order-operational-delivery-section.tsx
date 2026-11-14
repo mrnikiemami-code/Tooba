@@ -323,6 +323,25 @@ export function AdminOrderOperationalDeliverySection({
 }: Props) {
   const groups = detail.operationalDeliveryGroups ?? [];
   if (groups.length === 0) {
+    // TB-266-R1: a historical order that was checked out BEFORE a captured shipping group existed has no
+    // accepted group history at all, so no lawful parcel can be created for it and no reload will ever change
+    // that. Say the permanent truth instead of asking the operator to reload a fact that does not exist.
+    const capturedGroups = detail.shippingGroups ?? [];
+    const packedLines = (detail.sellerOrders ?? []).flatMap((seller) => seller.lines ?? [])
+      .filter((line) => (line.quantityPacked ?? 0) > 0);
+    if (capturedGroups.length === 0 && packedLines.length > 0) {
+      return (
+        <div
+          className="rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5 text-xs text-amber-900"
+          data-testid="admin-order-operational-delivery-no-captured-group"
+          dir="rtl"
+        >
+          این سفارش گروه ارسال ثبت‌شده ندارد؛ زمان ایجاد آن، انتخاب روش و بازهٔ تحویل مشتری ثبت نشده است.
+          برای همین ایجاد مرسوله برای این سفارش ممکن نیست و بارگذاری دوباره هم آن را تغییر نمی‌دهد.
+          آزمایش کامل ایجاد مرسوله را روی سفارشی انجام دهید که گروه ارسال ثبت‌شده دارد.
+        </div>
+      );
+    }
     return (
       <div
         className="rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5 text-xs text-amber-900"

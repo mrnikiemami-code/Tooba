@@ -434,6 +434,45 @@ function insideDialogMarkup(html: string, testId: string): boolean {
   return index > dialogStart && index < dialogEnd;
 }
 
+/**
+ * TB-266-R1: an order created before a captured shipping group existed has no accepted group history, so the
+ * forward create is permanently impossible. The section must state that permanent fact instead of asking for a
+ * reload of something that will never appear.
+ */
+test("TB-266-R1 static render: an uncaptured historical order states the permanent reason, not a reload", () => {
+  const packedDetail = baseDetail({ shippingGroups: [], operationalDeliveryGroups: [] });
+  const packedHtml = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: packedDetail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+    }),
+  );
+  assert.ok(packedHtml.includes("admin-order-operational-delivery-no-captured-group"));
+  assert.doesNotMatch(packedHtml, /admin-order-operational-delivery-empty/);
+  assert.match(packedHtml, /گروه ارسال ثبت‌شده ندارد/);
+  assert.match(packedHtml, /ایجاد مرسوله برای این سفارش ممکن نیست/);
+  assert.doesNotMatch(packedHtml, /دوباره بارگذاری/);
+  assert.doesNotMatch(packedHtml, /ایجاد مرسوله</);
+
+  // A genuinely transient empty projection (nothing packed yet) keeps the ordinary retry copy.
+  const emptyDetail = baseDetail({ shippingGroups: [], operationalDeliveryGroups: [] });
+  for (const seller of emptyDetail.sellerOrders) {
+    for (const line of seller.lines) line.quantityPacked = 0;
+  }
+  const emptyHtml = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: emptyDetail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+    }),
+  );
+  assert.ok(emptyHtml.includes("admin-order-operational-delivery-empty"));
+  assert.doesNotMatch(emptyHtml, /admin-order-operational-delivery-no-captured-group/);
+});
+
 test("TB-254 mounted: the operational section has no selection control outside the dialog", async () => {
   resetGroupScope(CHECKOUT);
   installFetch((call) => {

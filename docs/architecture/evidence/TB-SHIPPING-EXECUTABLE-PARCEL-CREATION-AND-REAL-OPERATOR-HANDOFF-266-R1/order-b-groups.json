@@ -1,0 +1,55 @@
+﻿{
+ "status": "Paid",
+ "paymentState": "Paid",
+ "shippingMethodLabel": "TB264R2 تیپاکس اکسپرس آزمایشی",
+ "groupCount": 1,
+ "groups": [
+  {
+   "key": "01a1db2fe36e7000b7d3afb2fe86e81a|IRR|tipax\u001fexpress|tipax|express|2026-11-17|324000000000|360000000000|Asia/Tehran|تهران\u001fتهران\u001f1969764511\u001fخیابان ولیعصر، پلاک ۱، واحد ۲|seller:01a030d140cb70008abe6d31739956c5|solo:01a1db2fe3517000a51671ab5b815d1c|manual|01a1db2fe3517000a51671ab5b815d1c",
+   "methodLabel": "TB264R2 تیپاکس اکسپرس آزمایشی",
+   "methodCode": "tipax\u001fexpress",
+   "deliveryDate": "2026-11-17",
+   "window": "09:00–10:00",
+   "responsibility": "ارسال فروشگاه",
+   "plannedDispatch": {
+    "handoffDate": "2026-11-15",
+    "handoffTimeWindow": "08:00–20:00",
+    "handoffTimeZone": "Asia/Tehran",
+    "transportWorkingDays": 2,
+    "policyVersion": 3,
+    "distinctVariants": 1,
+    "preparationStartUtc": "2026-11-15T09:30:00+00:00",
+    "transferDepartureUtc": "2026-11-15T15:10:00+00:00",
+    "handoffDeadlineUtc": "2026-11-15T16:30:00+00:00",
+    "preparationMinutes": 300,
+    "handoffMinutes": 80
+   },
+   "members": [
+    {
+     "shippingGroupId": "01a1db2f-e351-7000-a516-71ab5b815d1c",
+     "sellerOrderId": "01a1db2f-e375-7000-8197-9657a380a505",
+     "createParcelEligible": true,
+     "transportMode": "Manual",
+     "lines": [
+      {
+       "orderLineId": "01a1db2f-e379-7000-80f5-91d1401c225c",
+       "title": "لنوو اولترابوک مدل 2",
+       "remainingPackedQuantity": 1,
+       "packedQuantity": 1
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "shipments": [],
+ "lineStatuses": [
+  {
+   "orderLineId": "01a1db2f-e379-7000-80f5-91d1401c225c",
+   "operationalStatus": "Packed",
+   "packed": 1,
+   "processing": 1,
+   "allocated": 0
+  }
+ ]
+}

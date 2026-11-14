@@ -1,4 +1,22 @@
-# CURRENT — 266 WORKER RESULT PASS: payment-gated supply, readable queue, resolving locator, clean four-order trial set — 2026-11-14
+# CURRENT — 266-R1 PASS: uncaptured historical order explained truthfully, real browser create→track→dispatch proven, second order actionable — 2026-11-14
+
+Read docs/ai/tasks/TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-EXECUTABLE-PARCEL-CREATION-AND-REAL-OPERATOR-HANDOFF-266-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,root-cause.md,browser-control-handoff.md,browser-live-verification.txt,payment-dispatch-proof.md,cleanup-audit-266.md,user-trial.md}.
+Status **PASS** within the issued scope, NOT Architect ACCEPT, NOT user acceptance. The user's reported dead end
+(`01a1daa2-519d-…`) is an order with **zero captured shipping groups**: its operations API advertised
+`create_shipment` (quantity/paid-based projection) while the delivery section can only create from an accepted
+captured group, and the backend refuses creation without one
+(`fulfillment.validation.shipping_group_id_required`) — so the old «دوباره بارگذاری کنید» copy was a false
+instruction. The section now states that permanent reason instead. Two coherent captured orders were created
+through the public storefront pipeline; on Order A the worker executed the real browser flow
+«ایجاد مرسوله» → «ثبت کد رهگیری» (internal `TRK-…`) → «ارسال» ending `Dispatched`; Order B is left `Packed` with
+one 44px «ایجاد مرسوله» for the user. Three new negative payment cases (existing parcel dispatch, bulk selections,
+consolidated package) pass with zero consume. The 266 cleanup audit is appended with its gaps declared UNVERIFIED.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Earlier banners below are historical.
+
+---
+
+# SUPERSEDED — 266 WORKER RESULT PASS: payment-gated supply, readable queue, resolving locator, clean four-order trial set — 2026-11-14
 
 Read docs/ai/tasks/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/{RESULT.md,RECEIPTS.md,result-contract.txt,audit-correction-265.md}.
