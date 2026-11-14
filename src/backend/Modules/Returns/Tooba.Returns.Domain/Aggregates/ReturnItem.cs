@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Returns.Domain.Events;
 using Tooba.Returns.Domain.ValueObjects;
 
@@ -35,6 +35,18 @@ public sealed class ReturnItem
     /// <summary>رزرو موجودی مرجع؛ FK Inventory نیست.</summary>
     public Guid? ReservationId { get; init; }
 
+    /// <summary>TB-265: فیزیک دریافت این خط؛ ردیف‌های قدیمی همیشه Usable خوانده می‌شوند.</summary>
+    public ReturnItemCondition Condition { get; private set; } = ReturnItemCondition.Usable;
+
+    /// <summary>TB-265: سرنوشت پایدار مقدار دریافت‌شده؛ واحد آسیب‌دیده هرگز saleable نمی‌شود.</summary>
+    public ReturnItemDisposition Disposition { get; private set; } = ReturnItemDisposition.None;
+
+    /// <summary>TB-265: مرسولهٔ مبدأ که این مقدار از آن بازگشته.</summary>
+    public Guid? SourceShipmentId { get; init; }
+
+    /// <summary>TB-265: رسید فیزیکی مبدأ (رسید دوم ساخته نمی‌شود).</summary>
+    public Guid? SourceReceiptId { get; init; }
+
     internal static ReturnItem Create(
         Guid returnItemId,
         Guid returnRequestId,
@@ -42,7 +54,10 @@ public sealed class ReturnItem
         decimal quantity,
         decimal unitPriceSnapshot,
         string currency,
-        Guid? reservationId) =>
+        Guid? reservationId,
+        ReturnItemCondition condition = ReturnItemCondition.Usable,
+        Guid? sourceShipmentId = null,
+        Guid? sourceReceiptId = null) =>
         new()
         {
             ReturnItemId = returnItemId,
@@ -52,5 +67,30 @@ public sealed class ReturnItem
             UnitPriceSnapshot = unitPriceSnapshot,
             Currency = currency.Trim(),
             ReservationId = reservationId,
+            Condition = Enum.IsDefined(condition) ? condition : ReturnItemCondition.Usable,
+            Disposition = condition == ReturnItemCondition.Damaged
+                ? ReturnItemDisposition.DamagedNonSaleable
+                : ReturnItemDisposition.None,
+            SourceShipmentId = sourceShipmentId,
+            SourceReceiptId = sourceReceiptId,
         };
+
+    /// <summary>
+    /// TB-265: سرنوشت فیزیکی را یک‌بار ثبت می‌کند. واحد آسیب‌دیده هرگز saleable نمی‌شود حتی اگر فراخوان اشتباه باشد.
+    /// </summary>
+    /// <summary>TB-265: records the physical disposition once (damaged never becomes saleable).</summary>
+    public void MarkDisposition(ReturnItemDisposition disposition)
+    {
+        if (Condition == ReturnItemCondition.Damaged && disposition == ReturnItemDisposition.SaleableRestock)
+        {
+            throw new ContractOperationException("return.damaged_saleable_restock_refused");
+        }
+
+        if (Disposition != ReturnItemDisposition.None)
+        {
+            return;
+        }
+
+        Disposition = disposition;
+    }
 }

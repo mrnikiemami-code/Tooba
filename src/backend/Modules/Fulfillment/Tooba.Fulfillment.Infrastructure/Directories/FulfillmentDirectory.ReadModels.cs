@@ -37,6 +37,15 @@ public sealed partial class FulfillmentDirectory
         var resolutionsByShipment = resolutions
             .GroupBy(x => x.ShipmentId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<DamagedGoodsResolution>)g.ToArray());
+        // TB-265: capacity already promised to an existing courier-origin Returns case is reported as consumed, so
+        // the operator is never offered a resend/replacement the owning authority would refuse.
+        var capacityClaims = await _db.CourierReturnClaims.AsNoTracking()
+            .Where(x => x.FulfillmentId == unit.FulfillmentId
+                        && (x.Status == CourierReturnClaimStatus.Requested || x.Status == CourierReturnClaimStatus.Approved))
+            .ToListAsync(cancellationToken);
+        var capacityClaimLines = capacityClaims
+            .SelectMany(x => x.Lines.Select(l => new ReturnedCapacityClaim(x.ShipmentId, l.OrderLineId, l.Quantity, l.Condition)))
+            .ToArray();
         var itemsByReceipt = receiptItems
             .GroupBy(x => x.ShipmentReturnReceiptId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ShipmentReturnReceiptItem>)g.ToArray());
@@ -89,14 +98,16 @@ public sealed partial class FulfillmentDirectory
                             shipmentItemsByShipment,
                             shipments,
                             shipment.ShipmentId,
-                            x.OrderLineId),
+                            x.OrderLineId,
+                            capacityClaimLines),
                         SourceDamagedQuantity(receiptItems, receiptShipment, shipment.ShipmentId, x.OrderLineId),
                         SourceOutstandingDamagedQuantity(
                             receiptItems,
                             receiptShipment,
                             resolutionsByShipment,
                             shipment.ShipmentId,
-                            x.OrderLineId)))
+                            x.OrderLineId,
+                            capacityClaimLines)))
                     .ToArray(),
                 shipment.CreatedAt,
                 shipment.ShippingMethodCode,
@@ -150,10 +161,10 @@ public sealed partial class FulfillmentDirectory
                 x.ShippingGroupId,
                 UsableReturnedQuantity(receiptItems, x.OrderLineId),
                 ResendCommittedQuantity(shipmentSnapshots, x.OrderLineId),
-                ResendableQuantity(receiptItems, shipmentSnapshots, x.OrderLineId),
+                ResendableQuantity(receiptItems, shipmentSnapshots, x.OrderLineId, capacityClaimLines),
                 DeliveredQuantity(shipmentSnapshots, x.OrderLineId),
                 DamagedReturnedQuantity(receiptItems, x.OrderLineId),
-                OutstandingDamagedQuantity(receiptItems, resolutions, x.OrderLineId))).ToArray(),
+                OutstandingDamagedQuantity(receiptItems, resolutions, x.OrderLineId, capacityClaimLines))).ToArray(),
             shipmentSnapshots,
             unit.CreatedAt,
             unit.UpdatedAt,
@@ -177,7 +188,8 @@ public sealed partial class FulfillmentDirectory
         IReadOnlyDictionary<Guid, IReadOnlyList<ShipmentItem>> shipmentItemsByShipment,
         IReadOnlyList<Shipment> shipments,
         Guid sourceShipmentId,
-        Guid orderLineId)
+        Guid orderLineId,
+        IReadOnlyList<ReturnedCapacityClaim> capacityClaims)
     {
         var usable = receiptItems
             .Where(x => x.OrderLineId == orderLineId
@@ -192,7 +204,13 @@ public sealed partial class FulfillmentDirectory
             .SelectMany(s => shipmentItemsByShipment.TryGetValue(s.ShipmentId, out var items) ? items : [])
             .Where(x => x.OrderLineId == orderLineId)
             .Sum(x => x.Quantity);
-        var remaining = usable - committed;
+        // TB-265: quantity promised to a courier-origin Returns case is already spent for this source line.
+        var claimed = capacityClaims
+            .Where(c => c.ShipmentId == sourceShipmentId
+                        && c.OrderLineId == orderLineId
+                        && c.Condition == CourierReturnClaimCondition.Usable)
+            .Sum(c => c.Quantity);
+        var remaining = usable - committed - claimed;
         return remaining > 0m ? remaining : 0m;
     }
 
@@ -212,10 +230,15 @@ public sealed partial class FulfillmentDirectory
     private static decimal ResendableQuantity(
         IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
         IReadOnlyList<ShipmentSnapshot> shipments,
-        Guid orderLineId)
+        Guid orderLineId,
+        IReadOnlyList<ReturnedCapacityClaim> capacityClaims)
     {
         var remaining = UsableReturnedQuantity(receiptItems, orderLineId)
-            - ResendCommittedQuantity(shipments, orderLineId);
+            - ResendCommittedQuantity(shipments, orderLineId)
+            // TB-265: capacity already promised to an existing courier-origin Returns case is not resend capacity.
+            - capacityClaims
+                .Where(c => c.OrderLineId == orderLineId && c.Condition == CourierReturnClaimCondition.Usable)
+                .Sum(c => c.Quantity);
         return remaining > 0m ? remaining : 0m;
     }
 
@@ -247,7 +270,8 @@ public sealed partial class FulfillmentDirectory
         IReadOnlyDictionary<Guid, Guid> receiptShipment,
         IReadOnlyDictionary<Guid, IReadOnlyList<DamagedGoodsResolution>> resolutionsByShipment,
         Guid sourceShipmentId,
-        Guid orderLineId)
+        Guid orderLineId,
+        IReadOnlyList<ReturnedCapacityClaim> capacityClaims)
     {
         var damaged = SourceDamagedQuantity(receiptItems, receiptShipment, sourceShipmentId, orderLineId);
         var committed = resolutionsByShipment.TryGetValue(sourceShipmentId, out var resolutions)
@@ -255,7 +279,13 @@ public sealed partial class FulfillmentDirectory
                 .Where(r => r.OrderLineId == orderLineId && r.Status != DamagedResolutionStatus.Cancelled)
                 .Sum(r => r.Quantity)
             : 0m;
-        var remaining = damaged - committed;
+        // TB-265: damaged quantity already funded to a courier-origin Returns case is not available to a decision.
+        var claimed = capacityClaims
+            .Where(c => c.ShipmentId == sourceShipmentId
+                        && c.OrderLineId == orderLineId
+                        && c.Condition == CourierReturnClaimCondition.Damaged)
+            .Sum(c => c.Quantity);
+        var remaining = damaged - committed - claimed;
         return remaining > 0m ? remaining : 0m;
     }
 
@@ -271,13 +301,18 @@ public sealed partial class FulfillmentDirectory
     private static decimal OutstandingDamagedQuantity(
         IReadOnlyList<ShipmentReturnReceiptItem> receiptItems,
         IReadOnlyList<DamagedGoodsResolution> resolutions,
-        Guid orderLineId)
+        Guid orderLineId,
+        IReadOnlyList<ReturnedCapacityClaim> capacityClaims)
     {
         var damaged = DamagedReturnedQuantity(receiptItems, orderLineId);
         var committed = resolutions
             .Where(r => r.OrderLineId == orderLineId && r.Status != DamagedResolutionStatus.Cancelled)
             .Sum(r => r.Quantity);
-        var remaining = damaged - committed;
+        // TB-265: damaged quantity funded to a courier-origin Returns case is not available to a decision.
+        var claimed = capacityClaims
+            .Where(c => c.OrderLineId == orderLineId && c.Condition == CourierReturnClaimCondition.Damaged)
+            .Sum(c => c.Quantity);
+        var remaining = damaged - committed - claimed;
         return remaining > 0m ? remaining : 0m;
     }
 

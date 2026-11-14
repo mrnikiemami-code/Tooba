@@ -36,7 +36,8 @@ export type PostDispatchExceptionMode =
   | "start_return"
   | "record_return_receipt"
   | "resend_shipment"
-  | "resolve_damaged_goods";
+  | "resolve_damaged_goods"
+  | "create_courier_return";
 
 /** TB-262: the two outcomes the server accepts for damaged goods received back at origin. */
 export type DamagedResolutionOutcomeCode = "replacement" | "referral";
@@ -93,6 +94,12 @@ export type PostDispatchExceptionRequest =
   | { code: "start_return" }
   | { code: "record_return_receipt"; receiptItems: PostDispatchReceiptLine[]; note: string | null }
   | { code: "resend_shipment"; selections: Array<{ orderLineId: string; quantity: number }>; idempotencyKey: string }
+  | {
+    code: "create_courier_return";
+    items: Array<{ orderLineId: string; quantity: number; condition: "usable" | "damaged" }>;
+    note: string | null;
+    idempotencyKey: string;
+  }
   | {
     code: "resolve_damaged_goods";
     orderLineId: string;
@@ -158,6 +165,7 @@ export const POST_DISPATCH_MODE_LABEL_FA: Record<PostDispatchExceptionMode, stri
   record_return_receipt: "تأیید دریافت در مبدأ",
   resend_shipment: "ارسال مجدد",
   resolve_damaged_goods: "تعیین تکلیف کالای آسیب‌دیده",
+  create_courier_return: "ایجاد پروندهٔ مرجوعی",
 };
 
 const MODE_TITLE: Record<PostDispatchExceptionMode, string> = POST_DISPATCH_MODE_LABEL_FA;
@@ -256,6 +264,13 @@ function describeRetained(
     ];
   }
 
+  if (request.code === "create_courier_return") {
+    return request.items.map((item) => ({
+      key: `${item.orderLineId}:${item.condition}`,
+      text: `${titleOf(item.orderLineId)} · ${item.quantity.toLocaleString("fa-IR")} · ${item.condition === "usable" ? "سالم" : "آسیب‌دیده"}`,
+    }));
+  }
+
   return [];
 }
 
@@ -298,6 +313,8 @@ export function PostDispatchExceptionDialog({
   const [note, setNote] = useState("");
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, ReceiptDraft>>({});
   const [resendDrafts, setResendDrafts] = useState<Record<string, string>>({});
+  /** TB-265: per-line usable/damaged quantity the linked returns case should claim. */
+  const [courierDrafts, setCourierDrafts] = useState<Record<string, ReceiptDraft>>({});
   const [idempotencyKey, setIdempotencyKey] = useState<string>("");
   const [localErrorFa, setLocalErrorFa] = useState<string | null>(null);
   /** TB-262: the reviewed damaged-goods outcome and its per-line quantity draft. */
@@ -376,6 +393,13 @@ export function PostDispatchExceptionDialog({
     }
     setResendDrafts(resend);
 
+    // TB-265: the linked returns case starts at zero — the operator states exactly what the case claims.
+    const courier: Record<string, ReceiptDraft> = {};
+    for (const line of linesRef.current) {
+      courier[line.orderLineId] = { usable: "0", damaged: "0" };
+    }
+    setCourierDrafts(courier);
+
     // TB-262: the damaged review starts at this parcel's own remaining damaged quantity, never a guess.
     const resumeDamage = mode === "resolve_damaged_goods" ? damagedResume ?? null : null;
     setDamagedOutcome(resumeDamage?.outcome ?? "replacement");
@@ -444,6 +468,32 @@ export function PostDispatchExceptionDialog({
       || damagedQuantity === null
       || damagedQuantity <= 0
       || damagedQuantity > damagedLine.damagedOutstandingQuantity;
+
+  /** TB-265: the quantities one linked returns case may claim, bounded by the same server-owned capacities. */
+  const courierReview = useMemo(() => {
+    const items: Array<{ orderLineId: string; quantity: number; condition: "usable" | "damaged" }> = [];
+    let problem: string | null = null;
+    for (const line of lines) {
+      const draft = courierDrafts[line.orderLineId];
+      const usable = parseReceiptQuantity(draft?.usable);
+      const damaged = parseReceiptQuantity(draft?.damaged);
+      if (usable === null || damaged === null) {
+        problem ??= "مقدار واردشده باید عددی نامنفی باشد.";
+        continue;
+      }
+      if (usable > line.resendableQuantity) {
+        problem ??= `مقدار سالم این قلم از ظرفیت بازماندهٔ ارسال مجدد (${line.resendableQuantity.toLocaleString("fa-IR")}) بیشتر است.`;
+        continue;
+      }
+      if (damaged > line.damagedOutstandingQuantity) {
+        problem ??= `مقدار آسیب‌دیدهٔ این قلم از باقیماندهٔ تعیین‌نشده (${line.damagedOutstandingQuantity.toLocaleString("fa-IR")}) بیشتر است.`;
+        continue;
+      }
+      if (usable > 0) items.push({ orderLineId: line.orderLineId, quantity: usable, condition: "usable" });
+      if (damaged > 0) items.push({ orderLineId: line.orderLineId, quantity: damaged, condition: "damaged" });
+    }
+    return { items, problem };
+  }, [lines, courierDrafts]);
 
   /**
    * TB-258-R3: a NEW mutation is refused unless the COMPLETE reviewed request is reload-durable. The message
@@ -608,6 +658,24 @@ export function PostDispatchExceptionDialog({
         return;
       }
       void send({ code: "resend_shipment", selections, idempotencyKey });
+      return;
+    }
+
+    if (mode === "create_courier_return") {
+      if (courierReview.problem) {
+        setLocalErrorFa(courierReview.problem);
+        return;
+      }
+      if (courierReview.items.length === 0) {
+        setLocalErrorFa("دست‌کم برای یک قلم مقدار سالم یا آسیب‌دیده انتخاب کنید.");
+        return;
+      }
+      void send({
+        code: "create_courier_return",
+        items: courierReview.items,
+        note: note.trim() || null,
+        idempotencyKey,
+      });
     }
   }
 
@@ -621,7 +689,9 @@ export function PostDispatchExceptionDialog({
           ? "تأیید دریافت در مبدأ"
           : mode === "resolve_damaged_goods"
             ? "ثبت تعیین تکلیف"
-            : "ایجاد مرسولهٔ ارسال مجدد";
+            : mode === "create_courier_return"
+              ? "ایجاد پروندهٔ مرجوعی"
+              : "ایجاد مرسولهٔ ارسال مجدد";
 
   /**
    * TB-263: ONE inline surface. Local field validation wins, then the deterministic server reason of the
@@ -637,7 +707,8 @@ export function PostDispatchExceptionDialog({
     || (!retained
       && ((mode === "record_return_receipt" && receiptProblems.length > 0)
         || (mode === "resend_shipment" && resendTotal <= 0)
-        || (mode === "resolve_damaged_goods" && damagedInvalid)));
+        || (mode === "resolve_damaged_goods" && damagedInvalid)
+        || (mode === "create_courier_return" && (courierReview.problem !== null || courierReview.items.length === 0))));
 
   return (
     <Dialog open={open} onClose={onClose} showCloseButton={false} size="md" title={MODE_TITLE[mode]}>
@@ -985,6 +1056,90 @@ export function PostDispatchExceptionDialog({
                   </label>
                 </>
               )}
+            </>
+          ) : null}
+
+          {!retained && mode === "create_courier_return" ? (
+            <>
+              <p className="text-xs leading-6 text-gray-600">
+                پروندهٔ مرجوعی برای همین مرسوله در سامانهٔ مرجوعی‌های موجود ساخته می‌شود و همان مسیر بازبینی، تأیید و بازپرداخت را طی می‌کند. مقدار انتخابی از همین مرسوله رزرو می‌شود و دیگر برای ارسال مجدد یا جایگزینی مصرف نمی‌شود. بازپرداخت خودکار نیست و تا تأیید مرجوعی هیچ مبلغی جابه‌جا نمی‌شود؛ کالای آسیب‌دیده هم فروختنی نمی‌شود.
+              </p>
+              <ul className="space-y-2">
+                {lines.map((line) => {
+                  const draft = courierDrafts[line.orderLineId] ?? { usable: "0", damaged: "0" };
+                  const eligible = line.resendableQuantity > 0 || line.damagedOutstandingQuantity > 0;
+                  return (
+                    <li
+                      key={line.orderLineId}
+                      className="rounded-lg border border-gray-200 px-3 py-2"
+                      data-testid={`admin-order-post-dispatch-courier-line-${line.orderLineId}`}
+                    >
+                      <p className="break-words text-sm text-gray-800">{line.title}</p>
+                      <p className="mt-0.5 text-[11px] text-gray-500">
+                        {`ظرفیت سالم بازمانده: ${line.resendableQuantity.toLocaleString("fa-IR")} · آسیب‌دیدهٔ تعیین‌نشده: ${line.damagedOutstandingQuantity.toLocaleString("fa-IR")}`}
+                      </p>
+                      {eligible ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          <label className="flex items-center gap-1.5 text-xs text-gray-700">
+                            <span>سالم</span>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min={0}
+                              max={line.resendableQuantity}
+                              step="any"
+                              value={draft.usable}
+                              disabled={pending}
+                              onChange={(event) =>
+                                setCourierDrafts((previous) => ({
+                                  ...previous,
+                                  [line.orderLineId]: { ...draft, usable: event.target.value },
+                                }))
+                              }
+                              className="min-h-11 w-24 rounded-lg border border-gray-200 px-2 text-sm tabular-nums"
+                              data-testid={`admin-order-post-dispatch-courier-usable-${line.orderLineId}`}
+                            />
+                          </label>
+                          <label className="flex items-center gap-1.5 text-xs text-gray-700">
+                            <span>آسیب‌دیده</span>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min={0}
+                              max={line.damagedOutstandingQuantity}
+                              step="any"
+                              value={draft.damaged}
+                              disabled={pending}
+                              onChange={(event) =>
+                                setCourierDrafts((previous) => ({
+                                  ...previous,
+                                  [line.orderLineId]: { ...draft, damaged: event.target.value },
+                                }))
+                              }
+                              className="min-h-11 w-24 rounded-lg border border-gray-200 px-2 text-sm tabular-nums"
+                              data-testid={`admin-order-post-dispatch-courier-damaged-${line.orderLineId}`}
+                            />
+                          </label>
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-[11px] text-gray-500">ظرفیتی از این قلم برای پروندهٔ مرجوعی نمانده است.</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              <label className="block space-y-1">
+                <span className="text-xs font-bold text-gray-700">توضیح (اختیاری)</span>
+                <textarea
+                  value={note}
+                  disabled={pending}
+                  onChange={(event) => setNote(event.target.value)}
+                  maxLength={500}
+                  rows={2}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  data-testid={`admin-order-post-dispatch-courier-note-${parcelKey}`}
+                />
+              </label>
             </>
           ) : null}
 

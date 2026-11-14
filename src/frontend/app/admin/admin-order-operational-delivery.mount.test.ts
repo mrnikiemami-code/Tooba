@@ -3196,3 +3196,95 @@ test("TB-264 static: a legacy policy-v1 plan renders no deadline row and invents
   assert.ok(!html.includes("admin-order-operational-deadlines-"));
   assert.doesNotMatch(html, /مهلت‌های عملیاتی:/);
 });
+
+/* ──────────────────── TB-265: courier-origin receipt → EXISTING returns case ─────────────────── */
+
+/**
+ * TB-265: a returned parcel whose RECEIVED USABLE quantity is not already committed to a resend can be
+ * handed to the existing returns workflow. The reviewed quantity is the ONLY quantity the case claims, and
+ * creating the case refunds nothing by itself.
+ */
+test("TB-265 mounted: the reviewed courier-origin quantity opens ONE linked returns case", async () => {
+  resetPostDispatchAttempts();
+  const calls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("create_courier_return", "so1", "sh1")]);
+    return postResponse(200, { ok: true });
+  });
+  const spy = spyOnSuccess();
+  try {
+    const detail = withExceptionParcel(
+      baseDetail(),
+      {
+        status: "Returned",
+        returnedAt: "2026-11-09T10:00:00Z",
+        returnReceiptLines: [{ orderLineId: "ol1", quantity: 2, condition: "Usable" }],
+      },
+      { resendableQuantity: 2, returnedUsableQuantity: 2, returnedDamagedQuantity: 0, damagedOutstandingQuantity: 0 },
+    );
+    const mounted = await mount(createElement(AdminOrderItemsShippingPanel, { detail, checkoutId: CHECKOUT }));
+
+    await waitFor(
+      () => qq(mounted.container, "[data-testid='admin-order-post-dispatch-courier-return-sh1']").length === 1,
+    );
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-courier-return-sh1']"));
+    await waitFor(
+      () => qq(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']").length === 1,
+    );
+
+    // The case starts at zero: nothing but the operator's own statement becomes a claim.
+    const usable = q(mounted.container, "[data-testid='admin-order-post-dispatch-courier-usable-ol1']") as HTMLInputElement;
+    assert.equal(usable.value, "0");
+    await setInputValue(usable, "2");
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-submit-sh1']"));
+    await waitFor(() => calls.filter((call) => call.method === "POST").length === 1);
+    await flush();
+
+    const body = calls.filter((call) => call.method === "POST")[0]!.body;
+    assert.equal(body.code, "create_courier_return");
+    assert.deepEqual(body.courierReturnItems, [{ orderLineId: "ol1", quantity: 2, condition: "usable" }]);
+    assert.ok(String(body.idempotencyKey ?? "").length > 0, "one reviewed occurrence identity is sent");
+    assert.equal(spy.messages.length, 1, "a confirmed case reports exactly once");
+    assert.match(spy.messages[0]!, /پروندهٔ مرجوعی ساخته شد/);
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-dialog-sh1']").length, 0);
+    assert.equal(durablePostDispatchEnvelope(CHECKOUT, "sh1", "so1"), null, "only a completion clears the envelope");
+    await mounted.unmount();
+  } finally {
+    spy.restore();
+    restoreFetch();
+  }
+});
+
+test("TB-265 static: the courier-return entry exists only when the server projects it", () => {
+  const detail = withExceptionParcel(
+    baseDetail(),
+    {
+      status: "Returned",
+      returnedAt: "2026-11-09T10:00:00Z",
+      returnReceiptLines: [{ orderLineId: "ol1", quantity: 2, condition: "Usable" }],
+    },
+    { resendableQuantity: 2, returnedUsableQuantity: 2, returnedDamagedQuantity: 0, damagedOutstandingQuantity: 0 },
+  );
+  const withEntry = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: (_seller, shipment) =>
+        shipment.shipmentId === "sh1" ? { ...NO_CAPS, canCreateCourierReturn: true } : NO_CAPS,
+    }),
+  );
+  assert.ok(withEntry.includes("admin-order-post-dispatch-courier-return-sh1"));
+  assert.match(withEntry, /ایجاد پروندهٔ مرجوعی/);
+
+  const withoutEntry = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: () => NO_CAPS,
+    }),
+  );
+  assert.ok(!withoutEntry.includes("admin-order-post-dispatch-courier-return-sh1"));
+});

@@ -55,7 +55,11 @@ public sealed record ReturnItemSnapshot(
     decimal Quantity,
     decimal UnitPriceSnapshot,
     string Currency,
-    Guid? ReservationId);
+    Guid? ReservationId,
+    ReturnItemConditionOption Condition = ReturnItemConditionOption.Usable,
+    ReturnItemConditionOption? DispositionCondition = null,
+    Guid? SourceShipmentId = null,
+    Guid? SourceReceiptId = null);
 
 /// <summary>One refund attempt of a return request.</summary>
 public sealed record RefundAttemptSnapshot(
@@ -86,7 +90,17 @@ public sealed record ReturnSnapshot(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<ReturnItemSnapshot> Items,
-    IReadOnlyList<RefundAttemptSnapshot> RefundAttempts);
+    IReadOnlyList<RefundAttemptSnapshot> RefundAttempts,
+    ReturnOriginOption Origin = ReturnOriginOption.CustomerDelivered,
+    Guid? SourceFulfillmentId = null,
+    Guid? SourceShipmentId = null,
+    Guid? SourceReceiptId = null,
+    Guid? SourceClaimId = null,
+    string? SourceOccurrenceKey = null,
+    string ClosurePhase = "None",
+    DateTimeOffset? ObligationClosedAt = null,
+    DateTimeOffset? StockSettledAt = null,
+    decimal ReleasedHeldQuantity = 0);
 
 /// <summary>Remaining returnable quantity of one order line.</summary>
 public sealed record ReturnLineEligibility(
@@ -153,6 +167,25 @@ public interface IReturnAdminOperations
 
     /// <summary>Retry a failed refund.</summary>
     Task<ReturnSnapshot> RetryRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-265: create a courier-origin case from an already physically received returned parcel. The received
+    /// quantity is claimed durably in Fulfillment FIRST (exclusive across resend/replacement/refund), the receipt is
+    /// reused, and the case starts Requested with NO money and NO stock movement.
+    /// </summary>
+    Task<CourierOriginReturnResult> CreateCourierOriginAsync(
+        CreateCourierOriginReturnCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-265: read-only exact-intent reconciliation for a courier-origin creation whose response was lost. It answers
+    /// the recorded case or the recorded conflict and never creates a second case.
+    /// </summary>
+    Task<CourierOriginReturnResult?> ReconcileCourierOriginAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        string occurrenceKey,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Stable eligibility reason codes and their stable API error codes.</summary>
@@ -195,3 +228,55 @@ public static class ReturnEligibilityReasons
         _ => "return.rejected",
     };
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// TB-265: courier-origin cases linked to the EXISTING Returns review/refund/disposition workflow.
+//
+// Existing rows keep their customer-delivered semantics. A courier-origin case is created from a returned parcel
+// whose physical origin receipt already exists: the receipt is REUSED (never received twice), the case starts
+// Requested, creation moves no money and releases no stock, and approval closes the corresponding order-line
+// delivery obligation before the existing refund path runs.
+// ---------------------------------------------------------------------------------------------------------------
+
+/// <summary>TB-265: origin discriminator exposed through the admin operations contract.</summary>
+public enum ReturnOriginOption
+{
+    /// <summary>Customer-delivered RMA (historical semantics).</summary>
+    CustomerDelivered = 0,
+
+    /// <summary>Courier-origin receipt (parcel physically back at the seller).</summary>
+    CourierOrigin = 1,
+}
+
+/// <summary>TB-265: physical condition of a returned line.</summary>
+public enum ReturnItemConditionOption
+{
+    /// <summary>Usable / resellable.</summary>
+    Usable = 0,
+
+    /// <summary>Damaged / never restocked as saleable.</summary>
+    Damaged = 1,
+}
+
+/// <summary>TB-265: one selected received line of a courier-origin case.</summary>
+public sealed record CourierOriginReturnLineCommand(
+    Guid OrderLineId,
+    decimal Quantity,
+    ReturnItemConditionOption Condition = ReturnItemConditionOption.Usable);
+
+/// <summary>TB-265: reviewed creation intent for a courier-origin case.</summary>
+public sealed record CreateCourierOriginReturnCommand(
+    Guid FulfillmentId,
+    Guid ShipmentId,
+    Guid ActorUserId,
+    string IdempotencyKey,
+    string OccurrenceKey,
+    string? Reason,
+    IReadOnlyList<CourierOriginReturnLineCommand> Items);
+
+/// <summary>TB-265: answer of a courier-origin creation/reconciliation attempt.</summary>
+public sealed record CourierOriginReturnResult(
+    ReturnSnapshot Snapshot,
+    Guid SourceClaimId,
+    bool AlreadyExisted = false,
+    string? ConflictCode = null);

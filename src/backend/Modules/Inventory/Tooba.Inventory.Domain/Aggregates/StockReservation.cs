@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Domain.ValueObjects;
 
@@ -22,7 +22,7 @@ public sealed class StockReservation
     /// <summary>
     /// مقدار قفل‌شده.
     /// </summary>
-    public decimal Quantity { get; init; }
+    public decimal Quantity { get; private set; }
 
     /// <summary>
     /// وضعیت چرخهٔ رزرو.
@@ -150,6 +150,30 @@ public sealed class StockReservation
 
         ExpiresAt = reviewExpiresAt;
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// TB-265: releases ONLY the given quantity of an unconsumed Held reservation, keeping the rest of the hold (and
+    /// any sibling portion) intact. The remaining quantity stays authoritative for availability math, so a partial
+    /// release can never over-release stock.
+    /// </summary>
+    public decimal ReleasePartially(decimal quantity, DateTimeOffset now)
+    {
+        if (Status != StockReservationStatus.Held || quantity <= 0m)
+        {
+            return 0m;
+        }
+
+        var released = quantity > Quantity ? Quantity : quantity;
+        Quantity -= released;
+        UpdatedAt = now;
+        if (Quantity == 0m)
+        {
+            Status = StockReservationStatus.Released;
+            IdempotencyKey = null;
+        }
+
+        return released;
     }
 
     /// <summary>

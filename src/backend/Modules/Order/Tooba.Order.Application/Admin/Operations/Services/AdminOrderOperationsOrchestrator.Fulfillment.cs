@@ -550,6 +550,108 @@ public sealed partial class AdminOrderOperationsOrchestrator
     }
 
     /// <summary>
+    /// TB-265: creates a courier-origin Returns case for the exact received quantity the operator reviewed. The
+    /// Fulfillment claim is the single source-quantity authority: it refuses quantity already funding a resend, a
+    /// replacement or another case, and an exact replay answers the recorded case/claim instead of creating a second.
+    /// Nothing is refunded here — the case only enters the existing Returns review/approval/refund workflow.
+    /// </summary>
+    private async Task<object> RunCourierReturnAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+        EnsureCancelledDoesNotBlock(group, "create_courier_return");
+
+        // Creating a Returns case is a return-management action, never an order-handling shortcut.
+        if (!Has(effective, "return.manage"))
+        {
+            throw new AdminOrderOperationsException("order.operation.denied");
+        }
+
+        var fulfillmentId = RequireFulfillmentId(request);
+        var shipmentId = RequireShipmentId(request);
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var owned = fulfillments.FirstOrDefault(x => x.FulfillmentId == fulfillmentId)
+            ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        if (owned.Shipments.All(x => x.ShipmentId != shipmentId))
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var items = BuildCourierReturnIntent(request);
+        var reviewedKey = request.IdempotencyKey?.Trim();
+        if (string.IsNullOrWhiteSpace(reviewedKey))
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        // The claim occurrence is bound to THIS parcel so two different parcels can never share one claim identity.
+        var occurrenceKey = $"courier-return:{shipmentId:N}:{reviewedKey}";
+        if (occurrenceKey.Length > 128)
+        {
+            occurrenceKey = occurrenceKey[..128];
+        }
+
+        var created = await _returns.CreateCourierOriginAsync(
+            new CreateCourierOriginReturnCommand(
+                fulfillmentId,
+                shipmentId,
+                actorUserId,
+                reviewedKey,
+                occurrenceKey,
+                request.Reason ?? request.Note,
+                items),
+            cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(created.ConflictCode))
+        {
+            throw new AdminOrderOperationsException(created.ConflictCode);
+        }
+
+        return created.Snapshot;
+    }
+
+    /// <summary>TB-265: the exact reviewed received quantity/condition of every claimed line.</summary>
+    private static IReadOnlyList<CourierOriginReturnLineCommand> BuildCourierReturnIntent(
+        AdminOrderOperationRequest request)
+    {
+        var source = request.CourierReturnItems;
+        if (source is null || source.Count == 0)
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        var items = new List<CourierOriginReturnLineCommand>(source.Count);
+        foreach (var line in source)
+        {
+            if (line.OrderLineId == Guid.Empty || line.Quantity <= 0m)
+            {
+                throw new AdminOrderOperationsException("order.operation.invalid");
+            }
+
+            var condition = (line.Condition ?? string.Empty).Trim().ToLowerInvariant() switch
+            {
+                "usable" => ReturnItemConditionOption.Usable,
+                "damaged" => ReturnItemConditionOption.Damaged,
+                _ => throw new AdminOrderOperationsException("order.operation.invalid"),
+            };
+
+            items.Add(new CourierOriginReturnLineCommand(line.OrderLineId, line.Quantity, condition));
+        }
+
+        if (items.GroupBy(x => new { x.OrderLineId, x.Condition }).Any(x => x.Count() > 1))
+        {
+            throw new AdminOrderOperationsException("order.operation.invalid");
+        }
+
+        return items;
+    }
+
+    /// <summary>
     /// TB-258-R2: every post-dispatch exception command runs here. An EXACT recorded intent recovered after a lost
     /// response is answered from the owning durable facts even when the fresh projection no longer offers the
     /// action; anything else must still pass the ordinary current-projection gate, so an absent record can never

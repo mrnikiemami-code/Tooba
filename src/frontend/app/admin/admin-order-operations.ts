@@ -135,6 +135,11 @@ export type AdminOrderOperationRequest = {
   quantity?: number | null;
   /** TB-262: reviewed damaged-goods outcome — `replacement` or `referral`. */
   damagedOutcome?: string | null;
+  /**
+   * TB-265: the exact received quantity a courier-origin returns case claims, each line with its own physical
+   * condition. Distinct from `returnItems` (the customer RMA lines of a different workflow).
+   */
+  courierReturnItems?: Array<{ orderLineId: string; quantity: number; condition: string }> | null;
 };
 
 /**
@@ -360,6 +365,11 @@ export async function executeAdminOrderOperation(
         orderLineId: body.orderLineId ?? null,
         quantity: body.quantity ?? null,
         damagedOutcome: body.damagedOutcome ?? null,
+        courierReturnItems: body.courierReturnItems?.map((line) => ({
+          orderLineId: line.orderLineId,
+          quantity: line.quantity,
+          condition: line.condition,
+        })) ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

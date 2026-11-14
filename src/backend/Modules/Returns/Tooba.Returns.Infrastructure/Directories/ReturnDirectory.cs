@@ -1,7 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Microsoft.Extensions.Logging;
 using Tooba.Order.Contracts.Returns;
+using Tooba.Fulfillment.Contracts.Operations;
+using Tooba.Fulfillment.Contracts.Returns;
 using Tooba.Payment.Contracts.Returns;
 using Tooba.Returns.Application.ReturnRequests.Commands;
 using Tooba.Returns.Application.ReturnRequests.Models;
@@ -21,7 +23,7 @@ namespace Tooba.Returns.Infrastructure.Directories;
 /// ارکستراسیون مرجوعی در schema returns.
 /// مقصد Wallet: اعتبار ledger یک‌بار؛ PSP refund gateway صدا زده نمی‌شود (no double-credit).
 /// </summary>
-public sealed class ReturnDirectory : IReturnDirectory
+public sealed partial class ReturnDirectory : IReturnDirectory
 {
     private readonly ReturnsDbContext _db;
     private readonly IReturnUseCaseGuard _guard;
@@ -31,6 +33,9 @@ public sealed class ReturnDirectory : IReturnDirectory
     private readonly IPaymentRefundGateway _refundGateway;
     private readonly IWalletRefundCreditPort _wallets;
     private readonly IReturnInventoryGateway _inventory;
+    private readonly IFulfillmentCourierReturnSource _courierSource;
+    private readonly IOrderReturnObligationClosure _obligationClosure;
+    private readonly IFulfillmentAdminOperations _fulfillment;
     private readonly ReturnsInstrumentation _telemetry;
     private readonly ILogger<ReturnDirectory> _logger;
     private readonly IClock _clock;
@@ -51,7 +56,10 @@ public sealed class ReturnDirectory : IReturnDirectory
         ReturnsInstrumentation telemetry,
         ILogger<ReturnDirectory> logger,
         IClock clock,
-        IIdGenerator ids)
+        IIdGenerator ids,
+        IFulfillmentCourierReturnSource? courierSource = null,
+        IOrderReturnObligationClosure? obligationClosure = null,
+        IFulfillmentAdminOperations? fulfillment = null)
     {
         _db = db;
         _guard = guard;
@@ -61,6 +69,9 @@ public sealed class ReturnDirectory : IReturnDirectory
         _refundGateway = refundGateway;
         _wallets = wallets;
         _inventory = inventory;
+        _courierSource = courierSource!;
+        _obligationClosure = obligationClosure!;
+        _fulfillment = fulfillment!;
         _telemetry = telemetry;
         _logger = logger;
         _clock = clock;
@@ -221,6 +232,38 @@ public sealed class ReturnDirectory : IReturnDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
+
+        if (request.Origin == ReturnOrigin.CourierOrigin
+            && request.ClosurePhase < CourierOriginClosurePhase.RefundReleased
+            && request.Status is ReturnRequestStatus.Approved
+                or ReturnRequestStatus.RefundProcessing
+                or ReturnRequestStatus.RefundFailed)
+        {
+            // TB-265: a previous approval already recorded its durable phases (approval + money attempt). A refused
+            // closure or a lost money answer must be RESUMED, never re-approved or duplicated: the same recorded
+            // obligation/branch work runs again idempotently and only then does the SAME attempt proceed.
+            await EnsureCourierOriginClosureAsync(request, command.ActorUserId, cancellationToken);
+            if (request.Status == ReturnRequestStatus.RefundFailed)
+            {
+                // A failed money attempt is resumed through the existing retry entry, not a second refund attempt.
+                await _db.SaveChangesAsync(cancellationToken);
+                return await MapSnapshotAsync(request, cancellationToken);
+            }
+
+            var pending = request.RefundAttempts
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefault(x => x.Status == RefundAttemptStatus.Pending)
+                ?? throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
+            await ExecuteRefundAsync(request, pending, cancellationToken);
+            if (request.Status == ReturnRequestStatus.Completed)
+            {
+                request.MarkRefundReleased(_clock.UtcNow);
+            }
+
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
+
         var payment = await ResolvePaymentAsync(request, cancellationToken)
             ?? throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
         if (!string.Equals(payment.Status, "Succeeded", StringComparison.Ordinal))
@@ -235,7 +278,19 @@ public sealed class ReturnDirectory : IReturnDirectory
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordApproved();
 
+        if (request.Origin == ReturnOrigin.CourierOrigin)
+        {
+            // TB-265: obligation + branch closure BEFORE money. A refused closure keeps the approval pending and
+            // never lets a refund run over live replacement stock.
+            await EnsureCourierOriginClosureAsync(request, command.ActorUserId, cancellationToken);
+        }
+
         await ExecuteRefundAsync(request, attempt, cancellationToken);
+        if (request.Origin == ReturnOrigin.CourierOrigin && request.Status == ReturnRequestStatus.Completed)
+        {
+            request.MarkRefundReleased(_clock.UtcNow);
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
         return await MapSnapshotAsync(request, cancellationToken);
     }
@@ -246,9 +301,18 @@ public sealed class ReturnDirectory : IReturnDirectory
         _ = command.Reason;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
-        request.Reject(_clock.UtcNow);
+        if (request.Status == ReturnRequestStatus.Requested)
+        {
+            request.Reject(_clock.UtcNow);
+            await _db.SaveChangesAsync(cancellationToken);
+            _telemetry.RecordRejected();
+        }
+
+        // TB-265: rejecting a courier-origin case releases ONLY its source-branch claim, so the same received
+        // quantity becomes lawfully available again. The active order's stock hold is untouched. The call is
+        // idempotent, so a retry after a partial failure still lands exactly once.
+        await ReleaseCourierOriginClaimAsync(request, nameof(ReturnRequestStatus.Rejected), command.ActorUserId, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
-        _telemetry.RecordRejected();
         return await MapSnapshotAsync(request, cancellationToken);
     }
 
@@ -297,14 +361,7 @@ public sealed class ReturnDirectory : IReturnDirectory
                 attempt.MarkSucceeded($"wallet-refund:{request.ReturnRequestId:D}", now);
                 request.MarkRefundSucceeded(now);
                 _telemetry.RecordRefundSucceeded();
-                foreach (var item in request.Items.Where(x => x.ReservationId is not null))
-                {
-                    await _inventory.RestockConsumedReservationAsync(
-                        item.ReservationId!.Value,
-                        item.Quantity,
-                        $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
-                        cancellationToken);
-                }
+                await SettlePhysicalDispositionAsync(request, cancellationToken);
 
                 return;
             }
@@ -320,14 +377,7 @@ public sealed class ReturnDirectory : IReturnDirectory
                 attempt.MarkSucceeded(result.ProviderReference ?? $"refund-{attempt.RefundAttemptId:N}", now);
                 request.MarkRefundSucceeded(now);
                 _telemetry.RecordRefundSucceeded();
-                foreach (var item in request.Items.Where(x => x.ReservationId is not null))
-                {
-                    await _inventory.RestockConsumedReservationAsync(
-                        item.ReservationId!.Value,
-                        item.Quantity,
-                        $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
-                        cancellationToken);
-                }
+                await SettlePhysicalDispositionAsync(request, cancellationToken);
             }
             else
             {
@@ -403,7 +453,11 @@ public sealed class ReturnDirectory : IReturnDirectory
                 x.Quantity,
                 x.UnitPriceSnapshot,
                 x.Currency,
-                x.ReservationId)).ToArray(),
+                x.ReservationId,
+                x.Condition,
+                x.Disposition,
+                x.SourceShipmentId,
+                x.SourceReceiptId)).ToArray(),
             attempts.Select(x => new RefundAttemptSnapshot(
                 x.RefundAttemptId,
                 x.PaymentId,
@@ -414,6 +468,16 @@ public sealed class ReturnDirectory : IReturnDirectory
                 x.ProviderReference,
                 x.FailureCode,
                 x.CreatedAt,
-                x.CompletedAt)).ToArray());
+                x.CompletedAt)).ToArray(),
+            request.Origin,
+            request.SourceFulfillmentId,
+            request.SourceShipmentId,
+            request.SourceReceiptId,
+            request.SourceClaimId,
+            request.SourceOccurrenceKey,
+            request.ClosurePhase,
+            request.ObligationClosedAt,
+            request.StockSettledAt,
+            request.ReleasedHeldQuantity);
     }
 }

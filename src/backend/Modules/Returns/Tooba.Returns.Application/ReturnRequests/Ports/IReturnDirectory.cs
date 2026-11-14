@@ -51,6 +51,24 @@ public interface IReturnDirectory
 
     /// <summary>refund شکست‌خورده را دوباره تلاش می‌کند (admin).</summary>
     Task<ReturnSnapshot> RetryRefundAsync(RetryReturnRefundCommand command, CancellationToken cancellationToken);
+
+    /// <summary>TB-265: creates a courier-origin case from an already received returned parcel.</summary>
+    Task<(ReturnSnapshot? Snapshot, Guid ClaimId, bool AlreadyExisted, string? Conflict)> CreateCourierOriginAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string idempotencyKey,
+        string occurrenceKey,
+        string? reason,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity, ReturnItemCondition Condition)> items,
+        CancellationToken cancellationToken);
+
+    /// <summary>TB-265: read-only exact-intent reconciliation of a courier-origin creation.</summary>
+    Task<(ReturnSnapshot? Snapshot, Guid ClaimId, bool AlreadyExisted, string? Conflict)> ReconcileCourierOriginAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        string occurrenceKey,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Query port صف کار Admin returns (جدا از directory ارکستراسیون).</summary>

@@ -395,6 +395,9 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
               // deliberate decision, which the server projects for exactly this returned parcel.
               canResolveDamagedGoods:
                 !packageLocked && Boolean(actionFor(actions, "resolve_damaged_goods", seller.id, shipment.shipmentId)),
+              // TB-265: the third lawful exit — a courier-origin receipt linked to the EXISTING returns case.
+              canCreateCourierReturn:
+                !packageLocked && Boolean(actionFor(actions, "create_courier_return", seller.id, shipment.shipmentId)),
             };
           }}
           onParcelTrack={(seller, shipment) => setTrackingTarget({ seller, shipment })}
@@ -458,6 +461,17 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                     idempotencyKey: request.idempotencyKey,
                   }
                   : {}),
+                ...(request.code === "create_courier_return"
+                  ? {
+                    courierReturnItems: request.items.map((line) => ({
+                      orderLineId: line.orderLineId,
+                      quantity: line.quantity,
+                      condition: line.condition,
+                    })),
+                    note: request.note,
+                    idempotencyKey: request.idempotencyKey,
+                  }
+                  : {}),
               });
               if (result.state !== "ok") {
                 // TB-263: the server's answer is a FACT, not a lost response. A durably recorded decision
@@ -476,7 +490,9 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                   ? request.outcome === "referral"
                     ? "ارجاع کالای آسیب‌دیده ثبت شد — در انتظار بررسی."
                     : "جایگزینی کالای آسیب‌دیده ثبت شد."
-                  : `عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`,
+                  : request.code === "create_courier_return"
+                    ? "پروندهٔ مرجوعی ساخته شد — در انتظار بررسی و تأیید مرجوعی."
+                    : `عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`,
               );
               onCompleted?.();
               return completedPostDispatchOutcome();

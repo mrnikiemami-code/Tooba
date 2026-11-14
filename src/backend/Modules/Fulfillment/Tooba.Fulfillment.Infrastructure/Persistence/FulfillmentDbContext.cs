@@ -53,6 +53,9 @@ public sealed class FulfillmentDbContext : DbContext
     /// <summary>TB-262: تصمیم‌های پایدار تعیین تکلیف کالای آسیب‌دیده.</summary>
     public DbSet<DamagedGoodsResolution> DamagedResolutions => Set<DamagedGoodsResolution>();
 
+    /// <summary>TB-265: exclusive source-quantity claims that fund courier-origin Returns cases.</summary>
+    public DbSet<CourierReturnClaim> CourierReturnClaims => Set<CourierReturnClaim>();
+
     /// <summary>
     /// گروه‌های ارسال پذیرفته‌شدهٔ مالک Fulfillment.
     /// </summary>
@@ -256,6 +259,33 @@ public sealed class FulfillmentDbContext : DbContext
                 .HasDatabaseName("ux_damaged_goods_resolutions_fulfillment_occurrence");
             entity.HasIndex(x => x.ReplacementShipmentId).HasFilter("replacement_shipment_id IS NOT NULL");
             entity.HasIndex(x => x.ReplacementReservationId).HasFilter("replacement_reservation_id IS NOT NULL");
+        });
+        modelBuilder.Entity<CourierReturnClaim>(entity =>
+        {
+            entity.ToTable("courier_return_claims");
+            entity.HasKey(x => x.CourierReturnClaimId);
+            entity.Property(x => x.CourierReturnClaimId).ValueGeneratedNever();
+            entity.Property(x => x.OccurrenceKey).HasMaxLength(128);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.LinesPayload).HasMaxLength(2048);
+            entity.Property(x => x.ActiveKey).HasMaxLength(256);
+            entity.Property(x => x.ReleasedHeldQuantity).HasPrecision(18, 6);
+            entity.Ignore(x => x.Lines);
+            entity.Ignore(x => x.IsActive);
+            entity.HasIndex(x => x.FulfillmentId);
+            entity.HasIndex(x => x.ShipmentId);
+            entity.HasIndex(x => x.ShipmentReturnReceiptId);
+            entity.HasIndex(x => x.ReturnRequestId).HasFilter("return_request_id IS NOT NULL");
+            // TB-265: one durable claim per reviewed occurrence inside its owning unit.
+            entity.HasIndex(x => new { x.FulfillmentId, x.OccurrenceKey })
+                .IsUnique()
+                .HasDatabaseName("ux_courier_return_claims_fulfillment_occurrence");
+            // TB-265: the source-quantity exclusivity guard. At most ONE active claim can hold the same received
+            // quantity; terminal rows clear this key so history stays readable.
+            entity.HasIndex(x => x.ActiveKey)
+                .IsUnique()
+                .HasFilter("active_key IS NOT NULL")
+                .HasDatabaseName("ux_courier_return_claims_active_key");
         });
         modelBuilder.Entity<ShipmentItem>(entity =>
         {

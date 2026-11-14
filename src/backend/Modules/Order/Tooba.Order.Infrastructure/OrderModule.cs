@@ -1,4 +1,4 @@
-using Tooba.Payment.Contracts.Events;
+﻿using Tooba.Payment.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -112,6 +112,8 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<ICustomerCheckoutOwnershipReader, CustomerCheckoutOwnershipBridge>();
         services.AddScoped<IOrderGridEnrichmentReader, OrderGridEnrichmentBridge>();
         services.AddScoped<IOrderReturnReader, OrderReturnBridge>();
+        // TB-265: Order-owned authority over the remaining delivery obligation of a line.
+        services.AddScoped<Tooba.Order.Contracts.Returns.IOrderReturnObligationClosure, Integrations.Returns.OrderReturnObligationClosure>();
         services.AddScoped<Tooba.Order.Application.Storefront.Ports.IOrderShippingGroupHistoryReader,
             Integrations.Storefront.OrderShippingGroupHistoryReader>();
         services.AddScoped<Tooba.Order.Contracts.Settlement.IOrderShippingGroupSettlementReader, Integrations.Settlement.OrderShippingGroupSettlementBridge>();

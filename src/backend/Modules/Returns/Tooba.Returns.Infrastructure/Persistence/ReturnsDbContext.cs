@@ -59,6 +59,11 @@ public sealed class ReturnsDbContext : DbContext
             entity.Property(x => x.Currency).HasMaxLength(8);
             entity.Property(x => x.RefundAmount).HasPrecision(18, 4);
             entity.Property(x => x.RefundDestination).HasConversion<string>().HasMaxLength(32);
+            // TB-265: explicit origin discriminator + courier-origin source linkage and closure phases.
+            entity.Property(x => x.Origin).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.SourceOccurrenceKey).HasMaxLength(128);
+            entity.Property(x => x.ClosurePhase).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.ReleasedHeldQuantity).HasPrecision(18, 6);
             entity.Ignore(x => x.DomainEvents);
             entity.Ignore(x => x.Items);
             entity.Ignore(x => x.RefundAttempts);
@@ -76,6 +81,9 @@ public sealed class ReturnsDbContext : DbContext
             entity.Property(x => x.Currency).HasMaxLength(8);
             entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.UnitPriceSnapshot).HasPrecision(18, 4);
+            // TB-265: recorded physical condition and explicit disposition of the received quantity.
+            entity.Property(x => x.Condition).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.Disposition).HasConversion<string>().HasMaxLength(32);
             entity.HasIndex(x => x.ReturnRequestId);
             entity.HasIndex(x => x.OrderLineId);
         });

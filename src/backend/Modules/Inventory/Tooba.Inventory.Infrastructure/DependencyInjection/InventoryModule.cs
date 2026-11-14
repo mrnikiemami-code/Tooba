@@ -1,4 +1,4 @@
-using Tooba.Inventory.Infrastructure.Messaging;
+﻿using Tooba.Inventory.Infrastructure.Messaging;
 using Tooba.Inventory.Infrastructure.Adapters;
 using Tooba.Inventory.Infrastructure.Directories;
 using Tooba.Inventory.Contracts.Seller;
@@ -46,6 +46,8 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<IInventoryUseCaseGuard, OpenInventoryUseCaseGuard>();
         services.AddScoped<IInventoryDirectory, InventoryDirectory>();
         services.AddScoped<IInventoryReturnGateway, InventoryReturnGateway>();
+        // TB-265: quantity-safe release of the unconsumed hold behind a closed courier-return obligation.
+        services.AddScoped<Tooba.Inventory.Contracts.Returns.IInventoryReturnObligationRelease, InventoryReturnObligationRelease>();
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<ISellerOfferInventoryGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IFulfillmentInventoryLifecyclePort>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());

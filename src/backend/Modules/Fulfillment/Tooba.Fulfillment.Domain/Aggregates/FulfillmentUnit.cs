@@ -16,6 +16,8 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     private readonly List<FulfillmentShippingGroup> _shippingGroups = [];
     private readonly List<ShipmentReturnReceipt> _returnReceipts = [];
     private readonly List<DamagedGoodsResolution> _damagedResolutions = [];
+    // TB-265: capacity already claimed by an existing courier-origin Returns case (never granted twice).
+    private readonly List<ReturnedCapacityClaim> _returnCapacityClaims = [];
 
     private FulfillmentUnit()
     {
@@ -248,6 +250,24 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         _damagedResolutions.Clear();
         _damagedResolutions.AddRange(resolutions);
     }
+
+    /// <summary>
+    /// TB-265: attaches the still-binding courier-origin Returns claims of this unit. A claim is capacity already
+    /// promised to an existing Returns case, so it must never be reported or granted again as resend/replacement
+    /// capacity. The list is read from the claim rows by the owning infrastructure and is empty by default.
+    /// </summary>
+    public void AttachLoadedReturnCapacityClaims(IEnumerable<ReturnedCapacityClaim> claims)
+    {
+        _returnCapacityClaims.Clear();
+        _returnCapacityClaims.AddRange(claims.Where(x => x.Quantity > 0m));
+    }
+
+    private decimal ClaimedQuantity(Guid sourceShipmentId, Guid orderLineId, CourierReturnClaimCondition condition) =>
+        _returnCapacityClaims
+            .Where(c => c.ShipmentId == sourceShipmentId
+                        && c.OrderLineId == orderLineId
+                        && c.Condition == condition)
+            .Sum(c => c.Quantity);
 
     /// <summary>همهٔ باقیمانده را وارد پردازش می‌کند.</summary>
     public void MarkProcessing(DateTimeOffset now)
@@ -751,7 +771,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     public decimal ResendableQuantity(Guid sourceShipmentId, Guid orderLineId)
     {
         var remaining = ReturnedUsableQuantity(sourceShipmentId, orderLineId)
-            - ResendCommittedQuantity(sourceShipmentId, orderLineId);
+            - ResendCommittedQuantity(sourceShipmentId, orderLineId)
+            // TB-265: quantity already promised to an existing courier-origin Returns case is not resend capacity.
+            - ClaimedQuantity(sourceShipmentId, orderLineId, CourierReturnClaimCondition.Usable);
         return remaining > 0m ? remaining : 0m;
     }
 
@@ -779,7 +801,12 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     /// <summary>TB-258: remaining returned capacity of one line available for a new resend parcel.</summary>
     public decimal ResendableQuantity(Guid orderLineId)
     {
-        var remaining = ReturnedUsableQuantity(orderLineId) - ResendCommittedQuantity(orderLineId);
+        var remaining = ReturnedUsableQuantity(orderLineId)
+            - ResendCommittedQuantity(orderLineId)
+            // TB-265: capacity promised to an existing courier-origin Returns case is never resend capacity.
+            - _returnCapacityClaims
+                .Where(c => c.OrderLineId == orderLineId && c.Condition == CourierReturnClaimCondition.Usable)
+                .Sum(c => c.Quantity);
         return remaining > 0m ? remaining : 0m;
     }
 
@@ -825,7 +852,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     public decimal OutstandingDamagedQuantity(Guid sourceShipmentId, Guid orderLineId)
     {
         var remaining = ReceiptDamagedQuantity(sourceShipmentId, orderLineId)
-            - DamagedCommittedQuantity(sourceShipmentId, orderLineId);
+            - DamagedCommittedQuantity(sourceShipmentId, orderLineId)
+            // TB-265: damaged quantity already funded to an existing courier-origin Returns case is not available.
+            - ClaimedQuantity(sourceShipmentId, orderLineId, CourierReturnClaimCondition.Damaged);
         return remaining > 0m ? remaining : 0m;
     }
 
@@ -835,6 +864,46 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             .Select(r => r.ShipmentId)
             .Distinct()
             .Sum(shipmentId => OutstandingDamagedQuantity(shipmentId, orderLineId));
+
+    /// <summary>
+    /// TB-265: damaged quantity of ONE source parcel line that a courier-origin Returns case may still deliberately
+    /// redirect into the existing returns workflow. A recorded replacement decision keeps its units committed, but
+    /// while its replacement parcel has NOT been dispatched the SAME physical unit can still be switched: the
+    /// approval settlement cancels that Created parcel and releases its own held stock exactly once. A dispatched,
+    /// in-transit or delivered replacement is a live obligation, never unused held stock, so it is not redirectable
+    /// and an approval that needs it is refused with the precise next step.
+    /// </summary>
+    public decimal RedirectableDamagedQuantity(Guid sourceShipmentId, Guid orderLineId) =>
+        _damagedResolutions
+            .Where(r => r.ShipmentId == sourceShipmentId
+                && r.OrderLineId == orderLineId
+                && r.Status != DamagedResolutionStatus.Cancelled
+                && IsRedirectableReplacement(r))
+            .Sum(r => r.Quantity);
+
+    /// <summary>
+    /// TB-265: damaged quantity of ONE source parcel line whose replacement parcel has ALREADY left the warehouse.
+    /// Those units are a live obligation, not unused held stock, so a courier-origin Returns case must be refused with
+    /// this precise reason instead of being told the receipt never had capacity.
+    /// </summary>
+    public decimal DamagedCommittedToDispatchedReplacement(Guid sourceShipmentId, Guid orderLineId) =>
+        _damagedResolutions
+            .Where(r => r.ShipmentId == sourceShipmentId
+                && r.OrderLineId == orderLineId
+                && r.ReplacementShipmentId is not null
+                && !IsRedirectableReplacement(r))
+            .Sum(r => r.Quantity);
+
+    private bool IsRedirectableReplacement(DamagedGoodsResolution resolution)
+    {
+        if (resolution.ReplacementShipmentId is not { } shipmentId)
+        {
+            // Recorded but no parcel yet (starved stock, or reserved before the parcel write landed): still switchable.
+            return true;
+        }
+
+        return _shipments.SingleOrDefault(x => x.ShipmentId == shipmentId) is { Status: ShipmentStatus.Created };
+    }
 
     /// <summary>TB-262: true when at least one returned parcel still owes a damaged-goods decision.</summary>
     public bool HasOutstandingDamagedQuantity(Guid sourceShipmentId) =>

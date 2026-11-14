@@ -17,6 +17,7 @@ using Tooba.Fulfillment.Infrastructure.Handlers;
 using Tooba.Fulfillment.Infrastructure.Shipping;
 using Tooba.Fulfillment.Infrastructure.Messaging;
 using Tooba.Fulfillment.Infrastructure.Observability;
+using Tooba.Fulfillment.Infrastructure.Returns;
 using Tooba.ModuleContracts;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Fulfillment.Contracts.Returns;
@@ -134,6 +135,8 @@ public sealed class FulfillmentModule : IToobaModule
             configuration.GetSection(ShippingOneLevelCatalogOptions.SectionName));
         services.AddSingleton<IErrorCatalogContributor, Errors.FulfillmentErrorCatalogContributor>();
         services.AddScoped<IFulfillmentInventoryGateway, FulfillmentInventoryGateway>();
+        // TB-265: Fulfillment-owned exclusive source-quantity authority for courier-origin Returns cases.
+        services.AddScoped<Tooba.Fulfillment.Contracts.Returns.IFulfillmentCourierReturnSource, CourierReturnSourceDirectory>();
         services.AddScoped<IFulfillmentReturnReader, FulfillmentReturnBridge>();
         services.AddScoped<ISellerOrderCancelFulfillmentGate, FulfillmentSellerOrderCancelGate>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, FulfillmentPaymentSucceededHandler>();

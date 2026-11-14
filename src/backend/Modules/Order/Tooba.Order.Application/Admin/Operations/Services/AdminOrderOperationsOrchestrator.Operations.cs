@@ -379,6 +379,23 @@ public sealed partial class AdminOrderOperationsOrchestrator
             request,
             cancellationToken));
 
+    /// <summary>
+    /// TB-265: creates the third lawful outcome of a courier-return receipt — a Returns case linked to the EXISTING
+    /// Returns review/refund/disposition workflow, beside the healthy same-goods resend and the newly reserved healthy
+    /// replacement. The received quantity is claimed in Fulfillment BEFORE the case exists, so the same units can never
+    /// fund two branches.
+    /// </summary>
+    public Task<Result<object>> CreateCourierReturnAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        RunOperationAsync(() => RunCourierReturnAsync(
+            checkoutId,
+            actorUserId,
+            request,
+            cancellationToken));
+
     public Task<Result<object>> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         Guid actorUserId,

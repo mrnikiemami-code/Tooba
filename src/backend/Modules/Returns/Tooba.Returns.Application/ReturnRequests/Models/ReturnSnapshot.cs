@@ -1,4 +1,4 @@
-using Tooba.Returns.Domain.ValueObjects;
+﻿using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Application.ReturnRequests.Models;
 
@@ -21,4 +21,14 @@ public sealed record ReturnSnapshot(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<ReturnItemSnapshot> Items,
-    IReadOnlyList<RefundAttemptSnapshot> RefundAttempts);
+    IReadOnlyList<RefundAttemptSnapshot> RefundAttempts,
+    ReturnOrigin Origin = ReturnOrigin.CustomerDelivered,
+    Guid? SourceFulfillmentId = null,
+    Guid? SourceShipmentId = null,
+    Guid? SourceReceiptId = null,
+    Guid? SourceClaimId = null,
+    string? SourceOccurrenceKey = null,
+    CourierOriginClosurePhase ClosurePhase = CourierOriginClosurePhase.None,
+    DateTimeOffset? ObligationClosedAt = null,
+    DateTimeOffset? StockSettledAt = null,
+    decimal ReleasedHeldQuantity = 0);

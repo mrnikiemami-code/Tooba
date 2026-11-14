@@ -1,4 +1,4 @@
-using Tooba.Returns.Domain.ValueObjects;
+﻿using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Application.ReturnRequests.Models;
 
@@ -12,4 +12,8 @@ public sealed record ReturnItemSnapshot(
     decimal Quantity,
     decimal UnitPriceSnapshot,
     string Currency,
-    Guid? ReservationId);
+    Guid? ReservationId,
+    ReturnItemCondition Condition = ReturnItemCondition.Usable,
+    ReturnItemDisposition Disposition = ReturnItemDisposition.None,
+    Guid? SourceShipmentId = null,
+    Guid? SourceReceiptId = null);

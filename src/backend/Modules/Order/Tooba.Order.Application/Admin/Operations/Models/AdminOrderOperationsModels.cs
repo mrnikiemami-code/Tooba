@@ -118,7 +118,19 @@ public sealed record AdminOrderOperationRequest(
     /// TB-262: the reviewed damaged-goods outcome — <c>replacement</c> (new healthy-stock reservation and a linked
     /// replacement parcel) or <c>referral</c> (left for customer service / existing financial handling).
     /// </summary>
-    string? DamagedOutcome = null);
+    string? DamagedOutcome = null,
+    /// <summary>
+    /// TB-265: the exact received quantity of a returned parcel that a courier-origin Returns case claims. Each line
+    /// carries its own physical condition; usable and damaged quantity are separate pools and the server refuses a
+    /// quantity that is already funding a resend, a replacement or another case.
+    /// </summary>
+    IReadOnlyList<AdminCourierReturnLineSelection>? CourierReturnItems = null);
+
+/// <summary>TB-265: one claimed line of a courier-origin Returns case.</summary>
+public sealed record AdminCourierReturnLineSelection(
+    Guid OrderLineId,
+    decimal Quantity,
+    string Condition = "usable");
 
 /// <summary>TB-258: one physically received line submitted with an origin receipt.</summary>
 public sealed record AdminReturnReceiptLineSelection(

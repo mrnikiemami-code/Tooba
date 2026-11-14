@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Returns.Domain.Events;
 using Tooba.Returns.Domain.ValueObjects;
 
@@ -44,6 +44,36 @@ public sealed class ReturnRequest : IHasDomainEvents
 
     /// <summary>ارز refund.</summary>
     public string Currency { get; init; } = string.Empty;
+
+    /// <summary>TB-265: origin of this case; existing rows stay customer-delivered.</summary>
+    public ReturnOrigin Origin { get; private set; } = ReturnOrigin.CustomerDelivered;
+
+    /// <summary>TB-265: owning fulfillment unit of a courier-origin case.</summary>
+    public Guid? SourceFulfillmentId { get; private set; }
+
+    /// <summary>TB-265: the returned parcel this case was created from.</summary>
+    public Guid? SourceShipmentId { get; private set; }
+
+    /// <summary>TB-265: the single physical origin receipt that is reused (never a second receive).</summary>
+    public Guid? SourceReceiptId { get; private set; }
+
+    /// <summary>TB-265: reviewed occurrence identity of the creation command (durable exact replay).</summary>
+    public string? SourceOccurrenceKey { get; private set; }
+
+    /// <summary>TB-265: the Fulfillment-owned exclusive source-quantity claim that funds this case.</summary>
+    public Guid? SourceClaimId { get; private set; }
+
+    /// <summary>TB-265: when the owning order-line delivery obligation was closed.</summary>
+    public DateTimeOffset? ObligationClosedAt { get; private set; }
+
+    /// <summary>TB-265: when the source branch was settled and its unconsumed hold released once.</summary>
+    public DateTimeOffset? StockSettledAt { get; private set; }
+
+    /// <summary>TB-265: durable closure phase so a retry resumes the exact remaining work.</summary>
+    public CourierOriginClosurePhase ClosurePhase { get; private set; }
+
+    /// <summary>TB-265: quantity actually released from an unconsumed hold for this closure.</summary>
+    public decimal ReleasedHeldQuantity { get; private set; }
 
     /// <summary>مبلغ refund محاسبه‌شده از snapshot خطوط.</summary>
     public decimal RefundAmount { get; private set; }
@@ -148,6 +178,140 @@ public sealed class ReturnRequest : IHasDomainEvents
     {
         _refundAttempts.Clear();
         _refundAttempts.AddRange(attempts);
+    }
+
+    /// <summary>
+    /// TB-265: builds a courier-origin case from an already-received origin receipt. The physical receipt is REUSED —
+    /// no second receive is invented — and every line carries its recorded condition so damaged units are never
+    /// presented as healthy capacity.
+    /// </summary>
+    public static ReturnRequest CreateCourierOrigin(
+        Guid returnRequestId,
+        Func<Guid> newId,
+        Guid sellerOrderId,
+        Guid checkoutId,
+        Guid sellerPartyId,
+        Guid requestedByUserId,
+        Guid sourceFulfillmentId,
+        Guid sourceShipmentId,
+        Guid sourceReceiptId,
+        Guid sourceClaimId,
+        string sourceOccurrenceKey,
+        string idempotencyKey,
+        string? reason,
+        string currency,
+        IEnumerable<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId, ReturnItemCondition Condition)> lines,
+        DateTimeOffset now,
+        RefundDestination refundDestination = RefundDestination.OriginalPayment)
+    {
+        if (sourceFulfillmentId == Guid.Empty || sourceShipmentId == Guid.Empty || sourceReceiptId == Guid.Empty)
+        {
+            throw new InvalidOperationException("returns.courier_origin.source_required");
+        }
+
+        if (sourceClaimId == Guid.Empty)
+        {
+            throw new InvalidOperationException("returns.courier_origin.claim_required");
+        }
+
+        if (string.IsNullOrWhiteSpace(sourceOccurrenceKey))
+        {
+            throw new InvalidOperationException("returns.courier_origin.occurrence_required");
+        }
+
+        var request = Create(
+            returnRequestId,
+            newId,
+            sellerOrderId,
+            checkoutId,
+            sellerPartyId,
+            requestedByUserId,
+            idempotencyKey,
+            reason,
+            currency,
+            lines.Select(x => (x.OrderLineId, x.Quantity, x.UnitPriceSnapshot, x.ReservationId)),
+            now,
+            refundDestination);
+
+        // The factory above minted usable lines; replace them with the exact recorded condition per line.
+        request._items.Clear();
+        foreach (var line in lines)
+        {
+            request._items.Add(ReturnItem.Create(
+                newId(),
+                request.ReturnRequestId,
+                line.OrderLineId,
+                line.Quantity,
+                line.UnitPriceSnapshot,
+                currency,
+                line.ReservationId,
+                line.Condition,
+                sourceShipmentId,
+                sourceReceiptId));
+        }
+
+        request.RefundAmount = request._items.Sum(x => x.UnitPriceSnapshot * x.Quantity);
+        request.Origin = ReturnOrigin.CourierOrigin;
+        request.SourceFulfillmentId = sourceFulfillmentId;
+        request.SourceShipmentId = sourceShipmentId;
+        request.SourceReceiptId = sourceReceiptId;
+        request.SourceOccurrenceKey = sourceOccurrenceKey.Trim();
+        request.SourceClaimId = sourceClaimId;
+        return request;
+    }
+
+    /// <summary>TB-265: records that the owning order-line delivery obligation is closed (idempotent phase).</summary>
+    public void MarkObligationClosed(DateTimeOffset now)
+    {
+        if (Origin != ReturnOrigin.CourierOrigin)
+        {
+            return;
+        }
+
+        if (ClosurePhase >= CourierOriginClosurePhase.ObligationClosed && ObligationClosedAt is not null)
+        {
+            return;
+        }
+
+        // Monotonic: a repeated (out-of-order) marker never moves the case backwards.
+        ObligationClosedAt ??= now;
+        if (ClosurePhase < CourierOriginClosurePhase.ObligationClosed)
+        {
+            ClosurePhase = CourierOriginClosurePhase.ObligationClosed;
+        }
+
+        UpdatedAt = now;
+    }
+
+    /// <summary>TB-265: records that the unconsumed held quantity was released exactly once.</summary>
+    public void MarkStockSettled(decimal releasedQuantity, DateTimeOffset now)
+    {
+        if (Origin != ReturnOrigin.CourierOrigin)
+        {
+            return;
+        }
+
+        if (ClosurePhase >= CourierOriginClosurePhase.StockSettled && StockSettledAt is not null)
+        {
+            return;
+        }
+
+        // The FIRST settlement is the durable answer: a replay can never change how much was released.
+        ReleasedHeldQuantity = releasedQuantity > 0 ? releasedQuantity : 0;
+        StockSettledAt ??= now;
+        if (ClosurePhase < CourierOriginClosurePhase.StockSettled)
+        {
+            ClosurePhase = CourierOriginClosurePhase.StockSettled;
+        }
+
+        UpdatedAt = now;
+    }
+
+    /// <summary>TB-265: the money phase may proceed; recorded so a replay never refunds twice.</summary>
+    public void MarkRefundReleased(DateTimeOffset now)
+    {
+        ClosurePhase = CourierOriginClosurePhase.RefundReleased;
+        UpdatedAt = now;
     }
 
     /// <summary>درخواست را تأیید می‌کند.</summary>

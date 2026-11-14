@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Domain.ValueObjects;
 
 namespace Tooba.Fulfillment.Domain.Aggregates;
@@ -267,6 +267,19 @@ public sealed class DamagedGoodsResolution
     /// مقدار آسیب‌دیده همچنان غیرقابل‌فروش می‌ماند و تاریخچهٔ تصمیم پاک نمی‌شود.
     /// </summary>
     internal void MarkOrderCancelled(DateTimeOffset now)
+    {
+        ReplacementShipmentId = null;
+        ReplacementReservationId = null;
+        Status = DamagedResolutionStatus.Cancelled;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// TB-265: a deliberate, audited switch from the retained replacement branch to an approved Returns case. The
+    /// settlement has already released this decision's own unconsumed hold; the decision keeps its immutable
+    /// occurrence identity and its quantity, and its damaged units stay non-saleable.
+    /// </summary>
+    public void MarkReturnCaseSettled(DateTimeOffset now)
     {
         ReplacementShipmentId = null;
         ReplacementReservationId = null;

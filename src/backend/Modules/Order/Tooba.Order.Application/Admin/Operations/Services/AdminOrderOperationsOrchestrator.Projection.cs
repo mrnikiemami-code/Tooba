@@ -382,6 +382,35 @@ public sealed partial class AdminOrderOperationsOrchestrator
                             ? "تصمیم کالای آسیب‌دیده (جایگزینی از موجودی سالم یا ارجاع) ثبت شود؟"
                             : "همان تصمیم ثبت‌شدهٔ کالای آسیب‌دیده ادامه یابد تا مرسولهٔ جایگزین ساخته شود؟"));
                 }
+
+                // TB-265: the third lawful outcome of a courier-return receipt — a Returns case linked to the existing
+                // Returns review/refund/disposition workflow. It is offered only while no active courier-origin case
+                // already holds this receipt, and it never replaces the healthy resend or the replacement path.
+                var activeCourierCase = returns.Any(x =>
+                    x.Origin == ReturnOriginOption.CourierOrigin
+                    && x.SourceShipmentId == shipment.ShipmentId
+                    && x.Status is ReturnRequestOperationStatus.Requested
+                        or ReturnRequestOperationStatus.Approved
+                        or ReturnRequestOperationStatus.RefundProcessing
+                        or ReturnRequestOperationStatus.RefundFailed);
+                if (shipment.Status == ShipmentOperationStatus.Returned
+                    && shipment.ReturnReceipt is not null
+                    && !activeCourierCase
+                    && shipment.Items.Any(x => x.ResendableQuantity > 0m || x.OutstandingDamagedQuantity > 0m)
+                    && Has(effective, "return.manage"))
+                {
+                    actions.Add(Action(
+                        "create_courier_return",
+                        "ایجاد پروندهٔ مرجوعی",
+                        "Create return case",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        "return.manage",
+                        true,
+                        "برای همین مقدار دریافتی پروندهٔ مرجوعی ساخته شود؟ پرونده وارد گردش تأیید/بازگشت وجه موجود می‌شود و موجودی فعال سفارش آزاد نمی‌شود."));
+                }
             }
         }
 

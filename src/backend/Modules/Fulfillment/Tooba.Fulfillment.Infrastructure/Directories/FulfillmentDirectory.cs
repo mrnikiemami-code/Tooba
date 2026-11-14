@@ -714,6 +714,14 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             .Where(x => x.FulfillmentId == fulfillmentId)
             .ToListAsync(cancellationToken);
         unit.AttachLoadedDamagedResolutions(resolutions);
+        // TB-265: still-binding courier-origin Returns claims are capacity already promised to a case, so the
+        // aggregate must never grant it again to a resend or a replacement.
+        var claims = await _db.CourierReturnClaims.AsNoTracking()
+            .Where(x => x.FulfillmentId == fulfillmentId
+                        && (x.Status == CourierReturnClaimStatus.Requested || x.Status == CourierReturnClaimStatus.Approved))
+            .ToListAsync(cancellationToken);
+        unit.AttachLoadedReturnCapacityClaims(claims.SelectMany(x => x.Lines.Select(l =>
+            new ReturnedCapacityClaim(x.ShipmentId, l.OrderLineId, l.Quantity, l.Condition))).ToArray());
         return unit;
     }
 

@@ -93,6 +93,75 @@ internal sealed class ReturnAdminOperationsAdapter(
     /// the owning seller scope (used by the seller use case). The adapter resolves it from the owning
     /// snapshot so the same <c>return.missing</c> fault is raised for an unknown identifier.
     /// </summary>
+    public async Task<CourierOriginReturnResult> CreateCourierOriginAsync(
+        CreateCourierOriginReturnCommand command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        var (snapshot, claimId, alreadyExisted, conflict) = await directory.CreateCourierOriginAsync(
+            command.FulfillmentId,
+            command.ShipmentId,
+            command.ActorUserId,
+            command.IdempotencyKey,
+            command.OccurrenceKey,
+            command.Reason,
+            command.Items
+                .Select(x => (
+                    x.OrderLineId,
+                    x.Quantity,
+                    x.Condition == ReturnItemConditionOption.Damaged
+                        ? ReturnItemCondition.Damaged
+                        : ReturnItemCondition.Usable))
+                .ToList(),
+            cancellationToken);
+
+        if (snapshot is null)
+        {
+            throw new ContractOperationException(conflict ?? ReturnsErrorCodes.Missing);
+        }
+
+        return new CourierOriginReturnResult(Map(snapshot), claimId, alreadyExisted, conflict);
+    }
+
+    public async Task<CourierOriginReturnResult?> ReconcileCourierOriginAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        string occurrenceKey,
+        CancellationToken cancellationToken)
+    {
+        var (snapshot, claimId, alreadyExisted, conflict) = await directory.ReconcileCourierOriginAsync(
+            fulfillmentId,
+            shipmentId,
+            occurrenceKey,
+            cancellationToken);
+
+        if (snapshot is null)
+        {
+            return conflict is null ? null : new CourierOriginReturnResult(
+                new ReturnSnapshot(
+                    Guid.Empty,
+                    Guid.Empty,
+                    Guid.Empty,
+                    Guid.Empty,
+                    Guid.Empty,
+                    ReturnRequestOperationStatus.Requested,
+                    null,
+                    string.Empty,
+                    0m,
+                    null,
+                    RefundDestinationOption.OriginalPayment,
+                    default,
+                    default,
+                    Array.Empty<ReturnItemSnapshot>(),
+                    Array.Empty<RefundAttemptSnapshot>()),
+                claimId,
+                alreadyExisted,
+                conflict);
+        }
+
+        return new CourierOriginReturnResult(Map(snapshot), claimId, alreadyExisted, conflict);
+    }
+
     private async Task<Guid> RequireSellerPartyAsync(Guid returnRequestId, CancellationToken cancellationToken) =>
         (await directory.GetAsync(returnRequestId, cancellationToken))?.SellerPartyId
         ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
@@ -119,7 +188,13 @@ internal sealed class ReturnAdminOperationsAdapter(
                     x.Quantity,
                     x.UnitPriceSnapshot,
                     x.Currency,
-                    x.ReservationId))
+                    x.ReservationId,
+                    (ReturnItemConditionOption)x.Condition,
+                    x.Disposition == ReturnItemDisposition.DamagedNonSaleable
+                        ? ReturnItemConditionOption.Damaged
+                        : null,
+                    x.SourceShipmentId,
+                    x.SourceReceiptId))
                 .ToList(),
             snapshot.RefundAttempts
                 .Select(x => new RefundAttemptSnapshot(
@@ -133,7 +208,17 @@ internal sealed class ReturnAdminOperationsAdapter(
                     x.FailureCode,
                     x.CreatedAt,
                     x.CompletedAt))
-                .ToList());
+                .ToList(),
+            (ReturnOriginOption)snapshot.Origin,
+            snapshot.SourceFulfillmentId,
+            snapshot.SourceShipmentId,
+            snapshot.SourceReceiptId,
+            snapshot.SourceClaimId,
+            snapshot.SourceOccurrenceKey,
+            snapshot.ClosurePhase.ToString(),
+            snapshot.ObligationClosedAt,
+            snapshot.StockSettledAt,
+            snapshot.ReleasedHeldQuantity);
 
     private static ReturnEligibilityResult Map(AppModels.ReturnEligibilityResult result) =>
         new(

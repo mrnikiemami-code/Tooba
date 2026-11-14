@@ -61,6 +61,8 @@ export type OperationalParcelCapabilities = {
   canResend: boolean;
   /** TB-262: damaged units received back on this parcel still owe one deliberate decision each. */
   canResolveDamagedGoods: boolean;
+  /** TB-265: this courier-origin receipt may open a linked case in the EXISTING returns workflow. */
+  canCreateCourierReturn: boolean;
 };
 
 /**
@@ -142,6 +144,7 @@ const NO_PARCEL_ACTIONS: OperationalParcelCapabilities = {
   canRecordReturnReceipt: false,
   canResend: false,
   canResolveDamagedGoods: false,
+  canCreateCourierReturn: false,
 };
 
 function lineKey(line: AdminOrderLine): string {
@@ -777,6 +780,7 @@ function permittedExceptionModes(caps: OperationalParcelCapabilities): PostDispa
   if (caps.canRecordReturnReceipt) modes.push("record_return_receipt");
   if (caps.canResend) modes.push("resend_shipment");
   if (caps.canResolveDamagedGoods) modes.push("resolve_damaged_goods");
+  if (caps.canCreateCourierReturn) modes.push("create_courier_return");
   return modes;
 }
 
@@ -1098,6 +1102,7 @@ function GroupParcels({
                   || caps.canRecordReturnReceipt
                   || caps.canResend
                   || caps.canResolveDamagedGoods
+                  || caps.canCreateCourierReturn
                 ) ? (
                   <div
                     className="mt-2 flex flex-wrap gap-1.5 border-t border-gray-100 pt-2"
@@ -1158,6 +1163,17 @@ function GroupParcels({
                         {pendingDamage && receipt.outstanding === 0
                           ? "ادامهٔ تعیین تکلیف کالای آسیب‌دیده"
                           : "تعیین تکلیف کالای آسیب‌دیده"}
+                      </button>
+                    ) : null}
+                    {caps.canCreateCourierReturn ? (
+                      <button
+                        type="button"
+                        disabled={pending || exceptionPending}
+                        onClick={() => openException(row.seller, parcel, "create_courier_return")}
+                        className="min-h-11 rounded-lg border border-gray-200 px-3 text-xs font-bold text-gray-700 disabled:opacity-50"
+                        data-testid={`admin-order-post-dispatch-courier-return-${parcel.shipmentId}`}
+                      >
+                        ایجاد پروندهٔ مرجوعی
                       </button>
                     ) : null}
                   </div>

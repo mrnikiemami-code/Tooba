@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
@@ -924,6 +924,210 @@ public sealed class AdminOrderPostDispatchReplayTests
             "tb258r3-orchestrator-relational.txt");
     }
 
+    // ------------------------------------------------------------------------------------------------------------
+    // TB-265: the courier-origin Returns case is the third lawful outcome of an origin receipt, and it is an ORDER
+    // post-dispatch command like any other. These facts bind the SURFACE only — the quantity authority, obligation
+    // closure and condition-aware disposition are proven by the relational matrix.
+    // ------------------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_courier_origin_case_requires_return_management_authority_before_any_read()
+    {
+        var ports = new Ports("order.handle", "fulfillment.manage");
+        var orchestrator = Build(Fulfillment(FulfillmentSnapshotWith(ShipmentOperationStatus.Returned, true, true)), ports);
+
+        var result = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("order.operation.denied", result.FirstError.Code);
+        // Order/fulfillment authority is NOT return-management authority: the owning Returns workflow is never asked.
+        Assert.Equal(0, ports.Returns.CourierCreateCalls);
+        Assert.Equal(0, ports.Returns.CourierReconcileCalls);
+    }
+
+    [Fact]
+    public async Task A_courier_origin_case_without_the_reviewed_key_or_lines_is_refused_and_creates_nothing()
+    {
+        var ports = new Ports("return.manage");
+        var orchestrator = Build(Fulfillment(FulfillmentSnapshotWith(ShipmentOperationStatus.Returned, true, true)), ports);
+
+        // No reviewed key: a retry could not be told apart from a new case, so the intent is not reviewable.
+        var noKey = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(idempotencyKey: null),
+            CancellationToken.None);
+        Assert.False(noKey.IsSuccess);
+        Assert.Equal("order.operation.invalid", noKey.FirstError.Code);
+
+        // No claimed lines at all.
+        var noLines = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(dropItems: true),
+            CancellationToken.None);
+        Assert.False(noLines.IsSuccess);
+        Assert.Equal("order.operation.invalid", noLines.FirstError.Code);
+
+        // The same line+condition twice is ambiguous physical intent.
+        var duplicated = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(dropItems: true, extraItems: [
+                new AdminCourierReturnLineSelection(LineId, 1m, "damaged"),
+                new AdminCourierReturnLineSelection(LineId, 1m, "Damaged")]),
+            CancellationToken.None);
+        Assert.False(duplicated.IsSuccess);
+        Assert.Equal("order.operation.invalid", duplicated.FirstError.Code);
+
+        // An unknown physical condition token is refused rather than assumed usable.
+        var unknownCondition = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(dropItems: true, extraItems: [
+                new AdminCourierReturnLineSelection(LineId, 1m, "broken")]),
+            CancellationToken.None);
+        Assert.False(unknownCondition.IsSuccess);
+        Assert.Equal("order.operation.invalid", unknownCondition.FirstError.Code);
+
+        Assert.Equal(0, ports.Returns.CourierCreateCalls);
+    }
+
+    [Fact]
+    public async Task A_courier_origin_case_binds_the_claim_to_this_exact_parcel_and_reviewed_quantity()
+    {
+        var snapshot = ReturnSnapshot();
+        var ports = new Ports("return.manage");
+        ports.Returns.CourierCreateAnswer = new CourierOriginReturnResult(snapshot, ClaimId);
+        var orchestrator = Build(Fulfillment(FulfillmentSnapshotWith(ShipmentOperationStatus.Returned, true, true)), ports);
+
+        var result = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.IsSuccess ? string.Empty : result.FirstError?.Code);
+        Assert.Same(snapshot, Assert.IsType<ReturnSnapshot>(result.Value));
+
+        var command = Assert.Single(ports.Returns.CourierCreates);
+        Assert.Equal(FulfillmentId, command.FulfillmentId);
+        Assert.Equal(ShipmentId, command.ShipmentId);
+        Assert.Equal(ActorId, command.ActorUserId);
+        Assert.Equal("courier-return-review-1", command.IdempotencyKey);
+        // The claim occurrence is scoped to THIS parcel, so two parcels can never share one claim identity.
+        Assert.Equal($"courier-return:{ShipmentId:N}:courier-return-review-1", command.OccurrenceKey);
+        var line = Assert.Single(command.Items);
+        Assert.Equal(LineId, line.OrderLineId);
+        Assert.Equal(1m, line.Quantity);
+        Assert.Equal(ReturnItemConditionOption.Damaged, line.Condition);
+        // Creating the case is NOT a refund and NOT a restock: only case creation was requested.
+        Assert.Equal(0, ports.Returns.CourierReconcileCalls);
+    }
+
+    [Fact]
+    public async Task An_exact_replay_answers_the_recorded_case_instead_of_creating_a_second_one()
+    {
+        var snapshot = ReturnSnapshot();
+        var ports = new Ports("return.manage");
+        ports.Returns.CourierCreateAnswer = new CourierOriginReturnResult(snapshot, ClaimId, AlreadyExisted: true);
+        ports.Returns.CourierReconcileAnswer = new CourierOriginReturnResult(snapshot, ClaimId);
+        var orchestrator = Build(Fulfillment(FulfillmentSnapshotWith(ShipmentOperationStatus.Returned, true, true)), ports);
+
+        var result = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess, result.IsSuccess ? string.Empty : result.FirstError?.Code);
+        var answered = Assert.IsType<ReturnSnapshot>(result.Value);
+        Assert.Equal(snapshot.ReturnRequestId, answered.ReturnRequestId);
+        // Exactly ONE create was submitted; the duplicate review key answered the durable case.
+        Assert.Single(ports.Returns.CourierCreates);
+    }
+
+    [Fact]
+    public async Task A_recorded_courier_origin_conflict_is_reported_verbatim_and_creates_no_case()
+    {
+        var ports = new Ports("return.manage");
+        ports.Returns.CourierCreateAnswer = new CourierOriginReturnResult(
+            ReturnSnapshot(),
+            ClaimId,
+            ConflictCode: "fulfillment.returns.replacement_already_dispatched");
+        var orchestrator = Build(Fulfillment(FulfillmentSnapshotWith(ShipmentOperationStatus.Returned, true, true)), ports);
+
+        var result = await orchestrator.CreateCourierReturnAsync(
+            CheckoutId,
+            ActorId,
+            CourierReturnRequest(),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        // The Fulfillment claim is the single quantity authority: committed-to-dispatched units are never re-claimed.
+        Assert.Equal("fulfillment.returns.replacement_already_dispatched", result.FirstError.Code);
+        Assert.Single(ports.Returns.CourierCreates);
+    }
+
+    private static readonly Guid ClaimId = Guid.Parse("77777777-7777-7777-7777-777777777777");
+
+    private static FulfillmentFake Fulfillment(FulfillmentSnapshot snapshot) =>
+        new(snapshot, new PostDispatchIntentResult(PostDispatchIntentState.Recorded, snapshot));
+
+    private static ReturnSnapshot ReturnSnapshot() => new(
+        Guid.Parse("88888888-8888-8888-8888-888888888888"),
+        SellerOrderId,
+        CheckoutId,
+        SellerPartyId,
+        ActorId,
+        ReturnRequestOperationStatus.Requested,
+        "کالای مرجوعی حامل",
+        "IRR",
+        0m,
+        null,
+        RefundDestinationOption.OriginalPayment,
+        new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero),
+        new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero),
+        [
+            new ReturnItemSnapshot(
+                Guid.Parse("99999999-9999-9999-9999-999999999998"),
+                LineId,
+                1m,
+                0m,
+                "IRR",
+                null,
+                ReturnItemConditionOption.Damaged)
+        ],
+        [],
+        ReturnOriginOption.CourierOrigin,
+        FulfillmentId,
+        ShipmentId,
+        null,
+        ClaimId,
+        $"courier-return:{ShipmentId:N}:courier-return-review-1");
+
+    private static AdminOrderOperationRequest CourierReturnRequest(
+        string? idempotencyKey = "courier-return-review-1",
+        bool dropItems = false,
+        IReadOnlyList<AdminCourierReturnLineSelection>? extraItems = null) => new(
+        "create_courier_return",
+        SellerOrderId,
+        FulfillmentId,
+        ShipmentId,
+        ReturnRequestId: null,
+        CarrierDisplayName: null,
+        TrackingReference: null,
+        Reason: "کالای برگشتی نیازمند بررسی مرجوعی است",
+        IdempotencyKey: idempotencyKey,
+        ReturnItems: null,
+        CourierReturnItems: extraItems ?? (dropItems
+            ? null
+            : [new AdminCourierReturnLineSelection(LineId, 1m, "damaged")]));
+
     /// <summary>Task-labelled evidence of the public-command run; nothing runs without the directory.</summary>
     private static void RecordEvidence(string line, string fileName = "tb258r2-orchestrator-relational.txt")
     {
@@ -1101,6 +1305,37 @@ public sealed class AdminOrderPostDispatchReplayTests
             Guid returnRequestId,
             Guid actorUserId,
             CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<CourierOriginReturnResult> CreateCourierOriginAsync(
+            CreateCourierOriginReturnCommand command,
+            CancellationToken cancellationToken)
+        {
+            CourierCreateCalls++;
+            CourierCreates.Add(command);
+            return Task.FromResult(CourierCreateAnswer ?? new CourierOriginReturnResult(
+                ReturnSnapshot(),
+                ClaimId));
+        }
+
+        public Task<CourierOriginReturnResult?> ReconcileCourierOriginAsync(
+            Guid fulfillmentId,
+            Guid shipmentId,
+            string occurrenceKey,
+            CancellationToken cancellationToken)
+        {
+            CourierReconcileCalls++;
+            return Task.FromResult(CourierReconcileAnswer);
+        }
+
+        /// <summary>TB-265: reviewed courier-origin intents submitted through the owning Returns workflow.</summary>
+        public List<CreateCourierOriginReturnCommand> CourierCreates { get; } = [];
+
+        public int CourierCreateCalls { get; private set; }
+
+        public int CourierReconcileCalls { get; private set; }
+
+        public CourierOriginReturnResult? CourierCreateAnswer { get; set; }
+
+        public CourierOriginReturnResult? CourierReconcileAnswer { get; set; }
     }
 
     private sealed class PaymentFake : IPaymentAdminGateway

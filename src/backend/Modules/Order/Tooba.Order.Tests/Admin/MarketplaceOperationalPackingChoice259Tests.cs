@@ -1068,6 +1068,15 @@ public sealed class MarketplaceOperationalPackingChoice259Tests
         public Task<ReturnSnapshot> RetryRefundAsync(
             Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+        public Task<CourierOriginReturnResult> CreateCourierOriginAsync(
+            CreateCourierOriginReturnCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<CourierOriginReturnResult?> ReconcileCourierOriginAsync(
+            Guid fulfillmentId,
+            Guid shipmentId,
+            string occurrenceKey,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class PaymentFake : IPaymentAdminGateway
