@@ -56,12 +56,21 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
     }
 
     /// <inheritdoc />
-    public async Task<CourierReturnClaimResult> ClaimAsync(
+    public Task<CourierReturnClaimResult> ClaimAsync(
+        CreateCourierReturnClaimCommand command,
+        CancellationToken cancellationToken) =>
+        ExecuteSerializedAsync(
+            async () =>
+            {
+                await _guard.EnsureCanMutateAsync(cancellationToken);
+                return await ClaimOnceAsync(command, cancellationToken);
+            },
+            cancellationToken);
+
+    private async Task<CourierReturnClaimResult> ClaimOnceAsync(
         CreateCourierReturnClaimCommand command,
         CancellationToken cancellationToken)
     {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-
         // TB-265: capacity is a SHARED pool, so the free-quantity check and the claim insert must be one serialized
         // decision. Serializable isolation is the SAME protocol the resend/replacement writers already use, so a
         // concurrent resend/replacement/dispatch and this claim cannot both commit against the same received units.
@@ -204,6 +213,44 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
         return new CourierReturnClaimResult(Map(claim));
     }
 
+    /// <summary>
+    /// TB-265-R2: one serialized decision may lose a 40001 read/write-dependency race before it ever commits. The
+    /// decision is idempotent, so it is re-evaluated ONCE against the committed state (where the winner's row is now
+    /// visible) instead of surfacing a raw engine error to the operator.
+    /// </summary>
+    private async Task<T> ExecuteSerializedAsync<T>(
+        Func<Task<T>> action,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                return await action();
+            }
+            catch (Exception exception) when (attempt == 0 && IsSerializationFailure(exception))
+            {
+                _db.ChangeTracker.Clear();
+            }
+        }
+    }
+
+    private static bool IsSerializationFailure(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is Npgsql.PostgresException postgres
+                && (postgres.SqlState == Npgsql.PostgresErrorCodes.SerializationFailure
+                    || postgres.SqlState == Npgsql.PostgresErrorCodes.DeadlockDetected))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static async Task CommitAsync(
         Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction,
         bool ownsTransaction,
@@ -295,15 +342,98 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
     }
 
     /// <inheritdoc />
-    public async Task<CourierReturnSettlement> SettleApprovedAsync(
+    public Task<CourierReturnSettlement> EnsureAllocationsAsync(
         Guid claimId,
         Guid returnRequestId,
         Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        ExecuteSerializedAsync(
+            async () =>
+            {
+                _ = returnRequestId;
+                _ = actorUserId;
+                await _guard.EnsureCanMutateAsync(cancellationToken);
+                return await EnsureAllocationsOnceAsync(claimId, cancellationToken);
+            },
+            cancellationToken);
+
+    private async Task<CourierReturnSettlement> EnsureAllocationsOnceAsync(
+        Guid claimId,
         CancellationToken cancellationToken)
     {
-        _ = actorUserId;
-        await _guard.EnsureCanMutateAsync(cancellationToken);
+        // Same serialized protocol as the claim/settlement: the exact allocation is a fact about this unit, so it is
+        // recorded under the unit row lock and committed BEFORE the caller performs an irreversible closure.
+        var ownsTransaction = _db.Database.CurrentTransaction is null;
+        await using var transaction = ownsTransaction
+            ? await _db.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken)
+            : null;
 
+        var claim = await LoadClaimAsync(claimId, cancellationToken);
+        if (ownsTransaction)
+        {
+            await _db.Database.ExecuteSqlAsync(
+                $"SELECT 1 FROM fulfillment.fulfillments WHERE fulfillment_id = {claim.FulfillmentId} FOR UPDATE",
+                cancellationToken);
+        }
+
+        var allocations = await _db.CourierReturnClaimAllocations
+            .Where(x => x.ClaimId == claimId)
+            .OrderBy(x => x.CreatedAt)
+            .ThenBy(x => x.AllocationId)
+            .ToListAsync(cancellationToken);
+
+        if (claim.SettledAt is not null)
+        {
+            await CommitAsync(transaction, ownsTransaction, cancellationToken);
+            return BuildSettlement(claim, allocations, blocker: null, settled: true);
+        }
+
+        if (allocations.Count == 0)
+        {
+            var unit = await LoadMutableAsync(claim.FulfillmentId, cancellationToken);
+            List<CourierReturnClaimAllocation> planned;
+            try
+            {
+                planned = Plan(unit, claim, _clock.UtcNow);
+            }
+            catch (ContractOperationException refusal)
+            {
+                // A genuinely unrunnable branch is DATA, not a half-closed obligation: zero writes, so the approved
+                // case stays resumable once the blocker is resolved.
+                await CommitAsync(transaction, ownsTransaction, cancellationToken);
+                return BuildSettlement(claim, [], refusal.Code, settled: false);
+            }
+
+            _db.CourierReturnClaimAllocations.AddRange(planned);
+            await _db.SaveChangesAsync(cancellationToken);
+            allocations = planned;
+        }
+
+        await CommitAsync(transaction, ownsTransaction, cancellationToken);
+        return BuildSettlement(claim, allocations, blocker: null, settled: false);
+    }
+
+    /// <inheritdoc />
+    public Task<CourierReturnSettlement> SettleApprovedAsync(
+        Guid claimId,
+        Guid returnRequestId,
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        ExecuteSerializedAsync(
+            async () =>
+            {
+                _ = actorUserId;
+                await _guard.EnsureCanMutateAsync(cancellationToken);
+                return await SettleApprovedOnceAsync(claimId, returnRequestId, cancellationToken);
+            },
+            cancellationToken);
+
+    private async Task<CourierReturnSettlement> SettleApprovedOnceAsync(
+        Guid claimId,
+        Guid returnRequestId,
+        CancellationToken cancellationToken)
+    {
         // TB-265-R1: settlement mutates the aggregate (cancelling the replacement parcel) and releases stock, so it
         // must be serialized with a competing claim/dispatch of the same unit and be one durable unit itself.
         var ownsTransaction = _db.Database.CurrentTransaction is null;
@@ -352,12 +482,27 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
         {
             // Record the exact source allocation BEFORE any side effect. A crash after this point resumes with the
             // same parcel/hold identity instead of re-planning against a changed unit.
-            allocations = Plan(unit, claim, now);
-            _db.CourierReturnClaimAllocations.AddRange(allocations);
+            List<CourierReturnClaimAllocation> planned;
+            try
+            {
+                planned = Plan(unit, claim, now);
+            }
+            catch (ContractOperationException refusal)
+            {
+                await CommitAsync(transaction, ownsTransaction, cancellationToken);
+                return BuildSettlement(claim, [], refusal.Code, settled: false);
+            }
+
+            _db.CourierReturnClaimAllocations.AddRange(planned);
             await _db.SaveChangesAsync(cancellationToken);
+            allocations = planned;
         }
 
-        foreach (var allocation in allocations.Where(x => x.State == CourierReturnAllocationState.Pending))
+        var pending = allocations.Where(x => x.State == CourierReturnAllocationState.Pending).ToList();
+
+        // (1) Validate EVERY pending branch before any effect. A dispatched replacement refuses the whole settlement
+        //     instead of cancelling the branches that were still valid.
+        foreach (var allocation in pending)
         {
             if (allocation.CancelledReplacementShipmentId is { } parcelId)
             {
@@ -365,27 +510,43 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
                 if (replacement is null || replacement.Status != ShipmentStatus.Created)
                 {
                     // An already dispatched replacement is a live customer obligation, not unused held stock.
-                    await _db.SaveChangesAsync(cancellationToken);
                     await CommitAsync(transaction, ownsTransaction, cancellationToken);
                     return BuildSettlement(
                         claim, allocations, "fulfillment.returns.replacement_already_dispatched", settled: false);
                 }
-
-                unit.CancelShipment(parcelId, now);
-                allocation.MarkBranchClosed(parcelId, now);
-                await _db.SaveChangesAsync(cancellationToken);
-            }
-
-            if (allocation.DamagedResolutionId is { } resolutionId
-                && unit.DamagedResolutions.SingleOrDefault(x => x.DamagedGoodsResolutionId == resolutionId)
-                    is { } resolution)
-            {
-                resolution.MarkReturnCaseSettled(now);
-                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
-        foreach (var allocation in allocations.Where(x => x.State == CourierReturnAllocationState.Pending))
+        // (2) Close the owning branch exactly. A PARTIAL selection settles only its own quantity into the case and
+        //     keeps the unselected remainder as the same live decision with its retained hold; a full selection
+        //     settles the decision. The selected Created parcel is then cancelled, because its units are re-prepared
+        //     for the remainder instead of dispatching units the case already refunded.
+        foreach (var allocation in pending)
+        {
+            if (allocation.DamagedResolutionId is { } resolutionId
+                && unit.FindDamagedResolution(resolutionId) is { } resolution)
+            {
+                if (resolution.RemainingQuantity > allocation.Quantity)
+                {
+                    resolution.SettlePartialCase(allocation.Quantity, now);
+                }
+                else
+                {
+                    resolution.MarkReturnCaseSettled(now);
+                }
+            }
+
+            if (allocation.CancelledReplacementShipmentId is { } parcelId)
+            {
+                unit.CancelShipment(parcelId, now);
+                allocation.MarkBranchClosed(parcelId, now);
+            }
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+
+        // (3) Release the exact unconsumed held quantity of each allocation, once per allocation identity.
+        foreach (var allocation in pending)
         {
             decimal released = 0m;
             if (allocation.HeldReservationId is { } reservationId)
@@ -426,6 +587,11 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
     /// Builds the exact per-quantity allocations of this claim with ZERO writes. Every claimed line is answered by its
     /// OWN source: remaining damaged units go to their own recorded decision (own replacement parcel + own hold), and a
     /// usable unit goes to its own line hold. A decision that already dispatched is refused, never treated as unused.
+    /// <para>
+    /// TB-265-R2: a decision may be LARGER than the selected portion. The allocation then covers exactly the selected
+    /// quantity and the settlement reduces that decision by it, so the unselected remainder keeps its retained hold and
+    /// stays a lawful replacement obligation instead of being cancelled, refunded or released by this case.
+    /// </para>
     /// </summary>
     private List<CourierReturnClaimAllocation> Plan(FulfillmentUnit unit, CourierReturnClaim claim, DateTimeOffset now)
     {
@@ -450,11 +616,10 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
                         break;
                     }
 
-                    if (resolution.Quantity > remaining)
+                    var available = resolution.RemainingQuantity;
+                    if (available <= 0m)
                     {
-                        // Splitting one durable decision across two branches would release a hold another branch
-                        // still owes; refuse instead of silently overdrawing it.
-                        throw new ContractOperationException("fulfillment.returns.replacement_partial_claim_unsupported");
+                        continue;
                     }
 
                     if (resolution.ReplacementShipmentId is { } parcelId)
@@ -466,6 +631,9 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
                         }
                     }
 
+                    // Exact selected allocation: the smaller of the case quantity and this decision's OWN remaining
+                    // quantity. A partial take is representable now, so no lawful selection is refused after closure.
+                    var take = available < remaining ? available : remaining;
                     allocations.Add(CourierReturnClaimAllocation.Plan(
                         _ids.NewId(),
                         claim.CourierReturnClaimId,
@@ -473,12 +641,12 @@ public sealed class CourierReturnSourceDirectory : IFulfillmentCourierReturnSour
                         claim.ShipmentReturnReceiptId,
                         line.OrderLineId,
                         line.Condition,
-                        resolution.Quantity,
+                        take,
                         resolution.DamagedGoodsResolutionId,
                         resolution.ReplacementShipmentId,
                         resolution.ReplacementReservationId,
                         now));
-                    remaining -= resolution.Quantity;
+                    remaining -= take;
                 }
 
                 if (remaining > 0m)

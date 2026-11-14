@@ -362,8 +362,7 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                         .HasName("pk_courier_return_claim_lines");
 
                     b.HasIndex("ActiveKey")
-                        .IsUnique()
-                        .HasDatabaseName("ux_courier_return_claim_lines_active_key")
+                        .HasDatabaseName("ix_courier_return_claim_lines_active_key")
                         .HasFilter("active_key IS NOT NULL");
 
                     b.HasIndex("ClaimId")
@@ -386,6 +385,12 @@ namespace Tooba.Fulfillment.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<decimal>("CaseSettledQuantity")
+                        .ValueGeneratedNever()
+                        .HasColumnType("numeric(18,6)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("case_settled_quantity");
 
                     b.Property<Guid>("DecidedByUserId")
                         .HasColumnType("uuid")

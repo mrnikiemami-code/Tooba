@@ -16,11 +16,20 @@ public interface IInventoryReturnGateway
 }
 
 /// <summary>TB-265: result of releasing the unconsumed held quantity that backs one closed order-line obligation.</summary>
+/// <param name="ReservationId">The reservation the request addressed.</param>
+/// <param name="RequestedQuantity">The quantity the request asked to release.</param>
+/// <param name="ReleasedQuantity">The quantity actually released (0 when nothing was still held).</param>
+/// <param name="Status">Replayed when this answer comes from the recorded durable request, otherwise the fresh outcome.</param>
+/// <param name="Outcome">
+/// TB-265-R2 truthful effect: Released | PartiallyHeld | Consumed (a consumed sale is never "released") |
+/// AlreadyReleased. Never claims a release for a no-op.
+/// </param>
 public sealed record InventoryHeldReleaseResult(
     Guid ReservationId,
     decimal RequestedQuantity,
     decimal ReleasedQuantity,
-    string Status);
+    string Status,
+    string? Outcome = null);
 
 /// <summary>
 /// TB-265: narrow, quantity-safe seam used when an approved courier-origin return closes the corresponding order-line

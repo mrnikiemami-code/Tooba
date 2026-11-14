@@ -39,6 +39,16 @@ public sealed class DamagedGoodsResolution
     /// <summary>مقدار آسیب‌دیدهٔ تعیین‌تکلیف‌شده.</summary>
     public decimal Quantity { get; init; }
 
+    /// <summary>
+    /// TB-265-R2: quantity of this decision already settled into an approved courier-origin Returns case. It is the
+    /// durable remainder authority for a PARTIAL case: the decision keeps its immutable decided quantity and its
+    /// occurrence identity, while only the unselected part stays a live replacement obligation.
+    /// </summary>
+    public decimal CaseSettledQuantity { get; private set; }
+
+    /// <summary>TB-265-R2: the still-owed quantity of this decision (decided − settled into cases).</summary>
+    public decimal RemainingQuantity => Quantity - CaseSettledQuantity;
+
     /// <summary>تصمیم اپراتور.</summary>
     public DamagedResolutionOutcome Outcome { get; private set; }
 
@@ -281,9 +291,48 @@ public sealed class DamagedGoodsResolution
     /// </summary>
     public void MarkReturnCaseSettled(DateTimeOffset now)
     {
+        CaseSettledQuantity = Quantity;
         ReplacementShipmentId = null;
         ReplacementReservationId = null;
         Status = DamagedResolutionStatus.Cancelled;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// TB-265-R2: settles ONLY the selected portion of this decision into an approved Returns case.
+    /// <para>
+    /// The unselected remainder is NOT cancelled, refunded or released: it stays the same decision with the same
+    /// retained purpose-bound hold (now holding only the remainder, because the case released exactly its own
+    /// quantity), the same occurrence identity and a fresh attempt, so lawful re-preparation/replacement of the
+    /// remainder can still complete the order. The cancelled parcel allocation is dropped here, BEFORE the owning
+    /// cancellation, so a replayed cancellation cannot double-advance the attempt.
+    /// </para>
+    /// </summary>
+    /// <param name="quantity">The portion selected by the approved case (strictly smaller than the remainder).</param>
+    /// <param name="now">Owning clock instant.</param>
+    public void SettlePartialCase(decimal quantity, DateTimeOffset now)
+    {
+        if (quantity <= 0m || quantity >= RemainingQuantity)
+        {
+            throw new ContractOperationException("fulfillment.returns.partial_claim_quantity_invalid");
+        }
+
+        if (Status == DamagedResolutionStatus.Cancelled)
+        {
+            throw new ContractOperationException("fulfillment.damage.resolution_cancelled");
+        }
+
+        CaseSettledQuantity += quantity;
+        // The selected portion gets a NEW parcel attempt for the remainder; the old parcel allocation is detached.
+        if (ReplacementShipmentId is not null)
+        {
+            ReplacementShipmentId = null;
+            Attempt += 1;
+        }
+
+        Status = ReplacementReservationId is null
+            ? DamagedResolutionStatus.Recorded
+            : DamagedResolutionStatus.Reserved;
         UpdatedAt = now;
     }
 

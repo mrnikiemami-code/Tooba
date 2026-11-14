@@ -14,6 +14,7 @@ using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Fulfillment.Infrastructure.Returns;
 using Tooba.Inventory.Application.Orders;
 using Tooba.Inventory.Application.Ports;
+using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Contracts.Replacement;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Domain.Aggregates;
@@ -32,6 +33,7 @@ using Tooba.Persistence;
 using Tooba.Returns.Application.ReturnRequests.Commands;
 using Tooba.Returns.Application.ReturnRequests.Models;
 using Tooba.Returns.Application.ReturnRequests.Ports;
+using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Infrastructure.Directories;
 using Tooba.Returns.Infrastructure.Observability;
@@ -263,10 +265,14 @@ public sealed class CourierOriginReturns265RelationalTests
         var item = Assert.Single(approved.Items);
         Assert.Equal(ReturnItemDisposition.SaleableRestock, item.Disposition);
 
-        // A replay can never refund or restock a second time.
-        await Assert.ThrowsAnyAsync<Exception>(() => returns.Directory.ApproveAsync(
+        // TB-265-R2: a genuinely finished courier case answers its RECORDED completion instead of falling through
+        // into a second approval, and nothing is refunded or restocked again.
+        var replay = await returns.Directory.ApproveAsync(
             new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId),
-            CancellationToken.None));
+            CancellationToken.None);
+        Assert.Equal(ReturnRequestStatus.Completed, replay.Status);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, replay.ClosurePhase);
+        Assert.Equal(approved.ReleasedHeldQuantity, replay.ReleasedHeldQuantity);
         Assert.Equal(1, returns.RefundCalls);
         Assert.Single(returns.Restocked);
         Assert.Equal(7m, await StockOnHandAsync(fixture));
@@ -336,10 +342,12 @@ public sealed class CourierOriginReturns265RelationalTests
         Assert.Empty(returns.Restocked);
         Assert.Equal(ReturnItemDisposition.DamagedNonSaleable, Assert.Single(approved.Items).Disposition);
 
-        // Durable replay: nothing is released or refunded twice.
-        await Assert.ThrowsAnyAsync<Exception>(() => returns.Directory.ApproveAsync(
+        // Durable replay: nothing is released or refunded twice — the recorded completion is answered.
+        var replay = await returns.Directory.ApproveAsync(
             new ApproveReturnCommand(approved.ReturnRequestId, fixture.ActorUserId, fixture.SellerPartyId),
-            CancellationToken.None));
+            CancellationToken.None);
+        Assert.Equal(ReturnRequestStatus.Completed, replay.Status);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, replay.ClosurePhase);
         Assert.Equal(1, returns.RefundCalls);
         Assert.Equal(7m, await StockOnHandAsync(fixture));
         Assert.Equal(1m, approved.ReleasedHeldQuantity);
@@ -593,17 +601,24 @@ public sealed class CourierOriginReturns265RelationalTests
         await using var left = fixture.NewLease();
         await using var right = fixture.NewLease();
 
-        var results = await Task.WhenAll(
-            left.Release.ReleaseUnconsumedHeldAsync(
-                reservationId, 2m, $"tb265-j-left-{reservationId:N}", CancellationToken.None),
-            right.Release.ReleaseUnconsumedHeldAsync(
-                reservationId, 2m, $"tb265-j-right-{reservationId:N}", CancellationToken.None));
+        var leftKey = $"tb265-j-left-{reservationId:N}";
+        var rightKey = $"tb265-j-right-{reservationId:N}";
+        var raced = await Task.WhenAll(
+            left.Release.ReleaseUnconsumedHeldAsync(reservationId, 2m, leftKey, CancellationToken.None),
+            right.Release.ReleaseUnconsumedHeldAsync(reservationId, 2m, rightKey, CancellationToken.None));
+        var leftResult = raced[0];
+        var rightResult = raced[1];
 
-        // Serialized on the reservation row: the second context can only release what still remains.
-        var total = results.Sum(x => x.ReleasedQuantity);
+        // Serialized on the reservation row: the second context can only release what still remains. Which context
+        // wins is not deterministic, so the assertion is on the pair, never on a named side.
+        var total = leftResult.ReleasedQuantity + rightResult.ReleasedQuantity;
         Assert.Equal(3m, total);
-        Assert.Contains(results, x => x.ReleasedQuantity == 2m);
-        Assert.Contains(results, x => x.ReleasedQuantity == 1m);
+        Assert.Equal([1m, 2m], new[] { leftResult.ReleasedQuantity, rightResult.ReleasedQuantity }.OrderBy(x => x).ToArray());
+        var winner = leftResult.ReleasedQuantity == 2m ? leftResult : rightResult;
+        var loser = leftResult.ReleasedQuantity == 1m ? leftResult : rightResult;
+        // The winner asked for 2 of 3 and left the reservation partly held; the loser released the last unit.
+        Assert.Equal("PartiallyHeld", winner.Outcome);
+        Assert.Equal("Released", loser.Outcome);
 
         await using (var db = CreateInventoryDb(fixture.Connection))
         {
@@ -617,21 +632,534 @@ public sealed class CourierOriginReturns265RelationalTests
                 .SingleAsync(x => x.StockItemId == stockItemId);
             Assert.Equal(0m, position.Reserved);
             Assert.Equal(10m, position.OnHand);
-            Assert.Equal(2, await db.ReturnRestockInbox.AsNoTracking()
+            Assert.Equal(2, await db.HeldObligationReleases.AsNoTracking()
                 .CountAsync(x => x.ReservationId == reservationId));
         }
 
-        // Exact replay of the same key answers the recorded amount and writes nothing.
-        var replay = await left.Release.ReleaseUnconsumedHeldAsync(
-            reservationId, 2m, $"tb265-j-left-{reservationId:N}", CancellationToken.None);
-        var recorded = results.Single(x => x.ReleasedQuantity == 2m).ReleasedQuantity;
-        Assert.Equal(recorded, replay.ReleasedQuantity);
-        Assert.Equal("Replayed", replay.Status);
+        // Exact replay of the same key answers the recorded amount and writes nothing — per side, with that side's key.
+        var leftReplay = await left.Release.ReleaseUnconsumedHeldAsync(
+            reservationId, 2m, leftKey, CancellationToken.None);
+        Assert.Equal(leftResult.ReleasedQuantity, leftReplay.ReleasedQuantity);
+        Assert.Equal(leftResult.Outcome, leftReplay.Outcome);
+        Assert.Equal("Replayed", leftReplay.Status);
+
+        var rightReplay = await right.Release.ReleaseUnconsumedHeldAsync(
+            reservationId, 2m, rightKey, CancellationToken.None);
+        Assert.Equal(rightResult.ReleasedQuantity, rightReplay.ReleasedQuantity);
+        Assert.Equal(rightResult.Outcome, rightReplay.Outcome);
+        Assert.Equal("Replayed", rightReplay.Status);
+
+        // A changed requested amount under a recorded key is a typed conflict, never another side's answer.
+        await Assert.ThrowsAsync<ContractOperationException>(() => left.Release.ReleaseUnconsumedHeldAsync(
+            reservationId, 1m, leftKey, CancellationToken.None));
 
         fixture.Record(
             _output,
             $"J fulfillment={fixture.FulfillmentId} reservation={reservationId} held=3 "
-            + $"released=2+1 total=3 reserved=0 onHand=10 inbox=2 replay=Replayed consumedSale=Consumed");
+            + $"released=2+1 total=3 reserved=0 onHand=10 identities=2 replay=Replayed consumedSale=Consumed");
+    }
+
+    // ------------------------------------------------------------------ L: exact release identity (TB-265-R2)
+
+    [Fact]
+    public async Task L_one_release_request_answers_only_its_own_identity_and_refuses_a_changed_one()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("L", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+        var (stockItemId, reservationId) = await SeedHoldAsync(fixture, 5m, 3m, "L");
+        // A reservation this request never named. Answering it with the recorded effect would be exactly the defect.
+        var otherReservationId = Guid.NewGuid();
+
+        await using var lease = fixture.NewLease();
+        var key = $"tb265-l-release-{reservationId:N}";
+
+        var first = await lease.Release.ReleaseUnconsumedHeldAsync(
+            reservationId, 2m, key, CancellationToken.None);
+
+        // The request asked for 2 of 3 — the effect is exactly 2 and the reservation is truthfully still partly held.
+        Assert.Equal(2m, first.ReleasedQuantity);
+        Assert.Equal("PartiallyHeld", first.Status);
+        Assert.Equal("PartiallyHeld", first.Outcome);
+
+        // EXACT replay (same reservation + same requested amount) answers the recorded ACTUAL amount, not the
+        // remainder that is left now.
+        var replay = await lease.Release.ReleaseUnconsumedHeldAsync(
+            reservationId, 2m, key, CancellationToken.None);
+        Assert.Equal("Replayed", replay.Status);
+        Assert.Equal(2m, replay.ReleasedQuantity);
+        Assert.Equal("PartiallyHeld", replay.Outcome);
+
+        // A CHANGED requested amount under the same key is a typed conflict with zero writes.
+        var changedQuantity = await Assert.ThrowsAsync<ContractOperationException>(
+            () => lease.Release.ReleaseUnconsumedHeldAsync(reservationId, 3m, key, CancellationToken.None));
+        Assert.Equal(InventoryErrorCodes.HeldReleaseIntentConflict, changedQuantity.Code);
+
+        // A CHANGED reservation under the same key is a typed conflict with zero writes too.
+        var changedReservation = await Assert.ThrowsAsync<ContractOperationException>(
+            () => lease.Release.ReleaseUnconsumedHeldAsync(otherReservationId, 2m, key, CancellationToken.None));
+        Assert.Equal(InventoryErrorCodes.HeldReleaseIntentConflict, changedReservation.Code);
+
+        await using (var db = CreateInventoryDb(fixture.Connection))
+        {
+            var reservation = await db.Reservations.AsNoTracking().SingleAsync(x => x.ReservationId == reservationId);
+            Assert.Equal(1m, reservation.Quantity);
+            Assert.Equal(StockReservationStatus.Held, reservation.Status);
+            Assert.Equal(0, await db.Reservations.AsNoTracking()
+                .CountAsync(x => x.ReservationId == otherReservationId));
+            var position = await db.Positions.AsNoTracking().SingleAsync(x => x.StockItemId == stockItemId);
+            Assert.Equal(1m, position.Reserved);
+            Assert.Equal(5m, position.OnHand);
+            Assert.Equal(1, await db.HeldObligationReleases.AsNoTracking()
+                .CountAsync(x => x.IdempotencyKey == key));
+        }
+
+        // A CONSUMED original sale is a truthful no-op: it is never reported as "Released".
+        var consumedReservationId = Guid.NewGuid();
+        await using (var seed = CreateInventoryDb(fixture.Connection))
+        {
+            var consumed = StockReservation.Hold(
+                consumedReservationId, stockItemId, 2m, "TB265-L consumed", $"tb265-l-consumed-{consumedReservationId:N}",
+                new DateTimeOffset(2026, 11, 13, 7, 0, 0, TimeSpan.Zero), null);
+            consumed.MoveTo(StockReservationStatus.Consumed, new DateTimeOffset(2026, 11, 13, 7, 5, 0, TimeSpan.Zero));
+            seed.Reservations.Add(consumed);
+            await seed.SaveChangesAsync();
+        }
+
+        var consumedNoOp = await lease.Release.ReleaseUnconsumedHeldAsync(
+            consumedReservationId, 1m, $"tb265-l-consumed-release-{consumedReservationId:N}", CancellationToken.None);
+        Assert.Equal(0m, consumedNoOp.ReleasedQuantity);
+        Assert.Equal("Consumed", consumedNoOp.Status);
+        Assert.Equal("Consumed", consumedNoOp.Outcome);
+
+        fixture.Record(
+            _output,
+            $"L fulfillment={fixture.FulfillmentId} reservation={reservationId} requested=2 released=2 outcome=PartiallyHeld "
+            + $"replayActual=2 changedQuantity=held_release.intent_conflict changedReservation=held_release.intent_conflict "
+            + $"holdLeft=1 reserved=1 onHand=5 identities=1 otherTouched=0 consumed=Consumed released=0");
+    }
+
+    // ------------------------------------------------------------------ M: rollback window and exact retry
+
+    [Fact]
+    public async Task M_a_release_that_never_commits_leaves_no_identity_and_its_exact_retry_effects_once()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("M", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+        var (stockItemId, reservationId) = await SeedHoldAsync(fixture, 4m, 3m, "M");
+        var key = $"tb265-m-release-{reservationId:N}";
+
+        // A failure BETWEEN the position update and the commit: the adapter joins the caller's transaction, so an
+        // abandoned transaction must leave reservation, Reserved and the durable identity exactly unchanged.
+        await using (var db = CreateInventoryDb(fixture.Connection))
+        {
+            var release = new InventoryReturnObligationRelease(db, new OpenInventoryGuard(), new SystemUtcClock());
+            await using var abandoned = await db.Database.BeginTransactionAsync();
+            var inside = await release.ReleaseUnconsumedHeldAsync(reservationId, 1m, key, CancellationToken.None);
+            Assert.Equal(1m, inside.ReleasedQuantity);
+            await abandoned.RollbackAsync();
+        }
+
+        await using (var db = CreateInventoryDb(fixture.Connection))
+        {
+            // Independent context: the effect never happened.
+            var reservation = await db.Reservations.AsNoTracking().SingleAsync(x => x.ReservationId == reservationId);
+            Assert.Equal(3m, reservation.Quantity);
+            Assert.Equal(StockReservationStatus.Held, reservation.Status);
+            var position = await db.Positions.AsNoTracking().SingleAsync(x => x.StockItemId == stockItemId);
+            Assert.Equal(3m, position.Reserved);
+            Assert.Equal(4m, position.OnHand);
+            Assert.Equal(0, await db.HeldObligationReleases.AsNoTracking()
+                .CountAsync(x => x.IdempotencyKey == key));
+        }
+
+        // The exact retry performs the effect once...
+        await using (var db = CreateInventoryDb(fixture.Connection))
+        {
+            var release = new InventoryReturnObligationRelease(db, new OpenInventoryGuard(), new SystemUtcClock());
+            var retried = await release.ReleaseUnconsumedHeldAsync(reservationId, 1m, key, CancellationToken.None);
+            Assert.Equal(1m, retried.ReleasedQuantity);
+            Assert.Equal("PartiallyHeld", retried.Status);
+        }
+
+        // ...and any further exact call replays the same recorded amount.
+        await using (var db = CreateInventoryDb(fixture.Connection))
+        {
+            var release = new InventoryReturnObligationRelease(db, new OpenInventoryGuard(), new SystemUtcClock());
+            var replays = await release.ReleaseUnconsumedHeldAsync(reservationId, 1m, key, CancellationToken.None);
+            Assert.Equal("Replayed", replays.Status);
+            Assert.Equal(1m, replays.ReleasedQuantity);
+
+            var reservation = await db.Reservations.AsNoTracking().SingleAsync(x => x.ReservationId == reservationId);
+            Assert.Equal(2m, reservation.Quantity);
+            var position = await db.Positions.AsNoTracking().SingleAsync(x => x.StockItemId == stockItemId);
+            Assert.Equal(2m, position.Reserved);
+            Assert.Equal(4m, position.OnHand);
+            Assert.Equal(1, await db.HeldObligationReleases.AsNoTracking()
+                .CountAsync(x => x.IdempotencyKey == key));
+        }
+
+        fixture.Record(
+            _output,
+            $"M fulfillment={fixture.FulfillmentId} reservation={reservationId} abandonedCommit=no-effect "
+            + $"hold=3 reserved=3 identities=0 retryReleased=1 finalHold=2 finalReserved=2 identities=1 replay=Replayed");
+    }
+
+    // ------------------------------------------------------------------ N: one durable decision per case
+
+    [Fact]
+    public async Task N_concurrent_approve_and_reject_share_exactly_one_durable_decision()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("N", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+        await using var creator = fixture.NewReturns();
+
+        var created = await creator.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId,
+            fixture.SourceShipmentId,
+            fixture.ActorUserId,
+            $"tb265-n-1-{fixture.FulfillmentId:N}",
+            $"courier-return:tb265-n-1-{fixture.FulfillmentId:N}",
+            "رقابت تصمیم",
+            [(fixture.LineAId, 1m, ReturnItemCondition.Usable)],
+            CancellationToken.None);
+        Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+        var caseId = created.Snapshot!.ReturnRequestId;
+
+        await using var approver = fixture.NewReturns();
+        await using var rejecter = fixture.NewReturns();
+
+        async Task<string> ApproveOutcomeAsync()
+        {
+            try
+            {
+                await approver.Directory.ApproveAsync(
+                    new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId),
+                    CancellationToken.None);
+                return "Approved";
+            }
+            catch (ContractOperationException refused)
+            {
+                return refused.Code;
+            }
+        }
+
+        async Task<string> RejectOutcomeAsync()
+        {
+            try
+            {
+                await rejecter.Directory.RejectAsync(
+                    new RejectReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId, "tb265-r2-race"),
+                    CancellationToken.None);
+                return "Rejected";
+            }
+            catch (ContractOperationException refused)
+            {
+                return refused.Code;
+            }
+        }
+
+        var outcomes = await Task.WhenAll(ApproveOutcomeAsync(), RejectOutcomeAsync());
+        var winner = Assert.Single(outcomes.Where(x => x is "Approved" or "Rejected"));
+        var loser = Assert.Single(outcomes.Where(x => x is not ("Approved" or "Rejected")));
+        Assert.Contains(loser, new[] { ReturnsErrorCodes.AlreadyApproved, ReturnsErrorCodes.AlreadyRejected });
+
+        // Exactly ONE durable decision row exists, and it is the winner's.
+        await using (var db = CreateReturnsDb(Connection))
+        {
+            var rows = await db.ReturnDecisions.AsNoTracking()
+                .Where(x => x.ReturnRequestId == caseId)
+                .ToListAsync(CancellationToken.None);
+            var decision = Assert.Single(rows);
+            Assert.Equal(winner == "Approved" ? "Approve" : "Reject", decision.Decision);
+            Assert.Equal(fixture.ActorUserId, decision.DecidedByUserId);
+        }
+
+        // The loser performed NOTHING: no money, no claim release, no opposite status.
+        var refundCalls = approver.RefundCalls + rejecter.RefundCalls;
+        await using (var reader = fixture.NewReturns())
+        {
+            var final = await reader.Directory.GetAsync(caseId, CancellationToken.None);
+            var claim = await reader.Lease.Source.GetClaimAsync(final!.SourceClaimId!.Value, CancellationToken.None);
+            if (winner == "Approved")
+            {
+                Assert.Equal(ReturnRequestStatus.Completed, final.Status);
+                Assert.Equal(CourierOriginClosurePhase.RefundReleased, final.ClosurePhase);
+                Assert.Equal(1, refundCalls);
+                Assert.Equal(FulfillmentContracts.CourierReturnClaimStatus.Approved, claim!.Status);
+            }
+            else
+            {
+                Assert.Equal(ReturnRequestStatus.Rejected, final.Status);
+                Assert.Equal(CourierOriginClosurePhase.None, final.ClosurePhase);
+                Assert.Equal(0, refundCalls);
+                Assert.Equal(FulfillmentContracts.CourierReturnClaimStatus.Rejected, claim!.Status);
+            }
+        }
+
+        fixture.Record(
+            _output,
+            $"N fulfillment={fixture.FulfillmentId} case={caseId} winner={winner} loser={loser} "
+            + $"decisions=1 refundCalls={refundCalls}");
+    }
+
+    // ------------------------------------------------------------------ O: finished case answers its completion
+
+    [Fact]
+    public async Task O_a_finished_courier_case_answers_its_recorded_completion_without_a_second_attempt()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("O", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+        await using var creator = fixture.NewReturns();
+
+        var created = await creator.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId,
+            fixture.SourceShipmentId,
+            fixture.ActorUserId,
+            $"tb265-o-1-{fixture.FulfillmentId:N}",
+            $"courier-return:tb265-o-1-{fixture.FulfillmentId:N}",
+            "تکمیل‌شده",
+            [(fixture.LineAId, 1m, ReturnItemCondition.Usable)],
+            CancellationToken.None);
+        Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+        var caseId = created.Snapshot!.ReturnRequestId;
+
+        var approved = await creator.Directory.ApproveAsync(
+            new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId),
+            CancellationToken.None);
+        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, approved.ClosurePhase);
+        Assert.Equal(1, creator.RefundCalls);
+
+        int attemptsBefore;
+        await using (var db = CreateReturnsDb(Connection))
+        {
+            attemptsBefore = await db.RefundAttempts.AsNoTracking()
+                .CountAsync(x => x.ReturnRequestId == caseId, CancellationToken.None);
+        }
+        Assert.Equal(1, attemptsBefore);
+
+        // A DIFFERENT operator (independent context) approves the already finished case: it answers the recorded
+        // completion, mints no second attempt and moves no money.
+        await using var other = fixture.NewReturns();
+        var replay = await other.Directory.ApproveAsync(
+            new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId),
+            CancellationToken.None);
+
+        Assert.Equal(ReturnRequestStatus.Completed, replay.Status);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, replay.ClosurePhase);
+        Assert.Equal(approved.ReleasedHeldQuantity, replay.ReleasedHeldQuantity);
+        Assert.Equal(0, other.RefundCalls);
+        Assert.Empty(other.Restocked);
+        await using (var db = CreateReturnsDb(Connection))
+        {
+            Assert.Equal(1, await db.RefundAttempts.AsNoTracking()
+                .CountAsync(x => x.ReturnRequestId == caseId, CancellationToken.None));
+            Assert.Equal(1, await db.ReturnDecisions.AsNoTracking()
+                .CountAsync(x => x.ReturnRequestId == caseId, CancellationToken.None));
+        }
+
+        fixture.Record(
+            _output,
+            $"O fulfillment={fixture.FulfillmentId} case={caseId} status=Completed phase=RefundReleased "
+            + $"attempts=1 refunds=1 replayRefunds=0 replayAttempts=1");
+    }
+
+    // ------------------------------------------------------------------ P: partial selection keeps the remainder
+
+    [Fact]
+    public async Task P_a_partial_case_selection_keeps_the_unselected_replacement_obligation_and_its_hold()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("P", usableA: 0m, damagedA: 3m, dispatchA: 3m);
+        await using var returns = fixture.NewReturns();
+
+        // A recorded damaged decision over the WHOLE received quantity, already funded by its own Created parcel
+        // and its own purpose-bound hold (order already dispatched in the fixture).
+        var replacement = await returns.Fulfillment.ResolveReplacementAsync(fixture);
+        Assert.NotNull(replacement.ReplacementShipmentId);
+        Assert.NotNull(replacement.ReplacementReservationId);
+        var replacementShipmentId = replacement.ReplacementShipmentId!.Value;
+        var replacementReservationId = replacement.ReplacementReservationId!.Value;
+        Assert.Equal(3m, await ReservationQuantityAsync(fixture, replacementReservationId));
+
+        // The case deliberately selects ONE of the three damaged units.
+        var created = await returns.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId,
+            fixture.SourceShipmentId,
+            fixture.ActorUserId,
+            $"tb265-p-1-{fixture.FulfillmentId:N}",
+            $"courier-return:tb265-p-1-{fixture.FulfillmentId:N}",
+            "انتخاب بخشی از تصمیم جایگزینی",
+            [(fixture.LineAId, 1m, ReturnItemCondition.Damaged)],
+            CancellationToken.None);
+        Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+        var claimed = await returns.Lease.Source.GetClaimAsync(
+            (await returns.Directory.GetAsync(created.Snapshot!.ReturnRequestId, CancellationToken.None))!.SourceClaimId!.Value,
+            CancellationToken.None);
+        var allocationPlan = await returns.Lease.Source.EnsureAllocationsAsync(
+            claimed!.ClaimId, created.Snapshot.ReturnRequestId, fixture.ActorUserId, CancellationToken.None);
+        Assert.Null(allocationPlan.BlockerCode);
+        Assert.False(allocationPlan.Settled);
+        Assert.Equal(0, returns.RefundCalls);
+
+        // The decided branch is still held until the approval actually settles it.
+        Assert.Equal(StockReservationStatus.Held, await ReservationStatusAsync(fixture, replacementReservationId));
+
+        var approved = await returns.Directory.ApproveAsync(
+            new ApproveReturnCommand(created.Snapshot.ReturnRequestId, fixture.ActorUserId, fixture.SellerPartyId),
+            CancellationToken.None);
+
+        // Only the selected unit was settled and released; the other two remain owed to the SAME order.
+        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, approved.ClosurePhase);
+        Assert.Equal(1m, approved.ReleasedHeldQuantity);
+        Assert.Equal(1, returns.RefundCalls);
+        Assert.Equal(2m, await ReservationQuantityAsync(fixture, replacementReservationId));
+        Assert.Equal(StockReservationStatus.Held, await ReservationStatusAsync(fixture, replacementReservationId));
+        // The cancelled parcel allocation is gone, so dispatch of the remaining units is re-preparable.
+        Assert.Equal(ShipmentStatus.Cancelled, await ShipmentStatusAsync(fixture, replacementShipmentId));
+
+        await using (var db = CreateFulfillmentDb(Connection))
+        {
+            var resolution = await db.DamagedResolutions.AsNoTracking()
+                .SingleAsync(x => x.FulfillmentId == fixture.FulfillmentId, CancellationToken.None);
+            Assert.Equal(3m, resolution.Quantity);
+            Assert.Equal(1m, resolution.CaseSettledQuantity);
+            Assert.Equal(2m, resolution.RemainingQuantity);
+            Assert.Equal(replacementReservationId, resolution.ReplacementReservationId);
+            Assert.Null(resolution.ReplacementShipmentId);
+        }
+
+        var after = await returns.Fulfillment.Directory.GetAsync(fixture.FulfillmentId, CancellationToken.None);
+        // Nothing is left UNDECIDED: the case consumed 1 and the retained decision still owns the other 2, so the
+        // damaged units are fully accounted for without pretending the remainder was refunded or released.
+        Assert.Equal(0m, after!.Items.Single(x => x.OrderLineId == fixture.LineAId).OutstandingDamagedQuantity);
+        Assert.Equal(0m, after.Items.Single(x => x.OrderLineId == fixture.LineAId).ResendableQuantity);
+
+        // Damage is never saleable, and money was released exactly once.
+        Assert.Empty(returns.Restocked);
+        Assert.Equal(ReturnItemDisposition.DamagedNonSaleable, Assert.Single(approved.Items).Disposition);
+        Assert.Equal(7m, await StockOnHandAsync(fixture));
+
+        // An exact approval replay resumes the recorded completion: no second release, no second refund.
+        var replay = await returns.Directory.ApproveAsync(
+            new ApproveReturnCommand(approved.ReturnRequestId, fixture.ActorUserId, fixture.SellerPartyId),
+            CancellationToken.None);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, replay.ClosurePhase);
+        Assert.Equal(1, returns.RefundCalls);
+        Assert.Equal(2m, await ReservationQuantityAsync(fixture, replacementReservationId));
+
+        // The retained remainder is still a lawful replacement obligation: the SAME recorded decision re-prepares a
+        // NEW parcel for exactly the two unselected units, funded by the SAME retained hold.
+        var remainder = await returns.Fulfillment.Directory.ResolveDamagedGoodsAsync(
+            fixture.FulfillmentId,
+            fixture.ActorUserId,
+            fixture.SourceShipmentId,
+            fixture.LineAId,
+            3m,
+            Tooba.Fulfillment.Domain.ValueObjects.DamagedResolutionOutcome.Replacement,
+            $"tb265-replacement-{fixture.SourceShipmentId:N}",
+            null,
+            CancellationToken.None);
+        Assert.Null(remainder.BlockerCode);
+        Assert.NotNull(remainder.ReplacementShipmentId);
+        Assert.NotEqual(replacementShipmentId, remainder.ReplacementShipmentId!.Value);
+        Assert.Equal(replacementReservationId, remainder.ReplacementReservationId);
+        Assert.Equal(2m, remainder.Snapshot.Shipments
+            .Single(x => x.ShipmentId == remainder.ReplacementShipmentId!.Value).Items.Sum(x => x.Quantity));
+        // The sibling line is untouched by the whole partial-return cycle.
+        Assert.Equal(0m, remainder.Snapshot.Items.Single(x => x.OrderLineId == fixture.LineBId).ResendableQuantity);
+
+        fixture.Record(
+            _output,
+            $"P fulfillment={fixture.FulfillmentId} case={approved.ReturnRequestId} selected=1 decided=3 "
+            + $"caseSettled=1 remaining=2 hold={replacementReservationId} holdLeft=2 status=Held "
+            + $"parcel={replacementShipmentId} parcelStatus=Cancelled releasedHeld=1 refunds=1 restocks=0 onHand=7 "
+            + $"repreparedParcel={remainder.ReplacementShipmentId} repreparparedQty=2 replayRefunds=1 siblingB=0");
+    }
+
+    // ------------------------------------------------------------------ Q: two approvals, one financial attempt
+
+    [Fact]
+    public async Task Q_two_concurrent_approvals_share_one_attempt_and_mint_no_second_money_call_key()
+    {
+        if (Connection is null)
+        {
+            return;
+        }
+
+        var fixture = await CreateReturnedFixtureAsync("Q", usableA: 1m, damagedA: 0m, dispatchA: 3m);
+        await using var creator = fixture.NewReturns();
+
+        var created = await creator.Directory.CreateCourierOriginAsync(
+            fixture.FulfillmentId,
+            fixture.SourceShipmentId,
+            fixture.ActorUserId,
+            $"tb265-q-1-{fixture.FulfillmentId:N}",
+            $"courier-return:tb265-q-1-{fixture.FulfillmentId:N}",
+            "تأیید هم‌زمان",
+            [(fixture.LineAId, 1m, ReturnItemCondition.Usable)],
+            CancellationToken.None);
+        Assert.True(created.Snapshot is not null, created.Conflict ?? "created snapshot missing");
+        var caseId = created.Snapshot!.ReturnRequestId;
+
+        await using var first = fixture.NewReturns();
+        await using var second = fixture.NewReturns();
+
+        // Deterministic barrier: the FIRST approval is held inside the money step while the SECOND one runs the whole
+        // approval path concurrently against the same case.
+        first.Refunds.HoldFirstCall = true;
+        var firstApproval = first.Directory.ApproveAsync(
+            new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId),
+            CancellationToken.None);
+        await first.Refunds.Entered;
+
+        var secondApproval = await second.Directory.ApproveAsync(
+            new ApproveReturnCommand(caseId, fixture.ActorUserId, fixture.SellerPartyId),
+            CancellationToken.None);
+        first.Refunds.Release();
+        var firstResult = await firstApproval;
+
+        // BOTH approvals answer the same completed case, and the provider saw exactly ONE attempt identity.
+        Assert.Equal(ReturnRequestStatus.Completed, secondApproval.Status);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, secondApproval.ClosurePhase);
+        Assert.Equal(ReturnRequestStatus.Completed, firstResult.Status);
+        Assert.Equal(CourierOriginClosurePhase.RefundReleased, firstResult.ClosurePhase);
+
+        var keys = first.Refunds.Keys.Concat(second.Refunds.Keys).Distinct().ToList();
+        Assert.Single(keys);
+        await using (var db = CreateReturnsDb(Connection))
+        {
+            Assert.Equal(1, await db.RefundAttempts.AsNoTracking()
+                .CountAsync(x => x.ReturnRequestId == caseId, CancellationToken.None));
+            Assert.Equal(1, await db.ReturnDecisions.AsNoTracking()
+                .CountAsync(x => x.ReturnRequestId == caseId, CancellationToken.None));
+        }
+
+        fixture.Record(
+            _output,
+            $"Q fulfillment={fixture.FulfillmentId} case={caseId} approvals=2 status=Completed phase=RefundReleased "
+            + $"distinctKeys=1 keys={string.Join(',', keys)} attempts=1 decisions=1");
     }
 
     // ------------------------------------------------------------------ K: money and disposition are separate
@@ -1029,6 +1557,29 @@ public sealed class CourierOriginReturns265RelationalTests
             new UuidV7IdGenerator(),
             new ModuleCallTracer());
 
+    /// <summary>
+    /// TB-265-R2: seeds ONE dedicated <see cref="StockReservationStatus.Held"/> reservation over a fresh stock item, the
+    /// exact shape an active order hold has when its line obligation closes. Returns the stock item and reservation.
+    /// </summary>
+    private static async Task<(Guid StockItemId, Guid ReservationId)> SeedHoldAsync(
+        Fixture fixture, decimal onHand, decimal held, string tag)
+    {
+        var stockItemId = Guid.NewGuid();
+        var offerId = Guid.NewGuid();
+        var reservationId = Guid.NewGuid();
+        var now = new DateTimeOffset(2026, 11, 13, 7, 0, 0, TimeSpan.Zero);
+        await using var db = CreateInventoryDb(fixture.Connection);
+        var position = StockPosition.Open(stockItemId, offerId, Guid.NewGuid(), Guid.NewGuid(), now);
+        position.SyncQuantities(onHand, held, now);
+        var hold = StockReservation.Hold(
+            reservationId, stockItemId, held, $"TB265-{tag} hold", $"tb265-{tag.ToLowerInvariant()}-{reservationId:N}",
+            now, null);
+        db.Positions.Add(position);
+        db.Reservations.Add(hold);
+        await db.SaveChangesAsync();
+        return (stockItemId, reservationId);
+    }
+
     private static async Task<decimal> StockOnHandAsync(Fixture fixture)
     {
         await using var db = CreateInventoryDb(fixture.Connection);
@@ -1044,6 +1595,15 @@ public sealed class CourierOriginReturns265RelationalTests
         return await db.Reservations.AsNoTracking()
             .Where(x => x.ReservationId == reservationId)
             .Select(x => x.Status)
+            .SingleAsync();
+    }
+
+    private static async Task<decimal> ReservationQuantityAsync(Fixture fixture, Guid reservationId)
+    {
+        await using var db = CreateInventoryDb(fixture.Connection);
+        return await db.Reservations.AsNoTracking()
+            .Where(x => x.ReservationId == reservationId)
+            .Select(x => x.Quantity)
             .SingleAsync();
     }
 
@@ -1079,15 +1639,50 @@ public sealed class CourierOriginReturns265RelationalTests
         }
     }
 
+    /// <summary>
+    /// TB-265-R2: a controlled money port. It records the exact idempotency key of every call so two approvals can be
+    /// proven to share ONE financial attempt, and it can hold the FIRST call at a deterministic barrier so a racing
+    /// approval really runs while the money step is still in flight.
+    /// </summary>
     private sealed class ControlledRefundGateway : IPaymentRefundGateway
     {
-        public int Calls { get; private set; }
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _calls;
 
-        public Task<GatewayRefundResult> RefundAsync(
+        /// <summary>Keys actually presented to the provider, in call order.</summary>
+        public List<string> Keys { get; } = [];
+
+        /// <summary>When true the FIRST call blocks until <see cref="Release"/> is called.</summary>
+        public bool HoldFirstCall { get; set; }
+
+        public int Calls => Volatile.Read(ref _calls);
+
+        /// <summary>Completes when the first refund call has reached the provider seam.</summary>
+        public Task Entered => _entered.Task;
+
+        /// <summary>Lets the held first call finish.</summary>
+        public void Release() => _release.TrySetResult();
+
+        public async Task<GatewayRefundResult> RefundAsync(
             Guid paymentId, decimal amount, string currency, string idempotencyKey, CancellationToken cancellationToken)
         {
-            Calls++;
-            return Task.FromResult(new GatewayRefundResult(true, $"tb265-refund-{Calls}", null));
+            var call = Interlocked.Increment(ref _calls);
+            lock (Keys)
+            {
+                Keys.Add(idempotencyKey);
+            }
+
+            if (call == 1)
+            {
+                _entered.TrySetResult();
+                if (HoldFirstCall)
+                {
+                    await _release.Task;
+                }
+            }
+
+            return new GatewayRefundResult(true, $"tb265-refund-{call}", null);
         }
     }
 

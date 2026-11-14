@@ -314,7 +314,7 @@ public sealed partial class FulfillmentDirectory
         var damaged = DamagedReturnedQuantity(receiptItems, orderLineId);
         var committed = resolutions
             .Where(r => r.OrderLineId == orderLineId && r.Status != DamagedResolutionStatus.Cancelled)
-            .Sum(r => r.Quantity);
+            .Sum(r => r.RemainingQuantity);
         // TB-265: damaged quantity funded to a courier-origin Returns case is not available to a decision.
         var claimed = capacityClaims
             .Where(c => c.OrderLineId == orderLineId && c.Condition == CourierReturnClaimCondition.Damaged)

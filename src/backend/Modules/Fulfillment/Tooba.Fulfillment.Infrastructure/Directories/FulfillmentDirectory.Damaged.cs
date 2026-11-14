@@ -103,7 +103,7 @@ public sealed partial class FulfillmentDirectory
             {
                 var reserved = await _inventory.ReserveReplacementReservationAsync(
                     originalReservationId.Value,
-                    resolution.Quantity,
+                    resolution.RemainingQuantity,
                     resolution.ReservationKey,
                     $"damaged-resolution:{resolution.DamagedGoodsResolutionId:N}",
                     cancellationToken);

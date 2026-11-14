@@ -215,4 +215,125 @@ public sealed class CourierReturnClaim265Tests
         // The claim never borrows from, or lends to, an unrelated line.
         Assert.Equal(0m, unit.ResendableQuantity(Guid.NewGuid(), line));
     }
+
+    /// <summary>
+    /// TB-265-R2: a courier-origin case may select LESS than a recorded damaged-goods decision. The settlement then
+    /// consumes exactly its own portion and the unselected remainder stays the SAME live decision with its retained
+    /// hold — the remaining obligation of the paid order is never cancelled, refunded or silently released.
+    /// </summary>
+    [Fact]
+    public void A_partial_case_settlement_keeps_the_unselected_replacement_obligation()
+    {
+        var line = Guid.NewGuid();
+        var groupId = Guid.NewGuid();
+        var sellerPartyId = Guid.NewGuid();
+        var unit = FulfillmentUnit.CreateFromPaidOrder(
+            Fulfillment,
+            () => Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            sellerPartyId,
+            Guid.NewGuid(),
+            "گیرندهٔ آزمون ۲۶۵",
+            "09120000065",
+            "تهران",
+            "تهران",
+            "نشانی آزمون تسک ۲۶۵",
+            "1234567891",
+            "post",
+            "پیشتاز",
+            [(line, 3m, (Guid?)null)],
+            Now,
+            [
+                new FulfillmentShippingGroupPlan(
+                    groupId,
+                    sellerPartyId,
+                    "post",
+                    null,
+                    null,
+                    "پیشتاز",
+                    null,
+                    DateOnly.FromDateTime(Now.UtcDateTime),
+                    null,
+                    null,
+                    1,
+                    [line]),
+            ]);
+
+        unit.MarkProcessing(Now);
+        unit.MarkPacked(Now);
+        var shipment = unit.CreateShipment(
+            Guid.NewGuid(),
+            () => Guid.NewGuid(),
+            "پست",
+            [(line, 3m)],
+            Now,
+            "post",
+            "پیشتاز",
+            shippingGroupId: groupId);
+        unit.AssignTracking(shipment.ShipmentId, "TRK-TB265-R2", Now);
+        unit.ApplyShipmentDispatched(shipment.ShipmentId, Now);
+        unit.RecordShipmentNonDelivery(shipment.ShipmentId, "customer_unavailable", null, Actor, Now.AddHours(1));
+        unit.StartShipmentReturn(shipment.ShipmentId, Actor, Now.AddHours(2));
+        unit.RecordReturnReceipt(
+            Guid.NewGuid(),
+            () => Guid.NewGuid(),
+            shipment.ShipmentId,
+            Actor,
+            [(line, 3m, ReturnReceiptCondition.Damaged)],
+            Now.AddHours(3),
+            null,
+            Now.AddHours(3));
+
+        var resolutionId = Guid.NewGuid();
+        var resolution = unit.RecordDamagedResolution(
+            resolutionId,
+            shipment.ShipmentId,
+            line,
+            3m,
+            DamagedResolutionOutcome.Replacement,
+            "tb265-r2-partial",
+            Actor,
+            null,
+            Now.AddHours(4));
+        var heldReservationId = Guid.NewGuid();
+        unit.AttachDamagedResolutionReservation(resolutionId, heldReservationId, Now.AddHours(4));
+        Assert.Equal(3m, resolution.RemainingQuantity);
+
+        // The approved case selects ONE of the three decided units.
+        resolution.SettlePartialCase(1m, Now.AddHours(5));
+
+        // Decided quantity and occurrence identity are immutable history: the SAME reviewed occurrence answers the
+        // SAME decision instead of minting a second one.
+        Assert.Equal(3m, resolution.Quantity);
+        var sameOccurrence = unit.RecordDamagedResolution(
+            Guid.NewGuid(),
+            shipment.ShipmentId,
+            line,
+            3m,
+            DamagedResolutionOutcome.Replacement,
+            "tb265-r2-partial",
+            Actor,
+            null,
+            Now.AddHours(5));
+        Assert.Equal(resolutionId, sameOccurrence.DamagedGoodsResolutionId);
+        // Exactly the selected portion settled; the OTHER TWO units are still owed to the order.
+        Assert.Equal(1m, resolution.CaseSettledQuantity);
+        Assert.Equal(2m, resolution.RemainingQuantity);
+        // The settled unit is accounted for by the case's own source claim (loaded by the owning loader), so nothing
+        // is left undecided and the two retained units are the decision's own remaining obligation.
+        unit.AttachLoadedReturnCapacityClaims(
+        [
+            new ReturnedCapacityClaim(shipment.ShipmentId, line, 1m, CourierReturnClaimCondition.Damaged),
+        ]);
+        Assert.Equal(0m, unit.OutstandingDamagedQuantity(shipment.ShipmentId, line));
+        Assert.False(unit.HasOutstandingDamagedQuantity(shipment.ShipmentId));
+        // The decision is neither cancelled nor fulfilled, and its purpose-bound hold is retained.
+        Assert.Equal(DamagedResolutionStatus.Reserved, resolution.Status);
+        Assert.Equal(heldReservationId, resolution.ReplacementReservationId);
+
+        // Only the remainder can be settled afterwards; the settled unit can never fund a second branch.
+        Assert.Throws<ContractOperationException>(() => resolution.SettlePartialCase(2m, Now.AddHours(6)));
+        Assert.Throws<ContractOperationException>(() => resolution.SettlePartialCase(0m, Now.AddHours(6)));
+    }
 }

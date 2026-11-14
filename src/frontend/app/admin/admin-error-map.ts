@@ -684,6 +684,18 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "مصرف رزرو با موجودی هم‌خوان نبود.",
     en: "Reservation consumption did not match stock quantities.",
   },
+  "inventory.reservation.release_mismatch": {
+    fa: "آزادسازی رزرو با موجودی هم‌خوان نبود؛ وضعیت رزرو این سفارش را بررسی کنید.",
+    en: "The reservation release did not match stock quantities; review this order's reservation.",
+  },
+  "inventory.held_release.intent_conflict": {
+    fa: "این درخواست آزادسازی با درخواست ثبت‌شدهٔ قبلی هم‌خوان نیست (رزرو یا مقدار متفاوت است). صفحه را تازه کنید و دوباره بررسی کنید.",
+    en: "This release request does not match the recorded one (different reservation or quantity). Refresh and review again.",
+  },
+  "inventory.return_restock.invalid": {
+    fa: "درخواست بازگشت کالا به موجودی معتبر نیست؛ مقدار و وضعیت رزرو را بررسی کنید.",
+    en: "The return-restock request is not valid; check the quantity and reservation state.",
+  },
   "order.operational_group.consolidate_not_marketplace": {
     fa: "تجمیع فقط وقتی ارسال بر عهدهٔ مارکت‌پلیس است مجاز است.",
     en: "Consolidation is allowed only when Marketplace owns the delivery responsibility.",
@@ -1199,10 +1211,6 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   "fulfillment.returns.claim_concurrency_conflict": {
     fa: "هم‌زمانی در ثبت ادعا رخ داد؛ دوباره تلاش کنید.",
     en: "A concurrency conflict occurred while recording the claim; try again.",
-  },
-  "fulfillment.returns.replacement_partial_claim_unsupported": {
-    fa: "ادعای بخشی از یک مرسولهٔ جایگزین پشتیبانی نمی‌شود.",
-    en: "A partial claim of a replacement parcel is not supported.",
   },
 };
 

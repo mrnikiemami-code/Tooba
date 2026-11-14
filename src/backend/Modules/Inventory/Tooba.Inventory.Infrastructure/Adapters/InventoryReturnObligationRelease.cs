@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Inventory.Application.Ports;
 using Tooba.Inventory.Contracts.Errors;
@@ -19,14 +19,23 @@ namespace Tooba.Inventory.Infrastructure.Adapters;
 /// belongs to the return disposition (damaged units are never made saleable here).
 /// </para>
 /// <para>
-/// TB-265-R1: the three writes (position <c>Reserved</c> decrease, reservation quantity/status change and the
-/// idempotency inbox row) are ONE atomic unit. The reservation row is locked first, so two independent contexts
-/// cannot both read the same Held quantity and release it twice; the inbox primary key is the durable replay answer,
-/// and a lost commit is answered from that row instead of releasing again.
+/// TB-265-R1: the three writes (position <c>Reserved</c> decrease, reservation quantity/status change and the durable
+/// answer row) are ONE atomic unit. The reservation row is locked first, so two independent contexts cannot both read
+/// the same Held quantity and release it twice.
+/// </para>
+/// <para>
+/// TB-265-R2: the durable row now records the IMMUTABLE REQUEST (purpose, key, reservation, requested quantity) next to
+/// the actual effect. Every replay branch — first lookup, inside-lock lookup and the concurrency winner — compares that
+/// request before answering, so a changed reservation or a changed requested quantity is a typed conflict with zero
+/// writes instead of being silently answered with another request's released amount. The answer is also truthful: a
+/// Consumed no-op reports <c>Consumed</c>, never <c>Released</c>.
 /// </para>
 /// </summary>
 public sealed class InventoryReturnObligationRelease : IInventoryReturnObligationRelease
 {
+    /// <summary>Owning purpose of this release. It is deliberately distinct from the return-restock inbox purpose.</summary>
+    public const string ReleasePurpose = "order-line-obligation-hold-release";
+
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
     private readonly IClock _clock;
@@ -57,36 +66,36 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
 
         var key = idempotencyKey.Trim();
 
-        // Durable idempotency: the recorded row remembers exactly how much was released for this key.
-        var recorded = await _db.ReturnRestockInbox.AsNoTracking()
+        // Durable replay: the recorded row answers ITS OWN request exactly (requested identity, not just the key).
+        var recorded = await _db.HeldObligationReleases.AsNoTracking()
             .SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
         if (recorded is not null)
         {
-            return new InventoryHeldReleaseResult(reservationId, quantity, recorded.Quantity, "Replayed");
+            return AnswerRecorded(recorded, reservationId, quantity);
         }
 
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
-        // TB-265-R1: serialize on the reservation row before reading its Held quantity. Without this lock two
-        // concurrent approvals would both see the same remaining quantity and release it twice.
+        // Serialize on the reservation row before reading its Held quantity. Without this lock two concurrent
+        // approvals would both see the same remaining quantity and release it twice. The row lock is taken in the
+        // adapter's OWN transaction and, just as well, inside a caller-owned transaction (where it simply lives until
+        // that caller commits), so serialization never depends on who opened the transaction.
         var ownsTransaction = _db.Database.CurrentTransaction is null;
         await using var transaction = ownsTransaction
             ? await _db.Database.BeginTransactionAsync(cancellationToken)
             : null;
-        if (ownsTransaction)
-        {
-            await _db.Database.ExecuteSqlAsync(
-                $"SELECT 1 FROM inventory.reservations WHERE reservation_id = {reservationId} FOR UPDATE",
-                cancellationToken);
-        }
+        await _db.Database.ExecuteSqlAsync(
+            $"SELECT 1 FROM inventory.reservations WHERE reservation_id = {reservationId} FOR UPDATE",
+            cancellationToken);
 
-        // Re-read inside the lock: a racing context may have just released or consumed it.
-        var replayInsideLock = await _db.ReturnRestockInbox.AsNoTracking()
+        // Re-read inside the lock: a racing context may have just answered this same request.
+        var replayInsideLock = await _db.HeldObligationReleases.AsNoTracking()
             .SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
         if (replayInsideLock is not null)
         {
+            var replayed = AnswerRecorded(replayInsideLock, reservationId, quantity);
             await CommitAsync(transaction, ownsTransaction, cancellationToken);
-            return new InventoryHeldReleaseResult(reservationId, quantity, replayInsideLock.Quantity, "Replayed");
+            return replayed;
         }
 
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken);
@@ -96,7 +105,27 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
         }
 
         var now = _clock.UtcNow;
-        var released = reservation.ReleasePartially(quantity, now);
+        decimal released;
+        string outcome;
+        if (reservation.Status == StockReservationStatus.Consumed)
+        {
+            // A consumed original sale can never be released or resurrected. This is a truthful no-op, not "Released".
+            released = 0m;
+            outcome = ReleaseOutcome.Consumed;
+        }
+        else if (reservation.Status == StockReservationStatus.Released)
+        {
+            released = 0m;
+            outcome = ReleaseOutcome.AlreadyReleased;
+        }
+        else
+        {
+            released = reservation.ReleasePartially(quantity, now);
+            outcome = reservation.Status == StockReservationStatus.Held
+                ? ReleaseOutcome.PartiallyHeld
+                : ReleaseOutcome.Released;
+        }
+
         if (released > 0m)
         {
             // Same invariant as the owning release: only Reserved moves, so availability grows by exactly the
@@ -119,11 +148,14 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
             position.SyncQuantities(position.OnHand, position.Reserved, now);
         }
 
-        _db.ReturnRestockInbox.Add(new ReturnRestockInboxRecord
+        _db.HeldObligationReleases.Add(new HeldObligationReleaseRecord
         {
             IdempotencyKey = key,
+            Purpose = ReleasePurpose,
             ReservationId = reservationId,
-            Quantity = released,
+            RequestedQuantity = quantity,
+            ReleasedQuantity = released,
+            Outcome = outcome,
             ProcessedAt = now,
         });
 
@@ -134,7 +166,7 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
         }
         catch (DbUpdateException)
         {
-            // A concurrent attempt with the SAME key won the inbox primary key: the effect is one release, and the
+            // A concurrent attempt with the SAME key won the answer primary key: the effect is one release, and the
             // recorded row is the answer. Nothing from this context was committed.
             if (ownsTransaction && transaction is not null)
             {
@@ -142,11 +174,11 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
             }
 
             _db.ChangeTracker.Clear();
-            var winner = await _db.ReturnRestockInbox.AsNoTracking()
+            var winner = await _db.HeldObligationReleases.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
             if (winner is not null)
             {
-                return new InventoryHeldReleaseResult(reservationId, quantity, winner.Quantity, "Replayed");
+                return AnswerRecorded(winner, reservationId, quantity);
             }
 
             throw;
@@ -156,7 +188,32 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
             reservationId,
             quantity,
             released,
-            reservation.Status == StockReservationStatus.Held ? "PartiallyHeld" : "Released");
+            outcome,
+            outcome);
+    }
+
+    /// <summary>
+    /// Answers a recorded durable request. A key that now carries a DIFFERENT purpose, reservation or requested amount
+    /// is a changed intent: it must be refused before any write rather than answered with someone else's effect.
+    /// </summary>
+    private static InventoryHeldReleaseResult AnswerRecorded(
+        HeldObligationReleaseRecord recorded,
+        Guid reservationId,
+        decimal requestedQuantity)
+    {
+        if (recorded.ReservationId != reservationId
+            || recorded.RequestedQuantity != requestedQuantity
+            || !string.Equals(recorded.Purpose, ReleasePurpose, StringComparison.Ordinal))
+        {
+            throw new ContractOperationException(InventoryErrorCodes.HeldReleaseIntentConflict);
+        }
+
+        return new InventoryHeldReleaseResult(
+            recorded.ReservationId,
+            recorded.RequestedQuantity,
+            recorded.ReleasedQuantity,
+            "Replayed",
+            recorded.Outcome);
     }
 
     private static async Task CommitAsync(
@@ -169,4 +226,14 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
             await transaction.CommitAsync(cancellationToken);
         }
     }
+
+    /// <summary>Durable outcome values of one release request.</summary>
+    private static class ReleaseOutcome
+    {
+        internal const string Released = "Released";
+        internal const string PartiallyHeld = "PartiallyHeld";
+        internal const string Consumed = "Consumed";
+        internal const string AlreadyReleased = "AlreadyReleased";
+    }
 }
+

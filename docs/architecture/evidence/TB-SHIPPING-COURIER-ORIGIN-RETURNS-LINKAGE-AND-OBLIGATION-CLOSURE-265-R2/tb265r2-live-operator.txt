@@ -1,0 +1,72 @@
+TB-265-R2 live operator proof — read-only reads plus task-labelled production-path writes
+Canonical runtime: Host http://127.0.0.1:5088 (published artifacts\publish-primary, PID 10004 after the final restart),
+Next http://127.0.0.1:3000 (BUILD_ID PtxAhyJO9UhnwD8B3_ln4, PID 17188), ONE database tooba_alpha @127.0.0.1:5432
+(SingleStore, tenant store-alpha). Admin reads use the established Development dev-actor header only.
+
+## 0. Dev actor (read)
+GET /v1/admin/dev-context -> 200
+{"actorUserId":"01a036c2-970e-7000-8eb7-94bf5cc2d8db","actorLabel":"admin-actor@tooba.local","tenantId":"store-alpha"}
+
+## 1. Positive create through the REAL public command (task-labelled fixture, one write)
+POST /v1/admin/orders/0dabee2e-c347-408e-a058-59876121a472/operations -> 200
+{code=create_courier_return, sellerOrderId=67b1fd26-4a0e-4a8b-834b-b391e931f5c0,
+ fulfillmentId=d6029640-f820-43df-90c5-234e36d9f7e1, shipmentId=01a1d89e-6528-7000-b278-579beaf5267c,
+ idempotencyKey=tb265r2-live-review-1, courierReturnItems=[{93bfa493-5789-44c3-9d9d-a3e3adb9a25e, 1, usable}]}
+<- returnRequestId=01a1d8a1-b65e-7000-b5f9-c65e06529cfa status=Requested
+   origin=CourierOrigin sourceClaimId=01a1d8a1-b621-7000-b00e-5a553c148509 closurePhase=None
+   releasedHeldQuantity=0 items[0].condition=Usable items[0].sourceReceiptId=01a1d89e-65d6-7000-9651-5dbb4a1a2d97
+   sourceOccurrenceKey=courier-return:01a1d89e65287000b278579beaf5267c:tb265r2-live-review-1
+
+## 2. Exact replay of the same reviewed key (no second case, no second claim)
+Same POST body and same idempotencyKey -> 200
+<- same returnRequestId=01a1d8a1-b65e-7000-b5f9-c65e06529cfa, same sourceClaimId, closurePhase=None
+DB: select count(*) from fulfillment.courier_return_claims where shipment_id='01a1d89e-6528-7000-b278-579beaf5267c'
+  -> 1
+
+## 3. Reload after restart — the persisted link the operator button reads
+GET /v1/admin/orders/0dabee2e-c347-408e-a058-59876121a472 -> 200 (after Host was republished and restarted)
+"courierReturnCases":[{"claimId":"01a1d8a1-b621-7000-b00e-5a553c148509",
+ "returnRequestId":"01a1d8a1-b65e-7000-b5f9-c65e06529cfa","status":"Requested",
+ "linkedAt":"2026-11-14T05:57:19.138682+00:00"}]
+(that non-empty list is what renders «مشاهدهٔ پروندهٔ مرجوعی» on the parcel card)
+
+GET /v1/admin/returns/01a1d8a1-b65e-7000-b5f9-c65e06529cfa -> 200
+status=Requested origin=CourierOrigin sourceClaimId=01a1d8a1-b621-7000-b00e-5a553c148509
+closurePhase=None releasedHeldQuantity=0 refundAmount=1000.0000
+items[0]: quantity=1 condition=Usable disposition=null sourceShipmentId=01a1d89e-6528-7000-b278-579beaf5267c
+refundAttempts: []   (nothing was charged, refunded or released by creating the case)
+
+## 4. Durable serialized decision on the reject path (no money, no stock)
+POST .../d82b9539-568f-4fd7-a910-3f89642437d4/operations {code=create_courier_return, key=tb265r2-live-review-2} -> 200
+  case=01a1d8a2-1d88-7000-a146-787bdeabab62 claim=01a1d8a2-1d81-7000-b17c-8cf1270f3ed5 status=Requested
+POST ... {code=reject_return, returnRequestId=01a1d8a2-1d88-7000-a146-787bdeabab62} -> 200
+  status=Rejected, releasedHeldQuantity=0, refundAttempts=[]
+DB returns.return_request_decisions:
+  01a1d8a2-1d88-7000-a146-787bdeabab62 | Reject | 01a036c2-970e-7000-8eb7-94bf5cc2d8db | 2026-11-14 05:57:52.178384+00
+DB fulfillment.courier_return_claims: 01a1d8a2-1d81-7000-b17c-8cf1270f3ed5 -> Rejected
+DB inventory.reservations for that case's items -> 0 rows (nothing was released, nothing was consumed)
+
+Same reject again -> 200 with the recorded Rejected snapshot (exact terminal replay, no second decision row).
+Approve the SAME case after the recorded rejection -> 409
+{"title":"این مرجوعی قبلاً رد شده است.","errorCode":"return.already_rejected","status":409}
+observed FIRST as 404 refund.payment_missing on this payment-less fixture; the defect was fixed by answering the
+recorded opposite decision before any payment read, re-published, and the same call then answered the typed
+return.already_rejected with zero writes (the payment-less case stays rejectable, no decision row is invented).
+
+## 5. Partial-source case already persisted by the owning path (reload of the P scenario)
+GET /v1/admin/returns/01a1d89e-538a-7000-bf99-f6e3c9ddc025 -> 200
+status=Completed origin=CourierOrigin closurePhase=RefundReleased releasedHeldQuantity=1
+items[0] quantity=1 condition=Damaged disposition=DamagedNonSaleable
+refundAttempts[0] status=Succeeded idempotencyKey=refund-01a1d89e538a7000bf99f6e3c9ddc025 (controlled financial port)
+GET /v1/admin/orders/f1ec6f1a-ff39-472e-8ff7-f677840bd184 -> 200
+replacement parcel 01a1d89e-5184-...: returnReceiptLines=[{00341667-..., 3, Damaged}]
+  damagedResolutions=[{... quantity=3 outcome=Replacement status=Fulfilled}]
+  courierReturnCases=[{01a1d89e-5333-..., 01a1d89e-538a-..., Approved}]
+  next parcel 01a1d89e-52ca-... status=Cancelled  (only the SELECTED unit was case-bound and cancelled)
+DB fulfillment.shipments of that fulfillment (read-only):
+  01a1d89e-5184-... Returned  3
+  01a1d89e-52ca-... Cancelled 3
+  01a1d89e-5679-... Created   2   <- the unselected remainder stayed on the order and was re-prepared, quantity 2
+
+Every write above is a task-labelled TB265 fixture through a public owning command. No user/screenshot/cart/payment/
+service row was touched; no provider call, no real refund or wallet credit, no fake waybill.

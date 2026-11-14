@@ -191,6 +191,50 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                     b.ToTable("reservation_consumptions", "inventory");
                 });
 
+            modelBuilder.Entity("Tooba.Inventory.Infrastructure.Persistence.HeldObligationReleaseRecord", b =>
+                {
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(190)
+                        .HasColumnType("character varying(190)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("outcome");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("purpose");
+
+                    b.Property<decimal>("ReleasedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("released_quantity");
+
+                    b.Property<decimal>("RequestedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("requested_quantity");
+
+                    b.Property<Guid>("ReservationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reservation_id");
+
+                    b.HasKey("IdempotencyKey")
+                        .HasName("pk_held_obligation_releases");
+
+                    b.HasIndex("ReservationId")
+                        .HasDatabaseName("ix_held_obligation_releases_reservation_id");
+
+                    b.ToTable("held_obligation_releases", "inventory");
+                });
+
             modelBuilder.Entity("Tooba.Inventory.Infrastructure.Persistence.ReturnRestockInboxRecord", b =>
                 {
                     b.Property<string>("IdempotencyKey")

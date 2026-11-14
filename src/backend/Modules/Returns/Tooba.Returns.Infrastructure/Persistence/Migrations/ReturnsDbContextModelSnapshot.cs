@@ -143,6 +143,33 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.ToTable("refund_attempts", "returns");
                 });
 
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnDecisionRecord", b =>
+                {
+                    b.Property<Guid>("ReturnRequestId")
+                        .ValueGeneratedNever()
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.Property<DateTimeOffset>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<Guid>("DecidedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by_user_id");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("decision");
+
+                    b.HasKey("ReturnRequestId")
+                        .HasName("pk_return_request_decisions");
+
+                    b.ToTable("return_request_decisions", "returns");
+                });
+
             modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnItem", b =>
                 {
                     b.Property<Guid>("ReturnItemId")

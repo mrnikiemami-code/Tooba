@@ -191,6 +191,24 @@ public sealed partial class ReturnDirectory
     {
         var now = _clock.UtcNow;
 
+        if (request.SourceClaimId is not { } sourceClaimId)
+        {
+            throw new ContractOperationException("return.courier_origin.claim_missing");
+        }
+
+        // TB-265-R2: record the exact executable allocation BEFORE the irreversible Order obligation closure. A branch
+        // that cannot actually run (for example an already dispatched replacement) is refused here with zero writes, so
+        // an accepted case can never be left closed but unsettleable.
+        if (request.ClosurePhase < CourierOriginClosurePhase.StockSettled || request.StockSettledAt is null)
+        {
+            var plan = await _courierSource.EnsureAllocationsAsync(
+                sourceClaimId, request.ReturnRequestId, actorUserId, cancellationToken);
+            if (plan.BlockerCode is { } planBlocker)
+            {
+                throw new ContractOperationException(planBlocker);
+            }
+        }
+
         if (request.ClosurePhase < CourierOriginClosurePhase.ObligationClosed || request.ObligationClosedAt is null)
         {
             foreach (var group in request.Items.GroupBy(x => x.OrderLineId))
@@ -218,12 +236,7 @@ public sealed partial class ReturnDirectory
 
         if (request.ClosurePhase < CourierOriginClosurePhase.StockSettled || request.StockSettledAt is null)
         {
-            if (request.SourceClaimId is not { } claimId)
-            {
-                throw new ContractOperationException("return.courier_origin.claim_missing");
-            }
-
-            var settlement = await _courierSource.SettleApprovedAsync(claimId, request.ReturnRequestId, actorUserId, cancellationToken);
+            var settlement = await _courierSource.SettleApprovedAsync(sourceClaimId, request.ReturnRequestId, actorUserId, cancellationToken);
             if (!settlement.Settled)
             {
                 // Refused (for example an already dispatched replacement) is a pending, reconcilable fact — never a

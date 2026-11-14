@@ -5,10 +5,12 @@ namespace Tooba.Fulfillment.Domain.Aggregates;
 /// <summary>
 /// TB-265-R1: the per-line row of one courier-origin source claim.
 /// <para>
-/// The whole claim payload is still the durable replay identity, but source-quantity exclusivity is per LINE: this row
-/// carries its own <see cref="ActiveKey"/>, so the database (a unique index on the key) — not a caller's aggregate
-/// list — is what makes two claims of the same (receipt, line, condition) quantity impossible. A terminal claim clears
-/// its line keys, so history stays readable while new lawful claims become possible again.
+/// The whole claim payload is still the durable replay identity. This row records the exact claimed quantity per line
+/// and carries a per-line capacity key for lookup. TB-265-R2: that key is deliberately NOT unique — two lawful claims
+/// of disjoint quantities on the same (receipt, line, condition) must both be accepted, so uniqueness would advertise
+/// a remaining quantity and then refuse it. Overlap is prevented by the owning serialized capacity authority (the
+/// Serializable transaction, the Fulfillment row lock and the aggregate's free-quantity computation), not by this key.
+/// A terminal claim clears its keys so history stays readable while nothing blocks a new lawful claim.
 /// </para>
 /// </summary>
 public sealed class CourierReturnClaimLineRecord
@@ -63,8 +65,9 @@ public sealed class CourierReturnClaimLineRecord
         };
 
     /// <summary>
-    /// Stable per-line capacity key. It does NOT contain the claim id: two active claims of the same physical
-    /// (receipt, line, condition) quantity collide on the unique index, which is the actual exclusivity authority.
+    /// Stable per-line capacity key (lookup only, never an overlap guard). It does NOT contain the claim id: the key
+    /// identifies the physical (receipt, line, condition) pool this line drew from, and the owning serialized
+    /// authority — not a unique index — is what prevents two claims from overdrawing that pool.
     /// </summary>
     public static string BuildActiveKey(
         Guid shipmentReturnReceiptId,

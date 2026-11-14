@@ -38,6 +38,7 @@ public static class InventoryErrorCodes
         SupplyModeInvalid,
         ManualReviewUnavailable,
         ReturnRestockInvalid,
+        HeldReleaseIntentConflict,
         OutboxUnmappedEventType,
     };
 
@@ -132,6 +133,12 @@ public static class InventoryErrorCodes
 
     /// <summary>The return-restock request is not usable (quantity, idempotency key or reservation state).</summary>
     public const string ReturnRestockInvalid = "inventory.return_restock.invalid";
+
+    /// <summary>
+    /// TB-265-R2: the idempotency key already answers a DIFFERENT release request (other reservation or requested
+    /// quantity). The recorded effect is never reused for a changed intent.
+    /// </summary>
+    public const string HeldReleaseIntentConflict = "inventory.held_release.intent_conflict";
 
     /// <summary>The outbox registration has no mapping for the given integration event type.</summary>
     public const string OutboxUnmappedEventType = "inventory.outbox.unmapped_event_type";

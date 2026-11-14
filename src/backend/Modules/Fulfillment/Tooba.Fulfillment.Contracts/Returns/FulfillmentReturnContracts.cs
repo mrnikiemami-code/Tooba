@@ -163,4 +163,19 @@ public interface IFulfillmentCourierReturnSource
         Guid returnRequestId,
         Guid actorUserId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-265-R2: records the exact executable allocation of this claim BEFORE any irreversible closure.
+    /// <para>
+    /// Returns refuses to close the Order obligation until the source branch is proven runnable (its replacement parcel
+    /// is still cancellable, its quantities are exact, a partial selection is representable). A blocker is returned as
+    /// data with zero writes, so an accepted claim can never become an unsupported branch after its obligation closed.
+    /// The recorded allocation is durable and settlement resumes it verbatim.
+    /// </para>
+    /// </summary>
+    Task<CourierReturnSettlement> EnsureAllocationsAsync(
+        Guid claimId,
+        Guid returnRequestId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
 }

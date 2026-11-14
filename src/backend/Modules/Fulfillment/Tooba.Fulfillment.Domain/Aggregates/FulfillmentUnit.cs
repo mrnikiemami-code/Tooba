@@ -884,7 +884,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             .Where(r => r.ShipmentId == sourceShipmentId
                 && r.OrderLineId == orderLineId
                 && r.Status != DamagedResolutionStatus.Cancelled)
-            .Sum(r => r.Quantity);
+            .Sum(r => r.RemainingQuantity);
 
     /// <summary>TB-262: damaged quantity of ONE source parcel line still awaiting a decision.</summary>
     public decimal OutstandingDamagedQuantity(Guid sourceShipmentId, Guid orderLineId)
@@ -917,7 +917,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
                 && r.OrderLineId == orderLineId
                 && r.Status != DamagedResolutionStatus.Cancelled
                 && IsRedirectableReplacement(r))
-            .Sum(r => r.Quantity);
+            .Sum(r => r.RemainingQuantity);
 
     /// <summary>
     /// TB-265: damaged quantity of ONE source parcel line whose replacement parcel has ALREADY left the warehouse.
@@ -930,7 +930,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
                 && r.OrderLineId == orderLineId
                 && r.ReplacementShipmentId is not null
                 && !IsRedirectableReplacement(r))
-            .Sum(r => r.Quantity);
+            .Sum(r => r.RemainingQuantity);
 
     private bool IsRedirectableReplacement(DamagedGoodsResolution resolution)
     {
@@ -1092,7 +1092,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         }
 
         var original = RequireShipment(resolution.ShipmentId);
-        var items = new[] { (resolution.OrderLineId, resolution.Quantity) };
+        var items = new[] { (resolution.OrderLineId, resolution.RemainingQuantity) };
 
         // The parcel's dispatch key stays bound to the reviewed occurrence, but it is ATTEMPT-scoped: an exact replay
         // of the same occurrence keeps its key (so the recorded parcel is reused), while a retry after an explicit

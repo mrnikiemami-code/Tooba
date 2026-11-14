@@ -248,6 +248,10 @@ public sealed class FulfillmentDbContext : DbContext
             entity.HasKey(x => x.DamagedGoodsResolutionId);
             entity.Property(x => x.DamagedGoodsResolutionId).ValueGeneratedNever();
             entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.CaseSettledQuantity)
+                .HasColumnType("numeric(18,6)")
+                .HasDefaultValue(0m)
+                .ValueGeneratedNever();
             entity.Property(x => x.Outcome).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.OccurrenceKey).HasMaxLength(128);
@@ -256,6 +260,7 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Ignore(x => x.ReservationKey);
             entity.Ignore(x => x.ReservationConsumerKey);
             entity.Ignore(x => x.AwaitsHealthyStock);
+            entity.Ignore(x => x.RemainingQuantity);
             entity.HasIndex(x => x.FulfillmentId);
             entity.HasIndex(x => x.ShipmentId);
             // TB-262: one durable decision per reviewed occurrence inside its owning unit. A retry answers the
@@ -303,13 +308,13 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.ActiveKey).HasMaxLength(256);
             entity.HasIndex(x => x.ClaimId)
                 .HasDatabaseName("ix_courier_return_claim_lines_claim_id");
-            // TB-265-R1: the real per-line exclusivity authority. Two active claims of the SAME
-            // (receipt, line, condition) quantity collide here; a terminal claim clears its key so the
-            // released quantity may lawfully be claimed again.
+            // TB-265-R2: the capacity key is a LOOKUP key, not an overlap guard. Two lawful claims of disjoint
+            // quantities on the same (receipt, line, condition) must both be accepted, so uniqueness would falsely
+            // advertise a remaining quantity and then refuse it. The real serialization authority is the owning
+            // Serializable transaction + Fulfillment row lock + the aggregate's free-quantity computation.
             entity.HasIndex(x => x.ActiveKey)
-                .IsUnique()
                 .HasFilter("active_key IS NOT NULL")
-                .HasDatabaseName("ux_courier_return_claim_lines_active_key");
+                .HasDatabaseName("ix_courier_return_claim_lines_active_key");
         });
         modelBuilder.Entity<CourierReturnClaimAllocation>(entity =>
         {

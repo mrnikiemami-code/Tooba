@@ -1,0 +1,85 @@
+TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R2
+============================================================
+Task-ID              : TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R2
+Parent-Task          : TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1
+Channel              : tooba-main
+Repository           : mrnikiemami-code/Tooba (branch main)
+Expected-Base-SHA    : a0e1f24e55f14f8bc366c9018da9f117e718aca8   (verified ancestor of HEAD, exit 0)
+Work-Base-SHA        : 494690faf0c5c4f73bcf578301725f6e95432b9f   (HEAD == origin/main before this round)
+Code-Commit-SHA      : __CODE_SHA__
+Evidence-Commit-SHA  : __EVIDENCE_SHA__
+Final-HEAD-SHA       : __FINAL_SHA__
+Origin-Main-Parity   : __PARITY__
+
+Status               : PASS (worker, within the issued 265-R2 scope)
+Decision             : EXACT_IMMUTABLE_RELEASE_REQUEST_IDENTITY_WITH_SERIALIZED_DURABLE_APPROVE_VS_REJECT_DECISION_AND_PARTIAL_SOURCE_REPLACEMENT_RETURN_THAT_CONSERVES_THE_REMAINING_ORDERS_OWN_OBLIGATION
+Architect-Review     : PENDING
+User-Acceptance      : PENDING (user trial)
+
+Scope delivered
+  1 Inventory exact release identity + truthful outcome
+      inventory.held_obligation_releases (HeldObligationReleaseRecord) ; all replay branches compare
+      purpose/reservation/requested quantity ; changed intent = inventory.held_release.intent_conflict (zero writes) ;
+      Consumed/AlreadyReleased/PartiallyHeld reported truthfully ; atomic reservation lock + Reserved decrement + row.
+      Migration: inventory 20261114150000_AddHeldObligationReleases
+  2 Returns serialized durable decision + completed replay
+      returns.return_request_decisions (ReturnDecisionRecord, PK = case) written under the case row lock before any
+      effect; shared attempt key refund-{case:N}; Completed@RefundReleased answers its recorded completion; opposite
+      decision refused (return.already_rejected / return.already_approved); approve reads the recorded decision before
+      any payment lookup so a payment-less case is never misreported.
+      Migration: returns 20261114170000_AddReturnRequestDecisions
+  3 Fulfillment partial source replacement conservation
+      DamagedGoodsResolution.CaseSettledQuantity/RemainingQuantity + SettlePartialCase ; EnsureAllocationsAsync persists
+      the executable allocation BEFORE Order closure ; selected portion cancelled/case-bound, remainder 2 stays on the
+      order and is re-prepared as its own parcel ; no false ActiveKey block on disjoint partial claims.
+      Migration: fulfillment 20261114160000_AddPartialCourierReturnSettlement
+  4 Operator handoff
+      real POST create_courier_return -> persisted case + claim ; exact replay answers the same case (claims=1) ; read
+      model still exposes courierReturnCases after Host republish/restart (single «مشاهدهٔ پروندهٔ مرجوعی») ; Returns
+      detail shows origin/condition/phase ; live reject wrote one durable decision with zero money/stock effect ;
+      approval exercised through the owning application with controlled financial ports only.
+
+Verification (each once after the final change)
+  Fulfillment CourierReturnClaim265Tests                8/8
+  Inventory   ReturnObligationRelease265Tests          5/5
+  Returns     CourierOriginReturns265Tests             5/5
+  Host        CourierOriginReturns265RelationalTests  17/17   (real tooba_alpha; A–K + L,M,N,O,P,Q)
+  Order       AdminOrderPostDispatchReplayTests       16/16   (public-command boundary)
+  FE          npm run test:returns                     7/7
+  FE          admin-error-map.test.ts                  7/7
+  FE          tsc --noEmit                             0
+  FE          npm run build                            0   BUILD_ID PtxAhyJO9UhnwD8B3_ln4
+  Backend     dotnet build Tooba.slnx -c Release       0 errors / 213 warnings
+  Backend     dotnet publish Host -o artifacts/publish-primary   0 errors
+
+Runtime / environment
+  ONE database: tooba_alpha @127.0.0.1:5432 (SingleStore, tenant store-alpha)
+  Host:  5088, PID 10004, /health 200, /health/ready 200 (SingleStore)
+  Next:  3000, PID 17188, /fa 200, BUILD_ID PtxAhyJO9UhnwD8B3_ln4
+  Migrations applied only by Tooba.MigrationRunner after D:\temp\tb265r2-backup\tooba_alpha-pre-tb265-r2.dump
+    (3,570,765 bytes). All modules pendingCount=0.
+  No extra/disposable/Docker/15433 database, no edition/connection/port/appsettings switch, no manual DDL,
+  no raw business SQL, no reset/reseed/delete/backfill, no global reclaimer.
+  DataProtection / CapturedPreview unchanged (local ON 7 dates / checked-in OFF).
+  User rows, shipping draft 01a17d0d-… and the 261 screenshot fixture read-only. All fixtures TB265-*/tb265r2-*.
+  255 parked; live Tipax deferred; parent common-package return still unsupported with the real child guards.
+
+Review URLs (canonical runtime)
+  http://127.0.0.1:3000/fa/admin/orders/0dabee2e-c347-408e-a058-59876121a472/operations?fulfillmentId=d6029640-f820-43df-90c5-234e36d9f7e1
+    -> parcel 01a1d89e-6528-… shows «مشاهدهٔ پروندهٔ مرجوعی» for case 01a1d8a1-b65e-7000-b5f9-c65e06529cfa (Requested)
+  http://127.0.0.1:3000/fa/admin/returns/01a1d8a1-b65e-7000-b5f9-c65e06529cfa
+  http://127.0.0.1:3000/fa/admin/returns/01a1d89e-538a-7000-bf99-f6e3c9ddc025   (partial, Completed, releasedHeld=1)
+  http://127.0.0.1:3000/fa/admin/orders/0dabee2e-… and /fa/admin/fulfillments for the queue
+
+Financial boundary (disclosed)
+  No real payment, provider call, wallet credit or refund was executed. Approval/refund proof uses the owning
+  application with task-owned controlled ports (IPaymentRefundGateway / IPaymentReturnReader /
+  IWalletRefundCreditPort). The live review case is intentionally left Requested.
+
+Honest limits
+  Worker PASS, not Architect ACCEPT and not user acceptance. No browser click-through by the worker. Concurrency
+  proven with independent real contexts + DB guards, not a stress test. Parent consolidated-package return still
+  unsupported. Not "shipping complete".
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE

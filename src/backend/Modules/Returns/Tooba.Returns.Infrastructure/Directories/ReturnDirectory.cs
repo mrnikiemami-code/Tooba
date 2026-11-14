@@ -231,7 +231,17 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     public async Task<ReturnSnapshot> ApproveAsync(ApproveReturnCommand command, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
+
+        if (request.Origin == ReturnOrigin.CourierOrigin
+            && request.Status == ReturnRequestStatus.Completed
+            && request.ClosurePhase == CourierOriginClosurePhase.RefundReleased)
+        {
+            // TB-265-R2: a genuinely finished courier case answers its recorded completion. It must never fall through
+            // into an ordinary approval that could mint another attempt for an already released refund.
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
 
         if (request.Origin == ReturnOrigin.CourierOrigin
             && request.ClosurePhase < CourierOriginClosurePhase.RefundReleased
@@ -243,36 +253,17 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             // TB-265: a previous approval already recorded its durable phases (approval + money attempt). A refused
             // closure or a lost money answer must be RESUMED, never re-approved or duplicated: the same recorded
             // obligation/branch work runs again idempotently and only then does the SAME attempt proceed.
-            await EnsureCourierOriginClosureAsync(request, command.ActorUserId, cancellationToken);
-            if (request.Status == ReturnRequestStatus.RefundFailed)
-            {
-                // A failed money attempt is resumed through the existing retry entry, not a second refund attempt.
-                await _db.SaveChangesAsync(cancellationToken);
-                return await MapSnapshotAsync(request, cancellationToken);
-            }
+            return await ResumeCourierApprovalAsync(request, command.ActorUserId, cancellationToken);
+        }
 
-            if (request.Status == ReturnRequestStatus.Completed)
-            {
-                // TB-265-R1: money already succeeded and the obligation is closed, so ONLY the unfinished physical
-                // disposition is retried here. No second money attempt is created.
-                await SettlePhysicalDispositionAsync(request, cancellationToken);
-                MarkRefundReleasedWhenFullyDisposed(request);
-                await _db.SaveChangesAsync(cancellationToken);
-                return await MapSnapshotAsync(request, cancellationToken);
-            }
-
-            var pending = request.RefundAttempts
-                .OrderByDescending(x => x.CreatedAt)
-                .FirstOrDefault(x => x.Status == RefundAttemptStatus.Pending)
-                ?? throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
-            await ExecuteRefundAsync(request, pending, cancellationToken);
-            if (request.Status == ReturnRequestStatus.Completed)
-            {
-                MarkRefundReleasedWhenFullyDisposed(request);
-            }
-
-            await _db.SaveChangesAsync(cancellationToken);
-            return await MapSnapshotAsync(request, cancellationToken);
+        // TB-265-R2: a durable REJECTION already recorded for this case is answered BEFORE any payment read, so an
+        // approval can never proceed — and never reports an unrelated missing-payment fault — for a case another
+        // authority already rejected. This is a read: it writes nothing and keeps a payment-less case rejectable.
+        var recordedDecision = await _db.ReturnDecisions.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.ReturnRequestId == command.ReturnRequestId, cancellationToken);
+        if (recordedDecision is not null && !AnswersDecision(recordedDecision, ReturnDecisionKind.Approve))
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.AlreadyRejected);
         }
 
         var payment = await ResolvePaymentAsync(request, cancellationToken)
@@ -282,11 +273,46 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.RefundAlreadyStarted);
         }
 
-        request.Approve(payment.PaymentId, _clock.UtcNow, command.RefundDestination);
-        request.MarkRefundProcessing(_clock.UtcNow);
-        var attempt = request.BeginRefundAttempt(_ids.NewId(), payment.PaymentId, $"refund-{request.ReturnRequestId:N}", _clock.UtcNow);
-        _db.RefundAttempts.Add(attempt);
-        await _db.SaveChangesAsync(cancellationToken);
+        // TB-265-R2: the durable approve-vs-reject decision is recorded under the case row lock BEFORE any
+        // money/stock/claim effect, and only once the ordinary preconditions above are known good — a case that could
+        // not be approved here stays rejectable instead of leaving an unusable approval record behind.
+        var decision = await RecordReturnDecisionAsync(
+            command.ReturnRequestId, ReturnDecisionKind.Approve, command.ActorUserId, cancellationToken)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
+        if (!AnswersDecision(decision, ReturnDecisionKind.Approve))
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.AlreadyRejected);
+        }
+
+        RefundAttempt attempt;
+        try
+        {
+            request.Approve(payment.PaymentId, _clock.UtcNow, command.RefundDestination);
+            request.MarkRefundProcessing(_clock.UtcNow);
+            // TB-265-R2: the financial attempt key is deterministic per case, so two approvals can only ever share
+            // ONE durable attempt. The unique key is the guard that makes the second writer lose here.
+            attempt = request.BeginRefundAttempt(
+                _ids.NewId(), payment.PaymentId, $"refund-{request.ReturnRequestId:N}", _clock.UtcNow);
+            _db.RefundAttempts.Add(attempt);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // A concurrent approval already minted the SAME attempt. Re-read the durable state and RESUME that
+            // recorded attempt instead of failing the caller or minting a second financial attempt.
+            _db.ChangeTracker.Clear();
+            var recorded = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
+            if (recorded.Origin != ReturnOrigin.CourierOrigin
+                || recorded.Status is not (ReturnRequestStatus.Approved
+                    or ReturnRequestStatus.RefundProcessing
+                    or ReturnRequestStatus.Completed))
+            {
+                throw;
+            }
+
+            return await ResumeCourierApprovalAsync(recorded, command.ActorUserId, cancellationToken);
+        }
+
         _telemetry.RecordApproved();
 
         if (request.Origin == ReturnOrigin.CourierOrigin)
@@ -306,11 +332,64 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         return await MapSnapshotAsync(request, cancellationToken);
     }
 
+    /// <summary>
+    /// TB-265-R2: resumes the ONE durable approval already recorded for this courier-origin case. It never approves
+    /// again and never mints another refund attempt: the closed obligation/branch is re-checked idempotently, the same
+    /// recorded attempt is executed, and a successful refund with a pending disposition retries only the disposition.
+    /// </summary>
+    private async Task<ReturnSnapshot> ResumeCourierApprovalAsync(
+        ReturnRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureCourierOriginClosureAsync(request, actorUserId, cancellationToken);
+        if (request.Status == ReturnRequestStatus.RefundFailed)
+        {
+            // A failed money attempt is resumed through the existing retry entry, not a second refund attempt.
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
+
+        if (request.Status == ReturnRequestStatus.Completed)
+        {
+            // TB-265-R1: money already succeeded and the obligation is closed, so ONLY the unfinished physical
+            // disposition is retried here. No second money attempt is created.
+            await SettlePhysicalDispositionAsync(request, cancellationToken);
+            MarkRefundReleasedWhenFullyDisposed(request);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
+
+        var pending = request.RefundAttempts
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefault(x => x.Status == RefundAttemptStatus.Pending)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
+        await ExecuteRefundAsync(request, pending, cancellationToken);
+        if (request.Status == ReturnRequestStatus.Completed)
+        {
+            MarkRefundReleasedWhenFullyDisposed(request);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return await MapSnapshotAsync(request, cancellationToken);
+    }
+
     /// <inheritdoc />
     public async Task<ReturnSnapshot> RejectAsync(RejectReturnCommand command, CancellationToken cancellationToken)
     {
         _ = command.Reason;
         await _guard.EnsureCanMutateAsync(cancellationToken);
+
+        // TB-265-R2: the SAME durable decision authority as approval. A case whose approval already won can never be
+        // rejected here, so its source claim/hold/money are never released by a losing concurrent request.
+        var decision = await RecordReturnDecisionAsync(
+            command.ReturnRequestId, ReturnDecisionKind.Reject, command.ActorUserId, cancellationToken)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
+        if (!AnswersDecision(decision, ReturnDecisionKind.Reject))
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.AlreadyApproved);
+        }
+
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
 
         // TB-265-R1: only a case that was never approved can be rejected. A case already refunding/approved keeps
@@ -383,6 +462,13 @@ public sealed partial class ReturnDirectory : IReturnDirectory
 
     private async Task ExecuteRefundAsync(ReturnRequest request, RefundAttempt attempt, CancellationToken cancellationToken)
     {
+        // TB-265-R2: an attempt that ALREADY recorded its money outcome is a durable answer, never a new money call.
+        // This is what makes a concurrent/late resume of the same case safe with the same attempt identity.
+        if (attempt.Status == RefundAttemptStatus.Succeeded)
+        {
+            return;
+        }
+
         var now = _clock.UtcNow;
         try
         {

@@ -1,0 +1,32 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Tooba.ModuleContracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.ModuleContracts\bin\Release\net8.0\Tooba.ModuleContracts.dll
+  Tooba.BuildingBlocks -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.BuildingBlocks\bin\Release\net8.0\Tooba.BuildingBlocks.dll
+  Tooba.Catalog.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Contracts\bin\Release\net8.0\Tooba.Catalog.Contracts.dll
+  Tooba.Offer.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Offer\Tooba.Offer.Contracts\bin\Release\net8.0\Tooba.Offer.Contracts.dll
+  Tooba.Persistence -> D:\Users\User\source\repos\SarvNewVer\src\backend\BuildingBlocks\Tooba.Persistence\bin\Release\net8.0\Tooba.Persistence.dll
+  Tooba.Inventory.Contracts -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Contracts\bin\Release\net8.0\Tooba.Inventory.Contracts.dll
+  Tooba.Inventory.Domain -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Domain\bin\Release\net8.0\Tooba.Inventory.Domain.dll
+  Tooba.Inventory.Application -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Application\bin\Release\net8.0\Tooba.Inventory.Application.dll
+  Tooba.Inventory.Infrastructure -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Infrastructure\bin\Release\net8.0\Tooba.Inventory.Infrastructure.dll
+  Tooba.Inventory.Tests -> D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Tests\bin\Release\net8.0\Tooba.Inventory.Tests.dll
+Test run for D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Inventory\Tooba.Inventory.Tests\bin\Release\net8.0\Tooba.Inventory.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.24)
+[xUnit.net 00:00:00.07]   Discovering: Tooba.Inventory.Tests
+[xUnit.net 00:00:00.10]   Discovered:  Tooba.Inventory.Tests
+[xUnit.net 00:00:00.10]   Starting:    Tooba.Inventory.Tests
+[xUnit.net 00:00:00.15]   Finished:    Tooba.Inventory.Tests
+  Passed Tooba.Inventory.Tests.Behavior.ReturnObligationRelease265Tests.Releasing_the_whole_held_quantity_marks_the_reservation_released [9 ms]
+  Passed Tooba.Inventory.Tests.Behavior.ReturnObligationRelease265Tests.A_held_quantity_is_released_partially_and_the_sibling_hold_is_untouched [< 1 ms]
+  Passed Tooba.Inventory.Tests.Behavior.ReturnObligationRelease265Tests.An_over_request_can_never_release_more_than_the_reservation_holds [< 1 ms]
+  Passed Tooba.Inventory.Tests.Behavior.ReturnObligationRelease265Tests.A_non_positive_release_is_refused_without_changing_the_hold [< 1 ms]
+  Passed Tooba.Inventory.Tests.Behavior.ReturnObligationRelease265Tests.A_consumed_sale_reservation_is_never_released [< 1 ms]
+
+Test Run Successful.
+Total tests: 5
+     Passed: 5
+ Total time: 0.6149 Seconds

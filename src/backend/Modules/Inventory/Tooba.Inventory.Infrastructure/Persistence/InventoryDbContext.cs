@@ -50,6 +50,11 @@ public sealed class InventoryDbContext : DbContext
     public DbSet<ReservationConsumptionRecord> ReservationConsumptions => Set<ReservationConsumptionRecord>();
 
     /// <summary>
+    /// TB-265-R2: هویت درخواست آزادسازی بخشی از رزرو نگه‌داشته‌شده، جدا از اثر واقعی و جدا از restock مرجوعی.
+    /// </summary>
+    public DbSet<HeldObligationReleaseRecord> HeldObligationReleases => Set<HeldObligationReleaseRecord>();
+
+    /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -105,6 +110,17 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.ReservationId).ValueGeneratedNever();
             entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.ConsumerKey).HasMaxLength(128);
+        });
+        modelBuilder.Entity<HeldObligationReleaseRecord>(entity =>
+        {
+            entity.ToTable("held_obligation_releases");
+            entity.HasKey(x => x.IdempotencyKey);
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(190);
+            entity.Property(x => x.Purpose).HasMaxLength(64);
+            entity.Property(x => x.RequestedQuantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.ReleasedQuantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.Outcome).HasMaxLength(32);
+            entity.HasIndex(x => x.ReservationId);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

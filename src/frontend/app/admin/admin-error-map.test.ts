@@ -74,6 +74,25 @@ test("maps known catalog attribute duplicate codes in fa and en", () => {
   assert.ok(listMappedAdminErrorCodes().includes("fulfillment.package.deliver_before_dispatch"));
 });
 
+test("courier-origin release and restock refusals are Persian, never machine codes", () => {
+  const intentConflict = mapAdminErrorMessage("inventory.held_release.intent_conflict", "fa");
+  assert.ok(/[\u0600-\u06ff]/.test(intentConflict));
+  assert.ok(!intentConflict.includes("inventory."));
+  assert.ok(!isTechnicalAdminErrorText(intentConflict));
+  assert.equal(
+    mapAdminErrorMessage("inventory.held_release.intent_conflict", "en"),
+    "This release request does not match the recorded one (different reservation or quantity). Refresh and review again.",
+  );
+  const releaseMismatch = mapAdminErrorMessage("inventory.reservation.release_mismatch", "fa");
+  assert.ok(/[\u0600-\u06ff]/.test(releaseMismatch));
+  assert.ok(!releaseMismatch.includes("inventory."));
+  const restock = mapAdminErrorMessage("inventory.return_restock.invalid", "fa");
+  assert.ok(/[\u0600-\u06ff]/.test(restock));
+  assert.ok(!restock.includes("inventory."));
+  // A partial claim of a replacement parcel is supported now, so its old refusal copy must be gone.
+  assert.ok(!listMappedAdminErrorCodes().includes("fulfillment.returns.replacement_partial_claim_unsupported"));
+});
+
 test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {
   assert.equal(mapAdminErrorMessage("Bad Request", "fa"), unknownAdminErrorMessage("fa"));
   assert.equal(mapAdminErrorMessage("HTTP 400", "en"), unknownAdminErrorMessage("en"));

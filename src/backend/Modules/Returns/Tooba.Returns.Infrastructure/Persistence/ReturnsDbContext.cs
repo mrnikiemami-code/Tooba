@@ -40,6 +40,11 @@ public sealed class ReturnsDbContext : DbContext
     public DbSet<RefundAttempt> RefundAttempts => Set<RefundAttempt>();
 
     /// <summary>
+    /// TB-265-R2: تصمیم پایدار و سریال‌شدهٔ تأیید/رد هر پرونده.
+    /// </summary>
+    public DbSet<ReturnDecisionRecord> ReturnDecisions => Set<ReturnDecisionRecord>();
+
+    /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -100,6 +105,13 @@ public sealed class ReturnsDbContext : DbContext
             entity.Property(x => x.FailureCode).HasMaxLength(64);
             entity.HasIndex(x => x.ReturnRequestId);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique();
+        });
+        modelBuilder.Entity<ReturnDecisionRecord>(entity =>
+        {
+            entity.ToTable("return_request_decisions");
+            entity.HasKey(x => x.ReturnRequestId);
+            entity.Property(x => x.ReturnRequestId).ValueGeneratedNever();
+            entity.Property(x => x.Decision).HasMaxLength(32);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
