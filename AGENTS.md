@@ -1,3 +1,7 @@
+# CURRENT — 265-R2 REVIEWED; STOP FOR USER TRIAL — 2026-11-14
+
+Read docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R2/ARCHITECT-REVIEW.md. The three bounded source repairs are ready for user trial; no browser/user acceptance or live financial/provider acceptance claimed. Worker Q proves one attempt KEY, not one gateway invocation. Persisted Requested review case and completed partial example URLs are in review. User checks existing browser journey/Persian feedback/mobile; live approval is a business mutation, not a controlled-port preview. NO next implementation task, automaticNext NONE. Wait for user feedback; don't reopen263/264 or run broad test loops. One canonical database and all user-data constraints retained. Earlier CURRENT banners below are superseded.
+
 # CURRENT — 265-R2 WORKER RESULT PASS: exact immutable release identity, serialized durable approve/reject, partial source replacement that conserves the order's remaining obligation — 2026-11-14
 
 Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R2/TASK.md and
