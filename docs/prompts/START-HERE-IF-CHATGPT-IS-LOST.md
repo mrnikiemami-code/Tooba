@@ -1,4 +1,23 @@
-# CURRENT ARCHITECT RECOVERY — 265 PARTIAL; ONLY265-R1 ISSUED — 2026-11-14
+# CURRENT — 265-R1 WORKER RESULT PASS: durable Order closure, source-exact claim settlement, atomic partial release, money/disposition recovery — 2026-11-14
+
+Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tb265-relational.txt,tb265-behavior.txt,tb265-fulfillment.txt,tb265-plan.txt}.
+Status **PASS** within the issued A–E repair scope, decision **DURABLE_ORDER_OWNED_LINE_OBLIGATION_CLOSURE_SOURCE_AND_QUANTITY_EXACT_CLAIM_SETTLEMENT_ATOMIC_INVENTORY_PARTIAL_RELEASE_AND_INDEPENDENT_MONEY_VS_DISPOSITION_RECOVERY**, NOT Architect ACCEPT, NOT user VISUAL/FUNCTIONAL ACCEPT, NOT live finance/provider proof. Base `d6bdc88c99502e115ebd3e3d4e7f64087dadc0f2` verified ancestor; code/HEAD SHA in `result-contract.txt`; single worker, one task, no delegation, no historical agent resumed. 264/R1/R2 scheduling, 264-R3 mobile and 263 notifications untouched.
+
+A real durable Order closure (`"order".order_line_obligation_closures`, row-locked `"order".order_lines`, exact replay, changed intent conflict, cumulative bound, siblings untouched, actual reader consumes it).
+B source/quantity-exact Fulfillment claim (`courier_return_claim_lines` unique `ActiveKey={receiptId}:{orderLineId}:{condition}` + `courier_return_claim_allocations` owning parcel+hold; sourceA cannot touch sourceB; Requested case freezes its claimed replacement; reject restores only that claim; dispatched replacement refused; lost-link retry repairs).
+C one atomic Inventory partial release (reservation row lock; held + `Reserved` decrement + durable release identity all-or-nothing; `OnHand` unchanged; replay/conflict/concurrency proven 2+1 of 3).
+D money independent of disposition (`ObligationClosed→StockSettled→RefundProcessing→RefundReleased`; refund success + restock failure retries disposition only with one refund; late reject typed refusal, no claim/stock/money change).
+E operator path + localization (`CourierReturnCases` on the shipment read model, one «مشاهدهٔ پروندهٔ مرجوعی» per case surviving reload, Returns origin/phase/released quantity + Persian condition/disposition, typed `returns.courier_origin.*` / `fulfillment.returns.*` mappings, served BUILD_ID `JD0cZnOk5evPmE-HmLmNl`).
+
+Proven once each: Host relational **11/11** (A–K), Returns **5/5**, Fulfillment **8/8**, FE returns **7/7**, typecheck 0, `next build` 0, solution build 0 errors, Host publish 0 errors.
+Deploy: additive Order `20261114120000_AddOrderLineObligationClosures` + Fulfillment `20261114130000_AddCourierReturnClaimLinesAndAllocations` applied by the repository runner after private backup `D:\temp\tb265-backup\tooba_alpha-pre-tb265-r1.dump`; all modules `pendingCount=0`; Host 5088 PID 28852 healthy, FE 3000 PID 11200 on `JD0cZnOk5evPmE-HmLmNl`; one DB `tooba_alpha`; no extra DB/DDL/reseed/reclaimer; user and method `01a17d0d…` rows read-only; keys/CapturedPreview preserved; 255 parked; Tipax deferred.
+Limits: no browser click-through by the worker (live trial pending); disclosed task-owned controlled financial port, no real provider money; no whole-module/base-parity suite; 265-R1 PASS pending Architect review and user functional acceptance.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. The prior recovery banner below is superseded.
+
+---
+
+## SUPERSEDED — 265 PARTIAL; ONLY265-R1 ISSUED — 2026-11-14
 
 Read docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/TASK.md.
 265 worker PASS is NOT accepted: source-confirmed owning/recovery gaps A–E below. One worker/task repair, no new product stage/delegation/broad test loop.

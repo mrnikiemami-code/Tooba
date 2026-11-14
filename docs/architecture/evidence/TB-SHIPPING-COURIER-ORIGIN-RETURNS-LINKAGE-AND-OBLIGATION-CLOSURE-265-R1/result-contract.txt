@@ -1,0 +1,57 @@
+TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1
+mode=REPAIR_DURABLE_ORDER_CLOSURE_SOURCE_EXACT_SETTLEMENT_ATOMIC_STOCK_RELEASE_AND_MONEY_DISPOSITION_RECOVERY_WITH_REAL_CASE_HANDOFF
+decision=DURABLE_ORDER_OWNED_LINE_OBLIGATION_CLOSURE_SOURCE_AND_QUANTITY_EXACT_CLAIM_SETTLEMENT_ATOMIC_INVENTORY_PARTIAL_RELEASE_AND_INDEPENDENT_MONEY_VS_DISPOSITION_RECOVERY
+status=PASS_WITHIN_ISSUED_SCOPE_PENDING_ARCHITECT_REVIEW_NOT_USER_ACCEPTANCE
+base=d6bdc88c99502e115ebd3e3d4e7f64087dadc0f2
+code=906d943c4a3e0df4bbab45e84c7ae06aff44b959
+branch=main
+stopState=STOP_FOR_ARCHITECT
+automaticNextImplementationTask=NONE
+
+migrations:
+  order=20261114120000_AddOrderLineObligationClosures
+  fulfillment=20261114130000_AddCourierReturnClaimLinesAndAllocations
+  appliedBy=Tooba.MigrationRunner
+  privateBackup=D:\temp\tb265-backup\tooba_alpha-pre-tb265-r1.dump (3457390 bytes, 2026-11-14 07:45 local)
+  pendingCountAllModules=0
+
+newTables:
+  - '"order".order_line_obligation_closures'
+  - fulfillment.courier_return_claim_lines
+  - fulfillment.courier_return_claim_allocations
+
+proof:
+  hostRelational=CourierOriginReturns265RelationalTests 11/11 (A,B,C,D,E,F,G,H,I,J,K) on real tooba_alpha
+  returns=CourierOriginReturns265Tests 5/5
+  fulfillment=CourierReturnClaim265Tests 8/8
+  frontend=test:returns 7/7, typecheck 0, next build 0
+  build=Tooba.slnx 0 errors; Host publish 0 errors
+  evidence=docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1
+
+runtime:
+  database=tooba_alpha@127.0.0.1:5432 (SingleStore, tenant store-alpha)
+  host=http://127.0.0.1:5088 PID 28852 /health 200 /health/ready 200
+  frontend=http://127.0.0.1:3000 PID 11200 BUILD_ID JD0cZnOk5evPmE-HmLmNl /fa 200
+  servedChunks=3852-a745543e9279487e.js, 7825-e370aae29c6ec503.js (200, carry the courier-case link and Returns copy)
+  previousBuildId=y1ZgMVMtBdg9PSdNndMYa (404 after restart)
+
+boundaries:
+  oneDbOnly=yes
+  noExtraOrDisposableDb=yes
+  noEditionConnectionPortChange=yes
+  noManualDdlBusinessSqlResetReseedBackfill=yes
+  noGlobalReclaimer=yes
+  dataProtectionUntouched=yes
+  capturedPreviewLocalOnCheckedInOff=yes
+  userRowsWritable=no
+  methodDraft01a17d0dReadOnly=yes
+  parked255=yes
+  tipaxDeferred=yes
+  accepted264And263Reopened=no
+
+limits:
+  noBrowserClickThroughByWorker=yes
+  financialPorts=task-owned controlled recorder (no real provider/wallet money)
+  livePaidCheckoutOrProviderRefund=not executed
+  wholeModuleOrBaseParitySuite=not run
+  parentCommonPackageReturnOrchestration=still unsupported (real child guards preserved)

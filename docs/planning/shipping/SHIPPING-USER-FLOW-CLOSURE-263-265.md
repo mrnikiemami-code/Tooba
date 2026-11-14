@@ -1,4 +1,17 @@
-# CURRENT ARCHITECT RECOVERY — 265 PARTIAL; ONLY265-R1 ISSUED — 2026-11-14
+# CURRENT — 265-R1 REPAIR LANDED (worker PASS, pending Architect review) — 2026-11-14
+
+Read docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/{RESULT.md,RECEIPTS.md,result-contract.txt}.
+The five concrete 265 gaps A–E are repaired in one bounded pass: real Order-owned durable line-obligation closure, source/quantity-exact Fulfillment claim settlement and dispatch freeze, atomic Inventory partial release, independent money-vs-disposition recovery, and the linked/localized operator path. Decision **DURABLE_ORDER_OWNED_LINE_OBLIGATION_CLOSURE_SOURCE_AND_QUANTITY_EXACT_CLAIM_SETTLEMENT_ATOMIC_INVENTORY_PARTIAL_RELEASE_AND_INDEPENDENT_MONEY_VS_DISPOSITION_RECOVERY**; NOT Architect ACCEPT and NOT user functional acceptance.
+
+Three business paths stay binding and are now physically enforced: healthy same-unit resend from the source `Usable` capacity, newly reserved healthy replacement with its own purpose-bound non-expiring hold, and linked existing Returns case whose approval performs the owning phase order (Order closure → stock settlement → refund). A requested case claims only its selected quantity, releases no stock and moves no money; rejection restores only that claim; an approved case releases only its own unconsumed held quantity once; consumed original sale stock is never resurrected, damaged units never become saleable, sibling/unselected quantities and their lawful obligations stay intact.
+
+Remaining planned, NOT issued: parent common-package return orchestration (child guards stay real), any provider/live financial settlement work, and the user's own functional trial. Accepted 264/R1/R2 scheduling, 264-R3 mobile and 263 notifications were not reopened. One canonical `tooba_alpha` 5432 / FE 3000 / Host 5088 SingleStore; keys and CapturedPreview preserved; 255 parked, Tipax deferred.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+---
+
+## SUPERSEDED — 265 PARTIAL; ONLY265-R1 ISSUED — 2026-11-14
 
 Read docs/architecture/evidence/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-SHIPPING-COURIER-ORIGIN-RETURNS-LINKAGE-AND-OBLIGATION-CLOSURE-265-R1/TASK.md.
 265 worker PASS is NOT accepted: source-confirmed owning/recovery gaps A–E below. One worker/task repair, no new product stage/delegation/broad test loop.
