@@ -7,9 +7,8 @@ Repository           : mrnikiemami-code/Tooba (branch main)
 Expected-Base-SHA    : a0e1f24e55f14f8bc366c9018da9f117e718aca8   (verified ancestor of HEAD, exit 0)
 Work-Base-SHA        : 494690faf0c5c4f73bcf578301725f6e95432b9f   (HEAD == origin/main before this round)
 Code+Evidence-Commit : d25544749f9dbe77c0dd79aa9c4e472af895a02c   (single commit: source, migrations, evidence, ledger)
-Final-HEAD-SHA       : the docs-only SHA-recording commit that carries this line; `git rev-parse HEAD`
-                       immediately after push (see RECEIPTS.md for the recorded value)
-Origin-Main-Parity   : HEAD == origin/main verified after the push (`git rev-parse HEAD` == `git rev-parse origin/main`)
+Report-Commit-SHA    : 70f152abbb758b204570ac0cb80b839bc7117543   (this contract + SHA recording)
+Origin-Main-Parity   : `HEAD == origin/main` verified after every push; see RECEIPTS.md §7 for the exact SHAs
 
 Status               : PASS (worker, within the issued 265-R2 scope)
 Decision             : EXACT_IMMUTABLE_RELEASE_REQUEST_IDENTITY_WITH_SERIALIZED_DURABLE_APPROVE_VS_REJECT_DECISION_AND_PARTIAL_SOURCE_REPLACEMENT_RETURN_THAT_CONSERVES_THE_REMAINING_ORDERS_OWN_OBLIGATION

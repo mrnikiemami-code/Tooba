@@ -117,3 +117,11 @@ git diff --stat   # 22 tracked files, 1412 insertions(+), 143 deletions(-), plus
 #   src/backend/Modules/Returns/Tooba.Returns.Infrastructure/Directories/ReturnDirectory.Decisions.cs
 #   docs/architecture/evidence/TB-SHIPPING-…-265-R2/*  (this evidence)
 ```
+
+## 7. Repository state (this round)
+
+```
+d25544749f9dbe77c0dd79aa9c4e472af895a02c   code + migrations + evidence + ledger (single task commit)
+70f152abbb758b204570ac0cb80b839bc7117543   result contract + SHA recording
+git rev-parse origin/main                  == the local HEAD after each push (parity verified)
+```
