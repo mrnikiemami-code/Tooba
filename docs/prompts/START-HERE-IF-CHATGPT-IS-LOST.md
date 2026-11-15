@@ -1,4 +1,15 @@
-# CURRENT — 271 PARTIAL + 271-R1 PASS (repair): one active/archive selection, a tab-invariant archive badge, one combined classified set under one server now, a real job-priority default order, typed refusals and an explicit zone-unavailable state
+# CURRENT — 271-R1 ARCHITECT ACCEPT WITHIN REPAIR SCOPE; QUEUE READY FOR USER REVIEW — 2026-11-15
+
+Read docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/ARCHITECT-REVIEW.md.
+Latest Architect-accepted task: TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1.
+Last implementation: 6632c42d424603f076a9a3a484133f21c056ff5e; reviewed main e533cad03b6626ca894738d9631f73eb4ef5f7fd.
+Queue271 as repaired: source/evidence acceptance, READY_FOR_USER_REVIEW, NOT user visual/functional acceptance.
+Active Task/Repair: NONE. STOP_FOR_USER_REVIEW. automaticNextImplementationTask: NONE.
+One active/archive selection, tab-invariant history badge, one combined classification/clock per response, real default job-priority ordering, blocked work preserved, typed unsupported-filter refusal and honest unknown-zone state reviewed.
+Worker tests/runtime receipts reviewed; no independent Architect local test/browser verification. Current live coverage: four active undated rows plus one history row; dated ordering/zones/cutoff rely on controlled tests, no new demo dataset.
+Review http://127.0.0.1:3000/fa/admin/fulfillments. No new implementation, screenshots, loops, fixture/order/data writes, cleanup or schema work. Preserve 270-R4 acceptance and prior 271/270-R2/R3 partial/audit history, including missing R2 pre-apply backup. No provider/financial/all-shipping acceptance.
+
+# SUPERSEDED — 271 PARTIAL + 271-R1 PASS (repair): one active/archive selection, a tab-invariant archive badge, one combined classified set under one server now, a real job-priority default order, typed refusals and an explicit zone-unavailable state
 
 Read docs/ai/tasks/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,query-selection-count-parity-proof.md,default-sort-blocked-and-zone-proof.md,user-review.md}.
