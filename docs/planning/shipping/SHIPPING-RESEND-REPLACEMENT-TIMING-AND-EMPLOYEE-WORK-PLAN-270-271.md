@@ -45,3 +45,10 @@ No new settings/dataset/business state engine. Existing Toast/MessageBox, RTL/mo
 
 ## Recovery / stop
 Current active269 only.270/271 NOT ISSUED; numbers reserved for planning, no worker launched. When269 result arrives independently inspect and either issue exact repair OR270, one at a time. No automatic tasks/messages/provider calls. One canonical tooba_alpha5432 SingleStore/store-alpha FE3000->Host5088, all keys/flags preserved. No new cleanup/restore/reset/stock write, no user method edit. Preserve prior cleanup audit corrections and unknowns, don't certify historic manual reset.
+
+## Status pointer — 2026-11-15 (TB-270-R3)
+
+- 270-R1: ACCEPT within its additive read-only captured-input seam scope.
+- 270-R2: PARTIAL — Architect review persisted at docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/R2/ARCHITECT-REVIEW.md.
+- 270-R3: PASS within its repair scope, awaiting Architect review — docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/.
+- 271 (job-stage/time-scope filters): NOT ISSUED. Next implementation task: NONE.

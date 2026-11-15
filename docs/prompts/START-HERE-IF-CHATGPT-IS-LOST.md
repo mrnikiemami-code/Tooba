@@ -1,4 +1,22 @@
-# CURRENT — 270-R2 PASS: an existing resend/replacement parcel gets its OWN confirmed dispatch plan and cannot be dispatched without it
+# CURRENT — 270-R3 PASS: exact captured binding, one shared plan binding, Inventory-owned replacement hold, and a frozen fingerprinted review with honest recovery
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/{RESULT.md,RECEIPTS.md,result-contract.txt,exact-binding-proof.md,recovery-and-connected-workflow-proof.md,user-review.md}.
+Decision `EXACT_CAPTURED_GROUP_AND_RATE_ROW_IDENTITY_ONE_SHARED_PLAN_BINDING_ON_GUARD_PACKAGE_PROJECTION_AND_BULK_PREFLIGHT_INVENTORY_OWNED_REPLACEMENT_HOLD_READ_AND_A_FROZEN_SERVER_FINGERPRINTED_REVIEW_WITH_EXPIRED_SLOT_RECONCILIATION_EPOCH_FENCING_AND_CREATE_TO_PLAN_HANDOFF`,
+Status **PASS within the issued 270-R3 repair scope**, NOT Architect ACCEPT, NOT user acceptance. **271 NOT ISSUED**, next
+implementation NONE. R2 is **PARTIAL** — its Architect review is persisted at `…270-R3/R2/ARCHITECT-REVIEW.md` (missing
+pre-apply backup and the exact relational proof limits included). R1 stays ACCEPT within its read-only seam scope.
+
+R3 repaired the five concrete R2 seams without changing the two-stage design: the captured read is addressed by the
+captured `AreaGroupId`/`RateRowId` (proven against the real R1 adapter with different Order vs captured ids), one shared
+`OrderShipmentDispatchPlanBindingRules` decides "planned" for the dispatch guard, package, queue projection and a new
+all-member bulk preflight, the replacement hold is read from Inventory's CURRENT reservation through a
+Fulfillment-owned contract, the preview issues a server `ReviewFingerprint` that confirmation must echo (expired slot →
+typed refusal, never clamped; exact replay answers the stored row), and create/recover hands the exact created parcel to
+planning while pending/referral/completed replay opens no calendar. No migration, no live plan row, no fixture parcel,
+no provider/waybill/notification/money action.
+
+# SUPERSEDED — 270-R2 PASS: an existing resend/replacement parcel gets its OWN confirmed dispatch plan and cannot be dispatched without it
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/{RESULT.md,RECEIPTS.md,result-contract.txt,ownership-and-plan.md,readiness-and-feasibility-proof.md,replay-and-dispatch-guard-proof.md,user-review.md}.

@@ -1,0 +1,67 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Task-ID: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3
+Parent-Task: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Mode: REPAIR_EXACT_CAPTURE_BINDING_LIVE_HOLD_AND_IMMUTABLE_PLAN_RECOVERY
+
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Expected-Base-SHA: febeb27e36829cdceb1a8c6a3dcf4a9b0f22f659
+Base-SHA:          febeb27e36829cdceb1a8c6a3dcf4a9b0f22f659  (present locally, was HEAD, == origin/main)
+Code-SHA:          96c5a8e19c10ba246b799202a804187ca1957a18
+Evidence-SHA:      recorded in the canonical Bridge Result body (the commit that adds this evidence set)
+Final-HEAD:        the evidence commit (this file's commit); reported in the Bridge Result body
+
+Decision:
+EXACT_CAPTURED_GROUP_AND_RATE_ROW_IDENTITY_ONE_SHARED_PLAN_BINDING_ON_GUARD_PACKAGE_PROJECTION_AND_BULK_PREFLIGHT_INVENTORY_OWNED_REPLACEMENT_HOLD_READ_AND_A_FROZEN_SERVER_FINGERPRINTED_REVIEW_WITH_EXPIRED_SLOT_RECONCILIATION_EPOCH_FENCING_AND_CREATE_TO_PLAN_HANDOFF
+
+Scope proofs (each run once, after the final code change):
+  Order unit              AdminShipmentPlan270R2Tests                     25/25
+  Order relational        AdminShipmentDispatchPlan270R2RelationalTests    2/2   (real tooba_alpha, rolled back)
+  Queue projection        AdminFulfillmentOwnPlanProjection270R2Tests      3/3
+  Store arbitration       OrderShipmentDispatchPlanStoreFilter270R3Tests   3/3
+  Fulfillment guard       DispatchPlanGuard270R2Tests                      7/7
+  Fulfillment readiness   ReplacementReadiness270R3Tests                   4/4
+  Fulfillment bulk        AdminFulfillmentBulkTests                       12/12
+  Shipping seam           ShippingAttemptSchedulingLookupTests              8/8
+  FE mount                admin-shipment-plan-270r2 (10) + delivery (74)   84/84
+  typecheck               tsc --noEmit                                     0
+  FE build                npm run build          BUILD_ID iXZVso1qBFzB4wDa0huHP
+  Backend build           dotnet build Tooba.slnx -c Release                0 errors
+  Host publish            dotnet publish artifacts\publish-primary          0 errors
+  Served markers          _buildManifest.js 200; chunks/9424-518a110b21e84091.js 200 (new copy)
+  Runtime                 Host 5088 PID 43312 /health 200, /health/ready 200 → SingleStore
+                          Next 3000 PID 620 /fa 200 on BUILD_ID iXZVso1qBFzB4wDa0huHP
+
+Schema:
+  No migration added or modified by this increment.
+  Applied schema remains order 20261115120000_AddShipmentDispatchPlans (R2, MigrationRunner).
+  No DDL, no reset/reseed/backfill, no manual business SQL.
+
+Disclosed deviations / limits:
+  - R2's pre-apply private backup for the additive shipment_dispatch_plans migration is still ABSENT; only the
+    post-apply dump D:\temp\tb270r2-backup\tooba_alpha-post-tb270r2.dump (2,949,234 B) exists. Persisted in
+    R2/ARCHITECT-REVIEW.md; R3 adds no schema change so nothing new depended on it.
+  - The first `dotnet publish` of this round failed (MSB3021/MSB3027) because the running Host (PID 19240) locked
+    the output DLLs. The Host was stopped and the publish re-run successfully; the failed attempt is recorded in
+    RECEIPTS.md §5, not hidden.
+  - No live eligible Created/unplanned resend-or-replacement parcel exists in the current data, so no live plan row,
+    no live operator click-through and no manufactured fixture parcel/hold/order. The review URL is completed
+    read-only history; the actionable path is proven by the mounted suite and owning-application cases.
+  - Concurrency is proven by the shipment_id unique index + two independent contexts, not by a stress harness.
+  - Bulk dispatch has no separate test class beyond its preflight cases; it runs the same single-dispatch guard.
+  - Pre-existing untracked scratch scripts (scripts/tb266r1-*.mjs, scripts/tb270r2-*.mjs) are not part of this change.
+
+No live business write, no parcel/hold/reservation/stock/decision change, no provider call, no waybill, no
+notification send, no money movement, no user-data mutation. ONE canonical tooba_alpha 5432 SingleStore/store-alpha,
+Host 5088, Next 3000; no second/disposable database, no 15433, no edition/port/connection/appsettings/keys change.
+
+Worker PASS is not Architect ACCEPT. No user visual/functional, provider, financial or universal shipping acceptance
+is claimed. 271 remains NOT ISSUED.

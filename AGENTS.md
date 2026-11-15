@@ -1,4 +1,43 @@
-# CURRENT — 270-R2 PASS: a resend/replacement parcel now has its own deliberately confirmed plan and cannot be dispatched without it — 2026-11-15
+# CURRENT — 270-R3 PASS: the plan now binds to the REAL captured area group/rate row, one shared binding guards every reader, the replacement hold is read from Inventory, and a frozen fingerprinted review recovers honestly — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,exact-binding-proof.md,recovery-and-connected-workflow-proof.md,user-review.md}.
+Status **PASS within the issued 270-R3 repair scope**, decision
+`EXACT_CAPTURED_GROUP_AND_RATE_ROW_IDENTITY_ONE_SHARED_PLAN_BINDING_ON_GUARD_PACKAGE_PROJECTION_AND_BULK_PREFLIGHT_INVENTORY_OWNED_REPLACEMENT_HOLD_READ_AND_A_FROZEN_SERVER_FINGERPRINTED_REVIEW_WITH_EXPIRED_SLOT_RECONCILIATION_EPOCH_FENCING_AND_CREATE_TO_PLAN_HANDOFF`,
+NOT Architect ACCEPT, NOT user visual/functional acceptance, NOT any carrier/provider/waybill/customer-consent/financial claim.
+Chain: **270-R1 = ACCEPT within its additive read-only seam scope** (checkpoint persisted); **270-R2 = PARTIAL, its
+Architect review is now persisted at `…270-R3/R2/ARCHITECT-REVIEW.md`** (including the missing pre-apply backup and the
+exact relational proof limits); **270-R3 = this result, awaiting Architect review**. 270 stays PARTIAL as the parent and
+**271 is NOT ISSUED**; `automaticNextImplementationTask: NONE`.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A Captured binding | exact | the scheduling lookup is addressed with `binding.AreaGroupId` + `binding.RateRowId`; the Order `ShippingGroupId` is never used as a captured identity. A connected case runs the REAL R1 adapter with deliberately different ids, and a capture answering for the Order group is `binding_mismatch` with no calendar |
+| B One binding | shared | `OrderShipmentDispatchPlanBindingRules` (parcel/checkout/order/unit/group/kind/source/decision/hold/canonical line fingerprint/method/coherence) is used by the dispatch guard, consolidated package, queue projection and a new all-member bulk preflight that runs before the first effect; failures are closed and the store arbitrates only `ux_shipment_dispatch_plans_shipment` + `23505` |
+| C Readiness | owning | `IFulfillmentReplacementReadinessReader` verifies unit + replacement parcel + source + ONE `Reserved|Fulfilled` decision + exact line/quantity + Inventory's CURRENT `Held` reservation, read-only; released/consumed/wrong-line is a typed refusal. Order depends on the Fulfillment contract, never on Inventory |
+| D Review | frozen + fingerprint | the server issues a `ReviewFingerprint` over the reviewed facts; confirmation echoes it, a changed context is `review_context_changed` with zero write, an expired slot is `selection_expired` (never clamped), exact replay answers the stored row, and the dialog freezes the exact request bytes across an unknown outcome with epoch fencing against late responses |
+| E Handoff | exact parcel | create/recover hands the created parcel id to planning; pending/referral/completed replay opens no calendar; the existing card entry still works |
+| F Data | unchanged | one canonical `tooba_alpha`, **no migration added**, no DDL/reset/reseed/backfill, no fixture order/parcel/hold, no live plan row, no provider/waybill/notification/money action |
+
+Verified once after the final code change: Order `AdminShipmentPlan270R2Tests` **25/25**,
+`AdminShipmentDispatchPlan270R2RelationalTests` **2/2** (rolled back), `AdminFulfillmentOwnPlanProjection270R2Tests` **3/3**,
+`OrderShipmentDispatchPlanStoreFilter270R3Tests` **3/3**, Fulfillment `DispatchPlanGuard270R2Tests` **7/7**,
+`ReplacementReadiness270R3Tests` **4/4**, `AdminFulfillmentBulkTests` **12/12**, Shipping
+`ShippingAttemptSchedulingLookupTests` **8/8**, FE mount **84/84**, `tsc` 0, `npm run build` 0
+(`BUILD_ID iXZVso1qBFzB4wDa0huHP`), `dotnet build Tooba.slnx -c Release` 0 errors, Host publish 0 errors.
+Deploy: Host 5088 PID 43312 (`/health` + `/health/ready` 200, SingleStore), Next 3000 PID 620 (`/fa` 200, served chunk
+`9424-518a110b21e84091.js` 200 with the new copy). Read-only live check at 1440/390: document overflow 0 (`-15`/`0`),
+tabs همه(۲)/دریافت‌شده در مبدأ(۱)/ارسال مجدد(۱)/تحویل‌شده(۱), **no** «زمان‌بندی ارسال» button for the `Delivered` history,
+no raw ISO and no IANA id in operator copy.
+Known limits: **R2's pre-apply backup is still absent** (only the post-apply dump exists; R3 adds no schema change); the
+first publish of this round failed on a file lock held by the running Host and was re-run after the graceful stop; no
+live eligible `Created`/unplanned parcel exists, so the review URL is completed history and the actionable path rests on
+the mounted suite plus owning-application cases; concurrency is proven by the unique index + independent contexts, not a
+stress harness; one pre-existing lineage link measures 24px high at 390 (TB-268 surface, not introduced here); untracked
+`scripts/tb266r1-*.mjs` / `scripts/tb270r2-*.mjs` scratch files are not part of this change.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+# SUPERSEDED — 270-R2 PASS: a resend/replacement parcel now has its own deliberately confirmed plan and cannot be dispatched without it — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-and-plan.md,readiness-and-feasibility-proof.md,replay-and-dispatch-guard-proof.md,user-review.md}.
