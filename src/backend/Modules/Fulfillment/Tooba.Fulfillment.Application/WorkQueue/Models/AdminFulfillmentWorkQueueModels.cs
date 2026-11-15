@@ -92,7 +92,25 @@ public sealed record AdminFulfillmentWorkQueueRow(
     // TB-264: server-derived preparation urgency (<see cref="AdminFulfillmentPreparationState"/> token).
     string PreparationState = AdminFulfillmentPreparationStateNames.None,
     // TB-264: accepted timing policy version (1 = no operational deadlines).
-    int DispatchPolicyVersion = 1);
+    int DispatchPolicyVersion = 1,
+    // TB-271: the ONE employee job stage of this physical row (token of <see cref="AdminFulfillmentJobStageNames"/>).
+    // It is a read label over facts this row already carries; it never authorizes anything on its own.
+    string JobStage = AdminFulfillmentJobStageNames.History,
+    // TB-271: Persian operator label of <see cref="JobStage"/>.
+    string JobStageLabelFa = "",
+    // TB-271: WHAT the row's relevant instant means (never a merged blur between start/departure/close).
+    string JobTimeMeaning = AdminFulfillmentJobTimeMeanings.None,
+    // TB-271: Persian label of <see cref="JobTimeMeaning"/>, including the honest undated/ongoing wording.
+    string JobTimeLabelFa = "",
+    // TB-271: the relevant persisted instant of THIS job, null when the accepted evidence carries none.
+    DateTimeOffset? JobTimeUtc = null,
+    // TB-271: this row's position against the injected server now (<see cref="AdminFulfillmentJobTimeStates"/>).
+    string JobTimeState = AdminFulfillmentJobTimeStates.Undated,
+    // TB-271: 1-based position of this parcel inside its whole physical group (0 = not an ordinated parcel), so two
+    // rows of one order stay distinguishable by a HUMAN number instead of a raw id.
+    int WorkUnitOrdinal = 0,
+    // TB-271: how many live parcels that whole group owns (0 = not an ordinated parcel).
+    int WorkUnitOrdinalTotal = 0);
 
 /// <summary>
 /// TB-260-R1: the physical scopes a queue row can own. A row is ONE work unit, never a whole seller order:
@@ -612,7 +630,28 @@ public sealed record AdminFulfillmentWorkQueueCounts(
     int Unspecified,
     int InTransit,
     // TB-264: overlapping «شروع آماده‌سازی رسیده» subset of TotalActive.
-    int PreparationDue = 0);
+    int PreparationDue = 0,
+    // TB-271: stage badges. Each one covers the WHOLE classified set inside the SELECTED time scope, after
+    // search/column filters and before the selected stage — so a badge can never describe one fetched page.
+    int StageAll = 0,
+    int StagePreparation = 0,
+    int StageReadyToSend = 0,
+    int StageHandoff = 0,
+    int StageDelivery = 0,
+    int StageReturns = 0,
+    // TB-271: the archive badge. History is time-independent and is NEVER part of an active total.
+    int StageHistory = 0,
+    // TB-271: time badges. Each one covers the SELECTED stage after the same constraints, before the selected scope.
+    int TimeToday = 0,
+    int TimeFuture = 0,
+    int TimeAll = 0,
+    // TB-271: the explicit «موعد مشخص نشده» subset of the current (stage + time) selection.
+    int Undated = 0,
+    // TB-271: the row count of the current (stage + time) selection — the same set the page is cut from.
+    int SelectedTotal = 0,
+    // TB-271: the server's own echo of the applied tokens, so the client never guesses what it is looking at.
+    string SelectedStage = AdminFulfillmentJobStageNames.All,
+    string SelectedTimeScope = AdminFulfillmentTimeScopeNames.Today);
 
 /// <summary>
 /// TB-260: one queue page plus the bucket counts of the whole filtered set it was cut from. Field names

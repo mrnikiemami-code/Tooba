@@ -10,12 +10,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   FULFILLMENT_DISPATCH_FILTERS,
+  FULFILLMENT_EMPTY_QUEUE_COUNTS,
   formatCustomerReceiving,
   formatDispatchBucketLabel,
   formatHandoffWindowLabel,
   formatPlannedHandoff,
   mapFulfillmentQueueCounts,
   normalizeDispatchToken,
+  type FulfillmentQueueCounts,
 } from "./fulfillment-work-queue-dispatch.ts";
 import { mapFulfillmentList, formatFulfillmentQueueQuantity } from "./fulfillment-api.ts";
 
@@ -92,16 +94,19 @@ test("a row without timing stays truthful instead of inventing a bucket or a dat
 });
 
 test("counts are read from the server's dispatchCounts and default to zero, never to a page tally", () => {
-  // TB-264 added the server-owned `preparationDue` count; this contract carries it verbatim.
-  assert.deepEqual(mapFulfillmentQueueCounts({ totalActive: 3, due: 1, today: 1, overdue: 0, upcoming: 1, unspecified: 1, inTransit: 2 }), {
-    totalActive: 3, due: 1, today: 1, overdue: 0, upcoming: 1, unspecified: 1, inTransit: 2, preparationDue: 0,
+  // TB-264 added the server-owned `preparationDue` count; TB-271 added the stage/time badges. This contract carries
+  // every field verbatim, and an absent one defaults to zero instead of a page tally.
+  const withDefaults = (overrides: Partial<FulfillmentQueueCounts>): FulfillmentQueueCounts => ({
+    ...FULFILLMENT_EMPTY_QUEUE_COUNTS,
+    ...overrides,
   });
-  assert.deepEqual(mapFulfillmentQueueCounts({ TotalActive: 1, Due: 1, Today: 1, Overdue: 0, Upcoming: 0, Unspecified: 0, InTransit: 0 }), {
-    totalActive: 1, due: 1, today: 1, overdue: 0, upcoming: 0, unspecified: 0, inTransit: 0, preparationDue: 0,
-  });
-  assert.deepEqual(mapFulfillmentQueueCounts(null), {
-    totalActive: 0, due: 0, today: 0, overdue: 0, upcoming: 0, unspecified: 0, inTransit: 0, preparationDue: 0,
-  });
+  assert.deepEqual(mapFulfillmentQueueCounts({ totalActive: 3, due: 1, today: 1, overdue: 0, upcoming: 1, unspecified: 1, inTransit: 2 }), withDefaults({
+    totalActive: 3, due: 1, today: 1, overdue: 0, upcoming: 1, unspecified: 1, inTransit: 2,
+  }));
+  assert.deepEqual(mapFulfillmentQueueCounts({ TotalActive: 1, Due: 1, Today: 1, Overdue: 0, Upcoming: 0, Unspecified: 0, InTransit: 0 }), withDefaults({
+    totalActive: 1, due: 1, today: 1, overdue: 0, upcoming: 0, unspecified: 0, inTransit: 0,
+  }));
+  assert.deepEqual(mapFulfillmentQueueCounts(null), withDefaults({}));
 });
 
 test("quick filters use the exact ids the Fulfillment module declares", () => {

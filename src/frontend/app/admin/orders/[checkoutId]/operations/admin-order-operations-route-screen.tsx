@@ -248,6 +248,24 @@ function toTargetFact(
   };
 }
 
+/**
+ * TB-271: «بازگشت به صف کار» restores the EXACT queue selection the row was opened from. The new stage/time
+ * tokens win; a link that only carried the legacy `filter` token keeps working through the queue's own documented
+ * mapping, so no stale hidden filter is ever combined with a visible one.
+ */
+function queueBackHref(
+  filter: string | null,
+  stage: string | null,
+  scope: string | null,
+): string {
+  const params = new URLSearchParams();
+  if (stage) params.set("stage", stage);
+  if (scope) params.set("scope", scope);
+  if (!stage && !scope && filter) params.set("filter", filter);
+  const query = params.toString();
+  return query ? `/admin/fulfillments?${query}` : "/admin/fulfillments";
+}
+
 export function AdminOrderOperationsRouteScreen({
   checkoutId,
   fulfillmentId,
@@ -256,6 +274,8 @@ export function AdminOrderOperationsRouteScreen({
   packageId = null,
   fromQueue = false,
   backFilter = null,
+  backStage = null,
+  backScope = null,
 }: {
   checkoutId: string;
   fulfillmentId: string | null;
@@ -265,8 +285,11 @@ export function AdminOrderOperationsRouteScreen({
   /** TB-260-R1: exact consolidated-package locator from a package work row. */
   packageId?: string | null;
   fromQueue?: boolean;
-  /** The quick filter the operator left behind, so «بازگشت به صف کار» restores the same queue view. */
+  /** The legacy quick filter an older link carried, so «بازگشت به صف کار» still restores a meaningful view. */
   backFilter?: string | null;
+  /** TB-271: the queue's job-stage/time-scope selection this row was opened from. */
+  backStage?: string | null;
+  backScope?: string | null;
 }) {
   const [result, setResult] = useState<AdminResult<AdminOrderDetail>>({ state: "ok", data: null, status: 0 });
   const [reloadToken, setReloadToken] = useState(0);
@@ -428,7 +451,7 @@ export function AdminOrderOperationsRouteScreen({
       state={viewState}
       errorMessage={result.message ? mapAdminErrorMessage(result.message, "fa") : null}
       onRetry={() => setReloadToken((value) => value + 1)}
-      backHref={backFilter ? `/admin/fulfillments?filter=${encodeURIComponent(backFilter)}` : "/admin/fulfillments"}
+      backHref={queueBackHref(backFilter, backStage, backScope)}
       fullOrderHref={`/admin/orders/${checkoutId}`}
       recipientName={detail?.recipientName}
       recipientMobile={detail?.contactMobile}

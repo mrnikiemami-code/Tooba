@@ -56,69 +56,51 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var (rows, timingFilter) = await ClassifyAsync(request, cancellationToken);
-        var filtered = timingFilter is null
-            ? rows
-            : rows.Where(row => MatchesTiming(row, timingFilter)).ToList();
+        var classification = await ClassifyAsync(request, cancellationToken);
 
-        var ordered = ApplySort(filtered, request);
+        // TB-271: ONE selection authority — the page is cut from exactly the sequence the counts describe.
+        var selected = AdminFulfillmentWorkQueueCountsBuilder
+            .Select(classification.Rows, classification.Stage, classification.TimeScope)
+            .ToList();
+        var ordered = ApplySort(selected, request);
         var page = Math.Max(1, request.Page);
         var size = Math.Max(1, request.PageSize);
         var items = ordered.Skip((page - 1) * size).Take(size).ToList();
         return new GridPageResponse<AdminFulfillmentWorkQueueRow>(items, page, size, ordered.Count);
     }
 
-    /// <summary>TB-260: counts of the whole filtered set, never of one page.</summary>
+    /// <summary>TB-260/TB-271: counts of the whole classified set, never of one page.</summary>
     public async Task<AdminFulfillmentWorkQueueCounts> CountAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var (rows, _) = await ClassifyAsync(request, cancellationToken);
-        // TB-260: counts always describe the set produced by search/column filters, INDEPENDENT of the
-        // selected quick dispatch tab. Otherwise selecting «سررسیدشده» would zero every other tab's badge.
-        return new AdminFulfillmentWorkQueueCounts(
-            rows.Count(row => row.PendingDispatch),
-            rows.Count(row => IsDue(row)),
-            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Today),
-            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Overdue),
-            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Upcoming),
-            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Unspecified),
-            rows.Count(row => row.DispatchBucket == AdminFulfillmentDispatchBucketNames.InTransit),
-            rows.Count(row => IsPreparationDue(row)));
+        var classification = await ClassifyAsync(request, cancellationToken);
+        // TB-271: the badge dimensions are defined ONCE in the owning builder over the same classified rows the
+        // page is cut from, so a stage badge can never be tallied from a fetched page and the selected stage/time
+        // never has to be re-derived here.
+        return AdminFulfillmentWorkQueueCountsBuilder.Build(
+            classification.Rows,
+            classification.Stage,
+            classification.TimeScope);
     }
 
-    private static bool IsDue(AdminFulfillmentWorkQueueRow row) =>
-        IsPreparationDue(row)
-        || row.DispatchBucket is AdminFulfillmentDispatchBucketNames.Today or AdminFulfillmentDispatchBucketNames.Overdue
-        && row.HandoffWindowState is AdminFulfillmentDispatchBucketNames.WindowOpen
-            or AdminFulfillmentDispatchBucketNames.WindowClosed;
-
-    /// <summary>TB-264: preparation must already have started (server derived, never a browser date).</summary>
-    private static bool IsPreparationDue(AdminFulfillmentWorkQueueRow row) =>
-        row.PreparationState is AdminFulfillmentPreparationStateNames.Overdue
-            or AdminFulfillmentPreparationStateNames.HandoffMissed;
-
-    private static bool MatchesTiming(AdminFulfillmentWorkQueueRow row, string filter) =>
-        filter.ToLowerInvariant() switch
-        {
-            AdminFulfillmentDispatchTimingAuthority.FilterDue => IsDue(row),
-            AdminFulfillmentDispatchTimingAuthority.FilterToday =>
-                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Today,
-            AdminFulfillmentDispatchTimingAuthority.FilterOverdue =>
-                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Overdue,
-            AdminFulfillmentDispatchTimingAuthority.FilterUpcoming =>
-                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Upcoming,
-            AdminFulfillmentDispatchTimingAuthority.FilterUnspecified =>
-                row.DispatchBucket == AdminFulfillmentDispatchBucketNames.Unspecified,
-            AdminFulfillmentDispatchTimingAuthority.FilterPreparationDue => IsPreparationDue(row),
-            _ => true,
-        };
+    /// <summary>TB-271: the classified physical rows plus the exact selection the server applied.</summary>
+    private sealed record WorkQueueClassification(
+        List<AdminFulfillmentWorkQueueRow> Rows,
+        string Stage,
+        string TimeScope);
 
     /// <summary>
     /// Applies search/filters in SQL, then classifies the whole filtered set in memory. Timing must be
     /// evaluated by ONE authority over complete rows, so a page can never be filtered after paging.
     /// </summary>
-    private async Task<(List<AdminFulfillmentWorkQueueRow> Rows, string? TimingFilter)> ClassifyAsync(
+    /// <remarks>
+    /// TB-271: the selection is read from the two narrow tokens <c>jobStage</c>/<c>timeScope</c>; a legacy
+    /// <c>queueFilter</c> token is normalized through the ONE documented mapping instead of being combined with a
+    /// hidden second filter. Filtering a seller unit by status BEFORE projecting its exact parcels/groups/packages
+    /// would silently drop sibling rows, so the selection is always applied to the classified physical rows.
+    /// </remarks>
+    private async Task<WorkQueueClassification> ClassifyAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
@@ -139,31 +121,55 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
                 || matchingOrderIds.Contains(x.SellerOrderId));
         }
 
-        string? timingFilter = null;
-        var queueFilterRequested = false;
+        string? stageToken = null;
+        string? scopeToken = null;
+        string? legacyToken = null;
+        var selectionRequested = false;
+        var legacyRequested = false;
         foreach (var filter in request.Filters)
         {
-            if (filter.Field == "queueFilter")
+            switch (filter.Field)
             {
-                queueFilterRequested = true;
-                var raw = (filter.Values?.FirstOrDefault() ?? filter.Value ?? string.Empty).Trim();
-                if (AdminFulfillmentDispatchTimingAuthority.IsTimingFilter(raw))
-                {
-                    // TB-260: timing is classified from the accepted plan, never from a SQL status alone.
-                    timingFilter = string.Equals(raw, AdminFulfillmentQueueFilters.All, StringComparison.OrdinalIgnoreCase)
-                        ? null
-                        : raw.ToLowerInvariant();
+                case "jobStage":
+                    selectionRequested = true;
+                    stageToken = FirstToken(filter);
                     continue;
-                }
+                case "timeScope":
+                    selectionRequested = true;
+                    scopeToken = FirstToken(filter);
+                    continue;
+                case "queueFilter":
+                    legacyRequested = true;
+                    legacyToken = FirstToken(filter);
+                    continue;
             }
 
             q = await ApplyFilterAsync(q, filter, cancellationToken);
         }
 
-        if (!queueFilterRequested)
+        // ONE selection authority: the explicit tokens win outright, and a legacy token is mapped to a documented
+        // (stage, scope) pair — never applied as an extra prefilter behind the visible selection.
+        string stage;
+        string scope;
+        if (selectionRequested)
         {
-            // TB-260: the DEFAULT queue is live work, not an order archive. Finished rows stay reachable
-            // through the explicit delivered/problem/history quick filters, which set queueFilter.
+            stage = AdminFulfillmentWorkQueueCountsBuilder.NormalizeStage(stageToken);
+            scope = AdminFulfillmentTimeScopeNames.Normalize(scopeToken);
+        }
+        else if (legacyRequested)
+        {
+            (stage, scope) = AdminFulfillmentLegacyQueueSelection.Map(legacyToken);
+        }
+        else
+        {
+            stage = AdminFulfillmentJobStageNames.All;
+            scope = AdminFulfillmentTimeScopeNames.Default;
+        }
+
+        // The archive is the ONLY selection allowed to read terminal units; active work never includes a
+        // Delivered/Cancelled unit, and the archive is never folded into an active total.
+        if (!string.Equals(stage, AdminFulfillmentJobStageNames.History, StringComparison.Ordinal))
+        {
             q = q.Where(x => x.Status != FulfillmentStatus.Cancelled && x.Status != FulfillmentStatus.Delivered);
         }
 
@@ -176,12 +182,15 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         var units = await q.ToListAsync(cancellationToken);
         if (units.Count == 0)
         {
-            return ([], timingFilter);
+            return new WorkQueueClassification([], stage, scope);
         }
 
         var rows = await MapPageAsync(units, _clock.UtcNow, cancellationToken);
-        return (rows.ToList(), timingFilter);
+        return new WorkQueueClassification(rows.ToList(), stage, scope);
     }
+
+    private static string FirstToken(GridFilterRequest filter) =>
+        (filter.Values is { Count: > 0 } ? filter.Values[0] : filter.Value ?? string.Empty).Trim();
 
     private async Task<HashSet<Guid>?> EvaluateAdvancedAsync(
         GridAdvancedFilterExpression? expression,
@@ -465,9 +474,13 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         var sort = request.Sort.FirstOrDefault();
         if (sort is null || string.IsNullOrWhiteSpace(sort.Field))
         {
+            // TB-271: overdue first by its OWN relevant instant, then today, then the explicitly undated current
+            // work, then future by its meaningful stored instant. The dispatch bucket and the physical work-unit key
+            // stay as deterministic tie-breaks, so the order never depends on the page that was fetched.
             return rows
-                .OrderBy(row => AdminFulfillmentDispatchTimingAuthority.PriorityRank(ParseBucket(row.DispatchBucket)))
-                .ThenBy(row => IsPreparationDue(row) ? 0 : 1)
+                .OrderBy(row => AdminFulfillmentJobStageAuthority.PriorityRank(row.JobTimeState))
+                .ThenBy(row => row.JobTimeUtc ?? DateTimeOffset.MaxValue)
+                .ThenBy(row => AdminFulfillmentDispatchTimingAuthority.PriorityRank(ParseBucket(row.DispatchBucket)))
                 .ThenBy(row => row.DispatchDeadlineUtc ?? DateTimeOffset.MaxValue)
                 .ThenBy(row => row.PlannedHandoffDate ?? DateOnly.MaxValue)
                 // TB-260-R1: the physical work-unit key is the tie-break, so two parcels of one seller order can

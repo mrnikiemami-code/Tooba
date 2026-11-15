@@ -142,7 +142,7 @@ internal static class AdminFulfillmentWorkUnitProjection
                 continue;
             }
 
-            produced.Add(BuildParcelRow(context, unit, shipment));
+            produced.Add(BuildParcelRow(context, unit, shipment, ParcelOrdinalOf(liveShipments, shipment)));
         }
 
         if (produced.Count == 0 && !unit.Shipments.Any(x => coveredShipments.Contains(x.ShipmentId)))
@@ -205,7 +205,8 @@ internal static class AdminFulfillmentWorkUnitProjection
     private static AdminFulfillmentWorkQueueRow BuildParcelRow(
         AdminFulfillmentWorkUnitContext context,
         FulfillmentSnapshot unit,
-        ShipmentSnapshot shipment)
+        ShipmentSnapshot shipment,
+        (int Ordinal, int Total) ordinal)
     {
         // A linked attempt (resend/replacement) is a NEW physical parcel: its timing is ONLY its own confirmed plan.
         // Without one it is truthfully unspecified («موعد ارسال مشخص نشده») instead of inheriting the shipped
@@ -270,7 +271,9 @@ internal static class AdminFulfillmentWorkUnitProjection
             targetShipmentId: shipment.ShipmentId,
             targetPackageId: null,
             targetPackageNumber: null,
-            pending: pending);
+            pending: pending,
+            workUnitOrdinal: ordinal.Ordinal,
+            workUnitOrdinalTotal: ordinal.Total);
     }
 
     private static AdminFulfillmentWorkQueueRow? BuildPackageRow(
@@ -423,7 +426,9 @@ internal static class AdminFulfillmentWorkUnitProjection
         Guid? targetPackageId,
         string? targetPackageNumber,
         bool pending,
-        DateTimeOffset? updatedAt = null)
+        DateTimeOffset? updatedAt = null,
+        int workUnitOrdinal = 0,
+        int workUnitOrdinalTotal = 0)
     {
         var next = AdminFulfillmentNextStep.Resolve(codes);
         var actionable = timing.Bucket is AdminFulfillmentDispatchBucket.Overdue
@@ -433,6 +438,19 @@ internal static class AdminFulfillmentWorkUnitProjection
         var plan = Earliest(plans);
         var blocker = explicitBlocker
             ?? (actionable && next.Code.Length == 0 ? NoActionBlockerFa : null);
+
+        // TB-271: ONE read classification of this physical row's next job and of the accepted instant that job
+        // actually answers to. It reuses the already-projected capability codes and plan instants; it grants nothing.
+        var job = AdminFulfillmentJobStageAuthority.Classify(
+            kind,
+            state,
+            codes,
+            pending,
+            timing.PreparationStartUtc,
+            timing.TransferDepartureUtc,
+            timing.HandoffDeadlineUtc,
+            timing.HandoffTimeZone,
+            context.NowUtc);
 
         return new AdminFulfillmentWorkQueueRow(
             unit.FulfillmentId,
@@ -482,7 +500,15 @@ internal static class AdminFulfillmentWorkUnitProjection
             timing.TransferDepartureUtc,
             timing.HandoffDeadlineUtc,
             AdminFulfillmentPreparationStateNames.Of(timing.PreparationState),
-            timing.PolicyVersion);
+            timing.PolicyVersion,
+            job.Stage,
+            job.StageLabelFa,
+            job.JobTimeMeaning,
+            job.JobTimeLabelFa,
+            job.JobTimeUtc,
+            job.JobTimeState,
+            workUnitOrdinal,
+            workUnitOrdinalTotal);
     }
 
     /// <summary>
@@ -598,6 +624,22 @@ internal static class AdminFulfillmentWorkUnitProjection
         return Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingRules.Validate(plan, candidate) is null
             ? plan
             : null;
+    }
+
+    /// <summary>
+    /// TB-271: the 1-based position of one live parcel inside its WHOLE physical group plus that group's live parcel
+    /// count. It is a human locator only (the stable key stays the shipment id) and it reuses the projection's own
+    /// deterministic parcel order, so «مرسولهٔ ۲ از ۳» never renumbers between refreshes.
+    /// </summary>
+    private static (int Ordinal, int Total) ParcelOrdinalOf(
+        IReadOnlyList<ShipmentSnapshot> liveShipments,
+        ShipmentSnapshot shipment)
+    {
+        var siblings = liveShipments
+            .Where(x => x.ShippingGroupId == shipment.ShippingGroupId)
+            .ToList();
+        var index = siblings.FindIndex(x => x.ShipmentId == shipment.ShipmentId);
+        return index < 0 ? (0, 0) : (index + 1, siblings.Count);
     }
 
     private static decimal ResendableOf(

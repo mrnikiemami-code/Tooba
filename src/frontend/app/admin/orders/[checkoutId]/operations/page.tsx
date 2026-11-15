@@ -27,6 +27,8 @@ export default async function AdminOrderOperationsPage({
       packageId={pick("packageId")}
       fromQueue={pick("from") === "queue"}
       backFilter={pick("filter")}
+      backStage={pick("stage")}
+      backScope={pick("scope")}
     />
   );
 }

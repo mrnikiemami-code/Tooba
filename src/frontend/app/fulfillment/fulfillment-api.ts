@@ -128,6 +128,19 @@ export interface FulfillmentListRow {
   scopeLineCount: number;
   scopeQuantity: number;
   scopeRemainingQuantity: number;
+  /**
+   * TB-271: the ONE employee job stage of this physical row and the accepted instant that job answers to.
+   * These are server-classified read labels; they grant nothing and the UI never derives them locally.
+   */
+  jobStage: string;
+  jobStageLabelFa: string;
+  jobTimeMeaning: string;
+  jobTimeLabelFa: string;
+  jobTimeUtc: string | null;
+  jobTimeState: string;
+  /** TB-271: 1-based human parcel position inside its whole physical group (0 = not an ordinated parcel). */
+  workUnitOrdinal: number;
+  workUnitOrdinalTotal: number;
 }
 
 /** TB-260-R1: the physical scopes a queue row can own. */
@@ -405,6 +418,14 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
         scopeLineCount: number(prop(item, "scopeLineCount", "ScopeLineCount")),
         scopeQuantity: number(prop(item, "scopeQuantity", "ScopeQuantity")),
         scopeRemainingQuantity: number(prop(item, "scopeRemainingQuantity", "ScopeRemainingQuantity")),
+        jobStage: text(prop(item, "jobStage", "JobStage"), "history"),
+        jobStageLabelFa: text(prop(item, "jobStageLabelFa", "JobStageLabelFa")),
+        jobTimeMeaning: text(prop(item, "jobTimeMeaning", "JobTimeMeaning"), "none"),
+        jobTimeLabelFa: text(prop(item, "jobTimeLabelFa", "JobTimeLabelFa")),
+        jobTimeUtc: nullableText(prop(item, "jobTimeUtc", "JobTimeUtc")),
+        jobTimeState: text(prop(item, "jobTimeState", "JobTimeState"), "undated"),
+        workUnitOrdinal: number(prop(item, "workUnitOrdinal", "WorkUnitOrdinal")),
+        workUnitOrdinalTotal: number(prop(item, "workUnitOrdinalTotal", "WorkUnitOrdinalTotal")),
       }];
     }
 
@@ -464,6 +485,14 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
       scopeLineCount: snapshot.items.length,
       scopeQuantity: snapshot.items.reduce((sum, row) => sum + row.quantityOrdered, 0),
       scopeRemainingQuantity: 0,
+      jobStage: "history",
+      jobStageLabelFa: "سابقهٔ ارسال",
+      jobTimeMeaning: "none",
+      jobTimeLabelFa: "—",
+      jobTimeUtc: null,
+      jobTimeState: "undated",
+      workUnitOrdinal: 0,
+      workUnitOrdinalTotal: 0,
     }];
   });
 }

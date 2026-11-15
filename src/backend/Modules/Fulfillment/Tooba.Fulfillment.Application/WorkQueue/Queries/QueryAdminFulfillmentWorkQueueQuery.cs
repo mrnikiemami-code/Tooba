@@ -17,6 +17,9 @@ public sealed class AdminFulfillmentGridQueryPolicy : IGridQueryPolicy
         "orderReference", "recipientName", "fulfillmentId", "checkoutId", "cityName",
         "sellerPartyId", "sellerDisplayName", "shippingMethodCode", "shippingMethodLabel",
         "shipmentCount", "status", "queueFilter", "createdAt", "updatedAt",
+        // TB-271: the ONE job-stage selection and the independent time scope. They are filters only (the physical
+        // rows are projected server-side), so they are deliberately not sortable columns.
+        "jobStage", "timeScope",
     };
 
     /// <summary>
@@ -44,6 +47,9 @@ public sealed class AdminFulfillmentGridQueryPolicy : IGridQueryPolicy
         ["shipmentCount"] = GridQueryOperators.Number,
         ["status"] = GridQueryOperators.Enum,
         ["queueFilter"] = GridQueryOperators.Enum,
+        // TB-271: the stage/time tokens are server-side selections, validated as enums (values) with no column sort.
+        ["jobStage"] = GridQueryOperators.Enum,
+        ["timeScope"] = GridQueryOperators.Enum,
         ["createdAt"] = GridQueryOperators.Date,
         ["updatedAt"] = GridQueryOperators.Date,
     };

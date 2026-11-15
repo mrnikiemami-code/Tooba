@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { Eye, PackageCheck } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   AppDataGrid,
@@ -10,37 +9,30 @@ import {
   faWorkspaceMessages,
   useLegacyAdminGridDirectProps,
 } from "../../design-system";
-import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
-import type { GridBulkAction, GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
+import type { GridBulkAction, GridServerQuery } from "../../design-system/data-grid";
 import {
   FULFILLMENT_BULK_ACTION_LABELS,
-  FULFILLMENT_QUEUE_FILTERS,
   FULFILLMENT_SAFE_BULK_ACTION_CODES,
   areFulfillmentBulkCompatible,
   executeAdminFulfillmentWorkQueueBulk,
-  formatFulfillmentDate,
-  formatFulfillmentQueueQuantity,
-  formatFulfillmentShipmentSummary,
-  formatFulfillmentStatus,
-  fulfillmentStatusBadgeClass,
   queryAdminFulfillmentsWorkQueue,
   type FulfillmentListRow,
-  type FulfillmentQueueFilter,
 } from "../fulfillment/fulfillment-api";
 import {
-  FULFILLMENT_DISPATCH_FILTERS,
-  FULFILLMENT_EMPTY_QUEUE_COUNTS,
-  formatCustomerReceiving,
-  formatDispatchBucketLabel,
-  formatHandoffWindowLabel,
-  formatPlannedHandoff,
-  formatPreparationDeadlines,
-  formatPreparationState,
-  normalizeDispatchToken,
+  FULFILLMENT_HISTORY_STAGE_LABEL,
+  FULFILLMENT_JOB_STAGES,
+  FULFILLMENT_TIME_SCOPES,
+  legacyQueueSelection,
+  normalizeJobStage,
+  normalizeTimeScope,
+  stageCount,
+  timeCount,
+  type FulfillmentJobStage,
   type FulfillmentQueueCounts,
+  type FulfillmentTimeScope,
 } from "../fulfillment/fulfillment-work-queue-dispatch";
+import { createFulfillmentWorkQueueColumns } from "./admin-fulfillment-work-queue-columns";
 import { mapAdminErrorMessage } from "./admin-error-map";
-import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { ADMIN_FULFILLMENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
 function PageHeading({ title, description }: { title: string; description?: string }) {
@@ -53,496 +45,118 @@ function PageHeading({ title, description }: { title: string; description?: stri
   );
 }
 
-function truncatedCell(content: ReactNode, title?: string) {
-  return (
-    <div className="app-grid-cell-content min-w-0">
-      <span className="block truncate" title={title}>{content}</span>
-    </div>
-  );
-}
-
-const fulfillmentStatusEnumOptions = [
-  { value: "ReadyToFulfill", label: formatFulfillmentStatus("ReadyToFulfill") },
-  { value: "Processing", label: formatFulfillmentStatus("Processing") },
-  { value: "Packed", label: formatFulfillmentStatus("Packed") },
-  { value: "PartialDispatched", label: formatFulfillmentStatus("PartialDispatched") },
-  { value: "Dispatched", label: formatFulfillmentStatus("Dispatched") },
-  { value: "InTransit", label: formatFulfillmentStatus("InTransit") },
-  { value: "Delivered", label: formatFulfillmentStatus("Delivered") },
-  { value: "Failed", label: formatFulfillmentStatus("Failed") },
-  { value: "Cancelled", label: formatFulfillmentStatus("Cancelled") },
-];
-
-const shippingMethodEnumOptions = [
-  { value: "post", label: "پست" },
-  { value: "tipax", label: "تیپاکس" },
-  { value: "snapp_courier", label: "اسنپ / پیک آنلاین" },
-  { value: "store_courier", label: "پیک فروشگاه" },
-  { value: "in_person", label: "تحویل حضوری" },
-];
-
 /**
- * TB-260-R1: the row's scope, in operator words. A seller order can now appear several times (one row per
- * physical work unit), so the row must say WHAT it owns — an unallocated group, one parcel or one package.
- */
-const WORK_UNIT_KIND_LABELS: Record<string, string> = {
-  group: "گروه ارسال",
-  parcel: "مرسوله",
-  package: "بستهٔ تجمیعی",
-  fulfillment: "سابقهٔ ارسال",
-};
-
-const WORK_UNIT_STATE_LABELS: Record<string, string> = {
-  Created: "در انتظار ارسال به حامل",
-  Dispatched: "ارسال‌شده به حامل",
-  InTransit: "در مسیر تحویل",
-  Delivered: "تحویل‌شده",
-  Failed: "ناموفق",
-  Cancelled: "لغو‌شده",
-  NonDelivered: "تحویل ناموفق",
-  Returning: "در حال برگشت به مبدأ",
-  Returned: "دریافت‌شده در مبدأ",
-};
-
-/** The physical state of THIS work unit (never the whole seller order's aggregate status). */
-function workUnitStateLabel(row: FulfillmentListRow): string {
-  const state = row.workUnitState || "";
-  if (state && WORK_UNIT_STATE_LABELS[state]) return WORK_UNIT_STATE_LABELS[state];
-  if (row.workUnitKind === "group") {
-    return row.workUnitState === "Ungrouped" ? "بدون گروه پذیرش" : "آمادهٔ اقدام عملیاتی";
-  }
-  return state || formatFulfillmentStatus(row.status);
-}
-
-/** What this row owns, in operator words — the row is ONE physical unit, not a seller order. */
-function workUnitKindLabel(row: FulfillmentListRow): string {
-  const kind = WORK_UNIT_KIND_LABELS[row.workUnitKind] ?? row.workUnitKind;
-  if (row.targetPackageNumber) return `${kind} ${row.targetPackageNumber}`;
-  // TB-266: the state badge beside this label already says «بدون گروه پذیرش», so the scope repeats only the
-  // unit kind instead of stacking the same words twice inside a single non-wrapping line.
-  return kind;
-}
-
-const viewActions: AppGridRowAction<FulfillmentListRow>[] = [
-  {
-    id: "open-operations",
-    label: "عملیات ارسال",
-    icon: PackageCheck,
-    href: (row) => {
-      const query = new URLSearchParams({ fulfillmentId: row.fulfillmentId, from: "queue" });
-      // TB-260-R1: the locator is the EXACT physical target of this row — a group, a parcel or a package.
-      // Sending only the seller's earliest group is how the wrong work used to be opened.
-      if (row.targetShippingGroupId) query.set("shippingGroupId", row.targetShippingGroupId);
-      if (row.targetShipmentId) query.set("shipmentId", row.targetShipmentId);
-      if (row.targetPackageId) query.set("packageId", row.targetPackageId);
-      // Carry the active quick filter so «بازگشت به صف کار» returns to the same queue view.
-      if (typeof window !== "undefined") {
-        const active = new URLSearchParams(window.location.search).get("filter");
-        if (active) query.set("filter", active);
-      }
-      return `/admin/orders/${row.checkoutId}/operations?${query.toString()}`;
-    },
-    testId: (row) => `admin-fulfillment-open-operations-${row.id}`,
-  },
-  {
-    id: "view-order",
-    label: "مشاهده سفارش",
-    icon: Eye,
-    href: (row) => `/admin/orders/${row.checkoutId}`,
-    testId: (row) => `admin-fulfillment-view-order-${row.id}`,
-  },
-];
-
-function dispatchCountFor(filter: FulfillmentQueueFilter, counts: FulfillmentQueueCounts): number {
-  switch (filter) {
-    case "dispatch_preparation_due":
-      return counts.preparationDue;
-    case "dispatch_overdue":
-      return counts.overdue;
-    case "dispatch_today":
-      return counts.today;
-    case "dispatch_due":
-      return counts.due;
-    case "dispatch_upcoming":
-      return counts.upcoming;
-    case "dispatch_unspecified":
-      return counts.unspecified;
-    case "in_transit":
-      return counts.inTransit;
-    default:
-      return 0;
-  }
-}
-
-/** بُعد زمانی سرور را با رنگ و متن کوتاه نشان می‌دهد؛ مقدار ناشناس نیز صادقانه برچسب می‌خورد. */
-function dispatchBucketBadge(row: FulfillmentListRow) {
-  const bucket = normalizeDispatchToken(row.dispatchBucket);
-  const windowState = normalizeDispatchToken(row.handoffWindowState);
-  const tone =
-    bucket === "overdue"
-      ? "bg-rose-50 text-rose-700"
-      : bucket === "today"
-        ? "bg-amber-50 text-amber-800"
-        : bucket === "upcoming"
-          ? "bg-sky-50 text-sky-800"
-          : bucket === "in_transit"
-            ? "bg-indigo-50 text-indigo-800"
-            : bucket === "unspecified"
-              ? "bg-slate-100 text-slate-700"
-              : "bg-slate-50 text-slate-600";
-  const windowHint = row.pendingDispatch && windowState !== "none" && windowState !== ""
-    ? ` · ${formatHandoffWindowLabel(windowState)}`
-    : "";
-  // TB-264: preparation urgency is server derived; it is surfaced beside the bucket so a row whose
-  // preparation should already have started can never look comfortably «آینده».
-  const preparationToken = normalizeDispatchToken(row.preparationState);
-  const preparationHint = preparationToken === "overdue" || preparationToken === "handoff_missed"
-    ? ` · ${formatPreparationState(row.preparationState)}`
-    : "";
-  return (
-    // TB-266: the bucket pill stays on ONE line — wrapping its hints inside a fixed row height was what pushed the
-    // pill's text out of the cell. The full sentence is kept as a tooltip.
-    <span
-      className={`inline-flex max-w-full min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}
-      title={`${formatDispatchBucketLabel(row.dispatchBucket)}${windowHint}${preparationHint}`}
-    >
-      <span className="shrink-0">{formatDispatchBucketLabel(row.dispatchBucket)}</span>
-      {windowHint ? <span className="truncate font-medium opacity-80">{windowHint}</span> : null}
-      {preparationHint ? <span className="shrink-0 font-medium opacity-80">{preparationHint}</span> : null}
-    </span>
-  );
-}
-
-/**
- * صف کار عملیاتی ارسال و تحویل — AppDataGrid + فیلتر سریع سروری + kebab + bulk سازگار.
- * Orders UI را دست نمی‌زند؛ فقط همین صفحه.
+ * صف کار عملیاتی ارسال و تحویل — AppDataGrid + یک مرحلهٔ کار + یک بازهٔ زمانی + kebab + bulk سازگار.
+ *
+ * TB-271: the two overlapping quick-filter rows are gone. ONE job-stage strip (server-classified, one stage per
+ * ACTIVE physical row) and ONE independent time scope are the only selection surface; both are read tokens sent to
+ * the existing grid query, so the server keeps the single filtering/counting authority. Orders UI را دست نمی‌زند؛
+ * فقط همین صفحه.
  */
 export function AdminFulfillmentWorkQueueScreen() {
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_FULFILLMENT_GRID_VIEW_KEY), []);
-  const [queueFilter, setQueueFilter] = useState<FulfillmentQueueFilter>("all");
-  const [counts, setCounts] = useState<FulfillmentQueueCounts>(FULFILLMENT_EMPTY_QUEUE_COUNTS);
+  // TB-271: ONE job-stage selection and ONE independent time scope. `null` counts mean "unknown" and are rendered
+  // as «—», never as a successful-looking zero.
+  const [jobStage, setJobStage] = useState<FulfillmentJobStage>("all");
+  const [timeScope, setTimeScope] = useState<FulfillmentTimeScope>("today");
+  const [counts, setCounts] = useState<FulfillmentQueueCounts | null>(null);
   const [denied, setDenied] = useState(false);
   const [gridError, setGridError] = useState<string>();
   const [reloadToken, setReloadToken] = useState(0);
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
+  // Counters are fenced too: a slow response for an OLD stage/time selection must never publish its badges.
+  const requestSeq = useRef(0);
 
-  // TB-260: returning from the operational view restores the exact quick filter the operator left.
+  /**
+   * Reads the queue selection from the URL. A legacy `filter` deep link is translated ONCE through the documented
+   * mapping and rewritten into `stage`/`scope`, so an old link can never combine with the visible controls.
+   */
+  const readSelectionFromUrl = useCallback((url: URL): { stage: FulfillmentJobStage; scope: FulfillmentTimeScope } => {
+    const legacy = url.searchParams.get("filter");
+    if (legacy) {
+      const mapped = legacyQueueSelection(legacy);
+      url.searchParams.delete("filter");
+      url.searchParams.set("stage", mapped.stage);
+      url.searchParams.set("scope", mapped.scope);
+      window.history.replaceState({}, "", url.toString());
+      return mapped;
+    }
+    return {
+      stage: normalizeJobStage(url.searchParams.get("stage")),
+      scope: normalizeTimeScope(url.searchParams.get("scope")),
+    };
+  }, []);
+
+  // Clean entry = the live default work; an explicit valid URL state is restored exactly.
   useEffect(() => {
-    const raw = new URLSearchParams(window.location.search).get("filter");
-    if (!raw) return;
-    const known = [...FULFILLMENT_QUEUE_FILTERS, ...FULFILLMENT_DISPATCH_FILTERS].some((tab) => tab.id === raw);
-    if (known) setQueueFilter(raw as FulfillmentQueueFilter);
-  }, []);
+    const next = readSelectionFromUrl(new URL(window.location.href));
+    setJobStage(next.stage);
+    setTimeScope(next.scope);
+  }, [readSelectionFromUrl]);
 
-  const selectFilter = useCallback((id: FulfillmentQueueFilter) => {
-    setQueueFilter(id);
-    const url = new URL(window.location.href);
-    if (id === "all") url.searchParams.delete("filter");
-    else url.searchParams.set("filter", id);
-    window.history.replaceState({}, "", url.toString());
-  }, []);
+  // Browser back/forward restores the same queue state instead of leaving a stale hidden selection behind.
+  useEffect(() => {
+    const onPopState = () => {
+      const next = readSelectionFromUrl(new URL(window.location.href));
+      setJobStage(next.stage);
+      setTimeScope(next.scope);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [readSelectionFromUrl]);
 
-  const columns = useMemo((): GridColumnDef<FulfillmentListRow>[] => [
-    {
-      id: "orderReference",
-      header: "سفارش",
-      accessor: (row) => row.orderReference,
-      cell: (row) => truncatedCell(row.orderReference || "—", row.orderReference || undefined),
-      width: 160,
-      minWidth: 120,
-      filterKind: "text",
-      sortable: true,
+  const applySelection = useCallback(
+    (next: { stage: FulfillmentJobStage; scope: FulfillmentTimeScope }) => {
+      setJobStage(next.stage);
+      setTimeScope(next.scope);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("filter");
+      if (next.stage === "all") url.searchParams.delete("stage");
+      else url.searchParams.set("stage", next.stage);
+      if (next.scope === "today") url.searchParams.delete("scope");
+      else url.searchParams.set("scope", next.scope);
+      window.history.pushState({}, "", url.toString());
     },
-    {
-      id: "sellerDisplayName",
-      header: "فروشنده",
-      accessor: (row) => row.sellerDisplayName,
-      cell: (row) => truncatedCell(row.sellerDisplayName || "—", row.sellerDisplayName),
-      width: 160,
-      minWidth: 120,
-      filterKind: "text",
-      sortable: true,
-    },
-    {
-      id: "primaryShipmentId",
-      header: "مرسوله",
-      accessor: (row) => formatFulfillmentShipmentSummary(row),
-      cell: (row) => truncatedCell(formatFulfillmentShipmentSummary(row)),
-      width: 110,
-      minWidth: 88,
-      sortable: false,
-    },
-    {
-      id: "quantityOrdered",
-      header: "اقلام / مقدار",
-      accessor: (row) => row.quantityOrdered,
-      cell: (row) => truncatedCell(formatFulfillmentQueueQuantity(row)),
-      width: 200,
-      minWidth: 150,
-      sortable: true,
-    },
-    {
-      id: "shippingMethodLabel",
-      header: "روش ارسال",
-      accessor: (row) => row.shippingMethodLabel || row.shippingMethodCode,
-      cell: (row) => truncatedCell(row.shippingMethodLabel || row.shippingMethodCode || "—"),
-      width: 150,
-      minWidth: 120,
-      filterKind: "status",
-      enumOptions: shippingMethodEnumOptions,
-      sortable: true,
-    },
-    {
-      id: "shippingMethodCode",
-      header: "کد روش ارسال",
-      accessor: (row) => row.shippingMethodCode,
-      width: 120,
-      minWidth: 96,
-      filterKind: "status",
-      enumOptions: shippingMethodEnumOptions,
-      defaultVisible: false,
-    },
-    {
-      id: "status",
-      header: "وضعیت عملیاتی",
-      accessor: (row) => row.status,
-      cell: (row) => {
-        // TB-260-R1: the badge describes THIS physical unit. A seller order can now have several rows, so a
-        // package/parcel row must never reprint the seller-wide status (a Created parcel under a Dispatched
-        // fulfillment would otherwise look dispatched, and «موعد ارسال» would contradict the badge).
-        // TB-266: this cell used to stack the badge over a wrapping scope label inside a fixed row height, which
-        // clipped the badge vertically (and at 390px pushed the scope into 3–4 word-wrapped lines). Both items now
-        // share ONE non-wrapping line: the badge keeps its full height and the scope truncates with a tooltip.
-        const history = row.workUnitKind === "fulfillment";
-        const scope = history ? "" : workUnitKindLabel(row);
-        return (
-          <span
-            className="flex w-full min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap"
-            data-testid={`admin-fulfillment-work-unit-${row.id}`}
-          >
-            <span
-              className={`${fulfillmentStatusBadgeClass(history ? row.status : row.workUnitState || row.status)} shrink-0 whitespace-nowrap`}
-            >
-              {history ? formatFulfillmentStatus(row.status) : workUnitStateLabel(row)}
-            </span>
-            {scope ? (
-              <span
-                className="min-w-0 truncate text-[11px] leading-4 text-muted"
-                title={scope}
-                data-testid={`admin-fulfillment-work-scope-${row.id}`}
-              >
-                {scope}
-              </span>
-            ) : null}
-          </span>
-        );
-      },
-      width: 200,
-      minWidth: 150,
-      filterKind: "status",
-      enumOptions: fulfillmentStatusEnumOptions,
-      sortable: true,
-    },
-    {
-      id: "dispatchBucket",
-      header: "بُعد زمانی ارسال",
-      accessor: (row) => normalizeDispatchToken(row.dispatchBucket),
-      cell: (row) => dispatchBucketBadge(row),
-      width: 190,
-      minWidth: 150,
-      // Timing is filtered by the server-authoritative quick tabs (full-set counts), so the column is
-      // sortable but deliberately not a second, silently-ignored filter surface.
-      sortable: true,
-    },
-    {
-      id: "dispatchDeadline",
-      header: "موعد ارسال",
-      accessor: (row) => row.plannedHandoffDate ?? "",
-      cell: (row) => (
-        <span
-          className="block truncate text-xs font-semibold"
-          title={formatPlannedHandoff(row)}
-          data-testid={`admin-fulfillment-plan-${row.id}`}
-        >
-          {formatPlannedHandoff(row)}
-        </span>
-      ),
-      width: 210,
-      minWidth: 160,
-      sortable: true,
-    },
-    {
-      id: "operationalDeadlines",
-      header: "مهلت‌های عملیاتی",
-      accessor: (row) => row.preparationStartUtc ?? "",
-      cell: (row) => (
-        <span
-          className="block truncate text-[11px] text-muted"
-          title={formatPreparationDeadlines(row)}
-          data-testid={`admin-fulfillment-deadlines-${row.id}`}
-        >
-          {formatPreparationDeadlines(row)}
-        </span>
-      ),
-      width: 240,
-      minWidth: 170,
-      sortable: false,
-    },
-    {
-      id: "customerReceiving",
-      header: "تحویل مشتری",
-      accessor: (row) => row.customerReceivingDate ?? "",
-      cell: (row) => (
-        <span
-          className="block truncate text-xs"
-          title={formatCustomerReceiving(row)}
-          data-testid={`admin-fulfillment-receiving-${row.id}`}
-        >
-          {formatCustomerReceiving(row)}
-        </span>
-      ),
-      width: 180,
-      minWidth: 140,
-      sortable: false,
-    },
-    {
-      id: "nextStep",
-      header: "اقدام بعدی",
-      accessor: (row) => row.nextStepLabelFa,
-      cell: (row) => (
-        // TB-266: label and blocker share ONE non-wrapping line; the blocker keeps its warning tone without adding a
-        // second wrapped line inside the fixed row height.
-        <span
-          className="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-xs"
-          title={[row.nextStepLabelFa, row.nextStepBlockerFa].filter(Boolean).join(" — ")}
-          data-testid={`admin-fulfillment-next-step-${row.id}`}
-        >
-          {row.nextStepLabelFa ? (
-            <span className="shrink-0 font-semibold">{row.nextStepLabelFa}</span>
-          ) : (
-            <span className="text-muted">—</span>
-          )}
-          {row.nextStepBlockerFa ? (
-            <span className="min-w-0 truncate text-[11px] text-amber-800">{row.nextStepBlockerFa}</span>
-          ) : null}
-        </span>
-      ),
-      width: 220,
-      minWidth: 160,
-      sortable: false,
-    },
-    {
-      id: "trackingSummary",
-      header: "کد رهگیری",
-      accessor: (row) => row.trackingSummary,
-      cell: (row) => (
-        <span className="block truncate font-mono text-xs dir-ltr text-left" title={row.trackingSummary || undefined}>
-          {row.trackingSummary || "—"}
-        </span>
-      ),
-      width: 150,
-      minWidth: 110,
-      filterKind: "text",
-    },
-    {
-      id: "recipientName",
-      header: "گیرنده",
-      accessor: (row) => row.recipientName,
-      cell: (row) => truncatedCell(row.recipientName || "بدون نام", row.recipientName),
-      width: 140,
-      minWidth: 110,
-      filterKind: "text",
-      sortable: true,
-    },
-    {
-      id: "cityName",
-      header: "مقصد / شهر",
-      accessor: (row) => row.cityName,
-      cell: (row) => truncatedCell(row.cityName || "—", row.cityName),
-      width: 120,
-      minWidth: 96,
-      filterKind: "text",
-      sortable: true,
-    },
-    {
-      id: "createdAt",
-      header: "زمان ایجاد",
-      accessor: (row) => row.createdAt,
-      cell: (row) => truncatedCell(formatFulfillmentDate(row.createdAt)),
-      width: 140,
-      minWidth: 120,
-      filterKind: "date",
-      sortable: true,
-    },
-    {
-      id: "updatedAt",
-      header: "آخرین تغییر",
-      accessor: (row) => row.updatedAt,
-      cell: (row) => truncatedCell(formatFulfillmentDate(row.updatedAt)),
-      width: 140,
-      minWidth: 120,
-      filterKind: "date",
-      sortable: true,
-    },
-    {
-      id: "actions",
-      header: "عملیات",
-      accessor: () => "",
-      cell: (row) => (
-        <span className="inline-flex items-center gap-1" data-testid={`admin-fulfillment-ops-${row.id}`}>
-          <AppGridRowActionsCell row={row} actions={viewActions} compact />
-          {/*
-            TB-260-R1: the per-fulfillment action menu is a fulfilment-level command surface. A row that owns only
-            ONE group / parcel / package must not offer it, otherwise a scoped row could execute a sibling's
-            operation (or the wrong parcel's dispatch). Such a row's single action owner is «عملیات ارسال», which
-            opens the exact target. History rows (kind = fulfillment) keep the menu when the server allows actions.
-          */}
-          {row.workUnitKind === "fulfillment" && row.availableActionCodes.length > 0 ? (
-            <AdminOrderOperationsMenu
-              checkoutId={row.checkoutId}
-              label="عملیات"
-              compact
-              iconOnly
-              scope="fulfillment-queue"
-              fulfillmentId={row.fulfillmentId}
-              onCompleted={refresh}
-              testId={`admin-fulfillment-kebab-${row.id}`}
-            />
-          ) : null}
-        </span>
-      ),
-      width: 120,
-      minWidth: 100,
-      exportable: false,
-      sortable: false,
-    },
-  ], [refresh]);
+    [],
+  );
+
+  const columns = useMemo(() => createFulfillmentWorkQueueColumns(refresh), [refresh]);
 
   const queryFn = useCallback(
     async (query: GridServerQuery) => {
+      const sequence = ++requestSeq.current;
       const filters = { ...query.filters };
-      if (queueFilter !== "all") {
-        filters.queueFilter = { kind: "status", values: [queueFilter] };
-      } else {
-        delete filters.queueFilter;
-      }
+      // TB-271: the ONE selection authority — the two narrow tokens. A legacy `queueFilter` is never sent, so a
+      // hidden second filter can never combine with the visible stage/time controls.
+      filters.jobStage = { kind: "status", values: [jobStage] };
+      filters.timeScope = { kind: "status", values: [timeScope] };
+      delete filters.queueFilter;
       // Map shipping method column filter field to code when enum selected via label column.
       if (filters.shippingMethodLabel && filters.shippingMethodLabel.kind === "status") {
         filters.shippingMethodCode = filters.shippingMethodLabel;
         delete filters.shippingMethodLabel;
       }
       const response = await queryAdminFulfillmentsWorkQueue({ ...query, filters });
-      // Counts come from the server for the WHOLE filtered set; a page-local tally would be a lie.
-      if (response.meta) setCounts(response.meta);
+      // Counts come from the server for the WHOLE filtered set; a page-local tally would be a lie. A response for
+      // an OLDER stage/time selection never publishes its badges over a newer one.
+      if (sequence === requestSeq.current) setCounts(response.meta ?? null);
       return response;
     },
-    [queueFilter],
+    [jobStage, timeScope],
   );
 
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => {
       void reloadToken;
-      return adminGridQueryAdapter(queryFn, () => setDenied(true), (message) => setGridError(message))(query);
+      return adminGridQueryAdapter(
+        queryFn,
+        () => setDenied(true),
+        (message) => {
+          // A missing/error payload is unknown, not six honest zeros.
+          setCounts(null);
+          setGridError(message);
+        },
+      )(query);
     },
     [queryFn, reloadToken],
   );
@@ -608,67 +222,117 @@ export function AdminFulfillmentWorkQueueScreen() {
       <PageHeading title="ارسال و تحویل" />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex flex-col gap-3 border-b border-border px-4 py-3 md:px-5">
-          <div className="flex flex-wrap gap-2" data-testid="admin-fulfillment-queue-dispatch-filters" role="tablist" aria-label="بُعد زمانی ارسال">
-            {FULFILLMENT_DISPATCH_FILTERS.map((tab) => {
-              const active = queueFilter === tab.id;
-              const badge = dispatchCountFor(tab.id, counts);
+          {/*
+            TB-271: ONE job-stage strip replaces the two overlapping quick-filter rows. Each badge counts the WHOLE
+            active set inside the selected time scope (server-owned), and «سابقهٔ ارسال» stays a separate quiet
+            archive choice outside the five competing work stages.
+          */}
+          <div
+            className="flex flex-wrap gap-2"
+            data-testid="admin-fulfillment-job-stages"
+            role="tablist"
+            aria-label="مرحلهٔ کار"
+          >
+            {FULFILLMENT_JOB_STAGES.map((stage) => {
+              const active = jobStage === stage.id;
+              const badge = counts ? stageCount(counts, stage.id) : null;
               return (
                 <button
-                  key={tab.id}
+                  key={stage.id}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  data-testid={`admin-fulfillment-queue-filter-${tab.id}`}
-                  data-count={badge}
+                  data-testid={`admin-fulfillment-job-stage-${stage.id}`}
+                  data-count={badge ?? ""}
                   className={
                     active
                       ? "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground"
                       : "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted hover:bg-secondary"
                   }
-                  onClick={() => {
-                    selectFilter(tab.id);
-                    refresh();
-                  }}
+                  onClick={() => applySelection({ stage: stage.id, scope: timeScope })}
                 >
-                  <span>{tab.labelFa}</span>
+                  <span>{stage.labelFa}</span>
                   <span
                     className={
                       active
                         ? "rounded-full bg-primary-foreground/20 px-1.5 py-0.5 text-[11px] tabular-nums"
                         : "rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-foreground"
                     }
-                    data-testid={`admin-fulfillment-queue-count-${tab.id}`}
+                    data-testid={`admin-fulfillment-job-stage-count-${stage.id}`}
+                    title={badge === null ? "شمارش در دسترس نیست" : undefined}
                   >
-                    {badge.toLocaleString("fa-IR")}
+                    {badge === null ? "—" : badge.toLocaleString("fa-IR")}
                   </span>
                 </button>
               );
             })}
           </div>
-          <div className="flex flex-wrap gap-2" data-testid="admin-fulfillment-queue-filters" role="tablist" aria-label="وضعیت عملیاتی">
-            {FULFILLMENT_QUEUE_FILTERS.map((tab) => {
-              const active = queueFilter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  data-testid={`admin-fulfillment-queue-filter-${tab.id}`}
-                  className={
-                    active
-                      ? "inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground"
-                      : "inline-flex min-h-11 items-center rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted hover:bg-secondary"
-                  }
-                  onClick={() => {
-                    selectFilter(tab.id);
-                    refresh();
-                  }}
-                >
-                  {tab.labelFa}
-                </button>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-3">
+            <div
+              className="flex flex-wrap gap-1.5"
+              data-testid="admin-fulfillment-time-scopes"
+              role="tablist"
+              aria-label="بازهٔ زمانی"
+            >
+              {FULFILLMENT_TIME_SCOPES.map((scope) => {
+                const active = timeScope === scope.id && jobStage !== "history";
+                const badge = counts ? timeCount(counts, scope.id) : null;
+                return (
+                  <button
+                    key={scope.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    disabled={jobStage === "history"}
+                    title={jobStage === "history" ? "سابقهٔ ارسال بازهٔ زمانی ندارد" : scope.hintFa}
+                    data-testid={`admin-fulfillment-time-scope-${scope.id}`}
+                    data-count={badge ?? ""}
+                    className={
+                      active
+                        ? "inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-secondary px-3 text-xs font-bold text-foreground"
+                        : "inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-muted hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                    }
+                    onClick={() => applySelection({ stage: jobStage, scope: scope.id })}
+                  >
+                    <span>{scope.labelFa}</span>
+                    <span
+                      className="rounded-full bg-surface px-1.5 py-0.5 text-[11px] tabular-nums text-foreground"
+                      data-testid={`admin-fulfillment-time-scope-count-${scope.id}`}
+                    >
+                      {badge === null ? "—" : badge.toLocaleString("fa-IR")}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={jobStage === "history"}
+              data-testid="admin-fulfillment-job-stage-history"
+              className={
+                jobStage === "history"
+                  ? "inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-slate-200 px-3 text-xs font-bold text-slate-800"
+                  : "inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-muted hover:bg-secondary"
+              }
+              onClick={() => applySelection({ stage: "history", scope: "all" })}
+            >
+              <span>{FULFILLMENT_HISTORY_STAGE_LABEL}</span>
+              <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] tabular-nums text-foreground">
+                {counts === null ? "—" : counts.stageHistory.toLocaleString("fa-IR")}
+              </span>
+            </button>
+            <p
+              className="text-xs text-muted"
+              data-testid="admin-fulfillment-queue-summary"
+              data-selected-total={counts?.selectedTotal ?? ""}
+            >
+              {counts === null
+                ? "شمارش این نمایش در دسترس نیست."
+                : counts.undated > 0
+                  ? `${counts.selectedTotal.toLocaleString("fa-IR")} ردیف در این نمایش · ${counts.undated.toLocaleString("fa-IR")} ردیف بدون موعد مشخص`
+                  : `${counts.selectedTotal.toLocaleString("fa-IR")} ردیف در این نمایش`}
+            </p>
           </div>
         </div>
         <div className="overflow-x-auto p-2 md:p-4">

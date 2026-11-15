@@ -46,13 +46,19 @@ function row(partial: Partial<FulfillmentListRow> & { sellerPartyId: string; ava
 
 test("work queue screen uses AppDataGrid not AgGridReact", () => {
   const source = readFileSync(join(dir, "admin-fulfillment-work-queue-screen.tsx"), "utf8");
+  // TB-271: the column contract (cells, locators, enum options) lives in its own module beside the screen.
+  const columns = readFileSync(join(dir, "admin-fulfillment-work-queue-columns.tsx"), "utf8");
   assert.match(source, /AppDataGrid/);
   assert.doesNotMatch(source, /AgGridReact/);
   assert.match(source, /bulkActions/);
-  assert.match(source, /fulfillment-queue/);
-  assert.match(source, /admin\/orders\/\$\{row\.checkoutId\}/);
-  assert.match(source, /admin-fulfillment-queue-filters/);
-  assert.match(source, /PartialDispatched/);
+  assert.match(columns, /fulfillment-queue/);
+  assert.match(columns, /admin\/orders\/\$\{row\.checkoutId\}/);
+  // TB-271: the two overlapping quick-filter rows were replaced by ONE job-stage strip plus a time scope.
+  assert.match(source, /admin-fulfillment-job-stages/);
+  assert.match(source, /admin-fulfillment-time-scopes/);
+  assert.doesNotMatch(source, /FULFILLMENT_DISPATCH_FILTERS/);
+  assert.doesNotMatch(source, /FULFILLMENT_QUEUE_FILTERS/);
+  assert.match(columns, /PartialDispatched/);
 });
 
 test("AdminFulfillmentsScreen delegates to work queue screen", () => {
@@ -132,7 +138,7 @@ test("fulfillment-queue scope keeps only fulfillment ops for matching id", () =>
 });
 
 test("queue quantity and shipment summary are decimal-aware and GUID-free", () => {
-  const source = readFileSync(join(dir, "admin-fulfillment-work-queue-screen.tsx"), "utf8");
+  const source = readFileSync(join(dir, "admin-fulfillment-work-queue-columns.tsx"), "utf8");
   assert.match(source, /formatFulfillmentQueueQuantity/);
   assert.match(source, /formatFulfillmentShipmentSummary/);
   assert.match(source, /availableActionCodes\.length > 0/);
