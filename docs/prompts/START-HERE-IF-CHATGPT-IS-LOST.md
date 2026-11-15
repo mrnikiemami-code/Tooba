@@ -1,4 +1,26 @@
-# CURRENT — 268 PASS (presentation only): group-scoped parcel tabs with counted categories, actionable-first default, cross-tab lineage — 2026-11-15
+# CURRENT — 269 PASS (presentation only): fulfilment-queue dates now use the same Persian/Jalali calendar as the operations view — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/{RESULT.md,RECEIPTS.md,result-contract.txt,date-display-proof.md,user-review.md}.
+The user's 2026-11-15 screenshot showed `/admin/fulfillments` printing a raw `2026-11-15` handoff date beside Jalali
+deadlines. Root, source-confirmed: the queue owned its own three formatters (`formatPlannedHandoff`,
+`formatCustomerReceiving`, `formatOperationalDeadline`) and TB-267 had only standardized the order-operations page. The
+repair is display-only: all four formatters now delegate to the EXISTING `lib/operational-format.ts` helpers, so a
+date-only commitment renders that calendar day (`۲۴ آبان ۱۴۰۵`, anchored at local noon so no zone can slide it), an
+accepted instant renders in its carrier zone (`۲۳ آبان ۱۴۰۵، ۱۳:۰۰`), a clock range keeps its start/end order and Persian
+digits inside LTR isolation, and the zone appears ONCE per cell as «به وقت تهران» instead of the raw `Asia/Tehran`.
+Missing promises keep `مشخص نشده` / `—`; unreadable input or a refused zone is named (`تاریخ نامعتبر`,
+`منطقهٔ زمانی نامعتبر`, `منطقهٔ زمانی مشخص نشده`) rather than spilling raw ISO or falling back to the browser zone. Sorting,
+filtering, timing tabs/counts, 64px rows, the TB-268 parcel tabs and every order fact are untouched; the wire values are
+unchanged. Verified once: focused suite 13/13, `test:fulfillment` 6/6, `tsc` 0, `next build` 0
+`BUILD_ID UmAnnlHYHCf-Sa5-dTMkm`, served chunk `967-076c4bd18e2dcc76.js` 200 with the new markers, live read-only queue at
+1440 and 390 with 0 document overflow and the Persian strings in cell and title. FE 3000 PID 38800; Host 5088 untouched;
+one canonical `tooba_alpha`; no migration/DB write/fixture/provider call. Declared limit: the envelope
+`Expected-Base-SHA d4fb3b8e…` is absent in this clone, so work began from the real local `main` head `f62bd7564`. 268 stays
+PASS-within-scope and still awaits the user's visual acceptance; nothing functional was reopened.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. No user acceptance claimed.
+
+# SUPERSEDED — 268 PASS (presentation only): group-scoped parcel tabs with counted categories, actionable-first default, cross-tab lineage — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/{RESULT.md,RECEIPTS.md,result-contract.txt,tab-counts-and-navigation.md,user-review.md}.

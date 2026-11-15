@@ -1,0 +1,50 @@
+# result-contract — TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269
+
+Task-ID: TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269
+Parent-Task: TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268
+Channel: tooba-main
+Mode: PRESENTATION_ONLY_QUEUE_PERSIAN_DATE_CONSISTENCY
+
+STATUS: PASS (within the issued presentation-only scope)
+DECISION: QUEUE_HANDOFF_CUSTOMER_AND_OPERATIONAL_DEADLINE_CELLS_RENDER_ONE_PERSIAN_JALALI_CALENDAR_WITH_DATE_ONLY_STABILITY_ACCEPTED_ZONE_INSTANTS_ISOLATED_LTR_RANGES_AND_TRUTHFUL_INVALID_MARKERS_WITH_ZERO_DATA_CHANGE
+
+NOT_CLAIMED:
+  - Architect ACCEPT
+  - user VISUAL / FUNCTIONAL ACCEPT
+  - "all shipping complete"
+  - any backend, contract, data, payment, Returns, scheduler or provider outcome
+
+EXPECTED_BASE_SHA_ENVELOPE: d4fb3b8e3505a445b123efc8d63badea52df1172
+BASE_SHA_VERIFIED: NO  (object absent in this clone; work base = local main head f62bd7564d5394dc8e36df4193b065d17be38682)
+CODE_SHA: see FINAL_HEAD below
+EVIDENCE_SHA: see FINAL_HEAD below
+FINAL_HEAD: see FINAL_HEAD line appended by the commit below
+ORIGIN_PARITY: origin/main == FINAL_HEAD after push
+
+CHANGED_SURFACE:
+  - src/frontend/app/fulfillment/fulfillment-work-queue-dispatch.ts   (display formatters only)
+  - src/frontend/app/fulfillment/fulfillment-work-queue-260.test.ts   (one pinned expectation updated)
+  - src/frontend/app/fulfillment/fulfillment-work-queue-persian-dates-269.test.ts  (new, 7 cases)
+  - docs/ai/tasks/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/TASK.md
+  - docs/architecture/evidence/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/{TASK,RESULT,RECEIPTS,result-contract}.md/.txt,date-display-proof.md
+  - AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md (CURRENT banner)
+
+NOT_CHANGED: backend, Contracts, endpoints, API payload, query/sort/filter values, migrations, schema, locale registry,
+appsettings, edition, ports, DataProtection, CapturedPreview, TB-268 tabs and counts, user data.
+
+VERIFIED_ONCE:
+  focused_formatter_suite: 13/13  (7 new TB-269 + 6 retained queue contract)
+  test:fulfillment:        6/6
+  tsc --noEmit:            0
+  next build:              0   BUILD_ID UmAnnlHYHCf-Sa5-dTMkm
+  served build:            /fa 200, _buildManifest.js 200, chunk 967-076c4bd18e2dcc76.js 200 with the new markers
+  host:                    /health 200, /health/ready 200 (untouched)
+  live 1440 / 390:         document overflow 0 / 0; handoff, deadlines and customer cells all Persian Jalali,
+                           cell == title, no raw YYYY-MM-DD and no raw IANA id
+
+RUNTIME: FE 3000 PID 38800 (BUILD_ID UmAnnlHYHCf-Sa5-dTMkm); Host 5088 unchanged; ONE tooba_alpha 5432 SingleStore.
+
+REVIEW_URL: /fa/admin/fulfillments   (user route /admin/fulfillments renders identically)
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE

@@ -7,6 +7,55 @@
  * a "today" or a bucket from the browser clock, and it never looks up current shipping settings.
  */
 import type { FulfillmentListRow, FulfillmentQueueFilter } from "./fulfillment-api.ts";
+import {
+  operationalDayLabel,
+  operationalInstantLabel,
+  operationalTimeZoneLabel,
+  operationalTimeWindowLabel,
+} from "../../lib/operational-format.ts";
+
+/**
+ * TB-269: the queue renders the SAME calendar the operations page renders. The user's screenshot showed a raw
+ * `2026-11-15` handoff date beside Jalali deadlines, so these formatters now use the shared operational display
+ * helpers instead of printing wire values. Display only: no instant, day or zone is derived or recomputed here.
+ */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** A date-only acceptance fact is that CALENDAR DAY. It is never converted through a client/UTC midnight. */
+function acceptedDayLabel(
+  raw: string | null | undefined,
+  zone?: string | null,
+): string | null {
+  const value = (raw ?? "").trim();
+  if (!value) return null;
+  // Defensive only: the wire shape is a date. A full instant (never shipped here) keeps its accepted-zone label
+  // rather than being shifted through the browser zone.
+  if (!DATE_ONLY.test(value)) return operationalInstantLabel(value, readZone(zone));
+  return operationalDayLabel(value);
+}
+
+/** A zone the runtime can actually format in; `null` means missing (`""`) or refused (unknown id). */
+function readZone(zone: string | null | undefined): string | null {
+  const raw = (zone ?? "").trim();
+  if (!raw) return null;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: raw });
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+/** LTR isolation for a clock range inside an RTL line: the range keeps its direction and its start/end order. */
+function isolatedTimeRange(window: string): string {
+  return `\u2066${operationalTimeWindowLabel(window)}\u2069`;
+}
+
+/** The three honest display markers; none of them is a guessed date and none leaks a raw value. */
+export const FULFILLMENT_DISPLAY_UNAVAILABLE = "مشخص نشده";
+export const FULFILLMENT_DISPLAY_INVALID_DATE = "تاریخ نامعتبر";
+export const FULFILLMENT_DISPLAY_INVALID_ZONE = "منطقهٔ زمانی نامعتبر";
+export const FULFILLMENT_DISPLAY_MISSING_ZONE = "منطقهٔ زمانی مشخص نشده";
 
 /** Honest counts of the whole filtered queue set (never of the current page). */
 export interface FulfillmentQueueCounts {
@@ -119,10 +168,20 @@ export function formatHandoffWindowLabel(state: string | null | undefined): stri
 export function formatPlannedHandoff(
   row: Pick<FulfillmentListRow, "plannedHandoffDate" | "plannedHandoffWindow" | "plannedHandoffTimeZone">,
 ): string {
-  if (!row.plannedHandoffDate) return "مشخص نشده";
-  const window = row.plannedHandoffWindow ? ` · ${row.plannedHandoffWindow}` : "";
-  const zone = row.plannedHandoffTimeZone ? ` (${row.plannedHandoffTimeZone})` : "";
-  return `${row.plannedHandoffDate}${window}${zone}`;
+  if (!row.plannedHandoffDate) return FULFILLMENT_DISPLAY_UNAVAILABLE;
+  const day = acceptedDayLabel(row.plannedHandoffDate, row.plannedHandoffTimeZone);
+  if (!day) return FULFILLMENT_DISPLAY_INVALID_DATE;
+  const parts = [day];
+  const window = (row.plannedHandoffWindow ?? "").trim();
+  if (window) parts.push(isolatedTimeRange(window));
+  const declaredZone = (row.plannedHandoffTimeZone ?? "").trim();
+  if (declaredZone) {
+    const zone = readZone(declaredZone);
+    if (!zone) return [...parts, FULFILLMENT_DISPLAY_INVALID_ZONE].join(" · ");
+    const zoneLabel = operationalTimeZoneLabel(zone);
+    if (zoneLabel) parts.push(zoneLabel);
+  }
+  return parts.join(" · ");
 }
 
 /** Customer delivery commitment — deliberately displayed apart from the dispatch plan. */
@@ -130,9 +189,10 @@ export function formatCustomerReceiving(
   row: Pick<FulfillmentListRow, "customerReceivingDate" | "customerReceivingWindow">,
 ): string {
   if (!row.customerReceivingDate) return "—";
-  return row.customerReceivingWindow
-    ? `${row.customerReceivingDate} · ${row.customerReceivingWindow}`
-    : row.customerReceivingDate;
+  const day = acceptedDayLabel(row.customerReceivingDate);
+  if (!day) return FULFILLMENT_DISPLAY_INVALID_DATE;
+  const window = (row.customerReceivingWindow ?? "").trim();
+  return window ? `${day} · ${isolatedTimeRange(window)}` : day;
 }
 
 /** Reads the module-owned `dispatchCounts` block out of a raw GridQuery payload. */
@@ -159,26 +219,19 @@ export function formatPreparationState(state: string | null | undefined): string
 }
 
 /**
- * TB-264: one operational deadline in the accepted carrier zone. The instant is produced by the server
- * from the accepted policy; this function only renders it and never shifts it.
+ * TB-264 / TB-269: one operational deadline in the accepted carrier zone. The instant is produced by the server
+ * from the accepted policy; this function only renders it in the human Persian calendar of that zone and never
+ * shifts it. An unreadable instant or a refused zone is named truthfully instead of leaking a raw value.
  */
 export function formatOperationalDeadline(utc: string | null | undefined, timeZone?: string | null): string {
-  if (!utc) return "—";
-  const parsed = new Date(utc);
-  if (Number.isNaN(parsed.getTime())) return utc;
-  try {
-    return new Intl.DateTimeFormat("fa-IR", {
-      timeZone: timeZone || "UTC",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(parsed);
-  } catch {
-    return utc;
-  }
+  const raw = (utc ?? "").trim();
+  if (!raw) return "—";
+  if (Number.isNaN(new Date(raw).getTime())) return FULFILLMENT_DISPLAY_INVALID_DATE;
+  const declaredZone = (timeZone ?? "").trim();
+  if (!declaredZone) return FULFILLMENT_DISPLAY_MISSING_ZONE;
+  const zone = readZone(declaredZone);
+  if (!zone) return FULFILLMENT_DISPLAY_INVALID_ZONE;
+  return operationalInstantLabel(raw, zone) ?? FULFILLMENT_DISPLAY_INVALID_DATE;
 }
 
 /** «آماده‌سازی تا … · خروج تا … · تحویل به حامل تا …» — absent deadlines stay explicitly «—». */
@@ -192,9 +245,12 @@ export function formatPreparationDeadlines(
     return "—";
   }
   const zone = row.plannedHandoffTimeZone;
-  return [
+  const parts = [
     `آماده‌سازی تا ${formatOperationalDeadline(row.preparationStartUtc, zone)}`,
     `خروج تا ${formatOperationalDeadline(row.transferDepartureUtc, zone)}`,
     `تحویل به حامل تا ${formatOperationalDeadline(row.handoffDeadlineUtc, zone)}`,
-  ].join(" · ");
+  ];
+  // The zone is one human label per cell («به وقت تهران»), never the raw id repeated beside every instant.
+  const zoneLabel = operationalTimeZoneLabel(readZone(zone));
+  return zoneLabel ? `${parts.join(" · ")} · ${zoneLabel}` : parts.join(" · ");
 }

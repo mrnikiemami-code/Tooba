@@ -1,4 +1,35 @@
-# CURRENT — 268 PASS (presentation only): group-scoped parcel tab strip with Persian count badges, quiet non-zero categories, actionable-first default, cross-tab lineage revelation — 2026-11-15
+# CURRENT — 269 PASS (presentation only): fulfilment-queue dates speak the same Persian/Jalali calendar as the operations view — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,date-display-proof.md,user-review.md}.
+Status **PASS within the issued presentation-only scope**, decision
+`QUEUE_HANDOFF_CUSTOMER_AND_OPERATIONAL_DEADLINE_CELLS_RENDER_ONE_PERSIAN_JALALI_CALENDAR_WITH_DATE_ONLY_STABILITY_ACCEPTED_ZONE_INSTANTS_ISOLATED_LTR_RANGES_AND_TRUTHFUL_INVALID_MARKERS_WITH_ZERO_DATA_CHANGE`,
+NOT Architect ACCEPT, NOT user VISUAL ACCEPT. 268 is unchanged and still awaits the user's visual look; no functional
+reopening.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| 1 Root | source-confirmed, not guessed | `formatPlannedHandoff` returned `plannedHandoffDate` + raw window + `(Asia/Tehran)`; `formatCustomerReceiving` returned its raw date; `formatOperationalDeadline` used `fa-IR` 2-digit fields and echoed raw ISO/zone on refusal — TB-267 had only standardized the order-operations page |
+| 2 Repair | display only, one shared authority | all four queue formatters now render through the EXISTING `lib/operational-format.ts` helpers: date-only → `۲۴ آبان ۱۴۰۵` (anchored at local noon, so no zone can slide the day), instant → accepted carrier-zone `۲۳ آبان ۱۴۰۵، ۱۳:۰۰`, range → `\u2066۰۸:۰۰–۲۰:۰۰\u2069` (start/end order kept, isolated LTR), zone → ONE «به وقت تهران» per cell |
+| 3 Refusals | truthful, never raw | `تاریخ نامعتبر` / `منطقهٔ زمانی نامعتبر` / `منطقهٔ زمانی مشخص نشده`; a refused or absent zone is never replaced by the browser zone, and missing promises keep `مشخص نشده` / `—` |
+| 4 Wire | untouched | accessors still sort/filter on the ISO values; no server/contract/endpoint/query/filter/«today» logic, no locale registry, no new formatting framework |
+
+Verified once: focused suite **13/13** (7 new TB-269 + 6 retained queue contract, one pinned raw expectation updated);
+`npm run test:fulfillment` 6/6; `tsc` 0; `next build` 0 `BUILD_ID UmAnnlHYHCf-Sa5-dTMkm`; served
+`_buildManifest.js` 200 and chunk `967-076c4bd18e2dcc76.js` 200 carrying the new markers; live read-only
+`/fa/admin/fulfillments` **and** the user's `/admin/fulfillments` show `۲۴ آبان ۱۴۰۵ · ۰۸:۰۰–۲۰:۰۰ · به وقت تهران`,
+the three-instant deadline cell with one zone label and `۲۶ آبان ۱۴۰۵ · ۰۹:۰۰-۱۰:۰۰`, cell == title, no raw
+`YYYY-MM-DD` or IANA id, document overflow 0 at 1440 and 390, grid keeps its scoped scroll (2882>340 at 390).
+FE-only: Next restarted on 3000 (PID 38800); Host 5088 untouched (`/health` + `/health/ready` 200); no
+migration/DDL/business SQL/fixture/provider call; one canonical `tooba_alpha`.
+Known limits: the envelope `Expected-Base-SHA d4fb3b8e…` is **absent** in this clone (`git cat-file` fails), so work began
+from the real local `main` head `f62bd7564` and that is declared rather than substituted; the design-system grid unmounts a
+column scrolled outside its virtualized viewport, so the live check scrolled each cell into the DOM (pre-existing grid
+behaviour); `createdAt`/`updatedAt` keep their existing `fa-IR` formatter and were not part of the report; no user trial run.
+`scripts/tb266r1-*.mjs` scratch files remain untracked and are not part of this change set.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Review URL is in `user-review.md`; no acceptance claimed.
+
+# SUPERSEDED — 268 PASS (presentation only): group-scoped parcel tab strip — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tab-counts-and-navigation.md,user-review.md}.

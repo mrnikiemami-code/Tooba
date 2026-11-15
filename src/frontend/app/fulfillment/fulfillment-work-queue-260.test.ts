@@ -128,11 +128,12 @@ test("quick filters use the exact ids the Fulfillment module declares", () => {
   assert.equal(formatHandoffWindowLabel("None"), "بدون بازه");
   assert.equal(normalizeDispatchToken("TodayNotOpen"), "today_not_open");
   assert.equal(normalizeDispatchToken("in_transit"), "in_transit");
+  // TB-269: the handoff promise is Persian/Jalali with a human zone label — never a raw ISO date or raw zone id.
   assert.equal(formatPlannedHandoff({
     plannedHandoffDate: "2026-11-10",
     plannedHandoffWindow: "10:00–13:00",
     plannedHandoffTimeZone: "Asia/Tehran",
-  }), "2026-11-10 · 10:00–13:00 (Asia/Tehran)");
+  }), "۱۹ آبان ۱۴۰۵ · \u2066۱۰:۰۰–۱۳:۰۰\u2069 · به وقت تهران");
 });
 
 test("TB-260-R1: two physical work units of ONE seller order keep distinct row ids and exact locators", () => {
