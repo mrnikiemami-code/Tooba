@@ -1,11 +1,14 @@
 /**
  * TB-270-R3 — finds the EXACT physical parcel a create/recover post-dispatch operation produced.
+ * TB-270-R4 Repair C — exact operation identity only; a single remaining candidate is never proof.
  *
  * The review must hand off to the planning modal for the parcel that really exists, never for a guess:
- *  - a resend is identified by its source parcel and its occurrence key (`shippingDispatchKey`);
- *  - a replacement is identified by the damaged-goods decision that funds it.
- * An ambiguous or absent match returns `null`, so the operator stays on the refreshed parcel cards instead of
- * being sent to a modal for a parcel that was not proven to be theirs.
+ *  - a resend is identified by its exact source parcel AND the exact non-empty occurrence key the owning
+ *    command recorded on the parcel (`shippingDispatchKey`);
+ *  - a replacement is identified by the damage decision recorded on the REQUESTED source parcel, that decision's
+ *    reviewed occurrence key, and the Created child that very decision links.
+ * An ambiguous, missing or mismatched identity returns `null`, so the operator stays on the refreshed parcel cards
+ * instead of being sent to a modal for a parcel that was not proven to be this operation's own.
  *
  * Pure: transport-free and tolerant of camelCase/PascalCase JSON only.
  */
@@ -39,7 +42,11 @@ function decisionsOf(shipment: UnknownRecord): UnknownRecord[] {
   return list(shipment, "damagedResolutions", "DamagedResolutions");
 }
 
-/** Every parcel of the snapshot, newest first, matching the requested identity. */
+function idOf(shipment: UnknownRecord): string | null {
+  return text(shipment, "shipmentId", "ShipmentId");
+}
+
+/** Every parcel of the snapshot, matching the requested exact identity. */
 export type CreatedParcelProbe = {
   /** `resend` or `replacement` — the two linked attempts a plan is confirmed for. */
   kind: "resend" | "replacement";
@@ -53,6 +60,14 @@ function statusOf(shipment: UnknownRecord): string {
   return (text(shipment, "status", "Status") ?? "").toLowerCase();
 }
 
+function isCreated(shipment: UnknownRecord): boolean {
+  return statusOf(shipment) === "created";
+}
+
+function damagedResolutionIdOf(shipment: UnknownRecord): string | null {
+  return text(shipment, "damagedResolutionId", "DamagedResolutionId");
+}
+
 /**
  * The single physical parcel this operation created or recovered, or `null` when it cannot be proven.
  */
@@ -62,68 +77,60 @@ export function resolveCreatedParcelId(
 ): string | null {
   const source = probe.sourceShipmentId.trim();
   const key = probe.idempotencyKey.trim();
-  if (!source) return null;
+  // TB-270-R4: BOTH identities are required. Without the reviewed occurrence key there is no exact operation
+  // identity at all, and "the only Created child of this source" is a guess — never a handoff target.
+  if (!source || !key) return null;
 
   const shipments = shipmentsOf(snapshot);
-  const candidates: UnknownRecord[] = [];
 
   if (probe.kind === "resend") {
-    for (const shipment of shipments) {
-      const resendOf = text(shipment, "resendOfShipmentId", "ResendOfShipmentId");
-      if (resendOf !== source) continue;
+    const exact = shipments.filter((shipment) => {
+      if (!isCreated(shipment)) return false;
+      if (text(shipment, "resendOfShipmentId", "ResendOfShipmentId") !== source) return false;
       // A damaged-goods replacement also carries the source id; only a pure resend is a resend.
-      if (text(shipment, "damagedResolutionId", "DamagedResolutionId")) continue;
-      // TB-270-R3: a delivered/dispatched/cancelled child is COMPLETED HISTORY. Planning it would offer a
-      // calendar for a parcel that already left (or can never leave), so it is never a handoff target.
-      if (statusOf(shipment) !== "created") continue;
-      candidates.push(shipment);
-    }
-  } else {
-    for (const shipment of shipments) {
-      if (!text(shipment, "damagedResolutionId", "DamagedResolutionId")) continue;
-      if (statusOf(shipment) !== "created") continue;
-      candidates.push(shipment);
-    }
+      if (damagedResolutionIdOf(shipment)) return false;
+      return text(shipment, "shippingDispatchKey", "ShippingDispatchKey") === key;
+    });
+    return exact.length === 1 ? idOf(exact[0]) : null;
   }
 
-  if (candidates.length === 0) return null;
+  // The decision must live on the REQUESTED source parcel: a decision of any other returned parcel — even one that
+  // happens to carry the same key — is a different operation and must never be substituted.
+  const sourceParcel = shipments.find((shipment) => idOf(shipment) === source);
+  if (!sourceParcel) return null;
 
-  // 1) The exact occurrence key the server recorded on the parcel is the strongest identity.
-  if (key) {
-    const exact = candidates.filter(
-      (shipment) => text(shipment, "shippingDispatchKey", "ShippingDispatchKey") === key,
-    );
-    if (exact.length === 1) return text(exact[0], "shipmentId", "ShipmentId");
-    if (exact.length > 1) return null;
-  }
+  const matching = decisionsOf(sourceParcel).filter((decision) => {
+    if ((text(decision, "outcome", "Outcome") ?? "").toLowerCase() !== "replacement") return false;
+    const status = (text(decision, "status", "Status") ?? "").toLowerCase();
+    if (status !== "reserved" && status !== "fulfilled") return false;
+    if ((text(decision, "occurrenceKey", "OccurrenceKey") ?? "") !== key) return false;
+    return Boolean(text(decision, "replacementShipmentId", "ReplacementShipmentId"));
+  });
+  if (matching.length === 0) return null;
 
-  // 2) For a replacement the decision's own link is exact (replacementShipmentId on the source parcel's decision).
-  if (probe.kind === "replacement") {
-    const linked = new Set<string>();
-    for (const shipment of shipments) {
-      for (const decision of decisionsOf(shipment)) {
-        const replacementId = text(decision, "replacementShipmentId", "ReplacementShipmentId");
-        const decisionKey = text(decision, "occurrenceKey", "OccurrenceKey");
-        const outcome = (text(decision, "outcome", "Outcome") ?? "").toLowerCase();
-        const status = (text(decision, "status", "Status") ?? "").toLowerCase();
-        if (!replacementId) continue;
-        if (outcome !== "replacement") continue;
-        if (status !== "reserved" && status !== "fulfilled") continue;
-        if (key && decisionKey && decisionKey !== key) continue;
-        if (key && !decisionKey) continue;
-        linked.add(replacementId);
-      }
-    }
-    if (linked.size === 1) {
-      const only = [...linked][0];
-      return candidates.some((shipment) => text(shipment, "shipmentId", "ShipmentId") === only)
-        ? only
-        : null;
-    }
-    return null;
-  }
+  const replacementIds = new Set(
+    matching.map((decision) => text(decision, "replacementShipmentId", "ReplacementShipmentId")!),
+  );
+  // Two decisions answering for two different parcels under one reviewed key is ambiguous: open nothing.
+  if (replacementIds.size !== 1) return null;
 
-  // 3) A resend must be the ONLY still-created candidate of that source; two candidates are ambiguous.
-  const created = candidates.filter((shipment) => statusOf(shipment) === "created");
-  return created.length === 1 ? text(created[0], "shipmentId", "ShipmentId") : null;
+  const replacementId = [...replacementIds][0];
+  const decisionIds = new Set(
+    matching.map((decision) => text(decision, "damagedGoodsResolutionId", "DamagedGoodsResolutionId")),
+  );
+
+  const child = shipments.find((shipment) => {
+    if (idOf(shipment) !== replacementId) return false;
+    if (!isCreated(shipment)) return false;
+    if (!damagedResolutionIdOf(shipment)) return false;
+    // The child must be the parcel THIS decision funds, not merely a parcel with a similar id.
+    const childDecisionId = damagedResolutionIdOf(shipment);
+    if (!decisionIds.has(childDecisionId)) return false;
+    // When the parcel also records its source, it must be the requested one.
+    const childSource = text(shipment, "resendOfShipmentId", "ResendOfShipmentId");
+    if (childSource && childSource !== source) return false;
+    return true;
+  });
+
+  return child ? replacementId : null;
 }

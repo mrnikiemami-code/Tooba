@@ -784,3 +784,226 @@ test("TB-270-R3: a late answer for the PREVIOUS target never writes the newer su
   );
   await tree.unmount();
 });
+
+// ---------------------------------------------------------------- TB-270-R4: first-send durability + lifecycle fence
+
+const SCOPE = { viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT };
+
+function planBody(key: string, date = "2026-11-16", opens = "09:00", closes = "10:00"): string {
+  return JSON.stringify({
+    code: "plan_shipment_dispatch",
+    shipmentId: SHIPMENT,
+    idempotencyKey: key,
+    dispatchPlanReceivingDate: date,
+    dispatchPlanReceivingOpensAt: opens,
+    dispatchPlanReceivingClosesAt: closes,
+    dispatchPlanReviewFingerprint: "fingerprint-1",
+  });
+}
+
+test("TB-270-R4: the FIRST post is unresolved the instant it may be sent — an unmount before any catch recovers it exactly", async () => {
+  resetScope();
+  const posts: string[] = [];
+  // The first POST never answers: no catch, no finally, no epoch guard ever runs for it.
+  const props = {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT,
+    shipmentId: SHIPMENT,
+    viewerScopeKey: VIEWER,
+    previewLoader: async () => ok(preview()),
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      posts.push(JSON.stringify(body));
+      return new Promise<never>(() => undefined);
+    },
+  };
+
+  const first = await mount(createElement(AdminShipmentPlanModal, props));
+  await waitFor(() => qq(first.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+  await click(q(first.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+  await flush();
+  await click(q(first.container, CONFIRM));
+  await waitFor(() => posts.length === 1);
+
+  const pending = readShipmentPlanAttempt(SCOPE);
+  assert.ok(pending, "the exact intent is durable BEFORE the executor answers");
+  assert.equal(pending.occurrenceKey, JSON.parse(posts[0]!).idempotencyKey);
+  assert.equal(pending.requestBody, posts[0], "the exact serialized body is what was stored");
+  assert.equal(pending.uncertain, false, "nothing caught an exception: this is not the uncertain branch");
+  assert.equal(pending.unresolved, true, "it is unresolved from the instant the request may have been sent");
+
+  // The surface simply disappears while the POST is still in flight.
+  await first.unmount();
+  assert.equal(
+    readShipmentPlanAttempt(SCOPE)?.occurrenceKey,
+    pending.occurrenceKey,
+    "an unmount can neither discard nor replace the unresolved intent",
+  );
+
+  // Remount with a DIFFERENT offered slot: the retained intent wins and a fresh selection cannot overwrite it.
+  let closed = 0;
+  const retried: string[] = [];
+  const second = await mount(createElement(AdminShipmentPlanModal, {
+    ...props,
+    previewLoader: async () => ok(preview({ options: [option("2026-11-17", "11:00", "12:00")] })),
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      retried.push(JSON.stringify(body));
+      return ok({});
+    },
+    onClose: () => { closed += 1; },
+  }));
+  await waitFor(() => Boolean(second.container.querySelector("[data-testid='admin-shipment-plan-frozen']")));
+  assert.equal(
+    second.container.querySelector(CONFIRM),
+    null,
+    "a fresh confirmation cannot be minted while the first intent is unresolved",
+  );
+  assert.equal(
+    qq(second.container, "[data-testid='admin-shipment-plan-slot-2026-11-17-11:00']").length,
+    1,
+    "the newer calendar is visible but not selectable as a new intent",
+  );
+  await click(q(second.container, "[data-testid='admin-shipment-plan-retry-same']"));
+  await waitFor(() => retried.length === 1);
+  assert.equal(retried[0], posts[0], "the retry is the EXACT serialized intent, not a rebuilt selection");
+  await waitFor(() => closed === 1);
+  await waitFor(() => readShipmentPlanAttempt(SCOPE) === null);
+  await second.unmount();
+});
+
+test("TB-270-R4: an unresolved intent survives a FAILED preview, and a TB-270-R3 record is never assumed never-sent", async () => {
+  resetScope();
+  // A record written by the previous version: exact body retained, uncertain:false, no `unresolved` field at all.
+  const legacy = planBody("legacy-key");
+  sessionStorage.setItem(
+    `tb.shipment-plan-attempt.v1:${CHECKOUT}:${VIEWER}:${SHIPMENT}`,
+    JSON.stringify({
+      viewerScopeKey: VIEWER,
+      checkoutId: CHECKOUT,
+      shipmentId: SHIPMENT,
+      occurrenceKey: "legacy-key",
+      receivingDate: "2026-11-16",
+      receivingOpensAt: "09:00",
+      receivingClosesAt: "10:00",
+      receivingTimeZone: "Asia/Tehran",
+      attempts: 1,
+      lastFailedAtUtc: null,
+      lastMessageFa: null,
+      requestBody: legacy,
+      reviewFingerprint: "fingerprint-1",
+      uncertain: false,
+    }),
+  );
+
+  const bodies: string[] = [];
+  const mounted = await mount(createElement(AdminShipmentPlanModal, {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT,
+    shipmentId: SHIPMENT,
+    viewerScopeKey: VIEWER,
+    previewLoader: async () => ({ state: "error" as const, data: null, status: 0, message: "host-unreachable" }),
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      bodies.push(JSON.stringify(body));
+      return ok({});
+    },
+  }));
+
+  // Even with no calendar at all, the unresolved intent is the only action on this surface.
+  await waitFor(() => Boolean(mounted.container.querySelector("[data-testid='admin-shipment-plan-retry-same']")));
+  assert.equal(mounted.container.querySelector(CONFIRM), null);
+  await click(q(mounted.container, "[data-testid='admin-shipment-plan-retry-same']"));
+  await waitFor(() => bodies.length === 1);
+  assert.equal(bodies[0], legacy, "the previous version's body is retried byte-for-byte, never rebuilt");
+  await mounted.unmount();
+});
+
+test("TB-270-R4: a late answer after unmount/retarget neither clears a newer intent nor closes a newer surface", async () => {
+  resetScope();
+  let release: ((value: unknown) => void) | null = null;
+  const gate = new Promise<unknown>((resolve) => { release = resolve; });
+  const started: string[] = [];
+  let closed = 0;
+  const props = {
+    open: true,
+    onClose: () => { closed += 1; },
+    checkoutId: CHECKOUT,
+    viewerScopeKey: VIEWER,
+    previewLoader: async () => ok(preview()),
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      started.push(JSON.stringify(body));
+      return gate as never;
+    },
+  };
+
+  const first = await mount(createElement(AdminShipmentPlanModal, { ...props, shipmentId: SHIPMENT }));
+  await waitFor(() => qq(first.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+  await click(q(first.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+  await flush();
+  await click(q(first.container, CONFIRM));
+  await waitFor(() => started.length === 1);
+
+  // The surface is retargeted to another parcel while the first POST is still open.
+  await first.rerender(createElement(AdminShipmentPlanModal, { ...props, shipmentId: "sh-plan-2" }));
+  await waitFor(() => qq(first.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+
+  // A NEWER reviewed intent is recorded for the ORIGINAL scope (as the next surface would).
+  const newer = planBody("newer-key", "2026-11-17", "11:00", "12:00");
+  writeShipmentPlanAttempt({ scope: SCOPE, occurrenceKey: "newer-key", receivingDate: "2026-11-17", requestBody: newer, unresolved: true });
+
+  release!(ok({}));
+  await flush();
+  assert.equal(closed, 0, "the old answer can never close the surface that replaced it");
+  assert.ok(
+    q(first.container, "[data-testid^='admin-shipment-plan-slot-']"),
+    "the newer target keeps its own calendar",
+  );
+  assert.equal(
+    readShipmentPlanAttempt(SCOPE)?.occurrenceKey,
+    "newer-key",
+    "a late success for an older occurrence cannot clear a newer stored intent",
+  );
+  await first.unmount();
+  resetScope();
+});
+
+test("TB-270-R4: a conflict/authorization answer keeps the exact intent recoverable instead of assuming no write", async () => {
+  resetScope();
+  const bodies: string[] = [];
+  let answer: { state: "ok"; data: unknown; status: number } | { state: "error"; data: null; status: number; message: string } =
+    { state: "error", data: null, status: 409, message: "order.shipment_plan.conflict" };
+  const mounted = await mount(createElement(AdminShipmentPlanModal, {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT,
+    shipmentId: SHIPMENT,
+    viewerScopeKey: VIEWER,
+    previewLoader: async () => ok(preview()),
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      bodies.push(JSON.stringify(body));
+      return answer;
+    },
+  }));
+
+  await waitFor(() => qq(mounted.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+  await click(q(mounted.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+  await flush();
+  await click(q(mounted.container, CONFIRM));
+  await waitFor(() => bodies.length === 1);
+
+  // A conflict is NOT a proven no-write refusal: the exact intent stays frozen and retryable.
+  await waitFor(() => Boolean(mounted.container.querySelector("[data-testid='admin-shipment-plan-frozen']")));
+  const kept = readShipmentPlanAttempt(SCOPE);
+  assert.ok(kept, "the reviewed intent is preserved");
+  assert.equal(kept!.unresolved, true);
+  assert.equal(kept!.requestBody, bodies[0]);
+  assert.equal(mounted.container.querySelector("[data-testid='admin-shipment-plan-prior-outcome']"), null);
+
+  // The explicit retry repeats the identical bytes; an authoritative replay answer then clears THAT occurrence.
+  answer = ok({ replayed: true });
+  await click(q(mounted.container, "[data-testid='admin-shipment-plan-retry-same']"));
+  await waitFor(() => bodies.length === 2);
+  assert.equal(bodies[1], bodies[0], "the conflict never caused a new intent or a new key");
+  await waitFor(() => readShipmentPlanAttempt(SCOPE) === null);
+  await mounted.unmount();
+});

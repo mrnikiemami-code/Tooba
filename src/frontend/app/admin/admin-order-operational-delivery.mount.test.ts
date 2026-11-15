@@ -4082,3 +4082,194 @@ test("TB-270-R3 mounted: the parcel CARD's existing plan entry still opens that 
     restoreFetch();
   }
 });
+
+test("TB-270-R4 mounted: a child WITHOUT the reviewed key, a decision of ANOTHER source and an ambiguous pair open NO calendar", async () => {
+  // 1) Resend: the only Created child of the source carries a DIFFERENT occurrence key.
+  resetGroupScope(CHECKOUT);
+  resetPostDispatchAttempts();
+  const wrongKeyCalls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resend_shipment", "so1", PARCEL_SOURCE)]);
+    return postResponse(200, createdParcelSnapshot({
+      shipmentId: RESEND_CHILD,
+      status: "Created",
+      carrierDisplayName: "پست",
+      trackingReference: null,
+      itemCount: 1,
+      lines: [{ orderLineId: "ol1", quantity: 1 }],
+      shippingGroupId: "g1",
+      resendOfShipmentId: PARCEL_SOURCE,
+      shippingDispatchKey: "key-of-another-occurrence",
+    }));
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForResend(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-resend-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-resend-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(wrongKeyCalls).length === 1);
+    await flush();
+    assert.equal(
+      qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length,
+      0,
+      "one leftover Created child is never proof of THIS operation",
+    );
+    assert.equal(planRequests(wrongKeyCalls).length, 0);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+
+  // 2) Replacement: the reviewed key lives on ANOTHER source parcel's decision, not the requested source.
+  resetPostDispatchAttempts();
+  const otherSourceCalls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", PARCEL_SOURCE)]);
+    const key = String(call.body.idempotencyKey ?? "");
+    return postResponse(200, {
+      fulfillmentId: "so1",
+      sellerOrderId: "so1",
+      shipments: [
+        {
+          shipmentId: PARCEL_SOURCE,
+          status: "Returned",
+          carrierDisplayName: "پست",
+          trackingReference: "TRK-0001",
+          itemCount: 2,
+          lines: [{ orderLineId: "ol1", quantity: 2 }],
+          returnedAt: "2026-11-09T10:00:00Z",
+          damagedResolutions: [],
+        },
+        {
+          shipmentId: "sh-other-source",
+          status: "Returned",
+          carrierDisplayName: "پست",
+          trackingReference: "TRK-0002",
+          itemCount: 1,
+          lines: [{ orderLineId: "ol1", quantity: 1 }],
+          returnedAt: "2026-11-08T10:00:00Z",
+          damagedResolutions: [{
+            damagedGoodsResolutionId: "dgr-other",
+            orderLineId: "ol1",
+            quantity: 1,
+            outcome: "Replacement",
+            status: "Reserved",
+            occurrenceKey: key,
+            replacementShipmentId: "sh-other-child",
+          }],
+        },
+        {
+          shipmentId: "sh-other-child",
+          status: "Created",
+          carrierDisplayName: "پست",
+          trackingReference: null,
+          itemCount: 1,
+          lines: [{ orderLineId: "ol1", quantity: 1 }],
+          shippingGroupId: "g1",
+          damagedResolutionId: "dgr-other",
+          resendOfShipmentId: "sh-other-source",
+          isReplacement: true,
+        },
+      ],
+    });
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForDamaged(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement'] input"));
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(otherSourceCalls).length === 1);
+    await flush();
+    assert.equal(
+      qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length,
+      0,
+      "another source's decision is a different operation and is never substituted",
+    );
+    assert.equal(planRequests(otherSourceCalls).length, 0);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+
+  // 3) Ambiguity: one reviewed key answers for TWO different replacement parcels on the requested source.
+  resetPostDispatchAttempts();
+  const ambiguousCalls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", PARCEL_SOURCE)]);
+    const key = String(call.body.idempotencyKey ?? "");
+    const decision = (id: string, child: string) => ({
+      damagedGoodsResolutionId: id,
+      orderLineId: "ol1",
+      quantity: 1,
+      outcome: "Replacement",
+      status: "Reserved",
+      occurrenceKey: key,
+      replacementShipmentId: child,
+    });
+    return postResponse(200, {
+      fulfillmentId: "so1",
+      sellerOrderId: "so1",
+      shipments: [
+        {
+          shipmentId: PARCEL_SOURCE,
+          status: "Returned",
+          carrierDisplayName: "پست",
+          trackingReference: "TRK-0001",
+          itemCount: 2,
+          lines: [{ orderLineId: "ol1", quantity: 2 }],
+          returnedAt: "2026-11-09T10:00:00Z",
+          damagedResolutions: [decision("dgr-a", "sh-child-a"), decision("dgr-b", "sh-child-b")],
+        },
+        {
+          shipmentId: "sh-child-a",
+          status: "Created",
+          carrierDisplayName: "پست",
+          trackingReference: null,
+          itemCount: 1,
+          lines: [{ orderLineId: "ol1", quantity: 1 }],
+          shippingGroupId: "g1",
+          damagedResolutionId: "dgr-a",
+          resendOfShipmentId: PARCEL_SOURCE,
+          isReplacement: true,
+        },
+        {
+          shipmentId: "sh-child-b",
+          status: "Created",
+          carrierDisplayName: "پست",
+          trackingReference: null,
+          itemCount: 1,
+          lines: [{ orderLineId: "ol1", quantity: 1 }],
+          shippingGroupId: "g1",
+          damagedResolutionId: "dgr-b",
+          resendOfShipmentId: PARCEL_SOURCE,
+          isReplacement: true,
+        },
+      ],
+    });
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForDamaged(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement'] input"));
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(ambiguousCalls).length === 1);
+    await flush();
+    assert.equal(
+      qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length,
+      0,
+      "an ambiguous decision pair never auto-opens a calendar",
+    );
+    assert.equal(planRequests(ambiguousCalls).length, 0);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});

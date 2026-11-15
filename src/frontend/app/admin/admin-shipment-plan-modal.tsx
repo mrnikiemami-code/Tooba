@@ -12,8 +12,10 @@ import {
   type AdminOrderOperationRequest,
 } from "./admin-order-operations";
 import {
+  clearShipmentPlanAttemptIfCurrent,
   endShipmentPlanReview,
-  markShipmentPlanAttemptFailed,
+  isUnresolvedShipmentPlanAttempt,
+  markShipmentPlanAttemptFailedIfCurrent,
   mintShipmentPlanOccurrence,
   readShipmentPlanAttempt,
   writeShipmentPlanAttempt,
@@ -71,6 +73,39 @@ function safeParseBody(raw: string): AdminOrderOperationRequest | null {
 }
 
 /**
+ * TB-270-R4 Repair A: refusals the planning command raises BEFORE it can insert a row.
+ *
+ * These are the only answers that prove THIS occurrence wrote nothing, so only these may end the review. A
+ * `conflict` (same key/another occurrence already owns the parcel), an authorization loss/denial, an unknown HTTP
+ * status or any transport failure is NOT proof that no plan exists and must keep the exact intent recoverable.
+ */
+const PROVEN_NO_WRITE_REFUSALS = new Set([
+  "order.shipment_plan.selection_expired",
+  "order.shipment_plan.review_context_changed",
+  "order.shipment_plan.not_created",
+  "order.shipment_plan.first_dispatch_not_plannable",
+  "order.shipment_plan.payment_required",
+  "order.shipment_plan.group_missing",
+  "order.shipment_plan.binding_missing",
+  "order.shipment_plan.binding_mismatch",
+  "order.shipment_plan.service_missing",
+  "order.shipment_plan.package_locked",
+  "order.shipment_plan.source_not_ready",
+  "order.shipment_plan.source_quantity_mismatch",
+  "order.shipment_plan.no_feasible_date",
+  "order.cancelled.blocks_action",
+  "order.operation.invalid",
+]);
+
+function isProvenNoWriteRefusal(identity: string | null | undefined): boolean {
+  const code = (identity ?? "").trim();
+  if (!code) return false;
+  if (PROVEN_NO_WRITE_REFUSALS.has(code)) return true;
+  // Captured-input/scheduling refusals are answered by the read-only seam before any plan can be inserted.
+  return code.startsWith("shipping.scheduling.");
+}
+
+/**
  * TB-270-R2 — «زمان‌بندی ارسال» یک مرسولهٔ ارسال مجدد/جایگزین موجود.
  *
  * The physical parcel already exists (Fulfillment made it); this review only makes it dispatch-authorized.
@@ -117,19 +152,33 @@ export function AdminShipmentPlanModal({
   const load = useCallback(async (epoch: number) => {
     setLoading(true);
     setLoadError(null);
+    // TB-270-R4 Repair A: the durable unresolved intent is read BEFORE the preview, so it is recovered even when the
+    // owning calendar refuses/fails or the reviewed slot is no longer offered. It is never rebuilt from UI state.
+    const rec = readShipmentPlanAttempt(scope);
+    const isFrozen = isUnresolvedShipmentPlanAttempt(rec);
     try {
       const result = await previewLoaderRef.current(checkoutId, shipmentId);
       if (epoch !== epochRef.current) return;
       if (result.state !== "ok" || !result.data) {
         setPreview(null);
+        setRetained(rec);
+        setFrozen(isFrozen);
+        setSelectedKey(null);
         setLoadError(mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"));
         return;
       }
+      // An authoritative stored plan for THIS exact occurrence resolves the retained intent: the server proves the
+      // plan exists, so the client record is cleared (compare-and-clear) instead of being retried.
+      const confirmedKey = result.data.confirmedPlan?.occurrenceKey ?? null;
+      if (isFrozen && rec && confirmedKey && confirmedKey === rec.occurrenceKey) {
+        clearShipmentPlanAttemptIfCurrent(scope, rec.occurrenceKey, rec.requestBody);
+        setPreview(result.data);
+        setRetained(null);
+        setFrozen(false);
+        setSelectedKey(null);
+        return;
+      }
       setPreview(result.data);
-      // TB-270-R3: ONLY a genuinely unknown outcome may re-send a retained body. A record without an uncertain
-      // outcome is history, not permission, so the operator deliberately chooses a fresh reviewed slot.
-      const rec = readShipmentPlanAttempt(scope);
-      const isFrozen = Boolean(rec?.uncertain && rec?.requestBody);
       setRetained(rec);
       setFrozen(isFrozen);
       const retainedKey = isFrozen && rec?.receivingDate
@@ -141,6 +190,9 @@ export function AdminShipmentPlanModal({
     } catch {
       if (epoch !== epochRef.current) return;
       setPreview(null);
+      setRetained(rec);
+      setFrozen(isFrozen);
+      setSelectedKey(null);
       setLoadError(mapAdminErrorMessage("host-unreachable", "fa"));
     } finally {
       if (epoch === epochRef.current) setLoading(false);
@@ -148,7 +200,12 @@ export function AdminShipmentPlanModal({
   }, [checkoutId, shipmentId, scope]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // TB-270-R4 Repair D: closing this surface invalidates the presentation epoch IMMEDIATELY, so an answer that
+      // arrives afterwards can never touch the next surface. Durability (Repair A) is what protects the intent.
+      epochRef.current += 1;
+      return;
+    }
     // A new mount/parcel is a new epoch: a late answer for the previous one must never write this screen.
     const epoch = epochRef.current + 1;
     epochRef.current = epoch;
@@ -164,6 +221,11 @@ export function AdminShipmentPlanModal({
     // that live request instead of pretending the surface is idle.
     setPending(inFlightRef.current);
     void load(epoch);
+    // Unmount (and a retarget/reload of this component) ends this presentation epoch too: no stale callback may
+    // close/reopen a newer dialog, refresh another target or clear/overwrite a newer stored intent.
+    return () => {
+      epochRef.current += 1;
+    };
   }, [open, load]);
 
   const options = preview?.options ?? [];
@@ -217,9 +279,10 @@ export function AdminShipmentPlanModal({
 
     try {
       const result = await operationExecutorRef.current(checkoutId, body);
-      if (epoch !== epochRef.current) return;
       if (result.state === "ok") {
-        endShipmentPlanReview(scope);
+        // Authoritative success/replay for THIS exact occurrence: compare-and-clear, never a blind scope clear.
+        clearShipmentPlanAttemptIfCurrent(scope, attempt.occurrenceKey, attempt.requestBody);
+        if (epoch !== epochRef.current) return;
         setRetained(null);
         setFrozen(false);
         onClose();
@@ -229,9 +292,15 @@ export function AdminShipmentPlanModal({
 
       const fa = mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa");
       const unknown = result.status <= 0 || result.status >= 500;
-      if (unknown) {
-        // ONLY a genuine transport loss / 5xx is uncertain: the exact reviewed body stays frozen and is retried as-is.
-        const kept = markShipmentPlanAttemptFailed(scope, attempt, fa, true);
+      // TB-270-R4 Repair A: only a refusal the command raises BEFORE it can insert proves this occurrence wrote
+      // nothing. A conflict/denial/anything else may hide a committed plan, so it keeps the exact intent recoverable.
+      const identity = result.code ?? result.message ?? "order.operation.failed";
+      const provenNoWrite = !unknown && isProvenNoWriteRefusal(identity);
+
+      if (!provenNoWrite) {
+        // Compare-and-update: a late answer for an older occurrence can never overwrite a newer stored intent.
+        const kept = markShipmentPlanAttemptFailedIfCurrent(scope, attempt, fa, true) ?? attempt;
+        if (epoch !== epochRef.current) return;
         setRetained(kept);
         setFrozen(true);
         setSendError(fa);
@@ -239,9 +308,10 @@ export function AdminShipmentPlanModal({
         return;
       }
 
-      // A deterministic refusal ENDS this review: the exact prior outcome is preserved for the operator, and the
+      // A PROVEN no-write refusal ENDS this review: the exact prior outcome is preserved for the operator, and the
       // stale body/key are dropped so a different selection can never ride on an already-refused occurrence.
-      endShipmentPlanReview(scope);
+      clearShipmentPlanAttemptIfCurrent(scope, attempt.occurrenceKey, attempt.requestBody);
+      if (epoch !== epochRef.current) return;
       setRetained(null);
       setFrozen(false);
       setSelectedKey(null);
@@ -249,12 +319,12 @@ export function AdminShipmentPlanModal({
       setSendError(fa);
       setReconcileHint(false);
     } catch (thrown) {
-      if (epoch !== epochRef.current) return;
       const fa = mapAdminErrorMessage(
         thrown instanceof Error && thrown.message ? thrown.message : "order.operation.failed",
         "fa",
       );
-      const kept = markShipmentPlanAttemptFailed(scope, attempt, fa, true);
+      const kept = markShipmentPlanAttemptFailedIfCurrent(scope, attempt, fa, true) ?? attempt;
+      if (epoch !== epochRef.current) return;
       setRetained(kept);
       setFrozen(true);
       setSendError(fa);
@@ -263,7 +333,7 @@ export function AdminShipmentPlanModal({
       // TB-270-R3: the guard is released when the REQUEST settles, never when the surface is reused; only the
       // presentation of that outcome is fenced by the epoch.
       inFlightRef.current = false;
-      setPending(false);
+      if (epoch === epochRef.current) setPending(false);
     }
   }
 
@@ -271,7 +341,12 @@ export function AdminShipmentPlanModal({
     if (confirmed || pending) return;
 
     // 1) An unresolved reviewed body is re-sent exactly; nothing is rebuilt from current state.
-    if (frozen && retained?.requestBody) {
+    if (frozen) {
+      if (!retained?.requestBody) {
+        // Without the durable body there is no exact intent to repeat; a fresh occurrence is never minted here.
+        setSendError("درخواست بازبینی‌شدهٔ ذخیره‌شده خوانده نشد؛ بازبینی تازه لازم است.");
+        return;
+      }
       const parsed = safeParseBody(retained.requestBody);
       if (!parsed || parsed.idempotencyKey !== retained.occurrenceKey) {
         setSendError("درخواست بازبینی‌شدهٔ ذخیره‌شده خوانده نشد؛ بازبینی تازه لازم است.");
@@ -306,6 +381,9 @@ export function AdminShipmentPlanModal({
       requestBody: JSON.stringify(body),
       reviewFingerprint: preview?.reviewFingerprint ?? null,
       uncertain: false,
+      // TB-270-R4 Repair A: from this instant the intent may already have been SENT, whatever happens to this
+      // component (close, unmount, reload, process kill). Only an authoritative answer may resolve it.
+      unresolved: true,
     });
     if (!written?.durable) {
       // No durable envelope means a reload could lose the key and mint a second review; refuse instead.

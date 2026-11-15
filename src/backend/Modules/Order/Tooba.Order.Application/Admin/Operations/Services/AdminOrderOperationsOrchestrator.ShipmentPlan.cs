@@ -97,16 +97,14 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.denied");
         }
 
-        if (IsCheckoutCancelled(group))
-        {
-            throw new AdminOrderOperationsException("order.cancelled.blocks_action");
-        }
-
         if (shipmentId == Guid.Empty)
         {
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
+        // TB-270-R4 Repair B: the cancellation gate is NOT applied to proving which parcel this is. An already
+        // recorded plan must stay readable (history) after the order was cancelled; cancellation only refuses
+        // OFFERING a new calendar, which is decided inside BuildPreviewAsync after the stored row is read.
         var located = await LocateParcelForReadAsync(checkoutId, group, shipmentId, cancellationToken);
         return await BuildPreviewAsync(located, cancellationToken);
     }
@@ -163,7 +161,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             return PlanResult(existing, replayed: true);
         }
 
-        var located = RequirePlannable(locatedAny);
+        var located = await RequireNewPlanGatesAsync(locatedAny, cancellationToken);
         var plan = await BuildPlanAsync(located, actorUserId, reviewedKey, request, cancellationToken);
         var outcome = await _shipmentPlanStore.TryInsertAsync(plan, cancellationToken);
         switch (outcome)
@@ -282,16 +280,6 @@ public sealed partial class AdminOrderOperationsOrchestrator
         return parcel;
     }
 
-    private async Task<LocatedParcel> LocateParcelAsync(
-        Guid checkoutId,
-        AdminOrderOpsCheckoutSnapshot checkout,
-        Guid shipmentId,
-        CancellationToken cancellationToken)
-    {
-        var located = await LocateParcelForReadAsync(checkoutId, checkout, shipmentId, cancellationToken);
-        return await RequirePlannableAsync(located, cancellationToken);
-    }
-
     /// <summary>
     /// The mutable/eligibility gates plus the active-common-package lock: a parcel inside a live package is operated
     /// from the package, and only a live <c>Created</c> linked parcel of a paid order can obtain a new plan.
@@ -310,6 +298,27 @@ public sealed partial class AdminOrderOperationsOrchestrator
         }
 
         return RequirePlannable(located);
+    }
+
+    /// <summary>
+    /// TB-270-R4 Repair B: the ONE gate composition for a NEW plan (preview calendar or confirmation insert).
+    /// </summary>
+    /// <remarks>
+    /// An exact recorded plan never reaches this method: it is answered from the stored row first, so a cancelled
+    /// order or a parcel inside an active package still exposes its own immutable history and re-enables nothing.
+    /// A mutation that would create a row must pass BOTH the checkout-cancellation gate and the owning asynchronous
+    /// active-package membership check — a UI-only safeguard or the synchronous eligibility helper alone is not enough.
+    /// </remarks>
+    private async Task<LocatedParcel> RequireNewPlanGatesAsync(
+        LocatedParcel located,
+        CancellationToken cancellationToken)
+    {
+        if (IsCheckoutCancelled(located.Checkout))
+        {
+            throw new AdminOrderOperationsException("order.cancelled.blocks_action");
+        }
+
+        return await RequirePlannableAsync(located, cancellationToken);
     }
 
     /// <summary>
@@ -501,9 +510,10 @@ public sealed partial class AdminOrderOperationsOrchestrator
         }
 
         // Eligibility is a REFUSAL, not a blocker: an unplanned parcel that is not a live Created linked attempt (or
-        // that is locked in an active package) can never be scheduled, so no calendar/blocker is derived for it. Only
-        // the captured-inputs/feasibility stage below answers with a truthful blocker.
-        var plannable = await RequirePlannableAsync(parcel, cancellationToken);
+        // that is locked in an active package, or whose checkout was cancelled) can never be scheduled, so no
+        // calendar/blocker is derived for it. Only the captured-inputs/feasibility stage below answers with a
+        // truthful blocker. This is the SAME gate composition the confirmation uses before inserting a row.
+        var plannable = await RequireNewPlanGatesAsync(parcel, cancellationToken);
 
         try
         {

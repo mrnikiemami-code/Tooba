@@ -45,6 +45,14 @@ export type ShipmentPlanAttempt = {
   reviewFingerprint: string | null;
   /** TB-270-R3: the last outcome was genuinely unknown (transport loss / 5xx / timeout) and must be retried as-is. */
   uncertain: boolean;
+  /**
+   * TB-270-R4 Repair A: this occurrence may already have been SENT. It is written (with the exact body) BEFORE the
+   * operation executor is invoked, read back, and is only ever cleared by the response that proves the outcome of
+   * THAT exact occurrence/body. A reload, unmount, close or process interruption therefore recovers the identical
+   * intent instead of minting a second review. Records written by TB-270-R3 default to `true` on read: a retained
+   * body with no authoritative terminal result cannot be assumed never sent.
+   */
+  unresolved: boolean;
 };
 
 const VERSION = "v1";
@@ -126,6 +134,9 @@ function readStored(key: string): ShipmentPlanAttempt | null {
       requestBody: coalesce(parsed.requestBody) || null,
       reviewFingerprint: coalesce(parsed.reviewFingerprint) || null,
       uncertain: parsed.uncertain === true,
+      // TB-270-R4: a record retained by the older shape cannot prove its outcome ended; only an explicit `false`
+      // (never written by any previous version) marks it resolved.
+      unresolved: parsed.unresolved !== false,
     };
   } catch {
     return memoryFallback.get(key) ?? null;
@@ -166,6 +177,7 @@ export function writeShipmentPlanAttempt(input: {
   requestBody?: string | null;
   reviewFingerprint?: string | null;
   uncertain?: boolean;
+  unresolved?: boolean;
 }): ShipmentPlanAttemptWrite | null {
   const normalized = normalizeScope(input.scope);
   const occurrenceKey = coalesce(input.occurrenceKey);
@@ -185,6 +197,8 @@ export function writeShipmentPlanAttempt(input: {
     requestBody: coalesce(input.requestBody) || null,
     reviewFingerprint: coalesce(input.reviewFingerprint) || null,
     uncertain: input.uncertain === true,
+    // TB-270-R4 Repair A: a write that carries a reviewed body is by definition an UNRESOLVED intent.
+    unresolved: input.unresolved !== false,
   };
   const key = storageKey(normalized);
   const api = sessionStorageApi();
@@ -239,7 +253,63 @@ export function markShipmentPlanAttemptFailed(
     requestBody: attempt.requestBody,
     reviewFingerprint: attempt.reviewFingerprint,
     uncertain,
+    unresolved: true,
   })?.attempt ?? attempt;
+}
+
+/**
+ * TB-270-R4 Repair A: a retained reviewed body is an UNRESOLVED send, never "history".
+ *
+ * The record is written (with the exact serialized body and its read-back verification) BEFORE the first POST, so a
+ * reload/unmount/close/process kill in that window leaves exactly this state behind. TB-270-R3 records that carried a
+ * body but `uncertain: false` are migrated conservatively: without an explicit `unresolved: false` the outcome is
+ * still unknown, so the exact body — never a freshly rebuilt selection — is what may be sent again.
+ */
+export function isUnresolvedShipmentPlanAttempt(
+  attempt: ShipmentPlanAttempt | null,
+): attempt is ShipmentPlanAttempt {
+  return Boolean(attempt && attempt.requestBody && attempt.unresolved !== false);
+}
+
+/**
+ * TB-270-R4 Repair D: compare-and-clear ONE exact occurrence/body.
+ *
+ * A late answer must never erase a newer review that was recorded for the same viewer/checkout/parcel in the
+ * meantime, so the currently stored record is compared by occurrence AND body before anything is removed.
+ * Returns `true` only when THIS exact intent was the one cleared.
+ */
+export function clearShipmentPlanAttemptIfCurrent(
+  scope: ShipmentPlanAttemptScope,
+  occurrenceKey: string,
+  requestBody?: string | null,
+): boolean {
+  const recorded = readShipmentPlanAttempt(scope);
+  if (!recorded) return false;
+  if (recorded.occurrenceKey !== coalesce(occurrenceKey)) return false;
+  const body = coalesce(requestBody);
+  if (body && recorded.requestBody && recorded.requestBody !== body) return false;
+  clearShipmentPlanAttempt(scope);
+  return true;
+}
+
+/**
+ * TB-270-R4 Repair D: compare-and-update ONE exact occurrence.
+ *
+ * An outcome that arrives after the surface was closed/unmounted/retargeted still records the truth for ITS OWN
+ * occurrence, but it must never overwrite the state of a newer occurrence stored for the same scope. Returns the
+ * recorded attempt only when it was this exact occurrence that was updated.
+ */
+export function markShipmentPlanAttemptFailedIfCurrent(
+  scope: ShipmentPlanAttemptScope,
+  attempt: ShipmentPlanAttempt,
+  messageFa?: string | null,
+  uncertain = false,
+): ShipmentPlanAttempt | null {
+  const recorded = readShipmentPlanAttempt(scope);
+  if (!recorded) return null;
+  if (recorded.occurrenceKey !== attempt.occurrenceKey) return null;
+  if (recorded.requestBody !== attempt.requestBody) return null;
+  return markShipmentPlanAttemptFailed(scope, attempt, messageFa, uncertain);
 }
 
 /**

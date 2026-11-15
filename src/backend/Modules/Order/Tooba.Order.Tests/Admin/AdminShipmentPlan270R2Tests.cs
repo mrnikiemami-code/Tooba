@@ -376,6 +376,74 @@ public sealed class AdminShipmentPlan270R2Tests
         Assert.Equal("order.shipment_plan.payment_required", Code(preview));
     }
 
+    // ---------------------------------------------------------------- TB-270-R4 Repair B: history first, new-write gates second
+
+    [Fact]
+    public async Task A_direct_plan_confirmation_inside_an_active_package_is_refused_with_zero_insert()
+    {
+        // The owning active-package membership gate is an ASYNC read: a direct new confirmation must run it, so a
+        // parcel that is operated from its package never gets a second, conflicting plan (regardless of any UI state).
+        var fixture = Fixture.Resend(packageLocked: true);
+
+        var preview = await fixture.PreviewAsync(fixture.ResendShipmentId);
+        Assert.False(preview.IsSuccess);
+        Assert.Equal("order.shipment_plan.package_locked", Code(preview));
+
+        var confirm = await fixture.PlanAsync(DummyOption(), "tb270r4-package-key");
+        Assert.False(confirm.IsSuccess);
+        Assert.Equal("order.shipment_plan.package_locked", Code(confirm));
+        Assert.Empty(fixture.Store.Rows);
+    }
+
+    [Fact]
+    public async Task A_direct_plan_confirmation_on_a_cancelled_order_is_refused_with_zero_insert()
+    {
+        var fixture = Fixture.Resend(cancelled: true);
+
+        // Offering a NEW calendar is refused on a cancelled checkout, with no derived date.
+        var preview = await fixture.PreviewAsync(fixture.ResendShipmentId);
+        Assert.False(preview.IsSuccess);
+        Assert.Equal("order.cancelled.blocks_action", Code(preview));
+
+        var confirm = await fixture.PlanAsync(DummyOption(), "tb270r4-cancelled-key");
+        Assert.False(confirm.IsSuccess);
+        Assert.Equal("order.cancelled.blocks_action", Code(confirm));
+        Assert.Empty(fixture.Store.Rows);
+    }
+
+    [Fact]
+    public async Task A_recorded_plan_answers_its_own_history_after_cancellation_and_never_offers_a_new_calendar()
+    {
+        // A genuine authorized confirmation first (one row, one key).
+        var original = Fixture.Resend();
+        var option = await original.FirstOptionAsync();
+        var first = await original.PlanAsync(option, "tb270r4-history-key");
+        Assert.True(first.IsSuccess, Code(first));
+        var recorded = Assert.Single(original.Store.Rows);
+
+        // The SAME parcel is read after the order was later cancelled: history is preserved, a NEW calendar is not.
+        var cancelled = Fixture.Resend(cancelled: true).SeedPlan(recorded);
+
+        var history = await cancelled.PreviewAsync(cancelled.ResendShipmentId);
+        Assert.True(history.IsSuccess, Code(history));
+        Assert.True(history.Value!.HistoryOnly);
+        Assert.Empty(history.Value.Options);
+        Assert.NotNull(history.Value.ConfirmedPlan);
+        Assert.Equal(recorded.CustomerReceivingDate, history.Value.ConfirmedPlan!.ReceivingDate);
+
+        // An exact authorized replay is still answered from the stored row and writes nothing.
+        var replay = await cancelled.PlanAsync(option, "tb270r4-history-key");
+        Assert.True(replay.IsSuccess, Code(replay));
+        Assert.True(Json(replay.Value!).GetProperty("replayed").GetBoolean());
+        Assert.Single(cancelled.Store.Rows);
+
+        // A DIFFERENT occurrence for the same parcel can never mint a second plan, cancelled or not.
+        var conflicting = await cancelled.PlanAsync(option, "tb270r4-history-other-key");
+        Assert.False(conflicting.IsSuccess);
+        Assert.Equal("order.shipment_plan.conflict", Code(conflicting));
+        Assert.Single(cancelled.Store.Rows);
+    }
+
     // ---------------------------------------------------------------- TB-270-R3 repairs
 
     [Fact]
@@ -768,7 +836,9 @@ public sealed class AdminShipmentPlan270R2Tests
             IReadOnlyList<string>? missingInputs = null,
             bool capturedRefusal = false,
             bool capturedUsesShippingGroup = false,
-            bool readinessIdentityMismatch = false) =>
+            bool readinessIdentityMismatch = false,
+            bool cancelled = false,
+            bool packageLocked = false) =>
             Build(
                 replacement: null,
                 parcelQuantity,
@@ -781,7 +851,9 @@ public sealed class AdminShipmentPlan270R2Tests
                 missingInputs,
                 capturedRefusal,
                 capturedUsesShippingGroup,
-                readinessIdentityMismatch);
+                readinessIdentityMismatch,
+                cancelled: cancelled,
+                packageLocked: packageLocked);
 
         public static Fixture Replacement(DamagedResolutionStatus status, bool identityMismatch = false) =>
             Build(
@@ -811,7 +883,9 @@ public sealed class AdminShipmentPlan270R2Tests
             bool capturedUsesShippingGroup = false,
             bool readinessIdentityMismatch = false,
             AcceptedShipmentGroupBinding? bindingOverride = null,
-            IShippingAttemptSchedulingLookup? activeLookup = null)
+            IShippingAttemptSchedulingLookup? activeLookup = null,
+            bool cancelled = false,
+            bool packageLocked = false)
         {
             var resendShipmentId = Guid.Parse("01a1d270-2000-7000-8000-000000000001");
 
@@ -935,8 +1009,8 @@ public sealed class AdminShipmentPlan270R2Tests
                 BuildInputs(missingInputs, capturedUsesShippingGroup ? Group : null));
             var store = new InMemoryPlanStore();
             var access = new AccessFake(allowManage);
-            var fulfillment = new FulfillmentFake(unit);
-            var checkouts = new CheckoutReader(paid);
+            var fulfillment = new FulfillmentFake(unit, resendShipmentId, packageLocked);
+            var checkouts = new CheckoutReader(paid, cancelled);
             var readiness = new ReplacementReadinessFake(
                 unit,
                 replacement is { } readyStatus
@@ -957,6 +1031,16 @@ public sealed class AdminShipmentPlan270R2Tests
 
         public Fixture WithClock(IClock clock) =>
             new(Store, Schedule.CreateOrchestrator(clock), ResendShipmentId, Schedule);
+
+        /// <summary>
+        /// TB-270-R4 Repair B: seeds the row an EARLIER authorized confirmation really wrote, so a later lifecycle
+        /// state (cancellation / dispatch) is exercised against genuine stored history instead of a re-plan.
+        /// </summary>
+        public Fixture SeedPlan(OrderShipmentDispatchPlan plan)
+        {
+            Store.Rows.Add(plan);
+            return this;
+        }
 
         public Task<Result<AdminShipmentDispatchPlanPreview>> PreviewAsync(Guid shipmentId) =>
             Orchestrator.PreviewShipmentDispatchPlanAsync(Checkout, Actor, shipmentId, CancellationToken.None);
@@ -1108,7 +1192,7 @@ public sealed class AdminShipmentPlan270R2Tests
                 new TimeOnly(closesAt, 0)))
             .ToList();
 
-    private sealed class CheckoutReader(bool paid) : IAdminOrderOperationsCheckoutReader
+    private sealed class CheckoutReader(bool paid, bool cancelled = false) : IAdminOrderOperationsCheckoutReader
     {
         public Task<AdminOrderOpsCheckoutSnapshot?> GetAsync(
             Guid checkoutId,
@@ -1121,7 +1205,11 @@ public sealed class AdminShipmentPlan270R2Tests
                         [new AdminOrderOpsSellerOrderSnapshot(
                             SellerOrder,
                             SellerParty,
-                            paid ? SellerOrderStatus.Paid : SellerOrderStatus.PendingPayment,
+                            // TB-270-R4 Repair B: a cancelled checkout is the owning "all seller orders cancelled"
+                            // fact the new-confirmation gate must refuse; it is never a UI-only condition.
+                            cancelled
+                                ? SellerOrderStatus.Cancelled
+                                : paid ? SellerOrderStatus.Paid : SellerOrderStatus.PendingPayment,
                             null,
                             [])])
                     : null);
@@ -1250,7 +1338,10 @@ public sealed class AdminShipmentPlan270R2Tests
         }
     }
 
-    private sealed class FulfillmentFake(FulfillmentSnapshot unit) : IFulfillmentAdminOperations
+    private sealed class FulfillmentFake(
+        FulfillmentSnapshot unit,
+        Guid? packageLockedShipmentId = null,
+        bool packageLocked = false) : IFulfillmentAdminOperations
     {
         public Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(
             Guid checkoutId,
@@ -1260,7 +1351,16 @@ public sealed class AdminShipmentPlan270R2Tests
         public Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(
             IReadOnlyList<Guid> shipmentIds,
             CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ActivePackageMembershipSnapshot>>([]);
+            Task.FromResult<IReadOnlyList<ActivePackageMembershipSnapshot>>(
+                // TB-270-R4 Repair B: the OWNING active-package fact. A parcel inside a live package is operated from
+                // that package, so a direct new-plan confirmation must be refused by this read, not by the UI.
+                packageLocked && packageLockedShipmentId is { } locked && shipmentIds.Contains(locked)
+                    ? [new ActivePackageMembershipSnapshot(
+                        locked,
+                        Guid.Parse("01a1d270-3000-7000-8000-0000000000aa"),
+                        "TB270R2-PKG",
+                        ConsolidatedPackageOperationStatus.Created)]
+                    : []);
 
         public Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
             Guid checkoutId,
