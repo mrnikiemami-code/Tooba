@@ -1,3 +1,7 @@
+# CURRENT — WAIT269 RESULT; PLAN270 TIMING THEN271 EMPLOYEE QUEUE — 2026-11-15
+
+Read docs/planning/shipping/SHIPPING-RESEND-REPLACEMENT-TIMING-AND-EMPLOYEE-WORK-PLAN-270-271.md. User explicitly requests planning for missing NEW resend/replacement timing, then a work-oriented employee queue on existing data.269 remains ONLY issued task; RESULT not present when checked. Review its actual result first; repair only concrete269 defect if needed, else issue ONE270 task.270/271 PLANNED NOT ISSUED. New parcel must own new readiness/feasible customer window/prep+departure+handoff plan, no original-deadline borrowing, no invented dates or extra demo dataset.271 job-stage/time-scope filters follow only after timing review. No concurrent tasks/loops, no backend or user mutations now, no cleanup/new DB. Earlier CURRENT banners superseded.
+
 # CURRENT — ONLY TB269 ISSUED: PERSIAN DATES IN QUEUE — 2026-11-15
 
 Task docs/ai/tasks/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/TASK.md. User screenshot queue mixes raw Gregorian handoff with Jalali deadlines. Source root formatPlannedHandoff/formatCustomerReceiving echo ISO DateOnly;267 changed order view only.269 display-only consistency in queue cell+tooltip, preserve DateOnly/accepted-zone instants/wire sort values, no business changes/data writes/backend.268 tabs remain awaiting visual user feedback, no functional reopening or cleanup. One worker/task STOP_FOR_ARCHITECT automaticNext NONE. Earlier CURRENT banners superseded.
