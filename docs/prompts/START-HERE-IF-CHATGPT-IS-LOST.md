@@ -1,4 +1,22 @@
-# CURRENT — 270 PARTIAL (design/ownership only, ZERO CODE CHANGE): resend/replacement own dispatch plan — seam decided, missing scheduling input named, nothing implemented
+# CURRENT — 270-R1 PASS: the read-only captured attempt-scheduling inputs seam exists (no caller, no plan, no UI change)
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,scheduling-inputs-proof.md}.
+Decision `ONE_ADDITIVE_READ_ONLY_SHIPPING_CONTRACTS_SEAM_EXPOSES_THE_EXACT_CAPTURED_SCHEDULING_INPUTS_WITHOUT_DESTINATION_MEASUREMENTS_CURRENCY_RATE_SELECTION_OR_PROVIDER_AND_WITH_TYPED_REFUSALS_AND_ZERO_ORDER_OR_FRONTEND_CHANGE`,
+Status **PASS within the issued 270-R1 scope**, NOT Architect ACCEPT, NOT user acceptance.
+
+The seam `IShippingAttemptSchedulingLookup` (Shipping Contracts) reads ONE exact captured revision plus ONE exact accepted
+group/rate row and returns the stored scheduling inputs: that row's own transport days, the stored preparation/handoff
+minutes and processing mode, and the receiving/carrier/processing weeks with their own timezones — plus the stable codes of
+inputs the capture never stored. It needs no Destination, measurements, currency or rate selection, performs no pricing and
+makes no provider/Geography call; refusals are typed and payload-free, cancellation and unexpected failures propagate.
+It is registered once and scoped with **no caller**, so nothing in the running product behaves differently: a resend or
+replacement parcel still shows «موعد ارسال مشخص نشده» because it has no plan of its own. 270-R2 (Order-owned plan table +
+reviewed command + feasible-date preview + queue/detail wiring + review step) is **NOT issued**; 271 is **NOT issued**.
+Focused suite 7/7, solution build 0 errors, no migration/DB write/fixture/provider call/service restart; the served FE is
+still TB-269's build. Worker PASS is not Architect acceptance and no user trial exists for this increment.
+
+# SUPERSEDED — 270 PARTIAL (design/ownership only, ZERO CODE CHANGE): resend/replacement own dispatch plan — seam decided, missing scheduling input named, nothing implemented
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/{RESULT.md,RECEIPTS.md,result-contract.txt,ownership-and-plan.md,timing-and-readiness-proof.md,replay-and-write-boundaries.md,user-review.md}.

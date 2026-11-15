@@ -1,4 +1,25 @@
-# CURRENT — 270 PARTIAL (design/ownership only, ZERO CODE CHANGE): the resend/replacement own-dispatch-plan seam is decided and its missing input is named — 2026-11-15
+# CURRENT — 270-R1 PASS: the read-only captured attempt-scheduling inputs seam exists (no caller, no plan) — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,scheduling-inputs-proof.md}.
+Status **PASS within the issued 270-R1 scope**, decision
+`ONE_ADDITIVE_READ_ONLY_SHIPPING_CONTRACTS_SEAM_EXPOSES_THE_EXACT_CAPTURED_SCHEDULING_INPUTS_WITHOUT_DESTINATION_MEASUREMENTS_CURRENCY_RATE_SELECTION_OR_PROVIDER_AND_WITH_TYPED_REFUSALS_AND_ZERO_ORDER_OR_FRONTEND_CHANGE`,
+NOT Architect ACCEPT, NOT user acceptance. 270 stays PARTIAL (design only) and is the parent of this increment.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| 1 Contracts | added | `IShippingAttemptSchedulingLookup` + request/result/view types in `Shipping.Contracts/Scheduling`; explicit identity (owner, draft, revision, service/option, exact `GroupId` **and** `RateRowId`, optional expected snapshot) because `MinDeliveryDays`/`MaxDeliveryDays` live inside `Groups[].RateRows[]`, not at the payload root |
+| 2 Adapter | added | exact `GetCapturedRevisionAsync` + `ReadPayload()`, canonical trim/case service-option comparison, exact group/row resolution, loss-less week mapping (three separate timezones), payload-free typed refusals, `AsNoTracking` read-only |
+| 3 Missing inputs | honest | `MissingInputs` names only what the capture never stored (`method_settings`, `preparation_handoff_minutes`, `processing_mode`, `receiving_week`, `carrier_week`, `processing_week`); `HasCompleteInputs` is never a feasibility/activation/coverage/eligibility claim |
+| 4 No caller | deliberate | registered once and scoped beside the other captured reads, commented "no caller yet"; no Order/Fulfillment/queue/detail/frontend change, so a resend/replacement parcel still reads Unspecified («موعد ارسال مشخص نشده») — unchanged and truthful |
+| 5 Proof | once | focused `ShippingAttemptSchedulingLookupTests` **7/7**; `dotnet build Tooba.slnx -c Release` **0 errors**; whole-project Shipping run disclosed as 771 pass / 88 pre-existing disposable-Postgres-gated failures (15432/15433), plus one pre-existing unrelated error-catalog assertion |
+| 6 Not implemented | stated | no `shipment_dispatch_plans` table/migration, no `plan_shipment_dispatch` command, no feasible-date preview, no queue/detail wiring, no review step, no parcel plan — that is **270-R2, NOT issued**; **271** also NOT ISSUED |
+
+Worker PASS is not Architect acceptance. No user trial URL exists for this increment (served UI is byte-identical to the
+TB-269 build `UmAnnlHYHCf-Sa5-dTMkm`); no migration, DB write, fixture, provider call or service restart was performed.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+# SUPERSEDED — 270 PARTIAL (design/ownership only, ZERO CODE CHANGE): the resend/replacement own-dispatch-plan seam is decided and its missing input is named — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/{RESULT.md,RECEIPTS.md,result-contract.txt,ownership-and-plan.md,timing-and-readiness-proof.md,replay-and-write-boundaries.md,user-review.md}.

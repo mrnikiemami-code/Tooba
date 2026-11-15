@@ -1,0 +1,80 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Task-ID: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1
+Parent-Task: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Mode: SHIPPING_CAPTURED_ATTEMPT_SCHEDULING_INPUTS_READ_ONLY
+Bridge-Task-Row: f2e354c7-1c7c-4ac7-86d9-07c6bf309c2d
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+
+Expected-Base-SHA: 1b1f8b68f0a1fa0278293f2ca91998d477943e2b
+Base-SHA: 1b1f8b68f0a1fa0278293f2ca91998d477943e2b
+Code-SHA: a51a62425997cffc8b2be29603968ff86ff2d445
+Evidence-SHA: EVIDENCE_SHA_PLACEHOLDER
+automaticNextImplementationTask: NONE
+
+VERIFIED
+- expected base == actual HEAD == local origin/main at start: 1b1f8b68f0a1fa0278293f2ca91998d477943e2b
+  (ancestor checks exit 0 against both HEAD and origin/main); no incoming delta to integrate, no RECOVERY_CONFLICT.
+- code diff: exactly one tracked file modified (ShippingModule.cs, +6 lines: using + one scoped registration) and three
+  new files; no other tracked path changed.
+- decision string:
+  ONE_ADDITIVE_READ_ONLY_SHIPPING_CONTRACTS_SEAM_EXPOSES_THE_EXACT_CAPTURED_SCHEDULING_INPUTS_WITHOUT_DESTINATION_MEASUREMENTS_CURRENCY_RATE_SELECTION_OR_PROVIDER_AND_WITH_TYPED_REFUSALS_AND_ZERO_ORDER_OR_FRONTEND_CHANGE
+
+CHANGED PATHS
+- src/backend/Modules/Shipping/Tooba.Shipping.Contracts/Scheduling/ShippingAttemptSchedulingContracts.cs (new, 288 lines)
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/Scheduling/ShippingAttemptSchedulingLookup.cs (new, 319 lines)
+- src/backend/Modules/Shipping/Tooba.Shipping.Infrastructure/DependencyInjection/ShippingModule.cs (modified, +6)
+- src/backend/Modules/Shipping/Tooba.Shipping.Tests/Scheduling/ShippingAttemptSchedulingLookupTests.cs (new, 797 lines)
+- docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/TASK.md
+- docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,scheduling-inputs-proof.md}
+
+SEAM
+- IShippingAttemptSchedulingLookup.LookupAsync(request, ct) with explicit identity: owner kind + owner tenant/seller,
+  draft id, source revision, expected service/option, exact GroupId, exact RateRowId, optional expected snapshot id.
+- Result is a typed verdict + stable reason code; only CapturedInputs carries a payload, every refusal carries none.
+- Payload maps losslessly: that rate row's own stored MinDeliveryDays/MaxDeliveryDays, stored PreparationMinutes/
+  HandoffMinutes, stored processing mode, receiving week (with slot duration), carrier week, processing week — each with
+  its OWN stored timezone — plus stable codes of inputs the capture never stored (MissingInputs).
+- Refusals: OwnerScopeUnavailable, CapturedRevisionUnavailable (absent revision / foreign owner / corrupt body / headers
+  disagreeing with the row), SnapshotMismatch, ServiceOptionMismatch, GroupUnavailable, GroupAmbiguous,
+  RateRowUnavailable, RateRowAmbiguous. Cancellation and unexpected dependency exceptions propagate unchanged.
+- Read-only (AsNoTracking, no SaveChanges/capture/transaction); no destination, measurement, weight, item count, currency,
+  freight/packaging, coverage or Geography read; no rate selection; no provider call; no second scheduling engine.
+- Registered once, scoped, in ShippingModule with a comment that it has no caller yet.
+
+PROOF
+- focused: dotnet test Tooba.Shipping.Tests -c Release --filter FullyQualifiedName~ShippingAttemptSchedulingLookupTests
+  -> Passed!  Failed: 0, Passed: 7, Skipped: 0, Total: 7 (578 ms, net8.0). Covers issued A–F (exact mapping + read-only,
+  per-row duration with no destination/size, owner/snapshot refusals, service/option/group/row refusals + canonical
+  comparison, legacy/format-3/absent-timing/corrupt-format honesty, failure/cancellation propagation, one scoped DI).
+- build: dotnet build Tooba.slnx -c Release -> 0 Error(s), 379 Warning(s) (pre-existing warning classes).
+- whole-project observation disclosed, not re-run: Shipping tests 771 passed / 88 failed, every sampled failure an
+  environment-gated disposable-Postgres matrix (TOOBA_TB214_POSTGRES 15432, TOOBA_TB249R6_POSTGRES 15433); Composition
+  subset 20/21 with the pre-existing unrelated `shipping.carrier.shipment.intent_conflict` catalog assertion.
+- two test-fixture corrections before green are recorded in RECEIPTS (aggregate-owned group identity must be read back;
+  the duplicate-row corruption must duplicate the requested row). No product code changed for either.
+
+BOUNDARIES
+- No Order/Fulfillment/Inventory/Storefront/queue/operational-detail/frontend file changed; no caller wired; no table,
+  column, migration, command, endpoint, projection or preview; no change to captured-quote/authoring behaviour.
+- No attempt plan exists; a resend/replacement parcel still reads Unspecified («موعد ارسال مشخص نشده») — unchanged and
+  truthful. 270-R2 (Order-owned plan + reviewed command + preview + queue/detail + review step) is NOT issued;
+  271 (job-stage filters) is NOT issued.
+- Environment: no migration/DDL/business SQL/fixture/settings edit/stock write/cleanup/provider call; no FE rebuild or
+  service restart; ONE canonical tooba_alpha @5432 untouched; user orders, Returned-source/Delivered-resend history and
+  the shipping draft read-only.
+
+LIMITS
+- No live caller, so no runtime behaviour to observe; proof is the focused suite over the real directory and the real
+  captured payload with EF InMemory — not a relational or hosted proof, and no feasibility/activation/coverage/eligibility
+  claim. HasCompleteInputs means only "every input this seam declares is stored".
+- No review URL for this increment: the served UI is byte-identical to TB-269's build (BUILD_ID UmAnnlHYHCf-Sa5-dTMkm);
+  the previous read-only reference surfaces remain /fa/admin/fulfillments and the 01a1db2f-… operations route.
+- Worker PASS != Architect ACCEPT. No user visual/functional acceptance, no shipping/provider/financial completion claim.
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
