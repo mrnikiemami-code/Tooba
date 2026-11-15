@@ -1,4 +1,24 @@
-# CURRENT — 270-R3 PASS: exact captured binding, one shared plan binding, Inventory-owned replacement hold, and a frozen fingerprinted review with honest recovery
+# CURRENT — 270-R4 PASS: unresolved-first send durability, new-confirmation gates after stored replay, exact handoff identity, close/unmount/retarget fence
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/{RESULT.md,RECEIPTS.md,result-contract.txt,first-send-and-lifecycle-proof.md,command-gates-and-exact-handoff-proof.md,user-review.md}.
+Decision `FIRST_SEND_IS_UNRESOLVED_BEFORE_THE_EXECUTOR_ONE_NEW_PLAN_GATE_COMPOSITION_AFTER_STORED_REPLAY_EXACT_SOURCE_KEY_DECISION_PARITY_FOR_HANDOFF_AND_A_CLOSE_UNMOUNT_RETARGET_RESPONSE_FENCE_WITH_COMPARE_AND_CLEAR`,
+Status **PASS within the issued four-defect repair scope**, NOT Architect ACCEPT, NOT user acceptance. **271 NOT ISSUED**,
+next implementation NONE. R1 ACCEPT within its read-only seam; R2 PARTIAL (its review lives under `…270-R3/R2/`); R3
+PARTIAL (review now persisted at `…270-R3/ARCHITECT-REVIEW.md`).
+
+R4 closed the four source-confirmed R3 defects: (A) the reviewed body/key is durably marked UNRESOLVED and read back
+before the executor is invoked, so an unmount/reload with no catch recovers the identical intent and only an
+authoritative success/replay or a proven no-write refusal ends it (conflict/authorization never clears it); (B) one
+`RequireNewPlanGatesAsync` (checkout-not-cancelled + async active-package membership) now guards the NEW confirmation and
+the NEW-calendar preview, while a stored plan is answered first — history stays readable after cancellation, a direct
+locked/cancelled POST inserts nothing; (C) create→plan handoff needs the exact source and reviewed key (or the exact
+damaged-goods decision on the requested source and its own Created child) — the "only Created candidate" fallback and
+cross-source scanning are gone; (D) close and unmount/cleanup bump the presentation epoch, every stale callback is fenced
+and storage is compare-and-cleared by exact occurrence + body. No migration, no live plan row, no fixture, no
+provider/waybill/money/notification action.
+
+# SUPERSEDED — 270-R3 PASS: exact captured binding, one shared plan binding, Inventory-owned replacement hold, and a frozen fingerprinted review with honest recovery
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/{RESULT.md,RECEIPTS.md,result-contract.txt,exact-binding-proof.md,recovery-and-connected-workflow-proof.md,user-review.md}.

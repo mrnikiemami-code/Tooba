@@ -1,0 +1,78 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Task-ID: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4
+Parent-Task: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Mode: REPAIR_PRE_SEND_DURABILITY_NEW_CONFIRM_GATES_AND_EXACT_HANDOFF
+
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Expected-Base-SHA: 1ff02ab8a18c20999b92791f2b51520726bfa2d1
+Base-SHA:          1ff02ab8a18c20999b92791f2b51520726bfa2d1  (present locally, was HEAD, == origin/main)
+Code-SHA:          reported in the canonical Bridge Result body (implementation commit)
+Evidence-SHA:      reported in the canonical Bridge Result body (the commit that adds this evidence set)
+Final-HEAD:        the evidence commit (this file's commit); reported in the Bridge Result body
+
+Decision:
+FIRST_SEND_IS_UNRESOLVED_BEFORE_THE_EXECUTOR_ONE_NEW_PLAN_GATE_COMPOSITION_AFTER_STORED_REPLAY_EXACT_SOURCE_KEY_DECISION_PARITY_FOR_HANDOFF_AND_A_CLOSE_UNMOUNT_RETARGET_RESPONSE_FENCE_WITH_COMPARE_AND_CLEAR
+
+Scope proofs (each run once, after the final code change):
+  Order command           AdminShipmentPlan270R2Tests                       28/28   (25 retained + 3 Repair B)
+  FE helper resolver      created-parcel.test.ts                            13/13   (run explicitly)
+  FE mounted plan         admin-shipment-plan-270r2.mount.test.ts           14/14   (10 retained + 4 A/D)
+  FE mounted panel        admin-order-operational-delivery.mount.test.ts    75/75   (74 retained + 1, 3 sub-cases)
+  typecheck               tsc --noEmit                                      0
+  FE build                npm run build            BUILD_ID cz4aReIm9Nx33hKljkmfr
+  Backend build           dotnet build Tooba.slnx -c Release                 0 errors (332 warnings)
+  Host publish            dotnet publish artifacts/publish-primary           0 errors
+  Served markers          _buildManifest.js 200; chunks/9424-c99e9070dc020045.js 200 (plan-modal copy)
+  Runtime                 Host 5088 PID 48388 /health 200, /health/ready 200 → SingleStore
+                          Next 3000 PID 31184 /fa 200 on BUILD_ID cz4aReIm9Nx33hKljkmfr
+
+Repairs:
+  A  a durable `unresolved` intent (exact body/key) is written AND read back BEFORE the executor runs; legacy
+     `uncertain:false` records read as unresolved; a failed durable write refuses to send; a conflict/authorization
+     answer never clears the intent; only an authoritative success/replay or a proven no-write refusal resolves it.
+  B  ONE `RequireNewPlanGatesAsync` = checkout-not-cancelled AND the async active-package gate, used by the NEW
+     confirmation and the NEW-calendar preview; the stored-plan replay stays first, so history is readable after
+     cancellation/dispatch while a direct new POST can insert nothing.
+  C  exact handoff identity only: resend needs the exact source + non-empty reviewed key on the child; replacement needs
+     the reviewed decision ON the requested source with its own Created child; the "only remaining Created candidate"
+     fallback and cross-source decision scanning are removed.
+  D  close AND effect cleanup/unmount bump the presentation epoch; every stale callback (incl. `finally`) is fenced;
+     storage is compare-and-cleared/updated on the exact occurrence + body, never by scope alone.
+
+Schema:
+  No migration added or modified by this increment. Applied schema unchanged.
+  No DDL, no reset/reseed/backfill, no manual business SQL, no cleanup, no restore.
+
+Data:
+  No new live order/parcel/plan/stock/hold/decision/settings fixture; no business write of any kind; user rows, the
+  user's own shipping draft and the completed linked history are read-only. No provider call, no waybill, no money
+  movement, no notification. ONE canonical tooba_alpha 5432 SingleStore/store-alpha, Host 5088, Next 3000; no
+  second/disposable database, no 15432/15433, no edition/port/connection/appsettings/keys/CapturedPreview change.
+
+Disclosed deviations / limits:
+  - The worktree already contained an uncommitted, incomplete edit set for exactly these four defects when the task
+    arrived (code only; no command-gate fixtures, no A/D mounted cases; the test fixture did not compile). It was
+    reviewed against the issued base, completed and verified from 1ff02ab8a…; nothing was stashed, discarded, reset,
+    rebased or amended, and pre-existing untracked scratch scripts were left untouched.
+  - R2's pre-apply private backup for the additive shipment_dispatch_plans migration is still ABSENT (only the
+    post-apply dump exists). Irreversible audit deviation; no retroactive fix, reapply or restore attempted.
+  - True two-writer concurrency remains UNPROVEN (no concurrency harness was added, by instruction). Relational
+    evidence elsewhere remains sequential immutability/unique-index proof; the "two independent writers" claim is not
+    repeated.
+  - No live eligible Created/unplanned linked parcel exists, so no live plan row or operator click-through was
+    produced; the review URL is completed read-only history. Mounted/command evidence is worker evidence, not a
+    browser session, and the Architect has not executed local runtime/tests.
+  - Untouched classes were not rerun (store/index relational, projection, guard, readiness, bulk, Shipping seam).
+  - Pre-existing untracked scripts/tb266r1-*.mjs, scripts/tb270r2-*.mjs are not part of this change.
+
+Worker PASS is not Architect ACCEPT. No user visual/functional, provider, financial or universal shipping acceptance is
+claimed. 270-R1 ACCEPT within its read-only seam; 270-R2 / 270-R3 PARTIAL; 271 remains NOT ISSUED.

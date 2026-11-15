@@ -1,4 +1,36 @@
-# CURRENT — 270-R3 PASS: the plan now binds to the REAL captured area group/rate row, one shared binding guards every reader, the replacement hold is read from Inventory, and a frozen fingerprinted review recovers honestly — 2026-11-15
+# CURRENT — 270-R4 PASS (four-defect repair): the first send is unresolved before the executor, one new-plan gate composition runs after the stored replay, handoff identity is exact, and close/unmount/retarget fence every stale answer — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,first-send-and-lifecycle-proof.md,command-gates-and-exact-handoff-proof.md,user-review.md}.
+Status **PASS within the issued four-defect repair scope**, decision
+`FIRST_SEND_IS_UNRESOLVED_BEFORE_THE_EXECUTOR_ONE_NEW_PLAN_GATE_COMPOSITION_AFTER_STORED_REPLAY_EXACT_SOURCE_KEY_DECISION_PARITY_FOR_HANDOFF_AND_A_CLOSE_UNMOUNT_RETARGET_RESPONSE_FENCE_WITH_COMPARE_AND_CLEAR`,
+NOT Architect ACCEPT, NOT user visual/functional acceptance, NOT any carrier/provider/waybill/consent/financial claim.
+Chain: **270-R1 = ACCEPT within its additive read-only seam scope**; **270-R2 = PARTIAL** and **270-R3 = PARTIAL** (the R3
+review is now persisted at `…270-R3/ARCHITECT-REVIEW.md`); **270-R4 = this result, awaiting Architect review**. 270 stays
+PARTIAL as the parent and **271 is NOT ISSUED**; `automaticNextImplementationTask: NONE`.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A First send | unresolved immediately | the exact body/key is written AND read back BEFORE the executor runs, so an unmount/reload/process kill with no catch recovers the identical intent; a TB-270-R3 `uncertain:false` record reads as unresolved, a failed durable write refuses to send, and only an authoritative success/replay or a proven no-write refusal resolves it |
+| B Command gates | history first, then both gates | `RequireNewPlanGatesAsync` = checkout-not-cancelled **and** the async active-package membership check, shared by the new confirmation and the new-calendar preview; a stored plan is answered before any live gate, so history survives cancellation/dispatch while a direct new POST inserts nothing |
+| C Handoff | exact identity only | resend needs the exact source **and** a non-empty reviewed key on the child; replacement needs the reviewed decision on the REQUESTED source, its key, and its own `Created` child; the "only remaining candidate" fallback and cross-source decision scan are gone |
+| D Lifecycle | epoch + CAS | close **and** unmount/cleanup bump the presentation epoch, every stale callback (including `finally`) is fenced, and storage is compare-and-cleared/updated on the exact occurrence + body rather than by scope |
+
+Verified once after the final code change: Order `AdminShipmentPlan270R2Tests` **28/28** (25 retained + 3 Repair-B),
+`created-parcel.test.ts` **13/13** (helper, run explicitly), plan mount **14/14** (10 retained + 4 A/D), delivery mount
+**75/75** (74 retained + 1 three-case negative), `tsc --noEmit` 0, `npm run build` 0 (`BUILD_ID cz4aReIm9Nx33hKljkmfr`),
+`dotnet build Tooba.slnx -c Release` 0 errors, Host publish 0 errors.
+Deploy: Host 5088 PID 48388 (`/health` + `/health/ready` 200, SingleStore), Next 3000 PID 31184 (`/fa` 200, served chunk
+`9424-c99e9070dc020045.js` 200 with the plan-modal copy). No migration/DDL/reset/reseed/backfill/business SQL/cleanup/
+restore, no new fixture, no live plan row, no provider/waybill/money/notification action; one canonical `tooba_alpha`.
+Known limits: the worktree already carried an incomplete uncommitted edit set for these four defects (reviewed, completed,
+verified from the issued base; nothing stashed/reset/reverted); R2's pre-apply backup is still absent; true two-writer
+concurrency stays UNPROVEN; the review URL is completed history only (no eligible live unplanned parcel), so mounted and
+owning-application evidence is worker evidence, not a browser session; untouched test classes were not rerun; untracked
+`scripts/tb266r1-*.mjs` / `scripts/tb270r2-*.mjs` scratch files are not part of this change.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+# SUPERSEDED — 270-R3 PASS: the plan now binds to the REAL captured area group/rate row, one shared binding guards every reader, the replacement hold is read from Inventory, and a frozen fingerprinted review recovers honestly — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,exact-binding-proof.md,recovery-and-connected-workflow-proof.md,user-review.md}.
