@@ -80,8 +80,19 @@ public sealed class OrderShipmentDispatchPlanStore : IOrderShipmentDispatchPlanS
         }
     }
 
-    private static bool IsUniqueShipmentViolation(DbUpdateException ex)
-        => ex.InnerException is Npgsql.PostgresException { SqlState: "23505" };
+    /// <summary>
+    /// TB-270-R3: ONLY the plan table's own unique <c>shipment_id</c> index means "another confirmation won". Any
+    /// other 23505 (a different unique constraint, or an unknown one) is a genuine error and must surface instead of
+    /// being reinterpreted as an exact replay.
+    /// </summary>
+    internal const string UniqueShipmentConstraint = "ux_shipment_dispatch_plans_shipment";
+
+    internal static bool IsUniqueShipmentViolation(DbUpdateException ex)
+        => ex.InnerException is Npgsql.PostgresException
+        {
+            SqlState: "23505",
+        } violation
+        && string.Equals(violation.ConstraintName, UniqueShipmentConstraint, StringComparison.Ordinal);
 }
 
 /// <summary>

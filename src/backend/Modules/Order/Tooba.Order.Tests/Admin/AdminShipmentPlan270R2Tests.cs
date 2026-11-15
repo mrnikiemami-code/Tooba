@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Operations;
@@ -11,8 +13,13 @@ using Tooba.Order.Domain.Aggregates;
 using Tooba.Order.Domain.Checkout;
 using Tooba.Order.Domain.Enums;
 using Tooba.Shipping.Contracts.Authoring;
+using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Contracts.Scheduling;
+using Tooba.Shipping.Domain.Authoring;
+using Tooba.Shipping.Infrastructure.Authoring;
+using Tooba.Shipping.Infrastructure.Persistence;
+using Tooba.Shipping.Infrastructure.Scheduling;
 using Xunit;
 
 namespace Tooba.Order.Tests.Admin;
@@ -51,6 +58,12 @@ public sealed class AdminShipmentPlan270R2Tests
 
     private static readonly DateTimeOffset Now = new(2026, 11, 16, 6, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset ReceivedAt = new(2026, 11, 15, 12, 0, 0, TimeSpan.Zero);
+
+    /// <summary>The ONE store tenant context the connected capture is authored under.</summary>
+    private const string Tenant = "store-alpha";
+
+    /// <summary>The single captured destination node of the connected capture (identity only, never a rate input).</summary>
+    private static readonly Guid City = Guid.Parse("01a1d270-1000-7000-8000-00000000000f");
 
     // ---------------------------------------------------------------- the parcel becomes scheduled
 
@@ -363,12 +376,294 @@ public sealed class AdminShipmentPlan270R2Tests
         Assert.Equal("order.shipment_plan.payment_required", Code(preview));
     }
 
+    // ---------------------------------------------------------------- TB-270-R3 repairs
+
+    [Fact]
+    public async Task Preview_addresses_the_CAPTURED_area_group_and_rate_row_not_the_order_shipping_group()
+    {
+        var fixture = Fixture.Resend();
+        var preview = await fixture.PreviewAsync(fixture.ResendShipmentId);
+
+        Assert.True(preview.IsSuccess, Code(preview));
+        Assert.NotEmpty(preview.Value!.Options);
+        var request = Assert.IsType<ShippingAttemptSchedulingLookupRequest>(fixture.LastLookupRequest);
+        Assert.Equal(AreaGroup, request.GroupId);
+        Assert.Equal(RateRow, request.RateRowId);
+        Assert.NotEqual(Group, request.GroupId);
+        // The Order-side group identity is still what the plan reports: the two namespaces stay distinct.
+        Assert.Equal(Group, preview.Value.ShippingGroupId);
+    }
+
+    [Fact]
+    public async Task A_capture_that_answers_for_the_order_shipping_group_is_refused_as_a_binding_mismatch()
+    {
+        var fixture = Fixture.Resend(capturedUsesShippingGroup: true);
+        var preview = await fixture.PreviewAsync(fixture.ResendShipmentId);
+
+        Assert.True(preview.IsSuccess, Code(preview));
+        Assert.Equal("order.shipment_plan.binding_mismatch", preview.Value!.BlockerCode);
+        Assert.Empty(preview.Value.Options);
+    }
+
+    [Fact]
+    public async Task Confirmation_without_the_reviewed_fingerprint_requires_a_fresh_review()
+    {
+        var fixture = Fixture.Resend();
+        var option = await fixture.FirstOptionAsync();
+
+        var refused = await fixture.Orchestrator.PlanShipmentDispatchAsync(
+            Checkout,
+            Actor,
+            Request(fixture.ResendShipmentId, option, "tb270r3-key-no-fingerprint"),
+            CancellationToken.None);
+
+        Assert.False(refused.IsSuccess);
+        Assert.Equal("order.shipment_plan.review_required", Code(refused));
+        Assert.Empty(fixture.Store.Rows);
+    }
+
+    [Fact]
+    public async Task A_changed_reviewed_context_is_refused_instead_of_being_silently_replanned()
+    {
+        var fixture = Fixture.Resend();
+        var options = await fixture.OptionsAsync();
+        Assert.True(options.Count >= 2, "the fixture needs at least two feasible options");
+        var preview = await fixture.PreviewAsync(fixture.ResendShipmentId);
+        var reviewed = preview.Value!.ReviewFingerprint;
+        Assert.False(string.IsNullOrWhiteSpace(reviewed));
+
+        var stale = await fixture.Orchestrator.PlanShipmentDispatchAsync(
+            Checkout,
+            Actor,
+            Request(fixture.ResendShipmentId, options[1], "tb270r3-key-stale", "v1:0000000000000000"),
+            CancellationToken.None);
+
+        Assert.False(stale.IsSuccess);
+        Assert.Equal("order.shipment_plan.review_context_changed", Code(stale));
+        Assert.Empty(fixture.Store.Rows);
+
+        // The SAME reviewed context still confirms normally.
+        var confirmed = await fixture.PlanAsync(options[1], "tb270r3-key-echoed");
+        Assert.True(confirmed.IsSuccess, Code(confirmed));
+        Assert.Single(fixture.Store.Rows);
+    }
+
+    [Fact]
+    public async Task A_replacement_readiness_fact_for_another_parcel_never_authorizes_this_one()
+    {
+        var replacement = Fixture.Replacement(DamagedResolutionStatus.Reserved, identityMismatch: true);
+        var blocked = await replacement.PreviewAsync(replacement.ResendShipmentId);
+
+        Assert.True(blocked.IsSuccess, Code(blocked));
+        Assert.Equal("order.shipment_plan.replacement_hold_missing", blocked.Value!.BlockerCode);
+        Assert.Empty(blocked.Value.Options);
+        Assert.True(replacement.ReadinessCalls >= 1, "the owning readiness read is consulted");
+    }
+
+    [Fact]
+    public async Task A_ready_replacement_reads_its_hold_from_the_owning_fact()
+    {
+        var fixture = Fixture.Replacement(DamagedResolutionStatus.Reserved);
+        var option = await fixture.FirstOptionAsync();
+        Assert.True((await fixture.PlanAsync(option, "tb270r3-key-hold")).IsSuccess);
+
+        var row = Assert.Single(fixture.Store.Rows);
+        Assert.Equal(OrderShipmentReadinessSources.ReplacementHold, row.ReadinessSource);
+        Assert.Equal(Hold, row.ReplacementReservationId);
+        Assert.True(fixture.ReadinessCalls >= 1);
+    }
+
+    // ------------------------------------------------- connected captured seam (Repair A)
+
+    /// <summary>
+    /// TB-270-R3 Repair A: ONE connected application fact. The REAL R1 Shipping adapter reads a REAL captured
+    /// revision — canonical encoder, real EF store, real owner-scope resolver — instead of a fake that would answer
+    /// any group id it is handed. The captured ids are read back from the payload, never assumed.
+    /// </summary>
+    private sealed record ConnectedCapture(
+        IShippingAttemptSchedulingLookup Lookup,
+        Guid SnapshotId,
+        Guid DraftId,
+        long SourceRevision,
+        int FormatVersion,
+        Guid AreaGroupId,
+        Guid RateRowId,
+        int MinimumDeliveryDays,
+        int MaximumDeliveryDays);
+
+    private static ConnectedCapture BuildConnectedCapture()
+    {
+        var draft = ShippingAuthoringDraft.Create(
+            ShippingDraftOwner.ForStore(Tenant),
+            "store_courier",
+            null,
+            [new ShippingAuthoringRegionGroupInput(null, [new ShippingDestinationNode(ShippingDestinationNodeKind.City, City)])],
+            Now.AddHours(-3));
+
+        var groupId = draft.RegionGroups.Single().GroupId;
+        draft.ReplaceGroupRateRows(
+            groupId,
+            [new(null, null, null, null, null, null, null, 50_000.00m, 2_000.00m, 1, 2)],
+            "IRT",
+            Now.AddHours(-3).AddMinutes(1));
+
+        // The customer receiving week, the carrier acceptance week and the warehouse processing week are three
+        // SEPARATE stored calendars; nothing here is a default and nothing is collapsed into one week.
+        draft.ApplyWeeklySchedule(
+            draft.PreflightWeeklySchedule(
+                "Asia/Tehran",
+                [
+                    new(1, true, new TimeOnly(9, 0), new TimeOnly(18, 0)),
+                    new(2, true, new TimeOnly(9, 0), new TimeOnly(18, 0)),
+                    new(3, true, new TimeOnly(9, 0), new TimeOnly(18, 0)),
+                    new(4, true, new TimeOnly(9, 0), new TimeOnly(18, 0)),
+                    new(5, false, null, null),
+                    new(6, true, new TimeOnly(9, 0), new TimeOnly(14, 0)),
+                    new(7, false, null, null),
+                ],
+                60),
+            Now.AddHours(-3).AddMinutes(2));
+
+        draft.ApplyCarrierSchedule(
+            draft.PreflightCarrierSchedule(
+                "Asia/Tehran",
+                [
+                    new(1, true, new TimeOnly(8, 0), new TimeOnly(20, 0)),
+                    new(2, true, new TimeOnly(8, 0), new TimeOnly(20, 0)),
+                    new(3, true, new TimeOnly(8, 0), new TimeOnly(20, 0)),
+                    new(4, true, new TimeOnly(8, 0), new TimeOnly(20, 0)),
+                    new(5, true, new TimeOnly(8, 0), new TimeOnly(20, 0)),
+                    new(6, true, new TimeOnly(8, 0), new TimeOnly(16, 0)),
+                    new(7, false, null, null),
+                ]),
+            Now.AddHours(-3).AddMinutes(3));
+
+        draft.ApplyProcessingSchedule(
+            draft.PreflightProcessingSchedule(
+                "Asia/Tehran",
+                [
+                    new(1, true, new TimeOnly(8, 0), new TimeOnly(18, 0)),
+                    new(2, true, new TimeOnly(8, 0), new TimeOnly(18, 0)),
+                    new(3, true, new TimeOnly(8, 0), new TimeOnly(18, 0)),
+                    new(4, true, new TimeOnly(8, 0), new TimeOnly(18, 0)),
+                    new(5, true, new TimeOnly(8, 0), new TimeOnly(18, 0)),
+                    new(6, true, new TimeOnly(8, 0), new TimeOnly(14, 0)),
+                    new(7, false, null, null),
+                ]),
+            Now.AddHours(-3).AddMinutes(4));
+
+        draft.ApplyMethodSettings(
+            draft.PreflightMethodSettings(
+                ShippingFreightPayerMode.Prepaid,
+                ShippingAuthoringCalculationMode.Manual,
+                120,
+                60,
+                ShippingAuthoringPreparationProcessingMode.WorkingWeek),
+            Now.AddHours(-3).AddMinutes(5));
+
+        draft.ApplyTypeAssignment(draft.PreflightTypeAssignment(null), Now.AddHours(-3).AddMinutes(6));
+
+        // The ONE canonical capture path: the row is written by the real encoder, not by hand-written JSON.
+        var snapshot = ShippingAuthoringRevisionSnapshot.Capture(draft, Now.AddHours(-2), Snapshot);
+        var payload = snapshot.ReadPayload();
+        var capturedGroup = payload.Groups.Single();
+        var capturedRow = capturedGroup.RateRows.Single();
+        Assert.Equal(ShippingAuthoringRevisionSnapshot.ProcessingHoursFormatVersion, snapshot.FormatVersion);
+        Assert.NotNull(payload.MethodSettings);
+        Assert.NotNull(payload.CarrierAcceptance);
+        Assert.NotNull(payload.ProcessingHours);
+
+        var context = new ShippingDbContext(new DbContextOptionsBuilder<ShippingDbContext>()
+            .UseInMemoryDatabase($"tb270r3-connected-{Guid.NewGuid():N}")
+            .Options);
+        context.AuthoringRevisionSnapshots.Add(snapshot);
+        context.SaveChanges();
+        context.ChangeTracker.Clear();
+
+        var lookup = new ShippingAttemptSchedulingLookup(
+            new ShippingAuthoringDraftDirectory(context),
+            new FixedEdition(),
+            new FixedTenant(Tenant),
+            NullLogger<ShippingAttemptSchedulingLookup>.Instance);
+
+        return new ConnectedCapture(
+            lookup,
+            snapshot.SnapshotId,
+            snapshot.DraftId,
+            snapshot.SourceRevision,
+            snapshot.FormatVersion,
+            capturedGroup.GroupId,
+            capturedRow.RateRowId,
+            capturedRow.MinDeliveryDays,
+            capturedRow.MaxDeliveryDays);
+    }
+
+    // ------------------------------------------------- connected captured seam (Repair A)
+
+    [Fact]
+    public async Task The_real_captured_seam_resolves_the_area_group_and_the_created_parcel_gets_its_own_plan()
+    {
+        var fixture = Fixture.Connected();
+        var preview = await fixture.PreviewAsync(fixture.ResendShipmentId);
+
+        Assert.True(preview.IsSuccess, Code(preview));
+        var value = preview.Value!;
+        Assert.Null(value.BlockerCode);
+        Assert.NotEmpty(value.Options);
+
+        // The accepted evidence keeps BOTH identities distinct: the checkout group and the captured area group.
+        Assert.Equal(Group, value.ShippingGroupId);
+        Assert.NotNull(value.AreaGroupId);
+        Assert.NotEqual(Group, value.AreaGroupId);
+        Assert.NotNull(value.RateRowId);
+        Assert.NotNull(value.SnapshotId);
+        Assert.Null(value.ConfirmedPlan);
+
+        var option = value.Options[0];
+        var planned = await fixture.PlanAsync(option, "tb270r3-connected-key");
+        Assert.True(planned.IsSuccess, Code(planned));
+
+        // The immutable row stores the SAME captured binding that the seam resolved, not the checkout group.
+        var row = Assert.Single(fixture.Store.Rows);
+        Assert.Equal(value.AreaGroupId, row.AreaGroupId);
+        Assert.Equal(value.RateRowId, row.RateRowId);
+        Assert.Equal(value.SnapshotId, row.SnapshotId);
+        Assert.Equal(value.DraftId, row.DraftId);
+        Assert.Equal(value.SourceRevision, row.SourceRevision);
+        Assert.Equal(value.FormatVersion, row.FormatVersion);
+        Assert.Equal(Group, row.ShippingGroupId);
+        Assert.Equal(120, row.PreparationMinutes);
+        Assert.Equal(60, row.HandoffMinutes);
+        Assert.True(row.PreparationStartUtc <= row.TransferDepartureUtc);
+        Assert.True(row.TransferDepartureUtc <= row.HandoffDeadlineUtc);
+
+        // Exact replay of the same reviewed selection answers the stored plan and never appends a second row.
+        var replay = await fixture.PlanAsync(option, "tb270r3-connected-key");
+        Assert.True(replay.IsSuccess, Code(replay));
+        Assert.Single(fixture.Store.Rows);
+    }
+
+    [Fact]
+    public async Task The_order_side_group_identity_cannot_address_the_captured_read()
+    {
+        // The SAME accepted evidence, but its captured area group replaced by the Order checkout shipping-group id:
+        // that id is a different namespace, so the real seam answers "no such group" and NO calendar is invented.
+        var fixture = Fixture.Connected(areaGroupOverride: Group);
+        var preview = await fixture.PreviewAsync(fixture.ResendShipmentId);
+
+        Assert.True(preview.IsSuccess, Code(preview));
+        Assert.Equal(ShippingAttemptSchedulingReasonCodes.GroupUnavailable, preview.Value!.BlockerCode);
+        Assert.Empty(preview.Value.Options);
+        Assert.Empty(fixture.Store.Rows);
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private static AdminOrderOperationRequest Request(
         Guid shipmentId,
         AdminShipmentDispatchPlanOption option,
-        string key) =>
+        string key,
+        string? reviewFingerprint = null) =>
         new(
             "plan_shipment_dispatch",
             SellerOrder,
@@ -382,7 +677,8 @@ public sealed class AdminShipmentPlan270R2Tests
             null,
             DispatchPlanReceivingDate: option.ReceivingDate.ToString("yyyy-MM-dd"),
             DispatchPlanReceivingOpensAt: option.ReceivingOpensAt,
-            DispatchPlanReceivingClosesAt: option.ReceivingClosesAt);
+            DispatchPlanReceivingClosesAt: option.ReceivingClosesAt,
+            DispatchPlanReviewFingerprint: reviewFingerprint);
 
     private static AdminShipmentDispatchPlanOption DummyOption() =>
         new(
@@ -413,6 +709,26 @@ public sealed class AdminShipmentPlan270R2Tests
         public DateTimeOffset UtcNow { get; } = now;
     }
 
+    /// <summary>TB-270-R3: the trusted SingleStore edition context the connected seam is resolved under.</summary>
+    private sealed class FixedEdition : ICurrentEdition
+    {
+        public EditionContext? Current => new(ToobaEdition.SingleStore, "tb270r3");
+    }
+
+    /// <summary>TB-270-R3: the trusted active tenant of the connected capture.</summary>
+    private sealed class FixedTenant(string tenantId) : ICurrentTenant
+    {
+        public TenantContext? Current => new(
+            new TenantId(tenantId),
+            TenantStatus.Active,
+            new ConnectionReference("tb270r3"),
+            null,
+            null,
+            null,
+            "localhost",
+            null);
+    }
+
     private sealed class Fixture
     {
         private Fixture(
@@ -435,6 +751,12 @@ public sealed class AdminShipmentPlan270R2Tests
 
         private ScheduleFixture Schedule { get; }
 
+        /// <summary>The EXACT request the orchestrator sent to the captured-inputs seam (Repair A evidence).</summary>
+        public ShippingAttemptSchedulingLookupRequest? LastLookupRequest => Schedule.Lookup.LastRequest;
+
+        /// <summary>How many times the owning replacement-readiness read was consulted (Repair C evidence).</summary>
+        public int ReadinessCalls => Schedule.Readiness.Calls;
+
         public static Fixture Resend(
             decimal parcelQuantity = 1m,
             decimal usable = 1m,
@@ -444,7 +766,9 @@ public sealed class AdminShipmentPlan270R2Tests
             bool allowManage = true,
             bool paid = true,
             IReadOnlyList<string>? missingInputs = null,
-            bool capturedRefusal = false) =>
+            bool capturedRefusal = false,
+            bool capturedUsesShippingGroup = false,
+            bool readinessIdentityMismatch = false) =>
             Build(
                 replacement: null,
                 parcelQuantity,
@@ -455,9 +779,11 @@ public sealed class AdminShipmentPlan270R2Tests
                 allowManage,
                 paid,
                 missingInputs,
-                capturedRefusal);
+                capturedRefusal,
+                capturedUsesShippingGroup,
+                readinessIdentityMismatch);
 
-        public static Fixture Replacement(DamagedResolutionStatus status) =>
+        public static Fixture Replacement(DamagedResolutionStatus status, bool identityMismatch = false) =>
             Build(
                 status,
                 1m,
@@ -468,7 +794,8 @@ public sealed class AdminShipmentPlan270R2Tests
                 allowManage: true,
                 paid: true,
                 missingInputs: null,
-                capturedRefusal: false);
+                capturedRefusal: false,
+                readinessIdentityMismatch: identityMismatch);
 
         private static Fixture Build(
             DamagedResolutionStatus? replacement,
@@ -480,7 +807,11 @@ public sealed class AdminShipmentPlan270R2Tests
             bool allowManage,
             bool paid,
             IReadOnlyList<string>? missingInputs,
-            bool capturedRefusal)
+            bool capturedRefusal,
+            bool capturedUsesShippingGroup = false,
+            bool readinessIdentityMismatch = false,
+            AcceptedShipmentGroupBinding? bindingOverride = null,
+            IShippingAttemptSchedulingLookup? activeLookup = null)
         {
             var resendShipmentId = Guid.Parse("01a1d270-2000-7000-8000-000000000001");
 
@@ -573,7 +904,7 @@ public sealed class AdminShipmentPlan270R2Tests
                 Now.AddDays(-7),
                 Now);
 
-            var bindings = new BindingFake(new AcceptedShipmentGroupBinding(
+            var bindings = new BindingFake(bindingOverride ?? new AcceptedShipmentGroupBinding(
                 Checkout,
                 SellerOrder,
                 SellerParty,
@@ -599,13 +930,28 @@ public sealed class AdminShipmentPlan270R2Tests
                 1,
                 2));
 
-            var lookup = new LookupFake(capturedRefusal, BuildInputs(missingInputs));
+            var lookup = new LookupFake(
+                capturedRefusal,
+                BuildInputs(missingInputs, capturedUsesShippingGroup ? Group : null));
             var store = new InMemoryPlanStore();
             var access = new AccessFake(allowManage);
             var fulfillment = new FulfillmentFake(unit);
             var checkouts = new CheckoutReader(paid);
+            var readiness = new ReplacementReadinessFake(
+                unit,
+                replacement is { } readyStatus
+                    && readyStatus is DamagedResolutionStatus.Reserved or DamagedResolutionStatus.Fulfilled,
+                readinessIdentityMismatch);
 
-            var schedule = new ScheduleFixture(checkouts, fulfillment, bindings, lookup, store, access);
+            var schedule = new ScheduleFixture(
+                checkouts,
+                fulfillment,
+                bindings,
+                lookup,
+                store,
+                access,
+                readiness,
+                activeLookup);
             return new Fixture(store, schedule.CreateOrchestrator(new FixedClock(Now)), resendShipmentId, schedule);
         }
 
@@ -631,9 +977,63 @@ public sealed class AdminShipmentPlan270R2Tests
             return preview.Value.Options[0];
         }
 
-        public Task<Result<object>> PlanAsync(AdminShipmentDispatchPlanOption option, string key) =>
-            Orchestrator.PlanShipmentDispatchAsync(
-                Checkout, Actor, Request(ResendShipmentId, option, key), CancellationToken.None);
+        public async Task<Result<object>> PlanAsync(AdminShipmentDispatchPlanOption option, string key)
+        {
+            // The reviewed context comes from the OWNING preview, exactly like the client echoes it back.
+            var preview = await PreviewAsync(ResendShipmentId);
+            var fingerprint = preview.IsSuccess ? preview.Value!.ReviewFingerprint : null;
+            return await Orchestrator.PlanShipmentDispatchAsync(
+                Checkout, Actor, Request(ResendShipmentId, option, key, fingerprint), CancellationToken.None);
+        }
+
+        /// <summary>
+        /// TB-270-R3 Repair A: the accepted evidence of the SAME group, whose captured identity comes from a REAL
+        /// capture. The Order-side <c>ShippingGroupId</c> stays the checkout group; the captured area group is a
+        /// DIFFERENT identity namespace that only the real seam can resolve.
+        /// </summary>
+        public static Fixture Connected(Guid? areaGroupOverride = null)
+        {
+            var capture = BuildConnectedCapture();
+            var binding = new AcceptedShipmentGroupBinding(
+                Checkout,
+                SellerOrder,
+                SellerParty,
+                Group,
+                "store_courier",
+                "پیشتاز",
+                "store_courier",
+                null,
+                ShippingGroupOwnerKind.Store,
+                Tenant,
+                null,
+                capture.SnapshotId,
+                capture.DraftId,
+                capture.SourceRevision,
+                capture.FormatVersion,
+                9,
+                areaGroupOverride ?? capture.AreaGroupId,
+                capture.RateRowId,
+                new DateOnly(2026, 11, 18),
+                new TimeOnly(9, 0).Ticks,
+                new TimeOnly(10, 0).Ticks,
+                "Asia/Tehran",
+                capture.MinimumDeliveryDays,
+                capture.MaximumDeliveryDays);
+
+            return Build(
+                replacement: null,
+                parcelQuantity: 1m,
+                usable: 1m,
+                damaged: 0m,
+                receipt: true,
+                dispatched: false,
+                allowManage: true,
+                paid: true,
+                missingInputs: null,
+                capturedRefusal: false,
+                bindingOverride: binding,
+                activeLookup: capture.Lookup);
+        }
     }
 
     private sealed record ScheduleFixture(
@@ -642,9 +1042,17 @@ public sealed class AdminShipmentPlan270R2Tests
         BindingFake Bindings,
         LookupFake Lookup,
         InMemoryPlanStore Store,
-        AccessFake Access)
+        AccessFake Access,
+        ReplacementReadinessFake Readiness,
+        IShippingAttemptSchedulingLookup? ActiveLookup = null)
     {
-        public AdminOrderOperationsOrchestrator CreateOrchestrator(IClock clock) =>
+        /// <summary>
+        /// TB-270-R3: `lookupOverride` replaces the controlled fake with the REAL R1 Shipping adapter for the one
+        /// connected seam case; every other port stays the same, so only the capture read changes.
+        /// </summary>
+        public AdminOrderOperationsOrchestrator CreateOrchestrator(
+            IClock clock,
+            IShippingAttemptSchedulingLookup? lookupOverride = null) =>
             new(
                 Checkouts,
                 Fulfillment,
@@ -661,11 +1069,14 @@ public sealed class AdminShipmentPlan270R2Tests
                 null!,
                 Store,
                 Bindings,
-                Lookup,
-                clock);
+                lookupOverride ?? ActiveLookup ?? Lookup,
+                clock,
+                Readiness);
     }
 
-    private static ShippingAttemptSchedulingInputs BuildInputs(IReadOnlyList<string>? missingInputs) =>
+    private static ShippingAttemptSchedulingInputs BuildInputs(
+        IReadOnlyList<string>? missingInputs,
+        Guid? capturedGroupId = null) =>
         new(
             ShippingCapturedQuoteOwnerKind.Seller,
             "store-alpha",
@@ -676,7 +1087,7 @@ public sealed class AdminShipmentPlan270R2Tests
             4,
             "store_courier",
             null,
-            Group,
+            capturedGroupId ?? AreaGroup,
             RateRow,
             1,
             2,
@@ -735,13 +1146,28 @@ public sealed class AdminShipmentPlan270R2Tests
                 checkoutId == binding.CheckoutId && shippingGroupId == binding.ShippingGroupId ? binding : null);
     }
 
+    /// <summary>
+    /// TB-270-R3 Repair A: the seam is addressed by the CAPTURED area group and its rate row, never by the Order
+    /// checkout shipping-group id. The fake refuses any other group identity, so a regression fails loudly.
+    /// </summary>
     private sealed class LookupFake(bool refuse, ShippingAttemptSchedulingInputs inputs)
         : IShippingAttemptSchedulingLookup
     {
+        public ShippingAttemptSchedulingLookupRequest? LastRequest { get; private set; }
+
         public Task<ShippingAttemptSchedulingResult> LookupAsync(
             ShippingAttemptSchedulingLookupRequest request,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(
+            CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            if (request.GroupId != AreaGroup || request.RateRowId != RateRow)
+            {
+                return Task.FromResult(ShippingAttemptSchedulingResult.Refused(
+                    ShippingAttemptSchedulingVerdict.CapturedRevisionUnavailable,
+                    ShippingAttemptSchedulingReasonCodes.CapturedRevisionUnavailable));
+            }
+
+            return Task.FromResult(
                 refuse
                     ? ShippingAttemptSchedulingResult.Refused(
                         ShippingAttemptSchedulingVerdict.CapturedRevisionUnavailable,
@@ -750,6 +1176,48 @@ public sealed class AdminShipmentPlan270R2Tests
                         ShippingAttemptSchedulingVerdict.CapturedInputs,
                         ShippingAttemptSchedulingReasonCodes.CapturedInputs,
                         inputs));
+        }
+    }
+
+    /// <summary>
+    /// TB-270-R3 Repair C: the owning readiness fact. The test controls readiness; the orchestrator still re-checks
+    /// the returned identity against the parcel's recorded chain, so a mismatched fact is refused.
+    /// </summary>
+    private sealed class ReplacementReadinessFake(FulfillmentSnapshot unit, bool ready, bool identityMismatch = false)
+        : IFulfillmentReplacementReadinessReader
+    {
+        public int Calls { get; private set; }
+
+        public Task<FulfillmentReplacementReadinessFact> GetAsync(
+            Guid fulfillmentId,
+            Guid shipmentId,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            var parcel = unit.Shipments.Single(x => x.ShipmentId == shipmentId);
+            if (!ready)
+            {
+                return Task.FromResult(new FulfillmentReplacementReadinessFact(
+                    fulfillmentId,
+                    shipmentId,
+                    false,
+                    FulfillmentReplacementReadinessReasonCodes.DecisionNotReady));
+            }
+
+            // A fact about a DIFFERENT parcel must never authorize this one.
+            var reportedShipment = identityMismatch ? SourceShipment : shipmentId;
+            return Task.FromResult(new FulfillmentReplacementReadinessFact(
+                fulfillmentId,
+                reportedShipment,
+                true,
+                FulfillmentReplacementReadinessReasonCodes.Ready,
+                parcel.ResendOfShipmentId,
+                parcel.DamagedResolutionId,
+                parcel.ReplacementReservationId,
+                Line,
+                parcel.Items.Sum(x => x.Quantity),
+                ReceivedAt));
+        }
     }
 
     private sealed class InMemoryPlanStore : IOrderShipmentDispatchPlanStore

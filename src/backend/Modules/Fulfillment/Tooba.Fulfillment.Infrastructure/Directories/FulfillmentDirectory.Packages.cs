@@ -277,7 +277,7 @@ public sealed partial class FulfillmentDirectory
         // TB-270-R2: هر عضوِ «تلاش جدید» باید برنامهٔ تأییدشدهٔ خودش را داشته باشد؛ یک عضو بدون برنامه کل بسته را
         // رد می‌کند تا هرگز ارسال جزئی/بدون موعد ثبت نشود.
         await EnsureLinkedAttemptsPlannedAsync(
-            steps.Select(x => x.Shipment).ToList(),
+            steps.Select(x => (x.Unit, x.Shipment)).ToList(),
             cancellationToken);
 
         // فاز ۲ — اعمال همهٔ تغییرات Fulfillment و یک SaveChanges برای کل بسته.

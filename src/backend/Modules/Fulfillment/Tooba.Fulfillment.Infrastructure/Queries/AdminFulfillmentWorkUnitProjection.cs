@@ -211,9 +211,7 @@ internal static class AdminFulfillmentWorkUnitProjection
         // Without one it is truthfully unspecified («موعد ارسال مشخص نشده») instead of inheriting the shipped
         // parcel's expired deadline. First dispatch keeps its original accepted group plan.
         var linkedAttempt = shipment.IsReplacement || shipment.ResendOfShipmentId is not null;
-        var ownPlan = linkedAttempt && context.OwnPlanByShipmentId.TryGetValue(shipment.ShipmentId, out var confirmed)
-            ? confirmed
-            : null;
+        var ownPlan = linkedAttempt ? ValidatedOwnPlan(context, unit, shipment) : null;
         var plans = linkedAttempt
             ? ownPlan is null
                 ? []
@@ -534,9 +532,23 @@ internal static class AdminFulfillmentWorkUnitProjection
         AdminFulfillmentWorkUnitContext context,
         AdminFulfillmentPackageMemberFacts member)
     {
-        if (context.OwnPlanByShipmentId.TryGetValue(member.ShipmentId, out var own))
+        // TB-270-R3: a package member's plan is validated against the OWNING unit/parcel identity exactly like the
+        // dispatch guard does; a mismatched/untrusted row contributes nothing.
+        var unit = context.Units.FirstOrDefault(x => x.FulfillmentId == member.FulfillmentId);
+        var shipment = unit?.Shipments.FirstOrDefault(x => x.ShipmentId == member.ShipmentId);
+        if (unit is not null && shipment is not null)
         {
-            return [own.ToDispatchPlanFact()];
+            var own = ValidatedOwnPlan(context, unit, shipment);
+            if (own is not null)
+            {
+                return [own.ToDispatchPlanFact()];
+            }
+        }
+        else if (context.OwnPlanByShipmentId.ContainsKey(member.ShipmentId))
+        {
+            // The owning unit/parcel snapshot is unavailable in this projection, so the plan cannot be proven to belong
+            // to this exact parcel: contribute nothing rather than implying it is scheduled.
+            return [];
         }
 
         // A linked attempt without its own plan contributes nothing: its group plan is the ORIGINAL shipment's
@@ -549,6 +561,43 @@ internal static class AdminFulfillmentWorkUnitProjection
         return member.ShippingGroupId is null
             ? []
             : PlansOf(context, member.SellerOrderId, member.ShippingGroupId);
+    }
+
+    /// <summary>
+    /// TB-270-R3: the OWN plan of a linked parcel, returned ONLY when the shared Contracts rules prove it belongs to
+    /// this exact parcel/source/capture with the exact line fingerprint. Same authority as the dispatch guard.
+    /// </summary>
+    private static OrderShipmentDispatchPlanFact? ValidatedOwnPlan(
+        AdminFulfillmentWorkUnitContext context,
+        FulfillmentSnapshot unit,
+        ShipmentSnapshot shipment)
+    {
+        if (!context.OwnPlanByShipmentId.TryGetValue(shipment.ShipmentId, out var plan))
+        {
+            return null;
+        }
+
+        var candidate = shipment.ShippingGroupId is { } shippingGroupId && shippingGroupId != Guid.Empty
+            ? new Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingCandidate(
+                shipment.ShipmentId,
+                unit.CheckoutId,
+                unit.SellerOrderId,
+                unit.FulfillmentId,
+                shippingGroupId,
+                shipment.IsReplacement
+                    ? Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Replacement
+                    : Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Resend,
+                shipment.ResendOfShipmentId,
+                shipment.DamagedResolutionId,
+                shipment.ReplacementReservationId,
+                Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingRules.BuildLineFingerprint(
+                    shipment.Items.Select(x => (x.OrderLineId, x.Quantity))),
+                shipment.ShippingMethodCode)
+            : null;
+
+        return Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingRules.Validate(plan, candidate) is null
+            ? plan
+            : null;
     }
 
     private static decimal ResendableOf(

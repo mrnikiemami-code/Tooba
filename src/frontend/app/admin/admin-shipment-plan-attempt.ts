@@ -31,9 +31,20 @@ export type ShipmentPlanAttempt = {
   receivingDate: string | null;
   receivingOpensAt: string | null;
   receivingClosesAt: string | null;
+  /** TB-270-R3: the captured receiving zone shown in the review (comparison evidence, never authority). */
+  receivingTimeZone: string | null;
   attempts: number;
   lastFailedAtUtc: string | null;
   lastMessageFa: string | null;
+  /**
+   * TB-270-R3: the EXACT request body that was reviewed and sent (serialized JSON). While the outcome is
+   * uncertain this string is re-sent byte-for-byte, so no field can drift between attempts.
+   */
+  requestBody: string | null;
+  /** TB-270-R3: the server-issued review fingerprint that was echoed in `requestBody`. */
+  reviewFingerprint: string | null;
+  /** TB-270-R3: the last outcome was genuinely unknown (transport loss / 5xx / timeout) and must be retried as-is. */
+  uncertain: boolean;
 };
 
 const VERSION = "v1";
@@ -108,9 +119,13 @@ function readStored(key: string): ShipmentPlanAttempt | null {
       receivingDate: coalesce(parsed.receivingDate) || null,
       receivingOpensAt: coalesce(parsed.receivingOpensAt) || null,
       receivingClosesAt: coalesce(parsed.receivingClosesAt) || null,
+      receivingTimeZone: coalesce(parsed.receivingTimeZone) || null,
       attempts: Number.isFinite(parsed.attempts) ? Math.max(0, Number(parsed.attempts)) : 0,
       lastFailedAtUtc: coalesce(parsed.lastFailedAtUtc) || null,
       lastMessageFa: coalesce(parsed.lastMessageFa) || null,
+      requestBody: coalesce(parsed.requestBody) || null,
+      reviewFingerprint: coalesce(parsed.reviewFingerprint) || null,
+      uncertain: parsed.uncertain === true,
     };
   } catch {
     return memoryFallback.get(key) ?? null;
@@ -144,9 +159,13 @@ export function writeShipmentPlanAttempt(input: {
   receivingDate?: string | null;
   receivingOpensAt?: string | null;
   receivingClosesAt?: string | null;
+  receivingTimeZone?: string | null;
   attempts?: number;
   lastFailedAtUtc?: string | null;
   lastMessageFa?: string | null;
+  requestBody?: string | null;
+  reviewFingerprint?: string | null;
+  uncertain?: boolean;
 }): ShipmentPlanAttemptWrite | null {
   const normalized = normalizeScope(input.scope);
   const occurrenceKey = coalesce(input.occurrenceKey);
@@ -159,9 +178,13 @@ export function writeShipmentPlanAttempt(input: {
     receivingDate: coalesce(input.receivingDate) || null,
     receivingOpensAt: coalesce(input.receivingOpensAt) || null,
     receivingClosesAt: coalesce(input.receivingClosesAt) || null,
+    receivingTimeZone: coalesce(input.receivingTimeZone) || null,
     attempts: Math.max(1, input.attempts ?? 1),
     lastFailedAtUtc: input.lastFailedAtUtc ?? null,
     lastMessageFa: coalesce(input.lastMessageFa) || null,
+    requestBody: coalesce(input.requestBody) || null,
+    reviewFingerprint: coalesce(input.reviewFingerprint) || null,
+    uncertain: input.uncertain === true,
   };
   const key = storageKey(normalized);
   const api = sessionStorageApi();
@@ -196,11 +219,12 @@ export function clearShipmentPlanAttempt(scope: ShipmentPlanAttemptScope): void 
   }
 }
 
-/** Records one failed/uncertain outcome while KEEPING the exact key and selection. */
+/** Records one failed/uncertain outcome while KEEPING the exact key, selection and reviewed body. */
 export function markShipmentPlanAttemptFailed(
   scope: ShipmentPlanAttemptScope,
   attempt: ShipmentPlanAttempt,
   messageFa?: string | null,
+  uncertain = false,
 ): ShipmentPlanAttempt {
   return writeShipmentPlanAttempt({
     scope,
@@ -208,8 +232,20 @@ export function markShipmentPlanAttemptFailed(
     receivingDate: attempt.receivingDate,
     receivingOpensAt: attempt.receivingOpensAt,
     receivingClosesAt: attempt.receivingClosesAt,
+    receivingTimeZone: attempt.receivingTimeZone,
     attempts: attempt.attempts + 1,
     lastFailedAtUtc: new Date().toISOString(),
     lastMessageFa: messageFa ?? null,
+    requestBody: attempt.requestBody,
+    reviewFingerprint: attempt.reviewFingerprint,
+    uncertain,
   })?.attempt ?? attempt;
+}
+
+/**
+ * TB-270-R3: a deterministic refusal ends this review: the recorded body/key are cleared so the next intent can
+ * never reuse a stale reviewed context. The caller displays the exact prior outcome before asking for a new review.
+ */
+export function endShipmentPlanReview(scope: ShipmentPlanAttemptScope): void {
+  clearShipmentPlanAttempt(scope);
 }

@@ -411,6 +411,36 @@ public sealed class ShippingAttemptSchedulingLookupTests
         Assert.NotSame(a, c);
     }
 
+    [Fact]
+    public async Task The_seam_is_addressed_by_the_CAPTURED_area_group_and_refuses_an_order_side_group_identity()
+    {
+        // TB-270-R3 Repair A: `payload.Groups[].GroupId` (the captured area group) and the Order checkout
+        // shipping-group id are DIFFERENT identity namespaces. Only the captured id can address this read.
+        var fixture = Build();
+        using var database = new Database(fixture.Snapshot);
+
+        var captured = await Lookup(database).LookupAsync(
+            Request(fixture, fixture.GroupA, fixture.RowA1),
+            CancellationToken.None);
+        Assert.Equal(ShippingAttemptSchedulingVerdict.CapturedInputs, captured.Verdict);
+        Assert.Equal(fixture.GroupA, captured.Inputs!.GroupId);
+
+        // An Order-side group id (a different namespace entirely) is not a group of this capture: no payload at all.
+        var orderSideGroupId = Guid.Parse("01a1d270-0000-7000-8000-000000000007");
+        var refused = await Lookup(database).LookupAsync(
+            Request(fixture, orderSideGroupId, fixture.RowA1),
+            CancellationToken.None);
+        AssertRefused(refused, ShippingAttemptSchedulingVerdict.GroupUnavailable);
+
+        // The exact rate row of the captured group is still found when the captured group is addressed.
+        var siblingRow = await Lookup(database).LookupAsync(
+            Request(fixture, fixture.GroupA, fixture.RowA2),
+            CancellationToken.None);
+        Assert.Equal(ShippingAttemptSchedulingVerdict.CapturedInputs, siblingRow.Verdict);
+        Assert.Equal(fixture.GroupA, siblingRow.Inputs!.GroupId);
+        Assert.Equal(fixture.RowA2, siblingRow.Inputs.RateRowId);
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private sealed record Fixture(

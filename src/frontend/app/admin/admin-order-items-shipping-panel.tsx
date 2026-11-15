@@ -54,6 +54,7 @@ import {
   completedPostDispatchOutcome,
   POST_DISPATCH_MODE_LABEL_FA,
   readPostDispatchAttempt,
+  resolveCreatedParcelId,
 } from "../../features/order-operational-groups";
 
 type Props = {
@@ -523,6 +524,26 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, 
                   messageFa: mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
                 });
               }
+              function createdAttemptParcel(): string | null {
+                // TB-270-R3: only a linked attempt can own a plan, and only the server-proven parcel is used.
+                if (request.code === "resend_shipment") {
+                  return resolveCreatedParcelId(result.data, {
+                    kind: "resend",
+                    sourceShipmentId: shipmentId,
+                    idempotencyKey: request.idempotencyKey,
+                  });
+                }
+                if (request.code === "resolve_damaged_goods" && request.outcome === "replacement") {
+                  return resolveCreatedParcelId(result.data, {
+                    kind: "replacement",
+                    sourceShipmentId: shipmentId,
+                    idempotencyKey: request.idempotencyKey,
+                  });
+                }
+                return null;
+              }
+
+              const createdShipmentId = createdAttemptParcel();
               toast.success(
                 request.code === "resolve_damaged_goods"
                   ? request.outcome === "referral"
@@ -533,7 +554,11 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, 
                     : `عملیات ${action?.labelFa ?? POST_DISPATCH_MODE_LABEL_FA[request.code]} انجام شد.`,
               );
               onCompleted?.();
-              return completedPostDispatchOutcome();
+              if (createdShipmentId) {
+                // The review closes and continues on the parcel that really exists: its own plan surface.
+                setPlanTarget({ seller, shipmentId: createdShipmentId, ordinal: undefined });
+              }
+              return completedPostDispatchOutcome(createdShipmentId);
             } finally {
               setPendingCode(null);
             }

@@ -2,6 +2,7 @@
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Application.Admin.Operations.Models;
+using Tooba.Order.Application.Admin.Operations.Mappers;
 using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Order.Application.Admin.Operations.Ports;
 using Tooba.Order.Contracts.Admin.Operations;
@@ -261,14 +262,15 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 }
 
                 var linkedAttempt = shipment.IsReplacement || shipment.ResendOfShipmentId is not null;
+                // TB-270-R3: the SAME shared binding rules as the dispatch guard. A row that does not prove this exact
+                // parcel/source/quantity is NOT a plan, so dispatch stays withheld and planning is offered instead.
+                var ownPlan = linkedAttempt && plansByShipment.TryGetValue(shipment.ShipmentId, out var storedPlan)
+                    ? OrderShipmentDispatchPlanContractMapper.ToFact(storedPlan)
+                    : null;
                 var linkedPlanned = linkedAttempt
-                    && plansByShipment.TryGetValue(shipment.ShipmentId, out var ownPlan)
-                    && string.Equals(
-                        ownPlan.AttemptKind,
-                        shipment.IsReplacement
-                            ? OrderShipmentAttemptKinds.Replacement
-                            : OrderShipmentAttemptKinds.Resend,
-                        StringComparison.Ordinal);
+                    && OrderShipmentDispatchPlanBindingRules.Validate(
+                        ownPlan,
+                        BuildPlanBindingCandidate(fulfillment, shipment)) is null;
 
                 if (supplyAuthorized
                     && linkedAttempt

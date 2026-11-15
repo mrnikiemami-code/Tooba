@@ -1,10 +1,13 @@
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Operations;
 using Tooba.Order.Application.Admin.Operations.Models;
 using Tooba.Order.Application.Admin.Operations.Policies;
 using Tooba.Order.Application.Admin.Operations.Ports;
+using Tooba.Order.Contracts.Shipping;
 using Tooba.Order.Domain.Aggregates;
 using Tooba.Order.Domain.Checkout;
 using Tooba.Shipping.Contracts.Authoring;
@@ -104,7 +107,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
-        var located = await LocateParcelAsync(checkoutId, group, shipmentId, cancellationToken);
+        var located = await LocateParcelForReadAsync(checkoutId, group, shipmentId, cancellationToken);
         return await BuildPreviewAsync(located, cancellationToken);
     }
 
@@ -117,7 +120,6 @@ public sealed partial class AdminOrderOperationsOrchestrator
         var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
             ?? throw new AdminOrderOperationsException("order.operation.invalid");
         var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
-        EnsureCancelledDoesNotBlock(group, "plan_shipment_dispatch");
 
         // The exact same actor gate as the physical operations, re-checked on every request including a replay.
         if (!HasAny(effective, "order.handle", "fulfillment.manage"))
@@ -132,13 +134,22 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.operation.invalid");
         }
 
-        var located = await LocateParcelAsync(checkoutId, group, shipmentId, cancellationToken);
+        var locatedAny = await LocateParcelForReadAsync(checkoutId, group, shipmentId, cancellationToken);
 
-        // An exact replay is answered from the stored fact before any new feasibility work, so a lost response after
-        // commit never re-derives (and never changes) the confirmed promise.
+        // An exact replay is answered from the stored fact before ANY mutable state/feasibility gate, so a lost
+        // response after commit never re-derives (and never changes) the confirmed promise. A parcel that has since
+        // been dispatched/delivered/cancelled — or an order cancelled afterwards — still answers its own recorded plan
+        // and this read-only answer re-enables nothing.
         var existing = await _shipmentPlanStore.FindAsync(shipmentId, cancellationToken);
         if (existing is not null)
         {
+            if (existing.CheckoutId != checkoutId
+                || existing.FulfillmentId != locatedAny.Fulfillment.FulfillmentId
+                || existing.ShipmentId != shipmentId)
+            {
+                throw new AdminOrderOperationsException("order.operation.invalid");
+            }
+
             if (!string.Equals(existing.OccurrenceKey, reviewedKey, StringComparison.Ordinal))
             {
                 throw new AdminOrderOperationsException("order.shipment_plan.conflict");
@@ -152,6 +163,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             return PlanResult(existing, replayed: true);
         }
 
+        var located = RequirePlannable(locatedAny);
         var plan = await BuildPlanAsync(located, actorUserId, reviewedKey, request, cancellationToken);
         var outcome = await _shipmentPlanStore.TryInsertAsync(plan, cancellationToken);
         switch (outcome)
@@ -215,7 +227,14 @@ public sealed partial class AdminOrderOperationsOrchestrator
         public bool IsLinkedAttempt => Shipment.IsReplacement || Shipment.ResendOfShipmentId is not null;
     }
 
-    private async Task<LocatedParcel> LocateParcelAsync(
+    /// <summary>
+    /// Existence/ownership of one exact parcel in this checkout — no mutable/eligibility gate.
+    /// </summary>
+    /// <remarks>
+    /// Used by the read paths (an already-confirmed plan must still be readable after dispatch) and to prove the parcel
+    /// really belongs to this checkout before any planning work. It never proves the parcel is plannable.
+    /// </remarks>
+    private async Task<LocatedParcel> LocateParcelForReadAsync(
         Guid checkoutId,
         AdminOrderOpsCheckoutSnapshot checkout,
         Guid shipmentId,
@@ -227,7 +246,17 @@ public sealed partial class AdminOrderOperationsOrchestrator
         var shipment = fulfillment.Shipments.Single(x => x.ShipmentId == shipmentId);
         var sellerOrder = checkout.SellerOrders.FirstOrDefault(x => x.SellerOrderId == fulfillment.SellerOrderId)
             ?? throw new AdminOrderOperationsException("order.operation.invalid");
+        return new LocatedParcel(checkout, sellerOrder, fulfillment, shipment, fulfillments);
+    }
 
+    /// <summary>
+    /// The mutable/eligibility gates: only a live <c>Created</c> linked parcel of a paid order outside an active
+    /// common package can obtain a NEW plan. Stored plans are read through <see cref="LocateParcelForReadAsync"/>.
+    /// </summary>
+    private LocatedParcel RequirePlannable(LocatedParcel located)
+    {
+        var parcel = located;
+        var shipment = parcel.Shipment;
         // Only an EXACT live Created linked parcel can be planned. First dispatch keeps its original accepted plan;
         // dispatched/delivered/cancelled history never gains a planning action and never becomes plannable again.
         if (!shipment.IsReplacement && shipment.ResendOfShipmentId is null)
@@ -240,15 +269,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.shipment_plan.not_created");
         }
 
-        // A parcel locked inside an active common package is operated from the package, never as a child here.
-        var membership = await _fulfillment.GetActiveMembershipByShipmentIdsAsync([shipmentId], cancellationToken);
-        if (membership.Any(x => x.ShipmentId == shipmentId
-            && x.PackageStatus is ConsolidatedPackageOperationStatus.Created or ConsolidatedPackageOperationStatus.Dispatched))
-        {
-            throw new AdminOrderOperationsException("order.shipment_plan.package_locked");
-        }
-
-        if (sellerOrder.Status != SellerOrderStatus.Paid)
+        if (parcel.SellerOrder.Status != SellerOrderStatus.Paid)
         {
             throw new AdminOrderOperationsException("order.shipment_plan.payment_required");
         }
@@ -258,7 +279,37 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.shipment_plan.group_missing");
         }
 
-        return new LocatedParcel(checkout, sellerOrder, fulfillment, shipment, fulfillments);
+        return parcel;
+    }
+
+    private async Task<LocatedParcel> LocateParcelAsync(
+        Guid checkoutId,
+        AdminOrderOpsCheckoutSnapshot checkout,
+        Guid shipmentId,
+        CancellationToken cancellationToken)
+    {
+        var located = await LocateParcelForReadAsync(checkoutId, checkout, shipmentId, cancellationToken);
+        return await RequirePlannableAsync(located, cancellationToken);
+    }
+
+    /// <summary>
+    /// The mutable/eligibility gates plus the active-common-package lock: a parcel inside a live package is operated
+    /// from the package, and only a live <c>Created</c> linked parcel of a paid order can obtain a new plan.
+    /// </summary>
+    private async Task<LocatedParcel> RequirePlannableAsync(
+        LocatedParcel located,
+        CancellationToken cancellationToken)
+    {
+        var membership = await _fulfillment.GetActiveMembershipByShipmentIdsAsync(
+            [located.Shipment.ShipmentId],
+            cancellationToken);
+        if (membership.Any(x => x.ShipmentId == located.Shipment.ShipmentId
+            && x.PackageStatus is ConsolidatedPackageOperationStatus.Created or ConsolidatedPackageOperationStatus.Dispatched))
+        {
+            throw new AdminOrderOperationsException("order.shipment_plan.package_locked");
+        }
+
+        return RequirePlannable(located);
     }
 
     /// <summary>
@@ -277,17 +328,35 @@ public sealed partial class AdminOrderOperationsOrchestrator
         CancellationToken cancellationToken)
     {
         var shipment = parcel.Shipment;
+        var shippingGroupId = shipment.ShippingGroupId!.Value;
         var binding = await _acceptedShipmentBindings.GetAsync(
                 parcel.Checkout.CheckoutId,
-                shipment.ShippingGroupId!.Value,
+                shippingGroupId,
                 cancellationToken)
             ?? throw new AdminOrderOperationsException("order.shipment_plan.binding_missing");
+
+        // The accepted capture must belong to THIS checkout/seller order/seller/group/method. A group id that resolves
+        // to a different owner's evidence is never usable, and the group's recorded method must be the parcel's method.
+        if (binding.CheckoutId != parcel.Checkout.CheckoutId
+            || binding.SellerOrderId != parcel.SellerOrder.SellerOrderId
+            || binding.ShippingGroupId != shippingGroupId
+            || (binding.SellerPartyId != Guid.Empty
+                && parcel.Fulfillment.SellerPartyId != Guid.Empty
+                && binding.SellerPartyId != parcel.Fulfillment.SellerPartyId)
+            || (shipment.ShippingMethodCode.Length != 0
+                && !CanonicalEquals(shipment.ShippingMethodCode, binding.MethodCode)))
+        {
+            throw new AdminOrderOperationsException("order.shipment_plan.binding_mismatch");
+        }
 
         if (string.IsNullOrWhiteSpace(binding.ServiceCode))
         {
             throw new AdminOrderOperationsException("order.shipment_plan.service_missing");
         }
 
+        // TB-270-R3 Repair A: the lookup addresses the CAPTURED area group (<c>payload.Groups[].GroupId</c>) and its
+        // exact rate row. The Order checkout shipping-group id is a different identity namespace and must never be
+        // sent here, or the seam answers a different/absent group.
         var lookup = await _schedulingLookup.LookupAsync(
             new ShippingAttemptSchedulingLookupRequest(
                 ToShippingOwnerKind(binding.OwnerKind),
@@ -297,7 +366,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 binding.SourceRevision,
                 binding.ServiceCode,
                 binding.OptionCode,
-                binding.ShippingGroupId,
+                binding.AreaGroupId,
                 binding.RateRowId,
                 binding.SnapshotId),
             cancellationToken);
@@ -309,6 +378,23 @@ public sealed partial class AdminOrderOperationsOrchestrator
         }
 
         var captured = lookup.Inputs!;
+
+        // The returned capture must be the SAME immutable revision/group/rate row the accepted evidence names. A
+        // mismatch means the authored revision changed under the historical acceptance; planning is refused.
+        if (captured.SnapshotId != binding.SnapshotId
+            || captured.DraftId != binding.DraftId
+            || captured.SourceRevision != binding.SourceRevision
+            || captured.FormatVersion != binding.FormatVersion
+            || captured.GroupId != binding.AreaGroupId
+            || captured.RateRowId != binding.RateRowId
+            || !CanonicalEquals(captured.ServiceCode, binding.ServiceCode)
+            || !CanonicalEquals(captured.OptionCode, binding.OptionCode)
+            || captured.OwnerKind != ToShippingOwnerKind(binding.OwnerKind)
+            || !string.Equals(captured.OwnerTenantId, binding.OwnerTenantKey, StringComparison.Ordinal)
+            || captured.OwnerSellerPartyId != binding.OwnerSellerPartyId)
+        {
+            throw new AdminOrderOperationsException("order.shipment_plan.binding_mismatch");
+        }
         if (!captured.HasCompleteInputs
             || captured.ReceivingWeek is null
             || captured.CarrierWeek is null
@@ -318,7 +404,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             throw new AdminOrderOperationsException("order.shipment_plan.captured_inputs_incomplete");
         }
 
-        var (readinessSource, readinessAt) = await ResolveReadinessAsync(parcel, captured, cancellationToken);
+        var (readinessSource, readinessAt) = await ResolveReadinessAsync(parcel, cancellationToken);
         return new PlanInputs(
             parcel,
             binding,
@@ -333,43 +419,43 @@ public sealed partial class AdminOrderOperationsOrchestrator
     /// </summary>
     private async Task<(string Source, DateTimeOffset ReadyAt)> ResolveReadinessAsync(
         LocatedParcel parcel,
-        ShippingAttemptSchedulingInputs captured,
         CancellationToken cancellationToken)
     {
-        _ = captured;
         var shipment = parcel.Shipment;
         if (shipment.IsReplacement)
         {
-            var sourceId = shipment.ResendOfShipmentId
-                ?? throw new AdminOrderOperationsException("order.shipment_plan.source_missing");
-            var source = parcel.AllFulfillments
-                .SelectMany(x => x.Shipments)
-                .FirstOrDefault(x => x.ShipmentId == sourceId)
-                ?? throw new AdminOrderOperationsException("order.shipment_plan.source_missing");
-
-            var decision = source.DamagedResolutions?
-                .FirstOrDefault(x => x.ReplacementShipmentId == shipment.ShipmentId);
-            if (decision is null
-                || decision.Outcome != DamagedResolutionOutcome.Replacement
-                || decision.Status is not (DamagedResolutionStatus.Reserved or DamagedResolutionStatus.Fulfilled))
-            {
-                // The decision still owes its stock: an honest blocker, no promise.
-                throw new AdminOrderOperationsException("order.shipment_plan.replacement_hold_missing");
-            }
-
-            if (shipment.ReplacementReservationId is not { } reservationId
-                || decision.ReplacementReservationId != reservationId)
+            // TB-270-R3 Repair C: a projected decision status is NOT readiness. The OWNING Fulfillment read verifies
+            // the decision, the parcel's exact line/quantity and Inventory's CURRENT hold in one place.
+            if (_replacementReadiness is null)
             {
                 throw new AdminOrderOperationsException("order.shipment_plan.replacement_hold_missing");
             }
 
-            var replacementQuantity = shipment.Items.Sum(x => x.Quantity);
-            if (decision.Quantity < replacementQuantity || decision.ShipmentId != sourceId)
+            var readiness = await _replacementReadiness.GetAsync(
+                parcel.Fulfillment.FulfillmentId,
+                shipment.ShipmentId,
+                cancellationToken);
+            if (!readiness.IsReady)
             {
-                throw new AdminOrderOperationsException("order.shipment_plan.source_quantity_mismatch");
+                throw new AdminOrderOperationsException(
+                    readiness.ReasonCode is FulfillmentReplacementReadinessReasonCodes.HoldQuantityMismatch
+                        or FulfillmentReplacementReadinessReasonCodes.LineMismatch
+                        ? "order.shipment_plan.source_quantity_mismatch"
+                        : "order.shipment_plan.replacement_hold_missing");
             }
 
-            return (OrderShipmentReadinessSources.ReplacementHold, decision.UpdatedAt);
+            // The fact is about THIS parcel and its exact recorded chain; a fact for any other identity is refused.
+            if (readiness.ShipmentId != shipment.ShipmentId
+                || readiness.FulfillmentId != parcel.Fulfillment.FulfillmentId
+                || readiness.SourceShipmentId != shipment.ResendOfShipmentId
+                || readiness.DamagedResolutionId != shipment.DamagedResolutionId
+                || readiness.ReplacementReservationId != shipment.ReplacementReservationId
+                || readiness.ReadyAtUtc is null)
+            {
+                throw new AdminOrderOperationsException("order.shipment_plan.replacement_hold_missing");
+            }
+
+            return (OrderShipmentReadinessSources.ReplacementHold, readiness.ReadyAtUtc.Value);
         }
 
         var resendOf = shipment.ResendOfShipmentId
@@ -407,24 +493,64 @@ public sealed partial class AdminOrderOperationsOrchestrator
         CancellationToken cancellationToken)
     {
         var confirmed = await _shipmentPlanStore.FindAsync(parcel.Shipment.ShipmentId, cancellationToken);
+        if (confirmed is not null)
+        {
+            // An already-confirmed plan is HISTORY: it is reported from the stored row and no new calendar is derived,
+            // so a dispatched/delivered parcel still shows its exact promise and offers no second action.
+            return HistoryPreview(parcel, confirmed);
+        }
+
+        // Eligibility is a REFUSAL, not a blocker: an unplanned parcel that is not a live Created linked attempt (or
+        // that is locked in an active package) can never be scheduled, so no calendar/blocker is derived for it. Only
+        // the captured-inputs/feasibility stage below answers with a truthful blocker.
+        var plannable = await RequirePlannableAsync(parcel, cancellationToken);
+
         try
         {
-            var inputs = await ResolvePlanInputsAsync(parcel, cancellationToken);
+            var inputs = await ResolvePlanInputsAsync(plannable, cancellationToken);
             var anchor = Max(_clock.UtcNow, inputs.ReadinessAtUtc);
             var options = BuildOptions(inputs, anchor);
-            return PreviewOf(inputs, options, confirmed);
+            return PreviewOf(inputs, options);
         }
         catch (AdminOrderOperationsException blocked)
         {
             // A truthful blocker still returns the exact parcel/binding context it could establish.
-            return BlockedPreview(parcel, confirmed, blocked.Code);
+            return BlockedPreview(parcel, blocked.Code);
         }
     }
 
+    private static AdminShipmentDispatchPlanPreview HistoryPreview(
+        LocatedParcel parcel,
+        OrderShipmentDispatchPlan confirmed)
+        => new(
+            parcel.Checkout.CheckoutId,
+            parcel.SellerOrder.SellerOrderId,
+            parcel.Fulfillment.FulfillmentId,
+            parcel.Shipment.ShipmentId,
+            confirmed.ShippingGroupId,
+            parcel.AttemptKind,
+            parcel.Shipment.ResendOfShipmentId,
+            parcel.Shipment.DamagedResolutionId,
+            parcel.Shipment.ReplacementReservationId,
+            confirmed.SourceFingerprint,
+            confirmed.ReadinessSource,
+            confirmed.ReadinessAtUtc,
+            confirmed.MethodCode,
+            confirmed.MethodLabel,
+            confirmed.SnapshotId,
+            confirmed.DraftId,
+            confirmed.SourceRevision,
+            confirmed.FormatVersion,
+            confirmed.AreaGroupId,
+            confirmed.RateRowId,
+            confirmed.ConfirmedAtUtc,
+            [],
+            ConfirmedOf(confirmed),
+            HistoryOnly: true);
+
     private AdminShipmentDispatchPlanPreview PreviewOf(
         PlanInputs inputs,
-        IReadOnlyList<AdminShipmentDispatchPlanOption> options,
-        OrderShipmentDispatchPlan? confirmed)
+        IReadOnlyList<AdminShipmentDispatchPlanOption> options)
     {
         var parcel = inputs.Parcel;
         var binding = inputs.Binding;
@@ -451,19 +577,19 @@ public sealed partial class AdminOrderOperationsOrchestrator
             binding.RateRowId,
             _clock.UtcNow,
             options,
-            confirmed is null ? null : ConfirmedOf(confirmed),
+            null,
             options.Count == 0 ? "order.shipment_plan.no_feasible_date" : null,
             options.Count == 0
                 ? "با ورودی‌های زمان‌بندی همین روش، تاریخ قابل ارائه‌ای برای این مرسوله پیدا نشد؛ زمان‌بندی تأیید نشد."
-                : null);
+                : null,
+            SchedulingReasonCode: null,
+            ReviewFingerprint: BuildReviewFingerprint(inputs));
     }
 
     private AdminShipmentDispatchPlanPreview BlockedPreview(
         LocatedParcel parcel,
-        OrderShipmentDispatchPlan? confirmed,
         string blockerCode)
     {
-        _ = confirmed;
         return new AdminShipmentDispatchPlanPreview(
             parcel.Checkout.CheckoutId,
             parcel.SellerOrder.SellerOrderId,
@@ -496,6 +622,12 @@ public sealed partial class AdminOrderOperationsOrchestrator
     {
         "order.shipment_plan.binding_missing" =>
             "شاهد ارسال پذیرفته‌شدهٔ این گروه موجود نیست؛ زمان‌بندی از داده‌های جاری بازسازی نمی‌شود.",
+        "order.shipment_plan.binding_mismatch" =>
+            "شاهد پذیرفته‌شده با گروه/خدمت/نسخهٔ ثبت‌شدهٔ این مرسوله یکی نیست؛ زمان‌بندی از آن ساخته نمی‌شود.",
+        "order.shipment_plan.review_context_changed" =>
+            "شرایط این زمان‌بندی پس از بازبینی تغییر کرده است؛ بازبینی تازه لازم است و هیچ برنامه‌ای با داده‌های قدیمی ثبت نشد.",
+        "order.shipment_plan.review_required" =>
+            "این تأیید باید با همان بازبینی سرور انجام شود؛ بازبینی تازه بگیرید.",
         "order.shipment_plan.service_missing" =>
             "خدمت ارسال این گروه در شاهد پذیرفته‌شده ثبت نشده است؛ زمان‌بندی ممکن نیست.",
         "order.shipment_plan.captured_inputs_unavailable" =>
@@ -644,6 +776,47 @@ public sealed partial class AdminOrderOperationsOrchestrator
         return options;
     }
 
+    /// <summary>
+    /// TB-270-R3: یک اثر انگشت غیرقابل حدس از <b>کل</b> زمینهٔ بازبینی (هویت مرسوله/منبع/تصمیم/رزرو، شاهد capture،
+    /// منبع آماده‌بودن و اثر انگشت خط/مقدار). تأیید باید همان را برگرداند؛ تغییر زمینه بازبینی تازه لازم دارد.
+    /// </summary>
+    private static string BuildReviewFingerprint(PlanInputs inputs)
+    {
+        var parcel = inputs.Parcel;
+        var binding = inputs.Binding;
+        var captured = inputs.Captured;
+        var raw = string.Join(
+            '\n',
+            "tb270r3:v1",
+            parcel.Checkout.CheckoutId.ToString("N"),
+            parcel.SellerOrder.SellerOrderId.ToString("N"),
+            parcel.Fulfillment.FulfillmentId.ToString("N"),
+            parcel.Shipment.ShipmentId.ToString("N"),
+            binding.ShippingGroupId.ToString("N"),
+            parcel.AttemptKind,
+            parcel.Shipment.ResendOfShipmentId?.ToString("N") ?? "-",
+            parcel.Shipment.DamagedResolutionId?.ToString("N") ?? "-",
+            parcel.Shipment.ReplacementReservationId?.ToString("N") ?? "-",
+            inputs.SourceFingerprint,
+            binding.SnapshotId.ToString("N"),
+            binding.DraftId.ToString("N"),
+            binding.SourceRevision.ToString(CultureInfo.InvariantCulture),
+            binding.FormatVersion.ToString(CultureInfo.InvariantCulture),
+            binding.SelectionVersion.ToString(CultureInfo.InvariantCulture),
+            binding.AreaGroupId.ToString("N"),
+            binding.RateRowId.ToString("N"),
+            binding.MethodCode,
+            binding.ServiceCode,
+            binding.OptionCode ?? "-",
+            inputs.ReadinessSource,
+            inputs.ReadinessAtUtc.UtcDateTime.Ticks.ToString(CultureInfo.InvariantCulture),
+            captured.MaxDeliveryDays.ToString(CultureInfo.InvariantCulture),
+            captured.PreparationMinutes?.ToString(CultureInfo.InvariantCulture) ?? "-",
+            captured.HandoffMinutes?.ToString(CultureInfo.InvariantCulture) ?? "-");
+
+        return "v1:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
+    }
+
     /// <summary>ساخت ردیف تغییرناپذیر از انتخاب بازبینی‌شده و تقویم تازه؛ انتخاب منقضی رد می‌شود.</summary>
     private async Task<OrderShipmentDispatchPlan> BuildPlanAsync(
         LocatedParcel parcel,
@@ -653,6 +826,28 @@ public sealed partial class AdminOrderOperationsOrchestrator
         CancellationToken cancellationToken)
     {
         var inputs = await ResolvePlanInputsAsync(parcel, cancellationToken);
+
+        // A confirmation without the reviewed customer slot is a selection error, not a review-context error.
+        if (ParseDate(request.DispatchPlanReceivingDate) is null
+            || ParseTime(request.DispatchPlanReceivingOpensAt) is null
+            || ParseTime(request.DispatchPlanReceivingClosesAt) is null)
+        {
+            throw new AdminOrderOperationsException("order.shipment_plan.selection_required");
+        }
+
+        // TB-270-R3: the confirmation must echo the EXACT reviewed context. A missing fingerprint is a fresh review
+        // requirement, and a changed context is refused rather than a different plan being silently confirmed.
+        var reviewedFingerprint = (request.DispatchPlanReviewFingerprint ?? string.Empty).Trim();
+        if (reviewedFingerprint.Length == 0)
+        {
+            throw new AdminOrderOperationsException("order.shipment_plan.review_required");
+        }
+
+        if (!string.Equals(reviewedFingerprint, BuildReviewFingerprint(inputs), StringComparison.Ordinal))
+        {
+            throw new AdminOrderOperationsException("order.shipment_plan.review_context_changed");
+        }
+
         var anchor = Max(_clock.UtcNow, inputs.ReadinessAtUtc);
         var options = BuildOptions(inputs, anchor);
         if (options.Count == 0)
@@ -664,7 +859,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         var binding = inputs.Binding;
         var captured = inputs.Captured;
         return OrderShipmentDispatchPlan.Create(
-            Guid.NewGuid(),
+            _ids.NewId(),
             parcel.Shipment.ShipmentId,
             parcel.Checkout.CheckoutId,
             parcel.SellerOrder.SellerOrderId,
@@ -793,12 +988,43 @@ public sealed partial class AdminOrderOperationsOrchestrator
 
     /// <summary>اثر انگشت دقیق خط/مقدار همین مرسوله؛ تطبیق پایدار میان Order و Fulfillment.</summary>
     public static string BuildSourceFingerprint(ShipmentSnapshot shipment)
-        => string.Join(
-            ";",
-            shipment.Items
-                .OrderBy(x => x.OrderLineId)
-                .Select(x => string.Concat(
-                    x.OrderLineId.ToString("N"),
-                    "=",
-                    x.Quantity.ToString("0.######", CultureInfo.InvariantCulture))));
+        => OrderShipmentDispatchPlanBindingRules.BuildLineFingerprint(
+            shipment.Items.Select(x => (x.OrderLineId, x.Quantity)));
+
+    /// <summary>مقایسهٔ متعارف کدهای خدمت/گزینه: فاصلهٔ اضافی و بزرگی/کوچکی حرف معنا ندارد.</summary>
+    private static bool CanonicalEquals(string? left, string? right)
+        => string.Equals(
+            (left ?? string.Empty).Trim(),
+            (right ?? string.Empty).Trim(),
+            StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// TB-270-R3: the exact identity a plan must carry, built from the OWNING snapshot (same shape the Fulfillment
+    /// guard builds from its unit), so Order and Fulfillment can never disagree about "planned".
+    /// </summary>
+    private static OrderShipmentDispatchPlanBindingCandidate? BuildPlanBindingCandidate(
+        FulfillmentSnapshot fulfillment,
+        ShipmentSnapshot shipment)
+    {
+        if (shipment.ShippingGroupId is not { } shippingGroupId || shippingGroupId == Guid.Empty)
+        {
+            return null;
+        }
+
+        return new OrderShipmentDispatchPlanBindingCandidate(
+            shipment.ShipmentId,
+            fulfillment.CheckoutId,
+            fulfillment.SellerOrderId,
+            fulfillment.FulfillmentId,
+            shippingGroupId,
+            shipment.IsReplacement
+                ? OrderShipmentAttemptKinds.Replacement
+                : OrderShipmentAttemptKinds.Resend,
+            shipment.ResendOfShipmentId,
+            shipment.DamagedResolutionId,
+            shipment.ReplacementReservationId,
+            BuildSourceFingerprint(shipment),
+            shipment.ShippingMethodCode);
+    }
+
 }

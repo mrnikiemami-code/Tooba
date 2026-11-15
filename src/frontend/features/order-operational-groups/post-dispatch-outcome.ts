@@ -28,6 +28,11 @@ export type PostDispatchSubmitOutcome = {
   code: string | null;
   /** A refusal that ends this review (authority/ownership/state conflict) instead of one fixed inline. */
   blocking: boolean;
+  /**
+   * TB-270-R3: the EXACT physical parcel this completion created/recovered, when the server proved it. The review
+   * closes and continues on that parcel's own planning surface; `null` means "no proven parcel", never a guess.
+   */
+  createdShipmentId?: string | null;
 };
 
 /** What the app layer knows about one submit attempt, independent of any HTTP client type. */
@@ -38,6 +43,8 @@ export type PostDispatchResultFacts = {
   code: string | null;
   /** Localized operator copy produced by the existing admin error mapper. */
   messageFa: string;
+  /** TB-270-R3: the exact parcel this completion created/recovered, only when the server proved it. */
+  createdShipmentId?: string | null;
 };
 
 export const POST_DISPATCH_OUTCOME_MESSAGE_FA: Record<PostDispatchSubmitOutcomeKind, string> = {
@@ -62,8 +69,14 @@ export function isPendingPostDispatchCode(code: string | null | undefined): bool
  * continue: the actor is denied, or the fresh projection no longer offers the action at all (the panel
  * marks that case `blocking`).
  */
-export function completedPostDispatchOutcome(): PostDispatchSubmitOutcome {
-  return { kind: "completed", messageFa: POST_DISPATCH_OUTCOME_MESSAGE_FA.completed, code: null, blocking: false };
+export function completedPostDispatchOutcome(createdShipmentId?: string | null): PostDispatchSubmitOutcome {
+  return {
+    kind: "completed",
+    messageFa: POST_DISPATCH_OUTCOME_MESSAGE_FA.completed,
+    code: null,
+    blocking: false,
+    createdShipmentId: createdShipmentId?.trim() || null,
+  };
 }
 
 export function unknownPostDispatchOutcome(messageFa?: string | null): PostDispatchSubmitOutcome {
@@ -80,7 +93,7 @@ export function unknownPostDispatchOutcome(messageFa?: string | null): PostDispa
  * uncertain; a 4xx with a stable code is a deterministic server fact.
  */
 export function classifyPostDispatchResult(facts: PostDispatchResultFacts): PostDispatchSubmitOutcome {
-  if (facts.ok) return completedPostDispatchOutcome();
+  if (facts.ok) return completedPostDispatchOutcome(facts.createdShipmentId);
 
   const code = facts.code?.trim() || null;
   const messageFa = facts.messageFa?.trim() || POST_DISPATCH_OUTCOME_MESSAGE_FA.unknown;

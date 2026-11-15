@@ -98,6 +98,9 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IFulfillmentUseCaseGuard, OpenFulfillmentUseCaseGuard>();
         services.AddScoped<FulfillmentDirectory>();
         services.AddScoped<IFulfillmentDirectory>(sp => sp.GetRequiredService<FulfillmentDirectory>());
+        // TB-270-R3: the owning read that proves a replacement parcel's hold is still Held before Order plans it.
+        services.AddScoped<Contracts.Operations.IFulfillmentReplacementReadinessReader>(
+            sp => sp.GetRequiredService<FulfillmentDirectory>());
         services.AddScoped<Contracts.History.IFulfillmentHistoryReader, Adapters.FulfillmentHistoryReader>();
         services.AddScoped<Contracts.Operations.IFulfillmentAdminOperations, Adapters.FulfillmentAdminOperationsAdapter>();
         services.AddScoped<ISellerFulfillmentAuthorizer, SellerFulfillmentAuthorizer>();

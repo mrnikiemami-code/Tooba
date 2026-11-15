@@ -91,6 +91,22 @@ public sealed class ExecuteAdminFulfillmentBulkHandler
                 snapshots.Add((item, snapshot));
             }
 
+            // TB-270-R3: one all-member preflight BEFORE the first effect. A single plan-less or wrongly bound linked
+            // parcel refuses the whole dispatch batch, so no member is ever half-sent by a bulk request.
+            if (string.Equals(code, "dispatch_shipment", StringComparison.OrdinalIgnoreCase))
+            {
+                var affected = snapshots
+                    .Select(x => new FulfillmentShipmentReference(
+                        x.Snapshot.FulfillmentId,
+                        ResolveShipmentId(x.Item, x.Snapshot, code)!.Value))
+                    .ToList();
+                var refusal = await _fulfillment.VerifyLinkedDispatchPlansAsync(affected, cancellationToken);
+                if (refusal is not null)
+                {
+                    return Ok(0, 0, refusal);
+                }
+            }
+
             var succeeded = 0;
             foreach (var (item, snapshot) in snapshots)
             {

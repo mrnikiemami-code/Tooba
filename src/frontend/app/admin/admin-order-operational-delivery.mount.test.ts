@@ -26,6 +26,7 @@ import {
 } from "./admin-api.ts";
 import { AdminOrderOperationalDeliverySection } from "./admin-order-operational-delivery-section.tsx";
 import { AdminOrderItemsShippingPanel } from "./admin-order-items-shipping-panel.tsx";
+import { clearShipmentPlanAttempt } from "./admin-shipment-plan-attempt.ts";
 import {
   click,
   clickBurst,
@@ -263,7 +264,8 @@ function withParcels(detail: AdminOrderDetail, packaged: boolean): AdminOrderDet
   };
 }
 
-type FetchCall = { method: string; body: Record<string, unknown> };
+/** TB-270-R3: the exact request URL is part of the fact, so a plan preview for the SOURCE cannot pass as the child. */
+type FetchCall = { method: string; url: string; body: Record<string, unknown> };
 
 function installFetch(responder: (call: FetchCall, index: number) => Response | Promise<Response>): FetchCall[] {
   const calls: FetchCall[] = [];
@@ -274,7 +276,7 @@ function installFetch(responder: (call: FetchCall, index: number) => Response | 
     if (typeof init?.body === "string") {
       body = JSON.parse(init.body) as Record<string, unknown>;
     }
-    const call = { method, body };
+    const call = { method, url: String(input), body };
     calls.push(call);
     try {
       return await responder(call, calls.length);
@@ -3689,4 +3691,394 @@ test("TB-268: a selected tab that becomes empty keeps its selection and says so"
     /^مرسوله‌ای در این بخش نیست\.$/,
   );
   await mounted.unmount();
+});
+
+/* ─────────── TB-270-R3: the ACTUAL create/recover → own-plan handoff on the shipped panel ─────────── */
+
+/**
+ * The four cases below mount the real panel and let it go through its real post-dispatch path. The plan
+ * modal is the real one, so its preview request is the observable proof: a modal opened for the SOURCE
+ * parcel, or a calendar offered when no parcel was proven, would show up as a different URL or as an extra
+ * request. The fixtures are the server's OWN snapshot shape (`shipments[]`), not a local guess.
+ */
+
+const PARCEL_SOURCE = "sh1";
+const RESEND_CHILD = "sh1-resend";
+const REPLACEMENT_CHILD = "sh1-replacement";
+
+function planPreviewPayload(checkoutId: string, shipmentId: string, kind: "resend" | "replacement") {
+  return {
+    checkoutId,
+    sellerOrderId: "so1",
+    fulfillmentId: "so1",
+    shipmentId,
+    shippingGroupId: "g1",
+    attemptKind: kind,
+    sourceShipmentId: PARCEL_SOURCE,
+    sourceFingerprint: "ol1=1",
+    readinessSource: kind === "resend" ? "return_receipt" : "replacement_hold",
+    readinessAtUtc: "2026-11-14T09:00:00Z",
+    methodCode: "post",
+    methodLabel: "پیشتاز",
+    snapshotId: "snap-1",
+    draftId: "draft-1",
+    sourceRevision: 7,
+    formatVersion: 4,
+    areaGroupId: "area-1",
+    rateRowId: "row-1",
+    servedAtUtc: "2026-11-15T06:00:00Z",
+    reviewFingerprint: "fp-1",
+    options: [{
+      receivingDate: "2026-11-16",
+      receivingOpensAt: "09:00",
+      receivingClosesAt: "10:00",
+      receivingTimeZone: "Asia/Tehran",
+      handoffDate: "2026-11-14",
+      handoffOpensAt: "08:00",
+      handoffClosesAt: "20:00",
+      handoffTimeZone: "Asia/Tehran",
+      preparationStartUtc: "2026-11-13T03:00:00Z",
+      transferDepartureUtc: "2026-11-13T06:00:00Z",
+      handoffDeadlineUtc: "2026-11-13T16:30:00Z",
+    }],
+    confirmedPlan: null,
+    blockerCode: null,
+    blockerFa: null,
+    missingCapturedInputs: null,
+    schedulingReasonCode: "shipping.scheduling.ok",
+  };
+}
+
+/** The exact server snapshot a create/recover answers with, plus the parcel it produced (if any). */
+function createdParcelSnapshot(
+  child: Record<string, unknown> | null,
+  sourceExtras: Record<string, unknown> = {},
+) {
+  return {
+    fulfillmentId: "so1",
+    sellerOrderId: "so1",
+    shipments: [
+      {
+        shipmentId: PARCEL_SOURCE,
+        status: "Returned",
+        carrierDisplayName: "پست",
+        trackingReference: "TRK-0001",
+        itemCount: 2,
+        lines: [{ orderLineId: "ol1", quantity: 2 }],
+        returnedAt: "2026-11-09T10:00:00Z",
+        ...sourceExtras,
+      },
+      ...(child ? [child] : []),
+    ],
+  };
+}
+
+function returnedForResend(): AdminOrderDetail {
+  return withExceptionParcel(
+    baseDetail(),
+    { status: "Returned", returnedAt: "2026-11-09T10:00:00Z" },
+    { returnedUsableQuantity: 1, resendableQuantity: 1, deliveredQuantity: 0 },
+  );
+}
+
+function returnedForDamaged(): AdminOrderDetail {
+  return withExceptionParcel(
+    baseDetail(),
+    {
+      status: "Returned",
+      returnedAt: "2026-11-09T10:00:00Z",
+      returnReceiptLines: [{ orderLineId: "ol1", quantity: 1, condition: "Damaged" }],
+      lines: [{ orderLineId: "ol1", quantity: 2, outstandingDamagedQuantity: 1 }],
+    },
+    { returnedUsableQuantity: 0, resendableQuantity: 0, deliveredQuantity: 0, outstandingDamagedQuantity: 1 },
+  );
+}
+
+/** One already-existing resend child, so the parcel CARD's own plan entry can be exercised. */
+function existingResendChild(childId: string): AdminOrderDetail {
+  const base = withExceptionParcel(baseDetail());
+  return {
+    ...base,
+    sellerOrders: base.sellerOrders.map((seller, idx) => (idx !== 0 ? seller : {
+      ...seller,
+      shipments: [{
+        shipmentId: childId,
+        status: "Created",
+        carrierDisplayName: "پست",
+        shippingGroupId: "g1",
+        shippingMethodCode: "post",
+        itemCount: 1,
+        lines: [{ orderLineId: "ol1", quantity: 1 }],
+        trackingReference: null,
+        activePackageNumber: null,
+        packageLockedReasonFa: null,
+        resendOfShipmentId: PARCEL_SOURCE,
+      }],
+    })),
+  };
+}
+
+function planRequests(calls: FetchCall[]): string[] {
+  return calls
+    .filter((call) => call.method === "GET" && call.url.includes("/shipment-plan/"))
+    .map((call) => call.url.slice(call.url.indexOf("/shipment-plan/")));
+}
+
+function postRequests(calls: FetchCall[]): FetchCall[] {
+  return calls.filter((call) => call.method === "POST");
+}
+
+test("TB-270-R3 mounted: a returned-source resend create opens the plan for the EXACT created child", async () => {
+  resetGroupScope(CHECKOUT);
+  resetPostDispatchAttempts();
+  clearShipmentPlanAttempt({ viewerScopeKey: null, checkoutId: CHECKOUT, shipmentId: RESEND_CHILD });
+  const calls = installFetch((call) => {
+    if (call.method === "GET") {
+      const marker = "/shipment-plan/";
+      const at = call.url.indexOf(marker);
+      if (at >= 0) {
+        const shipmentId = decodeURIComponent(call.url.slice(at + marker.length));
+        return postResponse(200, planPreviewPayload(CHECKOUT, shipmentId, "resend"));
+      }
+      return operationsPage([shipmentAction("resend_shipment", "so1", PARCEL_SOURCE)]);
+    }
+    const key = String(call.body.idempotencyKey ?? "");
+    return postResponse(200, createdParcelSnapshot({
+      shipmentId: RESEND_CHILD,
+      status: "Created",
+      carrierDisplayName: "پست",
+      trackingReference: null,
+      itemCount: 1,
+      lines: [{ orderLineId: "ol1", quantity: 1 }],
+      shippingGroupId: "g1",
+      resendOfShipmentId: PARCEL_SOURCE,
+      shippingDispatchKey: key,
+    }));
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForResend(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-resend-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-resend-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(calls).length === 1);
+    assert.equal(postRequests(calls)[0].body.code, "resend_shipment");
+
+    // The exception review closed and the SAME panel opened planning for the parcel that really exists.
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length === 1);
+    await waitFor(() => planRequests(calls).length === 1);
+    assert.equal(
+      qq(mounted.container, `[data-testid='admin-order-post-dispatch-dialog-${PARCEL_SOURCE}']`).length,
+      0,
+      "the two surfaces never overlap",
+    );
+    const requested = planRequests(calls)[0];
+    assert.equal(requested, `/shipment-plan/${RESEND_CHILD}`, "the preview is for the child, never the source");
+    assert.ok(!requested.endsWith(`/shipment-plan/${PARCEL_SOURCE}`));
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-270-R3 mounted: a replacement with real stock opens the plan for the EXACT replacement child", async () => {
+  resetGroupScope(CHECKOUT);
+  resetPostDispatchAttempts();
+  clearShipmentPlanAttempt({ viewerScopeKey: null, checkoutId: CHECKOUT, shipmentId: REPLACEMENT_CHILD });
+  const calls = installFetch((call) => {
+    if (call.method === "GET") {
+      const marker = "/shipment-plan/";
+      const at = call.url.indexOf(marker);
+      if (at >= 0) {
+        const shipmentId = decodeURIComponent(call.url.slice(at + marker.length));
+        return postResponse(200, planPreviewPayload(CHECKOUT, shipmentId, "replacement"));
+      }
+      return operationsPage([shipmentAction("resolve_damaged_goods", "so1", PARCEL_SOURCE)]);
+    }
+    const key = String(call.body.idempotencyKey ?? "");
+    return postResponse(200, createdParcelSnapshot({
+      shipmentId: REPLACEMENT_CHILD,
+      status: "Created",
+      carrierDisplayName: "پست",
+      trackingReference: null,
+      itemCount: 1,
+      lines: [{ orderLineId: "ol1", quantity: 1 }],
+      shippingGroupId: "g1",
+      damagedResolutionId: "dgr-1",
+      shippingDispatchKey: key,
+      isReplacement: true,
+    }, {
+      damagedResolutions: [{
+        damagedGoodsResolutionId: "dgr-1",
+        orderLineId: "ol1",
+        quantity: 1,
+        outcome: "Replacement",
+        status: "Reserved",
+        occurrenceKey: key,
+        replacementShipmentId: REPLACEMENT_CHILD,
+      }],
+    }));
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForDamaged(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-outcome-replacement']`).length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement'] input"));
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(calls).length === 1);
+    assert.equal(postRequests(calls)[0].body.code, "resolve_damaged_goods");
+    assert.equal(postRequests(calls)[0].body.damagedOutcome, "replacement");
+
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length === 1);
+    await waitFor(() => planRequests(calls).length === 1);
+    assert.equal(planRequests(calls)[0], `/shipment-plan/${REPLACEMENT_CHILD}`);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-270-R3 mounted: a pending hold, a referral and a completed replay open NO calendar", async () => {
+  resetGroupScope(CHECKOUT);
+  resetPostDispatchAttempts();
+
+  // 1) The decision is recorded but its stock holds NO parcel yet: nothing to plan.
+  const pendingCalls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", PARCEL_SOURCE)]);
+    const key = String(call.body.idempotencyKey ?? "");
+    return postResponse(200, createdParcelSnapshot(null, {
+      damagedResolutions: [{
+        damagedGoodsResolutionId: "dgr-pending",
+        orderLineId: "ol1",
+        quantity: 1,
+        outcome: "Replacement",
+        status: "Reserved",
+        occurrenceKey: key,
+        replacementShipmentId: null,
+      }],
+    }));
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForDamaged(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-replacement'] input"));
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(pendingCalls).length === 1);
+    await flush();
+    assert.equal(qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length, 0);
+    assert.equal(planRequests(pendingCalls).length, 0, "an unproven parcel gets no invented calendar");
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+
+  // 2) A referral is not a replacement: no parcel, no plan surface.
+  resetPostDispatchAttempts();
+  const referralCalls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resolve_damaged_goods", "so1", PARCEL_SOURCE)]);
+    return postResponse(200, createdParcelSnapshot(null, {
+      damagedResolutions: [{
+        damagedGoodsResolutionId: "dgr-referral",
+        orderLineId: "ol1",
+        quantity: 1,
+        outcome: "Referral",
+        status: "Recorded",
+        occurrenceKey: String(call.body.idempotencyKey ?? ""),
+        replacementShipmentId: null,
+      }],
+    }));
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForDamaged(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-damaged-action-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-referral']").length === 1);
+    await click(q(mounted.container, "[data-testid='admin-order-post-dispatch-damaged-outcome-referral'] input"));
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(referralCalls).length === 1);
+    await flush();
+    assert.equal(qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length, 0);
+    assert.equal(planRequests(referralCalls).length, 0);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+
+  // 3) An exact replay of an already-dispatched resend answers history, not a plannable parcel.
+  resetPostDispatchAttempts();
+  const replayCalls = installFetch((call) => {
+    if (call.method === "GET") return operationsPage([shipmentAction("resend_shipment", "so1", PARCEL_SOURCE)]);
+    const key = String(call.body.idempotencyKey ?? "");
+    return postResponse(200, createdParcelSnapshot({
+      shipmentId: RESEND_CHILD,
+      status: "Dispatched",
+      carrierDisplayName: "پست",
+      trackingReference: "TRK-RESEND",
+      itemCount: 1,
+      lines: [{ orderLineId: "ol1", quantity: 1 }],
+      shippingGroupId: "g1",
+      resendOfShipmentId: PARCEL_SOURCE,
+      shippingDispatchKey: key,
+      dispatchedAt: "2026-11-13T08:00:00Z",
+    }));
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, { detail: returnedForResend(), checkoutId: CHECKOUT }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-resend-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-resend-${PARCEL_SOURCE}']`));
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-post-dispatch-submit-${PARCEL_SOURCE}']`));
+    await waitFor(() => postRequests(replayCalls).length === 1);
+    await flush();
+    assert.equal(qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length, 0);
+    assert.equal(planRequests(replayCalls).length, 0, "completed history is never made plannable");
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
+});
+
+test("TB-270-R3 mounted: the parcel CARD's existing plan entry still opens that exact parcel", async () => {
+  resetGroupScope(CHECKOUT);
+  clearShipmentPlanAttempt({ viewerScopeKey: null, checkoutId: CHECKOUT, shipmentId: RESEND_CHILD });
+  const calls = installFetch((call) => {
+    if (call.method === "GET") {
+      const marker = "/shipment-plan/";
+      const at = call.url.indexOf(marker);
+      if (at >= 0) {
+        const shipmentId = decodeURIComponent(call.url.slice(at + marker.length));
+        return postResponse(200, planPreviewPayload(CHECKOUT, shipmentId, "resend"));
+      }
+      return operationsPage([shipmentAction("plan_shipment_dispatch", "so1", RESEND_CHILD)]);
+    }
+    return postResponse(200, { ok: true });
+  });
+  try {
+    const mounted = await mount(
+      createElement(AdminOrderItemsShippingPanel, {
+        detail: existingResendChild(RESEND_CHILD),
+        checkoutId: CHECKOUT,
+      }),
+    );
+    await waitFor(() => qq(mounted.container, `[data-testid='admin-order-shipment-plan-${RESEND_CHILD}']`).length === 1);
+    await click(q(mounted.container, `[data-testid='admin-order-shipment-plan-${RESEND_CHILD}']`));
+    await waitFor(() => qq(mounted.container, "[data-testid='admin-shipment-plan-modal']").length === 1);
+    assert.deepEqual(planRequests(calls), [`/shipment-plan/${RESEND_CHILD}`]);
+    await mounted.unmount();
+  } finally {
+    restoreFetch();
+  }
 });

@@ -38,6 +38,7 @@ public sealed class DispatchPlanGuard270R2Tests
     private static readonly Guid SiblingSellerOrder = Guid.Parse("01a1d270-0000-7000-8000-000000000010");
     private static readonly Guid SiblingSellerParty = Guid.Parse("01a1d270-0000-7000-8000-000000000011");
     private static readonly Guid SiblingLine = Guid.Parse("01a1d270-0000-7000-8000-000000000012");
+    private static readonly Guid ShippingGroup = Guid.Parse("01a1d270-0000-7000-8000-000000000020");
 
     [Fact]
     public async Task Unplanned_resend_parcel_is_refused_with_zero_consume_and_no_dispatch()
@@ -87,7 +88,7 @@ public sealed class DispatchPlanGuard270R2Tests
             Guid.NewGuid(),
             "TRK-TB270R2-PLANNED",
             CancellationToken.None);
-        plans.Add(Plan(resend.CreatedShipmentId, OrderShipmentDispatchPlanKinds.Resend));
+        plans.Add(PlanFor(resend.Snapshot, resend.CreatedShipmentId, OrderShipmentDispatchPlanKinds.Resend));
 
         var dispatched = await directory.DispatchShipmentAsync(
             fixture.FulfillmentId, resend.CreatedShipmentId, Guid.NewGuid(), CancellationToken.None);
@@ -115,7 +116,7 @@ public sealed class DispatchPlanGuard270R2Tests
             CancellationToken.None,
             "tb270r2-resend-wrong-kind");
         // A replacement plan cannot authorize a resend parcel: the binding is the attempt identity, not a row count.
-        plans.Add(Plan(resend.CreatedShipmentId, OrderShipmentDispatchPlanKinds.Replacement));
+        plans.Add(PlanFor(resend.Snapshot, resend.CreatedShipmentId, OrderShipmentDispatchPlanKinds.Replacement));
 
         var error = await Assert.ThrowsAsync<ContractOperationException>(() =>
             directory.DispatchShipmentAsync(
@@ -173,6 +174,69 @@ public sealed class DispatchPlanGuard270R2Tests
         Assert.Equal(
             ConsolidatedPackageStatus.Created,
             (await db.ConsolidatedPackages.SingleAsync()).Status);
+    }
+
+    [Fact]
+    public async Task A_plan_bound_to_another_identity_never_authorizes_dispatch()
+    {
+        // TB-270-R3 Repair B: the SAME ShipmentId and SAME attempt kind is not enough. Every identity the shared
+        // Contracts rule compares (checkout/seller order/unit/group/source/decision/hold/method/line quantity and the
+        // accepted capture) is exercised, and each wrong value must refuse BEFORE any consume/state change.
+        await using var db = CreateDb();
+        var inventory = new RecordingInventory();
+        var plans = new PlanReaderFake();
+        var directory = CreateDirectory(db, inventory, plans);
+        var fixture = await SeedReturnedSourceAsync(db, directory);
+        var resend = await CreateResendAsync(directory, fixture, "tb270r3-resend-wrong-binding");
+        await directory.AssignTrackingAsync(
+            fixture.FulfillmentId,
+            resend.CreatedShipmentId,
+            Guid.NewGuid(),
+            "TRK-TB270R3-WRONG-BINDING",
+            CancellationToken.None);
+
+        var valid = PlanFor(resend.Snapshot, resend.CreatedShipmentId, OrderShipmentDispatchPlanKinds.Resend);
+        var variants = new (string Name, OrderShipmentDispatchPlanFact Plan)[]
+        {
+            ("checkout", valid with { CheckoutId = Guid.NewGuid() }),
+            ("seller order", valid with { SellerOrderId = Guid.NewGuid() }),
+            ("fulfillment unit", valid with { FulfillmentId = Guid.NewGuid() }),
+            ("order shipping group", valid with { ShippingGroupId = Guid.NewGuid() }),
+            ("source parcel", valid with { SourceShipmentId = Guid.NewGuid() }),
+            ("replacement decision", valid with { DamagedResolutionId = Guid.NewGuid() }),
+            ("replacement hold", valid with { ReplacementReservationId = Guid.NewGuid() }),
+            ("shipping method", valid with { MethodCode = "tipax" }),
+            (
+                "line quantity",
+                valid with
+                {
+                    SourceFingerprint = OrderShipmentDispatchPlanBindingRules.BuildLineFingerprint([(Line, 2m)]),
+                }),
+            ("accepted capture", valid with { SnapshotId = Guid.Empty }),
+        };
+
+        foreach (var (name, plan) in variants)
+        {
+            plans.ReplaceAll(plan);
+            var error = await Assert.ThrowsAsync<ContractOperationException>(() =>
+                directory.DispatchShipmentAsync(
+                    fixture.FulfillmentId, resend.CreatedShipmentId, Guid.NewGuid(), CancellationToken.None));
+            Assert.True(
+                error.Code == FulfillmentErrorCodes.DispatchPlanRequired,
+                $"wrong {name} was not refused with the plan guard: {error.Code}");
+            Assert.Equal(0, inventory.ConsumeCalls);
+            var stored = await db.Shipments.SingleAsync(x => x.ShipmentId == resend.CreatedShipmentId);
+            Assert.Equal(ShipmentStatus.Created, stored.Status);
+            Assert.Null(stored.DispatchedAt);
+        }
+
+        // The unmodified plan for the SAME parcel still authorizes exactly one dispatch after those refusals.
+        plans.ReplaceAll(valid);
+        var dispatched = await directory.DispatchShipmentAsync(
+            fixture.FulfillmentId, resend.CreatedShipmentId, Guid.NewGuid(), CancellationToken.None);
+        var parcel = dispatched.Shipments.Single(x => x.ShipmentId == resend.CreatedShipmentId);
+        Assert.Equal(ShipmentStatus.Dispatched, parcel.Status);
+        Assert.NotNull(parcel.DispatchedAt);
     }
 
     [Fact]
@@ -240,7 +304,8 @@ public sealed class DispatchPlanGuard270R2Tests
             "پیشتاز",
             [new AppModels.ShipmentLineCommand(Line, 1m)],
             CancellationToken.None,
-            shippingMethodCode: "store_courier");
+            shippingMethodCode: "store_courier",
+            shippingGroupId: ShippingGroup);
         var sourceShipmentId = created.Snapshot.Shipments.Single().ShipmentId;
         await directory.AssignTrackingAsync(
             fulfillmentId, sourceShipmentId, Guid.NewGuid(), "TRK-TB270R2-SOURCE", CancellationToken.None);
@@ -292,7 +357,8 @@ public sealed class DispatchPlanGuard270R2Tests
     private static OrderFulfillmentHandoffSnapshot SellerOrderSnapshot(
         Guid sellerOrderId,
         Guid sellerPartyId,
-        Guid lineId) =>
+        Guid lineId,
+        Guid? shippingGroupId = null) =>
         new(
             sellerOrderId,
             Checkout,
@@ -307,29 +373,55 @@ public sealed class DispatchPlanGuard270R2Tests
             "1234567890",
             "store_courier",
             "پیشتاز",
-            [new OrderFulfillmentLineSnapshot(lineId, 1m, null)]);
+            [new OrderFulfillmentLineSnapshot(lineId, 1m, null)],
+            shippingGroupId is { } group
+                ? [
+                    new OrderFulfillmentShippingGroupSnapshot(
+                        group,
+                        sellerOrderId,
+                        sellerPartyId,
+                        "store_courier",
+                        "store_courier",
+                        null,
+                        "پیشتاز",
+                        null,
+                        new DateOnly(2026, 11, 20),
+                        null,
+                        null,
+                        0,
+                        [lineId]),
+                ]
+                : null);
 
-    private static OrderShipmentDispatchPlanFact Plan(Guid shipmentId, string kind) =>
-        new(
+    private static OrderShipmentDispatchPlanFact PlanFor(
+        AppModels.FulfillmentSnapshot snapshot,
+        Guid shipmentId,
+        string kind)
+    {
+        // The plan row is built from the SAME owning facts the guard reads, so this helper cannot invent an identity
+        // the parcel does not have.
+        var shipment = snapshot.Shipments.Single(x => x.ShipmentId == shipmentId);
+        return new OrderShipmentDispatchPlanFact(
             Guid.NewGuid(),
             shipmentId,
-            Checkout,
-            SellerOrder,
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            snapshot.CheckoutId,
+            snapshot.SellerOrderId,
+            snapshot.FulfillmentId,
+            shipment.ShippingGroupId ?? Guid.Empty,
             kind,
+            shipment.ResendOfShipmentId,
+            shipment.DamagedResolutionId,
+            shipment.ReplacementReservationId,
+            OrderShipmentDispatchPlanBindingRules.BuildLineFingerprint(
+                shipment.Items.Select(x => (x.OrderLineId, x.Quantity))),
             Guid.NewGuid(),
-            null,
-            null,
-            "fingerprint",
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            1,
+            7,
             4,
             1,
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "store_courier",
+            shipment.ShippingMethodCode ?? "store_courier",
             "پیشتاز",
             "store_courier",
             null,
@@ -353,6 +445,7 @@ public sealed class DispatchPlanGuard270R2Tests
             "tb270r2-occurrence",
             Guid.NewGuid(),
             new DateTimeOffset(2026, 11, 16, 10, 0, 0, TimeSpan.Zero));
+    }
 
     private static FulfillmentDirectory CreateDirectory(
         FulfillmentDbContext db,
@@ -389,7 +482,7 @@ public sealed class DispatchPlanGuard270R2Tests
             CancellationToken cancellationToken) =>
             Task.FromResult<OrderFulfillmentHandoffSnapshot?>(
                 sellerOrderId == SellerOrder
-                    ? SellerOrderSnapshot(SellerOrder, SellerParty, Line)
+                    ? SellerOrderSnapshot(SellerOrder, SellerParty, Line, ShippingGroup)
                     : sellerOrderId == SiblingSellerOrder
                         ? SellerOrderSnapshot(SiblingSellerOrder, SiblingSellerParty, SiblingLine)
                         : null);
@@ -420,6 +513,13 @@ public sealed class DispatchPlanGuard270R2Tests
         private readonly List<OrderShipmentDispatchPlanFact> _rows = [];
 
         public void Add(OrderShipmentDispatchPlanFact fact) => _rows.Add(fact);
+
+        /// <summary>TB-270-R3: replaces the reader's answer, so one seeded parcel can face several plan variants.</summary>
+        public void ReplaceAll(OrderShipmentDispatchPlanFact fact)
+        {
+            _rows.Clear();
+            _rows.Add(fact);
+        }
 
         public Task<IReadOnlyList<OrderShipmentDispatchPlanFact>> ListForShipmentsAsync(
             IReadOnlyList<Guid> shipmentIds,

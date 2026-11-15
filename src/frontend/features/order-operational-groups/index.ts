@@ -78,6 +78,10 @@ export type {
 // TB-260: the finance-free frame of the shared operational order view (queue row and full order page).
 export { OrderOperationsView } from "./ui/order-operations-view.tsx";
 
+// TB-270-R3: the exact physical parcel a resend/replacement completion produced, or null when unproven.
+export { resolveCreatedParcelId } from "./created-parcel.ts";
+export type { CreatedParcelProbe } from "./created-parcel.ts";
+
 export type {
   OrderOperationsTargetFact,
   OrderOperationsViewProps,

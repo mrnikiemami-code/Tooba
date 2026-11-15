@@ -92,6 +92,16 @@ public sealed partial class AdminOrderOperationsOrchestrator
     private readonly IOrderShipmentDispatchPlanStore _shipmentPlanStore;
     private readonly IOrderAcceptedShipmentBindingReader _acceptedShipmentBindings;
     private readonly IShippingAttemptSchedulingLookup _schedulingLookup;
+    /// <summary>
+    /// TB-270-R3: the owning Fulfillment/Inventory read that proves a replacement parcel's hold is still held.
+    /// Absent wiring is treated as "cannot prove readiness" and therefore refuses a replacement plan.
+    /// </summary>
+    private readonly IFulfillmentReplacementReadinessReader? _replacementReadiness;
+    /// <summary>
+    /// TB-270-R3: the repository's ONE id authority, so a new plan row uses the same identity convention as every
+    /// other durable aggregate instead of an ad-hoc <see cref="Guid.NewGuid"/>.
+    /// </summary>
+    private readonly IIdGenerator _ids;
     private readonly IClock _clock;
     private readonly MarketplaceOperationalGroupWorkflow _operationalGroupWorkflow;
 
@@ -115,7 +125,9 @@ public sealed partial class AdminOrderOperationsOrchestrator
         IOrderShipmentDispatchPlanStore shipmentPlanStore,
         IOrderAcceptedShipmentBindingReader acceptedShipmentBindings,
         IShippingAttemptSchedulingLookup schedulingLookup,
-        IClock clock)
+        IClock clock,
+        IFulfillmentReplacementReadinessReader? replacementReadiness = null,
+        IIdGenerator? idGenerator = null)
     {
         _checkouts = checkouts;
         _fulfillment = fulfillment;
@@ -134,6 +146,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
         _shipmentPlanStore = shipmentPlanStore;
         _acceptedShipmentBindings = acceptedShipmentBindings;
         _schedulingLookup = schedulingLookup;
+        _replacementReadiness = replacementReadiness;
+        _ids = idGenerator ?? new UuidV7IdGenerator();
         _clock = clock;
         _operationalGroupWorkflow = new MarketplaceOperationalGroupWorkflow(
             fulfillment,

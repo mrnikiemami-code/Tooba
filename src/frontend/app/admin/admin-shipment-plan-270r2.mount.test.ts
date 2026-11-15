@@ -93,6 +93,7 @@ function preview(overrides: Partial<AdminShipmentDispatchPlanPreview> = {}): Adm
     areaGroupId: "area-1",
     rateRowId: "rate-1",
     servedAtUtc: "2026-11-15T06:00:00Z",
+    reviewFingerprint: "fingerprint-1",
     options: [option("2026-11-16", "09:00", "10:00"), option("2026-11-16", "11:00", "12:00"), option("2026-11-17", "09:00", "10:00")],
     confirmedPlan: null,
     blockerCode: null,
@@ -111,10 +112,10 @@ function resetScope(viewer: string = VIEWER, shipmentId: string = SHIPMENT) {
   clearShipmentPlanAttempt({ viewerScopeKey: viewer, checkoutId: CHECKOUT, shipmentId });
 }
 
-test("mounted: a feasible slot is deliberately selected, the reviewed key is written BEFORE the POST, and success clears it", async () => {
+test("mounted: a feasible slot is deliberately selected, the COMPLETE reviewed envelope is written BEFORE the POST, and success clears it", async () => {
   resetScope();
   const posts: AdminOrderOperationRequest[] = [];
-  const storedAtPost: string[] = [];
+  const storedAtPost: Array<ReturnType<typeof readShipmentPlanAttempt>> = [];
   const { container, unmount } = await mount(
     createElement(AdminShipmentPlanModal, {
       open: true,
@@ -128,8 +129,7 @@ test("mounted: a feasible slot is deliberately selected, the reviewed key is wri
         posts.push(body);
         // The durable envelope must already exist when the request leaves the browser.
         storedAtPost.push(
-          readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT })
-            ?.occurrenceKey ?? "",
+          readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT }),
         );
         return ok({});
       },
@@ -153,16 +153,25 @@ test("mounted: a feasible slot is deliberately selected, the reviewed key is wri
   assert.equal(posts[0]!.dispatchPlanReceivingOpensAt, "11:00");
   assert.equal(posts[0]!.dispatchPlanReceivingClosesAt, "12:00");
   assert.ok(posts[0]!.idempotencyKey, "the reviewed occurrence key is sent");
-  assert.equal(storedAtPost[0], posts[0]!.idempotencyKey, "the key was persisted before the POST");
+  const atPost = storedAtPost[0]!;
+  assert.equal(atPost.occurrenceKey, posts[0]!.idempotencyKey, "the key was persisted before the POST");
+  assert.deepEqual(
+    JSON.parse(atPost.requestBody ?? "{}"),
+    posts[0],
+    "the EXACT reviewed request body was persisted before it was sent",
+  );
+  assert.equal(atPost.reviewFingerprint, "fingerprint-1", "the server-issued review context is retained");
+  assert.equal(atPost.receivingTimeZone, "Asia/Tehran", "the reviewed receiving zone is retained");
+  assert.equal(atPost.uncertain, false, "a request that has not failed is not uncertain");
   await waitFor(() => readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT }) === null);
 
   await unmount();
 });
 
-test("mounted: a typed refusal keeps the exact occurrence and remount reconciles the SAME key (no second review)", async () => {
+test("mounted: a DETERMINISTIC refusal ENDS that review — nothing is retained, and the next review uses a NEW key", async () => {
   resetScope();
   const keys: string[] = [];
-  let refuse = true;
+  let status = 409;
   const props = {
     open: true,
     onClose: () => undefined,
@@ -172,9 +181,9 @@ test("mounted: a typed refusal keeps the exact occurrence and remount reconciles
     previewLoader: async () => ok(preview()),
     operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
       keys.push(body.idempotencyKey ?? "");
-      return refuse
-        ? { state: "error" as const, data: null, status: 409, message: "order.shipment_plan.selection_expired" }
-        : ok({});
+      return status === 200
+        ? ok({})
+        : { state: "error" as const, data: null, status, message: "order.shipment_plan.selection_expired" };
     },
   };
 
@@ -185,24 +194,99 @@ test("mounted: a typed refusal keeps the exact occurrence and remount reconciles
   await click(q(first.container, CONFIRM));
   await waitFor(() => keys.length === 1);
   await waitFor(() => Boolean(first.container.querySelector(ERROR)));
-  assert.ok(first.container.querySelector(RECONCILE), "the retained-review hint is shown after a refusal");
+  assert.ok(
+    first.container.querySelector("[data-testid='admin-shipment-plan-prior-outcome']"),
+    "the exact prior outcome is shown to the operator",
+  );
+  assert.equal(
+    first.container.querySelector("[data-testid='admin-shipment-plan-frozen']"),
+    null,
+    "a deterministic refusal is NOT presented as an unknown outcome",
+  );
+  assert.equal(
+    readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT }),
+    null,
+    "the refused occurrence is ended, so its key/body cannot be reused",
+  );
   await first.unmount();
 
-  const retained = readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT });
-  assert.equal(retained?.occurrenceKey, keys[0], "the refused intent is retained verbatim");
-
-  refuse = false;
+  // A remount starts from the owning preview alone: no retained slot, no frozen retry.
   const second = await mount(createElement(AdminShipmentPlanModal, props));
-  // The retained slot is still offered, so it is restored as the reviewed selection.
-  await waitFor(() => Boolean(second.container.querySelector("[data-testid='admin-shipment-plan-deadlines']")));
+  await waitFor(() => qq(second.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
   assert.equal(
-    qq(second.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']")[0]!.getAttribute("aria-pressed"),
-    "true",
-    "the retained selection comes back selected",
+    (q(second.container, CONFIRM) as HTMLButtonElement).disabled,
+    true,
+    "nothing is preselected after a refused review",
   );
+  assert.equal(
+    second.container.querySelector("[data-testid='admin-shipment-plan-retry-same']"),
+    null,
+    "there is no frozen retry for a deterministic refusal",
+  );
+  await click(q(second.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+  await flush();
+  status = 200;
   await click(q(second.container, CONFIRM));
   await waitFor(() => keys.length === 2);
-  assert.equal(keys[1], keys[0], "the second attempt reuses the SAME reviewed occurrence");
+  assert.notEqual(keys[1], keys[0], "a fresh review never reuses an already-refused key");
+  await second.unmount();
+});
+
+test("mounted: an UNKNOWN outcome (transport loss) freezes the EXACT reviewed body and re-sends it byte-for-byte", async () => {
+  resetScope();
+  const bodies: string[] = [];
+  let fail = true;
+  const props = {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT,
+    shipmentId: SHIPMENT,
+    viewerScopeKey: VIEWER,
+    previewLoader: async () => ok(preview()),
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      bodies.push(JSON.stringify(body));
+      return fail
+        ? { state: "error" as const, data: null, status: 0, message: "host-unreachable" }
+        : ok({});
+    },
+  };
+
+  const first = await mount(createElement(AdminShipmentPlanModal, props));
+  await waitFor(() => qq(first.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+  await click(q(first.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+  await flush();
+  await click(q(first.container, CONFIRM));
+  await waitFor(() => bodies.length === 1);
+  await waitFor(() => Boolean(first.container.querySelector("[data-testid='admin-shipment-plan-frozen']")));
+  assert.ok(first.container.querySelector(RECONCILE), "the operator is told the exact request is preserved");
+  assert.ok(
+    first.container.querySelector("[data-testid='admin-shipment-plan-retry-same']"),
+    "the only offered action is re-sending the same reviewed request",
+  );
+  const recorded = readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT });
+  assert.equal(recorded?.uncertain, true, "the outcome is recorded as genuinely unknown");
+  assert.deepEqual(JSON.parse(recorded?.requestBody ?? "{}"), JSON.parse(bodies[0]!), "the exact body is retained");
+  await first.unmount();
+
+  // A remount must NOT mint a second review: the retained body is the only thing that can be sent again.
+  fail = false;
+  const second = await mount(createElement(AdminShipmentPlanModal, props));
+  await waitFor(() => Boolean(second.container.querySelector("[data-testid='admin-shipment-plan-frozen']")));
+  assert.equal(
+    second.container.querySelector("[data-testid='admin-shipment-plan-confirm']"),
+    null,
+    "no fresh confirmation is possible while the outcome is unknown",
+  );
+  assert.equal(
+    qq(second.container, "[data-testid^='admin-shipment-plan-slot-']").every(
+      (node) => (node as HTMLButtonElement).disabled,
+    ),
+    true,
+    "no different slot can be chosen while frozen",
+  );
+  await click(q(second.container, "[data-testid='admin-shipment-plan-retry-same']"));
+  await waitFor(() => bodies.length === 2);
+  assert.equal(bodies[1], bodies[0], "the retry re-sends the identical reviewed body (same key, same slot)");
   await second.unmount();
 });
 
@@ -587,4 +671,116 @@ test("static render: the SAME Created card offers planning only, and the stored 
   assert.match(block, /[۰-۹]/);
   assert.doesNotMatch(block, /2026-11-20T|2026-11-20/);
   assert.equal(planned.length, 0, "rendering never plans on its own");
+});
+
+test("TB-270-R3: an EXPIRED old slot still reconciles the exact retained intent and offers no new choice", async () => {
+  resetScope();
+  const bodies: string[] = [];
+  let fail = true;
+  let loaderCalls = 0;
+  const props = {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT,
+    shipmentId: SHIPMENT,
+    viewerScopeKey: VIEWER,
+    previewLoader: async () => {
+      loaderCalls += 1;
+      // The review offered 09:00; every later read of the OWNING calendar no longer offers that slot.
+      return ok(preview({
+        options: loaderCalls === 1
+          ? [option("2026-11-16", "09:00", "10:00"), option("2026-11-17", "09:00", "10:00")]
+          : [option("2026-11-18", "11:00", "12:00")],
+      }));
+    },
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      bodies.push(JSON.stringify(body));
+      return fail
+        ? { state: "error" as const, data: null, status: 0, message: "host-unreachable" }
+        : ok({});
+    },
+  };
+
+  const first = await mount(createElement(AdminShipmentPlanModal, props));
+  await waitFor(() => qq(first.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+  await click(q(first.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+  await flush();
+  await click(q(first.container, CONFIRM));
+  await waitFor(() => bodies.length === 1);
+  await waitFor(() => Boolean(first.container.querySelector("[data-testid='admin-shipment-plan-frozen']")));
+  await first.unmount();
+
+  fail = false;
+  const second = await mount(createElement(AdminShipmentPlanModal, props));
+  await waitFor(() => Boolean(second.container.querySelector("[data-testid='admin-shipment-plan-frozen']")));
+  assert.equal(
+    qq(second.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']").length,
+    0,
+    "the reviewed slot is genuinely gone from the freshly generated calendar",
+  );
+  assert.equal(
+    second.container.querySelector(CONFIRM),
+    null,
+    "a fresh confirmation is impossible while the old intent is unresolved",
+  );
+  await click(q(second.container, "[data-testid='admin-shipment-plan-retry-same']"));
+  await waitFor(() => bodies.length === 2);
+  assert.equal(
+    bodies[1],
+    bodies[0],
+    "the expired slot reconciles the SAME reviewed request instead of silently selecting another",
+  );
+  await second.unmount();
+});
+
+test("TB-270-R3: a late answer for the PREVIOUS target never writes the newer surface", async () => {
+  resetScope();
+  let releaseStale: ((value: null) => void) | null = null;
+  const staleGate = new Promise<null>((resolve) => {
+    releaseStale = resolve;
+  });
+  const staleLoader = async () => {
+    await staleGate;
+    return ok(preview({
+      shipmentId: "sh-stale",
+      options: [option("2026-12-01", "09:00", "10:00")],
+    }));
+  };
+  const freshLoader = async () => ok(preview({
+    shipmentId: "sh-fresh",
+    options: [option("2026-11-20", "11:00", "12:00")],
+  }));
+  const base = {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT,
+    viewerScopeKey: VIEWER,
+    operationExecutor: async () => ok({}),
+  };
+
+  const tree = await mount(createElement(AdminShipmentPlanModal, {
+    ...base,
+    shipmentId: "sh-stale",
+    previewLoader: staleLoader,
+  }));
+  // The operator retargets the SAME surface to another parcel before the first read answers.
+  await tree.rerender(createElement(AdminShipmentPlanModal, {
+    ...base,
+    shipmentId: "sh-fresh",
+    previewLoader: freshLoader,
+  }));
+  await waitFor(() => qq(tree.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+
+  releaseStale!(null);
+  await flush();
+  assert.equal(
+    qq(tree.container, "[data-testid='admin-shipment-plan-slot-2026-12-01-09:00']").length,
+    0,
+    "the previous parcel's calendar never reaches the new target",
+  );
+  assert.ok(
+    q(tree.container, "[data-testid='admin-shipment-plan-slot-2026-11-20-11:00']"),
+    "the surface keeps showing its own parcel's calendar",
+  );
+  await tree.unmount();
 });

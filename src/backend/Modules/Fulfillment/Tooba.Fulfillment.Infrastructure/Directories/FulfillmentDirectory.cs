@@ -1,5 +1,6 @@
 ﻿using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Fulfillment.Contracts.Errors;
+using IFulfillmentReplacementReadinessReader = Tooba.Fulfillment.Contracts.Operations.IFulfillmentReplacementReadinessReader;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application.Fulfillments.Ports;
@@ -26,7 +27,7 @@ public sealed class OpenFulfillmentUseCaseGuard : IFulfillmentUseCaseGuard
 /// <summary>
 /// ارکستراسیون fulfillment در schema fulfillment.
 /// </summary>
-public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
+public sealed partial class FulfillmentDirectory : IFulfillmentDirectory, IFulfillmentReplacementReadinessReader
 {
     private readonly FulfillmentDbContext _db;
     private readonly IFulfillmentUseCaseGuard _guard;
@@ -65,18 +66,21 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
     }
 
     /// <summary>
-    /// TB-270-R2: هر مرسولهٔ <b>تلاش جدید</b> (ارسال مجدد/جایگزینی) پیش از ارسال باید برنامهٔ ارسال مستقل و
+    /// TB-270-R2/R3: هر مرسولهٔ <b>تلاش جدید</b> (ارسال مجدد/جایگزینی) پیش از ارسال باید برنامهٔ ارسال مستقل و
     /// تأییدشدهٔ خودش را در Order داشته باشد؛ برنامهٔ سفارش اول هرگز قرض داده نمی‌شود.
     /// </summary>
     /// <remarks>
     /// این دروازه پیش از هر مصرف موجودی/نوشتن وضعیت اجرا می‌شود و هیچ مرسوله‌ای از آن معاف نیست. نبودِ برنامه یک
     /// امتناع نوع‌دار است، نه «ارسال با تاریخ حدسی»؛ ارسال مجدد همان دقیقه‌ای که ساخته می‌شود قابل ارسال نیست.
+    /// تطبیق فقط کلید/گونهٔ تلاش نیست: همان قاعدهٔ مشترک Contracts (پارچهٔ شناسه‌ها، منبع/تصمیم/رزرو، روش، اثر انگشت
+    /// خط/مقدار و اعتبار شاهد capture) اجرا می‌شود، تا نگهبان ارسال و نمایش‌های فقط‌خواندنی هرگز دو تعریف متفاوت از
+    /// «زمان‌بندی‌شده» نداشته باشند. نبود/تکرار/ناهمخوانی ردیف «بدون برنامه» است، نه «برنامه‌دار».
     /// </remarks>
     private async Task EnsureLinkedAttemptsPlannedAsync(
-        IReadOnlyList<Shipment> shipments,
+        IReadOnlyList<(FulfillmentUnit Unit, Shipment Shipment)> members,
         CancellationToken cancellationToken)
     {
-        var linked = shipments.Where(x => x.IsResend || x.IsReplacement).ToList();
+        var linked = members.Where(x => x.Shipment.IsResend || x.Shipment.IsReplacement).ToList();
         if (linked.Count == 0)
         {
             return;
@@ -87,23 +91,110 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
             throw new ContractOperationException(FulfillmentErrorCodes.DispatchPlanRequired);
         }
 
-        var plans = await _shipmentDispatchPlans.ListForShipmentsAsync(
-            linked.Select(x => x.ShipmentId).ToList(),
-            cancellationToken);
-        var byShipment = plans.ToDictionary(x => x.ShipmentId);
-        foreach (var shipment in linked)
+        var shipmentIds = linked.Select(x => x.Shipment.ShipmentId).Distinct().ToList();
+        var plans = await _shipmentDispatchPlans.ListForShipmentsAsync(shipmentIds, cancellationToken);
+
+        // A duplicated row for one parcel is a corrupt state, never "planned": fail closed.
+        var byShipment = new Dictionary<Guid, Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanFact>();
+        foreach (var plan in plans)
         {
-            if (!byShipment.TryGetValue(shipment.ShipmentId, out var plan)
-                || !string.Equals(
-                    plan.AttemptKind,
-                    shipment.IsReplacement
-                        ? Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Replacement
-                        : Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Resend,
-                    StringComparison.Ordinal))
+            if (!byShipment.TryAdd(plan.ShipmentId, plan))
             {
                 throw new ContractOperationException(FulfillmentErrorCodes.DispatchPlanRequired);
             }
         }
+
+        foreach (var (unit, shipment) in linked)
+        {
+            byShipment.TryGetValue(shipment.ShipmentId, out var plan);
+            var candidate = BuildPlanBindingCandidate(unit, shipment);
+            if (Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingRules.Validate(plan, candidate) is not null)
+            {
+                throw new ContractOperationException(FulfillmentErrorCodes.DispatchPlanRequired);
+            }
+        }
+    }
+
+    /// <summary>
+    /// TB-270-R3: پیش‌بررسی «همهٔ» مرسوله‌های یک عملیات گروهی، پیش از نخستین اثر.
+    /// </summary>
+    /// <remarks>
+    /// یک ارسال گروهی نباید نیمه‌کاره بماند: اگر یکی از اعضا برنامهٔ معتبر خودش را نداشته باشد، همان امتناع
+    /// پیش از ارسال/مصرف هیچ عضوی برمی‌گردد. این فقط‌خواندنی است و جای دروازهٔ نهاییِ هر ارسال را نمی‌گیرد.
+    /// </remarks>
+    public async Task<string?> VerifyLinkedDispatchPlansAsync(
+        IReadOnlyList<FulfillmentShipmentReference> shipments,
+        CancellationToken cancellationToken)
+    {
+        if (shipments.Count == 0)
+        {
+            return null;
+        }
+
+        var members = new List<(FulfillmentUnit Unit, Shipment Shipment)>();
+        foreach (var group in shipments.GroupBy(x => x.FulfillmentId))
+        {
+            FulfillmentUnit unit;
+            try
+            {
+                unit = await LoadMutableAsync(group.Key, cancellationToken);
+            }
+            catch (ContractOperationException)
+            {
+                // An unreadable owning unit is never "planned": the whole set is refused before any effect.
+                return FulfillmentErrorCodes.DispatchPlanRequired;
+            }
+
+            foreach (var reference in group)
+            {
+                var shipment = unit.Shipments.SingleOrDefault(x => x.ShipmentId == reference.ShipmentId);
+                if (shipment is null)
+                {
+                    return FulfillmentErrorCodes.DispatchPlanRequired;
+                }
+
+                members.Add((unit, shipment));
+            }
+        }
+
+        try
+        {
+            await EnsureLinkedAttemptsPlannedAsync(members, cancellationToken);
+            return null;
+        }
+        catch (ContractOperationException refusal)
+        {
+            return refusal.Code;
+        }
+    }
+
+    /// <summary>
+    /// TB-270-R3: the exact identity the guard compares — built ONLY from the owning unit/parcel facts.
+    /// </summary>
+    internal static Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingCandidate? BuildPlanBindingCandidate(
+        FulfillmentUnit unit,
+        Shipment shipment)
+    {
+        if (shipment.ShippingGroupId is not { } shippingGroupId || shippingGroupId == Guid.Empty)
+        {
+            return null;
+        }
+
+        return new Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingCandidate(
+            shipment.ShipmentId,
+            unit.CheckoutId,
+            unit.SellerOrderId,
+            unit.FulfillmentId,
+            shippingGroupId,
+            shipment.IsReplacement
+                ? Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Replacement
+                : Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Resend,
+            shipment.ResendOfShipmentId,
+            shipment.DamagedResolutionId,
+            shipment.ReplacementReservationId,
+            Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanBindingRules.BuildLineFingerprint(
+                shipment.Items.Select(x => (x.OrderLineId, x.Quantity))),
+            shipment.ShippingMethodCode);
     }
 
     /// <summary>
@@ -687,7 +778,7 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
 
         // TB-270-R2: a linked attempt is dispatch-authorized only by ITS OWN confirmed plan; the check precedes every
         // stock consumption and status write so an unplanned resend/replacement can never leave the warehouse.
-        await EnsureLinkedAttemptsPlannedAsync([shipment], cancellationToken);
+        await EnsureLinkedAttemptsPlannedAsync([(unit, shipment)], cancellationToken);
 
         // TB-266: an exact replay of an already-dispatched shipment above still answers its recorded fact; a NEW
         // dispatch requires authoritative payment/supply authorization before any stock is consumed.

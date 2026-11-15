@@ -137,6 +137,69 @@ public sealed class AdminFulfillmentBulkTests
         Assert.Equal(1, result.Succeeded);
     }
 
+    [Fact]
+    public async Task Bulk_dispatch_preflights_every_member_before_any_effect()
+    {
+        // TB-270-R3: one plan-less member must refuse the WHOLE batch, not half-send it.
+        var seller = Guid.NewGuid();
+        var a = DispatchableSnapshot(seller);
+        var b = DispatchableSnapshot(seller);
+        var dir = new StubDir([a, b]) { PreflightRefusal = FulfillmentErrorCodes.DispatchPlanRequired };
+        var ops = new StubOps();
+        var result = await Run(dir, ops, "dispatch_shipment", [Item(a), Item(b)]);
+        Assert.Equal(FulfillmentErrorCodes.DispatchPlanRequired, result.ErrorCode);
+        Assert.Equal(0, result.Attempted);
+        Assert.Equal(0, result.Succeeded);
+        Assert.Equal(1, dir.PreflightCalls);
+        Assert.Equal(0, ops.Calls);
+    }
+
+    [Fact]
+    public async Task Bulk_dispatch_with_a_valid_set_still_executes_each_member()
+    {
+        var seller = Guid.NewGuid();
+        var a = DispatchableSnapshot(seller);
+        var b = DispatchableSnapshot(seller);
+        var dir = new StubDir([a, b]);
+        var ops = new StubOps();
+        var result = await Run(dir, ops, "dispatch_shipment", [Item(a), Item(b)]);
+        Assert.Null(result.ErrorCode);
+        Assert.Equal(1, dir.PreflightCalls);
+        Assert.Equal(2, ops.Calls);
+        Assert.Equal(2, result.Succeeded);
+    }
+
+    [Fact]
+    public async Task Non_dispatch_bulk_does_not_consult_the_plan_preflight()
+    {
+        var a = Snapshot(Guid.NewGuid(), FulfillmentStatus.ReadyToFulfill);
+        var dir = new StubDir([a]);
+        var result = await Run(dir, new StubOps(), "mark_processing", [Item(a)]);
+        Assert.Null(result.ErrorCode);
+        Assert.Equal(0, dir.PreflightCalls);
+    }
+
+    /// <summary>A Packed unit with one Created, tracked parcel — the shape a bulk dispatch is offered for.</summary>
+    private static FulfillmentSnapshot DispatchableSnapshot(Guid seller)
+    {
+        var lineId = Guid.NewGuid();
+        return Snapshot(
+            seller,
+            FulfillmentStatus.Packed,
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 1, 0, null, 1, 1)],
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentStatus.Created,
+                    "پست",
+                    "TRK-TB270R3",
+                    null,
+                    null,
+                    [new ShipmentLineSnapshot(lineId, 1)],
+                    default),
+            ]);
+    }
+
     private static async Task<AdminFulfillmentWorkQueueBulkResult> Run(
         StubDir dir,
         StubOps ops,
@@ -266,11 +329,27 @@ public sealed class AdminFulfillmentBulkTests
             throw new NotImplementedException();
         public Task VoidActivePackagesForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken) =>
             throw new NotImplementedException();
+
+        /// <summary>TB-270-R3: the bulk preflight; a stub may refuse the whole set deliberately.</summary>
+        public Task<string?> VerifyLinkedDispatchPlansAsync(
+            IReadOnlyList<FulfillmentShipmentReference> shipments,
+            CancellationToken cancellationToken)
+        {
+            PreflightCalls++;
+            return Task.FromResult(PreflightRefusal);
+        }
+
+        public int PreflightCalls { get; private set; }
+
+        public string? PreflightRefusal { get; init; }
     }
 
     private sealed class StubOps(int? failOnCall = null) : IAdminOrderFulfillmentOperations
     {
         private int _calls;
+
+        /// <summary>TB-270-R3: how many real operation calls were made (0 proves "no effect").</summary>
+        public int Calls => _calls;
 
         public Task<AdminOrderFulfillmentOperationOutcome> TryExecuteAsync(
             Guid checkoutId,

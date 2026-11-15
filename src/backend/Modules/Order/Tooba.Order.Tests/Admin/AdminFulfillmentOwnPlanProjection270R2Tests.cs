@@ -220,7 +220,7 @@ public sealed class AdminFulfillmentOwnPlanProjection270R2Tests
         rows.Single(x => x.TargetShipmentId == ParcelId(seed));
 
     private static FulfillmentSnapshot Unit(IReadOnlyList<ShipmentSnapshot> shipments) => new(
-        Guid.NewGuid(),
+        FulfillmentId,
         SellerOrderId,
         CheckoutId,
         SellerPartyId,
@@ -250,6 +250,7 @@ public sealed class AdminFulfillmentOwnPlanProjection270R2Tests
     private static readonly Guid SellerOrderId = Guid.NewGuid();
     private static readonly Guid CheckoutId = Guid.NewGuid();
     private static readonly Guid SellerPartyId = Guid.NewGuid();
+    private static readonly Guid FulfillmentId = Guid.NewGuid();
     private static readonly Guid OrderLineId = Guid.NewGuid();
 
     private static ShipmentSnapshot Parcel(
@@ -301,13 +302,13 @@ public sealed class AdminFulfillmentOwnPlanProjection270R2Tests
             ParcelId(seed),
             CheckoutId,
             SellerOrderId,
-            Guid.NewGuid(),
+            FulfillmentId,
             GroupId,
             OrderShipmentDispatchPlanKinds.Resend,
             ParcelId("tb270r2-first"),
             null,
             null,
-            "tb270r2-line=1",
+            OrderShipmentDispatchPlanBindingRules.BuildLineFingerprint([(OrderLineId, 1m)]),
             Guid.NewGuid(),
             Guid.NewGuid(),
             7,

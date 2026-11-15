@@ -24,6 +24,13 @@ namespace Tooba.Order.Tests.Admin;
 /// Gated by <c>TB270R2_CONNECTION</c> and restricted to the ONE canonical <c>tooba_alpha</c> at 127.0.0.1:5432. The
 /// real <see cref="OrderShipmentDispatchPlanStore"/> is the code under test; the second writer is the real EF model.
 /// </para>
+/// <para>
+/// TB-270-R3 PROOF LABEL: these are SEQUENTIAL single-context STORE/INDEX facts — one writer and one raw duplicate
+/// INSERT at a time inside one rolled-back transaction. They prove row immutability, exact replay, intent conflict
+/// and the UNIQUE <c>shipment_id</c> index. They do NOT prove a race between two independent application writers, and
+/// nothing here claims that. An absent connection is reported as an explicit SKIP with its reason (never as a silent
+/// pass), so a "green" run without the variable cannot be mistaken for storage proof.
+/// </para>
 /// </remarks>
 public sealed class AdminShipmentDispatchPlan270R2RelationalTests
 {
@@ -38,11 +45,25 @@ public sealed class AdminShipmentDispatchPlan270R2RelationalTests
     private static string? Connection =>
         Environment.GetEnvironmentVariable(RelationalEnvVar) is { Length: > 0 } raw ? raw : null;
 
-    [Fact]
+    /// <summary>
+    /// TB-270-R3: without the connection variable the case is SKIPPED with a stated reason, so the result can never
+    /// look like a passing storage proof that never touched storage.
+    /// </summary>
+    public sealed class CanonicalRelationalFactAttribute : FactAttribute
+    {
+        public CanonicalRelationalFactAttribute()
+        {
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(RelationalEnvVar)))
+            {
+                Skip = $"NOT RUN: {RelationalEnvVar} is not set; the canonical tooba_alpha relational proof was not exercised.";
+            }
+        }
+    }
+
+    [CanonicalRelationalFact]
     [Trait("Case", "A-immutable-and-replay")]
     public async Task A_stored_plan_is_immutable_and_exact_replay_and_changed_intent_are_distinguished()
     {
-        if (Connection is null) return;
         CanonicalTarget();
 
         var shipmentId = Guid.NewGuid();
@@ -92,11 +113,10 @@ public sealed class AdminShipmentDispatchPlan270R2RelationalTests
         Assert.Equal(0, await db.ShipmentDispatchPlans.CountAsync(x => x.ShipmentId == shipmentId));
     }
 
-    [Fact]
+    [CanonicalRelationalFact]
     [Trait("Case", "B-unique-index")]
     public async Task B_the_database_itself_refuses_a_second_plan_row_for_the_same_parcel()
     {
-        if (Connection is null) return;
         CanonicalTarget();
 
         var shipmentId = Guid.NewGuid();
@@ -140,9 +160,18 @@ public sealed class AdminShipmentDispatchPlan270R2RelationalTests
                 shipmentId,
                 Guid.NewGuid()));
 
-            // 23505 = unique_violation; the errant statement aborted only its own implicit savepoint.
+            // 23505 = unique_violation; the errant statement aborted only its own implicit savepoint. The exact
+            // constraint is asserted too: the store's arbitration may only reinterpret THIS index.
             Assert.Equal("23505", violation.SqlState);
-            _output.WriteLine($"B shipment={shipmentId} second-row refused with SqlState={violation.SqlState}");
+            Assert.Equal(
+                OrderShipmentDispatchPlanStore.UniqueShipmentConstraint,
+                violation.ConstraintName);
+
+            // The store's own catch path must accept exactly that violation and nothing else.
+            Assert.True(OrderShipmentDispatchPlanStore.IsUniqueShipmentViolation(
+                new DbUpdateException("concurrent winner", violation)));
+            _output.WriteLine(
+                $"B shipment={shipmentId} second-row refused with SqlState={violation.SqlState} constraint={violation.ConstraintName}");
         }
         finally
         {

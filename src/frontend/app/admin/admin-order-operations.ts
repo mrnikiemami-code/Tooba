@@ -187,6 +187,13 @@ export type AdminShipmentDispatchPlanPreview = {
   blockerFa: string | null;
   missingCapturedInputs: string[] | null;
   schedulingReasonCode: string | null;
+  /**
+   * TB-270-R3: the server-issued fingerprint of the reviewed context. It must be echoed on confirmation
+   * so a changed source/decision/hold/capture is refused instead of silently replanned.
+   */
+  reviewFingerprint: string | null;
+  /** TB-270-R3: the response describes the ALREADY confirmed plan (history); no new calendar, no action. */
+  historyOnly: boolean;
 };
 
 /**
@@ -251,6 +258,8 @@ export type AdminOrderOperationRequest = {
   dispatchPlanReceivingDate?: string | null;
   dispatchPlanReceivingOpensAt?: string | null;
   dispatchPlanReceivingClosesAt?: string | null;
+  /** TB-270-R3: the exact fingerprint of the preview the operator reviewed. */
+  dispatchPlanReviewFingerprint?: string | null;
 };
 
 /**
@@ -423,6 +432,8 @@ function mapShipmentDispatchPlanPreview(raw: unknown): AdminShipmentDispatchPlan
         .filter((value): value is string => Boolean(value))
       : null,
     schedulingReasonCode: asString(row.schedulingReasonCode) ?? asString(row.SchedulingReasonCode),
+    reviewFingerprint: asString(row.reviewFingerprint) ?? asString(row.ReviewFingerprint),
+    historyOnly: (row.historyOnly ?? row.HistoryOnly) === true,
   };
 }
 
@@ -675,6 +686,7 @@ export async function executeAdminOrderOperation(
         dispatchPlanReceivingDate: body.dispatchPlanReceivingDate ?? null,
         dispatchPlanReceivingOpensAt: body.dispatchPlanReceivingOpensAt ?? null,
         dispatchPlanReceivingClosesAt: body.dispatchPlanReceivingClosesAt ?? null,
+        dispatchPlanReviewFingerprint: body.dispatchPlanReviewFingerprint ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

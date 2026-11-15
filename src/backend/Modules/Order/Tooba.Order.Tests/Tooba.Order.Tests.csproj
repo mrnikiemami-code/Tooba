@@ -29,5 +29,8 @@
     <ProjectReference Include="..\..\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj" />
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Application\Tooba.Fulfillment.Application.csproj" />
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Infrastructure\Tooba.Fulfillment.Infrastructure.csproj" />
+    <!-- TB-270-R3: the ONE connected seam proof runs the REAL R1 Shipping lookup against a REAL captured payload,
+         exactly like the Host composition, so a mock that answers any requested group cannot certify Repair A. -->
+    <ProjectReference Include="..\..\Shipping\Tooba.Shipping.Infrastructure\Tooba.Shipping.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

@@ -291,4 +291,20 @@ public interface IFulfillmentDirectory
     /// بسته‌های Created فعال checkout را باطل می‌کند (مسیر لغو سفارش).
     /// </summary>
     Task VoidActivePackagesForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-270-R3: پیش‌بررسی «همهٔ» مرسوله‌های یک عملیات گروهی، پیش از نخستین اثر.
+    /// </summary>
+    /// <remarks>
+    /// یک عملیات گروهی که چند مرسوله را ارسال می‌کند نباید نیمه‌کاره بماند: اگر یکی از اعضا برنامهٔ تأییدشدهٔ
+    /// خودش را نداشته باشد یا برنامه‌اش به هویت کامل همان مرسوله گره نخورده باشد، پاسخ همان کد امتناع است و
+    /// هیچ عضوی ارسال/مصرف نمی‌شود. <c>null</c> یعنی کل مجموعه از این دروازه گذشت؛ این پیش‌بررسی هیچ
+    /// نوشتنی انجام نمی‌دهد و جای دروازهٔ نهاییِ هر ارسال را نمی‌گیرد.
+    /// </remarks>
+    Task<string?> VerifyLinkedDispatchPlansAsync(
+        IReadOnlyList<FulfillmentShipmentReference> shipments,
+        CancellationToken cancellationToken);
 }
+
+/// <summary>TB-270-R3: یک مرسولهٔ فیزیکی داخل یک واحد fulfillment، برای پیش‌بررسی گروهی.</summary>
+public sealed record FulfillmentShipmentReference(Guid FulfillmentId, Guid ShipmentId);

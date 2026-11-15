@@ -165,7 +165,14 @@ public sealed record AdminOrderOperationRequest(
     /// <summary>TB-270-R2: the reviewed slot start in the captured receiving zone (<c>HH:mm</c>).</summary>
     string? DispatchPlanReceivingOpensAt = null,
     /// <summary>TB-270-R2: the reviewed slot end in the captured receiving zone (<c>HH:mm</c>, exclusive).</summary>
-    string? DispatchPlanReceivingClosesAt = null);
+    string? DispatchPlanReceivingClosesAt = null,
+    /// <summary>
+    /// TB-270-R3: the exact review fingerprint the server issued with the preview the operator reviewed. The server
+    /// recomputes it from the same owning facts and refuses (<c>order.shipment_plan.review_context_changed</c>) when
+    /// the source parcel/decision/hold/capture/readiness changed between review and confirmation. It is never used as
+    /// an idempotency key, and it is not sent on an exact replay of an already-confirmed key.
+    /// </summary>
+    string? DispatchPlanReviewFingerprint = null);
 
 /// <summary>TB-265: one claimed line of a courier-origin Returns case.</summary>
 public sealed record AdminCourierReturnLineSelection(
@@ -264,4 +271,15 @@ public sealed record AdminShipmentDispatchPlanPreview(
     string? BlockerCode = null,
     string? BlockerFa = null,
     IReadOnlyList<string>? MissingCapturedInputs = null,
-    string? SchedulingReasonCode = null);
+    string? SchedulingReasonCode = null,
+    /// <summary>
+    /// TB-270-R3: opaque server-issued fingerprint of the reviewed context (owning parcel identity, source
+    /// decision/hold identity, accepted capture identity, readiness anchor and line fingerprint). The confirmation
+    /// request must echo it unchanged; a changed context is refused instead of silently replanned.
+    /// </summary>
+    string? ReviewFingerprint = null,
+    /// <summary>
+    /// TB-270-R3: true when the response describes the ALREADY confirmed plan (history) and therefore offers no new
+    /// calendar and no action. A read of a dispatched/delivered parcel still reports its stored promise.
+    /// </summary>
+    bool HistoryOnly = false);

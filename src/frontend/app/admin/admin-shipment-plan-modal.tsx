@@ -12,11 +12,12 @@ import {
   type AdminOrderOperationRequest,
 } from "./admin-order-operations";
 import {
-  clearShipmentPlanAttempt,
+  endShipmentPlanReview,
   markShipmentPlanAttemptFailed,
   mintShipmentPlanOccurrence,
   readShipmentPlanAttempt,
   writeShipmentPlanAttempt,
+  type ShipmentPlanAttempt,
 } from "./admin-shipment-plan-attempt";
 import {
   operationalDayLabel,
@@ -48,6 +49,27 @@ function attemptKindLabel(kind: string | null | undefined): string {
   return kind === "replacement" ? "جایگزینی" : "ارسال مجدد";
 }
 
+/** TB-270-R3: reads back an exactly retained reviewed body; a malformed record is never guessed at. */
+function safeParseBody(raw: string): AdminOrderOperationRequest | null {
+  try {
+    const parsed = JSON.parse(raw) as Partial<AdminOrderOperationRequest> | null;
+    if (!parsed || typeof parsed !== "object") return null;
+    if (parsed.code !== "plan_shipment_dispatch") return null;
+    if (typeof parsed.shipmentId !== "string" || typeof parsed.idempotencyKey !== "string") return null;
+    return {
+      code: "plan_shipment_dispatch",
+      shipmentId: parsed.shipmentId,
+      idempotencyKey: parsed.idempotencyKey,
+      dispatchPlanReceivingDate: parsed.dispatchPlanReceivingDate ?? null,
+      dispatchPlanReceivingOpensAt: parsed.dispatchPlanReceivingOpensAt ?? null,
+      dispatchPlanReceivingClosesAt: parsed.dispatchPlanReceivingClosesAt ?? null,
+      dispatchPlanReviewFingerprint: parsed.dispatchPlanReviewFingerprint ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * TB-270-R2 — «زمان‌بندی ارسال» یک مرسولهٔ ارسال مجدد/جایگزین موجود.
  *
@@ -74,7 +96,14 @@ export function AdminShipmentPlanModal({
   const [pending, setPending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [reconcileHint, setReconcileHint] = useState(false);
+  /** TB-270-R3: the retained reviewed envelope (exact body + key) that must be resolved before any new review. */
+  const [retained, setRetained] = useState<ShipmentPlanAttempt | null>(null);
+  /** TB-270-R3: the exact reviewed body was already sent with an UNKNOWN outcome; only that body may go again. */
+  const [frozen, setFrozen] = useState(false);
+  /** TB-270-R3: the exact prior outcome, kept when a deterministic refusal ends that review. */
+  const [priorOutcomeFa, setPriorOutcomeFa] = useState<string | null>(null);
   const inFlightRef = useRef(false);
+  const epochRef = useRef(0);
   const previewLoaderRef = useRef(previewLoader);
   previewLoaderRef.current = previewLoader;
   const operationExecutorRef = useRef(operationExecutor);
@@ -85,43 +114,56 @@ export function AdminShipmentPlanModal({
     [viewerScopeKey, checkoutId, shipmentId],
   );
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (epoch: number) => {
     setLoading(true);
     setLoadError(null);
     try {
       const result = await previewLoaderRef.current(checkoutId, shipmentId);
+      if (epoch !== epochRef.current) return;
       if (result.state !== "ok" || !result.data) {
         setPreview(null);
         setLoadError(mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"));
         return;
       }
       setPreview(result.data);
-      // A retained review keeps its reviewed slot selected; otherwise nothing is preselected, because the
-      // operator must choose the customer commitment deliberately.
-      const retained = readShipmentPlanAttempt(scope);
-      const retainedKey = retained?.receivingDate
-        ? `${retained.receivingDate}|${retained.receivingOpensAt ?? ""}|${retained.receivingClosesAt ?? ""}`
+      // TB-270-R3: ONLY a genuinely unknown outcome may re-send a retained body. A record without an uncertain
+      // outcome is history, not permission, so the operator deliberately chooses a fresh reviewed slot.
+      const rec = readShipmentPlanAttempt(scope);
+      const isFrozen = Boolean(rec?.uncertain && rec?.requestBody);
+      setRetained(rec);
+      setFrozen(isFrozen);
+      const retainedKey = isFrozen && rec?.receivingDate
+        ? `${rec.receivingDate}|${rec.receivingOpensAt ?? ""}|${rec.receivingClosesAt ?? ""}`
         : null;
       const stillOffered = retainedKey
         && result.data.options.some((option) => slotKey(option) === retainedKey);
       setSelectedKey(stillOffered ? retainedKey : null);
     } catch {
+      if (epoch !== epochRef.current) return;
       setPreview(null);
       setLoadError(mapAdminErrorMessage("host-unreachable", "fa"));
     } finally {
-      setLoading(false);
+      if (epoch === epochRef.current) setLoading(false);
     }
   }, [checkoutId, shipmentId, scope]);
 
   useEffect(() => {
     if (!open) return;
-    setPending(false);
+    // A new mount/parcel is a new epoch: a late answer for the previous one must never write this screen.
+    const epoch = epochRef.current + 1;
+    epochRef.current = epoch;
     setSendError(null);
     setReconcileHint(false);
+    setPriorOutcomeFa(null);
     setPreview(null);
     setSelectedKey(null);
-    inFlightRef.current = false;
-    void load();
+    setRetained(null);
+    setFrozen(false);
+    // TB-270-R3: the single-flight guard is NEVER released here. Closing/reopening or retargeting this surface while
+    // an earlier POST is still in flight must not make a second, different intent possible; the pending flag mirrors
+    // that live request instead of pretending the surface is idle.
+    setPending(inFlightRef.current);
+    void load(epoch);
   }, [open, load]);
 
   const options = preview?.options ?? [];
@@ -159,36 +201,91 @@ export function AdminShipmentPlanModal({
   );
 
   const confirmed = preview?.confirmedPlan ?? null;
-  const canConfirm = Boolean(selected) && !pending && !confirmed;
+  const canConfirm = !confirmed && !pending && (frozen ? Boolean(retained?.requestBody) : Boolean(selected));
 
-  async function confirm() {
-    if (!selected || pending || confirmed) return;
-    if (inFlightRef.current) return;
+  /**
+   * TB-270-R3: one send path. `raw` is an exact retained body (byte-for-byte intent) and is never rebuilt from
+   * current UI state; a fresh reviewed body is persisted together with its exact JSON BEFORE the POST.
+   */
+  async function send(body: AdminOrderOperationRequest, attempt: ShipmentPlanAttempt) {
+    if (pending || inFlightRef.current) return;
     inFlightRef.current = true;
     setPending(true);
     setSendError(null);
     setReconcileHint(false);
+    const epoch = epochRef.current;
 
-    // Retain the reviewed intent + key BEFORE the first POST: a lost response reconciles the SAME plan.
-    const retained = readShipmentPlanAttempt(scope);
-    const occurrenceKey = retained?.occurrenceKey ?? mintShipmentPlanOccurrence();
-    const written = writeShipmentPlanAttempt({
-      scope,
-      occurrenceKey,
-      receivingDate: selected.receivingDate,
-      receivingOpensAt: selected.receivingOpensAt,
-      receivingClosesAt: selected.receivingClosesAt,
-      attempts: (retained?.attempts ?? 0) + 1,
-    });
-    if (!written?.durable) {
-      // No durable envelope means a reload could lose the key and mint a second review; refuse instead.
+    try {
+      const result = await operationExecutorRef.current(checkoutId, body);
+      if (epoch !== epochRef.current) return;
+      if (result.state === "ok") {
+        endShipmentPlanReview(scope);
+        setRetained(null);
+        setFrozen(false);
+        onClose();
+        onCompleted?.();
+        return;
+      }
+
+      const fa = mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa");
+      const unknown = result.status <= 0 || result.status >= 500;
+      if (unknown) {
+        // ONLY a genuine transport loss / 5xx is uncertain: the exact reviewed body stays frozen and is retried as-is.
+        const kept = markShipmentPlanAttemptFailed(scope, attempt, fa, true);
+        setRetained(kept);
+        setFrozen(true);
+        setSendError(fa);
+        setReconcileHint(true);
+        return;
+      }
+
+      // A deterministic refusal ENDS this review: the exact prior outcome is preserved for the operator, and the
+      // stale body/key are dropped so a different selection can never ride on an already-refused occurrence.
+      endShipmentPlanReview(scope);
+      setRetained(null);
+      setFrozen(false);
+      setSelectedKey(null);
+      setPriorOutcomeFa(fa);
+      setSendError(fa);
+      setReconcileHint(false);
+    } catch (thrown) {
+      if (epoch !== epochRef.current) return;
+      const fa = mapAdminErrorMessage(
+        thrown instanceof Error && thrown.message ? thrown.message : "order.operation.failed",
+        "fa",
+      );
+      const kept = markShipmentPlanAttemptFailed(scope, attempt, fa, true);
+      setRetained(kept);
+      setFrozen(true);
+      setSendError(fa);
+      setReconcileHint(true);
+    } finally {
+      // TB-270-R3: the guard is released when the REQUEST settles, never when the surface is reused; only the
+      // presentation of that outcome is fenced by the epoch.
       inFlightRef.current = false;
       setPending(false);
-      setReconcileHint(true);
-      setSendError("ذخیرهٔ محلی این مرور ممکن نیست؛ برای جلوگیری از ثبت دوباره، تا تازه‌سازی صفحه اقدام نکنید.");
+    }
+  }
+
+  async function confirm() {
+    if (confirmed || pending) return;
+
+    // 1) An unresolved reviewed body is re-sent exactly; nothing is rebuilt from current state.
+    if (frozen && retained?.requestBody) {
+      const parsed = safeParseBody(retained.requestBody);
+      if (!parsed || parsed.idempotencyKey !== retained.occurrenceKey) {
+        setSendError("درخواست بازبینی‌شدهٔ ذخیره‌شده خوانده نشد؛ بازبینی تازه لازم است.");
+        return;
+      }
+      await send(parsed, retained);
       return;
     }
 
+    if (!selected) return;
+
+    // 2) A fresh review: retain the key + the COMPLETE reviewed body before the first POST. A deterministically
+    // refused occurrence was already ended, so a fresh review always carries a NEW key instead of reusing one.
+    const occurrenceKey = mintShipmentPlanOccurrence();
     const body: AdminOrderOperationRequest = {
       code: "plan_shipment_dispatch",
       shipmentId,
@@ -196,37 +293,47 @@ export function AdminShipmentPlanModal({
       dispatchPlanReceivingDate: selected.receivingDate,
       dispatchPlanReceivingOpensAt: selected.receivingOpensAt,
       dispatchPlanReceivingClosesAt: selected.receivingClosesAt,
+      dispatchPlanReviewFingerprint: preview?.reviewFingerprint ?? null,
     };
-
-    try {
-      const result = await operationExecutorRef.current(checkoutId, body);
-      if (result.state !== "ok") {
-        markShipmentPlanAttemptFailed(
-          scope,
-          written.attempt,
-          mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"),
-        );
-        setSendError(mapAdminErrorMessage(result.message ?? "order.operation.failed", "fa"));
-        // A refusal is deterministic, but the reviewed intent is kept: the operator may pick a fresh slot
-        // and the SAME key then answers the recorded plan instead of creating a second one.
-        setReconcileHint(true);
-        return;
-      }
-      clearShipmentPlanAttempt(scope);
-      onClose();
-      onCompleted?.();
-    } catch (thrown) {
-      const fa = mapAdminErrorMessage(
-        thrown instanceof Error && thrown.message ? thrown.message : "order.operation.failed",
-        "fa",
-      );
-      markShipmentPlanAttemptFailed(scope, written.attempt, fa);
-      setSendError(fa);
+    const written = writeShipmentPlanAttempt({
+      scope,
+      occurrenceKey,
+      receivingDate: selected.receivingDate,
+      receivingOpensAt: selected.receivingOpensAt,
+      receivingClosesAt: selected.receivingClosesAt,
+      receivingTimeZone: selected.receivingTimeZone ?? null,
+      attempts: (retained?.attempts ?? 0) + 1,
+      requestBody: JSON.stringify(body),
+      reviewFingerprint: preview?.reviewFingerprint ?? null,
+      uncertain: false,
+    });
+    if (!written?.durable) {
+      // No durable envelope means a reload could lose the key and mint a second review; refuse instead.
       setReconcileHint(true);
-    } finally {
-      inFlightRef.current = false;
-      setPending(false);
+      setSendError("ذخیرهٔ محلی این مرور ممکن نیست؛ برای جلوگیری از ثبت دوباره، تا تازه‌سازی صفحه اقدام نکنید.");
+      return;
     }
+    setRetained(written.attempt);
+    await send(body, written.attempt);
+  }
+
+  /** TB-270-R3: re-reads the owning preview under a new epoch (never mixes a late answer into this screen). */
+  function reload(clearPriorOutcome = false) {
+    if (clearPriorOutcome) setPriorOutcomeFa(null);
+    const epoch = epochRef.current + 1;
+    epochRef.current = epoch;
+    void load(epoch);
+  }
+
+  /** TB-270-R3: ends a deterministically refused review so a deliberate NEW review can start from a fresh preview. */
+  function startFreshReview() {
+    endShipmentPlanReview(scope);
+    setRetained(null);
+    setFrozen(false);
+    setSelectedKey(null);
+    setSendError(null);
+    setReconcileHint(false);
+    reload();
   }
 
   const title = parcelOrdinal
@@ -275,7 +382,7 @@ export function AdminShipmentPlanModal({
           {loadError ? (
             <div className="space-y-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
               <p data-testid="admin-shipment-plan-load-error">{loadError}</p>
-              <Button type="button" tone="secondary" onClick={() => void load()} disabled={loading}>
+              <Button type="button" tone="secondary" onClick={() => reload()} disabled={loading}>
                 تلاش دوباره
               </Button>
             </div>
@@ -336,6 +443,16 @@ export function AdminShipmentPlanModal({
 
           {!loading && !loadError && !preview?.blockerCode && !confirmed && dates.length > 0 ? (
             <div className="space-y-2">
+              {frozen ? (
+                <p
+                  className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900"
+                  role="status"
+                  data-testid="admin-shipment-plan-frozen"
+                >
+                  نتیجهٔ تأیید قبلی مشخص نشد. همان درخواست بازبینی‌شده دقیقاً حفظ شده است؛ تا روشن‌شدن نتیجه
+                  فقط می‌توانید همان درخواست را دوباره بفرستید. بازهٔ دیگری در این وضعیت ثبت نمی‌شود.
+                </p>
+              ) : null}
               <p className="text-xs font-bold text-gray-700">تاریخ تحویل مشتری</p>
               <div className="flex flex-wrap gap-1.5" dir="rtl">
                 {dates.map((date) => {
@@ -345,9 +462,11 @@ export function AdminShipmentPlanModal({
                       key={date}
                       type="button"
                       onClick={() => {
+                        if (frozen) return;
                         setActiveDate(date);
                         setSelectedKey(null);
                       }}
+                      disabled={frozen}
                       className={
                         active
                           ? "min-h-11 rounded-lg border border-primary bg-primary/5 px-3 text-xs font-bold text-primary"
@@ -371,7 +490,11 @@ export function AdminShipmentPlanModal({
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setSelectedKey(key)}
+                      onClick={() => {
+                        if (frozen) return;
+                        setSelectedKey(key);
+                      }}
+                      disabled={frozen}
                       className={
                         active
                           ? "min-h-11 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-start text-xs text-gray-900"
@@ -417,6 +540,23 @@ export function AdminShipmentPlanModal({
             </div>
           ) : null}
 
+          {priorOutcomeFa && !frozen ? (
+            <div
+              className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+              role="status"
+              data-testid="admin-shipment-plan-prior-outcome"
+            >
+              <p>{priorOutcomeFa}</p>
+              <p>
+                آن بازبینی با همین نتیجه بسته شد و کلید/بازهٔ قبلی برای انتخاب دیگری بازاستفاده نمی‌شود. بازبینی تازه
+                از داده‌های فعلی گرفته می‌شود.
+              </p>
+              <Button type="button" tone="secondary" onClick={startFreshReview} disabled={loading}>
+                بازبینی تازه
+              </Button>
+            </div>
+          ) : null}
+
           {sendError ? (
             <p
               className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
@@ -429,8 +569,9 @@ export function AdminShipmentPlanModal({
 
           {reconcileHint ? (
             <p className="text-[11px] text-gray-600" role="status" data-testid="admin-shipment-plan-reconcile">
-              همان مرور قبلی حفظ شده است؛ اگر پاسخ نرسید، دوباره تأیید کنید تا همان برنامه خوانده شود و برنامهٔ
-              دومی ساخته نشود.
+              {frozen
+                ? "همان درخواست بازبینی‌شده حفظ شده است؛ با ارسال دوبارهٔ همان درخواست، اگر برنامه ثبت شده باشد همان خوانده می‌شود و برنامهٔ دومی ساخته نمی‌شود."
+                : "همان مرور قبلی حفظ شده است؛ اگر پاسخ نرسید، دوباره تأیید کنید تا همان برنامه خوانده شود و برنامهٔ دومی ساخته نشود."}
             </p>
           ) : null}
         </div>
@@ -439,14 +580,25 @@ export function AdminShipmentPlanModal({
           <Button type="button" tone="secondary" onClick={onClose} disabled={pending}>
             بستن
           </Button>
-          <Button
-            type="button"
-            onClick={() => void confirm()}
-            disabled={!canConfirm}
-            data-testid="admin-shipment-plan-confirm"
-          >
-            {pending ? "در حال تأیید…" : "تأیید زمان‌بندی"}
-          </Button>
+          {frozen ? (
+            <Button
+              type="button"
+              onClick={() => void confirm()}
+              disabled={!canConfirm}
+              data-testid="admin-shipment-plan-retry-same"
+            >
+              {pending ? "در حال ارسال…" : "تلاش دوباره با همین درخواست"}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => void confirm()}
+              disabled={!canConfirm}
+              data-testid="admin-shipment-plan-confirm"
+            >
+              {pending ? "در حال تأیید…" : "تأیید زمان‌بندی"}
+            </Button>
+          )}
         </div>
       </div>
     </Dialog>
