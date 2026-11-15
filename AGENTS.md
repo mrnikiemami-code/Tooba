@@ -1,3 +1,7 @@
+# CURRENT — ONLY TB269 ISSUED: PERSIAN DATES IN QUEUE — 2026-11-15
+
+Task docs/ai/tasks/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/TASK.md. User screenshot queue mixes raw Gregorian handoff with Jalali deadlines. Source root formatPlannedHandoff/formatCustomerReceiving echo ISO DateOnly;267 changed order view only.269 display-only consistency in queue cell+tooltip, preserve DateOnly/accepted-zone instants/wire sort values, no business changes/data writes/backend.268 tabs remain awaiting visual user feedback, no functional reopening or cleanup. One worker/task STOP_FOR_ARCHITECT automaticNext NONE. Earlier CURRENT banners superseded.
+
 # CURRENT — TB268 REVIEWED; WAIT FOR USER VISUAL CHECK — 2026-11-15
 
 Read docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/ARCHITECT-REVIEW.md. Exercised group ready for visual review: All2/Origin1/Resend1/Delivered1, defaultResend child2; link reveals source1. User/order state read-only. No new task automaticNext NONE, no business/payment/Returns/scheduler reopening or cleanup/refactor/baseline loops. User functional feedback positive,267 improved;268 visual acceptance pending. Worker geometry/keyboard proof reviewed, not independent architect runtime verification. Earlier CURRENT worker banner superseded.
