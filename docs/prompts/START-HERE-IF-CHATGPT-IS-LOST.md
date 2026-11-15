@@ -1,4 +1,19 @@
-# CURRENT — 270-R1 PASS: the read-only captured attempt-scheduling inputs seam exists (no caller, no plan, no UI change)
+# CURRENT — 270-R2 PASS: an existing resend/replacement parcel gets its OWN confirmed dispatch plan and cannot be dispatched without it
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/{RESULT.md,RECEIPTS.md,result-contract.txt,ownership-and-plan.md,readiness-and-feasibility-proof.md,replay-and-dispatch-guard-proof.md,user-review.md}.
+Decision `TWO_STAGE_ALLOCATION_THEN_ORDER_OWNED_IMMUTABLE_DISPATCH_PLAN_WITH_TYPED_PREVIEW_FEASIBILITY_EXACT_REPLAY_CONFLICT_AND_A_SHARED_SERVER_DISPATCH_GUARD_ON_SINGLE_BULK_AND_PACKAGE_PATHS_PLUS_OWN_PLAN_QUEUE_AND_DETAIL_ON_THE_EXISTING_OPERATOR_WORKFLOW_WITH_ZERO_LIVE_DATA_CHANGE`,
+Status **PASS within the issued 270-R2 scope**, NOT Architect ACCEPT, NOT user acceptance. **271 NOT ISSUED.**
+
+Two explicit durable stages: Fulfillment still creates the physical parcel; Order then confirms ONE immutable own plan
+(`order.shipment_dispatch_plans`, unique `shipment_id`) for that exact existing `Created` parcel through the existing
+operations endpoint (`plan_shipment_dispatch` + a read-only `…/shipment-plan/{shipmentId}` preview). Between the stages
+the parcel is visible and recoverable but not dispatch-authorized; single, bulk and consolidated-package dispatch all
+refuse it with `fulfillment.dispatch.plan_required` before any stock consume. The queue and detail read ONLY the
+parcel's own plan — never the original group plan and never a sibling's — so an unplanned attempt stays
+«موعد ارسال مشخص نشده» and offers planning instead of dispatch.
+
+# SUPERSEDED — 270-R1 PASS: the read-only captured attempt-scheduling inputs seam exists (no caller, no plan, no UI change)
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,scheduling-inputs-proof.md}.

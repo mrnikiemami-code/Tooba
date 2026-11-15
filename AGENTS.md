@@ -1,7 +1,45 @@
-# CURRENT — 270-R1 PASS: the read-only captured attempt-scheduling inputs seam exists (no caller, no plan) — 2026-11-15
+# CURRENT — 270-R2 PASS: a resend/replacement parcel now has its own deliberately confirmed plan and cannot be dispatched without it — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ownership-and-plan.md,readiness-and-feasibility-proof.md,replay-and-dispatch-guard-proof.md,user-review.md}.
+Status **PASS within the issued 270-R2 scope**, decision
+`TWO_STAGE_ALLOCATION_THEN_ORDER_OWNED_IMMUTABLE_DISPATCH_PLAN_WITH_TYPED_PREVIEW_FEASIBILITY_EXACT_REPLAY_CONFLICT_AND_A_SHARED_SERVER_DISPATCH_GUARD_ON_SINGLE_BULK_AND_PACKAGE_PATHS_PLUS_OWN_PLAN_QUEUE_AND_DETAIL_ON_THE_EXISTING_OPERATOR_WORKFLOW_WITH_ZERO_LIVE_DATA_CHANGE`,
+NOT Architect ACCEPT, NOT user acceptance, NOT any carrier/provider/waybill/customer-consent/financial claim.
+270-R1 remains **ACCEPT within its additive read-only seam scope** and its checkpoint is now persisted as
+`docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/ARCHITECT-REVIEW.md`.
+270 stays PARTIAL (design only) as the parent; **271 is NOT ISSUED**.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| 1 Invariant | implemented | Fulfillment still creates the physical parcel (`Created`); Order confirms ONE immutable own plan for that exact existing parcel. Between the two stages the parcel exists, is visible and recoverable, and is **not** dispatch-authorized. No Order-generated Fulfillment id, no cross-module atomicity claim, no scheduler/daemon |
+| 2 Persistence | additive | `order.shipment_dispatch_plans` (PK `plan_id`, **unique `shipment_id`**) with the exact binding (`snapshot/draft/revision/format/selection/areaGroup/rateRow`, owner scope, attempt kind, source ids, `source_fingerprint`) plus the selected windows/three UTC deadlines, allowances, transport days, policy version, readiness source, occurrence key, actor and confirmation instant; DB checks refuse a partial/decreasing triple |
+| 3 Readiness | owning facts | resend = source `Returned` receipt with per-line **usable** cover; replacement = its OWN `Replacement`/`Reserved|Fulfilled` decision with matching reservation id and covering quantity. Anchor `= max(server now, readiness_at)`; `CreatedAt` never substitutes for stock validation; one preparation + one transfer allowance applied once by the existing authority |
+| 4 Preview | read-only | `GET …/shipment-plan/{shipmentId}` returns feasible customer dates/slots with carrier-handoff and preparation-start deadlines, or a typed blocker with **no** calendar. Three independent weeks/zones, half-open carrier close, MAX transport days, unprovable deadlines skipped, missing capture/zone/week → localized blocker (never an invented weekday/date/slot) |
+| 5 Confirm | immutable + replay | `plan_shipment_dispatch` on the existing operations endpoint: actor gate re-checked on every request, exact replay answered from the stored row before any new feasibility work, changed key/selection → conflict with zero extra write, expired selection refused (never clamped), `23505` arbitrates two confirmations |
+| 6 Dispatch guard | server-only, shared | `fulfillment.dispatch.plan_required` is raised BEFORE any consume/state/event for every linked member on single dispatch and on consolidated-package dispatch (whole package refused); a missing reader refuses; first dispatch unchanged; no client-only disable and no bypass |
+| 7 Queue / detail | own plan only | a linked attempt reads ONLY its own plan (never the original group plan, never a sibling's promise); unplanned → `Unspecified`, null promise, `plan_shipment_dispatch` offered, `dispatch_shipment` withheld; detail renders the stored promise and adds planning only for an authorized, Created, non-package-locked linked parcel |
+| 8 Workflow | existing surface | same operational card + one «زمان‌بندی ارسال» button (44px), one `AdminShipmentPlanModal`, durable envelope written before the POST, refusal retains the exact occurrence, success refreshes the owning read models; 268 tabs/ordinals, Toast/MessageBox, RTL and the finance-free view untouched |
+
+Verified once after the final code change: `AdminShipmentPlan270R2Tests` **17/17**,
+`AdminShipmentDispatchPlan270R2RelationalTests` **2/2** on real `tooba_alpha` (rolled back),
+`AdminFulfillmentOwnPlanProjection270R2Tests` **3/3**, `DispatchPlanGuard270R2Tests` **6/6**, FE mount **77/77**,
+`tsc` 0, `npm run build` 0 (`BUILD_ID jdEuO1DKPbRL6rVo1vqUG`), Host publish 0 errors.
+Deploy: ONE canonical `tooba_alpha` 5432 SingleStore/store-alpha, Host 5088 (PID 19240, `/health` + `/health/ready` 200),
+Next 3000 (PID 41560); migration `order 20261115120000_AddShipmentDispatchPlans` applied once by the repository
+MigrationRunner (`pendingMigrations: []`); no manual DDL/destructive change/reset/reseed/backfill, no provider call, no
+fake waybill; **no live business write** (`shipment_dispatch_plans` = 0 rows, no parcel/hold/stock/decision/user row
+touched).
+Known limits: the **pre-apply** private backup was not taken before the additive migration was applied (only a
+**post-apply** dump was created: `D:\temp\tb270r2-backup\tooba_alpha-post-tb270r2.dump`, 2,949,234 B) — declared, not
+papered over; no live eligible unplanned parcel exists (the only linked resend is `Delivered`), so the review URL is
+read-only completed history and no live plan row/click-through was produced; concurrency is proven by the unique index +
+two independent contexts, not stress testing; no bulk-specific class (bulk runs the same single-dispatch guard).
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+# SUPERSEDED — 270-R1 PASS: the read-only captured attempt-scheduling inputs seam exists (no caller, no plan) — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/TASK.md and
-docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,scheduling-inputs-proof.md}.
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,scheduling-inputs-proof.md,ARCHITECT-REVIEW.md}.
 Status **PASS within the issued 270-R1 scope**, decision
 `ONE_ADDITIVE_READ_ONLY_SHIPPING_CONTRACTS_SEAM_EXPOSES_THE_EXACT_CAPTURED_SCHEDULING_INPUTS_WITHOUT_DESTINATION_MEASUREMENTS_CURRENCY_RATE_SELECTION_OR_PROVIDER_AND_WITH_TYPED_REFUSALS_AND_ZERO_ORDER_OR_FRONTEND_CHANGE`,
 NOT Architect ACCEPT, NOT user acceptance. 270 stays PARTIAL (design only) and is the parent of this increment.

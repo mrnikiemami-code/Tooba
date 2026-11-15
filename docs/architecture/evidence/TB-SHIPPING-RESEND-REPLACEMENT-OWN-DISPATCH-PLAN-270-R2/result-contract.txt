@@ -1,0 +1,58 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Task-ID: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R2
+Parent-Task: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Mode: OWN_ATTEMPT_PLAN_REVIEW_CONFIRM_AND_GATED_DISPATCH
+
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Expected-Base-SHA: 15b0d91488637631dbbc7e466212dd226b26f919
+Base-SHA:          15b0d91488637631dbbc7e466212dd226b26f919  (present locally, was HEAD, ancestor of origin/main)
+Code-SHA:          ce5d7f998ce8a3f391c416881afcfa5f0a5c951f
+Evidence-SHA:      recorded in the canonical Bridge Result body (the commit that adds this evidence set)
+Final-HEAD:        the evidence commit (this file's commit); reported in the Bridge Result body
+
+Decision:
+TWO_STAGE_ALLOCATION_THEN_ORDER_OWNED_IMMUTABLE_DISPATCH_PLAN_WITH_TYPED_PREVIEW_FEASIBILITY_EXACT_REPLAY_CONFLICT_AND_A_SHARED_SERVER_DISPATCH_GUARD_ON_SINGLE_BULK_AND_PACKAGE_PATHS_PLUS_OWN_PLAN_QUEUE_AND_DETAIL_ON_THE_EXISTING_OPERATOR_WORKFLOW_WITH_ZERO_LIVE_DATA_CHANGE
+
+Scope proofs (each run once, after the final code change):
+  Order unit              AdminShipmentPlan270R2Tests                     17/17
+  Order relational        AdminShipmentDispatchPlan270R2RelationalTests    2/2   (real tooba_alpha, rolled back)
+  Queue projection        AdminFulfillmentOwnPlanProjection270R2Tests      3/3
+  Fulfillment guard       DispatchPlanGuard270R2Tests                      6/6
+  FE mount                admin-shipment-plan-270r2 + admin-order-operational-delivery   77/77
+  typecheck               tsc --noEmit                                    0
+  FE build                npm run build         BUILD_ID jdEuO1DKPbRL6rVo1vqUG
+  Host publish            dotnet publish artifacts/publish-primary          0 errors
+  Served markers          _buildManifest.js 200; chunks/9424-91fab6e90a400226.js 200 (new copy)
+  Host health             /health 200, /health/ready 200 (SingleStore)
+
+Migration:
+  order 20261115120000_AddShipmentDispatchPlans  applied once by Tooba.MigrationRunner
+  plan --tenant store-alpha -> currentMigration 20261115120000_AddShipmentDispatchPlans, pendingMigrations []
+
+Disclosed deviations:
+  - The pre-apply private backup was NOT taken before the additive migration was applied; only
+    pre-apply-plan.json existed at that moment. A post-apply dump was created:
+    D:\temp\tb270r2-backup\tooba_alpha-post-tb270r2.dump  (2,949,234 B, sha256 prefix 331B373AD45882D9).
+    Declared, not papered over; the migration only creates one table + indexes and its Down drops exactly that table.
+  - The configured mount runner is `tsx --tsconfig tsconfig.mount-tests.json --test`; an initial `npx vitest` attempt
+    was the wrong runner (JSX parse error) and produced no result.
+  - No live eligible unplanned parcel exists (the only linked resend is Delivered), so no live plan row and no live
+    operator click-through; the review URL is read-only completed history.
+  - Concurrency proven by the shipment_id unique index + two independent relational contexts, not a stress harness.
+  - No bulk-specific test class: bulk selection dispatch runs the same single-dispatch guard.
+
+No live business write, no parcel/hold/reservation/stock/decision change, no provider call, no waybill, no
+notification send, no money movement, no user-data mutation. ONE canonical tooba_alpha 5432 SingleStore/store-alpha,
+Host 5088, Next 3000; no second/disposable database, no 15433, no edition/port/connection/appsettings/keys change.
+
+Worker PASS is not Architect ACCEPT. No user visual/functional, provider, financial or universal shipping acceptance is
+claimed.
