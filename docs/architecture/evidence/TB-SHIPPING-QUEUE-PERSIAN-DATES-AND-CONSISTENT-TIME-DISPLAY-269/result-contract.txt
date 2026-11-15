@@ -48,3 +48,21 @@ REVIEW_URL: /fa/admin/fulfillments   (user route /admin/fulfillments renders ide
 
 STOP_FOR_ARCHITECT
 automaticNextImplementationTask: NONE
+
+## FINAL_HEAD (appended after push)
+
+```text
+BASE_LOCAL_MAIN_AT_TASK_START : f62bd7564d5394dc8e36df4193b065d17be38682
+CODE_COMMIT                   : 463609685d797c2ea21e424ba66116aa026834e4
+  "TB-269: fulfilment queue dates render the Persian/Jalali calendar of the operations view"
+MERGE_COMMIT_AFTER_FETCH      : c3920a1d499f62f349ad46857b61a60652a38bcb
+  "Merge origin/main (269 issue + 268 review docs) into TB-269"
+FINAL_HEAD                    : c3920a1d499f62f349ad46857b61a60652a38bcb
+ORIGIN_MAIN_AFTER_PUSH        : c3920a1d499f62f349ad46857b61a60652a38bcb   (parity OK)
+```
+
+The push was rejected once (`fetch first`) because origin had advanced with the task issue and the 268 review docs; the
+history was integrated with a plain `--no-ff` merge (no rebase, no force, no amend, no reset, no stash). The only conflicts
+were the two CURRENT-banner files; the 269 PASS banner is CURRENT and the incoming banners were demoted to SUPERSEDED.
+The incoming `docs/ai/tasks/…-269/TASK.md` is byte-identical to the copy committed here (diff against origin = 0 lines).
+
