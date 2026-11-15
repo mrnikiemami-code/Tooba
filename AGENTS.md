@@ -1,3 +1,7 @@
+# CURRENT — TB267 IMPROVED PER USER; ONLY TB268 PARCEL TABS ISSUED — 2026-11-15
+
+User: «بهتر شد» but parcel cards remain cluttered; requests counted tabs such as resend1 and received-at-origin1. Active task docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md is presentation only, shared group-scoped counted underline tabs, initial actionable priority, stable ordinal/lineage cross-tab navigation and retained-recovery preservation. User functional workflow remains positive; no business/payment/Returns/scheduler redesign. Same exercised order read-only. Zero writes/fixtures/cleanup. No nested duplicate actions. One worker/task; STOP_FOR_ARCHITECT automaticNext NONE, await result then visual trial. Earlier CURRENT banners superseded.
+
 # CURRENT — TB267 REVIEWED FOR VISUAL HANDOFF; WAIT FOR USER — 2026-11-15
 
 Read docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267/ARCHITECT-REVIEW.md and user-review.md. Presentation-only source/evidence review complete; READY_FOR_USER_VISUAL_REVIEW, not visual acceptance. Same exercised OrderB stays read-only, Returned source/Delivered resend; no new task/automaticNext NONE. User previously said functionality worked; do not reopen payment/scheduler/Returns/quantity or reset data. Served build EwxE4g90_VArF5iXhm6oO reports readable structured layout390/1024/1440. No independent architect runtime/pixel verification claimed; await user look. Earlier CURRENT banners superseded.
