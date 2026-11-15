@@ -1,0 +1,97 @@
+TB-268 result contract
+======================
+
+Task              : TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268
+Parent            : TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267
+Channel           : tooba-main
+Worker            : tooba-worker-01 (cursor), single worker, one task, no delegation, no historical agent resumed
+Mode              : PRESENTATION_ONLY_GROUP_SCOPED_PARCEL_TABS_WITH_COUNTS_AND_PRESERVED_ACTIONS
+Status            : PASS within the issued presentation-only scope
+Decision          : GROUP_SCOPED_PARCEL_TAB_STRIP_WITH_PERSIAN_COUNT_BADGES_QUIET_NONZERO_CATEGORIES_ACTIONABILITY_FIRST_DEFAULT_AND_CROSS_TAB_LINEAGE_REVELATION_ON_THE_EXISTING_OPERATOR_VIEW_WITH_ZERO_FUNCTIONAL_CHANGE
+Acceptance        : NOT Architect ACCEPT, NOT user VISUAL ACCEPT, no shipping/financial/provider claim
+Next              : STOP_FOR_ARCHITECT ; automaticNextImplementationTask = NONE
+
+git
+---
+issued work base      : 2d8e42249a875fc67acb6659cdca674297766357   (the two doc commits that issue TB-268; work base == HEAD at round start)
+code commit           : the FE code commit of this round (3 files: 3 modified; +762 / -35 lines)
+evidence commit       : the commit that contains this file (docs-only) — final HEAD, verify with `git rev-parse HEAD`
+origin parity         : final HEAD == origin/main after push (recorded in RECEIPTS/git log; no force push)
+
+scope
+-----
+presentation only, inside the ALREADY EXISTING shared operational parcel subsection.
+  backend / endpoint / contract / capability / validator / handler : UNCHANGED
+  schema / migration / DDL / business SQL / data write             : NONE
+  action eligibility / mutation payload / quantity / capacity      : UNCHANGED
+  retained envelope / occurrence key / recovery rows               : UNCHANGED (same store, same keys, same handlers)
+  Tailwind config / global typography / sidebar / grid sweep       : UNCHANGED
+  screenshots committed                                            : NONE (forbidden by the task)
+
+changed files
+-------------
+  M src/frontend/app/admin/admin-order-operational-delivery-section.tsx        (+427 / -26)
+  M src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts      (+369 / -9)
+  M src/frontend/app/admin/admin-order-items-shipping-panel.tsx                (+1  / -0)   capabilitiesReady={opsLoaded}
+
+tabs implemented (group scoped, this group's projected parcels only)
+--------------------------------------------------------------------
+  همه                  every parcel of the group, cancelled history included
+  نیازمند اقدام        server-projected action OR a retained unresolved reviewed attempt (never status-derived)
+  در مسیر              Dispatched / InTransit
+  در حال برگشت         Returning
+  دریافت‌شده در مبدأ   Returned (carrier origin — NOT a customer RMA)
+  ارسال مجدد           durable resendOfShipmentId AND not the recorded damaged replacement (delivered resend included)
+  تحویل‌شده            Delivered
+  لغوشده               Cancelled
+  strip shows «همه» + non-zero categories + the currently selected tab; counts are parcels, Persian digits,
+  taken from ONE full-group snapshot; a resend is lineage and deliberately overlaps its status tab.
+
+behaviour
+---------
+  default tab           one actionability-first choice per mounted group: needsAction → resend → inTransit → receivedAtOrigin → delivered → all
+                        pinned only when the caller's action projection is authoritative (capabilitiesReady)
+  tab click             local state only, ZERO business requests, zero mutation
+  numbering             «مرسولهٔ ۱/۲» keeps its ordinal in the WHOLE group, never the filtered list
+  lineage navigation    chip / «نمایش مرسولهٔ ۲» selects the counterpart's own tab then focuses the EXISTING card by stable id
+  empty selected tab    stays selected on an authoritative refresh and says «مرسوله‌ای در این بخش نیست.»
+  single parcel         no tab strip at all (navigation would be pure noise)
+
+verification (once each, after the final change)
+------------------------------------------------
+  npx tsc --noEmit                                    0 diagnostics
+  mounted delivery suite                              70 / 70 pass  (63 retained + 7 TB-268)
+  npm run build                                       0 errors, BUILD_ID vJWB2FG1oJ2-vHasmjtve
+  served _buildManifest.js                            200
+  served chunks 7825-41be5c01279d084e / 967-9c7248c75c25d481   200 / 200, carry «نیازمند اقدام», «مرسوله‌ای در این بخش نیست»
+  live Order B 1440                                   doc 1425/1425 no overflow, strip 1022/1022 fits, tabs 44px, card 1037 in main 1169
+  live Order B 1024                                   doc 1009/1009 no overflow, strip 606/606 fits, tabs 44px
+  live Order B 390 (fresh load)                       doc 390/390 no overflow, strip 502 > 306 scoped scroll, tabs 44px,
+                                                      selected tab fully visible (42..169 inside 42..348)
+  live counts Order B                                 همه(۲) · دریافت‌شده در مبدأ(۱) · ارسال مجدد(۱) · تحویل‌شده(۱);
+                                                      needsAction/inTransit/returning/cancelled are 0 and hidden
+  live default tab                                    «ارسال مجدد» (needsAction 0 → resend 1), child card only
+  live keyboard                                       ArrowLeft from «ارسال مجدد» → «تحویل‌شده», focus followed, roving tabIndex 0
+  live cross-tab lineage                              chip «ارسال مجدد از مرسولهٔ ۱» → «دریافت‌شده در مبدأ» tab, source card focused
+  architecture guards                                 unchanged vs HEAD: 8/11 pass, the same 3 pre-existing baseline failures
+
+runtime
+-------
+  FE Next 3000 restarted on BUILD_ID vJWB2FG1oJ2-vHasmjtve (PID 32300)
+  Host 5088 untouched (/health 200, /health/ready 200) ; ONE tooba_alpha 5432 SingleStore ; no migration ; no DB write
+  user Order 01a1db2f-e36e-7000-b7d3-afb2fe86e81a read-only (GET only) ; no create/dispatch/deliver/return/refund/cancel/save/publish
+
+known limits
+------------
+  - the strip lives inside the already-oversized `admin-order-operational-delivery-section.tsx` (1788 lines); the file was
+    already `NEW_OVERSIZED_FILE` in the FE-SIZE guard baseline before this task, so no new violation class was introduced,
+    but the architecture backlog is real and untouched (a split is NOT part of a presentation-only task)
+  - architecture guards FE-FOLDER-001 / FE-FOLDER-002 / FE-SIZE fail identically at HEAD and after this change (verified by
+    stashing the three files and re-running); they are long-standing task-wide baselines, not this change
+  - `tailwind.config.ts` still does not scan `features/**`; every class used here lives under `app/**` and was confirmed in
+    the served DOM
+  - no user trial was run; no visual acceptance, no functional re-exercise, no shipping/financial claim
+  - the tab strip is per operational group; an order with several groups repeats the strip per group by design
+  - untracked prior-run scratch scripts `scripts/tb266r1-*.mjs` remain and are not part of this change set
+
+--- end

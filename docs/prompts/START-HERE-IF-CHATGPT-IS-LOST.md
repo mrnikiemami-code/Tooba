@@ -1,4 +1,26 @@
-# CURRENT — 267 PASS (presentation only): compact professional operational order surface, human Persian copy, finance-free shipping route, zero functional change — 2026-11-15
+# CURRENT — 268 PASS (presentation only): group-scoped parcel tabs with counted categories, actionable-first default, cross-tab lineage — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/{RESULT.md,RECEIPTS.md,result-contract.txt,tab-counts-and-navigation.md,user-review.md}.
+267 is improved per the user («بهتر شد»); the remaining complaint was operator density, so ONLY the parcel area of the
+existing shared operational section became one RTL underline tab strip: «همه» + only non-zero categories + the current
+selection, counts are parcels in Persian digits from ONE group snapshot. Categories are statuses plus one lineage
+(`ارسال مجدد`, deliberately overlapping `تحویل‌شده`); «نیازمند اقدام» is the server projection plus a retained unresolved
+attempt. Default tab is chosen once per mounted group, actionability first (needsAction → resend → inTransit →
+receivedAtOrigin → delivered → all), pinned only when the action projection is authoritative. Ordinals never renumber;
+the relationship chip moves to the counterpart's tab and focuses the EXISTING card; a selected tab that empties keeps
+its selection and says so; one parcel renders no strip; a click is local state only (zero requests). Actions, dialogs,
+retained envelopes, occurrence keys and the finance-free route are untouched: zero backend/schema/data change and the
+exercised Order B `01a1db2f-e36e-…` stayed read-only (`Returned` source + `Delivered` resend). `tsc` 0, mounted 70/70
+(63 retained + 7 new), `next build` 0 (`BUILD_ID vJWB2FG1oJ2-vHasmjtve`), FE restarted on 3000 (PID 32300), Host 5088
+untouched, no migration/DB write, one canonical `tooba_alpha`. Live 1440/1024/390: 0 document overflow, 44px tabs,
+scoped strip scroll at 390 with the selected tab in view. Known: the oversized section file and the three architecture
+guard baselines fail identically at HEAD (reported, not "fixed"); `tailwind.config.ts` still does not scan `features/**`.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Earlier banners below are historical.
+
+---
+
+# SUPERSEDED — 267 PASS (presentation only): compact professional operational order surface, human Persian copy, finance-free shipping route, zero functional change — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-OPERATIONAL-ORDER-PROFESSIONAL-LAYOUT-AND-PERSIAN-COPY-267/{RESULT.md,RECEIPTS.md,result-contract.txt,layout-before-after-metrics.md,copy-changes.md,user-review.md}.

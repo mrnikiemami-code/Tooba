@@ -1,4 +1,35 @@
-# CURRENT — TB267 IMPROVED PER USER; ONLY TB268 PARCEL TABS ISSUED — 2026-11-15
+# CURRENT — 268 PASS (presentation only): group-scoped parcel tab strip with Persian count badges, quiet non-zero categories, actionable-first default, cross-tab lineage revelation — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tab-counts-and-navigation.md,user-review.md}.
+Status **PASS within the issued presentation-only scope**, decision `GROUP_SCOPED_PARCEL_TAB_STRIP_WITH_PERSIAN_COUNT_BADGES_QUIET_NONZERO_CATEGORIES_ACTIONABILITY_FIRST_DEFAULT_AND_CROSS_TAB_LINEAGE_REVELATION_ON_THE_EXISTING_OPERATOR_VIEW_WITH_ZERO_FUNCTIONAL_CHANGE`,
+NOT Architect ACCEPT, NOT user VISUAL ACCEPT, no shipping/carrier/financial claim. 267 is improved per the user («بهتر شد»); the
+remaining complaint was density («کارمند با دیدین این فرم خیلی شلوغه براش»), so only the parcel area became tabbed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| 1 Strip | real underline tablist, group scoped | inside the EXISTING shared parcel subsection; «همه» + only non-zero categories + the current selection; counts are parcels in Persian digits from ONE group snapshot, so badges and cards cannot disagree |
+| 2 Categories | statuses + one lineage | نیازمند اقدام (server projection **or** retained unresolved attempt) / در مسیر / در حال برگشت / دریافت‌شده در مبدأ (`Returned`, carrier origin, not a customer RMA) / ارسال مجدد (`resendOfShipmentId` and not a damaged replacement, delivered resend included) / تحویل‌شده / لغوشده; resend deliberately overlaps its status |
+| 3 Default | actionability first, pinned once | needsAction → resend → inTransit → receivedAtOrigin → delivered → all, chosen per mounted group and only when `capabilitiesReady={opsLoaded}` makes the action projection authoritative |
+| 4 Identity | never renumbered | «مرسولهٔ ۱/۲» keeps its whole-group ordinal; the relationship chip (44px hit area) selects the counterpart's own tab and focuses the EXISTING card by stable `shipmentId`; no clone, no second action owner |
+| 5 Recovery | untouched | review dialog, envelope, occurrence key, handlers and retained rows unchanged; tab switching resets nothing and retries nothing; a click is local state only, zero requests |
+| 6 Empty / quiet | honest | a selected tab that reaches 0 on refresh keeps its selection and says «مرسوله‌ای در این بخش نیست.»; one parcel or one non-zero category renders no strip |
+| 7 a11y | ARIA + RTL | `tablist/tab/tabpanel`, `aria-selected/controls/labelledby`, roving `tabIndex`, ArrowLeft advances (RTL), ArrowRight back, Home/End ends, focus follows |
+
+Verified once: `tsc` 0; mounted suite **70/70** (63 retained + 7 TB-268); `next build` 0 `BUILD_ID vJWB2FG1oJ2-vHasmjtve`; served
+manifest 200 and chunks `7825-41be5c01279d084e` / `967-9c7248c75c25d481` 200 carrying the new copy; live read-only Order B
+counts همه(۲)/دریافت‌شده در مبدأ(۱)/ارسال مجدد(۱)/تحویل‌شده(۱) with «ارسال مجدد» as the default tab, doc overflow 0 at
+1440/1024/390, tabs 44px, strip scoped-scrolls at 390 (502>306) with the selected tab fully visible, live ArrowLeft and live
+chip→counterpart-tab focus verified. FE-only: Next restarted on 3000 (PID 32300), Host 5088 untouched (`/health` +
+`/health/ready` 200), no migration/DB write, no provider/waybill, one canonical `tooba_alpha`.
+Known limits: the strip lives in the already-oversized `admin-order-operational-delivery-section.tsx` (1788 lines, already
+`NEW_OVERSIZED_FILE` in the baseline); `FE-FOLDER-001/002` and `FE-SIZE` fail **identically at HEAD** (verified by stashing the
+three files), so they are long-standing baselines, not this change; `tailwind.config.ts` still does not scan `features/**` (all
+classes used here are under `app/**`, confirmed in the served DOM); the strip repeats per operational group by design; no user
+trial run. Two prior-run scratch files `scripts/tb266r1-*.mjs` remain untracked and are not part of this change set.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. User visual trial is the review URL in `user-review.md`; no acceptance claimed.
+
+# SUPERSEDED — TB267 IMPROVED PER USER; TB268 ISSUED — 2026-11-15
 
 User: «بهتر شد» but parcel cards remain cluttered; requests counted tabs such as resend1 and received-at-origin1. Active task docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md is presentation only, shared group-scoped counted underline tabs, initial actionable priority, stable ordinal/lineage cross-tab navigation and retained-recovery preservation. User functional workflow remains positive; no business/payment/Returns/scheduler redesign. Same exercised order read-only. Zero writes/fixtures/cleanup. No nested duplicate actions. One worker/task; STOP_FOR_ARCHITECT automaticNext NONE, await result then visual trial. Earlier CURRENT banners superseded.
 
