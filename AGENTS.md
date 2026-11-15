@@ -1,4 +1,45 @@
-# CURRENT — 271 PASS (employee queue read model + existing UI): five server-classified job stages, an independent امروز/آینده/همه scope, one pre-paging count set and a quiet history tab — 2026-11-15
+# CURRENT — 271 PARTIAL + 271-R1 PASS (repair): one active/archive selection with a tab-invariant archive badge, one combined classified set under one server now, a real job-priority default order, typed refusal of unevaluable selections and an explicit zone-unavailable classification — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,query-selection-count-parity-proof.md,default-sort-blocked-and-zone-proof.md,user-review.md}.
+The 271 PARTIAL review is persisted at `docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/ARCHITECT-REVIEW.md`.
+Status **271 = PARTIAL (NOT accepted)**; **271-R1 = PASS within the issued repair scope**, decision
+`ONE_ACTIVE_ARCHIVE_SELECTION_WITH_A_CONSTANT_ARCHIVE_BADGE_ONE_COMBINED_CLASSIFIED_SET_UNDER_ONE_SERVER_NOW_A_REAL_JOB_PRIORITY_DEFAULT_ORDER_TYPED_REFUSAL_OF_UNEVALUABLE_SELECTIONS_AND_AN_EXPLICIT_ZONE_UNAVAILABLE_CLASSIFICATION_ON_THE_EXISTING_QUEUE_WITH_ZERO_LIFECYCLE_OR_DATA_CHANGE`,
+NOT Architect ACCEPT, NOT user visual/functional acceptance, NOT any shipping/carrier/provider/financial claim.
+Base `09cbaa436` (== origin/main and the issued Expected-Base-SHA). **Latest accepted remains 270-R4 ACCEPT within its
+four-defect repair scope** (270-R1 ACCEPT within its seam; 270-R2/R3 PARTIAL; 270 PARTIAL as parent).
+`activeTask: NONE` — no task is issued or running; `automaticNextImplementationTask: NONE`.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A Active vs archive | one predicate | `InSelection` returns active rows only (including «همه») inside the selected scope, and the explicit `history` token returns only terminal rows, time-independently; `SelectedTotal`, the undated count and the page use that same predicate, so a terminal row can never ride on an active page or total |
+| B Archive badge | tab-invariant | the stage-dependent `Cancelled/Delivered` SQL prefilter is gone: the complete physical row set is classified on every request, so `stageHistory` is a constant function of the common search/column constraints and does not move with the selected active tab |
+| C Terminality | positive facts | `hasOpenObligation` (remaining process/pack/allocation quantity, a live parcel that must move, a received source that still owes a decision) replaces "no available codes"; a blocked unit keeps one of the five honest stages plus its existing blocker and gains no permission, while a settled returned source is archive |
+| D One read, one now | one response | `QueryWithCountsAsync` returns items + page total + counts from ONE `ClassifyAsync` under ONE injected `_clock.UtcNow`; the live handler calls it once and the legacy page/count methods delegate to it, so no second classification can occur |
+| E Default order | real | an absent sort stays absent (no synthetic `updatedAt desc`) so overdue → due-today → undated → future with `JobTimeUtc`/bucket/handoff/`WorkUnitKey` tie-breaks actually runs; explicit operator/saved-view sorts are preserved verbatim; selection tokens are not sortable |
+| F Refusals | before any read | `jobStage`/`timeScope`/`queueFilter` inside an advanced expression ⇒ `grid.advancedFilter.field.invalid`; a selection must be one value with `equals`/`in` ⇒ else `grid.filter.operator.invalid`; both raised in `Normalize`, before the DB |
+| G Zone | explicit unknown | `AcceptedZone` validates the accepted id with no UTC/Tehran/browser fallback: missing/invalid ⇒ `zone_unavailable` + `undated` + an explicit Persian label while the stored instant is kept for auditing; valid-zone half-open cutoff/day semantics unchanged |
+| H Data | untouched | one canonical `tooba_alpha`; no migration/DDL/reset/reseed/backfill/cleanup, no fixture/plan/hold/stock/decision/settings/draft write, no provider/waybill |
+
+Verified once after the final code change: Fulfillment `AdminFulfillmentWorkQueue271R1Tests` **17/17**,
+`AdminFulfillmentJobStage271Tests` **15/15**, combined with `FulfillmentErrorAndGridTests` **37/37**; FE mount
+**12/12**; node queue suite **9/9**; `test:fulfillment` **6/6**; `tsc --noEmit` 0; `npm run build` 0
+(`BUILD_ID mry3IgeR--YNQDX_gvEMt`); `dotnet build Tooba.slnx -c Release` 0 errors; Host publish 0 errors.
+Deploy: Host 5088 PID 24008 (`/health` + `/health/ready` 200, SingleStore `store-alpha`), Next 3000 PID 41084
+(`/fa` 200, served `_buildManifest.js` 200 on the new BUILD_ID).
+Read-only live at 1440/390 (DOM/text, no screenshots): stage badges همه ۴ · آماده‌سازی ۲ · آمادهٔ ارسال ۱ · تحویل به حامل ۰ ·
+پیگیری ۱ · برگشتی ۰, time امروز ۴ / آینده ۰ / همه ۴, «سابقهٔ ارسال ۱» constant across «همه»→«تحویل به حامل»→«همه»,
+«۴ ردیف در این نمایش · ۴ ردیف بدون موعد مشخص»; archive tab = 1 row with a disabled time control and 0/0/0 time badges,
+total 1; live request body `sort: []` with only the two visible selection filters; document overflow 0 at both widths;
+all stage/scope tabs 44px. Live refusals: HTTP 400 `grid.advancedFilter.field.invalid` and `grid.filter.operator.invalid`.
+Known limits: the live set is 4 rows and **entirely undated**, so dated ordering/cutoff equality/independent zones/future
+scope rest on the focused tests; the archive holds one row; `npm run test:grid` has one PRE-EXISTING failure in
+`column-manager.test.ts` (its `PAGE_SIZES` expectation predates the unchanged source); 25 pre-existing 36px grid toolbar
+controls remain under 44px; untracked `scripts/tb266r1-*.mjs` / `scripts/tb270r2-*.mjs` scratch files are not part of
+this change set.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+# SUPERSEDED — 271 PASS (employee queue read model + existing UI): five server-classified job stages, an independent امروز/آینده/همه scope, one pre-paging count set and a quiet history tab — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,work-stage-mapping.md,timing-counts-and-query-proof.md,user-review.md}.

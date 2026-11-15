@@ -1,0 +1,56 @@
+# TB-271-R1 — result contract
+
+```
+Task-ID: TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1
+Parent-Task: TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Mode: REPAIR_QUEUE_ACTIVE_ARCHIVE_PARITY_SINGLE_READ_AND_REAL_DEFAULT_ORDER
+Status: PASS (within the issued repair scope; worker PASS != Architect ACCEPT)
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 09cbaa436a03310f0cb46e6e622824f938d6c728
+Base-SHA: 09cbaa436a03310f0cb46e6e622824f938d6c728   (verified ancestor of origin/main; git merge-base exit 0)
+Code-SHA: 6632c42d424603f076a9a3a484133f21c056ff5e
+Evidence-SHA: PENDING-EVIDENCE-COMMIT
+automaticNextImplementationTask: NONE
+```
+
+## Decision
+
+`ONE_ACTIVE_ARCHIVE_SELECTION_WITH_A_CONSTANT_ARCHIVE_BADGE_ONE_COMBINED_CLASSIFIED_SET_UNDER_ONE_SERVER_NOW_A_REAL_JOB_PRIORITY_DEFAULT_ORDER_TYPED_REFUSAL_OF_UNEVALUABLE_SELECTIONS_AND_AN_EXPLICIT_ZONE_UNAVAILABLE_CLASSIFICATION_ON_THE_EXISTING_QUEUE_WITH_ZERO_LIFECYCLE_OR_DATA_CHANGE`
+
+## Repairs (all five issued defects)
+
+- A: active/archive parity — one `InSelection` predicate; no stage-dependent SQL prefilter; terminality from
+  `hasOpenObligation`, blocked active work keeps an honest stage; archive badge is tab-invariant and time-independent.
+- B: one combined read — `QueryWithCountsAsync` returns items + total + counts from ONE classification under ONE injected
+  clock; the live handler never calls the split page/count path.
+- C: real default order — an absent sort stays absent so overdue → due-today → undated → future actually runs; an
+  explicit sort is preserved; selection tokens are not sortable.
+- D: unsupported selections refused — `jobStage`/`timeScope`/`queueFilter` inside advanced expressions ⇒
+  `grid.advancedFilter.field.invalid`; a selection must be one value with `equals`/`in` ⇒ else
+  `grid.filter.operator.invalid`; both before any read.
+- E: invalid/missing accepted zone ⇒ `zone_unavailable` + `undated` with an explicit Persian label; no UTC/Tehran/browser
+  substitution; valid-zone half-open cutoff semantics unchanged.
+
+## Checks
+
+- Fulfillment `AdminFulfillmentWorkQueue271R1Tests` 17/17; `AdminFulfillmentJobStage271Tests` 15/15; combined 37/37.
+- FE mount `admin-fulfillment-work-queue-271.mount.test.ts` 12/12; node queue suite 9/9; `test:fulfillment` 6/6.
+- `tsc --noEmit` 0; `npm run build` 0 (`BUILD_ID mry3IgeR--YNQDX_gvEMt`); `dotnet build Tooba.slnx -c Release` 0 errors;
+  Host publish 0 errors.
+- Live: Host 5088 (PID 24008, `/health` 200, `/health/ready` 200 SingleStore); Next 3000 (PID 41084, `/fa` 200,
+  manifest 200 on the new BUILD_ID).
+
+## Not claimed
+
+Architect acceptance, user visual/functional acceptance, any shipping/carrier/provider/financial claim, a live dated
+ordering proof on the current all-undated live set, or a large-archive proof.
+
+```
+END
+```

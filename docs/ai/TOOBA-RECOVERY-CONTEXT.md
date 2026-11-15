@@ -1,20 +1,27 @@
 # Tooba — Recovery Context
 
-## Current pointer — 2026-11-15 (TB-271 employee work queue: five job stages + independent time scope)
+## Current pointer — 2026-11-15 (TB-271 PARTIAL + TB-271-R1 repair PASS awaiting Architect review)
 
 Latest Architect-accepted work: **TB-270-R4 = ACCEPT within its issued four-defect repair scope**
 (`docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/ARCHITECT-REVIEW.md`); 270-R1 ACCEPT
 within its read-only seam; 270-R2/R3 remain PARTIAL; `270` stays PARTIAL as the parent design task.
-Last implementation: **TB-271 = worker PASS awaiting Architect review**
-(`docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/`) at base
-`c501fe9bcdb2c42a26d05e23d44af288931612ed`, code `114c48ce6a65b8c57423ae5673325c199e24a1c8` — one server classifier maps
-each active physical work unit to exactly one job stage (preparation / ready_to_send / handoff / delivery / returns, with a
-quiet time-independent «سابقهٔ ارسال» archive) plus an independent امروز/آینده/همه scope, with stage/time badges and the
-page cut from ONE pre-paged set. **Active task: none.** `automaticNextImplementationTask: NONE`.
-Runtime unchanged: ONE canonical `tooba_alpha` @5432 SingleStore `store-alpha`, Host 5088 (PID 40692), FE 3000 (PID
-24868, `BUILD_ID 3jjJwEQe78ttzvxLwFBNg`). No migration was added by 271.
-Remaining user trial: the review URL in the 271 `user-review.md`; no user visual/functional acceptance is claimed, and the
-live data set is 4 rows, all undated.
+Last implementation: **TB-271 = PARTIAL (not accepted)** — its review is persisted at
+`docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/ARCHITECT-REVIEW.md` — and
+**TB-271-R1 = PASS within the issued repair scope, awaiting Architect review**
+(`docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/`) at base
+`09cbaa436a03310f0cb46e6e622824f938d6c728` (== origin/main and the issued Expected-Base-SHA). 271-R1 closes the five
+read/query defects: «همه» is the five ACTIVE stages only with a time-independent explicit archive (never inside an active
+total), the archive badge is a constant function of the common constraints (no stage-dependent SQL prefilter), terminality
+is the positive `hasOpenObligation` fact (a blocked unit keeps an honest stage), page + total + every badge come from ONE
+`QueryWithCountsAsync` classification under ONE injected clock, an absent sort stays absent so the server's
+overdue → due-today → undated → future order really runs (explicit sorts preserved), `jobStage`/`timeScope`/`queueFilter`
+are refused inside advanced expressions and a selection must be single-valued (both before any read), and a missing/invalid
+accepted zone is `zone_unavailable` + `undated` with an explicit Persian label. **Active task: none.**
+`automaticNextImplementationTask: NONE`.
+Runtime: ONE canonical `tooba_alpha` @5432 SingleStore `store-alpha`, Host 5088 (PID 24008, `/health` + `/health/ready`
+200), FE 3000 (PID 41084, `BUILD_ID mry3IgeR--YNQDX_gvEMt`). No migration was added by 271 or 271-R1.
+Remaining user trial: the review URL in the 271-R1 `user-review.md`; no user visual/functional acceptance is claimed, and
+the live data set is 4 rows, all undated, with a one-row archive.
 
 ## Superseded handoff — 2026-11-14 (TB-266 payment-gated supply, readable queue, clean trial set)
 

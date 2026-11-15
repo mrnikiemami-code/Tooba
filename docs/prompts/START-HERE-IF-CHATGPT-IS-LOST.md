@@ -1,4 +1,37 @@
-# CURRENT — 271 PASS: five server job stages + an independent Today/Future/All scope on the existing employee queue
+# CURRENT — 271 PARTIAL + 271-R1 PASS (repair): one active/archive selection, a tab-invariant archive badge, one combined classified set under one server now, a real job-priority default order, typed refusals and an explicit zone-unavailable state
+
+Read docs/ai/tasks/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,query-selection-count-parity-proof.md,default-sort-blocked-and-zone-proof.md,user-review.md}.
+271's PARTIAL review is persisted at `docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/ARCHITECT-REVIEW.md`.
+**271 = PARTIAL (not accepted); 271-R1 = PASS within the issued repair scope**, NOT Architect ACCEPT, NOT user acceptance,
+decision
+`ONE_ACTIVE_ARCHIVE_SELECTION_WITH_A_CONSTANT_ARCHIVE_BADGE_ONE_COMBINED_CLASSIFIED_SET_UNDER_ONE_SERVER_NOW_A_REAL_JOB_PRIORITY_DEFAULT_ORDER_TYPED_REFUSAL_OF_UNEVALUABLE_SELECTIONS_AND_AN_EXPLICIT_ZONE_UNAVAILABLE_CLASSIFICATION_ON_THE_EXISTING_QUEUE_WITH_ZERO_LIFECYCLE_OR_DATA_CHANGE`.
+Base `09cbaa436` (== origin/main and the issued Expected-Base-SHA). **Latest accepted remains 270-R4 ACCEPT within its
+four-defect repair scope**; R1 ACCEPT within its seam; R2/R3 remain PARTIAL; 270 stays PARTIAL as the parent.
+`activeTask: NONE`; `automaticNextImplementationTask: NONE`.
+
+The five job stages and the independent Today/Future/All control stay as issued. The repair closes the read/query
+inconsistencies: «همه» means the five ACTIVE stages only and the archive is reachable exclusively through the explicit
+history token (time-independent, never inside an active total); the archive badge no longer depends on the selected tab
+because the complete physical row set is classified on every request; terminality comes from `hasOpenObligation` instead
+of an empty capability list, so a blocked unit keeps an honest stage; page + total + every badge come from ONE
+`QueryWithCountsAsync` classification under ONE injected clock; an absent sort stays absent so the server's
+overdue → due-today → undated → future order really runs while explicit sorts are preserved; `jobStage`/`timeScope`/
+`queueFilter` are refused inside an advanced expression (`grid.advancedFilter.field.invalid`) and a selection must be one
+value with `equals`/`in` (`grid.filter.operator.invalid`), both before any read; and a missing/invalid accepted zone is
+`zone_unavailable` + `undated` with an explicit Persian label, never a UTC/Tehran/browser guess.
+Verified once: `AdminFulfillmentWorkQueue271R1Tests` 17/17, `AdminFulfillmentJobStage271Tests` 15/15, combined 37/37, FE
+mount 12/12, node queue suite 9/9, `test:fulfillment` 6/6, `tsc` 0, `npm run build` 0
+(`BUILD_ID mry3IgeR--YNQDX_gvEMt`), solution build 0 errors, Host publish 0 errors, Host 5088 PID 24008 healthy
+(`/health` + `/health/ready` SingleStore), Next 3000 PID 41084.
+Live read-only: همه ۴ · آماده‌سازی ۲ · آمادهٔ ارسال ۱ · تحویل به حامل ۰ · پیگیری ۱ · برگشتی ۰, امروز ۴ / آینده ۰ / همه ۴,
+«سابقهٔ ارسال ۱» constant across active tabs, archive = 1 row with 0/0/0 time badges, `sort: []` on the wire, overflow 0 at
+1440/390, 44px tabs; live 400s for the two refused shapes.
+Limits: the live set is 4 rows and entirely undated (dated ordering/future scope rest on the focused tests), the archive
+holds one row, `npm run test:grid` keeps one pre-existing `column-manager.test.ts` failure, and 25 pre-existing 36px grid
+toolbar controls remain under 44px.
+
+# SUPERSEDED — 271 PASS: five server job stages + an independent Today/Future/All scope on the existing employee queue
 
 Read docs/ai/tasks/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/{RESULT.md,RECEIPTS.md,result-contract.txt,work-stage-mapping.md,timing-counts-and-query-proof.md,user-review.md}.
