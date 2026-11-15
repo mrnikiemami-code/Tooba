@@ -13,6 +13,7 @@ using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Application.Scheduling.Ports;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
+using Tooba.Shipping.Contracts.Scheduling;
 using Tooba.Shipping.Contracts.Operations;
 using Tooba.Shipping.Infrastructure.Operations;
 using Tooba.Shipping.Infrastructure.Authoring;
@@ -89,6 +90,11 @@ public sealed class ShippingModule : IToobaModule
         // destination path through Geography Contracts and calls the SAME rate authority once. Registered
         // once, scoped, read-only; it is not a publication pointer and has no live Order/Storefront consumer.
         services.AddScoped<IShippingCapturedRevisionQuoteLookup, ShippingCapturedRevisionQuoteLookup>();
+        // TB-270-R1: the additive read seam that exposes the CAPTURED scheduling inputs (exact group/rate
+        // row duration, method timing policy, receiving/carrier/processing weeks) WITHOUT destination,
+        // measurements, currency, rate selection or any provider/Geography call. Read-only, Contracts-only
+        // and deliberately without a caller yet: the later attempt-plan owner is a separate reviewed task.
+        services.AddScoped<IShippingAttemptSchedulingLookup, ShippingAttemptSchedulingLookup>();
         // Packaging fee is a Shipping-owned commercial fact kept SEPARATE from the freight charge:
         // this read-only seam answers "what is the packaging component" without ever mutating a quote.
         services.AddScoped<IShippingPackagingFeeLookup, ShippingPackagingFeeLookup>();
