@@ -71,12 +71,13 @@ public sealed class FulfillmentErrorAndGridTests
     }
 
     [Fact]
-    public void Fulfillment_grid_policy_preserves_default_sort_and_field_whitelist()
+    public void Fulfillment_grid_policy_keeps_an_absent_sort_absent_and_enforces_the_field_whitelist()
     {
         var normalized = AdminFulfillmentGridQueryPolicy.Instance.Normalize(
             new GridQueryRequest(1, 20, null, [], [], null));
-        Assert.Equal("updatedAt", Assert.Single(normalized.Sort).Field);
-        Assert.Equal("desc", normalized.Sort[0].Direction);
+        // TB-271-R1: no synthetic `updatedAt desc` — an absent sort stays absent so the engine's documented
+        // job-priority ordering (overdue → today → undated → future) actually runs on a clean entry.
+        Assert.Empty(normalized.Sort);
 
         Assert.Throws<GridQueryValidationException>(() =>
             AdminFulfillmentGridQueryPolicy.Instance.Normalize(

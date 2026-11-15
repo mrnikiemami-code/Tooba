@@ -7,10 +7,11 @@ namespace Tooba.Fulfillment.Application.WorkQueue.Models;
 /// <remarks>
 /// <para>Badge dimensions are deliberate and explicit:</para>
 /// <list type="bullet">
-/// <item>stage badge = whole set inside the SELECTED time scope, before the selected stage;</item>
-/// <item>time badge = the SELECTED stage, before the selected scope;</item>
-/// <item>page total = both selections;</item>
-/// <item>archive (history) = time-independent and excluded from every active total;</item>
+/// <item>stage badge = whole ACTIVE set inside the SELECTED time scope, before the selected stage;</item>
+/// <item>time badge = the SELECTED active stage, before the selected scope (0 on the archive, which has no time);</item>
+/// <item>page total = both selections, cut from the SAME predicate as <c>SelectedTotal</c>;</item>
+/// <item>archive (history) = time-independent, reachable ONLY through the explicit history token, and excluded
+/// from every active total;</item>
 /// <item>undated = the explicit «موعد مشخص نشده» subset of the current selection.</item>
 /// </list>
 /// </remarks>
@@ -50,13 +51,15 @@ public static class AdminFulfillmentWorkQueueCountsBuilder
             StageDelivery: CountStage(inScope, AdminFulfillmentJobStageNames.Delivery),
             StageReturns: CountStage(inScope, AdminFulfillmentJobStageNames.Returns),
             StageHistory: history.Count,
-            TimeToday: CountTime(Selectable(active, history, stage), AdminFulfillmentTimeScopeNames.Today),
-            TimeFuture: CountTime(Selectable(active, history, stage), AdminFulfillmentTimeScopeNames.Future),
-            TimeAll: Selectable(active, history, stage).Count,
-            Undated: Selectable(active, history, stage)
+            TimeToday: CountTime(Selectable(active, stage), AdminFulfillmentTimeScopeNames.Today),
+            TimeFuture: CountTime(Selectable(active, stage), AdminFulfillmentTimeScopeNames.Future),
+            TimeAll: Selectable(active, stage).Count,
+            Undated: Selectable(active, stage)
                 .Count(row => InScope(row, scope)
                     && string.Equals(row.JobTimeState, AdminFulfillmentJobTimeStates.Undated, StringComparison.Ordinal)),
-            SelectedTotal: Selectable(active, history, stage).Count(row => InScope(row, scope)),
+            // TB-271-R1: the page total is EXACTLY the rows the page is cut from — the same predicate as Select.
+            // Deriving it from the active-only helpers made the archive tab claim «۰ ردیف» while rendering its rows.
+            SelectedTotal: rows.Count(row => InSelection(row, stage, scope)),
             SelectedStage: stage,
             SelectedTimeScope: scope);
     }
@@ -83,33 +86,48 @@ public static class AdminFulfillmentWorkQueueCountsBuilder
     public static bool IsActive(AdminFulfillmentWorkQueueRow row) =>
         !string.Equals(row.JobStage, AdminFulfillmentJobStageNames.History, StringComparison.Ordinal);
 
+    /// <summary>
+    /// TB-271-R1: the ONE exact predicate behind the page, <c>SelectedTotal</c>, the undated count and the time
+    /// badges. An active view (including «همه») contains ACTIVE rows only inside the selected time scope; the explicit
+    /// archive selection contains terminal rows only and is time-independent.
+    /// </summary>
     private static bool InSelection(AdminFulfillmentWorkQueueRow row, string stage, string scope)
     {
+        if (string.Equals(stage, AdminFulfillmentJobStageNames.History, StringComparison.Ordinal))
+        {
+            // The archive is exactly the terminal subset, whatever time scope the client happens to echo.
+            return !IsActive(row);
+        }
+
+        if (!IsActive(row))
+        {
+            // No terminal row can ever sit on an active page or inside an active total.
+            return false;
+        }
+
         if (!AdminFulfillmentJobStageAuthority.MatchesStage(row.JobStage, stage))
         {
             return false;
         }
 
-        // The archive is time-independent: a terminal row has no relevant job time to compare.
-        return !IsActive(row) || InScope(row, scope);
+        return InScope(row, scope);
     }
 
     private static bool InScope(AdminFulfillmentWorkQueueRow row, string scope) =>
         AdminFulfillmentJobStageAuthority.MatchesTimeScope(row.JobTimeState, scope);
 
     /// <summary>
-    /// The rows the TIME badges and the page describe: the SELECTED stage, before the selected time scope. «همه»
-    /// covers every active row, the archive is time-independent, and any other stage is exactly that stage — so a
-    /// time badge can never be borrowed from a different stage's rows.
+    /// The rows the TIME badges and the page describe: the SELECTED active stage, before the selected time scope.
+    /// The archive has no time dimension (its control is disabled and its rows carry no job time), so all three time
+    /// badges are honestly 0 there instead of borrowing the terminal count.
     /// </summary>
     private static List<AdminFulfillmentWorkQueueRow> Selectable(
         List<AdminFulfillmentWorkQueueRow> active,
-        List<AdminFulfillmentWorkQueueRow> history,
         string stage)
     {
         if (string.Equals(stage, AdminFulfillmentJobStageNames.History, StringComparison.Ordinal))
         {
-            return history;
+            return [];
         }
 
         if (string.Equals(stage, AdminFulfillmentJobStageNames.All, StringComparison.Ordinal))

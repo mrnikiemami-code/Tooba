@@ -91,6 +91,12 @@ public static class AdminFulfillmentJobTimeMeanings
     /// <summary>Delivery/return follow-up with no stored SLA: no invented hourly deadline.</summary>
     public const string OngoingFollowUp = "ongoing_followup";
 
+    /// <summary>
+    /// TB-271-R1: the accepted instant exists but the accepted ZONE is missing/refused, so no local day can be
+    /// asserted. The stored instant is kept for auditing; no UTC/browser/Tehran substitution is made.
+    /// </summary>
+    public const string ZoneUnavailable = "zone_unavailable";
+
     /// <summary>Terminal history: no job time at all.</summary>
     public const string None = "none";
 }
@@ -149,6 +155,8 @@ public static class AdminFulfillmentJobStageAuthority
     private const string TimeLabelHandoff = "آخرین مهلت تحویل به حامل";
     private const string TimeLabelMissingPlan = "موعد ارسال مشخص نشده";
     private const string TimeLabelOngoing = "پیگیری جاری؛ مهلت مشخصی ثبت نشده";
+    private const string TimeLabelZoneMissing = "منطقهٔ زمانی مشخص نشده؛ زمان کار قابل تعیین نیست";
+    private const string TimeLabelZoneInvalid = "منطقهٔ زمانی نامعتبر؛ زمان کار قابل تعیین نیست";
     private const string TimeLabelNone = "—";
 
     /// <summary>The Persian operator label of one stage token.</summary>
@@ -164,33 +172,42 @@ public static class AdminFulfillmentJobStageAuthority
     };
 
     /// <summary>
-    /// Classifies ONE physical work unit. <paramref name="pendingDispatch"/> is the existing physical-work fact and
-    /// <paramref name="nowUtc"/> is the injected server clock; nothing here reads settings or a browser clock.
+    /// Classifies ONE physical work unit. <paramref name="hasOpenObligation"/> is the positive physical fact
+    /// (remaining process/pack/allocation quantity, a live parcel that must move, or a received source that still
+    /// owes a decision) — never the mere absence of an offered capability. <paramref name="nowUtc"/> is the
+    /// injected server clock; nothing here reads settings or a browser clock.
     /// </summary>
+    /// <param name="hasPreparationWork">TB-271-R1: this scope still has processable/packable quantity.</param>
+    /// <param name="hasAllocationWork">TB-271-R1: this scope still has packed quantity without a parcel.</param>
     public static AdminFulfillmentJobStageFacts Classify(
         string workUnitKind,
         string workUnitState,
         IReadOnlyList<string> availableActionCodes,
-        bool pendingDispatch,
+        bool hasOpenObligation,
         DateTimeOffset? preparationStartUtc,
         DateTimeOffset? transferDepartureUtc,
         DateTimeOffset? handoffDeadlineUtc,
         string? timeZone,
-        DateTimeOffset nowUtc)
+        DateTimeOffset nowUtc,
+        bool hasPreparationWork = false,
+        bool hasAllocationWork = false)
     {
         ArgumentNullException.ThrowIfNull(availableActionCodes);
-        var stage = ResolveStage(workUnitKind, workUnitState, availableActionCodes, pendingDispatch);
+        var stage = ResolveStage(
+            workUnitKind, workUnitState, availableActionCodes, hasOpenObligation,
+            hasPreparationWork, hasAllocationWork);
+        var zone = AcceptedZone(timeZone);
         return stage switch
         {
             AdminFulfillmentJobStageNames.Preparation => WithInstant(
                 stage, AdminFulfillmentJobTimeMeanings.PreparationStart, TimeLabelPreparation,
-                preparationStartUtc, timeZone, nowUtc),
+                preparationStartUtc, timeZone, zone, nowUtc),
             AdminFulfillmentJobStageNames.ReadyToSend => WithInstant(
                 stage, AdminFulfillmentJobTimeMeanings.TransferDeparture, TimeLabelTransfer,
-                transferDepartureUtc, timeZone, nowUtc),
+                transferDepartureUtc, timeZone, zone, nowUtc),
             AdminFulfillmentJobStageNames.Handoff => WithInstant(
                 stage, AdminFulfillmentJobTimeMeanings.HandoffClose, TimeLabelHandoff,
-                handoffDeadlineUtc, timeZone, nowUtc),
+                handoffDeadlineUtc, timeZone, zone, nowUtc),
             AdminFulfillmentJobStageNames.Delivery or AdminFulfillmentJobStageNames.Returns => new AdminFulfillmentJobStageFacts(
                 stage,
                 LabelFa(stage),
@@ -209,22 +226,29 @@ public static class AdminFulfillmentJobStageAuthority
     }
 
     /// <summary>The stage token of one physical work unit (the precedence in <c>work-stage-mapping.md</c> §2).</summary>
+    /// <remarks>
+    /// TB-271-R1: terminality is decided by POSITIVE physical evidence only. A blocked active unit (no permitted
+    /// action because of payment/ownership/capture/source) is still work and therefore keeps an honest one-of-five
+    /// stage; only a finished state, a closed/no-obligation unit or the projection's own "no open unit" shape is
+    /// the archive. An empty capability list is never proof that nothing remains.
+    /// </remarks>
     public static string ResolveStage(
         string workUnitKind,
         string workUnitState,
         IReadOnlyList<string> availableActionCodes,
-        bool pendingDispatch)
+        bool hasOpenObligation,
+        bool hasPreparationWork = false,
+        bool hasAllocationWork = false)
     {
         ArgumentNullException.ThrowIfNull(availableActionCodes);
         var kind = (workUnitKind ?? string.Empty).Trim();
         var state = (workUnitState ?? string.Empty).Trim();
         var codes = availableActionCodes;
-        var hasForwardCode = codes.Count > 0;
 
-        // 1) Terminal first: the projection's own "no open physical unit" shape, a finished state, or nothing forward.
+        // 1) Terminal only on real evidence: no open physical unit, a finished state, or a settled obligation.
         if (string.Equals(kind, AdminFulfillmentWorkUnitKinds.Fulfillment, StringComparison.OrdinalIgnoreCase)
             || IsTerminalState(state)
-            || (!pendingDispatch && !hasForwardCode))
+            || !hasOpenObligation)
         {
             return AdminFulfillmentJobStageNames.History;
         }
@@ -240,8 +264,8 @@ public static class AdminFulfillmentJobStageAuthority
             return AdminFulfillmentJobStageNames.Returns;
         }
 
-        // 3) Processing/packing of this row's OWN remaining quantity.
-        if (Has(codes, "mark_processing", "mark_packed"))
+        // 3) Processing/packing of this row's OWN remaining quantity (capability OR the positive quantity fact).
+        if (Has(codes, "mark_processing", "mark_packed") || hasPreparationWork)
         {
             return AdminFulfillmentJobStageNames.Preparation;
         }
@@ -269,12 +293,34 @@ public static class AdminFulfillmentJobStageAuthority
                 "assign_tracking",
                 "correct_tracking",
                 "assign_consolidated_package_tracking")
-            || string.Equals(state, "Created", StringComparison.OrdinalIgnoreCase))
+            || string.Equals(state, "Created", StringComparison.OrdinalIgnoreCase)
+            || (string.Equals(kind, AdminFulfillmentWorkUnitKinds.Group, StringComparison.OrdinalIgnoreCase)
+                && hasAllocationWork))
         {
             return AdminFulfillmentJobStageNames.ReadyToSend;
         }
 
-        return AdminFulfillmentJobStageNames.History;
+        // 7) A BLOCKED active unit keeps the honest stage of its own physical state. Never the archive, and never a
+        // capability-derived guess: a received source still owes return work, a group still owns its own remaining
+        // quantity, a live parcel still needs its exit, and a live package still needs its handoff.
+        if (string.Equals(state, "Returned", StringComparison.OrdinalIgnoreCase))
+        {
+            return AdminFulfillmentJobStageNames.Returns;
+        }
+
+        if (string.Equals(kind, AdminFulfillmentWorkUnitKinds.Group, StringComparison.OrdinalIgnoreCase))
+        {
+            return hasAllocationWork
+                ? AdminFulfillmentJobStageNames.ReadyToSend
+                : AdminFulfillmentJobStageNames.Preparation;
+        }
+
+        if (string.Equals(kind, AdminFulfillmentWorkUnitKinds.Package, StringComparison.OrdinalIgnoreCase))
+        {
+            return AdminFulfillmentJobStageNames.Handoff;
+        }
+
+        return AdminFulfillmentJobStageNames.ReadyToSend;
     }
 
     /// <summary>Does a row's own time state belong to the requested time scope?</summary>
@@ -288,13 +334,22 @@ public static class AdminFulfillmentJobStageAuthority
             _ => !string.Equals(jobTimeState, AdminFulfillmentJobTimeStates.Future, StringComparison.Ordinal),
         };
 
-    /// <summary>Does a row's stage belong to the requested stage selection?</summary>
+    /// <summary>
+    /// Does a row's stage belong to the requested stage selection? TB-271-R1: «همه» is the five ACTIVE stages only —
+    /// the archive is reachable exclusively through the explicit <c>history</c> token, so a terminal row can never
+    /// ride along on the active page or distort an active total.
+    /// </summary>
     public static bool MatchesStage(string jobStage, string? selectedStage)
     {
         var token = (selectedStage ?? string.Empty).Trim().ToLowerInvariant();
-        return token.Length == 0
-            || string.Equals(token, AdminFulfillmentJobStageNames.All, StringComparison.Ordinal)
-            || string.Equals(jobStage, token, StringComparison.Ordinal);
+        var stage = (jobStage ?? string.Empty).Trim();
+        if (token.Length == 0 || string.Equals(token, AdminFulfillmentJobStageNames.All, StringComparison.Ordinal))
+        {
+            return stage.Length > 0
+                && !string.Equals(stage, AdminFulfillmentJobStageNames.History, StringComparison.Ordinal);
+        }
+
+        return string.Equals(stage, token, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -316,6 +371,7 @@ public static class AdminFulfillmentJobStageAuthority
         string label,
         DateTimeOffset? instant,
         string? timeZone,
+        TimeZoneInfo? zone,
         DateTimeOffset nowUtc)
     {
         if (instant is null)
@@ -330,28 +386,69 @@ public static class AdminFulfillmentJobStageAuthority
                 AdminFulfillmentJobTimeStates.Undated);
         }
 
+        // TB-271-R1: an accepted instant without a usable accepted ZONE can never be classified into a local
+        // today/future day. The stored instant is kept, the state is explicitly undated and the label names why.
+        if (zone is null)
+        {
+            var missing = string.IsNullOrWhiteSpace(timeZone);
+            return new AdminFulfillmentJobStageFacts(
+                stage,
+                LabelFa(stage),
+                AdminFulfillmentJobTimeMeanings.ZoneUnavailable,
+                missing ? TimeLabelZoneMissing : TimeLabelZoneInvalid,
+                instant,
+                AdminFulfillmentJobTimeStates.Undated);
+        }
+
         return new AdminFulfillmentJobStageFacts(
             stage,
             LabelFa(stage),
             meaning,
             label,
             instant,
-            StateOf(instant.Value, timeZone, nowUtc));
+            StateOf(instant.Value, zone, nowUtc));
     }
 
-    private static string StateOf(DateTimeOffset instant, string? timeZone, DateTimeOffset nowUtc)
+    private static string StateOf(DateTimeOffset instant, TimeZoneInfo zone, DateTimeOffset nowUtc)
     {
-        // Half-open: exactly at the accepted cutoff is already late.
+        // Half-open: exactly at the accepted cutoff is already late. This comparison is on ABSOLUTE instants, so it
+        // needs no zone and no local day.
         if (instant <= nowUtc)
         {
             return AdminFulfillmentJobTimeStates.PastDue;
         }
 
-        var instantDay = AdminFulfillmentDispatchTimingAuthority.LocalDate(instant, timeZone);
-        var today = AdminFulfillmentDispatchTimingAuthority.LocalDate(nowUtc, timeZone);
+        var instantDay = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, zone).DateTime);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(nowUtc, zone).DateTime);
         return instantDay <= today
             ? AdminFulfillmentJobTimeStates.DueToday
             : AdminFulfillmentJobTimeStates.Future;
+    }
+
+    /// <summary>
+    /// TB-271-R1: the accepted zone, or <c>null</c> when it is missing/refused. This is the NEW classifier boundary:
+    /// it never falls back to UTC/browser/Tehran, and it leaves the older scheduling helper semantics untouched.
+    /// </summary>
+    private static TimeZoneInfo? AcceptedZone(string? timeZone)
+    {
+        var id = (timeZone ?? string.Empty).Trim();
+        if (id.Length == 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(id);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return null;
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return null;
+        }
     }
 
     private static bool IsTerminalState(string state) =>

@@ -222,6 +222,8 @@ test("a clean entry shows the live default work — stage همه with scope ام
     const applied = selectionOf(stub.calls.at(-1)!.body);
     assert.equal(applied.stage, "all");
     assert.equal(applied.scope, "today");
+    // TB-271-R1: a clean entry sends NO synthetic `updatedAt desc`, so the server's job-priority order runs.
+    assert.deepEqual((stub.calls.at(-1)!.body?.sort as unknown[] | undefined) ?? [], []);
     // A clean entry never mutates the URL into an explicit selection.
     assert.equal(window.location.search, "");
   } finally {
@@ -340,6 +342,68 @@ test("unknown counts render as unavailable markers instead of a successful-looki
     assert.equal(q(tree.container, "[data-testid='admin-fulfillment-job-stage-count-preparation']").textContent, "—");
     assert.equal(q(tree.container, "[data-testid='admin-fulfillment-time-scope-count-today']").textContent, "—");
     assert.match(q(tree.container, "[data-testid='admin-fulfillment-queue-summary']").textContent ?? "", /در دسترس نیست/);
+  } finally {
+    await tree.unmount();
+    stub.restore();
+  }
+});
+
+test("the footer total is the server's selected total and the archive badge never moves with the active tab", async () => {
+  setUrl("");
+  const stub = stubFetch(() => ({
+    items: [item()],
+    totalCount: 3,
+    dispatchCounts: counts({ selectedTotal: 3, stageHistory: 7 }),
+  }));
+  const tree = await mountScreen();
+  try {
+    await waitFor(() => qq(tree.container, "[data-testid^='admin-fulfillment-job-time-']").length > 0);
+    // TB-271-R1: the grid total is the server's selection total (totalCount === selectedTotal on the wire), never
+    // the one fetched row.
+    const pagination = q(tree.container, "[data-app-grid-pagination]");
+    assert.match(pagination.textContent ?? "", /از\s*۳\s*ردیف/);
+    assert.equal(
+      q(tree.container, "[data-testid='admin-fulfillment-queue-summary']").getAttribute("data-selected-total"),
+      "3",
+    );
+    const archiveBadge = () =>
+      q(tree.container, "[data-testid='admin-fulfillment-job-stage-history']").textContent ?? "";
+    assert.equal(archiveBadge().includes((7).toLocaleString("fa-IR")), true);
+
+    // Changing the active stage and then the time scope is a read of a different selection, but the archive badge
+    // is a function of the common constraints: it may never move with the tab the operator is looking at.
+    await click(q(tree.container, "[data-testid='admin-fulfillment-job-stage-handoff']"));
+    await waitFor(() => selectionOf(stub.calls.at(-1)!.body).stage === "handoff");
+    await click(q(tree.container, "[data-testid='admin-fulfillment-time-scope-future']"));
+    await waitFor(() => selectionOf(stub.calls.at(-1)!.body).scope === "future");
+    assert.equal(archiveBadge().includes((7).toLocaleString("fa-IR")), true);
+  } finally {
+    await tree.unmount();
+    stub.restore();
+  }
+});
+
+test("an accepted zone that is missing or invalid is named truthfully instead of guessed into a date", async () => {
+  setUrl("");
+  const stub = stubFetch(() => ({
+    items: [item({
+      jobTimeMeaning: "zone_unavailable",
+      jobTimeLabelFa: "منطقهٔ زمانی مشخص نشده؛ زمان کار قابل تعیین نیست",
+      jobTimeUtc: "2026-11-15T16:30:00Z",
+      plannedHandoffTimeZone: null,
+      jobTimeState: "undated",
+    })],
+    dispatchCounts: counts({ undated: 1, selectedTotal: 1 }),
+  }));
+  const tree = await mountScreen();
+  try {
+    await waitFor(() => qq(tree.container, "[data-testid^='admin-fulfillment-job-time-']").length > 0);
+    const cell = q(tree.container, "[data-testid='admin-fulfillment-job-time-parcel:sh-1']");
+    // The sentence names the real problem, the state is the honest undated exception and no date is invented.
+    assert.match(cell.textContent ?? "", /منطقهٔ زمانی مشخص نشده/);
+    assert.equal(cell.getAttribute("data-job-time-state"), "undated");
+    assert.doesNotMatch(cell.textContent ?? "", /\d{4}-\d{2}-\d{2}T/);
+    assert.doesNotMatch(cell.textContent ?? "", /Asia\/Tehran/);
   } finally {
     await tree.unmount();
     stub.restore();

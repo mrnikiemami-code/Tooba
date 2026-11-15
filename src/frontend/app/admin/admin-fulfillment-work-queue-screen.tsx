@@ -10,6 +10,7 @@ import {
   useLegacyAdminGridDirectProps,
 } from "../../design-system";
 import type { GridBulkAction, GridServerQuery } from "../../design-system/data-grid";
+import { DEFAULT_GRID_QUERY } from "../../design-system/app-data-grid/grid-query-mapper.ts";
 import {
   FULFILLMENT_BULK_ACTION_LABELS,
   FULFILLMENT_SAFE_BULK_ACTION_CODES,
@@ -53,6 +54,14 @@ function PageHeading({ title, description }: { title: string; description?: stri
  * the existing grid query, so the server keeps the single filtering/counting authority. Orders UI را دست نمی‌زند؛
  * فقط همین صفحه.
  */
+/**
+ * TB-271-R1: this grid's clean entry is the EMPLOYEE job priority (overdue → today → undated → future), owned by
+ * the server. The shared grid default (`updatedAt desc`) is a column sort the operator never asked for, so it is
+ * not sent here: an empty sort is what lets the documented queue order run. Any explicit operator/saved-view sort
+ * still wins, because the grid sends it verbatim.
+ */
+const QUEUE_DEFAULT_QUERY: GridServerQuery = { ...DEFAULT_GRID_QUERY, sorts: [] };
+
 export function AdminFulfillmentWorkQueueScreen() {
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_FULFILLMENT_GRID_VIEW_KEY), []);
   // TB-271: ONE job-stage selection and ONE independent time scope. `null` counts mean "unknown" and are rendered
@@ -339,7 +348,12 @@ export function AdminFulfillmentWorkQueueScreen() {
           {gridError ? (
             <ErrorState title="فروشگاه در دسترس نیست" detail={gridError} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
-            <AppDataGrid<FulfillmentListRow> {...gridProps} rowHeight={64} bulkActions={bulkActions} />
+            <AppDataGrid<FulfillmentListRow>
+              {...gridProps}
+              rowHeight={64}
+              bulkActions={bulkActions}
+              defaultQuery={QUEUE_DEFAULT_QUERY}
+            />
           )}
         </div>
       </section>

@@ -47,7 +47,7 @@ public sealed class AdminFulfillmentJobStage271Tests
     {
         var codes = new[] { "cancel_shipment", "correct_tracking", "dispatch_shipment" };
         var facts = AdminFulfillmentJobStageAuthority.Classify(
-            AdminFulfillmentWorkUnitKinds.Parcel, "Created", codes, pendingDispatch: true,
+            AdminFulfillmentWorkUnitKinds.Parcel, "Created", codes, hasOpenObligation: true,
             preparationStartUtc: Now.AddHours(-4),
             transferDepartureUtc: Now.AddHours(-2),
             handoffDeadlineUtc: Now.AddHours(3),
@@ -336,7 +336,26 @@ public sealed class AdminFulfillmentJobStage271Tests
         string state,
         IReadOnlyList<string> codes) =>
         AdminFulfillmentJobStageAuthority.Classify(
-            kind, state, codes, pendingDispatch: state == "Created", null, null, null, Tehran, Now);
+            kind,
+            state,
+            codes,
+            hasOpenObligation: OpenObligation(state, codes),
+            preparationStartUtc: null,
+            transferDepartureUtc: null,
+            handoffDeadlineUtc: null,
+            timeZone: Tehran,
+            nowUtc: Now,
+            hasPreparationWork: codes.Any(code => code is "mark_processing" or "mark_packed"),
+            hasAllocationWork: codes.Any(code => code == "create_shipment"));
+
+    /// <summary>
+    /// TB-271-R1: the pure-case physical obligation. A finished state owns nothing; a received source only owes work
+    /// while a decision is still offered for it. These are only the fixture-side facts of this helper — the real
+    /// projection derives them from quantities and parcel lifecycles.
+    /// </summary>
+    private static bool OpenObligation(string state, IReadOnlyList<string> codes) =>
+        state is not ("Delivered" or "Cancelled" or "Failed")
+        && (!string.Equals(state, "Returned", StringComparison.Ordinal) || codes.Count > 0);
 
     private static AdminFulfillmentWorkQueueRow Row(string key, string stage, string timeState) =>
         new(

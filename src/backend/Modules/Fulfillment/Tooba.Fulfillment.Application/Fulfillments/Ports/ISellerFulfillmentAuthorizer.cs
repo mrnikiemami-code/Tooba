@@ -24,7 +24,15 @@ public interface ISellerFulfillmentAuthorizer
 /// <summary>Query port صف کار Admin fulfillment.</summary>
 public interface IAdminFulfillmentWorkQueueQuery
 {
-    /// <summary>صفحه‌بندی DB-native صف کار.</summary>
+    /// <summary>
+    /// TB-271-R1: the ONE read the live queue endpoint uses — a single classification under ONE injected clock
+    /// returning the page AND its counts together, so the rows and the badges can never come from two reads.
+    /// </summary>
+    Task<WorkQueue.Models.AdminFulfillmentWorkQueueSnapshot> QueryWithCountsAsync(
+        BuildingBlocks.Grid.GridQueryRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>صفحه‌بندی DB-native صف کار (same single-classification path as the combined read).</summary>
     Task<BuildingBlocks.Grid.GridPageResponse<WorkQueue.Models.AdminFulfillmentWorkQueueRow>> QueryAsync(
         BuildingBlocks.Grid.GridQueryRequest request,
         CancellationToken cancellationToken);

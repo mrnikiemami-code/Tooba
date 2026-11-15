@@ -110,7 +110,11 @@ public sealed record AdminFulfillmentWorkQueueRow(
     // rows of one order stay distinguishable by a HUMAN number instead of a raw id.
     int WorkUnitOrdinal = 0,
     // TB-271: how many live parcels that whole group owns (0 = not an ordinated parcel).
-    int WorkUnitOrdinalTotal = 0);
+    int WorkUnitOrdinalTotal = 0,
+    // TB-271-R1: the POSITIVE physical fact that this row still owns an open obligation — remaining
+    // process/pack/allocation quantity, a live parcel that must still move, or a received source that still owes a
+    // decision. It is what makes an active stage honest when no capability is offered; it never authorizes anything.
+    bool HasOpenObligation = false);
 
 /// <summary>
 /// TB-260-R1: the physical scopes a queue row can own. A row is ONE work unit, never a whole seller order:
@@ -663,3 +667,15 @@ public sealed record AdminFulfillmentWorkQueuePage(
     int PageSize,
     int TotalCount,
     AdminFulfillmentWorkQueueCounts DispatchCounts);
+
+/// <summary>
+/// TB-271-R1: ONE classified set, ONE server now, one page and its counts — the shape the live handler returns so
+/// the page and the badges can never come from two independent classifications. This is a read snapshot inside ONE
+/// request, not a database serializable snapshot and not a cross-module transaction.
+/// </summary>
+public sealed record AdminFulfillmentWorkQueueSnapshot(
+    IReadOnlyList<AdminFulfillmentWorkQueueRow> Items,
+    int Page,
+    int PageSize,
+    int TotalCount,
+    AdminFulfillmentWorkQueueCounts Counts);

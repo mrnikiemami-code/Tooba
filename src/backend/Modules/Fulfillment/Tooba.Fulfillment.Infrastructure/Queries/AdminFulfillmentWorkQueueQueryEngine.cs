@@ -51,14 +51,20 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         _clock = clock;
     }
 
-    /// <summary>صفحه‌بندی و فیلتر صف کار را اجرا می‌کند.</summary>
-    public async Task<GridPageResponse<AdminFulfillmentWorkQueueRow>> QueryAsync(
+    /// <summary>
+    /// TB-271-R1: ONE classified set, ONE server now, one page and its counts. This is the ONLY read the live
+    /// queue endpoint uses, so the rows and the badges can never be produced by two independent classifications
+    /// (which could disagree across a clock tick or a source change).
+    /// </summary>
+    public async Task<AdminFulfillmentWorkQueueSnapshot> QueryWithCountsAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var classification = await ClassifyAsync(request, cancellationToken);
+        // ONE clock read for this HTTP response: the same instant classifies every row and every badge.
+        var nowUtc = _clock.UtcNow;
+        var classification = await ClassifyAsync(request, nowUtc, cancellationToken);
 
-        // TB-271: ONE selection authority — the page is cut from exactly the sequence the counts describe.
+        // TB-260/TB-271: ONE selection authority — the page is cut from exactly the sequence the counts describe.
         var selected = AdminFulfillmentWorkQueueCountsBuilder
             .Select(classification.Rows, classification.Stage, classification.TimeScope)
             .ToList();
@@ -66,7 +72,25 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         var page = Math.Max(1, request.Page);
         var size = Math.Max(1, request.PageSize);
         var items = ordered.Skip((page - 1) * size).Take(size).ToList();
-        return new GridPageResponse<AdminFulfillmentWorkQueueRow>(items, page, size, ordered.Count);
+        // TB-271: the badge dimensions are defined ONCE in the owning builder over the SAME classified rows the page
+        // is cut from, so a stage badge can never be tallied from a fetched page.
+        var counts = AdminFulfillmentWorkQueueCountsBuilder.Build(
+            classification.Rows,
+            classification.Stage,
+            classification.TimeScope);
+        return new AdminFulfillmentWorkQueueSnapshot(items, page, size, ordered.Count, counts);
+    }
+
+    /// <summary>صفحه‌بندی و فیلتر صف کار را اجرا می‌کند.</summary>
+    public async Task<GridPageResponse<AdminFulfillmentWorkQueueRow>> QueryAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        // The page and the counts always come from the SAME combined read; no caller can trigger a second
+        // classification for one response.
+        var snapshot = await QueryWithCountsAsync(request, cancellationToken);
+        return new GridPageResponse<AdminFulfillmentWorkQueueRow>(
+            snapshot.Items, snapshot.Page, snapshot.PageSize, snapshot.TotalCount);
     }
 
     /// <summary>TB-260/TB-271: counts of the whole classified set, never of one page.</summary>
@@ -74,14 +98,8 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var classification = await ClassifyAsync(request, cancellationToken);
-        // TB-271: the badge dimensions are defined ONCE in the owning builder over the same classified rows the
-        // page is cut from, so a stage badge can never be tallied from a fetched page and the selected stage/time
-        // never has to be re-derived here.
-        return AdminFulfillmentWorkQueueCountsBuilder.Build(
-            classification.Rows,
-            classification.Stage,
-            classification.TimeScope);
+        var snapshot = await QueryWithCountsAsync(request, cancellationToken);
+        return snapshot.Counts;
     }
 
     /// <summary>TB-271: the classified physical rows plus the exact selection the server applied.</summary>
@@ -99,9 +117,13 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
     /// <c>queueFilter</c> token is normalized through the ONE documented mapping instead of being combined with a
     /// hidden second filter. Filtering a seller unit by status BEFORE projecting its exact parcels/groups/packages
     /// would silently drop sibling rows, so the selection is always applied to the classified physical rows.
+    /// TB-271-R1: the physical row set is COMPLETE for the common search/column constraints — no stage-dependent
+    /// status prefilter — so the archive badge cannot change with the selected active tab and a blocked active unit
+    /// can never be dropped before it is classified. <paramref name="nowUtc"/> is read ONCE by the caller.
     /// </remarks>
     private async Task<WorkQueueClassification> ClassifyAsync(
         GridQueryRequest request,
+        DateTimeOffset nowUtc,
         CancellationToken cancellationToken)
     {
         IQueryable<FulfillmentUnit> q = _db.Fulfillments.AsNoTracking();
@@ -166,12 +188,10 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             scope = AdminFulfillmentTimeScopeNames.Default;
         }
 
-        // The archive is the ONLY selection allowed to read terminal units; active work never includes a
-        // Delivered/Cancelled unit, and the archive is never folded into an active total.
-        if (!string.Equals(stage, AdminFulfillmentJobStageNames.History, StringComparison.Ordinal))
-        {
-            q = q.Where(x => x.Status != FulfillmentStatus.Cancelled && x.Status != FulfillmentStatus.Delivered);
-        }
+        // TB-271-R1: the archive is the ONLY selection that RENDERS terminal units as its rows, but the terminal
+        // units must still be CLASSIFIED for every request so the archive badge is a constant function of the
+        // common search/column constraints. Therefore no stage-dependent status prefilter is applied here: the
+        // active/history decision belongs to the physical row projection, never to a hidden query narrowing.
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
         if (advancedIds is not null)
@@ -185,7 +205,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             return new WorkQueueClassification([], stage, scope);
         }
 
-        var rows = await MapPageAsync(units, _clock.UtcNow, cancellationToken);
+        var rows = await MapPageAsync(units, nowUtc, cancellationToken);
         return new WorkQueueClassification(rows.ToList(), stage, scope);
     }
 

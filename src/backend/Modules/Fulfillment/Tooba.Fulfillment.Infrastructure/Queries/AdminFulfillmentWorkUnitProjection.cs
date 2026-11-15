@@ -114,6 +114,9 @@ internal static class AdminFulfillmentWorkUnitProjection
         IReadOnlySet<Guid> coveredShipments)
     {
         var produced = new List<AdminFulfillmentWorkQueueRow>();
+        // TB-271-R1: a closed seller unit (cancelled/delivered) can never own NEW preparation work; that is a
+        // lifecycle fact, not an inference from a missing capability. The unit's own parcels keep their own states.
+        var unitClosed = unit.Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Delivered;
         var liveShipments = unit.Shipments
             .Where(x => x.Status != ShipmentStatus.Cancelled)
             .OrderBy(x => x.CreatedAt)
@@ -131,7 +134,7 @@ internal static class AdminFulfillmentWorkUnitProjection
                 continue;
             }
 
-            produced.Add(BuildGroupRow(context, unit, scope.Key, groupItems, groupShipments));
+            produced.Add(BuildGroupRow(context, unit, scope.Key, groupItems, groupShipments, unitClosed));
         }
 
         foreach (var shipment in liveShipments)
@@ -158,7 +161,8 @@ internal static class AdminFulfillmentWorkUnitProjection
         FulfillmentSnapshot unit,
         Guid? shippingGroupId,
         IReadOnlyList<FulfillmentItemSnapshot> groupItems,
-        IReadOnlyList<ShipmentSnapshot> groupShipments)
+        IReadOnlyList<ShipmentSnapshot> groupShipments,
+        bool unitClosed)
     {
         var plans = PlansOf(context, unit.SellerOrderId, shippingGroupId);
         // A group row only exists because the group itself still owns preparation work, so it is pending by
@@ -166,7 +170,13 @@ internal static class AdminFulfillmentWorkUnitProjection
         var timing = AdminFulfillmentDispatchTimingAuthority.Classify(true, false, plans, context.NowUtc);
         var remaining = groupItems.Sum(item =>
             AdminFulfillmentQueueFilters.ScopeRemainingPackedQuantity(item, groupShipments));
-        var codes = GroupActionCodes(groupItems, remaining);
+        // TB-271-R1: the positive physical facts of THIS group scope. A cancelled/delivered seller unit owes no new
+        // preparation, so its leftover quantities are archive material rather than invented active work.
+        var hasPreparationWork = !unitClosed
+            && (groupItems.Any(x => x.QuantityOrdered > x.QuantityProcessing)
+                || groupItems.Any(x => x.QuantityProcessing > x.QuantityPacked));
+        var hasAllocationWork = !unitClosed && remaining > 0m;
+        var codes = unitClosed ? [] : GroupActionCodes(groupItems, remaining);
         var tracking = groupShipments
             .Select(x => x.TrackingReference)
             .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -199,7 +209,10 @@ internal static class AdminFulfillmentWorkUnitProjection
             targetShipmentId: null,
             targetPackageId: null,
             targetPackageNumber: null,
-            pending: true);
+            pending: !unitClosed,
+            hasOpenObligation: hasPreparationWork || hasAllocationWork,
+            hasPreparationWork: hasPreparationWork,
+            hasAllocationWork: hasAllocationWork);
     }
 
     private static AdminFulfillmentWorkQueueRow BuildParcelRow(
@@ -240,6 +253,12 @@ internal static class AdminFulfillmentWorkUnitProjection
         var methodCode = string.IsNullOrWhiteSpace(shipment.ShippingMethodCode)
             ? unit.ShippingMethodCode
             : shipment.ShippingMethodCode;
+        // TB-271-R1: a live parcel is an open physical obligation on its own. A received source is only still open
+        // when it truly owes a decision (resendable capacity or an outstanding damaged unit), so a fully settled
+        // returned parcel becomes archive instead of a fabricated return job.
+        var unitClosed = unit.Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Delivered;
+        var hasOpenObligation = !unitClosed
+            && (shipment.Status != ShipmentStatus.Returned || resendable || outstandingDamaged);
 
         return CreateRow(
             context,
@@ -273,7 +292,8 @@ internal static class AdminFulfillmentWorkUnitProjection
             targetPackageNumber: null,
             pending: pending,
             workUnitOrdinal: ordinal.Ordinal,
-            workUnitOrdinalTotal: ordinal.Total);
+            workUnitOrdinalTotal: ordinal.Total,
+            hasOpenObligation: hasOpenObligation);
     }
 
     private static AdminFulfillmentWorkQueueRow? BuildPackageRow(
@@ -352,7 +372,10 @@ internal static class AdminFulfillmentWorkUnitProjection
             targetPackageId: package.ConsolidatedPackageId,
             targetPackageNumber: package.PackageNumber,
             pending: pending,
-            updatedAt: package.UpdatedAt);
+            updatedAt: package.UpdatedAt,
+            // TB-271-R1: a Created/Dispatched package always still owns its handoff or delivery outcome.
+            hasOpenObligation: package.Status is ConsolidatedPackageStatus.Created
+                or ConsolidatedPackageStatus.Dispatched);
     }
 
     /// <summary>
@@ -398,7 +421,9 @@ internal static class AdminFulfillmentWorkUnitProjection
             targetShipmentId: null,
             targetPackageId: null,
             targetPackageNumber: null,
-            pending: false);
+            pending: false,
+            // TB-271-R1: no open physical unit was produced for this seller unit — the archive is its honest home.
+            hasOpenObligation: false);
     }
 
     private static AdminFulfillmentWorkQueueRow CreateRow(
@@ -428,7 +453,10 @@ internal static class AdminFulfillmentWorkUnitProjection
         bool pending,
         DateTimeOffset? updatedAt = null,
         int workUnitOrdinal = 0,
-        int workUnitOrdinalTotal = 0)
+        int workUnitOrdinalTotal = 0,
+        bool hasOpenObligation = false,
+        bool hasPreparationWork = false,
+        bool hasAllocationWork = false)
     {
         var next = AdminFulfillmentNextStep.Resolve(codes);
         var actionable = timing.Bucket is AdminFulfillmentDispatchBucket.Overdue
@@ -441,16 +469,19 @@ internal static class AdminFulfillmentWorkUnitProjection
 
         // TB-271: ONE read classification of this physical row's next job and of the accepted instant that job
         // actually answers to. It reuses the already-projected capability codes and plan instants; it grants nothing.
+        // TB-271-R1: terminality comes from the positive physical obligation fact, never from an empty code list.
         var job = AdminFulfillmentJobStageAuthority.Classify(
             kind,
             state,
             codes,
-            pending,
+            hasOpenObligation,
             timing.PreparationStartUtc,
             timing.TransferDepartureUtc,
             timing.HandoffDeadlineUtc,
             timing.HandoffTimeZone,
-            context.NowUtc);
+            context.NowUtc,
+            hasPreparationWork,
+            hasAllocationWork);
 
         return new AdminFulfillmentWorkQueueRow(
             unit.FulfillmentId,
@@ -508,7 +539,8 @@ internal static class AdminFulfillmentWorkUnitProjection
             job.JobTimeUtc,
             job.JobTimeState,
             workUnitOrdinal,
-            workUnitOrdinalTotal);
+            workUnitOrdinalTotal,
+            hasOpenObligation);
     }
 
     /// <summary>

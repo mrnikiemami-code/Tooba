@@ -360,13 +360,16 @@ export function AppDataGrid<T extends { id: string }>({
     (event: SortChangedEvent<T>) => {
       if (suppressGridEventsRef.current) return;
       const colState = event.api.getColumnState().find((col) => col.sort);
+      // TB-271-R1: clearing a sort restores THIS grid's own default, never a hardcoded global one. A grid that
+      // declares no default sort (e.g. the employee work queue, whose order is server-owned job priority) therefore
+      // asks for exactly that instead of an unrequested `updatedAt desc`.
       const sorts = colState?.colId && colState.sort
         ? [{ columnId: colState.colId, direction: colState.sort as "asc" | "desc" }]
-        : DEFAULT_GRID_QUERY.sorts;
+        : defaultQuery.sorts;
       setLayoutRevision((revision) => revision + 1);
       void load({ ...queryRef.current, page: 1, sorts });
     },
-    [load],
+    [defaultQuery.sorts, load],
   );
 
   const commitColumnFilters = useCallback(() => {
