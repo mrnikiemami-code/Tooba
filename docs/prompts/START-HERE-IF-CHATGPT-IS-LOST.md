@@ -20,6 +20,10 @@ one canonical `tooba_alpha`; no migration/DB write/fixture/provider call. Declar
 PASS-within-scope and still awaits the user's visual acceptance; nothing functional was reopened.
 STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. No user acceptance claimed.
 
+# SUPERSEDED — SHIPPING CURRENT CHECKPOINT — 2026-11-15
+
+269 queue Persian date correction is ONLY issued task;269 result not yet present at planning check. Read AGENTS and docs/planning/shipping/SHIPPING-RESEND-REPLACEMENT-TIMING-AND-EMPLOYEE-WORK-PLAN-270-271.md. User authorizes conditional sequence: review269, exact correction if needed, otherwise ONE270 resend/replacement own schedule task;271 actionable employee filters later after timing review.270/271 planned, not issued. Reuse existing data/settings/Shipping authority, no new demonstration orders. New source readiness requires new feasible customer window and durable parcel deadlines, not old deadline inheritance. No concurrent worker, no loop, no cleanup/DB reset. Functional user feedback positive; UI267 improved/268 tabs awaiting user verdict. Preserve all prior audit limits.
+
 # SUPERSEDED — 268 PASS (presentation only): group-scoped parcel tabs with counted categories, actionable-first default, cross-tab lineage — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md and

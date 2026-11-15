@@ -29,7 +29,19 @@ behaviour); `createdAt`/`updatedAt` keep their existing `fa-IR` formatter and we
 `scripts/tb266r1-*.mjs` scratch files remain untracked and are not part of this change set.
 STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. Review URL is in `user-review.md`; no acceptance claimed.
 
-# SUPERSEDED — 268 PASS (presentation only): group-scoped parcel tab strip — 2026-11-15
+# SUPERSEDED — WAIT269 RESULT; PLAN270 TIMING THEN271 EMPLOYEE QUEUE — 2026-11-15
+
+Read docs/planning/shipping/SHIPPING-RESEND-REPLACEMENT-TIMING-AND-EMPLOYEE-WORK-PLAN-270-271.md. User explicitly requests planning for missing NEW resend/replacement timing, then a work-oriented employee queue on existing data.269 remains ONLY issued task; RESULT not present when checked. Review its actual result first; repair only concrete269 defect if needed, else issue ONE270 task.270/271 PLANNED NOT ISSUED. New parcel must own new readiness/feasible customer window/prep+departure+handoff plan, no original-deadline borrowing, no invented dates or extra demo dataset.271 job-stage/time-scope filters follow only after timing review. No concurrent tasks/loops, no backend or user mutations now, no cleanup/new DB. Earlier CURRENT banners superseded.
+
+# SUPERSEDED — ONLY TB269 ISSUED: PERSIAN DATES IN QUEUE — 2026-11-15
+
+Task docs/ai/tasks/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/TASK.md. User screenshot queue mixes raw Gregorian handoff with Jalali deadlines. Source root formatPlannedHandoff/formatCustomerReceiving echo ISO DateOnly;267 changed order view only.269 display-only consistency in queue cell+tooltip, preserve DateOnly/accepted-zone instants/wire sort values, no business changes/data writes/backend.268 tabs remain awaiting visual user feedback, no functional reopening or cleanup. One worker/task STOP_FOR_ARCHITECT automaticNext NONE. Earlier CURRENT banners superseded.
+
+# SUPERSEDED — TB268 REVIEWED; WAIT FOR USER VISUAL CHECK — 2026-11-15
+
+Read docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/ARCHITECT-REVIEW.md. Exercised group ready for visual review: All2/Origin1/Resend1/Delivered1, defaultResend child2; link reveals source1. User/order state read-only. No new task automaticNext NONE, no business/payment/Returns/scheduler reopening or cleanup/refactor/baseline loops. User functional feedback positive,267 improved;268 visual acceptance pending. Worker geometry/keyboard proof reviewed, not independent architect runtime verification. Earlier CURRENT worker banner superseded.
+
+# SUPERSEDED — 268 PASS (presentation only): group-scoped parcel tab strip with Persian count badges, quiet non-zero categories, actionable-first default, cross-tab lineage revelation — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,tab-counts-and-navigation.md,user-review.md}.
