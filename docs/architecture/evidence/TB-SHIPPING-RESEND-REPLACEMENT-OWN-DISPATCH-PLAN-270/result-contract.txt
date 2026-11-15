@@ -1,0 +1,106 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Task-ID: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270
+Parent-Task: TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Mode: RESEND_REPLACEMENT_OWN_DURABLE_DISPATCH_PLAN
+Status: PARTIAL
+Stop-State: STOP_FOR_ARCHITECT
+
+Expected-Base-SHA: 8e9f42cf72af54101c102a60d6fdfce7be01e473
+Base-SHA: 8e9f42cf72af54101c102a60d6fdfce7be01e473
+Code-SHA: NONE
+Evidence-SHA: 97c5c02b677a838f912776ca63e37ff610bbf839
+automaticNextImplementationTask: NONE
+
+VERIFIED
+- expected base == actual HEAD == local origin/main at start: 8e9f42cf72af54101c102a60d6fdfce7be01e473 (ancestor check exit 0
+  against both HEAD and origin/main); `git fetch origin` failed transiently with a TLS EOF, no incoming delta to integrate.
+- work base == base: every source read and every statement in this evidence was taken at 8e9f42cf7.
+- code diff: NONE. `git diff --stat HEAD` is empty for tracked files; the only additions are documentation
+  (docs/ai/tasks/...270/TASK.md, docs/architecture/evidence/...270/{TASK,RESULT,RECEIPTS,ownership-and-plan,
+  timing-and-readiness-proof,replay-and-write-boundaries,user-review}.md, the 269 ARCHITECT-REVIEW.md, and the two banner
+  files + the 270/271 plan pointer).
+- no migration, no DDL, no business SQL, no fixture, no settings edit, no stock write, no cleanup, no provider call.
+- environment read-only: Host 5088 /health 200 and /health/ready 200; FE 3000 /fa/admin/fulfillments 200 (served build is
+  still the TB-269 one, because nothing in src/** changed and no service was restarted).
+- task envelope persisted byte-identical from GET /api/tasks/next?channelId=tooba-main (20,542 chars) at the required path.
+
+MIGRATION-IDS: NONE
+BACKUP-REFERENCE: NONE (not required; no schema change)
+PENDING-MIGRATIONS: unchanged from the base tree (no migration was added or applied)
+
+RESULT
+Status PARTIAL. This run decided the ownership/scheduling seam that requirement A asks for and named the exact blocking
+input, and deliberately did not start a write path it could not finish lawfully. No user-visible behaviour changed.
+
+ROOT (source-verified at 8e9f42cf7)
+A resend or healthy-stock replacement is a new physical attempt. `AdminFulfillmentWorkUnitProjection.BuildParcelRow`
+(203-208) gives every `ResendOfShipmentId != null` parcel `plans = []`, so `AdminFulfillmentDispatchTimingAuthority.Classify`
+returns `Unspecified` with no handoff/customer date. That is correct: the alternative — `PlansOf(sellerOrderId,
+shippingGroupId)` — would lend the shipped parcel's expired promise to a new attempt. The real gap is that no lawful path
+exists to give the attempt its own plan.
+
+WHY NO LAWFUL INPUT EXISTS TODAY
+The Order-owned accepted evidence stores the plan's outputs (`ShippingGroupAcceptedEvidence.cs:552-610`: handoff
+date/open/close/zone, transport working days, policy version, schedule snapshot/revision, preparation start, transfer
+departure, handoff deadline, preparation/handoff minutes) but not the carrier/customer/processing WEEK SHAPES. The only
+Contracts read that returns those weeks is `IShippingCapturedRevisionQuoteLookup.QuoteAsync`, whose request needs a
+`DestinationIdentifiers` plus optional measurement inputs (`ShippingCapturedRevisionQuoteContracts.cs:283-291`) and whose
+`Selection` (hence `Settings`/`CarrierWeek`/`ReceivingWeek`/`ProcessingWeek`) is null unless a rate row matched
+(`ShippingCapturedRevisionQuoteLookup.cs:680-745`). Order owns neither input any more: `OrderShippingGroup` has no
+destination columns (12-79) and the destination ids live only on the seller's CURRENT `CartShippingDraft` (87-96), which
+must not be mixed with a historical acceptance; the group's weight/item count were cart facts at submission and were never
+persisted. Passing nulls makes weight/count rate modes answer `MeasurementRequired` with no weeks.
+
+DESIGN DELIVERED (docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/*)
+1. ownership-and-plan.md — full verified call path; the facts that already exist per owner with file/line; the genuinely
+   missing inputs; the chosen minimal seam `IShippingAttemptSchedulingLookup` (one additive Shipping Contracts read over
+   the already captured `ShippingAuthoringRevisionPayload` that is destination-independent, `ShippingAuthoringRevisionSnapshot.cs:202-218`);
+   the Order-owned `"order".shipment_dispatch_plans` shape (PK shipment_id, unique occurrence key, Pending→Committed);
+   the write ordering that makes a parcel-without-plan impossible (Order generates the parcel id, plan row first, then the
+   owning create with that exact id, then commit) with an interruption/recovery table.
+2. timing-and-readiness-proof.md — resend readiness = the source parcel's physical origin receipt (`ReturnedAt`);
+   replacement readiness = its purpose-bound non-expiring hold / linked parcel creation; never the original order or
+   dispatch instant, never a browser clock; one preparation allowance + one transfer allowance, single-counted by the
+   existing authority; `PreparationStartUtc` is a deadline, not "packing finished"; the original customer date may only be
+   reused when still feasible for the new readiness.
+3. replay-and-write-boundaries.md — uniqueness/identity guards, the exact submit order, the recovery route for every
+   interruption boundary, the read boundaries (own plan only, first dispatch unchanged, history never actionable, no
+   per-read recomputation), and the focused cases the implementation owes.
+4. The 269 Architect checkpoint was persisted where the envelope asked for it.
+
+NOT IMPLEMENTED (complete list; no substitute PASS claimed)
+1 no Shipping scheduling-inputs Contracts seam; 2 no attempt-plan table/migration/entity/EF config; 3 no
+`plan_shipment_dispatch` command/endpoint, no review→submit, no replay/conflict, no concurrency proof; 4 no feasible-date
+preview for a specific attempt; 5 no queue or detail change (a resend/replacement still reads `Unspecified`, unchanged and
+truthful; no new action anywhere); 6 no frontend review step; 7 no focused test (nothing to test); 8 no live eligible
+unplanned parcel was created or inspected by mutation, so none is promised.
+
+TESTS / BUILDS
+None run. Nothing in src/** changed, so no build, test, publish or restart was warranted; the served FE build remains
+TB-269's `BUILD_ID UmAnnlHYHCf-Sa5-dTMkm`. Deliberately no re-run of unaffected suites.
+
+CHANGED FILES
+docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/TASK.md
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/{TASK,RESULT,RECEIPTS,ownership-and-plan,
+timing-and-readiness-proof,replay-and-write-boundaries,user-review}.md + result-contract.txt
+docs/architecture/evidence/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/ARCHITECT-REVIEW.md
+AGENTS.md, docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md, docs/planning/shipping/SHIPPING-RESEND-REPLACEMENT-TIMING-AND-EMPLOYEE-WORK-PLAN-270-271.md
+
+REVIEW URL
+http://localhost:3000/fa/admin/fulfillments and
+http://localhost:3000/fa/admin/orders/01a1db2f-e36e-7000-b7d3-afb2fe86e81a/operations
+Both show the CURRENT read-only state only: no eligible unplanned parcel is promised, and no new action exists. A
+resend/replacement row still shows «موعد ارسال مشخص نشده» because it has no plan of its own — that is the unchanged,
+truthful behaviour this run intentionally did not fake.
+
+RECOMMENDATION
+Issue 270-R1 = the additive `IShippingAttemptSchedulingLookup` Contracts seam + one focused Shipping test (no Order change),
+then 270-R2 = the Order-owned attempt plan (table/migration/Contracts/reader), the reviewed `plan_shipment_dispatch`
+command with replay/conflict, the feasible-date preview, the queue/detail own-plan wiring and the review step inside the
+EXISTING resend/replacement dialog, proven on the cases listed in replay-and-write-boundaries.md §4. 271 NOT ISSUED.
+
+END_TOOBA_WORKER_RESULT
