@@ -2248,6 +2248,11 @@ test("TB-258-R1 mounted: two same-tick submits send exactly one mutation with on
   await waitFor(() => requests.length >= 1);
   await flush();
   assert.equal(requests.length, 1, "one reviewed action is one mutation");
+  // The delayed answer resolves AFTER the burst: let its continuation settle inside THIS test, otherwise
+  // a late completion could clear another test's envelope for the same shared scope.
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  });
   await mounted.unmount();
 });
 
@@ -2268,6 +2273,9 @@ test("TB-258-R1 mounted: uncertain outcome + remount + consumed capacity reconci
   assert.equal(requests.length, 1, "the request really left the browser");
   // Network loss / 5xx: the review is retained instead of being thrown away.
   assert.ok(qq(first.container, "[data-testid='admin-order-post-dispatch-retained-sh-r1']").length === 1);
+  // The retained review and the durable envelope are written by the same async send continuation; wait
+  // for that continuation instead of racing it.
+  await waitFor(() => readPostDispatchAttempt(R1_SCOPE) !== null, { timeoutMs: 500 });
   const recorded = readPostDispatchAttempt(R1_SCOPE);
   assert.ok(recorded, "the complete envelope is durable before/after the mutation");
   assert.deepEqual(recorded!.request.selections, [{ orderLineId: "ol1", quantity: 2 }]);
@@ -2605,7 +2613,7 @@ test("TB-259 static: only the packing choices the server projected are offered f
  * origin and its receipt is 1 «آسیب‌دیده», so `resendableQuantity` is genuinely 0 and «ارسال مجدد» must NOT
  * appear. The defect was never the refusal - it was the silence: a stale «در مسیر تحویل» label and no reason.
  */
-test("TB-261 static: a damaged origin receipt localizes the carrier return and states why resend is absent", () => {
+test("TB-261 mounted: a damaged origin receipt localizes the carrier return and states why resend is absent", async () => {
   const detail = withExceptionParcel(
     baseDetail(),
     {
@@ -2618,7 +2626,7 @@ test("TB-261 static: a damaged origin receipt localizes the carrier return and s
     },
     { returnedUsableQuantity: 0, resendableQuantity: 0, deliveredQuantity: 0 },
   );
-  const html = renderToStaticMarkup(
+  const mounted = await mount(
     createElement(AdminOrderOperationalDeliverySection, {
       detail,
       pendingCode: null,
@@ -2627,6 +2635,9 @@ test("TB-261 static: a damaged origin receipt localizes the carrier return and s
       parcelCapabilities: () => NO_CAPS,
     }),
   );
+  // TB-268: the returned source parcel lives in its own tab; «همه» shows both parcels of the group.
+  await click(q(mounted.container, `[data-testid='admin-order-operational-parcel-tabs-${GROUP_KEY}-tab-all']`));
+  const html = mounted.container.innerHTML;
 
   // The carrier exception is named in operator Persian, never as a raw enum and never as customer «مرجوعی».
   assert.match(html, /دریافت‌شده در مبدأ/);
@@ -2641,6 +2652,7 @@ test("TB-261 static: a damaged origin receipt localizes the carrier return and s
   const sibling = html.slice(html.indexOf("admin-order-operational-parcel-sh2"));
   assert.match(sibling, /ارسال‌شده به حامل/);
   assert.doesNotMatch(sibling, /دریافت‌شده در مبدأ/);
+  await mounted.unmount();
 });
 
 /** A returned parcel whose usable capacity was already spent on ITS OWN resend parcel. */
@@ -2675,7 +2687,7 @@ function withResendChild(detail: AdminOrderDetail, child: Partial<AdminShipment>
   };
 }
 
-test("TB-261 static: consumed usable capacity names the existing resend parcel instead of a dead end", () => {
+test("TB-261 mounted: consumed usable capacity names the existing resend parcel instead of a dead end", async () => {
   const detail = withResendChild(
     withExceptionParcel(
       baseDetail(),
@@ -2688,7 +2700,7 @@ test("TB-261 static: consumed usable capacity names the existing resend parcel i
     ),
     { trackingReference: "TRK-RESEND-1" },
   );
-  const html = renderToStaticMarkup(
+  const mounted = await mount(
     createElement(AdminOrderOperationalDeliverySection, {
       detail,
       pendingCode: null,
@@ -2697,6 +2709,8 @@ test("TB-261 static: consumed usable capacity names the existing resend parcel i
       parcelCapabilities: () => NO_CAPS,
     }),
   );
+  await click(q(mounted.container, `[data-testid='admin-order-operational-parcel-tabs-${GROUP_KEY}-tab-all']`));
+  const html = mounted.container.innerHTML;
 
   // Capacity is spent, so no second resend may be offered for the same source…
   assert.ok(!html.includes("admin-order-post-dispatch-resend-sh1"));
@@ -2706,6 +2720,7 @@ test("TB-261 static: consumed usable capacity names the existing resend parcel i
   assert.match(html, /TRK-RESEND-1/);
   assert.match(html, /پیگیری ارسال مجدد/);
   assert.ok(!html.includes("آسیب‌دیده — نیازمند تعیین تکلیف"), "a healthy receipt must not invent damage");
+  await mounted.unmount();
 });
 
 test("TB-261 static: positive own usable capacity offers exactly one deliberate resend", () => {
@@ -3328,4 +3343,350 @@ test("TB-265 static: the courier-return entry exists only when the server projec
     }),
   );
   assert.ok(!withoutEntry.includes("admin-order-post-dispatch-courier-return-sh1"));
+});
+
+// ------------------------------------------------------- TB-268 group parcel tabs (quiet operator view)
+
+const TAB_BASE = `admin-order-operational-parcel-tabs-${GROUP_KEY}`;
+const tabSelector = (key: string) => `[data-testid='${TAB_BASE}-tab-${key}']`;
+const panelSelector = `[data-testid='${TAB_BASE}-panel']`;
+
+/** Extra parcels on the group's first member so one group really holds several lifecycle states. */
+function withExtraParcels(
+  detail: AdminOrderDetail,
+  extra: Array<Partial<AdminShipment>>,
+): AdminOrderDetail {
+  return {
+    ...detail,
+    sellerOrders: detail.sellerOrders.map((seller, idx) => (idx !== 0 ? seller : {
+      ...seller,
+      shipments: [
+        ...(seller.shipments ?? []),
+        ...extra.map((overrides, index) => ({
+          shipmentId: `sh-extra-${index + 1}`,
+          status: "Created",
+          carrierDisplayName: "پست",
+          shippingGroupId: "g1",
+          shippingMethodCode: "post",
+          itemCount: 1,
+          lines: [{ orderLineId: "ol1", quantity: 1 }],
+          trackingReference: null,
+          activePackageNumber: null,
+          packageLockedReasonFa: null,
+          ...overrides,
+        })),
+      ],
+    })),
+  };
+}
+
+/** sh1 = Dispatched with a real action, sh2 = Dispatched, extra1 = Delivered, extra2 = Created. */
+function mixedLifecycleDetail(): AdminOrderDetail {
+  return withExtraParcels(
+    withExceptionParcel(baseDetail()),
+    [{ status: "Delivered", deliveredAt: "2026-11-10T09:00:00Z" }, { status: "Created" }],
+  );
+}
+
+function mixedCaps(_seller: AdminSellerOrder, shipment: AdminShipment) {
+  return shipment.shipmentId === "sh1" ? { ...NO_CAPS, canDispatch: true } : NO_CAPS;
+}
+
+function activeTabOf(container: HTMLElement): string | null {
+  return q(container, panelSelector).getAttribute("data-active-tab");
+}
+
+function tabLabel(container: HTMLElement, key: string): string {
+  return (q(container, tabSelector(key)).textContent ?? "").trim();
+}
+
+test("TB-268: the strip shows «همه» plus only the non-zero categories, in Persian-digit counts", async () => {
+  const mounted = await mount(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: mixedLifecycleDetail(),
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: mixedCaps,
+    }),
+  );
+  const html = mounted.container.innerHTML;
+
+  // Every category that exists in this group is one tab; nothing is invented for the empty ones.
+  assert.ok(qq(mounted.container, `[data-testid='${TAB_BASE}']`).length === 1);
+  for (const key of ["all", "needsAction", "inTransit", "delivered"]) {
+    assert.equal(qq(mounted.container, tabSelector(key)).length, 1, `${key} must be offered`);
+  }
+  for (const key of ["returning", "receivedAtOrigin", "resend", "cancelled"]) {
+    assert.equal(qq(mounted.container, tabSelector(key)).length, 0, `${key} is empty here and must stay hidden`);
+  }
+
+  // Counts are the operator's own digits and match the group's real parcels.
+  assert.match(tabLabel(mounted.container, "all"), /^همه\s*\(۴\)$/);
+  assert.match(tabLabel(mounted.container, "needsAction"), /^نیازمند اقدام\s*\(۱\)$/);
+  assert.match(tabLabel(mounted.container, "inTransit"), /^در مسیر\s*\(۲\)$/);
+  assert.match(tabLabel(mounted.container, "delivered"), /^تحویل‌شده\s*\(۱\)$/);
+  // A latin digit would mean a raw count leaked into the Persian operator surface.
+  assert.doesNotMatch(tabLabel(mounted.container, "all"), /\(4\)/);
+
+  // The most actionable category is selected first, so the form opens on what needs the operator.
+  assert.equal(activeTabOf(mounted.container), "needsAction");
+  assert.equal(q(mounted.container, tabSelector("needsAction")).getAttribute("aria-selected"), "true");
+  assert.ok(html.includes("admin-order-operational-parcel-sh1"));
+  assert.ok(!html.includes("admin-order-operational-parcel-sh2"), "the quiet default hides other categories");
+  assert.ok(!html.includes("admin-order-operational-parcel-sh-extra-1"));
+
+  // The sibling in the same category stays visible: the filter never splits one status in two.
+  await click(q(mounted.container, tabSelector("inTransit")));
+  assert.ok(qq(mounted.container, "[data-testid='admin-order-operational-parcel-sh1']").length === 1);
+  assert.ok(qq(mounted.container, "[data-testid='admin-order-operational-parcel-sh2']").length === 1);
+  assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-parcel-sh-extra-1']").length, 0);
+
+  // «همه» is the whole group truth, including a parcel no category names.
+  await click(q(mounted.container, tabSelector("all")));
+  assert.equal(activeTabOf(mounted.container), "all");
+  for (const id of ["sh1", "sh2", "sh-extra-1", "sh-extra-2"]) {
+    assert.equal(
+      qq(mounted.container, `[data-testid='admin-order-operational-parcel-${id}']`).length,
+      1,
+      `${id} must be reachable through «همه»`,
+    );
+  }
+  await mounted.unmount();
+});
+
+test("TB-268: overlapping lineage counts on both tabs, and a resend is not a status", async () => {
+  const detail = withResendChild(
+    withExceptionParcel(
+      baseDetail(),
+      { status: "Returned", returnedAt: "2026-11-09T10:00:00Z" },
+      { returnedUsableQuantity: 2, resendableQuantity: 0, deliveredQuantity: 0 },
+    ),
+    { trackingReference: "TRK-RESEND-1" },
+  );
+  const mounted = await mount(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: () => NO_CAPS,
+    }),
+  );
+
+  // sh1 is ReceivedAtOrigin, sh2 is InTransit, and the child is BOTH its own status and a resend.
+  assert.match(tabLabel(mounted.container, "receivedAtOrigin"), /\(۱\)$/);
+  assert.match(tabLabel(mounted.container, "resend"), /\(۱\)$/);
+  assert.match(tabLabel(mounted.container, "inTransit"), /\(۱\)$/);
+  assert.match(tabLabel(mounted.container, "all"), /\(۳\)$/);
+  assert.equal(qq(mounted.container, tabSelector("delivered")).length, 0);
+
+  // Nothing needs an action here, so the resend category is the operator's first stop.
+  assert.equal(activeTabOf(mounted.container), "resend");
+  assert.ok(qq(mounted.container, "[data-testid='admin-order-operational-parcel-sh1-resend']").length === 1);
+  assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-parcel-sh1']").length, 0);
+
+  // The source parcel is still one click away and still names its own resend child.
+  await click(q(mounted.container, tabSelector("receivedAtOrigin")));
+  assert.equal(activeTabOf(mounted.container), "receivedAtOrigin");
+  assert.ok(qq(mounted.container, "[data-testid='admin-order-operational-parcel-sh1']").length === 1);
+  assert.ok(mounted.container.innerHTML.includes("admin-order-operational-parcel-resend-link-sh1"));
+  await mounted.unmount();
+});
+
+test("TB-268: RTL keyboard navigation moves the selection and the focus together", async () => {
+  const mounted = await mount(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: mixedLifecycleDetail(),
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: mixedCaps,
+    }),
+  );
+  const strip = q(mounted.container, `[data-testid='${TAB_BASE}']`);
+  const press = async (key: string) => {
+    await act(async () => {
+      strip.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    });
+    await flush();
+  };
+
+  // Roving tabindex: only the selected tab is in the page tab order.
+  assert.equal(q(mounted.container, tabSelector("needsAction")).tabIndex, 0);
+  assert.equal(q(mounted.container, tabSelector("all")).tabIndex, -1);
+  assert.equal(q(mounted.container, tabSelector("delivered")).tabIndex, -1);
+
+  // RTL: ArrowLeft advances to the next tab, ArrowRight goes back.
+  await press("ArrowLeft");
+  assert.equal(activeTabOf(mounted.container), "inTransit");
+  assert.equal(document.activeElement, q(mounted.container, tabSelector("inTransit")));
+  assert.equal(q(mounted.container, tabSelector("inTransit")).tabIndex, 0);
+  assert.equal(q(mounted.container, tabSelector("needsAction")).tabIndex, -1);
+
+  await press("ArrowRight");
+  assert.equal(activeTabOf(mounted.container), "needsAction");
+
+  await press("End");
+  assert.equal(activeTabOf(mounted.container), "delivered");
+  assert.equal(document.activeElement, q(mounted.container, tabSelector("delivered")));
+
+  await press("Home");
+  assert.equal(activeTabOf(mounted.container), "all");
+  assert.equal(document.activeElement, q(mounted.container, tabSelector("all")));
+
+  // Wrapping never escapes the strip and never selects a hidden category.
+  await press("ArrowRight");
+  assert.equal(activeTabOf(mounted.container), "delivered");
+  await press("ArrowLeft");
+  assert.equal(activeTabOf(mounted.container), "all");
+  await mounted.unmount();
+});
+
+test("TB-268: a lineage chip reveals the EXISTING counterpart card in its own tab", async () => {
+  const detail = withResendChild(
+    withExceptionParcel(
+      baseDetail(),
+      { status: "Returned", returnedAt: "2026-11-09T10:00:00Z", returnReceiptLines: [{ orderLineId: "ol1", quantity: 2, condition: "Usable" }] },
+      { returnedUsableQuantity: 2, resendableQuantity: 0, deliveredQuantity: 0 },
+    ),
+    { trackingReference: "TRK-RESEND-1" },
+  );
+  const mounted = await mount(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail,
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: () => NO_CAPS,
+    }),
+  );
+  await click(q(mounted.container, tabSelector("receivedAtOrigin")));
+  await click(q(mounted.container, "[data-testid='admin-order-operational-parcel-resend-link-sh1']"));
+  assert.equal(activeTabOf(mounted.container), "resend");
+  const child = q(mounted.container, "[data-testid='admin-order-operational-parcel-sh1-resend']");
+  assert.equal(qq(mounted.container, "[data-testid='admin-order-operational-parcel-sh1-resend']").length, 1, "the counterpart is revealed, never duplicated");
+  assert.equal(document.activeElement, child);
+  // The jump is not an action: the resend entry is absent because capacity is already committed.
+  assert.ok(!mounted.container.innerHTML.includes("admin-order-post-dispatch-resend-sh1"));
+  await mounted.unmount();
+});
+
+test("TB-268: one parcel, or a not-yet-authoritative projection, adds no navigation", async () => {
+  const onlyOne = await mount(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: {
+        ...baseDetail(),
+        sellerOrders: baseDetail().sellerOrders.map((seller, idx) => (idx !== 0 ? { ...seller, shipments: [] } : {
+          ...seller,
+          shipments: [{
+            shipmentId: "sh1",
+            status: "Created",
+            carrierDisplayName: "پست",
+            shippingGroupId: "g1",
+            shippingMethodCode: "post",
+            itemCount: 2,
+            lines: [{ orderLineId: "ol1", quantity: 2 }],
+            trackingReference: null,
+            activePackageNumber: null,
+            packageLockedReasonFa: null,
+          }],
+        })),
+      },
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: () => NO_CAPS,
+    }),
+  );
+  assert.equal(qq(onlyOne.container, `[data-testid='${TAB_BASE}']`).length, 0, "one parcel needs no tabs");
+  assert.equal(activeTabOf(onlyOne.container), "all");
+  assert.ok(qq(onlyOne.container, "[data-testid='admin-order-operational-parcel-sh1']").length === 1);
+  await onlyOne.unmount();
+
+  const provisional = await mount(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: mixedLifecycleDetail(),
+      pendingCode: null,
+      capabilitiesReady: false,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      parcelCapabilities: mixedCaps,
+    }),
+  );
+  assert.equal(qq(provisional.container, `[data-testid='${TAB_BASE}']`).length, 0, "an unfinished projection may not hide a parcel");
+  assert.equal(activeTabOf(provisional.container), "all");
+  for (const id of ["sh1", "sh2", "sh-extra-1", "sh-extra-2"]) {
+    assert.ok(qq(provisional.container, `[data-testid='admin-order-operational-parcel-${id}']`).length === 1);
+  }
+  await provisional.unmount();
+});
+
+test("TB-268: a retained unresolved attempt funds «نیازمند اقدام» and survives a tab switch", async () => {
+  resetPostDispatchAttempts();
+  clearPostDispatchForParcel("sh1");
+  writePostDispatchAttempt({
+    scope: {
+      viewerScopeKey: null,
+      checkoutId: CHECKOUT,
+      fulfillmentId: "so1",
+      sourceShipmentId: "sh1",
+      mode: "resend_shipment",
+    },
+    request: { code: "resend_shipment", selections: [{ orderLineId: "ol1", quantity: 1 }], idempotencyKey: "occ-tb268" },
+    attempts: 1,
+  });
+
+  try {
+    const section = () => createElement(AdminOrderOperationalDeliverySection, {
+      detail: mixedLifecycleDetail(),
+      pendingCode: null,
+      onCreateShipment: () => undefined,
+      onParcelException: () => true,
+      // The projection permits NOTHING: only the recorded obligation can need the operator.
+      parcelCapabilities: () => NO_CAPS,
+    });
+    const mounted = await mount(section());
+    assert.match(tabLabel(mounted.container, "needsAction"), /\(۱\)$/);
+    assert.equal(activeTabOf(mounted.container), "needsAction", "a recorded obligation outranks every status");
+    assert.ok(qq(mounted.container, "[data-testid='admin-order-post-dispatch-reconcile-sh1']").length === 1);
+
+    // Away and back: the recovery entry is re-read from the retained envelope, never lost by filtering.
+    await click(q(mounted.container, tabSelector("delivered")));
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-reconcile-sh1']").length, 0);
+    await click(q(mounted.container, tabSelector("needsAction")));
+    assert.equal(qq(mounted.container, "[data-testid='admin-order-post-dispatch-reconcile-sh1']").length, 1);
+    await mounted.unmount();
+  } finally {
+    clearPostDispatchForParcel("sh1");
+  }
+});
+
+test("TB-268: a selected tab that becomes empty keeps its selection and says so", async () => {
+  const full = mixedLifecycleDetail();
+  const shrunk = withExtraParcels(withExceptionParcel(baseDetail()), [{ status: "Created" }]);
+  const section = (detail: AdminOrderDetail) => createElement(AdminOrderOperationalDeliverySection, {
+    detail,
+    pendingCode: null,
+    onCreateShipment: () => undefined,
+    onParcelException: () => true,
+    parcelCapabilities: () => NO_CAPS,
+  });
+
+  const mounted = await mount(section(full));
+  await click(q(mounted.container, tabSelector("delivered")));
+  assert.equal(activeTabOf(mounted.container), "delivered");
+
+  // An authoritative refresh drops the only delivered parcel: no surprise jump while the operator reads.
+  await mounted.rerender(section(shrunk));
+  await flush();
+  assert.equal(activeTabOf(mounted.container), "delivered");
+  const kept = q(mounted.container, tabSelector("delivered"));
+  assert.equal(kept.getAttribute("aria-selected"), "true");
+  assert.match((kept.textContent ?? "").trim(), /\(۰\)$/);
+  assert.match(
+    (q(mounted.container, `[data-testid='${TAB_BASE}-empty']`).textContent ?? "").trim(),
+    /^مرسوله‌ای در این بخش نیست\.$/,
+  );
+  await mounted.unmount();
 });

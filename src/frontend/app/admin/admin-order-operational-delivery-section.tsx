@@ -140,6 +140,11 @@ type Props = {
   ) => Promise<PostDispatchSubmitOutcome | boolean> | PostDispatchSubmitOutcome | boolean;
   /** TB-263: owning facts changed (a blocking refusal) — the caller re-reads the authoritative detail. */
   onFactsChanged?: () => void;
+  /**
+   * TB-268: whether the caller's server projection of parcel actions is authoritative yet. The default tab
+   * is chosen from that projection, so it is pinned only once this is true (default true for a direct render).
+   */
+  capabilitiesReady?: boolean;
 };
 
 /** No permitted action: a cancelled, package-owned, or pending parcel exposes nothing here. */
@@ -185,6 +190,97 @@ function isPackageLocked(parcel: AdminShipment): boolean {
 
 function isCarrierException(status: string | null | undefined): boolean {
   return status === "NonDelivered" || status === "Returning" || status === "Returned";
+}
+
+/**
+ * TB-268: the parcel tabs are PRESENTATION filters over the parcels the server already projected for ONE
+ * operational group. They never derive permission from a status and they never call the server: a click is
+ * local state only.
+ */
+export type OperationalParcelTabKey =
+  | "all"
+  | "needsAction"
+  | "inTransit"
+  | "returning"
+  | "receivedAtOrigin"
+  | "resend"
+  | "delivered"
+  | "cancelled";
+
+/** Display order of the strip; zero-count categories are hidden except the one already selected. */
+const OPERATIONAL_PARCEL_TAB_ORDER: OperationalParcelTabKey[] = [
+  "all",
+  "needsAction",
+  "inTransit",
+  "returning",
+  "receivedAtOrigin",
+  "resend",
+  "delivered",
+  "cancelled",
+];
+
+const OPERATIONAL_PARCEL_TAB_LABELS: Record<OperationalParcelTabKey, string> = {
+  all: "همه",
+  needsAction: "نیازمند اقدام",
+  inTransit: "در مسیر",
+  returning: "در حال برگشت",
+  receivedAtOrigin: "دریافت‌شده در مبدأ",
+  resend: "ارسال مجدد",
+  delivered: "تحویل‌شده",
+  cancelled: "لغوشده",
+};
+
+/** The ONE status→tab mapping. A status with no tab stays reachable through «همه»/«نیازمند اقدام». */
+function parcelStatusTab(status: string | null | undefined): OperationalParcelTabKey | null {
+  if (isCancelledShipment(status)) return "cancelled";
+  switch (status) {
+    case "Dispatched":
+    case "InTransit":
+      return "inTransit";
+    case "Returning":
+      return "returning";
+    case "Returned":
+      return "receivedAtOrigin";
+    case "Delivered":
+      return "delivered";
+    default:
+      return null;
+  }
+}
+
+/**
+ * A tab is a filter over the group's own parcels. `resend` is LINEAGE (it overlaps the status tabs on
+ * purpose), every other category is a status, and «نیازمند اقدام» is the existing server projection plus
+ * any retained reviewed attempt that still owes reconciliation.
+ */
+function parcelEntryMatchesTab(
+  entry: { statusTab: OperationalParcelTabKey | null; isResend: boolean; hasAction: boolean; retained: boolean },
+  tab: OperationalParcelTabKey,
+): boolean {
+  switch (tab) {
+    case "all":
+      return true;
+    case "needsAction":
+      return entry.hasAction || entry.retained;
+    case "resend":
+      return entry.isResend;
+    default:
+      return entry.statusTab === tab;
+  }
+}
+
+/** Initial tab is chosen ONCE per mounted group: the most actionable non-zero category, else «همه». */
+function initialOperationalParcelTab(
+  counts: Record<OperationalParcelTabKey, number>,
+): OperationalParcelTabKey {
+  const priority: OperationalParcelTabKey[] = [
+    "needsAction",
+    "resend",
+    "inTransit",
+    "receivedAtOrigin",
+    "delivered",
+  ];
+  return priority.find((key) => counts[key] > 0) ?? "all";
 }
 
 /**
@@ -314,6 +410,7 @@ export function AdminOrderOperationalDeliverySection({
   onParcelOperation,
   onParcelException,
   onFactsChanged,
+  capabilitiesReady = true,
 }: Props) {
   const groups = detail.operationalDeliveryGroups ?? [];
   if (groups.length === 0) {
@@ -382,6 +479,7 @@ export function AdminOrderOperationalDeliverySection({
             onParcelOperation={onParcelOperation}
             onParcelException={onParcelException}
             onFactsChanged={onFactsChanged}
+            capabilitiesReady={capabilitiesReady}
           />
         ))}
       </div>
@@ -403,6 +501,7 @@ function OperationalCard({
   onParcelOperation,
   onParcelException,
   onFactsChanged,
+  capabilitiesReady,
 }: {
   group: AdminOperationalDeliveryGroup;
   detail: AdminOrderDetail;
@@ -417,6 +516,7 @@ function OperationalCard({
   onParcelOperation?: Props["onParcelOperation"];
   onParcelException?: Props["onParcelException"];
   onFactsChanged?: Props["onFactsChanged"];
+  capabilitiesReady: boolean;
 }) {
   /** TB-253-R4: retained attempt of this checkout/group/scope; it survives remounts. */
   const [retainedAttempt, setRetainedAttempt] = useState<OperationalGroupAttempt | null>(null);
@@ -588,6 +688,7 @@ function OperationalCard({
           onParcelOperation={onParcelOperation}
           onParcelException={onParcelException}
           onFactsChanged={onFactsChanged}
+          capabilitiesReady={capabilitiesReady}
           onCreateShipment={onCreateShipment}
         />
 
@@ -815,6 +916,7 @@ function GroupParcels({
   onParcelOperation,
   onParcelException,
   onFactsChanged,
+  capabilitiesReady,
   onCreateShipment,
 }: {
   detail: AdminOrderDetail;
@@ -829,6 +931,8 @@ function GroupParcels({
   onParcelOperation?: Props["onParcelOperation"];
   onParcelException?: Props["onParcelException"];
   onFactsChanged?: Props["onFactsChanged"];
+  /** TB-268: the caller's action projection is authoritative, so the initial tab may be pinned. */
+  capabilitiesReady: boolean;
   onCreateShipment: (target: OperationalCreateTarget) => void;
 }) {
   /** TB-258: the ONE open post-dispatch review; it is bound to one parcel and one mode at a time. */
@@ -965,10 +1069,207 @@ function GroupParcels({
   /** TB-267: the human parcel number an operator sees, so a relationship names «مرسولهٔ ۲», not a raw code. */
   const parcelNumber = new Map(standalone.map((row, index) => [row.shipment.shipmentId, index + 1]));
   const locked = rows.filter((row) => isPackageLocked(row.shipment));
-  const lockedPackages = new Map<string, number>();
+  const lockedByPackage = new Map<string, AdminShipment[]>();
   for (const row of locked) {
     const key = row.shipment.activePackageNumber || "بستهٔ مشترک";
-    lockedPackages.set(key, (lockedPackages.get(key) ?? 0) + 1);
+    lockedByPackage.set(key, [...(lockedByPackage.get(key) ?? []), row.shipment]);
+  }
+
+  /**
+   * TB-268: a parcel that is the recorded replacement of a damaged-goods decision is NOT a same-goods
+   * resend, so it never funds the «ارسال مجدد» tab. This uses only already-projected facts.
+   */
+  const replacementShipmentIds = new Set<string>();
+  for (const row of rows) {
+    for (const decision of row.shipment.damagedResolutions ?? []) {
+      if (decision.replacementShipmentId) replacementShipmentIds.add(decision.replacementShipmentId);
+    }
+  }
+
+  /**
+   * TB-268: every fact a parcel card renders, computed ONCE so the tab counts and the visible cards can
+   * never disagree. Nothing here changes a capability: `projectedCaps` is the server's own projection.
+   */
+  const parcelFacts = standalone.map((row, index) => {
+    const parcel = row.shipment;
+    const cancelled = isCancelledShipment(parcel.status);
+    const projectedCaps = cancelled
+      ? NO_PARCEL_ACTIONS
+      : parcelCapabilities?.(row.seller, parcel) ?? NO_PARCEL_ACTIONS;
+    const retainedReview = onParcelException && !cancelled
+      ? retainedReviewFor(row.seller, parcel, projectedCaps)
+      : null;
+    return {
+      row,
+      parcel,
+      /** The ordinal is its place in the WHOLE group, never its place in the filtered list. */
+      ordinal: index + 1,
+      cancelled,
+      projectedCaps,
+      retainedReview,
+      statusTab: parcelStatusTab(parcel.status),
+      isResend: Boolean(parcel.resendOfShipmentId) && !replacementShipmentIds.has(parcel.shipmentId),
+      hasAction: Object.values(projectedCaps).some(Boolean),
+      receipt: receiptTotals(parcel),
+      resendChild: resendByOriginalId.get(parcel.shipmentId) ?? null,
+      damagedDecisions: parcel.damagedResolutions ?? [],
+    };
+  });
+  const lockedFacts = locked.map((row) => ({
+    parcel: row.shipment,
+    statusTab: parcelStatusTab(row.shipment.status),
+    isResend: Boolean(row.shipment.resendOfShipmentId)
+      && !replacementShipmentIds.has(row.shipment.shipmentId),
+  }));
+
+  const parcelTabCounts = OPERATIONAL_PARCEL_TAB_ORDER.reduce(
+    (accumulator, key) => ({ ...accumulator, [key]: 0 }),
+    {} as Record<OperationalParcelTabKey, number>,
+  );
+  // «همه» is the group's whole parcel truth, cancelled history included.
+  parcelTabCounts.all = standalone.length + locked.length;
+  for (const key of OPERATIONAL_PARCEL_TAB_ORDER) {
+    if (key === "all") continue;
+    for (const fact of parcelFacts) {
+      if (parcelEntryMatchesTab({
+        statusTab: fact.statusTab,
+        isResend: fact.isResend,
+        hasAction: fact.hasAction,
+        retained: Boolean(fact.retainedReview),
+      }, key)) {
+        parcelTabCounts[key] += 1;
+      }
+    }
+    // A package-locked child owns no action HERE (its operations live in the shared package section), so it
+    // never funds «نیازمند اقدام» — but it is still one real parcel under «همه» and its own status.
+    if (key === "needsAction") continue;
+    for (const fact of lockedFacts) {
+      if (parcelEntryMatchesTab({
+        statusTab: fact.statusTab,
+        isResend: fact.isResend,
+        hasAction: false,
+        retained: false,
+      }, key)) {
+        parcelTabCounts[key] += 1;
+      }
+    }
+  }
+
+  /**
+   * TB-268: the selected tab is chosen ONCE per mounted group (the parent keys each group card by
+   * operationalGroupKey), so an authoritative refresh never yanks the operator to another category.
+   */
+  const [parcelTab, setParcelTab] = useState<OperationalParcelTabKey | null>(
+    () => (capabilitiesReady ? initialOperationalParcelTab(parcelTabCounts) : null),
+  );
+  const [parcelReveal, setParcelReveal] = useState<{ shipmentId: string } | null>(null);
+  const parcelTabRefs = useRef<Partial<Record<OperationalParcelTabKey, HTMLButtonElement | null>>>({});
+  const parcelCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const pendingTabFocus = useRef(false);
+
+  const totalParcels = standalone.length + locked.length;
+  /**
+   * TB-268: the default tab is pinned ONCE, and only once the caller's projection is authoritative. Until
+   * then «همه» shows every parcel, so no card is ever hidden by an unfinished action projection.
+   */
+  useEffect(() => {
+    if (parcelTab !== null || !capabilitiesReady) return;
+    setParcelTab(initialOperationalParcelTab(parcelTabCounts));
+  }, [capabilitiesReady, parcelTab, parcelTabCounts]);
+
+  const visibleTabKeys = OPERATIONAL_PARCEL_TAB_ORDER.filter(
+    (key) => key === "all" || parcelTabCounts[key] > 0 || key === parcelTab,
+  );
+  // One parcel, or one non-zero category: the strip would only add navigation, so it stays out of the way.
+  const showTabStrip = parcelTab !== null && totalParcels > 1 && visibleTabKeys.length > 1;
+  const activeTab: OperationalParcelTabKey = showTabStrip ? parcelTab : "all";
+  const activeFacts = activeTab === "all"
+    ? parcelFacts
+    : parcelFacts.filter((fact) => parcelEntryMatchesTab({
+      statusTab: fact.statusTab,
+      isResend: fact.isResend,
+      hasAction: fact.hasAction,
+      retained: Boolean(fact.retainedReview),
+    }, activeTab));
+  const activePackages = [...lockedByPackage.entries()].filter(([, children]) => (
+    activeTab === "all"
+    || (activeTab !== "needsAction" && children.some((child) => parcelEntryMatchesTab({
+      statusTab: parcelStatusTab(child.status),
+      isResend: Boolean(child.resendOfShipmentId) && !replacementShipmentIds.has(child.shipmentId),
+      hasAction: false,
+      retained: false,
+    }, activeTab)))
+  ));
+
+  const tabBaseId = `admin-order-operational-parcel-tabs-${group.operationalGroupKey}`;
+
+  /** Keep the selected tab reachable on a narrow screen and honour keyboard navigation focus. */
+  useEffect(() => {
+    if (!showTabStrip) return;
+    const revealActive = () => {
+      parcelTabRefs.current[activeTab]?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    };
+    revealActive();
+    // A phone that was already open when the viewport changed must still see its own selected tab.
+    window.addEventListener("resize", revealActive);
+    if (pendingTabFocus.current) {
+      parcelTabRefs.current[activeTab]?.focus();
+      pendingTabFocus.current = false;
+    }
+    return () => window.removeEventListener("resize", revealActive);
+  }, [activeTab, showTabStrip]);
+
+  /** A cross-tab lineage link reveals the EXISTING card of its counterpart; it never duplicates it. */
+  useEffect(() => {
+    if (!parcelReveal) return;
+    const node = parcelCardRefs.current[parcelReveal.shipmentId];
+    if (node) {
+      node.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+      node.focus({ preventScroll: true });
+    }
+    setParcelReveal(null);
+  }, [parcelReveal]);
+
+  function chooseParcelTab(key: OperationalParcelTabKey, focusTab = false) {
+    if (key === parcelTab) {
+      if (focusTab) parcelTabRefs.current[key]?.focus();
+      return;
+    }
+    pendingTabFocus.current = focusTab;
+    setParcelTab(key);
+  }
+
+  /** RTL horizontal tablist: ArrowLeft advances, ArrowRight goes back, Home/End jump to the ends. */
+  function onParcelTabKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (visibleTabKeys.length === 0) return;
+    const index = Math.max(0, visibleTabKeys.indexOf(activeTab));
+    let next: OperationalParcelTabKey | null = null;
+    if (event.key === "ArrowLeft") next = visibleTabKeys[(index + 1) % visibleTabKeys.length] ?? null;
+    else if (event.key === "ArrowRight") {
+      next = visibleTabKeys[(index - 1 + visibleTabKeys.length) % visibleTabKeys.length] ?? null;
+    } else if (event.key === "Home") next = visibleTabKeys[0] ?? null;
+    else if (event.key === "End") next = visibleTabKeys[visibleTabKeys.length - 1] ?? null;
+    if (!next) return;
+    event.preventDefault();
+    chooseParcelTab(next, true);
+  }
+
+  /**
+   * TB-268: follow a source↔resend relationship to the REAL counterpart card. The destination is the
+   * narrowest visible tab that contains it (resend lineage first, then its own status, then «همه»).
+   */
+  function revealParcel(shipmentId: string) {
+    const fact = parcelFacts.find((candidate) => candidate.parcel.shipmentId === shipmentId);
+    if (!fact) return;
+    const preferred: OperationalParcelTabKey[] = [];
+    if (fact.isResend) preferred.push("resend");
+    if (fact.statusTab) preferred.push(fact.statusTab);
+    preferred.push("all");
+    const destination = showTabStrip
+      ? preferred.find((key) => visibleTabKeys.includes(key)) ?? "all"
+      : "all";
+    if (destination !== parcelTab) setParcelTab(destination);
+    setParcelReveal({ shipmentId });
   }
 
   const standaloneMembers = group.members.filter((member) => {
@@ -1016,33 +1317,73 @@ function GroupParcels({
           هنوز مرسوله‌ای برای این گروه ساخته نشده است.
         </p>
       ) : (
-        <ul className="space-y-2">
-          {standalone.map((row, index) => {
-            const parcel = row.shipment;
-            const cancelled = isCancelledShipment(parcel.status);
-            const projectedCaps = cancelled
-              ? NO_PARCEL_ACTIONS
-              : parcelCapabilities?.(row.seller, parcel) ?? NO_PARCEL_ACTIONS;
+        <div>
+          {showTabStrip ? (
+            <div
+              role="tablist"
+              aria-label="دسته‌بندی مرسوله‌های این گروه"
+              className="mb-2 flex items-end gap-1 overflow-x-auto border-b border-gray-200"
+              data-testid={tabBaseId}
+              onKeyDown={onParcelTabKeyDown}
+            >
+              {visibleTabKeys.map((key) => {
+                const selected = activeTab === key;
+                return (
+                  <button
+                    key={key}
+                    ref={(node) => {
+                      parcelTabRefs.current[key] = node;
+                    }}
+                    type="button"
+                    role="tab"
+                    id={`${tabBaseId}-tab-${key}`}
+                    aria-selected={selected}
+                    aria-controls={`${tabBaseId}-panel`}
+                    tabIndex={selected ? 0 : -1}
+                    data-testid={`${tabBaseId}-tab-${key}`}
+                    className={
+                      selected
+                        ? "-mb-px inline-flex min-h-11 shrink-0 items-center whitespace-nowrap border-b-2 border-primary px-3 text-sm font-black text-gray-900"
+                        : "-mb-px inline-flex min-h-11 shrink-0 items-center whitespace-nowrap border-b-2 border-transparent px-3 text-sm font-bold text-gray-500"
+                    }
+                    onClick={() => chooseParcelTab(key)}
+                  >
+                    {OPERATIONAL_PARCEL_TAB_LABELS[key]}
+                    <span className="ms-1 text-xs font-bold text-gray-500">
+                      {`(${parcelTabCounts[key].toLocaleString("fa-IR")})`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          <div
+            role="tabpanel"
+            id={`${tabBaseId}-panel`}
+            aria-labelledby={showTabStrip ? `${tabBaseId}-tab-${activeTab}` : undefined}
+            tabIndex={showTabStrip ? 0 : undefined}
+            data-active-tab={activeTab}
+            data-testid={`${tabBaseId}-panel`}
+          >
+            <ul className="space-y-2">
+          {activeFacts.map((fact) => {
+            const { row, parcel, cancelled, projectedCaps, retainedReview, receipt, resendChild } = fact;
             const caps = cancelled || pending ? NO_PARCEL_ACTIONS : projectedCaps;
-            // TB-258-R2: a retained reviewed request keeps ONE recovery entry even after the projection
-            // stopped offering the action (refresh, state transition, exhausted capacity).
-            const retainedReview = onParcelException && !cancelled
-              ? retainedReviewFor(row.seller, parcel, projectedCaps)
-              : null;
-            // TB-261: the honest physical facts of THIS parcel's own receipt and ITS own resend.
-            const receipt = receiptTotals(parcel);
-            const resendChild = resendByOriginalId.get(parcel.shipmentId) ?? null;
             // TB-262-R1: the server-owned durable damaged decisions of this parcel. A recorded decision that still
             // owes its replacement parcel stays resumable even after the outstanding quantity was consumed by it.
-            const damagedDecisions = parcel.damagedResolutions ?? [];
+            const damagedDecisions = fact.damagedDecisions;
             const pendingDamage = damagedDecisions.find(isPendingDamageResolution) ?? null;
             return (
               <li
                 key={parcel.shipmentId}
+                ref={(node) => {
+                  parcelCardRefs.current[parcel.shipmentId] = node;
+                }}
+                tabIndex={-1}
                 className={
                   cancelled
-                    ? "rounded-lg border border-red-100 bg-red-50/40 px-3 py-2"
-                    : "rounded-lg border border-gray-200 bg-white px-3 py-2"
+                    ? "rounded-lg border border-red-100 bg-red-50/40 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    : "rounded-lg border border-gray-200 bg-white px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 }
                 data-testid={`admin-order-operational-parcel-${parcel.shipmentId}`}
               >
@@ -1050,26 +1391,32 @@ function GroupParcels({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <p className="text-sm font-bold text-gray-900">
-                        {`مرسولهٔ ${(index + 1).toLocaleString("fa-IR")}`}
+                        {`مرسولهٔ ${fact.ordinal.toLocaleString("fa-IR")}`}
                       </p>
                       {multiMember ? (
                         <span className="text-xs text-gray-500">{row.member.sellerDisplayName}</span>
                       ) : null}
-                      {/* TB-267: the source/replacement relationship is ONE human label, not a repeated code. */}
+                      {/* TB-267/268: one human relationship chip; clicking it reveals the EXISTING counterpart card. */}
                       {resendChild ? (
-                        <span
-                          className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800 ring-1 ring-sky-200"
+                        <button
+                          type="button"
+                          onClick={() => revealParcel(resendChild.shipmentId)}
+                          className="relative min-h-6 rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800 ring-1 ring-sky-200 before:absolute before:-inset-y-2.5 before:inset-x-0 before:content-['']"
+                          title="نمایش مرسولهٔ ارسال مجدد"
                           data-testid={`admin-order-operational-parcel-resend-link-${parcel.shipmentId}`}
                         >
                           {`ارسال مجدد در مرسولهٔ ${(parcelNumber.get(resendChild.shipmentId) ?? 0).toLocaleString("fa-IR")} · ${formatAdminShipmentStatus(resendChild.status)}`}
-                        </span>
+                        </button>
                       ) : parcel.resendOfShipmentId && parcelNumber.has(parcel.resendOfShipmentId) ? (
-                        <span
-                          className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800 ring-1 ring-sky-200"
+                        <button
+                          type="button"
+                          onClick={() => revealParcel(parcel.resendOfShipmentId!)}
+                          className="relative min-h-6 rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800 ring-1 ring-sky-200 before:absolute before:-inset-y-2.5 before:inset-x-0 before:content-['']"
+                          title="نمایش مرسولهٔ مبدأ"
                           data-testid={`admin-order-operational-parcel-resend-of-${parcel.shipmentId}`}
                         >
                           {`ارسال مجدد از مرسولهٔ ${(parcelNumber.get(parcel.resendOfShipmentId) ?? 0).toLocaleString("fa-IR")}`}
-                        </span>
+                        </button>
                       ) : null}
                     </div>
                     <p className="mt-0.5 text-xs text-gray-500">
@@ -1320,6 +1667,14 @@ function GroupParcels({
                               )}
                               <span>{`· ${formatAdminShipmentStatus(resendChild.status)}`}</span>
                             </p>
+                            <button
+                              type="button"
+                              onClick={() => revealParcel(resendChild.shipmentId)}
+                              className="mt-1 inline-flex min-h-11 items-center text-xs font-bold text-sky-800 underline decoration-dotted underline-offset-2"
+                              data-testid={`admin-order-operational-parcel-reveal-resend-${parcel.shipmentId}`}
+                            >
+                              {`نمایش مرسولهٔ ${(parcelNumber.get(resendChild.shipmentId) ?? 0).toLocaleString("fa-IR")}`}
+                            </button>
                           </details>
                         ) : null}
                         {receipt.usable === 0 && receipt.damaged === 0 && !resendChild ? (
@@ -1352,7 +1707,7 @@ function GroupParcels({
               </li>
             );
           })}
-          {[...lockedPackages.entries()].map(([packageNumber, count]) => (
+          {activePackages.map(([packageNumber, children]) => (
             <li
               key={`pkg:${packageNumber}`}
               className="rounded-lg border border-indigo-100 bg-indigo-50/40 px-3 py-2"
@@ -1362,11 +1717,21 @@ function GroupParcels({
                 {packageNumber === "بستهٔ مشترک" ? packageNumber : `بستهٔ ارسال مشترک ${packageNumber}`}
               </p>
               <p className="mt-0.5 text-xs text-indigo-900">
-                {`${count.toLocaleString("fa-IR")} مرسوله در این بسته · عملیات ارسال از بخش «بستهٔ ارسال مشترک» انجام می‌شود.`}
+                {`${children.length.toLocaleString("fa-IR")} مرسوله در این بسته · عملیات ارسال از بخش «بستهٔ ارسال مشترک» انجام می‌شود.`}
               </p>
             </li>
           ))}
-        </ul>
+            </ul>
+            {activeFacts.length === 0 && activePackages.length === 0 ? (
+              <p
+                className="rounded-lg border border-dashed border-gray-200 px-3 py-2.5 text-xs text-gray-500"
+                data-testid={`${tabBaseId}-empty`}
+              >
+                مرسوله‌ای در این بخش نیست.
+              </p>
+            ) : null}
+          </div>
+        </div>
       )}
 
       {exception ? (

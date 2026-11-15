@@ -383,6 +383,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, 
           onCreateShipment={(target) => setShipmentModalTarget(target)}
           occurrenceScopeKey={viewerScopeKey}
           packingModes={packingModesForGroupWorkflow(opsBySeller)}
+          capabilitiesReady={opsLoaded}
           parcelCapabilities={(seller, shipment) => {
             // TB-254: this card is the ONE parcel/action owner. A parcel that belongs to a shared
             // package is operated from the package section, so it exposes no duplicate action here.
