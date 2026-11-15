@@ -1,4 +1,4 @@
-// Posts the TB-270 worker result, completes the task row and returns the heartbeat to Idle.
+﻿// Posts the TB-270 worker result, completes the task row and returns the heartbeat to Idle.
 // Run ONLY after every doc/commit/push step of this task is finished (nothing follows it).
 const fs = require("node:fs");
 const path = require("node:path");
@@ -35,7 +35,7 @@ const summary = [
   "",
   "ENVIRONMENT (read-only): Host 5088 /health 200, /health/ready 200; FE 3000 /fa/admin/fulfillments 200. No migration, DDL, business SQL, fixture, settings edit, stock write, cleanup, provider/waybill call or money movement; user orders, the Returned-source/Delivered-resend trial history and the shipping draft were not touched.",
   "",
-  "GIT: expected base 8e9f42cf72af54101c102a60d6fdfce7be01e473 == actual work base == local origin/main at start (ancestor checks exit 0); one transient TLS EOF on fetch with no incoming delta to integrate. Code-SHA NONE (no source change). Evidence commit 97c5c02b677a838f912776ca63e37ff610bbf839 (12 files, documentation only; git diff --stat HEAD empty for tracked code). Contract pin f81695019a459ce3156ca63f1f5735f1893c0b43. FINAL_HEAD and origin/main are IDENTICAL at f81695019a459ce3156ca63f1f5735f1893c0b43 (parity verified after push). No force/amend/reset/rebase/stash; the eight pre-existing untracked scripts/tb266r1-*.mjs were left untouched and not committed.",
+  "GIT: expected base 8e9f42cf72af54101c102a60d6fdfce7be01e473 == actual work base == local origin/main at start (ancestor checks exit 0); one transient TLS EOF on fetch with no incoming delta to integrate. Code-SHA NONE (no source change). Evidence commit 97c5c02b677a838f912776ca63e37ff610bbf839 (12 files, documentation only; git diff --stat HEAD empty for tracked code). Contract pin f81695019a459ce3156ca63f1f5735f1893c0b43; the poster commit is 4f7cf39828c2c803f21a4beab0b1fca41bee5aeb and HEAD == origin/main was re-verified after EACH push (97c5c02b6 -> f81695019 -> 4f7cf3982), including the final poster commit itself, so the tree transmitted with this result is in parity and carries no source change. No force/amend/reset/rebase/stash; the eight pre-existing untracked scripts/tb266r1-*.mjs were left untouched and not committed.",
   "",
   "RECOMMENDATION: 270-R1 = the additive IShippingAttemptSchedulingLookup Contracts seam + one focused Shipping test (no Order change); 270-R2 = the Order-owned attempt plan (table/migration/Contracts/reader) + the reviewed plan_shipment_dispatch command with replay/conflict + feasible-date preview + queue/detail own-plan wiring + the review step inside the EXISTING resend/replacement dialog, proven on the cases in replay-and-write-boundaries.md §4. 271 (job-stage filters) remains NOT ISSUED.",
   "",
