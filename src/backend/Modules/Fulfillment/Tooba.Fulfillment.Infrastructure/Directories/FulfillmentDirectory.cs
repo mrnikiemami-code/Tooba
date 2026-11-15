@@ -35,10 +35,15 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
     private readonly FulfillmentInstrumentation _telemetry;
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
+    private readonly Tooba.Order.Contracts.Shipping.IOrderShipmentDispatchPlanReader? _shipmentDispatchPlans;
 
     /// <summary>
     /// دایرکتوری را به schema fulfillment و درز Order/Inventory وصل می‌کند.
     /// </summary>
+    /// <param name="shipmentDispatchPlans">
+    /// TB-270-R2: خواندن برنامهٔ ارسال مستقل یک تلاش جدید از Order. در ترکیب production همیشه تأمین می‌شود؛
+    /// نبودن آن یعنی «منبع برنامه در دسترس نیست» و هر ارسال مرسولهٔ ارسال مجدد/جایگزینی رد می‌شود.
+    /// </param>
     public FulfillmentDirectory(
         FulfillmentDbContext db,
         IFulfillmentUseCaseGuard guard,
@@ -46,7 +51,8 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         IFulfillmentInventoryGateway inventory,
         FulfillmentInstrumentation telemetry,
         IClock clock,
-        IIdGenerator ids)
+        IIdGenerator ids,
+        Tooba.Order.Contracts.Shipping.IOrderShipmentDispatchPlanReader? shipmentDispatchPlans = null)
     {
         _db = db;
         _guard = guard;
@@ -55,6 +61,49 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         _telemetry = telemetry;
         _clock = clock;
         _ids = ids;
+        _shipmentDispatchPlans = shipmentDispatchPlans;
+    }
+
+    /// <summary>
+    /// TB-270-R2: هر مرسولهٔ <b>تلاش جدید</b> (ارسال مجدد/جایگزینی) پیش از ارسال باید برنامهٔ ارسال مستقل و
+    /// تأییدشدهٔ خودش را در Order داشته باشد؛ برنامهٔ سفارش اول هرگز قرض داده نمی‌شود.
+    /// </summary>
+    /// <remarks>
+    /// این دروازه پیش از هر مصرف موجودی/نوشتن وضعیت اجرا می‌شود و هیچ مرسوله‌ای از آن معاف نیست. نبودِ برنامه یک
+    /// امتناع نوع‌دار است، نه «ارسال با تاریخ حدسی»؛ ارسال مجدد همان دقیقه‌ای که ساخته می‌شود قابل ارسال نیست.
+    /// </remarks>
+    private async Task EnsureLinkedAttemptsPlannedAsync(
+        IReadOnlyList<Shipment> shipments,
+        CancellationToken cancellationToken)
+    {
+        var linked = shipments.Where(x => x.IsResend || x.IsReplacement).ToList();
+        if (linked.Count == 0)
+        {
+            return;
+        }
+
+        if (_shipmentDispatchPlans is null)
+        {
+            throw new ContractOperationException(FulfillmentErrorCodes.DispatchPlanRequired);
+        }
+
+        var plans = await _shipmentDispatchPlans.ListForShipmentsAsync(
+            linked.Select(x => x.ShipmentId).ToList(),
+            cancellationToken);
+        var byShipment = plans.ToDictionary(x => x.ShipmentId);
+        foreach (var shipment in linked)
+        {
+            if (!byShipment.TryGetValue(shipment.ShipmentId, out var plan)
+                || !string.Equals(
+                    plan.AttemptKind,
+                    shipment.IsReplacement
+                        ? Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Replacement
+                        : Tooba.Order.Contracts.Shipping.OrderShipmentDispatchPlanKinds.Resend,
+                    StringComparison.Ordinal))
+            {
+                throw new ContractOperationException(FulfillmentErrorCodes.DispatchPlanRequired);
+            }
+        }
     }
 
     /// <summary>
@@ -635,6 +684,10 @@ public sealed partial class FulfillmentDirectory : IFulfillmentDirectory
         {
             return await MapSnapshotAsync(unit, cancellationToken);
         }
+
+        // TB-270-R2: a linked attempt is dispatch-authorized only by ITS OWN confirmed plan; the check precedes every
+        // stock consumption and status write so an unplanned resend/replacement can never leave the warehouse.
+        await EnsureLinkedAttemptsPlannedAsync([shipment], cancellationToken);
 
         // TB-266: an exact replay of an already-dispatched shipment above still answers its recorded fact; a NEW
         // dispatch requires authoritative payment/supply authorization before any stock is consumed.

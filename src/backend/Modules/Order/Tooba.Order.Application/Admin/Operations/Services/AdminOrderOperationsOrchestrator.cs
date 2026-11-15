@@ -1,3 +1,4 @@
+using System.Globalization;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Operations;
@@ -12,6 +13,7 @@ using Tooba.Order.Domain;
 using Tooba.Payment.Contracts.Admin;
 using Tooba.Returns.Contracts.Operations;
 using Tooba.Settlement.Contracts.Operations;
+using Tooba.Shipping.Contracts.Scheduling;
 
 using Tooba.Order.Application.Checkout.Abuse;
 using Tooba.Order.Application.Checkout.Contracts;
@@ -55,6 +57,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
         "cancel_shipment",
         "assign_tracking",
         "correct_tracking",
+        "plan_shipment_dispatch",
         "dispatch_shipment",
         "deliver_shipment",
         "create_consolidated_package",
@@ -86,6 +89,10 @@ public sealed partial class AdminOrderOperationsOrchestrator
     private readonly IAdminOrderOperationsSupplyPort _orderSupply;
     private readonly IOrderCommittedCarrierShipmentFactsReader _committedShippingGroups;
     private readonly IOrderShippingGroupHistoryReader _shippingGroupHistory;
+    private readonly IOrderShipmentDispatchPlanStore _shipmentPlanStore;
+    private readonly IOrderAcceptedShipmentBindingReader _acceptedShipmentBindings;
+    private readonly IShippingAttemptSchedulingLookup _schedulingLookup;
+    private readonly IClock _clock;
     private readonly MarketplaceOperationalGroupWorkflow _operationalGroupWorkflow;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
@@ -104,7 +111,11 @@ public sealed partial class AdminOrderOperationsOrchestrator
         IAdminOrderOperationsSupplyPort orderSupply,
         IOrderCommittedCarrierShipmentFactsReader committedShippingGroups,
         IOrderShippingGroupHistoryReader shippingGroupHistory,
-        IOrderOperationalGroupOccurrenceStore operationalGroupOccurrences)
+        IOrderOperationalGroupOccurrenceStore operationalGroupOccurrences,
+        IOrderShipmentDispatchPlanStore shipmentPlanStore,
+        IOrderAcceptedShipmentBindingReader acceptedShipmentBindings,
+        IShippingAttemptSchedulingLookup schedulingLookup,
+        IClock clock)
     {
         _checkouts = checkouts;
         _fulfillment = fulfillment;
@@ -120,6 +131,10 @@ public sealed partial class AdminOrderOperationsOrchestrator
         _orderSupply = orderSupply;
         _committedShippingGroups = committedShippingGroups;
         _shippingGroupHistory = shippingGroupHistory;
+        _shipmentPlanStore = shipmentPlanStore;
+        _acceptedShipmentBindings = acceptedShipmentBindings;
+        _schedulingLookup = schedulingLookup;
+        _clock = clock;
         _operationalGroupWorkflow = new MarketplaceOperationalGroupWorkflow(
             fulfillment,
             committedShippingGroups,
@@ -162,6 +177,10 @@ public sealed partial class AdminOrderOperationsOrchestrator
         var allShipmentIds = fulfillments.SelectMany(f => f.Shipments.Select(s => s.ShipmentId)).Distinct().ToArray();
         var memberships = await _fulfillment.GetActiveMembershipByShipmentIdsAsync(allShipmentIds, cancellationToken);
         var membershipByShipment = memberships.ToDictionary(x => x.ShipmentId);
+        // TB-270-R2: each parcel's OWN confirmed plan, read from the Order rows only. Absence is the truthful
+        // "needs planning" state and never borrows another parcel's/group's promise.
+        var plansByShipment = (await _shipmentPlanStore.ListAsync(allShipmentIds, cancellationToken))
+            .ToDictionary(x => x.ShipmentId);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var returns = (await _returns.ListBySellerOrderIdsAsync(sellerOrderIds, cancellationToken))
             .OrderByDescending(x => x.CreatedAt)
@@ -182,7 +201,7 @@ public sealed partial class AdminOrderOperationsOrchestrator
             var elig = await _returns.EvaluateEligibilityAsync(order.SellerOrderId, cancellationToken);
             eligibility.Add(elig);
             var fulfillment = fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId);
-            ProjectActions(actions, order, fulfillment, returns, elig, effective, membershipByShipment);
+            ProjectActions(actions, order, fulfillment, returns, elig, effective, membershipByShipment, plansByShipment);
         }
 
         ProjectWholeOrderCancel(actions, group, fulfillments, effective, blockedBySellerPayout);
@@ -235,6 +254,30 @@ public sealed partial class AdminOrderOperationsOrchestrator
                 .Select(x => new AdminSupplyLineShortage(x.ItemTitle, x.UnitCode, x.Required, x.Available, x.Shortage))
                 .ToList()
             : [];
+        var planSummaries = plansByShipment.Values
+            .OrderBy(x => x.ConfirmedAtUtc)
+            .Select(x => new AdminShipmentDispatchPlanStored(
+                x.ShipmentId,
+                x.PlanId,
+                x.AttemptKind,
+                x.OccurrenceKey,
+                x.CustomerReceivingDate,
+                TimeOnly.FromTimeSpan(TimeSpan.FromTicks(x.CustomerReceivingOpenTicks)).ToString("HH\\:mm", CultureInfo.InvariantCulture),
+                TimeOnly.FromTimeSpan(TimeSpan.FromTicks(x.CustomerReceivingCloseTicks)).ToString("HH\\:mm", CultureInfo.InvariantCulture),
+                x.CustomerReceivingTimeZone,
+                x.HandoffDate,
+                TimeOnly.FromTimeSpan(TimeSpan.FromTicks(x.HandoffOpenTicks)).ToString("HH\\:mm", CultureInfo.InvariantCulture),
+                TimeOnly.FromTimeSpan(TimeSpan.FromTicks(x.HandoffCloseTicks)).ToString("HH\\:mm", CultureInfo.InvariantCulture),
+                x.HandoffTimeZone,
+                x.PreparationStartUtc,
+                x.TransferDepartureUtc,
+                x.HandoffDeadlineUtc,
+                x.PreparationMinutes,
+                x.HandoffMinutes,
+                x.TransportWorkingDays,
+                x.PolicyVersion,
+                x.ConfirmedAtUtc))
+            .ToList();
         return new AdminOrderOperationsPage(
             checkoutId,
             collapsed,
@@ -247,7 +290,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
             supply.MessageFa,
             canConfirmDeposit,
             canRecover,
-            shortage);
+            shortage,
+            planSummaries);
     }
 
     /// <summary>eligibility همهٔ سفارش‌های فروشندهٔ یک checkout.</summary>

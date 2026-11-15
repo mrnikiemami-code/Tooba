@@ -139,6 +139,7 @@ public sealed class AdminPreparationConnected264R2Tests
             new EmptyPartyLookup(),
             new OrderGridEnrichmentBridge(orderDb),
             new OrderDispatchPlanFactsBridge(orderDb),
+            new OrderShipmentDispatchPlanReader(orderDb),
             new FixedClock(now));
         var page = await engine.QueryAsync(Request(1, 50, recipient), CancellationToken.None);
 
@@ -276,6 +277,7 @@ public sealed class AdminPreparationConnected264R2Tests
             new EmptyPartyLookup(),
             new OrderGridEnrichmentBridge(orderDb),
             new OrderDispatchPlanFactsBridge(orderDb),
+            new OrderShipmentDispatchPlanReader(orderDb),
             new FixedClock(now));
         var page = await engine.QueryAsync(Request(1, 50, recipient), CancellationToken.None);
 

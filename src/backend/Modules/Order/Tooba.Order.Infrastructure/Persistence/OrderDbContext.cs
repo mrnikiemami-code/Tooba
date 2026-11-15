@@ -89,6 +89,11 @@ public sealed class OrderDbContext : DbContext
     public DbSet<OrderLineObligationClosureRecord> ReturnObligationClosures =>
         Set<OrderLineObligationClosureRecord>();
 
+    /// <summary>
+    /// TB-270-R2: تأییدیهٔ تغییرناپذیر برنامهٔ ارسال مستقل یک مرسولهٔ موجود (ارسال مجدد/جایگزینی).
+    /// </summary>
+    public DbSet<OrderShipmentDispatchPlan> ShipmentDispatchPlans => Set<OrderShipmentDispatchPlan>();
+
 
 
     /// <summary>مشاهده‌های Admin برای قفل حذف یادداشت.</summary>
@@ -312,9 +317,45 @@ public sealed class OrderDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<SellerOrder>(entity =>
+        // TB-270-R2: one immutable confirmed shipment plan per exact physical parcel. The unique key is the
+        // sequential half of the invariant: two confirmations can never produce two plans for one parcel.
+        modelBuilder.Entity<OrderShipmentDispatchPlan>(entity =>
         {
-            entity.ToTable("seller_orders");
+            entity.ToTable("shipment_dispatch_plans");
+            entity.HasKey(x => x.PlanId);
+            entity.Property(x => x.PlanId).ValueGeneratedNever();
+            entity.Property(x => x.ShipmentId).ValueGeneratedNever();
+            entity.HasIndex(x => x.ShipmentId).IsUnique()
+                .HasDatabaseName("ux_shipment_dispatch_plans_shipment");
+            entity.HasIndex(x => new { x.SellerOrderId, x.ShippingGroupId });
+            entity.HasIndex(x => x.CheckoutId);
+            entity.Property(x => x.AttemptKind).HasMaxLength(16);
+            entity.Property(x => x.SourceFingerprint).HasMaxLength(OrderShipmentDispatchPlan.MaxFingerprintLength);
+            entity.Property(x => x.MethodCode).HasMaxLength(OrderShipmentDispatchPlan.MaxCodeLength);
+            entity.Property(x => x.MethodLabel).HasMaxLength(256);
+            entity.Property(x => x.ServiceCode).HasMaxLength(OrderShipmentDispatchPlan.MaxCodeLength);
+            entity.Property(x => x.OptionCode).HasMaxLength(OrderShipmentDispatchPlan.MaxCodeLength);
+            entity.Property(x => x.CustomerReceivingTimeZone).HasMaxLength(OrderShipmentDispatchPlan.MaxTimeZoneLength);
+            entity.Property(x => x.HandoffTimeZone).HasMaxLength(OrderShipmentDispatchPlan.MaxTimeZoneLength);
+            entity.Property(x => x.ReadinessSource).HasMaxLength(32);
+            entity.Property(x => x.OccurrenceKey).HasMaxLength(OrderShipmentDispatchPlan.MaxOccurrenceKeyLength);
+            entity.Property(x => x.OwnerTenantKey).HasMaxLength(64);
+            // The additive migration owns these snake_case column names.
+            entity.Property(x => x.CustomerReceivingDate).HasColumnName("customer_receiving_date");
+            entity.Property(x => x.CustomerReceivingOpenTicks).HasColumnName("customer_receiving_open_ticks");
+            entity.Property(x => x.CustomerReceivingCloseTicks).HasColumnName("customer_receiving_close_ticks");
+            entity.Property(x => x.HandoffDate).HasColumnName("handoff_date");
+            entity.Property(x => x.HandoffOpenTicks).HasColumnName("handoff_open_ticks");
+            entity.Property(x => x.HandoffCloseTicks).HasColumnName("handoff_close_ticks");
+            entity.Property(x => x.PreparationStartUtc).HasColumnName("preparation_start_utc");
+            entity.Property(x => x.TransferDepartureUtc).HasColumnName("transfer_departure_utc");
+            entity.Property(x => x.HandoffDeadlineUtc).HasColumnName("handoff_deadline_utc");
+            entity.Property(x => x.ReadinessAtUtc).HasColumnName("readiness_at_utc");
+            entity.Property(x => x.ConfirmedAtUtc).HasColumnName("confirmed_at_utc");
+        });
+
+        modelBuilder.Entity<SellerOrder>(entity =>
+        {            entity.ToTable("seller_orders");
             entity.HasKey(x => x.SellerOrderId);
             entity.Property(x => x.SellerOrderId).ValueGeneratedNever();
             entity.Property(x => x.OrderNumber).HasMaxLength(64);

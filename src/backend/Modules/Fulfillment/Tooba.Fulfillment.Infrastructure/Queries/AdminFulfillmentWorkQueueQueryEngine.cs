@@ -31,6 +31,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
     private readonly IPartyLookup _parties;
     private readonly IOrderGridEnrichmentReader _orders;
     private readonly IOrderDispatchPlanFactsReader _dispatchPlans;
+    private readonly IOrderShipmentDispatchPlanReader _ownShipmentPlans;
     private readonly IClock _clock;
 
     /// <summary>موتور صف کار را به DbContextها وصل می‌کند.</summary>
@@ -39,12 +40,14 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         IPartyLookup parties,
         IOrderGridEnrichmentReader orders,
         IOrderDispatchPlanFactsReader dispatchPlans,
+        IOrderShipmentDispatchPlanReader ownShipmentPlans,
         IClock clock)
     {
         _db = db;
         _parties = parties;
         _orders = orders;
         _dispatchPlans = dispatchPlans;
+        _ownShipmentPlans = ownShipmentPlans;
         _clock = clock;
     }
 
@@ -623,6 +626,20 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
             .GroupBy(plan => (plan.SellerOrderId, plan.ShippingGroupId))
             .ToDictionary(group => group.Key, group => (IReadOnlyList<OrderAcceptedGroupDispatchPlanFact>)group.ToList());
 
+        // TB-270-R2: each linked resend/replacement parcel's OWN confirmed plan, read in one batch from Order rows.
+        // This is the only plan a new physical attempt may show; absence stays «موعد ارسال مشخص نشده».
+        var linkedShipments = allShipments
+            .Where(x => x.IsReplacement || x.ResendOfShipmentId is not null)
+            .ToList();
+        var ownPlanByShipmentId = linkedShipments.Count == 0
+            ? new Dictionary<Guid, OrderShipmentDispatchPlanFact>()
+            : (await _ownShipmentPlans.ListForShipmentsAsync(
+                    linkedShipments.Select(x => x.ShipmentId).ToList(),
+                    cancellationToken))
+                .GroupBy(x => x.ShipmentId)
+                .ToDictionary(group => group.Key, group => group.First());
+        var linkedAttemptShipmentIds = linkedShipments.Select(x => x.ShipmentId).ToHashSet();
+
         var itemsBy = items.GroupBy(x => x.FulfillmentId).ToDictionary(g => g.Key, g => g.ToList());
         var shipmentSnapshotsBy = allShipments
             .GroupBy(x => x.FulfillmentId)
@@ -695,6 +712,8 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine : IAdminFulfillmentWork
         return AdminFulfillmentWorkUnitProjection.Build(new AdminFulfillmentWorkUnitContext(
             units,
             plansByGroup,
+            ownPlanByShipmentId,
+            linkedAttemptShipmentIds,
             packages,
             packageIdByShipment,
             resendableBySourceLine,

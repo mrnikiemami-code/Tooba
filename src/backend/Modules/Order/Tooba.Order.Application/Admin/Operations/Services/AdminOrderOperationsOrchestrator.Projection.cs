@@ -36,7 +36,8 @@ public sealed partial class AdminOrderOperationsOrchestrator
         IReadOnlyList<ReturnSnapshot> returns,
         ReturnEligibilityResult eligibility,
         OrderAdminEffectiveAccess effective,
-        IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment)
+        IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment,
+        IReadOnlyDictionary<Guid, OrderShipmentDispatchPlan> plansByShipment)
     {
         if (order.Status != SellerOrderStatus.Cancelled && fulfillment is not null)
         {
@@ -259,7 +260,41 @@ public sealed partial class AdminOrderOperationsOrchestrator
                         "کد رهگیری مرسوله اصلاح شود؟ مقدار قبلی در تاریخچه می‌ماند."));
                 }
 
+                var linkedAttempt = shipment.IsReplacement || shipment.ResendOfShipmentId is not null;
+                var linkedPlanned = linkedAttempt
+                    && plansByShipment.TryGetValue(shipment.ShipmentId, out var ownPlan)
+                    && string.Equals(
+                        ownPlan.AttemptKind,
+                        shipment.IsReplacement
+                            ? OrderShipmentAttemptKinds.Replacement
+                            : OrderShipmentAttemptKinds.Resend,
+                        StringComparison.Ordinal);
+
                 if (supplyAuthorized
+                    && linkedAttempt
+                    && !linkedPlanned
+                    && shipment.DispatchedAt is null
+                    && shipment.Status == ShipmentOperationStatus.Created
+                    && !lockedByPackage
+                    && HasAny(effective, "order.handle", "fulfillment.manage"))
+                {
+                    // TB-270-R2: the physical parcel already exists but has no OWN plan, so the only lawful next step
+                    // is planning it. Dispatch is deliberately absent — this action never creates the parcel.
+                    actions.Add(Action(
+                        "plan_shipment_dispatch",
+                        "زمان‌بندی ارسال این مرسوله",
+                        "Plan this parcel's dispatch",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        false,
+                        null));
+                }
+
+                if (supplyAuthorized
+                    && (!linkedAttempt || linkedPlanned)
                     && !string.IsNullOrWhiteSpace(shipment.TrackingReference)
                     && shipment.DispatchedAt is null
                     && shipment.Status is ShipmentOperationStatus.Created

@@ -1191,7 +1191,11 @@ public sealed class AdminOrderPostDispatchReplayTests
             new SupplyFake(),
             new CommittedShippingFake(),
             new ShippingHistoryFake(),
-            new OccurrenceStoreFake());
+            new OccurrenceStoreFake(),
+            new ShipmentPlanStoreFake(),
+            new AcceptedBindingFake(),
+            new SchedulingLookupFake(),
+            new SystemUtcClock());
 
     private static FulfillmentSnapshot FulfillmentSnapshotWith(
         ShipmentOperationStatus shipmentStatus,
@@ -1486,6 +1490,50 @@ public sealed class AdminOrderPostDispatchReplayTests
             Guid occurrenceId,
             CancellationToken cancellationToken) =>
             Task.FromResult<Tooba.Order.Application.Admin.Operations.Ports.OperationalGroupOccurrenceRecord?>(null);
+    }
+
+    /// <summary>TB-270-R2: in-memory plan rows so the projection sees an honest "needs planning" default.</summary>
+    private sealed class ShipmentPlanStoreFake : IOrderShipmentDispatchPlanStore
+    {
+        private readonly List<Tooba.Order.Domain.Aggregates.OrderShipmentDispatchPlan> _rows = [];
+
+        public Task<Tooba.Order.Domain.Aggregates.OrderShipmentDispatchPlan?> FindAsync(
+            Guid shipmentId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(_rows.SingleOrDefault(x => x.ShipmentId == shipmentId));
+
+        public Task<IReadOnlyList<Tooba.Order.Domain.Aggregates.OrderShipmentDispatchPlan>> ListAsync(
+            IReadOnlyList<Guid> shipmentIds,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Order.Domain.Aggregates.OrderShipmentDispatchPlan>>(
+                _rows.Where(x => shipmentIds.Contains(x.ShipmentId)).ToList());
+
+        public Task<OrderShipmentDispatchPlanInsertOutcome> TryInsertAsync(
+            Tooba.Order.Domain.Aggregates.OrderShipmentDispatchPlan plan,
+            CancellationToken cancellationToken)
+        {
+            _rows.Add(plan);
+            return Task.FromResult(OrderShipmentDispatchPlanInsertOutcome.Inserted);
+        }
+    }
+
+    private sealed class AcceptedBindingFake : IOrderAcceptedShipmentBindingReader
+    {
+        public Task<AcceptedShipmentGroupBinding?> GetAsync(
+            Guid checkoutId,
+            Guid shippingGroupId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<AcceptedShipmentGroupBinding?>(null);
+    }
+
+    private sealed class SchedulingLookupFake : Tooba.Shipping.Contracts.Scheduling.IShippingAttemptSchedulingLookup
+    {
+        public Task<Tooba.Shipping.Contracts.Scheduling.ShippingAttemptSchedulingResult> LookupAsync(
+            Tooba.Shipping.Contracts.Scheduling.ShippingAttemptSchedulingLookupRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Tooba.Shipping.Contracts.Scheduling.ShippingAttemptSchedulingResult.Refused(
+                Tooba.Shipping.Contracts.Scheduling.ShippingAttemptSchedulingVerdict.CapturedRevisionUnavailable,
+                Tooba.Shipping.Contracts.Scheduling.ShippingAttemptSchedulingReasonCodes.CapturedRevisionUnavailable));
     }
 
     private sealed class FulfillmentFake : IFulfillmentAdminOperations

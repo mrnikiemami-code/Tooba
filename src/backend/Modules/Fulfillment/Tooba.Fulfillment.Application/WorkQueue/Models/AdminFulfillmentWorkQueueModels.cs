@@ -368,18 +368,40 @@ public static class AdminFulfillmentQueueFilters
     /// usable capacity (<paramref name="hasResendableCapacity"/>), so an emptied/committed parcel truthfully offers
     /// no action instead of promising one the command would refuse.
     /// </remarks>
+    /// <param name="hasOutstandingDamagedQuantity">TB-262: a physically received damaged unit still owes a decision.</param>
+    /// <param name="linkedAttemptUnplanned">
+    /// TB-270-R2: this Created parcel is a resend/replacement attempt that has NO confirmed plan of its own. Its only
+    /// forward step is planning that exact parcel; «ارسال» is withheld because the owning command would refuse it.
+    /// </param>
     public static IReadOnlyList<string> ProjectParcelActionCodes(
         ShipmentStatus status,
         bool hasTracking,
         bool hasDispatchedAt,
         bool hasResendableCapacity,
-        bool hasOutstandingDamagedQuantity = false)
+        bool hasOutstandingDamagedQuantity = false,
+        bool linkedAttemptUnplanned = false)
     {
         var codes = new List<string>();
         switch (status)
         {
             case ShipmentStatus.Created:
                 codes.Add("cancel_shipment");
+                if (linkedAttemptUnplanned)
+                {
+                    // The physical parcel exists but is not scheduled: the operator plans THIS parcel before dispatch.
+                    codes.Add("plan_shipment_dispatch");
+                    if (!hasTracking)
+                    {
+                        codes.Add("assign_tracking");
+                    }
+                    else if (!hasDispatchedAt)
+                    {
+                        codes.Add("correct_tracking");
+                    }
+
+                    break;
+                }
+
                 if (!hasTracking)
                 {
                     codes.Add("assign_tracking");

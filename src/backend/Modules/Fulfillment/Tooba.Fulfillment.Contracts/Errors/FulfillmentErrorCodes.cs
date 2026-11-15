@@ -29,6 +29,12 @@ public static class FulfillmentErrorCodes
     /// </summary>
     public const string OrderPaymentNotAuthorized = "fulfillment.order.payment_not_authorized";
 
+    /// <summary>
+    /// TB-270-R2: a resend/replacement parcel has no confirmed OWN dispatch plan in Order yet, so dispatch is not
+    /// authorized. The physical parcel exists and is plannable; the operator must preview and confirm its plan first.
+    /// </summary>
+    public const string DispatchPlanRequired = "fulfillment.dispatch.plan_required";
+
     /// <summary>Order line was not found.</summary>
     public const string OrderLineNotFound = "fulfillment.order_line.not_found";
 

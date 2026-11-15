@@ -35,6 +35,12 @@ internal sealed record AdminFulfillmentPackageMemberFacts(
 internal sealed record AdminFulfillmentWorkUnitContext(
     IReadOnlyList<FulfillmentSnapshot> Units,
     IReadOnlyDictionary<(Guid SellerOrderId, Guid ShippingGroupId), IReadOnlyList<OrderAcceptedGroupDispatchPlanFact>> PlansByGroup,
+    // TB-270-R2: the OWN confirmed plan of each linked resend/replacement parcel, keyed by its exact shipment id.
+    // A linked attempt never reads PlansByGroup: the original accepted promise belongs to the shipped parcel and is
+    // never lent to a new physical attempt.
+    IReadOnlyDictionary<Guid, OrderShipmentDispatchPlanFact> OwnPlanByShipmentId,
+    // TB-270-R2: every shipment id in scope that IS a linked attempt (replacement or resend), planned or not.
+    IReadOnlySet<Guid> LinkedAttemptShipmentIds,
     IReadOnlyDictionary<Guid, AdminFulfillmentPackageWorkFacts> Packages,
     IReadOnlyDictionary<Guid, Guid> PackageIdByShipmentId,
     IReadOnlyDictionary<(Guid ShipmentId, Guid OrderLineId), decimal> ResendableBySourceLine,
@@ -201,11 +207,18 @@ internal static class AdminFulfillmentWorkUnitProjection
         FulfillmentSnapshot unit,
         ShipmentSnapshot shipment)
     {
-        // A Created resend parcel is funded by returned capacity and carries no accepted first-dispatch plan, so
-        // its timing is truthfully unspecified instead of inheriting the shipped parcel's old deadline.
-        var plans = shipment.ResendOfShipmentId is null
-            ? PlansOf(context, unit.SellerOrderId, shipment.ShippingGroupId)
-            : [];
+        // A linked attempt (resend/replacement) is a NEW physical parcel: its timing is ONLY its own confirmed plan.
+        // Without one it is truthfully unspecified («موعد ارسال مشخص نشده») instead of inheriting the shipped
+        // parcel's expired deadline. First dispatch keeps its original accepted group plan.
+        var linkedAttempt = shipment.IsReplacement || shipment.ResendOfShipmentId is not null;
+        var ownPlan = linkedAttempt && context.OwnPlanByShipmentId.TryGetValue(shipment.ShipmentId, out var confirmed)
+            ? confirmed
+            : null;
+        var plans = linkedAttempt
+            ? ownPlan is null
+                ? []
+                : [ownPlan.ToDispatchPlanFact()]
+            : PlansOf(context, unit.SellerOrderId, shipment.ShippingGroupId);
         var pending = shipment.Status == ShipmentStatus.Created;
         var inTransit = shipment.Status is ShipmentStatus.Dispatched
             or ShipmentStatus.InTransit
@@ -223,7 +236,8 @@ internal static class AdminFulfillmentWorkUnitProjection
             !string.IsNullOrWhiteSpace(shipment.TrackingReference),
             shipment.DispatchedAt is not null,
             resendable,
-            outstandingDamaged);
+            outstandingDamaged,
+            linkedAttemptUnplanned: pending && linkedAttempt && ownPlan is null);
         var methodCode = string.IsNullOrWhiteSpace(shipment.ShippingMethodCode)
             ? unit.ShippingMethodCode
             : shipment.ShippingMethodCode;
@@ -278,9 +292,11 @@ internal static class AdminFulfillmentWorkUnitProjection
             return null;
         }
 
+        // TB-270-R2: a linked member (resend/replacement) contributes ONLY its own confirmed plan; its group's plan
+        // belongs to the original shipment and is never lent. A member of the package is therefore never made to look
+        // scheduled by a sibling's promise, and an unplanned member keeps the package timing truthful.
         var plans = package.Members
-            .Where(member => member.ShippingGroupId is not null)
-            .SelectMany(member => PlansOf(context, member.SellerOrderId, member.ShippingGroupId))
+            .SelectMany(member => PlansForPackageMember(context, member))
             .GroupBy(plan => plan.ShippingGroupId)
             .Select(group => group.First())
             .OrderBy(plan => plan.HandoffDate)
@@ -509,6 +525,31 @@ internal static class AdminFulfillmentWorkUnitProjection
             && context.PlansByGroup.TryGetValue((sellerOrderId, groupId), out var plans)
             ? plans
             : [];
+
+    /// <summary>
+    /// TB-270-R2: the plans a package MEMBER may contribute. A linked resend/replacement parcel contributes only its
+    /// own confirmed plan; an ordinary member contributes its accepted group plan.
+    /// </summary>
+    private static IReadOnlyList<OrderAcceptedGroupDispatchPlanFact> PlansForPackageMember(
+        AdminFulfillmentWorkUnitContext context,
+        AdminFulfillmentPackageMemberFacts member)
+    {
+        if (context.OwnPlanByShipmentId.TryGetValue(member.ShipmentId, out var own))
+        {
+            return [own.ToDispatchPlanFact()];
+        }
+
+        // A linked attempt without its own plan contributes nothing: its group plan is the ORIGINAL shipment's
+        // promise and must never make a new physical attempt look scheduled.
+        if (context.LinkedAttemptShipmentIds.Contains(member.ShipmentId))
+        {
+            return [];
+        }
+
+        return member.ShippingGroupId is null
+            ? []
+            : PlansOf(context, member.SellerOrderId, member.ShippingGroupId);
+    }
 
     private static decimal ResendableOf(
         AdminFulfillmentWorkUnitContext context,

@@ -1,0 +1,590 @@
+/**
+ * TB-270-R2 — the OWN dispatch plan of an existing resend/replacement parcel.
+ *
+ * Two stages, one workflow: Fulfillment already created the physical parcel; this surface only makes it
+ * dispatch-authorized. The tests below prove the reviewed intent (occurrence key + chosen customer slot) is
+ * retained BEFORE the first POST, that a refusal/remount reconciles the SAME key instead of minting a second
+ * review, that a blocker is shown as a blocker (never a invented calendar), and that a stored plan is displayed
+ * exactly as the server reports it.
+ *
+ * Run with:
+ *   npx tsx --tsconfig tsconfig.mount-tests.json --test app/admin/admin-shipment-plan-270r2.mount.test.ts
+ */
+import "../../features/order-carrier-execution/install-jsdom-globals.ts";
+import assert from "node:assert/strict";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import test from "node:test";
+import {
+  mapAdminOrderDetail,
+  type AdminOrderDetail,
+} from "./admin-api.ts";
+import { AdminShipmentPlanModal } from "./admin-shipment-plan-modal.tsx";
+import { AdminOrderOperationalDeliverySection } from "./admin-order-operational-delivery-section.tsx";
+import {
+  clearShipmentPlanAttempt,
+  readShipmentPlanAttempt,
+  writeShipmentPlanAttempt,
+} from "./admin-shipment-plan-attempt.ts";
+import {
+  click,
+  ensureDom,
+  flush,
+  mount,
+  q,
+  qq,
+  waitFor,
+} from "../../features/order-carrier-execution/test-dom-harness.ts";
+import type {
+  AdminOrderOperationRequest,
+  AdminShipmentDispatchPlanOption,
+  AdminShipmentDispatchPlanPreview,
+} from "./admin-order-operations.ts";
+
+ensureDom();
+
+const CHECKOUT = "checkout-270r2";
+const SHIPMENT = "sh-plan-1";
+const VIEWER = "admin:viewer-a";
+
+const CONFIRM = "[data-testid='admin-shipment-plan-confirm']";
+const ERROR = "[data-testid='admin-shipment-plan-error']";
+const RECONCILE = "[data-testid='admin-shipment-plan-reconcile']";
+const BLOCKER = "[data-testid='admin-shipment-plan-blocker']";
+const CONFIRMED = "[data-testid='admin-shipment-plan-confirmed']";
+const EMPTY = "[data-testid='admin-shipment-plan-empty']";
+
+function option(date: string, opens: string, closes: string): AdminShipmentDispatchPlanOption {
+  return {
+    receivingDate: date,
+    receivingOpensAt: opens,
+    receivingClosesAt: closes,
+    receivingTimeZone: "Asia/Tehran",
+    handoffDate: date,
+    handoffOpensAt: "08:00",
+    handoffClosesAt: "20:00",
+    handoffTimeZone: "Asia/Tehran",
+    preparationStartUtc: `${date}T03:00:00Z`,
+    transferDepartureUtc: `${date}T06:00:00Z`,
+    handoffDeadlineUtc: `${date}T16:30:00Z`,
+  };
+}
+
+function preview(overrides: Partial<AdminShipmentDispatchPlanPreview> = {}): AdminShipmentDispatchPlanPreview {
+  return {
+    checkoutId: CHECKOUT,
+    sellerOrderId: "so1",
+    fulfillmentId: "f1",
+    shipmentId: SHIPMENT,
+    shippingGroupId: "g1",
+    attemptKind: "resend",
+    sourceShipmentId: "sh-origin",
+    damagedResolutionId: null,
+    replacementReservationId: null,
+    sourceFingerprint: "tb270r2-line=1",
+    readinessSource: "return_receipt",
+    readinessAtUtc: "2026-11-14T09:00:00Z",
+    methodCode: "store_courier",
+    methodLabel: "پیشتاز",
+    snapshotId: "snap-1",
+    draftId: "draft-1",
+    sourceRevision: 7,
+    formatVersion: 4,
+    areaGroupId: "area-1",
+    rateRowId: "rate-1",
+    servedAtUtc: "2026-11-15T06:00:00Z",
+    options: [option("2026-11-16", "09:00", "10:00"), option("2026-11-16", "11:00", "12:00"), option("2026-11-17", "09:00", "10:00")],
+    confirmedPlan: null,
+    blockerCode: null,
+    blockerFa: null,
+    missingCapturedInputs: null,
+    schedulingReasonCode: "shipping.scheduling.ok",
+    ...overrides,
+  };
+}
+
+function ok<T>(data: T) {
+  return { state: "ok" as const, data, status: 200 };
+}
+
+function resetScope(viewer: string = VIEWER, shipmentId: string = SHIPMENT) {
+  clearShipmentPlanAttempt({ viewerScopeKey: viewer, checkoutId: CHECKOUT, shipmentId });
+}
+
+test("mounted: a feasible slot is deliberately selected, the reviewed key is written BEFORE the POST, and success clears it", async () => {
+  resetScope();
+  const posts: AdminOrderOperationRequest[] = [];
+  const storedAtPost: string[] = [];
+  const { container, unmount } = await mount(
+    createElement(AdminShipmentPlanModal, {
+      open: true,
+      onClose: () => undefined,
+      checkoutId: CHECKOUT,
+      shipmentId: SHIPMENT,
+      viewerScopeKey: VIEWER,
+      onCompleted: () => undefined,
+      previewLoader: async () => ok(preview()),
+      operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+        posts.push(body);
+        // The durable envelope must already exist when the request leaves the browser.
+        storedAtPost.push(
+          readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT })
+            ?.occurrenceKey ?? "",
+        );
+        return ok({});
+      },
+    }),
+  );
+
+  await waitFor(() => qq(container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+  assert.equal((q(container, CONFIRM) as HTMLButtonElement).disabled, true, "no date may be preselected");
+
+  await click(q(container, "[data-testid='admin-shipment-plan-slot-2026-11-16-11:00']"));
+  await flush();
+  assert.equal((q(container, CONFIRM) as HTMLButtonElement).disabled, false);
+  assert.match(q(container, "[data-testid='admin-shipment-plan-deadlines']").textContent ?? "", /۲۰:۰۰/);
+
+  await click(q(container, CONFIRM));
+  await waitFor(() => posts.length === 1);
+
+  assert.equal(posts[0]!.code, "plan_shipment_dispatch");
+  assert.equal(posts[0]!.shipmentId, SHIPMENT);
+  assert.equal(posts[0]!.dispatchPlanReceivingDate, "2026-11-16");
+  assert.equal(posts[0]!.dispatchPlanReceivingOpensAt, "11:00");
+  assert.equal(posts[0]!.dispatchPlanReceivingClosesAt, "12:00");
+  assert.ok(posts[0]!.idempotencyKey, "the reviewed occurrence key is sent");
+  assert.equal(storedAtPost[0], posts[0]!.idempotencyKey, "the key was persisted before the POST");
+  await waitFor(() => readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT }) === null);
+
+  await unmount();
+});
+
+test("mounted: a typed refusal keeps the exact occurrence and remount reconciles the SAME key (no second review)", async () => {
+  resetScope();
+  const keys: string[] = [];
+  let refuse = true;
+  const props = {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT,
+    shipmentId: SHIPMENT,
+    viewerScopeKey: VIEWER,
+    previewLoader: async () => ok(preview()),
+    operationExecutor: async (_checkoutId: string, body: AdminOrderOperationRequest) => {
+      keys.push(body.idempotencyKey ?? "");
+      return refuse
+        ? { state: "error" as const, data: null, status: 409, message: "order.shipment_plan.selection_expired" }
+        : ok({});
+    },
+  };
+
+  const first = await mount(createElement(AdminShipmentPlanModal, props));
+  await waitFor(() => qq(first.container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+  await click(q(first.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+  await flush();
+  await click(q(first.container, CONFIRM));
+  await waitFor(() => keys.length === 1);
+  await waitFor(() => Boolean(first.container.querySelector(ERROR)));
+  assert.ok(first.container.querySelector(RECONCILE), "the retained-review hint is shown after a refusal");
+  await first.unmount();
+
+  const retained = readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT });
+  assert.equal(retained?.occurrenceKey, keys[0], "the refused intent is retained verbatim");
+
+  refuse = false;
+  const second = await mount(createElement(AdminShipmentPlanModal, props));
+  // The retained slot is still offered, so it is restored as the reviewed selection.
+  await waitFor(() => Boolean(second.container.querySelector("[data-testid='admin-shipment-plan-deadlines']")));
+  assert.equal(
+    qq(second.container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']")[0]!.getAttribute("aria-pressed"),
+    "true",
+    "the retained selection comes back selected",
+  );
+  await click(q(second.container, CONFIRM));
+  await waitFor(() => keys.length === 2);
+  assert.equal(keys[1], keys[0], "the second attempt reuses the SAME reviewed occurrence");
+  await second.unmount();
+});
+
+test("mounted: a stock-pending blocker shows the blocker and NO calendar (no invented date)", async () => {
+  resetScope();
+  let posts = 0;
+  const { container, unmount } = await mount(
+    createElement(AdminShipmentPlanModal, {
+      open: true,
+      onClose: () => undefined,
+      checkoutId: CHECKOUT,
+      shipmentId: SHIPMENT,
+      viewerScopeKey: VIEWER,
+      previewLoader: async () => ok(preview({
+        options: [],
+        blockerCode: "order.shipment_plan.replacement_stock_pending",
+        blockerFa: "موجودی سالم این جایگزینی هنوز تخصیص نیافته است؛ تا آماده‌شدن رزرو، تاریخی ارائه نمی‌شود.",
+        schedulingReasonCode: null,
+      })),
+      operationExecutor: async () => {
+        posts += 1;
+        return ok({});
+      },
+    }),
+  );
+
+  await waitFor(() => Boolean(container.querySelector(BLOCKER)));
+  assert.match(q(container, BLOCKER).textContent ?? "", /موجودی سالم/);
+  assert.equal(qq(container, "[data-testid^='admin-shipment-plan-slot-']").length, 0);
+  assert.equal((q(container, CONFIRM) as HTMLButtonElement).disabled, true);
+  await click(q(container, CONFIRM)).catch(() => undefined);
+  await flush();
+  assert.equal(posts, 0, "a blocked parcel never posts a plan");
+  await unmount();
+});
+
+test("mounted: a confirmed plan is displayed as stored history and cannot be re-confirmed", async () => {
+  resetScope();
+  const confirmed = {
+    planId: "plan-1",
+    occurrenceKey: "occurrence-1",
+    receivingDate: "2026-11-20",
+    receivingOpensAt: "09:00",
+    receivingClosesAt: "10:00",
+    receivingTimeZone: "Asia/Tehran",
+    handoffDate: "2026-11-18",
+    handoffOpensAt: "08:00",
+    handoffClosesAt: "20:00",
+    handoffTimeZone: "Asia/Tehran",
+    preparationStartUtc: "2026-11-18T03:00:00Z",
+    transferDepartureUtc: "2026-11-18T06:00:00Z",
+    handoffDeadlineUtc: "2026-11-18T16:30:00Z",
+    preparationMinutes: 120,
+    handoffMinutes: 60,
+    transportWorkingDays: 2,
+    policyVersion: 3,
+    confirmedByUserId: "user-1",
+    confirmedAtUtc: "2026-11-15T06:00:00Z",
+  };
+  const { container, unmount } = await mount(
+    createElement(AdminShipmentPlanModal, {
+      open: true,
+      onClose: () => undefined,
+      checkoutId: CHECKOUT,
+      shipmentId: SHIPMENT,
+      viewerScopeKey: VIEWER,
+      previewLoader: async () => ok(preview({ options: [], confirmedPlan: confirmed })),
+      operationExecutor: async () => {
+        throw new Error("a stored plan must never be posted again");
+      },
+    }),
+  );
+
+  await waitFor(() => Boolean(container.querySelector(CONFIRMED)));
+  const text = q(container, CONFIRMED).textContent ?? "";
+  assert.match(text, /برنامهٔ تأییدشدهٔ خودش/);
+  assert.match(text, /به وقت تهران/);
+  assert.match(text, /[۰-۹]/);
+  assert.doesNotMatch(text, /2026-11-20/);
+  assert.equal((q(container, CONFIRM) as HTMLButtonElement).disabled, true);
+  assert.equal(qq(container, "[data-testid^='admin-shipment-plan-slot-']").length, 0);
+  await unmount();
+});
+
+test("mounted: without a durable envelope the review refuses to POST instead of risking a second plan", async () => {
+  resetScope();
+  const original = (globalThis as { sessionStorage?: Storage }).sessionStorage;
+  let posts = 0;
+  const throwing = {
+    getItem: () => {
+      throw new Error("storage refused");
+    },
+    setItem: () => {
+      throw new Error("storage refused");
+    },
+    removeItem: () => {
+      throw new Error("storage refused");
+    },
+  } as unknown as Storage;
+
+  try {
+    (globalThis as { sessionStorage?: Storage }).sessionStorage = throwing;
+    const { container, unmount } = await mount(
+      createElement(AdminShipmentPlanModal, {
+        open: true,
+        onClose: () => undefined,
+        checkoutId: CHECKOUT,
+        shipmentId: SHIPMENT,
+        viewerScopeKey: VIEWER,
+        previewLoader: async () => ok(preview()),
+        operationExecutor: async () => {
+          posts += 1;
+          return ok({});
+        },
+      }),
+    );
+    await waitFor(() => qq(container, "[data-testid^='admin-shipment-plan-slot-']").length >= 1);
+    await click(q(container, "[data-testid='admin-shipment-plan-slot-2026-11-16-09:00']"));
+    await flush();
+    await click(q(container, CONFIRM));
+    await waitFor(() => Boolean(container.querySelector(ERROR)));
+    assert.match(q(container, ERROR).textContent ?? "", /ذخیرهٔ محلی/);
+    assert.equal(posts, 0, "no plan is posted without a verified local envelope");
+    await unmount();
+  } finally {
+    (globalThis as { sessionStorage?: Storage }).sessionStorage = original;
+  }
+});
+
+test("store: a reviewed occurrence is scoped to viewer + checkout + exact parcel", () => {
+  resetScope();
+  const written = writeShipmentPlanAttempt({
+    scope: { viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT },
+    occurrenceKey: "occurrence-a",
+    receivingDate: "2026-11-16",
+    receivingOpensAt: "09:00",
+    receivingClosesAt: "10:00",
+  });
+  assert.equal(written?.durable, true);
+  assert.equal(
+    readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: SHIPMENT })?.occurrenceKey,
+    "occurrence-a",
+  );
+  assert.equal(
+    readShipmentPlanAttempt({ viewerScopeKey: "admin:viewer-b", checkoutId: CHECKOUT, shipmentId: SHIPMENT }),
+    null,
+    "another viewer never inherits the review",
+  );
+  assert.equal(
+    readShipmentPlanAttempt({ viewerScopeKey: VIEWER, checkoutId: CHECKOUT, shipmentId: "sh-other" }),
+    null,
+    "another parcel never inherits the review",
+  );
+  resetScope();
+});
+
+/** Minimal detail: one marketplace group covering two sellers, each with one linked attempt parcel. */
+function detailWithLinkedAttempts(): AdminOrderDetail {
+  const mapped = mapAdminOrderDetail({
+    checkoutId: "plan-c1",
+    reference: "PLAN-R2",
+    currency: "IRR",
+    sellerOrders: [
+      {
+        sellerOrderId: "so1",
+        orderNumber: "SO-1",
+        sellerDisplayName: "آرمان",
+        lines: [{
+          orderLineId: "ol1",
+          offerId: "o1",
+          productTitle: "شال آرمان",
+          quantity: 2,
+          quantityPacked: 2,
+          quantityAllocated: 0,
+          unitAmount: 1000,
+          linePayable: 2000,
+          currency: "IRR",
+        }],
+        shipments: [{
+          shipmentId: "sh1",
+          status: "Created",
+          carrierDisplayName: "پست",
+          shippingGroupId: "g1",
+          shippingMethodCode: "post",
+          itemCount: 1,
+          lines: [{ orderLineId: "ol1", quantity: 1 }],
+          trackingReference: null,
+          activePackageNumber: null,
+          packageLockedReasonFa: null,
+          resendOfShipmentId: "sh0",
+        }],
+      },
+      {
+        sellerOrderId: "so2",
+        orderNumber: "SO-2",
+        sellerDisplayName: "نیلوا",
+        lines: [{
+          orderLineId: "ol2",
+          offerId: "o2",
+          productTitle: "پیراهن نیلوا",
+          quantity: 1,
+          quantityPacked: 1,
+          quantityAllocated: 0,
+          unitAmount: 3000,
+          linePayable: 3000,
+          currency: "IRR",
+        }],
+        shipments: [{
+          shipmentId: "sh2",
+          status: "Created",
+          carrierDisplayName: "پست",
+          shippingGroupId: "g2",
+          shippingMethodCode: "post",
+          itemCount: 1,
+          lines: [{ orderLineId: "ol2", quantity: 1 }],
+          trackingReference: null,
+          activePackageNumber: null,
+          packageLockedReasonFa: null,
+        }],
+      },
+    ],
+    shippingGroups: [
+      {
+        shippingGroupId: "g1",
+        sellerOrderId: "so1",
+        sellerPartyId: "sp1",
+        methodCode: "post",
+        methodLabel: "پیشتاز",
+        serviceCode: null,
+        optionCode: null,
+        shippingChargeSnapshot: 125000,
+        currency: "IRR",
+        deliveryDate: "2026-11-10",
+        deliveryTimeWindow: "14:00–15:00",
+        deliveryTimeZone: "Asia/Tehran",
+        ownerKind: "Marketplace",
+        ownerTenantKey: null,
+        ownerSellerPartyId: null,
+        orderLineIds: ["ol1"],
+        createParcelEligible: true,
+        createParcelBlockReasonFa: null,
+        payableAtCheckoutAmount: 125000,
+        carrierCollectAmount: 0,
+        transportMode: "Manual",
+      },
+      {
+        shippingGroupId: "g2",
+        sellerOrderId: "so2",
+        sellerPartyId: "sp2",
+        methodCode: "post",
+        methodLabel: "پیشتاز",
+        serviceCode: null,
+        optionCode: null,
+        shippingChargeSnapshot: 125000,
+        currency: "IRR",
+        deliveryDate: "2026-11-10",
+        deliveryTimeWindow: "14:00–15:00",
+        deliveryTimeZone: "Asia/Tehran",
+        ownerKind: "Marketplace",
+        ownerTenantKey: null,
+        ownerSellerPartyId: null,
+        orderLineIds: ["ol2"],
+        createParcelEligible: true,
+        createParcelBlockReasonFa: null,
+        payableAtCheckoutAmount: 125000,
+        carrierCollectAmount: 0,
+        transportMode: "Manual",
+      },
+    ],
+    operationalDeliveryGroups: [
+      {
+        operationalGroupKey: "plan-group",
+        methodLabel: "پیشتاز",
+        methodCode: "post",
+        serviceCode: null,
+        optionCode: null,
+        deliveryDate: "2026-11-10",
+        deliveryTimeWindow: "14:00–15:00",
+        responsibilityLabelFa: "ارسال توسط مارکت‌پلیس",
+        isCrossSellerMarketplace: true,
+        separateReasonFa: null,
+        consolidateEligible: true,
+        consolidateBlockReasonFa: null,
+        combinedFeeTotal: 250000,
+        currency: "IRR",
+        members: [
+          {
+            shippingGroupId: "g1",
+            sellerOrderId: "so1",
+            sellerPartyId: "sp1",
+            sellerDisplayName: "آرمان",
+            orderLineIds: ["ol1"],
+            createParcelEligible: true,
+            createParcelBlockReasonFa: null,
+            transportMode: "Manual",
+            feeAmount: 125000,
+            currency: "IRR",
+            lines: [{ orderLineId: "ol1", title: "شال آرمان", remainingPackedQuantity: 2, packedQuantity: 2 }],
+          },
+          {
+            shippingGroupId: "g2",
+            sellerOrderId: "so2",
+            sellerPartyId: "sp2",
+            sellerDisplayName: "نیلوا",
+            orderLineIds: ["ol2"],
+            createParcelEligible: true,
+            createParcelBlockReasonFa: null,
+            transportMode: "Manual",
+            feeAmount: 125000,
+            currency: "IRR",
+            lines: [{ orderLineId: "ol2", title: "پیراهن نیلوا", remainingPackedQuantity: 1, packedQuantity: 1 }],
+          },
+        ],
+        feeBreakdown: [
+          { shippingGroupId: "g1", sellerDisplayName: "آرمان", feeAmount: 125000, currency: "IRR" },
+          { shippingGroupId: "g2", sellerDisplayName: "نیلوا", feeAmount: 125000, currency: "IRR" },
+        ],
+        actorMayManageOperations: true,
+      },
+    ],
+  });
+  assert.ok(mapped);
+  return mapped!;
+}
+
+test("static render: the SAME Created card offers planning only, and the stored plan is shown as the server reported it", () => {
+  const planned: string[] = [];
+  const html = renderToStaticMarkup(
+    createElement(AdminOrderOperationalDeliverySection, {
+      detail: detailWithLinkedAttempts(),
+      pendingCode: null,
+      actorMayManage: true,
+      parcelCapabilities: (_seller: unknown, shipment: { shipmentId: string }) => ({
+        canCancel: true,
+        canTrack: false,
+        canDispatch: false,
+        canDeliver: false,
+        canResend: false,
+        canResolveDamagedGoods: false,
+        canCreateCourierReturn: false,
+        canPlanDispatch: shipment.shipmentId === "sh1",
+      }),
+      shipmentPlansByShipmentId: {
+        sh1: {
+          shipmentId: "sh1",
+          planId: "plan-1",
+          attemptKind: "resend",
+          occurrenceKey: "occurrence-1",
+          receivingDate: "2026-11-20",
+          receivingOpensAt: "09:00",
+          receivingClosesAt: "10:00",
+          receivingTimeZone: "Asia/Tehran",
+          handoffDate: "2026-11-18",
+          handoffOpensAt: "08:00",
+          handoffClosesAt: "20:00",
+          handoffTimeZone: "Asia/Tehran",
+          preparationStartUtc: "2026-11-18T03:00:00Z",
+          transferDepartureUtc: "2026-11-18T06:00:00Z",
+          handoffDeadlineUtc: "2026-11-18T16:30:00Z",
+          preparationMinutes: 120,
+          handoffMinutes: 60,
+          transportWorkingDays: 2,
+          policyVersion: 3,
+          confirmedAtUtc: "2026-11-15T06:00:00Z",
+        },
+      },
+      onParcelPlan: (_seller: unknown, shipmentId: string) => planned.push(shipmentId),
+      onCreateShipment: () => undefined,
+      onPrepareOperationalGroup: () => undefined,
+    } as never),
+  );
+
+  // The unplanned/unscheduled parcel: one planning step, no dispatch claim.
+  assert.ok(html.includes("admin-order-shipment-plan-sh1"));
+  assert.match(html, /زمان‌بندی ارسال/);
+  // The stored plan is Persian/Jalali with an accepted-zone label and never a raw ISO date.
+  const planBlock = html.slice(html.indexOf("admin-order-parcel-plan-sh1"));
+  assert.ok(planBlock.length > 0);
+  const block = planBlock.slice(0, planBlock.indexOf("</div>"));
+  assert.match(block, /موعد تحویل مشتری/);
+  assert.match(block, /به وقت تهران/);
+  assert.match(block, /[۰-۹]/);
+  assert.doesNotMatch(block, /2026-11-20T|2026-11-20/);
+  assert.equal(planned.length, 0, "rendering never plans on its own");
+});

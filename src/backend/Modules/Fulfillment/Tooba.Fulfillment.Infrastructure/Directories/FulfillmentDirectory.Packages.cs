@@ -274,6 +274,12 @@ public sealed partial class FulfillmentDirectory
         // فاز ۱ — اعتبارسنجی و محاسبهٔ کدها؛ هیچ نوشتنی انجام نمی‌شود.
         var steps = await BuildDispatchStepsAsync(package, activeMembers, cancellationToken);
 
+        // TB-270-R2: هر عضوِ «تلاش جدید» باید برنامهٔ تأییدشدهٔ خودش را داشته باشد؛ یک عضو بدون برنامه کل بسته را
+        // رد می‌کند تا هرگز ارسال جزئی/بدون موعد ثبت نشود.
+        await EnsureLinkedAttemptsPlannedAsync(
+            steps.Select(x => x.Shipment).ToList(),
+            cancellationToken);
+
         // فاز ۲ — اعمال همهٔ تغییرات Fulfillment و یک SaveChanges برای کل بسته.
         foreach (var step in steps.Where(x => x.GeneratedTrackingReference is not null))
         {

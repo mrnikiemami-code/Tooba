@@ -83,6 +83,10 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsInventoryRecoveryPort, Admin.Operations.AdminOrderOperationsInventoryRecoveryAdapter>();
         services.AddScoped<Application.Admin.Operations.Ports.IAdminOrderOperationsSupplyPort, Admin.Operations.AdminOrderOperationsSupplyAdapter>();
         services.AddScoped<Application.Admin.Operations.Ports.IOrderOperationalGroupOccurrenceStore, Admin.Operations.OrderOperationalGroupOccurrenceStore>();
+        // TB-270-R2: the OWN dispatch plan of an existing resend/replacement parcel (Order-owned, one row per parcel).
+        services.AddScoped<Application.Admin.Operations.Ports.IOrderShipmentDispatchPlanStore, Admin.Operations.OrderShipmentDispatchPlanStore>();
+        services.AddScoped<Application.Admin.Operations.Ports.IOrderAcceptedShipmentBindingReader, Admin.Operations.OrderAcceptedShipmentBindingReader>();
+        services.AddScoped<Tooba.Order.Contracts.Shipping.IOrderShipmentDispatchPlanReader, Integrations.DispatchPlan.OrderShipmentDispatchPlanReader>();
         services.AddScoped<Application.Admin.Operations.Services.AdminOrderOperationsOrchestrator>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
 

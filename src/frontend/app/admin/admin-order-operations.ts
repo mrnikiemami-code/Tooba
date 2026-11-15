@@ -83,6 +83,110 @@ export type AdminOrderOperationsPage = {
     available: number;
     shortage: number;
   }>;
+  /**
+   * TB-270-R2: stored OWN plans of linked resend/replacement parcels, read from Order rows. A stored plan is
+   * immutable history: an elapsed promise is displayed as elapsed, never re-planned locally.
+   */
+  shipmentDispatchPlans?: AdminShipmentDispatchPlanStored[];
+};
+
+/** TB-270-R2: one stored own plan exactly as the owning Order read model reports it. */
+export type AdminShipmentDispatchPlanStored = {
+  shipmentId: string;
+  planId: string;
+  attemptKind: string;
+  occurrenceKey: string;
+  receivingDate: string;
+  receivingOpensAt: string;
+  receivingClosesAt: string;
+  receivingTimeZone: string;
+  handoffDate: string;
+  handoffOpensAt: string;
+  handoffClosesAt: string;
+  handoffTimeZone: string;
+  preparationStartUtc: string;
+  transferDepartureUtc: string;
+  handoffDeadlineUtc: string;
+  preparationMinutes: number;
+  handoffMinutes: number;
+  transportWorkingDays: number;
+  policyVersion: number;
+  confirmedAtUtc: string;
+};
+
+/**
+ * TB-270-R2: ONE feasible customer window the server computed from the seller's own captured inputs.
+ * `receivingDate` + the slot strings are exactly what `plan_shipment_dispatch` must echo back.
+ */
+export type AdminShipmentDispatchPlanOption = {
+  receivingDate: string;
+  receivingOpensAt: string;
+  receivingClosesAt: string;
+  receivingTimeZone: string;
+  handoffDate: string;
+  handoffOpensAt: string;
+  handoffClosesAt: string;
+  handoffTimeZone: string;
+  preparationStartUtc: string;
+  transferDepartureUtc: string;
+  handoffDeadlineUtc: string;
+};
+
+/** TB-270-R2: the plan already stored for this parcel — immutable history, never re-planned. */
+export type AdminShipmentDispatchPlanConfirmed = {
+  planId: string;
+  occurrenceKey: string;
+  receivingDate: string;
+  receivingOpensAt: string;
+  receivingClosesAt: string;
+  receivingTimeZone: string;
+  handoffDate: string;
+  handoffOpensAt: string;
+  handoffClosesAt: string;
+  handoffTimeZone: string;
+  preparationStartUtc: string;
+  transferDepartureUtc: string;
+  handoffDeadlineUtc: string;
+  preparationMinutes: number;
+  handoffMinutes: number;
+  transportWorkingDays: number;
+  policyVersion: number;
+  confirmedByUserId: string;
+  confirmedAtUtc: string;
+};
+
+/**
+ * TB-270-R2: read-only preview of one existing resend/replacement parcel's OWN dispatch plan.
+ * A non-empty `blockerCode` means "no actionable promise"; `options` is then empty.
+ */
+export type AdminShipmentDispatchPlanPreview = {
+  checkoutId: string;
+  sellerOrderId: string;
+  fulfillmentId: string;
+  shipmentId: string;
+  shippingGroupId: string | null;
+  attemptKind: string;
+  sourceShipmentId: string | null;
+  damagedResolutionId: string | null;
+  replacementReservationId: string | null;
+  sourceFingerprint: string;
+  readinessSource: string | null;
+  readinessAtUtc: string | null;
+  methodCode: string | null;
+  methodLabel: string | null;
+  snapshotId: string | null;
+  draftId: string | null;
+  sourceRevision: number | null;
+  formatVersion: number | null;
+  areaGroupId: string | null;
+  rateRowId: string | null;
+  servedAtUtc: string;
+  options: AdminShipmentDispatchPlanOption[];
+  confirmedPlan: AdminShipmentDispatchPlanConfirmed | null;
+  blockerCode: string | null;
+  blockerFa: string | null;
+  missingCapturedInputs: string[] | null;
+  schedulingReasonCode: string | null;
 };
 
 /**
@@ -140,6 +244,13 @@ export type AdminOrderOperationRequest = {
    * condition. Distinct from `returnItems` (the customer RMA lines of a different workflow).
    */
   courierReturnItems?: Array<{ orderLineId: string; quantity: number; condition: string }> | null;
+  /**
+   * TB-270-R2: the reviewed customer date/slot of ONE existing resend/replacement parcel's own dispatch plan.
+   * The server re-validates them against a freshly computed feasible calendar; an expired selection is refused.
+   */
+  dispatchPlanReceivingDate?: string | null;
+  dispatchPlanReceivingOpensAt?: string | null;
+  dispatchPlanReceivingClosesAt?: string | null;
 };
 
 /**
@@ -196,6 +307,125 @@ function mapAction(raw: unknown): AdminOrderOperationAction | null {
   };
 }
 
+function asNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function mapDispatchPlanOption(raw: unknown): AdminShipmentDispatchPlanOption | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const receivingDate = asString(row.receivingDate) ?? asString(row.ReceivingDate);
+  const receivingOpensAt = asString(row.receivingOpensAt) ?? asString(row.ReceivingOpensAt);
+  const receivingClosesAt = asString(row.receivingClosesAt) ?? asString(row.ReceivingClosesAt);
+  const receivingTimeZone = asString(row.receivingTimeZone) ?? asString(row.ReceivingTimeZone);
+  const preparationStartUtc = asString(row.preparationStartUtc) ?? asString(row.PreparationStartUtc);
+  const transferDepartureUtc = asString(row.transferDepartureUtc) ?? asString(row.TransferDepartureUtc);
+  const handoffDeadlineUtc = asString(row.handoffDeadlineUtc) ?? asString(row.HandoffDeadlineUtc);
+  if (
+    !receivingDate || !receivingOpensAt || !receivingClosesAt || !receivingTimeZone
+    || !preparationStartUtc || !transferDepartureUtc || !handoffDeadlineUtc
+  ) {
+    return null;
+  }
+  return {
+    receivingDate,
+    receivingOpensAt,
+    receivingClosesAt,
+    receivingTimeZone,
+    handoffDate: asString(row.handoffDate) ?? asString(row.HandoffDate) ?? "",
+    handoffOpensAt: asString(row.handoffOpensAt) ?? asString(row.HandoffOpensAt) ?? "",
+    handoffClosesAt: asString(row.handoffClosesAt) ?? asString(row.HandoffClosesAt) ?? "",
+    handoffTimeZone: asString(row.handoffTimeZone) ?? asString(row.HandoffTimeZone) ?? "",
+    preparationStartUtc,
+    transferDepartureUtc,
+    handoffDeadlineUtc,
+  };
+}
+
+function mapConfirmedPlan(raw: unknown): AdminShipmentDispatchPlanConfirmed | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const planId = asString(row.planId) ?? asString(row.PlanId);
+  const receivingDate = asString(row.receivingDate) ?? asString(row.ReceivingDate);
+  const confirmedAtUtc = asString(row.confirmedAtUtc) ?? asString(row.ConfirmedAtUtc);
+  if (!planId || !receivingDate || !confirmedAtUtc) return null;
+  return {
+    planId,
+    occurrenceKey: asString(row.occurrenceKey) ?? asString(row.OccurrenceKey) ?? "",
+    receivingDate,
+    receivingOpensAt: asString(row.receivingOpensAt) ?? asString(row.ReceivingOpensAt) ?? "",
+    receivingClosesAt: asString(row.receivingClosesAt) ?? asString(row.ReceivingClosesAt) ?? "",
+    receivingTimeZone: asString(row.receivingTimeZone) ?? asString(row.ReceivingTimeZone) ?? "",
+    handoffDate: asString(row.handoffDate) ?? asString(row.HandoffDate) ?? "",
+    handoffOpensAt: asString(row.handoffOpensAt) ?? asString(row.HandoffOpensAt) ?? "",
+    handoffClosesAt: asString(row.handoffClosesAt) ?? asString(row.HandoffClosesAt) ?? "",
+    handoffTimeZone: asString(row.handoffTimeZone) ?? asString(row.HandoffTimeZone) ?? "",
+    preparationStartUtc: asString(row.preparationStartUtc) ?? asString(row.PreparationStartUtc) ?? "",
+    transferDepartureUtc: asString(row.transferDepartureUtc) ?? asString(row.TransferDepartureUtc) ?? "",
+    handoffDeadlineUtc: asString(row.handoffDeadlineUtc) ?? asString(row.HandoffDeadlineUtc) ?? "",
+    preparationMinutes: asNumber(row.preparationMinutes ?? row.PreparationMinutes) ?? 0,
+    handoffMinutes: asNumber(row.handoffMinutes ?? row.HandoffMinutes) ?? 0,
+    transportWorkingDays: asNumber(row.transportWorkingDays ?? row.TransportWorkingDays) ?? 0,
+    policyVersion: asNumber(row.policyVersion ?? row.PolicyVersion) ?? 0,
+    confirmedByUserId: asString(row.confirmedByUserId) ?? asString(row.ConfirmedByUserId) ?? "",
+    confirmedAtUtc,
+  };
+}
+
+function mapShipmentDispatchPlanPreview(raw: unknown): AdminShipmentDispatchPlanPreview | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const checkoutId = asString(row.checkoutId) ?? asString(row.CheckoutId);
+  const shipmentId = asString(row.shipmentId) ?? asString(row.ShipmentId);
+  const attemptKind = asString(row.attemptKind) ?? asString(row.AttemptKind);
+  if (!checkoutId || !shipmentId || !attemptKind) return null;
+  const optionsRaw = row.options ?? row.Options;
+  const missingRaw = row.missingCapturedInputs ?? row.MissingCapturedInputs;
+  return {
+    checkoutId,
+    sellerOrderId: asString(row.sellerOrderId) ?? asString(row.SellerOrderId) ?? "",
+    fulfillmentId: asString(row.fulfillmentId) ?? asString(row.FulfillmentId) ?? "",
+    shipmentId,
+    shippingGroupId: asString(row.shippingGroupId) ?? asString(row.ShippingGroupId),
+    attemptKind,
+    sourceShipmentId: asString(row.sourceShipmentId) ?? asString(row.SourceShipmentId),
+    damagedResolutionId: asString(row.damagedResolutionId) ?? asString(row.DamagedResolutionId),
+    replacementReservationId:
+      asString(row.replacementReservationId) ?? asString(row.ReplacementReservationId),
+    sourceFingerprint: asString(row.sourceFingerprint) ?? asString(row.SourceFingerprint) ?? "",
+    readinessSource: asString(row.readinessSource) ?? asString(row.ReadinessSource),
+    readinessAtUtc: asString(row.readinessAtUtc) ?? asString(row.ReadinessAtUtc),
+    methodCode: asString(row.methodCode) ?? asString(row.MethodCode),
+    methodLabel: asString(row.methodLabel) ?? asString(row.MethodLabel),
+    snapshotId: asString(row.snapshotId) ?? asString(row.SnapshotId),
+    draftId: asString(row.draftId) ?? asString(row.DraftId),
+    sourceRevision: asNumber(row.sourceRevision ?? row.SourceRevision),
+    formatVersion: asNumber(row.formatVersion ?? row.FormatVersion),
+    areaGroupId: asString(row.areaGroupId) ?? asString(row.AreaGroupId),
+    rateRowId: asString(row.rateRowId) ?? asString(row.RateRowId),
+    servedAtUtc: asString(row.servedAtUtc) ?? asString(row.ServedAtUtc) ?? "",
+    options: Array.isArray(optionsRaw)
+      ? (optionsRaw as unknown[])
+        .map(mapDispatchPlanOption)
+        .filter((option): option is AdminShipmentDispatchPlanOption => option !== null)
+      : [],
+    confirmedPlan: mapConfirmedPlan(row.confirmedPlan ?? row.ConfirmedPlan),
+    blockerCode: asString(row.blockerCode) ?? asString(row.BlockerCode),
+    blockerFa: asString(row.blockerFa) ?? asString(row.BlockerFa),
+    missingCapturedInputs: Array.isArray(missingRaw)
+      ? (missingRaw as unknown[])
+        .map((value) => asString(value))
+        .filter((value): value is string => Boolean(value))
+      : null,
+    schedulingReasonCode: asString(row.schedulingReasonCode) ?? asString(row.SchedulingReasonCode),
+  };
+}
+
 function mapPage(raw: unknown): AdminOrderOperationsPage | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
@@ -233,7 +463,42 @@ function mapPage(raw: unknown): AdminOrderOperationsPage | null {
           }];
         })
       : [],
+    shipmentDispatchPlans: mapStoredPlans(row.shipmentDispatchPlans ?? row.ShipmentDispatchPlans),
   };
+}
+
+function mapStoredPlans(raw: unknown): AdminShipmentDispatchPlanStored[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const shipmentId = asString(row.shipmentId) ?? asString(row.ShipmentId);
+    const planId = asString(row.planId) ?? asString(row.PlanId);
+    const receivingDate = asString(row.receivingDate) ?? asString(row.ReceivingDate);
+    if (!shipmentId || !planId || !receivingDate) return [];
+    return [{
+      shipmentId,
+      planId,
+      attemptKind: asString(row.attemptKind) ?? asString(row.AttemptKind) ?? "",
+      occurrenceKey: asString(row.occurrenceKey) ?? asString(row.OccurrenceKey) ?? "",
+      receivingDate,
+      receivingOpensAt: asString(row.receivingOpensAt) ?? asString(row.ReceivingOpensAt) ?? "",
+      receivingClosesAt: asString(row.receivingClosesAt) ?? asString(row.ReceivingClosesAt) ?? "",
+      receivingTimeZone: asString(row.receivingTimeZone) ?? asString(row.ReceivingTimeZone) ?? "",
+      handoffDate: asString(row.handoffDate) ?? asString(row.HandoffDate) ?? "",
+      handoffOpensAt: asString(row.handoffOpensAt) ?? asString(row.HandoffOpensAt) ?? "",
+      handoffClosesAt: asString(row.handoffClosesAt) ?? asString(row.HandoffClosesAt) ?? "",
+      handoffTimeZone: asString(row.handoffTimeZone) ?? asString(row.HandoffTimeZone) ?? "",
+      preparationStartUtc: asString(row.preparationStartUtc) ?? asString(row.PreparationStartUtc) ?? "",
+      transferDepartureUtc: asString(row.transferDepartureUtc) ?? asString(row.TransferDepartureUtc) ?? "",
+      handoffDeadlineUtc: asString(row.handoffDeadlineUtc) ?? asString(row.HandoffDeadlineUtc) ?? "",
+      preparationMinutes: asNumber(row.preparationMinutes ?? row.PreparationMinutes) ?? 0,
+      handoffMinutes: asNumber(row.handoffMinutes ?? row.HandoffMinutes) ?? 0,
+      transportWorkingDays: asNumber(row.transportWorkingDays ?? row.TransportWorkingDays) ?? 0,
+      policyVersion: asNumber(row.policyVersion ?? row.PolicyVersion) ?? 0,
+      confirmedAtUtc: asString(row.confirmedAtUtc) ?? asString(row.ConfirmedAtUtc) ?? "",
+    }];
+  });
 }
 
 function mapLineCaps(raw: unknown): AdminOrderLineCapability[] {
@@ -324,6 +589,43 @@ export async function loadAdminOrderOperations(
   }
 }
 
+/**
+ * TB-270-R2: پیش‌نمایش فقط‌خواندنی «برنامهٔ ارسال» یک مرسولهٔ ارسال مجدد/جایگزین موجود.
+ *
+ * این خواندن هیچ مرسوله‌ای نمی‌سازد، موجودی رزرو نمی‌کند و برنامه‌ای ثبت نمی‌کند؛ فقط
+ * گزینه‌های واقعیِ پنجرهٔ مشتری را از ورودی‌های ثبت‌شدهٔ همان فروشنده برمی‌گرداند.
+ */
+export async function loadShipmentDispatchPlanPreview(
+  checkoutId: string,
+  shipmentId: string,
+): Promise<AdminResult<AdminShipmentDispatchPlanPreview>> {
+  try {
+    const response = await fetch(
+      `/v1/admin/orders/${encodeURIComponent(checkoutId)}/shipment-plan/${encodeURIComponent(shipmentId)}`,
+      { headers: adminHeaders() },
+    );
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      const err = await parseError(response);
+      return {
+        state: "error",
+        data: null,
+        status: response.status,
+        message: mapOrderOperationError(err.code, err.detail),
+      };
+    }
+    const payload = await response.json().catch(() => null);
+    const data = mapShipmentDispatchPlanPreview(payload);
+    return data
+      ? { state: "ok", data, status: response.status }
+      : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+  } catch {
+    return { state: "error", data: null, status: 0, message: mapOrderOperationError("host-unreachable") };
+  }
+}
+
 /** یک عملیات را اجرا می‌کند. */
 export async function executeAdminOrderOperation(
   checkoutId: string,
@@ -370,6 +672,9 @@ export async function executeAdminOrderOperation(
           quantity: line.quantity,
           condition: line.condition,
         })) ?? null,
+        dispatchPlanReceivingDate: body.dispatchPlanReceivingDate ?? null,
+        dispatchPlanReceivingOpensAt: body.dispatchPlanReceivingOpensAt ?? null,
+        dispatchPlanReceivingClosesAt: body.dispatchPlanReceivingClosesAt ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

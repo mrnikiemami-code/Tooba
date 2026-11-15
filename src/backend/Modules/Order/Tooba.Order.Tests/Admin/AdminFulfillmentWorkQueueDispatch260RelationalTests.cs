@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
@@ -135,6 +135,7 @@ public sealed class AdminFulfillmentWorkQueueDispatch260RelationalTests
             new EmptyPartyLookup(),
             new OrderGridEnrichmentBridge(orderDb),
             new OrderDispatchPlanFactsBridge(orderDb),
+            new OrderShipmentDispatchPlanReader(orderDb),
             new FixedClock(now));
 
         var beforeCounts = await PhysicalCountsAsync(target);

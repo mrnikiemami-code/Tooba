@@ -21,6 +21,7 @@ using Tooba.Order.Application.Admin.Operations.Commands.DispatchShipment;
 using Tooba.Order.Application.Admin.Operations.Commands.MarkFulfillmentPacked;
 using Tooba.Order.Application.Admin.Operations.Commands.MarkFulfillmentProcessing;
 using Tooba.Order.Application.Admin.Operations.Commands.PackFulfillmentSelected;
+using Tooba.Order.Application.Admin.Operations.Commands.PlanShipmentDispatch;
 using Tooba.Order.Application.Admin.Operations.Commands.PrepareOperationalGroup;
 using Tooba.Order.Application.Admin.Operations.Commands.RecoverInventoryReservation;
 using Tooba.Order.Application.Admin.Operations.Commands.RejectDeposit;
@@ -40,6 +41,7 @@ using Tooba.Order.Application.Admin.Operations.Commands.UnprocessFulfillment;
 using Tooba.Order.Application.Admin.Operations.Models;
 using Tooba.Order.Application.Admin.Operations.Queries.GetAdminOrderOperations;
 using Tooba.Order.Application.Admin.Operations.Queries.ListAdminOrderReturnEligibility;
+using Tooba.Order.Application.Admin.Operations.Queries.PreviewShipmentDispatchPlan;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 
@@ -55,6 +57,7 @@ internal static class AdminOrderOperationsEndpoints
         group.MapGet("/{checkoutId:guid}/operations", ListAsync);
         group.MapPost("/{checkoutId:guid}/operations", ExecuteAsync);
         group.MapGet("/{checkoutId:guid}/return-eligibility", ListReturnEligibilityAsync);
+        group.MapGet("/{checkoutId:guid}/shipment-plan/{shipmentId:guid}", PreviewShipmentPlanAsync);
     }
 
     private static async Task<IResult> ListAsync(
@@ -79,6 +82,20 @@ internal static class AdminOrderOperationsEndpoints
     {
         await auth.RequireAdminAsync(context, ct);
         return api.From(await sender.Send(new ListAdminOrderReturnEligibilityQuery(checkoutId), ct));
+    }
+
+    private static async Task<IResult> PreviewShipmentPlanAsync(
+        Guid checkoutId,
+        Guid shipmentId,
+        ISender sender,
+        IOrderAdminAuthorizer auth,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken ct)
+    {
+        var actor = await auth.RequireAdminAsync(context, ct);
+        return api.From(await sender.Send(
+            new PreviewShipmentDispatchPlanQuery(checkoutId, actor, shipmentId), ct));
     }
 
     private static async Task<IResult> ExecuteAsync(
@@ -131,6 +148,7 @@ internal static class AdminOrderOperationsEndpoints
             "resend_shipment" => await sender.Send(new ResendShipmentCommand(checkoutId, actor, request), ct),
             "resolve_damaged_goods" => await sender.Send(new ResolveDamagedGoodsCommand(checkoutId, actor, request), ct),
             "create_courier_return" => await sender.Send(new CreateCourierReturnCommand(checkoutId, actor, request), ct),
+            "plan_shipment_dispatch" => await sender.Send(new PlanShipmentDispatchCommand(checkoutId, actor, request), ct),
             _ => Result.Failure<object>(new SemanticError("order.operation.invalid")),
         };
         return api.From(result);

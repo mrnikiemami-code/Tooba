@@ -620,6 +620,79 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "جایگزینی به مرسولهٔ آسیب‌دیدهٔ مبدأ نیاز دارد.",
     en: "The replacement needs the damaged source parcel.",
   },
+  // TB-270-R2: a resend/replacement parcel leaves the warehouse only with its OWN confirmed dispatch plan.
+  "fulfillment.dispatch.plan_required": {
+    fa: "ابتدا زمان‌بندی این مرسوله را تأیید کنید؛ تا آن زمان ارسال مجاز نیست و موجودی مصرف نمی‌شود.",
+    en: "Confirm this parcel's dispatch plan first; until then dispatch is not authorized and no stock is consumed.",
+  },
+  "order.shipment_plan.not_created": {
+    fa: "فقط مرسولهٔ ساخته‌شده و ارسال‌نشده قابل زمان‌بندی است.",
+    en: "Only a created, not-yet-dispatched parcel can be planned.",
+  },
+  "order.shipment_plan.first_dispatch_not_plannable": {
+    fa: "زمان‌بندی مستقل فقط برای مرسولهٔ ارسال مجدد یا جایگزین است؛ ارسال اول موعد خود را دارد.",
+    en: "An own plan exists only for a resend/replacement parcel; the first dispatch keeps its accepted promise.",
+  },
+  "order.shipment_plan.package_locked": {
+    fa: "این مرسوله داخل بستهٔ تجمیعی است؛ اقدام از همان بسته انجام می‌شود.",
+    en: "This parcel is inside a consolidated package; act from that package.",
+  },
+  "order.shipment_plan.payment_required": {
+    fa: "پرداخت این سفارش تأیید نشده است؛ زمان‌بندی ارسال ممکن نیست.",
+    en: "This order's payment is not authorized; the parcel cannot be planned.",
+  },
+  "order.shipment_plan.group_missing": {
+    fa: "این مرسوله به گروه ارسال متعهد وصل نیست؛ زمان‌بندی ممکن نیست.",
+    en: "This parcel has no accepted shipping group; it cannot be planned.",
+  },
+  "order.shipment_plan.binding_missing": {
+    fa: "شاهد ارسال پذیرفته‌شدهٔ این گروه موجود نیست؛ زمان‌بندی از داده‌های جاری بازسازی نمی‌شود.",
+    en: "The accepted evidence of this group is missing; scheduling is not rebuilt from current settings.",
+  },
+  "order.shipment_plan.service_missing": {
+    fa: "خدمت ارسال این گروه در شاهد پذیرفته‌شده ثبت نشده است؛ زمان‌بندی ممکن نیست.",
+    en: "The accepted evidence records no shipping service for this group; it cannot be planned.",
+  },
+  "order.shipment_plan.captured_inputs_unavailable": {
+    fa: "ورودی‌های زمان‌بندی این روش از شاهد تاریخی خوانده نشد؛ هیچ تاریخ/ساعتی حدس زده نمی‌شود.",
+    en: "This method's captured scheduling inputs are unavailable; no date or slot is guessed.",
+  },
+  "order.shipment_plan.captured_inputs_incomplete": {
+    fa: "بخشی از ورودی‌های زمان‌بندی (هفتهٔ مشتری/حامل/پردازش یا زمان آماده‌سازی) در شاهد ثبت نشده است.",
+    en: "Part of the scheduling inputs (customer/carrier/processing week or preparation allowance) was not captured.",
+  },
+  "order.shipment_plan.source_missing": {
+    fa: "مرسولهٔ مبدأ این تلاش پیدا نشد؛ زمان‌بندی ساخته نمی‌شود.",
+    en: "The source parcel of this attempt was not found; no plan is created.",
+  },
+  "order.shipment_plan.source_not_ready": {
+    fa: "این مرسوله هنوز رسید دریافت در مبدأ ندارد؛ زمان‌بندی ارسال ممکن نیست.",
+    en: "This parcel has no origin receipt yet; it cannot be planned.",
+  },
+  "order.shipment_plan.source_quantity_mismatch": {
+    fa: "مقدار سالم دریافتی مبدأ برای همین مقدار کافی نیست؛ زمان‌بندی ساخته نمی‌شود.",
+    en: "The usable received quantity does not cover this parcel; no plan is created.",
+  },
+  "order.shipment_plan.replacement_hold_missing": {
+    fa: "تصمیم جایگزینی/رزرو موجودی سالم این مرسوله هنوز پایدار نیست؛ زمان‌بندی ساخته نمی‌شود.",
+    en: "This replacement's decision/healthy-stock hold is not durable yet; no plan is created.",
+  },
+  "order.shipment_plan.no_feasible_date": {
+    fa: "با ورودی‌های زمان‌بندی همین روش، تاریخ قابل ارائه‌ای برای این مرسوله پیدا نشد.",
+    en: "With this method's captured inputs no feasible date remains for this parcel.",
+  },
+  "order.shipment_plan.selection_required": {
+    fa: "یک تاریخ و بازهٔ تحویل مشتری را انتخاب کنید.",
+    en: "Select one customer date and slot.",
+  },
+  "order.shipment_plan.selection_expired": {
+    fa: "این بازه از زمان بازبینی دیگر معتبر نیست؛ یک بازهٔ تازه انتخاب کنید.",
+    en: "This slot is no longer feasible since the review; choose a fresh one.",
+  },
+  "order.shipment_plan.conflict": {
+    fa: "برنامهٔ دیگری برای همین مرسوله ثبت شده است؛ وضعیت را تازه‌سازی کنید.",
+    en: "Another plan is already recorded for this parcel; refresh the state.",
+  },
   "fulfillment.damage.replacement_occurrence_required": {
     fa: "جایگزینی به شناسهٔ درخواست بازبینی‌شده نیاز دارد.",
     en: "The replacement needs the reviewed request identity.",

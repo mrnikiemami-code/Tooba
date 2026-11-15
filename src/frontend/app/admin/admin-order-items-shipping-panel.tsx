@@ -14,6 +14,7 @@ import {
   type AdminShipment,
 } from "./admin-api";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
+import { AdminShipmentPlanModal } from "./admin-shipment-plan-modal";
 import { AdminConsolidatedPackageSection } from "./admin-consolidated-package-section";
 import { AdminOrderOperationalDeliverySection } from "./admin-order-operational-delivery-section";
 import {
@@ -37,6 +38,7 @@ import {
   type AdminOrderLineCapability,
   type AdminOrderOperationAction,
   type AdminSellerCapability,
+  type AdminShipmentDispatchPlanStored,
 } from "./admin-order-operations";
 import { sellerQuickActionLabels } from "./admin-order-operations-scope";
 import { parseQuantityInput } from "../../lib/quantity-display";
@@ -168,12 +170,24 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, 
   const [lineCaps, setLineCaps] = useState<Record<string, AdminOrderLineCapability>>({});
   const [sellerCaps, setSellerCaps] = useState<Record<string, AdminSellerCapability>>({});
   const [opsLoaded, setOpsLoaded] = useState(false);
+  /**
+   * TB-270-R2: the stored OWN plan of each linked resend/replacement parcel, exactly as Order reports it.
+   * The card renders this stored promise; it never derives a local date, and after a confirmation the owning
+   * read model is reloaded instead of assuming the write succeeded.
+   */
+  const [plansByShipment, setPlansByShipment] = useState<Record<string, AdminShipmentDispatchPlanStored>>({});
   const [pendingCode, setPendingCode] = useState<string | null>(null);
   const groupWorkflowInFlight = useRef(false);
   const [openKebabLineId, setOpenKebabLineId] = useState<string | null>(null);
   const [shipmentModalTarget, setShipmentModalTarget] = useState<{
     seller: AdminSellerOrder;
     group: AdminAcceptedShippingGroup;
+  } | null>(null);
+  /** TB-270-R2: which existing Created parcel is being scheduled; `null` closes the review. */
+  const [planTarget, setPlanTarget] = useState<{
+    seller: AdminSellerOrder;
+    shipmentId: string;
+    ordinal?: number;
   } | null>(null);
   const [trackingTarget, setTrackingTarget] = useState<{
     seller: AdminSellerOrder;
@@ -201,6 +215,9 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, 
       const nextSellers: Record<string, AdminSellerCapability> = {};
       for (const cap of result.data.sellerCapabilities) nextSellers[cap.sellerOrderId] = cap;
       setSellerCaps(nextSellers);
+      const nextPlans: Record<string, AdminShipmentDispatchPlanStored> = {};
+      for (const plan of result.data.shipmentDispatchPlans ?? []) nextPlans[plan.shipmentId] = plan;
+      setPlansByShipment(nextPlans);
       setOpsLoaded(true);
     });
     return () => {
@@ -411,8 +428,16 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, 
               // TB-265: the third lawful exit — a courier-origin receipt linked to the EXISTING returns case.
               canCreateCourierReturn:
                 !packageLocked && Boolean(actionFor(actions, "create_courier_return", seller.id, shipment.shipmentId)),
+              // TB-270-R2: a Created resend/replacement parcel is dispatch-authorized only by its OWN confirmed
+              // plan. Until then the server projects this one forward step and withholds «ارسال».
+              canPlanDispatch:
+                !packageLocked
+                && Boolean(actionFor(actions, "plan_shipment_dispatch", seller.id, shipment.shipmentId)),
             };
           }}
+          shipmentPlansByShipmentId={plansByShipment}
+          onParcelPlan={(seller, shipmentId) =>
+            setPlanTarget({ seller, shipmentId, ordinal: undefined })}
           onParcelTrack={(seller, shipment) => setTrackingTarget({ seller, shipment })}
           onParcelOperation={(seller, code, shipmentId) => {
             void runSellerOp(seller, code, { shipmentId });
@@ -1134,6 +1159,23 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted, 
             });
             if (ok) setTrackingTarget(null);
             return ok;
+          }}
+        />
+      ) : null}
+
+      {planTarget ? (
+        <AdminShipmentPlanModal
+          key={planTarget.shipmentId}
+          open
+          checkoutId={checkoutId}
+          shipmentId={planTarget.shipmentId}
+          parcelOrdinal={planTarget.ordinal}
+          viewerScopeKey={viewerScopeKey}
+          onClose={() => setPlanTarget(null)}
+          onCompleted={() => {
+            setPlanTarget(null);
+            // Refresh the owning read model so the card shows the STORED plan, never a local guess.
+            onCompleted?.();
           }}
         />
       ) : null}

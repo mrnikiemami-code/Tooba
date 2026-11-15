@@ -18,8 +18,10 @@ import {
 import {
   operationalDayLabel,
   operationalInstantLabel,
+  operationalTimeWindowLabel,
   operationalTimeZoneLabel,
 } from "../../lib/operational-format";
+import type { AdminShipmentDispatchPlanStored } from "./admin-order-operations";
 import { MessageBox } from "../../design-system";
 import {
   clearOperationalGroupAttempt,
@@ -67,6 +69,8 @@ export type OperationalParcelCapabilities = {
   canResolveDamagedGoods: boolean;
   /** TB-265: this courier-origin receipt may open a linked case in the EXISTING returns workflow. */
   canCreateCourierReturn: boolean;
+  /** TB-270-R2: this existing Created resend/replacement parcel has no OWN confirmed plan yet. */
+  canPlanDispatch: boolean;
 };
 
 /**
@@ -126,6 +130,13 @@ type Props = {
   packingModes?: readonly ("common" | "separate")[] | null;
   /** TB-254: exactly one parcel/action owner — the group card shows the permitted next action. */
   parcelCapabilities?: (seller: AdminSellerOrder, shipment: AdminShipment) => OperationalParcelCapabilities;
+  /**
+   * TB-270-R2: the stored OWN dispatch plan of each linked resend/replacement parcel, as the owning Order
+   * read model reports it. The card shows this stored promise; it never derives one locally.
+   */
+  shipmentPlansByShipmentId?: Record<string, AdminShipmentDispatchPlanStored> | null;
+  /** TB-270-R2: open the plan review of exactly this existing Created parcel. */
+  onParcelPlan?: (seller: AdminSellerOrder, shipmentId: string) => void;
   onParcelTrack?: (seller: AdminSellerOrder, shipment: AdminShipment) => void;
   onParcelOperation?: (seller: AdminSellerOrder, code: string, shipmentId: string) => void;
   /**
@@ -159,6 +170,7 @@ const NO_PARCEL_ACTIONS: OperationalParcelCapabilities = {
   canResend: false,
   canResolveDamagedGoods: false,
   canCreateCourierReturn: false,
+  canPlanDispatch: false,
 };
 
 function lineKey(line: AdminOrderLine): string {
@@ -406,6 +418,8 @@ export function AdminOrderOperationalDeliverySection({
   occurrenceScopeKey,
   packingModes,
   parcelCapabilities,
+  shipmentPlansByShipmentId,
+  onParcelPlan,
   onParcelTrack,
   onParcelOperation,
   onParcelException,
@@ -475,6 +489,8 @@ export function AdminOrderOperationalDeliverySection({
             occurrenceScopeKey={occurrenceScopeKey}
             packingModes={packingModes}
             parcelCapabilities={parcelCapabilities}
+            shipmentPlansByShipmentId={shipmentPlansByShipmentId}
+            onParcelPlan={onParcelPlan}
             onParcelTrack={onParcelTrack}
             onParcelOperation={onParcelOperation}
             onParcelException={onParcelException}
@@ -497,6 +513,8 @@ function OperationalCard({
   occurrenceScopeKey,
   packingModes,
   parcelCapabilities,
+  shipmentPlansByShipmentId,
+  onParcelPlan,
   onParcelTrack,
   onParcelOperation,
   onParcelException,
@@ -512,6 +530,8 @@ function OperationalCard({
   occurrenceScopeKey?: string | null;
   packingModes?: Props["packingModes"];
   parcelCapabilities?: Props["parcelCapabilities"];
+  shipmentPlansByShipmentId?: Props["shipmentPlansByShipmentId"];
+  onParcelPlan?: Props["onParcelPlan"];
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
   onParcelException?: Props["onParcelException"];
@@ -684,6 +704,8 @@ function OperationalCard({
           actorMayManage={actorMayManage}
           viewerScopeKey={occurrenceScopeKey}
           parcelCapabilities={parcelCapabilities}
+          shipmentPlansByShipmentId={shipmentPlansByShipmentId}
+          onParcelPlan={onParcelPlan}
           onParcelTrack={onParcelTrack}
           onParcelOperation={onParcelOperation}
           onParcelException={onParcelException}
@@ -912,6 +934,8 @@ function GroupParcels({
   actorMayManage,
   viewerScopeKey,
   parcelCapabilities,
+  shipmentPlansByShipmentId,
+  onParcelPlan,
   onParcelTrack,
   onParcelOperation,
   onParcelException,
@@ -927,6 +951,8 @@ function GroupParcels({
   /** TB-258-R1: viewer/owner scope of the retained post-dispatch request. */
   viewerScopeKey?: string | null;
   parcelCapabilities?: Props["parcelCapabilities"];
+  shipmentPlansByShipmentId?: Props["shipmentPlansByShipmentId"];
+  onParcelPlan?: Props["onParcelPlan"];
   onParcelTrack?: Props["onParcelTrack"];
   onParcelOperation?: Props["onParcelOperation"];
   onParcelException?: Props["onParcelException"];
@@ -1107,6 +1133,8 @@ function GroupParcels({
       cancelled,
       projectedCaps,
       retainedReview,
+      /** TB-270-R2: the STORED own plan of this exact parcel, if the operator already confirmed one. */
+      storedPlan: shipmentPlansByShipmentId?.[parcel.shipmentId] ?? null,
       statusTab: parcelStatusTab(parcel.status),
       isResend: Boolean(parcel.resendOfShipmentId) && !replacementShipmentIds.has(parcel.shipmentId),
       hasAction: Object.values(projectedCaps).some(Boolean),
@@ -1367,7 +1395,7 @@ function GroupParcels({
           >
             <ul className="space-y-2">
           {activeFacts.map((fact) => {
-            const { row, parcel, cancelled, projectedCaps, retainedReview, receipt, resendChild } = fact;
+            const { row, parcel, cancelled, projectedCaps, retainedReview, receipt, resendChild, storedPlan } = fact;
             const caps = cancelled || pending ? NO_PARCEL_ACTIONS : projectedCaps;
             // TB-262-R1: the server-owned durable damaged decisions of this parcel. A recorded decision that still
             // owes its replacement parcel stays resumable even after the outstanding quantity was consumed by it.
@@ -1463,8 +1491,45 @@ function GroupParcels({
                     <span className="text-xs text-gray-500">ثبت نشده است</span>
                   )}
                 </div>
-                {caps.canTrack || caps.canDispatch || caps.canDeliver || caps.canCancel ? (
+                {storedPlan ? (
+                  <div
+                    className="mt-2 space-y-0.5 rounded-lg border border-emerald-100 bg-emerald-50/60 px-2.5 py-1.5 text-xs text-emerald-900"
+                    data-testid={`admin-order-parcel-plan-${parcel.shipmentId}`}
+                  >
+                    <p>
+                      <span className="font-bold">موعد تحویل مشتری: </span>
+                      {operationalDayLabel(storedPlan.receivingDate) ?? "مشخص نشده"}
+                      {" · "}
+                      <bdi dir="ltr">
+                        {operationalTimeWindowLabel(`${storedPlan.receivingOpensAt}-${storedPlan.receivingClosesAt}`)}
+                      </bdi>
+                    </p>
+                    <p>
+                      <span className="font-bold">تحویل به حامل تا: </span>
+                      {operationalInstantLabel(storedPlan.handoffDeadlineUtc, storedPlan.handoffTimeZone)
+                        ?? "مشخص نشده"}
+                      {operationalTimeZoneLabel(storedPlan.handoffTimeZone) ? (
+                        <> {" · "} {operationalTimeZoneLabel(storedPlan.handoffTimeZone)}</>
+                      ) : null}
+                    </p>
+                    <p className="text-[11px] text-emerald-800">
+                      {`شروع آماده‌سازی تا ${operationalInstantLabel(storedPlan.preparationStartUtc, storedPlan.receivingTimeZone) ?? "مشخص نشده"}`}
+                    </p>
+                  </div>
+                ) : null}
+                {caps.canTrack || caps.canDispatch || caps.canDeliver || caps.canCancel || caps.canPlanDispatch ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
+                    {caps.canPlanDispatch ? (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => onParcelPlan?.(row.seller, parcel.shipmentId)}
+                        className="min-h-11 rounded-lg border border-primary px-3 text-xs font-bold text-primary disabled:opacity-50"
+                        data-testid={`admin-order-shipment-plan-${parcel.shipmentId}`}
+                      >
+                        زمان‌بندی ارسال
+                      </button>
+                    ) : null}
                     {caps.canTrack ? (
                       <button
                         type="button"

@@ -56,7 +56,38 @@ public sealed record AdminOrderOperationsPage(
     string? SupplyMessageFa = null,
     bool CanConfirmDeposit = false,
     bool CanRecoverInventory = false,
-    IReadOnlyList<AdminSupplyLineShortage>? SupplyLines = null);
+    IReadOnlyList<AdminSupplyLineShortage>? SupplyLines = null,
+    /// <summary>
+    /// TB-270-R2: each linked resend/replacement parcel's OWN confirmed plan, so the detail surface renders the stored
+    /// promise that the owning read model holds instead of re-deriving a local date.
+    /// </summary>
+    IReadOnlyList<AdminShipmentDispatchPlanStored>? ShipmentDispatchPlans = null);
+
+/// <summary>
+/// TB-270-R2: one stored own plan as the operator view reads it. It is immutable history: an elapsed promise is shown
+/// as elapsed, never silently re-planned.
+/// </summary>
+public sealed record AdminShipmentDispatchPlanStored(
+    Guid ShipmentId,
+    Guid PlanId,
+    string AttemptKind,
+    string OccurrenceKey,
+    DateOnly ReceivingDate,
+    string ReceivingOpensAt,
+    string ReceivingClosesAt,
+    string ReceivingTimeZone,
+    DateOnly HandoffDate,
+    string HandoffOpensAt,
+    string HandoffClosesAt,
+    string HandoffTimeZone,
+    DateTimeOffset PreparationStartUtc,
+    DateTimeOffset TransferDepartureUtc,
+    DateTimeOffset HandoffDeadlineUtc,
+    int PreparationMinutes,
+    int HandoffMinutes,
+    int TransportWorkingDays,
+    int PolicyVersion,
+    DateTimeOffset ConfirmedAtUtc);
 
 /// <summary>کمبود خط تأمین برای Admin — بدون GUID رزرو.</summary>
 public sealed record AdminSupplyLineShortage(
@@ -124,7 +155,17 @@ public sealed record AdminOrderOperationRequest(
     /// carries its own physical condition; usable and damaged quantity are separate pools and the server refuses a
     /// quantity that is already funding a resend, a replacement or another case.
     /// </summary>
-    IReadOnlyList<AdminCourierReturnLineSelection>? CourierReturnItems = null);
+    IReadOnlyList<AdminCourierReturnLineSelection>? CourierReturnItems = null,
+    /// <summary>
+    /// TB-270-R2: the operator's reviewed customer date for THIS parcel's own plan (ISO <c>yyyy-MM-dd</c>). It is
+    /// re-validated against a freshly computed feasible calendar; an expired/changed selection is refused and never
+    /// silently clamped to another date.
+    /// </summary>
+    string? DispatchPlanReceivingDate = null,
+    /// <summary>TB-270-R2: the reviewed slot start in the captured receiving zone (<c>HH:mm</c>).</summary>
+    string? DispatchPlanReceivingOpensAt = null,
+    /// <summary>TB-270-R2: the reviewed slot end in the captured receiving zone (<c>HH:mm</c>, exclusive).</summary>
+    string? DispatchPlanReceivingClosesAt = null);
 
 /// <summary>TB-265: one claimed line of a courier-origin Returns case.</summary>
 public sealed record AdminCourierReturnLineSelection(
@@ -137,3 +178,90 @@ public sealed record AdminReturnReceiptLineSelection(
     Guid OrderLineId,
     decimal Quantity,
     int Condition = 0);
+
+/// <summary>
+/// TB-270-R2: one feasible customer receiving slot for a specific parcel's OWN plan, with the three operational
+/// deadlines that the existing scheduling authority derived for exactly that slot.
+/// </summary>
+/// <param name="ReceivingDate">Customer date (local to the captured receiving zone).</param>
+/// <param name="ReceivingOpensAt">Slot start <c>HH:mm</c> in the receiving zone.</param>
+/// <param name="ReceivingClosesAt">Slot end <c>HH:mm</c> (exclusive) in the receiving zone.</param>
+/// <param name="ReceivingTimeZone">The captured receiving zone id.</param>
+/// <param name="HandoffDate">Carrier acceptance date in the carrier zone.</param>
+/// <param name="HandoffOpensAt">Carrier window opens <c>HH:mm</c>.</param>
+/// <param name="HandoffClosesAt">Carrier window closes <c>HH:mm</c> (exclusive).</param>
+/// <param name="HandoffTimeZone">The captured carrier zone id.</param>
+/// <param name="PreparationStartUtc">Last instant to START physical preparation (not "packing finished").</param>
+/// <param name="TransferDepartureUtc">Last instant to leave toward the carrier.</param>
+/// <param name="HandoffDeadlineUtc">Carrier acceptance close instant (exclusive).</param>
+public sealed record AdminShipmentDispatchPlanOption(
+    DateOnly ReceivingDate,
+    string ReceivingOpensAt,
+    string ReceivingClosesAt,
+    string ReceivingTimeZone,
+    DateOnly HandoffDate,
+    string HandoffOpensAt,
+    string HandoffClosesAt,
+    string HandoffTimeZone,
+    DateTimeOffset PreparationStartUtc,
+    DateTimeOffset TransferDepartureUtc,
+    DateTimeOffset HandoffDeadlineUtc);
+
+/// <summary>TB-270-R2: the confirmed plan already stored for this parcel (immutable history).</summary>
+public sealed record AdminShipmentDispatchPlanConfirmed(
+    Guid PlanId,
+    string OccurrenceKey,
+    DateOnly ReceivingDate,
+    string ReceivingOpensAt,
+    string ReceivingClosesAt,
+    string ReceivingTimeZone,
+    DateOnly HandoffDate,
+    string HandoffOpensAt,
+    string HandoffClosesAt,
+    string HandoffTimeZone,
+    DateTimeOffset PreparationStartUtc,
+    DateTimeOffset TransferDepartureUtc,
+    DateTimeOffset HandoffDeadlineUtc,
+    int PreparationMinutes,
+    int HandoffMinutes,
+    int TransportWorkingDays,
+    int PolicyVersion,
+    Guid ConfirmedByUserId,
+    DateTimeOffset ConfirmedAtUtc);
+
+/// <summary>
+/// TB-270-R2: read-only preview of one parcel's OWN dispatch plan — the exact source/binding/readiness context plus
+/// the feasible customer options the existing scheduling authority yields from the captured inputs.
+/// </summary>
+/// <remarks>
+/// A returned row is a read: it never writes, never reserves stock, never creates a parcel and never commits a plan.
+/// <see cref="BlockerCode"/> non-empty means "no actionable promise" and <see cref="Options"/> is empty.
+/// </remarks>
+public sealed record AdminShipmentDispatchPlanPreview(
+    Guid CheckoutId,
+    Guid SellerOrderId,
+    Guid FulfillmentId,
+    Guid ShipmentId,
+    Guid? ShippingGroupId,
+    string AttemptKind,
+    Guid? SourceShipmentId,
+    Guid? DamagedResolutionId,
+    Guid? ReplacementReservationId,
+    string SourceFingerprint,
+    string? ReadinessSource,
+    DateTimeOffset? ReadinessAtUtc,
+    string? MethodCode,
+    string? MethodLabel,
+    Guid? SnapshotId,
+    Guid? DraftId,
+    long? SourceRevision,
+    int? FormatVersion,
+    Guid? AreaGroupId,
+    Guid? RateRowId,
+    DateTimeOffset ServedAtUtc,
+    IReadOnlyList<AdminShipmentDispatchPlanOption> Options,
+    AdminShipmentDispatchPlanConfirmed? ConfirmedPlan = null,
+    string? BlockerCode = null,
+    string? BlockerFa = null,
+    IReadOnlyList<string>? MissingCapturedInputs = null,
+    string? SchedulingReasonCode = null);
