@@ -1,4 +1,28 @@
-# CURRENT — 270-R4 PASS: unresolved-first send durability, new-confirmation gates after stored replay, exact handoff identity, close/unmount/retarget fence
+# CURRENT — 271 PASS: five server job stages + an independent Today/Future/All scope on the existing employee queue
+
+Read docs/ai/tasks/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/{RESULT.md,RECEIPTS.md,result-contract.txt,work-stage-mapping.md,timing-counts-and-query-proof.md,user-review.md}.
+Decision `FIVE_SERVER_CLASSIFIED_JOB_STAGES_PLUS_AN_INDEPENDENT_TODAY_FUTURE_ALL_SCOPE_ONE_COUNT_SET_BEFORE_PAGING_AND_A_QUIET_HISTORY_VIEW_ON_THE_EXISTING_QUEUE_WITH_STAGE_RELEVANT_TIME_MEANINGS_AND_ZERO_BUSINESS_AUTHORIZATION_OR_DATA_CHANGE`,
+Status **PASS within the issued read-model/query + existing-queue-UI scope**, NOT Architect ACCEPT, NOT user acceptance.
+Base `c501fe9bc` (== origin/main), code `114c48ce6`. **270-R4 is ACCEPT within its four-defect repair scope** (checkpoint
+at `…270-R4/ARCHITECT-REVIEW.md`); R1 ACCEPT within its seam; R2/R3 remain PARTIAL; 270 stays PARTIAL as the parent.
+`automaticNextImplementationTask: NONE`.
+
+One server classifier gives each ACTIVE physical work unit exactly one job stage (preparation / ready_to_send / handoff /
+delivery / returns; terminal rows only reach the quiet «سابقهٔ ارسال» archive), and one independent time scope
+(امروز default / آینده / همه) over the injected server now and the row's own accepted zone. The two competing quick-filter
+rows are gone; stage badges cover the whole active set inside the selected scope, time badges cover the selected stage, and
+both plus the page are cut from ONE pre-paged classification pass. Stage-relevant time keeps its exact meaning
+(«آخرین مهلت شروع آماده‌سازی» vs departure deadline vs half-open acceptance close; delivery/returns stay
+«پیگیری جاری؛ مهلت مشخصی ثبت نشده»), and undated active work stays visible and counted in Today. Legacy `filter`/
+`queueFilter` links are translated once into `(stage, scope)` and dropped. Zero business write, zero migration, zero
+fixture; the only action remains the existing «عملیات ارسال» into the shared detail.
+Verified once: `AdminFulfillmentJobStage271Tests` 15/15, FE mount 10/10, FE node suites 28/28, `npm run build` 0
+(`BUILD_ID 3jjJwEQe78ttzvxLwFBNg`), Host publish 0 errors, Host 5088 PID 40692 healthy, Next 3000 PID 24868.
+Limits: the live set is 4 rows and entirely undated, so dated ordering/future scope rest on the focused tests;
+`سابقهٔ ارسال` is 0 here; `FE-FOLDER-001`/`FE-SIZE` keep their pre-existing HEAD failures.
+
+# SUPERSEDED — 270-R4 PASS: unresolved-first send durability, new-confirmation gates after stored replay, exact handoff identity, close/unmount/retarget fence
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/{RESULT.md,RECEIPTS.md,result-contract.txt,first-send-and-lifecycle-proof.md,command-gates-and-exact-handoff-proof.md,user-review.md}.

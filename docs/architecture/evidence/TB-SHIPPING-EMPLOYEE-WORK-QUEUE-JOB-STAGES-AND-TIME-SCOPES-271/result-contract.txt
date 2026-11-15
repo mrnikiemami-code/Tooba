@@ -1,0 +1,30 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_RESULT_CONTRACT
+Task-ID: TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271
+Parent-Task: TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Mode: EMPLOYEE_JOB_QUEUE_OVER_EXISTING_AUTHORITATIVE_WORK_UNITS
+Bridge-Task-Row: a4ddd1a9-8d79-44da-95c5-b8a8e778452f
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Expected-Base-SHA: c501fe9bcdb2c42a26d05e23d44af288931612ed
+Base-SHA: c501fe9bcdb2c42a26d05e23d44af288931612ed
+Code-SHA: 114c48ce6a65b8c57423ae5673325c199e24a1c8
+Evidence-SHA: EVIDENCE_SHA_PENDING_FINAL_DOCS_COMMIT
+
+Decision: FIVE_SERVER_CLASSIFIED_JOB_STAGES_PLUS_AN_INDEPENDENT_TODAY_FUTURE_ALL_SCOPE_ONE_COUNT_SET_BEFORE_PAGING_AND_A_QUIET_HISTORY_VIEW_ON_THE_EXISTING_QUEUE_WITH_STAGE_RELEVANT_TIME_MEANINGS_AND_ZERO_BUSINESS_AUTHORIZATION_OR_DATA_CHANGE
+
+Frontend-Build: BUILD_ID 3jjJwEQe78ttzvxLwFBNg (npm run build, 0 errors)
+Backend-Build: dotnet publish Tooba.Host -c Release, 0 errors
+Runtime: Host 5088 PID 40692 (/health 200, /health/ready 200, SingleStore store-alpha) ; Next 3000 PID 24868
+Database: tooba_alpha @ 127.0.0.1:5432 — NO migration, NO DDL, NO business SQL, NO fixture
+Checks: AdminFulfillmentJobStage271Tests 15/15 ; FE mount 10/10 ; FE node suites 28/28
+Review-URL: http://127.0.0.1:3000/fa/admin/fulfillments (also http://127.0.0.1:3000/admin/fulfillments)
+END_TOOBA_RESULT_CONTRACT

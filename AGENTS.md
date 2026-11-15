@@ -1,4 +1,41 @@
-# CURRENT — 270-R4 PASS (four-defect repair): the first send is unresolved before the executor, one new-plan gate composition runs after the stored replay, handoff identity is exact, and close/unmount/retarget fence every stale answer — 2026-11-15
+# CURRENT — 271 PASS (employee queue read model + existing UI): five server-classified job stages, an independent امروز/آینده/همه scope, one pre-paging count set and a quiet history tab — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,work-stage-mapping.md,timing-counts-and-query-proof.md,user-review.md}.
+Status **PASS within the issued read-model/query + existing-queue-UI scope**, decision
+`FIVE_SERVER_CLASSIFIED_JOB_STAGES_PLUS_AN_INDEPENDENT_TODAY_FUTURE_ALL_SCOPE_ONE_COUNT_SET_BEFORE_PAGING_AND_A_QUIET_HISTORY_VIEW_ON_THE_EXISTING_QUEUE_WITH_STAGE_RELEVANT_TIME_MEANINGS_AND_ZERO_BUSINESS_AUTHORIZATION_OR_DATA_CHANGE`,
+NOT Architect ACCEPT, NOT user visual/functional acceptance, NOT any shipping/carrier/provider/financial claim.
+Base `c501fe9bc` (== origin/main), code `114c48ce6`. **270-R4 is ACCEPT within its four-defect repair scope** (checkpoint
+persisted at `…270-R4/ARCHITECT-REVIEW.md`); 270-R1 ACCEPT within its seam; 270-R2/R3 remain PARTIAL; 270 stays PARTIAL
+as the parent. `automaticNextImplementationTask: NONE`.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A Job stages | one per active physical row | `preparation` / `ready_to_send` / `handoff` / `delivery` / `returns`, precedence history → returns → preparation → handoff → delivery → ready_to_send; a settled returned source is history, not active return work; `correct_tracking` sits below `dispatch_shipment` and below `plan_shipment_dispatch`; blocked active rows keep their honest stage + existing server blocker |
+| B Time scope | independent, exactly three | امروز (default, overdue first, includes undated) / آینده / همه with the injected server now and the row's own accepted zone; preparation shows «آخرین مهلت شروع آماده‌سازی», ready-to-send the departure deadline, handoff the half-open acceptance close, delivery/returns nothing stored → «پیگیری جاری؛ مهلت مشخصی ثبت نشده»; no invented durations, no customer promise as a warehouse due time, no browser-zone fallback |
+| C Counts | one pre-paging set | stage badges cover the whole active set in the selected scope; time badges cover the selected stage; page total = the rows the page is cut from; history excluded from active totals; `بدون موعد مشخص` always explicit; nothing tallied from a fetched page and a package still owns its locked members |
+| D Legacy URLs | translated once | the old `filter`/`queueFilter` tokens become one `(stage, scope)` pair and are dropped; unknown → clean `همه` + `امروز`; `jobStage`/`timeScope` are refused inside the advanced-filter expression |
+| E UI | one strip, one scope, one link | the two competing quick-filter rows are gone; one job tablist with Persian badges, a secondary Today/Future/All control, a quiet time-independent «سابقهٔ ارسال» tab; rows show the human parcel locator, the exact server verb, the job-time meaning and the separate customer promise; the only action is the existing «عملیات ارسال» carrying the queue selection back; 64px rows, 44px tabs, scoped grid scroll, zero document overflow |
+| F Data | untouched | one canonical `tooba_alpha`; no migration/DDL/reset/reseed/backfill/cleanup, no fixture, no plan/hold/stock/decision/settings/draft write, no provider or waybill |
+
+Verified once after the final code change: Fulfillment `AdminFulfillmentJobStage271Tests` **15/15**, FE mount **10/10**,
+FE node suites (`admin-fulfillment-work-queue`, `fulfillment-work-queue-260`, `fulfillment-work-queue-persian-dates-269`,
+`fulfillment-api`) **28/28**, `npm run build` 0 (`BUILD_ID 3jjJwEQe78ttzvxLwFBNg`), `dotnet publish` Host 0 errors.
+Deploy: Host 5088 PID 40692 (`/health` + `/health/ready` 200, SingleStore `store-alpha`), Next 3000 PID 24868
+(`/fa` 200, served chunk `967-fdda0cb21881b957.js` 200 with the stage copy).
+Read-only live at 1440/390: stage badges همه ۴ · آماده‌سازی ۲ · آمادهٔ ارسال ۱ · تحویل ۰ · پیگیری ۱ · برگشتی ۰,
+time امروز ۴ · آینده ۰ · همه ۴, سابقهٔ ارسال ۰, «۴ ردیف بدون موعد مشخص»; selecting «آمادهٔ ارسال» then «آینده» kept the
+stage badges fixed, moved the time badges to امروز ۱ / آینده ۰ / همه ۱ and showed an honest «۰ ردیف در این نمایش»;
+`?queueFilter=needs_action` normalizes to همه + امروز; document overflow 0 at both widths.
+Known limits: the live set is 4 rows and **entirely undated** (the one dispatched row is `delivery`, undated by design;
+the rest are legacy/uncaptured rows with no own plan), so dated ordering, cutoff equality, independent zones and the
+future scope rest on the focused tests; `سابقهٔ ارسال` is 0 on this data; `FE-FOLDER-001`/`FE-SIZE` fail with the same
+pre-existing path set as at HEAD (`fulfillment-api.ts` was already 845 LOC > 800 and this task adds 29 lines to that
+already-flagged path, adding no new violating path); the pre-existing 36px grid toolbar buttons were not restyled;
+untracked `scripts/tb266r1-*.mjs` / `scripts/tb270r2-*.mjs` scratch files are not part of any change set.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE.
+
+# SUPERSEDED — 270-R4 PASS (four-defect repair): the first send is unresolved before the executor, one new-plan gate composition runs after the stored replay, handoff identity is exact, and close/unmount/retarget fence every stale answer — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,first-send-and-lifecycle-proof.md,command-gates-and-exact-handoff-proof.md,user-review.md}.

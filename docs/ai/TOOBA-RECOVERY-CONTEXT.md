@@ -1,6 +1,22 @@
 # Tooba — Recovery Context
 
-## Current pointer — 2026-11-14 (TB-266 payment-gated supply, readable queue, clean trial set)
+## Current pointer — 2026-11-15 (TB-271 employee work queue: five job stages + independent time scope)
+
+Latest Architect-accepted work: **TB-270-R4 = ACCEPT within its issued four-defect repair scope**
+(`docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270-R4/ARCHITECT-REVIEW.md`); 270-R1 ACCEPT
+within its read-only seam; 270-R2/R3 remain PARTIAL; `270` stays PARTIAL as the parent design task.
+Last implementation: **TB-271 = worker PASS awaiting Architect review**
+(`docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271/`) at base
+`c501fe9bcdb2c42a26d05e23d44af288931612ed`, code `114c48ce6a65b8c57423ae5673325c199e24a1c8` — one server classifier maps
+each active physical work unit to exactly one job stage (preparation / ready_to_send / handoff / delivery / returns, with a
+quiet time-independent «سابقهٔ ارسال» archive) plus an independent امروز/آینده/همه scope, with stage/time badges and the
+page cut from ONE pre-paged set. **Active task: none.** `automaticNextImplementationTask: NONE`.
+Runtime unchanged: ONE canonical `tooba_alpha` @5432 SingleStore `store-alpha`, Host 5088 (PID 40692), FE 3000 (PID
+24868, `BUILD_ID 3jjJwEQe78ttzvxLwFBNg`). No migration was added by 271.
+Remaining user trial: the review URL in the 271 `user-review.md`; no user visual/functional acceptance is claimed, and the
+live data set is 4 rows, all undated.
+
+## Superseded handoff — 2026-11-14 (TB-266 payment-gated supply, readable queue, clean trial set)
 
 Authoritative reading: root `AGENTS.md` CURRENT banner and
 `docs/architecture/evidence/TB-SHIPPING-PAYMENT-GATED-DISPATCH-READABLE-QUEUE-AND-CLEAN-TRIAL-DATA-266/RESULT.md`.
