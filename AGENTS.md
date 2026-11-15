@@ -1,4 +1,31 @@
-# CURRENT — 269 PASS (presentation only): fulfilment-queue dates speak the same Persian/Jalali calendar as the operations view — 2026-11-15
+# CURRENT — 270 PARTIAL (design/ownership only, ZERO CODE CHANGE): the resend/replacement own-dispatch-plan seam is decided and its missing input is named — 2026-11-15
+
+Read docs/ai/tasks/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/TASK.md and
+docs/architecture/evidence/TB-SHIPPING-RESEND-REPLACEMENT-OWN-DISPATCH-PLAN-270/{RESULT.md,RECEIPTS.md,result-contract.txt,ownership-and-plan.md,timing-and-readiness-proof.md,replay-and-write-boundaries.md,user-review.md}.
+Status **PARTIAL**, decision `RESEND_REPLACEMENT_OWN_DISPATCH_PLAN_OWNERSHIP_AND_SCHEDULING_SEAM_DECIDED_WITH_SOURCE_VERIFIED_MISSING_INPUT_BLOCKER_AND_ZERO_CODE_CHANGE`,
+NOT Architect ACCEPT, NOT user acceptance. 269 is ACCEPT within its presentation-only scope (its checkpoint is now persisted
+as the 269 ARCHITECT-REVIEW.md); 268 still awaits the user's visual acceptance. 270 changed **documentation only**: no
+Contracts type, table, migration, command, endpoint, projection, queue reader, frontend surface or test was touched.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| 1 Root | confirmed | a resend/replacement parcel is a NEW attempt and today has `plans = []` by design, so it is `Unspecified` («موعد ارسال مشخص نشده») instead of borrowing the shipped parcel's expired promise; the gap is that no lawful way exists to give the attempt its own plan |
+| 2 Missing input | named exactly | the accepted evidence stores the plan's OUTPUTS (handoff window/zone, transport days, prep/handoff minutes, three deadlines) but not the carrier/customer/processing WEEK SHAPES; the only Contracts read that returns them is the rate-quote lookup, which needs a Destination + measurements and returns them only when `Verdict == Quoted` |
+| 3 Why Order cannot re-quote | source-verified | `OrderShippingGroup` has no destination columns; the destination ids live on the seller's CURRENT draft (`CartShippingDraft`), and mixing that with a historical acceptance is forbidden; null measurements make weight/count rate modes answer `MeasurementRequired` with no weeks |
+| 4 Chosen seam | design | one additive Shipping Contracts read (`IShippingAttemptSchedulingLookup`) over the already-captured authoring payload (`MethodSettings` + customer week + carrier week + processing week), no rate/coverage/destination, no second engine |
+| 5 Plan ownership | design | Order owns `"order".shipment_dispatch_plans` (PK `shipment_id`, unique occurrence key, Pending→Committed), the parcel id supplied BY Order so a parcel can never exist without its plan; Fulfillment keeps readiness/attempt/lineage, Inventory keeps the retained hold, Shipping stays pure policy |
+| 6 Readiness | source-verified | resend = usable origin receipt (`ReturnedAt`); replacement = its purpose-bound hold / linked parcel creation; never the original dispatch date, the order instant or a browser clock; one preparation allowance, one transfer allowance, `PreparationStartUtc` is a deadline not "packing finished" |
+| 7 Not implemented | stated | no seam, no table/migration, no `plan_shipment_dispatch` command, no preview calendar, no queue/detail own-plan read, no review dialog, no focused proof; a stock-less replacement still gets no actionable promise and every existing row is unchanged |
+| 8 Environment | read-only | Host 5088 `/health` + `/health/ready` 200, FE 3000 `/fa/admin/fulfillments` 200 on the unchanged TB-269 build; no DB write/migration/fixture/settings edit/provider call/cleanup; user orders, Returned-source/Delivered-resend history and the shipping draft untouched |
+
+Recommended split so each increment is verifiable: **270-R1** = the additive `IShippingAttemptSchedulingLookup` Contracts
+seam + its focused Shipping test; **270-R2** = the Order-owned attempt plan (table/migration/Contracts/reader), the
+reviewed `plan_shipment_dispatch` command with replay/conflict, the preview read, the queue/detail own-plan wiring and the
+review step inside the EXISTING resend/replacement dialog, proven on the cases listed in
+`replay-and-write-boundaries.md` §4. `271` (job-stage filters) remains **NOT ISSUED**.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask:NONE. No user acceptance claimed.
+
+# SUPERSEDED — 269 PASS (presentation only): fulfilment-queue dates speak the same Persian/Jalali calendar as the operations view — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/TASK.md and
 docs/architecture/evidence/TB-SHIPPING-QUEUE-PERSIAN-DATES-AND-CONSISTENT-TIME-DISPLAY-269/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,date-display-proof.md,user-review.md}.
