@@ -1,3 +1,7 @@
+# CURRENT — TB268 REVIEWED; WAIT FOR USER VISUAL CHECK — 2026-11-15
+
+Read docs/architecture/evidence/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/ARCHITECT-REVIEW.md. Exercised group ready for visual review: All2/Origin1/Resend1/Delivered1, defaultResend child2; link reveals source1. User/order state read-only. No new task automaticNext NONE, no business/payment/Returns/scheduler reopening or cleanup/refactor/baseline loops. User functional feedback positive,267 improved;268 visual acceptance pending. Worker geometry/keyboard proof reviewed, not independent architect runtime verification. Earlier CURRENT worker banner superseded.
+
 # CURRENT — 268 PASS (presentation only): group-scoped parcel tab strip with Persian count badges, quiet non-zero categories, actionable-first default, cross-tab lineage revelation — 2026-11-15
 
 Read docs/ai/tasks/TB-SHIPPING-PARCEL-TABS-AND-QUIET-OPERATOR-VIEW-268/TASK.md and
