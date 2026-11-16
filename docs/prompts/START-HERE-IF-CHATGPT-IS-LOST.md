@@ -1,4 +1,46 @@
-# CURRENT — RETURNS274 PARTIAL; ONLY274-R1 REPAIR — 2026-11-16
+# CURRENT — 274-R1 WORKER PASS (explicit inspection, fail-closed evidence, truthful stock, scoped decision collision); 274 STAYS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,receipt-and-stock-integrity-proof.md,decision-collision-proof.md,migration-and-backup-proof.md}.
+Status **PASS within the issued A–E repair scope**, decision
+`EXPLICIT_INSPECTION_AT_EVERY_REACHABLE_ENTRY_FAIL_CLOSED_STORED_RECEIPT_EVIDENCE_WITH_ADDITIVE_STORE_CONSTRAINTS_AND_LOCAL_COMPOSITE_OWNERSHIP_A_TYPED_PENDING_STOCK_BINDING_BLOCKER_INSTEAD_OF_FALSE_COMPLETION_AND_A_SCOPED_SAVEPOINT_DECISION_COLLISION_RECOVERY_WITH_EXACT_PK_IDENTITY_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ONE_ADDITIVE_MIGRATION_APPLIED_AFTER_A_FRESH_VERIFIED_PRE_APPLY_BACKUP`,
+NOT Architect ACCEPT, NOT user functional acceptance, NOT any provider/financial/UI claim. Base
+`145bb1a0747e6a97c607c06d22c374e34a001bc8` (== Expected-Base-SHA; parent 274 code
+`7e7c2ee3d97506408112432775abeeb56715c3fd`). The parent 274 **stays PARTIAL** until the Architect reviews this repair;
+its own evidence, `274/ARCHITECT-REVIEW.md` and the original proof-discrepancy record are unchanged.
+272-R1 / 273-R2 / shipping acceptances preserved. **275–276 remain candidates, NOT ISSUED.** Single worker, one task,
+no delegation, no historical agent resumed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A inspection | explicit only | `ReturnItemConditionParser.Parse` refuses null/blank/unknown with `return.receipt.line_invalid` (the "default usable" success is gone) and the optional `Usable` default is removed from the wire DTO, the Application typed line and the Contracts command; the endpoint parses every line BEFORE `sender.Send`, so no case read/write happens on an omitted token and no receipt can be inferred from a default `ReturnItem.Condition` |
+| B evidence + store | fail closed, additive migration | the ONE `ReturnReceivingSummary` rejects non-positive/over-precise/undefined stored quantities, undefined inspection, duplicate `(receipt,item,condition)`, unknown/duplicate requested identity, foreign item, borrowed receipt header and over-coverage (bad rows contribute zero); the write re-reads it after the case `FOR UPDATE` and refuses a NEW occurrence on incoherent evidence with `return.recovery.evidence_conflict` + 0 rows; `EnsureOwningSellerScope` runs inside the directory before any decision/receipt/money write; no actor → `return.receipt.actor_required`. Migration `20261116140705_BoundedReceiptIntegrityConstraints`: `quantity > 0`, `condition IN ('Usable','Damaged')`, local alternate keys and composite FKs tying a line's case to BOTH its header and its item; the applied parent migration untouched |
+| C stock | never falsely complete | restock uses the immutable complete summary's `Usable` only; `Usable > 0` with no owning reservation is a typed PENDING blocker (`Disposition = None`, 0 Inventory calls, money untouched, no new attempt) reported as `return.recovery.stock_binding_required` and refused by the action with the same code; `SaleableRestockedQuantity` exposes the exact restocked portion so a mixed line never reads as wholly saleable; a rejected/cancelled case with undisposed received goods reports `return.recovery.physical_resolution_required` (no kind), while a still-`Requested` case is not falsely blocked |
+| D decision collision | scoped, exact | the insert runs in `SAVEPOINT tb274_decision_intent` with `ROLLBACK TO SAVEPOINT` on collision (caller transaction never committed/rolled back); **no** `ChangeTracker.Clear` — only this attempt's added entries are detached; 23505 must match constraint `pk_return_request_decisions` AND table `return_request_decisions` AND schema `returns`; one `AnswersDecision` + normalized-reason comparison on both reads (same reason replays, a different reason is `return.decision.reason_conflict`, a legacy null is never overwritten) |
+| E backup + apply | fresh, ordered, verified | plan listed only this Returns migration; fresh `pg_dump` 2,979,578 B SHA256 `31D47A05…527A52` (17:44:10) verified by `pg_restore --list` exit 0 / 1445 TOC lines / 0 stderr (17:44:11) BEFORE apply; applied ONCE by `Tooba.MigrationRunner` (`succeeded=true`, `pendingMigrations=[]`), post-apply `pendingCount=0`; the **original** 274 archive was verified NOW (18:33:02) and labelled as a current verification, not a retroactive receipt |
+
+Verified once after the final code change: `ReturnsCustomerReceipts274R1Tests` **14/14**; `ReturnsCustomerReceipts274Tests`
+**25/25** (combined 39/39); `ReturnsCustomerReceipts274R1RelationalTests` **4/4** on real `tooba_alpha` (caller-owned,
+rolled back, `committedRows=0`); `dotnet build src/backend/Tooba.slnx -c Release` 0 errors; Host publish 0 errors.
+Host-only refresh: PID 22064 on 5088 (`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy),
+`/__platform-commerce` → `store-alpha`, running dll SHA256
+`5CE96FB414ED4B51C02EBDA17400150CC700D0BEC97697E6C3610D8422506971`; FE untouched.
+Live read-only wire on a NON-EXISTENT case id: no actor → 401 `admin.actor.missing`; omitted condition → 400
+`return.receipt.line_invalid`; blank condition → 400 `return.receipt.line_invalid`; `damaged` → 404 `return.missing`
+(proving the token refuses before any case read); `POST /v1/admin/returns/query` → 200 `totalCount=0`.
+Known limits: **no live return case exists**, so no served operator receiving/inspection walkthrough and no demo
+case/order/hold/receipt was created; money/stock proven with controlled ports and the relational facts are real
+PostgreSQL but rollback-only; no committed two-writer race — the collision arbitration is proven with controlled exact
+error injection, and the SAVEPOINT branch itself is production-only (a duplicate-key state cannot be produced inside a
+rollback-only caller transaction without a second writer); the cumulative upper bound stays in serialized owning code
+(no DB CHECK); `SaleableRestockedQuantity` is additive/nullable with no backfill.
+Declared deviations: the worker also ran the whole `Tooba.Returns.Tests` (105/105), `ReturnsModuleAmsc001*` (34/34) and
+the retained 274+273 relational filter (9/9) outside the issued selection; the R1 suite was re-run after two small
+in-correction test/precision edits; apply attempt #1 failed `42703` and was fully rolled back before the fresh backup and
+the single successful apply.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — RETURNS274 PARTIAL; ONLY274-R1 REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/ARCHITECT-REVIEW.md.
 274 NOT ACCEPTED at7e7c2ee3d97506408112432775abeeb56715c3fd. Retain receipt foundation; repair explicit inspection, truthful stock/remaining-work facts, stored/DB receipt integrity and decision collision handling.

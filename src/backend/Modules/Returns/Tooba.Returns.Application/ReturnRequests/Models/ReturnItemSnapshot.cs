@@ -5,6 +5,12 @@ namespace Tooba.Returns.Application.ReturnRequests.Models;
 
 /// <summary>
 /// snapshot خط مرجوعی.
+/// <para>
+/// TB-274-R1: <see cref="SaleableRestockedQuantity"/> is the EXACT inspected usable quantity this line actually returned
+/// to saleable stock (null when no saleable restock was recorded). A mixed line restocks only that portion, so neither
+/// the requested quantity nor <see cref="Condition"/>/<see cref="Disposition"/> may be read as "the whole requested
+/// amount went back to saleable stock".
+/// </para>
 /// </summary>
 public sealed record ReturnItemSnapshot(
     Guid ReturnItemId,
@@ -16,4 +22,5 @@ public sealed record ReturnItemSnapshot(
     ReturnItemCondition Condition = ReturnItemCondition.Usable,
     ReturnItemDisposition Disposition = ReturnItemDisposition.None,
     Guid? SourceShipmentId = null,
-    Guid? SourceReceiptId = null);
+    Guid? SourceReceiptId = null,
+    decimal? SaleableRestockedQuantity = null);

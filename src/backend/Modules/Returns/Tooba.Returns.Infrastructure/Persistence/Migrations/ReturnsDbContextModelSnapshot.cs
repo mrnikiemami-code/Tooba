@@ -187,6 +187,9 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
 
                     b.HasKey("ReturnItemId");
 
+                    b.HasAlternateKey("ReturnRequestId", "ReturnItemId")
+                        .HasName("ak_return_items_return_request_id_return_item_id");
+
                     b.HasIndex("OrderLineId");
 
                     b.HasIndex("ReturnRequestId");
@@ -220,6 +223,9 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
 
                     b.HasKey("ReturnReceiptId")
                         .HasName("pk_customer_return_receipts");
+
+                    b.HasAlternateKey("ReturnRequestId", "ReturnReceiptId")
+                        .HasName("ak_customer_return_receipts_return_request_id_return_receipt_id");
 
                     b.HasIndex("ReturnRequestId")
                         .HasDatabaseName("ix_customer_return_receipts_return_request_id");
@@ -268,11 +274,22 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReturnRequestId")
                         .HasDatabaseName("ix_customer_return_receipt_lines_return_request_id");
 
+                    b.HasIndex("ReturnRequestId", "ReturnItemId")
+                        .HasDatabaseName("ix_customer_return_receipt_lines_owning_item");
+
+                    b.HasIndex("ReturnRequestId", "ReturnReceiptId")
+                        .HasDatabaseName("ix_customer_return_receipt_lines_owning_receipt");
+
                     b.HasIndex("ReturnReceiptId", "ReturnItemId", "Condition")
                         .IsUnique()
                         .HasDatabaseName("ix_customer_return_receipt_lines_receipt_item_condition");
 
-                    b.ToTable("customer_return_receipt_lines", "returns");
+                    b.ToTable("customer_return_receipt_lines", "returns", t =>
+                        {
+                            t.HasCheckConstraint("ck_customer_return_receipt_lines_condition_defined", "condition IN ('Usable', 'Damaged')");
+
+                            t.HasCheckConstraint("ck_customer_return_receipt_lines_quantity_positive", "quantity > 0");
+                        });
                 });
 
             modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnRequest", b =>
@@ -426,17 +443,19 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnItem", null)
                         .WithMany()
-                        .HasForeignKey("ReturnItemId")
+                        .HasForeignKey("ReturnRequestId", "ReturnItemId")
+                        .HasPrincipalKey("ReturnRequestId", "ReturnItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_customer_return_receipt_lines_return_items_return_item_id");
+                        .HasConstraintName("fk_customer_return_receipt_lines_return_items_owning_case");
 
                     b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnReceipt", null)
                         .WithMany()
-                        .HasForeignKey("ReturnReceiptId")
+                        .HasForeignKey("ReturnRequestId", "ReturnReceiptId")
+                        .HasPrincipalKey("ReturnRequestId", "ReturnReceiptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_customer_return_receipt_lines_receipts_return_receipt_id");
+                        .HasConstraintName("fk_customer_return_receipt_lines_receipts_owning_case");
                 });
 #pragma warning restore 612, 618
         }

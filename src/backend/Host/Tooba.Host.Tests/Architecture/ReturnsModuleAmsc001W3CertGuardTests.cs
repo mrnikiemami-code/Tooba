@@ -194,13 +194,13 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal, TB-273-R1 the two
         // recovery evidence/transaction refusals and TB-274 the nine customer-receipt/inspection/reason refusals,
         // all HTTP-reachable.
-        Assert.Equal(40, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(43, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(41, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(44, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(40, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(43, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.
@@ -303,6 +303,8 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
                 "20261114170000_AddReturnRequestDecisions.cs",
                 "20261116122318_AddCustomerReceiptsAndDecisionReason.Designer.cs",
                 "20261116122318_AddCustomerReceiptsAndDecisionReason.cs",
+                "20261116140705_BoundedReceiptIntegrityConstraints.Designer.cs",
+                "20261116140705_BoundedReceiptIntegrityConstraints.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             migrations);

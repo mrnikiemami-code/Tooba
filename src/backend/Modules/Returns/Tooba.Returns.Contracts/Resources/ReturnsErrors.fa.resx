@@ -35,12 +35,15 @@
   <data name="return.recovery.gateway_unavailable" xml:space="preserve"><value>درگاه بازگشت وجه پیکربندی نشده است؛ بنابراین تلاش ثبت‌شده ارسال نمی‌شود و در حالت در انتظار باقی می‌ماند.</value></data>
   <data name="return.recovery.evidence_conflict" xml:space="preserve"><value>تصمیم، تلاش بازگشت وجه یا نشانه‌های بستن این مرجوعی با هم ناسازگارند؛ بنابراین هیچ بازیابی‌ای بدون حدس نام‌گذاری نمی‌شود.</value></data>
   <data name="return.recovery.transaction_owned" xml:space="preserve"><value>بازیابی درون تراکنش بازِ فراخوان اجرا نمی‌شود؛ بنابراین هیچ ارسال یا نوشتنی انجام نشد.</value></data>
+  <data name="return.recovery.stock_binding_required" xml:space="preserve"><value>مقدار سالمِ بازرسی‌شده پیوند موجودیِ مالک ندارد؛ بنابراین بازگشت به موجودیِ قابل فروش تأیید نمی‌شود.</value></data>
+  <data name="return.recovery.physical_resolution_required" xml:space="preserve"><value>مرجوعیِ ردشده یا لغوشده کالایی فیزیکی دریافت کرده که هنوز تعیین تکلیف ثبت‌شده ندارد.</value></data>
   <data name="return.receipt.occurrence_required" xml:space="preserve"><value>هر رسید مشتری باید رخداد بازبینی‌شدهٔ خود را مشخص کند.</value></data>
   <data name="return.receipt.line_invalid" xml:space="preserve"><value>یک خط رسید مقدار بازرسی‌شدهٔ معتبری از این مرجوعی نیست.</value></data>
   <data name="return.receipt.over_received" xml:space="preserve"><value>رسید ارسالی بیش از مقدار درخواستی این مرجوعی تحویل می‌گیرد.</value></data>
   <data name="return.receipt.conflict" xml:space="preserve"><value>این رخداد قبلاً با نیت دریافت متفاوتی ثبت شده است.</value></data>
   <data name="return.receipt.origin_invalid" xml:space="preserve"><value>پروندهٔ بازگشتی از حامل از رسید متعلق به تحویل استفاده می‌کند و رسید دوم در اینجا ثبت نمی‌شود.</value></data>
   <data name="return.receipt.state_invalid" xml:space="preserve"><value>این مرجوعی برای ثبت رسید فیزیکی جدید باز نیست.</value></data>
+  <data name="return.receipt.actor_required" xml:space="preserve"><value>هر رسید مشتری باید کاربر ثبت‌کننده را مشخص کند.</value></data>
   <data name="return.receiving.incomplete" xml:space="preserve"><value>پوشش کامل رسید و بازرسی برای این مرجوعی ثبت نشده است؛ بنابراین تأیید، بازگشت وجه یا بازگشت به موجودی آغاز نمی‌شود.</value></data>
   <data name="return.rejection_reason_required" xml:space="preserve"><value>رد یک مرجوعی جدید باید دلیل معنادار داشته باشد.</value></data>
   <data name="return.decision.reason_conflict" xml:space="preserve"><value>رد ثبت‌شده از قبل دلیل متفاوتی دارد.</value></data>

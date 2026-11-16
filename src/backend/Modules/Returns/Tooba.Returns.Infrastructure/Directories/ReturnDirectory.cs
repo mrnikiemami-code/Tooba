@@ -174,6 +174,11 @@ public sealed partial class ReturnDirectory : IReturnDirectory
 
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
 
+        // TB-274-R1 (B): the owning seller scope is enforced HERE, inside the owning directory, before any decision,
+        // receipt or money write — not only in the Application handler that internal adapters can bypass. A foreign
+        // seller scope answers exactly like an unknown case.
+        EnsureOwningSellerScope(request, command.SellerPartyId);
+
         if (request.Origin == ReturnOrigin.CourierOrigin
             && request.Status == ReturnRequestStatus.Completed
             && request.ClosurePhase == CourierOriginClosurePhase.RefundReleased)
@@ -324,6 +329,11 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
+        // TB-274-R1 (B/D): the owning scope AND the case are settled BEFORE the durable decision is recorded, so a
+        // foreign seller scope can never write a winning decision or a rejection reason for another seller's case.
+        var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
+        EnsureOwningSellerScope(request, command.SellerPartyId);
+
         // TB-265-R2 / TB-274: the SAME durable decision authority as approval, now carrying the reviewed rejection
         // reason in the same row. A case whose approval already won can never be rejected here, so its source
         // claim/hold/money are never released by a losing concurrent request; a changed reason is a typed conflict.
@@ -334,8 +344,6 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         {
             throw new ContractOperationException(ReturnsErrorCodes.AlreadyApproved);
         }
-
-        var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
 
         // TB-265-R1: only a case that was never approved can be rejected. A case already refunding/approved keeps
         // its obligation and its claim; releasing its branch here would free capacity a live (or completed) case
@@ -766,6 +774,18 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         return request;
     }
 
+    /// <summary>
+    /// TB-274-R1 (B): the stored case must belong to the acting seller scope before ANY decision or physical write,
+    /// inside the owning directory. A foreign scope answers exactly like a missing case (no leak, no cross-seller write).
+    /// </summary>
+    private static void EnsureOwningSellerScope(ReturnRequest request, Guid? sellerPartyId)
+    {
+        if (sellerPartyId is { } scope && request.SellerPartyId != scope)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.Missing);
+        }
+    }
+
     private async Task<IReadOnlyList<ReturnSnapshot>> MapManyAsync(
         IReadOnlyList<ReturnRequest> requests,
         CancellationToken cancellationToken)
@@ -821,7 +841,12 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 x.Condition,
                 x.Disposition,
                 x.SourceShipmentId,
-                x.SourceReceiptId)).ToArray(),
+                x.SourceReceiptId,
+                // TB-274-R1: the exact inspected usable quantity that was restocked, never the requested quantity — a
+                // mixed line therefore never reads as "the whole amount went back to saleable stock".
+                receiving is not null && x.Disposition == ReturnItemDisposition.SaleableRestock
+                    ? receiving.UsableOf(x.ReturnItemId)
+                    : null)).ToArray(),
             attempts.Select(x => new RefundAttemptSnapshot(
                 x.RefundAttemptId,
                 x.PaymentId,

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Returns;
@@ -101,12 +101,12 @@ public sealed class ReturnsCharacterizationTests
                 first.ReturnRequestId,
                 Guid.NewGuid(),
                 "char-receipt-1",
-                first.Items.Select(x => new CustomerReceiptLine(x.ReturnItemId, x.Quantity))
+                first.Items.Select(x => new CustomerReceiptLine(x.ReturnItemId, x.Quantity, ReturnItemCondition.Usable))
                     .ToList()),
             CancellationToken.None);
 
         var approved = await directory.ApproveAsync(
-            new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid(), Guid.NewGuid()),
+            new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid(), first.SellerPartyId),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
         Assert.Single(refunds.Calls);
@@ -164,12 +164,12 @@ public sealed class ReturnsCharacterizationTests
                 created.ReturnRequestId,
                 Guid.NewGuid(),
                 "char-receipt-wallet",
-                created.Items.Select(x => new CustomerReceiptLine(x.ReturnItemId, x.Quantity))
+                created.Items.Select(x => new CustomerReceiptLine(x.ReturnItemId, x.Quantity, ReturnItemCondition.Usable))
                     .ToList()),
             CancellationToken.None);
 
         var approved = await directory.ApproveAsync(
-            new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid(), Guid.NewGuid()),
+            new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid(), created.SellerPartyId),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
         Assert.Empty(refunds.Calls);

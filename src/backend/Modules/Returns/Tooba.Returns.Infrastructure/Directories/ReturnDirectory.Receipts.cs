@@ -33,6 +33,13 @@ public sealed partial class ReturnDirectory
         ArgumentNullException.ThrowIfNull(command);
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
+        // TB-274-R1: the recording operator is supplied by the authenticated authority, never by the browser, and a
+        // receipt that names no actor is refused as a typed fault before any case read or write.
+        if (command.ActorUserId == Guid.Empty)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.ReceiptActorRequired);
+        }
+
         var occurrenceKey = NormalizeOccurrenceKey(command.OccurrenceKey);
         var lines = NormalizeReceiptLines(command.Items);
 
@@ -106,7 +113,9 @@ public sealed partial class ReturnDirectory
                     .AnyAsync(
                         x => x.ReturnRequestId == command.ReturnRequestId
                              && x.Disposition != ReturnItemDisposition.None,
-                        cancellationToken);
+                        cancellationToken)
+                    || await _db.ReturnReceipts.AsNoTracking()
+                        .AnyAsync(x => x.ReturnRequestId == command.ReturnRequestId, cancellationToken);
                 var moneyStartedWithoutPhysicalHistory = request.Status is ReturnRequestStatus.Approved
                     or ReturnRequestStatus.RefundProcessing
                     or ReturnRequestStatus.RefundFailed
@@ -132,13 +141,15 @@ public sealed partial class ReturnDirectory
                 }
             }
 
-            var recordedLines = await _db.ReturnReceiptLines.AsNoTracking()
-                .Where(x => x.ReturnRequestId == command.ReturnRequestId)
-                .Select(x => new { x.ReturnItemId, x.Quantity, x.Condition })
-                .ToListAsync(cancellationToken);
-            var coverage = ReturnReceivingSummary.Describe(
-                requestedItems.Select(x => (x.ReturnItemId, x.Quantity)),
-                recordedLines.Select(x => (x.ReturnItemId, x.Quantity, x.Condition)));
+            // TB-274-R1: the cumulative coverage is read through the SAME owning binding every read/action uses. If the
+            // already-stored evidence is contradictory (borrowed receipt header, foreign item, non-positive or
+            // undefined stored row, duplicate identity, over-coverage) a NEW occurrence never "repairs" it by adding
+            // more lines: it is refused with the typed evidence conflict and zero new rows.
+            var coverage = await ReadReceivingAsync(command.ReturnRequestId, cancellationToken);
+            if (coverage is not { IsCoherent: true })
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.RecoveryEvidenceConflict);
+            }
 
             foreach (var group in lines.GroupBy(x => x.ReturnItemId))
             {
@@ -193,18 +204,37 @@ public sealed partial class ReturnDirectory
             return null;
         }
 
+        return await ReadReceivingAsync(request.ReturnRequestId, cancellationToken);
+    }
+
+    /// <summary>
+    /// TB-274-R1: the ONE stored-fact read of a case's receiving evidence. Every recorded line is bound to its OWN
+    /// receipt header OF THIS CASE before it may count, so a line that names another case's receipt is never borrowed
+    /// into this case's coverage — the summary reports that contradiction instead.
+    /// </summary>
+    private async Task<ReturnReceivingSummary> ReadReceivingAsync(
+        Guid returnRequestId,
+        CancellationToken cancellationToken)
+    {
         var requestedItems = await _db.ReturnItems.AsNoTracking()
-            .Where(x => x.ReturnRequestId == request.ReturnRequestId)
+            .Where(x => x.ReturnRequestId == returnRequestId)
             .Select(x => new { x.ReturnItemId, x.Quantity })
             .ToListAsync(cancellationToken);
+
+        var owningReceipts = await _db.ReturnReceipts.AsNoTracking()
+            .Where(x => x.ReturnRequestId == returnRequestId)
+            .Select(x => x.ReturnReceiptId)
+            .ToListAsync(cancellationToken);
+
         var recordedLines = await _db.ReturnReceiptLines.AsNoTracking()
-            .Where(x => x.ReturnRequestId == request.ReturnRequestId)
-            .Select(x => new { x.ReturnItemId, x.Quantity, x.Condition })
+            .Where(x => x.ReturnRequestId == returnRequestId)
+            .Select(x => new { x.ReturnReceiptId, x.ReturnItemId, x.Quantity, x.Condition })
             .ToListAsync(cancellationToken);
 
         return ReturnReceivingSummary.Describe(
             requestedItems.Select(x => (x.ReturnItemId, x.Quantity)),
-            recordedLines.Select(x => (x.ReturnItemId, x.Quantity, x.Condition)));
+            recordedLines.Select(x => ((Guid?)x.ReturnReceiptId, x.ReturnItemId, x.Quantity, x.Condition)),
+            owningReceipts);
     }
 
     /// <summary>

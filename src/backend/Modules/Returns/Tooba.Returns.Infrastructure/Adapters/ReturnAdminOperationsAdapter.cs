@@ -179,6 +179,13 @@ internal sealed class ReturnAdminOperationsAdapter(
     /// <summary>
     /// TB-274: record one physical customer receipt occurrence. The admin contract carries only the reviewed
     /// occurrence identity and the inspected quantities; the case/state/over-receipt/gating rules stay in the directory.
+    /// <para>
+    /// TB-274-R1: the inspected condition is mapped EXPLICITLY. There is no "anything not damaged means usable"
+    /// fallback — an undefined value is refused with the same typed line fault every other malformed line raises, so a
+    /// contract caller cannot silently record a usable unit by omission or by an unmapped enum value. The owner/case
+    /// scope is never taken from the caller: the directory resolves the case from its own identifier and only its own
+    /// lines may be received.
+    /// </para>
     /// </summary>
     public async Task<ReturnSnapshot> RecordCustomerReceiptAsync(
         RecordCustomerReceiptCommand command,
@@ -194,12 +201,18 @@ internal sealed class ReturnAdminOperationsAdapter(
                     .Select(x => new CustomerReceiptLine(
                         x.ReturnItemId,
                         x.Quantity,
-                        x.Condition == ReturnItemConditionOption.Damaged
-                            ? ReturnItemCondition.Damaged
-                            : ReturnItemCondition.Usable))
+                        ToDomainCondition(x.Condition)))
                     .ToList()),
             cancellationToken));
     }
+
+    /// <summary>TB-274-R1: exactly the two defined inspections; anything else is a typed refusal, never a default.</summary>
+    private static ReturnItemCondition ToDomainCondition(ReturnItemConditionOption condition) => condition switch
+    {
+        ReturnItemConditionOption.Usable => ReturnItemCondition.Usable,
+        ReturnItemConditionOption.Damaged => ReturnItemCondition.Damaged,
+        _ => throw new ContractOperationException(ReturnsErrorCodes.ReceiptLineInvalid),
+    };
 
     private async Task<Guid> RequireSellerPartyAsync(Guid returnRequestId, CancellationToken cancellationToken) =>
         (await directory.GetAsync(returnRequestId, cancellationToken))?.SellerPartyId
@@ -233,7 +246,8 @@ internal sealed class ReturnAdminOperationsAdapter(
                         ? ReturnItemConditionOption.Damaged
                         : null,
                     x.SourceShipmentId,
-                    x.SourceReceiptId))
+                    x.SourceReceiptId,
+                    x.SaleableRestockedQuantity))
                 .ToList(),
             snapshot.RefundAttempts
                 .Select(x => new RefundAttemptSnapshot(

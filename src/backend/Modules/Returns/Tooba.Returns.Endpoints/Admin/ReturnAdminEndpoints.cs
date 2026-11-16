@@ -111,11 +111,15 @@ public sealed record AdminReturnReceiptRequest(
 /// TB-274: one inspected line of the submitted customer receipt. <c>Condition</c> is the stable wire token
 /// (<c>usable</c>/<c>damaged</c>) parsed by <see cref="ReturnItemConditionParser"/>, so a malformed token is a typed
 /// refusal rather than a transport fault.
+/// <para>
+/// TB-274-R1: the token has NO default. An omitted inspection token is refused by the parser before any case read, so
+/// a browser that forgets to state the condition can never record a usable unit by omission.
+/// </para>
 /// </summary>
 public sealed record AdminReturnReceiptLine(
     Guid ReturnItemId,
     decimal Quantity,
-    string? Condition = ReturnItemConditionParser.Usable);
+    string? Condition);
 
 /// <summary>
 /// TB-273: wire-only explicit recovery body. <c>Kind</c> is the reviewed intent token and

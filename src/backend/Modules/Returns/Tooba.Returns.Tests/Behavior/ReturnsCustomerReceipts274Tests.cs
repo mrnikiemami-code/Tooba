@@ -126,7 +126,7 @@ public sealed class ReturnsCustomerReceipts274Tests
         var item = Guid.NewGuid();
 
         var blankKey = validator.Validate(new RecordReturnReceiptCommand(
-            Guid.NewGuid(), Guid.NewGuid(), " ", [new CustomerReceiptLine(item, 1m)]));
+            Guid.NewGuid(), Guid.NewGuid(), " ", [new CustomerReceiptLine(item, 1m, ReturnItemCondition.Usable)]));
         Assert.False(blankKey.IsValid);
         Assert.Contains(blankKey.Errors, x => x.ErrorCode == ReturnsValidationCodes.ReceiptOccurrenceRequired);
 
@@ -137,12 +137,16 @@ public sealed class ReturnsCustomerReceipts274Tests
 
         var duplicate = validator.Validate(new RecordReturnReceiptCommand(
             Guid.NewGuid(), Guid.NewGuid(), "occ",
-            [new CustomerReceiptLine(item, 1m), new CustomerReceiptLine(item, 1m)]));
+            [
+                new CustomerReceiptLine(item, 1m, ReturnItemCondition.Usable),
+                new CustomerReceiptLine(item, 1m, ReturnItemCondition.Usable),
+            ]));
         Assert.False(duplicate.IsValid);
         Assert.Contains(duplicate.Errors, x => x.ErrorCode == ReturnsValidationCodes.ReceiptDuplicateLine);
 
         var imprecise = validator.Validate(new RecordReturnReceiptCommand(
-            Guid.NewGuid(), Guid.NewGuid(), "occ", [new CustomerReceiptLine(item, 1.0000001m)]));
+            Guid.NewGuid(), Guid.NewGuid(), "occ",
+            [new CustomerReceiptLine(item, 1.0000001m, ReturnItemCondition.Usable)]));
         Assert.False(imprecise.IsValid);
         Assert.Contains(imprecise.Errors, x => x.ErrorCode == ReturnsValidationCodes.ReceiptQuantityInvalid);
 
@@ -153,11 +157,16 @@ public sealed class ReturnsCustomerReceipts274Tests
     }
 
     [Fact]
-    public void The_wire_condition_token_is_parsed_and_an_undefined_token_is_a_stable_refusal()
+    public void The_wire_condition_token_is_explicit_and_a_missing_token_is_a_stable_refusal()
     {
-        // Absent means the documented default, never an undefined condition.
-        Assert.Equal(ReturnItemCondition.Usable, ReturnItemConditionParser.Parse(null).Value);
-        Assert.Equal(ReturnItemCondition.Usable, ReturnItemConditionParser.Parse("  ").Value);
+        // TB-274-R1 (A): inspection is EXPLICIT. An omitted/null/blank token is the SAME typed refusal as a typo,
+        // so silence can never become a usable unit.
+        foreach (var token in new string?[] { null, "", "   " })
+        {
+            var missing = ReturnItemConditionParser.Parse(token);
+            Assert.True(missing.IsFailure);
+            Assert.Equal(ReturnsErrorCodes.ReceiptLineInvalid, missing.FirstError.Code);
+        }
 
         // The two defined tokens parse (case/space tolerant, as the recovery-kind parser already is).
         Assert.Equal(ReturnItemCondition.Usable, ReturnItemConditionParser.Parse("Usable").Value);

@@ -22,11 +22,17 @@ public sealed record RecordReturnReceiptCommand(
     string OccurrenceKey,
     IReadOnlyList<CustomerReceiptLine> Items) : IRequest<Result<ReturnSnapshot>>;
 
-/// <summary>TB-274: one inspected line of a submitted customer receipt.</summary>
+/// <summary>
+/// TB-274: one inspected line of a submitted customer receipt.
+/// <para>
+/// TB-274-R1: the inspection is REQUIRED. There is deliberately no default, because an omitted condition must never be
+/// read as <see cref="ReturnItemCondition.Usable"/>; every caller has to name what the operator actually inspected.
+/// </para>
+/// </summary>
 public sealed record CustomerReceiptLine(
     Guid ReturnItemId,
     decimal Quantity,
-    ReturnItemCondition Condition = ReturnItemCondition.Usable);
+    ReturnItemCondition Condition);
 
 /// <summary>Handler — Result via the canonical typed-fault seam.</summary>
 public sealed class RecordReturnReceiptHandler(IReturnDirectory returns)

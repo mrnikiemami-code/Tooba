@@ -35,12 +35,15 @@
   <data name="return.recovery.gateway_unavailable" xml:space="preserve"><value>The refund adapter is not configured, so the stored attempt cannot be sent; it stays pending.</value></data>
   <data name="return.recovery.evidence_conflict" xml:space="preserve"><value>The stored decision, refund attempt or closure facts of this return contradict each other, so no recovery can be named without guessing.</value></data>
   <data name="return.recovery.transaction_owned" xml:space="preserve"><value>Recovery cannot run inside an open caller-owned database transaction, so nothing was sent or written.</value></data>
+  <data name="return.recovery.stock_binding_required" xml:space="preserve"><value>The inspected usable quantity has no owning stock binding, so no saleable restock can be confirmed yet.</value></data>
+  <data name="return.recovery.physical_resolution_required" xml:space="preserve"><value>The rejected or cancelled return physically received goods that still have no recorded disposition.</value></data>
   <data name="return.receipt.occurrence_required" xml:space="preserve"><value>A customer receipt must name the reviewed occurrence it belongs to.</value></data>
   <data name="return.receipt.line_invalid" xml:space="preserve"><value>A receipt line is not a valid inspected quantity of this return.</value></data>
   <data name="return.receipt.over_received" xml:space="preserve"><value>The submitted receipt would receive more units than this return requested.</value></data>
   <data name="return.receipt.conflict" xml:space="preserve"><value>The occurrence key was already recorded with a different receiving intent.</value></data>
   <data name="return.receipt.origin_invalid" xml:space="preserve"><value>A courier-origin case reuses the receipt owned by fulfillment and cannot record a second one here.</value></data>
   <data name="return.receipt.state_invalid" xml:space="preserve"><value>The return is not open for a new physical receipt.</value></data>
+  <data name="return.receipt.actor_required" xml:space="preserve"><value>A customer receipt must name the recording operator.</value></data>
   <data name="return.receiving.incomplete" xml:space="preserve"><value>The return has no complete recorded receiving/inspection coverage, so no approval, refund or restock can start.</value></data>
   <data name="return.rejection_reason_required" xml:space="preserve"><value>A new rejection must state a meaningful reason.</value></data>
   <data name="return.decision.reason_conflict" xml:space="preserve"><value>The recorded rejection already states a different reason.</value></data>

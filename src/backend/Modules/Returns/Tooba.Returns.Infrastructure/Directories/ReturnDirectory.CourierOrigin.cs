@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Returns;
 using Tooba.Returns.Application.ReturnRequests.Models;
@@ -318,14 +319,23 @@ public sealed partial class ReturnDirectory
             // TB-265-R1: the owning restock is called BEFORE the disposition is marked, with the SAME per-item
             // identity on every retry. A failed restock therefore leaves the item explicitly pending instead of
             // persisting a false SaleableRestock. A damaged portion of the same line is never part of this quantity.
-            if (item.ReservationId is { } reservationId)
+            // TB-274-R1 (C): a saleable restock REQUIRES the owning stock binding. Without a reservation there is no
+            // Inventory owner to confirm the move, so the line stays explicitly pending — no Inventory call, no
+            // disposition claim and no invented completion. The confirmed money is untouched.
+            if (item.ReservationId is not { } reservationId || reservationId == Guid.Empty)
             {
-                await _inventory.RestockConsumedReservationAsync(
-                    reservationId,
-                    usable,
-                    $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
-                    cancellationToken);
+                _logger.LogWarning(
+                    "Physical disposition pending for return {ReturnRequestId} line {ReturnItemId}: the inspected usable quantity has no owning stock binding",
+                    request.ReturnRequestId,
+                    item.ReturnItemId);
+                continue;
             }
+
+            await _inventory.RestockConsumedReservationAsync(
+                reservationId,
+                usable,
+                $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
+                cancellationToken);
 
             var itemEntry = _db.Entry(item);
             item.MarkDisposition(ReturnItemDisposition.SaleableRestock);

@@ -74,7 +74,7 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         await using var caller = await db.Database.BeginTransactionAsync();
 
-        var (returnRequestId, returnItemId) = await StageRequestedCaseAsync(db, $"{_runTag}coverage", quantity: 3m);
+        var (returnRequestId, returnItemId, sellerPartyId) = await StageRequestedCaseAsync(db, $"{_runTag}coverage", quantity: 3m);
 
         var first = await directory.RecordReceiptAsync(
             Receipt(returnRequestId, "delivery-1", (returnItemId, 1m, ReturnItemCondition.Usable)),
@@ -128,7 +128,7 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         await using var caller = await db.Database.BeginTransactionAsync();
 
-        var (returnRequestId, returnItemId) = await StageRequestedCaseAsync(db, $"{_runTag}mixed", quantity: 2m);
+        var (returnRequestId, returnItemId, sellerPartyId) = await StageRequestedCaseAsync(db, $"{_runTag}mixed", quantity: 2m);
 
         var recorded = await directory.RecordReceiptAsync(
             Receipt(
@@ -183,13 +183,13 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         await using var caller = await db.Database.BeginTransactionAsync();
 
-        var (returnRequestId, returnItemId) = await StageRequestedCaseAsync(db, $"{_runTag}gate", quantity: 3m);
+        var (returnRequestId, returnItemId, sellerPartyId) = await StageRequestedCaseAsync(db, $"{_runTag}gate", quantity: 3m);
         await directory.RecordReceiptAsync(
             Receipt(returnRequestId, "delivery-1", (returnItemId, 1m, ReturnItemCondition.Usable)),
             CancellationToken.None);
 
         var refused = await Assert.ThrowsAsync<ContractOperationException>(() => directory.ApproveAsync(
-            new ApproveReturnCommand(returnRequestId, Guid.NewGuid(), Guid.NewGuid()),
+            new ApproveReturnCommand(returnRequestId, Guid.NewGuid(), sellerPartyId),
             CancellationToken.None));
 
         Assert.Equal(ReturnsErrorCodes.ReceivingIncomplete, refused.Code);
@@ -218,11 +218,11 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         await using var caller = await db.Database.BeginTransactionAsync();
 
-        var (returnRequestId, _) = await StageRequestedCaseAsync(db, $"{_runTag}reason", quantity: 1m);
+        var (returnRequestId, _, sellerPartyId) = await StageRequestedCaseAsync(db, $"{_runTag}reason", quantity: 1m);
         var actor = Guid.NewGuid();
 
         await directory.RejectAsync(
-            new RejectReturnCommand(returnRequestId, actor, Guid.NewGuid(), "  عیب واقعی کالا  "),
+            new RejectReturnCommand(returnRequestId, actor, sellerPartyId, "  عیب واقعی کالا  "),
             CancellationToken.None);
 
         var stored = await db.ReturnDecisions.AsNoTracking().SingleAsync(x => x.ReturnRequestId == returnRequestId);
@@ -233,13 +233,13 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         // The same statement replays the SAME durable decision: no second row, no second effect.
         await directory.RejectAsync(
-            new RejectReturnCommand(returnRequestId, actor, Guid.NewGuid(), "عیب واقعی کالا"),
+            new RejectReturnCommand(returnRequestId, actor, sellerPartyId, "عیب واقعی کالا"),
             CancellationToken.None);
         Assert.Equal(1, await db.ReturnDecisions.CountAsync(x => x.ReturnRequestId == returnRequestId));
 
         // A different statement under the SAME winning decision is refused with zero effect.
         var conflict = await Assert.ThrowsAsync<ContractOperationException>(() => directory.RejectAsync(
-            new RejectReturnCommand(returnRequestId, actor, Guid.NewGuid(), "دلیل دیگری"),
+            new RejectReturnCommand(returnRequestId, actor, sellerPartyId, "دلیل دیگری"),
             CancellationToken.None));
         Assert.Equal(ReturnsErrorCodes.DecisionReasonConflict, conflict.Code);
         Assert.Equal(
@@ -248,7 +248,7 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         // The opposite decision can never win afterwards.
         var alreadyRejected = await Assert.ThrowsAsync<ContractOperationException>(() => directory.ApproveAsync(
-            new ApproveReturnCommand(returnRequestId, actor, Guid.NewGuid()),
+            new ApproveReturnCommand(returnRequestId, actor, sellerPartyId),
             CancellationToken.None));
         Assert.Equal(ReturnsErrorCodes.AlreadyRejected, alreadyRejected.Code);
         Assert.Equal(0, await db.RefundAttempts.CountAsync(x => x.ReturnRequestId == returnRequestId));
@@ -270,12 +270,12 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         await using var caller = await db.Database.BeginTransactionAsync();
 
-        var (returnRequestId, _) = await StageRequestedCaseAsync(db, $"{_runTag}noreason", quantity: 1m);
+        var (returnRequestId, _, sellerPartyId) = await StageRequestedCaseAsync(db, $"{_runTag}noreason", quantity: 1m);
 
         foreach (var reason in new[] { null, "   " })
         {
             var refused = await Assert.ThrowsAsync<ContractOperationException>(() => directory.RejectAsync(
-                new RejectReturnCommand(returnRequestId, Guid.NewGuid(), Guid.NewGuid(), reason),
+                new RejectReturnCommand(returnRequestId, Guid.NewGuid(), sellerPartyId, reason),
                 CancellationToken.None));
             Assert.Equal(ReturnsErrorCodes.RejectionReasonRequired, refused.Code);
         }
@@ -304,9 +304,9 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
 
         await using var caller = await db.Database.BeginTransactionAsync();
 
-        var (returnRequestId, returnItemId) = await StageRequestedCaseAsync(db, $"{_runTag}decided", quantity: 1m);
+        var (returnRequestId, returnItemId, sellerPartyId) = await StageRequestedCaseAsync(db, $"{_runTag}decided", quantity: 1m);
         await directory.RejectAsync(
-            new RejectReturnCommand(returnRequestId, Guid.NewGuid(), Guid.NewGuid(), "مشتری انصراف داد"),
+            new RejectReturnCommand(returnRequestId, Guid.NewGuid(), sellerPartyId, "مشتری انصراف داد"),
             CancellationToken.None);
 
         var refused = await Assert.ThrowsAsync<ContractOperationException>(() => directory.RecordReceiptAsync(
@@ -338,12 +338,13 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
     /// Stages ONE ordinary delivered-customer case in <c>Requested</c> inside the caller's own transaction. Nothing is
     /// committed, so the case, its line and every receipt of this suite disappear with the rollback.
     /// </summary>
-    private static async Task<(Guid ReturnRequestId, Guid ReturnItemId)> StageRequestedCaseAsync(
+    private static async Task<(Guid ReturnRequestId, Guid ReturnItemId, Guid SellerPartyId)> StageRequestedCaseAsync(
         ReturnsDbContext db,
         string idempotencyKey,
         decimal quantity)
     {
         var returnRequestId = Guid.NewGuid();
+        var sellerPartyId = Guid.NewGuid();
         var orderLineId = Guid.NewGuid();
 
         var request = ReturnRequest.Create(
@@ -351,7 +352,7 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
             () => Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            sellerPartyId,
             Guid.NewGuid(),
             idempotencyKey,
             "دلیل مرجوعی",
@@ -363,7 +364,7 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
         db.ReturnItems.AddRange(request.Items);
         await db.SaveChangesAsync();
 
-        return (returnRequestId, request.Items.Single().ReturnItemId);
+        return (returnRequestId, request.Items.Single().ReturnItemId, sellerPartyId);
     }
 
     private async Task<long> CountTagRowsAsync()

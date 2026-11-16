@@ -61,12 +61,15 @@ public static class ReturnsErrorCodes
         RecoveryGatewayUnavailable,
         RecoveryEvidenceConflict,
         RecoveryTransactionOwned,
+        RecoveryStockBindingRequired,
+        RecoveryPhysicalResolutionRequired,
         ReceiptOccurrenceRequired,
         ReceiptLineInvalid,
         ReceiptOverReceived,
         ReceiptConflict,
         ReceiptOriginInvalid,
         ReceiptStateInvalid,
+        ReceiptActorRequired,
         ReceivingIncomplete,
         RejectionReasonRequired,
         DecisionReasonConflict,
@@ -233,6 +236,21 @@ public static class ReturnsErrorCodes
     public const string RecoveryTransactionOwned = "return.recovery.transaction_owned";
 
     /// <summary>
+    /// TB-274-R1: the received and inspected usable quantity has no owning stock binding (the requested line carries no
+    /// reservation), so no Inventory owner could confirm a restock. It is a typed PENDING blocker: the disposition stays
+    /// unrecorded, no Inventory call is made, the confirmed money is untouched and no new attempt is minted. Nothing is
+    /// guessed, reserved or invented to "complete" the physical phase.
+    /// </summary>
+    public const string RecoveryStockBindingRequired = "return.recovery.stock_binding_required";
+
+    /// <summary>
+    /// TB-274-R1: a rejected/cancelled case physically received goods that still have no recorded disposition, so it
+    /// owes an honest remaining physical resolution. The read reports it without a recovery kind (no executable intent),
+    /// the recorded receipt history stays visible, and no restock/refund/ship-back is invented.
+    /// </summary>
+    public const string RecoveryPhysicalResolutionRequired = "return.recovery.physical_resolution_required";
+
+    /// <summary>
     /// TB-274: a customer receipt must name the reviewed occurrence it belongs to. An absent/blank/over-long key is
     /// refused so an exact replay can never be confused with a second delivery.
     /// </summary>
@@ -266,6 +284,13 @@ public static class ReturnsErrorCodes
     /// can be received; a decision already taken keeps its recorded facts).
     /// </summary>
     public const string ReceiptStateInvalid = "return.receipt.state_invalid";
+
+    /// <summary>
+    /// TB-274-R1: a receipt must name the recording operator. The actor is server-derived (the authenticated admin
+    /// authority), never a browser-supplied owner or seller identity, so an absent actor is refused as a typed fault
+    /// instead of surfacing as a model/aggregate exception.
+    /// </summary>
+    public const string ReceiptActorRequired = "return.receipt.actor_required";
 
     /// <summary>
     /// TB-274: the case has no complete, coherent receiving/inspection coverage, so the new approval decision, refund

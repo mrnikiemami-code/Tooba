@@ -192,6 +192,14 @@ public sealed partial class ReturnDirectory
                 throw new ContractOperationException(ReturnsErrorCodes.RecoveryReceivingRequired);
             }
 
+            // TB-274-R1 (C): an inspected usable quantity without its owning stock binding cannot be restocked, so the
+            // physical intent refuses with the SAME typed blocker the read reports — no Inventory call, no disposition
+            // claim, no invented completion, no new attempt.
+            if (HasUnboundInspectedUsable(request, receiving))
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.RecoveryStockBindingRequired);
+            }
+
             await SettlePhysicalDispositionAsync(request, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return await MapSnapshotAsync(request, cancellationToken);
@@ -206,4 +214,14 @@ public sealed partial class ReturnDirectory
         await _db.SaveChangesAsync(cancellationToken);
         return await MapSnapshotAsync(request, cancellationToken);
     }
+
+    /// <summary>
+    /// TB-274-R1 (C): true when a requested line inspected a positive usable quantity but owns no stock binding at all.
+    /// Such a line can never be restocked by Inventory, so it is a typed PENDING blocker instead of a claimed physical
+    /// completion. Nothing is reserved, guessed or created.
+    /// </summary>
+    private static bool HasUnboundInspectedUsable(ReturnRequest request, ReturnReceivingSummary receiving) =>
+        request.Items.Any(item =>
+            receiving.UsableOf(item.ReturnItemId) > 0m
+            && (item.ReservationId is not { } reservationId || reservationId == Guid.Empty));
 }

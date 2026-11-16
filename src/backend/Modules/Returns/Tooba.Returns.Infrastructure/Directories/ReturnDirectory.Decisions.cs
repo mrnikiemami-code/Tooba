@@ -114,10 +114,27 @@ public sealed partial class ReturnDirectory
             DecidedAt = _clock.UtcNow,
         };
 
+        var trackedBeforeAttempt = _db.ChangeTracker.Entries().Select(x => x.Entity).ToList();
         _db.ReturnDecisions.Add(decision);
+
+        // TB-274-R1 (D): this attempt's insert lives inside its OWN savepoint, so a key collision can be undone
+        // without rolling back the caller's transaction and without touching any caller-tracked entity.
+        const string decisionSavePoint = "tb274_decision_intent";
+        var hasSavePoint = false;
+        if (relational && transaction is not null)
+        {
+            await _db.Database.ExecuteSqlRawAsync($"SAVEPOINT {decisionSavePoint}", cancellationToken);
+            hasSavePoint = true;
+        }
+
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
+            if (hasSavePoint)
+            {
+                await _db.Database.ExecuteSqlRawAsync($"RELEASE SAVEPOINT {decisionSavePoint}", cancellationToken);
+            }
+
             await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
             return decision;
         }
@@ -125,28 +142,64 @@ public sealed partial class ReturnDirectory
         {
             // TB-274: ONLY the decision table's own primary key means "another decision won". A different unique
             // constraint (or any other provider failure) is a genuine error and surfaces unchanged.
-            if (ownsTransaction && transaction is not null)
+            if (hasSavePoint)
+            {
+                await _db.Database.ExecuteSqlRawAsync($"ROLLBACK TO SAVEPOINT {decisionSavePoint}", cancellationToken);
+                await _db.Database.ExecuteSqlRawAsync($"RELEASE SAVEPOINT {decisionSavePoint}", cancellationToken);
+            }
+            else if (ownsTransaction && transaction is not null)
             {
                 await transaction.RollbackAsync(cancellationToken);
             }
 
-            _db.ChangeTracker.Clear();
-            return await _db.ReturnDecisions.AsNoTracking()
+            DetachAttemptEntries(trackedBeforeAttempt);
+
+            var winner = await _db.ReturnDecisions.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.ReturnRequestId == returnRequestId, cancellationToken)
                 ?? throw new ContractOperationException(ReturnsErrorCodes.Stale);
+
+            if (kind == ReturnDecisionKind.Reject
+                && AnswersDecision(winner, ReturnDecisionKind.Reject)
+                && !string.Equals(winner.Reason, normalizedReason, StringComparison.Ordinal))
+            {
+                // The concurrent winner stated a different reason; answering would rewrite a durable decision.
+                throw new ContractOperationException(ReturnsErrorCodes.DecisionReasonConflict);
+            }
+
+            return winner;
+        }
+    }
+
+    /// <summary>
+    /// TB-274-R1 (D): detaches ONLY the entries this attempt added, so a caller's own tracked entities keep their
+    /// instance, their state and their values. There is deliberately no global <c>ChangeTracker.Clear()</c>.
+    /// </summary>
+    private void DetachAttemptEntries(IReadOnlyList<object> trackedBeforeAttempt)
+    {
+        foreach (var entry in _db.ChangeTracker.Entries().ToList())
+        {
+            var existedBefore = trackedBeforeAttempt.Any(x => ReferenceEquals(x, entry.Entity));
+            if (!existedBefore && entry.State is EntityState.Added)
+            {
+                entry.State = EntityState.Detached;
+            }
         }
     }
 
     /// <summary>
     /// TB-274: the exact durable identity of the decision row. Only a unique violation on
-    /// <c>pk_return_request_decisions</c> may be arbitrated as "the other decision won"; a lookalike constraint or any
-    /// other provider error is never reinterpreted.
+    /// <c>pk_return_request_decisions</c> may be arbitrated as "the other decision won"; a lookalike constraint, a
+    /// same-named constraint on ANOTHER table/schema, or any other provider error is never reinterpreted.
     /// </summary>
     private const string DecisionPrimaryKeyConstraint = "pk_return_request_decisions";
 
+    private const string DecisionTable = "return_request_decisions";
+
     private static bool IsDecisionKeyConflict(DbUpdateException exception) =>
         exception.InnerException is Npgsql.PostgresException { SqlState: "23505" } postgres
-        && string.Equals(postgres.ConstraintName, DecisionPrimaryKeyConstraint, StringComparison.Ordinal);
+        && string.Equals(postgres.ConstraintName, DecisionPrimaryKeyConstraint, StringComparison.Ordinal)
+        && string.Equals(postgres.TableName, DecisionTable, StringComparison.Ordinal)
+        && string.Equals(postgres.SchemaName, ReturnsDbContext.Schema, StringComparison.Ordinal);
 
     /// <summary>
     /// TB-274: a new rejection requires a meaningful reviewed statement (trimmed, bounded), so the durable decision

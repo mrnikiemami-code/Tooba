@@ -107,10 +107,35 @@ public static class ReturnRecoveryPolicy
                 // A case that was never approved owns no financial attempt. A stored attempt on such a status is a
                 // CONTRADICTORY fact, not an executable recovery: it is described as blocked instead of "nothing to
                 // recover", so the inconsistency is never hidden behind a quiet read.
-                return snapshot.RefundAttempts.Count > 0
-                    ? Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed)
-                    : new ReturnRecoveryDescription(
-                        ReturnRecoveryPhase.None, null, null, null, FinancialComplete: false, allItemsDisposed);
+                if (snapshot.RefundAttempts.Count > 0)
+                {
+                    return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed);
+                }
+
+                // TB-274-R1: a receipt whose stored rows contradict the request can never be read as physical evidence.
+                if (snapshot.Receiving is { IsCoherent: false })
+                {
+                    return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, physicalComplete: false);
+                }
+
+                // TB-274-R1 (C): a case that was rejected/cancelled AFTER goods were physically received still owes an
+                // honest remaining physical resolution. The fact is reported with NO recovery kind (there is no
+                // executable stock intent for it), the recorded receipt history stays visible, and nothing is
+                // restocked, refunded or shipped back automatically.
+                // The blocker is deliberately limited to a case that was DECIDED AWAY: a still-Requested case awaiting
+                // its remaining deliveries has no owed resolution yet, so it must not be reported as blocked.
+                if (snapshot.Status is ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled
+                    && allItemsDisposed is false
+                    && HasUnresolvedReceivedGoods(snapshot))
+                {
+                    return Blocked(
+                        ReturnsErrorCodes.RecoveryPhysicalResolutionRequired,
+                        financialComplete: false,
+                        physicalComplete: false);
+                }
+
+                return new ReturnRecoveryDescription(
+                    ReturnRecoveryPhase.None, null, null, null, FinancialComplete: false, allItemsDisposed);
 
             case ReturnRequestStatus.Approved:
             case ReturnRequestStatus.RefundProcessing:
@@ -323,6 +348,14 @@ public static class ReturnRecoveryPolicy
 
         if (snapshot.Origin != ReturnOrigin.CourierOrigin)
         {
+            // TB-274-R1 (C): an already-durable disposition stays the recorded history, but a line that restocked a
+            // usable quantity WITHOUT any owning stock binding was never confirmed by Inventory, so it can never make
+            // the case "Settled". The check runs before the completion answer for that reason.
+            if (HasMissingStockBinding(snapshot))
+            {
+                return Blocked(ReturnsErrorCodes.RecoveryStockBindingRequired, financialComplete: true, physicalComplete: false, money.AttemptId);
+            }
+
             if (allItemsDisposed)
             {
                 return new ReturnRecoveryDescription(
@@ -434,6 +467,51 @@ public static class ReturnRecoveryPolicy
         bool physicalComplete,
         Guid? attemptId = null) =>
         new(ReturnRecoveryPhase.Blocked, null, attemptId, code, financialComplete, physicalComplete);
+
+    /// <summary>
+    /// TB-274-R1 (C): true when at least one requested line physically received goods but carries no recorded
+    /// disposition yet — the honest remaining physical work of a case that was decided away.
+    /// </summary>
+    private static bool HasUnresolvedReceivedGoods(ReturnSnapshot snapshot)
+    {
+        if (snapshot.Receiving is not { IsCoherent: true } receiving)
+        {
+            return false;
+        }
+
+        return snapshot.Items.Any(item =>
+            receiving.WasReceived(item.ReturnItemId) && item.Disposition == ReturnItemDisposition.None);
+    }
+
+    /// <summary>
+    /// TB-274-R1 (C): true when a COMPLETE, coherent receipt inspected a positive usable quantity for a line that has no
+    /// owning stock binding. Such a line can never be restocked (there is no Inventory reservation to confirm), so the
+    /// physical phase is a typed pending blocker instead of a claimed completion. Nothing is guessed, reserved or
+    /// created here.
+    /// </summary>
+    private static bool HasMissingStockBinding(ReturnSnapshot snapshot)
+    {
+        if (snapshot.Receiving is not { IsCoherent: true, IsComplete: true } receiving)
+        {
+            return false;
+        }
+
+        foreach (var line in receiving.Lines)
+        {
+            if (line.Usable <= 0m)
+            {
+                continue;
+            }
+
+            var item = snapshot.Items.FirstOrDefault(x => x.ReturnItemId == line.ReturnItemId);
+            if (item is null || item.ReservationId is not { } reservationId || reservationId == Guid.Empty)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>The exact financial answer of ONE case: complete money, a single pending unknown, or a typed blocker.</summary>
     private readonly record struct MoneyEvidence(

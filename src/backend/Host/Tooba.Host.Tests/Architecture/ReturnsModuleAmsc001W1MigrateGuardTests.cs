@@ -55,7 +55,7 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         // quantity-precision refusal (return.quantity_precision), TB-273-R1 the recovery evidence-conflict and
         // caller-transaction refusals and TB-274 the nine customer-receipt/inspection/reason refusals — all
         // HTTP-reachable.
-        Assert.Equal(40, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(43, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));
@@ -399,6 +399,8 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
                 "20261114170000_AddReturnRequestDecisions.cs",
                 "20261116122318_AddCustomerReceiptsAndDecisionReason.Designer.cs",
                 "20261116122318_AddCustomerReceiptsAndDecisionReason.cs",
+                "20261116140705_BoundedReceiptIntegrityConstraints.Designer.cs",
+                "20261116140705_BoundedReceiptIntegrityConstraints.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             files);

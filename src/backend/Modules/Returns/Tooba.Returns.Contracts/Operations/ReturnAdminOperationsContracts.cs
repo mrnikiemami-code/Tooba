@@ -59,7 +59,11 @@ public sealed record ReturnItemSnapshot(
     ReturnItemConditionOption Condition = ReturnItemConditionOption.Usable,
     ReturnItemConditionOption? DispositionCondition = null,
     Guid? SourceShipmentId = null,
-    Guid? SourceReceiptId = null);
+    Guid? SourceReceiptId = null,
+    // TB-274-R1: the EXACT inspected usable quantity this line actually restocked (null when no saleable restock was
+    // recorded). A mixed line restocks only this portion, so <see cref="DispositionCondition"/> / the line quantity can
+    // never be read as "the whole requested amount went back to saleable stock".
+    decimal? SaleableRestockedQuantity = null);
 
 /// <summary>One refund attempt of a return request.</summary>
 public sealed record RefundAttemptSnapshot(
@@ -239,7 +243,7 @@ public interface IReturnAdminOperations
 public sealed record CustomerReceiptLineCommand(
     Guid ReturnItemId,
     decimal Quantity,
-    ReturnItemConditionOption Condition = ReturnItemConditionOption.Usable);
+    ReturnItemConditionOption Condition);
 
 /// <summary>
 /// TB-274: reviewed receiving intent. <paramref name="OccurrenceKey"/> is the durable identity of the delivery, so a
