@@ -773,6 +773,242 @@ public sealed class ReturnsRecovery273Tests
         Assert.Null((await order.Attempts()).Single().ProviderReference);
     }
 
+    // ------------------------------------------------------------------ TB-273-R2 (A): source before pending money
+
+    [Fact]
+    public void Incoherent_courier_source_blocks_pending_money_in_the_same_policy_the_command_uses()
+    {
+        // A stored approved courier case with ONE bound PENDING attempt is genuinely unknown money...
+        var coherent = Snap(
+            ReturnRequestStatus.RefundProcessing,
+            ReturnOrigin.CourierOrigin,
+            attempts: [(Guid.NewGuid(), RefundAttemptStatus.Pending)]);
+        var valid = Describe(coherent);
+        Assert.Equal(ReturnRecoveryPhase.PendingMoney, valid.Phase);
+        Assert.Equal(ReturnRecoveryKind.ResumePendingRefund, valid.RecoveryKind);
+        Assert.Null(valid.BlockerCode);
+
+        // ...but ONLY while the SAME courier source/claim/receipt/condition evidence is coherent. Each broken shape
+        // below must be a typed blocker with NO executable kind, exactly like a broken physical phase.
+        var item = coherent.Items[0];
+        var broken = new[]
+        {
+            coherent with { SourceClaimId = null },
+            coherent with { SourceFulfillmentId = Guid.Empty },
+            coherent with { SourceReceiptId = null },
+            coherent with { SourceOccurrenceKey = " " },
+            coherent with { Items = [item with { SourceReceiptId = Guid.NewGuid() }] },
+            coherent with { Items = [item with { SourceShipmentId = Guid.NewGuid() }] },
+            coherent with { Items = [item with { Disposition = ReturnItemDisposition.DamagedNonSaleable }] },
+            coherent with
+            {
+                Items =
+                [
+                    item with
+                    {
+                        Condition = ReturnItemCondition.Damaged,
+                        Disposition = ReturnItemDisposition.SaleableRestock,
+                    },
+                ],
+            },
+        };
+
+        foreach (var snapshot in broken)
+        {
+            var read = Describe(snapshot);
+            Assert.Equal(ReturnRecoveryPhase.Blocked, read.Phase);
+            Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, read.BlockerCode);
+            Assert.Null(read.RecoveryKind);
+            Assert.False(read.FinancialComplete);
+            Assert.False(read.PhysicalComplete);
+        }
+
+        // A bound SUCCEEDED money fact is never discarded by the same source inconsistency: it stays confirmed and
+        // blocked, so the money is neither re-sent nor used to authorize stock.
+        var confirmed = Snap(
+            ReturnRequestStatus.Completed,
+            ReturnOrigin.CourierOrigin,
+            attempts: [(Guid.NewGuid(), RefundAttemptStatus.Succeeded)],
+            dispositions: [ReturnItemDisposition.SaleableRestock],
+            closurePhase: CourierOriginClosurePhase.RefundReleased) with
+        {
+            SourceClaimId = null,
+        };
+        var confirmedRead = Describe(confirmed);
+        Assert.Equal(ReturnRecoveryPhase.Blocked, confirmedRead.Phase);
+        Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, confirmedRead.BlockerCode);
+        Assert.True(confirmedRead.FinancialComplete);
+        Assert.Null(confirmedRead.RecoveryKind);
+    }
+
+    [Fact]
+    public async Task Pending_courier_money_with_a_broken_source_is_refused_before_any_money_or_owner_call()
+    {
+        // 1) The case lost its source claim.
+        await AssertPendingCourierSourceRefusedAsync(static (db, requestId) =>
+        {
+            var request = db.ReturnRequests.Single(x => x.ReturnRequestId == requestId);
+            db.Entry(request).Property(x => x.SourceClaimId).CurrentValue = null;
+            return Task.CompletedTask;
+        });
+
+        // 2) A received line points at ANOTHER receipt/parcel.
+        await AssertPendingCourierSourceRefusedAsync(static (db, requestId) =>
+        {
+            var item = db.ReturnItems.First(x => x.ReturnRequestId == requestId);
+            db.Entry(item).Property(x => x.SourceReceiptId).CurrentValue = Guid.NewGuid();
+            db.Entry(item).Property(x => x.SourceShipmentId).CurrentValue = Guid.NewGuid();
+            return Task.CompletedTask;
+        });
+
+        // 3) The recorded condition/disposition pair is illegal (a usable unit marked non-saleable).
+        await AssertPendingCourierSourceRefusedAsync(static (db, requestId) =>
+        {
+            var item = db.ReturnItems.Single(x => x.ReturnRequestId == requestId && x.Condition == ReturnItemCondition.Usable);
+            db.Entry(item).Property(x => x.Disposition).CurrentValue = ReturnItemDisposition.DamagedNonSaleable;
+            return Task.CompletedTask;
+        });
+    }
+
+    [Fact]
+    public async Task A_coherent_pending_courier_case_resumes_the_same_bound_attempt_and_key()
+    {
+        await using var order = await SeedCourierCaseAsync(pendingMoney: true);
+        order.Gateway.EnqueueSuccess("ref-273r2-courier");
+        var attempt = Assert.Single(await order.Attempts());
+        Assert.Equal(RefundAttemptStatus.Pending, attempt.Status);
+        Assert.Equal(ReturnRecoveryPhase.PendingMoney, (await order.Snapshot())!.Recovery!.Phase);
+
+        var recovered = await order.Recover(ReturnRecoveryKind.ResumePendingRefund, attempt.RefundAttemptId);
+
+        // The SAME attempt and key answered: nothing was re-keyed, re-minted or re-approved.
+        var after = Assert.Single(await order.Attempts());
+        Assert.Equal(attempt.RefundAttemptId, after.RefundAttemptId);
+        Assert.Equal(attempt.IdempotencyKey, after.IdempotencyKey);
+        Assert.Equal(RefundAttemptStatus.Succeeded, after.Status);
+        Assert.Equal("ref-273r2-courier", after.ProviderReference);
+        Assert.Equal(1, await order.AttemptCount());
+
+        var call = Assert.Single(order.Gateway.Calls);
+        Assert.Equal(attempt.IdempotencyKey, call.IdempotencyKey);
+        Assert.Equal(attempt.PaymentId, call.PaymentId);
+        Assert.Equal(attempt.Amount, call.Amount);
+        Assert.Empty(order.Wallet.Calls);
+
+        // Money success is not physical completion; the existing owning closure stays the recorded authority.
+        Assert.True(recovered.Recovery!.FinancialComplete);
+        Assert.Equal(1, await order.DecisionCount());
+    }
+
+    // ------------------------------------------------------------------ TB-273-R2 (B): the prior closure evidence
+
+    [Fact]
+    public void A_recorded_final_marker_without_its_prior_closure_timestamps_is_inconsistent_not_settled()
+    {
+        var attempt = (Guid.NewGuid(), RefundAttemptStatus.Succeeded);
+        var complete = Snap(
+            ReturnRequestStatus.Completed,
+            ReturnOrigin.CourierOrigin,
+            attempts: [attempt],
+            dispositions: [ReturnItemDisposition.SaleableRestock],
+            closurePhase: CourierOriginClosurePhase.RefundReleased);
+
+        // Coherent final facts: the completion.
+        var settled = Describe(complete);
+        Assert.Equal(ReturnRecoveryPhase.Settled, settled.Phase);
+        Assert.True(settled.FinancialComplete);
+        Assert.True(settled.PhysicalComplete);
+
+        // The finalization writer itself requires both prior timestamps, so a marker missing either one (or both) is
+        // an inconsistent stored shape: typed conflict, no kind, confirmed money preserved, never Settled.
+        var inconsistent = new[]
+        {
+            complete with { ObligationClosedAt = null },
+            complete with { StockSettledAt = null },
+            complete with { ObligationClosedAt = null, StockSettledAt = null },
+        };
+
+        foreach (var snapshot in inconsistent)
+        {
+            var read = Describe(snapshot);
+            Assert.Equal(ReturnRecoveryPhase.Blocked, read.Phase);
+            Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, read.BlockerCode);
+            Assert.Null(read.RecoveryKind);
+            Assert.True(read.FinancialComplete);
+            Assert.False(read.PhysicalComplete);
+        }
+
+        // The legitimate marker-only state (both timestamps durable, final marker still owed) stays recoverable.
+        var markerPending = Snap(
+            ReturnRequestStatus.Completed,
+            ReturnOrigin.CourierOrigin,
+            attempts: [attempt],
+            dispositions: [ReturnItemDisposition.SaleableRestock],
+            closurePhase: CourierOriginClosurePhase.StockSettled);
+        var pending = Describe(markerPending);
+        Assert.Equal(ReturnRecoveryPhase.PendingDisposition, pending.Phase);
+        Assert.Equal(ReturnRecoveryKind.SettlePhysicalDisposition, pending.RecoveryKind);
+    }
+
+    [Fact]
+    public async Task A_final_marker_missing_its_prior_evidence_refuses_physical_recovery_and_repairs_nothing()
+    {
+        var variants = new[] { "obligation", "stock", "both" };
+        foreach (var variant in variants)
+        {
+            await using var order = await SeedCourierCaseAsync();
+
+            // Every item is durable, the case looks like its final marker landed — but the prior evidence did not.
+            foreach (var item in await order.Db.ReturnItems.ToListAsync())
+            {
+                item.MarkDisposition(item.Condition == ReturnItemCondition.Damaged
+                    ? ReturnItemDisposition.DamagedNonSaleable
+                    : ReturnItemDisposition.SaleableRestock);
+            }
+
+            var request = await order.Db.ReturnRequests.SingleAsync();
+            order.Db.Entry(request).Property(x => x.ClosurePhase).CurrentValue = CourierOriginClosurePhase.RefundReleased;
+            if (variant is "obligation" or "both")
+            {
+                order.Db.Entry(request).Property(x => x.ObligationClosedAt).CurrentValue = null;
+            }
+
+            if (variant is "stock" or "both")
+            {
+                order.Db.Entry(request).Property(x => x.StockSettledAt).CurrentValue = null;
+            }
+
+            await order.Db.SaveChangesAsync();
+            order.ResetRequestScope();
+
+            var read = (await order.Snapshot())!.Recovery!;
+            Assert.Equal(ReturnRecoveryPhase.Blocked, read.Phase);
+            Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, read.BlockerCode);
+            Assert.Null(read.RecoveryKind);
+            Assert.True(read.FinancialComplete);
+            Assert.False(read.PhysicalComplete);
+
+            var refused = await Assert.ThrowsAsync<ContractOperationException>(() => order.Recover(
+                ReturnRecoveryKind.SettlePhysicalDisposition, expectedAttemptId: null));
+            Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, refused.Code);
+
+            // Zero effect: no money, no stock, no backfill of the missing timestamps and no new attempt.
+            Assert.Empty(order.Gateway.Calls);
+            Assert.Empty(order.Wallet.Calls);
+            Assert.Empty(order.Inventory.Restocked);
+            Assert.Equal(1, await order.AttemptCount());
+            Assert.Equal("ref-273-courier", (await order.Attempts()).Single().ProviderReference);
+            var stored = await order.Snapshot();
+            Assert.Equal(CourierOriginClosurePhase.RefundReleased, stored!.ClosurePhase);
+            Assert.Equal(
+                variant is "obligation" or "both" ? (DateTimeOffset?)null : Now,
+                (await order.Db.ReturnRequests.AsNoTracking().SingleAsync()).ObligationClosedAt);
+            Assert.Equal(
+                variant is "stock" or "both" ? (DateTimeOffset?)null : Now,
+                (await order.Db.ReturnRequests.AsNoTracking().SingleAsync()).StockSettledAt);
+        }
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private static ReturnRecoveryDescription Describe(ReturnSnapshot snapshot) =>
@@ -786,7 +1022,9 @@ public sealed class ReturnsRecovery273Tests
         decimal refundAmount = 1000m,
         string? recordedDecision = ReturnRecoveryPolicy.ApprovedDecision,
         bool bindAttempts = true,
-        CourierOriginClosurePhase closurePhase = CourierOriginClosurePhase.None)
+        CourierOriginClosurePhase closurePhase = CourierOriginClosurePhase.None,
+        bool priorObligationClosedAt = true,
+        bool priorStockSettledAt = true)
     {
         var effective = dispositions ?? [ReturnItemDisposition.None];
         var approved = status is not (ReturnRequestStatus.Requested
@@ -844,6 +1082,18 @@ public sealed class ReturnsRecovery273Tests
             SourceClaimId: courier ? Guid.NewGuid() : null,
             SourceOccurrenceKey: courier ? "courier-return:tb273" : null,
             ClosurePhase: closurePhase,
+            // TB-273-R2 (B): the prior durable closure timestamps the finalization writer requires. A marker phase
+            // without them is an inconsistent stored shape, so the fixture can omit either/both on purpose.
+            ObligationClosedAt: courier
+                && closurePhase >= CourierOriginClosurePhase.ObligationClosed
+                && priorObligationClosedAt
+                ? (DateTimeOffset?)Now
+                : null,
+            StockSettledAt: courier
+                && closurePhase >= CourierOriginClosurePhase.StockSettled
+                && priorStockSettledAt
+                ? (DateTimeOffset?)Now
+                : null,
             RecordedDecision: recordedDecision);
     }
 
@@ -1018,7 +1268,46 @@ public sealed class ReturnsRecovery273Tests
         return new CaseHarness(db, dbName, directory, returnRequestId, gateway, wallet, inventory, saveInterceptor);
     }
 
-    private static async Task<CaseHarness> SeedCourierCaseAsync()
+    /// <summary>
+    /// TB-273-R2 (A): stages a coherent pending-courier case, breaks exactly ONE stored source fact and proves the
+    /// READ blocker and the ACTION refusal are the SAME typed conflict with zero money/owner call and no state change.
+    /// </summary>
+    private static async Task AssertPendingCourierSourceRefusedAsync(
+        Func<ReturnsDbContext, Guid, Task> breakStoredEvidence)
+    {
+        await using var order = await SeedCourierCaseAsync(pendingMoney: true);
+        await breakStoredEvidence(order.Db, order.ReturnRequestId);
+        await order.Db.SaveChangesAsync();
+        order.ResetRequestScope();
+
+        var attempt = Assert.Single(await order.Attempts());
+        var read = (await order.Snapshot())!.Recovery!;
+        Assert.Equal(ReturnRecoveryPhase.Blocked, read.Phase);
+        Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, read.BlockerCode);
+        Assert.Null(read.RecoveryKind);
+        Assert.False(read.FinancialComplete);
+
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(() => order.Recover(
+            ReturnRecoveryKind.ResumePendingRefund, attempt.RefundAttemptId));
+        Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, refused.Code);
+
+        // Zero effect: no money, no owner call, no re-key and no closure backfill.
+        Assert.Empty(order.Gateway.Calls);
+        Assert.Empty(order.Wallet.Calls);
+        Assert.Empty(order.Inventory.Restocked);
+        var after = Assert.Single(await order.Attempts());
+        Assert.Equal(attempt.RefundAttemptId, after.RefundAttemptId);
+        Assert.Equal(attempt.IdempotencyKey, after.IdempotencyKey);
+        Assert.Equal(RefundAttemptStatus.Pending, after.Status);
+        Assert.Null(after.ProviderReference);
+        Assert.Equal(1, await order.AttemptCount());
+
+        var stored = await order.Snapshot();
+        Assert.Equal(ReturnRequestStatus.RefundProcessing, stored!.Status);
+        Assert.Equal(CourierOriginClosurePhase.StockSettled, stored.ClosurePhase);
+    }
+
+    private static async Task<CaseHarness> SeedCourierCaseAsync(bool pendingMoney = false)
     {
         var dbName = Guid.NewGuid().ToString("N");
         var saveInterceptor = new FailingSaveInterceptor();
@@ -1059,8 +1348,11 @@ public sealed class ReturnsRecovery273Tests
         request.MarkRefundProcessing(Now);
         var attempt = request.BeginRefundAttempt(Guid.NewGuid(), paymentId, $"refund-{returnRequestId:N}", Now);
         db.RefundAttempts.Add(attempt);
-        attempt.MarkSucceeded("ref-273-courier", Now);
-        request.MarkRefundSucceeded(Now);
+        if (!pendingMoney)
+        {
+            attempt.MarkSucceeded("ref-273-courier", Now);
+            request.MarkRefundSucceeded(Now);
+        }
 
         // The owning closure phases were recorded BEFORE the money by the approval: recovery must not redo them.
         request.MarkObligationClosed(Now);

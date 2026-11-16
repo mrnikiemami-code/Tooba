@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Tooba.BuildingBlocks;
 using Microsoft.Extensions.Logging;
 using Tooba.Order.Contracts.Returns;
@@ -677,17 +679,33 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     }
 
     /// <summary>
-    /// TB-273-R1 B/C: refuses an effectful step while a caller-owned, enlisted or ambient transaction is open. It
-    /// never commits/rolls back/disposes the caller's transaction and never touches its entities.
+    /// TB-273-R1 B / TB-273-R2 C: refuses an effectful step while a caller-owned, ENLISTED or ambient transaction is
+    /// open. It never commits/rolls back/disposes the caller's transaction and never touches its entities.
+    /// <para>
+    /// An explicit <see cref="System.Transactions.CommittableTransaction"/> enlisted on this context is NOT visible as
+    /// <see cref="Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.CurrentTransaction"/> and leaves
+    /// <see cref="System.Transactions.Transaction.Current"/> null, so EF's own owning transaction manager
+    /// (<see cref="RelationalConnection.EnlistedTransaction"/>) is inspected as well. Only the installed provider's
+    /// supported state is read — no reflection, no name guessing, no second transaction framework.
+    /// </para>
     /// </summary>
     private void RefuseConstrainedTransaction()
     {
         if (_db.Database.CurrentTransaction is not null
-            || System.Transactions.Transaction.Current is not null)
+            || System.Transactions.Transaction.Current is not null
+            || HasEnlistedProviderTransaction())
         {
             throw new ContractOperationException(ReturnsErrorCodes.RecoveryTransactionOwned);
         }
     }
+
+    /// <summary>
+    /// TB-273-R2 C: the provider-enlisted transaction state, read from the context's own relational transaction
+    /// manager. A non-relational (controlled unit-test) provider owns no enlistment, so this is a strict no-op there.
+    /// </summary>
+    private bool HasEnlistedProviderTransaction() =>
+        _db.Database.IsRelational()
+        && _db.Database.GetService<IRelationalConnection>() is RelationalConnection { EnlistedTransaction: not null };
 
     /// <summary>
     /// TB-273-R1 C: restores ONLY the affected tracked entry after a failed local save, so an unsaved in-memory flag

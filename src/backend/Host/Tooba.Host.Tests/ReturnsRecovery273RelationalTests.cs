@@ -1,5 +1,7 @@
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 using Tooba.BuildingBlocks;
@@ -149,6 +151,88 @@ public sealed class ReturnsRecovery273RelationalTests
         Assert.Equal(ReturnsErrorCodes.RecoveryTransactionOwned, refusal!.Code);
         var leftover = await CountTagRowsAsync();
         _output.WriteLine($"TB273R1-B ambient refusal tag={_runTag} target={_canonicalIdentity} committedRows={leftover}");
+        Assert.Equal(0L, leftover);
+    }
+
+    // ------------------------------------------------------------------ C: an explicitly enlisted transaction is refused
+
+    /// <summary>
+    /// TB-273-R2 (C): an EXPLICIT provider enlistment is not visible as EF's <c>CurrentTransaction</c> and leaves
+    /// <c>Transaction.Current</c> null, so it is a separate shape from both already-covered cases. The caller stages
+    /// its evidence inside a transaction it owns, rolls it back (nothing is committed) and then enlists a
+    /// CommittableTransaction on the SAME context through EF's owning relational transaction manager. Recovery must
+    /// refuse BEFORE any lookup (the rolled-back case does not exist, yet the answer is the transaction guard, not
+    /// <c>return.missing</c>), with zero money/stock calls and the caller's enlistment and tracked entities intact.
+    /// </summary>
+    [SkippableFact]
+    public async Task An_explicitly_enlisted_caller_transaction_refuses_effectful_recovery_before_any_effect()
+    {
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
+
+        var gateway = new CountingGateway();
+        var wallet = new CountingWallet();
+        var inventory = new CountingInventory();
+
+        await using var db = CreateDb();
+        var directory = BuildDirectory(db, gateway, wallet, inventory);
+
+        // Staged inside a caller-owned EF transaction that is rolled back: no task row is ever committed.
+        Guid stagedReturnRequestId;
+        Guid stagedAttemptId;
+        await using (var staging = await db.Database.BeginTransactionAsync())
+        {
+            (stagedReturnRequestId, stagedAttemptId) = await StageApprovedCaseAsync(db, $"{_runTag}enlisted");
+            await staging.RollbackAsync();
+        }
+
+        Assert.Equal(1, db.ChangeTracker.Entries<RefundAttempt>().Count());
+
+        using var enlisted = new CommittableTransaction();
+        await db.Database.OpenConnectionAsync();
+        var connection = Assert.IsAssignableFrom<RelationalConnection>(
+            db.Database.GetService<IRelationalConnection>());
+
+        // Explicit enlistment OUTSIDE any ambient TransactionScope.
+        connection.EnlistTransaction(enlisted);
+
+        // The exact shape the guard must catch, asserted BEFORE the action.
+        Assert.Null(db.Database.CurrentTransaction);
+        Assert.Null(Transaction.Current);
+        Assert.Same(enlisted, connection.EnlistedTransaction);
+
+        ContractOperationException? refusal = null;
+        try
+        {
+            refusal = await Assert.ThrowsAsync<ContractOperationException>(() => directory.RecoverAsync(
+                new RecoverReturnCommand(
+                    stagedReturnRequestId, Guid.NewGuid(), ReturnRecoveryKind.ResumePendingRefund, stagedAttemptId),
+                CancellationToken.None));
+
+            // The caller's enlistment is STILL the owner: recovery never committed, rolled back or disposed it.
+            Assert.Null(db.Database.CurrentTransaction);
+            Assert.Null(Transaction.Current);
+            Assert.Same(enlisted, connection.EnlistedTransaction);
+
+            // Nothing was sent and nothing was written by the refused intent.
+            Assert.Equal(0, gateway.Calls);
+            Assert.Equal(0, wallet.Calls);
+            Assert.Equal(0, inventory.Calls);
+
+            var tracked = db.ChangeTracker.Entries<RefundAttempt>().Single();
+            Assert.Equal(EntityState.Unchanged, tracked.State);
+            Assert.Equal(RefundAttemptStatus.Pending, tracked.Entity.Status);
+        }
+        finally
+        {
+            // Caller-owned rollback; recovery itself owns nothing here.
+            enlisted.Rollback();
+            await db.Database.CloseConnectionAsync();
+        }
+
+        Assert.Equal(ReturnsErrorCodes.RecoveryTransactionOwned, refusal!.Code);
+        var leftover = await CountTagRowsAsync();
+        _output.WriteLine(
+            $"TB273R2-C explicit-enlistment refusal tag={_runTag} target={_canonicalIdentity} committedRows={leftover}");
         Assert.Equal(0L, leftover);
     }
 

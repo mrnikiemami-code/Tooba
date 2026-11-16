@@ -19,6 +19,11 @@ namespace Tooba.Returns.Application.ReturnRequests.Models;
 /// obligation/stock closure markers. Anything it cannot prove is <see cref="ReturnRecoveryPhase.Blocked"/>, never a
 /// guessed resume and never an invented completion.
 /// </para>
+/// <para>
+/// TB-273-R2: the same rule is enforced BEFORE any effectful courier recovery — including unknown (pending) money,
+/// not only a confirmed one — and the recorded final marker is only read as completion when the PRIOR durable closure
+/// timestamps exist, exactly as the finalization writer requires.
+/// </para>
 /// </summary>
 public enum ReturnRecoveryPhase
 {
@@ -119,6 +124,19 @@ public static class ReturnRecoveryPolicy
 
                 if (money.IsPending && money.AttemptId is { } pendingId)
                 {
+                    // TB-273-R2 (A): unknown courier money is an EFFECTFUL recovery, so the SAME courier source
+                    // coherence rule is required BEFORE offering it — not only after the money succeeded. Otherwise a
+                    // malformed receipt/source/condition would be advertised as resumable and could reach the money
+                    // phase (and the owning closure helper) without any source validation. The blocker is typed and
+                    // carries no RecoveryKind, so neither a read nor an action can offer an execution.
+                    if (snapshot.Origin == ReturnOrigin.CourierOrigin && !HasCoherentCourierSource(snapshot))
+                    {
+                        return Blocked(
+                            ReturnsErrorCodes.RecoveryEvidenceConflict,
+                            financialComplete: false,
+                            physicalComplete: false);
+                    }
+
                     return new ReturnRecoveryDescription(
                         ReturnRecoveryPhase.PendingMoney,
                         ReturnRecoveryKind.ResumePendingRefund,
@@ -301,6 +319,16 @@ public static class ReturnRecoveryPolicy
         if (snapshot.ClosurePhase == CourierOriginClosurePhase.RefundReleased && !allItemsDisposed)
         {
             // The final marker can only be truthful once every received line recorded its disposition.
+            return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
+        }
+
+        if (snapshot.ClosurePhase == CourierOriginClosurePhase.RefundReleased
+            && (snapshot.ObligationClosedAt is null || snapshot.StockSettledAt is null))
+        {
+            // TB-273-R2 (B): a recorded final marker is only Settled when the PRIOR durable closure evidence the
+            // finalization writer itself requires is also durable. A forged/incomplete Phase 3 marker whose
+            // obligation or stock timestamps never landed is INCONSISTENT: the same typed conflict is reported, the
+            // confirmed money fact is preserved, and nothing is repaired, backfilled or completed automatically.
             return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
         }
 
