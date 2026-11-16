@@ -2,7 +2,10 @@
 
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
 
-## CURRENT checkpoint — 2026-11-16 (274 worker pass)
+## CURRENT checkpoint — 2026-11-16
+274 Architect decision PARTIAL; only274-R1 receipt-integrity/stock/decision repair next. Read274/ARCHITECT-REVIEW.md.275/276 NOT ISSUED. Retain applied274 migration, require fresh pre-backup for new additive constraints. Preserve272-R1/273-R2 acceptance and audit history.
+
+## Superseded274 worker checkpoint — 2026-11-16
 274 worker result: PASS within the issued A–E backend scope, awaiting Architect review (NOT Architect/user acceptance).
 Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/RESULT.md.
 Returns now owns the ordinary customer RECEIVING/INSPECTION facts (`POST /v1/admin/returns/{id}/receipt`, additive

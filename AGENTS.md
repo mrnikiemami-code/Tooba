@@ -1,4 +1,14 @@
-# CURRENT — 274 WORKER PASS; RETURNS RECEIVING/INSPECTION GATE AWAITS ARCHITECT REVIEW — 2026-11-16
+# CURRENT — RETURNS274 PARTIAL; ONLY274-R1 REPAIR — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/ARCHITECT-REVIEW.md.
+274 NOT ACCEPTED at7e7c2ee3d97506408112432775abeeb56715c3fd. Retain receipt foundation; repair explicit inspection, truthful stock/remaining-work facts, stored/DB receipt integrity and decision collision handling.
+Only TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1 next via real Bridge envelope;275/276 NOT ISSUED.
+Applied274 migration stays unchanged. Any new constraint migration needs verified fresh pre-apply backup and exact runner plan; no data repair/restore.
+Original evidence retained, including global-tracker-clear proof discrepancy and out-of-scope broad test/pin changes. No Architect runtime/tests.
+Preserve272-R1/273-R2/shipping acceptance and historical audits; no screenshots/delegation/loops/committed test facts.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 274 WORKER PASS; RETURNS RECEIVING/INSPECTION GATE AWAITS ARCHITECT REVIEW — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/TASK.md and
 docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,receiving-and-approval-proof.md,disposition-and-decision-proof.md,migration-and-preapply-backup-proof.md}.

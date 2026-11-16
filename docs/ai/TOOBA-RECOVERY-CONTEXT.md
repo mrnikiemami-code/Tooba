@@ -1,4 +1,14 @@
-# CURRENT — RETURNS273 BACKEND SCOPE CLOSED THROUGH273-R2; ONLY274 NEXT — 2026-11-16
+# CURRENT — RETURNS274 PARTIAL; ONLY274-R1 REPAIR — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/ARCHITECT-REVIEW.md.
+274 NOT ACCEPTED at7e7c2ee3d97506408112432775abeeb56715c3fd. Retain receipt foundation; repair explicit inspection, truthful stock/remaining-work facts, stored/DB receipt integrity and decision collision handling.
+Only TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1 next via real Bridge envelope;275/276 NOT ISSUED.
+Applied274 migration stays unchanged. Any new constraint migration needs verified fresh pre-apply backup and exact runner plan; no data repair/restore.
+Original evidence retained, including global-tracker-clear proof discrepancy and out-of-scope broad test/pin changes. No Architect runtime/tests.
+Preserve272-R1/273-R2/shipping acceptance and historical audits; no screenshots/delegation/loops/committed test facts.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS273 BACKEND SCOPE CLOSED THROUGH273-R2; ONLY274 NEXT — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/ARCHITECT-REVIEW.md.
 273-R2 ACCEPT within three-gate source/evidence scope at ce471c71b1bf5f64f7e2d55ff482eba96fe34ca5;273 recovery foundation closed through repairs.
