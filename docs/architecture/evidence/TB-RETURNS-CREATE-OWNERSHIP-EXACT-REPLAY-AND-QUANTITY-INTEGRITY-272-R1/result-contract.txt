@@ -1,0 +1,98 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+CONTRACT: TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1
+PARENT: TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272
+CHANNEL: tooba-main
+WORKER: tooba-worker-01 / cursor
+
+EXPECTED_BASE_SHA: 71f5170f7a534b8d54facbcac4475efaa11672b3
+ACTUAL_BASE_SHA: 71f5170f7a534b8d54facbcac4475efaa11672b3
+BASE_EQUALS_ORIGIN_MAIN_AT_CLAIM: true
+INCOMING_DELTA: none
+CODE_SHA: e2a69f931b03caf9d9fa8189c10ea798359a2960
+EVIDENCE_COMMIT: reported in the canonical Bridge result (this file cannot embed its own commit)
+FINAL_HEAD_AND_ORIGIN_PARITY: reported in the canonical Bridge result
+
+STATUS: PASS
+SCOPE: A, B, C within the issued repair boundary
+DECISION: EXACTLY_REPRESENTABLE_QUANTITY_AND_FULL_IMMUTABLE_BINDING_SCOPED_COLLISION_RECOVERY_THAT_NEVER_CLEARS_A_CALLERS_TRACKER_OR_COMMITS_A_CALLERS_TRANSACTION_AN_UNCONDITIONAL_ORDINARY_FACTORY_INVARIANT_AND_A_ROLLBACK_ONLY_RELATIONAL_HARNESS_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION
+STOP_STATE: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+A_EXACTLY_REPRESENTABLE_QUANTITY_AND_FULL_BINDING: implemented
+  Rule: Tooba.Returns.Domain/ValueObjects/PersistedReturnQuantity.cs (Scale=6, IsExactlyRepresentable).
+  Refusals: CreateReturnCommandValidator (returns.validation.quantity_precision);
+            ReturnDirectory.CreateInternalAsync before the stored-key read (return.quantity_precision);
+            ReturnRequest.Build for every line (returns.quantity_precision).
+  Typed/catalogued/localized: return.quantity_precision (HTTP 400, Business) in ReturnsErrorCodes,
+            ReturnsErrorCatalogContributor, ReturnsErrors.resx + ReturnsErrors.fa.resx.
+  No rounding of requested goods; 0.000001 accepted, 1 == 1.000000, 1.0000001/1.0000002/0.0000004/0.0000006 refused.
+  Binding: OrdinaryCreationIntent now also compares CheckoutId and SellerPartyId beside seller order, owning
+            customer, Origin=CustomerDelivered, RefundDestination, Trim(reason), ordered (line, quantity) set.
+            Mismatch -> return.idempotency_conflict, zero writes, no payload leak. Authorization before any reply.
+  Not done: no destination-as-historical-authority, no creation metadata/schema, approval unchanged.
+
+B_CALLER_TRANSACTION_AND_FACTORY_INVARIANT: implemented
+  Tracker: SnapshotTrackedEntities before Add + DetachFailedCreation(trackedBefore) — no ChangeTracker.Clear().
+  Transaction: ownsTransaction -> own BeginTransaction/Commit/Rollback; caller transaction is never committed or
+            rolled back; savepoint tb272_creation_intent created before insert, released on success, restored on
+            collision (ReturnCreationSerialization.CallerSavepointName); impossible savepoint recovery propagates.
+  Arbitration: only SQLSTATE 23505 on returns.return_requests / ix_return_requests_idempotency_key.
+  Factory: ReturnRequest.Create always enforces one line per order line + precision; public
+            enforceOneLinePerOrderLine removed. Courier-origin keeps (line, condition) via the shared private Build.
+
+C_ROLLBACK_ONLY_RELATIONAL_HARNESS: implemented
+  6 SkippableFacts, every writer transaction caller-owned and rolled back; no commit/ExecuteDelete/ExecuteUpdate/
+  TRUNCATE/DELETE/restore/reseed. Target validated before writes (loopback + 5432 + tooba_alpha + server-confirmed
+  identity, no secrets printed); missing/non-canonical target => visible SKIP. Per-fact tagged row count asserted 0
+  on a separate connection.
+
+SCHEMA: unchanged (no migration, no DDL, no backfill). Migration plan: 33 modules, pendingCount=0 everywhere;
+        Returns head remains 20261114170000_AddReturnRequestDecisions.
+
+CHECKS (once, after the final change):
+  ReturnsCreateIntegrity272Tests: 18/18 passed
+  ReturnsCreateIntegrity272RelationalTests on canonical tooba_alpha: 6/6 passed, committedRows=0 in every fact
+  Scoped canonical error-set guards: the 3 updated count pins pass; ReturnsModuleAmsc001W3CertGuardTests whole-class
+    side effect surfaced the PRE-EXISTING migration-file-list pin Returns_is_contracts_only_and_microservice_extractable
+    (identical at base) — reported, not repaired
+  dotnet build Tooba.slnx -c Release: 0 errors (211 warnings: pre-existing analyzers + offline NU1900)
+  dotnet publish Tooba.Host: 0 errors
+
+RUNTIME: refreshed (Host only)
+  old Host dll SHA256 389D5A7AC8D9112059F37626345207B999F083942B31DE6F40EEE1375B760954
+  new Host dll SHA256 3244E778B2B24884D85AE4537961105CA97729B0A9B36AF075534D1FEF8BEEEB
+  PID 13160 on 5088; /health 200 {"status":"ok"}; /health/ready 200
+  /__platform-commerce: SingleStore, tenant-alpha, store-alpha, 127.0.0.1, dev-singlestore, theme-alpha, IR
+  appsettings*.json unchanged; startup log: bootstraps skipped, no business migration/seed/backfill, 0 Error/Critical
+  FE untouched (no FE test/build/restart; /fa 200 on the existing build)
+
+DATA: one canonical tooba_alpha 127.0.0.1:5432 (SingleStore/store-alpha)
+  Relational task writes existed only inside caller transactions and were verified absent (0 committed rows per fact).
+  No committed fixture, cleanup, delete, restore, reset, reseed, backfill, live business write or provider/money action.
+
+PRIOR DEVIATION RETAINED: the TB-272 committed-fixture/ExecuteDelete observation remains historical evidence, is not
+  repaired retroactively and was NOT re-run. The committed two-writer race is NOT proven and NOT authorized here.
+
+LIMITS:
+  No committed winner-vs-loser race; the collision branch uses controlled failure injection with the exact 23505 shape
+    proven against the real index in the same run.
+  The owned-transaction creation path is not exercised (a successful owned creation commits; committed fixtures are
+    forbidden) — declared, not claimed.
+  No live return case exists in the canonical database -> no served HTTP/UI walkthrough of a real creation.
+  Two pre-existing ReturnsCharacterizationTests failures (EF-InMemory transaction warning) were not re-run (whole-project
+    run not authorized) and the two pre-existing AMSC migration-list pins are untouched.
+  No refund/receipt/reconciliation/rejection-reason/queue/detail/mobile/finance work; shared ordinary/courier physical
+    capacity redesign stays out of this slice.
+
+EVIDENCE:
+  docs/ai/tasks/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/TASK.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/TASK.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/RESULT.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/RECEIPTS.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/result-contract.txt
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/precision-and-transaction-proof.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/rollback-only-proof.md
+
+NOT CLAIMED: Architect acceptance, user acceptance, customer/provider/financial readiness, full Returns completion.
+NEXT: 272 remains PARTIAL until Architect review of this repair; 273-276 NOT ISSUED.
+STOP_FOR_ARCHITECT

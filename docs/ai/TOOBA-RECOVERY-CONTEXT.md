@@ -1,4 +1,26 @@
-# CURRENT — RETURNS272 PARTIAL; ONLY272-R1 BOUNDED REPAIR — 2026-11-16
+# CURRENT — 272-R1 WORKER PASS; 272 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,precision-and-transaction-proof.md,rollback-only-proof.md}.
+Status **PASS within the issued A–C repair scope**, decision
+`EXACTLY_REPRESENTABLE_QUANTITY_AND_FULL_IMMUTABLE_BINDING_SCOPED_COLLISION_RECOVERY_THAT_NEVER_CLEARS_A_CALLERS_TRACKER_OR_COMMITS_A_CALLERS_TRANSACTION_AN_UNCONDITIONAL_ORDINARY_FACTORY_INVARIANT_AND_A_ROLLBACK_ONLY_RELATIONAL_HARNESS_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION`,
+NOT Architect ACCEPT, NOT user functional acceptance. Base `71f5170f7a534b8d54facbcac4475efaa11672b3` (==
+origin/main at claim); code `e2a69f931b03caf9d9fa8189c10ea798359a2960`. Parent 272 stays **PARTIAL** until the Architect
+reviews this repair; its original evidence and `ARCHITECT-REVIEW.md` are unchanged and its committed-fixture/delete
+deviation stays historical (not re-run, not retroactively authorized). `273–276` remain candidates, **NOT ISSUED**.
+A: unrepresentable quantities are refused (validator, owning directory before the stored-key read, aggregate) with a
+typed/catalogued/localized `return.quantity_precision`, and the immutable intent now also binds `CheckoutId` +
+`SellerPartyId`. B: collision recovery detaches only this attempt's entries and restores a caller savepoint — the
+caller's transaction and tracked work are never cleared or ended — and the ordinary factory no longer exposes
+`enforceOneLinePerOrderLine`. C: the relational class is rollback-only on canonical `tooba_alpha` with a validated
+target, visible SKIP and `committedRows=0` asserted per fact.
+Verified once: 18/18 unit, 6/6 relational, build 0 errors, Host publish 0 errors, Host 5088 refreshed (dll
+`3244E778B2B24884D85AE4537961105CA97729B0A9B36AF075534D1FEF8BEEEB`), FE untouched, no migration/seed/backfill.
+Known limits: committed two-writer race NOT proven (not authorized), owned-transaction path not exercised, no live
+return case, pre-existing ReturnsCharacterization/AMSC pins untouched.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS272 PARTIAL; ONLY272-R1 BOUNDED REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/ARCHITECT-REVIEW.md.
 Architect reviewed source/evidence at b9df36a1dcdc63c8d5d5ec61761d0deb3da4bc3c; 272 is PARTIAL, NOT ACCEPTED.

@@ -1,6 +1,10 @@
 # Returns and refunds — Architect execution plan — 2026-11-16
 
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
+272-R1 repair result: PASS within its issued A–C scope (2026-11-16), awaiting Architect review; evidence in
+`docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/`. 272 remains
+**PARTIAL** as the parent until that review; only the precision/full-binding, caller-transaction/tracker and
+rollback-only-harness seams changed. 273–276 remain candidates, NOT ISSUED.
 272 Architect review: PARTIAL; only272-R1 bounded repair is next. Read 272/ARCHITECT-REVIEW.md. The original worker PASS remains history, not acceptance. Committed relational fixtures/deletes were outside the rollback-only authorization and must not recur. Source baseline: c492443179b86f3efc065121b3ae2a140105937d.
 272 worker result: PASS within its issued A–D scope (2026-11-16) — awaiting Architect review; evidence in
 `docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/`. 273–276 remain candidates, NOT ISSUED.

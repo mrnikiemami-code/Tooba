@@ -1,4 +1,39 @@
-# CURRENT — RETURNS272 PARTIAL; ONLY272-R1 BOUNDED REPAIR — 2026-11-16
+# CURRENT — 272-R1 WORKER PASS; 272 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,precision-and-transaction-proof.md,rollback-only-proof.md}.
+Status **PASS within the issued A–C repair scope**, decision
+`EXACTLY_REPRESENTABLE_QUANTITY_AND_FULL_IMMUTABLE_BINDING_SCOPED_COLLISION_RECOVERY_THAT_NEVER_CLEARS_A_CALLERS_TRACKER_OR_COMMITS_A_CALLERS_TRANSACTION_AN_UNCONDITIONAL_ORDINARY_FACTORY_INVARIANT_AND_A_ROLLBACK_ONLY_RELATIONAL_HARNESS_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION`,
+NOT Architect ACCEPT, NOT user functional acceptance, NOT any refund/provider/financial claim. Base
+`71f5170f7a534b8d54facbcac4475efaa11672b3` (== origin/main at claim), code `e2a69f931b03caf9d9fa8189c10ea798359a2960`.
+The parent 272 **stays PARTIAL** until the Architect reviews this repair; its original evidence and
+`ARCHITECT-REVIEW.md` are unchanged and its committed-fixture/delete deviation is historical only. `273–276` remain
+candidates, **NOT ISSUED**. Single worker, one task, no delegation, no historical agent resumed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A precision | refuse, never round | `PersistedReturnQuantity` (scale 6) enforced at the reachable validator, the owning directory **before** the stored-key read, and the aggregate; `return.quantity_precision` is typed/catalogued/localized (400 Business). `1.0000001`/`1.0000002`/`0.0000004`/`0.0000006` are refused, `0.000001` accepted, `1` == `1.000000` |
+| A binding | full immutable intent | `OrdinaryCreationIntent` also compares `CheckoutId` and `SellerPartyId` beside seller order, owning customer, `Origin=CustomerDelivered`, destination, trimmed reason and the ordered line/quantity set; mismatch is `return.idempotency_conflict` with zero writes |
+| B tracker | scoped detach | no `ChangeTracker.Clear()`: identities are snapshotted before `Add` and only this attempt's entries are detached, so caller entities keep instance/state/values |
+| B transaction | caller stays owner | savepoint `tb272_creation_intent` before the insert, released on success, restored on a key collision; the caller transaction is never committed or rolled back; only real `23505` on `ix_return_requests_idempotency_key` is arbitrated |
+| B factory | no bypass | `ReturnRequest.Create` always enforces one line per order line + precision; public `enforceOneLinePerOrderLine` removed; courier-origin keeps `(line, condition)` through the private shared `Build` |
+| C harness | rollback-only | 6 `SkippableFact`s, caller-owned transactions rolled back, no commit/delete/cleanup, target validated (loopback + 5432 + `tooba_alpha` + server-confirmed identity, no secrets printed) with visible SKIP, and `committedRows=0` asserted per fact |
+| D schema/data | untouched | no migration/DDL/backfill/seed/cleanup/restore; migration plan 33 modules `pendingCount=0`; one canonical `tooba_alpha` |
+
+Verified once after the final change: `ReturnsCreateIntegrity272Tests` **18/18**;
+`ReturnsCreateIntegrity272RelationalTests` on real `tooba_alpha` **6/6** with `committedRows=0` in every fact;
+the three updated canonical error-count pins pass; `dotnet build Tooba.slnx -c Release` 0 errors; Host publish 0
+errors. Host-only refresh: PID 13160 on 5088 (`/health` + `/health/ready` 200, `/__platform-commerce` →
+SingleStore `store-alpha`), new Host dll SHA256
+`3244E778B2B24884D85AE4537961105CA97729B0A9B36AF075534D1FEF8BEEEB`; config files and FE untouched.
+Known limits: no committed winner-vs-loser race (not required, not authorized) — the collision branch uses controlled
+failure injection carrying the exact `23505` shape proven against the real index in the same run; the
+owned-transaction creation path is not exercised because a successful owned creation commits; no live return case
+exists so there is no served walkthrough; the pre-existing `ReturnsCharacterizationTests` failures and the two AMSC
+migration-list pins were left untouched.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — RETURNS272 PARTIAL; ONLY272-R1 BOUNDED REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/ARCHITECT-REVIEW.md.
 Architect reviewed source/evidence at b9df36a1dcdc63c8d5d5ec61761d0deb3da4bc3c; 272 is PARTIAL, NOT ACCEPTED.
