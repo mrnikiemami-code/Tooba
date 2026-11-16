@@ -341,6 +341,81 @@ body {
 }
 
 /*
+  Method calendars (customer delivery / carrier acceptance / warehouse preparation).
+
+  Each day used to be a wrapping flex line that repeated its own «از / تا» titles and contained a time
+  input whose width utility was never emitted, so the input fell back to the browser default (~185px).
+  Working rows grew to ~132px and wrapped onto two lines while a closed row stayed ~63px, and no column
+  lined up between days. One grid with fixed tracks gives every row the same height and puts the weekday,
+  the status toggle and both time fields on a single axis at every width.
+
+  Written here rather than as feature-level utilities because `tailwind.config.ts` does not scan
+  `features/**`, so a utility used only there is never emitted into the served CSS.
+*/
+.ds-day-schedule {
+  /* Fixed tracks, not content-sized ones: the header and every day row must resolve to the SAME columns even
+     though their own content differs (a short «روز» title vs a long «چهارشنبه»). */
+  --ds-day-schedule-columns: 5.5rem 7rem minmax(0, 1fr) minmax(0, 1fr);
+  display: grid;
+  grid-template-columns: var(--ds-day-schedule-columns);
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.25rem;
+  min-height: 3.75rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.ds-day-schedule--head {
+  min-height: 0;
+  padding-block: 0.5rem 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgb(107 114 128);
+}
+
+.ds-day-schedule__day {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgb(17 24 39);
+  white-space: nowrap;
+}
+
+/* The time field owns its track; it never widens the row beyond the grid. */
+.ds-day-schedule__time {
+  width: 100%;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ds-day-schedule__full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 40rem) {
+  .ds-day-schedule {
+    --ds-day-schedule-columns: 4rem 6rem minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 0.375rem;
+    padding-inline: 0.5rem;
+  }
+
+  .ds-day-schedule--head {
+    font-size: 0.625rem;
+    line-height: 1.35;
+  }
+
+  .ds-day-schedule__status button {
+    padding-inline: 0.375rem;
+  }
+
+  .ds-day-schedule__time {
+    font-size: 0.75rem;
+    padding-inline: 0.25rem;
+  }
+}
+
+
+/*
   LOCK-SF-261 — Admin/Seller fixed panel tokens.
   Storefront appearance must never recolor these panels (primary stays Tooba blue).
 */

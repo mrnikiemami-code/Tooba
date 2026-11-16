@@ -57,9 +57,14 @@ test("seven weekdays render once as compact rows with bounded HH:mm width", asyn
   const week = await source("ui/authoring-week-editor.tsx");
   assert.match(week, /WEEK_DISPLAY_ORDER\.map/);
   assert.equal(WEEK_DISPLAY_ORDER.length, 7);
-  assert.match(week, /min-h-14/);
-  assert.match(week, /w-\[7\.5rem\]/);
+  // Every day shares ONE emitted geometry class: `min-h-14` and `w-[7.5rem]` were never in the served CSS
+  // (tailwind does not scan features/**), so the rows were not compact and the time field had no bound.
+  assert.match(week, /className="ds-day-schedule"/);
+  assert.match(week, /ds-day-schedule__time/);
   assert.match(week, /divide-y divide-border/);
+  // The column titles are printed ONCE for the week, not repeated above every working day.
+  assert.match(week, /DayScheduleHeader/);
+  assert.equal(/processingOpenColumn|weekFromColumn[\s\S]{0,40}<TimeBoundInput/.test(week), false);
   // Closed days must not paint a second closed label under the status control.
   assert.equal(/weekClosed[\s\S]{0,80}shipping-authoring-week-bounds/.test(week), false);
   assert.equal(week.includes("shipping-authoring-week-bounds-"), false);
