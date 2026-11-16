@@ -1,4 +1,15 @@
-# CURRENT — 272 WORKER PASS; AWAIT ARCHITECT REVIEW — 2026-11-16
+# CURRENT — RETURNS272 PARTIAL; ONLY272-R1 BOUNDED REPAIR — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/ARCHITECT-REVIEW.md.
+Architect reviewed source/evidence at b9df36a1dcdc63c8d5d5ec61761d0deb3da4bc3c; 272 is PARTIAL, NOT ACCEPTED.
+Retain ownership/duplicate/capacity/locking improvements. Repair quantity precision/full binding, collision tracking scope and unconditional ordinary factory invariant; replace unsafe relational harness.
+Worker's committed task records + deletion on canonical business tables breached the rollback-only task boundary; zero leftovers is worker evidence, not retroactive authorization. Do not repeat commits/deletes or cleanup.
+Only TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1 is issued next through its real Bridge envelope. 273–276 NOT ISSUED.
+No screenshots, delegation, automatic next implementation, live business/provider/money writes, migration or FE change.
+No Architect local test/browser execution. Preserve shipping271-R1/270-R4 acceptance and historical audit limits.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 272 WORKER PASS; AWAIT ARCHITECT REVIEW — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/TASK.md and
 docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,creation-integrity-proof.md}.
