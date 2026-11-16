@@ -1,4 +1,12 @@
-# CURRENT — 275 WORKER PASS (operator queue, single case workspace, durable reviewed intent, mobile); NO LIVE RETURN CASE — 2026-11-16
+# CURRENT — 275 PARTIAL AFTER SOURCE REVIEW; ONLY276 CONNECTED REPAIR + ONE USER REVIEW CASE — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/ARCHITECT-REVIEW.md.
+275 source review found unresolved intent cleared on failure/null, missing verified durable body and exact compare-clear, mutation lifecycle fencing gaps, and retry child replay ordered after live-state/current-leaf gates. The 21 FE node tests do not mount the workspace.
+Only TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276 is authorized next; no parallel task. It repairs the connected workflow and prepares ONE lawful ordinary Requested return via the owning API for user review. User explicitly authorized this one case alongside progress; prior no-fixture blanket does not forbid that case. No approval/rejection/receipt/refund/recovery/stock/provider effect or fabricated Paid/Delivered fact. No schema change.
+No user/financial/full-Returns acceptance. Preserve prior acceptance/audit history. ONE tooba_alpha5432/store-alpha, Host5088/FE3000; no screenshots, delegation or automatic continuation.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 275 WORKER PASS (operator queue, single case workspace, durable reviewed intent, mobile); NO LIVE RETURN CASE — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/TASK.md and
 docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,operator-workflow-proof.md,query-count-and-display-proof.md,durable-intent-and-mobile-proof.md,user-review.md}.
