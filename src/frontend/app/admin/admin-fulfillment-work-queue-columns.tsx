@@ -239,12 +239,10 @@ function dispatchBucketBadge(row: FulfillmentListRow) {
 /**
  * Builds the queue's columns. `onRefresh` is used ONLY by the fulfilment-level action menu after a command.
  *
- * Column widths are the operator's own authored preference, promoted from the saved view on
- * `grid.admin.fulfillments` (asli-grid) into these code defaults: orderReference 255.5555419921875,
- * shippingMethodLabel 217.77777099609375, status 264.4444580078125, trackingSummary 268.88885498046875,
- * recipientName 234.4444580078125, cityName 170, createdAt 172.22222900390625, updatedAt 163.33331298828125.
- * Raw fractional widths are kept unrounded so the default render stays pixel-identical to the saved view.
- * Everything else in that view (order, visibility, sorts = [], pageSize = 10) already matched the code.
+ * Column widths are the operator's own authored preference: the saved view named «اصلی» on
+ * `grid.admin.fulfillments` was promoted here into code defaults (asli-grid) and then deleted. Raw fractional
+ * ag-grid widths are kept unrounded so the default render stays pixel-identical to that view. Everything else in
+ * the view (layout.order, `shippingMethodCode` hidden, sorts = [], pageSize = 10) already matched the code.
  */
 export function createFulfillmentWorkQueueColumns(
   onRefresh: () => void,
@@ -344,7 +342,7 @@ export function createFulfillmentWorkQueueColumns(
           </span>
         );
       },
-      width: 264.4444580078125,
+      width: 313.3333740234375,
       minWidth: 150,
       filterKind: "status",
       enumOptions: fulfillmentStatusEnumOptions,
@@ -374,7 +372,7 @@ export function createFulfillmentWorkQueueColumns(
       header: "بُعد زمانی ارسال",
       accessor: (row) => normalizeDispatchToken(row.dispatchBucket),
       cell: (row) => dispatchBucketBadge(row),
-      width: 190,
+      width: 233.33331298828125,
       minWidth: 150,
       // Timing is filtered by the server-authoritative stage/time controls (full-set counts), so the column is
       // sortable but deliberately not a second, silently-ignored filter surface.
@@ -393,7 +391,7 @@ export function createFulfillmentWorkQueueColumns(
           {formatPlannedHandoff(row)}
         </span>
       ),
-      width: 210,
+      width: 291.111083984375,
       minWidth: 160,
       sortable: true,
     },
@@ -410,7 +408,7 @@ export function createFulfillmentWorkQueueColumns(
           {formatPreparationDeadlines(row)}
         </span>
       ),
-      width: 240,
+      width: 587.7778015136719,
       minWidth: 170,
       sortable: false,
     },
@@ -427,7 +425,7 @@ export function createFulfillmentWorkQueueColumns(
           {formatCustomerReceiving(row)}
         </span>
       ),
-      width: 180,
+      width: 188.888916015625,
       minWidth: 140,
       sortable: false,
     },

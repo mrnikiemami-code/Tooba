@@ -147,11 +147,12 @@ test("queue quantity and shipment summary are decimal-aware and GUID-free", () =
   assert.doesNotMatch(source, /toLocaleString\("fa-IR"\)\}`/);
 });
 
-test("formatFulfillmentQueueQuantity strips zeros and keeps 1.25", () => {
+test("formatFulfillmentQueueQuantity strips zeros and stays Persian-digit for the operator", () => {
   const qty = formatFulfillmentQueueQuantity({ itemCount: 1, quantityOrdered: 1.25, quantityShipped: 0.5 });
-  assert.match(qty, /1\.25/);
-  assert.match(qty, /0\.75/);
-  assert.doesNotMatch(qty, /000000/);
+  // Operator copy prints Persian digits; the numeric value stays on the accessor for sort/filter/export.
+  assert.match(qty, /۱٫۲۵/);
+  assert.match(qty, /۰٫۷۵/);
+  assert.doesNotMatch(qty, /[0-9.]/);
   assert.equal(formatFulfillmentShipmentSummary({ shipmentCount: 0 }), "—");
   assert.match(formatFulfillmentShipmentSummary({ shipmentCount: 2 }), /مرسوله/);
 });

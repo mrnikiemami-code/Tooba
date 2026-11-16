@@ -10,6 +10,25 @@ export function formatQuantityDisplay(value: number, decimalPlaces = 6): string 
   return raw.replace(/\.?0+$/, "");
 }
 
+const PERSIAN_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"] as const;
+const PERSIAN_DECIMAL_SEPARATOR = "٫";
+
+/**
+ * نمایش مقدار برای اپراتور فارسی‌زبان: ارقام فارسی و جداکنندهٔ اعشار فارسی («۲٫۵»).
+ *
+ * فقط لایهٔ نمایش است؛ مقدار داده و مقدار ورودی‌ها دست‌نخورده می‌ماند، چون `parseQuantityInput`
+ * ارقام لاتین را می‌خواند.
+ */
+export function formatQuantityDisplayFa(value: number, decimalPlaces = 6): string {
+  const latin = formatQuantityDisplay(value, decimalPlaces);
+  if (!latin) {
+    return latin;
+  }
+  return latin
+    .replace(/\./g, PERSIAN_DECIMAL_SEPARATOR)
+    .replace(/\d/g, (digit) => PERSIAN_DIGITS[Number(digit)] ?? digit);
+}
+
 /**
  * ورودی مقدار اعشاری را بدون parseInt می‌خواند.
  */

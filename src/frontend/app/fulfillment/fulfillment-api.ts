@@ -15,7 +15,7 @@ import {
   readSellerPartyId,
   type HostReadSource,
 } from "../vendor-panel/seller-api.ts";
-import { formatQuantityDisplay } from "../../lib/quantity-display.ts";
+import { formatQuantityDisplay, formatQuantityDisplayFa } from "../../lib/quantity-display.ts";
 import { readDispatchCountsFromPayload, type FulfillmentQueueCounts } from "./fulfillment-work-queue-dispatch.ts";
 
 export interface FulfillmentShipmentLine {
@@ -201,8 +201,10 @@ export function formatFulfillmentQueueQuantity(
   // totals would double-count the same quantity across two parcels of one order.
   const scoped = (row.scopeLineCount ?? 0) > 0;
   const lines = (scoped ? row.scopeLineCount! : row.itemCount).toLocaleString("fa-IR");
-  const ordered = formatQuantityDisplay(scoped ? row.scopeQuantity! : row.quantityOrdered);
-  const remaining = formatQuantityDisplay(
+  // Operator copy prints Persian digits and the Persian decimal separator («۲٫۵»); the stored value and the
+  // column accessor stay numeric, so sorting, filtering and CSV export are untouched.
+  const ordered = formatQuantityDisplayFa(scoped ? row.scopeQuantity! : row.quantityOrdered);
+  const remaining = formatQuantityDisplayFa(
     scoped ? row.scopeRemainingQuantity ?? 0 : Math.max(0, row.quantityOrdered - row.quantityShipped),
   );
   return `${lines} قلم · مقدار ${ordered} · باقی ${remaining}`;
