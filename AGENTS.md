@@ -1,4 +1,42 @@
-# CURRENT — RETURNS274-R1 REPAIR ACCEPTED WITH DECLARED LIMITS; ONLY275 NEXT — 2026-11-16
+# CURRENT — 275 WORKER PASS (operator queue + reviewed case workspace + durable intent + mobile); STILL NO LIVE RETURN CASE; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/TASK.md and
+docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,operator-workflow-proof.md,query-count-and-display-proof.md,durable-intent-and-mobile-proof.md,user-review.md}.
+Status **PASS within the issued A–F operator-workflow scope**, decision
+`ONE_RETURNS_OWNED_WORK_DESCRIPTION_SHARED_BY_A_SERVERSIDE_CLASSIFIED_QUEUE_AND_THE_SINGLE_CASE_WORKSPACE_WITH_PRE_PAGING_COUNTS_ONE_ACTION_OWNER_A_DURABLE_COMPARED_REVIEW_INTENT_EXACTLY_REPRESENTABLE_RECEIPT_QUANTITIES_AND_A_DETERMINISTIC_REVIEWED_FAILURE_RETRY_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT any provider/financial/stock/UI-completeness claim. Base
+`79258250c87c313cf778a73ab94e8eb4be45d19e` (== Expected-Base-SHA == origin/main at claim). 274-R1 acceptance is preserved
+unchanged; **276 remains NOT ISSUED**. Single worker, one task, no delegation, no historical agent resumed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A work description | one, Returns-owned | `ReturnWorkPolicy.Describe` maps stored facts to `receiving/decision/refund/refund_failed/disposition/settled/closed` and delegates every money/physical question to the EXISTING `ReturnRecoveryPolicy`; each case publishes its blocker and its exact published action codes (`record_receipt`, `approve_return`, `reject_return`, `resume_pending_refund`, `retry_refund`, `settle_physical_disposition`); blocked ACTIVE work stays visible, money-complete-but-undisposed is active, a decided-away case with received goods reports `physical_resolution_required` |
+| A queue + counts | one constrained set | `AdminReturnGridQueryEngine.QueryAsync` classifies the search/column-constrained set ONCE and returns page + `totalCount` + `counts{allOpen,receiving,decision,refund,refundFailed,disposition,history}` from it; the `workCategory` selector is answered by the classification (never SQL), legacy tokens translate once (`pending_review`→decision, `approved`/`refund_needed`/`refund_pending`→refund, `refund_failed`→refund_failed, `completed`/`rejected`→history), unknown→active set, a selector inside an advanced expression is `grid.advancedFilter.field.invalid` and a malformed selection operator is `grid.filter.operator.invalid` before any DB read; batch reads only (5 set-based + 3 Contracts enrichments per page, no per-row Directory/payment/provider call) |
+| B one action owner | detail only | the queue is read-only with ONE «بررسی مرجوعی» row action; `/admin/returns/{id}` renders `AdminReturnWorkspace` (single owner); `admin-screens.tsx` keeps a compatibility re-export; the legacy status-only card and its unguarded `RefundFailed` retry button are gone; per line requested/received/usable/damaged/`SaleableRestockedQuantity`/disposition, real receipt occurrence history, quiet attempt history with truthful absent PSP reference |
+| C1 partial receiving | lawful but bounded | a NEW occurrence is allowed on a financially progressed case only while no item carries a disposition and coverage is incomplete and coherent; rejected/cancelled, disposed or complete refuses `return.receipt.state_invalid`; over-receiving `return.receipt.over_received`, incoherent evidence `return.recovery.evidence_conflict` + 0 rows; still zero money/stock calls |
+| C2 reviewed retry | deterministic identity | `RetryReturnRefundCommand.ExpectedFailedAttemptId`; child id = `SHA256("tb275-refund-retry:{case}:{failed}")`, key = `refund-retry-{failed}` (`ReturnRetryIdentity`), so duplicate/lost answers resolve to the SAME child by primary key; only the CURRENT un-retried failure is reviewable (same rule in read and write), ambiguous/foreign/stale is a typed refusal, and the older adapter path answers the stored current failure or `return.recovery.attempt_unbound` — no counter key, no bypass, no schema |
+| D durable intent | before first send | `return-review-intent.ts` stores `{action, occurrenceKey, body, recordedAt}` in `sessionStorage` before dispatch, refuses to send when storage is unavailable or throws, one `inFlight` executor per tick, `epoch` fencing on case change/unmount, compare-and-clear on the exact occurrence; the unresolved envelope stays visible with an exact-body retry; no polling |
+| E mobile | 44px, scoped scroll | strips and new controls 44px; 390 document overflow 0, strip wraps locally, grid keeps its own scroller (340/1652); honest empty/unknown/denied/error/not-found states («پرونده‌ای برای نمایش نیست»), Persian/Jalali dates and Persian digits via existing helpers; the historical 36px grid toolbar was deliberately not restyled |
+| F proof | focused + live read-only | `ReturnsOperatorWorkflow275Tests` **12/12**; `admin-returns-work-queue.test.ts` **21/21**; `tsc --noEmit` 0; `next build` 0 (`BUILD_ID TaMAKtGjoy8sg6NHdnsO9`); `dotnet build Tooba.slnx -c Release` 0 errors; Host publish 0 errors |
+| schema/data | untouched | **zero migration/DDL/seed/backfill/reset/cleanup/restore**, one canonical `tooba_alpha`, no live case/order/draft/hold/stock/decision write and no provider/PSP/Wallet/Inventory/waybill/notification call |
+
+Served artifacts: Host `5088` PID `16532` loading
+`artifacts\publish-primary\Tooba.Host.dll` SHA256 `02AECDC72FA4506C889C743713CD8A93A1983F25C489268B4E0E3F55BF48DD73`
+(`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy); Next `3000` PID `50724`, `BUILD_ID
+TaMAKtGjoy8sg6NHdnsO9`, served chunk `/_next/static/chunks/692-4941a8a633b47e39.js` 200 with the workspace copy.
+Live read-only wire: query without actor → `401 admin.actor.missing`; with actor → `200` empty page +
+`counts` all zero; legacy `pending_review`/`refund_needed` → 200 translated; unknown token → active set; advanced-expression
+selector → `400 grid.advancedFilter.field.invalid`; malformed selection → `400 grid.filter.operator.invalid`; unknown case →
+`404 return.missing`. Live DOM at 1440/390: document overflow 0, 7 strips each 44px, honest empty grid, not-found page
+without a permanent loading state.
+Known limits: **no live return case exists**, so there is no served operator receiving/approval/refund walkthrough and no
+demo order/case/receipt/hold was created; actionable proof is mounted/controlled (in-memory EF + controlled ports); true
+two-writer concurrency is not stress-tested; the pre-existing 36px shared grid toolbar was not restyled; the FE suite and
+the production build were each re-run once after two small in-correction FE edits (declared), and an earlier build of this
+task (`oyZqjXe6auOIgTkU-Gm6R`) was superseded by the final `TaMAKtGjoy8sg6NHdnsO9`.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — RETURNS274-R1 REPAIR ACCEPTED WITH DECLARED LIMITS; ONLY275 NEXT — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1/ARCHITECT-REVIEW.md.
 274-R1 bounded repair accepted at5aaff422fb83095c885afaf372e610a3da8f0a2d; receiving foundation proceeds to operator integration.

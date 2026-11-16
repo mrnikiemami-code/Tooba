@@ -90,8 +90,11 @@ public interface IReturnDirectory
 /// <summary>Query port صف کار Admin returns (جدا از directory ارکستراسیون).</summary>
 public interface IAdminReturnGridQuery
 {
-    /// <summary>صفحه‌بندی DB-native صف کار مرجوعی.</summary>
-    Task<BuildingBlocks.Grid.GridPageResponse<AdminReturnWorkQueueRow>> QueryAsync(
+    /// <summary>
+    /// صفحه‌بندی صف کار مرجوعی. The page AND every work-strip count come from one classification of the constrained
+    /// set, so a selected stage can never disagree with the badge that selected it.
+    /// </summary>
+    Task<AdminReturnWorkQueuePage> QueryAsync(
         BuildingBlocks.Grid.GridQueryRequest request,
         CancellationToken cancellationToken);
 }

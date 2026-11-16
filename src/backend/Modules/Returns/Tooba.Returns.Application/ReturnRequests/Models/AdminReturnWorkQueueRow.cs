@@ -4,6 +4,11 @@ namespace Tooba.Returns.Application.ReturnRequests.Models;
 /// Admin return/refund work-queue row — a read model over the same Return aggregate, with no second
 /// lifecycle. Transport-neutral: every value is already projected by
 /// <see cref="AdminReturnQueueFilters"/> or resolved from a foreign Contracts lookup.
+/// <para>
+/// TB-275: the row also carries the case's ONE work stage (<see cref="WorkCategory"/>), its typed blocker, the exact
+/// stored refund attempt the workspace may act on, and one entry per requested line, so the queue never renders a
+/// summed quantity or an invented action.
+/// </para>
 /// </summary>
 public sealed record AdminReturnWorkQueueRow(
     Guid ReturnRequestId,
@@ -22,4 +27,10 @@ public sealed record AdminReturnWorkQueueRow(
     string EligibilitySummary,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    IReadOnlyList<string> AvailableActionCodes);
+    IReadOnlyList<string> AvailableActionCodes,
+    IReadOnlyList<AdminReturnWorkQueueLine>? Lines = null,
+    string WorkCategory = ReturnWorkCategoryCodes.Closed,
+    string? WorkBlockerCode = null,
+    bool NeedsOperator = false,
+    Guid? PendingRefundAttemptId = null,
+    Guid? FailedRefundAttemptId = null);

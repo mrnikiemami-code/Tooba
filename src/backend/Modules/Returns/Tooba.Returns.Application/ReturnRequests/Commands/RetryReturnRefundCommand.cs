@@ -8,7 +8,16 @@ namespace Tooba.Returns.Application.ReturnRequests.Commands;
 
 /// <summary>MediatR admin retry-refund use case (single authoritative request shape).</summary>
 public sealed record RetryReturnRefundCommand(Guid ReturnRequestId, Guid ActorUserId)
-    : IRequest<Result<ReturnSnapshot>>;
+    : IRequest<Result<ReturnSnapshot>>
+{
+    /// <summary>
+    /// TB-275 (C2): the exact stored FAILED attempt the operator reviewed. When supplied, the retry only proceeds for
+    /// that attempt (a different stored failure is a typed mismatch and mints nothing); when absent, the case's single
+    /// coherent bound failure is used, exactly as the recovery read describes it. The child attempt identity is derived
+    /// from that reviewed failure in the owning directory, so a duplicate/lost-response POST cannot mint a second one.
+    /// </summary>
+    public Guid? ExpectedFailedAttemptId { get; init; }
+}
 
 /// <summary>Handler — Result via the canonical typed-fault seam.</summary>
 public sealed class RetryReturnRefundHandler(IReturnDirectory returns)

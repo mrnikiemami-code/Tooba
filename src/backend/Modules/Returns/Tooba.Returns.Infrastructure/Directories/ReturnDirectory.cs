@@ -400,22 +400,140 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         // case owns its Fulfillment receipt and is unaffected.
         await EnsureOrdinaryReceivingCompleteAsync(request, cancellationToken);
 
+        // TB-275 (C2): the reviewed DEFINITE failure is the only failure this intent may retry, and it must be the
+        // single coherent failed attempt this case owns. The child identity is derived from that stored failure, so a
+        // duplicate/lost-response POST resolves to the SAME child attempt instead of minting a count-based one.
+        var failed = ReadReviewedFailedAttempt(request, command.ExpectedFailedAttemptId);
         var paymentId = request.PaymentId
             ?? throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
+        var childAttemptId = DeriveRetryAttemptId(request.ReturnRequestId, failed.RefundAttemptId);
+        var childKey = DeriveRetryIdempotencyKey(failed.RefundAttemptId);
+
+        var alreadyMinted = request.RefundAttempts
+            .FirstOrDefault(x => x.RefundAttemptId == childAttemptId);
+        if (alreadyMinted is not null)
+        {
+            // Exact reviewed replay: the same case, the same reviewed failure and therefore the same child. A terminal
+            // child is answered from its durable row (never re-sent); a still-pending one repeats ITS own key.
+            EnsureRetryAttemptIdentity(request, alreadyMinted, paymentId, childKey);
+            await ExecuteRefundAsync(request, alreadyMinted, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
+
         request.MarkRefundProcessing(_clock.UtcNow);
-        var attempt = request.BeginRefundAttempt(
-            _ids.NewId(),
-            paymentId,
-            $"refund-retry-{request.ReturnRequestId:N}-{request.RefundAttempts.Count + 1}",
-            _clock.UtcNow);
+        var attempt = request.BeginRefundAttempt(childAttemptId, paymentId, childKey, _clock.UtcNow);
         _db.RefundAttempts.Add(attempt);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsRetryAttemptKeyConflict(ex))
+        {
+            // A concurrent duplicate of the SAME reviewed intent won the deterministic child identity. Only THIS
+            // attempt's entry is detached (never a caller-wide tracker clear) and the stored row is answered on its
+            // own terms: the same failure, the same payment/amount/currency and the same derived key, or a typed
+            // refusal.
+            _db.Entry(attempt).State = EntityState.Detached;
+            var stored = await _db.RefundAttempts
+                .FirstOrDefaultAsync(
+                    x => x.ReturnRequestId == request.ReturnRequestId && x.RefundAttemptId == childAttemptId,
+                    cancellationToken)
+                ?? throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptUnbound);
+            EnsureRetryAttemptIdentity(request, stored, paymentId, childKey);
+            await ExecuteRefundAsync(request, stored, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
+        }
+
         _telemetry.RecordRetry();
 
         await ExecuteRefundAsync(request, attempt, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         return await MapSnapshotAsync(request, cancellationToken);
     }
+
+    /// <summary>
+    /// TB-275 (C2): the exact reviewed failure. A retry may only answer for the case's CURRENT coherent definite
+    /// failure — a bound FAILED attempt that has not already produced its derived child — and, when the operator states
+    /// which attempt was reviewed, it must be that one. Anything else is a typed refusal and mints nothing.
+    /// </summary>
+    private static RefundAttempt ReadReviewedFailedAttempt(ReturnRequest request, Guid? expectedFailedAttemptId)
+    {
+        if (expectedFailedAttemptId == Guid.Empty)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
+        }
+
+        var boundFailed = request.RefundAttempts
+            .Where(x => x.Status == RefundAttemptStatus.Failed && IsBoundToRequest(request, x))
+            .ToArray();
+        var reviewable = boundFailed
+            .Where(x => request.RefundAttempts.All(child =>
+                child.RefundAttemptId != ReturnRetryIdentity.DeriveAttemptId(request.ReturnRequestId, x.RefundAttemptId)))
+            .ToArray();
+        if (reviewable.Length != 1)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptUnbound);
+        }
+
+        var failed = reviewable[0];
+        if (expectedFailedAttemptId is { } reviewed && reviewed != failed.RefundAttemptId)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
+        }
+
+        return failed;
+    }
+
+    /// <summary>
+    /// TB-275 (C2): the child attempt must answer for THIS case with the reviewed payment, the exact refund amount and
+    /// currency and the deterministic key derived from the reviewed failure. A row that does not is never re-sent.
+    /// </summary>
+    private static void EnsureRetryAttemptIdentity(
+        ReturnRequest request,
+        RefundAttempt attempt,
+        Guid paymentId,
+        string expectedKey)
+    {
+        if (attempt.PaymentId != paymentId
+            || attempt.Amount != request.RefundAmount
+            || !string.Equals(attempt.Currency.Trim(), request.Currency.Trim(), StringComparison.Ordinal)
+            || !string.Equals(attempt.IdempotencyKey, expectedKey, StringComparison.Ordinal))
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
+        }
+    }
+
+    /// <summary>The same binding rule the recovery read uses, over the loaded aggregate.</summary>
+    private static bool IsBoundToRequest(ReturnRequest request, RefundAttempt attempt) =>
+        attempt.RefundAttemptId != Guid.Empty
+        && !string.IsNullOrWhiteSpace(attempt.IdempotencyKey)
+        && request.PaymentId is { } paymentId
+        && paymentId != Guid.Empty
+        && attempt.PaymentId == paymentId
+        && attempt.Amount == request.RefundAmount
+        && string.Equals(attempt.Currency.Trim(), request.Currency.Trim(), StringComparison.Ordinal);
+
+    /// <summary>
+    /// TB-275 (C2): the deterministic child attempt identity of ONE reviewed failure. Deriving it (instead of a
+    /// count-based key) is what makes a duplicate or lost-response POST resolve to the same intent: the primary key
+    /// itself arbitrates, and no second table or counter is introduced.
+    /// </summary>
+    private static Guid DeriveRetryAttemptId(Guid returnRequestId, Guid failedAttemptId) =>
+        ReturnRetryIdentity.DeriveAttemptId(returnRequestId, failedAttemptId);
+
+    /// <summary>TB-275 (C2): the deterministic provider-facing key of that same child attempt.</summary>
+    private static string DeriveRetryIdempotencyKey(Guid failedAttemptId) =>
+        ReturnRetryIdentity.DeriveIdempotencyKey(failedAttemptId);
+
+    /// <summary>The exact provider collision shape that means "this reviewed child already exists".</summary>
+    private static bool IsRetryAttemptKeyConflict(DbUpdateException exception) =>
+        exception.InnerException is Npgsql.PostgresException { SqlState: "23505" } postgres
+        && string.Equals(postgres.TableName, "refund_attempts", StringComparison.Ordinal)
+        && string.Equals(postgres.SchemaName, ReturnsDbContext.Schema, StringComparison.Ordinal)
+        && (string.Equals(postgres.ConstraintName, "pk_refund_attempts", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(postgres.ConstraintName, "ix_refund_attempts_IdempotencyKey", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
     /// TB-273: what one refund execution actually proved. <c>Unavailable</c> is a definite "nothing was sent";
@@ -816,7 +934,17 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             .Where(x => x.ReturnRequestId == request.ReturnRequestId)
             .Select(x => new { x.Decision, x.Reason })
             .SingleOrDefaultAsync(cancellationToken);
-        var receiving = await ReadReceivingAsync(request, cancellationToken);
+
+        // TB-275: the receiving summary and the recorded occurrences come from ONE read of the same stored rows, so a
+        // list of receipts can never disagree with the coverage it produced.
+        ReturnReceivingSummary? receiving = null;
+        IReadOnlyList<ReturnReceiptOccurrenceSnapshot> receipts = Array.Empty<ReturnReceiptOccurrenceSnapshot>();
+        if (request.Origin != ReturnOrigin.CourierOrigin)
+        {
+            var evidence = await ReadReceiptEvidenceAsync(request.ReturnRequestId, cancellationToken);
+            receiving = evidence.Summary;
+            receipts = evidence.Occurrences;
+        }
         var snapshot = new ReturnSnapshot(
             request.ReturnRequestId,
             request.SellerOrderId,
@@ -870,10 +998,14 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             request.ReleasedHeldQuantity,
             RecordedDecision: recordedDecision?.Decision,
             Receiving: receiving,
-            DecisionReason: recordedDecision?.Reason);
+            DecisionReason: recordedDecision?.Reason,
+            Receipts: receipts);
 
         // TB-273: every read (admin/customer/seller/detail) carries the SAME stored-fact recovery description the
         // recovery command decides on, so a read and an action can never disagree.
-        return snapshot with { Recovery = ReturnRecoveryPolicy.Describe(snapshot) };
+        // TB-275: the work stage/actions are derived from that SAME description, so the queue bucket, the detail
+        // workspace and the executable actions share one authority.
+        var described = snapshot with { Recovery = ReturnRecoveryPolicy.Describe(snapshot) };
+        return described with { Work = ReturnWorkPolicy.Describe(described) };
     }
 }

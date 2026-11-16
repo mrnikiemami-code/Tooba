@@ -15,8 +15,18 @@ public sealed class AdminReturnGridQueryPolicy : IGridQueryPolicy
     private static readonly HashSet<string> AllowedFields = new(StringComparer.Ordinal)
     {
         "returnReference", "orderReference", "returnRequestId", "customerDisplayName", "sellerDisplayName",
-        "productLabel", "quantityRequested", "returnStatus", "refundStatus", "queueFilter",
+        "productLabel", "quantityRequested", "returnStatus", "refundStatus",
         "createdAt", "updatedAt",
+    };
+
+    /// <summary>
+    /// TB-275: the work selector and its legacy predecessor are accepted as CELL filters only. They are answered by the
+    /// ONE classification, so they are refused inside the advanced-filter expression exactly like the Fulfillment queue
+    /// selectors: an expression that names a selector can never be evaluated as a column comparison.
+    /// </summary>
+    private static readonly HashSet<string> QueueSelectionFields = new(StringComparer.Ordinal)
+    {
+        "workCategory", "queueFilter",
     };
 
     private static readonly Dictionary<string, HashSet<string>> OperatorsByField = new(StringComparer.Ordinal)
@@ -30,6 +40,7 @@ public sealed class AdminReturnGridQueryPolicy : IGridQueryPolicy
         ["quantityRequested"] = GridQueryOperators.Number,
         ["returnStatus"] = GridQueryOperators.Enum,
         ["refundStatus"] = GridQueryOperators.Enum,
+        ["workCategory"] = GridQueryOperators.Enum,
         ["queueFilter"] = GridQueryOperators.Enum,
         ["createdAt"] = GridQueryOperators.Date,
         ["updatedAt"] = GridQueryOperators.Date,
@@ -53,17 +64,41 @@ public sealed class AdminReturnGridQueryPolicy : IGridQueryPolicy
             sorts.Add(new GridSortRequest("createdAt", "desc"));
 
         var filters = new List<GridFilterRequest>();
+        string? selection = null;
         foreach (var filter in request.Filters ?? [])
         {
-            if (string.IsNullOrWhiteSpace(filter.Field)
-                || !AllowedFields.Contains(filter.Field.Trim())
-                || !OperatorsByField.TryGetValue(filter.Field.Trim(), out var allowedOps))
+            if (string.IsNullOrWhiteSpace(filter.Field))
+                throw GridQueryValidationException.FilterFieldInvalid();
+            var field = filter.Field.Trim();
+            if (!AllowedFields.Contains(field) && !QueueSelectionFields.Contains(field))
+                throw GridQueryValidationException.FilterFieldInvalid();
+            if (!OperatorsByField.TryGetValue(field, out var allowedOps))
                 throw GridQueryValidationException.FilterFieldInvalid();
             var op = (filter.Operator ?? string.Empty).Trim();
             if (!allowedOps.Contains(op))
                 throw GridQueryValidationException.FilterOperatorInvalid();
-            filters.Add(GridQueryPolicyBase.NormalizeFilter(filter with { Field = filter.Field.Trim() }));
+
+            if (QueueSelectionFields.Contains(field))
+            {
+                // One selection value with equals/in; anything else is a transport mistake, not a superset.
+                var values = filter.Values?.Where(v => !string.IsNullOrWhiteSpace(v)).ToArray() ?? [];
+                if (values.Length > 1 || op is not ("equals" or "in"))
+                    throw GridQueryValidationException.FilterOperatorInvalid();
+                selection = values.FirstOrDefault() ?? filter.Value;
+                continue;
+            }
+
+            filters.Add(GridQueryPolicyBase.NormalizeFilter(filter with { Field = field }));
         }
+
+        // TB-275: exactly ONE canonical work selection, translated from the new stage tokens or the legacy queue tokens.
+        // An unknown token falls back to the honest active set, never to "everything".
+        filters.Add(new GridFilterRequest(
+            "workCategory",
+            "equals",
+            AdminReturnWorkQueueSelection.Canonicalize(selection),
+            null,
+            null));
 
         return new GridQueryRequest(page, pageSize, search, sorts, filters, NormalizeAdvanced(request.AdvancedFilter));
     }
@@ -96,12 +131,12 @@ public sealed class AdminReturnGridQueryPolicy : IGridQueryPolicy
 }
 
 public sealed record QueryAdminReturnsGridQuery(GridQueryRequest Request)
-    : IRequest<Result<GridPageResponse<AdminReturnWorkQueueRow>>>;
+    : IRequest<Result<AdminReturnWorkQueuePage>>;
 
 public sealed class QueryAdminReturnsGridHandler(IAdminReturnGridQuery query)
-    : IRequestHandler<QueryAdminReturnsGridQuery, Result<GridPageResponse<AdminReturnWorkQueueRow>>>
+    : IRequestHandler<QueryAdminReturnsGridQuery, Result<AdminReturnWorkQueuePage>>
 {
-    public async Task<Result<GridPageResponse<AdminReturnWorkQueueRow>>> Handle(
+    public async Task<Result<AdminReturnWorkQueuePage>> Handle(
         QueryAdminReturnsGridQuery request, CancellationToken cancellationToken)
     {
         try
@@ -111,7 +146,7 @@ public sealed class QueryAdminReturnsGridHandler(IAdminReturnGridQuery query)
         }
         catch (GridQueryValidationException ex)
         {
-            return Result.Failure<GridPageResponse<AdminReturnWorkQueueRow>>(new SemanticError(ex.ErrorCode));
+            return Result.Failure<AdminReturnWorkQueuePage>(new SemanticError(ex.ErrorCode));
         }
     }
 }

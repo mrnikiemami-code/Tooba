@@ -51,11 +51,19 @@ public static class ReturnAdminEndpoints
     }
 
     private static async Task<IResult> AdminRetryRefundAsync(
-        Guid returnRequestId, ISender sender, IReturnAdminAuthorizer authorizer, ApiResponseFactory api,
-        HttpContext context, CancellationToken cancellationToken)
+        Guid returnRequestId, Guid? expectedFailedAttemptId, ISender sender, IReturnAdminAuthorizer authorizer,
+        ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
     {
         var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
-        return api.From(await sender.Send(new RetryReturnRefundCommand(returnRequestId, actorUserId), cancellationToken));
+
+        // TB-275 (C2): the reviewed failed attempt travels as the occurrence identity of the retry intent (a route/query
+        // value, never a client-owned body); the server still derives the child attempt identity itself.
+        return api.From(await sender.Send(
+            new RetryReturnRefundCommand(returnRequestId, actorUserId)
+            {
+                ExpectedFailedAttemptId = expectedFailedAttemptId,
+            },
+            cancellationToken));
     }
 
     private static async Task<IResult> AdminRecoverAsync(

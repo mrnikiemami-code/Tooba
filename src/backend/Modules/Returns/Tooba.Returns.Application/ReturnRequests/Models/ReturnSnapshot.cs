@@ -41,4 +41,9 @@ public sealed record ReturnSnapshot(
     // Null when no receipt was ever recorded. Approval, money and restock are gated on this exact fact.
     ReturnReceivingSummary? Receiving = null,
     // TB-274: the reason recorded with the winning rejection decision (null for an approval or a pre-274 rejection).
-    string? DecisionReason = null);
+    string? DecisionReason = null,
+    // TB-275: every recorded customer receipt occurrence, oldest first. A courier-origin case's receipt belongs to
+    // Fulfillment, so this stays empty for it (never an invented occurrence).
+    IReadOnlyList<ReturnReceiptOccurrenceSnapshot>? Receipts = null,
+    // TB-275: the ONE work stage/action description shared by the queue and the detail workspace.
+    ReturnWorkDescription? Work = null);

@@ -309,10 +309,14 @@ public static class ReturnRecoveryPolicy
             return new MoneyEvidence(false, boundPending[0].RefundAttemptId, true, null);
         }
 
-        // No live bound row. Only a definite failure may answer from bound FAILED history — and only when it is the
-        // single bound failure, so a replay can never borrow an unrelated attempt.
-        return boundFailed.Length == 1
-            ? new MoneyEvidence(false, boundFailed[0].RefundAttemptId, false, null)
+        // No live bound row. Only a definite failure may answer from bound FAILED history — and only the CURRENT one:
+        // a failure that already produced its derived child is history, so the child's own failure is what a NEW
+        // deliberate review answers for. Ambiguous history is never a first/latest guess.
+        var currentFailure = boundFailed.Length == 1
+            ? boundFailed[0].RefundAttemptId
+            : ReturnRetryIdentity.CurrentReviewableFailureId(snapshot.ReturnRequestId, boundFailed);
+        return currentFailure is { } failed
+            ? new MoneyEvidence(false, failed, false, null)
             : new MoneyEvidence(false, null, false, ReturnsErrorCodes.RecoveryAttemptUnbound);
     }
 

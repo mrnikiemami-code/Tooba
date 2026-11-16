@@ -110,7 +110,48 @@ public sealed record ReturnSnapshot(
     // approval, refund attempt and restock are gated on this exact stored fact.
     ReturnReceivingSnapshot? Receiving = null,
     // TB-274: the reason recorded with the winning rejection decision (null for an approval).
-    string? DecisionReason = null);
+    string? DecisionReason = null,
+    // TB-275: the durable approve/reject decision recorded for this case ("Approve"/"Reject") or null when no decision
+    // row exists. The workspace never invents an approval the store did not record.
+    string? RecordedDecision = null,
+    // TB-275: every recorded customer receipt occurrence, oldest first, so the operator can see the physical history
+    // instead of a single summarized number. Empty for a courier-origin case (Fulfillment owns that receipt).
+    IReadOnlyList<ReturnReceiptOccurrenceSnapshot>? Receipts = null,
+    // TB-275: the ONE work stage/action description the queue and this workspace share.
+    ReturnWorkSnapshot? Work = null);
+
+/// <summary>
+/// TB-275: the operator work stage of one case, as the wire reports it. <c>CategoryCode</c> is a stable token
+/// (<c>receiving</c>/<c>decision</c>/<c>refund</c>/<c>refund_failed</c>/<c>disposition</c>/<c>settled</c>/<c>closed</c>)
+/// and <c>ActionCodes</c> names only the intents the module actually offers for the stored facts.
+/// </summary>
+public sealed record ReturnWorkSnapshot(
+    string CategoryCode,
+    string? BlockerCode,
+    Guid? PendingRefundAttemptId,
+    Guid? FailedRefundAttemptId,
+    bool CanRecordReceipt,
+    bool CanDecide,
+    bool CanResumeRefund,
+    bool CanRetryRefund,
+    bool CanSettlePhysical,
+    bool IsOpen,
+    bool NeedsOperator,
+    IReadOnlyList<string> ActionCodes);
+
+/// <summary>TB-275: one inspected line inside a recorded customer receipt occurrence.</summary>
+public sealed record ReturnReceiptLineSnapshot(
+    Guid ReturnItemId,
+    decimal Quantity,
+    ReturnItemConditionOption Condition);
+
+/// <summary>TB-275: ONE recorded physical customer receipt (header + inspected lines), as an immutable occurrence.</summary>
+public sealed record ReturnReceiptOccurrenceSnapshot(
+    Guid ReturnReceiptId,
+    string OccurrenceKey,
+    Guid ReceivedByUserId,
+    DateTimeOffset RecordedAt,
+    IReadOnlyList<ReturnReceiptLineSnapshot> Lines);
 
 /// <summary>TB-274: one inspected line of the recorded customer receipt coverage.</summary>
 public sealed record ReturnReceivingLineSnapshot(

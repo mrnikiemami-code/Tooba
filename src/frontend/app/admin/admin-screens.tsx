@@ -22,6 +22,7 @@ import { adminSupplyBadgeClass, formatAdminSupplyStatus, supplyStatusEnumOptions
 import { reservationBadgeClass, reservationStateEnumOptions } from "./admin-reservation-cycle";
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
+export { AdminReturnDetailScreen } from "./admin-return-workspace";
 import {
   ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY,
 } from "./saved-view-store";
@@ -34,13 +35,6 @@ import {
 import { FulfillmentShipmentList } from "../fulfillment/fulfillment-ui";
 import { AdminFulfillmentWorkQueueScreen } from "./admin-fulfillment-work-queue-screen";
 import { AdminReturnsWorkQueueScreen } from "./admin-returns-work-queue-screen";
-import {
-  adminRetryReturnRefund,
-  formatReturnDate,
-  loadAdminReturnDetail,
-  type ReturnSnapshot,
-} from "../returns/return-api";
-import { ReturnDetailCard } from "../returns/return-ui";
 import {
   formatPayoutStatus,
   formatSettlementMoney,
@@ -415,44 +409,6 @@ export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId:
 /** فهرست زندهٔ مرجوعی برای Admin — صف کار عملیاتی. */
 export function AdminReturnsScreen() {
   return <AdminReturnsWorkQueueScreen />;
-}
-
-/** جزئیات مرجوعی Admin با retry refund. */
-export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: string }) {
-  const [result, setResult] = useState<AdminResult<ReturnSnapshot>>({ state: "ok", data: null, status: 0 });
-  const refresh = () => void loadAdminReturnDetail(returnRequestId).then(setResult);
-  useEffect(refresh, [returnRequestId]);
-  if (result.state === "denied") return <Denied retry={refresh} />;
-  const snapshot = result.data;
-  const canRetry = snapshot?.status === "RefundFailed";
-
-  return (
-    <main>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading
-          title="جزئیات مرجوعی"
-          description={snapshot ? formatReturnDate(snapshot.createdAt) : "در حال بارگذاری"}
-        />
-        <Link className="text-sm text-primary hover:underline" href="/admin/returns">بازگشت به فهرست</Link>
-      </div>
-      {result.state === "error" ? (
-        <ErrorState title="مرجوعی خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
-      ) : snapshot ? (
-        <div className="grid gap-5">
-          <ReturnDetailCard snapshot={snapshot} hideTechnicalIds />
-          {canRetry ? (
-            <button
-              type="button"
-              className="rounded-xl px-4 py-2 text-sm font-bold bg-[#2563EB] text-white hover:bg-blue-700 transition-colors w-fit"
-              onClick={() => void adminRetryReturnRefund(returnRequestId).then(refresh)}
-            >
-              تلاش مجدد بازگشت وجه
-            </button>
-          ) : null}
-        </div>
-      ) : <p className="text-muted">در حال بارگذاری…</p>}
-    </main>
-  );
 }
 
 

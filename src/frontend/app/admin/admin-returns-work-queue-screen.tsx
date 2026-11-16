@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { Eye } from "lucide-react";
+import { ClipboardCheck } from "lucide-react";
 import {
   AppDataGrid,
   ErrorState,
@@ -11,20 +11,25 @@ import {
 } from "../../design-system";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
+import { toPersianDigits } from "../../lib/persian-digits";
 import { formatQuantityDisplay } from "../../lib/quantity-display";
 import {
-  RETURN_QUEUE_FILTERS,
+  RETURN_WORK_STRIPS,
   formatRefundLifecycleStatus,
   formatReturnDate,
   formatReturnStatus,
-  queryAdminReturnsGrid,
+  formatReturnWorkCategory,
+  queryAdminReturnsWorkQueue,
+  readReturnWorkSelectionFromUrl,
   refundLifecycleBadgeClass,
   returnStatusBadgeClass,
-  type ReturnQueueFilter,
+  returnWorkBadgeClass,
+  writeReturnWorkSelectionToUrl,
+  type AdminReturnWorkCounts,
   type ReturnWorkQueueRow,
+  type ReturnWorkQueueSelection,
 } from "../returns/return-api";
 import { mapAdminErrorMessage } from "./admin-error-map";
-import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { ADMIN_RETURN_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
 function PageHeading({ title, description }: { title: string; description: string }) {
@@ -60,37 +65,67 @@ const refundStatusEnumOptions = [
   { value: "completed", label: formatRefundLifecycleStatus("completed") },
 ];
 
-const viewActions: AppGridRowAction<ReturnWorkQueueRow>[] = [
+/**
+ * TB-275: the ONE row action. The queue is a work list, not an action surface: every decision, receipt, retry and
+ * physical settlement happens inside the reviewed case workspace, so a kebab menu can never fire an intent the
+ * operator did not deliberately review.
+ */
+const reviewAction: AppGridRowAction<ReturnWorkQueueRow>[] = [
   {
-    id: "view-order",
-    label: "مشاهده سفارش",
-    icon: Eye,
-    href: (row) => `/admin/orders/${row.checkoutId}`,
-    testId: (row) => `admin-return-view-order-${row.returnRequestId}`,
-  },
-  {
-    id: "view-return",
-    label: "جزئیات مرجوعی",
-    icon: Eye,
+    id: "review-return",
+    label: "بررسی مرجوعی",
+    icon: ClipboardCheck,
     href: (row) => `/admin/returns/${row.returnRequestId}`,
-    testId: (row) => `admin-return-view-detail-${row.returnRequestId}`,
+    testId: (row) => `admin-return-review-${row.returnRequestId}`,
   },
 ];
 
-function formatQueueQuantity(row: ReturnWorkQueueRow): string {
-  return `${formatQuantityDisplay(row.quantityRequested)} ${row.unitLabel}`.trim();
+/** One requested line group: quantity + its OWN unit, never summed across incompatible units. */
+function lineSummary(row: ReturnWorkQueueRow): { label: string; meta: string } {
+  if (row.lines.length === 0) {
+    return {
+      label: row.productLabel || "—",
+      meta: `${formatQuantityDisplay(row.quantityRequested)} ${row.unitLabel}`.trim(),
+    };
+  }
+  if (row.lines.length === 1) {
+    const line = row.lines[0]!;
+    return {
+      label: line.productLabel || row.productLabel || "—",
+      meta: `${formatQuantityDisplay(line.quantity)} ${line.unitLabel}`.trim(),
+    };
+  }
+  return {
+    label: `${toPersianDigits(row.lines.length)} قلم کالا`,
+    meta: row.lines
+      .map((line) => `${formatQuantityDisplay(line.quantity)} ${line.unitLabel}`)
+      .join(" · "),
+  };
 }
 
 /**
- * صف کار عملیاتی مرجوعی‌ها و بازگشت وجه — AppDataGrid، بدون GUID، lifecycle جدا.
+ * TB-275: the authoritative Returns work queue — one server-classified work stage per case, counted BEFORE paging, and
+ * a single reviewed entry into the case workspace.
  */
 export function AdminReturnsWorkQueueScreen() {
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_RETURN_GRID_VIEW_KEY), []);
-  const [queueFilter, setQueueFilter] = useState<ReturnQueueFilter>("all");
+  // The strip lives in the URL as ONE canonical token, so opening a case and coming back restores the same selection.
+  const [selection, setSelection] = useState<ReturnWorkQueueSelection>(() =>
+    typeof window === "undefined" ? "open" : readReturnWorkSelectionFromUrl(window.location.search),
+  );
+  const [counts, setCounts] = useState<AdminReturnWorkCounts>();
   const [denied, setDenied] = useState(false);
   const [gridError, setGridError] = useState<string>();
   const [reloadToken, setReloadToken] = useState(0);
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  const select = useCallback((next: ReturnWorkQueueSelection) => {
+    if (typeof window !== "undefined") {
+      const search = writeReturnWorkSelectionToUrl(window.location.search, next);
+      window.history.replaceState(null, "", `${window.location.pathname}${search}`);
+    }
+    setSelection(next);
+  }, []);
 
   const columns = useMemo((): GridColumnDef<ReturnWorkQueueRow>[] => [
     {
@@ -124,30 +159,46 @@ export function AdminReturnsWorkQueueScreen() {
       sortable: true,
     },
     {
-      id: "sellerDisplayName",
-      header: "فروشنده",
-      accessor: (row) => row.sellerDisplayName,
-      cell: (row) => truncatedCell(row.sellerDisplayName || "—", row.sellerDisplayName),
-      width: 150,
-      minWidth: 120,
+      id: "productLabel",
+      header: "کالا",
+      accessor: (row) => lineSummary(row).label,
+      cell: (row) => {
+        const summary = lineSummary(row);
+        return (
+          <div className="app-grid-cell-content min-w-0">
+            <span className="block truncate font-semibold" title={summary.label}>{summary.label}</span>
+            <span className="block truncate text-xs text-muted" dir="rtl">{summary.meta}</span>
+          </div>
+        );
+      },
+      width: 200,
+      minWidth: 150,
       filterKind: "text",
       sortable: true,
     },
     {
-      id: "productLabel",
-      header: "کالا",
-      accessor: (row) => row.productLabel,
-      cell: (row) => truncatedCell(row.productLabel || "—", row.productLabel),
+      id: "workCategory",
+      header: "مرحلهٔ کار",
+      accessor: (row) => row.workCategory,
+      cell: (row) => (
+        <div className="app-grid-cell-content min-w-0">
+          <span className={returnWorkBadgeClass(row.workCategory)}>
+            {formatReturnWorkCategory(row.workCategory)}
+          </span>
+          {row.workBlockerCode ? (
+            <span className="mt-1 block truncate text-xs text-amber-700" title={mapAdminErrorMessage(row.workBlockerCode, "fa")}>
+              {mapAdminErrorMessage(row.workBlockerCode, "fa")}
+            </span>
+          ) : null}
+        </div>
+      ),
       width: 180,
       minWidth: 140,
-    },
-    {
-      id: "quantityRequested",
-      header: "مقدار",
-      accessor: (row) => row.quantityRequested,
-      cell: (row) => truncatedCell(formatQueueQuantity(row)),
-      width: 120,
-      minWidth: 96,
+      filterKind: "status",
+      enumOptions: RETURN_WORK_STRIPS.filter((strip) => strip.id !== "open" && strip.id !== "history").map((strip) => ({
+        value: strip.id,
+        label: strip.labelFa,
+      })),
       sortable: true,
     },
     {
@@ -187,16 +238,6 @@ export function AdminReturnsWorkQueueScreen() {
       minWidth: 140,
     },
     {
-      id: "createdAt",
-      header: "زمان درخواست",
-      accessor: (row) => row.createdAt,
-      cell: (row) => truncatedCell(formatReturnDate(row.createdAt)),
-      width: 140,
-      minWidth: 120,
-      filterKind: "date",
-      sortable: true,
-    },
-    {
       id: "updatedAt",
       header: "آخرین تغییر",
       accessor: (row) => row.updatedAt,
@@ -212,39 +253,23 @@ export function AdminReturnsWorkQueueScreen() {
       accessor: () => "",
       cell: (row) => (
         <span className="inline-flex items-center gap-1" data-testid={`admin-return-ops-${row.returnRequestId}`}>
-          <AppGridRowActionsCell row={row} actions={viewActions} compact />
-          {row.availableActionCodes.length > 0 ? (
-            <AdminOrderOperationsMenu
-              checkoutId={row.checkoutId}
-              label="عملیات"
-              compact
-              iconOnly
-              scope="returns-queue"
-              returnRequestId={row.returnRequestId}
-              onCompleted={refresh}
-              testId={`admin-return-kebab-${row.returnRequestId}`}
-            />
-          ) : null}
+          <AppGridRowActionsCell row={row} actions={reviewAction} compact />
         </span>
       ),
-      width: 120,
-      minWidth: 100,
+      width: 150,
+      minWidth: 130,
       exportable: false,
       sortable: false,
     },
-  ], [refresh]);
+  ], []);
 
   const queryFn = useCallback(
     async (query: GridServerQuery) => {
-      const filters = { ...query.filters };
-      if (queueFilter !== "all") {
-        filters.queueFilter = { kind: "status", values: [queueFilter] };
-      } else {
-        delete filters.queueFilter;
-      }
-      return queryAdminReturnsGrid({ ...query, filters });
+      const result = await queryAdminReturnsWorkQueue(query, selection);
+      if (result.meta) setCounts(result.meta);
+      return result;
     },
-    [queueFilter],
+    [selection],
   );
 
   const queryAdapter = useCallback(
@@ -284,28 +309,49 @@ export function AdminReturnsWorkQueueScreen() {
       />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex flex-col gap-3 border-b border-border px-4 py-3 md:px-5">
-          <span className="text-sm text-muted">دادهٔ زندهٔ فروشگاه — server GridQuery</span>
-          <div className="flex flex-wrap gap-2" data-testid="admin-returns-queue-filters" role="tablist">
-            {RETURN_QUEUE_FILTERS.map((tab) => {
-              const active = queueFilter === tab.id;
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm text-muted">دادهٔ زندهٔ فروشگاه — مرحلهٔ کار پیش از صفحه‌بندی شمرده می‌شود</span>
+            <span className="text-xs text-muted" data-testid="admin-returns-active-count">
+              {counts ? `${toPersianDigits(counts.allOpen)} پروندهٔ باز` : "—"}
+            </span>
+          </div>
+          <div
+            className="flex flex-wrap gap-2"
+            data-testid="admin-returns-work-strips"
+            role="tablist"
+            aria-label="مرحلهٔ کار مرجوعی"
+          >
+            {RETURN_WORK_STRIPS.map((strip) => {
+              const active = selection === strip.id;
+              const count = counts ? counts[strip.countKey] : undefined;
               return (
                 <button
-                  key={tab.id}
+                  key={strip.id}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  data-testid={`admin-returns-queue-filter-${tab.id}`}
+                  data-testid={`admin-returns-queue-filter-${strip.id}`}
                   className={
                     active
-                      ? "rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
-                      : "rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-muted hover:bg-secondary"
+                      ? "inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground"
+                      : "inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-semibold text-muted hover:bg-secondary"
                   }
                   onClick={() => {
-                    setQueueFilter(tab.id);
+                    if (selection === strip.id) return;
+                    select(strip.id);
                     refresh();
                   }}
                 >
-                  {tab.labelFa}
+                  <span>{strip.labelFa}</span>
+                  <span
+                    className={
+                      active
+                        ? "rounded-full bg-primary-foreground/20 px-2 text-xs"
+                        : "rounded-full bg-secondary px-2 text-xs"
+                    }
+                  >
+                    {toPersianDigits(count ?? 0)}
+                  </span>
                 </button>
               );
             })}

@@ -84,9 +84,22 @@ internal sealed class ReturnAdminOperationsAdapter(
     public async Task<ReturnSnapshot> RetryRefundAsync(
         Guid returnRequestId,
         Guid actorUserId,
-        CancellationToken cancellationToken) =>
-        Map(await directory.RetryRefundAsync(
-            new RetryReturnRefundCommand(returnRequestId, actorUserId), cancellationToken));
+        CancellationToken cancellationToken)
+    {
+        // TB-275 (C2): an older caller does not carry the reviewed failed attempt, so this entry point answers only the
+        // case's CURRENT definite failure from the stored work description — the same identity the case workspace
+        // reviews. It never mints a count-based attempt and never retries without a definitive failure (fail closed).
+        var current = await directory.GetAsync(returnRequestId, cancellationToken)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
+        var failedAttemptId = current.Work?.FailedRefundAttemptId
+            ?? throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptUnbound);
+        return Map(await directory.RetryRefundAsync(
+            new RetryReturnRefundCommand(returnRequestId, actorUserId)
+            {
+                ExpectedFailedAttemptId = failedAttemptId,
+            },
+            cancellationToken));
+    }
 
     public async Task<ReturnSnapshot> RecoverRefundAsync(
         Guid returnRequestId,
@@ -274,7 +287,43 @@ internal sealed class ReturnAdminOperationsAdapter(
             snapshot.ReleasedHeldQuantity,
             Map(snapshot.Recovery),
             Map(snapshot.Receiving),
-            snapshot.DecisionReason);
+            snapshot.DecisionReason,
+            snapshot.RecordedDecision,
+            snapshot.Receipts
+                ?.Select(x => new ReturnReceiptOccurrenceSnapshot(
+                    x.ReturnReceiptId,
+                    x.OccurrenceKey,
+                    x.ReceivedByUserId,
+                    x.RecordedAt,
+                    x.Lines
+                        .Select(line => new ReturnReceiptLineSnapshot(
+                            line.ReturnItemId,
+                            line.Quantity,
+                            (ReturnItemConditionOption)line.Condition))
+                        .ToList()))
+                .ToList(),
+            Map(snapshot.Work));
+
+    /// <summary>
+    /// TB-275: the additive operator work stage. Every flag is a positive stored fact computed by the ONE Returns-owned
+    /// policy, so this projection never re-derives a permission the actions would refuse.
+    /// </summary>
+    private static ReturnWorkSnapshot? Map(AppModels.ReturnWorkDescription? work) =>
+        work is null
+            ? null
+            : new ReturnWorkSnapshot(
+                work.CategoryCode,
+                work.BlockerCode,
+                work.PendingRefundAttemptId,
+                work.FailedRefundAttemptId,
+                work.CanRecordReceipt,
+                work.CanDecide,
+                work.CanResumeRefund,
+                work.CanRetryRefund,
+                work.CanSettlePhysical,
+                work.IsOpen,
+                work.NeedsOperator,
+                work.ActionCodes.ToList());
 
     /// <summary>
     /// TB-273: additive recovery facts. Money completion and physical completion stay two independent facts so a

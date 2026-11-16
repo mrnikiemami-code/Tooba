@@ -1,0 +1,36 @@
+TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275 — RESULT CONTRACT (as issued)
+
+Task-ID: TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275
+Parent-Task: TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Mode: ONE_OPERATOR_RETURNS_WORKFLOW_WITH_AUTHORITATIVE_QUEUE_DETAIL_REVIEW_AND_MOBILE
+Expected-Base-SHA: 79258250c87c313cf778a73ab94e8eb4be45d19e
+Stop-State: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+Scope A — one Returns-owned work description over stored facts, used by the queue and the detail:
+  server next step, work category, blocked reason, explicit review/action capabilities; history only when no remaining
+  physical/financial obligation; no invented promise/deadline/filter.
+Scope B — the queue is read-only with ONE reviewed entry per row; /admin/returns/{returnRequestId} is the sole action
+  owner; per-line requested/received/usable/damaged/SaleableRestockedQuantity; real receipt history; quiet attempt
+  history; only server-described actions.
+Scope C1 — lawful legacy partial-receipt continuation while no disposition exists and coverage is incomplete/coherent;
+  settled/disposed/decided-away refused.
+Scope C2 — reviewed definite-failure retry bound to an exact expectedFailedAttemptId with a deterministic child identity;
+  duplicate/lost answer replays ONE child; no count-based key; ambiguity is a typed blocker.
+Scope D — durable review intent before the first send, one executor per tick, epoch fencing, compare-and-clear, exact-body
+  retry, no background loop.
+Scope E — 1440/390 operator layout over the existing design system, 44px new controls, scoped grid scroll, Persian/Jalali
+  and honest unknown/empty/error/denied states.
+Scope F — focused named tests, typecheck, production build, backend build/publish, live read-only verification, evidence.
+
+Required evidence files:
+  TASK.md, RESULT.md, RECEIPTS.md, result-contract.txt, operator-workflow-proof.md,
+  query-count-and-display-proof.md, durable-intent-and-mobile-proof.md, user-review.md
+
+Contract outcome recorded by this task: PASS within the issued scope, with the "no live return case" limit declared.

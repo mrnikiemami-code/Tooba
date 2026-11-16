@@ -1,4 +1,28 @@
-# CURRENT — RETURNS274-R1 REPAIR ACCEPTED WITH DECLARED LIMITS; ONLY275 NEXT — 2026-11-16
+# CURRENT — 275 WORKER PASS (operator queue, single case workspace, durable reviewed intent, mobile); NO LIVE RETURN CASE — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/TASK.md and
+docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,operator-workflow-proof.md,query-count-and-display-proof.md,durable-intent-and-mobile-proof.md,user-review.md}.
+275 PASS within the issued A–F operator-workflow scope, awaiting Architect review (NOT Architect ACCEPT, NOT user
+functional/visual acceptance). Base `79258250c87c313cf778a73ab94e8eb4be45d19e` == Expected-Base-SHA == origin/main.
+274-R1 acceptance preserved; **276 NOT ISSUED**; `automaticNextImplementationTask: NONE`.
+One Returns-owned work description (`ReturnWorkPolicy`) serves a server-classified queue (page + total + pre-paging
+strip counts from ONE constrained set, legacy tokens translated once, selector refused inside advanced expressions) and
+the single case workspace (sole action owner; per-line requested/received/usable/damaged/SaleableRestockedQuantity, real
+receipt occurrences, quiet attempt history, only server-described actions). C1: lawful partial-receipt continuation
+while nothing is disposed and coverage is incomplete/coherent. C2: reviewed definite-failure retry with a deterministic
+child identity derived from `(case, failedAttempt)` — duplicate/lost answers replay ONE child, no counter key, no schema.
+D: intent persisted in `sessionStorage` before the first possible send, one executor per tick, epoch fencing,
+compare-and-clear, no polling. E: 44px controls, 390/1440 scoped scroll, honest empty/unknown/denied/not-found states.
+Proof: `ReturnsOperatorWorkflow275Tests` 12/12; FE suite 21/21; `tsc` 0; `next build` 0 (`BUILD_ID
+TaMAKtGjoy8sg6NHdnsO9`); `dotnet build` 0 errors; Host publish 0 errors. Host 5088 PID 16532 serving
+`…\artifacts\publish-primary\Tooba.Host.dll` SHA256 `02AECDC7…48DD73` (`/health` + `/health/ready` 200); Next 3000 PID
+50724. Zero migration/DDL/seed/backfill/cleanup/restore, one canonical `tooba_alpha`, no live business write, no
+provider/money/stock call, no screenshots.
+**No live return case exists**, so the live queue is honestly empty and there is no served operator walkthrough; the
+actionable path is mounted/controlled proof only. No demo order/case/receipt/hold was created.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS274-R1 REPAIR ACCEPTED WITH DECLARED LIMITS; ONLY275 NEXT — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1/ARCHITECT-REVIEW.md.
 274-R1 bounded repair accepted at5aaff422fb83095c885afaf372e610a3da8f0a2d; receiving foundation proceeds to operator integration.

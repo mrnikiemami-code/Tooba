@@ -925,6 +925,50 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "مقصد بازگشت وجه نامعتبر است.",
     en: "The refund destination is not valid.",
   },
+  "return.receipt.state_invalid": {
+    fa: "وثوق فیزیکی این مرجوعی بسته شده است؛ ثبت رسید تازه مجاز نیست.",
+    en: "Receiving for this return is closed; a new receipt is not allowed.",
+  },
+  "return.receipt.line_invalid": {
+    fa: "مقدار یا وضعیت یکی از اقلام رسید معتبر نیست.",
+    en: "A receipt line quantity or inspection value is not valid.",
+  },
+  "return.receipt.actor_required": {
+    fa: "ثبت‌کننده رسید مشخص نشده است. دوباره وارد شوید.",
+    en: "The receiving operator is not identified. Sign in again.",
+  },
+  "return.recovery.receiving_required": {
+    fa: "تا تکمیل دریافت و بازرسی کالا، این مرحله قابل انجام نیست.",
+    en: "This step needs the customer's goods received and inspected first.",
+  },
+  "return.recovery.evidence_conflict": {
+    fa: "اطلاعات ثبت‌شده با درخواست هم‌خوان نیست؛ نیاز به بررسی دارد.",
+    en: "The stored evidence contradicts the request and needs review.",
+  },
+  "return.recovery.stock_binding_required": {
+    fa: "برای برگشت این کالا به موجودی، اتصال انبار ثبت نشده است.",
+    en: "This line has no owning stock binding, so it cannot be restocked.",
+  },
+  "return.recovery.physical_resolution_required": {
+    fa: "کالای دریافت‌شده در این پرونده باید تعیین تکلیف شود.",
+    en: "The goods received on this case still owe a physical resolution.",
+  },
+  "return.recovery.attempt_unbound": {
+    fa: "تلاش بازگشت وجه معتبر و یکتا برای این پرونده پیدا نشد.",
+    en: "No single coherent refund attempt is bound to this case.",
+  },
+  "return.recovery.attempt_mismatch": {
+    fa: "تلاش بازگشت وجه انتخاب‌شده با پرونده هم‌خوان نیست.",
+    en: "The reviewed refund attempt does not match this case.",
+  },
+  "return.recovery.reason_required": {
+    fa: "برای رد مرجوعی، دلیل آن را بنویسید.",
+    en: "A rejection requires a reason.",
+  },
+  "return.recovery.reason_conflict": {
+    fa: "دلیل ثبت‌شده با این تصمیم هم‌خوان نیست.",
+    en: "The recorded reason does not match this decision.",
+  },
   "order.note.invalid": {
     fa: "متن یادداشت معتبر نیست.",
     en: "The note text is not valid.",

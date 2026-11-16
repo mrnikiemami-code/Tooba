@@ -102,44 +102,11 @@ public sealed partial class ReturnDirectory
                 return await MapSnapshotAsync(request, cancellationToken);
             }
 
-            if (request.Status != ReturnRequestStatus.Requested)
-            {
-                // TB-274: a NEW physical receipt is a statement about goods the operator has in hand. It is lawful
-                // while the case is still awaiting a decision, and for a case whose MONEY already started but whose
-                // physical side is still entirely unsettled (the only way such a legacy case can lawfully proceed).
-                // A decided, rejected, cancelled or already-settled physical history is a durable record this
-                // submission may not retroactively change.
-                var physicalHistoryExists = await _db.ReturnItems.AsNoTracking()
-                    .AnyAsync(
-                        x => x.ReturnRequestId == command.ReturnRequestId
-                             && x.Disposition != ReturnItemDisposition.None,
-                        cancellationToken)
-                    || await _db.ReturnReceipts.AsNoTracking()
-                        .AnyAsync(x => x.ReturnRequestId == command.ReturnRequestId, cancellationToken);
-                var moneyStartedWithoutPhysicalHistory = request.Status is ReturnRequestStatus.Approved
-                    or ReturnRequestStatus.RefundProcessing
-                    or ReturnRequestStatus.RefundFailed
-                    or ReturnRequestStatus.Completed;
-                if (!moneyStartedWithoutPhysicalHistory || physicalHistoryExists)
-                {
-                    throw new ContractOperationException(ReturnsErrorCodes.ReceiptStateInvalid);
-                }
-            }
-
             var requestedItems = await _db.ReturnItems.AsNoTracking()
                 .Where(x => x.ReturnRequestId == command.ReturnRequestId)
-                .Select(x => new { x.ReturnItemId, x.Quantity })
+                .Select(x => new { x.ReturnItemId, x.Quantity, x.Disposition })
                 .ToListAsync(cancellationToken);
             var requestedById = requestedItems.ToDictionary(x => x.ReturnItemId, x => x.Quantity);
-
-            foreach (var line in lines)
-            {
-                if (!requestedById.ContainsKey(line.ReturnItemId))
-                {
-                    // A receipt may only answer for a line of THIS case.
-                    throw new ContractOperationException(ReturnsErrorCodes.ReceiptLineInvalid);
-                }
-            }
 
             // TB-274-R1: the cumulative coverage is read through the SAME owning binding every read/action uses. If the
             // already-stored evidence is contradictory (borrowed receipt header, foreign item, non-positive or
@@ -149,6 +116,33 @@ public sealed partial class ReturnDirectory
             if (coverage is not { IsCoherent: true })
             {
                 throw new ContractOperationException(ReturnsErrorCodes.RecoveryEvidenceConflict);
+            }
+
+            if (request.Status != ReturnRequestStatus.Requested)
+            {
+                // TB-275 (C1): a NEW physical receipt is a statement about goods the operator has in hand. It is lawful
+                // while the case is still awaiting a decision, and it stays lawful for a case whose MONEY already
+                // started as long as nothing was physically disposed yet and the cumulative coverage is still
+                // INCOMPLETE — the only way such a legacy partial case can lawfully finish its receiving. Once an item
+                // carries a disposition, or the coverage is already complete, the stored receipt history is a durable
+                // record this submission may not retroactively change, and a decided-away (rejected/cancelled) case
+                // never receives NEW goods through this command. The check uses the same stored facts as the read
+                // projection, so the workspace can never offer a recording this path refuses.
+                if (request.Status is ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled
+                    || requestedItems.Any(x => x.Disposition != ReturnItemDisposition.None)
+                    || coverage.IsComplete)
+                {
+                    throw new ContractOperationException(ReturnsErrorCodes.ReceiptStateInvalid);
+                }
+            }
+
+            foreach (var line in lines)
+            {
+                if (!requestedById.ContainsKey(line.ReturnItemId))
+                {
+                    // A receipt may only answer for a line of THIS case.
+                    throw new ContractOperationException(ReturnsErrorCodes.ReceiptLineInvalid);
+                }
             }
 
             foreach (var group in lines.GroupBy(x => x.ReturnItemId))
@@ -208,13 +202,19 @@ public sealed partial class ReturnDirectory
     }
 
     /// <summary>
-    /// TB-274-R1: the ONE stored-fact read of a case's receiving evidence. Every recorded line is bound to its OWN
-    /// receipt header OF THIS CASE before it may count, so a line that names another case's receipt is never borrowed
-    /// into this case's coverage — the summary reports that contradiction instead.
+    /// TB-274-R1 / TB-275: the ONE stored-fact read of a case's receiving evidence. Every recorded line is bound to its
+    /// OWN receipt header OF THIS CASE before it may count, so a line that names another case's receipt is never
+    /// borrowed into this case's coverage — the summary reports that contradiction instead. The same read also returns
+    /// the recorded occurrences, so the workspace never needs a second, possibly disagreeing, receipt query.
     /// </summary>
     private async Task<ReturnReceivingSummary> ReadReceivingAsync(
         Guid returnRequestId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) =>
+        (await ReadReceiptEvidenceAsync(returnRequestId, cancellationToken)).Summary;
+
+    /// <summary>TB-275: the receiving summary AND the recorded occurrences, from ONE read of the same stored rows.</summary>
+    private async Task<(ReturnReceivingSummary Summary, IReadOnlyList<ReturnReceiptOccurrenceSnapshot> Occurrences)>
+        ReadReceiptEvidenceAsync(Guid returnRequestId, CancellationToken cancellationToken)
     {
         var requestedItems = await _db.ReturnItems.AsNoTracking()
             .Where(x => x.ReturnRequestId == returnRequestId)
@@ -223,7 +223,7 @@ public sealed partial class ReturnDirectory
 
         var owningReceipts = await _db.ReturnReceipts.AsNoTracking()
             .Where(x => x.ReturnRequestId == returnRequestId)
-            .Select(x => x.ReturnReceiptId)
+            .Select(x => new { x.ReturnReceiptId, x.OccurrenceKey, x.ReceivedByUserId, x.RecordedAt })
             .ToListAsync(cancellationToken);
 
         var recordedLines = await _db.ReturnReceiptLines.AsNoTracking()
@@ -231,10 +231,34 @@ public sealed partial class ReturnDirectory
             .Select(x => new { x.ReturnReceiptId, x.ReturnItemId, x.Quantity, x.Condition })
             .ToListAsync(cancellationToken);
 
-        return ReturnReceivingSummary.Describe(
+        var summary = ReturnReceivingSummary.Describe(
             requestedItems.Select(x => (x.ReturnItemId, x.Quantity)),
             recordedLines.Select(x => ((Guid?)x.ReturnReceiptId, x.ReturnItemId, x.Quantity, x.Condition)),
-            owningReceipts);
+            owningReceipts.Select(x => x.ReturnReceiptId).ToArray());
+
+        var linesByReceipt = recordedLines
+            .GroupBy(x => x.ReturnReceiptId)
+            .ToDictionary(group => group.Key, group => group
+                .OrderBy(x => x.ReturnItemId)
+                .ThenBy(x => x.Condition)
+                .ThenBy(x => x.Quantity)
+                .Select(x => new ReturnReceiptLineSnapshot(x.ReturnItemId, x.Quantity, x.Condition))
+                .ToArray());
+
+        var occurrences = owningReceipts
+            .OrderBy(x => x.RecordedAt)
+            .ThenBy(x => x.ReturnReceiptId)
+            .Select(x => new ReturnReceiptOccurrenceSnapshot(
+                x.ReturnReceiptId,
+                x.OccurrenceKey,
+                x.ReceivedByUserId,
+                x.RecordedAt,
+                linesByReceipt.TryGetValue(x.ReturnReceiptId, out var lines)
+                    ? lines
+                    : Array.Empty<ReturnReceiptLineSnapshot>()))
+            .ToArray();
+
+        return (summary, occurrences);
     }
 
     /// <summary>
