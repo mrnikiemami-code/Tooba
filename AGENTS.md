@@ -1,4 +1,15 @@
-# CURRENT — 274-R1 WORKER PASS (explicit inspection, fail-closed evidence, truthful stock, scoped decision collision); 274 STAYS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+# CURRENT — RETURNS274-R1 REPAIR ACCEPTED WITH DECLARED LIMITS; ONLY275 NEXT — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1/ARCHITECT-REVIEW.md.
+274-R1 bounded repair accepted at5aaff422fb83095c885afaf372e610a3da8f0a2d; receiving foundation proceeds to operator integration.
+Original274 PARTIAL review, broad-run deviations, failed first migration apply/private-backup evidence and transaction proof limits remain history.
+Only TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275 next via actual Bridge envelope;276 NOT ISSUED.
+275 owns queue/detail/mobile, single action owner, durable reviewed intent, exact failure retry guard and lawful legacy partial-receipt continuation. No schema/provider/live business writes.
+No Architect runtime/tests, live valid case or user/provider/financial acceptance. Preserve272-R1/273-R2/shipping acceptance.
+ONE tooba_alpha5432/store-alpha, Host5088/FE3000; one worker/task, no screenshots/delegation/loops.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 274-R1 WORKER PASS (explicit inspection, fail-closed evidence, truthful stock, scoped decision collision); 274 STAYS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1/TASK.md and
 docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,receipt-and-stock-integrity-proof.md,decision-collision-proof.md,migration-and-backup-proof.md}.
