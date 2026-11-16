@@ -3,6 +3,9 @@
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
 
 ## CURRENT checkpoint — 2026-11-16
+273-R1 Architect decision: PARTIAL, only273-R2 three-gate correction is next. Read273-R1/ARCHITECT-REVIEW.md. Source coherence before pending money, prior closure timestamps before settled, explicit enlisted transaction detection.274–276 NOT ISSUED. No scope expansion or proof loop. Preserve272-R1 acceptance/audit.
+
+## Superseded273-R1 worker checkpoint — 2026-11-16
 273-R1 worker result: PASS within the issued A–D repair scope, awaiting Architect review (NOT Architect/user acceptance).
 Parent **273 remains PARTIAL** until the Architect reviews this repair; its evidence and `ARCHITECT-REVIEW.md` are unchanged.
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/RESULT.md.

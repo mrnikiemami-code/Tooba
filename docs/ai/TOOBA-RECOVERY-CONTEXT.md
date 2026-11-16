@@ -1,4 +1,14 @@
-# CURRENT — 273-R1 WORKER PASS; 273 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+# CURRENT — RETURNS273-R1 PARTIAL; ONLY273-R2 THREE-GATE REPAIR — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/ARCHITECT-REVIEW.md.
+At a2ffbf60de3151037c6512461289d0c99bc7ccca, retain repaired reference/binding/marker restoration;273 not accepted.
+Only TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2 next: courier source before pending-money recovery, prior closure timestamps before Settled, explicit provider-enlisted transaction refusal.
+274–276 NOT ISSUED. No migration/FE/provider integration, screenshots/delegation/loops/broad test reruns.
+Worker broad-suite deviation remains history. No Architect local tests/runtime. Preserve272-R1/shipping acceptance and prior audits.
+ONE canonical tooba_alpha5432/store-alpha, Host5088/FE3000; rollback-only test facts, no committed live business/provider/money/stock effects.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 273-R1 WORKER PASS; 273 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/TASK.md and
 docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,binding-and-finalization-proof.md,transaction-and-reference-proof.md}.
