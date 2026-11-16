@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+CONTRACT: TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272
+PARENT: TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1
+CHANNEL: tooba-main
+
+EXPECTED_BASE_SHA: 9d1a64e49102dd4e4429caad987beb7219f070ae
+ACTUAL_BASE_SHA: 9d1a64e49102dd4e4429caad987beb7219f070ae
+BASE_EQUALS_ORIGIN_MAIN_AT_CLAIM: true
+INCOMING_DELTA: none
+CODE_SHA: 4d0ba4e169bff5c529ff387509c4fa920a31930f
+EVIDENCE_COMMIT: reported in the canonical Bridge result (this file cannot embed its own commit)
+FINAL_HEAD_AND_ORIGIN_PARITY: reported in the canonical Bridge result
+
+STATUS: PASS
+SCOPE: A, B, C, D within the issued boundary
+DECISION: AUTHORIZED_EXACT_CREATE_REPLAY_ONE_LINE_PER_ORDER_LINE_REFUND_FAILED_KEEPING_CAPACITY_AND_ONE_SERIALIZED_CHECK_AND_INSERT_PER_SELLER_ORDER_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE
+STOP_STATE: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+A_AUTHORIZED_EXACT_REPLAY: implemented
+  Ordering: mutation gate -> seller order binding -> customer ownership -> duplicate shape -> normalized intent ->
+  Returns transaction + advisory lock -> stored key read -> exact comparison.
+  Source: src/backend/Modules/Returns/Tooba.Returns.Infrastructure/Directories/ReturnDirectory.Creation.cs
+  Compared intent: SellerOrderId, RequestedByUserId, Origin=CustomerDelivered, RefundDestination, Trim(reason),
+  ordered (OrderLineId, Quantity) set rounded to numeric(18,6).
+  Changed intent -> return.idempotency_conflict (HTTP 409), zero writes. Courier-origin key -> conflict, never borrowed.
+  Unique index arbitration: only SQLSTATE 23505 on returns.return_requests / ix_return_requests_idempotency_key.
+
+B_ONE_LINE_PER_ORDER_LINE: implemented
+  Reachable validation: returns.validation.duplicate_order_line (CreateReturnCommandValidator).
+  Owning invariant: returns.duplicate_line (ReturnRequest.FindRepeatedOrderLine + Create guard).
+  Courier-origin exempt by design: claim identity is (order line, condition).
+
+C_REFUND_FAILED_KEEPS_CAPACITY: implemented
+  Occupied: Requested, Approved, RefundProcessing, RefundFailed, Completed.
+  Released: Rejected, Cancelled.
+  Source: ReturnEligibilityEvaluator.GetAlreadyReturnedQuantitiesAsync (single canonical evaluator).
+
+D_ATOMIC_CHECK_AND_INSERT: implemented
+  pg_advisory_xact_lock over (namespace 0x544F4F4241000272 ^ sellerOrderId) inside Returns' own transaction.
+  Eligibility re-read AFTER the lock; transaction-scoped release (commit/rollback/cancellation/connection loss).
+  No foreign table lock, no foreign-schema SQL, no money/stock/provider call inside the transaction.
+
+SCHEMA: unchanged (no migration, no DDL, no backfill)
+
+CHECKS:
+  ReturnsCreateIntegrity272Tests: 13/13 passed
+  Tooba.Returns.Tests (whole project): 34 total, 32 passed, 2 pre-existing failures
+    (ReturnsCharacterizationTests EF-InMemory/TransactionIgnoredWarning; identical at base 9d1a64e49)
+  ReturnsCreateIntegrity272RelationalTests on canonical tooba_alpha: 5/5 passed
+    (external lock holder contention, 3-round two-writer race, real unique-index collision,
+     real pk_return_items not reclassified, rollback + exact replay)
+  ReturnsModuleAmsc guards: 34 total, 32 passed, 2 pre-existing migration-list failures (identical at base)
+  dotnet build Tooba.slnx -c Release: 0 errors
+  Host publish: 0 errors
+
+RUNTIME: refreshed (Host only)
+  old Host dll SHA256 E204C33AA3765BD8F6073C30FA96646B433D60154DD621A8919822CC4AE18EDB
+  new Host dll SHA256 389D5A7AC8D9112059F37626345207B999F083942B31DE6F40EEE1375B760954
+  PID 51448 on 5088; /health 200 {"status":"ok"}; /health/ready 200
+  /__platform-commerce: SingleStore, tenant-alpha, store-alpha, 127.0.0.1, dev-singlestore, theme-alpha, IR
+  No business migration/seed/backfill at startup. FE untouched.
+
+DATA: one canonical tooba_alpha 127.0.0.1:5432 (SingleStore/store-alpha)
+  Task-labelled relational rows were deleted; leftover tb272-rel-% rows = 0 (requests and items).
+  Declared deviation: the two-writer race required committed task-labelled rows (a rolled-back transaction is
+  invisible to a competing connection); they were deleted and verified 0.
+  No user/parcel/case/stock/hold/decision/settings write, no reset/reseed/backfill/cleanup/restore,
+  no provider/PSP/waybill/notification/money operation.
+
+LIMITS:
+  No live return case exists in the canonical database -> no served HTTP/UI walkthrough of a real creation.
+  Two pre-existing ReturnsCharacterizationTests failures and two pre-existing AMSC migration-list pins left untouched.
+  Concurrency proven with independent connections (deterministic lock holder + 3 race rounds), not a stress harness.
+  No refund/reconciliation/receipt/queue/detail/mobile/finance work; shared ordinary/courier physical-capacity
+  redesign remains out of slice.
+
+EVIDENCE:
+  docs/ai/tasks/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/TASK.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/TASK.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/RESULT.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/RECEIPTS.md
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/result-contract.txt
+  docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/creation-integrity-proof.md
+
+NOT CLAIMED: Architect acceptance, user acceptance, customer/provider/financial readiness, full Returns completion.
+NEXT: 273-276 NOT ISSUED.
+STOP_FOR_ARCHITECT

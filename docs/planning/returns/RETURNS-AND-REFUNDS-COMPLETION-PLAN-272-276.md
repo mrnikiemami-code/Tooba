@@ -1,6 +1,8 @@
 # Returns and refunds — Architect execution plan — 2026-11-16
 
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER. Source baseline: c492443179b86f3efc065121b3ae2a140105937d.
+272 worker result: PASS within its issued A–D scope (2026-11-16) — awaiting Architect review; evidence in
+`docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/`. 273–276 remain candidates, NOT ISSUED.
 User instruction: plan, record in Architect context, then start. One downloadable task at a time; review result and source before issuing the next. No screenshot deliverables, delegation, idle polling or automatic implementation loop.
 
 ## Goal and completion boundary

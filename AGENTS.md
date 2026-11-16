@@ -1,4 +1,36 @@
-# CURRENT — RETURNS COMPLETION PLAN; ONLY TB-272 FIRST INCREMENT — 2026-11-16
+# CURRENT — 272 WORKER PASS; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,creation-integrity-proof.md}.
+Status **PASS within the issued A–D scope**, decision
+`AUTHORIZED_EXACT_CREATE_REPLAY_ONE_LINE_PER_ORDER_LINE_REFUND_FAILED_KEEPING_CAPACITY_AND_ONE_SERIALIZED_CHECK_AND_INSERT_PER_SELLER_ORDER_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE`,
+NOT Architect ACCEPT, NOT user functional acceptance, NOT any refund/provider/financial claim. Base
+`9d1a64e49102dd4e4429caad987beb7219f070ae` (== origin/main at claim). Parent 271-R1 acceptance stays bounded and
+preserved. Single worker, one task, no delegation, no historical agent resumed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A Authorized exact replay | ownership first | the mutation gate, seller-order binding and customer ownership are settled BEFORE any stored key is answered or compared; the compared intent is normalized (SellerOrderId, requesting user, `Origin=CustomerDelivered`, refund destination, `Trim`ed reason, ordered line/quantity set at `numeric(18,6)`), so the same key + identical intent replays the snapshot and a changed intent is `return.idempotency_conflict` (409) with zero writes; a courier-origin occurrence key can never be borrowed; only SQLSTATE `23505` on `ix_return_requests_idempotency_key` is arbitrated |
+| B One line per order line | validator + aggregate | `returns.validation.duplicate_order_line` refuses an ordinary customer/admin payload and `returns.duplicate_line` is the owning `ReturnRequest.Create` invariant; courier-origin is deliberately exempt because its claim identity is (order line, condition) |
+| C RefundFailed capacity | kept | `RefundFailed` stays an occupying status in `ReturnEligibilityEvaluator.GetAlreadyReturnedQuantitiesAsync`; only `Rejected`/`Cancelled` release requested quantity — one canonical evaluator, no second counting path |
+| D One atomic check+insert | per seller order | `pg_advisory_xact_lock` over a namespaced key derived from the seller order id inside Returns' own transaction, eligibility re-read AFTER the lock, release on commit/rollback/cancellation/connection loss; no foreign table lock, no cross-schema SQL, no money/stock/provider call inside the transaction |
+| E Schema / data | untouched | no migration, no DDL, no backfill; one canonical `tooba_alpha`; no user/parcel/case/stock/hold/decision/settings write |
+
+Verified once after the final code change: `ReturnsCreateIntegrity272Tests` **13/13**;
+`ReturnsCreateIntegrity272RelationalTests` on real `tooba_alpha` **5/5** (external lock-holder contention, 3-round
+two-writer race, real unique-index collision, real `pk_return_items` not reclassified, rollback + exact replay);
+`dotnet build Tooba.slnx -c Release` 0 errors; Host publish 0 errors. Host-only refresh: PID 51448 on 5088
+(`/health` + `/health/ready` 200, `/__platform-commerce` → SingleStore `store-alpha`), new Host dll SHA256
+`389D5A7AC8D9112059F37626345207B999F083942B31DE6F40EEE1375B760954`; FE untouched.
+Known limits: two pre-existing `ReturnsCharacterizationTests` failures (EF-InMemory transaction warning) and two
+pre-existing AMSC migration-list pins fail identically at base and were left untouched; no live return case exists in
+the canonical database so there is no served HTTP/UI walkthrough of a real creation; concurrency is proven with a
+deterministic external lock holder plus three race rounds, not a stress harness; task-labelled relational rows were
+deleted and verified 0, and the race rows had to be committed (a rolled-back write is invisible to a competing
+connection) — declared, not papered over.
+`273–276` remain candidates, **NOT ISSUED**; `activeTask: NONE`. STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS COMPLETION PLAN; ONLY TB-272 WAS ISSUED — 2026-11-16
 
 User authorized sequential completion of /admin/returns after the Architect source audit.
 Read docs/planning/returns/RETURNS-AND-REFUNDS-COMPLETION-PLAN-272-276.md.
