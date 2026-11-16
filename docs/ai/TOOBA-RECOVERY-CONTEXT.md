@@ -1,4 +1,31 @@
-# CURRENT — RETURNS272 CREATION SCOPE CLOSED THROUGH272-R1; ONLY273 NEXT — 2026-11-16
+# CURRENT — 273 WORKER PASS; BACKEND RECOVERY INCREMENT AWAITS ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,recovery-state-and-contract-proof.md,same-attempt-and-disposition-proof.md}.
+273 = **PASS within the issued backend A–D scope**, awaiting Architect review; NOT Architect/user acceptance, NOT any
+provider/financial/UI claim. Base `fcb2fe1cd2325b9378e85e55554bacadcef01b42` (== origin/main at claim), code
+`05cafa54aa4e2f9347ff37f4ce7295cfab1b12b2`. 272-R1 acceptance and 272's PARTIAL history are preserved. 274–276 remain
+candidates, **NOT ISSUED** (274 = customer receipt/inspection stage, 275 = operator recovery UI, 276 = later plan step).
+One worker/task, no delegation, no loop, no screenshots.
+- One pure stored-fact recovery description (`ReturnRecoveryPolicy`) serves both the read projection and the action, so
+  they cannot disagree; money completion and physical completion stay two independent facts.
+- `POST /v1/admin/returns/{id}/recover` (`resume_pending_refund`) repeats the **existing** pending attempt with its
+  recorded key/payment/amount/currency and the case's fixed destination — no new attempt, no new key, no fresh approval,
+  no destination override, no amount recomputation. A wrong/missing/ambiguous attempt refuses before any effect, and an
+  explicitly unconfigured adapter is a truthful 503 `return.recovery.gateway_unavailable` with the attempt still pending.
+- `settle_physical_disposition` is a separate intent: zero refund/Wallet calls, zero attempts, the existing per-item
+  restock identity, `DamagedNonSaleable` kept, and an ordinary RMA refused with `return.recovery.receiving_required`
+  instead of a fabricated saleable restock from default `Usable`.
+- No transaction/row lock spans an external call; the answer is applied afterwards under a short owning `FOR UPDATE` +
+  reload that applies only from `Pending`, so a stale/late answer cannot downgrade or duplicate, and a local save failure
+  is never answered as durable money.
+Schema untouched (no migration/DDL/backfill). Canonical `tooba_alpha`5432/store-alpha, Host5088, FE3000 untouched; no
+live case mutation, no provider/PSP/Wallet/Inventory/waybill/money call. Live read-only wire receipts exist; the live
+Returns table is empty, so there is no served walkthrough of a real recovery.
+Preserve shipping271-R1/270-R4 acceptance and prior audit history.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS272 CREATION SCOPE CLOSED THROUGH272-R1; ONLY273 NEXT — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/ARCHITECT-REVIEW.md.
 272-R1 ACCEPT within issued A–C source/evidence scope at b5d9b9aecdcc13909099c9117887861e2bf0ae46; parent creation work closed through repair.

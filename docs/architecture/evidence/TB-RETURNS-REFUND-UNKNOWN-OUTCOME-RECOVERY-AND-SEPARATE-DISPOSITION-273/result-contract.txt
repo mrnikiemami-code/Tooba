@@ -1,0 +1,152 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+CONTRACT: TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273
+PARENT: TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1
+CHANNEL: tooba-main
+WORKER: tooba-worker-01 / cursor
+
+EXPECTED_BASE_SHA: fcb2fe1cd2325b9378e85e55554bacadcef01b42
+ACTUAL_BASE_SHA: fcb2fe1cd2325b9378e85e55554bacadcef01b42
+BASE_EQUALS_ORIGIN_MAIN_AT_CLAIM: true
+INCOMING_DELTA: none
+CODE_SHA: 05cafa54aa4e2f9347ff37f4ce7295cfab1b12b2
+EVIDENCE_COMMIT: reported in the canonical Bridge result (this file cannot embed its own commit)
+FINAL_HEAD_AND_ORIGIN_PARITY: reported in the canonical Bridge result
+
+STATUS: PASS
+SCOPE: A, B, C, D of the issued backend recovery increment
+DECISION: ONE_PURE_STORED_FACT_RECOVERY_DESCRIPTION_SERVING_BOTH_READ_AND_ACTION_AN_EXPLICIT_ADMIN_CQRS_RECOVERY_INTENT_THAT_REPEATS_THE_EXISTING_PENDING_ATTEMPT_WITHOUT_MINTING_OR_REKEYING_A_SEPARATE_PHYSICAL_DISPOSITION_INTENT_WITH_ZERO_MONEY_CALLS_AND_A_SHORT_OWNING_COORDINATION_THAT_NEVER_SPANS_AN_EXTERNAL_CALL_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION
+STOP_STATE: STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+
+A_ONE_AUTHORITATIVE_RECOVERY_DESCRIPTION: implemented
+  Policy: Tooba.Returns.Application/ReturnRequests/Models/ReturnRecoveryDescription.cs
+    (ReturnRecoveryPhase None|PendingMoney|FailedMoney|PendingDisposition|Settled|Blocked,
+     ReturnRecoveryKind ResumePendingRefund|SettlePhysicalDisposition,
+     RefundAttemptId, BlockerCode, FinancialComplete, PhysicalComplete, ReturnRecoveryPolicy.Describe).
+  Input is ONLY the stored ReturnSnapshot (case/origin/status, attempts, item dispositions). It never contacts Payment,
+    Wallet or Inventory, never mints an attempt and never writes.
+  Reused by both the recovery command (executability) and the read projection: ReturnDirectory.MapSnapshotAsync
+    returns `snapshot with { Recovery = ReturnRecoveryPolicy.Describe(snapshot) }`, so admin/customer/seller/detail
+    reads and the action can never disagree.
+  Additive Contracts: ReturnRecoveryPhaseOption / ReturnRecoveryKindOption / ReturnRecoverySnapshot and
+    ReturnSnapshot.Recovery (nullable, last ordinal member). No existing numeric enum or shipped wire member changed.
+
+B_EXPLICIT_SAME_ATTEMPT_ADMIN_RECOVERY: implemented
+  CQRS: RecoverReturnCommand + RecoverReturnHandler (ReturnsOperation.ExecuteAsync -> Result) +
+        RecoverReturnCommandValidator (returns.validation.recovery_kind_invalid / recovery_attempt_required).
+  Endpoint: POST /v1/admin/returns/{returnRequestId:guid}/recover in the existing admin route family, existing
+    IReturnAdminAuthorizer (actor resolved on EVERY call) and existing ApiResponseFactory.
+  Wire: AdminReturnRecoveryRequest { Kind, ExpectedRefundAttemptId } only — no payment/amount/currency/customer/
+        destination from the client. Stable tokens: resume_pending_refund / settle_physical_disposition
+        (ReturnRecoveryKindParser; absent or unknown token is return.recovery.kind_invalid, never defaulted).
+  Money intent: refuses a missing/wrong/unknown/ambiguous attempt BEFORE any effect
+    (return.recovery.attempt_mismatch / return.recovery.attempt_unbound / return.recovery.state_mismatch), requires
+    payment/amount/currency coherence with the stored case, and reuses the attempt's EXISTING
+    IdempotencyKey/PaymentId/Amount/Currency and the case's fixed destination. No new attempt, no new key, no fresh
+    approval, no destination override, no amount recomputation.
+  Unconfigured adapter: a ContractOperationException whose typed code is exactly
+    payment.refund.gateway.unconfigured is classified as RefundExecutionOutcome.Unavailable and answered as
+    return.recovery.gateway_unavailable (HTTP 503 Business) with the attempt still Pending and its key intact.
+    Classification is by typed code only, never by message text.
+  Unknown/transport answer: stays Unresolved with the SAME attempt and key; nothing is promoted into a definite
+    failure and no synthetic provider reference is written.
+  Definite provider refusal: recorded as a real Failed attempt through the same owning write; the pending resume
+    intent is then answered from the stored row and never re-sends.
+  Wallet: the existing Wallet adapter and the case key wallet-refund-credit:{caseId} are reused; zero PSP calls.
+    OriginalPayment never credits Wallet (the destination is read from the stored case, never substituted).
+
+C_SEPARATE_PHYSICAL_DISPOSITION_INTENT: implemented
+  SettlePhysicalDisposition performs ZERO refund/Wallet calls and creates ZERO attempts; it refuses while the money
+    is not confirmed (return.recovery.state_mismatch).
+  Courier-origin re-reads the existing receipt/claim/closure sequence idempotently (EnsureCourierOriginClosureAsync),
+    reuses the existing per-item restock identity, keeps DamagedNonSaleable, then MarkRefundReleasedWhenFullyDisposed.
+  CustomerDelivered: no receipt/inspection fact exists, so the intent is refused with
+    return.recovery.receiving_required (HTTP 400 Business) and NOTHING is restocked; the confirmed money stays.
+    SettlePhysicalDispositionAsync gained the explicit `allowOrdinaryDisposition` boundary so a recovery intent can
+    never reach the legacy unconditional ordinary restock; the approve/retry paths keep their previous default.
+  Already settled: answered from the stored, recorded completion with zero effect. A failed stock call leaves the
+    item pending with its same identity and never marks SaleableRestock before Inventory confirms.
+
+D_DURABILITY_AND_LOST_ANSWERS: implemented
+  No database transaction or row lock spans the gateway/Wallet/Inventory call: the external call happens first and
+    the outcome is applied afterwards in RecordRefundOutcomeAsync, which opens its own short transaction only when it
+    owns one, takes SELECT ... FOR UPDATE on returns.refund_attempts (own schema only), Reloads the attempt AND the
+    case, and returns false (stale) when a terminal status is already durable.
+  The caller's transaction is never committed/rolled back; no DbUpdateException swallowing and no
+    ChangeTracker.Clear() were introduced. A local SaveChanges failure propagates, so an external success whose save
+    did not land is never reported as durable money.
+  Approve-vs-reject authority is unchanged and checked before any lifecycle mapping: a rejected/cancelled/unapproved
+    case can never gain a recovery action (no first/latest attempt fallback anywhere).
+
+SCHEMA: unchanged (no migration, no DDL, no backfill). Existing returns.refund_attempts / return_items /
+  return_request_decisions and the stored closure facts were sufficient.
+
+CHECKS (run once, after the final code change):
+  ReturnsRecovery273Tests: 15/15 passed
+  Disclosure: the whole Tooba.Returns.Tests project was run once (broader than the named suite): 52 passed / 2 failed,
+    the two failures being the PRE-EXISTING ReturnsCharacterizationTests
+    (Create_approve_refund_preserves_amount_currency_and_is_idempotent,
+     Wallet_destination_credits_wallet_without_psp_refund) that fail on the EF-InMemory
+    TransactionIgnoredWarning at ReturnDirectory.RecordReturnDecisionAsync — identical at base and left untouched.
+  Disclosure: the Host ReturnsModuleAmsc* filter was run once (broader than the named suite): 34 total,
+    32 passed / 2 failed, both the PRE-EXISTING migration-file-list pins
+    (ReturnsModuleAmsc001W3CertGuardTests.Returns_is_contracts_only_and_microservice_extractable,
+     ReturnsModuleAmsc001W1MigrateGuardTests.Migration_did_not_change_the_returns_schema_migrations); the updated
+    route/validator/error-catalog count pins in those same files pass.
+  dotnet build Tooba.slnx -c Release: 0 errors (293 warnings, pre-existing analyzers).
+  dotnet publish Tooba.Host: exit 0 (1 pre-existing CS0105 warning in AdminDevActorBootstrap).
+
+RUNTIME: refreshed (Host only)
+  old Host dll SHA256 3244E778B2B24884D85AE4537961105CA97729B0A9B36AF075534D1FEF8BEEEB
+  new Host dll SHA256 2E80BFFBB3D595A685430382F00ACFC61D09A13A9636C469CC2D963D4AD4802A
+  graceful stop of PID 13160 (listeners 0) -> one publish -> one start (process tree PID 38068, listener PID 28580)
+  /health 200 {"status":"ok"}; /health/ready 200 SingleStore/postgresql/authorization(inmemory)/messaging Healthy
+  /__platform-commerce 200 SingleStore, dev-singlestore, store-alpha, tenant-alpha, theme-alpha, IR
+  appsettings*.json untouched; FE untouched (no FE build/test/restart, no screenshots)
+
+LIVE READ-ONLY WIRE RECEIPTS (no business write):
+  POST /v1/admin/returns/{random}/recover without the dev actor -> 403 admin.authorization.denied (authority is
+    enforced before any read/effect; the route exists rather than 404).
+  With actor 01a036c2-970e-7000-8eb7-94bf5cc2d8db: body {} -> 400 return.recovery.kind_invalid;
+    {"kind":"not_a_kind"} -> 400 return.recovery.kind_invalid;
+    {"kind":"resume_pending_refund"} -> 400 validation.failed [ExpectedRefundAttemptId: recovery_attempt_required];
+    {"kind":"resume_pending_refund","expectedRefundAttemptId":<random>} -> 404 return.missing;
+    {"kind":"settle_physical_disposition"} -> 404 return.missing.
+  POST /v1/admin/returns/query {"page":1,"pageSize":5,"filters":[],"sort":[]} -> 200
+    {"items":[],"page":1,"pageSize":5,"totalCount":0} (the live Returns table is empty, as the envelope pre-declared).
+
+DATA / FINANCIAL BOUNDARIES: one canonical tooba_alpha 127.0.0.1:5432 (SingleStore/store-alpha). No migration,
+  DDL, seed, backfill, cleanup, delete, restore, reset or reseed. No live case approval/reject/refund/recovery
+  mutation; no provider/PSP/Wallet/Inventory/waybill/notification/money call was made by this increment.
+
+BACKEND ONLY: the operator recovery UI (275), the customer receipt/inspection stage (274) and 276 remain NOT ISSUED.
+  This result does not claim UI recovery, receiving evidence, provider readiness or full Returns completion.
+
+LIMITS:
+  No live actionable return case exists (live totalCount=0), so there is no served operator walkthrough of a real
+    recovery; the route/refusal walkthrough is real but read-only, and the effects are proven by the focused suite.
+  Controlled ports only: the gateway/Wallet/Inventory behaviour is proven with task-owned scripted ports and
+    injected local-save failure, not a real PSP; "one HTTP provider call" is NOT claimed — same-key concurrent
+    recoveries may each call the owning gateway, which the Contract's same-key idempotency must fold.
+  Concurrency/late-answer safety is proven by re-read + monotonic status application with a stale-answer case, not a
+    stress harness.
+  No relational test was added (the envelope allows them only if needed); the FOR UPDATE branch is therefore
+    exercised only on the running relational Host, not by an automated rollback-only fact.
+  Broader suites than the named focused ones were executed once each (whole Returns project, Host ReturnsModuleAmsc
+    filter) and are disclosed above; no whole-solution test run was performed.
+  One existing behaviour was necessarily touched on the shared refund path: ExecuteRefundAsync now short-circuits a
+    NON-Pending attempt (previously only Succeeded), so a definite Failed attempt cannot be re-sent by a same-intent
+    resume; the terminal new-attempt retry intent (retry_refund) is unchanged and NOT audited here.
+
+EVIDENCE:
+  docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/TASK.md
+  docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/TASK.md
+  docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/RESULT.md
+  docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/RECEIPTS.md
+  docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/result-contract.txt
+  docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/recovery-state-and-contract-proof.md
+  docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/same-attempt-and-disposition-proof.md
+
+NOT CLAIMED: Architect acceptance, user acceptance, provider/financial readiness, receiving/inspection evidence,
+  operator recovery UI, full Returns completion.
+STOP_FOR_ARCHITECT

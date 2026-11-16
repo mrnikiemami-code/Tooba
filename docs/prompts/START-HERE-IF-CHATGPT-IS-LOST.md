@@ -1,4 +1,29 @@
-# CURRENT — RETURNS272 CREATION SCOPE CLOSED THROUGH272-R1; ONLY273 NEXT — 2026-11-16
+# CURRENT — 273 WORKER PASS; BACKEND RECOVERY AWAITS ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/{RESULT.md,RECEIPTS.md,result-contract.txt}.
+273 = PASS within the issued backend A–D scope, awaiting Architect review; NOT Architect/user acceptance, NOT any
+provider/financial/UI claim. Base `fcb2fe1cd2325b9378e85e55554bacadcef01b42` (== origin/main at claim), code
+`05cafa54aa4e2f9347ff37f4ce7295cfab1b12b2`. 272-R1 remains ACCEPT within its A–C repair scope and 272 remains PARTIAL as
+the parent; both histories are preserved. 274–276 are candidates, **NOT ISSUED**.
+- One pure stored-fact recovery description serves both the read projection and the recovery action (money completion and
+  physical completion are separate facts).
+- `POST /v1/admin/returns/{id}/recover`: `resume_pending_refund` repeats the EXISTING pending attempt (same
+  key/payment/amount/currency, fixed destination) — no new attempt, no new key; `settle_physical_disposition` is a
+  separate zero-money intent that reuses the existing per-item restock identity and refuses an ordinary RMA with
+  `return.recovery.receiving_required`.
+- An explicitly unconfigured adapter is a truthful 503 `return.recovery.gateway_unavailable` with the attempt still
+  pending; unknown/transport answers stay pending with the same key; a definite failure is never re-sent.
+- No transaction/row lock spans an external call; the answer is applied afterwards under a short owning `FOR UPDATE` +
+  reload that only applies from `Pending`.
+Schema untouched. Canonical `tooba_alpha`5432/store-alpha, Host5088 refreshed (dll
+`2E80BFFBB3D595A685430382F00ACFC61D09A13A9636C469CC2D963D4AD4802A`), FE3000 untouched; no live case mutation, no
+provider/money/stock call. The live Returns table is empty, so there is no served walkthrough of a real recovery.
+Keep one task/worker, no screenshots/delegation/automatic loop.
+Preserve shipping271-R1/270-R4 acceptance and prior audit history.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS272 CREATION SCOPE CLOSED THROUGH272-R1; ONLY273 NEXT — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/ARCHITECT-REVIEW.md.
 272-R1 ACCEPT within issued A–C source/evidence scope at b5d9b9aecdcc13909099c9117887861e2bf0ae46; parent creation work closed through repair.

@@ -1,4 +1,42 @@
-# CURRENT — RETURNS272 CREATION SCOPE CLOSED THROUGH272-R1; ONLY273 NEXT — 2026-11-16
+# CURRENT — 273 WORKER PASS; BACKEND RECOVERY INCREMENT AWAITS ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,recovery-state-and-contract-proof.md,same-attempt-and-disposition-proof.md}.
+Status **PASS within the issued backend A–D scope**, decision
+`ONE_PURE_STORED_FACT_RECOVERY_DESCRIPTION_SERVING_BOTH_READ_AND_ACTION_AN_EXPLICIT_ADMIN_CQRS_RECOVERY_INTENT_THAT_REPEATS_THE_EXISTING_PENDING_ATTEMPT_WITHOUT_MINTING_OR_REKEYING_A_SEPARATE_PHYSICAL_DISPOSITION_INTENT_WITH_ZERO_MONEY_CALLS_AND_A_SHORT_OWNING_COORDINATION_THAT_NEVER_SPANS_AN_EXTERNAL_CALL_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION`,
+NOT Architect ACCEPT, NOT user functional acceptance, NOT any provider/financial/UI claim. Base
+`fcb2fe1cd2325b9378e85e55554bacadcef01b42` (== origin/main at claim), code `05cafa54aa4e2f9347ff37f4ce7295cfab1b12b2`.
+272-R1 acceptance and the original 272 PARTIAL history are preserved unchanged. **274–276 remain candidates, NOT ISSUED**:
+this is backend only, the operator recovery UI is 275 and the customer receipt/inspection stage is 274.
+Single worker, one task, no delegation, no historical agent resumed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A one description | pure, reused | `ReturnRecoveryPolicy.Describe` over stored case/attempt/item facts yields `None`/`PendingMoney`/`FailedMoney`/`PendingDisposition`/`Settled`/`Blocked` with the exact attempt id, a stable blocker code and independent `FinancialComplete`/`PhysicalComplete`; the same function feeds `MapSnapshotAsync`, so every read and the action cannot disagree |
+| B same-attempt money | no new attempt/key | `POST /v1/admin/returns/{id}/recover` with `resume_pending_refund` repeats the stored attempt with its recorded key/payment/amount/currency and the case's fixed destination; a wrong/missing/ambiguous attempt, a non-pending attempt or an incoherent case is refused before any effect |
+| B unconfigured adapter | truthful unavailable | the typed `payment.refund.gateway.unconfigured` becomes `return.recovery.gateway_unavailable` (503) with the attempt still `Pending`; never a refund, never an invented provider rejection, never re-keyed |
+| C physical intent | zero money | `settle_physical_disposition` makes zero refund/Wallet calls and creates zero attempts, reuses the existing per-item restock identity, keeps `DamagedNonSaleable`, and refuses an ordinary RMA with `return.recovery.receiving_required` without restocking anything |
+| D durability | no lock across I/O | the external call runs with no transaction/row lock; the outcome is applied afterwards under a short owning `FOR UPDATE` + reload that only applies from `Pending`, so a stale/late answer cannot downgrade or duplicate; a local save failure is never answered as durable money |
+| Contracts | additive | `ReturnRecoverySnapshot` + two option enums + a trailing nullable `ReturnSnapshot.Recovery`; six typed/catalogued/localized `return.recovery.*` codes; no numeric enum value or shipped member changed; no new operator menu verb published (275 owns the UI) |
+| Schema/data | untouched | no migration/DDL/backfill/seed/cleanup/restore; one canonical `tooba_alpha`; no live case approval/reject/refund/recovery write and no provider/PSP/Wallet/Inventory/waybill/money call |
+
+Verified once after the final change: `ReturnsRecovery273Tests` **15/15**; `dotnet build Tooba.slnx -c Release` 0 errors;
+Host publish 0 errors. Host-only refresh: PID 28580 on 5088 (`/health` + `/health/ready` 200 SingleStore,
+`/__platform-commerce` → `store-alpha`), new Host dll SHA256
+`2E80BFFBB3D595A685430382F00ACFC61D09A13A9636C469CC2D963D4AD4802A`; FE untouched.
+Live read-only wire: no dev actor → 403 `admin.authorization.denied`; `{}`/unknown token → 400
+`return.recovery.kind_invalid`; resume without attempt → 400 `returns.validation.recovery_attempt_required`; resume or
+disposition on a non-existent case → 404 `return.missing`; `POST /v1/admin/returns/query` → 200 `totalCount=0`.
+Known limits: **no live return case exists**, so there is no served operator walkthrough of a real recovery (the wire
+receipts are real but read-only); money/stock are proven with controlled ports plus injected local-save failure, no real
+PSP and no "one provider call" claim; concurrency is a re-read/monotonic proof, not a stress harness; no relational test
+was added, so the `FOR UPDATE` branch is exercised only by the running Host; the whole Returns project (52/2) and the
+Host `ReturnsModuleAmsc*` filter (32/2) were each run once and are disclosed — all four failures are the pre-existing
+ones; `ExecuteRefundAsync` now short-circuits any non-`Pending` attempt (previously only `Succeeded`) so a definite
+failure cannot be re-sent by a same-intent resume, and the separate terminal `retry_refund` intent is not audited here.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — RETURNS272 CREATION SCOPE CLOSED THROUGH272-R1; ONLY273 NEXT — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/ARCHITECT-REVIEW.md.
 272-R1 ACCEPT within issued A–C source/evidence scope at b5d9b9aecdcc13909099c9117887861e2bf0ae46; parent creation work closed through repair.
