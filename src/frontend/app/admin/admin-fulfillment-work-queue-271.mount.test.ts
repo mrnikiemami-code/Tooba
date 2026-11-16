@@ -22,6 +22,7 @@ import {
   mount,
   q,
   qq,
+  setInputValue,
   waitFor,
 } from "../../features/order-carrier-execution/test-dom-harness.ts";
 
@@ -500,6 +501,47 @@ test("the quiet archive is reachable, time-independent and never part of the act
     assert.equal((q(tree.container, "[data-testid='admin-fulfillment-time-scope-today']") as HTMLButtonElement).disabled, true);
     await waitFor(() => selectionOf(stub.calls.at(-1)!.body).stage === "history");
     assert.equal(selectionOf(stub.calls.at(-1)!.body).scope, "all");
+  } finally {
+    await tree.unmount();
+    stub.restore();
+  }
+});
+
+test("the operator sees Persian digits on the codes while search still reaches the stored Latin value", async () => {
+  setUrl("");
+  const reference = "TB-20261114151709-01-2d8281";
+  const tracking = "TRK-01A1DB2C5F9F70008149360BCBC27C3A";
+  const stub = stubFetch(() => ({
+    items: [item({ orderReference: reference, trackingSummary: tracking, shipmentCount: 1 })],
+    dispatchCounts: counts(),
+  }));
+  const tree = await mountScreen();
+  try {
+    await waitFor(() => qq(tree.container, "[data-testid^='admin-fulfillment-job-time-']").length > 0);
+
+    // Display: Persian digits only, and the exact stored code stays recoverable through the tooltip.
+    const referenceCell = [...tree.container.querySelectorAll("[title]")].find(
+      (node) => node.getAttribute("title") === reference,
+    );
+    assert.ok(referenceCell, "the reference cell keeps its exact stored value as a tooltip");
+    assert.match(referenceCell.textContent ?? "", /[۰-۹]/);
+    assert.doesNotMatch(referenceCell.textContent ?? "", /[0-9]/);
+    const trackingCell = [...tree.container.querySelectorAll("[title]")].find(
+      (node) => node.getAttribute("title") === tracking,
+    );
+    assert.ok(trackingCell, "the tracking cell keeps its exact stored value as a tooltip");
+    assert.doesNotMatch(trackingCell.textContent ?? "", /[0-9]/);
+
+    // Typing the LOCALIZED code in search still finds the row: the outgoing value is folded back to Latin.
+    const searchBox = tree.container.querySelector("input[type='search'], input[placeholder='جستجو…']");
+    assert.ok(searchBox, "the grid search box is present");
+    await setInputValue(searchBox, "TB-۲۰۲۶۱۱۱۴۱۵۱۷۰۹-۰۱-۲d۸۲۸۱");
+    searchBox.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await waitFor(() => stub.calls.at(-1)!.body?.search !== undefined);
+
+    assert.equal(stub.calls.at(-1)!.body?.search, reference);
+    // No localized digit ever reaches the wire.
+    assert.doesNotMatch(JSON.stringify(stub.calls.at(-1)!.body), /[۰-۹]/);
   } finally {
     await tree.unmount();
     stub.restore();

@@ -25,6 +25,7 @@ import {
   normalizeDispatchToken,
 } from "../fulfillment/fulfillment-work-queue-dispatch";
 import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
+import { toPersianDigits } from "../../lib/persian-digits.ts";
 
 /**
  * TB-271 — the queue's column contract, kept beside the screen but out of it.
@@ -251,8 +252,10 @@ export function createFulfillmentWorkQueueColumns(
     {
       id: "orderReference",
       header: "سفارش",
+      // The canonical reference stays on the accessor (search, filter, sort, CSV keep Latin digits); only the
+      // rendered digits are Persian. The tooltip keeps the exact machine value for a copy/paste lookup.
       accessor: (row) => row.orderReference,
-      cell: (row) => truncatedCell(row.orderReference || "—", row.orderReference || undefined),
+      cell: (row) => truncatedCell(toPersianDigits(row.orderReference) || "—", row.orderReference || undefined),
       width: 255.5555419921875,
       minWidth: 120,
       filterKind: "text",
@@ -458,10 +461,12 @@ export function createFulfillmentWorkQueueColumns(
     {
       id: "trackingSummary",
       header: "کد رهگیری",
+      // Digits are Persian for the operator; the accessor keeps the canonical Latin code so search, filter and
+      // CSV export are unchanged, and the tooltip still shows the exact value a carrier lookup needs.
       accessor: (row) => row.trackingSummary,
       cell: (row) => (
         <span className="block truncate font-mono text-xs dir-ltr text-left" title={row.trackingSummary || undefined}>
-          {row.trackingSummary || "—"}
+          {toPersianDigits(row.trackingSummary) || "—"}
         </span>
       ),
       width: 268.88885498046875,

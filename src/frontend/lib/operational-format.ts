@@ -10,7 +10,7 @@
  * returns null so the caller can say «مشخص نشده» instead of inventing a date.
  */
 
-const PERSIAN_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"] as const;
+import { toPersianDigits as persianDigits } from "./persian-digits.ts";
 
 /** A tiny dictionary of the zones this product actually plans in; any other zone falls back to its own id. */
 const ZONE_CITY_FA: Record<string, string> = {
@@ -25,10 +25,6 @@ const ZONE_CITY_FA: Record<string, string> = {
   kabul: "کابل",
   utc: "UTC",
 };
-
-function persianDigits(value: string): string {
-  return value.replace(/\d/g, (digit) => PERSIAN_DIGITS[Number(digit)] ?? digit);
-}
 
 function instant(isoUtc: string | null | undefined): Date | null {
   const raw = (isoUtc ?? "").trim();

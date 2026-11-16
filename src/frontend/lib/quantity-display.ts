@@ -1,3 +1,5 @@
+import { PERSIAN_DECIMAL_SEPARATOR, toPersianDigits } from "./persian-digits.ts";
+
 /**
  * نمایش مقدار کالا بدون صفرهای ذخیره‌سازی؛ parseInt استفاده نمی‌شود.
  */
@@ -10,9 +12,6 @@ export function formatQuantityDisplay(value: number, decimalPlaces = 6): string 
   return raw.replace(/\.?0+$/, "");
 }
 
-const PERSIAN_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"] as const;
-const PERSIAN_DECIMAL_SEPARATOR = "٫";
-
 /**
  * نمایش مقدار برای اپراتور فارسی‌زبان: ارقام فارسی و جداکنندهٔ اعشار فارسی («۲٫۵»).
  *
@@ -24,9 +23,7 @@ export function formatQuantityDisplayFa(value: number, decimalPlaces = 6): strin
   if (!latin) {
     return latin;
   }
-  return latin
-    .replace(/\./g, PERSIAN_DECIMAL_SEPARATOR)
-    .replace(/\d/g, (digit) => PERSIAN_DIGITS[Number(digit)] ?? digit);
+  return toPersianDigits(latin.replace(".", PERSIAN_DECIMAL_SEPARATOR));
 }
 
 /**

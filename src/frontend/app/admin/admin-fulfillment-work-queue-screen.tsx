@@ -35,6 +35,7 @@ import {
 import { createFulfillmentWorkQueueColumns } from "./admin-fulfillment-work-queue-columns";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { ADMIN_FULFILLMENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
+import { fromPersianDigits } from "../../lib/persian-digits.ts";
 
 function PageHeading({ title, description }: { title: string; description?: string }) {
   return (
@@ -145,7 +146,20 @@ export function AdminFulfillmentWorkQueueScreen() {
         filters.shippingMethodCode = filters.shippingMethodLabel;
         delete filters.shippingMethodLabel;
       }
-      const response = await queryAdminFulfillmentsWorkQueue({ ...query, filters });
+      // Codes are DISPLAYED with Persian digits, so an operator copies «TB-۲۰۲۶…» and pastes it into search or a
+      // text filter. The server still stores the Latin code, so the outgoing value is folded back to Latin digits;
+      // nothing else about the query, the filter or the server contract changes.
+      for (const [field, value] of Object.entries(filters)) {
+        if (value.kind === "text" && value.query) {
+          filters[field] = { ...value, query: fromPersianDigits(value.query) };
+        }
+      }
+      const search = (query.search ?? "").trim();
+      const response = await queryAdminFulfillmentsWorkQueue({
+        ...query,
+        search: search ? fromPersianDigits(search) : undefined,
+        filters,
+      });
       // Counts come from the server for the WHOLE filtered set; a page-local tally would be a lie. A response for
       // an OLDER stage/time selection never publishes its badges over a newer one.
       if (sequence === requestSeq.current) setCounts(response.meta ?? null);
