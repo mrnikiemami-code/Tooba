@@ -3,6 +3,9 @@
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
 
 ## CURRENT checkpoint — 2026-11-16
+273 Architect decision: PARTIAL, NOT ACCEPTED. Read273/ARCHITECT-REVIEW.md. Only273-R1 bounded evidence/binding/closure, transaction boundary and truthful reference repair is next.274–276 NOT ISSUED. Preserve272-R1 acceptance and prior audit.
+
+## Superseded273 worker checkpoint — 2026-11-16
 273 = PASS within the issued backend A–D scope, awaiting Architect review (NOT Architect/user acceptance).
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/RESULT.md.
 273 delivered: one pure stored-fact recovery description reused by read and action; `POST /v1/admin/returns/{id}/recover`

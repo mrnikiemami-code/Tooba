@@ -1,4 +1,14 @@
-# CURRENT — 273 WORKER PASS; BACKEND RECOVERY INCREMENT AWAITS ARCHITECT REVIEW — 2026-11-16
+# CURRENT — RETURNS273 PARTIAL; ONLY273-R1 BOUNDED REPAIR — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/ARCHITECT-REVIEW.md.
+273 is NOT ACCEPTED at bf2dc514fdd68ab83b512aa78d5388c55975fa6f. Retain same-attempt recovery direction; repair shared evidence/closure, caller-transaction effects and synthetic provider reference, then targeted proof.
+Only TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1 next via actual Bridge envelope;274–276 NOT ISSUED.
+272-R1 source/evidence acceptance and original272 committed-fixture/delete audit preserved.
+No Architect local runtime/tests. Empty-route probes do not prove outcome SQL branch. No screenshots/delegation/loops.
+Canonical tooba_alpha5432/store-alpha, Host5088/FE3000; no live business/provider/stock/money writes or schema changes.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 273 WORKER PASS; BACKEND RECOVERY INCREMENT AWAITS ARCHITECT REVIEW — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/TASK.md and
 docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,recovery-state-and-contract-proof.md,same-attempt-and-disposition-proof.md}.
