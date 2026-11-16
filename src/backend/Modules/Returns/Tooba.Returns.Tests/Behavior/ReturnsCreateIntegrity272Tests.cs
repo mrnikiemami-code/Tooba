@@ -422,6 +422,237 @@ public sealed class ReturnsCreateIntegrity272Tests
         Assert.True(single.IsValid);
     }
 
+    // ------------------------------------------------------------------ A (R1): persisted precision, full binding
+
+    [Fact]
+    public async Task Unrepresentable_quantities_are_refused_before_any_write_or_replay()
+    {
+        var customer = Guid.NewGuid();
+        var lineId = Guid.NewGuid();
+        var sellerOrderId = Guid.NewGuid();
+        await using var db = CreateDb();
+        var clock = new MutableClock(DeliveredAt.AddDays(2));
+        var directory = BuildDirectory(
+            db,
+            clock,
+            [BuildOrder(sellerOrderId, customer, 2m, [lineId])],
+            [BuildFulfillment(sellerOrderId, (lineId, 2m))]);
+
+        // A legitimate fractional quantity at the persisted scale is accepted and is the ONLY stored fact.
+        var created = await directory.CreateAsync(
+            Command(sellerOrderId, customer, "tb272r1-precision-ok", [new ReturnLineCommand(lineId, 1m)]),
+            CancellationToken.None);
+        Assert.Equal(1m, created.Items.Single().Quantity);
+
+        // 1.0000001 and 1.0000002 are DIFFERENT raw quantities that the six-decimal column would both store as
+        // 1.000000, and 0.0000004/0.0000006 would be stored as a different number of physical units (0 and 1).
+        // Each is refused with a typed fault, and none of them may be answered by the stored case above.
+        foreach (var quantity in new[] { 1.0000001m, 1.0000002m, 0.0000004m, 0.0000006m })
+        {
+            var refused = await Assert.ThrowsAsync<ContractOperationException>(() => directory.CreateAsync(
+                Command(sellerOrderId, customer, "tb272r1-precision-ok", [new ReturnLineCommand(lineId, quantity)]),
+                CancellationToken.None));
+            Assert.Equal(ReturnsErrorCodes.QuantityPrecision, refused.Code);
+        }
+
+        // A fresh key with an invalid quantity is refused too: no case and no item is written for it.
+        var fresh = await Assert.ThrowsAsync<ContractOperationException>(() => directory.CreateAsync(
+            Command(sellerOrderId, customer, "tb272r1-precision-fresh", [new ReturnLineCommand(lineId, 0.0000004m)]),
+            CancellationToken.None));
+        Assert.Equal(ReturnsErrorCodes.QuantityPrecision, fresh.Code);
+
+        // Exactly six fractional digits (and its trailing-zero form) stay representable and replay the same case.
+        var small = await directory.CreateAsync(
+            Command(sellerOrderId, customer, "tb272r1-precision-small", [new ReturnLineCommand(lineId, 0.000001m)]),
+            CancellationToken.None);
+        var trailingZeros = await directory.CreateAsync(
+            Command(sellerOrderId, customer, "tb272r1-precision-small", [new ReturnLineCommand(lineId, 0.0000010m)]),
+            CancellationToken.None);
+        Assert.Equal(small.ReturnRequestId, trailingZeros.ReturnRequestId);
+
+        Assert.Equal(2, await db.ReturnRequests.CountAsync());
+        Assert.Equal(2, await db.ReturnItems.CountAsync());
+        Assert.Equal(0m, await db.ReturnRequests
+            .Where(x => x.IdempotencyKey == "tb272r1-precision-fresh")
+            .SumAsync(x => x.RefundAmount));
+    }
+
+    [Fact]
+    public void The_aggregate_refuses_unrepresentable_quantities_and_keeps_no_bypass()
+    {
+        var sellerOrderId = Guid.NewGuid();
+        var lineId = Guid.NewGuid();
+
+        var precision = Assert.Throws<InvalidOperationException>(() => ReturnRequest.Create(
+            Guid.NewGuid(),
+            () => Guid.NewGuid(),
+            sellerOrderId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "tb272r1-aggregate-precision",
+            null,
+            "IRR",
+            [(lineId, 1.0000001m, 1000m, (Guid?)null)],
+            DeliveredAt));
+        Assert.Equal("returns.quantity_precision", precision.Message);
+
+        // The ordinary factory must never expose a way to weaken the one-line-per-order-line invariant.
+        var bypass = typeof(ReturnRequest)
+            .GetMethods()
+            .SelectMany(x => x.GetParameters())
+            .Select(x => x.Name)
+            .ToArray();
+        Assert.DoesNotContain("enforceOneLinePerOrderLine", bypass);
+
+        // Courier-origin keeps its own (line, condition) identity through the shared private factory.
+        var courier = ReturnRequest.CreateCourierOrigin(
+            Guid.NewGuid(),
+            () => Guid.NewGuid(),
+            sellerOrderId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "courier-return:tb272r1-precision",
+            "tb272r1-courier-precision",
+            null,
+            "IRR",
+            [
+                (lineId, 1m, 1000m, (Guid?)null, ReturnItemCondition.Usable),
+                (lineId, 1m, 1000m, (Guid?)null, ReturnItemCondition.Damaged),
+            ],
+            DeliveredAt);
+        Assert.Equal(2, courier.Items.Count);
+        Assert.Equal(ReturnItemDisposition.DamagedNonSaleable, courier.Items[1].Disposition);
+    }
+
+    [Fact]
+    public async Task A_stored_case_with_another_checkout_or_seller_binding_is_not_replayed()
+    {
+        var customer = Guid.NewGuid();
+        var lineId = Guid.NewGuid();
+        var sellerOrderId = Guid.NewGuid();
+        var checkoutId = Guid.NewGuid();
+        var sellerPartyId = Guid.NewGuid();
+        await using var db = CreateDb();
+        var clock = new MutableClock(DeliveredAt.AddDays(2));
+
+        // The case is created against the REAL binding (checkout + seller party).
+        var created = await BuildDirectory(
+                db,
+                clock,
+                [BuildOrder(sellerOrderId, customer, 2m, [lineId], checkoutId: checkoutId, sellerPartyId: sellerPartyId)],
+                [BuildFulfillment(sellerOrderId, (lineId, 2m))])
+            .CreateAsync(
+                Command(sellerOrderId, customer, "tb272r1-binding", [new ReturnLineCommand(lineId, 1m)]),
+                CancellationToken.None);
+
+        foreach (var (otherCheckout, otherSeller) in new[]
+                 {
+                     (Guid.NewGuid(), sellerPartyId),
+                     (checkoutId, Guid.NewGuid()),
+                 })
+        {
+            var mismatch = await Assert.ThrowsAsync<ContractOperationException>(() => BuildDirectory(
+                    db,
+                    clock,
+                    [BuildOrder(sellerOrderId, customer, 2m, [lineId], checkoutId: otherCheckout,
+                        sellerPartyId: otherSeller)],
+                    [BuildFulfillment(sellerOrderId, (lineId, 2m))])
+                .CreateAsync(
+                    Command(sellerOrderId, customer, "tb272r1-binding", [new ReturnLineCommand(lineId, 1m)]),
+                    CancellationToken.None));
+            Assert.Equal(ReturnsErrorCodes.IdempotencyConflict, mismatch.Code);
+        }
+
+        // The stored case is still the single, unchanged row of the original binding.
+        Assert.Equal(1, await db.ReturnRequests.CountAsync());
+        var stored = await db.ReturnRequests.SingleAsync();
+        Assert.Equal(created.ReturnRequestId, stored.ReturnRequestId);
+        Assert.Equal(checkoutId, stored.CheckoutId);
+        Assert.Equal(sellerPartyId, stored.SellerPartyId);
+    }
+
+    // ------------------------------------------------------------------ B (R1): the caller's tracking survives
+
+    [Fact]
+    public async Task A_refused_creation_preserves_unrelated_caller_tracked_work()
+    {
+        var customer = Guid.NewGuid();
+        var lineId = Guid.NewGuid();
+        var otherOrder = Guid.NewGuid();
+        var otherLine = Guid.NewGuid();
+        await using var db = CreateDb();
+        var clock = new MutableClock(DeliveredAt.AddDays(2));
+
+        // Caller work that is already tracked and DIRTY before the refused creation runs.
+        var pending = ReturnRequest.Create(
+            Guid.NewGuid(),
+            () => Guid.NewGuid(),
+            otherOrder,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            customer,
+            "tb272r1-caller-work",
+            "کار در جریان",
+            "IRR",
+            [(otherLine, 1m, 1000m, (Guid?)null)],
+            clock.UtcNow);
+        db.ReturnRequests.Add(pending);
+        db.ReturnItems.AddRange(pending.Items);
+        await db.SaveChangesAsync();
+        var paymentId = Guid.NewGuid();
+        pending.Approve(paymentId, clock.UtcNow);
+        Assert.Equal(EntityState.Modified, db.Entry(pending).State);
+
+        var directory = BuildDirectory(
+            db,
+            clock,
+            [BuildOrder(otherOrder, customer, 1m, [otherLine])],
+            [BuildFulfillment(otherOrder, (otherLine, 1m))]);
+
+        // A refused creation (unrepresentable quantity) must not touch the caller's tracked work.
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(() => directory.CreateAsync(
+            Command(otherOrder, customer, "tb272r1-caller-refused", [new ReturnLineCommand(otherLine, 1.0000001m)]),
+            CancellationToken.None));
+        Assert.Equal(ReturnsErrorCodes.QuantityPrecision, refused.Code);
+
+        var entry = db.Entry(pending);
+        Assert.Equal(EntityState.Modified, entry.State);
+        Assert.Same(pending, entry.Entity);
+        Assert.Equal(ReturnRequestStatus.Approved, entry.Entity.Status);
+        Assert.Equal(paymentId, entry.Entity.PaymentId);
+        Assert.Equal("کار در جریان", entry.Entity.Reason);
+
+        // The refused attempt leaked neither a request nor an item into the tracker.
+        Assert.DoesNotContain(db.ChangeTracker.Entries<ReturnRequest>(), x => x.State == EntityState.Added);
+        Assert.DoesNotContain(db.ChangeTracker.Entries<ReturnItem>(), x => x.State == EntityState.Added);
+        Assert.Equal(1, await db.ReturnRequests.CountAsync());
+    }
+
+    [Fact]
+    public async Task The_transport_validator_refuses_unrepresentable_quantities()
+    {
+        var lineId = Guid.NewGuid();
+        var sellerOrderId = Guid.NewGuid();
+        var validator = new CreateReturnCommandValidator();
+
+        var tooPrecise = await validator.ValidateAsync(Command(
+            sellerOrderId, Guid.NewGuid(), "tb272r1-validator-precision",
+            [new ReturnLineCommand(lineId, 1.0000001m)]));
+        Assert.False(tooPrecise.IsValid);
+        Assert.Contains(tooPrecise.Errors, x => x.ErrorCode == ReturnsValidationCodes.QuantityPrecision);
+
+        var exactlySix = await validator.ValidateAsync(Command(
+            sellerOrderId, Guid.NewGuid(), "tb272r1-validator-six",
+            [new ReturnLineCommand(lineId, 0.000001m)]));
+        Assert.True(exactlySix.IsValid);
+    }
+
     // ------------------------------------------------------------------ C: refund failed still occupies capacity
 
     [Fact]
@@ -585,11 +816,13 @@ public sealed class ReturnsCreateIntegrity272Tests
         decimal quantity,
         Guid[] lineIds,
         int windowDays = 7,
-        decimal unitPrice = 1000m) =>
+        decimal unitPrice = 1000m,
+        Guid? checkoutId = null,
+        Guid? sellerPartyId = null) =>
         new(
             sellerOrderId,
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            checkoutId ?? Guid.NewGuid(),
+            sellerPartyId ?? Guid.NewGuid(),
             customerUserId,
             true,
             "IRR",

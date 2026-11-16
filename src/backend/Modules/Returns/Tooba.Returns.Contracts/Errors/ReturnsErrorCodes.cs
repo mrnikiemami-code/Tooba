@@ -47,6 +47,7 @@ public static class ReturnsErrorCodes
         IdempotencyRequired,
         IdempotencyConflict,
         DuplicateLine,
+        QuantityPrecision,
         RefundDestinationInvalid,
         RefundRetryInvalidState,
         RefundAlreadyStarted,
@@ -139,6 +140,13 @@ public static class ReturnsErrorCodes
     /// being silently merged or refunded twice.
     /// </summary>
     public const string DuplicateLine = "return.duplicate_line";
+
+    /// <summary>
+    /// TB-272-R1: the submitted quantity is not exactly representable at the persisted six-decimal scale of
+    /// <c>returns.return_items.quantity</c>. It is refused rather than rounded, so the stored number of physical
+    /// units is always the number the caller submitted.
+    /// </summary>
+    public const string QuantityPrecision = "return.quantity_precision";
 
     /// <summary>Invalid refund destination.</summary>
     public const string RefundDestinationInvalid = "refund.destination.invalid";

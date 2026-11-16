@@ -28,6 +28,7 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.IdempotencyRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Idempotency key required."),
         D(ReturnsErrorCodes.IdempotencyConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The idempotency key belongs to a different return request."),
         D(ReturnsErrorCodes.DuplicateLine, ErrorClassification.Business, StatusCodes.Status400BadRequest, "An order line was submitted more than once."),
+        D(ReturnsErrorCodes.QuantityPrecision, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The return quantity has more precision than the stored quantity supports."),
         D(ReturnsErrorCodes.RefundDestinationInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Invalid refund destination."),
         D(ReturnsErrorCodes.RefundRetryInvalidState, ErrorClassification.Business, StatusCodes.Status400BadRequest, "Refund retry invalid state."),
         D(ReturnsErrorCodes.RefundAlreadyStarted, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Refund already started."),

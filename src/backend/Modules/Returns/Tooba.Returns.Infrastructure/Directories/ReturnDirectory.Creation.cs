@@ -11,7 +11,8 @@ using Tooba.Returns.Domain.ValueObjects;
 namespace Tooba.Returns.Infrastructure.Directories;
 
 /// <summary>
-/// TB-272: ordinary (customer-delivered) creation. Authority first, then ONE classified decision per seller order.
+/// TB-272 / TB-272-R1: ordinary (customer-delivered) creation. Authority first, then ONE classified decision per
+/// seller order.
 /// <para>
 /// The previous shape answered a globally matched idempotency key <b>before</b> it validated the submitted order and
 /// before it compared what the stored case was actually created for, so a replay could hand back a case belonging to
@@ -20,17 +21,20 @@ namespace Tooba.Returns.Infrastructure.Directories;
 /// </para>
 /// <list type="number">
 /// <item><description>the caller's mutation gate, the submitted order binding and (customer path) ownership;</description></item>
-/// <item><description>one normalized creation intent (lines as a set, trimmed reason, destination);</description></item>
+/// <item><description>the list-shape and persisted-precision refusals (nothing is rounded, nothing is replayed);</description></item>
+/// <item><description>one normalized creation intent (lines as a set, trimmed reason, destination, checkout, seller);</description></item>
 /// <item><description>the relational critical section of the canonical seller order (serializes the quantity read);</description></item>
 /// <item><description>exact replay answered only for the identical intent, otherwise a typed conflict with zero writes;</description></item>
 /// <item><description>eligibility read AFTER the lock, then the insert.</description></item>
 /// </list>
+/// <para>
+/// TB-272-R1 also bounds the failure recovery: a key collision removes only the entries this failed creation added and,
+/// when the caller owns the transaction, restores a savepoint instead of rolling the caller's transaction back or
+/// clearing the tracker, so unrelated caller work keeps its identity, state and transaction.
+/// </para>
 /// </summary>
 public sealed partial class ReturnDirectory
 {
-    /// <summary>Persisted quantity scale of <c>returns.return_items.quantity</c> (numeric(18,6)).</summary>
-    private const int QuantityScale = 6;
-
     private async Task<ReturnSnapshot> CreateInternalAsync(
         CreateReturnCommand command,
         bool requireOwner,
@@ -60,15 +64,30 @@ public sealed partial class ReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.DuplicateLine);
         }
 
+        // TB-272-R1 (A): the persisted quantity is numeric(18,6). A quantity with more fractional digits would be
+        // stored as a DIFFERENT number of physical units, and two different raw quantities could persist identically
+        // and then compare equal. It is refused BEFORE the stored-key read, so an invalid request can never be handed
+        // an existing snapshot as if it had succeeded.
+        foreach (var item in command.Items)
+        {
+            if (!PersistedReturnQuantity.IsExactlyRepresentable(item.Quantity))
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.QuantityPrecision);
+            }
+        }
+
         var intent = OrdinaryCreationIntent.Capture(orderContext, command);
         var idempotencyKey = command.IdempotencyKey.Trim();
 
         // TB-272 (D): the whole decision (quantity read → insert) is one critical section per seller order.
         var relational = _db.Database.IsRelational();
         var ownsTransaction = relational && _db.Database.CurrentTransaction is null;
-        await using var transaction = ownsTransaction
+        await using var ownedTransaction = ownsTransaction
             ? await _db.Database.BeginTransactionAsync(cancellationToken)
             : null;
+        // A caller that already opened a transaction stays its owner: this method never commits or rolls it back.
+        var callerTransaction = ownedTransaction is null ? _db.Database.CurrentTransaction : null;
+        HashSet<object>? trackedBefore = null;
 
         try
         {
@@ -83,7 +102,7 @@ public sealed partial class ReturnDirectory
             if (stored is not null)
             {
                 var replay = await AnswerStoredCreationAsync(stored, intent, cancellationToken);
-                await CommitCreationAsync(transaction, ownsTransaction, cancellationToken);
+                await CommitCreationAsync(ownedTransaction, cancellationToken);
                 return replay;
             }
 
@@ -124,10 +143,26 @@ public sealed partial class ReturnDirectory
                 lineSnapshots,
                 now,
                 command.RefundDestination);
+
+            // TB-272-R1 (B): remember exactly what the tracker held BEFORE this creation. Recovery detaches only the
+            // entries this attempt added, so unrelated caller work keeps its identity, state and values.
+            trackedBefore = SnapshotTrackedEntities();
+            string? savepointName = null;
+            if (callerTransaction is not null)
+            {
+                savepointName = ReturnCreationSerialization.CallerSavepointName;
+                await callerTransaction.CreateSavepointAsync(savepointName, cancellationToken);
+            }
+
             _db.ReturnRequests.Add(request);
             _db.ReturnItems.AddRange(request.Items);
             await _db.SaveChangesAsync(cancellationToken);
-            await CommitCreationAsync(transaction, ownsTransaction, cancellationToken);
+            if (callerTransaction is not null && savepointName is not null)
+            {
+                await callerTransaction.ReleaseSavepointAsync(savepointName, cancellationToken);
+            }
+
+            await CommitCreationAsync(ownedTransaction, cancellationToken);
             _telemetry.RecordCreated();
             return await MapSnapshotAsync(request, cancellationToken);
         }
@@ -136,12 +171,20 @@ public sealed partial class ReturnDirectory
             // ONLY the idempotency unique index reaches here (a genuine same-key collision that did not serialize, for
             // example a writer holding an outer transaction). The winner is re-read and compared with the SAME
             // authorization + exact-intent rule; a different intent stays a typed conflict. Anything else propagates.
-            if (ownsTransaction && transaction is not null)
+            if (ownedTransaction is not null)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                // This attempt owns the transaction, so ending it is this attempt's own decision.
+                await ownedTransaction.RollbackAsync(cancellationToken);
+            }
+            else if (callerTransaction is not null)
+            {
+                // The caller owns the transaction: restore the savepoint so it stays usable, and never commit or roll
+                // it back. If savepoint recovery is impossible the honest provider failure propagates to the caller.
+                await callerTransaction.RollbackToSavepointAsync(
+                    ReturnCreationSerialization.CallerSavepointName, cancellationToken);
             }
 
-            _db.ChangeTracker.Clear();
+            DetachFailedCreation(trackedBefore);
             var winner = await _db.ReturnRequests.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.IdempotencyKey == idempotencyKey, cancellationToken)
                 ?? throw new ContractOperationException(ReturnsErrorCodes.Stale);
@@ -151,8 +194,8 @@ public sealed partial class ReturnDirectory
 
     /// <summary>
     /// Answers an already-stored case for this key ONLY when the stored row is the same immutable creation intent
-    /// (order, owning customer, destination, reason and the exact line/quantity set). A changed intent is a typed
-    /// conflict, never a borrowed snapshot and never a mutation.
+    /// (seller order, checkout, seller party, owning customer, origin, destination, reason and the exact
+    /// line/quantity set). A changed intent is a typed conflict, never a borrowed snapshot and never a mutation.
     /// </summary>
     private async Task<ReturnSnapshot> AnswerStoredCreationAsync(
         ReturnRequest stored,
@@ -169,23 +212,60 @@ public sealed partial class ReturnDirectory
     }
 
     private static async Task CommitCreationAsync(
-        IDbContextTransaction? transaction,
-        bool ownsTransaction,
+        IDbContextTransaction? ownedTransaction,
         CancellationToken cancellationToken)
     {
-        if (ownsTransaction && transaction is not null)
+        if (ownedTransaction is not null)
         {
-            await transaction.CommitAsync(cancellationToken);
+            await ownedTransaction.CommitAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>Identity of every entity the tracker held before this creation attempt added its own rows.</summary>
+    private HashSet<object> SnapshotTrackedEntities() =>
+        _db.ChangeTracker.Entries()
+            .Select(x => x.Entity)
+            .ToHashSet(ReferenceEqualityComparer.Instance);
+
+    /// <summary>
+    /// TB-272-R1 (B): removes ONLY the entries this failed attempt introduced (the request, its items and anything a
+    /// save interceptor attached for them). Entries that were already tracked keep their entity instance, state and
+    /// values, so pending caller work is neither detached nor re-saved.
+    /// </summary>
+    private void DetachFailedCreation(HashSet<object>? trackedBefore)
+    {
+        if (trackedBefore is null)
+        {
+            // The attempt never reached its own inserts, so it introduced nothing to remove.
+            return;
+        }
+
+        foreach (var entry in _db.ChangeTracker.Entries().ToList())
+        {
+            if (entry.State == EntityState.Detached)
+            {
+                continue;
+            }
+
+            if (trackedBefore.Contains(entry.Entity))
+            {
+                continue;
+            }
+
+            entry.State = EntityState.Detached;
         }
     }
 
     /// <summary>
-    /// The normalized creation intent of ONE ordinary request. Comparison is deliberately ordered and
-    /// precision-normalized: a different item ORDER is the same intent, while a different line set, quantity,
-    /// destination, reason, order or owning customer is a different request.
+    /// The normalized creation intent of ONE ordinary request. Comparison is deliberately ordered: a different item
+    /// ORDER is the same intent, while a different line set, quantity, destination, reason, order, checkout, seller
+    /// party or owning customer is a different request. Quantities are compared at the persisted scale — since every
+    /// accepted input is already exactly representable there, that alignment can never hide a changed quantity.
     /// </summary>
     private sealed record OrdinaryCreationIntent(
         Guid SellerOrderId,
+        Guid CheckoutId,
+        Guid SellerPartyId,
         Guid RequestedByUserId,
         RefundDestination RefundDestination,
         string ReasonKey,
@@ -196,6 +276,8 @@ public sealed partial class ReturnDirectory
             CreateReturnCommand command) =>
             new(
                 orderContext.SellerOrderId,
+                orderContext.CheckoutId,
+                orderContext.SellerPartyId,
                 orderContext.PlacedByUserId,
                 command.RefundDestination,
                 NormalizeReason(command.Reason),
@@ -207,6 +289,8 @@ public sealed partial class ReturnDirectory
         public bool Matches(ReturnRequest stored, ReturnSnapshot snapshot)
         {
             if (stored.SellerOrderId != SellerOrderId
+                || stored.CheckoutId != CheckoutId
+                || stored.SellerPartyId != SellerPartyId
                 || stored.Origin != ReturnOrigin.CustomerDelivered
                 || stored.RequestedByUserId != RequestedByUserId
                 || stored.RefundDestination != RefundDestination
@@ -225,6 +309,6 @@ public sealed partial class ReturnDirectory
         private static string NormalizeReason(string? reason) => (reason ?? string.Empty).Trim();
 
         private static decimal NormalizeQuantity(decimal quantity) =>
-            decimal.Round(quantity, QuantityScale, MidpointRounding.AwayFromZero);
+            decimal.Round(quantity, PersistedReturnQuantity.Scale, MidpointRounding.AwayFromZero);
     }
 }

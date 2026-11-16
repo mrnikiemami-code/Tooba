@@ -21,6 +21,7 @@
   <data name="return.idempotency_required" xml:space="preserve"><value>کلید یکتایی درخواست الزامی است.</value></data>
   <data name="return.idempotency_conflict" xml:space="preserve"><value>این کلید یکتایی قبلاً برای درخواست مرجوعی دیگری استفاده شده است.</value></data>
   <data name="return.duplicate_line" xml:space="preserve"><value>یک خط سفارش بیش از یک بار ارسال شده است.</value></data>
+  <data name="return.quantity_precision" xml:space="preserve"><value>مقدار مرجوعی بیش از دقت قابل ذخیره اعشار دارد.</value></data>
   <data name="refund.destination.invalid" xml:space="preserve"><value>مقصد بازگشت وجه نامعتبر است.</value></data>
   <data name="refund.retry.invalid_state" xml:space="preserve"><value>بازگشت وجه در وضعیت فعلی قابل تلاش دوباره نیست.</value></data>
   <data name="refund.already_started" xml:space="preserve"><value>بازگشت وجه قبلاً آغاز شده است.</value></data>

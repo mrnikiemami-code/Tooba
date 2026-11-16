@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 using Tooba.BuildingBlocks;
@@ -10,6 +11,7 @@ using Tooba.Returns.Application.ReturnRequests.Commands;
 using Tooba.Returns.Application.ReturnRequests.Models;
 using Tooba.Returns.Application.ReturnRequests.Ports;
 using Tooba.Returns.Contracts.Errors;
+using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Infrastructure.Directories;
 using Tooba.Returns.Infrastructure.Evaluators;
@@ -23,38 +25,50 @@ using Xunit.Abstractions;
 namespace Tooba.Host.Tests;
 
 /// <summary>
-/// TB-272 (A + D) on REAL PostgreSQL: the ordinary creation decision is one critical section per canonical seller
-/// order, and the one unique index on <c>returns.return_requests.idempotency_key</c> is the only collision that turns
-/// into the typed <c>return.idempotency_conflict</c>.
+/// TB-272 / TB-272-R1 (A, B, D) on REAL PostgreSQL, under a ROLLBACK-ONLY boundary.
+/// <para>
+/// Every task-owned row is written inside a CALLER-OWNED transaction that the test itself rolls back
+/// (<c>await using</c> dispose ⇒ rollback); nothing is ever committed and nothing is deleted afterwards. The
+/// creation therefore runs exactly the "caller already owns a transaction" branch of the owning directory, and each
+/// fact ends by re-reading the canonical database on a separate connection to prove the rolled-back rows are gone.
+/// </para>
+/// <para>
+/// The target is validated BEFORE any write: <c>TB272_CONNECTION</c> must address loopback PostgreSQL port 5432 and
+/// database <c>tooba_alpha</c>, and the server itself must confirm that identity read-only. A missing or non-canonical
+/// target produces a visible framework SKIP (never a silent pass) and no connection is opened against it.
+/// </para>
+/// <para>
+/// The Order/Fulfillment/payment/wallet seams stay controlled in-memory readers: no provider is called, no money
+/// moves, no stock changes. What is NOT demonstrated here is a committed winner-vs-loser two-writer race: a competing
+/// row can only be seen by another transaction once it is committed, which this boundary forbids — that limit is
+/// declared in the evidence instead of being manufactured.
+/// </para>
 /// </summary>
-/// <remarks>
-/// Gated by <c>TB272_CONNECTION</c>; the target must be the ONE canonical database (127.0.0.1:5432/tooba_alpha).
-/// The Order/Fulfillment/payment/wallet seams are controlled in-memory readers (no provider is called, no money moves,
-/// no stock changes); every row this class writes is task-labelled <c>tb272-rel-…</c> and is deleted again by the
-/// exact idempotency-key prefix of this run. No user order, case, item or attempt row is read, written or deleted.
-/// </remarks>
 [Collection("PostgresSerial")]
 public sealed class ReturnsCreateIntegrity272RelationalTests
 {
     private static readonly DateTimeOffset DeliveredAt = DateTimeOffset.UtcNow.AddDays(-1);
 
+    /// <summary>
+    /// The canonical target check, evaluated ONCE per run. It never logs or returns the connection string itself, only
+    /// whether the target is the canonical loopback <c>tooba_alpha</c> database.
+    /// </summary>
+    private static readonly Lazy<(bool Ok, string Reason)> CanonicalTarget = new(ValidateCanonicalTarget);
+
     private readonly ITestOutputHelper _output;
-    private readonly string _runTag = $"tb272-rel-{Guid.NewGuid():N}-";
+    private readonly string _runTag = $"tb272r1-rel-{Guid.NewGuid():N}-";
 
     public ReturnsCreateIntegrity272RelationalTests(ITestOutputHelper output) => _output = output;
 
     private static string? Connection =>
-        Environment.GetEnvironmentVariable("TB272_CONNECTION") is { Length: > 0 } raw ? raw : null;
+        Environment.GetEnvironmentVariable("TB272_CONNECTION") is { Length: > 0 } raw ? raw.Trim() : null;
 
     // ------------------------------------------------------------------ D: the advisory lock is the serialization
 
-    [Fact]
+    [SkippableFact]
     public async Task The_creation_decision_waits_for_the_seller_order_advisory_lock()
     {
-        if (Connection is null)
-        {
-            return;
-        }
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
 
         var sellerOrderId = Guid.NewGuid();
         var lineId = Guid.NewGuid();
@@ -63,6 +77,7 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
         var fulfillments = new MapFulfillmentReader([BuildFulfillment(sellerOrderId, (lineId, 2m))]);
 
         await using var db = CreateDb();
+        await using var caller = await db.Database.BeginTransactionAsync();
         var directory = BuildDirectory(db, orders, fulfillments);
 
         // Another session holds THIS order's creation lock. If the writer did not take the same lock it would finish
@@ -88,144 +103,161 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
         await held.RollbackAsync();
         var snapshot = await pending.WaitAsync(TimeSpan.FromSeconds(30));
         Assert.Equal(1m, snapshot.Items.Single().Quantity);
-        _output.WriteLine($"TB272-D lock order={sellerOrderId} request={snapshot.ReturnRequestId}");
+        _output.WriteLine($"TB272R1-D lock order={sellerOrderId} request={snapshot.ReturnRequestId}");
 
-        await CleanupAsync();
+        // The caller's transaction is rolled back by disposal; nothing it wrote survives.
+        await caller.RollbackAsync();
+        AssertNoRolledBackRows(await CountTagRowsAsync());
     }
 
-    // ------------------------------------------------------------------ D: no over-allocation under concurrency
+    // ------------------------------------------------------------------ B: real collision shape + savepoint recovery
 
-    [Fact]
-    public async Task Concurrent_creations_never_over_allocate_the_last_returnable_unit()
+    [SkippableFact]
+    public async Task A_real_unique_violation_inside_a_caller_transaction_is_exactly_classified_and_savepoint_recoverable()
     {
-        if (Connection is null)
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
+
+        var key = $"{_runTag}real-index";
+        await using var db = CreateDb();
+        await using var caller = await db.Database.BeginTransactionAsync();
+
+        var createdAt = DeliveredAt;
+        var first = ReturnRequest.Create(
+            Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            key, "دلیل مرجوعی", "IRR", [(Guid.NewGuid(), 1m, 1000m, (Guid?)null)], createdAt);
+        db.ReturnRequests.Add(first);
+        db.ReturnItems.AddRange(first.Items);
+        await db.SaveChangesAsync();
+
+        // A savepoint exactly like the one the owning directory opens immediately BEFORE its own insert.
+        await caller.CreateSavepointAsync(ReturnCreationSerialization.CallerSavepointName);
+
+        // The SAME idempotency key inside the same transaction: PostgreSQL itself raises 23505 on the real index and
+        // EF surfaces it exactly as the owning recovery branch sees it.
+        var duplicate = ReturnRequest.Create(
+            Guid.NewGuid(), () => Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            key, "دلیل مرجوعی", "IRR", [(Guid.NewGuid(), 1m, 1000m, (Guid?)null)], createdAt);
+        db.ReturnRequests.Add(duplicate);
+        db.ReturnItems.AddRange(duplicate.Items);
+        Exception? failure = null;
+        try
         {
-            return;
+            await db.SaveChangesAsync();
+        }
+        catch (Exception exception)
+        {
+            failure = exception;
         }
 
-        for (var round = 1; round <= 3; round++)
-        {
-            var sellerOrderId = Guid.NewGuid();
-            var lineId = Guid.NewGuid();
-            var customer = Guid.NewGuid();
-            var orders = new MapOrderReader([BuildOrder(sellerOrderId, customer, 3m, [lineId])]);
-            var fulfillments = new MapFulfillmentReader([BuildFulfillment(sellerOrderId, (lineId, 3m))]);
+        var updateException = Assert.IsType<DbUpdateException>(failure);
+        var postgres = Assert.IsType<PostgresException>(updateException.InnerException);
+        Assert.Equal(PostgresErrorCodes.UniqueViolation, postgres.SqlState);
+        Assert.Equal(ReturnCreationSerialization.IdempotencyUniqueIndex, postgres.ConstraintName);
+        Assert.Equal(ReturnCreationSerialization.IdempotencyTable, postgres.TableName);
+        Assert.True(ReturnCreationSerialization.IsIdempotencyConflict(updateException));
 
-            // Two of the three delivered units are already requested and COMMITTED, so exactly ONE unit is left.
-            await using (var seedDb = CreateDb())
-            {
-                var seed = await BuildDirectory(seedDb, orders, fulfillments).CreateAsync(
-                    Command(sellerOrderId, customer, $"{_runTag}r{round}-seed", [new ReturnLineCommand(lineId, 2m)]),
-                    CancellationToken.None);
-                Assert.Equal(2000m, seed.RefundAmount);
-            }
+        // Restoring the savepoint makes the CALLER's transaction usable again — the directory's recovery mechanism.
+        // This test simply drops the failed attempt's tracked additions (the production recovery detaches only its own).
+        await caller.RollbackToSavepointAsync(ReturnCreationSerialization.CallerSavepointName);
+        db.ChangeTracker.Clear();
 
-            await using var leftDb = CreateDb();
-            await using var rightDb = CreateDb();
-            var left = BuildDirectory(leftDb, orders, fulfillments);
-            var right = BuildDirectory(rightDb, orders, fulfillments);
+        var usable = await InsertRequestAsync(db, NewRow($"{_runTag}real-index-c", $"{_runTag}real-index-c"));
+        Assert.NotNull(usable);
+        Assert.Equal(1L, await db.ReturnRequests.AsNoTracking().LongCountAsync(x => x.IdempotencyKey == key));
 
-            // Two DIFFERENT keys, submitted at the same time, each asking for the same single remaining unit. Without
-            // the per-order critical section both would read remaining = 1 and both would insert.
-            var results = await Task.WhenAll(
-                AttemptAsync(left, sellerOrderId, customer, $"{_runTag}r{round}-left", lineId),
-                AttemptAsync(right, sellerOrderId, customer, $"{_runTag}r{round}-right", lineId));
-
-            var accepted = results.Count(x => x.RequestId is not null);
-            var refused = results.Where(x => x.RequestId is null).ToArray();
-            Assert.Equal(1, accepted);
-            Assert.Single(refused);
-            Assert.Equal(ReturnsErrorCodes.QuantityExceeded, refused[0].Code);
-
-            await using var verifyDb = CreateDb();
-            var requests = await verifyDb.ReturnRequests.AsNoTracking()
-                .Where(x => x.SellerOrderId == sellerOrderId)
-                .Select(x => x.ReturnRequestId)
-                .ToListAsync();
-            var requestedUnits = await verifyDb.ReturnItems.AsNoTracking()
-                .Where(x => requests.Contains(x.ReturnRequestId))
-                .SumAsync(x => x.Quantity);
-
-            Assert.Equal(2, requests.Count);
-            Assert.Equal(3m, requestedUnits);
-            _output.WriteLine($"TB272-D round={round} order={sellerOrderId} accepted={accepted} requestedUnits={requestedUnits}");
-        }
-
-        await CleanupAsync();
+        await caller.RollbackAsync();
+        AssertNoRolledBackRows(await CountTagRowsAsync());
     }
 
-    // ------------------------------------------------------------------ A: the real unique index is the collision
-
-    [Fact]
-    public async Task The_same_key_on_two_orders_collides_on_the_real_unique_index_and_conflicts()
+    [SkippableFact]
+    public async Task A_key_collision_removes_only_this_attempt_and_keeps_the_caller_transaction_usable()
     {
-        if (Connection is null)
-        {
-            return;
-        }
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
 
         var customer = Guid.NewGuid();
-        var orderA = Guid.NewGuid();
-        var orderB = Guid.NewGuid();
-        var lineA = Guid.NewGuid();
-        var lineB = Guid.NewGuid();
-        var key = $"{_runTag}collision";
+        var sellerOrderId = Guid.NewGuid();
+        var lineId = Guid.NewGuid();
+        var otherOrder = Guid.NewGuid();
+        var otherLine = Guid.NewGuid();
+        var key = $"{_runTag}injected-collision";
         var orders = new MapOrderReader([
-            BuildOrder(orderA, customer, 2m, [lineA]),
-            BuildOrder(orderB, customer, 2m, [lineB]),
+            BuildOrder(sellerOrderId, customer, 2m, [lineId]),
+            BuildOrder(otherOrder, customer, 2m, [otherLine]),
         ]);
         var fulfillments = new MapFulfillmentReader([
-            BuildFulfillment(orderA, (lineA, 2m)),
-            BuildFulfillment(orderB, (lineB, 2m)),
+            BuildFulfillment(sellerOrderId, (lineId, 2m)),
+            BuildFulfillment(otherOrder, (otherLine, 2m)),
         ]);
 
-        // Order A's creation runs inside a caller-owned transaction, so its row stays UNCOMMITTED. Order B has a
-        // DIFFERENT advisory-lock key (another order), so it is not serialized against A: its read sees no row and its
-        // insert must collide with the real unique index once A commits.
-        await using var dbA = CreateDb();
-        await using var transactionA = await dbA.Database.BeginTransactionAsync();
-        var createdA = await BuildDirectory(dbA, orders, fulfillments).CreateAsync(
-            Command(orderA, customer, key, [new ReturnLineCommand(lineA, 1m)]),
+        var injector = new ExactConflictInjector();
+        await using var db = CreateDb(injector);
+        await using var caller = await db.Database.BeginTransactionAsync();
+
+        // Caller-owned work that is already tracked and DIRTY before the creation attempt.
+        var pending = ReturnRequest.Create(
+            Guid.NewGuid(),
+            () => Guid.NewGuid(),
+            otherOrder,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            customer,
+            $"{_runTag}caller-work",
+            "کار در جریان",
+            "IRR",
+            [(otherLine, 1m, 1000m, (Guid?)null)],
+            DateTimeOffset.UtcNow);
+        db.ReturnRequests.Add(pending);
+        db.ReturnItems.AddRange(pending.Items);
+        await db.SaveChangesAsync();
+        var paymentId = Guid.NewGuid();
+        pending.Approve(paymentId, DateTimeOffset.UtcNow);
+        Assert.Equal(EntityState.Modified, db.Entry(pending).State);
+
+        var directory = BuildDirectory(db, orders, fulfillments);
+        injector.Arm();
+
+        // The injected failure carries the EXACT provider error shape of the real index (proven separately above), so
+        // the owning recovery branch really runs: savepoint restore → scoped detach → winner read.
+        var conflict = await Assert.ThrowsAsync<ContractOperationException>(() => directory.CreateAsync(
+            Command(sellerOrderId, customer, key, [new ReturnLineCommand(lineId, 1m)]),
+            CancellationToken.None));
+
+        // No winner is visible inside this uncommitted transaction, so the honest answer is the typed stale refusal;
+        // crucially it is NOT a borrowed snapshot and NOT a silent success.
+        Assert.Equal(ReturnsErrorCodes.Stale, conflict.Code);
+
+        // Only this attempt's additions were removed; the caller's dirty entity kept its instance, state and values.
+        var entry = db.Entry(pending);
+        Assert.Equal(EntityState.Modified, entry.State);
+        Assert.Same(pending, entry.Entity);
+        Assert.Equal(ReturnRequestStatus.Approved, entry.Entity.Status);
+        Assert.Equal(paymentId, entry.Entity.PaymentId);
+        Assert.DoesNotContain(
+            db.ChangeTracker.Entries<ReturnRequest>(),
+            x => x.State == EntityState.Added && x.Entity.IdempotencyKey == key);
+        Assert.DoesNotContain(db.ChangeTracker.Entries<ReturnItem>(), x => x.State == EntityState.Added);
+
+        // The caller's transaction was neither committed nor rolled back by the directory: it still works.
+        var afterRecovery = await directory.CreateAsync(
+            Command(sellerOrderId, customer, $"{_runTag}after-recovery", [new ReturnLineCommand(lineId, 1m)]),
             CancellationToken.None);
-        Assert.Equal(orderA, createdA.SellerOrderId);
+        Assert.Equal(1m, afterRecovery.Items.Single().Quantity);
 
-        await using var dbB = CreateDb();
-        var pendingB = BuildDirectory(dbB, orders, fulfillments).CreateAsync(
-            Command(orderB, customer, key, [new ReturnLineCommand(lineB, 1m)]),
-            CancellationToken.None);
-        await Task.Delay(TimeSpan.FromMilliseconds(1200));
-        Assert.False(pendingB.IsCompleted);
+        // The caller's own pending change is still pending and now saveable in the same transaction.
+        await db.SaveChangesAsync();
+        Assert.Equal(ReturnRequestStatus.Approved,
+            (await db.ReturnRequests.AsNoTracking().SingleAsync(x => x.ReturnRequestId == pending.ReturnRequestId)).Status);
 
-        await transactionA.CommitAsync();
-
-        var conflict = await Assert.ThrowsAsync<ContractOperationException>(
-            () => pendingB.WaitAsync(TimeSpan.FromSeconds(30)));
-        Assert.Equal(ReturnsErrorCodes.IdempotencyConflict, conflict.Code);
-
-        await using var verifyDb = CreateDb();
-        var stored = await verifyDb.ReturnRequests.AsNoTracking()
-            .Where(x => x.IdempotencyKey == key)
-            .ToListAsync();
-        Assert.Single(stored);
-        Assert.Equal(createdA.ReturnRequestId, stored[0].ReturnRequestId);
-        Assert.Equal(orderA, stored[0].SellerOrderId);
-        Assert.Equal(
-            0,
-            await verifyDb.ReturnRequests.AsNoTracking().CountAsync(x => x.SellerOrderId == orderB));
-        _output.WriteLine($"TB272-A uniqueIndex winner={stored[0].ReturnRequestId} loser={ReturnsErrorCodes.IdempotencyConflict}");
-
-        await CleanupAsync();
+        await caller.RollbackAsync();
+        AssertNoRolledBackRows(await CountTagRowsAsync());
     }
 
     // ------------------------------------------------------------------ A: only the real key index is a collision
 
-    [Fact]
+    [SkippableFact]
     public async Task Only_the_idempotency_index_is_classified_as_a_key_collision()
     {
-        if (Connection is null)
-        {
-            return;
-        }
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
 
         var customer = Guid.NewGuid();
         var sellerOrderId = Guid.NewGuid();
@@ -234,7 +266,7 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
         var fulfillments = new MapFulfillmentReader([BuildFulfillment(sellerOrderId, (lineId, 2m))]);
 
         await using var db = CreateDb();
-        await using var transaction = await db.Database.BeginTransactionAsync();
+        await using var caller = await db.Database.BeginTransactionAsync();
         var created = await BuildDirectory(db, orders, fulfillments).CreateAsync(
             Command(sellerOrderId, customer, $"{_runTag}constraint", [new ReturnLineCommand(lineId, 1m)]),
             CancellationToken.None);
@@ -249,15 +281,18 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
             await db.Database.ExecuteSqlRawAsync(
                 """
                 INSERT INTO returns.return_items
-                    (return_item_id, return_request_id, order_line_id, quantity, unit_price_snapshot, currency)
-                VALUES ({0}, {1}, {2}, {3}, {4}, {5})
+                    (return_item_id, return_request_id, order_line_id, quantity, unit_price_snapshot, currency,
+                     condition, disposition)
+                VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})
                 """,
                 item.ReturnItemId,
                 item.ReturnRequestId,
                 item.OrderLineId,
                 item.Quantity,
                 item.UnitPriceSnapshot,
-                item.Currency);
+                item.Currency,
+                "Usable",
+                "None");
         }
         catch (Exception exception)
         {
@@ -269,19 +304,109 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
         Assert.Equal("pk_return_items", postgres!.ConstraintName);
         Assert.False(ReturnCreationSerialization.IsIdempotencyConflict(new DbUpdateException("test", postgres)));
 
-        await transaction.RollbackAsync();
-        await CleanupAsync();
+        await caller.RollbackAsync();
+        AssertNoRolledBackRows(await CountTagRowsAsync());
     }
 
-    // ------------------------------------------------------------------ rollback + release on the refusal path
+    // ------------------------------------------------------------------ A (R1): persisted precision and binding
 
-    [Fact]
-    public async Task A_refused_creation_leaves_no_row_and_releases_its_lock()
+    [SkippableFact]
+    public async Task Persisted_quantity_precision_and_the_full_binding_hold_inside_one_transaction()
     {
-        if (Connection is null)
-        {
-            return;
-        }
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
+
+        var customer = Guid.NewGuid();
+        var sellerOrderId = Guid.NewGuid();
+        var lineId = Guid.NewGuid();
+        var checkoutId = Guid.NewGuid();
+        var sellerPartyId = Guid.NewGuid();
+        var key = $"{_runTag}precision";
+        var orders = new MapOrderReader([
+            BuildOrder(sellerOrderId, customer, 2m, [lineId], checkoutId, sellerPartyId),
+        ]);
+        var fulfillments = new MapFulfillmentReader([BuildFulfillment(sellerOrderId, (lineId, 2m))]);
+
+        await using var db = CreateDb();
+        await using var caller = await db.Database.BeginTransactionAsync();
+
+        // A stored case with the exact binding and a SIX-decimal quantity really lives in the transaction.
+        var storedId = Guid.NewGuid();
+        await InsertRequestAsync(db, new RequestRow(
+            storedId, sellerOrderId, checkoutId, sellerPartyId, customer, key, "دلیل مرجوعی", "Requested",
+            0.001m, "OriginalPayment", "CustomerDelivered"));
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            INSERT INTO returns.return_items
+                (return_item_id, return_request_id, order_line_id, quantity, unit_price_snapshot, currency,
+                 condition, disposition)
+            VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})
+            """,
+            Guid.NewGuid(),
+            storedId,
+            lineId,
+            0.000001m,
+            1000m,
+            "IRR",
+            "Usable",
+            "None");
+
+        // Exact replay answers the PERSISTED facts: the stored six-decimal quantity is the answer, not a rounded one.
+        var replay = await BuildDirectory(db, orders, fulfillments).CreateAsync(
+            Command(sellerOrderId, customer, key, [new ReturnLineCommand(lineId, 0.000001m)]),
+            CancellationToken.None);
+        Assert.Equal(storedId, replay.ReturnRequestId);
+        Assert.Equal(0.000001m, replay.Items.Single().Quantity);
+        var persistedQuantity = await db.ReturnItems.AsNoTracking()
+            .Where(x => x.ReturnRequestId == storedId)
+            .Select(x => x.Quantity)
+            .SingleAsync();
+        Assert.Equal(0.000001m, persistedQuantity);
+        Assert.Equal(replay.Items.Single().Quantity, persistedQuantity);
+
+        // A quantity the column cannot represent exactly is refused BEFORE the stored key is even compared, so it can
+        // never be answered by the snapshot above.
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(() => BuildDirectory(db, orders, fulfillments)
+            .CreateAsync(
+                Command(sellerOrderId, customer, key, [new ReturnLineCommand(lineId, 0.0000011m)]),
+                CancellationToken.None));
+        Assert.Equal(ReturnsErrorCodes.QuantityPrecision, refused.Code);
+
+        // The stored binding includes checkout and seller party: a same-key row carrying another checkout is refused
+        // with no payload and no write.
+        var otherCheckoutKey = $"{_runTag}binding";
+        await InsertRequestAsync(db, new RequestRow(
+            Guid.NewGuid(), sellerOrderId, Guid.NewGuid(), sellerPartyId, customer, otherCheckoutKey,
+            "دلیل مرجوعی", "Requested", 1000m, "OriginalPayment", "CustomerDelivered"));
+        var binding = await Assert.ThrowsAsync<ContractOperationException>(() => BuildDirectory(db, orders, fulfillments)
+            .CreateAsync(
+                Command(sellerOrderId, customer, otherCheckoutKey, [new ReturnLineCommand(lineId, 1m)]),
+                CancellationToken.None));
+        Assert.Equal(ReturnsErrorCodes.IdempotencyConflict, binding.Code);
+
+        // A same-key row carrying another SELLER PARTY is refused the same way.
+        var otherSellerKey = $"{_runTag}binding-seller";
+        await InsertRequestAsync(db, new RequestRow(
+            Guid.NewGuid(), sellerOrderId, checkoutId, Guid.NewGuid(), customer, otherSellerKey,
+            "دلیل مرجوعی", "Requested", 1000m, "OriginalPayment", "CustomerDelivered"));
+        var sellerBinding = await Assert.ThrowsAsync<ContractOperationException>(() => BuildDirectory(db, orders, fulfillments)
+            .CreateAsync(
+                Command(sellerOrderId, customer, otherSellerKey, [new ReturnLineCommand(lineId, 1m)]),
+                CancellationToken.None));
+        Assert.Equal(ReturnsErrorCodes.IdempotencyConflict, sellerBinding.Code);
+
+        // Only the three injected rows exist in this transaction; the refusals wrote nothing.
+        Assert.Equal(3, await db.ReturnRequests.AsNoTracking().CountAsync(x => x.IdempotencyKey.StartsWith(_runTag)));
+
+        await caller.RollbackAsync();
+        AssertNoRolledBackRows(await CountTagRowsAsync());
+    }
+
+    // ------------------------------------------------------------------ refusal + replay + rollback-only
+
+    [SkippableFact]
+    public async Task A_refused_creation_leaves_no_row_keeps_the_caller_transaction_and_replays_exactly()
+    {
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
 
         var customer = Guid.NewGuid();
         var sellerOrderId = Guid.NewGuid();
@@ -290,75 +415,213 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
         var fulfillments = new MapFulfillmentReader([BuildFulfillment(sellerOrderId, (lineId, 1m))]);
 
         await using var db = CreateDb();
+        await using var caller = await db.Database.BeginTransactionAsync();
         var directory = BuildDirectory(db, orders, fulfillments);
         var first = await directory.CreateAsync(
             Command(sellerOrderId, customer, $"{_runTag}rollback-1", [new ReturnLineCommand(lineId, 1m)]),
             CancellationToken.None);
 
-        // Over-asking the exhausted line is refused inside the critical section; that transaction must roll back and
-        // release the lock, so the next writer on the SAME order is not blocked by the refusal.
+        // Over-asking the exhausted line is refused inside the critical section; a C# refusal is not a provider
+        // failure, so the caller's transaction stays usable and no row was added by the refused attempt.
         var refused = await Assert.ThrowsAsync<ContractOperationException>(() => directory.CreateAsync(
             Command(sellerOrderId, customer, $"{_runTag}rollback-2", [new ReturnLineCommand(lineId, 1m)]),
             CancellationToken.None));
         Assert.Equal(ReturnsErrorCodes.QuantityExceeded, refused.Code);
 
-        // Exact replay of the committed request still answers the same case.
+        // Exact replay of the request still answers the same case inside the same transaction.
         var replay = await directory.CreateAsync(
             Command(sellerOrderId, customer, $"{_runTag}rollback-1", [new ReturnLineCommand(lineId, 1m)]),
             CancellationToken.None);
         Assert.Equal(first.ReturnRequestId, replay.ReturnRequestId);
+        Assert.Equal(1, await db.ReturnRequests.AsNoTracking().CountAsync(x => x.SellerOrderId == sellerOrderId));
+        _output.WriteLine($"TB272R1 refusal=refused replay={replay.ReturnRequestId}");
 
-        await using var verifyDb = CreateDb();
-        Assert.Equal(1, await verifyDb.ReturnRequests.AsNoTracking().CountAsync(x => x.SellerOrderId == sellerOrderId));
-        _output.WriteLine($"TB272 refusal=rolled-back replay={replay.ReturnRequestId}");
-
-        await CleanupAsync();
+        await caller.RollbackAsync();
+        AssertNoRolledBackRows(await CountTagRowsAsync());
     }
 
-    // ------------------------------------------------------------------ fixtures
+    // ------------------------------------------------------------------ target validation
 
-    private async Task CleanupAsync()
+    private static (bool Ok, string Reason) ValidateCanonicalTarget()
     {
-        if (Connection is null)
+        var raw = Connection;
+        if (raw is null)
         {
-            return;
+            return (false, "TB272_CONNECTION is not set; this rollback-only relational proof did not run.");
         }
 
-        await using var db = CreateDb();
-        var owned = await db.ReturnRequests
-            .Where(x => x.IdempotencyKey.StartsWith(_runTag))
-            .Select(x => x.ReturnRequestId)
-            .ToListAsync();
-        if (owned.Count == 0)
-        {
-            _output.WriteLine($"TB272 cleanup tag={_runTag} rows=0");
-            return;
-        }
-
-        await db.ReturnItems.Where(x => owned.Contains(x.ReturnRequestId)).ExecuteDeleteAsync();
-        await db.RefundAttempts.Where(x => owned.Contains(x.ReturnRequestId)).ExecuteDeleteAsync();
-        await db.ReturnRequests.Where(x => owned.Contains(x.ReturnRequestId)).ExecuteDeleteAsync();
-        _output.WriteLine($"TB272 cleanup tag={_runTag} rows={owned.Count}");
-    }
-
-    private static async Task<(Guid? RequestId, string? Code)> AttemptAsync(
-        ReturnDirectory directory,
-        Guid sellerOrderId,
-        Guid customer,
-        string key,
-        Guid lineId)
-    {
+        NpgsqlConnectionStringBuilder builder;
         try
         {
-            var snapshot = await directory.CreateAsync(
-                Command(sellerOrderId, customer, key, [new ReturnLineCommand(lineId, 1m)]),
-                CancellationToken.None);
-            return (snapshot.ReturnRequestId, null);
+            builder = new NpgsqlConnectionStringBuilder(raw);
         }
-        catch (ContractOperationException exception)
+        catch (Exception)
         {
-            return (null, exception.Code);
+            return (false, "TB272_CONNECTION is not a valid Npgsql connection string; the proof did not run.");
         }
+
+        if (!IsLoopback(builder.Host))
+        {
+            return (false, "TB272_CONNECTION does not address loopback; the canonical target was rejected.");
+        }
+
+        if (builder.Port != 5432 || !string.Equals(builder.Database, "tooba_alpha", StringComparison.Ordinal))
+        {
+            return (false, "TB272_CONNECTION does not address loopback port 5432 / tooba_alpha; the canonical target was rejected.");
+        }
+
+        try
+        {
+            using var connection = new NpgsqlConnection(raw);
+            connection.Open();
+            using var command = new NpgsqlCommand(
+                "SELECT current_database(), inet_server_port(), host(inet_server_addr())", connection);
+            using var reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                return (false, "The canonical target did not answer its own identity; the proof did not run.");
+            }
+
+            var database = reader.GetString(0);
+            var port = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+            var address = reader.IsDBNull(2) ? "none" : reader.GetString(2);
+            if (!string.Equals(database, "tooba_alpha", StringComparison.Ordinal) || port != 5432)
+            {
+                // Only the non-secret server identity is named, never the connection string or credentials.
+                return (false,
+                    $"The server identity (database={database}, port={port}) is not the canonical tooba_alpha database on 5432; the proof did not run.");
+            }
+
+            // The authoritative target identity is the CLIENT endpoint (loopback:5432, validated above) plus this
+            // server-confirmed database name and server port. A published loopback port into the canonical container
+            // reports the container's own interface address here (for example 172.18.0.2), which is why the address is
+            // recorded as an observation instead of being required to be loopback.
+            Console.WriteLine($"TB272R1 target database={database} serverPort={port} serverAddress={address}");
+        }
+        catch (Exception)
+        {
+            return (false, "The canonical tooba_alpha database is not reachable; the proof did not run.");
+        }
+
+        return (true, "canonical loopback tooba_alpha");
+    }
+
+    private static bool IsLoopback(string? host) =>
+        host is not null
+        && (host.Equals("127.0.0.1", StringComparison.Ordinal)
+            || host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("::1", StringComparison.Ordinal));
+
+    // ------------------------------------------------------------------ rollback-only bookkeeping
+
+    /// <summary>Counts the rows this run could have committed. A rolled-back run must always answer zero.</summary>
+    private async Task<long> CountTagRowsAsync()
+    {
+        await using var verify = CreateDb();
+        return await verify.ReturnRequests.AsNoTracking()
+            .LongCountAsync(x => x.IdempotencyKey.StartsWith(_runTag));
+    }
+
+    private void AssertNoRolledBackRows(long leftover)
+    {
+        _output.WriteLine($"TB272R1 rollback-only tag={_runTag} committedRows={leftover}");
+        Assert.Equal(0L, leftover);
+    }
+
+    // ------------------------------------------------------------------ owning-boundary fixtures
+
+    private sealed record RequestRow(
+        Guid RequestId,
+        Guid SellerOrderId,
+        Guid CheckoutId,
+        Guid SellerPartyId,
+        Guid RequestedByUserId,
+        string IdempotencyKey,
+        string Reason,
+        string Status,
+        decimal RefundAmount,
+        string RefundDestination,
+        string Origin);
+
+    private static RequestRow NewRow(string key, string marker) =>
+        new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), key, marker,
+            "Requested", 1000m, "OriginalPayment", "CustomerDelivered");
+
+    private static async Task<RequestRow> InsertRequestAsync(ReturnsDbContext db, RequestRow row)
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            INSERT INTO returns.return_requests
+                (return_request_id, seller_order_id, checkout_id, seller_party_id, requested_by_user_id,
+                 idempotency_key, status, reason, currency, refund_amount, payment_id, created_at, updated_at,
+                 origin, source_fulfillment_id, source_shipment_id, source_receipt_id, source_occurrence_key,
+                 source_claim_id, obligation_closed_at, stock_settled_at, closure_phase, released_held_quantity,
+                 refund_destination)
+            VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, NULL, {10}, {11},
+                    {12}, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'None', 0, {13})
+            """,
+            row.RequestId,
+            row.SellerOrderId,
+            row.CheckoutId,
+            row.SellerPartyId,
+            row.RequestedByUserId,
+            row.IdempotencyKey,
+            row.Status,
+            row.Reason,
+            "IRR",
+            row.RefundAmount,
+            DeliveredAt,
+            DeliveredAt,
+            row.Origin,
+            row.RefundDestination);
+        return row;
+    }
+
+    /// <summary>
+    /// Controlled failure injection, used ONLY to reach the owning recovery branch that a rollback-only boundary
+    /// otherwise cannot reach (a same-key winner is only visible to another connection after a commit). The raised
+    /// exception carries the exact provider shape the real index produces — proven independently against PostgreSQL in
+    /// <see cref="A_real_unique_violation_inside_a_caller_transaction_is_exactly_classified_and_savepoint_recoverable"/>.
+    /// </summary>
+    private sealed class ExactConflictInjector : SaveChangesInterceptor
+    {
+        private int _armed;
+
+        public void Arm() => Interlocked.Exchange(ref _armed, 1);
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (Interlocked.Exchange(ref _armed, 0) == 1)
+            {
+                var postgres = new PostgresException(
+                    "duplicate key value violates unique constraint \"ix_return_requests_idempotency_key\"",
+                    "ERROR",
+                    "ERROR",
+                    PostgresErrorCodes.UniqueViolation,
+                    constraintName: ReturnCreationSerialization.IdempotencyUniqueIndex,
+                    tableName: ReturnCreationSerialization.IdempotencyTable,
+                    schemaName: ReturnCreationSerialization.IdempotencySchema);
+                throw new DbUpdateException("tb272r1 injected idempotency collision", postgres);
+            }
+
+            return ValueTask.FromResult(result);
+        }
+    }
+
+    private static ReturnsDbContext CreateDb(SaveChangesInterceptor? interceptor = null)
+    {
+        var options = new DbContextOptionsBuilder<ReturnsDbContext>();
+        ToobaNpgsql.ConfigureModuleContext(
+            options, Connection!, ReturnsDbContext.Schema, typeof(ReturnsDbContext));
+        if (interceptor is not null)
+        {
+            options.AddInterceptors(interceptor);
+        }
+
+        return new ReturnsDbContext(options.Options);
     }
 
     private static CreateReturnCommand Command(
@@ -366,7 +629,7 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
         Guid actorUserId,
         string idempotencyKey,
         IReadOnlyList<ReturnLineCommand> items) =>
-        new(sellerOrderId, actorUserId, idempotencyKey, "TB272 relational", items);
+        new(sellerOrderId, actorUserId, idempotencyKey, "دلیل مرجوعی", items);
 
     private static ReturnDirectory BuildDirectory(
         ReturnsDbContext db,
@@ -389,23 +652,17 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
             new UuidV7IdGenerator());
     }
 
-    private static ReturnsDbContext CreateDb()
-    {
-        var options = new DbContextOptionsBuilder<ReturnsDbContext>();
-        ToobaNpgsql.ConfigureModuleContext(
-            options, Connection!, ReturnsDbContext.Schema, typeof(ReturnsDbContext));
-        return new ReturnsDbContext(options.Options);
-    }
-
     private static OrderReturnContextSnapshot BuildOrder(
         Guid sellerOrderId,
         Guid customerUserId,
         decimal quantity,
-        Guid[] lineIds) =>
+        Guid[] lineIds,
+        Guid? checkoutId = null,
+        Guid? sellerPartyId = null) =>
         new(
             sellerOrderId,
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            checkoutId ?? Guid.NewGuid(),
+            sellerPartyId ?? Guid.NewGuid(),
             customerUserId,
             true,
             "IRR",
@@ -477,7 +734,7 @@ public sealed class ReturnsCreateIntegrity272RelationalTests
             string currency,
             string idempotencyKey,
             CancellationToken cancellationToken) =>
-            Task.FromResult(new GatewayRefundResult(true, "tb272-rel", null));
+            Task.FromResult(new GatewayRefundResult(true, "tb272r1-rel", null));
     }
 
     private sealed class RecordingWallet : IWalletRefundCreditPort

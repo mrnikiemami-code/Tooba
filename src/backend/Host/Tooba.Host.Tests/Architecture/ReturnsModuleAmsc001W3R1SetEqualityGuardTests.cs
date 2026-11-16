@@ -352,10 +352,11 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
     [Fact]
     public void Certification_truth_and_stable_code_split_are_preserved()
     {
-        // TB-272 added the two creation-integrity refusals (both HTTP-reachable).
-        Assert.Equal(22, ReturnsErrorCodes.HttpReachable.Count);
+        // TB-272 added the two creation-integrity refusals and TB-272-R1 the persisted quantity-precision refusal
+        // (all HTTP-reachable).
+        Assert.Equal(23, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(23, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(24, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         // No raw API-result or ad-hoc fault classification in the endpoint surface.
         var root = Repo();

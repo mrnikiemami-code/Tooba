@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks.Grid;
 using Tooba.Returns.Application.ReturnRequests.Commands;
 using Tooba.Returns.Application.ReturnRequests.Queries;
 using Tooba.Returns.Application.ReturnRequests.Models;
+using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Application.Validation;
 
@@ -47,7 +48,12 @@ public sealed class CreateReturnCommandValidator : AbstractValidator<CreateRetur
                 .WithErrorCode(ReturnsValidationCodes.OrderLineIdRequired);
             item.RuleFor(x => x.Quantity)
                 .GreaterThan(0)
-                .WithErrorCode(ReturnsValidationCodes.QuantityInvalid);
+                .WithErrorCode(ReturnsValidationCodes.QuantityInvalid)
+                // TB-272-R1: the persisted quantity is numeric(18,6); a value with more fractional digits would be
+                // stored as a different number of physical units. Refuse it here (endpoint-reachable) instead of
+                // silently rounding it; the owning aggregate repeats the same invariant.
+                .Must(PersistedReturnQuantity.IsExactlyRepresentable)
+                .WithErrorCode(ReturnsValidationCodes.QuantityPrecision);
         });
         RuleFor(x => x.RefundDestination)
             .IsInEnum()

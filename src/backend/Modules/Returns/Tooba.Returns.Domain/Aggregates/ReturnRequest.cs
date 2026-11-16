@@ -124,13 +124,14 @@ public sealed class ReturnRequest : IHasDomainEvents
 
     /// <summary>
     /// درخواست مرجوعی را از snapshot خطوط می‌سازد. eligibility در Directory بررسی می‌شود.
+    /// <para>
+    /// TB-272-R1: this is the ORDINARY (customer-delivered) factory and it carries the ordinary invariants
+    /// unconditionally — each order line is named exactly once (a repeated line would be measured against the same
+    /// remaining quantity twice and would double the refunded price of one physical line) and every quantity must be
+    /// exactly representable at the persisted six-decimal scale. There is deliberately no bypass parameter: the
+    /// courier-origin identity (order line, condition) has its own factory, so no caller can weaken this contract.
+    /// </para>
     /// </summary>
-    /// <param name="enforceOneLinePerOrderLine">
-    /// TB-272 (B): an ORDINARY (customer-delivered) creation names each order line exactly once — a repeated line
-    /// would be validated against the same remaining quantity twice and would double the refunded price for one
-    /// physical line. Courier-origin creation passes <c>false</c> on purpose: its durable claim identity is
-    /// (order line, condition), so the same line legitimately appears once per received condition.
-    /// </param>
     public static ReturnRequest Create(
         Guid returnRequestId,
         Func<Guid> newId,
@@ -143,24 +144,77 @@ public sealed class ReturnRequest : IHasDomainEvents
         string currency,
         IEnumerable<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)> lines,
         DateTimeOffset now,
-        RefundDestination refundDestination = RefundDestination.OriginalPayment,
-        bool enforceOneLinePerOrderLine = true)
+        RefundDestination refundDestination = RefundDestination.OriginalPayment)
+    {
+        var requestedLines = lines as IReadOnlyList<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)>
+            ?? lines.ToArray();
+        if (FindRepeatedOrderLine(requestedLines.Select(x => x.OrderLineId)) is not null)
+        {
+            throw new InvalidOperationException("returns.duplicate_line");
+        }
+
+        return Build(
+            returnRequestId,
+            newId,
+            sellerOrderId,
+            checkoutId,
+            sellerPartyId,
+            requestedByUserId,
+            idempotencyKey,
+            reason,
+            currency,
+            requestedLines
+                .Select(x => (x.OrderLineId, x.Quantity, x.UnitPriceSnapshot, x.ReservationId, ReturnItemCondition.Usable))
+                .ToArray(),
+            now,
+            refundDestination);
+    }
+
+    /// <summary>
+    /// TB-272-R1: the ONE shared construction path of a return case. It owns the invariants every caller must obey —
+    /// a required idempotency key, a defined refund destination, exactly representable and positive quantities — and
+    /// it is invoked only by the ordinary factory above (after its one-line-per-order-line rule) and by the
+    /// courier-origin factory below (whose identity is (order line, condition) instead).
+    /// </summary>
+    private static ReturnRequest Build(
+        Guid returnRequestId,
+        Func<Guid> newId,
+        Guid sellerOrderId,
+        Guid checkoutId,
+        Guid sellerPartyId,
+        Guid requestedByUserId,
+        string idempotencyKey,
+        string? reason,
+        string currency,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId, ReturnItemCondition Condition)> lines,
+        DateTimeOffset now,
+        RefundDestination refundDestination,
+        Guid? sourceShipmentId = null,
+        Guid? sourceReceiptId = null)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             throw new InvalidOperationException("returns.idempotency.required");
         }
 
-        var requestedLines = lines as IReadOnlyList<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)>
-            ?? lines.ToArray();
-        if (enforceOneLinePerOrderLine && FindRepeatedOrderLine(requestedLines.Select(x => x.OrderLineId)) is not null)
-        {
-            throw new InvalidOperationException("returns.duplicate_line");
-        }
-
         if (!Enum.IsDefined(refundDestination))
         {
             throw new InvalidOperationException("returns.refund_destination.invalid");
+        }
+
+        foreach (var line in lines)
+        {
+            // TB-272-R1: the persisted column is numeric(18,6). A quantity that cannot be stored exactly is refused
+            // instead of being silently rounded into a different number of physical units.
+            if (!PersistedReturnQuantity.IsExactlyRepresentable(line.Quantity))
+            {
+                throw new InvalidOperationException("returns.quantity_precision");
+            }
+
+            if (line.Quantity <= 0)
+            {
+                throw new InvalidOperationException("returns.qty.positive");
+            }
         }
 
         var request = new ReturnRequest
@@ -178,13 +232,8 @@ public sealed class ReturnRequest : IHasDomainEvents
             CreatedAt = now,
             UpdatedAt = now,
         };
-        foreach (var line in requestedLines)
+        foreach (var line in lines)
         {
-            if (line.Quantity <= 0)
-            {
-                throw new InvalidOperationException("returns.qty.positive");
-            }
-
             request._items.Add(ReturnItem.Create(
                 newId(),
                 request.ReturnRequestId,
@@ -192,7 +241,10 @@ public sealed class ReturnRequest : IHasDomainEvents
                 line.Quantity,
                 line.UnitPriceSnapshot,
                 currency,
-                line.ReservationId));
+                line.ReservationId,
+                line.Condition,
+                sourceShipmentId,
+                sourceReceiptId));
         }
 
         request.RefundAmount = request._items.Sum(x => x.UnitPriceSnapshot * x.Quantity);
@@ -253,7 +305,7 @@ public sealed class ReturnRequest : IHasDomainEvents
             throw new InvalidOperationException("returns.courier_origin.occurrence_required");
         }
 
-        var request = Create(
+        var request = Build(
             returnRequestId,
             newId,
             sellerOrderId,
@@ -263,29 +315,14 @@ public sealed class ReturnRequest : IHasDomainEvents
             idempotencyKey,
             reason,
             currency,
-            lines.Select(x => (x.OrderLineId, x.Quantity, x.UnitPriceSnapshot, x.ReservationId)),
+            lines
+                .Select(x => (x.OrderLineId, x.Quantity, x.UnitPriceSnapshot, x.ReservationId, x.Condition))
+                .ToArray(),
             now,
             refundDestination,
-            enforceOneLinePerOrderLine: false);
+            sourceShipmentId,
+            sourceReceiptId);
 
-        // The factory above minted usable lines; replace them with the exact recorded condition per line.
-        request._items.Clear();
-        foreach (var line in lines)
-        {
-            request._items.Add(ReturnItem.Create(
-                newId(),
-                request.ReturnRequestId,
-                line.OrderLineId,
-                line.Quantity,
-                line.UnitPriceSnapshot,
-                currency,
-                line.ReservationId,
-                line.Condition,
-                sourceShipmentId,
-                sourceReceiptId));
-        }
-
-        request.RefundAmount = request._items.Sum(x => x.UnitPriceSnapshot * x.Quantity);
         request.Origin = ReturnOrigin.CourierOrigin;
         request.SourceFulfillmentId = sourceFulfillmentId;
         request.SourceShipmentId = sourceShipmentId;

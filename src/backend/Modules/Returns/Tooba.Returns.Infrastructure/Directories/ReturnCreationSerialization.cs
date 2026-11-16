@@ -44,6 +44,13 @@ public static class ReturnCreationSerialization
     public const string IdempotencySchema = "returns";
 
     /// <summary>
+    /// TB-272-R1: the savepoint this creation opens before its insert when the CALLER owns the transaction. A key
+    /// collision then restores this savepoint instead of rolling the caller's transaction back, so the caller's
+    /// transaction stays usable and every unrelated tracked change survives.
+    /// </summary>
+    public const string CallerSavepointName = "tb272_creation_intent";
+
+    /// <summary>
     /// Deterministic advisory-lock key of one seller order. Distinct orders may in theory collide on the 64-bit fold,
     /// which can only over-serialize two unrelated creations (never under-serialize), so correctness does not depend
     /// on uniqueness here.

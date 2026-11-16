@@ -43,6 +43,12 @@ public static class ReturnsValidationCodes
     /// <summary>An ordinary creation named the same order line more than once (list shape, not a quantity rule).</summary>
     public const string DuplicateOrderLine = "returns.validation.duplicate_order_line";
 
+    /// <summary>
+    /// A return line quantity is not exactly representable at the persisted six-decimal scale, so accepting it would
+    /// store a different number of physical units than the caller submitted.
+    /// </summary>
+    public const string QuantityPrecision = "returns.validation.quantity_precision";
+
     /// <summary>The admin grid query body must be present.</summary>
     public const string GridRequestRequired = "returns.validation.grid_request_required";
 }
