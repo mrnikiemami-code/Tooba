@@ -1,4 +1,15 @@
-# CURRENT — 272-R1 WORKER PASS; 272 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+# CURRENT — RETURNS272 CREATION SCOPE CLOSED THROUGH272-R1; ONLY273 NEXT — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/ARCHITECT-REVIEW.md.
+272-R1 ACCEPT within issued A–C source/evidence scope at b5d9b9aecdcc13909099c9117887861e2bf0ae46; parent creation work closed through repair.
+Original272 PARTIAL review and committed-fixture/delete deviation preserved, never retroactively authorized.
+No committed two-writer/owned-success relational proof, no live return walkthrough, no Architect runtime execution or user/provider/financial acceptance.
+Only TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273 is issued next via its actual Bridge envelope;274–276 NOT ISSUED.
+Keep one task/worker, no screenshots/delegation/automatic loop. Canonical tooba_alpha5432/store-alpha, Host5088/FE3000, rollback-only test data.
+Preserve shipping271-R1/270-R4 acceptance and prior audit history.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 272-R1 WORKER PASS; 272 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/TASK.md and
 docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,precision-and-transaction-proof.md,rollback-only-proof.md}.

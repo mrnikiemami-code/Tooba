@@ -1,6 +1,15 @@
 # Returns and refunds — Architect execution plan — 2026-11-16
 
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
+
+## CURRENT checkpoint — 2026-11-16
+272-R1 ACCEPT within A–C source/evidence repair scope; parent272 creation work closed through repair.
+Read 272-R1/ARCHITECT-REVIEW.md. The original272 PARTIAL review and unauthorized committed fixture/delete deviation remain history. Limits: no committed two-writer/owned-success relational proof, no live return walkthrough or Architect runtime execution.
+ONLY TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273 is next;274–276 NOT ISSUED.
+273 is a backend recovery foundation: same durable unknown attempt, explicit definite-failure retry identity, physical-disposition recovery distinct from money, truthful read-model actions/blockers. Full UI/mobile is275. Ordinary physical receipt remains274; no recovery may invent receipt or saleable condition.
+
+## Superseded worker pointers (retain as history)
+
 272-R1 repair result: PASS within its issued A–C scope (2026-11-16), awaiting Architect review; evidence in
 `docs/architecture/evidence/TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272-R1/`. 272 remains
 **PARTIAL** as the parent until that review; only the precision/full-binding, caller-transaction/tracker and
@@ -21,7 +30,7 @@ Complete the existing /admin/returns workflow with truthful physical, financial 
 - RejectAsync discards Reason. Queue summarizes first product/unit with total quantities and repeats RET-orderNumber for multiple cases.
 - PaymentModule registers FakePaymentRefundGateway outside Production, FailClosedPaymentRefundGateway in Production. No real PSP refund integration was established by this audit.
 
-## Ordered work packages — only 272 is issued next
+## Ordered work packages — current issue authority is the CURRENT checkpoint above
 | Candidate task | Coherent outcome | Review boundary |
 | --- | --- | --- |
 | TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272 | Authorized exact replay, duplicate-line refusal, failed-refund quantities retained, atomic ordinary creation quantity enforcement | No money/physical lifecycle/FE change; command and relational evidence |
