@@ -236,7 +236,16 @@ function dispatchBucketBadge(row: FulfillmentListRow) {
   );
 }
 
-/** Builds the queue's columns. `onRefresh` is used ONLY by the fulfilment-level action menu after a command. */
+/**
+ * Builds the queue's columns. `onRefresh` is used ONLY by the fulfilment-level action menu after a command.
+ *
+ * Column widths are the operator's own authored preference, promoted from the saved view on
+ * `grid.admin.fulfillments` (asli-grid) into these code defaults: orderReference 255.5555419921875,
+ * shippingMethodLabel 217.77777099609375, status 264.4444580078125, trackingSummary 268.88885498046875,
+ * recipientName 234.4444580078125, cityName 170, createdAt 172.22222900390625, updatedAt 163.33331298828125.
+ * Raw fractional widths are kept unrounded so the default render stays pixel-identical to the saved view.
+ * Everything else in that view (order, visibility, sorts = [], pageSize = 10) already matched the code.
+ */
 export function createFulfillmentWorkQueueColumns(
   onRefresh: () => void,
 ): GridColumnDef<FulfillmentListRow>[] {
@@ -246,7 +255,7 @@ export function createFulfillmentWorkQueueColumns(
       header: "سفارش",
       accessor: (row) => row.orderReference,
       cell: (row) => truncatedCell(row.orderReference || "—", row.orderReference || undefined),
-      width: 160,
+      width: 255.5555419921875,
       minWidth: 120,
       filterKind: "text",
       sortable: true,
@@ -284,7 +293,7 @@ export function createFulfillmentWorkQueueColumns(
       header: "روش ارسال",
       accessor: (row) => row.shippingMethodLabel || row.shippingMethodCode,
       cell: (row) => truncatedCell(row.shippingMethodLabel || row.shippingMethodCode || "—"),
-      width: 150,
+      width: 217.77777099609375,
       minWidth: 120,
       filterKind: "status",
       enumOptions: shippingMethodEnumOptions,
@@ -335,7 +344,7 @@ export function createFulfillmentWorkQueueColumns(
           </span>
         );
       },
-      width: 200,
+      width: 264.4444580078125,
       minWidth: 150,
       filterKind: "status",
       enumOptions: fulfillmentStatusEnumOptions,
@@ -457,7 +466,7 @@ export function createFulfillmentWorkQueueColumns(
           {row.trackingSummary || "—"}
         </span>
       ),
-      width: 150,
+      width: 268.88885498046875,
       minWidth: 110,
       filterKind: "text",
     },
@@ -466,7 +475,7 @@ export function createFulfillmentWorkQueueColumns(
       header: "گیرنده",
       accessor: (row) => row.recipientName,
       cell: (row) => truncatedCell(row.recipientName || "بدون نام", row.recipientName),
-      width: 140,
+      width: 234.4444580078125,
       minWidth: 110,
       filterKind: "text",
       sortable: true,
@@ -476,7 +485,7 @@ export function createFulfillmentWorkQueueColumns(
       header: "مقصد / شهر",
       accessor: (row) => row.cityName,
       cell: (row) => truncatedCell(row.cityName || "—", row.cityName),
-      width: 120,
+      width: 170,
       minWidth: 96,
       filterKind: "text",
       sortable: true,
@@ -486,7 +495,7 @@ export function createFulfillmentWorkQueueColumns(
       header: "زمان ایجاد",
       accessor: (row) => row.createdAt,
       cell: (row) => truncatedCell(formatFulfillmentDate(row.createdAt)),
-      width: 140,
+      width: 172.22222900390625,
       minWidth: 120,
       filterKind: "date",
       sortable: true,
@@ -496,7 +505,7 @@ export function createFulfillmentWorkQueueColumns(
       header: "آخرین تغییر",
       accessor: (row) => row.updatedAt,
       cell: (row) => truncatedCell(formatFulfillmentDate(row.updatedAt)),
-      width: 140,
+      width: 163.33331298828125,
       minWidth: 120,
       filterKind: "date",
       sortable: true,
