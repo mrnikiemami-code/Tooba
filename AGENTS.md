@@ -1,4 +1,16 @@
-# CURRENT — 273-R2 WORKER PASS (three-gate repair); 273 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+# CURRENT — RETURNS273 BACKEND SCOPE CLOSED THROUGH273-R2; ONLY274 NEXT — 2026-11-16
+
+Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/ARCHITECT-REVIEW.md.
+273-R2 ACCEPT within three-gate source/evidence scope at ce471c71b1bf5f64f7e2d55ff482eba96fe34ca5;273 recovery foundation closed through repairs.
+Original273/R1 PARTIAL reviews, prior broad-test deviations and272 fixture/delete audit remain history, not retroactively accepted execution.
+Only TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274 next via actual Bridge envelope.275/276 NOT ISSUED.
+274: ordinary customer receipt/inspection, lawful refund/stock gates, reason persistence; additive schema only with true pre-apply backup.
+No Architect local runtime/tests, live case or user/provider/financial acceptance; outcome SQL branch and raw-connection enlistment limits retained.
+Canonical tooba_alpha5432/store-alpha, Host5088/FE3000; one worker/task, rollback-only tests, no screenshots/delegation/loops.
+Preserve272-R1 and shipping acceptance/history.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 273-R2 WORKER PASS (three-gate repair); 273 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
 
 Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/TASK.md and
 docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,three-gate-proof.md}.

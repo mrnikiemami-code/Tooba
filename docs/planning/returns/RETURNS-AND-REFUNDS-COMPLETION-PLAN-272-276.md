@@ -3,6 +3,10 @@
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
 
 ## CURRENT checkpoint — 2026-11-16
+273-R2 ACCEPT within three-gate source/evidence scope;273 backend recovery foundation closed through repairs. Read273-R2/ARCHITECT-REVIEW.md. Original273/R1 PARTIAL results/reviews and all deviations remain history.
+ONLY TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274 is next: Returns-owned ordinary customer receiving/inspection facts, exact received quantities/conditions, all ordinary refund/restock entry paths gated, persisted rejection reason. Backend-only; UI275/connected276 NOT ISSUED. Additive migration requires actual pre-apply backup and repository runner. No live business fixtures/money/stock actions.
+
+## Superseded273-R2 worker checkpoint — 2026-11-16
 273-R2 worker result: PASS within the issued three-gate repair scope, awaiting Architect review (NOT Architect/user
 acceptance). Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/RESULT.md.
 The parent **273 and 273-R1 remain PARTIAL**. 273-R2 closed the three accepted omissions: the SAME courier
@@ -70,7 +74,7 @@ Complete the existing /admin/returns workflow with truthful physical, financial 
 | Candidate task | Coherent outcome | Review boundary |
 | --- | --- | --- |
 | TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272 | Authorized exact replay, duplicate-line refusal, failed-refund quantities retained, atomic ordinary creation quantity enforcement | No money/physical lifecycle/FE change; command and relational evidence |
-| 273 — implemented, awaiting Architect review | Explicit same-attempt unknown-outcome reconciliation; definite failure distinguished from unknown; independent retry of physical disposition without refund again | No invented PSP outcome, no blind new refund key; preserve approve/reject arbitration and Wallet once-only credit |
+| 273 — backend foundation closed through273-R2 | Explicit same-attempt unknown-outcome reconciliation; definite failure distinguished from unknown; independent retry of physical disposition without refund again | No invented PSP outcome, no blind new refund key; preserve approve/reject arbitration and Wallet once-only credit |
 | 274 — candidate, NOT ISSUED | Customer receipt/inspection evidence and lawful quantities/conditions before ordinary refund/restock; persisted decision reason | Keep courier receipt and claims authoritative, no duplicate receipt authority; concrete additive migration reviewed with pre-apply backup if needed |
 | 275 — candidate, NOT ISSUED | Existing admin queue/detail/workflow: distinct case locator, accurate multiple items/units, amount/currency/destination/origin, actionable phase/blocker, counts and reason/recovery controls, Persian dates and mobile readability | One action owner, shared grid/components, 390/1440 DOM/text proof; durable reviewed intent and late-response fencing |
 | 276 — candidate, NOT ISSUED | Connected focused acceptance of customer + courier + Wallet + original-payment outcomes and recovery, actual served artifacts and residual limits | Existing data GET only; controlled tests for missing live cases; no manufactured orders/refunds |
