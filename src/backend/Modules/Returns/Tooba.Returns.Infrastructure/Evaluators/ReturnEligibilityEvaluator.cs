@@ -138,11 +138,15 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
         Guid sellerOrderId,
         CancellationToken cancellationToken)
     {
+        // TB-272 (C): a FAILED money attempt is not a cancelled physical intent. RefundFailed still occupies its
+        // requested line quantities, so the same units can never fund a second, over-capacity request. Only
+        // Rejected/Cancelled release capacity (they are absent from this set on purpose).
         var activeStatuses = new[]
         {
             ReturnRequestStatus.Requested,
             ReturnRequestStatus.Approved,
             ReturnRequestStatus.RefundProcessing,
+            ReturnRequestStatus.RefundFailed,
             ReturnRequestStatus.Completed,
         };
         var requestIds = await _db.ReturnRequests.AsNoTracking()

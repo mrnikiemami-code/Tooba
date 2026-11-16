@@ -103,8 +103,34 @@ public sealed class ReturnRequest : IHasDomainEvents
     public void ClearDomainEvents() => _domainEvents.Clear();
 
     /// <summary>
+    /// TB-272 (B): order-line identity of the duplicate rule. Returns the first order line that is named more than
+    /// once, or <c>null</c> when every line is named exactly once. The ordinary creation path (Directory) turns a
+    /// non-null answer into its typed <c>return.duplicate_line</c> fault before any work; this aggregate repeats the
+    /// same rule so a future caller cannot bypass it.
+    /// </summary>
+    public static Guid? FindRepeatedOrderLine(IEnumerable<Guid> orderLineIds)
+    {
+        ArgumentNullException.ThrowIfNull(orderLineIds);
+        foreach (var group in orderLineIds.GroupBy(x => x))
+        {
+            if (group.Count() > 1)
+            {
+                return group.Key;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// درخواست مرجوعی را از snapshot خطوط می‌سازد. eligibility در Directory بررسی می‌شود.
     /// </summary>
+    /// <param name="enforceOneLinePerOrderLine">
+    /// TB-272 (B): an ORDINARY (customer-delivered) creation names each order line exactly once — a repeated line
+    /// would be validated against the same remaining quantity twice and would double the refunded price for one
+    /// physical line. Courier-origin creation passes <c>false</c> on purpose: its durable claim identity is
+    /// (order line, condition), so the same line legitimately appears once per received condition.
+    /// </param>
     public static ReturnRequest Create(
         Guid returnRequestId,
         Func<Guid> newId,
@@ -117,11 +143,19 @@ public sealed class ReturnRequest : IHasDomainEvents
         string currency,
         IEnumerable<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)> lines,
         DateTimeOffset now,
-        RefundDestination refundDestination = RefundDestination.OriginalPayment)
+        RefundDestination refundDestination = RefundDestination.OriginalPayment,
+        bool enforceOneLinePerOrderLine = true)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             throw new InvalidOperationException("returns.idempotency.required");
+        }
+
+        var requestedLines = lines as IReadOnlyList<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)>
+            ?? lines.ToArray();
+        if (enforceOneLinePerOrderLine && FindRepeatedOrderLine(requestedLines.Select(x => x.OrderLineId)) is not null)
+        {
+            throw new InvalidOperationException("returns.duplicate_line");
         }
 
         if (!Enum.IsDefined(refundDestination))
@@ -144,7 +178,7 @@ public sealed class ReturnRequest : IHasDomainEvents
             CreatedAt = now,
             UpdatedAt = now,
         };
-        foreach (var line in lines)
+        foreach (var line in requestedLines)
         {
             if (line.Quantity <= 0)
             {
@@ -231,7 +265,8 @@ public sealed class ReturnRequest : IHasDomainEvents
             currency,
             lines.Select(x => (x.OrderLineId, x.Quantity, x.UnitPriceSnapshot, x.ReservationId)),
             now,
-            refundDestination);
+            refundDestination,
+            enforceOneLinePerOrderLine: false);
 
         // The factory above minted usable lines; replace them with the exact recorded condition per line.
         request._items.Clear();

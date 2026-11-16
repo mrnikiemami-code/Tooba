@@ -34,6 +34,12 @@ public sealed class CreateReturnCommandValidator : AbstractValidator<CreateRetur
             .WithErrorCode(ReturnsValidationCodes.ItemsRequired)
             .Must(items => items is { Count: > 0 })
             .WithErrorCode(ReturnsValidationCodes.ItemsEmpty);
+        // TB-272 (B): one line per order line. Duplicate detection is list SHAPE (an item identified twice), not a
+        // quantity/eligibility rule — the remaining-quantity authority stays in the evaluator and the Directory.
+        RuleFor(x => x.Items)
+            .Must(items => items!.Select(x => x.OrderLineId).Distinct().Count() == items.Count)
+            .When(x => x.Items is { Count: > 0 })
+            .WithErrorCode(ReturnsValidationCodes.DuplicateOrderLine);
         RuleForEach(x => x.Items).ChildRules(item =>
         {
             item.RuleFor(x => x.OrderLineId)

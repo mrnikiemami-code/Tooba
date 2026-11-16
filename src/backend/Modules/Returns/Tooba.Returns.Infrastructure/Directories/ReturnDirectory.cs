@@ -92,69 +92,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         CancellationToken cancellationToken) =>
         _eligibility.EvaluateAsync(sellerOrderId, cancellationToken);
 
-    private async Task<ReturnSnapshot> CreateInternalAsync(
-        CreateReturnCommand command,
-        bool requireOwner,
-        CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-
-        var existing = await _db.ReturnRequests.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.IdempotencyKey == command.IdempotencyKey, cancellationToken);
-        if (existing is not null)
-        {
-            return await MapSnapshotAsync(existing, cancellationToken);
-        }
-
-        var orderContext = await _orders.GetReturnContextAsync(command.SellerOrderId, cancellationToken)
-            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
-        if (requireOwner && orderContext.PlacedByUserId != command.ActorUserId)
-        {
-            throw new ContractOperationException(ReturnsErrorCodes.NotOwner);
-        }
-
-        var eligibility = await _eligibility.EvaluateAsync(command.SellerOrderId, cancellationToken);
-        if (!eligibility.Eligible)
-        {
-            throw new ContractOperationException(ReturnEligibilityReasonCodes.ToErrorCode(eligibility.ReasonCode));
-        }
-
-        var remainingByLine = eligibility.Lines.ToDictionary(x => x.OrderLineId, x => x.RemainingReturnableQuantity);
-        var lineSnapshots = new List<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)>();
-        foreach (var item in command.Items)
-        {
-            var orderLine = orderContext.Lines.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)
-                ?? throw new ContractOperationException(ReturnsErrorCodes.LineMissing);
-            remainingByLine.TryGetValue(item.OrderLineId, out var remaining);
-            if (item.Quantity <= 0 || item.Quantity > remaining)
-            {
-                throw new ContractOperationException(ReturnsErrorCodes.QuantityExceeded);
-            }
-
-            lineSnapshots.Add((item.OrderLineId, item.Quantity, orderLine.UnitPriceSnapshot, orderLine.ReservationId));
-        }
-
-        var now = _clock.UtcNow;
-        var requestedBy = orderContext.PlacedByUserId;
-        var request = ReturnRequest.Create(
-            _ids.NewId(),
-            () => _ids.NewId(),
-            orderContext.SellerOrderId,
-            orderContext.CheckoutId,
-            orderContext.SellerPartyId,
-            requestedBy,
-            command.IdempotencyKey,
-            command.Reason,
-            orderContext.Currency,
-            lineSnapshots,
-            now,
-            command.RefundDestination);
-        _db.ReturnRequests.Add(request);
-        _db.ReturnItems.AddRange(request.Items);
-        await _db.SaveChangesAsync(cancellationToken);
-        _telemetry.RecordCreated();
-        return await MapSnapshotAsync(request, cancellationToken);
-    }
+    // TB-272: ordinary creation lives in ReturnDirectory.Creation.cs (authority → intent → one serialized decision).
 
     /// <inheritdoc />
     public async Task<ReturnSnapshot?> GetAsync(Guid returnRequestId, CancellationToken cancellationToken)

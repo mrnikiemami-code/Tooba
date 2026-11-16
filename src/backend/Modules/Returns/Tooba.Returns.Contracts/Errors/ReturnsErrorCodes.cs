@@ -45,6 +45,8 @@ public static class ReturnsErrorCodes
         LineMissing,
         NotOwner,
         IdempotencyRequired,
+        IdempotencyConflict,
+        DuplicateLine,
         RefundDestinationInvalid,
         RefundRetryInvalidState,
         RefundAlreadyStarted,
@@ -125,6 +127,18 @@ public static class ReturnsErrorCodes
 
     /// <summary>Idempotency required.</summary>
     public const string IdempotencyRequired = "return.idempotency_required";
+
+    /// <summary>
+    /// TB-272: the submitted creation key is already stored for a DIFFERENT creation intent (another seller order,
+    /// customer, line set/quantity, refund destination or reason). A typed conflict — never a borrowed snapshot.
+    /// </summary>
+    public const string IdempotencyConflict = "return.idempotency_conflict";
+
+    /// <summary>
+    /// TB-272: an ordinary creation named the same order line more than once. The duplicate is refused instead of
+    /// being silently merged or refunded twice.
+    /// </summary>
+    public const string DuplicateLine = "return.duplicate_line";
 
     /// <summary>Invalid refund destination.</summary>
     public const string RefundDestinationInvalid = "refund.destination.invalid";
