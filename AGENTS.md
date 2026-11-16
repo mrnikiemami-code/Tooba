@@ -1,4 +1,15 @@
-# CURRENT — 271-R1 ARCHITECT ACCEPT WITHIN REPAIR SCOPE; QUEUE READY FOR USER REVIEW — 2026-11-15
+# CURRENT — RETURNS COMPLETION PLAN; ONLY TB-272 FIRST INCREMENT — 2026-11-16
+
+User authorized sequential completion of /admin/returns after the Architect source audit.
+Read docs/planning/returns/RETURNS-AND-REFUNDS-COMPLETION-PLAN-272-276.md.
+First task: TB-RETURNS-CREATE-OWNERSHIP-EXACT-REPLAY-AND-QUANTITY-INTEGRITY-272; execute only its actual Bridge envelope, never this roadmap.
+Later 273–276 are candidates, NOT ISSUED. One worker/task, no screenshots or loops.
+Shipping271-R1 and270-R4 acceptance remains bounded and preserved; no user visual/functional or provider/financial acceptance.
+Source audit baseline c492443179b86f3efc065121b3ae2a140105937d; no Architect local test/runtime verification.
+ONE canonical tooba_alpha5432 SingleStore/store-alpha, Host5088/FE3000; no live business/provider/money writes.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 271-R1 ARCHITECT ACCEPT WITHIN REPAIR SCOPE; QUEUE READY FOR USER REVIEW — 2026-11-15
 
 Read docs/architecture/evidence/TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1/ARCHITECT-REVIEW.md.
 Latest Architect-accepted task: TB-SHIPPING-EMPLOYEE-WORK-QUEUE-JOB-STAGES-AND-TIME-SCOPES-271-R1.
