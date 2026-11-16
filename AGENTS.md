@@ -1,4 +1,43 @@
-# CURRENT — RETURNS273 PARTIAL; ONLY273-R1 BOUNDED REPAIR — 2026-11-16
+# CURRENT — 273-R1 WORKER PASS; 273 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,binding-and-finalization-proof.md,transaction-and-reference-proof.md}.
+Status **PASS within the issued A–D repair scope**, decision
+`ONE_FAIL_CLOSED_STORED_EVIDENCE_POLICY_SHARED_BY_READ_AND_ACTION_A_RECORDED_APPROVAL_AND_A_FULLY_BOUND_ATTEMPT_REQUIRED_AN_EXPLICIT_PENDING_FINAL_MARKER_PHASE_A_CALLER_OR_AMBIENT_TRANSACTION_REFUSED_BEFORE_ANY_EFFECT_AND_A_TRUTHFUL_ABSENT_PROVIDER_REFERENCE_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION`,
+NOT Architect ACCEPT, NOT user functional acceptance, NOT any provider/financial/UI claim. Base
+`1e4e7cb677c25f2746a0a5b4c870808015aa95fc` (== Expected-Base-SHA and local `main` head at claim), code
+`150179bbc6acae82d915c1919f3fd8cfc4884a93`. The parent 273 **stays PARTIAL** until the Architect reviews this repair;
+its own evidence and `ARCHITECT-REVIEW.md` are unchanged. 272-R1 acceptance and the original 272 PARTIAL history are
+preserved. **274–276 remain candidates, NOT ISSUED.** Single worker, one task, no delegation, no historical agent
+resumed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A one rule | fail closed | `ReturnRecoveryPolicy` is still the only rule for `MapSnapshotAsync` and `RecoverAsync`; effectful recovery now requires a **recorded** `"Approve"` decision (`ReturnSnapshot.RecordedDecision`, one read of the decision row) — missing or `"Reject"` is a typed blocker with zero effect and no invented approval |
+| A binding | every stored identity | an attempt authorizes anything only when its id, non-blank key, the case's non-zero `PaymentId`, the exact amount and the trimmed currency all match; foreign live rows, two live bound rows or succeeded+pending are `return.recovery.attempt_unbound`; no first/latest fallback; a wrong expected id cannot borrow a stored completion |
+| A final step | explicit pending marker | courier `Settled` requires every item disposed **and** `ClosurePhase == RefundReleased`; all-items-disposed with `StockSettled` is `PendingDisposition`, and its zero-money intent writes only the final marker (no gateway/Wallet/Inventory call, no new attempt); ordinary RMAs keep the explicit receiving-required blocker |
+| B transactions | refused before effect | `return.recovery.transaction_owned` when an EF caller transaction or an ambient `TransactionScope` is open — at command entry, at the shared `ExecuteRefundAsync` boundary and before the outcome helper opens its own `FOR UPDATE` transaction; the caller's transaction/entities/values are never committed, rolled back or mutated |
+| C reference | truthful | `MarkSucceeded(string?)` stores a null/blank reference as `null`; the synthetic `refund-{attemptId}` id is gone while the authoritative success boolean is preserved; the final marker re-reads durable item/closure facts and reloads only the affected entry on a failed save (no `ChangeTracker.Clear`) |
+| D proof | focused + rollback-only | `ReturnsRecovery273Tests` **24/24**; `ReturnsRecovery273RelationalTests` **2/2** on real `tooba_alpha` with `committedRows=0`; three exact catalog pins (31/1/32, contributor count 31) pass; build 0 errors; Host publish 0 errors |
+| Contracts/schema | additive, no migration | one trailing nullable `ReturnSnapshot.RecordedDecision` + two catalogued/localized `return.recovery.*` codes; no numeric enum or shipped wire member changed; no migration/DDL/backfill/seed/cleanup |
+
+Verified once after the final change: `ReturnsRecovery273Tests` **24/24**; `ReturnsRecovery273RelationalTests` **2/2**
+(target `tooba_alpha:5432/172.18.0.2`, `committedRows=0`); `dotnet build src/backend/Tooba.slnx -c Release` 0 errors;
+Host publish 0 errors. Host-only refresh: PID 37876 on 5088 (`/health` + `/health/ready` 200 SingleStore,
+`/__platform-commerce` → `store-alpha`), new Host dll SHA256
+`FAF2D791DAFB1C55A33E5C5A533AEC9B7061194336ABA9E7A75BB274F630E440`; FE untouched.
+Live read-only wire: no actor → 401 `admin.actor.missing`; `{}`/unknown kind → 400 `return.recovery.kind_invalid`; resume
+without attempt → 400 `validation.failed` / `returns.validation.recovery_attempt_required`; resume or disposition on a
+non-existent case → 404 `return.missing`; `POST /v1/admin/returns/query` → 200 `totalCount=0`.
+Known limits: **no live return case exists**, so there is no served operator walkthrough of a real recovery; money/stock
+are proven with controlled ports plus injected local-save failure; the `FOR UPDATE`/reload/apply branch is not exercised
+by the rollback-only facts; `return.recovery.transaction_owned` is catalogued/localized and classified HTTP-reachable but
+no shipped HTTP path opens a transaction, so it is proven relationally only; the worker ran the whole
+`Tooba.Returns.Tests` project (60/2) and the `ReturnsModuleAmsc001*` filter (32/2) outside the issued validation
+selection — a declared deviation, all four failures pre-existing, nothing repaired or re-pinned from them.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — RETURNS273 PARTIAL; ONLY273-R1 BOUNDED REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/ARCHITECT-REVIEW.md.
 273 is NOT ACCEPTED at bf2dc514fdd68ab83b512aa78d5388c55975fa6f. Retain same-attempt recovery direction; repair shared evidence/closure, caller-transaction effects and synthetic provider reference, then targeted proof.

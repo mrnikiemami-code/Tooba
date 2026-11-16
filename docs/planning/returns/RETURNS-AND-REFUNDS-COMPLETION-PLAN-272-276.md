@@ -3,6 +3,19 @@
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
 
 ## CURRENT checkpoint — 2026-11-16
+273-R1 worker result: PASS within the issued A–D repair scope, awaiting Architect review (NOT Architect/user acceptance).
+Parent **273 remains PARTIAL** until the Architect reviews this repair; its evidence and `ARCHITECT-REVIEW.md` are unchanged.
+Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/RESULT.md.
+273-R1 repaired: one fail-closed stored-evidence policy (recorded APPROVE required, fully bound attempt, coherent courier
+source) shared by read and action; all-items-disposed + `StockSettled` is explicitly `PendingDisposition` whose zero-money
+intent writes only the final marker; `return.recovery.transaction_owned` refuses a caller/ambient transaction before any
+effect; a null/blank PSP reference is stored truthfully. `ReturnsRecovery273Tests` 24/24,
+`ReturnsRecovery273RelationalTests` 2/2 rollback-only on real `tooba_alpha` (`committedRows=0`). Schema untouched.
+**274–276 remain candidates, NOT ISSUED** (274 = customer receipt/inspection evidence, 275 = operator UI, 276 = connected
+acceptance). The live Returns table is empty, so no served walkthrough of a real recovery exists.
+272-R1 ACCEPT within A–C source/evidence repair scope; parent272 creation work closed through repair.
+
+## Superseded273 checkpoint — 2026-11-16
 273 Architect decision: PARTIAL, NOT ACCEPTED. Read273/ARCHITECT-REVIEW.md. Only273-R1 bounded evidence/binding/closure, transaction boundary and truthful reference repair is next.274–276 NOT ISSUED. Preserve272-R1 acceptance and prior audit.
 
 ## Superseded273 worker checkpoint — 2026-11-16

@@ -1,0 +1,63 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1
+Parent-Task: TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Scope: REPAIR_RECOVERY_EVIDENCE_CLOSURE_TRANSACTION_BOUNDARY_AND_TRUTHFUL_REFERENCE (A-D)
+Expected-Base-SHA: 1e4e7cb677c25f2746a0a5b4c870808015aa95fc
+Base-SHA: 1e4e7cb677c25f2746a0a5b4c870808015aa95fc
+Code-SHA: 150179bbc6acae82d915c1919f3fd8cfc4884a93
+Evidence-SHA: recorded by the Bridge result (the evidence/ledger commit; no self-referential hash pin)
+Final-HEAD: recorded by the Bridge result (== origin/main after the normal push)
+Origin-Parity: verified after the push (same SHA on origin/main)
+
+Decision: ONE_FAIL_CLOSED_STORED_EVIDENCE_POLICY_SHARED_BY_READ_AND_ACTION_A_RECORDED_APPROVAL_AND_A_FULLY_BOUND_ATTEMPT_REQUIRED_AN_EXPLICIT_PENDING_FINAL_MARKER_PHASE_A_CALLER_OR_AMBIENT_TRANSACTION_REFUSED_BEFORE_ANY_EFFECT_AND_A_TRUTHFUL_ABSENT_PROVIDER_REFERENCE_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION
+
+A: ReturnRecoveryPolicy is the single evidence rule for MapSnapshotAsync and RecoverAsync. RecordedDecision is read from
+   returns.return_request_decisions (trailing nullable snapshot member); missing/opposite => typed blocker with no
+   effect. IsBoundToCase requires attempt id, non-blank key, non-zero case payment, exact amount, trimmed currency;
+   foreign live rows and >=2 live bound rows are RecoveryAttemptUnbound with no first/latest fallback. A requested id
+   must equal the single bound attempt id before any stored completion is answered. Courier source/claim/receipt/line/
+   condition coherence is required, Settled requires all items disposed AND ClosurePhase==RefundReleased, and
+   all-items-disposed + StockSettled is PendingDisposition whose zero-money intent resumes only the final marker.
+B: RefuseConstrainedTransaction (CurrentTransaction or Transaction.Current) raises return.recovery.transaction_owned
+   before the case read, at the shared ExecuteRefundAsync external-call boundary, and before RecordRefundOutcomeAsync
+   opens its own FOR UPDATE transaction. The caller transaction is never committed/rolled back/disposed and its tracked
+   entities keep instance/state/values.
+C: MarkSucceeded(string?) stores a truthful null/blank reference; the synthetic refund-{attemptId} id is gone.
+   MarkRefundReleasedWhenFullyDisposedAsync re-reads durable item/closure facts, saves the marker itself and restores
+   only the affected entry on failure (scoped ReloadAsync, no ChangeTracker.Clear); courier item-save failures reload
+   only the affected line.
+D: ReturnsRecovery273Tests 24/24; ReturnsRecovery273RelationalTests 2/2 on real tooba_alpha with committedRows=0.
+
+Schema: no migration/DDL/backfill/seed/restore/cleanup; one canonical tooba_alpha / store-alpha; no live
+approval/reject/refund/recovery write and no provider/PSP/Wallet/Inventory/waybill/money call.
+
+Validation: ReturnsRecovery273Tests 24/24; ReturnsRecovery273RelationalTests 2/2 (target tooba_alpha:5432/172.18.0.2,
+committedRows=0); three exact catalog pins (31 HTTP / 1 platform / 32 total, contributor D() count 31) pass inside the
+ReturnsModuleAmsc001 filter 32/2; dotnet build 0 errors; Host publish 0 errors.
+Runtime: Host 5088 PID 37876, /health 200, /health/ready 200 (SingleStore), /__platform-commerce -> store-alpha;
+new dll SHA256 FAF2D791DAFB1C55A33E5C5A533AEC9B7061194336ABA9E7A75BB274F630E440; FE untouched.
+Read-only wire: no actor 401 admin.actor.missing; {} or unknown kind 400 return.recovery.kind_invalid; resume without
+attempt 400 returns.validation.recovery_attempt_required; resume/disposition on a missing case 404 return.missing;
+POST /v1/admin/returns/query 200 totalCount=0.
+
+Limits: no live return case exists, so there is no served walkthrough of a real recovery; money/stock rest on controlled
+ports with injected local-save failure; the FOR UPDATE/reload/apply branch is not exercised by the rollback-only facts;
+concurrency is a re-read proof, not a stress harness; return.recovery.transaction_owned is catalogued/localized and
+classified HTTP-reachable but is not observable over the shipped HTTP endpoint (no HTTP path opens a transaction) — it is
+proven relationally; the worker ran the whole Tooba.Returns.Tests project (60/2) and the ReturnsModuleAmsc001 filter
+(32/2) outside the issued validation selection — declared deviation, all four failures pre-existing, nothing repaired or
+re-pinned from them.
+
+Worker PASS != Architect ACCEPT; backend-only, no user/provider/financial/full-Returns acceptance.
+273 remains PARTIAL until this repair is reviewed. 274-276 NOT ISSUED.
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

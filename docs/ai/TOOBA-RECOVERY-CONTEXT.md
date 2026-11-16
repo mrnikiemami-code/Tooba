@@ -1,4 +1,30 @@
-# CURRENT — RETURNS273 PARTIAL; ONLY273-R1 BOUNDED REPAIR — 2026-11-16
+# CURRENT — 273-R1 WORKER PASS; 273 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,binding-and-finalization-proof.md,transaction-and-reference-proof.md}.
+273-R1 = **PASS within the issued backend A–D repair scope**, awaiting Architect review. NOT Architect ACCEPT, NOT user
+acceptance, NOT any provider/financial/UI claim. The parent **273 stays PARTIAL** until this repair is reviewed; its own
+evidence and `ARCHITECT-REVIEW.md` are unchanged. Base `1e4e7cb677c25f2746a0a5b4c870808015aa95fc`, code
+`150179bbc6acae82d915c1919f3fd8cfc4884a93`. 272-R1 acceptance and the original 272 committed-fixture/delete audit are
+preserved. **274–276 remain NOT ISSUED.** One worker/task, no delegation, no loop, no screenshots.
+- Effectful recovery now requires a **recorded** `"Approve"` decision; missing/opposite is a typed blocker with zero
+  effect. An attempt authorizes work only when id, non-blank key, the case's `PaymentId`, the exact amount and the
+  trimmed currency all match — foreign/ambiguous rows are `return.recovery.attempt_unbound`, never a first/latest guess.
+- Courier `Settled` requires all items disposed **and** `ClosurePhase == RefundReleased`. All-items-disposed with
+  `StockSettled` is `PendingDisposition`, and its zero-money intent writes **only** the final marker (no gateway, Wallet,
+  Inventory or new attempt). Ordinary RMAs keep the explicit receiving-required blocker.
+- `return.recovery.transaction_owned` refuses an EF caller transaction or an ambient `TransactionScope` before any
+  effect, at command entry, at the shared `ExecuteRefundAsync` boundary and before the outcome helper opens its own
+  `FOR UPDATE` transaction; the caller's transaction and tracked values are untouched.
+- A null/blank PSP reference is stored truthfully as `null` (the synthetic `refund-{attemptId}` id is gone); the final
+  marker re-reads durable item/closure facts and reloads only the affected entry after a failed save.
+Schema untouched (no migration/DDL/backfill/seed/cleanup); one canonical `tooba_alpha`5432/store-alpha, Host5088, FE3000
+untouched; no live case mutation, no provider/PSP/Wallet/Inventory/waybill/money call. No live return case exists, so
+there is no served walkthrough; the wire receipts are real but read-only.
+Preserve shipping271-R1/270-R4 acceptance and prior audit history.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS273 PARTIAL; ONLY273-R1 BOUNDED REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273/ARCHITECT-REVIEW.md.
 273 is NOT ACCEPTED at bf2dc514fdd68ab83b512aa78d5388c55975fa6f. Retain same-attempt recovery direction; repair shared evidence/closure, caller-transaction effects and synthetic provider reference, then targeted proof.
