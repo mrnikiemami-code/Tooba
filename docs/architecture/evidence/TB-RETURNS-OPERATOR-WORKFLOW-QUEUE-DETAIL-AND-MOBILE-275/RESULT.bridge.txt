@@ -1,0 +1,100 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275
+Parent-Task: TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Repository: mrnikiemami-code/Tooba
+Branch: main
+Status: PASS within the issued A-F operator-workflow scope
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 79258250c87c313cf778a73ab94e8eb4be45d19e
+Base-SHA (verified == Expected-Base-SHA == origin/main at claim): 79258250c87c313cf778a73ab94e8eb4be45d19e
+Code-SHA (implementation + evidence commit): abc0bad78e1b9a5c98cde8887c62d7dbc6078f28
+origin/main after code push: abc0bad78e1b9a5c98cde8887c62d7dbc6078f28 (parity confirmed, no divergence)
+Final-HEAD: abc0bad78 plus one following docs-only commit that adds this posting file (RESULT.bridge.txt) and changes
+no source, test, contract or configuration file.
+Evidence: docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/{TASK.md,RESULT.md,RESULT.bridge.txt,RECEIPTS.md,result-contract.txt,operator-workflow-proof.md,query-count-and-display-proof.md,durable-intent-and-mobile-proof.md,user-review.md}
+Task envelope: docs/ai/tasks/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/TASK.md
+
+DECISION
+ONE_RETURNS_OWNED_WORK_DESCRIPTION_SHARED_BY_A_SERVERSIDE_CLASSIFIED_QUEUE_AND_THE_SINGLE_CASE_WORKSPACE_WITH_PRE_PAGING_COUNTS_ONE_ACTION_OWNER_A_DURABLE_COMPARED_REVIEW_INTENT_EXACTLY_REPRESENTABLE_RECEIPT_QUANTITIES_AND_A_DETERMINISTIC_REVIEWED_FAILURE_RETRY_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE
+
+SCOPE A - one Returns-owned work description over stored facts, used by queue and detail
+- ReturnWorkDescription / ReturnWorkPolicy.Describe classifies ONE case into receiving | decision | refund | refund_failed | disposition | settled | closed from STORED facts only.
+- Every money/physical completion question is delegated to the EXISTING ReturnRecoveryPolicy; no second derivation, no divergence between read and action.
+- Each description carries a typed blocker code and positive capability flags (CanRecordReceipt, CanDecide, CanResumeRefund, CanRetryRefund, CanSettlePhysical) plus the exact published action codes; no invented verb, no invented deadline/promise.
+- History is returned only when no remaining physical/financial obligation exists.
+- Queue: AdminReturnGridQueryEngine.QueryWithCountsAsync returns items + page + pageSize + totalCount + counts{allOpen,receiving,decision,refund,refundFailed,disposition,history} from ONE constrained classification pass; the page is cut from the same set, so a strip badge cannot disagree with its rows.
+- Legacy queueFilter tokens translate ONCE (pending_review->decision; approved/refund_needed/refund_pending->refund; refund_failed->refund_failed; completed/rejected->history); an unknown token lands on the honest active set, never on "everything".
+- A work selection inside the advanced-filter expression is refused (grid.advancedFilter.field.invalid) and a malformed selection operator is grid.filter.operator.invalid, both BEFORE any DB read.
+- Display facts per line: stable human case locator RET-<order>-<seq> derived from immutable order/number facts (never a raw GUID), own product label/quantity/unit per line (AdminReturnWorkQueueLine), origin, receiving progress, money vs physical phase, next step, blocker. Lines are never summed into the first item's unit.
+
+SCOPE B - queue read-only, single action owner, honest detail
+- admin-returns-work-queue-screen.tsx is read-only: ONE row action "بررسی مرجوعی" plus order navigation; the financial kebab is gone.
+- /admin/returns/{returnRequestId} renders AdminReturnWorkspace, the sole action owner; admin-screens.tsx keeps a compatibility re-export (AdminReturnDetailScreen -> workspace) instead of the legacy card + unguarded retry button.
+- Per line: requested / received / usable / damaged / SaleableRestockedQuantity / disposition, so a mixed item never reads as wholly saleable.
+- Receipt history lists real occurrences with recorded instant and per-(line,condition) portions; refund attempts are quiet (amount/currency/status/createdAt/failureCode; no invented PSP reference); the customer's request reason and the winning operator decision reason are separate.
+- Actions rendered ONLY when the server description says they are executable, each through its owning route: record receipt (deliberate, explicit quantities + conditions), approve (Order operations authority, deliberate confirm), reject (meaningful reason >=3 chars, confirmed), resume stored pending refund (exact expectedRefundAttemptId), reviewed definite-failure retry (exact expectedFailedAttemptId), physical-only settlement (settle_physical_disposition).
+
+SCOPE C1 - lawful legacy partial-receipt continuation, bounded
+- A NEW occurrence stays lawful on a financially progressed ordinary case only while NOTHING has a disposition AND cumulative coverage is still incomplete and coherent.
+- Refused with return.receipt.state_invalid: a decided-away (rejected/cancelled) case, an already-disposed item, or complete coverage.
+- Over-receiving stays return.receipt.over_received; the exact-key replay stays exact; incoherent stored evidence refuses with return.recovery.evidence_conflict and 0 rows.
+- Receipt recording still makes ZERO money/stock/provider calls.
+
+SCOPE C2 - reviewed definite-failure retry with deterministic identity, no schema
+- RetryReturnRefundCommand.ExpectedFailedAttemptId is the reviewed failure.
+- Child attempt id derived as SHA-256("tb275-refund-retry:{case}:{failedAttempt}"); provider key refund-retry-{failedAttempt} (ReturnRetryIdentity). A lost response or duplicate POST answers the SAME child via primary-key arbitration: no counter key, no new table, no migration.
+- A non-bound / foreign / stale / ambiguous failure is a typed refusal; a failure that already produced its child is history and the next review binds to THAT child.
+- An older caller without the reviewed identity is answered from the stored description's current reviewable failure or fails closed (return.recovery.attempt_unbound); no bypass, no count-based key.
+
+SCOPE D - durable compared review intent
+- return-review-intent.ts (Returns-owned helper) persists {action, occurrenceKey, body, createdAt} in sessionStorage BEFORE the request.
+- Refuses to send when storage is unavailable (explicit user notice, no silent send).
+- Serializes a same-tick double click through one inFlight ref; epoch fencing against stale component callbacks.
+- Clears with compare-and-clear on the exact occurrence + body only; unrelated intents are untouched.
+- Unknown outcome / unmount / reload keeps the unresolved intent visible with an exact-body retry; a 4xx/conflict keeps the uncertainty instead of silently resolving it; no background polling loop.
+
+SCOPE E - 1440/390 operator layout on the existing design system
+- Queue strip and detail actions are >=44px; receipt quantity/condition controls are 44px with localized decimal input.
+- At 390 the strip wraps locally and the grid keeps its own horizontal scroller (340 visible / 1652 content) with document overflow 0; at 1440 document overflow 0.
+- Persian/Jalali dates and Persian digits via the existing helpers; honest empty/unknown/denied/not-found states.
+
+SCOPE F - focused proof (run once after the final change)
+- backend ReturnsOperatorWorkflow275Tests 12/12.
+- frontend admin-returns-work-queue.test.ts 21/21.
+- tsc --noEmit 0 errors.
+- Next production build 0 errors, BUILD_ID TaMAKtGjoy8sg6NHdnsO9.
+- dotnet build src/backend/Tooba.slnx -c Release 0 errors.
+- Host publish 0 errors.
+- No untouched test class was rerun; no broad suite rerun.
+
+SERVED ARTIFACTS (read-only verification)
+- Host 5088 PID 16532, loaded assembly D:\Users\User\source\repos\SarvNewVer\artifacts\publish-primary\Tooba.Host.dll SHA256 02AECDC72FA4506C889C743713CD8A93A1983F25C489268B4E0E3F55BF48DD73; /health 200; /health/ready 200 (SingleStore, messaging Healthy).
+- Next 3000 PID 50724, BUILD_ID TaMAKtGjoy8sg6NHdnsO9; served chunk /_next/static/chunks/692-4941a8a633b47e39.js 200 (169,248 B) carrying the workspace copy, the not-found state and the storage-failure guard.
+- GET /fa/admin/returns and GET /fa/admin/returns/{unknown-guid} serve 200 at 1440 and 390 with document overflow 0.
+- Live read-only wire on a non-existent case id: queue query returns totalCount 0 with every strip count 0 and the honest "no row" copy; no actor-gated mutation was attempted.
+
+SCHEMA / DATA
+- ZERO migration, no DDL, no backfill, no seed, no reset, no cleanup, no restore.
+- ONE canonical tooba_alpha; no live case/order/draft/hold/stock/decision/settings write; no provider/PSP/Wallet/Inventory/waybill/notification call.
+- No screenshots were taken; no browser automation was used beyond read-only page/DOM measurement.
+
+KNOWN LIMITS (declared, not papered over)
+- NO live return case exists in the canonical database: the queue renders 0 for every strip and the grid says "no row to display". There is NO served operator walkthrough of a real receiving/approval/refund; all actionable proof is mounted/controlled (in-memory EF + controlled ports).
+- No demo order/case/receipt/hold/stock row was created to make the screen look populated.
+- True two-writer concurrency is not stress-tested; C2 duplicate-POST and stale-source cases are proven with sequential/repeated calls through the owning directory, and the retry identity's safety rests on the derived primary key plus existing unique constraints.
+- The pre-existing 36px shared grid toolbar buttons were deliberately not restyled (the task forbids a global toolbar restyle); the controls introduced by this task are 44px.
+- No new error code was introduced by 275; earlier typed refusals (including return.recovery.transaction_owned) are unchanged.
+- The ReceiptDraftLine quantity input accepts Persian digits and requires <=6 decimals client-side; a value needing rounding is refused before any intent is stored (the server independently enforces precision).
+- Worker PASS != Architect ACCEPT != user functional/visual acceptance.
+
+REVIEW URL
+- Queue: http://127.0.0.1:3000/fa/admin/returns
+- Honest empty detail state: http://127.0.0.1:3000/fa/admin/returns/00000000-0000-0000-0000-000000000000
+
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT
