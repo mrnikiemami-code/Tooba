@@ -100,7 +100,8 @@ public sealed record ReturnSnapshot(
     string ClosurePhase = "None",
     DateTimeOffset? ObligationClosedAt = null,
     DateTimeOffset? StockSettledAt = null,
-    decimal ReleasedHeldQuantity = 0);
+    decimal ReleasedHeldQuantity = 0,
+    ReturnRecoverySnapshot? Recovery = null);
 
 /// <summary>Remaining returnable quantity of one order line.</summary>
 public sealed record ReturnLineEligibility(
@@ -167,6 +168,19 @@ public interface IReturnAdminOperations
 
     /// <summary>Retry a failed refund.</summary>
     Task<ReturnSnapshot> RetryRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-273: explicitly recover ONE already-approved case. <paramref name="kind"/> is the reviewed intent
+    /// (<c>resume_pending_refund</c> repeats the exact stored pending attempt; <c>settle_physical_disposition</c>
+    /// performs the physical phase only) and <paramref name="expectedRefundAttemptId"/> is the exact stored attempt the
+    /// caller reviewed. It never mints a new attempt, changes a destination/amount or approves a case.
+    /// </summary>
+    Task<ReturnSnapshot> RecoverRefundAsync(
+        Guid returnRequestId,
+        Guid actorUserId,
+        ReturnRecoveryKindOption kind,
+        Guid? expectedRefundAttemptId,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// TB-265: create a courier-origin case from an already physically received returned parcel. The received

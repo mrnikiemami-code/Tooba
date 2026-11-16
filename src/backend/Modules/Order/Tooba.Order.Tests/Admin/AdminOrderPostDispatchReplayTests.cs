@@ -1309,6 +1309,14 @@ public sealed class AdminOrderPostDispatchReplayTests
             Guid returnRequestId,
             Guid actorUserId,
             CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<ReturnSnapshot> RecoverRefundAsync(
+            Guid returnRequestId,
+            Guid actorUserId,
+            ReturnRecoveryKindOption kind,
+            Guid? expectedRefundAttemptId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<CourierOriginReturnResult> CreateCourierOriginAsync(
             CreateCourierOriginReturnCommand command,
             CancellationToken cancellationToken)

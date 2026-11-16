@@ -27,5 +27,11 @@
   <data name="refund.already_started" xml:space="preserve"><value>The refund has already started.</value></data>
   <data name="refund.already_completed" xml:space="preserve"><value>The refund has already completed.</value></data>
   <data name="refund.payment_missing" xml:space="preserve"><value>The payment for the refund was not found.</value></data>
+  <data name="return.recovery.kind_invalid" xml:space="preserve"><value>The requested refund recovery kind is missing or unknown.</value></data>
+  <data name="return.recovery.attempt_mismatch" xml:space="preserve"><value>The expected refund attempt does not match the stored attempt of this return.</value></data>
+  <data name="return.recovery.state_mismatch" xml:space="preserve"><value>The requested recovery does not apply to the stored state of this return.</value></data>
+  <data name="return.recovery.receiving_required" xml:space="preserve"><value>The received units have no recorded receipt or inspection, so their physical disposition cannot be executed yet.</value></data>
+  <data name="return.recovery.attempt_unbound" xml:space="preserve"><value>No single stored refund attempt is bound to this money phase.</value></data>
+  <data name="return.recovery.gateway_unavailable" xml:space="preserve"><value>The refund adapter is not configured, so the stored attempt cannot be sent; it stays pending.</value></data>
   <data name="return.outbox.unmapped_event" xml:space="preserve"><value>The integration event type is not registered.</value></data>
 </root>

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Tooba.Returns.Contracts.Errors;
@@ -30,6 +30,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
     private static readonly string[] ValidatorRequired =
     [
         "CreateReturnCommand", "ApproveReturnCommand", "RejectReturnCommand", "QueryAdminReturnsGridQuery",
+        "RecoverReturnCommand",
     ];
 
     private static readonly string[] NoValidatorRequired =
@@ -104,7 +105,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         var routeCount = Regex.Matches(admin, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(seller, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(customer, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count;
-        Assert.Equal(11, routeCount);
+        Assert.Equal(12, routeCount);
 
         var module = File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Returns.Endpoints/ReturnEndpointModule.cs"));
         Assert.Contains("MapGroup(\"/v1/customer\")", module, StringComparison.Ordinal);
@@ -144,7 +145,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
             .Where(p => Path.GetFileName(p).EndsWith("Endpoints.cs", StringComparison.Ordinal))
             .ToArray();
         var sendCount = endpoints.Sum(p => Regex.Matches(File.ReadAllText(p), @"sender\.Send\(").Count);
-        Assert.Equal(11, sendCount);
+        Assert.Equal(12, sendCount);
         foreach (var file in endpoints)
         {
             var text = File.ReadAllText(file);
@@ -152,9 +153,9 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
             Assert.DoesNotContain("IReturnDirectory", text, StringComparison.Ordinal);
         }
 
-        // Exactly four transport validators, one per VALIDATOR_REQUIRED request.
+        // Exactly five transport validators, one per VALIDATOR_REQUIRED request.
         var validators = File.ReadAllText(Path.Combine(applicationRoot, "Validation/ReturnsRequestValidators.cs"));
-        Assert.Equal(4, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(5, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
         foreach (var request in ValidatorRequired)
         {
             Assert.Contains($"AbstractValidator<{request}>", validators, StringComparison.Ordinal);
@@ -191,13 +192,13 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
 
         // Single canonical stable-code home with the reachability split preserved. TB-272 added the two
         // creation-integrity refusals and TB-272-R1 the persisted quantity-precision refusal, all HTTP-reachable.
-        Assert.Equal(23, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(29, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(24, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(30, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(23, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(29, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.

@@ -53,6 +53,12 @@ public static class ReturnsErrorCodes
         RefundAlreadyStarted,
         RefundAlreadyCompleted,
         RefundPaymentMissing,
+        RecoveryKindInvalid,
+        RecoveryAttemptMismatch,
+        RecoveryStateMismatch,
+        RecoveryReceivingRequired,
+        RecoveryAttemptUnbound,
+        RecoveryGatewayUnavailable,
     };
 
     private static readonly HashSet<string> PlatformFaultCodes = new(StringComparer.Ordinal)
@@ -162,6 +168,43 @@ public static class ReturnsErrorCodes
 
     /// <summary>Payment missing for refund.</summary>
     public const string RefundPaymentMissing = "refund.payment_missing";
+
+    /// <summary>
+    /// TB-273: the requested recovery kind token is absent or unknown. A recovery kind is never defaulted, because
+    /// guessing one could repeat a payment or invent a physical action.
+    /// </summary>
+    public const string RecoveryKindInvalid = "return.recovery.kind_invalid";
+
+    /// <summary>
+    /// TB-273: the expected stored refund-attempt identity does not match the case's single bound attempt (stale,
+    /// wrong, missing or ambiguous). Refused before any financial or physical effect.
+    /// </summary>
+    public const string RecoveryAttemptMismatch = "return.recovery.attempt_mismatch";
+
+    /// <summary>
+    /// TB-273: the requested recovery intent does not apply to the stored state (for example a money resume on a
+    /// definite failure, or a physical settlement before the money is confirmed).
+    /// </summary>
+    public const string RecoveryStateMismatch = "return.recovery.state_mismatch";
+
+    /// <summary>
+    /// TB-273: a delivered-customer case has no recorded receipt/inspection fact, so its physical disposition cannot
+    /// be executed from the default condition. The confirmed money is kept and the blocker is explicit.
+    /// </summary>
+    public const string RecoveryReceivingRequired = "return.recovery.receiving_required";
+
+    /// <summary>
+    /// TB-273: a money phase carries no single exact bound refund attempt, so no recovery can be named without
+    /// guessing. Reported as a read blocker and refused as an action.
+    /// </summary>
+    public const string RecoveryAttemptUnbound = "return.recovery.attempt_unbound";
+
+    /// <summary>
+    /// TB-273: the owning refund adapter is explicitly not configured, so NO send was attempted. This is a
+    /// truthful "cannot send now" answer with the pending attempt retained — never a successful refund, never an
+    /// invented terminal provider rejection, and never a fresh attempt or key.
+    /// </summary>
+    public const string RecoveryGatewayUnavailable = "return.recovery.gateway_unavailable";
 
     /// <summary>Outbox registration has no mapping for the given integration event type (platform fault).</summary>
     public const string OutboxUnmappedEvent = "return.outbox.unmapped_event";

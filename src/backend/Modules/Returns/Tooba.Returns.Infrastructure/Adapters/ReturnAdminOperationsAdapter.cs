@@ -88,6 +88,20 @@ internal sealed class ReturnAdminOperationsAdapter(
         Map(await directory.RetryRefundAsync(
             new RetryReturnRefundCommand(returnRequestId, actorUserId), cancellationToken));
 
+    public async Task<ReturnSnapshot> RecoverRefundAsync(
+        Guid returnRequestId,
+        Guid actorUserId,
+        ReturnRecoveryKindOption kind,
+        Guid? expectedRefundAttemptId,
+        CancellationToken cancellationToken) =>
+        Map(await directory.RecoverAsync(
+            new RecoverReturnCommand(
+                returnRequestId,
+                actorUserId,
+                (AppModels.ReturnRecoveryKind)kind,
+                expectedRefundAttemptId),
+            cancellationToken));
+
     /// <summary>
     /// Admin callers address a return by identifier only; the authoritative command shape also carries
     /// the owning seller scope (used by the seller use case). The adapter resolves it from the owning
@@ -218,7 +232,23 @@ internal sealed class ReturnAdminOperationsAdapter(
             snapshot.ClosurePhase.ToString(),
             snapshot.ObligationClosedAt,
             snapshot.StockSettledAt,
-            snapshot.ReleasedHeldQuantity);
+            snapshot.ReleasedHeldQuantity,
+            Map(snapshot.Recovery));
+
+    /// <summary>
+    /// TB-273: additive recovery facts. Money completion and physical completion stay two independent facts so a
+    /// consumer can never read a completed refund as fully settled stock.
+    /// </summary>
+    private static ReturnRecoverySnapshot? Map(AppModels.ReturnRecoveryDescription? recovery) =>
+        recovery is null
+            ? null
+            : new ReturnRecoverySnapshot(
+                (ReturnRecoveryPhaseOption)recovery.Phase,
+                recovery.RecoveryKind is { } kind ? (ReturnRecoveryKindOption)kind : null,
+                recovery.RefundAttemptId,
+                recovery.BlockerCode,
+                recovery.FinancialComplete,
+                recovery.PhysicalComplete);
 
     private static ReturnEligibilityResult Map(AppModels.ReturnEligibilityResult result) =>
         new(

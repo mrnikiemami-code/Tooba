@@ -398,21 +398,47 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         return await MapSnapshotAsync(request, cancellationToken);
     }
 
-    private async Task ExecuteRefundAsync(ReturnRequest request, RefundAttempt attempt, CancellationToken cancellationToken)
+    /// <summary>
+    /// TB-273: what one refund execution actually proved. <c>Unavailable</c> is a definite "nothing was sent";
+    /// <c>Unresolved</c> is unknown; <c>Resolved</c> means a durable terminal outcome now exists.
+    /// </summary>
+    private enum RefundExecutionOutcome
+    {
+        Resolved = 0,
+        Unresolved = 1,
+        Unavailable = 2,
+    }
+
+    /// <summary>
+    /// Executes ONE refund attempt. A durable terminal attempt is never re-sent, and the external call is never made
+    /// inside a database transaction or under a row lock (TB-273 D).
+    /// <para>
+    /// TB-273: the outcome reports whether the owning adapter was EXPLICITLY unconfigured (so nothing was even sent)
+    /// separately from an answer that is genuinely unknown. Only the caller decides what a definite "cannot send"
+    /// means for its own intent; the shared approve/retry paths keep their existing pending behaviour.
+    /// </para>
+    /// </summary>
+    private async Task<RefundExecutionOutcome> ExecuteRefundAsync(
+        ReturnRequest request,
+        RefundAttempt attempt,
+        CancellationToken cancellationToken,
+        bool settleOrdinaryPhysicalDisposition = true)
     {
         // TB-265-R2: an attempt that ALREADY recorded its money outcome is a durable answer, never a new money call.
         // This is what makes a concurrent/late resume of the same case safe with the same attempt identity.
-        if (attempt.Status == RefundAttemptStatus.Succeeded)
+        if (attempt.Status != RefundAttemptStatus.Pending)
         {
-            return;
+            return RefundExecutionOutcome.Resolved;
         }
 
         var now = _clock.UtcNow;
-        try
+
+        if (request.RefundDestination == RefundDestination.Wallet)
         {
-            if (request.RefundDestination == RefundDestination.Wallet)
+            // انتخاب معماری: اعتبار کیف پول جایگزین PSP gateway است؛ gateway صدا زده نمی‌شود تا double-credit نشود.
+            // The wallet ledger key is the CASE key, so a repeated same-intent resume can only ever credit once.
+            try
             {
-                // انتخاب معماری: اعتبار کیف پول جایگزین PSP gateway است؛ gateway صدا زده نمی‌شود تا double-credit نشود.
                 await _wallets.CreditRefundAsync(
                     request.RequestedByUserId,
                     attempt.Amount,
@@ -420,42 +446,166 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                     request.ReturnRequestId,
                     $"wallet-refund-credit:{request.ReturnRequestId:D}",
                     cancellationToken);
-                attempt.MarkSucceeded($"wallet-refund:{request.ReturnRequestId:D}", now);
-                request.MarkRefundSucceeded(now);
-                _telemetry.RecordRefundSucceeded();
-                await _db.SaveChangesAsync(cancellationToken);
-                await TrySettlePhysicalDispositionAsync(request, cancellationToken);
-                return;
+            }
+            catch (Exception ex)
+            {
+                // TB-265-R1/TB-273: an UNKNOWN/transport outcome is not a failure. The durable attempt and its key are
+                // retained and the case stays RefundProcessing so the SAME attempt can be reconciled.
+                _logger.LogWarning(ex, "Wallet refund outcome unknown for return {ReturnRequestId}", request.ReturnRequestId);
+                return RefundExecutionOutcome.Unresolved;
             }
 
-            var result = await _refundGateway.RefundAsync(
+            await ApplyRefundSuccessAsync(
+                request,
+                attempt,
+                $"wallet-refund:{request.ReturnRequestId:D}",
+                now,
+                settleOrdinaryPhysicalDisposition,
+                cancellationToken);
+            return RefundExecutionOutcome.Resolved;
+        }
+
+        GatewayRefundResult result;
+        try
+        {
+            result = await _refundGateway.RefundAsync(
                 attempt.PaymentId,
                 attempt.Amount,
                 attempt.Currency,
                 attempt.IdempotencyKey,
                 cancellationToken);
-            if (result.Succeeded)
-            {
-                attempt.MarkSucceeded(result.ProviderReference ?? $"refund-{attempt.RefundAttemptId:N}", now);
-                request.MarkRefundSucceeded(now);
-                _telemetry.RecordRefundSucceeded();
-                await _db.SaveChangesAsync(cancellationToken);
-                await TrySettlePhysicalDispositionAsync(request, cancellationToken);
-            }
-            else
-            {
-                // A proven terminal refusal is a real failed money attempt.
-                attempt.MarkFailed(result.FailureCode ?? "REFUND_FAILED", now);
-                request.MarkRefundFailed(now);
-                _telemetry.RecordRefundFailed();
-            }
+        }
+        catch (ContractOperationException ex) when (string.Equals(
+            ex.Code, UnconfiguredRefundGatewayCode, StringComparison.Ordinal))
+        {
+            // TB-273 B: an EXPLICITLY unconfigured adapter proves no send happened, so this is not unknown money and
+            // must never be promoted into a terminal provider rejection. The pending attempt and its key are kept.
+            _logger.LogWarning(ex, "Refund adapter unconfigured for return {ReturnRequestId}", request.ReturnRequestId);
+            return RefundExecutionOutcome.Unavailable;
         }
         catch (Exception ex)
         {
-            // TB-265-R1: an UNKNOWN/transport outcome is not a failure. The durable attempt and its idempotency key
-            // are retained, the case stays RefundProcessing, and the existing resume path reconciles the SAME
-            // attempt instead of minting a second refund key over a possibly completed refund.
+            // An unknown answer after a possible send stays unknown with the SAME attempt — never a synthetic
+            // provider reference, never a definite failure, and never a second idempotency key.
             _logger.LogWarning(ex, "Refund outcome unknown for return {ReturnRequestId}", request.ReturnRequestId);
+            return RefundExecutionOutcome.Unresolved;
+        }
+
+        if (result.Succeeded)
+        {
+            await ApplyRefundSuccessAsync(
+                request,
+                attempt,
+                result.ProviderReference ?? $"refund-{attempt.RefundAttemptId:N}",
+                now,
+                settleOrdinaryPhysicalDisposition,
+                cancellationToken);
+            return RefundExecutionOutcome.Resolved;
+        }
+
+        // A proven terminal refusal is a real failed money attempt.
+        await RecordRefundOutcomeAsync(
+            request, attempt, succeeded: false, providerReference: null,
+            failureCode: result.FailureCode ?? "REFUND_FAILED", now, cancellationToken);
+        return RefundExecutionOutcome.Resolved;
+    }
+
+    /// <summary>
+    /// TB-273: the owning Payment contract's exact "no refund adapter is configured" code. Classified by typed code
+    /// only — never by message text — and only to distinguish "definitely not sent" from "unknown".
+    /// </summary>
+    private const string UnconfiguredRefundGatewayCode = "payment.refund.gateway.unconfigured";
+
+    private async Task ApplyRefundSuccessAsync(
+        ReturnRequest request,
+        RefundAttempt attempt,
+        string providerReference,
+        DateTimeOffset now,
+        bool settleOrdinaryPhysicalDisposition,
+        CancellationToken cancellationToken)
+    {
+        if (!await RecordRefundOutcomeAsync(
+                request, attempt, succeeded: true, providerReference, failureCode: null, now, cancellationToken))
+        {
+            // A concurrent writer already recorded a terminal outcome: nothing is downgraded and no second event is
+            // raised. The physical phase stays reachable through the explicit physical intent.
+            return;
+        }
+
+        await TrySettlePhysicalDispositionAsync(request, cancellationToken, settleOrdinaryPhysicalDisposition);
+    }
+
+    /// <summary>
+    /// TB-273 D: applies a money answer under a SHORT owning coordination that re-reads the exact durable attempt.
+    /// Returns <c>false</c> when a terminal outcome was already durable (this answer is stale and is not applied).
+    /// A local persistence failure propagates: an external success whose save did not land is UNCERTAIN, never an
+    /// undurable success.
+    /// </summary>
+    private async Task<bool> RecordRefundOutcomeAsync(
+        ReturnRequest request,
+        RefundAttempt attempt,
+        bool succeeded,
+        string? providerReference,
+        string? failureCode,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        // The coordination is a real row lock on the relational production store and a no-transaction read on a
+        // provider that cannot serialize; it never spans the gateway/Wallet/Inventory call above.
+        var relational = _db.Database.IsRelational();
+        var ownsTransaction = relational && _db.Database.CurrentTransaction is null;
+        var transaction = ownsTransaction ? await _db.Database.BeginTransactionAsync(cancellationToken) : null;
+        try
+        {
+            if (relational)
+            {
+                await _db.Database.ExecuteSqlAsync(
+                    $"SELECT 1 FROM returns.refund_attempts WHERE refund_attempt_id = {attempt.RefundAttemptId} FOR UPDATE",
+                    cancellationToken);
+            }
+
+            // Re-read BEFORE applying: a stale success/failure can never downgrade a terminal row, resurrect an
+            // attempt another writer settled, or produce a second outcome event.
+            await _db.Entry(attempt).ReloadAsync(cancellationToken);
+            await _db.Entry(request).ReloadAsync(cancellationToken);
+
+            if (attempt.Status != RefundAttemptStatus.Pending)
+            {
+                if (transaction is not null)
+                {
+                    await transaction.CommitAsync(cancellationToken);
+                }
+
+                return false;
+            }
+
+            if (succeeded)
+            {
+                attempt.MarkSucceeded(providerReference!, now);
+                request.MarkRefundSucceeded(now);
+                _telemetry.RecordRefundSucceeded();
+            }
+            else
+            {
+                attempt.MarkFailed(failureCode!, now);
+                request.MarkRefundFailed(now);
+                _telemetry.RecordRefundFailed();
+            }
+
+            await _db.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return true;
+        }
+        finally
+        {
+            if (transaction is not null)
+            {
+                await transaction.DisposeAsync();
+            }
         }
     }
 
@@ -478,11 +628,14 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     /// TB-265-R1: the physical disposition is a separate owner phase from money. Its failure can never change a
     /// successful refund into a failed one; the unfinished item stays explicitly pending for a disposition-only retry.
     /// </summary>
-    private async Task TrySettlePhysicalDispositionAsync(ReturnRequest request, CancellationToken cancellationToken)
+    private async Task TrySettlePhysicalDispositionAsync(
+        ReturnRequest request,
+        CancellationToken cancellationToken,
+        bool allowOrdinaryDisposition = true)
     {
         try
         {
-            await SettlePhysicalDispositionAsync(request, cancellationToken);
+            await SettlePhysicalDispositionAsync(request, cancellationToken, allowOrdinaryDisposition);
         }
         catch (Exception ex)
         {
@@ -528,7 +681,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             .Where(x => x.ReturnRequestId == request.ReturnRequestId)
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
-        return new ReturnSnapshot(
+        var snapshot = new ReturnSnapshot(
             request.ReturnRequestId,
             request.SellerOrderId,
             request.CheckoutId,
@@ -574,5 +727,9 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             request.ObligationClosedAt,
             request.StockSettledAt,
             request.ReleasedHeldQuantity);
+
+        // TB-273: every read (admin/customer/seller/detail) carries the SAME stored-fact recovery description the
+        // recovery command decides on, so a read and an action can never disagree.
+        return snapshot with { Recovery = ReturnRecoveryPolicy.Describe(snapshot) };
     }
 }

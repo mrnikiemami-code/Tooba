@@ -34,6 +34,12 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.RefundAlreadyStarted, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Refund already started."),
         D(ReturnsErrorCodes.RefundAlreadyCompleted, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Refund already completed."),
         D(ReturnsErrorCodes.RefundPaymentMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound, "Refund payment missing."),
+        D(ReturnsErrorCodes.RecoveryKindInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The requested refund recovery kind is missing or unknown."),
+        D(ReturnsErrorCodes.RecoveryAttemptMismatch, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The expected refund attempt does not match the stored attempt of this return."),
+        D(ReturnsErrorCodes.RecoveryStateMismatch, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The requested recovery does not apply to the stored state of this return."),
+        D(ReturnsErrorCodes.RecoveryReceivingRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The received units have no recorded receipt/inspection, so their physical disposition cannot be executed."),
+        D(ReturnsErrorCodes.RecoveryAttemptUnbound, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "No single stored refund attempt is bound to this money phase."),
+        D(ReturnsErrorCodes.RecoveryGatewayUnavailable, ErrorClassification.Business, StatusCodes.Status503ServiceUnavailable, "The refund adapter is not configured, so the stored attempt cannot be sent; it stays pending."),
     ];
 
     private static ErrorDescriptor D(

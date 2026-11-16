@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Tooba.Returns.Contracts.Errors;
@@ -53,7 +53,7 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         // 23 HTTP-reachable outcome codes + 1 platform-side outbox fault = 24 declared. TB-272 added the two
         // creation-integrity refusals (return.idempotency_conflict, return.duplicate_line) and TB-272-R1 the persisted
         // quantity-precision refusal (return.quantity_precision) — all HTTP-reachable.
-        Assert.Equal(23, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(29, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));
@@ -179,13 +179,14 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
                      "ApproveReturnCommandValidator",
                      "RejectReturnCommandValidator",
                      "QueryAdminReturnsGridQueryValidator",
+                     "RecoverReturnCommandValidator",
                  })
         {
             Assert.Contains(type, validators, StringComparison.Ordinal);
         }
 
-        // Exactly four transport validators — one per VALIDATOR_REQUIRED request.
-        Assert.Equal(4, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        // Exactly five transport validators — one per VALIDATOR_REQUIRED request.
+        Assert.Equal(5, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
 
         // Validators emit stable machine codes, never user-facing prose.
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);

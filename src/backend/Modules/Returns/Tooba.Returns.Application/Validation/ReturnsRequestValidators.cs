@@ -95,3 +95,29 @@ public sealed class QueryAdminReturnsGridQueryValidator : AbstractValidator<Quer
             .NotNull()
             .WithErrorCode(ReturnsValidationCodes.GridRequestRequired);
 }
+
+/// <summary>
+/// TB-273: transport shape of the explicit recovery request. The kind must be a known intent and a money-related
+/// intent must name the exact stored attempt the caller reviewed — the business binding (which attempt belongs to the
+/// case, and whether it is still the single pending one) stays in the owning Directory.
+/// </summary>
+public sealed class RecoverReturnCommandValidator : AbstractValidator<RecoverReturnCommand>
+{
+    public RecoverReturnCommandValidator()
+    {
+        RuleFor(x => x.ReturnRequestId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ReturnRequestIdRequired);
+        RuleFor(x => x.Kind)
+            .IsInEnum()
+            .WithErrorCode(ReturnsValidationCodes.RecoveryKindInvalid);
+        RuleFor(x => x.ExpectedRefundAttemptId)
+            .NotNull()
+            .WithErrorCode(ReturnsValidationCodes.RecoveryAttemptRequired)
+            .When(x => x.Kind == ReturnRecoveryKind.ResumePendingRefund);
+        RuleFor(x => x.ExpectedRefundAttemptId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.RecoveryAttemptRequired)
+            .When(x => x.ExpectedRefundAttemptId.HasValue);
+    }
+}

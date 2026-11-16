@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.Returns.Application.Composition;
 using Tooba.Returns.Application.ReturnRequests.Commands;
 using Tooba.Returns.Application.ReturnRequests.Queries;
 
@@ -19,6 +20,7 @@ public static class ReturnAdminEndpoints
         group.MapPost("/returns/query", AdminQueryGridAsync);
         group.MapGet("/returns/{returnRequestId:guid}", AdminGetAsync);
         group.MapPost("/returns/{returnRequestId:guid}/retry-refund", AdminRetryRefundAsync);
+        group.MapPost("/returns/{returnRequestId:guid}/recover", AdminRecoverAsync);
     }
 
     private static async Task<IResult> AdminListAsync(
@@ -52,4 +54,27 @@ public static class ReturnAdminEndpoints
         var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         return api.From(await sender.Send(new RetryReturnRefundCommand(returnRequestId, actorUserId), cancellationToken));
     }
+
+    private static async Task<IResult> AdminRecoverAsync(
+        Guid returnRequestId, AdminReturnRecoveryRequest? body, ISender sender, IReturnAdminAuthorizer authorizer,
+        ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
+    {
+        var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        var kind = ReturnRecoveryKindParser.Parse(body?.Kind);
+        if (kind.IsFailure)
+        {
+            return api.From(kind);
+        }
+
+        return api.From(await sender.Send(
+            new RecoverReturnCommand(returnRequestId, actorUserId, kind.Value, body?.ExpectedRefundAttemptId),
+            cancellationToken));
+    }
 }
+
+/// <summary>
+/// TB-273: wire-only explicit recovery body. <c>Kind</c> is the reviewed intent token and
+/// <c>ExpectedRefundAttemptId</c> is the exact stored attempt the operator reviewed; no payment, amount, currency,
+/// destination or customer value is accepted from the client.
+/// </summary>
+public sealed record AdminReturnRecoveryRequest(string? Kind, Guid? ExpectedRefundAttemptId = null);

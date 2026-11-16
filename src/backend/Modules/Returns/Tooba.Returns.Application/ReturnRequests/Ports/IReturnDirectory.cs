@@ -52,6 +52,13 @@ public interface IReturnDirectory
     /// <summary>refund شکست‌خورده را دوباره تلاش می‌کند (admin).</summary>
     Task<ReturnSnapshot> RetryRefundAsync(RetryReturnRefundCommand command, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// TB-273: explicit recovery of ONE already-approved case from its STORED facts. The money intent repeats the
+    /// exact bound pending attempt (same key/payment/amount/currency) and the physical intent settles disposition only;
+    /// neither mints a new attempt, changes the destination/amount or approves a case.
+    /// </summary>
+    Task<ReturnSnapshot> RecoverAsync(RecoverReturnCommand command, CancellationToken cancellationToken);
+
     /// <summary>TB-265: creates a courier-origin case from an already received returned parcel.</summary>
     Task<(ReturnSnapshot? Snapshot, Guid ClaimId, bool AlreadyExisted, string? Conflict)> CreateCourierOriginAsync(
         Guid fulfillmentId,

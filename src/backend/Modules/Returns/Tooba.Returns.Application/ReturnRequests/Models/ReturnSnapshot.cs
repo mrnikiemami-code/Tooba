@@ -31,4 +31,5 @@ public sealed record ReturnSnapshot(
     CourierOriginClosurePhase ClosurePhase = CourierOriginClosurePhase.None,
     DateTimeOffset? ObligationClosedAt = null,
     DateTimeOffset? StockSettledAt = null,
-    decimal ReleasedHeldQuantity = 0);
+    decimal ReleasedHeldQuantity = 0,
+    ReturnRecoveryDescription? Recovery = null);

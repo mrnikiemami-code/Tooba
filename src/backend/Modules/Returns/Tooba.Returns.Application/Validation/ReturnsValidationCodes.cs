@@ -51,4 +51,10 @@ public static class ReturnsValidationCodes
 
     /// <summary>The admin grid query body must be present.</summary>
     public const string GridRequestRequired = "returns.validation.grid_request_required";
+
+    /// <summary>TB-273: the explicit recovery kind must be one of the defined intents.</summary>
+    public const string RecoveryKindInvalid = "returns.validation.recovery_kind_invalid";
+
+    /// <summary>TB-273: a money-related recovery must name the exact stored refund attempt.</summary>
+    public const string RecoveryAttemptRequired = "returns.validation.recovery_attempt_required";
 }

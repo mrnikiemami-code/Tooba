@@ -252,8 +252,16 @@ public sealed partial class ReturnDirectory
     /// <summary>
     /// Records the physical disposition of every received line exactly once. A damaged unit is recorded as
     /// non-saleable and is NEVER passed to the unconditional saleable restock path.
+    /// <para>
+    /// TB-273 (C): <paramref name="allowOrdinaryDisposition"/> is the explicit boundary of the new physical recovery
+    /// intent. A delivered-customer case has no recorded receipt/inspection fact, so that intent must never reach the
+    /// legacy unconditional restock — the units stay pending with the explicit blocker instead.
+    /// </para>
     /// </summary>
-    private async Task SettlePhysicalDispositionAsync(ReturnRequest request, CancellationToken cancellationToken)
+    private async Task SettlePhysicalDispositionAsync(
+        ReturnRequest request,
+        CancellationToken cancellationToken,
+        bool allowOrdinaryDisposition = true)
     {
         foreach (var item in request.Items)
         {
@@ -278,6 +286,13 @@ public sealed partial class ReturnDirectory
                     throw;
                 }
 
+                continue;
+            }
+
+            if (request.Origin == ReturnOrigin.CustomerDelivered && !allowOrdinaryDisposition)
+            {
+                // TB-273: no receiving/inspection evidence exists for an ordinary RMA line, so a recovery intent
+                // cannot honestly restock it. The line stays pending; the confirmed money is untouched.
                 continue;
             }
 
