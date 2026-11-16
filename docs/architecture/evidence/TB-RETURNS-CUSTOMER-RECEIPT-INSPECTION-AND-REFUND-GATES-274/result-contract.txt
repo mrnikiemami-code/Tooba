@@ -1,0 +1,35 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274
+Parent-Task: TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: ca2dbed34ba67251dea5b60fd048d1040eef02dd
+Base-SHA: ca2dbed34ba67251dea5b60fd048d1040eef02dd
+Code-SHA: recorded by the Bridge result (code/evidence commit)
+Evidence-SHA: recorded by the Bridge result (no self-referential hash pin)
+Final-HEAD: recorded by the Bridge result (== origin/main after the normal push)
+Origin-Parity: verified after the push (same SHA on origin/main)
+Decision: ONE_SHARED_STORED_CUSTOMER_RECEIVING_INSPECTION_AUTHORITY_GATING_EVERY_ORDINARY_MONEY_AND_STOCK_PATH_WITH_CUMULATIVE_PARTIAL_OCCURRENCES_MIXED_USABLE_DAMAGED_PORTIONS_AN_EXACT_OCCURRENCE_REPLAY_AND_A_PERSISTED_WINNING_REJECTION_REASON_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ONE_ADDITIVE_MIGRATION_APPLIED_AFTER_A_VERIFIED_PRE_APPLY_BACKUP
+
+A RECEIVE+INSPECT: Returns owns ReturnReceipt (one physical occurrence: id, case, occurrence key, actor, recorded time) + ReturnReceiptLine (per (item, condition) quantity, owning receipt/case/item). RecordReturnReceiptCommand -> POST /v1/admin/returns/{id}/receipt -> ReturnDirectory.RecordReceiptAsync: guard, trim/bound the occurrence key, validate positive exactly-6-decimal quantities + defined usable|damaged condition + no duplicate (item,condition), relational case-row SELECT ... FOR UPDATE, origin refusal for courier cases, exact stored occurrence replay vs typed conflict, state gate (Requested, or a money-started case with NO durable item disposition), item ownership, cumulative coverage re-read AFTER the lock with over-receive refusal, insert header+lines, one save, commit, zero money/stock effect. Mixed goods are two inspected portions of ONE requested line, never a split line.
+
+B ONE GATE: ReturnReceivingSummary (requested/received/usable/damaged/remaining per item + IsComplete/IsCoherent) is the single authority. ApproveAsync, RetryRefundAsync, ordinary RecoverAsync(ResumePendingRefund) and ordinary RecoverAsync(SettlePhysicalDisposition) all require coherent+complete coverage before a decision/attempt/money/stock action; the read policy reports the identical return.recovery.receiving_required blocker with no RecoveryKind and the same attempt id, so a read never advertises what the action refuses. Saleable restock is ONLY inspected Usable under the existing per-item identity; Damaged is DamagedNonSaleable with zero saleable calls; confirmed money is never re-sent.
+
+C DECISION REASON: returns.return_request_decisions.reason nullable varchar(512); a new rejection requires a meaningful trimmed reason at the reachable validator AND the owning directory, persisted atomically with the winning decision under the case lock; same reason replays, a changed reason is return.decision.reason_conflict; an approval records none; the snapshot exposes DecisionReason separately; the unique-violation arbitration is narrowed to pk_return_request_decisions and the global tracker clear/broad catch replaced by scoped handling.
+
+D SCHEMA+APPLY: migration 20261116122318_AddCustomerReceiptsAndDecisionReason (additive: reason column + customer_return_receipts + customer_return_receipt_lines with owning FKs, unique (return_request_id,occurrence_key), unique (return_receipt_id,return_item_id,condition), numeric(18,6)). Pre-apply REAL pg_dump D:\temp\tb274-backup\tooba_alpha-pre-tb274.dump 2,966,890 B SHA256 ADCE728BD0D5732C09F5EECDC219287859CB7FE56173F9F5BD07A10BDC64CD16 at 16:13:46; plan-pre-apply.json carries this as the only pending Returns migration; applied ONCE by Tooba.MigrationRunner for store-alpha (apply.log succeeded=true durationMs=122 pendingMigrations=[]); history newest row confirmed; both new tables 0 rows; reason column nullable 512 verified read-only.
+
+E PROOF ONCE: ReturnsCustomerReceipts274Tests 25/25; whole Tooba.Returns.Tests 93/93 (273 recovery retained with REAL receipt fixtures); ReturnsCustomerReceipts274RelationalTests 6/6 on tooba_alpha:5432/172.18.0.2 each printing committedRows=0; ReturnsModuleAmsc001* 34/34; ReturnsRecovery273RelationalTests 3/3 with TB273R1_CONNECTION; dotnet build Tooba.slnx -c Release 0 errors; Host publish 0 errors. Host-only restart PID 7804 on 5088, /health 200, /health/ready 200 (SingleStore, messaging Healthy), Host dll SHA256 A3A67D8D129A76D6E6BBBB42371CE7E224735436F2A499FC97232FF59DDBD805. Read-only wire: POST receipt without actor -> 401 admin.actor.missing; returns query without actor -> 401 admin.actor.missing.
+
+BOUNDARIES: ONE canonical tooba_alpha 127.0.0.1:5432 SingleStore/store-alpha, Host 5088 / FE 3000; FE untouched (no build/restart/screenshot). No other module schema, no manual DDL, no seed/backfill/cleanup/delete/restore, no committed business or test row, no live approval/reject/refund/receipt mutation, no provider/PSP/Wallet/Inventory/waybill/notification/money operation, no connection/port/settings/keys/CapturedPreview change.
+
+PROOF LIMITS: no DB CHECK constraint for positive quantity/defined condition (enforced by the owning aggregate + exact-scale rule + unique index; the DB enforces PK/FK/uniqueness) — declared, not claimed; the receipt state gate deliberately allows a NEW receipt on a money-started case only while no item carries a disposition; because the money-success path settles the physical side from a complete receipt, the ordinary PendingDisposition phase is mostly reachable for legacy/incomplete-save states; money/stock are proved with controlled ports, and the relational facts are real PostgreSQL but rollback-only; concurrent receipts serialize on the case row (no committed two-writer race created); no live return case exists, so there is no served operator walkthrough and no demo case/order/hold was created; the new unit suite was re-run while correcting test-only expectations (legacy fixture lacked its durable decision row; retained 273 fixtures needed real receipt evidence) — the final passing runs are the reported ones.
+
+Worker PASS != Architect ACCEPT. 273/273-R1/273-R2 history preserved; 275 (operator UI/mobile) and 276 (connected acceptance) remain NOT ISSUED. No user/provider/financial/full-Returns acceptance.
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

@@ -101,7 +101,31 @@ public sealed record ReturnSnapshot(
     DateTimeOffset? ObligationClosedAt = null,
     DateTimeOffset? StockSettledAt = null,
     decimal ReleasedHeldQuantity = 0,
-    ReturnRecoverySnapshot? Recovery = null);
+    ReturnRecoverySnapshot? Recovery = null,
+    // TB-274: the receiving/inspection summary of a delivered-customer case. Null when nothing was received yet;
+    // approval, refund attempt and restock are gated on this exact stored fact.
+    ReturnReceivingSnapshot? Receiving = null,
+    // TB-274: the reason recorded with the winning rejection decision (null for an approval).
+    string? DecisionReason = null);
+
+/// <summary>TB-274: one inspected line of the recorded customer receipt coverage.</summary>
+public sealed record ReturnReceivingLineSnapshot(
+    Guid ReturnItemId,
+    decimal Requested,
+    decimal Received,
+    decimal Usable,
+    decimal Damaged);
+
+/// <summary>
+/// TB-274: the additive read description of what the customer physically returned. <c>IsComplete</c> is true only
+/// when every requested unit was received and <c>IsCoherent</c> is false whenever the stored rows contradict the
+/// request (over-receipt or a foreign line).
+/// </summary>
+public sealed record ReturnReceivingSnapshot(
+    IReadOnlyList<ReturnReceivingLineSnapshot> Lines,
+    bool IsComplete,
+    bool IsCoherent);
+
 
 /// <summary>Remaining returnable quantity of one order line.</summary>
 public sealed record ReturnLineEligibility(
@@ -200,7 +224,32 @@ public interface IReturnAdminOperations
         Guid shipmentId,
         string occurrenceKey,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-274: record ONE physical customer receipt occurrence (received + inspected quantities) of a
+    /// delivered-customer case. It moves no money/stock, refuses over-receiving and answers an exact replay from the
+    /// stored occurrence.
+    /// </summary>
+    Task<ReturnSnapshot> RecordCustomerReceiptAsync(
+        RecordCustomerReceiptCommand command,
+        CancellationToken cancellationToken);
 }
+
+/// <summary>TB-274: one inspected line of a customer receipt submitted through the admin operations contract.</summary>
+public sealed record CustomerReceiptLineCommand(
+    Guid ReturnItemId,
+    decimal Quantity,
+    ReturnItemConditionOption Condition = ReturnItemConditionOption.Usable);
+
+/// <summary>
+/// TB-274: reviewed receiving intent. <paramref name="OccurrenceKey"/> is the durable identity of the delivery, so a
+/// retried/lost-response submission replays the stored receipt instead of receiving the same units twice.
+/// </summary>
+public sealed record RecordCustomerReceiptCommand(
+    Guid ReturnRequestId,
+    Guid ActorUserId,
+    string OccurrenceKey,
+    IReadOnlyList<CustomerReceiptLineCommand> Items);
 
 /// <summary>Stable eligibility reason codes and their stable API error codes.</summary>
 public static class ReturnEligibilityReasons

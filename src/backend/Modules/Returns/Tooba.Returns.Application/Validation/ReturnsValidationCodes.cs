@@ -57,4 +57,25 @@ public static class ReturnsValidationCodes
 
     /// <summary>TB-273: a money-related recovery must name the exact stored refund attempt.</summary>
     public const string RecoveryAttemptRequired = "returns.validation.recovery_attempt_required";
+
+    /// <summary>TB-274: a customer receipt must name its occurrence identity.</summary>
+    public const string ReceiptOccurrenceRequired = "returns.validation.receipt_occurrence_required";
+
+    /// <summary>TB-274: the receipt occurrence identity must not exceed the persisted length.</summary>
+    public const string ReceiptOccurrenceTooLong = "returns.validation.receipt_occurrence_too_long";
+
+    /// <summary>TB-274: the receipt line collection must contain at least one inspected line.</summary>
+    public const string ReceiptLinesEmpty = "returns.validation.receipt_lines_empty";
+
+    /// <summary>TB-274: every receipt line must name a real return item.</summary>
+    public const string ReceiptItemIdRequired = "returns.validation.receipt_item_id_required";
+
+    /// <summary>TB-274: every receipt quantity must be positive and exactly representable at the persisted scale.</summary>
+    public const string ReceiptQuantityInvalid = "returns.validation.receipt_quantity_invalid";
+
+    /// <summary>TB-274: the inspected condition must be a defined condition.</summary>
+    public const string ReceiptConditionInvalid = "returns.validation.receipt_condition_invalid";
+
+    /// <summary>TB-274: one receipt occurrence cannot name the same (item, condition) twice.</summary>
+    public const string ReceiptDuplicateLine = "returns.validation.receipt_duplicate_line";
 }

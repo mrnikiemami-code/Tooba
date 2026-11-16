@@ -18,6 +18,12 @@ public sealed class ReturnDecisionRecord
     /// <summary>تصمیم پایدار: Approve | Reject.</summary>
     public string Decision { get; init; } = string.Empty;
 
+    /// <summary>
+    /// TB-274: the reviewed operator reason of a rejection, persisted with the winning decision row. Null for an
+    /// approval (an approval carries no rejection statement) and for a rejection recorded before TB-274.
+    /// </summary>
+    public string? Reason { get; init; }
+
     /// <summary>اپراتور تصمیم‌گیرنده.</summary>
     public Guid DecidedByUserId { get; init; }
 

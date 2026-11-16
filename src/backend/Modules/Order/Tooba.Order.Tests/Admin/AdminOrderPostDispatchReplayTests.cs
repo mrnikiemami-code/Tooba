@@ -1348,6 +1348,10 @@ public sealed class AdminOrderPostDispatchReplayTests
         public CourierOriginReturnResult? CourierCreateAnswer { get; set; }
 
         public CourierOriginReturnResult? CourierReconcileAnswer { get; set; }
+
+        public Task<ReturnSnapshot> RecordCustomerReceiptAsync(
+            RecordCustomerReceiptCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class PaymentFake : IPaymentAdminGateway

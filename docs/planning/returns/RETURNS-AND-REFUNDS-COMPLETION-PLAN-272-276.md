@@ -2,7 +2,21 @@
 
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
 
-## CURRENT checkpoint — 2026-11-16
+## CURRENT checkpoint — 2026-11-16 (274 worker pass)
+274 worker result: PASS within the issued A–E backend scope, awaiting Architect review (NOT Architect/user acceptance).
+Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/RESULT.md.
+Returns now owns the ordinary customer RECEIVING/INSPECTION facts (`POST /v1/admin/returns/{id}/receipt`, additive
+`customer_return_receipts` + `customer_return_receipt_lines`) and `ReturnReceivingSummary` is the single authority that
+gates approval, refund retry, pending-money recovery and physical-disposition recovery; saleable restock is only the
+inspected `Usable` quantity after confirmed money, `Damaged` never touches saleable stock, and a new rejection persists a
+meaningful reason with its winning decision (`return.decision.reason_conflict` on a changed replay). One additive migration
+applied once by the repository runner after a verified pre-apply `pg_dump`. `ReturnsCustomerReceipts274Tests` 25/25, whole
+Returns suite 93/93, relational 6/6 with `committedRows=0`, build/publish 0 errors, FE untouched.
+**275 (operator receiving/inspection UI + mobile) and 276 (connected acceptance) remain candidates, NOT ISSUED.** No live
+return case exists, so no served operator walkthrough; no demo case/order/hold was created; money/stock proven with
+controlled ports and rollback-only relational facts.
+
+## Superseded 273-R2-ACCEPT checkpoint — 2026-11-16
 273-R2 ACCEPT within three-gate source/evidence scope;273 backend recovery foundation closed through repairs. Read273-R2/ARCHITECT-REVIEW.md. Original273/R1 PARTIAL results/reviews and all deviations remain history.
 ONLY TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274 is next: Returns-owned ordinary customer receiving/inspection facts, exact received quantities/conditions, all ordinary refund/restock entry paths gated, persisted rejection reason. Backend-only; UI275/connected276 NOT ISSUED. Additive migration requires actual pre-apply backup and repository runner. No live business fixtures/money/stock actions.
 

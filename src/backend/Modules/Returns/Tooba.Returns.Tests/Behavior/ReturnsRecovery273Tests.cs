@@ -49,12 +49,23 @@ public sealed class ReturnsRecovery273Tests
         // One bound pending attempt: the money answer is UNKNOWN and only that exact attempt may be resumed.
         var attemptId = Guid.NewGuid();
         var pending = Describe(Snap(
-            ReturnRequestStatus.RefundProcessing, attempts: [(attemptId, RefundAttemptStatus.Pending)]));
+            ReturnRequestStatus.RefundProcessing,
+            attempts: [(attemptId, RefundAttemptStatus.Pending)],
+            receivingComplete: true));
         Assert.Equal(ReturnRecoveryPhase.PendingMoney, pending.Phase);
         Assert.Equal(ReturnRecoveryKind.ResumePendingRefund, pending.RecoveryKind);
         Assert.Equal(attemptId, pending.RefundAttemptId);
         Assert.False(pending.FinancialComplete);
         Assert.Null(pending.BlockerCode);
+
+        // TB-274 (B): the SAME unknown ordinary money over NO recorded physical evidence is a typed blocker — the
+        // unknown attempt is never repeated around the receiving/inspection rule that gates every ordinary money path.
+        var pendingWithoutReceipt = Describe(Snap(
+            ReturnRequestStatus.RefundProcessing,
+            attempts: [(attemptId, RefundAttemptStatus.Pending)]));
+        Assert.Equal(ReturnRecoveryPhase.Blocked, pendingWithoutReceipt.Phase);
+        Assert.Equal(ReturnsErrorCodes.RecoveryReceivingRequired, pendingWithoutReceipt.BlockerCode);
+        Assert.Null(pendingWithoutReceipt.RecoveryKind);
 
         // Several pending attempts are an ambiguous binding, never a guessed resume.
         var ambiguous = Describe(Snap(
@@ -161,10 +172,12 @@ public sealed class ReturnsRecovery273Tests
         Assert.Equal(ReturnRequestStatus.Completed, recovered.Status);
         Assert.Equal(1, await order.AttemptCount());
 
-        // Money success is NOT physical completion: the separate disposition stays honestly pending.
+        // Money success is NOT physical completion: the recorded receipt now authorizes the OWNING physical step, and
+        // it settles exactly the inspected usable quantity (never the requested default).
         Assert.True(recovered.Recovery!.FinancialComplete);
-        Assert.False(recovered.Recovery.PhysicalComplete);
-        Assert.Equal(ReturnItemDisposition.None, (await order.Items()).Single().Disposition);
+        Assert.True(recovered.Recovery.PhysicalComplete);
+        Assert.Equal(ReturnItemDisposition.SaleableRestock, (await order.Items()).Single().Disposition);
+        Assert.Equal(1m, Assert.Single(order.Inventory.Restocked).Quantity);
 
         // The provider saw exactly the recorded identity, once, and the wallet was never touched.
         var call = Assert.Single(order.Gateway.Calls);
@@ -321,7 +334,7 @@ public sealed class ReturnsRecovery273Tests
     [Fact]
     public async Task An_ordinary_case_without_receiving_evidence_is_blocked_with_zero_restock_and_money_kept()
     {
-        await using var order = await SeedOrdinaryCaseAsync(StoredState.MoneyConfirmedNoDisposition);
+        await using var order = await SeedOrdinaryCaseAsync(StoredState.MoneyConfirmedNoDisposition, receipt: false);
         Assert.Equal(ReturnsErrorCodes.RecoveryReceivingRequired, (await order.Snapshot())!.Recovery!.BlockerCode);
 
         var blocked = await Assert.ThrowsAsync<ContractOperationException>(() => order.Recover(
@@ -761,10 +774,13 @@ public sealed class ReturnsRecovery273Tests
         Assert.Null(after.ProviderReference);
         Assert.Equal(ReturnRequestStatus.Completed, recovered.Status);
 
-        // The confirmed money fact is preserved while the ordinary physical phase stays explicitly blocked.
+        // The confirmed money fact is preserved; the recorded receipt now authorizes the owning physical settlement,
+        // which restocks exactly the inspected usable quantity with the same per-item identity.
         Assert.True(recovered.Recovery!.FinancialComplete);
-        Assert.Equal(ReturnRecoveryPhase.Blocked, recovered.Recovery.Phase);
-        Assert.Equal(ReturnsErrorCodes.RecoveryReceivingRequired, recovered.Recovery.BlockerCode);
+        Assert.Equal(ReturnRecoveryPhase.Settled, recovered.Recovery.Phase);
+        Assert.Null(recovered.Recovery.BlockerCode);
+        Assert.Equal(ReturnItemDisposition.SaleableRestock, (await order.Items()).Single().Disposition);
+        Assert.Equal(1m, Assert.Single(order.Inventory.Restocked).Quantity);
 
         // A repeat answers the stored outcome: no fresh money and still no invented reference.
         await order.Recover(ReturnRecoveryKind.ResumePendingRefund, attempt.RefundAttemptId);
@@ -1024,7 +1040,8 @@ public sealed class ReturnsRecovery273Tests
         bool bindAttempts = true,
         CourierOriginClosurePhase closurePhase = CourierOriginClosurePhase.None,
         bool priorObligationClosedAt = true,
-        bool priorStockSettledAt = true)
+        bool priorStockSettledAt = true,
+        bool receivingComplete = false)
     {
         var effective = dispositions ?? [ReturnItemDisposition.None];
         var approved = status is not (ReturnRequestStatus.Requested
@@ -1034,6 +1051,29 @@ public sealed class ReturnsRecovery273Tests
         var courier = origin == ReturnOrigin.CourierOrigin;
         var receiptId = Guid.NewGuid();
         var shipmentId = Guid.NewGuid();
+        var items = effective
+            .Select(disposition => new ReturnItemSnapshot(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                1m,
+                1000m,
+                "IRR",
+                null,
+                ReturnItemCondition.Usable,
+                disposition,
+                courier ? shipmentId : null,
+                courier ? receiptId : null))
+            .ToArray();
+        // TB-274 (B): an ordinary case's receiving/inspection evidence is a real stored fact, so the pure policy
+        // fixture states it explicitly instead of implying it from the line's default condition.
+        var receiving = !courier && receivingComplete
+            ? ReturnReceivingSummary.Describe(
+                items.Select(x => (x.ReturnItemId, x.Quantity)),
+                items.SelectMany(x => new[]
+                {
+                    (x.ReturnItemId, x.Quantity, ReturnItemCondition.Usable),
+                }))
+            : null;
 
         return new ReturnSnapshot(
             Guid.NewGuid(),
@@ -1049,19 +1089,7 @@ public sealed class ReturnsRecovery273Tests
             RefundDestination.OriginalPayment,
             Now,
             Now,
-            effective
-                .Select(disposition => new ReturnItemSnapshot(
-                    Guid.NewGuid(),
-                    Guid.NewGuid(),
-                    1m,
-                    1000m,
-                    "IRR",
-                    null,
-                    ReturnItemCondition.Usable,
-                    disposition,
-                    courier ? shipmentId : null,
-                    courier ? receiptId : null))
-                .ToArray(),
+            items,
             (attempts ?? [])
                 .Select(x => new RefundAttemptSnapshot(
                     x.Id,
@@ -1094,7 +1122,8 @@ public sealed class ReturnsRecovery273Tests
                 && priorStockSettledAt
                 ? (DateTimeOffset?)Now
                 : null,
-            RecordedDecision: recordedDecision);
+            RecordedDecision: recordedDecision,
+            Receiving: receiving);
     }
 
     private enum StoredState
@@ -1185,7 +1214,8 @@ public sealed class ReturnsRecovery273Tests
         RefundDestination destination = RefundDestination.OriginalPayment,
         IReturnUseCaseGuard? guard = null,
         bool seedDecision = true,
-        string decision = ReturnRecoveryPolicy.ApprovedDecision)
+        string decision = ReturnRecoveryPolicy.ApprovedDecision,
+        bool receipt = true)
     {
         var dbName = Guid.NewGuid().ToString("N");
         var saveInterceptor = new FailingSaveInterceptor();
@@ -1249,6 +1279,24 @@ public sealed class ReturnsRecovery273Tests
                 DecidedByUserId = Guid.NewGuid(),
                 DecidedAt = Now,
             });
+        }
+
+        if (receipt && state is not (StoredState.Requested or StoredState.Rejected))
+        {
+            // TB-274 (B): an ordinary case that already progressed financially carries the REAL customer receipt the
+            // unknown-money/failed-money/confirmed-money phases are now gated on. It is recorded evidence, not a
+            // bypass flag: the same rows every 274 gate reads.
+            var returnItem = request.Items.Single();
+            var seededReceipt = ReturnReceipt.Create(
+                Guid.NewGuid(),
+                () => Guid.NewGuid(),
+                returnRequestId,
+                $"tb273-receipt-{returnRequestId:N}",
+                Guid.NewGuid(),
+                Now,
+                [(returnItem.ReturnItemId, returnItem.Quantity, ReturnItemCondition.Usable)]);
+            db.ReturnReceipts.Add(seededReceipt);
+            db.ReturnReceiptLines.AddRange(seededReceipt.Lines);
         }
 
         await db.SaveChangesAsync();

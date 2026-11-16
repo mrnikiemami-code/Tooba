@@ -52,9 +52,10 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
     {
         // 23 HTTP-reachable outcome codes + 1 platform-side outbox fault = 24 declared. TB-272 added the two
         // creation-integrity refusals (return.idempotency_conflict, return.duplicate_line), TB-272-R1 the persisted
-        // quantity-precision refusal (return.quantity_precision) and TB-273-R1 the recovery evidence-conflict and
-        // caller-transaction refusals — all HTTP-reachable.
-        Assert.Equal(31, ReturnsErrorCodes.HttpReachable.Count);
+        // quantity-precision refusal (return.quantity_precision), TB-273-R1 the recovery evidence-conflict and
+        // caller-transaction refusals and TB-274 the nine customer-receipt/inspection/reason refusals — all
+        // HTTP-reachable.
+        Assert.Equal(40, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));
@@ -181,13 +182,14 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
                      "RejectReturnCommandValidator",
                      "QueryAdminReturnsGridQueryValidator",
                      "RecoverReturnCommandValidator",
+                     "RecordReturnReceiptCommandValidator",
                  })
         {
             Assert.Contains(type, validators, StringComparison.Ordinal);
         }
 
-        // Exactly five transport validators — one per VALIDATOR_REQUIRED request.
-        Assert.Equal(5, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        // Exactly six transport validators — one per VALIDATOR_REQUIRED request.
+        Assert.Equal(6, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
 
         // Validators emit stable machine codes, never user-facing prose.
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);
@@ -390,6 +392,13 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
                 "20260827020000_InitialReturns.cs",
                 "20260827200000_AddRefundDestination.cs",
                 "20260909130600_DecimalReturnQuantity.cs",
+                "20261113162816_AddCourierOriginReturnsLinkage.Designer.cs",
+                "20261113162816_AddCourierOriginReturnsLinkage.cs",
+                "20261113174500_NormalizeCourierOriginColumnNames.Designer.cs",
+                "20261113174500_NormalizeCourierOriginColumnNames.cs",
+                "20261114170000_AddReturnRequestDecisions.cs",
+                "20261116122318_AddCustomerReceiptsAndDecisionReason.Designer.cs",
+                "20261116122318_AddCustomerReceiptsAndDecisionReason.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             files);

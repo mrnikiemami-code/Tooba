@@ -42,6 +42,15 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.RecoveryGatewayUnavailable, ErrorClassification.Business, StatusCodes.Status503ServiceUnavailable, "The refund adapter is not configured, so the stored attempt cannot be sent; it stays pending."),
         D(ReturnsErrorCodes.RecoveryEvidenceConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The stored decision, refund attempt or closure facts of this return contradict each other, so no recovery can be named without guessing."),
         D(ReturnsErrorCodes.RecoveryTransactionOwned, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Recovery cannot run inside an open caller-owned database transaction, so nothing was sent or written."),
+        D(ReturnsErrorCodes.ReceiptOccurrenceRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A customer receipt must name the reviewed occurrence it belongs to."),
+        D(ReturnsErrorCodes.ReceiptLineInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A receipt line is not a valid inspected quantity of this return."),
+        D(ReturnsErrorCodes.ReceiptOverReceived, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The submitted receipt would receive more units than this return requested."),
+        D(ReturnsErrorCodes.ReceiptConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The occurrence key was already recorded with a different receiving intent."),
+        D(ReturnsErrorCodes.ReceiptOriginInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A courier-origin case reuses the receipt owned by fulfillment and cannot record a second one here."),
+        D(ReturnsErrorCodes.ReceiptStateInvalid, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The return is not open for a new physical receipt."),
+        D(ReturnsErrorCodes.ReceivingIncomplete, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The return has no complete recorded receiving/inspection coverage, so no approval, refund or restock can start."),
+        D(ReturnsErrorCodes.RejectionReasonRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A new rejection must state a meaningful reason."),
+        D(ReturnsErrorCodes.DecisionReasonConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The recorded rejection already states a different reason."),
     ];
 
     private static ErrorDescriptor D(

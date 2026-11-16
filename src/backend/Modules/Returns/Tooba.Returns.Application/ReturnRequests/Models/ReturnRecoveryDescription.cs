@@ -137,6 +137,31 @@ public static class ReturnRecoveryPolicy
                             physicalComplete: false);
                     }
 
+                    // TB-274 (B): an ordinary delivered RMA may only continue its unknown money over its OWN recorded
+                    // physical evidence. A missing/incomplete receipt is a typed blocker (no kind, no new key); an
+                    // incoherent receipt is the same evidence conflict every other ordinary phase reports. The actual
+                    // refusal lives in the owning directory, so the read can never advertise an execution it refuses.
+                    if (snapshot.Origin != ReturnOrigin.CourierOrigin)
+                    {
+                        if (snapshot.Receiving is { IsCoherent: false })
+                        {
+                            return Blocked(
+                                ReturnsErrorCodes.RecoveryEvidenceConflict,
+                                financialComplete: false,
+                                physicalComplete: false,
+                                attemptId: money.AttemptId);
+                        }
+
+                        if (snapshot.Receiving is not { IsComplete: true })
+                        {
+                            return Blocked(
+                                ReturnsErrorCodes.RecoveryReceivingRequired,
+                                financialComplete: false,
+                                physicalComplete: false,
+                                attemptId: money.AttemptId);
+                        }
+                    }
+
                     return new ReturnRecoveryDescription(
                         ReturnRecoveryPhase.PendingMoney,
                         ReturnRecoveryKind.ResumePendingRefund,
@@ -304,8 +329,26 @@ public static class ReturnRecoveryPolicy
                     ReturnRecoveryPhase.Settled, null, money.AttemptId, null, FinancialComplete: true, PhysicalComplete: true);
             }
 
-            // An ordinary delivered RMA has no recorded receipt/inspection fact, so no disposition can be honestly
-            // executed from the default condition. The confirmed money is preserved and the blocker is explicit.
+            // TB-274: a delivered-customer case owns its recorded customer receipt. A complete, coherent receipt makes
+            // the physical phase real, executable work over the INSPECTED usable quantity; an incoherent receipt is a
+            // typed evidence conflict; a missing/incomplete receipt keeps the explicit blocker and never restocks the
+            // requested quantity as if it had arrived usable.
+            if (snapshot.Receiving is { IsCoherent: false })
+            {
+                return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
+            }
+
+            if (snapshot.Receiving is { IsComplete: true })
+            {
+                return new ReturnRecoveryDescription(
+                    ReturnRecoveryPhase.PendingDisposition,
+                    ReturnRecoveryKind.SettlePhysicalDisposition,
+                    money.AttemptId,
+                    null,
+                    FinancialComplete: true,
+                    PhysicalComplete: false);
+            }
+
             return Blocked(ReturnsErrorCodes.RecoveryReceivingRequired, financialComplete: true, physicalComplete: false, money.AttemptId);
         }
 

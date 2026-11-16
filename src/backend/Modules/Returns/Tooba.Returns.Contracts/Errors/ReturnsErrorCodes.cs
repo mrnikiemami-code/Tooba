@@ -61,6 +61,15 @@ public static class ReturnsErrorCodes
         RecoveryGatewayUnavailable,
         RecoveryEvidenceConflict,
         RecoveryTransactionOwned,
+        ReceiptOccurrenceRequired,
+        ReceiptLineInvalid,
+        ReceiptOverReceived,
+        ReceiptConflict,
+        ReceiptOriginInvalid,
+        ReceiptStateInvalid,
+        ReceivingIncomplete,
+        RejectionReasonRequired,
+        DecisionReasonConflict,
     };
 
     private static readonly HashSet<string> PlatformFaultCodes = new(StringComparer.Ordinal)
@@ -222,6 +231,58 @@ public static class ReturnsErrorCodes
     /// BEFORE any effect; the caller's transaction, entities and values are left untouched.
     /// </summary>
     public const string RecoveryTransactionOwned = "return.recovery.transaction_owned";
+
+    /// <summary>
+    /// TB-274: a customer receipt must name the reviewed occurrence it belongs to. An absent/blank/over-long key is
+    /// refused so an exact replay can never be confused with a second delivery.
+    /// </summary>
+    public const string ReceiptOccurrenceRequired = "return.receipt.occurrence_required";
+
+    /// <summary>
+    /// TB-274: a receipt line is not a real inspected quantity of this case (unknown item, non-positive quantity, more
+    /// precision than the persisted scale supports, undefined condition, or a duplicate item+condition).
+    /// </summary>
+    public const string ReceiptLineInvalid = "return.receipt.line_invalid";
+
+    /// <summary>
+    /// TB-274: the recorded receipts of this case already cover the requested quantity, so the submitted occurrence
+    /// would receive more units than the customer was asked to return. Nothing is written.
+    /// </summary>
+    public const string ReceiptOverReceived = "return.receipt.over_received";
+
+    /// <summary>
+    /// TB-274: the same occurrence key was already recorded with a DIFFERENT receiving/inspection intent. A typed
+    /// conflict — never a silent rewrite of a durable physical fact.
+    /// </summary>
+    public const string ReceiptConflict = "return.receipt.conflict";
+
+    /// <summary>
+    /// TB-274: a courier-origin case's physical receipt is owned by Fulfillment and is reused, never recorded here.
+    /// </summary>
+    public const string ReceiptOriginInvalid = "return.receipt.origin_invalid";
+
+    /// <summary>
+    /// TB-274: the case is not in a state that can accept a new physical receipt (only a still-open requested case
+    /// can be received; a decision already taken keeps its recorded facts).
+    /// </summary>
+    public const string ReceiptStateInvalid = "return.receipt.state_invalid";
+
+    /// <summary>
+    /// TB-274: the case has no complete, coherent receiving/inspection coverage, so the new approval decision, refund
+    /// attempt or physical disposition is refused instead of being invented from the requested quantity.
+    /// </summary>
+    public const string ReceivingIncomplete = "return.receiving.incomplete";
+
+    /// <summary>
+    /// TB-274: a NEW rejection must state a meaningful reviewed reason (trimmed, non-empty, bounded), because the
+    /// durable decision row is the only record of why it was rejected.
+    /// </summary>
+    public const string RejectionReasonRequired = "return.rejection_reason_required";
+
+    /// <summary>
+    /// TB-274: the winning rejection already recorded a different reason. The durable decision is never rewritten.
+    /// </summary>
+    public const string DecisionReasonConflict = "return.decision.reason_conflict";
 
     /// <summary>Outbox registration has no mapping for the given integration event type (platform fault).</summary>
     public const string OutboxUnmappedEvent = "return.outbox.unmapped_event";

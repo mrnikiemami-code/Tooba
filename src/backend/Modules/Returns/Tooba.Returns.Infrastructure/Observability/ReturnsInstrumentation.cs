@@ -14,6 +14,7 @@ public sealed class ReturnsInstrumentation
     private readonly Counter<long> _retry;
     private readonly Counter<long> _refundSucceeded;
     private readonly Counter<long> _refundFailed;
+    private readonly Counter<long> _receipts;
 
     /// <summary>
     /// متریک‌های in-process Returns.
@@ -27,6 +28,7 @@ public sealed class ReturnsInstrumentation
         _retry = meter.CreateCounter<long>("tooba.returns.refund.retry");
         _refundSucceeded = meter.CreateCounter<long>("tooba.returns.refund.succeeded");
         _refundFailed = meter.CreateCounter<long>("tooba.returns.refund.failed");
+        _receipts = meter.CreateCounter<long>("tooba.returns.receipt.recorded");
     }
 
     /// <summary>ثبت ایجاد درخواست.</summary>
@@ -46,4 +48,7 @@ public sealed class ReturnsInstrumentation
 
     /// <summary>ثبت refund شکست.</summary>
     public void RecordRefundFailed() => _refundFailed.Add(1);
+
+    /// <summary>TB-274: ثبت رسید فیزیکی مشتری.</summary>
+    public void RecordReceipt() => _receipts.Add(1);
 }

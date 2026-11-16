@@ -76,6 +76,15 @@ public interface IReturnDirectory
         Guid shipmentId,
         string occurrenceKey,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-274: records ONE physical customer receipt occurrence (received and inspected quantities) of a
+    /// delivered-customer case. It moves no money and no stock, refuses over-receiving and answers an exact replay
+    /// from the stored occurrence; a courier-origin receipt belongs to Fulfillment and is refused here.
+    /// </summary>
+    Task<ReturnSnapshot> RecordReceiptAsync(
+        RecordReturnReceiptCommand command,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Query port صف کار Admin returns (جدا از directory ارکستراسیون).</summary>

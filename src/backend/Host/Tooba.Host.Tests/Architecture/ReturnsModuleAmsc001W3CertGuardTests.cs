@@ -30,7 +30,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
     private static readonly string[] ValidatorRequired =
     [
         "CreateReturnCommand", "ApproveReturnCommand", "RejectReturnCommand", "QueryAdminReturnsGridQuery",
-        "RecoverReturnCommand",
+        "RecoverReturnCommand", "RecordReturnReceiptCommand",
     ];
 
     private static readonly string[] NoValidatorRequired =
@@ -105,7 +105,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         var routeCount = Regex.Matches(admin, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(seller, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(customer, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count;
-        Assert.Equal(12, routeCount);
+        Assert.Equal(13, routeCount);
 
         var module = File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Returns.Endpoints/ReturnEndpointModule.cs"));
         Assert.Contains("MapGroup(\"/v1/customer\")", module, StringComparison.Ordinal);
@@ -145,7 +145,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
             .Where(p => Path.GetFileName(p).EndsWith("Endpoints.cs", StringComparison.Ordinal))
             .ToArray();
         var sendCount = endpoints.Sum(p => Regex.Matches(File.ReadAllText(p), @"sender\.Send\(").Count);
-        Assert.Equal(12, sendCount);
+        Assert.Equal(13, sendCount);
         foreach (var file in endpoints)
         {
             var text = File.ReadAllText(file);
@@ -153,9 +153,9 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
             Assert.DoesNotContain("IReturnDirectory", text, StringComparison.Ordinal);
         }
 
-        // Exactly five transport validators, one per VALIDATOR_REQUIRED request.
+        // Exactly six transport validators, one per VALIDATOR_REQUIRED request.
         var validators = File.ReadAllText(Path.Combine(applicationRoot, "Validation/ReturnsRequestValidators.cs"));
-        Assert.Equal(5, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(6, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
         foreach (var request in ValidatorRequired)
         {
             Assert.Contains($"AbstractValidator<{request}>", validators, StringComparison.Ordinal);
@@ -191,15 +191,16 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         Assert.DoesNotContain("when (ex.Message", joined, StringComparison.Ordinal);
 
         // Single canonical stable-code home with the reachability split preserved. TB-272 added the two
-        // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal and TB-273-R1 the two
-        // recovery evidence/transaction refusals, all HTTP-reachable.
-        Assert.Equal(31, ReturnsErrorCodes.HttpReachable.Count);
+        // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal, TB-273-R1 the two
+        // recovery evidence/transaction refusals and TB-274 the nine customer-receipt/inspection/reason refusals,
+        // all HTTP-reachable.
+        Assert.Equal(40, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(32, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(41, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(31, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(40, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.
@@ -295,6 +296,13 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
                 "20260827020000_InitialReturns.cs",
                 "20260827200000_AddRefundDestination.cs",
                 "20260909130600_DecimalReturnQuantity.cs",
+                "20261113162816_AddCourierOriginReturnsLinkage.Designer.cs",
+                "20261113162816_AddCourierOriginReturnsLinkage.cs",
+                "20261113174500_NormalizeCourierOriginColumnNames.Designer.cs",
+                "20261113174500_NormalizeCourierOriginColumnNames.cs",
+                "20261114170000_AddReturnRequestDecisions.cs",
+                "20261116122318_AddCustomerReceiptsAndDecisionReason.Designer.cs",
+                "20261116122318_AddCustomerReceiptsAndDecisionReason.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             migrations);

@@ -45,6 +45,16 @@ public sealed class ReturnsDbContext : DbContext
     public DbSet<ReturnDecisionRecord> ReturnDecisions => Set<ReturnDecisionRecord>();
 
     /// <summary>
+    /// TB-274: رسیدهای فیزیکی مشتری برای پرونده‌های تحویل‌شده (یک ردیف برای هر رخداد دریافت).
+    /// </summary>
+    public DbSet<ReturnReceipt> ReturnReceipts => Set<ReturnReceipt>();
+
+    /// <summary>
+    /// TB-274: خطوط بازرسی‌شدهٔ هر رسید (مقدار دریافت‌شده به تفکیک وضعیت).
+    /// </summary>
+    public DbSet<ReturnReceiptLine> ReturnReceiptLines => Set<ReturnReceiptLine>();
+
+    /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -109,9 +119,70 @@ public sealed class ReturnsDbContext : DbContext
         modelBuilder.Entity<ReturnDecisionRecord>(entity =>
         {
             entity.ToTable("return_request_decisions");
-            entity.HasKey(x => x.ReturnRequestId);
-            entity.Property(x => x.ReturnRequestId).ValueGeneratedNever();
-            entity.Property(x => x.Decision).HasMaxLength(32);
+            entity.HasKey(x => x.ReturnRequestId).HasName("pk_return_request_decisions");
+            entity.Property(x => x.ReturnRequestId).ValueGeneratedNever().HasColumnName("return_request_id");
+            entity.Property(x => x.Decision).HasMaxLength(32).HasColumnName("decision");
+            entity.Property(x => x.DecidedByUserId).HasColumnName("decided_by_user_id");
+            entity.Property(x => x.DecidedAt).HasColumnName("decided_at");
+            // TB-274: the reviewed rejection reason is part of the winning decision row, so the exact operator
+            // statement is durable with the decision itself (never a second, separately-writable note).
+            entity.Property(x => x.Reason).HasMaxLength(512).HasColumnName("reason");
+        });
+        modelBuilder.Entity<ReturnReceipt>(entity =>
+        {
+            entity.ToTable("customer_return_receipts");
+            entity.HasKey(x => x.ReturnReceiptId).HasName("pk_customer_return_receipts");
+            entity.Property(x => x.ReturnReceiptId).ValueGeneratedNever().HasColumnName("return_receipt_id");
+            entity.Property(x => x.ReturnRequestId).HasColumnName("return_request_id");
+            entity.Property(x => x.OccurrenceKey)
+                .HasMaxLength(ReturnReceipt.OccurrenceKeyMaxLength)
+                .HasColumnName("occurrence_key");
+            entity.Property(x => x.ReceivedByUserId).HasColumnName("received_by_user_id");
+            entity.Property(x => x.RecordedAt).HasColumnName("recorded_at");
+            entity.Ignore(x => x.Lines);
+            // ONE receipt per reviewed occurrence, and the occurrence belongs to exactly one case.
+            entity.HasIndex(x => new { x.ReturnRequestId, x.OccurrenceKey })
+                .IsUnique()
+                .HasDatabaseName("ix_customer_return_receipts_return_request_id_occurrence_key");
+            entity.HasIndex(x => x.ReturnRequestId)
+                .HasDatabaseName("ix_customer_return_receipts_return_request_id");
+            entity.HasOne<ReturnRequest>()
+                .WithMany()
+                .HasForeignKey(x => x.ReturnRequestId)
+                .HasConstraintName("fk_customer_return_receipts_return_requests_return_request_id")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<ReturnReceiptLine>(entity =>
+        {
+            entity.ToTable("customer_return_receipt_lines");
+            entity.HasKey(x => x.ReturnReceiptLineId).HasName("pk_customer_return_receipt_lines");
+            entity.Property(x => x.ReturnReceiptLineId).ValueGeneratedNever().HasColumnName("return_receipt_line_id");
+            entity.Property(x => x.ReturnReceiptId).HasColumnName("return_receipt_id");
+            entity.Property(x => x.ReturnRequestId).HasColumnName("return_request_id");
+            entity.Property(x => x.ReturnItemId).HasColumnName("return_item_id");
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)").HasColumnName("quantity");
+            entity.Property(x => x.Condition)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .HasColumnName("condition");
+            // One condition per line per occurrence; a mixed return is two rows, never a split requested line.
+            entity.HasIndex(x => new { x.ReturnReceiptId, x.ReturnItemId, x.Condition })
+                .IsUnique()
+                .HasDatabaseName("ix_customer_return_receipt_lines_receipt_item_condition");
+            entity.HasIndex(x => x.ReturnRequestId)
+                .HasDatabaseName("ix_customer_return_receipt_lines_return_request_id");
+            entity.HasIndex(x => x.ReturnItemId)
+                .HasDatabaseName("ix_customer_return_receipt_lines_return_item_id");
+            entity.HasOne<ReturnReceipt>()
+                .WithMany()
+                .HasForeignKey(x => x.ReturnReceiptId)
+                .HasConstraintName("fk_customer_return_receipt_lines_receipts_return_receipt_id")
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<ReturnItem>()
+                .WithMany()
+                .HasForeignKey(x => x.ReturnItemId)
+                .HasConstraintName("fk_customer_return_receipt_lines_return_items_return_item_id")
+                .OnDelete(DeleteBehavior.Restrict);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

@@ -1,4 +1,37 @@
-# CURRENT — RETURNS273 BACKEND SCOPE CLOSED THROUGH273-R2; ONLY274 NEXT — 2026-11-16
+# CURRENT — 274 WORKER PASS; RETURNS RECEIVING/INSPECTION GATE IN AWAIT OF ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CUSTOMER-RECEIPT-INSPECTION-AND-REFUND-GATES-274/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,receiving-and-approval-proof.md,disposition-and-decision-proof.md,migration-and-preapply-backup-proof.md}.
+Status **PASS within the issued A–E backend scope**, decision
+`ONE_SHARED_STORED_CUSTOMER_RECEIVING_INSPECTION_AUTHORITY_GATING_EVERY_ORDINARY_MONEY_AND_STOCK_PATH_WITH_CUMULATIVE_PARTIAL_OCCURRENCES_MIXED_USABLE_DAMAGED_PORTIONS_AN_EXACT_OCCURRENCE_REPLAY_AND_A_PERSISTED_WINNING_REJECTION_REASON_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ONE_ADDITIVE_MIGRATION_APPLIED_AFTER_A_VERIFIED_PRE_APPLY_BACKUP`,
+NOT Architect ACCEPT, NOT user functional acceptance, NOT any provider/financial/UI claim. Base
+`ca2dbed34ba67251dea5b60fd048d1040eef02dd`. 273/273-R1/273-R2 history and the 272-R1 acceptance are unchanged.
+**275–276 remain candidates, NOT ISSUED.** Single worker, one task, no delegation, no historical agent resumed.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A receive + inspect | Returns-owned, additive | `POST /v1/admin/returns/{id}/receipt` records one physical occurrence (header + per (item, condition) lines) with an exact-key replay, cumulative coverage re-read AFTER the case `FOR UPDATE` (never over-receiving), partial occurrences and mixed usable/damaged portions of ONE requested line; a courier-origin case is refused; recording receipt makes zero money/stock calls |
+| B one gate | shared authority | `ReturnReceivingSummary` is the only rule: approval, refund retry, pending-money recovery and physical-disposition recovery over an ORDINARY delivered return all require coherent+complete coverage, and the read policy reports the same `return.recovery.receiving_required` with no kind; saleable restock is ONLY inspected `Usable`, `Damaged` never touches saleable stock, confirmed money is never re-sent |
+| C rejection reason | atomic, replayable | `return_request_decisions.reason` (nullable, 512) is required (meaningful, trimmed) for a NEW rejection and written with the winning decision under the case lock; the same decision/reason replays, a changed reason is `return.decision.reason_conflict`; the unique-violation arbitration is narrowed to `pk_return_request_decisions` |
+| D schema + apply | one additive migration, really backed up | pre-apply `pg_dump` `D:\temp\tb274-backup\tooba_alpha-pre-tb274.dump` 2,966,890 B SHA256 `ADCE728B…DC64CD16`, plan showed it as the only pending Returns migration, applied ONCE by `Tooba.MigrationRunner` (apply log `succeeded=true`, `pendingMigrations=[]`), both new tables 0 rows |
+| E proof | focused + rollback-only | `ReturnsCustomerReceipts274Tests` **25/25**; whole `Tooba.Returns.Tests` **93/93**; `ReturnsCustomerReceipts274RelationalTests` **6/6** on real `tooba_alpha` with `committedRows=0`; `ReturnsModuleAmsc001*` 34/34; `ReturnsRecovery273RelationalTests` 3/3; build 0 errors; Host publish 0 errors |
+
+Verified once after the final change: `ReturnsCustomerReceipts274Tests` 25/25; whole Returns suite 93/93; relational
+suite 6/6 `committedRows=0` (target `tooba_alpha:5432/172.18.0.2`); AMSC guard 34/34; 273 relational 3/3;
+`dotnet build src/backend/Tooba.slnx -c Release` 0 errors; Host publish 0 errors. Host-only refresh: PID 7804 on 5088
+(`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy), new Host dll SHA256
+`A3A67D8D129A76D6E6BBBB42371CE7E224735436F2A499FC97232FF59DDBD805`; FE untouched.
+Live read-only wire: receipt POST without actor → 401 `admin.actor.missing`; `POST /v1/admin/returns/query` without actor →
+401 `admin.actor.missing`.
+Known limits: positive-quantity/defined-condition are enforced by the owning aggregate + exact-scale rule + unique index
+(no DB CHECK); a NEW receipt stays allowed on a money-started case only while no item carries a disposition; money/stock
+are proved with controlled ports and the relational facts are real PostgreSQL but rollback-only; no committed two-writer
+receipt race; **no live return case exists**, so there is no served operator walkthrough and no demo case/order/hold was
+created; the new unit suite was re-run while correcting test-only expectations (legacy fixture lacked its durable decision
+row; retained 273 fixtures needed real receipt evidence) — the final passing runs are the reported ones.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — RETURNS273 BACKEND SCOPE CLOSED THROUGH273-R2; ONLY274 NEXT — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/ARCHITECT-REVIEW.md.
 273-R2 ACCEPT within three-gate source/evidence scope at ce471c71b1bf5f64f7e2d55ff482eba96fe34ca5;273 recovery foundation closed through repairs.

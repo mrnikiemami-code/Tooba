@@ -94,6 +94,17 @@ public sealed class ReturnsCharacterizationTests
         Assert.Equal(2000m, first.RefundAmount);
         Assert.Equal("IRR", first.Currency);
 
+        // TB-274: an ordinary delivered RMA is approved only over its OWN recorded physical receipt, never over the
+        // requested quantity. The customer handed back both units, both usable.
+        await directory.RecordReceiptAsync(
+            new RecordReturnReceiptCommand(
+                first.ReturnRequestId,
+                Guid.NewGuid(),
+                "char-receipt-1",
+                first.Items.Select(x => new CustomerReceiptLine(x.ReturnItemId, x.Quantity))
+                    .ToList()),
+            CancellationToken.None);
+
         var approved = await directory.ApproveAsync(
             new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid(), Guid.NewGuid()),
             CancellationToken.None);
@@ -146,6 +157,17 @@ public sealed class ReturnsCharacterizationTests
                 [new ReturnLineCommand(lineId, 1)],
                 RefundDestination.Wallet),
             CancellationToken.None);
+
+        // TB-274: the same physical receiving gate applies before a Wallet refund.
+        await directory.RecordReceiptAsync(
+            new RecordReturnReceiptCommand(
+                created.ReturnRequestId,
+                Guid.NewGuid(),
+                "char-receipt-wallet",
+                created.Items.Select(x => new CustomerReceiptLine(x.ReturnItemId, x.Quantity))
+                    .ToList()),
+            CancellationToken.None);
+
         var approved = await directory.ApproveAsync(
             new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid(), Guid.NewGuid()),
             CancellationToken.None);
@@ -186,6 +208,9 @@ public sealed class ReturnsCharacterizationTests
     {
         var options = new DbContextOptionsBuilder<ReturnsDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            // TB-265-R2 records the durable decision inside a transaction; the in-memory provider has none, so the
+            // harness declares that no-op instead of treating the provider warning as a failure.
+            .ConfigureWarnings(x => x.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         return new ReturnsDbContext(options);
     }

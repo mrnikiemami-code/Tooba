@@ -108,11 +108,24 @@ public sealed partial class ReturnDirectory
             // allocation and no attempt. A case whose source links are incoherent never reaches here (blocked above).
             await EnsureCourierOriginClosureAsync(request, command.ActorUserId, cancellationToken);
         }
+        else
+        {
+            // TB-274 (B): an ordinary delivered RMA repeats its unknown money ONLY over its own recorded, complete and
+            // coherent customer receipt. The blocker is the SAME one the read description reports and it mints no key.
+            var receiving = await ReadReceivingAsync(request, cancellationToken);
+            if (receiving is not { IsCoherent: true, IsComplete: true })
+            {
+                throw new ContractOperationException(
+                    receiving is { IsCoherent: false }
+                        ? ReturnsErrorCodes.RecoveryEvidenceConflict
+                        : ReturnsErrorCodes.RecoveryReceivingRequired);
+            }
+        }
 
         // The external call happens with NO transaction or row lock held; the outcome is applied under a short
         // owning coordination that re-reads the exact durable attempt.
         var outcome = await ExecuteRefundAsync(
-            request, attempt, cancellationToken, settleOrdinaryPhysicalDisposition: false);
+            request, attempt, cancellationToken);
 
         if (outcome == RefundExecutionOutcome.Unavailable)
         {
@@ -170,14 +183,25 @@ public sealed partial class ReturnDirectory
 
         if (request.Origin != ReturnOrigin.CourierOrigin)
         {
-            throw new ContractOperationException(ReturnsErrorCodes.RecoveryReceivingRequired);
+            // TB-274: an ordinary delivered RMA is executable ONLY over its own recorded, complete and coherent
+            // customer receipt. Without that evidence the confirmed money stays intact and the line stays pending —
+            // the requested quantity is never restocked as if it had been received and inspected as usable.
+            var receiving = await ReadReceivingAsync(request, cancellationToken);
+            if (receiving is not { IsCoherent: true, IsComplete: true })
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.RecoveryReceivingRequired);
+            }
+
+            await SettlePhysicalDispositionAsync(request, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await MapSnapshotAsync(request, cancellationToken);
         }
 
         // Existing physical receipt/claim/closure sequencing is re-read idempotently. A completed lineage is history,
         // not a new receipt or allocation; a marker-only recovery performs no external owner call here.
         await EnsureCourierOriginClosureAsync(request, command.ActorUserId, cancellationToken);
 
-        await SettlePhysicalDispositionAsync(request, cancellationToken, allowOrdinaryDisposition: false);
+        await SettlePhysicalDispositionAsync(request, cancellationToken);
         await MarkRefundReleasedWhenFullyDisposedAsync(request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         return await MapSnapshotAsync(request, cancellationToken);

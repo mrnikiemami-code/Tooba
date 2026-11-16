@@ -121,3 +121,49 @@ public sealed class RecoverReturnCommandValidator : AbstractValidator<RecoverRet
             .When(x => x.ExpectedRefundAttemptId.HasValue);
     }
 }
+
+/// <summary>
+/// TB-274: transport shape of a customer receipt. The occurrence identity, the non-empty line set, the positive and
+/// exactly representable quantities, the defined condition and the no-duplicate-(item, condition) rule are shape; the
+/// owning case/state/over-receipt/gating rules stay in the Directory.
+/// </summary>
+public sealed class RecordReturnReceiptCommandValidator : AbstractValidator<RecordReturnReceiptCommand>
+{
+    public RecordReturnReceiptCommandValidator()
+    {
+        RuleFor(x => x.ReturnRequestId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ReturnRequestIdRequired);
+        RuleFor(x => x.OccurrenceKey)
+            .NotEmpty()
+            .WithErrorCode(ReturnsValidationCodes.ReceiptOccurrenceRequired)
+            .MaximumLength(128)
+            .WithErrorCode(ReturnsValidationCodes.ReceiptOccurrenceTooLong);
+        RuleFor(x => x.Items)
+            .NotNull()
+            .WithErrorCode(ReturnsValidationCodes.ReceiptLinesEmpty)
+            .Must(items => items is { Count: > 0 })
+            .WithErrorCode(ReturnsValidationCodes.ReceiptLinesEmpty);
+        RuleFor(x => x.Items)
+            .Must(items => items!
+                .Select(x => (x.ReturnItemId, x.Condition))
+                .Distinct()
+                .Count() == items.Count)
+            .When(x => x.Items is { Count: > 0 })
+            .WithErrorCode(ReturnsValidationCodes.ReceiptDuplicateLine);
+        RuleForEach(x => x.Items).ChildRules(item =>
+        {
+            item.RuleFor(x => x.ReturnItemId)
+                .NotEqual(Guid.Empty)
+                .WithErrorCode(ReturnsValidationCodes.ReceiptItemIdRequired);
+            item.RuleFor(x => x.Quantity)
+                .GreaterThan(0)
+                .WithErrorCode(ReturnsValidationCodes.ReceiptQuantityInvalid)
+                .Must(PersistedReturnQuantity.IsExactlyRepresentable)
+                .WithErrorCode(ReturnsValidationCodes.ReceiptQuantityInvalid);
+            item.RuleFor(x => x.Condition)
+                .IsInEnum()
+                .WithErrorCode(ReturnsValidationCodes.ReceiptConditionInvalid);
+        });
+    }
+}

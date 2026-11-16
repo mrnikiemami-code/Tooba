@@ -36,4 +36,9 @@ public sealed record ReturnSnapshot(
     // TB-273-R1: the durable approve/reject decision recorded for this case ("Approve"/"Reject") or null when no
     // decision row exists. The recovery policy treats a missing row as a blocker instead of inventing an approval;
     // no other decision metadata is exposed.
-    string? RecordedDecision = null);
+    string? RecordedDecision = null,
+    // TB-274: the receiving/inspection summary of a delivered-customer case, computed only from recorded receipts.
+    // Null when no receipt was ever recorded. Approval, money and restock are gated on this exact fact.
+    ReturnReceivingSummary? Receiving = null,
+    // TB-274: the reason recorded with the winning rejection decision (null for an approval or a pre-274 rejection).
+    string? DecisionReason = null);

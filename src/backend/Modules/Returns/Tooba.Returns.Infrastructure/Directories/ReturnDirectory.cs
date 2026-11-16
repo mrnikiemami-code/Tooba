@@ -206,6 +206,11 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.AlreadyRejected);
         }
 
+        // TB-274: an ordinary delivered RMA has no Fulfillment-owned receipt, so its OWN recorded customer receipt is
+        // the only lawful basis for approval, a refund attempt or a restock. A NEW approval decision is refused until
+        // the receiving/inspection coverage is complete and coherent — never derived from the requested quantity.
+        await EnsureOrdinaryReceivingCompleteAsync(request, cancellationToken);
+
         var payment = await ResolvePaymentAsync(request, cancellationToken)
             ?? throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
         if (!string.Equals(payment.Status, "Succeeded", StringComparison.Ordinal))
@@ -317,13 +322,13 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     /// <inheritdoc />
     public async Task<ReturnSnapshot> RejectAsync(RejectReturnCommand command, CancellationToken cancellationToken)
     {
-        _ = command.Reason;
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
-        // TB-265-R2: the SAME durable decision authority as approval. A case whose approval already won can never be
-        // rejected here, so its source claim/hold/money are never released by a losing concurrent request.
+        // TB-265-R2 / TB-274: the SAME durable decision authority as approval, now carrying the reviewed rejection
+        // reason in the same row. A case whose approval already won can never be rejected here, so its source
+        // claim/hold/money are never released by a losing concurrent request; a changed reason is a typed conflict.
         var decision = await RecordReturnDecisionAsync(
-            command.ReturnRequestId, ReturnDecisionKind.Reject, command.ActorUserId, cancellationToken)
+            command.ReturnRequestId, ReturnDecisionKind.Reject, command.ActorUserId, cancellationToken, command.Reason)
             ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
         if (!AnswersDecision(decision, ReturnDecisionKind.Reject))
         {
@@ -383,6 +388,10 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
         }
 
+        // TB-274: a retry mints a NEW refund attempt, so the same ordinary receiving authority gates it. A courier
+        // case owns its Fulfillment receipt and is unaffected.
+        await EnsureOrdinaryReceivingCompleteAsync(request, cancellationToken);
+
         var paymentId = request.PaymentId
             ?? throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
         request.MarkRefundProcessing(_clock.UtcNow);
@@ -423,8 +432,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     private async Task<RefundExecutionOutcome> ExecuteRefundAsync(
         ReturnRequest request,
         RefundAttempt attempt,
-        CancellationToken cancellationToken,
-        bool settleOrdinaryPhysicalDisposition = true)
+        CancellationToken cancellationToken)
     {
         // TB-265-R2: an attempt that ALREADY recorded its money outcome is a durable answer, never a new money call.
         // This is what makes a concurrent/late resume of the same case safe with the same attempt identity.
@@ -468,7 +476,6 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 attempt,
                 $"wallet-refund:{request.ReturnRequestId:D}",
                 now,
-                settleOrdinaryPhysicalDisposition,
                 cancellationToken);
             return RefundExecutionOutcome.Resolved;
         }
@@ -508,7 +515,6 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 attempt,
                 result.ProviderReference,
                 now,
-                settleOrdinaryPhysicalDisposition,
                 cancellationToken);
             return RefundExecutionOutcome.Resolved;
         }
@@ -531,7 +537,6 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         RefundAttempt attempt,
         string? providerReference,
         DateTimeOffset now,
-        bool settleOrdinaryPhysicalDisposition,
         CancellationToken cancellationToken)
     {
         if (!await RecordRefundOutcomeAsync(
@@ -542,7 +547,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             return;
         }
 
-        await TrySettlePhysicalDispositionAsync(request, cancellationToken, settleOrdinaryPhysicalDisposition);
+        await TrySettlePhysicalDispositionAsync(request, cancellationToken);
     }
 
     /// <summary>
@@ -733,12 +738,11 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     /// </summary>
     private async Task TrySettlePhysicalDispositionAsync(
         ReturnRequest request,
-        CancellationToken cancellationToken,
-        bool allowOrdinaryDisposition = true)
+        CancellationToken cancellationToken)
     {
         try
         {
-            await SettlePhysicalDispositionAsync(request, cancellationToken, allowOrdinaryDisposition);
+            await SettlePhysicalDispositionAsync(request, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -786,11 +790,13 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             .ToListAsync(cancellationToken);
 
         // TB-273-R1: the durable approve/reject decision is part of the SAME stored-fact description the recovery
-        // command decides on. Reading it here keeps one evidence rule for reads and actions.
+        // command decides on. Reading it here keeps one evidence rule for reads and actions. TB-274 adds the reason
+        // recorded with that winning decision and the receiving/inspection summary of the physical receipt.
         var recordedDecision = await _db.ReturnDecisions.AsNoTracking()
             .Where(x => x.ReturnRequestId == request.ReturnRequestId)
-            .Select(x => x.Decision)
+            .Select(x => new { x.Decision, x.Reason })
             .SingleOrDefaultAsync(cancellationToken);
+        var receiving = await ReadReceivingAsync(request, cancellationToken);
         var snapshot = new ReturnSnapshot(
             request.ReturnRequestId,
             request.SellerOrderId,
@@ -837,7 +843,9 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             request.ObligationClosedAt,
             request.StockSettledAt,
             request.ReleasedHeldQuantity,
-            RecordedDecision: recordedDecision);
+            RecordedDecision: recordedDecision?.Decision,
+            Receiving: receiving,
+            DecisionReason: recordedDecision?.Reason);
 
         // TB-273: every read (admin/customer/seller/detail) carries the SAME stored-fact recovery description the
         // recovery command decides on, so a read and an action can never disagree.

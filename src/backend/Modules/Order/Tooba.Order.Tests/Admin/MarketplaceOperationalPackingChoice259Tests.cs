@@ -1131,6 +1131,10 @@ public sealed class MarketplaceOperationalPackingChoice259Tests
             Guid shipmentId,
             string occurrenceKey,
             CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<ReturnSnapshot> RecordCustomerReceiptAsync(
+            RecordCustomerReceiptCommand command,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class PaymentFake : IPaymentAdminGateway

@@ -176,6 +176,31 @@ internal sealed class ReturnAdminOperationsAdapter(
         return new CourierOriginReturnResult(Map(snapshot), claimId, alreadyExisted, conflict);
     }
 
+    /// <summary>
+    /// TB-274: record one physical customer receipt occurrence. The admin contract carries only the reviewed
+    /// occurrence identity and the inspected quantities; the case/state/over-receipt/gating rules stay in the directory.
+    /// </summary>
+    public async Task<ReturnSnapshot> RecordCustomerReceiptAsync(
+        RecordCustomerReceiptCommand command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return Map(await directory.RecordReceiptAsync(
+            new RecordReturnReceiptCommand(
+                command.ReturnRequestId,
+                command.ActorUserId,
+                command.OccurrenceKey,
+                (command.Items ?? [])
+                    .Select(x => new CustomerReceiptLine(
+                        x.ReturnItemId,
+                        x.Quantity,
+                        x.Condition == ReturnItemConditionOption.Damaged
+                            ? ReturnItemCondition.Damaged
+                            : ReturnItemCondition.Usable))
+                    .ToList()),
+            cancellationToken));
+    }
+
     private async Task<Guid> RequireSellerPartyAsync(Guid returnRequestId, CancellationToken cancellationToken) =>
         (await directory.GetAsync(returnRequestId, cancellationToken))?.SellerPartyId
         ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
@@ -233,7 +258,9 @@ internal sealed class ReturnAdminOperationsAdapter(
             snapshot.ObligationClosedAt,
             snapshot.StockSettledAt,
             snapshot.ReleasedHeldQuantity,
-            Map(snapshot.Recovery));
+            Map(snapshot.Recovery),
+            Map(snapshot.Receiving),
+            snapshot.DecisionReason);
 
     /// <summary>
     /// TB-273: additive recovery facts. Money completion and physical completion stay two independent facts so a
@@ -249,6 +276,25 @@ internal sealed class ReturnAdminOperationsAdapter(
                 recovery.BlockerCode,
                 recovery.FinancialComplete,
                 recovery.PhysicalComplete);
+
+    /// <summary>
+    /// TB-274: the additive receiving facts. <c>IsComplete</c>/<c>IsCoherent</c> are reported separately so a consumer
+    /// can never read "some units arrived" as "fully received" and never treats a contradictory row as capacity.
+    /// </summary>
+    private static ReturnReceivingSnapshot? Map(ReturnReceivingSummary? receiving) =>
+        receiving is null
+            ? null
+            : new ReturnReceivingSnapshot(
+                receiving.Lines
+                    .Select(x => new ReturnReceivingLineSnapshot(
+                        x.ReturnItemId,
+                        x.Requested,
+                        x.Received,
+                        x.Usable,
+                        x.Damaged))
+                    .ToList(),
+                receiving.IsComplete,
+                receiving.IsCoherent);
 
     private static ReturnEligibilityResult Map(AppModels.ReturnEligibilityResult result) =>
         new(

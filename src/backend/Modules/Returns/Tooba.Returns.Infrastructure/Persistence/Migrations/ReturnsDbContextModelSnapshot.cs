@@ -143,33 +143,6 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.ToTable("refund_attempts", "returns");
                 });
 
-            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnDecisionRecord", b =>
-                {
-                    b.Property<Guid>("ReturnRequestId")
-                        .ValueGeneratedNever()
-                        .HasColumnType("uuid")
-                        .HasColumnName("return_request_id");
-
-                    b.Property<DateTimeOffset>("DecidedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("decided_at");
-
-                    b.Property<Guid>("DecidedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("decided_by_user_id");
-
-                    b.Property<string>("Decision")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)")
-                        .HasColumnName("decision");
-
-                    b.HasKey("ReturnRequestId")
-                        .HasName("pk_return_request_decisions");
-
-                    b.ToTable("return_request_decisions", "returns");
-                });
-
             modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnItem", b =>
                 {
                     b.Property<Guid>("ReturnItemId")
@@ -219,6 +192,87 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReturnRequestId");
 
                     b.ToTable("return_items", "returns");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnReceipt", b =>
+                {
+                    b.Property<Guid>("ReturnReceiptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_receipt_id");
+
+                    b.Property<string>("OccurrenceKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("occurrence_key");
+
+                    b.Property<Guid>("ReceivedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("received_by_user_id");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.HasKey("ReturnReceiptId")
+                        .HasName("pk_customer_return_receipts");
+
+                    b.HasIndex("ReturnRequestId")
+                        .HasDatabaseName("ix_customer_return_receipts_return_request_id");
+
+                    b.HasIndex("ReturnRequestId", "OccurrenceKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_customer_return_receipts_return_request_id_occurrence_key");
+
+                    b.ToTable("customer_return_receipts", "returns");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnReceiptLine", b =>
+                {
+                    b.Property<Guid>("ReturnReceiptLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_receipt_line_id");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("condition");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("ReturnItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_item_id");
+
+                    b.Property<Guid>("ReturnReceiptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_receipt_id");
+
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.HasKey("ReturnReceiptLineId")
+                        .HasName("pk_customer_return_receipt_lines");
+
+                    b.HasIndex("ReturnItemId")
+                        .HasDatabaseName("ix_customer_return_receipt_lines_return_item_id");
+
+                    b.HasIndex("ReturnRequestId")
+                        .HasDatabaseName("ix_customer_return_receipt_lines_return_request_id");
+
+                    b.HasIndex("ReturnReceiptId", "ReturnItemId", "Condition")
+                        .IsUnique()
+                        .HasDatabaseName("ix_customer_return_receipt_lines_receipt_item_condition");
+
+                    b.ToTable("customer_return_receipt_lines", "returns");
                 });
 
             modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnRequest", b =>
@@ -325,6 +379,64 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.HasIndex("SellerPartyId");
 
                     b.ToTable("return_requests", "returns");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnDecisionRecord", b =>
+                {
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.Property<DateTimeOffset>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<Guid>("DecidedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by_user_id");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("decision");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("reason");
+
+                    b.HasKey("ReturnRequestId")
+                        .HasName("pk_return_request_decisions");
+
+                    b.ToTable("return_request_decisions", "returns");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnReceipt", b =>
+                {
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_customer_return_receipts_return_requests_return_request_id");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnReceiptLine", b =>
+                {
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnItem", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_customer_return_receipt_lines_return_items_return_item_id");
+
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnReceipt", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_customer_return_receipt_lines_receipts_return_receipt_id");
                 });
 #pragma warning restore 612, 618
         }
