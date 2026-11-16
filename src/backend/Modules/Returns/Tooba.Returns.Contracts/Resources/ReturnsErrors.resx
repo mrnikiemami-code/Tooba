@@ -33,5 +33,7 @@
   <data name="return.recovery.receiving_required" xml:space="preserve"><value>The received units have no recorded receipt or inspection, so their physical disposition cannot be executed yet.</value></data>
   <data name="return.recovery.attempt_unbound" xml:space="preserve"><value>No single stored refund attempt is bound to this money phase.</value></data>
   <data name="return.recovery.gateway_unavailable" xml:space="preserve"><value>The refund adapter is not configured, so the stored attempt cannot be sent; it stays pending.</value></data>
+  <data name="return.recovery.evidence_conflict" xml:space="preserve"><value>The stored decision, refund attempt or closure facts of this return contradict each other, so no recovery can be named without guessing.</value></data>
+  <data name="return.recovery.transaction_owned" xml:space="preserve"><value>Recovery cannot run inside an open caller-owned database transaction, so nothing was sent or written.</value></data>
   <data name="return.outbox.unmapped_event" xml:space="preserve"><value>The integration event type is not registered.</value></data>
 </root>

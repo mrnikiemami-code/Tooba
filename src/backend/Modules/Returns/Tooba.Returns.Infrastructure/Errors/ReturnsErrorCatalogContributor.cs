@@ -40,6 +40,8 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.RecoveryReceivingRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The received units have no recorded receipt/inspection, so their physical disposition cannot be executed."),
         D(ReturnsErrorCodes.RecoveryAttemptUnbound, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "No single stored refund attempt is bound to this money phase."),
         D(ReturnsErrorCodes.RecoveryGatewayUnavailable, ErrorClassification.Business, StatusCodes.Status503ServiceUnavailable, "The refund adapter is not configured, so the stored attempt cannot be sent; it stays pending."),
+        D(ReturnsErrorCodes.RecoveryEvidenceConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The stored decision, refund attempt or closure facts of this return contradict each other, so no recovery can be named without guessing."),
+        D(ReturnsErrorCodes.RecoveryTransactionOwned, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Recovery cannot run inside an open caller-owned database transaction, so nothing was sent or written."),
     ];
 
     private static ErrorDescriptor D(

@@ -354,11 +354,11 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
     [Fact]
     public void Certification_truth_and_stable_code_split_are_preserved()
     {
-        // TB-272 added the two creation-integrity refusals and TB-272-R1 the persisted quantity-precision refusal
-        // (all HTTP-reachable).
-        Assert.Equal(29, ReturnsErrorCodes.HttpReachable.Count);
+        // TB-272 added the two creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal and
+        // TB-273-R1 the recovery evidence-conflict and caller-transaction refusals (all HTTP-reachable).
+        Assert.Equal(31, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(30, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(32, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         // No raw API-result or ad-hoc fault classification in the endpoint surface.
         var root = Repo();
@@ -552,3 +552,4 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         throw new InvalidOperationException("repo root not found");
     }
 }
+

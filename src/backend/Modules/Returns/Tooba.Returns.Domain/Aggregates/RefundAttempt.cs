@@ -67,11 +67,18 @@ public sealed class RefundAttempt
             CreatedAt = now,
         };
 
-    /// <summary>تلاش را موفق علامت می‌زند.</summary>
-    public void MarkSucceeded(string providerReference, DateTimeOffset now)
+    /// <summary>
+    /// تلاش را موفق علامت می‌زند.
+    /// <para>
+    /// TB-273-R1 C: the success fact is authoritative on its own. When the owning adapter supplies no provider
+    /// reference, the stored reference is truthfully absent (never a fabricated PSP id) and the attempt is still a
+    /// success — a missing reference alone is never read as a failed payment.
+    /// </para>
+    /// </summary>
+    public void MarkSucceeded(string? providerReference, DateTimeOffset now)
     {
         Status = RefundAttemptStatus.Succeeded;
-        ProviderReference = providerReference.Trim();
+        ProviderReference = string.IsNullOrWhiteSpace(providerReference) ? null : providerReference.Trim();
         CompletedAt = now;
     }
 

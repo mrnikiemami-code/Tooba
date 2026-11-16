@@ -32,4 +32,8 @@ public sealed record ReturnSnapshot(
     DateTimeOffset? ObligationClosedAt = null,
     DateTimeOffset? StockSettledAt = null,
     decimal ReleasedHeldQuantity = 0,
-    ReturnRecoveryDescription? Recovery = null);
+    ReturnRecoveryDescription? Recovery = null,
+    // TB-273-R1: the durable approve/reject decision recorded for this case ("Approve"/"Reject") or null when no
+    // decision row exists. The recovery policy treats a missing row as a blocker instead of inventing an approval;
+    // no other decision metadata is exposed.
+    string? RecordedDecision = null);

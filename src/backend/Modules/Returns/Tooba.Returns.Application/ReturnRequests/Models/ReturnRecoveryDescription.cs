@@ -1,4 +1,4 @@
-using Tooba.Returns.Contracts.Errors;
+﻿using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Application.ReturnRequests.Models;
@@ -10,6 +10,14 @@ namespace Tooba.Returns.Application.ReturnRequests.Models;
 /// were settled, and a settled stock phase does not imply the money was released. The description therefore
 /// reports financial and physical completion as two independent facts and never guesses an action from a status
 /// alone.
+/// </para>
+/// <para>
+/// TB-273-R1 (A): the policy is FAIL CLOSED. It is the single evidence rule shared by the admin read projection and
+/// the recovery command, so a permissive read can never disagree with a strict action. It requires a recorded
+/// durable APPROVE decision, an attempt that binds to THIS case (stored payment, exact amount, currency and a
+/// non-empty identity/key), and — for a courier-origin case — coherent source/claim/receipt links plus the owning
+/// obligation/stock closure markers. Anything it cannot prove is <see cref="ReturnRecoveryPhase.Blocked"/>, never a
+/// guessed resume and never an invented completion.
 /// </para>
 /// </summary>
 public enum ReturnRecoveryPhase
@@ -23,10 +31,17 @@ public enum ReturnRecoveryPhase
     /// <summary>A definite financial failure. The existing deliberate new-attempt retry is a DIFFERENT intent.</summary>
     FailedMoney = 2,
 
-    /// <summary>The money is confirmed and the physical disposition of the received units is unfinished.</summary>
+    /// <summary>
+    /// The money is confirmed and an owning physical step is unfinished. For a courier-origin case this includes the
+    /// state where EVERY item disposition is durable but the final closure marker is still missing (TB-273-R1): that
+    /// case stays recoverable and the physical intent resumes only the remaining closure work.
+    /// </summary>
     PendingDisposition = 3,
 
-    /// <summary>Money confirmed and every received line recorded its disposition: the recorded completion.</summary>
+    /// <summary>
+    /// Money confirmed AND every required durable physical fact (item dispositions plus, for a courier-origin case,
+    /// the owning closure) recorded: the recorded completion.
+    /// </summary>
     Settled = 4,
 
     /// <summary>Inconsistent/ambiguous stored binding or missing owning physical evidence: a typed blocker, no guess.</summary>
@@ -59,21 +74,24 @@ public sealed record ReturnRecoveryDescription(
     bool PhysicalComplete);
 
 /// <summary>
-/// TB-273: pure recovery projection over stored facts. The same policy is reused by the recovery command (to
-/// decide what is executable) and by the admin read projection (to describe what is stored), so a read and an
-/// action can never disagree about the state of one case.
+/// TB-273 / TB-273-R1: pure recovery projection over stored facts. The same policy is reused by the recovery
+/// command (to decide what is executable) and by every admin read projection (to describe what is stored), so a
+/// read and an action can never disagree about the state of one case.
 /// </summary>
 public static class ReturnRecoveryPolicy
 {
+    /// <summary>The exact durable decision value the owning approval records.</summary>
+    public const string ApprovedDecision = "Approve";
+
+    /// <summary>The exact durable decision value the owning rejection records.</summary>
+    public const string RejectedDecision = "Reject";
+
     /// <summary>Describes the recovery state of the given stored case snapshot.</summary>
     public static ReturnRecoveryDescription Describe(ReturnSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
-        var attempts = snapshot.RefundAttempts;
-        var pending = attempts.Where(x => x.Status == RefundAttemptStatus.Pending).ToArray();
-        var moneySucceeded = attempts.Any(x => x.Status == RefundAttemptStatus.Succeeded);
-        var physicalComplete = snapshot.Items.Count > 0
+        var allItemsDisposed = snapshot.Items.Count > 0
             && snapshot.Items.All(x => x.Disposition != ReturnItemDisposition.None);
 
         switch (snapshot.Status)
@@ -81,91 +99,275 @@ public static class ReturnRecoveryPolicy
             case ReturnRequestStatus.Requested:
             case ReturnRequestStatus.Rejected:
             case ReturnRequestStatus.Cancelled:
-                // No approved financial attempt exists, so there is no financial or physical recovery to run.
-                return new ReturnRecoveryDescription(
-                    ReturnRecoveryPhase.None, null, null, null, FinancialComplete: false, physicalComplete);
+                // A case that was never approved owns no financial attempt. A stored attempt on such a status is a
+                // CONTRADICTORY fact, not an executable recovery: it is described as blocked instead of "nothing to
+                // recover", so the inconsistency is never hidden behind a quiet read.
+                return snapshot.RefundAttempts.Count > 0
+                    ? Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed)
+                    : new ReturnRecoveryDescription(
+                        ReturnRecoveryPhase.None, null, null, null, FinancialComplete: false, allItemsDisposed);
 
             case ReturnRequestStatus.Approved:
             case ReturnRequestStatus.RefundProcessing:
             {
-                // An approval is recorded; the money answer is UNKNOWN only when exactly one attempt is bound and
-                // still pending. Zero or several pending attempts is an ambiguous binding, never a guessed resume.
-                if (pending.Length == 1 && !moneySucceeded)
+                var money = ReadMoney(snapshot);
+                if (money.Complete)
+                {
+                    // A bound success is the ONE coherent current outcome, even when the case status row lags it.
+                    return Physical(snapshot, money, allItemsDisposed);
+                }
+
+                if (money.IsPending && money.AttemptId is { } pendingId)
                 {
                     return new ReturnRecoveryDescription(
                         ReturnRecoveryPhase.PendingMoney,
                         ReturnRecoveryKind.ResumePendingRefund,
-                        pending[0].RefundAttemptId,
+                        pendingId,
                         null,
                         FinancialComplete: false,
-                        physicalComplete);
+                        allItemsDisposed);
                 }
 
-                return new ReturnRecoveryDescription(
-                    ReturnRecoveryPhase.Blocked,
-                    null,
-                    null,
-                    ReturnsErrorCodes.RecoveryAttemptUnbound,
-                    FinancialComplete: false,
-                    physicalComplete);
+                return Blocked(
+                    money.BlockerCode ?? ReturnsErrorCodes.RecoveryAttemptUnbound,
+                    financialComplete: false,
+                    allItemsDisposed);
             }
 
             case ReturnRequestStatus.RefundFailed:
-                // Definite financial failure: the existing retry intent owns a NEW attempt. It is never reported as
-                // unknown money, and this recovery command never mints the retry.
-                return new ReturnRecoveryDescription(
-                    ReturnRecoveryPhase.FailedMoney, null, null, null, FinancialComplete: false, physicalComplete);
+            {
+                var money = ReadMoney(snapshot);
+                if (money.Complete)
+                {
+                    // A succeeded bound attempt on an explicitly failed case contradicts itself. The money FACT is
+                    // preserved so it is never re-sent, but it never authorizes stock work either.
+                    return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, allItemsDisposed);
+                }
+
+                if (money.IsPending)
+                {
+                    // A live pending attempt on a failed case is an interrupted retry, not a definite failure.
+                    return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed);
+                }
+
+                if (money.AttemptId is { } failedId && money.BlockerCode is null)
+                {
+                    // The definite failure is its own phase; the new-attempt retry is a DIFFERENT intent.
+                    return new ReturnRecoveryDescription(
+                        ReturnRecoveryPhase.FailedMoney, null, failedId, null, FinancialComplete: false, allItemsDisposed);
+                }
+
+                return Blocked(
+                    money.BlockerCode ?? ReturnsErrorCodes.RecoveryAttemptUnbound,
+                    financialComplete: false,
+                    allItemsDisposed);
+            }
 
             case ReturnRequestStatus.Completed:
             {
-                if (!moneySucceeded || pending.Length > 0)
+                var money = ReadMoney(snapshot);
+                if (!money.Complete)
                 {
-                    // A completed case whose money row cannot be bound is inconsistent, not settled.
-                    return new ReturnRecoveryDescription(
-                        ReturnRecoveryPhase.Blocked,
-                        null,
-                        null,
-                        ReturnsErrorCodes.RecoveryAttemptUnbound,
-                        FinancialComplete: false,
-                        physicalComplete);
+                    // A completed case whose money row cannot be positively bound is inconsistent, not settled.
+                    return Blocked(
+                        money.BlockerCode ?? ReturnsErrorCodes.RecoveryAttemptUnbound,
+                        financialComplete: false,
+                        allItemsDisposed);
                 }
 
-                if (physicalComplete)
-                {
-                    return new ReturnRecoveryDescription(
-                        ReturnRecoveryPhase.Settled, null, null, null, FinancialComplete: true, PhysicalComplete: true);
-                }
-
-                // Money confirmed, physical work unfinished. A delivered-customer RMA has no recorded receipt or
-                // inspection fact, so no disposition can be honestly executed from the default condition.
-                if (snapshot.Origin == ReturnOrigin.CustomerDelivered)
-                {
-                    return new ReturnRecoveryDescription(
-                        ReturnRecoveryPhase.Blocked,
-                        null,
-                        null,
-                        ReturnsErrorCodes.RecoveryReceivingRequired,
-                        FinancialComplete: true,
-                        PhysicalComplete: false);
-                }
-
-                return new ReturnRecoveryDescription(
-                    ReturnRecoveryPhase.PendingDisposition,
-                    ReturnRecoveryKind.SettlePhysicalDisposition,
-                    null,
-                    null,
-                    FinancialComplete: true,
-                    PhysicalComplete: false);
+                return Physical(snapshot, money, allItemsDisposed);
             }
 
             default:
-                return new ReturnRecoveryDescription(
-                    ReturnRecoveryPhase.Blocked,
-                    null,
-                    null,
-                    ReturnsErrorCodes.RecoveryAttemptUnbound,
-                    FinancialComplete: false,
-                    physicalComplete);
+                return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed);
         }
     }
+
+    /// <summary>
+    /// TB-273-R1 (A): the single financial evidence rule. Exactly ONE coherent current outcome is required: a bound
+    /// attempt whose stored payment, exact amount, currency and non-empty identity/key all match this very case. A
+    /// foreign, ambiguous or contradictory live row is a blocker — never a "first/latest" guess — while older FAILED
+    /// history is preserved without being confused with a pending attempt.
+    /// </summary>
+    private static MoneyEvidence ReadMoney(ReturnSnapshot snapshot)
+    {
+        if (string.Equals(snapshot.RecordedDecision, RejectedDecision, StringComparison.Ordinal))
+        {
+            // The durable rejection is the winning decision: no recovery may invent an approval for it.
+            return new MoneyEvidence(false, null, false, ReturnsErrorCodes.AlreadyRejected);
+        }
+
+        if (!string.Equals(snapshot.RecordedDecision, ApprovedDecision, StringComparison.Ordinal))
+        {
+            // Effectful recovery requires a RECORDED approval. A missing row is not repaired from a status or a caller.
+            return new MoneyEvidence(false, null, false, ReturnsErrorCodes.RecoveryEvidenceConflict);
+        }
+
+        var attempts = snapshot.RefundAttempts;
+        var boundSucceeded = attempts
+            .Where(x => x.Status == RefundAttemptStatus.Succeeded && IsBoundToCase(snapshot, x))
+            .ToArray();
+        var boundPending = attempts
+            .Where(x => x.Status == RefundAttemptStatus.Pending && IsBoundToCase(snapshot, x))
+            .ToArray();
+        var boundFailed = attempts
+            .Where(x => x.Status == RefundAttemptStatus.Failed && IsBoundToCase(snapshot, x))
+            .ToArray();
+        var foreignLive = attempts
+            .Where(x => x.Status is RefundAttemptStatus.Pending or RefundAttemptStatus.Succeeded
+                        && !IsBoundToCase(snapshot, x))
+            .ToArray();
+
+        if (foreignLive.Length > 0)
+        {
+            // A live attempt that answers for another payment/amount/currency can never authorize this case.
+            return new MoneyEvidence(false, null, false, ReturnsErrorCodes.RecoveryAttemptUnbound);
+        }
+
+        if (boundSucceeded.Length > 1 || boundPending.Length > 1
+            || (boundSucceeded.Length == 1 && boundPending.Length == 1))
+        {
+            // Ambiguous: more than one live row could be "the" outcome. No resume is guessed from it.
+            return new MoneyEvidence(false, null, false, ReturnsErrorCodes.RecoveryAttemptUnbound);
+        }
+
+        if (boundSucceeded.Length == 1)
+        {
+            return new MoneyEvidence(true, boundSucceeded[0].RefundAttemptId, false, null);
+        }
+
+        if (boundPending.Length == 1)
+        {
+            return new MoneyEvidence(false, boundPending[0].RefundAttemptId, true, null);
+        }
+
+        // No live bound row. Only a definite failure may answer from bound FAILED history — and only when it is the
+        // single bound failure, so a replay can never borrow an unrelated attempt.
+        return boundFailed.Length == 1
+            ? new MoneyEvidence(false, boundFailed[0].RefundAttemptId, false, null)
+            : new MoneyEvidence(false, null, false, ReturnsErrorCodes.RecoveryAttemptUnbound);
+    }
+
+    /// <summary>
+    /// TB-273-R1 (A): an attempt is "bound" only when EVERY stored identity fact of this case matches it. No
+    /// fallback to the newest/oldest row and no tolerance for a blank key or a zero id.
+    /// </summary>
+    private static bool IsBoundToCase(ReturnSnapshot snapshot, RefundAttemptSnapshot attempt) =>
+        attempt.RefundAttemptId != Guid.Empty
+        && !string.IsNullOrWhiteSpace(attempt.IdempotencyKey)
+        && snapshot.PaymentId is { } paymentId
+        && paymentId != Guid.Empty
+        && attempt.PaymentId == paymentId
+        && attempt.Amount == snapshot.RefundAmount
+        && string.Equals(attempt.Currency.Trim(), snapshot.Currency.Trim(), StringComparison.Ordinal);
+
+    /// <summary>
+    /// TB-273-R1 (A/C): the physical phase from durable facts. Money is already confirmed here. A courier-origin case
+    /// owns its receipt/claim/closure, so its completion requires all three; every item disposition being durable
+    /// while the FINAL closure marker is still missing is explicitly <see cref="ReturnRecoveryPhase.PendingDisposition"/>
+    /// (recoverable, zero money), never a silent <see cref="ReturnRecoveryPhase.Settled"/>.
+    /// </summary>
+    private static ReturnRecoveryDescription Physical(
+        ReturnSnapshot snapshot,
+        MoneyEvidence money,
+        bool allItemsDisposed)
+    {
+        if (snapshot.Items.Count == 0)
+        {
+            // No received line means no provable physical phase at all.
+            return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
+        }
+
+        if (snapshot.Origin != ReturnOrigin.CourierOrigin)
+        {
+            if (allItemsDisposed)
+            {
+                return new ReturnRecoveryDescription(
+                    ReturnRecoveryPhase.Settled, null, money.AttemptId, null, FinancialComplete: true, PhysicalComplete: true);
+            }
+
+            // An ordinary delivered RMA has no recorded receipt/inspection fact, so no disposition can be honestly
+            // executed from the default condition. The confirmed money is preserved and the blocker is explicit.
+            return Blocked(ReturnsErrorCodes.RecoveryReceivingRequired, financialComplete: true, physicalComplete: false, money.AttemptId);
+        }
+
+        if (!HasCoherentCourierSource(snapshot))
+        {
+            // Fail closed: a case whose source/claim/receipt/line or condition/disposition facts contradict each
+            // other can never be used to move stock, and the money fact is preserved rather than re-sent.
+            return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
+        }
+
+        if (snapshot.ClosurePhase == CourierOriginClosurePhase.RefundReleased && !allItemsDisposed)
+        {
+            // The final marker can only be truthful once every received line recorded its disposition.
+            return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
+        }
+
+        if (allItemsDisposed && snapshot.ClosurePhase == CourierOriginClosurePhase.RefundReleased)
+        {
+            return new ReturnRecoveryDescription(
+                ReturnRecoveryPhase.Settled, null, money.AttemptId, null, FinancialComplete: true, PhysicalComplete: true);
+        }
+
+        // Either an item disposition, or the owning closure/final marker, is still pending. Both are the SAME
+        // physical intent and neither may call money again; when only the marker is missing the intent resumes just it.
+        return new ReturnRecoveryDescription(
+            ReturnRecoveryPhase.PendingDisposition,
+            ReturnRecoveryKind.SettlePhysicalDisposition,
+            money.AttemptId,
+            null,
+            FinancialComplete: true,
+            PhysicalComplete: false);
+    }
+
+    /// <summary>
+    /// TB-273-R1 (A): the durable courier-origin source evidence. The case must name its fulfillment unit, parcel,
+    /// receipt and exclusive claim; every received line must point at that SAME receipt/parcel; and each recorded
+    /// condition must carry the disposition that condition can legally produce.
+    /// </summary>
+    private static bool HasCoherentCourierSource(ReturnSnapshot snapshot)
+    {
+        if (snapshot.SourceFulfillmentId is not { } fulfillmentId || fulfillmentId == Guid.Empty
+            || snapshot.SourceShipmentId is not { } shipmentId || shipmentId == Guid.Empty
+            || snapshot.SourceReceiptId is not { } receiptId || receiptId == Guid.Empty
+            || snapshot.SourceClaimId is not { } claimId || claimId == Guid.Empty
+            || string.IsNullOrWhiteSpace(snapshot.SourceOccurrenceKey))
+        {
+            return false;
+        }
+
+        foreach (var item in snapshot.Items)
+        {
+            if (item.SourceReceiptId != receiptId || item.SourceShipmentId != shipmentId)
+            {
+                return false;
+            }
+
+            var coherent = item.Condition == ReturnItemCondition.Damaged
+                ? item.Disposition is ReturnItemDisposition.None or ReturnItemDisposition.DamagedNonSaleable
+                : item.Disposition is ReturnItemDisposition.None or ReturnItemDisposition.SaleableRestock;
+
+            if (!coherent)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static ReturnRecoveryDescription Blocked(
+        string code,
+        bool financialComplete,
+        bool physicalComplete,
+        Guid? attemptId = null) =>
+        new(ReturnRecoveryPhase.Blocked, null, attemptId, code, financialComplete, physicalComplete);
+
+    /// <summary>The exact financial answer of ONE case: complete money, a single pending unknown, or a typed blocker.</summary>
+    private readonly record struct MoneyEvidence(
+        bool Complete,
+        Guid? AttemptId,
+        bool IsPending,
+        string? BlockerCode);
 }

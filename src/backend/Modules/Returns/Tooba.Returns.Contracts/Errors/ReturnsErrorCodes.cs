@@ -59,6 +59,8 @@ public static class ReturnsErrorCodes
         RecoveryReceivingRequired,
         RecoveryAttemptUnbound,
         RecoveryGatewayUnavailable,
+        RecoveryEvidenceConflict,
+        RecoveryTransactionOwned,
     };
 
     private static readonly HashSet<string> PlatformFaultCodes = new(StringComparer.Ordinal)
@@ -205,6 +207,21 @@ public static class ReturnsErrorCodes
     /// invented terminal provider rejection, and never a fresh attempt or key.
     /// </summary>
     public const string RecoveryGatewayUnavailable = "return.recovery.gateway_unavailable";
+
+    /// <summary>
+    /// TB-273-R1: the stored decision/attempt/closure facts of this case contradict each other (no recorded
+    /// approval, a live attempt that does not bind to the case, a succeeded attempt beside a failed case, an
+    /// incoherent courier source/claim/receipt link, or a final marker without the item facts). It is a typed
+    /// blocker: no recovery is guessed, no money is re-sent and no stock is moved to "repair" the inconsistency.
+    /// </summary>
+    public const string RecoveryEvidenceConflict = "return.recovery.evidence_conflict";
+
+    /// <summary>
+    /// TB-273-R1: an effectful recovery was requested while a caller-owned, enlisted or ambient database
+    /// transaction is open. No external money/stock call may span such a transaction, so the intent is refused
+    /// BEFORE any effect; the caller's transaction, entities and values are left untouched.
+    /// </summary>
+    public const string RecoveryTransactionOwned = "return.recovery.transaction_owned";
 
     /// <summary>Outbox registration has no mapping for the given integration event type (platform fault).</summary>
     public const string OutboxUnmappedEvent = "return.outbox.unmapped_event";

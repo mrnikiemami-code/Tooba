@@ -263,7 +263,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         await ExecuteRefundAsync(request, attempt, cancellationToken);
         if (request.Origin == ReturnOrigin.CourierOrigin && request.Status == ReturnRequestStatus.Completed)
         {
-            MarkRefundReleasedWhenFullyDisposed(request);
+            await MarkRefundReleasedWhenFullyDisposedAsync(request, cancellationToken);
         }
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -293,7 +293,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             // TB-265-R1: money already succeeded and the obligation is closed, so ONLY the unfinished physical
             // disposition is retried here. No second money attempt is created.
             await SettlePhysicalDispositionAsync(request, cancellationToken);
-            MarkRefundReleasedWhenFullyDisposed(request);
+            await MarkRefundReleasedWhenFullyDisposedAsync(request, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return await MapSnapshotAsync(request, cancellationToken);
         }
@@ -305,7 +305,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         await ExecuteRefundAsync(request, pending, cancellationToken);
         if (request.Status == ReturnRequestStatus.Completed)
         {
-            MarkRefundReleasedWhenFullyDisposed(request);
+            await MarkRefundReleasedWhenFullyDisposedAsync(request, cancellationToken);
         }
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -371,7 +371,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             // TB-265-R1: the money already succeeded; retry ONLY the unfinished physical disposition with the same
             // per-item identity. No new refund attempt and no new idempotency key is minted here.
             await SettlePhysicalDispositionAsync(request, cancellationToken);
-            MarkRefundReleasedWhenFullyDisposed(request);
+            await MarkRefundReleasedWhenFullyDisposedAsync(request, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return await MapSnapshotAsync(request, cancellationToken);
         }
@@ -430,6 +430,12 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         {
             return RefundExecutionOutcome.Resolved;
         }
+
+        // TB-273-R1 B: the SHARED external-call boundary. No gateway/Wallet call may be made while a caller-owned,
+        // enlisted or ambient transaction is open, because the owning outcome write could then be joined to it
+        // without being committed before the physical phase runs. Every direct caller of this helper is covered,
+        // so a future path cannot silently bypass the precondition.
+        RefuseConstrainedTransaction();
 
         var now = _clock.UtcNow;
 
@@ -493,10 +499,12 @@ public sealed partial class ReturnDirectory : IReturnDirectory
 
         if (result.Succeeded)
         {
+            // TB-273-R1 C: the authoritative SUCCESS boolean is preserved truthfully even when the adapter supplies no
+            // reference. A synthetic PSP id is never invented, and a missing reference alone is never read as failure.
             await ApplyRefundSuccessAsync(
                 request,
                 attempt,
-                result.ProviderReference ?? $"refund-{attempt.RefundAttemptId:N}",
+                result.ProviderReference,
                 now,
                 settleOrdinaryPhysicalDisposition,
                 cancellationToken);
@@ -519,7 +527,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     private async Task ApplyRefundSuccessAsync(
         ReturnRequest request,
         RefundAttempt attempt,
-        string providerReference,
+        string? providerReference,
         DateTimeOffset now,
         bool settleOrdinaryPhysicalDisposition,
         CancellationToken cancellationToken)
@@ -550,6 +558,10 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        // TB-273-R1 B: an outcome may only be recorded by a coordination this owner can commit itself. A caller
+        // transaction would make "durable before the physical phase" false, so it is refused instead of joined.
+        RefuseConstrainedTransaction();
+
         // The coordination is a real row lock on the relational production store and a no-transaction read on a
         // provider that cannot serialize; it never spans the gateway/Wallet/Inventory call above.
         var relational = _db.Database.IsRelational();
@@ -581,7 +593,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
 
             if (succeeded)
             {
-                attempt.MarkSucceeded(providerReference!, now);
+                attempt.MarkSucceeded(providerReference, now);
                 request.MarkRefundSucceeded(now);
                 _telemetry.RecordRefundSucceeded();
             }
@@ -610,18 +622,91 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     }
 
     /// <summary>
-    /// TB-265-R1: the money phase is only recorded as finished when every received line also has its physical
-    /// disposition. A failed/pending restock keeps the case <c>Completed</c> with <c>StockSettled</c>, so the
-    /// disposition-only retry stays reachable and no second refund attempt is ever minted for it.
+    /// TB-265-R1 / TB-273-R1: the money phase is only recorded as finished when every received line has a DURABLE
+    /// disposition and, for a courier-origin case, the owning obligation/stock closure markers are durable too.
+    /// <para>
+    /// The decision is taken from a durable re-read, never from tracked/in-memory flags: a lost item or marker save
+    /// must not be promoted into a completion by a retry in the same request scope. If the marker save itself fails,
+    /// the tracked case is restored from the store before the failure propagates, so no unsaved
+    /// <c>RefundReleased</c> survives to authorize a false completion.
+    /// </para>
     /// </summary>
-    private void MarkRefundReleasedWhenFullyDisposed(ReturnRequest request)
+    private async Task MarkRefundReleasedWhenFullyDisposedAsync(
+        ReturnRequest request,
+        CancellationToken cancellationToken)
     {
-        if (request.Items.Any(x => x.Disposition == ReturnItemDisposition.None))
+        if (request.Origin != ReturnOrigin.CourierOrigin)
+        {
+            // Legacy ordinary cases carry no owning closure marker to finalize.
+            return;
+        }
+
+        var durableDispositions = await _db.ReturnItems.AsNoTracking()
+            .Where(x => x.ReturnRequestId == request.ReturnRequestId)
+            .Select(x => x.Disposition)
+            .ToListAsync(cancellationToken);
+        if (durableDispositions.Count == 0 || durableDispositions.Any(x => x == ReturnItemDisposition.None))
         {
             return;
         }
 
+        var durableClosure = await _db.ReturnRequests.AsNoTracking()
+            .Where(x => x.ReturnRequestId == request.ReturnRequestId)
+            .Select(x => new { x.ClosurePhase, x.ObligationClosedAt, x.StockSettledAt })
+            .SingleAsync(cancellationToken);
+        if (durableClosure.ClosurePhase >= CourierOriginClosurePhase.RefundReleased
+            || durableClosure.ObligationClosedAt is null
+            || durableClosure.StockSettledAt is null
+            || durableClosure.ClosurePhase < CourierOriginClosurePhase.StockSettled)
+        {
+            // Either the final marker is already durable (nothing to do) or an earlier owning phase is still missing.
+            return;
+        }
+
+        var entry = _db.Entry(request);
         request.MarkRefundReleased(_clock.UtcNow);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            await RestoreTrackedAsync(entry, cancellationToken);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// TB-273-R1 B/C: refuses an effectful step while a caller-owned, enlisted or ambient transaction is open. It
+    /// never commits/rolls back/disposes the caller's transaction and never touches its entities.
+    /// </summary>
+    private void RefuseConstrainedTransaction()
+    {
+        if (_db.Database.CurrentTransaction is not null
+            || System.Transactions.Transaction.Current is not null)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RecoveryTransactionOwned);
+        }
+    }
+
+    /// <summary>
+    /// TB-273-R1 C: restores ONLY the affected tracked entry after a failed local save, so an unsaved in-memory flag
+    /// can never be read as a durable fact. There is deliberately no global <c>ChangeTracker.Clear()</c>.
+    /// </summary>
+    private static async Task RestoreTrackedAsync<TEntity>(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<TEntity> entry,
+        CancellationToken cancellationToken)
+        where TEntity : class
+    {
+        try
+        {
+            await entry.ReloadAsync(cancellationToken);
+        }
+        catch
+        {
+            // The store could not be re-read: detaching is still strictly safer than keeping the unsaved value.
+            entry.State = EntityState.Detached;
+        }
     }
 
     /// <summary>
@@ -681,6 +766,13 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             .Where(x => x.ReturnRequestId == request.ReturnRequestId)
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
+
+        // TB-273-R1: the durable approve/reject decision is part of the SAME stored-fact description the recovery
+        // command decides on. Reading it here keeps one evidence rule for reads and actions.
+        var recordedDecision = await _db.ReturnDecisions.AsNoTracking()
+            .Where(x => x.ReturnRequestId == request.ReturnRequestId)
+            .Select(x => x.Decision)
+            .SingleOrDefaultAsync(cancellationToken);
         var snapshot = new ReturnSnapshot(
             request.ReturnRequestId,
             request.SellerOrderId,
@@ -726,7 +818,8 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             request.ClosurePhase,
             request.ObligationClosedAt,
             request.StockSettledAt,
-            request.ReleasedHeldQuantity);
+            request.ReleasedHeldQuantity,
+            RecordedDecision: recordedDecision);
 
         // TB-273: every read (admin/customer/seller/detail) carries the SAME stored-fact recovery description the
         // recovery command decides on, so a read and an action can never disagree.

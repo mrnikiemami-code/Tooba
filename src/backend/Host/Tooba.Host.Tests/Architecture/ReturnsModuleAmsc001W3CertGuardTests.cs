@@ -191,14 +191,15 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         Assert.DoesNotContain("when (ex.Message", joined, StringComparison.Ordinal);
 
         // Single canonical stable-code home with the reachability split preserved. TB-272 added the two
-        // creation-integrity refusals and TB-272-R1 the persisted quantity-precision refusal, all HTTP-reachable.
-        Assert.Equal(29, ReturnsErrorCodes.HttpReachable.Count);
+        // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal and TB-273-R1 the two
+        // recovery evidence/transaction refusals, all HTTP-reachable.
+        Assert.Equal(31, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(30, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(32, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(29, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(31, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.
@@ -356,3 +357,5 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         throw new InvalidOperationException("repo root not found");
     }
 }
+
+

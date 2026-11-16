@@ -33,5 +33,7 @@
   <data name="return.recovery.receiving_required" xml:space="preserve"><value>برای واحدهای دریافت‌شده رسید یا بازرسی ثبت نشده است؛ بنابراین تعیین سرنوشت فیزیکی آن‌ها هنوز ممکن نیست.</value></data>
   <data name="return.recovery.attempt_unbound" xml:space="preserve"><value>هیچ تلاش بازگشت وجه واحدی به این مرحلهٔ مالی متصل نیست.</value></data>
   <data name="return.recovery.gateway_unavailable" xml:space="preserve"><value>درگاه بازگشت وجه پیکربندی نشده است؛ بنابراین تلاش ثبت‌شده ارسال نمی‌شود و در حالت در انتظار باقی می‌ماند.</value></data>
+  <data name="return.recovery.evidence_conflict" xml:space="preserve"><value>تصمیم، تلاش بازگشت وجه یا نشانه‌های بستن این مرجوعی با هم ناسازگارند؛ بنابراین هیچ بازیابی‌ای بدون حدس نام‌گذاری نمی‌شود.</value></data>
+  <data name="return.recovery.transaction_owned" xml:space="preserve"><value>بازیابی درون تراکنش بازِ فراخوان اجرا نمی‌شود؛ بنابراین هیچ ارسال یا نوشتنی انجام نشد.</value></data>
   <data name="return.outbox.unmapped_event" xml:space="preserve"><value>نوع رویداد یکپارچه ثبت نشده است.</value></data>
 </root>

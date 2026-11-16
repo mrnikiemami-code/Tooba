@@ -282,7 +282,9 @@ public sealed partial class ReturnDirectory
                 }
                 catch
                 {
-                    entry.State = EntityState.Unchanged;
+                    // TB-273-R1 C: reload ONLY this affected line, so an unsaved in-memory disposition cannot be
+                    // trusted by a retry in the same scope while the database still holds the pending fact.
+                    await RestoreTrackedAsync(entry, cancellationToken);
                     throw;
                 }
 
@@ -316,7 +318,8 @@ public sealed partial class ReturnDirectory
             }
             catch
             {
-                itemEntry.State = EntityState.Unchanged;
+                // TB-273-R1 C: reload only this line; the unsaved SaleableRestock must never be read as durable.
+                await RestoreTrackedAsync(itemEntry, cancellationToken);
                 throw;
             }
         }
