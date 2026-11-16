@@ -1,4 +1,42 @@
-# CURRENT — RETURNS273-R1 PARTIAL; ONLY273-R2 THREE-GATE REPAIR — 2026-11-16
+# CURRENT — 273-R2 WORKER PASS (three-gate repair); 273 REMAINS PARTIAL; AWAIT ARCHITECT REVIEW — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,three-gate-proof.md}.
+Status **PASS within the issued three-gate repair scope**, decision
+`COURIER_SOURCE_COHERENCE_BEFORE_ANY_EFFECTFUL_PENDING_MONEY_RECOVERY_A_RECORDED_FINAL_MARKER_REQUIRING_ITS_PRIOR_DURABLE_CLOSURE_TIMESTAMPS_AND_AN_EXPLICIT_PROVIDER_ENLISTED_TRANSACTION_REFUSED_BY_THE_SAME_SINGLE_GUARD_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_COMMITTED_ROW`,
+NOT Architect ACCEPT, NOT user functional acceptance, NOT any provider/financial/UI claim. Base
+`02af2261032adf3aeb299fa9c369ee3b5154718d` (== Expected-Base-SHA; local `main` after fetch + `--ff-only`, incoming delta
+= the Architect docs-only review), code `2481d40b98182bd17cf72614ff5c45173ef310ad`. Parent 273 and 273-R1 **stay
+PARTIAL** until the Architect reviews this repair; their reports and the R1 `ARCHITECT-REVIEW.md` are unchanged.
+272-R1 acceptance, the original 272 fixture/delete audit and shipping acceptances are preserved. **274–276 remain
+candidates, NOT ISSUED.** Single worker, one task, no delegation, no historical agent resumed.
+
+| Gate | State | What this means |
+| --- | --- | --- |
+| A source before money | same rule, earlier | `ReturnRecoveryPolicy.Describe` (L127–139) runs the EXISTING `HasCoherentCourierSource` BEFORE offering `PendingMoney`; missing/empty source/receipt/claim/occurrence key, item receipt/parcel mismatch or an illegal recorded condition/disposition is `return.recovery.evidence_conflict` with **no** `RecoveryKind`, before any closure/gateway/Wallet/Inventory call; a bound SUCCEEDED money fact stays `FinancialComplete=true` and blocked, never re-sent; the command reads the same description (no duplicated predicate) |
+| B settled needs prior facts | typed conflict | `Physical` (L319–333) treats `RefundReleased` with a null `ObligationClosedAt` or `StockSettledAt` as `return.recovery.evidence_conflict` (`FinancialComplete=true`, `PhysicalComplete=false`, no kind) — exactly the facts the finalization writer requires; no repair/backfill/inference, no new SLA/window/lifecycle stage; coherent `StockSettled`+both timestamps+all disposed stays marker-only `PendingDisposition`, coherent `RefundReleased` stays `Settled` with zero-effect replay |
+| C explicit enlistment | same single guard | `RefuseConstrainedTransaction` (L685–709) also reads EF's owning transaction manager — `_db.Database.GetService<IRelationalConnection>() is RelationalConnection { EnlistedTransaction: not null }` (relational only) — so an explicitly enlisted `CommittableTransaction` with `CurrentTransaction==null` and `Transaction.Current==null` is refused with the same `return.recovery.transaction_owned`; no reflection, no new framework, no caller commit/rollback/dispose |
+| Proof | focused + rollback-only | `ReturnsRecovery273Tests` **29/29** (24 retained + 5 new); ONE new explicit-enlistment fact on real `tooba_alpha` (`1/1`, target `tooba_alpha:5432/172.18.0.2`, `committedRows=0`); build 0 errors; Host publish 0 errors |
+| Contracts/schema/data | untouched | no new error code (both reused), no catalog/route/validator churn, no migration/DDL/seed/backfill/cleanup, no live business/provider/money write, FE untouched |
+
+Verified once after the final change: `ReturnsRecovery273Tests` **29/29**; the NEW relational fact only (exact method
+filter) **1/1** with `committedRows=0`; `dotnet build src/backend/Tooba.slnx -c Release` 0 errors (679 pre-existing
+warnings); Host publish 0 errors. Host-only refresh: PID 13284 on 5088 (`/health` 200, `/health/ready` 200 SingleStore
++ messaging Healthy, `/__platform-commerce` → `store-alpha`), new Host dll SHA256
+`3DA1453E7B8F77A592D1AC5F41E5BA95189A4CEE77423AAB1485FBCD8535C60C`; FE untouched.
+Live read-only wire: no actor → 401 `admin.actor.missing`; `{}` → 400 `return.recovery.kind_invalid`; resume without
+attempt → 400 `validation.failed` / `returns.validation.recovery_attempt_required`; resume or disposition on a missing
+case → 404 `return.missing`; `POST /v1/admin/returns/query` → 200 `totalCount=0`.
+Known limits: **no live return case exists**, so there is no served operator walkthrough of a real recovery and no demo
+case was created; the controlled unit proof uses in-memory EF plus controlled ports (no real PSP/Wallet/Inventory
+effect); `NpgsqlConnection`'s own enlisted-transaction property is internal, so a caller that bypasses the owning
+context and enlists the raw `DbConnection` is not separately observable — the supported owning-context path is proven;
+the `FOR UPDATE` outcome branch stays unexercised (accepted R1 limit, not chased); the focused unit suite was executed
+twice because the first run failed on a `Single()` over the two-item courier fixture in the NEW **test** helper (helper
+fixed; the passing run is reported) — a declared deviation.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — RETURNS273-R1 PARTIAL; ONLY273-R2 THREE-GATE REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/ARCHITECT-REVIEW.md.
 At a2ffbf60de3151037c6512461289d0c99bc7ccca, retain repaired reference/binding/marker restoration;273 not accepted.

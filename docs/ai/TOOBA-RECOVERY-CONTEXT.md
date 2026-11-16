@@ -1,4 +1,27 @@
-# CURRENT — RETURNS273-R1 PARTIAL; ONLY273-R2 THREE-GATE REPAIR — 2026-11-16
+# CURRENT — 273-R2 WORKER PASS (three-gate repair); 273 REMAINS PARTIAL — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,three-gate-proof.md}.
+Status **PASS within the issued three-gate repair scope**, decision
+`COURIER_SOURCE_COHERENCE_BEFORE_ANY_EFFECTFUL_PENDING_MONEY_RECOVERY_A_RECORDED_FINAL_MARKER_REQUIRING_ITS_PRIOR_DURABLE_CLOSURE_TIMESTAMPS_AND_AN_EXPLICIT_PROVIDER_ENLISTED_TRANSACTION_REFUSED_BY_THE_SAME_SINGLE_GUARD_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_COMMITTED_ROW`.
+NOT Architect ACCEPT, NOT user functional acceptance. Base `02af2261032adf3aeb299fa9c369ee3b5154718d`, code
+`2481d40b98182bd17cf72614ff5c45173ef310ad`. Parent 273 + 273-R1 **stay PARTIAL**; their reports and the R1 review are
+unchanged. 272-R1 acceptance and the original 272 audit are preserved. **274–276 NOT ISSUED.**
+- A: the SAME `HasCoherentCourierSource` rule runs inside `ReturnRecoveryPolicy.Describe` BEFORE `PendingMoney` is
+  offered; broken source/claim/receipt/condition is `return.recovery.evidence_conflict` with no `RecoveryKind`, zero
+  closure/money/stock call. A bound success fact stays `FinancialComplete=true` and is never re-sent.
+- B: `RefundReleased` without `ObligationClosedAt`/`StockSettledAt` is a typed evidence conflict (money preserved),
+  never `Settled`; marker-only `StockSettled` and coherent `RefundReleased` positives are unchanged.
+- C: the single guard also reads EF's owning `RelationalConnection.EnlistedTransaction`, so explicit enlistment with
+  `CurrentTransaction==null` and `Transaction.Current==null` is refused as `return.recovery.transaction_owned`.
+Proof: `ReturnsRecovery273Tests` 29/29; ONE new rollback-only enlistment fact 1/1 (`tooba_alpha:5432/172.18.0.2`,
+`committedRows=0`); build 0 errors; Host-only refresh PID 13284 on 5088, dll
+`3DA1453E7B8F77A592D1AC5F41E5BA95189A4CEE77423AAB1485FBCD8535C60C`; FE untouched; no migration, no live case
+(`totalCount=0`), no business/provider/money write. Declared deviation: focused unit suite ran twice (first failure was a
+`Single()` in the NEW test helper, fixed).
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS273-R1 PARTIAL; ONLY273-R2 THREE-GATE REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/ARCHITECT-REVIEW.md.
 At a2ffbf60de3151037c6512461289d0c99bc7ccca, retain repaired reference/binding/marker restoration;273 not accepted.

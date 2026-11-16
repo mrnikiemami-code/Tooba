@@ -1,0 +1,33 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2
+Parent-Task: TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1
+Channel: tooba-main
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
+Program: TOOBA
+Status: PASS
+Stop-State: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 02af2261032adf3aeb299fa9c369ee3b5154718d
+Base-SHA: 02af2261032adf3aeb299fa9c369ee3b5154718d
+Code-SHA: 2481d40b98182bd17cf72614ff5c45173ef310ad
+Evidence-SHA: recorded by the Bridge result (the evidence/ledger commit; no self-referential hash pin)
+Final-HEAD: recorded by the Bridge result (== origin/main after the normal push)
+Origin-Parity: verified after the push (same SHA on origin/main)
+Decision: COURIER_SOURCE_COHERENCE_BEFORE_ANY_EFFECTFUL_PENDING_MONEY_RECOVERY_A_RECORDED_FINAL_MARKER_REQUIRING_ITS_PRIOR_DURABLE_CLOSURE_TIMESTAMPS_AND_AN_EXPLICIT_PROVIDER_ENLISTED_TRANSACTION_REFUSED_BY_THE_SAME_SINGLE_GUARD_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_COMMITTED_ROW
+
+GATE A: ReturnRecoveryPolicy.Describe (ReturnRecoveryDescription.cs L127-139) evaluates the EXISTING HasCoherentCourierSource rule BEFORE constructing PendingMoney, so a stored approved courier case with a missing/empty source/receipt/claim/occurrence key, an item receipt/parcel mismatch or an illegal recorded condition/disposition is Blocked with return.recovery.evidence_conflict and NO RecoveryKind, before any closure/money/stock call. The command decides on the same description (no duplicated predicate). A bound SUCCEEDED money fact stays FinancialComplete=true and blocked, never re-sent. Proof: policy fact with 8 broken shapes; directory fact corrupting missing claim / wrong item receipt+parcel / illegal usable->non-saleable with gateway 0, Wallet 0, Inventory 0, attempt id+key+status unchanged; valid pending courier positive resumes the SAME attempt/key once.
+
+GATE B: Physical (ReturnRecoveryDescription.cs L319-333) treats ClosurePhase==RefundReleased with a null ObligationClosedAt or StockSettledAt as return.recovery.evidence_conflict (FinancialComplete=true, PhysicalComplete=false, no kind), matching the prior facts MarkRefundReleasedWhenFullyDisposedAsync already requires. No backfill/repair/inference and no new lifecycle/SLA/window rule. Proof: policy fact for missing obligation / missing stock / both plus coherent StockSettled marker-only and coherent RefundReleased settled positives; directory fact for all three variants with zero money/stock calls, closure left RefundReleased, missing timestamp left null, attempt still Succeeded with its stored reference, and the retained marker-only/lost-save positives still green.
+
+GATE C: RefuseConstrainedTransaction (ReturnDirectory.cs L685-709) also inspects EF's owning transaction manager: _db.Database.GetService<IRelationalConnection>() is RelationalConnection { EnlistedTransaction: not null } (relational only). Same typed return.recovery.transaction_owned, same three call sites, no reflection, no new framework, no caller commit/rollback/dispose, no tracked-state change. Proof: ONE new rollback-only real PostgreSQL fact (ReturnsRecovery273RelationalTests.An_explicitly_enlisted_caller_transaction_refuses_effectful_recovery_before_any_effect) that asserts CurrentTransaction==null AND Transaction.Current==null while explicit enlistment is present, gets transaction_owned (not return.missing, proving the guard precedes any lookup), 0 gateway/Wallet/Inventory calls, caller enlistment + tracked entity preserved, caller rolls back, committedRows=0 on tooba_alpha:5432/172.18.0.2.
+
+VALIDATION: ReturnsRecovery273Tests 29/29 (24 retained + 5 new) once; ONLY the new explicit-enlistment relational fact with an exact method filter, 1/1 passed, committedRows=0; dotnet build src/backend/Tooba.slnx -c Release 0 errors (679 pre-existing warnings); Host publish 0 errors; Host-only restart PID 13284 on 5088 with /health 200, /health/ready 200 (SingleStore, postgresql configured, messaging Healthy), /__platform-commerce -> store-alpha, Host dll SHA256 3DA1453E7B8F77A592D1AC5F41E5BA95189A4CEE77423AAB1485FBCD8535C60C; FE untouched. Live read-only wire: no actor -> 401 admin.actor.missing; {} -> 400 return.recovery.kind_invalid; resume without attempt -> 400 validation.failed / returns.validation.recovery_attempt_required; resume/disposition on a missing case -> 404 return.missing; returns query -> 200 totalCount=0.
+
+BOUNDARIES: ONE canonical tooba_alpha 127.0.0.1:5432 SingleStore/store-alpha; Host 5088 / FE 3000. No migration/DDL/seed/backfill/cleanup/delete/restore; no committed business test row; no live approval/reject/refund/recovery mutation; no provider/PSP/Wallet/Inventory/waybill/notification/money operation; no settings/keys/CapturedPreview/connection/port change. No new error code, so no catalog/route/validator count churn and no architecture-guard run.
+
+PROOF LIMITS: controlled unit proof uses in-memory EF + controlled ports (not a real PSP/Wallet/Inventory effect); the enlistment proof is real PostgreSQL but rollback-only and the staged case row is intentionally absent at action time; NpgsqlConnection's own enlisted-transaction property is internal, so a caller that bypasses the owning context and enlists the raw DbConnection directly is not separately observable through supported APIs (the supported owning-context path is proven); the FOR UPDATE outcome coordination remains unexercised as accepted by the Architect and was not chased; the live Returns table is empty so there is no live case or served recovery walkthrough, and no demo case was created. Declared deviation: the focused unit suite was executed twice because the first run failed on a Single() over the two-item courier fixture in the NEW test helper (test-only defect); the helper was fixed and the passing run is the reported one.
+
+Worker PASS != Architect ACCEPT. Parent 273 and 273-R1 remain PARTIAL; backend-only; no user/provider/financial/full-Returns acceptance. 274-276 NOT ISSUED.
+automaticNextImplementationTask: NONE
+END_TOOBA_WORKER_RESULT

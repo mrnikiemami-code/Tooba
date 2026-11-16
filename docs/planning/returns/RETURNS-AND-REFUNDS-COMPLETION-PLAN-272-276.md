@@ -3,6 +3,17 @@
 State: APPROVED_FOR_SEQUENTIAL_IMPLEMENTATION_BY_USER.
 
 ## CURRENT checkpoint — 2026-11-16
+273-R2 worker result: PASS within the issued three-gate repair scope, awaiting Architect review (NOT Architect/user
+acceptance). Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/RESULT.md.
+The parent **273 and 273-R1 remain PARTIAL**. 273-R2 closed the three accepted omissions: the SAME courier
+source/condition coherence rule runs before `PendingMoney` is offered (typed evidence conflict, no kind, zero calls);
+`RefundReleased` without `ObligationClosedAt`/`StockSettledAt` is an evidence conflict, never `Settled`; the single
+transaction guard also reads EF's `RelationalConnection.EnlistedTransaction`. `ReturnsRecovery273Tests` 29/29 and ONE
+new rollback-only explicit-enlistment fact 1/1 on real `tooba_alpha` (`committedRows=0`); schema/FE untouched.
+**274–276 remain candidates, NOT ISSUED** (274 = customer receipt/inspection evidence, 275 = operator UI, 276 =
+connected acceptance). The live Returns table is empty, so no served recovery walkthrough exists.
+
+## Superseded273-R1 checkpoint — 2026-11-16
 273-R1 Architect decision: PARTIAL, only273-R2 three-gate correction is next. Read273-R1/ARCHITECT-REVIEW.md. Source coherence before pending money, prior closure timestamps before settled, explicit enlisted transaction detection.274–276 NOT ISSUED. No scope expansion or proof loop. Preserve272-R1 acceptance/audit.
 
 ## Superseded273-R1 worker checkpoint — 2026-11-16

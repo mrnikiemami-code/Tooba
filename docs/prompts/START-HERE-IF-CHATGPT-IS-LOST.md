@@ -1,4 +1,16 @@
-# CURRENT — RETURNS273-R1 PARTIAL; ONLY273-R2 THREE-GATE REPAIR — 2026-11-16
+# CURRENT — 273-R2 WORKER PASS (three-gate repair); 273 REMAINS PARTIAL — 2026-11-16
+
+Read docs/ai/tasks/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/TASK.md and
+docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R2/{RESULT.md,RECEIPTS.md,result-contract.txt,three-gate-proof.md}.
+273-R2 = PASS within the issued three-gate scope, awaiting Architect review; NOT Architect/user acceptance, NOT any
+provider/financial/UI claim. Base `02af2261032adf3aeb299fa9c369ee3b5154718d`, code `2481d40b98182bd17cf72614ff5c45173ef310ad`.
+Courier source coherence now gates pending-money recovery too; `RefundReleased` without its prior closure timestamps is
+a typed evidence conflict; explicit provider enlistment is refused by the same guard. `ReturnsRecovery273Tests` 29/29,
+one new rollback-only enlistment fact 1/1 (`committedRows=0`), build 0 errors, Host-only refresh on 5088. Parent 273 +
+273-R1 stay PARTIAL; 274–276 NOT ISSUED. One canonical tooba_alpha5432/store-alpha, no migration/FE/live business write.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — RETURNS273-R1 PARTIAL; ONLY273-R2 THREE-GATE REPAIR — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-REFUND-UNKNOWN-OUTCOME-RECOVERY-AND-SEPARATE-DISPOSITION-273-R1/ARCHITECT-REVIEW.md.
 At a2ffbf60de3151037c6512461289d0c99bc7ccca, retain repaired reference/binding/marker restoration;273 not accepted.
