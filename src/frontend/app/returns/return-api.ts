@@ -26,6 +26,11 @@ export interface ReturnItem {
   /** TB-265: recorded physical disposition once the owning restock/non-saleable decision is durable. */
   dispositionCondition?: string | null;
   /**
+   * TB-277: the OWNING recorded disposition of this line (`None`/`SaleableRestock`/`DamagedNonSaleable`). It is the
+   * stored physical answer — a completed money fact never implies it, and an absent value is never read as restocked.
+   */
+  disposition?: string | null;
+  /**
    * TB-275: the EXACT inspected usable quantity this line actually restocked (null when no saleable restock was
    * recorded). A mixed line restocks only this portion, so the requested quantity never reads as wholly saleable.
    */
@@ -42,6 +47,12 @@ export interface ReturnItem {
    */
   productLabel?: string | null;
   unitLabel?: string | null;
+  /**
+   * TB-277: how many decimals the ORDERING UNIT of this line accepts (0 for whole pieces, 3 for grams, …), read from
+   * the owning order line snapshot. `null` means the owning read did not answer a unit precision, so the surface falls
+   * back to the persisted scale instead of inventing "whole pieces".
+   */
+  unitDecimalPlaces?: number | null;
 }
 
 export interface RefundAttempt {
@@ -139,6 +150,11 @@ export interface ReturnWorkDescription {
   canResumeRefund: boolean;
   canRetryRefund: boolean;
   canSettlePhysical: boolean;
+  /**
+   * TB-277: approval is a decision only, so an approved case with no refund attempt yet publishes this separate
+   * financial action. It is the ONLY lawful way the first refund starts.
+   */
+  canStartRefund: boolean;
   isOpen: boolean;
   needsOperator: boolean;
   actionCodes: string[];
@@ -219,6 +235,7 @@ function mapReturnWork(value: unknown): ReturnWorkDescription | null {
     canResumeRefund: bool(prop(work, "canResumeRefund", "CanResumeRefund")),
     canRetryRefund: bool(prop(work, "canRetryRefund", "CanRetryRefund")),
     canSettlePhysical: bool(prop(work, "canSettlePhysical", "CanSettlePhysical")),
+    canStartRefund: bool(prop(work, "canStartRefund", "CanStartRefund")),
     isOpen: bool(prop(work, "isOpen", "IsOpen")),
     needsOperator: bool(prop(work, "needsOperator", "NeedsOperator")),
     actionCodes: stringList(prop(work, "actionCodes", "ActionCodes")),
@@ -309,12 +326,17 @@ function mapReturnItem(value: unknown): ReturnItem | null {
     reservationId: nullableText(prop(item, "reservationId", "ReservationId")),
     condition: text(prop(item, "condition", "Condition"), "Usable"),
     dispositionCondition: nullableText(prop(item, "dispositionCondition", "DispositionCondition")),
+    // TB-277: the stored physical disposition is its own field on the owning detail read; it is never inferred from
+    // the money status or from the received quantities.
+    disposition: nullableText(prop(item, "disposition", "Disposition")),
     saleableRestockedQuantity: nullableNumber(prop(item, "saleableRestockedQuantity", "SaleableRestockedQuantity")),
     sourceShipmentId: nullableText(prop(item, "sourceShipmentId", "SourceShipmentId")),
     sourceReceiptId: nullableText(prop(item, "sourceReceiptId", "SourceReceiptId")),
     // TB-276: operator display facts resolved by the owning admin detail read; absent stays unknown, never invented.
     productLabel: nullableText(prop(item, "productLabel", "ProductLabel")),
     unitLabel: nullableText(prop(item, "unitLabel", "UnitLabel")),
+    // TB-277: unit precision of this line, answered by the owning order line read (null when it did not answer).
+    unitDecimalPlaces: nullableNumber(prop(item, "unitDecimalPlaces", "UnitDecimalPlaces")),
   };
 }
 
@@ -563,6 +585,29 @@ export function returnWorkBadgeClass(category: string | null | undefined): strin
 /** TB-275: the inspection token of one received line. */
 export function formatReturnCondition(condition: string): string {
   return condition === "Damaged" ? "معیوب" : "سالم";
+}
+
+/**
+ * TB-277: the STORED physical disposition of one line, in operator language. `None` is the honest "not decided yet"
+ * answer (never "completed"), a saleable restock carries its exact restocked portion so the requested quantity is never
+ * read as wholly saleable, and an unknown token is shown as unknown instead of being guessed.
+ */
+export function formatReturnDisposition(
+  disposition: string | null | undefined,
+  saleableRestockedQuantity?: number | null,
+): string {
+  switch (disposition) {
+    case "SaleableRestock":
+      return typeof saleableRestockedQuantity === "number"
+        ? `برگشت به موجودی قابل فروش (${new Intl.NumberFormat("fa-IR").format(saleableRestockedQuantity)})`
+        : "برگشت به موجودی قابل فروش";
+    case "DamagedNonSaleable":
+      return "غیرقابل فروش (معیوب)";
+    case "None":
+      return "تعیین‌نشده";
+    default:
+      return "نامشخص";
+  }
 }
 
 export type ReturnQueueFilter =
@@ -1111,9 +1156,8 @@ async function adminReturnsPost(path: string, body: unknown): Promise<AdminResul
  */
 export function sendReviewedReturnCommand(
   returnRequestId: string,
-  route: "receipt" | "recover",
+  route: "receipt" | "recover" | "start-refund",
   body: Record<string, unknown>,
 ): Promise<AdminResult<ReturnSnapshot>> {
-  const suffix = route === "receipt" ? "receipt" : "recover";
-  return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(returnRequestId)}/${suffix}`, body);
+  return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(returnRequestId)}/${route}`, body);
 }

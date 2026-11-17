@@ -73,6 +73,7 @@ public static class ReturnsErrorCodes
         ReceivingIncomplete,
         RejectionReasonRequired,
         DecisionReasonConflict,
+        FirstRefundNotLawful,
     };
 
     private static readonly HashSet<string> PlatformFaultCodes = new(StringComparer.Ordinal)
@@ -308,6 +309,14 @@ public static class ReturnsErrorCodes
     /// TB-274: the winning rejection already recorded a different reason. The durable decision is never rewritten.
     /// </summary>
     public const string DecisionReasonConflict = "return.decision.reason_conflict";
+
+    /// <summary>
+    /// TB-277: the explicit FIRST-refund command was called for a case that is not in the stored "approved, no refund
+    /// attempt yet" state (nothing approved, already started/finished, rejected, or a contradictory binding). It is
+    /// refused with zero effect — no attempt, no key, no provider/Wallet call — instead of inferring a first attempt
+    /// from the current status.
+    /// </summary>
+    public const string FirstRefundNotLawful = "return.refund.first_not_lawful";
 
     /// <summary>Outbox registration has no mapping for the given integration event type (platform fault).</summary>
     public const string OutboxUnmappedEvent = "return.outbox.unmapped_event";

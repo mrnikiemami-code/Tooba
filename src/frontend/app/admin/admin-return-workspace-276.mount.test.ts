@@ -146,13 +146,10 @@ function seed(returnRequestId: string, intent: ReturnReviewIntent) {
   window.sessionStorage.setItem(returnIntentStorageKey(returnRequestId), serializeReturnReviewIntent(intent));
 }
 
-/** Fills the receipt form for the single fixture line and returns the body the workspace will freeze. */
+/** Fills the receipt dialog's usable portion for the single fixture line and returns the body the workspace freezes. */
 async function fillReceipt(container: HTMLElement) {
+  // TB-277: the receipt dialog states the usable and damaged portions separately under one line ceiling.
   await setInputValue(q(container, "[data-testid='admin-return-receipt-qty-0']"), "2");
-  const select = q(container, "[data-testid='admin-return-receipt-condition-0']") as HTMLSelectElement;
-  const setter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, "value")?.set;
-  setter?.call(select, "Usable");
-  select.dispatchEvent(new Event("change", { bubbles: true }));
   await flush();
 }
 

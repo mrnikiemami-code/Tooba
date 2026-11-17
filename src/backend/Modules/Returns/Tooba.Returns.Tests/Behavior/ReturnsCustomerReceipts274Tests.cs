@@ -378,7 +378,15 @@ public sealed class ReturnsCustomerReceipts274Tests
         await order.RecordAsync("delivery-2", (order.ReturnItemId, 1m, ReturnItemCondition.Usable));
         var approved = await order.ApproveAsync();
 
-        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        // TB-277: approving is a DECISION only — no money has moved yet.
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Empty(order.Gateway.Calls);
+        Assert.Equal(0, await order.AttemptCount());
+
+        // The separate deliberate first-refund intent is what actually sends the money.
+        var completed = await order.StartRefundAsync();
+
+        Assert.Equal(ReturnRequestStatus.Completed, completed.Status);
         var call = Assert.Single(order.Gateway.Calls);
         Assert.Equal(2000m, call.Amount);
         Assert.Equal(1, await order.AttemptCount());
@@ -395,7 +403,15 @@ public sealed class ReturnsCustomerReceipts274Tests
             (order.ReturnItemId, 1m, ReturnItemCondition.Damaged));
 
         var approved = await order.ApproveAsync();
-        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+
+        // TB-277: approval alone neither moves money nor touches saleable stock.
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Empty(order.Gateway.Calls);
+        Assert.Empty(order.Inventory.Restocked);
+
+        // The explicit first refund executes the money and then the condition-safe physical disposition.
+        var completed = await order.StartRefundAsync();
+        Assert.Equal(ReturnRequestStatus.Completed, completed.Status);
 
         // ONLY the inspected usable quantity becomes saleable stock, once, under the owning per-item key.
         var restock = Assert.Single(order.Inventory.Restocked);
@@ -420,10 +436,14 @@ public sealed class ReturnsCustomerReceipts274Tests
         await order.RecordAsync("delivery-1", (order.ReturnItemId, 2m, ReturnItemCondition.Damaged));
 
         var approved = await order.ApproveAsync();
-        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Empty(order.Gateway.Calls);
+        Assert.Empty(order.Inventory.Restocked);
 
-        // The money is confirmed, but a damaged unit is never saleable stock: the line is non-saleable and Inventory
-        // is never called at all.
+        // TB-277: the money is started by the explicit first refund; the damaged line is never saleable stock.
+        var completed = await order.StartRefundAsync();
+        Assert.Equal(ReturnRequestStatus.Completed, completed.Status);
+
         Assert.Empty(order.Inventory.Restocked);
         Assert.Equal(
             ReturnItemDisposition.DamagedNonSaleable,
@@ -452,9 +472,13 @@ public sealed class ReturnsCustomerReceipts274Tests
             (order.ReturnItemId, 1m, ReturnItemCondition.Usable),
             (order.ReturnItemId, 1m, ReturnItemCondition.Damaged));
 
-        // The owning restock fails once during approval, so the money is confirmed while the physical phase stays open.
-        order.Inventory.FailuresRemaining = 1;
+        // TB-277: approval is decision-only; the money and its physical follow-up belong to the explicit first refund.
         await order.ApproveAsync();
+
+        // The owning restock fails once during the first refund, so the money is confirmed while the physical phase
+        // stays open.
+        order.Inventory.FailuresRemaining = 1;
+        await order.StartRefundAsync();
 
         Assert.Equal(ReturnItemDisposition.None, (await order.Items()).Single().Disposition);
         var read = (await order.Snapshot())!.Recovery!;
@@ -563,7 +587,9 @@ public sealed class ReturnsCustomerReceipts274Tests
         await order.RecordAsync("delivery-1", (order.ReturnItemId, 1m, ReturnItemCondition.Usable));
 
         var approved = await order.ApproveAsync();
-        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+
+        // TB-277: approval records the decision only, so the case is Approved — not financially completed.
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
         Assert.Null(approved.DecisionReason);
 
         var decision = Assert.Single(await order.Decisions());
@@ -733,6 +759,13 @@ public sealed class ReturnsCustomerReceipts274Tests
         public Task<ReturnSnapshot> RetryAsync() =>
             _directory.RetryRefundAsync(
                 new RetryReturnRefundCommand(ReturnRequestId, Guid.NewGuid()),
+                CancellationToken.None);
+
+        // TB-277: approval records a decision only, so the money of an approved case is started by this explicit
+        // intent — the same one the operator's «شروع بازپرداخت» action sends.
+        public Task<ReturnSnapshot> StartRefundAsync() =>
+            _directory.StartFirstRefundAsync(
+                new StartReturnRefundCommand(ReturnRequestId, Guid.NewGuid()),
                 CancellationToken.None);
 
         public Task<ReturnSnapshot> RecoverAsync(ReturnRecoveryKind kind, Guid? expectedAttemptId = null) =>

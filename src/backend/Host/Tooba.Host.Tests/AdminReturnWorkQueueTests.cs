@@ -39,7 +39,14 @@ public sealed class AdminReturnWorkQueueTests
         Assert.Equal("Approved", AdminReturnQueueFilters.ComposeReturnStatus(ReturnRequestStatus.RefundProcessing));
         Assert.Equal("Approved", AdminReturnQueueFilters.ComposeReturnStatus(ReturnRequestStatus.RefundFailed));
         Assert.Equal("none", AdminReturnQueueFilters.ComposeRefundStatus(ReturnRequestStatus.Requested, []));
-        Assert.Equal("pending", AdminReturnQueueFilters.ComposeRefundStatus(ReturnRequestStatus.Approved, []));
+        // TB-277: approval is a decision only — no money is pending until the first refund actually starts.
+        Assert.Equal("none", AdminReturnQueueFilters.ComposeRefundStatus(ReturnRequestStatus.Approved, []));
+        Assert.Equal(
+            "pending",
+            AdminReturnQueueFilters.ComposeRefundStatus(ReturnRequestStatus.Approved, [RefundAttemptStatus.Pending]));
+        Assert.Equal(
+            "pending",
+            AdminReturnQueueFilters.ComposeRefundStatus(ReturnRequestStatus.RefundProcessing, []));
         Assert.Equal("failed", AdminReturnQueueFilters.ComposeRefundStatus(ReturnRequestStatus.RefundFailed, [RefundAttemptStatus.Failed]));
         Assert.Equal("completed", AdminReturnQueueFilters.ComposeRefundStatus(ReturnRequestStatus.Completed, [RefundAttemptStatus.Succeeded]));
     }

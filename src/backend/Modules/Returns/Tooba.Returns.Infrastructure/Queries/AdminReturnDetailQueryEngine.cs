@@ -63,6 +63,9 @@ public sealed class AdminReturnDetailQueryEngine(
                 {
                     ProductLabel = productLabel.Length == 0 ? null : productLabel,
                     UnitLabel = unitLabel,
+                    // TB-277: the OWNING accepted line snapshot is the only unit-precision authority. An unanswered
+                    // line leaves it null (honest unavailable) instead of guessing whole pieces.
+                    UnitDecimalPlaces = line is null ? null : Math.Clamp(line.QuantityDecimalPlacesSnapshot, 0, 6),
                 };
             })
             .ToArray();

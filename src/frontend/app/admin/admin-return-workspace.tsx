@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { MessageBox, ToastRegion } from "../../design-system";
+import { Button, Dialog, MessageBox, ToastRegion } from "../../design-system";
 import { formatQuantityDisplayFa } from "../../lib/quantity-display";
 import { toPersianDigits } from "../../lib/persian-digits";
 import { mapAdminErrorMessage } from "./admin-error-map";
@@ -14,6 +14,7 @@ import {
   formatRefundDestination,
   formatReturnCondition,
   formatReturnDate,
+  formatReturnDisposition,
   formatReturnStatus,
   formatUnitLabel,
   formatReturnWorkCategory,
@@ -76,6 +77,8 @@ function actionLabel(action: ReturnReviewAction): string {
       return "تأیید مرجوعی";
     case "reject":
       return "رد مرجوعی";
+    case "start_refund":
+      return "شروع بازگشت وجه";
     case "resume_refund":
       return "پیگیری بازگشت وجه";
     case "retry_refund":
@@ -92,32 +95,165 @@ function successLabel(action: ReturnReviewAction): string {
     case "reject":
       return "مرجوعی رد شد.";
     case "approve":
-      return "مرجوعی تأیید شد.";
+      // TB-277: approval is a decision only; the money message belongs to the separate refund action.
+      return "تصمیم تأیید ثبت شد؛ بازگشت وجه هنوز آغاز نشده است.";
+    case "start_refund":
+      return "بازگشت وجه آغاز شد.";
+    case "resume_refund":
+      return "همان تلاش بازگشت وجه دوباره ارسال شد.";
+    case "retry_refund":
+      return "تلاش دوبارهٔ بازگشت وجه ثبت شد.";
+    case "settle_physical":
+      return "تعیین تکلیف فیزیکی کالا ثبت شد.";
     default:
       return "اقدام ثبت شد.";
   }
 }
 
-type ReceiptConditionChoice = "" | "Usable" | "Damaged";
 type ReceiptDraftLine = {
   returnItemId: string;
-  remaining: number;
-  quantity: string;
-  condition: ReceiptConditionChoice;
+  productLabel: string | null;
+  unitLabel: string | null;
+  /** TB-277: decimals the ORDERING UNIT accepts; 0 means whole pieces only. */
+  decimalPlaces: number;
+  /** The line's remaining covered quantity — the ONE ceiling both condition fields share. */
+  ceiling: number;
+  usable: string;
+  damaged: string;
 };
 
+/** The persisted scale of every return quantity: `numeric(18,6)` may never be rounded to fit. */
+const MAX_QUANTITY_SCALE = 6;
+
 /**
- * TB-275: the persisted quantity is `numeric(18,6)`, so the operator's text is accepted only when it is EXACTLY
- * representable — up to 6 decimals, no exponent, no thousands separator. A value that would need rounding is refused
- * instead of being silently turned into a different quantity of goods.
+ * TB-275 / TB-277: the persisted quantity is `numeric(18,6)`, so the operator's text is accepted only when it is
+ * EXACTLY representable — up to the unit's own decimals, no exponent, no thousands separator. A value that would need
+ * rounding is refused instead of being silently turned into a different quantity of goods.
  */
 const EXACT_QUANTITY = /^\d{1,9}(?:\.\d{1,6})?$/;
 
+/**
+ * TB-277: Persian/Arabic digits and the Persian decimal separator are the normal way an Iranian operator types a
+ * quantity, so they are normalized before parsing — never rejected as "invalid number".
+ */
+export function normalizeQuantityInput(raw: string): string {
+  return raw
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/٫/g, ".")
+    .replace(/[\u066c\u060c,\s]/g, "")
+    .trim();
+}
+
 export function parseExactQuantity(raw: string): number | null {
-  const text = raw.trim().replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
+  const text = normalizeQuantityInput(raw);
   if (!EXACT_QUANTITY.test(text)) return null;
   const value = Number(text);
   return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/** The decimal places actually written in a normalized quantity text (0 when it has no fractional part). */
+function writtenScale(normalized: string): number {
+  const dot = normalized.indexOf(".");
+  return dot < 0 ? 0 : normalized.length - dot - 1;
+}
+
+export type QuantityProblem = "empty" | "malformed" | "precision" | "over_ceiling";
+
+/**
+ * TB-277: ONE line entry is bounded by the unit's precision AND by the line's own remaining coverage. A piece-count
+ * unit therefore refuses `0.5`, and `usable + damaged` can never exceed what the customer still owes on that line —
+ * the client-side counterpart of the server's cumulative ceiling, never a replacement for it.
+ */
+export function evaluateQuantityEntry(
+  raw: string,
+  decimalPlaces: number,
+  ceiling: number,
+): { value: number | null; problem: QuantityProblem | null } {
+  const normalized = normalizeQuantityInput(raw);
+  if (normalized === "") return { value: null, problem: "empty" };
+  const value = parseExactQuantity(normalized);
+  if (value === null) return { value: null, problem: "malformed" };
+  if (writtenScale(normalized) > Math.min(decimalPlaces, MAX_QUANTITY_SCALE)) return { value: null, problem: "precision" };
+  if (value > ceiling) return { value: null, problem: "over_ceiling" };
+  return { value, problem: null };
+}
+
+/** The `step` attribute for one unit-aware quantity field. */
+export function quantityStep(decimalPlaces: number): string {
+  const places = Math.max(0, Math.min(decimalPlaces, MAX_QUANTITY_SCALE));
+  return places === 0 ? "1" : `0.${"0".repeat(places - 1)}1`;
+}
+
+function describeQuantityProblem(problem: QuantityProblem, line: ReceiptDraftLine): string {
+  switch (problem) {
+    case "malformed":
+      return "مقدار را با رقم وارد کنید؛ حداکثر ۶ رقم اعشار و بدون جداکنندهٔ هزارگان.";
+    case "precision":
+      return line.decimalPlaces === 0
+        ? `واحد این قلم «${formatUnitLabel(line.unitLabel)}» است و فقط مقدار صحیح می‌پذیرد.`
+        : `واحد این قلم حداکثر ${toPersianDigits(line.decimalPlaces)} رقم اعشار می‌پذیرد.`;
+    case "over_ceiling":
+      return `مقدار واردشده از باقی‌ماندهٔ این قلم (${formatQuantityDisplayFa(line.ceiling)}) بیشتر است.`;
+    default:
+      return "";
+  }
+}
+
+type ReceiptLineItems = { returnItemId: string; quantity: number; condition: "Usable" | "Damaged" };
+
+/**
+ * TB-277: ONE authority for "is this receipt dialog submittable?" — the confirm button's disabled state and the
+ * confirm handler both read it, so an over-ceiling or mis-precision amount is blocked locally (never merely reported
+ * after a send) and the server's own cumulative ceiling stays the final authority.
+ * <para>
+ * <c>problem</c> is the first refusal attributable to ONE field (the field itself also shows it inline);
+ * <c>sumProblem</c> is the aggregate fact of a line whose two portions are individually valid but over the shared
+ * ceiling — it has no single field to blame, so it is published once for the dialog.
+ * </para>
+ */
+export function collectReceiptItems(lines: readonly ReceiptDraftLine[]): {
+  items: ReceiptLineItems[];
+  problem: string | null;
+  sumProblem: string | null;
+} {
+  if (lines.length === 0) {
+    return { items: [], problem: null, sumProblem: null };
+  }
+  const items: ReceiptLineItems[] = [];
+  let sumProblem: string | null = null;
+  for (const line of lines) {
+    const usable = normalizeQuantityInput(line.usable);
+    const damaged = normalizeQuantityInput(line.damaged);
+    if (usable === "" && damaged === "") continue;
+
+    const usableCheck = evaluateQuantityEntry(usable, line.decimalPlaces, line.ceiling);
+    const damagedCheck = evaluateQuantityEntry(damaged, line.decimalPlaces, line.ceiling);
+    for (const [condition, check, entered] of [
+      ["Usable", usableCheck, usable] as const,
+      ["Damaged", damagedCheck, damaged] as const,
+    ]) {
+      if (entered === "") continue;
+      if (check.problem) {
+        return {
+          items: [],
+          problem: `قلم «${line.productLabel ?? "کالای سفارش"}»: ${describeQuantityProblem(check.problem, line)}`,
+          sumProblem: null,
+        };
+      }
+      items.push({ returnItemId: line.returnItemId, quantity: check.value as number, condition });
+    }
+
+    // The two portions are ONE bounded fact about this line: neither may fund the other.
+    const total = (usableCheck.value ?? 0) + (damagedCheck.value ?? 0);
+    if (total > line.ceiling) {
+      sumProblem =
+        `قلم «${line.productLabel ?? "کالای سفارش"}»: مجموع سالم و معیوب ` +
+        `(${formatQuantityDisplayFa(total)}) از باقی‌ماندهٔ این قلم (${formatQuantityDisplayFa(line.ceiling)}) بیشتر است.`;
+      return { items: [], problem: null, sumProblem };
+    }
+  }
+  return { items, problem: null, sumProblem };
 }
 
 /**
@@ -131,14 +267,24 @@ export function parseExactQuantity(raw: string): number | null {
  */
 export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: string }) {
   const [result, setResult] = useState<AdminResult<ReturnSnapshot>>({ state: "ok", data: null, status: 0 });
+  /**
+   * TB-277: the ONE review dialog currently open. Every operator action is reviewed in a design-system `Dialog`;
+   * no action form is ever rendered inline on the page.
+   */
+  const [reviewing, setReviewing] = useState<ReturnReviewAction | null>(null);
+  /** The action whose command is actually on the wire (single in-flight lock). */
   const [pending, setPending] = useState<ReturnReviewAction | null>(null);
   const [stored, setStored] = useState<ReturnReviewIntentRead>({ kind: "none" });
   const [notice, setNotice] = useState<{ title: string; text: string } | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; seq: number } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [receiptLines, setReceiptLines] = useState<ReceiptDraftLine[]>([]);
+  /** TB-277: the blocked-quantity reason of the receipt dialog, shown inside the dialog instead of sending. */
+  const [receiptProblem, setReceiptProblem] = useState<string | null>(null);
   const inFlight = useRef(false);
   const epoch = useRef(0);
+  // TB-277: a repeated identical success must still announce itself, so every publish carries a new sequence.
+  const toastSeq = useRef(1);
 
   const snapshot = result.data;
   const work = snapshot?.work ?? null;
@@ -175,6 +321,8 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
     // A retarget must not show the previous case while the new read is in flight.
     setResult({ state: "ok", data: null, status: 0 });
     setPending(null);
+    setReviewing(null);
+    setReceiptProblem(null);
     void loadAt(started);
     return () => {
       // Unmount/retarget bumps the epoch so every late answer is fenced out of the newer surface.
@@ -187,21 +335,39 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
   }, [readStored]);
 
   useEffect(() => {
+    if (!toast) return;
+    // The shared ToastRegion is a passive region; the feature clears its own message so the SAME success can be
+    // announced again and a stale notice never sits on the page indefinitely.
+    const timer = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  useEffect(() => {
     if (!snapshot) return;
-    // TB-275: nothing is preselected. The operator states the real delivered quantity of each line and its inspection
-    // condition, because a pre-filled "everything arrived, everything usable" would record goods nobody inspected.
+    // TB-275/TB-277: nothing is preselected. The operator states the real delivered quantity of each line — split
+    // between the inspected usable and damaged portions, under ONE shared remaining ceiling — because a pre-filled
+    // "everything arrived, everything usable" would record goods nobody inspected.
     const draft = snapshot.items.map((item) => {
       const line = snapshot.receiving?.lines.find((entry) => entry.returnItemId === item.returnItemId);
       const requested = line?.requested ?? item.quantity;
       const received = line?.received ?? 0;
+      const answeredPlaces = item.unitDecimalPlaces;
       return {
         returnItemId: item.returnItemId,
-        remaining: Math.max(0, requested - received),
-        quantity: "",
-        condition: "" as ReceiptConditionChoice,
+        productLabel: item.productLabel ?? null,
+        unitLabel: item.unitLabel ?? null,
+        // An unanswered unit precision falls back to the persisted scale, never to "whole pieces".
+        decimalPlaces:
+          typeof answeredPlaces === "number" && answeredPlaces >= 0
+            ? Math.min(Math.trunc(answeredPlaces), MAX_QUANTITY_SCALE)
+            : MAX_QUANTITY_SCALE,
+        ceiling: Math.max(0, requested - received),
+        usable: "",
+        damaged: "",
       };
     });
     setReceiptLines(draft);
+    setReceiptProblem(null);
   }, [snapshot]);
 
   /**
@@ -217,7 +383,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         const cleared = clearReturnReviewIntentIfCurrent(storage, intent);
         setStored(cleared ? { kind: "none" } : readStored());
         if (answer.state === "applied") {
-          setToast(successLabel(intent.action));
+          setToast({ text: successLabel(intent.action), seq: toastSeq.current++ });
         } else {
           setNotice({
             title: "اقدام انجام نشد",
@@ -312,55 +478,59 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
   );
 
   const reviewReceipt = useCallback(() => {
-    // Only lines the operator actually filled are sent, and each must carry an explicit inspection condition. A
-    // quantity that is not exactly representable is refused here, before any intent is persisted or sent.
-    const parsed = receiptLines.map((line) => ({
-      line,
-      quantity: line.quantity.trim() === "" ? null : parseExactQuantity(line.quantity),
-    }));
-    const filled = parsed.filter((entry) => entry.line.quantity.trim() !== "");
-    if (filled.length === 0) {
-      setNotice({
-        title: "دریافت ثبت نشد",
-        text: "برای ثبت دریافت، مقدار واقعی دست‌کم یک قلم را وارد کنید.",
-      });
+    // TB-277: each entered portion is bounded by the UNIT's own precision and by the line's remaining coverage, and
+    // usable + damaged share that ONE ceiling. Everything is refused here — inside the dialog, before any intent is
+    // persisted or sent — so an over-ceiling or mis-precision quantity can never leave this surface.
+    if (receiptLines.length === 0) {
+      setReceiptProblem("برای این پرونده قلمی برای دریافت وجود ندارد.");
       return;
     }
-    if (filled.some((entry) => entry.quantity === null)) {
-      setNotice({
-        title: "دریافت ثبت نشد",
-        text: "مقدار هر قلم باید بزرگ‌تر از صفر و حداکثر با ۶ رقم اعشار باشد؛ مقدار بیش از این دقت گرد نمی‌شود.",
-      });
+    const collected = collectReceiptItems(receiptLines);
+    if (collected.problem || collected.sumProblem) {
+      setReceiptProblem(collected.problem ?? collected.sumProblem);
       return;
     }
-    if (filled.some((entry) => entry.line.condition === "")) {
-      setNotice({
-        title: "دریافت ثبت نشد",
-        text: "وضعیت بازرسی (سالم یا معیوب) هر قلم واردشده را مشخص کنید.",
-      });
+    if (collected.items.length === 0) {
+      setReceiptProblem("برای ثبت دریافت، مقدار واقعی دست‌کم یک قلم را وارد کنید.");
       return;
     }
+    const items = collected.items;
+
     const occurrenceKey = createOccurrenceKey();
     const intent = buildReturnReviewIntent({
       action: "receipt",
       target: "returns",
       returnRequestId,
       occurrenceKey,
-      body: {
-        occurrenceKey,
-        items: filled.map((entry) => ({
-          returnItemId: entry.line.returnItemId,
-          quantity: entry.quantity as number,
-          condition: entry.line.condition as "Usable" | "Damaged",
-        })),
-      },
+      body: { occurrenceKey, items },
     });
     if (!intent) {
-      setNotice({ title: "دریافت ثبت نشد", text: "بستهٔ این اقدام کامل نشد؛ هیچ درخواستی ارسال نشد." });
+      setReceiptProblem("بستهٔ این اقدام کامل نشد؛ هیچ درخواستی ارسال نشد.");
       return;
     }
+    setReceiptProblem(null);
+    setReviewing(null);
     void send(intent);
   }, [receiptLines, returnRequestId, send]);
+
+  /**
+   * TB-277: the FIRST refund is a reviewed financial action of its own. It is never part of the approval dialog, and
+   * it is offered only while the owning work description publishes it (`canStartRefund`).
+   */
+  const reviewStartRefund = useCallback(() => {
+    const intent = buildReturnReviewIntent({
+      action: "start_refund",
+      target: "returns",
+      returnRequestId,
+      body: { kind: "start_refund" },
+    });
+    if (!intent) {
+      setNotice({ title: "اقدام انجام نشد", text: "بستهٔ این اقدام کامل نشد؛ هیچ درخواستی ارسال نشد." });
+      return;
+    }
+    setReviewing(null);
+    void send(intent);
+  }, [returnRequestId, send]);
 
   const reviewDecision = useCallback(
     (action: "approve" | "reject", reason: string | null) => {
@@ -391,6 +561,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         setNotice({ title: "اقدام انجام نشد", text: "بستهٔ این اقدام کامل نشد؛ هیچ درخواستی ارسال نشد." });
         return;
       }
+      setReviewing(null);
       void send(intent);
     },
     [returnRequestId, send, snapshot?.checkoutId],
@@ -432,10 +603,16 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         setNotice({ title: "اقدام انجام نشد", text: "بستهٔ این اقدام کامل نشد؛ هیچ درخواستی ارسال نشد." });
         return;
       }
+      setReviewing(null);
       void send(intent);
     },
     [returnRequestId, send, work?.failedRefundAttemptId, work?.pendingRefundAttemptId],
   );
+
+  const closeReview = useCallback(() => {
+    setReviewing(null);
+    setReceiptProblem(null);
+  }, []);
 
   const discardUnreadable = useCallback(() => {
     if (!storage) return;
@@ -449,6 +626,18 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       {formatReturnWorkCategory(work?.category)}
     </span>
   ) : null;
+
+  /**
+   * TB-277: every action is blocked while a command is on the wire OR while a durable unresolved envelope exists, so a
+   * second reviewed command can never be built on top of a possibly-applied one.
+   */
+  const commandsBlocked = pending !== null || stored.kind !== "none";
+
+  // ONE local authority for the receipt dialog's submit state: an over-ceiling or mis-precision amount disables the
+  // confirm button instead of being discovered after a send.
+  const receiptCollected = collectReceiptItems(receiptLines);
+  const receiptSubmittable =
+    receiptCollected.problem === null && receiptCollected.sumProblem === null && receiptCollected.items.length > 0;
 
   return (
     <main data-testid="admin-return-workspace" dir="rtl" className="space-y-5">
@@ -475,7 +664,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         </Link>
       </div>
 
-      <ToastRegion message={toast} />
+      <ToastRegion key={toast?.seq ?? 0} message={toast?.text ?? null} />
 
       {/*
         TB-276: retained evidence is rendered from STORAGE, before and independently of the fresh detail read. A failed
@@ -641,7 +830,9 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                             ? "—"
                             : formatQuantityDisplayFa(item.saleableRestockedQuantity)}
                         </td>
-                        <td className="py-2">{item.dispositionCondition ? formatReturnCondition(item.dispositionCondition) : "باقی‌مانده"}</td>
+                        <td className="py-2" data-testid={`admin-return-item-disposition-${index}`}>
+                          {formatReturnDisposition(item.disposition, item.saleableRestockedQuantity)}
+                        </td>
                       </tr>
                     );
                   })}
@@ -706,189 +897,373 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <h2 className="font-semibold">اقدام‌های مجاز</h2>
             {work && work.actionCodes.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {work.canRecordReceipt ? (
-                  <ActionButton
-                    id="record-receipt"
-                    label="ثبت دریافت کالا"
-                    onClick={() => setPending("receipt")}
-                    disabled={pending !== null || stored.kind !== "none"}
-                  />
-                ) : null}
-                {work.canDecide ? (
-                  <>
+              <>
+                <p className="mt-1 text-sm text-muted">
+                  هر اقدام در پنجرهٔ بررسی خودش باز می‌شود و تا تأیید شما هیچ درخواستی ارسال نمی‌شود.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {work.canRecordReceipt ? (
                     <ActionButton
-                      id="approve"
-                      label="تأیید مرجوعی"
-                      onClick={() => setPending("approve")}
-                      disabled={pending !== null || stored.kind !== "none"}
+                      id="record-receipt"
+                      label="ثبت دریافت کالا"
+                      onClick={() => setReviewing("receipt")}
+                      disabled={commandsBlocked}
                     />
+                  ) : null}
+                  {work.canDecide ? (
+                    <>
+                      <ActionButton
+                        id="approve"
+                        label="تأیید مرجوعی"
+                        onClick={() => setReviewing("approve")}
+                        disabled={commandsBlocked}
+                      />
+                      <ActionButton
+                        id="reject"
+                        label="رد مرجوعی"
+                        tone="danger"
+                        onClick={() => setReviewing("reject")}
+                        disabled={commandsBlocked}
+                      />
+                    </>
+                  ) : null}
+                  {/*
+                    TB-277: approval records a DECISION only. The money is a separate, deliberate action that the owning
+                    work description publishes on its own; it never rides on "approve".
+                  */}
+                  {work.canStartRefund ? (
                     <ActionButton
-                      id="reject"
-                      label="رد مرجوعی"
-                      tone="danger"
-                      onClick={() => setPending("reject")}
-                      disabled={pending !== null || stored.kind !== "none"}
+                      id="start-refund"
+                      label="شروع بازگشت وجه"
+                      onClick={() => setReviewing("start_refund")}
+                      disabled={commandsBlocked}
                     />
-                  </>
-                ) : null}
-                {work.canResumeRefund ? (
-                  <ActionButton
-                    id="resume-refund"
-                    label="پیگیری بازگشت وجه"
-                    onClick={() => reviewRecovery("resume_refund")}
-                    disabled={pending !== null || stored.kind !== "none"}
-                  />
-                ) : null}
-                {work.canRetryRefund ? (
-                  <ActionButton
-                    id="retry-refund"
-                    label="تلاش دوبارهٔ بازگشت وجه"
-                    onClick={() => reviewRecovery("retry_refund")}
-                    disabled={pending !== null || stored.kind !== "none"}
-                  />
-                ) : null}
-                {work.canSettlePhysical ? (
-                  <ActionButton
-                    id="settle-physical"
-                    label="تعیین تکلیف کالا"
-                    onClick={() => reviewRecovery("settle_physical")}
-                    disabled={pending !== null || stored.kind !== "none"}
-                  />
-                ) : null}
-              </div>
+                  ) : null}
+                  {work.canResumeRefund ? (
+                    <ActionButton
+                      id="resume-refund"
+                      label="پیگیری بازگشت وجه"
+                      onClick={() => setReviewing("resume_refund")}
+                      disabled={commandsBlocked}
+                    />
+                  ) : null}
+                  {work.canRetryRefund ? (
+                    <ActionButton
+                      id="retry-refund"
+                      label="تلاش دوبارهٔ بازگشت وجه"
+                      onClick={() => setReviewing("retry_refund")}
+                      disabled={commandsBlocked}
+                    />
+                  ) : null}
+                  {work.canSettlePhysical ? (
+                    <ActionButton
+                      id="settle-physical"
+                      label="تعیین تکلیف کالا"
+                      onClick={() => setReviewing("settle_physical")}
+                      disabled={commandsBlocked}
+                    />
+                  ) : null}
+                </div>
+              </>
             ) : (
               <p className="mt-2 text-sm text-muted">برای وضعیت فعلی این پرونده اقدام اجرایی وجود ندارد.</p>
             )}
-            {pending ? <p className="mt-3 text-sm text-muted">در حال ثبت اقدام…</p> : null}
+            {pending ? (
+              <p className="mt-3 text-sm text-muted" data-testid="admin-return-command-pending">
+                در حال ثبت اقدام…
+              </p>
+            ) : null}
           </section>
 
-          {pending === "approve" ? (
-            <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="admin-return-approve-form">
-              <h2 className="font-semibold">تأیید مرجوعی</h2>
-              <p className="mt-1 text-sm text-muted">
-                با تأیید، بازگشت وجه به «{formatRefundDestination(snapshot.destination)}» آغاز می‌شود. این تصمیم پس از ثبت
-                قابل بازگشت نیست.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="min-h-11 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground"
-                  data-testid="admin-return-approve-confirm"
-                  onClick={() => reviewDecision("approve", null)}
-                >
-                  ثبت تأیید
-                </button>
-                <button type="button" className="min-h-11 rounded-xl border border-border px-4 text-sm" onClick={() => setPending(null)}>
-                  انصراف
-                </button>
+          {/*
+            TB-277: the reviewed decision is a DIALOG. Its copy says exactly what it does — record the decision, move no
+            money — so an operator can never read approval as "the refund happened".
+          */}
+          {reviewing === "approve" ? (
+            <Dialog open title="تأیید مرجوعی" onClose={closeReview} showCloseButton={false}>
+              <div className="space-y-3 text-sm" data-testid="admin-return-approve-form">
+                <p>
+                  با تأیید، فقط <strong>تصمیم تأیید</strong> روی این پرونده ثبت می‌شود.
+                </p>
+                <p className="text-muted">
+                  در همین مرحله هیچ وجهی جابه‌جا نمی‌شود و هیچ کالایی به موجودی قابل‌فروش برنمی‌گردد. بازگشت وجه به «
+                  {formatRefundDestination(snapshot.destination)}» یک اقدام مالی جداگانه است که پس از ثبت تأیید، با دکمهٔ
+                  «شروع بازگشت وجه» انجام می‌شود.
+                </p>
+                <p className="text-muted">این تصمیم پس از ثبت قابل بازگشت نیست.</p>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button tone="secondary" type="button" onClick={closeReview} data-testid="admin-return-approve-cancel">
+                    انصراف
+                  </Button>
+                  <Button type="button" onClick={() => reviewDecision("approve", null)} data-testid="admin-return-approve-confirm">
+                    ثبت تأیید
+                  </Button>
+                </div>
               </div>
-            </section>
+            </Dialog>
           ) : null}
 
-          {pending === "reject" ? (
-            <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="admin-return-reject-form">
-              <h2 className="font-semibold">دلیل رد مرجوعی</h2>
-              <p className="mt-1 text-sm text-muted">دلیل ثبت‌شده همراه تصمیم ذخیره می‌شود و برای پیگیری قابل استناد است.</p>
-              <textarea
-                className="mt-3 min-h-24 w-full rounded-xl border border-border bg-surface p-3 text-sm"
-                value={rejectReason}
-                onChange={(event) => setRejectReason(event.target.value)}
-                data-testid="admin-return-reject-reason"
-              />
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="min-h-11 rounded-xl bg-red-600 px-4 text-sm font-bold text-white"
-                  disabled={pending !== "reject" || rejectReason.trim().length < 3}
-                  onClick={() => {
-                    if (rejectReason.trim().length < 3) return;
-                    reviewDecision("reject", rejectReason.trim());
-                  }}
-                >
-                  ثبت رد
-                </button>
-                <button type="button" className="min-h-11 rounded-xl border border-border px-4 text-sm" onClick={() => setPending(null)}>
-                  انصراف
-                </button>
+          {reviewing === "reject" ? (
+            <Dialog open title="رد مرجوعی" onClose={closeReview} showCloseButton={false}>
+              <div className="space-y-3 text-sm" data-testid="admin-return-reject-form">
+                <p>دلیل ثبت‌شده همراه تصمیم ذخیره می‌شود و برای پیگیری قابل استناد است.</p>
+                <p className="text-muted">
+                  با رد، بازگشت وجه انجام نمی‌شود. کالای دریافت‌شده در همین وضعیت باقی می‌ماند و تعیین تکلیف فیزیکی آن
+                  اقدام جداگانه‌ای است.
+                </p>
+                <label className="block">
+                  <span className="block text-muted">دلیل رد (حداقل ۳ نویسه)</span>
+                  <textarea
+                    className="mt-1 min-h-24 w-full rounded-xl border border-border bg-surface p-3 text-sm"
+                    value={rejectReason}
+                    onChange={(event) => setRejectReason(event.target.value)}
+                    data-testid="admin-return-reject-reason"
+                  />
+                </label>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button tone="secondary" type="button" onClick={closeReview}>
+                    انصراف
+                  </Button>
+                  <Button
+                    tone="danger"
+                    type="button"
+                    disabled={rejectReason.trim().length < 3}
+                    onClick={() => {
+                      if (rejectReason.trim().length < 3) return;
+                      reviewDecision("reject", rejectReason.trim());
+                    }}
+                    data-testid="admin-return-reject-confirm"
+                  >
+                    ثبت رد
+                  </Button>
+                </div>
               </div>
-            </section>
+            </Dialog>
           ) : null}
 
-          {pending === "receipt" ? (
-            <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="admin-return-receipt-form">
-              <h2 className="font-semibold">ثبت دریافت و بازرسی</h2>
-              <p className="mt-1 text-sm text-muted">هر قلم را با مقدار واقعی تحویل‌شده و وضعیت بازرسی ثبت کنید.</p>
-              <p className="mt-1 text-xs text-muted">
-                مقدار را دقیقاً همان‌قدری که تحویل گرفته‌اید وارد کنید (تا ۶ رقم اعشار). مقداری که دقیق قابل ثبت نباشد گرد
-                نمی‌شود و ثبت نخواهد شد.
-              </p>
-              <div className="mt-3 space-y-2">
-                {receiptLines.map((line, index) => (
-                  <div key={line.returnItemId} className="flex flex-wrap items-end gap-2">
-                    <label className="text-sm">
-                      <span className="block text-muted">قلم {toPersianDigits(index + 1)}</span>
-                      <input
-                        className="mt-1 min-h-11 w-28 rounded-xl border border-border bg-surface px-3 text-sm"
-                        inputMode="decimal"
-                        data-testid={`admin-return-receipt-qty-${index}`}
-                        value={line.quantity}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          setReceiptLines((current) =>
-                            current.map((entry) =>
-                              entry.returnItemId === line.returnItemId ? { ...entry, quantity: value } : entry,
-                            ),
-                          );
-                        }}
-                      />
-                    </label>
-                    <label className="text-sm">
-                      <span className="block text-muted">وضعیت</span>
-                      <select
-                        className="mt-1 min-h-11 rounded-xl border border-border bg-surface px-3 text-sm"
-                        data-testid={`admin-return-receipt-condition-${index}`}
-                        value={line.condition}
-                        onChange={(event) => {
-                          const value: ReceiptConditionChoice =
-                            event.target.value === "Damaged"
-                              ? "Damaged"
-                              : event.target.value === "Usable"
-                                ? "Usable"
-                                : "";
-                          setReceiptLines((current) =>
-                            current.map((entry) =>
-                              entry.returnItemId === line.returnItemId ? { ...entry, condition: value } : entry,
-                            ),
-                          );
-                        }}
-                      >
-                        <option value="" disabled>
-                          انتخاب کنید
-                        </option>
-                        <option value="Usable">سالم</option>
-                        <option value="Damaged">معیوب</option>
-                      </select>
-                    </label>
-                    <span className="text-xs text-muted">باقی‌مانده: {formatQuantityDisplayFa(line.remaining)}</span>
+          {reviewing === "start_refund" ? (
+            <Dialog open title="شروع بازگشت وجه" onClose={closeReview} showCloseButton={false}>
+              <div className="space-y-3 text-sm" data-testid="admin-return-start-refund-form">
+                <p>
+                  این اقدام، <strong>اولین تلاش بازگشت وجه</strong> این پرونده را ثبت و به درگاه پرداخت ارسال می‌کند:
+                </p>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
+                  <dt className="text-muted">مبلغ</dt>
+                  <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
+                  <dt className="text-muted">مقصد</dt>
+                  <dd>{formatRefundDestination(snapshot.destination)}</dd>
+                  <dt className="text-muted">پرداخت مبدأ</dt>
+                  <dd>{snapshot.paymentId ? "به همین پرونده متصل است" : "ثبت نشده"}</dd>
+                  <dt className="text-muted">تصمیم ثبت‌شده</dt>
+                  <dd>تأیید مرجوعی</dd>
+                </dl>
+                <p className="text-muted">
+                  تأیید مرجوعی به‌تنهایی هیچ وجهی جابه‌جا نمی‌کند؛ این پنجره همان اقدام مالی جداگانه است. شناسهٔ این تلاش
+                  از خود پرونده ساخته می‌شود، بنابراین کلیک دوباره یا قطع پاسخ، تلاش دومی نمی‌سازد.
+                </p>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button tone="secondary" type="button" onClick={closeReview}>
+                    انصراف
+                  </Button>
+                  <Button type="button" onClick={reviewStartRefund} data-testid="admin-return-start-refund-confirm">
+                    شروع بازگشت وجه
+                  </Button>
+                </div>
+              </div>
+            </Dialog>
+          ) : null}
+
+          {/*
+            TB-277: receiving is a DIALOG with one bounded pair of fields per product line. Each field states the unit,
+            the unit's precision and the line's remaining ceiling, and an over-ceiling / mis-precision amount is refused
+            inside this dialog — nothing is stored or sent for an invalid quantity.
+          */}
+          {reviewing === "receipt" ? (
+            <Dialog open size="lg" title="ثبت دریافت و بازرسی" onClose={closeReview} showCloseButton={false}>
+              <div className="space-y-4 text-sm" data-testid="admin-return-receipt-form">
+                <p className="text-muted">
+                  هر قلم را با مقدار واقعی تحویل‌شده ثبت کنید: بخش سالم و بخش معیوب جدا وارد می‌شوند و مجموع آن دو از
+                  باقی‌ماندهٔ همان قلم بیشتر نمی‌شود.
+                </p>
+                {receiptLines.length === 0 ? (
+                  <p className="text-amber-700">درخواست این پرونده قلمی برای دریافت ندارد.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {receiptLines.map((line, index) => {
+                      const usableCheck = evaluateQuantityEntry(line.usable, line.decimalPlaces, line.ceiling);
+                      const damagedCheck = evaluateQuantityEntry(line.damaged, line.decimalPlaces, line.ceiling);
+                      const usableEntered = normalizeQuantityInput(line.usable) !== "";
+                      const damagedEntered = normalizeQuantityInput(line.damaged) !== "";
+                      const update = (patch: Partial<ReceiptDraftLine>) =>
+                        setReceiptLines((current) =>
+                          current.map((entry) => (entry.returnItemId === line.returnItemId ? { ...entry, ...patch } : entry)),
+                        );
+                      return (
+                        <fieldset
+                          key={line.returnItemId}
+                          className="rounded-xl border border-border p-3"
+                          data-testid={`admin-return-receipt-line-${index}`}
+                        >
+                          <legend className="px-1 text-sm font-semibold">
+                            {line.productLabel ?? "کالای سفارش"}
+                          </legend>
+                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted">
+                            <span>واحد: {formatUnitLabel(line.unitLabel)}</span>
+                            <span data-testid={`admin-return-receipt-ceiling-${index}`}>
+                              باقی‌ماندهٔ قابل دریافت: {formatQuantityDisplayFa(line.ceiling)}
+                            </span>
+                            <span>
+                              {line.decimalPlaces === 0
+                                ? "فقط عدد صحیح"
+                                : `حداکثر ${toPersianDigits(line.decimalPlaces)} رقم اعشار`}
+                            </span>
+                          </div>
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            <label className="text-sm">
+                              <span className="block text-muted">سالم</span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                maxLength={12}
+                                placeholder="۰"
+                                className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
+                                aria-invalid={usableEntered && usableCheck.problem !== null ? true : undefined}
+                                data-testid={`admin-return-receipt-qty-${index}`}
+                                data-max={line.ceiling}
+                                data-step={quantityStep(line.decimalPlaces)}
+                                value={line.usable}
+                                onChange={(event) => update({ usable: event.target.value })}
+                              />
+                              {usableEntered && usableCheck.problem ? (
+                                <span className="mt-1 block text-xs text-red-700" role="alert">
+                                  {describeQuantityProblem(usableCheck.problem, line)}
+                                </span>
+                              ) : null}
+                            </label>
+                            <label className="text-sm">
+                              <span className="block text-muted">معیوب</span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                maxLength={12}
+                                placeholder="۰"
+                                className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
+                                aria-invalid={damagedEntered && damagedCheck.problem !== null ? true : undefined}
+                                data-testid={`admin-return-receipt-damaged-${index}`}
+                                data-max={line.ceiling}
+                                data-step={quantityStep(line.decimalPlaces)}
+                                value={line.damaged}
+                                onChange={(event) => update({ damaged: event.target.value })}
+                              />
+                              {damagedEntered && damagedCheck.problem ? (
+                                <span className="mt-1 block text-xs text-red-700" role="alert">
+                                  {describeQuantityProblem(damagedCheck.problem, line)}
+                                </span>
+                              ) : null}
+                            </label>
+                          </div>
+                        </fieldset>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
+                {receiptCollected.sumProblem ? (
+                  <p className="text-sm text-red-700" role="alert" data-testid="admin-return-receipt-sum-problem">
+                    {receiptCollected.sumProblem}
+                  </p>
+                ) : null}
+                {receiptProblem ? (
+                  <p className="text-sm text-red-700" role="alert" data-testid="admin-return-receipt-problem">
+                    {receiptProblem}
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button tone="secondary" type="button" onClick={closeReview}>
+                    انصراف
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={!receiptSubmittable}
+                    onClick={reviewReceipt}
+                    data-testid="admin-return-receipt-confirm"
+                  >
+                    ثبت دریافت
+                  </Button>
+                </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="min-h-11 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-50"
-                  data-testid="admin-return-receipt-confirm"
-                  disabled={pending !== "receipt"}
-                  onClick={reviewReceipt}
-                >
-                  ثبت دریافت
-                </button>
-                <button type="button" className="min-h-11 rounded-xl border border-border px-4 text-sm" onClick={() => setPending(null)}>
-                  انصراف
-                </button>
+            </Dialog>
+          ) : null}
+
+          {reviewing === "resume_refund" ? (
+            <Dialog open title="پیگیری بازگشت وجه" onClose={closeReview} showCloseButton={false}>
+              <div className="space-y-3 text-sm" data-testid="admin-return-resume-form">
+                <p>
+                  تلاش بازگشت وجهِ در جریان این پرونده با همان شناسهٔ ثبت‌شده و همان مبلغ دوباره ارسال می‌شود؛ تلاش تازه‌ای
+                  ساخته نمی‌شود.
+                </p>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
+                  <dt className="text-muted">مبلغ</dt>
+                  <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
+                  <dt className="text-muted">مقصد</dt>
+                  <dd>{formatRefundDestination(snapshot.destination)}</dd>
+                </dl>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button tone="secondary" type="button" onClick={closeReview}>
+                    انصراف
+                  </Button>
+                  <Button type="button" onClick={() => reviewRecovery("resume_refund")} data-testid="admin-return-resume-confirm">
+                    ارسال دوبارهٔ همان تلاش
+                  </Button>
+                </div>
               </div>
-            </section>
+            </Dialog>
+          ) : null}
+
+          {reviewing === "retry_refund" ? (
+            <Dialog open title="تلاش دوبارهٔ بازگشت وجه" onClose={closeReview} showCloseButton={false}>
+              <div className="space-y-3 text-sm" data-testid="admin-return-retry-form">
+                <p>
+                  تنها تلاش <strong>قطعی ناموفق</strong> این پرونده بررسی و تلاش وابستهٔ آن ساخته می‌شود؛ شناسهٔ تلاش
+                  دوباره از همان تلاش ناموفق مشتق می‌شود.
+                </p>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
+                  <dt className="text-muted">مبلغ</dt>
+                  <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
+                  <dt className="text-muted">مقصد</dt>
+                  <dd>{formatRefundDestination(snapshot.destination)}</dd>
+                </dl>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button tone="secondary" type="button" onClick={closeReview}>
+                    انصراف
+                  </Button>
+                  <Button type="button" onClick={() => reviewRecovery("retry_refund")} data-testid="admin-return-retry-confirm">
+                    ثبت تلاش دوباره
+                  </Button>
+                </div>
+              </div>
+            </Dialog>
+          ) : null}
+
+          {reviewing === "settle_physical" ? (
+            <Dialog open title="تعیین تکلیف کالا" onClose={closeReview} showCloseButton={false}>
+              <div className="space-y-3 text-sm" data-testid="admin-return-settle-form">
+                <p>
+                  کالای دریافت‌شدهٔ این پرونده تعیین تکلیف می‌شود: بخش سالم به موجودی قابل‌فروش برمی‌گردد و بخش معیوب
+                  غیرقابل‌فروش می‌ماند.
+                </p>
+                <p className="text-muted">این اقدام هیچ وجهی جابه‌جا نمی‌کند و تلاش بازگشت وجهی نمی‌سازد.</p>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button tone="secondary" type="button" onClick={closeReview}>
+                    انصراف
+                  </Button>
+                  <Button type="button" onClick={() => reviewRecovery("settle_physical")} data-testid="admin-return-settle-confirm">
+                    ثبت تعیین تکلیف
+                  </Button>
+                </div>
+              </div>
+            </Dialog>
           ) : null}
         </>
       )}
@@ -974,6 +1349,11 @@ async function dispatch(intent: ReturnReviewIntent): Promise<ReviewAnswer> {
       // The frozen reviewed bytes are the ONLY body sent: nothing is rebuilt from a newer detail read.
       return classifyReviewAnswer(
         await sendReviewedReturnCommand(intent.returnRequestId, intent.action === "receipt" ? "receipt" : "recover", body),
+      );
+    case "start_refund":
+      // TB-277: the deliberate FIRST-refund command; its reviewed bytes travel unchanged on a retry.
+      return classifyReviewAnswer(
+        await sendReviewedReturnCommand(intent.returnRequestId, "start-refund", body),
       );
     case "retry_refund":
       return classifyReviewAnswer(

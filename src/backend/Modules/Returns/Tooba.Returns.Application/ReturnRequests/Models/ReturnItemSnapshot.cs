@@ -31,4 +31,8 @@ public sealed record ReturnItemSnapshot(
     Guid? SourceReceiptId = null,
     decimal? SaleableRestockedQuantity = null,
     string? ProductLabel = null,
-    string? UnitLabel = null);
+    string? UnitLabel = null,
+    // TB-277: the authoritative fractional precision of this line's unit, read from the ACCEPTED Order line snapshot
+    // (<c>QuantityDecimalPlacesSnapshot</c>). Null when the owning line could not be answered — the UI then refuses to
+    // invent a step and never silently falls back to whole pieces.
+    int? UnitDecimalPlaces = null);

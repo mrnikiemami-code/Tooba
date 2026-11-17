@@ -65,7 +65,13 @@ public static class AdminReturnQueueFilters
         _ => "Approved",
     };
 
-    /// <summary>Refund status: none / pending / failed / completed.</summary>
+    /// <summary>
+    /// Refund status: none / pending / failed / completed.
+    /// <para>
+    /// TB-277: an APPROVED case has recorded a decision only — the first refund is a separate deliberate action — so
+    /// approval alone never reads as "a refund is pending". A pending refund requires an attempt that actually started.
+    /// </para>
+    /// </summary>
     public static string ComposeRefundStatus(ReturnRequestStatus status, IReadOnlyList<RefundAttemptStatus> attempts)
     {
         if (status is ReturnRequestStatus.Requested or ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled)
@@ -86,7 +92,7 @@ public static class AdminReturnQueueFilters
             return "failed";
         }
 
-        if (status is ReturnRequestStatus.RefundProcessing or ReturnRequestStatus.Approved
+        if (status == ReturnRequestStatus.RefundProcessing
             || attempts.Any(x => x == RefundAttemptStatus.Pending))
         {
             return "pending";

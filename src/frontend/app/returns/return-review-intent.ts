@@ -17,11 +17,13 @@
 /** TB-276: bump when the stored shape changes incompatibly; an older envelope reads as unreadable evidence. */
 export const RETURN_REVIEW_INTENT_VERSION = "v2";
 
-/** TB-275: the deliberate review intents of one return case. */
+/** TB-275/TB-277: the deliberate review intents of one return case. */
 export type ReturnReviewAction =
   | "receipt"
   | "approve"
   | "reject"
+  /** TB-277: the FIRST refund of an approved case — a deliberate financial action, never part of "approve". */
+  | "start_refund"
   | "resume_refund"
   | "retry_refund"
   | "settle_physical";
@@ -66,6 +68,7 @@ const KNOWN_ACTIONS: ReadonlySet<string> = new Set<ReturnReviewAction>([
   "receipt",
   "approve",
   "reject",
+  "start_refund",
   "resume_refund",
   "retry_refund",
   "settle_physical",
@@ -324,6 +327,8 @@ export const PROVEN_NO_EFFECT_REFUSAL_CODES: ReadonlySet<string> = new Set([
   "refund.already_started",
   "refund.already_completed",
   "refund.destination.invalid",
+  // TB-277: the first refund refuses before it persists an attempt or calls the gateway at all.
+  "return.refund.first_not_lawful",
   "return.recovery.kind_invalid",
   "return.recovery.attempt_mismatch",
   "return.recovery.attempt_unbound",

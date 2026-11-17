@@ -47,5 +47,6 @@
   <data name="return.receiving.incomplete" xml:space="preserve"><value>The return has no complete recorded receiving/inspection coverage, so no approval, refund or restock can start.</value></data>
   <data name="return.rejection_reason_required" xml:space="preserve"><value>A new rejection must state a meaningful reason.</value></data>
   <data name="return.decision.reason_conflict" xml:space="preserve"><value>The recorded rejection already states a different reason.</value></data>
+  <data name="return.refund.first_not_lawful" xml:space="preserve"><value>Only an approved return whose refund was never started can begin its first refund.</value></data>
   <data name="return.outbox.unmapped_event" xml:space="preserve"><value>The integration event type is not registered.</value></data>
 </root>

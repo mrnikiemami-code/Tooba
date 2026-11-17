@@ -23,6 +23,7 @@ public static class ReturnAdminEndpoints
         group.MapGet("/returns/{returnRequestId:guid}", AdminGetAsync);
         group.MapPost("/returns/{returnRequestId:guid}/retry-refund", AdminRetryRefundAsync);
         group.MapPost("/returns/{returnRequestId:guid}/recover", AdminRecoverAsync);
+        group.MapPost("/returns/{returnRequestId:guid}/start-refund", AdminStartRefundAsync);
         group.MapPost("/returns/{returnRequestId:guid}/receipt", AdminRecordReceiptAsync);
     }
 
@@ -79,6 +80,20 @@ public static class ReturnAdminEndpoints
 
         return api.From(await sender.Send(
             new RecoverReturnCommand(returnRequestId, actorUserId, kind.Value, body?.ExpectedRefundAttemptId),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> AdminStartRefundAsync(
+        Guid returnRequestId, ISender sender, IReturnAdminAuthorizer authorizer,
+        ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
+    {
+        var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+
+        // TB-277: the FIRST refund is a deliberate financial action of its own. Only the case identity travels; the
+        // owning directory reads the approved decision, fixed payment, amount, currency and destination from the
+        // stored case and derives the one durable attempt identity from it.
+        return api.From(await sender.Send(
+            new StartReturnRefundCommand(returnRequestId, actorUserId),
             cancellationToken));
     }
 

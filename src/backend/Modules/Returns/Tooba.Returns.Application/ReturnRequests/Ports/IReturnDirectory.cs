@@ -43,8 +43,13 @@ public interface IReturnDirectory
     /// <summary>وضعیت‌های مرجوعی برای overlay گرید سفارش Admin.</summary>
     Task<IReadOnlyList<ReturnStatusOverlayRow>> ListStatusOverlayAsync(CancellationToken cancellationToken);
 
-    /// <summary>درخواست را تأیید و refund را آغاز می‌کند.</summary>
+    /// <summary>درخواست را تأیید می‌کند (TB-277: فقط تصمیم؛ هیچ پولی جابه‌جا نمی‌شود).</summary>
     Task<ReturnSnapshot> ApproveAsync(ApproveReturnCommand command, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-277: نخستین بازگشت وجه یک پرونده تأییدشده را به‌صورت صریح آغاز می‌کند (اقدام مالی مستقل از تأیید).
+    /// </summary>
+    Task<ReturnSnapshot> StartFirstRefundAsync(StartReturnRefundCommand command, CancellationToken cancellationToken);
 
     /// <summary>درخواست را رد می‌کند.</summary>
     Task<ReturnSnapshot> RejectAsync(RejectReturnCommand command, CancellationToken cancellationToken);

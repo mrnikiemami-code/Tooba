@@ -189,9 +189,13 @@ public sealed class ReturnsCustomerReceipts274R1Tests
         await order.RecordAsync("delivery-1", (order.ReturnItemId, 2m, ReturnItemCondition.Usable));
 
         var approved = await order.ApproveAsync();
-        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Empty(order.Gateway.Calls);
 
-        // The money really was confirmed, and NOTHING was restocked or declared saleable without Inventory.
+        // TB-277: the explicit first refund confirms the money, and NOTHING is restocked or declared saleable
+        // without Inventory.
+        var completed = await order.StartRefundAsync();
+        Assert.Equal(ReturnRequestStatus.Completed, completed.Status);
         Assert.Single(order.Gateway.Calls);
         Assert.Empty(order.Inventory.Restocked);
         Assert.Equal(ReturnItemDisposition.None, (await order.Items()).Single().Disposition);
@@ -224,6 +228,7 @@ public sealed class ReturnsCustomerReceipts274R1Tests
         await order.RecordAsync("delivery-1", (order.ReturnItemId, 1m, ReturnItemCondition.Damaged));
 
         await order.ApproveAsync();
+        await order.StartRefundAsync();
 
         Assert.Empty(order.Inventory.Restocked);
         Assert.Equal(ReturnItemDisposition.DamagedNonSaleable, (await order.Items()).Single().Disposition);
@@ -241,6 +246,7 @@ public sealed class ReturnsCustomerReceipts274R1Tests
             (order.ReturnItemId, 1m, ReturnItemCondition.Damaged));
 
         await order.ApproveAsync();
+        await order.StartRefundAsync();
 
         // ONLY the inspected usable portion may reach saleable Inventory; the damaged portion never does.
         var restock = Assert.Single(order.Inventory.Restocked);
@@ -460,6 +466,12 @@ public sealed class ReturnsCustomerReceipts274R1Tests
                 CancellationToken.None);
 
         public Task<ReturnSnapshot> ApproveAsync() => ApproveAsAsync(SellerPartyId);
+
+        // TB-277: approval records a decision only; this explicit intent is what starts the money.
+        public Task<ReturnSnapshot> StartRefundAsync() =>
+            _directory.StartFirstRefundAsync(
+                new StartReturnRefundCommand(ReturnRequestId, Guid.NewGuid()),
+                CancellationToken.None);
 
         public Task<ReturnSnapshot> ApproveAsAsync(Guid sellerPartyId) =>
             _directory.ApproveAsync(

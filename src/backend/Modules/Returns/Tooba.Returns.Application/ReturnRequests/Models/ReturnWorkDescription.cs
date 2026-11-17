@@ -99,6 +99,13 @@ public static class ReturnWorkActionCodes
 
     /// <summary>Settle the physical disposition only.</summary>
     public const string SettlePhysical = "settle_physical_disposition";
+
+    /// <summary>
+    /// TB-277: deliberately execute the FIRST refund of an approved-but-not-yet-started case. It is a distinct verb
+    /// from <see cref="ResumeRefund"/> (repeat the same unknown attempt) and <see cref="RetryRefund"/> (mint a child
+    /// attempt for a definite failure).
+    /// </summary>
+    public const string StartRefund = "start_refund";
 }
 
 /// <summary>
@@ -115,16 +122,20 @@ public sealed record ReturnWorkDescription(
     bool CanDecide,
     bool CanResumeRefund,
     bool CanRetryRefund,
-    bool CanSettlePhysical)
+    bool CanSettlePhysical,
+    // TB-277: an approved case that owns no refund attempt may deliberately start its FIRST refund. This is NOT a
+    // recovery (nothing is pending) and NOT a retry (nothing failed).
+    bool CanStartRefund = false)
 {
     /// <summary>True while the case still owns open work in the queue's active set.</summary>
     public bool IsOpen => Category is not (ReturnWorkCategory.Closed or ReturnWorkCategory.Settled);
 
     /// <summary>
     /// True for the stages that notify an operator that they owe a decision/action. A pending refund the system bound
-    /// is deliberately NOT a notification (it is waiting on the provider, not on the operator).
+    /// is deliberately NOT a notification (it is waiting on the provider, not on the operator); an approval whose
+    /// first financial step was deliberately not taken yet IS one, because only an operator can start it.
     /// </summary>
-    public bool NeedsOperator => Category is ReturnWorkCategory.Receiving
+    public bool NeedsOperator => CanStartRefund || Category is ReturnWorkCategory.Receiving
         or ReturnWorkCategory.Decision
         or ReturnWorkCategory.RefundFailed
         or ReturnWorkCategory.Disposition;
@@ -145,6 +156,7 @@ public sealed record ReturnWorkDescription(
                 codes.Add(ReturnWorkActionCodes.Reject);
             }
 
+            if (CanStartRefund) codes.Add(ReturnWorkActionCodes.StartRefund);
             if (CanResumeRefund) codes.Add(ReturnWorkActionCodes.ResumeRefund);
             if (CanRetryRefund) codes.Add(ReturnWorkActionCodes.RetryRefund);
             if (CanSettlePhysical) codes.Add(ReturnWorkActionCodes.SettlePhysical);
@@ -193,6 +205,9 @@ public static class ReturnWorkPolicy
         var canRetryRefund = recovery.Phase == ReturnRecoveryPhase.FailedMoney;
         var canSettlePhysical = recovery.Phase == ReturnRecoveryPhase.PendingDisposition
             && recovery.RecoveryKind == ReturnRecoveryKind.SettlePhysicalDisposition;
+        // TB-277: only the policy's own "lawfully approved, nothing started" phase authorizes the first money step,
+        // so a read can never advertise an execution the command would refuse.
+        var canStartRefund = recovery.Phase == ReturnRecoveryPhase.AwaitingFirstRefund;
 
         var (category, blocker, pending, failed) = Classify(snapshot, recovery, receiptComplete);
 
@@ -205,7 +220,8 @@ public static class ReturnWorkPolicy
             canDecide,
             canResumeRefund,
             canRetryRefund,
-            canSettlePhysical);
+            canSettlePhysical,
+            canStartRefund);
     }
 
     private static (ReturnWorkCategory Category, string? Blocker, Guid? Pending, Guid? Failed) Classify(
@@ -213,6 +229,10 @@ public static class ReturnWorkPolicy
         ReturnRecoveryDescription recovery,
         bool receiptComplete) => recovery.Phase switch
         {
+            ReturnRecoveryPhase.AwaitingFirstRefund => (
+                // TB-277: an approved case whose money was deliberately not started is ACTIVE refund work, not a
+                // closed/settled case and not an unknown outcome.
+                ReturnWorkCategory.Refund, null, null, null),
             ReturnRecoveryPhase.PendingMoney => (
                 ReturnWorkCategory.Refund, null, recovery.RefundAttemptId, null),
             ReturnRecoveryPhase.FailedMoney => (

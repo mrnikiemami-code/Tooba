@@ -123,6 +123,20 @@ public sealed class RecoverReturnCommandValidator : AbstractValidator<RecoverRet
 }
 
 /// <summary>
+/// TB-277: transport shape of the explicit FIRST-refund request. Only the case identity travels; every amount,
+/// payment, currency, destination and customer fact is read from the stored case by the owning directory.
+/// </summary>
+public sealed class StartReturnRefundCommandValidator : AbstractValidator<StartReturnRefundCommand>
+{
+    public StartReturnRefundCommandValidator()
+    {
+        RuleFor(x => x.ReturnRequestId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ReturnRequestIdRequired);
+    }
+}
+
+/// <summary>
 /// TB-274: transport shape of a customer receipt. The occurrence identity, the non-empty line set, the positive and
 /// exactly representable quantities, the defined condition and the no-duplicate-(item, condition) rule are shape; the
 /// owning case/state/over-receipt/gating rules stay in the Directory.

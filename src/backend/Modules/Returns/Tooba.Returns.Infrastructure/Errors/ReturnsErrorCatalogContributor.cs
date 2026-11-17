@@ -54,6 +54,7 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.ReceivingIncomplete, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The return has no complete recorded receiving/inspection coverage, so no approval, refund or restock can start."),
         D(ReturnsErrorCodes.RejectionReasonRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A new rejection must state a meaningful reason."),
         D(ReturnsErrorCodes.DecisionReasonConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The recorded rejection already states a different reason."),
+        D(ReturnsErrorCodes.FirstRefundNotLawful, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Only an approved return whose refund was never started can begin its first refund."),
     ];
 
     private static ErrorDescriptor D(

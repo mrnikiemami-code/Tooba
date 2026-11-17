@@ -68,6 +68,14 @@ internal sealed class ReturnAdminOperationsAdapter(
                 await RequireSellerPartyAsync(returnRequestId, cancellationToken)),
             cancellationToken));
 
+    public async Task<ReturnSnapshot> StartFirstRefundAsync(
+        Guid returnRequestId,
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        Map(await directory.StartFirstRefundAsync(
+            new StartReturnRefundCommand(returnRequestId, actorUserId),
+            cancellationToken));
+
     public async Task<ReturnSnapshot> RejectAsync(
         Guid returnRequestId,
         Guid actorUserId,
@@ -260,7 +268,8 @@ internal sealed class ReturnAdminOperationsAdapter(
                         : null,
                     x.SourceShipmentId,
                     x.SourceReceiptId,
-                    x.SaleableRestockedQuantity))
+                    x.SaleableRestockedQuantity,
+                    x.UnitDecimalPlaces))
                 .ToList(),
             snapshot.RefundAttempts
                 .Select(x => new RefundAttemptSnapshot(
@@ -323,7 +332,8 @@ internal sealed class ReturnAdminOperationsAdapter(
                 work.CanSettlePhysical,
                 work.IsOpen,
                 work.NeedsOperator,
-                work.ActionCodes.ToList());
+                work.ActionCodes.ToList(),
+                work.CanStartRefund);
 
     /// <summary>
     /// TB-273: additive recovery facts. Money completion and physical completion stay two independent facts so a

@@ -1115,6 +1115,11 @@ public sealed class MarketplaceOperationalPackingChoice259Tests
             Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        // TB-277: the explicit first refund is not exercised by this Order-side suite; the stub keeps the contract.
+        public Task<ReturnSnapshot> StartFirstRefundAsync(
+            Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
         public Task<ReturnSnapshot> RecoverRefundAsync(
             Guid returnRequestId,
             Guid actorUserId,

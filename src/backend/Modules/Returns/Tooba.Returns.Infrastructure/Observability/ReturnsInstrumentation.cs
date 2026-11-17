@@ -15,6 +15,7 @@ public sealed class ReturnsInstrumentation
     private readonly Counter<long> _refundSucceeded;
     private readonly Counter<long> _refundFailed;
     private readonly Counter<long> _receipts;
+    private readonly Counter<long> _firstRefundStarted;
 
     /// <summary>
     /// متریک‌های in-process Returns.
@@ -29,6 +30,7 @@ public sealed class ReturnsInstrumentation
         _refundSucceeded = meter.CreateCounter<long>("tooba.returns.refund.succeeded");
         _refundFailed = meter.CreateCounter<long>("tooba.returns.refund.failed");
         _receipts = meter.CreateCounter<long>("tooba.returns.receipt.recorded");
+        _firstRefundStarted = meter.CreateCounter<long>("tooba.returns.refund.first_started");
     }
 
     /// <summary>ثبت ایجاد درخواست.</summary>
@@ -51,4 +53,7 @@ public sealed class ReturnsInstrumentation
 
     /// <summary>TB-274: ثبت رسید فیزیکی مشتری.</summary>
     public void RecordReceipt() => _receipts.Add(1);
+
+    /// <summary>TB-277: ثبت آغاز صریح نخستین بازگشت وجه (اقدام مالی مستقل از تأیید).</summary>
+    public void RecordFirstRefundStarted() => _firstRefundStarted.Add(1);
 }

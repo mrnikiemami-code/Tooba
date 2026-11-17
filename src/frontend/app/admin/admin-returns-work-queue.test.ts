@@ -87,9 +87,12 @@ test("AdminReturnsScreen delegates to work queue screen and the detail barrel ke
 test("case workspace is the single action owner and never sends before persisting the intent", () => {
   const workspace = readFileSync(join(dir, "admin-return-workspace.tsx"), "utf8");
   assert.match(workspace, /data-testid="admin-return-workspace"/);
-  for (const action of ["record-receipt", "approve", "reject", "resume-refund", "retry-refund", "settle-physical"]) {
+  for (const action of ["record-receipt", "approve", "reject", "start-refund", "resume-refund", "retry-refund", "settle-physical"]) {
     assert.match(workspace, new RegExp(`id="${action}"`), action);
   }
+  // TB-277: approval is a decision only; the first refund is its own published action, never a side effect of approve.
+  assert.match(workspace, /work\.canStartRefund/);
+  assert.match(workspace, /reviewStartRefund/);
   // Durable review precedes the send, and the answer is inspected BEFORE anything is cleared.
   assert.match(workspace, /if \(inFlight\.current\) return;/);
   assert.match(workspace, /storeReturnReviewIntent\(storage, intent\)/);
@@ -508,16 +511,20 @@ test("chrome nav uses بازگشت وجه not بازپرداخت", () => {
   assert.doesNotMatch(chrome, /بازپرداخت/);
 });
 
-test("receipt review never preselects arrival/condition and refuses inexact quantities", () => {
+test("receipt review never preselects arrival and bounds each portion by the unit and the shared ceiling", () => {
   const source = readFileSync(join(dir, "admin-return-workspace.tsx"), "utf8");
-  // Nothing is pre-filled: the draft starts empty and the inspection condition starts unselected.
-  assert.match(source, /quantity: "",\s*\n\s*condition: "" as ReceiptConditionChoice,/);
-  assert.doesNotMatch(source, /condition: "Usable" as const/);
-  assert.match(source, /<option value="" disabled>/);
-  // Exactly-representable quantities only; a value needing rounding is refused before any intent is stored.
+  // Nothing is pre-filled: both inspected portions of every line start empty.
+  assert.match(source, /usable: "",\s*\n\s*damaged: "",/);
+  assert.doesNotMatch(source, /usable: "0"/);
+  // Exactly-representable quantities only; a value needing rounding is never silently changed.
   assert.ok(source.includes("const EXACT_QUANTITY = /^\\d{1,9}(?:\\.\\d{1,6})?$/;"), "exact 6-decimal quantity guard is missing");
-  assert.match(source, /مقدار بیش از این دقت گرد نمی‌شود/);
-  assert.match(source, /وضعیت بازرسی \(سالم یا معیوب\) هر قلم واردشده را مشخص کنید/);
-  // Quantity inputs and select carry the 44px minimum target.
-  assert.match(source, /min-h-11 w-28/);
+  // TB-277: the unit's own precision and the line's remaining coverage are refused BEFORE any intent is stored.
+  assert.match(source, /writtenScale\(normalized\) > Math\.min\(decimalPlaces, MAX_QUANTITY_SCALE\)/);
+  assert.match(source, /if \(value > ceiling\) return \{ value: null, problem: "over_ceiling" \};/);
+  // usable + damaged share ONE ceiling; neither portion may fund the other.
+  assert.match(source, /if \(total > entry\.line\.ceiling\)/);
+  // Persian digits and the Persian decimal separator are normalized instead of rejected.
+  assert.match(source, /export function normalizeQuantityInput/);
+  // The bounded quantity fields carry the 44px minimum target.
+  assert.match(source, /min-h-11 w-full/);
 });

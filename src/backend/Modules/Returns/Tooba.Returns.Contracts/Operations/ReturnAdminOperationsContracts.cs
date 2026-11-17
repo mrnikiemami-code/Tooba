@@ -63,7 +63,10 @@ public sealed record ReturnItemSnapshot(
     // TB-274-R1: the EXACT inspected usable quantity this line actually restocked (null when no saleable restock was
     // recorded). A mixed line restocks only this portion, so <see cref="DispositionCondition"/> / the line quantity can
     // never be read as "the whole requested amount went back to saleable stock".
-    decimal? SaleableRestockedQuantity = null);
+    decimal? SaleableRestockedQuantity = null,
+    // TB-277: the accepted Order line's fractional precision for this unit (0 = whole pieces). Null means the owning
+    // line could not be answered — a consumer must then refuse to invent a step rather than assume whole units.
+    int? UnitDecimalPlaces = null);
 
 /// <summary>One refund attempt of a return request.</summary>
 public sealed record RefundAttemptSnapshot(
@@ -137,7 +140,10 @@ public sealed record ReturnWorkSnapshot(
     bool CanSettlePhysical,
     bool IsOpen,
     bool NeedsOperator,
-    IReadOnlyList<string> ActionCodes);
+    // TB-277: an approved case that owns no refund attempt may deliberately start its FIRST refund. Distinct from
+    // resume (an unknown pending attempt) and retry (a definite failure). Appended so prior members keep their meaning.
+    IReadOnlyList<string> ActionCodes,
+    bool CanStartRefund = false);
 
 /// <summary>TB-275: one inspected line inside a recorded customer receipt occurrence.</summary>
 public sealed record ReturnReceiptLineSnapshot(
@@ -225,8 +231,14 @@ public interface IReturnAdminOperations
         CreateAdminReturnCommand command,
         CancellationToken cancellationToken);
 
-    /// <summary>Approve a return request and start the refund.</summary>
+    /// <summary>Approve a return request. TB-277: this records the DECISION only and never executes money.</summary>
     Task<ReturnSnapshot> ApproveAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-277: deliberately execute the FIRST refund of an approved case that owns no attempt yet. This is a real
+    /// financial action (money moves); it is neither the unknown-pending resume nor the failed-attempt retry.
+    /// </summary>
+    Task<ReturnSnapshot> StartFirstRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken);
 
     /// <summary>Reject a return request.</summary>
     Task<ReturnSnapshot> RejectAsync(

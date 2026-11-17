@@ -1,4 +1,28 @@
-# CURRENT — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
+# CURRENT — 277 WORKER PASS (shared action modals + unit-bounded receiving + decision-only approval with an explicit first refund); AWAIT USER LOOK AND ARCHITECT REVIEW — 2026-11-17
+
+Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/{RESULT.md,RECEIPTS.md,result-contract.txt,modal-and-quantity-proof.md,approval-vs-refund-proof.md,user-review.md}.
+277 PASS within the issued A–F scope, awaiting Architect review (NOT Architect ACCEPT, NOT user acceptance). 276/275/274/273/272-R1
+and shipping acceptances preserved. Expected-Base-SHA == Base `04aa77a5df260b3e76a115d607080a8e6c8ed004`.
+
+Behavior now: every Returns action review opens ONE shared design-system `Dialog` (no inline forms); receipt quantity fields
+show product + localized unit + «حداکثر قابل دریافت», are bounded by the owning unit precision (`QuantityDecimalPlacesSnapshot`,
+capped 6, null when unanswered) and one `requested − received` ceiling shared by usable+damaged; success uses the shared
+`ToastRegion`, command refusals the shared `MessageBox`, field problems in-dialog; `ApproveAsync` is DECISION ONLY (no attempt,
+no gateway/Wallet, no restock) and the FIRST refund is its own `start_refund` command/route with a deterministic case-derived
+attempt id/key persisted before the external call. `AwaitingFirstRefund` is appended as phase 6; money-complete with undisposed
+goods is still `Disposition`, never settled. No migration.
+
+Proof: backend 61/61 focused; mounted real workspace 8/8; `tsc` 0; `next build` 0 (`BUILD_ID VAx5DNtd8dMTFmyI5e2OR`);
+backend build 0; Host publish 0. Host 5088 PID 49764 (dll SHA256 `64C74398…2F9EB0`, healthy), Next 3000 PID 7020.
+The exercised case `01a1e6b0-f33a-7000-80ee-beffb6344490` is untouched (`Completed`, `Approve`, 1 receipt, 1 Succeeded attempt at
+`00:31:26Z`, disposition `SaleableRestock`, `Settled`); counts/`updated_at` unchanged and no returns event after that instant.
+Primary review URL: http://127.0.0.1:3000/fa/admin/returns/01a1e6b0-f33a-7000-80ee-beffb6344490 (settled history → no action is
+offered; the modal workflow is proven by the mounted real component, not by posting on the case).
+Limits: controlled ports only (no real PSP/Wallet/Inventory), no committed two-writer race, jsdom mount + DOM/text live check,
+no served modal opened on the settled case, other units inherit owning metadata without individual exercise.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
 
 Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277 is authorized next. Read276/ARCHITECT-REVIEW.md and standing user rules in AGENTS.
 Source base be47ee81ae0bf2b7e2678752741837ca60af0b70. User exercised the review case: receipt and approval, with a recorded refund success. Its latest live state MUST be read; the earlier Requested/empty-history report is obsolete. Do not reset/clone/reverse the case or perform further live receipt/decision/money/stock writes.

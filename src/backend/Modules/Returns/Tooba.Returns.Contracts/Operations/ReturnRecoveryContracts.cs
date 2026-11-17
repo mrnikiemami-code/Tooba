@@ -27,6 +27,12 @@ public enum ReturnRecoveryPhaseOption
 
     /// <summary>Inconsistent/ambiguous binding or missing owning physical evidence: explicit blocker, no guess.</summary>
     Blocked = 5,
+
+    /// <summary>
+    /// TB-277: lawfully approved and NO refund attempt exists yet. Approval is a decision; the first money execution
+    /// is its own deliberate intent. Appended so every shipped numeric value keeps its meaning.
+    /// </summary>
+    AwaitingFirstRefund = 6,
 }
 
 /// <summary>TB-273: the explicit recovery intent an operator may ask for.</summary>

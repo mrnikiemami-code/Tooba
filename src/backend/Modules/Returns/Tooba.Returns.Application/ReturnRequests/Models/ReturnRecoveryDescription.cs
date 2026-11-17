@@ -51,6 +51,15 @@ public enum ReturnRecoveryPhase
 
     /// <summary>Inconsistent/ambiguous stored binding or missing owning physical evidence: a typed blocker, no guess.</summary>
     Blocked = 5,
+
+    /// <summary>
+    /// TB-277: the case is lawfully APPROVED and owns no refund attempt at all. This is the deliberate decision-only
+    /// state: the first money execution is a SEPARATE intent (<see cref="ReturnRecoveryKind"/> deliberately does not
+    /// name it). It is not "unknown money" and not an unbound attempt — it is the recorded answer to a real step that
+    /// simply has not been taken yet. Appended after <see cref="Blocked"/> so every shipped numeric value keeps its
+    /// meaning.
+    /// </summary>
+    AwaitingFirstRefund = 6,
 }
 
 /// <summary>
@@ -145,6 +154,53 @@ public static class ReturnRecoveryPolicy
                 {
                     // A bound success is the ONE coherent current outcome, even when the case status row lags it.
                     return Physical(snapshot, money, allItemsDisposed);
+                }
+
+                if (money.Absent)
+                {
+                    // TB-277: approval is a DECISION and the first financial step is its own deliberate intent. An
+                    // Approved case that owns no attempt at all is therefore the honest "awaiting first refund"
+                    // state — not "unknown money" and not an unbound attempt. It is only offered when every
+                    // lawful precondition of the money step is already a stored fact; anything it cannot prove is
+                    // the same typed blocker the action itself raises, with no executable kind.
+                    if (snapshot.Status != ReturnRequestStatus.Approved)
+                    {
+                        // A RefundProcessing case with no attempt contradicts itself: the status is only written
+                        // together with the durable attempt, so it is never read as "ready to start".
+                        return Blocked(ReturnsErrorCodes.RecoveryAttemptUnbound, financialComplete: false, allItemsDisposed);
+                    }
+
+                    if (snapshot.Origin != ReturnOrigin.CourierOrigin)
+                    {
+                        if (snapshot.Receiving is { IsCoherent: false })
+                        {
+                            return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed);
+                        }
+
+                        if (snapshot.Receiving is not { IsComplete: true })
+                        {
+                            return Blocked(ReturnsErrorCodes.RecoveryReceivingRequired, financialComplete: false, allItemsDisposed);
+                        }
+                    }
+                    else if (!HasCoherentCourierSource(snapshot))
+                    {
+                        return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, physicalComplete: false);
+                    }
+
+                    if (snapshot.PaymentId is not { } firstPaymentId || firstPaymentId == Guid.Empty)
+                    {
+                        // The money step needs the case's FIXED payment binding; without it no first attempt may
+                        // name an amount/destination, so the read reports it as a typed blocker.
+                        return Blocked(ReturnsErrorCodes.RefundPaymentMissing, financialComplete: false, allItemsDisposed);
+                    }
+
+                    return new ReturnRecoveryDescription(
+                        ReturnRecoveryPhase.AwaitingFirstRefund,
+                        RecoveryKind: null,
+                        RefundAttemptId: null,
+                        BlockerCode: null,
+                        FinancialComplete: false,
+                        allItemsDisposed);
                 }
 
                 if (money.IsPending && money.AttemptId is { } pendingId)
@@ -272,6 +328,13 @@ public static class ReturnRecoveryPolicy
         }
 
         var attempts = snapshot.RefundAttempts;
+        if (attempts.Count == 0)
+        {
+            // TB-277: an approved case that never started money owns NO attempt. That is a truthful stored fact, not
+            // an ambiguous/unbound one, so it is reported distinctly instead of as attempt_unbound.
+            return new MoneyEvidence(false, null, false, null, Absent: true);
+        }
+
         var boundSucceeded = attempts
             .Where(x => x.Status == RefundAttemptStatus.Succeeded && IsBoundToCase(snapshot, x))
             .ToArray();
@@ -517,10 +580,14 @@ public static class ReturnRecoveryPolicy
         return false;
     }
 
-    /// <summary>The exact financial answer of ONE case: complete money, a single pending unknown, or a typed blocker.</summary>
+    /// <summary>
+    /// The exact financial answer of ONE case: complete money, a single pending unknown, a typed blocker, or — for a
+    /// case that never started money — the explicit <paramref name="Absent"/> fact.
+    /// </summary>
     private readonly record struct MoneyEvidence(
         bool Complete,
         Guid? AttemptId,
         bool IsPending,
-        string? BlockerCode);
+        string? BlockerCode,
+        bool Absent = false);
 }
