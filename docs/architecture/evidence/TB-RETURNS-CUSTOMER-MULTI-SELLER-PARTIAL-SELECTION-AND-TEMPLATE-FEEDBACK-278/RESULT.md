@@ -8,7 +8,8 @@ ONE_AUTHORITATIVE_PER_LINE_CUSTOMER_ELIGIBILITY_READ_ONE_OWNING_UNIT_QUANTUM_GAT
 ```
 
 **NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT Marketplace/customer Returns readiness.**
-Base `1dc7494f47a416d6bd65b9dce9b4eda971476782` (== Expected-Base-SHA). Bridge task row
+Base `1dc7494f47a416d6bd65b9dce9b4eda971476782` (== Expected-Base-SHA), code commit
+`d7eadc17c956d472786b5b8df23961a553b49faa` (pushed to `origin/main`). Bridge task row
 `650b8b3d-83d1-4d39-a8fb-1b9be2640416`. `279` remains planned and NOT ISSUED. 277 / 277-R1 / 277-R2 bounded acceptances
 and every earlier Returns/shipping acceptance are preserved unchanged. Single worker, one task, no delegation, no
 historical subagent resumed, no screenshots, no automatic next implementation.

@@ -24,7 +24,7 @@ unanswered precision; same-line multi-reason children share one server ceiling; 
 279 owns decision reconsideration, legacy multi-item partial authority, delivery-slice allocation and refundable-amount
 policy. Declared deviations: Bridge envelope content unavailable → reconstructed `TASK.md`; the 272 fractional-scale
 fixture now declares a 6-decimal owning unit; three AMSC pins extended by this task; Host/Next restarted.
-STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+Code commit `d7eadc17c9`. STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
 
 # SUPERSEDED — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
 

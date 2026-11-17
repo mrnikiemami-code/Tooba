@@ -12,6 +12,7 @@ GET  /api/tasks?… row keys = id,channelId,taskId,status,createdAtUtc,claimedAt
      (declared: the Bridge cannot serve the envelope text; TASK.md is reconstructed from the durable 278-279 plan,
       SOURCE-AUDIT and the AGENTS clarification block)
 git  base = 1dc7494f47a416d6bd65b9dce9b4eda971476782  (== Expected-Base-SHA)
+git  code commit = d7eadc17c956d472786b5b8df23961a553b49faa  (pushed to origin/main)
 ```
 
 ## 2. Backend — focused owning proofs
