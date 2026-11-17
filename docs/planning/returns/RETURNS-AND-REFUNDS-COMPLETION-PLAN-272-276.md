@@ -1,4 +1,13 @@
-# CURRENT — 277-R2 ACCEPTED; REQUESTED277 REPAIR CHAIN CLOSED WITH PROOF LIMITS — 2026-11-17
+# CURRENT — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
+
+Read docs/planning/returns/RETURNS-MARKETPLACE-COMPLETION-PLAN-278-279.md and docs/architecture/evidence/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/SOURCE-AUDIT.md FIRST for new-chat recovery.
+Only TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278 issued next;279 planned NOT ISSUED. No ten micro-tasks/automatic loop.
+277/R1/R2 bounded acceptance retained, not full customer/Marketplace readiness. User images show separate approval/refund sequence; template Toast still wrong. Actual template is react-toastify through AppProviders, not DS ToastRegion. Customer selection currently posts entire shipped item set and cannot choose2of3/exclude correct goods.
+278 default child case granularity is seller+selected order line+reason; independent quantity/decision/refund, exact stable-key recovery; no mixed sellers in a case.279 owns audited pre-money decision correction, legacy partial-case laws and delivery-slice expiry allocation.
+Existing user cases01a1e6b0-f33a-7000-80ee-beffb6344490 and01a1e9c5-c729-7000-b614-79daf3d0e812 read-only; no reset/clone/new fixtures/money/stock/provider calls. Preserve original history.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 277-R2 ACCEPTED; REQUESTED277 REPAIR CHAIN CLOSED WITH PROOF LIMITS — 2026-11-17
 
 Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/ARCHITECT-REVIEW.md.
 Source938ab6488ebdeec6cf2c97d3023b0bb085dd4b9d removes the last unsafe token; mounted regression proves unknown->metadata-refusal retains exact intent and authoritative replay clears it. Prior277-R1 A/B acceptance retained;277 modal/approval-vs-first-refund work retained. This requested repair chain is closed within reviewed scope, not universal Returns/provider/user acceptance.
