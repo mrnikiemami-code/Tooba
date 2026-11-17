@@ -1,4 +1,10 @@
-# CURRENT — 277 PARTIAL: THREE BOUNDED QUANTITY/INTENT REPAIRS; ONLY277-R1 — 2026-11-17
+# CURRENT — 277-R1 UNIT/DECIMAL REPAIR ACCEPTED; ONE UNSAFE REFUSAL TOKEN REMAINS; ONLY277-R2 — 2026-11-17
+Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/ARCHITECT-REVIEW.md.
+A/B accepted within bounded source-review scope. C still PARTIAL: unit_quantity_invalid can mean unavailable owning metadata and must not erase an earlier possibly-sent receipt.
+Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2 next, FE classifier + one mounted regression. Preserve standing user rules, source/data/history,277 approval split. No live POST/new case/backend/schema change/screenshots/delegation/loop.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 277 PARTIAL: THREE BOUNDED QUANTITY/INTENT REPAIRS; ONLY277-R1 — 2026-11-17
 
 Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/ARCHITECT-REVIEW.md.
 Approval/explicit first-refund separation and DS modals are retained. Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1: server unit precision, exact decimal client ceiling/sums, and uncertainty retained through later denial/conflict.

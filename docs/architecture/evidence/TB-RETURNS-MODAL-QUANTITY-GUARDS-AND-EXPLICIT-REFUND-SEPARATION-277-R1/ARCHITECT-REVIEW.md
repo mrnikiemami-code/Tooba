@@ -1,0 +1,10 @@
+# Architect source review — 277-R1 — 2026-11-17
+Reviewed main9adc53bd14e09c851452111878c1dbf712564498. Source review only; no Architect local runtime/test execution.
+
+A ACCEPT within issued owning-unit scope: new receipt checks Order accepted-line precision with OwningUnitQuantity; exact occurrence replay precedes that read/gate. Missing metadata fails closed. No schema/data change.
+B ACCEPT within supported client range: scaled integer millionths replace floating sums/subtraction; explicit nine-integer-digit parser bounds unsupported values. No whole-Returns certification. Preserve277 approval/refund split and modal work.
+C PARTIAL: most unsafe refusal tokens were removed, but return.receipt.unit_quantity_invalid remains PROVEN_NO_EFFECT. ReadOwningUnitDecimalPlacesAsync emits that SAME code for null Order context/unanswered precision as for invalid quantity. Lookup availability is not immutable body evidence. A retry refusal cannot establish that an earlier unknown/in-flight request will never commit: it may overtake an earlier request still before the case lock. Exact stored replay FIRST is correct and means an ALREADY COMMITTED occurrence normally replays without this metadata read; do not claim that path is broken. The remaining gap is clearing uncertainty for an earlier still-running send based on temporary lookup failure in another request. Keep the exact intent until authoritative reconciliation.
+
+One tiny277-R2 only: remove this unsafe no-effect classification (and correct its body-only comment), add mounted unknown->unit-metadata-refusal->exact-replay retention proof. Existing owning refusal semantics/quantity rules remain. No backend change, new code, schema, fixture, case or live POST.
+Worker broad Returns/Host/AMSC runs beyond issued selection are recorded as deviations, not requested recertification. 277-R1's eight mounted tests do not cover this remaining uncertain-outcome sequence. Preserve receipts and historical reports.
+Existing live case is Settled/read-only; no new refund/stock/receipt operation or reset. No screenshot/delegation/automatic continuation. User/full-Returns/provider/financial acceptance unclaimed.
