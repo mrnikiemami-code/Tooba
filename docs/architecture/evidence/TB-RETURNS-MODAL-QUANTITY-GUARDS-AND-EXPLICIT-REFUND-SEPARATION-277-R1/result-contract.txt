@@ -1,0 +1,40 @@
+TASK=TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1
+PARENT=TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277
+BRIDGE_TASK_ROW=14671841-a144-4d59-ad9e-350b3c693b23
+BASE=42e2df1f328e16b1bd855cc57edde168071a600f
+STATUS=PASS_WITHIN_ISSUED_A_C_REPAIR_SCOPE
+DECISION=EXACT_OWNING_UNIT_QUANTUM_ENFORCEMENT_AT_THE_RECEIPT_WRITE_BOUNDARY_ONE_EXACT_INTEGER_MILLIONTH_QUANTITY_AUTHORITY_SHARED_BY_THE_DIALOG_AND_ITS_CONFIRM_GATE_AND_A_BODY_ONLY_PROVEN_NO_EFFECT_REFUSAL_SET_THAT_KEEPS_EVERY_POSSIBLY_SENT_INTENT_UNRESOLVED_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE
+ARCHITECT_ACCEPT=NO
+USER_ACCEPTANCE=NO
+MIGRATIONS=0
+LIVE_BUSINESS_WRITE=0
+NEW_RETURN_CASE=0
+SCHEMA_CHANGE=0
+
+A_OWNING_UNIT=ReturnDirectory.Receipts.cs gates every NEW line on OrderReturnLineSnapshot.QuantityDecimalPlacesSnapshot through OwningUnitQuantity.IsAlignedTo before any insert; missing/foreign/unanswered precision => return.receipt.unit_quantity_invalid (400, Business), zero writes; exact stored replay answered first; 1 == 1.000000 preserved.
+A_CONTRACT=OrderReturnLineSnapshot.QuantityDecimalPlacesSnapshot (trailing optional int?, additive) mapped in OrderReturnBridge; live GET publishes unitDecimalPlaces on the case item.
+B_QUANTITY_AUTHORITY=app/returns/return-quantity.ts (integer millionths, string-parsed, exact add/subtract/compare, unit quantum, Persian normalization, index/scale refusal) + app/returns/return-receipt-quantities.ts (evaluateQuantityEntry + collectReceiptItems, one shared ceiling for usable+damaged, unknown precision blocks).
+B_NO_FLOAT=0.1+0.2 is exactly 0.3; requested-received never drifts; no epsilon/clamp/round.
+C_REFUSAL_SET=Only body-dictated/immutable-identity codes remain; authorization denials, missing actor, operation denial, validation.failed, conflicts/states, refund.* and all return.recovery.* (incl. return.refund.first_not_lawful) removed so a possibly-sent intent stays unresolved.
+
+TESTS_BACKEND_RETURNS=139/139
+TESTS_HOST_AMSC=34/34
+TESTS_HOST_RECEIPT_RELATIONAL=10/10
+TESTS_FE_QUANTITY=7/7
+TESTS_FE_QUEUE=26/26
+TESTS_FE_ERROR_MAP=8/8
+TESTS_FE_MOUNTED_WORKSPACE=8/8
+TSC=0
+FE_BUILD=0 BUILD_ID=0RrDo7CGZ60FPsYrWxQ1a
+BACKEND_BUILD=0_ERRORS
+HOST_PUBLISH=0_ERRORS
+
+HOST=5088 PID=21060 DLL_SHA256=8AA71DD82E6D737F9698A93D0F99EE7A77EB07E02916E4185DE9C271890E7948
+HEALTH=200 HEALTH_READY=200 PLATFORM=store-alpha
+FE=3000 PID=7864
+LIVE_CASE=01a1e6b0-f33a-7000-80ee-beffb6344490 UNTOUCHED_COMPLETED_HISTORY
+
+LIMITS=money/stock proven with controlled ports only; no real PSP/Wallet/Inventory effect; no committed two-writer race; mounted suite is jsdom; live look is HTTP/GET + served-chunk text only (no screenshots); only the exercised pcs line is live, other units are focused-test evidence.
+DEVIATIONS=two stale approve-refunds characterizations updated to the accepted decision-only behavior; AMSC matrices extended to the route/validator/code TB-277 added; relational order reader replaced so unit metadata is real; Bridge returned empty task content so TASK.md is a declared reconstructed repair record.
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask=NONE

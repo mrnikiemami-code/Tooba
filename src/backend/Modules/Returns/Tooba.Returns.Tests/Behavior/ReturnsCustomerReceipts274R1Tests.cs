@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -592,7 +592,7 @@ public sealed class ReturnsCustomerReceipts274R1Tests
             customerUserId,
             true,
             "IRR",
-            [new OrderReturnLineSnapshot(lineId, quantity, unitPrice, "IRR", reservationId, true, 7)]);
+            [new OrderReturnLineSnapshot(lineId, quantity, unitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0)]);
 
     private static ReturnsDbContext CreateDb(string databaseName, DecisionCollisionInterceptor collision)
     {

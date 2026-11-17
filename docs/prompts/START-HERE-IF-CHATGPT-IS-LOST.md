@@ -1,9 +1,16 @@
-# CURRENT — 277 PARTIAL: THREE BOUNDED QUANTITY/INTENT REPAIRS; ONLY277-R1 — 2026-11-17
+# CURRENT — 277-R1 WORKER PASS (owning unit enforced at the receipt write, exact millionth client quantities, body-only no-effect refusals); AWAIT ARCHITECT REVIEW AND USER LOOK — 2026-11-17
 
-Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/ARCHITECT-REVIEW.md.
-Approval/explicit first-refund separation and DS modals are retained. Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1: server unit precision, exact decimal client ceiling/sums, and uncertainty retained through later denial/conflict.
-Existing user case is settled history: READ-ONLY. No valid live POST, new fixture/case, stock/money/provider effect, reset or schema change. Preserve standing user rules and all previous audit history. One worker/task, no screenshots/delegation/automatic continuation.
-STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+Read docs/ai/tasks/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,precision-and-uncertainty-proof.md,user-review.md}.
+Status PASS within the issued A–C repair scope; NOT Architect ACCEPT, NOT user functional/visual acceptance.
+TB-277 stays reviewed-PARTIAL and its DS modals, decision-only approval and explicit first-refund route are retained
+unchanged. A receipt line's NEW quantity is now validated against the owning unit's precision in
+`ReturnDirectory.Receipts.cs` (typed `return.receipt.unit_quantity_invalid`, zero writes, exact stored replay first);
+the dialog's quantities are exact `numeric(18,6)` integer millionths shared by the field bound, the shared
+usable+damaged ceiling and the confirm gate; and `PROVEN_NO_EFFECT_REFUSAL_CODES` now holds only body-dictated
+refusals, so a possibly-sent intent is never cleared by a later denial/conflict.
+The exercised case `01a1e6b0-f33a-7000-80ee-beffb6344490` is READ-ONLY settled history and was not changed.
+One worker/task, no screenshots/delegation/loop. STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
 
 # SUPERSEDED — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
 

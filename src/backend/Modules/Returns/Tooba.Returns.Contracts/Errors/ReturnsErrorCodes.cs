@@ -70,6 +70,7 @@ public static class ReturnsErrorCodes
         ReceiptOriginInvalid,
         ReceiptStateInvalid,
         ReceiptActorRequired,
+        ReceiptUnitQuantityInvalid,
         ReceivingIncomplete,
         RejectionReasonRequired,
         DecisionReasonConflict,
@@ -292,6 +293,14 @@ public static class ReturnsErrorCodes
     /// instead of surfacing as a model/aggregate exception.
     /// </summary>
     public const string ReceiptActorRequired = "return.receipt.actor_required";
+
+    /// <summary>
+    /// TB-277-R1: a NEW inspected quantity does not land exactly on the OWNING UNIT's quantum (a fraction of a
+    /// whole-piece line, or more decimals than the unit accepts), or the owning order line did not answer a usable
+    /// precision for this case line. It is refused before any row is written; the persisted six-decimal scale is a
+    /// storage cap, never permission to receive a fraction of a piece.
+    /// </summary>
+    public const string ReceiptUnitQuantityInvalid = "return.receipt.unit_quantity_invalid";
 
     /// <summary>
     /// TB-274: the case has no complete, coherent receiving/inspection coverage, so the new approval decision, refund

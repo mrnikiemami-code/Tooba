@@ -1,8 +1,13 @@
-# CURRENT — 277 PARTIAL: THREE BOUNDED QUANTITY/INTENT REPAIRS; ONLY277-R1 — 2026-11-17
+# CURRENT — 277-R1 WORKER PASS (owning unit enforced at the receipt write, exact millionth client quantities, body-only no-effect refusals); AWAIT ARCHITECT REVIEW AND USER LOOK — 2026-11-17
 
-Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/ARCHITECT-REVIEW.md.
-Approval/explicit first-refund separation and DS modals are retained. Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1: server unit precision, exact decimal client ceiling/sums, and uncertainty retained through later denial/conflict.
-Existing user case is settled history: READ-ONLY. No valid live POST, new fixture/case, stock/money/provider effect, reset or schema change. Preserve standing user rules and all previous audit history. One worker/task, no screenshots/delegation/automatic continuation.
+Read docs/ai/tasks/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/{RESULT.md,RECEIPTS.md,result-contract.txt,precision-and-uncertainty-proof.md,user-review.md}.
+277-R1 PASS within the issued A–C repair scope; 277 stays reviewed-PARTIAL with its DS modals, decision-only approval and
+explicit first-refund route retained. Base `42e2df1f328e16b1bd855cc57edde168071a600f`. The receipt write now validates a
+NEW quantity against the owning unit (`return.receipt.unit_quantity_invalid`, zero writes, exact replay first), the dialog
+uses exact integer millionths for the field bound, the shared usable+damaged ceiling and the confirm gate, and the
+proven-no-effect refusal set keeps only body-dictated codes. No schema change, no new case, no live business write. The
+exercised case `01a1e6b0-f33a-7000-80ee-beffb6344490` is READ-ONLY. One worker/task, no screenshots/delegation/loop.
 STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
 
 # SUPERSEDED — 277 WORKER PASS (shared action modals + unit-bounded receiving + decision-only approval with an explicit first refund); AWAIT USER LOOK AND ARCHITECT REVIEW — 2026-11-17

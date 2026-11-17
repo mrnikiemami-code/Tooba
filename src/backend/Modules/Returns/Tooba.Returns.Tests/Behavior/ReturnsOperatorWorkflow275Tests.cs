@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tooba.BuildingBlocks;
@@ -801,7 +801,7 @@ public sealed class ReturnsOperatorWorkflow275Tests
             customer,
             true,
             "IRR",
-            [new OrderReturnLineSnapshot(lineId, requested, unitPrice, "IRR", reservationId, true, 7)]);
+            [new OrderReturnLineSnapshot(lineId, requested, unitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0)]);
 
         return new Fixture(
             dbName,

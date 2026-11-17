@@ -44,6 +44,7 @@
   <data name="return.receipt.origin_invalid" xml:space="preserve"><value>پروندهٔ بازگشتی از حامل از رسید متعلق به تحویل استفاده می‌کند و رسید دوم در اینجا ثبت نمی‌شود.</value></data>
   <data name="return.receipt.state_invalid" xml:space="preserve"><value>این مرجوعی برای ثبت رسید فیزیکی جدید باز نیست.</value></data>
   <data name="return.receipt.actor_required" xml:space="preserve"><value>هر رسید مشتری باید کاربر ثبت‌کننده را مشخص کند.</value></data>
+  <data name="return.receipt.unit_quantity_invalid" xml:space="preserve"><value>مقدار بازرسی‌شده با دقت واحد این قلم هم‌خوان نیست، یا دقت واحد آن قلم از خط سفارش قابل تأیید نبود.</value></data>
   <data name="return.receiving.incomplete" xml:space="preserve"><value>پوشش کامل رسید و بازرسی برای این مرجوعی ثبت نشده است؛ بنابراین تأیید، بازگشت وجه یا بازگشت به موجودی آغاز نمی‌شود.</value></data>
   <data name="return.rejection_reason_required" xml:space="preserve"><value>رد یک مرجوعی جدید باید دلیل معنادار داشته باشد.</value></data>
   <data name="return.decision.reason_conflict" xml:space="preserve"><value>رد ثبت‌شده از قبل دلیل متفاوتی دارد.</value></data>

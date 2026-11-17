@@ -1473,7 +1473,7 @@ public sealed class ReturnsRecovery273Tests
             true,
             "IRR",
             lineIds
-                .Select(x => new OrderReturnLineSnapshot(x, 1m, 1000m, "IRR", reservationId, true, 7))
+                .Select(x => new OrderReturnLineSnapshot(x, 1m, 1000m, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0))
                 .ToArray());
 
     private static ReturnsDbContext CreateDb(string? name = null, FailingSaveInterceptor? interceptor = null)

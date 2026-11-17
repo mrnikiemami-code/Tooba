@@ -36,7 +36,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
     private static readonly string[] ValidatorRequired =
     [
         "CreateReturnCommand", "ApproveReturnCommand", "RejectReturnCommand", "QueryAdminReturnsGridQuery",
-        "RecoverReturnCommand", "RecordReturnReceiptCommand",
+        "RecoverReturnCommand", "RecordReturnReceiptCommand", "StartReturnRefundCommand",
     ];
 
     private static readonly string[] NoValidatorRequired =
@@ -45,7 +45,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         "ListAdminReturnsQuery", "GetAdminReturnQuery", "RetryReturnRefundCommand",
     ];
 
-    /// <summary>Exact expected audience → verb → path → dispatched request map (13 rows).</summary>
+    /// <summary>Exact expected audience → verb → path → dispatched request map (14 rows).</summary>
     private static readonly (string Audience, string Verb, string Path, string Request)[] ExpectedRoutes =
     [
         ("customer", "Get", "/v1/customer/returns", "ListCustomerReturnsQuery"),
@@ -61,6 +61,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/retry-refund", "RetryReturnRefundCommand"),
         ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/recover", "RecoverReturnCommand"),
         ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/receipt", "RecordReturnReceiptCommand"),
+        ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/start-refund", "StartReturnRefundCommand"),
     ];
 
     // ---------------------------------------------------------------------------------------------
@@ -85,7 +86,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
             .ThenBy(x => x.Verb, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(13, derived.Count);
+        Assert.Equal(14, derived.Count);
         Assert.Equal(expectedMap.Length, actualMap.Length);
         for (var i = 0; i < expectedMap.Length; i++)
         {
@@ -96,7 +97,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         }
 
         // Every shipped route dispatches through exactly one ISender.Send call site.
-        Assert.Equal(13, derived.Count(d => d.SendCount == 1));
+        Assert.Equal(14, derived.Count(d => d.SendCount == 1));
     }
 
     [Fact]
@@ -120,7 +121,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
 
         // The partition is a real partition: disjoint halves, exact union.
         Assert.Empty(ValidatorRequired.Intersect(NoValidatorRequired, StringComparer.Ordinal));
-        Assert.Equal(13, ValidatorRequired.Length + NoValidatorRequired.Length);
+        Assert.Equal(14, ValidatorRequired.Length + NoValidatorRequired.Length);
 
         // One-to-one: 13 routes → 13 sends → 13 actual requests → 13 matching handlers.
         var applicationRoot = Path.Combine(root, ModuleRoot, "Tooba.Returns.Application");
@@ -197,6 +198,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         Assert.Contains("new ListAdminReturnsQuery()", admin, StringComparison.Ordinal);
         Assert.Contains("new GetAdminReturnQuery(returnRequestId)", admin, StringComparison.Ordinal);
         Assert.Contains("new RetryReturnRefundCommand(returnRequestId, actorUserId)", admin, StringComparison.Ordinal);
+        Assert.Contains("new StartReturnRefundCommand(returnRequestId, actorUserId)", admin, StringComparison.Ordinal);
 
         // The only client-readable identity shortcut is the module-owned customer authorizer's
         // Development/Testing-only header, which preserves the accepted Host semantics and has no
@@ -215,6 +217,11 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         // there is no client body parameter on the handler.
         var retryHandler = ExtractHandlerBody(admin, "AdminRetryRefundAsync");
         Assert.DoesNotContain("body", retryHandler, StringComparison.OrdinalIgnoreCase);
+
+        // TB-277: the FIRST refund is the same shape — the route identity plus the server-derived actor only, so the
+        // operator can neither name an amount/destination nor pay a different case than the one reviewed.
+        var startHandler = ExtractHandlerBody(admin, "AdminStartRefundAsync");
+        Assert.DoesNotContain("body", startHandler, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -344,6 +351,9 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         Assert.Null(provider.GetService<IValidator<ListAdminReturnsQuery>>());
         Assert.Null(provider.GetService<IValidator<GetAdminReturnQuery>>());
         Assert.Null(provider.GetService<IValidator<RetryReturnRefundCommand>>());
+        // TB-277: starting the FIRST refund carries no client amount/payment/destination — only the case identity is
+        // transported, and it has its own shape validator that never sees money.
+        Assert.NotNull(provider.GetService<IValidator<StartReturnRefundCommand>>());
 
         // And the canonical validation behavior is installed exactly once in the pipeline.
         var behaviors = provider.GetServices<MediatR.IPipelineBehavior<CreateReturnCommand, Tooba.BuildingBlocks.Results.Result<Tooba.Returns.Application.ReturnRequests.Models.ReturnSnapshot>>>()
@@ -358,9 +368,9 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         // TB-272 added the two creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal,
         // TB-273-R1 the recovery evidence-conflict and caller-transaction refusals and TB-274 the nine customer
         // receipt/inspection/reason refusals (all HTTP-reachable).
-        Assert.Equal(43, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(45, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(44, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         // No raw API-result or ad-hoc fault classification in the endpoint surface.
         var root = Repo();

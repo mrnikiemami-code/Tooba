@@ -942,6 +942,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "مقدار یا وضعیت یکی از اقلام رسید معتبر نیست.",
     en: "A receipt line quantity or inspection value is not valid.",
   },
+  "return.receipt.unit_quantity_invalid": {
+    fa: "مقدار ثبت‌شده با واحد همین قلم هم‌خوان نیست؛ برای واحدهای شمارشی فقط عدد صحیح و برای واحدهای وزنی حداکثر همان رقم اعشارِ واحد مجاز است.",
+    en: "The quantity does not match this line's unit: whole pieces accept only whole numbers, and weighed units accept only their own decimal places.",
+  },
   "return.receipt.actor_required": {
     fa: "ثبت‌کننده رسید مشخص نشده است. دوباره وارد شوید.",
     en: "The receiving operator is not identified. Sign in again.",

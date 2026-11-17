@@ -55,5 +55,7 @@ public sealed class OrderReturnBridge : IOrderReturnReader
                 x.IsReturnableSnapshot,
                 x.ReturnWindowDaysSnapshot,
                 x.ReturnPolicySourceSnapshot,
-                x.ReturnPolicyLabelSnapshot)).ToArray());
+                x.ReturnPolicyLabelSnapshot,
+                // TB-277-R1: the same owning accepted-line snapshot the admin detail read publishes.
+                x.QuantityDecimalPlacesSnapshot)).ToArray());
 }

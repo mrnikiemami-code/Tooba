@@ -40,6 +40,16 @@ import {
   type ReturnReviewIntent,
   type ReturnReviewIntentRead,
 } from "../returns/return-review-intent";
+import {
+  MAX_QUANTITY_SCALE,
+  normalizeQuantityInput,
+  parsePositiveExactUnits,
+  quantityStep,
+  subtractUnits,
+  unitsFromWireNumber,
+  unitsToExactText,
+  unitsToWireNumber,
+} from "../returns/return-quantity";
 
 export type { ReturnReviewAction, ReturnReviewIntent } from "../returns/return-review-intent";
 
@@ -110,150 +120,31 @@ function successLabel(action: ReturnReviewAction): string {
   }
 }
 
-type ReceiptDraftLine = {
-  returnItemId: string;
-  productLabel: string | null;
-  unitLabel: string | null;
-  /** TB-277: decimals the ORDERING UNIT accepts; 0 means whole pieces only. */
-  decimalPlaces: number;
-  /** The line's remaining covered quantity — the ONE ceiling both condition fields share. */
-  ceiling: number;
-  usable: string;
-  damaged: string;
+import {
+  collectReceiptItems,
+  describeQuantityProblem,
+  evaluateQuantityEntry,
+  formatCeilingFa,
+  type QuantityProblem,
+  type ReceiptDraftLine,
+} from "../returns/return-receipt-quantities";
+export {
+  collectReceiptItems,
+  describeQuantityProblem,
+  evaluateQuantityEntry,
+  formatCeilingFa,
 };
+export type { QuantityProblem, ReceiptDraftLine };
+export {
+  MAX_QUANTITY_SCALE,
+  normalizeQuantityInput,
+  quantityStep,
+} from "../returns/return-quantity";
 
-/** The persisted scale of every return quantity: `numeric(18,6)` may never be rounded to fit. */
-const MAX_QUANTITY_SCALE = 6;
-
-/**
- * TB-275 / TB-277: the persisted quantity is `numeric(18,6)`, so the operator's text is accepted only when it is
- * EXACTLY representable — up to the unit's own decimals, no exponent, no thousands separator. A value that would need
- * rounding is refused instead of being silently turned into a different quantity of goods.
- */
-const EXACT_QUANTITY = /^\d{1,9}(?:\.\d{1,6})?$/;
-
-/**
- * TB-277: Persian/Arabic digits and the Persian decimal separator are the normal way an Iranian operator types a
- * quantity, so they are normalized before parsing — never rejected as "invalid number".
- */
-export function normalizeQuantityInput(raw: string): string {
-  return raw
-    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
-    .replace(/٫/g, ".")
-    .replace(/[\u066c\u060c,\s]/g, "")
-    .trim();
-}
-
+/** The decimal value of an exact integer-units quantity, for display and compatibility callers. */
 export function parseExactQuantity(raw: string): number | null {
-  const text = normalizeQuantityInput(raw);
-  if (!EXACT_QUANTITY.test(text)) return null;
-  const value = Number(text);
-  return Number.isFinite(value) && value > 0 ? value : null;
-}
-
-/** The decimal places actually written in a normalized quantity text (0 when it has no fractional part). */
-function writtenScale(normalized: string): number {
-  const dot = normalized.indexOf(".");
-  return dot < 0 ? 0 : normalized.length - dot - 1;
-}
-
-export type QuantityProblem = "empty" | "malformed" | "precision" | "over_ceiling";
-
-/**
- * TB-277: ONE line entry is bounded by the unit's precision AND by the line's own remaining coverage. A piece-count
- * unit therefore refuses `0.5`, and `usable + damaged` can never exceed what the customer still owes on that line —
- * the client-side counterpart of the server's cumulative ceiling, never a replacement for it.
- */
-export function evaluateQuantityEntry(
-  raw: string,
-  decimalPlaces: number,
-  ceiling: number,
-): { value: number | null; problem: QuantityProblem | null } {
-  const normalized = normalizeQuantityInput(raw);
-  if (normalized === "") return { value: null, problem: "empty" };
-  const value = parseExactQuantity(normalized);
-  if (value === null) return { value: null, problem: "malformed" };
-  if (writtenScale(normalized) > Math.min(decimalPlaces, MAX_QUANTITY_SCALE)) return { value: null, problem: "precision" };
-  if (value > ceiling) return { value: null, problem: "over_ceiling" };
-  return { value, problem: null };
-}
-
-/** The `step` attribute for one unit-aware quantity field. */
-export function quantityStep(decimalPlaces: number): string {
-  const places = Math.max(0, Math.min(decimalPlaces, MAX_QUANTITY_SCALE));
-  return places === 0 ? "1" : `0.${"0".repeat(places - 1)}1`;
-}
-
-function describeQuantityProblem(problem: QuantityProblem, line: ReceiptDraftLine): string {
-  switch (problem) {
-    case "malformed":
-      return "مقدار را با رقم وارد کنید؛ حداکثر ۶ رقم اعشار و بدون جداکنندهٔ هزارگان.";
-    case "precision":
-      return line.decimalPlaces === 0
-        ? `واحد این قلم «${formatUnitLabel(line.unitLabel)}» است و فقط مقدار صحیح می‌پذیرد.`
-        : `واحد این قلم حداکثر ${toPersianDigits(line.decimalPlaces)} رقم اعشار می‌پذیرد.`;
-    case "over_ceiling":
-      return `مقدار واردشده از باقی‌ماندهٔ این قلم (${formatQuantityDisplayFa(line.ceiling)}) بیشتر است.`;
-    default:
-      return "";
-  }
-}
-
-type ReceiptLineItems = { returnItemId: string; quantity: number; condition: "Usable" | "Damaged" };
-
-/**
- * TB-277: ONE authority for "is this receipt dialog submittable?" — the confirm button's disabled state and the
- * confirm handler both read it, so an over-ceiling or mis-precision amount is blocked locally (never merely reported
- * after a send) and the server's own cumulative ceiling stays the final authority.
- * <para>
- * <c>problem</c> is the first refusal attributable to ONE field (the field itself also shows it inline);
- * <c>sumProblem</c> is the aggregate fact of a line whose two portions are individually valid but over the shared
- * ceiling — it has no single field to blame, so it is published once for the dialog.
- * </para>
- */
-export function collectReceiptItems(lines: readonly ReceiptDraftLine[]): {
-  items: ReceiptLineItems[];
-  problem: string | null;
-  sumProblem: string | null;
-} {
-  if (lines.length === 0) {
-    return { items: [], problem: null, sumProblem: null };
-  }
-  const items: ReceiptLineItems[] = [];
-  let sumProblem: string | null = null;
-  for (const line of lines) {
-    const usable = normalizeQuantityInput(line.usable);
-    const damaged = normalizeQuantityInput(line.damaged);
-    if (usable === "" && damaged === "") continue;
-
-    const usableCheck = evaluateQuantityEntry(usable, line.decimalPlaces, line.ceiling);
-    const damagedCheck = evaluateQuantityEntry(damaged, line.decimalPlaces, line.ceiling);
-    for (const [condition, check, entered] of [
-      ["Usable", usableCheck, usable] as const,
-      ["Damaged", damagedCheck, damaged] as const,
-    ]) {
-      if (entered === "") continue;
-      if (check.problem) {
-        return {
-          items: [],
-          problem: `قلم «${line.productLabel ?? "کالای سفارش"}»: ${describeQuantityProblem(check.problem, line)}`,
-          sumProblem: null,
-        };
-      }
-      items.push({ returnItemId: line.returnItemId, quantity: check.value as number, condition });
-    }
-
-    // The two portions are ONE bounded fact about this line: neither may fund the other.
-    const total = (usableCheck.value ?? 0) + (damagedCheck.value ?? 0);
-    if (total > line.ceiling) {
-      sumProblem =
-        `قلم «${line.productLabel ?? "کالای سفارش"}»: مجموع سالم و معیوب ` +
-        `(${formatQuantityDisplayFa(total)}) از باقی‌ماندهٔ این قلم (${formatQuantityDisplayFa(line.ceiling)}) بیشتر است.`;
-      return { items: [], problem: null, sumProblem };
-    }
-  }
-  return { items, problem: null, sumProblem };
+  const units = parsePositiveExactUnits(raw);
+  return units === null ? null : unitsToWireNumber(units);
 }
 
 /**
@@ -352,16 +243,25 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       const requested = line?.requested ?? item.quantity;
       const received = line?.received ?? 0;
       const answeredPlaces = item.unitDecimalPlaces;
+      // TB-277-R1: the remaining ceiling is an EXACT subtraction of the authoritative decimals, never a floating
+      // point `requested - received` (which produces 0.19999999999999998 for 0.3 - 0.1).
+      const requestedUnits = unitsFromWireNumber(requested);
+      const receivedUnits = unitsFromWireNumber(received);
+      const remainingUnits =
+        requestedUnits === null || receivedUnits === null
+          ? null
+          : Math.max(0, subtractUnits(requestedUnits, receivedUnits));
       return {
         returnItemId: item.returnItemId,
         productLabel: item.productLabel ?? null,
         unitLabel: item.unitLabel ?? null,
-        // An unanswered unit precision falls back to the persisted scale, never to "whole pieces".
+        // An unanswered unit precision is HONESTLY BLOCKED — the persisted scale is a storage cap, never a guessed
+        // permission to receive a fraction of a piece.
         decimalPlaces:
           typeof answeredPlaces === "number" && answeredPlaces >= 0
             ? Math.min(Math.trunc(answeredPlaces), MAX_QUANTITY_SCALE)
-            : MAX_QUANTITY_SCALE,
-        ceiling: Math.max(0, requested - received),
+            : null,
+        ceilingUnits: remainingUnits ?? 0,
         usable: "",
         damaged: "",
       };
@@ -1090,8 +990,10 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                 ) : (
                   <div className="space-y-3">
                     {receiptLines.map((line, index) => {
-                      const usableCheck = evaluateQuantityEntry(line.usable, line.decimalPlaces, line.ceiling);
-                      const damagedCheck = evaluateQuantityEntry(line.damaged, line.decimalPlaces, line.ceiling);
+                      const usableCheck = evaluateQuantityEntry(line.usable, line.decimalPlaces, line.ceilingUnits);
+                      const damagedCheck = evaluateQuantityEntry(line.damaged, line.decimalPlaces, line.ceilingUnits);
+                      // TB-277-R1: an unanswered owning unit precision is a BLOCKED line, not a six-decimal guess.
+                      const unitUnavailable = line.decimalPlaces === null;
                       const usableEntered = normalizeQuantityInput(line.usable) !== "";
                       const damagedEntered = normalizeQuantityInput(line.damaged) !== "";
                       const update = (patch: Partial<ReceiptDraftLine>) =>
@@ -1110,14 +1012,25 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted">
                             <span>واحد: {formatUnitLabel(line.unitLabel)}</span>
                             <span data-testid={`admin-return-receipt-ceiling-${index}`}>
-                              باقی‌ماندهٔ قابل دریافت: {formatQuantityDisplayFa(line.ceiling)}
+                              باقی‌ماندهٔ قابل دریافت: {formatCeilingFa(line)}
                             </span>
                             <span>
-                              {line.decimalPlaces === 0
-                                ? "فقط عدد صحیح"
-                                : `حداکثر ${toPersianDigits(line.decimalPlaces)} رقم اعشار`}
+                              {line.decimalPlaces === null
+                                ? "دقت واحد تأیید نشد"
+                                : line.decimalPlaces === 0
+                                  ? "فقط عدد صحیح"
+                                  : `حداکثر ${toPersianDigits(line.decimalPlaces)} رقم اعشار`}
                             </span>
                           </div>
+                          {unitUnavailable ? (
+                            <p
+                              className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800"
+                              data-testid={`admin-return-receipt-unit-unavailable-${index}`}
+                              role="alert"
+                            >
+                              دقت واحد این قلم از خط سفارش تأیید نشد؛ دریافت این قلم تا پاسخ‌گویی واحد مسدود است.
+                            </p>
+                          ) : null}
                           <div className="mt-2 grid gap-2 sm:grid-cols-2">
                             <label className="text-sm">
                               <span className="block text-muted">سالم</span>
@@ -1130,8 +1043,9 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                                 className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
                                 aria-invalid={usableEntered && usableCheck.problem !== null ? true : undefined}
                                 data-testid={`admin-return-receipt-qty-${index}`}
-                                data-max={line.ceiling}
-                                data-step={quantityStep(line.decimalPlaces)}
+                                data-max={line.ceilingUnits === null ? undefined : unitsToExactText(line.ceilingUnits)}
+                                data-step={line.decimalPlaces === null ? undefined : quantityStep(line.decimalPlaces)}
+                                disabled={unitUnavailable || line.ceilingUnits === null}
                                 value={line.usable}
                                 onChange={(event) => update({ usable: event.target.value })}
                               />
@@ -1152,8 +1066,9 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                                 className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
                                 aria-invalid={damagedEntered && damagedCheck.problem !== null ? true : undefined}
                                 data-testid={`admin-return-receipt-damaged-${index}`}
-                                data-max={line.ceiling}
-                                data-step={quantityStep(line.decimalPlaces)}
+                                data-max={line.ceilingUnits === null ? undefined : unitsToExactText(line.ceilingUnits)}
+                                data-step={line.decimalPlaces === null ? undefined : quantityStep(line.decimalPlaces)}
+                                disabled={unitUnavailable || line.ceilingUnits === null}
                                 value={line.damaged}
                                 onChange={(event) => update({ damaged: event.target.value })}
                               />

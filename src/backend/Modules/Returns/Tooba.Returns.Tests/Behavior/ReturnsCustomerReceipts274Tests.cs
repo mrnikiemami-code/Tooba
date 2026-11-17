@@ -993,7 +993,7 @@ public sealed class ReturnsCustomerReceipts274Tests
             customerUserId,
             true,
             "IRR",
-            [new OrderReturnLineSnapshot(lineId, quantity, unitPrice, "IRR", reservationId, true, 7)]);
+            [new OrderReturnLineSnapshot(lineId, quantity, unitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0)]);
 
     private static ReturnsDbContext CreateDb()
     {

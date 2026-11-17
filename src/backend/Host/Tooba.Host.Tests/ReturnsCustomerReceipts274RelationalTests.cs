@@ -487,7 +487,7 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
     private static ReturnDirectory BuildDirectory(ReturnsDbContext db)
     {
         var clock = new SystemUtcClock();
-        var orders = new EmptyOrderReader();
+        var orders = new ReturnsBackedOrderReader(db);
         var fulfillments = new EmptyFulfillmentReader();
         return new ReturnDirectory(
             db,
@@ -503,12 +503,48 @@ public sealed class ReturnsCustomerReceipts274RelationalTests
             new UuidV7IdGenerator());
     }
 
-    private sealed class EmptyOrderReader : IOrderReturnReader
+    /// <summary>
+    /// TB-277-R1: the staged cases of this harness own no real Order aggregate, so this reader answers the owning
+    /// order snapshot of the case's own seller order from the staged rows themselves with a WHOLE-PIECE unit — the
+    /// physical receiving gate therefore sees an answered precision instead of an invented six-decimal fallback. It
+    /// reads only; no order row is created or repaired.
+    /// </summary>
+    private sealed class ReturnsBackedOrderReader(ReturnsDbContext db) : IOrderReturnReader
     {
-        public Task<OrderReturnContextSnapshot?> GetReturnContextAsync(
+        public async Task<OrderReturnContextSnapshot?> GetReturnContextAsync(
             Guid sellerOrderId,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<OrderReturnContextSnapshot?>(null);
+            CancellationToken cancellationToken)
+        {
+            var request = await db.ReturnRequests.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.SellerOrderId == sellerOrderId, cancellationToken);
+            if (request is null)
+            {
+                return null;
+            }
+
+            var items = await db.ReturnItems.AsNoTracking()
+                .Where(x => x.ReturnRequestId == request.ReturnRequestId)
+                .Select(x => new { x.OrderLineId, x.Quantity })
+                .ToListAsync(cancellationToken);
+            return new OrderReturnContextSnapshot(
+                sellerOrderId,
+                request.CheckoutId,
+                request.SellerPartyId,
+                Guid.Empty,
+                false,
+                "IRR",
+                items.Select(x => new OrderReturnLineSnapshot(
+                    x.OrderLineId,
+                    x.Quantity,
+                    1000m,
+                    "IRR",
+                    null,
+                    true,
+                    7,
+                    null,
+                    null,
+                    QuantityDecimalPlacesSnapshot: 0)).ToArray());
+        }
     }
 
     private sealed class EmptyFulfillmentReader : IFulfillmentReturnReader

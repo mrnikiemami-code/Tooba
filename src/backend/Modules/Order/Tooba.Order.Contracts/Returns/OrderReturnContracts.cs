@@ -12,7 +12,14 @@ public sealed record OrderReturnLineSnapshot(
     bool IsReturnableSnapshot = true,
     int ReturnWindowDaysSnapshot = 7,
     string? ReturnPolicySourceSnapshot = null,
-    string? ReturnPolicyLabelSnapshot = null);
+    string? ReturnPolicyLabelSnapshot = null,
+    /// <summary>
+    /// TB-277-R1: the decimal places the ORDERING UNIT of this line accepts, read from the owning accepted line
+    /// snapshot (<c>QuantityDecimalPlacesSnapshot</c>) — the same fact the admin detail read publishes. It is the ONLY
+    /// unit-precision authority a physical receiving quantity may be validated against. <c>null</c> means the owning
+    /// line did not answer, and a caller must then refuse a fractional claim instead of assuming a scale.
+    /// </summary>
+    int? QuantityDecimalPlacesSnapshot = null);
 
 /// <summary>
 /// snapshot سفارش برای eligibility مرجوعی.

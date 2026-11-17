@@ -275,68 +275,37 @@ export function discardUnreadableReturnReviewIntent(
 }
 
 /**
- * TB-276: the reviewed commands whose owning code path proves refusal happened BEFORE any durable write of that
- * intent. This is a deliberately small, auditable TOKEN list — never "every 4xx", never message matching:
+ * TB-276 / TB-277-R1: the reviewed commands whose owning code path proves refusal happened BEFORE any durable write of
+ * that intent. This is a deliberately small, auditable TOKEN list — never "every 4xx", never message matching:
  *
- * - a transport failure carries no code at all and is therefore never listed;
- * - `return.rejected` is the client fallback for a payload without a code, so it is excluded;
- * - `return.recovery.gateway_unavailable` is excluded: the pending attempt is retained and must be resumed by the
- *   SAME intent instead of being discarded;
- * - a receipt/decision conflict names a durable row that already exists, so no NEW fact was written by this reviewed
- *   command and it can never be applied — it is listed.
+ * TB-277-R1 REMOVED every code that only proves "this RETRY was refused". A later authorization denial, a missing
+ * actor, a permission loss or a generic conflict/state answer says nothing about an EARLIER send of the same frozen
+ * bytes: that send may have been authorized and may have written, so the retained envelope must stay unresolved. The
+ * remaining tokens are refusals determined SOLELY by the frozen reviewed body (or by an immutable fact that could never
+ * have been true when the body was sent), so they can never describe a command that wrote and then answered this way.
+ *
+ * Deliberately NOT listed:
+ * - a transport failure carries no code at all;
+ * - `return.rejected` is the client fallback for a payload without a code;
+ * - `return.recovery.gateway_unavailable`: the pending attempt is retained and must be resumed by the SAME intent;
+ * - `admin.authorization.denied`, `admin.actor.missing`, `order.operation.denied`, `validation.failed` at the
+ *   authorization boundary, and every conflict/state code (`return.stale`, `return.already_*`,
+ *   `return.idempotency_conflict`, `return.decision.reason_conflict`, `return.receipt.conflict`,
+ *   `return.receipt.state_invalid`, `return.recovery.*`) — they describe THIS attempt, not an earlier one.
  */
 export const PROVEN_NO_EFFECT_REFUSAL_CODES: ReadonlySet<string> = new Set([
-  // authorization / transport-level validation: refused before the owning handler runs
-  "admin.authorization.denied",
-  "admin.actor.missing",
-  "order.operation.denied",
-  "validation.failed",
-  // case address / ownership / eligibility
-  "return.missing",
-  "return.not_owner",
-  "return.line_missing",
+  // The reviewed BODY itself cannot describe a lawful quantity of goods; no earlier send of these bytes could write.
   "return.quantity_invalid",
   "return.quantity_precision",
   "return.duplicate_line",
   "return.idempotency_required",
-  "return.idempotency_conflict",
-  "return.non_returnable",
-  "return.expired",
-  "return.not_delivered",
-  "return.not_paid",
-  "return.fulfillment_missing",
-  "return.stale",
-  // decision
-  "return.already_approved",
-  "return.already_rejected",
   "return.rejection_reason_required",
-  "return.decision.reason_conflict",
-  "return.reject.invalid_state",
-  // physical receiving
   "return.receipt.occurrence_required",
   "return.receipt.line_invalid",
-  "return.receipt.actor_required",
+  "return.receipt.unit_quantity_invalid",
+  // The line it names cannot belong to this case (an immutable identity), so nothing could ever have been stored.
+  "return.line_missing",
   "return.receipt.origin_invalid",
-  "return.receipt.state_invalid",
-  "return.receipt.over_received",
-  "return.receipt.conflict",
-  "return.receiving.incomplete",
-  // money / recovery
-  "refund.retry.invalid_state",
-  "refund.payment_missing",
-  "refund.already_started",
-  "refund.already_completed",
-  "refund.destination.invalid",
-  // TB-277: the first refund refuses before it persists an attempt or calls the gateway at all.
-  "return.refund.first_not_lawful",
-  "return.recovery.kind_invalid",
-  "return.recovery.attempt_mismatch",
-  "return.recovery.attempt_unbound",
-  "return.recovery.state_mismatch",
-  "return.recovery.receiving_required",
-  "return.recovery.evidence_conflict",
-  "return.recovery.transaction_owned",
-  "return.recovery.stock_binding_required",
 ]);
 
 /** True when a typed code proves the reviewed command did not write anything. */

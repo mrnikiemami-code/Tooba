@@ -108,7 +108,16 @@ public sealed class ReturnsCharacterizationTests
         var approved = await directory.ApproveAsync(
             new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid(), first.SellerPartyId),
             CancellationToken.None);
-        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        // TB-277: approving records the DECISION only. Nothing is refunded, no attempt is created and no case is closed.
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Empty(refunds.Calls);
+        Assert.Empty(wallets.Credits);
+
+        // TB-277: the FIRST refund is a separate deliberate financial command over the same stored decision.
+        var refunded = await directory.StartFirstRefundAsync(
+            new StartReturnRefundCommand(approved.ReturnRequestId, Guid.NewGuid()),
+            CancellationToken.None);
+        Assert.Equal(ReturnRequestStatus.Completed, refunded.Status);
         Assert.Single(refunds.Calls);
         Assert.Equal(paymentId, refunds.Calls[0].PaymentId);
         Assert.Equal(2000m, refunds.Calls[0].Amount);
@@ -171,7 +180,17 @@ public sealed class ReturnsCharacterizationTests
         var approved = await directory.ApproveAsync(
             new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid(), created.SellerPartyId),
             CancellationToken.None);
-        Assert.Equal(ReturnRequestStatus.Completed, approved.Status);
+        // TB-277: the approval decision moves no money and settles no stock.
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Empty(refunds.Calls);
+        Assert.Empty(wallets.Credits);
+        Assert.Empty(inventory.Restocks);
+
+        // TB-277: the separate first-refund command is what credits the Wallet destination and restocks saleable goods.
+        var refunded = await directory.StartFirstRefundAsync(
+            new StartReturnRefundCommand(approved.ReturnRequestId, Guid.NewGuid()),
+            CancellationToken.None);
+        Assert.Equal(ReturnRequestStatus.Completed, refunded.Status);
         Assert.Empty(refunds.Calls);
         Assert.Single(wallets.Credits);
         Assert.Single(inventory.Restocks);
@@ -191,7 +210,7 @@ public sealed class ReturnsCharacterizationTests
             Guid.NewGuid(),
             true,
             "IRR",
-            [new OrderReturnLineSnapshot(lineId, qty, unitPrice, "IRR", reservationId, true, 7)]);
+            [new OrderReturnLineSnapshot(lineId, qty, unitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0)]);
 
     private static FulfillmentReturnEligibilitySnapshot BuildFulfillment(
         Guid sellerOrderId,

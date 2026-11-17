@@ -514,20 +514,21 @@ test("the quantity guard is unit-aware and normalizes Persian input", () => {
   assert.equal(parseOrNull("0"), null, "zero is not a quantity of received goods");
   assert.equal(parseOrNull("1.0000001"), null, "the persisted scale is never rounded");
 
-  // Whole pieces refuse a fraction; grams accept an exact fractional amount.
-  assert.equal(evaluateQuantityEntry("1.5", 0, 10).problem, "precision");
-  assert.equal(evaluateQuantityEntry("1.5", 3, 10).value, 1.5);
-  assert.equal(evaluateQuantityEntry("1.2345", 3, 10).problem, "precision");
+  // Whole pieces refuse a fraction; grams accept an exact fractional amount. Ceilings are EXACT millionths.
+  const tenPieces = 10_000_000;
+  assert.equal(evaluateQuantityEntry("1.5", 0, tenPieces).problem, "precision");
+  assert.equal(evaluateQuantityEntry("1.5", 3, tenPieces).value, 1.5);
+  assert.equal(evaluateQuantityEntry("1.2345", 3, tenPieces).problem, "precision");
 
   // The ceiling is inclusive, never a suggestion.
-  assert.equal(evaluateQuantityEntry("10", 0, 10).value, 10);
-  assert.equal(evaluateQuantityEntry("11", 0, 10).problem, "over_ceiling");
+  assert.equal(evaluateQuantityEntry("10", 0, tenPieces).value, 10);
+  assert.equal(evaluateQuantityEntry("11", 0, tenPieces).problem, "over_ceiling");
 
   assert.equal(quantityStep(0), "1");
   assert.equal(quantityStep(3), "0.001");
 });
 
 function parseOrNull(raw: string): number | null {
-  const result = evaluateQuantityEntry(raw, 6, 1_000_000);
+  const result = evaluateQuantityEntry(raw, 6, 10_000_000);
   return result.problem === null ? result.value : null;
 }

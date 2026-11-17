@@ -34,6 +34,7 @@ import {
 import { filterOperationsForScope } from "./admin-order-operations-scope.ts";
 import { formatQuantityDisplay } from "../../lib/quantity-display.ts";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import { collectReceiptItems, evaluateQuantityEntry } from "../returns/return-receipt-quantities.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
@@ -392,8 +393,22 @@ test("same-intent comparison keeps a retried command identical to the reviewed o
 });
 
 test("the proven no-effect refusal list is typed codes only", () => {
-  assert.equal(isProvenNoEffectRefusal("return.receipt.state_invalid"), true);
-  assert.equal(isProvenNoEffectRefusal("return.recovery.attempt_mismatch"), true);
+  // TB-277-R1: only refusals determined SOLELY by the frozen reviewed body prove that no earlier send could have
+  // written. A later denial, actor loss, conflict or generic state answer describes THIS retry only.
+  assert.equal(isProvenNoEffectRefusal("return.receipt.line_invalid"), true);
+  assert.equal(isProvenNoEffectRefusal("return.receipt.unit_quantity_invalid"), true);
+  assert.equal(isProvenNoEffectRefusal("return.receipt.occurrence_required"), true);
+  assert.equal(isProvenNoEffectRefusal("admin.authorization.denied"), false);
+  assert.equal(isProvenNoEffectRefusal("admin.actor.missing"), false);
+  assert.equal(isProvenNoEffectRefusal("order.operation.denied"), false);
+  assert.equal(isProvenNoEffectRefusal("return.not_owner"), false);
+  assert.equal(isProvenNoEffectRefusal("return.receipt.state_invalid"), false);
+  assert.equal(isProvenNoEffectRefusal("return.receipt.conflict"), false);
+  assert.equal(isProvenNoEffectRefusal("return.stale"), false);
+  assert.equal(isProvenNoEffectRefusal("return.already_approved"), false);
+  assert.equal(isProvenNoEffectRefusal("return.idempotency_conflict"), false);
+  assert.equal(isProvenNoEffectRefusal("return.refund.first_not_lawful"), false);
+  assert.equal(isProvenNoEffectRefusal("return.recovery.attempt_mismatch"), false);
   // Uncertainty and "cannot send now" must never resolve a retained intent.
   assert.equal(isProvenNoEffectRefusal("host-unreachable"), false);
   assert.equal(isProvenNoEffectRefusal("return.recovery.gateway_unavailable"), false);
@@ -512,19 +527,34 @@ test("chrome nav uses بازگشت وجه not بازپرداخت", () => {
 });
 
 test("receipt review never preselects arrival and bounds each portion by the unit and the shared ceiling", () => {
-  const source = readFileSync(join(dir, "admin-return-workspace.tsx"), "utf8");
-  // Nothing is pre-filled: both inspected portions of every line start empty.
-  assert.match(source, /usable: "",\s*\n\s*damaged: "",/);
-  assert.doesNotMatch(source, /usable: "0"/);
-  // Exactly-representable quantities only; a value needing rounding is never silently changed.
-  assert.ok(source.includes("const EXACT_QUANTITY = /^\\d{1,9}(?:\\.\\d{1,6})?$/;"), "exact 6-decimal quantity guard is missing");
-  // TB-277: the unit's own precision and the line's remaining coverage are refused BEFORE any intent is stored.
-  assert.match(source, /writtenScale\(normalized\) > Math\.min\(decimalPlaces, MAX_QUANTITY_SCALE\)/);
-  assert.match(source, /if \(value > ceiling\) return \{ value: null, problem: "over_ceiling" \};/);
-  // usable + damaged share ONE ceiling; neither portion may fund the other.
-  assert.match(source, /if \(total > entry\.line\.ceiling\)/);
-  // Persian digits and the Persian decimal separator are normalized instead of rejected.
-  assert.match(source, /export function normalizeQuantityInput/);
+  const line = {
+    returnItemId: "ri-1",
+    productLabel: "کالای سفارش",
+    unitLabel: "pcs",
+    decimalPlaces: 0,
+    ceilingUnits: 2_000_000,
+    usable: "",
+    damaged: "",
+  };
+
+  // Nothing is pre-filled: an untouched draft submits nothing at all.
+  assert.deepEqual(collectReceiptItems([line]), { items: [], problem: null, sumProblem: null });
+
+  // A whole-piece unit refuses a fraction before anything is stored, and the ceiling is inclusive.
+  assert.equal(evaluateQuantityEntry("0.5", 0, 2_000_000).problem, "precision");
+  assert.equal(evaluateQuantityEntry("2", 0, 2_000_000).units, 2_000_000);
+  assert.equal(evaluateQuantityEntry("3", 0, 2_000_000).problem, "over_ceiling");
+
+  // Usable + damaged share ONE exact ceiling; neither portion may fund the other.
+  const over = collectReceiptItems([{ ...line, usable: "2", damaged: "1" }]);
+  assert.equal(over.items.length, 0);
+  assert.match(over.problem ?? over.sumProblem ?? "", /بیشتر است/);
+
+  // An unanswered owning unit precision is a BLOCKED line, never a six-decimal guess.
+  assert.equal(evaluateQuantityEntry("1", null, 2_000_000).problem, "unit_unknown");
+  assert.equal(collectReceiptItems([{ ...line, decimalPlaces: null, usable: "1" }]).items.length, 0);
+
   // The bounded quantity fields carry the 44px minimum target.
+  const source = readFileSync(join(dir, "admin-return-workspace.tsx"), "utf8");
   assert.match(source, /min-h-11 w-full/);
 });

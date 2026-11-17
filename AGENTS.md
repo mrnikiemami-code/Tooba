@@ -1,9 +1,30 @@
-# CURRENT — 277 PARTIAL: THREE BOUNDED QUANTITY/INTENT REPAIRS; ONLY277-R1 — 2026-11-17
+# CURRENT — 277-R1 WORKER PASS (owning unit enforced at the receipt write, exact millionth client quantities, body-only no-effect refusals); AWAIT ARCHITECT REVIEW AND USER LOOK — 2026-11-17
 
-Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/ARCHITECT-REVIEW.md.
-Approval/explicit first-refund separation and DS modals are retained. Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1: server unit precision, exact decimal client ceiling/sums, and uncertainty retained through later denial/conflict.
-Existing user case is settled history: READ-ONLY. No valid live POST, new fixture/case, stock/money/provider effect, reset or schema change. Preserve standing user rules and all previous audit history. One worker/task, no screenshots/delegation/automatic continuation.
-STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+Read docs/ai/tasks/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,precision-and-uncertainty-proof.md,user-review.md}.
+Status **PASS within the issued A–C repair scope**, decision
+`EXACT_OWNING_UNIT_QUANTUM_ENFORCEMENT_AT_THE_RECEIPT_WRITE_BOUNDARY_ONE_EXACT_INTEGER_MILLIONTH_QUANTITY_AUTHORITY_SHARED_BY_THE_DIALOG_AND_ITS_CONFIRM_GATE_AND_A_BODY_ONLY_PROVEN_NO_EFFECT_REFUSAL_SET_THAT_KEEPS_EVERY_POSSIBLY_SENT_INTENT_UNRESOLVED_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance. Expected-Base-SHA == Base `42e2df1f328e16b1bd855cc57edde168071a600f`.
+TB-277 stays reviewed-PARTIAL; its DS modals, decision-only approval and explicit first-refund route are retained unchanged.
+272-R1 / 273-R2 / 274-R1 / 275 / 276 and shipping acceptances preserved unchanged.
+Single worker, one task, no delegation, no historical agent resumed, no screenshots, no loop.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A owning unit | enforced before any row | `ReturnDirectory.Receipts.cs` reads the case's own Order return context and each item's `OrderLineId`, then `OwningUnitQuantity.IsAlignedTo(quantity, places)`; `0.5` on a «عدد»/0-decimal line and `0.0001` on a 3-decimal gram line are `return.receipt.unit_quantity_invalid` (400 Business) with **zero writes**; missing/foreign/unanswered/out-of-range precision is the same typed refusal (no six-decimal default); the exact stored occurrence replay is answered **before** this gate; `1 == 1.000000` preserved; `OrderReturnLineSnapshot.QuantityDecimalPlacesSnapshot` is one additive trailing optional member |
+| B exact client math | integer millionths | `app/returns/return-quantity.ts` carries every quantity as exact `numeric(18,6)` millionths (`0.1+0.2==0.3`, `1-0.8==0.2`, Persian/Arabic digits and `٫` normalized, `1.0000001` refused not rounded, unit quantum/step derived); `app/returns/return-receipt-quantities.ts` holds the pure `evaluateQuantityEntry` + `collectReceiptItems` that BOTH the confirm-disabled state and the confirm handler read; usable+damaged share ONE exact ceiling; unknown unit precision blocks the line honestly; workspace shrank 1386→1301 lines |
+| C refusal set | body-dictated only | authorization denials, missing actor, operation denial, `validation.failed`, stale/already/conflict/state codes, `refund.*` and every `return.recovery.*` (incl. `return.refund.first_not_lawful`) were removed from `PROVEN_NO_EFFECT_REFUSAL_CODES`; only body/immutable-identity refusals remain, so a possibly-sent intent stays unresolved after an unknown outcome |
+| proof | focused | Returns `139/139`; Host `ReturnsModuleAmsc001*` `34/34` (matrices extended to the route/validator/code TB-277 added); Host `ReturnsCustomerReceipts274*` `10/10` on real `tooba_alpha`; FE `return-quantity` `7/7`, queue `26/26`, error-map `8/8`, mounted workspace `8/8`; `tsc` 0; `npm run build` 0; `dotnet build Tooba.slnx -c Release` 0 errors; Host publish 0 errors |
+| E served | Host + FE refreshed | Host `5088` PID `21060`, dll SHA256 `8AA71DD82E6D737F9698A93D0F99EE7A77EB07E02916E4185DE9C271890E7948` (`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy, `/__platform-commerce` → `store-alpha`); Next `3000` PID `7864`, `BUILD_ID 0RrDo7CGZ60FPsYrWxQ1a`, served chunks `1323-979bf525b6515616.js` + `7952-040a265ac5604fbd.js` 200 |
+| live case | read-only, untouched | `01a1e6b0-f33a-7000-80ee-beffb6344490` GET 200: `Completed`, `2,407,839 IRR`, one `Succeeded` attempt, item «لنوو اولترابوک مدل 2» `pcs` `unitDecimalPlaces=0` `SaleableRestock` `1.000000`; no write, no new case, no money/stock/provider/notification call; settled history offers no action, so modal variants rest on the mounted real component |
+| schema/data | untouched | zero migration/DDL/seed/backfill/reset/cleanup/restore; one canonical `tooba_alpha`; the Bridge returned empty task content, so `TASK.md` is a declared reconstructed repair record |
+
+Known limits: money/stock proven with controlled ports only; no real PSP/Wallet/Inventory effect; no committed two-writer
+race; the mounted suite is jsdom and the live check is HTTP/GET + served-chunk text (no screenshots); only the exercised
+`pcs` line exists live. Declared deviations: two stale `ReturnsCharacterizationTests` that assumed "approve refunds" were
+updated to the accepted decision-only behavior; AMSC pins extended; the relational receipt facts now use the
+Returns-backed order reader so unit metadata is real; a `dotnet`/`next` restart and one superseded FE build are recorded.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
 
 # SUPERSEDED — 277 WORKER PASS (shared action modals + unit-bounded receiving + decision-only approval with an explicit first refund); AWAIT USER LOOK AND ARCHITECT REVIEW — 2026-11-17
 

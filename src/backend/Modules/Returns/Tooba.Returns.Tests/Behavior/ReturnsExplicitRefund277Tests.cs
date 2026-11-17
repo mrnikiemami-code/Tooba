@@ -349,7 +349,7 @@ public sealed class ReturnsExplicitRefund277Tests
             customer,
             true,
             "IRR",
-            [new OrderReturnLineSnapshot(lineId, requested, unitPrice, "IRR", reservationId, true, 7)]);
+            [new OrderReturnLineSnapshot(lineId, requested, unitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0)]);
 
         return new Fixture(dbName, returnRequestId, request.Items.Single().ReturnItemId, lineId, requested, unitPrice, orderSnapshot);
     }

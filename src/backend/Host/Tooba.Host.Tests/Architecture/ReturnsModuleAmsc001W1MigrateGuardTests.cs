@@ -55,7 +55,7 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         // quantity-precision refusal (return.quantity_precision), TB-273-R1 the recovery evidence-conflict and
         // caller-transaction refusals and TB-274 the nine customer-receipt/inspection/reason refusals — all
         // HTTP-reachable.
-        Assert.Equal(43, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(45, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));
@@ -181,15 +181,16 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
                      "ApproveReturnCommandValidator",
                      "RejectReturnCommandValidator",
                      "QueryAdminReturnsGridQueryValidator",
-                     "RecoverReturnCommandValidator",
-                     "RecordReturnReceiptCommandValidator",
+                    "RecoverReturnCommandValidator",
+                    "RecordReturnReceiptCommandValidator",
+                    "StartReturnRefundCommandValidator",
                  })
         {
             Assert.Contains(type, validators, StringComparison.Ordinal);
         }
 
-        // Exactly six transport validators — one per VALIDATOR_REQUIRED request.
-        Assert.Equal(6, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        // Exactly seven transport validators — one per VALIDATOR_REQUIRED request.
+        Assert.Equal(7, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
 
         // Validators emit stable machine codes, never user-facing prose.
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);

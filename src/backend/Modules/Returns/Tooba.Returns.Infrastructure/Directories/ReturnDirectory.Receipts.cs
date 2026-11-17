@@ -104,7 +104,7 @@ public sealed partial class ReturnDirectory
 
             var requestedItems = await _db.ReturnItems.AsNoTracking()
                 .Where(x => x.ReturnRequestId == command.ReturnRequestId)
-                .Select(x => new { x.ReturnItemId, x.Quantity, x.Disposition })
+                .Select(x => new { x.ReturnItemId, x.OrderLineId, x.Quantity, x.Disposition })
                 .ToListAsync(cancellationToken);
             var requestedById = requestedItems.ToDictionary(x => x.ReturnItemId, x => x.Quantity);
 
@@ -142,6 +142,22 @@ public sealed partial class ReturnDirectory
                 {
                     // A receipt may only answer for a line of THIS case.
                     throw new ContractOperationException(ReturnsErrorCodes.ReceiptLineInvalid);
+                }
+            }
+
+            // TB-277-R1: a NEW inspected quantity must land exactly on the OWNING UNIT's quantum. The persisted scale
+            // is only a storage cap — 0.5 of a whole-piece line and 0.0001 of a three-decimal gram line are refused
+            // here, so a direct POST cannot bypass the rule the workspace already applies. Missing/unanswered/foreign
+            // metadata is a truthful refusal, never a guessed default, and nothing is written before this gate.
+            var unitDecimalPlaces = await ReadOwningUnitDecimalPlacesAsync(
+                request,
+                requestedItems.Select(x => (x.ReturnItemId, x.OrderLineId)).ToArray(),
+                cancellationToken);
+            foreach (var line in lines)
+            {
+                if (!OwningUnitQuantity.IsAlignedTo(line.Quantity, unitDecimalPlaces[line.ReturnItemId]))
+                {
+                    throw new ContractOperationException(ReturnsErrorCodes.ReceiptUnitQuantityInvalid);
                 }
             }
 
@@ -259,6 +275,50 @@ public sealed partial class ReturnDirectory
             .ToArray();
 
         return (summary, occurrences);
+    }
+
+    /// <summary>
+    /// TB-277-R1: the answered unit precision of every requested line of THIS case, read from the owning Order
+    /// Contracts snapshot of the case's own seller order (the same accepted-line fact the admin detail read publishes).
+    /// <para>
+    /// There is deliberately no fallback: a line whose order context/order line cannot be bound, or whose owning line
+    /// did not answer a precision, refuses a NEW receipt with the typed unit-invalid code instead of adopting a scale
+    /// nobody proved. Nothing is written or repaired by this read.
+    /// </para>
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, int>> ReadOwningUnitDecimalPlacesAsync(
+        ReturnRequest request,
+        IReadOnlyList<(Guid ReturnItemId, Guid OrderLineId)> items,
+        CancellationToken cancellationToken)
+    {
+        var context = await _orders.GetReturnContextAsync(request.SellerOrderId, cancellationToken);
+        if (context is null)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.ReceiptUnitQuantityInvalid);
+        }
+
+        var orderLineById = new Dictionary<Guid, Tooba.Order.Contracts.Returns.OrderReturnLineSnapshot>();
+        foreach (var orderLine in context.Lines)
+        {
+            orderLineById.TryAdd(orderLine.OrderLineId, orderLine);
+        }
+
+        var placesByItem = new Dictionary<Guid, int>(items.Count);
+        foreach (var item in items)
+        {
+            // The return item's OWN order line must be answered by this case's order context with a usable precision.
+            if (item.OrderLineId == Guid.Empty
+                || !orderLineById.TryGetValue(item.OrderLineId, out var orderLine)
+                || orderLine.QuantityDecimalPlacesSnapshot is not { } places
+                || places is < 0 or > OwningUnitQuantity.MaxDecimalPlaces)
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.ReceiptUnitQuantityInvalid);
+            }
+
+            placesByItem[item.ReturnItemId] = places;
+        }
+
+        return placesByItem;
     }
 
     /// <summary>

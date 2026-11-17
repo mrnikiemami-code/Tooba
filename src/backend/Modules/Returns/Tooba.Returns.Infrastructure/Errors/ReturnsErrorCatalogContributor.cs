@@ -51,6 +51,7 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.ReceiptOriginInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A courier-origin case reuses the receipt owned by fulfillment and cannot record a second one here."),
         D(ReturnsErrorCodes.ReceiptStateInvalid, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The return is not open for a new physical receipt."),
         D(ReturnsErrorCodes.ReceiptActorRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A customer receipt must name the recording operator."),
+        D(ReturnsErrorCodes.ReceiptUnitQuantityInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "An inspected quantity must land exactly on the owning unit's precision, and that precision must be answered by the owning order line."),
         D(ReturnsErrorCodes.ReceivingIncomplete, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The return has no complete recorded receiving/inspection coverage, so no approval, refund or restock can start."),
         D(ReturnsErrorCodes.RejectionReasonRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A new rejection must state a meaningful reason."),
         D(ReturnsErrorCodes.DecisionReasonConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The recorded rejection already states a different reason."),
