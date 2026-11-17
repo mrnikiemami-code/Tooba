@@ -1,4 +1,32 @@
-# CURRENT — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
+# CURRENT — 278 CUSTOMER MULTI-SELLER PARTIAL SELECTION AND REAL TEMPLATE TOAST WORKER PASS; AWAIT ARCHITECT REVIEW — 2026-11-17
+
+Read docs/ai/tasks/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,customer-scenario-proof.md,durable-submission-and-template-toast-proof.md,user-review.md}.
+Status **PASS within the issued 278 scope**, decision
+`ONE_AUTHORITATIVE_PER_LINE_CUSTOMER_ELIGIBILITY_READ_ONE_OWNING_UNIT_QUANTUM_GATE_AT_CREATION_ONE_FROZEN_MULTI_SELLER_SUBMISSION_OF_STABLE_KEYED_CHILD_CASES_AND_THE_APPLICATION_OWN_REACT_TOASTIFY_TEMPLATE_ON_THE_EXISTING_RETURNS_SURFACES_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT Marketplace readiness. Expected-Base-SHA == Base
+`1dc7494f47a416d6bd65b9dce9b4eda971476782`. `279` remains planned, NOT ISSUED. 277/R1/R2 bounded acceptances preserved.
+Single worker, one task, no delegation, no historical subagent resumed, no screenshots, no loop.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A eligibility | one owning authority | `GET /v1/customer/returns/eligibility/{sellerOrderId}` binds the owning customer before any fact, then answers each line from the SAME `IReturnEligibilityEvaluator` the create command runs: delivered, already-returned, remaining, `ReturnableUntil`, blocker, unit code and accepted precision; `window_expired` is distinct from `nothing_returnable`; unknown precision is `unit_precision_unavailable`, never six decimals; no permission from shipped quantity or aggregate `Delivered` |
+| B creation quantum | before any row | `ReturnDirectory.Creation.cs` re-reads eligibility under the per-seller-order serialization, then `OwningUnitQuantity.IsCreationQuantityAcceptable`: `0.5` on a whole-piece line and `0.0001` on a 3-decimal gram line are `return.quantity_unit_invalid` (400, zero writes); an unanswered precision refuses fractions but keeps whole quantities lawful; the exact stored-occurrence replay is answered before this gate |
+| C selection | one frozen multi-seller act | the old `ReturnFormModal` (all shipped quantity, one reason, no key) is deleted; `return-request-modal.tsx` shows real product + unit + ceiling + step per line, nothing preselected, per-line or shared reason, exact millionth arithmetic; `return-submission.ts` freezes one child per `(sellerOrderId, orderLineId, reason)` with its own stable key and verbatim bytes, recorded children terminal, only 6 body-dictated refusals prove no effect, partial success retained and only unresolved children retried, exact-current-act clear |
+| D template toast | actual react-toastify | admin workspace and customer modal emit `toast.success`/`toast.error` through the single container in `app/providers.tsx`; no `ToastRegion` on any Returns surface, no second container; field errors stay inline |
+| proof | focused | Returns `148/148` (278 facts `9/9`); AMSC guards `34/34` (15 routes, 15 sends, 46 HTTP-reachable codes); FE submission+mounted `11/11`; `return-api` `7/7`; `tsc` 0; `next build` 0 (`BUILD_ID 0chXf5Nh9mayZ6KZAKbUC`); backend Release build 0 errors; Host publish 0 errors |
+| served | refreshed | Host `5088` PID `31444` dll SHA256 `292C479D…406BC27` (`/health` 200, `/health/ready` 200, `store-alpha`); Next `3000` PID `45076` serving `page-7821fa6a631ec3c4.js` (modal copy) + `9627-0b0f29163bba673b.js` (toastify); unauthenticated eligibility GET → `401 customer.session.required` |
+| data | untouched | zero migration/DDL/seed/backfill/reset/cleanup; no live case, receipt, decision, refund, stock, hold, provider or notification call; both user cases remain read-only settled history |
+
+Known limits: no live customer session/checkout was exercised (served proof is the typed 401, the served chunk and the
+mounted component); the mounted suite is jsdom (behaviour, not geometry); the read side conservatively blocks a line with
+unanswered precision; same-line multi-reason children share one server ceiling; no provider/PSP/Wallet/Inventory effect;
+279 owns decision reconsideration, legacy multi-item partial authority, delivery-slice allocation and refundable-amount
+policy. Declared deviations: Bridge envelope content unavailable → reconstructed `TASK.md`; the 272 fractional-scale
+fixture now declares a 6-decimal owning unit; three AMSC pins extended by this task; Host/Next restarted.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
 
 Read docs/planning/returns/RETURNS-MARKETPLACE-COMPLETION-PLAN-278-279.md and docs/architecture/evidence/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/SOURCE-AUDIT.md FIRST for new-chat recovery.
 Only TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278 issued next;279 planned NOT ISSUED. No ten micro-tasks/automatic loop.

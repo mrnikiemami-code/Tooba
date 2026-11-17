@@ -335,6 +335,12 @@ public static class ReturnEligibilityReasons
     /// <summary>Fulfillment not found.</summary>
     public const string FulfillmentMissing = "fulfillment_missing";
 
+    /// <summary>
+    /// TB-278: the owning order line did not answer a unit precision, so no quantity of this line can be selected or
+    /// created lawfully. The line is blocked instead of assuming a default scale.
+    /// </summary>
+    public const string UnitPrecisionUnavailable = "unit_precision_unavailable";
+
     /// <summary>Stable API error code of a reason code.</summary>
     public static string ToErrorCode(string reasonCode) => reasonCode switch
     {
@@ -345,6 +351,7 @@ public static class ReturnEligibilityReasons
         NotPaid => "return.not_paid",
         OrderMissing => "return.missing",
         FulfillmentMissing => "return.fulfillment_missing",
+        UnitPrecisionUnavailable => Errors.ReturnsErrorCodes.QuantityUnitInvalid,
         _ => "return.rejected",
     };
 }

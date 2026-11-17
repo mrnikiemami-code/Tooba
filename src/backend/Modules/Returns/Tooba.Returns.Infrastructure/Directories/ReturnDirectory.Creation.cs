@@ -126,6 +126,16 @@ public sealed partial class ReturnDirectory
                     throw new ContractOperationException(ReturnsErrorCodes.QuantityExceeded);
                 }
 
+                // TB-278 (B): the requested quantity must be a whole number of the ORDERING UNIT of this line. A
+                // whole-piece line refuses 0.5 before any row is written, and an unanswered owning precision never
+                // grants a fractional claim. The exact stored-intent replay above is answered before this gate, so a
+                // committed occurrence is never re-described as invalid.
+                if (!OwningUnitQuantity.IsCreationQuantityAcceptable(
+                        item.Quantity, orderLine.QuantityDecimalPlacesSnapshot))
+                {
+                    throw new ContractOperationException(ReturnsErrorCodes.QuantityUnitInvalid);
+                }
+
                 lineSnapshots.Add((item.OrderLineId, item.Quantity, orderLine.UnitPriceSnapshot, orderLine.ReservationId));
             }
 

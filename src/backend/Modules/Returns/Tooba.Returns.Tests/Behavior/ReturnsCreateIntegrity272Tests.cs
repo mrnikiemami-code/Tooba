@@ -435,10 +435,12 @@ public sealed class ReturnsCreateIntegrity272Tests
         var directory = BuildDirectory(
             db,
             clock,
-            [BuildOrder(sellerOrderId, customer, 2m, [lineId])],
+            [BuildOrder(sellerOrderId, customer, 2m, [lineId], decimalPlaces: 6)],
             [BuildFulfillment(sellerOrderId, (lineId, 2m))]);
 
         // A legitimate fractional quantity at the persisted scale is accepted and is the ONLY stored fact.
+        // TB-278: this line is a 6-decimal unit (a weight), so the owning unit quantum admits the exact fraction the
+        // persisted scale allows; a whole-piece line would refuse it before this scale question is even reached.
         var created = await directory.CreateAsync(
             Command(sellerOrderId, customer, "tb272r1-precision-ok", [new ReturnLineCommand(lineId, 1m)]),
             CancellationToken.None);
@@ -818,7 +820,8 @@ public sealed class ReturnsCreateIntegrity272Tests
         int windowDays = 7,
         decimal unitPrice = 1000m,
         Guid? checkoutId = null,
-        Guid? sellerPartyId = null) =>
+        Guid? sellerPartyId = null,
+        int? decimalPlaces = null) =>
         new(
             sellerOrderId,
             checkoutId ?? Guid.NewGuid(),
@@ -827,7 +830,8 @@ public sealed class ReturnsCreateIntegrity272Tests
             true,
             "IRR",
             lineIds
-                .Select(x => new OrderReturnLineSnapshot(x, quantity, unitPrice, "IRR", null, true, windowDays))
+                .Select(x => new OrderReturnLineSnapshot(
+                    x, quantity, unitPrice, "IRR", null, true, windowDays, null, null, decimalPlaces))
                 .ToArray());
 
     private static FulfillmentReturnEligibilitySnapshot BuildFulfillment(

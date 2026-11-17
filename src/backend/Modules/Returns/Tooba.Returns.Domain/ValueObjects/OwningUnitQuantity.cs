@@ -42,6 +42,28 @@ public static class OwningUnitQuantity
         return scaled == decimal.Truncate(scaled);
     }
 
+    /// <summary>
+    /// TB-278: the CREATION-time form of the same rule, used before a return request line is persisted.
+    /// <para>
+    /// When the owning order line answered its unit precision, the quantity must land exactly on that unit's quantum.
+    /// When it did not answer, a fractional quantity is still refused (no default scale is invented) while a WHOLE
+    /// quantity stays lawful — a whole piece is the same physical amount under every unit precision, so an unanswered
+    /// metadata line must not block an ordinary customer return of intact items. The fractional part is never rounded
+    /// or clamped away.
+    /// </para>
+    /// </summary>
+    public static bool IsCreationQuantityAcceptable(decimal quantity, int? decimalPlaces)
+    {
+        if (decimalPlaces is not null)
+        {
+            return IsAlignedTo(quantity, decimalPlaces.Value);
+        }
+
+        return quantity > 0m
+            && PersistedReturnQuantity.IsExactlyRepresentable(quantity)
+            && quantity == decimal.Truncate(quantity);
+    }
+
     private static decimal Pow10(int exponent)
     {
         var value = 1m;

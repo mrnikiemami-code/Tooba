@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Button, Dialog, MessageBox, ToastRegion } from "../../design-system";
+import { toast } from "react-toastify";
+import { Button, Dialog, MessageBox } from "../../design-system";
 import { formatQuantityDisplayFa } from "../../lib/quantity-display";
 import { toPersianDigits } from "../../lib/persian-digits";
 import { mapAdminErrorMessage } from "./admin-error-map";
@@ -167,15 +168,12 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
   const [pending, setPending] = useState<ReturnReviewAction | null>(null);
   const [stored, setStored] = useState<ReturnReviewIntentRead>({ kind: "none" });
   const [notice, setNotice] = useState<{ title: string; text: string } | null>(null);
-  const [toast, setToast] = useState<{ text: string; seq: number } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [receiptLines, setReceiptLines] = useState<ReceiptDraftLine[]>([]);
   /** TB-277: the blocked-quantity reason of the receipt dialog, shown inside the dialog instead of sending. */
   const [receiptProblem, setReceiptProblem] = useState<string | null>(null);
   const inFlight = useRef(false);
   const epoch = useRef(0);
-  // TB-277: a repeated identical success must still announce itself, so every publish carries a new sequence.
-  const toastSeq = useRef(1);
 
   const snapshot = result.data;
   const work = snapshot?.work ?? null;
@@ -224,14 +222,6 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
   useEffect(() => {
     setStored(readStored());
   }, [readStored]);
-
-  useEffect(() => {
-    if (!toast) return;
-    // The shared ToastRegion is a passive region; the feature clears its own message so the SAME success can be
-    // announced again and a stale notice never sits on the page indefinitely.
-    const timer = setTimeout(() => setToast(null), 6000);
-    return () => clearTimeout(timer);
-  }, [toast]);
 
   useEffect(() => {
     if (!snapshot) return;
@@ -283,12 +273,9 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         const cleared = clearReturnReviewIntentIfCurrent(storage, intent);
         setStored(cleared ? { kind: "none" } : readStored());
         if (answer.state === "applied") {
-          setToast({ text: successLabel(intent.action), seq: toastSeq.current++ });
+          toast.success(successLabel(intent.action));
         } else {
-          setNotice({
-            title: "اقدام انجام نشد",
-            text: mapAdminErrorMessage(answer.code, "fa"),
-          });
+          toast.error(mapAdminErrorMessage(answer.code, "fa"));
         }
         await loadAt(started);
         return;
@@ -563,8 +550,6 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           بازگشت به صف کار
         </Link>
       </div>
-
-      <ToastRegion key={toast?.seq ?? 0} message={toast?.text ?? null} />
 
       {/*
         TB-276: retained evidence is rendered from STORAGE, before and independently of the fresh detail read. A failed

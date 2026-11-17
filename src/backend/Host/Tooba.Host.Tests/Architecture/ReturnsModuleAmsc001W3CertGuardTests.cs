@@ -36,7 +36,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
     private static readonly string[] NoValidatorRequired =
     [
         "ListCustomerReturnsQuery", "GetCustomerReturnQuery", "ListSellerReturnsQuery", "GetSellerReturnQuery",
-        "ListAdminReturnsQuery", "GetAdminReturnQuery", "RetryReturnRefundCommand",
+        "ListAdminReturnsQuery", "GetAdminReturnQuery", "RetryReturnRefundCommand", "GetCustomerReturnEligibilityQuery",
     ];
 
     [Fact]
@@ -105,7 +105,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         var routeCount = Regex.Matches(admin, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(seller, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(customer, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count;
-        Assert.Equal(14, routeCount);
+        Assert.Equal(15, routeCount);
 
         var module = File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Returns.Endpoints/ReturnEndpointModule.cs"));
         Assert.Contains("MapGroup(\"/v1/customer\")", module, StringComparison.Ordinal);
@@ -145,7 +145,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
             .Where(p => Path.GetFileName(p).EndsWith("Endpoints.cs", StringComparison.Ordinal))
             .ToArray();
         var sendCount = endpoints.Sum(p => Regex.Matches(File.ReadAllText(p), @"sender\.Send\(").Count);
-        Assert.Equal(14, sendCount);
+        Assert.Equal(15, sendCount);
         foreach (var file in endpoints)
         {
             var text = File.ReadAllText(file);
@@ -192,15 +192,15 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
 
         // Single canonical stable-code home with the reachability split preserved. TB-272 added the two
         // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal, TB-273-R1 the two
-        // recovery evidence/transaction refusals and TB-274 the nine customer-receipt/inspection/reason refusals,
-        // all HTTP-reachable.
-        Assert.Equal(45, ReturnsErrorCodes.HttpReachable.Count);
+        // recovery evidence/transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals and
+        // TB-278 the owning-unit creation quantum refusal, all HTTP-reachable.
+        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(47, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(45, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(46, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.

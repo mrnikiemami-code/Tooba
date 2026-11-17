@@ -250,19 +250,34 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             alreadyReturned.TryGetValue(line.OrderLineId, out var returned);
             if (!line.IsReturnableSnapshot)
             {
-                return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
+                return new ReturnLineEligibility(
+                    line.OrderLineId,
+                    delivered,
+                    returned,
+                    0,
+                    null,
+                    ReturnEligibilityReasonCodes.NonReturnable);
             }
 
             if (delivered <= 0)
             {
                 // تعداد تحویل‌نشده ساعت مرجوعی ندارد.
-                return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
+                return new ReturnLineEligibility(
+                    line.OrderLineId,
+                    delivered,
+                    returned,
+                    0,
+                    null,
+                    ReturnEligibilityReasonCodes.NotDelivered);
             }
 
             var windowDays = line.ReturnWindowDaysSnapshot > 0
                 ? line.ReturnWindowDaysSnapshot
                 : (int)ReturnWindow.TotalDays;
             var slices = SlicesForLine(fulfillment, line.OrderLineId, lastDeliveredAt);
+            var returnableUntil = slices.Count == 0
+                ? lastDeliveredAt.AddDays(windowDays)
+                : slices.Max(slice => slice.DeliveredAt.AddDays(windowDays));
             var stillInWindow = 0m;
             foreach (var slice in slices)
             {
@@ -273,7 +288,36 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             }
 
             var remaining = Math.Max(0m, stillInWindow - returned);
-            return new ReturnLineEligibility(line.OrderLineId, delivered, returned, remaining);
+            if (now > returnableUntil)
+            {
+                // TB-278: an expired line is honestly "expired", not a generic exhausted quantity.
+                return new ReturnLineEligibility(
+                    line.OrderLineId,
+                    delivered,
+                    returned,
+                    0,
+                    returnableUntil,
+                    ReturnEligibilityReasonCodes.WindowExpired);
+            }
+
+            if (remaining <= 0)
+            {
+                return new ReturnLineEligibility(
+                    line.OrderLineId,
+                    delivered,
+                    returned,
+                    remaining,
+                    returnableUntil,
+                    ReturnEligibilityReasonCodes.NothingReturnable);
+            }
+
+            return new ReturnLineEligibility(
+                line.OrderLineId,
+                delivered,
+                returned,
+                remaining,
+                returnableUntil,
+                null);
         }).ToArray();
     }
 }

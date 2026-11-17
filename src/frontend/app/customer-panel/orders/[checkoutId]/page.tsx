@@ -14,16 +14,24 @@ import {
 } from "../../customer-api";
 import { loadCustomerFulfillments, type FulfillmentSnapshot } from "../../../fulfillment/fulfillment-api";
 import { FulfillmentShippingInfoBlock } from "../../../fulfillment/fulfillment-ui";
-import { ReturnFormModal } from "../../../returns/return-ui";
+import { loadCustomerReturnEligibility, type CustomerReturnEligibilitySnapshot } from "../../../returns/return-api";
+import { hasUnresolvedCustomerReturnSubmission } from "../../../returns/return-submission";
+import { ReturnRequestModal, type ReturnRequestSeller } from "../../../returns/return-request-modal";
 
 /**
  * جزئیات سفارش مشتری با خطوط هر فروشنده و snapshot ارسال واقعی.
+ *
+ * TB-278: a return request is offered per seller order from the OWNING Returns eligibility read — delivered lines that
+ * are still inside their own return window and still have a lawful remainder — never from the aggregate fulfillment
+ * status or the shipped quantity. One deliberate act may select lines from SEVERAL sellers.
  */
 export default function CustomerOrderDetail() {
   const params = useParams<{ checkoutId: string }>();
   const [page, setPage] = useState<CustomerOrderDetailPage | null | undefined>(undefined);
   const [fulfillments, setFulfillments] = useState<FulfillmentSnapshot[] | null | undefined>(undefined);
-  const [returnModal, setReturnModal] = useState<{ sellerOrderId: string; items: FulfillmentSnapshot["items"] } | null>(null);
+  const [eligibility, setEligibility] = useState<Record<string, CustomerReturnEligibilitySnapshot | null> | null>(null);
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [pendingReturn, setPendingReturn] = useState(false);
   const [retryBusy, setRetryBusy] = useState(false);
   const [retryError, setRetryError] = useState<string | null>(null);
 
@@ -38,6 +46,28 @@ export default function CustomerOrderDetail() {
     });
   }, [params.checkoutId]);
 
+  useEffect(() => {
+    if (!page) return;
+    let cancelled = false;
+    setEligibility(null);
+    void Promise.all(
+      page.sellerOrders.map(async (seller) => {
+        const result = await loadCustomerReturnEligibility(seller.sellerOrderId);
+        return [seller.sellerOrderId, result.ok ? result.snapshot : null] as const;
+      }),
+    ).then((entries) => {
+      if (!cancelled) setEligibility(Object.fromEntries(entries));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [page]);
+
+  useEffect(() => {
+    const storage = typeof window === "undefined" ? null : window.sessionStorage;
+    setPendingReturn(hasUnresolvedCustomerReturnSubmission(storage, params.checkoutId));
+  }, [params.checkoutId, returnModalOpen]);
+
   const fulfillmentBySeller = useMemo(() => {
     const map = new Map<string, FulfillmentSnapshot>();
     for (const snapshot of fulfillments ?? []) {
@@ -46,18 +76,22 @@ export default function CustomerOrderDetail() {
     return map;
   }, [fulfillments]);
 
-  const returnLineLabels = useMemo(() => {
-    if (!page) return {} as Record<string, string>;
-    const map: Record<string, string> = {};
+  const returnSellers = useMemo<ReturnRequestSeller[]>(() => {
+    if (!page || !eligibility) return [];
+    const rows: ReturnRequestSeller[] = [];
     for (const seller of page.sellerOrders) {
-      const fulfillment = fulfillmentBySeller.get(seller.sellerOrderId);
-      if (!fulfillment) continue;
-      fulfillment.items.forEach((item, index) => {
-        map[item.orderLineId] = seller.lines[index]?.title ?? `خط ${item.orderLineId.slice(0, 8)}`;
+      const snapshot = eligibility[seller.sellerOrderId];
+      if (!snapshot) continue;
+      if (!snapshot.lines.some((line) => line.selectable && line.remainingReturnableQuantity > 0)) continue;
+      rows.push({
+        sellerOrderId: seller.sellerOrderId,
+        sellerDisplayName: seller.sellerDisplayName,
+        orderNumber: seller.orderNumber,
+        eligibility: snapshot,
       });
     }
-    return map;
-  }, [page, fulfillmentBySeller]);
+    return rows;
+  }, [page, eligibility]);
 
   if (page === undefined) {
     return <div className="bg-surface rounded-2xl border p-8 text-center text-gray-500">در حال دریافت جزئیات سفارش...</div>;
@@ -135,6 +169,32 @@ export default function CustomerOrderDetail() {
           <Money label="مبلغ پرداختی" amount={page.payableAmount} currency={page.currency} strong />
         </div>
 
+        {pendingReturn || returnSellers.length > 0 ? (
+          <div className="mb-4 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 flex flex-wrap items-center gap-3">
+            <RotateCcw className="w-4 h-4 text-primary shrink-0" />
+            <p className="text-xs text-gray-700 flex-1 min-w-[12rem]">
+              {pendingReturn
+                ? "یک درخواست مرجوعی ناتمام برای این سفارش نگه داشته شده است."
+                : "برای اقلام تحویل‌شدهٔ این سفارش می‌توانید درخواست مرجوعی ثبت کنید؛ فقط اقلامی که انتخاب کنید مرجوع می‌شوند."}
+            </p>
+            <button
+              type="button"
+              data-testid="open-customer-return-request"
+              onClick={() => setReturnModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition-colors min-h-11"
+            >
+              <RotateCcw className="w-4 h-4" />
+              {pendingReturn ? "ادامهٔ درخواست مرجوعی" : "درخواست مرجوعی"}
+            </button>
+          </div>
+        ) : null}
+
+        {eligibility === null ? (
+          <p className="mb-3 text-xs text-gray-500">در حال بررسی شرایط مرجوعی...</p>
+        ) : returnSellers.length === 0 ? (
+          <p className="mb-3 text-xs text-gray-500">در حال حاضر قلم قابل مرجوعی برای این سفارش وجود ندارد.</p>
+        ) : null}
+
         <div className="space-y-4">
           {page.sellerOrders.map((seller) => (
             <article key={seller.sellerOrderId} className="rounded-2xl border border-gray-100 overflow-hidden bg-surface" data-storefront-surface-role="card">
@@ -164,21 +224,8 @@ export default function CustomerOrderDetail() {
                 ))}
               </div>
               {fulfillmentBySeller.get(seller.sellerOrderId) ? (
-                <div className="px-4 pb-4 space-y-3">
+                <div className="px-4 pb-4">
                   <FulfillmentShippingInfoBlock snapshot={fulfillmentBySeller.get(seller.sellerOrderId)!} />
-                  {fulfillmentBySeller.get(seller.sellerOrderId)!.status === "Delivered" ? (
-                    <button
-                      type="button"
-                      onClick={() => setReturnModal({
-                        sellerOrderId: seller.sellerOrderId,
-                        items: fulfillmentBySeller.get(seller.sellerOrderId)!.items,
-                      })}
-                      className="inline-flex items-center gap-2 rounded-xl border border-primary px-4 py-2 text-sm font-bold text-primary hover:bg-blue-50 transition-colors"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      درخواست مرجوعی
-                    </button>
-                  ) : null}
                 </div>
               ) : fulfillments !== undefined && fulfillments !== null && fulfillments.length === 0 ? (
                 <p className="px-4 pb-4 text-xs text-gray-400">وضعیت ارسال این فروشنده هنوز ثبت نشده است.</p>
@@ -213,14 +260,17 @@ export default function CustomerOrderDetail() {
           </div>
         </div>
       </section>
-      {returnModal && page ? (
-        <ReturnFormModal
+      {returnModalOpen ? (
+        <ReturnRequestModal
           open
-          sellerOrderId={returnModal.sellerOrderId}
+          checkoutId={params.checkoutId}
           orderReference={page.reference}
-          fulfillmentItems={returnModal.items}
-          lineLabels={returnLineLabels}
-          onClose={() => setReturnModal(null)}
+          sellers={returnSellers}
+          onClose={() => setReturnModalOpen(false)}
+          onSubmitted={() => {
+            const storage = typeof window === "undefined" ? null : window.sessionStorage;
+            setPendingReturn(hasUnresolvedCustomerReturnSubmission(storage, params.checkoutId));
+          }}
         />
       ) : null}
     </div>

@@ -22,6 +22,7 @@
   <data name="return.idempotency_conflict" xml:space="preserve"><value>This idempotency key was already used for a different return request.</value></data>
   <data name="return.duplicate_line" xml:space="preserve"><value>An order line was submitted more than once.</value></data>
   <data name="return.quantity_precision" xml:space="preserve"><value>The return quantity has more precision than the stored quantity supports.</value></data>
+  <data name="return.quantity_unit_invalid" xml:space="preserve"><value>The return quantity does not match the precision of the owning unit, or that unit precision was not answered by the owning order line.</value></data>
   <data name="refund.destination.invalid" xml:space="preserve"><value>The refund destination is invalid.</value></data>
   <data name="refund.retry.invalid_state" xml:space="preserve"><value>The refund cannot be retried from its current state.</value></data>
   <data name="refund.already_started" xml:space="preserve"><value>The refund has already started.</value></data>

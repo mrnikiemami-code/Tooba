@@ -852,6 +852,139 @@ export interface CreateReturnLineInput {
   quantity: number;
 }
 
+/**
+ * TB-278: ONE customer-selectable line, as the owning Returns eligibility authority answers it.
+ *
+ * `remainingReturnableQuantity` is the exact lawful remainder (delivered slices still inside the line's own policy
+ * window MINUS every quantity already occupied by an active/complete case). It is never the shipped quantity, never the
+ * aggregate order status and never a browser-clock decision. `unitDecimalPlaces` is the OWNING order line's accepted
+ * precision (`null` = the owning read did not answer, so the line cannot be offered a quantity at all).
+ */
+export interface CustomerReturnEligibilityLine {
+  orderLineId: string;
+  productLabel: string | null;
+  unitLabel: string | null;
+  unitDecimalPlaces: number | null;
+  deliveredQuantity: number;
+  alreadyReturnedQuantity: number;
+  remainingReturnableQuantity: number;
+  isReturnable: boolean;
+  returnWindowDays: number;
+  returnableUntil: string | null;
+  /** The ONE stable reason this line cannot be selected right now (`null` = it can). */
+  blockerCode: string | null;
+  selectable: boolean;
+}
+
+/** TB-278: the authenticated customer's authoritative eligibility of ONE seller order of a checkout. */
+export interface CustomerReturnEligibilitySnapshot {
+  sellerOrderId: string;
+  checkoutId: string;
+  currency: string;
+  eligible: boolean;
+  reasonCode: string;
+  eligibleUntil: string | null;
+  lastDeliveredAt: string | null;
+  lines: CustomerReturnEligibilityLine[];
+}
+
+function mapEligibilityLine(value: unknown): CustomerReturnEligibilityLine | null {
+  const line = record(value);
+  if (!line) return null;
+  const orderLineId = text(prop(line, "orderLineId", "OrderLineId"));
+  if (!orderLineId) return null;
+  return {
+    orderLineId,
+    productLabel: nullableText(prop(line, "productLabel", "ProductLabel")),
+    unitLabel: nullableText(prop(line, "unitLabel", "UnitLabel")),
+    unitDecimalPlaces: nullableNumber(prop(line, "unitDecimalPlaces", "UnitDecimalPlaces")),
+    deliveredQuantity: number(prop(line, "deliveredQuantity", "DeliveredQuantity")),
+    alreadyReturnedQuantity: number(prop(line, "alreadyReturnedQuantity", "AlreadyReturnedQuantity")),
+    remainingReturnableQuantity: number(prop(line, "remainingReturnableQuantity", "RemainingReturnableQuantity")),
+    isReturnable: bool(prop(line, "isReturnable", "IsReturnable")),
+    returnWindowDays: number(prop(line, "returnWindowDays", "ReturnWindowDays")),
+    returnableUntil: nullableText(prop(line, "returnableUntil", "ReturnableUntil")),
+    blockerCode: nullableText(prop(line, "blockerCode", "BlockerCode")),
+    selectable: bool(prop(line, "selectable", "Selectable")),
+  };
+}
+
+/** TB-278: maps the eligibility read; an unusable payload is `null`, never an empty "everything blocked" snapshot. */
+export function mapCustomerReturnEligibility(value: unknown): CustomerReturnEligibilitySnapshot | null {
+  const item = record(value);
+  if (!item) return null;
+  const sellerOrderId = text(prop(item, "sellerOrderId", "SellerOrderId"));
+  if (!sellerOrderId) return null;
+  const linesRaw = prop(item, "lines", "Lines");
+  return {
+    sellerOrderId,
+    checkoutId: text(prop(item, "checkoutId", "CheckoutId")),
+    currency: text(prop(item, "currency", "Currency"), "IRR"),
+    eligible: bool(prop(item, "eligible", "Eligible")),
+    reasonCode: text(prop(item, "reasonCode", "ReasonCode")),
+    eligibleUntil: nullableText(prop(item, "eligibleUntil", "EligibleUntil")),
+    lastDeliveredAt: nullableText(prop(item, "lastDeliveredAt", "LastDeliveredAt")),
+    lines: Array.isArray(linesRaw)
+      ? linesRaw.map(mapEligibilityLine).filter((row): row is CustomerReturnEligibilityLine => row !== null)
+      : [],
+  };
+}
+
+/**
+ * TB-278: the authoritative per-line eligibility of ONE seller order of the signed-in customer's own checkout.
+ *
+ * A foreign/unknown seller order is a typed refusal (`return.not_owner` / `return.missing`) — never an empty list that
+ * the surface could read as "nothing to return". A transport failure is distinguished from a refusal, so the page can
+ * say "unavailable, try again" instead of inventing eligibility.
+ */
+export async function loadCustomerReturnEligibility(
+  sellerOrderId: string,
+): Promise<{ ok: true; snapshot: CustomerReturnEligibilitySnapshot } | { ok: false; errorCode: string; status: number }> {
+  try {
+    const response = await fetch(`/api/customer/returns/eligibility/${encodeURIComponent(sellerOrderId)}`, {
+      credentials: "include",
+      headers: customerAuthHeaders(),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const code = text(prop(record(payload) ?? {}, "errorCode", "ErrorCode"), "") || "return.rejected";
+      return { ok: false, errorCode: code, status: response.status };
+    }
+    const snapshot = mapCustomerReturnEligibility(payload);
+    if (!snapshot) return { ok: false, errorCode: "return.invalid-response", status: response.status };
+    return { ok: true, snapshot };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable", status: 0 };
+  }
+}
+
+/**
+ * TB-278: the Persian explanation of ONE eligibility blocker token. Unknown tokens are shown as "not available now"
+ * instead of being guessed into a wrong business reason.
+ */
+export function formatReturnEligibilityBlocker(code: string | null | undefined): string {
+  switch ((code ?? "").trim()) {
+    case "not_paid":
+      return "پرداخت این سفارش تکمیل نشده است.";
+    case "not_delivered":
+      return "این قلم هنوز تحویل نشده است.";
+    case "window_expired":
+      return "بازهٔ مجاز مرجوعی این قلم به پایان رسیده است.";
+    case "nothing_returnable":
+      return "مقدار قابل مرجوعی این قلم تمام شده است.";
+    case "non_returnable":
+      return "این قلم قابل مرجوع کردن نیست.";
+    case "fulfillment_missing":
+      return "وضعیت ارسال این فروشنده ثبت نشده است.";
+    case "unit_precision_unavailable":
+      return "دقت واحد این قلم از سفارش قابل تأیید نیست؛ مرجوعی این قلم ممکن نیست.";
+    case "order_missing":
+      return "این سفارش پیدا نشد.";
+    default:
+      return "این قلم در حال حاضر قابل مرجوع کردن نیست.";
+  }
+}
+
 /** درخواست مرجوعی مشتری را ثبت می‌کند. */
 export async function createCustomerReturn(input: {
   sellerOrderId: string;
@@ -883,6 +1016,36 @@ export async function createCustomerReturn(input: {
     return { ok: true, snapshot };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+/**
+ * TB-278: sends EXACTLY the frozen customer return body of ONE child submission.
+ *
+ * The bytes are produced once by `return-submission.ts` and replayed verbatim on every retry of the same child, so a
+ * duplicate click, a lost response or a resume after reload can never mint a different idempotency key or a different
+ * quantity — the owning Returns directory answers the SAME stored case.
+ */
+export async function sendCustomerReturnBody(
+  body: string,
+): Promise<{ ok: true; snapshot: ReturnSnapshot } | { ok: false; errorCode: string; status: number }> {
+  try {
+    const response = await fetch("/api/customer/returns", {
+      method: "POST",
+      credentials: "include",
+      headers: { ...customerAuthHeaders(), "Content-Type": "application/json" },
+      body,
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const errorCode = text(prop(record(payload) ?? {}, "errorCode", "ErrorCode"), "return.rejected");
+      return { ok: false, errorCode, status: response.status };
+    }
+    const snapshot = mapReturnSnapshot(payload);
+    if (!snapshot) return { ok: false, errorCode: "return.invalid-response", status: response.status };
+    return { ok: true, snapshot };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable", status: 0 };
   }
 }
 

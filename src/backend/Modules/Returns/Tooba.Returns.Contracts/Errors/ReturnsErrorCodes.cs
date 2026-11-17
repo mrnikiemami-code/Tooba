@@ -48,6 +48,7 @@ public static class ReturnsErrorCodes
         IdempotencyConflict,
         DuplicateLine,
         QuantityPrecision,
+        QuantityUnitInvalid,
         RefundDestinationInvalid,
         RefundRetryInvalidState,
         RefundAlreadyStarted,
@@ -169,6 +170,14 @@ public static class ReturnsErrorCodes
     /// units is always the number the caller submitted.
     /// </summary>
     public const string QuantityPrecision = "return.quantity_precision";
+
+    /// <summary>
+    /// TB-278: the created quantity does not land exactly on the ORDERING UNIT's own precision of its order line
+    /// (for example a fraction of a whole piece, or more decimals than the unit accepts), or the owning order line did
+    /// not answer a usable precision. Refused before any row is written; the persisted six-decimal scale is a storage
+    /// cap, never permission to return a fraction of a piece.
+    /// </summary>
+    public const string QuantityUnitInvalid = "return.quantity_unit_invalid";
 
     /// <summary>Invalid refund destination.</summary>
     public const string RefundDestinationInvalid = "refund.destination.invalid";

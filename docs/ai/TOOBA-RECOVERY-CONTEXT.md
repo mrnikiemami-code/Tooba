@@ -1,4 +1,11 @@
-# CURRENT — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
+# CURRENT — 278 CUSTOMER MULTI-SELLER PARTIAL SELECTION AND REAL TEMPLATE TOAST WORKER PASS; AWAIT ARCHITECT REVIEW — 2026-11-17
+
+Read docs/architecture/evidence/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,customer-scenario-proof.md,durable-submission-and-template-toast-proof.md,user-review.md} and docs/ai/tasks/…-278/TASK.md.
+278 worker PASS within the issued scope: owning-customer per-line eligibility (`GET /v1/customer/returns/eligibility/{sellerOrderId}`), creation unit-quantum gate (`return.quantity_unit_invalid`), one frozen multi-seller submission of stable-keyed child cases, and the real react-toastify template on Returns command surfaces. Base `1dc7494f4`. Zero migration, zero live business write, both user cases read-only.
+279 (decision reconsideration, legacy multi-item partial authority, delivery-slice allocation, refundable-amount policy) remains planned NOT ISSUED. Architect review and user look are still required; a worker PASS is not acceptance.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
 
 Read docs/planning/returns/RETURNS-MARKETPLACE-COMPLETION-PLAN-278-279.md and docs/architecture/evidence/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/SOURCE-AUDIT.md FIRST for new-chat recovery.
 Only TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278 issued next;279 planned NOT ISSUED. No ten micro-tasks/automatic loop.

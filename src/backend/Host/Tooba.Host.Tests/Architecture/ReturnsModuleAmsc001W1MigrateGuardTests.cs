@@ -53,9 +53,9 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         // 23 HTTP-reachable outcome codes + 1 platform-side outbox fault = 24 declared. TB-272 added the two
         // creation-integrity refusals (return.idempotency_conflict, return.duplicate_line), TB-272-R1 the persisted
         // quantity-precision refusal (return.quantity_precision), TB-273-R1 the recovery evidence-conflict and
-        // caller-transaction refusals and TB-274 the nine customer-receipt/inspection/reason refusals — all
-        // HTTP-reachable.
-        Assert.Equal(45, ReturnsErrorCodes.HttpReachable.Count);
+        // caller-transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals and TB-278 the
+        // owning-unit creation quantum refusal — all HTTP-reachable.
+        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));

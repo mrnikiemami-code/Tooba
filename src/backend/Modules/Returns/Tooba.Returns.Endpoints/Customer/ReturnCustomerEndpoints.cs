@@ -35,6 +35,8 @@ public static class ReturnCustomerEndpoints
         ArgumentNullException.ThrowIfNull(group);
         group.MapGet("/returns", CustomerListAsync);
         group.MapGet("/returns/{returnRequestId:guid}", CustomerGetAsync);
+        // TB-278: authoritative per-line return eligibility of ONE seller order of the customer's own checkout.
+        group.MapGet("/returns/eligibility/{sellerOrderId:guid}", CustomerEligibilityAsync);
         group.MapPost("/returns", CustomerCreateAsync);
     }
 
@@ -56,6 +58,17 @@ public static class ReturnCustomerEndpoints
         if (actor is null)
             return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
         return api.From(await sender.Send(new GetCustomerReturnQuery(actor.Value, returnRequestId), cancellationToken));
+    }
+
+    private static async Task<IResult> CustomerEligibilityAsync(
+        Guid sellerOrderId, ISender sender, IReturnCustomerAuthorizer authorizer, ApiResponseFactory api,
+        HttpContext context, CancellationToken cancellationToken)
+    {
+        var actor = authorizer.TryResolveActor(context);
+        if (actor is null)
+            return api.FromFailure(new SemanticError(FoundationErrorCodes.CustomerSessionRequired));
+        return api.From(await sender.Send(
+            new GetCustomerReturnEligibilityQuery(actor.Value, sellerOrderId), cancellationToken));
     }
 
     private static async Task<IResult> CustomerCreateAsync(

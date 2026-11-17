@@ -42,14 +42,16 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
     private static readonly string[] NoValidatorRequired =
     [
         "ListCustomerReturnsQuery", "GetCustomerReturnQuery", "ListSellerReturnsQuery", "GetSellerReturnQuery",
-        "ListAdminReturnsQuery", "GetAdminReturnQuery", "RetryReturnRefundCommand",
+        "ListAdminReturnsQuery", "GetAdminReturnQuery", "RetryReturnRefundCommand", "GetCustomerReturnEligibilityQuery",
     ];
 
-    /// <summary>Exact expected audience → verb → path → dispatched request map (14 rows).</summary>
+    /// <summary>Exact expected audience → verb → path → dispatched request map (15 rows).</summary>
     private static readonly (string Audience, string Verb, string Path, string Request)[] ExpectedRoutes =
     [
         ("customer", "Get", "/v1/customer/returns", "ListCustomerReturnsQuery"),
         ("customer", "Get", "/v1/customer/returns/{returnRequestId:guid}", "GetCustomerReturnQuery"),
+        // TB-278: the customer's authoritative per-line return eligibility of ONE own seller order.
+        ("customer", "Get", "/v1/customer/returns/eligibility/{sellerOrderId:guid}", "GetCustomerReturnEligibilityQuery"),
         ("customer", "Post", "/v1/customer/returns", "CreateReturnCommand"),
         ("seller", "Get", "/v1/seller/returns", "ListSellerReturnsQuery"),
         ("seller", "Get", "/v1/seller/returns/{returnRequestId:guid}", "GetSellerReturnQuery"),
@@ -86,7 +88,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
             .ThenBy(x => x.Verb, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(14, derived.Count);
+        Assert.Equal(15, derived.Count);
         Assert.Equal(expectedMap.Length, actualMap.Length);
         for (var i = 0; i < expectedMap.Length; i++)
         {
@@ -97,7 +99,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         }
 
         // Every shipped route dispatches through exactly one ISender.Send call site.
-        Assert.Equal(14, derived.Count(d => d.SendCount == 1));
+        Assert.Equal(15, derived.Count(d => d.SendCount == 1));
     }
 
     [Fact]
@@ -121,9 +123,9 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
 
         // The partition is a real partition: disjoint halves, exact union.
         Assert.Empty(ValidatorRequired.Intersect(NoValidatorRequired, StringComparer.Ordinal));
-        Assert.Equal(14, ValidatorRequired.Length + NoValidatorRequired.Length);
+        Assert.Equal(15, ValidatorRequired.Length + NoValidatorRequired.Length);
 
-        // One-to-one: 13 routes → 13 sends → 13 actual requests → 13 matching handlers.
+        // One-to-one: 15 routes → 15 sends → 15 actual requests → 15 matching handlers.
         var applicationRoot = Path.Combine(root, ModuleRoot, "Tooba.Returns.Application");
         foreach (var request in dispatched)
         {
@@ -192,6 +194,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         Assert.Contains("authorizer.TryResolveActor(context)", customer, StringComparison.Ordinal);
         Assert.Contains("new ListCustomerReturnsQuery(actor.Value)", customer, StringComparison.Ordinal);
         Assert.Contains("new GetCustomerReturnQuery(actor.Value, returnRequestId)", customer, StringComparison.Ordinal);
+        Assert.Contains("new GetCustomerReturnEligibilityQuery(actor.Value, sellerOrderId)", customer, StringComparison.Ordinal);
         Assert.Contains("await authorizer.RequireAuthorizedAsync(context, cancellationToken)", seller, StringComparison.Ordinal);
         Assert.Contains("new ListSellerReturnsQuery(sellerPartyId)", seller, StringComparison.Ordinal);
         Assert.Contains("new GetSellerReturnQuery(sellerPartyId, returnRequestId)", seller, StringComparison.Ordinal);
@@ -366,11 +369,11 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
     public void Certification_truth_and_stable_code_split_are_preserved()
     {
         // TB-272 added the two creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal,
-        // TB-273-R1 the recovery evidence-conflict and caller-transaction refusals and TB-274 the nine customer
-        // receipt/inspection/reason refusals (all HTTP-reachable).
-        Assert.Equal(45, ReturnsErrorCodes.HttpReachable.Count);
+        // TB-273-R1 the recovery evidence-conflict and caller-transaction refusals, TB-274 the nine customer
+        // receipt/inspection/reason refusals and TB-278 the owning-unit creation refusal (all HTTP-reachable).
+        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(47, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         // No raw API-result or ad-hoc fault classification in the endpoint surface.
         var root = Repo();

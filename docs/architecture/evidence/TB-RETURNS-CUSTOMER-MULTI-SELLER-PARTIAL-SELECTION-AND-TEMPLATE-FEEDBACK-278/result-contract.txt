@@ -1,0 +1,49 @@
+TASK=TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278
+BRIDGE_TASK_ROW=650b8b3d-83d1-4d39-a8fb-1b9be2640416
+BASE=1dc7494f47a416d6bd65b9dce9b4eda971476782
+STATUS=PASS_WITHIN_ISSUED_278_SCOPE
+DECISION=ONE_AUTHORITATIVE_PER_LINE_CUSTOMER_ELIGIBILITY_READ_ONE_OWNING_UNIT_QUANTUM_GATE_AT_CREATION_ONE_FROZEN_MULTI_SELLER_SUBMISSION_OF_STABLE_KEYED_CHILD_CASES_AND_THE_APPLICATION_OWN_REACT_TOASTIFY_TEMPLATE_ON_THE_EXISTING_RETURNS_SURFACES_WITH_ZERO_MIGRATION_AND_ZERO_LIVE_BUSINESS_WRITE
+ARCHITECT_ACCEPT=NO
+USER_ACCEPTANCE=NO
+ENVELOPE_CONTENT=UNAVAILABLE_FROM_BRIDGE; TASK.md IS A DECLARED RECONSTRUCTION FROM THE DURABLE 278-279 PLAN + SOURCE-AUDIT + AGENTS CLARIFICATION
+MIGRATIONS=0
+SCHEMA_CHANGE=0
+LIVE_BUSINESS_WRITE=0
+LIVE_HTTP_POST=0
+NEW_RETURN_CASE=0
+
+A_ELIGIBILITY_ROUTE=GET /v1/customer/returns/eligibility/{sellerOrderId} -> GetCustomerReturnEligibilityQuery -> CustomerReturnEligibilityQueryEngine; owner binding BEFORE any fact (return.missing / return.not_owner); per-line delivered/already-returned/remaining/returnableUntil/blocker/unit precision from IReturnEligibilityEvaluator + Order/Catalog Contracts.
+A_BLOCKERS=window_expired | nothing_returnable | not_delivered | non_returnable | unit_precision_unavailable; ReturnLineEligibility gained two additive trailing optional members (ReturnableUntil, BlockerCode); aggregate Eligible/ReasonCode unchanged.
+B_CREATION_GATE=ReturnDirectory.Creation.cs: eligibility re-read AFTER the per-seller-order serialization, remaining ceiling, then OwningUnitQuantity.IsCreationQuantityAcceptable(quantity, QuantityDecimalPlacesSnapshot); the exact stored-occurrence replay is answered BEFORE this gate.
+B_ERROR=return.quantity_unit_invalid (400 Business), catalogued + localized fa/en; HTTP-reachable errors 45 -> 46.
+C_CHILD_CASES=one child per (sellerOrderId, orderLineId, reason); own stable idempotency key; own exact request bytes; frozen and read back BEFORE the first send.
+C_REFUSALS=SUBMISSION_NO_EFFECT_REFUSALS = 6 body-dictated tokens only (quantity_invalid, quantity_precision, quantity_unit_invalid, duplicate_line, idempotency_required, line_missing); every other refusal keeps the child unknown.
+C_RECOVERY=recorded child terminal and never re-sent; uncertain child keeps its bytes and re-sends byte-identically; partial success retained and shown; clear only the exact current act once every child is resolved; unreadable storage is explicit and refuses to send.
+D_OLD_FORM=app/returns/return-ui.tsx ReturnFormModal (all quantityShipped, one case reason, no key, text-only summary) deleted.
+E_TOAST=admin-return-workspace.tsx uses toast.success / toast.error from react-toastify (single container in app/providers.tsx); customer modal uses the same template with inline field validation; no ToastRegion on any Returns surface and no second container.
+SELLER_SURFACE=NONE_EXISTS_IN_THIS_APP (declared; nothing to convert).
+
+TESTS_BACKEND_RETURNS=148/148
+TESTS_BACKEND_278_FACTS=9/9
+TESTS_AMSC_GUARDS=34/34
+TESTS_FE_SUBMISSION_AND_MOUNTED=11/11
+TESTS_FE_RETURN_API=7/7
+TSC=0
+FE_BUILD=0 BUILD_ID=0chXf5Nh9mayZ6KZAKbUC
+BACKEND_BUILD=0 errors (216 pre-existing warnings)
+HOST_PUBLISH=0 errors
+
+REGISTRY_PINS=AMSC: 15 routes, 15 MediatR sends, HttpReachable 46 (+1 platform fault = 47), contributor D(...) count 46; GetCustomerReturnEligibilityQuery added to NoValidatorRequired (actor + bound seller order id only).
+ROUTE_REGISTRATION=LIVE 401 customer.session.required for an unauthenticated GET /v1/customer/returns/eligibility/{guid}.
+
+HOST=5088 PID=31444 DLL_SHA256=292C479DE80B8B21CEFDA693BBE293E972F86F5789D4A59A18CC9A665406BC27
+HEALTH=200 HEALTH_READY=200 (SingleStore + postgresql-sql messaging Healthy) PROVENANCE=store-alpha
+FE=3000 PID=45076 BUILD_ID=0chXf5Nh9mayZ6KZAKbUC
+SERVED_ROUTE_CHUNK=/_next/static/chunks/app/customer-panel/orders/%5BcheckoutId%5D/page-7821fa6a631ec3c4.js 200 (modal copy present)
+SERVED_TOAST_RUNTIME=/_next/static/chunks/9627-0b0f29163bba673b.js 200
+LIVE_CASES=01a1e6b0-f33a-7000-80ee-beffb6344490 and 01a1e9c5-c729-7000-b614-79daf3d0e812 remain READ-ONLY settled history (no reset/clone/receipt/decision/refund/stock/provider action)
+
+LIMITS=no live customer session/checkout was exercised (served proof is the typed 401, the served client chunk and the mounted component); the mounted modal suite is jsdom, so selection/validation/recovery is proven but not browser geometry; read-side Selectable blocks an unknown-precision line even though the write path would accept a whole quantity there (deliberately conservative); same-line multi-reason selections are separate children sharing the server's one remaining ceiling; no provider/PSP/Wallet/Inventory call and no refund-amount policy claim; no legacy multi-item / delivery-slice / decision-reconsideration behaviour (279).
+DEVIATIONS=the Bridge envelope content is not retrievable so TASK.md is a declared reconstruction; ReturnsCreateIntegrity272Tests now declares a 6-decimal owning unit for its fractional-scale fact (a whole-piece line now lawfully refuses that fraction); the three AMSC pins were extended by this task's own additions; ReturnEligibilityEvaluator gained additive line facts; Host was restarted from the fresh publish and Next was rebuilt/restarted (BUILD_ID changed); pre-existing untracked scratch scripts and the Host's App_Data dataprotection keys are not part of this change set.
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask=NONE

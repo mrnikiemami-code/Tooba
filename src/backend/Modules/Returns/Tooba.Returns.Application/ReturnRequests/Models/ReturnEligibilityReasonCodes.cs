@@ -36,6 +36,9 @@ public static class ReturnEligibilityReasonCodes
     /// <summary>Fulfillment not found.</summary>
     public const string FulfillmentMissing = ReturnEligibilityReasons.FulfillmentMissing;
 
+    /// <summary>Owning line precision unavailable (TB-278).</summary>
+    public const string UnitPrecisionUnavailable = ReturnEligibilityReasons.UnitPrecisionUnavailable;
+
     /// <summary>Stable HTTP error code of a reason code — delegates to the boundary contract.</summary>
     public static string ToErrorCode(string reasonCode) => ReturnEligibilityReasons.ToErrorCode(reasonCode);
 }
