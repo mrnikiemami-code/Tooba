@@ -93,6 +93,17 @@ test("courier-origin release and restock refusals are Persian, never machine cod
   assert.ok(!listMappedAdminErrorCodes().includes("fulfillment.returns.replacement_partial_claim_unsupported"));
 });
 
+test("TB-276: every proven no-effect refusal the reviewed workflow can receive is localized", async () => {
+  const { PROVEN_NO_EFFECT_REFUSAL_CODES } = await import("../returns/return-review-intent.ts");
+  const unknownFa = unknownAdminErrorMessage("fa");
+  const missing: string[] = [];
+  for (const code of PROVEN_NO_EFFECT_REFUSAL_CODES) {
+    const fa = mapAdminErrorMessage(code, "fa");
+    if (fa === unknownFa || fa.includes(code) || !/[\u0600-\u06ff]/.test(fa)) missing.push(code);
+  }
+  assert.deepEqual(missing, []);
+});
+
 test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {
   assert.equal(mapAdminErrorMessage("Bad Request", "fa"), unknownAdminErrorMessage("fa"));
   assert.equal(mapAdminErrorMessage("HTTP 400", "en"), unknownAdminErrorMessage("en"));

@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Fulfillment.Contracts.Returns;
+using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Order.Contracts.Returns;
 using Tooba.Payment.Contracts.Returns;
 using Tooba.Returns.Application.ReturnRequests.Commands;
@@ -17,6 +19,7 @@ using Tooba.Returns.Infrastructure.Directories;
 using Tooba.Returns.Infrastructure.Evaluators;
 using Tooba.Returns.Infrastructure.Observability;
 using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Returns.Infrastructure.Queries;
 using Tooba.Wallet.Contracts.Dtos;
 using Tooba.Wallet.Contracts.Refunds;
 using Xunit;
@@ -270,6 +273,29 @@ public sealed class ReturnsOperatorWorkflow275Tests
     // ------------------------------------------------------------------ C2: reviewed definite-failure retry
 
     [Fact]
+    public async Task Retry_refuses_an_identity_that_is_not_a_stored_failure_of_this_case()
+    {
+        var fixture = await SeedAsync(Staged.DefiniteFailureWithReceipt);
+        await using var order = fixture.Open();
+
+        // A random id is not a stored row of this case.
+        var unknown = await Assert.ThrowsAsync<ContractOperationException>(
+            () => order.RetryAsync(Guid.NewGuid()));
+        Assert.Equal(ReturnsErrorCodes.RecoveryAttemptMismatch, unknown.Code);
+
+        // A real stored attempt of this case that is NOT a definite failure is not a reviewable failure either.
+        var succeededFixture = await SeedAsync(Staged.SucceededWithReceipt);
+        await using var succeeded = succeededFixture.Open();
+        var completed = Assert.Single(await succeeded.Attempts());
+        Assert.Equal(RefundAttemptStatus.Succeeded, completed.Status);
+        var notFailed = await Assert.ThrowsAsync<ContractOperationException>(
+            () => succeeded.RetryAsync(completed.RefundAttemptId));
+        Assert.Equal(ReturnsErrorCodes.RecoveryAttemptMismatch, notFailed.Code);
+        Assert.Empty(succeeded.Gateway.Calls);
+        Assert.Equal(1, await succeeded.AttemptCount());
+    }
+
+    [Fact]
     public async Task Retry_binds_the_child_attempt_to_the_reviewed_failure_deterministically()
     {
         var fixture = await SeedAsync(Staged.DefiniteFailureWithReceipt);
@@ -290,24 +316,28 @@ public sealed class ReturnsOperatorWorkflow275Tests
     }
 
     [Fact]
-    public async Task A_duplicate_post_answers_the_recorded_success_without_sending_money_again()
+    public async Task A_duplicate_post_answers_the_recorded_child_without_sending_money_again()
     {
         var fixture = await SeedAsync(Staged.DefiniteFailureWithReceipt);
         Guid reviewedAttemptId;
+        Guid childAttemptId;
         await using (var first = fixture.Open())
         {
             reviewedAttemptId = Assert.Single(await first.Attempts()).RefundAttemptId;
             Assert.Equal(ReturnRequestStatus.Completed, (await first.RetryAsync(reviewedAttemptId)).Status);
             Assert.Single(first.Gateway.Calls);
+            childAttemptId = Assert.Single(
+                await first.Attempts(),
+                x => x.RefundAttemptId != reviewedAttemptId).RefundAttemptId;
         }
 
-        // A second, independent operator scope re-reads the durable case: the reviewed retry is no longer offered and
-        // a duplicate POST mints nothing and sends nothing.
+        // TB-276 (B): a second, independent operator scope replays the PARENT intent. The read no longer offers a
+        // retry for the settled case, and the duplicate POST answers the SAME durable child — no new attempt, no send.
         await using var duplicate = fixture.Open();
         Assert.Equal(ReturnWorkCategory.Settled, (await duplicate.Snapshot())!.Work!.Category);
-        var refused = await Assert.ThrowsAsync<ContractOperationException>(
-            () => duplicate.RetryAsync(reviewedAttemptId));
-        Assert.Equal(ReturnsErrorCodes.RefundRetryInvalidState, refused.Code);
+        var replayed = await duplicate.RetryAsync(reviewedAttemptId);
+        Assert.Equal(ReturnRequestStatus.Completed, replayed.Status);
+        Assert.Contains(replayed.RefundAttempts, x => x.RefundAttemptId == childAttemptId);
         Assert.Empty(duplicate.Gateway.Calls);
         Assert.Equal(2, await duplicate.AttemptCount());
     }
@@ -327,13 +357,43 @@ public sealed class ReturnsOperatorWorkflow275Tests
     }
 
     [Fact]
-    public async Task Retry_is_refused_when_the_stored_failure_is_not_positively_bound()
+    public async Task Retry_requires_an_explicit_reviewed_failure_at_every_boundary()
+    {
+        var fixture = await SeedAsync(Staged.DefiniteFailureWithReceipt);
+        await using var order = fixture.Open();
+        var stored = Assert.Single(await order.Attempts());
+
+        // TB-276 (B): an absent id is NOT "the current failure" — the caller must state the attempt it reviewed.
+        var missing = await Assert.ThrowsAsync<ContractOperationException>(() => order.RetryAsync(null));
+        Assert.Equal(ReturnsErrorCodes.RecoveryAttemptMismatch, missing.Code);
+        var empty = await Assert.ThrowsAsync<ContractOperationException>(() => order.RetryAsync(Guid.Empty));
+        Assert.Equal(ReturnsErrorCodes.RecoveryAttemptMismatch, empty.Code);
+        Assert.Empty(order.Gateway.Calls);
+        Assert.Equal(1, await order.AttemptCount());
+        Assert.Equal(ReturnRequestStatus.RefundFailed, (await order.Snapshot())!.Status);
+
+        // The explicit, actually stored review is still the lawful command.
+        Assert.Equal(ReturnRequestStatus.Completed, (await order.RetryAsync(stored.RefundAttemptId)).Status);
+        Assert.Single(order.Gateway.Calls);
+    }
+
+    [Fact]
+    public async Task Retry_is_refused_when_the_case_has_no_single_reviewable_failure()
     {
         var fixture = await SeedAsync(Staged.AmbiguousFailuresWithReceipt);
         await using var order = fixture.Open();
+        var attempts = await order.Attempts();
+        Assert.Equal(2, attempts.Count);
 
-        var refused = await Assert.ThrowsAsync<ContractOperationException>(() => order.RetryAsync(null));
-        Assert.Equal(ReturnsErrorCodes.RecoveryAttemptUnbound, refused.Code);
+        // An explicit id cannot resolve an ambiguous case: the read publishes no single reviewable failure, and the
+        // write applies the same rule, so nothing is minted for either named row.
+        foreach (var attempt in attempts)
+        {
+            var refused = await Assert.ThrowsAsync<ContractOperationException>(
+                () => order.RetryAsync(attempt.RefundAttemptId));
+            Assert.Equal(ReturnsErrorCodes.RecoveryAttemptUnbound, refused.Code);
+        }
+
         Assert.Empty(order.Gateway.Calls);
         Assert.Equal(2, await order.AttemptCount());
 
@@ -342,7 +402,7 @@ public sealed class ReturnsOperatorWorkflow275Tests
     }
 
     [Fact]
-    public async Task After_the_reviewed_retry_fails_again_the_new_child_is_the_only_reviewable_failure()
+    public async Task After_the_reviewed_retry_fails_again_the_child_is_the_only_reviewable_failure()
     {
         var fixture = await SeedAsync(Staged.DefiniteFailureWithReceipt);
         Guid parentId;
@@ -362,16 +422,59 @@ public sealed class ReturnsOperatorWorkflow275Tests
         Assert.True(snapshot.Work.CanRetryRefund);
         Assert.Equal(childId, snapshot.Work.FailedRefundAttemptId);
 
-        // Re-submitting the parent is not "the reviewed failure" any more: refused before any money.
-        var stale = await Assert.ThrowsAsync<ContractOperationException>(() => next.RetryAsync(parentId));
-        Assert.Equal(ReturnsErrorCodes.RecoveryAttemptMismatch, stale.Code);
+        // TB-276 (B): re-submitting the PARENT is the replay of an already-applied intent, so it answers its own
+        // deterministic child (the failed row) and mints/sends nothing.
+        var replay = await next.RetryAsync(parentId);
+        Assert.Equal(ReturnRequestStatus.RefundFailed, replay.Status);
+        Assert.Contains(replay.RefundAttempts, x => x.RefundAttemptId == childId);
         Assert.Empty(next.Gateway.Calls);
+        Assert.Equal(2, await next.AttemptCount());
 
         // A NEW deliberate review bound to the child is the only lawful next attempt.
         next.Gateway.Succeed = true;
         Assert.Equal(ReturnRequestStatus.Completed, (await next.RetryAsync(childId)).Status);
         Assert.Single(next.Gateway.Calls);
         Assert.Equal(3, await next.AttemptCount());
+    }
+
+    /// <summary>
+    /// TB-276: the served case detail must show the same product/quantity/unit as the queue row, resolved from the
+    /// owning Order/Catalog Contracts reads — and an owning read that cannot answer leaves the display facts unknown
+    /// instead of inventing a product name or defaulting a missing unit.
+    /// </summary>
+    [Fact]
+    public async Task Admin_detail_adds_each_line_product_and_unit_without_touching_the_stored_facts()
+    {
+        var fixture = await SeedAsync(Staged.CompleteReceiptPendingMoney);
+        await using var harness = fixture.Open();
+        var variantId = Guid.NewGuid();
+
+        var answered = new AdminReturnDetailQueryEngine(
+            harness.Directory,
+            new FixedGridEnrichment(fixture.OrderLineId, variantId, "pcs"),
+            new FixedCatalogTitles(variantId, "لنوو اولترابوک مدل ۲"));
+        var detail = await answered.QueryAsync(fixture.ReturnRequestId, CancellationToken.None);
+
+        Assert.NotNull(detail);
+        var line = Assert.Single(detail!.Items);
+        Assert.Equal("لنوو اولترابوک مدل ۲", line.ProductLabel);
+        Assert.Equal("pcs", line.UnitLabel);
+        // Display enrichment never edits the owning facts.
+        Assert.Equal(fixture.Requested, line.Quantity);
+        Assert.Equal(ReturnRequestStatus.RefundProcessing, detail.Status);
+
+        // An owning read that answers nothing keeps the display facts null: no invented title, no default «واحد».
+        var silent = new AdminReturnDetailQueryEngine(
+            harness.Directory,
+            new FixedGridEnrichment(fixture.OrderLineId, Guid.Empty, null),
+            new FixedCatalogTitles(null, null));
+        var blind = await silent.QueryAsync(fixture.ReturnRequestId, CancellationToken.None);
+        Assert.NotNull(blind);
+        Assert.Null(Assert.Single(blind!.Items).ProductLabel);
+        Assert.Null(blind.Items[0].UnitLabel);
+
+        // A case that does not exist is still a 404-shaped absence, not an empty enriched page.
+        Assert.Null(await answered.QueryAsync(Guid.NewGuid(), CancellationToken.None));
     }
 
     // ------------------------------------------------------------------ fixtures
@@ -383,6 +486,7 @@ public sealed class ReturnsOperatorWorkflow275Tests
         PartiallyReceivedDisposed,
         DefiniteFailureWithReceipt,
         AmbiguousFailuresWithReceipt,
+        SucceededWithReceipt,
         RejectedWithPartialReceipt,
     }
 
@@ -496,6 +600,8 @@ public sealed class ReturnsOperatorWorkflow275Tests
         }
 
         public Fixture Fixture { get; }
+
+        public IReturnDirectory Directory => _directory;
 
         public ReturnsDbContext Db { get; }
 
@@ -635,6 +741,16 @@ public sealed class ReturnsOperatorWorkflow275Tests
                 failed.MarkFailed("REFUND_DECLINED", Now);
                 request.MarkRefundFailed(Now);
                 db.RefundAttempts.Add(failed);
+                break;
+
+            case Staged.SucceededWithReceipt:
+                request.Approve(paymentId, Now);
+                request.MarkRefundProcessing(Now);
+                var completedAttempt = request.BeginRefundAttempt(
+                    Guid.NewGuid(), paymentId, $"refund-{returnRequestId:N}", Now);
+                completedAttempt.MarkSucceeded("ref-275", Now);
+                request.MarkRefundSucceeded(Now);
+                db.RefundAttempts.Add(completedAttempt);
                 break;
 
             case Staged.AmbiguousFailuresWithReceipt:
@@ -808,5 +924,62 @@ public sealed class ReturnsOperatorWorkflow275Tests
             decimal quantity,
             string idempotencyKey,
             CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    /// <summary>Only the line read the admin detail needs; every other grid read is not part of this surface.</summary>
+    private sealed class FixedGridEnrichment(Guid lineId, Guid variantId, string? unitCode) : IOrderGridEnrichmentReader
+    {
+        public Task<IReadOnlyDictionary<Guid, OrderGridLineSnapshot>> GetLinesAsync(
+            IReadOnlyList<Guid> orderLineIds,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, OrderGridLineSnapshot>>(
+                orderLineIds.Contains(lineId) && variantId != Guid.Empty
+                    ? new Dictionary<Guid, OrderGridLineSnapshot>
+                    {
+                        [lineId] = new(lineId, variantId, unitCode, 0, null, true, 7),
+                    }
+                    : new Dictionary<Guid, OrderGridLineSnapshot>());
+
+        public Task<IReadOnlyDictionary<Guid, string>> GetOrderNumbersAsync(
+            IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<Guid>> SearchSellerOrderIdsByOrderNumberAsync(
+            string term, int take, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<Guid>> FilterSellerOrderIdsByOrderNumberAsync(
+            string? op, string? value, IReadOnlyList<string>? values, int take, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyDictionary<Guid, string>> GetRecipientNamesAsync(
+            IReadOnlyList<Guid> checkoutIds, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<Guid>> SearchCheckoutIdsByRecipientAsync(
+            string term, int take, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<Guid>> FilterCheckoutIdsByRecipientAsync(
+            string? op, string? value, IReadOnlyList<string>? values, int take, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
+    /// <summary>The Catalog title answer; a null variant is "no title known", never a placeholder.</summary>
+    private sealed class FixedCatalogTitles(Guid? variantId, string? title) : ICatalogVariantLookup
+    {
+        public Task<IReadOnlyDictionary<Guid, string>> GetVariantTitlesAsync(
+            IReadOnlyList<Guid> variantIds,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(
+                variantId is not null && title is not null && variantIds.Contains(variantId.Value)
+                    ? new Dictionary<Guid, string> { [variantId.Value] = title }
+                    : new Dictionary<Guid, string>());
+
+        public Task<CatalogVariantLookupResult?> FindVariantAsync(
+            Guid variantId, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<IReadOnlyDictionary<Guid, Guid?>> GetPrimaryCategoryIdsByVariantIdsAsync(
+            IReadOnlyList<Guid> variantIds, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<Guid>> GetPublishedVariantIdsAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }

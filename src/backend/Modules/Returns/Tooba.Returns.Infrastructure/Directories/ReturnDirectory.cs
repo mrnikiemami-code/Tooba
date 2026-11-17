@@ -385,25 +385,23 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         {
             // TB-265-R1: the money already succeeded; retry ONLY the unfinished physical disposition with the same
             // per-item identity. No new refund attempt and no new idempotency key is minted here.
+            // TB-276 (B): this is deliberately NOT a failed-refund retry — the case owns no failed attempt to review —
+            // and the branch sends no money, so the required reviewed failure id only governs the money path below.
             await SettlePhysicalDispositionAsync(request, cancellationToken);
             await MarkRefundReleasedWhenFullyDisposedAsync(request, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return await MapSnapshotAsync(request, cancellationToken);
         }
 
-        if (request.Status != ReturnRequestStatus.RefundFailed)
-        {
-            throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
-        }
-
         // TB-274: a retry mints a NEW refund attempt, so the same ordinary receiving authority gates it. A courier
         // case owns its Fulfillment receipt and is unaffected.
         await EnsureOrdinaryReceivingCompleteAsync(request, cancellationToken);
 
-        // TB-275 (C2): the reviewed DEFINITE failure is the only failure this intent may retry, and it must be the
-        // single coherent failed attempt this case owns. The child identity is derived from that stored failure, so a
-        // duplicate/lost-response POST resolves to the SAME child attempt instead of minting a count-based one.
-        var failed = ReadReviewedFailedAttempt(request, command.ExpectedFailedAttemptId);
+        // TB-276 (B): the reviewed DEFINITE failure is REQUIRED — every reachable retry boundary must name the stored
+        // attempt the operator reviewed, because "the current failure" is a guess that would let an unreviewed caller
+        // retry whichever row happened to be newest. The child identity is derived from that exact stored failure, so a
+        // duplicate/lost-response POST resolves to the SAME child instead of minting a count-based one.
+        var failed = RequireReviewedFailedAttempt(request, command.ExpectedFailedAttemptId);
         var paymentId = request.PaymentId
             ?? throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
         var childAttemptId = DeriveRetryAttemptId(request.ReturnRequestId, failed.RefundAttemptId);
@@ -413,13 +411,22 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             .FirstOrDefault(x => x.RefundAttemptId == childAttemptId);
         if (alreadyMinted is not null)
         {
-            // Exact reviewed replay: the same case, the same reviewed failure and therefore the same child. A terminal
-            // child is answered from its durable row (never re-sent); a still-pending one repeats ITS own key.
+            // TB-276 (B): a replay of the PARENT intent answers its deterministic CHILD — whatever that child's stored
+            // outcome is (pending, succeeded or failed). Nothing is re-minted, no new key is minted, and a terminal
+            // child is never re-sent; the answer is the child's own durable row.
             EnsureRetryAttemptIdentity(request, alreadyMinted, paymentId, childKey);
             await ExecuteRefundAsync(request, alreadyMinted, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return await MapSnapshotAsync(request, cancellationToken);
         }
+
+        // A NEW child only exists for a case that is currently a definite failure of its single reviewable attempt.
+        if (request.Status != ReturnRequestStatus.RefundFailed)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
+        }
+
+        EnsureReviewedFailureIsTheCurrentOne(request, failed);
 
         request.MarkRefundProcessing(_clock.UtcNow);
         var attempt = request.BeginRefundAttempt(childAttemptId, paymentId, childKey, _clock.UtcNow);
@@ -454,21 +461,38 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     }
 
     /// <summary>
-    /// TB-275 (C2): the exact reviewed failure. A retry may only answer for the case's CURRENT coherent definite
-    /// failure — a bound FAILED attempt that has not already produced its derived child — and, when the operator states
-    /// which attempt was reviewed, it must be that one. Anything else is a typed refusal and mints nothing.
+    /// TB-276 (B): the EXACT reviewed failure. The reviewed attempt id is REQUIRED — an absent or empty value is a
+    /// typed refusal, never "the stored failure". The named row must be a stored FAILED attempt positively bound to
+    /// this case; anything else is a refusal and mints nothing.
     /// </summary>
-    private static RefundAttempt ReadReviewedFailedAttempt(ReturnRequest request, Guid? expectedFailedAttemptId)
+    private static RefundAttempt RequireReviewedFailedAttempt(ReturnRequest request, Guid? expectedFailedAttemptId)
     {
-        if (expectedFailedAttemptId == Guid.Empty)
+        if (expectedFailedAttemptId is not { } expected || expected == Guid.Empty)
         {
             throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
         }
 
-        var boundFailed = request.RefundAttempts
+        var reviewed = request.RefundAttempts
+            .FirstOrDefault(x => x.RefundAttemptId == expected)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
+
+        if (reviewed.Status != RefundAttemptStatus.Failed || !IsBoundToRequest(request, reviewed))
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
+        }
+
+        return reviewed;
+    }
+
+    /// <summary>
+    /// TB-275 (C2) / TB-276 (B): minting a NEW child may only answer the case's CURRENT reviewable failure — the same
+    /// single positively bound, not-yet-retried failure the read publishes — so an ambiguous or already-retried parent
+    /// mints nothing.
+    /// </summary>
+    private static void EnsureReviewedFailureIsTheCurrentOne(ReturnRequest request, RefundAttempt reviewed)
+    {
+        var reviewable = request.RefundAttempts
             .Where(x => x.Status == RefundAttemptStatus.Failed && IsBoundToRequest(request, x))
-            .ToArray();
-        var reviewable = boundFailed
             .Where(x => request.RefundAttempts.All(child =>
                 child.RefundAttemptId != ReturnRetryIdentity.DeriveAttemptId(request.ReturnRequestId, x.RefundAttemptId)))
             .ToArray();
@@ -477,13 +501,10 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptUnbound);
         }
 
-        var failed = reviewable[0];
-        if (expectedFailedAttemptId is { } reviewed && reviewed != failed.RefundAttemptId)
+        if (reviewable[0].RefundAttemptId != reviewed.RefundAttemptId)
         {
             throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
         }
-
-        return failed;
     }
 
     /// <summary>

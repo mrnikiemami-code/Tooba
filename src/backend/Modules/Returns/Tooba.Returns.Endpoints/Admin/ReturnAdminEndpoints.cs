@@ -57,7 +57,7 @@ public static class ReturnAdminEndpoints
         var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
 
         // TB-275 (C2): the reviewed failed attempt travels as the occurrence identity of the retry intent (a route/query
-        // value, never a client-owned body); the server still derives the child attempt identity itself.
+        // value, never a client-supplied payload); the server still derives the child attempt identity itself.
         return api.From(await sender.Send(
             new RetryReturnRefundCommand(returnRequestId, actorUserId)
             {

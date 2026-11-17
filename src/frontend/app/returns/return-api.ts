@@ -34,6 +34,14 @@ export interface ReturnItem {
   sourceShipmentId?: string | null;
   /** TB-265: the single origin receipt that is reused, never re-received. */
   sourceReceiptId?: string | null;
+  /**
+   * TB-276: operator display facts of this line, resolved by the owning admin detail read from the Order line and
+   * Catalog variant (Contracts reads). Both are null when the owning read cannot answer — the surface shows the
+   * stored quantity and an honest unknown product/unit instead of inventing either, and no money/physical fact is
+   * derived from them.
+   */
+  productLabel?: string | null;
+  unitLabel?: string | null;
 }
 
 export interface RefundAttempt {
@@ -304,6 +312,9 @@ function mapReturnItem(value: unknown): ReturnItem | null {
     saleableRestockedQuantity: nullableNumber(prop(item, "saleableRestockedQuantity", "SaleableRestockedQuantity")),
     sourceShipmentId: nullableText(prop(item, "sourceShipmentId", "SourceShipmentId")),
     sourceReceiptId: nullableText(prop(item, "sourceReceiptId", "SourceReceiptId")),
+    // TB-276: operator display facts resolved by the owning admin detail read; absent stays unknown, never invented.
+    productLabel: nullableText(prop(item, "productLabel", "ProductLabel")),
+    unitLabel: nullableText(prop(item, "unitLabel", "UnitLabel")),
   };
 }
 
@@ -579,6 +590,35 @@ function stringList(raw: unknown): string[] {
   return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
 }
 
+/**
+ * TB-276: the Order line snapshot publishes the stored unit CODE (`pcs`, `kg`, …). The operator surface shows the
+ * Persian display of the standard codes a line can carry and passes any other code through unchanged — the unit is
+ * never derived, converted or summed here.
+ */
+const UNIT_LABELS_FA: Record<string, string> = {
+  pcs: "عدد",
+  piece: "عدد",
+  unit: "واحد",
+  kg: "کیلوگرم",
+  g: "گرم",
+  gr: "گرم",
+  m: "متر",
+  cm: "سانتی‌متر",
+  l: "لیتر",
+  ml: "میلی‌لیتر",
+  pack: "بسته",
+  box: "جعبه",
+  set: "ست",
+  pair: "جفت",
+};
+
+/** Display label of one stored unit code; an unknown code is shown exactly as stored. */
+export function formatUnitLabel(unitLabel: string | null | undefined): string {
+  const raw = (unitLabel ?? "").trim();
+  if (!raw) return "واحد";
+  return UNIT_LABELS_FA[raw.toLowerCase()] ?? raw;
+}
+
 /** ردیف صف کار Admin را از DTO Host نگاشت می‌کند. */
 export function mapReturnWorkQueueRow(value: unknown): ReturnWorkQueueRow | null {
   const item = record(value);
@@ -598,7 +638,7 @@ export function mapReturnWorkQueueRow(value: unknown): ReturnWorkQueueRow | null
     sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName")),
     productLabel: text(prop(item, "productLabel", "ProductLabel")),
     quantityRequested: number(prop(item, "quantityRequested", "QuantityRequested")),
-    unitLabel: text(prop(item, "unitLabel", "UnitLabel"), "واحد"),
+    unitLabel: formatUnitLabel(text(prop(item, "unitLabel", "UnitLabel"), "واحد")),
     returnStatus: text(prop(item, "returnStatus", "ReturnStatus")),
     refundStatus: text(prop(item, "refundStatus", "RefundStatus")),
     eligibilitySummary: text(prop(item, "eligibilitySummary", "EligibilitySummary")),
@@ -622,7 +662,7 @@ function mapReturnWorkQueueLines(raw: unknown): ReturnWorkQueueLine[] {
     return [{
       productLabel: text(prop(line, "productLabel", "ProductLabel")),
       quantity: number(prop(line, "quantity", "Quantity")),
-      unitLabel: text(prop(line, "unitLabel", "UnitLabel"), "واحد"),
+      unitLabel: formatUnitLabel(text(prop(line, "unitLabel", "UnitLabel"), "واحد")),
       condition: text(prop(line, "condition", "Condition"), "Usable"),
     }];
   });
@@ -980,14 +1020,21 @@ export async function adminRetryReturnRefund(
     );
     const payload = await response.json().catch(() => null);
     if (response.status === 401 || response.status === 403) {
-      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+      return {
+        state: "denied",
+        data: null,
+        status: response.status,
+        message: "admin.authorization.denied",
+        code: "admin.authorization.denied",
+      };
     }
     if (!response.ok) {
-      return { state: "error", data: null, status: response.status, message: text(prop(record(payload) ?? {}, "errorCode", "ErrorCode"), "return.rejected") };
+      const code = text(prop(record(payload) ?? {}, "errorCode", "ErrorCode"), "") || null;
+      return { state: "error", data: null, status: response.status, message: code ?? "return.rejected", code };
     }
     return { state: "ok", data: mapReturnSnapshot(payload), status: response.status };
   } catch {
-    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+    return { state: "error", data: null, status: 0, message: "host-unreachable", code: null };
   }
 }
 
@@ -1030,18 +1077,43 @@ async function adminReturnsPost(path: string, body: unknown): Promise<AdminResul
     });
     const payload = await response.json().catch(() => null);
     if (response.status === 401 || response.status === 403) {
-      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+      return {
+        state: "denied",
+        data: null,
+        status: response.status,
+        message: "admin.authorization.denied",
+        code: "admin.authorization.denied",
+      };
     }
     if (!response.ok) {
+      // TB-276: the raw typed code is published beside the localised message, so a reviewer can tell a proven
+      // no-effect refusal from an unknown outcome instead of pattern-matching Persian text.
+      const code = text(prop(record(payload) ?? {}, "errorCode", "ErrorCode"), "") || null;
       return {
         state: "error",
         data: null,
         status: response.status,
-        message: text(prop(record(payload) ?? {}, "errorCode", "ErrorCode"), "return.rejected"),
+        message: code ?? "return.rejected",
+        code,
       };
     }
     return { state: "ok", data: mapReturnSnapshot(payload), status: response.status };
   } catch {
-    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+    return { state: "error", data: null, status: 0, message: "host-unreachable", code: null };
   }
+}
+
+/**
+ * TB-276: sends the FROZEN reviewed body of a Returns-owned command exactly as it was reviewed.
+ * <para>
+ * The body is the parsed form of the stored `requestBody`, so a retry of an unknown outcome re-sends the same command
+ * bytes instead of rebuilding the request from a newer detail read.
+ */
+export function sendReviewedReturnCommand(
+  returnRequestId: string,
+  route: "receipt" | "recover",
+  body: Record<string, unknown>,
+): Promise<AdminResult<ReturnSnapshot>> {
+  const suffix = route === "receipt" ? "receipt" : "recover";
+  return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(returnRequestId)}/${suffix}`, body);
 }

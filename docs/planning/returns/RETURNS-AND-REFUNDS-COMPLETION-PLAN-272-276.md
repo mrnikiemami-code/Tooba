@@ -1,4 +1,27 @@
-# CURRENT — 275 PARTIAL AFTER SOURCE REVIEW; ONLY276 CONNECTED REPAIR + ONE USER REVIEW CASE — 2026-11-16
+# CURRENT — 276 WORKER PASS (connected durable review + reviewed retry replay + ONE live review case); AWAIT USER TEST AND ARCHITECT REVIEW — 2026-11-17
+
+Read docs/ai/tasks/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/{RESULT.md,RECEIPTS.md,result-contract.txt,connected-intent-and-retry-proof.md,user-review-case-proof.md,user-review.md}.
+276 PASS within the issued A–F connected-repair + one-user-review-case scope, awaiting Architect review (NOT Architect
+ACCEPT, NOT user acceptance). 275 stays PARTIAL as the parent; 272-R1/273-R2/274-R1 and shipping acceptances preserved.
+Connected repair: the reviewed envelope now freezes the target case + owning checkout/route + action + occurrence + the
+EXACT transport body, is written and READ BACK before the first possible send, refuses to send on storage unavailability,
+treats unknown/5xx/conflict as unresolved, releases only on an explicit `PROVEN_NO_EFFECT_REFUSAL_CODES` token, clears
+compare-and-clear on the exact bytes, and fences every mutation/read/`finally` with a presentation epoch. The reviewed
+failed-refund retry requires a nonempty `ExpectedFailedAttemptId`, locates its deterministic child BEFORE the
+`RefundFailed`/current-leaf gates, replays a stored child (Succeeded/Failed) from storage, reconciles a stored Pending child
+on the same key, and only then may mint after the effectful gates.
+Proof: mounted `AdminReturnWorkspace` 10/10; `ReturnsOperatorWorkflow275Tests` 15/15 through real `ReturnDirectory`;
+queue/mapping/labels 26/26; error map 8/8; `tsc` 0; `next build` 0 (`BUILD_ID gC-lsQo8rzo30IeWT6MwF`); backend build 0;
+Host publish 0; AMSC guard 34/34. Host 5088 PID 8572 (dll SHA256 `D998ECBC…32838E`, healthy), Next 3000 PID 21544.
+ONE lawful live review case exists: `01a1e6b0-f33a-7000-80ee-beffb6344490` / `RET-TB-20261114175151-01-7d5f59-1`,
+`CustomerDelivered`, `Requested`, 1 × `pcs`, 2,407,839 IRR, zero receipts/decisions/attempts/dispositions, source order
+still `Paid`, one normal `return.requested.v1` event (two older leftover rows disclosed). Primary review URL:
+http://127.0.0.1:3000/fa/admin/returns/01a1e6b0-f33a-7000-80ee-beffb6344490
+No schema change, no provider/money/stock/notification effect, no demo order or fake receipt. User has NOT accepted yet.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 275 PARTIAL AFTER SOURCE REVIEW; ONLY276 CONNECTED REPAIR + ONE USER REVIEW CASE — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/ARCHITECT-REVIEW.md.
 275 source review found unresolved intent cleared on failure/null, missing verified durable body and exact compare-clear, mutation lifecycle fencing gaps, and retry child replay ordered after live-state/current-leaf gates. The 21 FE node tests do not mount the workspace.

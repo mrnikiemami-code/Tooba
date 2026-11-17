@@ -210,6 +210,15 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "دسترسی مجاز نیست.",
     en: "You are not allowed to perform this action.",
   },
+  // TB-276: the two auth/contract refusals the connected reviewed workflow can actually receive.
+  "admin.actor.missing": {
+    fa: "هویت اپراتور مشخص نشده است. دوباره وارد شوید.",
+    en: "The operator identity is missing. Sign in again.",
+  },
+  "validation.failed": {
+    fa: "اطلاعات این درخواست کامل یا معتبر نیست.",
+    en: "This request's data is incomplete or not valid.",
+  },
   "order.operation.denied": {
     fa: "مجوز انجام این عملیات وجود ندارد.",
     en: "You are not allowed to perform this order operation.",
@@ -968,6 +977,76 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   "return.recovery.reason_conflict": {
     fa: "دلیل ثبت‌شده با این تصمیم هم‌خوان نیست.",
     en: "The recorded reason does not match this decision.",
+  },
+  // TB-276: every code the connected reviewed workflow can answer with is localized, so a refusal reaches the
+  // operator as a Persian sentence instead of a generic failure or a raw machine token.
+  "return.not_owner": {
+    fa: "این مرجوعی به سفارش شما تعلق ندارد.",
+    en: "This return does not belong to your order.",
+  },
+  "return.line_missing": {
+    fa: "قلم انتخاب‌شده در این مرجوعی پیدا نشد.",
+    en: "The selected line is not part of this return.",
+  },
+  "return.quantity_precision": {
+    fa: "تعداد باید بزرگ‌تر از صفر و حداکثر با ۶ رقم اعشار باشد.",
+    en: "The quantity must be positive with at most 6 decimal places.",
+  },
+  "return.duplicate_line": {
+    fa: "هر قلم سفارش فقط یک بار در یک مرجوعی ثبت می‌شود.",
+    en: "Each order line can appear only once in a return.",
+  },
+  "return.idempotency_required": {
+    fa: "شناسهٔ یکتای این اقدام مشخص نشده است.",
+    en: "The unique occurrence key of this action is missing.",
+  },
+  "return.idempotency_conflict": {
+    fa: "این شناسهٔ اقدام قبلاً برای درخواست دیگری استفاده شده است.",
+    en: "This occurrence key was already used for a different request.",
+  },
+  "return.rejection_reason_required": {
+    fa: "برای رد مرجوعی، دلیل آن را بنویسید.",
+    en: "A rejection requires a reason.",
+  },
+  "return.decision.reason_conflict": {
+    fa: "دلیل ثبت‌شده با تصمیم قبلی این پرونده هم‌خوان نیست.",
+    en: "The recorded reason differs from this case's existing decision.",
+  },
+  "return.reject.invalid_state": {
+    fa: "در وضعیت فعلی این پرونده، رد مرجوعی مجاز نیست.",
+    en: "Rejecting is not allowed in the current state of this case.",
+  },
+  "return.receipt.occurrence_required": {
+    fa: "شناسهٔ این دریافت مشخص نشده است.",
+    en: "The occurrence key of this receipt is missing.",
+  },
+  "return.receipt.origin_invalid": {
+    fa: "ثبت دریافت برای این نوع مرجوعی مجاز نیست.",
+    en: "Receiving is not allowed for this kind of return.",
+  },
+  "return.receipt.over_received": {
+    fa: "مقدار ثبت‌شده از مقدار درخواستی این قلم بیشتر است.",
+    en: "The recorded quantity exceeds the quantity requested for this line.",
+  },
+  "return.receipt.conflict": {
+    fa: "این دریافت قبلاً با اطلاعات دیگری ثبت شده است.",
+    en: "This receipt was already recorded with different details.",
+  },
+  "return.receiving.incomplete": {
+    fa: "دریافت و بازرسی همهٔ اقلام این مرجوعی کامل نشده است.",
+    en: "Receiving and inspection of every line on this return is not complete.",
+  },
+  "return.recovery.kind_invalid": {
+    fa: "نوع اقدام پیگیری مشخص یا معتبر نیست.",
+    en: "The recovery action kind is missing or not valid.",
+  },
+  "return.recovery.state_mismatch": {
+    fa: "وضعیت این پرونده با اقدام انتخاب‌شده هم‌خوان نیست.",
+    en: "The case state does not match the selected action.",
+  },
+  "return.recovery.transaction_owned": {
+    fa: "این اقدام در وضعیت تراکنشی ناایمن اجرا شد و ثبت نشد.",
+    en: "The action ran inside an unsafe transaction and was not applied.",
   },
   "order.note.invalid": {
     fa: "متن یادداشت معتبر نیست.",

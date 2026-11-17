@@ -98,3 +98,18 @@ public interface IAdminReturnGridQuery
         BuildingBlocks.Grid.GridQueryRequest request,
         CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// TB-276: خواندن جزئیات یک پرونده برای اپراتور، همراه با واقعیت‌های نمایشی هر خط.
+/// <para>
+/// The stored snapshot owns every case/line/money/physical fact. The port adds ONLY the operator display facts the
+/// owning modules can answer through their Contracts (product title, stored unit code) so the served detail shows the
+/// same product/quantity/unit the queue row shows. An unanswered display fact stays null; nothing is inferred from a
+/// URL, a sibling parcel or a default unit, and no money/stock/decision fact is produced or changed here.
+/// </para>
+/// </summary>
+public interface IAdminReturnDetailQuery
+{
+    /// <summary>پرونده با واقعیت‌های نمایشی خط؛ نبودِ پرونده → null.</summary>
+    Task<ReturnSnapshot?> QueryAsync(Guid returnRequestId, CancellationToken cancellationToken);
+}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { ClipboardCheck } from "lucide-react";
@@ -12,7 +12,7 @@ import {
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
 import { toPersianDigits } from "../../lib/persian-digits";
-import { formatQuantityDisplay } from "../../lib/quantity-display";
+import { formatQuantityDisplayFa } from "../../lib/quantity-display";
 import {
   RETURN_WORK_STRIPS,
   formatRefundLifecycleStatus,
@@ -29,6 +29,7 @@ import {
   type ReturnWorkQueueRow,
   type ReturnWorkQueueSelection,
 } from "../returns/return-api";
+import { formatEligibilityLabel } from "../returns/return-eligibility-label";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { ADMIN_RETURN_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
@@ -80,25 +81,33 @@ const reviewAction: AppGridRowAction<ReturnWorkQueueRow>[] = [
   },
 ];
 
+/**
+ * TB-276: the owning eligibility label carries a Gregorian `yyyy-mm-dd` deadline. The operator surface shows the SAME
+ * stored instant as a Jalali day through the shared operational formatter, so no raw ISO date reaches the operator.
+ * Display only: the instant is never recomputed, and an unrecognised shape is passed through unchanged.
+ * The pure rule lives in `returns/return-eligibility-label.ts` so it is provable without rendering the screen.
+ */
+export { formatEligibilityLabel };
+
 /** One requested line group: quantity + its OWN unit, never summed across incompatible units. */
 function lineSummary(row: ReturnWorkQueueRow): { label: string; meta: string } {
   if (row.lines.length === 0) {
     return {
       label: row.productLabel || "—",
-      meta: `${formatQuantityDisplay(row.quantityRequested)} ${row.unitLabel}`.trim(),
+      meta: `${formatQuantityDisplayFa(row.quantityRequested)} ${row.unitLabel}`.trim(),
     };
   }
   if (row.lines.length === 1) {
     const line = row.lines[0]!;
     return {
       label: line.productLabel || row.productLabel || "—",
-      meta: `${formatQuantityDisplay(line.quantity)} ${line.unitLabel}`.trim(),
+      meta: `${formatQuantityDisplayFa(line.quantity)} ${line.unitLabel}`.trim(),
     };
   }
   return {
     label: `${toPersianDigits(row.lines.length)} قلم کالا`,
     meta: row.lines
-      .map((line) => `${formatQuantityDisplay(line.quantity)} ${line.unitLabel}`)
+      .map((line) => `${formatQuantityDisplayFa(line.quantity)} ${line.unitLabel}`)
       .join(" · "),
   };
 }
@@ -233,7 +242,10 @@ export function AdminReturnsWorkQueueScreen() {
       id: "eligibilitySummary",
       header: "مهلت / شرایط",
       accessor: (row) => row.eligibilitySummary,
-      cell: (row) => truncatedCell(row.eligibilitySummary || "—", row.eligibilitySummary),
+      cell: (row) => {
+        const label = formatEligibilityLabel(row.eligibilitySummary);
+        return truncatedCell(label, label);
+      },
       width: 180,
       minWidth: 140,
     },

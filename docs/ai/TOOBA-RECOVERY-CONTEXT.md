@@ -1,4 +1,37 @@
-# CURRENT — 275 PARTIAL AFTER SOURCE REVIEW; ONLY276 CONNECTED REPAIR + ONE USER REVIEW CASE — 2026-11-16
+# CURRENT — 276 WORKER PASS (connected review intent + reviewed retry replay + ONE live review case); AWAIT USER TEST AND ARCHITECT REVIEW — 2026-11-17
+
+Read docs/ai/tasks/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/TASK.md and
+docs/architecture/evidence/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,connected-intent-and-retry-proof.md,user-review-case-proof.md,user-review.md}.
+Status **PASS within the issued A–F connected-repair + one-user-review-case scope**, decision
+`EXACT_DURABLE_REVIEW_WITH_VERIFIED_READ_BACK_EXACT_BODY_COMPARE_AND_CLEAR_EPOCH_FENCING_AND_A_TYPED_NO_EFFECT_RULE_AN_EXPLICITLY_BOUND_FAILED_REFUND_RETRY_THAT_REPLAYS_ITS_DETERMINISTIC_CHILD_BEFORE_ANY_GATE_MOUNTED_AND_DIRECTORY_PROOF_INSTEAD_OF_SOURCE_REGEX_ONE_LAWFUL_CUSTOMER_DELIVERED_REQUESTED_CASE_AND_A_SERVED_DESKTOP_MOBILE_OPERATOR_SURFACE_WITH_PER_LINE_PRODUCT_QUANTITY_AND_UNIT_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ZERO_MIGRATION_AND_ONE_READ_ONLY_REVIEW_CASE`,
+NOT Architect ACCEPT, NOT user visual/functional acceptance. Base `5fbdea3394d0636ae62e5ae06bab95e432563da2`. 275 stays
+PARTIAL as the parent until the Architect reviews this repair; 272-R1/273-R2/274-R1 and shipping acceptances preserved.
+Single worker, one task, no delegation, no historical agent resumed, no screenshots, no loop.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A durable review | verified before first send | `return-review-intent.ts` `v2` freezes `{version,target,case,routeTargetId,action,occurrenceKey,EXACT body}`; `storeReturnReviewIntent` writes then reads the SAME bytes back and refuses to send on a failed set/read/compare; `clearReturnReviewIntentIfCurrent` clears only the exact envelope; `PROVEN_NO_EFFECT_REFUSAL_CODES` is a literal token list (transport failures, `return.rejected`, `return.recovery.gateway_unavailable` deliberately excluded); unconditional finish-clear and blind «نادیده گرفتن» are gone; approve/reject dispatch uses the FROZEN checkout, never `snapshot.checkoutId` |
+| A fencing | epoch on every path | one `epoch` ref; detail read, dispatch, answer, toast/notice, pending lock and `finally` are all `isCurrent(started)`, bumped on mount/retarget and in cleanup, so a late answer never paints on or releases a newer surface |
+| B reviewed retry | child before gates | `RequireReviewedFailedAttempt` refuses null/empty/foreign/stale with typed codes; the deterministic child is located BEFORE `RefundFailed`/current-leaf gates; a stored child answers from storage (Succeeded/Failed) or reconciles the same attempt/key (Pending); only a missing child may mint after the effectful gates; 23505 arbitration narrowed to `returns.refund_attempts` PK/index with a per-entry detach |
+| C proof | mounted + directory | `admin-return-workspace-276.mount.test.ts` **10/10** on the real component; `ReturnsOperatorWorkflow275Tests` **15/15** through the real `ReturnDirectory`; queue/mapping/labels **26/26**; error map **8/8**; `tsc` 0; `next build` 0; backend build 0; Host publish 0; AMSC guard **34/34** |
+| D review case | ONE, left Requested | `01a1e6b0-f33a-7000-80ee-beffb6344490` / `RET-TB-20261114175151-01-7d5f59-1`, `CustomerDelivered`, 1 × «لنوو اولترابوک مدل 2» `pcs`, 2,407,839 IRR, created through the existing owning command with key `tb276-review-case-01a1db2f`; receipts/decisions/attempts/dispositions **0**; source order `Paid` unchanged; one normal `return.requested.v1` event (2 older leftover rows disclosed) |
+| E served | desktop + mobile | queue + case detail at 1440/390: 0 document overflow, truthful `receiving` stage, per-line product + Persian unit, Jalali dates, Persian digits, receipt form opens empty and closes without a request; primary review URL is the real case detail |
+| schema/data | untouched | zero migration/DDL/seed/backfill/cleanup/restore; one canonical `tooba_alpha`; no payment/order/shipment/stock/hold/provider/money/notification effect; the case's `payment_id` is genuinely absent so no refund path exists on it |
+
+Served artifacts: Host `5088` PID `8572` loading `artifacts\publish-primary\Tooba.Host.dll` SHA256
+`D998ECBC22459E127166C9C03747CA688475557D58937CBE516D1876BB32838E` (`/health` 200, `/health/ready` 200 SingleStore +
+messaging Healthy, `/__platform-commerce` → `store-alpha`); Next `3000` PID `21544`, `BUILD_ID gC-lsQo8rzo30IeWT6MwF`.
+Live read-only wire: case `200` with `productLabel`/`unitLabel` and `receiving.received=0 remaining=1`; query `200`
+`totalCount=1 counts{allOpen:1,receiving:1,decision:0,…}`; no actor → `401 admin.actor.missing`; unknown case retry →
+`404 return.missing`.
+Known limits: no committed two-writer race; no real PSP/Wallet/Inventory effect; the mounted suite is jsdom with
+controlled HTTP, the browser checks are DOM/text only; the creation's idempotent replay was not exercised (one row for
+the key, one case for the checkout); the case owns no money fact, so approval/refund paths cannot be demonstrated on it;
+the pre-existing 36px shared grid toolbar was not restyled; the grid's left-hand columns are reached through its own
+scroller.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — 275 PARTIAL AFTER SOURCE REVIEW; ONLY276 CONNECTED REPAIR + ONE USER REVIEW CASE — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/ARCHITECT-REVIEW.md.
 275 source review found unresolved intent cleared on failure/null, missing verified durable body and exact compare-clear, mutation lifecycle fencing gaps, and retry child replay ordered after live-state/current-leaf gates. The 21 FE node tests do not mount the workspace.

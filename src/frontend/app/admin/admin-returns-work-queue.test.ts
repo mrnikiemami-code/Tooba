@@ -8,6 +8,7 @@ import {
   RETURN_WORK_STRIPS,
   formatRefundLifecycleStatus,
   formatReturnStatus,
+  formatUnitLabel,
   mapAdminReturnWorkCounts,
   mapReturnSnapshot,
   mapReturnWorkQueueList,
@@ -15,14 +16,20 @@ import {
   readReturnWorkSelectionFromUrl,
   writeReturnWorkSelectionToUrl,
 } from "../returns/return-api.ts";
+import { formatEligibilityLabel } from "../returns/return-eligibility-label.ts";
 import {
-  buildReviewIntent,
-  clearReviewIntent,
+  buildReturnReviewIntent,
+  clearReturnReviewIntentIfCurrent,
   createMemoryIntentStorage,
   createOccurrenceKey,
-  readReviewIntent,
+  discardUnreadableReturnReviewIntent,
+  isProvenNoEffectRefusal,
+  parseReturnReviewBody,
+  readReturnReviewIntent,
   returnIntentStorageKey,
-  storeReviewIntent,
+  sameReturnReviewIntent,
+  serializeReturnReviewIntent,
+  storeReturnReviewIntent,
 } from "../returns/return-review-intent.ts";
 import { filterOperationsForScope } from "./admin-order-operations-scope.ts";
 import { formatQuantityDisplay } from "../../lib/quantity-display.ts";
@@ -83,10 +90,13 @@ test("case workspace is the single action owner and never sends before persistin
   for (const action of ["record-receipt", "approve", "reject", "resume-refund", "retry-refund", "settle-physical"]) {
     assert.match(workspace, new RegExp(`id="${action}"`), action);
   }
-  // Durable review precedes the send.
+  // Durable review precedes the send, and the answer is inspected BEFORE anything is cleared.
   assert.match(workspace, /if \(inFlight\.current\) return;/);
-  assert.match(workspace, /storeReviewIntent\(storage, returnRequestId, intent\)/);
-  assert.match(workspace, /clearReviewIntent\(storage, returnRequestId, intent\.occurrenceKey\)/);
+  assert.match(workspace, /storeReturnReviewIntent\(storage, intent\)/);
+  assert.match(workspace, /clearReturnReviewIntentIfCurrent\(storage, intent\)/);
+  // TB-276: an unknown outcome keeps the frozen envelope; there is no "ignore the uncertainty" control.
+  assert.doesNotMatch(workspace, /نادیده گرفتن/);
+  assert.match(workspace, /admin-return-unresolved-intent/);
   // Every action is gated by the server's own capabilities.
   assert.match(workspace, /work\.canRecordReceipt/);
   assert.match(workspace, /work\.canDecide/);
@@ -179,9 +189,35 @@ test("work-queue rows keep per-line units instead of summing incompatible ones",
   assert.equal(rows[0]?.lines.length, 2);
   assert.deepEqual(
     rows[0]!.lines.map((line) => `${line.quantity}:${line.unitLabel}`),
-    ["2:kg", "3:بسته"],
+    ["2:کیلوگرم", "3:بسته"],
   );
   assert.equal(formatQuantityDisplay(rows[0]!.lines[1]!.quantity), "3");
+  // TB-276: a standard stored unit code is shown in Persian, an unknown code is passed through unchanged.
+  assert.equal(formatUnitLabel("pcs"), "عدد");
+  assert.equal(formatUnitLabel("crate-12"), "crate-12");
+  assert.equal(formatUnitLabel(null), "واحد");
+});
+
+test("an eligibility label shows its own deadline in Jalali with Persian digits", () => {
+  // The owning server label carries a real Gregorian deadline and Latin digits; the operator sees the SAME instant as
+  // a Jalali day and the same counts in Persian digits.
+  const labelled = formatEligibilityLabel("5 روز باقی‌مانده · مهلت 2026-11-21");
+  assert.ok(!/\d/.test(labelled), `a Latin digit leaked: ${labelled}`);
+  assert.ok(!/\d{4}-\d{2}-\d{2}/.test(labelled), `raw ISO day leaked: ${labelled}`);
+  assert.ok(labelled.includes("۱۴۰۵"), `expected a Jalali year, got: ${labelled}`);
+  assert.ok(labelled.startsWith("۵ روز باقی‌مانده · مهلت "), `label words must survive: ${labelled}`);
+  // Two different stored deadlines must remain distinguishable after formatting.
+  assert.notEqual(
+    formatEligibilityLabel("مهلت 2026-11-21"),
+    formatEligibilityLabel("مهلت 2026-11-22"),
+  );
+  // Absent and unparseable shapes are never invented into a date; a refused day is passed through with Persian digits.
+  assert.equal(formatEligibilityLabel(null), "—");
+  assert.equal(formatEligibilityLabel("   "), "—");
+  assert.equal(formatEligibilityLabel("مهلت تمام شده"), "مهلت تمام شده");
+  assert.equal(formatEligibilityLabel("مهلت 2026-13-45"), "مهلت ۲۰۲۶-۱۳-۴۵");
+  // An already-Persian label is not double-converted.
+  assert.equal(formatEligibilityLabel("۲ روز باقی‌مانده"), "۲ روز باقی‌مانده");
 });
 
 test("an absent work stage is never read as an invented open permission", () => {
@@ -201,33 +237,165 @@ test("work counts are read from the server payload and an absent block is unknow
   assert.equal(mapAdminReturnWorkCounts({ items: [] }), undefined);
 });
 
-test("durable review intent round-trips through the storage seam", () => {
+test("durable review intent round-trips through the storage seam with its exact frozen body", () => {
   const storage = createMemoryIntentStorage();
   const key = returnIntentStorageKey("case-1");
-  const intent = buildReviewIntent("receipt", { occurrenceKey: "occ-1", items: [] }, "occ-1");
-  storeReviewIntent(storage, "case-1", intent);
-  assert.equal(storage.getItem(key), JSON.stringify(intent));
-  const stored = readReviewIntent(storage, "case-1");
-  assert.equal(stored?.action, "receipt");
-  assert.equal(stored?.occurrenceKey, "occ-1");
-  assert.equal(stored?.body.occurrenceKey, "occ-1");
+  const intent = buildReturnReviewIntent({
+    action: "receipt",
+    target: "returns",
+    returnRequestId: "case-1",
+    occurrenceKey: "occ-1",
+    body: { occurrenceKey: "occ-1", items: [{ returnItemId: "i1", quantity: 1, condition: "Usable" }] },
+  });
+  assert.ok(intent);
+  assert.equal(storeReturnReviewIntent(storage, intent), true);
+  assert.equal(storage.getItem(key), serializeReturnReviewIntent(intent));
+  const stored = readReturnReviewIntent(storage, "case-1");
+  assert.equal(stored.kind, "pending");
+  if (stored.kind !== "pending") return;
+  assert.equal(stored.intent.action, "receipt");
+  assert.equal(stored.intent.target, "returns");
+  assert.equal(stored.intent.occurrenceKey, "occ-1");
+  // The reviewed transport body is the exact frozen string, not a rebuilt object.
+  assert.equal(stored.intent.requestBody, intent.requestBody);
+  assert.deepEqual(parseReturnReviewBody(stored.intent), JSON.parse(intent.requestBody));
 });
 
-test("compare-and-clear only removes the exact reviewed occurrence", () => {
+test("a storage that silently discards the write is never treated as durable", () => {
+  const discarding = {
+    getItem: () => null,
+    setItem: () => undefined,
+    removeItem: () => undefined,
+  };
+  const intent = buildReturnReviewIntent({
+    action: "receipt",
+    target: "returns",
+    returnRequestId: "case-1b",
+    body: { occurrenceKey: "occ-1b", items: [] },
+  });
+  assert.ok(intent);
+  assert.equal(storeReturnReviewIntent(discarding, intent), false);
+  assert.equal(readReturnReviewIntent(discarding, "case-1b").kind, "none");
+});
+
+test("compare-and-clear needs the exact reviewed command, not just the occurrence", () => {
   const storage = createMemoryIntentStorage();
-  storeReviewIntent(storage, "case-2", buildReviewIntent("retry_refund", {}, "occ-old"));
-  // A late answer for an older intent must not erase the newer envelope.
-  assert.equal(clearReviewIntent(storage, "case-2", "occ-other"), false);
-  assert.notEqual(readReviewIntent(storage, "case-2"), null);
-  assert.equal(clearReviewIntent(storage, "case-2", "occ-old"), true);
-  assert.equal(readReviewIntent(storage, "case-2"), null);
+  const first = buildReturnReviewIntent({
+    action: "retry_refund",
+    target: "returns",
+    returnRequestId: "case-2",
+    occurrenceKey: "occ-old",
+    body: { expectedFailedAttemptId: "a1" },
+  });
+  const other = buildReturnReviewIntent({
+    action: "retry_refund",
+    target: "returns",
+    returnRequestId: "case-2",
+    occurrenceKey: "occ-old",
+    body: { expectedFailedAttemptId: "a2" },
+  });
+  assert.ok(first && other);
+  assert.equal(storeReturnReviewIntent(storage, first), true);
+  // Same key, different reviewed body: a late answer for one may never clear the other.
+  assert.equal(clearReturnReviewIntentIfCurrent(storage, other), false);
+  assert.equal(readReturnReviewIntent(storage, "case-2").kind, "pending");
+  // A different occurrence is likewise refused.
+  const foreign = { ...first, occurrenceKey: "occ-other" };
+  assert.equal(clearReturnReviewIntentIfCurrent(storage, foreign), false);
+  assert.equal(clearReturnReviewIntentIfCurrent(storage, first), true);
+  assert.equal(readReturnReviewIntent(storage, "case-2").kind, "none");
 });
 
-test("a corrupt or nameless envelope is not an intent", () => {
-  const storage = createMemoryIntentStorage({ [returnIntentStorageKey("case-3")]: "{not json" });
-  assert.equal(readReviewIntent(storage, "case-3"), null);
-  const blank = createMemoryIntentStorage({ [returnIntentStorageKey("case-4")]: JSON.stringify({ action: "approve" }) });
-  assert.equal(readReviewIntent(blank, "case-4"), null);
+test("a corrupt, foreign or unsupported envelope is unreadable evidence, never a sendable intent", () => {
+  const corrupt = createMemoryIntentStorage({ [returnIntentStorageKey("case-3")]: "{not json" });
+  assert.equal(readReturnReviewIntent(corrupt, "case-3").kind, "unreadable");
+
+  const nameless = createMemoryIntentStorage({
+    [returnIntentStorageKey("case-4")]: JSON.stringify({ version: "v2", action: "approve", target: "order-operation" }),
+  });
+  assert.equal(readReturnReviewIntent(nameless, "case-4").kind, "unreadable");
+
+  const foreignCase = buildReturnReviewIntent({
+    action: "approve",
+    target: "order-operation",
+    returnRequestId: "case-5",
+    routeTargetId: "checkout-1",
+    body: { code: "approve_return", returnRequestId: "case-5", idempotencyKey: "k" },
+  });
+  assert.ok(foreignCase);
+  const swapped = createMemoryIntentStorage({ [returnIntentStorageKey("case-6")]: serializeReturnReviewIntent(foreignCase) });
+  assert.equal(readReturnReviewIntent(swapped, "case-6").kind, "unreadable");
+
+  // A body that is not the exact bytes it claims to be is corrupt too.
+  const tampered = createMemoryIntentStorage({
+    [returnIntentStorageKey("case-7")]: JSON.stringify({
+      version: "v2",
+      action: "approve",
+      target: "order-operation",
+      returnRequestId: "case-7",
+      routeTargetId: "checkout-1",
+      occurrenceKey: "occ-7",
+      requestBody: "not-json",
+      recordedAt: "",
+    }),
+  });
+  assert.equal(readReturnReviewIntent(tampered, "case-7").kind, "unreadable");
+
+  // Only unreadable bytes may be discarded; valid evidence is never removed by this control.
+  assert.equal(discardUnreadableReturnReviewIntent(corrupt, "case-3"), true);
+  assert.equal(readReturnReviewIntent(corrupt, "case-3").kind, "none");
+  const valid = createMemoryIntentStorage();
+  assert.ok(foreignCase);
+  assert.equal(storeReturnReviewIntent(valid, foreignCase), true);
+  assert.equal(discardUnreadableReturnReviewIntent(valid, "case-5"), false);
+  assert.equal(readReturnReviewIntent(valid, "case-5").kind, "pending");
+});
+
+test("an unaddressable review is refused before any bytes are stored", () => {
+  // An order-operation intent without its frozen checkout can never be built.
+  assert.equal(
+    buildReturnReviewIntent({
+      action: "approve",
+      target: "order-operation",
+      returnRequestId: "case-8",
+      body: { code: "approve_return" },
+    }),
+    null,
+  );
+  // A Returns-owned intent must not carry a foreign route identity.
+  assert.equal(
+    buildReturnReviewIntent({
+      action: "receipt",
+      target: "returns",
+      returnRequestId: "case-8",
+      routeTargetId: "checkout-1",
+      body: { occurrenceKey: "o", items: [] },
+    }),
+    null,
+  );
+});
+
+test("same-intent comparison keeps a retried command identical to the reviewed one", () => {
+  const intent = buildReturnReviewIntent({
+    action: "settle_physical",
+    target: "returns",
+    returnRequestId: "case-9",
+    occurrenceKey: "occ-9",
+    body: { kind: "settle_physical_disposition" },
+  });
+  assert.ok(intent);
+  assert.equal(sameReturnReviewIntent(intent, { ...intent }), true);
+  assert.equal(sameReturnReviewIntent(intent, { ...intent, requestBody: '{"kind":"other"}' }), false);
+});
+
+test("the proven no-effect refusal list is typed codes only", () => {
+  assert.equal(isProvenNoEffectRefusal("return.receipt.state_invalid"), true);
+  assert.equal(isProvenNoEffectRefusal("return.recovery.attempt_mismatch"), true);
+  // Uncertainty and "cannot send now" must never resolve a retained intent.
+  assert.equal(isProvenNoEffectRefusal("host-unreachable"), false);
+  assert.equal(isProvenNoEffectRefusal("return.recovery.gateway_unavailable"), false);
+  assert.equal(isProvenNoEffectRefusal("return.rejected"), false);
+  assert.equal(isProvenNoEffectRefusal(null), false);
 });
 
 test("each reviewed occurrence gets its own identity", () => {
@@ -269,6 +437,8 @@ test("a case snapshot maps the mixed inspected/restocked facts without inventing
         quantity: 3,
         dispositionCondition: "Usable",
         saleableRestockedQuantity: 2,
+        productLabel: "لنوو اولترابوک",
+        unitLabel: "pcs",
       },
       { returnItemId: "i2", orderLineId: "l2", quantity: 1 },
     ],
@@ -277,6 +447,12 @@ test("a case snapshot maps the mixed inspected/restocked facts without inventing
   assert.equal(snapshot?.items[0]?.saleableRestockedQuantity, 2);
   // An absent restock fact stays unknown, not "the whole requested quantity is saleable".
   assert.equal(snapshot?.items[1]?.saleableRestockedQuantity, null);
+  // TB-276: per-line product/unit display facts are mapped exactly; an absent one stays unknown, never invented.
+  assert.equal(snapshot?.items[0]?.productLabel, "لنوو اولترابوک");
+  assert.equal(snapshot?.items[0]?.unitLabel, "pcs");
+  assert.equal(snapshot?.items[1]?.productLabel, null);
+  assert.equal(snapshot?.items[1]?.unitLabel, null);
+  assert.equal(formatUnitLabel(snapshot?.items[0]?.unitLabel), "عدد");
 });
 
 test("returns-queue scope keeps only return ops for matching id", () => {

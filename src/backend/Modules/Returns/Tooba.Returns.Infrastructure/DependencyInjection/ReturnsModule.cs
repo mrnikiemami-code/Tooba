@@ -44,6 +44,7 @@ public sealed class ReturnsModule : IToobaModule
         services.AddScoped<Contracts.History.IReturnHistoryReader, Adapters.ReturnHistoryReader>();
         services.AddScoped<Contracts.Operations.IReturnAdminOperations, Adapters.ReturnAdminOperationsAdapter>();
         services.AddScoped<IAdminReturnGridQuery, AdminReturnGridQueryEngine>();
+        services.AddScoped<IAdminReturnDetailQuery, AdminReturnDetailQueryEngine>();
         services.AddSingleton<IErrorCatalogContributor, ReturnsErrorCatalogContributor>();
         services.AddScoped<IReturnInventoryGateway, ReturnInventoryGateway>();
         services.AddScoped<IReturnSettlementReader, ReturnSettlementBridge>();
