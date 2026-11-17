@@ -1,4 +1,30 @@
-# CURRENT — 277-R1 UNIT/DECIMAL REPAIR ACCEPTED; ONE UNSAFE REFUSAL TOKEN REMAINS; ONLY277-R2 — 2026-11-17
+# CURRENT — 277-R2 WORKER PASS (one unsafe no-effect token removed; mounted unknown→lookup-refusal→exact-replay retention); AWAIT ARCHITECT REVIEW — 2026-11-17
+Read docs/ai/tasks/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/TASK.md and
+docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,retention-proof.md,user-review.md}.
+Status **PASS within the issued "one tiny 277-R2" scope**, decision
+`ONE_UNSAFE_NO_EFFECT_CLASSIFICATION_REMOVED_SO_A_TEMPORARY_OWNING_UNIT_METADATA_LOOKUP_REFUSAL_CAN_NEVER_RESOLVE_A_POSSIBLY_SENT_RECEIPT_AND_THE_MOUNTED_WORKSPACE_PROVES_UNKNOWN_THEN_REFUSAL_THEN_EXACT_REPLAY_RETENTION_ON_THE_EXISTING_RETURNS_SURFACE_WITH_ZERO_BACKEND_CHANGE_ZERO_SCHEMA_AND_ZERO_LIVE_POST`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance. Expected-Base-SHA == Base `eaab66e86d7f0b70798d4f2b61c4122eef09d7ad`.
+277-R1's A/B acceptances and all 277 modal/approval/first-refund work are preserved unchanged; the committed-occurrence
+replay path is not re-described as broken. Single worker, one task, no delegation, no historical agent resumed, no
+screenshots, no loop.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| C refusal set | one token removed | `PROVEN_NO_EFFECT_REFUSAL_CODES` is now **9** body-dictated/immutable-identity tokens; `return.receipt.unit_quantity_invalid` is **out** because the owning route emits that same code both for a mis-precision body and for an owning precision the lookup could not answer — lookup availability of a separate request is not evidence about the earlier send; the set's doc block records the removal and the body-only group comment was corrected |
+| retention | proven, not asserted | mounted real `AdminReturnWorkspace`: transport loss keeps the frozen envelope and shows the one uncertainty modal → a retry answered `400 return.receipt.unit_quantity_invalid` leaves the bytes **byte-identical**, the retained card present and the notice still “uncertain” (never the resolved-refusal notice) → only the `200` replay of that same occurrence clears it; all three sends carry identical bodies |
+| negative control | the fact is a guard | re-adding the removed token locally makes that same fact fail at the retention assertion (`storedIntent()` reads `null`, i.e. a lookup refusal erased a possibly-sent intent); restored before any commit — declared deviation |
+| A/B preserved | untouched | receipt write gate (`ReturnDirectory.Receipts.cs`), `OwningUnitQuantity`, `QuantityDecimalPlacesSnapshot`, integer-millionth client arithmetic, shared usable+damaged ceiling, unknown-precision blocking, Persian normalization — **no backend edit at all** |
+| proof | focused | mounted workspace **9/9**; `return-quantity`+queue+error-map+return-api **48/48** (queue **26/26** with the flipped assertion); `tsc` **0**; `next build` **0** |
+| served | FE only | Next `3000` PID `23760`, `BUILD_ID GptasB03cazPtYoJp7aiE`; case page 200; chunk `7952-1ecaa58d415c5e34.js` serves the 9-token set with **no** occurrence of the removed token while `1323-979bf525b6515616.js` still carries its plain fa/en explanation; Host untouched (`5088` PID `21060`, dll SHA256 `8AA71DD8…E7948`, `/health` 200, `/health/ready` 200) |
+| live case | read-only | `01a1e6b0-f33a-7000-80ee-beffb6344490` stays `Completed` history; **zero** live POST, receipt, decision, refund, stock, provider or reset; no new case |
+| schema/data | untouched | zero migration/DDL/seed/backfill/cleanup; one canonical `tooba_alpha`; the Bridge row carried no content, so `TASK.md` is a declared reconstructed repair record |
+
+Known limits: the mounted suite is jsdom with a scripted owning route, so it proves classification/storage/retention and
+not browser geometry; no live unknown-outcome walkthrough exists (the only case is settled and no live POST is
+authorized); the owning lookup failure itself remains 277-R1 backend evidence.
+STOP_FOR_ARCHITECT; `automaticNextImplementationTask: NONE`.
+
+# SUPERSEDED — 277-R1 UNIT/DECIMAL REPAIR ACCEPTED; ONE UNSAFE REFUSAL TOKEN REMAINS; ONLY277-R2 — 2026-11-17
 Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/ARCHITECT-REVIEW.md.
 A/B accepted within bounded source-review scope. C still PARTIAL: unit_quantity_invalid can mean unavailable owning metadata and must not erase an earlier possibly-sent receipt.
 Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2 next, FE classifier + one mounted regression. Preserve standing user rules, source/data/history,277 approval split. No live POST/new case/backend/schema change/screenshots/delegation/loop.

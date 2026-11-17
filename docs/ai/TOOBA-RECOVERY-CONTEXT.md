@@ -1,4 +1,18 @@
-# CURRENT — 277-R1 UNIT/DECIMAL REPAIR ACCEPTED; ONE UNSAFE REFUSAL TOKEN REMAINS; ONLY277-R2 — 2026-11-17
+# CURRENT — 277-R2 WORKER PASS (one unsafe no-effect token removed; mounted unknown→lookup-refusal→exact-replay retention); AWAIT ARCHITECT REVIEW — 2026-11-17
+Read docs/ai/tasks/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/TASK.md and
+docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,retention-proof.md,user-review.md}.
+**One tiny repair only**, base `eaab66e86`. `return.receipt.unit_quantity_invalid` is no longer a proven no-effect refusal
+(the owning route also answers it when a separate unit-metadata lookup could not answer, so a refuted retry may not erase a
+possibly-sent receipt); the set is 9 body-dictated tokens and its doc comment now says so. Mounted real workspace proves
+transport-loss retention → retry refused with that code keeps the byte-identical envelope and the retained card → only the
+200 replay of that same occurrence clears it; all sends byte-identical. Negative control: re-adding the token makes that
+fact fail (`storedIntent()` null). 277-R1 A/B, the receipt write gate and all 277 modal/approval/first-refund work are
+untouched; no backend edit, no schema, no fixture, no live POST, no new case. Mounted 9/9, queue 26/26, combined FE 48/48,
+`tsc` 0, `next build` 0 (`BUILD_ID GptasB03cazPtYoJp7aiE`, Next PID 23760); Host unchanged (`5088` PID `21060`, dll
+`8AA71DD8…E7948`, `/health` + `/health/ready` 200). Settled case `01a1e6b0-…` read-only.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 277-R1 UNIT/DECIMAL REPAIR ACCEPTED; ONE UNSAFE REFUSAL TOKEN REMAINS; ONLY277-R2 — 2026-11-17
 Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/ARCHITECT-REVIEW.md.
 A/B accepted within bounded source-review scope. C still PARTIAL: unit_quantity_invalid can mean unavailable owning metadata and must not erase an earlier possibly-sent receipt.
 Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2 next, FE classifier + one mounted regression. Preserve standing user rules, source/data/history,277 approval split. No live POST/new case/backend/schema change/screenshots/delegation/loop.

@@ -152,6 +152,49 @@ function storedIntent(): ReturnReviewIntent | null {
   return raw == null ? null : (JSON.parse(raw) as ReturnReviewIntent);
 }
 
+/** TB-277-R2: a scripted owning route, so one case can walk unknown → lookup refusal → authoritative replay. */
+type ScriptedAnswer =
+  | { kind: "ok" }
+  | { kind: "error"; status: number; code: string }
+  | { kind: "transport" };
+
+function stubScripted(detail: unknown, answers: ScriptedAnswer[]) {
+  const original = globalThis.fetch;
+  const calls: Call[] = [];
+  let sent = 0;
+  globalThis.fetch = (async (input: unknown, init?: { method?: string; body?: unknown }) => {
+    const url = typeof input === "string" ? input : String((input as { url?: string })?.url ?? input);
+    const method = (init?.method ?? "GET").toUpperCase();
+    const body = typeof init?.body === "string" ? (JSON.parse(init.body) as Record<string, unknown>) : null;
+    calls.push({ url, method, body });
+    if (method === "GET") return respond(200, detail);
+    const answer = answers[Math.min(sent, answers.length - 1)];
+    sent += 1;
+    if (answer.kind === "transport") throw new TypeError("Failed to fetch");
+    if (answer.kind === "error") {
+      return {
+        ok: false,
+        status: answer.status,
+        json: async () => ({ errorCode: answer.code }),
+      } as unknown as Response;
+    }
+    return respond(200, detail);
+  }) as typeof fetch;
+  return {
+    calls,
+    posts: () => calls.filter((call) => call.method === "POST"),
+    restore() {
+      globalThis.fetch = original;
+    },
+  };
+}
+
+/** The one visible feedback surface's text, title included. */
+function noticeText(container: HTMLElement): string {
+  const body = q(container, "[data-testid='admin-return-notice']");
+  return (body.closest("dialog") ?? body).textContent ?? "";
+}
+
 function openDialogs(container: HTMLElement): HTMLElement[] {
   return qq(container, "dialog[open]");
 }
@@ -500,6 +543,66 @@ test("a case's items show their own stored disposition, so undisposed goods are 
       0,
       "a settled case offers no review action",
     );
+  } finally {
+    await tree.unmount();
+    stub.restore();
+    window.sessionStorage.clear();
+  }
+});
+
+test("an unknown receipt send survives a unit-metadata refusal and only the exact replay resolves it", async () => {
+  window.sessionStorage.clear();
+  const snapshot = fixture([{ returnItemId: "ri-1", requested: 2, unitLabel: "pcs", unitDecimalPlaces: 0 }], {
+    categoryCode: "receipt",
+    canRecordReceipt: true,
+    actionCodes: ["record_receipt"],
+  });
+  // 1) the first send loses its answer; 2) the retry is refused by the owning unit-metadata lookup; 3) the retry of the
+  // SAME bytes answers the occurrence that was actually stored.
+  const stub = stubScripted(snapshot, [
+    { kind: "transport" },
+    { kind: "error", status: 400, code: "return.receipt.unit_quantity_invalid" },
+    { kind: "ok" },
+  ]);
+  const tree = await mount(createElement(AdminReturnWorkspace, { returnRequestId: CASE_ID }));
+  try {
+    await openAction(tree.container, "record-receipt");
+    await setInputValue(q(tree.container, "[data-testid='admin-return-receipt-qty-0']"), "2");
+    await click(q(tree.container, "[data-testid='admin-return-receipt-confirm']"));
+    await waitFor(() => stub.posts().length === 1);
+
+    // The answer never arrived, so nothing here may be read as "it did not write".
+    const frozen = storedIntent();
+    assert.ok(frozen, "an unknown outcome must keep the reviewed bytes on this device");
+    assert.equal(frozen?.action, "receipt");
+    assert.equal(openDialogs(tree.container).length, 1, "uncertainty is reported in ONE modal surface");
+    assert.match(noticeText(tree.container), /قطعی نیست/);
+
+    // The operator acknowledges the message; the retained card still holds the exact intent.
+    await click(q(tree.container, "[data-testid='admin-return-notice-ok']"));
+    await waitFor(() => qq(tree.container, "[data-testid='admin-return-unresolved-intent']").length === 1);
+    assert.equal(openDialogs(tree.container).length, 0);
+
+    // 2) The owning route answers the SAME code it also uses when it cannot read the unit metadata at all. That is
+    //    lookup availability in another request, never proof about the earlier send, so the envelope must survive.
+    await click(q(tree.container, "[data-testid='admin-return-unresolved-retry']"));
+    await waitFor(() => stub.posts().length === 2);
+    assert.deepEqual(storedIntent(), frozen, "a unit-metadata refusal may not erase a possibly-sent intent");
+    assert.equal(qq(tree.container, "[data-testid='admin-return-unresolved-intent']").length, 1);
+    assert.match(noticeText(tree.container), /قطعی نیست/);
+    assert.doesNotMatch(noticeText(tree.container), /اقدام انجام نشد/, "the retry refusal is not a resolved refusal");
+
+    // 3) The authoritative replay of the SAME occurrence finally answers — and only that resolves the intent.
+    await click(q(tree.container, "[data-testid='admin-return-notice-ok']"));
+    await click(q(tree.container, "[data-testid='admin-return-unresolved-retry']"));
+    await waitFor(() => stub.posts().length === 3);
+    await waitFor(() => storedIntent() === null);
+    await waitFor(() => qq(tree.container, "[data-testid='admin-return-unresolved-intent']").length === 0);
+
+    // Every send carried byte-identical body bytes: one reviewed occurrence, never a second command.
+    const sent = stub.posts().map((call) => JSON.stringify(call.body));
+    assert.equal(new Set(sent).size, 1, "each retry must re-send the exact reviewed bytes");
+    assert.equal(stub.posts()[0].url, `/v1/admin/returns/${CASE_ID}/receipt`);
   } finally {
     await tree.unmount();
     stub.restore();

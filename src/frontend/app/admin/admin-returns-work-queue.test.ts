@@ -396,7 +396,6 @@ test("the proven no-effect refusal list is typed codes only", () => {
   // TB-277-R1: only refusals determined SOLELY by the frozen reviewed body prove that no earlier send could have
   // written. A later denial, actor loss, conflict or generic state answer describes THIS retry only.
   assert.equal(isProvenNoEffectRefusal("return.receipt.line_invalid"), true);
-  assert.equal(isProvenNoEffectRefusal("return.receipt.unit_quantity_invalid"), true);
   assert.equal(isProvenNoEffectRefusal("return.receipt.occurrence_required"), true);
   assert.equal(isProvenNoEffectRefusal("admin.authorization.denied"), false);
   assert.equal(isProvenNoEffectRefusal("admin.actor.missing"), false);
@@ -409,6 +408,10 @@ test("the proven no-effect refusal list is typed codes only", () => {
   assert.equal(isProvenNoEffectRefusal("return.idempotency_conflict"), false);
   assert.equal(isProvenNoEffectRefusal("return.refund.first_not_lawful"), false);
   assert.equal(isProvenNoEffectRefusal("return.recovery.attempt_mismatch"), false);
+  // TB-277-R2: the owning receipt route answers this SAME code for a mis-precision body AND for an owning unit
+  // precision the lookup could not answer. The second is lookup availability in another request, never proof that an
+  // earlier still-running send of these exact bytes did not commit — so it may not clear a retained envelope.
+  assert.equal(isProvenNoEffectRefusal("return.receipt.unit_quantity_invalid"), false);
   // Uncertainty and "cannot send now" must never resolve a retained intent.
   assert.equal(isProvenNoEffectRefusal("host-unreachable"), false);
   assert.equal(isProvenNoEffectRefusal("return.recovery.gateway_unavailable"), false);

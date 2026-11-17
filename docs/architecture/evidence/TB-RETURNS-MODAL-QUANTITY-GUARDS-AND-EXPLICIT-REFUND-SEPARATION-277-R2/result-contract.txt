@@ -1,0 +1,41 @@
+TASK=TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2
+PARENT=TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1
+GRANDPARENT=TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277
+BRIDGE_TASK_ROW=afb1e8ac-f381-48f1-8cc6-d8c739470b77
+BASE=eaab66e86d7f0b70798d4f2b61c4122eef09d7ad
+STATUS=PASS_WITHIN_ISSUED_ONE_TINY_REPAIR_SCOPE
+DECISION=ONE_UNSAFE_NO_EFFECT_CLASSIFICATION_REMOVED_SO_A_TEMPORARY_OWNING_UNIT_METADATA_LOOKUP_REFUSAL_CAN_NEVER_RESOLVE_A_POSSIBLY_SENT_RECEIPT_AND_THE_MOUNTED_WORKSPACE_PROVES_UNKNOWN_THEN_REFUSAL_THEN_EXACT_REPLAY_RETENTION_ON_THE_EXISTING_RETURNS_SURFACE_WITH_ZERO_BACKEND_CHANGE_ZERO_SCHEMA_AND_ZERO_LIVE_POST
+ARCHITECT_ACCEPT=NO
+USER_ACCEPTANCE=NO
+MIGRATIONS=0
+SCHEMA_CHANGE=0
+LIVE_BUSINESS_WRITE=0
+LIVE_HTTP_POST=0
+NEW_RETURN_CASE=0
+BACKEND_CHANGE=0
+
+C_REFUSAL_SET=PROVEN_NO_EFFECT_REFUSAL_CODES is now 9 body-dictated/immutable-identity tokens; return.receipt.unit_quantity_invalid was REMOVED (it also answers an unanswered/foreign owning precision from a temporary lookup, so a refuted retry proves nothing about an earlier still-running send).
+C_COMMENT=The set's doc block now says TB-277-R2 removed that token and why, states that the second emission is lookup availability, and corrects the body-only group comment (quantity, occurrence or decision).
+A_PRESERVED=Owning-unit quantum gate, exact occurrence replay first, typed refusal, zero-write order: unchanged (no backend edit).
+B_PRESERVED=Integer-millionth client arithmetic, one shared usable+damaged ceiling, unknown-precision blocking, Persian normalization: unchanged.
+MODAL_WORK_PRESERVED=One design-system Dialog per reviewed action; approval stays a decision only; first refund stays its own reviewed command: unchanged.
+MOUNTED_PROOF=app/admin/admin-return-workspace-277.mount.test.ts — "an unknown receipt send survives a unit-metadata refusal and only the exact replay resolves it": (1) transport loss keeps the frozen envelope and shows the single uncertainty modal; (2) a retry answered 400 return.receipt.unit_quantity_invalid leaves the SAME bytes in storage and the retained card on screen, and does NOT show the resolved-refusal notice; (3) the third send answers 200 with the stored snapshot, which clears the envelope and removes the card; all three bodies are byte-identical (one occurrence, one command).
+REGRESSION_PROOF=With the token temporarily re-added locally, the same mounted fact fails at the retention assertion (stored envelope reads null because a lookup refusal erased it); restored immediately, no commit.
+
+TESTS_FE_MOUNTED_WORKSPACE=9/9
+TESTS_FE_QUANTITY_QUEUE_ERRORMAP_RETURNSAPI=48/48
+TESTS_FE_QUEUE=26/26
+TSC=0
+FE_BUILD=0 BUILD_ID=GptasB03cazPtYoJp7aiE
+SERVED_CHUNK=/_next/static/chunks/7952-1ecaa58d415c5e34.js contains the 9-token set and no occurrence of the removed token
+SERVED_ERROR_COPY=/_next/static/chunks/1323-979bf525b6515616.js still carries the Persian/English message for return.receipt.unit_quantity_invalid (the operator still reads a plain explanation)
+
+HOST=5088 PID=21060 DLL_SHA256=8AA71DD82E6D737F9698A93D0F99EE7A77EB07E02916E4185DE9C271890E7948 (unchanged; no backend change)
+HEALTH=200 HEALTH_READY=200
+FE=3000 PID=23760 BUILD_ID=GptasB03cazPtYoJp7aiE
+LIVE_CASE=01a1e6b0-f33a-7000-80ee-beffb6344490 READ_ONLY_COMPLETED_HISTORY (no POST, no receipt, no decision, no refund, no reset)
+
+LIMITS=the mounted suite is jsdom with a scripted owning route, so it proves classification and retention, not browser geometry; no live unknown-outcome walkthrough was produced (the only case is settled and no live POST is authorized); the owning unit-metadata lookup failure itself is a backend fact proven by the R1 receipt suite, not re-exercised here.
+DEVIATIONS=the Bridge returned empty content so TASK.md is a declared reconstructed repair record; the regression proof temporarily re-added the removed token in the working copy and restored it before any commit; the FE was rebuilt and its process restarted (BUILD_ID 0RrDo7CGZ60FPsYrWxQ1a -> GptasB03cazPtYoJp7aiE) because a served behaviour changed; origin/main was fast-forwarded over the Architect's docs-only review commit before starting.
+STOP_FOR_ARCHITECT
+automaticNextImplementationTask=NONE

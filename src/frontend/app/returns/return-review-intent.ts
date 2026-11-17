@@ -275,8 +275,9 @@ export function discardUnreadableReturnReviewIntent(
 }
 
 /**
- * TB-276 / TB-277-R1: the reviewed commands whose owning code path proves refusal happened BEFORE any durable write of
- * that intent. This is a deliberately small, auditable TOKEN list — never "every 4xx", never message matching:
+ * TB-276 / TB-277-R1 / TB-277-R2: the reviewed commands whose owning code path proves refusal happened BEFORE any
+ * durable write of that intent. This is a deliberately small, auditable TOKEN list — never "every 4xx", never message
+ * matching:
  *
  * TB-277-R1 REMOVED every code that only proves "this RETRY was refused". A later authorization denial, a missing
  * actor, a permission loss or a generic conflict/state answer says nothing about an EARLIER send of the same frozen
@@ -284,17 +285,25 @@ export function discardUnreadableReturnReviewIntent(
  * remaining tokens are refusals determined SOLELY by the frozen reviewed body (or by an immutable fact that could never
  * have been true when the body was sent), so they can never describe a command that wrote and then answered this way.
  *
+ * TB-277-R2 then removed `return.receipt.unit_quantity_invalid` for the same reason: the owning route answers that ONE
+ * code both for a body whose quantity misses the owning unit's quantum AND for an owning unit precision the lookup
+ * could not answer at all. The second case is LOOKUP AVAILABILITY of a separate request, not evidence about the frozen
+ * bytes, and a retry may overtake an earlier request that is still before the case lock.
+ *
  * Deliberately NOT listed:
  * - a transport failure carries no code at all;
  * - `return.rejected` is the client fallback for a payload without a code;
  * - `return.recovery.gateway_unavailable`: the pending attempt is retained and must be resumed by the SAME intent;
+ * - `return.receipt.unit_quantity_invalid`: a refuted retry does not prove an earlier still-running send of these exact
+ *   bytes never committed; the envelope stays until that occurrence is authoritatively reconciled (a committed
+ *   occurrence replays, so nothing is lost by waiting);
  * - `admin.authorization.denied`, `admin.actor.missing`, `order.operation.denied`, `validation.failed` at the
  *   authorization boundary, and every conflict/state code (`return.stale`, `return.already_*`,
  *   `return.idempotency_conflict`, `return.decision.reason_conflict`, `return.receipt.conflict`,
  *   `return.receipt.state_invalid`, `return.recovery.*`) — they describe THIS attempt, not an earlier one.
  */
 export const PROVEN_NO_EFFECT_REFUSAL_CODES: ReadonlySet<string> = new Set([
-  // The reviewed BODY itself cannot describe a lawful quantity of goods; no earlier send of these bytes could write.
+  // The reviewed BODY itself cannot describe a lawful quantity, occurrence or decision; no send of these bytes writes.
   "return.quantity_invalid",
   "return.quantity_precision",
   "return.duplicate_line",
@@ -302,7 +311,6 @@ export const PROVEN_NO_EFFECT_REFUSAL_CODES: ReadonlySet<string> = new Set([
   "return.rejection_reason_required",
   "return.receipt.occurrence_required",
   "return.receipt.line_invalid",
-  "return.receipt.unit_quantity_invalid",
   // The line it names cannot belong to this case (an immutable identity), so nothing could ever have been stored.
   "return.line_missing",
   "return.receipt.origin_invalid",
