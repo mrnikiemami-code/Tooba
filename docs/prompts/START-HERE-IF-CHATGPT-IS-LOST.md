@@ -1,4 +1,10 @@
-# CURRENT — 275 PARTIAL AFTER SOURCE REVIEW; ONLY276 CONNECTED REPAIR + ONE USER REVIEW CASE — 2026-11-16
+# CURRENT — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
+
+Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277 is authorized next. Read276/ARCHITECT-REVIEW.md and standing user rules in AGENTS.
+Source base be47ee81ae0bf2b7e2678752741837ca60af0b70. User exercised the review case: receipt and approval, with a recorded refund success. Its latest live state MUST be read; the earlier Requested/empty-history report is obsolete. Do not reset/clone/reverse the case or perform further live receipt/decision/money/stock writes.
+276 is not final user acceptance. Existing foundations retained; original worker/audit reports preserved.277 owns shared modal/notification UX, unit-aware remaining quantity constraints and a real decision-vs-first-refund command split. One worker/task, no screenshots/delegation/loops, no automatic next task.
+
+# SUPERSEDED — 275 PARTIAL AFTER SOURCE REVIEW; ONLY276 CONNECTED REPAIR + ONE USER REVIEW CASE — 2026-11-16
 
 Read docs/architecture/evidence/TB-RETURNS-OPERATOR-WORKFLOW-QUEUE-DETAIL-AND-MOBILE-275/ARCHITECT-REVIEW.md.
 275 source review found unresolved intent cleared on failure/null, missing verified durable body and exact compare-clear, mutation lifecycle fencing gaps, and retry child replay ordered after live-state/current-leaf gates. The 21 FE node tests do not mount the workspace.

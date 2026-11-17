@@ -1,4 +1,10 @@
-# CURRENT — 276 WORKER PASS (connected review intent + reviewed retry replay + ONE live review case); AWAIT USER TEST AND ARCHITECT REVIEW — 2026-11-17
+# CURRENT — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
+
+Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277 is authorized next. Read276/ARCHITECT-REVIEW.md and standing user rules in AGENTS.
+Source base be47ee81ae0bf2b7e2678752741837ca60af0b70. User exercised the review case: receipt and approval, with a recorded refund success. Its latest live state MUST be read; the earlier Requested/empty-history report is obsolete. Do not reset/clone/reverse the case or perform further live receipt/decision/money/stock writes.
+276 is not final user acceptance. Existing foundations retained; original worker/audit reports preserved.277 owns shared modal/notification UX, unit-aware remaining quantity constraints and a real decision-vs-first-refund command split. One worker/task, no screenshots/delegation/loops, no automatic next task.
+
+# SUPERSEDED — 276 WORKER PASS (connected review intent + reviewed retry replay + ONE live review case); AWAIT USER TEST AND ARCHITECT REVIEW — 2026-11-17
 
 Read docs/ai/tasks/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/TASK.md and
 docs/architecture/evidence/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,connected-intent-and-retry-proof.md,user-review-case-proof.md,user-review.md}.

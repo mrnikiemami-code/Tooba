@@ -1,4 +1,20 @@
-# CURRENT — 276 WORKER PASS (connected durable review + reviewed retry replay + ONE live review case); AWAIT USER TEST AND ARCHITECT REVIEW — 2026-11-17
+# CURRENT — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
+
+Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277 is authorized next. Read276/ARCHITECT-REVIEW.md and standing user rules in AGENTS.
+Source base be47ee81ae0bf2b7e2678752741837ca60af0b70. User exercised the review case: receipt and approval, with a recorded refund success. Its latest live state MUST be read; the earlier Requested/empty-history report is obsolete. Do not reset/clone/reverse the case or perform further live receipt/decision/money/stock writes.
+276 is not final user acceptance. Existing foundations retained; original worker/audit reports preserved.277 owns shared modal/notification UX, unit-aware remaining quantity constraints and a real decision-vs-first-refund command split. One worker/task, no screenshots/delegation/loops, no automatic next task.
+
+## Standing user rules — operator action reviews (2026-11-17)
+These are user requirements, carried into every subsequent Returns/operator task:
+- An action that needs fields, inspection, a decision or financial review opens ONE existing design-system Dialog/modal. Do not expand action forms as new sections below the page, scroll the user to a distant form, or stack dialogs. Keep responsive focus/close/cancel behavior and readable44px controls.
+- Use the application's existing shared Toast/MessageBox convention for command outcomes and concise field-level validation for invalid inputs. No custom floating black success boxes, separate notification framework or duplicated success/error notices. Importing ToastRegion alone is not acceptance of the actual result.
+- Receipt quantity controls show the actual product, unit and authoritative remaining ceiling. Prevent invalid submission locally; integer pieces and permitted fractional gram/weight quantities use their owning unit precision. Never hardcode all units to step1 or silently clamp/round an entered quantity. Usable+damaged portions share ONE line ceiling; server validation remains final.
+- Approving a return is a decision ONLY. It must not initiate/refire a refund, credit Wallet, settle stock, or silently finish the case. FIRST refund execution is a distinct deliberate financial review/command; pending same-attempt recovery and definite-failure retry remain distinct. UI labels alone do not separate backend effects.
+- Historical receipt/decision/refund facts are immutable audit history. User test actions are not authorization to reset/recreate/reverse an exercised case or to execute further money/stock effects during development.
+- Keep possibly-sent exact durable intents through unknown, conflict and lost authorization. A later refusal does not prove that an earlier send did not write.
+No screenshot requests, delegation or automatic implementation loop. One task, one result, Architect/user review before another task.
+
+# SUPERSEDED — 276 WORKER PASS (connected durable review + reviewed retry replay + ONE live review case); AWAIT USER TEST AND ARCHITECT REVIEW — 2026-11-17
 
 Read docs/ai/tasks/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/TASK.md and
 docs/architecture/evidence/TB-RETURNS-CONNECTED-WORKFLOW-REPAIR-AND-USER-REVIEW-276/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,connected-intent-and-retry-proof.md,user-review-case-proof.md,user-review.md}.
