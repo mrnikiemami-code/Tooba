@@ -1,4 +1,10 @@
-# CURRENT — 277-R2 WORKER PASS (one unsafe no-effect token removed; mounted unknown→lookup-refusal→exact-replay retention); AWAIT ARCHITECT REVIEW — 2026-11-17
+# CURRENT — 277-R2 ACCEPTED; REQUESTED277 REPAIR CHAIN CLOSED WITH PROOF LIMITS — 2026-11-17
+
+Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/ARCHITECT-REVIEW.md.
+Source938ab6488ebdeec6cf2c97d3023b0bb085dd4b9d removes the last unsafe token; mounted regression proves unknown->metadata-refusal retains exact intent and authoritative replay clears it. Prior277-R1 A/B acceptance retained;277 modal/approval-vs-first-refund work retained. This requested repair chain is closed within reviewed scope, not universal Returns/provider/user acceptance.
+No next implementation issued. activeTask: NONE; automaticNextImplementationTask: NONE. Await user's next feedback. Existing case is Settled read-only history; no new case/live mutation/reset/provider/money action authorized. Preserve standing user rules, all partial/audit history and proof limits.
+
+# SUPERSEDED — 277-R2 WORKER PASS (one unsafe no-effect token removed; mounted unknown→lookup-refusal→exact-replay retention); AWAIT ARCHITECT REVIEW — 2026-11-17
 Read docs/ai/tasks/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/TASK.md and
 docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,retention-proof.md,user-review.md}.
 Status **PASS within the issued "one tiny 277-R2" scope**, decision
