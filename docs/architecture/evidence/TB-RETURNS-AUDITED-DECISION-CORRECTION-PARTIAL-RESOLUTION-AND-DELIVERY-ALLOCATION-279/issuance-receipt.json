@@ -1,0 +1,13 @@
+{
+  "protocol": "BRIDGE-WAKE-V1",
+  "taskId": "TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279",
+  "issuedBy": "Architect",
+  "issuedDate": "2026-11-17",
+  "expectedCodeBaseSha": "57cccbbe7cffea23c30ee0f474291cb3dda7bc58",
+  "docsOnlyIssuanceDeltaAuthorized": true,
+  "taskSha256": "cf82f24f2ea6f94dbc41d24581b9704c11b49fc69f8c841b0d09a57c38bbb174",
+  "taskBytes": 18405,
+  "canonicalTaskPath": "docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/TASK.md",
+  "evidenceTaskPath": "docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/TASK.md",
+  "automaticNextImplementationTask": "NONE"
+}

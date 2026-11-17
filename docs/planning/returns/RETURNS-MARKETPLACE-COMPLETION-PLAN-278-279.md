@@ -1,4 +1,12 @@
-# Returns marketplace completion — 278–279 — 2026-11-17
+# CURRENT — final consolidated279 issued — 2026-11-17
+
+278 result source57cccbbe7cffea23c30ee0f474291cb3dda7bc58: PARTIAL after independent source review; retain useful delivered features. Read its ARCHITECT-REVIEW.
+Only TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279 next. FULL issued TASK and SHA256 receipt are in the repo, no reconstruction from Bridge summaries.
+Detailed chosen domain/serialization/product decisions: RETURNS-279-EXECUTION-DECISIONS.md.
+Complete278 durability/lifecycle blockers in279 alongside audited decision correction, partial accepted/rejected quantities, rejected-goods custody, delivery-slice capacity and Returns-mediated shared-payment budget.
+One result, no extra per-helper repair tasks or279 follow-up automatically. No user/provider/full-Returns acceptance until evidence supports it. Preserve existing history and read-only trial cases. Migration boundary is bounded additive Returns schema, verified fresh backup then runner, no data fix.
+
+# SUPERSEDED — original278–279 planning checkpoint (historical context)
 
 State: USER_REQUESTED_FAST_CONSOLIDATED_COMPLETION. Two main delivery slices, not ten micro-tasks.
 Only TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278 is issued next. 279 is planned, NOT ISSUED; no delegation/automatic loop.

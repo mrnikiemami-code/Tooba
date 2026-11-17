@@ -1,4 +1,14 @@
-# CURRENT — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
+# CURRENT — 278 PARTIAL; ONLY FINAL CONSOLIDATED279 ISSUED WITH EXACT REPO ENVELOPE — 2026-11-17
+
+Read docs/planning/returns/RETURNS-279-EXECUTION-DECISIONS.md,278/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/TASK.md.
+The FULL279 envelope and identical evidence TASK are committed BEFORE execution; issuance-receipt.json carries SHA256. Empty Bridge body is not permission to reconstruct the task.
+Expected CODE base57cccbbe7cffea23c30ee0f474291cb3dda7bc58; this issuance delta is docs-only and explicitly allowed. Record actual claim HEAD and verify no incoming source drift.
+Retain278 eligibility/selection/creation-quantum/react-toastify improvements; close pending-act overwrite, missing epoch/viewer/body guards and same-line portions INSIDE279, no278-R1 micro-task.
+279 owns audited pre-money correction/version-fenced first start, partial item/physical resolution, delivery allocation and Returns-managed shared-payment budget. One bounded additive Returns migration only after verified pre-apply backup+runner. No live business writes, fixtures, resets or provider/stock/money calls; existing trial cases read-only.
+User requires fast two-delivery completion, one worker/task/result, no delegation/screenshots/broad suite loops.279 is the final planned main implementation, not a universal provider/user acceptance claim. No automatic next task.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
 
 Read docs/planning/returns/RETURNS-MARKETPLACE-COMPLETION-PLAN-278-279.md and docs/architecture/evidence/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/SOURCE-AUDIT.md FIRST for new-chat recovery.
 Only TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278 issued next;279 planned NOT ISSUED. No ten micro-tasks/automatic loop.
