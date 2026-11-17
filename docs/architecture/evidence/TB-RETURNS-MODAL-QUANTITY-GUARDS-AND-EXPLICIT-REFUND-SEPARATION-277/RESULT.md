@@ -10,6 +10,10 @@ NOT Architect ACCEPT. NOT user visual/functional acceptance. NOT any PSP/Wallet/
 - Task row: `9c85e03b-9d78-4c6d-b5e4-13c378345a25`
 - Channel: `tooba-main`
 - Expected-Base-SHA == Base-SHA: `04aa77a5df260b3e76a115d607080a8e6c8ed004`
+- Delivery: code + this evidence set are committed as `fac017f94d3d6af09939eb495cc34f6231eb5aac`
+  (its parent is exactly the Expected-Base-SHA), pushed to `origin/main`, parity confirmed with a fresh fetch;
+  the served Host DLL and Next bundle were published from that same tree (`RECEIPTS.md` §11). The final
+  docs-only addendum HEAD is reported to Bridge only, so no hash refers to itself.
 - Parent 276 stays exactly as reported; this change adds the user-requested behavior instead of rewriting 276 history.
 
 ## What the user asked for, and what changed

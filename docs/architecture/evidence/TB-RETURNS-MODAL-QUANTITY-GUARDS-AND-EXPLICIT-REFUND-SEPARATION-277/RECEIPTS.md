@@ -124,3 +124,29 @@ databases:  one canonical tooba_alpha
 live business writes by this task: NONE (see §8)
 provider / PSP / Wallet / Inventory / waybill / notification calls: NONE
 ```
+
+## 11. Delivery (git)
+
+```
+$ git rev-parse HEAD^                     04aa77a5df260b3e76a115d607080a8e6c8ed004   (= Expected-Base-SHA)
+$ git rev-parse HEAD                      fac017f94d3d6af09939eb495cc34f6231eb5aac
+$ git push origin main
+To https://github.com/mrnikiemami-code/Tooba.git
+   04aa77a5d..fac017f94  main -> main
+$ git fetch origin --quiet && git rev-parse origin/main
+fac017f94d3d6af09939eb495cc34f6231eb5aac
+$ git status --porcelain=v1 | Select-String "^ M|^M "      (no tracked modification)
+```
+
+- `fac017f94d3d6af09939eb495cc34f6231eb5aac` is the normal commit carrying the code, the tests and this
+  evidence set (42 paths); parent is exactly the issued `Expected-Base-SHA`. Pushed once, no force/amend/
+  reset/stash/rebase.
+- Exact final-HEAD/origin parity was confirmed by a **fresh** fetch: local `HEAD` == `origin/main`.
+- Served identity: the Host `64C74398…F2F9EB0` DLL and the Next `BUILD_ID VAx5DNtd8dMTFmyI5e2OR` bundle were
+  published from this working tree in §7 and nothing under `src/` or any config changed after that publish/
+  restart, so the running binaries correspond to the committed source of `fac017f9`. Build identity is stated
+  as publish-time evidence, not re-derived from git.
+- Untracked scratch files (`scripts/tb266r1-*.mjs`, `scripts/tb270r2-*.mjs`, `scripts/tb276-read-bridge-db.mjs`)
+  are pre-existing leftovers, were not staged, and are not part of the change set.
+- This delivery section is a docs-only follow-up on top of `fac017f9`; its own hash is deliberately not written
+  inside itself (no self-referential hash loop) and is reported in the Bridge result envelope only.
