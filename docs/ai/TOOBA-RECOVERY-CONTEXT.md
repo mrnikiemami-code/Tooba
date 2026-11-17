@@ -1,4 +1,11 @@
-# CURRENT — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
+# CURRENT — 277 PARTIAL: THREE BOUNDED QUANTITY/INTENT REPAIRS; ONLY277-R1 — 2026-11-17
+
+Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/ARCHITECT-REVIEW.md.
+Approval/explicit first-refund separation and DS modals are retained. Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1: server unit precision, exact decimal client ceiling/sums, and uncertainty retained through later denial/conflict.
+Existing user case is settled history: READ-ONLY. No valid live POST, new fixture/case, stock/money/provider effect, reset or schema change. Preserve standing user rules and all previous audit history. One worker/task, no screenshots/delegation/automatic continuation.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — USER REVIEW REQUIRES MODALS, BOUNDED UNIT QUANTITIES AND SEPARATE REFUND; ONLY277 — 2026-11-17
 
 Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277 is authorized next. Read276/ARCHITECT-REVIEW.md and standing user rules in AGENTS.
 Source base be47ee81ae0bf2b7e2678752741837ca60af0b70. User exercised the review case: receipt and approval, with a recorded refund success. Its latest live state MUST be read; the earlier Requested/empty-history report is obsolete. Do not reset/clone/reverse the case or perform further live receipt/decision/money/stock writes.

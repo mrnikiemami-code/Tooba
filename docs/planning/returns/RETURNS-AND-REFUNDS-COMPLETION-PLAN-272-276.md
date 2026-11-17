@@ -1,4 +1,11 @@
-# CURRENT — 277 WORKER PASS (shared action modals + unit-bounded receiving + decision-only approval with an explicit first refund); AWAIT USER LOOK AND ARCHITECT REVIEW — 2026-11-17
+# CURRENT — 277 PARTIAL: THREE BOUNDED QUANTITY/INTENT REPAIRS; ONLY277-R1 — 2026-11-17
+
+Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/ARCHITECT-REVIEW.md.
+Approval/explicit first-refund separation and DS modals are retained. Only TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1: server unit precision, exact decimal client ceiling/sums, and uncertainty retained through later denial/conflict.
+Existing user case is settled history: READ-ONLY. No valid live POST, new fixture/case, stock/money/provider effect, reset or schema change. Preserve standing user rules and all previous audit history. One worker/task, no screenshots/delegation/automatic continuation.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 277 WORKER PASS (shared action modals + unit-bounded receiving + decision-only approval with an explicit first refund); AWAIT USER LOOK AND ARCHITECT REVIEW — 2026-11-17
 
 Read docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277/{RESULT.md,RECEIPTS.md,result-contract.txt,modal-and-quantity-proof.md,approval-vs-refund-proof.md,user-review.md}.
 277 PASS within the issued A–F scope, awaiting Architect review (NOT Architect ACCEPT, NOT user acceptance). 276/275/274/273/272-R1
