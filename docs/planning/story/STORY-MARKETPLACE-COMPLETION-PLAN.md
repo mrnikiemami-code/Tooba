@@ -1,3 +1,7 @@
+# CURRENT — FIRST DELIVERY ISSUED AS TB-STORY-281; SECOND DELIVERY NOT ISSUED — 2026-11-19
+
+Owner requested starting the first task and waiting for its result before issuing the next. Exact envelope: `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md`. Active worker tooba-worker-01. This task's bounded permission now supersedes the original analysis-only execution state for delivery ONE only; the original plan below is preserved as historical product context. No automatic continuation. UI/shared-list delivery remains planned, not issued. automaticNextImplementationTask NONE.
+
 # برنامهٔ تکمیل استوری مارکت‌پلیس و پنل مشترک فروشگاه/ادمین
 
 تاریخ: ۱۹ نوامبر ۲۰۲۶
