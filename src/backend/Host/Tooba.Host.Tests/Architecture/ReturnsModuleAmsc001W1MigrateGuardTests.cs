@@ -55,11 +55,12 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         // quantity-precision refusal (return.quantity_precision), TB-273-R1 the recovery evidence-conflict and
         // caller-transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals, TB-278 the
         // owning-unit creation quantum refusal and TB-279 the audited-correction, per-item resolution, custody,
-        // delivery-allocation and shared-refund-budget refusals — all HTTP-reachable.
+        // delivery-allocation and shared-refund-budget refusals — and TB-279-R2 the reviewed-plan version refusal —
+        // all HTTP-reachable.
         Assert.Equal(
             ReturnsErrorCodes.HttpReachable.Count,
             ReturnsErrorCodes.HttpReachable.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(86, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(87, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));

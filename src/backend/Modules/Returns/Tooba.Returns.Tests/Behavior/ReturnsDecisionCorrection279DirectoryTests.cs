@@ -183,7 +183,7 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         Assert.Null(published.ApprovedAmount);
         Assert.Equal(Requested * UnitPrice, published.RefundAmount);
 
-        var approved = await harness.ApproveAsync(expectedVersion: 0);
+        var approved = await harness.ApproveAsync(expectedVersion: 0, expectedResolutionVersion: published.Resolution!.Version);
 
         // The approved money is the accepted quantity at the STORED unit price — never the original 2-unit claim.
         Assert.Equal(UnitPrice, approved.ApprovedAmount);
@@ -228,8 +228,39 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         Assert.Equal(0, await harness.ResolutionCountAsync());
     }
 
-    // ------------------------------------------------------------------ C: custody of rejected received goods
+    [Fact]
+    public async Task B_a_decision_over_a_reviewed_plan_must_carry_that_plan_version()
+    {
+        await using var harness = await SeedAsync(Stage.RequestedWithMixedReceipt);
+        await harness.PublishResolutionAsync(
+            "resolution-1",
+            expectedVersion: 0,
+            (1m, 1m, "واحد آسیب‌دیده قابل بازگشت وجه نیست."));
 
+        // TB-279-R2 (D): an approval that blesses a reviewed plan without naming the revision it read is refused,
+        // and nothing is decided or frozen.
+        var missing = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.ApproveAsync(expectedVersion: 0));
+        Assert.Equal(ReturnsErrorCodes.ResolutionReviewVersionRequired, missing.Code);
+        var undecided = await harness.SnapshotAsync();
+        Assert.Equal(ReturnRequestStatus.Requested, undecided.Status);
+        Assert.Null(undecided.ApprovedAmount);
+
+        // A stale plan revision is the same typed conflict a stale decision version gets.
+        var stale = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.ApproveAsync(expectedVersion: 0, expectedResolutionVersion: 99));
+        Assert.Equal(ReturnsErrorCodes.CorrectionVersionStale, stale.Code);
+        Assert.Equal(ReturnRequestStatus.Requested, (await harness.SnapshotAsync()).Status);
+        Assert.Equal(0, harness.Gateway.Calls);
+
+        // The exact reviewed revision approves.
+        var approved = await harness.ApproveAsync(expectedVersion: 0, expectedResolutionVersion: 1);
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Equal(UnitPrice, approved.ApprovedAmount);
+        Assert.Equal(0, harness.Gateway.Calls);
+    }
+
+    // ------------------------------------------------------------------ C: custody of rejected received goods
     [Fact]
     public async Task C_custody_hands_back_only_the_rejected_remainder_and_never_claims_settlement()
     {
@@ -238,7 +269,7 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             "resolution-1",
             expectedVersion: 0,
             (1m, 1m, "واحد آسیب‌دیده قابل بازگشت وجه نیست."));
-        await harness.ApproveAsync(expectedVersion: 0);
+        await harness.ApproveAsync(expectedVersion: 0, expectedResolutionVersion: 1);
 
         var over = await Assert.ThrowsAsync<ContractOperationException>(
             () => harness.CustodyAsync("custody-over", quantity: 2m, "رسید تحویل حضوری ۱"));
@@ -365,11 +396,12 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                     SellerPartyId),
                 CancellationToken.None);
 
-        public Task<ReturnSnapshot> ApproveAsync(int? expectedVersion = null) =>
+        public Task<ReturnSnapshot> ApproveAsync(int? expectedVersion = null, int? expectedResolutionVersion = null) =>
             _directory.ApproveAsync(
                 new ApproveReturnCommand(ReturnRequestId, Guid.NewGuid(), SellerPartyId)
                 {
                     ExpectedDecisionVersion = expectedVersion,
+                    ExpectedResolutionVersion = expectedResolutionVersion,
                 },
                 CancellationToken.None);
 

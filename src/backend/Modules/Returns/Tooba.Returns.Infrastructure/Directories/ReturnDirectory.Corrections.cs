@@ -220,6 +220,29 @@ public sealed partial class ReturnDirectory
         return null;
     }
 
+    /// <summary>
+    /// TB-279-R2 (D): a decision that blesses a REVIEWED plan must name the exact plan revision it was taken against.
+    /// An implicit baseline (no reviewed plan) has no plan to name; a reviewed plan without the expected version is a
+    /// typed refusal, and a mismatched one is the same stale-version conflict a stale decision version gets.
+    /// </summary>
+    private static void EnsureReviewedPlanVersion(ReturnResolutionSnapshot resolution, int? expectedResolutionVersion)
+    {
+        if (!resolution.FromReviewedPlan)
+        {
+            return;
+        }
+
+        if (expectedResolutionVersion is null)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.ResolutionReviewVersionRequired);
+        }
+
+        if (expectedResolutionVersion.Value != resolution.Version)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
+        }
+    }
+
     private static string DecisionTokenOf(ReturnDecisionKind kind) =>
         kind == ReturnDecisionKind.Approve
             ? ReturnDecisionRevision.ApproveDecision

@@ -34,6 +34,7 @@ import {
   clearReturnSubmissionIfCurrent,
   readReturnSubmission,
   recordChildOutcome,
+  serializeReturnSubmission,
   storeReturnSubmission,
   SUBMISSION_NO_EFFECT_REFUSALS,
   summarizeReturnSubmission,
@@ -161,6 +162,8 @@ export function ReturnRequestModal({
   const [storageBlocked, setStorageBlocked] = useState(false);
   const [viewerMissing, setViewerMissing] = useState(false);
   const [unreadable, setUnreadable] = useState(false);
+  // TB-279-R2 (F): an older viewer-less act exists for this checkout. It is preserved untouched and blocks a new act.
+  const [legacyPending, setLegacyPending] = useState(false);
   const [retained, setRetained] = useState<ReturnSubmission | null>(null);
   const [reasonId, setReasonId] = useState("");
   const [description, setDescription] = useState("");
@@ -181,8 +184,20 @@ export function ReturnRequestModal({
     return epoch.current === started;
   }
 
+  // TB-279-R2 (F): unmount invalidates the epoch so no in-flight answer can paint, notify or clear after the surface
+  // is gone (React may run this cleanup twice in development; the mount effect claims a fresh epoch either way).
   useEffect(() => {
-    if (!open) return;
+    return () => {
+      epoch.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    // A closed surface invalidates the epoch too: reopening, retargeting or closing can never let a late answer win.
+    if (!open) {
+      epoch.current += 1;
+      return;
+    }
     const started = ++epoch.current;
     const nextStorage = acquireSubmissionStorage();
     if (!isCurrent(started)) return;
@@ -191,6 +206,7 @@ export function ReturnRequestModal({
     if (viewer === "") {
       setViewerMissing(true);
       setUnreadable(false);
+      setLegacyPending(false);
       setRetained(null);
     } else {
       setViewerMissing(false);
@@ -198,6 +214,7 @@ export function ReturnRequestModal({
       if (!isCurrent(started)) return;
       setRetained(read.kind === "found" ? read.submission : null);
       setUnreadable(read.kind === "unreadable");
+      setLegacyPending(read.kind === "legacy_unresolved");
     }
     setReasonId("");
     setDescription("");
@@ -249,6 +266,7 @@ export function ReturnRequestModal({
     !storageBlocked &&
     viewer !== "" &&
     !unreadable &&
+    !legacyPending &&
     selectedCount > 0 &&
     !hasLineError;
 
@@ -364,23 +382,72 @@ export function ReturnRequestModal({
     const refused: ReturnSubmissionChild[] = [];
     let possiblyWritten = 0;
     let current: ReturnSubmission | null = act;
+
+    /**
+     * TB-279-R2 (F): before ANY child is put on the wire, the stored act must still be THIS exact act and must still
+     * carry this child's exact frozen bytes. A replaced act, a cleared act or a tampered child stops the send.
+     */
+    function exactStoredEnvelope(child: ReturnSubmissionChild): string | null {
+      const read = readReturnSubmission(storageRef, act.checkoutId, act.viewerId);
+      if (read.kind !== "found") return null;
+      const stored = read.submission;
+      if (stored.submissionKey !== act.submissionKey) return null;
+      const target = stored.children.find((item) => item.key === child.key);
+      if (!target || target.body !== child.body || target.idempotencyKey !== child.idempotencyKey) return null;
+      return serializeReturnSubmission(stored);
+    }
+
     for (const child of children) {
+      // Stale surface: never start another send.
+      if (!isCurrent(started)) return;
+      const envelope = exactStoredEnvelope(child);
+      if (envelope === null) {
+        if (isCurrent(started)) {
+          const reread = readReturnSubmission(storageRef, act.checkoutId, act.viewerId);
+          setRetained(reread.kind === "found" ? reread.submission : null);
+          setUnreadable(reread.kind === "unreadable");
+          toast.error("شاهد ذخیره‌شدهٔ درخواست تغییر کرده است؛ برای جلوگیری از ثبت تکراری چیزی ارسال نشد.");
+        }
+        return;
+      }
       const answer = await sendCustomerReturnBody(child.body);
+      const expected = { envelope, childBody: child.body, idempotencyKey: child.idempotencyKey };
       const updated = answer.ok
-        ? recordChildOutcome(storageRef, scope, act.submissionKey, child.key, {
-            kind: "recorded",
-            caseId: answer.snapshot.returnRequestId,
-            caseNumber: null,
-          })
+        ? recordChildOutcome(
+            storageRef,
+            scope,
+            act.submissionKey,
+            child.key,
+            {
+              kind: "recorded",
+              caseId: answer.snapshot.returnRequestId,
+              caseNumber: null,
+            },
+            expected,
+          )
         : SUBMISSION_NO_EFFECT_REFUSALS.has(answer.errorCode)
-          ? recordChildOutcome(storageRef, scope, act.submissionKey, child.key, {
-              kind: "refused",
-              refusalCode: answer.errorCode,
-            })
-          : recordChildOutcome(storageRef, scope, act.submissionKey, child.key, {
-              kind: "unknown",
-              refusalCode: answer.errorCode,
-            });
+          ? recordChildOutcome(
+              storageRef,
+              scope,
+              act.submissionKey,
+              child.key,
+              {
+                kind: "refused",
+                refusalCode: answer.errorCode,
+              },
+              expected,
+            )
+          : recordChildOutcome(
+              storageRef,
+              scope,
+              act.submissionKey,
+              child.key,
+              {
+                kind: "unknown",
+                refusalCode: answer.errorCode,
+              },
+              expected,
+            );
       if (updated) current = updated;
       if (answer.ok) {
         recordedSnapshots.push(answer.snapshot);
@@ -444,6 +511,11 @@ export function ReturnRequestModal({
     }
     // TB-279-R1: a possibly-sent or unreadable act is NEVER overwritten by a new one. Re-read the exact scope first.
     const existing = readReturnSubmission(storage, checkoutId, viewer);
+    if (existing.kind === "legacy_unresolved") {
+      setLegacyPending(true);
+      setFieldError("شاهد ثبت قدیمی‌تری برای این سفارش وجود دارد که قابل انتساب به حساب شما نیست؛ برای جلوگیری از ثبت تکراری درخواستی ارسال نشد.");
+      return;
+    }
     if (existing.kind === "unreadable") {
       setUnreadable(true);
       setFieldError("شاهد ثبت قبلی در این مرورگر خوانا نیست؛ برای جلوگیری از ثبت تکراری درخواستی ارسال نشد.");
@@ -487,6 +559,7 @@ export function ReturnRequestModal({
     if (!isCurrent(started)) return;
     setRetained(act);
     setUnreadable(false);
+    setLegacyPending(false);
     activeSends.current += 1;
     setBusy(true);
     try {
@@ -531,6 +604,16 @@ export function ReturnRequestModal({
         {storageBlocked ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800" role="alert">
             ثبت امن درخواست در این مرورگر ممکن نیست؛ چیزی ارسال نشد.
+          </p>
+        ) : null}
+        {legacyPending ? (
+          <p
+            data-testid="customer-return-legacy-evidence"
+            className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
+            role="alert"
+          >
+            یک شاهد ثبت قدیمی‌تر برای این سفارش در این مرورگر نگه داشته شده است و به حساب شما قابل انتساب نیست؛
+            برای جلوگیری از ثبت تکراری، درخواست جدیدی ارسال نمی‌شود. اگر مطمئن نیستید، با پشتیبانی تماس بگیرید.
           </p>
         ) : null}
         {unreadable ? (

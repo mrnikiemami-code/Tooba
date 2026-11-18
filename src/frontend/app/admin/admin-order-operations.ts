@@ -260,6 +260,10 @@ export type AdminOrderOperationRequest = {
   dispatchPlanReceivingClosesAt?: string | null;
   /** TB-270-R3: the exact fingerprint of the preview the operator reviewed. */
   dispatchPlanReviewFingerprint?: string | null;
+  /** TB-279-R2 (D): the reviewed Returns decision revision (approve/reject). */
+  expectedDecisionVersion?: number | null;
+  /** TB-279-R2 (D): the reviewed Returns plan revision (approve/reject). */
+  expectedResolutionVersion?: number | null;
 };
 
 /**
@@ -687,6 +691,8 @@ export async function executeAdminOrderOperation(
         dispatchPlanReceivingOpensAt: body.dispatchPlanReceivingOpensAt ?? null,
         dispatchPlanReceivingClosesAt: body.dispatchPlanReceivingClosesAt ?? null,
         dispatchPlanReviewFingerprint: body.dispatchPlanReviewFingerprint ?? null,
+        expectedDecisionVersion: body.expectedDecisionVersion ?? null,
+        expectedResolutionVersion: body.expectedResolutionVersion ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

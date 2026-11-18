@@ -254,9 +254,14 @@ export function ReturnReviewModal({
     }
     setBusy(true);
     setError(null);
+    // TB-279-R2 (D): freeze the revisions of the EXACT snapshot this seller reviewed.
+    const reviewed = {
+      expectedDecisionVersion: current.decisionVersion ?? 0,
+      expectedResolutionVersion: current.resolution?.version ?? 0,
+    };
     const result = kind === "approved"
-      ? await sellerApproveReturn(sellerPartyId, current.returnRequestId, destination)
-      : await sellerRejectReturn(sellerPartyId, current.returnRequestId, adminReason.trim());
+      ? await sellerApproveReturn(sellerPartyId, current.returnRequestId, destination, reviewed)
+      : await sellerRejectReturn(sellerPartyId, current.returnRequestId, adminReason.trim(), reviewed);
     setBusy(false);
     if (!result.ok) {
       setError(result.errorCode);

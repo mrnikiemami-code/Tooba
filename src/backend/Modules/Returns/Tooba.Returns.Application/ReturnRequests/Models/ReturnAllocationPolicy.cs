@@ -30,8 +30,14 @@ public static class ReturnAllocationPolicy
     /// <para>
     /// <paramref name="allocatedElsewhere"/> is the sum of durable, still-active allocations of OTHER cases on that same
     /// slice key. <paramref name="legacyUnallocated"/> is the quantity of this line already occupied by active cases
-    /// that predate per-delivery allocation; it is never guessed onto a specific slice, so it is subtracted from the
-    /// OLDEST in-window slice first (the conservative direction: a legacy return cannot appear to free a newer batch).
+    /// that predate per-delivery allocation.
+    /// </para>
+    /// <para>
+    /// TB-279-R2 (C/E): a legacy occupancy is never guessed onto a slice. It is only subtracted when the line has
+    /// exactly ONE delivered slice (so there is exactly one possible origin) and that slice can actually cover it. In
+    /// every other case — more than one delivery of the line, expired ones included, or a legacy quantity larger than
+    /// the provable leftover — every slice is flagged ambiguous and a new claim is refused, because trimming a guess
+    /// onto the oldest batch would silently release capacity the seller may still physically hold.
     /// </para>
     /// </summary>
     public static IReadOnlyList<ReturnLineDeliveryAvailability> Describe(
@@ -58,14 +64,20 @@ public static class ReturnAllocationPolicy
             .OrderBy(x => x.DeliveredAt)
             .ToArray();
 
-        // TB-279-R1 (F5): a legacy (pre-allocation) active case occupies this line without naming a delivery. When MORE
-        // THAN ONE delivery could be its origin, the leftover capacity of each slice is genuinely unknowable, so every
-        // slice of the line is flagged ambiguous and a NEW claim is refused instead of guessing an origin.
-        var ambiguousLegacy = Math.Max(0m, legacyUnallocated) > 0m
-            && merged.Count(x => IsInWindow(x.DeliveredAt, days, now)) > 1;
+        // TB-279-R1 (F5) / TB-279-R2 (C/E): a legacy (pre-allocation) active case occupies this line without naming a
+        // delivery. Its origin is only provable when the line has exactly ONE delivered slice and that slice's leftover
+        // actually covers the legacy quantity. Ambiguity is counted across EVERY delivered slice of the line — an
+        // EXPIRED earlier parcel is still a plausible origin, so ignoring it would pretend a newer batch is free.
+        var legacy = Math.Max(0m, legacyUnallocated);
+        var provableLeftover = merged.Sum(x =>
+        {
+            allocatedElsewhere.TryGetValue(x.Key, out var allocated);
+            return Math.Max(0m, x.Quantity - allocated);
+        });
+        var ambiguousLegacy = legacy > 0m && (merged.Length != 1 || legacy > provableLeftover);
 
         var availability = new List<ReturnLineDeliveryAvailability>(merged.Length);
-        var remainingLegacy = Math.Max(0m, legacyUnallocated);
+        var remainingLegacy = ambiguousLegacy ? 0m : legacy;
         foreach (var slice in merged)
         {
             allocatedElsewhere.TryGetValue(slice.Key, out var allocated);

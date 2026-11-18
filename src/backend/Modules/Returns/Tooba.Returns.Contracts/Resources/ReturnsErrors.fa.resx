@@ -89,6 +89,7 @@
   <data name="return.allocation.legacy_ambiguous" xml:space="preserve"><value>مرجوعی پیشین این قلم پیش از تخصیص هر تحویل ثبت شده و بیش از یک تحویل می‌تواند مبدأ آن باشد؛ انتخاب یکی از آن‌ها حدس است و مجاز نیست.</value></data>
   <data name="return.resolution.portion_required" xml:space="preserve"><value>برنامهٔ تفکیک باید سهم پذیرفته‌شده و رد‌شدهٔ هر وضعیت (سالم/آسیب‌دیده) را صریح بیان کند؛ تفکیک «اول سالم» استنتاج نمی‌شود.</value></data>
   <data name="return.resolution.portion_invalid" xml:space="preserve"><value>سهم‌های تفکیک‌شدهٔ هر وضعیت با این قلم هم‌خوان نیست.</value></data>
+  <data name="return.resolution.review_version_required" xml:space="preserve"><value>نسخهٔ بررسی‌شدهٔ برنامهٔ تفکیک برای این تصمیم ارسال نشده است؛ تصمیم باید دقیقاً بر همان نسخه‌ای که بررسی شده اعمال شود.</value></data>
   <data name="return.custody.proof_kind_required" xml:space="preserve"><value>برای تحویل حضوری، نوع شواهد لازم است: گواهی اپراتور بر تحویل حضوری یا تأیید تحویل‌شدن توسط حاملِ مالک.</value></data>
   <data name="return.custody.proof_kind_unavailable" xml:space="preserve"><value>نوع شواهد انتخاب‌شده برای این پرونده در دسترس نیست.</value></data>
 </root>

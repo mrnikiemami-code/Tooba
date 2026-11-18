@@ -136,7 +136,7 @@ export interface ReturnDecisionRevision {
   recordedAt: string;
 }
 
-/** TB-279: the reviewed accepted/rejected split of ONE requested line. */
+/** TB-279: the reviewed accepted/rejected split of ONE requested line, PER CONDITION (TB-279-R2). */
 export interface ReturnResolutionLine {
   returnItemId: string;
   requested: number;
@@ -145,6 +145,14 @@ export interface ReturnResolutionLine {
   damaged: number;
   accepted: number;
   rejected: number;
+  /** TB-279-R2: the refundable portion of each inspected condition. */
+  acceptedUsable: number;
+  acceptedDamaged: number;
+  /** TB-279-R2: the declined but physically received portion of each condition (owed back to the customer). */
+  rejectedReceivedUsable: number;
+  rejectedReceivedDamaged: number;
+  /** TB-279-R2: the part of the claim that never physically arrived. */
+  rejectedUnreceived: number;
   reason: string | null;
   version: number;
 }
@@ -167,6 +175,8 @@ export interface ReturnCustody {
   condition: "Usable" | "Damaged" | string;
   recipientUserId: string;
   proofReference: string;
+  /** TB-279-R2: the reviewed proof kind this handback rests on (operator attestation). */
+  proofKind?: string | null;
   recordedAt: string;
 }
 
@@ -521,6 +531,11 @@ export function mapReturnResolutionLine(value: unknown): ReturnResolutionLine | 
     damaged: number(prop(row, "damaged", "Damaged")),
     accepted: number(prop(row, "accepted", "Accepted")),
     rejected: number(prop(row, "rejected", "Rejected")),
+    acceptedUsable: number(prop(row, "acceptedUsable", "AcceptedUsable")),
+    acceptedDamaged: number(prop(row, "acceptedDamaged", "AcceptedDamaged")),
+    rejectedReceivedUsable: number(prop(row, "rejectedReceivedUsable", "RejectedReceivedUsable")),
+    rejectedReceivedDamaged: number(prop(row, "rejectedReceivedDamaged", "RejectedReceivedDamaged")),
+    rejectedUnreceived: number(prop(row, "rejectedUnreceived", "RejectedUnreceived")),
     reason: nullableText(prop(row, "reason", "Reason")),
     version: integerValue(prop(row, "version", "Version")),
   };
@@ -557,6 +572,7 @@ export function mapReturnCustody(value: unknown): ReturnCustody | null {
     condition: text(prop(row, "condition", "Condition"), ""),
     recipientUserId: text(prop(row, "recipientUserId", "RecipientUserId"), ""),
     proofReference: text(prop(row, "proofReference", "ProofReference"), ""),
+    proofKind: nullableText(prop(row, "proofKind", "ProofKind")),
     recordedAt: text(prop(row, "recordedAt", "RecordedAt"), ""),
   };
 }
@@ -1294,16 +1310,29 @@ export function sellerApproveReturn(
   sellerPartyId: string,
   returnRequestId: string,
   destination?: RefundDestination,
+  reviewed?: { expectedDecisionVersion?: number | null; expectedResolutionVersion?: number | null },
 ) {
   const dest = destination ?? DEFAULT_REFUND_DESTINATION;
   return sellerMutate(sellerPartyId, `/v1/seller/returns/${returnRequestId}/approve`, {
     destination: dest,
     refundDestination: dest,
+    // TB-279-R2 (D): the version of the snapshot the seller actually reviewed, never a fresh read at dispatch.
+    expectedDecisionVersion: reviewed?.expectedDecisionVersion ?? null,
+    expectedResolutionVersion: reviewed?.expectedResolutionVersion ?? null,
   });
 }
 
-export function sellerRejectReturn(sellerPartyId: string, returnRequestId: string, reason?: string) {
-  return sellerMutate(sellerPartyId, `/v1/seller/returns/${returnRequestId}/reject`, { reason: reason ?? null });
+export function sellerRejectReturn(
+  sellerPartyId: string,
+  returnRequestId: string,
+  reason?: string,
+  reviewed?: { expectedDecisionVersion?: number | null; expectedResolutionVersion?: number | null },
+) {
+  return sellerMutate(sellerPartyId, `/v1/seller/returns/${returnRequestId}/reject`, {
+    reason: reason ?? null,
+    expectedDecisionVersion: reviewed?.expectedDecisionVersion ?? null,
+    expectedResolutionVersion: reviewed?.expectedResolutionVersion ?? null,
+  });
 }
 
 /** فهرست مرجوعی Admin. */
@@ -1372,12 +1401,18 @@ export async function loadAdminReturnDetail(returnRequestId: string): Promise<Ad
   }
 }
 
-/** retry refund توسط Admin. */
+/** retry refund توسط Admin — TB-279-R2: fenced by the reviewed failed attempt AND decision revision. */
 export async function adminRetryReturnRefund(
   returnRequestId: string,
   expectedFailedAttemptId?: string | null,
+  expectedDecisionVersion?: number | null,
 ): Promise<AdminResult<ReturnSnapshot>> {
-  const query = expectedFailedAttemptId ? `?expectedFailedAttemptId=${encodeURIComponent(expectedFailedAttemptId)}` : "";
+  const params = new URLSearchParams();
+  if (expectedFailedAttemptId) params.set("expectedFailedAttemptId", expectedFailedAttemptId);
+  if (typeof expectedDecisionVersion === "number") {
+    params.set("expectedDecisionVersion", String(expectedDecisionVersion));
+  }
+  const query = params.toString() ? `?${params.toString()}` : "";
   try {
     const response = await fetch(
       `/v1/admin/returns/${encodeURIComponent(returnRequestId)}/retry-refund${query}`,
@@ -1488,12 +1523,20 @@ export async function adminReopenReturnForReview(input: {
   });
 }
 
-/** TB-279: publishes the reviewed per-item/condition split of a legacy multi-item case. */
+/** TB-279 / TB-279-R2: publishes the reviewed per-item/condition split of a legacy multi-item case. */
 export async function adminPublishReturnResolution(input: {
   returnRequestId: string;
   occurrenceKey: string;
   expectedResolutionVersion: number;
-  lines: { returnItemId: string; acceptedQuantity: number; rejectedQuantity: number; reason?: string | null }[];
+  lines: {
+    returnItemId: string;
+    acceptedUsable: number;
+    acceptedDamaged: number;
+    rejectedReceivedUsable: number;
+    rejectedReceivedDamaged: number;
+    rejectedUnreceived: number;
+    reason?: string | null;
+  }[];
 }): Promise<AdminResult<ReturnSnapshot>> {
   return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(input.returnRequestId)}/resolution`, {
     occurrenceKey: input.occurrenceKey,
@@ -1502,7 +1545,7 @@ export async function adminPublishReturnResolution(input: {
   });
 }
 
-/** TB-279: records ONE actual handback occurrence of rejected received goods to the owning customer. */
+/** TB-279 / TB-279-R2: records ONE actual handback occurrence of rejected received goods to the owning customer. */
 export async function adminRecordReturnCustody(input: {
   returnRequestId: string;
   occurrenceKey: string;
@@ -1510,6 +1553,8 @@ export async function adminRecordReturnCustody(input: {
   quantity: number;
   condition: "Usable" | "Damaged";
   proofReference: string;
+  /** TB-279-R2: the reviewed proof kind; only the operator attestation is an available owning fact today. */
+  proofKind?: "operator_attestation";
 }): Promise<AdminResult<ReturnSnapshot>> {
   return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(input.returnRequestId)}/custody`, {
     occurrenceKey: input.occurrenceKey,
@@ -1517,7 +1562,26 @@ export async function adminRecordReturnCustody(input: {
     quantity: input.quantity,
     condition: input.condition,
     proofReference: input.proofReference,
+    proofKind: input.proofKind ?? "operator_attestation",
   });
+}
+
+/**
+ * TB-279-R2 (R1-A): the deliberate FIRST refund, fenced by the reviewed EFFECTIVE decision revision.
+ * <para>
+ * The revision travels as the route's reviewed context (never as a body amount/payment), so a correction published
+ * after the operator reviewed the case refuses this start instead of sending money against the earlier plan.
+ * </para>
+ */
+export function adminStartReturnRefund(
+  returnRequestId: string,
+  expectedDecisionVersion: number | null,
+): Promise<AdminResult<ReturnSnapshot>> {
+  const query =
+    typeof expectedDecisionVersion === "number"
+      ? `?expectedDecisionVersion=${encodeURIComponent(String(expectedDecisionVersion))}`
+      : "";
+  return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(returnRequestId)}/start-refund${query}`, {});
 }
 
 /**

@@ -104,6 +104,61 @@ test("TB-276: every proven no-effect refusal the reviewed workflow can receive i
   assert.deepEqual(missing, []);
 });
 
+test("TB-279-R2: every operator refusal of the correction/resolution/custody/allocation surface is localized", () => {
+  const unknownFa = unknownAdminErrorMessage("fa");
+  const codes = [
+    "return.resolution.required",
+    "return.resolution.incomplete",
+    "return.resolution.invalid",
+    "return.resolution.received_exceeded",
+    "return.resolution.state_invalid",
+    "return.resolution.version_stale",
+    "return.resolution.actor_required",
+    "return.resolution.item_invalid",
+    "return.resolution.portion_required",
+    "return.resolution.portion_invalid",
+    "return.resolution.review_version_required",
+    "return.correction.not_applicable",
+    "return.correction.state_invalid",
+    "return.correction.financial_effect_recorded",
+    "return.correction.custody_recorded",
+    "return.correction.physical_effect_recorded",
+    "return.correction.source_effect_recorded",
+    "return.correction.source_unsupported",
+    "return.correction.capacity_conflict",
+    "return.correction.actor_required",
+    "return.correction.reason_required",
+    "return.correction.version_stale",
+    "return.correction.occurrence_conflict",
+    "return.custody.item_invalid",
+    "return.custody.quantity_invalid",
+    "return.custody.proof_required",
+    "return.custody.recipient_invalid",
+    "return.custody.over_handed",
+    "return.custody.state_invalid",
+    "return.custody.occurrence_conflict",
+    "return.custody.actor_required",
+    "return.custody.proof_kind_required",
+    "return.custody.proof_kind_unavailable",
+    "return.allocation.required",
+    "return.allocation.exceeded",
+    "return.allocation.stale",
+    "return.allocation.legacy_ambiguous",
+    "return.refund.budget_exceeded",
+    "return.refund.budget_binding_invalid",
+    "return.refund.review_version_required",
+    "return.approved_amount.conflict",
+  ];
+  const missing: string[] = [];
+  for (const code of codes) {
+    const fa = mapAdminErrorMessage(code, "fa");
+    const en = mapAdminErrorMessage(code, "en");
+    if (fa === unknownFa || fa.includes("return.") || !/[\u0600-\u06ff]/.test(fa)) missing.push(`${code}:fa`);
+    if (en.includes("return.") || !/[A-Za-z]/.test(en)) missing.push(`${code}:en`);
+  }
+  assert.deepEqual(missing, []);
+});
+
 test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {
   assert.equal(mapAdminErrorMessage("Bad Request", "fa"), unknownAdminErrorMessage("fa"));
   assert.equal(mapAdminErrorMessage("HTTP 400", "en"), unknownAdminErrorMessage("en"));

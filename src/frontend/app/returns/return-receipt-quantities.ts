@@ -19,6 +19,7 @@ import {
   compareUnits,
   isAlignedToUnit,
   normalizeQuantityInput,
+  parseExactUnits,
   parsePositiveExactUnits,
   unitsToWireNumber,
 } from "./return-quantity.ts";
@@ -68,6 +69,28 @@ export function evaluateQuantityEntry(
   if (decimalPlaces === null) return { units: null, value: null, problem: "unit_unknown" };
   if (ceilingUnits === null) return { units: null, value: null, problem: "ceiling_unknown" };
   if (!isAlignedToUnit(units, decimalPlaces)) return { units: null, value: null, problem: "precision" };
+  if (compareUnits(units, ceilingUnits) > 0) return { units: null, value: null, problem: "over_ceiling" };
+  return { units, value: unitsToWireNumber(units), problem: null };
+}
+
+/**
+ * TB-279-R2: ONE accepted portion of a resolution plan. Unlike a received quantity, "nothing of this inspected
+ * condition is accepted" is a lawful reviewed fact, so ZERO is representable here while the same exact-arithmetic,
+ * owning-unit precision and per-condition ceiling rules still refuse `0.5` on a piece unit or anything over the ceiling.
+ */
+export function evaluateAcceptedPortion(
+  raw: string,
+  decimalPlaces: number | null,
+  ceilingUnits: number | null,
+): { units: number | null; value: number | null; problem: QuantityProblem | null } {
+  const normalized = normalizeQuantityInput(raw);
+  if (normalized === "") return { units: null, value: null, problem: "empty" };
+  const units = parseExactUnits(normalized);
+  if (units === null) return { units: null, value: null, problem: "malformed" };
+  if (decimalPlaces === null) return { units: null, value: null, problem: "unit_unknown" };
+  if (ceilingUnits === null) return { units: null, value: null, problem: "ceiling_unknown" };
+  // `isAlignedToUnit` deliberately refuses zero (a receipt may not record nothing); a reviewed acceptance may.
+  if (units > 0 && !isAlignedToUnit(units, decimalPlaces)) return { units: null, value: null, problem: "precision" };
   if (compareUnits(units, ceilingUnits) > 0) return { units: null, value: null, problem: "over_ceiling" };
   return { units, value: unitsToWireNumber(units), problem: null };
 }

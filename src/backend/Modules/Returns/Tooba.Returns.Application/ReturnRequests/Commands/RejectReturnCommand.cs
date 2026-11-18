@@ -15,7 +15,9 @@ public sealed record RejectReturnCommand(
     Guid SellerPartyId,
     string? Reason = null,
     // TB-279: the EFFECTIVE decision revision the operator reviewed; a newer revision refuses this stale one.
-    int? ExpectedDecisionVersion = null) : IRequest<Result<ReturnSnapshot>>;
+    int? ExpectedDecisionVersion = null,
+    // TB-279-R2 (D): the reviewed PLAN revision the decision was taken against (required when one exists).
+    int? ExpectedResolutionVersion = null) : IRequest<Result<ReturnSnapshot>>;
 
 /// <summary>Handler — seller scope then directory reject.</summary>
 public sealed class RejectReturnHandler(IReturnDirectory returns)

@@ -1102,14 +1102,19 @@ public sealed class MarketplaceOperationalPackingChoice259Tests
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task<ReturnSnapshot> ApproveAsync(
-            Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+            Guid returnRequestId,
+            Guid actorUserId,
+            CancellationToken cancellationToken,
+            int? expectedDecisionVersion = null,
+            int? expectedResolutionVersion = null) => throw new NotSupportedException();
 
         public Task<ReturnSnapshot> RejectAsync(
             Guid returnRequestId,
             Guid actorUserId,
             string? reason,
-            CancellationToken cancellationToken) => throw new NotSupportedException();
+            CancellationToken cancellationToken,
+            int? expectedDecisionVersion = null,
+            int? expectedResolutionVersion = null) => throw new NotSupportedException();
 
         public Task<ReturnSnapshot> RetryRefundAsync(
             Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>

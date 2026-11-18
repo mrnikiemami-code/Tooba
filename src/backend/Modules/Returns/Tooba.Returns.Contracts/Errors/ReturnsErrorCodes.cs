@@ -119,6 +119,7 @@ public static class ReturnsErrorCodes
         AllocationLegacyAmbiguous,
         ResolutionPortionRequired,
         ResolutionPortionInvalid,
+        ResolutionReviewVersionRequired,
         CustodyProofKindRequired,
         CustodyProofKindUnavailable,
     };
@@ -550,6 +551,12 @@ public static class ReturnsErrorCodes
 
     /// <summary>TB-279-R1 (F2): the reviewed per-condition portions do not account for the claim coherently.</summary>
     public const string ResolutionPortionInvalid = "return.resolution.portion_invalid";
+
+    /// <summary>
+    /// TB-279-R2 (D): an approval (or a new reviewed plan) did not carry the exact reviewed plan version it was
+    /// decided against, so a decision can never bless a plan the operator did not actually review.
+    /// </summary>
+    public const string ResolutionReviewVersionRequired = "return.resolution.review_version_required";
 
     /// <summary>
     /// TB-279-R1 (F3): a custody proof kind is required — the operator either attests an actual in-person handback to

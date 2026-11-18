@@ -172,7 +172,17 @@ public sealed record AdminOrderOperationRequest(
     /// the source parcel/decision/hold/capture/readiness changed between review and confirmation. It is never used as
     /// an idempotency key, and it is not sent on an exact replay of an already-confirmed key.
     /// </summary>
-    string? DispatchPlanReviewFingerprint = null);
+    string? DispatchPlanReviewFingerprint = null,
+    /// <summary>
+    /// TB-279-R2 (D): the EFFECTIVE Returns decision revision the operator reviewed when approving/rejecting. A newer
+    /// revision refuses the stale review instead of deciding over a correction the operator never saw.
+    /// </summary>
+    int? ExpectedDecisionVersion = null,
+    /// <summary>
+    /// TB-279-R2 (D): the reviewed Returns PLAN revision the decision was taken against. Required when the case owns a
+    /// reviewed plan, so an approval can never bless a plan version the operator did not read.
+    /// </summary>
+    int? ExpectedResolutionVersion = null);
 
 /// <summary>TB-265: one claimed line of a courier-origin Returns case.</summary>
 public sealed record AdminCourierReturnLineSelection(

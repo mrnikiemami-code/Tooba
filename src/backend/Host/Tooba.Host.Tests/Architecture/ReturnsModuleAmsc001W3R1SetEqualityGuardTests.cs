@@ -375,10 +375,12 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
     {
         // TB-272 added the two creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal,
         // TB-273-R1 the recovery evidence-conflict and caller-transaction refusals, TB-274 the nine customer
-        // receipt/inspection/reason refusals and TB-278 the owning-unit creation refusal (all HTTP-reachable).
-        Assert.Equal(86, ReturnsErrorCodes.HttpReachable.Count);
+        // receipt/inspection/reason refusals, TB-278 the owning-unit creation refusal and TB-279/279-R2 the reviewed
+        // correction, per-item resolution (including the reviewed-plan version), custody, allocation and shared-budget
+        // refusals — all HTTP-reachable.
+        Assert.Equal(87, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(87, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(88, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         // No raw API-result or ad-hoc fault classification in the endpoint surface.
         var root = Repo();

@@ -180,24 +180,29 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             requestIds = requestIds.Where(x => x != excluded).ToList();
         }
 
-        if (requestIds.Count == 0)
+        // TB-279-R2 (C): a case whose status is no longer active can still physically HOLD goods, and its live
+        // allocation rows are a real capacity claim. The allocation read below therefore covers every case of the
+        // seller order, so an empty active-status set must never be answered as "nothing is occupied".
+        var allRequestIds = await _db.ReturnRequests.AsNoTracking()
+            .Where(x => x.SellerOrderId == sellerOrderId)
+            .Select(x => x.ReturnRequestId)
+            .ToListAsync(cancellationToken);
+        if (allRequestIds.Count == 0)
         {
             return LineOccupancy.Empty;
         }
 
-        var items = await _db.ReturnItems.AsNoTracking()
-            .Where(x => requestIds.Contains(x.ReturnRequestId))
-            .Select(x => new { x.ReturnRequestId, x.OrderLineId, x.Quantity })
-            .ToListAsync(cancellationToken);
+        var items = requestIds.Count == 0
+            ? new List<OccupiedItemRow>()
+            : await _db.ReturnItems.AsNoTracking()
+                .Where(x => requestIds.Contains(x.ReturnRequestId))
+                .Select(x => new OccupiedItemRow(x.ReturnRequestId, x.OrderLineId, x.Quantity))
+                .ToListAsync(cancellationToken);
 
         // Active (not released) allocations are the real capacity claim; a released row returned its quantity to the
         // pool when the case was rejected/cancelled. TB-279-R1 (F3): rejected/cancelled cases can still own HELD rows —
         // the goods they physically received stay claimed until a real handback — so the allocation read covers every
         // case of the seller order and lets the rows themselves (not the status) decide occupancy.
-        var allRequestIds = await _db.ReturnRequests.AsNoTracking()
-            .Where(x => x.SellerOrderId == sellerOrderId)
-            .Select(x => x.ReturnRequestId)
-            .ToListAsync(cancellationToken);
         var allocations = await _db.ReturnDeliveryAllocations.AsNoTracking()
             .Where(x => allRequestIds.Contains(x.ReturnRequestId) && x.ReleasedAt == null)
             .Select(x => new { x.ReturnRequestId, x.OrderLineId, x.SliceKey, x.Quantity })
@@ -221,6 +226,8 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
 
         return new LineOccupancy(returned, legacyUnallocated, allocatedElsewhere);
     }
+
+    private sealed record OccupiedItemRow(Guid ReturnRequestId, Guid OrderLineId, decimal Quantity);
 
     private sealed record LineOccupancy(
         IReadOnlyDictionary<Guid, decimal> Returned,

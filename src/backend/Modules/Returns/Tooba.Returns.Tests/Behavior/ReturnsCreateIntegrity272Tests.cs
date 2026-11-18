@@ -693,17 +693,20 @@ public sealed class ReturnsCreateIntegrity272Tests
         // occupying set, so a failed refund is never mistaken for a released one.
         var rejectOrder = Guid.NewGuid();
         var rejectLine = Guid.NewGuid();
+        var rejectParty = Guid.NewGuid();
         var rejectDirectory = BuildDirectory(
             db,
             clock,
-            [BuildOrder(rejectOrder, customer, 2m, [rejectLine])],
+            [BuildOrder(rejectOrder, customer, 2m, [rejectLine], sellerPartyId: rejectParty)],
             [BuildFulfillment(rejectOrder, (rejectLine, 2m))]);
         var rejected = await rejectDirectory.CreateAsync(
             Command(rejectOrder, customer, "tb272-reject", [new ReturnLineCommand(rejectLine, 2m)]),
             CancellationToken.None);
-        var rejectedRow = await db.ReturnRequests.SingleAsync(x => x.ReturnRequestId == rejected.ReturnRequestId);
-        rejectedRow.Reject(clock.UtcNow);
-        await db.SaveChangesAsync();
+        // TB-279-R2 (C): the owning rejection path is what releases the case's delivery claim, so the rejection runs
+        // through the SAME directory the way the operator path does (never an entity mutation that skips the release).
+        await rejectDirectory.RejectAsync(
+            new RejectReturnCommand(rejected.ReturnRequestId, Guid.NewGuid(), rejectParty, "کالا سالم نبود"),
+            CancellationToken.None);
 
         var released = await rejectDirectory.EvaluateEligibilityAsync(rejectOrder, CancellationToken.None);
         Assert.Equal(2m, released.Lines.Single(x => x.OrderLineId == rejectLine).RemainingReturnableQuantity);

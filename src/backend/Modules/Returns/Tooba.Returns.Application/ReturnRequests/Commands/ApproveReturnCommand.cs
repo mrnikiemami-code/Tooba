@@ -16,7 +16,10 @@ public sealed record ApproveReturnCommand(
     Guid SellerPartyId,
     RefundDestination? RefundDestination = null,
     // TB-279: the EFFECTIVE decision revision the operator reviewed; a newer revision refuses this stale one.
-    int? ExpectedDecisionVersion = null) : IRequest<Result<ReturnSnapshot>>;
+    int? ExpectedDecisionVersion = null,
+    // TB-279-R2 (D): the reviewed PLAN revision the decision was actually taken against. Required when the case owns a
+    // reviewed plan, so an approval can never bless a plan version the operator did not read.
+    int? ExpectedResolutionVersion = null) : IRequest<Result<ReturnSnapshot>>;
 
 /// <summary>Handler — seller scope then directory approve.</summary>
 public sealed class ApproveReturnHandler(IReturnDirectory returns)

@@ -152,6 +152,7 @@ public sealed partial class ReturnDirectory
             var unitDecimalPlaces = await ReadOwningUnitDecimalPlacesAsync(
                 request,
                 requestedItems.Select(x => (x.ReturnItemId, x.OrderLineId)).ToArray(),
+                ReturnsErrorCodes.ReceiptUnitQuantityInvalid,
                 cancellationToken);
             foreach (var line in lines)
             {
@@ -289,12 +290,13 @@ public sealed partial class ReturnDirectory
     private async Task<IReadOnlyDictionary<Guid, int>> ReadOwningUnitDecimalPlacesAsync(
         ReturnRequest request,
         IReadOnlyList<(Guid ReturnItemId, Guid OrderLineId)> items,
+        string refusalCode,
         CancellationToken cancellationToken)
     {
         var context = await _orders.GetReturnContextAsync(request.SellerOrderId, cancellationToken);
         if (context is null)
         {
-            throw new ContractOperationException(ReturnsErrorCodes.ReceiptUnitQuantityInvalid);
+            throw new ContractOperationException(refusalCode);
         }
 
         var orderLineById = new Dictionary<Guid, Tooba.Order.Contracts.Returns.OrderReturnLineSnapshot>();
@@ -312,7 +314,7 @@ public sealed partial class ReturnDirectory
                 || orderLine.QuantityDecimalPlacesSnapshot is not { } places
                 || places is < 0 or > OwningUnitQuantity.MaxDecimalPlaces)
             {
-                throw new ContractOperationException(ReturnsErrorCodes.ReceiptUnitQuantityInvalid);
+                throw new ContractOperationException(refusalCode);
             }
 
             placesByItem[item.ReturnItemId] = places;

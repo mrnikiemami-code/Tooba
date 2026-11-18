@@ -248,7 +248,7 @@ public sealed class ReturnsDecisionCorrection279Tests
     // ------------------------------------------------------------------ D: delivery-slice allocation
 
     [Fact]
-    public void An_old_legacy_case_is_discounted_from_the_oldest_slice_only()
+    public void An_old_legacy_case_is_never_guessed_onto_one_of_two_delivery_slices()
     {
         var lineId = Guid.NewGuid();
         var slices = new[]
@@ -265,10 +265,44 @@ public sealed class ReturnsDecisionCorrection279Tests
             allocatedElsewhere: new Dictionary<string, decimal>(),
             legacyUnallocated: 1m);
 
+        // TB-279-R2 (C/E): the origin of a legacy occupancy is NOT provable with two deliveries of the line, so no
+        // slice is trimmed and none may be allocated from — the caller answers the typed ambiguity instead.
         Assert.Equal(2, availability.Count);
-        Assert.Equal(0m, availability[0].AvailableQuantity);
-        Assert.Equal(1m, availability[1].AvailableQuantity);
-        Assert.All(availability, x => Assert.True(x.IsInWindow));
+        Assert.All(availability, x => Assert.True(x.LegacyAmbiguous));
+        Assert.All(availability, x => Assert.Equal(1m, x.AvailableQuantity));
+        Assert.True(ReturnAllocationPolicy.HasAmbiguousLegacy(availability));
+        Assert.Null(ReturnAllocationPolicy.Allocate(availability, 1m));
+    }
+
+    [Fact]
+    public void A_legacy_case_with_one_delivery_is_discounted_from_that_only_possible_origin()
+    {
+        var lineId = Guid.NewGuid();
+        var availability = ReturnAllocationPolicy.Describe(
+            lineId,
+            [new ReturnDeliverySliceSource(lineId, 2m, Now.AddDays(-2))],
+            windowDays: 7,
+            now: Now,
+            allocatedElsewhere: new Dictionary<string, decimal>(),
+            legacyUnallocated: 3m);
+
+        // Exactly one possible origin, but the provable leftover cannot cover the legacy claim: still ambiguous.
+        Assert.True(availability.Single().LegacyAmbiguous);
+        Assert.Null(ReturnAllocationPolicy.Allocate(availability, 1m));
+
+        var covered = ReturnAllocationPolicy.Describe(
+            lineId,
+            [new ReturnDeliverySliceSource(lineId, 2m, Now.AddDays(-2))],
+            windowDays: 7,
+            now: Now,
+            allocatedElsewhere: new Dictionary<string, decimal>(),
+            legacyUnallocated: 1m);
+
+        Assert.False(covered.Single().LegacyAmbiguous);
+        Assert.Equal(1m, covered.Single().AvailableQuantity);
+        var allocated = ReturnAllocationPolicy.Allocate(covered, 1m);
+        Assert.NotNull(allocated);
+        Assert.Equal(1m, allocated!.Single().Quantity);
     }
 
     [Fact]

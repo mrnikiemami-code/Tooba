@@ -10,14 +10,21 @@ using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Endpoints.Seller;
 
-/// <summary>Wire-only approve.</summary>
-public sealed record ApproveReturnRequest(string? RefundDestination = null, string? Destination = null)
+/// <summary>Wire-only approve. TB-279-R2 (D): the reviewed decision/plan revisions the seller looked at travel too.</summary>
+public sealed record ApproveReturnRequest(
+    string? RefundDestination = null,
+    string? Destination = null,
+    int? ExpectedDecisionVersion = null,
+    int? ExpectedResolutionVersion = null)
 {
     public string? EffectiveRefundDestination => RefundDestination ?? Destination;
 }
 
 /// <summary>Wire-only reject.</summary>
-public sealed record RejectReturnRequest(string? Reason);
+public sealed record RejectReturnRequest(
+    string? Reason,
+    int? ExpectedDecisionVersion = null,
+    int? ExpectedResolutionVersion = null);
 
 /// <summary>Thin seller Returns HTTP routes.</summary>
 public static class ReturnSellerEndpoints
@@ -62,8 +69,11 @@ public static class ReturnSellerEndpoints
         }
 
         var (actorUserId, sellerPartyId) = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        // TB-279-R2 (D): the seller surface freezes the version of the snapshot it actually loaded, so a correction
+        // published since then refuses instead of being blessed by an older read.
         return api.From(await sender.Send(new ApproveReturnCommand(
-            returnRequestId, actorUserId, sellerPartyId, destination), cancellationToken));
+            returnRequestId, actorUserId, sellerPartyId, destination,
+            body.ExpectedDecisionVersion, body.ExpectedResolutionVersion), cancellationToken));
     }
 
     private static async Task<IResult> SellerRejectAsync(
@@ -73,6 +83,7 @@ public static class ReturnSellerEndpoints
     {
         var (actorUserId, sellerPartyId) = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
         return api.From(await sender.Send(new RejectReturnCommand(
-            returnRequestId, actorUserId, sellerPartyId, body.Reason), cancellationToken));
+            returnRequestId, actorUserId, sellerPartyId, body.Reason,
+            body.ExpectedDecisionVersion, body.ExpectedResolutionVersion), cancellationToken));
     }
 }

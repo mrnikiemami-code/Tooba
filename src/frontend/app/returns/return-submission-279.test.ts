@@ -12,6 +12,7 @@ import {
   clearReturnSubmissionIfCurrent,
   hasUnresolvedCustomerReturnSubmission,
   readReturnSubmission,
+  recordChildOutcome,
   serializeReturnSubmission,
   storeReturnSubmission,
   submissionStorageKey,
@@ -168,4 +169,77 @@ test("the viewer scope survives serialization, so a child-outcome write cannot d
   assert.ok(storeReturnSubmission(storage, read.kind === "found" ? read.submission : act));
   assert.ok(storage.dump()["tb279:customer-return-submission:user-3:co-3"]);
   assert.equal(storage.dump()["tb279:customer-return-submission:co-3"], undefined);
+});
+
+/**
+ * TB-279-R2 (F): an OLDER viewer-less act (`tb278:customer-return-submission:`) can never be attributed to the customer
+ * in front of the surface. Both v1 key shapes are detected, the bytes are preserved verbatim, and the act is reported as
+ * unresolved evidence instead of "nothing here" so no new act can silently overwrite it.
+ */
+test("a legacy viewer-less act is detected in both key shapes, preserved and treated as unresolved", () => {
+  const storage = memoryStorage();
+  const legacyRaw = JSON.stringify({ version: 1, submissionKey: "old", checkoutId: "co-legacy", children: [] });
+  storage.setItem("tb278:customer-return-submission:co-legacy", legacyRaw);
+
+  assert.equal(readReturnSubmission(storage, "co-legacy", "user-1").kind, "legacy_unresolved");
+  assert.equal(hasUnresolvedCustomerReturnSubmission(storage, "co-legacy", "user-1"), true);
+  // The bytes are never rewritten, compared or cleared by the current surface.
+  assert.equal(storage.dump()["tb278:customer-return-submission:co-legacy"], legacyRaw);
+
+  // The viewer-scoped v1 shape is the same evidence for the same checkout.
+  const scoped = memoryStorage();
+  scoped.setItem("tb278:customer-return-submission:user-9:co-legacy", legacyRaw);
+  assert.equal(readReturnSubmission(scoped, "co-legacy", "user-1").kind, "legacy_unresolved");
+
+  // Another checkout is unaffected.
+  assert.equal(readReturnSubmission(storage, "co-other", "user-1").kind, "none");
+});
+
+/**
+ * TB-279-R2 (F): a child answer is applied to the EXACT stored envelope only. A replaced/re-scoped/tampered act — or a
+ * child whose frozen bytes no longer match — drops the late answer instead of writing it onto different bytes.
+ */
+test("a child outcome is applied only to the exact stored envelope and the exact frozen child", () => {
+  const storage = memoryStorage();
+  const act = buildReturnSubmission({
+    checkoutId: "co-exact",
+    destination: "OriginalPayment",
+    viewerId: "user-4",
+    selections: [firstPortion],
+    submissionKey: "sub-exact",
+    recordedAt: "2026-11-18T00:00:00.000Z",
+    newChildKey: () => "key",
+  });
+  assert.ok(act);
+  assert.ok(storeReturnSubmission(storage, act));
+  const child = act.children[0];
+  const expected = {
+    envelope: serializeReturnSubmission(act),
+    childBody: child.body,
+    idempotencyKey: child.idempotencyKey,
+  };
+
+  // A stale envelope (the act was replaced) is refused.
+  assert.equal(
+    recordChildOutcome(storage, { checkoutId: "co-exact", viewerId: "user-4" }, "sub-exact", child.key, { kind: "unknown", refusalCode: null }, { ...expected, envelope: "{}" }),
+    null,
+  );
+  // A drifted child body/key is refused too.
+  assert.equal(
+    recordChildOutcome(storage, { checkoutId: "co-exact", viewerId: "user-4" }, "sub-exact", child.key, { kind: "unknown", refusalCode: null }, { ...expected, childBody: "{}" }),
+    null,
+  );
+  assert.equal(storage.dump()[submissionStorageKey("co-exact", "user-4")], serializeReturnSubmission(act));
+
+  // The exact answer is applied.
+  const updated = recordChildOutcome(
+    storage,
+    { checkoutId: "co-exact", viewerId: "user-4" },
+    "sub-exact",
+    child.key,
+    { kind: "recorded", caseId: "case-1", caseNumber: "RET-1" },
+    expected,
+  );
+  assert.ok(updated);
+  assert.equal(updated.children[0].state, "recorded");
 });

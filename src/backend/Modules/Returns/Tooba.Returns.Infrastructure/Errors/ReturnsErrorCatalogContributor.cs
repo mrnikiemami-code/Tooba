@@ -95,6 +95,7 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.AllocationLegacyAmbiguous, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "This legacy claim owns quantity that is bound to no single delivered slice."),
         D(ReturnsErrorCodes.ResolutionPortionRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The reviewed plan must name the per-condition accepted/rejected portions."),
         D(ReturnsErrorCodes.ResolutionPortionInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The reviewed per-condition portions do not account for the claim."),
+        D(ReturnsErrorCodes.ResolutionReviewVersionRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A decision on a reviewed plan must name the reviewed resolution revision."),
         D(ReturnsErrorCodes.CustodyProofKindRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A handback must name its explicit proof kind."),
         D(ReturnsErrorCodes.CustodyProofKindUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The named handback proof kind has no owning fact here."),
     ];

@@ -82,7 +82,14 @@ public sealed partial class AdminOrderOperationsOrchestrator
         CancellationToken cancellationToken)
     {
         var returnRequestId = RequireReturnRequestId(request);
-        return await _returns.ApproveAsync(returnRequestId, actorUserId, cancellationToken);
+        // TB-279-R2 (D): the reviewed decision/plan revisions ride with the operation, so the Returns authority can
+        // refuse a decision taken against a revision or plan the operator never saw.
+        return await _returns.ApproveAsync(
+            returnRequestId,
+            actorUserId,
+            cancellationToken,
+            request.ExpectedDecisionVersion,
+            request.ExpectedResolutionVersion);
     }
 
     private async Task<object> RejectReturnCoreAsync(
@@ -91,7 +98,13 @@ public sealed partial class AdminOrderOperationsOrchestrator
         CancellationToken cancellationToken)
     {
         var returnRequestId = RequireReturnRequestId(request);
-        return await _returns.RejectAsync(returnRequestId, actorUserId, request.Reason, cancellationToken);
+        return await _returns.RejectAsync(
+            returnRequestId,
+            actorUserId,
+            request.Reason,
+            cancellationToken,
+            request.ExpectedDecisionVersion,
+            request.ExpectedResolutionVersion);
     }
 
     private void ProjectPaymentActions(

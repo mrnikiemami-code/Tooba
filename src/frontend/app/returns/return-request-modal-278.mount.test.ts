@@ -38,6 +38,7 @@ import {
 import {
   buildReturnSubmission,
   readReturnSubmission,
+  RETURN_SUBMISSION_LEGACY_PREFIX,
   serializeReturnSubmission,
   storeReturnSubmission,
   submissionStorageKey,
@@ -594,6 +595,160 @@ test("the customer modal is the shared design-system Dialog, not a private fixed
   } finally {
     await tree.unmount();
     stub.restore();
+    window.sessionStorage.clear();
+  }
+});
+
+/**
+ * TB-279-R2 (F / G6): the lifecycle fences of the frozen act, mounted on the real modal. A surface that goes away, an
+ * older viewer-less witness and an act whose stored bytes were replaced while an answer was in flight must all fail
+ * closed — no second send, no stale toast, no old-outcome write and no clear.
+ */
+test("unmounting while the first of two children is on the wire stops the second send and never notifies", async () => {
+  window.sessionStorage.clear();
+  const original = globalThis.fetch;
+  let started = 0;
+  let release: (() => void) | null = null;
+  globalThis.fetch = (async () => {
+    started += 1;
+    return new Promise<Response>((resolve) => {
+      release = () => resolve(respond(200, snapshot(`rr-unmount-${started}`, "so-a")));
+    });
+  }) as typeof fetch;
+  const submitted: number[] = [];
+  const tree = await mount(
+    createElement(
+      "div",
+      null,
+      createElement(ReturnRequestModal, {
+        open: true,
+        onClose: () => undefined,
+        checkoutId: CHECKOUT_ID,
+        orderReference: "REF-278",
+        viewerId: "user-278",
+        sellers: sellers(),
+        onSubmitted: (snaps) => submitted.push(snaps.length),
+      }),
+      createElement(ToastContainer, { autoClose: false, newestOnTop: true }),
+    ),
+  );
+  try {
+    await flush();
+    await toggleLine(tree.container, "ol-socks");
+    await setInputValue(q(tree.container, "[data-testid='return-line-quantity-ol-socks']"), "2");
+    await toggleLine(tree.container, "ol-lamp");
+    await setInputValue(q(tree.container, "[data-testid='return-line-quantity-ol-lamp']"), "1.25");
+    await setSelectValue(q(tree.container, "#return-shared-reason"), "defective");
+    await setTextarea(q(tree.container, "#return-description"), "دو قلم را برمی‌گردانم.");
+
+    const button = submitButton(tree.container);
+    assert.ok(button);
+    await click(button);
+    await waitFor(() => started === 1);
+
+    // The customer leaves the surface while the FIRST child is still unanswered.
+    await tree.unmount();
+    (release as (() => void) | null)?.();
+    await flush();
+    await flush();
+
+    assert.equal(started, 1, "no second child is ever sent from an unmounted surface");
+    assert.deepEqual(submitted, [], "a stale answer never calls the submission callback");
+
+    // The exact evidence of the first send survives where it belongs: the act is not cleared by a dead surface.
+    const stored = readReturnSubmission(window.sessionStorage, CHECKOUT_ID, "user-278");
+    assert.equal(stored.kind, "found");
+  } finally {
+    globalThis.fetch = original;
+    window.sessionStorage.clear();
+  }
+});
+
+test("an older viewer-less witness blocks a NEW act instead of pretending nothing is pending", async () => {
+  window.sessionStorage.clear();
+  // The legacy TB-278 key has no viewer scope, so it cannot be attributed to this account.
+  window.sessionStorage.setItem(`${RETURN_SUBMISSION_LEGACY_PREFIX}${CHECKOUT_ID}`, "{\"legacy\":true}");
+  const legacyBefore = window.sessionStorage.getItem(`${RETURN_SUBMISSION_LEGACY_PREFIX}${CHECKOUT_ID}`);
+  const stub = stubCustomerReturns([{ kind: "ok", id: "rr-legacy" }]);
+  const tree = await mountModal(sellers());
+  try {
+    await flush();
+    assert.equal(qq(tree.container, "[data-testid='customer-return-legacy-evidence']").length, 1);
+
+    await fillAct(tree);
+    const button = submitButton(tree.container);
+    assert.ok(button);
+    assert.equal(button.disabled, true, "unresolved older evidence keeps the surface closed");
+    await click(button);
+    await flush();
+
+    assert.equal(stub.posts().length, 0, "no new act may be created over unresolved evidence");
+    assert.equal(
+      window.sessionStorage.getItem(`${RETURN_SUBMISSION_LEGACY_PREFIX}${CHECKOUT_ID}`),
+      legacyBefore,
+      "the older witness is preserved untouched",
+    );
+    assert.equal(
+      window.sessionStorage.getItem(submissionStorageKey(CHECKOUT_ID, "user-278")),
+      null,
+      "a viewer-scoped act is never minted on top of it",
+    );
+  } finally {
+    await tree.unmount();
+    stub.restore();
+    window.sessionStorage.clear();
+  }
+});
+
+test("replacing the frozen bytes while the answer is in flight never applies the old outcome", async () => {
+  window.sessionStorage.clear();
+  const original = globalThis.fetch;
+  let started = 0;
+  let release: (() => void) | null = null;
+  globalThis.fetch = (async () => {
+    started += 1;
+    return new Promise<Response>((resolve) => {
+      release = () => resolve(respond(200, snapshot("rr-tampered", "so-a")));
+    });
+  }) as typeof fetch;
+  const tree = await mountModal(sellers());
+  try {
+    await flush();
+    await fillAct(tree);
+    const button = submitButton(tree.container);
+    assert.ok(button);
+    await click(button);
+    await waitFor(() => started === 1);
+
+    // A second tab (or the customer's own editing of storage) replaces the act under the SAME act and child key.
+    const key = submissionStorageKey(CHECKOUT_ID, "user-278");
+    const storedRaw = window.sessionStorage.getItem(key);
+    assert.ok(storedRaw);
+    const tampered = storedRaw.replace(/"quantityText":"2"/, "\"quantityText\":\"1\"");
+    assert.notEqual(tampered, storedRaw, "the replacement really changed the frozen bytes");
+    window.sessionStorage.setItem(key, tampered);
+
+    (release as (() => void) | null)?.();
+    await flush();
+    await flush();
+
+    assert.equal(
+      window.sessionStorage.getItem(key),
+      tampered,
+      "an answer to bytes that are no longer stored never rewrites or clears the act",
+    );
+    const after = JSON.parse(window.sessionStorage.getItem(key) ?? "{}") as {
+      children?: Array<{ state?: string }>;
+    };
+    assert.equal(after.children?.[0]?.state, "pending", "the stale answer is never recorded as this child's outcome");
+    assert.equal(
+      toastTexts(tree.container).some((text) => text.includes("درخواست مرجوعی ثبت شد")),
+      false,
+      "the old outcome is never announced as a success",
+    );
+  } finally {
+    await tree.unmount();
+    globalThis.fetch = original;
     window.sessionStorage.clear();
   }
 });

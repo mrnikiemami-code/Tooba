@@ -161,8 +161,17 @@ public sealed class ReturnsClosure279RelationalTests
         var directory = BuildDirectory(db, new FixedPaymentReader(paymentId, checkoutId, 100m));
 
         // The operator reviewed effective version 5, which is not what the case carries: refuse with zero writes.
-        var stale = await Assert.ThrowsAsync<ContractOperationException>(() => directory.ApproveAsync(
+        // TB-279-R2 (D): a decision over a reviewed plan must FIRST name the plan revision it was taken against;
+        // omitting it is its own typed refusal and still writes nothing.
+        var planless = await Assert.ThrowsAsync<ContractOperationException>(() => directory.ApproveAsync(
             new ApproveReturnCommand(returnRequestId, Guid.NewGuid(), SellerPartyId, RefundDestination.OriginalPayment, 5),
+            CancellationToken.None));
+        Assert.Equal(ReturnsErrorCodes.ResolutionReviewVersionRequired, planless.Code);
+
+        var stale = await Assert.ThrowsAsync<ContractOperationException>(() => directory.ApproveAsync(
+            new ApproveReturnCommand(
+                returnRequestId, Guid.NewGuid(), SellerPartyId, RefundDestination.OriginalPayment, 5,
+                ExpectedResolutionVersion: 1),
             CancellationToken.None));
         Assert.Equal(ReturnsErrorCodes.CorrectionVersionStale, stale.Code);
 
@@ -174,7 +183,9 @@ public sealed class ReturnsClosure279RelationalTests
 
         // The reviewed version 0 is the effective one: decision + status + frozen amount move in this ONE transaction.
         var approved = await directory.ApproveAsync(
-            new ApproveReturnCommand(returnRequestId, Guid.NewGuid(), SellerPartyId, RefundDestination.OriginalPayment, 0),
+            new ApproveReturnCommand(
+                returnRequestId, Guid.NewGuid(), SellerPartyId, RefundDestination.OriginalPayment, 0,
+                ExpectedResolutionVersion: 1),
             CancellationToken.None);
 
         Assert.Equal(ReturnRequestStatus.Approved, approved.Status);

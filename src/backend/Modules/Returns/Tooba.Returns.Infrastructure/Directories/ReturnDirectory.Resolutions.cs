@@ -98,6 +98,14 @@ public sealed partial class ReturnDirectory
             }
 
             var itemsById = request.Items.ToDictionary(x => x.ReturnItemId);
+            // TB-279-R2 (D): a reviewed portion is a number of things in the OWNING unit, exactly like a receipt. An
+            // unanswered/foreign precision refuses the plan instead of inventing a scale, and this read happens before
+            // any resolution row is written.
+            var unitDecimalPlaces = await ReadOwningUnitDecimalPlacesAsync(
+                request,
+                request.Items.Select(x => (x.ReturnItemId, x.OrderLineId)).ToArray(),
+                ReturnsErrorCodes.ResolutionPortionInvalid,
+                cancellationToken);
             var seen = new HashSet<Guid>();
             var version = currentVersion + 1;
             var rows = new List<ReturnItemResolution>(command.Lines.Count);
@@ -130,6 +138,14 @@ public sealed partial class ReturnDirectory
                 if (portions.Any(value => value < 0m || !PersistedReturnQuantity.IsExactlyRepresentable(value)))
                 {
                     throw new ContractOperationException(ReturnsErrorCodes.ResolutionInvalid);
+                }
+
+                // TB-279-R2 (D): every portion must land on the owning line's unit quantum (zero is lawful — a portion
+                // may be deliberately empty — but a fractional piece is never rounded away).
+                var places = unitDecimalPlaces[item.ReturnItemId];
+                if (portions.Any(value => value != 0m && !OwningUnitQuantity.IsAlignedTo(value, places)))
+                {
+                    throw new ContractOperationException(ReturnsErrorCodes.ResolutionPortionInvalid);
                 }
 
                 var accepted = acceptedUsable + acceptedDamaged;
@@ -311,6 +327,22 @@ public sealed partial class ReturnDirectory
                 throw new ContractOperationException(ReturnsErrorCodes.CustodyRecipientInvalid);
             }
 
+            // TB-279-R2 (D): a handback is a physical quantity of the owning unit, so it is checked against the same
+            // quantum a receipt/resolution portion is. An unanswered precision refuses the handback.
+            var item = request.Items.SingleOrDefault(x => x.ReturnItemId == command.ReturnItemId)
+                ?? throw new ContractOperationException(ReturnsErrorCodes.CustodyItemInvalid);
+            var unitDecimalPlaces = await ReadOwningUnitDecimalPlacesAsync(
+                request,
+                [(command.ReturnItemId, item.OrderLineId)],
+                ReturnsErrorCodes.CustodyQuantityInvalid,
+                cancellationToken);
+            if (!OwningUnitQuantity.IsAlignedTo(
+                    command.Quantity,
+                    unitDecimalPlaces[command.ReturnItemId]))
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.CustodyQuantityInvalid);
+            }
+
             var recordedAt = _clock.UtcNow;
             var custodyId = _ids.NewId();
             var custodyFact = new ReturnCustodySnapshot(
@@ -340,18 +372,19 @@ public sealed partial class ReturnDirectory
 
             await _db.SaveChangesAsync(cancellationToken);
 
-            // TB-279-R1 (F3): the handed-back units are no longer held, so the line's delivery claim shrinks by exactly
-            // that portion. A partial handback therefore releases only its own part and a fully handed-back line
-            // returns the rest to the pool — while the seller-order serialization above keeps this atomic with the
-            // custody fact itself.
-            var item = request.Items.SingleOrDefault(x => x.ReturnItemId == command.ReturnItemId);
+            // TB-279-R1 (F3) / TB-279-R2 (C): the handed-back units are no longer held, so the line's delivery claim
+            // shrinks by exactly that portion — but ONLY that portion. The occupied quantity of this line is the
+            // ACCEPTED consumption plus the custody still owed, so trimming to "owed" alone would silently release the
+            // accepted units a sibling case must never take. The seller-order serialization above keeps this atomic
+            // with the custody fact itself; `item` was already resolved and quantum-checked above.
             if (item is not null)
             {
                 var custodyAfter = snapshot.Custody.Append(custodyFact).ToArray();
+                var occupied = line.Accepted + ReturnResolutionPolicy.OwedCustody(line, custodyAfter);
                 await TrimActiveAllocationsToHeldAsync(
                     request.ReturnRequestId,
                     item,
-                    ReturnResolutionPolicy.OwedCustody(line, custodyAfter),
+                    occupied,
                     allocateWhenMissing: false,
                     cancellationToken);
             }
@@ -403,7 +436,11 @@ public sealed partial class ReturnDirectory
         return token switch
         {
             ReturnCustodyProofKindParser.OperatorAttestation => ReturnCustodyProofKindParser.OperatorAttestation,
-            ReturnCustodyProofKindParser.CarrierDeliveredBack => ReturnCustodyProofKindParser.CarrierDeliveredBack,
+            // TB-279-R2 (E): a carrier "delivered back" claim has NO owning carrier reader behind it yet, so it can
+            // never be stored as if it were a verified fact. The token is recognised and refused with its own typed
+            // unavailable code instead of being accepted as a free-text note or silently downgraded to an attestation.
+            ReturnCustodyProofKindParser.CarrierDeliveredBack =>
+                throw new ContractOperationException(ReturnsErrorCodes.CustodyProofKindUnavailable),
             _ => throw new ContractOperationException(ReturnsErrorCodes.CustodyProofKindUnavailable),
         };
     }

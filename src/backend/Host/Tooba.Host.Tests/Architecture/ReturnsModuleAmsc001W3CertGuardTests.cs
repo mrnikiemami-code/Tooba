@@ -193,14 +193,16 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         // Single canonical stable-code home with the reachability split preserved. TB-272 added the two
         // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal, TB-273-R1 the two
         // recovery evidence/transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals and
-        // TB-278 the owning-unit creation quantum refusal, all HTTP-reachable.
-        Assert.Equal(86, ReturnsErrorCodes.HttpReachable.Count);
+        // TB-278 the owning-unit creation quantum refusal and TB-279/279-R2 the reviewed correction, per-item
+        // resolution (including the reviewed-plan version), custody, delivery-allocation and shared-budget
+        // refusals, all HTTP-reachable.
+        Assert.Equal(87, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(87, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(88, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(86, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(87, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.

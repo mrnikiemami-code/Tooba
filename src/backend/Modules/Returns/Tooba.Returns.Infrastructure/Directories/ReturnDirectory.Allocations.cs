@@ -86,11 +86,39 @@ public sealed partial class ReturnDirectory
     private async Task ReleaseRejectedDeliveriesAsync(ReturnRequest request, CancellationToken cancellationToken)
     {
         var receiving = await ReadReceivingAsync(request, cancellationToken);
+        // TB-279-R2 (C): the occupied quantity of a rejected line is NOT "whatever the receipt happened to say". A
+        // reviewed plan can accept part of a line while declining the rest, and the accepted portion keeps consuming
+        // its delivery slice exactly like the declined-but-received one. Releasing down to the receipt alone (or to
+        // zero when the evidence is incoherent) would hand a sibling case goods this case still owns.
+        var storedResolutions = await _db.ReturnItemResolutions.AsNoTracking()
+            .Where(x => x.ReturnRequestId == request.ReturnRequestId)
+            .ToListAsync(cancellationToken);
+        var latestVersion = storedResolutions.Count == 0 ? 0 : storedResolutions.Max(x => x.Version);
+        var resolvedById = storedResolutions
+            .Where(x => x.Version == latestVersion)
+            .ToDictionary(x => x.ReturnItemId);
         foreach (var item in request.Items)
         {
             var held = receiving is { IsCoherent: true }
                 ? receiving.UsableOf(item.ReturnItemId) + receiving.DamagedOf(item.ReturnItemId)
                 : 0m;
+            if (resolvedById.TryGetValue(item.ReturnItemId, out var resolved))
+            {
+                // TB-279-R2 (C): the occupied quantity is accepted + declined-but-received, PER CONDITION. A stored
+                // portion that is not fully populated is not provable here, so `held` is kept as the higher claim.
+                var acceptedUsable = resolved.AcceptedUsableQuantity;
+                var acceptedDamaged = resolved.AcceptedDamagedQuantity;
+                var rejectedUsable = resolved.RejectedReceivedUsableQuantity;
+                var rejectedDamaged = resolved.RejectedReceivedDamagedQuantity;
+                if (acceptedUsable is not null && acceptedDamaged is not null
+                    && rejectedUsable is not null && rejectedDamaged is not null)
+                {
+                    var occupied = acceptedUsable.Value + acceptedDamaged.Value
+                        + rejectedUsable.Value + rejectedDamaged.Value;
+                    held = Math.Max(held, occupied);
+                }
+            }
+
             await TrimActiveAllocationsToHeldAsync(
                 request.ReturnRequestId,
                 item,
@@ -132,8 +160,7 @@ public sealed partial class ReturnDirectory
                 await OwningSellerOrderIdAsync(returnRequestId, cancellationToken),
                 cancellationToken,
                 excludeReturnRequestId: returnRequestId);
-            var line = eligibility.Lines.FirstOrDefault(x => x.OrderLineId == item.OrderLineId);
-            var bound = line?.Slices is { Count: > 0 } slices
+            var line = eligibility.Lines.FirstOrDefault(x => x.OrderLineId == item.OrderLineId);            var bound = line?.Slices is { Count: > 0 } slices
                 ? ReturnAllocationPolicy.Allocate(slices, held)
                 : null;
             if (bound is null)
@@ -236,13 +263,36 @@ public sealed partial class ReturnDirectory
 
         if (rows.Count > 0)
         {
-            if (rows.Any(x => x.ReleasedAt is not null))
+            var released = rows.Where(x => x.ReleasedAt is not null).ToArray();
+            if (released.Length == 0)
             {
-                // The exact capacity this case owned is re-acquired under the caller's seller-order serialization.
-                foreach (var row in rows)
+                return;
+            }
+
+            // TB-279-R2 (E): the correction re-acquires the EXACT slices this case previously owned — not an
+            // aggregate quantity that could be taken from a newer delivery. Each released slice must still have its
+            // own leftover, so a sibling case that already consumed it is the typed conflict with ZERO rows changed.
+            var ownedEligibility = await _eligibility.EvaluateAsync(
+                request.SellerOrderId,
+                cancellationToken,
+                excludeReturnRequestId: request.ReturnRequestId);
+            foreach (var lineGroup in released.GroupBy(x => x.OrderLineId))
+            {
+                var line = ownedEligibility.Lines.FirstOrDefault(x => x.OrderLineId == lineGroup.Key);
+                foreach (var sliceGroup in lineGroup.GroupBy(x => x.SliceKey, StringComparer.Ordinal))
                 {
-                    row.ReleasedAt = null;
+                    var slice = line?.Slices.FirstOrDefault(x =>
+                        string.Equals(x.SliceKey, sliceGroup.Key, StringComparison.Ordinal));
+                    if (slice is null || slice.AvailableQuantity < sliceGroup.Sum(x => x.Quantity))
+                    {
+                        throw new ContractOperationException(ReturnsErrorCodes.CorrectionCapacityConflict);
+                    }
                 }
+            }
+
+            foreach (var row in released)
+            {
+                row.ReleasedAt = null;
             }
 
             return;

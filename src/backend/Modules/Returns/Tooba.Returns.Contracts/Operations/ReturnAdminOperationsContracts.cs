@@ -291,8 +291,17 @@ public interface IReturnAdminOperations
         CreateAdminReturnCommand command,
         CancellationToken cancellationToken);
 
-    /// <summary>Approve a return request. TB-277: this records the DECISION only and never executes money.</summary>
-    Task<ReturnSnapshot> ApproveAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken);
+    /// <summary>
+    /// Approve a return request. TB-277: this records the DECISION only and never executes money.
+    /// TB-279-R2 (D): the reviewed decision and plan revisions are honored when supplied and otherwise reviewed once
+    /// against the CURRENT stored facts, so the locked decision can still refuse a newer correction as stale.
+    /// </summary>
+    Task<ReturnSnapshot> ApproveAsync(
+        Guid returnRequestId,
+        Guid actorUserId,
+        CancellationToken cancellationToken,
+        int? expectedDecisionVersion = null,
+        int? expectedResolutionVersion = null);
 
     /// <summary>
     /// TB-277: deliberately execute the FIRST refund of an approved case that owns no attempt yet. This is a real
@@ -305,7 +314,9 @@ public interface IReturnAdminOperations
         Guid returnRequestId,
         Guid actorUserId,
         string? reason,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        int? expectedDecisionVersion = null,
+        int? expectedResolutionVersion = null);
 
     /// <summary>Retry a failed refund.</summary>
     Task<ReturnSnapshot> RetryRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken);

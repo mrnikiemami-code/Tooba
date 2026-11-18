@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { act, createElement } from "react";
 import test from "node:test";
 import { AdminReturnWorkspace } from "./admin-return-workspace.tsx";
-import { click, ensureDom, flush, mount, q, qq, setInputValue, waitFor } from "../../features/order-carrier-execution/test-dom-harness.ts";
+import { click, ensureDom, flush, mount, q, qq, setInputValue, setSelectValue, waitFor } from "../../features/order-carrier-execution/test-dom-harness.ts";
 import { returnIntentStorageKey } from "../returns/return-review-intent.ts";
 
 ensureDom();
@@ -71,7 +71,7 @@ function fixture(work: Record<string, unknown>) {
     resolution: {
       version: 1,
       isComplete: false,
-      approvedAmount: 200000,
+      approvedAmount: 100000,
       fromReviewedPlan: true,
       lines: [
         {
@@ -80,8 +80,13 @@ function fixture(work: Record<string, unknown>) {
           received: 3,
           usable: 2,
           damaged: 1,
-          accepted: 2,
-          rejected: 1,
+          accepted: 1,
+          rejected: 2,
+          acceptedUsable: 1,
+          acceptedDamaged: 0,
+          rejectedReceivedUsable: 1,
+          rejectedReceivedDamaged: 1,
+          rejectedUnreceived: 0,
           reason: "یکی معیوب",
           version: 1,
         },
@@ -231,19 +236,24 @@ test("the resolution dialog refuses an over-received split locally and sends one
     await waitFor(() => qq(tree.container, "[data-testid='admin-return-action-publish-resolution']").length === 1);
     await openAction(tree.container, "publish-resolution");
 
-    // 3 accepted + 1 rejected against a received 3 exceeds the ceiling: refused inside the dialog.
-    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-accepted-0']"), "3");
-    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-rejected-0']"), "1");
+    // 3 accepted against a received-usable 2 exceeds THIS condition's ceiling: refused inside the dialog.
+    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-accepted-usable-0']"), "3");
     await click(q(tree.container, "[data-testid='admin-return-resolution-confirm']"));
     await flush();
     assert.equal(stub.posts().length, 0, "an over-received split never leaves the surface");
     assert.match(
       (q(tree.container, "[data-testid='admin-return-notice']").closest("dialog") ?? q(tree.container, "[data-testid='admin-return-notice']")).textContent ?? "",
-      /بیشتر/,
+      /دریافت‌شده/,
     );
 
-    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-accepted-0']"), "2");
-    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-rejected-0']"), "1");
+    // A damaged acceptance above the damaged ceiling is refused by the SAME per-condition rule.
+    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-accepted-usable-0']"), "1");
+    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-accepted-damaged-0']"), "2");
+    await click(q(tree.container, "[data-testid='admin-return-resolution-confirm']"));
+    await flush();
+    assert.equal(stub.posts().length, 0, "a damaged acceptance can never borrow the usable ceiling");
+
+    await setInputValue(q(tree.container, "[data-testid='admin-return-resolution-accepted-damaged-0']"), "0");
     await click(q(tree.container, "[data-testid='admin-return-resolution-confirm']"));
     await flush();
 
@@ -254,8 +264,11 @@ test("the resolution dialog refuses an over-received split locally and sends one
     const lines = posts[0].body?.lines as Array<Record<string, unknown>>;
     assert.equal(lines.length, 1);
     assert.equal(lines[0].returnItemId, "ri-1");
-    assert.equal(lines[0].acceptedQuantity, 2);
-    assert.equal(lines[0].rejectedQuantity, 1);
+    assert.equal(lines[0].acceptedUsable, 1);
+    assert.equal(lines[0].acceptedDamaged, 0);
+    assert.equal(lines[0].rejectedReceivedUsable, 1);
+    assert.equal(lines[0].rejectedReceivedDamaged, 1);
+    assert.equal(lines[0].rejectedUnreceived, 0);
   } finally {
     await tree.unmount();
     stub.restore();
@@ -271,6 +284,8 @@ test("custody needs a real proof reference and stays inside the rejected remaind
     await waitFor(() => qq(tree.container, "[data-testid='admin-return-action-record-custody']").length === 1);
     await openAction(tree.container, "record-custody");
 
+    // The rejected RECEIVED portion is the only thing a handback can discharge; the line must be chosen deliberately.
+    await setSelectValue(q(tree.container, "[data-testid='admin-return-custody-item']"), "ri-1");
     await setInputValue(q(tree.container, "[data-testid='admin-return-custody-quantity']"), "1");
     await click(q(tree.container, "[data-testid='admin-return-custody-confirm']"));
     await flush();
@@ -280,8 +295,15 @@ test("custody needs a real proof reference and stays inside the rejected remaind
     await setInputValue(q(tree.container, "[data-testid='admin-return-custody-proof']"), "RCPT-9911");
     await click(q(tree.container, "[data-testid='admin-return-custody-confirm']"));
     await flush();
-    assert.equal(stub.posts().length, 0, "over-handing the rejected portion is refused locally");
+    assert.equal(stub.posts().length, 0, "over-handing the rejected usable portion is refused locally");
 
+    // A USABLE handback can never discharge the DAMAGED obligation: the two ceilings are separate.
+    await setSelectValue(q(tree.container, "[data-testid='admin-return-custody-condition']"), "Damaged");
+    await click(q(tree.container, "[data-testid='admin-return-custody-confirm']"));
+    await flush();
+    assert.equal(stub.posts().length, 0, "the damaged ceiling is one, not the whole rejected remainder");
+
+    await setSelectValue(q(tree.container, "[data-testid='admin-return-custody-condition']"), "Usable");
     await setInputValue(q(tree.container, "[data-testid='admin-return-custody-quantity']"), "1");
     await click(q(tree.container, "[data-testid='admin-return-custody-confirm']"));
     await flush();
@@ -291,7 +313,9 @@ test("custody needs a real proof reference and stays inside the rejected remaind
     assert.match(posts[0].url, /\/v1\/admin\/returns\/rr-279-a\/custody$/);
     assert.equal(posts[0].body?.returnItemId, "ri-1");
     assert.equal(posts[0].body?.quantity, 1);
+    assert.equal(posts[0].body?.condition, "Usable");
     assert.equal(posts[0].body?.proofReference, "RCPT-9911");
+    assert.equal(posts[0].body?.proofKind, "operator_attestation");
   } finally {
     await tree.unmount();
     stub.restore();

@@ -440,8 +440,9 @@ test("approve records the decision only, and the first refund is a separate revi
     await click(q(tree.container, "[data-testid='admin-return-start-refund-confirm']"));
     await waitFor(() => stub.posts().length === 2);
     const refundPost = stub.posts()[1];
-    assert.equal(refundPost.url, `/v1/admin/returns/${CASE_ID}/start-refund`);
-    assert.equal(JSON.stringify(refundPost.body), JSON.stringify({ kind: "start_refund" }));
+    // TB-279-R2: the reviewed EFFECTIVE decision revision travels with the command, so a later correction refuses it.
+    assert.equal(refundPost.url, `/v1/admin/returns/${CASE_ID}/start-refund?expectedDecisionVersion=0`);
+    assert.equal(JSON.stringify(refundPost.body), JSON.stringify({}));
   } finally {
     await tree.unmount();
     stub.restore();

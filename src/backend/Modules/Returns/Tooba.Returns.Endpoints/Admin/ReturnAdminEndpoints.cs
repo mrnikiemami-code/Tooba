@@ -177,7 +177,8 @@ public static class ReturnAdminEndpoints
     }
 
     private static async Task<IResult> AdminStartRefundAsync(
-        Guid returnRequestId, int? expectedDecisionVersion, ISender sender, IReturnAdminAuthorizer authorizer,
+        Guid returnRequestId, int? expectedDecisionVersion,
+        ISender sender, IReturnAdminAuthorizer authorizer,
         ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
     {
         var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
@@ -185,8 +186,10 @@ public static class ReturnAdminEndpoints
         // TB-277: the FIRST refund is a deliberate financial action of its own. Only the case identity travels; the
         // owning directory reads the approved decision, fixed payment, amount, currency and destination from the
         // stored case and derives the one durable attempt identity from it.
-        // TB-279-R1 (F4): the reviewed decision revision is REQUIRED by the directory, so the money can never be sent
-        // against a plan the operator did not see.
+        // TB-279-R1 (F4) / TB-279-R2 (R1-A): the reviewed DECISION revision is REQUIRED by the directory, so the money
+        // can never be sent against a plan the operator did not see. It travels as a route/query value only — this
+        // command carries no client-supplied payload at all, so an operator still cannot name an amount, a destination
+        // or an actor.
         return api.From(await sender.Send(
             new StartReturnRefundCommand(returnRequestId, actorUserId, expectedDecisionVersion),
             cancellationToken));

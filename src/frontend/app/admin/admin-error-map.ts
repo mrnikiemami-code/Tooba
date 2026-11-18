@@ -1,4 +1,4 @@
-/**
+﻿/**
  * نگاشت پایدار کد خطای Admin به پیام انسان‌خوان fa/en.
  * متن خام HTTP / Bad Request / stack هرگز به UI برنمی‌گردد.
  */
@@ -1051,6 +1051,171 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   "return.recovery.transaction_owned": {
     fa: "این اقدام در وضعیت تراکنشی ناایمن اجرا شد و ثبت نشد.",
     en: "The action ran inside an unsafe transaction and was not applied.",
+  },
+  // TB-279 / TB-279-R2: the operator correction, per-portion resolution, custody, allocation and budget refusals.
+  "return.resolution.required": {
+    fa: "برای این پرونده هنوز برنامهٔ تفکیک اقلام ثبت نشده است.",
+    en: "No reviewed item resolution has been published for this case yet.",
+  },
+  "return.resolution.incomplete": {
+    fa: "برنامهٔ تفکیک هنوز همهٔ اقلام را پوشش نمی‌دهد.",
+    en: "The reviewed resolution does not cover every line yet.",
+  },
+  "return.resolution.invalid": {
+    fa: "برنامهٔ تفکیک اقلام معتبر نیست؛ مقدار پذیرفته‌شده و رد‌شده را بازبینی کنید.",
+    en: "The item resolution is not valid; review the accepted and rejected portions.",
+  },
+  "return.resolution.received_exceeded": {
+    fa: "مقدار پذیرفته‌شده از مقدار دریافت‌شدهٔ همان وضعیت بیشتر است.",
+    en: "The accepted quantity exceeds the received quantity of that condition.",
+  },
+  "return.resolution.state_invalid": {
+    fa: "وضعیت این پرونده اجازهٔ ثبت یا تغییر برنامهٔ تفکیک را نمی‌دهد.",
+    en: "The case state does not allow publishing or changing a resolution.",
+  },
+  "return.resolution.version_stale": {
+    fa: "برنامهٔ تفکیک پس از بازبینی شما تغییر کرده است؛ صفحه را تازه کنید.",
+    en: "The resolution changed after you reviewed it; refresh the page.",
+  },
+  "return.resolution.actor_required": {
+    fa: "برای ثبت برنامهٔ تفکیک، هویت کاربر اپراتور لازم است.",
+    en: "An operator identity is required to publish a resolution.",
+  },
+  "return.resolution.item_invalid": {
+    fa: "یکی از اقلام برنامهٔ تفکیک به این پرونده تعلق ندارد یا نامعتبر است.",
+    en: "A resolution line does not belong to this case or is not valid.",
+  },
+  "return.resolution.portion_required": {
+    fa: "برای هر قلم باید مقدار پذیرفته‌شده و رد‌شدهٔ هر وضعیت مشخص شود.",
+    en: "Every line must declare its accepted and rejected portions per condition.",
+  },
+  "return.resolution.portion_invalid": {
+    fa: "یکی از بخش‌های اعلام‌شده با مقدار دریافت‌شدهٔ همان وضعیت هم‌خوان نیست.",
+    en: "A declared portion does not match the received quantity of that condition.",
+  },
+  "return.resolution.review_version_required": {
+    fa: "نسخهٔ بازبینی‌شدهٔ برنامهٔ تفکیک همراه درخواست نبود؛ اقدامی انجام نشد.",
+    en: "The reviewed resolution version was missing from the request; nothing was applied.",
+  },
+  "return.correction.not_applicable": {
+    fa: "برای این پرونده بازگشایی برای بررسی دوباره مجاز نیست.",
+    en: "Reopening for review is not applicable to this case.",
+  },
+  "return.correction.state_invalid": {
+    fa: "وضعیت فعلی پرونده اجازهٔ بازگشایی برای بررسی دوباره را نمی‌دهد.",
+    en: "The current case state does not allow reopening for review.",
+  },
+  "return.correction.financial_effect_recorded": {
+    fa: "برای این پرونده اثر مالی ثبت شده است و بازگشایی تصمیم مجاز نیست.",
+    en: "A financial effect is recorded on this case, so the decision cannot be reopened.",
+  },
+  "return.correction.custody_recorded": {
+    fa: "برای این پرونده تحویل کالای رد‌شده ثبت شده است و بازگشایی مجاز نیست.",
+    en: "A rejected-goods handback is recorded, so reopening is not allowed.",
+  },
+  "return.correction.physical_effect_recorded": {
+    fa: "اثر فیزیکی (تعیین تکلیف کالا) ثبت شده است و بازگشایی مجاز نیست.",
+    en: "A physical effect is recorded, so reopening is not allowed.",
+  },
+  "return.correction.source_effect_recorded": {
+    fa: "اثر منبع (مرجوعی از سمت شرکت حمل) ثبت شده است و بازگشایی مجاز نیست.",
+    en: "A source-side effect is recorded, so reopening is not allowed.",
+  },
+  "return.correction.source_unsupported": {
+    fa: "بازگشایی برای مرجوعی‌های سمت شرکت حمل پشتیبانی نمی‌شود.",
+    en: "Reopening is not supported for courier-origin returns.",
+  },
+  "return.correction.capacity_conflict": {
+    fa: "ظرفیت مرجوعی این اقلام پیش از این توسط پروندهٔ دیگری مصرف شده است.",
+    en: "The return capacity of these lines was already consumed by another case.",
+  },
+  "return.correction.actor_required": {
+    fa: "برای بازگشایی تصمیم، هویت کاربر اپراتور لازم است.",
+    en: "An operator identity is required to reopen a decision.",
+  },
+  "return.correction.reason_required": {
+    fa: "دلیل بازبینی دوباره باید نوشته شود.",
+    en: "A reviewed reason is required.",
+  },
+  "return.correction.version_stale": {
+    fa: "تصمیم این پرونده پس از بازبینی شما تغییر کرده است؛ صفحه را تازه کنید.",
+    en: "The decision changed after you reviewed it; refresh the page.",
+  },
+  "return.correction.occurrence_conflict": {
+    fa: "این رخداد قبلاً با دلیل دیگری ثبت شده است.",
+    en: "This occurrence was already recorded with a different reason.",
+  },
+  "return.custody.item_invalid": {
+    fa: "قلم انتخاب‌شده برای تحویل به این پرونده تعلق ندارد.",
+    en: "The selected item does not belong to this case.",
+  },
+  "return.custody.quantity_invalid": {
+    fa: "مقدار تحویل با دقت واحد قلم یا باقی‌ماندهٔ رد‌شدهٔ همان وضعیت هم‌خوان نیست.",
+    en: "The handback quantity does not match the unit precision or the rejected remainder of that condition.",
+  },
+  "return.custody.proof_required": {
+    fa: "شاهد تحویل (شمارهٔ رسید یا صورت‌جلسه) لازم است.",
+    en: "A handback proof reference is required.",
+  },
+  "return.custody.recipient_invalid": {
+    fa: "تحویل‌گیرندهٔ ثبت‌شده معتبر نیست.",
+    en: "The recorded recipient is not valid.",
+  },
+  "return.custody.over_handed": {
+    fa: "مقدار تحویل از باقی‌ماندهٔ رد‌شدهٔ همان وضعیت بیشتر است.",
+    en: "The handback exceeds the rejected remainder of that condition.",
+  },
+  "return.custody.state_invalid": {
+    fa: "وضعیت این پرونده اجازهٔ ثبت تحویل کالای رد‌شده را نمی‌دهد.",
+    en: "The case state does not allow recording a rejected-goods handback.",
+  },
+  "return.custody.occurrence_conflict": {
+    fa: "این رخداد تحویل قبلاً با اطلاعات دیگری ثبت شده است.",
+    en: "This handback occurrence was already recorded with different details.",
+  },
+  "return.custody.actor_required": {
+    fa: "برای ثبت تحویل، هویت کاربر اپراتور لازم است.",
+    en: "An operator identity is required to record a handback.",
+  },
+  "return.custody.proof_kind_required": {
+    fa: "نوع شاهد تحویل مشخص نشده است.",
+    en: "The handback proof kind is missing.",
+  },
+  "return.custody.proof_kind_unavailable": {
+    fa: "شاهد «تحویل توسط شرکت حمل» در دسترس نیست؛ فقط تأیید اپراتور پذیرفته می‌شود.",
+    en: "The carrier delivered-back proof is not available; only an operator attestation is accepted.",
+  },
+  "return.allocation.required": {
+    fa: "این مرجوعی به سهم تحویل مشخصی متصل نشده است.",
+    en: "This return is not bound to a concrete delivery slice.",
+  },
+  "return.allocation.exceeded": {
+    fa: "مقدار این مرجوعی از ظرفیت باقی‌ماندهٔ سهم تحویل بیشتر است.",
+    en: "This return exceeds the remaining capacity of the delivery slice.",
+  },
+  "return.allocation.stale": {
+    fa: "سهم تحویل این مرجوعی منقضی یا تغییر کرده است.",
+    en: "The delivery slice of this return expired or changed.",
+  },
+  "return.allocation.legacy_ambiguous": {
+    fa: "سهم تحویل این پروندهٔ قدیمی به‌طور قطعی قابل تشخیص نیست؛ برای جلوگیری از تخصیص حدسی اقدامی انجام نشد.",
+    en: "The delivery slice of this legacy case cannot be proven; nothing was allocated rather than guessed.",
+  },
+  "return.refund.budget_exceeded": {
+    fa: "مجموع بازگشت وجه‌های این پرداخت از مبلغ پرداخت‌شده بیشتر می‌شود.",
+    en: "The refunds on this payment would exceed the amount that was paid.",
+  },
+  "return.refund.budget_binding_invalid": {
+    fa: "اتصال این بازگشت وجه به پرداخت صاحب پرونده معتبر نیست.",
+    en: "This refund is not lawfully bound to the case's owning payment.",
+  },
+  "return.refund.review_version_required": {
+    fa: "نسخهٔ بازبینی‌شدهٔ تصمیم همراه درخواست نبود؛ اقدامی انجام نشد.",
+    en: "The reviewed decision version was missing from the request; nothing was applied.",
+  },
+  "return.approved_amount.conflict": {
+    fa: "مبلغ تأییدشدهٔ ثبت‌شده با برنامهٔ تفکیک بازبینی‌شده هم‌خوان نیست.",
+    en: "The stored approved amount does not match the reviewed resolution.",
   },
   "order.note.invalid": {
     fa: "متن یادداشت معتبر نیست.",

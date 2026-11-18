@@ -60,13 +60,32 @@ internal sealed class ReturnAdminOperationsAdapter(
     public async Task<ReturnSnapshot> ApproveAsync(
         Guid returnRequestId,
         Guid actorUserId,
-        CancellationToken cancellationToken) =>
-        Map(await directory.ApproveAsync(
+        CancellationToken cancellationToken,
+        int? expectedDecisionVersion = null,
+        int? expectedResolutionVersion = null)
+    {
+        // TB-279-R2 (D): a caller that reviewed nothing specific is bound to the state it reads HERE, so a correction
+        // committed afterwards still refuses the stale decision inside the locked scope.
+        if (expectedDecisionVersion is null || expectedResolutionVersion is null)
+        {
+            var current = await directory.GetAsync(returnRequestId, cancellationToken)
+                ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
+            expectedDecisionVersion ??= current.DecisionVersion;
+            if (expectedResolutionVersion is null && current.Resolution?.FromReviewedPlan == true)
+            {
+                expectedResolutionVersion = current.Resolution.Version;
+            }
+        }
+
+        return Map(await directory.ApproveAsync(
             new ApproveReturnCommand(
                 returnRequestId,
                 actorUserId,
-                await RequireSellerPartyAsync(returnRequestId, cancellationToken)),
+                await RequireSellerPartyAsync(returnRequestId, cancellationToken),
+                ExpectedResolutionVersion: expectedResolutionVersion,
+                ExpectedDecisionVersion: expectedDecisionVersion),
             cancellationToken));
+    }
 
     public async Task<ReturnSnapshot> StartFirstRefundAsync(
         Guid returnRequestId,
@@ -87,14 +106,31 @@ internal sealed class ReturnAdminOperationsAdapter(
         Guid returnRequestId,
         Guid actorUserId,
         string? reason,
-        CancellationToken cancellationToken) =>
-        Map(await directory.RejectAsync(
+        CancellationToken cancellationToken,
+        int? expectedDecisionVersion = null,
+        int? expectedResolutionVersion = null)
+    {
+        if (expectedDecisionVersion is null || expectedResolutionVersion is null)
+        {
+            var current = await directory.GetAsync(returnRequestId, cancellationToken)
+                ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
+            expectedDecisionVersion ??= current.DecisionVersion;
+            if (expectedResolutionVersion is null && current.Resolution?.FromReviewedPlan == true)
+            {
+                expectedResolutionVersion = current.Resolution.Version;
+            }
+        }
+
+        return Map(await directory.RejectAsync(
             new RejectReturnCommand(
                 returnRequestId,
                 actorUserId,
                 await RequireSellerPartyAsync(returnRequestId, cancellationToken),
-                reason),
+                reason,
+                expectedDecisionVersion,
+                expectedResolutionVersion),
             cancellationToken));
+    }
 
     public async Task<ReturnSnapshot> RetryRefundAsync(
         Guid returnRequestId,

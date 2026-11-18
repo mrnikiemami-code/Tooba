@@ -11,6 +11,7 @@ import { executeAdminOrderOperation } from "./admin-order-operations";
 import type { AdminResult } from "./admin-api";
 import {
   adminRetryReturnRefund,
+  adminStartReturnRefund,
   formatRefundAttemptStatus,
   formatRefundDestination,
   formatReturnCondition,
@@ -151,6 +152,7 @@ function successLabel(action: ReturnReviewAction): string {
 import {
   collectReceiptItems,
   describeQuantityProblem,
+  evaluateAcceptedPortion,
   evaluateQuantityEntry,
   formatCeilingFa,
   type QuantityProblem,
@@ -159,6 +161,7 @@ import {
 export {
   collectReceiptItems,
   describeQuantityProblem,
+  evaluateAcceptedPortion,
   evaluateQuantityEntry,
   formatCeilingFa,
 };
@@ -199,11 +202,23 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
   /** TB-279: the reviewed reason of an audited decision correction. */
   const [correctionReason, setCorrectionReason] = useState("");
   /**
-   * TB-279: the reviewed per-item split of a legacy multi-item case. Nothing is preselected: the operator states the
-   * accepted and rejected portion of each line against the stored received quantity.
+   * TB-279 / TB-279-R2: the reviewed per-item/condition split of a legacy multi-item case. Nothing is preselected: the
+   * operator states how much of EACH inspected condition is accepted, and the declined portions follow exactly from the
+   * stored receipt (received − accepted) instead of being typed as an unrelated total.
    */
   const [resolutionDraft, setResolutionDraft] = useState<
-    { returnItemId: string; label: string; unitLabel: string; ceiling: number; accepted: string; rejected: string; reason: string }[]
+    {
+      returnItemId: string;
+      label: string;
+      unitLabel: string;
+      requested: number;
+      received: number;
+      usable: number;
+      damaged: number;
+      acceptedUsable: string;
+      acceptedDamaged: string;
+      reason: string;
+    }[]
   >([]);
   /** TB-279: the reviewed handback of ONE rejected received portion. */
   const [custodyDraft, setCustodyDraft] = useState<{
@@ -452,7 +467,12 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       action: "start_refund",
       target: "returns",
       returnRequestId,
-      body: { kind: "start_refund" },
+      body: {
+        kind: "start_refund",
+        // TB-279-R2 (R1-A): the reviewed EFFECTIVE decision revision is frozen with the command, so a correction
+        // published after this review refuses the start instead of sending money against an unread plan.
+        expectedDecisionVersion: snapshot?.decisionVersion ?? 0,
+      },
     });
     if (!intent) {
       setNotice({ title: "اقدام انجام نشد", text: "بستهٔ این اقدام کامل نشد؛ هیچ درخواستی ارسال نشد." });
@@ -460,7 +480,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
     }
     setReviewing(null);
     void send(intent);
-  }, [returnRequestId, send]);
+  }, [returnRequestId, send, snapshot?.decisionVersion]);
 
   const reviewDecision = useCallback(
     (action: "approve" | "reject", reason: string | null) => {
@@ -485,6 +505,10 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           returnRequestId,
           reason,
           idempotencyKey: occurrenceKey,
+          // TB-279-R2 (D): the reviewed decision and PLAN revisions are frozen with the decision, so a correction
+          // committed after this review refuses it instead of blessing a plan/revision the operator never read.
+          expectedDecisionVersion: snapshot?.decisionVersion ?? 0,
+          expectedResolutionVersion: snapshot?.resolution?.version ?? 0,
         },
       });
       if (!intent) {
@@ -494,7 +518,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       setReviewing(null);
       void send(intent);
     },
-    [returnRequestId, send, snapshot?.checkoutId],
+    [returnRequestId, send, snapshot?.checkoutId, snapshot?.decisionVersion, snapshot?.resolution?.version],
   );
 
   const reviewRecovery = useCallback(
@@ -519,7 +543,11 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           });
           return;
         }
-        body = { expectedFailedAttemptId: failedId };
+        body = {
+          expectedFailedAttemptId: failedId,
+          // TB-279-R2 (R1-A): the reviewed decision revision travels with the retry too.
+          expectedDecisionVersion: snapshot?.decisionVersion ?? 0,
+        };
       } else {
         body = { kind: "settle_physical_disposition" };
       }
@@ -536,7 +564,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       setReviewing(null);
       void send(intent);
     },
-    [returnRequestId, send, work?.failedRefundAttemptId, work?.pendingRefundAttemptId],
+    [returnRequestId, send, work?.failedRefundAttemptId, work?.pendingRefundAttemptId, snapshot?.decisionVersion],
   );
 
   /**
@@ -554,48 +582,63 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
    */
   const reviewResolution = useCallback(() => {
     if (!snapshot) return;
-    const lines: { returnItemId: string; acceptedQuantity: number; rejectedQuantity: number; reason: string | null }[] = [];
+    const lines: {
+      returnItemId: string;
+      acceptedUsable: number;
+      acceptedDamaged: number;
+      rejectedReceivedUsable: number;
+      rejectedReceivedDamaged: number;
+      rejectedUnreceived: number;
+      reason: string | null;
+    }[] = [];
     for (const line of resolutionDraft) {
       const item = snapshot.items.find((entry) => entry.returnItemId === line.returnItemId);
       const places =
         item && typeof item.unitDecimalPlaces === "number" ? Math.min(Math.trunc(item.unitDecimalPlaces), MAX_QUANTITY_SCALE) : null;
-      const ceiling = unitsFromWireNumber(line.ceiling);
-      const accepted = evaluateQuantityEntry(line.accepted, places, ceiling);
-      const rejected = evaluateQuantityEntry(line.rejected, places, ceiling);
-      if (line.accepted === "" && line.rejected === "") {
+      // TB-279-R2: each accepted portion is bounded by ITS OWN inspected condition, not by a shared total.
+      const usableCeiling = unitsFromWireNumber(line.usable);
+      const damagedCeiling = unitsFromWireNumber(line.damaged);
+      const acceptedUsable = evaluateAcceptedPortion(line.acceptedUsable, places, usableCeiling);
+      const acceptedDamaged = evaluateAcceptedPortion(line.acceptedDamaged, places, damagedCeiling);
+      if (line.acceptedUsable === "" && line.acceptedDamaged === "") {
         setNotice({
           title: "برنامهٔ تفکیک کامل نیست",
-          text: `برای قلم «${line.label}» مقدار پذیرفته‌شده و رد‌شده را وارد کنید.`,
+          text: `برای قلم «${line.label}» مقدار پذیرفته‌شده را وارد کنید (اگر هیچ مقداری پذیرفته نشد، ۰).`,
         });
         return;
       }
-      if (accepted.problem || rejected.problem) {
+      if (acceptedUsable.problem || acceptedDamaged.problem) {
         setNotice({
           title: "مقدار این قلم معتبر نیست",
-          text:
-            `قلم «${line.label}»: مقدار باید با دقت واحد همان قلم و در محدودهٔ دریافت‌شده (${formatCeilingFa({
-              ...line,
-              productLabel: line.label,
-              usable: "",
-              damaged: "",
-              ceilingUnits: ceiling,
-              decimalPlaces: places,
-            })}) باشد.`,
+          text: `قلم «${line.label}»: مقدار پذیرفته‌شده باید با دقت واحد همین قلم و در محدودهٔ همان وضعیتِ دریافت‌شده باشد.`,
         });
         return;
       }
-      const total = addUnits(accepted.units ?? 0, rejected.units ?? 0);
-      if (ceiling === null || compareUnits(total, ceiling) > 0) {
+      // The declined RECEIVED portions are the exact complement of the accepted ones per condition, and the
+      // never-received remainder is the stored physical fact. Nothing here is a free third total.
+      const receivedUsable = usableCeiling ?? 0;
+      const receivedDamaged = damagedCeiling ?? 0;
+      const acceptedUsableUnits = acceptedUsable.units ?? 0;
+      const acceptedDamagedUnits = acceptedDamaged.units ?? 0;
+      if (compareUnits(acceptedUsableUnits, receivedUsable) > 0 || compareUnits(acceptedDamagedUnits, receivedDamaged) > 0) {
         setNotice({
           title: "مجموع تفکیک از دریافت‌شده بیشتر است",
-          text: `قلم «${line.label}»: مجموع پذیرفته و رد‌شده نمی‌تواند از مقدار دریافت‌شده بیشتر باشد.`,
+          text: `قلم «${line.label}»: مقدار پذیرفته‌شده نمی‌تواند از مقدار دریافت‌شدهٔ همان وضعیت بیشتر باشد.`,
         });
         return;
       }
+      const requestedUnits = unitsFromWireNumber(line.requested) ?? 0;
+      const receivedUnits = unitsFromWireNumber(line.received) ?? 0;
       lines.push({
         returnItemId: line.returnItemId,
-        acceptedQuantity: accepted.value ?? 0,
-        rejectedQuantity: rejected.value ?? 0,
+        acceptedUsable: acceptedUsable.value ?? 0,
+        acceptedDamaged: acceptedDamaged.value ?? 0,
+        rejectedReceivedUsable: unitsToWireNumber(subtractUnits(receivedUsable, acceptedUsableUnits)) ?? 0,
+        rejectedReceivedDamaged: unitsToWireNumber(subtractUnits(receivedDamaged, acceptedDamagedUnits)) ?? 0,
+        rejectedUnreceived:
+          unitsToWireNumber(
+            compareUnits(receivedUnits, requestedUnits) >= 0 ? 0 : subtractUnits(requestedUnits, receivedUnits),
+          ) ?? 0,
         reason: line.reason.trim() === "" ? null : line.reason.trim(),
       });
     }
@@ -635,17 +678,25 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       setNotice({ title: "قلم انتخاب نشده است", text: "برای ثبت تحویل، قلم رد‌شده را انتخاب کنید." });
       return;
     }
+    // TB-279-R2 (R1-A): the ceiling is the outstanding handback of THIS condition. A usable handback can never
+    // discharge a damaged obligation, and the never-received remainder is not a handback at all.
     const alreadyHanded = (snapshot.custody ?? [])
-      .filter((entry) => entry.returnItemId === custodyDraft.returnItemId)
-      .reduce((sum, entry) => sum + unitsFromWireNumber(entry.quantity)!, 0);
-    const rejectedUnits = unitsFromWireNumber(line.rejected) ?? 0;
-    const remaining = Math.max(0, rejectedUnits - alreadyHanded);
+      .filter(
+        (entry) =>
+          entry.returnItemId === custodyDraft.returnItemId
+          && String(entry.condition).toLowerCase() === custodyDraft.condition.toLowerCase(),
+      )
+      .reduce((sum, entry) => sum + (unitsFromWireNumber(entry.quantity) ?? 0), 0);
+    const owedOfCondition =
+      custodyDraft.condition === "Damaged" ? line.rejectedReceivedDamaged : line.rejectedReceivedUsable;
+    const owedUnits = unitsFromWireNumber(owedOfCondition) ?? 0;
+    const remaining = compareUnits(alreadyHanded, owedUnits) >= 0 ? 0 : subtractUnits(owedUnits, alreadyHanded);
     const places = typeof item.unitDecimalPlaces === "number" ? Math.min(Math.trunc(item.unitDecimalPlaces), MAX_QUANTITY_SCALE) : null;
     const checked = evaluateQuantityEntry(custodyDraft.quantity, places, remaining);
     if (checked.problem) {
       setNotice({
         title: "مقدار تحویل معتبر نیست",
-        text: "مقدار باید با دقت واحد همین قلم و در محدودهٔ باقی‌ماندهٔ رد‌شده باشد.",
+        text: "مقدار باید با دقت واحد همین قلم و در محدودهٔ باقی‌ماندهٔ رد‌شدهٔ همان وضعیت باشد.",
       });
       return;
     }
@@ -665,6 +716,9 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         quantity: checked.value ?? 0,
         condition: custodyDraft.condition,
         proofReference: custodyDraft.proof.trim(),
+        // TB-279-R2: the reviewed proof kind is frozen with the command. Only an operator attestation is an available
+        // owning fact today; a carrier delivered-back claim has no reader behind it and is refused by the server.
+        proofKind: "operator_attestation",
       },
     });
     if (!intent) {
@@ -1024,24 +1078,49 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                     </p>
                   ) : null}
                   <div className="mt-3 space-y-1 text-sm" data-testid="admin-return-custody-remaining">
-                    <h4 className="font-semibold text-muted">باقی‌ماندهٔ تحویل کالای رد‌شده</h4>
+                    <h4 className="font-semibold text-muted">باقی‌ماندهٔ تحویل کالای رد‌شده (به تفکیک وضعیت)</h4>
                     {snapshot.resolution.lines
-                      .filter((line) => (unitsFromWireNumber(line.rejected) ?? 0) > 0)
+                      .filter(
+                        (line) =>
+                          (unitsFromWireNumber(line.rejectedReceivedUsable) ?? 0) > 0
+                          || (unitsFromWireNumber(line.rejectedReceivedDamaged) ?? 0) > 0,
+                      )
                       .map((line) => {
                         const item = snapshot.items.find((entry) => entry.returnItemId === line.returnItemId);
-                        const handed = (snapshot.custody ?? [])
-                          .filter((entry) => entry.returnItemId === line.returnItemId)
-                          .reduce((sum, entry) => sum + (unitsFromWireNumber(entry.quantity) ?? 0), 0);
-                        const rejected = unitsFromWireNumber(line.rejected) ?? 0;
-                        const remaining = Math.max(0, rejected - handed);
+                        const handedOf = (condition: string) =>
+                          (snapshot.custody ?? [])
+                            .filter(
+                              (entry) =>
+                                entry.returnItemId === line.returnItemId
+                                && String(entry.condition).toLowerCase() === condition.toLowerCase(),
+                            )
+                            .reduce((sum, entry) => sum + (unitsFromWireNumber(entry.quantity) ?? 0), 0);
+                        const usablePossible = unitsFromWireNumber(line.rejectedReceivedUsable) ?? 0;
+                        const damagedPossible = unitsFromWireNumber(line.rejectedReceivedDamaged) ?? 0;
+                        const usableHanded = handedOf("Usable");
+                        const damagedHanded = handedOf("Damaged");
+                        const usableRemaining =
+                          compareUnits(usableHanded, usablePossible) >= 0 ? 0 : subtractUnits(usablePossible, usableHanded);
+                        const damagedRemaining =
+                          compareUnits(damagedHanded, damagedPossible) >= 0 ? 0 : subtractUnits(damagedPossible, damagedHanded);
                         return (
                           <p key={`custody-remaining-${line.returnItemId}`} className="flex flex-wrap items-center gap-2">
                             <span>{item?.productLabel ?? "کالای سفارش"}</span>
-                            <span className="text-muted">رد‌شده: {formatQuantityDisplayFa(line.rejected)}</span>
-                            <span className="text-muted">تحویل‌شده: {formatQuantityDisplayFa(unitsToWireNumber(handed))}</span>
-                            <span className={remaining > 0 ? "text-amber-700" : "text-muted"}>
-                              در اختیار شرکت: {formatQuantityDisplayFa(unitsToWireNumber(remaining))}
+                            <span className="text-muted">
+                              سالم: رد‌شدهٔ دریافت‌شده {formatQuantityDisplayFa(line.rejectedReceivedUsable)} · تحویل‌شده{" "}
+                              {formatQuantityDisplayFa(unitsToWireNumber(usableHanded))} · در اختیار شرکت{" "}
+                              {formatQuantityDisplayFa(unitsToWireNumber(usableRemaining))}
                             </span>
+                            <span className="text-muted">
+                              معیوب: رد‌شدهٔ دریافت‌شده {formatQuantityDisplayFa(line.rejectedReceivedDamaged)} · تحویل‌شده{" "}
+                              {formatQuantityDisplayFa(unitsToWireNumber(damagedHanded))} · در اختیار شرکت{" "}
+                              {formatQuantityDisplayFa(unitsToWireNumber(damagedRemaining))}
+                            </span>
+                            {(unitsFromWireNumber(line.rejectedUnreceived) ?? 0) > 0 ? (
+                              <span className="text-muted">
+                                دریافت‌نشده: {formatQuantityDisplayFa(line.rejectedUnreceived)}
+                              </span>
+                            ) : null}
                           </p>
                         );
                       })}
@@ -1159,14 +1238,19 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                         setResolutionDraft(
                           snapshot.items.map((item) => {
                             const line = snapshot.resolution?.lines.find((entry) => entry.returnItemId === item.returnItemId);
-                            const ceiling = line?.received ?? 0;
+                            const receivedLine = snapshot.receiving?.lines.find(
+                              (entry) => entry.returnItemId === item.returnItemId,
+                            );
                             return {
                               returnItemId: item.returnItemId,
                               label: item.productLabel ?? "کالای سفارش",
                               unitLabel: item.unitLabel ?? "",
-                              ceiling,
-                              accepted: "",
-                              rejected: "",
+                              requested: receivedLine?.requested ?? item.quantity,
+                              received: receivedLine?.received ?? 0,
+                              usable: receivedLine?.usable ?? 0,
+                              damaged: receivedLine?.damaged ?? 0,
+                              acceptedUsable: "",
+                              acceptedDamaged: "",
                               reason: "",
                             };
                           }),
@@ -1562,8 +1646,9 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
             <Dialog open size="lg" title="ثبت برنامهٔ تفکیک اقلام" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-resolution-form">
                 <p>
-                  برای هر قلم، میزان <strong>پذیرفته‌شده</strong> و <strong>رد‌شده</strong> را مشخص کنید. مبلغ تأییدشده
-                  فقط از مقدار پذیرفته‌شده و قیمت ثبت‌شدهٔ همان قلم ساخته می‌شود؛ هیچ مبلغی دستی وارد نمی‌شود.
+                  برای هر قلم، میزان <strong>پذیرفته‌شده</strong> از هر وضعیت (سالم/معیوب) را مشخص کنید. مبلغ تأییدشده فقط
+                  از مقدار پذیرفته‌شده و قیمت ثبت‌شدهٔ همان قلم ساخته می‌شود و بخش رد‌شدهٔ دریافت‌شده به‌صورت خودکار محاسبه
+                  می‌شود؛ هیچ مبلغی دستی وارد نمی‌شود.
                 </p>
                 <div className="max-h-80 space-y-3 overflow-y-auto pe-1">
                   {resolutionDraft.map((line, index) => {
@@ -1573,43 +1658,91 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                         ? Math.min(Math.trunc(item.unitDecimalPlaces), MAX_QUANTITY_SCALE)
                         : null;
                     })();
-                    const ceilingLabel = places === null ? "نامشخص" : formatQuantityDisplayFa(line.ceiling);
+                    const usableCeiling = unitsFromWireNumber(line.usable);
+                    const damagedCeiling = unitsFromWireNumber(line.damaged);
+                    const acceptedUsableCheck = evaluateAcceptedPortion(line.acceptedUsable, places, usableCeiling);
+                    const acceptedDamagedCheck = evaluateAcceptedPortion(line.acceptedDamaged, places, damagedCeiling);
+                    // TB-279-R2: the declined portions come from the EXACT entered units (never a wire string re-parse).
+                    const acceptedUsableUnits = acceptedUsableCheck.units ?? 0;
+                    const acceptedDamagedUnits = acceptedDamagedCheck.units ?? 0;
+                    const rejectedReceivedUsable =
+                      compareUnits(acceptedUsableUnits, usableCeiling ?? 0) > 0
+                        ? 0
+                        : unitsToWireNumber(subtractUnits(usableCeiling ?? 0, acceptedUsableUnits));
+                    const rejectedReceivedDamaged =
+                      compareUnits(acceptedDamagedUnits, damagedCeiling ?? 0) > 0
+                        ? 0
+                        : unitsToWireNumber(subtractUnits(damagedCeiling ?? 0, acceptedDamagedUnits));
+                    const rejectedUnreceived =
+                      compareUnits(
+                        unitsFromWireNumber(line.received) ?? 0,
+                        unitsFromWireNumber(line.requested) ?? 0,
+                      ) >= 0
+                        ? 0
+                        : unitsToWireNumber(
+                            subtractUnits(
+                              unitsFromWireNumber(line.requested) ?? 0,
+                              unitsFromWireNumber(line.received) ?? 0,
+                            ),
+                          ) ?? 0;
                     return (
                       <div key={line.returnItemId} className="rounded-xl border border-border p-3">
                         <p className="font-semibold">{line.label}</p>
                         <p className="text-muted">
-                          واحد: {formatUnitLabel(line.unitLabel)} · دریافت‌شده: {ceilingLabel}
+                          واحد: {formatUnitLabel(line.unitLabel)} · درخواست: {formatQuantityDisplayFa(line.requested)} ·
+                          دریافت‌شده: {formatQuantityDisplayFa(line.received)}
                         </p>
                         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <label className="block">
-                            <span className="block text-muted">پذیرفته‌شده</span>
+                            <span className="block text-muted">
+                              پذیرفته‌شدهٔ سالم (حداکثر {formatQuantityDisplayFa(line.usable)})
+                            </span>
                             <input
                               className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
                               inputMode="decimal"
-                              value={line.accepted}
+                              value={line.acceptedUsable}
+                              aria-invalid={acceptedUsableCheck.problem ? true : undefined}
                               onChange={(event) => {
                                 const next = [...resolutionDraft];
-                                next[index] = { ...line, accepted: event.target.value };
+                                next[index] = { ...line, acceptedUsable: event.target.value };
                                 setResolutionDraft(next);
                               }}
-                              data-testid={`admin-return-resolution-accepted-${index}`}
+                              data-testid={`admin-return-resolution-accepted-usable-${index}`}
                             />
+                            {acceptedUsableCheck.problem ? (
+                              <span className="mt-1 block text-xs text-red-700" role="alert">
+                                مقدار باید با دقت واحد همین قلم و در محدودهٔ سالمِ دریافت‌شده باشد.
+                              </span>
+                            ) : null}
                           </label>
                           <label className="block">
-                            <span className="block text-muted">رد‌شده</span>
+                            <span className="block text-muted">
+                              پذیرفته‌شدهٔ معیوب (حداکثر {formatQuantityDisplayFa(line.damaged)})
+                            </span>
                             <input
                               className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
                               inputMode="decimal"
-                              value={line.rejected}
+                              value={line.acceptedDamaged}
+                              aria-invalid={acceptedDamagedCheck.problem ? true : undefined}
                               onChange={(event) => {
                                 const next = [...resolutionDraft];
-                                next[index] = { ...line, rejected: event.target.value };
+                                next[index] = { ...line, acceptedDamaged: event.target.value };
                                 setResolutionDraft(next);
                               }}
-                              data-testid={`admin-return-resolution-rejected-${index}`}
+                              data-testid={`admin-return-resolution-accepted-damaged-${index}`}
                             />
+                            {acceptedDamagedCheck.problem ? (
+                              <span className="mt-1 block text-xs text-red-700" role="alert">
+                                مقدار باید با دقت واحد همین قلم و در محدودهٔ معیوبِ دریافت‌شده باشد.
+                              </span>
+                            ) : null}
                           </label>
                         </div>
+                        <p className="mt-2 text-xs text-muted" data-testid={`admin-return-resolution-derived-${index}`}>
+                          رد‌شدهٔ دریافت‌شده: سالم {formatQuantityDisplayFa(rejectedReceivedUsable)} · معیوب{" "}
+                          {formatQuantityDisplayFa(rejectedReceivedDamaged)} · دریافت‌نشده{" "}
+                          {formatQuantityDisplayFa(rejectedUnreceived)}
+                        </p>
                         <label className="mt-2 block">
                           <span className="block text-muted">دلیل این قلم (اختیاری)</span>
                           <input
@@ -1655,7 +1788,11 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                   >
                     <option value="">انتخاب کنید…</option>
                     {(snapshot.resolution?.lines ?? [])
-                      .filter((line) => line.rejected > 0)
+                      .filter(
+                        (line) =>
+                          (unitsFromWireNumber(line.rejectedReceivedUsable) ?? 0) > 0
+                          || (unitsFromWireNumber(line.rejectedReceivedDamaged) ?? 0) > 0,
+                      )
                       .map((line) => {
                         const item = snapshot.items.find((entry) => entry.returnItemId === line.returnItemId);
                         return (
@@ -1685,6 +1822,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                       onChange={(event) =>
                         setCustodyDraft({ ...custodyDraft, condition: event.target.value as "Usable" | "Damaged" })
                       }
+                      data-testid="admin-return-custody-condition"
                     >
                       <option value="Usable">سالم</option>
                       <option value="Damaged">معیوب</option>
@@ -1823,15 +1961,20 @@ async function dispatch(intent: ReturnReviewIntent): Promise<ReviewAnswer> {
     case "record_custody":
       return classifyReviewAnswer(await sendReviewedReturnCommand(intent.returnRequestId, "custody", body));
     case "start_refund":
-      // TB-277: the deliberate FIRST-refund command; its reviewed bytes travel unchanged on a retry.
+      // TB-277 / TB-279-R2 (R1-A): the deliberate FIRST-refund command carries the reviewed EFFECTIVE decision
+      // revision on its reviewed route, so a newer correction refuses it before any money.
       return classifyReviewAnswer(
-        await sendReviewedReturnCommand(intent.returnRequestId, "start-refund", body),
+        await adminStartReturnRefund(
+          intent.returnRequestId,
+          typeof body.expectedDecisionVersion === "number" ? body.expectedDecisionVersion : null,
+        ),
       );
     case "retry_refund":
       return classifyReviewAnswer(
         await adminRetryReturnRefund(
           intent.returnRequestId,
           (body.expectedFailedAttemptId as string | null) ?? null,
+          typeof body.expectedDecisionVersion === "number" ? body.expectedDecisionVersion : null,
         ),
       );
     case "approve":
@@ -1844,6 +1987,11 @@ async function dispatch(intent: ReturnReviewIntent): Promise<ReviewAnswer> {
           returnRequestId: intent.returnRequestId,
           reason: (body.reason as string | null) ?? null,
           idempotencyKey: String(body.idempotencyKey ?? intent.occurrenceKey),
+          // TB-279-R2 (D): the reviewed revisions ride with the frozen decision bytes.
+          expectedDecisionVersion:
+            typeof body.expectedDecisionVersion === "number" ? body.expectedDecisionVersion : null,
+          expectedResolutionVersion:
+            typeof body.expectedResolutionVersion === "number" ? body.expectedResolutionVersion : null,
         }),
       );
     }

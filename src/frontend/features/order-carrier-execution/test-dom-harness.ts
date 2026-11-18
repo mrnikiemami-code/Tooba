@@ -129,6 +129,19 @@ export async function setInputValue(el: Element, value: string): Promise<void> {
   await flush();
 }
 
+/** Chooses one option of a real `<select>`: the value setter plus a `change` event, inside `act`. */
+export async function setSelectValue(el: Element, value: string): Promise<void> {
+  const select = el as HTMLSelectElement;
+  await act(async () => {
+    select.focus();
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, "value")?.set;
+    if (!setter) throw new Error("HTMLSelectElement value setter missing");
+    setter.call(select, value);
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await flush();
+}
+
 export function el(type: string, props?: Record<string, unknown> | null, ...children: ReactNode[]) {
   return createElement(type, props ?? null, ...children);
 }

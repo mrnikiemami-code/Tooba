@@ -30,6 +30,11 @@ import {
 
 export const RETURN_SUBMISSION_VERSION = 2;
 export const RETURN_SUBMISSION_STORAGE_PREFIX = "tb279:customer-return-submission:";
+/**
+ * TB-279-R2 (F): the PREVIOUS-version prefix. A v1 act carries NO authenticated viewer, so it can never be attributed to
+ * the customer in front of the surface; its bytes are preserved untouched and treated as unresolved evidence.
+ */
+export const RETURN_SUBMISSION_LEGACY_PREFIX = "tb278:customer-return-submission:";
 
 export type ReturnSubmissionChildState = "pending" | "unknown" | "recorded" | "refused";
 
@@ -100,6 +105,8 @@ export type SubmissionRead =
   | { kind: "unavailable" }
   | { kind: "viewer_required" }
   | { kind: "unreadable" }
+  /** TB-279-R2: an older, viewer-less act exists for this checkout. It is preserved and can never be adopted/cleared. */
+  | { kind: "legacy_unresolved" }
   | { kind: "found"; submission: ReturnSubmission };
 
 /**
@@ -322,6 +329,23 @@ export function parseReturnSubmission(raw: string | null): ReturnSubmission | nu
   };
 }
 
+/**
+ * TB-279-R2 (F): finds every PREVIOUS-version act of this checkout. A v1 envelope has no viewer, so it cannot be
+ * attributed to the current customer and must never be adopted, compared or cleared — only preserved and reported.
+ * Both v1 key shapes are matched: `${prefix}${checkoutId}` and `${prefix}${viewer}:${checkoutId}`.
+ */
+export function findLegacySubmissionKeys(storage: SubmissionStorage, checkoutId: string): string[] {
+  const keys: string[] = [];
+  const unscoped = `${RETURN_SUBMISSION_LEGACY_PREFIX}${checkoutId}`;
+  const suffix = `:${checkoutId}`;
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (!key || !key.startsWith(RETURN_SUBMISSION_LEGACY_PREFIX)) continue;
+    if (key === unscoped || key.endsWith(suffix)) keys.push(key);
+  }
+  return keys;
+}
+
 /** Reads THIS viewer's frozen act for THIS checkout. `unreadable`/`viewer_required` are explicit states, never "none". */
 export function readReturnSubmission(
   storage: SubmissionStorage | null,
@@ -337,7 +361,15 @@ export function readReturnSubmission(
   } catch {
     return { kind: "unavailable" };
   }
-  if (!raw) return { kind: "none" };
+  if (!raw) {
+    // TB-279-R2 (F): a legacy act for this checkout is unresolved evidence, not "nothing here".
+    try {
+      if (findLegacySubmissionKeys(storage, checkoutId).length > 0) return { kind: "legacy_unresolved" };
+    } catch {
+      return { kind: "unavailable" };
+    }
+    return { kind: "none" };
+  }
   const submission = parseReturnSubmission(raw);
   if (!submission) return { kind: "unreadable" };
   // The envelope must belong to EXACTLY this scope; anything else is foreign or tampered evidence.
@@ -368,6 +400,10 @@ export function storeReturnSubmission(storage: SubmissionStorage | null, submiss
  *
  * Returns the updated act, or `null` when storage is unavailable, the scope is unknown, or the stored act is not this
  * submission key (a newer act is never touched by a late answer).
+ *
+ * TB-279-R2 (F): when the caller passes `expected` it must match the STORED envelope byte-for-byte and the child it is
+ * answering must still carry the exact frozen body/idempotency key. A late answer for an act that was replaced,
+ * re-scoped or tampered with is dropped instead of being applied to different bytes.
  */
 export function recordChildOutcome(
   storage: SubmissionStorage | null,
@@ -378,12 +414,19 @@ export function recordChildOutcome(
     | { kind: "recorded"; caseId: string; caseNumber: string | null }
     | { kind: "refused"; refusalCode: string }
     | { kind: "unknown"; refusalCode: string | null },
+  expected?: { envelope: string; childBody: string; idempotencyKey: string },
 ): ReturnSubmission | null {
   const read = readReturnSubmission(storage, scope.checkoutId, scope.viewerId);
   if (read.kind !== "found") return null;
   const current = read.submission;
   if (current.submissionKey !== submissionKey) return null;
-  if (!current.children.some((child) => child.key === childKey)) return null;
+  const target = current.children.find((child) => child.key === childKey);
+  if (!target) return null;
+  if (expected) {
+    if (serializeReturnSubmission(current) !== expected.envelope) return null;
+    if (target.body !== expected.childBody) return null;
+    if (target.idempotencyKey !== expected.idempotencyKey) return null;
+  }
   const children = current.children.map((child) => {
     if (child.key !== childKey) return child;
     if (child.state === "recorded") return child;
@@ -442,6 +485,8 @@ export function hasUnresolvedCustomerReturnSubmission(
 ): boolean {
   const read = readReturnSubmission(storage, checkoutId, viewerId);
   if (read.kind === "unreadable") return true;
+  // TB-279-R2 (F): a preserved older act is unresolved until a human reconciles it.
+  if (read.kind === "legacy_unresolved") return true;
   if (read.kind !== "found") return false;
   return !summarizeReturnSubmission(read.submission).resolved;
 }

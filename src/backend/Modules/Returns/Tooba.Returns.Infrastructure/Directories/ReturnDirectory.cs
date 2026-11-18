@@ -221,6 +221,8 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         // unlawful approval is refused without opening a transaction. They are re-read under the lock below.
         var reviewed = await MapSnapshotAsync(request, cancellationToken);
         var reviewedResolution = EnsureReviewedMoneyBasis(request, reviewed);
+        // TB-279-R2 (D): the decision must name the plan revision it reviewed, not just the money it produced.
+        EnsureReviewedPlanVersion(reviewedResolution, command.ExpectedResolutionVersion);
         var reviewedVersion = reviewedResolution.Version;
         var reviewedAmount = reviewedResolution.ApprovedAmount;
 
@@ -237,6 +239,8 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             {
                 throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
             }
+
+            EnsureReviewedPlanVersion(lockedResolution, command.ExpectedResolutionVersion);
 
             if (request.PaymentId is { } existingPayment && existingPayment != payment.PaymentId)
             {
@@ -316,6 +320,12 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         {
             EnsureOwningSellerScope(request, command.SellerPartyId);
 
+            // TB-279-R2 (D): a rejection also names the reviewed plan revision it was taken against, so a rejection can
+            // never silently discard a plan the operator did not read. The fence is applied to the WINNING decision
+            // only: an exact replay or a conflicting reason is answered by the durable decision authority itself, so a
+            // case that is already rejected/cancelled never reports a plan refusal instead of its own answer.
+            var lockedSnapshot = await MapSnapshotAsync(request, cancellationToken);
+
             var append = await AppendReviewedDecisionAsync(
                 request,
                 ReturnDecisionKind.Reject,
@@ -323,6 +333,11 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 command.Reason,
                 command.ExpectedDecisionVersion,
                 cancellationToken);
+
+            if (append == DecisionAppend.Recorded || request.Status == ReturnRequestStatus.Requested)
+            {
+                EnsureReviewedPlanVersion(ReturnResolutionPolicy.Resolve(lockedSnapshot), command.ExpectedResolutionVersion);
+            }
 
             // A NEW decision, or an exact replay of THIS decision on a case that is still undecided (a concurrent
             // duplicate/winner recorded the same rejection). Both move the case exactly once.
