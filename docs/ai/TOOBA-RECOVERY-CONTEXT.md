@@ -1,4 +1,10 @@
-# CURRENT — 279-R1 WORKER PASS (six 279 defects + S1–S5 closed); AWAIT ARCHITECT REVIEW — 2026-11-18
+# CURRENT — 279-R1 ARCHITECT REVIEW: PARTIAL; KEY CONTAINMENT AND CONNECTED CLOSURE PENDING — 2026-11-18
+
+Reviewed code `3f8b670cd4a16db9ef8e1c4766704b53a075d364`. Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/ARCHITECT-REVIEW.md` FIRST. Useful reservation/portion/atomic-decision changes retained, but operator wire contracts omit required versions/portions/proof, rejected/mixed allocation occupancy is wrong, unit/resolution-version gates incomplete, carrier/legacy evidence not fail-closed, and customer unmount/v1 intent handling remains unsafe. Whole-suite/mock PASS does not prove these counterexamples.
+Actual diff also commits a plaintext environment Data Protection master-key XML and protected scratch files. Do NOT print key values, blindly delete runtime/user files, or rewrite history. Containment must preserve local material privately, untrack with a normal commit/ignore and assess controlled key retirement/session impact. Worker rebase/amend/force-push and envelope/report discrepancies are recorded.
+278/279/279-R1 remain PARTIAL; no user/provider/financial acceptance. No new task issued here; activeTask NONE; STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE. Historical reports remain below unchanged.
+
+# SUPERSEDED — worker 279-R1 report (historical, not Architect acceptance)
 
 The consolidated repair `TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1` is
 implemented and reported: one shared payment-reservation protocol for first + retry attempts with owning payment facts

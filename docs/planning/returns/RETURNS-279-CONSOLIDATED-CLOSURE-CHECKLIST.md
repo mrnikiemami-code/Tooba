@@ -1,3 +1,21 @@
+# CURRENT — 279-R1 source review reopened consolidated closure — 2026-11-18
+
+Status PARTIAL, not final acceptance. Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/ARCHITECT-REVIEW.md` (code `3f8b670`). No new task issued by this checkpoint.
+
+| Remaining group | Concrete required proof | Status |
+| --- | --- | --- |
+| R1-A connected operator contract | Real modal/transport/endpoint accepts the SAME frozen decision+resolution versions, per-condition split and attested proof; new start/retry succeeds with controlled ports | blocking |
+| R1-B capacity | Rejected-only seller keeps held occupancy; mixed accepted 2 + owed 1 minus handback 0.5 keeps 2.5 occupied; no silent legacy disappearance | blocking |
+| R1-C version/quantum | Stale reviewed plan and missing new-decision version refuse; 0.5 pcs resolution/custody cannot write or send money/stock | blocking |
+| R1-D positive evidence | Unsupported carrier proof refuses; expired+live legacy slice ambiguity blocks without guessing; reacquisition proves exact slice | blocking |
+| R1-E retained customer act | Unmount stops later child sends; v1 uncertainty blocks replacement; old answer cannot update a different same-key body | blocking |
+| R1-F truthful tests | Exact owning regressions and strict wire/mounted negative controls; matrix cites tests that actually exist | blocking |
+| Protected repository material | Private local preservation, normal untracking/ignore, assessed environment-key retirement; no destructive cleanup/history rewrite | blocking containment |
+
+Retain the new shared budget method, accepted-usable Inventory argument, per-portion durable fields, atomic decision transition, shared customer Dialog and template toast. They are useful, bounded improvements. Preserve earlier reports and migration history; no reset/reapply/live mutation/new demo case. Prior small-item closure labels are worker assertions until connected evidence above passes. One consolidated correction boundary; no per-helper micro-task chain.
+
+---
+
 # CURRENT — included in the ONE issued 279-R1 repair — 2026-11-18
 
 Full envelope: `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/TASK.md`. All F1–F6 and S1–S5 below are in scope; implementation/closure NOT yet claimed. No automatic next task. The original planning checklist is preserved below; its old “not issued” label describes its creation state.
