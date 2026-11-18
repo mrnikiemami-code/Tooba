@@ -16,6 +16,23 @@ out/
 .env.*.local
 appsettings.*.local.json
 
+# ASP.NET Data Protection key ring is runtime material: persisting it in source leaks the master key.
+# The ring is created at runtime under the Host content root (Tooba.Shipping.Infrastructure,
+# App_Data/dataprotection-keys) and must never be committed.
+src/backend/Host/Tooba.Host/App_Data/dataprotection-keys/
+**/App_Data/dataprotection-keys/
+
+# TB-279-R2 containment: task scratch/probe/seed scripts that were committed by accident.
+# They stay on the author's disk and are not source. Narrow, name-scoped rules only: legitimate
+# product scripts (scripts/capture-*, scripts/prove-*, scripts/dev/*) remain tracked.
+/scripts/tb266r1-*.mjs
+/scripts/tb270r2-*.mjs
+/scripts/tb276-read-bridge-db.mjs
+/scripts/tb277r1-post-result.mjs
+/scripts/tb278-post-result.mjs
+/scripts/tb279-post-result.mjs
+/scripts/tb279-read-bridge-db.mjs
+
 # OS
 Thumbs.db
 .DS_Store
