@@ -1,4 +1,10 @@
-# CURRENT — TB-280-R1 ARCHITECT ACCEPT: THREE UX FINDINGS CLOSED; OWNER TEST NEXT — 2026-11-19
+# CURRENT — STORY MARKETPLACE SOURCE AUDIT AND PRODUCT PLAN RECORDED; NO IMPLEMENTATION ISSUED — 2026-11-19
+
+Owner requested reading the actual Story code and FIRST delivering a report/plan. Read `docs/planning/story/SOURCE-AUDIT-2026-11-19.md` and `docs/planning/story/STORY-MARKETPLACE-COMPLETION-PLAN.md`. Source reviewed at `e242d4dd9cc69c9094187caf838bb60d0cd87c70`; no local tests/runtime or business writes performed. One existing shared seller/admin UI is retained as the base. Target: Orders-style grid, seller-owned drafts/media/review, admin moderation plus creating ON BEHALF OF a validated shop, real scheduled publication and honest storefront. Audit records S01–S13, including missing admin-for-shop ownership, incomplete editor/media scope, empty publication, Scheduled visibility gap and non-persistent public controls. Plan proposes TWO cohesive delivery packages (can be one implementation task if bounded), NOT ten microtasks. No implementation/task/Bridge dispatch is authorized by this planning checkpoint.
+
+activeTask NONE; automaticNextImplementationTask NONE; next step OWNER_REVIEW_OF_REPORT_AND_PLAN. TOOBA-UX-001 applies: shopkeepers must understand the product without technical explanations. Preserve 280-R1 bounded Architect ACCEPT (user test still pending), 279-R3 acceptance, all prior reports and future refund-method/batch-payment backlog. No source/schema/data/seed/reset/runtime/config/key change. Do not mistake audit findings or the proposed product flow for implemented capability, new permissions or Marketplace acceptance.
+
+# HISTORICAL — TB-280-R1 accepted UX and owner-test checkpoint
 
 ## نیاز آیندهٔ ثبت‌شده — روش بازگشت وجه و واریز گروهی (۱۹ نوامبر ۲۰۲۶)
 
