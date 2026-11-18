@@ -1,4 +1,12 @@
-# CURRENT — 279-R3 ARCHITECT ACCEPT: FIXED RETURNS CLOSURE COMPLETE — 2026-11-18
+# CURRENT — MERCHANT PRODUCT UX REQUIRED; TB-280 ISSUED — 2026-11-18
+
+The product owner requires a sellable interface for ordinary shopkeepers with limited technical literacy. Passing technical tests does not establish product usability. Read the permanent cross-feature rule `docs/product/OPERATOR-UX-ACCEPTANCE.md` (TOOBA-UX-001) for EVERY subsequent UI task.
+
+Active issued task: `TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280`; read `docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/TASK.md` and its issuance receipt. Await the single Cursor worker's Bridge claim; do not start another task. Fix the existing Returns presentation in ONE focused increment: everyday language, one clear next action, review only actual received goods, contextual fields and progressive history. Preserve exact retained intents and all accepted owning write guards. Only the specifically bounded read-only work-capability correction is allowed beside the frontend work. T1–T7 are the focused acceptance scenarios. No live business POST/write, demo reset, migration, provider/money/stock effect or screenshot. User visual/functional acceptance remains pending.
+
+279-R3 remains Architect ACCEPT within its fixed backend scope; this is a separate product UX issue, not a reopening of that closure. Base `9aaf5bcd486ed63271ef431be20b7e24e8bb1951`. Key exposure remains CONTAINED_PENDING_REVIEWED_RETIREMENT, a separate pending review; no key operation is authorized. automaticNextImplementationTask NONE. Preserve all historical evidence and user work.
+
+# HISTORICAL — 279-R3 fixed-scope Architect acceptance checkpoint
 
 Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/ARCHITECT-REVIEW.md` FIRST. Source/evidence reviewed at `44e2cc6b3ea168b0e93de9103b861149d0f21fe7` (implementation `32b48c5b53ea263cd0aae00a5da59f34b4749671`). ACCEPT within issued B1/B2 + C1/C2 + D: required new-decision version after replay; legacy/incoherent held occupancy; actual Inventory quantity2 not3 with durable replay; failed-child shared-budget refusal/lawful control; safe historical posting untracking. This increment is CLOSED; no further repair task for those findings.
 Last Architect-accepted Returns closure: `TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3`. Retain repaired R2 workflows and all historical reviews; original PARTIAL verdicts are not rewritten. Worker focused receipts21/21 +4/4 and guards34/34 were assessed against actual source/test assertions; Architect did not execute the local Windows runtime.

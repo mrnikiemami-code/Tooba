@@ -1,0 +1,19 @@
+{
+  "protocol": "BRIDGE-WAKE-V1",
+  "taskId": "TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280",
+  "issuedDate": "2026-11-18",
+  "timezone": "Asia/Tehran",
+  "expectedBaseSha": "9aaf5bcd486ed63271ef431be20b7e24e8bb1951",
+  "acceptedBackendReviewCommit": "9aaf5bcd486ed63271ef431be20b7e24e8bb1951",
+  "encoding": "UTF-8",
+  "lineEndings": "LF",
+  "taskBytes": 15499,
+  "taskSha256": "291454901c9eb3c5832fa7f19c28b62cc3312056de7c5af092efb6a8f7214f25",
+  "downloadFilename": "TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280.task.md",
+  "taskPaths": [
+    "docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/TASK.md",
+    "docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/TASK.md"
+  ],
+  "permittedIncomingDelta": "docs-only issuance; verify at claim",
+  "automaticNextImplementationTask": "NONE"
+}
