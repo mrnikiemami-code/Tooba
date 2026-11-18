@@ -105,7 +105,7 @@ namespace Tooba.Story.Infrastructure.Persistence.Migrations
                     b.ToTable("outbox_messages", "story");
                 });
 
-            modelBuilder.Entity("Tooba.Story.Domain.Story", b =>
+            modelBuilder.Entity("Tooba.Story.Domain.Aggregates.Story", b =>
                 {
                     b.Property<Guid>("StoryId")
                         .HasColumnType("uuid")
@@ -123,6 +123,10 @@ namespace Tooba.Story.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedByActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_actor_user_id");
 
                     b.Property<string>("CtaTarget")
                         .HasMaxLength(512)
@@ -231,7 +235,55 @@ namespace Tooba.Story.Infrastructure.Persistence.Migrations
                     b.ToTable("stories", "story");
                 });
 
-            modelBuilder.Entity("Tooba.Story.Domain.StoryItem", b =>
+            modelBuilder.Entity("Tooba.Story.Domain.Aggregates.StoryCommandOccurrence", b =>
+                {
+                    b.Property<string>("OccurrenceKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("occurrence_key");
+
+                    b.Property<string>("ActionCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("action_code");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("IntentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("intent_hash");
+
+                    b.Property<Guid?>("SellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_party_id");
+
+                    b.Property<Guid>("StoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("story_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("OccurrenceKey")
+                        .HasName("pk_command_occurrences");
+
+                    b.HasIndex("TenantId", "SellerPartyId", "CreatedAt")
+                        .HasDatabaseName("ix_command_occurrences_tenant_id_seller_party_id_created_at");
+
+                    b.ToTable("command_occurrences", "story");
+                });
+
+            modelBuilder.Entity("Tooba.Story.Domain.Aggregates.StoryItem", b =>
                 {
                     b.Property<Guid>("StoryItemId")
                         .HasColumnType("uuid")

@@ -21,7 +21,10 @@ public sealed record PublicStoryCard(
     int DisplayOrder,
     string CtaType,
     string? CtaTarget,
-    IReadOnlyList<PublicStoryItem> Items);
+    IReadOnlyList<PublicStoryItem> Items,
+    Guid? SellerPartyId = null,
+    string? ShopDisplayName = null,
+    string? ShopPublicId = null);
 
 /// <summary>آیتم مدیریتی استوری.</summary>
 public sealed record AdminStoryItemSnapshot(
@@ -63,7 +66,12 @@ public sealed record AdminStorySnapshot(
     int VersionToken,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    IReadOnlyList<AdminStoryItemSnapshot> Items);
+    IReadOnlyList<AdminStoryItemSnapshot> Items,
+    Guid? CreatedByActorUserId = null,
+    string? ShopDisplayName = null,
+    bool ContentReady = false,
+    bool EffectivelyPublic = false,
+    IReadOnlyList<string>? ActionCodes = null);
 
 /// <summary>فرمان ایجاد استوری.</summary>
 public sealed record CreateStoryCommand(
@@ -74,7 +82,10 @@ public sealed record CreateStoryCommand(
     string? CoverMediaUrl,
     int? DisplayOrder,
     string? CtaType,
-    string? CtaTarget);
+    string? CtaTarget,
+    Guid? SellerPartyId = null,
+    string? OccurrenceKey = null,
+    int? ExpectedVersion = null);
 
 /// <summary>فرمان به‌روزرسانی استوری.</summary>
 public sealed record UpdateStoryCommand(

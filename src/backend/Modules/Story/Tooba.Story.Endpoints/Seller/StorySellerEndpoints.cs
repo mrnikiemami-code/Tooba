@@ -26,6 +26,8 @@ public static class StorySellerEndpoints
         seller.MapPost("", SellerCreateAsync);
         seller.MapPut("/{id:guid}", SellerUpdateAsync);
         seller.MapPost("/{id:guid}/submit", SellerSubmitAsync);
+        seller.MapPost("/{id:guid}/return-to-draft", SellerReturnToDraftAsync);
+        seller.MapPost("/{id:guid}/stop", SellerStopAsync);
         seller.MapPost("/{id:guid}/items", SellerAddItemAsync);
         seller.MapPut("/{id:guid}/items/{itemId:guid}", SellerUpdateItemAsync);
         seller.MapDelete("/{id:guid}/items/{itemId:guid}", SellerRemoveItemAsync);
@@ -88,6 +90,22 @@ public static class StorySellerEndpoints
         SellerMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, actor, sellerPartyId) => sender.Send(
                 new SubmitSellerStoryCommand(tenantId, sellerPartyId, id, actor), cancellationToken));
+
+    private static Task<IResult> SellerReturnToDraftAsync(
+        Guid id, ReviewedStoryActionBody? body, ISender sender, IStorySellerAuthorizer auth, HttpContext http,
+        ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
+        SellerMutationAsync(auth, http, tenant, api, cancellationToken,
+            (tenantId, _, sellerPartyId) => sender.Send(
+                new ReturnSellerStoryToDraftCommand(tenantId, sellerPartyId, id, body?.ExpectedVersion),
+                cancellationToken));
+
+    private static Task<IResult> SellerStopAsync(
+        Guid id, ReviewedStoryActionBody? body, ISender sender, IStorySellerAuthorizer auth, HttpContext http,
+        ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
+        SellerMutationAsync(auth, http, tenant, api, cancellationToken,
+            (tenantId, _, sellerPartyId) => sender.Send(
+                new StopSellerStoryCommand(tenantId, sellerPartyId, id, body?.ExpectedVersion),
+                cancellationToken));
 
     private static Task<IResult> SellerAddItemAsync(
         Guid id, AddStoryItemBody body, ISender sender, IStorySellerAuthorizer auth, HttpContext http,

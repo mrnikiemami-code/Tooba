@@ -34,6 +34,47 @@ public interface IStoryDirectory
         CreateStoryCommand command,
         CancellationToken cancellationToken);
 
+    /// <summary>پیش‌نویس متعلق به فروشگاه را برای ادمین می‌سازد.</summary>
+    Task<AdminStorySnapshot> AdminCreateForShopAsync(
+        Guid tenantId,
+        Guid adminActorUserId,
+        Guid sellerPartyId,
+        CreateStoryCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>تأیید و انتشار اتمی با نسخهٔ دیده‌شده.</summary>
+    Task<AdminStorySnapshot> AdminApproveAndPublishAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        int? expectedVersion,
+        CancellationToken cancellationToken);
+
+    /// <summary>تأیید و زمان‌بندی اتمی با نسخهٔ دیده‌شده.</summary>
+    Task<AdminStorySnapshot> AdminApproveAndScheduleAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        int? expectedVersion,
+        SetStoryScheduleCommand schedule,
+        CancellationToken cancellationToken);
+
+    /// <summary>بازگشت فروشنده به پیش‌نویس پس از تأیید.</summary>
+    Task<AdminStorySnapshot> SellerReturnToDraftAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        int? expectedVersion,
+        CancellationToken cancellationToken);
+
+    /// <summary>توقف انتشار توسط فروشندهٔ مالک.</summary>
+    Task<AdminStorySnapshot> SellerStopAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        int? expectedVersion,
+        CancellationToken cancellationToken);
+
     /// <summary>فیلدهای استوری را به‌روزرسانی می‌کند.</summary>
     Task<AdminStorySnapshot> AdminUpdateAsync(
         Guid tenantId,

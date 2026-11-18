@@ -36,6 +36,8 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("DisableAdminStoryCommand", "POST /v1/admin/stories/{id}/disable", NoValidatorRequired),
         ("ScheduleAdminStoryCommand", "POST /v1/admin/stories/{id}/schedule", ValidatorRequired),
         ("ApproveAdminStoryCommand", "POST /v1/admin/stories/{id}/approve", NoValidatorRequired),
+        ("ApproveAndPublishAdminStoryCommand", "POST /v1/admin/stories/{id}/approve-and-publish", ValidatorRequired),
+        ("ApproveAndScheduleAdminStoryCommand", "POST /v1/admin/stories/{id}/approve-and-schedule", ValidatorRequired),
         ("RejectAdminStoryCommand", "POST /v1/admin/stories/{id}/reject", ValidatorRequired),
         ("AddAdminStoryItemCommand", "POST /v1/admin/stories/{id}/items", ValidatorRequired),
         ("UpdateAdminStoryItemCommand", "PUT /v1/admin/stories/{id}/items/{itemId}", ValidatorRequired),
@@ -46,6 +48,8 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("CreateSellerStoryDraftCommand", "POST /v1/seller/stories", ValidatorRequired),
         ("UpdateSellerStoryCommand", "PUT /v1/seller/stories/{id}", ValidatorRequired),
         ("SubmitSellerStoryCommand", "POST /v1/seller/stories/{id}/submit", NoValidatorRequired),
+        ("ReturnSellerStoryToDraftCommand", "POST /v1/seller/stories/{id}/return-to-draft", ValidatorRequired),
+        ("StopSellerStoryCommand", "POST /v1/seller/stories/{id}/stop", ValidatorRequired),
         ("AddSellerStoryItemCommand", "POST /v1/seller/stories/{id}/items", ValidatorRequired),
         ("UpdateSellerStoryItemCommand", "PUT /v1/seller/stories/{id}/items/{itemId}", ValidatorRequired),
         ("RemoveSellerStoryItemCommand", "DELETE /v1/seller/stories/{id}/items/{itemId}", NoValidatorRequired),
@@ -71,13 +75,17 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("UpdateSellerStoryItemCommand", typeof(UpdateSellerStoryItemCommandValidator)),
         ("ReorderSellerStoryItemsCommand", typeof(ReorderSellerStoryItemsCommandValidator)),
         ("GetPublicStoriesQuery", typeof(GetPublicStoriesQueryValidator)),
+        ("ApproveAndPublishAdminStoryCommand", typeof(ApproveAndPublishAdminStoryCommandValidator)),
+        ("ApproveAndScheduleAdminStoryCommand", typeof(ApproveAndScheduleAdminStoryCommandValidator)),
+        ("ReturnSellerStoryToDraftCommand", typeof(ReturnSellerStoryToDraftCommandValidator)),
+        ("StopSellerStoryCommand", typeof(StopSellerStoryCommandValidator)),
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_25_with_16_required_and_9_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_29_with_20_required_and_9_no_validator()
     {
-        Assert.Equal(25, Manifest.Length);
-        Assert.Equal(16, Manifest.Count(x => x.Classification == ValidatorRequired));
+        Assert.Equal(29, Manifest.Length);
+        Assert.Equal(20, Manifest.Count(x => x.Classification == ValidatorRequired));
         Assert.Equal(9, Manifest.Count(x => x.Classification == NoValidatorRequired));
         Assert.Equal(Manifest.Length, Manifest.Select(x => x.RequestTypeName).Distinct(StringComparer.Ordinal).Count());
     }
@@ -96,7 +104,7 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
     }
 
     [Fact]
-    public void Sixteen_required_validators_resolve_via_foundation_DI_and_nine_have_none()
+    public void Twenty_required_validators_resolve_via_foundation_DI_and_nine_have_none()
     {
         var services = new ServiceCollection();
         services.AddLogging();

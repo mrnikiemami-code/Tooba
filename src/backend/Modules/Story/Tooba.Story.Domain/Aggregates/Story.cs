@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Story.Contracts.Errors;
 
 using Tooba.Story.Domain.Enums;
+using Tooba.Story.Domain.Policies;
 using Tooba.Story.Domain.Rules;
 
 namespace Tooba.Story.Domain.Aggregates;
@@ -29,6 +30,8 @@ public sealed class Story
     public Guid? SubmittedByActorUserId { get; private set; }
     /// <summary>Actor ادمین بازبین.</summary>
     public Guid? ReviewedByActorUserId { get; private set; }
+    /// <summary>Actor واقعی ایجادکننده (ادمین یا فروشنده)؛ مالک فروشگاه نیست.</summary>
+    public Guid? CreatedByActorUserId { get; private set; }
     /// <summary>زمان ارسال برای بازبینی.</summary>
     public DateTimeOffset? SubmittedAt { get; private set; }
     /// <summary>زمان آخرین بازبینی.</summary>
@@ -106,11 +109,11 @@ public sealed class Story
         };
     }
 
-    /// <summary>پیش‌نویس فروشنده می‌سازد.</summary>
-    public static Story CreateSellerDraft(
+    /// <summary>پیش‌نویس متعلق به فروشگاه با ثبت actor واقعی ایجادکننده.</summary>
+    public static Story CreateShopOwnedDraft(
         Guid tenantId,
         Guid sellerPartyId,
-        Guid actorUserId,
+        Guid createdByActorUserId,
         string title,
         int displayOrder,
         DateTimeOffset now,
@@ -122,8 +125,8 @@ public sealed class Story
         string? ctaTarget = null)
     {
         if (sellerPartyId == Guid.Empty)
-            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
-        if (actorUserId == Guid.Empty)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.ShopInvalid));
+        if (createdByActorUserId == Guid.Empty)
             throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
         ValidateTitle(title);
@@ -137,8 +140,9 @@ public sealed class Story
             TenantId = tenantId,
             Origin = StoryOrigin.Seller,
             SellerPartyId = sellerPartyId,
+            CreatedByActorUserId = createdByActorUserId,
             ReviewStatus = StoryReviewStatus.None,
-            SubmittedByActorUserId = actorUserId,
+            SubmittedByActorUserId = createdByActorUserId,
             Locale = NormalizeOptional(locale, StoryRules.LocaleMaxLength),
             Market = NormalizeOptional(market, StoryRules.MarketMaxLength),
             Title = title.Trim(),
@@ -153,6 +157,34 @@ public sealed class Story
             UpdatedAt = now,
         };
     }
+
+    /// <summary>پیش‌نویس فروشنده می‌سازد.</summary>
+    public static Story CreateSellerDraft(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid actorUserId,
+        string title,
+        int displayOrder,
+        DateTimeOffset now,
+        string? locale = null,
+        string? market = null,
+        Guid? coverMediaAssetId = null,
+        string? coverMediaUrl = null,
+        string? ctaType = null,
+        string? ctaTarget = null) =>
+        CreateShopOwnedDraft(
+            tenantId,
+            sellerPartyId,
+            actorUserId,
+            title,
+            displayOrder,
+            now,
+            locale,
+            market,
+            coverMediaAssetId,
+            coverMediaUrl,
+            ctaType,
+            ctaTarget);
 
     /// <summary>آیا فروشنده مجاز به ویرایش محتوا است.</summary>
     public bool IsSellerContentEditable() =>
@@ -194,6 +226,7 @@ public sealed class Story
     public void SetSchedule(DateTimeOffset? startAt, DateTimeOffset? endAt, DateTimeOffset now)
     {
         EnsurePublicationEligible();
+        EnsurePlayableContent();
         if (startAt.HasValue && endAt.HasValue && endAt.Value <= startAt.Value)
             throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
 
@@ -212,7 +245,12 @@ public sealed class Story
     public void Activate(DateTimeOffset now)
     {
         EnsurePublicationEligible();
+        EnsurePlayableContent();
+        if (EndAt is { } end && end <= now)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.ScheduleInvalid));
         Status = StoryStatus.Active;
+        if (StartAt is { } start && start > now)
+            Status = StoryStatus.Scheduled;
         Touch(now);
     }
 
@@ -227,6 +265,7 @@ public sealed class Story
             throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
         if (ReviewStatus is not (StoryReviewStatus.None or StoryReviewStatus.Rejected))
             throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+        EnsurePlayableContent();
 
         ReviewStatus = StoryReviewStatus.Submitted;
         SubmittedByActorUserId = actorUserId;
@@ -234,6 +273,46 @@ public sealed class Story
         RejectionReason = null;
         ReviewedByActorUserId = null;
         ReviewedAt = null;
+        Touch(now);
+    }
+
+    /// <summary>نسخهٔ دیده‌شده را قبل از جهش اثرگذار الزام می‌کند.</summary>
+    public void EnsureExpectedVersion(int? expectedVersion)
+    {
+        if (expectedVersion is null)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.VersionRequired));
+        if (expectedVersion.Value != VersionToken)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.VersionStale));
+    }
+
+    /// <summary>فروشنده استوری تأییدشده را برای ویرایش به پیش‌نویس برمی‌گرداند و انتشار را قطع می‌کند.</summary>
+    public void ReturnToDraftForEdit(DateTimeOffset now)
+    {
+        if (Origin != StoryOrigin.Seller)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+        if (ReviewStatus != StoryReviewStatus.Approved)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+
+        Status = StoryStatus.Draft;
+        ReviewStatus = StoryReviewStatus.None;
+        ReviewedByActorUserId = null;
+        ReviewedAt = null;
+        SubmittedAt = null;
+        SubmittedByActorUserId = null;
+        RejectionReason = null;
+        StartAt = null;
+        EndAt = null;
+        Touch(now);
+    }
+
+    /// <summary>فروشنده انتشار خودش را متوقف می‌کند؛ بازبینی دوباره برای انتشار لازم است.</summary>
+    public void StopOwnPublication(DateTimeOffset now)
+    {
+        if (Origin != StoryOrigin.Seller)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+        if (Status is not (StoryStatus.Active or StoryStatus.Scheduled))
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+        Status = StoryStatus.Disabled;
         Touch(now);
     }
 
@@ -255,6 +334,7 @@ public sealed class Story
 
         if (ReviewStatus != StoryReviewStatus.Submitted)
             throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+        EnsurePlayableContent();
 
         ReviewStatus = StoryReviewStatus.Approved;
         ReviewedByActorUserId = adminActorUserId;
@@ -305,10 +385,7 @@ public sealed class Story
 
     /// <summary>آیا استوری در زمان داده‌شده برای عموم قابل نمایش است.</summary>
     public bool IsPubliclyVisible(DateTimeOffset now) =>
-        IsPublicationEligible()
-        && Status == StoryStatus.Active
-        && (StartAt is null || StartAt <= now)
-        && (EndAt is null || EndAt > now);
+        StoryPublicationPolicy.IsEffectivelyPublic(this, now);
 
     /// <summary>آیتم رسانهٔ جدید اضافه می‌کند.</summary>
     public StoryItem AddItem(
@@ -397,6 +474,12 @@ public sealed class Story
     {
         if (!IsPublicationEligible())
             throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+    }
+
+    private void EnsurePlayableContent()
+    {
+        if (!StoryPublicationPolicy.HasPlayableContent(this))
+            throw new SemanticException(new SemanticError(StoryErrorCodes.ContentNotReady));
     }
 
     private static string ValidateRejectionReason(string reason)

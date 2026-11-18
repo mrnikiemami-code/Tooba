@@ -20,6 +20,13 @@ public sealed class MediaDbContext : DbContext
     /// <summary>دارایی‌های رسانه.</summary>
     public DbSet<MediaAsset> Assets => Set<MediaAsset>();
 
+    /// <summary>مالکیت فروشگاهی دارایی‌های جدید.</summary>
+    public DbSet<MediaAssetOwnerBinding> AssetOwnerBindings => Set<MediaAssetOwnerBinding>();
+
+    /// <summary>رخداد آپلود فروشنده برای replay.</summary>
+    public DbSet<Tooba.Media.Infrastructure.Assets.MediaAssetOwnerOccurrence> AssetOwnerOccurrences =>
+        Set<Tooba.Media.Infrastructure.Assets.MediaAssetOwnerOccurrence>();
+
     /// <summary>Outbox ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -40,6 +47,27 @@ public sealed class MediaDbContext : DbContext
             entity.HasIndex(x => x.StorageKey).IsUnique();
             entity.HasIndex(x => x.CreatedAt);
             entity.HasIndex(x => x.OriginalFileName);
+        });
+        modelBuilder.Entity<MediaAssetOwnerBinding>(entity =>
+        {
+            entity.ToTable("asset_owner_bindings");
+            entity.HasKey(x => x.MediaAssetId);
+            entity.Property(x => x.MediaAssetId).ValueGeneratedNever();
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.SellerPartyId).IsRequired();
+            entity.Property(x => x.CreatedByUserId).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.SellerPartyId, x.CreatedAt });
+        });
+        modelBuilder.Entity<Tooba.Media.Infrastructure.Assets.MediaAssetOwnerOccurrence>(entity =>
+        {
+            entity.ToTable("asset_owner_occurrences");
+            entity.HasKey(x => x.OccurrenceKey);
+            entity.Property(x => x.OccurrenceKey).HasMaxLength(128);
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.SellerPartyId).IsRequired();
+            entity.Property(x => x.MediaAssetId).IsRequired();
+            entity.Property(x => x.ActorUserId).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.SellerPartyId, x.CreatedAt });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

@@ -7,7 +7,7 @@ using Tooba.Story.Application.Stories.Presentation;
 namespace Tooba.Story.Application.Stories.Commands.Admin;
 
 /// <summary>ایجاد استوری ادمین.</summary>
-public sealed record CreateAdminStoryCommand(Guid TenantId, CreateStoryCommand Input)
+public sealed record CreateAdminStoryCommand(Guid TenantId, Guid ActorUserId, CreateStoryCommand Input)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class CreateAdminStoryCommandHandler(StoryPresentationComposer composer)
@@ -15,7 +15,47 @@ public sealed class CreateAdminStoryCommandHandler(StoryPresentationComposer com
 {
     public Task<Result<AdminStorySnapshot>> Handle(CreateAdminStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
-            () => composer.AdminCreateAsync(request.TenantId, request.Input, cancellationToken));
+            () => composer.AdminCreateAsync(request.TenantId, request.ActorUserId, request.Input, cancellationToken));
+}
+
+/// <summary>تأیید و انتشار اتمی.</summary>
+public sealed record ApproveAndPublishAdminStoryCommand(
+    Guid TenantId, Guid StoryId, Guid AdminActorUserId, int? ExpectedVersion)
+    : IRequest<Result<AdminStorySnapshot>>;
+
+public sealed class ApproveAndPublishAdminStoryCommandHandler(StoryPresentationComposer composer)
+    : IRequestHandler<ApproveAndPublishAdminStoryCommand, Result<AdminStorySnapshot>>
+{
+    public Task<Result<AdminStorySnapshot>> Handle(
+        ApproveAndPublishAdminStoryCommand request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.AdminApproveAndPublishAsync(
+                request.TenantId, request.StoryId, request.AdminActorUserId, request.ExpectedVersion, cancellationToken));
+}
+
+/// <summary>تأیید و زمان‌بندی اتمی.</summary>
+public sealed record ApproveAndScheduleAdminStoryCommand(
+    Guid TenantId,
+    Guid StoryId,
+    Guid AdminActorUserId,
+    int? ExpectedVersion,
+    DateTimeOffset? StartAt,
+    DateTimeOffset? EndAt)
+    : IRequest<Result<AdminStorySnapshot>>;
+
+public sealed class ApproveAndScheduleAdminStoryCommandHandler(StoryPresentationComposer composer)
+    : IRequestHandler<ApproveAndScheduleAdminStoryCommand, Result<AdminStorySnapshot>>
+{
+    public Task<Result<AdminStorySnapshot>> Handle(
+        ApproveAndScheduleAdminStoryCommand request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.AdminApproveAndScheduleAsync(
+                request.TenantId,
+                request.StoryId,
+                request.AdminActorUserId,
+                request.ExpectedVersion,
+                new SetStoryScheduleCommand(request.StartAt, request.EndAt),
+                cancellationToken));
 }
 
 /// <summary>به‌روزرسانی استوری ادمین.</summary>

@@ -18,4 +18,11 @@
   <data name="story.schedule.range.invalid" xml:space="preserve"><value>Story schedule range is invalid.</value></data>
   <data name="story.locale.invalid" xml:space="preserve"><value>Story locale value is invalid.</value></data>
   <data name="story.market.invalid" xml:space="preserve"><value>Story market value is invalid.</value></data>
+  <data name="story.shop.invalid" xml:space="preserve"><value>Story shop is invalid.</value></data>
+  <data name="story.content.notReady" xml:space="preserve"><value>Story content is not ready.</value></data>
+  <data name="story.version.required" xml:space="preserve"><value>Story reviewed version is required.</value></data>
+  <data name="story.version.stale" xml:space="preserve"><value>Story reviewed version is stale.</value></data>
+  <data name="story.schedule.invalid" xml:space="preserve"><value>Story schedule is invalid.</value></data>
+  <data name="story.media.forbidden" xml:space="preserve"><value>Story media is forbidden.</value></data>
+  <data name="story.occurrence.conflict" xml:space="preserve"><value>Story occurrence conflicts.</value></data>
 </root>

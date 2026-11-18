@@ -22,6 +22,8 @@ public sealed class MediaErrorCatalogContributor : IErrorCatalogContributor
             "Media storage is unavailable."),
         D(MediaErrorCodes.Missing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Media was not found."),
+        D(MediaErrorCodes.OwnerForbidden, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
+            "Media owner access is forbidden."),
         D(MediaAssetContractCodes.AssetMissing, ErrorClassification.NotFound, StatusCodes.Status404NotFound,
             "Media asset is missing."),
     ];

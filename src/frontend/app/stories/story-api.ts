@@ -79,6 +79,11 @@ export interface AdminStorySnapshot {
   updatedAt: string;
   items: AdminStoryItem[];
   id: string;
+  createdByActorUserId: string | null;
+  shopDisplayName: string | null;
+  contentReady: boolean;
+  effectivelyPublic: boolean;
+  actionCodes: string[];
 }
 
 const STORY_STATUS_NAMES: Record<number, string> = {
@@ -239,6 +244,14 @@ export function mapAdminStory(value: unknown): AdminStorySnapshot | null {
     updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
     items,
     id: storyId,
+    createdByActorUserId: nullableText(prop(item, "createdByActorUserId", "CreatedByActorUserId")),
+    shopDisplayName: nullableText(prop(item, "shopDisplayName", "ShopDisplayName")),
+    contentReady: Boolean(prop(item, "contentReady", "ContentReady")),
+    effectivelyPublic: Boolean(prop(item, "effectivelyPublic", "EffectivelyPublic")),
+    actionCodes: (() => {
+      const raw = prop(item, "actionCodes", "ActionCodes");
+      return Array.isArray(raw) ? raw.map((code) => String(code)) : [];
+    })(),
   };
 }
 
@@ -354,9 +367,12 @@ export async function createAdminStory(input: {
   locale?: string | null;
   market?: string | null;
   coverMediaUrl?: string | null;
+  coverMediaAssetId?: string | null;
   displayOrder?: number | null;
   ctaType?: string | null;
   ctaTarget?: string | null;
+  sellerPartyId?: string | null;
+  occurrenceKey?: string | null;
 }): Promise<{ ok: boolean; story?: AdminStorySnapshot; message?: string }> {
   try {
     const response = await fetch("/v1/admin/stories", {
@@ -366,11 +382,13 @@ export async function createAdminStory(input: {
         title: input.title,
         locale: input.locale ?? null,
         market: input.market ?? null,
-        coverMediaAssetId: null,
+        coverMediaAssetId: input.coverMediaAssetId ?? null,
         coverMediaUrl: input.coverMediaUrl ?? null,
         displayOrder: input.displayOrder ?? null,
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
+        sellerPartyId: input.sellerPartyId ?? null,
+        occurrenceKey: input.occurrenceKey ?? null,
       }),
     });
     const payload = await response.json().catch(() => null);
@@ -535,6 +553,42 @@ export async function approveAdminStory(storyId: string): Promise<AdminResult<Ad
   }
 }
 
+export async function approveAndPublishAdminStory(
+  storyId: string,
+  expectedVersion: number,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  try {
+    const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/approve-and-publish`, {
+      method: "POST",
+      headers: adminHeaders(true),
+      body: JSON.stringify({ expectedVersion }),
+    });
+    return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function approveAndScheduleAdminStory(
+  storyId: string,
+  input: { expectedVersion: number; startAt?: string | null; endAt?: string | null },
+): Promise<AdminResult<AdminStorySnapshot>> {
+  try {
+    const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/approve-and-schedule`, {
+      method: "POST",
+      headers: adminHeaders(true),
+      body: JSON.stringify({
+        expectedVersion: input.expectedVersion,
+        startAt: input.startAt ?? null,
+        endAt: input.endAt ?? null,
+      }),
+    });
+    return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
 export async function rejectAdminStory(
   storyId: string,
   reason: string,
@@ -563,6 +617,7 @@ type StoryMutationInput = {
 
 type StoryItemMutationInput = {
   mediaType: string;
+  mediaAssetId?: string | null;
   mediaUrl?: string | null;
   caption?: string | null;
   durationMs?: number | null;
@@ -709,6 +764,48 @@ export async function submitSellerStory(
   }
 }
 
+export async function returnSellerStoryToDraft(
+  storyId: string,
+  expectedVersion: number,
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/return-to-draft`, {
+      method: "POST",
+      headers: sellerStoryHeaders(partyId, true),
+      body: JSON.stringify({ expectedVersion }),
+    });
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function stopSellerStory(
+  storyId: string,
+  expectedVersion: number,
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/stop`, {
+      method: "POST",
+      headers: sellerStoryHeaders(partyId, true),
+      body: JSON.stringify({ expectedVersion }),
+    });
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
 export async function addSellerStoryItem(
   storyId: string,
   input: StoryItemMutationInput,
@@ -724,7 +821,7 @@ export async function addSellerStoryItem(
       headers: sellerStoryHeaders(partyId, true),
       body: JSON.stringify({
         mediaType: input.mediaType,
-        mediaAssetId: null,
+        mediaAssetId: input.mediaAssetId ?? null,
         mediaUrl: input.mediaUrl ?? null,
         caption: input.caption ?? null,
         durationMs: input.durationMs ?? null,

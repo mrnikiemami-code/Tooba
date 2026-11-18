@@ -45,10 +45,41 @@ public sealed class StoryPresentationComposer
     public Task<AdminStorySnapshot?> AdminGetAsync(Guid tenantId, Guid storyId, CancellationToken cancellationToken) =>
         Guard(() => _stories.AdminGetAsync(tenantId, storyId, cancellationToken));
 
-    /// <summary>ایجاد استوری ادمین.</summary>
+    /// <summary>ایجاد استوری ادمین یا پیش‌نویس برای فروشگاه انتخاب‌شده.</summary>
     public Task<AdminStorySnapshot> AdminCreateAsync(
-        Guid tenantId, CreateStoryCommand command, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminCreateAsync(tenantId, command, cancellationToken));
+        Guid tenantId, Guid actorUserId, CreateStoryCommand command, CancellationToken cancellationToken) =>
+        Guard(() => command.SellerPartyId is Guid shop && shop != Guid.Empty
+            ? _stories.AdminCreateForShopAsync(tenantId, actorUserId, shop, command, cancellationToken)
+            : _stories.AdminCreateAsync(tenantId, command, cancellationToken));
+
+    /// <summary>تأیید و انتشار اتمی.</summary>
+    public Task<AdminStorySnapshot> AdminApproveAndPublishAsync(
+        Guid tenantId, Guid storyId, Guid adminActorUserId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminApproveAndPublishAsync(
+            tenantId, storyId, adminActorUserId, expectedVersion, cancellationToken));
+
+    /// <summary>تأیید و زمان‌بندی اتمی.</summary>
+    public Task<AdminStorySnapshot> AdminApproveAndScheduleAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        int? expectedVersion,
+        SetStoryScheduleCommand schedule,
+        CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminApproveAndScheduleAsync(
+            tenantId, storyId, adminActorUserId, expectedVersion, schedule, cancellationToken));
+
+    /// <summary>بازگشت فروشنده به پیش‌نویس.</summary>
+    public Task<AdminStorySnapshot> SellerReturnToDraftAsync(
+        Guid tenantId, Guid sellerPartyId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guard(() => _stories.SellerReturnToDraftAsync(
+            tenantId, sellerPartyId, storyId, expectedVersion, cancellationToken));
+
+    /// <summary>توقف انتشار توسط فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerStopAsync(
+        Guid tenantId, Guid sellerPartyId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guard(() => _stories.SellerStopAsync(
+            tenantId, sellerPartyId, storyId, expectedVersion, cancellationToken));
 
     /// <summary>به‌روزرسانی استوری.</summary>
     public Task<AdminStorySnapshot> AdminUpdateAsync(

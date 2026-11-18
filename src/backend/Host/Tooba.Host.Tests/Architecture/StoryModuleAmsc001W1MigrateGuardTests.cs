@@ -118,7 +118,7 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);
 
         // Exactly sixteen transport validators — one per VALIDATOR_REQUIRED endpoint-reachable request.
-        Assert.Equal(16, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(20, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
     }
 
     [Fact]

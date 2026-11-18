@@ -16,6 +16,7 @@ public static class MediaErrorCodes
         StorageUnavailable,
         Missing,
         ValidationFailed,
+        OwnerForbidden,
     };
 
     /// <summary>
@@ -46,4 +47,7 @@ public static class MediaErrorCodes
     /// the FluentValidation transport pipeline. HTTP 400.
     /// </summary>
     public const string ValidationFailed = "media.validation.failed";
+
+    /// <summary>Asset is not authorized for the requesting shop/tenant. HTTP 403.</summary>
+    public const string OwnerForbidden = "media.owner.forbidden";
 }

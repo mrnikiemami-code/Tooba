@@ -11,7 +11,15 @@ public sealed record CreateStoryBody(
     string? CoverMediaUrl,
     int? DisplayOrder,
     string? CtaType,
-    string? CtaTarget);
+    string? CtaTarget,
+    Guid? SellerPartyId = null,
+    string? OccurrenceKey = null);
+
+/// <summary>بدنهٔ فرمان‌های نسخه‌دار بازبینی/انتشار.</summary>
+public sealed record ReviewedStoryActionBody(int? ExpectedVersion);
+
+/// <summary>بدنهٔ تأیید و زمان‌بندی.</summary>
+public sealed record ApproveAndScheduleBody(int? ExpectedVersion, DateTimeOffset? StartAt, DateTimeOffset? EndAt);
 
 /// <summary>بدنهٔ به‌روزرسانی استوری.</summary>
 public sealed record UpdateStoryBody(
@@ -61,7 +69,7 @@ public static class StoryBodyMapping
 {
     public static CreateStoryCommand ToCreate(CreateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,
-        body.DisplayOrder, body.CtaType, body.CtaTarget);
+        body.DisplayOrder, body.CtaType, body.CtaTarget, body.SellerPartyId, body.OccurrenceKey);
 
     public static UpdateStoryCommand ToUpdate(UpdateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,

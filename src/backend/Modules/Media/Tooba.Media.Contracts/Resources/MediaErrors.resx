@@ -11,4 +11,5 @@
   <data name="media.storage.unavailable" xml:space="preserve"><value>Service Unavailable</value></data>
   <data name="media.missing" xml:space="preserve"><value>Not Found</value></data>
   <data name="media.asset.missing" xml:space="preserve"><value>Not Found</value></data>
+  <data name="media.owner.forbidden" xml:space="preserve"><value>Forbidden</value></data>
 </root>

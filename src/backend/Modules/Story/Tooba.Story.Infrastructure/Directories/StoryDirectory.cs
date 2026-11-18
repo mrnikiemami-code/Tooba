@@ -1,10 +1,13 @@
 using Tooba.Story.Contracts.Errors;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Media.Contracts.Assets;
+using Tooba.Party.Contracts.Ports;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Domain.Aggregates;
 using Tooba.Story.Domain.Enums;
+using Tooba.Story.Domain.Policies;
 using Tooba.Story.Domain.Rules;
 using Tooba.Story.Infrastructure.Persistence;
 using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
@@ -12,12 +15,22 @@ using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
 namespace Tooba.Story.Infrastructure.Directories;
 
 /// <summary>دایرکتوری Story با schema مستقل.</summary>
-public sealed class StoryDirectory : IStoryDirectory
+public sealed partial class StoryDirectory : IStoryDirectory
 {
     private readonly StoryDbContext _db;
+    private readonly IPartyAdminSellerReadGateway? _partySellers;
+    private readonly IStoryMediaAssetPort? _media;
 
-    /// <summary>DbContext مالک را تزریق می‌کند.</summary>
-    public StoryDirectory(StoryDbContext db) => _db = db;
+    /// <summary>DbContext مالک را تزریق می‌کند؛ Party/Media اختیاری برای تست‌های جدا هستند.</summary>
+    public StoryDirectory(
+        StoryDbContext db,
+        IPartyAdminSellerReadGateway? partySellers = null,
+        IStoryMediaAssetPort? media = null)
+    {
+        _db = db;
+        _partySellers = partySellers;
+        _media = media;
+    }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<PublicStoryCard>> GetPublicStoriesAsync(
@@ -27,10 +40,10 @@ public sealed class StoryDirectory : IStoryDirectory
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        // Public eligibility: Admin-origin OR Approved review, then Active/window via IsPubliclyVisible.
+        // Public eligibility: Admin-origin OR Approved review; Active OR Scheduled, then window via IsPubliclyVisible.
         var rows = await _db.Stories.AsNoTracking()
             .Where(story => story.TenantId == tenantId
-                && story.Status == StoryStatus.Active
+                && (story.Status == StoryStatus.Active || story.Status == StoryStatus.Scheduled)
                 && (story.Origin == StoryOrigin.Admin
                     || story.ReviewStatus == StoryReviewStatus.Approved))
             .OrderBy(story => story.DisplayOrder)
@@ -426,6 +439,8 @@ public sealed class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        var bound = await BindSellerMediaAsync(
+            tenantId, sellerPartyId, command.MediaAssetId, command.MediaUrl, cancellationToken);
         var now = DateTimeOffset.UtcNow;
         var order = command.DisplayOrder
             ?? (story.Items.Count == 0 ? 0 : story.Items.Max(item => item.DisplayOrder) + 1);
@@ -433,8 +448,8 @@ public sealed class StoryDirectory : IStoryDirectory
             command.MediaType,
             order,
             now,
-            command.MediaAssetId,
-            command.MediaUrl,
+            bound.AssetId,
+            bound.DisplayUrl,
             command.Caption,
             command.DurationMs,
             command.CtaType,
@@ -453,11 +468,13 @@ public sealed class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        var bound = await BindSellerMediaAsync(
+            tenantId, sellerPartyId, command.MediaAssetId, command.MediaUrl, cancellationToken);
         story.UpdateItem(
             itemId,
             command.MediaType,
-            command.MediaAssetId,
-            command.MediaUrl,
+            bound.AssetId,
+            bound.DisplayUrl,
             command.Caption,
             command.DurationMs,
             command.CtaType,
@@ -495,35 +512,48 @@ public sealed class StoryDirectory : IStoryDirectory
         return MapAdmin(story);
     }
 
-    internal static AdminStorySnapshot MapAdmin(StoryEntity story) => new(
-        story.StoryId,
-        story.TenantId,
-        story.Origin,
-        story.SellerPartyId,
-        story.ReviewStatus,
-        story.SubmittedByActorUserId,
-        story.ReviewedByActorUserId,
-        story.SubmittedAt,
-        story.ReviewedAt,
-        story.RejectionReason,
-        story.Locale,
-        story.Market,
-        story.Title,
-        story.CoverMediaAssetId,
-        story.CoverMediaUrl,
-        story.DisplayOrder,
-        story.StartAt,
-        story.EndAt,
-        story.Status,
-        story.CtaType,
-        story.CtaTarget,
-        story.VersionToken,
-        story.CreatedAt,
-        story.UpdatedAt,
-        story.Items
-            .OrderBy(item => item.DisplayOrder)
-            .Select(MapAdminItem)
-            .ToList());
+    internal static AdminStorySnapshot MapAdmin(StoryEntity story)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var actions = StoryPublicationPolicy.ProjectActionCodes(story, isAdmin: true, now)
+            .Concat(StoryPublicationPolicy.ProjectActionCodes(story, isAdmin: false, now))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        return new(
+            story.StoryId,
+            story.TenantId,
+            story.Origin,
+            story.SellerPartyId,
+            story.ReviewStatus,
+            story.SubmittedByActorUserId,
+            story.ReviewedByActorUserId,
+            story.SubmittedAt,
+            story.ReviewedAt,
+            story.RejectionReason,
+            story.Locale,
+            story.Market,
+            story.Title,
+            story.CoverMediaAssetId,
+            story.CoverMediaUrl,
+            story.DisplayOrder,
+            story.StartAt,
+            story.EndAt,
+            story.Status,
+            story.CtaType,
+            story.CtaTarget,
+            story.VersionToken,
+            story.CreatedAt,
+            story.UpdatedAt,
+            story.Items
+                .OrderBy(item => item.DisplayOrder)
+                .Select(MapAdminItem)
+                .ToList(),
+            story.CreatedByActorUserId,
+            ShopDisplayName: null,
+            ContentReady: StoryPublicationPolicy.HasPlayableContent(story),
+            EffectivelyPublic: StoryPublicationPolicy.IsEffectivelyPublic(story, now),
+            ActionCodes: actions);
+    }
 
     private static PublicStoryCard MapPublic(StoryEntity story)
     {
@@ -539,7 +569,8 @@ public sealed class StoryDirectory : IStoryDirectory
             story.DisplayOrder,
             story.CtaType,
             story.CtaTarget,
-            items);
+            items,
+            story.SellerPartyId);
     }
 
     private static PublicStoryItem MapPublicItem(StoryItem item) => new(
@@ -703,6 +734,37 @@ public sealed class StoryDirectory : IStoryDirectory
             .ToDictionary(group => group.Key, group => group.ToList());
         foreach (var story in stories)
             story.AttachItems(grouped.GetValueOrDefault(story.StoryId, []));
+    }
+
+    private async Task<(Guid? AssetId, string? DisplayUrl)> BindSellerMediaAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid? mediaAssetId,
+        string? mediaUrl,
+        CancellationToken cancellationToken)
+    {
+        if (mediaAssetId is Guid assetId && assetId != Guid.Empty)
+        {
+            if (_media is null)
+                return (assetId, string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim());
+
+            try
+            {
+                var authorized = await _media.AuthorizeForStoryAsync(
+                    assetId, tenantId, sellerPartyId, allowUnscopedAdminAssets: false, cancellationToken);
+                return (authorized.MediaAssetId, authorized.DisplayUrl);
+            }
+            catch (ContractOperationException)
+            {
+                throw new SemanticException(new SemanticError(StoryErrorCodes.MediaForbidden));
+            }
+        }
+
+        // Seller submissions cannot bypass ownership with a raw external URL.
+        if (!string.IsNullOrWhiteSpace(mediaUrl))
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MediaForbidden));
+
+        return (null, null);
     }
 
     private async Task SaveStoryAsync(StoryEntity story, CancellationToken cancellationToken)

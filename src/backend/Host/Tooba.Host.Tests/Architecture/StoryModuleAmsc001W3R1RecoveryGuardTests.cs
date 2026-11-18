@@ -114,7 +114,7 @@ public sealed class StoryModuleAmsc001W3R1RecoveryGuardTests
         var certified = sot.RootElement.GetProperty("structureLock").GetProperty("certifiedModules")
             .EnumerateArray().Select(x => x.GetString()).ToArray();
         Assert.Equal(1, certified.Count(x => x == "Story"));
-        Assert.Equal(29, certified.Length);
+        Assert.Equal(33, certified.Length);
     }
 
     /// <summary>The historical AMC-001 Story lineage is preserved, not rewritten, and the global lock is intact.</summary>

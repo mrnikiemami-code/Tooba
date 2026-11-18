@@ -18,4 +18,11 @@
   <data name="story.schedule.range.invalid" xml:space="preserve"><value>بازهٔ زمان‌بندی استوری نامعتبر است.</value></data>
   <data name="story.locale.invalid" xml:space="preserve"><value>مقدار locale استوری نامعتبر است.</value></data>
   <data name="story.market.invalid" xml:space="preserve"><value>مقدار market استوری نامعتبر است.</value></data>
+  <data name="story.shop.invalid" xml:space="preserve"><value>فروشگاه استوری نامعتبر است.</value></data>
+  <data name="story.content.notReady" xml:space="preserve"><value>محتوای استوری آماده نیست.</value></data>
+  <data name="story.version.required" xml:space="preserve"><value>نسخهٔ بازبینی استوری الزامی است.</value></data>
+  <data name="story.version.stale" xml:space="preserve"><value>نسخهٔ بازبینی استوری کهنه است.</value></data>
+  <data name="story.schedule.invalid" xml:space="preserve"><value>زمان‌بندی استوری نامعتبر است.</value></data>
+  <data name="story.media.forbidden" xml:space="preserve"><value>رسانهٔ استوری مجاز نیست.</value></data>
+  <data name="story.occurrence.conflict" xml:space="preserve"><value>رخداد فرمان استوری در تضاد است.</value></data>
 </root>

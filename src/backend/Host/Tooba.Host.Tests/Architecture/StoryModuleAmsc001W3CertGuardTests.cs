@@ -137,12 +137,12 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var endpointSources = Sources(endpoints);
         var applicationSources = Sources(application);
 
-        // 25 routes: 15 admin + 9 seller + 1 storefront.
-        Assert.Equal(25, endpointSources.Sum(s => Regex.Matches(s, @"\.Map(Get|Post|Put|Patch|Delete)\(").Count));
-        Assert.Equal(15, Regex.Matches(
+        // 29 routes: 17 admin + 11 seller + 1 storefront (TB-281 added approve/schedule composites + seller stop/reopen).
+        Assert.Equal(29, endpointSources.Sum(s => Regex.Matches(s, @"\.Map(Get|Post|Put|Patch|Delete)\(").Count));
+        Assert.Equal(17, Regex.Matches(
             File.ReadAllText(Path.Combine(endpoints, "Admin", "StoryAdminEndpoints.cs")),
             @"\.Map(Get|Post|Put|Patch|Delete)\(").Count);
-        Assert.Equal(9, Regex.Matches(
+        Assert.Equal(11, Regex.Matches(
             File.ReadAllText(Path.Combine(endpoints, "Seller", "StorySellerEndpoints.cs")),
             @"\.Map(Get|Post|Put|Patch|Delete)\(").Count);
         Assert.Equal(1, Regex.Matches(
@@ -159,12 +159,12 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("app.MapStoryModuleEndpoints();", program, StringComparison.Ordinal);
 
-        // CQRS: 25 real requests, 25 real handlers, dispatched through ISender.
+        // CQRS: 29 real requests/handlers (TB-281 added 4 lifecycle commands), dispatched through ISender.
         var joinedApplication = string.Join("\n", applicationSources);
-        Assert.Equal(25, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
-        Assert.Equal(25, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
-        Assert.Equal(16, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
-        Assert.Equal(25, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
+        Assert.Equal(29, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
+        Assert.Equal(29, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
+        Assert.Equal(20, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(29, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
 
         // No endpoint reaches persistence directly.
         Assert.DoesNotContain("DbContext", string.Join("\n", endpointSources), StringComparison.Ordinal);
@@ -259,7 +259,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
             ["Tooba.Story.Domain"] = ["Tooba.BuildingBlocks", "Tooba.Story.Contracts"],
             ["Tooba.Story.Application"] = ["Tooba.BuildingBlocks", "Tooba.Story.Contracts", "Tooba.Story.Domain"],
             ["Tooba.Story.Endpoints"] = ["Tooba.BuildingBlocks", "Tooba.Story.Application", "Tooba.Story.Contracts"],
-            ["Tooba.Story.Infrastructure"] = ["Tooba.ModuleContracts", "Tooba.Persistence", "Tooba.Story.Application", "Tooba.Story.Contracts", "Tooba.Story.Domain"],
+            ["Tooba.Story.Infrastructure"] = ["Tooba.Media.Contracts", "Tooba.ModuleContracts", "Tooba.Party.Contracts", "Tooba.Persistence", "Tooba.Story.Application", "Tooba.Story.Contracts", "Tooba.Story.Domain"],
         };
 
         foreach (var (project, references) in expected)
@@ -335,7 +335,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
                 File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Story.Contracts", "Errors", "StoryErrorCodes.cs")),
                 @"public const string \w+ = ""(story\.[A-Za-z.]+)"";")
             .Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(5, errorCodes.Length);
+        Assert.Equal(12, errorCodes.Length);
 
         var en = File.ReadAllText(Path.Combine(endpoints, "Resources", "StoryErrors.resx"));
         var fa = File.ReadAllText(Path.Combine(endpoints, "Resources", "StoryErrors.fa.resx"));
@@ -388,7 +388,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var dbContext = File.ReadAllText(Path.Combine(infrastructure, "Persistence", "StoryDbContext.cs"));
         Assert.Contains("public const string Schema = \"story\";", dbContext, StringComparison.Ordinal);
         Assert.Single(Directory.GetFiles(Path.Combine(infrastructure, "Persistence"), "*DbContext.cs", SearchOption.TopDirectoryOnly));
-        Assert.Equal(2, Directory.GetFiles(Path.Combine(infrastructure, "Persistence", "Migrations"), "*.cs")
+        Assert.Equal(3, Directory.GetFiles(Path.Combine(infrastructure, "Persistence", "Migrations"), "*.cs")
             .Count(f => !f.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)
                 && !f.EndsWith("ModelSnapshot.cs", StringComparison.OrdinalIgnoreCase)));
     }
@@ -463,6 +463,13 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         "story.mutation.rejected" => "MutationRejected",
         "story.tenant.missing" => "TenantMissing",
         "story.reviewStatus.invalid" => "ReviewStatusInvalid",
+        "story.shop.invalid" => "ShopInvalid",
+        "story.content.notReady" => "ContentNotReady",
+        "story.version.required" => "VersionRequired",
+        "story.version.stale" => "VersionStale",
+        "story.schedule.invalid" => "ScheduleInvalid",
+        "story.media.forbidden" => "MediaForbidden",
+        "story.occurrence.conflict" => "OccurrenceConflict",
         _ => throw new InvalidOperationException($"unmapped story error code {code}"),
     };
 

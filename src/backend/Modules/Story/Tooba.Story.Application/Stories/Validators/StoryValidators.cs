@@ -224,9 +224,46 @@ public sealed class GetPublicStoriesQueryValidator : AbstractValidator<GetPublic
 
     private static bool BeValidLocaleOrEmpty(string? raw) =>
         string.IsNullOrWhiteSpace(raw)
-        || (raw.Length <= StoryRules.LocaleMaxLength && raw.All(char.IsLetterOrDigit));
+        || (raw.Length <= StoryRules.LocaleMaxLength
+            && raw.All(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_'));
 
     private static bool BeValidMarketOrEmpty(string? raw) =>
         string.IsNullOrWhiteSpace(raw)
-        || (raw.Length <= StoryRules.MarketMaxLength && raw.All(char.IsLetterOrDigit));
+        || (raw.Length <= StoryRules.MarketMaxLength
+            && raw.All(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_'));
+}
+
+/// <summary>اعتبارسنجی تأیید و انتشار اتمی (نسخه از body اختیاری است؛ دامنه الزام می‌کند).</summary>
+public sealed class ApproveAndPublishAdminStoryCommandValidator : AbstractValidator<ApproveAndPublishAdminStoryCommand>
+{
+    public ApproveAndPublishAdminStoryCommandValidator()
+    {
+    }
+}
+
+/// <summary>اعتبارسنجی تأیید و زمان‌بندی اتمی.</summary>
+public sealed class ApproveAndScheduleAdminStoryCommandValidator : AbstractValidator<ApproveAndScheduleAdminStoryCommand>
+{
+    public ApproveAndScheduleAdminStoryCommandValidator()
+    {
+        RuleFor(x => x)
+            .Must(x => x.StartAt is null || x.EndAt is null || x.EndAt >= x.StartAt)
+            .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
+    }
+}
+
+/// <summary>اعتبارسنجی بازگشت فروشنده به پیش‌نویس.</summary>
+public sealed class ReturnSellerStoryToDraftCommandValidator : AbstractValidator<ReturnSellerStoryToDraftCommand>
+{
+    public ReturnSellerStoryToDraftCommandValidator()
+    {
+    }
+}
+
+/// <summary>اعتبارسنجی توقف انتشار فروشنده.</summary>
+public sealed class StopSellerStoryCommandValidator : AbstractValidator<StopSellerStoryCommand>
+{
+    public StopSellerStoryCommandValidator()
+    {
+    }
 }

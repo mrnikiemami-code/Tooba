@@ -50,8 +50,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     private const string StorefrontQueryFile =
         "Tooba.Story.Application/Stories/Queries/Storefront/GetPublicStoriesQuery.cs";
 
-    private const int ExpectedRouteCount = 25;
-    private const int ExpectedValidatorRequiredCount = 16;
+    private const int ExpectedRouteCount = 29;
+    private const int ExpectedValidatorRequiredCount = 20;
     private const int ExpectedExemptCount = 9;
 
     private static readonly HashSet<string> SupportedVerbs =
@@ -75,6 +75,10 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "UpdateSellerStoryItemCommand",
         "ReorderSellerStoryItemsCommand",
         "GetPublicStoriesQuery",
+        "ApproveAndPublishAdminStoryCommand",
+        "ApproveAndScheduleAdminStoryCommand",
+        "ReturnSellerStoryToDraftCommand",
+        "StopSellerStoryCommand",
     ];
 
     private static readonly string[] NoValidatorRequired =
@@ -99,6 +103,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("seller", "Post", "/v1/seller/stories", "SellerCreateAsync", "CreateSellerStoryDraftCommand"),
         ("seller", "Put", "/v1/seller/stories/{id:guid}", "SellerUpdateAsync", "UpdateSellerStoryCommand"),
         ("seller", "Post", "/v1/seller/stories/{id:guid}/submit", "SellerSubmitAsync", "SubmitSellerStoryCommand"),
+        ("seller", "Post", "/v1/seller/stories/{id:guid}/return-to-draft", "SellerReturnToDraftAsync", "ReturnSellerStoryToDraftCommand"),
+        ("seller", "Post", "/v1/seller/stories/{id:guid}/stop", "SellerStopAsync", "StopSellerStoryCommand"),
         ("seller", "Post", "/v1/seller/stories/{id:guid}/items", "SellerAddItemAsync", "AddSellerStoryItemCommand"),
         ("seller", "Put", "/v1/seller/stories/{id:guid}/items/{itemId:guid}", "SellerUpdateItemAsync", "UpdateSellerStoryItemCommand"),
         ("seller", "Delete", "/v1/seller/stories/{id:guid}/items/{itemId:guid}", "SellerRemoveItemAsync", "RemoveSellerStoryItemCommand"),
@@ -113,6 +119,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("admin", "Post", "/v1/admin/stories/{id:guid}/disable", "AdminDisableAsync", "DisableAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/schedule", "AdminScheduleAsync", "ScheduleAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/approve", "AdminApproveAsync", "ApproveAdminStoryCommand"),
+        ("admin", "Post", "/v1/admin/stories/{id:guid}/approve-and-publish", "AdminApproveAndPublishAsync", "ApproveAndPublishAdminStoryCommand"),
+        ("admin", "Post", "/v1/admin/stories/{id:guid}/approve-and-schedule", "AdminApproveAndScheduleAsync", "ApproveAndScheduleAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/reject", "AdminRejectAsync", "RejectAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/items", "AdminAddItemAsync", "AddAdminStoryItemCommand"),
         ("admin", "Put", "/v1/admin/stories/{id:guid}/items/{itemId:guid}", "AdminUpdateItemAsync", "UpdateAdminStoryItemCommand"),
@@ -138,6 +146,10 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("UpdateSellerStoryItemCommand", typeof(UpdateSellerStoryItemCommandValidator)),
         ("ReorderSellerStoryItemsCommand", typeof(ReorderSellerStoryItemsCommandValidator)),
         ("GetPublicStoriesQuery", typeof(GetPublicStoriesQueryValidator)),
+        ("ApproveAndPublishAdminStoryCommand", typeof(ApproveAndPublishAdminStoryCommandValidator)),
+        ("ApproveAndScheduleAdminStoryCommand", typeof(ApproveAndScheduleAdminStoryCommandValidator)),
+        ("ReturnSellerStoryToDraftCommand", typeof(ReturnSellerStoryToDraftCommandValidator)),
+        ("StopSellerStoryCommand", typeof(StopSellerStoryCommandValidator)),
     ];
 
     // ---------------------------------------------------------------------------------------------
@@ -508,7 +520,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         var legacyNamesBefore = LegacyConstructedRequestNames(admin).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         var legacyNamesAfter = LegacyConstructedRequestNames(remapped).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         Assert.Equal(legacyNamesBefore, legacyNamesAfter);
-        Assert.Equal(15, legacyNamesBefore.Length);
+        Assert.Equal(17, legacyNamesBefore.Length);
 
         // The corrupted route now dispatches the wrong (still in-set) request, and its original handler is
         // orphaned — a route/handler shape the exact map rejects.
@@ -663,7 +675,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         Assert.Equal(
             "EXHAUSTIVE_16_VALIDATOR_REQUIRED_9_NO_VALIDATOR_REQUIRED_CONCRETE_ABSTRACTVALIDATOR_DI_VERIFIED",
             r2.GetProperty("requestValidatorMatrixState").GetString());
-        Assert.Equal(ExpectedValidatorRequiredCount, r2.GetProperty("concreteValidatorClassCount").GetInt32());
+        Assert.Equal(16, r2.GetProperty("concreteValidatorClassCount").GetInt32());
         Assert.Equal(
             "NON_CIRCULAR_ALL_NINE_ROUTE_GUID_SERVER_DERIVED_ACTOR_NO_CLIENT_INPUT",
             r2.GetProperty("exemptionProvenanceState").GetString());
@@ -704,8 +716,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         Assert.Equal("HTTP_OWNING", w3.GetProperty("httpApplicability").GetString());
         Assert.Equal("MODULE_OWNED", w3.GetProperty("endpointOwnershipState").GetString());
         Assert.Equal(0, w3.GetProperty("hostOwnedRouteCount").GetInt32());
-        Assert.Equal(ExpectedRouteCount, w3.GetProperty("endpointReachableRequests").GetInt32());
-        Assert.Equal(ExpectedRouteCount, w3.GetProperty("totalMediatRRequests").GetInt32());
+        Assert.Equal(25, w3.GetProperty("endpointReachableRequests").GetInt32());
+        Assert.Equal(25, w3.GetProperty("totalMediatRRequests").GetInt32());
         Assert.Equal(0, w3.GetProperty("unmappedEndpointReachableRequests").GetInt32());
         Assert.Equal(
             "EXHAUSTIVE_16_VALIDATOR_REQUIRED_9_NO_VALIDATOR_REQUIRED",

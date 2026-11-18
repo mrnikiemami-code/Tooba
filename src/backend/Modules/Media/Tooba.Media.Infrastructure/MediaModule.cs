@@ -40,7 +40,9 @@ public sealed class MediaModule : IToobaModule
                     : Path.Combine(env.ContentRootPath, configured);
             return new LocalFileMediaStore(root);
         });
-        services.AddScoped<IMediaDirectory, MediaDirectory>();
+        services.AddScoped<MediaDirectory>();
+        services.AddScoped<IMediaDirectory>(sp => sp.GetRequiredService<MediaDirectory>());
+        services.AddScoped<IStoryMediaAssetPort>(sp => sp.GetRequiredService<MediaDirectory>());
         services.AddScoped<IMediaAssetUploadPort, MediaAssetUploadBridge>();
         services.AddScoped<IMediaAssetDemoPort, MediaAssetDemoBridge>();
         services.AddScoped<IMediaAssetReadinessPort, MediaAssetReadinessBridge>();

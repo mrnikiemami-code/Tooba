@@ -24,6 +24,9 @@ public sealed class StoryDbContext : DbContext
     /// <summary>آیتم‌های استوری.</summary>
     public DbSet<StoryItem> StoryItems => Set<StoryItem>();
 
+    /// <summary>رخدادهای پایدار فرمان برای replay.</summary>
+    public DbSet<StoryCommandOccurrence> CommandOccurrences => Set<StoryCommandOccurrence>();
+
     /// <summary>Outbox ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -48,6 +51,7 @@ public sealed class StoryDbContext : DbContext
             entity.Property(x => x.CtaType).HasMaxLength(StoryRules.CtaTypeMaxLength).IsRequired();
             entity.Property(x => x.CtaTarget).HasMaxLength(StoryRules.CtaTargetMaxLength);
             entity.Property(x => x.VersionToken).IsConcurrencyToken();
+            entity.Property(x => x.CreatedByActorUserId);
             entity.HasIndex(x => new { x.TenantId, x.DisplayOrder });
             entity.HasIndex(x => new { x.TenantId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.ReviewStatus });
@@ -66,6 +70,18 @@ public sealed class StoryDbContext : DbContext
             entity.Property(x => x.CtaType).HasMaxLength(StoryRules.CtaTypeMaxLength).IsRequired();
             entity.Property(x => x.CtaTarget).HasMaxLength(StoryRules.CtaTargetMaxLength);
             entity.HasIndex(x => new { x.StoryId, x.DisplayOrder });
+        });
+        modelBuilder.Entity<StoryCommandOccurrence>(entity =>
+        {
+            entity.ToTable("command_occurrences");
+            entity.HasKey(x => x.OccurrenceKey);
+            entity.Property(x => x.OccurrenceKey).HasMaxLength(128);
+            entity.Property(x => x.ActionCode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IntentHash).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TenantId).IsRequired();
+            entity.Property(x => x.StoryId).IsRequired();
+            entity.Property(x => x.ActorUserId).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.SellerPartyId, x.CreatedAt });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

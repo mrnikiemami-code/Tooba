@@ -1,8 +1,14 @@
-# CURRENT — TB-STORY-281 FIRST CONSOLIDATED DELIVERY ISSUED; WAIT FOR RESULT BEFORE NEXT TASK — 2026-11-19
+# CURRENT — TB-281 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
 
-Active issued task: `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281`, tooba-worker-01 / cursor / tooba-main. Read exact `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md`, issuance receipt and story SOURCE-AUDIT/COMPLETION-PLAN. Owner authorized starting delivery ONE, then explicitly waiting for its result before the next task. Scope: shop ownership + admin-on-behalf, Media-owned seller asset scope, content readiness, reviewed lifecycle/version/replay, real schedule windows, scoped read/grid/public contracts. Backend first; frontend only essential transport/mapping plumbing. Orders-style shared grid/editor and connected public-player delivery remain PLANNED NOT ISSUED. No automatic next task or delegation.
+Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md` and
+`docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,user-review.md,issuance-receipt.json}`.
+Status **PARTIAL** within issued first Story marketplace backend delivery: shop ownership + Media seller scope + publication policy + version-fenced lifecycle + FE transport landed with focused proof and additive Media/Story migrations applied after verified backup; full G1–G7 matrix and admin shop-name grid filter remain open.
+Decision `STORY_SHOP_OWNERSHIP_MEDIA_SELLER_SCOPE_PUBLICATION_POLICY_VERSION_FENCED_LIFECYCLE_AND_TRANSPORT_PLUMBING_LANDED_WITH_FOCUSED_PROOF_AND_ADDITIVE_SCHEMA_APPLIED_BUT_FULL_G_SCENARIO_MATRIX_AND_ADMIN_SHOP_NAME_GRID_FILTER_REMAIN_OPEN`.
+NOT Architect ACCEPT, NOT user acceptance. Delivery two NOT ISSUED. Expected-Base `6c0914c37eb9de1e915c874718d813270cc8d9f0` (ancestor); claim HEAD `c15a3a69c` docs-only. Host 5088 refreshed; ZERO live Story/Media business write. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
 
-Expected base `6c0914c37eb9de1e915c874718d813270cc8d9f0`; docs-only issuance descendant allowed. Bounded additive Story/Media migration permission ONLY under the exact backup/runner/verification procedure in this task; no business fixtures/seed/reset/live mutation. Preserve all existing user stories, Return280-R1/279-R3 acceptances and future payout backlog. User/Marketplace acceptance NOT claimed. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT after worker result.
+# HISTORICAL — TB-STORY-281 FIRST CONSOLIDATED DELIVERY ISSUED
+
+Active issued task was `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281`. See CURRENT worker PARTIAL above for the executed result.
 
 # HISTORICAL — Story source audit/planning checkpoint
 

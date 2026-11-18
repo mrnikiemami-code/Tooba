@@ -49,6 +49,35 @@ public sealed class SubmitSellerStoryCommandHandler(StoryPresentationComposer co
                 request.TenantId, request.SellerPartyId, request.StoryId, request.ActorUserId, cancellationToken));
 }
 
+/// <summary>بازگشت فروشنده به پیش‌نویس.</summary>
+public sealed record ReturnSellerStoryToDraftCommand(
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, int? ExpectedVersion)
+    : IRequest<Result<AdminStorySnapshot>>;
+
+public sealed class ReturnSellerStoryToDraftCommandHandler(StoryPresentationComposer composer)
+    : IRequestHandler<ReturnSellerStoryToDraftCommand, Result<AdminStorySnapshot>>
+{
+    public Task<Result<AdminStorySnapshot>> Handle(
+        ReturnSellerStoryToDraftCommand request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.SellerReturnToDraftAsync(
+                request.TenantId, request.SellerPartyId, request.StoryId, request.ExpectedVersion, cancellationToken));
+}
+
+/// <summary>توقف انتشار فروشنده.</summary>
+public sealed record StopSellerStoryCommand(
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, int? ExpectedVersion)
+    : IRequest<Result<AdminStorySnapshot>>;
+
+public sealed class StopSellerStoryCommandHandler(StoryPresentationComposer composer)
+    : IRequestHandler<StopSellerStoryCommand, Result<AdminStorySnapshot>>
+{
+    public Task<Result<AdminStorySnapshot>> Handle(StopSellerStoryCommand request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.SellerStopAsync(
+                request.TenantId, request.SellerPartyId, request.StoryId, request.ExpectedVersion, cancellationToken));
+}
+
 /// <summary>افزودن آیتم فروشنده.</summary>
 public sealed record AddSellerStoryItemCommand(
     Guid TenantId, Guid SellerPartyId, Guid StoryId, AddStoryItemCommand Input)

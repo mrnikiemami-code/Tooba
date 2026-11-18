@@ -11,4 +11,5 @@
   <data name="media.storage.unavailable" xml:space="preserve"><value>ذخیره‌سازی رسانه در دسترس نیست.</value></data>
   <data name="media.missing" xml:space="preserve"><value>رسانه یافت نشد.</value></data>
   <data name="media.asset.missing" xml:space="preserve"><value>رسانه یافت نشد.</value></data>
+  <data name="media.owner.forbidden" xml:space="preserve"><value>دسترسی به مالک رسانه مجاز نیست.</value></data>
 </root>

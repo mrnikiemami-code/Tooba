@@ -142,7 +142,7 @@ public sealed class MediaModuleAmsc001W1MigrateGuardTests
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToArray();
 
-        Assert.Equal(6, declared.Length);
+        Assert.Equal(7, declared.Length);
 
         foreach (var project in ProductionProjects)
         {
@@ -253,12 +253,13 @@ public sealed class MediaModuleAmsc001W1MigrateGuardTests
         var root = Path.Combine(Repo(), "src/backend/Modules/Media/Tooba.Media.Infrastructure/Persistence/Migrations");
         var migrations = Directory.EnumerateFiles(root, "*.cs", SearchOption.TopDirectoryOnly)
             .Select(Path.GetFileName)
-            .Where(name => name!.EndsWith("_InitialMedia.cs", StringComparison.Ordinal)
-                || name.EndsWith("_AddMediaFocalPoint.cs", StringComparison.Ordinal))
+            .Where(name => name is not null
+                && !name.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)
+                && !name.Equals("MediaDbContextModelSnapshot.cs", StringComparison.Ordinal))
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(2, migrations.Length);
+        Assert.Equal(3, migrations.Length);
         Assert.Equal("media", ReadSchema());
     }
 

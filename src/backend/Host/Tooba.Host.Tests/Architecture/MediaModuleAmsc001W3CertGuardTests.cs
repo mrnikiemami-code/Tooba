@@ -91,7 +91,7 @@ public sealed class MediaModuleAmsc001W3CertGuardTests
             root, ModuleRoot, "Tooba.Media.Contracts", "Errors", "MediaErrorCodes.cs"));
         var declared = Regex.Matches(codesFile, "public const string \\w+ = \"(?<c>[^\"]+)\"")
             .Select(m => m.Groups["c"].Value).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-        Assert.Equal(6, declared.Length);
+        Assert.Equal(7, declared.Length);
         foreach (var code in declared)
         {
             Assert.StartsWith("media.", code, StringComparison.Ordinal);
@@ -109,7 +109,7 @@ public sealed class MediaModuleAmsc001W3CertGuardTests
             .Select(m => m.Groups["n"].Value).ToArray();
         var descriptors = Regex.Matches(contributor, "D\\(MediaErrorCodes\\.(?<n>\\w+)")
             .Select(m => m.Groups["n"].Value).ToArray();
-        Assert.Equal(6, descriptors.Length);
+        Assert.Equal(7, descriptors.Length);
         Assert.Equal(names.Length, descriptors.Distinct(StringComparer.Ordinal).Count());
         foreach (var name in names)
         {
