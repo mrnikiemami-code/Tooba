@@ -1,8 +1,14 @@
-# CURRENT — 279-R2 CONNECTED CLOSURE + PRIVATE REPOSITORY CONTAINMENT ISSUED; AWAIT BRIDGE CLAIM — 2026-11-18
+# CURRENT — 279-R2 WORKER PASS; AWAIT ARCHITECT REVIEW — 2026-11-18
 
-Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md` and `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/issuance-receipt.json` FIRST. Exact full repo envelope already exists; no reconstruction/overwriting its bytes for Bridge formatting. Expected base `6e3d1873f7f9926c2906ae4e26547a6c9ef97eeb`; following issuance is docs-only, verify actual claim and no source drift.
-ONE task closes R1-A–F: real modal/API versions+portions+proof, rejected-only/mixed capacity, reviewed plan/quantum gates, evidenced custody/legacy slices, unmount/v1/exact-origin intent retention and meaningful negative-control tests. First privately preserve and untrack accidentally committed key/scratch files with exact ignores; never print secrets or delete active runtime/user files. Assess key retirement impact; revocation/session invalidation/history purge NOT authorized. Keep any unresolved retirement explicitly separate from functional closure.
-No schema change, live POST/business write/new demo/reset/provider/stock/money effect, screenshots/delegation/broad suite loops. Explicit-path staging and normal commits/push ONLY; no rebase/amend/force. Preserve completed cases/history and useful R1 changes. Parent279/R1/278 remain PARTIAL pending independent review. No automatic follow-on; STOP_FOR_ARCHITECT; automaticNextImplementationTask NONE.
+Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md` and
+`docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/`
+(`RESULT.md`, `closure-matrix.md`, `connected-wire-proof.md`, `quantity-capacity-proof.md`, `retained-intent-proof.md`,
+`key-containment.md`, `migration-and-backup-proof.md`, `RECEIPTS.md`, `result-contract.txt`).
+Status PASS within the issued A–G scope; base `6e3d1873f7f9926c2906ae4e26547a6c9ef97eeb`; code `3b1ce75d9` on top of
+`22a0ec148` (containment) and `ff69838cf` (issuance). 279/278/279-R1 remain PARTIAL; not Architect or user acceptance.
+Key exposure is `CONTAINED_PENDING_REVIEWED_RETIREMENT` (Git containment only; no rotation). Proof: Returns 177/177,
+Host 37/37, FE unit 29/29, mounted 34/34, tsc 0, next build 0, build/publish 0 errors. STOP_FOR_ARCHITECT;
+automaticNextImplementationTask: NONE.
 
 # SUPERSEDED — previous review/checkpoint (historical)
 

@@ -1,4 +1,38 @@
-# CURRENT — 279-R2 CONNECTED CLOSURE + PRIVATE REPOSITORY CONTAINMENT ISSUED; AWAIT BRIDGE CLAIM — 2026-11-18
+# CURRENT — 279-R2 WORKER PASS (A–G closed with targeted counterexamples); AWAIT ARCHITECT REVIEW — 2026-11-18
+
+Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md` and
+`docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,closure-matrix.md,connected-wire-proof.md,quantity-capacity-proof.md,retained-intent-proof.md,key-containment.md,migration-and-backup-proof.md,user-review.md,issuance-receipt.json}`.
+Status **PASS within the issued A–G scope**, decision
+`ONE_CONNECTED_REVIEWED_WIRE_CONTRACT_ONE_PORTION_CAPACITY_AUTHORITY_AND_ONE_EXACT_ORIGINATING_CUSTOMER_INTENT_WITH_TARGETED_NEGATIVE_CONTROLS_AND_PRIVATE_LOCAL_KEY_PRESERVATION`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT Marketplace/provider/financial readiness, NOT a claim that
+the historical key exposure is remediated.
+Expected-Base-SHA `6e3d1873f7f9926c2906ae4e26547a6c9ef97eeb` (verified ancestor); reviewed code
+`3f8b670cd4a16db9ef8e1c4766704b53a075d364`; claim commits `ff69838cf` (docs issuance) → `22a0ec148` (containment) →
+`3b1ce75d9` (code, 43 source files). 279-R1/279/278 remain PARTIAL; single worker, one task, no delegation, no historical
+subagent resumed, no screenshots, no loop, no live POST.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A containment | untracked + preserved | key XML, 21 scratch scripts and the 277-R1 `RESULT.bridge.txt` left the Git index in `22a0ec148` with exact scoped ignores; private copies hash-verified under `D:\temp\tb279r2-containment` BEFORE untracking; the only key in the source-ring is `key-6db9ecd9-…` (the served publish uses `key-d82e31a6-…`), so `key-containment.md` records `Security-Exposure-State=CONTAINED_PENDING_REVIEWED_RETIREMENT` with the ordered replace/re-encrypt/retire procedure — nothing was revoked, rotated or history-purged |
+| B wire | one frozen shape | start-refund carries the reviewed decision revision via route/query only; retry carries failed id + decision revision; approve/reject carry both reviewed revisions; resolution sends the five explicit per-condition portions; custody sends `operator_attestation` + proof; the modal freezes the revisions of the snapshot it loaded; missing ⇒ `return.resolution.review_version_required`, stale ⇒ `return.correction.version_stale` |
+| C capacity | accepted + owed | `ReadOccupancyAsync` reads live allocations for EVERY case of the seller order (rejected-only sellers keep their held goods); custody trims to `accepted + OwedCustody(condition)`; stored fact: 3 delivered / 2 accepted / 1 rejected / 0.5 handed back ⇒ live allocation **2.5**, eligibility **0.5** |
+| D versions + quantum | refused before any row | the decision boundary re-reads and compares the reviewed plan revision and frozen amount under the existing lock; resolution and custody portions must align to the owning line unit (`0.0001` on a 3-decimal line refused with zero rows); exact stored occurrence still replays first |
+| E evidence | no unproven claim | `carrier_delivered_back` refused as `return.custody.proof_kind_unavailable`; legacy ambiguity now spans expired + live slices; reopen re-acquires its exact previously owned slice |
+| F customer act | epoch-fenced | unmount/close/retarget invalidate the epoch, every child send is fenced, v1/tb278 evidence is unresolved and blocking, and `recordChildOutcome` compares the exact originating envelope |
+| G proof | focused, owning | Returns `177/177` (15 directory facts incl. the three R2 counterexamples), Host `37/37` (34 AMSC + 3 rollback-only relational, `committedRows=0`), FE unit `29/29`, mounted `34/34`, `tsc` 0, `next build` 0 (`BUILD_ID IdLHLUerRPBB-OzXddPwk`), `dotnet build Release` 0 errors, Host publish 0 errors |
+| served | refreshed | Host `5088` PID `7808`, dll SHA256 `7B8AAB852972C1CDCED3A12AA2A057700183FA16AE1A2FA89A60D209CF499977` (`/health` 200, `/health/ready` 200); Next `3000` PID `9904`, BUILD_ID `IdLHLUerRPBB-OzXddPwk`, `/fa/admin/returns` 200 |
+| schema/data | untouched | R2 adds NO migration/DDL/seed/backfill; the single R1 Returns migration remains the only schema change; zero live business/provider/money/stock/notification write and no reset/cleanup/restore |
+
+Known limits: money/stock are controlled-port facts; the occupancy and quantum counterexamples run on in-memory EF over the
+real directory/evaluator (relational rollback-only facts cover the lock/budget/atomic-approval path); mounted suites are
+jsdom (behaviour, not geometry); no live customer session, checkout or active case exists, so the served check is
+read-only history plus typed refusals; carrier handback is refused, not implemented; the key exposure is contained in Git
+only. Declared deviations: temporary file-log instrumentation in `ReturnDirectory.Allocations.cs`/`.Resolutions.cs` during
+diagnosis was fully removed before the reported runs; a whole-repository `npx vitest run` fails at COLLECTION
+(`jsx to preserve`) and the supported Node/tsx runners produced the reported proof.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 279-R2 CONNECTED CLOSURE + PRIVATE REPOSITORY CONTAINMENT WAS ISSUED — 2026-11-18
 
 Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md` and `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/issuance-receipt.json` FIRST. Exact full repo envelope already exists; no reconstruction/overwriting its bytes for Bridge formatting. Expected base `6e3d1873f7f9926c2906ae4e26547a6c9ef97eeb`; following issuance is docs-only, verify actual claim and no source drift.
 ONE task closes R1-A–F: real modal/API versions+portions+proof, rejected-only/mixed capacity, reviewed plan/quantum gates, evidenced custody/legacy slices, unmount/v1/exact-origin intent retention and meaningful negative-control tests. First privately preserve and untrack accidentally committed key/scratch files with exact ignores; never print secrets or delete active runtime/user files. Assess key retirement impact; revocation/session invalidation/history purge NOT authorized. Keep any unresolved retirement explicitly separate from functional closure.

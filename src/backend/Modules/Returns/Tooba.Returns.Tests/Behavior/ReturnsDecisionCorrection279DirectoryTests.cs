@@ -295,6 +295,91 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         Assert.True(handed.Recovery.PhysicalComplete is false);
     }
 
+    // ------------------------------------------------------------------ TB-279-R2 counterexamples
+
+    [Fact]
+    public async Task R2_a_plan_portion_finer_than_the_owning_unit_is_refused_before_any_row()
+    {
+        // A 3-decimal gram/weight line accepts its own 0.001 quantum; a ten-thousandth is not a physical quantity of
+        // that unit and is refused instead of being rounded into one.
+        await using var harness = await SeedAsync(Stage.RequestedWithMixedReceipt, unitPlaces: 3);
+
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.PublishResolutionAsync(
+                "resolution-quantum",
+                expectedVersion: 0,
+                (0.0001m, 0m, "کسر ریزتر از واحد")));
+
+        Assert.Equal(ReturnsErrorCodes.ResolutionPortionInvalid, refused.Code);
+        Assert.Equal(0, await harness.ResolutionCountAsync());
+    }
+
+    [Fact]
+    public async Task R2_a_handback_finer_than_the_owning_unit_and_an_unproven_carrier_are_refused()
+    {
+        await using var harness = await SeedAsync(Stage.RequestedWithMixedReceipt, unitPlaces: 3);
+        await harness.PublishResolutionAsync(
+            "resolution-1",
+            expectedVersion: 0,
+            (1m, 1m, "واحد آسیب‌دیده قابل بازگشت وجه نیست."));
+        await harness.ApproveAsync(expectedVersion: 0, expectedResolutionVersion: 1);
+
+        var tooFine = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.CustodyAsync("custody-fine", quantity: 0.0001m, "رسید تحویل حضوری"));
+        Assert.Equal(ReturnsErrorCodes.CustodyQuantityInvalid, tooFine.Code);
+
+        // TB-279-R2 (E): "the carrier brought it back" is not an owned carrier fact yet, so the token is refused
+        // rather than stored as if a delivery had been verified.
+        var carrier = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.CustodyAsync(
+                "custody-carrier",
+                quantity: 1m,
+                "بارنامه بازگشت ۱۲۳",
+                ReturnCustodyProofKindParser.CarrierDeliveredBack));
+        Assert.Equal(ReturnsErrorCodes.CustodyProofKindUnavailable, carrier.Code);
+
+        Assert.Equal(0, await harness.CustodyCountAsync());
+        Assert.Equal(0, harness.Gateway.Calls);
+        Assert.Equal(0, harness.Inventory.Calls);
+    }
+
+    [Fact]
+    public async Task R2_a_handed_back_remainder_keeps_the_accepted_units_occupied()
+    {
+        // Delivered/requested/received 3, accepted 2, rejected-received 1. After half of the rejected unit is physically
+        // handed back the seller still holds 2 accepted + 0.5 owed = 2.5, so at most 0.5 of a NEW claim is lawful.
+        await using var harness = await SeedAsync(
+            Stage.RequestedWithMixedReceipt,
+            requestedOverride: 3m,
+            unitPlaces: 1,
+            receivedUsableOverride: 2m,
+            receivedDamagedOverride: 1m,
+            seedAllocation: true);
+
+        await harness.PublishResolutionAsync(
+            "resolution-1",
+            expectedVersion: 0,
+            (2m, 1m, "یک عدد آسیب‌دیده"));
+        await harness.ApproveAsync(expectedVersion: 0, expectedResolutionVersion: 1);
+
+        var fullyHeld = await harness.EligibilityAsync();
+        Assert.Equal(0m, fullyHeld.Lines.Single(x => x.OrderLineId == harness.OrderLineId).RemainingReturnableQuantity);
+
+        await harness.CustodyAsync("custody-half", quantity: 0.5m, "رسید تحویل حضوری ۱");
+        var stored = await harness.SnapshotAsync();
+        Assert.Equal(2m, stored.Resolution!.Lines.Single().Accepted);
+        Assert.Equal(1m, stored.Resolution.Lines.Single().RejectedReceivedDamaged);
+        Assert.Equal(0.5m, stored.Custody!.Single().Quantity);
+        Assert.Equal(2.5m, await harness.AllocationSumAsync());
+
+        var afterHandback = await harness.EligibilityAsync();
+        var remaining = afterHandback.Lines.Single(x => x.OrderLineId == harness.OrderLineId);
+        // 3 delivered − (2 accepted + 0.5 still owed) = 0.5: the accepted units were NOT released by the handback.
+        Assert.Equal(0.5m, remaining.RemainingReturnableQuantity);
+        // Exactly one live row of 2.5 plus the released 0.5 split: the handback released ONLY its own portion.
+        Assert.Equal(2, await harness.AllocationCountAsync());
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private enum Stage
@@ -310,6 +395,9 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
     {
         private readonly ReturnDirectory _directory;
         private readonly Guid _requestedByUserId;
+        private readonly OrderReturnContextSnapshot _order;
+        private readonly Guid _lineId;
+        private readonly IClock _clock;
 
         public Harness(
             string dbName,
@@ -326,9 +414,11 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             ReturnRequestId = returnRequestId;
             ReturnItemId = returnItemId;
             _requestedByUserId = order.PlacedByUserId;
+            _order = order;
+            _lineId = orderLineId;
+            _clock = new FixedClock(Now);
             Gateway = new CountingGateway();
             Inventory = new CountingInventory();
-            var clock = new FixedClock(Now);
             var orderReader = new FixedOrderReader(order);
             _directory = new ReturnDirectory(
                 db,
@@ -338,16 +428,31 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                     orderReader,
                     new FixedFulfillmentReader(order, orderLineId),
                     db,
-                    clock),
+                    _clock),
                 new FixedPaymentReader(unitPrice * Requested),
                 Gateway,
                 new NoopWallet(),
                 Inventory,
                 new ReturnsInstrumentation(),
                 NullLogger<ReturnDirectory>.Instance,
-                clock,
+                _clock,
                 new UuidV7IdGenerator());
             _ = decision;
+        }
+
+        /// <summary>
+        /// TB-279-R2 (C): the SAME owning evaluator that answers customer eligibility and creation capacity, run over
+        /// this case's own stored rows — so the remaining quantity is the real occupancy math, not a hand-built number.
+        /// </summary>
+        public Task<ReturnEligibilityResult> EligibilityAsync()
+        {
+            var orderReader = new FixedOrderReader(_order);
+            return new ReturnEligibilityEvaluator(
+                    orderReader,
+                    new FixedFulfillmentReader(_order, _lineId),
+                    Db,
+                    _clock)
+                .EvaluateAsync(_order.SellerOrderId, CancellationToken.None);
         }
 
         public string DbName { get; }
@@ -357,6 +462,8 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         public Guid ReturnRequestId { get; }
 
         public Guid ReturnItemId { get; }
+
+        public Guid OrderLineId => _lineId;
 
         public CountingGateway Gateway { get; }
 
@@ -405,7 +512,11 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                 },
                 CancellationToken.None);
 
-        public Task<ReturnSnapshot> CustodyAsync(string occurrenceKey, decimal quantity, string proof) =>
+        public Task<ReturnSnapshot> CustodyAsync(
+            string occurrenceKey,
+            decimal quantity,
+            string proof,
+            string proofKind = ReturnCustodyProofKindParser.OperatorAttestation) =>
             _directory.RecordCustodyAsync(
                 new RecordReturnCustodyCommand(
                     ReturnRequestId,
@@ -415,7 +526,7 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                     quantity,
                     ReturnItemCondition.Damaged,
                     proof,
-                    ReturnCustodyProofKindParser.OperatorAttestation,
+                    proofKind,
                     SellerPartyId),
                 CancellationToken.None);
 
@@ -440,11 +551,24 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         public Task<int> AllocationCountAsync() =>
             Db.ReturnDeliveryAllocations.CountAsync(x => x.ReturnRequestId == ReturnRequestId);
 
+        public async Task<decimal> AllocationSumAsync() =>
+            await Db.ReturnDeliveryAllocations
+                .Where(x => x.ReturnRequestId == ReturnRequestId && x.ReleasedAt == null)
+                .SumAsync(x => x.Quantity);
+
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
 
-    private static async Task<Harness> SeedAsync(Stage stage, bool rivalClaim = false)
+    private static async Task<Harness> SeedAsync(
+        Stage stage,
+        bool rivalClaim = false,
+        decimal? requestedOverride = null,
+        int unitPlaces = 0,
+        decimal? receivedUsableOverride = null,
+        decimal? receivedDamagedOverride = null,
+        bool seedAllocation = false)
     {
+        var requested = requestedOverride ?? Requested;
         var dbName = Guid.NewGuid().ToString("N");
         var db = CreateDb(dbName);
         var customer = Guid.NewGuid();
@@ -463,7 +587,7 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             $"tb279-{returnRequestId:N}",
             "دلیل مرجوعی",
             "IRR",
-            [(lineId, Requested, UnitPrice, (Guid?)reservationId)],
+            [(lineId, requested, UnitPrice, (Guid?)reservationId)],
             Now,
             RefundDestination.OriginalPayment);
         db.ReturnRequests.Add(request);
@@ -514,13 +638,14 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             }
         }
 
-        var receivedUsable = stage switch
+        var receivedUsable = receivedUsableOverride ?? (stage switch
         {
             Stage.RequestedWithMixedReceipt => 1m,
             Stage.RequestedWithPartialReceipt => 1m,
-            _ => Requested,
-        };
-        var receivedDamaged = stage == Stage.RequestedWithMixedReceipt ? 1m : 0m;
+            _ => requested,
+        });
+        var receivedDamaged = receivedDamagedOverride
+            ?? (stage == Stage.RequestedWithMixedReceipt ? 1m : 0m);
         var receipt = ReturnReceipt.Create(
             Guid.NewGuid(),
             () => Guid.NewGuid(),
@@ -550,6 +675,27 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
 
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
+
+        if (seedAllocation)
+        {
+            // A claim created through the OWNING directory carries one active per-delivery allocation per item; seeding
+            // it here lets the evaluator read the same real occupancy a served creation would produce.
+            db.ReturnDeliveryAllocations.Add(new ReturnDeliveryAllocation
+            {
+                ReturnAllocationId = Guid.NewGuid(),
+                ReturnRequestId = returnRequestId,
+                ReturnItemId = request.Items.Single().ReturnItemId,
+                OrderLineId = lineId,
+                SliceKey = ReturnAllocationPolicy.SliceKeyOf(lineId, Now),
+                Quantity = requested,
+                DeliveredAt = Now,
+                ReleasedAt = null,
+                RecordedAt = Now,
+            });
+            await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
+        }
+
         await db.DisposeAsync();
 
         var order = new OrderReturnContextSnapshot(
@@ -559,7 +705,7 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             customer,
             true,
             "IRR",
-            [new OrderReturnLineSnapshot(lineId, Requested, UnitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0)]);
+            [new OrderReturnLineSnapshot(lineId, requested, UnitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: unitPlaces)]);
 
         return new Harness(
             dbName,

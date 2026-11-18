@@ -1,0 +1,53 @@
+TB-279-R2 RESULT CONTRACT
+=========================
+
+Task: TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2
+Channel: tooba-main
+Worker: tooba-worker-01
+AgentType: cursor
+Expected-Base-SHA: 6e3d1873f7f9926c2906ae4e26547a6c9ef97eeb
+Reviewed-Code-SHA: 3f8b670cd4a16db9ef8e1c4766704b53a075d364
+Claim commits: ff69838cf, 22a0ec148, 3b1ce75d9
+
+Status: PASS within the issued consolidated A-G scope
+Architect acceptance: NO
+User functional/visual acceptance: NO
+Marketplace/provider/financial readiness: NO
+automaticNextImplementationTask: NONE
+
+Decision:
+ONE_CONNECTED_REVIEWED_WIRE_CONTRACT_ONE_PORTION_CAPACITY_AUTHORITY_AND_ONE_EXACT_ORIGINATING_CUSTOMER_INTENT_WITH_TARGETED_NEGATIVE_CONTROLS_AND_PRIVATE_LOCAL_KEY_PRESERVATION
+
+Areas:
+A containment            = index removed, scoped ignore, private preservation, active-key assessment,
+                           Security-Exposure-State=CONTAINED_PENDING_REVIEWED_RETIREMENT
+B wire contract          = start/retry/approve/reject carry reviewed decision+resolution revisions;
+                           resolution sends five portions; custody sends operator_attestation + proof
+C portion capacity       = held allocations read regardless of status; occupied = accepted + owed custody;
+                           fact: 3 delivered / 2 accepted / 1 rejected / 0.5 back => live 2.5, remaining 0.5
+D reviewed versions+unit = missing plan revision => return.resolution.review_version_required;
+                           stale => return.correction.version_stale; off-quantum portion/custody refused
+E evidenced custody      = carrier_delivered_back refused as return.custody.proof_kind_unavailable;
+                           legacy ambiguity across expired+live slices; exact-slice reacquisition
+F customer intent        = unmount/close/retarget epoch, per-send fence, v1 evidence blocks,
+                           exact originating-envelope comparison before child outcome
+G proof                  = Returns 177/177; Host 37/37 (34 AMSC + 3 rollback-only relational,
+                           committedRows=0); FE unit 29/29; mounted 34/34; tsc 0; next build 0
+                           (BUILD_ID IdLHLUerRPBB-OzXddPwk); dotnet build Release 0 errors;
+                           Host publish 0 errors
+
+Served:
+Host 5088 PID 7808, dll SHA256 7B8AAB852972C1CDCED3A12AA2A057700183FA16AE1A2FA89A60D209CF499977,
+  /health 200, /health/ready 200
+Next 3000 PID 9904, BUILD_ID IdLHLUerRPBB-OzXddPwk, /fa/admin/returns 200
+
+Schema/data:
+No migration/DDL/seed/backfill/reset/cleanup in R2. Single R1 Returns migration remains the only schema change.
+No live business/provider/money/stock/notification write. Existing settled cases remain read-only history.
+
+Known limits:
+controlled money/stock ports; in-memory EF for the occupancy/quantum counterexamples;
+jsdom behaviour not geometry; no live active case/session; carrier handback intentionally unimplemented;
+key exposure contained in Git only with retirement pending reviewed approval.
+
+STOP_FOR_ARCHITECT

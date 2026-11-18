@@ -1,4 +1,22 @@
-# CURRENT — remaining R1-A–F included in the ONE issued 279-R2 repair — 2026-11-18
+# CURRENT — 279-R2 worker PASS claims A–G; Architect review pending — 2026-11-18
+
+Envelope: `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md`.
+Implementation claimed in `3b1ce75d9` (after containment `22a0ec148`); proof in
+`docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/`.
+Every blocking row below is addressed by a cited fact; the group remains labeled blocking until the Architect verifies
+it. Key retirement stays explicitly pending (`key-containment.md`). No automatic follow-on task.
+
+| Remaining group | Concrete required proof | Claimed evidence |
+| --- | --- | --- |
+| R1-A connected operator contract | Real modal/transport/endpoint accepts the SAME frozen decision+resolution versions, per-condition split and attested proof; new start/retry succeeds with controlled ports | `connected-wire-proof.md`; mounted 23/23 workspace facts; `B_a_decision_over_a_reviewed_plan_must_carry_that_plan_version` |
+| R1-B capacity | Rejected-only seller keeps held occupancy; mixed accepted 2 + owed 1 minus handback 0.5 keeps 2.5 occupied; no silent legacy disappearance | `R2_a_handed_back_remainder_keeps_the_accepted_units_occupied`; rejected-capacity facts |
+| R1-C version/quantum | Stale reviewed plan and missing new-decision version refuse; 0.5 pcs resolution/custody cannot write or send money/stock | missing/stale plan facts; `R2_a_plan_portion_finer_than_the_owning_unit_is_refused_before_any_row`; custody quantum fact |
+| R1-D positive evidence | Unsupported carrier proof refuses; expired+live legacy slice ambiguity blocks without guessing; reacquisition proves exact slice | `R2_a_handback_finer_than_the_owning_unit_and_an_unproven_carrier_are_refused`; `An_old_legacy_case_is_never_guessed_onto_one_of_two_delivery_slices`; rejected re-acquisition facts |
+| R1-E retained customer act | Unmount stops later child sends; v1 uncertainty blocks replacement; old answer cannot update a different same-key body | `retained-intent-proof.md`; mounted 11/11 |
+| R1-F truthful tests | Exact owning regressions and strict wire/mounted negative controls; matrix cites tests that actually exist | `closure-matrix.md`; Returns 177/177, Host 37/37, FE unit 29/29, mounted 34/34 |
+| Protected repository material | Private local preservation, normal untracking/ignore, assessed environment-key retirement; no destructive cleanup/history rewrite | `22a0ec148`; `key-containment.md` |
+
+# SUPERSEDED — remaining R1-A–F included in the ONE issued 279-R2 repair — 2026-11-18
 
 Envelope: `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md`. Implementation NOT yet claimed. Repository containment preserves local material; any needed key retirement stays explicitly pending impact review. No automatic follow-on task. Original review/checklist preserved below.
 
