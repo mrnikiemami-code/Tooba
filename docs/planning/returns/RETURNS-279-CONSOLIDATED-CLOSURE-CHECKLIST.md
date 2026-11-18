@@ -1,3 +1,22 @@
+# CURRENT — 279-R2 reviewed; most connected repairs retained, narrow closure remains — 2026-11-18
+
+Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/ARCHITECT-REVIEW.md` (source `f867dcb7163608915112c7450196c49bc8a3ba37`). Overall PARTIAL; no new task issued.
+
+| Item | Current Architect source review | Required remaining evidence/action |
+| --- | --- | --- |
+| Operator wire and condition portions | repaired in real workspace/helpers/owning shapes | retain strict body/query assertions; do not revert to aggregate portions |
+| Quantum/carrier/slice gates | known unit quantum and unavailable carrier repaired; expired slices considered | retain focused negative/positive cases |
+| Mixed allocated custody | 3/2/1/0.5 now keeps 2.5 occupied | retain owning Directory/evaluator fact |
+| Customer retained act | unmount/pre-send/v1/exact-origin repairs retained | retain mounted regression coverage |
+| B1 NEW decision revision | OPEN: null decision version still permits new decision | refuse missing after replay check, current succeeds/stale refuses/no writes |
+| B2 unallocated held goods | OPEN: rejected legacy held goods excluded; corrupt receipt can release as zero | preserve/block outstanding quantities, no guessed slice or silent return; exact evaluator/Directory facts |
+| Controlled financial/Inventory proof | OPEN acceptance limit | actual recorder asserts accepted usable 2, not 3; failed A/B-reserved/A-retry refuses without child/effect |
+| Key/source containment | key+20 scripts out of HEAD; private preservation reported | retirement pending impact review; historical bridge report still needs safe untracking/ignore; correct inventory claims |
+
+No new migration/live mutation/reset/demo/provider effect/secret revocation. Finish only the narrow original-scope closure; no blanket test sweeps or repeated full-module redesign. Original reports/checklists preserved below.
+
+---
+
 # CURRENT — 279-R2 worker PASS claims A–G; Architect review pending — 2026-11-18
 
 Envelope: `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md`.

@@ -1,4 +1,10 @@
-# CURRENT — 279-R2 WORKER PASS; AWAIT ARCHITECT REVIEW — 2026-11-18
+# CURRENT — 279-R2 ARCHITECT REVIEW: PARTIAL, TWO OWNER GATES STILL OPEN — 2026-11-18
+
+Reviewed final source `f867dcb7163608915112c7450196c49bc8a3ba37`. Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/ARCHITECT-REVIEW.md` FIRST. Retain repaired real operator wire, per-condition quantities, quantum, accepted+owed custody trim, legacy slice ambiguity, customer unmount/v1/exact-origin retention and current-tree key untracking.
+Remaining blocking B1: NEW approve/reject can omit decision version; resolution-version gate is not a substitute. B2: rejected/cancelled legacy received goods WITHOUT allocation rows disappear from occupancy; incoherent receipt can still release as held=0. Add exact owner regressions and the still-missing controlled-port budget/Inventory proof. One narrow closure boundary, no broad redesign/micro-task chain.
+Key exposure remains CONTAINED_PENDING_REVIEWED_RETIREMENT; no secret rotation/deletion authorized. Historical 277-R1 bridge posting still tracked despite report: preserve locally before normal untracking/ignore. No new task issued here; parents remain PARTIAL, no user/provider/financial acceptance. STOP_FOR_ARCHITECT; activeTask NONE; automaticNextImplementationTask NONE.
+
+# SUPERSEDED — worker/checkpoint report (historical)
 
 Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md` and
 `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/`
