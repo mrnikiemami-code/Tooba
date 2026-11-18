@@ -1,0 +1,20 @@
+{
+  "protocol": "BRIDGE-WAKE-V1",
+  "taskId": "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1",
+  "parentTask": "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281",
+  "issuedDate": "2026-11-19",
+  "timezone": "Asia/Tehran",
+  "expectedBaseSha": "860c6a2c72842c8971d8b9f9885e26cdb0f3f657",
+  "taskBytes": 16772,
+  "taskSha256": "05ca4b11bccc68281174ce44fbc12a6b1af9809e73a0ec2e1afbc89190673e48",
+  "encoding": "UTF-8",
+  "lineEndings": "LF",
+  "downloadFilename": "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1.task.md",
+  "taskPaths": [
+    "docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/TASK.md",
+    "docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/TASK.md"
+  ],
+  "permittedIncomingDelta": "docs-only review/issuance descendant; verify at claim",
+  "uiDelivery": "PLANNED_NOT_ISSUED",
+  "automaticNextImplementationTask": "NONE"
+}

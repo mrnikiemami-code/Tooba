@@ -1,4 +1,10 @@
-# CURRENT — TB-281 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
+# CURRENT — TB-STORY-281 ARCHITECT PARTIAL; ONE CONSOLIDATED 281-R1 REPAIR ISSUED — 2026-11-19
+
+Read parent `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/ARCHITECT-REVIEW.md` (source-confirmed B1–B7) and EXACT `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/TASK.md`. Worker281 correctly returned PARTIAL; Architect does NOT accept delivery one. Independent review found fresh persisted public read evaluates empty Items before loading, optional authority bypasses, upload intent/owner-save gaps, incomplete old-route version/replay, admin+seller action union, missing scoped query/CTA/public identity, and Media CQRS/tenant duplication. Four domain/InMemory facts +52 pins are not parent G1–G7 proof.
+
+Active issued task: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1, same tooba-worker-01 / tooba-main; ONE consolidated completion of original scope, no new redesign or microtask chain. Shared Orders-style UI delivery remains PLANNED NOT ISSUED until this result is reviewed. Expected base 860c6a2c72842c8971d8b9f9885e26cdb0f3f657; docs-only review/issuance descendants allowed. Already-applied parent Story/Media migrations immutable; bounded additional schema only per exact fresh backup/runner rules. No live business write/fixture/seed/reset/key operation. Returns acceptances and payout backlog preserved. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+
+# HISTORICAL — TB-STORY-281 worker checkpoint
 
 Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md` and
 `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,user-review.md,issuance-receipt.json}`.
