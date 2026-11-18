@@ -1,3 +1,7 @@
+# CURRENT — remaining R1-A–F included in the ONE issued 279-R2 repair — 2026-11-18
+
+Envelope: `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/TASK.md`. Implementation NOT yet claimed. Repository containment preserves local material; any needed key retirement stays explicitly pending impact review. No automatic follow-on task. Original review/checklist preserved below.
+
 # CURRENT — 279-R1 source review reopened consolidated closure — 2026-11-18
 
 Status PARTIAL, not final acceptance. Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/ARCHITECT-REVIEW.md` (code `3f8b670`). No new task issued by this checkpoint.
