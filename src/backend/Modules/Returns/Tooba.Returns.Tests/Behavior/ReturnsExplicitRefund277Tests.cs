@@ -219,7 +219,7 @@ public sealed class ReturnsExplicitRefund277Tests
                     new FixedFulfillmentReader(fixture.OrderSnapshot, fixture.OrderLineId),
                     db,
                     clock),
-                new FixedPaymentReader(fixture.Requested * fixture.UnitPrice),
+                new FixedPaymentReader(fixture.Requested * fixture.UnitPrice, fixture.CheckoutId),
                 Gateway,
                 Wallet,
                 Inventory,
@@ -250,10 +250,17 @@ public sealed class ReturnsExplicitRefund277Tests
                     RefundDestination.OriginalPayment),
                 CancellationToken.None);
 
-        public Task<ReturnSnapshot> StartFirstRefundAsync() =>
-            _directory.StartFirstRefundAsync(
-                new StartReturnRefundCommand(Fixture.ReturnRequestId, Guid.NewGuid()),
+        public async Task<ReturnSnapshot> StartFirstRefundAsync()
+        {
+            // TB-279-R1 (F4): every NEW money command names the revision the operator reviewed.
+            var reviewed = await _directory.GetAsync(Fixture.ReturnRequestId, CancellationToken.None);
+            return await _directory.StartFirstRefundAsync(
+                new StartReturnRefundCommand(
+                    Fixture.ReturnRequestId,
+                    Guid.NewGuid(),
+                    reviewed?.DecisionVersion ?? 0),
                 CancellationToken.None);
+        }
 
         public Task<ReturnSnapshot?> Snapshot() => _directory.GetAsync(Fixture.ReturnRequestId, CancellationToken.None);
 
@@ -270,7 +277,8 @@ public sealed class ReturnsExplicitRefund277Tests
         Guid OrderLineId,
         decimal Requested,
         decimal UnitPrice,
-        OrderReturnContextSnapshot OrderSnapshot)
+        OrderReturnContextSnapshot OrderSnapshot,
+        Guid CheckoutId)
     {
         public Harness Open() => new(this, CreateDb(DbName));
     }
@@ -355,7 +363,7 @@ public sealed class ReturnsExplicitRefund277Tests
             "IRR",
             [new OrderReturnLineSnapshot(lineId, requested, unitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: 0)]);
 
-        return new Fixture(dbName, returnRequestId, request.Items.Single().ReturnItemId, lineId, requested, unitPrice, orderSnapshot);
+        return new Fixture(dbName, returnRequestId, request.Items.Single().ReturnItemId, lineId, requested, unitPrice, orderSnapshot, request.CheckoutId);
     }
 
     private static ReturnsDbContext CreateDb(string name) => new(
@@ -403,7 +411,7 @@ public sealed class ReturnsExplicitRefund277Tests
         }
     }
 
-    private sealed class FixedPaymentReader(decimal amount) : IPaymentReturnReader
+    private sealed class FixedPaymentReader(decimal amount, Guid owningCheckoutId) : IPaymentReturnReader
     {
         private readonly Guid _paymentId = Guid.NewGuid();
 
@@ -415,7 +423,7 @@ public sealed class ReturnsExplicitRefund277Tests
             Task.FromResult<PaymentReturnSnapshot?>(
                 new PaymentReturnSnapshot(
                     paymentId == Guid.Empty ? _paymentId : paymentId,
-                    Guid.NewGuid(),
+                    owningCheckoutId,
                     amount,
                     "IRR",
                     "Succeeded"));

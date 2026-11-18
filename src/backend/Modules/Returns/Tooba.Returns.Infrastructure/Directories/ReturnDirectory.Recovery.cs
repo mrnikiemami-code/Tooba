@@ -110,15 +110,18 @@ public sealed partial class ReturnDirectory
         }
         else
         {
-            // TB-274 (B): an ordinary delivered RMA repeats its unknown money ONLY over its own recorded, complete and
-            // coherent customer receipt. The blocker is the SAME one the read description reports and it mints no key.
-            var receiving = await ReadReceivingAsync(request, cancellationToken);
-            if (receiving is not { IsCoherent: true, IsComplete: true })
+            // TB-274 / TB-279-R1 (F2): an ordinary delivered RMA repeats its unknown money ONLY over the SAME coverage
+            // the read description reports — coherent evidence plus a complete reviewed resolution (or the whole-claim
+            // baseline when no split exists). A partial receipt with a rejected unreceived remainder is therefore
+            // lawful work, while a missing/incomplete basis mints no key and sends nothing.
+            if (!ReturnResolutionPolicy.TryDescribeCompleteCoverage(
+                    snapshot,
+                    out _,
+                    out var coverageBlocker,
+                    incoherentCode: ReturnsErrorCodes.RecoveryEvidenceConflict,
+                    incompleteReceiptCode: ReturnsErrorCodes.RecoveryReceivingRequired))
             {
-                throw new ContractOperationException(
-                    receiving is { IsCoherent: false }
-                        ? ReturnsErrorCodes.RecoveryEvidenceConflict
-                        : ReturnsErrorCodes.RecoveryReceivingRequired);
+                throw new ContractOperationException(coverageBlocker);
             }
         }
 
@@ -183,19 +186,24 @@ public sealed partial class ReturnDirectory
 
         if (request.Origin != ReturnOrigin.CourierOrigin)
         {
-            // TB-274: an ordinary delivered RMA is executable ONLY over its own recorded, complete and coherent
-            // customer receipt. Without that evidence the confirmed money stays intact and the line stays pending —
-            // the requested quantity is never restocked as if it had been received and inspected as usable.
-            var receiving = await ReadReceivingAsync(request, cancellationToken);
-            if (receiving is not { IsCoherent: true, IsComplete: true })
+            // TB-274 / TB-279-R1 (F2): an ordinary delivered RMA is executable ONLY over the SAME coverage the read
+            // reports, and only the ACCEPTED usable portion of each reviewed line may reach Inventory. The requested
+            // quantity is never restocked as if it had been received, and a rejected received portion belongs to the
+            // customer, not to saleable stock.
+            if (!ReturnResolutionPolicy.TryDescribeCompleteCoverage(
+                    snapshot,
+                    out var coverage,
+                    out var coverageBlocker,
+                    incoherentCode: ReturnsErrorCodes.RecoveryReceivingRequired,
+                    incompleteReceiptCode: ReturnsErrorCodes.RecoveryReceivingRequired))
             {
-                throw new ContractOperationException(ReturnsErrorCodes.RecoveryReceivingRequired);
+                throw new ContractOperationException(coverageBlocker);
             }
 
-            // TB-274-R1 (C): an inspected usable quantity without its owning stock binding cannot be restocked, so the
+            // TB-274-R1 (C): an ACCEPTED usable portion without its owning stock binding cannot be restocked, so the
             // physical intent refuses with the SAME typed blocker the read reports — no Inventory call, no disposition
             // claim, no invented completion, no new attempt.
-            if (HasUnboundInspectedUsable(request, receiving))
+            if (HasUnboundAcceptedUsable(request, coverage))
             {
                 throw new ContractOperationException(ReturnsErrorCodes.RecoveryStockBindingRequired);
             }
@@ -216,12 +224,15 @@ public sealed partial class ReturnDirectory
     }
 
     /// <summary>
-    /// TB-274-R1 (C): true when a requested line inspected a positive usable quantity but owns no stock binding at all.
-    /// Such a line can never be restocked by Inventory, so it is a typed PENDING blocker instead of a claimed physical
-    /// completion. Nothing is reserved, guessed or created.
+    /// TB-274-R1 (C) / TB-279-R1 (F2): true when a reviewed line ACCEPTS a positive usable portion but owns no stock
+    /// binding at all. That portion can never be restocked by Inventory, so it is a typed PENDING blocker instead of a
+    /// claimed physical completion. An accepted-damaged-only line needs no binding, and a rejected received portion is
+    /// never restocked, so neither may block on a missing reservation.
     /// </summary>
-    private static bool HasUnboundInspectedUsable(ReturnRequest request, ReturnReceivingSummary receiving) =>
-        request.Items.Any(item =>
-            receiving.UsableOf(item.ReturnItemId) > 0m
-            && (item.ReservationId is not { } reservationId || reservationId == Guid.Empty));
+    private static bool HasUnboundAcceptedUsable(ReturnRequest request, ReturnResolutionSnapshot coverage) =>
+        coverage.Lines.Any(line =>
+            line.AcceptedUsable > 0m
+            && request.Items.Any(item =>
+                item.ReturnItemId == line.ReturnItemId
+                && (item.ReservationId is not { } reservationId || reservationId == Guid.Empty)));
 }

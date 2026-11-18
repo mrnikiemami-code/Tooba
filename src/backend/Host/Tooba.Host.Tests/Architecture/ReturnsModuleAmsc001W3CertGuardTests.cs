@@ -194,13 +194,13 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal, TB-273-R1 the two
         // recovery evidence/transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals and
         // TB-278 the owning-unit creation quantum refusal, all HTTP-reachable.
-        Assert.Equal(80, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(86, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(81, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(87, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(80, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(86, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.
@@ -309,6 +309,8 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
                 "20261117164135_Tb279AuditedDecisionCorrectionResolutionCustodyAndAllocation.cs",
                 "20261118004500_NormalizeApprovedAmountColumn.Designer.cs",
                 "20261118004500_NormalizeApprovedAmountColumn.cs",
+                "20261118023434_Tb279R1PerConditionPortionsAndCustodyProof.Designer.cs",
+                "20261118023434_Tb279R1PerConditionPortionsAndCustodyProof.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             migrations);

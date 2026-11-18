@@ -41,8 +41,11 @@ public sealed class ReturnsDecisionCorrection279Tests
                     Received: 2m,
                     Usable: 1m,
                     Damaged: 1m,
-                    Accepted: 1m,
-                    Rejected: 1m,
+                    AcceptedUsable: 1m,
+                    AcceptedDamaged: 0m,
+                    RejectedReceivedUsable: 0m,
+                    RejectedReceivedDamaged: 1m,
+                    RejectedUnreceived: 0m,
                     Reason: "یک عدد سالم پذیرفته شد",
                     Version: 1),
             ],
@@ -71,7 +74,7 @@ public sealed class ReturnsDecisionCorrection279Tests
             snapshot.Receiving,
             [
                 new ReturnResolutionLineSnapshot(
-                    snapshot.Items[0].ReturnItemId, 2m, 1m, 1m, 0m, 2m, 0m, "همه پذیرفته", 1),
+                    snapshot.Items[0].ReturnItemId, 2m, 1m, 1m, 0m, 2m, 0m, 0m, 0m, 0m, "همه پذیرفته", 1),
             ],
             storedVersion: 1,
             originalAmount: 200m);
@@ -94,7 +97,7 @@ public sealed class ReturnsDecisionCorrection279Tests
             snapshot.Receiving,
             [
                 new ReturnResolutionLineSnapshot(
-                    snapshot.Items[0].ReturnItemId, 3m, 3m, 3m, 0m, 2m, 0m, "دو عدد", 1),
+                    snapshot.Items[0].ReturnItemId, 3m, 3m, 3m, 0m, 2m, 0m, 0m, 0m, 0m, "دو عدد", 1),
             ],
             storedVersion: 1,
             originalAmount: 150m);
@@ -351,7 +354,18 @@ public sealed class ReturnsDecisionCorrection279Tests
             Lines:
             [
                 new ReturnResolutionLineSnapshot(
-                    itemId, accepted + rejected, usable + damaged, usable, damaged, accepted, rejected, "بررسی‌شده", 1),
+                    itemId,
+                    accepted + rejected,
+                    usable + damaged,
+                    usable,
+                    damaged,
+                    AcceptedUsable: accepted,
+                    AcceptedDamaged: 0m,
+                    RejectedReceivedUsable: rejected,
+                    RejectedReceivedDamaged: 0m,
+                    RejectedUnreceived: 0m,
+                    "بررسی‌شده",
+                    1),
             ]);
 
     private static ReturnItemSnapshot Item(

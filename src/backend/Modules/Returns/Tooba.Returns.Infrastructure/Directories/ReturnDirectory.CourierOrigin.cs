@@ -251,23 +251,118 @@ public sealed partial class ReturnDirectory
     }
 
     /// <summary>
-    /// Records the physical disposition of every received line exactly once. A damaged unit is recorded as
-    /// non-saleable and is NEVER passed to the unconditional saleable restock path.
+    /// Records the physical completion of every ACCEPTED portion exactly once.
     /// <para>
-    /// TB-274: a delivered-customer case now OWNS its recorded customer receipt, so its disposition is derived from
-    /// the inspected quantities — ONLY the usable quantity is restocked and the damaged quantity is never sent to
-    /// saleable inventory. A case without a complete, coherent receipt keeps its lines explicitly pending instead of
-    /// restocking the requested quantity (the money is untouched).
+    /// TB-279-R1 (F2): the ONLY basis is the reviewed per-condition plan — never "the inspected quantity" and never
+    /// the requested quantity. <see cref="ReturnResolutionLineSnapshot.AcceptedUsable"/> is restocked as saleable
+    /// stock, <see cref="ReturnResolutionLineSnapshot.AcceptedDamaged"/> is recorded as non-saleable, and the rejected
+    /// received portions are never touched here at all: they belong to the customer and are discharged by custody.
+    /// </para>
+    /// <para>
+    /// Each accepted portion carries its own durable completion fact
+    /// (<see cref="ReturnItem.UsableRestockedQuantity"/> / <see cref="ReturnItem.DamagedRecordedQuantity"/>), so a
+    /// mixed line needs BOTH before it is complete and a retried/uncertain money answer can never restock the same
+    /// units twice. A line without a lawful plan or without its owning stock binding stays explicitly pending; the
+    /// confirmed money is untouched.
     /// </para>
     /// </summary>
     private async Task SettlePhysicalDispositionAsync(
         ReturnRequest request,
         CancellationToken cancellationToken)
     {
-        var ordinary = request.Origin == ReturnOrigin.CustomerDelivered;
-        var receiving = ordinary ? await ReadReceivingAsync(request, cancellationToken) : null;
-        var ordinaryEvidence = ordinary && receiving is { IsCoherent: true, IsComplete: true };
+        if (request.Origin != ReturnOrigin.CustomerDelivered)
+        {
+            await SettleCourierOwnedDispositionAsync(request, cancellationToken);
+            return;
+        }
 
+        var snapshot = await MapSnapshotAsync(request, cancellationToken);
+        if (snapshot.Resolution is not { IsComplete: true } resolution)
+        {
+            // No reviewed, complete plan: no unit may be restocked or declared non-saleable, because the accepted
+            // condition was never reviewed. The lines stay pending and the money is untouched.
+            _logger.LogWarning(
+                "Physical disposition pending for return {ReturnRequestId}: no complete reviewed resolution",
+                request.ReturnRequestId);
+            return;
+        }
+
+        foreach (var item in request.Items)
+        {
+            var line = resolution.Lines.FirstOrDefault(x => x.ReturnItemId == item.ReturnItemId);
+            if (line is null)
+            {
+                continue;
+            }
+
+            // --- accepted DAMAGED portion: recorded as non-saleable, never saleable stock, no stock binding needed.
+            if (line.AcceptedDamaged > 0m && (item.DamagedRecordedQuantity ?? 0m) != line.AcceptedDamaged)
+            {
+                var damagedEntry = _db.Entry(item);
+                item.RecordDamagedNonSaleable(line.AcceptedDamaged);
+                try
+                {
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+                catch
+                {
+                    // TB-273-R1 C: reload ONLY this affected line, so an unsaved in-memory portion cannot be trusted by
+                    // a retry in the same scope while the database still holds the pending fact.
+                    await RestoreTrackedAsync(damagedEntry, cancellationToken);
+                    throw;
+                }
+            }
+
+            // --- accepted USABLE portion: the ONLY quantity that may ever become saleable stock.
+            if (line.AcceptedUsable <= 0m || (item.UsableRestockedQuantity ?? 0m) == line.AcceptedUsable)
+            {
+                continue;
+            }
+
+            // TB-274-R1 (C): a saleable restock REQUIRES the owning stock binding. Without a reservation there is no
+            // Inventory owner to confirm the move, so the line stays explicitly pending — no Inventory call, no
+            // disposition claim and no invented completion. The confirmed money is untouched.
+            if (item.ReservationId is not { } reservationId || reservationId == Guid.Empty)
+            {
+                _logger.LogWarning(
+                    "Physical disposition pending for return {ReturnRequestId} line {ReturnItemId}: the accepted usable portion has no owning stock binding",
+                    request.ReturnRequestId,
+                    item.ReturnItemId);
+                continue;
+            }
+
+            // TB-265-R1: the owning restock is called BEFORE the portion is recorded, with the SAME per-item identity on
+            // every retry. A failed restock therefore leaves the line explicitly pending instead of a false completion.
+            await _inventory.RestockConsumedReservationAsync(
+                reservationId,
+                line.AcceptedUsable,
+                $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
+                cancellationToken);
+
+            var itemEntry = _db.Entry(item);
+            item.RecordUsableRestock(line.AcceptedUsable);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch
+            {
+                // TB-273-R1 C: reload only this line; the unsaved completion must never be read as durable.
+                await RestoreTrackedAsync(itemEntry, cancellationToken);
+                throw;
+            }
+        }
+    }
+
+    /// <summary>
+    /// TB-279-R1 (F2): the unchanged courier-origin physical settlement. A courier-origin line owns its Fulfillment
+    /// receipt/claim, so its recorded <see cref="ReturnItem.Condition"/> is the physical fact of that line; an ordinary
+    /// case never reaches this path.
+    /// </summary>
+    private async Task SettleCourierOwnedDispositionAsync(
+        ReturnRequest request,
+        CancellationToken cancellationToken)
+    {
         foreach (var item in request.Items)
         {
             if (item.Disposition != ReturnItemDisposition.None)
@@ -277,20 +372,8 @@ public sealed partial class ReturnDirectory
                 continue;
             }
 
-            if (ordinary && !ordinaryEvidence)
-            {
-                // TB-273/TB-274: no coherent, complete customer receipt exists, so no unit may be restocked or
-                // declared non-saleable from the requested quantity. The line stays pending; the money is untouched.
-                continue;
-            }
-
-            // TB-274: the inspected quantity of THIS line is the only physical fact a restock may use.
-            var usable = ordinary
-                ? receiving!.Lines.Single(x => x.ReturnItemId == item.ReturnItemId).Usable
-                : item.Condition == ReturnItemCondition.Usable ? item.Quantity : 0m;
-            var damaged = ordinary
-                ? receiving!.Lines.Single(x => x.ReturnItemId == item.ReturnItemId).Damaged
-                : item.Condition == ReturnItemCondition.Damaged ? item.Quantity : 0m;
+            var usable = item.Condition == ReturnItemCondition.Usable ? item.Quantity : 0m;
+            var damaged = item.Condition == ReturnItemCondition.Damaged ? item.Quantity : 0m;
 
             if (usable <= 0m)
             {
@@ -316,12 +399,6 @@ public sealed partial class ReturnDirectory
                 continue;
             }
 
-            // TB-265-R1: the owning restock is called BEFORE the disposition is marked, with the SAME per-item
-            // identity on every retry. A failed restock therefore leaves the item explicitly pending instead of
-            // persisting a false SaleableRestock. A damaged portion of the same line is never part of this quantity.
-            // TB-274-R1 (C): a saleable restock REQUIRES the owning stock binding. Without a reservation there is no
-            // Inventory owner to confirm the move, so the line stays explicitly pending — no Inventory call, no
-            // disposition claim and no invented completion. The confirmed money is untouched.
             if (item.ReservationId is not { } reservationId || reservationId == Guid.Empty)
             {
                 _logger.LogWarning(

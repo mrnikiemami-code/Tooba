@@ -60,6 +60,13 @@ public sealed record ReturnReceivingSummary(
     public decimal UsableOf(Guid returnItemId) =>
         Lines.FirstOrDefault(x => x.ReturnItemId == returnItemId)?.Usable ?? 0m;
 
+    /// <summary>
+    /// TB-279-R1 (F2): the exact inspected DAMAGED quantity of ONE requested line, or <c>0</c> when this case carries no
+    /// such line. It is the only quantity a non-saleable record may name, and never the requested quantity.
+    /// </summary>
+    public decimal DamagedOf(Guid returnItemId) =>
+        Lines.FirstOrDefault(x => x.ReturnItemId == returnItemId)?.Damaged ?? 0m;
+
     /// <summary>True when this line received at least one unit.</summary>
     public bool WasReceived(Guid returnItemId) =>
         Lines.Any(x => x.ReturnItemId == returnItemId && x.Received > 0m);

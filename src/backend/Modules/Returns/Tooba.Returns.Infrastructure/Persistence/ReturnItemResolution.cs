@@ -31,6 +31,24 @@ public sealed class ReturnItemResolution
     /// <summary>مقدار ردشده یا انصراف‌داده‌شده (بدون بازگشت وجه و بدون رسید ساختگی).</summary>
     public decimal RejectedQuantity { get; init; }
 
+    /// <summary>
+    /// TB-279-R1 (F2): the accepted portion of the inspected USABLE condition. Null on a pre-R1 row whose accepted
+    /// condition was never reviewed — such a row is read as an incomplete plan, never as a usable-first split.
+    /// </summary>
+    public decimal? AcceptedUsableQuantity { get; init; }
+
+    /// <summary>TB-279-R1 (F2): the accepted portion of the inspected DAMAGED condition.</summary>
+    public decimal? AcceptedDamagedQuantity { get; init; }
+
+    /// <summary>TB-279-R1 (F3): declined but RECEIVED usable units, owed back to the owning customer.</summary>
+    public decimal? RejectedReceivedUsableQuantity { get; init; }
+
+    /// <summary>TB-279-R1 (F3): declined but RECEIVED damaged units, owed back to the owning customer.</summary>
+    public decimal? RejectedReceivedDamagedQuantity { get; init; }
+
+    /// <summary>TB-279-R1 (F2): the part of the claim that never physically arrived.</summary>
+    public decimal? RejectedUnreceivedQuantity { get; init; }
+
     /// <summary>دلیل بازبینی‌شدهٔ این حل‌وفصل.</summary>
     public string Reason { get; init; } = string.Empty;
 

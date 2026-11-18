@@ -6,10 +6,10 @@ import {
   Package,
   RefreshCw,
   RotateCcw,
-  X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import { Dialog } from "../../design-system/primitives/overlays";
 import {
   DEFAULT_REFUND_DESTINATION,
   formatReturnEligibilityBlocker,
@@ -128,6 +128,26 @@ function ceilingUnits(line: CustomerReturnEligibilityLine): number | null {
   return unitsFromWireNumber(line.remainingReturnableQuantity);
 }
 
+/**
+ * TB-279-R1: safe storage acquisition. Both the `window.sessionStorage` property getter and a probe write can throw
+ * (privacy mode, quota, hardened browsers); each failure means the surface can never PROVE a durable act, so it must
+ * refuse to send instead of turning unreadable evidence into "nothing pending".
+ */
+export function acquireSubmissionStorage(): SubmissionStorage | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const store = window.sessionStorage;
+    if (!store) return null;
+    const probe = "__tb279_storage_probe__";
+    store.setItem(probe, "1");
+    const readable = store.getItem(probe) === "1";
+    store.removeItem(probe);
+    return readable ? store : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ReturnRequestModal({
   open,
   onClose,
@@ -138,6 +158,9 @@ export function ReturnRequestModal({
   onSubmitted,
 }: ReturnRequestModalProps) {
   const [storage, setStorage] = useState<SubmissionStorage | null>(null);
+  const [storageBlocked, setStorageBlocked] = useState(false);
+  const [viewerMissing, setViewerMissing] = useState(false);
+  const [unreadable, setUnreadable] = useState(false);
   const [retained, setRetained] = useState<ReturnSubmission | null>(null);
   const [reasonId, setReasonId] = useState("");
   const [description, setDescription] = useState("");
@@ -146,22 +169,43 @@ export function ReturnRequestModal({
   const [busy, setBusy] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [successCount, setSuccessCount] = useState<number | null>(null);
-  const inFlight = useRef(false);
+  // TB-279-R1: presentation epoch. Every late read/answer/state update compares it, so a stale act can never paint on,
+  // toast on, or release a newer surface.
+  const epoch = useRef(0);
+  // Counts UNRESOLVED sends, independent of the epoch: a possibly-sent act is never sendable twice, and a stale
+  // completion can never release a lock that a newer send owns.
+  const activeSends = useRef(0);
+  const viewer = viewerId?.trim() ?? "";
+
+  function isCurrent(started: number): boolean {
+    return epoch.current === started;
+  }
 
   useEffect(() => {
     if (!open) return;
-    const nextStorage = typeof window === "undefined" ? null : window.sessionStorage;
+    const started = ++epoch.current;
+    const nextStorage = acquireSubmissionStorage();
+    if (!isCurrent(started)) return;
     setStorage(nextStorage);
-    const read = readReturnSubmission(nextStorage, checkoutId, viewerId);
-    setRetained(read.kind === "found" ? read.submission : null);
+    setStorageBlocked(nextStorage === null);
+    if (viewer === "") {
+      setViewerMissing(true);
+      setUnreadable(false);
+      setRetained(null);
+    } else {
+      setViewerMissing(false);
+      const read = readReturnSubmission(nextStorage, checkoutId, viewer);
+      if (!isCurrent(started)) return;
+      setRetained(read.kind === "found" ? read.submission : null);
+      setUnreadable(read.kind === "unreadable");
+    }
     setReasonId("");
     setDescription("");
     setDestination(DEFAULT_REFUND_DESTINATION);
     setLines({});
     setFieldError(null);
     setSuccessCount(null);
-    inFlight.current = false;
-  }, [open, checkoutId, viewerId]);
+  }, [open, checkoutId, viewer]);
 
   const eligibleLines = useMemo(() => {
     const rows: Array<{ seller: ReturnRequestSeller; line: CustomerReturnEligibilityLine }> = [];
@@ -199,7 +243,14 @@ export function ReturnRequestModal({
 
   const selectedCount = Object.values(lines).filter((state) => state.selected).length;
   const hasLineError = Object.values(selectedLineErrors).some((value) => value !== null);
-  const canSubmit = !busy && storage !== null && selectedCount > 0 && !hasLineError;
+  const canSubmit =
+    !busy &&
+    storage !== null &&
+    !storageBlocked &&
+    viewer !== "" &&
+    !unreadable &&
+    selectedCount > 0 &&
+    !hasLineError;
 
   if (!open) return null;
 
@@ -301,45 +352,54 @@ export function ReturnRequestModal({
 
   /**
    * Sends ONLY unsettled children of one frozen act, in order, and records each answer against the exact act.
-   * Returns the recorded snapshots so the surface can refresh the customer's own return list once.
+   *
+   * The epoch fence is applied AFTER each answer so a closed/retargeted surface never paints, notifies or clears on a
+   * newer surface — while the answer itself is still written as exact evidence for the act it belongs to.
    */
-  async function dispatchChildren(act: ReturnSubmission, children: ReturnSubmissionChild[]) {
+  async function dispatchChildren(act: ReturnSubmission, children: ReturnSubmissionChild[], started: number) {
     const storageRef = storage;
+    if (!storageRef) return;
+    const scope = { checkoutId: act.checkoutId, viewerId: act.viewerId };
     const recordedSnapshots: ReturnSnapshot[] = [];
     const refused: ReturnSubmissionChild[] = [];
     let possiblyWritten = 0;
     let current: ReturnSubmission | null = act;
     for (const child of children) {
       const answer = await sendCustomerReturnBody(child.body);
-      if (answer.ok) {
-        const updated = recordChildOutcome(storageRef, act.submissionKey, child.key, {
-          kind: "recorded",
-          caseId: answer.snapshot.returnRequestId,
-          caseNumber: null,
-        });
-        if (updated) current = updated;
-        recordedSnapshots.push(answer.snapshot);
-        continue;
-      }
-      const provesNoEffect = SUBMISSION_NO_EFFECT_REFUSALS.has(answer.errorCode);
-      const updated = recordChildOutcome(storageRef, act.submissionKey, child.key, provesNoEffect
-        ? { kind: "refused", refusalCode: answer.errorCode }
-        : { kind: "unknown", refusalCode: answer.errorCode });
+      const updated = answer.ok
+        ? recordChildOutcome(storageRef, scope, act.submissionKey, child.key, {
+            kind: "recorded",
+            caseId: answer.snapshot.returnRequestId,
+            caseNumber: null,
+          })
+        : SUBMISSION_NO_EFFECT_REFUSALS.has(answer.errorCode)
+          ? recordChildOutcome(storageRef, scope, act.submissionKey, child.key, {
+              kind: "refused",
+              refusalCode: answer.errorCode,
+            })
+          : recordChildOutcome(storageRef, scope, act.submissionKey, child.key, {
+              kind: "unknown",
+              refusalCode: answer.errorCode,
+            });
       if (updated) current = updated;
-      if (provesNoEffect) {
+      if (answer.ok) {
+        recordedSnapshots.push(answer.snapshot);
+      } else if (SUBMISSION_NO_EFFECT_REFUSALS.has(answer.errorCode)) {
         refused.push(child);
       } else {
         possiblyWritten += 1;
       }
+      // Stale surface: keep the durable outcome, stop sending the remainder and never touch the newer UI.
+      if (!isCurrent(started)) return;
     }
 
     const latest = current;
+    if (!isCurrent(started)) return;
     setRetained(latest);
     const finalSummary = latest ? summarizeReturnSubmission(latest) : null;
     if (latest) {
-      const summary = summarizeReturnSubmission(latest);
-      if (summary.resolved) {
-        clearReturnSubmissionIfCurrent(storageRef, latest, viewerId);
+      if (finalSummary?.resolved) {
+        clearReturnSubmissionIfCurrent(storageRef, latest, viewer);
         setRetained(null);
       }
     }
@@ -372,81 +432,115 @@ export function ReturnRequestModal({
   }
 
   async function submit() {
-    if (inFlight.current) return;
+    if (activeSends.current > 0) return;
+    const started = epoch.current;
+    if (viewer === "") {
+      setFieldError("برای ثبت درخواست مرجوعی باید وارد حساب کاربری خود شوید.");
+      return;
+    }
     if (!storage) {
       toast.error("ثبت امن درخواست در این مرورگر ممکن نیست؛ درخواستی ارسال نشد.");
       return;
+    }
+    // TB-279-R1: a possibly-sent or unreadable act is NEVER overwritten by a new one. Re-read the exact scope first.
+    const existing = readReturnSubmission(storage, checkoutId, viewer);
+    if (existing.kind === "unreadable") {
+      setUnreadable(true);
+      setFieldError("شاهد ثبت قبلی در این مرورگر خوانا نیست؛ برای جلوگیری از ثبت تکراری درخواستی ارسال نشد.");
+      return;
+    }
+    if (existing.kind === "unavailable") {
+      toast.error("ثبت امن درخواست در این مرورگر ممکن نیست؛ درخواستی ارسال نشد.");
+      return;
+    }
+    if (existing.kind === "found") {
+      if (!isCurrent(started)) return;
+      const pending = unresolvedChildren(existing.submission);
+      if (pending.length > 0) {
+        setRetained(existing.submission);
+        setFieldError("یک درخواست ناتمام از قبل ثبت شده است؛ ابتدا همان را ادامه دهید.");
+        return;
+      }
+      // Every child is resolved: the exact act is cleared before a new deliberate act may take its place.
+      if (!clearReturnSubmissionIfCurrent(storage, existing.submission, viewer)) {
+        setFieldError("درخواست قبلی قابل پاک‌سازی نبود؛ برای جلوگیری از تداخل چیزی ارسال نشد.");
+        return;
+      }
+      setRetained(null);
     }
     const selections = validateAct();
     if (!selections) return;
     const act = buildReturnSubmission({
       checkoutId,
       destination,
-      viewerId: viewerId ?? null,
+      viewerId: viewer,
       selections,
     });
-    if (!storeReturnSubmission(storage, act, viewerId)) {
+    if (!act) {
+      setFieldError("ثبت درخواست بدون شناسهٔ حساب کاربری ممکن نیست.");
+      return;
+    }
+    if (!storeReturnSubmission(storage, act)) {
       toast.error("ذخیرهٔ امن درخواست ممکن نشد؛ برای جلوگیری از ثبت تکراری چیزی ارسال نشد.");
       return;
     }
+    if (!isCurrent(started)) return;
     setRetained(act);
-    inFlight.current = true;
+    setUnreadable(false);
+    activeSends.current += 1;
     setBusy(true);
     try {
-      await dispatchChildren(act, unresolvedChildren(act));
+      await dispatchChildren(act, unresolvedChildren(act), started);
     } finally {
-      inFlight.current = false;
-      setBusy(false);
+      activeSends.current -= 1;
+      if (isCurrent(started)) setBusy(false);
     }
   }
 
   async function resume() {
-    if (inFlight.current || !storage || !retained) return;
+    if (activeSends.current > 0 || !storage || !retained) return;
+    if (viewer === "" || retained.viewerId !== viewer) return;
     const pending = unresolvedChildren(retained);
     if (pending.length === 0) return;
-    inFlight.current = true;
+    const started = epoch.current;
+    activeSends.current += 1;
     setBusy(true);
     try {
-      await dispatchChildren(retained, pending);
+      await dispatchChildren(retained, pending, started);
     } finally {
-      inFlight.current = false;
-      setBusy(false);
+      activeSends.current -= 1;
+      if (isCurrent(started)) setBusy(false);
     }
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      data-testid="customer-return-request-modal"
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="درخواست مرجوعی"
-        className="relative bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200"
-      >
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-              <RotateCcw className="w-5 h-5 text-[#2563EB]" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">درخواست مرجوعی</h3>
-              <p className="text-xs text-gray-500">{orderReference ?? checkoutId.slice(0, 8)}</p>
-            </div>
+    <Dialog open={open} onClose={onClose} title="درخواست مرجوعی" size="lg" showCloseButton={false}>
+      <div dir="rtl" data-testid="customer-return-request-modal" className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <RotateCcw className="w-5 h-5 text-[#2563EB]" />
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 min-h-11 min-w-11 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="بستن"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <p className="text-xs text-gray-500">{orderReference ?? checkoutId.slice(0, 8)}</p>
         </div>
 
+        {viewerMissing ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800" role="alert">
+            برای ثبت درخواست مرجوعی باید وارد حساب کاربری خود شوید؛ چیزی ارسال نشد.
+          </p>
+        ) : null}
+        {storageBlocked ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800" role="alert">
+            ثبت امن درخواست در این مرورگر ممکن نیست؛ چیزی ارسال نشد.
+          </p>
+        ) : null}
+        {unreadable ? (
+          <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+            شاهد ثبت قبلی در این مرورگر خوانا نیست. برای جلوگیری از ثبت تکراری، درخواست جدیدی ارسال نمی‌شود.
+          </p>
+        ) : null}
+
         {successCount !== null ? (
-          <div className="p-4 md:p-6 text-center space-y-4">
+          <div className="p-2 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto">
               <CheckCircle className="w-8 h-8 text-emerald-500" />
             </div>
@@ -465,7 +559,7 @@ export function ReturnRequestModal({
             </button>
           </div>
         ) : (
-          <div className="p-4 md:p-6 overflow-y-auto max-h-[calc(90vh-80px)] space-y-5">
+          <div className="space-y-5">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
               <p className="text-xs text-amber-700">
@@ -658,7 +752,7 @@ export function ReturnRequestModal({
           </div>
         )}
       </div>
-    </div>
+    </Dialog>
   );
 }
 

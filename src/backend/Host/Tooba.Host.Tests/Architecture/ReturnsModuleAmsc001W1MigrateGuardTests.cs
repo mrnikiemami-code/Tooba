@@ -59,7 +59,7 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         Assert.Equal(
             ReturnsErrorCodes.HttpReachable.Count,
             ReturnsErrorCodes.HttpReachable.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(80, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(86, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));
@@ -410,6 +410,8 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
                 "20261117164135_Tb279AuditedDecisionCorrectionResolutionCustodyAndAllocation.cs",
                 "20261118004500_NormalizeApprovedAmountColumn.Designer.cs",
                 "20261118004500_NormalizeApprovedAmountColumn.cs",
+                "20261118023434_Tb279R1PerConditionPortionsAndCustodyProof.Designer.cs",
+                "20261118023434_Tb279R1PerConditionPortionsAndCustodyProof.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             files);

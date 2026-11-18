@@ -480,7 +480,13 @@ public sealed class ReturnsCustomerReceipts274Tests
         order.Inventory.FailuresRemaining = 1;
         await order.StartRefundAsync();
 
-        Assert.Equal(ReturnItemDisposition.None, (await order.Items()).Single().Disposition);
+        // TB-279-R1 (F2): each accepted portion owns its own durable completion fact. The damaged portion was recorded
+        // as non-saleable BEFORE the (failed) usable restock, so the line is honestly part-done — never a false whole
+        // disposition — and the usable portion still owes its own Inventory-confirmed restock.
+        var pendingItem = (await order.Items()).Single();
+        Assert.Equal(ReturnItemDisposition.DamagedNonSaleable, pendingItem.Disposition);
+        Assert.Equal(1m, pendingItem.DamagedRecordedQuantity);
+        Assert.Null(pendingItem.UsableRestockedQuantity);
         var read = (await order.Snapshot())!.Recovery!;
         Assert.Equal(ReturnRecoveryPhase.PendingDisposition, read.Phase);
         Assert.Equal(ReturnRecoveryKind.SettlePhysicalDisposition, read.RecoveryKind);
@@ -756,17 +762,30 @@ public sealed class ReturnsCustomerReceipts274Tests
                 new RejectReturnCommand(ReturnRequestId, Guid.NewGuid(), SellerPartyId, reason),
                 CancellationToken.None);
 
-        public Task<ReturnSnapshot> RetryAsync() =>
-            _directory.RetryRefundAsync(
-                new RetryReturnRefundCommand(ReturnRequestId, Guid.NewGuid()),
+        public async Task<ReturnSnapshot> RetryAsync()
+        {
+            // TB-279-R1 (F4): every NEW money command names the reviewed decision revision.
+            var reviewed = await _directory.GetAsync(ReturnRequestId, CancellationToken.None);
+            return await _directory.RetryRefundAsync(
+                new RetryReturnRefundCommand(ReturnRequestId, Guid.NewGuid())
+                {
+                    ExpectedDecisionVersion = reviewed?.DecisionVersion ?? 0,
+                },
                 CancellationToken.None);
+        }
 
         // TB-277: approval records a decision only, so the money of an approved case is started by this explicit
         // intent — the same one the operator's «شروع بازپرداخت» action sends.
-        public Task<ReturnSnapshot> StartRefundAsync() =>
-            _directory.StartFirstRefundAsync(
-                new StartReturnRefundCommand(ReturnRequestId, Guid.NewGuid()),
+        public async Task<ReturnSnapshot> StartRefundAsync()
+        {
+            var reviewed = await _directory.GetAsync(ReturnRequestId, CancellationToken.None);
+            return await _directory.StartFirstRefundAsync(
+                new StartReturnRefundCommand(
+                    ReturnRequestId,
+                    Guid.NewGuid(),
+                    reviewed?.DecisionVersion ?? 0),
                 CancellationToken.None);
+        }
 
         public Task<ReturnSnapshot> RecoverAsync(ReturnRecoveryKind kind, Guid? expectedAttemptId = null) =>
             _directory.RecoverAsync(
@@ -910,7 +929,7 @@ public sealed class ReturnsCustomerReceipts274Tests
                 new FixedFulfillmentReader(order, lineId),
                 db,
                 clock),
-            new FixedPaymentReader(requested * unitPrice),
+            new FixedPaymentReader(requested * unitPrice, request.CheckoutId),
             gateway,
             wallet,
             inventory,
@@ -967,7 +986,7 @@ public sealed class ReturnsCustomerReceipts274Tests
                 new FixedFulfillmentReader(order, lineId),
                 db,
                 clock),
-            new FixedPaymentReader(1000m),
+            new FixedPaymentReader(1000m, request.CheckoutId),
             gateway,
             wallet,
             inventory,
@@ -1045,7 +1064,7 @@ public sealed class ReturnsCustomerReceipts274Tests
         }
     }
 
-    private sealed class FixedPaymentReader(decimal amount) : IPaymentReturnReader
+    private sealed class FixedPaymentReader(decimal amount, Guid owningCheckoutId) : IPaymentReturnReader
     {
         private readonly Guid _paymentId = Guid.NewGuid();
 
@@ -1057,7 +1076,7 @@ public sealed class ReturnsCustomerReceipts274Tests
             Task.FromResult<PaymentReturnSnapshot?>(
                 new PaymentReturnSnapshot(
                     paymentId == Guid.Empty ? _paymentId : paymentId,
-                    Guid.NewGuid(),
+                    owningCheckoutId,
                     amount,
                     "IRR",
                     "Succeeded"));

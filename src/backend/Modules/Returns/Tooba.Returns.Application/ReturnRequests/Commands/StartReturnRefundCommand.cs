@@ -21,7 +21,11 @@ namespace Tooba.Returns.Application.ReturnRequests.Commands;
 /// </summary>
 public sealed record StartReturnRefundCommand(
     Guid ReturnRequestId,
-    Guid ActorUserId) : IRequest<Result<ReturnSnapshot>>;
+    Guid ActorUserId,
+    // TB-279-R1 (F4): the EFFECTIVE decision revision the operator reviewed. A newer revision refuses this stale start
+    // BEFORE any budget reservation or external call, so an amount/plan corrected after the operator looked at it can
+    // never be refunded by the earlier review.
+    int? ExpectedDecisionVersion = null) : IRequest<Result<ReturnSnapshot>>;
 
 /// <summary>Handler — the owning directory reads every financial fact from the stored case.</summary>
 public sealed class StartReturnRefundHandler(IReturnDirectory returns)

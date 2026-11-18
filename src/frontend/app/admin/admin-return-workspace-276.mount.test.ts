@@ -19,6 +19,7 @@ import "../../features/order-carrier-execution/install-jsdom-globals.ts";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import test from "node:test";
+import { ToastContainer } from "react-toastify";
 import { AdminReturnWorkspace } from "./admin-return-workspace.tsx";
 import {
   click,
@@ -81,6 +82,12 @@ function snapshot(returnRequestId: string, overrides: Record<string, unknown> = 
         unitPriceSnapshot: 600000,
         currency: "IRR",
         condition: "Usable",
+        // TB-276-R1: the accepted current wire carries the owning line's display + precision facts. Without them the
+        // receipt dialog honestly blocks the line ("unit precision not confirmed"), which is not what this fixture is
+        // about — it pins the durable reviewed-intent workflow, so it declares a whole-piece owning unit.
+        productLabel: "کالای ۲۷۶",
+        unitLabel: "pcs",
+        unitDecimalPlaces: 0,
       },
     ],
     refundAttempts: [],
@@ -252,10 +259,20 @@ test("a 5xx/unknown answer keeps the exact envelope, and the retry re-sends the 
 
 test("a proven no-effect refusal releases the command and tells the operator in Persian", async () => {
   window.sessionStorage.clear();
+  // TB-277-R1: only a BODY/immutable-identity refusal proves no effect. A capacity/state code such as
+  // `return.receipt.over_received` describes this attempt and must keep the envelope — that is covered by the 277 suite.
   const stub = stubFetch({
-    answer: () => ({ status: 409, payload: { errorCode: "return.receipt.over_received" } }),
+    answer: () => ({ status: 400, payload: { errorCode: "return.receipt.line_invalid" } }),
   });
-  const tree = await mount(createElement(AdminReturnWorkspace, { returnRequestId: CASE_A }));
+  // TB-277: command outcomes use the ONE template toast surface, not a private MessageBox.
+  const tree = await mount(
+    createElement(
+      "div",
+      null,
+      createElement(AdminReturnWorkspace, { returnRequestId: CASE_A }),
+      createElement(ToastContainer, { autoClose: false, newestOnTop: true }),
+    ),
+  );
   try {
     await waitFor(() => qq(tree.container, "[data-testid='admin-return-action-record-receipt']").length === 1);
     await click(q(tree.container, "[data-testid='admin-return-action-record-receipt']"));
@@ -264,11 +281,21 @@ test("a proven no-effect refusal releases the command and tells the operator in 
     await waitFor(() => stub.posts().length === 1);
     await waitFor(() => stored(CASE_A) === null);
 
-    const notice = q(tree.container, "[data-testid='admin-return-notice']");
-    assert.match(notice.textContent ?? "", /بیشتر است/);
+    // Earlier cases in this file leave their own template toasts in the shared store; wait for THIS command's toast.
+    await waitFor(() =>
+      qq(tree.container, ".Toastify__toast").some((node) =>
+        /مقدار یا وضعیت یکی از اقلام رسید معتبر نیست/.test(node.textContent ?? ""),
+      ),
+    );
+    const outcome = qq(tree.container, ".Toastify__toast").find((node) =>
+      /معتبر نیست/.test(node.textContent ?? ""),
+    );
+    assert.ok(outcome);
+    const text = outcome?.textContent ?? "";
     // No raw machine token and no English title reaches the operator.
-    assert.doesNotMatch(notice.textContent ?? "", /return\.receipt|Bad Request|error/i);
+    assert.doesNotMatch(text, /return\.receipt|Bad Request|error/i);
     assert.equal(qq(tree.container, "[data-testid='admin-return-unresolved-intent']").length, 0);
+    assert.equal(qq(tree.container, "[data-testid='admin-return-notice']").length, 0);
   } finally {
     await tree.unmount();
     stub.restore();

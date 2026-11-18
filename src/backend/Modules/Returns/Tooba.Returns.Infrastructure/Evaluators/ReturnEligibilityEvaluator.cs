@@ -191,11 +191,21 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             .ToListAsync(cancellationToken);
 
         // Active (not released) allocations are the real capacity claim; a released row returned its quantity to the
-        // pool when the case was rejected/cancelled.
+        // pool when the case was rejected/cancelled. TB-279-R1 (F3): rejected/cancelled cases can still own HELD rows —
+        // the goods they physically received stay claimed until a real handback — so the allocation read covers every
+        // case of the seller order and lets the rows themselves (not the status) decide occupancy.
+        var allRequestIds = await _db.ReturnRequests.AsNoTracking()
+            .Where(x => x.SellerOrderId == sellerOrderId)
+            .Select(x => x.ReturnRequestId)
+            .ToListAsync(cancellationToken);
         var allocations = await _db.ReturnDeliveryAllocations.AsNoTracking()
-            .Where(x => requestIds.Contains(x.ReturnRequestId) && x.ReleasedAt == null)
+            .Where(x => allRequestIds.Contains(x.ReturnRequestId) && x.ReleasedAt == null)
             .Select(x => new { x.ReturnRequestId, x.OrderLineId, x.SliceKey, x.Quantity })
             .ToListAsync(cancellationToken);
+        if (excludeReturnRequestId is { } reacquiring)
+        {
+            allocations = allocations.Where(x => x.ReturnRequestId != reacquiring).ToList();
+        }
 
         var allocatedRequestIds = allocations.Select(x => x.ReturnRequestId).ToHashSet();
         var returned = items

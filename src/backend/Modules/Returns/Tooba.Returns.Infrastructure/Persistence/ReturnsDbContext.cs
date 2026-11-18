@@ -86,7 +86,9 @@ public sealed class ReturnsDbContext : DbContext
             entity.Property(x => x.Currency).HasMaxLength(8);
             entity.Property(x => x.RefundAmount).HasPrecision(18, 4);
             // TB-279: the reviewed approved money, frozen before the first money step; null = never frozen (legacy).
-            entity.Property(x => x.ApprovedAmount).HasPrecision(18, 4);
+            // TB-279-R1 (F4): the column name is pinned to the module's canonical snake_case so the model and the applied
+            // schema can never disagree again (the original migration wrote "ApprovedAmount" and needed a repair).
+            entity.Property(x => x.ApprovedAmount).HasPrecision(18, 4).HasColumnName("approved_amount");
             entity.Property(x => x.RefundDestination).HasConversion<string>().HasMaxLength(32);
             // TB-265: explicit origin discriminator + courier-origin source linkage and closure phases.
             entity.Property(x => x.Origin).HasConversion<string>().HasMaxLength(32);
@@ -113,6 +115,12 @@ public sealed class ReturnsDbContext : DbContext
             // TB-265: recorded physical condition and explicit disposition of the received quantity.
             entity.Property(x => x.Condition).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Disposition).HasConversion<string>().HasMaxLength(32);
+            // TB-279-R1 (F2): per-portion durable physical completion. Null = not recorded yet; a mixed line can never
+            // prove two conditions from one coarse enum.
+            entity.Property(x => x.UsableRestockedQuantity).HasColumnType("numeric(18,6)")
+                .HasColumnName("usable_restocked_quantity");
+            entity.Property(x => x.DamagedRecordedQuantity).HasColumnType("numeric(18,6)")
+                .HasColumnName("damaged_recorded_quantity");
             entity.HasIndex(x => x.ReturnRequestId);
             entity.HasIndex(x => x.OrderLineId);
             // TB-274-R1 (B): the owning case is a real composite identity of a requested line, so a receipt line can be
@@ -279,6 +287,18 @@ public sealed class ReturnsDbContext : DbContext
             entity.Property(x => x.Version).ValueGeneratedNever().HasColumnName("resolution_version");
             entity.Property(x => x.AcceptedQuantity).HasColumnType("numeric(18,6)").HasColumnName("accepted_quantity");
             entity.Property(x => x.RejectedQuantity).HasColumnType("numeric(18,6)").HasColumnName("rejected_quantity");
+            // TB-279-R1 (F2/F3): the explicit per-condition portions. Nullable so a pre-R1 row keeps its original bytes
+            // and is read as an incomplete plan instead of a guessed usable-first split.
+            entity.Property(x => x.AcceptedUsableQuantity).HasColumnType("numeric(18,6)")
+                .HasColumnName("accepted_usable_quantity");
+            entity.Property(x => x.AcceptedDamagedQuantity).HasColumnType("numeric(18,6)")
+                .HasColumnName("accepted_damaged_quantity");
+            entity.Property(x => x.RejectedReceivedUsableQuantity).HasColumnType("numeric(18,6)")
+                .HasColumnName("rejected_received_usable_quantity");
+            entity.Property(x => x.RejectedReceivedDamagedQuantity).HasColumnType("numeric(18,6)")
+                .HasColumnName("rejected_received_damaged_quantity");
+            entity.Property(x => x.RejectedUnreceivedQuantity).HasColumnType("numeric(18,6)")
+                .HasColumnName("rejected_unreceived_quantity");
             entity.Property(x => x.Reason).HasMaxLength(512).HasColumnName("reason");
             entity.Property(x => x.ActorUserId).HasColumnName("actor_user_id");
             entity.Property(x => x.OccurrenceKey).HasMaxLength(128).HasColumnName("occurrence_key");
@@ -321,6 +341,8 @@ public sealed class ReturnsDbContext : DbContext
             entity.Property(x => x.Condition).HasMaxLength(32).HasColumnName("condition");
             entity.Property(x => x.RecipientUserId).HasColumnName("recipient_user_id");
             entity.Property(x => x.ProofReference).HasMaxLength(256).HasColumnName("proof_reference");
+            // TB-279-R1 (F3): the reviewed proof KIND. Nullable so a pre-R1 row keeps its historical bytes.
+            entity.Property(x => x.ProofKind).HasMaxLength(32).HasColumnName("proof_kind");
             entity.Property(x => x.ActorUserId).HasColumnName("actor_user_id");
             entity.Property(x => x.OccurrenceKey).HasMaxLength(128).HasColumnName("occurrence_key");
             entity.Property(x => x.RecordedAt).HasColumnName("recorded_at");

@@ -115,6 +115,12 @@ public static class ReturnsValidationCodes
     /// <summary>TB-279: a custody quantity is non-positive or over-precise.</summary>
     public const string CustodyQuantityInvalid = "returns.validation.custody_quantity_invalid";
 
+    /// <summary>TB-279-R1: a resolution line must state EVERY per-condition portion; an omitted one is never zero.</summary>
+    public const string ResolutionPortionRequired = "returns.validation.resolution_portion_required";
+
     /// <summary>TB-279: a custody inspection is not a defined condition.</summary>
     public const string CustodyConditionInvalid = "returns.validation.custody_condition_invalid";
+
+    /// <summary>TB-279-R1: a custody handback must state WHICH proof kind its evidence is.</summary>
+    public const string CustodyProofKindRequired = "returns.validation.custody_proof_kind_required";
 }

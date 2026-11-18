@@ -67,17 +67,34 @@ public sealed partial class ReturnDirectory
         return new DecisionState(baseline?.Decision, baseline?.Reason, revisions);
     }
 
+    /// <summary>What appending a reviewed decision did: it wrote a NEW decision, or it answered an exact replay.</summary>
+    private enum DecisionAppend
+    {
+        Recorded = 0,
+        Replayed = 1,
+    }
+
     /// <summary>
-    /// Records ONE reviewed decision under the case row lock, appending a revision when the baseline already exists.
+    /// TB-279-R1 (F4): appends ONE reviewed decision INSIDE the caller's already-locked short transaction.
     /// <para>
-    /// The rules are deliberate: an exact replay of the CURRENT decision answers its own stored fact; the opposite
-    /// decision of the current one is a typed refusal (a decided case is never silently flipped); a stale
-    /// <paramref name="expectedVersion"/> refuses a pre-correction review; and a NEW decision over an OPEN (reopened)
-    /// case binds the CURRENT revision.
+    /// This method owns no transaction and never commits: the caller persists the case transition, the frozen approved
+    /// amount and any capacity change in the SAME transaction, so a decision can never commit and leave its state change
+    /// to a later unprotected write. It assumes the case row lock is held and the tracked case was re-read after that
+    /// lock.
+    /// </para>
+    /// <para>
+    /// The rules are the shipped ones: an exact replay of the CURRENT decision answers its own stored fact; the opposite
+    /// decision of the current one is a typed refusal; a stale <paramref name="expectedVersion"/> refuses a
+    /// pre-correction review; and a NEW decision over an OPEN (reopened) case binds the CURRENT revision.
+    /// </para>
+    /// <para>
+    /// TB-274-R1 (D) is preserved: the insert runs inside its own savepoint, so a concurrent winner that already owns
+    /// the baseline/version row is arbitrated (rollback to the savepoint, detach ONLY this attempt's entries) instead of
+    /// aborting the caller's transaction or clearing its tracker.
     /// </para>
     /// </summary>
-    private async Task RecordReviewedDecisionAsync(
-        Guid returnRequestId,
+    private async Task<DecisionAppend> AppendReviewedDecisionAsync(
+        ReturnRequest request,
         ReturnDecisionKind kind,
         Guid actorUserId,
         string? reason,
@@ -85,90 +102,26 @@ public sealed partial class ReturnDirectory
         CancellationToken cancellationToken)
     {
         var normalizedReason = kind == ReturnDecisionKind.Reject ? NormalizeDecisionReason(reason) : null;
-        var relational = _db.Database.IsRelational();
-        var ownsTransaction = relational && _db.Database.CurrentTransaction is null;
-        await using var transaction = ownsTransaction
-            ? await _db.Database.BeginTransactionAsync(cancellationToken)
-            : null;
-
-        if (relational)
+        var state = await ReadDecisionStateAsync(request.ReturnRequestId, cancellationToken);
+        var existing = ResolveExistingDecision(state, kind, normalizedReason, expectedVersion);
+        if (existing is not null)
         {
-            await _db.Database.ExecuteSqlAsync(
-                $"SELECT 1 FROM returns.return_requests WHERE return_request_id = {returnRequestId} FOR UPDATE",
-                cancellationToken);
-        }
-
-        var state = await ReadDecisionStateAsync(returnRequestId, cancellationToken);
-        var current = await _db.ReturnRequests.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.ReturnRequestId == returnRequestId, cancellationToken);
-        if (current is null)
-        {
-            await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
-            throw new ContractOperationException(ReturnsErrorCodes.Missing);
-        }
-
-        var kindToken = kind == ReturnDecisionKind.Approve
-            ? ReturnDecisionRevision.ApproveDecision
-            : ReturnDecisionRevision.RejectDecision;
-
-        if (state.EffectiveDecision is { } effective)
-        {
-            if (string.Equals(effective, kindToken, StringComparison.Ordinal))
-            {
-                // The SAME decision is already the effective one. A changed rejection reason would rewrite a durable
-                // decision, so it is the exact typed conflict; otherwise this is an exact replay with zero effect.
-                if (kind == ReturnDecisionKind.Reject
-                    && !string.Equals(state.EffectiveReason, normalizedReason, StringComparison.Ordinal))
-                {
-                    await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
-                    throw new ContractOperationException(ReturnsErrorCodes.DecisionReasonConflict);
-                }
-
-                await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
-                return;
-            }
-
-            // The opposite decision is effective. Answering would release/refund capacity another authority owns.
-            await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
-            throw new ContractOperationException(kind == ReturnDecisionKind.Approve
-                ? ReturnsErrorCodes.AlreadyRejected
-                : ReturnsErrorCodes.AlreadyApproved);
-        }
-
-        // An OPEN case (no effective decision: freshly requested or corrected back to review) requires the review to
-        // name the revision it looked at. A stale review is refused instead of deciding over a newer revision.
-        if (expectedVersion is { } expected && expected != state.EffectiveVersion)
-        {
-            await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
-            throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
-        }
-
-        var conflictsWithCurrentState = kind == ReturnDecisionKind.Approve
-            ? current.Status is ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled
-            : current.Status is ReturnRequestStatus.Approved
-                or ReturnRequestStatus.RefundProcessing
-                or ReturnRequestStatus.RefundFailed
-                or ReturnRequestStatus.Completed;
-        if (conflictsWithCurrentState)
-        {
-            await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
-            throw new ContractOperationException(kind == ReturnDecisionKind.Approve
-                ? ReturnsErrorCodes.AlreadyRejected
-                : ReturnsErrorCodes.AlreadyApproved);
+            return existing.Value;
         }
 
         var now = _clock.UtcNow;
-        // Only the entries THIS attempt adds may be detached on a collision; a caller's own tracked entities keep
-        // their instance/state/values (TB-274-R1 D), so the tracker is never cleared.
-        var trackedBeforeAttempt = _db.ChangeTracker.Entries().Select(x => x.Entity).ToList();
+        var relational = _db.Database.IsRelational();
         const string decisionSavePoint = "tb279_decision_intent";
         var hasSavePoint = false;
-        if (relational && transaction is not null)
+        if (relational && _db.Database.CurrentTransaction is not null)
         {
             await _db.Database.ExecuteSqlRawAsync($"SAVEPOINT {decisionSavePoint}", cancellationToken);
             hasSavePoint = true;
         }
 
+        // Only the entries THIS attempt adds may be detached on a collision; a caller's own tracked entities keep their
+        // instance/state/values, so the tracker is never cleared.
+        var trackedBeforeAttempt = _db.ChangeTracker.Entries().Select(x => x.Entity).ToList();
         try
         {
             if (state.BaselineDecision is null)
@@ -176,8 +129,8 @@ public sealed partial class ReturnDirectory
                 // The FIRST decision of the case is the legacy baseline row (version 0), exactly as shipped.
                 _db.ReturnDecisions.Add(new ReturnDecisionRecord
                 {
-                    ReturnRequestId = returnRequestId,
-                    Decision = kindToken,
+                    ReturnRequestId = request.ReturnRequestId,
+                    Decision = DecisionTokenOf(kind),
                     Reason = normalizedReason,
                     DecidedByUserId = actorUserId,
                     DecidedAt = now,
@@ -187,12 +140,12 @@ public sealed partial class ReturnDirectory
             {
                 _db.ReturnDecisionRevisions.Add(new ReturnDecisionRevision
                 {
-                    ReturnRequestId = returnRequestId,
+                    ReturnRequestId = request.ReturnRequestId,
                     Version = state.EffectiveVersion + 1,
-                    Decision = kindToken,
+                    Decision = DecisionTokenOf(kind),
                     Reason = normalizedReason,
                     ActorUserId = actorUserId,
-                    OccurrenceKey = BuildDecisionOccurrenceKey(kindToken, expectedVersion, normalizedReason),
+                    OccurrenceKey = BuildDecisionOccurrenceKey(DecisionTokenOf(kind), state.EffectiveVersion, normalizedReason),
                     RecordedAt = now,
                 });
             }
@@ -203,7 +156,7 @@ public sealed partial class ReturnDirectory
                 await _db.Database.ExecuteSqlRawAsync($"RELEASE SAVEPOINT {decisionSavePoint}", cancellationToken);
             }
 
-            await CommitDecisionAsync(transaction, ownsTransaction, cancellationToken);
+            return DecisionAppend.Recorded;
         }
         catch (DbUpdateException ex) when (IsDecisionKeyConflict(ex) || IsRevisionKeyConflict(ex))
         {
@@ -212,46 +165,83 @@ public sealed partial class ReturnDirectory
                 await _db.Database.ExecuteSqlRawAsync($"ROLLBACK TO SAVEPOINT {decisionSavePoint}", cancellationToken);
                 await _db.Database.ExecuteSqlRawAsync($"RELEASE SAVEPOINT {decisionSavePoint}", cancellationToken);
             }
-            else if (ownsTransaction && transaction is not null)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-            }
 
             DetachAttemptEntries(trackedBeforeAttempt);
 
-            // A concurrent writer won the same version/baseline. Re-read and answer the SAME rules against the
-            // recorded fact; a genuinely different state is a typed stale refusal, never a silent second write.
-            var winner = await ReadDecisionStateAsync(returnRequestId, cancellationToken);
-            if (string.Equals(winner.EffectiveDecision, kindToken, StringComparison.Ordinal))
-            {
-                if (kind == ReturnDecisionKind.Reject
-                    && !string.Equals(winner.EffectiveReason, normalizedReason, StringComparison.Ordinal))
-                {
-                    throw new ContractOperationException(ReturnsErrorCodes.DecisionReasonConflict);
-                }
-
-                return;
-            }
-
-            if (winner.EffectiveDecision is not null)
-            {
-                throw new ContractOperationException(kind == ReturnDecisionKind.Approve
-                    ? ReturnsErrorCodes.AlreadyRejected
-                    : ReturnsErrorCodes.AlreadyApproved);
-            }
-
-            throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
+            // A concurrent writer won the same version/baseline. Re-read and answer the SAME rules against the recorded
+            // fact; a genuinely different state is a typed stale refusal, never a silent second write.
+            var winner = await ReadDecisionStateAsync(request.ReturnRequestId, cancellationToken);
+            return ResolveExistingDecision(winner, kind, normalizedReason, expectedVersion)
+                ?? throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
         }
     }
 
     /// <summary>
-    /// The reviewed occurrence identity of a decision that must be attributable even though the operator path does not
-    /// carry a client key: the exact effective version it was reviewed against, the decision token and the normalized
-    /// reason. It is unique per case because the version is monotonic.
+    /// The decision rules applied to the ALREADY stored state: an exact replay answers its own fact, the opposite
+    /// decision is a typed refusal, a stale reviewed version is refused, and a decided/open state that cannot change is
+    /// refused. <c>null</c> means "no decision is recorded yet — write it".
     /// </summary>
-    private static string BuildDecisionOccurrenceKey(string decision, int? expectedVersion, string? reason) =>
-        $"decision:{decision}:{expectedVersion ?? -1}:{(reason is null ? "-" : reason.GetHashCode().ToString("X8"))}";
+    private static DecisionAppend? ResolveExistingDecision(
+        DecisionState state,
+        ReturnDecisionKind kind,
+        string? normalizedReason,
+        int? expectedVersion)
+    {
+        var kindToken = DecisionTokenOf(kind);
 
+        if (state.EffectiveDecision is { } effective)
+        {
+            if (string.Equals(effective, kindToken, StringComparison.Ordinal))
+            {
+                // The SAME decision is already the effective one. A changed rejection reason would rewrite a durable
+                // decision, so it is the exact typed conflict; otherwise this is an exact replay with zero effect.
+                if (kind == ReturnDecisionKind.Reject
+                    && !string.Equals(state.EffectiveReason, normalizedReason, StringComparison.Ordinal))
+                {
+                    throw new ContractOperationException(ReturnsErrorCodes.DecisionReasonConflict);
+                }
+
+                return DecisionAppend.Replayed;
+            }
+
+            // The opposite decision is effective. Answering would release/refund capacity another authority owns.
+            throw new ContractOperationException(kind == ReturnDecisionKind.Approve
+                ? ReturnsErrorCodes.AlreadyRejected
+                : ReturnsErrorCodes.AlreadyApproved);
+        }
+
+        // An OPEN case (no effective decision: freshly requested or corrected back to review) requires the review to
+        // name the revision it looked at. A stale review is refused instead of deciding over a newer revision.
+        if (expectedVersion is { } expected && expected != state.EffectiveVersion)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
+        }
+
+        return null;
+    }
+
+    private static string DecisionTokenOf(ReturnDecisionKind kind) =>
+        kind == ReturnDecisionKind.Approve
+            ? ReturnDecisionRevision.ApproveDecision
+            : ReturnDecisionRevision.RejectDecision;
+
+    /// <summary>
+    /// TB-279-R1 (F4): the reviewed occurrence identity of a decision that must be attributable even though the operator
+    /// path does not carry a client key: the exact effective version it was reviewed against, the decision token and the
+    /// normalized reason. It is unique per case because the version is monotonic.
+    /// <para>
+    /// The reason is hashed with SHA-256, never <see cref="object.GetHashCode"/>: the occurrence key is a DURABLE
+    /// identity, so it must be identical across process restarts and machines.
+    /// </para>
+    /// </summary>
+    private static string BuildDecisionOccurrenceKey(string decision, int? expectedVersion, string? reason)
+    {
+        var payload = $"decision|{decision}|{expectedVersion ?? -1}|{reason ?? "-"}";
+        var digest = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(payload));
+        return $"decision:{decision}:{expectedVersion ?? -1}:{Convert.ToHexString(digest, 0, 8)}";
+    }
+
+    /// <summary>The exact provider collision shape that means "another writer owns this decision version".</summary>
     private static bool IsRevisionKeyConflict(DbUpdateException exception) =>
         exception.InnerException is Npgsql.PostgresException { SqlState: "23505" } postgres
         && string.Equals(postgres.TableName, "return_request_decision_revisions", StringComparison.Ordinal)
@@ -372,6 +362,56 @@ public sealed partial class ReturnDirectory
             await _db.SaveChangesAsync(cancellationToken);
             await CommitCorrectionAsync(transaction, ownsTransaction, cancellationToken);
             return await MapSnapshotAsync(request, cancellationToken);
+        }
+        catch
+        {
+            if (ownsTransaction && transaction is not null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// TB-279-R1 (F4): the ONE short critical section a reviewed decision transition commits in.
+    /// <para>
+    /// The seller-order serialization is the same critical section creation uses, the case row is locked, and the
+    /// TRACKED case is re-read AFTER that lock so a pre-lock tracked value can never overwrite a newer correction. The
+    /// body runs inside the caller's transaction: the decision, the case transition, the frozen approved amount and the
+    /// capacity release either commit together or not at all. No external port is called from here.
+    /// </para>
+    /// </summary>
+    private async Task<TResult> InLockedDecisionScopeAsync<TResult>(
+        ReturnRequest request,
+        Func<Task<TResult>> body,
+        CancellationToken cancellationToken)
+    {
+        var relational = _db.Database.IsRelational();
+        var ownsTransaction = relational && _db.Database.CurrentTransaction is null;
+        await using var transaction = ownsTransaction
+            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        try
+        {
+            if (relational)
+            {
+                await ReturnCreationSerialization.AcquireAsync(_db.Database, request.SellerOrderId, cancellationToken);
+                await _db.Database.ExecuteSqlAsync(
+                    $"SELECT 1 FROM returns.return_requests WHERE return_request_id = {request.ReturnRequestId} FOR UPDATE",
+                    cancellationToken);
+                await _db.Entry(request).ReloadAsync(cancellationToken);
+            }
+
+            var result = await body();
+
+            if (ownsTransaction && transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return result;
         }
         catch
         {

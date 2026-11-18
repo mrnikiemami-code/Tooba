@@ -177,14 +177,19 @@ public static class ReturnRecoveryPolicy
                             return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed);
                         }
 
-                        // TB-279 (C): money may only start on a resolution that actually names the accepted money.
-                        // A stored reviewed plan that is incomplete/incoherent blocks the first refund; a case with
-                        // no plan at all keeps the legacy approved amount (the pre-279 case), and complete receiving
-                        // already derives a complete baseline plan.
-                        if (ReturnResolutionPolicy.Resolve(snapshot) is { IsComplete: false, FromReviewedPlan: true } incomplete)
+                        // TB-279 (C) / TB-279-R1 (F2): money may only start on a coverage basis that actually names
+                        // the accepted money. A reviewed plan accounts for the whole claim (accepted received portions
+                        // plus a rejected never-received remainder); without a plan the whole claim must have arrived.
+                        // Either way a partial receipt with no plan is honest receiving work, not a first refund.
+                        if (!ReturnResolutionPolicy.TryDescribeCompleteCoverage(
+                                snapshot,
+                                out _,
+                                out var firstBlocker,
+                                incoherentCode: ReturnsErrorCodes.RecoveryEvidenceConflict,
+                                incompleteReceiptCode: ReturnsErrorCodes.RecoveryReceivingRequired))
                         {
                             return Blocked(
-                                incomplete.BlockerCode ?? ReturnsErrorCodes.ResolutionRequired,
+                                firstBlocker,
                                 financialComplete: false,
                                 allItemsDisposed);
                         }
@@ -240,10 +245,19 @@ public static class ReturnRecoveryPolicy
                                 attemptId: money.AttemptId);
                         }
 
-                        if (snapshot.Receiving is not { IsComplete: true })
+                        // TB-279-R1 (F2): the SAME coverage rule as every other money path — a complete REVIEWED plan
+                        // is the basis, so an accepted received portion plus a rejected never-received remainder can
+                        // still resume its unknown money. A missing/incomplete basis stays the same typed blocker the
+                        // action raises.
+                        if (!ReturnResolutionPolicy.TryDescribeCompleteCoverage(
+                                snapshot,
+                                out _,
+                                out var coverageBlocker,
+                                incoherentCode: ReturnsErrorCodes.RecoveryEvidenceConflict,
+                                incompleteReceiptCode: ReturnsErrorCodes.RecoveryReceivingRequired))
                         {
                             return Blocked(
-                                ReturnsErrorCodes.RecoveryReceivingRequired,
+                                coverageBlocker,
                                 financialComplete: false,
                                 physicalComplete: false,
                                 attemptId: money.AttemptId);
@@ -433,9 +447,10 @@ public static class ReturnRecoveryPolicy
 
         if (snapshot.Origin != ReturnOrigin.CourierOrigin)
         {
-            // TB-274-R1 (C): an already-durable disposition stays the recorded history, but a line that restocked a
-            // usable quantity WITHOUT any owning stock binding was never confirmed by Inventory, so it can never make
-            // the case "Settled". The check runs before the completion answer for that reason.
+            // TB-274-R1 (C) / TB-279-R1 (F2): an ACCEPTED usable portion without any owning stock binding was never
+            // confirmed by Inventory, so it can never make the case "Settled". The check runs before the completion
+            // answer for that reason, and it names only the accepted usable portion — a damaged-only acceptance needs
+            // no reservation and a rejected received portion is never restocked.
             if (HasMissingStockBinding(snapshot))
             {
                 return Blocked(ReturnsErrorCodes.RecoveryStockBindingRequired, financialComplete: true, physicalComplete: false, money.AttemptId);
@@ -451,16 +466,16 @@ public static class ReturnRecoveryPolicy
                     ReturnRecoveryPhase.Settled, null, money.AttemptId, null, FinancialComplete: true, PhysicalComplete: true);
             }
 
-            // TB-274: a delivered-customer case owns its recorded customer receipt. A complete, coherent receipt makes
-            // the physical phase real, executable work over the INSPECTED usable quantity; an incoherent receipt is a
-            // typed evidence conflict; a missing/incomplete receipt keeps the explicit blocker and never restocks the
-            // requested quantity as if it had arrived usable.
-            if (snapshot.Receiving is { IsCoherent: false })
-            {
-                return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
-            }
-
-            if (snapshot.Receiving is { IsComplete: true } && ReturnResolutionPolicy.Resolve(snapshot) is { IsComplete: true })
+            // TB-274 / TB-279-R1 (F2): the physical phase is real, executable work over the ACCEPTED portions of a
+            // complete reviewed plan — whether the accepted portion was received in full or the remainder never
+            // arrived and was lawfully rejected. A partial receipt with no reviewed split keeps its explicit
+            // receiving blocker; a complete receipt with an unresolved plan reports its own resolution blocker.
+            if (ReturnResolutionPolicy.TryDescribeCompleteCoverage(
+                    snapshot,
+                    out _,
+                    out var physicalBlocker,
+                    incoherentCode: ReturnsErrorCodes.RecoveryEvidenceConflict,
+                    incompleteReceiptCode: ReturnsErrorCodes.RecoveryReceivingRequired))
             {
                 return new ReturnRecoveryDescription(
                     ReturnRecoveryPhase.PendingDisposition,
@@ -471,20 +486,8 @@ public static class ReturnRecoveryPolicy
                     PhysicalComplete: false);
             }
 
-            // The physical gate keeps its EXISTING precedence (TB-274): a missing/incomplete customer receipt is
-            // receiving work, never a resolution problem. Only a complete receipt with an unresolved plan names the
-            // resolution blocker.
-            if (snapshot.Receiving is not { IsComplete: true })
-            {
-                return Blocked(
-                    ReturnsErrorCodes.RecoveryReceivingRequired,
-                    financialComplete: true,
-                    physicalComplete: false,
-                    money.AttemptId);
-            }
-
             return Blocked(
-                ReturnResolutionPolicy.Resolve(snapshot).BlockerCode ?? ReturnsErrorCodes.ResolutionRequired,
+                physicalBlocker,
                 financialComplete: true,
                 physicalComplete: false,
                 money.AttemptId);
@@ -589,21 +592,22 @@ public static class ReturnRecoveryPolicy
     }
 
     /// <summary>
-    /// TB-274-R1 (C): true when a COMPLETE, coherent receipt inspected a positive usable quantity for a line that has no
-    /// owning stock binding. Such a line can never be restocked (there is no Inventory reservation to confirm), so the
-    /// physical phase is a typed pending blocker instead of a claimed completion. Nothing is guessed, reserved or
-    /// created here.
+    /// TB-274-R1 (C) / TB-279-R1 (F2): true when the effective plan ACCEPTS a positive usable portion for a line that
+    /// has no owning stock binding. Such a portion can never be restocked (there is no Inventory reservation to
+    /// confirm), so the physical phase is a typed pending blocker instead of a claimed completion. A damaged-only
+    /// acceptance and a rejected received portion never need a reservation, so they never raise this blocker.
     /// </summary>
     private static bool HasMissingStockBinding(ReturnSnapshot snapshot)
     {
-        if (snapshot.Receiving is not { IsCoherent: true, IsComplete: true } receiving)
+        var resolution = ReturnResolutionPolicy.Resolve(snapshot);
+        if (!resolution.IsComplete)
         {
             return false;
         }
 
-        foreach (var line in receiving.Lines)
+        foreach (var line in resolution.Lines)
         {
-            if (line.Usable <= 0m)
+            if (line.AcceptedUsable <= 0m)
             {
                 continue;
             }

@@ -33,6 +33,13 @@ public sealed class ReturnItemCustody
     /// <summary>مرجع مدرک تحویل (حضوری یا تحویل تأییدشده)؛ هرگز شمارهٔ رهگیری تنها نیست.</summary>
     public string ProofReference { get; init; } = string.Empty;
 
+    /// <summary>
+    /// TB-279-R1 (F3): the reviewed PROOF KIND this handback was recorded under — the operator's attestation of an
+    /// actual in-person handback, or an existing owning carrier's verified delivered-back fact. It is nullable so a
+    /// pre-R1 row keeps its bytes; such a row is still read as its own historical fact.
+    /// </summary>
+    public string? ProofKind { get; init; }
+
     /// <summary>اپراتور ثبت‌کننده.</summary>
     public Guid ActorUserId { get; init; }
 

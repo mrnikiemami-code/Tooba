@@ -1,0 +1,33 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1
+Parent-Task: TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA
+Status: PASS
+Scope: A-G_CONSOLIDATED_279_F1_F6_AND_S1_S5
+Expected-Base-SHA: 0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32
+Base-SHA: 0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32 (docs-only issuance delta; zero source/config/schema drift; parent 279 code 9c0885a5943e7f1a4e1a09a17fac417d23037aa6)
+Code-SHA: ONE combined commit (code + tests + migration + evidence + AGENTS/plan pointers) — exact SHA in `git log -1` and the posted Bridge result
+Evidence-SHA: same ONE combined commit
+Final-HEAD: same ONE combined commit, pushed to origin/main
+HEAD-Equals-Origin-Main: verified after push
+Critical-Closure-State: F1 closed (one reservation protocol for first + retry, payment facts before locks, cross-case budget under one advisory key, commit before external port); F2 closed (reviewed per-condition portions drive money and accepted-usable-only restock, requested amount immutable); F3 closed (rejected received goods held until evidenced condition-specific handback, zero-money custody); F4 closed (frozen reviewed version, atomic decision+status+amount+capacity, SHA-256 occurrence identity); F5 closed (typed legacy ambiguity, no guessed slice); F6 closed (viewer-scoped exact durable act, storage probe, epoch fence, shared Dialog, single react-toastify)
+Small-Closure-State: S1 closed; S2 closed; S3 closed; S4 closed; S5 closed
+Schema-State: one additive Returns migration 20261118023434_Tb279R1PerConditionPortionsAndCustodyProof applied ONCE by Tooba.MigrationRunner after a fresh pg_dump (3 031 123 B, SHA256 C025224B6C0BDC9F06F3A180AF02109DEF41915E1F07BB70D3EFEFBB17DEADEE) verified by pg_restore --list (exit 0, 1475 TOC lines); plan contained only this migration; post-apply pendingMigrations [] everywhere
+Relational-Proof-State: ReturnsClosure279RelationalTests 3/3 on canonical tooba_alpha, committedRows=0 (cross-case budget read 60 vs 100; two-session payment advisory-lock contention with independent second payment; stale-version zero-write vs lawful atomic approval with approved 1000 / requested 2000 / 0 attempts)
+Validation-State: Returns 172/172; AMSC guards 34/34; dotnet build 0 errors; Host publish 0 errors; FE 44/44; tsc 0; next build 0 (BUILD_ID 1qgSFICgCehoh6FzH3a0f)
+Served-State: Host 5088 PID 28300 dll SHA256 9C5ECED52091F98A828EBDA0F7AB1F52009148F9C987439706F61623CD63F62D (/health 200, /health/ready 200 SingleStore + messaging Healthy, /__platform-commerce → store-alpha); Next 3000 PID 29448 BUILD_ID 1qgSFICgCehoh6FzH3a0f, chunk 7944-5791a99ccf276c21.js 200 serving admin-return-custody-remaining / admin-return-requested-amount / record_custody / publish_resolution / reopen_for_review / «بازگردانی»; read-only wire: 401 admin.actor.missing without actor, 200 Completed with approvedAmount null / custody 0 / attempts 1 / Settled / unchanged updated_at with the dev actor, 404 return.missing for an unknown case
+Live-Business-Write-State: ZERO
+Provider-Money-Stock-Effect-State: ZERO
+User-Work-Preserved: YES
+Architect-Accept-State: NO
+User-Acceptance-State: NO
+Evidence-Limits: money/stock proven with controlled ports (no real PSP/Wallet/Inventory/notification effect); no committed two-writer race (effectful first-refund intent refuses caller transactions); mounted FE suites are jsdom (behaviour, not geometry); no live customer session/checkout/active return case, so the active operator/customer flow has no live walkthrough and the three settled cases were read only
+Recovery-Next-Task: NONE
+Next-Recommended-Task: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT

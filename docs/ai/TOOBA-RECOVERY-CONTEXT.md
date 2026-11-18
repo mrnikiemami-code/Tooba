@@ -1,10 +1,28 @@
-# CURRENT — 279-R1 CONSOLIDATED REPAIR ENVELOPE ISSUED; AWAIT BRIDGE CLAIM — 2026-11-18
+# CURRENT — 279-R1 WORKER PASS (six 279 defects + S1–S5 closed); AWAIT ARCHITECT REVIEW — 2026-11-18
 
-User authorized one consolidated closure, not micro-tasks. Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/TASK.md` and `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/issuance-receipt.json` FIRST. Full task is already committed; empty Bridge content never authorizes reconstruction. Download filename exactly matches Task-ID. Expected base `0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32`; subsequent issuance delta is docs-only and explicitly permitted after verification.
-279/278 remain PARTIAL. This repair owns ALL F1–F6 and S1–S5: shared first/retry budget; reviewed portion money/stock/custody; atomic reviewed-version decision transitions; no guessed legacy allocation; exact viewer-scoped customer intent; shared customer Dialog/template toast/precision/test/display/recovery closure. One worker/task/result, no delegation/screenshots/polling/broad test loops. Only the task's bounded additive Returns migration is authorized if necessary, with a verified fresh pre-apply backup and Runner; no live business write/provider/stock/money effect, no new/reset demo case. Completed user cases remain read-only. No automatic follow-on.
-Worker must report every critical/small item truthfully; PASS cannot leave a critical counterexample open. Architect/user acceptance is pending. STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+The consolidated repair `TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1` is
+implemented and reported: one shared payment-reservation protocol for first + retry attempts with owning payment facts
+read before any lock, reviewed per-condition portions driving money and accepted-usable-only restock, rejected received
+goods held under custody with condition-specific evidenced handback, version-fenced atomic decision transitions, a typed
+`return.allocation.legacy_ambiguous` instead of a guessed legacy slice, and a viewer-scoped exact durable customer act
+with the shared DS Dialog and the single react-toastify container.
+Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/{RESULT.md,RECEIPTS.md,closure-matrix.md,rollback-only-proof.md}` FIRST; the exact envelope bytes are in both
+`TASK.md` copies with `issuance-receipt.json` (24 251 B, SHA256 `A5FABF0B…494AF`).
+Base `0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32`; the one additive migration
+`20261118023434_Tb279R1PerConditionPortionsAndCustodyProof` was applied once after a verified fresh backup
+(3 031 123 B, `C025224B…EEADEE`). Three stored cases untouched (`Completed`, `approved_amount NULL`), new tables 0 rows,
+zero live business write, no live POST.
+278 and 279 remain PARTIAL; this is not Architect ACCEPT, not user functional/visual acceptance and not
+provider/financial readiness. STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
 
-# SUPERSEDED — pre-issuance 279 review checkpoint (historical)
+# SUPERSEDED — 279-R1 ISSUED AS A DOCS-ONLY ENVELOPE — 2026-11-18
+
+`…279-R1` was issued by commit `fd0b24cc1` (docs-only): `docs/ai/tasks/…279-R1/TASK.md` + identical evidence copy +
+`issuance-receipt.json` + closure-checklist header. Expected-Base-SHA `0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32`;
+reviewed parent `9c0885a5943e7f1a4e1a09a17fac417d23037aa6`. Issued file 24 446 B SHA256 `8913a285…0435c9`; the Bridge
+delivered the same requirements flattened at 24 251 B SHA256 `A5FABF0B…494AF`. The 279-R1 PASS below is the worker result.
+
+# SUPERSEDED — 279 ARCHITECT REVIEW: PARTIAL; CONSOLIDATED CLOSURE PLANNED, NOT ISSUED — 2026-11-18
 
 Independent source review of code `9c0885a5943e7f1a4e1a09a17fac417d23037aa6` found six blocking groups: retry budget bypass/locked payment read, actual restock ignoring accepted portions, rejected-held capacity/custody condition gaps, incomplete reviewed-version/atomic decision fencing, guessed legacy delivery attribution, and unclosed customer intent durability. Worker PASS is not Architect ACCEPT.
 Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/ARCHITECT-REVIEW.md` and `docs/planning/returns/RETURNS-279-CONSOLIDATED-CLOSURE-CHECKLIST.md` FIRST. The checklist includes the small shared-dialog/toast, unknown-precision, retained-test, display and recovery-document items so they are not forgotten. Resolve together after critical defects; do not create ten micro-tasks.

@@ -35,6 +35,13 @@ import {
   setInputValue,
   waitFor,
 } from "../../features/order-carrier-execution/test-dom-harness.ts";
+import {
+  buildReturnSubmission,
+  readReturnSubmission,
+  serializeReturnSubmission,
+  storeReturnSubmission,
+  submissionStorageKey,
+} from "./return-submission.ts";
 
 ensureDom();
 
@@ -208,6 +215,19 @@ function toastTexts(container: HTMLElement): string[] {
   return qq(container, ".Toastify__toast").map((node) => node.textContent ?? "");
 }
 
+async function fillAct(tree: { container: HTMLElement }, lineId = "ol-socks", quantity = "2") {
+  await toggleLine(tree.container, lineId);
+  await setInputValue(q(tree.container, `[data-testid='return-line-quantity-${lineId}']`), quantity);
+  await setSelectValue(q(tree.container, "#return-shared-reason"), "defective");
+  await setTextarea(q(tree.container, "#return-description"), "کالا در زمان تحویل آسیب دیده بود.");
+}
+
+function submitButton(container: HTMLElement): HTMLButtonElement | undefined {
+  return qq(container, "button").find((button) =>
+    (button.textContent ?? "").includes("ثبت درخواست مرجوعی"),
+  ) as HTMLButtonElement | undefined;
+}
+
 async function mountModal(sellersInput: ReturnRequestSeller[], onSubmitted?: (count: number) => void) {
   return mount(
     createElement(
@@ -218,6 +238,7 @@ async function mountModal(sellersInput: ReturnRequestSeller[], onSubmitted?: (co
         onClose: () => undefined,
         checkoutId: CHECKOUT_ID,
         orderReference: "REF-278",
+        viewerId: "user-278",
         sellers: sellersInput,
         onSubmitted: (snaps) => onSubmitted?.(snaps.length),
       }),
@@ -416,6 +437,160 @@ test("a checkout with no eligible line offers no selection at all", async () => 
     assert.ok(submitButton);
     assert.equal((submitButton as HTMLButtonElement).disabled, true);
     assert.equal(stub.posts().length, 0);
+  } finally {
+    await tree.unmount();
+    stub.restore();
+    window.sessionStorage.clear();
+  }
+});
+
+test("an unreadable or throwing storage refuses to send and says so honestly", async () => {
+  window.sessionStorage.clear();
+  const descriptor = Object.getOwnPropertyDescriptor(window, "sessionStorage");
+  Object.defineProperty(window, "sessionStorage", {
+    configurable: true,
+    get() {
+      throw new Error("storage denied");
+    },
+  });
+  const stub = stubCustomerReturns([{ kind: "ok", id: "rr-0" }]);
+  const tree = await mountModal(sellers());
+  try {
+    await flush();
+    assert.match(tree.container.textContent ?? "", /ثبت امن درخواست در این مرورگر ممکن نیست/);
+    await fillAct(tree);
+    const button = submitButton(tree.container);
+    assert.ok(button);
+    assert.equal(button.disabled, true, "no durable act can be proven, so submit stays closed");
+    await click(button);
+    await flush();
+    assert.equal(stub.posts().length, 0);
+  } finally {
+    await tree.unmount();
+    stub.restore();
+    if (descriptor) Object.defineProperty(window, "sessionStorage", descriptor);
+    window.sessionStorage.clear();
+  }
+});
+
+test("a retained possibly-sent act is never overwritten by a new submission", async () => {
+  window.sessionStorage.clear();
+  const act = buildReturnSubmission({
+    checkoutId: CHECKOUT_ID,
+    destination: "OriginalPayment",
+    viewerId: "user-278",
+    submissionKey: "retained-278",
+    recordedAt: "2026-11-18T00:00:00Z",
+    newChildKey: () => "child-key",
+    selections: [
+      {
+        sellerOrderId: "so-a",
+        orderLineId: "ol-socks",
+        productLabel: "جوراب نخی",
+        unitLabel: "pcs",
+        unitDecimalPlaces: 0,
+        quantityUnits: 2_000_000,
+        quantityText: "2",
+        reason: "خرابی کالا",
+      },
+    ],
+  });
+  assert.ok(act);
+  assert.ok(storeReturnSubmission(window.sessionStorage, act));
+  const before = window.sessionStorage.getItem(submissionStorageKey(CHECKOUT_ID, "user-278"));
+
+  const stub = stubCustomerReturns([{ kind: "ok", id: "rr-0" }]);
+  const tree = await mountModal(sellers());
+  try {
+    await flush();
+    assert.equal(qq(tree.container, "[data-testid='retained-return-submission']").length, 1);
+    await fillAct(tree);
+    const button = submitButton(tree.container);
+    assert.ok(button);
+    await click(button);
+    await flush();
+    // The existing act was not replaced and nothing new left the surface.
+    assert.equal(stub.posts().length, 0);
+    assert.equal(
+      window.sessionStorage.getItem(submissionStorageKey(CHECKOUT_ID, "user-278")),
+      before,
+      "the stored possibly-sent act must stay byte-identical",
+    );
+    assert.match(tree.container.textContent ?? "", /یک درخواست ناتمام از قبل ثبت شده است/);
+    assert.equal(qq(tree.container, "[data-testid='retained-return-submission']").length, 1);
+  } finally {
+    await tree.unmount();
+    stub.restore();
+    window.sessionStorage.clear();
+  }
+});
+
+test("a late answer never paints on the retargeted checkout", async () => {
+  window.sessionStorage.clear();
+  const original = globalThis.fetch;
+  let started = 0;
+  let release: (() => void) | null = null;
+  globalThis.fetch = (async () => {
+    started += 1;
+    return new Promise<Response>((resolve) => {
+      release = () => resolve(respond(200, snapshot("rr-late", "so-a", CHECKOUT_ID)));
+    });
+  }) as typeof fetch;
+  const tree = await mount(createElement(ReturnRequestModal, {
+    open: true,
+    onClose: () => undefined,
+    checkoutId: CHECKOUT_ID,
+    orderReference: "REF-278",
+    viewerId: "user-278",
+    sellers: sellers(),
+  }));
+  try {
+    await flush();
+    await fillAct(tree);
+    const button = submitButton(tree.container);
+    assert.ok(button);
+    await click(button);
+    await waitFor(() => started === 1);
+
+    // RETARGET: the customer surface now belongs to another checkout while the old answer is unanswered.
+    await tree.rerender(createElement(ReturnRequestModal, {
+      open: true,
+      onClose: () => undefined,
+      checkoutId: "checkout-278-b",
+      orderReference: "REF-278-B",
+      viewerId: "user-278",
+      sellers: sellers(),
+    }));
+    await flush();
+    (release as (() => void) | null)?.();
+    await flush();
+    await flush();
+
+    assert.equal(tree.container.textContent?.includes("درخواست شما ثبت شد"), false, "a stale answer never paints");
+    assert.equal(qq(tree.container, "[data-testid='retained-return-submission']").length, 0);
+    // The exact evidence of the old act stays where it belongs, untouched by the newer surface.
+    const stored = readReturnSubmission(window.sessionStorage, CHECKOUT_ID, "user-278");
+    assert.equal(stored.kind, "found");
+  } finally {
+    await tree.unmount();
+    globalThis.fetch = original;
+    window.sessionStorage.clear();
+  }
+});
+
+test("the customer modal is the shared design-system Dialog, not a private fixed overlay", async () => {
+  window.sessionStorage.clear();
+  const stub = stubCustomerReturns([{ kind: "ok", id: "rr-0" }]);
+  const tree = await mountModal(sellers());
+  try {
+    await flush();
+    const dialog = q(tree.container, "dialog");
+    assert.ok(dialog, "the shared Dialog element owns the surface");
+    assert.equal(dialog.hasAttribute("open"), true);
+    assert.equal(qq(tree.container, "[role='dialog']").length, 0, "no second hand-rolled dialog role");
+    assert.equal(qq(tree.container, ".fixed.inset-0").length, 0, "no private fixed overlay");
+    const title = q(tree.container, "h2");
+    assert.match(title.textContent ?? "", /درخواست مرجوعی/);
   } finally {
     await tree.unmount();
     stub.restore();

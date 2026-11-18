@@ -1,5 +1,5 @@
 ﻿/**
- * TB-278 — the customer's ONE durable multi-seller return submission.
+ * TB-278/TB-279-R1 — the customer's ONE durable multi-seller return submission.
  *
  * A customer may lawfully return SEVERAL lines that belong to DIFFERENT seller orders (and lines that need different
  * reasons) in one deliberate act. The owning Returns directory still creates ONE case per seller order, so this module
@@ -7,6 +7,11 @@
  * stable idempotency key and its own EXACT request bytes — and writes the whole set to storage BEFORE the first send.
  *
  * Rules this module owns (the surface must not re-invent them):
+ *  - the act belongs to ONE authenticated viewer: the key is `viewer + checkout`, so a shared browser session can never
+ *    read, retry or clear another customer's possibly-sent act, and an act recorded without a viewer is unreadable;
+ *  - a stored envelope is only trusted when its OWN bytes verify: every child's exact body is re-derived from its
+ *    identity (seller order + line + reason + quantity + key + destination) and compared, so tampered evidence can never
+ *    be replayed;
  *  - the bytes of a child are produced once and replayed verbatim, so a duplicate click, a lost response, a reload or a
  *    second device attempt resolves to the SAME stored case instead of minting a new one;
  *  - a child that came back with a typed refusal proves no effect ONLY when the refusal is dictated by the immutable
@@ -14,8 +19,8 @@
  *    child `unknown`, because an earlier send of those same bytes may already have written;
  *  - a recorded child is terminal and never re-sent, so a partially successful act keeps its successes and retries only
  *    the unresolved children;
- *  - nothing is cleared implicitly: only the exact current submission key can be cleared, and only when every child is
- *    resolved.
+ *  - nothing is cleared implicitly: only the EXACT current act can be cleared (full envelope compare, not just a key),
+ *    and only when every child is resolved.
  */
 import {
   isAlignedToUnit,
@@ -23,10 +28,12 @@ import {
   unitsToWireNumber,
 } from "./return-quantity.ts";
 
-export const RETURN_SUBMISSION_VERSION = 1;
-export const RETURN_SUBMISSION_STORAGE_PREFIX = "tb278:customer-return-submission:";
+export const RETURN_SUBMISSION_VERSION = 2;
+export const RETURN_SUBMISSION_STORAGE_PREFIX = "tb279:customer-return-submission:";
 
 export type ReturnSubmissionChildState = "pending" | "unknown" | "recorded" | "refused";
+
+export type RefundDestinationToken = "OriginalPayment" | "Wallet";
 
 /** One frozen child: one case the customer deliberately asked for. */
 export interface ReturnSubmissionChild {
@@ -55,12 +62,9 @@ export interface ReturnSubmission {
   version: number;
   submissionKey: string;
   checkoutId: string;
-  /**
-   * TB-279: the customer this act belongs to. `undefined` means the surface did not know the viewer, so the act keeps the
-   * legacy shared key: it is never a guessed identity, and another viewer never silently adopts it.
-   */
-  viewerId?: string | null;
-  destination: string;
+  /** The authenticated customer this act belongs to — never optional, never guessed. */
+  viewerId: string;
+  destination: RefundDestinationToken;
   recordedAt: string;
   children: ReturnSubmissionChild[];
 }
@@ -76,6 +80,12 @@ export interface SubmissionSelection {
   reason: string;
 }
 
+/** The exact scope an act lives in: one viewer's act for one checkout. */
+export interface SubmissionScope {
+  checkoutId: string;
+  viewerId: string;
+}
+
 /** The minimal storage shape (browser `sessionStorage` or a test double). */
 export interface SubmissionStorage {
   readonly length: number;
@@ -88,6 +98,7 @@ export interface SubmissionStorage {
 export type SubmissionRead =
   | { kind: "none" }
   | { kind: "unavailable" }
+  | { kind: "viewer_required" }
   | { kind: "unreadable" }
   | { kind: "found"; submission: ReturnSubmission };
 
@@ -105,19 +116,14 @@ export const SUBMISSION_NO_EFFECT_REFUSALS: ReadonlySet<string> = new Set([
   "return.line_missing",
 ]);
 
-/**
- * TB-279: the durable act is scoped to the VIEWING customer, not only to the checkout.
- * <para>
- * A shared browser session can be used by more than one customer; a viewer-scoped key means one customer can never read,
- * retry or clear another customer's possibly-sent act. When the viewer is unknown the act keeps the legacy shared key
- * (never a guessed identity), and the surface still refuses to send on unreadable evidence.
- * </para>
- */
-export function submissionStorageKey(checkoutId: string, viewerId?: string | null): string {
-  const viewer = viewerId?.trim() ?? "";
-  return viewer === ""
-    ? `${RETURN_SUBMISSION_STORAGE_PREFIX}${checkoutId}`
-    : `${RETURN_SUBMISSION_STORAGE_PREFIX}${viewer}:${checkoutId}`;
+function isDestination(value: unknown): value is RefundDestinationToken {
+  return value === "OriginalPayment" || value === "Wallet";
+}
+
+/** TB-279-R1: the key is viewer-scoped; an empty viewer has NO key at all (no shared fallback). */
+export function submissionStorageKey(checkoutId: string, viewerId: string): string {
+  const viewer = viewerId.trim();
+  return `${RETURN_SUBMISSION_STORAGE_PREFIX}${viewer}:${checkoutId}`;
 }
 
 /** The stable identity of one child: the owning directory's own case grain. */
@@ -155,33 +161,40 @@ export function buildChildBody(child: {
 export function defaultSubmissionKeyFactory(): string {
   const uuid = globalThis.crypto?.randomUUID;
   if (typeof uuid === "function") return uuid.call(globalThis.crypto);
-  return `tb278-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  return `tb279-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function trimOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
 }
 
 /**
  * Freezes the customer's deliberate selection into one durable act. Every child carries its own idempotency key and its
  * exact bytes; the act itself gets one submission key so only THIS act can ever be resumed or cleared.
+ * Returns `null` when the act has no authenticated viewer or no lawful child — the surface must not send then.
  */
 export function buildReturnSubmission(input: {
   checkoutId: string;
-  destination: string;
+  destination: RefundDestinationToken;
   selections: SubmissionSelection[];
+  viewerId: string | null | undefined;
   recordedAt?: string;
   submissionKey?: string;
-  viewerId?: string | null;
   newChildKey?: () => string;
-}): ReturnSubmission {
+}): ReturnSubmission | null {
+  const viewerId = trimOrNull(input.viewerId);
+  if (!viewerId || !input.checkoutId || input.selections.length === 0) return null;
   const newKey = input.newChildKey ?? defaultSubmissionKeyFactory;
   return {
     version: RETURN_SUBMISSION_VERSION,
     submissionKey: input.submissionKey ?? newKey(),
     checkoutId: input.checkoutId,
-    viewerId: input.viewerId ?? null,
+    viewerId,
     destination: input.destination,
     recordedAt: input.recordedAt ?? new Date().toISOString(),
     children: input.selections.map((selection) => {
       const reason = selection.reason.trim();
-      const idempotencyKey = `tb278-${newKey()}`;
+      const idempotencyKey = `tb279-${newKey()}`;
       return {
         key: submissionChildKey(selection.sellerOrderId, selection.orderLineId, reason),
         sellerOrderId: selection.sellerOrderId,
@@ -218,7 +231,11 @@ function isChildState(value: unknown): value is ReturnSubmissionChildState {
   return value === "pending" || value === "unknown" || value === "recorded" || value === "refused";
 }
 
-function parseChild(value: unknown): ReturnSubmissionChild | null {
+/**
+ * Parses one stored child and RE-DERIVES its exact body from its own identity. A body that does not match (tampered
+ * quantity, foreign line, different destination, mismatched child key) is refused as unreadable evidence, never replayed.
+ */
+function parseChild(value: unknown, destination: RefundDestinationToken): ReturnSubmissionChild | null {
   if (!value || typeof value !== "object") return null;
   const child = value as Record<string, unknown>;
   if (typeof child.key !== "string" || child.key.length === 0) return null;
@@ -226,8 +243,33 @@ function parseChild(value: unknown): ReturnSubmissionChild | null {
   if (typeof child.orderLineId !== "string" || child.orderLineId.length === 0) return null;
   if (typeof child.idempotencyKey !== "string" || child.idempotencyKey.length === 0) return null;
   if (typeof child.body !== "string" || child.body.length === 0) return null;
-  if (typeof child.quantityUnits !== "number" || !Number.isInteger(child.quantityUnits)) return null;
+  if (typeof child.quantityUnits !== "number" || !Number.isInteger(child.quantityUnits) || child.quantityUnits <= 0) {
+    return null;
+  }
   if (!isChildState(child.state)) return null;
+  const reason = typeof child.reason === "string" ? child.reason : "";
+  if (reason.trim() === "") return null;
+  // The child key is the owning directory's grain: seller order + line + reason.
+  if (child.key !== submissionChildKey(child.sellerOrderId, child.orderLineId, reason)) return null;
+  // The stored bytes must be EXACTLY the bytes this identity produces.
+  const expectedBody = buildChildBody({
+    sellerOrderId: child.sellerOrderId,
+    idempotencyKey: child.idempotencyKey,
+    reason,
+    destination,
+    orderLineId: child.orderLineId,
+    quantityUnits: child.quantityUnits,
+  });
+  if (child.body !== expectedBody) return null;
+  const caseId = trimOrNull(child.caseId);
+  const refusalCode = trimOrNull(child.refusalCode);
+  if (child.state === "recorded" && caseId === null) return null;
+  if (child.state === "refused" && (refusalCode === null || !SUBMISSION_NO_EFFECT_REFUSALS.has(refusalCode))) {
+    return null;
+  }
+  if (child.state !== "refused" && refusalCode !== null && SUBMISSION_NO_EFFECT_REFUSALS.has(refusalCode)) {
+    return null;
+  }
   return {
     key: child.key,
     sellerOrderId: child.sellerOrderId,
@@ -237,13 +279,13 @@ function parseChild(value: unknown): ReturnSubmissionChild | null {
     unitDecimalPlaces: typeof child.unitDecimalPlaces === "number" ? child.unitDecimalPlaces : null,
     quantityUnits: child.quantityUnits,
     quantityText: typeof child.quantityText === "string" ? child.quantityText : unitsToExactText(child.quantityUnits),
-    reason: typeof child.reason === "string" ? child.reason : "",
+    reason,
     idempotencyKey: child.idempotencyKey,
     body: child.body,
     state: child.state,
-    caseId: typeof child.caseId === "string" ? child.caseId : null,
-    caseNumber: typeof child.caseNumber === "string" ? child.caseNumber : null,
-    refusalCode: typeof child.refusalCode === "string" ? child.refusalCode : null,
+    caseId,
+    caseNumber: trimOrNull(child.caseNumber),
+    refusalCode,
   };
 }
 
@@ -260,81 +302,88 @@ export function parseReturnSubmission(raw: string | null): ReturnSubmission | nu
   if (record.version !== RETURN_SUBMISSION_VERSION) return null;
   if (typeof record.submissionKey !== "string" || record.submissionKey.length === 0) return null;
   if (typeof record.checkoutId !== "string" || record.checkoutId.length === 0) return null;
+  const viewerId = trimOrNull(record.viewerId);
+  // TB-279-R1: an act with no authenticated viewer can never be adopted or replayed.
+  if (viewerId === null) return null;
+  if (!isDestination(record.destination)) return null;
   if (!Array.isArray(record.children) || record.children.length === 0) return null;
-  const children = record.children.map(parseChild);
+  const children = record.children.map((child) => parseChild(child, record.destination as RefundDestinationToken));
   if (children.some((child) => child === null)) return null;
+  const typed = children as ReturnSubmissionChild[];
+  if (new Set(typed.map((child) => child.key)).size !== typed.length) return null;
   return {
     version: RETURN_SUBMISSION_VERSION,
     submissionKey: record.submissionKey,
     checkoutId: record.checkoutId,
-    // TB-279: an act recorded without a viewer keeps `null` (legacy shared key) and is never adopted by a named viewer.
-    viewerId: typeof record.viewerId === "string" && record.viewerId.length > 0 ? record.viewerId : null,
-    destination: typeof record.destination === "string" ? record.destination : "OriginalPayment",
+    viewerId,
+    destination: record.destination as RefundDestinationToken,
     recordedAt: typeof record.recordedAt === "string" ? record.recordedAt : "",
-    children: children as ReturnSubmissionChild[],
+    children: typed,
   };
 }
 
-/** Reads this checkout's frozen act. `unreadable` is an explicit state, never silently "nothing pending". */
-export function readReturnSubmission( storage: SubmissionStorage | null, checkoutId: string, viewerId?: string | null, ): SubmissionRead {
+/** Reads THIS viewer's frozen act for THIS checkout. `unreadable`/`viewer_required` are explicit states, never "none". */
+export function readReturnSubmission(
+  storage: SubmissionStorage | null,
+  checkoutId: string,
+  viewerId?: string | null,
+): SubmissionRead {
   if (!storage) return { kind: "unavailable" };
+  const viewer = trimOrNull(viewerId);
+  if (viewer === null) return { kind: "viewer_required" };
   let raw: string | null;
   try {
-    raw = storage.getItem(submissionStorageKey(checkoutId, viewerId));
+    raw = storage.getItem(submissionStorageKey(checkoutId, viewer));
   } catch {
     return { kind: "unavailable" };
   }
   if (!raw) return { kind: "none" };
   const submission = parseReturnSubmission(raw);
   if (!submission) return { kind: "unreadable" };
-  if (submission.checkoutId !== checkoutId) return { kind: "unreadable" };
-  // TB-279: an act scoped to another viewer is never adopted by this one; it stays untouched evidence for that viewer.
-  const scopedViewer = submission.viewerId ?? null;
-  const requestedViewer = viewerId?.trim() ?? "";
-  if (requestedViewer !== "" && scopedViewer !== null && scopedViewer !== requestedViewer) {
-    return { kind: "none" };
-  }
+  // The envelope must belong to EXACTLY this scope; anything else is foreign or tampered evidence.
+  if (submission.checkoutId !== checkoutId || submission.viewerId !== viewer) return { kind: "unreadable" };
   return { kind: "found", submission };
 }
 
 /** Writes AND reads the act back; a failed set/read/compare means the surface must not send. */
-export function storeReturnSubmission(
-  storage: SubmissionStorage | null,
-  submission: ReturnSubmission,
-  viewerId?: string | null,
-): boolean {
+export function storeReturnSubmission(storage: SubmissionStorage | null, submission: ReturnSubmission): boolean {
   if (!storage) return false;
+  if (trimOrNull(submission.viewerId) === null) return false;
   const value = serializeReturnSubmission(submission);
-  // TB-279: the act's OWN viewer scope is authoritative, so a child-outcome write can never drift into another key.
-  const scope = viewerId ?? submission.viewerId ?? null;
+  const key = submissionStorageKey(submission.checkoutId, submission.viewerId);
   try {
-    storage.setItem(submissionStorageKey(submission.checkoutId, scope), value);
-    return storage.getItem(submissionStorageKey(submission.checkoutId, scope)) === value;
+    storage.setItem(key, value);
+    return storage.getItem(key) === value;
   } catch {
     return false;
   }
 }
 
 /**
- * Applies ONE child's answer to the CURRENT act only.
+ * Applies ONE child's answer to the CURRENT exact act only.
  *
  * - `recorded` is terminal (a case exists — never re-sent),
  * - `refused` only when the typed code proves the body/identity was rejected (never possibly written),
  * - everything else is `unknown` and keeps its exact bytes for the next attempt.
  *
- * Returns the updated act, or `null` when storage is unavailable or the stored act is not this submission key.
+ * Returns the updated act, or `null` when storage is unavailable, the scope is unknown, or the stored act is not this
+ * submission key (a newer act is never touched by a late answer).
  */
 export function recordChildOutcome(
   storage: SubmissionStorage | null,
+  scope: SubmissionScope,
   submissionKey: string,
   childKey: string,
   outcome:
-    | { kind: "recorded"; caseId: string | null; caseNumber: string | null }
+    | { kind: "recorded"; caseId: string; caseNumber: string | null }
     | { kind: "refused"; refusalCode: string }
     | { kind: "unknown"; refusalCode: string | null },
 ): ReturnSubmission | null {
-  const current = readReturnSubmissionByKey(storage, submissionKey);
-  if (!current) return null;
+  const read = readReturnSubmission(storage, scope.checkoutId, scope.viewerId);
+  if (read.kind !== "found") return null;
+  const current = read.submission;
+  if (current.submissionKey !== submissionKey) return null;
+  if (!current.children.some((child) => child.key === childKey)) return null;
   const children = current.children.map((child) => {
     if (child.key !== childKey) return child;
     if (child.state === "recorded") return child;
@@ -350,37 +399,23 @@ export function recordChildOutcome(
   return storeReturnSubmission(storage, updated) ? updated : null;
 }
 
-function readReturnSubmissionByKey(
-  storage: SubmissionStorage | null,
-  submissionKey: string,
-): ReturnSubmission | null {
-  if (!storage) return null;
-  try {
-    for (let index = 0; index < storage.length; index += 1) {
-      const key = storage.key(index);
-      if (!key || !key.startsWith(RETURN_SUBMISSION_STORAGE_PREFIX)) continue;
-      const submission = parseReturnSubmission(storage.getItem(key));
-      if (submission && submission.submissionKey === submissionKey) return submission;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-/** Clears only the EXACT act; a newer act (or another checkout's act) is never touched. */
+/**
+ * Clears only the EXACT act: the stored envelope must be byte-identical to the one whose every child is resolved. A
+ * newer act, another checkout's act, another viewer's act or a tampered envelope is never removed.
+ */
 export function clearReturnSubmissionIfCurrent(
   storage: SubmissionStorage | null,
   submission: ReturnSubmission,
   viewerId?: string | null,
 ): boolean {
   if (!storage) return false;
-  const key = submissionStorageKey(submission.checkoutId, viewerId ?? submission.viewerId ?? null);
+  const viewer = trimOrNull(viewerId);
+  if (viewer === null || viewer !== submission.viewerId) return false;
+  const key = submissionStorageKey(submission.checkoutId, submission.viewerId);
   try {
     const raw = storage.getItem(key);
     if (raw === null) return true;
-    const stored = parseReturnSubmission(raw);
-    if (!stored || stored.submissionKey !== submission.submissionKey) return false;
+    if (raw !== serializeReturnSubmission(submission)) return false;
     storage.removeItem(key);
     return storage.getItem(key) === null;
   } catch {

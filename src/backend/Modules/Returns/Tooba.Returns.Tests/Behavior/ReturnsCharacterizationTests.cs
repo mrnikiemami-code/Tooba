@@ -115,7 +115,10 @@ public sealed class ReturnsCharacterizationTests
 
         // TB-277: the FIRST refund is a separate deliberate financial command over the same stored decision.
         var refunded = await directory.StartFirstRefundAsync(
-            new StartReturnRefundCommand(approved.ReturnRequestId, Guid.NewGuid()),
+            new StartReturnRefundCommand(
+                approved.ReturnRequestId,
+                Guid.NewGuid(),
+                approved.DecisionVersion),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Completed, refunded.Status);
         Assert.Single(refunds.Calls);
@@ -188,7 +191,10 @@ public sealed class ReturnsCharacterizationTests
 
         // TB-277: the separate first-refund command is what credits the Wallet destination and restocks saleable goods.
         var refunded = await directory.StartFirstRefundAsync(
-            new StartReturnRefundCommand(approved.ReturnRequestId, Guid.NewGuid()),
+            new StartReturnRefundCommand(
+                approved.ReturnRequestId,
+                Guid.NewGuid(),
+                approved.DecisionVersion),
             CancellationToken.None);
         Assert.Equal(ReturnRequestStatus.Completed, refunded.Status);
         Assert.Empty(refunds.Calls);

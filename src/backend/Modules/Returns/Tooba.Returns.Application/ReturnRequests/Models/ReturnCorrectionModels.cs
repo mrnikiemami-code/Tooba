@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.ValueObjects;
 
@@ -15,9 +16,14 @@ public sealed record ReturnDecisionRevisionSnapshot(
     DateTimeOffset RecordedAt);
 
 /// <summary>
-/// TB-279: the reviewed resolution of ONE requested line. <see cref="Accepted"/> is the refundable quantity,
-/// <see cref="Rejected"/> the withdrawn/declined quantity, and the two may never name more than the original claim or
-/// accept more than what was physically received.
+/// TB-279 / TB-279-R1: the reviewed resolution of ONE requested line, PER CONDITION.
+/// <para>
+/// <see cref="AcceptedUsable"/> and <see cref="AcceptedDamaged"/> are the refundable portions of each inspected
+/// condition, <see cref="RejectedReceivedUsable"/> and <see cref="RejectedReceivedDamaged"/> are the received units that
+/// were declined and stay the customer's property (owed back), and <see cref="RejectedUnreceived"/> is the part of the
+/// original claim that never physically arrived. Nothing is inferred: an earlier revision derived the accepted condition
+/// from <c>Min(accepted, usable)</c>, which silently chose a condition the operator never reviewed.
+/// </para>
 /// </summary>
 public sealed record ReturnResolutionLineSnapshot(
     Guid ReturnItemId,
@@ -25,25 +31,27 @@ public sealed record ReturnResolutionLineSnapshot(
     decimal Received,
     decimal Usable,
     decimal Damaged,
-    decimal Accepted,
-    decimal Rejected,
+    decimal AcceptedUsable,
+    decimal AcceptedDamaged,
+    decimal RejectedReceivedUsable,
+    decimal RejectedReceivedDamaged,
+    decimal RejectedUnreceived,
     string? Reason,
-    int Version)
+    int Version,
+    /// <summary>
+    /// False for a stored plan row that predates the per-condition columns. Such a row can never be read as a lawful
+    /// split, because its accepted condition is unknown — the plan is incomplete and asks to be reviewed again.
+    /// </summary>
+    bool PortionsKnown = true)
 {
-    /// <summary>Accepted usable portion — the ONLY quantity a saleable restock may use.</summary>
-    public decimal AcceptedUsable => Math.Min(Accepted, Usable);
+    /// <summary>The refundable quantity of this line (both accepted conditions).</summary>
+    public decimal Accepted => AcceptedUsable + AcceptedDamaged;
 
-    /// <summary>Accepted portion that was inspected damaged (never saleable).</summary>
-    public decimal AcceptedDamaged => Math.Max(0m, Math.Min(Accepted, Usable + Damaged) - AcceptedUsable);
+    /// <summary>The declined quantity of this line, received or never received.</summary>
+    public decimal Rejected => RejectedReceivedUsable + RejectedReceivedDamaged + RejectedUnreceived;
 
-    /// <summary>Rejected received usable portion: customer-owned custody, never restocked.</summary>
-    public decimal RejectedUsable => Math.Max(0m, Usable - AcceptedUsable);
-
-    /// <summary>Rejected received damaged portion: customer-owned custody, never saleable.</summary>
-    public decimal RejectedDamaged => Math.Max(0m, Damaged - AcceptedDamaged);
-
-    /// <summary>Rejected received quantity of both conditions.</summary>
-    public decimal RejectedReceived => RejectedUsable + RejectedDamaged;
+    /// <summary>Declined units that physically arrived and are therefore owed back to the owning customer.</summary>
+    public decimal RejectedReceived => RejectedReceivedUsable + RejectedReceivedDamaged;
 }
 
 /// <summary>
@@ -67,7 +75,9 @@ public sealed record ReturnCustodySnapshot(
     ReturnItemCondition Condition,
     Guid RecipientUserId,
     string ProofReference,
-    DateTimeOffset RecordedAt);
+    DateTimeOffset RecordedAt,
+    /// <summary>TB-279-R1: the reviewed proof kind of this handback (operator attestation or owning carrier fact).</summary>
+    string? ProofKind = null);
 
 /// <summary>
 /// TB-279: whether this case may lawfully be corrected, and the exact typed reason when it may not. The correction is
@@ -90,10 +100,12 @@ public static class ReturnResolutionPolicy
     /// <para>
     ///  - A courier-origin case derives its money from the Fulfillment-owned source claim, so it is complete by
     ///    construction and keeps the original amount.
-    ///  - A stored reviewed plan (the highest version, one row per requested item) must account for the whole claim
-    ///    exactly, and its accepted quantities may not exceed what was physically received.
-    ///  - With no stored plan, complete receiving coverage is the only unambiguous baseline: every requested unit
-    ///    arrived, so every unit is accepted. Anything less is incomplete and names the exact next step.
+    ///  - A stored reviewed plan (the highest version, one row per requested item) must name a coherent per-condition
+    ///    split that accounts for the whole claim exactly, and its accepted portions may not exceed what was physically
+    ///    received in that same condition.
+    ///  - With no stored plan, complete receiving coverage is the only unambiguous baseline. Anything less is
+    ///    incomplete and names the exact next step — a case whose accepted quantity was received but whose rejected
+    ///    remainder never arrived is only lawful through a REVIEWED plan.
     /// </para>
     /// </summary>
     public static ReturnResolutionSnapshot Describe(
@@ -137,9 +149,23 @@ public static class ReturnResolutionPolicy
                 var usable = received?.Usable ?? stored.Usable;
                 var damaged = received?.Damaged ?? stored.Damaged;
 
-                if (stored.Accepted < 0m || stored.Rejected < 0m
-                    || !PersistedReturnQuantity.IsExactlyRepresentable(stored.Accepted)
-                    || !PersistedReturnQuantity.IsExactlyRepresentable(stored.Rejected))
+                if (!stored.PortionsKnown)
+                {
+                    // A pre-R1 plan row never named the accepted condition, so it can never authorize money or a
+                    // restock. The operator republishes a reviewed, explicit split.
+                    return new ReturnResolutionSnapshot(
+                        storedVersion, false, 0m, true, storedLines, ReturnsErrorCodes.ResolutionPortionRequired);
+                }
+
+                var portions = new[]
+                {
+                    stored.AcceptedUsable,
+                    stored.AcceptedDamaged,
+                    stored.RejectedReceivedUsable,
+                    stored.RejectedReceivedDamaged,
+                    stored.RejectedUnreceived,
+                };
+                if (portions.Any(value => value < 0m || !PersistedReturnQuantity.IsExactlyRepresentable(value)))
                 {
                     return new ReturnResolutionSnapshot(storedVersion, false, 0m, true, storedLines, ReturnsErrorCodes.ResolutionInvalid);
                 }
@@ -150,23 +176,31 @@ public static class ReturnResolutionPolicy
                     return new ReturnResolutionSnapshot(storedVersion, false, 0m, true, storedLines, ReturnsErrorCodes.ResolutionIncomplete);
                 }
 
-                if (stored.Accepted > receivedQuantity)
+                // Each condition is bounded by ITS OWN received quantity. A usable unit can never stand in for a
+                // damaged one, and an accepted portion beyond what arrived is not a refund.
+                if (stored.AcceptedUsable > usable
+                    || stored.AcceptedDamaged > damaged
+                    || stored.RejectedReceivedUsable > usable - stored.AcceptedUsable
+                    || stored.RejectedReceivedDamaged > damaged - stored.AcceptedDamaged)
                 {
-                    // An accepted quantity must have coherent physical evidence; an unreceived unit is never accepted.
                     return new ReturnResolutionSnapshot(storedVersion, false, 0m, true, storedLines, ReturnsErrorCodes.ResolutionReceivedExceeded);
                 }
 
+                if (stored.RejectedUnreceived != requested - receivedQuantity)
+                {
+                    // The never-received remainder is a physical fact, not a free choice: it must equal exactly what
+                    // the coherent receipt says never arrived.
+                    return new ReturnResolutionSnapshot(storedVersion, false, 0m, true, storedLines, ReturnsErrorCodes.ResolutionPortionInvalid);
+                }
+
                 approved += MoneyOf(item.UnitPriceSnapshot, stored.Accepted);
-                lines.Add(new ReturnResolutionLineSnapshot(
-                    item.ReturnItemId,
-                    requested,
-                    receivedQuantity,
-                    usable,
-                    damaged,
-                    stored.Accepted,
-                    stored.Rejected,
-                    stored.Reason,
-                    stored.Version));
+                lines.Add(stored with
+                {
+                    Requested = requested,
+                    Received = receivedQuantity,
+                    Usable = usable,
+                    Damaged = damaged,
+                });
             }
 
             return new ReturnResolutionSnapshot(storedVersion, true, Math.Round(approved, 4, MidpointRounding.AwayFromZero), true, lines);
@@ -186,7 +220,7 @@ public static class ReturnResolutionPolicy
                     : ReturnsErrorCodes.ResolutionRequired);
         }
 
-        // Complete coverage with no counter-evidence: every requested unit was received, so every unit is accepted.
+        // Complete coverage with no counter-evidence: every requested unit arrived, so every unit is accepted.
         var baselineLines = new List<ReturnResolutionLineSnapshot>(items.Count);
         var baselineApproved = 0m;
         foreach (var item in items)
@@ -205,13 +239,56 @@ public static class ReturnResolutionPolicy
                 received.Received,
                 received.Usable,
                 received.Damaged,
-                requested,
+                received.Usable,
+                received.Damaged,
+                0m,
+                0m,
                 0m,
                 null,
                 0));
         }
 
         return new ReturnResolutionSnapshot(0, true, Math.Round(baselineApproved, 4, MidpointRounding.AwayFromZero), false, baselineLines);
+    }
+
+    /// <summary>
+    /// TB-279-R1 (F3): the honest custody plan of a case that was REJECTED/CANCELLED without a reviewed partial plan.
+    /// It accepts nothing (zero money) and names every received unit — per condition — as owed back to the customer, so
+    /// a whole-case rejection with received goods exposes a lawful handback action instead of a false closure.
+    /// </summary>
+    public static ReturnResolutionSnapshot DescribeRejectedCustody(
+        IReadOnlyList<ReturnItemSnapshot> items,
+        ReturnReceivingSummary? receiving)
+    {
+        if (receiving is not { IsCoherent: true } summary)
+        {
+            return new ReturnResolutionSnapshot(0, false, 0m, true, [], ReturnsErrorCodes.RecoveryEvidenceConflict);
+        }
+
+        var lines = new List<ReturnResolutionLineSnapshot>(items.Count);
+        foreach (var item in items)
+        {
+            var line = summary.Lines.FirstOrDefault(x => x.ReturnItemId == item.ReturnItemId);
+            var requested = item.Quantity;
+            var received = line?.Received ?? 0m;
+            var usable = line?.Usable ?? 0m;
+            var damaged = line?.Damaged ?? 0m;
+            lines.Add(new ReturnResolutionLineSnapshot(
+                item.ReturnItemId,
+                requested,
+                received,
+                usable,
+                damaged,
+                AcceptedUsable: 0m,
+                AcceptedDamaged: 0m,
+                RejectedReceivedUsable: usable,
+                RejectedReceivedDamaged: damaged,
+                RejectedUnreceived: Math.Max(0m, requested - received),
+                null,
+                0));
+        }
+
+        return new ReturnResolutionSnapshot(0, true, 0m, true, lines);
     }
 
     /// <summary>
@@ -233,9 +310,59 @@ public static class ReturnResolutionPolicy
     }
 
     /// <summary>
-    /// True when every accepted portion carries the durable physical fact it must (a usable restock or a non-saleable
-    /// damaged record) and every rejected received portion was really handed back. Money-complete work is never
-    /// reported as settled while received goods are still owed to the owning customer.
+    /// TB-279-R1 (F2): the ONE coverage answer every money/physical gate shares.
+    /// <para>
+    /// A REVIEWED plan is the authority: it accounts for the whole claim, bounds each accepted portion by its own
+    /// received condition and names the never-received remainder exactly, so accepted 2 received + rejected 1 never
+    /// received is a lawful COMPLETE basis even though the original claim was not fully delivered. Complete receiving
+    /// coverage is required only for the IMPLICIT baseline plan (no reviewed split), and incoherent stored evidence is
+    /// always a conflict. Nothing here infers a condition or clamps a quantity.
+    /// </para>
+    /// </summary>
+    public static bool TryDescribeCompleteCoverage(
+        ReturnSnapshot snapshot,
+        out ReturnResolutionSnapshot resolution,
+        [NotNullWhen(false)] out string? blockerCode,
+        string incoherentCode = ReturnsErrorCodes.RecoveryEvidenceConflict,
+        string incompleteReceiptCode = ReturnsErrorCodes.ReceivingIncomplete)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        resolution = Resolve(snapshot);
+        if (snapshot.Receiving is { IsCoherent: false })
+        {
+            blockerCode = incoherentCode;
+            return false;
+        }
+
+        if (resolution.FromReviewedPlan)
+        {
+            if (resolution.IsComplete)
+            {
+                blockerCode = null;
+                return true;
+            }
+
+            blockerCode = resolution.BlockerCode ?? ReturnsErrorCodes.ResolutionRequired;
+            return false;
+        }
+
+        // The IMPLICIT baseline (no reviewed split) has exactly ONE lawful basis: the whole claim was physically
+        // received and the recorded evidence is coherent. A partial receipt can only become lawful through a reviewed
+        // plan, never by assuming the missing units were "accepted".
+        if (snapshot.Receiving is { IsCoherent: true, IsComplete: true })
+        {
+            blockerCode = null;
+            return true;
+        }
+
+        blockerCode = incompleteReceiptCode;
+        return false;
+    }
+
+    /// <summary>
+    /// True when every accepted portion carries the durable physical fact it must (its own usable restock or its own
+    /// non-saleable damaged record) and every rejected received portion was really handed back. Money-complete work is
+    /// never reported as settled while received goods are still owed to the owning customer.
     /// </summary>
     public static bool IsPhysicalComplete(ReturnSnapshot snapshot)
     {
@@ -260,14 +387,39 @@ public static class ReturnResolutionPolicy
                 return false;
             }
 
-            if (line.AcceptedUsable > 0m && item.Disposition != ReturnItemDisposition.SaleableRestock)
+            if (line.AcceptedUsable > 0m)
             {
-                return false;
+                // TB-279-R1 (F2): a NEW completion names the exact accepted USEABLE portion Inventory confirmed.
+                if (item.UsableRestockedQuantity is { } restocked)
+                {
+                    if (restocked != line.AcceptedUsable)
+                    {
+                        return false;
+                    }
+                }
+                else if (item.Disposition != ReturnItemDisposition.SaleableRestock)
+                {
+                    // A disposal recorded BEFORE per-portion facts existed is immutable history and still proves its
+                    // effect, but only the SALEABLE one proves this portion; anything else (or none) is unsettled.
+                    return false;
+                }
             }
 
-            if (line.AcceptedUsable <= 0m && line.AcceptedDamaged > 0m && item.Disposition == ReturnItemDisposition.None)
+            if (line.AcceptedDamaged > 0m)
             {
-                return false;
+                // The damaged portion is never saleable stock: it owes its own durable non-saleable record.
+                if (item.DamagedRecordedQuantity is { } recordedDamaged)
+                {
+                    if (recordedDamaged != line.AcceptedDamaged)
+                    {
+                        return false;
+                    }
+                }
+                else if (item.Disposition != ReturnItemDisposition.DamagedNonSaleable)
+                {
+                    // A legacy saleable restock of a damaged portion is exactly the false fact this rule refuses.
+                    return false;
+                }
             }
 
             if (OwedCustody(line, snapshot.Custody) > 0m)
@@ -282,17 +434,31 @@ public static class ReturnResolutionPolicy
     /// <summary>Rejected received quantity of one line that the owning customer has NOT yet physically received back.</summary>
     public static decimal OwedCustody(
         ReturnResolutionLineSnapshot line,
-        IReadOnlyList<ReturnCustodySnapshot>? custody)
+        IReadOnlyList<ReturnCustodySnapshot>? custody) =>
+        OwedCustodyOfCondition(line, custody, ReturnItemCondition.Usable)
+        + OwedCustodyOfCondition(line, custody, ReturnItemCondition.Damaged);
+
+    /// <summary>
+    /// TB-279-R1 (F3): the outstanding handback of ONE condition. A handback may never exceed the rejected received
+    /// portion of the condition it names, so a usable handback can never settle a damaged obligation.
+    /// </summary>
+    public static decimal OwedCustodyOfCondition(
+        ReturnResolutionLineSnapshot line,
+        IReadOnlyList<ReturnCustodySnapshot>? custody,
+        ReturnItemCondition condition)
     {
-        if (line.RejectedReceived <= 0m)
+        var rejected = condition == ReturnItemCondition.Damaged
+            ? line.RejectedReceivedDamaged
+            : line.RejectedReceivedUsable;
+        if (rejected <= 0m)
         {
             return 0m;
         }
 
         var handedBack = custody?
-            .Where(x => x.ReturnItemId == line.ReturnItemId)
+            .Where(x => x.ReturnItemId == line.ReturnItemId && x.Condition == condition)
             .Sum(x => x.Quantity) ?? 0m;
-        return Math.Max(0m, line.RejectedReceived - handedBack);
+        return Math.Max(0m, rejected - handedBack);
     }
 
     /// <summary>The exact approved money of a case: the frozen reviewed amount, else the legacy baseline when money already started.</summary>
@@ -343,7 +509,9 @@ public static class ReturnCorrectionPolicy
             return new ReturnCorrectionAssessment(false, ReturnsErrorCodes.CorrectionCustodyRecorded);
         }
 
-        if (snapshot.Items.Any(x => x.Disposition != ReturnItemDisposition.None))
+        if (snapshot.Items.Any(x => x.Disposition != ReturnItemDisposition.None
+                || x.UsableRestockedQuantity is not null
+                || x.DamagedRecordedQuantity is not null))
         {
             return new ReturnCorrectionAssessment(false, ReturnsErrorCodes.CorrectionPhysicalEffectRecorded);
         }

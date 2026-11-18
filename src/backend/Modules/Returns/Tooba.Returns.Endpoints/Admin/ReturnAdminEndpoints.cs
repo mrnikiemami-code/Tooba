@@ -62,8 +62,11 @@ public static class ReturnAdminEndpoints
         var lines = (body?.Lines ?? [])
             .Select(x => new ReturnResolutionLineCommand(
                 x.ReturnItemId,
-                x.AcceptedQuantity,
-                x.RejectedQuantity,
+                x.AcceptedUsable,
+                x.AcceptedDamaged,
+                x.RejectedReceivedUsable,
+                x.RejectedReceivedDamaged,
+                x.RejectedUnreceived,
                 x.Reason))
             .ToList();
 
@@ -92,6 +95,14 @@ public static class ReturnAdminEndpoints
             return api.From(condition);
         }
 
+        // TB-279-R1 (F3): the proof KIND is parsed before any read, so a bare tracking number (or silence) is a typed
+        // refusal instead of an operator attestation by default.
+        var proofKind = ReturnCustodyProofKindParser.Parse(body?.ProofKind);
+        if (proofKind.IsFailure)
+        {
+            return api.From(proofKind);
+        }
+
         return api.From(await sender.Send(
             new RecordReturnCustodyCommand(
                 returnRequestId,
@@ -100,7 +111,8 @@ public static class ReturnAdminEndpoints
                 body?.ReturnItemId ?? Guid.Empty,
                 body?.Quantity ?? 0m,
                 condition.Value,
-                body?.ProofReference ?? string.Empty),
+                body?.ProofReference ?? string.Empty,
+                proofKind.Value),
             cancellationToken));
     }
 
@@ -129,17 +141,21 @@ public static class ReturnAdminEndpoints
     }
 
     private static async Task<IResult> AdminRetryRefundAsync(
-        Guid returnRequestId, Guid? expectedFailedAttemptId, ISender sender, IReturnAdminAuthorizer authorizer,
-        ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
+        Guid returnRequestId, Guid? expectedFailedAttemptId, int? expectedDecisionVersion, ISender sender,
+        IReturnAdminAuthorizer authorizer, ApiResponseFactory api, HttpContext context,
+        CancellationToken cancellationToken)
     {
         var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
 
         // TB-275 (C2): the reviewed failed attempt travels as the occurrence identity of the retry intent (a route/query
         // value, never a client-supplied payload); the server still derives the child attempt identity itself.
+        // TB-279-R1 (F4): the reviewed DECISION revision travels with it, so a correction published after the operator
+        // looked at the case refuses this retry instead of sending money against the earlier plan.
         return api.From(await sender.Send(
             new RetryReturnRefundCommand(returnRequestId, actorUserId)
             {
                 ExpectedFailedAttemptId = expectedFailedAttemptId,
+                ExpectedDecisionVersion = expectedDecisionVersion,
             },
             cancellationToken));
     }
@@ -161,7 +177,7 @@ public static class ReturnAdminEndpoints
     }
 
     private static async Task<IResult> AdminStartRefundAsync(
-        Guid returnRequestId, ISender sender, IReturnAdminAuthorizer authorizer,
+        Guid returnRequestId, int? expectedDecisionVersion, ISender sender, IReturnAdminAuthorizer authorizer,
         ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
     {
         var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
@@ -169,8 +185,10 @@ public static class ReturnAdminEndpoints
         // TB-277: the FIRST refund is a deliberate financial action of its own. Only the case identity travels; the
         // owning directory reads the approved decision, fixed payment, amount, currency and destination from the
         // stored case and derives the one durable attempt identity from it.
+        // TB-279-R1 (F4): the reviewed decision revision is REQUIRED by the directory, so the money can never be sent
+        // against a plan the operator did not see.
         return api.From(await sender.Send(
-            new StartReturnRefundCommand(returnRequestId, actorUserId),
+            new StartReturnRefundCommand(returnRequestId, actorUserId, expectedDecisionVersion),
             cancellationToken));
     }
 
@@ -237,11 +255,17 @@ public sealed record AdminReturnReopenRequest(
     string? Reason,
     int? ExpectedDecisionVersion = null);
 
-/// <summary>TB-279: one reviewed accepted/rejected split of a requested line.</summary>
+/// <summary>
+/// TB-279-R1 (F2): one reviewed PER-CONDITION split of a requested line on the wire. Every portion is a distinct,
+/// deliberate number; a missing portion is a typed refusal (`return.resolution.portion_required`), never zero.
+/// </summary>
 public sealed record AdminReturnResolutionLine(
     Guid ReturnItemId,
-    decimal AcceptedQuantity,
-    decimal RejectedQuantity,
+    decimal? AcceptedUsable,
+    decimal? AcceptedDamaged,
+    decimal? RejectedReceivedUsable,
+    decimal? RejectedReceivedDamaged,
+    decimal? RejectedUnreceived,
     string? Reason);
 
 /// <summary>
@@ -262,4 +286,5 @@ public sealed record AdminReturnCustodyRequest(
     Guid? ReturnItemId,
     decimal? Quantity,
     string? Condition,
-    string? ProofReference);
+    string? ProofReference,
+    string? ProofKind = null);

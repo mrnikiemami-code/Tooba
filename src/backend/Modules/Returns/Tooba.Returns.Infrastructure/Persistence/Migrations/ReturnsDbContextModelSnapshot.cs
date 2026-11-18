@@ -158,6 +158,10 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)");
 
+                    b.Property<decimal?>("DamagedRecordedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("damaged_recorded_quantity");
+
                     b.Property<string>("Disposition")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -184,6 +188,10 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("UnitPriceSnapshot")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal?>("UsableRestockedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("usable_restocked_quantity");
 
                     b.HasKey("ReturnItemId");
 
@@ -297,9 +305,10 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ReturnRequestId")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal?>("approved_amount")
+                    b.Property<decimal?>("ApprovedAmount")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("approved_amount");
 
                     b.Property<Guid>("CheckoutId")
                         .HasColumnType("uuid");
@@ -561,6 +570,11 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("occurrence_key");
 
+                    b.Property<string>("ProofKind")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("proof_kind");
+
                     b.Property<string>("ProofReference")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -620,9 +634,17 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("resolution_version");
 
+                    b.Property<decimal?>("AcceptedDamagedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("accepted_damaged_quantity");
+
                     b.Property<decimal>("AcceptedQuantity")
                         .HasColumnType("numeric(18,6)")
                         .HasColumnName("accepted_quantity");
+
+                    b.Property<decimal?>("AcceptedUsableQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("accepted_usable_quantity");
 
                     b.Property<Guid>("ActorUserId")
                         .HasColumnType("uuid")
@@ -647,6 +669,18 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("RejectedQuantity")
                         .HasColumnType("numeric(18,6)")
                         .HasColumnName("rejected_quantity");
+
+                    b.Property<decimal?>("RejectedReceivedDamagedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("rejected_received_damaged_quantity");
+
+                    b.Property<decimal?>("RejectedReceivedUsableQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("rejected_received_usable_quantity");
+
+                    b.Property<decimal?>("RejectedUnreceivedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("rejected_unreceived_quantity");
 
                     b.HasKey("ReturnRequestId", "ReturnItemId", "Version")
                         .HasName("pk_return_item_resolutions");

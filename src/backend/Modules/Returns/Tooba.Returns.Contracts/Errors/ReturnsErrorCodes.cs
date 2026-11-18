@@ -113,6 +113,14 @@ public static class ReturnsErrorCodes
         RefundBudgetExceeded,
         RefundBudgetBindingInvalid,
         ApprovedAmountConflict,
+        // TB-279-R1: the six codes the reviewed correction/portion/custody/budget repair added — every one is refused
+        // to an HTTP client as a typed fault (body-dictated or state-dictated), none is a platform-side fault.
+        RefundReviewVersionRequired,
+        AllocationLegacyAmbiguous,
+        ResolutionPortionRequired,
+        ResolutionPortionInvalid,
+        CustodyProofKindRequired,
+        CustodyProofKindUnavailable,
     };
 
     private static readonly HashSet<string> PlatformFaultCodes = new(StringComparer.Ordinal)
@@ -521,5 +529,38 @@ public static class ReturnsErrorCodes
 
     /// <summary>TB-279: the approved money was already frozen with a different value and is immutable.</summary>
     public const string ApprovedAmountConflict = "return.approved_amount.conflict";
+
+    /// <summary>
+    /// TB-279-R1 (F4): a NEW effectful money command did not carry the reviewed decision revision the operator saw, so
+    /// the server cannot tell whether that review is still the effective one. Missing is refused exactly like stale.
+    /// </summary>
+    public const string RefundReviewVersionRequired = "return.refund.review_version_required";
+
+    /// <summary>
+    /// TB-279-R1 (F5): an active legacy case of this line owns quantity that is bound to NO delivered slice, and more
+    /// than one slice could be its origin. Choosing one would be a guess, so the capacity is published as ambiguous.
+    /// </summary>
+    public const string AllocationLegacyAmbiguous = "return.allocation.legacy_ambiguous";
+
+    /// <summary>
+    /// TB-279-R1 (F2): the stored reviewed plan does not name the per-condition accepted/rejected portions this
+    /// authority requires, so its accepted condition can never be inferred from a usable-first split.
+    /// </summary>
+    public const string ResolutionPortionRequired = "return.resolution.portion_required";
+
+    /// <summary>TB-279-R1 (F2): the reviewed per-condition portions do not account for the claim coherently.</summary>
+    public const string ResolutionPortionInvalid = "return.resolution.portion_invalid";
+
+    /// <summary>
+    /// TB-279-R1 (F3): a custody proof kind is required — the operator either attests an actual in-person handback to
+    /// the owning customer or names an owning carrier's verified delivered-back fact.
+    /// </summary>
+    public const string CustodyProofKindRequired = "return.custody.proof_kind_required";
+
+    /// <summary>
+    /// TB-279-R1 (F3): the named proof kind is not an available owning fact here (no carrier delivered-back owner
+    /// exists yet), so it is refused instead of being accepted as a free-text note.
+    /// </summary>
+    public const string CustodyProofKindUnavailable = "return.custody.proof_kind_unavailable";
 }
 

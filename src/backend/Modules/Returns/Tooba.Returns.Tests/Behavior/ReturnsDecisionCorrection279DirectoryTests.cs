@@ -5,6 +5,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Returns;
 using Tooba.Order.Contracts.Returns;
 using Tooba.Payment.Contracts.Returns;
+using Tooba.Returns.Application.Composition;
 using Tooba.Returns.Application.ReturnRequests.Commands;
 using Tooba.Returns.Application.ReturnRequests.Models;
 using Tooba.Returns.Application.ReturnRequests.Ports;
@@ -352,7 +353,14 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                     occurrenceKey,
                     expectedVersion,
                     lines
-                        .Select(x => new ReturnResolutionLineCommand(ReturnItemId, x.Accepted, x.Rejected, x.Reason))
+                        .Select(x => new ReturnResolutionLineCommand(
+                            ReturnItemId,
+                            AcceptedUsable: x.Accepted,
+                            AcceptedDamaged: 0m,
+                            RejectedReceivedUsable: 0m,
+                            RejectedReceivedDamaged: x.Rejected,
+                            RejectedUnreceived: 0m,
+                            x.Reason))
                         .ToList(),
                     SellerPartyId),
                 CancellationToken.None);
@@ -375,6 +383,7 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                     quantity,
                     ReturnItemCondition.Damaged,
                     proof,
+                    ReturnCustodyProofKindParser.OperatorAttestation,
                     SellerPartyId),
                 CancellationToken.None);
 

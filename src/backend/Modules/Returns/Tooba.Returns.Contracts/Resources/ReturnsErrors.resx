@@ -85,4 +85,10 @@
   <data name="return.refund.budget_exceeded" xml:space="preserve"><value>The shared payment refund budget would be exceeded.</value></data>
   <data name="return.refund.budget_binding_invalid" xml:space="preserve"><value>The refund budget is bound to a different checkout/customer/currency.</value></data>
   <data name="return.approved_amount.conflict" xml:space="preserve"><value>The frozen approved amount of this case no longer matches its reviewed resolution.</value></data>
+  <data name="return.refund.review_version_required" xml:space="preserve"><value>This money action did not carry the reviewed decision revision, so it is refused; reopen the case and review it again.</value></data>
+  <data name="return.allocation.legacy_ambiguous" xml:space="preserve"><value>This line's earlier return predates per-delivery allocation and more than one delivery could be its origin, so no new claim may guess one.</value></data>
+  <data name="return.resolution.portion_required" xml:space="preserve"><value>The reviewed plan must name the accepted and rejected portions of each condition; a usable-first split is never inferred.</value></data>
+  <data name="return.resolution.portion_invalid" xml:space="preserve"><value>The reviewed per-condition portions do not account for this line coherently.</value></data>
+  <data name="return.custody.proof_kind_required" xml:space="preserve"><value>A handback needs its proof kind: an operator attestation of an in-person handback or an owning carrier's verified delivered-back fact.</value></data>
+  <data name="return.custody.proof_kind_unavailable" xml:space="preserve"><value>The named proof kind is not an available owning fact for this case.</value></data>
 </root>

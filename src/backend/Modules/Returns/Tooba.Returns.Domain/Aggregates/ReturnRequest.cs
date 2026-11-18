@@ -477,7 +477,7 @@ public sealed class ReturnRequest : IHasDomainEvents
         EnsureStatus(ReturnRequestStatus.RefundProcessing);
         Status = ReturnRequestStatus.Completed;
         UpdatedAt = now;
-        _domainEvents.Add(new RefundSucceededDomainEvent(ReturnRequestId, SellerOrderId, PaymentId ?? Guid.Empty, RefundAmount, Currency));
+        _domainEvents.Add(new RefundSucceededDomainEvent(ReturnRequestId, SellerOrderId, PaymentId ?? Guid.Empty, ReviewableMoney, Currency));
     }
 
     /// <summary>refund را شکست‌خورده علامت می‌زند.</summary>
@@ -497,12 +497,21 @@ public sealed class ReturnRequest : IHasDomainEvents
     }
 
     /// <summary>تلاش refund جدید ثبت می‌کند.</summary>
+    /// <para>
+    /// TB-279-R1 (F2): the attempt amount is the REVIEWED approved money of the case (accepted quantities × stored unit
+    /// prices) when that amount was frozen, and only falls back to the original claim for a legacy case that started
+    /// money before any reviewed amount existed. A browser amount is never an input.
+    /// </para>
     public RefundAttempt BeginRefundAttempt(Guid refundAttemptId, Guid paymentId, string idempotencyKey, DateTimeOffset now)
     {
-        var attempt = RefundAttempt.CreatePending(refundAttemptId, ReturnRequestId, paymentId, RefundAmount, Currency, idempotencyKey, now);
+        var amount = ApprovedAmount ?? RefundAmount;
+        var attempt = RefundAttempt.CreatePending(refundAttemptId, ReturnRequestId, paymentId, amount, Currency, idempotencyKey, now);
         _refundAttempts.Add(attempt);
         return attempt;
     }
+
+    /// <summary>TB-279-R1: the money this case may lawfully move — the frozen reviewed amount, else the original claim.</summary>
+    public decimal ReviewableMoney => ApprovedAmount ?? RefundAmount;
 
     private void EnsureStatus(params ReturnRequestStatus[] allowed)
     {

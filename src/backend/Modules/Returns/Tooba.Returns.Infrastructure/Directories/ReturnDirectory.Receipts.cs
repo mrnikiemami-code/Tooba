@@ -322,25 +322,11 @@ public sealed partial class ReturnDirectory
     }
 
     /// <summary>
-    /// TB-274: the shared gate of every NEW ordinary money/stock start. Approval, a new refund attempt and a physical
-    /// restock may only proceed over a complete, coherent receipt.
+    /// TB-279-R1 (F2): the removed <c>EnsureOrdinaryReceivingCompleteAsync</c> helper is intentionally gone. Its single
+    /// rule now lives with its callers (<c>EnsureReviewedReceivingComplete</c> for the approval decision and the
+    /// recovery/work policies for money and physical start) so one definition answers every path instead of two
+    /// copies drifting apart.
     /// </summary>
-    private async Task EnsureOrdinaryReceivingCompleteAsync(
-        ReturnRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (request.Origin != ReturnOrigin.CustomerDelivered)
-        {
-            return;
-        }
-
-        var receiving = await ReadReceivingAsync(request, cancellationToken);
-        if (receiving is null || !receiving.IsCoherent || !receiving.IsComplete)
-        {
-            throw new ContractOperationException(ReturnsErrorCodes.ReceivingIncomplete);
-        }
-    }
-
     private static async Task CommitReceiptAsync(
         Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? ownedTransaction,
         CancellationToken cancellationToken)

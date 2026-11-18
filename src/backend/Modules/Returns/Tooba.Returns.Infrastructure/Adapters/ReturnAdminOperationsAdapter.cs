@@ -71,10 +71,17 @@ internal sealed class ReturnAdminOperationsAdapter(
     public async Task<ReturnSnapshot> StartFirstRefundAsync(
         Guid returnRequestId,
         Guid actorUserId,
-        CancellationToken cancellationToken) =>
-        Map(await directory.StartFirstRefundAsync(
-            new StartReturnRefundCommand(returnRequestId, actorUserId),
+        CancellationToken cancellationToken)
+    {
+        // TB-279-R1 (F4): a first refund is version-fenced. This legacy adapter carries no reviewed revision of its own,
+        // so it reviews the CURRENT stored revision once and passes THAT to the owning directory: a correction committed
+        // between this read and the money step still refuses the stale intent inside the locked reservation.
+        var current = await directory.GetAsync(returnRequestId, cancellationToken)
+            ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
+        return Map(await directory.StartFirstRefundAsync(
+            new StartReturnRefundCommand(returnRequestId, actorUserId, current.DecisionVersion),
             cancellationToken));
+    }
 
     public async Task<ReturnSnapshot> RejectAsync(
         Guid returnRequestId,
@@ -105,6 +112,8 @@ internal sealed class ReturnAdminOperationsAdapter(
             new RetryReturnRefundCommand(returnRequestId, actorUserId)
             {
                 ExpectedFailedAttemptId = failedAttemptId,
+                // TB-279-R1 (F4): the revision this adapter just read is the one it reviews.
+                ExpectedDecisionVersion = current.DecisionVersion,
             },
             cancellationToken));
     }

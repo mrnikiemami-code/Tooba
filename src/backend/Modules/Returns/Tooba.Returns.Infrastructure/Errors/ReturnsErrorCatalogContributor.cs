@@ -91,6 +91,12 @@ public sealed class ReturnsErrorCatalogContributor : IErrorCatalogContributor
         D(ReturnsErrorCodes.RefundBudgetExceeded, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The shared payment refund budget would be exceeded."),
         D(ReturnsErrorCodes.RefundBudgetBindingInvalid, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The refund budget is bound to a different checkout/customer/currency."),
         D(ReturnsErrorCodes.ApprovedAmountConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "The frozen approved amount of this case no longer matches its reviewed resolution."),
+        D(ReturnsErrorCodes.RefundReviewVersionRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A new refund attempt must name the reviewed decision revision."),
+        D(ReturnsErrorCodes.AllocationLegacyAmbiguous, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "This legacy claim owns quantity that is bound to no single delivered slice."),
+        D(ReturnsErrorCodes.ResolutionPortionRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The reviewed plan must name the per-condition accepted/rejected portions."),
+        D(ReturnsErrorCodes.ResolutionPortionInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The reviewed per-condition portions do not account for the claim."),
+        D(ReturnsErrorCodes.CustodyProofKindRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest, "A handback must name its explicit proof kind."),
+        D(ReturnsErrorCodes.CustodyProofKindUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest, "The named handback proof kind has no owning fact here."),
     ];
 
     private static ErrorDescriptor D(

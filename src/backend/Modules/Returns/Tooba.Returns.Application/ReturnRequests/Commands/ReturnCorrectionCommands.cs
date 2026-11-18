@@ -27,11 +27,27 @@ public sealed record ReopenReturnForReviewCommand(
     int? ExpectedDecisionVersion = null,
     Guid? SellerPartyId = null) : IRequest<Result<ReturnSnapshot>>;
 
-/// <summary>TB-279: one reviewed split of ONE requested line.</summary>
+/// <summary>
+/// TB-279-R1 (F2/F3): one reviewed PER-CONDITION split of ONE requested line.
+/// <para>
+/// Every portion is REQUIRED and there is no inferred default: the earlier shape carried only accepted/rejected totals,
+/// so the accepted CONDITION was derived from <c>Min(accepted, usable)</c> and the operator's actual decision about the
+/// damaged units was lost. A null portion is `return.resolution.portion_required`, never zero.
+/// </para>
+/// <para>
+/// <see cref="AcceptedUsable"/> + <see cref="AcceptedDamaged"/> is the refundable quantity,
+/// <see cref="RejectedReceivedUsable"/> + <see cref="RejectedReceivedDamaged"/> is declined but physically received (and
+/// therefore owed back to the customer), and <see cref="RejectedUnreceived"/> is the part of the claim that never
+/// arrived. The three together must equal the requested quantity.
+/// </para>
+/// </summary>
 public sealed record ReturnResolutionLineCommand(
     Guid ReturnItemId,
-    decimal AcceptedQuantity,
-    decimal RejectedQuantity,
+    decimal? AcceptedUsable,
+    decimal? AcceptedDamaged,
+    decimal? RejectedReceivedUsable,
+    decimal? RejectedReceivedDamaged,
+    decimal? RejectedUnreceived,
     string? Reason);
 
 /// <summary>
@@ -50,6 +66,11 @@ public sealed record PublishReturnResolutionCommand(
 /// <summary>
 /// TB-279: the deliberate audited confirmation of an ACTUAL physical handback of rejected received goods to the owning
 /// customer. It records a Returns custody fact only — no refund, Wallet, stock or carrier transition.
+/// <para>
+/// TB-279-R1 (F3): <see cref="ProofKind"/> is REQUIRED and is one of the two reviewed proof semantics — an operator
+/// in-person attestation or an owning carrier delivered-back fact. A tracking number alone is not a handback, and the
+/// kind is stored so a later reader can tell WHICH evidence the custody fact rests on.
+/// </para>
 /// </summary>
 public sealed record RecordReturnCustodyCommand(
     Guid ReturnRequestId,
@@ -59,6 +80,7 @@ public sealed record RecordReturnCustodyCommand(
     decimal Quantity,
     ReturnItemCondition Condition,
     string ProofReference,
+    string? ProofKind = null,
     Guid? SellerPartyId = null) : IRequest<Result<ReturnSnapshot>>;
 
 /// <summary>Handler — seller scope then the owning corrections authority.</summary>

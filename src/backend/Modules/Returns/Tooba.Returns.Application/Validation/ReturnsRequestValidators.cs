@@ -253,15 +253,43 @@ public sealed class PublishReturnResolutionCommandValidator : AbstractValidator<
             line.RuleFor(x => x.ReturnItemId)
                 .NotEqual(Guid.Empty)
                 .WithErrorCode(ReturnsValidationCodes.ReceiptItemIdRequired);
-            line.RuleFor(x => x.AcceptedQuantity)
+
+            // TB-279-R1 (F2): every per-condition portion is REQUIRED. An omitted portion is not zero — the accepted
+            // condition must be a deliberate operator statement, never derived from the received quantities.
+            line.RuleFor(x => x.AcceptedUsable)
+                .NotNull()
+                .WithErrorCode(ReturnsValidationCodes.ResolutionPortionRequired)
                 .GreaterThanOrEqualTo(0)
                 .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid)
-                .Must(PersistedReturnQuantity.IsExactlyRepresentable)
+                .Must(value => value is null || PersistedReturnQuantity.IsExactlyRepresentable(value.Value))
                 .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid);
-            line.RuleFor(x => x.RejectedQuantity)
+            line.RuleFor(x => x.AcceptedDamaged)
+                .NotNull()
+                .WithErrorCode(ReturnsValidationCodes.ResolutionPortionRequired)
                 .GreaterThanOrEqualTo(0)
                 .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid)
-                .Must(PersistedReturnQuantity.IsExactlyRepresentable)
+                .Must(value => value is null || PersistedReturnQuantity.IsExactlyRepresentable(value.Value))
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid);
+            line.RuleFor(x => x.RejectedReceivedUsable)
+                .NotNull()
+                .WithErrorCode(ReturnsValidationCodes.ResolutionPortionRequired)
+                .GreaterThanOrEqualTo(0)
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid)
+                .Must(value => value is null || PersistedReturnQuantity.IsExactlyRepresentable(value.Value))
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid);
+            line.RuleFor(x => x.RejectedReceivedDamaged)
+                .NotNull()
+                .WithErrorCode(ReturnsValidationCodes.ResolutionPortionRequired)
+                .GreaterThanOrEqualTo(0)
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid)
+                .Must(value => value is null || PersistedReturnQuantity.IsExactlyRepresentable(value.Value))
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid);
+            line.RuleFor(x => x.RejectedUnreceived)
+                .NotNull()
+                .WithErrorCode(ReturnsValidationCodes.ResolutionPortionRequired)
+                .GreaterThanOrEqualTo(0)
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid)
+                .Must(value => value is null || PersistedReturnQuantity.IsExactlyRepresentable(value.Value))
                 .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid);
             line.RuleFor(x => x.Reason)
                 .MaximumLength(512)
@@ -306,5 +334,10 @@ public sealed class RecordReturnCustodyCommandValidator : AbstractValidator<Reco
             .WithErrorCode(ReturnsValidationCodes.CustodyProofRequired)
             .MaximumLength(256)
             .WithErrorCode(ReturnsValidationCodes.CustodyProofRequired);
+        // TB-279-R1 (F3): the proof KIND is required shape. The endpoint's parser already refused an unknown token with
+        // its own typed `custody.proof_kind_unavailable`, so this rule only answers silence.
+        RuleFor(x => x.ProofKind)
+            .NotEmpty()
+            .WithErrorCode(ReturnsValidationCodes.CustodyProofKindRequired);
     }
 }

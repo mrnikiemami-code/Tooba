@@ -32,7 +32,21 @@ public sealed class ReturnDeliveryAllocation
     public string SliceKey { get; init; } = string.Empty;
 
     /// <summary>مقدار تخصیص‌یافته از این برش.</summary>
-    public decimal Quantity { get; init; }
+    public decimal Quantity { get; set; }
+
+    /// <summary>
+    /// TB-279-R1 (F3): shrinks this claim to the portion still physically held. A handback (or the never-received
+    /// remainder of a rejection) releases capacity without inventing a new slice or rewriting the delivery instant.
+    /// </summary>
+    public void ReduceQuantity(decimal quantity)
+    {
+        if (quantity <= 0m || quantity >= Quantity)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity));
+        }
+
+        Quantity -= quantity;
+    }
 
     /// <summary>زمان تحویل همان برش (برای محاسبهٔ پنجره؛ هرگز از امروز مرورگر).</summary>
     public DateTimeOffset DeliveredAt { get; init; }

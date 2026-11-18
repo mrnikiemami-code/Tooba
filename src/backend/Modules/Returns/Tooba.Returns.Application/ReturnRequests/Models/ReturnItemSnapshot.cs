@@ -35,4 +35,9 @@ public sealed record ReturnItemSnapshot(
     // TB-277: the authoritative fractional precision of this line's unit, read from the ACCEPTED Order line snapshot
     // (<c>QuantityDecimalPlacesSnapshot</c>). Null when the owning line could not be answered — the UI then refuses to
     // invent a step and never silently falls back to whole pieces.
-    int? UnitDecimalPlaces = null);
+    int? UnitDecimalPlaces = null,
+    // TB-279-R1 (F2): the exact accepted usable portion Inventory confirmed for this line (null = not yet). It is a
+    // per-portion fact, so a mixed line can never claim completion from one coarse disposition enum.
+    decimal? UsableRestockedQuantity = null,
+    // TB-279-R1 (F2): the exact accepted damaged portion recorded non-saleable for this line (null = not yet).
+    decimal? DamagedRecordedQuantity = null);

@@ -13,7 +13,13 @@ public sealed record ReturnLineDeliveryAvailability(
     DateTimeOffset DeliveredAt,
     decimal SliceQuantity,
     decimal AvailableQuantity,
-    bool IsInWindow);
+    bool IsInWindow,
+    /// <summary>
+    /// TB-279-R1 (F5): true when an ACTIVE case that predates per-delivery allocation occupies this line and more than
+    /// one delivery could be its origin. The line's leftover capacity is then unknowable, so a NEW claim is refused with
+    /// <c>return.allocation.legacy_ambiguous</c> instead of binding units to a guessed slice.
+    /// </summary>
+    bool LegacyAmbiguous = false);
 
 /// <summary>
 /// eligibility خط مرجوعی برای یک OrderLine.

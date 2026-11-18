@@ -1,4 +1,4 @@
-using Tooba.Returns.Contracts.Errors;
+﻿using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.ValueObjects;
 
 namespace Tooba.Returns.Application.ReturnRequests.Models;
@@ -209,11 +209,18 @@ public static class ReturnWorkPolicy
         var customerDelivered = snapshot.Origin != ReturnOrigin.CourierOrigin;
         var anyDisposition = snapshot.Items.Any(x => x.Disposition != ReturnItemDisposition.None);
         var receiptCoherent = snapshot.Receiving is not { IsCoherent: false };
-        var receiptComplete = !customerDelivered || snapshot.Receiving is { IsComplete: true };
+        // TB-279-R1 (F2): the SAME coverage rule as every money/physical gate. A reviewed plan accounts for the whole
+        // claim (including a rejected never-received remainder), so "every requested unit arrived" is not the test;
+        // a case without a reviewed split still needs its whole claim physically received.
+        var effectiveResolution = ReturnResolutionPolicy.Resolve(snapshot);
+        var coverageComplete = !customerDelivered
+            || (receiptCoherent
+                && ReturnResolutionPolicy.TryDescribeCompleteCoverage(snapshot, out _, out _));
 
         // A further receipt occurrence is lawful only while the stored evidence is coherent, nothing was disposed yet
-        // and the cumulative coverage is still incomplete — the same precondition the owning directory enforces
-        // (TB-275 C1), so the workspace never offers a recording the directory would refuse.
+        // and no complete coverage exists yet — the same precondition the owning directory enforces (TB-275 C1), so
+        // the workspace never offers a recording the directory would refuse. Once a reviewed plan fixes the claim there
+        // is no lawful further occurrence.
         var canRecordReceipt = customerDelivered
             && snapshot.Status is ReturnRequestStatus.Requested
                 or ReturnRequestStatus.Approved
@@ -221,14 +228,13 @@ public static class ReturnWorkPolicy
                 or ReturnRequestStatus.RefundFailed
             && !anyDisposition
             && receiptCoherent
-            && snapshot.Receiving is not { IsComplete: true };
+            && !coverageComplete;
 
         var canDecide = snapshot.Status == ReturnRequestStatus.Requested
             // TB-279: the EFFECTIVE decision is the authority. A corrected (reopened) case keeps its baseline row as
             // audit history but is back in review, so a RecordedDecision-only check would leave it undecidable forever.
             && snapshot.EffectiveDecision is null
-            && receiptComplete
-            && receiptCoherent
+            && coverageComplete
             && recovery.Phase != ReturnRecoveryPhase.Blocked;
 
         var canResumeRefund = recovery.Phase == ReturnRecoveryPhase.PendingMoney;
@@ -246,7 +252,6 @@ public static class ReturnWorkPolicy
         // TB-279: publishing the reviewed split is decision work offered exactly when the case's EFFECTIVE resolution
         // cannot name the accepted money (the legacy/partial claim). A fully received claim keeps the whole-accept
         // baseline, so the operator is never asked to re-type what the stored evidence already states.
-        var effectiveResolution = ReturnResolutionPolicy.Resolve(snapshot);
         var canPublishResolution = customerDelivered
             && snapshot.Status == ReturnRequestStatus.Requested
             && snapshot.EffectiveDecision is null
@@ -263,7 +268,7 @@ public static class ReturnWorkPolicy
                 || effectiveResolution.Lines.Any(line => line.ReturnItemId == x.ReturnItemId && line.AcceptedUsable <= 0m))
             && effectiveResolution.Lines.Any(line => ReturnResolutionPolicy.OwedCustody(line, snapshot.Custody) > 0m);
 
-        var (category, blocker, pending, failed) = Classify(snapshot, recovery, receiptComplete);
+        var (category, blocker, pending, failed) = Classify(snapshot, recovery, coverageComplete);
 
         return new ReturnWorkDescription(
             category,
@@ -284,7 +289,7 @@ public static class ReturnWorkPolicy
     private static (ReturnWorkCategory Category, string? Blocker, Guid? Pending, Guid? Failed) Classify(
         ReturnSnapshot snapshot,
         ReturnRecoveryDescription recovery,
-        bool receiptComplete) => recovery.Phase switch
+        bool coverageComplete) => recovery.Phase switch
         {
             ReturnRecoveryPhase.AwaitingFirstRefund => (
                 // TB-277: an approved case whose money was deliberately not started is ACTIVE refund work, not a
@@ -298,16 +303,16 @@ public static class ReturnWorkPolicy
                 ReturnWorkCategory.Disposition, null, null, null),
             ReturnRecoveryPhase.Settled => (
                 ReturnWorkCategory.Settled, null, null, null),
-            ReturnRecoveryPhase.Blocked => Blocked(snapshot, recovery, receiptComplete),
-            _ => Unapproved(snapshot, receiptComplete),
+            ReturnRecoveryPhase.Blocked => Blocked(snapshot, recovery, coverageComplete),
+            _ => Unapproved(snapshot, coverageComplete),
         };
 
     /// <summary>An unapproved case: receiving first, then the decision, otherwise its decided-away terminal stage.</summary>
-    private static (ReturnWorkCategory, string?, Guid?, Guid?) Unapproved(ReturnSnapshot snapshot, bool receiptComplete) =>
+    private static (ReturnWorkCategory, string?, Guid?, Guid?) Unapproved(ReturnSnapshot snapshot, bool coverageComplete) =>
         snapshot.Status switch
         {
             ReturnRequestStatus.Requested => (
-                receiptComplete ? ReturnWorkCategory.Decision : ReturnWorkCategory.Receiving, null, null, null),
+                coverageComplete ? ReturnWorkCategory.Decision : ReturnWorkCategory.Receiving, null, null, null),
             _ => (ReturnWorkCategory.Closed, null, null, null),
         };
 
@@ -319,7 +324,7 @@ public static class ReturnWorkPolicy
     private static (ReturnWorkCategory, string?, Guid?, Guid?) Blocked(
         ReturnSnapshot snapshot,
         ReturnRecoveryDescription recovery,
-        bool receiptComplete)
+        bool coverageComplete)
     {
         var blocker = recovery.BlockerCode;
 
@@ -346,7 +351,7 @@ public static class ReturnWorkPolicy
         return snapshot.Status switch
         {
             ReturnRequestStatus.Requested => (
-                receiptComplete ? ReturnWorkCategory.Decision : ReturnWorkCategory.Receiving, blocker, null, null),
+                coverageComplete ? ReturnWorkCategory.Decision : ReturnWorkCategory.Receiving, blocker, null, null),
             ReturnRequestStatus.RefundFailed => (ReturnWorkCategory.RefundFailed, blocker, null, null),
             ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled => (
                 ReturnWorkCategory.Closed, blocker, null, null),
@@ -354,3 +359,4 @@ public static class ReturnWorkPolicy
         };
     }
 }
+

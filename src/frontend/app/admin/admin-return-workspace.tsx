@@ -838,8 +838,8 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                 ) : null}
               </div>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                <dt className="text-muted">مبلغ مرجوعی</dt>
-                <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
+                <dt className="text-muted">مبلغ درخواستی مشتری</dt>
+                <dd data-testid="admin-return-requested-amount">{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
                 <dt className="text-muted">مقصد بازگشت وجه</dt>
                 <dd>{formatRefundDestination(snapshot.destination)}</dd>
                 <dt className="text-muted">منشأ مرجوعی</dt>
@@ -855,7 +855,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                 </dd>
                 {snapshot.approvedAmount !== null && snapshot.approvedAmount !== undefined ? (
                   <>
-                    <dt className="text-muted">مبلغ تأییدشده</dt>
+                    <dt className="text-muted">مبلغ تأییدشده (بر اساس مقدار پذیرفته)</dt>
                     <dd data-testid="admin-return-approved-amount">{formatRial(snapshot.approvedAmount, snapshot.currency)}</dd>
                   </>
                 ) : null}
@@ -1023,6 +1023,29 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                       {mapAdminErrorMessage(snapshot.resolution.blockerCode, "fa")}
                     </p>
                   ) : null}
+                  <div className="mt-3 space-y-1 text-sm" data-testid="admin-return-custody-remaining">
+                    <h4 className="font-semibold text-muted">باقی‌ماندهٔ تحویل کالای رد‌شده</h4>
+                    {snapshot.resolution.lines
+                      .filter((line) => (unitsFromWireNumber(line.rejected) ?? 0) > 0)
+                      .map((line) => {
+                        const item = snapshot.items.find((entry) => entry.returnItemId === line.returnItemId);
+                        const handed = (snapshot.custody ?? [])
+                          .filter((entry) => entry.returnItemId === line.returnItemId)
+                          .reduce((sum, entry) => sum + (unitsFromWireNumber(entry.quantity) ?? 0), 0);
+                        const rejected = unitsFromWireNumber(line.rejected) ?? 0;
+                        const remaining = Math.max(0, rejected - handed);
+                        return (
+                          <p key={`custody-remaining-${line.returnItemId}`} className="flex flex-wrap items-center gap-2">
+                            <span>{item?.productLabel ?? "کالای سفارش"}</span>
+                            <span className="text-muted">رد‌شده: {formatQuantityDisplayFa(line.rejected)}</span>
+                            <span className="text-muted">تحویل‌شده: {formatQuantityDisplayFa(unitsToWireNumber(handed))}</span>
+                            <span className={remaining > 0 ? "text-amber-700" : "text-muted"}>
+                              در اختیار شرکت: {formatQuantityDisplayFa(unitsToWireNumber(remaining))}
+                            </span>
+                          </p>
+                        );
+                      })}
+                  </div>
                 </div>
               ) : null}
               {(snapshot.custody?.length ?? 0) > 0 ? (

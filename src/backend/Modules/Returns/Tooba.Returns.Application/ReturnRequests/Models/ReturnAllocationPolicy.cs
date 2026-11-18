@@ -58,6 +58,12 @@ public static class ReturnAllocationPolicy
             .OrderBy(x => x.DeliveredAt)
             .ToArray();
 
+        // TB-279-R1 (F5): a legacy (pre-allocation) active case occupies this line without naming a delivery. When MORE
+        // THAN ONE delivery could be its origin, the leftover capacity of each slice is genuinely unknowable, so every
+        // slice of the line is flagged ambiguous and a NEW claim is refused instead of guessing an origin.
+        var ambiguousLegacy = Math.Max(0m, legacyUnallocated) > 0m
+            && merged.Count(x => IsInWindow(x.DeliveredAt, days, now)) > 1;
+
         var availability = new List<ReturnLineDeliveryAvailability>(merged.Length);
         var remainingLegacy = Math.Max(0m, legacyUnallocated);
         foreach (var slice in merged)
@@ -76,11 +82,19 @@ public static class ReturnAllocationPolicy
                 slice.DeliveredAt,
                 slice.Quantity,
                 available,
-                IsInWindow(slice.DeliveredAt, days, now)));
+                IsInWindow(slice.DeliveredAt, days, now),
+                ambiguousLegacy));
         }
 
         return availability;
     }
+
+    /// <summary>
+    /// TB-279-R1 (F5): true when this line's per-delivery capacity cannot be attributed, so no new claim may bind a
+    /// slice. A single-delivery line stays answerable (there is exactly one possible origin).
+    /// </summary>
+    public static bool HasAmbiguousLegacy(IReadOnlyList<ReturnLineDeliveryAvailability> slices) =>
+        slices.Count > 0 && slices.Any(x => x.LegacyAmbiguous);
 
     /// <summary>True while this slice's own window is still open at the owning server instant.</summary>
     public static bool IsInWindow(DateTimeOffset deliveredAt, int windowDays, DateTimeOffset now) =>
@@ -97,6 +111,14 @@ public static class ReturnAllocationPolicy
     {
         ArgumentNullException.ThrowIfNull(slices);
         if (requested <= 0m)
+        {
+            return null;
+        }
+
+        // TB-279-R1 (F5): a line whose leftover capacity cannot be attributed to one delivery (an active legacy claim
+        // plus more than one in-window delivery) is never allocated by guessing an origin, even when the summed
+        // capacity looks sufficient. The caller answers the typed ambiguity instead.
+        if (HasAmbiguousLegacy(slices))
         {
             return null;
         }

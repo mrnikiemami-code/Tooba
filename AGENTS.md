@@ -1,10 +1,50 @@
-# CURRENT — 279-R1 CONSOLIDATED REPAIR ENVELOPE ISSUED; AWAIT BRIDGE CLAIM — 2026-11-18
+# CURRENT — 279-R1 WORKER PASS (all six source-confirmed 279 defects + S1–S5 closed in one bounded repair); AWAIT ARCHITECT REVIEW — 2026-11-18
 
-User authorized one consolidated closure, not micro-tasks. Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/TASK.md` and `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/issuance-receipt.json` FIRST. Full task is already committed; empty Bridge content never authorizes reconstruction. Download filename exactly matches Task-ID. Expected base `0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32`; subsequent issuance delta is docs-only and explicitly permitted after verification.
-279/278 remain PARTIAL. This repair owns ALL F1–F6 and S1–S5: shared first/retry budget; reviewed portion money/stock/custody; atomic reviewed-version decision transitions; no guessed legacy allocation; exact viewer-scoped customer intent; shared customer Dialog/template toast/precision/test/display/recovery closure. One worker/task/result, no delegation/screenshots/polling/broad test loops. Only the task's bounded additive Returns migration is authorized if necessary, with a verified fresh pre-apply backup and Runner; no live business write/provider/stock/money effect, no new/reset demo case. Completed user cases remain read-only. No automatic follow-on.
-Worker must report every critical/small item truthfully; PASS cannot leave a critical counterexample open. Architect/user acceptance is pending. STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+Read docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/TASK.md and
+docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,closure-matrix.md,budget-and-decision-proof.md,portion-and-custody-proof.md,customer-intent-proof.md,rollback-only-proof.md,migration-and-backup-proof.md,issuance-receipt.json,user-review.md}.
+Status **PASS within the issued consolidated A–G scope**, decision
+`ONE_REVIEWED_PORTION_AUTHORITY_FOR_MONEY_STOCK_AND_CUSTODY_ONE_ATOMIC_VERSION_FENCED_DECISION_TRANSITION_ONE_SHARED_RETURNS_PAYMENT_RESERVATION_PROTOCOL_FOR_EVERY_NEW_ATTEMPT_AND_ONE_VIEWER_SCOPED_EXACT_DURABLE_CUSTOMER_INTENT_WITH_NO_GUESSED_LEGACY_ALLOCATION_ON_THE_EXISTING_RETURNS_MODULE`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT Marketplace/provider/financial readiness.
+Expected-Base-SHA == `0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32`; claim HEAD is the same SHA (docs-only issuance delta, zero
+source/config/schema drift; parent 279 code `9c0885a5943e7f1a4e1a09a17fac417d23037aa6`). Envelope 24 251 bytes,
+SHA256 `A5FABF0BC43546F4775F14018679813F8DF67B8374300A4F14A89C2F131494AF`, persisted byte-identically to both TASK.md paths
+before execution. 277/R1/R2, 278 and 279 history preserved; parent 279 and 278 stay PARTIAL. Single worker, one task, no
+delegation, no historical subagent resumed, no screenshots, no loop, no live POST.
 
-# SUPERSEDED — pre-issuance 279 review checkpoint (historical)
+| Area | State | What this means |
+| --- | --- | --- |
+| A/F1 budget | one reservation protocol | `ReturnDirectory.Reservations.cs` serves the FIRST refund and every NEW retry child: owning payment facts before any lock (missing/foreign/currency/non-Succeeded/over-amount fail closed), seller order → case → payment order, effective decision revision + frozen amount re-read after the lock, Pending+Succeeded of EVERY case of that payment counted under one stable advisory key, attempt+case state committed before any external port; a duplicate answers its stored identity |
+| B/F2 portions | reviewed, not inferred | `ReturnResolutionPolicy` accepted per condition + rejected split (received/unreceived), refuse-never-clamp, money = accepted × STORED unit price, requested amount immutable, approved frozen before the first attempt; restock = accepted usable only, each accepted portion needs its own durable completion, unbound accepted usable is a typed PENDING blocker; the implicit baseline now requires a coherent+complete receipt |
+| C/F3 custody | physical facts hold capacity | rejected received goods keep their delivery allocations until an evidenced handback; custody validates case/item/condition/exact quantum/condition ceiling/server-derived recipient/proof and compares the whole immutable intent on replay; whole-case rejection exposes the same action; custody is zero money and cannot reopen effects |
+| D/F4 versions | frozen + atomic | `ExpectedDecisionVersion` travels UI → API → CQRS → Directory; missing is `return.refund.review_version_required`, stale is `return.correction.version_stale`; decision/revision, status, frozen approved amount and capacity change persist in ONE locked transaction; occurrence keys are SHA-256 of the canonical intent |
+| E/F5 legacy | no guess | a legacy case without positively provable slices is `return.allocation.legacy_ambiguous` with zero rows; new claims keep oldest-eligible first, expired slice never funds, same-instant merge, zero-row insufficient capacity |
+| F/S1–S5 | customer act + shared UI | viewer-scoped `v2` submission (no viewerless fallback), storage property+method probe, exact byte re-verification, epoch fence, retained act never overwritten; shared DS `Dialog` replacing the custom fixed overlay; ONE react-toastify container, one toast per command; honest unknown-precision policy; human locator + requested vs approved + custody remaining, never "all refunded" for a zero-owed case; stale 276 fixture updated without weakening assertions |
+| proof | focused | Returns `172/172`; AMSC guards `34/34`; real-PG rollback-only `3/3` (`committedRows=0`: cross-case budget read, payment advisory-lock contention between two sessions, stale-version zero-write vs lawful atomic approval with approved 1000 / requested 2000); `dotnet build` 0 errors; Host publish 0 errors; FE `44/44`, `tsc` 0, `next build` 0 (`BUILD_ID 1qgSFICgCehoh6FzH3a0f`) |
+| served | refreshed | Host `5088` PID `28300`, dll SHA256 `9C5ECED52091F98A828EBDA0F7AB1F52009148F9C987439706F61623CD63F62D` (`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy, `/__platform-commerce` → `store-alpha`); Next `3000` PID `29448`, chunk `7944-5791a99ccf276c21.js` 200 serving `admin-return-custody-remaining`, `admin-return-requested-amount`, `record_custody`, `publish_resolution`, `reopen_for_review`, «بازگردانی» |
+| migration | one additive, backed up | `20261118023434_Tb279R1PerConditionPortionsAndCustodyProof` applied ONCE by `Tooba.MigrationRunner` after a fresh `pg_dump` (3 031 123 B, SHA256 `C025224B…EEADEE`) verified by `pg_restore --list` exit 0 / 1475 TOC lines; plan contained only this migration; post-apply `pendingMigrations []` for every module |
+| data | untouched | zero reset/reseed/backfill/cleanup/restore; zero live business write; three stored cases remain `Completed` with `approved_amount NULL` and original `updated_at`; the four new tables hold 0 rows |
+
+Known limits: money/stock proven with controlled ports (no real PSP/Wallet/Inventory/notification effect); no committed
+two-writer race (the effectful first-refund intent refuses caller transactions, so its commit path rests on controlled
+ports while the shared lock/budget read and atomic version-fenced approval are proven on real PostgreSQL rollback-only);
+mounted FE suites are jsdom (behaviour, not geometry); no live customer session/checkout/active case exists, so the active
+operator/customer walkthrough has no live path and the three settled cases were read only. Declared deviations: the first
+`dotnet publish` failed `MSB3026` on Host-locked DLLs and was re-run after stopping the Host; Next was restarted on the new
+BUILD_ID; `Tooba.Host.Tests` emits pre-existing `xUnit2013`/`NU1900` warnings with 0 errors. Evidence:
+`closure-matrix.md` maps every F1–F6/S1–S5 to source + fact + limit.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. No automatic next task.
+
+# SUPERSEDED — 279-R1 ISSUED AS A DOCS-ONLY ENVELOPE — 2026-11-18
+
+`TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1` was issued by commit
+`fd0b24cc1` as docs-only: the task at `docs/ai/tasks/…279-R1/TASK.md` and its identical evidence copy, the
+`issuance-receipt.json` and the closure-checklist header. Expected-Base-SHA `0ef5ae21a048dc6e466d50d8c72bcbe7b9e27e32`;
+reviewed parent implementation `9c0885a5943e7f1a4e1a09a17fac417d23037aa6`. The issued file is 24 446 B SHA256
+`8913a285…0435c9`; the Bridge delivered the same requirements flattened at 24 251 B SHA256 `A5FABF0B…494AF`
+(heading/bullet formatting only). 279-R1 closes all six source-confirmed 279 defects plus S1–S5 in ONE bounded repair;
+the 279-R1 PASS below is its worker result. STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 279 ARCHITECT REVIEW: PARTIAL; CONSOLIDATED CLOSURE PLANNED, NOT ISSUED — 2026-11-18
 
 Independent source review of code `9c0885a5943e7f1a4e1a09a17fac417d23037aa6` found six blocking groups: retry budget bypass/locked payment read, actual restock ignoring accepted portions, rejected-held capacity/custody condition gaps, incomplete reviewed-version/atomic decision fencing, guessed legacy delivery attribution, and unclosed customer intent durability. Worker PASS is not Architect ACCEPT.
 Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/ARCHITECT-REVIEW.md` and `docs/planning/returns/RETURNS-279-CONSOLIDATED-CLOSURE-CHECKLIST.md` FIRST. The checklist includes the small shared-dialog/toast, unknown-precision, retained-test, display and recovery-document items so they are not forgotten. Resolve together after critical defects; do not create ten micro-tasks.

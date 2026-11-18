@@ -248,9 +248,18 @@ public sealed class AdminReturnGridQueryEngine : IAdminReturnGridQuery
                 x.Disposition,
                 x.SourceShipmentId,
                 x.SourceReceiptId,
-                receiving is not null && x.Disposition == ReturnItemDisposition.SaleableRestock
-                    ? receiving.UsableOf(x.ReturnItemId)
-                    : null)).ToArray(),
+                SaleableRestockedQuantity: x.UsableRestockedQuantity
+                    ?? (receiving is not null && x.Disposition == ReturnItemDisposition.SaleableRestock
+                        ? receiving.UsableOf(x.ReturnItemId)
+                        : null),
+                UsableRestockedQuantity: x.UsableRestockedQuantity
+                    ?? (receiving is not null && x.Disposition == ReturnItemDisposition.SaleableRestock
+                        ? receiving.UsableOf(x.ReturnItemId)
+                        : null),
+                DamagedRecordedQuantity: x.DamagedRecordedQuantity
+                    ?? (receiving is not null && x.Disposition == ReturnItemDisposition.DamagedNonSaleable
+                        ? receiving.DamagedOf(x.ReturnItemId)
+                        : null))).ToArray(),
             attempts.Select(x => new RefundAttemptSnapshot(
                 x.RefundAttemptId,
                 x.PaymentId,

@@ -17,6 +17,12 @@ public sealed record RetryReturnRefundCommand(Guid ReturnRequestId, Guid ActorUs
     /// from that reviewed failure in the owning directory, so a duplicate/lost-response POST cannot mint a second one.
     /// </summary>
     public Guid? ExpectedFailedAttemptId { get; init; }
+
+    /// <summary>
+    /// TB-279-R1 (F4): the EFFECTIVE decision revision the operator reviewed. The retry mints NEW money, so it is fenced
+    /// exactly like the first refund: a newer decision/plan revision refuses this stale review before any reservation.
+    /// </summary>
+    public int? ExpectedDecisionVersion { get; init; }
 }
 
 /// <summary>Handler — Result via the canonical typed-fault seam.</summary>

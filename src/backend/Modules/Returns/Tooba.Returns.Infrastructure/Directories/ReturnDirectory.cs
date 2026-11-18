@@ -170,6 +170,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     /// <inheritdoc />
     public async Task<ReturnSnapshot> ApproveAsync(ApproveReturnCommand command, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(command);
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
@@ -207,22 +208,6 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             return await MapSnapshotAsync(request, cancellationToken);
         }
 
-        // TB-274: an ordinary delivered RMA has no Fulfillment-owned receipt, so its OWN recorded customer receipt is
-        // the only lawful basis for approval. A NEW approval decision is refused until the receiving/inspection
-        // coverage is complete and coherent — never derived from the requested quantity.
-        await EnsureOrdinaryReceivingCompleteAsync(request, cancellationToken);
-
-        // TB-279 (C): the reviewed resolution must be COMPLETE before the approval decision, and the approved money is
-        // derived from its accepted quantities and the stored unit prices only. A legacy case with no reviewed plan
-        // and incomplete coverage is refused instead of refunding the whole original claim.
-        var approvalSnapshot = await MapSnapshotAsync(request, cancellationToken);
-        var resolution = approvalSnapshot.Resolution;
-        if (resolution is not { IsComplete: true })
-        {
-            throw new ContractOperationException(
-                resolution?.BlockerCode ?? ReturnsErrorCodes.ResolutionRequired);
-        }
-
         // The case's FIXED payment binding is part of the lawful approval decision (the later first-refund intent
         // names no payment of its own); reading it moves no money.
         var payment = await ResolvePaymentAsync(request, cancellationToken)
@@ -232,30 +217,90 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.RefundAlreadyStarted);
         }
 
-        // TB-265-R2: the durable approve-vs-reject decision is recorded under the case row lock BEFORE any effect, and
-        // only once the preconditions above are known good — a case that could not be approved here stays rejectable.
-        // TB-279: a stale pre-correction review is refused against the CURRENT revision.
-        await RecordReviewedDecisionAsync(
-            command.ReturnRequestId,
-            ReturnDecisionKind.Approve,
-            command.ActorUserId,
-            reason: null,
-            command.ExpectedDecisionVersion,
-            cancellationToken);
+        // TB-274 / TB-279 (C): the reviewed facts that authorize the approval, read ONCE before the lock so an
+        // unlawful approval is refused without opening a transaction. They are re-read under the lock below.
+        var reviewed = await MapSnapshotAsync(request, cancellationToken);
+        var reviewedResolution = EnsureReviewedMoneyBasis(request, reviewed);
+        var reviewedVersion = reviewedResolution.Version;
+        var reviewedAmount = reviewedResolution.ApprovedAmount;
 
-        // Only the CASE moves to Approved. There is no RefundProcessing transition and no attempt yet: the operator
-        // must deliberately start the money through the explicit first-refund action. The reviewed amount is frozen
-        // here, before any money exists, so the first refund can never name a different number.
-        request.Approve(payment.PaymentId, _clock.UtcNow, command.RefundDestination, resolution.ApprovedAmount);
-        await _db.SaveChangesAsync(cancellationToken);
+        // TB-265-R2 / TB-279-R1 (F4): ONE short lock holds the reviewed decision, the case transition and the FROZEN
+        // approved amount. The decision can therefore never commit while its status/amount wait for a later write.
+        return await InLockedDecisionScopeAsync(request, async () =>
+        {
+            EnsureOwningSellerScope(request, command.SellerPartyId);
 
-        _telemetry.RecordApproved();
-        return await MapSnapshotAsync(request, cancellationToken);
+            // Never let a pre-lock tracked value overwrite a newer correction: the reviewed facts are re-read now.
+            var locked = await MapSnapshotAsync(request, cancellationToken);
+            var lockedResolution = EnsureReviewedMoneyBasis(request, locked);
+            if (lockedResolution.Version != reviewedVersion || lockedResolution.ApprovedAmount != reviewedAmount)
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
+            }
+
+            if (request.PaymentId is { } existingPayment && existingPayment != payment.PaymentId)
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.RefundPaymentMissing);
+            }
+
+            var append = await AppendReviewedDecisionAsync(
+                request,
+                ReturnDecisionKind.Approve,
+                command.ActorUserId,
+                reason: null,
+                command.ExpectedDecisionVersion,
+                cancellationToken);
+
+            // A NEW decision, or an exact replay of THIS decision on a case that is still undecided (a concurrent
+            // duplicate/winner recorded the same approval). Both move the case exactly once.
+            if (append == DecisionAppend.Recorded || request.Status == ReturnRequestStatus.Requested)
+            {
+                // Only the CASE moves to Approved. There is no RefundProcessing transition and no attempt yet: the
+                // operator must deliberately start the money through the explicit first-refund action. The reviewed
+                // amount is frozen here, before any money exists, so the first refund can never name another number.
+                request.Approve(payment.PaymentId, _clock.UtcNow, command.RefundDestination, reviewedAmount);
+                await _db.SaveChangesAsync(cancellationToken);
+                _telemetry.RecordApproved();
+            }
+
+            return await MapSnapshotAsync(request, cancellationToken);
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// TB-274 / TB-279-R1 (F2): the ONE money/decision basis of a NEW ordinary approval.
+    /// <para>
+    /// The reviewed resolution — not "every requested unit arrived" — is the basis: an accepted received portion plus
+    /// a rejected remainder that never arrived is a lawful COMPLETE plan, while a case with no reviewed split still
+    /// needs its whole claim physically received. Incoherent stored evidence is always refused, and the accepted
+    /// portions must already be covered by their own received condition (that bound lives in the resolution policy).
+    /// </para>
+    /// </summary>
+    private static ReturnResolutionSnapshot EnsureReviewedMoneyBasis(ReturnRequest request, ReturnSnapshot snapshot)
+    {
+        var resolution = ReturnResolutionPolicy.Resolve(snapshot);
+        if (request.Origin != ReturnOrigin.CustomerDelivered)
+        {
+            return resolution;
+        }
+
+        if (!ReturnResolutionPolicy.TryDescribeCompleteCoverage(
+                snapshot,
+                out resolution,
+                out var blockerCode,
+                incoherentCode: ReturnsErrorCodes.ReceivingIncomplete,
+                incompleteReceiptCode: ReturnsErrorCodes.ReceivingIncomplete))
+        {
+            throw new ContractOperationException(blockerCode);
+        }
+
+        return resolution;
     }
 
     /// <inheritdoc />
     public async Task<ReturnSnapshot> RejectAsync(RejectReturnCommand command, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(command);
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
         // TB-274-R1 (B/D): the owning scope AND the case are settled BEFORE the durable decision is recorded, so a
@@ -263,48 +308,58 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
         EnsureOwningSellerScope(request, command.SellerPartyId);
 
-        // TB-265-R2 / TB-274: the SAME durable decision authority as approval, now carrying the reviewed rejection
-        // reason in the same row. A case whose approval already won can never be rejected here, so its source
+        // TB-265-R2 / TB-274 / TB-279-R1 (F4): the SAME durable decision authority as approval, now carrying the
+        // reviewed rejection reason in the same row, the case transition and the released per-delivery capacity in ONE
+        // locked transaction. A case whose approval already won can never be rejected here, so its source
         // claim/hold/money are never released by a losing concurrent request; a changed reason is a typed conflict.
-        // TB-279: the append-only authority also fences a STALE pre-correction review.
-        await RecordReviewedDecisionAsync(
-            command.ReturnRequestId,
-            ReturnDecisionKind.Reject,
-            command.ActorUserId,
-            command.Reason,
-            command.ExpectedDecisionVersion,
-            cancellationToken);
-
-        // TB-265-R1: only a case that was never approved can be rejected. A case already refunding/approved keeps
-        // its obligation and its claim; releasing its branch here would free capacity a live (or completed) case
-        // still owns and would let the same units fund a second branch.
-        if (request.Status == ReturnRequestStatus.Requested)
+        var snapshot = await InLockedDecisionScopeAsync(request, async () =>
         {
-            request.Reject(_clock.UtcNow);
+            EnsureOwningSellerScope(request, command.SellerPartyId);
 
-            // TB-279 (D): a rejected claim RELEASES its per-delivery capacity, so the same units may fund a later
-            // lawful return instead of being occupied forever by a cancelled intent.
-            await EnsureDeliveryAllocationsAsync(request, release: true, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
-            _telemetry.RecordRejected();
+            var append = await AppendReviewedDecisionAsync(
+                request,
+                ReturnDecisionKind.Reject,
+                command.ActorUserId,
+                command.Reason,
+                command.ExpectedDecisionVersion,
+                cancellationToken);
 
-            // Releasing the source branch AFTER the durable reject is the only lawful release of this claim.
-            await ReleaseCourierOriginClaimAsync(
-                request, nameof(ReturnRequestStatus.Rejected), command.ActorUserId, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
+            // A NEW decision, or an exact replay of THIS decision on a case that is still undecided (a concurrent
+            // duplicate/winner recorded the same rejection). Both move the case exactly once.
+            if (append == DecisionAppend.Recorded || request.Status == ReturnRequestStatus.Requested)
+            {
+                // TB-265-R1: only a case that was never approved can be rejected. A case already refunding/approved
+                // keeps its obligation and its claim (already a typed refusal above); releasing its branch here would
+                // free capacity a live case still owns and would let the same units fund a second branch.
+                if (request.Status != ReturnRequestStatus.Requested)
+                {
+                    throw new ContractOperationException("return.reject.invalid_state");
+                }
+
+                request.Reject(_clock.UtcNow);
+
+                // TB-279 (D) / TB-279-R1 (F3): a rejected claim returns its NEVER-RECEIVED remainder to the pool, while
+                // the goods that physically arrived stay claimed (under this same seller-order lock) until their real
+                // handback is durable. Releasing everything would let a sibling case claim units the seller still holds.
+                await ReleaseRejectedDeliveriesAsync(request, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+                _telemetry.RecordRejected();
+            }
+
             return await MapSnapshotAsync(request, cancellationToken);
-        }
+        }, cancellationToken);
 
+        // Releasing the source branch AFTER the durable reject is the only lawful release of this claim. It talks to
+        // the Fulfillment contract, so it deliberately runs OUTSIDE the decision transaction.
         if (request.Status is ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled)
         {
-            // Exact terminal replay: finish any still-pending claim release, and never touch money or stock.
             await ReleaseCourierOriginClaimAsync(
                 request, request.Status.ToString(), command.ActorUserId, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return await MapSnapshotAsync(request, cancellationToken);
         }
 
-        throw new ContractOperationException("return.reject.invalid_state");
+        return snapshot;
     }
 
     /// <inheritdoc />
@@ -327,9 +382,31 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             return await MapSnapshotAsync(request, cancellationToken);
         }
 
-        // TB-274: a retry mints a NEW refund attempt, so the same ordinary receiving authority gates it. A courier
-        // case owns its Fulfillment receipt and is unaffected.
-        await EnsureOrdinaryReceivingCompleteAsync(request, cancellationToken);
+        // TB-274 / TB-279-R1 (F2): a retry mints a NEW refund attempt over a REVIEWED resolution, not over the whole
+        // original claim. A coherent receipt plus a complete reviewed plan is the money basis; "every requested unit
+        // arrived" is not required, because an accepted received portion plus a rejected unreceived remainder is a
+        // lawful complete plan. A courier case owns its Fulfillment receipt and is unaffected.
+        if (request.Origin != ReturnOrigin.CourierOrigin)
+        {
+            var retrySnapshot = await MapSnapshotAsync(request, cancellationToken);
+            if (retrySnapshot.Receiving is { IsCoherent: false })
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.RecoveryEvidenceConflict);
+            }
+
+            if (retrySnapshot.Receiving is not { } receiving
+                || !receiving.Lines.Any(x => x.Received > 0m))
+            {
+                // No recorded physical occurrence at all: the same receiving authority gates this path.
+                throw new ContractOperationException(ReturnsErrorCodes.ReceivingIncomplete);
+            }
+
+            if (retrySnapshot.Resolution is not { IsComplete: true })
+            {
+                throw new ContractOperationException(
+                    retrySnapshot.Resolution?.BlockerCode ?? ReturnsErrorCodes.ResolutionRequired);
+            }
+        }
 
         // TB-276 (B): the reviewed DEFINITE failure is REQUIRED — every reachable retry boundary must name the stored
         // attempt the operator reviewed, because "the current failure" is a guess that would let an unreviewed caller
@@ -354,39 +431,29 @@ public sealed partial class ReturnDirectory : IReturnDirectory
             return await MapSnapshotAsync(request, cancellationToken);
         }
 
-        // A NEW child only exists for a case that is currently a definite failure of its single reviewable attempt.
-        if (request.Status != ReturnRequestStatus.RefundFailed)
+        // TB-279-R1 (F1/F4): the reviewed decision revision is REQUIRED and the owning payment facts are read before any
+        // transaction, so this NEW child obeys the SAME reservation protocol as the first refund. Both are checked
+        // AFTER the reviewed failure itself, so a case without one reviewable failure answers that truthful refusal.
+        var expectedDecisionVersion = RequireReviewedDecisionVersion(command.ExpectedDecisionVersion);
+        var authority = await RequirePaymentAuthorityAsync(request, cancellationToken);
+
+        var reservation = await PersistNewAttemptUnderReservationAsync(
+            request,
+            childAttemptId,
+            childKey,
+            authority,
+            expectedDecisionVersion,
+            failed.RefundAttemptId,
+            cancellationToken);
+        if (reservation == AttemptReservation.AlreadyAnswered)
         {
-            throw new ContractOperationException(ReturnsErrorCodes.RefundRetryInvalidState);
+            // A concurrent duplicate of the SAME reviewed intent won the deterministic child identity, or a correction
+            // moved the case. This request sends nothing.
+            return await GetAsync(request.ReturnRequestId, cancellationToken)
+                ?? await MapSnapshotAsync(request, cancellationToken);
         }
 
-        EnsureReviewedFailureIsTheCurrentOne(request, failed);
-
-        request.MarkRefundProcessing(_clock.UtcNow);
-        var attempt = request.BeginRefundAttempt(childAttemptId, paymentId, childKey, _clock.UtcNow);
-        _db.RefundAttempts.Add(attempt);
-        try
-        {
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (IsRetryAttemptKeyConflict(ex))
-        {
-            // A concurrent duplicate of the SAME reviewed intent won the deterministic child identity. Only THIS
-            // attempt's entry is detached (never a caller-wide tracker clear) and the stored row is answered on its
-            // own terms: the same failure, the same payment/amount/currency and the same derived key, or a typed
-            // refusal.
-            _db.Entry(attempt).State = EntityState.Detached;
-            var stored = await _db.RefundAttempts
-                .FirstOrDefaultAsync(
-                    x => x.ReturnRequestId == request.ReturnRequestId && x.RefundAttemptId == childAttemptId,
-                    cancellationToken)
-                ?? throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptUnbound);
-            EnsureRetryAttemptIdentity(request, stored, paymentId, childKey);
-            await ExecuteRefundAsync(request, stored, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
-            return await MapSnapshotAsync(request, cancellationToken);
-        }
-
+        var attempt = request.RefundAttempts.Single(x => x.RefundAttemptId == childAttemptId);
         _telemetry.RecordRetry();
 
         await ExecuteRefundAsync(request, attempt, cancellationToken);
@@ -419,25 +486,20 @@ public sealed partial class ReturnDirectory : IReturnDirectory
     }
 
     /// <summary>
-    /// TB-275 (C2) / TB-276 (B): minting a NEW child may only answer the case's CURRENT reviewable failure — the same
-    /// single positively bound, not-yet-retried failure the read publishes — so an ambiguous or already-retried parent
-    /// mints nothing.
+    /// TB-275 (C2) / TB-276 (B) / TB-279-R1 (F1): minting a NEW child may only answer the case's CURRENT reviewable
+    /// failure — the same single positively bound, not-yet-retried failure the read publishes — re-read AFTER the
+    /// seller/case locks, so an ambiguous, superseded or already-retried parent mints nothing.
     /// </summary>
-    private static void EnsureReviewedFailureIsTheCurrentOne(ReturnRequest request, RefundAttempt reviewed)
+    private static void EnsureReviewedFailureIsStillCurrent(ReturnRequest request, Guid reviewedFailedAttemptId)
     {
         var reviewable = request.RefundAttempts
             .Where(x => x.Status == RefundAttemptStatus.Failed && IsBoundToRequest(request, x))
             .Where(x => request.RefundAttempts.All(child =>
                 child.RefundAttemptId != ReturnRetryIdentity.DeriveAttemptId(request.ReturnRequestId, x.RefundAttemptId)))
             .ToArray();
-        if (reviewable.Length != 1)
+        if (reviewable.Length != 1 || reviewable[0].RefundAttemptId != reviewedFailedAttemptId)
         {
             throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptUnbound);
-        }
-
-        if (reviewable[0].RefundAttemptId != reviewed.RefundAttemptId)
-        {
-            throw new ContractOperationException(ReturnsErrorCodes.RecoveryAttemptMismatch);
         }
     }
 
@@ -452,7 +514,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         string expectedKey)
     {
         if (attempt.PaymentId != paymentId
-            || attempt.Amount != request.RefundAmount
+            || attempt.Amount != request.ReviewableMoney
             || !string.Equals(attempt.Currency.Trim(), request.Currency.Trim(), StringComparison.Ordinal)
             || !string.Equals(attempt.IdempotencyKey, expectedKey, StringComparison.Ordinal))
         {
@@ -467,7 +529,7 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         && request.PaymentId is { } paymentId
         && paymentId != Guid.Empty
         && attempt.PaymentId == paymentId
-        && attempt.Amount == request.RefundAmount
+        && attempt.Amount == request.ReviewableMoney
         && string.Equals(attempt.Currency.Trim(), request.Currency.Trim(), StringComparison.Ordinal);
 
     /// <summary>
@@ -933,9 +995,21 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                 x.SourceReceiptId,
                 // TB-274-R1: the exact inspected usable quantity that was restocked, never the requested quantity — a
                 // mixed line therefore never reads as "the whole amount went back to saleable stock".
-                receiving is not null && x.Disposition == ReturnItemDisposition.SaleableRestock
-                    ? receiving.UsableOf(x.ReturnItemId)
-                    : null)).ToArray(),
+                SaleableRestockedQuantity: x.UsableRestockedQuantity
+                    ?? (receiving is not null && x.Disposition == ReturnItemDisposition.SaleableRestock
+                        ? receiving.UsableOf(x.ReturnItemId)
+                        : null),
+                // TB-279-R1 (F2): the durable per-portion facts of this line. A row recorded before those columns
+                // existed keeps proving its ONE inspected portion through its immutable disposition; a pre-R1 row can
+                // therefore never claim a mixed completion.
+                UsableRestockedQuantity: x.UsableRestockedQuantity
+                    ?? (receiving is not null && x.Disposition == ReturnItemDisposition.SaleableRestock
+                        ? receiving.UsableOf(x.ReturnItemId)
+                        : null),
+                DamagedRecordedQuantity: x.DamagedRecordedQuantity
+                    ?? (receiving is not null && x.Disposition == ReturnItemDisposition.DamagedNonSaleable
+                        ? receiving.DamagedOf(x.ReturnItemId)
+                        : null))).ToArray(),
             attempts.Select(x => new RefundAttemptSnapshot(
                 x.RefundAttemptId,
                 x.PaymentId,
@@ -974,12 +1048,20 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                     : ReturnItemCondition.Usable,
                 x.RecipientUserId,
                 x.ProofReference,
-                x.RecordedAt)).ToArray());
+                x.RecordedAt,
+                x.ProofKind)).ToArray());
 
         // TB-279: the reviewed resolution plan and the approved money it can lawfully name. Both are pure functions of
         // stored facts, so a read and a money action can never disagree about the amount.
         var resolutionVersion = storedLines.Count == 0 ? 0 : storedLines.Max(x => x.Version);
-        var resolution = ReturnResolutionPolicy.Describe(
+        // TB-279-R1 (F3): a case that was rejected/cancelled with goods physically in hand has no reviewed partial
+        // plan, yet it still owes every received unit back to the owning customer. The honest plan of that case accepts
+        // nothing, names the received portions per condition as owed custody, and is therefore a COMPLETE physical
+        // basis for the custody command — never a false "nothing to do" closure.
+        var resolution = storedLines.Count == 0
+                && request.Status is ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled
+            ? ReturnResolutionPolicy.DescribeRejectedCustody(snapshot.Items, receiving)
+            : ReturnResolutionPolicy.Describe(
             request.Origin,
             snapshot.Items,
             receiving,
@@ -991,10 +1073,20 @@ public sealed partial class ReturnDirectory : IReturnDirectory
                     receiving?.Lines.FirstOrDefault(line => line.ReturnItemId == x.ReturnItemId)?.Received ?? 0m,
                     receiving?.Lines.FirstOrDefault(line => line.ReturnItemId == x.ReturnItemId)?.Usable ?? 0m,
                     receiving?.Lines.FirstOrDefault(line => line.ReturnItemId == x.ReturnItemId)?.Damaged ?? 0m,
-                    x.AcceptedQuantity,
-                    x.RejectedQuantity,
+                    // TB-279-R1 (F2/F3): the explicit per-condition portions the operator reviewed. A pre-R1 row has
+                    // NULLs here on purpose: it is answered as an incomplete plan, never as a usable-first guess.
+                    AcceptedUsable: x.AcceptedUsableQuantity ?? 0m,
+                    AcceptedDamaged: x.AcceptedDamagedQuantity ?? 0m,
+                    RejectedReceivedUsable: x.RejectedReceivedUsableQuantity ?? 0m,
+                    RejectedReceivedDamaged: x.RejectedReceivedDamagedQuantity ?? 0m,
+                    RejectedUnreceived: x.RejectedUnreceivedQuantity ?? 0m,
                     x.Reason,
-                    x.Version))
+                    x.Version,
+                    PortionsKnown: x.AcceptedUsableQuantity is not null
+                        && x.AcceptedDamagedQuantity is not null
+                        && x.RejectedReceivedUsableQuantity is not null
+                        && x.RejectedReceivedDamagedQuantity is not null
+                        && x.RejectedUnreceivedQuantity is not null))
                 .ToArray(),
             resolutionVersion,
             request.RefundAmount);

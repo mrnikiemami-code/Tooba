@@ -1,5 +1,5 @@
 /**
- * TB-278 — the customer's durable multi-seller return submission.
+ * TB-278/TB-279-R1 — the customer's durable multi-seller return submission.
  *
  * These cases pin the parts the customer surface must not re-invent:
  *
@@ -10,7 +10,9 @@
  *  3. the act is written AND read back before any send, so an unavailable/lying storage refuses the whole act;
  *  4. an authoritative success is terminal, a body-dictated refusal is a no-effect refusal, and every other refusal
  *     keeps the child unresolved because an earlier send of the same bytes may have written;
- *  5. only the exact current act can be cleared, so a newer act is never discarded by a late answer.
+ *  5. only the exact current act can be cleared, so a newer act is never discarded by a late answer;
+ *  6. the act is scoped to ONE authenticated viewer and every stored child's exact bytes are re-verified on read, so a
+ *     shared session, a foreign viewer or a tampered envelope can never be adopted or replayed.
  */
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -24,6 +26,7 @@ import {
   serializeReturnSubmission,
   storeReturnSubmission,
   submissionChildKey,
+  submissionStorageKey,
   summarizeReturnSubmission,
   SUBMISSION_NO_EFFECT_REFUSALS,
   unresolvedChildren,
@@ -32,6 +35,8 @@ import {
   type SubmissionSelection,
   type SubmissionStorage,
 } from "./return-submission.ts";
+
+const VIEWER = "user-278";
 
 function fakeStorage(initial: Record<string, string> = {}): SubmissionStorage & { values: Map<string, string> } {
   const values = new Map(Object.entries(initial));
@@ -75,8 +80,14 @@ function selection(overrides: Partial<SubmissionSelection> = {}): SubmissionSele
   };
 }
 
+function buildAct(input: Omit<Parameters<typeof buildReturnSubmission>[0], "viewerId">): ReturnSubmission {
+  const act = buildReturnSubmission({ ...input, viewerId: VIEWER });
+  assert.ok(act, "the act must be buildable for an authenticated viewer");
+  return act;
+}
+
 test("one act freezes one child per selected line, across sellers, before any send", () => {
-  const act = buildReturnSubmission({
+  const act = buildAct({
     checkoutId: "co-1",
     destination: "Wallet",
     recordedAt: "2026-11-17T00:00:00Z",
@@ -96,8 +107,9 @@ test("one act freezes one child per selected line, across sellers, before any se
     ],
   });
 
-  assert.equal(act.version, 1);
+  assert.equal(act.version, 2);
   assert.equal(act.submissionKey, "act-1");
+  assert.equal(act.viewerId, VIEWER);
   assert.equal(act.children.length, 2);
   assert.deepEqual(act.children.map((child) => child.state), ["pending", "pending"]);
   assert.deepEqual(
@@ -119,14 +131,17 @@ test("one act freezes one child per selected line, across sellers, before any se
   assert.equal(body.refundDestination, "Wallet");
   assert.deepEqual(body.items, [{ orderLineId: "ol-lamp", quantity: 1.25 }]);
 
-  const read = readReturnSubmission(fakeStorageWith(act), "co-1");
+  const read = readReturnSubmission(fakeStorageWith(act), act.checkoutId, VIEWER);
   assert.equal(read.kind, "found");
   assert.equal(summarizeReturnSubmission(act).pending, 2);
-  assert.equal(hasUnresolvedCustomerReturnSubmission(fakeStorageWith(act), "co-1"), true);
+  assert.equal(hasUnresolvedCustomerReturnSubmission(fakeStorageWith(act), act.checkoutId, VIEWER), true);
+
+  // TB-279-R1: no authenticated viewer means no act and no storage identity at all.
+  assert.equal(buildReturnSubmission({ checkoutId: "co-1", destination: "Wallet", selections: [selection()], viewerId: null }), null);
 });
 
 function fakeStorageWith(act: ReturnSubmission): SubmissionStorage {
-  return fakeStorage({ [`tb278:customer-return-submission:${act.checkoutId}`]: serializeReturnSubmission(act) });
+  return fakeStorage({ [submissionStorageKey(act.checkoutId, act.viewerId)]: serializeReturnSubmission(act) });
 }
 
 test("the line's own unit bounds local quantity validation — nothing is clamped or rounded", () => {
@@ -174,7 +189,7 @@ test("the line's own unit bounds local quantity validation — nothing is clampe
 });
 
 test("the act is verified in storage; a lying or unavailable storage refuses to send", () => {
-  const act = buildReturnSubmission({
+  const act = buildAct({
     checkoutId: "co-verify",
     destination: "OriginalPayment",
     submissionKey: "act-verify",
@@ -183,7 +198,7 @@ test("the act is verified in storage; a lying or unavailable storage refuses to 
   });
   const good = fakeStorage();
   assert.equal(storeReturnSubmission(good, act), true);
-  assert.equal(good.getItem("tb278:customer-return-submission:co-verify"), serializeReturnSubmission(act));
+  assert.equal(good.getItem(submissionStorageKey("co-verify", VIEWER)), serializeReturnSubmission(act));
 
   // A storage whose write silently vanishes is NOT durable.
   const lying = fakeStorage();
@@ -200,17 +215,67 @@ test("the act is verified in storage; a lying or unavailable storage refuses to 
   };
   assert.equal(storeReturnSubmission(throwing, act), false);
   assert.equal(storeReturnSubmission(null, act), false);
-  assert.equal(readReturnSubmission(null, "co-verify").kind, "unavailable");
+  assert.equal(readReturnSubmission(null, "co-verify", VIEWER).kind, "unavailable");
 });
 
 test("unreadable evidence is an explicit state, never 'nothing pending'", () => {
-  const broken = fakeStorage({ "tb278:customer-return-submission:co-x": "{not json" });
-  assert.equal(readReturnSubmission(broken, "co-x").kind, "unreadable");
-  assert.equal(hasUnresolvedCustomerReturnSubmission(broken, "co-x"), true, "a broken envelope needs attention");
+  const broken = fakeStorage({ [submissionStorageKey("co-x", VIEWER)]: "{not json" });
+  assert.equal(readReturnSubmission(broken, "co-x", VIEWER).kind, "unreadable");
+  assert.equal(hasUnresolvedCustomerReturnSubmission(broken, "co-x", VIEWER), true, "a broken envelope needs attention");
   const none = fakeStorage();
-  assert.equal(readReturnSubmission(none, "co-x").kind, "none");
-  assert.equal(hasUnresolvedCustomerReturnSubmission(none, "co-x"), false);
+  assert.equal(readReturnSubmission(none, "co-x", VIEWER).kind, "none");
+  assert.equal(hasUnresolvedCustomerReturnSubmission(none, "co-x", VIEWER), false);
   assert.equal(parseReturnSubmission(null), null);
+});
+
+test("the act is viewer-scoped: another customer's act is never read, adopted or cleared", () => {
+  const act = buildAct({ checkoutId: "co-scope", destination: "Wallet", submissionKey: "act-scope", selections: [selection()] });
+  const storage = fakeStorageWith(act);
+
+  // No viewer: the surface cannot name a scope at all.
+  assert.equal(readReturnSubmission(storage, "co-scope").kind, "viewer_required");
+  assert.equal(readReturnSubmission(storage, "co-scope", "").kind, "viewer_required");
+
+  // A different viewer reads its OWN (empty) scope, never this act.
+  assert.equal(readReturnSubmission(storage, "co-scope", "user-other").kind, "none");
+  assert.equal(storeReturnSubmission(storage, { ...act, viewerId: " " }), false);
+  // A stale envelope whose own viewer disagrees with its key is unreadable evidence.
+  const foreign = fakeStorage({ [submissionStorageKey("co-scope", "user-other")]: serializeReturnSubmission(act) });
+  assert.equal(readReturnSubmission(foreign, "co-scope", "user-other").kind, "unreadable");
+  assert.equal(clearReturnSubmissionIfCurrent(storage, act, "user-other"), false);
+  assert.equal(readReturnSubmission(storage, "co-scope", VIEWER).kind, "found");
+});
+
+test("tampered child bytes are refused on read, never replayed", () => {
+  const act = buildAct({ checkoutId: "co-tamper", destination: "Wallet", submissionKey: "act-tamper", selections: [selection()] });
+  const stored = JSON.parse(serializeReturnSubmission(act)) as ReturnSubmission;
+
+  // A changed quantity in the frozen body no longer matches its own identity.
+  const quantityTamper = JSON.parse(serializeReturnSubmission(stored)) as ReturnSubmission;
+  quantityTamper.children[0].body = quantityTamper.children[0].body.replace('"quantity":2', '"quantity":3');
+  assert.equal(parseReturnSubmission(JSON.stringify(quantityTamper)), null);
+
+  // A foreign line or a changed child key is refused as well.
+  const lineTamper = JSON.parse(serializeReturnSubmission(stored)) as ReturnSubmission;
+  lineTamper.children[0].orderLineId = "ol-other";
+  assert.equal(parseReturnSubmission(JSON.stringify(lineTamper)), null);
+
+  // A `refused` child must carry a body-dictated code; an authority refusal can only stay unknown.
+  const forgedRefusal = JSON.parse(serializeReturnSubmission(stored)) as ReturnSubmission;
+  forgedRefusal.children[0].state = "refused";
+  forgedRefusal.children[0].refusalCode = "return.idempotency_conflict";
+  assert.equal(parseReturnSubmission(JSON.stringify(forgedRefusal)), null);
+
+  // A recorded child must name the case it created.
+  const missingCase = JSON.parse(serializeReturnSubmission(stored)) as ReturnSubmission;
+  missingCase.children[0].state = "recorded";
+  missingCase.children[0].caseId = null;
+  assert.equal(parseReturnSubmission(JSON.stringify(missingCase)), null);
+
+  // An act recorded without an authenticated viewer is unreadable, never adopted.
+  const viewerless = JSON.parse(serializeReturnSubmission(stored)) as Record<string, unknown>;
+  viewerless.viewerId = null;
+  assert.equal(parseReturnSubmission(JSON.stringify(viewerless)), null);
 });
 
 test("only a body-dictated refusal is a no-effect refusal; every other refusal stays unresolved", () => {
@@ -233,7 +298,7 @@ test("only a body-dictated refusal is a no-effect refusal; every other refusal s
 });
 
 test("a child's answer is recorded against the exact act: recorded is terminal, unknown keeps its bytes", () => {
-  const act = buildReturnSubmission({
+  const act = buildAct({
     checkoutId: "co-answers",
     destination: "Wallet",
     submissionKey: "act-answers",
@@ -245,10 +310,11 @@ test("a child's answer is recorded against the exact act: recorded is terminal, 
   });
   const storage = fakeStorage();
   assert.equal(storeReturnSubmission(storage, act), true);
+  const scope = { checkoutId: act.checkoutId, viewerId: act.viewerId };
   const [first, second] = act.children;
 
   // The first child's answer never arrived: its exact bytes stay for the next attempt.
-  const afterUnknown = recordChildOutcome(storage, act.submissionKey, first.key, {
+  const afterUnknown = recordChildOutcome(storage, scope, act.submissionKey, first.key, {
     kind: "unknown",
     refusalCode: "host-unreachable",
   });
@@ -258,13 +324,13 @@ test("a child's answer is recorded against the exact act: recorded is terminal, 
   assert.equal(afterUnknown?.children[0].refusalCode, "host-unreachable");
 
   // The second child was stored: it can never be sent again, even if a later answer arrives.
-  const afterRecorded = recordChildOutcome(storage, act.submissionKey, second.key, {
+  const afterRecorded = recordChildOutcome(storage, scope, act.submissionKey, second.key, {
     kind: "recorded",
     caseId: "rr-2",
     caseNumber: "RET-2",
   });
   assert.ok(afterRecorded);
-  const terminal = recordChildOutcome(storage, act.submissionKey, second.key, {
+  const terminal = recordChildOutcome(storage, scope, act.submissionKey, second.key, {
     kind: "unknown",
     refusalCode: "host-unreachable",
   });
@@ -281,20 +347,29 @@ test("a child's answer is recorded against the exact act: recorded is terminal, 
 
   // A late answer for a DIFFERENT act is never applied to the current one.
   assert.equal(
-    recordChildOutcome(storage, "another-act", first.key, { kind: "recorded", caseId: "rr-x", caseNumber: null }),
+    recordChildOutcome(storage, scope, "another-act", first.key, { kind: "recorded", caseId: "rr-x", caseNumber: null }),
+    null,
+  );
+  // An answer from ANOTHER viewer's scope can never touch this act.
+  assert.equal(
+    recordChildOutcome(storage, { checkoutId: act.checkoutId, viewerId: "user-other" }, act.submissionKey, first.key, {
+      kind: "recorded",
+      caseId: "rr-y",
+      caseNumber: null,
+    }),
     null,
   );
 });
 
 test("only the exact current act can be cleared; a newer act survives a late answer", () => {
-  const older = buildReturnSubmission({
+  const older = buildAct({
     checkoutId: "co-clear",
     destination: "Wallet",
     submissionKey: "act-old",
     newChildKey: nextKey,
     selections: [selection({ orderLineId: "ol-old" })],
   });
-  const newer = buildReturnSubmission({
+  const newer = buildAct({
     checkoutId: "co-clear",
     destination: "Wallet",
     submissionKey: "act-new",
@@ -303,12 +378,19 @@ test("only the exact current act can be cleared; a newer act survives a late ans
   });
   const storage = fakeStorage();
   assert.equal(storeReturnSubmission(storage, older), true);
-  assert.equal(clearReturnSubmissionIfCurrent(storage, older), true, "the current act can be cleared");
-  assert.equal(readReturnSubmission(storage, "co-clear").kind, "none");
+  assert.equal(clearReturnSubmissionIfCurrent(storage, older, VIEWER), true, "the current act can be cleared");
+  assert.equal(readReturnSubmission(storage, "co-clear", VIEWER).kind, "none");
 
   assert.equal(storeReturnSubmission(storage, newer), true);
-  assert.equal(clearReturnSubmissionIfCurrent(storage, older), false, "a stale act never clears a newer one");
-  const read = readReturnSubmission(storage, "co-clear");
+  assert.equal(clearReturnSubmissionIfCurrent(storage, older, VIEWER), false, "a stale act never clears a newer one");
+  const read = readReturnSubmission(storage, "co-clear", VIEWER);
   assert.equal(read.kind, "found");
   assert.equal(read.kind === "found" ? read.submission.submissionKey : null, "act-new");
+
+  // A changed stored envelope is not "the exact act": the clear refuses instead of deleting evidence.
+  const mutated = JSON.parse(serializeReturnSubmission(newer)) as ReturnSubmission;
+  mutated.recordedAt = "2026-11-18T00:00:00Z";
+  storage.setItem(submissionStorageKey("co-clear", VIEWER), JSON.stringify(mutated));
+  assert.equal(clearReturnSubmissionIfCurrent(storage, newer, VIEWER), false);
+  assert.notEqual(readReturnSubmission(storage, "co-clear", VIEWER).kind, "none");
 });

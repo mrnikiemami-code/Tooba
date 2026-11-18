@@ -468,10 +468,17 @@ public sealed class ReturnsCustomerReceipts274R1Tests
         public Task<ReturnSnapshot> ApproveAsync() => ApproveAsAsync(SellerPartyId);
 
         // TB-277: approval records a decision only; this explicit intent is what starts the money.
-        public Task<ReturnSnapshot> StartRefundAsync() =>
-            _directory.StartFirstRefundAsync(
-                new StartReturnRefundCommand(ReturnRequestId, Guid.NewGuid()),
+        public async Task<ReturnSnapshot> StartRefundAsync()
+        {
+            // TB-279-R1 (F4): every NEW money command names the reviewed decision revision.
+            var reviewed = await _directory.GetAsync(ReturnRequestId, CancellationToken.None);
+            return await _directory.StartFirstRefundAsync(
+                new StartReturnRefundCommand(
+                    ReturnRequestId,
+                    Guid.NewGuid(),
+                    reviewed?.DecisionVersion ?? 0),
                 CancellationToken.None);
+        }
 
         public Task<ReturnSnapshot> ApproveAsAsync(Guid sellerPartyId) =>
             _directory.ApproveAsync(
@@ -558,7 +565,7 @@ public sealed class ReturnsCustomerReceipts274R1Tests
                 new FixedFulfillmentReader(order, lineId),
                 db,
                 clock),
-            new FixedPaymentReader(requested * 1000m),
+            new FixedPaymentReader(requested * 1000m, request.CheckoutId),
             gateway,
             wallet,
             inventory,
@@ -724,7 +731,7 @@ public sealed class ReturnsCustomerReceipts274R1Tests
         }
     }
 
-    private sealed class FixedPaymentReader(decimal amount) : IPaymentReturnReader
+    private sealed class FixedPaymentReader(decimal amount, Guid owningCheckoutId) : IPaymentReturnReader
     {
         private readonly Guid _paymentId = Guid.NewGuid();
 
@@ -736,7 +743,7 @@ public sealed class ReturnsCustomerReceipts274R1Tests
             Task.FromResult<PaymentReturnSnapshot?>(
                 new PaymentReturnSnapshot(
                     paymentId == Guid.Empty ? _paymentId : paymentId,
-                    Guid.NewGuid(),
+                    owningCheckoutId,
                     amount,
                     "IRR",
                     "Succeeded"));
