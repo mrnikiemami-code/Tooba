@@ -1,3 +1,7 @@
+# CURRENT — included in the ONE issued 279-R1 repair — 2026-11-18
+
+Full envelope: `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R1/TASK.md`. All F1–F6 and S1–S5 below are in scope; implementation/closure NOT yet claimed. No automatic next task. The original planning checklist is preserved below; its old “not issued” label describes its creation state.
+
 # Returns — one consolidated closure checklist after TB-279
 Date: 2026-11-18. Status: PLANNED, NOT ISSUED.
 Source checkpoint: 9c0885a5943e7f1a4e1a09a17fac417d23037aa6.
