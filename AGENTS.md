@@ -1,4 +1,10 @@
-# CURRENT — 279-R3 WORKER PASS (B1/B2 + controlled effect proofs + posting cleanup closed); AWAIT ARCHITECT REVIEW — 2026-11-18
+# CURRENT — 279-R3 ARCHITECT ACCEPT: FIXED RETURNS CLOSURE COMPLETE — 2026-11-18
+
+Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/ARCHITECT-REVIEW.md` FIRST. Source/evidence reviewed at `44e2cc6b3ea168b0e93de9103b861149d0f21fe7` (implementation `32b48c5b53ea263cd0aae00a5da59f34b4749671`). ACCEPT within issued B1/B2 + C1/C2 + D: required new-decision version after replay; legacy/incoherent held occupancy; actual Inventory quantity2 not3 with durable replay; failed-child shared-budget refusal/lawful control; safe historical posting untracking. This increment is CLOSED; no further repair task for those findings.
+Last Architect-accepted Returns closure: `TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3`. Retain repaired R2 workflows and all historical reviews; original PARTIAL verdicts are not rewritten. Worker focused receipts21/21 +4/4 and guards34/34 were assessed against actual source/test assertions; Architect did not execute the local Windows runtime.
+activeTask NONE; automaticNextImplementationTask NONE; no next implementation issued. User/provider/live financial/full Marketplace acceptance not claimed. No active served walkthrough; history URLs remain read-only, no automatic demo. Key security state remains CONTAINED_PENDING_REVIEWED_RETIREMENT, separate from accepted Returns closure; no key operation authorized. Move on only to the user's next chosen development.
+
+# SUPERSEDED — worker/issuance checkpoint (historical)
 
 Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/TASK.md` and
 `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,closure-matrix.md,owner-proof.md,user-review.md,issuance-receipt.json}`.

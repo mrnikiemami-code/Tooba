@@ -1,3 +1,22 @@
+# CURRENT — 279-R3 ARCHITECT ACCEPT; audited closure CLOSED — 2026-11-18
+
+Acceptance: `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/ARCHITECT-REVIEW.md`. Reviewed final source `44e2cc6b3ea168b0e93de9103b861149d0f21fe7`.
+
+| Remaining issued item | Final state | Evidence |
+| --- | --- | --- |
+| B1 missing/current/stale NEW decision version and exact replay | CLOSED | owning21-fact suite plus shipped-adapter fact |
+| B2 unallocated rejected held goods, ambiguous origins and incoherent release | CLOSED | exact evaluator/Directory assertions and conservative stored-fact policy |
+| C1 actual accepted-only restock quantity and durable first-attempt replay | CLOSED | real Directory + recording gateway/Inventory, actual quantity2 rather than3 |
+| C2 actual failed-child cross-case budget refusal and lawful deterministic child | CLOSED | 60+60>100 refuses;40+60=100 succeeds once;missing authority refuses |
+| Historical posting safely untracked | CLOSED | current diff/ignore + reported private local preservation |
+| Earlier R2 operator/customer/quantum/portion changes | RETAINED | previous source-reviewed improvements preserved |
+| User active-flow review / real provider effects | NOT CLAIMED | no active served walkthrough, controlled ports only |
+| Historical environment-key retirement | SEPARATE PENDING DECISION | CONTAINED_PENDING_REVIEWED_RETIREMENT; no rotation/revocation authorized |
+
+No additional implementation task for this closed scope. activeTask NONE; automaticNextImplementationTask NONE. Prior PARTIAL reports remain historical; these particular findings are resolved through accepted R3. No automatic business fixture, key operation or retest loop. The user may move to other development.
+
+---
+
 # CURRENT — 279-R3 worker PASS recorded; AWAIT ARCHITECT REVIEW — 2026-11-18
 
 Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/{RESULT.md,closure-matrix.md,owner-proof.md,RECEIPTS.md}`.
