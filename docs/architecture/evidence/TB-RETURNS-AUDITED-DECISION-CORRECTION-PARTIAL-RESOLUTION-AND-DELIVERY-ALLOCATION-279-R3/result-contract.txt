@@ -1,0 +1,35 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3
+Parent-Task: TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2
+Channel: tooba-main
+WorkerId: tooba-worker-01
+AgentType: cursor
+Program: TOOBA
+Status: PASS within the issued B1/B2/C1/C2/D fixed scope (NOT Architect ACCEPT, NOT user acceptance)
+Expected-Base-SHA: dd5c1d31fcd65bce7164c115599aacb5a4e33083
+Base-SHA: e7db94398e663b604a536b82bd86670bb50f72db (permitted docs-only issuance commit on top of Expected-Base, verified ancestor, zero incoming source/config/schema delta)
+Code-SHA: 32b48c5b53ea263cd0aae00a5da59f34b4749671
+Evidence-SHA: 50432050c04ea35d584aa14a42e5d99747bfbfcd
+Final-HEAD: 50432050c04ea35d584aa14a42e5d99747bfbfcd (all proof/evidence); the pushed HEAD is the single docs-only commit that adds THIS contract file — `git log -1 --pretty=%H`, no source/config/schema delta
+HEAD-Equals-Origin-Main: YES (fetched origin/main immediately before push; pushed normally, no rebase/amend/force)
+B1-New-Decision-Version: after the exact stored-replay path, ReturnDirectory.Corrections.cs ResolveExistingDecision refuses a MISSING or different ExpectedDecisionVersion with return.correction.version_stale before any decision/revision/status/amount/allocation row; the locking comparison is unchanged; ReturnAdminOperationsAdapter no longer back-fills a revision from a fresh read. Facts: R3_B1_a_reopened_case_refuses_an_unversioned_new_decision_then_accepts_the_reviewed_one, R3_B1_a_reopened_case_refuses_an_unversioned_new_rejection_before_any_row, R3_B1_A4_the_reachable_admin_contract_never_invents_the_reviewed_revision (21/21 class green)
+B2-Held-Capacity: new pure ReturnHeldGoodsPolicy derives outstanding held quantity per item/condition from stored receiving + latest complete resolution + custody (incoherent receipt => conservative claim, never zero); the evaluator adds rejected/cancelled cases with NO allocation rows to legacy occupancy (one provable slice subtracted, several => every slice LegacyAmbiguous and a new claim refused); DescribeRejectedHeldAsync refuses an incoherent receipt with return.recovery.evidence_conflict BEFORE the rejection row and feeds the same map to the release. Facts: R3_B2_a_legacy_rejected_case_with_received_goods_keeps_its_occupancy_without_rows, R3_B2_an_ambiguous_expired_and_live_origin_is_typed_blocked_not_guessed_free, R3_B2_an_incoherent_receipt_blocks_the_rejection_without_releasing_its_live_row, R2_a_handed_back_remainder_keeps_the_accepted_units_occupied (2.5 occupied / 0.5 free)
+C1-Inventory-Argument: real StartFirstRefundAsync through the actual ReturnDirectory on requested/received 3, accepted 2, rejected-received 1: exactly ONE durable attempt with 2 x stored unit price and the case-derived id/key, one gateway call with that stored amount/key, recording Inventory receives (owning reservation, 2, key) - never 3 - UsableRestockedQuantity=2, rejected-received 1 still owed (Recovery.Phase=PendingDisposition), and a replay of the same intent adds no attempt/gateway/restock. Fact: C1_the_real_first_refund_restocks_exactly_the_accepted_portion_and_replays_with_zero_effect
+C2-Retry-Budget: real RetryRefundAsync with exact failed id + reviewed decision version: payment 100, A failure 60, sibling Pending 60 => return.refund.budget_exceeded, one attempt, zero gateway/Inventory, status still RefundFailed; lawful control (sibling 40) mints exactly one deterministic child (ReturnRetryIdentity), one gateway call of 60, one accepted-usable restock of 1, duplicate reviewed intent mints nothing; missing payment authority => refund.payment_missing with zero attempt/effect. Facts: C2_the_real_failed_child_retry_refuses_a_cross_case_budget_overrun_and_mints_nothing, C2_an_independent_lawful_control_mints_exactly_one_deterministic_child_and_replays_it, C2_a_missing_payment_authority_refuses_the_retry_with_zero_attempt_and_effect
+Historical-Posting-Cleanup: docs/architecture/evidence/TB-RETURNS-MODAL-QUANTITY-GUARDS-AND-EXPLICIT-REFUND-SEPARATION-277-R1/RESULT.bridge.txt removed from the Git index with git rm --cached in normal commit 50432050c; local working copy preserved (Test-Path True); one exact scoped ignore docs/architecture/evidence/**/RESULT.bridge.txt matches it (git check-ignore); the historical 277-R1 RESULT.md/evidence is untouched
+Security-Exposure-State: CONTAINED_PENDING_REVIEWED_RETIREMENT
+Validation-State: ReturnsDecisionCorrection279DirectoryTests 21/21; ReturnsFinalClosure279R3Tests 4/4; Host ReturnsModuleAmsc001* 34/34; dotnet build src/backend/Tooba.slnx -c Release 0 errors (642 pre-existing warnings, NU1900 offline feed); dotnet publish Tooba.Host 0 errors. Declared deviation: one whole Tooba.Returns.Tests run 187/187 beyond the issued focused selection; the Host had to be stopped/started for the publish. Served: Host 5088 PID 39776 dll SHA256 04CD98A718E4BCB9702AF12F54BA4872E6B11FEB6956604AF9A65E4055ED34C5 (/health 200, /health/ready 200 SingleStore+messaging Healthy, /__platform-commerce store-alpha), Next 3000 PID 9904 unchanged (/fa/admin/returns 200), both stored cases read GET-only and still Completed with original updated_at
+Schema-State: ZERO
+Live-Business-Write-State: ZERO
+Provider-Money-Stock-Effect-State: ZERO
+User-Work-Preserved: YES
+Git-Rewrite-State: NONE
+Architect-Accept-State: NO
+User-Acceptance-State: NO
+Evidence-Limits: money/Inventory are scripted controlled ports (no real PSP/Wallet/Inventory effect); no committed two-writer race; the incoherent-read path is surfaced as a conservative claim plus typed allocation/evidence refusal rather than new UI copy; no active case exists and no live POST was authorized, so there is no served operator approve/reject/refund walkthrough; legacy/unallocated held goods are preserved without manufacturing rows or backfill; key exposure is contained in Git only and retirement remains an explicitly separate, unauthorised decision
+Recovery-Next-Task: NONE
+Next-Recommended-Task: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT
+END_TOOBA_WORKER_RESULT
