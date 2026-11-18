@@ -1,3 +1,7 @@
+# CURRENT — all remaining narrow closure items are in ONE issued 279-R3 — 2026-11-18
+
+Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/TASK.md`. Scope frozen to B1/B2 + actual Inventory/retry-budget proof + safe historical posting untracking. No new polish/audit/task chain. Preserve R2 repaired paths; no schema/live business write/key operation. Implementation not yet claimed; Architect/user acceptance pending. Security retirement stays separately explicit. Previous review/checklist preserved below.
+
 # CURRENT — 279-R2 reviewed; most connected repairs retained, narrow closure remains — 2026-11-18
 
 Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R2/ARCHITECT-REVIEW.md` (source `f867dcb7163608915112c7450196c49bc8a3ba37`). Overall PARTIAL; no new task issued.
