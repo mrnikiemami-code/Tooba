@@ -1,4 +1,10 @@
-# CURRENT — 278 PARTIAL; ONLY FINAL CONSOLIDATED279 ISSUED WITH EXACT REPO ENVELOPE — 2026-11-17
+# CURRENT — 279 ARCHITECT REVIEW: PARTIAL; CONSOLIDATED CLOSURE PLANNED, NOT ISSUED — 2026-11-18
+
+Independent source review of code `9c0885a5943e7f1a4e1a09a17fac417d23037aa6` found six blocking groups: retry budget bypass/locked payment read, actual restock ignoring accepted portions, rejected-held capacity/custody condition gaps, incomplete reviewed-version/atomic decision fencing, guessed legacy delivery attribution, and unclosed customer intent durability. Worker PASS is not Architect ACCEPT.
+Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/ARCHITECT-REVIEW.md` and `docs/planning/returns/RETURNS-279-CONSOLIDATED-CLOSURE-CHECKLIST.md` FIRST. The checklist includes the small shared-dialog/toast, unknown-precision, retained-test, display and recovery-document items so they are not forgotten. Resolve together after critical defects; do not create ten micro-tasks.
+278 and279 remain PARTIAL. Retain useful delivered work and every prior accepted boundary/history. No live mutation/reset/new demo, no automatic task or migration/apply authority. **No repair task issued here**; STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — previous worker/checkpoint report (preserved below)
 
 Read docs/planning/returns/RETURNS-279-EXECUTION-DECISIONS.md,278/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/TASK.md.
 The FULL279 envelope and identical evidence TASK are committed BEFORE execution; issuance-receipt.json carries SHA256. Empty Bridge body is not permission to reconstruct the task.
