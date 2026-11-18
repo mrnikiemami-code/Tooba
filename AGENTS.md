@@ -1,4 +1,10 @@
-# CURRENT — TB-280 WORKER PASS: RETURNS WORKSPACE NOW SPEAKS SHOP LANGUAGE WITH ONE NEXT STEP; AWAIT ARCHITECT REVIEW AND USER LOOK — 2026-11-18
+# CURRENT — TB-280 ARCHITECT PARTIAL: THREE BOUNDED PRODUCT UX FINDINGS — 2026-11-19
+
+Read `docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/ARCHITECT-REVIEW.md` FIRST. Worker head 83f56842f139c8512974aa872b67b0d3b6e97d9e independently source-reviewed. Zero-received gating, next-step hierarchy and main copy improved; final product/user acceptance NOT granted. UX1: refund confirmation displays requested rather than approved/bound money. UX2: full-receipt implicit baseline prefills aggregate accepted into usable, causing immediate errors for damaged/mixed goods; zero-condition fields remain. UX3: headline sums pcs and grams. Keep these as ONE bounded frontend closure, not a backend redesign or long task chain. No next implementation issued; automaticNextImplementationTask NONE.
+
+279-R3 fixed-scope Architect ACCEPT remains preserved. Follow `docs/product/OPERATOR-UX-ACCEPTANCE.md` for every UI task. Preserve exact intent/version safety and all owning write guards. No live POST/write, fixture/reset, migration or key operation is authorized by this review. Owner visual/functional acceptance remains pending. Historical worker PASS and prior reports remain unchanged.
+
+# HISTORICAL — TB-280 worker checkpoint
 
 Read `docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/TASK.md` and
 `docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ux-before-after.md,user-review.md,issuance-receipt.json}`.
