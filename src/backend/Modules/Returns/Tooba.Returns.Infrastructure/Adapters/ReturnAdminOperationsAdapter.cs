@@ -64,19 +64,10 @@ internal sealed class ReturnAdminOperationsAdapter(
         int? expectedDecisionVersion = null,
         int? expectedResolutionVersion = null)
     {
-        // TB-279-R2 (D): a caller that reviewed nothing specific is bound to the state it reads HERE, so a correction
-        // committed afterwards still refuses the stale decision inside the locked scope.
-        if (expectedDecisionVersion is null || expectedResolutionVersion is null)
-        {
-            var current = await directory.GetAsync(returnRequestId, cancellationToken)
-                ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
-            expectedDecisionVersion ??= current.DecisionVersion;
-            if (expectedResolutionVersion is null && current.Resolution?.FromReviewedPlan == true)
-            {
-                expectedResolutionVersion = current.Resolution.Version;
-            }
-        }
-
+        // TB-279-R3 (B1/A4): this reachable Order/admin adapter NEVER invents the revision it is approving. The
+        // reviewed decision and plan versions travel exactly as the caller supplied them; a caller that reviewed
+        // nothing gets the owning directory's typed stale-review refusal instead of an unreviewed decision taken
+        // against whatever the store happened to hold at send time.
         return Map(await directory.ApproveAsync(
             new ApproveReturnCommand(
                 returnRequestId,
@@ -110,17 +101,8 @@ internal sealed class ReturnAdminOperationsAdapter(
         int? expectedDecisionVersion = null,
         int? expectedResolutionVersion = null)
     {
-        if (expectedDecisionVersion is null || expectedResolutionVersion is null)
-        {
-            var current = await directory.GetAsync(returnRequestId, cancellationToken)
-                ?? throw new ContractOperationException(ReturnsErrorCodes.Missing);
-            expectedDecisionVersion ??= current.DecisionVersion;
-            if (expectedResolutionVersion is null && current.Resolution?.FromReviewedPlan == true)
-            {
-                expectedResolutionVersion = current.Resolution.Version;
-            }
-        }
-
+        // TB-279-R3 (B1/A4): the same rule as approval — the reviewed revisions are forwarded exactly as supplied and
+        // are never synthesized from a fresh read, so an unreviewed rejection is refused by the owning directory.
         return Map(await directory.RejectAsync(
             new RejectReturnCommand(
                 returnRequestId,

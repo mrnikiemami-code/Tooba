@@ -106,7 +106,11 @@ public sealed class ReturnsCharacterizationTests
             CancellationToken.None);
 
         var approved = await directory.ApproveAsync(
-            new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid(), first.SellerPartyId),
+            new ApproveReturnCommand(first.ReturnRequestId, Guid.NewGuid(), first.SellerPartyId)
+            {
+                // TB-279-R3 (B1): a NEW decision names the revision the caller reviewed.
+                ExpectedDecisionVersion = first.DecisionVersion,
+            },
             CancellationToken.None);
         // TB-277: approving records the DECISION only. Nothing is refunded, no attempt is created and no case is closed.
         Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
@@ -181,7 +185,11 @@ public sealed class ReturnsCharacterizationTests
             CancellationToken.None);
 
         var approved = await directory.ApproveAsync(
-            new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid(), created.SellerPartyId),
+            new ApproveReturnCommand(created.ReturnRequestId, Guid.NewGuid(), created.SellerPartyId)
+            {
+                // TB-279-R3 (B1): a NEW decision names the revision the caller reviewed.
+                ExpectedDecisionVersion = created.DecisionVersion,
+            },
             CancellationToken.None);
         // TB-277: the approval decision moves no money and settles no stock.
         Assert.Equal(ReturnRequestStatus.Approved, approved.Status);

@@ -183,14 +183,16 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
         // TB-279-R2 (C): a case whose status is no longer active can still physically HOLD goods, and its live
         // allocation rows are a real capacity claim. The allocation read below therefore covers every case of the
         // seller order, so an empty active-status set must never be answered as "nothing is occupied".
-        var allRequestIds = await _db.ReturnRequests.AsNoTracking()
+        var allCases = await _db.ReturnRequests.AsNoTracking()
             .Where(x => x.SellerOrderId == sellerOrderId)
-            .Select(x => x.ReturnRequestId)
+            .Select(x => new { x.ReturnRequestId, x.Status })
             .ToListAsync(cancellationToken);
-        if (allRequestIds.Count == 0)
+        if (allCases.Count == 0)
         {
             return LineOccupancy.Empty;
         }
+
+        var allRequestIds = allCases.Select(x => x.ReturnRequestId).ToList();
 
         var items = requestIds.Count == 0
             ? new List<OccupiedItemRow>()
@@ -224,7 +226,175 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             .GroupBy(x => x.SliceKey, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity), StringComparer.Ordinal);
 
+        // TB-279-R3 (B2): a REJECTED/CANCELLED case owns whatever it physically received until the custody authority
+        // records its actual handback. Allocation rows only answer that while they are still live; a legacy rejection
+        // with real received goods and NO rows used to vanish from every read, letting the same units fund a second
+        // claim. Its held quantity is therefore read from its own stored receiving/resolution/custody facts and added
+        // to the line's unallocated legacy occupancy — which is NEVER guessed onto a slice.
+        var releasedCaseIds = allCases
+            .Where(x => x.Status is ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled)
+            .Select(x => x.ReturnRequestId)
+            .Where(x => excludeReturnRequestId != x)
+            .ToArray();
+        if (releasedCaseIds.Length > 0)
+        {
+            var allocatedPairs = allocations
+                .Select(x => (x.ReturnRequestId, x.OrderLineId))
+                .ToHashSet();
+            var heldByLine = await ReadRejectedHeldByLineAsync(
+                releasedCaseIds,
+                allocatedPairs,
+                cancellationToken);
+            foreach (var (orderLineId, quantity) in heldByLine)
+            {
+                if (quantity <= 0m)
+                {
+                    continue;
+                }
+
+                legacyUnallocated[orderLineId] =
+                    (legacyUnallocated.TryGetValue(orderLineId, out var existing) ? existing : 0m) + quantity;
+            }
+        }
+
         return new LineOccupancy(returned, legacyUnallocated, allocatedElsewhere);
+    }
+
+    /// <summary>
+    /// TB-279-R3 (B2): the outstanding held quantity of every REJECTED/CANCELLED case line whose delivery origin is not
+    /// already claimed by one of its own LIVE allocation rows.
+    /// <para>
+    /// The quantity comes from the SAME receiving/resolution/custody authorities the write boundary uses, per item and
+    /// condition. Contradictory stored receiving rows are never read as "nothing arrived": the conservative claim of the
+    /// line is kept and the new claim that depends on the missing attribution is refused by the allocation policy.
+    /// </para>
+    /// </summary>
+    private async Task<Dictionary<Guid, decimal>> ReadRejectedHeldByLineAsync(
+        IReadOnlyList<Guid> releasedRequestIds,
+        IReadOnlySet<(Guid ReturnRequestId, Guid OrderLineId)> allocatedPairs,
+        CancellationToken cancellationToken)
+    {
+        var held = new Dictionary<Guid, decimal>();
+        if (releasedRequestIds.Count == 0)
+        {
+            return held;
+        }
+
+        var items = await _db.ReturnItems.AsNoTracking()
+            .Where(x => releasedRequestIds.Contains(x.ReturnRequestId))
+            .Select(x => new { x.ReturnRequestId, x.ReturnItemId, x.OrderLineId, x.Quantity })
+            .ToListAsync(cancellationToken);
+        if (items.Count == 0)
+        {
+            return held;
+        }
+
+        var receiptHeaders = await _db.ReturnReceipts.AsNoTracking()
+            .Where(x => releasedRequestIds.Contains(x.ReturnRequestId))
+            .Select(x => new { x.ReturnRequestId, x.ReturnReceiptId })
+            .ToListAsync(cancellationToken);
+        var receiptLines = await _db.ReturnReceiptLines.AsNoTracking()
+            .Where(x => releasedRequestIds.Contains(x.ReturnRequestId))
+            .Select(x => new { x.ReturnRequestId, x.ReturnReceiptId, x.ReturnItemId, x.Quantity, x.Condition })
+            .ToListAsync(cancellationToken);
+        var planRows = await _db.ReturnItemResolutions.AsNoTracking()
+            .Where(x => releasedRequestIds.Contains(x.ReturnRequestId))
+            .Select(x => new
+            {
+                x.ReturnRequestId,
+                x.ReturnItemId,
+                x.Version,
+                x.AcceptedUsableQuantity,
+                x.AcceptedDamagedQuantity,
+                x.RejectedReceivedUsableQuantity,
+                x.RejectedReceivedDamagedQuantity,
+            })
+            .ToListAsync(cancellationToken);
+        var custodyRows = await _db.ReturnItemCustodies.AsNoTracking()
+            .Where(x => releasedRequestIds.Contains(x.ReturnRequestId))
+            .Select(x => new { x.ReturnRequestId, x.ReturnItemId, x.Quantity, x.Condition })
+            .ToListAsync(cancellationToken);
+
+        foreach (var caseGroup in items.GroupBy(x => x.ReturnRequestId))
+        {
+            var caseItems = caseGroup.ToArray();
+            var owningReceiptIds = receiptHeaders
+                .Where(x => x.ReturnRequestId == caseGroup.Key)
+                .Select(x => x.ReturnReceiptId)
+                .ToArray();
+            var summary = ReturnReceivingSummary.Describe(
+                caseItems.Select(x => (x.ReturnItemId, x.Quantity)),
+                receiptLines
+                    .Where(x => x.ReturnRequestId == caseGroup.Key)
+                    .Select(x => ((Guid?)x.ReturnReceiptId, x.ReturnItemId, x.Quantity, x.Condition)),
+                owningReceiptIds);
+
+            foreach (var item in caseItems)
+            {
+                if (allocatedPairs.Contains((caseGroup.Key, item.OrderLineId)))
+                {
+                    // This case line still owns a LIVE allocation row: the allocation read is its capacity claim, and
+                    // counting its held quantity again would occupy the same goods twice.
+                    continue;
+                }
+
+                var receivedLine = summary.Lines.FirstOrDefault(x => x.ReturnItemId == item.ReturnItemId);
+                var received = new List<(decimal, ReturnItemCondition)>(2);
+                if (receivedLine is { Usable: > 0m })
+                {
+                    received.Add((receivedLine.Usable, ReturnItemCondition.Usable));
+                }
+
+                if (receivedLine is { Damaged: > 0m })
+                {
+                    received.Add((receivedLine.Damaged, ReturnItemCondition.Damaged));
+                }
+
+                var handedBack = custodyRows
+                    .Where(x => x.ReturnRequestId == caseGroup.Key && x.ReturnItemId == item.ReturnItemId)
+                    .Select(x => (
+                        x.Quantity,
+                        string.Equals(x.Condition, nameof(ReturnItemCondition.Damaged), StringComparison.Ordinal)
+                            ? ReturnItemCondition.Damaged
+                            : ReturnItemCondition.Usable))
+                    .ToArray();
+
+                var planRow = planRows
+                    .Where(x => x.ReturnRequestId == caseGroup.Key
+                        && x.ReturnItemId == item.ReturnItemId
+                        && x.AcceptedUsableQuantity is not null
+                        && x.AcceptedDamagedQuantity is not null
+                        && x.RejectedReceivedUsableQuantity is not null
+                        && x.RejectedReceivedDamagedQuantity is not null)
+                    .OrderByDescending(x => x.Version)
+                    .FirstOrDefault();
+                var plan = planRow is null
+                    ? null
+                    : new ReturnHeldGoodsPlanPortion(
+                        planRow.AcceptedUsableQuantity!.Value,
+                        planRow.AcceptedDamagedQuantity!.Value,
+                        planRow.RejectedReceivedUsableQuantity!.Value,
+                        planRow.RejectedReceivedDamagedQuantity!.Value);
+
+                var description = ReturnHeldGoodsPolicy.Describe(new ReturnHeldGoodsLineEvidence(
+                    item.ReturnItemId,
+                    item.Quantity,
+                    received,
+                    summary.IsCoherent,
+                    plan,
+                    handedBack));
+                if (description.OutstandingHeld <= 0m)
+                {
+                    continue;
+                }
+
+                held[item.OrderLineId] =
+                    (held.TryGetValue(item.OrderLineId, out var existing) ? existing : 0m)
+                    + description.OutstandingHeld;
+            }
+        }
+
+        return held;
     }
 
     private sealed record OccupiedItemRow(Guid ReturnRequestId, Guid OrderLineId, decimal Quantity);

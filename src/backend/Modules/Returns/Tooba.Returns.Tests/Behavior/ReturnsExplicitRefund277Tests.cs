@@ -241,14 +241,21 @@ public sealed class ReturnsExplicitRefund277Tests
 
         public ScriptedInventory Inventory { get; }
 
-        public Task<ReturnSnapshot> ApproveAsync() =>
-            _directory.ApproveAsync(
+        public async Task<ReturnSnapshot> ApproveAsync()
+        {
+            // TB-279-R3 (B1): a NEW decision names the revision the operator reviewed.
+            var reviewed = await _directory.GetAsync(Fixture.ReturnRequestId, CancellationToken.None);
+            return await _directory.ApproveAsync(
                 new ApproveReturnCommand(
                     Fixture.ReturnRequestId,
                     Guid.NewGuid(),
                     SellerPartyId,
-                    RefundDestination.OriginalPayment),
+                    RefundDestination.OriginalPayment)
+                {
+                    ExpectedDecisionVersion = reviewed?.DecisionVersion ?? 0,
+                },
                 CancellationToken.None);
+        }
 
         public async Task<ReturnSnapshot> StartFirstRefundAsync()
         {

@@ -320,6 +320,15 @@ public sealed partial class ReturnDirectory : IReturnDirectory
         {
             EnsureOwningSellerScope(request, command.SellerPartyId);
 
+            // TB-279-R3 (B2): the held-goods evidence is settled BEFORE any decision/status row is touched. Contradictory
+            // stored receiving rows are refused here with the existing typed evidence conflict, so a release can never
+            // turn incoherent evidence into a "nothing held" success and no falsely released decision/status exists.
+            IReadOnlyDictionary<Guid, decimal>? rejectedHeld = null;
+            if (request.Status == ReturnRequestStatus.Requested)
+            {
+                rejectedHeld = await DescribeRejectedHeldAsync(request, cancellationToken);
+            }
+
             // TB-279-R2 (D): a rejection also names the reviewed plan revision it was taken against, so a rejection can
             // never silently discard a plan the operator did not read. The fence is applied to the WINNING decision
             // only: an exact replay or a conflicting reason is answered by the durable decision authority itself, so a
@@ -353,10 +362,14 @@ public sealed partial class ReturnDirectory : IReturnDirectory
 
                 request.Reject(_clock.UtcNow);
 
-                // TB-279 (D) / TB-279-R1 (F3): a rejected claim returns its NEVER-RECEIVED remainder to the pool, while
-                // the goods that physically arrived stay claimed (under this same seller-order lock) until their real
-                // handback is durable. Releasing everything would let a sibling case claim units the seller still holds.
-                await ReleaseRejectedDeliveriesAsync(request, cancellationToken);
+                // TB-279 (D) / TB-279-R1 (F3) / TB-279-R3 (B2): a rejected claim returns its NEVER-RECEIVED remainder to
+                // the pool, while the goods that physically arrived stay claimed (under this same seller-order lock)
+                // until their real handback is durable. Releasing everything would let a sibling case claim units the
+                // seller still holds, and the held quantity was already described from this case's own facts above.
+                await ReleaseRejectedDeliveriesAsync(
+                    request,
+                    rejectedHeld ?? new Dictionary<Guid, decimal>(),
+                    cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
                 _telemetry.RecordRejected();
             }

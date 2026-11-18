@@ -481,14 +481,33 @@ public sealed class ReturnsCustomerReceipts274R1Tests
         }
 
         public Task<ReturnSnapshot> ApproveAsAsync(Guid sellerPartyId) =>
-            _directory.ApproveAsync(
-                new ApproveReturnCommand(ReturnRequestId, Guid.NewGuid(), sellerPartyId),
-                CancellationToken.None);
+            ApproveAsVersionedAsync(sellerPartyId);
 
         public Task<ReturnSnapshot> RejectAsAsync(Guid sellerPartyId, string? reason) =>
-            _directory.RejectAsync(
-                new RejectReturnCommand(ReturnRequestId, Guid.NewGuid(), sellerPartyId, reason),
+            RejectAsVersionedAsync(sellerPartyId, reason);
+
+        /// <summary>TB-279-R3 (B1): a NEW decision names the revision the operator reviewed.</summary>
+        private async Task<ReturnSnapshot> ApproveAsVersionedAsync(Guid sellerPartyId)
+        {
+            var reviewed = await _directory.GetAsync(ReturnRequestId, CancellationToken.None);
+            return await _directory.ApproveAsync(
+                new ApproveReturnCommand(ReturnRequestId, Guid.NewGuid(), sellerPartyId)
+                {
+                    ExpectedDecisionVersion = reviewed?.DecisionVersion ?? 0,
+                },
                 CancellationToken.None);
+        }
+
+        private async Task<ReturnSnapshot> RejectAsVersionedAsync(Guid sellerPartyId, string? reason)
+        {
+            var reviewed = await _directory.GetAsync(ReturnRequestId, CancellationToken.None);
+            return await _directory.RejectAsync(
+                new RejectReturnCommand(ReturnRequestId, Guid.NewGuid(), sellerPartyId, reason)
+                {
+                    ExpectedDecisionVersion = reviewed?.DecisionVersion ?? 0,
+                },
+                CancellationToken.None);
+        }
 
         public Task<ReturnSnapshot> RecoverAsync(ReturnRecoveryKind kind, Guid? expectedAttemptId = null) =>
             _directory.RecoverAsync(

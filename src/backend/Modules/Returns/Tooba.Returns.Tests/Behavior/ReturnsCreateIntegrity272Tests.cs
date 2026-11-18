@@ -705,7 +705,11 @@ public sealed class ReturnsCreateIntegrity272Tests
         // TB-279-R2 (C): the owning rejection path is what releases the case's delivery claim, so the rejection runs
         // through the SAME directory the way the operator path does (never an entity mutation that skips the release).
         await rejectDirectory.RejectAsync(
-            new RejectReturnCommand(rejected.ReturnRequestId, Guid.NewGuid(), rejectParty, "کالا سالم نبود"),
+            new RejectReturnCommand(rejected.ReturnRequestId, Guid.NewGuid(), rejectParty, "کالا سالم نبود")
+            {
+                // TB-279-R3 (B1): a NEW decision names the revision the caller reviewed.
+                ExpectedDecisionVersion = rejected.DecisionVersion,
+            },
             CancellationToken.None);
 
         var released = await rejectDirectory.EvaluateEligibilityAsync(rejectOrder, CancellationToken.None);

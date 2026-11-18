@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Returns.Application.ReturnRequests.Models;
 using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.Aggregates;
+using Tooba.Returns.Domain.ValueObjects;
 using Tooba.Returns.Infrastructure.Persistence;
 
 namespace Tooba.Returns.Infrastructure.Directories;
@@ -73,51 +74,109 @@ public sealed partial class ReturnDirectory
     }
 
     /// <summary>
-    /// TB-279-R1 (F3): releases the capacity of a REJECTED/CANCELLED case down to the goods it physically holds.
+    /// TB-279-R3 (B2): what each requested line still physically holds, read from the SAME authorities the write
+    /// boundary uses — never from the status and never from the requested quantity read as "received".
     /// <para>
-    /// The claimed quantity was the whole ORIGINAL claim, but the customer keeps the never-received remainder, so that
-    /// remainder returns to the pool at once. Everything that actually arrived stays under the seller-order
-    /// serialization until its real handback is recorded: a sibling case can therefore never claim goods the seller
-    /// still holds for another customer. A case with no recorded receipt releases its entire claim (its previous
-    /// behaviour); a legacy case without allocation rows re-acquires exactly the held quantity from its own eligible
-    /// slices instead of guessing an older delivery.
+    /// Contradictory stored receiving rows are refused here, BEFORE the rejection is recorded, with the existing typed
+    /// evidence conflict: a release may not turn incoherent evidence into a successful "nothing held" outcome, and no
+    /// decision/status/allocation row may move for it.
     /// </para>
     /// </summary>
-    private async Task ReleaseRejectedDeliveriesAsync(ReturnRequest request, CancellationToken cancellationToken)
+    private async Task<IReadOnlyDictionary<Guid, decimal>> DescribeRejectedHeldAsync(
+        ReturnRequest request,
+        CancellationToken cancellationToken)
     {
         var receiving = await ReadReceivingAsync(request, cancellationToken);
-        // TB-279-R2 (C): the occupied quantity of a rejected line is NOT "whatever the receipt happened to say". A
-        // reviewed plan can accept part of a line while declining the rest, and the accepted portion keeps consuming
-        // its delivery slice exactly like the declined-but-received one. Releasing down to the receipt alone (or to
-        // zero when the evidence is incoherent) would hand a sibling case goods this case still owns.
+        if (receiving is { IsCoherent: false })
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.RecoveryEvidenceConflict);
+        }
+
         var storedResolutions = await _db.ReturnItemResolutions.AsNoTracking()
+            .Where(x => x.ReturnRequestId == request.ReturnRequestId)
+            .ToListAsync(cancellationToken);
+        var custodies = await _db.ReturnItemCustodies.AsNoTracking()
             .Where(x => x.ReturnRequestId == request.ReturnRequestId)
             .ToListAsync(cancellationToken);
         var latestVersion = storedResolutions.Count == 0 ? 0 : storedResolutions.Max(x => x.Version);
         var resolvedById = storedResolutions
             .Where(x => x.Version == latestVersion)
-            .ToDictionary(x => x.ReturnItemId);
+            .GroupBy(x => x.ReturnItemId)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(x => x.Version).First());
+
+        var held = new Dictionary<Guid, decimal>(request.Items.Count);
         foreach (var item in request.Items)
         {
-            var held = receiving is { IsCoherent: true }
-                ? receiving.UsableOf(item.ReturnItemId) + receiving.DamagedOf(item.ReturnItemId)
-                : 0m;
-            if (resolvedById.TryGetValue(item.ReturnItemId, out var resolved))
+            ReturnHeldGoodsPlanPortion? plan = null;
+            if (resolvedById.TryGetValue(item.ReturnItemId, out var resolved)
+                && resolved.AcceptedUsableQuantity is { } acceptedUsable
+                && resolved.AcceptedDamagedQuantity is { } acceptedDamaged
+                && resolved.RejectedReceivedUsableQuantity is { } rejectedUsable
+                && resolved.RejectedReceivedDamagedQuantity is { } rejectedDamaged)
             {
-                // TB-279-R2 (C): the occupied quantity is accepted + declined-but-received, PER CONDITION. A stored
-                // portion that is not fully populated is not provable here, so `held` is kept as the higher claim.
-                var acceptedUsable = resolved.AcceptedUsableQuantity;
-                var acceptedDamaged = resolved.AcceptedDamagedQuantity;
-                var rejectedUsable = resolved.RejectedReceivedUsableQuantity;
-                var rejectedDamaged = resolved.RejectedReceivedDamagedQuantity;
-                if (acceptedUsable is not null && acceptedDamaged is not null
-                    && rejectedUsable is not null && rejectedDamaged is not null)
+                plan = new ReturnHeldGoodsPlanPortion(
+                    acceptedUsable,
+                    acceptedDamaged,
+                    rejectedUsable,
+                    rejectedDamaged);
+            }
+
+            var received = new List<(decimal, ReturnItemCondition)>(2);
+            if (receiving is not null)
+            {
+                if (receiving.UsableOf(item.ReturnItemId) is var usable and > 0m)
                 {
-                    var occupied = acceptedUsable.Value + acceptedDamaged.Value
-                        + rejectedUsable.Value + rejectedDamaged.Value;
-                    held = Math.Max(held, occupied);
+                    received.Add((usable, ReturnItemCondition.Usable));
+                }
+
+                if (receiving.DamagedOf(item.ReturnItemId) is var damaged and > 0m)
+                {
+                    received.Add((damaged, ReturnItemCondition.Damaged));
                 }
             }
+
+            var handedBack = custodies
+                .Where(x => x.ReturnItemId == item.ReturnItemId)
+                .Select(x => (
+                    x.Quantity,
+                    string.Equals(x.Condition, nameof(ReturnItemCondition.Damaged), StringComparison.Ordinal)
+                        ? ReturnItemCondition.Damaged
+                        : ReturnItemCondition.Usable))
+                .ToArray();
+
+            held[item.ReturnItemId] = ReturnHeldGoodsPolicy.Describe(new ReturnHeldGoodsLineEvidence(
+                item.ReturnItemId,
+                item.Quantity,
+                received,
+                // courier origin owns its receipt in Fulfillment; this path never restocks/receives it here.
+                receiving?.IsCoherent ?? true,
+                plan,
+                handedBack)).OutstandingHeld;
+        }
+
+        return held;
+    }
+
+    /// <summary>
+    /// TB-279-R1 (F3) / TB-279-R3 (B2): releases the capacity of a REJECTED/CANCELLED case down to the goods it
+    /// physically holds. The held map is the ONE description <see cref="DescribeRejectedHeldAsync"/> produced for this
+    /// same rejection, so the release can never read a different "held" than the one the decision was reviewed over.
+    /// <para>
+    /// The claimed quantity was the whole ORIGINAL claim, but the customer keeps the never-received remainder, so that
+    /// remainder returns to the pool at once. Everything that actually arrived stays under the seller-order
+    /// serialization until its real handback is recorded: a sibling case can therefore never claim goods the seller
+    /// still holds for another customer. A legacy case without allocation rows re-acquires exactly the held quantity
+    /// from its own eligible slices instead of guessing an older delivery.
+    /// </para>
+    /// </summary>
+    private async Task ReleaseRejectedDeliveriesAsync(
+        ReturnRequest request,
+        IReadOnlyDictionary<Guid, decimal> heldByItem,
+        CancellationToken cancellationToken)
+    {
+        foreach (var item in request.Items)
+        {
+            var held = heldByItem.TryGetValue(item.ReturnItemId, out var described) ? described : 0m;
 
             await TrimActiveAllocationsToHeldAsync(
                 request.ReturnRequestId,
@@ -160,7 +219,8 @@ public sealed partial class ReturnDirectory
                 await OwningSellerOrderIdAsync(returnRequestId, cancellationToken),
                 cancellationToken,
                 excludeReturnRequestId: returnRequestId);
-            var line = eligibility.Lines.FirstOrDefault(x => x.OrderLineId == item.OrderLineId);            var bound = line?.Slices is { Count: > 0 } slices
+            var line = eligibility.Lines.FirstOrDefault(x => x.OrderLineId == item.OrderLineId);
+            var bound = line?.Slices is { Count: > 0 } slices
                 ? ReturnAllocationPolicy.Allocate(slices, held)
                 : null;
             if (bound is null)

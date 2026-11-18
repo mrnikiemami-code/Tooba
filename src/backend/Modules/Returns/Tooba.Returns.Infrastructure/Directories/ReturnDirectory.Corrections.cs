@@ -211,8 +211,16 @@ public sealed partial class ReturnDirectory
         }
 
         // An OPEN case (no effective decision: freshly requested or corrected back to review) requires the review to
-        // name the revision it looked at. A stale review is refused instead of deciding over a newer revision.
-        if (expectedVersion is { } expected && expected != state.EffectiveVersion)
+        // name the revision it looked at. TB-279-R3 (B1): a MISSING version is refused exactly like a stale one —
+        // otherwise an unreviewed caller could append a NEW decision over a reopened case without ever naming the
+        // revision it read. An exact recorded replay of the SAME effective decision was answered above with zero effect
+        // and needs no version.
+        if (expectedVersion is not { } reviewedVersion)
+        {
+            throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
+        }
+
+        if (reviewedVersion != state.EffectiveVersion)
         {
             throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
         }

@@ -293,8 +293,9 @@ public interface IReturnAdminOperations
 
     /// <summary>
     /// Approve a return request. TB-277: this records the DECISION only and never executes money.
-    /// TB-279-R2 (D): the reviewed decision and plan revisions are honored when supplied and otherwise reviewed once
-    /// against the CURRENT stored facts, so the locked decision can still refuse a newer correction as stale.
+    /// TB-279-R3 (B1/A4): a NEW decision must name the revision the caller reviewed. The values are forwarded exactly
+    /// as supplied and are never synthesized from a fresh read, so a caller that reviewed nothing is refused with
+    /// <c>return.correction.version_stale</c>; an exact replay of the effective decision still answers its stored fact.
     /// </summary>
     Task<ReturnSnapshot> ApproveAsync(
         Guid returnRequestId,
@@ -309,7 +310,11 @@ public interface IReturnAdminOperations
     /// </summary>
     Task<ReturnSnapshot> StartFirstRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken);
 
-    /// <summary>Reject a return request.</summary>
+    /// <summary>
+    /// Reject a return request. TB-279-R3 (B1/A4): the reviewed decision/plan revisions are required for a NEW
+    /// rejection and are forwarded exactly as supplied — an unreviewed rejection is refused with
+    /// <c>return.correction.version_stale</c>.
+    /// </summary>
     Task<ReturnSnapshot> RejectAsync(
         Guid returnRequestId,
         Guid actorUserId,

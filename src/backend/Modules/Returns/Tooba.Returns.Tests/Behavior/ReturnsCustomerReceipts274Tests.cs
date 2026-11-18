@@ -752,15 +752,28 @@ public sealed class ReturnsCustomerReceipts274Tests
                     lines.Select(x => new CustomerReceiptLine(x.ReturnItemId, x.Quantity, x.Condition)).ToList()),
                 CancellationToken.None);
 
-        public Task<ReturnSnapshot> ApproveAsync() =>
-            _directory.ApproveAsync(
-                new ApproveReturnCommand(ReturnRequestId, Guid.NewGuid(), SellerPartyId),
+        public async Task<ReturnSnapshot> ApproveAsync()
+        {
+            // TB-279-R3 (B1): a NEW decision always names the revision the operator reviewed.
+            var reviewed = await _directory.GetAsync(ReturnRequestId, CancellationToken.None);
+            return await _directory.ApproveAsync(
+                new ApproveReturnCommand(ReturnRequestId, Guid.NewGuid(), SellerPartyId)
+                {
+                    ExpectedDecisionVersion = reviewed?.DecisionVersion ?? 0,
+                },
                 CancellationToken.None);
+        }
 
-        public Task<ReturnSnapshot> RejectAsync(string? reason) =>
-            _directory.RejectAsync(
-                new RejectReturnCommand(ReturnRequestId, Guid.NewGuid(), SellerPartyId, reason),
+        public async Task<ReturnSnapshot> RejectAsync(string? reason)
+        {
+            var reviewed = await _directory.GetAsync(ReturnRequestId, CancellationToken.None);
+            return await _directory.RejectAsync(
+                new RejectReturnCommand(ReturnRequestId, Guid.NewGuid(), SellerPartyId, reason)
+                {
+                    ExpectedDecisionVersion = reviewed?.DecisionVersion ?? 0,
+                },
                 CancellationToken.None);
+        }
 
         public async Task<ReturnSnapshot> RetryAsync()
         {

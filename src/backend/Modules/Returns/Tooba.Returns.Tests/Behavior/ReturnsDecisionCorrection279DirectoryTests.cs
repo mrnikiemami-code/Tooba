@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Contracts.Returns;
@@ -12,12 +16,15 @@ using Tooba.Returns.Application.ReturnRequests.Ports;
 using Tooba.Returns.Contracts.Errors;
 using Tooba.Returns.Domain.Aggregates;
 using Tooba.Returns.Domain.ValueObjects;
+using Tooba.Returns.Infrastructure.DependencyInjection;
 using Tooba.Returns.Infrastructure.Directories;
 using Tooba.Returns.Infrastructure.Evaluators;
 using Tooba.Returns.Infrastructure.Observability;
 using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Wallet.Contracts.Refunds;
 using Xunit;
+using IReturnAdminOperations = Tooba.Returns.Contracts.Operations.IReturnAdminOperations;
+using ReturnRequestOperationStatus = Tooba.Returns.Contracts.Operations.ReturnRequestOperationStatus;
 
 namespace Tooba.Returns.Tests.Behavior;
 
@@ -380,6 +387,177 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         Assert.Equal(2, await harness.AllocationCountAsync());
     }
 
+    // ------------------------------------------------------------------ R3 (B1): every NEW decision names its revision
+
+    [Fact]
+    public async Task R3_B1_a_reopened_case_refuses_an_unversioned_new_decision_then_accepts_the_reviewed_one()
+    {
+        // A genuine decided case is corrected back to review, so the effective decision is now null at version 1. A NEW
+        // approval that does not name the revision it looked at is refused before any decision/status/amount row.
+        await using var harness = await SeedAsync(Stage.ApprovedNoMoney);
+
+        var reopened = await harness.ReopenAsync("reopen-b1-approve", "بازبینی تصمیم پیشین", expectedVersion: 0);
+        Assert.Equal(ReturnRequestStatus.Requested, reopened.Status);
+        Assert.Equal(1, reopened.DecisionVersion);
+        var allocationsAfterReopen = await harness.AllocationCountAsync();
+
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.ApproveAsync(expectedVersion: null, expectedResolutionVersion: null));
+
+        Assert.Equal(ReturnsErrorCodes.CorrectionVersionStale, refused.Code);
+        Assert.Equal(1, await harness.DecisionCountAsync());
+        Assert.Equal(1, await harness.RevisionCountAsync());
+        Assert.Equal(ReturnRequestStatus.Requested, (await harness.SnapshotAsync()).Status);
+        Assert.Null((await harness.SnapshotAsync()).ApprovedAmount);
+        Assert.Equal(allocationsAfterReopen, await harness.AllocationCountAsync());
+        Assert.Equal(0, harness.Gateway.Calls);
+        Assert.Equal(0, harness.Inventory.Calls);
+
+        // A STALE revision (the pre-correction 0) is refused the same way...
+        var stale = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.ApproveAsync(expectedVersion: 0));
+        Assert.Equal(ReturnsErrorCodes.CorrectionVersionStale, stale.Code);
+        Assert.Equal(1, await harness.RevisionCountAsync());
+        Assert.Equal(ReturnRequestStatus.Requested, (await harness.SnapshotAsync()).Status);
+
+        // ...while the ACTUAL reviewed revision succeeds and appends exactly one revision.
+        var approved = await harness.ApproveAsync(expectedVersion: 1);
+        Assert.Equal(ReturnRequestStatus.Approved, approved.Status);
+        Assert.Equal(2, await harness.RevisionCountAsync());
+        Assert.Equal(2 * UnitPrice, approved.ApprovedAmount);
+
+        // A genuine replay of that same effective decision answers its stored fact with ZERO new effect.
+        var replay = await harness.ApproveAsync(expectedVersion: 1);
+        Assert.Equal(ReturnRequestStatus.Approved, replay.Status);
+        Assert.Equal(2, await harness.RevisionCountAsync());
+        Assert.Equal(1, await harness.DecisionCountAsync());
+        Assert.Equal(0, harness.Gateway.Calls);
+    }
+
+    [Fact]
+    public async Task R3_B1_a_reopened_case_refuses_an_unversioned_new_rejection_before_any_row()
+    {
+        await using var harness = await SeedAsync(Stage.ApprovedNoMoney);
+
+        var reopened = await harness.ReopenAsync("reopen-b1-reject", "بازبینی تصمیم پیشین", expectedVersion: 0);
+        Assert.Equal(1, reopened.DecisionVersion);
+        var allocationsAfterReopen = await harness.AllocationCountAsync();
+
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.RejectAsync("کالا مطابق سیاست مرجوعی نیست.", expectedVersion: null));
+
+        Assert.Equal(ReturnsErrorCodes.CorrectionVersionStale, refused.Code);
+        Assert.Equal(1, await harness.DecisionCountAsync());
+        Assert.Equal(1, await harness.RevisionCountAsync());
+        Assert.Equal(ReturnRequestStatus.Requested, (await harness.SnapshotAsync()).Status);
+        Assert.Equal(allocationsAfterReopen, await harness.AllocationCountAsync());
+        Assert.Equal(0, harness.Gateway.Calls);
+        Assert.Equal(0, harness.Inventory.Calls);
+
+        var rejected = await harness.RejectAsync("کالا مطابق سیاست مرجوعی نیست.", expectedVersion: 1);
+        Assert.Equal(ReturnRequestStatus.Rejected, rejected.Status);
+        Assert.Equal(2, await harness.RevisionCountAsync());
+        Assert.Equal(1, await harness.DecisionCountAsync());
+    }
+
+    [Fact]
+    public async Task R3_B1_A4_the_reachable_admin_contract_never_invents_the_reviewed_revision()
+    {
+        // The reachable Order/admin shape (IReturnAdminOperations through the shipped DI registration) forwards ONLY
+        // what the caller reviewed: an absent version is refused, never filled in from a fresh read.
+        await using var harness = await SeedAsync(Stage.ApprovedNoMoney);
+        var reopened = await harness.ReopenAsync("reopen-b1-adapter", "بازبینی تصمیم پیشین", expectedVersion: 0);
+        Assert.Equal(1, reopened.DecisionVersion);
+
+        await using var provider = BuildReturnsContractProvider(harness);
+        var operations = provider.GetRequiredService<IReturnAdminOperations>();
+
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(
+            () => operations.ApproveAsync(harness.ReturnRequestId, Guid.NewGuid(), CancellationToken.None));
+
+        Assert.Equal(ReturnsErrorCodes.CorrectionVersionStale, refused.Code);
+        Assert.Equal(1, await harness.RevisionCountAsync());
+        Assert.Equal(ReturnRequestStatus.Requested, (await harness.SnapshotAsync()).Status);
+
+        var approved = await operations.ApproveAsync(
+            harness.ReturnRequestId,
+            Guid.NewGuid(),
+            CancellationToken.None,
+            expectedDecisionVersion: reopened.DecisionVersion);
+
+        Assert.Equal(ReturnRequestOperationStatus.Approved, approved.Status);
+        Assert.Equal(2, await harness.RevisionCountAsync());
+    }
+
+    // ------------------------------------------------------------------ R3 (B2): rejected goods stay claimed
+
+    [Fact]
+    public async Task R3_B2_a_legacy_rejected_case_with_received_goods_keeps_its_occupancy_without_rows()
+    {
+        // The rejection predates per-delivery allocation and owns NO allocation row, but its recorded receipt proves
+        // that the unit physically arrived. That unit is still held by the seller, so it can never fund a new claim.
+        await using var harness = await SeedAsync(Stage.RejectedNoMoney);
+
+        Assert.Equal(0, await harness.AllocationCountAsync());
+        var eligibility = await harness.EligibilityAsync();
+        var line = eligibility.Lines.Single(x => x.OrderLineId == harness.OrderLineId);
+
+        Assert.Equal(0m, line.RemainingReturnableQuantity);
+        Assert.Equal(0m, line.Slices?.Sum(x => x.AvailableQuantity) ?? 0m);
+        Assert.False(eligibility.Eligible);
+        Assert.Equal(ReturnEligibilityReasonCodes.NothingReturnable, line.BlockerCode);
+    }
+
+    [Fact]
+    public async Task R3_B2_an_ambiguous_expired_and_live_origin_is_typed_blocked_not_guessed_free()
+    {
+        // The same held unit, but the line has TWO deliveries: one expired parcel and one live parcel. The held unit's
+        // physical origin cannot be proved, so the allocator refuses to bind it instead of guessing a batch.
+        await using var harness = await SeedAsync(
+            Stage.RejectedNoMoney,
+            requestedOverride: 1m,
+            ambiguousDeliveryOrigin: true);
+
+        Assert.Equal(0, await harness.AllocationCountAsync());
+        var eligibility = await harness.EligibilityAsync();
+        var line = eligibility.Lines.Single(x => x.OrderLineId == harness.OrderLineId);
+
+        Assert.NotNull(line.Slices);
+        Assert.Equal(2, line.Slices!.Count);
+        Assert.Contains(line.Slices, x => !x.IsInWindow);
+        Assert.Contains(line.Slices, x => x.IsInWindow);
+        // Every slice is flagged: the unallocated held goods may belong to either delivery, so no slice is "free".
+        Assert.All(line.Slices, x => Assert.True(x.LegacyAmbiguous));
+        Assert.Null(ReturnAllocationPolicy.Allocate(line.Slices, 1m));
+    }
+
+    [Fact]
+    public async Task R3_B2_an_incoherent_receipt_blocks_the_rejection_without_releasing_its_live_row()
+    {
+        // The stored receipt claims one unit MORE than the case line ever requested, and the case still owns a LIVE
+        // allocation row. Releasing on that contradiction would read "nothing held", so the rejection is refused with
+        // the existing evidence conflict: no decision, no status, and no falsely released row / new free capacity.
+        await using var harness = await SeedAsync(
+            Stage.RequestedWithMixedReceipt,
+            incoherentReceipt: true,
+            seedAllocation: true);
+
+        Assert.Equal(1, await harness.AllocationCountAsync());
+        Assert.Equal(Requested, await harness.AllocationSumAsync());
+
+        var refused = await Assert.ThrowsAsync<ContractOperationException>(
+            () => harness.RejectAsync("کالا مطابق سیاست مرجوعی نیست.", expectedVersion: 0));
+
+        Assert.Equal(ReturnsErrorCodes.RecoveryEvidenceConflict, refused.Code);
+        Assert.Equal(0, await harness.DecisionCountAsync());
+        Assert.Equal(0, await harness.RevisionCountAsync());
+        Assert.Equal(ReturnRequestStatus.Requested, (await harness.SnapshotAsync()).Status);
+        Assert.Equal(1, await harness.AllocationCountAsync());
+        Assert.Equal(Requested, await harness.AllocationSumAsync());
+        Assert.Equal(0, harness.Gateway.Calls);
+        Assert.Equal(0, harness.Inventory.Calls);
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private enum Stage
@@ -407,7 +585,8 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             Guid orderLineId,
             decimal unitPrice,
             OrderReturnContextSnapshot order,
-            ReturnDecisionRecord? decision)
+            ReturnDecisionRecord? decision,
+            IReadOnlyList<LineDeliverySlice>? deliverySlices = null)
         {
             DbName = dbName;
             Db = db;
@@ -420,15 +599,16 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             Gateway = new CountingGateway();
             Inventory = new CountingInventory();
             var orderReader = new FixedOrderReader(order);
+            Eligibility = new ReturnEligibilityEvaluator(
+                orderReader,
+                new FixedFulfillmentReader(order, orderLineId, deliverySlices),
+                db,
+                _clock);
             _directory = new ReturnDirectory(
                 db,
                 new OpenReturnUseCaseGuard(),
                 orderReader,
-                new ReturnEligibilityEvaluator(
-                    orderReader,
-                    new FixedFulfillmentReader(order, orderLineId),
-                    db,
-                    _clock),
+                Eligibility,
                 new FixedPaymentReader(unitPrice * Requested),
                 Gateway,
                 new NoopWallet(),
@@ -444,16 +624,12 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         /// TB-279-R2 (C): the SAME owning evaluator that answers customer eligibility and creation capacity, run over
         /// this case's own stored rows — so the remaining quantity is the real occupancy math, not a hand-built number.
         /// </summary>
-        public Task<ReturnEligibilityResult> EligibilityAsync()
-        {
-            var orderReader = new FixedOrderReader(_order);
-            return new ReturnEligibilityEvaluator(
-                    orderReader,
-                    new FixedFulfillmentReader(_order, _lineId),
-                    Db,
-                    _clock)
-                .EvaluateAsync(_order.SellerOrderId, CancellationToken.None);
-        }
+        public Task<ReturnEligibilityResult> EligibilityAsync() =>
+            Eligibility.EvaluateAsync(_order.SellerOrderId, CancellationToken.None);
+
+        public ReturnDirectory Directory => _directory;
+
+        public IReturnEligibilityEvaluator Eligibility { get; }
 
         public string DbName { get; }
 
@@ -512,6 +688,18 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                 },
                 CancellationToken.None);
 
+        public Task<ReturnSnapshot> RejectAsync(
+            string reason,
+            int? expectedVersion = null,
+            int? expectedResolutionVersion = null) =>
+            _directory.RejectAsync(
+                new RejectReturnCommand(ReturnRequestId, Guid.NewGuid(), SellerPartyId, reason)
+                {
+                    ExpectedDecisionVersion = expectedVersion,
+                    ExpectedResolutionVersion = expectedResolutionVersion,
+                },
+                CancellationToken.None);
+
         public Task<ReturnSnapshot> CustodyAsync(
             string occurrenceKey,
             decimal quantity,
@@ -535,6 +723,9 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
 
         public Task<int> RevisionCountAsync() =>
             Db.ReturnDecisionRevisions.CountAsync(x => x.ReturnRequestId == ReturnRequestId);
+
+        public Task<int> DecisionCountAsync() =>
+            Db.ReturnDecisions.CountAsync(x => x.ReturnRequestId == ReturnRequestId);
 
         public Task<int> AttemptCountAsync() =>
             Db.RefundAttempts.CountAsync(x => x.ReturnRequestId == ReturnRequestId);
@@ -566,7 +757,9 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         int unitPlaces = 0,
         decimal? receivedUsableOverride = null,
         decimal? receivedDamagedOverride = null,
-        bool seedAllocation = false)
+        bool seedAllocation = false,
+        bool incoherentReceipt = false,
+        bool ambiguousDeliveryOrigin = false)
     {
         var requested = requestedOverride ?? Requested;
         var dbName = Guid.NewGuid().ToString("N");
@@ -646,6 +839,17 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
         });
         var receivedDamaged = receivedDamagedOverride
             ?? (stage == Stage.RequestedWithMixedReceipt ? 1m : 0m);
+        // TB-279-R3 (B2): one stored receipt line that claims MORE than the case line ever requested, used to prove
+        // that contradictory receiving evidence can never be read as "nothing held" by a rejection release.
+        List<(Guid ReturnItemId, decimal Quantity, ReturnItemCondition Condition)> receiptLines = incoherentReceipt
+            ? [(request.Items.Single().ReturnItemId, requested + 1m, ReturnItemCondition.Usable)]
+            : receivedDamaged > 0m
+                ?
+                [
+                    (request.Items.Single().ReturnItemId, receivedUsable, ReturnItemCondition.Usable),
+                    (request.Items.Single().ReturnItemId, receivedDamaged, ReturnItemCondition.Damaged),
+                ]
+                : [(request.Items.Single().ReturnItemId, receivedUsable, ReturnItemCondition.Usable)];
         var receipt = ReturnReceipt.Create(
             Guid.NewGuid(),
             () => Guid.NewGuid(),
@@ -653,13 +857,7 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             $"tb279-delivery-1-{stage}",
             Guid.NewGuid(),
             Now,
-            receivedDamaged > 0m
-                ?
-                [
-                    (request.Items.Single().ReturnItemId, receivedUsable, ReturnItemCondition.Usable),
-                    (request.Items.Single().ReturnItemId, receivedDamaged, ReturnItemCondition.Damaged),
-                ]
-                : [(request.Items.Single().ReturnItemId, receivedUsable, ReturnItemCondition.Usable)]);
+            receiptLines);
         db.ReturnReceipts.Add(receipt);
         db.ReturnReceiptLines.AddRange(receipt.Lines);
 
@@ -707,6 +905,16 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             "IRR",
             [new OrderReturnLineSnapshot(lineId, requested, UnitPrice, "IRR", reservationId, true, 7, null, null, QuantityDecimalPlacesSnapshot: unitPlaces)]);
 
+        // TB-279-R3 (B2): two deliveries of the same line — an old parcel whose window already closed and a live one.
+        // A held unit's physical origin is then unprovable, so the allocator must refuse instead of guessing a batch.
+        IReadOnlyList<LineDeliverySlice>? deliverySlices = ambiguousDeliveryOrigin
+            ?
+            [
+                new LineDeliverySlice(lineId, requested / 2m, Now.AddDays(-30)),
+                new LineDeliverySlice(lineId, requested / 2m, Now),
+            ]
+            : null;
+
         return new Harness(
             dbName,
             CreateDb(dbName),
@@ -715,7 +923,8 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             lineId,
             UnitPrice,
             order,
-            decision);
+            decision,
+            deliverySlices);
     }
 
     private static ReturnsDbContext CreateDb(string name) => new(
@@ -723,6 +932,35 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
             .UseInMemoryDatabase(name)
             .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options);
+
+    /// <summary>
+    /// TB-279-R3 (B1/A4): the SHIPPED module registration is what is under test — <see cref="ReturnsModule"/> wires
+    /// <see cref="IReturnAdminOperations"/> to its own adapter — while only the leaf ports are this suite's
+    /// in-memory/controlled doubles. The reachable contract therefore forwards exactly what a caller reviewed and can
+    /// never substitute a fresh read for the missing revision.
+    /// </summary>
+    private static ServiceProvider BuildReturnsContractProvider(Harness harness)
+    {
+        var services = new ServiceCollection();
+        new ReturnsModule().AddServices(
+            services,
+            new ConfigurationBuilder().Build(),
+            new FakeHostEnvironment());
+        services.AddScoped(_ => harness.Directory);
+        services.AddScoped<IReturnEligibilityEvaluator>(_ => harness.Eligibility);
+        return services.BuildServiceProvider();
+    }
+
+    private sealed class FakeHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+
+        public string ApplicationName { get; set; } = "Tooba.Returns.Tests";
+
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
 
     private sealed class FixedClock(DateTimeOffset utcNow) : IClock
     {
@@ -738,19 +976,26 @@ public sealed class ReturnsDecisionCorrection279DirectoryTests
                 snapshot.SellerOrderId == sellerOrderId ? snapshot : null);
     }
 
-    private sealed class FixedFulfillmentReader(OrderReturnContextSnapshot order, Guid lineId)
+    private sealed class FixedFulfillmentReader(
+        OrderReturnContextSnapshot order,
+        Guid lineId,
+        IReadOnlyList<LineDeliverySlice>? deliverySlices = null)
         : IFulfillmentReturnReader
     {
+        private readonly IReadOnlyList<LineDeliverySlice> _slices = deliverySlices is { Count: > 0 }
+            ? deliverySlices
+            : [new LineDeliverySlice(lineId, order.Lines.Single().Quantity, Now)];
+
         public Task<FulfillmentReturnEligibilitySnapshot?> GetEligibilityAsync(
             Guid sellerOrderId,
             CancellationToken cancellationToken) =>
             Task.FromResult<FulfillmentReturnEligibilitySnapshot?>(
                 new FulfillmentReturnEligibilitySnapshot(
                     sellerOrderId,
-                    new Dictionary<Guid, decimal> { [lineId] = order.Lines.Single().Quantity },
+                    new Dictionary<Guid, decimal> { [lineId] = _slices.Sum(x => x.Quantity) },
                     Now,
-                    new Dictionary<Guid, DateTimeOffset> { [lineId] = Now },
-                    [new LineDeliverySlice(lineId, order.Lines.Single().Quantity, Now)]));
+                    new Dictionary<Guid, DateTimeOffset> { [lineId] = _slices.Max(x => x.DeliveredAt) },
+                    _slices));
 
         public Task<IReadOnlyDictionary<Guid, DateTimeOffset?>> GetLastDeliveredAtBySellerOrderIdsAsync(
             IReadOnlyList<Guid> sellerOrderIds,
