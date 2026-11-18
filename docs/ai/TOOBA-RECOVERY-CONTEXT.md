@@ -1,4 +1,10 @@
-# CURRENT — TB-280-R1 WORKER PASS: UX1/UX2/UX3 CLOSED ON RETURNS WORKSPACE; AWAIT ARCHITECT AND OWNER LOOK — 2026-11-19
+# CURRENT — TB-280-R1 ARCHITECT ACCEPT: THREE UX FINDINGS CLOSED; OWNER TEST NEXT — 2026-11-19
+
+Read `docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/ARCHITECT-REVIEW.md`. Independent source/test-assertion review at bb03fbd54416e8c4a436ae40a176b5d715649b11 accepts the issued UX1/UX2/UX3 closure: approved/bound money confirmation, per-condition clean review, per-product unit summary. No further repair task for these findings. The next step is the owner's visual/functional test, NOT another implementation task. User acceptance NOT CLAIMED; no financial/provider/full Marketplace acceptance.
+
+Review URL: http://127.0.0.1:3000/fa/admin/returns/01a1eefb-ea96-7000-838d-9a0b37661c8b . Live positive-money/mixed flows remain mounted-fixture proof, current live case received0. Architect did not run local tests or browser. Worker served FE BUILD_ID xUhUnq_b5Okl6j0RYf2Jl; Host/backend unchanged. Historical 280 PARTIAL and all earlier reviews preserved; 279-R3 ACCEPT unchanged. TOOBA-UX-001 remains mandatory. No live mutation, demo reset, schema or key operation performed/authorized by this review. activeTask NONE; automaticNextImplementationTask NONE; awaiting USER review.
+
+# HISTORICAL — TB-280-R1 worker PASS checkpoint
 
 Read `docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/TASK.md` and
 `docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,three-ux-fixes-proof.md,user-review.md,issuance-receipt.json}`.
