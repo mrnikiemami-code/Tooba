@@ -1,4 +1,12 @@
-# CURRENT — CUSTOMER/MARKETPLACE RETURNS GAPS RECORDED; TWO CONSOLIDATED DELIVERIES278–279 — 2026-11-17
+# CURRENT — TB-280-R1 UX CLOSURE ACCEPTED; OWNER TEST PENDING; FUTURE PAYOUT BACKLOG RECORDED — 2026-11-19
+
+Current acceptance: docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/ARCHITECT-REVIEW.md . User review remains pending; no new implementation task.
+
+## نیاز آیندهٔ ثبت‌شده — روش بازگشت وجه و واریز گروهی (۱۹ نوامبر ۲۰۲۶)
+
+به درخواست صاحب محصول، `docs/planning/returns/REFUND-PAYOUT-METHODS-AND-BATCH-PAYMENTS-BACKLOG.md` ثبت شد: نقدی، کارت‌به‌کارت، شبا با پایا/پل/ساتنا، برگشت به پرداخت اولیه و کیف پول فعال؛ پرداخت تکی/گروهی با نتیجهٔ مستقل و جلوگیری از پرداخت تکراری. ساخت فایل یا دسته به معنی پرداخت نیست. برنامهٔ آتی است: NOT ISSUED؛ هیچ اجرا یا تغییر قرارداد مالی فعلی مجاز نشده. مرحلهٔ جاری همچنان تست کاربر پس از پذیرش محدود 280-R1 است.
+
+# HISTORICAL — customer/Marketplace planning checkpoint (2026-11-17)
 
 Read docs/planning/returns/RETURNS-MARKETPLACE-COMPLETION-PLAN-278-279.md and docs/architecture/evidence/TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278/SOURCE-AUDIT.md FIRST for new-chat recovery.
 Only TB-RETURNS-CUSTOMER-MULTI-SELLER-PARTIAL-SELECTION-AND-TEMPLATE-FEEDBACK-278 issued next;279 planned NOT ISSUED. No ten micro-tasks/automatic loop.
