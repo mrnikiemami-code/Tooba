@@ -1,4 +1,22 @@
-# CURRENT — all remaining narrow closure items are in ONE issued 279-R3 — 2026-11-18
+# CURRENT — 279-R3 worker PASS recorded; AWAIT ARCHITECT REVIEW — 2026-11-18
+
+Read `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/{RESULT.md,closure-matrix.md,owner-proof.md,RECEIPTS.md}`.
+Code `32b48c5b5` on top of the docs-only issuance `e7db94398` (expected base `dd5c1d31f`). Scope stayed exactly B1/B2 +
+C1/C2 + D; nothing new was opened.
+
+| Item | Worker state | Evidence |
+| --- | --- | --- |
+| B1 NEW decision revision | closed in issued scope | `R3_B1_*` facts (21/21 class) — missing and stale refuse with zero rows, current succeeds, replay zero-effect, adapter refuses to invent a revision |
+| B2 unallocated/incoherent held goods | closed in issued scope | `R3_B2_*` facts + `R2_a_handed_back_remainder_keeps_the_accepted_units_occupied` (2.5 occupied / 0.5 free) |
+| C1 accepted-usable Inventory argument | closed in issued scope | `C1_the_real_first_refund_restocks_exactly_the_accepted_portion_and_replays_with_zero_effect` — actual `2`, never `3` |
+| C2 failed-child retry budget | closed in issued scope | `C2_*` facts — 60+60 over 100 refused with no child/effect; lawful 40+60 control mints one deterministic child |
+| D 277-R1 bridge posting | closed index-only | `git rm --cached` + exact scoped ignore; local copy preserved |
+| Key/source containment | unchanged | `CONTAINED_PENDING_REVIEWED_RETIREMENT`, retirement still a separate explicit decision |
+
+Architect/user acceptance still NOT claimed; parents remain PARTIAL; no automatic next task. Historical sections below are
+preserved unchanged.
+
+# SUPERSEDED — all remaining narrow closure items were in ONE issued 279-R3 — 2026-11-18
 
 Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/TASK.md`. Scope frozen to B1/B2 + actual Inventory/retry-budget proof + safe historical posting untracking. No new polish/audit/task chain. Preserve R2 repaired paths; no schema/live business write/key operation. Implementation not yet claimed; Architect/user acceptance pending. Security retirement stays separately explicit. Previous review/checklist preserved below.
 

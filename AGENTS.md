@@ -1,4 +1,34 @@
-# CURRENT — 279-R3 FINAL NARROW CLOSURE ENVELOPE ISSUED; AWAIT BRIDGE CLAIM — 2026-11-18
+# CURRENT — 279-R3 WORKER PASS (B1/B2 + controlled effect proofs + posting cleanup closed); AWAIT ARCHITECT REVIEW — 2026-11-18
+
+Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/TASK.md` and
+`docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,closure-matrix.md,owner-proof.md,user-review.md,issuance-receipt.json}`.
+Status **PASS within the issued B1/B2/C/D/E fixed scope**, decision
+`REQUIRE_A_REVIEWED_DECISION_VERSION_FOR_EVERY_NEW_DECISION_AFTER_EXACT_REPLAY_AND_PRESERVE_UNALLOCATED_OR_INCOHERENT_HELD_GOODS_AS_OCCUPIED_OR_TYPED_BLOCKED_WITH_DIRECT_DIRECTORY_MONEY_AND_STOCK_ARGUMENT_PROOF`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT Marketplace/provider/financial readiness, NOT key
+retirement.
+Expected-Base-SHA `dd5c1d31fcd65bce7164c115599aacb5a4e33083` (verified ancestor); actual claim HEAD
+`e7db94398e663b604a536b82bd86670bb50f72db` (permitted docs-only issuance); reviewed code
+`f867dcb7163608915112c7450196c49bc8a3ba37`. Parents 279 / 279-R1 / 279-R2 / 278 remain PARTIAL. Single worker, one
+task, no delegation, no historical subagent resumed, no screenshots, no loop, no live POST.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| B1 new decision | version required | after the exact stored-replay path, `ResolveExistingDecision` refuses a MISSING or different `ExpectedDecisionVersion` with `return.correction.version_stale` before any decision/revision/status/amount/allocation row; the Order/admin adapter no longer back-fills a version from a fresh read |
+| B2 held goods | occupied or typed blocked | new pure `ReturnHeldGoodsPolicy` answers outstanding held quantity per item/condition from stored receiving/resolution/custody; the evaluator adds rejected/cancelled cases that own NO allocation rows to legacy occupancy (single provable slice ⇒ subtracted, several ⇒ every slice `LegacyAmbiguous` and a new claim refused); `DescribeRejectedHeldAsync` refuses an incoherent receipt with `return.recovery.evidence_conflict` BEFORE the rejection row and feeds the same map to the release |
+| C1 restock argument | actual 2, never 3 | real `StartFirstRefundAsync` on a 3/2/1 case: one durable attempt `2 × unit price` + case-derived id/key, gateway once, recording Inventory gets `(reservation, 2, key)`, rejected-received 1 stays owed (`PendingDisposition`), replay adds nothing |
+| C2 retry budget | real Directory | real `RetryRefundAsync` on payment 100 / A-failure 60 / sibling 60 ⇒ `return.refund.budget_exceeded` with one attempt and zero gateway/Inventory; lawful control (sibling 40) mints exactly the deterministic child once and replays it; missing authority ⇒ `refund.payment_missing` |
+| D posting | index only | 277-R1 `RESULT.bridge.txt` untracked with `git rm --cached` + exact scoped ignore `docs/architecture/evidence/**/RESULT.bridge.txt`; local copy preserved; historical `RESULT.md` untouched |
+| proof | focused | `ReturnsDecisionCorrection279DirectoryTests` 21/21, `ReturnsFinalClosure279R3Tests` 4/4, Host `ReturnsModuleAmsc001*` 34/34, `dotnet build Tooba.slnx -c Release` 0 errors, Host publish 0 errors; declared deviation: one whole `Tooba.Returns.Tests` run 187/187 |
+| served | Host refreshed | Host `5088` PID `39776`, dll SHA256 `04CD98A718E4BCB9702AF12F54BA4872E6B11FEB6956604AF9A65E4055ED34C5` (`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy, `/__platform-commerce` → `store-alpha`); Next `3000` PID `9904` unchanged, `/fa/admin/returns` 200; both stored cases read GET-only, `Completed`, `updated_at` unchanged |
+| schema/data | untouched | zero migration/DDL/seed/backfill/reset/cleanup/restore, zero live business write, zero live POST, zero real PSP/Wallet/Inventory/notification effect |
+
+Known limits: money/Inventory are controlled scripted ports (no real provider effect); no committed two-writer race; the
+incoherent-read path surfaces as a conservative claim plus the typed allocation/evidence refusal, not new UI copy; there
+is no active case (and no live POST is authorized), so no served operator walkthrough exists; key exposure stays
+`CONTAINED_PENDING_REVIEWED_RETIREMENT` with no rotation/revocation/history purge.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — 279-R3 final narrow closure envelope issued; AWAIT BRIDGE CLAIM — 2026-11-18
 
 User explicitly requests completion in ONE task. Read `docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/TASK.md` and `docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3/issuance-receipt.json` FIRST. Expected base `dd5c1d31fcd65bce7164c115599aacb5a4e33083`; subsequent issuance delta is docs-only, verify ACTUAL claimed HEAD/no source drift. Canonical repo bytes win over transport formatting; never reconstruct/overwrite the envelope or receipt.
 FIXED acceptance scope: B1 required decision version for NEW approve/reject after replay; B2 unallocated rejected/incoherent held goods stay occupied or typed blocked; C1 actual Directory Inventory argument 2 not3 + replay; C2 actual failed-child budget refusal 60+60>100 plus lawful control; D safe historical posting untracking. Keep R2 repaired wire/quantum/custody/customer intent and all prior useful work. No new cosmetic/architecture audit or micro-task chain.
