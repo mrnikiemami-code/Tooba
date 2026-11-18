@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1
 Parent-Task: TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280
@@ -22,9 +22,9 @@ Security-Key-State: UNCHANGED_SEPARATE_PENDING_REVIEW
 Expected-Base-SHA: 9075e2fa4325a2de60cbd17ebfe908d9d9ee74ed
 Base-SHA: 4ce50d00690f3abdb058289f4a82d63275d136fb
 Code-SHA: 882ecc19b2100175ce6cc9325767f5b9f9421081
-Evidence-SHA: PENDING_EVIDENCE_COMMIT
-Final-HEAD: PENDING_EVIDENCE_COMMIT
-HEAD-Equals-Origin-Main: PENDING_PUSH
+Evidence-SHA: a28b98fc1fd4ef4c60b0f918b23e7f3bc5b9e21f
+Final-HEAD: a28b98fc1fd4ef4c60b0f918b23e7f3bc5b9e21f
+HEAD-Equals-Origin-Main: YES
 Review-URL: http://127.0.0.1:3000/fa/admin/returns/01a1eefb-ea96-7000-838d-9a0b37661c8b
 Evidence-Limits: mounted jsdom not geometry; live GET/DOM/text only at 1440/390 with zero POST; live case received=0 so UX1/UX2 positive paths are mounted-fixture proven; Host unchanged
 Recovery-Next-Task: NONE
