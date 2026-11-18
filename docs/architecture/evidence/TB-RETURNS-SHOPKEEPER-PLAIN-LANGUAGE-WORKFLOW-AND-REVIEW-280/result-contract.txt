@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 Task-ID: TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280
 Parent-Task: TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279-R3
@@ -10,9 +10,9 @@ Status: PASS within the issued A-E operator-UX scope (NOT Architect ACCEPT, NOT 
 Expected-Base-SHA: 9aaf5bcd486ed63271ef431be20b7e24e8bb1951
 Base-SHA: 2fb3791f0c1bd124ee9877f163918a25fdfa585a (permitted docs-only issuance on Expected-Base ancestor; zero incoming source/config/schema delta at claim)
 Code-SHA: ebc46ec5f026612e5ea9c555d566a26ca0803ee5
-Evidence-SHA: ebc46ec5f026612e5ea9c555d566a26ca0803ee5
-Final-HEAD: ebc46ec5f026612e5ea9c555d566a26ca0803ee5
-HEAD-Equals-Origin-Main: YES_AFTER_PUSH
+Evidence-SHA: a052410479db0c321a6aea6e425e683643197843
+Final-HEAD: a052410479db0c321a6aea6e425e683643197843
+HEAD-Equals-Origin-Main: YES
 Technical-Validation: ReturnsPlainLanguageWorkflow280Tests 4/4; ReturnsOperatorWorkflow275Tests+ReturnsDecisionCorrection279DirectoryTests 36/36 (combined focused 40/40); mounted 276+277+279+280 plus quantity/queue/error-map/return-api 76/76; tsc --noEmit 0; npm run build 0 (BUILD_ID aneVaAaZv-4AvKZggbQEJ); dotnet build Tooba.slnx -c Release 0 errors; Host publish 0 errors
 Operator-UX-Review-Readiness: READY_FOR_OWNER_LOOK — T1 zero-received offers only record_receipt with waiting copy and no zero-ceiling review; T2/T3 mounted review uses «بررسی مرجوعی», required reason, exact five-field wire, local over-ceiling/reason refusals before send; T5 approve decision-only vs separate «بازگشت وجه»; T6 retained-intent suites preserved; T7 history behind collapsed «سابقه»; working area free of «برنامهٔ تفکیک»/«نسخهٔ بررسی‌شده»/«فقط افزودنی»
 User-Acceptance: NOT_CLAIMED
