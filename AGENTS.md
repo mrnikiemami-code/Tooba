@@ -1,4 +1,34 @@
-# CURRENT — MERCHANT PRODUCT UX REQUIRED; TB-280 ISSUED — 2026-11-18
+# CURRENT — TB-280 WORKER PASS: RETURNS WORKSPACE NOW SPEAKS SHOP LANGUAGE WITH ONE NEXT STEP; AWAIT ARCHITECT REVIEW AND USER LOOK — 2026-11-18
+
+Read `docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/TASK.md` and
+`docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,ux-before-after.md,user-review.md,issuance-receipt.json}`.
+Status **PASS within the issued A–E operator-UX scope**, decision
+`PLAIN_BUSINESS_LANGUAGE_ONE_CLEAR_NEXT_ACTION_CONTEXTUAL_REVIEW_OF_REAL_RECEIVED_GOODS_AND_PROGRESSIVE_HISTORY_ON_THE_EXISTING_RETURNS_WORKSPACE_WITH_ACCEPTED_OWNER_GUARDS_PRESERVED`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT sellable/Marketplace readiness.
+Expected-Base-SHA `9aaf5bcd486ed63271ef431be20b7e24e8bb1951` (verified ancestor); claim HEAD `2fb3791f0c1bd124ee9877f163918a25fdfa585a`
+was the docs-only issuance, so no source drift arrived. Single worker, one task, no delegation, no historical subagent
+resumed, no screenshots, no loop, no live POST.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A review visibility | received goods only | `ReturnWorkPolicy.Describe` publishes `publish_resolution` only for a coherent receipt with `Received > 0m` instead of the requested-line count, so a case with nothing arrived offers «ثبت دریافت کالا» and no zero-ceiling review; a complete reviewed plan is still never re-published and every write rule is untouched |
+| A next step | one primary, rest secondary | the server-published action codes render through ONE ordered plan: the first entry is a full-width primary button with a one-sentence explanation, the rest are quiet buttons under «اقدام‌های دیگر»; `data-testid="admin-return-action-*"` identities preserved, no invented capability |
+| B layout | status → next step → items → history | the next-step card moved directly under the status card; receipts/refund attempts/decisions live behind ONE collapsed `<details data-testid="admin-return-history">` titled «سابقه»; outstanding rejected custody stays visible |
+| C review dialog | required reason, no red wall | the per-line reason is labelled الزامی with a 3-character minimum and refused locally before any bytes leave; an untouched dialog shows no errors because an empty portion means zero accepted |
+| C copy | plain retail Persian | «برنامهٔ تفکیک»، «نسخهٔ تصمیم»، «نسخهٔ بررسی‌شده»، «فقط افزودنی» and the lock/storage wording are gone from the working area and from `return.resolution.*`/`return.correction.*` copy; the technical versions/occurrence keys still travel on the wire unchanged |
+| proof | focused | `ReturnsPlainLanguageWorkflow280Tests` 4/4, `ReturnsOperatorWorkflow275Tests` + `ReturnsDecisionCorrection279DirectoryTests` 36/36, mounted workspace 276+277+279+280 27/27, FE unit (queue/quantity/error-map/return-api) 49/49, `tsc` 0, `next build` 0 (`BUILD_ID xUU4TGZ4j0_hnS1DumpHH`), `dotnet build Tooba.slnx -c Release` 0 errors, Host publish 0 errors |
+| served | refreshed | Host `5088` PID `38424`, dll SHA256 `147D033E79F774EE2F24925C501CF0DCE823571529F3ACE0004EBA37C096605B` (`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy, `/__platform-commerce` → `store-alpha`); Next `3000` PID `36664`, chunk `7944-e29aaa760b08cd39.js` 200 carries the new copy and none of the removed jargon |
+| live | read-only | `01a1eefb-ea96-7000-838d-9a0b37661c8b` still `Requested`, original `updated_at`, received 0, attempts 0, receipts 0, decision version 0, `canPublishResolution=false`, `actionCodes=["record_receipt"]`; DOM 1440/390: 0 document overflow, one primary action, 0 alert on open |
+| schema/data | untouched | zero migration/DDL/seed/backfill/reset/cleanup/restore, zero live business write, zero POST, zero money/stock/provider/notification effect |
+
+Known limits: the mounted proofs are jsdom (behaviour, not geometry) and the live check is read-only DOM/text measurement
+(no screenshots); the stored case has no received goods, so the positive-received review dialog is proven on the mounted
+real component and a fixture rather than against stored data; «اختیاری» still appears in the shared admin chunk for
+unrelated surfaces; the 279-R3 controlled-port limits and the contained key exposure
+(`CONTAINED_PENDING_REVIEWED_RETIREMENT`) are unchanged and out of scope.
+STOP_FOR_ARCHITECT_AND_USER_REVIEW; automaticNextImplementationTask: NONE.
+
+# SUPERSEDED — MERCHANT PRODUCT UX REQUIRED; TB-280 ISSUED — 2026-11-18
 
 The product owner requires a sellable interface for ordinary shopkeepers with limited technical literacy. Passing technical tests does not establish product usability. Read the permanent cross-feature rule `docs/product/OPERATOR-UX-ACCEPTANCE.md` (TOOBA-UX-001) for EVERY subsequent UI task.
 

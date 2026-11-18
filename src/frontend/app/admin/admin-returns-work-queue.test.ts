@@ -88,9 +88,13 @@ test("AdminReturnsScreen delegates to work queue screen and the detail barrel ke
 test("case workspace is the single action owner and never sends before persisting the intent", () => {
   const workspace = readFileSync(join(dir, "admin-return-workspace.tsx"), "utf8");
   assert.match(workspace, /data-testid="admin-return-workspace"/);
+  // TB-280: every published action keeps its stable test id, but they are now produced from ONE ordered plan whose
+  // first offered entry is the single prominent next step.
   for (const action of ["record-receipt", "approve", "reject", "start-refund", "resume-refund", "retry-refund", "settle-physical"]) {
-    assert.match(workspace, new RegExp(`id="${action}"`), action);
+    assert.match(workspace, new RegExp(`id: "${action}"`), action);
   }
+  assert.match(workspace, /data-testid=\{`admin-return-action-\$\{primaryAction\.id\}`\}/);
+  assert.match(workspace, /admin-return-other-actions/);
   // TB-277: approval is a decision only; the first refund is its own published action, never a side effect of approve.
   assert.match(workspace, /work\.canStartRefund/);
   assert.match(workspace, /reviewStartRefund/);
@@ -101,17 +105,17 @@ test("case workspace is the single action owner and never sends before persistin
   // TB-276: an unknown outcome keeps the frozen envelope; there is no "ignore the uncertainty" control.
   assert.doesNotMatch(workspace, /نادیده گرفتن/);
   assert.match(workspace, /admin-return-unresolved-intent/);
-  // Every action is gated by the server's own capabilities.
-  assert.match(workspace, /work\.canRecordReceipt/);
-  assert.match(workspace, /work\.canDecide/);
-  assert.match(workspace, /work\.canResumeRefund/);
-  assert.match(workspace, /work\.canRetryRefund/);
-  assert.match(workspace, /work\.canSettlePhysical/);
+  // Every action is gated by the server's own capabilities (TB-280 reads them once, in one ordered plan).
+  assert.match(workspace, /work\?\.canRecordReceipt === true/);
+  assert.match(workspace, /work\?\.canDecide === true/);
+  assert.match(workspace, /work\?\.canResumeRefund === true/);
+  assert.match(workspace, /work\?\.canRetryRefund === true/);
+  assert.match(workspace, /work\?\.canSettlePhysical === true/);
   // Money and physical facts are separate sections, and the mixed line never claims wholly saleable stock.
   assert.match(workspace, /سالم/);
   assert.match(workspace, /معیوب/);
-  assert.match(workspace, /سابقهٔ دریافت‌ها/);
-  assert.match(workspace, /تلاش‌های بازگشت وجه/);
+  assert.match(workspace, /دریافت‌های ثبت‌شده/);
+  assert.match(workspace, /بازگشت وجه/);
   assert.match(workspace, /min-h-11/);
   // An unknown case is an honest not-found state, never a permanent "loading".
   assert.match(workspace, /admin-return-missing/);

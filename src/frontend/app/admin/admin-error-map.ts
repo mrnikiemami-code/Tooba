@@ -1053,16 +1053,17 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     en: "The action ran inside an unsafe transaction and was not applied.",
   },
   // TB-279 / TB-279-R2: the operator correction, per-portion resolution, custody, allocation and budget refusals.
+  // TB-280: the same refusals said in shop language — no "plan", "version" or implementation nouns.
   "return.resolution.required": {
-    fa: "برای این پرونده هنوز برنامهٔ تفکیک اقلام ثبت نشده است.",
+    fa: "برای این پرونده هنوز بررسی کالاها ثبت نشده است.",
     en: "No reviewed item resolution has been published for this case yet.",
   },
   "return.resolution.incomplete": {
-    fa: "برنامهٔ تفکیک هنوز همهٔ اقلام را پوشش نمی‌دهد.",
+    fa: "بررسی هنوز همهٔ اقلام را پوشش نمی‌دهد.",
     en: "The reviewed resolution does not cover every line yet.",
   },
   "return.resolution.invalid": {
-    fa: "برنامهٔ تفکیک اقلام معتبر نیست؛ مقدار پذیرفته‌شده و رد‌شده را بازبینی کنید.",
+    fa: "بررسی کالاها معتبر نیست؛ مقدار پذیرفته‌شده و رد‌شده را بازبینی کنید.",
     en: "The item resolution is not valid; review the accepted and rejected portions.",
   },
   "return.resolution.received_exceeded": {
@@ -1070,19 +1071,19 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     en: "The accepted quantity exceeds the received quantity of that condition.",
   },
   "return.resolution.state_invalid": {
-    fa: "وضعیت این پرونده اجازهٔ ثبت یا تغییر برنامهٔ تفکیک را نمی‌دهد.",
+    fa: "وضعیت این پرونده اجازهٔ ثبت یا تغییر بررسی را نمی‌دهد.",
     en: "The case state does not allow publishing or changing a resolution.",
   },
   "return.resolution.version_stale": {
-    fa: "برنامهٔ تفکیک پس از بازبینی شما تغییر کرده است؛ صفحه را تازه کنید.",
+    fa: "بررسی پس از بازبینی شما تغییر کرده است؛ صفحه را تازه کنید.",
     en: "The resolution changed after you reviewed it; refresh the page.",
   },
   "return.resolution.actor_required": {
-    fa: "برای ثبت برنامهٔ تفکیک، هویت کاربر اپراتور لازم است.",
+    fa: "برای ثبت بررسی، هویت کاربر اپراتور لازم است.",
     en: "An operator identity is required to publish a resolution.",
   },
   "return.resolution.item_invalid": {
-    fa: "یکی از اقلام برنامهٔ تفکیک به این پرونده تعلق ندارد یا نامعتبر است.",
+    fa: "یکی از اقلام بررسی به این پرونده تعلق ندارد یا نامعتبر است.",
     en: "A resolution line does not belong to this case or is not valid.",
   },
   "return.resolution.portion_required": {
@@ -1094,7 +1095,7 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     en: "A declared portion does not match the received quantity of that condition.",
   },
   "return.resolution.review_version_required": {
-    fa: "نسخهٔ بازبینی‌شدهٔ برنامهٔ تفکیک همراه درخواست نبود؛ اقدامی انجام نشد.",
+    fa: "اطلاعات بازبینی‌شده همراه درخواست نبود؛ اقدامی انجام نشد.",
     en: "The reviewed resolution version was missing from the request; nothing was applied.",
   },
   "return.correction.not_applicable": {
@@ -1210,11 +1211,11 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     en: "This refund is not lawfully bound to the case's owning payment.",
   },
   "return.refund.review_version_required": {
-    fa: "نسخهٔ بازبینی‌شدهٔ تصمیم همراه درخواست نبود؛ اقدامی انجام نشد.",
+    fa: "اطلاعات بازبینی‌شدهٔ تصمیم همراه درخواست نبود؛ اقدامی انجام نشد.",
     en: "The reviewed decision version was missing from the request; nothing was applied.",
   },
   "return.approved_amount.conflict": {
-    fa: "مبلغ تأییدشدهٔ ثبت‌شده با برنامهٔ تفکیک بازبینی‌شده هم‌خوان نیست.",
+    fa: "مبلغ تأییدشدهٔ ثبت‌شده با بررسی بازبینی‌شده هم‌خوان نیست.",
     en: "The stored approved amount does not match the reviewed resolution.",
   },
   "order.note.invalid": {

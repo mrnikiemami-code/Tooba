@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -57,23 +57,61 @@ import {
 
 export type { ReturnReviewAction, ReturnReviewIntent } from "../returns/return-review-intent";
 
-function describeDetails(work: ReturnWorkDescription | null | undefined): string {
-  if (!work) return "وضعیت کاری این پرونده خوانده نشد.";
+/**
+ * TB-280: the exact received units of the whole case. The shopkeeper surface asks "how much actually arrived?", so the
+ * ONE sum is derived with the same exact integer arithmetic as every quantity field instead of a float subtraction.
+ */
+function receivedUnitsOf(snapshot: ReturnSnapshot | null | undefined): number {
+  return (snapshot?.receiving?.lines ?? []).reduce(
+    (sum, line) => sum + (unitsFromWireNumber(line.received) ?? 0),
+    0,
+  );
+}
+
+function sumUnitsOf(values: (number | null | undefined)[]): number {
+  return values.reduce<number>((sum, value) => sum + (unitsFromWireNumber(value ?? 0) ?? 0), 0);
+}
+
+/** TB-280: the money answer in business words, never a raw PSP/attempt token. */
+function describeRefundMoney(snapshot: ReturnSnapshot): string {
+  const attempts = snapshot.refundAttempts ?? [];
+  if (attempts.length === 0) return "هنوز آغاز نشده است";
+  const succeeded = attempts.filter((attempt) => String(attempt.status).toLowerCase() === "succeeded");
+  if (succeeded.length > 0) {
+    const total = succeeded.reduce((sum, attempt) => sum + attempt.amount, 0);
+    return `${formatRial(total, snapshot.currency)} بازگردانده شد`;
+  }
+  if (attempts.some((attempt) => String(attempt.status).toLowerCase() === "pending")) {
+    return "در حال انجام؛ نتیجهٔ نهایی هنوز مشخص نیست";
+  }
+  return "ناموفق؛ نیازمند بررسی";
+}
+
+/**
+ * TB-280: the ONE sentence that answers "what is this case waiting for?", in the words a shopkeeper uses. It is a
+ * presentation of the SAME stored facts the actions read — it never invents a step the server would refuse.
+ */
+function describeNextStep(snapshot: ReturnSnapshot | null | undefined, work: ReturnWorkDescription | null | undefined): string {
+  if (!work) return "وضعیت این پرونده خوانده نشد.";
   switch (work.category) {
     case "receiving":
-      return "کالای مشتری باید دریافت و بازرسی شود؛ تا تکمیل آن، تصمیم و بازگشت وجه مجاز نیست.";
+      return receivedUnitsOf(snapshot) > 0
+        ? "بخشی از کالا دریافت شده است. اگر باقی کالا برنمی‌گردد، با «بررسی مرجوعی» تکلیف مقدار دریافت‌شده را مشخص کنید."
+        : "هنوز کالایی دریافت نشده است؛ ابتدا دریافت کالا را ثبت کنید.";
     case "decision":
-      return "کالا دریافت شده است؛ تأیید یا رد مرجوعی تصمیم بعدی است.";
+      return "کالا دریافت شده است؛ قدم بعدی تأیید یا رد مرجوعی است.";
     case "refund":
-      return "بازگشت وجه آغاز شده و نتیجهٔ نهایی هنوز ثبت نشده است.";
+      return work.canStartRefund
+        ? "مرجوعی تأیید شده است، ولی بازگشت وجه هنوز آغاز نشده است."
+        : "بازگشت وجه آغاز شده و نتیجهٔ نهایی هنوز ثبت نشده است.";
     case "refund_failed":
-      return "بازگشت وجه به‌صورت قطعی ناموفق ثبت شده و نیازمند تلاش دوبارهٔ بررسی‌شده است.";
+      return "بازگشت وجه ناموفق بوده است؛ یک بار دیگر با بررسی ثبت می‌شود.";
     case "disposition":
-      return "وجه تأیید شده است؛ تعیین تکلیف فیزیکی کالای دریافت‌شده باقی مانده است.";
+      return "پول تأیید شده است؛ وضعیت کالاهای دریافت‌شده باید مشخص شود.";
     case "settled":
-      return "همهٔ آثار مالی و فیزیکی این پرونده ثبت شده است.";
+      return "همهٔ کارهای مالی و کالای این پرونده انجام شده است.";
     default:
-      return "این پرونده بسته شده و کار اجرایی باقی‌مانده ندارد.";
+      return "این پرونده بسته شده و کار باقی‌مانده‌ای ندارد.";
   }
 }
 
@@ -82,7 +120,18 @@ function formatRial(amount: number, currency: string): string {
   return `${formatted} ${currency === "IRR" ? "ریال" : currency}`;
 }
 
-/** A short human name for the reviewed action, used by the unresolved-intent card. */
+/**
+ * TB-280: the reviewed reason of one resolution line is REQUIRED by the owning writer (a non-empty, trimmed value of at
+ * most 512 chars). The dialog therefore enforces the same rule locally; labelling it "optional" and sending `null`
+ * only produced a server refusal after the operator had typed everything.
+ */
+const RESOLUTION_REASON_MIN = 3;
+function RESOLUTION_REASON_ACCEPTABLE(raw: string): boolean {
+  const trimmed = raw.trim();
+  return trimmed.length >= RESOLUTION_REASON_MIN && trimmed.length <= 512;
+}
+
+/** A short human name for the reviewed action, used by the unresolved-intent card and the action buttons. */
 function actionLabel(action: ReturnReviewAction): string {
   switch (action) {
     case "receipt":
@@ -92,17 +141,17 @@ function actionLabel(action: ReturnReviewAction): string {
     case "reject":
       return "رد مرجوعی";
     case "start_refund":
-      return "شروع بازگشت وجه";
+      return "بازگشت وجه";
     case "resume_refund":
       return "پیگیری بازگشت وجه";
     case "retry_refund":
       return "تلاش دوبارهٔ بازگشت وجه";
     case "reopen_for_review":
-      return "بازگشایی پرونده برای بررسی دوباره";
+      return "بازگشایی برای بررسی دوباره";
     case "publish_resolution":
-      return "ثبت برنامهٔ تفکیک اقلام";
+      return "بررسی مرجوعی";
     case "record_custody":
-      return "ثبت تحویل کالای رد‌شده";
+      return "تحویل کالای ردشده به مشتری";
     default:
       return "تعیین تکلیف کالا";
   }
@@ -133,17 +182,17 @@ function successLabel(action: ReturnReviewAction): string {
     case "start_refund":
       return "بازگشت وجه آغاز شد.";
     case "resume_refund":
-      return "همان تلاش بازگشت وجه دوباره ارسال شد.";
+      return "همان درخواست بازگشت وجه دوباره ارسال شد.";
     case "retry_refund":
       return "تلاش دوبارهٔ بازگشت وجه ثبت شد.";
     case "reopen_for_review":
-      return "پرونده با نسخهٔ تازه‌ای از تصمیم برای بررسی دوباره بازگشایی شد.";
+      return "پرونده برای بررسی دوباره بازگشایی شد.";
     case "publish_resolution":
-      return "برنامهٔ تفکیک اقلام ثبت شد و مبلغ تأییدشده از همان اقلام پذیرفته‌شده ساخته شد.";
+      return "بررسی مرجوعی ثبت شد. حالا می‌توانید مرجوعی را تأیید یا رد کنید.";
     case "record_custody":
       return "تحویل کالای رد‌شده به مشتری ثبت شد.";
     case "settle_physical":
-      return "تعیین تکلیف فیزیکی کالا ثبت شد.";
+      return "وضعیت کالا مشخص شد.";
     default:
       return "اقدام ثبت شد.";
   }
@@ -345,8 +394,8 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       setNotice({
         title: "نتیجهٔ این اقدام قطعی نیست",
         text:
-          "پاسخ سرور برای این اقدام قطعی دریافت نشد؛ ممکن است ثبت شده باشد. این اقدام به‌صورت «ناتمام» نگه داشته شد. " +
-          "همان اقدام را با همین شناسه دوباره ارسال کنید تا سرور همان نتیجه را پاسخ دهد و اقدام دومی ساخته نشود.",
+          "نتیجهٔ این اقدام قطعی مشخص نیست؛ ممکن است ثبت شده باشد. این اقدام به‌صورت «ناتمام» نگه داشته شد. " +
+          "همان اقدام را دوباره بفرستید؛ اگر قبلاً ثبت شده باشد، دوباره انجام نمی‌شود.",
       });
       await loadAt(started);
     },
@@ -529,7 +578,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         if (!attemptId) {
           setNotice({
             title: "اقدام انجام نشد",
-            text: "شناسهٔ تلاش بازگشت وجه در دسترس نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
+            text: "اطلاعات بازگشت وجه در جریان کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
           });
           return;
         }
@@ -539,7 +588,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         if (!failedId) {
           setNotice({
             title: "اقدام انجام نشد",
-            text: "شناسهٔ تلاش ناموفق بازگشت وجه در دسترس نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
+            text: "اطلاعات بازگشت وجه ناموفق کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
           });
           return;
         }
@@ -598,11 +647,11 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       // TB-279-R2: each accepted portion is bounded by ITS OWN inspected condition, not by a shared total.
       const usableCeiling = unitsFromWireNumber(line.usable);
       const damagedCeiling = unitsFromWireNumber(line.damaged);
-      const acceptedUsable = evaluateAcceptedPortion(line.acceptedUsable, places, usableCeiling);
-      const acceptedDamaged = evaluateAcceptedPortion(line.acceptedDamaged, places, damagedCeiling);
+      const acceptedUsable = evaluateAcceptedPortion(line.acceptedUsable.trim() === "" ? "0" : line.acceptedUsable, places, usableCeiling);
+      const acceptedDamaged = evaluateAcceptedPortion(line.acceptedDamaged.trim() === "" ? "0" : line.acceptedDamaged, places, damagedCeiling);
       if (line.acceptedUsable === "" && line.acceptedDamaged === "") {
         setNotice({
-          title: "برنامهٔ تفکیک کامل نیست",
+          title: "بررسی کامل نیست",
           text: `برای قلم «${line.label}» مقدار پذیرفته‌شده را وارد کنید (اگر هیچ مقداری پذیرفته نشد، ۰).`,
         });
         return;
@@ -610,7 +659,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       if (acceptedUsable.problem || acceptedDamaged.problem) {
         setNotice({
           title: "مقدار این قلم معتبر نیست",
-          text: `قلم «${line.label}»: مقدار پذیرفته‌شده باید با دقت واحد همین قلم و در محدودهٔ همان وضعیتِ دریافت‌شده باشد.`,
+          text: `قلم «${line.label}»: مقدار پذیرفته‌شده باید با واحد همین قلم و در محدودهٔ همان وضعیتِ دریافت‌شده باشد.`,
         });
         return;
       }
@@ -622,8 +671,17 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       const acceptedDamagedUnits = acceptedDamaged.units ?? 0;
       if (compareUnits(acceptedUsableUnits, receivedUsable) > 0 || compareUnits(acceptedDamagedUnits, receivedDamaged) > 0) {
         setNotice({
-          title: "مجموع تفکیک از دریافت‌شده بیشتر است",
+          title: "مقدار پذیرفته‌شده بیشتر از دریافت‌شده است",
           text: `قلم «${line.label}»: مقدار پذیرفته‌شده نمی‌تواند از مقدار دریافت‌شدهٔ همان وضعیت بیشتر باشد.`,
+        });
+        return;
+      }
+      // TB-280: the owning writer refuses a plan line without a meaningful reason, so the SAME requirement is enforced
+      // here — before any bytes are stored or sent — instead of labelling the field "optional".
+      if (!RESOLUTION_REASON_ACCEPTABLE(line.reason)) {
+        setNotice({
+          title: "دلیل بررسی لازم است",
+          text: `برای قلم «${line.label}» دلیل بررسی را بنویسید (دست‌کم ۳ نویسه).`,
         });
         return;
       }
@@ -639,11 +697,11 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           unitsToWireNumber(
             compareUnits(receivedUnits, requestedUnits) >= 0 ? 0 : subtractUnits(requestedUnits, receivedUnits),
           ) ?? 0,
-        reason: line.reason.trim() === "" ? null : line.reason.trim(),
+        reason: line.reason.trim(),
       });
     }
     if (lines.length === 0) {
-      setNotice({ title: "برنامهٔ تفکیک خالی است", text: "برای ثبت برنامهٔ تفکیک، دست‌کم یک قلم لازم است." });
+      setNotice({ title: "بررسی خالی است", text: "برای ثبت بررسی، دست‌کم یک قلم لازم است." });
       return;
     }
     const occurrenceKey = createOccurrenceKey();
@@ -759,6 +817,169 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
   const custodyOffered =
     actionCodes.includes("record_custody") && (snapshot?.resolution?.lines.some((line) => line.rejected > 0) ?? false);
 
+  // TB-280: the reviewed per-item plan starts from what ACTUALLY arrived, never from the requested quantity, so an
+  // operator cannot "accept" goods the shop never received.
+  const beginResolution = () => {
+    if (!snapshot) return;
+    setResolutionDraft(
+      snapshot.items.map((item) => {
+        const line = snapshot.resolution?.lines.find((entry) => entry.returnItemId === item.returnItemId);
+        const receivedLine = snapshot.receiving?.lines.find((entry) => entry.returnItemId === item.returnItemId);
+        return {
+          returnItemId: item.returnItemId,
+          label: item.productLabel ?? "کالای سفارش",
+          unitLabel: item.unitLabel ?? "",
+          requested: receivedLine?.requested ?? item.quantity,
+          received: receivedLine?.received ?? 0,
+          usable: receivedLine?.usable ?? 0,
+          damaged: receivedLine?.damaged ?? 0,
+          acceptedUsable: line ? formatQuantityDisplayFa(line.accepted) : "",
+          acceptedDamaged: "",
+          reason: line?.reason ?? "",
+        };
+      }),
+    );
+    setReviewing("publish_resolution");
+  };
+
+  const beginCustody = () => {
+    if (!snapshot) return;
+    const firstRejected = snapshot.resolution?.lines.find((entry) => entry.rejected > 0);
+    setCustodyDraft({
+      returnItemId: firstRejected?.returnItemId ?? "",
+      quantity: "",
+      condition: "Usable",
+      proof: "",
+    });
+    setReviewing("record_custody");
+  };
+
+  /*
+    TB-280: the shopkeeper sees ONE obvious next step instead of a wall of equally-weighted buttons. The order follows
+    the real shop workflow (goods in → inspect → decide → money → handback), and every entry is still gated by the
+    owning work description, so this surface can never offer an action the backend did not publish.
+  */
+  const actionPlan: Array<{
+    id: string;
+    label: string;
+    hint: string;
+    tone: "primary" | "danger";
+    offered: boolean;
+    start: () => void;
+  }> = [
+    {
+      id: "record-receipt",
+      label: "ثبت دریافت کالا",
+      hint: "کالایی که مشتری آورده است را ثبت کنید.",
+      tone: "primary",
+      offered: work?.canRecordReceipt === true,
+      start: () => setReviewing("receipt"),
+    },
+    {
+      id: "publish-resolution",
+      label: "بررسی مرجوعی",
+      hint: "مشخص کنید چه مقدار از کالای دریافت‌شده سالم است و چه مقدار رد می‌شود.",
+      tone: "primary",
+      offered: resolutionOffered,
+      start: beginResolution,
+    },
+    {
+      id: "approve",
+      label: "تأیید مرجوعی",
+      hint: "تأیید فقط تصمیم را ثبت می‌کند؛ بازگشت وجه جداگانه انجام می‌شود.",
+      tone: "primary",
+      offered: work?.canDecide === true,
+      start: () => setReviewing("approve"),
+    },
+    {
+      id: "reject",
+      label: "رد مرجوعی",
+      hint: "درخواست مرجوعی مشتری رد می‌شود.",
+      tone: "danger",
+      offered: work?.canDecide === true,
+      start: () => setReviewing("reject"),
+    },
+    {
+      id: "start-refund",
+      label: "بازگشت وجه",
+      hint: "مبلغ تأییدشده به مشتری برگردانده می‌شود.",
+      tone: "primary",
+      offered: work?.canStartRefund === true,
+      start: () => setReviewing("start_refund"),
+    },
+    {
+      id: "resume-refund",
+      label: "پیگیری بازگشت وجه",
+      hint: "نتیجهٔ بازگشت وجهی که در جریان است دوباره بررسی می‌شود.",
+      tone: "primary",
+      offered: work?.canResumeRefund === true,
+      start: () => setReviewing("resume_refund"),
+    },
+    {
+      id: "retry-refund",
+      label: "تلاش دوبارهٔ بازگشت وجه",
+      hint: "بازگشت وجه قبلی ناموفق بوده و یک بار دیگر انجام می‌شود.",
+      tone: "primary",
+      offered: work?.canRetryRefund === true,
+      start: () => setReviewing("retry_refund"),
+    },
+    {
+      id: "record-custody",
+      label: "تحویل کالای رد‌شده به مشتری",
+      hint: "کالایی که پذیرفته نشد به مشتری برگردانده می‌شود.",
+      tone: "primary",
+      offered: custodyOffered,
+      start: beginCustody,
+    },
+    {
+      id: "settle-physical",
+      label: "تعیین تکلیف کالا",
+      hint: "وضعیت نهایی کالاهای دریافت‌شده ثبت می‌شود.",
+      tone: "primary",
+      offered: work?.canSettlePhysical === true,
+      start: () => setReviewing("settle_physical"),
+    },
+    {
+      id: "reopen-for-review",
+      label: "بازگشایی برای بررسی دوباره",
+      hint: "تصمیم قبلی دوباره بررسی می‌شود؛ سابقهٔ قبلی پاک نمی‌شود.",
+      tone: "primary",
+      offered: correctionOffered,
+      start: openCorrection,
+    },
+  ];
+  const offeredActions = actionPlan.filter((entry) => entry.offered);
+
+  /*
+    TB-280: what the company still owes back to the customer, per item and condition. It is the stored rejected portion
+    minus the handbacks already recorded — the SAME numbers the handback ceiling uses, so the page and the command can
+    never disagree.
+  */
+  const custodyOutstanding: Array<{
+    returnItemId: string;
+    productLabel: string;
+    usable: number;
+    damaged: number;
+  }> = (snapshot?.resolution?.lines ?? [])
+    .map((line) => {
+      const handedUsable = (snapshot?.custody ?? [])
+        .filter((entry) => entry.returnItemId === line.returnItemId && String(entry.condition).toLowerCase() === "usable")
+        .reduce((sum, entry) => sum + (unitsFromWireNumber(entry.quantity) ?? 0), 0);
+      const handedDamaged = (snapshot?.custody ?? [])
+        .filter((entry) => entry.returnItemId === line.returnItemId && String(entry.condition).toLowerCase() === "damaged")
+        .reduce((sum, entry) => sum + (unitsFromWireNumber(entry.quantity) ?? 0), 0);
+      const owedUsable = unitsFromWireNumber(line.rejectedReceivedUsable) ?? 0;
+      const owedDamaged = unitsFromWireNumber(line.rejectedReceivedDamaged) ?? 0;
+      return {
+        returnItemId: line.returnItemId,
+        productLabel: snapshot?.items.find((item) => item.returnItemId === line.returnItemId)?.productLabel ?? "کالای سفارش",
+        usable: compareUnits(handedUsable, owedUsable) >= 0 ? 0 : unitsToWireNumber(subtractUnits(owedUsable, handedUsable)) ?? 0,
+        damaged:
+          compareUnits(handedDamaged, owedDamaged) >= 0 ? 0 : unitsToWireNumber(subtractUnits(owedDamaged, handedDamaged)) ?? 0,
+      };
+    })
+    .filter((entry) => entry.usable > 0 || entry.damaged > 0);
+
   // ONE local authority for the receipt dialog's submit state: an over-ceiling or mis-precision amount disables the
   // confirm button instead of being discovered after a send.
   const receiptCollected = collectReceiptItems(receiptLines);
@@ -801,8 +1022,8 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         >
           <p className="font-semibold">یک اقدام ناتمام برای این پرونده ثبت شده است: {actionLabel(stored.intent.action)}</p>
           <p className="mt-1">
-            پاسخ این اقدام به‌صورت قطعی دریافت نشده است. همان بستهٔ بررسی‌شده دوباره ارسال می‌شود؛ سرور همان شناسه را
-            تکرار می‌کند و اقدام دومی ساخته نمی‌شود.
+            نتیجهٔ این اقدام قطعی مشخص نیست. با زدن دکمهٔ زیر همان اقدام دوباره فرستاده می‌شود؛ اگر قبلاً ثبت شده باشد،
+            دوباره انجام نمی‌شود.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -881,84 +1102,150 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       ) : (
         <>
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="font-semibold">وضعیت کار</h2>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h2 className="font-semibold">وضعیت پرونده</h2>
                 <p className="mt-1 text-sm text-muted" data-testid="admin-return-workspace-detail">
-                  {describeDetails(work)}
+                  {describeNextStep(snapshot, work)}
                 </p>
                 {work?.blockerCode ? (
                   <p className="mt-2 text-sm text-amber-700">{mapAdminErrorMessage(work.blockerCode, "fa")}</p>
                 ) : null}
               </div>
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
                 <dt className="text-muted">مبلغ درخواستی مشتری</dt>
                 <dd data-testid="admin-return-requested-amount">{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
-                <dt className="text-muted">مقصد بازگشت وجه</dt>
-                <dd>{formatRefundDestination(snapshot.destination)}</dd>
-                <dt className="text-muted">منشأ مرجوعی</dt>
-                <dd>{snapshot.origin === "CourierOrigin" ? "برگشتی از حامل" : "تحویل مشتری به فروشنده"}</dd>
-                <dt className="text-muted">وضعیت مرجوعی</dt>
-                <dd><span className={returnStatusBadgeClass(snapshot.status)}>{formatReturnStatus(snapshot.status)}</span></dd>
-                <dt className="text-muted">تصمیم ثبت‌شده</dt>
-                <dd>
-                  {formatReturnEffectiveDecision(snapshot.effectiveDecision, snapshot.recordedDecision)}
-                  {snapshot.decisionVersion && snapshot.decisionVersion > 0 ? (
-                    <span className="ms-2 text-muted">(نسخهٔ {toPersianDigits(snapshot.decisionVersion)})</span>
-                  ) : null}
-                </dd>
                 {snapshot.approvedAmount !== null && snapshot.approvedAmount !== undefined ? (
                   <>
-                    <dt className="text-muted">مبلغ تأییدشده (بر اساس مقدار پذیرفته)</dt>
+                    <dt className="text-muted">مبلغ تأییدشده</dt>
                     <dd data-testid="admin-return-approved-amount">{formatRial(snapshot.approvedAmount, snapshot.currency)}</dd>
                   </>
                 ) : null}
+                <dt className="text-muted">بازگشت وجه</dt>
+                <dd data-testid="admin-return-refund-money">{describeRefundMoney(snapshot)}</dd>
+                <dt className="text-muted">مقصد بازگشت وجه</dt>
+                <dd>{formatRefundDestination(snapshot.destination)}</dd>
+                <dt className="text-muted">دریافت کالا</dt>
+                <dd data-testid="admin-return-received-summary">
+                  {receivedUnitsOf(snapshot) > 0
+                    ? `${formatQuantityDisplayFa(unitsToWireNumber(receivedUnitsOf(snapshot)))} از ${formatQuantityDisplayFa(
+                        unitsToWireNumber(sumUnitsOf(snapshot.items.map((item) => {
+                          const line = snapshot.receiving?.lines.find((entry) => entry.returnItemId === item.returnItemId);
+                          return line?.requested ?? item.quantity;
+                        }))),
+                      )}`
+                    : "هنوز کالایی دریافت نشده است"}
+                </dd>
+                <dt className="text-muted">وضعیت مرجوعی</dt>
+                <dd><span className={returnStatusBadgeClass(snapshot.status)}>{formatReturnStatus(snapshot.status)}</span></dd>
+                <dt className="text-muted">تصمیم</dt>
+                <dd>{formatReturnEffectiveDecision(snapshot.effectiveDecision, snapshot.recordedDecision)}</dd>
+                <dt className="text-muted">منشأ مرجوعی</dt>
+                <dd>{snapshot.origin === "CourierOrigin" ? "برگشتی از حامل" : "تحویل مشتری به فروشنده"}</dd>
               </dl>
             </div>
             {snapshot.reason ? <p className="mt-3 text-sm">دلیل درخواست مشتری: {snapshot.reason}</p> : null}
             {snapshot.decisionReason ? <p className="mt-1 text-sm">دلیل تصمیم اپراتور: {snapshot.decisionReason}</p> : null}
           </section>
 
+          <section
+            className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm"
+            data-testid="admin-return-next-step"
+          >
+            <h2 className="font-semibold">قدم بعدی</h2>
+            {work && offeredActions.length > 0 ? (
+              <>
+                <p className="mt-1 text-sm text-muted">
+                  هر اقدام در پنجرهٔ خودش باز می‌شود و تا تأیید شما هیچ درخواستی ارسال نمی‌شود.
+                </p>
+                {(() => {
+                  const [primaryAction, ...otherActions] = offeredActions;
+                  return (
+                    <>
+                      {/*
+                        TB-280: the ONE obvious action is a full-width, labelled button with its own sentence — a
+                        shopkeeper never has to guess which of ten buttons is the safe next step.
+                      */}
+                      <button
+                        type="button"
+                        data-testid={`admin-return-action-${primaryAction.id}`}
+                        className={
+                          primaryAction.tone === "danger"
+                            ? "mt-3 w-full min-h-12 rounded-2xl border border-red-300 bg-red-50 px-5 py-3 text-start text-red-800 disabled:opacity-50"
+                            : "mt-3 w-full min-h-12 rounded-2xl bg-primary px-5 py-3 text-start text-primary-foreground disabled:opacity-50"
+                        }
+                        disabled={commandsBlocked}
+                        onClick={primaryAction.start}
+                      >
+                        <span className="block text-base font-bold">{primaryAction.label}</span>
+                        <span className="mt-1 block text-xs font-normal opacity-90">{primaryAction.hint}</span>
+                      </button>
+                      {otherActions.length > 0 ? (
+                        <div className="mt-4" data-testid="admin-return-other-actions">
+                          <p className="text-xs font-semibold text-muted">اقدام‌های دیگر</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {otherActions.map((action) => (
+                              <ActionButton
+                                key={action.id}
+                                id={action.id}
+                                label={action.label}
+                                tone={action.tone === "danger" ? "danger" : "secondary"}
+                                onClick={action.start}
+                                disabled={commandsBlocked}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </>
+                  );
+                })()}
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-muted">برای وضعیت فعلی این پرونده اقدام اجرایی وجود ندارد.</p>
+            )}
+            {pending ? (
+              <p className="mt-3 text-sm text-muted" data-testid="admin-return-command-pending">
+                در حال ثبت اقدام…
+              </p>
+            ) : null}
+          </section>
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <h2 className="font-semibold">اقلام درخواست و دریافت</h2>
+            <h2 className="font-semibold">کالاها</h2>
             <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">
                 <thead className="text-muted">
                   <tr>
-                    <th className="py-2 text-start">قلم</th>
                     <th className="py-2 text-start">کالا / واحد</th>
                     <th className="py-2 text-start">درخواست</th>
                     <th className="py-2 text-start">دریافت‌شده</th>
+                    <th className="py-2 text-start">باقی‌ماندهٔ دریافت</th>
                     <th className="py-2 text-start">سالم</th>
                     <th className="py-2 text-start">معیوب</th>
-                    <th className="py-2 text-start">قابل‌فروش پس از برگشت</th>
-                    <th className="py-2 text-start">تعیین تکلیف</th>
+                    <th className="py-2 text-start">وضعیت کالا</th>
                   </tr>
                 </thead>
                 <tbody>
                   {snapshot.items.map((item, index) => {
                     const line = snapshot.receiving?.lines.find((entry) => entry.returnItemId === item.returnItemId);
+                    const requestedUnits = unitsFromWireNumber(line?.requested ?? item.quantity) ?? 0;
+                    const receivedUnits = unitsFromWireNumber(line?.received ?? 0) ?? 0;
+                    const remainingUnits =
+                      compareUnits(receivedUnits, requestedUnits) >= 0 ? 0 : subtractUnits(requestedUnits, receivedUnits);
                     return (
                       <tr key={item.returnItemId} className="border-t border-border">
-                        <td className="py-2">قلم {toPersianDigits(index + 1)}</td>
                         <td className="py-2" data-testid={`admin-return-item-product-${index}`}>
-                          <span className="block">{item.productLabel ?? "کالای سفارش"}</span>
+                          <span className="block font-semibold">{item.productLabel ?? "کالای سفارش"}</span>
                           {/* The unit is shown only when the owning line answered it; a missing unit is unknown, not «واحد». */}
                           {item.unitLabel ? (
-                            <span className="block text-xs text-muted">
-                              واحد: {formatUnitLabel(item.unitLabel)}
-                            </span>
+                            <span className="block text-xs text-muted">واحد: {formatUnitLabel(item.unitLabel)}</span>
                           ) : null}
                         </td>
-                        <td className="py-2">{formatQuantityDisplayFa(line?.requested ?? item.quantity)}</td>
-                        <td className="py-2">{formatQuantityDisplayFa(line?.received ?? 0)}</td>
+                        <td className="py-2">{formatQuantityDisplayFa(unitsToWireNumber(requestedUnits))}</td>
+                        <td className="py-2">{formatQuantityDisplayFa(unitsToWireNumber(receivedUnits))}</td>
+                        <td className="py-2">{formatQuantityDisplayFa(unitsToWireNumber(remainingUnits))}</td>
                         <td className="py-2">{formatQuantityDisplayFa(line?.usable ?? 0)}</td>
                         <td className="py-2">{formatQuantityDisplayFa(line?.damaged ?? 0)}</td>
-                        <td className="py-2">
-                          {item.saleableRestockedQuantity == null
-                            ? "—"
-                            : formatQuantityDisplayFa(item.saleableRestockedQuantity)}
-                        </td>
                         <td className="py-2" data-testid={`admin-return-item-disposition-${index}`}>
                           {formatReturnDisposition(item.disposition, item.saleableRestockedQuantity)}
                         </td>
@@ -968,16 +1255,53 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                 </tbody>
               </table>
             </div>
-            {snapshot.receiving && !snapshot.receiving.isComplete ? (
-              <p className="mt-3 text-sm text-amber-700">دریافت کامل نشده است؛ باقی‌مانده باید ثبت شود.</p>
-            ) : null}
             {snapshot.receiving && !snapshot.receiving.isCoherent ? (
               <p className="mt-3 text-sm text-red-700">اطلاعات دریافت با درخواست هم‌خوان نیست و نیاز به بررسی دارد.</p>
             ) : null}
           </section>
 
-          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <h2 className="font-semibold">سابقهٔ دریافت‌ها</h2>
+          {/*
+            TB-280: outstanding rejected goods stay VISIBLE — a shopkeeper must see what the company still owes back to
+            the customer. The numbers are the SAME stored rejected portions and recorded handbacks, only the wording
+            changed from "تفکیک" vocabulary to the goods that are still with the company.
+          */}
+          {custodyOutstanding.length > 0 ? (
+            <section
+              className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 shadow-sm"
+              data-testid="admin-return-custody-remaining"
+            >
+              <h2 className="font-semibold">کالای ردشده که باید به مشتری برگردد</h2>
+              <ul className="mt-3 space-y-2">
+                {custodyOutstanding.map((entry) => (
+                  <li key={`custody-outstanding-${entry.returnItemId}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="font-semibold">{entry.productLabel}</span>
+                    {entry.usable > 0 ? (
+                      <span>
+                        سالم: {formatQuantityDisplayFa(unitsToWireNumber(entry.usable))} در اختیار شرکت
+                      </span>
+                    ) : null}
+                    {entry.damaged > 0 ? (
+                      <span>
+                        معیوب: {formatQuantityDisplayFa(unitsToWireNumber(entry.damaged))} در اختیار شرکت
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs">با ثبت هر تحویل، مقدار باقی‌مانده کم می‌شود.</p>
+            </section>
+          ) : null}
+
+          <details
+            className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm"
+            data-testid="admin-return-history"
+          >
+            <summary className="cursor-pointer text-base font-semibold">سابقه</summary>
+            <p className="mt-1 text-sm text-muted">
+              برای پیگیری؛ همهٔ این موارد ثبت‌شده‌اند و تغییر نمی‌کنند.
+            </p>
+            <div className="mt-4">
+              <h3 className="font-semibold">دریافت‌های ثبت‌شده</h3>
             {snapshot.receipts && snapshot.receipts.length > 0 ? (
               <ol className="mt-3 space-y-3">
                 {snapshot.receipts.map((occurrence, index) => (
@@ -1003,10 +1327,8 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
             ) : (
               <p className="mt-2 text-sm text-muted">هنوز دریافت فیزیکی ثبت نشده است.</p>
             )}
-          </section>
 
-          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <h2 className="font-semibold">تلاش‌های بازگشت وجه</h2>
+              <h3 className="mt-5 font-semibold">بازگشت وجه</h3>
             {snapshot.refundAttempts.length > 0 ? (
               <ul className="mt-3 space-y-2 text-sm">
                 {snapshot.refundAttempts.map((attempt) => (
@@ -1014,25 +1336,23 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                     <span>{formatRial(attempt.amount, attempt.currency)}</span>
                     <span>{formatRefundAttemptStatus(attempt.status)}</span>
                     <span className="text-muted">{formatReturnDate(attempt.createdAt)}</span>
-                    {attempt.failureCode ? <span className="text-red-700">{attempt.failureCode}</span> : null}
+                    {attempt.failureCode ? <span className="text-red-700">{mapAdminErrorMessage(attempt.failureCode, "fa")}</span> : null}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-sm text-muted">هنوز تلاش بازگشت وجهی ثبت نشده است.</p>
+              <p className="mt-2 text-sm text-muted">هنوز بازگشت وجهی ثبت نشده است.</p>
             )}
-          </section>
 
           {snapshot.resolution || (snapshot.decisionHistory?.length ?? 0) > 0 || (snapshot.custody?.length ?? 0) > 0 ? (
-            <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-              <h2 className="font-semibold">تصمیم بازبینی‌شده و تفکیک اقلام</h2>
+            <div>
+              <h3 className="mt-5 font-semibold">بررسی و تصمیم‌های ثبت‌شده</h3>
               {(snapshot.decisionHistory?.length ?? 0) > 0 ? (
                 <div className="mt-3">
-                  <h3 className="text-sm font-semibold text-muted">تاریخچهٔ تصمیم (فقط افزودنی)</h3>
+                  <h4 className="text-sm font-semibold text-muted">تصمیم‌ها</h4>
                   <ul className="mt-2 space-y-1 text-sm">
                     {snapshot.decisionHistory!.map((revision) => (
                       <li key={`${revision.version}-${revision.recordedAt}`} className="flex flex-wrap items-center gap-2">
-                        <span>نسخهٔ {toPersianDigits(revision.version)}</span>
                         <span>{formatReturnEffectiveDecision(revision.decision, null)}</span>
                         {revision.reason ? <span className="text-muted">— {revision.reason}</span> : null}
                         <span className="text-muted">{formatReturnDate(revision.recordedAt)}</span>
@@ -1043,17 +1363,14 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
               ) : null}
               {snapshot.resolution ? (
                 <div className="mt-4 overflow-x-auto">
-                  <h3 className="text-sm font-semibold text-muted">
-                    برنامهٔ تفکیک (نسخهٔ {toPersianDigits(snapshot.resolution.version)})
-                    {snapshot.resolution.isComplete ? "" : " — ناقص"}
-                  </h3>
+                  <h4 className="text-sm font-semibold text-muted">بررسی ثبت‌شده</h4>
                   <table className="mt-2 w-full min-w-[420px] text-sm">
                     <thead className="text-muted">
                       <tr>
-                        <th className="py-2 text-start">قلم</th>
+                        <th className="py-2 text-start">کالا</th>
                         <th className="py-2 text-start">دریافت‌شده</th>
-                        <th className="py-2 text-start">پذیرفته</th>
-                        <th className="py-2 text-start">رد‌شده</th>
+                        <th className="py-2 text-start">پذیرفته‌شده</th>
+                        <th className="py-2 text-start">ردشده</th>
                         <th className="py-2 text-start">دلیل</th>
                       </tr>
                     </thead>
@@ -1077,54 +1394,6 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                       {mapAdminErrorMessage(snapshot.resolution.blockerCode, "fa")}
                     </p>
                   ) : null}
-                  <div className="mt-3 space-y-1 text-sm" data-testid="admin-return-custody-remaining">
-                    <h4 className="font-semibold text-muted">باقی‌ماندهٔ تحویل کالای رد‌شده (به تفکیک وضعیت)</h4>
-                    {snapshot.resolution.lines
-                      .filter(
-                        (line) =>
-                          (unitsFromWireNumber(line.rejectedReceivedUsable) ?? 0) > 0
-                          || (unitsFromWireNumber(line.rejectedReceivedDamaged) ?? 0) > 0,
-                      )
-                      .map((line) => {
-                        const item = snapshot.items.find((entry) => entry.returnItemId === line.returnItemId);
-                        const handedOf = (condition: string) =>
-                          (snapshot.custody ?? [])
-                            .filter(
-                              (entry) =>
-                                entry.returnItemId === line.returnItemId
-                                && String(entry.condition).toLowerCase() === condition.toLowerCase(),
-                            )
-                            .reduce((sum, entry) => sum + (unitsFromWireNumber(entry.quantity) ?? 0), 0);
-                        const usablePossible = unitsFromWireNumber(line.rejectedReceivedUsable) ?? 0;
-                        const damagedPossible = unitsFromWireNumber(line.rejectedReceivedDamaged) ?? 0;
-                        const usableHanded = handedOf("Usable");
-                        const damagedHanded = handedOf("Damaged");
-                        const usableRemaining =
-                          compareUnits(usableHanded, usablePossible) >= 0 ? 0 : subtractUnits(usablePossible, usableHanded);
-                        const damagedRemaining =
-                          compareUnits(damagedHanded, damagedPossible) >= 0 ? 0 : subtractUnits(damagedPossible, damagedHanded);
-                        return (
-                          <p key={`custody-remaining-${line.returnItemId}`} className="flex flex-wrap items-center gap-2">
-                            <span>{item?.productLabel ?? "کالای سفارش"}</span>
-                            <span className="text-muted">
-                              سالم: رد‌شدهٔ دریافت‌شده {formatQuantityDisplayFa(line.rejectedReceivedUsable)} · تحویل‌شده{" "}
-                              {formatQuantityDisplayFa(unitsToWireNumber(usableHanded))} · در اختیار شرکت{" "}
-                              {formatQuantityDisplayFa(unitsToWireNumber(usableRemaining))}
-                            </span>
-                            <span className="text-muted">
-                              معیوب: رد‌شدهٔ دریافت‌شده {formatQuantityDisplayFa(line.rejectedReceivedDamaged)} · تحویل‌شده{" "}
-                              {formatQuantityDisplayFa(unitsToWireNumber(damagedHanded))} · در اختیار شرکت{" "}
-                              {formatQuantityDisplayFa(unitsToWireNumber(damagedRemaining))}
-                            </span>
-                            {(unitsFromWireNumber(line.rejectedUnreceived) ?? 0) > 0 ? (
-                              <span className="text-muted">
-                                دریافت‌نشده: {formatQuantityDisplayFa(line.rejectedUnreceived)}
-                              </span>
-                            ) : null}
-                          </p>
-                        );
-                      })}
-                  </div>
                 </div>
               ) : null}
               {(snapshot.custody?.length ?? 0) > 0 ? (
@@ -1146,148 +1415,11 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                   </ul>
                 </div>
               ) : null}
-            </section>
+            </div>
           ) : null}
+            </div>
+          </details>
 
-          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <h2 className="font-semibold">اقدام‌های مجاز</h2>
-            {work && work.actionCodes.length > 0 ? (
-              <>
-                <p className="mt-1 text-sm text-muted">
-                  هر اقدام در پنجرهٔ بررسی خودش باز می‌شود و تا تأیید شما هیچ درخواستی ارسال نمی‌شود.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {work.canRecordReceipt ? (
-                    <ActionButton
-                      id="record-receipt"
-                      label="ثبت دریافت کالا"
-                      onClick={() => setReviewing("receipt")}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                  {work.canDecide ? (
-                    <>
-                      <ActionButton
-                        id="approve"
-                        label="تأیید مرجوعی"
-                        onClick={() => setReviewing("approve")}
-                        disabled={commandsBlocked}
-                      />
-                      <ActionButton
-                        id="reject"
-                        label="رد مرجوعی"
-                        tone="danger"
-                        onClick={() => setReviewing("reject")}
-                        disabled={commandsBlocked}
-                      />
-                    </>
-                  ) : null}
-                  {/*
-                    TB-277: approval records a DECISION only. The money is a separate, deliberate action that the owning
-                    work description publishes on its own; it never rides on "approve".
-                  */}
-                  {work.canStartRefund ? (
-                    <ActionButton
-                      id="start-refund"
-                      label="شروع بازگشت وجه"
-                      onClick={() => setReviewing("start_refund")}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                  {work.canResumeRefund ? (
-                    <ActionButton
-                      id="resume-refund"
-                      label="پیگیری بازگشت وجه"
-                      onClick={() => setReviewing("resume_refund")}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                  {work.canRetryRefund ? (
-                    <ActionButton
-                      id="retry-refund"
-                      label="تلاش دوبارهٔ بازگشت وجه"
-                      onClick={() => setReviewing("retry_refund")}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                  {work.canSettlePhysical ? (
-                    <ActionButton
-                      id="settle-physical"
-                      label="تعیین تکلیف کالا"
-                      onClick={() => setReviewing("settle_physical")}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                  {/*
-                    TB-279: the audited correction, the reviewed per-item resolution and the actual handback are offered
-                    only while the owning work description publishes their action code.
-                  */}
-                  {correctionOffered ? (
-                    <ActionButton
-                      id="reopen-for-review"
-                      label="بازگشایی برای بررسی دوباره"
-                      onClick={openCorrection}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                  {resolutionOffered ? (
-                    <ActionButton
-                      id="publish-resolution"
-                      label="ثبت برنامهٔ تفکیک اقلام"
-                      onClick={() => {
-                        setResolutionDraft(
-                          snapshot.items.map((item) => {
-                            const line = snapshot.resolution?.lines.find((entry) => entry.returnItemId === item.returnItemId);
-                            const receivedLine = snapshot.receiving?.lines.find(
-                              (entry) => entry.returnItemId === item.returnItemId,
-                            );
-                            return {
-                              returnItemId: item.returnItemId,
-                              label: item.productLabel ?? "کالای سفارش",
-                              unitLabel: item.unitLabel ?? "",
-                              requested: receivedLine?.requested ?? item.quantity,
-                              received: receivedLine?.received ?? 0,
-                              usable: receivedLine?.usable ?? 0,
-                              damaged: receivedLine?.damaged ?? 0,
-                              acceptedUsable: "",
-                              acceptedDamaged: "",
-                              reason: "",
-                            };
-                          }),
-                        );
-                        setReviewing("publish_resolution");
-                      }}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                  {custodyOffered ? (
-                    <ActionButton
-                      id="record-custody"
-                      label="ثبت تحویل کالای رد‌شده"
-                      onClick={() => {
-                        const firstRejected = snapshot.resolution?.lines.find((entry) => entry.rejected > 0);
-                        setCustodyDraft({
-                          returnItemId: firstRejected?.returnItemId ?? "",
-                          quantity: "",
-                          condition: "Usable",
-                          proof: "",
-                        });
-                        setReviewing("record_custody");
-                      }}
-                      disabled={commandsBlocked}
-                    />
-                  ) : null}
-                </div>
-              </>
-            ) : (
-              <p className="mt-2 text-sm text-muted">برای وضعیت فعلی این پرونده اقدام اجرایی وجود ندارد.</p>
-            )}
-            {pending ? (
-              <p className="mt-3 text-sm text-muted" data-testid="admin-return-command-pending">
-                در حال ثبت اقدام…
-              </p>
-            ) : null}
-          </section>
 
           {/*
             TB-277: the reviewed decision is a DIALOG. Its copy says exactly what it does — record the decision, move no
@@ -1302,7 +1434,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                 <p className="text-muted">
                   در همین مرحله هیچ وجهی جابه‌جا نمی‌شود و هیچ کالایی به موجودی قابل‌فروش برنمی‌گردد. بازگشت وجه به «
                   {formatRefundDestination(snapshot.destination)}» یک اقدام مالی جداگانه است که پس از ثبت تأیید، با دکمهٔ
-                  «شروع بازگشت وجه» انجام می‌شود.
+                  «بازگشت وجه» انجام می‌شود.
                 </p>
                 <p className="text-muted">این تصمیم پس از ثبت قابل بازگشت نیست.</p>
                 <div className="flex flex-wrap justify-end gap-2">
@@ -1356,11 +1488,10 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           ) : null}
 
           {reviewing === "start_refund" ? (
-            <Dialog open title="شروع بازگشت وجه" onClose={closeReview} showCloseButton={false}>
+            <Dialog open title="بازگشت وجه" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-start-refund-form">
                 <p>
-                  این اقدام، <strong>اولین تلاش بازگشت وجه</strong> این پرونده را ثبت و به درگاه پرداخت ارسال می‌کند:
-                </p>
+                  این اقدام، <strong>بازگشت وجه این پرونده</strong> را ثبت و به درگاه پرداخت ارسال می‌کند:</p>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
                   <dt className="text-muted">مبلغ</dt>
                   <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
@@ -1372,15 +1503,15 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                   <dd>تأیید مرجوعی</dd>
                 </dl>
                 <p className="text-muted">
-                  تأیید مرجوعی به‌تنهایی هیچ وجهی جابه‌جا نمی‌کند؛ این پنجره همان اقدام مالی جداگانه است. شناسهٔ این تلاش
-                  از خود پرونده ساخته می‌شود، بنابراین کلیک دوباره یا قطع پاسخ، تلاش دومی نمی‌سازد.
+                  تأیید مرجوعی به‌تنهایی هیچ وجهی جابه‌جا نمی‌کند؛ این پنجره همان اقدام مالی جداگانه است. اگر دوباره کلیک
+                  کنید یا پاسخ قطع شود، همان درخواست تکرار می‌شود و مبلغ دوباره کم نمی‌شود.
                 </p>
                 <div className="flex flex-wrap justify-end gap-2">
                   <Button tone="secondary" type="button" onClick={closeReview}>
                     انصراف
                   </Button>
                   <Button type="button" onClick={reviewStartRefund} data-testid="admin-return-start-refund-confirm">
-                    شروع بازگشت وجه
+                    بازگشت وجه
                   </Button>
                 </div>
               </div>
@@ -1529,7 +1660,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
             <Dialog open title="پیگیری بازگشت وجه" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-resume-form">
                 <p>
-                  تلاش بازگشت وجهِ در جریان این پرونده با همان شناسهٔ ثبت‌شده و همان مبلغ دوباره ارسال می‌شود؛ تلاش تازه‌ای
+                  نتیجهٔ بازگشت وجهی که در جریان است دوباره بررسی می‌شود؛ همین مبلغ پیگیری می‌شود و بازگشت وجه تازه‌ای
                   ساخته نمی‌شود.
                 </p>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
@@ -1554,8 +1685,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
             <Dialog open title="تلاش دوبارهٔ بازگشت وجه" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-retry-form">
                 <p>
-                  تنها تلاش <strong>قطعی ناموفق</strong> این پرونده بررسی و تلاش وابستهٔ آن ساخته می‌شود؛ شناسهٔ تلاش
-                  دوباره از همان تلاش ناموفق مشتق می‌شود.
+                  بازگشت وجهی که قبلاً <strong>ناموفق</strong> بوده یک بار دیگر انجام می‌شود؛ مبلغ دوباره کم نمی‌شود.
                 </p>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
                   <dt className="text-muted">مبلغ</dt>
@@ -1579,8 +1709,8 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
             <Dialog open title="بازگشایی پرونده برای بررسی دوباره" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-reopen-form">
                 <p>
-                  با این اقدام، پرونده از وضعیت تصمیم‌گرفته‌شده به <strong>بررسی دوباره</strong> برمی‌گردد و یک
-                  <strong> نسخهٔ تازهٔ تصمیم</strong> به تاریخچهٔ همین پرونده افزوده می‌شود. تصمیم‌های قبلی پاک نمی‌شوند.
+                  با این اقدام، پرونده از وضعیت تصمیم‌گرفته‌شده به <strong>بررسی دوباره</strong> برمی‌گردد و
+                  <strong> تصمیم تازه</strong> در سابقهٔ همین پرونده ثبت می‌شود. تصمیم‌های قبلی پاک نمی‌شوند.
                 </p>
                 <p className="text-muted">
                   این اقدام فقط تا زمانی ممکن است که هیچ اثر مالی یا فیزیکی ثبت نشده باشد. اگر بازگشت وجه یا تعیین تکلیف
@@ -1589,8 +1719,6 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
                   <dt className="text-muted">تصمیم فعلی</dt>
                   <dd>{formatReturnEffectiveDecision(snapshot.effectiveDecision, snapshot.recordedDecision)}</dd>
-                  <dt className="text-muted">نسخهٔ بررسی‌شده</dt>
-                  <dd>{toPersianDigits(snapshot.decisionVersion ?? 0)}</dd>
                 </dl>
                 <label className="block">
                   <span className="block text-muted">دلیل بازگشایی (حداقل ۳ نویسه)</span>
@@ -1643,12 +1771,12 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           ) : null}
 
           {reviewing === "publish_resolution" ? (
-            <Dialog open size="lg" title="ثبت برنامهٔ تفکیک اقلام" onClose={closeReview} showCloseButton={false}>
+            <Dialog open size="lg" title="بررسی مرجوعی" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-resolution-form">
                 <p>
-                  برای هر قلم، میزان <strong>پذیرفته‌شده</strong> از هر وضعیت (سالم/معیوب) را مشخص کنید. مبلغ تأییدشده فقط
-                  از مقدار پذیرفته‌شده و قیمت ثبت‌شدهٔ همان قلم ساخته می‌شود و بخش رد‌شدهٔ دریافت‌شده به‌صورت خودکار محاسبه
-                  می‌شود؛ هیچ مبلغی دستی وارد نمی‌شود.
+                  برای هر قلم مشخص کنید چه مقدار از کالای <strong>دریافت‌شده</strong> پذیرفته می‌شود. مبلغ قابل بازگشت فقط از
+                  مقدار پذیرفته‌شده و قیمت ثبت‌شدهٔ همان قلم ساخته می‌شود؛ بخشی که پذیرفته نشود خودکار محاسبه می‌شود و مبلغی
+                  دستی وارد نمی‌کنید.
                 </p>
                 <div className="max-h-80 space-y-3 overflow-y-auto pe-1">
                   {resolutionDraft.map((line, index) => {
@@ -1660,11 +1788,19 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                     })();
                     const usableCeiling = unitsFromWireNumber(line.usable);
                     const damagedCeiling = unitsFromWireNumber(line.damaged);
-                    const acceptedUsableCheck = evaluateAcceptedPortion(line.acceptedUsable, places, usableCeiling);
-                    const acceptedDamagedCheck = evaluateAcceptedPortion(line.acceptedDamaged, places, damagedCeiling);
+                    // TB-280: an EMPTY portion is "zero accepted", not an error — a red message on an untouched dialog
+                    // is exactly the noise this task removes. Only a value the operator actually typed is checked.
+                    const acceptedUsableCheck =
+                      line.acceptedUsable.trim() === ""
+                        ? null
+                        : evaluateAcceptedPortion(line.acceptedUsable, places, usableCeiling);
+                    const acceptedDamagedCheck =
+                      line.acceptedDamaged.trim() === ""
+                        ? null
+                        : evaluateAcceptedPortion(line.acceptedDamaged, places, damagedCeiling);
                     // TB-279-R2: the declined portions come from the EXACT entered units (never a wire string re-parse).
-                    const acceptedUsableUnits = acceptedUsableCheck.units ?? 0;
-                    const acceptedDamagedUnits = acceptedDamagedCheck.units ?? 0;
+                    const acceptedUsableUnits = acceptedUsableCheck?.units ?? 0;
+                    const acceptedDamagedUnits = acceptedDamagedCheck?.units ?? 0;
                     const rejectedReceivedUsable =
                       compareUnits(acceptedUsableUnits, usableCeiling ?? 0) > 0
                         ? 0
@@ -1701,7 +1837,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                               className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
                               inputMode="decimal"
                               value={line.acceptedUsable}
-                              aria-invalid={acceptedUsableCheck.problem ? true : undefined}
+                              aria-invalid={acceptedUsableCheck?.problem ? true : undefined}
                               onChange={(event) => {
                                 const next = [...resolutionDraft];
                                 next[index] = { ...line, acceptedUsable: event.target.value };
@@ -1709,7 +1845,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                               }}
                               data-testid={`admin-return-resolution-accepted-usable-${index}`}
                             />
-                            {acceptedUsableCheck.problem ? (
+                            {acceptedUsableCheck?.problem ? (
                               <span className="mt-1 block text-xs text-red-700" role="alert">
                                 مقدار باید با دقت واحد همین قلم و در محدودهٔ سالمِ دریافت‌شده باشد.
                               </span>
@@ -1723,7 +1859,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                               className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
                               inputMode="decimal"
                               value={line.acceptedDamaged}
-                              aria-invalid={acceptedDamagedCheck.problem ? true : undefined}
+                              aria-invalid={acceptedDamagedCheck?.problem ? true : undefined}
                               onChange={(event) => {
                                 const next = [...resolutionDraft];
                                 next[index] = { ...line, acceptedDamaged: event.target.value };
@@ -1731,7 +1867,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                               }}
                               data-testid={`admin-return-resolution-accepted-damaged-${index}`}
                             />
-                            {acceptedDamagedCheck.problem ? (
+                            {acceptedDamagedCheck?.problem ? (
                               <span className="mt-1 block text-xs text-red-700" role="alert">
                                 مقدار باید با دقت واحد همین قلم و در محدودهٔ معیوبِ دریافت‌شده باشد.
                               </span>
@@ -1744,7 +1880,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                           {formatQuantityDisplayFa(rejectedUnreceived)}
                         </p>
                         <label className="mt-2 block">
-                          <span className="block text-muted">دلیل این قلم (اختیاری)</span>
+                          <span className="block text-muted">دلیل این قلم (الزامی)</span>
                           <input
                             className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
                             value={line.reason}
@@ -1753,7 +1889,14 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                               next[index] = { ...line, reason: event.target.value };
                               setResolutionDraft(next);
                             }}
+                            data-testid={`admin-return-resolution-reason-${index}`}
                           />
+                          <span className="mt-1 block text-xs text-muted">
+                            چرا این مقدار پذیرفته یا رد شد؟ دست‌کم ۳ نویسه.
+                          </span>
+                          {line.reason.length > 0 && !RESOLUTION_REASON_ACCEPTABLE(line.reason) ? (
+                            <span className="mt-1 block text-xs text-red-700">دلیل باید دست‌کم ۳ نویسه باشد.</span>
+                          ) : null}
                         </label>
                       </div>
                     );
@@ -1764,7 +1907,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                     انصراف
                   </Button>
                   <Button type="button" onClick={reviewResolution} data-testid="admin-return-resolution-confirm">
-                    ثبت برنامهٔ تفکیک
+                    ثبت بررسی
                   </Button>
                 </div>
               </div>
@@ -1772,7 +1915,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           ) : null}
 
           {reviewing === "record_custody" ? (
-            <Dialog open title="ثبت تحویل کالای رد‌شده" onClose={closeReview} showCloseButton={false}>
+            <Dialog open title="تحویل کالای رد‌شده به مشتری" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-custody-form">
                 <p>
                   با این اقدام، بخش <strong>رد‌شدهٔ دریافت‌شده</strong> به‌صورت واقعی به مشتری تحویل داده می‌شود و همین
@@ -1894,7 +2037,7 @@ function ActionButton({
   label: string;
   onClick: () => void;
   disabled?: boolean;
-  tone?: "primary" | "danger";
+  tone?: "primary" | "secondary" | "danger";
 }) {
   return (
     <button
@@ -1903,7 +2046,9 @@ function ActionButton({
       className={
         tone === "danger"
           ? "min-h-11 rounded-xl border border-red-300 px-4 text-sm font-bold text-red-700 disabled:opacity-50"
-          : "min-h-11 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-50"
+          : tone === "secondary"
+            ? "min-h-11 rounded-xl border border-border px-4 text-sm font-semibold hover:bg-secondary disabled:opacity-50"
+            : "min-h-11 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-50"
       }
       disabled={disabled}
       onClick={onClick}

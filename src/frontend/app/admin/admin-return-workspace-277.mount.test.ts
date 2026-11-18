@@ -436,7 +436,7 @@ test("approve records the decision only, and the first refund is a separate revi
     await openAction(tree.container, "start-refund");
     const refundDialog = q(tree.container, "[data-testid='admin-return-start-refund-form']");
     assert.notEqual(refundDialog.closest("dialog"), null);
-    assert.match(refundDialog.textContent ?? "", /اولین تلاش بازگشت وجه/);
+    assert.match(refundDialog.textContent ?? "", /بازگشت وجه این پرونده را ثبت و به درگاه پرداخت ارسال می‌کند/);
     await click(q(tree.container, "[data-testid='admin-return-start-refund-confirm']"));
     await waitFor(() => stub.posts().length === 2);
     const refundPost = stub.posts()[1];

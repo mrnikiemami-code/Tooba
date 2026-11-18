@@ -249,15 +249,21 @@ public static class ReturnWorkPolicy
         var correction = snapshot.Correction ?? ReturnCorrectionPolicy.Describe(snapshot);
         var canReopenForReview = correction.CanReopenForReview;
 
-        // TB-279: publishing the reviewed split is decision work offered exactly when the case's EFFECTIVE resolution
-        // cannot name the accepted money (the legacy/partial claim). A fully received claim keeps the whole-accept
-        // baseline, so the operator is never asked to re-type what the stored evidence already states.
+        // TB-279 / TB-280: publishing the reviewed split is decision work offered in exactly the window the owning
+        // writer accepts (still in review, no decision, no refund attempt, no physical effect) and only for goods that
+        // were ACTUALLY received — `Lines.Count > 0` is the summary of the REQUESTED lines, so it is true even when
+        // nothing arrived and used to offer a review form whose every ceiling was zero.
+        // A complete REVIEWED plan needs no re-publication; the implicit all-received baseline still lets the operator
+        // deliberately review a LAWFUL partial acceptance of the goods that did arrive.
         var canPublishResolution = customerDelivered
             && snapshot.Status == ReturnRequestStatus.Requested
             && snapshot.EffectiveDecision is null
             && receiptCoherent
-            && snapshot.Receiving is { IsCoherent: true, Lines.Count: > 0 }
-            && !effectiveResolution.IsComplete;
+            && snapshot.RefundAttempts.Count == 0
+            && !anyDisposition
+            && snapshot.Receiving is { IsCoherent: true } receivingSummary
+            && receivingSummary.Received > 0m
+            && !(effectiveResolution.IsComplete && effectiveResolution.FromReviewedPlan);
 
         // TB-279: an actual handback is owed only for rejected RECEIVED goods, and every accepted portion must already
         // own its durable physical fact before the remaining custody work is offered.
