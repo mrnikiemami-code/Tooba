@@ -78,4 +78,43 @@ public static class ReturnsValidationCodes
 
     /// <summary>TB-274: one receipt occurrence cannot name the same (item, condition) twice.</summary>
     public const string ReceiptDuplicateLine = "returns.validation.receipt_duplicate_line";
+
+    /// <summary>TB-279: an audited correction must name the reviewing operator.</summary>
+    public const string CorrectionActorRequired = "returns.validation.correction_actor_required";
+
+    /// <summary>TB-279: an audited correction must state its reviewed occurrence identity.</summary>
+    public const string CorrectionOccurrenceRequired = "returns.validation.correction_occurrence_required";
+
+    /// <summary>TB-279: an audited correction must state its reviewed reason.</summary>
+    public const string CorrectionReasonRequired = "returns.validation.correction_reason_required";
+
+    /// <summary>TB-279: a reviewed resolution must name the reviewing operator.</summary>
+    public const string ResolutionActorRequired = "returns.validation.resolution_actor_required";
+
+    /// <summary>TB-279: a reviewed resolution must carry at least one line.</summary>
+    public const string ResolutionLinesEmpty = "returns.validation.resolution_lines_empty";
+
+    /// <summary>TB-279: a resolution line names the same item twice.</summary>
+    public const string ResolutionDuplicateLine = "returns.validation.resolution_duplicate_line";
+
+    /// <summary>TB-279: a resolution line names a non-positive or over-precise split.</summary>
+    public const string ResolutionQuantityInvalid = "returns.validation.resolution_quantity_invalid";
+
+    /// <summary>TB-279: the reviewed resolution version must be present and non-negative.</summary>
+    public const string ResolutionVersionInvalid = "returns.validation.resolution_version_invalid";
+
+    /// <summary>TB-279: a custody fact must name its reviewed occurrence identity.</summary>
+    public const string CustodyOccurrenceRequired = "returns.validation.custody_occurrence_required";
+
+    /// <summary>TB-279: a custody fact must name the receiving customer.</summary>
+    public const string CustodyRecipientRequired = "returns.validation.custody_recipient_required";
+
+    /// <summary>TB-279: a custody fact must carry its handback proof reference.</summary>
+    public const string CustodyProofRequired = "returns.validation.custody_proof_required";
+
+    /// <summary>TB-279: a custody quantity is non-positive or over-precise.</summary>
+    public const string CustodyQuantityInvalid = "returns.validation.custody_quantity_invalid";
+
+    /// <summary>TB-279: a custody inspection is not a defined condition.</summary>
+    public const string CustodyConditionInvalid = "returns.validation.custody_condition_invalid";
 }

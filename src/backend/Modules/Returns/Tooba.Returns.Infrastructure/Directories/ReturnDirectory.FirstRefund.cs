@@ -23,6 +23,13 @@ namespace Tooba.Returns.Infrastructure.Directories;
 /// already owns any attempt is answered from its own stored row with zero effect — it is never re-sent and never
 /// re-keyed from the current status or an attempt count.
 /// </para>
+/// <para>
+/// TB-279 (B/E): the FIRST attempt is persisted inside a SHORT owning transaction that re-reads the case AFTER its row
+/// lock and the shared seller-order serialization, verifies the CURRENT effective decision revision and the frozen
+/// approved amount, and reserves the payment's shared refund budget atomically. The transaction commits BEFORE any
+/// gateway/Wallet call, so a concurrent correction can never let a stale approval send money, and an unknown outcome
+/// keeps its reservation instead of losing it.
+/// </para>
 /// </summary>
 public sealed partial class ReturnDirectory
 {
@@ -40,7 +47,6 @@ public sealed partial class ReturnDirectory
 
         var request = await LoadMutableAsync(command.ReturnRequestId, cancellationToken);
         var snapshot = await MapSnapshotAsync(request, cancellationToken);
-        var description = ReturnRecoveryPolicy.Describe(snapshot);
 
         // ONE exact identity for the first money step of this case.
         var attemptId = ReturnFirstRefundIdentity.DeriveAttemptId(request.ReturnRequestId);
@@ -58,6 +64,10 @@ public sealed partial class ReturnDirectory
             return await MapSnapshotAsync(request, cancellationToken);
         }
 
+        // TB-279 (B): the reviewed revision this intent is acting on. A correction that landed after this read is
+        // refused by the locked re-check below instead of sending the money of a superseded decision.
+        var expectedDecisionVersion = snapshot.DecisionVersion;
+        var description = ReturnRecoveryPolicy.Describe(snapshot);
         if (description.Phase == ReturnRecoveryPhase.Blocked)
         {
             // The read exposes this typed blocker; the action refuses with the SAME reason and zero effect.
@@ -69,15 +79,6 @@ public sealed partial class ReturnDirectory
         {
             // Anything else (unapproved, already started, unknown/failed money, physical-only or settled) is NOT a
             // first refund. It is a typed refusal with zero effect rather than an inferred attempt.
-            throw new ContractOperationException(ReturnsErrorCodes.FirstRefundNotLawful);
-        }
-
-        // The recorded APPROVE decision is a stored fact the policy already required; re-read it as a positive guard
-        // so no other code path can ever start money over a missing or opposite decision.
-        var recordedDecision = await _db.ReturnDecisions.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.ReturnRequestId == request.ReturnRequestId, cancellationToken);
-        if (recordedDecision is null || !AnswersDecision(recordedDecision, ReturnDecisionKind.Approve))
-        {
             throw new ContractOperationException(ReturnsErrorCodes.FirstRefundNotLawful);
         }
 
@@ -95,13 +96,15 @@ public sealed partial class ReturnDirectory
         {
             // TB-265 / TB-277: the courier source/claim/obligation/branch closure phases are the PREREQUISITE of the
             // money step, so they run here — before the attempt is persisted and before any external call — while
-            // approval itself never released a claim, a hold or stock.
+            // approval itself never released a claim, a hold or stock. No external call runs inside the short
+            // attempt/budget transaction below.
             await EnsureCourierOriginClosureAsync(request, command.ActorUserId, cancellationToken);
         }
         else
         {
             // TB-274: an ordinary delivered RMA may only start money over its OWN complete and coherent recorded
-            // customer receipt; the client's ceiling is never the authority.
+            // customer receipt; the client's ceiling is never the authority. TB-279: the reviewed resolution must also
+            // be complete, because its accepted quantities are the ONLY basis of the approved amount.
             var receiving = await ReadReceivingAsync(request, cancellationToken);
             if (receiving is not { IsCoherent: true, IsComplete: true })
             {
@@ -109,6 +112,12 @@ public sealed partial class ReturnDirectory
                     receiving is { IsCoherent: false }
                         ? ReturnsErrorCodes.RecoveryEvidenceConflict
                         : ReturnsErrorCodes.RecoveryReceivingRequired);
+            }
+
+            if (snapshot.Resolution is not { IsComplete: true })
+            {
+                throw new ContractOperationException(
+                    snapshot.Resolution?.BlockerCode ?? ReturnsErrorCodes.ResolutionRequired);
             }
         }
 
@@ -119,35 +128,32 @@ public sealed partial class ReturnDirectory
             throw new ContractOperationException(ReturnsErrorCodes.RefundAlreadyStarted);
         }
 
-        // Persist the ONE durable attempt BEFORE the external call: a crash after the send must leave the same
-        // identity/key behind for reconciliation, and the unique key is what makes a concurrent duplicate lose.
-        request.MarkRefundProcessing(_clock.UtcNow);
-        var attempt = request.BeginRefundAttempt(attemptId, paymentId, idempotencyKey, _clock.UtcNow);
-        _db.RefundAttempts.Add(attempt);
-        try
+        var amount = ReturnResolutionPolicy.MoneyOf(snapshot);
+        if (amount < 0m || amount > payment.Amount)
         {
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (IsFirstAttemptKeyConflict(ex))
-        {
-            // Another duplicate of this SAME intent already persisted the first attempt. Only this attempt's entry is
-            // detached (never a caller-wide tracker clear) and the stored row is answered as-is: no second send.
-            _db.Entry(attempt).State = EntityState.Detached;
-            var stored = await _db.RefundAttempts.AsNoTracking()
-                .FirstOrDefaultAsync(
-                    x => x.ReturnRequestId == request.ReturnRequestId
-                        && (x.RefundAttemptId == attemptId
-                            || x.IdempotencyKey == idempotencyKey),
-                    cancellationToken);
-            if (stored is null)
-            {
-                throw;
-            }
-
-            var storedSnapshot = await GetAsync(request.ReturnRequestId, cancellationToken);
-            return storedSnapshot ?? await MapSnapshotAsync(request, cancellationToken);
+            // A reviewed amount can never exceed the owning payment, and a negative one is not money.
+            throw new ContractOperationException(ReturnsErrorCodes.RefundBudgetExceeded);
         }
 
+        // Persist the ONE durable attempt + its shared budget reservation BEFORE the external call: a crash after the
+        // send must leave the same identity/key/reservation behind for reconciliation.
+        var persisted = await PersistFirstAttemptUnderLockAsync(
+            request,
+            attemptId,
+            idempotencyKey,
+            paymentId,
+            amount,
+            expectedDecisionVersion,
+            cancellationToken);
+        if (!persisted)
+        {
+            // A concurrent duplicate of this exact intent (or a correction that won the version) answered inside the
+            // lock. Either way this request sends nothing.
+            return await GetAsync(request.ReturnRequestId, cancellationToken)
+                ?? await MapSnapshotAsync(request, cancellationToken);
+        }
+
+        var attempt = request.RefundAttempts.Single(x => x.RefundAttemptId == attemptId);
         _telemetry.RecordFirstRefundStarted();
 
         // The external call happens with NO transaction and NO row lock held; the outcome is applied by the existing
@@ -167,6 +173,128 @@ public sealed partial class ReturnDirectory
 
         await _db.SaveChangesAsync(cancellationToken);
         return await MapSnapshotAsync(request, cancellationToken);
+    }
+
+    /// <summary>
+    /// TB-279 (B/E): the SHORT owning transaction of the first money step. It takes the shared seller-order
+    /// serialization and the case row lock, re-reads every fact, verifies the CURRENT effective decision revision and
+    /// the frozen approved amount, checks the payment's shared refund budget, and persists the attempt + reservation.
+    /// Returns <c>false</c> when nothing was persisted (a concurrent duplicate or a superseded decision) — no money may
+    /// be sent in that case.
+    /// </summary>
+    private async Task<bool> PersistFirstAttemptUnderLockAsync(
+        ReturnRequest request,
+        Guid attemptId,
+        string idempotencyKey,
+        Guid paymentId,
+        decimal amount,
+        int expectedDecisionVersion,
+        CancellationToken cancellationToken)
+    {
+        var relational = _db.Database.IsRelational();
+        var ownsTransaction = relational && _db.Database.CurrentTransaction is null;
+        await using var transaction = ownsTransaction
+            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        try
+        {
+            if (relational)
+            {
+                await LockOwningSellerOrderAsync(request.ReturnRequestId, cancellationToken);
+                await _db.Database.ExecuteSqlAsync(
+                    $"SELECT 1 FROM returns.return_requests WHERE return_request_id = {request.ReturnRequestId} FOR UPDATE",
+                    cancellationToken);
+            }
+
+            // Re-read AFTER the lock: every fact this decision depends on is the CURRENT committed one, not the value
+            // this request read before the lock.
+            await _db.Entry(request).ReloadAsync(cancellationToken);
+            var state = await ReadDecisionStateAsync(request.ReturnRequestId, cancellationToken);
+            var staleAttempt = await _db.RefundAttempts.AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.ReturnRequestId == request.ReturnRequestId
+                        && (x.RefundAttemptId == attemptId || x.IdempotencyKey == idempotencyKey),
+                    cancellationToken);
+            if (staleAttempt is not null)
+            {
+                await CommitCorrectionAsync(transaction, ownsTransaction, cancellationToken);
+                return false;
+            }
+
+            if (state.EffectiveVersion != expectedDecisionVersion
+                || !string.Equals(
+                    state.EffectiveDecision,
+                    ReturnDecisionRevision.ApproveDecision,
+                    StringComparison.Ordinal)
+                || request.Status != ReturnRequestStatus.Approved
+                || request.PaymentId != paymentId)
+            {
+                // The reviewed decision was corrected (or the case moved) while this request waited: a stale approval
+                // can never send money.
+                throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
+            }
+
+            var currentApproved = request.ApprovedAmount ?? amount;
+            if (currentApproved != amount)
+            {
+                // The frozen approved money changed after this request read it. It is never re-derived from the older
+                // in-memory value.
+                throw new ContractOperationException(ReturnsErrorCodes.CorrectionVersionStale);
+            }
+
+            if (relational)
+            {
+                // TB-279 (E): the shared refund budget of this PAYMENT is serialized by its own Returns-owned lock, so
+                // two seller cases of one checkout can never both reserve the same remaining budget.
+                await ReturnBudgetSerialization.AcquireAsync(_db.Database, paymentId, cancellationToken);
+            }
+
+            var committedPaymentObligations = await _db.RefundAttempts.AsNoTracking()
+                .Where(x => x.PaymentId == paymentId
+                    && (x.Status == RefundAttemptStatus.Pending || x.Status == RefundAttemptStatus.Succeeded))
+                .Select(x => x.Amount)
+                .ToListAsync(cancellationToken);
+            var budget = await _payments.GetAsync(paymentId, request.RequestedByUserId, null, cancellationToken);
+            var reserved = committedPaymentObligations.Sum();
+            if (budget is not null && reserved + amount > budget.Amount)
+            {
+                throw new ContractOperationException(ReturnsErrorCodes.RefundBudgetExceeded);
+            }
+
+            request.MarkRefundProcessing(_clock.UtcNow);
+            request.FreezeApprovedAmount(amount);
+            var attempt = request.BeginRefundAttempt(attemptId, paymentId, idempotencyKey, _clock.UtcNow);
+            _db.RefundAttempts.Add(attempt);
+
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (IsFirstAttemptKeyConflict(ex))
+            {
+                // Another duplicate of this SAME intent already persisted the first attempt. Only this attempt's entry
+                // is detached (never a caller-wide tracker clear) and nothing is sent.
+                _db.Entry(attempt).State = EntityState.Detached;
+                if (ownsTransaction && transaction is not null)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                }
+
+                return false;
+            }
+
+            await CommitCorrectionAsync(transaction, ownsTransaction, cancellationToken);
+            return true;
+        }
+        catch
+        {
+            if (ownsTransaction && transaction is not null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            throw;
+        }
     }
 
     /// <summary>

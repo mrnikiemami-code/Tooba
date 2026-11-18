@@ -166,6 +166,11 @@ public sealed partial class ReturnDirectory
 
             _db.ReturnRequests.Add(request);
             _db.ReturnItems.AddRange(request.Items);
+
+            // TB-279 (D): the NEW claim is bound to the exact owning delivered slices, under the seller-order
+            // serialization already held above, so two sibling cases can never claim the same slice twice and an old
+            // return can never consume a newer delivery's window.
+            _db.ReturnDeliveryAllocations.AddRange(BuildDeliveryAllocations(request, eligibility));
             await _db.SaveChangesAsync(cancellationToken);
             if (callerTransaction is not null && savepointName is not null)
             {

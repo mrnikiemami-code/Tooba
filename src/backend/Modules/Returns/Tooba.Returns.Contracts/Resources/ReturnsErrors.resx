@@ -51,4 +51,38 @@
   <data name="return.decision.reason_conflict" xml:space="preserve"><value>The recorded rejection already states a different reason.</value></data>
   <data name="return.refund.first_not_lawful" xml:space="preserve"><value>Only an approved return whose refund was never started can begin its first refund.</value></data>
   <data name="return.outbox.unmapped_event" xml:space="preserve"><value>The integration event type is not registered.</value></data>
+  <data name="return.resolution.required" xml:space="preserve"><value>No reviewed resolution or complete receiving coverage exists, so no approved amount can be named yet.</value></data>
+  <data name="return.resolution.incomplete" xml:space="preserve"><value>The stored resolution does not account for the whole original claim.</value></data>
+  <data name="return.resolution.invalid" xml:space="preserve"><value>A stored resolution quantity is invalid.</value></data>
+  <data name="return.resolution.received_exceeded" xml:space="preserve"><value>An accepted quantity exceeds what was physically received.</value></data>
+  <data name="return.resolution.state_invalid" xml:space="preserve"><value>A resolution may only be published while the case is in review with no money or physical effect.</value></data>
+  <data name="return.resolution.version_stale" xml:space="preserve"><value>The case moved to a newer reviewed decision revision.</value></data>
+  <data name="return.resolution.actor_required" xml:space="preserve"><value>A reviewed resolution must name the reviewing operator.</value></data>
+  <data name="return.resolution.item_invalid" xml:space="preserve"><value>A resolution line does not belong to this return.</value></data>
+  <data name="return.correction.not_applicable" xml:space="preserve"><value>This return has no decided outcome to correct.</value></data>
+  <data name="return.correction.state_invalid" xml:space="preserve"><value>This return is not in an approved/rejected state that may be corrected.</value></data>
+  <data name="return.correction.financial_effect_recorded" xml:space="preserve"><value>A refund attempt is already recorded, so the decision cannot be reopened.</value></data>
+  <data name="return.correction.custody_recorded" xml:space="preserve"><value>Received goods were already handed back, so the decision cannot be reopened.</value></data>
+  <data name="return.correction.physical_effect_recorded" xml:space="preserve"><value>A stock disposition is already recorded, so the decision cannot be reopened.</value></data>
+  <data name="return.correction.source_effect_recorded" xml:space="preserve"><value>The source claim/closure was already released, so the decision cannot be reopened.</value></data>
+  <data name="return.correction.source_unsupported" xml:space="preserve"><value>A courier-origin claim cannot be corrected through the ordinary customer return authority.</value></data>
+  <data name="return.correction.capacity_conflict" xml:space="preserve"><value>Another return already occupies the released claim capacity.</value></data>
+  <data name="return.correction.actor_required" xml:space="preserve"><value>An audited correction must name the reviewing operator.</value></data>
+  <data name="return.correction.reason_required" xml:space="preserve"><value>An audited correction must state a meaningful reason.</value></data>
+  <data name="return.correction.version_stale" xml:space="preserve"><value>The decision revision is older than the current reviewed revision.</value></data>
+  <data name="return.correction.occurrence_conflict" xml:space="preserve"><value>The correction occurrence key was already recorded with a different intent.</value></data>
+  <data name="return.custody.item_invalid" xml:space="preserve"><value>A custody line does not belong to this return.</value></data>
+  <data name="return.custody.quantity_invalid" xml:space="preserve"><value>A custody quantity is invalid for the rejected received portion.</value></data>
+  <data name="return.custody.proof_required" xml:space="preserve"><value>A handback needs a meaningful proof reference.</value></data>
+  <data name="return.custody.recipient_invalid" xml:space="preserve"><value>A handback must name the owning customer as recipient.</value></data>
+  <data name="return.custody.over_handed" xml:space="preserve"><value>The rejected received quantity was already handed back.</value></data>
+  <data name="return.custody.state_invalid" xml:space="preserve"><value>This return may not record a physical handback now.</value></data>
+  <data name="return.custody.occurrence_conflict" xml:space="preserve"><value>The handback occurrence key was already recorded with a different intent.</value></data>
+  <data name="return.custody.actor_required" xml:space="preserve"><value>A physical handback must name the recording operator.</value></data>
+  <data name="return.allocation.required" xml:space="preserve"><value>The owning delivered slices did not answer enough eligible quantity.</value></data>
+  <data name="return.allocation.exceeded" xml:space="preserve"><value>The requested claim exceeds the unallocated delivered quantity.</value></data>
+  <data name="return.allocation.stale" xml:space="preserve"><value>The stored per-delivery allocation no longer matches the owning delivered slices.</value></data>
+  <data name="return.refund.budget_exceeded" xml:space="preserve"><value>The shared payment refund budget would be exceeded.</value></data>
+  <data name="return.refund.budget_binding_invalid" xml:space="preserve"><value>The refund budget is bound to a different checkout/customer/currency.</value></data>
+  <data name="return.approved_amount.conflict" xml:space="preserve"><value>The frozen approved amount of this case no longer matches its reviewed resolution.</value></data>
 </root>

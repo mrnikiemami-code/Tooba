@@ -106,6 +106,24 @@ public static class ReturnWorkActionCodes
     /// attempt for a definite failure).
     /// </summary>
     public const string StartRefund = "start_refund";
+
+    /// <summary>
+    /// TB-279: append an audited correction that returns an EFFECTIVE decision to review (a new decision version),
+    /// before any financial, physical or source effect was recorded. It never erases history.
+    /// </summary>
+    public const string ReopenForReview = "reopen_for_review";
+
+    /// <summary>
+    /// TB-279: publish the reviewed per-item accepted/rejected split of the whole claim. The approved money of the case
+    /// is derived from the accepted quantities only.
+    /// </summary>
+    public const string PublishResolution = "publish_resolution";
+
+    /// <summary>
+    /// TB-279: record the ACTUAL handback of rejected received goods to the owning customer. It is a physical fact,
+    /// never a courier transition and never a money call.
+    /// </summary>
+    public const string RecordCustody = "record_custody";
 }
 
 /// <summary>
@@ -125,7 +143,14 @@ public sealed record ReturnWorkDescription(
     bool CanSettlePhysical,
     // TB-277: an approved case that owns no refund attempt may deliberately start its FIRST refund. This is NOT a
     // recovery (nothing is pending) and NOT a retry (nothing failed).
-    bool CanStartRefund = false)
+    bool CanStartRefund = false,
+    // TB-279: an audited correction may return the EFFECTIVE decision to review (append-only version), only while no
+    // money/stock/handback effect was recorded.
+    bool CanReopenForReview = false,
+    // TB-279: the reviewed per-item accepted/rejected split may be published for this claim.
+    bool CanPublishResolution = false,
+    // TB-279: rejected received goods of this case still owe an actual handback to the owning customer.
+    bool CanRecordCustody = false)
 {
     /// <summary>True while the case still owns open work in the queue's active set.</summary>
     public bool IsOpen => Category is not (ReturnWorkCategory.Closed or ReturnWorkCategory.Settled);
@@ -135,7 +160,7 @@ public sealed record ReturnWorkDescription(
     /// is deliberately NOT a notification (it is waiting on the provider, not on the operator); an approval whose
     /// first financial step was deliberately not taken yet IS one, because only an operator can start it.
     /// </summary>
-    public bool NeedsOperator => CanStartRefund || Category is ReturnWorkCategory.Receiving
+    public bool NeedsOperator => CanStartRefund || CanRecordCustody || Category is ReturnWorkCategory.Receiving
         or ReturnWorkCategory.Decision
         or ReturnWorkCategory.RefundFailed
         or ReturnWorkCategory.Disposition;
@@ -148,17 +173,20 @@ public sealed record ReturnWorkDescription(
     {
         get
         {
-            var codes = new List<string>(3);
+            var codes = new List<string>(6);
             if (CanRecordReceipt) codes.Add(ReturnWorkActionCodes.RecordReceipt);
+            if (CanPublishResolution) codes.Add(ReturnWorkActionCodes.PublishResolution);
             if (CanDecide)
             {
                 codes.Add(ReturnWorkActionCodes.Approve);
                 codes.Add(ReturnWorkActionCodes.Reject);
             }
 
+            if (CanReopenForReview) codes.Add(ReturnWorkActionCodes.ReopenForReview);
             if (CanStartRefund) codes.Add(ReturnWorkActionCodes.StartRefund);
             if (CanResumeRefund) codes.Add(ReturnWorkActionCodes.ResumeRefund);
             if (CanRetryRefund) codes.Add(ReturnWorkActionCodes.RetryRefund);
+            if (CanRecordCustody) codes.Add(ReturnWorkActionCodes.RecordCustody);
             if (CanSettlePhysical) codes.Add(ReturnWorkActionCodes.SettlePhysical);
             return codes;
         }
@@ -196,7 +224,9 @@ public static class ReturnWorkPolicy
             && snapshot.Receiving is not { IsComplete: true };
 
         var canDecide = snapshot.Status == ReturnRequestStatus.Requested
-            && snapshot.RecordedDecision is null
+            // TB-279: the EFFECTIVE decision is the authority. A corrected (reopened) case keeps its baseline row as
+            // audit history but is back in review, so a RecordedDecision-only check would leave it undecidable forever.
+            && snapshot.EffectiveDecision is null
             && receiptComplete
             && receiptCoherent
             && recovery.Phase != ReturnRecoveryPhase.Blocked;
@@ -208,6 +238,30 @@ public static class ReturnWorkPolicy
         // TB-277: only the policy's own "lawfully approved, nothing started" phase authorizes the first money step,
         // so a read can never advertise an execution the command would refuse.
         var canStartRefund = recovery.Phase == ReturnRecoveryPhase.AwaitingFirstRefund;
+
+        // TB-279: the correction availability comes from the ONE stored-fact assessment, never from a UI guess.
+        var correction = snapshot.Correction ?? ReturnCorrectionPolicy.Describe(snapshot);
+        var canReopenForReview = correction.CanReopenForReview;
+
+        // TB-279: publishing the reviewed split is decision work offered exactly when the case's EFFECTIVE resolution
+        // cannot name the accepted money (the legacy/partial claim). A fully received claim keeps the whole-accept
+        // baseline, so the operator is never asked to re-type what the stored evidence already states.
+        var effectiveResolution = ReturnResolutionPolicy.Resolve(snapshot);
+        var canPublishResolution = customerDelivered
+            && snapshot.Status == ReturnRequestStatus.Requested
+            && snapshot.EffectiveDecision is null
+            && receiptCoherent
+            && snapshot.Receiving is { IsCoherent: true, Lines.Count: > 0 }
+            && !effectiveResolution.IsComplete;
+
+        // TB-279: an actual handback is owed only for rejected RECEIVED goods, and every accepted portion must already
+        // own its durable physical fact before the remaining custody work is offered.
+        var canRecordCustody = customerDelivered
+            && snapshot.EffectiveDecision is not null
+            && effectiveResolution.IsComplete
+            && snapshot.Items.All(x => x.Disposition != ReturnItemDisposition.None
+                || effectiveResolution.Lines.Any(line => line.ReturnItemId == x.ReturnItemId && line.AcceptedUsable <= 0m))
+            && effectiveResolution.Lines.Any(line => ReturnResolutionPolicy.OwedCustody(line, snapshot.Custody) > 0m);
 
         var (category, blocker, pending, failed) = Classify(snapshot, recovery, receiptComplete);
 
@@ -221,7 +275,10 @@ public static class ReturnWorkPolicy
             canResumeRefund,
             canRetryRefund,
             canSettlePhysical,
-            canStartRefund);
+            canStartRefund,
+            canReopenForReview,
+            canPublishResolution,
+            canRecordCustody);
     }
 
     private static (ReturnWorkCategory Category, string? Blocker, Guid? Pending, Guid? Failed) Classify(

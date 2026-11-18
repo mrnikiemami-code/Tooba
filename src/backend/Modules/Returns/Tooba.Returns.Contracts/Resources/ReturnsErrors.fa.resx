@@ -51,4 +51,38 @@
   <data name="return.decision.reason_conflict" xml:space="preserve"><value>رد ثبت‌شده از قبل دلیل متفاوتی دارد.</value></data>
   <data name="return.refund.first_not_lawful" xml:space="preserve"><value>فقط مرجوعی تأییدشده‌ای که بازگشت وجهش هرگز آغاز نشده است می‌تواند نخستین بازگشت وجه را شروع کند.</value></data>
   <data name="return.outbox.unmapped_event" xml:space="preserve"><value>نوع رویداد یکپارچه ثبت نشده است.</value></data>
+  <data name="return.resolution.required" xml:space="preserve"><value>هیچ طرح بازبینی‌شده یا پوشش کامل دریافت ثبت نشده است، بنابراین مبلغ تأییدشده هنوز قابل اعلام نیست.</value></data>
+  <data name="return.resolution.incomplete" xml:space="preserve"><value>طرح ثبت‌شده کل ادعای اولیه را پوشش نمی‌دهد.</value></data>
+  <data name="return.resolution.invalid" xml:space="preserve"><value>یکی از مقادیر طرح ثبت‌شده نامعتبر است.</value></data>
+  <data name="return.resolution.received_exceeded" xml:space="preserve"><value>مقدار پذیرفته‌شده از مقدار دریافت‌شده فیزیکی بیشتر است.</value></data>
+  <data name="return.resolution.state_invalid" xml:space="preserve"><value>طرح تفکیک فقط زمانی منتشر می‌شود که پرونده در حال بازبینی و بدون اثر مالی یا فیزیکی باشد.</value></data>
+  <data name="return.resolution.version_stale" xml:space="preserve"><value>پرونده به نسخه بازبینی جدیدتری منتقل شده است.</value></data>
+  <data name="return.resolution.actor_required" xml:space="preserve"><value>طرح تفکیک بازبینی‌شده باید بازبین را مشخص کند.</value></data>
+  <data name="return.resolution.item_invalid" xml:space="preserve"><value>یکی از ردیف‌های طرح تفکیک به این مرجوعی تعلق ندارد.</value></data>
+  <data name="return.correction.not_applicable" xml:space="preserve"><value>این مرجوعی تصمیم قابل اصلاحی ندارد.</value></data>
+  <data name="return.correction.state_invalid" xml:space="preserve"><value>این مرجوعی در وضعیت تأیید/رد قابل اصلاح نیست.</value></data>
+  <data name="return.correction.financial_effect_recorded" xml:space="preserve"><value>یک تلاش بازگشت وجه ثبت شده است، بنابراین تصمیم قابل بازگشایی نیست.</value></data>
+  <data name="return.correction.custody_recorded" xml:space="preserve"><value>کالای دریافت‌شده قبلاً به مشتری بازگردانده شده است، بنابراین تصمیم قابل بازگشایی نیست.</value></data>
+  <data name="return.correction.physical_effect_recorded" xml:space="preserve"><value>یک تعیین تکلیف موجودی ثبت شده است، بنابراین تصمیم قابل بازگشایی نیست.</value></data>
+  <data name="return.correction.source_effect_recorded" xml:space="preserve"><value>ادعا/بستن منبع قبلاً آزاد شده است، بنابراین تصمیم قابل بازگشایی نیست.</value></data>
+  <data name="return.correction.source_unsupported" xml:space="preserve"><value>ادعای منبع پیک از طریق اختیار مرجوعی عادی مشتری قابل اصلاح نیست.</value></data>
+  <data name="return.correction.capacity_conflict" xml:space="preserve"><value>مرجوعی دیگری ظرفیت آزادشده را اشغال کرده است.</value></data>
+  <data name="return.correction.actor_required" xml:space="preserve"><value>اصلاح حسابرسی‌شده باید بازبین را مشخص کند.</value></data>
+  <data name="return.correction.reason_required" xml:space="preserve"><value>اصلاح حسابرسی‌شده باید دلیل معنادار داشته باشد.</value></data>
+  <data name="return.correction.version_stale" xml:space="preserve"><value>نسخه تصمیم قدیمی‌تر از نسخه بازبینی جاری است.</value></data>
+  <data name="return.correction.occurrence_conflict" xml:space="preserve"><value>کلید رخداد اصلاح قبلاً با قصد متفاوت ثبت شده است.</value></data>
+  <data name="return.custody.item_invalid" xml:space="preserve"><value>یکی از ردیف‌های امانت به این مرجوعی تعلق ندارد.</value></data>
+  <data name="return.custody.quantity_invalid" xml:space="preserve"><value>مقدار امانت برای بخش ردشده دریافتی نامعتبر است.</value></data>
+  <data name="return.custody.proof_required" xml:space="preserve"><value>بازگرداندن کالا نیازمند مدرک معنادار است.</value></data>
+  <data name="return.custody.recipient_invalid" xml:space="preserve"><value>بازگرداندن کالا باید مشتری مالک را به‌عنوان دریافت‌کننده مشخص کند.</value></data>
+  <data name="return.custody.over_handed" xml:space="preserve"><value>مقدار ردشده دریافتی قبلاً به‌طور کامل بازگردانده شده است.</value></data>
+  <data name="return.custody.state_invalid" xml:space="preserve"><value>این مرجوعی در حال حاضر اجازه ثبت بازگرداندن فیزیکی ندارد.</value></data>
+  <data name="return.custody.occurrence_conflict" xml:space="preserve"><value>کلید رخداد بازگرداندن کالا قبلاً با قصد متفاوت ثبت شده است.</value></data>
+  <data name="return.custody.actor_required" xml:space="preserve"><value>بازگرداندن فیزیکی باید ثبت‌کننده را مشخص کند.</value></data>
+  <data name="return.allocation.required" xml:space="preserve"><value>برش‌های تحویل مالک، مقدار واجد شرایط کافی اعلام نکردند.</value></data>
+  <data name="return.allocation.exceeded" xml:space="preserve"><value>ادعای درخواستی از مقدار تخصیص‌نیافته تحویل بیشتر است.</value></data>
+  <data name="return.allocation.stale" xml:space="preserve"><value>تخصیص ثبت‌شده با برش‌های تحویل مالک هم‌خوان نیست.</value></data>
+  <data name="return.refund.budget_exceeded" xml:space="preserve"><value>سقف بودجه بازگشت وجه این پرداخت نقض می‌شود.</value></data>
+  <data name="return.refund.budget_binding_invalid" xml:space="preserve"><value>بودجه بازگشت وجه به تسویه/مشتری/ارز دیگری بسته شده است.</value></data>
+  <data name="return.approved_amount.conflict" xml:space="preserve"><value>مبلغ تأییدشده تثبیت‌شده این پرونده دیگر با برنامه تفکیک بازبینی‌شده هم‌خوان نیست.</value></data>
 </root>

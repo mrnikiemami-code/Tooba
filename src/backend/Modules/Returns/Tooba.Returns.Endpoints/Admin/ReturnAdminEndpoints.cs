@@ -25,6 +25,83 @@ public static class ReturnAdminEndpoints
         group.MapPost("/returns/{returnRequestId:guid}/recover", AdminRecoverAsync);
         group.MapPost("/returns/{returnRequestId:guid}/start-refund", AdminStartRefundAsync);
         group.MapPost("/returns/{returnRequestId:guid}/receipt", AdminRecordReceiptAsync);
+        group.MapPost("/returns/{returnRequestId:guid}/reopen", AdminReopenForReviewAsync);
+        group.MapPost("/returns/{returnRequestId:guid}/resolution", AdminPublishResolutionAsync);
+        group.MapPost("/returns/{returnRequestId:guid}/custody", AdminRecordCustodyAsync);
+    }
+
+    /// <summary>
+    /// TB-279: the audited correction of an already recorded decision. The body names the reviewed occurrence, the
+    /// operator's statement and the effective version it was reviewed against; no amount, status or money fact is
+    /// accepted from the client.
+    /// </summary>
+    private static async Task<IResult> AdminReopenForReviewAsync(
+        Guid returnRequestId, AdminReturnReopenRequest? body, ISender sender, IReturnAdminAuthorizer authorizer,
+        ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
+    {
+        var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        return api.From(await sender.Send(
+            new ReopenReturnForReviewCommand(
+                returnRequestId,
+                actorUserId,
+                body?.OccurrenceKey ?? string.Empty,
+                body?.Reason ?? string.Empty,
+                body?.ExpectedDecisionVersion),
+            cancellationToken));
+    }
+
+    /// <summary>
+    /// TB-279: publishes the reviewed per-item resolution. The approved money is derived by the owning policy from the
+    /// accepted quantities and the stored unit prices; the client never supplies an amount.
+    /// </summary>
+    private static async Task<IResult> AdminPublishResolutionAsync(
+        Guid returnRequestId, AdminReturnResolutionRequest? body, ISender sender, IReturnAdminAuthorizer authorizer,
+        ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
+    {
+        var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        var lines = (body?.Lines ?? [])
+            .Select(x => new ReturnResolutionLineCommand(
+                x.ReturnItemId,
+                x.AcceptedQuantity,
+                x.RejectedQuantity,
+                x.Reason))
+            .ToList();
+
+        return api.From(await sender.Send(
+            new PublishReturnResolutionCommand(
+                returnRequestId,
+                actorUserId,
+                body?.OccurrenceKey ?? string.Empty,
+                body?.ExpectedResolutionVersion ?? 0,
+                lines),
+            cancellationToken));
+    }
+
+    /// <summary>
+    /// TB-279: records the ACTUAL handback of rejected received goods. The recipient is the case's owning customer
+    /// (server-derived); the body carries the exact quantity, inspection, proof reference and occurrence only.
+    /// </summary>
+    private static async Task<IResult> AdminRecordCustodyAsync(
+        Guid returnRequestId, AdminReturnCustodyRequest? body, ISender sender, IReturnAdminAuthorizer authorizer,
+        ApiResponseFactory api, HttpContext context, CancellationToken cancellationToken)
+    {
+        var actorUserId = await authorizer.RequireAuthorizedAsync(context, cancellationToken);
+        var condition = ReturnItemConditionParser.Parse(body?.Condition);
+        if (condition.IsFailure)
+        {
+            return api.From(condition);
+        }
+
+        return api.From(await sender.Send(
+            new RecordReturnCustodyCommand(
+                returnRequestId,
+                actorUserId,
+                body?.OccurrenceKey ?? string.Empty,
+                body?.ReturnItemId ?? Guid.Empty,
+                body?.Quantity ?? 0m,
+                condition.Value,
+                body?.ProofReference ?? string.Empty),
+            cancellationToken));
     }
 
     private static async Task<IResult> AdminListAsync(
@@ -150,3 +227,39 @@ public sealed record AdminReturnReceiptLine(
 /// destination or customer value is accepted from the client.
 /// </summary>
 public sealed record AdminReturnRecoveryRequest(string? Kind, Guid? ExpectedRefundAttemptId = null);
+
+/// <summary>
+/// TB-279: wire-only audited correction body. The occurrence identity, the reviewed statement and the effective
+/// version the operator looked at travel; no money, status, amount or decision value is accepted.
+/// </summary>
+public sealed record AdminReturnReopenRequest(
+    string? OccurrenceKey,
+    string? Reason,
+    int? ExpectedDecisionVersion = null);
+
+/// <summary>TB-279: one reviewed accepted/rejected split of a requested line.</summary>
+public sealed record AdminReturnResolutionLine(
+    Guid ReturnItemId,
+    decimal AcceptedQuantity,
+    decimal RejectedQuantity,
+    string? Reason);
+
+/// <summary>
+/// TB-279: the reviewed resolution plan submitted for publication. The accepted quantities are the only money basis and
+/// the server derives the amount from the STORED unit prices.
+/// </summary>
+public sealed record AdminReturnResolutionRequest(
+    string? OccurrenceKey,
+    IReadOnlyList<AdminReturnResolutionLine>? Lines = null,
+    int? ExpectedResolutionVersion = null);
+
+/// <summary>
+/// TB-279: one ACTUAL physical handback of rejected received goods. <c>Condition</c> uses the same stable tokens as the
+/// receipt, and the recipient is never a browser-supplied identity.
+/// </summary>
+public sealed record AdminReturnCustodyRequest(
+    string? OccurrenceKey,
+    Guid? ReturnItemId,
+    decimal? Quantity,
+    string? Condition,
+    string? ProofReference);

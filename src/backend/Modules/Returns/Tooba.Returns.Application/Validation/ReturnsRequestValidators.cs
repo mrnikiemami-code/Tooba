@@ -181,3 +181,130 @@ public sealed class RecordReturnReceiptCommandValidator : AbstractValidator<Reco
         });
     }
 }
+
+/// <summary>
+/// TB-279: transport shape of an audited decision correction. The occurrence identity, the reviewed reason and the
+/// optional expected version are shape; whether the case may still be corrected (no recorded financial/physical/source
+/// effect) and the version arbitration stay in the owning Directory.
+/// </summary>
+public sealed class ReopenReturnForReviewCommandValidator : AbstractValidator<ReopenReturnForReviewCommand>
+{
+    public ReopenReturnForReviewCommandValidator()
+    {
+        RuleFor(x => x.ReturnRequestId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ReturnRequestIdRequired);
+        RuleFor(x => x.ActorUserId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.CorrectionActorRequired);
+        RuleFor(x => x.OccurrenceKey)
+            .NotEmpty()
+            .WithErrorCode(ReturnsValidationCodes.CorrectionOccurrenceRequired)
+            .MaximumLength(128)
+            .WithErrorCode(ReturnsValidationCodes.CorrectionOccurrenceRequired);
+        RuleFor(x => x.Reason)
+            .NotEmpty()
+            .WithErrorCode(ReturnsValidationCodes.CorrectionReasonRequired)
+            .Must(reason => reason is null || !string.IsNullOrWhiteSpace(reason))
+            .WithErrorCode(ReturnsValidationCodes.CorrectionReasonRequired)
+            .MaximumLength(512)
+            .WithErrorCode(ReturnsValidationCodes.ReasonTooLong);
+        RuleFor(x => x.ExpectedDecisionVersion)
+            .GreaterThanOrEqualTo(0)
+            .WithErrorCode(ReturnsValidationCodes.ResolutionVersionInvalid)
+            .When(x => x.ExpectedDecisionVersion.HasValue);
+    }
+}
+
+/// <summary>
+/// TB-279: transport shape of a reviewed per-item/condition resolution. Each line's positive, exactly representable
+/// split and the no-duplicate-item rule are shape; accepted-versus-received coherence, the derived approved money and
+/// the publishable case state stay in the owning Directory.
+/// </summary>
+public sealed class PublishReturnResolutionCommandValidator : AbstractValidator<PublishReturnResolutionCommand>
+{
+    public PublishReturnResolutionCommandValidator()
+    {
+        RuleFor(x => x.ReturnRequestId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ReturnRequestIdRequired);
+        RuleFor(x => x.ActorUserId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ResolutionActorRequired);
+        RuleFor(x => x.OccurrenceKey)
+            .NotEmpty()
+            .WithErrorCode(ReturnsValidationCodes.CorrectionOccurrenceRequired)
+            .MaximumLength(128)
+            .WithErrorCode(ReturnsValidationCodes.CorrectionOccurrenceRequired);
+        RuleFor(x => x.ExpectedResolutionVersion)
+            .GreaterThanOrEqualTo(0)
+            .WithErrorCode(ReturnsValidationCodes.ResolutionVersionInvalid);
+        RuleFor(x => x.Lines)
+            .NotNull()
+            .WithErrorCode(ReturnsValidationCodes.ResolutionLinesEmpty)
+            .Must(lines => lines is { Count: > 0 })
+            .WithErrorCode(ReturnsValidationCodes.ResolutionLinesEmpty);
+        RuleFor(x => x.Lines)
+            .Must(lines => lines!.Select(line => line.ReturnItemId).Distinct().Count() == lines.Count)
+            .When(x => x.Lines is { Count: > 0 })
+            .WithErrorCode(ReturnsValidationCodes.ResolutionDuplicateLine);
+        RuleForEach(x => x.Lines).ChildRules(line =>
+        {
+            line.RuleFor(x => x.ReturnItemId)
+                .NotEqual(Guid.Empty)
+                .WithErrorCode(ReturnsValidationCodes.ReceiptItemIdRequired);
+            line.RuleFor(x => x.AcceptedQuantity)
+                .GreaterThanOrEqualTo(0)
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid)
+                .Must(PersistedReturnQuantity.IsExactlyRepresentable)
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid);
+            line.RuleFor(x => x.RejectedQuantity)
+                .GreaterThanOrEqualTo(0)
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid)
+                .Must(PersistedReturnQuantity.IsExactlyRepresentable)
+                .WithErrorCode(ReturnsValidationCodes.ResolutionQuantityInvalid);
+            line.RuleFor(x => x.Reason)
+                .MaximumLength(512)
+                .WithErrorCode(ReturnsValidationCodes.ReasonTooLong);
+        });
+    }
+}
+
+/// <summary>
+/// TB-279: transport shape of one physical custody handback. The occurrence identity, the owning item, the positive and
+/// exactly representable quantity, the inspection and the proof reference are shape; whether the case actually owes a
+/// handback and the cumulative over-handback rule stay in the owning Directory.
+/// </summary>
+public sealed class RecordReturnCustodyCommandValidator : AbstractValidator<RecordReturnCustodyCommand>
+{
+    public RecordReturnCustodyCommandValidator()
+    {
+        RuleFor(x => x.ReturnRequestId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ReturnRequestIdRequired);
+        RuleFor(x => x.ActorUserId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.CustodyRecipientRequired);
+        RuleFor(x => x.OccurrenceKey)
+            .NotEmpty()
+            .WithErrorCode(ReturnsValidationCodes.CustodyOccurrenceRequired)
+            .MaximumLength(128)
+            .WithErrorCode(ReturnsValidationCodes.CustodyOccurrenceRequired);
+        RuleFor(x => x.ReturnItemId)
+            .NotEqual(Guid.Empty)
+            .WithErrorCode(ReturnsValidationCodes.ReceiptItemIdRequired);
+        RuleFor(x => x.Quantity)
+            .GreaterThan(0)
+            .WithErrorCode(ReturnsValidationCodes.CustodyQuantityInvalid)
+            .Must(PersistedReturnQuantity.IsExactlyRepresentable)
+            .WithErrorCode(ReturnsValidationCodes.CustodyQuantityInvalid);
+        RuleFor(x => x.Condition)
+            .IsInEnum()
+            .WithErrorCode(ReturnsValidationCodes.CustodyConditionInvalid);
+        RuleFor(x => x.ProofReference)
+            .NotEmpty()
+            .WithErrorCode(ReturnsValidationCodes.CustodyProofRequired)
+            .MaximumLength(256)
+            .WithErrorCode(ReturnsValidationCodes.CustodyProofRequired);
+    }
+}

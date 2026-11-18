@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Returns.Application.Composition;
@@ -14,7 +14,9 @@ public sealed record ApproveReturnCommand(
     Guid ReturnRequestId,
     Guid ActorUserId,
     Guid SellerPartyId,
-    RefundDestination? RefundDestination = null) : IRequest<Result<ReturnSnapshot>>;
+    RefundDestination? RefundDestination = null,
+    // TB-279: the EFFECTIVE decision revision the operator reviewed; a newer revision refuses this stale one.
+    int? ExpectedDecisionVersion = null) : IRequest<Result<ReturnSnapshot>>;
 
 /// <summary>Handler — seller scope then directory approve.</summary>
 public sealed class ApproveReturnHandler(IReturnDirectory returns)

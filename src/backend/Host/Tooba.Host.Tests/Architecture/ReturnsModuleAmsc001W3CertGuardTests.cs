@@ -105,7 +105,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         var routeCount = Regex.Matches(admin, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(seller, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count
                          + Regex.Matches(customer, @"group\.Map(Get|Post|Put|Patch|Delete)\(").Count;
-        Assert.Equal(15, routeCount);
+        Assert.Equal(18, routeCount);
 
         var module = File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Returns.Endpoints/ReturnEndpointModule.cs"));
         Assert.Contains("MapGroup(\"/v1/customer\")", module, StringComparison.Ordinal);
@@ -145,7 +145,7 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
             .Where(p => Path.GetFileName(p).EndsWith("Endpoints.cs", StringComparison.Ordinal))
             .ToArray();
         var sendCount = endpoints.Sum(p => Regex.Matches(File.ReadAllText(p), @"sender\.Send\(").Count);
-        Assert.Equal(15, sendCount);
+        Assert.Equal(18, sendCount);
         foreach (var file in endpoints)
         {
             var text = File.ReadAllText(file);
@@ -153,9 +153,9 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
             Assert.DoesNotContain("IReturnDirectory", text, StringComparison.Ordinal);
         }
 
-        // Exactly seven transport validators, one per VALIDATOR_REQUIRED request.
+        // Exactly ten transport validators, one per VALIDATOR_REQUIRED request (TB-279 added the correction, resolution and custody shapes).
         var validators = File.ReadAllText(Path.Combine(applicationRoot, "Validation/ReturnsRequestValidators.cs"));
-        Assert.Equal(7, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(10, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
         foreach (var request in ValidatorRequired)
         {
             Assert.Contains($"AbstractValidator<{request}>", validators, StringComparison.Ordinal);
@@ -194,13 +194,13 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
         // creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal, TB-273-R1 the two
         // recovery evidence/transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals and
         // TB-278 the owning-unit creation quantum refusal, all HTTP-reachable.
-        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(80, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(47, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(81, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         var contributor = File.ReadAllText(Path.Combine(
             root, ModuleRoot, "Tooba.Returns.Infrastructure/Errors/ReturnsErrorCatalogContributor.cs"));
-        Assert.Equal(46, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
+        Assert.Equal(80, Regex.Matches(contributor, @"D\(ReturnsErrorCodes\.").Count);
         Assert.DoesNotContain("OutboxUnmappedEvent", contributor, StringComparison.Ordinal);
 
         // Bilingual resources: one entry per declared code in both cultures.
@@ -305,6 +305,10 @@ public sealed class ReturnsModuleAmsc001W3CertGuardTests
                 "20261116122318_AddCustomerReceiptsAndDecisionReason.cs",
                 "20261116140705_BoundedReceiptIntegrityConstraints.Designer.cs",
                 "20261116140705_BoundedReceiptIntegrityConstraints.cs",
+                "20261117164135_Tb279AuditedDecisionCorrectionResolutionCustodyAndAllocation.Designer.cs",
+                "20261117164135_Tb279AuditedDecisionCorrectionResolutionCustodyAndAllocation.cs",
+                "20261118004500_NormalizeApprovedAmountColumn.Designer.cs",
+                "20261118004500_NormalizeApprovedAmountColumn.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             migrations);

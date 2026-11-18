@@ -297,6 +297,10 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ReturnRequestId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal?>("approved_amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
                     b.Property<Guid>("CheckoutId")
                         .HasColumnType("uuid");
 
@@ -429,6 +433,237 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                     b.ToTable("return_request_decisions", "returns");
                 });
 
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnDecisionRevision", b =>
+                {
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("revision_version");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("decision");
+
+                    b.Property<string>("OccurrenceKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("occurrence_key");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.HasKey("ReturnRequestId", "Version")
+                        .HasName("pk_return_request_decision_revisions");
+
+                    b.HasIndex("ReturnRequestId", "OccurrenceKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_return_request_decision_revisions_occurrence_key");
+
+                    b.ToTable("return_request_decision_revisions", "returns");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnDeliveryAllocation", b =>
+                {
+                    b.Property<Guid>("ReturnAllocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_allocation_id");
+
+                    b.Property<DateTimeOffset>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("delivered_at");
+
+                    b.Property<Guid>("OrderLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_line_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<DateTimeOffset?>("ReleasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("released_at");
+
+                    b.Property<Guid>("ReturnItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_item_id");
+
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.Property<string>("SliceKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("slice_key");
+
+                    b.HasKey("ReturnAllocationId")
+                        .HasName("pk_return_delivery_allocations");
+
+                    b.HasIndex("OrderLineId", "SliceKey")
+                        .HasDatabaseName("ix_return_delivery_allocations_owning_slice");
+
+                    b.HasIndex("ReturnRequestId", "ReturnItemId")
+                        .HasDatabaseName("ix_return_delivery_allocations_owning_item");
+
+                    b.HasIndex("ReturnRequestId", "ReturnItemId", "SliceKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_return_delivery_allocations_owning_case_slice");
+
+                    b.ToTable("return_delivery_allocations", "returns", t =>
+                        {
+                            t.HasCheckConstraint("ck_return_delivery_allocations_quantity_positive", "quantity > 0");
+
+                            t.HasCheckConstraint("ck_return_delivery_allocations_slice_present", "length(btrim(slice_key)) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnItemCustody", b =>
+                {
+                    b.Property<Guid>("ReturnCustodyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_custody_id");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("condition");
+
+                    b.Property<string>("OccurrenceKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("occurrence_key");
+
+                    b.Property<string>("ProofReference")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("proof_reference");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("RecipientUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recipient_user_id");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<Guid>("ReturnItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_item_id");
+
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.HasKey("ReturnCustodyId")
+                        .HasName("pk_return_item_custody");
+
+                    b.HasIndex("ReturnRequestId", "OccurrenceKey")
+                        .HasDatabaseName("ix_return_item_custody_occurrence_key");
+
+                    b.HasIndex("ReturnRequestId", "ReturnItemId")
+                        .HasDatabaseName("ix_return_item_custody_owning_item");
+
+                    b.ToTable("return_item_custody", "returns", t =>
+                        {
+                            t.HasCheckConstraint("ck_return_item_custody_condition_defined", "condition IN ('Usable', 'Damaged')");
+
+                            t.HasCheckConstraint("ck_return_item_custody_proof_present", "length(btrim(proof_reference)) > 0");
+
+                            t.HasCheckConstraint("ck_return_item_custody_quantity_positive", "quantity > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnItemResolution", b =>
+                {
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.Property<Guid>("ReturnItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_item_id");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("resolution_version");
+
+                    b.Property<decimal>("AcceptedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("accepted_quantity");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("OccurrenceKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("occurrence_key");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<decimal>("RejectedQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("rejected_quantity");
+
+                    b.HasKey("ReturnRequestId", "ReturnItemId", "Version")
+                        .HasName("pk_return_item_resolutions");
+
+                    b.HasIndex("ReturnRequestId", "OccurrenceKey")
+                        .HasDatabaseName("ix_return_item_resolutions_occurrence_key");
+
+                    b.ToTable("return_item_resolutions", "returns", t =>
+                        {
+                            t.HasCheckConstraint("ck_return_item_resolutions_accepted_non_negative", "accepted_quantity >= 0");
+
+                            t.HasCheckConstraint("ck_return_item_resolutions_reason_present", "length(btrim(reason)) > 0");
+
+                            t.HasCheckConstraint("ck_return_item_resolutions_rejected_non_negative", "rejected_quantity >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Tooba.Returns.Domain.Aggregates.ReturnReceipt", b =>
                 {
                     b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnRequest", null)
@@ -456,6 +691,70 @@ namespace Tooba.Returns.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_customer_return_receipt_lines_receipts_owning_case");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnDecisionRevision", b =>
+                {
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_return_request_decision_revisions_requests");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnDeliveryAllocation", b =>
+                {
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_return_delivery_allocations_requests");
+
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnItem", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId", "ReturnItemId")
+                        .HasPrincipalKey("ReturnRequestId", "ReturnItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_return_delivery_allocations_items_owning_case");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnItemCustody", b =>
+                {
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_return_item_custody_requests");
+
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnItem", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId", "ReturnItemId")
+                        .HasPrincipalKey("ReturnRequestId", "ReturnItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_return_item_custody_items_owning_case");
+                });
+
+            modelBuilder.Entity("Tooba.Returns.Infrastructure.Persistence.ReturnItemResolution", b =>
+                {
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_return_item_resolutions_requests");
+
+                    b.HasOne("Tooba.Returns.Domain.Aggregates.ReturnItem", null)
+                        .WithMany()
+                        .HasForeignKey("ReturnRequestId", "ReturnItemId")
+                        .HasPrincipalKey("ReturnRequestId", "ReturnItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_return_item_resolutions_items_owning_case");
                 });
 #pragma warning restore 612, 618
         }

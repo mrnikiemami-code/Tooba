@@ -1,4 +1,4 @@
-/**
+﻿/**
  * کلاینت و نگاشت مرجوعی/بازگشت وجه مشترک بین Customer/Seller/Admin.
  * فقط دادهٔ واقعی Host؛ بدون وضعیت ساختگی.
  */
@@ -111,6 +111,69 @@ export interface ReturnSnapshot {
   receiving?: ReturnReceivingSummary | null;
   /** TB-275: the ONE work stage/action description shared by the queue and this workspace. */
   work?: ReturnWorkDescription | null;
+  /** TB-279: the EFFECTIVE decision after the append-only revision history (null when a correction returned it to review). */
+  effectiveDecision?: string | null;
+  /** TB-279: the monotonic reviewed version of the effective decision (0 = only the legacy baseline row). */
+  decisionVersion?: number;
+  /** TB-279: every appended decision/correction fact, oldest first (the baseline row is not repeated). */
+  decisionHistory?: ReturnDecisionRevision[];
+  /** TB-279: the reviewed per-item/condition resolution plan and the approved money derived from it. */
+  resolution?: ReturnResolution | null;
+  /** TB-279: the frozen approved money (null until frozen). */
+  approvedAmount?: number | null;
+  /** TB-279: the recorded ACTUAL handbacks of rejected received goods to the owning customer. */
+  custody?: ReturnCustody[];
+  /** TB-279: whether an audited correction is available now, and the exact typed reason when it is not. */
+  correction?: ReturnCorrectionAssessment | null;
+}
+
+/** TB-279: one appended decision/correction fact of a case (the legacy baseline row is version 0). */
+export interface ReturnDecisionRevision {
+  version: number;
+  decision: string;
+  reason: string | null;
+  actorUserId: string;
+  recordedAt: string;
+}
+
+/** TB-279: the reviewed accepted/rejected split of ONE requested line. */
+export interface ReturnResolutionLine {
+  returnItemId: string;
+  requested: number;
+  received: number;
+  usable: number;
+  damaged: number;
+  accepted: number;
+  rejected: number;
+  reason: string | null;
+  version: number;
+}
+
+/** TB-279: the effective reviewed resolution plan of one case. */
+export interface ReturnResolution {
+  version: number;
+  isComplete: boolean;
+  approvedAmount: number;
+  fromReviewedPlan: boolean;
+  lines: ReturnResolutionLine[];
+  blockerCode?: string | null;
+}
+
+/** TB-279: one recorded ACTUAL handback of rejected received goods. */
+export interface ReturnCustody {
+  returnCustodyId: string;
+  returnItemId: string;
+  quantity: number;
+  condition: "Usable" | "Damaged" | string;
+  recipientUserId: string;
+  proofReference: string;
+  recordedAt: string;
+}
+
+/** TB-279: whether an audited correction is available, and the typed reason when it is not. */
+export interface ReturnCorrectionAssessment {
+  canReopenForReview: boolean;
+  blockerCode: string | null;
 }
 
 /** TB-274: the inspected coverage of one requested line. */
@@ -408,6 +471,103 @@ export function mapReturnSnapshot(value: unknown): ReturnSnapshot | null {
       : [],
     receiving: mapReturnReceiving(prop(item, "receiving", "Receiving")),
     work: mapReturnWork(prop(item, "work", "Work")),
+    effectiveDecision: nullableText(prop(item, "effectiveDecision", "EffectiveDecision")),
+    decisionVersion: integerValue(prop(item, "decisionVersion", "DecisionVersion")),
+    decisionHistory: Array.isArray(prop(item, "decisionHistory", "DecisionHistory"))
+      ? (prop(item, "decisionHistory", "DecisionHistory") as unknown[])
+          .map(mapReturnDecisionRevision)
+          .filter((row): row is ReturnDecisionRevision => row !== null)
+      : [],
+    resolution: mapReturnResolution(prop(item, "resolution", "Resolution")),
+    approvedAmount: nullableNumber(prop(item, "approvedAmount", "ApprovedAmount")),
+    custody: Array.isArray(prop(item, "custody", "Custody"))
+      ? (prop(item, "custody", "Custody") as unknown[])
+          .map(mapReturnCustody)
+          .filter((row): row is ReturnCustody => row !== null)
+      : [],
+    correction: mapReturnCorrection(prop(item, "correction", "Correction")),
+  };
+}
+
+function integerValue(value: unknown): number {
+  const parsed = number(value);
+  return Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
+}
+
+/** TB-279: one appended decision/correction fact. */
+export function mapReturnDecisionRevision(value: unknown): ReturnDecisionRevision | null {
+  const row = record(value);
+  if (!row) return null;
+  const decision = text(prop(row, "decision", "Decision"), "");
+  if (!decision) return null;
+  return {
+    version: integerValue(prop(row, "version", "Version")),
+    decision,
+    reason: nullableText(prop(row, "reason", "Reason")),
+    actorUserId: text(prop(row, "actorUserId", "ActorUserId"), ""),
+    recordedAt: text(prop(row, "recordedAt", "RecordedAt"), ""),
+  };
+}
+
+/** TB-279: the reviewed per-item/condition split of one line. */
+export function mapReturnResolutionLine(value: unknown): ReturnResolutionLine | null {
+  const row = record(value);
+  if (!row) return null;
+  return {
+    returnItemId: text(prop(row, "returnItemId", "ReturnItemId"), ""),
+    requested: number(prop(row, "requested", "Requested")),
+    received: number(prop(row, "received", "Received")),
+    usable: number(prop(row, "usable", "Usable")),
+    damaged: number(prop(row, "damaged", "Damaged")),
+    accepted: number(prop(row, "accepted", "Accepted")),
+    rejected: number(prop(row, "rejected", "Rejected")),
+    reason: nullableText(prop(row, "reason", "Reason")),
+    version: integerValue(prop(row, "version", "Version")),
+  };
+}
+
+/** TB-279: the effective reviewed resolution plan of a case. */
+export function mapReturnResolution(value: unknown): ReturnResolution | null {
+  const row = record(value);
+  if (!row) return null;
+  return {
+    version: integerValue(prop(row, "version", "Version")),
+    isComplete: prop(row, "isComplete", "IsComplete") === true,
+    approvedAmount: number(prop(row, "approvedAmount", "ApprovedAmount")),
+    fromReviewedPlan: prop(row, "fromReviewedPlan", "FromReviewedPlan") === true,
+    lines: Array.isArray(prop(row, "lines", "Lines"))
+      ? (prop(row, "lines", "Lines") as unknown[])
+          .map(mapReturnResolutionLine)
+          .filter((row): row is ReturnResolutionLine => row !== null)
+      : [],
+    blockerCode: nullableText(prop(row, "blockerCode", "BlockerCode")),
+  };
+}
+
+/** TB-279: one recorded ACTUAL handback occurrence. */
+export function mapReturnCustody(value: unknown): ReturnCustody | null {
+  const row = record(value);
+  if (!row) return null;
+  const id = text(prop(row, "returnCustodyId", "ReturnCustodyId"), "");
+  if (!id) return null;
+  return {
+    returnCustodyId: id,
+    returnItemId: text(prop(row, "returnItemId", "ReturnItemId"), ""),
+    quantity: number(prop(row, "quantity", "Quantity")),
+    condition: text(prop(row, "condition", "Condition"), ""),
+    recipientUserId: text(prop(row, "recipientUserId", "RecipientUserId"), ""),
+    proofReference: text(prop(row, "proofReference", "ProofReference"), ""),
+    recordedAt: text(prop(row, "recordedAt", "RecordedAt"), ""),
+  };
+}
+
+/** TB-279: whether an audited correction is available now. */
+export function mapReturnCorrection(value: unknown): ReturnCorrectionAssessment | null {
+  const row = record(value);
+  if (!row) return null;
+  return {
+    canReopenForReview: prop(row, "canReopenForReview", "CanReopenForReview") === true,
+    blockerCode: nullableText(prop(row, "blockerCode", "BlockerCode")),
   };
 }
 
@@ -1312,6 +1472,55 @@ async function adminReturnsPost(path: string, body: unknown): Promise<AdminResul
 }
 
 /**
+ * TB-279: the audited decision correction of one decided case. The occurrence key makes a duplicate click or a lost
+ * response resolve to the SAME appended revision instead of recording a second one.
+ */
+export async function adminReopenReturnForReview(input: {
+  returnRequestId: string;
+  occurrenceKey: string;
+  reason: string;
+  expectedDecisionVersion: number;
+}): Promise<AdminResult<ReturnSnapshot>> {
+  return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(input.returnRequestId)}/reopen`, {
+    occurrenceKey: input.occurrenceKey,
+    reason: input.reason,
+    expectedDecisionVersion: input.expectedDecisionVersion,
+  });
+}
+
+/** TB-279: publishes the reviewed per-item/condition split of a legacy multi-item case. */
+export async function adminPublishReturnResolution(input: {
+  returnRequestId: string;
+  occurrenceKey: string;
+  expectedResolutionVersion: number;
+  lines: { returnItemId: string; acceptedQuantity: number; rejectedQuantity: number; reason?: string | null }[];
+}): Promise<AdminResult<ReturnSnapshot>> {
+  return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(input.returnRequestId)}/resolution`, {
+    occurrenceKey: input.occurrenceKey,
+    expectedResolutionVersion: input.expectedResolutionVersion,
+    lines: input.lines,
+  });
+}
+
+/** TB-279: records ONE actual handback occurrence of rejected received goods to the owning customer. */
+export async function adminRecordReturnCustody(input: {
+  returnRequestId: string;
+  occurrenceKey: string;
+  returnItemId: string;
+  quantity: number;
+  condition: "Usable" | "Damaged";
+  proofReference: string;
+}): Promise<AdminResult<ReturnSnapshot>> {
+  return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(input.returnRequestId)}/custody`, {
+    occurrenceKey: input.occurrenceKey,
+    returnItemId: input.returnItemId,
+    quantity: input.quantity,
+    condition: input.condition,
+    proofReference: input.proofReference,
+  });
+}
+
+/**
  * TB-276: sends the FROZEN reviewed body of a Returns-owned command exactly as it was reviewed.
  * <para>
  * The body is the parsed form of the stored `requestBody`, so a retry of an unknown outcome re-sends the same command
@@ -1319,7 +1528,7 @@ async function adminReturnsPost(path: string, body: unknown): Promise<AdminResul
  */
 export function sendReviewedReturnCommand(
   returnRequestId: string,
-  route: "receipt" | "recover" | "start-refund",
+  route: "receipt" | "recover" | "start-refund" | "reopen" | "resolution" | "custody",
   body: Record<string, unknown>,
 ): Promise<AdminResult<ReturnSnapshot>> {
   return adminReturnsPost(`/v1/admin/returns/${encodeURIComponent(returnRequestId)}/${route}`, body);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   AlertTriangle,
@@ -69,6 +69,13 @@ interface LineState {
   quantityText: string;
   /** Empty = follow the act's shared reason. */
   reasonId: string;
+  /**
+   * TB-279: an OPTIONAL second portion of the SAME line with a DIFFERENT reason. Two portions of one line are two child
+   * cases at the owning directory's own grain (line + reason), so a customer can return part of a line as "damaged" and
+   * the rest as another reason without touching the correct goods. Empty = no second portion.
+   */
+  secondQuantityText: string;
+  secondReasonId: string;
 }
 
 export interface ReturnRequestModalProps {
@@ -76,6 +83,8 @@ export interface ReturnRequestModalProps {
   onClose: () => void;
   checkoutId: string;
   orderReference?: string;
+  /** TB-279: the signed-in customer this durable act belongs to; the act is scoped to this viewer only. */
+  viewerId?: string | null;
   sellers: ReturnRequestSeller[];
   onSubmitted?: (snapshots: ReturnSnapshot[]) => void;
 }
@@ -124,6 +133,7 @@ export function ReturnRequestModal({
   onClose,
   checkoutId,
   orderReference,
+  viewerId,
   sellers,
   onSubmitted,
 }: ReturnRequestModalProps) {
@@ -142,7 +152,7 @@ export function ReturnRequestModal({
     if (!open) return;
     const nextStorage = typeof window === "undefined" ? null : window.sessionStorage;
     setStorage(nextStorage);
-    const read = readReturnSubmission(nextStorage, checkoutId);
+    const read = readReturnSubmission(nextStorage, checkoutId, viewerId);
     setRetained(read.kind === "found" ? read.submission : null);
     setReasonId("");
     setDescription("");
@@ -151,7 +161,7 @@ export function ReturnRequestModal({
     setFieldError(null);
     setSuccessCount(null);
     inFlight.current = false;
-  }, [open, checkoutId]);
+  }, [open, checkoutId, viewerId]);
 
   const eligibleLines = useMemo(() => {
     const rows: Array<{ seller: ReturnRequestSeller; line: CustomerReturnEligibilityLine }> = [];
@@ -194,7 +204,7 @@ export function ReturnRequestModal({
   if (!open) return null;
 
   function lineState(orderLineId: string): LineState {
-    return lines[orderLineId] ?? { selected: false, quantityText: "", reasonId: "" };
+    return lines[orderLineId] ?? { selected: false, quantityText: "", reasonId: "", secondQuantityText: "", secondReasonId: "" };
   }
 
   function updateLine(orderLineId: string, patch: Partial<LineState>) {
@@ -249,6 +259,41 @@ export function ReturnRequestModal({
         quantityText: unitsToExactText(units),
         reason,
       });
+
+      // TB-279: an optional SECOND portion of the same line with a DIFFERENT reason. It is a separate child case, and
+      // the two portions together may never exceed the line's authoritative remaining ceiling.
+      if (state.secondQuantityText.trim() === "") continue;
+      const secondUnits = parsePositiveExactUnits(state.secondQuantityText);
+      if (secondUnits === null) {
+        setFieldError(`مقدار بخش دوم «${line.productLabel ?? "قلم انتخابی"}» معتبر نیست.`);
+        return null;
+      }
+      const secondReasonId = state.secondReasonId || reasonId;
+      const secondLabel = RETURN_REASONS.find((item) => item.id === secondReasonId)?.label;
+      if (!secondLabel) {
+        setFieldError(`برای بخش دوم «${line.productLabel ?? "قلم انتخابی"}» یک دلیل متفاوت انتخاب کنید.`);
+        return null;
+      }
+      const secondReason = description.trim() ? `${secondLabel}\n${description.trim()}` : secondLabel;
+      if (secondReason === reason) {
+        setFieldError(`بخش دوم «${line.productLabel ?? "قلم انتخابی"}» باید دلیل متفاوتی از بخش اول داشته باشد.`);
+        return null;
+      }
+      const lineCeiling = ceilingUnits(line);
+      if (lineCeiling === null || units + secondUnits > lineCeiling) {
+        setFieldError(`مجموع دو بخش «${line.productLabel ?? "قلم انتخابی"}» از باقی‌ماندهٔ قابل مرجوعی بیشتر است.`);
+        return null;
+      }
+      selections.push({
+        sellerOrderId: seller.sellerOrderId,
+        orderLineId: line.orderLineId,
+        productLabel: line.productLabel,
+        unitLabel: line.unitLabel,
+        unitDecimalPlaces: line.unitDecimalPlaces,
+        quantityUnits: secondUnits,
+        quantityText: unitsToExactText(secondUnits),
+        reason: secondReason,
+      });
     }
     setFieldError(null);
     return selections;
@@ -294,7 +339,7 @@ export function ReturnRequestModal({
     if (latest) {
       const summary = summarizeReturnSubmission(latest);
       if (summary.resolved) {
-        clearReturnSubmissionIfCurrent(storageRef, latest);
+        clearReturnSubmissionIfCurrent(storageRef, latest, viewerId);
         setRetained(null);
       }
     }
@@ -337,9 +382,10 @@ export function ReturnRequestModal({
     const act = buildReturnSubmission({
       checkoutId,
       destination,
+      viewerId: viewerId ?? null,
       selections,
     });
-    if (!storeReturnSubmission(storage, act)) {
+    if (!storeReturnSubmission(storage, act, viewerId)) {
       toast.error("ذخیرهٔ امن درخواست ممکن نشد؛ برای جلوگیری از ثبت تکراری چیزی ارسال نشد.");
       return;
     }
@@ -507,6 +553,38 @@ export function ReturnRequestModal({
                                 className="px-3 py-2 bg-white rounded-lg text-xs border border-gray-200 min-h-11"
                               >
                                 <option value="">{reasonId ? "همان دلیل کلی" : "دلیل را انتخاب کنید"}</option>
+                                {RETURN_REASONS.map((reason) => (
+                                  <option key={reason.id} value={reason.id}>{reason.label}</option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : null}
+                          {selectable && state.selected ? (
+                            <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-gray-200 pt-2">
+                              <span className="text-[11px] text-gray-500">بخش دوم (دلیل متفاوت، اختیاری)</span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                dir="ltr"
+                                aria-label="مقدار بخش دوم"
+                                value={state.secondQuantityText}
+                                onChange={(event) =>
+                                  updateLine(line.orderLineId, {
+                                    secondQuantityText: normalizeQuantityInput(event.target.value),
+                                  })
+                                }
+                                data-testid={`return-line-second-quantity-${line.orderLineId}`}
+                                className="w-28 px-3 py-2 bg-white rounded-lg text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB] min-h-11"
+                                placeholder="0"
+                              />
+                              <select
+                                value={state.secondReasonId}
+                                onChange={(event) => updateLine(line.orderLineId, { secondReasonId: event.target.value })}
+                                aria-label="دلیل بخش دوم این قلم"
+                                data-testid={`return-line-second-reason-${line.orderLineId}`}
+                                className="px-3 py-2 bg-white rounded-lg text-xs border border-gray-200 min-h-11"
+                              >
+                                <option value="">دلیل بخش دوم</option>
                                 {RETURN_REASONS.map((reason) => (
                                   <option key={reason.id} value={reason.id}>{reason.label}</option>
                                 ))}

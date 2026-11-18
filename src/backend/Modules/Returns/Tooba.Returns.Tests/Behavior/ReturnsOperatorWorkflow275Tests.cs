@@ -72,7 +72,14 @@ public sealed class ReturnsOperatorWorkflow275Tests
         Assert.True(complete.CanDecide);
         Assert.False(complete.CanRecordReceipt);
         Assert.Equal(
-            new[] { ReturnWorkActionCodes.Approve, ReturnWorkActionCodes.Reject },
+            // TB-279 adds the additive per-item resolution verb to the same case: the claim is fully received but its
+            // effective plan still needs the operator's accepted/rejected split before money can be named.
+            new[]
+            {
+                ReturnWorkActionCodes.PublishResolution,
+                ReturnWorkActionCodes.Approve,
+                ReturnWorkActionCodes.Reject,
+            },
             complete.ActionCodes);
     }
 

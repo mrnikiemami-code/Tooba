@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TB-278 — the customer's ONE durable multi-seller return submission.
  *
  * A customer may lawfully return SEVERAL lines that belong to DIFFERENT seller orders (and lines that need different
@@ -55,6 +55,11 @@ export interface ReturnSubmission {
   version: number;
   submissionKey: string;
   checkoutId: string;
+  /**
+   * TB-279: the customer this act belongs to. `undefined` means the surface did not know the viewer, so the act keeps the
+   * legacy shared key: it is never a guessed identity, and another viewer never silently adopts it.
+   */
+  viewerId?: string | null;
   destination: string;
   recordedAt: string;
   children: ReturnSubmissionChild[];
@@ -100,8 +105,19 @@ export const SUBMISSION_NO_EFFECT_REFUSALS: ReadonlySet<string> = new Set([
   "return.line_missing",
 ]);
 
-export function submissionStorageKey(checkoutId: string): string {
-  return `${RETURN_SUBMISSION_STORAGE_PREFIX}${checkoutId}`;
+/**
+ * TB-279: the durable act is scoped to the VIEWING customer, not only to the checkout.
+ * <para>
+ * A shared browser session can be used by more than one customer; a viewer-scoped key means one customer can never read,
+ * retry or clear another customer's possibly-sent act. When the viewer is unknown the act keeps the legacy shared key
+ * (never a guessed identity), and the surface still refuses to send on unreadable evidence.
+ * </para>
+ */
+export function submissionStorageKey(checkoutId: string, viewerId?: string | null): string {
+  const viewer = viewerId?.trim() ?? "";
+  return viewer === ""
+    ? `${RETURN_SUBMISSION_STORAGE_PREFIX}${checkoutId}`
+    : `${RETURN_SUBMISSION_STORAGE_PREFIX}${viewer}:${checkoutId}`;
 }
 
 /** The stable identity of one child: the owning directory's own case grain. */
@@ -152,6 +168,7 @@ export function buildReturnSubmission(input: {
   selections: SubmissionSelection[];
   recordedAt?: string;
   submissionKey?: string;
+  viewerId?: string | null;
   newChildKey?: () => string;
 }): ReturnSubmission {
   const newKey = input.newChildKey ?? defaultSubmissionKeyFactory;
@@ -159,6 +176,7 @@ export function buildReturnSubmission(input: {
     version: RETURN_SUBMISSION_VERSION,
     submissionKey: input.submissionKey ?? newKey(),
     checkoutId: input.checkoutId,
+    viewerId: input.viewerId ?? null,
     destination: input.destination,
     recordedAt: input.recordedAt ?? new Date().toISOString(),
     children: input.selections.map((selection) => {
@@ -249,6 +267,8 @@ export function parseReturnSubmission(raw: string | null): ReturnSubmission | nu
     version: RETURN_SUBMISSION_VERSION,
     submissionKey: record.submissionKey,
     checkoutId: record.checkoutId,
+    // TB-279: an act recorded without a viewer keeps `null` (legacy shared key) and is never adopted by a named viewer.
+    viewerId: typeof record.viewerId === "string" && record.viewerId.length > 0 ? record.viewerId : null,
     destination: typeof record.destination === "string" ? record.destination : "OriginalPayment",
     recordedAt: typeof record.recordedAt === "string" ? record.recordedAt : "",
     children: children as ReturnSubmissionChild[],
@@ -256,11 +276,11 @@ export function parseReturnSubmission(raw: string | null): ReturnSubmission | nu
 }
 
 /** Reads this checkout's frozen act. `unreadable` is an explicit state, never silently "nothing pending". */
-export function readReturnSubmission(storage: SubmissionStorage | null, checkoutId: string): SubmissionRead {
+export function readReturnSubmission( storage: SubmissionStorage | null, checkoutId: string, viewerId?: string | null, ): SubmissionRead {
   if (!storage) return { kind: "unavailable" };
   let raw: string | null;
   try {
-    raw = storage.getItem(submissionStorageKey(checkoutId));
+    raw = storage.getItem(submissionStorageKey(checkoutId, viewerId));
   } catch {
     return { kind: "unavailable" };
   }
@@ -268,16 +288,28 @@ export function readReturnSubmission(storage: SubmissionStorage | null, checkout
   const submission = parseReturnSubmission(raw);
   if (!submission) return { kind: "unreadable" };
   if (submission.checkoutId !== checkoutId) return { kind: "unreadable" };
+  // TB-279: an act scoped to another viewer is never adopted by this one; it stays untouched evidence for that viewer.
+  const scopedViewer = submission.viewerId ?? null;
+  const requestedViewer = viewerId?.trim() ?? "";
+  if (requestedViewer !== "" && scopedViewer !== null && scopedViewer !== requestedViewer) {
+    return { kind: "none" };
+  }
   return { kind: "found", submission };
 }
 
 /** Writes AND reads the act back; a failed set/read/compare means the surface must not send. */
-export function storeReturnSubmission(storage: SubmissionStorage | null, submission: ReturnSubmission): boolean {
+export function storeReturnSubmission(
+  storage: SubmissionStorage | null,
+  submission: ReturnSubmission,
+  viewerId?: string | null,
+): boolean {
   if (!storage) return false;
   const value = serializeReturnSubmission(submission);
+  // TB-279: the act's OWN viewer scope is authoritative, so a child-outcome write can never drift into another key.
+  const scope = viewerId ?? submission.viewerId ?? null;
   try {
-    storage.setItem(submissionStorageKey(submission.checkoutId), value);
-    return storage.getItem(submissionStorageKey(submission.checkoutId)) === value;
+    storage.setItem(submissionStorageKey(submission.checkoutId, scope), value);
+    return storage.getItem(submissionStorageKey(submission.checkoutId, scope)) === value;
   } catch {
     return false;
   }
@@ -340,9 +372,10 @@ function readReturnSubmissionByKey(
 export function clearReturnSubmissionIfCurrent(
   storage: SubmissionStorage | null,
   submission: ReturnSubmission,
+  viewerId?: string | null,
 ): boolean {
   if (!storage) return false;
-  const key = submissionStorageKey(submission.checkoutId);
+  const key = submissionStorageKey(submission.checkoutId, viewerId ?? submission.viewerId ?? null);
   try {
     const raw = storage.getItem(key);
     if (raw === null) return true;
@@ -370,8 +403,9 @@ export function recordedChildren(submission: ReturnSubmission): ReturnSubmission
 export function hasUnresolvedCustomerReturnSubmission(
   storage: SubmissionStorage | null,
   checkoutId: string,
+  viewerId?: string | null,
 ): boolean {
-  const read = readReturnSubmission(storage, checkoutId);
+  const read = readReturnSubmission(storage, checkoutId, viewerId);
   if (read.kind === "unreadable") return true;
   if (read.kind !== "found") return false;
   return !summarizeReturnSubmission(read.submission).resolved;

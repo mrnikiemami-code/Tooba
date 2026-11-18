@@ -17,6 +17,7 @@ import { FulfillmentShippingInfoBlock } from "../../../fulfillment/fulfillment-u
 import { loadCustomerReturnEligibility, type CustomerReturnEligibilitySnapshot } from "../../../returns/return-api";
 import { hasUnresolvedCustomerReturnSubmission } from "../../../returns/return-submission";
 import { ReturnRequestModal, type ReturnRequestSeller } from "../../../returns/return-request-modal";
+import { loadStorefrontSession } from "../../../storefront/storefront-identity-api";
 
 /**
  * جزئیات سفارش مشتری با خطوط هر فروشنده و snapshot ارسال واقعی.
@@ -32,6 +33,11 @@ export default function CustomerOrderDetail() {
   const [eligibility, setEligibility] = useState<Record<string, CustomerReturnEligibilitySnapshot | null> | null>(null);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [pendingReturn, setPendingReturn] = useState(false);
+  /**
+   * TB-279: the signed-in customer. The durable return act is scoped to this viewer, so another customer using the same
+   * browser can never read, resume or clear this customer's possibly-sent act.
+   */
+  const [viewerId, setViewerId] = useState<string | null>(null);
   const [retryBusy, setRetryBusy] = useState(false);
   const [retryError, setRetryError] = useState<string | null>(null);
 
@@ -64,9 +70,19 @@ export default function CustomerOrderDetail() {
   }, [page]);
 
   useEffect(() => {
+    let cancelled = false;
+    void loadStorefrontSession().then((session) => {
+      if (!cancelled) setViewerId(session.authenticated ? session.userId : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const storage = typeof window === "undefined" ? null : window.sessionStorage;
-    setPendingReturn(hasUnresolvedCustomerReturnSubmission(storage, params.checkoutId));
-  }, [params.checkoutId, returnModalOpen]);
+    setPendingReturn(hasUnresolvedCustomerReturnSubmission(storage, params.checkoutId, viewerId));
+  }, [params.checkoutId, returnModalOpen, viewerId]);
 
   const fulfillmentBySeller = useMemo(() => {
     const map = new Map<string, FulfillmentSnapshot>();
@@ -265,11 +281,12 @@ export default function CustomerOrderDetail() {
           open
           checkoutId={params.checkoutId}
           orderReference={page.reference}
+          viewerId={viewerId}
           sellers={returnSellers}
           onClose={() => setReturnModalOpen(false)}
           onSubmitted={() => {
             const storage = typeof window === "undefined" ? null : window.sessionStorage;
-            setPendingReturn(hasUnresolvedCustomerReturnSubmission(storage, params.checkoutId));
+            setPendingReturn(hasUnresolvedCustomerReturnSubmission(storage, params.checkoutId, viewerId));
           }}
         />
       ) : null}

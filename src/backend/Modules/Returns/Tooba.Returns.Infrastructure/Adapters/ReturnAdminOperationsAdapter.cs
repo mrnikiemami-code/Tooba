@@ -311,7 +311,58 @@ internal sealed class ReturnAdminOperationsAdapter(
                             (ReturnItemConditionOption)line.Condition))
                         .ToList()))
                 .ToList(),
-            Map(snapshot.Work));
+            Map(snapshot.Work),
+            snapshot.EffectiveDecision,
+            snapshot.DecisionVersion,
+            snapshot.DecisionHistory?
+                .Select(x => new ReturnDecisionRevisionSnapshot(
+                    x.Version,
+                    x.Decision,
+                    x.Reason,
+                    x.ActorUserId,
+                    x.RecordedAt))
+                .ToList(),
+            Map(snapshot.Resolution),
+            snapshot.ApprovedAmount,
+            snapshot.Custody?
+                .Select(x => new ReturnCustodySnapshot(
+                    x.ReturnCustodyId,
+                    x.ReturnItemId,
+                    x.Quantity,
+                    (ReturnItemConditionOption)x.Condition,
+                    x.RecipientUserId,
+                    x.ProofReference,
+                    x.RecordedAt))
+                .ToList(),
+            snapshot.Correction is { } correction
+                ? new ReturnCorrectionAssessment(correction.CanReopenForReview, correction.BlockerCode)
+                : null);
+
+    /// <summary>
+    /// TB-279: the reviewed resolution plan as the wire reports it. The approved amount is the policy's own number, so
+    /// no consumer re-multiplies a quantity (or reads today's price) to discover what a partial case may refund.
+    /// </summary>
+    private static ReturnResolutionSnapshot? Map(AppModels.ReturnResolutionSnapshot? resolution) =>
+        resolution is null
+            ? null
+            : new ReturnResolutionSnapshot(
+                resolution.Version,
+                resolution.IsComplete,
+                resolution.ApprovedAmount,
+                resolution.FromReviewedPlan,
+                resolution.Lines
+                    .Select(x => new ReturnResolutionLineSnapshot(
+                        x.ReturnItemId,
+                        x.Requested,
+                        x.Received,
+                        x.Usable,
+                        x.Damaged,
+                        x.Accepted,
+                        x.Rejected,
+                        x.Reason,
+                        x.Version))
+                    .ToList(),
+                resolution.BlockerCode);
 
     /// <summary>
     /// TB-275: the additive operator work stage. Every flag is a positive stored fact computed by the ONE Returns-owned

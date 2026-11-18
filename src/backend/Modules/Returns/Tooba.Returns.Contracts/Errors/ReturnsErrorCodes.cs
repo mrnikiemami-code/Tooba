@@ -76,6 +76,43 @@ public static class ReturnsErrorCodes
         RejectionReasonRequired,
         DecisionReasonConflict,
         FirstRefundNotLawful,
+        // TB-279: audited decision correction, reviewed per-item resolution, physical custody of rejected received
+        // goods, per-delivery allocation and the shared refund budget. Every one of these is reachable from the admin
+        // routes this task added or from the existing create/decision/money paths, so all are HTTP-reachable.
+        ResolutionRequired,
+        ResolutionIncomplete,
+        ResolutionInvalid,
+        ResolutionReceivedExceeded,
+        ResolutionStateInvalid,
+        ResolutionVersionStale,
+        ResolutionActorRequired,
+        ResolutionItemInvalid,
+        CorrectionNotApplicable,
+        CorrectionStateInvalid,
+        CorrectionFinancialEffectRecorded,
+        CorrectionCustodyRecorded,
+        CorrectionPhysicalEffectRecorded,
+        CorrectionSourceEffectRecorded,
+        CorrectionSourceUnsupported,
+        CorrectionCapacityConflict,
+        CorrectionActorRequired,
+        CorrectionReasonRequired,
+        CorrectionVersionStale,
+        CorrectionOccurrenceConflict,
+        CustodyItemInvalid,
+        CustodyQuantityInvalid,
+        CustodyProofRequired,
+        CustodyRecipientInvalid,
+        CustodyOverHanded,
+        CustodyStateInvalid,
+        CustodyOccurrenceConflict,
+        CustodyActorRequired,
+        AllocationRequired,
+        AllocationExceeded,
+        AllocationStale,
+        RefundBudgetExceeded,
+        RefundBudgetBindingInvalid,
+        ApprovedAmountConflict,
     };
 
     private static readonly HashSet<string> PlatformFaultCodes = new(StringComparer.Ordinal)
@@ -338,5 +375,151 @@ public static class ReturnsErrorCodes
 
     /// <summary>Outbox registration has no mapping for the given integration event type (platform fault).</summary>
     public const string OutboxUnmappedEvent = "return.outbox.unmapped_event";
+
+    // ------------------------------------------------------------------------------------------------------------
+    // TB-279: audited decision correction (append-only revisions), reviewed partial resolution, physical custody of
+    // rejected received goods, per-delivery allocation and the shared refund budget.
+    // ------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// TB-279: no lawful approved amount can be named yet — there is no reviewed resolution plan and no complete
+    /// coherent receiving coverage. Nothing has been refunded or restocked.
+    /// </summary>
+    public const string ResolutionRequired = "return.resolution.required";
+
+    /// <summary>
+    /// TB-279: a stored reviewed plan exists but does not account for the whole original claim, so it can never be read
+    /// as an approved amount (a remainder is never silently refunded or kept).
+    /// </summary>
+    public const string ResolutionIncomplete = "return.resolution.incomplete";
+
+    /// <summary>
+    /// TB-279: a stored resolution row is structurally invalid (negative or over-precise quantity, unknown identity).
+    /// </summary>
+    public const string ResolutionInvalid = "return.resolution.invalid";
+
+    /// <summary>
+    /// TB-279: an accepted quantity exceeds what was physically received for that line; accepted money is never
+    /// derived from an unreceived unit.
+    /// </summary>
+    public const string ResolutionReceivedExceeded = "return.resolution.received_exceeded";
+
+    /// <summary>
+    /// TB-279: a reviewed resolution may only be published while the case is in review and no money/physical effect
+    /// exists. It is refused with the exact reason and zero effect.
+    /// </summary>
+    public const string ResolutionStateInvalid = "return.resolution.state_invalid";
+
+    /// <summary>
+    /// TB-279: the submitted resolution was reviewed against an older decision version; the case has since moved to a
+    /// newer reviewed revision, so the stale plan cannot be published.
+    /// </summary>
+    public const string ResolutionVersionStale = "return.resolution.version_stale";
+
+    /// <summary>TB-279: a reviewed resolution must name the reviewing operator.</summary>
+    public const string ResolutionActorRequired = "return.resolution.actor_required";
+
+    /// <summary>TB-279: a resolution line names an item/property identity that does not belong to this case.</summary>
+    public const string ResolutionItemInvalid = "return.resolution.item_invalid";
+
+    /// <summary>
+    /// TB-279: the case has no decided outcome to correct (nothing decided, already reopened, or not decided yet).
+    /// </summary>
+    public const string CorrectionNotApplicable = "return.correction.not_applicable";
+
+    /// <summary>TB-279: the correction was requested for a status that is not an approved/rejected decision.</summary>
+    public const string CorrectionStateInvalid = "return.correction.state_invalid";
+
+    /// <summary>
+    /// TB-279: a real financial effect is already recorded for this case (any Pending/Failed/unknown/Succeeded refund
+    /// attempt), so the decision can never be reopened by a correction.
+    /// </summary>
+    public const string CorrectionFinancialEffectRecorded = "return.correction.financial_effect_recorded";
+
+    /// <summary>TB-279: rejected received goods were already handed back, so the decision can no longer be reopened.</summary>
+    public const string CorrectionCustodyRecorded = "return.correction.custody_recorded";
+
+    /// <summary>TB-279: a stock/restock disposition is already recorded, so the decision can no longer be reopened.</summary>
+    public const string CorrectionPhysicalEffectRecorded = "return.correction.physical_effect_recorded";
+
+    /// <summary>TB-279: the courier source/claim/closure was already released or closed, so it cannot be corrected here.</summary>
+    public const string CorrectionSourceEffectRecorded = "return.correction.source_effect_recorded";
+
+    /// <summary>
+    /// TB-279: a courier-origin case's claim/closure belongs to Fulfillment, so an ordinary customer correction can
+    /// never borrow its receipt/claim authority.
+    /// </summary>
+    public const string CorrectionSourceUnsupported = "return.correction.source_unsupported";
+
+    /// <summary>
+    /// TB-279: reopening a rejection requires the original claim capacity again, but another case already occupies the
+    /// released quantity. The conflict is refused instead of stealing or overrunning capacity.
+    /// </summary>
+    public const string CorrectionCapacityConflict = "return.correction.capacity_conflict";
+
+    /// <summary>TB-279: an audited correction must name the reviewing operator.</summary>
+    public const string CorrectionActorRequired = "return.correction.actor_required";
+
+    /// <summary>TB-279: an audited correction must state a meaningful reason.</summary>
+    public const string CorrectionReasonRequired = "return.correction.reason_required";
+
+    /// <summary>
+    /// TB-279: the decision/correction was reviewed against an older effective version, so it must not overwrite a
+    /// newer reviewed revision.
+    /// </summary>
+    public const string CorrectionVersionStale = "return.correction.version_stale";
+
+    /// <summary>TB-279: an occurrence key was already recorded for a different correction intent.</summary>
+    public const string CorrectionOccurrenceConflict = "return.correction.occurrence_conflict";
+
+    /// <summary>TB-279: a custody fact names a line that does not belong to this case.</summary>
+    public const string CustodyItemInvalid = "return.custody.item_invalid";
+
+    /// <summary>TB-279: a custody quantity is non-positive, over-precise or exceeds the rejected received portion.</summary>
+    public const string CustodyQuantityInvalid = "return.custody.quantity_invalid";
+
+    /// <summary>TB-279: a handback needs a meaningful proof reference; a tracking number alone is not delivery proof.</summary>
+    public const string CustodyProofRequired = "return.custody.proof_required";
+
+    /// <summary>TB-279: a handback must name the owning customer as the recipient.</summary>
+    public const string CustodyRecipientInvalid = "return.custody.recipient_invalid";
+
+    /// <summary>TB-279: this line's rejected received quantity was already fully handed back.</summary>
+    public const string CustodyOverHanded = "return.custody.over_handed";
+
+    /// <summary>TB-279: the case is not in a state that may record a physical handback.</summary>
+    public const string CustodyStateInvalid = "return.custody.state_invalid";
+
+    /// <summary>TB-279: the handback occurrence key was already recorded with a different intent.</summary>
+    public const string CustodyOccurrenceConflict = "return.custody.occurrence_conflict";
+
+    /// <summary>TB-279: a physical handback must name the recording operator.</summary>
+    public const string CustodyActorRequired = "return.custody.actor_required";
+
+    /// <summary>
+    /// TB-279: the owning delivered slices did not answer enough positive eligible quantity for the requested claim,
+    /// so the creation is refused instead of borrowing another delivery's window.
+    /// </summary>
+    public const string AllocationRequired = "return.allocation.required";
+
+    /// <summary>TB-279: the requested claim exceeds the unallocated quantity of the owning delivered slices.</summary>
+    public const string AllocationExceeded = "return.allocation.exceeded";
+
+    /// <summary>
+    /// TB-279: the stored per-delivery allocation no longer matches the owning delivered slices, so it is never used
+    /// as capacity.
+    /// </summary>
+    public const string AllocationStale = "return.allocation.stale";
+
+    /// <summary>
+    /// TB-279: this payment's reserved + confirmed Returns refund obligations would exceed the owning payment budget.
+    /// </summary>
+    public const string RefundBudgetExceeded = "return.refund.budget_exceeded";
+
+    /// <summary>TB-279: the shared payment budget is bound to a different checkout/customer/currency.</summary>
+    public const string RefundBudgetBindingInvalid = "return.refund.budget_binding_invalid";
+
+    /// <summary>TB-279: the approved money was already frozen with a different value and is immutable.</summary>
+    public const string ApprovedAmountConflict = "return.approved_amount.conflict";
 }
 

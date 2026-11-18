@@ -90,6 +90,30 @@ public interface IReturnDirectory
     Task<ReturnSnapshot> RecordReceiptAsync(
         RecordReturnReceiptCommand command,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-279: audited correction of an already recorded decision (append-only revision, back to review). It refuses
+    /// every real financial/physical/source effect and never reverses history.
+    /// </summary>
+    Task<ReturnSnapshot> ReopenForReviewAsync(
+        ReopenReturnForReviewCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-279: publishes the reviewed per-item/condition quantity resolution plan; the approved money is derived from
+    /// the accepted quantities only and frozen before the first financial attempt.
+    /// </summary>
+    Task<ReturnSnapshot> PublishResolutionAsync(
+        PublishReturnResolutionCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// TB-279: records the ACTUAL physical handback of rejected received goods to the owning customer. Zero refund,
+    /// Wallet, stock or carrier effect.
+    /// </summary>
+    Task<ReturnSnapshot> RecordCustodyAsync(
+        RecordReturnCustodyCommand command,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Query port صف کار Admin returns (جدا از directory ارکستراسیون).</summary>

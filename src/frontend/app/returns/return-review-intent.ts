@@ -26,7 +26,13 @@ export type ReturnReviewAction =
   | "start_refund"
   | "resume_refund"
   | "retry_refund"
-  | "settle_physical";
+  | "settle_physical"
+  /** TB-279: the audited decision correction that returns a decided case to review with a new revision. */
+  | "reopen_for_review"
+  /** TB-279: the reviewed per-item/condition resolution plan of a legacy multi-item case. */
+  | "publish_resolution"
+  /** TB-279: the ACTUAL handback of rejected received goods to the owning customer. */
+  | "record_custody";
 
 /**
  * TB-276: which owning route executes the reviewed action. `returns` is the Returns-owned admin route;
@@ -72,6 +78,9 @@ const KNOWN_ACTIONS: ReadonlySet<string> = new Set<ReturnReviewAction>([
   "resume_refund",
   "retry_refund",
   "settle_physical",
+  "reopen_for_review",
+  "publish_resolution",
+  "record_custody",
 ]);
 
 const KNOWN_TARGETS: ReadonlySet<string> = new Set<ReturnReviewTarget>(["returns", "order-operation"]);
@@ -314,6 +323,19 @@ export const PROVEN_NO_EFFECT_REFUSAL_CODES: ReadonlySet<string> = new Set([
   // The line it names cannot belong to this case (an immutable identity), so nothing could ever have been stored.
   "return.line_missing",
   "return.receipt.origin_invalid",
+  // TB-279: only the BODY-dictated refusals of the correction/resolution/custody shapes. A state, version or
+  // occurrence conflict keeps the envelope (it describes THIS attempt, not an earlier possibly-committed send).
+  "return.correction.actor_required",
+  "return.correction.reason_required",
+  "return.resolution.actor_required",
+  "return.resolution.invalid",
+  "return.resolution.received_exceeded",
+  "return.resolution.item_invalid",
+  "return.custody.actor_required",
+  "return.custody.item_invalid",
+  "return.custody.quantity_invalid",
+  "return.custody.proof_required",
+  "return.custody.recipient_invalid",
 ]);
 
 /** True when a typed code proves the reviewed command did not write anything. */

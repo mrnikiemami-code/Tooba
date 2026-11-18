@@ -53,9 +53,13 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         // 23 HTTP-reachable outcome codes + 1 platform-side outbox fault = 24 declared. TB-272 added the two
         // creation-integrity refusals (return.idempotency_conflict, return.duplicate_line), TB-272-R1 the persisted
         // quantity-precision refusal (return.quantity_precision), TB-273-R1 the recovery evidence-conflict and
-        // caller-transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals and TB-278 the
-        // owning-unit creation quantum refusal — all HTTP-reachable.
-        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count);
+        // caller-transaction refusals, TB-274 the nine customer-receipt/inspection/reason refusals, TB-278 the
+        // owning-unit creation quantum refusal and TB-279 the audited-correction, per-item resolution, custody,
+        // delivery-allocation and shared-refund-budget refusals — all HTTP-reachable.
+        Assert.Equal(
+            ReturnsErrorCodes.HttpReachable.Count,
+            ReturnsErrorCodes.HttpReachable.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(80, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
 
         Assert.True(ReturnsErrorCodes.IsHttpReachable(ReturnsErrorCodes.Missing));
@@ -190,7 +194,7 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
         }
 
         // Exactly seven transport validators — one per VALIDATOR_REQUIRED request.
-        Assert.Equal(7, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(10, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
 
         // Validators emit stable machine codes, never user-facing prose.
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);
@@ -402,6 +406,10 @@ public sealed class ReturnsModuleAmsc001W1MigrateGuardTests
                 "20261116122318_AddCustomerReceiptsAndDecisionReason.cs",
                 "20261116140705_BoundedReceiptIntegrityConstraints.Designer.cs",
                 "20261116140705_BoundedReceiptIntegrityConstraints.cs",
+                "20261117164135_Tb279AuditedDecisionCorrectionResolutionCustodyAndAllocation.Designer.cs",
+                "20261117164135_Tb279AuditedDecisionCorrectionResolutionCustodyAndAllocation.cs",
+                "20261118004500_NormalizeApprovedAmountColumn.Designer.cs",
+                "20261118004500_NormalizeApprovedAmountColumn.cs",
                 "ReturnsDbContextModelSnapshot.cs",
             ],
             files);

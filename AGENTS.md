@@ -1,4 +1,41 @@
-# CURRENT — 278 PARTIAL; ONLY FINAL CONSOLIDATED279 ISSUED WITH EXACT REPO ENVELOPE — 2026-11-17
+# CURRENT — 279 WORKER PASS (audited decision correction, partial resolution, custody, delivery allocation and shared budget); AWAIT ARCHITECT REVIEW AND USER LOOK — 2026-11-18
+
+Read docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/TASK.md and
+docs/architecture/evidence/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,decision-and-partial-resolution-proof.md,delivery-and-budget-proof.md,customer-retention-proof.md,migration-and-backup-proof.md,user-review.md}.
+Status **PASS within the issued consolidated scope**, decision
+`ONE_APPEND_ONLY_EFFECTIVE_DECISION_AUTHORITY_WITH_VERSION_FENCED_REOPEN_A_REVIEWED_PER_ITEM_RESOLUTION_THAT_FREEZES_ONLY_THE_ACCEPTED_MONEY_DURABLE_PER_PORTION_CUSTODY_DELIVERY_SLICE_ALLOCATION_AND_A_RETURNS_MANAGED_SHARED_PAYMENT_BUDGET_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ONE_ADDITIVE_MIGRATION_APPLIED_AFTER_A_VERIFIED_FRESH_BACKUP_AND_ZERO_LIVE_BUSINESS_WRITE`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance, NOT Marketplace/provider/financial readiness.
+Expected-Base-SHA == `57cccbbe7cffea23c30ee0f474291cb3dda7bc58`; claim HEAD `6463fdac85a5db66c6d454d4eac5b5e5f89db21b` (docs-only
+issuance; its parent is that code base, so no source drift arrived). 277/277-R1/277-R2 and 278 are retained; 278's
+durability gaps are closed inside 279 and **no 278-R1 was created**. Single worker, one task, no delegation, no historical
+subagent resumed, no screenshots, no loop.
+
+| Area | State | What this means |
+| --- | --- | --- |
+| A decision authority | one append-only authority | `returns.return_request_decision_revisions` appends every later decision/correction (version, decision, reviewed reason, actor, timestamp, occurrence key); the legacy `return_request_decisions` row stays the immutable version-0 baseline; `ReadDecisionStateAsync` is the ONE read behind the snapshot, the work/capability projection and every decide/refund/correction command; `ExpectedDecisionVersion` fences a stale review (`409 return.correction.version_stale`); the same occurrence replays, a changed reason is `return.correction.occurrence_conflict` |
+| A reopen | real gates before any row | `POST /v1/admin/returns/{id}/reopen` refuses courier origin, no effective decision, non-decided status, ANY refund attempt (pending/failed/unknown/succeeded) `correction.financial_effect_recorded`, any custody fact, any item disposition, any settlement fact; a rejection re-acquires its own released capacity under the seller-order serialization and a sibling that already took it is `correction.capacity_conflict` with zero rows |
+| B partial resolution | accepted quantities only | `POST …/resolution` publishes one reviewed plan version (one row per requested item, `accepted+rejected==requested`, `accepted<=received` never clamped, reason required); the approved amount is derived from accepted × the STORED unit price and frozen once into `return_requests.approved_amount` BEFORE the first attempt; the requested `refund_amount` stays visible and immutable; all-rejected means zero owed, not "refunded" |
+| C custody | per-portion physical facts | `POST …/custody` records the ACTUAL handback of rejected RECEIVED goods (item, quantity, condition, server-derived recipient, required proof, actor, occurrence key); over-handback / blank proof / foreign item are typed refusals; settlement needs every accepted portion's own physical fact AND every owed handback, and a settled legacy case never claims a rejection was "refunded" |
+| D allocation | per-delivery slice | `returns.return_delivery_allocations` binds every claim to owning delivered slices; oldest deadline first, an expired slice never funds a new claim, same-instant deliveries merge, a legacy case is conservatively discounted oldest-slice-only, insufficient capacity is refused with zero rows |
+| E budget | Returns-managed shared budget | one stable advisory key per payment (`ReturnBudgetSerialization`), counting Pending+Succeeded obligations of ALL Returns cases on that payment; the reservation commits with the attempt BEFORE the external call; a definite failure releases only its own reservation; a duplicate answers the stored attempt |
+| in-task fixes | three real defects closed | (1) reopen could never re-acquire capacity → `IReturnEligibilityEvaluator.EvaluateAsync(..., excludeReturnRequestId)` used only by the correction paths; (2) a reopened case was undecidable (`CanDecide` read `RecordedDecision`) → now reads the EFFECTIVE decision; (3) the first migration created PascalCase `"ApprovedAmount"` → additive `20261118004500_NormalizeApprovedAmountColumn` after a second verified backup |
+| proof | focused, owning | Returns `172/172` (new directory suite `11/11`, new policy suite `13/13`); AMSC guards `34/34`; `dotnet build Tooba.slnx -c Release` 0 errors; Host publish 0 errors; FE submission `25/25`, mounted `17/17`, `tsc` 0, `next build` 0 (`BUILD_ID 8fLqIGZTLx0CUcUquOuUG`) |
+| served | refreshed | Host `5088` PID `33892`, dll SHA256 `7EE36BFF…0766B4` (`/health` 200, `/health/ready` 200 SingleStore + messaging Healthy, `/__platform-commerce` → `store-alpha`); Next `3000` PID `5076`, chunk `7944-0ba65eeffc7022bc.js` 200 serves `reopen_for_review`/`publish_resolution`/`record_custody`/«بازگردانی» |
+| migration | one additive + one additive rename | `20261117164135_…` then `20261118004500_…`, each applied ONCE by `Tooba.MigrationRunner` after a fresh `pg_dump` verified by `pg_restore --list` (3 011 929 B `F3303203…DE05`; 3 028 309 B `B2C3CA92…1149`); post-apply `pendingCount=0`; three earlier apply attempts failed `42703` on a generated-constraint defect and are declared |
+| data | untouched | zero reset/reseed/backfill/cleanup/restore; zero live business write (no receipt, decision, revision, resolution, custody, allocation, refund, stock, hold, provider, PSP, Wallet, waybill or notification call); all three stored cases remain `Completed` with original `updated_at`, NULL `approved_amount`; the four new tables hold 0 rows |
+
+Known limits: money/stock proven with controlled ports (no real PSP/Wallet/Inventory effect); no committed two-writer
+race/stress harness; no served reopen/resolution/custody walkthrough because every stored case is settled read-only, so
+the served proof is the typed refusal (`correction.state_invalid`), the served chunk and the mounted real suite; the
+mounted suite is jsdom (behaviour, not geometry); card refunds outside this Returns authority are not in the shared
+budget; `Unknown` unit-precision read blocking remains the disclosed 278 limitation; the 276-era
+`admin-return-workspace-276.mount.test.ts` still fails on a fixture shape stale since 277 and was not rewritten.
+Declared deviations: Host republished/restarted three times (one failed start from the repo root, corrected by launching
+from `artifacts/publish-primary`); no new relational `SkippableFact` was added; probe scripts stayed untracked under
+`D:\temp`.
+STOP_FOR_ARCHITECT; automaticNextImplementationTask: NONE. No automatic next task.
+
+# SUPERSEDED — 278 PARTIAL; ONLY FINAL CONSOLIDATED279 ISSUED WITH EXACT REPO ENVELOPE — 2026-11-17
 
 Read docs/planning/returns/RETURNS-279-EXECUTION-DECISIONS.md,278/ARCHITECT-REVIEW.md and docs/ai/tasks/TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279/TASK.md.
 The FULL279 envelope and identical evidence TASK are committed BEFORE execution; issuance-receipt.json carries SHA256. Empty Bridge body is not permission to reconstruct the task.

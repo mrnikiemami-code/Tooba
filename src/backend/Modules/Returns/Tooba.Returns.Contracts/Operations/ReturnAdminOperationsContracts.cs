@@ -121,7 +121,67 @@ public sealed record ReturnSnapshot(
     // instead of a single summarized number. Empty for a courier-origin case (Fulfillment owns that receipt).
     IReadOnlyList<ReturnReceiptOccurrenceSnapshot>? Receipts = null,
     // TB-275: the ONE work stage/action description the queue and this workspace share.
-    ReturnWorkSnapshot? Work = null);
+    ReturnWorkSnapshot? Work = null,
+    // TB-279: the EFFECTIVE decision after the append-only revision history ("Approve"/"Reject"/null when a correction
+    // returned the case to review); <see cref="RecordedDecision"/> stays the immutable baseline row.
+    string? EffectiveDecision = null,
+    // TB-279: the monotonic reviewed version of the effective decision (0 = only the legacy baseline exists).
+    int DecisionVersion = 0,
+    // TB-279: every appended decision/correction fact, oldest first (the baseline row is not repeated).
+    IReadOnlyList<ReturnDecisionRevisionSnapshot>? DecisionHistory = null,
+    // TB-279: the reviewed per-item/condition resolution plan and the approved money derived from it.
+    ReturnResolutionSnapshot? Resolution = null,
+    // TB-279: the frozen approved money (null until frozen; a started refund keeps RefundAmount as the legacy baseline).
+    decimal? ApprovedAmount = null,
+    // TB-279: the recorded ACTUAL handbacks of rejected received goods to the owning customer.
+    IReadOnlyList<ReturnCustodySnapshot>? Custody = null,
+    // TB-279: whether an audited correction is available now and the exact typed reason when it is not.
+    ReturnCorrectionAssessment? Correction = null);
+
+/// <summary>TB-279: one appended decision/correction fact of the case (the legacy baseline row is version 0).</summary>
+public sealed record ReturnDecisionRevisionSnapshot(
+    int Version,
+    string Decision,
+    string? Reason,
+    Guid ActorUserId,
+    DateTimeOffset RecordedAt);
+
+/// <summary>TB-279: the reviewed accepted/rejected split of ONE requested line.</summary>
+public sealed record ReturnResolutionLineSnapshot(
+    Guid ReturnItemId,
+    decimal Requested,
+    decimal Received,
+    decimal Usable,
+    decimal Damaged,
+    decimal Accepted,
+    decimal Rejected,
+    string? Reason,
+    int Version);
+
+/// <summary>
+/// TB-279: the effective reviewed resolution plan. <c>IsComplete</c> is a positive fact (the whole original claim is
+/// accounted for) and <c>ApprovedAmount</c> is derived from the accepted quantities and the stored unit prices only.
+/// </summary>
+public sealed record ReturnResolutionSnapshot(
+    int Version,
+    bool IsComplete,
+    decimal ApprovedAmount,
+    bool FromReviewedPlan,
+    IReadOnlyList<ReturnResolutionLineSnapshot> Lines,
+    string? BlockerCode = null);
+
+/// <summary>TB-279: one recorded ACTUAL handback of rejected received goods to the owning customer.</summary>
+public sealed record ReturnCustodySnapshot(
+    Guid ReturnCustodyId,
+    Guid ReturnItemId,
+    decimal Quantity,
+    ReturnItemConditionOption Condition,
+    Guid RecipientUserId,
+    string ProofReference,
+    DateTimeOffset RecordedAt);
+
+/// <summary>TB-279: whether an audited correction is available and the exact typed reason when it is not.</summary>
+public sealed record ReturnCorrectionAssessment(bool CanReopenForReview, string? BlockerCode);
 
 /// <summary>
 /// TB-275: the operator work stage of one case, as the wire reports it. <c>CategoryCode</c> is a stable token

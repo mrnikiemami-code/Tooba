@@ -177,9 +177,16 @@ public static class ReturnRecoveryPolicy
                             return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: false, allItemsDisposed);
                         }
 
-                        if (snapshot.Receiving is not { IsComplete: true })
+                        // TB-279 (C): money may only start on a resolution that actually names the accepted money.
+                        // A stored reviewed plan that is incomplete/incoherent blocks the first refund; a case with
+                        // no plan at all keeps the legacy approved amount (the pre-279 case), and complete receiving
+                        // already derives a complete baseline plan.
+                        if (ReturnResolutionPolicy.Resolve(snapshot) is { IsComplete: false, FromReviewedPlan: true } incomplete)
                         {
-                            return Blocked(ReturnsErrorCodes.RecoveryReceivingRequired, financialComplete: false, allItemsDisposed);
+                            return Blocked(
+                                incomplete.BlockerCode ?? ReturnsErrorCodes.ResolutionRequired,
+                                financialComplete: false,
+                                allItemsDisposed);
                         }
                     }
                     else if (!HasCoherentCourierSource(snapshot))
@@ -315,13 +322,14 @@ public static class ReturnRecoveryPolicy
     /// </summary>
     private static MoneyEvidence ReadMoney(ReturnSnapshot snapshot)
     {
-        if (string.Equals(snapshot.RecordedDecision, RejectedDecision, StringComparison.Ordinal))
+        var effectiveDecision = EffectiveDecisionOf(snapshot);
+        if (string.Equals(effectiveDecision, RejectedDecision, StringComparison.Ordinal))
         {
             // The durable rejection is the winning decision: no recovery may invent an approval for it.
             return new MoneyEvidence(false, null, false, ReturnsErrorCodes.AlreadyRejected);
         }
 
-        if (!string.Equals(snapshot.RecordedDecision, ApprovedDecision, StringComparison.Ordinal))
+        if (!string.Equals(effectiveDecision, ApprovedDecision, StringComparison.Ordinal))
         {
             // Effectful recovery requires a RECORDED approval. A missing row is not repaired from a status or a caller.
             return new MoneyEvidence(false, null, false, ReturnsErrorCodes.RecoveryEvidenceConflict);
@@ -393,8 +401,18 @@ public static class ReturnRecoveryPolicy
         && snapshot.PaymentId is { } paymentId
         && paymentId != Guid.Empty
         && attempt.PaymentId == paymentId
-        && attempt.Amount == snapshot.RefundAmount
+        // TB-279 (C): the bound money is the REVIEWED approved amount (accepted quantities × stored unit prices), not
+        // the original claim of a partially resolved case.
+        && attempt.Amount == ReturnResolutionPolicy.MoneyOf(snapshot)
         && string.Equals(attempt.Currency.Trim(), snapshot.Currency.Trim(), StringComparison.Ordinal);
+
+    /// <summary>
+    /// TB-279 (B): the effective decision of a snapshot. A snapshot produced by the owning read always carries it; a
+    /// hand-built snapshot falls back to the legacy baseline only when no revision exists.
+    /// </summary>
+    private static string? EffectiveDecisionOf(ReturnSnapshot snapshot) =>
+        snapshot.EffectiveDecision
+        ?? (snapshot.DecisionVersion > 0 ? null : snapshot.RecordedDecision);
 
     /// <summary>
     /// TB-273-R1 (A/C): the physical phase from durable facts. Money is already confirmed here. A courier-origin case
@@ -423,7 +441,11 @@ public static class ReturnRecoveryPolicy
                 return Blocked(ReturnsErrorCodes.RecoveryStockBindingRequired, financialComplete: true, physicalComplete: false, money.AttemptId);
             }
 
-            if (allItemsDisposed)
+            // TB-279 (C): ordinary completion is the RESUMED per-portion fact — every accepted usable portion really
+            // restocked, every accepted damaged portion recorded non-saleable, and every rejected received portion
+            // really handed back. A single enum on the item can never express a mixed line, so a received portion that
+            // is still owed to the owning customer keeps the case open instead of reading as settled.
+            if (ReturnResolutionPolicy.IsPhysicalComplete(snapshot))
             {
                 return new ReturnRecoveryDescription(
                     ReturnRecoveryPhase.Settled, null, money.AttemptId, null, FinancialComplete: true, PhysicalComplete: true);
@@ -438,7 +460,7 @@ public static class ReturnRecoveryPolicy
                 return Blocked(ReturnsErrorCodes.RecoveryEvidenceConflict, financialComplete: true, physicalComplete: false, money.AttemptId);
             }
 
-            if (snapshot.Receiving is { IsComplete: true })
+            if (snapshot.Receiving is { IsComplete: true } && ReturnResolutionPolicy.Resolve(snapshot) is { IsComplete: true })
             {
                 return new ReturnRecoveryDescription(
                     ReturnRecoveryPhase.PendingDisposition,
@@ -449,7 +471,23 @@ public static class ReturnRecoveryPolicy
                     PhysicalComplete: false);
             }
 
-            return Blocked(ReturnsErrorCodes.RecoveryReceivingRequired, financialComplete: true, physicalComplete: false, money.AttemptId);
+            // The physical gate keeps its EXISTING precedence (TB-274): a missing/incomplete customer receipt is
+            // receiving work, never a resolution problem. Only a complete receipt with an unresolved plan names the
+            // resolution blocker.
+            if (snapshot.Receiving is not { IsComplete: true })
+            {
+                return Blocked(
+                    ReturnsErrorCodes.RecoveryReceivingRequired,
+                    financialComplete: true,
+                    physicalComplete: false,
+                    money.AttemptId);
+            }
+
+            return Blocked(
+                ReturnResolutionPolicy.Resolve(snapshot).BlockerCode ?? ReturnsErrorCodes.ResolutionRequired,
+                financialComplete: true,
+                physicalComplete: false,
+                money.AttemptId);
         }
 
         if (!HasCoherentCourierSource(snapshot))

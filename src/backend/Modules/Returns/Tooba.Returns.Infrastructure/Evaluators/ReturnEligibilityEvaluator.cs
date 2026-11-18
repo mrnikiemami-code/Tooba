@@ -37,7 +37,10 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
     }
 
     /// <inheritdoc />
-    public async Task<ReturnEligibilityResult> EvaluateAsync(Guid sellerOrderId, CancellationToken cancellationToken)
+    public async Task<ReturnEligibilityResult> EvaluateAsync(
+        Guid sellerOrderId,
+        CancellationToken cancellationToken,
+        Guid? excludeReturnRequestId = null)
     {
         var orderContext = await _orders.GetReturnContextAsync(sellerOrderId, cancellationToken);
         if (orderContext is null)
@@ -81,9 +84,9 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
         }
 
         var lastDeliveredAt = fulfillment.LastDeliveredAt.Value;
-        var alreadyReturned = await GetAlreadyReturnedQuantitiesAsync(sellerOrderId, cancellationToken);
+        var occupancy = await ReadOccupancyAsync(sellerOrderId, excludeReturnRequestId, cancellationToken);
         var now = _clock.UtcNow;
-        var lines = BuildLines(orderContext, fulfillment, alreadyReturned, lastDeliveredAt, now);
+        var lines = BuildLines(orderContext, fulfillment, occupancy, lastDeliveredAt, now);
         var anyReturnablePolicy = orderContext.Lines.Any(x => x.IsReturnableSnapshot);
         if (!anyReturnablePolicy)
         {
@@ -138,6 +141,24 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
         Guid sellerOrderId,
         CancellationToken cancellationToken)
     {
+        var occupancy = await ReadOccupancyAsync(sellerOrderId, null, cancellationToken);
+        return occupancy.Returned.ToDictionary(x => x.Key, x => x.Value);
+    }
+
+    /// <summary>
+    /// TB-272 (C) / TB-279 (D): ONE read of the active occupying facts of a seller order, split into
+    /// <list type="bullet">
+    /// <item><description>the requested quantity per line (diagnostic fact, unchanged by this task);</description></item>
+    /// <item><description>the durable per-slice allocations of active cases (the ONLY capacity a sibling may not take);</description></item>
+    /// <item><description>the quantity of active cases that predate per-delivery allocation, which is subtracted
+    /// conservatively from the oldest in-window slice instead of being ignored.</description></item>
+    /// </list>
+    /// </summary>
+    private async Task<LineOccupancy> ReadOccupancyAsync(
+        Guid sellerOrderId,
+        Guid? excludeReturnRequestId,
+        CancellationToken cancellationToken)
+    {
         // TB-272 (C): a FAILED money attempt is not a cancelled physical intent. RefundFailed still occupies its
         // requested line quantities, so the same units can never fund a second, over-capacity request. Only
         // Rejected/Cancelled release capacity (they are absent from this set on purpose).
@@ -153,17 +174,53 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             .Where(x => x.SellerOrderId == sellerOrderId && activeStatuses.Contains(x.Status))
             .Select(x => x.ReturnRequestId)
             .ToListAsync(cancellationToken);
+        if (excludeReturnRequestId is { } excluded)
+        {
+            // TB-279: re-acquiring a case's OWN capacity must not be blocked by that same case's recorded quantity.
+            requestIds = requestIds.Where(x => x != excluded).ToList();
+        }
+
         if (requestIds.Count == 0)
         {
-            return [];
+            return LineOccupancy.Empty;
         }
 
         var items = await _db.ReturnItems.AsNoTracking()
             .Where(x => requestIds.Contains(x.ReturnRequestId))
+            .Select(x => new { x.ReturnRequestId, x.OrderLineId, x.Quantity })
             .ToListAsync(cancellationToken);
-        return items
+
+        // Active (not released) allocations are the real capacity claim; a released row returned its quantity to the
+        // pool when the case was rejected/cancelled.
+        var allocations = await _db.ReturnDeliveryAllocations.AsNoTracking()
+            .Where(x => requestIds.Contains(x.ReturnRequestId) && x.ReleasedAt == null)
+            .Select(x => new { x.ReturnRequestId, x.OrderLineId, x.SliceKey, x.Quantity })
+            .ToListAsync(cancellationToken);
+
+        var allocatedRequestIds = allocations.Select(x => x.ReturnRequestId).ToHashSet();
+        var returned = items
             .GroupBy(x => x.OrderLineId)
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+        var legacyUnallocated = items
+            .Where(x => !allocatedRequestIds.Contains(x.ReturnRequestId))
+            .GroupBy(x => x.OrderLineId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+        var allocatedElsewhere = allocations
+            .GroupBy(x => x.SliceKey, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity), StringComparer.Ordinal);
+
+        return new LineOccupancy(returned, legacyUnallocated, allocatedElsewhere);
+    }
+
+    private sealed record LineOccupancy(
+        IReadOnlyDictionary<Guid, decimal> Returned,
+        IReadOnlyDictionary<Guid, decimal> LegacyUnallocated,
+        IReadOnlyDictionary<string, decimal> AllocatedElsewhere)
+    {
+        public static LineOccupancy Empty { get; } = new(
+            new Dictionary<Guid, decimal>(),
+            new Dictionary<Guid, decimal>(),
+            new Dictionary<string, decimal>(StringComparer.Ordinal));
     }
 
     private static ReturnEligibilityResult Empty(
@@ -240,14 +297,14 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
     private static IReadOnlyList<ReturnLineEligibility> BuildLines(
         OrderReturnContextSnapshot orderContext,
         FulfillmentReturnEligibilitySnapshot fulfillment,
-        IReadOnlyDictionary<Guid, decimal> alreadyReturned,
+        LineOccupancy occupancy,
         DateTimeOffset lastDeliveredAt,
         DateTimeOffset now)
     {
         return orderContext.Lines.Select(line =>
         {
             fulfillment.DeliveredQuantities.TryGetValue(line.OrderLineId, out var delivered);
-            alreadyReturned.TryGetValue(line.OrderLineId, out var returned);
+            occupancy.Returned.TryGetValue(line.OrderLineId, out var returned);
             if (!line.IsReturnableSnapshot)
             {
                 return new ReturnLineEligibility(
@@ -278,16 +335,18 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             var returnableUntil = slices.Count == 0
                 ? lastDeliveredAt.AddDays(windowDays)
                 : slices.Max(slice => slice.DeliveredAt.AddDays(windowDays));
-            var stillInWindow = 0m;
-            foreach (var slice in slices)
-            {
-                if (now <= slice.DeliveredAt.AddDays(windowDays))
-                {
-                    stillInWindow += slice.Quantity;
-                }
-            }
 
-            var remaining = Math.Max(0m, stillInWindow - returned);
+            // TB-279 (D): the ONE per-delivery availability. A returned quantity bound to an EXPIRED slice never eats
+            // into a newer delivered slice, because only the still-open slices contribute remaining capacity.
+            occupancy.LegacyUnallocated.TryGetValue(line.OrderLineId, out var legacyUnallocated);
+            var availability = ReturnAllocationPolicy.Describe(
+                line.OrderLineId,
+                slices.Select(x => new ReturnDeliverySliceSource(x.OrderLineId, x.Quantity, x.DeliveredAt)).ToArray(),
+                windowDays,
+                now,
+                occupancy.AllocatedElsewhere,
+                legacyUnallocated);
+            var remaining = Math.Max(0m, availability.Where(x => x.IsInWindow).Sum(x => x.AvailableQuantity));
             if (now > returnableUntil)
             {
                 // TB-278: an expired line is honestly "expired", not a generic exhausted quantity.
@@ -297,7 +356,8 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                     returned,
                     0,
                     returnableUntil,
-                    ReturnEligibilityReasonCodes.WindowExpired);
+                    ReturnEligibilityReasonCodes.WindowExpired,
+                    availability);
             }
 
             if (remaining <= 0)
@@ -308,7 +368,8 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                     returned,
                     remaining,
                     returnableUntil,
-                    ReturnEligibilityReasonCodes.NothingReturnable);
+                    ReturnEligibilityReasonCodes.NothingReturnable,
+                    availability);
             }
 
             return new ReturnLineEligibility(
@@ -317,7 +378,8 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                 returned,
                 remaining,
                 returnableUntil,
-                null);
+                null,
+                availability);
         }).ToArray();
     }
 }

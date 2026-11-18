@@ -46,4 +46,19 @@ public sealed record ReturnSnapshot(
     // Fulfillment, so this stays empty for it (never an invented occurrence).
     IReadOnlyList<ReturnReceiptOccurrenceSnapshot>? Receipts = null,
     // TB-275: the ONE work stage/action description shared by the queue and the detail workspace.
-    ReturnWorkDescription? Work = null);
+    ReturnWorkDescription? Work = null,
+    // TB-279: the EFFECTIVE decision after the append-only revision history ("Approve"/"Reject"/null when a correction
+    // returned the case to review). <see cref="RecordedDecision"/> stays the immutable legacy baseline row.
+    string? EffectiveDecision = null,
+    // TB-279: the monotonic reviewed version of the effective decision (0 = only the legacy baseline exists).
+    int DecisionVersion = 0,
+    // TB-279: every appended decision/correction fact, oldest first (the legacy baseline row is not repeated here).
+    IReadOnlyList<ReturnDecisionRevisionSnapshot>? DecisionHistory = null,
+    // TB-279: the reviewed per-item resolution plan and the money derived from its accepted quantities only.
+    ReturnResolutionSnapshot? Resolution = null,
+    // TB-279: the frozen approved money (null until approved/frozen; a case that already started money keeps RefundAmount).
+    decimal? ApprovedAmount = null,
+    // TB-279: the recorded ACTUAL handbacks of rejected received goods to the owning customer.
+    IReadOnlyList<ReturnCustodySnapshot>? Custody = null,
+    // TB-279: whether an audited correction is available and the exact typed reason when it is not.
+    ReturnCorrectionAssessment? Correction = null);

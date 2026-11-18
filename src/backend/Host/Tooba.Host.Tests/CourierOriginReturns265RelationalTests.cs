@@ -1821,7 +1821,10 @@ public sealed class CourierOriginReturns265RelationalTests
 
     private sealed class UnusedEligibility : IReturnEligibilityEvaluator
     {
-        public Task<ReturnEligibilityResult> EvaluateAsync(Guid sellerOrderId, CancellationToken cancellationToken) =>
+        public Task<ReturnEligibilityResult> EvaluateAsync(
+            Guid sellerOrderId,
+            CancellationToken cancellationToken,
+            Guid? excludeReturnRequestId = null) =>
             throw new NotSupportedException();
     }
 

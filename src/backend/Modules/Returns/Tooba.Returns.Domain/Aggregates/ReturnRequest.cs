@@ -78,6 +78,14 @@ public sealed class ReturnRequest : IHasDomainEvents
     /// <summary>مبلغ refund محاسبه‌شده از snapshot خطوط.</summary>
     public decimal RefundAmount { get; private set; }
 
+    /// <summary>
+    /// TB-279: the reviewed APPROVED money of this case, frozen before the first financial attempt. It is derived from
+    /// the accepted quantities of the reviewed resolution plan (<c>accepted × stored unit price</c>) — never from the
+    /// original claim, today's price or a browser amount. <c>null</c> means no reviewed amount was ever frozen, so a
+    /// case that already started money keeps its original <see cref="RefundAmount"/> as the legacy baseline.
+    /// </summary>
+    public decimal? ApprovedAmount { get; private set; }
+
     /// <summary>مقصد بازگشت وجه.</summary>
     public RefundDestination RefundDestination { get; private set; }
 
@@ -387,11 +395,16 @@ public sealed class ReturnRequest : IHasDomainEvents
     }
 
     /// <summary>درخواست را تأیید می‌کند.</summary>
-    public void Approve(Guid paymentId, DateTimeOffset now, RefundDestination? destinationOverride = null)
+    public void Approve(Guid paymentId, DateTimeOffset now, RefundDestination? destinationOverride = null, decimal? approvedAmount = null)
     {
         EnsureStatus(ReturnRequestStatus.Requested);
         Status = ReturnRequestStatus.Approved;
         PaymentId = paymentId;
+        if (approvedAmount is { } amount)
+        {
+            FreezeApprovedAmount(amount);
+        }
+
         if (destinationOverride is { } dest)
         {
             if (!Enum.IsDefined(dest))
@@ -401,6 +414,45 @@ public sealed class ReturnRequest : IHasDomainEvents
 
         UpdatedAt = now;
         _domainEvents.Add(new ReturnApprovedDomainEvent(ReturnRequestId, SellerOrderId, CheckoutId, RefundAmount, Currency));
+    }
+
+    /// <summary>
+    /// TB-279: freezes the reviewed approved money exactly once, BEFORE the first financial attempt. A later pass with a
+    /// different number is refused (the amount of a started refund is immutable), while the same number is a no-op.
+    /// </summary>
+    public void FreezeApprovedAmount(decimal amount)
+    {
+        if (amount < 0m)
+        {
+            throw new InvalidOperationException("returns.approved_amount.invalid");
+        }
+
+        if (ApprovedAmount is { } frozen)
+        {
+            if (frozen != amount)
+            {
+                throw new ContractOperationException("return.approved_amount.conflict");
+            }
+
+            return;
+        }
+
+        ApprovedAmount = amount;
+    }
+
+    /// <summary>
+    /// TB-279: audited correction of an already-recorded decision. The case returns to review; the previous decision
+    /// row AND the append-only revision history are untouched (the correction is a NEW fact), and no money, stock or
+    /// custody effect is reversed here. Callers must prove the preconditions (no attempt, no disposition, no handback)
+    /// before invoking this.
+    /// </summary>
+    public void ReopenForReview(DateTimeOffset now)
+    {
+        EnsureStatus(ReturnRequestStatus.Approved, ReturnRequestStatus.Rejected);
+        Status = ReturnRequestStatus.Requested;
+        PaymentId = null;
+        ApprovedAmount = null;
+        UpdatedAt = now;
     }
 
     /// <summary>درخواست را رد می‌کند.</summary>

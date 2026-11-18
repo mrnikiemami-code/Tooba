@@ -1,0 +1,61 @@
+RESULT-CONTRACT — TB-279
+=====================
+
+TASK             TB-RETURNS-AUDITED-DECISION-CORRECTION-PARTIAL-RESOLUTION-AND-DELIVERY-ALLOCATION-279
+CHANNEL          tooba-main
+BRIDGE-ROW       60f75a8f-52c9-4aa0-bc87-86c6dbaeaced
+MODE             FINAL_CONSOLIDATED_RETURNS_DECISION_PHYSICAL_FINANCIAL_AND_CUSTOMER_COMPLETION
+EXPECTED-BASE    57cccbbe7cffea23c30ee0f474291cb3dda7bc58
+CLAIM-HEAD       6463fdac85a5db66c6d454d4eac5b5e5f89db21b   (docs-only issuance; parent == EXPECTED-BASE)
+RESULT           PASS_WITHIN_ISSUED_SCOPE
+
+DECISION
+ONE_APPEND_ONLY_EFFECTIVE_DECISION_AUTHORITY_WITH_VERSION_FENCED_REOPEN_A_REVIEWED_PER_ITEM_RESOLUTION_THAT_FREEZES_ONLY_THE_ACCEPTED_MONEY_DURABLE_PER_PORTION_CUSTODY_DELIVERY_SLICE_ALLOCATION_AND_A_RETURNS_MANAGED_SHARED_PAYMENT_BUDGET_ON_THE_EXISTING_RETURNS_DIRECTORY_WITH_ONE_ADDITIVE_MIGRATION_APPLIED_AFTER_A_VERIFIED_FRESH_BACKUP_AND_ZERO_LIVE_BUSINESS_WRITE
+
+NOT_CLAIMED
+- NOT Architect ACCEPT
+- NOT user functional/visual acceptance
+- NOT Marketplace / provider / PSP / Wallet / Inventory / shipping readiness
+- NOT a universal refundable-balance or card-refund claim
+
+ENVELOPE-CHECK
+- code_base_expected_matches        yes (57cccbbe…)
+- incoming_delta                    docs-only issuance (allowed); no source drift
+- 278_improvements_retained         eligibility/selection/creation-quantum/react-toastify preserved
+- 278_R1_created                    NO (macro R1 forbidden; repairs made inside 279)
+- bounded_additive_migration        YES: 20261117164135_… + 20261118004500_…
+- migration_requires_verified_backup YES: two fresh dumps, both verify-listed before apply
+- live_business_write               NONE
+- fixtures / resets / provider calls NONE
+- existing trial cases              read-only settled history
+
+SCOPE-RESULTS
+A decision authority   one append-only revision table + single effective read; version-fenced; occurrence-replay; reason-conflict
+B partial resolution   accepted-only money, frozen once before the first attempt, requested amount immutable
+C custody              per-portion durable handback of rejected received goods; settlement needs every accepted portion
+D allocation           per-delivery-slice capacity; expired slice never funds a new claim; legacy discounted oldest-first
+E budget               per-payment shared obligation budget, reservation committed before the external call
+F migration            one additive migration (+ one additive naming fix) each applied once after a verified backup
+G proof                172/172 Returns, 34/34 AMSC, build 0 errors, publish 0 errors
+FE                     25/25 submission, 17/17 mounted, tsc 0, next build 0
+served                 Host 5088 health/ready 200 store-alpha; Next 3000 BUILD_ID 8fLqIGZTLx0CUcUquOuUG
+data                   three stored cases unchanged (Completed, original updated_at); four new tables 0 rows
+
+FOCUSED-TEST-COUNTS
+ReturnsDecisionCorrection279Tests            13 / 13
+ReturnsDecisionCorrection279DirectoryTests   11 / 11
+Tooba.Returns.Tests (whole project)         172 / 172
+ReturnsModuleAmsc001* (Host guards)          34 / 34
+FE return-submission* + quantity + api       25 / 25
+FE mounted workspace 277/278/279             17 / 17
+
+KNOWN-LIMITS
+- money/stock proven with controlled ports only (no real PSP/Wallet/Inventory effect)
+- no committed two-writer race; serialization proven structurally
+- no served reopen/resolution/custody walkthrough (only settled read-only cases exist)
+- mounted FE suite is jsdom (behaviour, not geometry)
+- card refunds outside Returns authority are not in the shared budget
+- 276-era mount test remains pre-existing-failing and was not rewritten
+
+VERDICT           STOP_FOR_ARCHITECT
+NEXT-TASK         NONE (automaticNextImplementationTask: NONE)

@@ -81,7 +81,11 @@ public sealed class ReturnsExplicitRefund277Tests
         Assert.False(work.CanSettlePhysical);
         Assert.True(work.NeedsOperator);
         Assert.True(work.IsOpen);
-        Assert.Equal([ReturnWorkActionCodes.StartRefund], work.ActionCodes);
+        // TB-279 appends the audited-correction verb: this approval reached no money/stock fact, so it stays
+        // reviewable, and the first-refund verb is unchanged beside it.
+        Assert.Equal(
+            [ReturnWorkActionCodes.ReopenForReview, ReturnWorkActionCodes.StartRefund],
+            work.ActionCodes);
         Assert.Null(work.PendingRefundAttemptId);
         Assert.Null(work.FailedRefundAttemptId);
     }

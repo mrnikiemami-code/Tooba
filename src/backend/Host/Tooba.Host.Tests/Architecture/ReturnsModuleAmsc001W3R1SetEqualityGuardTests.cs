@@ -37,6 +37,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
     [
         "CreateReturnCommand", "ApproveReturnCommand", "RejectReturnCommand", "QueryAdminReturnsGridQuery",
         "RecoverReturnCommand", "RecordReturnReceiptCommand", "StartReturnRefundCommand",
+        "ReopenReturnForReviewCommand", "PublishReturnResolutionCommand", "RecordReturnCustodyCommand",
     ];
 
     private static readonly string[] NoValidatorRequired =
@@ -64,6 +65,10 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/recover", "RecoverReturnCommand"),
         ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/receipt", "RecordReturnReceiptCommand"),
         ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/start-refund", "StartReturnRefundCommand"),
+        // TB-279: the audited decision correction, the reviewed per-item resolution and the actual handback.
+        ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/reopen", "ReopenReturnForReviewCommand"),
+        ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/resolution", "PublishReturnResolutionCommand"),
+        ("admin", "Post", "/v1/admin/returns/{returnRequestId:guid}/custody", "RecordReturnCustodyCommand"),
     ];
 
     // ---------------------------------------------------------------------------------------------
@@ -88,7 +93,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
             .ThenBy(x => x.Verb, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(15, derived.Count);
+        Assert.Equal(18, derived.Count);
         Assert.Equal(expectedMap.Length, actualMap.Length);
         for (var i = 0; i < expectedMap.Length; i++)
         {
@@ -99,7 +104,7 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         }
 
         // Every shipped route dispatches through exactly one ISender.Send call site.
-        Assert.Equal(15, derived.Count(d => d.SendCount == 1));
+        Assert.Equal(18, derived.Count(d => d.SendCount == 1));
     }
 
     [Fact]
@@ -123,9 +128,9 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
 
         // The partition is a real partition: disjoint halves, exact union.
         Assert.Empty(ValidatorRequired.Intersect(NoValidatorRequired, StringComparer.Ordinal));
-        Assert.Equal(15, ValidatorRequired.Length + NoValidatorRequired.Length);
+        Assert.Equal(18, ValidatorRequired.Length + NoValidatorRequired.Length);
 
-        // One-to-one: 15 routes → 15 sends → 15 actual requests → 15 matching handlers.
+        // One-to-one: 18 routes → 18 sends → 18 actual requests → 18 matching handlers.
         var applicationRoot = Path.Combine(root, ModuleRoot, "Tooba.Returns.Application");
         foreach (var request in dispatched)
         {
@@ -371,9 +376,9 @@ public sealed class ReturnsModuleAmsc001W3R1SetEqualityGuardTests
         // TB-272 added the two creation-integrity refusals, TB-272-R1 the persisted quantity-precision refusal,
         // TB-273-R1 the recovery evidence-conflict and caller-transaction refusals, TB-274 the nine customer
         // receipt/inspection/reason refusals and TB-278 the owning-unit creation refusal (all HTTP-reachable).
-        Assert.Equal(46, ReturnsErrorCodes.HttpReachable.Count);
+        Assert.Equal(80, ReturnsErrorCodes.HttpReachable.Count);
         Assert.Equal(1, ReturnsErrorCodes.PlatformFaults.Count);
-        Assert.Equal(47, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
+        Assert.Equal(81, ReturnsErrorCodes.HttpReachable.Count + ReturnsErrorCodes.PlatformFaults.Count);
 
         // No raw API-result or ad-hoc fault classification in the endpoint surface.
         var root = Repo();
