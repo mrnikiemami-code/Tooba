@@ -1,4 +1,10 @@
-# CURRENT — TB-280 ARCHITECT PARTIAL: THREE BOUNDED PRODUCT UX FINDINGS — 2026-11-19
+# CURRENT — TB-280-R1 ISSUED: ONE CONSOLIDATED UX CLOSURE FOR OWNER TEST — 2026-11-19
+
+Active task: `TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1`, single Cursor worker tooba-worker-01 / tooba-main. Read exact issued `docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/TASK.md` and its issuance receipt, then parent 280 ARCHITECT-REVIEW. Owner explicitly requested one task to finish and personally test. Close UX1 approved/bound money display, UX2 condition-correct full-receipt review and positive-condition fields, UX3 no pieces+grams headline sum TOGETHER. Frontend only, M1–M7 real-component proof, served frontend and short Persian user checklist. No backend redesign or task chain. Await Bridge claim; no implementation is running merely because this envelope is persisted.
+
+Expected base `9075e2fa4325a2de60cbd17ebfe908d9d9ee74ed`; docs-only issuance descendants permitted. 279-R3 ACCEPT preserved; 280 PARTIAL history preserved pending this repair's review. TOOBA-UX-001 remains mandatory. No live POST/business write, fixture/reset, migration, backend change/restart, provider/money/stock effect, screenshot or key operation. Exact command/retained-intent safety stays unchanged. User acceptance NOT claimed. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+
+# HISTORICAL — TB-280 Architect PARTIAL checkpoint
 
 Read `docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280/ARCHITECT-REVIEW.md` FIRST. Worker head 83f56842f139c8512974aa872b67b0d3b6e97d9e independently source-reviewed. Zero-received gating, next-step hierarchy and main copy improved; final product/user acceptance NOT granted. UX1: refund confirmation displays requested rather than approved/bound money. UX2: full-receipt implicit baseline prefills aggregate accepted into usable, causing immediate errors for damaged/mixed goods; zero-condition fields remain. UX3: headline sums pcs and grams. Keep these as ONE bounded frontend closure, not a backend redesign or long task chain. No next implementation issued; automaticNextImplementationTask NONE.
 
