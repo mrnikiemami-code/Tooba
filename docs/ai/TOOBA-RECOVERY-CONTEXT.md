@@ -1,8 +1,20 @@
-# CURRENT — TB-280-R1 ISSUED: ONE CONSOLIDATED UX CLOSURE FOR OWNER TEST — 2026-11-19
+# CURRENT — TB-280-R1 WORKER PASS: UX1/UX2/UX3 CLOSED ON RETURNS WORKSPACE; AWAIT ARCHITECT AND OWNER LOOK — 2026-11-19
 
-Active task: `TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1`, single Cursor worker tooba-worker-01 / tooba-main. Read exact issued `docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/TASK.md` and its issuance receipt, then parent 280 ARCHITECT-REVIEW. Owner explicitly requested one task to finish and personally test. Close UX1 approved/bound money display, UX2 condition-correct full-receipt review and positive-condition fields, UX3 no pieces+grams headline sum TOGETHER. Frontend only, M1–M7 real-component proof, served frontend and short Persian user checklist. No backend redesign or task chain. Await Bridge claim; no implementation is running merely because this envelope is persisted.
+Read `docs/ai/tasks/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/TASK.md` and
+`docs/architecture/evidence/TB-RETURNS-SHOPKEEPER-PLAIN-LANGUAGE-WORKFLOW-AND-REVIEW-280-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,three-ux-fixes-proof.md,user-review.md,issuance-receipt.json}`.
+Status **PASS within the issued UX1/UX2/UX3 frontend closure**, decision
+`ONE_AUTHORITATIVE_REVIEWED_MONEY_DISPLAY_CONDITION_BOUND_RECEIVED_GOODS_REVIEW_AND_PER_PRODUCT_UNIT_SUMMARY_ON_THE_EXISTING_RETURNS_WORKSPACE_WITH_EXACT_COMMAND_SAFETY_PRESERVED_ZERO_BACKEND_CHANGE_AND_ZERO_LIVE_BUSINESS_WRITE`,
+NOT Architect ACCEPT, NOT user functional/visual acceptance. Expected-Base-SHA `9075e2fa4325a2de60cbd17ebfe908d9d9ee74ed`
+(verified ancestor); claim HEAD `4ce50d00690f3abdb058289f4a82d63275d136fb` was docs-only issuance. Parent 280 remains PARTIAL pending
+review of this repair. 279-R3 ACCEPT preserved. Backend/schema/live write ZERO. FE proof: M1–M7 7/7, retained mounts
+34/34, unit 49/49, tsc 0, next build 0 (`BUILD_ID xUhUnq_b5Okl6j0RYf2Jl`). Host 5088 preserved; Next 3000 refreshed.
+Live case still receiving-only (read-only). User-Acceptance NOT_CLAIMED. automaticNextImplementationTask NONE;
+STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-Expected base `9075e2fa4325a2de60cbd17ebfe908d9d9ee74ed`; docs-only issuance descendants permitted. 279-R3 ACCEPT preserved; 280 PARTIAL history preserved pending this repair's review. TOOBA-UX-001 remains mandatory. No live POST/business write, fixture/reset, migration, backend change/restart, provider/money/stock effect, screenshot or key operation. Exact command/retained-intent safety stays unchanged. User acceptance NOT claimed. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+# HISTORICAL — TB-280-R1 ISSUED (docs-only envelope)
+
+Active task was issued for one consolidated UX1/UX2/UX3 frontend closure. Expected base
+`9075e2fa4325a2de60cbd17ebfe908d9d9ee74ed`. See CURRENT worker PASS above for the executed result.
 
 # HISTORICAL — TB-280 Architect PARTIAL checkpoint
 
