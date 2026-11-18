@@ -47,7 +47,6 @@ import {
   normalizeQuantityInput,
   parsePositiveExactUnits,
   quantityStep,
-  addUnits,
   compareUnits,
   subtractUnits,
   unitsFromWireNumber,
@@ -58,18 +57,26 @@ import {
 export type { ReturnReviewAction, ReturnReviewIntent } from "../returns/return-review-intent";
 
 /**
- * TB-280: the exact received units of the whole case. The shopkeeper surface asks "how much actually arrived?", so the
- * ONE sum is derived with the same exact integer arithmetic as every quantity field instead of a float subtraction.
+ * TB-280-R1 UX3: presence of any received goods is a boolean fact. Unlike units (pcs vs grams) must never be added into
+ * one operator-facing quantity.
  */
-function receivedUnitsOf(snapshot: ReturnSnapshot | null | undefined): number {
-  return (snapshot?.receiving?.lines ?? []).reduce(
-    (sum, line) => sum + (unitsFromWireNumber(line.received) ?? 0),
-    0,
-  );
+function hasAnyReceivedGoods(snapshot: ReturnSnapshot | null | undefined): boolean {
+  return (snapshot?.receiving?.lines ?? []).some((line) => (unitsFromWireNumber(line.received) ?? 0) > 0);
 }
 
-function sumUnitsOf(values: (number | null | undefined)[]): number {
-  return values.reduce<number>((sum, value) => sum + (unitsFromWireNumber(value ?? 0) ?? 0), 0);
+/** TB-280-R1 UX3: per-product received/requested with that product's own unit — never “501 of 501” across units. */
+function describeReceivedGoodsSummary(snapshot: ReturnSnapshot): string {
+  if (!hasAnyReceivedGoods(snapshot)) return "هنوز کالایی دریافت نشده است";
+  return snapshot.items
+    .map((item) => {
+      const line = snapshot.receiving?.lines.find((entry) => entry.returnItemId === item.returnItemId);
+      const received = line?.received ?? 0;
+      const requested = line?.requested ?? item.quantity;
+      const unit = formatUnitLabel(item.unitLabel);
+      const name = item.productLabel?.trim() || "کالا";
+      return `${name}: ${formatQuantityDisplayFa(received)} از ${formatQuantityDisplayFa(requested)} ${unit}`;
+    })
+    .join(" · ");
 }
 
 /** TB-280: the money answer in business words, never a raw PSP/attempt token. */
@@ -88,6 +95,51 @@ function describeRefundMoney(snapshot: ReturnSnapshot): string {
 }
 
 /**
+ * TB-280-R1 UX1: the money a financial confirmation may honestly show. An approved zero stays zero — never replaced by
+ * requested money through a truthiness fallback. A missing authoritative amount refuses the review instead of inventing one.
+ */
+type ReviewedMoneyDisplay =
+  | { kind: "amount"; amount: number; currency: string }
+  | { kind: "unavailable"; message: string };
+
+function firstRefundReviewMoney(snapshot: ReturnSnapshot): ReviewedMoneyDisplay {
+  if (snapshot.approvedAmount !== null && snapshot.approvedAmount !== undefined) {
+    return { kind: "amount", amount: snapshot.approvedAmount, currency: snapshot.currency };
+  }
+  // Legacy null approvedAmount: only reuse the reviewed-plan frozen amount when that plan is the owning read fact.
+  if (
+    snapshot.resolution?.fromReviewedPlan === true
+    && snapshot.resolution.approvedAmount !== null
+    && snapshot.resolution.approvedAmount !== undefined
+  ) {
+    return { kind: "amount", amount: snapshot.resolution.approvedAmount, currency: snapshot.currency };
+  }
+  return {
+    kind: "unavailable",
+    message: "مبلغ تأییدشده برای بازگشت وجه در این پرونده مشخص نیست؛ تا مشخص شدن آن اقدامی ارسال نمی‌شود.",
+  };
+}
+
+function boundAttemptReviewMoney(
+  snapshot: ReturnSnapshot,
+  attemptId: string | null | undefined,
+  missingMessage: string,
+): ReviewedMoneyDisplay {
+  if (!attemptId) {
+    return { kind: "unavailable", message: missingMessage };
+  }
+  const matches = (snapshot.refundAttempts ?? []).filter((attempt) => attempt.refundAttemptId === attemptId);
+  if (matches.length !== 1) {
+    return {
+      kind: "unavailable",
+      message: "اطلاعات مبلغ این بازگشت وجه با پرونده هم‌خوان نیست؛ برای جلوگیری از مبلغ نادرست، اقدامی ارسال نمی‌شود.",
+    };
+  }
+  const attempt = matches[0]!;
+  return { kind: "amount", amount: attempt.amount, currency: attempt.currency || snapshot.currency };
+}
+
+/**
  * TB-280: the ONE sentence that answers "what is this case waiting for?", in the words a shopkeeper uses. It is a
  * presentation of the SAME stored facts the actions read — it never invents a step the server would refuse.
  */
@@ -95,7 +147,7 @@ function describeNextStep(snapshot: ReturnSnapshot | null | undefined, work: Ret
   if (!work) return "وضعیت این پرونده خوانده نشد.";
   switch (work.category) {
     case "receiving":
-      return receivedUnitsOf(snapshot) > 0
+      return hasAnyReceivedGoods(snapshot)
         ? "بخشی از کالا دریافت شده است. اگر باقی کالا برنمی‌گردد، با «بررسی مرجوعی» تکلیف مقدار دریافت‌شده را مشخص کنید."
         : "هنوز کالایی دریافت نشده است؛ ابتدا دریافت کالا را ثبت کنید.";
     case "decision":
@@ -118,6 +170,11 @@ function describeNextStep(snapshot: ReturnSnapshot | null | undefined, work: Ret
 function formatRial(amount: number, currency: string): string {
   const formatted = new Intl.NumberFormat("fa-IR").format(Math.max(0, Math.round(amount)));
   return `${formatted} ${currency === "IRR" ? "ریال" : currency}`;
+}
+
+/** TB-280-R1 UX2: short ceiling refusal beside the field — no decimal-precision lesson. */
+function describeAcceptedCeilingProblem(ceiling: number, unitLabel: string | null | undefined): string {
+  return `بیشتر از ${formatQuantityDisplayFa(unitsToWireNumber(ceiling) ?? 0)} ${formatUnitLabel(unitLabel)} وارد نکنید.`;
 }
 
 /**
@@ -512,6 +569,12 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
    * it is offered only while the owning work description publishes it (`canStartRefund`).
    */
   const reviewStartRefund = useCallback(() => {
+    if (!snapshot) return;
+    const money = firstRefundReviewMoney(snapshot);
+    if (money.kind === "unavailable") {
+      setNotice({ title: "اقدام انجام نشد", text: money.message });
+      return;
+    }
     const intent = buildReturnReviewIntent({
       action: "start_refund",
       target: "returns",
@@ -520,7 +583,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
         kind: "start_refund",
         // TB-279-R2 (R1-A): the reviewed EFFECTIVE decision revision is frozen with the command, so a correction
         // published after this review refuses the start instead of sending money against an unread plan.
-        expectedDecisionVersion: snapshot?.decisionVersion ?? 0,
+        expectedDecisionVersion: snapshot.decisionVersion ?? 0,
       },
     });
     if (!intent) {
@@ -529,7 +592,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
     }
     setReviewing(null);
     void send(intent);
-  }, [returnRequestId, send, snapshot?.decisionVersion]);
+  }, [returnRequestId, send, snapshot]);
 
   const reviewDecision = useCallback(
     (action: "approve" | "reject", reason: string | null) => {
@@ -575,21 +638,29 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       let body: Record<string, unknown>;
       if (action === "resume_refund") {
         const attemptId = work?.pendingRefundAttemptId ?? null;
-        if (!attemptId) {
-          setNotice({
-            title: "اقدام انجام نشد",
-            text: "اطلاعات بازگشت وجه در جریان کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
-          });
+        const money = snapshot
+          ? boundAttemptReviewMoney(
+              snapshot,
+              attemptId,
+              "اطلاعات بازگشت وجه در جریان کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
+            )
+          : { kind: "unavailable" as const, message: "اطلاعات پرونده برای پیگیری بازگشت وجه در دسترس نیست." };
+        if (money.kind === "unavailable") {
+          setNotice({ title: "اقدام انجام نشد", text: money.message });
           return;
         }
         body = { kind: "resume_pending_refund", expectedRefundAttemptId: attemptId };
       } else if (action === "retry_refund") {
         const failedId = work?.failedRefundAttemptId ?? null;
-        if (!failedId) {
-          setNotice({
-            title: "اقدام انجام نشد",
-            text: "اطلاعات بازگشت وجه ناموفق کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
-          });
+        const money = snapshot
+          ? boundAttemptReviewMoney(
+              snapshot,
+              failedId,
+              "اطلاعات بازگشت وجه ناموفق کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
+            )
+          : { kind: "unavailable" as const, message: "اطلاعات پرونده برای تلاش دوباره در دسترس نیست." };
+        if (money.kind === "unavailable") {
+          setNotice({ title: "اقدام انجام نشد", text: money.message });
           return;
         }
         body = {
@@ -613,7 +684,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       setReviewing(null);
       void send(intent);
     },
-    [returnRequestId, send, work?.failedRefundAttemptId, work?.pendingRefundAttemptId, snapshot?.decisionVersion],
+    [returnRequestId, send, work?.failedRefundAttemptId, work?.pendingRefundAttemptId, snapshot],
   );
 
   /**
@@ -647,19 +718,17 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
       // TB-279-R2: each accepted portion is bounded by ITS OWN inspected condition, not by a shared total.
       const usableCeiling = unitsFromWireNumber(line.usable);
       const damagedCeiling = unitsFromWireNumber(line.damaged);
+      // Empty accepted fields mean deliberate zero. A zero-received item has no quantity inputs and is accounted as
+      // rejected-unreceived with its required reason; never invent a quantity or a generic reason.
       const acceptedUsable = evaluateAcceptedPortion(line.acceptedUsable.trim() === "" ? "0" : line.acceptedUsable, places, usableCeiling);
       const acceptedDamaged = evaluateAcceptedPortion(line.acceptedDamaged.trim() === "" ? "0" : line.acceptedDamaged, places, damagedCeiling);
-      if (line.acceptedUsable === "" && line.acceptedDamaged === "") {
-        setNotice({
-          title: "بررسی کامل نیست",
-          text: `برای قلم «${line.label}» مقدار پذیرفته‌شده را وارد کنید (اگر هیچ مقداری پذیرفته نشد، ۰).`,
-        });
-        return;
-      }
       if (acceptedUsable.problem || acceptedDamaged.problem) {
         setNotice({
           title: "مقدار این قلم معتبر نیست",
-          text: `قلم «${line.label}»: مقدار پذیرفته‌شده باید با واحد همین قلم و در محدودهٔ همان وضعیتِ دریافت‌شده باشد.`,
+          text: `قلم «${line.label}»: ${describeAcceptedCeilingProblem(
+            (acceptedUsable.problem ? usableCeiling : damagedCeiling) ?? 0,
+            line.unitLabel,
+          )}`,
         });
         return;
       }
@@ -817,24 +886,34 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
   const custodyOffered =
     actionCodes.includes("record_custody") && (snapshot?.resolution?.lines.some((line) => line.rejected > 0) ?? false);
 
-  // TB-280: the reviewed per-item plan starts from what ACTUALLY arrived, never from the requested quantity, so an
-  // operator cannot "accept" goods the shop never received.
+  // TB-280-R1 UX2: initialize from the EXACT per-condition accepted facts (never aggregate `accepted` into usable).
+  // Empty fields remain a deliberate zero; only conditions with a positive received ceiling are editable later.
   const beginResolution = () => {
     if (!snapshot) return;
     setResolutionDraft(
       snapshot.items.map((item) => {
         const line = snapshot.resolution?.lines.find((entry) => entry.returnItemId === item.returnItemId);
         const receivedLine = snapshot.receiving?.lines.find((entry) => entry.returnItemId === item.returnItemId);
+        const usable = receivedLine?.usable ?? 0;
+        const damaged = receivedLine?.damaged ?? 0;
+        const usableCeiling = unitsFromWireNumber(usable) ?? 0;
+        const damagedCeiling = unitsFromWireNumber(damaged) ?? 0;
         return {
           returnItemId: item.returnItemId,
           label: item.productLabel ?? "کالای سفارش",
           unitLabel: item.unitLabel ?? "",
           requested: receivedLine?.requested ?? item.quantity,
           received: receivedLine?.received ?? 0,
-          usable: receivedLine?.usable ?? 0,
-          damaged: receivedLine?.damaged ?? 0,
-          acceptedUsable: line ? formatQuantityDisplayFa(line.accepted) : "",
-          acceptedDamaged: "",
+          usable,
+          damaged,
+          acceptedUsable:
+            usableCeiling > 0 && line && line.acceptedUsable !== null && line.acceptedUsable !== undefined
+              ? formatQuantityDisplayFa(line.acceptedUsable)
+              : "",
+          acceptedDamaged:
+            damagedCeiling > 0 && line && line.acceptedDamaged !== null && line.acceptedDamaged !== undefined
+              ? formatQuantityDisplayFa(line.acceptedDamaged)
+              : "",
           reason: line?.reason ?? "",
         };
       }),
@@ -1126,16 +1205,7 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                 <dt className="text-muted">مقصد بازگشت وجه</dt>
                 <dd>{formatRefundDestination(snapshot.destination)}</dd>
                 <dt className="text-muted">دریافت کالا</dt>
-                <dd data-testid="admin-return-received-summary">
-                  {receivedUnitsOf(snapshot) > 0
-                    ? `${formatQuantityDisplayFa(unitsToWireNumber(receivedUnitsOf(snapshot)))} از ${formatQuantityDisplayFa(
-                        unitsToWireNumber(sumUnitsOf(snapshot.items.map((item) => {
-                          const line = snapshot.receiving?.lines.find((entry) => entry.returnItemId === item.returnItemId);
-                          return line?.requested ?? item.quantity;
-                        }))),
-                      )}`
-                    : "هنوز کالایی دریافت نشده است"}
-                </dd>
+                <dd data-testid="admin-return-received-summary">{describeReceivedGoodsSummary(snapshot)}</dd>
                 <dt className="text-muted">وضعیت مرجوعی</dt>
                 <dd><span className={returnStatusBadgeClass(snapshot.status)}>{formatReturnStatus(snapshot.status)}</span></dd>
                 <dt className="text-muted">تصمیم</dt>
@@ -1490,30 +1560,51 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           {reviewing === "start_refund" ? (
             <Dialog open title="بازگشت وجه" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-start-refund-form">
-                <p>
-                  این اقدام، <strong>بازگشت وجه این پرونده</strong> را ثبت و به درگاه پرداخت ارسال می‌کند:</p>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
-                  <dt className="text-muted">مبلغ</dt>
-                  <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
-                  <dt className="text-muted">مقصد</dt>
-                  <dd>{formatRefundDestination(snapshot.destination)}</dd>
-                  <dt className="text-muted">پرداخت مبدأ</dt>
-                  <dd>{snapshot.paymentId ? "به همین پرونده متصل است" : "ثبت نشده"}</dd>
-                  <dt className="text-muted">تصمیم ثبت‌شده</dt>
-                  <dd>تأیید مرجوعی</dd>
-                </dl>
-                <p className="text-muted">
-                  تأیید مرجوعی به‌تنهایی هیچ وجهی جابه‌جا نمی‌کند؛ این پنجره همان اقدام مالی جداگانه است. اگر دوباره کلیک
-                  کنید یا پاسخ قطع شود، همان درخواست تکرار می‌شود و مبلغ دوباره کم نمی‌شود.
-                </p>
-                <div className="flex flex-wrap justify-end gap-2">
-                  <Button tone="secondary" type="button" onClick={closeReview}>
-                    انصراف
-                  </Button>
-                  <Button type="button" onClick={reviewStartRefund} data-testid="admin-return-start-refund-confirm">
-                    بازگشت وجه
-                  </Button>
-                </div>
+                {(() => {
+                  const money = firstRefundReviewMoney(snapshot);
+                  return (
+                    <>
+                      <p>
+                        این اقدام، <strong>بازگشت وجه این پرونده</strong> را ثبت و به درگاه پرداخت ارسال می‌کند:
+                      </p>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
+                        <dt className="text-muted">مبلغ</dt>
+                        <dd data-testid="admin-return-start-refund-amount">
+                          {money.kind === "amount" ? formatRial(money.amount, money.currency) : "نامشخص"}
+                        </dd>
+                        <dt className="text-muted">مقصد</dt>
+                        <dd>{formatRefundDestination(snapshot.destination)}</dd>
+                        <dt className="text-muted">پرداخت مبدأ</dt>
+                        <dd>{snapshot.paymentId ? "به همین پرونده متصل است" : "ثبت نشده"}</dd>
+                        <dt className="text-muted">تصمیم ثبت‌شده</dt>
+                        <dd>تأیید مرجوعی</dd>
+                      </dl>
+                      {money.kind === "unavailable" ? (
+                        <p className="text-amber-800" role="alert" data-testid="admin-return-start-refund-unavailable">
+                          {money.message}
+                        </p>
+                      ) : (
+                        <p className="text-muted">
+                          تأیید مرجوعی به‌تنهایی هیچ وجهی جابه‌جا نمی‌کند؛ این پنجره همان اقدام مالی جداگانه است. اگر دوباره
+                          کلیک کنید یا پاسخ قطع شود، همان درخواست تکرار می‌شود و مبلغ دوباره کم نمی‌شود.
+                        </p>
+                      )}
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button tone="secondary" type="button" onClick={closeReview}>
+                          انصراف
+                        </Button>
+                        <Button
+                          type="button"
+                          disabled={money.kind === "unavailable"}
+                          onClick={reviewStartRefund}
+                          data-testid="admin-return-start-refund-confirm"
+                        >
+                          بازگشت وجه
+                        </Button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </Dialog>
           ) : null}
@@ -1659,24 +1750,47 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           {reviewing === "resume_refund" ? (
             <Dialog open title="پیگیری بازگشت وجه" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-resume-form">
-                <p>
-                  نتیجهٔ بازگشت وجهی که در جریان است دوباره بررسی می‌شود؛ همین مبلغ پیگیری می‌شود و بازگشت وجه تازه‌ای
-                  ساخته نمی‌شود.
-                </p>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
-                  <dt className="text-muted">مبلغ</dt>
-                  <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
-                  <dt className="text-muted">مقصد</dt>
-                  <dd>{formatRefundDestination(snapshot.destination)}</dd>
-                </dl>
-                <div className="flex flex-wrap justify-end gap-2">
-                  <Button tone="secondary" type="button" onClick={closeReview}>
-                    انصراف
-                  </Button>
-                  <Button type="button" onClick={() => reviewRecovery("resume_refund")} data-testid="admin-return-resume-confirm">
-                    ارسال دوبارهٔ همان تلاش
-                  </Button>
-                </div>
+                {(() => {
+                  const money = boundAttemptReviewMoney(
+                    snapshot,
+                    work?.pendingRefundAttemptId,
+                    "اطلاعات بازگشت وجه در جریان کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
+                  );
+                  return (
+                    <>
+                      <p>
+                        نتیجهٔ بازگشت وجهی که در جریان است دوباره بررسی می‌شود؛ همین مبلغ پیگیری می‌شود و بازگشت وجه تازه‌ای
+                        ساخته نمی‌شود.
+                      </p>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
+                        <dt className="text-muted">مبلغ</dt>
+                        <dd data-testid="admin-return-resume-amount">
+                          {money.kind === "amount" ? formatRial(money.amount, money.currency) : "نامشخص"}
+                        </dd>
+                        <dt className="text-muted">مقصد</dt>
+                        <dd>{formatRefundDestination(snapshot.destination)}</dd>
+                      </dl>
+                      {money.kind === "unavailable" ? (
+                        <p className="text-amber-800" role="alert" data-testid="admin-return-resume-unavailable">
+                          {money.message}
+                        </p>
+                      ) : null}
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button tone="secondary" type="button" onClick={closeReview}>
+                          انصراف
+                        </Button>
+                        <Button
+                          type="button"
+                          disabled={money.kind === "unavailable"}
+                          onClick={() => reviewRecovery("resume_refund")}
+                          data-testid="admin-return-resume-confirm"
+                        >
+                          ارسال دوبارهٔ همان تلاش
+                        </Button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </Dialog>
           ) : null}
@@ -1684,23 +1798,46 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
           {reviewing === "retry_refund" ? (
             <Dialog open title="تلاش دوبارهٔ بازگشت وجه" onClose={closeReview} showCloseButton={false}>
               <div className="space-y-3 text-sm" data-testid="admin-return-retry-form">
-                <p>
-                  بازگشت وجهی که قبلاً <strong>ناموفق</strong> بوده یک بار دیگر انجام می‌شود؛ مبلغ دوباره کم نمی‌شود.
-                </p>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
-                  <dt className="text-muted">مبلغ</dt>
-                  <dd>{formatRial(snapshot.refundAmount, snapshot.currency)}</dd>
-                  <dt className="text-muted">مقصد</dt>
-                  <dd>{formatRefundDestination(snapshot.destination)}</dd>
-                </dl>
-                <div className="flex flex-wrap justify-end gap-2">
-                  <Button tone="secondary" type="button" onClick={closeReview}>
-                    انصراف
-                  </Button>
-                  <Button type="button" onClick={() => reviewRecovery("retry_refund")} data-testid="admin-return-retry-confirm">
-                    ثبت تلاش دوباره
-                  </Button>
-                </div>
+                {(() => {
+                  const money = boundAttemptReviewMoney(
+                    snapshot,
+                    work?.failedRefundAttemptId,
+                    "اطلاعات بازگشت وجه ناموفق کامل نیست؛ برای جلوگیری از اقدام ناشناخته، درخواستی ارسال نشد.",
+                  );
+                  return (
+                    <>
+                      <p>
+                        بازگشت وجهی که قبلاً <strong>ناموفق</strong> بوده یک بار دیگر انجام می‌شود؛ مبلغ دوباره کم نمی‌شود.
+                      </p>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-xl border border-border p-3">
+                        <dt className="text-muted">مبلغ</dt>
+                        <dd data-testid="admin-return-retry-amount">
+                          {money.kind === "amount" ? formatRial(money.amount, money.currency) : "نامشخص"}
+                        </dd>
+                        <dt className="text-muted">مقصد</dt>
+                        <dd>{formatRefundDestination(snapshot.destination)}</dd>
+                      </dl>
+                      {money.kind === "unavailable" ? (
+                        <p className="text-amber-800" role="alert" data-testid="admin-return-retry-unavailable">
+                          {money.message}
+                        </p>
+                      ) : null}
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button tone="secondary" type="button" onClick={closeReview}>
+                          انصراف
+                        </Button>
+                        <Button
+                          type="button"
+                          disabled={money.kind === "unavailable"}
+                          onClick={() => reviewRecovery("retry_refund")}
+                          data-testid="admin-return-retry-confirm"
+                        >
+                          ثبت تلاش دوباره
+                        </Button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </Dialog>
           ) : null}
@@ -1821,59 +1958,73 @@ export function AdminReturnWorkspace({ returnRequestId }: { returnRequestId: str
                               unitsFromWireNumber(line.received) ?? 0,
                             ),
                           ) ?? 0;
+                    const showUsable = (usableCeiling ?? 0) > 0;
+                    const showDamaged = (damagedCeiling ?? 0) > 0;
+                    const nothingReceived = !showUsable && !showDamaged;
                     return (
-                      <div key={line.returnItemId} className="rounded-xl border border-border p-3">
+                      <div key={line.returnItemId} className="rounded-xl border border-border p-3" data-testid={`admin-return-resolution-line-${index}`}>
                         <p className="font-semibold">{line.label}</p>
                         <p className="text-muted">
                           واحد: {formatUnitLabel(line.unitLabel)} · درخواست: {formatQuantityDisplayFa(line.requested)} ·
                           دریافت‌شده: {formatQuantityDisplayFa(line.received)}
                         </p>
-                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          <label className="block">
-                            <span className="block text-muted">
-                              پذیرفته‌شدهٔ سالم (حداکثر {formatQuantityDisplayFa(line.usable)})
-                            </span>
-                            <input
-                              className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
-                              inputMode="decimal"
-                              value={line.acceptedUsable}
-                              aria-invalid={acceptedUsableCheck?.problem ? true : undefined}
-                              onChange={(event) => {
-                                const next = [...resolutionDraft];
-                                next[index] = { ...line, acceptedUsable: event.target.value };
-                                setResolutionDraft(next);
-                              }}
-                              data-testid={`admin-return-resolution-accepted-usable-${index}`}
-                            />
-                            {acceptedUsableCheck?.problem ? (
-                              <span className="mt-1 block text-xs text-red-700" role="alert">
-                                مقدار باید با دقت واحد همین قلم و در محدودهٔ سالمِ دریافت‌شده باشد.
-                              </span>
+                        {nothingReceived ? (
+                          <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800" data-testid={`admin-return-resolution-not-received-${index}`}>
+                            این قلم دریافت نشده است؛ مقدار پذیرفته‌شده برای آن صفر می‌ماند و باقی درخواست به‌عنوان دریافت‌نشده
+                            حساب می‌شود.
+                          </p>
+                        ) : (
+                          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            {showUsable ? (
+                              <label className="block">
+                                <span className="block text-muted">
+                                  پذیرفته‌شدهٔ سالم (حداکثر {formatQuantityDisplayFa(line.usable)} {formatUnitLabel(line.unitLabel)})
+                                </span>
+                                <input
+                                  className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
+                                  inputMode="decimal"
+                                  value={line.acceptedUsable}
+                                  aria-invalid={acceptedUsableCheck?.problem ? true : undefined}
+                                  onChange={(event) => {
+                                    const next = [...resolutionDraft];
+                                    next[index] = { ...line, acceptedUsable: event.target.value };
+                                    setResolutionDraft(next);
+                                  }}
+                                  data-testid={`admin-return-resolution-accepted-usable-${index}`}
+                                />
+                                {acceptedUsableCheck?.problem ? (
+                                  <span className="mt-1 block text-xs text-red-700" role="alert">
+                                    {describeAcceptedCeilingProblem(usableCeiling ?? 0, line.unitLabel)}
+                                  </span>
+                                ) : null}
+                              </label>
                             ) : null}
-                          </label>
-                          <label className="block">
-                            <span className="block text-muted">
-                              پذیرفته‌شدهٔ معیوب (حداکثر {formatQuantityDisplayFa(line.damaged)})
-                            </span>
-                            <input
-                              className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
-                              inputMode="decimal"
-                              value={line.acceptedDamaged}
-                              aria-invalid={acceptedDamagedCheck?.problem ? true : undefined}
-                              onChange={(event) => {
-                                const next = [...resolutionDraft];
-                                next[index] = { ...line, acceptedDamaged: event.target.value };
-                                setResolutionDraft(next);
-                              }}
-                              data-testid={`admin-return-resolution-accepted-damaged-${index}`}
-                            />
-                            {acceptedDamagedCheck?.problem ? (
-                              <span className="mt-1 block text-xs text-red-700" role="alert">
-                                مقدار باید با دقت واحد همین قلم و در محدودهٔ معیوبِ دریافت‌شده باشد.
-                              </span>
+                            {showDamaged ? (
+                              <label className="block">
+                                <span className="block text-muted">
+                                  پذیرفته‌شدهٔ معیوب (حداکثر {formatQuantityDisplayFa(line.damaged)} {formatUnitLabel(line.unitLabel)})
+                                </span>
+                                <input
+                                  className="mt-1 min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm"
+                                  inputMode="decimal"
+                                  value={line.acceptedDamaged}
+                                  aria-invalid={acceptedDamagedCheck?.problem ? true : undefined}
+                                  onChange={(event) => {
+                                    const next = [...resolutionDraft];
+                                    next[index] = { ...line, acceptedDamaged: event.target.value };
+                                    setResolutionDraft(next);
+                                  }}
+                                  data-testid={`admin-return-resolution-accepted-damaged-${index}`}
+                                />
+                                {acceptedDamagedCheck?.problem ? (
+                                  <span className="mt-1 block text-xs text-red-700" role="alert">
+                                    {describeAcceptedCeilingProblem(damagedCeiling ?? 0, line.unitLabel)}
+                                  </span>
+                                ) : null}
+                              </label>
                             ) : null}
-                          </label>
-                        </div>
+                          </div>
+                        )}
                         <p className="mt-2 text-xs text-muted" data-testid={`admin-return-resolution-derived-${index}`}>
                           رد‌شدهٔ دریافت‌شده: سالم {formatQuantityDisplayFa(rejectedReceivedUsable)} · معیوب{" "}
                           {formatQuantityDisplayFa(rejectedReceivedDamaged)} · دریافت‌نشده{" "}

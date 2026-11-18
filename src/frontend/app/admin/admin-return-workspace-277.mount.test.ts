@@ -408,12 +408,17 @@ test("usable and damaged portions of ONE line share the same ceiling", async () 
 
 test("approve records the decision only, and the first refund is a separate reviewed command", async () => {
   window.sessionStorage.clear();
-  const snapshot = fixture([{ returnItemId: "ri-1", requested: 2, received: 2 }], {
-    categoryCode: "decision",
-    canDecide: true,
-    canStartRefund: true,
-    actionCodes: ["approve_return", "reject_return", "start_refund"],
-  });
+  // TB-280-R1: the first-refund review shows the stored approved amount; a fixture without that fact must refuse send.
+  const snapshot = {
+    ...fixture([{ returnItemId: "ri-1", requested: 2, received: 2 }], {
+      categoryCode: "decision",
+      canDecide: true,
+      canStartRefund: true,
+      actionCodes: ["approve_return", "reject_return", "start_refund"],
+    }),
+    approvedAmount: 2407839,
+    decisionVersion: 0,
+  };
   const stub = stubFetch(snapshot);
   const tree = await mount(createElement(AdminReturnWorkspace, { returnRequestId: CASE_ID }));
   try {

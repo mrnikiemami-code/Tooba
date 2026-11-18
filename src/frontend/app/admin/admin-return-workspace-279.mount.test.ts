@@ -241,9 +241,10 @@ test("the resolution dialog refuses an over-received split locally and sends one
     await click(q(tree.container, "[data-testid='admin-return-resolution-confirm']"));
     await flush();
     assert.equal(stub.posts().length, 0, "an over-received split never leaves the surface");
+    // TB-280-R1: ceiling refusal is plain shop language beside/above the field, not a "دریافت‌شده" lesson.
     assert.match(
       (q(tree.container, "[data-testid='admin-return-notice']").closest("dialog") ?? q(tree.container, "[data-testid='admin-return-notice']")).textContent ?? "",
-      /دریافت‌شده/,
+      /بیشتر از ۲ عدد وارد نکنید|مقدار این قلم معتبر نیست/,
     );
 
     // A damaged acceptance above the damaged ceiling is refused by the SAME per-condition rule.
