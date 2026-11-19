@@ -1,4 +1,13 @@
-# CURRENT — TB-281-R4 WORKER PASS; AWAIT ARCHITECT — 2026-11-19
+# CURRENT — TB-281-R4 SOURCE REVIEW REQUIRES REPAIR; ONLY 281-R5 ISSUED — 2026-11-19
+
+Code reviewed 1c7a7789344f1367875f882b687aa608dd5a0fdd; final source/docs head aad32713b7486c429dbbfb5e948e95e30eb6bb67.
+Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/ARCHITECT-REVIEW.md. R4 worker PASS is NOT accepted as full A/B/C: owner edit replay missing, update intent incomplete, schedule replay after stale gate, duplicate arbitration absent, ambient/enlistment and relational claims exceed assertions.
+Only issued task TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5; exact docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/TASK.md. Preserve R4 progress; close specific source defects and truthful focused tests, no new product design/schema/live data.
+One worker tooba-worker-01/tooba-main, await this result; issued is not running. No automatic next task or parallel work.
+Shared Orders-style UI remains PLANNED NOT ISSUED until owning-path review closes. Mandatory seller integration: purchased-template EXISTING VendorShell /vendor-panel/stories with existing story.view menu/auth/context; shared feature, no new seller panel/menu/login. See SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
+Returns acceptance/payout backlog/user data/key state untouched. Worker PASS != Architect ACCEPT != user acceptance. automaticNextImplementationTask NONE.
+
+# HISTORICAL — superseded by CURRENT above
 
 Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/{RESULT.md,RECEIPTS.md,COMPLETION-LEDGER.md}.
 Worker PASS within issued A/B/C: transport+gates+Media failure injection+PG C1/C2/C3; focused 46/46; ZERO migration; ZERO live Story/Media write; UI PLANNED_NOT_ISSUED; VendorShell /vendor-panel/stories mandatory for future UI. Expected-Base 14b2395ee…. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
