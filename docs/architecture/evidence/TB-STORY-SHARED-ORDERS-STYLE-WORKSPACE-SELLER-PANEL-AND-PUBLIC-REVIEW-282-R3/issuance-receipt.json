@@ -1,0 +1,13 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3",
+  "parentTask": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2",
+  "expectedBaseSha": "9776ab9623aadb2d58f001113ce8269039b11a94",
+  "date": "2026-11-19",
+  "taskBytes": 7829,
+  "taskSha256": "2aa26026b39d3d396e2de13afcecd8ef5bfc3e9d9b00999084c67799d642435a",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "stopState": "STOP_FOR_ARCHITECT_AND_USER_REVIEW",
+  "automaticNextImplementationTask": "NONE"
+}

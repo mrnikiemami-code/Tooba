@@ -1,4 +1,8 @@
-# CURRENT — 282-R1 PARTIAL; only 282-R2 issued — 2026-11-19
+# CURRENT — existing seller integration retained; only 282-R3 issued — 2026-11-19
+
+Current task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3 closes response evidence and real catalogue search only. Existing VendorShell/story.view/shared editor remain; no parallel panel/menu/login. Previous task/status paragraphs below are historical. Await R3 result, no automatic next.
+
+# HISTORICAL — superseded by CURRENT above
 
 Existing VendorShell/story.view integration remains mandatory. Current task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2 finishes actual recovery, lawful lookup/date UI, scoped grid/shell and served proof. No duplicate panel/menu/login. Historical status blocks below do not issue tasks. Await R2 result; automaticNextImplementationTask NONE.
 

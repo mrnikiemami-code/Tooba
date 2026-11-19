@@ -1,4 +1,14 @@
-# CURRENT — TB-282-R1 REVIEWED PARTIAL; ONLY TB-282-R2 ISSUED — 2026-11-19
+# CURRENT — TB-282-R2 SCOPED PROGRESS REVIEWED; ONLY TB-282-R3 ISSUED — 2026-11-19
+
+Reviewed code 2085d39d5641c387008edccaff5294b18ca8f4ae; final docs head 9776ab9623aadb2d58f001113ce8269039b11a94.
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2/ARCHITECT-REVIEW.md. Retain real recovery dispatch, lawful role lookup endpoints, current Tehran/Jalali controls, same-tab scope event and platform asset-PK implementation/current served build. Full product closure NOT accepted.
+Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3/TASK.md. Two remaining gaps ONLY: S1 bound successful response/envelope-storage evidence (malformed 2xx must retain intent); S2 actual full eligible-catalogue search/page/count (no development sampler/fixed40).
+One worker tooba-worker-01/tooba-main; issued is not running. Await this result/review; no automatic next or parallel task. No reopening 281/Gate0/Media/editor/untouched landing.
+Worker served Host30848 and Next29064 BUILD_ID j3IOV0KOGPfOZrB3IX_SK. Owner may inspect current visible UI at /fa/admin/stories and /fa/vendor-panel/stories; no claim full functional/user acceptance. Worker continues READ-ONLY on live business rows.
+Purchased-template EXISTING VendorShell /vendor-panel/stories/story.view, shared feature and plain merchant language remain mandatory. ZERO migration/seed/live writes/key operations. Returns acceptances/payout backlog/user data unchanged.
+automaticNextImplementationTask NONE.
+
+# HISTORICAL — superseded by CURRENT above
 
 Reviewed feature 98d3e1fcdaf74227e22034325cbdef639b0d5d78 + stub compile fix 77cb3d9bf12c7ec9cbd70c28e0cc9515c1937789; final d0c09e2ed340bdf82c9a6e4ae8eaeb8f7ed96d58.
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1/ARCHITECT-REVIEW.md. Worker PASS is NOT accepted as full F1-F5. Retain routes/name-picker/editor/action controls/scoped views/product href and explicit Gate0-owned ids progress.
