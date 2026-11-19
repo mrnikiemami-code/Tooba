@@ -1,3 +1,17 @@
+# CURRENT — R12 LAYOUT REPAIR ACCEPTED; AWAIT OWNER REVIEW — 2026-11-20
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12/ARCHITECT-REVIEW.md
+Code d07ce9d90c0fefca6df53613ffc4a39ac167a393 / evidence 99c1e1181750c5c32a7e71412c9534d3e7f464bc.
+Decision ACCEPT_LAYOUT_REPAIR_FOR_OWNER_REVIEW. Shared create/edit header checkbox and stable equal date/time columns accepted from source/worker receipts. Desktop day/time diff0; mobile start-then-end, no overflow reported on active admin forms; seller shares component, not separately measured.
+State: AWAITING_OWNER_REVIEW
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_USER_REVIEW
+No R13 automatically. Owner rechecks no-end toggle. ZERO backend/live save scope. Existing Story functional/owner acceptance and production Html404 build blocker remain unchanged; frontend next-dev. Architect reviewed source/evidence, did not rerun Windows live geometry.
+Preserve VendorShell, local recovery, date/retry rules, Returns/payout/user work and R6 effects UNKNOWN.
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — OWNER TOGGLE LAYOUT FAILURE; ONLY TB-282-R12 ISSUED — 2026-11-20
 
 Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12
