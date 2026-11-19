@@ -1,3 +1,19 @@
+# CURRENT — R13 B ACCEPTED; ONLY R14 BULK CLOSURE ISSUED — 2026-11-20
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/ARCHITECT-REVIEW.md
+Code41bbd1e97e526641ded1260a741ec6d1e8129d38 / evidence eae4b3196823a874b04b5987a87e5f4504584f89. No-end END-label layout and single-operation wiring retained. Full bulk PASS not accepted: result.items dropped into count toast; batch continues captured old scope after per-request stale_epoch; no actual multi-selected-grid command test.
+Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14
+Expected-Base-SHA: eae4b3196823a874b04b5987a87e5f4504584f89
+Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/TASK.md
+Only two repairs: stop batch on epoch/actor/scope change with untouched rows not-started; visible per-title results and exact unresolved retry. One actual selected-grid mixed/partial test, no whole task-series rerun/redesign/backend change.
+One worker tooba-worker-01/tooba-main, issued NOT claimed/running.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14 (ISSUED_NOT_CLAIMED)
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Preserve VendorShell/R5–R13/owner fences/language registry/Returns/payout/user work. ZERO live business writes/migrations/seeds/grants/screenshots/delegation/polling. Html404 production release blocker/R6 UNKNOWN retained.
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — TB-282-R13 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/TASK.md` and
