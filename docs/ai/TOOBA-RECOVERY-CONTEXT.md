@@ -1,3 +1,17 @@
+# CURRENT — R17 TOAST PRESENTATION ACCEPTED; OWNER CHECK PENDING — 2026-11-20
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17/ARCHITECT-REVIEW.md
+Code 4b3e94724810fa7b3f395507825486bddb798100 / evidence 1a42d19a9266f6cdd32afc9c34075e71820856d4.
+Decision ACCEPT_TOAST_AND_COMPACT_CONFIRM_PRESENTATION_FOR_LOCAL_OWNER_CHECK. No impossible zero-eligible dialog; one native toast; compact confirmation counts/grouped reasons; no result modal. Owner R17 direction supersedes prior visible per-row modal requirement; safety retained.
+State: AWAITING_LOCAL_OWNER_CHECK
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_USER_REVIEW
+No R18 issued. Source/worker evidence reviewed, not architect-run Windows/browser proof. 1000 test is helper-only, NOT measured mounted DOM/performance/live 1000 deletes; missing proof and mixed-test wrong-story response limitations recorded in review. Not full task-proof/product/release/owner acceptance.
+Host5088 skip-bootstrap=1 / FE3000 next-dev; Html404 production blocker unchanged. ZERO backend/auth/schema/grant/seed/live Story-Media changes. Preserve R16 typing, durable retry/epoch, VendorShell/language registry/date layout, Returns/payout/user work, critical-storefront limitation and R6 effects UNKNOWN.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — OWNER REJECTED MODERATION FEEDBACK; R17 ISSUED — 2026-11-20
 
 Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17/TASK.md
