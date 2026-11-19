@@ -23,5 +23,5 @@ Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
 - Served next-dev controlled: zero-eligible toast «استوری‌های ویترین اصلی به تأیید نیاز ندارند.»; compact reject confirm processable ۲ / 1 skip group; cancel 0 command POST
 - Host5088 skip-bootstrap healthy; ZERO backend / live Story-Media write
 
-Code SHA: *(after commit)*
+Code SHA: `4b3e94724810fa7b3f395507825486bddb798100`
 User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`
