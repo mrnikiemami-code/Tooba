@@ -1,5 +1,9 @@
 # CURRENT — TB-281-R2 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
 
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+صاحب محصول تأکید کرد استوری باید در پنل فروشندهٔ موجود قالب تکمیل شود، نه پنل تازه. سورس بررسی شد: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» با مجوز `story.view` و مسیر `/vendor-panel/stories` از قبل وجود دارد؛ صفحه همان feature مشترک را با قابلیت فروشنده می‌گیرد. مرجع اجباری تسک UI آینده: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پوسته، ناوبری و auth/context موجود حفظ شوند؛ منو/پنل/ورود موازی ساخته نشود. این فقط یادداشت است؛ UI هنوز NOT ISSUED و automaticNextImplementationTask NONE.
+
 Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2/TASK.md` and
 `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,remaining-scope-closure.md,media-failure-proof.md,rollback-only-proof.md,schema-and-runtime-proof.md,ui-contract-handoff.md,issuance-receipt.json}`.
 Status **PARTIAL** within issued R2: Media atomic seller upload + CQRS seller/admin-for-shop; stop→return cycle; seller query; admin shop-name filter; product CTA port; cover bind on shop paths; seller create/add/stop/return occurrence; Host skip-bootstrap refresh; focused InMemory+AMSC proof. OPEN: Media recording-store suite, PG rollback G1–G7, full all-route occurrence matrix, canonical public shop id.
