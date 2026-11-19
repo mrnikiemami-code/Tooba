@@ -1,4 +1,18 @@
-# CURRENT — TB-282-R5 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+# CURRENT — STORY READY FOR OWNER TEST; NO IMPLEMENTATION TASK ACTIVE — 2026-11-19
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/ARCHITECT-REVIEW.md
+Reviewed code 352a252ad9cf21645cf54c2d71a51e91c4da9d98 / implementation-evidence main 71e489bcd7a0a1b871dad6bcec86bca1050c6e96.
+Decision ACCEPT_FOR_OWNER_TEST_WITH_DECLARED_LIMITS. Product names are bound per slide; shared edit uses existing update-item with preserved media; actual Catalog query >40 proof present at EF InMemory scope. No further automatic repair task. Full A-D proof certification/user/commercial acceptance NOT claimed.
+State: AWAITING_OWNER_TEST
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_USER_REVIEW
+User requested fast handoff: now user tests admin creation/main-or-shop, seller own-shop/product slides+edit/reload, submit -> admin moderation -> public playback/product/shop link, mobile grid/form. Title first/actions last existing logical-end pin must be checked in real active UI.
+Important evidence limits: shell-only served geometry is NOT active editor/grid proof; retention test is direct executor, not mounted pending-card/no-toast; detailed limitations in review. Do not reopen task series solely to recertify these before owner feedback. Actual owner failure -> one narrow justified repair.
+URLs http://127.0.0.1:3000/fa/admin/stories ; http://127.0.0.1:3000/fa/vendor-panel/stories ; http://127.0.0.1:3000/fa
+Worker reported Next BUILD_ID SpxfHsxtpvAChwrYh4xI7 / Host29956; Architect source review only, no live writes/tests. No business fixtures/seeds/migrations. Existing VendorShell/story.view, Returns/payout backlog/separate key state preserved.
+
+# HISTORICAL — superseded by CURRENT above
 
 Read docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/TASK.md and evidence TB-...-282-R5/{RESULT,RECEIPTS,COMPLETION-LEDGER,user-review}.
 Status PASS within issued A–D (F1 CtaProductTitle hydration, F2 mounted update_item + retention + precise negative control, C real CatalogPublishedProductSearchLookup >40). Host5088/Next3000 BUILD_ID SpxfHsxtpvAChwrYh4xI7; ZERO migration; ZERO live Story/Media write.
