@@ -1,3 +1,7 @@
+# CURRENT — integration mandatory in issued TB-STORY-282 — 2026-11-19
+
+The existing seller-panel requirement below remains binding. Current task is TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282. See its exact TASK.md and top recovery. Historical R2 active / UI NOT ISSUED statements below record the original note only; 282 now explicitly authorizes the shared UI after its Gate0. No duplicate panel/menu/login; one worker, await result. automaticNextImplementationTask NONE.
+
 # الزام اتصال استوری به پنل فروشندهٔ موجود قالب
 
 تاریخ: ۱۹ نوامبر ۲۰۲۶

@@ -1,0 +1,13 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282",
+  "parentTask": "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5",
+  "expectedBaseSha": "c9ba2296a3adfbb6f6ed2638df65957f4c3f391c",
+  "date": "2026-11-19",
+  "taskBytes": 17880,
+  "taskSha256": "ad47e6035be0b266c11ddd37457bded2cbb5e2c17e4ffd0336e998adf01b6fae",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "stopState": "STOP_FOR_ARCHITECT_AND_USER_REVIEW",
+  "automaticNextImplementationTask": "NONE"
+}

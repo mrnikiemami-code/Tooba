@@ -1,4 +1,15 @@
-# CURRENT — TB-281-R4 SOURCE REVIEW REQUIRES REPAIR; ONLY 281-R5 ISSUED — 2026-11-19
+# CURRENT — TB-281-R5 REVIEWED WITH RESIDUAL CONTAINMENT GATE; ONLY TB-STORY-282 ISSUED — 2026-11-19
+
+Source reviewed fa32794e059f8fdf52858cabfcc83494be05ed03; final docs head c9ba2296a3adfbb6f6ed2638df65957f4c3f391c.
+Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/ARCHITECT-REVIEW.md.
+R5 A1/A2/A3 and Media guard scoped progress accepted; complete 281 closure NOT claimed. Residual winner full identity + losing-entry containment + real EF concurrency branch are Gate 0 of the SAME connected task 282 (no standalone R6 issued).
+Only issued task: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282/TASK.md. One worker tooba-worker-01/tooba-main; issued does not mean claimed/running. Gate0 FIRST; then shared Orders-style list/editor/media/review/public playback. Await result and review; no parallel task or automatic continuation.
+UI delivery is NOW EXPLICITLY ISSUED within 282, contingent on its first gate. Existing prior NOT ISSUED blocks below are historical, not current instructions.
+Mandatory purchased-template seller integration: existing VendorShell /vendor-panel/stories with story.view navigation/theme/auth/shop context; no parallel panel/menu/login. See SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
+Product owner needs merchant-friendly language, shared design-system Dialog, existing react-toastify, real owner-scoped media/pickers, exact retry, honest public playback. Deliver user-review URLs + short Persian checklist. Worker does no live business writes; user starts actual new-story trial.
+ZERO migration/seed/live Story-Media mutation/key operation; Returns acceptances/payout backlog/user data preserved. Worker PASS != Architect/user acceptance. automaticNextImplementationTask NONE.
+
+# HISTORICAL — superseded by CURRENT above
 
 Code reviewed 1c7a7789344f1367875f882b687aa608dd5a0fdd; final source/docs head aad32713b7486c429dbbfb5e948e95e30eb6bb67.
 Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/ARCHITECT-REVIEW.md. R4 worker PASS is NOT accepted as full A/B/C: owner edit replay missing, update intent incomplete, schedule replay after stale gate, duplicate arbitration absent, ambient/enlistment and relational claims exceed assertions.
