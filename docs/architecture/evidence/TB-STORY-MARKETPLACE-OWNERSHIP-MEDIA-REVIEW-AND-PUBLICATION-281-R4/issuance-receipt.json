@@ -1,0 +1,12 @@
+{
+  "taskId": "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4",
+  "expectedBaseSha": "14b2395eea3585b7e12af71d135c84c77ce7f9c2",
+  "date": "2026-11-19",
+  "taskBytes": 11227,
+  "taskSha256": "0826bd9a7039370db6bacd1c39a2d078fd2abe531536c423cc857d2ffe2eac51",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "stopState": "STOP_FOR_ARCHITECT",
+  "automaticNextImplementationTask": "NONE"
+}

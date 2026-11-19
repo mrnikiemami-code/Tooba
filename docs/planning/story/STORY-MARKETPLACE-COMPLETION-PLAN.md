@@ -1,4 +1,15 @@
-# CURRENT — 281-R2 REVIEWED PARTIAL; ONLY 281-R3 ISSUED — 2026-11-19
+# CURRENT — TB-281-R3 REVIEWED PARTIAL; ONLY 281-R4 ISSUED — 2026-11-19
+
+Reviewed code 46c639c4c6cdd5f1ae0e3af2afbeb03f0dcf3dca; actual final head 14b2395eea3585b7e12af71d135c84c77ce7f9c2 is its docs-only addendum.
+Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/ARCHITECT-REVIEW.md.
+Only issued task: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4. Exact TASK.md: docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/TASK.md.
+Close A full version/occurrence transport (including broken delete/reorder), B actual Media save/ack failure proof, C canonical rollback-only PostgreSQL facts. No new product scope, migration, seed or live business mutation. Retain landed R3 checks/public attribution/scoped schema; old 57/57 is not missing behavior proof.
+One worker tooba-worker-01/tooba-main; issued does not mean running. Await result and review; no task chain.
+Seller Story UI MUST use purchased-template EXISTING VendorShell and /vendor-panel/stories, existing story.view/menu/auth/context. No parallel panel/menu/login. See SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
+Shared Orders-style UI delivery is PLANNED NOT ISSUED. Worker PASS != Architect ACCEPT != user acceptance. Returns acceptances/payout backlog preserved; no key operations.
+automaticNextImplementationTask NONE.
+
+# HISTORICAL — superseded by the CURRENT checkpoint above
 
 Reviewed source 4c086d32346ce2b6f695c254d7fa58db98c4f322. Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2/ARCHITECT-REVIEW.md.
 Only issued task: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3; exact envelope docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/TASK.md. One worker tooba-worker-01, tooba-main. Await its result; issued does not mean claimed/running.
