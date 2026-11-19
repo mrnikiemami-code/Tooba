@@ -10,20 +10,25 @@ import {
 import { createCsrfToken, csrfCookieOptions } from "../auth/csrf.ts";
 
 /**
- * Cookie Secure flag for BFF auth cookies.
- * Must follow the actual request scheme (and optional override), not NODE_ENV alone —
- * `next start` over http://127.0.0.1 drops Secure cookies in the browser, so CSRF/login fail.
+ * Cookie Secure for BFF auth cookies.
+ * Default remains Secure in production. The only Soft exception is the request URL itself
+ * on canonical loopback HTTP (127.0.0.1 / localhost / ::1) so local `next start` can store CSRF.
+ * Public HTTP cannot downgrade. Spoofed x-forwarded-proto=http cannot downgrade HTTPS.
+ * Unrestricted TOOBA_COOKIE_SECURE=false is not honored.
  */
 export function authCookieSecure(request?: Request): boolean {
   const override = process.env.TOOBA_COOKIE_SECURE?.trim();
-  if (override === "0" || override === "false") return false;
   if (override === "1" || override === "true") return true;
+
   if (request) {
-    const forwarded = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
-    if (forwarded === "https") return true;
-    if (forwarded === "http") return false;
     try {
-      return new URL(request.url).protocol === "https:";
+      const url = new URL(request.url);
+      const host = url.hostname.toLowerCase();
+      const loopback = host === "127.0.0.1" || host === "localhost" || host === "::1" || host === "[::1]";
+      if (url.protocol === "https:") return true;
+      if (url.protocol === "http:" && loopback) return false;
+      // Non-loopback HTTP keeps Secure (no public-HTTP downgrade).
+      return true;
     } catch {
       /* fall through */
     }

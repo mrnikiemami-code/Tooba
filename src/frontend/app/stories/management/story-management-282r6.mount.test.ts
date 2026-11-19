@@ -183,7 +183,7 @@ test("B/C: platform vs shop location and internal destination stay merchant-labe
   await flush();
   await waitFor(() => qq(platform.container, '[data-testid="story-detail-location"]').length === 1);
   assert.match(platform.container.textContent ?? "", new RegExp(faStoryCopy.platformStorefront));
-  assert.match(platform.container.textContent ?? "", new RegExp(faStoryCopy.destinationShop));
+  assert.match(platform.container.textContent ?? "", new RegExp(faStoryCopy.destinationUnavailable));
   assert.doesNotMatch(platform.container.textContent ?? "", /\binternal\b/);
   assert.doesNotMatch(platform.container.textContent ?? "", /Story/);
   await platform.unmount();

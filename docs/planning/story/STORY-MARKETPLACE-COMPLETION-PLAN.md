@@ -1,19 +1,14 @@
-# CURRENT — TB-282-R6 PARTIAL; ONLY TB-282-R7 ISSUED — 2026-11-19
+# CURRENT — TB-282-R7 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/ARCHITECT-REVIEW.md.
-Reviewed code 49b66122739a83eef5f69a69227990e49a17eea5 / evidence 9a28b8eae6c608f60045848383e7b5f62919be73. R6 is NOT accepted complete or owner-ready.
-Retain list-only filter/context/localization progress. Repair existing full-form gap (static empty preview, create+route+dialog sequence, dirty SPA navigation), truthful destination/origin, unrestricted cookie Secure downgrade and startup evidence deviation.
-Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7/TASK.md. One worker tooba-worker-01/tooba-main, not claimed/running.
-Expected-Base-SHA: 9a28b8eae6c608f60045848383e7b5f62919be73
-R6 reported Development without skip-bootstrap; Program.cs enters schema/seed/backfill orchestration. Actual effects UNKNOWN pending read-only evidence; do not claim ZERO seed/migration from unchanged DLL. No cleanup/restore authorized.
-Preserve VendorShell, R5 identity/retry/lifecycle, Returns, payout backlog and user work. No new phase/delegation/screenshots/polling. R7 requires safe skip-bootstrap for refresh, ZERO new migration/seed/live business writes.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Worker PASS within issued A–C. BUILD_ID wxqCG9BP0aNO3_zyiNnnQ. ZERO migration; ZERO live Story/Media write.
+NOT Architect ACCEPT, NOT owner acceptance. URLs: /fa/admin/stories, /fa/vendor-panel/stories, /fa.
+activeTask: NONE; automaticNextImplementationTask: NONE.
 
-# HISTORICAL — superseded by CURRENT above
+# HISTORICAL — TB-282-R7 ISSUED; WORKER PASS ABOVE
 
-# CURRENT — TB-282-R6 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+# HISTORICAL — TB-282-R6 PARTIAL; R7 ISSUED
+
+# HISTORICAL — TB-282-R6 WORKER PASS; LATER PARTIAL
 
 Worker PASS within issued A–D. BUILD_ID yq3D1_b-sYRUJXbreLqoj. ZERO migration; ZERO live Story/Media write.
 NOT Architect ACCEPT, NOT owner acceptance. URLs: /fa/admin/stories, /fa/vendor-panel/stories, /fa.

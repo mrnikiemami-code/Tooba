@@ -133,6 +133,12 @@ export type StoryCopy = {
   actorMissing: string;
   titleRequired: string;
   productIdInvalid: string;
+  unsavedLeaveTitle: string;
+  unsavedLeaveBody: string;
+  unsavedStay: string;
+  unsavedDiscard: string;
+  originCreatorAdmin: string;
+  originCreatorSeller: string;
 };
 
 export const faStoryCopy: StoryCopy = {
@@ -262,6 +268,12 @@ export const faStoryCopy: StoryCopy = {
   actorMissing: "شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.",
   titleRequired: "عنوان را وارد کنید.",
   productIdInvalid: "این ردیف شناسهٔ محصول معتبری ندارد.",
+  unsavedLeaveTitle: "تغییرات ذخیره‌نشده",
+  unsavedLeaveBody: "اگر الان برگردید، تغییرات ذخیره‌نشده از بین می‌روند.",
+  unsavedStay: "ادامهٔ ویرایش",
+  unsavedDiscard: "خروج بدون ذخیره",
+  originCreatorAdmin: "مدیر",
+  originCreatorSeller: "فروشنده",
 };
 
 export const enStoryCopy: StoryCopy = {
@@ -391,6 +403,12 @@ export const enStoryCopy: StoryCopy = {
   actorMissing: "A user identity is required to record this action safely.",
   titleRequired: "Enter a title.",
   productIdInvalid: "This row has no valid product identity.",
+  unsavedLeaveTitle: "Unsaved changes",
+  unsavedLeaveBody: "If you leave now, unsaved changes will be lost.",
+  unsavedStay: "Keep editing",
+  unsavedDiscard: "Leave without saving",
+  originCreatorAdmin: "Admin",
+  originCreatorSeller: "Seller",
 };
 
 /** Status / origin / review labels per locale. */
@@ -412,7 +430,7 @@ export const STORY_STATUS_LABELS_BY_LOCALE: Record<StoryUiLocale, Record<string,
 };
 
 export const STORY_ORIGIN_LABELS_BY_LOCALE: Record<StoryUiLocale, Record<string, string>> = {
-  fa: { Admin: "ویترین اصلی", Seller: "فروشگاه" },
+  fa: { Admin: "مدیر", Seller: "فروشنده" },
   en: { Admin: "Admin", Seller: "Seller" },
 };
 

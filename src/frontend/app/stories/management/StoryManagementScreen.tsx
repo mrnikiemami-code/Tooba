@@ -93,12 +93,18 @@ function shopLabel(row: AdminStorySnapshot, copy: StoryCopy): string {
   return copy.shopNameUnavailable;
 }
 
+function looksLikeGuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
+}
+
+const OPEN_SLIDE_AFTER_LOAD_KEY = "tooba.story.openSlideAfterLoad";
+
 function destinationLabelForType(ctaType: string | null | undefined, copy: StoryCopy): string {
   const type = (ctaType ?? "").trim().toLowerCase();
   if (!type || type === "none") return copy.destinationNone;
   if (type === "product") return copy.destinationProduct;
   if (type === "external") return copy.destinationExternal;
-  if (type === "internal" || type === "shop" || type === "seller") return copy.destinationShop;
+  if (type === "shop" || type === "seller") return copy.destinationShop;
   return copy.destinationUnavailable;
 }
 
@@ -214,7 +220,20 @@ function StoryManagementScreenBody({
   const [productLabelById, setProductLabelById] = useState<Record<string, string>>({});
   const [sellerShopLabel, setSellerShopLabel] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [pendingLeaveHref, setPendingLeaveHref] = useState<string | null>(null);
   const slideFileInputRef = useRef<HTMLInputElement | null>(null);
+  const ownedDraftIdRef = useRef<string | null>(initialStoryId);
+
+  function resolveShopDestinationName(target: string | null | undefined): string | null {
+    const raw = target?.trim() ?? "";
+    if (!raw || !looksLikeGuid(raw)) return null;
+    if (detail?.sellerPartyId === raw && detail.shopDisplayName?.trim()) {
+      return detail.shopDisplayName.trim();
+    }
+    const named = shopOptions.find((row) => row.sellerPartyId === raw)?.displayName?.trim();
+    return named || null;
+  }
 
   function destinationLabelForItem(item: AdminStorySnapshot["items"][number]): string {
     const ctaType = item.ctaType;
@@ -231,10 +250,30 @@ function StoryManagementScreenBody({
     if (type === "external") {
       return ctaTarget?.trim() ? `${copy.destinationExternal}: ${ctaTarget}` : copy.destinationExternal;
     }
-    if (type === "internal" || type === "shop" || type === "seller") {
-      return ctaTarget?.trim() ? `${copy.destinationShop}: ${ctaTarget}` : copy.destinationShop;
+    if (type === "shop" || type === "seller" || type === "internal") {
+      const shopName = resolveShopDestinationName(ctaTarget);
+      return shopName ? `${copy.destinationShop}: ${shopName}` : copy.destinationUnavailable;
     }
     return destinationLabelForType(ctaType, copy);
+  }
+
+  function finishLeave(href: string) {
+    if (href === basePath || href.endsWith(basePath)) {
+      setSelectedId(null);
+      setDetail(null);
+      ownedDraftIdRef.current = null;
+    }
+    setDirty(false);
+    router.push(href);
+  }
+
+  function requestLeave(href: string) {
+    if (!dirty) {
+      finishLeave(href);
+      return;
+    }
+    setPendingLeaveHref(href);
+    setLeaveOpen(true);
   }
 
   function openNewSlideDialog() {
@@ -400,6 +439,7 @@ function StoryManagementScreenBody({
       if (started !== epochRef.current) return;
       if (result.state === "ok" && result.data) {
         setDetail(result.data);
+        ownedDraftIdRef.current = result.data.storyId;
         setEditTitle(result.data.title);
         setEditLocale(result.data.locale || editLocale);
         setDirty(false);
@@ -412,6 +452,15 @@ function StoryManagementScreenBody({
         }
         setProductLabelById(nextLabels);
         setSelectedProductLabel("");
+        try {
+          const pendingOpen = sessionStorage.getItem(OPEN_SLIDE_AFTER_LOAD_KEY);
+          if (pendingOpen && pendingOpen === result.data.storyId) {
+            sessionStorage.removeItem(OPEN_SLIDE_AFTER_LOAD_KEY);
+            openNewSlideDialog();
+          }
+        } catch {
+          /* sessionStorage unavailable */
+        }
       } else if (result.state === "denied") setState("denied");
       else {
         setDetail(null);
@@ -468,7 +517,28 @@ function StoryManagementScreenBody({
     else toast.error("ارسال انجام نشد.");
   }
 
-  async function createDraft(): Promise<string | null> {
+  async function createDraft(options?: { openSlideAfter?: boolean }): Promise<string | null> {
+    const existingId = ownedDraftIdRef.current || selectedId;
+    if (existingId) {
+      if (options?.openSlideAfter) {
+        try {
+          sessionStorage.setItem(OPEN_SLIDE_AFTER_LOAD_KEY, existingId);
+        } catch {
+          /* ignore */
+        }
+        if (selectedId === existingId && detail) {
+          openNewSlideDialog();
+          try {
+            sessionStorage.removeItem(OPEN_SLIDE_AFTER_LOAD_KEY);
+          } catch {
+            /* ignore */
+          }
+        } else {
+          openDetail(existingId);
+        }
+      }
+      return existingId;
+    }
     if (inFlightRef.current) return null;
     if (!actorId) {
       toast.error(copy.actorMissing);
@@ -521,9 +591,18 @@ function StoryManagementScreenBody({
       setShowCreate(false);
       setDirty(false);
       if (id) {
-        openDetail(String(id));
-        router.push(`${basePath}/${id}`);
-        return String(id);
+        const storyId = String(id);
+        ownedDraftIdRef.current = storyId;
+        if (options?.openSlideAfter) {
+          try {
+            sessionStorage.setItem(OPEN_SLIDE_AFTER_LOAD_KEY, storyId);
+          } catch {
+            /* ignore */
+          }
+        }
+        // One deliberate route transition; dialog opens after bound detail load.
+        openDetail(storyId);
+        return storyId;
       }
       refreshGrid();
       return null;
@@ -538,6 +617,7 @@ function StoryManagementScreenBody({
   const title = capabilities.mode === "seller" ? copy.sellerTitle : copy.adminTitle;
   const description = capabilities.mode === "seller" ? copy.sellerDescription : copy.adminDescription;
   const testId = capabilities.mode === "seller" ? "seller-stories" : "admin-stories";
+  const showCreateWorkspace = createMode && !selectedId;
   const isListSurface = !createMode && !selectedId;
   const sellerEditable = detail ? hasAction(detail, "update") || hasAction(detail, "add_item") : false;
   const filteredShops = shopOptions.filter((row) => {
@@ -651,14 +731,15 @@ function StoryManagementScreenBody({
         />
       ) : null}
 
-      {createMode ? (
+      {showCreateWorkspace ? (
         <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-create-workspace">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-bold">{copy.createWorkspaceTitle}</h2>
             <button
               type="button"
               className="min-h-11 rounded-xl px-3 py-1.5 text-sm"
-              onClick={() => router.push(basePath)}
+              data-testid="story-create-back"
+              onClick={() => requestLeave(basePath)}
             >
               {copy.backToList}
             </button>
@@ -777,10 +858,7 @@ function StoryManagementScreenBody({
                   className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
                   data-testid="story-slide-open-new"
                   onClick={() => {
-                    void (async () => {
-                      const id = await createDraft();
-                      if (id) openNewSlideDialog();
-                    })();
+                    void createDraft({ openSlideAfter: true });
                   }}
                 >
                   {copy.addItem}
@@ -796,7 +874,7 @@ function StoryManagementScreenBody({
         </section>
       ) : null}
 
-      {!createMode && detail ? (
+      {selectedId && detail ? (
         <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-detail-workspace">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -808,18 +886,23 @@ function StoryManagementScreenBody({
                 <StoryStatusBadge status={detail.status} />
                 {detail.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={detail.reviewStatus} /> : null}
                 {capabilities.showOrigin ? (
-                  <span className="text-xs text-muted">{originLabels[detail.origin] ?? detail.origin}</span>
+                  <span className="text-xs text-muted" data-testid="story-detail-origin">
+                    {detail.origin === "Admin"
+                      ? copy.originCreatorAdmin
+                      : detail.origin === "Seller"
+                        ? copy.originCreatorSeller
+                        : originLabels[detail.origin] ?? detail.origin}
+                  </span>
                 ) : null}
               </div>
             </div>
             <button
               type="button"
               className="min-h-11 rounded-xl px-3 py-1.5 text-sm"
-              onClick={() => {
-                setSelectedId(null);
-                setDetail(null);
-                router.push(basePath);
-              }}
+              data-testid="story-detail-back"
+              onClick={() =>
+                requestLeave(basePath)
+              }
             >
               {copy.backToList}
             </button>
@@ -1099,7 +1182,7 @@ function StoryManagementScreenBody({
               </button>
             ) : null}
           </div>
-          <ul className="mb-4 space-y-2 text-sm">
+          <ul className="mb-4 space-y-2 text-sm" data-testid="story-detail-preview">
             {detail.items.map((item, index) => (
               <li key={item.storyItemId} className="rounded-xl border border-gray-100 px-3 py-2" data-testid="story-slide-row">
                 <div className="flex flex-wrap items-center gap-3">
@@ -1530,6 +1613,45 @@ function StoryManagementScreenBody({
               }}
             >
               {editingItemId ? copy.saveSlideChanges : copy.addItem}
+            </button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={leaveOpen}
+        onClose={() => {
+          setLeaveOpen(false);
+          setPendingLeaveHref(null);
+        }}
+        title={copy.unsavedLeaveTitle}
+      >
+        <div className="space-y-3 p-1" data-testid="story-unsaved-leave-dialog">
+          <p className="text-sm text-muted">{copy.unsavedLeaveBody}</p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              className="min-h-11 rounded-xl px-4 py-2 text-sm"
+              data-testid="story-unsaved-stay"
+              onClick={() => {
+                setLeaveOpen(false);
+                setPendingLeaveHref(null);
+              }}
+            >
+              {copy.unsavedStay}
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
+              data-testid="story-unsaved-discard"
+              onClick={() => {
+                const href = pendingLeaveHref;
+                setLeaveOpen(false);
+                setPendingLeaveHref(null);
+                if (href) finishLeave(href);
+              }}
+            >
+              {copy.unsavedDiscard}
             </button>
           </div>
         </div>

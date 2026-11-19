@@ -4,12 +4,18 @@
  */
 import "./install-jsdom-globals.ts";
 import React, {
-  act,
   createElement,
   type ReactElement,
   type ReactNode,
 } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { act as reactDomTestAct } from "react-dom/test-utils";
+
+/** React 19.2 production export may omit `act`; keep mounts working via react-dom/test-utils. */
+const act: typeof reactDomTestAct =
+  typeof (React as unknown as { act?: typeof reactDomTestAct }).act === "function"
+    ? (React as unknown as { act: typeof reactDomTestAct }).act
+    : reactDomTestAct;
 
 export type MountedTree = {
   container: HTMLElement;

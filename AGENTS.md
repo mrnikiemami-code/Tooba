@@ -1,19 +1,20 @@
-# CURRENT — TB-282-R6 PARTIAL; ONLY TB-282-R7 ISSUED — 2026-11-19
+# CURRENT — TB-282-R7 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/ARCHITECT-REVIEW.md.
-Reviewed code 49b66122739a83eef5f69a69227990e49a17eea5 / evidence 9a28b8eae6c608f60045848383e7b5f62919be73. R6 is NOT accepted complete or owner-ready.
-Retain list-only filter/context/localization progress. Repair existing full-form gap (static empty preview, create+route+dialog sequence, dirty SPA navigation), truthful destination/origin, unrestricted cookie Secure downgrade and startup evidence deviation.
-Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7/TASK.md. One worker tooba-worker-01/tooba-main, not claimed/running.
-Expected-Base-SHA: 9a28b8eae6c608f60045848383e7b5f62919be73
-R6 reported Development without skip-bootstrap; Program.cs enters schema/seed/backfill orchestration. Actual effects UNKNOWN pending read-only evidence; do not claim ZERO seed/migration from unchanged DLL. No cleanup/restore authorized.
-Preserve VendorShell, R5 identity/retry/lifecycle, Returns, payout backlog and user work. No new phase/delegation/screenshots/polling. R7 requires safe skip-bootstrap for refresh, ZERO new migration/seed/live business writes.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–C: connected create/add/preview/dirty-leave with one draft reuse; truthful destination/origin; loopback-only cookie Secure; Host skip-bootstrap=1; BUILD_ID `wxqCG9BP0aNO3_zyiNnnQ`; ZERO migration; ZERO live Story/Media write. R6 bootstrap effects UNKNOWN. Live admin via `/v1/admin/dev-context` 404 under skip (disclosed).
+Decision `A_CONNECTED_CREATE_ADD_PREVIEW_DIRTY_LEAVE_ONE_DRAFT_REUSE_B_TRUTHFUL_DESTINATION_ORIGIN_C_LOOPBACK_ONLY_COOKIE_SECURE_AND_SKIP_BOOTSTRAP_HOST_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `9a28b8eae6c608f60045848383e7b5f62919be73`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# CURRENT — TB-282-R6 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R7 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — TB-282-R6 PARTIAL; R7 ISSUED THEN WORKER PASS ABOVE
+
+# HISTORICAL — TB-282-R6 WORKER PASS; LATER PARTIAL BY ARCHITECT
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/TASK.md` and
 `docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
