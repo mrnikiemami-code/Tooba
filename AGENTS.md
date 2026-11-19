@@ -1,20 +1,20 @@
-# CURRENT — R13 B ACCEPTED; ONLY R14 BULK CLOSURE ISSUED — 2026-11-20
+# CURRENT — TB-282-R14 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
-Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/ARCHITECT-REVIEW.md
-Code41bbd1e97e526641ded1260a741ec6d1e8129d38 / evidence eae4b3196823a874b04b5987a87e5f4504584f89. No-end END-label layout and single-operation wiring retained. Full bulk PASS not accepted: result.items dropped into count toast; batch continues captured old scope after per-request stale_epoch; no actual multi-selected-grid command test.
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14
-Expected-Base-SHA: eae4b3196823a874b04b5987a87e5f4504584f89
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/TASK.md
-Only two repairs: stop batch on epoch/actor/scope change with untouched rows not-started; visible per-title results and exact unresolved retry. One actual selected-grid mixed/partial test, no whole task-series rerun/redesign/backend change.
-One worker tooba-worker-01/tooba-main, issued NOT claimed/running.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-Preserve VendorShell/R5–R13/owner fences/language registry/Returns/payout/user work. ZERO live business writes/migrations/seeds/grants/screenshots/delegation/polling. Html404 production release blocker/R6 UNKNOWN retained.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued bulk closure: freeze epoch/scope stop remaining as not-started; per-row result Dialog; real AppDataGrid multi-select mixed/partial/retry; Host5088 skip-bootstrap; Next3000 next-dev; ZERO migration; ZERO live Story/Media write.
+Decision `BULK_FREEZE_EPOCH_SCOPE_STOP_NOT_STARTED_AND_PER_ROW_RESULT_PANEL_REAL_GRID_SELECT_ZERO_BACKEND_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `eae4b3196823a874b04b5987a87e5f4504584f89`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW. R13 layout B retained.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# CURRENT — TB-282-R13 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — R14 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — R13 B ACCEPTED; R14 BULK CLOSURE ISSUED THEN PASS ABOVE
+
+# HISTORICAL — TB-282-R13 WORKER PASS; PARTIAL BY ARCHITECT; R14 ABOVE
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/TASK.md` and
 `docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
