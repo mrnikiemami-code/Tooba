@@ -1,0 +1,9 @@
+{
+  "workerId": "tooba-worker-01",
+  "taskId": "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5",
+  "bridgeRowId": "29d18780-b564-490c-a85a-f18337b22f2b",
+  "claimedAtUtc": "2026-11-19T02:41:01.6373877Z",
+  "claimHeadSha": "d78ecf39e165c7d10ede61e5de6bacf6856122bb",
+  "expectedBaseSha": "aad32713b7486c429dbbfb5e948e95e30eb6bb67",
+  "note": "Bridge GET next claimed; issuance delta docs-only FF from aad32713b; Bridge content saved to D:/temp/tb281r5-bridge-body.json at claim time"
+}

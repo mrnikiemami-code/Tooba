@@ -152,7 +152,12 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, null, "admin_create", key, intent,
             story.StoryId, Guid.Empty, now, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
+        var foldedCreate = await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, intent, cancellationToken);
+        if (foldedCreate is Guid foldedStoryId)
+        {
+            story = await LoadStoryAsync(tenantId, foldedStoryId, track: false, cancellationToken)
+                ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
+        }
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
@@ -164,7 +169,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var key = RequireOccurrenceKey(command.OccurrenceKey);
-        var intent = HashLifecycleIntent(storyId, command.ExpectedVersion, $"update|{command.Title}|{command.CtaType}|{command.CtaTarget}");
+        var intent = HashUpdateStoryIntent(storyId, command);
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         var replay = await TryReplayMappedAsync(
             tenantId, story.SellerPartyId, "admin_update", key, intent, isAdmin: true, cancellationToken, storyId);
@@ -191,7 +196,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_update", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
@@ -205,7 +210,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         string? occurrenceKey = null)
     {
         var key = RequireOccurrenceKey(occurrenceKey);
-        var intent = HashLifecycleIntent(storyId, expectedVersion, $"status|{status}");
+        var intent = HashCanonical(storyId.ToString("D"), expectedVersion?.ToString(System.Globalization.CultureInfo.InvariantCulture), "status", status.ToString());
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         var replay = await TryReplayMappedAsync(
             tenantId, story.SellerPartyId, "admin_set_status", key, intent, isAdmin: true, cancellationToken, storyId);
@@ -237,7 +242,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_set_status", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: true);
     }
 
@@ -249,19 +254,19 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
-        story.EnsureExpectedVersion(command.ExpectedVersion);
-        await EnsureStoredContentAuthorizedAsync(story, cancellationToken);
         var key = RequireOccurrenceKey(command.OccurrenceKey);
-        var intent = HashLifecycleIntent(storyId, command.ExpectedVersion, $"schedule|{command.StartAt:O}|{command.EndAt:O}");
+        var intent = HashScheduleIntent(storyId, command);
         var replay = await TryReplayMappedAsync(
             tenantId, story.SellerPartyId, "admin_set_schedule", key, intent, isAdmin: true, cancellationToken, storyId);
         if (replay is not null)
             return replay;
+        story.EnsureExpectedVersion(command.ExpectedVersion);
+        await EnsureStoredContentAuthorizedAsync(story, cancellationToken);
         story.SetSchedule(command.StartAt, command.EndAt, DateTimeOffset.UtcNow);
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_set_schedule", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: true);
     }
 
@@ -312,7 +317,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, null, "admin_reorder_stories", key, intent,
             storyIdsInOrder[0], Guid.Empty, now, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
+        await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, intent, cancellationToken);
         return stories
             .OrderBy(story => story.DisplayOrder)
             .Select(story => MapAdmin(story, isAdmin: true))
@@ -357,7 +362,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_add_item", key, itemIntent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, itemIntent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
@@ -369,7 +374,13 @@ public sealed partial class StoryDirectory : IStoryDirectory
         UpdateStoryItemCommand command,
         CancellationToken cancellationToken)
     {
+        var key = RequireOccurrenceKey(command.OccurrenceKey);
+        var intent = HashUpdateItemIntent(storyId, itemId, command);
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        var replay = await TryReplayMappedAsync(
+            tenantId, story.SellerPartyId, "admin_update_item", key, intent, isAdmin: true, cancellationToken, storyId);
+        if (replay is not null)
+            return replay;
         story.EnsureExpectedVersion(command.ExpectedVersion);
         await EnsureProductCtaAsync(story.SellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
         var bound = story.SellerPartyId is Guid shop && shop != Guid.Empty
@@ -388,7 +399,10 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaType,
             command.CtaTarget,
             DateTimeOffset.UtcNow);
-        await SaveStoryAsync(story, cancellationToken);
+        await RecordOccurrenceAsync(
+            tenantId, story.SellerPartyId, "admin_update_item", key, intent,
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
@@ -402,7 +416,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var key = RequireOccurrenceKey(occurrenceKey);
-        var intent = HashLifecycleIntent(storyId, expectedVersion, $"remove_item|{itemId:D}");
+        var intent = HashRemoveItemIntent(storyId, itemId, expectedVersion);
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         var replay = await TryReplayMappedAsync(
             tenantId, story.SellerPartyId, "admin_remove_item", key, intent, isAdmin: true, cancellationToken, storyId);
@@ -413,7 +427,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_remove_item", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: true);
     }
 
@@ -428,7 +442,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
     {
         var key = RequireOccurrenceKey(occurrenceKey);
         var ordered = string.Join(',', itemIdsInOrder.Select(id => id.ToString("D")));
-        var intent = HashLifecycleIntent(storyId, expectedVersion, $"reorder_items|{ordered}");
+        var intent = HashReorderItemsIntent(storyId, expectedVersion, ordered);
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         var replay = await TryReplayMappedAsync(
             tenantId, story.SellerPartyId, "admin_reorder_items", key, intent, isAdmin: true, cancellationToken, storyId);
@@ -439,7 +453,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_reorder_items", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: true);
     }
 
@@ -463,7 +477,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_disable", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: true);
     }
 
@@ -489,7 +503,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_approve", key, intent,
             story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: true);
     }
 
@@ -504,7 +518,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         string? occurrenceKey = null)
     {
         var key = RequireOccurrenceKey(occurrenceKey);
-        var intent = HashLifecycleIntent(storyId, expectedVersion, $"reject|{reason}");
+        var intent = HashCanonical(storyId.ToString("D"), expectedVersion?.ToString(System.Globalization.CultureInfo.InvariantCulture), "reject", reason);
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         var replay = await TryReplayMappedAsync(
             tenantId, story.SellerPartyId, "admin_reject", key, intent, isAdmin: true, cancellationToken, storyId);
@@ -515,7 +529,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_reject", key, intent,
             story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: true);
     }
 
@@ -599,7 +613,12 @@ public sealed partial class StoryDirectory : IStoryDirectory
             actorUserId,
             now,
             cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
+        var foldedSellerCreate = await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, createIntent, cancellationToken);
+        if (foldedSellerCreate is Guid foldedSellerStoryId)
+        {
+            story = await LoadStoryAsync(tenantId, foldedSellerStoryId, track: false, cancellationToken)
+                ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
+        }
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
@@ -611,6 +630,12 @@ public sealed partial class StoryDirectory : IStoryDirectory
         UpdateStoryCommand command,
         CancellationToken cancellationToken)
     {
+        var key = RequireOccurrenceKey(command.OccurrenceKey);
+        var intent = HashUpdateStoryIntent(storyId, command);
+        var replay = await TryReplayMappedAsync(
+            tenantId, sellerPartyId, "seller_update", key, intent, isAdmin: false, cancellationToken, storyId);
+        if (replay is not null)
+            return replay;
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.EnsureExpectedVersion(command.ExpectedVersion);
         await EnsureProductCtaAsync(sellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
@@ -626,7 +651,10 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaType,
             command.CtaTarget,
             DateTimeOffset.UtcNow);
-        await SaveStoryAsync(story, cancellationToken);
+        await RecordOccurrenceAsync(
+            tenantId, sellerPartyId, "seller_update", key, intent,
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
@@ -655,7 +683,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, sellerPartyId, "seller_submit", key, intent,
             story.StoryId, actorUserId, now, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
@@ -711,7 +739,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             story.CreatedByActorUserId ?? Guid.Empty,
             now,
             cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, itemIntent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
@@ -724,6 +752,12 @@ public sealed partial class StoryDirectory : IStoryDirectory
         UpdateStoryItemCommand command,
         CancellationToken cancellationToken)
     {
+        var key = RequireOccurrenceKey(command.OccurrenceKey);
+        var intent = HashUpdateItemIntent(storyId, itemId, command);
+        var replay = await TryReplayMappedAsync(
+            tenantId, sellerPartyId, "seller_update_item", key, intent, isAdmin: false, cancellationToken, storyId);
+        if (replay is not null)
+            return replay;
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.EnsureExpectedVersion(command.ExpectedVersion);
         await EnsureProductCtaAsync(sellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
@@ -739,7 +773,10 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaType,
             command.CtaTarget,
             DateTimeOffset.UtcNow);
-        await SaveStoryAsync(story, cancellationToken);
+        await RecordOccurrenceAsync(
+            tenantId, sellerPartyId, "seller_update_item", key, intent,
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
@@ -754,7 +791,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var key = RequireOccurrenceKey(occurrenceKey);
-        var intent = HashLifecycleIntent(storyId, expectedVersion, $"remove_item|{itemId:D}");
+        var intent = HashRemoveItemIntent(storyId, itemId, expectedVersion);
         var replay = await TryReplayMappedAsync(
             tenantId, sellerPartyId, "seller_remove_item", key, intent, isAdmin: false, cancellationToken, storyId);
         if (replay is not null)
@@ -765,7 +802,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, sellerPartyId, "seller_remove_item", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: false);
     }
 
@@ -781,7 +818,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
     {
         var key = RequireOccurrenceKey(occurrenceKey);
         var ordered = string.Join(',', itemIdsInOrder.Select(id => id.ToString("D")));
-        var intent = HashLifecycleIntent(storyId, expectedVersion, $"reorder_items|{ordered}");
+        var intent = HashReorderItemsIntent(storyId, expectedVersion, ordered);
         var replay = await TryReplayMappedAsync(
             tenantId, sellerPartyId, "seller_reorder_items", key, intent, isAdmin: false, cancellationToken, storyId);
         if (replay is not null)
@@ -792,7 +829,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, sellerPartyId, "seller_reorder_items", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return MapAdmin(story, isAdmin: false);
     }
 }

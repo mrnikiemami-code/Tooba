@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Tooba.BuildingBlocks;
 using Tooba.Media.Contracts.Assets;
 using Tooba.Media.Contracts.Errors;
@@ -65,10 +67,10 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
         if (stream is null || !stream.CanRead)
             throw new ContractOperationException(MediaErrorCodes.UploadFailed);
-        // Seller upload owns its own SaveChanges commit; ambient caller transactions are refused
-        // so a rolled-back outer scope cannot leave an orphaned object without a durable Media row.
-        if (_db.Database.CurrentTransaction is not null)
-            throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
+        // Seller upload owns its own SaveChanges commit. Refuse EF CurrentTransaction,
+        // System.Transactions.Transaction.Current, and provider-enlisted transactions
+        // (same authority shape as Returns RefuseConstrainedTransaction) before object store.
+        RefuseConstrainedTransaction();
 
         var normalizedType = NormalizeContentType(contentType);
         if (!IsImageOrVideo(normalizedType) || !AllowedContentTypes.Contains(normalizedType))
@@ -236,6 +238,25 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             .Where(row => IsImageOrVideo(row.ContentType))
             .ToList();
     }
+
+    /// <summary>
+    /// آپلود اثرگذار را هنگام باز بودن تراکنش فراخواننده، ambient یا enlistment رد می‌کند؛
+    /// هرگز تراکنش فراخواننده را commit/rollback/dispose نمی‌کند. کد تایپ‌شده همان
+    /// <see cref="MediaErrorCodes.ValidationFailed"/> است.
+    /// </summary>
+    private void RefuseConstrainedTransaction()
+    {
+        if (_db.Database.CurrentTransaction is not null
+            || System.Transactions.Transaction.Current is not null
+            || HasEnlistedProviderTransaction())
+        {
+            throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
+        }
+    }
+
+    private bool HasEnlistedProviderTransaction() =>
+        _db.Database.IsRelational()
+        && _db.Database.GetService<IRelationalConnection>() is RelationalConnection { EnlistedTransaction: not null };
 
     private void DetachAttemptOwned(
         MediaAsset asset,

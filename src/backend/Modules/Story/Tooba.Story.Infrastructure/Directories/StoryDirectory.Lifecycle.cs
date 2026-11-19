@@ -68,7 +68,13 @@ public sealed partial class StoryDirectory
             adminActorUserId,
             now,
             cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
+        var foldedShopCreate = await SaveChangesWithOccurrenceArbitrationAsync(
+            tenantId, key, createIntent, cancellationToken);
+        if (foldedShopCreate is Guid foldedShopStoryId)
+        {
+            story = await LoadStoryAsync(tenantId, foldedShopStoryId, track: false, cancellationToken)
+                ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
+        }
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
@@ -95,7 +101,7 @@ public sealed partial class StoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_approve_and_publish", key, intent,
             story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
@@ -110,8 +116,12 @@ public sealed partial class StoryDirectory
         string? occurrenceKey = null)
     {
         var key = RequireOccurrenceKey(occurrenceKey ?? schedule.OccurrenceKey);
-        var intent = HashLifecycleIntent(
-            storyId, expectedVersion, $"approve_and_schedule|{schedule.StartAt:O}|{schedule.EndAt:O}");
+        var intent = HashCanonical(
+            storyId.ToString("D"),
+            expectedVersion?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "approve_and_schedule",
+            schedule.StartAt?.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+            schedule.EndAt?.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         var replay = await TryReplayMappedAsync(
             tenantId, story.SellerPartyId, "admin_approve_and_schedule", key, intent, isAdmin: true, cancellationToken, storyId);
@@ -124,7 +134,7 @@ public sealed partial class StoryDirectory
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_approve_and_schedule", key, intent,
             story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
@@ -151,7 +161,7 @@ public sealed partial class StoryDirectory
         await RecordOccurrenceAsync(
             tenantId, sellerPartyId, "seller_return_to_draft", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
@@ -178,7 +188,7 @@ public sealed partial class StoryDirectory
         await RecordOccurrenceAsync(
             tenantId, sellerPartyId, "seller_stop", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
-        await SaveStoryAsync(story, cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 

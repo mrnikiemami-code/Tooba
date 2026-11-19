@@ -280,23 +280,4 @@ public sealed partial class StoryDirectory
         return true;
     }
 
-    private async Task SaveStoryAsync(StoryEntity story, CancellationToken cancellationToken)
-    {
-        _db.Stories.Update(story);
-        var existingItems = await _db.StoryItems
-            .Where(item => item.StoryId == story.StoryId)
-            .ToListAsync(cancellationToken);
-        var currentIds = story.Items.Select(item => item.StoryItemId).ToHashSet();
-        foreach (var removed in existingItems.Where(item => !currentIds.Contains(item.StoryItemId)))
-            _db.StoryItems.Remove(removed);
-        foreach (var item in story.Items)
-        {
-            if (existingItems.Any(existing => existing.StoryItemId == item.StoryItemId))
-                _db.StoryItems.Update(item);
-            else
-                _db.StoryItems.Add(item);
-        }
-
-        await _db.SaveChangesAsync(cancellationToken);
-    }
 }

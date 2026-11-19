@@ -1,13 +1,21 @@
-# CURRENT — TB-281-R4 SOURCE REVIEW REQUIRES REPAIR; ONLY 281-R5 ISSUED — 2026-11-19
+# CURRENT — TB-281-R5 WORKER PASS; AWAIT ARCHITECT — 2026-11-19
+
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+صاحب محصول تأکید کرد استوری باید در پنل فروشندهٔ موجود قالب تکمیل شود، نه پنل تازه. سورس بررسی شد: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» با مجوز `story.view` و مسیر `/vendor-panel/stories` از قبل وجود دارد؛ صفحه همان feature مشترک را با قابلیت فروشنده می‌گیرد. مرجع اجباری تسک UI آینده: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پوسته، ناوبری و auth/context موجود حفظ شوند؛ منو/پنل/ورود موازی ساخته نشود. این فقط یادداشت است؛ UI هنوز NOT ISSUED و automaticNextImplementationTask NONE.
+
+Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/TASK.md` and
+`docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,media-failure-proof.md,rollback-only-proof.md,all-route-matrix.md,schema-and-runtime-proof.md,ui-contract-handoff.md,issuance-receipt.json}`.
+Status **PASS** within issued A/B/C: Seller/AdminUpdateItem occurrence replay; length-prefixed update hashes; schedule replay-before-gates; Story occurrence unique arbitration; Media EF+ambient+enlistment refuse (ValidationFailed); fresh-context grid/expired/two-context stale + Media caller-entity proofs; focused 48/48; ZERO migration; ZERO live Story/Media business write.
+Decision `SELLER_ADMIN_UPDATE_ITEM_OCCURRENCE_REPLAY_LENGTH_PREFIXED_UPDATE_HASHES_SCHEDULE_REPLAY_BEFORE_GATES_STORY_OCCURRENCE_UNIQUE_ARBITRATION_MEDIA_AMBIENT_AND_ENLISTMENT_REFUSE_AND_TRUTHFUL_FRESH_CONTEXT_GRID_TWO_CONTEXT_STALE_AND_MEDIA_CALLER_ENTITY_PROOF_LANDED_WITH_FOCUSED_48_48_ZERO_MIGRATION`.
+NOT Architect ACCEPT, NOT user acceptance. UI delivery PLANNED_NOT_ISSUED. Expected-Base `aad32713b7486c429dbbfb5e948e95e30eb6bb67`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+
+# HISTORICAL — TB-281-R4 SOURCE REVIEW REQUIRED REPAIR; 281-R5 WAS ISSUED
 
 Code reviewed 1c7a7789344f1367875f882b687aa608dd5a0fdd; final source/docs head aad32713b7486c429dbbfb5e948e95e30eb6bb67.
-Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/ARCHITECT-REVIEW.md. R4 worker PASS is NOT accepted as full A/B/C: owner edit replay missing, update intent incomplete, schedule replay after stale gate, duplicate arbitration absent, ambient/enlistment and relational claims exceed assertions.
-Only issued task TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5; exact docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/TASK.md. Preserve R4 progress; close specific source defects and truthful focused tests, no new product design/schema/live data.
-One worker tooba-worker-01/tooba-main, await this result; issued is not running. No automatic next task or parallel work.
-Shared Orders-style UI remains PLANNED NOT ISSUED until owning-path review closes. Mandatory seller integration: purchased-template EXISTING VendorShell /vendor-panel/stories with existing story.view menu/auth/context; shared feature, no new seller panel/menu/login. See SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
-Returns acceptance/payout backlog/user data/key state untouched. Worker PASS != Architect ACCEPT != user acceptance. automaticNextImplementationTask NONE.
+Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/ARCHITECT-REVIEW.md. R4 worker PASS was NOT accepted as full A/B/C; R5 issued and executed (see CURRENT).
 
-# HISTORICAL — superseded by CURRENT above
+# HISTORICAL — superseded
 
 ## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 

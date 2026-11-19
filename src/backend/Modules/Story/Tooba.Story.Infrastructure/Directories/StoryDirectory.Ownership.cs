@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -323,40 +323,4 @@ public sealed partial class StoryDirectory
         return await EnrichAsync(MapAdmin(story, isAdmin), cancellationToken);
     }
 
-    private static string HashLifecycleIntent(Guid storyId, int? expectedVersion, string? extra = null)
-    {
-        static string F(string? value)
-        {
-            var text = value ?? string.Empty;
-            return text.Length.ToString(CultureInfo.InvariantCulture) + ":" + text;
-        }
-
-        var payload = string.Join('\u001f',
-            F(storyId.ToString("D")),
-            F(expectedVersion?.ToString(CultureInfo.InvariantCulture)),
-            F(extra));
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
-    }
-
-    private static string HashItemIntent(Guid storyId, AddStoryItemCommand command)
-    {
-        static string F(string? value)
-        {
-            var text = value ?? string.Empty;
-            return text.Length.ToString(CultureInfo.InvariantCulture) + ":" + text;
-        }
-
-        var payload = string.Join('\u001f',
-            F(storyId.ToString("D")),
-            F(command.MediaType),
-            F(command.MediaAssetId?.ToString("D")),
-            F(command.MediaUrl),
-            F(command.Caption),
-            F(command.DurationMs?.ToString(CultureInfo.InvariantCulture)),
-            F(command.CtaType),
-            F(command.CtaTarget),
-            F(command.DisplayOrder?.ToString(CultureInfo.InvariantCulture)),
-            F(command.ExpectedVersion?.ToString(CultureInfo.InvariantCulture)));
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
-    }
 }
