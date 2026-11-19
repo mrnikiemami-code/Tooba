@@ -31,5 +31,7 @@ Decision: `A_ADMIN_DELETE_REPLAY_FROM_OCCURRENCE_LEDGER_LIST_DETAIL_DELETE_B_EFF
 - Production BUILD_ID not minted (Html/404 prerender unrelated). Mounted jsdom ≠ geometry. Owner still runs real upload/delete/submit/moderation trial.
 - R6 bootstrap effects UNKNOWN retained; VendorShell unchanged.
 
+Final code SHA: `77fcb2630525fa334508d3e5ffdbc7491f63e3f9`
+
 automaticNextImplementationTask: NONE  
 STOP_FOR_ARCHITECT_AND_USER_REVIEW
