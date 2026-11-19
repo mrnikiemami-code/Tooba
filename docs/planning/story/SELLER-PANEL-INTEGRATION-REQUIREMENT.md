@@ -1,4 +1,19 @@
-# CURRENT — TB-282-R3 REVIEWED PARTIAL; NO NEXT TASK ISSUED — 2026-11-19
+# CURRENT — ONLY TB-282-R4 ISSUED; AWAIT WORKER RESULT — 2026-11-19
+
+Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4
+Expected-Base-SHA: f35f476c51346858bb1d61e96bb5e7d2068c5a79
+Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/TASK.md
+Evidence envelope/receipt: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/
+User explicitly rejected current Story UX in BOTH panels. One consolidated task: Orders-style list (title FIRST data column, operations LAST and logical-end PINNED including saved views); one shared complete merchant editor, compact save/localized upload, clear shop/main-storefront identity; named product selection AND UPDATE of existing slide; finish R3 S1 upload/add dispatch gate and actual mounted/negative-control/catalogue >40 proof. No separate discovery or another UI phase.
+Admin selects shop/main storefront on creation and moderates all; seller is fixed to current shop/products and submits for approval. Existing ownership/media are not silently reassigned. Existing purchased-template VendorShell /vendor-panel/stories /story.view remains; no duplicate panel/menu/login.
+Read R3 ARCHITECT-REVIEW; retain valid existing progress and historical reports. Do not declare previous PASS as user acceptance.
+One worker tooba-worker-01 / tooba-main. Issued is NOT claimed/running. Wait for this result, independently review, then owner test. No parallel/new task/automatic continuation.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+ZERO migration/live business write, no screenshots/delegation/polling; skip-bootstrap on Host refresh. Returns/payout backlog/separate key state preserved. Current review URLs /fa/admin/stories, /fa/vendor-panel/stories, /fa; user acceptance pending.
+
+# HISTORICAL — superseded by CURRENT above
 
 Reviewed implementation 70c5dd36a2a9508f7a95edce1ee575c0fda9dfae / evidence 9047660042696e205c04cf161c5c035abd912840.
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3/ARCHITECT-REVIEW.md.
