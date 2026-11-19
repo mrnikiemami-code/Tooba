@@ -43,7 +43,7 @@ npm run test:critical-storefront → 19/20 (storefront-landing-blocks.tsx:286 bg
 
 ## Git
 
-- Code/Evidence HEAD: (filled at commit)
+- Code/Evidence HEAD: `70c5dd36a2a9508f7a95edce1ee575c0fda9dfae`
 - User-Work-Preserved: YES
 
 ## Negative control
