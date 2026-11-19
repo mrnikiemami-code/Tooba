@@ -378,14 +378,96 @@ export async function executeAdminOpBatch(args: {
   return { items, succeeded, failed, unknown, skipped, notStarted, stoppedReason };
 }
 
-export function summarizeAdminBatch(result: StoryAdminBatchResult, kindLabel: string): string {
+export type SkippedReasonGroup = { reason: string; count: number };
+
+/** Group skipped rows by plain reason — never enumerate titles (bounded for large selections). */
+export function groupSkippedReasons(skipped: StoryAdminOpEligibility[]): SkippedReasonGroup[] {
+  const counts = new Map<string, number>();
+  for (const entry of skipped) {
+    const reason = (entry.reason ?? "").trim() || "این استوری برای این اقدام مناسب نیست.";
+    counts.set(reason, (counts.get(reason) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([reason, count]) => ({ reason, count }));
+}
+
+/**
+ * One plain-Persian toast when nothing in the selection can run.
+ * Prefers owner-facing plurals for common platform / awaiting-review cases.
+ */
+export function explainZeroEligibleToast(plan: StoryAdminOpPlan): string {
+  const groups = groupSkippedReasons(plan.skipped);
+  if (groups.length === 0) {
+    return plan.kind === "approve"
+      ? "استوری‌های ویترین اصلی به تأیید نیاز ندارند."
+      : plan.kind === "reject"
+        ? "فقط استوری‌های در انتظار تأیید قابل رد هستند."
+        : "هیچ‌کدام از استوری‌های انتخاب‌شده قابل حذف نیستند.";
+  }
+  if (groups.length === 1) {
+    const only = groups[0]!;
+    const allPlatform = plan.skipped.every((s) => s.row.origin === "Admin");
+    if (plan.kind === "approve" && allPlatform) {
+      return "استوری‌های ویترین اصلی به تأیید نیاز ندارند.";
+    }
+    if (plan.kind === "reject") {
+      const awaitingOnly = plan.skipped.every(
+        (s) => s.row.origin === "Admin" || s.row.reviewStatus !== "Submitted" || !hasAction(s.row, "reject"),
+      );
+      if (awaitingOnly) return "فقط استوری‌های در انتظار تأیید قابل رد هستند.";
+    }
+    if (only.count > 1) return only.reason;
+    return only.reason;
+  }
+  return groups.map((g) => (g.count > 1 ? `${g.reason} (${g.count})` : g.reason)).join("؛ ");
+}
+
+export type AdminBatchToastSeverity = "success" | "error" | "info" | "warning";
+
+export type AdminBatchToast = { message: string; severity: AdminBatchToastSeverity };
+
+function verbPastFa(kind: StoryAdminOpKind): string {
+  if (kind === "approve") return "تأیید شد";
+  if (kind === "reject") return "رد شد";
+  return "حذف شد";
+}
+
+/** ONE completion toast — totals only; skipped ≠ moderation «ردشده»; unknown is recoverable. */
+export function formatAdminBatchToast(result: StoryAdminBatchResult, kind: StoryAdminOpKind): AdminBatchToast {
   const parts: string[] = [];
-  if (result.succeeded > 0) parts.push(`${result.succeeded} موفق`);
-  if (result.failed > 0) parts.push(`${result.failed} ناموفق`);
-  if (result.unknown > 0) parts.push(`${result.unknown} نامشخص`);
-  if (result.skipped > 0) parts.push(`${result.skipped} ردشده`);
-  if (result.notStarted > 0) parts.push(`${result.notStarted} اجرا نشد`);
-  return `${kindLabel}: ${parts.join("، ") || "بدون تغییر"}`;
+  if (result.succeeded > 0) {
+    parts.push(`${result.succeeded} استوری ${verbPastFa(kind)}`);
+  }
+  const notDone = result.failed + result.skipped;
+  if (notDone > 0) {
+    parts.push(`${notDone} مورد ${kind === "delete" ? "حذف نشد" : "انجام نشد"}`);
+  }
+  if (result.unknown > 0) {
+    parts.push(`${result.unknown} مورد نتیجه‌اش نامشخص است و قابل ادامه است`);
+  }
+  if (result.notStarted > 0) {
+    parts.push(`${result.notStarted} مورد اجرا نشد`);
+  }
+  if (result.stoppedReason) {
+    parts.push(result.stoppedReason);
+  }
+  const message = parts.join("؛ ") || "تغییری اعمال نشد.";
+  let severity: AdminBatchToastSeverity = "info";
+  if (result.unknown > 0) severity = "warning";
+  else if (result.failed > 0 && result.succeeded === 0) severity = "error";
+  else if (result.succeeded > 0 && result.failed === 0 && result.unknown === 0 && result.notStarted === 0) {
+    severity = result.skipped > 0 ? "info" : "success";
+  } else if (result.succeeded === 0 && result.failed === 0 && result.unknown === 0) {
+    severity = "info";
+  }
+  return { message, severity };
+}
+
+/** @deprecated Prefer formatAdminBatchToast — kept for any residual callers. */
+export function summarizeAdminBatch(result: StoryAdminBatchResult, kindLabel: string): string {
+  void kindLabel;
+  const kind: StoryAdminOpKind =
+    result.items.find((i) => i.kind)?.kind ?? "approve";
+  return formatAdminBatchToast(result, kind).message;
 }
 
 export function outcomeLabelFa(outcome: StoryAdminOpOutcome): string {
@@ -397,7 +479,7 @@ export function outcomeLabelFa(outcome: StoryAdminOpOutcome): string {
     case "unknown":
       return "نامشخص";
     case "skipped":
-      return "ردشده";
+      return "انجام نشد";
     case "not_started":
       return "اجرا نشد";
     default:

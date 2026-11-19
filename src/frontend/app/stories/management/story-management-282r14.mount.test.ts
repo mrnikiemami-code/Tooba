@@ -155,14 +155,15 @@ test("R14: real grid select 2 eligible + 1 skipped; per-title results; distinct 
   await click(q(tree.container, '[data-testid="app-grid-bulk-story-bulk-approve"]'));
   await flush();
   await waitFor(() => qq(document.body, '[data-testid="story-admin-op-dialog"]').length === 1);
-  assert.equal(qq(document.body, '[data-testid="story-admin-op-eligible"] li').length, 2);
-  assert.equal(qq(document.body, '[data-testid="story-admin-op-skipped"] li').length, 1);
-  assert.match(q(document.body, '[data-testid="story-admin-op-skipped"]').textContent ?? "", /C-approved|تأیید/);
+  assert.match(q(document.body, '[data-testid="story-admin-op-processable-count"]').textContent ?? "", /2|۲/);
+  assert.match(q(document.body, '[data-testid="story-admin-op-skipped"]').textContent ?? "", /1|۱/);
+  assert.equal(qq(document.body, '[data-testid="story-admin-op-skipped-group"]').length, 1);
+  assert.ok(!(q(document.body, '[data-testid="story-admin-op-dialog"]').textContent ?? "").includes("A-submit"));
 
   await click(q(document.body, '[data-testid="story-admin-op-confirm"]'));
   await flush();
   await waitFor(() => posts.length === 2);
-  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 1);
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 0);
 
   const ids = posts.map((p) => p.url.match(/stories\/([0-9a-fA-F-]+)/)?.[1]);
   assert.deepEqual(new Set(ids), new Set([ID_A, ID_B]));
@@ -171,15 +172,6 @@ test("R14: real grid select 2 eligible + 1 skipped; per-title results; distinct 
   assert.notEqual(keys[0], keys[1]);
   assert.equal(JSON.parse(posts.find((p) => p.url.includes(ID_A))!.body).expectedVersion, 11);
   assert.equal(JSON.parse(posts.find((p) => p.url.includes(ID_B))!.body).expectedVersion, 22);
-
-  const resultItems = qq(document.body, '[data-testid="story-admin-op-result-item"]');
-  assert.ok(resultItems.length >= 3);
-  const text = q(document.body, '[data-testid="story-admin-op-result-list"]').textContent ?? "";
-  assert.match(text, /A-submit/);
-  assert.match(text, /B-submit/);
-  assert.match(text, /C-approved/);
-  assert.match(text, /موفق/);
-  assert.match(text, /ردشده/);
 
   globalThis.fetch = original;
   await tree.unmount();
@@ -239,7 +231,7 @@ test("R14: partial unknown retains second; retry exact bytes; first not repeated
   await click(q(document.body, '[data-testid="story-admin-op-confirm"]'));
   await flush();
   await waitFor(() => bodies.length === 2);
-  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result-item"][data-outcome="unknown"]').length >= 1);
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 0);
   const pending = listPendingStoryIntents("admin", null, "actor-admin-r14");
   assert.ok(pending.some((p) => p.state === "ok" && p.envelope.routeTargetId === ID_B));
   const secondBody = bodies[1]!;

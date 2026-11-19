@@ -1,16 +1,18 @@
-# CURRENT — OWNER REJECTED MODERATION FEEDBACK; R17 ISSUED — 2026-11-20
+# CURRENT — TB-282-R17 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
-Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17/TASK.md
-Owner explicitly requires native app toast, understandable copy and compact bulk confirmations. No eligible action -> explanatory toast, no impossible dialog; completion -> one summary toast, no per-row result Dialog/full title lists. Large selections must have bounded summary UI.
-This owner direction SUPERSEDES R14/R15 result-dialog presentation requirement only. Keep internal per-row outcomes, durable exact retry, uncertainty, epoch/scope fences and R16 stable typing/selection repair. Main-storefront stories are not made eligible by changing copy.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-R16 typing fix accepted narrowly; whole owner UX acceptance remains rejected/pending. ZERO backend/auth/schema/grant/seed/config/live Story-Media changes; Host5088 skip-bootstrap=1 / FE3000 next-dev. Html404 release blocker unchanged. Preserve VendorShell/language registry/date layout/Returns/payout/user work and R6 effects UNKNOWN.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued toast/compact-confirm presentation: zero-eligible → one native toast no dialog; mixed → count/group confirm; completion one toast no result Dialog; R16 typing retained; bounded 1000 helper; Host5088 skip-bootstrap; Next3000 next-dev; ZERO backend; ZERO live Story/Media write.
+Decision `NATIVE_TOAST_COMPACT_BULK_CONFIRM_NO_ZERO_ELIGIBLE_OR_RESULT_DIALOG_BOUNDED_1000_ZERO_BACKEND_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `6271b64a59ae63d4344a4837f56d5933dc439504`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — prior records preserved below
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# CURRENT — R16 REPORTED TYPING REPAIR ACCEPTED; OWNER CHECK PENDING — 2026-11-20
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — OWNER REJECTED MODERATION FEEDBACK; R17 ISSUED THEN WORKER PASS ABOVE
+
+# HISTORICAL — R16 REPORTED TYPING REPAIR ACCEPTED; OWNER CHECK PENDING — 2026-11-20
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16/ARCHITECT-REVIEW.md
 Code 6450d2684f58b5861ea650404f5e37395d771342 / evidence 7f9dd5ef073cbbec257ec69b69194510b99e71b0.

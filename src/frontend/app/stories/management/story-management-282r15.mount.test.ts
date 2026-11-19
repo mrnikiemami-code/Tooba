@@ -152,32 +152,17 @@ test("R15: rejected fetch on second row keeps result Dialog; recovery exact byte
   await click(q(document.body, '[data-testid="story-admin-op-confirm"]'));
   await flush();
 
-  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 1);
+  await waitFor(() => bodies.length >= 2);
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 0);
   assert.equal(unhandled, 0, "rejected fetch must not escape as unhandled rejection");
-
-  const list = q(document.body, '[data-testid="story-admin-op-result-list"]').textContent ?? "";
-  assert.match(list, /ok-net/);
-  assert.match(list, /lost-net/);
-  assert.match(list, /skip-net/);
-  assert.match(list, /موفق/);
-  assert.match(list, /نامشخص/);
-  assert.match(list, /ردشده/);
 
   const pending = listPendingStoryIntents("admin", null, "actor-admin-r15");
   const bPending = pending.find((p) => p.state === "ok" && p.envelope.routeTargetId === ID_B);
   assert.ok(bPending && bPending.state === "ok");
   assert.ok(!pending.some((p) => p.state === "ok" && p.envelope.routeTargetId === ID_A));
-  const firstB = bodies.find((_, i) => {
-    // second approve body is B under reject mode
-    return i >= 1;
-  });
   assert.ok(bodies.length >= 2);
   const lostBody = bodies[1]!;
   assert.equal(JSON.parse(lostBody).expectedVersion, 16);
-
-  await click(q(document.body, '[data-testid="story-admin-op-result-close"]'));
-  await flush();
-  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 0);
 
   mode = "ok";
   await waitFor(() => qq(document.body, '[data-testid="story-recovery-retry"]').length >= 1);

@@ -53,9 +53,9 @@ import { createScopedStorySavedViewStore } from "./story-saved-views";
 import {
   classifyAdminOp,
   executeAdminOpBatch,
-  outcomeLabelFa,
-  summarizeAdminBatch,
-  type StoryAdminBatchResult,
+  explainZeroEligibleToast,
+  formatAdminBatchToast,
+  groupSkippedReasons,
   type StoryAdminOpKind,
   type StoryAdminOpPlan,
 } from "./story-admin-ops";
@@ -317,8 +317,6 @@ function StoryManagementScreenBody({
   const [adminOpPlan, setAdminOpPlan] = useState<StoryAdminOpPlan | null>(null);
   const [adminOpReason, setAdminOpReason] = useState("");
   const [adminOpBusy, setAdminOpBusy] = useState(false);
-  const [adminOpResult, setAdminOpResult] = useState<StoryAdminBatchResult | null>(null);
-  const [adminOpResultKind, setAdminOpResultKind] = useState<StoryAdminOpKind | null>(null);
   const adminOpCancelledRef = useRef(false);
   const runSubmitRef = useRef<(row: AdminStorySnapshot) => void>(() => undefined);
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -669,7 +667,12 @@ function StoryManagementScreenBody({
 
   const openAdminOp = useCallback((kind: StoryAdminOpKind, rows: AdminStorySnapshot[]) => {
     if (capabilities.mode !== "admin" || rows.length === 0) return;
-    setAdminOpPlan(classifyAdminOp(kind, rows));
+    const plan = classifyAdminOp(kind, rows);
+    if (plan.eligible.length === 0) {
+      toast.info(explainZeroEligibleToast(plan));
+      return;
+    }
+    setAdminOpPlan(plan);
     setAdminOpReason("");
   }, [capabilities.mode]);
 
@@ -702,7 +705,9 @@ function StoryManagementScreenBody({
       return;
     }
     if (adminOpPlan.eligible.length === 0) {
-      toast.error(copy.bulkNoneEligible);
+      toast.info(explainZeroEligibleToast(adminOpPlan));
+      setAdminOpPlan(null);
+      setAdminOpReason("");
       return;
     }
     const planKind = adminOpPlan.kind;
@@ -721,41 +726,34 @@ function StoryManagementScreenBody({
         },
         isCancelled: () => adminOpCancelledRef.current,
       });
-      const label =
-        planKind === "approve"
-          ? copy.approveBatchToast
-          : planKind === "reject"
-            ? copy.rejectBatchToast
-            : copy.deleteStory;
-      // Count toast is secondary; per-row panel is authoritative.
-      toast.info(summarizeAdminBatch(result, label));
-      setAdminOpResultKind(planKind);
-      setAdminOpResult(result);
+      const announcement = formatAdminBatchToast(result, planKind);
+      if (announcement.severity === "success") toast.success(announcement.message);
+      else if (announcement.severity === "error") toast.error(announcement.message);
+      else if (announcement.severity === "warning") toast.warning(announcement.message);
+      else toast.info(announcement.message);
+
       setAdminOpPlan(null);
       setAdminOpReason("");
       refreshGrid();
       setReloadToken((v) => v + 1);
-      // Do NOT navigate away — user must inspect per-row results first.
+
+      // Genuine delete of the open detail → return to list; unresolved delete must not navigate.
+      if (planKind === "delete") {
+        const deletedIds = new Set(
+          result.items.filter((i) => i.outcome === "succeeded").map((i) => i.storyId),
+        );
+        if (
+          deletedIds.size > 0 &&
+          ((selectedId && deletedIds.has(selectedId)) || (detail && deletedIds.has(detail.storyId)))
+        ) {
+          setSelectedId(null);
+          setDetail(null);
+          ownedDraftIdRef.current = null;
+          router.push(basePath);
+        }
+      }
     } finally {
       setAdminOpBusy(false);
-    }
-  }
-
-  function closeAdminOpResult() {
-    const result = adminOpResult;
-    const kind = adminOpResultKind;
-    setAdminOpResult(null);
-    setAdminOpResultKind(null);
-    if (!result || kind !== "delete") return;
-    const deletedIds = new Set(
-      result.items.filter((i) => i.outcome === "succeeded").map((i) => i.storyId),
-    );
-    if (deletedIds.size === 0) return;
-    if ((selectedId && deletedIds.has(selectedId)) || (detail && deletedIds.has(detail.storyId))) {
-      setSelectedId(null);
-      setDetail(null);
-      ownedDraftIdRef.current = null;
-      router.push(basePath);
     }
   }
 
@@ -2246,6 +2244,9 @@ function StoryManagementScreenBody({
             <p className="text-sm text-muted" data-testid="story-admin-op-selected-count">
               {copy.bulkSelectedCount}: {adminOpPlan.selected.length.toLocaleString(numberLocale)}
             </p>
+            <p className="text-sm" data-testid="story-admin-op-processable-count">
+              {copy.bulkProcessableCount}: {adminOpPlan.eligible.length.toLocaleString(numberLocale)}
+            </p>
             {adminOpPlan.kind === "approve" ? (
               <p className="text-sm text-muted">{copy.approveConfirmBody}</p>
             ) : null}
@@ -2255,27 +2256,16 @@ function StoryManagementScreenBody({
             {adminOpPlan.kind === "reject" ? (
               <p className="text-sm text-muted">{copy.rejectConfirmBody}</p>
             ) : null}
-            {adminOpPlan.eligible.length > 0 ? (
-              <div data-testid="story-admin-op-eligible">
-                <p className="mb-1 text-sm font-bold">{copy.bulkEligibleHeading}</p>
-                <ul className="max-h-40 space-y-1 overflow-auto text-sm">
-                  {adminOpPlan.eligible.map((entry) => (
-                    <li key={entry.row.storyId}>«{entry.row.title}»</li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p className="text-sm text-rose-700" data-testid="story-admin-op-none-eligible">
-                {copy.bulkNoneEligible}
-              </p>
-            )}
             {adminOpPlan.skipped.length > 0 ? (
               <div data-testid="story-admin-op-skipped">
-                <p className="mb-1 text-sm font-bold">{copy.bulkSkippedHeading}</p>
-                <ul className="max-h-40 space-y-1 overflow-auto text-sm text-muted">
-                  {adminOpPlan.skipped.map((entry) => (
-                    <li key={entry.row.storyId}>
-                      «{entry.row.title}» — {entry.reason}
+                <p className="mb-1 text-sm font-bold">
+                  {copy.bulkSkippedHeading}: {adminOpPlan.skipped.length.toLocaleString(numberLocale)}
+                </p>
+                <ul className="max-h-40 space-y-1 overflow-auto text-sm text-muted" data-testid="story-admin-op-skipped-groups">
+                  {groupSkippedReasons(adminOpPlan.skipped).map((group) => (
+                    <li key={group.reason} data-testid="story-admin-op-skipped-group">
+                      {group.reason}
+                      {group.count > 1 ? ` (${group.count.toLocaleString(numberLocale)})` : ""}
                     </li>
                   ))}
                 </ul>
@@ -2317,60 +2307,10 @@ function StoryManagementScreenBody({
                 onClick={() => void confirmAdminOp()}
               >
                 {adminOpPlan.kind === "approve"
-                  ? copy.approve
+                  ? copy.bulkConfirmApprove
                   : adminOpPlan.kind === "reject"
-                    ? copy.reject
-                    : copy.deleteStory}
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </Dialog>
-
-      <Dialog
-        open={Boolean(adminOpResult)}
-        onClose={closeAdminOpResult}
-        title={copy.bulkResultTitle}
-      >
-        {adminOpResult ? (
-          <div className="space-y-3 p-1" data-testid="story-admin-op-result">
-            {adminOpResult.stoppedReason ? (
-              <p className="text-sm text-amber-800" data-testid="story-admin-op-stopped">
-                {adminOpResult.stoppedReason}
-              </p>
-            ) : null}
-            <ul className="max-h-72 space-y-2 overflow-auto text-sm" data-testid="story-admin-op-result-list">
-              {adminOpResult.items.map((item) => {
-                const opLabel =
-                  item.kind === "approve"
-                    ? copy.bulkOpApprove
-                    : item.kind === "reject"
-                      ? copy.bulkOpReject
-                      : copy.bulkOpDelete;
-                return (
-                  <li
-                    key={`${item.storyId}-${item.outcome}`}
-                    className="rounded-xl border border-border px-3 py-2"
-                    data-testid="story-admin-op-result-item"
-                    data-outcome={item.outcome}
-                    data-story-id={item.storyId}
-                  >
-                    <p className="font-bold">
-                      «{item.title}» — {opLabel} — {outcomeLabelFa(item.outcome)}
-                    </p>
-                    {item.message ? <p className="mt-1 text-muted">{item.message}</p> : null}
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className="min-h-11 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-                data-testid="story-admin-op-result-close"
-                onClick={closeAdminOpResult}
-              >
-                {copy.bulkResultClose}
+                    ? copy.bulkConfirmReject
+                    : copy.bulkConfirmDelete}
               </button>
             </div>
           </div>

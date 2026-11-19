@@ -287,7 +287,8 @@ test("R13 A: mixed plan shows skipped; only eligible approve POSTs", async () =>
   // Open approve for OK only via detail; skipped classification asserted above.
   await click(q(tree.container, '[data-testid="story-detail-approve"]'));
   await flush();
-  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-eligible"]').length === 1);
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-processable-count"]').length === 1);
+  assert.match(q(document.body, '[data-testid="story-admin-op-processable-count"]').textContent ?? "", /1|۱/);
   assert.equal(qq(document.body, '[data-testid="story-admin-op-skipped"]').length, 0);
   await click(q(document.body, '[data-testid="story-admin-op-confirm"]'));
   await flush();
@@ -425,6 +426,7 @@ test("R13 A: sequential batch approve posts one envelope per eligible story", as
     gate,
     scope: { role: "admin", shopId: null, actorUserId: "actor-admin-r13" },
     actorUserId: "actor-admin-r13",
+    readLiveScope: () => ({ role: "admin", shopId: null, actorUserId: "actor-admin-r13" }),
   });
   assert.equal(result.succeeded, 2);
   assert.equal(result.skipped, 1);

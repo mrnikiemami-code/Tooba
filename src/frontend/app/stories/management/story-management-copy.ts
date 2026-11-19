@@ -140,8 +140,12 @@ export type StoryCopy = {
   deleteBatchConfirmBody: string;
   bulkEligibleHeading: string;
   bulkSkippedHeading: string;
+  bulkProcessableCount: string;
   bulkSelectedCount: string;
   bulkNoneEligible: string;
+  bulkConfirmApprove: string;
+  bulkConfirmReject: string;
+  bulkConfirmDelete: string;
   bulkResultTitle: string;
   bulkResultClose: string;
   bulkOpApprove: string;
@@ -295,16 +299,20 @@ export const faStoryCopy: StoryCopy = {
   loadMoreProducts: "نمایش محصولات بیشتر",
   approveAndPublish: "تأیید و انتشار",
   approveAndSchedule: "تأیید و زمان‌بندی",
-  approveConfirm: "تأیید بازبینی",
-  approveConfirmBody: "با تأیید، بازهٔ انتشار هر استوری حفظ می‌شود و وضعیت بازبینی به‌روز می‌شود.",
+  approveConfirm: "تأیید استوری‌ها",
+  approveConfirmBody: "با تأیید، بازهٔ انتشار حفظ می‌شود و وضعیت بازبینی به‌روز می‌شود.",
   approveBatchToast: "تأیید",
-  rejectConfirmBody: "دلیل رد برای همهٔ موارد انتخاب‌شدهٔ مجاز یکسان اعمال می‌شود.",
+  rejectConfirmBody: "یک دلیل برای همهٔ استوری‌های قابل رد اعمال می‌شود.",
   rejectBatchToast: "رد",
   deleteBatchConfirmBody: "حذف قطعی است و قابل بازگشت نیست.",
   bulkEligibleHeading: "قابل اجرا",
-  bulkSkippedHeading: "ردشده از این اقدام",
+  bulkSkippedHeading: "اجرا نمی‌شود",
+  bulkProcessableCount: "قابل اجرا",
   bulkSelectedCount: "انتخاب‌شده",
-  bulkNoneEligible: "هیچ مورد مجازی در انتخاب فعلی نیست.",
+  bulkNoneEligible: "هیچ‌کدام از استوری‌های انتخاب‌شده برای این اقدام مناسب نیستند.",
+  bulkConfirmApprove: "تأیید",
+  bulkConfirmReject: "رد استوری‌ها",
+  bulkConfirmDelete: "حذف استوری‌ها",
   bulkResultTitle: "نتیجهٔ اقدام‌ها",
   bulkResultClose: "بستن نتیجه",
   bulkOpApprove: "تأیید",
@@ -458,16 +466,20 @@ export const enStoryCopy: StoryCopy = {
   loadMoreProducts: "Show more products",
   approveAndPublish: "Approve and publish",
   approveAndSchedule: "Approve and schedule",
-  approveConfirm: "Confirm review",
+  approveConfirm: "Approve stories",
   approveConfirmBody: "Approval keeps each publication window and updates review status.",
   approveBatchToast: "Approve",
-  rejectConfirmBody: "One reason applies to every eligible selected story.",
+  rejectConfirmBody: "One reason applies to every rejectable story in this selection.",
   rejectBatchToast: "Reject",
   deleteBatchConfirmBody: "Deletion is permanent and cannot be undone.",
-  bulkEligibleHeading: "Eligible",
-  bulkSkippedHeading: "Skipped for this action",
+  bulkEligibleHeading: "Processable",
+  bulkSkippedHeading: "Will not run",
+  bulkProcessableCount: "Processable",
   bulkSelectedCount: "Selected",
-  bulkNoneEligible: "No eligible stories in the current selection.",
+  bulkNoneEligible: "None of the selected stories can use this action.",
+  bulkConfirmApprove: "Approve",
+  bulkConfirmReject: "Reject stories",
+  bulkConfirmDelete: "Delete stories",
   bulkResultTitle: "Action results",
   bulkResultClose: "Close results",
   bulkOpApprove: "Approve",

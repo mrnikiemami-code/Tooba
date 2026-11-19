@@ -206,8 +206,9 @@ test("R16: reject typing does not refetch or clear selection; cancel then confir
   assert.equal(selectedCountText(tree.container), selectedBefore, "selection must stay");
   assert.equal(document.activeElement, input, "focus stays on reason");
   assert.equal(input.value, "ناقص");
-  assert.equal(qq(document.body, '[data-testid="story-admin-op-eligible"] li').length, 2);
-  assert.equal(qq(document.body, '[data-testid="story-admin-op-skipped"] li').length, 1);
+  assert.match(q(document.body, '[data-testid="story-admin-op-processable-count"]').textContent ?? "", /2|۲/);
+  assert.match(q(document.body, '[data-testid="story-admin-op-skipped"]').textContent ?? "", /1|۱/);
+  assert.equal(qq(document.body, '[data-testid="story-admin-op-skipped-group"]').length, 1);
 
   await click(q(document.body, '[data-testid="story-admin-op-cancel"]'));
   await flush();
@@ -234,19 +235,15 @@ test("R16: reject typing does not refetch or clear selection; cancel then confir
   assert.deepEqual(new Set(ids.map((x) => x.expectedVersion)), new Set([21, 22]));
   assert.ok(ids.every((x) => x.reason === "ناقص بود"));
   assert.notEqual(ids[0]!.occurrenceKey, ids[1]!.occurrenceKey);
-  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 1, {
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-result"]').length === 0, {
     timeoutMs: 5000,
   });
-  const resultText = q(document.body, '[data-testid="story-admin-op-result-list"]').textContent ?? "";
-  assert.match(resultText, /eligible-a/);
-  assert.match(resultText, /eligible-b/);
-  assert.match(resultText, /موبایل/);
-  assert.match(resultText, /ردشده/);
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-dialog"]').length === 0, {
+    timeoutMs: 5000,
+  });
 
   // Deliberate review-filter change still fetches
   const beforeRefresh = queryReads;
-  await click(q(document.body, '[data-testid="story-admin-op-result-close"]'));
-  await flush();
   const filter = q(tree.container, '[data-testid="admin-story-review-filter"]') as HTMLSelectElement;
   await act(async () => {
     filter.value = "Submitted";
