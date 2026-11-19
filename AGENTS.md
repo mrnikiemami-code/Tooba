@@ -1,3 +1,16 @@
+# CURRENT — R8 BOUNDED ACCEPTED; LIVE AUTH BLOCKED; ONLY TB-282-R9 ISSUED — 2026-11-19
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8/ARCHITECT-REVIEW.md
+Code bd23deeec736746170ed6fe101cd880ba1b2e33d / main dcd5e4e383f819924b182d421ffcb7dce32c1857. R8 recovered-create adoption and read-only dev-context bind accepted within recorded limits; no new Story UI phase.
+Actual live Story list still 403 admin.authorization.denied; dev-context/login 200 is not readiness. InMemory auth loses process tuples on restart; snapshot Find alone does not establish tenant#view.
+Only task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9; docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9/TASK.md. Expected-Base dcd5e4e383f819924b182d421ffcb7dce32c1857. Rebuild ONLY Development InMemory projection from verified existing membership/assignments through owning Contracts; no persistent grants/identity/business writes or bootstrap/seed. If durable authority absent, explicit blocker instead of invented grant.
+One worker tooba-worker-01/tooba-main; issued NOT claimed/running. Host refresh skip-bootstrap=1; preserve user work, Returns, payout, VendorShell, language registry. No screenshots/delegation/polling. R6 effects UNKNOWN.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9 (ISSUED_NOT_CLAIMED)
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — TB-282-R8 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8/TASK.md` and
