@@ -33,13 +33,12 @@ public sealed class StoryMarketplace281R2DirectoryTests
             CancellationToken.None);
         await directory.SellerAddItemAsync(
             StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
+            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, OccurrenceKey: "occ-add-22", ExpectedVersion: draft.VersionToken),
             CancellationToken.None);
         var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
         var submitted = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
-        await directory.AdminApproveAndPublishAsync(
-            StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None);
+        await directory.AdminApproveAndPublishAsync(StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None, "occ-aap-23");
 
         var live = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         Assert.Contains("stop", live!.ActionCodes!);
@@ -78,15 +77,15 @@ public sealed class StoryMarketplace281R2DirectoryTests
 
         await directory.SellerCreateDraftAsync(
             StoryTenantIds.StoreAlpha, shopA, seller,
-            new CreateStoryCommand("alpha-one", null, null, null, null, null, null, null),
+            new CreateStoryCommand("alpha-one", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-17"),
             CancellationToken.None);
         await directory.SellerCreateDraftAsync(
             StoryTenantIds.StoreAlpha, shopA, seller,
-            new CreateStoryCommand("alpha-two", null, null, null, null, null, null, null),
+            new CreateStoryCommand("alpha-two", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-18"),
             CancellationToken.None);
         await directory.SellerCreateDraftAsync(
             StoryTenantIds.StoreAlpha, shopB, seller,
-            new CreateStoryCommand("beta-one", null, null, null, null, null, null, null),
+            new CreateStoryCommand("beta-one", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-19"),
             CancellationToken.None);
 
         var page = await directory.SellerQueryAsync(
@@ -114,7 +113,7 @@ public sealed class StoryMarketplace281R2DirectoryTests
             directory.SellerCreateDraftAsync(
                 StoryTenantIds.StoreAlpha, shop, seller,
                 new CreateStoryCommand(
-                    "cta", null, null, null, null, null, "product", foreign.ToString("D")),
+                    "cta", null, null, null, null, null, "product", foreign.ToString("D"), OccurrenceKey: "occ-create-20"),
                 CancellationToken.None));
         Assert.Equal(StoryErrorCodes.CtaRejected, ex.Error.Code);
         Assert.Equal(0, await db.Stories.CountAsync());
@@ -122,7 +121,7 @@ public sealed class StoryMarketplace281R2DirectoryTests
         var ok = await directory.SellerCreateDraftAsync(
             StoryTenantIds.StoreAlpha, shop, seller,
             new CreateStoryCommand(
-                "cta-ok", null, null, null, null, null, "product", owned.ToString("D")),
+                "cta-ok", null, null, null, null, null, "product", owned.ToString("D"), OccurrenceKey: "occ-create-21"),
             CancellationToken.None);
         Assert.Equal(owned.ToString("D"), ok.CtaTarget);
     }
@@ -192,6 +191,13 @@ public sealed class StoryMarketplace281R2DirectoryTests
         public Task EnsureOwnedBySellerAsync(Guid productId, Guid sellerPartyId, CancellationToken cancellationToken)
         {
             if (sellerPartyId != shop || productId != ownedProduct)
+                throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+            return Task.CompletedTask;
+        }
+
+        public Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken)
+        {
+            if (productId != ownedProduct)
                 throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
             return Task.CompletedTask;
         }

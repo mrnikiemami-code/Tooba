@@ -20,7 +20,7 @@ public sealed class CreateAdminStoryCommandHandler(StoryPresentationComposer com
 
 /// <summary>تأیید و انتشار اتمی.</summary>
 public sealed record ApproveAndPublishAdminStoryCommand(
-    Guid TenantId, Guid StoryId, Guid AdminActorUserId, int? ExpectedVersion)
+    Guid TenantId, Guid StoryId, Guid AdminActorUserId, int? ExpectedVersion, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class ApproveAndPublishAdminStoryCommandHandler(StoryPresentationComposer composer)
@@ -30,7 +30,8 @@ public sealed class ApproveAndPublishAdminStoryCommandHandler(StoryPresentationC
         ApproveAndPublishAdminStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.AdminApproveAndPublishAsync(
-                request.TenantId, request.StoryId, request.AdminActorUserId, request.ExpectedVersion, cancellationToken));
+                request.TenantId, request.StoryId, request.AdminActorUserId, request.ExpectedVersion, cancellationToken,
+                request.OccurrenceKey));
 }
 
 /// <summary>تأیید و زمان‌بندی اتمی.</summary>
@@ -40,7 +41,8 @@ public sealed record ApproveAndScheduleAdminStoryCommand(
     Guid AdminActorUserId,
     int? ExpectedVersion,
     DateTimeOffset? StartAt,
-    DateTimeOffset? EndAt)
+    DateTimeOffset? EndAt,
+    string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class ApproveAndScheduleAdminStoryCommandHandler(StoryPresentationComposer composer)
@@ -54,8 +56,9 @@ public sealed class ApproveAndScheduleAdminStoryCommandHandler(StoryPresentation
                 request.StoryId,
                 request.AdminActorUserId,
                 request.ExpectedVersion,
-                new SetStoryScheduleCommand(request.StartAt, request.EndAt),
-                cancellationToken));
+                new SetStoryScheduleCommand(request.StartAt, request.EndAt, null, request.OccurrenceKey),
+                cancellationToken,
+                request.OccurrenceKey));
 }
 
 /// <summary>به‌روزرسانی استوری ادمین.</summary>
@@ -71,7 +74,8 @@ public sealed class UpdateAdminStoryCommandHandler(StoryPresentationComposer com
 }
 
 /// <summary>مرتب‌سازی استوری‌های ادمین.</summary>
-public sealed record ReorderAdminStoriesCommand(Guid TenantId, IReadOnlyList<Guid> StoryIds)
+public sealed record ReorderAdminStoriesCommand(
+    Guid TenantId, IReadOnlyList<Guid> StoryIds, IReadOnlyList<int> ExpectedVersions, string? OccurrenceKey)
     : IRequest<Result<IReadOnlyList<AdminStorySnapshot>>>;
 
 public sealed class ReorderAdminStoriesCommandHandler(StoryPresentationComposer composer)
@@ -80,11 +84,13 @@ public sealed class ReorderAdminStoriesCommandHandler(StoryPresentationComposer 
     public Task<Result<IReadOnlyList<AdminStorySnapshot>>> Handle(
         ReorderAdminStoriesCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
-            () => composer.AdminReorderStoriesAsync(request.TenantId, request.StoryIds, cancellationToken));
+            () => composer.AdminReorderStoriesAsync(
+                request.TenantId, request.StoryIds, request.ExpectedVersions, request.OccurrenceKey, cancellationToken));
 }
 
 /// <summary>فعال‌سازی استوری.</summary>
-public sealed record EnableAdminStoryCommand(Guid TenantId, Guid StoryId, int? ExpectedVersion)
+public sealed record EnableAdminStoryCommand(
+    Guid TenantId, Guid StoryId, int? ExpectedVersion, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class EnableAdminStoryCommandHandler(StoryPresentationComposer composer)
@@ -92,11 +98,13 @@ public sealed class EnableAdminStoryCommandHandler(StoryPresentationComposer com
 {
     public Task<Result<AdminStorySnapshot>> Handle(EnableAdminStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
-            () => composer.AdminEnableAsync(request.TenantId, request.StoryId, request.ExpectedVersion, cancellationToken));
+            () => composer.AdminEnableAsync(
+                request.TenantId, request.StoryId, request.ExpectedVersion, cancellationToken, request.OccurrenceKey));
 }
 
 /// <summary>غیرفعال‌سازی استوری.</summary>
-public sealed record DisableAdminStoryCommand(Guid TenantId, Guid StoryId, int? ExpectedVersion)
+public sealed record DisableAdminStoryCommand(
+    Guid TenantId, Guid StoryId, int? ExpectedVersion, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class DisableAdminStoryCommandHandler(StoryPresentationComposer composer)
@@ -104,7 +112,8 @@ public sealed class DisableAdminStoryCommandHandler(StoryPresentationComposer co
 {
     public Task<Result<AdminStorySnapshot>> Handle(DisableAdminStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
-            () => composer.AdminDisableAsync(request.TenantId, request.StoryId, request.ExpectedVersion, cancellationToken));
+            () => composer.AdminDisableAsync(
+                request.TenantId, request.StoryId, request.ExpectedVersion, cancellationToken, request.OccurrenceKey));
 }
 
 /// <summary>زمان‌بندی استوری.</summary>
@@ -120,7 +129,8 @@ public sealed class ScheduleAdminStoryCommandHandler(StoryPresentationComposer c
 }
 
 /// <summary>تأیید استوری فروشنده.</summary>
-public sealed record ApproveAdminStoryCommand(Guid TenantId, Guid StoryId, Guid AdminActorUserId, int? ExpectedVersion)
+public sealed record ApproveAdminStoryCommand(
+    Guid TenantId, Guid StoryId, Guid AdminActorUserId, int? ExpectedVersion, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class ApproveAdminStoryCommandHandler(StoryPresentationComposer composer)
@@ -129,12 +139,13 @@ public sealed class ApproveAdminStoryCommandHandler(StoryPresentationComposer co
     public Task<Result<AdminStorySnapshot>> Handle(ApproveAdminStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.AdminApproveAsync(
-                request.TenantId, request.StoryId, request.AdminActorUserId, request.ExpectedVersion, cancellationToken));
+                request.TenantId, request.StoryId, request.AdminActorUserId, request.ExpectedVersion, cancellationToken,
+                request.OccurrenceKey));
 }
 
 /// <summary>رد استوری فروشنده.</summary>
 public sealed record RejectAdminStoryCommand(
-    Guid TenantId, Guid StoryId, Guid AdminActorUserId, string Reason, int? ExpectedVersion)
+    Guid TenantId, Guid StoryId, Guid AdminActorUserId, string Reason, int? ExpectedVersion, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class RejectAdminStoryCommandHandler(StoryPresentationComposer composer)
@@ -143,7 +154,8 @@ public sealed class RejectAdminStoryCommandHandler(StoryPresentationComposer com
     public Task<Result<AdminStorySnapshot>> Handle(RejectAdminStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.AdminRejectAsync(
-                request.TenantId, request.StoryId, request.AdminActorUserId, request.Reason, request.ExpectedVersion, cancellationToken));
+                request.TenantId, request.StoryId, request.AdminActorUserId, request.Reason, request.ExpectedVersion,
+                cancellationToken, request.OccurrenceKey));
 }
 
 /// <summary>افزودن آیتم ادمین.</summary>
@@ -173,7 +185,8 @@ public sealed class UpdateAdminStoryItemCommandHandler(StoryPresentationComposer
 }
 
 /// <summary>حذف آیتم ادمین.</summary>
-public sealed record RemoveAdminStoryItemCommand(Guid TenantId, Guid StoryId, Guid ItemId)
+public sealed record RemoveAdminStoryItemCommand(
+    Guid TenantId, Guid StoryId, Guid ItemId, int? ExpectedVersion, string? OccurrenceKey)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class RemoveAdminStoryItemCommandHandler(StoryPresentationComposer composer)
@@ -181,11 +194,14 @@ public sealed class RemoveAdminStoryItemCommandHandler(StoryPresentationComposer
 {
     public Task<Result<AdminStorySnapshot>> Handle(RemoveAdminStoryItemCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
-            () => composer.AdminRemoveItemAsync(request.TenantId, request.StoryId, request.ItemId, cancellationToken));
+            () => composer.AdminRemoveItemAsync(
+                request.TenantId, request.StoryId, request.ItemId, request.ExpectedVersion, request.OccurrenceKey,
+                cancellationToken));
 }
 
 /// <summary>مرتب‌سازی آیتم‌های ادمین.</summary>
-public sealed record ReorderAdminStoryItemsCommand(Guid TenantId, Guid StoryId, IReadOnlyList<Guid> ItemIds)
+public sealed record ReorderAdminStoryItemsCommand(
+    Guid TenantId, Guid StoryId, IReadOnlyList<Guid> ItemIds, int? ExpectedVersion, string? OccurrenceKey)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class ReorderAdminStoryItemsCommandHandler(StoryPresentationComposer composer)
@@ -194,5 +210,7 @@ public sealed class ReorderAdminStoryItemsCommandHandler(StoryPresentationCompos
     public Task<Result<AdminStorySnapshot>> Handle(
         ReorderAdminStoryItemsCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
-            () => composer.AdminReorderItemsAsync(request.TenantId, request.StoryId, request.ItemIds, cancellationToken));
+            () => composer.AdminReorderItemsAsync(
+                request.TenantId, request.StoryId, request.ItemIds, request.ExpectedVersion, request.OccurrenceKey,
+                cancellationToken));
 }

@@ -1,0 +1,9 @@
+{
+    "workerId":  "tooba-worker-01",
+    "taskSha256":  "E33961BB113282A428556E8E9B6032A764C9D078C574D41FF6EA6592016DABAC",
+    "note":  "Bridge GET next claimed",
+    "claimedAtUtc":  "2026-11-19T02:00:32.6380797Z",
+    "bridgeContentLenObserved":  8607,
+    "taskId":  "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4",
+    "bridgeRowId":  "7d9c8f9b-9de2-44fd-927d-45433c0dfc17"
+}

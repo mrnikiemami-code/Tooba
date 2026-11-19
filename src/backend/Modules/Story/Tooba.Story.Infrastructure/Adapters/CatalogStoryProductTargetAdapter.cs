@@ -5,7 +5,7 @@ using Tooba.Story.Contracts.Errors;
 
 namespace Tooba.Story.Infrastructure.Adapters;
 
-/// <summary>مالکیت محصول CTA استوری از طریق کارت‌های محصول ویترین Catalog.</summary>
+/// <summary>مالکیت/اعتبار محصول CTA استوری از طریق کارت‌های محصول ویترین Catalog.</summary>
 public sealed class CatalogStoryProductTargetAdapter(ICatalogStorefrontProductCardLookup products)
     : IStoryProductTargetPort
 {
@@ -20,6 +20,17 @@ public sealed class CatalogStoryProductTargetAdapter(ICatalogStorefrontProductCa
 
         var cards = await products.ComposeProductCardsAsync([productId], cancellationToken);
         if (!cards.TryGetValue(productId, out var card) || card.SellerPartyId != sellerPartyId)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+    }
+
+    /// <inheritdoc />
+    public async Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        if (productId == Guid.Empty)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+
+        var cards = await products.ComposeProductCardsAsync([productId], cancellationToken);
+        if (!cards.ContainsKey(productId))
             throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
     }
 }

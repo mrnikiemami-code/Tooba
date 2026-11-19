@@ -95,7 +95,7 @@ public sealed class StoryMarketplace281DomainTests
             StoryTenantIds.StoreAlpha,
             shop,
             seller,
-            new CreateStoryCommand("v", null, null, null, null, null, null, null),
+            new CreateStoryCommand("v", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-34"),
             CancellationToken.None);
         await directory.SellerAddItemAsync(
             StoryTenantIds.StoreAlpha,
@@ -110,19 +110,14 @@ public sealed class StoryMarketplace281DomainTests
                 null,
                 null,
                 null,
-                ExpectedVersion: draft.VersionToken),
+                OccurrenceKey: "occ-add-35", ExpectedVersion: draft.VersionToken),
             CancellationToken.None);
         var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
         var current = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         Assert.NotNull(current);
         var ex = await Assert.ThrowsAsync<SemanticException>(() =>
-            directory.AdminApproveAndPublishAsync(
-                StoryTenantIds.StoreAlpha,
-                draft.StoryId,
-                admin,
-                current!.VersionToken - 1,
-                CancellationToken.None));
+            directory.AdminApproveAndPublishAsync(StoryTenantIds.StoreAlpha, draft.StoryId, admin, current!.VersionToken - 1, CancellationToken.None, "occ-aap-36"));
         Assert.Equal(StoryErrorCodes.VersionStale, ex.Error.Code);
     }
 

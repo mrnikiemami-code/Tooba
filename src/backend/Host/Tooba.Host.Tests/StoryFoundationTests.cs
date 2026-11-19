@@ -97,7 +97,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         var draft = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("پیش‌نویس", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
+            new CreateStoryCommand("پیش‌نویس", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-1"),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Draft, draft.Status);
         Assert.DoesNotContain(
@@ -108,12 +108,13 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         var clock = DateTimeOffset.UtcNow;
         var scheduled = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("آینده", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
+            new CreateStoryCommand("آینده", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-2"),
             CancellationToken.None);
         scheduled = await directory.AdminSetScheduleAsync(
             tenantId,
             scheduled.StoryId,
-            new SetStoryScheduleCommand(clock.AddDays(2), clock.AddDays(5), scheduled.VersionToken),
+            new SetStoryScheduleCommand(
+                clock.AddDays(2), clock.AddDays(5), scheduled.VersionToken, OccurrenceKey: "foundation-sched-1"),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Scheduled, scheduled.Status);
         Assert.DoesNotContain(
@@ -122,12 +123,13 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         var expired = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("منقضی", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
+            new CreateStoryCommand("منقضی", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-3"),
             CancellationToken.None);
         expired = await directory.AdminSetScheduleAsync(
             tenantId,
             expired.StoryId,
-            new SetStoryScheduleCommand(clock.AddDays(-5), clock.AddDays(-1), expired.VersionToken),
+            new SetStoryScheduleCommand(
+                clock.AddDays(-5), clock.AddDays(-1), expired.VersionToken, OccurrenceKey: "foundation-sched-2"),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Expired, expired.Status);
         Assert.DoesNotContain(
@@ -136,12 +138,12 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         var disabled = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("خاموش", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
+            new CreateStoryCommand("خاموش", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-4"),
             CancellationToken.None);
-        await directory.AdminSetStatusAsync(tenantId, disabled.StoryId, StoryStatus.Active, disabled.VersionToken, CancellationToken.None);
+        await directory.AdminSetStatusAsync(tenantId, disabled.StoryId, StoryStatus.Active, disabled.VersionToken, CancellationToken.None, "foundation-status-3");
         disabled = await directory.AdminGetAsync(tenantId, disabled.StoryId, CancellationToken.None)
             ?? throw new InvalidOperationException("disabled missing");
-        disabled = await directory.AdminSoftDisableAsync(tenantId, disabled.StoryId, disabled.VersionToken, CancellationToken.None);
+        disabled = await directory.AdminSoftDisableAsync(tenantId, disabled.StoryId, disabled.VersionToken, CancellationToken.None, "foundation-disable-6");
         Assert.Equal(StoryStatus.Disabled, disabled.Status);
         Assert.DoesNotContain(
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
@@ -158,7 +160,8 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                     "/images/stories/1.jpg",
                     null,
                     "external",
-                    "javascript:alert(1)"),
+                    "javascript:alert(1)",
+                    OccurrenceKey: "foundation-create-5"),
                 CancellationToken.None));
 
         var listed = await directory.AdminListAsync(tenantId, reviewStatus: null, CancellationToken.None);
@@ -166,7 +169,11 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             .OrderByDescending(story => story.DisplayOrder)
             .Select(story => story.StoryId)
             .ToList();
-        var reordered = await directory.AdminReorderStoriesAsync(tenantId, reorderedIds, CancellationToken.None);
+        var expectedVersions = reorderedIds
+            .Select(id => listed.Single(story => story.StoryId == id).VersionToken)
+            .ToList();
+        var reordered = await directory.AdminReorderStoriesAsync(
+            tenantId, reorderedIds, expectedVersions, "foundation-reorder-1", CancellationToken.None);
         Assert.Equal(reorderedIds, reordered.Select(story => story.StoryId).ToList());
 
         var missingActor = await Assert.ThrowsAsync<SemanticException>(() =>
@@ -224,7 +231,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             tenantId,
             sellerA,
             actorA,
-            new CreateStoryCommand("فروشنده پیش‌نویس", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
+            new CreateStoryCommand("فروشنده پیش‌نویس", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-6"),
             CancellationToken.None);
         Assert.Equal(StoryOrigin.Seller, draft.Origin);
         Assert.Equal(StoryReviewStatus.None, draft.ReviewStatus);
@@ -240,7 +247,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             story => story.StoryId == submitted.StoryId);
 
         await Assert.ThrowsAsync<SemanticException>(() =>
-            directory.AdminSetStatusAsync(tenantId, submitted.StoryId, StoryStatus.Active, submitted.VersionToken, CancellationToken.None));
+            directory.AdminSetStatusAsync(tenantId, submitted.StoryId, StoryStatus.Active, submitted.VersionToken, CancellationToken.None, "foundation-status-4"));
 
         var domainStory = await db.Stories.AsNoTracking()
             .FirstAsync(story => story.StoryId == submitted.StoryId, CancellationToken.None);
@@ -278,7 +285,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         Assert.Equal(adminActor, approvedAgain.ReviewedByActorUserId);
 
         var activated = await directory.AdminSetStatusAsync(
-            tenantId, approved.StoryId, StoryStatus.Active, approvedAgain.VersionToken, CancellationToken.None);
+            tenantId, approved.StoryId, StoryStatus.Active, approvedAgain.VersionToken, CancellationToken.None, "foundation-status-5");
         Assert.Equal(StoryStatus.Active, activated.Status);
         Assert.Contains(
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
@@ -288,7 +295,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             tenantId,
             sellerB,
             actorB,
-            new CreateStoryCommand("استوری فروشنده B", "fa", null, null, "/images/stories/2.jpg", null, "none", null),
+            new CreateStoryCommand("استوری فروشنده B", "fa", null, null, "/images/stories/2.jpg", null, "none", null, OccurrenceKey: "foundation-create-7"),
             CancellationToken.None);
         var listA = await directory.SellerListAsync(tenantId, sellerA, CancellationToken.None);
         Assert.DoesNotContain(listA, story => story.StoryId == foreign.StoryId);

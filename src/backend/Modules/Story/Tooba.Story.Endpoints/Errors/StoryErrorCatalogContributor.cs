@@ -24,6 +24,7 @@ public sealed class StoryErrorCatalogContributor : IErrorCatalogContributor
         D(StoryErrorCodes.MediaUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Story media authority is unavailable."),
         D(StoryErrorCodes.ShopAuthorityUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Story shop authority is unavailable."),
         D(StoryErrorCodes.OccurrenceConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Story occurrence conflicts."),
+        D(StoryErrorCodes.OccurrenceRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest, "Story occurrence key is required."),
     ];
 
     private static ErrorDescriptor D(string code, ErrorClassification classification, int status, string fallback) =>

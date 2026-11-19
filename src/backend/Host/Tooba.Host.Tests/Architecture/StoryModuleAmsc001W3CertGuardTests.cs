@@ -163,7 +163,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var joinedApplication = string.Join("\n", applicationSources);
         Assert.Equal(30, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
         Assert.Equal(30, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
-        Assert.Equal(25, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(27, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
         Assert.Equal(30, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
 
         // No endpoint reaches persistence directly.
@@ -335,7 +335,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
                 File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Story.Contracts", "Errors", "StoryErrorCodes.cs")),
                 @"public const string \w+ = ""(story\.[A-Za-z.]+)"";")
             .Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(14, errorCodes.Length);
+        Assert.Equal(15, errorCodes.Length);
 
         var en = File.ReadAllText(Path.Combine(endpoints, "Resources", "StoryErrors.resx"));
         var fa = File.ReadAllText(Path.Combine(endpoints, "Resources", "StoryErrors.fa.resx"));
@@ -472,6 +472,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         "story.media.unavailable" => "MediaUnavailable",
         "story.shop.authority.unavailable" => "ShopAuthorityUnavailable",
         "story.occurrence.conflict" => "OccurrenceConflict",
+        "story.occurrence.required" => "OccurrenceRequired",
         _ => throw new InvalidOperationException($"unmapped story error code {code}"),
     };
 

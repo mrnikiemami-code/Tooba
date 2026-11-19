@@ -114,7 +114,7 @@ public sealed class UpdateSellerStoryItemCommandHandler(StoryPresentationCompose
 
 /// <summary>حذف آیتم فروشنده.</summary>
 public sealed record RemoveSellerStoryItemCommand(
-    Guid TenantId, Guid SellerPartyId, Guid StoryId, Guid ItemId)
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, Guid ItemId, int? ExpectedVersion, string? OccurrenceKey)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class RemoveSellerStoryItemCommandHandler(StoryPresentationComposer composer)
@@ -124,12 +124,13 @@ public sealed class RemoveSellerStoryItemCommandHandler(StoryPresentationCompose
         RemoveSellerStoryItemCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.SellerRemoveItemAsync(
-                request.TenantId, request.SellerPartyId, request.StoryId, request.ItemId, cancellationToken));
+                request.TenantId, request.SellerPartyId, request.StoryId, request.ItemId,
+                request.ExpectedVersion, request.OccurrenceKey, cancellationToken));
 }
 
 /// <summary>مرتب‌سازی آیتم‌های فروشنده.</summary>
 public sealed record ReorderSellerStoryItemsCommand(
-    Guid TenantId, Guid SellerPartyId, Guid StoryId, IReadOnlyList<Guid> ItemIds)
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, IReadOnlyList<Guid> ItemIds, int? ExpectedVersion, string? OccurrenceKey)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class ReorderSellerStoryItemsCommandHandler(StoryPresentationComposer composer)
@@ -139,5 +140,6 @@ public sealed class ReorderSellerStoryItemsCommandHandler(StoryPresentationCompo
         ReorderSellerStoryItemsCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.SellerReorderItemsAsync(
-                request.TenantId, request.SellerPartyId, request.StoryId, request.ItemIds, cancellationToken));
+                request.TenantId, request.SellerPartyId, request.StoryId, request.ItemIds,
+                request.ExpectedVersion, request.OccurrenceKey, cancellationToken));
 }

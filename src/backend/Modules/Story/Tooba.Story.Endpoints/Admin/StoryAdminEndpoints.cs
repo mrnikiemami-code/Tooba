@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
@@ -106,7 +107,8 @@ public static class StoryAdminEndpoints
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, actor) => sender.Send(
-                new ApproveAndPublishAdminStoryCommand(tenantId, id, actor, body?.ExpectedVersion), cancellationToken));
+                new ApproveAndPublishAdminStoryCommand(
+                    tenantId, id, actor, body?.ExpectedVersion, body?.OccurrenceKey), cancellationToken));
 
     private static Task<IResult> AdminApproveAndScheduleAsync(
         Guid id, ApproveAndScheduleBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
@@ -119,7 +121,8 @@ public static class StoryAdminEndpoints
                     actor,
                     body.ExpectedVersion,
                     body.StartAt,
-                    body.EndAt),
+                    body.EndAt,
+                    body.OccurrenceKey),
                 cancellationToken));
 
     private static Task<IResult> AdminUpdateAsync(
@@ -132,19 +135,23 @@ public static class StoryAdminEndpoints
         ReorderStoriesBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
-            tenantId => sender.Send(new ReorderAdminStoriesCommand(tenantId, body.StoryIds), cancellationToken));
+            tenantId => sender.Send(
+                new ReorderAdminStoriesCommand(tenantId, body.StoryIds, body.ExpectedVersions, body.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> AdminEnableAsync(
         Guid id, ReviewedStoryActionBody? body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
-            tenantId => sender.Send(new EnableAdminStoryCommand(tenantId, id, body?.ExpectedVersion), cancellationToken));
+            tenantId => sender.Send(
+                new EnableAdminStoryCommand(tenantId, id, body?.ExpectedVersion, body?.OccurrenceKey), cancellationToken));
 
     private static Task<IResult> AdminDisableAsync(
         Guid id, ReviewedStoryActionBody? body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
-            tenantId => sender.Send(new DisableAdminStoryCommand(tenantId, id, body?.ExpectedVersion), cancellationToken));
+            tenantId => sender.Send(
+                new DisableAdminStoryCommand(tenantId, id, body?.ExpectedVersion, body?.OccurrenceKey), cancellationToken));
 
     private static Task<IResult> AdminScheduleAsync(
         Guid id, SetStoryScheduleBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
@@ -158,14 +165,16 @@ public static class StoryAdminEndpoints
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, actor) => sender.Send(
-                new ApproveAdminStoryCommand(tenantId, id, actor, body?.ExpectedVersion), cancellationToken));
+                new ApproveAdminStoryCommand(tenantId, id, actor, body?.ExpectedVersion, body?.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> AdminRejectAsync(
         Guid id, RejectStoryBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, actor) => sender.Send(
-                new RejectAdminStoryCommand(tenantId, id, actor, body.Reason ?? string.Empty, body.ExpectedVersion),
+                new RejectAdminStoryCommand(
+                    tenantId, id, actor, body.Reason ?? string.Empty, body.ExpectedVersion, body.OccurrenceKey),
                 cancellationToken));
 
     private static Task<IResult> AdminAddItemAsync(
@@ -185,16 +194,28 @@ public static class StoryAdminEndpoints
                 cancellationToken));
 
     private static Task<IResult> AdminRemoveItemAsync(
-        Guid id, Guid itemId, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
-        ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
+        Guid id,
+        Guid itemId,
+        [FromBody] ReviewedStoryActionBody? body,
+        ISender sender,
+        IStoryAdminAuthorizer auth,
+        HttpContext http,
+        ICurrentTenant tenant,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
-            tenantId => sender.Send(new RemoveAdminStoryItemCommand(tenantId, id, itemId), cancellationToken));
+            tenantId => sender.Send(
+                new RemoveAdminStoryItemCommand(tenantId, id, itemId, body?.ExpectedVersion, body?.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> AdminReorderItemsAsync(
         Guid id, ReorderStoryItemsBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
-            tenantId => sender.Send(new ReorderAdminStoryItemsCommand(tenantId, id, body.ItemIds), cancellationToken));
+            tenantId => sender.Send(
+                new ReorderAdminStoryItemsCommand(
+                    tenantId, id, body.ItemIds, body.ExpectedVersion, body.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> AdminMutationAsync<T>(
         IStoryAdminAuthorizer auth,

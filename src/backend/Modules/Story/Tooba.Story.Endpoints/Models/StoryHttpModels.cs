@@ -19,7 +19,11 @@ public sealed record CreateStoryBody(
 public sealed record ReviewedStoryActionBody(int? ExpectedVersion, string? OccurrenceKey = null);
 
 /// <summary>بدنهٔ تأیید و زمان‌بندی.</summary>
-public sealed record ApproveAndScheduleBody(int? ExpectedVersion, DateTimeOffset? StartAt, DateTimeOffset? EndAt);
+public sealed record ApproveAndScheduleBody(
+    int? ExpectedVersion,
+    DateTimeOffset? StartAt,
+    DateTimeOffset? EndAt,
+    string? OccurrenceKey = null);
 
 /// <summary>بدنهٔ به‌روزرسانی استوری.</summary>
 public sealed record UpdateStoryBody(
@@ -30,16 +34,24 @@ public sealed record UpdateStoryBody(
     string? CoverMediaUrl,
     string? CtaType,
     string? CtaTarget,
-    int? ExpectedVersion = null);
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null);
 
 /// <summary>بدنهٔ زمان‌بندی استوری.</summary>
-public sealed record SetStoryScheduleBody(DateTimeOffset? StartAt, DateTimeOffset? EndAt, int? ExpectedVersion = null);
+public sealed record SetStoryScheduleBody(
+    DateTimeOffset? StartAt,
+    DateTimeOffset? EndAt,
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null);
 
 /// <summary>بدنهٔ رد استوری.</summary>
-public sealed record RejectStoryBody(string? Reason, int? ExpectedVersion = null);
+public sealed record RejectStoryBody(string? Reason, int? ExpectedVersion = null, string? OccurrenceKey = null);
 
-/// <summary>بدنهٔ مرتب‌سازی استوری‌ها.</summary>
-public sealed record ReorderStoriesBody(IReadOnlyList<Guid> StoryIds);
+/// <summary>بدنهٔ مرتب‌سازی استوری‌ها با نسخهٔ هر رکورد.</summary>
+public sealed record ReorderStoriesBody(
+    IReadOnlyList<Guid> StoryIds,
+    IReadOnlyList<int> ExpectedVersions,
+    string? OccurrenceKey = null);
 
 /// <summary>بدنهٔ افزودن آیتم.</summary>
 public sealed record AddStoryItemBody(
@@ -63,10 +75,14 @@ public sealed record UpdateStoryItemBody(
     int? DurationMs,
     string? CtaType,
     string? CtaTarget,
-    int? ExpectedVersion = null);
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null);
 
 /// <summary>بدنهٔ مرتب‌سازی آیتم‌ها.</summary>
-public sealed record ReorderStoryItemsBody(IReadOnlyList<Guid> ItemIds);
+public sealed record ReorderStoryItemsBody(
+    IReadOnlyList<Guid> ItemIds,
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null);
 
 /// <summary>نگاشت بدنهٔ HTTP به فرمان‌های Application.</summary>
 public static class StoryBodyMapping
@@ -77,10 +93,10 @@ public static class StoryBodyMapping
 
     public static UpdateStoryCommand ToUpdate(UpdateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,
-        body.CtaType, body.CtaTarget, body.ExpectedVersion);
+        body.CtaType, body.CtaTarget, body.ExpectedVersion, body.OccurrenceKey);
 
     public static SetStoryScheduleCommand ToSchedule(SetStoryScheduleBody body) =>
-        new(body.StartAt, body.EndAt, body.ExpectedVersion);
+        new(body.StartAt, body.EndAt, body.ExpectedVersion, body.OccurrenceKey);
 
     public static AddStoryItemCommand ToAddItem(AddStoryItemBody body) => new(
         body.MediaType, body.MediaAssetId, body.MediaUrl, body.Caption, body.DurationMs,
@@ -88,5 +104,5 @@ public static class StoryBodyMapping
 
     public static UpdateStoryItemCommand ToUpdateItem(UpdateStoryItemBody body) => new(
         body.MediaType, body.MediaAssetId, body.MediaUrl, body.Caption, body.DurationMs,
-        body.CtaType, body.CtaTarget, body.ExpectedVersion);
+        body.CtaType, body.CtaTarget, body.ExpectedVersion, body.OccurrenceKey);
 }

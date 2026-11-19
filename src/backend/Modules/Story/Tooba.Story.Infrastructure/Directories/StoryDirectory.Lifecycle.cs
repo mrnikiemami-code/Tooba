@@ -24,14 +24,15 @@ public sealed partial class StoryDirectory
         CancellationToken cancellationToken)
     {
         await EnsureShopEligibleAsync(sellerPartyId, cancellationToken);
-        if (!string.IsNullOrWhiteSpace(command.OccurrenceKey))
+        var key = RequireOccurrenceKey(command.OccurrenceKey);
+        var createIntent = HashIntent(command);
         {
             var replay = await TryReplayAsync(
                 tenantId,
                 sellerPartyId,
                 "admin_create_for_shop",
-                command.OccurrenceKey!,
-                HashIntent(command),
+                key,
+                createIntent,
                 cancellationToken);
             if (replay is not null)
                 return replay;
@@ -61,8 +62,8 @@ public sealed partial class StoryDirectory
             tenantId,
             sellerPartyId,
             "admin_create_for_shop",
-            command.OccurrenceKey,
-            HashIntent(command),
+            key,
+            createIntent,
             story.StoryId,
             adminActorUserId,
             now,
@@ -77,13 +78,23 @@ public sealed partial class StoryDirectory
         Guid storyId,
         Guid adminActorUserId,
         int? expectedVersion,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null)
     {
+        var key = RequireOccurrenceKey(occurrenceKey);
+        var intent = HashLifecycleIntent(storyId, expectedVersion, "approve_and_publish");
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        var replay = await TryReplayMappedAsync(
+            tenantId, story.SellerPartyId, "admin_approve_and_publish", key, intent, isAdmin: true, cancellationToken, storyId);
+        if (replay is not null)
+            return replay;
         story.EnsureExpectedVersion(expectedVersion);
         await EnsureStoredContentAuthorizedAsync(story, cancellationToken);
         story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
         story.Activate(DateTimeOffset.UtcNow);
+        await RecordOccurrenceAsync(
+            tenantId, story.SellerPartyId, "admin_approve_and_publish", key, intent,
+            story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
@@ -95,13 +106,24 @@ public sealed partial class StoryDirectory
         Guid adminActorUserId,
         int? expectedVersion,
         SetStoryScheduleCommand schedule,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null)
     {
+        var key = RequireOccurrenceKey(occurrenceKey ?? schedule.OccurrenceKey);
+        var intent = HashLifecycleIntent(
+            storyId, expectedVersion, $"approve_and_schedule|{schedule.StartAt:O}|{schedule.EndAt:O}");
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        var replay = await TryReplayMappedAsync(
+            tenantId, story.SellerPartyId, "admin_approve_and_schedule", key, intent, isAdmin: true, cancellationToken, storyId);
+        if (replay is not null)
+            return replay;
         story.EnsureExpectedVersion(expectedVersion);
         await EnsureStoredContentAuthorizedAsync(story, cancellationToken);
         story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
         story.SetSchedule(schedule.StartAt, schedule.EndAt, DateTimeOffset.UtcNow);
+        await RecordOccurrenceAsync(
+            tenantId, story.SellerPartyId, "admin_approve_and_schedule", key, intent,
+            story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
@@ -115,9 +137,10 @@ public sealed partial class StoryDirectory
         CancellationToken cancellationToken,
         string? occurrenceKey = null)
     {
+        var key = RequireOccurrenceKey(occurrenceKey);
         var intent = HashLifecycleIntent(storyId, expectedVersion, "return_to_draft");
         var replay = await TryReplayLifecycleAsync(
-            tenantId, sellerPartyId, "seller_return_to_draft", occurrenceKey, intent, isAdmin: false, cancellationToken);
+            tenantId, sellerPartyId, "seller_return_to_draft", key, intent, isAdmin: false, cancellationToken);
         if (replay is not null)
             return replay;
 
@@ -126,7 +149,7 @@ public sealed partial class StoryDirectory
         var now = DateTimeOffset.UtcNow;
         story.ReturnToDraftForEdit(now);
         await RecordOccurrenceAsync(
-            tenantId, sellerPartyId, "seller_return_to_draft", occurrenceKey, intent,
+            tenantId, sellerPartyId, "seller_return_to_draft", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
@@ -141,9 +164,10 @@ public sealed partial class StoryDirectory
         CancellationToken cancellationToken,
         string? occurrenceKey = null)
     {
+        var key = RequireOccurrenceKey(occurrenceKey);
         var intent = HashLifecycleIntent(storyId, expectedVersion, "stop");
         var replay = await TryReplayLifecycleAsync(
-            tenantId, sellerPartyId, "seller_stop", occurrenceKey, intent, isAdmin: false, cancellationToken);
+            tenantId, sellerPartyId, "seller_stop", key, intent, isAdmin: false, cancellationToken);
         if (replay is not null)
             return replay;
 
@@ -152,7 +176,7 @@ public sealed partial class StoryDirectory
         var now = DateTimeOffset.UtcNow;
         story.StopOwnPublication(now);
         await RecordOccurrenceAsync(
-            tenantId, sellerPartyId, "seller_stop", occurrenceKey, intent,
+            tenantId, sellerPartyId, "seller_stop", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
@@ -222,12 +246,11 @@ public sealed partial class StoryDirectory
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(occurrenceKey))
-            return;
+        var normalized = RequireOccurrenceKey(occurrenceKey);
 
         _db.CommandOccurrences.Add(new StoryCommandOccurrence
         {
-            OccurrenceKey = occurrenceKey.Trim(),
+            OccurrenceKey = normalized,
             TenantId = tenantId,
             SellerPartyId = sellerPartyId,
             ActionCode = actionCode,

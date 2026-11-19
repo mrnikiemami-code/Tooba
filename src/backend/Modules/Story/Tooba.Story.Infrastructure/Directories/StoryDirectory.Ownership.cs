@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -151,14 +151,22 @@ public sealed partial class StoryDirectory
         if (!string.Equals(type, "product", StringComparison.Ordinal))
             return;
 
-        if (sellerPartyId is not Guid shop || shop == Guid.Empty)
-            throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
         if (_products is null)
             throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
         if (!Guid.TryParse(ctaTarget?.Trim(), out var productId) || productId == Guid.Empty)
             throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
 
-        await _products.EnsureOwnedBySellerAsync(productId, shop, cancellationToken);
+        if (sellerPartyId is Guid shop && shop != Guid.Empty)
+            await _products.EnsureOwnedBySellerAsync(productId, shop, cancellationToken);
+        else
+            await _products.EnsurePublishedExistsAsync(productId, cancellationToken);
+    }
+
+    private static string RequireOccurrenceKey(string? occurrenceKey)
+    {
+        if (string.IsNullOrWhiteSpace(occurrenceKey))
+            throw new SemanticException(new SemanticError(StoryErrorCodes.OccurrenceRequired));
+        return occurrenceKey.Trim();
     }
 
     private async Task<IReadOnlyList<AdminStorySnapshot>> EnrichManyAsync(

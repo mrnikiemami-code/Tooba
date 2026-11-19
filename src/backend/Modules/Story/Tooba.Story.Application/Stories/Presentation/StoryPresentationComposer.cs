@@ -54,9 +54,10 @@ public sealed class StoryPresentationComposer
 
     /// <summary>تأیید و انتشار اتمی.</summary>
     public Task<AdminStorySnapshot> AdminApproveAndPublishAsync(
-        Guid tenantId, Guid storyId, Guid adminActorUserId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guid tenantId, Guid storyId, Guid adminActorUserId, int? expectedVersion, CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
         Guard(() => _stories.AdminApproveAndPublishAsync(
-            tenantId, storyId, adminActorUserId, expectedVersion, cancellationToken));
+            tenantId, storyId, adminActorUserId, expectedVersion, cancellationToken, occurrenceKey));
 
     /// <summary>تأیید و زمان‌بندی اتمی.</summary>
     public Task<AdminStorySnapshot> AdminApproveAndScheduleAsync(
@@ -65,9 +66,10 @@ public sealed class StoryPresentationComposer
         Guid adminActorUserId,
         int? expectedVersion,
         SetStoryScheduleCommand schedule,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
         Guard(() => _stories.AdminApproveAndScheduleAsync(
-            tenantId, storyId, adminActorUserId, expectedVersion, schedule, cancellationToken));
+            tenantId, storyId, adminActorUserId, expectedVersion, schedule, cancellationToken, occurrenceKey));
 
     /// <summary>بازگشت فروشنده به پیش‌نویس.</summary>
     public Task<AdminStorySnapshot> SellerReturnToDraftAsync(
@@ -95,13 +97,17 @@ public sealed class StoryPresentationComposer
 
     /// <summary>فعال‌سازی.</summary>
     public Task<AdminStorySnapshot> AdminEnableAsync(
-        Guid tenantId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminSetStatusAsync(tenantId, storyId, StoryStatus.Active, expectedVersion, cancellationToken));
+        Guid tenantId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
+        Guard(() => _stories.AdminSetStatusAsync(
+            tenantId, storyId, StoryStatus.Active, expectedVersion, cancellationToken, occurrenceKey));
 
     /// <summary>غیرفعال‌سازی.</summary>
     public Task<AdminStorySnapshot> AdminDisableAsync(
-        Guid tenantId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminSoftDisableAsync(tenantId, storyId, expectedVersion, cancellationToken));
+        Guid tenantId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
+        Guard(() => _stories.AdminSoftDisableAsync(
+            tenantId, storyId, expectedVersion, cancellationToken, occurrenceKey));
 
     /// <summary>زمان‌بندی.</summary>
     public Task<AdminStorySnapshot> AdminSetScheduleAsync(
@@ -110,18 +116,24 @@ public sealed class StoryPresentationComposer
 
     /// <summary>تأیید استوری فروشنده.</summary>
     public Task<AdminStorySnapshot> AdminApproveAsync(
-        Guid tenantId, Guid storyId, Guid adminActorUserId, int? expectedVersion, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminApproveAsync(tenantId, storyId, adminActorUserId, expectedVersion, cancellationToken));
+        Guid tenantId, Guid storyId, Guid adminActorUserId, int? expectedVersion, CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
+        Guard(() => _stories.AdminApproveAsync(
+            tenantId, storyId, adminActorUserId, expectedVersion, cancellationToken, occurrenceKey));
 
     /// <summary>رد استوری فروشنده.</summary>
     public Task<AdminStorySnapshot> AdminRejectAsync(
-        Guid tenantId, Guid storyId, Guid adminActorUserId, string reason, int? expectedVersion, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminRejectAsync(tenantId, storyId, adminActorUserId, reason, expectedVersion, cancellationToken));
+        Guid tenantId, Guid storyId, Guid adminActorUserId, string reason, int? expectedVersion, CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
+        Guard(() => _stories.AdminRejectAsync(
+            tenantId, storyId, adminActorUserId, reason, expectedVersion, cancellationToken, occurrenceKey));
 
     /// <summary>مرتب‌سازی استوری‌ها.</summary>
     public Task<IReadOnlyList<AdminStorySnapshot>> AdminReorderStoriesAsync(
-        Guid tenantId, IReadOnlyList<Guid> storyIds, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminReorderStoriesAsync(tenantId, storyIds, cancellationToken));
+        Guid tenantId, IReadOnlyList<Guid> storyIds, IReadOnlyList<int> expectedVersions, string? occurrenceKey,
+        CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminReorderStoriesAsync(
+            tenantId, storyIds, expectedVersions, occurrenceKey, cancellationToken));
 
     /// <summary>افزودن آیتم.</summary>
     public Task<AdminStorySnapshot> AdminAddItemAsync(
@@ -135,13 +147,17 @@ public sealed class StoryPresentationComposer
 
     /// <summary>حذف آیتم.</summary>
     public Task<AdminStorySnapshot> AdminRemoveItemAsync(
-        Guid tenantId, Guid storyId, Guid itemId, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminRemoveItemAsync(tenantId, storyId, itemId, cancellationToken));
+        Guid tenantId, Guid storyId, Guid itemId, int? expectedVersion, string? occurrenceKey,
+        CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminRemoveItemAsync(
+            tenantId, storyId, itemId, expectedVersion, occurrenceKey, cancellationToken));
 
     /// <summary>مرتب‌سازی آیتم‌ها.</summary>
     public Task<AdminStorySnapshot> AdminReorderItemsAsync(
-        Guid tenantId, Guid storyId, IReadOnlyList<Guid> itemIds, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminReorderItemsAsync(tenantId, storyId, itemIds, cancellationToken));
+        Guid tenantId, Guid storyId, IReadOnlyList<Guid> itemIds, int? expectedVersion, string? occurrenceKey,
+        CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminReorderItemsAsync(
+            tenantId, storyId, itemIds, expectedVersion, occurrenceKey, cancellationToken));
 
     /// <summary>فهرست استوری‌های فروشنده.</summary>
     public Task<IReadOnlyList<AdminStorySnapshot>> SellerListAsync(
@@ -182,13 +198,17 @@ public sealed class StoryPresentationComposer
 
     /// <summary>حذف آیتم فروشنده.</summary>
     public Task<AdminStorySnapshot> SellerRemoveItemAsync(
-        Guid tenantId, Guid sellerPartyId, Guid storyId, Guid itemId, CancellationToken cancellationToken) =>
-        Guard(() => _stories.SellerRemoveItemAsync(tenantId, sellerPartyId, storyId, itemId, cancellationToken));
+        Guid tenantId, Guid sellerPartyId, Guid storyId, Guid itemId, int? expectedVersion, string? occurrenceKey,
+        CancellationToken cancellationToken) =>
+        Guard(() => _stories.SellerRemoveItemAsync(
+            tenantId, sellerPartyId, storyId, itemId, expectedVersion, occurrenceKey, cancellationToken));
 
     /// <summary>مرتب‌سازی آیتم‌های فروشنده.</summary>
     public Task<AdminStorySnapshot> SellerReorderItemsAsync(
-        Guid tenantId, Guid sellerPartyId, Guid storyId, IReadOnlyList<Guid> itemIds, CancellationToken cancellationToken) =>
-        Guard(() => _stories.SellerReorderItemsAsync(tenantId, sellerPartyId, storyId, itemIds, cancellationToken));
+        Guid tenantId, Guid sellerPartyId, Guid storyId, IReadOnlyList<Guid> itemIds, int? expectedVersion,
+        string? occurrenceKey, CancellationToken cancellationToken) =>
+        Guard(() => _stories.SellerReorderItemsAsync(
+            tenantId, sellerPartyId, storyId, itemIds, expectedVersion, occurrenceKey, cancellationToken));
 
     /// <summary>Tenant جاری را به Guid پایدار نگاشت می‌کند.</summary>
     public static Guid RequireTenantId(ICurrentTenant tenant)

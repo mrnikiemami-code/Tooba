@@ -96,13 +96,15 @@ public sealed record UpdateStoryCommand(
     string? CoverMediaUrl,
     string? CtaType,
     string? CtaTarget,
-    int? ExpectedVersion = null);
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null);
 
 /// <summary>فرمان زمان‌بندی استوری.</summary>
 public sealed record SetStoryScheduleCommand(
     DateTimeOffset? StartAt,
     DateTimeOffset? EndAt,
-    int? ExpectedVersion = null);
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null);
 
 /// <summary>فرمان افزودن آیتم.</summary>
 public sealed record AddStoryItemCommand(
@@ -126,4 +128,5 @@ public sealed record UpdateStoryItemCommand(
     int? DurationMs,
     string? CtaType,
     string? CtaTarget,
-    int? ExpectedVersion = null);
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null);

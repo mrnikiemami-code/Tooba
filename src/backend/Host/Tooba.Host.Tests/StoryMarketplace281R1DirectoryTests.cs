@@ -30,25 +30,24 @@ public sealed class StoryMarketplace281R1DirectoryTests
             var directory = new StoryDirectory(write, new StubParty(shop), new StubMedia(mediaId));
             var draft = await directory.SellerCreateDraftAsync(
                 StoryTenantIds.StoreAlpha, shop, seller,
-                new CreateStoryCommand("ready", null, null, null, null, null, null, null),
+                new CreateStoryCommand("ready", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-24"),
                 CancellationToken.None);
             await directory.SellerAddItemAsync(
                 StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
+                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, OccurrenceKey: "occ-add-28", ExpectedVersion: draft.VersionToken),
                 CancellationToken.None);
             var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
             var submitted = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
-            await directory.AdminApproveAndPublishAsync(
-                StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None);
+            await directory.AdminApproveAndPublishAsync(StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None, "occ-aap-32");
 
             var scheduledDraft = await directory.SellerCreateDraftAsync(
                 StoryTenantIds.StoreAlpha, shop, seller,
-                new CreateStoryCommand("later", null, null, null, null, null, null, null),
+                new CreateStoryCommand("later", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-25"),
                 CancellationToken.None);
             await directory.SellerAddItemAsync(
                 StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId,
-                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: scheduledDraft.VersionToken),
+                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, OccurrenceKey: "occ-add-29", ExpectedVersion: scheduledDraft.VersionToken),
                 CancellationToken.None);
             var afterSchedAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId, CancellationToken.None);
             await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId, seller, CancellationToken.None, afterSchedAdd!.VersionToken, "submit-" + scheduledDraft.StoryId.ToString("N"));
@@ -90,17 +89,16 @@ public sealed class StoryMarketplace281R1DirectoryTests
         var directory = new StoryDirectory(db, new StubParty(shop), new StubMedia(mediaId));
         var draft = await directory.SellerCreateDraftAsync(
             StoryTenantIds.StoreAlpha, shop, seller,
-            new CreateStoryCommand("a", null, null, null, null, null, null, null),
+            new CreateStoryCommand("a", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-26"),
             CancellationToken.None);
         await directory.SellerAddItemAsync(
             StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
+            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, OccurrenceKey: "occ-add-30", ExpectedVersion: draft.VersionToken),
             CancellationToken.None);
         var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
         var submitted = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
-        await directory.AdminApproveAndPublishAsync(
-            StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None);
+        await directory.AdminApproveAndPublishAsync(StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None, "occ-aap-33");
         var sellerView = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         Assert.NotNull(sellerView);
         Assert.Contains("stop", sellerView!.ActionCodes!);
@@ -122,12 +120,12 @@ public sealed class StoryMarketplace281R1DirectoryTests
         var directory = new StoryDirectory(db, new StubParty(shop), media: null);
         var draft = await directory.SellerCreateDraftAsync(
             StoryTenantIds.StoreAlpha, shop, seller,
-            new CreateStoryCommand("a", null, null, null, null, null, null, null),
+            new CreateStoryCommand("a", null, null, null, null, null, null, null, OccurrenceKey: "occ-create-27"),
             CancellationToken.None);
         var ex = await Assert.ThrowsAsync<SemanticException>(() =>
             directory.SellerAddItemAsync(
                 StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-                new AddStoryItemCommand("image", Guid.NewGuid(), null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
+                new AddStoryItemCommand("image", Guid.NewGuid(), null, null, null, null, null, null, OccurrenceKey: "occ-add-31", ExpectedVersion: draft.VersionToken),
                 CancellationToken.None));
         Assert.Equal(StoryErrorCodes.MediaUnavailable, ex.Error.Code);
     }

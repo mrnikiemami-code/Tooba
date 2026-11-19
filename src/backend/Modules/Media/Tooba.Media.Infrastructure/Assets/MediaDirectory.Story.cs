@@ -65,6 +65,10 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
         if (stream is null || !stream.CanRead)
             throw new ContractOperationException(MediaErrorCodes.UploadFailed);
+        // Seller upload owns its own SaveChanges commit; ambient caller transactions are refused
+        // so a rolled-back outer scope cannot leave an orphaned object without a durable Media row.
+        if (_db.Database.CurrentTransaction is not null)
+            throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
 
         var normalizedType = NormalizeContentType(contentType);
         if (!IsImageOrVideo(normalizedType) || !AllowedContentTypes.Contains(normalizedType))
@@ -155,7 +159,7 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        catch (DbUpdateException ex) when (IsOccurrenceUniqueViolation(ex))
         {
             DetachAttemptOwned(asset, binding, occurrence);
             try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
@@ -180,7 +184,24 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
         }
         catch (Exception ex)
         {
+            // If SaveChanges already committed (e.g. after-save interceptor throw / lost ack),
+            // do NOT delete the durable object; fold to the stored occurrence instead.
             DetachAttemptOwned(asset, binding, occurrence);
+            var durable = await _db.AssetOwnerOccurrences.AsNoTracking()
+                .FirstOrDefaultAsync(
+                    row => row.OccurrenceKey == key
+                        && row.TenantId == tenantId
+                        && row.SellerPartyId == sellerPartyId,
+                    cancellationToken);
+            if (durable is not null)
+            {
+                if (!string.Equals(durable.IntentHash, intentHash, StringComparison.Ordinal))
+                    throw new ContractOperationException(MediaErrorCodes.OwnerForbidden, ex);
+                var existing = await _db.Assets.AsNoTracking()
+                    .FirstAsync(row => row.MediaAssetId == durable.MediaAssetId, cancellationToken);
+                return MapStory(existing, sellerPartyId);
+            }
+
             try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
             throw new ContractOperationException(MediaErrorCodes.UploadFailed, ex);
         }
@@ -232,11 +253,15 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             occurrenceEntry.State = EntityState.Detached;
     }
 
-    private static bool IsUniqueViolation(DbUpdateException ex) =>
+    /// <summary>
+    /// Exact PostgreSQL unique identity for media.asset_owner_occurrences PK
+    /// (<c>pk_asset_owner_occurrences</c> on schema <c>media</c> / table <c>asset_owner_occurrences</c>).
+    /// </summary>
+    private static bool IsOccurrenceUniqueViolation(DbUpdateException ex) =>
         ex.InnerException is Npgsql.PostgresException { SqlState: "23505" } postgres
-        && (postgres.ConstraintName?.Contains("asset_owner_occurrences", StringComparison.OrdinalIgnoreCase) == true
-            || postgres.TableName?.Contains("asset_owner_occurrences", StringComparison.OrdinalIgnoreCase) == true
-            || string.Equals(postgres.ConstraintName, "pk_asset_owner_occurrences", StringComparison.OrdinalIgnoreCase));
+        && string.Equals(postgres.SchemaName, "media", StringComparison.Ordinal)
+        && string.Equals(postgres.TableName, "asset_owner_occurrences", StringComparison.Ordinal)
+        && string.Equals(postgres.ConstraintName, "pk_asset_owner_occurrences", StringComparison.Ordinal);
 
     private static string Len(string value) =>
         value.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + value;

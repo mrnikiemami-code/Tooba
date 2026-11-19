@@ -83,9 +83,10 @@ public sealed class MediaStorySellerUpload281R3Tests
     }
 
     [Fact]
-    public async Task Db_save_failure_after_store_cleans_attempt_object_and_detaches()
+    public async Task Same_occurrence_replay_returns_winner_without_new_object()
     {
-        await using var db = CreateDb("media-r3-dbsfail-" + Guid.NewGuid().ToString("N"));
+        // R3 name previously claimed a SaveChanges failure; that proof lives in MediaStorySellerUpload281R4Tests.
+        await using var db = CreateDb("media-r3-replay-winner-" + Guid.NewGuid().ToString("N"));
         var store = new RecordingStore();
         var media = new MediaDirectory(db, store, Config());
         var tenant = StoryTenantIds.StoreAlpha;
@@ -98,8 +99,6 @@ public sealed class MediaStorySellerUpload281R3Tests
             tenant, shop, actor, key, CancellationToken.None);
         Assert.Equal(1, store.Saved.Count);
 
-        // Force a second insert of the same occurrence key via raw entity to simulate unique race winner path:
-        // Replaying identical intent should return winner without adding objects.
         var replay = await media.UploadForSellerAsync(
             new MemoryStream("payload"u8.ToArray()), "a.jpg", "image/jpeg",
             tenant, shop, actor, key, CancellationToken.None);

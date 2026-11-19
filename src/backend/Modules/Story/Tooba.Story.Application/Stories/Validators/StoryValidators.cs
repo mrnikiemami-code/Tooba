@@ -72,6 +72,11 @@ public sealed class ReorderAdminStoriesCommandValidator : AbstractValidator<Reor
     public ReorderAdminStoriesCommandValidator()
     {
         RuleFor(x => x.StoryIds).NotNull().NotEmpty().WithErrorCode(StoryValidationCodes.StoryIdsRequired);
+        RuleFor(x => x.ExpectedVersions).NotNull().NotEmpty().WithErrorCode(StoryValidationCodes.StoryIdsRequired);
+        RuleFor(x => x)
+            .Must(x => x.ExpectedVersions is not null && x.StoryIds is not null
+                && x.ExpectedVersions.Count == x.StoryIds.Count)
+            .WithErrorCode(StoryValidationCodes.StoryIdsRequired);
     }
 }
 
@@ -307,6 +312,22 @@ public sealed class SubmitSellerStoryCommandValidator : AbstractValidator<Submit
 public sealed class StopSellerStoryCommandValidator : AbstractValidator<StopSellerStoryCommand>
 {
     public StopSellerStoryCommandValidator()
+    {
+    }
+}
+
+/// <summary>اعتبارسنجی حذف آیتم ادمین (نسخه/رخداد از body؛ دامنه الزام می‌کند).</summary>
+public sealed class RemoveAdminStoryItemCommandValidator : AbstractValidator<RemoveAdminStoryItemCommand>
+{
+    public RemoveAdminStoryItemCommandValidator()
+    {
+    }
+}
+
+/// <summary>اعتبارسنجی حذف آیتم فروشنده (نسخه/رخداد از body؛ دامنه الزام می‌کند).</summary>
+public sealed class RemoveSellerStoryItemCommandValidator : AbstractValidator<RemoveSellerStoryItemCommand>
+{
+    public RemoveSellerStoryItemCommandValidator()
     {
     }
 }

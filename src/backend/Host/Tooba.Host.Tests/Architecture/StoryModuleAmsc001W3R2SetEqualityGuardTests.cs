@@ -51,8 +51,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "Tooba.Story.Application/Stories/Queries/Storefront/GetPublicStoriesQuery.cs";
 
     private const int ExpectedRouteCount = 30;
-    private const int ExpectedValidatorRequiredCount = 25;
-    private const int ExpectedExemptCount = 5;
+    private const int ExpectedValidatorRequiredCount = 27;
+    private const int ExpectedExemptCount = 3;
 
     private static readonly HashSet<string> SupportedVerbs =
         new(["Get", "Post", "Put", "Patch", "Delete"], StringComparer.Ordinal);
@@ -84,15 +84,15 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "EnableAdminStoryCommand",
         "DisableAdminStoryCommand",
         "ApproveAdminStoryCommand",
+        "RemoveAdminStoryItemCommand",
+        "RemoveSellerStoryItemCommand",
     ];
 
     private static readonly string[] NoValidatorRequired =
     [
         "GetAdminStoryQuery",
-        "RemoveAdminStoryItemCommand",
         "ListSellerStoriesQuery",
         "GetSellerStoryQuery",
-        "RemoveSellerStoryItemCommand",
     ];
 
     /// <summary>The exact expected audience → verb → full route → handler → dispatched request map (25 rows).</summary>
@@ -157,6 +157,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("EnableAdminStoryCommand", typeof(EnableAdminStoryCommandValidator)),
         ("DisableAdminStoryCommand", typeof(DisableAdminStoryCommandValidator)),
         ("ApproveAdminStoryCommand", typeof(ApproveAdminStoryCommandValidator)),
+        ("RemoveAdminStoryItemCommand", typeof(RemoveAdminStoryItemCommandValidator)),
+        ("RemoveSellerStoryItemCommand", typeof(RemoveSellerStoryItemCommandValidator)),
     ];
 
     // ---------------------------------------------------------------------------------------------

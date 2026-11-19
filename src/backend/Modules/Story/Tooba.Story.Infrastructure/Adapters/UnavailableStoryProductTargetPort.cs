@@ -10,4 +10,8 @@ public sealed class UnavailableStoryProductTargetPort : IStoryProductTargetPort
     /// <inheritdoc />
     public Task EnsureOwnedBySellerAsync(Guid productId, Guid sellerPartyId, CancellationToken cancellationToken) =>
         throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+
+    /// <inheritdoc />
+    public Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken) =>
+        throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
 }

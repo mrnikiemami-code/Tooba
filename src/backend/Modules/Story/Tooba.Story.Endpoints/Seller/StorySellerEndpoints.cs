@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
@@ -151,18 +152,29 @@ public static class StorySellerEndpoints
                 cancellationToken));
 
     private static Task<IResult> SellerRemoveItemAsync(
-        Guid id, Guid itemId, ISender sender, IStorySellerAuthorizer auth, HttpContext http,
-        ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
+        Guid id,
+        Guid itemId,
+        [FromBody] ReviewedStoryActionBody? body,
+        ISender sender,
+        IStorySellerAuthorizer auth,
+        HttpContext http,
+        ICurrentTenant tenant,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
         SellerMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, _, sellerPartyId) => sender.Send(
-                new RemoveSellerStoryItemCommand(tenantId, sellerPartyId, id, itemId), cancellationToken));
+                new RemoveSellerStoryItemCommand(
+                    tenantId, sellerPartyId, id, itemId, body?.ExpectedVersion, body?.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> SellerReorderItemsAsync(
         Guid id, ReorderStoryItemsBody body, ISender sender, IStorySellerAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         SellerMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, _, sellerPartyId) => sender.Send(
-                new ReorderSellerStoryItemsCommand(tenantId, sellerPartyId, id, body.ItemIds), cancellationToken));
+                new ReorderSellerStoryItemsCommand(
+                    tenantId, sellerPartyId, id, body.ItemIds, body.ExpectedVersion, body.OccurrenceKey),
+                cancellationToken));
 
     private static async Task<IResult> SellerMutationAsync(
         IStorySellerAuthorizer auth,

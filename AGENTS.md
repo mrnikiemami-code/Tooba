@@ -1,15 +1,16 @@
-# CURRENT — TB-281-R3 REVIEWED PARTIAL; ONLY 281-R4 ISSUED — 2026-11-19
+# CURRENT — TB-281-R4 WORKER PASS; AWAIT ARCHITECT — 2026-11-19
 
-Reviewed code 46c639c4c6cdd5f1ae0e3af2afbeb03f0dcf3dca; actual final head 14b2395eea3585b7e12af71d135c84c77ce7f9c2 is its docs-only addendum.
-Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/ARCHITECT-REVIEW.md.
-Only issued task: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4. Exact TASK.md: docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/TASK.md.
-Close A full version/occurrence transport (including broken delete/reorder), B actual Media save/ack failure proof, C canonical rollback-only PostgreSQL facts. No new product scope, migration, seed or live business mutation. Retain landed R3 checks/public attribution/scoped schema; old 57/57 is not missing behavior proof.
-One worker tooba-worker-01/tooba-main; issued does not mean running. Await result and review; no task chain.
-Seller Story UI MUST use purchased-template EXISTING VendorShell and /vendor-panel/stories, existing story.view/menu/auth/context. No parallel panel/menu/login. See SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
-Shared Orders-style UI delivery is PLANNED NOT ISSUED. Worker PASS != Architect ACCEPT != user acceptance. Returns acceptances/payout backlog preserved; no key operations.
-automaticNextImplementationTask NONE.
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# HISTORICAL — superseded by the CURRENT checkpoint above
+صاحب محصول تأکید کرد استوری باید در پنل فروشندهٔ موجود قالب تکمیل شود، نه پنل تازه. سورس بررسی شد: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» با مجوز `story.view` و مسیر `/vendor-panel/stories` از قبل وجود دارد؛ صفحه همان feature مشترک را با قابلیت فروشنده می‌گیرد. مرجع اجباری تسک UI آینده: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پوسته، ناوبری و auth/context موجود حفظ شوند؛ منو/پنل/ورود موازی ساخته نشود. این فقط یادداشت است؛ UI هنوز NOT ISSUED و automaticNextImplementationTask NONE.
+
+Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/TASK.md` and
+`docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R4/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,media-failure-proof.md,rollback-only-proof.md,all-route-matrix.md,schema-and-runtime-proof.md,ui-contract-handoff.md,issuance-receipt.json}`.
+Status **PASS** within issued A/B/C: end-to-end version/occurrence transport (remove/reorder/composites); AdminSetSchedule content gate; platform product CTA via Catalog validity; Media SaveChanges failure injection + exact PG unique + ambient-tx refuse; three PG rollback-only packages; Host skip-bootstrap refresh; focused 46/46; ZERO migration; ZERO live Story/Media business write.
+Decision `END_TO_END_VERSION_OCCURRENCE_TRANSPORT_PLATFORM_CTA_ADMIN_SCHEDULE_CONTENT_GATE_MEDIA_SAVECHANGES_FAILURE_INJECTION_EXACT_PG_UNIQUE_AND_THREE_ROLLBACK_ONLY_PACKAGES_LANDED_WITH_FOCUSED_PROOF_ZERO_MIGRATION`.
+NOT Architect ACCEPT, NOT user acceptance. UI delivery PLANNED_NOT_ISSUED. Expected-Base `14b2395eea3585b7e12af71d135c84c77ce7f9c2`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+
+# HISTORICAL — TB-281-R3 REVIEWED PARTIAL; 281-R4 WAS ISSUED
 
 ## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 

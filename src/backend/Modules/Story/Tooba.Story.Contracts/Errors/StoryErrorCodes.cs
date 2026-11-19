@@ -49,4 +49,7 @@ public static class StoryErrorCodes
 
     /// <summary>هویت رخداد فرمان با نتیجهٔ ذخیره‌شده در تضاد است.</summary>
     public const string OccurrenceConflict = "story.occurrence.conflict";
+
+    /// <summary>کلید رخداد برای فرمان تغییردهنده الزامی است.</summary>
+    public const string OccurrenceRequired = "story.occurrence.required";
 }

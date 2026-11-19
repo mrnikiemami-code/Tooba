@@ -253,7 +253,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                 <button
                   type="button"
                   className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs text-white"
-                  onClick={() => void enableAdminStory(row.storyId, row.versionToken).then(refresh)}
+                  onClick={() => void enableAdminStory(row.storyId, row.versionToken).then(() => refresh())}
                 >
                   {STORY_COPY.enable}
                 </button>
@@ -298,7 +298,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                 type="button"
                 className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs text-white"
                 onClick={() =>
-                  void submitSellerStory(row.storyId).then((result) => {
+                  void submitSellerStory(row.storyId, null, row.versionToken).then((result) => {
                     if (result.state === "ok") refresh();
                     else setMessage(result.message);
                   })
@@ -470,7 +470,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
               type="button"
               className="mb-5 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
               onClick={() =>
-                void submitSellerStory(selected.storyId).then((result) => {
+                void submitSellerStory(selected.storyId, null, selected.versionToken).then((result) => {
                   if (result.state === "ok") refresh();
                   else setMessage(result.message);
                 })
@@ -562,8 +562,14 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                 onClick={() => {
                   const add =
                     capabilities.mode === "seller"
-                      ? addSellerStoryItem(selected.storyId, itemDraft)
-                      : addAdminStoryItem(selected.storyId, itemDraft);
+                      ? addSellerStoryItem(selected.storyId, {
+                          ...itemDraft,
+                          expectedVersion: selected.versionToken,
+                        })
+                      : addAdminStoryItem(selected.storyId, {
+                          ...itemDraft,
+                          expectedVersion: selected.versionToken,
+                        });
                   void add.then((result) => {
                     if (result.state === "ok") refresh();
                     else setMessage(result.message);

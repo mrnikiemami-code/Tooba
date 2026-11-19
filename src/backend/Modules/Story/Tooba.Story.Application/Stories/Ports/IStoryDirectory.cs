@@ -49,7 +49,8 @@ public interface IStoryDirectory
         Guid storyId,
         Guid adminActorUserId,
         int? expectedVersion,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
 
     /// <summary>تأیید و زمان‌بندی اتمی با نسخهٔ دیده‌شده.</summary>
     Task<AdminStorySnapshot> AdminApproveAndScheduleAsync(
@@ -58,7 +59,8 @@ public interface IStoryDirectory
         Guid adminActorUserId,
         int? expectedVersion,
         SetStoryScheduleCommand schedule,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
 
     /// <summary>بازگشت فروشنده به پیش‌نویس پس از تأیید.</summary>
     Task<AdminStorySnapshot> SellerReturnToDraftAsync(
@@ -98,7 +100,8 @@ public interface IStoryDirectory
         Guid storyId,
         StoryStatus status,
         int? expectedVersion,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
 
     /// <summary>زمان‌بندی استوری را تنظیم می‌کند.</summary>
     Task<AdminStorySnapshot> AdminSetScheduleAsync(
@@ -111,6 +114,8 @@ public interface IStoryDirectory
     Task<IReadOnlyList<AdminStorySnapshot>> AdminReorderStoriesAsync(
         Guid tenantId,
         IReadOnlyList<Guid> storyIdsInOrder,
+        IReadOnlyList<int> expectedVersions,
+        string? occurrenceKey,
         CancellationToken cancellationToken);
 
     /// <summary>آیتم به استوری اضافه می‌کند.</summary>
@@ -133,23 +138,26 @@ public interface IStoryDirectory
         Guid tenantId,
         Guid storyId,
         Guid itemId,
-        CancellationToken cancellationToken,
-        int? expectedVersion = null);
+        int? expectedVersion,
+        string? occurrenceKey,
+        CancellationToken cancellationToken);
 
     /// <summary>آیتم‌های استوری را مرتب می‌کند.</summary>
     Task<AdminStorySnapshot> AdminReorderItemsAsync(
         Guid tenantId,
         Guid storyId,
         IReadOnlyList<Guid> itemIdsInOrder,
-        CancellationToken cancellationToken,
-        int? expectedVersion = null);
+        int? expectedVersion,
+        string? occurrenceKey,
+        CancellationToken cancellationToken);
 
     /// <summary>استوری را با SoftDisable غیرفعال می‌کند.</summary>
     Task<AdminStorySnapshot> AdminSoftDisableAsync(
         Guid tenantId,
         Guid storyId,
         int? expectedVersion,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
 
     /// <summary>استوری فروشنده را تأیید می‌کند.</summary>
     Task<AdminStorySnapshot> AdminApproveAsync(
@@ -157,7 +165,8 @@ public interface IStoryDirectory
         Guid storyId,
         Guid adminActorUserId,
         int? expectedVersion,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
 
     /// <summary>استوری فروشنده را با دلیل رد می‌کند.</summary>
     Task<AdminStorySnapshot> AdminRejectAsync(
@@ -166,7 +175,8 @@ public interface IStoryDirectory
         Guid adminActorUserId,
         string reason,
         int? expectedVersion,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
 
     /// <summary>فهرست استوری‌های یک فروشنده.</summary>
     Task<IReadOnlyList<AdminStorySnapshot>> SellerListAsync(
@@ -230,8 +240,9 @@ public interface IStoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         Guid itemId,
-        CancellationToken cancellationToken,
-        int? expectedVersion = null);
+        int? expectedVersion,
+        string? occurrenceKey,
+        CancellationToken cancellationToken);
 
     /// <summary>آیتم‌های استوری قابل‌ویرایش فروشنده را مرتب می‌کند.</summary>
     Task<AdminStorySnapshot> SellerReorderItemsAsync(
@@ -239,5 +250,7 @@ public interface IStoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         IReadOnlyList<Guid> itemIdsInOrder,
+        int? expectedVersion,
+        string? occurrenceKey,
         CancellationToken cancellationToken);
 }
