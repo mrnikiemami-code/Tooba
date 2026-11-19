@@ -322,18 +322,42 @@ async function dispatchFrozenEnvelope<T>(
     if (envelope.role === "admin" && envelope.shopId && envelope.path.includes("upload-for-shop")) {
       form.append("sellerPartyId", envelope.shopId);
     }
-    const response = await fetch(envelope.path, {
-      method: envelope.method || "POST",
-      headers: buildHeaders(envelope, false),
-      body: form,
-    });
-    return finalizeResponse(envelope, response, mapOk);
+    try {
+      const response = await fetch(envelope.path, {
+        method: envelope.method || "POST",
+        headers: buildHeaders(envelope, false),
+        body: form,
+      });
+      return finalizeResponse(envelope, response, mapOk);
+    } catch (err) {
+      return transportRejectionResult(envelope, err);
+    }
   }
 
   if (envelope.bodyText == null) {
     return { state: "blocked", reason: "envelope" };
   }
   return sendJsonRequest(envelope, envelope.method, envelope.path, envelope.bodyText, mapOk);
+}
+
+/** Connection loss / rejected fetch — uncertain, keep exact persisted envelope. */
+function transportRejectionResult<T>(
+  envelope: StoryIntentEnvelope,
+  err: unknown,
+): StoryExecutorResult<T> {
+  const isNetwork =
+    err instanceof TypeError ||
+    (err instanceof Error && /failed to fetch|network|load failed|econn|abort/i.test(err.message));
+  if (!isNetwork && !(err instanceof Error)) {
+    // Non-Error throw: still uncertain at the wire boundary (do not invent success).
+  }
+  return {
+    state: "failed",
+    message: "ارتباط قطع شد؛ نتیجه نامشخص است و اقدام قابل ادامه است.",
+    envelope,
+    status: 0,
+    code: "story.transport.rejected",
+  };
 }
 
 async function sendJsonRequest<T>(
@@ -346,12 +370,16 @@ async function sendJsonRequest<T>(
   const wired: StoryIntentEnvelope = { ...envelope, method, path, bodyText };
   const route = bindStoryEnvelopeRoute(wired);
   if (!route.ok) return { state: "blocked", reason: "envelope" };
-  const response = await fetch(path, {
-    method,
-    headers: buildHeaders(envelope, true),
-    body: bodyText,
-  });
-  return finalizeResponse(envelope, response, mapOk);
+  try {
+    const response = await fetch(path, {
+      method,
+      headers: buildHeaders(envelope, true),
+      body: bodyText,
+    });
+    return finalizeResponse(envelope, response, mapOk);
+  } catch (err) {
+    return transportRejectionResult(envelope, err);
+  }
 }
 
 async function finalizeResponse<T>(

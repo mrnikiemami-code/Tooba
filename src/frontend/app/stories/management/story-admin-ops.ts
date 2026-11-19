@@ -166,9 +166,14 @@ export function buildAdminOpEnvelope(args: {
 
 function isUncertainFailure(outcome: Extract<StoryExecutorResult, { state: "failed" }>): boolean {
   if (outcome.status === 0) return true;
-  if (outcome.code === "story.response.unverified") return true;
+  if (outcome.code === "story.response.unverified" || outcome.code === "story.transport.rejected") return true;
   const msg = (outcome.message ?? "").toLowerCase();
-  return msg.includes("unverified") || msg.includes("host-unreachable") || msg.includes("uncertain");
+  return (
+    msg.includes("unverified") ||
+    msg.includes("host-unreachable") ||
+    msg.includes("uncertain") ||
+    msg.includes("ارتباط قطع")
+  );
 }
 
 function stopReasonLabel(
