@@ -1,20 +1,18 @@
-# CURRENT — OWNER REJECTED STORY UX; ONLY TB-282-R6 ISSUED — 2026-11-19
+# CURRENT — TB-282-R6 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6
-Expected-Base-SHA: 5a0b341ab5d3fcd7ab8539d3f5c488562529dd6b
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/TASK.md
-Evidence/receipt: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/
-Owner rejected real admin/seller screens: incomplete Persian, ambiguous shop/placement, list review filter in detail, unchanged title-only seller creation. R5 remains accepted only for limited owner trial; visual/product acceptance REJECTED.
-One consolidated R6 implements complete shared creation/edit form in BOTH existing admin and VendorShell, truthful shop/main context, list-only review filter, merchant localization and final served-role verification. Preserve R5 identity/retry/lifecycle and all unrelated work.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6 (ISSUED; not claimed/running)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-One worker tooba-worker-01 / tooba-main. No delegation/screenshots/polling loop. ZERO migration/live business writes. Await worker result then independent Architect review; do not repeat unchanged UI handoff.
-URLs /fa/admin/stories ; /fa/vendor-panel/stories ; /fa
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–D: full shared `/new` form (no title-only modal) for admin and VendorShell; list-only review filter; truthful محل نمایش; merchant destination labels; HTTP CSRF scheme-aware Secure; Host5088/Next3000 BUILD_ID `yq3D1_b-sYRUJXbreLqoj`; ZERO migration; ZERO live Story/Media write.
+Decision `A_FULL_SHARED_CREATE_WORKSPACE_BOTH_ROLES_B_LIST_ONLY_REVIEW_FILTER_TRUTHFUL_LOCATION_C_MERCHANT_DESTINATION_COPY_D_MOUNTED_SERVED_HTTP_COOKIE_SECURE_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `5a0b341ab5d3fcd7ab8539d3f5c488562529dd6b`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# CURRENT — STORY READY FOR OWNER TEST; NO IMPLEMENTATION TASK ACTIVE — 2026-11-19
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R6 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — STORY READY FOR OWNER TEST THEN OWNER REJECTED UX; R6 ISSUED
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/ARCHITECT-REVIEW.md
 Reviewed code 352a252ad9cf21645cf54c2d71a51e91c4da9d98 / implementation-evidence main 71e489bcd7a0a1b871dad6bcec86bca1050c6e96.

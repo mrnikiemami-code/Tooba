@@ -41,7 +41,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const response = NextResponse.json({ userId, authenticated: true });
-  for (const cookie of buildAuthCookies(sessionId, refreshToken)) {
+  for (const cookie of buildAuthCookies(sessionId, refreshToken, request)) {
     response.cookies.set(cookie.name, cookie.value, cookie.options);
   }
   return response;

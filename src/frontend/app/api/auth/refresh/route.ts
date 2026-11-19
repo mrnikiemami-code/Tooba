@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { REFRESH_COOKIE_NAME } from "../../../../lib/auth/constants.ts";
 import { CSRF_COOKIE_NAME, validateCsrf } from "../../../../lib/auth/csrf.ts";
-import { buildAuthCookies, clearAuthCookieOptions, SESSION_COOKIE_NAME } from "../../../../lib/server/session-cookies.ts";
+import { authCookieSecure, buildAuthCookies, clearAuthCookieOptions, SESSION_COOKIE_NAME } from "../../../../lib/server/session-cookies.ts";
 import { hostBaseUrl } from "../../../../lib/server/host-client.ts";
 
 export async function POST(request: Request): Promise<Response> {
@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
   });
   const payload = await upstream.json().catch(() => null) as Record<string, unknown> | null;
   if (!upstream.ok) {
-    const secure = process.env.NODE_ENV === "production";
+    const secure = authCookieSecure(request);
     const response = NextResponse.json(payload ?? { title: "Unauthorized" }, { status: upstream.status });
     for (const cookie of clearAuthCookieOptions(secure)) {
       response.cookies.set(cookie.name, "", cookie.options);
@@ -40,7 +40,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const response = NextResponse.json({ authenticated: true, userId: payload?.userId ?? null });
-  for (const cookie of buildAuthCookies(nextSession, nextRefresh)) {
+  for (const cookie of buildAuthCookies(nextSession, nextRefresh, request)) {
     response.cookies.set(cookie.name, cookie.value, cookie.options);
   }
   return response;

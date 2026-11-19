@@ -55,7 +55,9 @@ export type StoryCopy = {
   platformStorefront: string;
   destinationNone: string;
   destinationProduct: string;
+  destinationShop: string;
   destinationExternal: string;
+  destinationUnavailable: string;
   destinationPrefix: string;
   productSearchPlaceholder: string;
   productSelectedPrefix: string;
@@ -103,14 +105,41 @@ export type StoryCopy = {
   deniedTitle: string;
   deniedDetail: string;
   breadcrumbHome: string;
-  ownershipImmutableHint: string;
+  backToList: string;
+  filterReviewLabel: string;
+  filterApproved: string;
+  filterRejected: string;
+  shopNameUnavailable: string;
+  locationPrefix: string;
+  createWorkspaceTitle: string;
+  saveForm: string;
+  previewHeading: string;
+  previewEmpty: string;
+  slidesEmptyHint: string;
+  loadingProducts: string;
+  loadMoreProducts: string;
+  approveAndPublish: string;
+  approveAndSchedule: string;
+  scheduleDisplay: string;
+  stopDisplay: string;
+  returnToDraft: string;
+  pendingHeading: string;
+  pendingRetry: string;
+  pendingContinueFailed: string;
+  draftSaved: string;
+  submittedToast: string;
+  stoppedToast: string;
+  returnedToast: string;
+  actorMissing: string;
+  titleRequired: string;
+  productIdInvalid: string;
 };
 
 export const faStoryCopy: StoryCopy = {
   adminTitle: "استوری‌ها",
-  adminDescription: "ایجاد، فعال‌سازی و آیتم‌های Story ویترین",
+  adminDescription: "ساخت و انتشار استوری برای ویترین اصلی یا فروشگاه‌ها",
   sellerTitle: "استوری‌ها",
-  sellerDescription: "پیش‌نویس، آیتم‌ها و ارسال برای بازبینی",
+  sellerDescription: "پیش‌نویس اسلایدها و ارسال برای تأیید",
   createButton: "استوری جدید",
   createModalTitle: "ایجاد استوری",
   createAndPublish: "ایجاد و فعال‌سازی",
@@ -154,8 +183,10 @@ export const faStoryCopy: StoryCopy = {
   sellerShopFallback: "فروشگاه فعلی شما",
   platformStorefront: "ویترین اصلی",
   destinationNone: "بدون لینک",
-  destinationProduct: "محصول فروشگاه",
-  destinationExternal: "آدرس وب‌سایت",
+  destinationProduct: "محصول",
+  destinationShop: "فروشگاه",
+  destinationExternal: "پیوند",
+  destinationUnavailable: "مقصد در دسترس نیست",
   destinationPrefix: "مقصد:",
   productSearchPlaceholder: "جستجوی نام محصول در فهرست مجاز",
   productSelectedPrefix: "محصول انتخاب‌شده:",
@@ -203,7 +234,34 @@ export const faStoryCopy: StoryCopy = {
   deniedTitle: "دسترسی مجاز نیست",
   deniedDetail: "برای این بخش مجوز ندارید. از منوی پنل خارج نشوید؛ در صورت نیاز دوباره وارد شوید.",
   breadcrumbHome: "خانه",
-  ownershipImmutableHint: "مالکیت این استوری ثابت است و از اینجا تغییر نمی‌کند.",
+  backToList: "برگشت به فهرست",
+  filterReviewLabel: "وضعیت بررسی",
+  filterApproved: "تأییدشده",
+  filterRejected: "ردشده",
+  shopNameUnavailable: "نام فروشگاه در دسترس نیست",
+  locationPrefix: "محل نمایش:",
+  createWorkspaceTitle: "استوری جدید",
+  saveForm: "ذخیره",
+  previewHeading: "پیش‌نمایش اسلایدها",
+  previewEmpty: "هنوز اسلایدی نیست.",
+  slidesEmptyHint: "پس از ذخیره، اسلاید عکس یا ویدیو و مقصد را اضافه کنید.",
+  loadingProducts: "در حال بارگذاری…",
+  loadMoreProducts: "نمایش محصولات بیشتر",
+  approveAndPublish: "تأیید و انتشار",
+  approveAndSchedule: "تأیید و زمان‌بندی",
+  scheduleDisplay: "زمان‌بندی نمایش",
+  stopDisplay: "توقف نمایش",
+  returnToDraft: "بازگشت به پیش‌نویس",
+  pendingHeading: "اقدام ناتمام",
+  pendingRetry: "ادامه / ارسال مجدد",
+  pendingContinueFailed: "ارسال مجدد ممکن نشد.",
+  draftSaved: "ذخیره شد.",
+  submittedToast: "برای تأیید ارسال شد.",
+  stoppedToast: "متوقف شد.",
+  returnedToast: "به پیش‌نویس برگشت.",
+  actorMissing: "شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.",
+  titleRequired: "عنوان را وارد کنید.",
+  productIdInvalid: "این ردیف شناسهٔ محصول معتبری ندارد.",
 };
 
 export const enStoryCopy: StoryCopy = {
@@ -254,8 +312,10 @@ export const enStoryCopy: StoryCopy = {
   sellerShopFallback: "Your current shop",
   platformStorefront: "Main storefront",
   destinationNone: "No link",
-  destinationProduct: "Shop product",
-  destinationExternal: "Website URL",
+  destinationProduct: "Product",
+  destinationShop: "Shop",
+  destinationExternal: "Link",
+  destinationUnavailable: "Destination unavailable",
   destinationPrefix: "Destination:",
   productSearchPlaceholder: "Search eligible product names",
   productSelectedPrefix: "Selected product:",
@@ -303,7 +363,34 @@ export const enStoryCopy: StoryCopy = {
   deniedTitle: "Access denied",
   deniedDetail: "You do not have permission for this section. Stay in the panel menu; sign in again if needed.",
   breadcrumbHome: "Home",
-  ownershipImmutableHint: "This story’s owner is fixed and cannot be changed here.",
+  backToList: "Back to list",
+  filterReviewLabel: "Review status",
+  filterApproved: "Approved",
+  filterRejected: "Rejected",
+  shopNameUnavailable: "Shop name unavailable",
+  locationPrefix: "Shown on:",
+  createWorkspaceTitle: "New story",
+  saveForm: "Save",
+  previewHeading: "Slide preview",
+  previewEmpty: "No slides yet.",
+  slidesEmptyHint: "After saving, add a photo or video slide and its destination.",
+  loadingProducts: "Loading…",
+  loadMoreProducts: "Show more products",
+  approveAndPublish: "Approve and publish",
+  approveAndSchedule: "Approve and schedule",
+  scheduleDisplay: "Schedule display",
+  stopDisplay: "Stop display",
+  returnToDraft: "Return to draft",
+  pendingHeading: "Unfinished action",
+  pendingRetry: "Continue / retry",
+  pendingContinueFailed: "Retry could not be sent.",
+  draftSaved: "Saved.",
+  submittedToast: "Sent for approval.",
+  stoppedToast: "Stopped.",
+  returnedToast: "Returned to draft.",
+  actorMissing: "A user identity is required to record this action safely.",
+  titleRequired: "Enter a title.",
+  productIdInvalid: "This row has no valid product identity.",
 };
 
 /** Status / origin / review labels per locale. */
@@ -325,7 +412,7 @@ export const STORY_STATUS_LABELS_BY_LOCALE: Record<StoryUiLocale, Record<string,
 };
 
 export const STORY_ORIGIN_LABELS_BY_LOCALE: Record<StoryUiLocale, Record<string, string>> = {
-  fa: { Admin: "ادمین", Seller: "فروشنده" },
+  fa: { Admin: "ویترین اصلی", Seller: "فروشگاه" },
   en: { Admin: "Admin", Seller: "Seller" },
 };
 

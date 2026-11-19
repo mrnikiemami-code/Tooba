@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { CSRF_COOKIE_NAME, validateCsrf } from "../../../../lib/auth/csrf.ts";
-import { clearAuthCookieOptions } from "../../../../lib/server/session-cookies.ts";
+import { authCookieSecure, clearAuthCookieOptions } from "../../../../lib/server/session-cookies.ts";
 import { forwardToHost, readSessionId } from "../../../../lib/server/host-client.ts";
 
 export async function POST(request: Request): Promise<Response> {
@@ -18,7 +18,7 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  const secure = process.env.NODE_ENV === "production";
+  const secure = authCookieSecure(request);
   const response = new NextResponse(null, { status: 204 });
   for (const cookie of clearAuthCookieOptions(secure)) {
     response.cookies.set(cookie.name, "", cookie.options);

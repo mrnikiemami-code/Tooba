@@ -9,7 +9,25 @@ import {
 } from "../auth/constants.ts";
 import { createCsrfToken, csrfCookieOptions } from "../auth/csrf.ts";
 
-function isProduction(): boolean {
+/**
+ * Cookie Secure flag for BFF auth cookies.
+ * Must follow the actual request scheme (and optional override), not NODE_ENV alone —
+ * `next start` over http://127.0.0.1 drops Secure cookies in the browser, so CSRF/login fail.
+ */
+export function authCookieSecure(request?: Request): boolean {
+  const override = process.env.TOOBA_COOKIE_SECURE?.trim();
+  if (override === "0" || override === "false") return false;
+  if (override === "1" || override === "true") return true;
+  if (request) {
+    const forwarded = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    if (forwarded === "https") return true;
+    if (forwarded === "http") return false;
+    try {
+      return new URL(request.url).protocol === "https:";
+    } catch {
+      /* fall through */
+    }
+  }
   return process.env.NODE_ENV === "production";
 }
 
@@ -33,8 +51,12 @@ export function refreshCookieOptions(secure: boolean): Omit<ResponseCookie, "nam
   };
 }
 
-export function buildAuthCookies(sessionId: string, refreshToken: string): { name: string; value: string; options: ResponseCookie }[] {
-  const secure = isProduction();
+export function buildAuthCookies(
+  sessionId: string,
+  refreshToken: string,
+  request?: Request,
+): { name: string; value: string; options: ResponseCookie }[] {
+  const secure = authCookieSecure(request);
   const csrf = createCsrfToken();
   return [
     { name: SESSION_COOKIE_NAME, value: sessionId, options: { ...sessionCookieOptions(secure), name: SESSION_COOKIE_NAME, value: sessionId } },

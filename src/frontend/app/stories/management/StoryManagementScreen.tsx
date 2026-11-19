@@ -90,7 +90,16 @@ function PageHeading({ title, description, homeLabel }: { title: string; descrip
 function shopLabel(row: AdminStorySnapshot, copy: StoryCopy): string {
   if (row.shopDisplayName?.trim()) return row.shopDisplayName.trim();
   if (!row.sellerPartyId) return copy.platformStorefront;
-  return copy.sellerOwnerHeader;
+  return copy.shopNameUnavailable;
+}
+
+function destinationLabelForType(ctaType: string | null | undefined, copy: StoryCopy): string {
+  const type = (ctaType ?? "").trim().toLowerCase();
+  if (!type || type === "none") return copy.destinationNone;
+  if (type === "product") return copy.destinationProduct;
+  if (type === "external") return copy.destinationExternal;
+  if (type === "internal" || type === "shop" || type === "seller") return copy.destinationShop;
+  return copy.destinationUnavailable;
 }
 
 function displayState(row: AdminStorySnapshot, copy: StoryCopy): string {
@@ -210,19 +219,22 @@ function StoryManagementScreenBody({
   function destinationLabelForItem(item: AdminStorySnapshot["items"][number]): string {
     const ctaType = item.ctaType;
     const ctaTarget = item.ctaTarget;
-    if (!ctaType || ctaType === "none") return copy.destinationNone;
-    if (ctaType === "product") {
+    const type = (ctaType ?? "").trim().toLowerCase();
+    if (!type || type === "none") return copy.destinationNone;
+    if (type === "product") {
       const id = (ctaTarget ?? "").trim();
       if (!id) return copy.productUnknown;
-      // Bound only to THIS slide's owning target — never borrow selectedProductLabel from another editor.
       const owned = item.ctaProductTitle?.trim() || productLabelById[id];
       if (owned) return owned;
       return copy.productUnknown;
     }
-    if (ctaType === "external") {
+    if (type === "external") {
       return ctaTarget?.trim() ? `${copy.destinationExternal}: ${ctaTarget}` : copy.destinationExternal;
     }
-    return ctaType;
+    if (type === "internal" || type === "shop" || type === "seller") {
+      return ctaTarget?.trim() ? `${copy.destinationShop}: ${ctaTarget}` : copy.destinationShop;
+    }
+    return destinationLabelForType(ctaType, copy);
   }
 
   function openNewSlideDialog() {
@@ -449,27 +461,27 @@ function StoryManagementScreenBody({
       scope: { role: "seller", shopId: row.sellerPartyId, actorUserId: actorId },
     });
     if (outcome.state === "ok") {
-      toast.success("برای تأیید ارسال شد.");
+      toast.success(copy.submittedToast);
       refreshGrid();
       if (selectedId === row.storyId) setReloadToken((v) => v + 1);
     } else if (outcome.state === "failed") toast.error(outcome.message);
     else toast.error("ارسال انجام نشد.");
   }
 
-  async function createDraft() {
-    if (inFlightRef.current) return;
+  async function createDraft(): Promise<string | null> {
+    if (inFlightRef.current) return null;
     if (!actorId) {
-      toast.error("شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.");
-      return;
+      toast.error(copy.actorMissing);
+      return null;
     }
     const title = draftTitle.trim();
     if (!title) {
-      toast.error("عنوان را وارد کنید.");
-      return;
+      toast.error(copy.titleRequired);
+      return null;
     }
     if (capabilities.mode === "admin" && adminShopMode === "shop" && !adminShopId.trim()) {
-      toast.error("فروشگاه را از فهرست نام‌ها انتخاب کنید.");
-      return;
+      toast.error(copy.shopPickRequired);
+      return null;
     }
     const occurrenceKey = mintOccurrence();
     const shopId =
@@ -505,14 +517,20 @@ function StoryManagementScreenBody({
     if (outcome.state === "ok") {
       const payload = outcome.data as { storyId?: string; data?: { storyId?: string } };
       const id = payload?.storyId ?? payload?.data?.storyId;
-      toast.success("پیش‌نویس ذخیره شد.");
+      toast.success(copy.draftSaved);
       setShowCreate(false);
-      setDraftTitle("");
-      setSlideFile(null);
-      if (id) openDetail(String(id));
+      setDirty(false);
+      if (id) {
+        openDetail(String(id));
+        router.push(`${basePath}/${id}`);
+        return String(id);
+      }
       refreshGrid();
-    } else if (outcome.state === "failed") toast.error(outcome.message);
-    else toast.error("ارسال انجام نشد.");
+      return null;
+    }
+    if (outcome.state === "failed") toast.error(outcome.message);
+    else toast.error(copy.sendFailed);
+    return null;
   }
 
   if (state === "denied") return <Denied retry={refreshGrid} copy={copy} />;
@@ -520,6 +538,7 @@ function StoryManagementScreenBody({
   const title = capabilities.mode === "seller" ? copy.sellerTitle : copy.adminTitle;
   const description = capabilities.mode === "seller" ? copy.sellerDescription : copy.adminDescription;
   const testId = capabilities.mode === "seller" ? "seller-stories" : "admin-stories";
+  const isListSurface = !createMode && !selectedId;
   const sellerEditable = detail ? hasAction(detail, "update") || hasAction(detail, "add_item") : false;
   const filteredShops = shopOptions.filter((row) => {
     const q = shopSearch.trim();
@@ -532,9 +551,9 @@ function StoryManagementScreenBody({
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <PageHeading title={title} description={description} homeLabel={copy.breadcrumbHome} />
         <div className="flex flex-wrap items-center gap-2">
-          {capabilities.canReview ? (
+          {isListSurface && capabilities.canReview ? (
             <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
-              وضعیت بررسی
+              {copy.filterReviewLabel}
               <select
                 className="min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
                 value={reviewFilter}
@@ -546,19 +565,16 @@ function StoryManagementScreenBody({
               >
                 <option value="">{copy.filterAll}</option>
                 <option value="Submitted">{copy.filterPending}</option>
-                <option value="Approved">تأییدشده</option>
-                <option value="Rejected">ردشده</option>
+                <option value="Approved">{copy.filterApproved}</option>
+                <option value="Rejected">{copy.filterRejected}</option>
               </select>
             </label>
           ) : null}
-          {capabilities.canCreate ? (
+          {isListSurface && capabilities.canCreate ? (
             <button
               type="button"
               className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-              onClick={() => {
-                setShowCreate(true);
-                router.push(`${basePath}/new`);
-              }}
+              onClick={() => router.push(`${basePath}/new`)}
               data-testid="story-create-open"
             >
               {copy.createButton}
@@ -569,7 +585,7 @@ function StoryManagementScreenBody({
 
       {pendingActs.length > 0 ? (
         <section className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4" data-testid="story-pending-recovery">
-          <h2 className="mb-2 text-sm font-bold text-amber-900">اقدام ناتمام</h2>
+          <h2 className="mb-2 text-sm font-bold text-amber-900">{copy.pendingHeading}</h2>
           <ul className="space-y-2 text-sm text-amber-900">
             {pendingActs.map((act) => (
               <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
@@ -600,12 +616,12 @@ function StoryManagementScreenBody({
                         setRecoveryFile(null);
                         refreshGrid();
                         setReloadToken((v) => v + 1);
-                      } else if (outcome.state === "failed") toast.error(outcome.message);
-                      else toast.error("ارسال مجدد ممکن نشد.");
+                    } else if (outcome.state === "failed") toast.error(outcome.message);
+                    else toast.error(copy.pendingContinueFailed);
                     });
                   }}
                 >
-                  ادامه / ارسال مجدد
+                  {copy.pendingRetry}
                 </button>
                 </div>
               </li>
@@ -614,7 +630,7 @@ function StoryManagementScreenBody({
         </section>
       ) : null}
 
-      {!selectedId && !showCreate ? (
+      {isListSurface ? (
         <StoryLiveGrid
           capabilities={capabilities}
           reviewFilter={reviewFilter}
@@ -635,15 +651,159 @@ function StoryManagementScreenBody({
         />
       ) : null}
 
-      {detail ? (
+      {createMode ? (
+        <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-create-workspace">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-bold">{copy.createWorkspaceTitle}</h2>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl px-3 py-1.5 text-sm"
+              onClick={() => router.push(basePath)}
+            >
+              {copy.backToList}
+            </button>
+          </div>
+          <div className="mb-5 space-y-3">
+            <label className="block text-sm">
+              <span className="mb-1 block text-gray-600">{copy.titleLabel}</span>
+              <input
+                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                value={draftTitle}
+                onChange={(e) => {
+                  setDraftTitle(e.target.value);
+                  setDirty(true);
+                }}
+                data-testid="story-create-title"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-gray-600">{copy.languageLabel}</span>
+              <select
+                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                value={editLocale}
+                onChange={(e) => {
+                  setEditLocale(e.target.value);
+                  setDirty(true);
+                }}
+                data-testid="story-create-locale"
+              >
+                {localeOptions.map((row) => (
+                  <option key={row.code} value={row.code}>
+                    {row.name}
+                    {row.isDefault ? copy.localeDefaultSuffix : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {capabilities.mode === "seller" ? (
+              <p className="rounded-xl bg-secondary px-3 py-2 text-sm" data-testid="story-seller-shop-fixed">
+                {copy.sellerShopFixedPrefix} {sellerShopLabel.trim() || copy.sellerShopFallback}
+                <span className="mt-1 block text-xs text-muted">{copy.sellerShopFixedHint}</span>
+              </p>
+            ) : null}
+            {capabilities.mode === "admin" ? (
+              <fieldset className="space-y-2 text-sm">
+                <legend className="mb-1 text-gray-600">{copy.placementLegend}</legend>
+                <label className="flex min-h-11 items-center gap-2">
+                  <input
+                    type="radio"
+                    checked={adminShopMode === "platform"}
+                    onChange={() => {
+                      setAdminShopMode("platform");
+                      setAdminShopId("");
+                      setAdminShopName("");
+                    }}
+                  />
+                  {copy.mainStorefront}
+                </label>
+                <label className="flex min-h-11 items-center gap-2">
+                  <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
+                  {copy.forOneShop}
+                </label>
+                {adminShopMode === "shop" ? (
+                  <div className="space-y-2" data-testid="story-admin-shop-picker">
+                    <input
+                      className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                      placeholder={copy.shopSearchPlaceholder}
+                      value={shopSearch}
+                      onChange={(e) => setShopSearch(e.target.value)}
+                      data-testid="story-admin-shop-search"
+                    />
+                    {adminShopName ? (
+                      <p className="text-sm text-muted">
+                        {copy.selectedShopPrefix} {adminShopName}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-rose-700">{copy.shopPickRequired}</p>
+                    )}
+                    <ul className="max-h-48 overflow-auto rounded-xl border border-gray-100">
+                      {filteredShops.map((row) => (
+                        <li key={row.sellerPartyId}>
+                          <button
+                            type="button"
+                            className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
+                            onClick={() => {
+                              setAdminShopId(row.sellerPartyId);
+                              setAdminShopName(row.displayName);
+                            }}
+                            data-testid="story-admin-shop-option"
+                          >
+                            {row.displayName}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </fieldset>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                onClick={() => void createDraft()}
+                data-testid="story-create-save"
+              >
+                {copy.saveForm}
+              </button>
+            </div>
+          </div>
+          <div className="mb-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-bold">{copy.itemsHeading}</h3>
+              {capabilities.canCreate ? (
+                <button
+                  type="button"
+                  className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                  data-testid="story-slide-open-new"
+                  onClick={() => {
+                    void (async () => {
+                      const id = await createDraft();
+                      if (id) openNewSlideDialog();
+                    })();
+                  }}
+                >
+                  {copy.addItem}
+                </button>
+              ) : null}
+            </div>
+            <p className="text-sm text-muted">{copy.slidesEmptyHint}</p>
+          </div>
+          <div data-testid="story-create-preview">
+            <h3 className="mb-2 text-sm font-bold">{copy.previewHeading}</h3>
+            <p className="text-sm text-muted">{copy.previewEmpty}</p>
+          </div>
+        </section>
+      ) : null}
+
+      {!createMode && detail ? (
         <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-detail-workspace">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold">{detail.title}</h2>
-              <p className="text-sm text-muted">
-                {shopLabel(detail, copy)} · {displayState(detail, copy)}
+              <p className="text-sm text-muted" data-testid="story-detail-location">
+                {copy.locationPrefix} {shopLabel(detail, copy)} · {displayState(detail, copy)}
               </p>
-              <p className="mt-1 text-xs text-muted">{copy.ownershipImmutableHint}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <StoryStatusBadge status={detail.status} />
                 {detail.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={detail.reviewStatus} /> : null}
@@ -661,7 +821,7 @@ function StoryManagementScreenBody({
                 router.push(basePath);
               }}
             >
-              برگشت به فهرست
+              {copy.backToList}
             </button>
           </div>
 
@@ -679,7 +839,7 @@ function StoryManagementScreenBody({
                 className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
                 onClick={() => setPreviewConfirm("publish")}
               >
-                تأیید و انتشار
+                {copy.approveAndPublish}
               </button>
             ) : null}
             {hasAction(detail, "approve_and_schedule") ? (
@@ -700,7 +860,7 @@ function StoryManagementScreenBody({
                   setScheduleOpen(true);
                 }}
               >
-                تأیید و زمان‌بندی
+                {copy.approveAndSchedule}
               </button>
             ) : null}
             {hasAction(detail, "reject") ? (
@@ -730,7 +890,7 @@ function StoryManagementScreenBody({
                   setScheduleOpen(true);
                 }}
               >
-                زمان‌بندی نمایش
+                {copy.scheduleDisplay}
               </button>
             ) : null}
             {hasAction(detail, "stop") ? (
@@ -768,7 +928,7 @@ function StoryManagementScreenBody({
                     scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                   }).then((outcome) => {
                     if (outcome.state === "ok") {
-                      toast.success("متوقف شد.");
+                      toast.success(copy.stoppedToast);
                       refreshGrid();
                       setReloadToken((v) => v + 1);
                     } else if (outcome.state === "failed") toast.error(outcome.message);
@@ -776,7 +936,7 @@ function StoryManagementScreenBody({
                   });
                 }}
               >
-                توقف نمایش
+                {copy.stopDisplay}
               </button>
             ) : null}
             {hasAction(detail, "return_to_draft") ? (
@@ -811,7 +971,7 @@ function StoryManagementScreenBody({
                     scope: { role: "seller", shopId: sellerShopId, actorUserId: actorId },
                   }).then((outcome) => {
                     if (outcome.state === "ok") {
-                      toast.success("به پیش‌نویس برگشت.");
+                      toast.success(copy.returnedToast);
                       refreshGrid();
                       setReloadToken((v) => v + 1);
                     } else if (outcome.state === "failed") toast.error(outcome.message);
@@ -819,7 +979,7 @@ function StoryManagementScreenBody({
                   });
                 }}
               >
-                بازگشت به پیش‌نویس
+                {copy.returnToDraft}
               </button>
             ) : null}
             {hasAction(detail, "submit") ? (
@@ -1153,7 +1313,7 @@ function StoryManagementScreenBody({
                 onChange={(e) => setProductSearch(e.target.value)}
                 data-testid="story-product-search"
               />
-              {productLoading ? <p className="text-xs text-muted">در حال بارگذاری…</p> : null}
+              {productLoading ? <p className="text-xs text-muted">{copy.loadingProducts}</p> : null}
               <ul className="max-h-40 overflow-auto rounded-xl border border-gray-100">
                 {productOptions.map((row) => (
                   <li key={`${row.productId}:${row.offerId}`}>
@@ -1164,7 +1324,7 @@ function StoryManagementScreenBody({
                       data-product-id={row.productId}
                       onClick={() => {
                         if (!row.productId) {
-                          toast.error("این ردیف شناسهٔ محصول معتبری ندارد.");
+                          toast.error(copy.productIdInvalid);
                           return;
                         }
                         setSlideCtaTarget(row.productId);
@@ -1207,7 +1367,7 @@ function StoryManagementScreenBody({
                       .finally(() => setProductLoading(false));
                   }}
                 >
-                  نمایش محصولات بیشتر ({productOptions.length} از {productTotalCount})
+                  {copy.loadMoreProducts} ({productOptions.length} از {productTotalCount})
                 </button>
               ) : null}
               {slideCtaTarget ? (
@@ -1370,95 +1530,6 @@ function StoryManagementScreenBody({
               }}
             >
               {editingItemId ? copy.saveSlideChanges : copy.addItem}
-            </button>
-          </div>
-        </div>
-      </Dialog>
-
-      <Dialog open={showCreate} onClose={() => setShowCreate(false)} title={copy.createModalTitle}>
-        <div className="space-y-3 p-1">
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">{copy.titleLabel}</span>
-            <input
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={draftTitle}
-              onChange={(e) => setDraftTitle(e.target.value)}
-              data-testid="story-create-title"
-            />
-          </label>
-          {capabilities.mode === "seller" ? (
-            <p className="rounded-xl bg-secondary px-3 py-2 text-sm" data-testid="story-seller-shop-fixed">
-              {copy.sellerShopFixedPrefix} {sellerShopLabel.trim() || copy.sellerShopFallback}
-              <span className="mt-1 block text-xs text-muted">{copy.sellerShopFixedHint}</span>
-            </p>
-          ) : null}
-          {capabilities.mode === "admin" ? (
-            <fieldset className="space-y-2 text-sm">
-              <legend className="mb-1 text-gray-600">{copy.placementLegend}</legend>
-              <label className="flex min-h-11 items-center gap-2">
-                <input
-                  type="radio"
-                  checked={adminShopMode === "platform"}
-                  onChange={() => {
-                    setAdminShopMode("platform");
-                    setAdminShopId("");
-                    setAdminShopName("");
-                  }}
-                />
-                {copy.mainStorefront}
-              </label>
-              <label className="flex min-h-11 items-center gap-2">
-                <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
-                {copy.forOneShop}
-              </label>
-              {adminShopMode === "shop" ? (
-                <div className="space-y-2" data-testid="story-admin-shop-picker">
-                  <input
-                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                    placeholder={copy.shopSearchPlaceholder}
-                    value={shopSearch}
-                    onChange={(e) => setShopSearch(e.target.value)}
-                    data-testid="story-admin-shop-search"
-                  />
-                  {adminShopName ? (
-                    <p className="text-sm text-muted">
-                      {copy.selectedShopPrefix} {adminShopName}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-rose-700">{copy.shopPickRequired}</p>
-                  )}
-                  <ul className="max-h-48 overflow-auto rounded-xl border border-gray-100">
-                    {filteredShops.map((row) => (
-                      <li key={row.sellerPartyId}>
-                        <button
-                          type="button"
-                          className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
-                          onClick={() => {
-                            setAdminShopId(row.sellerPartyId);
-                            setAdminShopName(row.displayName);
-                          }}
-                          data-testid="story-admin-shop-option"
-                        >
-                          {row.displayName}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </fieldset>
-          ) : null}
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setShowCreate(false)}>
-              {copy.cancel}
-            </button>
-            <button
-              type="button"
-              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-              onClick={() => void createDraft()}
-              data-testid="story-create-save"
-            >
-              {copy.createDraft}
             </button>
           </div>
         </div>
@@ -1634,7 +1705,7 @@ function StoryManagementScreenBody({
         </div>
       </Dialog>
 
-      <Dialog open={previewConfirm === "publish"} onClose={() => setPreviewConfirm(null)} title="تأیید انتشار">
+      <Dialog open={previewConfirm === "publish"} onClose={() => setPreviewConfirm(null)} title={copy.approveAndPublish}>
         <div className="space-y-3 p-1" data-testid="story-publish-preview">
           {detail ? (
             <>
@@ -1651,9 +1722,9 @@ function StoryManagementScreenBody({
                       <img src={item.mediaUrl} alt="" className="h-16 w-16 rounded object-cover" />
                     ) : null}
                     <span>
-                      {item.mediaType === "video" ? "ویدیو" : "عکس"}
+                      {item.mediaType === "video" ? copy.videoLabel : copy.photoLabel}
                       {item.caption ? ` · ${item.caption}` : ""}
-                      {item.ctaType !== "none" ? ` · مقصد: ${item.ctaType}` : ""}
+                      {item.ctaType !== "none" ? ` · ${copy.destinationPrefix} ${destinationLabelForItem(item)}` : ""}
                     </span>
                   </li>
                 ))}

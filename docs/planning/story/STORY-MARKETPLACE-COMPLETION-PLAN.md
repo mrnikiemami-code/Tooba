@@ -1,16 +1,10 @@
-# CURRENT — OWNER REJECTED STORY UX; ONLY TB-282-R6 ISSUED — 2026-11-19
+# CURRENT — TB-282-R6 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6
-Expected-Base-SHA: 5a0b341ab5d3fcd7ab8539d3f5c488562529dd6b
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/TASK.md
-Evidence/receipt: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6/
-Owner rejected real admin/seller screens: incomplete Persian, ambiguous shop/placement, list review filter in detail, unchanged title-only seller creation. R5 remains accepted only for limited owner trial; visual/product acceptance REJECTED.
-One consolidated R6 implements complete shared creation/edit form in BOTH existing admin and VendorShell, truthful shop/main context, list-only review filter, merchant localization and final served-role verification. Preserve R5 identity/retry/lifecycle and all unrelated work.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6 (ISSUED; not claimed/running)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-One worker tooba-worker-01 / tooba-main. No delegation/screenshots/polling loop. ZERO migration/live business writes. Await worker result then independent Architect review; do not repeat unchanged UI handoff.
-URLs /fa/admin/stories ; /fa/vendor-panel/stories ; /fa
+Worker PASS within issued A–D. BUILD_ID yq3D1_b-sYRUJXbreLqoj. ZERO migration; ZERO live Story/Media write.
+NOT Architect ACCEPT, NOT owner acceptance. URLs: /fa/admin/stories, /fa/vendor-panel/stories, /fa.
+activeTask: NONE; automaticNextImplementationTask: NONE.
+
+# HISTORICAL — TB-282-R6 ISSUED; WORKER PASS ABOVE
 
 # HISTORICAL — superseded by CURRENT above
 
