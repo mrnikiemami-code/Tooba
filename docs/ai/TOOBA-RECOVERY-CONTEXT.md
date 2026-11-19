@@ -1,3 +1,17 @@
+# CURRENT — R14 PARTIAL; R15 REJECTED-TRANSPORT CLOSURE ISSUED — 2026-11-20
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/ARCHITECT-REVIEW.md
+Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15/TASK.md
+R14 code cbba1b3e247426ead2babd4f4dd0fae1755fd166 / evidence 8c6fe36325f181aba213fb655d735cc48c7384c7.
+Accepted: batch scope/epoch stop, per-row result panel, R13 date layout. Remaining: rejected fetch escapes before result Dialog; empty-200 test does not prove connection-loss handling. R15 repairs only this and proves actual grid-selected rejection/exact recovery.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+No production/user acceptance. Host5088 skip-bootstrap=1; FE3000 next-dev; Html404 production build blocker unchanged. No live mutations/grants/seeds/backend changes authorized. Preserve VendorShell, language registry, date/retry rules, Returns/payout/user work and R6 effects UNKNOWN.
+Architect reviewed source/evidence, did not rerun Windows runtime.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — R13 B ACCEPTED; ONLY R14 BULK CLOSURE ISSUED — 2026-11-20
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/ARCHITECT-REVIEW.md

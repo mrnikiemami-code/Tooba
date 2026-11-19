@@ -1,0 +1,11 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15",
+  "parentTask": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14",
+  "expectedBaseSHA": "8c6fe36325f181aba213fb655d735cc48c7384c7",
+  "date": "2026-11-20",
+  "timezone": "Asia/Tehran",
+  "authority": "Architect-issued narrow follow-up after source review",
+  "taskSHA256": "baf218565060e09a6942983c66c69344c8a58a14e77cf2c64502a546a65859ee",
+  "bridge": "Not enqueued or claimed via Bridge in this review; committed exact envelope is canonical",
+  "automaticNextImplementationTask": "NONE"
+}
