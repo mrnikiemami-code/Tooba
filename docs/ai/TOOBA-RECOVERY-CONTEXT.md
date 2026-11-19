@@ -1,17 +1,13 @@
-# CURRENT — ONLY TB-282-R4 ISSUED; AWAIT WORKER RESULT — 2026-11-19
+﻿# CURRENT — TB-282-R4 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4
-Expected-Base-SHA: f35f476c51346858bb1d61e96bb5e7d2068c5a79
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/TASK.md
-Evidence envelope/receipt: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/
-User explicitly rejected current Story UX in BOTH panels. One consolidated task: Orders-style list (title FIRST data column, operations LAST and logical-end PINNED including saved views); one shared complete merchant editor, compact save/localized upload, clear shop/main-storefront identity; named product selection AND UPDATE of existing slide; finish R3 S1 upload/add dispatch gate and actual mounted/negative-control/catalogue >40 proof. No separate discovery or another UI phase.
-Admin selects shop/main storefront on creation and moderates all; seller is fixed to current shop/products and submits for approval. Existing ownership/media are not silently reassigned. Existing purchased-template VendorShell /vendor-panel/stories /story.view remains; no duplicate panel/menu/login.
-Read R3 ARCHITECT-REVIEW; retain valid existing progress and historical reports. Do not declare previous PASS as user acceptance.
-One worker tooba-worker-01 / tooba-main. Issued is NOT claimed/running. Wait for this result, independently review, then owner test. No parallel/new task/automatic continuation.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-ZERO migration/live business write, no screenshots/delegation/polling; skip-bootstrap on Host refresh. Returns/payout backlog/separate key state preserved. Current review URLs /fa/admin/stories, /fa/vendor-panel/stories, /fa; user acceptance pending.
+Read docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/TASK.md and evidence TB-...-282-R4/{RESULT,RECEIPTS,COMPLETION-LEDGER,user-review}.
+Status PASS within issued A–E (Orders-style list, shared merchant editor fa/en catalogs, per-slide update_item, S1 bind every send, S2 >40 catalogue proof). Host5088/Next3000 BUILD_ID VKOLCT7WFUKHA67tlaFV-; ZERO migration; ZERO live Story/Media write.
+NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: /fa/admin/stories, /fa/vendor-panel/stories, /fa.
+Expected-Base f35f476c51346858bb1d61e96bb5e7d2068c5a79. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+Seller remains VendorShell /vendor-panel/stories /story.view — no parallel panel.
+
+# HISTORICAL — TB-282-R4 ISSUED; WORKER PASS ABOVE
+
 
 # HISTORICAL — superseded by CURRENT above
 

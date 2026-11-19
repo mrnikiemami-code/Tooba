@@ -69,6 +69,7 @@ export function verifyStorySuccessPayload(
     case "stop":
     case "return_to_draft":
     case "add_item":
+    case "update_item":
     case "remove_item":
     case "reorder_items":
       return verifyStoryTarget(envelope, root, mapped);
@@ -166,10 +167,11 @@ export function bindStoryEnvelopeRoute(
 
   const sellerStory = /^\/v1\/seller\/stories(?:\/|$)/;
   const adminStory = /^\/v1\/admin\/stories(?:\/|$)/;
+  // Anchored: reject appended/foreign path suffixes (e.g. …/upload-story/../other).
   const mediaUpload =
     role === "seller"
-      ? /^\/v1\/seller\/media\/upload-story/
-      : /^\/v1\/admin\/media\/upload-(?:story-platform|for-shop)/;
+      ? /^\/v1\/seller\/media\/upload-story\/?$/
+      : /^\/v1\/admin\/media\/upload-(?:story-platform|for-shop)\/?$/;
 
   const storyRoot = role === "seller" ? sellerStory : adminStory;
   if (!storyRoot.test(path) && !mediaUpload.test(path) && action !== "upload" && action !== "upload_add") {
@@ -265,6 +267,17 @@ export function bindStoryEnvelopeRoute(
         }
         return expect("POST", mediaUpload);
       }
+      case "update_item":
+        return (
+          Boolean(envelope.routeTargetId) &&
+          expect(
+            "PUT",
+            new RegExp(
+              `^/v1/${role === "seller" ? "seller" : "admin"}/stories/${guid}/items/${guid}/?$`,
+            ),
+          ) &&
+          path.includes(envelope.routeTargetId!)
+        );
       default:
         return false;
     }

@@ -1,19 +1,20 @@
-# CURRENT — ONLY TB-282-R4 ISSUED; AWAIT WORKER RESULT — 2026-11-19
+# CURRENT — TB-282-R4 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4
-Expected-Base-SHA: f35f476c51346858bb1d61e96bb5e7d2068c5a79
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/TASK.md
-Evidence envelope/receipt: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/
-User explicitly rejected current Story UX in BOTH panels. One consolidated task: Orders-style list (title FIRST data column, operations LAST and logical-end PINNED including saved views); one shared complete merchant editor, compact save/localized upload, clear shop/main-storefront identity; named product selection AND UPDATE of existing slide; finish R3 S1 upload/add dispatch gate and actual mounted/negative-control/catalogue >40 proof. No separate discovery or another UI phase.
-Admin selects shop/main storefront on creation and moderates all; seller is fixed to current shop/products and submits for approval. Existing ownership/media are not silently reassigned. Existing purchased-template VendorShell /vendor-panel/stories /story.view remains; no duplicate panel/menu/login.
-Read R3 ARCHITECT-REVIEW; retain valid existing progress and historical reports. Do not declare previous PASS as user acceptance.
-One worker tooba-worker-01 / tooba-main. Issued is NOT claimed/running. Wait for this result, independently review, then owner test. No parallel/new task/automatic continuation.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-ZERO migration/live business write, no screenshots/delegation/polling; skip-bootstrap on Host refresh. Returns/payout backlog/separate key state preserved. Current review URLs /fa/admin/stories, /fa/vendor-panel/stories, /fa; user acceptance pending.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–E: Orders-style title-first/actions-end; shared merchant editor with fa/en copy catalogs; per-slide product edit via update_item; S1 bind every send; S2 >40 catalogue owning-query proof; Host5088/Next3000 served BUILD_ID `VKOLCT7WFUKHA67tlaFV-`; ZERO migration; ZERO live Story/Media business write.
+Decision `A_ORDERS_STYLE_TITLE_FIRST_ACTIONS_END_B_SHARED_MERCHANT_EDITOR_LOCALE_CATALOGS_C_PER_SLIDE_PRODUCT_EDIT_UPDATE_ITEM_D_S1_BIND_EVERY_SEND_S2_OWNING_QUERY_GT40_E_MOUNTED_SERVED_PROOF_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `f35f476c51346858bb1d61e96bb5e7d2068c5a79`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. مرجع: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R4 ISSUED; WORKER PASS ABOVE
+
+Task issued Expected-Base `f35f476c51346858bb1d61e96bb5e7d2068c5a79`; claim docs HEAD `a86be4e60be985ae1b550f5b9bf7823860fc4993`. See CURRENT worker PASS above.
+
+# HISTORICAL — TB-282-R3 REVIEWED; 282-R4 WAS ISSUED
 
 Reviewed implementation 70c5dd36a2a9508f7a95edce1ee575c0fda9dfae / evidence 9047660042696e205c04cf161c5c035abd912840.
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3/ARCHITECT-REVIEW.md.

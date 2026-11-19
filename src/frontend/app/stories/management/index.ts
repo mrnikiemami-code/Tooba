@@ -8,4 +8,18 @@ export {
   type StoryCapabilities,
   type StoryManagementMode,
 } from "./story-capabilities";
-export { STORY_COPY, STORY_STATUS_LABELS, STORY_ORIGIN_LABELS, STORY_REVIEW_LABELS } from "./story-management-copy";
+export {
+  STORY_COPY,
+  STORY_STATUS_LABELS,
+  STORY_ORIGIN_LABELS,
+  STORY_REVIEW_LABELS,
+  faStoryCopy,
+  enStoryCopy,
+  storyCopy,
+  resolveStoryUiLocale,
+  STORY_STATUS_LABELS_BY_LOCALE,
+  STORY_ORIGIN_LABELS_BY_LOCALE,
+  STORY_REVIEW_LABELS_BY_LOCALE,
+  type StoryCopy,
+  type StoryUiLocale,
+} from "./story-management-copy";

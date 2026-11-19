@@ -1,26 +1,112 @@
-/** برچسب‌های مشترک مدیریت استوری — Admin و Seller یک زبان بصری دارند. */
+/**
+ * Shared Story workspace copy — Admin and Seller stay aligned.
+ * Locale catalogs follow the WorkspaceMessages pattern (fa default + en keys)
+ * so UI expansion does not scatter literals through the screen.
+ */
 
-export const STORY_STATUS_LABELS: Record<string, string> = {
-  Draft: "پیش‌نویس",
-  Scheduled: "زمان‌بندی",
-  Active: "فعال",
-  Expired: "منقضی",
-  Disabled: "غیرفعال",
+export type StoryUiLocale = "fa" | "en";
+
+export type StoryCopy = {
+  adminTitle: string;
+  adminDescription: string;
+  sellerTitle: string;
+  sellerDescription: string;
+  createButton: string;
+  createModalTitle: string;
+  createAndPublish: string;
+  createDraft: string;
+  cancel: string;
+  close: string;
+  details: string;
+  enable: string;
+  disable: string;
+  submit: string;
+  approve: string;
+  reject: string;
+  rejectPrompt: string;
+  rejectReasonRequired: string;
+  scheduleStart: string;
+  scheduleEnd: string;
+  saveSchedule: string;
+  itemsHeading: string;
+  addItem: string;
+  editItem: string;
+  editSlideTitle: string;
+  newSlideTitle: string;
+  saveSlideChanges: string;
+  saveTitleLocale: string;
+  rejectionReason: string;
+  listCountSuffix: string;
+  loadErrorTitle: string;
+  filterAll: string;
+  filterPending: string;
+  originHeader: string;
+  reviewHeader: string;
+  sellerOwnerHeader: string;
+  placementLegend: string;
+  mainStorefront: string;
+  forOneShop: string;
+  shopSearchPlaceholder: string;
+  shopPickRequired: string;
+  selectedShopPrefix: string;
+  sellerShopFixedPrefix: string;
+  sellerShopFixedHint: string;
+  sellerShopFallback: string;
+  platformStorefront: string;
+  destinationNone: string;
+  destinationProduct: string;
+  destinationExternal: string;
+  destinationPrefix: string;
+  productSearchPlaceholder: string;
+  productSelectedPrefix: string;
+  productUnknown: string;
+  productSelectedFallback: string;
+  pickFile: string;
+  pickedFilePrefix: string;
+  keepMediaHint: string;
+  captionLabel: string;
+  durationLabel: string;
+  ctaLabel: string;
+  mediaLabel: string;
+  slideAdded: string;
+  slideUpdated: string;
+  slideMissing: string;
+  sendFailed: string;
+  titleLabel: string;
+  languageLabel: string;
+  localeDefaultSuffix: string;
+  savedToast: string;
+  reorderToast: string;
+  reorderFailed: string;
+  moveUp: string;
+  removeSlide: string;
+  photoLabel: string;
+  videoLabel: string;
+  secondsSuffix: string;
+  columnTitle: string;
+  columnShop: string;
+  columnStatus: string;
+  columnSlides: string;
+  columnStart: string;
+  columnEnd: string;
+  columnUpdated: string;
+  columnActions: string;
+  rowReview: string;
+  rowSubmit: string;
+  noEnd: string;
+  displayOnStorefront: string;
+  displayAwaiting: string;
+  displayRejected: string;
+  displayScheduled: string;
+  displayStopped: string;
+  displayDraft: string;
+  deniedTitle: string;
+  deniedDetail: string;
+  breadcrumbHome: string;
+  ownershipImmutableHint: string;
 };
 
-export const STORY_ORIGIN_LABELS: Record<string, string> = {
-  Admin: "ادمین",
-  Seller: "فروشنده",
-};
-
-export const STORY_REVIEW_LABELS: Record<string, string> = {
-  None: "—",
-  Submitted: "در انتظار بازبینی",
-  Approved: "تأییدشده",
-  Rejected: "ردشده",
-};
-
-export const STORY_COPY = {
+export const faStoryCopy: StoryCopy = {
   adminTitle: "استوری‌ها",
   adminDescription: "ایجاد، فعال‌سازی و آیتم‌های Story ویترین",
   sellerTitle: "استوری‌ها",
@@ -42,8 +128,13 @@ export const STORY_COPY = {
   scheduleStart: "شروع (اختیاری)",
   scheduleEnd: "پایان (اختیاری)",
   saveSchedule: "ذخیره زمان‌بندی",
-  itemsHeading: "آیتم‌ها",
-  addItem: "افزودن آیتم",
+  itemsHeading: "اسلایدها",
+  addItem: "افزودن اسلاید",
+  editItem: "ویرایش",
+  editSlideTitle: "ویرایش اسلاید",
+  newSlideTitle: "اسلاید جدید",
+  saveSlideChanges: "ذخیره تغییرات",
+  saveTitleLocale: "ذخیره عنوان و زبان",
   rejectionReason: "دلیل رد",
   listCountSuffix: "استوری",
   loadErrorTitle: "استوری‌ها خوانده نشد",
@@ -52,4 +143,224 @@ export const STORY_COPY = {
   originHeader: "منبع",
   reviewHeader: "بازبینی",
   sellerOwnerHeader: "فروشنده",
-} as const;
+  placementLegend: "محل نمایش",
+  mainStorefront: "ویترین اصلی",
+  forOneShop: "برای یک فروشگاه",
+  shopSearchPlaceholder: "جستجوی نام فروشگاه",
+  shopPickRequired: "فروشگاه را از فهرست نام‌ها انتخاب کنید.",
+  selectedShopPrefix: "انتخاب‌شده:",
+  sellerShopFixedPrefix: "فروشگاه:",
+  sellerShopFixedHint: "این استوری فقط برای همین فروشگاه ثبت می‌شود.",
+  sellerShopFallback: "فروشگاه فعلی شما",
+  platformStorefront: "ویترین اصلی",
+  destinationNone: "بدون لینک",
+  destinationProduct: "محصول فروشگاه",
+  destinationExternal: "آدرس وب‌سایت",
+  destinationPrefix: "مقصد:",
+  productSearchPlaceholder: "جستجوی نام محصول در فهرست مجاز",
+  productSelectedPrefix: "محصول انتخاب‌شده:",
+  productUnknown: "محصول (نامشخص)",
+  productSelectedFallback: "محصول انتخاب‌شده",
+  pickFile: "انتخاب فایل",
+  pickedFilePrefix: "انتخاب‌شده:",
+  keepMediaHint: "رسانهٔ فعلی حفظ می‌شود مگر اینکه بعداً مسیر تعویض رسانه را جداگانه استفاده کنید.",
+  captionLabel: "زیرنویس",
+  durationLabel: "مدت نمایش عکس (ثانیه)",
+  ctaLabel: "مقصد دکمه",
+  mediaLabel: "عکس یا ویدیو",
+  slideAdded: "اسلاید اضافه شد.",
+  slideUpdated: "اسلاید به‌روز شد.",
+  slideMissing: "اسلاید پیدا نشد.",
+  sendFailed: "ارسال انجام نشد.",
+  titleLabel: "عنوان",
+  languageLabel: "زبان",
+  localeDefaultSuffix: " (پیش‌فرض)",
+  savedToast: "ذخیره شد.",
+  reorderToast: "ترتیب به‌روز شد.",
+  reorderFailed: "جابه‌جایی ممکن نشد.",
+  moveUp: "بالاتر",
+  removeSlide: "حذف",
+  photoLabel: "عکس",
+  videoLabel: "ویدیو",
+  secondsSuffix: "ثانیه",
+  columnTitle: "عنوان",
+  columnShop: "فروشگاه",
+  columnStatus: "وضعیت",
+  columnSlides: "اسلایدها",
+  columnStart: "شروع نمایش",
+  columnEnd: "پایان نمایش",
+  columnUpdated: "آخرین تغییر",
+  columnActions: "عملیات",
+  rowReview: "بررسی",
+  rowSubmit: "ارسال برای تأیید",
+  noEnd: "بدون پایان",
+  displayOnStorefront: "در ویترین",
+  displayAwaiting: "منتظر تأیید",
+  displayRejected: "رد شده",
+  displayScheduled: "زمان‌بندی‌شده",
+  displayStopped: "متوقف",
+  displayDraft: "پیش‌نویس",
+  deniedTitle: "دسترسی مجاز نیست",
+  deniedDetail: "برای این بخش مجوز ندارید. از منوی پنل خارج نشوید؛ در صورت نیاز دوباره وارد شوید.",
+  breadcrumbHome: "خانه",
+  ownershipImmutableHint: "مالکیت این استوری ثابت است و از اینجا تغییر نمی‌کند.",
+};
+
+export const enStoryCopy: StoryCopy = {
+  adminTitle: "Stories",
+  adminDescription: "Create, publish, and manage storefront story items",
+  sellerTitle: "Stories",
+  sellerDescription: "Draft items and submit for review",
+  createButton: "New story",
+  createModalTitle: "Create story",
+  createAndPublish: "Create and publish",
+  createDraft: "Create draft",
+  cancel: "Cancel",
+  close: "Close",
+  details: "Details",
+  enable: "Enable",
+  disable: "Disable",
+  submit: "Submit for review",
+  approve: "Approve",
+  reject: "Reject",
+  rejectPrompt: "Enter a rejection reason",
+  rejectReasonRequired: "Rejection requires a reason",
+  scheduleStart: "Start (optional)",
+  scheduleEnd: "End (optional)",
+  saveSchedule: "Save schedule",
+  itemsHeading: "Slides",
+  addItem: "Add slide",
+  editItem: "Edit",
+  editSlideTitle: "Edit slide",
+  newSlideTitle: "New slide",
+  saveSlideChanges: "Save changes",
+  saveTitleLocale: "Save title and language",
+  rejectionReason: "Rejection reason",
+  listCountSuffix: "stories",
+  loadErrorTitle: "Stories could not be loaded",
+  filterAll: "All",
+  filterPending: "Awaiting review",
+  originHeader: "Origin",
+  reviewHeader: "Review",
+  sellerOwnerHeader: "Seller",
+  placementLegend: "Placement",
+  mainStorefront: "Main storefront",
+  forOneShop: "For one shop",
+  shopSearchPlaceholder: "Search shop name",
+  shopPickRequired: "Pick a shop from the named list.",
+  selectedShopPrefix: "Selected:",
+  sellerShopFixedPrefix: "Shop:",
+  sellerShopFixedHint: "This story is recorded only for your current shop.",
+  sellerShopFallback: "Your current shop",
+  platformStorefront: "Main storefront",
+  destinationNone: "No link",
+  destinationProduct: "Shop product",
+  destinationExternal: "Website URL",
+  destinationPrefix: "Destination:",
+  productSearchPlaceholder: "Search eligible product names",
+  productSelectedPrefix: "Selected product:",
+  productUnknown: "Product (unknown)",
+  productSelectedFallback: "Selected product",
+  pickFile: "Choose file",
+  pickedFilePrefix: "Selected:",
+  keepMediaHint: "Current media is kept unless you deliberately replace it later.",
+  captionLabel: "Caption",
+  durationLabel: "Image duration (seconds)",
+  ctaLabel: "Button destination",
+  mediaLabel: "Photo or video",
+  slideAdded: "Slide added.",
+  slideUpdated: "Slide updated.",
+  slideMissing: "Slide not found.",
+  sendFailed: "Send failed.",
+  titleLabel: "Title",
+  languageLabel: "Language",
+  localeDefaultSuffix: " (default)",
+  savedToast: "Saved.",
+  reorderToast: "Order updated.",
+  reorderFailed: "Reorder failed.",
+  moveUp: "Move up",
+  removeSlide: "Remove",
+  photoLabel: "Photo",
+  videoLabel: "Video",
+  secondsSuffix: "sec",
+  columnTitle: "Title",
+  columnShop: "Shop",
+  columnStatus: "Status",
+  columnSlides: "Slides",
+  columnStart: "Starts",
+  columnEnd: "Ends",
+  columnUpdated: "Updated",
+  columnActions: "Actions",
+  rowReview: "Review",
+  rowSubmit: "Submit for approval",
+  noEnd: "No end",
+  displayOnStorefront: "On storefront",
+  displayAwaiting: "Awaiting approval",
+  displayRejected: "Rejected",
+  displayScheduled: "Scheduled",
+  displayStopped: "Stopped",
+  displayDraft: "Draft",
+  deniedTitle: "Access denied",
+  deniedDetail: "You do not have permission for this section. Stay in the panel menu; sign in again if needed.",
+  breadcrumbHome: "Home",
+  ownershipImmutableHint: "This story’s owner is fixed and cannot be changed here.",
+};
+
+/** Status / origin / review labels per locale. */
+export const STORY_STATUS_LABELS_BY_LOCALE: Record<StoryUiLocale, Record<string, string>> = {
+  fa: {
+    Draft: "پیش‌نویس",
+    Scheduled: "زمان‌بندی",
+    Active: "فعال",
+    Expired: "منقضی",
+    Disabled: "غیرفعال",
+  },
+  en: {
+    Draft: "Draft",
+    Scheduled: "Scheduled",
+    Active: "Active",
+    Expired: "Expired",
+    Disabled: "Disabled",
+  },
+};
+
+export const STORY_ORIGIN_LABELS_BY_LOCALE: Record<StoryUiLocale, Record<string, string>> = {
+  fa: { Admin: "ادمین", Seller: "فروشنده" },
+  en: { Admin: "Admin", Seller: "Seller" },
+};
+
+export const STORY_REVIEW_LABELS_BY_LOCALE: Record<StoryUiLocale, Record<string, string>> = {
+  fa: {
+    None: "—",
+    Submitted: "در انتظار بازبینی",
+    Approved: "تأییدشده",
+    Rejected: "ردشده",
+  },
+  en: {
+    None: "—",
+    Submitted: "Awaiting review",
+    Approved: "Approved",
+    Rejected: "Rejected",
+  },
+};
+
+/** Default fa catalogs kept for modules that still import the historical constants. */
+export const STORY_STATUS_LABELS = STORY_STATUS_LABELS_BY_LOCALE.fa;
+export const STORY_ORIGIN_LABELS = STORY_ORIGIN_LABELS_BY_LOCALE.fa;
+export const STORY_REVIEW_LABELS = STORY_REVIEW_LABELS_BY_LOCALE.fa;
+
+export function resolveStoryUiLocale(pathname?: string | null): StoryUiLocale {
+  const path =
+    pathname ??
+    (typeof window !== "undefined" ? window.location.pathname : "") ??
+    "";
+  const seg = path.split("/").filter(Boolean)[0]?.toLowerCase();
+  return seg === "en" ? "en" : "fa";
+}
+
+export function storyCopy(locale: StoryUiLocale = "fa"): StoryCopy {
+  return locale === "en" ? enStoryCopy : faStoryCopy;
+}
+
+/** Back-compat default (fa). Prefer storyCopy(resolveStoryUiLocale()). */
+export const STORY_COPY = faStoryCopy;

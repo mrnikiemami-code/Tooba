@@ -6,6 +6,7 @@ export type StoryIntentAction =
   | "create"
   | "update"
   | "add_item"
+  | "update_item"
   | "remove_item"
   | "reorder_items"
   | "submit"
@@ -64,6 +65,7 @@ const KNOWN_ACTIONS = new Set<StoryIntentAction>([
   "create",
   "update",
   "add_item",
+  "update_item",
   "remove_item",
   "reorder_items",
   "submit",

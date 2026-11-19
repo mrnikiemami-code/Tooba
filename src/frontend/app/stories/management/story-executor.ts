@@ -162,6 +162,8 @@ export async function runDurableUploadAdd(args: {
     let journal = args.envelope;
     const scopeCheck = validateStoryEnvelope(journal, args.scope);
     if (!scopeCheck.ok) return { state: "blocked", reason: "scope" };
+    const uploadRoute = bindStoryEnvelopeRoute(journal);
+    if (!uploadRoute.ok) return { state: "blocked", reason: "envelope" };
 
     if (!journal.children[0]?.done || !journal.addBodyText || !journal.uploadedAssetId) {
       if (!args.uploadFile) {
@@ -185,6 +187,8 @@ export async function runDurableUploadAdd(args: {
         },
       };
       if (!storeStoryIntent(journal)) return { state: "blocked", reason: "storage" };
+      const uploadBind = bindStoryEnvelopeRoute(journal);
+      if (!uploadBind.ok) return { state: "blocked", reason: "envelope" };
       const uploaded = await dispatchFrozenEnvelope(journal, args.uploadFile);
       if (started !== args.gate.epochRef.current) return { state: "blocked", reason: "stale_epoch" };
       if (uploaded.state !== "ok") return uploaded;
@@ -250,6 +254,8 @@ export async function runDurableUploadAdd(args: {
       return { state: "blocked", reason: "storage" };
     }
 
+    const addBind = bindStoryEnvelopeRoute(journal);
+    if (!addBind.ok) return { state: "blocked", reason: "envelope" };
     const addResult = await dispatchFrozenEnvelope(journal, null);
     if (started !== args.gate.epochRef.current) return { state: "blocked", reason: "stale_epoch" };
     if (addResult.state === "ok") {
@@ -268,13 +274,22 @@ async function dispatchFrozenEnvelope<T>(
   uploadFile: File | null,
   mapOk?: (payload: unknown) => T,
 ): Promise<StoryExecutorResult<T>> {
+  // Final send-boundary bind for every stage (upload, add, update-item, recovery).
+  const route = bindStoryEnvelopeRoute(envelope);
+  if (!route.ok) {
+    return { state: "blocked", reason: "envelope" };
+  }
+
   // upload_add: if upload child done and add body frozen → only POST add; never reupload.
   if (envelope.action === "upload_add" && envelope.children[0]?.done && envelope.addBodyText && envelope.uploadedAssetId) {
     const addPath =
       envelope.role === "seller"
         ? `/v1/seller/stories/${envelope.routeTargetId}/items`
         : `/v1/admin/stories/${envelope.routeTargetId}/items`;
-    return sendJsonRequest(envelope, "POST", addPath, envelope.addBodyText, mapOk);
+    const addEnvelope: StoryIntentEnvelope = { ...envelope, method: "POST", path: addPath, bodyText: envelope.addBodyText };
+    const addRoute = bindStoryEnvelopeRoute(addEnvelope);
+    if (!addRoute.ok) return { state: "blocked", reason: "envelope" };
+    return sendJsonRequest(addEnvelope, "POST", addPath, envelope.addBodyText, mapOk);
   }
 
   if (envelope.action === "upload" || envelope.action === "upload_add") {
@@ -327,6 +342,9 @@ async function sendJsonRequest<T>(
   bodyText: string,
   mapOk?: (payload: unknown) => T,
 ): Promise<StoryExecutorResult<T>> {
+  const wired: StoryIntentEnvelope = { ...envelope, method, path, bodyText };
+  const route = bindStoryEnvelopeRoute(wired);
+  if (!route.ok) return { state: "blocked", reason: "envelope" };
   const response = await fetch(path, {
     method,
     headers: buildHeaders(envelope, true),

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Eye, Send } from "lucide-react";
@@ -17,7 +17,7 @@ import { ADMIN_STORY_GRID_VIEW_KEY } from "../../admin/saved-view-store";
 import { formatAdminDate, type AdminLoadState } from "../../admin/admin-api";
 import { ADMIN_ACTOR_STORAGE_KEY, DEFAULT_ADMIN_ACTOR_ID } from "../../../lib/admin/admin-result";
 import { loadAdminSellers, type AdminSellerRow } from "../../../features/admin-sellers/api/sellers-api";
-import { readActorUserId, readSellerPartyId } from "../../vendor-panel/seller-api";
+import { loadSellerDevContexts, readActorUserId, readSellerPartyId } from "../../vendor-panel/seller-api";
 import { JalaliDatePicker } from "../../../design-system/app-data-grid/jalali-date-picker";
 import {
   getAdminStory,
@@ -27,7 +27,12 @@ import {
   type AdminStorySnapshot,
 } from "../story-api";
 import { type StoryCapabilities } from "./story-capabilities";
-import { STORY_COPY, STORY_ORIGIN_LABELS } from "./story-management-copy";
+import {
+  resolveStoryUiLocale,
+  storyCopy,
+  STORY_ORIGIN_LABELS_BY_LOCALE,
+  type StoryCopy,
+} from "./story-management-copy";
 import { StoryReviewBadge, StoryStatusBadge } from "./StoryStatusBadge";
 import { runDurableStoryMutation, runDurableUploadAdd, replayPendingStoryIntent } from "./story-executor";
 import { loadStoryLocaleOptions, loadStoryProductOptions, type StoryProductOptionRow } from "./story-lookups";
@@ -57,12 +62,12 @@ function resolveActorId(mode: "admin" | "seller"): string {
   return window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
 }
 
-function Denied({ retry }: { retry: () => void }) {
+function Denied({ retry, copy }: { retry: () => void; copy: StoryCopy }) {
   return (
     <div data-testid="admin-auth-denied">
       <ErrorState
-        title="دسترسی مجاز نیست"
-        detail="برای این بخش مجوز ندارید. از منوی پنل خارج نشوید؛ در صورت نیاز دوباره وارد شوید."
+        title={copy.deniedTitle}
+        detail={copy.deniedDetail}
         onRetry={retry}
         retryLabel={faWorkspaceMessages.retry}
       />
@@ -70,29 +75,31 @@ function Denied({ retry }: { retry: () => void }) {
   );
 }
 
-function PageHeading({ title, description }: { title: string; description: string }) {
+function PageHeading({ title, description, homeLabel }: { title: string; description: string; homeLabel: string }) {
   return (
     <div className="mb-5">
-      <p className="text-sm text-muted">خانه / {title}</p>
+      <p className="text-sm text-muted">
+        {homeLabel} / {title}
+      </p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-1 text-base text-muted">{description}</p>
     </div>
   );
 }
 
-function shopLabel(row: AdminStorySnapshot): string {
+function shopLabel(row: AdminStorySnapshot, copy: StoryCopy): string {
   if (row.shopDisplayName?.trim()) return row.shopDisplayName.trim();
-  if (!row.sellerPartyId) return "ویترین اصلی";
-  return "فروشگاه";
+  if (!row.sellerPartyId) return copy.platformStorefront;
+  return copy.sellerOwnerHeader;
 }
 
-function displayState(row: AdminStorySnapshot): string {
-  if (row.effectivelyPublic) return "در ویترین";
-  if (row.reviewStatus === "Submitted") return "منتظر تأیید";
-  if (row.reviewStatus === "Rejected") return "رد شده";
-  if (row.status === "Scheduled") return "زمان‌بندی‌شده";
-  if (row.status === "Disabled") return "متوقف";
-  if (row.status === "Draft" || row.reviewStatus === "None") return "پیش‌نویس";
+function displayState(row: AdminStorySnapshot, copy: StoryCopy): string {
+  if (row.effectivelyPublic) return copy.displayOnStorefront;
+  if (row.reviewStatus === "Submitted") return copy.displayAwaiting;
+  if (row.reviewStatus === "Rejected") return copy.displayRejected;
+  if (row.status === "Scheduled") return copy.displayScheduled;
+  if (row.status === "Disabled") return copy.displayStopped;
+  if (row.status === "Draft" || row.reviewStatus === "None") return copy.displayDraft;
   return row.status;
 }
 
@@ -147,6 +154,10 @@ function StoryManagementScreenBody({
   basePath: string;
 }) {
   void navigate;
+  const uiLocale = resolveStoryUiLocale();
+  const copy = storyCopy(uiLocale);
+  const originLabels = STORY_ORIGIN_LABELS_BY_LOCALE[uiLocale];
+  const numberLocale = uiLocale === "en" ? "en-US" : "fa-IR";
   const [state, setState] = useState<AdminLoadState | "loading">("loading");
   const [message, setMessage] = useState<string>();
   const [showCreate, setShowCreate] = useState(createMode);
@@ -189,7 +200,55 @@ function StoryManagementScreenBody({
   const [slideDurationSec, setSlideDurationSec] = useState("5");
   const [slideCtaType, setSlideCtaType] = useState("none");
   const [slideCtaTarget, setSlideCtaTarget] = useState("");
+  const [slideDialogOpen, setSlideDialogOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [productLabelById, setProductLabelById] = useState<Record<string, string>>({});
+  const [sellerShopLabel, setSellerShopLabel] = useState("");
   const [dirty, setDirty] = useState(false);
+  const slideFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  function destinationLabel(ctaType: string, ctaTarget: string | null | undefined): string {
+    if (!ctaType || ctaType === "none") return copy.destinationNone;
+    if (ctaType === "product") {
+      const id = (ctaTarget ?? "").trim();
+      if (!id) return copy.productUnknown;
+      return productLabelById[id] ?? (selectedProductLabel || copy.productSelectedFallback);
+    }
+    if (ctaType === "external") {
+      return ctaTarget?.trim() ? `${copy.destinationExternal}: ${ctaTarget}` : copy.destinationExternal;
+    }
+    return ctaType;
+  }
+
+  function openNewSlideDialog() {
+    setEditingItemId(null);
+    setSlideFile(null);
+    setSlideCaption("");
+    setSlideDurationSec("5");
+    setSlideCtaType("none");
+    setSlideCtaTarget("");
+    setSelectedProductLabel("");
+    setProductSearch("");
+    setSlideDialogOpen(true);
+  }
+
+  function openEditSlideDialog(item: AdminStorySnapshot["items"][number]) {
+    setEditingItemId(item.storyItemId);
+    setSlideFile(null);
+    setSlideCaption(item.caption ?? "");
+    setSlideDurationSec(
+      item.durationMs && item.durationMs > 0 ? String(Math.round(item.durationMs / 1000)) : "5",
+    );
+    setSlideCtaType(item.ctaType || "none");
+    setSlideCtaTarget(item.ctaTarget ?? "");
+    setSelectedProductLabel(
+      item.ctaType === "product" && item.ctaTarget
+        ? productLabelById[item.ctaTarget] ?? copy.productSelectedFallback
+        : "",
+    );
+    setProductSearch("");
+    setSlideDialogOpen(true);
+  }
   const epochRef = useRef(0);
   const inFlightRef = useRef(false);
   const scope = readStoryScope(capabilities.mode);
@@ -238,6 +297,26 @@ function StoryManagementScreenBody({
       }
     });
   }, [capabilities.mode]);
+
+  useEffect(() => {
+    if (capabilities.mode !== "seller") {
+      setSellerShopLabel("");
+      return;
+    }
+    let cancelled = false;
+    void loadSellerDevContexts()
+      .then((rows) => {
+        if (cancelled) return;
+        const match = rows.find((row) => row.sellerPartyId === sellerShopId);
+        setSellerShopLabel(match?.sellerLabel?.trim() ?? "");
+      })
+      .catch(() => {
+        if (!cancelled) setSellerShopLabel("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [capabilities.mode, sellerShopId, scopeTick]);
 
   useEffect(() => {
     void loadStoryLocaleOptions({
@@ -422,10 +501,10 @@ function StoryManagementScreenBody({
     else toast.error("ارسال انجام نشد.");
   }
 
-  if (state === "denied") return <Denied retry={refreshGrid} />;
+  if (state === "denied") return <Denied retry={refreshGrid} copy={copy} />;
 
-  const title = capabilities.mode === "seller" ? STORY_COPY.sellerTitle : STORY_COPY.adminTitle;
-  const description = capabilities.mode === "seller" ? STORY_COPY.sellerDescription : STORY_COPY.adminDescription;
+  const title = capabilities.mode === "seller" ? copy.sellerTitle : copy.adminTitle;
+  const description = capabilities.mode === "seller" ? copy.sellerDescription : copy.adminDescription;
   const testId = capabilities.mode === "seller" ? "seller-stories" : "admin-stories";
   const sellerEditable = detail ? hasAction(detail, "update") || hasAction(detail, "add_item") : false;
   const filteredShops = shopOptions.filter((row) => {
@@ -437,7 +516,7 @@ function StoryManagementScreenBody({
   return (
     <main data-testid={testId}>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title={title} description={description} />
+        <PageHeading title={title} description={description} homeLabel={copy.breadcrumbHome} />
         <div className="flex flex-wrap items-center gap-2">
           {capabilities.canReview ? (
             <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
@@ -451,8 +530,8 @@ function StoryManagementScreenBody({
                 }}
                 data-testid="admin-story-review-filter"
               >
-                <option value="">{STORY_COPY.filterAll}</option>
-                <option value="Submitted">{STORY_COPY.filterPending}</option>
+                <option value="">{copy.filterAll}</option>
+                <option value="Submitted">{copy.filterPending}</option>
                 <option value="Approved">تأییدشده</option>
                 <option value="Rejected">ردشده</option>
               </select>
@@ -468,7 +547,7 @@ function StoryManagementScreenBody({
               }}
               data-testid="story-create-open"
             >
-              استوری جدید
+              {copy.createButton}
             </button>
           ) : null}
         </div>
@@ -526,6 +605,8 @@ function StoryManagementScreenBody({
           capabilities={capabilities}
           reviewFilter={reviewFilter}
           reloadToken={reloadToken}
+          copy={copy}
+          numberLocale={numberLocale}
           onDenied={() => setState("denied")}
           onError={(detailMsg) => {
             setMessage(detailMsg);
@@ -545,12 +626,15 @@ function StoryManagementScreenBody({
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold">{detail.title}</h2>
-              <p className="text-sm text-muted">{shopLabel(detail)} · {displayState(detail)}</p>
+              <p className="text-sm text-muted">
+                {shopLabel(detail, copy)} · {displayState(detail, copy)}
+              </p>
+              <p className="mt-1 text-xs text-muted">{copy.ownershipImmutableHint}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <StoryStatusBadge status={detail.status} />
                 {detail.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={detail.reviewStatus} /> : null}
                 {capabilities.showOrigin ? (
-                  <span className="text-xs text-muted">{STORY_ORIGIN_LABELS[detail.origin] ?? detail.origin}</span>
+                  <span className="text-xs text-muted">{originLabels[detail.origin] ?? detail.origin}</span>
                 ) : null}
               </div>
             </div>
@@ -736,92 +820,111 @@ function StoryManagementScreenBody({
           </div>
 
           {capabilities.canEdit && sellerEditable ? (
-            <div className="mb-4 grid gap-3 md:grid-cols-2">
-              <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">عنوان</span>
-                <input
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  value={editTitle}
-                  onChange={(e) => {
-                    setEditTitle(e.target.value);
-                    setDirty(true);
+            <div className="mb-4 space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="block text-sm">
+                  <span className="mb-1 block text-gray-600">{copy.titleLabel}</span>
+                  <input
+                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    value={editTitle}
+                    onChange={(e) => {
+                      setEditTitle(e.target.value);
+                      setDirty(true);
+                    }}
+                    data-testid="story-edit-title"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-gray-600">{copy.languageLabel}</span>
+                  <select
+                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    value={editLocale}
+                    onChange={(e) => {
+                      setEditLocale(e.target.value);
+                      setDirty(true);
+                    }}
+                    data-testid="story-edit-locale"
+                  >
+                    {localeOptions.map((row) => (
+                      <option key={row.code} value={row.code}>
+                        {row.name}
+                        {row.isDefault ? copy.localeDefaultSuffix : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                  data-testid="story-save-title-locale"
+                  onClick={() => {
+                    if (!detail || !actorId) return;
+                    const key = mintOccurrence();
+                    const body = {
+                      title: editTitle.trim(),
+                      locale: editLocale || null,
+                      expectedVersion: detail.versionToken,
+                      occurrenceKey: key,
+                    };
+                    const envelope: StoryIntentEnvelope = {
+                      version: 2,
+                      action: "update",
+                      occurrenceKey: key,
+                      method: "PUT",
+                      path:
+                        capabilities.mode === "seller"
+                          ? `/v1/seller/stories/${detail.storyId}`
+                          : `/v1/admin/stories/${detail.storyId}`,
+                      routeTargetId: detail.storyId,
+                      expectedVersion: detail.versionToken,
+                      bodyText: JSON.stringify(body),
+                      uploadMeta: null,
+                      addBodyText: null,
+                      uploadedAssetId: null,
+                      children: [],
+                      role: capabilities.mode,
+                      shopId: detail.sellerPartyId ?? sellerShopId,
+                      actorUserId: actorId,
+                      recordedAt: new Date().toISOString(),
+                    };
+                    void runDurableStoryMutation({
+                      gate,
+                      envelope,
+                      scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                    }).then((outcome) => {
+                      if (outcome.state === "ok") {
+                        toast.success(copy.savedToast);
+                        setDirty(false);
+                        setReloadToken((v) => v + 1);
+                        refreshGrid();
+                      } else if (outcome.state === "failed") toast.error(outcome.message);
+                      else toast.error(copy.sendFailed);
+                    });
                   }}
-                  data-testid="story-edit-title"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">زبان</span>
-                <select
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  value={editLocale}
-                  onChange={(e) => {
-                    setEditLocale(e.target.value);
-                    setDirty(true);
-                  }}
-                  data-testid="story-edit-locale"
                 >
-                  {localeOptions.map((row) => (
-                    <option key={row.code} value={row.code}>
-                      {row.name}
-                      {row.isDefault ? " (پیش‌فرض)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white md:col-span-2"
-                onClick={() => {
-                  if (!detail || !actorId) return;
-                  const key = mintOccurrence();
-                  const body = {
-                    title: editTitle.trim(),
-                    locale: editLocale || null,
-                    expectedVersion: detail.versionToken,
-                    occurrenceKey: key,
-                  };
-                  const envelope: StoryIntentEnvelope = {
-                    version: 2,
-                    action: "update",
-                    occurrenceKey: key,
-                    method: "PUT",
-                    path:
-                      capabilities.mode === "seller"
-                        ? `/v1/seller/stories/${detail.storyId}`
-                        : `/v1/admin/stories/${detail.storyId}`,
-                    routeTargetId: detail.storyId,
-                    expectedVersion: detail.versionToken,
-                    bodyText: JSON.stringify(body),
-                    uploadMeta: null,
-                    addBodyText: null,
-                    uploadedAssetId: null,
-                    children: [],
-                    role: capabilities.mode,
-                    shopId: detail.sellerPartyId ?? sellerShopId,
-                    actorUserId: actorId,
-                    recordedAt: new Date().toISOString(),
-                  };
-                  void runDurableStoryMutation({
-                    gate,
-                    envelope,
-                    scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
-                  }).then((outcome) => {
-                    if (outcome.state === "ok") {
-                      toast.success("ذخیره شد.");
-                      setDirty(false);
-                      setReloadToken((v) => v + 1);
-                      refreshGrid();
-                    } else if (outcome.state === "failed") toast.error(outcome.message);
-                    else toast.error("ارسال انجام نشد.");
-                  });
-                }}
-              >
-                ذخیره عنوان و زبان
-              </button>
+                  {copy.saveTitleLocale}
+                </button>
+              </div>
             </div>
           ) : null}
 
-          <h3 className="mb-2 text-sm font-bold">اسلایدها ({detail.items.length.toLocaleString("fa-IR")})</h3>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-bold">
+              {copy.itemsHeading} ({detail.items.length.toLocaleString(numberLocale)})
+            </h3>
+            {capabilities.canEdit && sellerEditable ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                data-testid="story-slide-open-new"
+                onClick={() => openNewSlideDialog()}
+              >
+                {copy.addItem}
+              </button>
+            ) : null}
+          </div>
           <ul className="mb-4 space-y-2 text-sm">
             {detail.items.map((item, index) => (
               <li key={item.storyItemId} className="rounded-xl border border-gray-100 px-3 py-2" data-testid="story-slide-row">
@@ -834,11 +937,27 @@ function StoryManagementScreenBody({
                     <img src={item.mediaUrl} alt="" className="h-16 w-16 rounded object-cover" />
                   ) : null}
                   <div className="min-w-0 flex-1">
-                    <p>{item.mediaType === "video" ? "ویدیو" : "عکس"}</p>
+                    <p>
+                      {item.mediaType === "video" ? copy.videoLabel : copy.photoLabel}
+                      {item.durationMs
+                        ? ` · ${Math.round(item.durationMs / 1000).toLocaleString(numberLocale)} ${copy.secondsSuffix}`
+                        : ""}
+                    </p>
                     {item.caption ? <p className="text-muted">{item.caption}</p> : null}
+                    <p className="text-xs text-muted" data-testid="story-slide-destination">
+                      {copy.destinationPrefix} {destinationLabel(item.ctaType, item.ctaTarget)}
+                    </p>
                   </div>
                   {capabilities.canEdit && sellerEditable ? (
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="min-h-11 rounded-xl border border-gray-200 px-3 py-1.5 text-sm"
+                        data-testid="story-slide-edit"
+                        onClick={() => openEditSlideDialog(item)}
+                      >
+                        {copy.editItem}
+                      </button>
                       <button
                         type="button"
                         className="min-h-11 rounded-xl border border-gray-200 px-3 py-1.5 text-sm"
@@ -879,14 +998,14 @@ function StoryManagementScreenBody({
                             scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                           }).then((outcome) => {
                             if (outcome.state === "ok") {
-                              toast.success("ترتیب به‌روز شد.");
+                              toast.success(copy.reorderToast);
                               setReloadToken((v) => v + 1);
                             } else if (outcome.state === "failed") toast.error(outcome.message);
-                            else toast.error("جابه‌جایی ممکن نشد.");
+                            else toast.error(copy.reorderFailed);
                           });
                         }}
                       >
-                        بالاتر
+                        {copy.moveUp}
                       </button>
                       <button
                         type="button"
@@ -922,15 +1041,15 @@ function StoryManagementScreenBody({
                             scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                           }).then((outcome) => {
                             if (outcome.state === "ok") {
-                              toast.success("اسلاید حذف شد.");
+                              toast.success(copy.slideUpdated);
                               setReloadToken((v) => v + 1);
                               refreshGrid();
                             } else if (outcome.state === "failed") toast.error(outcome.message);
-                            else toast.error("حذف ممکن نشد.");
+                            else toast.error(copy.sendFailed);
                           });
                         }}
                       >
-                        حذف
+                        {copy.removeSlide}
                       </button>
                     </div>
                   ) : null}
@@ -939,214 +1058,311 @@ function StoryManagementScreenBody({
             ))}
           </ul>
 
-          {capabilities.canEdit && sellerEditable ? (
-            <div className="space-y-3" data-testid="story-slide-editor">
-              <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">عکس یا ویدیو</span>
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  className="min-h-11 w-full text-sm"
-                  onChange={(e) => setSlideFile(e.target.files?.[0] ?? null)}
-                  data-testid="story-slide-file"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">زیرنویس</span>
-                <input
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  value={slideCaption}
-                  onChange={(e) => setSlideCaption(e.target.value)}
-                  data-testid="story-slide-caption"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">مدت نمایش عکس (ثانیه)</span>
-                <input
-                  type="number"
-                  min={1}
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  value={slideDurationSec}
-                  onChange={(e) => setSlideDurationSec(e.target.value)}
-                  data-testid="story-slide-duration"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">مقصد دکمه</span>
-                <select
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  value={slideCtaType}
-                  onChange={(e) => {
-                    setSlideCtaType(e.target.value);
-                    setSlideCtaTarget("");
-                  }}
-                  data-testid="story-slide-cta-type"
-                >
-                  <option value="none">بدون دکمه</option>
-                  <option value="product">محصول فروشگاه</option>
-                  <option value="external">آدرس وب‌سایت</option>
-                </select>
-              </label>
-              {slideCtaType === "product" ? (
-                <div className="space-y-2" data-testid="story-product-picker">
-                  <input
-                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                    placeholder="جستجوی نام محصول در فهرست مجاز"
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    data-testid="story-product-search"
-                  />
-                  {productLoading ? <p className="text-xs text-muted">در حال بارگذاری…</p> : null}
-                  <ul className="max-h-40 overflow-auto rounded-xl border border-gray-100">
-                    {productOptions.map((row) => (
-                      <li key={`${row.productId}:${row.offerId}`}>
-                        <button
-                          type="button"
-                          className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
-                          onClick={() => {
-                            if (!row.productId) {
-                              toast.error("این ردیف شناسهٔ محصول معتبری ندارد.");
-                              return;
-                            }
-                            setSlideCtaTarget(row.productId);
-                            setSelectedProductLabel(row.productTitle);
-                          }}
-                        >
-                          {row.productTitle}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  {productOptions.length < productTotalCount ? (
-                    <button
-                      type="button"
-                      className="min-h-11 w-full rounded-xl border border-gray-200 text-sm"
-                      data-testid="story-product-load-more"
-                      onClick={() => {
-                        const shop =
-                          capabilities.mode === "seller"
-                            ? sellerShopId
-                            : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
-                        const next = productPage + 1;
-                        setProductLoading(true);
-                        void loadStoryProductOptions({
-                          mode: capabilities.mode,
-                          shopId: shop,
-                          actorUserId: actorId,
-                          search: productSearch,
-                          page: next,
-                          pageSize: 20,
-                        })
-                          .then((page) => {
-                            const seen = new Set(productOptions.map((r) => r.productId));
-                            const appended = page.items.filter((r) => !seen.has(r.productId));
-                            setProductOptions((prev) => [...prev, ...appended]);
-                            setProductTotalCount(page.totalCount);
-                            setProductPage(next);
-                          })
-                          .finally(() => setProductLoading(false));
-                      }}
-                    >
-                      نمایش محصولات بیشتر ({productOptions.length} از {productTotalCount})
-                    </button>
-                  ) : null}
-                  {slideCtaTarget ? (
-                    <p className="text-xs text-muted" data-testid="story-product-selected">
-                      محصول انتخاب‌شده: {selectedProductLabel || "ثبت شد"}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-              {slideCtaType === "external" ? (
-                <input
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  dir="ltr"
-                  placeholder="https://..."
-                  value={slideCtaTarget}
-                  onChange={(e) => setSlideCtaTarget(e.target.value)}
-                  data-testid="story-slide-cta-external"
-                />
-              ) : null}
+        </section>
+      ) : null}
+
+      <Dialog
+        open={slideDialogOpen}
+        onClose={() => {
+          setSlideDialogOpen(false);
+          setEditingItemId(null);
+        }}
+        title={editingItemId ? copy.editSlideTitle : copy.newSlideTitle}
+      >
+        <div className="space-y-3 p-1" data-testid="story-slide-editor">
+          {!editingItemId ? (
+            <div className="space-y-2 text-sm">
+              <span className="mb-1 block text-gray-600">{copy.mediaLabel}</span>
+              <input
+                ref={slideFileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="sr-only"
+                onChange={(e) => setSlideFile(e.target.files?.[0] ?? null)}
+                data-testid="story-slide-file"
+              />
               <button
                 type="button"
-                className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
-                disabled={!slideFile || inFlightRef.current}
-                onClick={() => {
-                  if (!slideFile || !detail || !actorId) return;
-                  void (async () => {
-                    if (inFlightRef.current) return;
-                    const uploadKey = mintOccurrence();
-                    const itemKey = mintOccurrence();
-                    const plannedAdd = {
+                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
+                onClick={() => slideFileInputRef.current?.click()}
+                data-testid="story-slide-file-pick"
+              >
+                {slideFile ? `${copy.pickedFilePrefix} ${slideFile.name}` : copy.pickFile}
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted">{copy.keepMediaHint}</p>
+          )}
+          <label className="block text-sm">
+            <span className="mb-1 block text-gray-600">{copy.captionLabel}</span>
+            <input
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              value={slideCaption}
+              onChange={(e) => setSlideCaption(e.target.value)}
+              data-testid="story-slide-caption"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-gray-600">{copy.durationLabel}</span>
+            <input
+              type="number"
+              min={1}
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              value={slideDurationSec}
+              onChange={(e) => setSlideDurationSec(e.target.value)}
+              data-testid="story-slide-duration"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-gray-600">{copy.ctaLabel}</span>
+            <select
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              value={slideCtaType}
+              onChange={(e) => {
+                setSlideCtaType(e.target.value);
+                setSlideCtaTarget("");
+                setSelectedProductLabel("");
+              }}
+              data-testid="story-slide-cta-type"
+            >
+              <option value="none">{copy.destinationNone}</option>
+              <option value="product">{copy.destinationProduct}</option>
+              <option value="external">{copy.destinationExternal}</option>
+            </select>
+          </label>
+          {slideCtaType === "product" ? (
+            <div className="space-y-2" data-testid="story-product-picker">
+              <input
+                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                placeholder={copy.productSearchPlaceholder}
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                data-testid="story-product-search"
+              />
+              {productLoading ? <p className="text-xs text-muted">در حال بارگذاری…</p> : null}
+              <ul className="max-h-40 overflow-auto rounded-xl border border-gray-100">
+                {productOptions.map((row) => (
+                  <li key={`${row.productId}:${row.offerId}`}>
+                    <button
+                      type="button"
+                      className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
+                      onClick={() => {
+                        if (!row.productId) {
+                          toast.error("این ردیف شناسهٔ محصول معتبری ندارد.");
+                          return;
+                        }
+                        setSlideCtaTarget(row.productId);
+                        setSelectedProductLabel(row.productTitle);
+                        setProductLabelById((prev) => ({ ...prev, [row.productId]: row.productTitle }));
+                      }}
+                    >
+                      {row.productTitle}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {productOptions.length < productTotalCount ? (
+                <button
+                  type="button"
+                  className="min-h-11 w-full rounded-xl border border-gray-200 text-sm"
+                  data-testid="story-product-load-more"
+                  onClick={() => {
+                    const shop =
+                      capabilities.mode === "seller"
+                        ? sellerShopId
+                        : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
+                    const next = productPage + 1;
+                    setProductLoading(true);
+                    void loadStoryProductOptions({
+                      mode: capabilities.mode,
+                      shopId: shop,
+                      actorUserId: actorId,
+                      search: productSearch,
+                      page: next,
+                      pageSize: 20,
+                    })
+                      .then((page) => {
+                        const seen = new Set(productOptions.map((r) => r.productId));
+                        const appended = page.items.filter((r) => !seen.has(r.productId));
+                        setProductOptions((prev) => [...prev, ...appended]);
+                        setProductTotalCount(page.totalCount);
+                        setProductPage(next);
+                      })
+                      .finally(() => setProductLoading(false));
+                  }}
+                >
+                  نمایش محصولات بیشتر ({productOptions.length} از {productTotalCount})
+                </button>
+              ) : null}
+              {slideCtaTarget ? (
+                <p className="text-xs text-muted" data-testid="story-product-selected">
+                  {copy.productSelectedPrefix} {selectedProductLabel || copy.productSelectedFallback}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {slideCtaType === "external" ? (
+            <input
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              dir="ltr"
+              placeholder="https://..."
+              value={slideCtaTarget}
+              onChange={(e) => setSlideCtaTarget(e.target.value)}
+              data-testid="story-slide-cta-external"
+            />
+          ) : null}
+          <div className="flex flex-wrap justify-end gap-2 pt-2">
+            <button
+              type="button"
+              className="min-h-11 rounded-xl px-4 py-2 text-sm"
+              onClick={() => {
+                setSlideDialogOpen(false);
+                setEditingItemId(null);
+              }}
+            >
+              {copy.cancel}
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+              disabled={(!editingItemId && !slideFile) || inFlightRef.current}
+              data-testid="story-slide-save"
+              onClick={() => {
+                if (!detail || !actorId) return;
+                void (async () => {
+                  if (inFlightRef.current) return;
+                  if (editingItemId) {
+                    const existing = detail.items.find((row) => row.storyItemId === editingItemId);
+                    if (!existing) {
+                      toast.error(copy.slideMissing);
+                      return;
+                    }
+                    const key = mintOccurrence();
+                    const body = {
+                      mediaType: existing.mediaType,
+                      mediaAssetId: existing.mediaAssetId,
+                      mediaUrl: existing.mediaUrl,
                       caption: slideCaption.trim() || null,
-                      durationSec: Math.max(1, Number(slideDurationSec) || 5),
+                      durationMs: Math.max(1, Number(slideDurationSec) || 5) * 1000,
                       ctaType: slideCtaType,
                       ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
                       expectedVersion: detail.versionToken,
-                      itemOccurrenceKey: itemKey,
+                      occurrenceKey: key,
                     };
-                    // Lock + store begin before async digest (executor owns the mutex).
-                    const uploadEnvelope: StoryIntentEnvelope = {
+                    const envelope: StoryIntentEnvelope = {
                       version: 2,
-                      action: "upload_add",
-                      occurrenceKey: uploadKey,
-                      method: "POST",
+                      action: "update_item",
+                      occurrenceKey: key,
+                      method: "PUT",
                       path:
                         capabilities.mode === "seller"
-                          ? "/v1/seller/media/upload-story"
-                          : detail.sellerPartyId
-                            ? "/v1/admin/media/upload-for-shop"
-                            : "/v1/admin/media/upload-story-platform",
+                          ? `/v1/seller/stories/${detail.storyId}/items/${editingItemId}`
+                          : `/v1/admin/stories/${detail.storyId}/items/${editingItemId}`,
                       routeTargetId: detail.storyId,
                       expectedVersion: detail.versionToken,
-                      bodyText: JSON.stringify(plannedAdd),
-                      uploadMeta: {
-                        fileName: slideFile.name,
-                        fileType: slideFile.type,
-                        fileSize: slideFile.size,
-                        digestHex: "pending",
-                      },
+                      bodyText: JSON.stringify(body),
+                      uploadMeta: null,
                       addBodyText: null,
                       uploadedAssetId: null,
-                      children: [
-                        { step: "upload", occurrenceKey: uploadKey, done: false },
-                        { step: "add", occurrenceKey: itemKey, done: false },
-                      ],
+                      children: [],
                       role: capabilities.mode,
                       shopId: detail.sellerPartyId ?? sellerShopId,
                       actorUserId: actorId,
                       recordedAt: new Date().toISOString(),
                     };
-                    const outcome = await runDurableUploadAdd({
+                    const outcome = await runDurableStoryMutation({
                       gate,
-                      envelope: uploadEnvelope,
+                      envelope,
                       scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
-                      uploadFile: slideFile,
                     });
                     if (outcome.state === "ok") {
-                      toast.success("اسلاید اضافه شد.");
-                      setSlideFile(null);
-                      setSlideCaption("");
-                      setSlideCtaType("none");
-                      setSlideCtaTarget("");
-                      refreshGrid();
+                      toast.success(copy.slideUpdated);
+                      if (slideCtaType === "product" && slideCtaTarget && selectedProductLabel) {
+                        setProductLabelById((prev) => ({ ...prev, [slideCtaTarget]: selectedProductLabel }));
+                      }
+                      setSlideDialogOpen(false);
+                      setEditingItemId(null);
                       setReloadToken((v) => v + 1);
+                      refreshGrid();
                     } else if (outcome.state === "failed") toast.error(outcome.message);
-                    else toast.error("ارسال انجام نشد.");
-                  })();
-                }}
-              >
-                افزودن اسلاید
-              </button>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
+                    else toast.error(copy.sendFailed);
+                    return;
+                  }
+                  if (!slideFile) return;
+                  const uploadKey = mintOccurrence();
+                  const itemKey = mintOccurrence();
+                  const plannedAdd = {
+                    caption: slideCaption.trim() || null,
+                    durationSec: Math.max(1, Number(slideDurationSec) || 5),
+                    ctaType: slideCtaType,
+                    ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
+                    expectedVersion: detail.versionToken,
+                    itemOccurrenceKey: itemKey,
+                  };
+                  const uploadEnvelope: StoryIntentEnvelope = {
+                    version: 2,
+                    action: "upload_add",
+                    occurrenceKey: uploadKey,
+                    method: "POST",
+                    path:
+                      capabilities.mode === "seller"
+                        ? "/v1/seller/media/upload-story"
+                        : detail.sellerPartyId
+                          ? "/v1/admin/media/upload-for-shop"
+                          : "/v1/admin/media/upload-story-platform",
+                    routeTargetId: detail.storyId,
+                    expectedVersion: detail.versionToken,
+                    bodyText: JSON.stringify(plannedAdd),
+                    uploadMeta: {
+                      fileName: slideFile.name,
+                      fileType: slideFile.type,
+                      fileSize: slideFile.size,
+                      digestHex: "pending",
+                    },
+                    addBodyText: null,
+                    uploadedAssetId: null,
+                    children: [
+                      { step: "upload", occurrenceKey: uploadKey, done: false },
+                      { step: "add", occurrenceKey: itemKey, done: false },
+                    ],
+                    role: capabilities.mode,
+                    shopId: detail.sellerPartyId ?? sellerShopId,
+                    actorUserId: actorId,
+                    recordedAt: new Date().toISOString(),
+                  };
+                  const outcome = await runDurableUploadAdd({
+                    gate,
+                    envelope: uploadEnvelope,
+                    scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                    uploadFile: slideFile,
+                  });
+                  if (outcome.state === "ok") {
+                    toast.success(copy.slideAdded);
+                    if (slideCtaType === "product" && slideCtaTarget && selectedProductLabel) {
+                      setProductLabelById((prev) => ({ ...prev, [slideCtaTarget]: selectedProductLabel }));
+                    }
+                    setSlideDialogOpen(false);
+                    setSlideFile(null);
+                    setSlideCaption("");
+                    setSlideCtaType("none");
+                    setSlideCtaTarget("");
+                    refreshGrid();
+                    setReloadToken((v) => v + 1);
+                  } else if (outcome.state === "failed") toast.error(outcome.message);
+                  else toast.error(copy.sendFailed);
+                })();
+              }}
+            >
+              {editingItemId ? copy.saveSlideChanges : copy.addItem}
+            </button>
+          </div>
+        </div>
+      </Dialog>
 
-      <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="استوری جدید">
+      <Dialog open={showCreate} onClose={() => setShowCreate(false)} title={copy.createModalTitle}>
         <div className="space-y-3 p-1">
           <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">عنوان</span>
+            <span className="mb-1 block text-gray-600">{copy.titleLabel}</span>
             <input
               className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
               value={draftTitle}
@@ -1154,9 +1370,15 @@ function StoryManagementScreenBody({
               data-testid="story-create-title"
             />
           </label>
+          {capabilities.mode === "seller" ? (
+            <p className="rounded-xl bg-secondary px-3 py-2 text-sm" data-testid="story-seller-shop-fixed">
+              {copy.sellerShopFixedPrefix} {sellerShopLabel.trim() || copy.sellerShopFallback}
+              <span className="mt-1 block text-xs text-muted">{copy.sellerShopFixedHint}</span>
+            </p>
+          ) : null}
           {capabilities.mode === "admin" ? (
             <fieldset className="space-y-2 text-sm">
-              <legend className="mb-1 text-gray-600">فروشگاه</legend>
+              <legend className="mb-1 text-gray-600">{copy.placementLegend}</legend>
               <label className="flex min-h-11 items-center gap-2">
                 <input
                   type="radio"
@@ -1167,25 +1389,27 @@ function StoryManagementScreenBody({
                     setAdminShopName("");
                   }}
                 />
-                ویترین اصلی
+                {copy.mainStorefront}
               </label>
               <label className="flex min-h-11 items-center gap-2">
                 <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
-                فروشگاه مشخص
+                {copy.forOneShop}
               </label>
               {adminShopMode === "shop" ? (
                 <div className="space-y-2" data-testid="story-admin-shop-picker">
                   <input
                     className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                    placeholder="جستجوی نام فروشگاه"
+                    placeholder={copy.shopSearchPlaceholder}
                     value={shopSearch}
                     onChange={(e) => setShopSearch(e.target.value)}
                     data-testid="story-admin-shop-search"
                   />
                   {adminShopName ? (
-                    <p className="text-sm text-muted">انتخاب‌شده: {adminShopName}</p>
+                    <p className="text-sm text-muted">
+                      {copy.selectedShopPrefix} {adminShopName}
+                    </p>
                   ) : (
-                    <p className="text-sm text-rose-700">فروشگاه را از فهرست نام‌ها انتخاب کنید.</p>
+                    <p className="text-sm text-rose-700">{copy.shopPickRequired}</p>
                   )}
                   <ul className="max-h-48 overflow-auto rounded-xl border border-gray-100">
                     {filteredShops.map((row) => (
@@ -1210,7 +1434,7 @@ function StoryManagementScreenBody({
           ) : null}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setShowCreate(false)}>
-              انصراف
+              {copy.cancel}
             </button>
             <button
               type="button"
@@ -1218,16 +1442,16 @@ function StoryManagementScreenBody({
               onClick={() => void createDraft()}
               data-testid="story-create-save"
             >
-              ذخیره پیش‌نویس
+              {copy.createDraft}
             </button>
           </div>
         </div>
       </Dialog>
 
-      <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} title="رد با دلیل">
+      <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} title={copy.reject}>
         <div className="space-y-3 p-1">
           <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">دلیل رد</span>
+            <span className="mb-1 block text-gray-600">{copy.rejectionReason}</span>
             <input
               className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
               value={rejectDraft}
@@ -1237,14 +1461,14 @@ function StoryManagementScreenBody({
           </label>
           <div className="flex justify-end gap-2">
             <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setRejectOpen(false)}>
-              انصراف
+              {copy.cancel}
             </button>
             <button
               type="button"
               className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
               onClick={() => {
                 if (!detail || !rejectDraft.trim()) {
-                  toast.error("دلیل رد را بنویسید.");
+                  toast.error(copy.rejectReasonRequired);
                   return;
                 }
                 if (!actorId) return;
@@ -1476,6 +1700,8 @@ function StoryLiveGrid({
   capabilities,
   reviewFilter,
   reloadToken,
+  copy,
+  numberLocale,
   onDenied,
   onError,
   onOk,
@@ -1488,6 +1714,8 @@ function StoryLiveGrid({
   capabilities: StoryCapabilities;
   reviewFilter: string;
   reloadToken: number;
+  copy: StoryCopy;
+  numberLocale: string;
   onDenied: () => void;
   onError: (message?: string) => void;
   onOk: () => void;
@@ -1503,7 +1731,7 @@ function StoryLiveGrid({
     return [
       {
         id: "title",
-        header: "عنوان",
+        header: copy.columnTitle,
         accessor: (row) => row.title,
         cell: (row) => (
           <button
@@ -1523,26 +1751,26 @@ function StoryLiveGrid({
         ),
         width: 240,
         minWidth: 160,
-        sticky: "start",
+        // Match Orders: first data column is not sticky; actions use bridge end-pin.
         filterKind: "text",
         sortable: true,
       },
       {
         id: "shopDisplayName",
-        header: "فروشگاه",
-        accessor: (row) => shopLabel(row),
-        cell: (row) => shopLabel(row),
+        header: copy.columnShop,
+        accessor: (row) => shopLabel(row, copy),
+        cell: (row) => shopLabel(row, copy),
         width: 140,
         minWidth: 110,
         filterKind: "text",
       },
       {
         id: "displayState",
-        header: "وضعیت",
-        accessor: (row) => displayState(row),
+        header: copy.columnStatus,
+        accessor: (row) => displayState(row, copy),
         cell: (row) => (
           <span className="inline-flex flex-col gap-1">
-            <span className="text-sm">{displayState(row)}</span>
+            <span className="text-sm">{displayState(row, copy)}</span>
             <span className="flex flex-wrap gap-1">
               <StoryStatusBadge status={row.status} />
               {row.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={row.reviewStatus} /> : null}
@@ -1554,15 +1782,15 @@ function StoryLiveGrid({
       },
       {
         id: "items",
-        header: "اسلایدها",
+        header: copy.columnSlides,
         accessor: (row) => row.items.length,
-        cell: (row) => row.items.length.toLocaleString("fa-IR"),
+        cell: (row) => row.items.length.toLocaleString(numberLocale),
         width: 90,
         minWidth: 70,
       },
       {
         id: "startAt",
-        header: "شروع نمایش",
+        header: copy.columnStart,
         accessor: (row) => row.startAt ?? "",
         cell: (row) => (row.startAt ? formatAdminDate(row.startAt) : "—"),
         width: 120,
@@ -1571,16 +1799,16 @@ function StoryLiveGrid({
       },
       {
         id: "endAt",
-        header: "پایان نمایش",
+        header: copy.columnEnd,
         accessor: (row) => row.endAt ?? "",
-        cell: (row) => (row.endAt ? formatAdminDate(row.endAt) : "بدون پایان"),
+        cell: (row) => (row.endAt ? formatAdminDate(row.endAt) : copy.noEnd),
         width: 120,
         minWidth: 100,
         filterKind: "date",
       },
       {
         id: "updatedAt",
-        header: "آخرین تغییر",
+        header: copy.columnUpdated,
         accessor: (row) => row.updatedAt,
         cell: (row) => formatAdminDate(row.updatedAt),
         width: 120,
@@ -1590,16 +1818,16 @@ function StoryLiveGrid({
       },
       {
         id: "actions",
-        header: "عملیات",
+        header: copy.columnActions,
         accessor: () => "",
         cell: (row) => {
           const actions: AppGridRowAction<AdminStorySnapshot>[] = [
-            { id: "view", label: "بررسی", icon: Eye, onClick: (r) => onOpenDetail(r.storyId) },
+            { id: "view", label: copy.rowReview, icon: Eye, onClick: (r) => onOpenDetail(r.storyId) },
           ];
           if (capabilities.canSubmit && hasAction(row, "submit")) {
             actions.push({
               id: "submit",
-              label: "ارسال برای تأیید",
+              label: copy.rowSubmit,
               icon: Send,
               onClick: (r) => onSubmit(r),
             });
@@ -1612,7 +1840,7 @@ function StoryLiveGrid({
         sortable: false,
       },
     ];
-  }, [capabilities.canSubmit, onOpenDetail, onSubmit]);
+  }, [capabilities.canSubmit, copy, numberLocale, onOpenDetail, onSubmit]);
 
   const savedViewStore = useMemo(
     () =>
@@ -1662,7 +1890,7 @@ function StoryLiveGrid({
     <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
       <div className="p-2 md:p-4">
         {showError ? (
-          <ErrorState title={STORY_COPY.loadErrorTitle} detail={errorMessage} onRetry={onRetry} retryLabel={faWorkspaceMessages.retry} />
+          <ErrorState title={copy.loadErrorTitle} detail={errorMessage} onRetry={onRetry} retryLabel={faWorkspaceMessages.retry} />
         ) : (
           <AppDataGrid<AdminStorySnapshot> {...gridProps} />
         )}
