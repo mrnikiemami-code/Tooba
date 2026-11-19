@@ -1,4 +1,8 @@
-# CURRENT — integration mandatory in issued TB-STORY-282 — 2026-11-19
+# CURRENT — 282 PARTIAL; existing seller panel completion in 282-R1 — 2026-11-19
+
+Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1. Original integration requirements below remain binding. Complete real VendorShell behavior and mounted proof; regex checking the page import is not acceptance. Shared feature within existing seller shell/auth, no duplicate menu/panel/login. Prior task/status paragraphs below are historical. Await R1 result; automaticNextImplementationTask NONE.
+
+# HISTORICAL — superseded by CURRENT above
 
 The existing seller-panel requirement below remains binding. Current task is TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282. See its exact TASK.md and top recovery. Historical R2 active / UI NOT ISSUED statements below record the original note only; 282 now explicitly authorizes the shared UI after its Gate0. No duplicate panel/menu/login; one worker, await result. automaticNextImplementationTask NONE.
 

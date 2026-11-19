@@ -1,4 +1,14 @@
-# CURRENT — TB-282 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+# CURRENT — TB-282 REVIEWED PARTIAL; ONLY TB-282-R1 ISSUED — 2026-11-19
+
+Reviewed code b0da0ab9d4ca593b9af17b0983802c2add936503; actual final head ebb921235456c6c75c88a06abfa35fcefa0b00db (normal merge/docs history preserved).
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282/ARCHITECT-REVIEW.md. Worker PASS A-F is NOT accepted as complete. Retain compact grid/query/shell/Dialog/toast/public-player progress; real editor, name/destination pickers, scoped recovery and real mounted proof remain due.
+Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1/TASK.md. One worker tooba-worker-01/tooba-main; issued is not claimed/running. Await result/review; no parallel/automatic next task.
+R1 closes existing F1 work protection, F2 complete merchant editor, F3 actual actor/shop query-view scope, F4 schema-free keyed platform Media upload, F5 real React/VendorShell/player mounted proof. One residual batch loser cleanup must preserve unrelated context entries. ZERO migration/live business write/seed/key operation.
+Seller integration MUST stay in purchased-template EXISTING VendorShell /vendor-panel/stories/story.view; shared feature, no new panel/menu/login or admin credential borrowing. See SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
+Merchant must select shop/product/file by human labels, preview and correct/re-submit content; source-regex tests are not mounted behavioral proof. User receives actual review URLs after real closure; worker does no live mutations.
+Returns acceptance/payout backlog/user work/key state unchanged. Worker PASS != Architect/user acceptance. automaticNextImplementationTask NONE.
+
+# HISTORICAL — superseded by CURRENT above
 
 R5 Architect review accepted A1/A2/A3 + Media guard progress; residual Gate0 (full occurrence identity, losing-entry detach, real EF concurrency) closed inside 282. Read `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/ARCHITECT-REVIEW.md`. No standalone R6.
 
