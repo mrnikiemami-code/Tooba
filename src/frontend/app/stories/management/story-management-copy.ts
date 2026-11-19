@@ -142,6 +142,11 @@ export type StoryCopy = {
   bulkSkippedHeading: string;
   bulkSelectedCount: string;
   bulkNoneEligible: string;
+  bulkResultTitle: string;
+  bulkResultClose: string;
+  bulkOpApprove: string;
+  bulkOpReject: string;
+  bulkOpDelete: string;
   scheduleDisplay: string;
   stopDisplay: string;
   returnToDraft: string;
@@ -300,6 +305,11 @@ export const faStoryCopy: StoryCopy = {
   bulkSkippedHeading: "ردشده از این اقدام",
   bulkSelectedCount: "انتخاب‌شده",
   bulkNoneEligible: "هیچ مورد مجازی در انتخاب فعلی نیست.",
+  bulkResultTitle: "نتیجهٔ اقدام‌ها",
+  bulkResultClose: "بستن نتیجه",
+  bulkOpApprove: "تأیید",
+  bulkOpReject: "رد",
+  bulkOpDelete: "حذف",
   scheduleDisplay: "زمان‌بندی نمایش",
   stopDisplay: "توقف نمایش",
   returnToDraft: "بازگشت به پیش‌نویس",
@@ -458,6 +468,11 @@ export const enStoryCopy: StoryCopy = {
   bulkSkippedHeading: "Skipped for this action",
   bulkSelectedCount: "Selected",
   bulkNoneEligible: "No eligible stories in the current selection.",
+  bulkResultTitle: "Action results",
+  bulkResultClose: "Close results",
+  bulkOpApprove: "Approve",
+  bulkOpReject: "Reject",
+  bulkOpDelete: "Delete",
   scheduleDisplay: "Schedule display",
   stopDisplay: "Stop display",
   returnToDraft: "Return to draft",

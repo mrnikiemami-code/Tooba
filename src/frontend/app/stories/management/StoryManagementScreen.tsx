@@ -53,7 +53,9 @@ import { createScopedStorySavedViewStore } from "./story-saved-views";
 import {
   classifyAdminOp,
   executeAdminOpBatch,
+  outcomeLabelFa,
   summarizeAdminBatch,
+  type StoryAdminBatchResult,
   type StoryAdminOpKind,
   type StoryAdminOpPlan,
 } from "./story-admin-ops";
@@ -315,6 +317,9 @@ function StoryManagementScreenBody({
   const [adminOpPlan, setAdminOpPlan] = useState<StoryAdminOpPlan | null>(null);
   const [adminOpReason, setAdminOpReason] = useState("");
   const [adminOpBusy, setAdminOpBusy] = useState(false);
+  const [adminOpResult, setAdminOpResult] = useState<StoryAdminBatchResult | null>(null);
+  const [adminOpResultKind, setAdminOpResultKind] = useState<StoryAdminOpKind | null>(null);
+  const adminOpCancelledRef = useRef(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleMode, setScheduleMode] = useState<"schedule" | "approve_schedule">("schedule");
   const [scheduleDraft, setScheduleDraft] = useState<StoryScheduleDraft>({
@@ -677,6 +682,8 @@ function StoryManagementScreenBody({
       toast.error(copy.bulkNoneEligible);
       return;
     }
+    const planKind = adminOpPlan.kind;
+    adminOpCancelledRef.current = false;
     setAdminOpBusy(true);
     try {
       const result = await executeAdminOpBatch({
@@ -685,35 +692,47 @@ function StoryManagementScreenBody({
         scope: { role: "admin", shopId: null, actorUserId: actorId },
         actorUserId: actorId,
         reason: adminOpReason.trim() || undefined,
+        readLiveScope: () => {
+          const live = readStoryScope("admin");
+          return { role: "admin", shopId: null, actorUserId: live.actorUserId || actorId };
+        },
+        isCancelled: () => adminOpCancelledRef.current,
       });
       const label =
-        adminOpPlan.kind === "approve"
+        planKind === "approve"
           ? copy.approveBatchToast
-          : adminOpPlan.kind === "reject"
+          : planKind === "reject"
             ? copy.rejectBatchToast
             : copy.deleteStory;
-      const summary = summarizeAdminBatch(result, label);
-      if (result.failed > 0 || result.unknown > 0) toast.error(summary);
-      else toast.success(summary);
-
-      const deletedIds = new Set(
-        result.items.filter((i) => i.outcome === "succeeded" && adminOpPlan.kind === "delete").map((i) => i.storyId),
-      );
-      if (deletedIds.size > 0) {
-        const closedId = selectedId && deletedIds.has(selectedId) ? selectedId : null;
-        if (closedId || (detail && deletedIds.has(detail.storyId))) {
-          setSelectedId(null);
-          setDetail(null);
-          ownedDraftIdRef.current = null;
-          router.push(basePath);
-        }
-      }
+      // Count toast is secondary; per-row panel is authoritative.
+      toast.info(summarizeAdminBatch(result, label));
+      setAdminOpResultKind(planKind);
+      setAdminOpResult(result);
       setAdminOpPlan(null);
       setAdminOpReason("");
       refreshGrid();
       setReloadToken((v) => v + 1);
+      // Do NOT navigate away — user must inspect per-row results first.
     } finally {
       setAdminOpBusy(false);
+    }
+  }
+
+  function closeAdminOpResult() {
+    const result = adminOpResult;
+    const kind = adminOpResultKind;
+    setAdminOpResult(null);
+    setAdminOpResultKind(null);
+    if (!result || kind !== "delete") return;
+    const deletedIds = new Set(
+      result.items.filter((i) => i.outcome === "succeeded").map((i) => i.storyId),
+    );
+    if (deletedIds.size === 0) return;
+    if ((selectedId && deletedIds.has(selectedId)) || (detail && deletedIds.has(detail.storyId))) {
+      setSelectedId(null);
+      setDetail(null);
+      ownedDraftIdRef.current = null;
+      router.push(basePath);
     }
   }
 
@@ -2191,7 +2210,10 @@ function StoryManagementScreenBody({
       <Dialog
         open={Boolean(adminOpPlan)}
         onClose={() => {
-          if (adminOpBusy) return;
+          if (adminOpBusy) {
+            adminOpCancelledRef.current = true;
+            return;
+          }
           setAdminOpPlan(null);
           setAdminOpReason("");
         }}
@@ -2283,6 +2305,56 @@ function StoryManagementScreenBody({
                   : adminOpPlan.kind === "reject"
                     ? copy.reject
                     : copy.deleteStory}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Dialog>
+
+      <Dialog
+        open={Boolean(adminOpResult)}
+        onClose={closeAdminOpResult}
+        title={copy.bulkResultTitle}
+      >
+        {adminOpResult ? (
+          <div className="space-y-3 p-1" data-testid="story-admin-op-result">
+            {adminOpResult.stoppedReason ? (
+              <p className="text-sm text-amber-800" data-testid="story-admin-op-stopped">
+                {adminOpResult.stoppedReason}
+              </p>
+            ) : null}
+            <ul className="max-h-72 space-y-2 overflow-auto text-sm" data-testid="story-admin-op-result-list">
+              {adminOpResult.items.map((item) => {
+                const opLabel =
+                  item.kind === "approve"
+                    ? copy.bulkOpApprove
+                    : item.kind === "reject"
+                      ? copy.bulkOpReject
+                      : copy.bulkOpDelete;
+                return (
+                  <li
+                    key={`${item.storyId}-${item.outcome}`}
+                    className="rounded-xl border border-border px-3 py-2"
+                    data-testid="story-admin-op-result-item"
+                    data-outcome={item.outcome}
+                    data-story-id={item.storyId}
+                  >
+                    <p className="font-bold">
+                      «{item.title}» — {opLabel} — {outcomeLabelFa(item.outcome)}
+                    </p>
+                    {item.message ? <p className="mt-1 text-muted">{item.message}</p> : null}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                data-testid="story-admin-op-result-close"
+                onClick={closeAdminOpResult}
+              >
+                {copy.bulkResultClose}
               </button>
             </div>
           </div>

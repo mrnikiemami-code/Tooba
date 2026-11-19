@@ -23,8 +23,33 @@ export type StoryAdminOpPlan = {
   skipped: StoryAdminOpEligibility[];
 };
 
+export type StoryAdminOpOutcome = "succeeded" | "failed" | "unknown" | "skipped" | "not_started";
+
+export type StoryAdminOpItemResult = {
+  storyId: string;
+  title: string;
+  kind: StoryAdminOpKind;
+  outcome: StoryAdminOpOutcome;
+  message: string | null;
+  envelope: StoryIntentEnvelope | null;
+};
+
+export type StoryAdminBatchResult = {
+  items: StoryAdminOpItemResult[];
+  succeeded: number;
+  failed: number;
+  unknown: number;
+  skipped: number;
+  notStarted: number;
+  stoppedReason: string | null;
+};
+
 function hasAction(row: AdminStorySnapshot, code: string): boolean {
   return (row.actionCodes ?? []).includes(code);
+}
+
+function scopesEqual(a: StoryExecutorScope, b: StoryExecutorScope): boolean {
+  return a.role === b.role && a.actorUserId === b.actorUserId && (a.shopId ?? null) === (b.shopId ?? null);
 }
 
 /** Persian skip reasons — merchant-facing, not technical jargon. */
@@ -139,25 +164,27 @@ export function buildAdminOpEnvelope(args: {
   };
 }
 
-export type StoryAdminOpItemResult = {
-  storyId: string;
-  title: string;
-  outcome: "succeeded" | "failed" | "unknown" | "skipped";
-  message: string | null;
-  envelope: StoryIntentEnvelope | null;
-};
+function isUncertainFailure(outcome: Extract<StoryExecutorResult, { state: "failed" }>): boolean {
+  if (outcome.status === 0) return true;
+  if (outcome.code === "story.response.unverified") return true;
+  const msg = (outcome.message ?? "").toLowerCase();
+  return msg.includes("unverified") || msg.includes("host-unreachable") || msg.includes("uncertain");
+}
 
-export type StoryAdminBatchResult = {
-  items: StoryAdminOpItemResult[];
-  succeeded: number;
-  failed: number;
-  unknown: number;
-  skipped: number;
-};
+function stopReasonLabel(
+  reason: "stale_epoch" | "scope" | "auth" | "cancelled" | "blocked",
+): string {
+  if (reason === "stale_epoch") return "جلسه یا زمینه عوض شد؛ بقیه اجرا نشد.";
+  if (reason === "scope") return "عامل یا فروشگاه عوض شد؛ بقیه اجرا نشد.";
+  if (reason === "auth") return "دسترسی قطع شد؛ بقیه اجرا نشد.";
+  if (reason === "cancelled") return "اقدام لغو شد؛ بقیه اجرا نشد.";
+  return "اجرا متوقف شد؛ بقیه اجرا نشد.";
+}
 
 /**
- * Sequential per-row execution. Failed/unknown keep their frozen envelope; succeeded clear via executor.
- * Callers retry only unresolved retained intents — never re-mint keys for a finished row.
+ * Sequential per-row execution with frozen actor/scope/epoch.
+ * Revalidates live scope + gate epoch before every subsequent dispatch.
+ * Untouched remaining rows are not_started (never persisted as sent).
  */
 export async function executeAdminOpBatch(args: {
   plan: StoryAdminOpPlan;
@@ -165,14 +192,25 @@ export async function executeAdminOpBatch(args: {
   scope: StoryExecutorScope;
   actorUserId: string;
   reason?: string;
-  /** Optional pre-frozen envelopes keyed by storyId (exact retry). */
   frozenByStoryId?: Map<string, StoryIntentEnvelope>;
+  /** Read current actor/shop/role before each later request. */
+  readLiveScope: () => StoryExecutorScope;
+  isCancelled?: () => boolean;
 }): Promise<StoryAdminBatchResult> {
+  const frozenScope: StoryExecutorScope = {
+    role: args.scope.role,
+    shopId: args.scope.shopId,
+    actorUserId: args.actorUserId,
+  };
+  const frozenEpoch = args.gate.epochRef.current;
+  const kind = args.plan.kind;
+
   const items: StoryAdminOpItemResult[] = [];
   for (const skip of args.plan.skipped) {
     items.push({
       storyId: skip.row.storyId,
       title: skip.row.title,
+      kind,
       outcome: "skipped",
       message: skip.reason,
       envelope: null,
@@ -182,47 +220,126 @@ export async function executeAdminOpBatch(args: {
   let succeeded = 0;
   let failed = 0;
   let unknown = 0;
+  let notStarted = 0;
   const skipped = args.plan.skipped.length;
+  let stoppedReason: string | null = null;
+  let stop = false;
 
-  for (const entry of args.plan.eligible) {
+  const markRemainingNotStarted = (fromIndex: number, reason: string) => {
+    stoppedReason = reason;
+    for (let i = fromIndex; i < args.plan.eligible.length; i += 1) {
+      const entry = args.plan.eligible[i]!;
+      items.push({
+        storyId: entry.row.storyId,
+        title: entry.row.title,
+        kind,
+        outcome: "not_started",
+        message: "اجرا نشد",
+        envelope: null,
+      });
+      notStarted += 1;
+    }
+  };
+
+  for (let index = 0; index < args.plan.eligible.length; index += 1) {
+    if (stop) break;
+
+    if (args.isCancelled?.()) {
+      markRemainingNotStarted(index, stopReasonLabel("cancelled"));
+      stop = true;
+      break;
+    }
+
+    if (args.gate.epochRef.current !== frozenEpoch) {
+      markRemainingNotStarted(index, stopReasonLabel("stale_epoch"));
+      stop = true;
+      break;
+    }
+
+    const live = args.readLiveScope();
+    if (!scopesEqual(live, frozenScope) || live.actorUserId !== frozenScope.actorUserId) {
+      markRemainingNotStarted(index, stopReasonLabel("scope"));
+      stop = true;
+      break;
+    }
+
+    const entry = args.plan.eligible[index]!;
     const frozen = args.frozenByStoryId?.get(entry.row.storyId);
     const envelope =
       frozen ??
       buildAdminOpEnvelope({
-        kind: args.plan.kind,
+        kind,
         row: entry.row,
-        actorUserId: args.actorUserId,
-        shopId: args.scope.shopId,
+        actorUserId: frozenScope.actorUserId,
+        shopId: frozenScope.shopId,
         reason: args.reason,
       });
+
     const outcome: StoryExecutorResult = await runDurableStoryMutation({
       gate: args.gate,
       envelope,
-      scope: args.scope,
+      scope: frozenScope,
     });
+
+    // Scope/epoch may have flipped while the request was in flight — keep this attempt's
+    // truthful outcome, but never dispatch later rows under the old actor.
+    const scopeAfter = args.readLiveScope();
+    const epochAfter = args.gate.epochRef.current;
+    const invalidatedAfter =
+      epochAfter !== frozenEpoch || !scopesEqual(scopeAfter, frozenScope) || Boolean(args.isCancelled?.());
+
     if (outcome.state === "ok") {
       succeeded += 1;
       items.push({
         storyId: entry.row.storyId,
         title: entry.row.title,
+        kind,
         outcome: "succeeded",
         message: null,
         envelope,
       });
     } else if (outcome.state === "failed") {
-      failed += 1;
-      items.push({
-        storyId: entry.row.storyId,
-        title: entry.row.title,
-        outcome: "failed",
-        message: outcome.message,
-        envelope: outcome.envelope,
-      });
+      if (isUncertainFailure(outcome)) {
+        unknown += 1;
+        items.push({
+          storyId: entry.row.storyId,
+          title: entry.row.title,
+          kind,
+          outcome: "unknown",
+          message: outcome.message || "نتیجه نامشخص است؛ اقدام قابل ادامه است.",
+          envelope: outcome.envelope,
+        });
+      } else {
+        failed += 1;
+        items.push({
+          storyId: entry.row.storyId,
+          title: entry.row.title,
+          kind,
+          outcome: "failed",
+          message: outcome.message,
+          envelope: outcome.envelope,
+        });
+      }
     } else if (outcome.state === "blocked") {
+      if (outcome.reason === "stale_epoch" || outcome.reason === "scope" || outcome.reason === "auth") {
+        unknown += 1;
+        items.push({
+          storyId: entry.row.storyId,
+          title: entry.row.title,
+          kind,
+          outcome: "unknown",
+          message: stopReasonLabel(outcome.reason),
+          envelope,
+        });
+        markRemainingNotStarted(index + 1, stopReasonLabel(outcome.reason));
+        stop = true;
+        break;
+      }
       unknown += 1;
       items.push({
         storyId: entry.row.storyId,
         title: entry.row.title,
+        kind,
         outcome: "unknown",
         message: outcome.reason,
         envelope,
@@ -232,14 +349,28 @@ export async function executeAdminOpBatch(args: {
       items.push({
         storyId: entry.row.storyId,
         title: entry.row.title,
+        kind,
         outcome: "unknown",
         message: "unknown",
         envelope,
       });
     }
+
+    if (invalidatedAfter && index + 1 < args.plan.eligible.length) {
+      markRemainingNotStarted(
+        index + 1,
+        args.isCancelled?.()
+          ? stopReasonLabel("cancelled")
+          : epochAfter !== frozenEpoch
+            ? stopReasonLabel("stale_epoch")
+            : stopReasonLabel("scope"),
+      );
+      stop = true;
+      break;
+    }
   }
 
-  return { items, succeeded, failed, unknown, skipped };
+  return { items, succeeded, failed, unknown, skipped, notStarted, stoppedReason };
 }
 
 export function summarizeAdminBatch(result: StoryAdminBatchResult, kindLabel: string): string {
@@ -248,5 +379,23 @@ export function summarizeAdminBatch(result: StoryAdminBatchResult, kindLabel: st
   if (result.failed > 0) parts.push(`${result.failed} ناموفق`);
   if (result.unknown > 0) parts.push(`${result.unknown} نامشخص`);
   if (result.skipped > 0) parts.push(`${result.skipped} ردشده`);
+  if (result.notStarted > 0) parts.push(`${result.notStarted} اجرا نشد`);
   return `${kindLabel}: ${parts.join("، ") || "بدون تغییر"}`;
+}
+
+export function outcomeLabelFa(outcome: StoryAdminOpOutcome): string {
+  switch (outcome) {
+    case "succeeded":
+      return "موفق";
+    case "failed":
+      return "ناموفق";
+    case "unknown":
+      return "نامشخص";
+    case "skipped":
+      return "ردشده";
+    case "not_started":
+      return "اجرا نشد";
+    default:
+      return outcome;
+  }
 }
