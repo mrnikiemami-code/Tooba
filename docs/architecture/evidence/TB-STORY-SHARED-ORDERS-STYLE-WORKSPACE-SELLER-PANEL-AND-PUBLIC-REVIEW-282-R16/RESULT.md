@@ -32,6 +32,6 @@ Mounted R16 fact **failed** before stabilization (~2400ms class; typing/open pat
 ## Architecture / i18n
 FE integration-only; AppDataGrid contract unchanged; `storyCopy` locale catalogs and VendorShell preserved. No architecture defect beyond the unstable callback wiring that this task closed.
 
-Code SHA: *(set after commit)*
+Code SHA: `6450d2684f58b5861ea650404f5e37395d771342`
 
 User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`
