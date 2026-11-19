@@ -2,10 +2,17 @@
   "taskId": "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3",
   "expectedBaseSha": "4c086d32346ce2b6f695c254d7fa58db98c4f322",
   "date": "2026-11-19",
-  "taskBytes": 13413,
-  "taskSha256": "d85dc22cf031de8d55df7bfd5c4b1beb791581a86fdfa88f225846af249d5bfd",
+  "taskBytes": 13582,
+  "taskSha256": "194da070cf5c1347d0215db35c8973c982fcb9af7198d2d881d4c19ff1c02356",
   "channel": "tooba-main",
   "worker": "tooba-worker-01",
   "stopState": "STOP_FOR_ARCHITECT",
-  "automaticNextImplementationTask": "NONE"
+  "automaticNextImplementationTask": "NONE",
+  "headerCorrection": {
+    "date": "2026-11-19",
+    "reason": "Restore canonical Bridge metadata names; same Task-ID and body, no new task or scope change",
+    "priorTaskBytes": 13413,
+    "priorTaskSha256": "d85dc22cf031de8d55df7bfd5c4b1beb791581a86fdfa88f225846af249d5bfd",
+    "priorIssuanceCommit": "d46d262e60c35ad5c6d6c51a6532a54fda20ba69"
+  }
 }

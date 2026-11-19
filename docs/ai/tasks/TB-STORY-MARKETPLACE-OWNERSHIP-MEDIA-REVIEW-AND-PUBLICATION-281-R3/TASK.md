@@ -1,15 +1,19 @@
-# TASK: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3
+# TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3
 
-Parent: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2
-Program: TOOBA
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Task-ID: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3
+Parent-Task: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2
 Channel: tooba-main
-Worker: tooba-worker-01
+Program: TOOBA
 Repository: mrnikiemami-code/Tooba
 Branch: main
-Expected-Base-SHA: 4c086d32346ce2b6f695c254d7fa58db98c4f322
+Worker-Id: tooba-worker-01
+Agent-Type: cursor
 Mode: FINISH_EXISTING_OWNING_PATHS_AND_REQUIRED_FAILURE_PROOF
-Final gate: STOP_FOR_ARCHITECT
+Expected-Base-SHA: 4c086d32346ce2b6f695c254d7fa58db98c4f322
+Issued-Date: 2026-11-19 (Asia/Tehran)
 automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT
 
 ## هدف
 بخش اول استوری را با بستن نقص‌های مشخص زیر تحویل بده. این تسک ادامهٔ همان تحویل است؛ بازطراحی، تحلیل دوبارهٔ کل پروژه یا تسک برنامه‌ریزی نیست. کارهای سالم 281/R1/R2 حفظ شوند. برای تمام‌کردن تست‌های صادرشده تا انتها ادامه بده؛ صرفِ کامپایل، محدودیت زمان فرضی، یا تمام‌شدن بخشی از ماتریس دلیل توقف PARTIAL نیست. اگر مانع واقعی بیرونی وجود داشت، عملیات ناموفق و شاهد دقیقش را گزارش کن؛ PASS نساز.
