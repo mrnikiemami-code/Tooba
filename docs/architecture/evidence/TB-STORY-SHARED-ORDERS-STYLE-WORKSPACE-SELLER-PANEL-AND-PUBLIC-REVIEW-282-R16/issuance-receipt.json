@@ -1,0 +1,10 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16",
+  "expectedBaseSHA": "d7c36bf836f66365772f2f95a24a48e5b23628ae",
+  "taskSHA256": "f0ba88d902e6860a0b70d82423c13aa16439ec142a6fb65cce2dcafec2b85fde",
+  "date": "2026-11-20",
+  "timezone": "Asia/Tehran",
+  "authority": "Owner-rejected interaction; narrowly issued architect repair",
+  "bridge": "Not enqueued via Bridge here; exact committed TASK.md canonical",
+  "automaticNextImplementationTask": "NONE"
+}
