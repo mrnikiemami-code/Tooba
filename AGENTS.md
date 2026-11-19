@@ -1,17 +1,18 @@
-# CURRENT — OWNER REQUESTED ADMIN SINGLE/BULK ACTIONS; ONLY TB-282-R13 ISSUED — 2026-11-20
+# CURRENT — TB-282-R13 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13
-Expected-Base-SHA: d6956b5f4363711aeba12ce7281f00fa42f46b62
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/TASK.md
-Owner requires admin single+selected-row deletion/approval/rejection from grid. AppDataGrid already has bulkActions/pageSelectionOnly; Story has not wired review/bulk controls. R13 uses existing grid and per-row reviewed commands/version/exact retry, clear confirmations/reject reasons/partial results; no new bulk backend framework or grant.
-Owner rejects no-end at global far corner: move beside END label inside equal-height end header; retain desktop aligned date/clock rows and mobile layout, disabled mounted controls/values/null semantics.
-R12 bounded alignment acceptance preserved; this is explicit further owner UX/operation request. One worker tooba-worker-01/tooba-main, issued NOT claimed/running. No screenshots/delegation/polling/live mutations/schema/seeds.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-Preserve R5–R12/VendorShell/language registry/Returns/payout/user work. Existing production Html404 build blocker and R6 effects UNKNOWN remain.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–B: admin row+detail+AppDataGrid bulk approve/reject/delete with eligibility Dialog, sequential durable envelopes, seller isolation; no-end beside END label equal headers; CDP 1440/390; Host5088 skip-bootstrap; Next3000 next-dev; ZERO migration; ZERO live Story/Media write; ZERO grant/seed.
+Decision `A_ADMIN_SINGLE_BULK_APPROVE_REJECT_DELETE_APP_DATA_GRID_B_NO_END_BESIDE_END_LABEL_EQUAL_HEADERS_ZERO_BACKEND_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `d6956b5f4363711aeba12ce7281f00fa42f46b62`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R13 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — R12 LAYOUT REPAIR ACCEPTED; OWNER REQUESTED R13; R13 ABOVE
 
 # CURRENT — R12 LAYOUT REPAIR ACCEPTED; AWAIT OWNER REVIEW — 2026-11-20
 
