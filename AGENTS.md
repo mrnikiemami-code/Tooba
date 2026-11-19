@@ -1,3 +1,20 @@
+# CURRENT — R11 ACCEPTED FOR LOCAL OWNER TEST; RELEASE BUILD BLOCKED — 2026-11-20
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11/ARCHITECT-REVIEW.md
+Code77fcb2630525fa334508d3e5ffdbc7491f63e3f9 / evidence 1da30eeb6fe211b24b7118022a650ccd321ec7dd.
+Decision ACCEPT_FOR_LOCAL_OWNER_TEST_WITH_DECLARED_LIMITS. Delete shop replay/list-detail controls, effective expiry status and strict end validation source accepted for local trial. Source and worker evidence reviewed; Architect did not rerun Windows serving/tests.
+State: AWAITING_LOCAL_OWNER_TEST
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_USER_REVIEW
+No R12 automatically. Owner tests actual photo/video preview/duration, dates save/reload, seller submit/admin approval/public playback and intentional test-record delete.
+Next3000 next-dev; production build Html404 prerender BLOCKED, no new BUILD_ID; absence of Story next/document import does not fully diagnose root cause. No production readiness/user acceptance/full A-C proof certification claimed.
+Host5088 skip-bootstrap1 DLLD5DF9070…E0599BEE health/ready/store-alpha worker-reported. FE5 includes source-regex player assertion, not actual ended runtime proof; receipts route200 not active dialog geometry. Detailed limits in review.
+ZERO live business writes by worker; owner actions create/delete real data. Keep R6 effects UNKNOWN/bg-white disclosure, VendorShell, R9 recovery, languages, Returns/payout/user work.
+URLs /fa/admin/stories ; /fa/vendor-panel/stories ; /fa
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — TB-282-R11 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11/TASK.md` and
