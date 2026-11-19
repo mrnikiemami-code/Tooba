@@ -1,4 +1,16 @@
-﻿# CURRENT — TB-282-R4 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+# CURRENT — TB-282-R4 REVIEWED PARTIAL; NO NEW TASK ISSUED — 2026-11-19
+
+Reviewed implementation 35b9ffc6406a770147ddfd8fc1ef514f0db20a1e; fresh main/evidence 08f73aaa7dce43c73ff25d4a67c8ffec6a394314.
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/ARCHITECT-REVIEW.md.
+Retain compact save/localized file/shared slide Dialog/update-item wire and upload dispatch gate progress. Full A-E PASS not accepted: F1 row product label borrows current editor selection and lacks stored target name hydration; F2 actual save/no-extra-write, malformed-response mounted proof, true negative control, real grid/saved-view/geometry and owning Catalogue query proof remain incomplete. Finish existing narrow obligations only; no new UI/backend phase.
+Correction: actions logical-end pin already comes from existing legacy-grid-bridge, so missing sticky on Story column alone was not proof of missing pin.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT
+Owner may inspect /fa/admin/stories, /fa/vendor-panel/stories and /fa; no user/commercial/complete connected acceptance claimed. Worker-reported Next build VKOLCT7WFUKHA67tlaFV-; Host18724; Architect source/evidence review only.
+Existing VendorShell /vendor-panel/stories/story.view retained; seller fixed shop/products, admin shop/main placement and moderation. ZERO migration/live-write scope; Returns/payout backlog/separate key state unchanged.
+
+# HISTORICAL — superseded by CURRENT above
 
 Read docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/TASK.md and evidence TB-...-282-R4/{RESULT,RECEIPTS,COMPLETION-LEDGER,user-review}.
 Status PASS within issued A–E (Orders-style list, shared merchant editor fa/en catalogs, per-slide update_item, S1 bind every send, S2 >40 catalogue proof). Host5088/Next3000 BUILD_ID VKOLCT7WFUKHA67tlaFV-; ZERO migration; ZERO live Story/Media write.
