@@ -59,4 +59,5 @@ Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
 
 ## Final SHA
 
-- Recorded after commit/push in RECEIPTS / Bridge result.
+- Implementation code SHA: `b0da0ab9d4ca593b9af17b0983802c2add936503`
+- Final origin/main tip recorded after docs parity commit in RECEIPTS.
