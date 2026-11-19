@@ -237,7 +237,10 @@ test("same-tick double click executor sends once", async () => {
   globalThis.fetch = (async () => {
     sends += 1;
     await new Promise((r) => setTimeout(r, 40));
-    return new Response("{}", { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ storyId: "11111111-1111-1111-1111-111111111111" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }) as typeof fetch;
   const p1 = runDurableStoryMutation({ gate, envelope, scope });
   const p2 = runDurableStoryMutation({ gate, envelope: { ...envelope }, scope });

@@ -1,6 +1,6 @@
-# CURRENT — existing seller integration retained; only 282-R3 issued — 2026-11-19
+# CURRENT — existing seller integration retained; TB-282-R3 worker PASS awaiting review — 2026-11-19
 
-Current task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3 closes response evidence and real catalogue search only. Existing VendorShell/story.view/shared editor remain; no parallel panel/menu/login. Previous task/status paragraphs below are historical. Await R3 result, no automatic next.
+TB-282-R3 worker PASS closed S1/S2 on the existing VendorShell/story.view/shared editor path. No parallel panel/menu/login. Await Architect/user review; automaticNextImplementationTask NONE.
 
 # HISTORICAL — superseded by CURRENT above
 

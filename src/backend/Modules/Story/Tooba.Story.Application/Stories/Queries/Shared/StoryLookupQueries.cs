@@ -20,22 +20,38 @@ public sealed class ListStoryLocaleOptionsQueryHandler(IStoryLocaleOptionsPort l
         => StoryOperation.ExecuteAsync(() => locales.ListEnabledAsync(cancellationToken));
 }
 
-/// <summary>پرس‌وجوی گزینه‌های محصول برای CTA استوری (فروشگاه یا ویترین اصلی).</summary>
-public sealed record ListStoryProductOptionsQuery(Guid? SellerPartyId)
-    : IRequest<Result<IReadOnlyList<StoryProductOption>>>;
+/// <summary>پرس‌وجوی صفحه‌بندی‌شدهٔ گزینه‌های محصول برای CTA استوری.</summary>
+public sealed record ListStoryProductOptionsQuery(
+    Guid? SellerPartyId,
+    string? Search,
+    int Page,
+    int PageSize)
+    : IRequest<Result<StoryProductOptionsPage>>;
 
 /// <summary>Handler گزینه‌های محصول استوری.</summary>
 public sealed class ListStoryProductOptionsQueryHandler(IStoryProductOptionsPort products)
-    : IRequestHandler<ListStoryProductOptionsQuery, Result<IReadOnlyList<StoryProductOption>>>
+    : IRequestHandler<ListStoryProductOptionsQuery, Result<StoryProductOptionsPage>>
 {
     /// <inheritdoc />
-    public Task<Result<IReadOnlyList<StoryProductOption>>> Handle(
+    public Task<Result<StoryProductOptionsPage>> Handle(
         ListStoryProductOptionsQuery request,
         CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(async () =>
         {
             if (request.SellerPartyId is Guid shop && shop != Guid.Empty)
-                return await products.ListForSellerAsync(shop, cancellationToken);
-            return await products.ListPublishedAsync(cancellationToken);
+            {
+                return await products.SearchForSellerAsync(
+                    shop,
+                    request.Search,
+                    request.Page,
+                    request.PageSize,
+                    cancellationToken);
+            }
+
+            return await products.SearchPublishedAsync(
+                request.Search,
+                request.Page,
+                request.PageSize,
+                cancellationToken);
         });
 }

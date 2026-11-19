@@ -2,7 +2,6 @@
  * Durable Story mutation intent — freeze exact wire before send; refuse overwrite of pending.
  * v2 envelope in sessionStorage with actor+role+shop namespace, verified read-back.
  */
-
 export type StoryIntentAction =
   | "create"
   | "update"
@@ -60,6 +59,7 @@ export type StoryIntentRead =
   | { state: "legacy_blocked"; detail: string };
 
 const STORAGE_PREFIX = "tooba.story.intent.v2:";
+const LEGACY_PREFIXES = ["tooba.story.intent.v1:", "tooba.story.intent:"] as const;
 const KNOWN_ACTIONS = new Set<StoryIntentAction>([
   "create",
   "update",
@@ -111,7 +111,8 @@ export function validateStoryEnvelope(
   }
   if (
     (envelope.action === "upload" || envelope.action === "upload_add") &&
-    (!envelope.uploadMeta?.digestHex || !envelope.uploadMeta.fileName)
+    (!envelope.uploadMeta?.digestHex || !envelope.uploadMeta.fileName) &&
+    !(envelope.children[0]?.done && envelope.addBodyText && envelope.uploadedAssetId)
   ) {
     return { ok: false, reason: "upload_meta" };
   }
@@ -143,13 +144,24 @@ function samePayload(a: StoryIntentEnvelope, b: StoryIntentEnvelope): boolean {
   );
 }
 
+function storage(): Storage | null {
+  try {
+    const s = globalThis.sessionStorage;
+    if (!s) return null;
+    return s;
+  } catch {
+    return null;
+  }
+}
+
 export function storeStoryIntent(envelope: StoryIntentEnvelope): boolean {
-  if (typeof sessionStorage === "undefined") return false;
+  const store = storage();
+  if (!store) return false;
   const valid = validateStoryEnvelope(envelope);
   if (!valid.ok) return false;
   const key = storageKey(envelope.role, envelope.shopId, envelope.actorUserId, envelope.action, envelope.routeTargetId);
   try {
-    const existing = sessionStorage.getItem(key);
+    const existing = store.getItem(key);
     if (existing) {
       try {
         const parsed = JSON.parse(existing) as StoryIntentEnvelope;
@@ -164,8 +176,8 @@ export function storeStoryIntent(envelope: StoryIntentEnvelope): boolean {
       }
     }
     const raw = JSON.stringify(envelope);
-    sessionStorage.setItem(key, raw);
-    return sessionStorage.getItem(key) === raw;
+    store.setItem(key, raw);
+    return store.getItem(key) === raw;
   } catch {
     return false;
   }
@@ -179,7 +191,7 @@ export function advanceStoryUploadJournal(
   previous: StoryIntentEnvelope,
   next: StoryIntentEnvelope,
 ): boolean {
-  if (typeof sessionStorage === "undefined") return false;
+  if (!storage()) return false;
   if (previous.occurrenceKey !== next.occurrenceKey) return false;
   if (previous.action !== "upload_add" || next.action !== "upload_add") return false;
   if (previous.actorUserId !== next.actorUserId) return false;
@@ -192,12 +204,14 @@ export function advanceStoryUploadJournal(
   const valid = validateStoryEnvelope(next);
   if (!valid.ok) return false;
   const key = storageKey(next.role, next.shopId, next.actorUserId, next.action, next.routeTargetId);
+  const store = storage();
+  if (!store) return false;
   try {
-    const rawExisting = sessionStorage.getItem(key);
+    const rawExisting = store.getItem(key);
     if (!rawExisting || rawExisting !== JSON.stringify(previous)) return false;
     const raw = JSON.stringify(next);
-    sessionStorage.setItem(key, raw);
-    return sessionStorage.getItem(key) === raw;
+    store.setItem(key, raw);
+    return store.getItem(key) === raw;
   } catch {
     return false;
   }
@@ -210,9 +224,10 @@ export function readStoryIntent(
   action: StoryIntentAction,
   target: string | null,
 ): StoryIntentRead {
-  if (typeof sessionStorage === "undefined") return { state: "unreadable", detail: "storage.unavailable" };
+  const store = storage();
+  if (!store) return { state: "unreadable", detail: "storage.unavailable" };
   try {
-    const raw = sessionStorage.getItem(storageKey(role, shopId, actorUserId, action, target));
+    const raw = store.getItem(storageKey(role, shopId, actorUserId, action, target));
     if (!raw) return { state: "missing" };
     const parsed = JSON.parse(raw) as StoryIntentEnvelope;
     if ((parsed as { version?: number })?.version === 1) return { state: "legacy_blocked", detail: "v1" };
@@ -225,11 +240,12 @@ export function readStoryIntent(
 }
 
 export function clearStoryIntentIfCurrent(envelope: StoryIntentEnvelope): void {
-  if (typeof sessionStorage === "undefined") return;
+  const store = storage();
+  if (!store) return;
   const key = storageKey(envelope.role, envelope.shopId, envelope.actorUserId, envelope.action, envelope.routeTargetId);
   try {
-    const raw = sessionStorage.getItem(key);
-    if (raw && raw === JSON.stringify(envelope)) sessionStorage.removeItem(key);
+    const raw = store.getItem(key);
+    if (raw && raw === JSON.stringify(envelope)) store.removeItem(key);
   } catch {
     /* ignore */
   }
@@ -244,14 +260,40 @@ export function listPendingStoryIntents(
   shopId: string | null,
   actorUserId: string,
 ): PendingStoryIntent[] {
-  if (typeof sessionStorage === "undefined" || !actorUserId?.trim()) return [];
-  const prefix = `${STORAGE_PREFIX}${role}:${shopId ?? "platform"}:${actorUserId}:`;
-  const rows: PendingStoryIntent[] = [];
   try {
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (!key?.startsWith(prefix)) continue;
-      const raw = sessionStorage.getItem(key);
+    const store = storage();
+    if (!store) {
+      return [{ state: "blocked", detail: "storage.unavailable", rawKey: "*" }];
+    }
+    if (!actorUserId?.trim()) {
+      return [{ state: "blocked", detail: "actor.missing", rawKey: "*" }];
+    }
+    const prefix = `${STORAGE_PREFIX}${role}:${shopId ?? "platform"}:${actorUserId}:`;
+    const rows: PendingStoryIntent[] = [];
+    const length = store.length;
+    for (let i = 0; i < length; i++) {
+      const key = store.key(i);
+      if (!key) continue;
+      if (LEGACY_PREFIXES.some((p) => key.startsWith(p))) {
+        rows.push({ state: "blocked", detail: "legacy_namespace", rawKey: key });
+        continue;
+      }
+      if (!key.startsWith(prefix)) {
+        // Another actor/role/shop under the same v2 family — never expose contents.
+        if (key.startsWith(STORAGE_PREFIX)) continue;
+        continue;
+      }
+      let raw: string | null;
+      try {
+        raw = store.getItem(key);
+      } catch (err) {
+        rows.push({
+          state: "blocked",
+          detail: err instanceof Error ? err.message : "storage.get.throw",
+          rawKey: key,
+        });
+        continue;
+      }
       if (!raw) continue;
       try {
         const parsed = JSON.parse(raw) as StoryIntentEnvelope;
@@ -269,10 +311,16 @@ export function listPendingStoryIntents(
         rows.push({ state: "blocked", detail: "malformed", rawKey: key });
       }
     }
-  } catch {
-    return [];
+    return rows;
+  } catch (err) {
+    return [
+      {
+        state: "blocked",
+        detail: err instanceof Error ? err.message : "storage.enumerate.throw",
+        rawKey: "*",
+      },
+    ];
   }
-  return rows;
 }
 
 /** Merchant-facing label — never action enum / key fragments. */

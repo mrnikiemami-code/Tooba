@@ -30,7 +30,7 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("ListAdminStoriesQuery", "GET /v1/admin/stories", ValidatorRequired),
         ("QueryAdminStoryGridQuery", "POST /v1/admin/stories/query", ValidatorRequired),
         ("ListStoryLocaleOptionsQuery", "GET /v1/admin/stories/locale-options|/v1/seller/stories/locale-options", NoValidatorRequired),
-        ("ListStoryProductOptionsQuery", "GET /v1/admin/stories/product-options|/v1/seller/stories/product-options", NoValidatorRequired),
+        ("ListStoryProductOptionsQuery", "GET /v1/admin/stories/product-options|/v1/seller/stories/product-options", ValidatorRequired),
         ("GetAdminStoryQuery", "GET /v1/admin/stories/{id}", NoValidatorRequired),
         ("CreateAdminStoryCommand", "POST /v1/admin/stories", ValidatorRequired),
         ("UpdateAdminStoryCommand", "PUT /v1/admin/stories/{id}", ValidatorRequired),
@@ -89,14 +89,15 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("ApproveAdminStoryCommand", typeof(ApproveAdminStoryCommandValidator)),
         ("RemoveAdminStoryItemCommand", typeof(RemoveAdminStoryItemCommandValidator)),
         ("RemoveSellerStoryItemCommand", typeof(RemoveSellerStoryItemCommandValidator)),
+        ("ListStoryProductOptionsQuery", typeof(ListStoryProductOptionsQueryValidator)),
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_32_with_27_required_and_5_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_32_with_28_required_and_4_no_validator()
     {
         Assert.Equal(32, Manifest.Length);
-        Assert.Equal(27, Manifest.Count(x => x.Classification == ValidatorRequired));
-        Assert.Equal(5, Manifest.Count(x => x.Classification == NoValidatorRequired));
+        Assert.Equal(28, Manifest.Count(x => x.Classification == ValidatorRequired));
+        Assert.Equal(4, Manifest.Count(x => x.Classification == NoValidatorRequired));
         Assert.Equal(Manifest.Length, Manifest.Select(x => x.RequestTypeName).Distinct(StringComparer.Ordinal).Count());
     }
 

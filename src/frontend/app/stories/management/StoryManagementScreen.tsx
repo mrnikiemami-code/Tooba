@@ -181,6 +181,10 @@ function StoryManagementScreenBody({
   const [localeOptions, setLocaleOptions] = useState<Array<{ code: string; name: string; isDefault: boolean }>>([]);
   const [productOptions, setProductOptions] = useState<StoryProductOptionRow[]>([]);
   const [productSearch, setProductSearch] = useState("");
+  const [productTotalCount, setProductTotalCount] = useState(0);
+  const [productPage, setProductPage] = useState(1);
+  const [productLoading, setProductLoading] = useState(false);
+  const [selectedProductLabel, setSelectedProductLabel] = useState("");
   const [slideCaption, setSlideCaption] = useState("");
   const [slideDurationSec, setSlideDurationSec] = useState("5");
   const [slideCtaType, setSlideCtaType] = useState("none");
@@ -252,12 +256,31 @@ function StoryManagementScreenBody({
       capabilities.mode === "seller"
         ? sellerShopId
         : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
+    setProductPage(1);
+    setProductLoading(true);
     void loadStoryProductOptions({
       mode: capabilities.mode,
       shopId: shop,
       actorUserId: actorId,
-    }).then((rows) => setProductOptions(rows));
-  }, [capabilities.mode, sellerShopId, detail?.sellerPartyId, adminShopId, adminShopMode, actorId, scopeTick]);
+      search: productSearch,
+      page: 1,
+      pageSize: 20,
+    })
+      .then((page) => {
+        setProductOptions(page.items);
+        setProductTotalCount(page.totalCount);
+      })
+      .finally(() => setProductLoading(false));
+  }, [
+    capabilities.mode,
+    sellerShopId,
+    detail?.sellerPartyId,
+    adminShopId,
+    adminShopMode,
+    actorId,
+    scopeTick,
+    productSearch,
+  ]);
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -968,33 +991,70 @@ function StoryManagementScreenBody({
                 <div className="space-y-2" data-testid="story-product-picker">
                   <input
                     className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                    placeholder="جستجوی نام محصول"
+                    placeholder="جستجوی نام محصول در فهرست مجاز"
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
+                    data-testid="story-product-search"
                   />
+                  {productLoading ? <p className="text-xs text-muted">در حال بارگذاری…</p> : null}
                   <ul className="max-h-40 overflow-auto rounded-xl border border-gray-100">
-                    {productOptions
-                      .filter((row) => !productSearch.trim() || row.productTitle.includes(productSearch.trim()))
-                      .slice(0, 20)
-                      .map((row) => (
-                        <li key={row.offerId}>
-                          <button
-                            type="button"
-                            className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
-                            onClick={() => {
-                              if (!row.productId) {
-                                toast.error("این ردیف شناسهٔ محصول معتبری ندارد.");
-                                return;
-                              }
-                              setSlideCtaTarget(row.productId);
-                            }}
-                          >
-                            {row.productTitle}
-                          </button>
-                        </li>
-                      ))}
+                    {productOptions.map((row) => (
+                      <li key={`${row.productId}:${row.offerId}`}>
+                        <button
+                          type="button"
+                          className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
+                          onClick={() => {
+                            if (!row.productId) {
+                              toast.error("این ردیف شناسهٔ محصول معتبری ندارد.");
+                              return;
+                            }
+                            setSlideCtaTarget(row.productId);
+                            setSelectedProductLabel(row.productTitle);
+                          }}
+                        >
+                          {row.productTitle}
+                        </button>
+                      </li>
+                    ))}
                   </ul>
-                  {slideCtaTarget ? <p className="text-xs text-muted">محصول انتخاب شد.</p> : null}
+                  {productOptions.length < productTotalCount ? (
+                    <button
+                      type="button"
+                      className="min-h-11 w-full rounded-xl border border-gray-200 text-sm"
+                      data-testid="story-product-load-more"
+                      onClick={() => {
+                        const shop =
+                          capabilities.mode === "seller"
+                            ? sellerShopId
+                            : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
+                        const next = productPage + 1;
+                        setProductLoading(true);
+                        void loadStoryProductOptions({
+                          mode: capabilities.mode,
+                          shopId: shop,
+                          actorUserId: actorId,
+                          search: productSearch,
+                          page: next,
+                          pageSize: 20,
+                        })
+                          .then((page) => {
+                            const seen = new Set(productOptions.map((r) => r.productId));
+                            const appended = page.items.filter((r) => !seen.has(r.productId));
+                            setProductOptions((prev) => [...prev, ...appended]);
+                            setProductTotalCount(page.totalCount);
+                            setProductPage(next);
+                          })
+                          .finally(() => setProductLoading(false));
+                      }}
+                    >
+                      نمایش محصولات بیشتر ({productOptions.length} از {productTotalCount})
+                    </button>
+                  ) : null}
+                  {slideCtaTarget ? (
+                    <p className="text-xs text-muted" data-testid="story-product-selected">
+                      محصول انتخاب‌شده: {selectedProductLabel || "ثبت شد"}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
               {slideCtaType === "external" ? (

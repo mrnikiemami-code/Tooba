@@ -1,12 +1,13 @@
-# CURRENT — TB-282-R2 SCOPED PROGRESS REVIEWED; ONLY TB-282-R3 ISSUED — 2026-11-19
+# CURRENT — TB-282-R3 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+
+Worker PASS within issued S1–S2 for TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3: verified bound response retention + real published catalogue search/page/count; Host5088/Next3000 BUILD_ID `fFmkskCMJiO4PrZyHPO6l`; ZERO migration; ZERO live Story/Media write.
+NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `9776ab9623aadb2d58f001113ce8269039b11a94`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+activeTask: NONE
+
+# HISTORICAL — TB-282-R2 REVIEWED PARTIAL; 282-R3 WAS ISSUED
 
 Reviewed code 2085d39d5641c387008edccaff5294b18ca8f4ae; final docs head 9776ab9623aadb2d58f001113ce8269039b11a94.
-Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2/ARCHITECT-REVIEW.md. Retain real recovery dispatch, lawful role lookup endpoints, current Tehran/Jalali controls, same-tab scope event and platform asset-PK implementation/current served build. Full product closure NOT accepted.
-Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3/TASK.md. Two remaining gaps ONLY: S1 bound successful response/envelope-storage evidence (malformed 2xx must retain intent); S2 actual full eligible-catalogue search/page/count (no development sampler/fixed40).
-One worker tooba-worker-01/tooba-main; issued is not running. Await this result/review; no automatic next or parallel task. No reopening 281/Gate0/Media/editor/untouched landing.
-Worker served Host30848 and Next29064 BUILD_ID j3IOV0KOGPfOZrB3IX_SK. Owner may inspect current visible UI at /fa/admin/stories and /fa/vendor-panel/stories; no claim full functional/user acceptance. Worker continues READ-ONLY on live business rows.
-Purchased-template EXISTING VendorShell /vendor-panel/stories/story.view, shared feature and plain merchant language remain mandatory. ZERO migration/seed/live writes/key operations. Returns acceptances/payout backlog/user data unchanged.
-automaticNextImplementationTask NONE.
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2/ARCHITECT-REVIEW.md. Parent PARTIAL closed by R3 worker PASS above.
 
 # HISTORICAL — superseded by CURRENT above
 

@@ -28,4 +28,7 @@
   <data name="story.shop.authority.unavailable" xml:space="preserve"><value>Story shop authority is unavailable.</value></data>
   <data name="story.occurrence.conflict" xml:space="preserve"><value>Story occurrence conflicts.</value></data>
   <data name="story.occurrence.required" xml:space="preserve"><value>Story occurrence key is required.</value></data>
+  <data name="story.productOptions.page.invalid" xml:space="preserve"><value>Story product options page is invalid.</value></data>
+  <data name="story.productOptions.pageSize.invalid" xml:space="preserve"><value>Story product options page size is invalid.</value></data>
+  <data name="story.productOptions.search.invalid" xml:space="preserve"><value>Story product options search is invalid.</value></data>
 </root>

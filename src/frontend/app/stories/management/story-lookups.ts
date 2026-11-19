@@ -1,5 +1,6 @@
 /**
  * Story editor lookups — lawful authority per role (no admin headers inside seller).
+ * Product options use server search + page/count (not client-only first40).
  */
 import { ADMIN_DEV_ACTOR_HEADER } from "../../admin/admin-api";
 import {
@@ -14,6 +15,11 @@ export type StoryProductOptionRow = {
   productId: string;
   productTitle: string;
   status: string;
+};
+
+export type StoryProductOptionsPage = {
+  items: StoryProductOptionRow[];
+  totalCount: number;
 };
 
 function adminHeaders(): Record<string, string> {
@@ -39,8 +45,25 @@ function asArray(payload: unknown): unknown[] {
     const record = payload as Record<string, unknown>;
     if (Array.isArray(record.data)) return record.data;
     if (Array.isArray(record.items)) return record.items;
+    if (record.data && typeof record.data === "object") {
+      const inner = record.data as Record<string, unknown>;
+      if (Array.isArray(inner.items)) return inner.items;
+    }
   }
   return [];
+}
+
+function readTotalCount(payload: unknown, itemCount: number): number {
+  if (!payload || typeof payload !== "object") return itemCount;
+  const record = payload as Record<string, unknown>;
+  const direct = record.totalCount ?? record.TotalCount;
+  if (typeof direct === "number" && Number.isFinite(direct)) return direct;
+  if (record.data && typeof record.data === "object") {
+    const inner = record.data as Record<string, unknown>;
+    const nested = inner.totalCount ?? inner.TotalCount;
+    if (typeof nested === "number" && Number.isFinite(nested)) return nested;
+  }
+  return itemCount;
 }
 
 export async function loadStoryLocaleOptions(args: {
@@ -76,22 +99,34 @@ export async function loadStoryProductOptions(args: {
   mode: "admin" | "seller";
   shopId: string | null;
   actorUserId: string;
-}): Promise<StoryProductOptionRow[]> {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<StoryProductOptionsPage> {
+  const page = Math.max(1, args.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, args.pageSize ?? 20));
+  const qs = new URLSearchParams();
+  qs.set("page", String(page));
+  qs.set("pageSize", String(pageSize));
+  if (args.search?.trim()) qs.set("search", args.search.trim());
+
   if (args.mode === "seller") {
-    if (!args.shopId) return [];
-    const response = await fetch("/v1/seller/stories/product-options", {
+    if (!args.shopId) return { items: [], totalCount: 0 };
+    const response = await fetch(`/v1/seller/stories/product-options?${qs}`, {
       headers: sellerHeaders(args.shopId, args.actorUserId),
     });
-    if (!response.ok) return [];
+    if (!response.ok) return { items: [], totalCount: 0 };
     const payload = await response.json().catch(() => null);
-    return mapProductRows(asArray(payload));
+    const items = mapProductRows(asArray(payload));
+    return { items, totalCount: readTotalCount(payload, items.length) };
   }
 
-  const qs = args.shopId ? `?sellerPartyId=${encodeURIComponent(args.shopId)}` : "";
-  const response = await fetch(`/v1/admin/stories/product-options${qs}`, { headers: adminHeaders() });
-  if (!response.ok) return [];
+  if (args.shopId) qs.set("sellerPartyId", args.shopId);
+  const response = await fetch(`/v1/admin/stories/product-options?${qs}`, { headers: adminHeaders() });
+  if (!response.ok) return { items: [], totalCount: 0 };
   const payload = await response.json().catch(() => null);
-  return mapProductRows(asArray(payload));
+  const items = mapProductRows(asArray(payload));
+  return { items, totalCount: readTotalCount(payload, items.length) };
 }
 
 function mapProductRows(rows: unknown[]): StoryProductOptionRow[] {

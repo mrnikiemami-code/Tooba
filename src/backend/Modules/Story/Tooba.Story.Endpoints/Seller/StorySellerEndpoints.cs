@@ -71,6 +71,9 @@ public static class StorySellerEndpoints
     }
 
     private static async Task<IResult> SellerProductOptionsAsync(
+        string? search,
+        int? page,
+        int? pageSize,
         ISender sender,
         IStorySellerAuthorizer auth,
         HttpContext http,
@@ -78,7 +81,13 @@ public static class StorySellerEndpoints
         CancellationToken cancellationToken)
     {
         var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        return api.From(await sender.Send(new ListStoryProductOptionsQuery(sellerPartyId), cancellationToken));
+        return api.From(await sender.Send(
+            new ListStoryProductOptionsQuery(
+                sellerPartyId,
+                search,
+                page ?? 1,
+                pageSize ?? 20),
+            cancellationToken));
     }
 
     private static async Task<IResult> SellerListAsync(

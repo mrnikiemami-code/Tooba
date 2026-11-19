@@ -53,8 +53,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     private const int ExpectedRouteCount = 34;
     // Admin+seller locale/product lookup routes share two request types (lawful dual-audience reads).
     private const int ExpectedDistinctRequestCount = 32;
-    private const int ExpectedValidatorRequiredCount = 27;
-    private const int ExpectedExemptCount = 5;
+    private const int ExpectedValidatorRequiredCount = 28;
+    private const int ExpectedExemptCount = 4;
 
     private static readonly HashSet<string> SupportedVerbs =
         new(["Get", "Post", "Put", "Patch", "Delete"], StringComparer.Ordinal);
@@ -88,6 +88,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "ApproveAdminStoryCommand",
         "RemoveAdminStoryItemCommand",
         "RemoveSellerStoryItemCommand",
+        "ListStoryProductOptionsQuery",
     ];
 
     private static readonly string[] NoValidatorRequired =
@@ -96,7 +97,6 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "ListSellerStoriesQuery",
         "GetSellerStoryQuery",
         "ListStoryLocaleOptionsQuery",
-        "ListStoryProductOptionsQuery",
     ];
 
     /// <summary>The exact expected audience → verb → full route → handler → dispatched request map (25 rows).</summary>
@@ -167,6 +167,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("ApproveAdminStoryCommand", typeof(ApproveAdminStoryCommandValidator)),
         ("RemoveAdminStoryItemCommand", typeof(RemoveAdminStoryItemCommandValidator)),
         ("RemoveSellerStoryItemCommand", typeof(RemoveSellerStoryItemCommandValidator)),
+        ("ListStoryProductOptionsQuery", typeof(ListStoryProductOptionsQueryValidator)),
     ];
 
     // ---------------------------------------------------------------------------------------------

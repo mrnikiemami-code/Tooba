@@ -86,7 +86,7 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToArray();
 
-        Assert.Equal(10, declared.Length);
+        Assert.Equal(13, declared.Length);
         Assert.All(declared, code => Assert.StartsWith("story.", code, StringComparison.Ordinal));
 
         var en = Read($"{StoryRootRelative}/Tooba.Story.Endpoints/Resources/StoryErrors.resx");
@@ -123,7 +123,7 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);
 
         // Transport validators — one per VALIDATOR_REQUIRED endpoint-reachable request (TB-281-R3 pins).
-        Assert.Equal(27, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(28, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
     }
 
     [Fact]

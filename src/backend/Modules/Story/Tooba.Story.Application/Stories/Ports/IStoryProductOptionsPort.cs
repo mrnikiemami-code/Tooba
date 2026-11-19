@@ -1,15 +1,31 @@
 namespace Tooba.Story.Application.Stories.Ports;
 
+/// <summary>صفحهٔ گزینه‌های محصول برای CTA استوری (جستجو/صفحه از همان مجموعهٔ واجد شرایط).</summary>
+public sealed record StoryProductOptionsPage(
+    IReadOnlyList<StoryProductOption> Items,
+    int TotalCount);
+
 /// <summary>ردیف‌های انتخاب محصول برای CTA استوری (پیشنهاد فروشنده یا محصولات منتشرشدهٔ ویترین).</summary>
 public interface IStoryProductOptionsPort
 {
-    /// <summary>محصول‌های واجد شرایط یک فروشگاه بر اساس پیشنهاد واقعی، نه برنده‌ی کارت ویترین.</summary>
-    Task<IReadOnlyList<StoryProductOption>> ListForSellerAsync(
+    /// <summary>
+    /// جستجو روی پیشنهادهای واقعی فروشگاه (نه برنده‌ی کارت)، سپس صفحه و شمارش از همان مجموعه.
+    /// </summary>
+    Task<StoryProductOptionsPage> SearchForSellerAsync(
         Guid sellerPartyId,
+        string? search,
+        int page,
+        int pageSize,
         CancellationToken cancellationToken);
 
-    /// <summary>محصول‌های منتشرشده برای CTA استوری ویترین اصلی (بدون فروشگاه).</summary>
-    Task<IReadOnlyList<StoryProductOption>> ListPublishedAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// جستجو روی محصولات Published ویترین اصلی — بدون sampler توسعه.
+    /// </summary>
+    Task<StoryProductOptionsPage> SearchPublishedAsync(
+        string? search,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>ردیف انتخاب محصول برای CTA استوری.</summary>

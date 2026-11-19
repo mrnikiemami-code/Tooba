@@ -163,7 +163,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var joinedApplication = string.Join("\n", applicationSources);
         Assert.Equal(32, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
         Assert.Equal(32, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
-        Assert.Equal(27, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(28, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
         Assert.Equal(34, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
 
         // No endpoint reaches persistence directly.
@@ -329,7 +329,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
                 File.ReadAllText(Path.Combine(application, "Stories", "Validators", "StoryValidators.cs")),
                 @"public const string \w+ = ""(story\.[A-Za-z.]+)"";")
             .Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(10, validationCodes.Length);
+        Assert.Equal(13, validationCodes.Length);
 
         var errorCodes = Regex.Matches(
                 File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Story.Contracts", "Errors", "StoryErrorCodes.cs")),

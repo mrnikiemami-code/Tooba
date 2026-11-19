@@ -76,6 +76,9 @@ public static class StoryAdminEndpoints
 
     private static async Task<IResult> AdminProductOptionsAsync(
         Guid? sellerPartyId,
+        string? search,
+        int? page,
+        int? pageSize,
         ISender sender,
         IStoryAdminAuthorizer auth,
         HttpContext http,
@@ -83,7 +86,13 @@ public static class StoryAdminEndpoints
         CancellationToken cancellationToken)
     {
         await auth.RequireAuthorizedAsync(http, cancellationToken);
-        return api.From(await sender.Send(new ListStoryProductOptionsQuery(sellerPartyId), cancellationToken));
+        return api.From(await sender.Send(
+            new ListStoryProductOptionsQuery(
+                sellerPartyId,
+                search,
+                page ?? 1,
+                pageSize ?? 20),
+            cancellationToken));
     }
 
     private static async Task<IResult> AdminQueryGridAsync(

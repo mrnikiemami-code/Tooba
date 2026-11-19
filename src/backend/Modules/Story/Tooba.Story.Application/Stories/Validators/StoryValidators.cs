@@ -3,6 +3,7 @@ using Tooba.Story.Application.Stories.Commands.Admin;
 using Tooba.Story.Application.Stories.Commands.Seller;
 using Tooba.Story.Application.Stories.Queries.Admin;
 using Tooba.Story.Application.Stories.Queries.Seller;
+using Tooba.Story.Application.Stories.Queries.Shared;
 using Tooba.Story.Application.Stories.Queries.Storefront;
 using Tooba.Story.Domain.Enums;
 using Tooba.Story.Domain.Rules;
@@ -46,6 +47,15 @@ public static class StoryValidationCodes
 
     /// <summary>مقدار market ورودی از نظر شکل نامعتبر است.</summary>
     public const string MarketInvalid = "story.market.invalid";
+
+    /// <summary>شمارهٔ صفحهٔ گزینه‌های محصول نامعتبر است.</summary>
+    public const string ProductOptionsPageInvalid = "story.productOptions.page.invalid";
+
+    /// <summary>اندازهٔ صفحهٔ گزینه‌های محصول نامعتبر است.</summary>
+    public const string ProductOptionsPageSizeInvalid = "story.productOptions.pageSize.invalid";
+
+    /// <summary>عبارت جستجوی محصول بیش از حد مجاز است.</summary>
+    public const string ProductOptionsSearchInvalid = "story.productOptions.search.invalid";
 }
 
 /// <summary>اعتبارسنجی ایجاد ادمین.</summary>
@@ -329,5 +339,23 @@ public sealed class RemoveSellerStoryItemCommandValidator : AbstractValidator<Re
 {
     public RemoveSellerStoryItemCommandValidator()
     {
+    }
+}
+
+/// <summary>اعتبارسنجی جستجو/صفحهٔ گزینه‌های محصول استوری.</summary>
+public sealed class ListStoryProductOptionsQueryValidator : AbstractValidator<ListStoryProductOptionsQuery>
+{
+    public ListStoryProductOptionsQueryValidator()
+    {
+        RuleFor(x => x.Page)
+            .GreaterThanOrEqualTo(1)
+            .WithErrorCode(StoryValidationCodes.ProductOptionsPageInvalid);
+        RuleFor(x => x.PageSize)
+            .InclusiveBetween(1, 50)
+            .WithErrorCode(StoryValidationCodes.ProductOptionsPageSizeInvalid);
+        RuleFor(x => x.Search)
+            .MaximumLength(200)
+            .When(x => x.Search is not null)
+            .WithErrorCode(StoryValidationCodes.ProductOptionsSearchInvalid);
     }
 }

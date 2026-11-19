@@ -10,6 +10,7 @@ import {
   validateStoryEnvelope,
   type StoryIntentEnvelope,
 } from "./story-intent";
+import { bindStoryEnvelopeRoute, verifyStorySuccessPayload } from "./story-response";
 import { ADMIN_DEV_ACTOR_HEADER } from "../../admin/admin-api";
 import { DEV_ACTOR_HEADER, SELLER_PARTY_HEADER } from "../../vendor-panel/seller-api";
 
@@ -80,7 +81,9 @@ export async function runDurableStoryMutation<T = unknown>(args: {
   if (args.gate.inFlightRef.current) return { state: "blocked", reason: "in_flight" };
 
   const scopeCheck = validateStoryEnvelope(args.envelope, args.scope);
-  if (!scopeCheck.ok) return { state: "blocked", reason: "scope" };
+  if (!scopeCheck.ok) return { state: "blocked", reason: scopeCheck.reason === "route_binding" ? "envelope" : "scope" };
+  const routeCheck = bindStoryEnvelopeRoute(args.envelope);
+  if (!routeCheck.ok) return { state: "blocked", reason: "envelope" };
 
   if (!storeStoryIntent(args.envelope)) return { state: "blocked", reason: "storage" };
 
@@ -337,38 +340,78 @@ async function finalizeResponse<T>(
   response: Response,
   mapOk?: (payload: unknown) => T,
 ): Promise<StoryExecutorResult<T>> {
-  if (response.status === 401 || response.status === 403) {
-    return { state: "blocked", reason: "auth" };
-  }
-  let payload: unknown = undefined;
-  const text = await response.text();
-  if (text) {
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      payload = undefined;
+  try {
+    if (response.status === 401 || response.status === 403) {
+      return { state: "blocked", reason: "auth" };
     }
-  }
-  if (!response.ok) {
+    let payload: unknown = undefined;
+    let parseFailed = false;
+    const text = await response.text();
+    if (!text || !text.trim()) {
+      if (response.ok) {
+        return {
+          state: "failed",
+          message: "پاسخ سرور قابل تأیید نبود؛ اقدام ناتمام ماند.",
+          envelope,
+          status: response.status,
+          code: "story.response.unverified",
+        };
+      }
+    } else {
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        parseFailed = true;
+        payload = undefined;
+      }
+    }
+    if (!response.ok) {
+      return {
+        state: "failed",
+        message: parseMessage(payload, "اقدام ممکن نشد."),
+        envelope,
+        status: response.status,
+        code: parseCode(payload),
+      };
+    }
+    if (response.status < 200 || response.status >= 300) {
+      return {
+        state: "failed",
+        message: "پاسخ نامعتبر از سرور.",
+        envelope,
+        status: response.status,
+        code: "story.response.unverified",
+      };
+    }
+    if (parseFailed || payload === undefined) {
+      return {
+        state: "failed",
+        message: "پاسخ سرور قابل تأیید نبود؛ اقدام ناتمام ماند.",
+        envelope,
+        status: response.status,
+        code: "story.response.unverified",
+      };
+    }
+    const verified = verifyStorySuccessPayload(envelope, payload, mapOk as ((p: unknown) => unknown) | undefined);
+    if (!verified.ok) {
+      return {
+        state: "failed",
+        message: "پاسخ سرور با اقدام انجام‌شده هم‌خوان نبود؛ اقدام ناتمام ماند.",
+        envelope,
+        status: response.status,
+        code: "story.response.unverified",
+      };
+    }
+    return { state: "ok", data: verified.data as T, envelope, status: response.status };
+  } catch {
     return {
       state: "failed",
-      message: parseMessage(payload, "اقدام ممکن نشد."),
+      message: "خواندن پاسخ ممکن نشد؛ اقدام ناتمام ماند.",
       envelope,
-      status: response.status,
-      code: parseCode(payload),
+      status: response.status || 0,
+      code: "story.response.unverified",
     };
   }
-  // Terminal success requires a real HTTP 2xx — never ok=true with missing response.
-  if (response.status < 200 || response.status >= 300) {
-    return {
-      state: "failed",
-      message: "پاسخ نامعتبر از سرور.",
-      envelope,
-      status: response.status,
-    };
-  }
-  const data = mapOk ? mapOk(payload) : (payload as T);
-  return { state: "ok", data, envelope, status: response.status };
 }
 
 /** Recovery: dispatch stored envelope even when detail GET failed. */
