@@ -51,8 +51,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "Tooba.Story.Application/Stories/Queries/Storefront/GetPublicStoriesQuery.cs";
 
     private const int ExpectedRouteCount = 30;
-    private const int ExpectedValidatorRequiredCount = 24;
-    private const int ExpectedExemptCount = 6;
+    private const int ExpectedValidatorRequiredCount = 25;
+    private const int ExpectedExemptCount = 5;
 
     private static readonly HashSet<string> SupportedVerbs =
         new(["Get", "Post", "Put", "Patch", "Delete"], StringComparer.Ordinal);
@@ -80,6 +80,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "ApproveAndScheduleAdminStoryCommand",
         "ReturnSellerStoryToDraftCommand",
         "StopSellerStoryCommand",
+        "SubmitSellerStoryCommand",
         "EnableAdminStoryCommand",
         "DisableAdminStoryCommand",
         "ApproveAdminStoryCommand",
@@ -91,7 +92,6 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "RemoveAdminStoryItemCommand",
         "ListSellerStoriesQuery",
         "GetSellerStoryQuery",
-        "SubmitSellerStoryCommand",
         "RemoveSellerStoryItemCommand",
     ];
 
@@ -153,6 +153,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("ApproveAndScheduleAdminStoryCommand", typeof(ApproveAndScheduleAdminStoryCommandValidator)),
         ("ReturnSellerStoryToDraftCommand", typeof(ReturnSellerStoryToDraftCommandValidator)),
         ("StopSellerStoryCommand", typeof(StopSellerStoryCommandValidator)),
+        ("SubmitSellerStoryCommand", typeof(SubmitSellerStoryCommandValidator)),
         ("EnableAdminStoryCommand", typeof(EnableAdminStoryCommandValidator)),
         ("DisableAdminStoryCommand", typeof(DisableAdminStoryCommandValidator)),
         ("ApproveAdminStoryCommand", typeof(ApproveAdminStoryCommandValidator)),

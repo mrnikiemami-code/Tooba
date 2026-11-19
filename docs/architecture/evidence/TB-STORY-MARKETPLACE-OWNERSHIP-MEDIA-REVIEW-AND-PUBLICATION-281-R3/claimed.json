@@ -1,0 +1,8 @@
+﻿{
+    "note":  "Bridge GET /api/tasks/next returned content once (claimed); subsequent next empty. Repo TASK.md restored from origin issuance.",
+    "workerId":  "tooba-worker-01",
+    "bridgeRowId":  "7c9b7b7e-b280-46d7-88ec-b163e3138705",
+    "claimedAtUtc":  "2026-11-19T01:30:16.4902391Z",
+    "bridgeContentLenObserved":  10218,
+    "taskId":  "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3"
+}

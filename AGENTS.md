@@ -1,13 +1,16 @@
-# CURRENT — 281-R2 REVIEWED PARTIAL; ONLY 281-R3 ISSUED — 2026-11-19
+# CURRENT — TB-281-R3 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
 
-Reviewed source 4c086d32346ce2b6f695c254d7fa58db98c4f322. Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2/ARCHITECT-REVIEW.md.
-Only issued task: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3; exact envelope docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/TASK.md. One worker tooba-worker-01, tooba-main. Await its result; issued does not mean claimed/running.
-Finish existing owning-path gaps and actual recording-store/PostgreSQL rollback proof. Retain landed work. No new product design, live business writes, seed, parallel task or automatic continuation. UI remains PLANNED NOT ISSUED pending review.
-Mandatory owner requirement: Story belongs in the PURCHASED TEMPLATE'S EXISTING seller panel: vendor-panel/layout.tsx -> VendorShell, existing story.view navigation /vendor-panel/stories. Shared Story feature, existing shell/auth/context; no new seller panel/menu/login. See docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
-Returns accepted history and payout-method/batch backlog preserved; no key retirement authorization.
-automaticNextImplementationTask NONE.
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# HISTORICAL — superseded by the CURRENT checkpoint above
+صاحب محصول تأکید کرد استوری باید در پنل فروشندهٔ موجود قالب تکمیل شود، نه پنل تازه. سورس بررسی شد: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» با مجوز `story.view` و مسیر `/vendor-panel/stories` از قبل وجود دارد؛ صفحه همان feature مشترک را با قابلیت فروشنده می‌گیرد. مرجع اجباری تسک UI آینده: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پوسته، ناوبری و auth/context موجود حفظ شوند؛ منو/پنل/ورود موازی ساخته نشود. این فقط یادداشت است؛ UI هنوز NOT ISSUED و automaticNextImplementationTask NONE.
+
+Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/TASK.md` and
+`docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,media-failure-proof.md,rollback-only-proof.md,all-route-matrix.md,schema-and-runtime-proof.md,ui-contract-handoff.md,issuance-receipt.json}`.
+Status **PARTIAL** within issued R3: shared admin/seller media+CTA gates; submit version/occurrence; storyId item hash + cross-target; Catalog public seller id; Media recording-store InMemory; tenant-scoped occurrence PK migration; Host skip-bootstrap refresh; focused 57/57. OPEN: PG rollback G-matrix; full admin composite occurrence transport.
+Decision `SHARED_ADMIN_SELLER_CONTENT_GATES_SUBMIT_VERSION_OCCURRENCE_STORYID_HASH_CATALOG_PUBLIC_SELLER_ID_MEDIA_RECORDING_INMEMORY_AND_TENANT_SCOPED_OCCURRENCE_PK_LANDED_BUT_PG_ROLLBACK_G_MATRIX_AND_FULL_ADMIN_COMPOSITE_OCCURRENCE_TRANSPORT_REMAIN_OPEN`.
+NOT Architect ACCEPT, NOT user acceptance. UI delivery PLANNED_NOT_ISSUED. Expected-Base `4c086d32346ce2b6f695c254d7fa58db98c4f322`. Host 5088 skip-bootstrap refreshed; ZERO live Story/Media business write. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+
+# HISTORICAL — 281-R2 REVIEWED PARTIAL; 281-R3 WAS ISSUED
 
 ## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 

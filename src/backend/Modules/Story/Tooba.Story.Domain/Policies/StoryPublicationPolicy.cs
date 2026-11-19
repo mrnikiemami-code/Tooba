@@ -6,11 +6,11 @@ using StoryAggregate = Tooba.Story.Domain.Aggregates.Story;
 namespace Tooba.Story.Domain.Policies;
 
 /// <summary>
-/// ONE Story-owned effective publication and readiness authority shared by commands and public reads.
+/// یک مرجع مالک‌شدهٔ Story برای آمادگی و انتشار مؤثر که فرمان‌ها و خواندن عمومی از آن مشترک‌اند.
 /// </summary>
 public static class StoryPublicationPolicy
 {
-    /// <summary>Drafts may be incomplete; submit/publish require at least one playable slide.</summary>
+    /// <summary>پیش‌نویس می‌تواند ناقص باشد؛ ارسال/انتشار حداقل یک اسلاید قابل‌پخش می‌خواهد.</summary>
     public static bool HasPlayableContent(StoryAggregate story)
     {
         ArgumentNullException.ThrowIfNull(story);
@@ -26,7 +26,7 @@ public static class StoryPublicationPolicy
         return true;
     }
 
-    /// <summary>A single slide is playable when it has a Ready-bound asset id or a non-empty media URL.</summary>
+    /// <summary>یک اسلاید وقتی قابل‌پخش است که شناسهٔ دارایی Ready یا URL رسانهٔ غیرخالی داشته باشد.</summary>
     public static bool IsPlayableItem(StoryItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -36,8 +36,8 @@ public static class StoryPublicationPolicy
     }
 
     /// <summary>
-    /// Effective public eligibility without requiring a daemon to rewrite Scheduled → Active.
-    /// Disabled/Rejected/Draft/Expired never become public merely because a timestamp arrives.
+    /// واجد شرایط بودن عمومی مؤثر بدون نیاز به بازنویسی Scheduled به Active توسط daemon.
+    /// Disabled/Rejected/Draft/Expired صرفاً به‌خاطر رسیدن زمان عمومی نمی‌شوند.
     /// </summary>
     public static bool IsEffectivelyPublic(StoryAggregate story, DateTimeOffset now)
     {
@@ -55,7 +55,7 @@ public static class StoryPublicationPolicy
         return HasPlayableContent(story);
     }
 
-    /// <summary>Action codes projected for the shared admin/seller workspace.</summary>
+    /// <summary>کدهای اقدام برای فضای کار مشترک ادمین/فروشنده.</summary>
     public static IReadOnlyList<string> ProjectActionCodes(
         StoryAggregate story,
         bool isAdmin,

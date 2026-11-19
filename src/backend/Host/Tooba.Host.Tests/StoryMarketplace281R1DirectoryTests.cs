@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Media.Contracts.Assets;
 using Tooba.Party.Contracts.Ports;
@@ -34,9 +34,10 @@ public sealed class StoryMarketplace281R1DirectoryTests
                 CancellationToken.None);
             await directory.SellerAddItemAsync(
                 StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null),
+                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
                 CancellationToken.None);
-            await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None);
+            var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
+        await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
             var submitted = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
             await directory.AdminApproveAndPublishAsync(
                 StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None);
@@ -47,9 +48,10 @@ public sealed class StoryMarketplace281R1DirectoryTests
                 CancellationToken.None);
             await directory.SellerAddItemAsync(
                 StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId,
-                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null),
+                new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: scheduledDraft.VersionToken),
                 CancellationToken.None);
-            await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId, seller, CancellationToken.None);
+            var afterSchedAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId, CancellationToken.None);
+            await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId, seller, CancellationToken.None, afterSchedAdd!.VersionToken, "submit-" + scheduledDraft.StoryId.ToString("N"));
             var scheduled = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, scheduledDraft.StoryId, CancellationToken.None);
             await directory.AdminApproveAndScheduleAsync(
                 StoryTenantIds.StoreAlpha,
@@ -92,9 +94,10 @@ public sealed class StoryMarketplace281R1DirectoryTests
             CancellationToken.None);
         await directory.SellerAddItemAsync(
             StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null),
+            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
             CancellationToken.None);
-        await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None);
+        var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
+        await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
         var submitted = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         await directory.AdminApproveAndPublishAsync(
             StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None);
@@ -124,7 +127,7 @@ public sealed class StoryMarketplace281R1DirectoryTests
         var ex = await Assert.ThrowsAsync<SemanticException>(() =>
             directory.SellerAddItemAsync(
                 StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-                new AddStoryItemCommand("image", Guid.NewGuid(), null, null, null, null, null, null),
+                new AddStoryItemCommand("image", Guid.NewGuid(), null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
                 CancellationToken.None));
         Assert.Equal(StoryErrorCodes.MediaUnavailable, ex.Error.Code);
     }

@@ -232,13 +232,11 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             occurrenceEntry.State = EntityState.Detached;
     }
 
-    private static bool IsUniqueViolation(DbUpdateException ex)
-    {
-        var text = ex.InnerException?.Message ?? ex.Message;
-        return text.Contains("23505", StringComparison.Ordinal)
-            || text.Contains("unique", StringComparison.OrdinalIgnoreCase)
-            || text.Contains("duplicate", StringComparison.OrdinalIgnoreCase);
-    }
+    private static bool IsUniqueViolation(DbUpdateException ex) =>
+        ex.InnerException is Npgsql.PostgresException { SqlState: "23505" } postgres
+        && (postgres.ConstraintName?.Contains("asset_owner_occurrences", StringComparison.OrdinalIgnoreCase) == true
+            || postgres.TableName?.Contains("asset_owner_occurrences", StringComparison.OrdinalIgnoreCase) == true
+            || string.Equals(postgres.ConstraintName, "pk_asset_owner_occurrences", StringComparison.OrdinalIgnoreCase));
 
     private static string Len(string value) =>
         value.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + value;

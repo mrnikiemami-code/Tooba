@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Media.Contracts.Assets;
@@ -33,9 +33,10 @@ public sealed class StoryMarketplace281R2DirectoryTests
             CancellationToken.None);
         await directory.SellerAddItemAsync(
             StoryTenantIds.StoreAlpha, shop, draft.StoryId,
-            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null),
+            new AddStoryItemCommand("image", mediaId, null, null, null, null, null, null, ExpectedVersion: draft.VersionToken),
             CancellationToken.None);
-        await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None);
+        var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
+        await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
         var submitted = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         await directory.AdminApproveAndPublishAsync(
             StoryTenantIds.StoreAlpha, draft.StoryId, admin, submitted!.VersionToken, CancellationToken.None);

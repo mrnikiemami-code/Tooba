@@ -1,10 +1,10 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Contracts.Errors;
 
 namespace Tooba.Story.Infrastructure.Adapters;
 
-/// <summary>Fail-closed product CTA port when Catalog lookup is not registered.</summary>
+/// <summary>درگاه CTA محصول با شکست بسته وقتی جستجوی Catalog ثبت نشده است.</summary>
 public sealed class UnavailableStoryProductTargetPort : IStoryProductTargetPort
 {
     /// <inheritdoc />

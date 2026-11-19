@@ -1,11 +1,11 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Contracts.Errors;
 
 namespace Tooba.Story.Infrastructure.Adapters;
 
-/// <summary>Story CTA product ownership via Catalog storefront product cards.</summary>
+/// <summary>مالکیت محصول CTA استوری از طریق کارت‌های محصول ویترین Catalog.</summary>
 public sealed class CatalogStoryProductTargetAdapter(ICatalogStorefrontProductCardLookup products)
     : IStoryProductTargetPort
 {

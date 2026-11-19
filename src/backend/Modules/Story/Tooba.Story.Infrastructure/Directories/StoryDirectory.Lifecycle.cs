@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
@@ -12,10 +12,10 @@ using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
 
 namespace Tooba.Story.Infrastructure.Directories;
 
-/// <summary>Admin-for-shop, version-fenced lifecycle, occurrence replay and seller stop/reopen.</summary>
+/// <summary>چرخهٔ عمر ادمین-برای-فروشگاه با حصار نسخه، بازپخش رخداد و توقف/بازگشت فروشنده.</summary>
 public sealed partial class StoryDirectory
 {
-    /// <summary>Creates a shop-owned draft for an authorized admin actor.</summary>
+    /// <summary>پیش‌نویس متعلق به فروشگاه را برای بازیگر ادمین مجاز می‌سازد.</summary>
     public async Task<AdminStorySnapshot> AdminCreateForShopAsync(
         Guid tenantId,
         Guid adminActorUserId,
@@ -71,7 +71,7 @@ public sealed partial class StoryDirectory
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
-    /// <summary>Approves the reviewed version and publishes immediately.</summary>
+    /// <summary>نسخهٔ بازبینی‌شده را تأیید و فوراً منتشر می‌کند.</summary>
     public async Task<AdminStorySnapshot> AdminApproveAndPublishAsync(
         Guid tenantId,
         Guid storyId,
@@ -81,13 +81,14 @@ public sealed partial class StoryDirectory
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         story.EnsureExpectedVersion(expectedVersion);
+        await EnsureStoredContentAuthorizedAsync(story, cancellationToken);
         story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
         story.Activate(DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
-    /// <summary>Approves the reviewed version and applies the schedule in one owning transition.</summary>
+    /// <summary>نسخهٔ بازبینی‌شده را تأیید و زمان‌بندی را در یک انتقال مالک اعمال می‌کند.</summary>
     public async Task<AdminStorySnapshot> AdminApproveAndScheduleAsync(
         Guid tenantId,
         Guid storyId,
@@ -98,13 +99,14 @@ public sealed partial class StoryDirectory
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         story.EnsureExpectedVersion(expectedVersion);
+        await EnsureStoredContentAuthorizedAsync(story, cancellationToken);
         story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
         story.SetSchedule(schedule.StartAt, schedule.EndAt, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
-    /// <summary>Seller returns an approved story to draft and stops publication.</summary>
+    /// <summary>فروشنده استوری تأییدشده را به پیش‌نویس برمی‌گرداند و انتشار را متوقف می‌کند.</summary>
     public async Task<AdminStorySnapshot> SellerReturnToDraftAsync(
         Guid tenantId,
         Guid sellerPartyId,
@@ -130,7 +132,7 @@ public sealed partial class StoryDirectory
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
-    /// <summary>Seller stops its own live/scheduled publication.</summary>
+    /// <summary>فروشنده انتشار زنده/زمان‌بندی‌شدهٔ خود را متوقف می‌کند.</summary>
     public async Task<AdminStorySnapshot> SellerStopAsync(
         Guid tenantId,
         Guid sellerPartyId,
@@ -156,7 +158,7 @@ public sealed partial class StoryDirectory
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
-    /// <summary>Attaches shop display names from Party Contracts.</summary>
+    /// <summary>نام نمایشی فروشگاه را از Party Contracts می‌چسباند.</summary>
     public async Task<AdminStorySnapshot> EnrichAsync(
         AdminStorySnapshot snapshot,
         CancellationToken cancellationToken)

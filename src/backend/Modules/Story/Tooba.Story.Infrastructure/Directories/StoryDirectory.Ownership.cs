@@ -1,24 +1,26 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Media.Contracts.Assets;
 using Tooba.Persistence.Grid;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Contracts.Errors;
 using Tooba.Story.Domain.Enums;
+using Tooba.Story.Domain.Policies;
 using Tooba.Story.Domain.Rules;
 using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
 
 namespace Tooba.Story.Infrastructure.Directories;
 
-/// <summary>Cover/CTA ownership, seller query and batch shop enrichment.</summary>
+/// <summary>مالکیت کاور/CTA، پرس‌وجوی فروشنده و غنی‌سازی دسته‌ای فروشگاه.</summary>
 public sealed partial class StoryDirectory
 {
-    /// <summary>Seller server-side page/count/filter/search for the owning shop.</summary>
+    /// <summary>صفحه‌بندی/شمارش/فیلتر/جستجوی سمت سرور فروشنده برای فروشگاه مالک.</summary>
     public async Task<GridPageResponse<AdminStorySnapshot>> SellerQueryAsync(
         Guid tenantId,
         Guid sellerPartyId,
@@ -188,7 +190,7 @@ public sealed partial class StoryDirectory
         IReadOnlyList<PublicStoryCard> rows,
         CancellationToken cancellationToken)
     {
-        if (rows.Count == 0 || _partySellers is null)
+        if (rows.Count == 0)
             return rows;
 
         var shops = rows
@@ -199,15 +201,73 @@ public sealed partial class StoryDirectory
         if (shops.Count == 0)
             return rows;
 
-        var projections = await _partySellers.GetStatusProjectionsAsync(shops, cancellationToken);
-        var names = projections.ToDictionary(row => row.PartyId, row => row.DisplayName);
-        // Canonical public id is not inventable from Party Guid; expose display name only.
+        IReadOnlyDictionary<Guid, string> names = new Dictionary<Guid, string>();
+        if (_partySellers is not null)
+        {
+            var projections = await _partySellers.GetStatusProjectionsAsync(shops, cancellationToken);
+            names = projections.ToDictionary(row => row.PartyId, row => row.DisplayName);
+        }
+
+        IReadOnlyDictionary<Guid, CatalogPublicSellerAttribution> publicAttrs =
+            new Dictionary<Guid, CatalogPublicSellerAttribution>();
+        if (_publicSellers is not null)
+            publicAttrs = await _publicSellers.ResolveAsync(shops, cancellationToken);
+
         return rows.Select(row =>
         {
-            if (row.SellerPartyId is Guid shop && names.TryGetValue(shop, out var name))
-                return row with { ShopDisplayName = name, ShopPublicId = null };
-            return row;
+            if (row.SellerPartyId is not Guid shop)
+                return row;
+            publicAttrs.TryGetValue(shop, out var attr);
+            names.TryGetValue(shop, out var partyName);
+            return row with
+            {
+                ShopDisplayName = attr?.DisplayName ?? partyName,
+                ShopPublicId = attr?.PublicId,
+            };
         }).ToList();
+    }
+
+    private async Task EnsureStoredContentAuthorizedAsync(
+        StoryEntity story,
+        CancellationToken cancellationToken)
+    {
+        if (!StoryPublicationPolicy.HasPlayableContent(story))
+            throw new SemanticException(new SemanticError(StoryErrorCodes.ContentNotReady));
+
+        await EnsureProductCtaAsync(story.SellerPartyId, story.CtaType, story.CtaTarget, cancellationToken);
+        if (story.CoverMediaAssetId is Guid coverId && coverId != Guid.Empty)
+        {
+            _ = await BindCoverAsync(
+                story.TenantId,
+                story.SellerPartyId,
+                coverId,
+                story.CoverMediaUrl,
+                allowUnscopedAdminAssets: story.SellerPartyId is null,
+                cancellationToken);
+        }
+
+        foreach (var item in story.Items)
+        {
+            await EnsureProductCtaAsync(story.SellerPartyId, item.CtaType, item.CtaTarget, cancellationToken);
+            if (item.MediaAssetId is Guid mediaId && mediaId != Guid.Empty)
+            {
+                if (story.SellerPartyId is Guid shop && shop != Guid.Empty)
+                {
+                    _ = await BindSellerMediaAsync(
+                        story.TenantId, shop, item.MediaType, mediaId, item.MediaUrl, cancellationToken);
+                }
+                else
+                {
+                    _ = await BindCoverAsync(
+                        story.TenantId, null, mediaId, item.MediaUrl,
+                        allowUnscopedAdminAssets: true, cancellationToken);
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(item.MediaUrl) && story.SellerPartyId is Guid)
+            {
+                throw new SemanticException(new SemanticError(StoryErrorCodes.MediaForbidden));
+            }
+        }
     }
 
     private async Task<AdminStorySnapshot?> TryReplayLifecycleAsync(
@@ -232,7 +292,8 @@ public sealed partial class StoryDirectory
         string occurrenceKey,
         string intentHash,
         bool isAdmin,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? expectedStoryId = null)
     {
         var key = occurrenceKey.Trim();
         var existing = await _db.CommandOccurrences.AsNoTracking()
@@ -243,7 +304,8 @@ public sealed partial class StoryDirectory
             return null;
         if (!string.Equals(existing.ActionCode, actionCode, StringComparison.Ordinal)
             || !string.Equals(existing.IntentHash, intentHash, StringComparison.Ordinal)
-            || existing.SellerPartyId != sellerPartyId)
+            || existing.SellerPartyId != sellerPartyId
+            || (expectedStoryId is Guid requiredStory && existing.StoryId != requiredStory))
         {
             throw new SemanticException(new SemanticError(StoryErrorCodes.OccurrenceConflict));
         }
@@ -268,7 +330,7 @@ public sealed partial class StoryDirectory
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
     }
 
-    private static string HashItemIntent(AddStoryItemCommand command)
+    private static string HashItemIntent(Guid storyId, AddStoryItemCommand command)
     {
         static string F(string? value)
         {
@@ -277,6 +339,7 @@ public sealed partial class StoryDirectory
         }
 
         var payload = string.Join('\u001f',
+            F(storyId.ToString("D")),
             F(command.MediaType),
             F(command.MediaAssetId?.ToString("D")),
             F(command.MediaUrl),

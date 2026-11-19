@@ -1,11 +1,11 @@
-namespace Tooba.Story.Application.Stories.Ports;
+﻿namespace Tooba.Story.Application.Stories.Ports;
 
-/// <summary>Owning product/offer authority for shop-scoped Story CTA targets.</summary>
+/// <summary>مرجع مالکیت محصول/پیشنهاد برای هدف‌های CTA استوری محدود به فروشگاه.</summary>
 public interface IStoryProductTargetPort
 {
     /// <summary>
-    /// Confirms the product is a positively established target owned by <paramref name="sellerPartyId"/>.
-    /// Missing/foreign products refuse; never invents ownership.
+    /// تأیید می‌کند محصول هدف برقرار و متعلق به <paramref name="sellerPartyId"/> است.
+    /// محصول غایب/بیگانه رد می‌شود؛ مالکیت جعل نمی‌شود.
     /// </summary>
     Task EnsureOwnedBySellerAsync(Guid productId, Guid sellerPartyId, CancellationToken cancellationToken);
 }

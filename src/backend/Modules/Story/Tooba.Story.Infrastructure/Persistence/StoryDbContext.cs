@@ -74,7 +74,8 @@ public sealed class StoryDbContext : DbContext
         modelBuilder.Entity<StoryCommandOccurrence>(entity =>
         {
             entity.ToTable("command_occurrences");
-            entity.HasKey(x => x.OccurrenceKey);
+            // Tenant-scoped identity: same occurrence key may exist under another tenant.
+            entity.HasKey(x => new { x.TenantId, x.OccurrenceKey });
             entity.Property(x => x.OccurrenceKey).HasMaxLength(128);
             entity.Property(x => x.ActionCode).HasMaxLength(64).IsRequired();
             entity.Property(x => x.IntentHash).HasMaxLength(64).IsRequired();

@@ -48,7 +48,8 @@ public sealed class StoryModule : IToobaModule
             sp.GetRequiredService<StoryDbContext>(),
             sp.GetService<IPartyAdminSellerReadGateway>(),
             sp.GetService<IStoryMediaAssetPort>(),
-            sp.GetRequiredService<IStoryProductTargetPort>()));
+            sp.GetRequiredService<IStoryProductTargetPort>(),
+            sp.GetService<ICatalogPublicSellerAttributionLookup>()));
         services.AddScoped<IStoryDirectory>(sp => sp.GetRequiredService<StoryDirectory>());
         services.AddScoped<IAdminStoryGridPort, AdminStoryGridAdapter>();
         services.AddScoped<StoryPresentationComposer>();

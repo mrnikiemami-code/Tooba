@@ -90,6 +90,7 @@ public sealed class CatalogModule : IToobaModule
         services.AddScoped<ICatalogAdminProductTitleIdLookup, Admin.CatalogAdminProductTitleIdLookup>();
         services.AddScoped<ICatalogReviewProductLookup, Adapters.CatalogReviewProductLookup>();
         services.AddScoped<ICatalogStorefrontProductCardLookup, Adapters.CatalogStorefrontProductCardLookup>();
+        services.AddScoped<ICatalogPublicSellerAttributionLookup, Adapters.CatalogPublicSellerAttributionAdapter>();
         services.AddScoped<ICatalogDevelopmentPublishedProductSampler, Adapters.CatalogDevelopmentPublishedProductSampler>();
         services.AddScoped<IStoreCheckoutAbuseSettingsReader, StoreCheckoutAbuseSettingsReader>();
         services.AddScoped<ICatalogCheckoutIdentityPolicyLookup, Checkout.CatalogCheckoutIdentityPolicyLookup>();

@@ -165,8 +165,10 @@ public sealed class StoryPresentationComposer
 
     /// <summary>ارسال برای بازبینی.</summary>
     public Task<AdminStorySnapshot> SellerSubmitAsync(
-        Guid tenantId, Guid sellerPartyId, Guid storyId, Guid actorUserId, CancellationToken cancellationToken) =>
-        Guard(() => _stories.SellerSubmitAsync(tenantId, sellerPartyId, storyId, actorUserId, cancellationToken));
+        Guid tenantId, Guid sellerPartyId, Guid storyId, Guid actorUserId, CancellationToken cancellationToken,
+        int? expectedVersion = null, string? occurrenceKey = null) =>
+        Guard(() => _stories.SellerSubmitAsync(
+            tenantId, sellerPartyId, storyId, actorUserId, cancellationToken, expectedVersion, occurrenceKey));
 
     /// <summary>افزودن آیتم فروشنده.</summary>
     public Task<AdminStorySnapshot> SellerAddItemAsync(

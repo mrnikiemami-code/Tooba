@@ -295,6 +295,14 @@ public sealed class ReturnSellerStoryToDraftCommandValidator : AbstractValidator
     }
 }
 
+/// <summary>اعتبارسنجی ارسال استوری فروشنده برای بازبینی.</summary>
+public sealed class SubmitSellerStoryCommandValidator : AbstractValidator<SubmitSellerStoryCommand>
+{
+    public SubmitSellerStoryCommandValidator()
+    {
+    }
+}
+
 /// <summary>اعتبارسنجی توقف انتشار فروشنده.</summary>
 public sealed class StopSellerStoryCommandValidator : AbstractValidator<StopSellerStoryCommand>
 {

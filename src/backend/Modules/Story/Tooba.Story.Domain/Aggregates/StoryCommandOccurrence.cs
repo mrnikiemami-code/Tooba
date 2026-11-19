@@ -1,29 +1,29 @@
 namespace Tooba.Story.Domain.Aggregates;
 
-/// <summary>Durable Story command occurrence for exact replay of create/lifecycle intents.</summary>
+/// <summary>رخداد ماندگار فرمان استوری برای بازپخش دقیق ایجاد و چرخهٔ عمر.</summary>
 public sealed class StoryCommandOccurrence
 {
-    /// <summary>Stable occurrence key supplied by the client.</summary>
+    /// <summary>کلید پایدار رخداد که کلاینت می‌فرستد.</summary>
     public string OccurrenceKey { get; init; } = string.Empty;
 
-    /// <summary>Owning tenant.</summary>
+    /// <summary>tenant مالک.</summary>
     public Guid TenantId { get; init; }
 
-    /// <summary>Optional seller scope.</summary>
+    /// <summary>محدودهٔ اختیاری فروشنده.</summary>
     public Guid? SellerPartyId { get; init; }
 
-    /// <summary>Command family token (create, submit, approve_publish, ...).</summary>
+    /// <summary>کد خانوادهٔ فرمان (create، submit، approve_publish و مانند آن).</summary>
     public string ActionCode { get; init; } = string.Empty;
 
-    /// <summary>SHA-256 of the canonical immutable intent body.</summary>
+    /// <summary>هش SHA-256 بدنهٔ نیت تغییرناپذیر کانونی.</summary>
     public string IntentHash { get; init; } = string.Empty;
 
-    /// <summary>Story id produced or targeted by the occurrence.</summary>
+    /// <summary>شناسهٔ استوری تولیدشده یا هدف رخداد.</summary>
     public Guid StoryId { get; init; }
 
-    /// <summary>Actor that first recorded the occurrence.</summary>
+    /// <summary>بازیگری که نخستین‌بار رخداد را ثبت کرد.</summary>
     public Guid ActorUserId { get; init; }
 
-    /// <summary>Recording instant.</summary>
+    /// <summary>لحظهٔ ثبت.</summary>
     public DateTimeOffset CreatedAt { get; init; }
 }

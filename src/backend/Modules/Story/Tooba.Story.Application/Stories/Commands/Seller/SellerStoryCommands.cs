@@ -37,7 +37,8 @@ public sealed class UpdateSellerStoryCommandHandler(StoryPresentationComposer co
 
 /// <summary>ارسال برای بازبینی.</summary>
 public sealed record SubmitSellerStoryCommand(
-    Guid TenantId, Guid SellerPartyId, Guid StoryId, Guid ActorUserId)
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, Guid ActorUserId,
+    int? ExpectedVersion = null, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class SubmitSellerStoryCommandHandler(StoryPresentationComposer composer)
@@ -46,7 +47,8 @@ public sealed class SubmitSellerStoryCommandHandler(StoryPresentationComposer co
     public Task<Result<AdminStorySnapshot>> Handle(SubmitSellerStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.SellerSubmitAsync(
-                request.TenantId, request.SellerPartyId, request.StoryId, request.ActorUserId, cancellationToken));
+                request.TenantId, request.SellerPartyId, request.StoryId, request.ActorUserId, cancellationToken,
+                request.ExpectedVersion, request.OccurrenceKey));
 }
 
 /// <summary>بازگشت فروشنده به پیش‌نویس.</summary>

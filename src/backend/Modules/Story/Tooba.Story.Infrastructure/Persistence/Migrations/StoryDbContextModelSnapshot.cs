@@ -274,7 +274,7 @@ namespace Tooba.Story.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
-                    b.HasKey("OccurrenceKey")
+                    b.HasKey("TenantId", "OccurrenceKey")
                         .HasName("pk_command_occurrences");
 
                     b.HasIndex("TenantId", "SellerPartyId", "CreatedAt")

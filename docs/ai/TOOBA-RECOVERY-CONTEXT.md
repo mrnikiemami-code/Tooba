@@ -1,13 +1,8 @@
-# CURRENT — 281-R2 REVIEWED PARTIAL; ONLY 281-R3 ISSUED — 2026-11-19
+# CURRENT — TB-281-R3 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
 
-Reviewed source 4c086d32346ce2b6f695c254d7fa58db98c4f322. Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2/ARCHITECT-REVIEW.md.
-Only issued task: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3; exact envelope docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/TASK.md. One worker tooba-worker-01, tooba-main. Await its result; issued does not mean claimed/running.
-Finish existing owning-path gaps and actual recording-store/PostgreSQL rollback proof. Retain landed work. No new product design, live business writes, seed, parallel task or automatic continuation. UI remains PLANNED NOT ISSUED pending review.
-Mandatory owner requirement: Story belongs in the PURCHASED TEMPLATE'S EXISTING seller panel: vendor-panel/layout.tsx -> VendorShell, existing story.view navigation /vendor-panel/stories. Shared Story feature, existing shell/auth/context; no new seller panel/menu/login. See docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md.
-Returns accepted history and payout-method/batch backlog preserved; no key retirement authorization.
-automaticNextImplementationTask NONE.
+Read docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R3/{RESULT.md,RECEIPTS.md,COMPLETION-LEDGER.md}. Worker PARTIAL: shared admin/seller content gates, submit version/occurrence, storyId hash, Catalog public seller id, Media recording InMemory, tenant-scoped occurrence PK, Host skip-bootstrap. OPEN: PG rollback G-matrix; full admin composite occurrence transport. UI PLANNED_NOT_ISSUED. VendorShell /vendor-panel/stories mandatory for future UI. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
 
-# HISTORICAL — superseded by the CURRENT checkpoint above
+# HISTORICAL — 281-R2 REVIEWED PARTIAL; 281-R3 WAS ISSUED
 
 ## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 

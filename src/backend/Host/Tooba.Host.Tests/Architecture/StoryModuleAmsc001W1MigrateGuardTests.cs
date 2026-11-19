@@ -33,6 +33,9 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
         "Tooba.BuildingBlocks",
         "Tooba.ModuleContracts",
         "Tooba.Persistence",
+        "Tooba.Party.Contracts",
+        "Tooba.Media.Contracts",
+        "Tooba.Catalog.Contracts",
     ];
 
     [Fact]
@@ -117,8 +120,8 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
         // Transport validators emit stable machine codes, never user-facing prose.
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);
 
-        // Exactly sixteen transport validators — one per VALIDATOR_REQUIRED endpoint-reachable request.
-        Assert.Equal(20, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        // Transport validators — one per VALIDATOR_REQUIRED endpoint-reachable request (TB-281-R3 pins).
+        Assert.Equal(25, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
     }
 
     [Fact]
@@ -174,7 +177,10 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
                     reference.Contains("Tooba.Story.", StringComparison.Ordinal)
                     || reference.Contains("Tooba.BuildingBlocks", StringComparison.Ordinal)
                     || reference.Contains("Tooba.ModuleContracts", StringComparison.Ordinal)
-                    || reference.Contains("Tooba.Persistence", StringComparison.Ordinal),
+                    || reference.Contains("Tooba.Persistence", StringComparison.Ordinal)
+                    || reference.Contains("Tooba.Party.Contracts", StringComparison.Ordinal)
+                    || reference.Contains("Tooba.Media.Contracts", StringComparison.Ordinal)
+                    || reference.Contains("Tooba.Catalog.Contracts", StringComparison.Ordinal),
                     $"foreign project reference in {project}: {reference}");
             }
         }

@@ -106,11 +106,13 @@ public static class StorySellerEndpoints
                 cancellationToken));
 
     private static Task<IResult> SellerSubmitAsync(
-        Guid id, ISender sender, IStorySellerAuthorizer auth, HttpContext http,
+        Guid id, ReviewedStoryActionBody? body, ISender sender, IStorySellerAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         SellerMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, actor, sellerPartyId) => sender.Send(
-                new SubmitSellerStoryCommand(tenantId, sellerPartyId, id, actor), cancellationToken));
+                new SubmitSellerStoryCommand(
+                    tenantId, sellerPartyId, id, actor, body?.ExpectedVersion, body?.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> SellerReturnToDraftAsync(
         Guid id, ReviewedStoryActionBody? body, ISender sender, IStorySellerAuthorizer auth, HttpContext http,

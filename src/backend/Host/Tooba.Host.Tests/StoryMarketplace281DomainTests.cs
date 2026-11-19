@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Story.Contracts.Errors;
 using Tooba.Story.Domain.Aggregates;
 using Tooba.Story.Domain.Enums;
@@ -109,9 +109,11 @@ public sealed class StoryMarketplace281DomainTests
                 null,
                 null,
                 null,
-                null),
+                null,
+                ExpectedVersion: draft.VersionToken),
             CancellationToken.None);
-        await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None);
+        var afterAdd = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
+        await directory.SellerSubmitAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, seller, CancellationToken.None, afterAdd!.VersionToken, "submit-" + draft.StoryId.ToString("N"));
         var current = await directory.SellerGetAsync(StoryTenantIds.StoreAlpha, shop, draft.StoryId, CancellationToken.None);
         Assert.NotNull(current);
         var ex = await Assert.ThrowsAsync<SemanticException>(() =>

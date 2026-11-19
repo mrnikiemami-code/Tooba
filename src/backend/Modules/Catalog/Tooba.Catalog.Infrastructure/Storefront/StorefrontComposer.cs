@@ -361,7 +361,7 @@ public sealed class StorefrontComposer : IStorefrontComposer
     /// <summary>
     /// از PartyId یک شناسهٔ عمومی یک‌طرفه می‌سازد تا شناسهٔ داخلی در URL یا JSON افشا نشود.
     /// </summary>
-    internal static string CreatePublicSellerId(Guid partyId)
+    public static string CreatePublicSellerId(Guid partyId)
     {
         var digest = SHA256.HashData(Encoding.UTF8.GetBytes($"tooba-public-seller:{partyId:N}"));
         return Convert.ToHexString(digest[..12]).ToLowerInvariant();

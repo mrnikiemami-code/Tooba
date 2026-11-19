@@ -133,14 +133,16 @@ public interface IStoryDirectory
         Guid tenantId,
         Guid storyId,
         Guid itemId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        int? expectedVersion = null);
 
     /// <summary>آیتم‌های استوری را مرتب می‌کند.</summary>
     Task<AdminStorySnapshot> AdminReorderItemsAsync(
         Guid tenantId,
         Guid storyId,
         IReadOnlyList<Guid> itemIdsInOrder,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        int? expectedVersion = null);
 
     /// <summary>استوری را با SoftDisable غیرفعال می‌کند.</summary>
     Task<AdminStorySnapshot> AdminSoftDisableAsync(
@@ -201,7 +203,9 @@ public interface IStoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         Guid actorUserId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        int? expectedVersion = null,
+        string? occurrenceKey = null);
 
     /// <summary>آیتم به استوری قابل‌ویرایش فروشنده اضافه می‌کند.</summary>
     Task<AdminStorySnapshot> SellerAddItemAsync(
@@ -226,7 +230,8 @@ public interface IStoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         Guid itemId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        int? expectedVersion = null);
 
     /// <summary>آیتم‌های استوری قابل‌ویرایش فروشنده را مرتب می‌کند.</summary>
     Task<AdminStorySnapshot> SellerReorderItemsAsync(
