@@ -1,4 +1,14 @@
-# CURRENT — TB-282 REVIEWED PARTIAL; ONLY TB-282-R1 ISSUED — 2026-11-19
+# CURRENT — TB-282-R1 REVIEWED PARTIAL; ONLY TB-282-R2 ISSUED — 2026-11-19
+
+Reviewed feature 98d3e1fcdaf74227e22034325cbdef639b0d5d78 + stub compile fix 77cb3d9bf12c7ec9cbd70c28e0cc9515c1937789; final d0c09e2ed340bdf82c9a6e4ae8eaeb8f7ed96d58.
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1/ARCHITECT-REVIEW.md. Worker PASS is NOT accepted as full F1-F5. Retain routes/name-picker/editor/action controls/scoped views/product href and explicit Gate0-owned ids progress.
+Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2/TASK.md. One worker tooba-worker-01/tooba-main, await result/review; issued is not running.
+Four closure groups: B1 recovery BUTTON must dispatch frozen command and resume correct upload child; B2 lawful role-scoped lookup/date picker+zone; B3 actual scope/grid/shell behavioral proof (no production test bypass); B4 real platform identity (no fake seller scope) and FINAL builds/current serving proof.
+Existing template VendorShell /vendor-panel/stories/story.view mandatory, shared feature only; no new panel/menu/login/admin credential borrowing. DB registry languages, real picker/navigation, correct dates and plain merchant copy required.
+ZERO migration/live business writes/seed/key operation. User receives usable current build URLs only after evidence; user performs first live new-story act. Returns acceptances/payout backlog/history/user work unchanged.
+Previous PASS/current-status paragraphs below are historical. Worker PASS != Architect/user acceptance. automaticNextImplementationTask NONE.
+
+# HISTORICAL — superseded by CURRENT above
 
 Reviewed code b0da0ab9d4ca593b9af17b0983802c2add936503; actual final head ebb921235456c6c75c88a06abfa35fcefa0b00db (normal merge/docs history preserved).
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282/ARCHITECT-REVIEW.md. Worker PASS A-F is NOT accepted as complete. Retain compact grid/query/shell/Dialog/toast/public-player progress; real editor, name/destination pickers, scoped recovery and real mounted proof remain due.
