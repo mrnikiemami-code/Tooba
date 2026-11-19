@@ -1,0 +1,11 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11",
+  "expectedBaseSha": "400ccbf1cade071be3ebd72ab95171360475f6fb",
+  "taskSha256": "73582ed25c99b587171406dc75b0d518c58ab0048fa89366eb301fa56013dfdf",
+  "issuedDate": "2026-11-19",
+  "timezone": "Asia/Tehran",
+  "state": "ISSUED_NOT_CLAIMED",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "bridgeDispatchPerformed": false
+}

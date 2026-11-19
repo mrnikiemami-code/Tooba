@@ -1,3 +1,19 @@
+# CURRENT — R10 PARTIAL; ONLY TB-282-R11 ISSUED — 2026-11-19
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10/ARCHITECT-REVIEW.md
+Code a58172221170def6a9ef7c316474289fb9a4d6c5 / main 400ccbf1cade071be3ebd72ab95171360475f6fb. Preserve preview/video-duration/draft-window/delete/status/readiness progress; full R10 PASS NOT accepted.
+Confirmed admin-for-shop delete replay scope mismatch, expired Active label falsely “در ویترین”, missing list delete, generic pending-delete route completion and date validation mismatch. R10 FE4/4 is date/copy units, not mounted preview/delete/submit proof; backend8/8 Domain facts, not real delete/replay path. Production Next build failed Html404; next-dev serving disclosed, no new BUILD_ID.
+Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11
+Expected-Base-SHA: 400ccbf1cade071be3ebd72ab95171360475f6fb
+Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11/TASK.md
+Only finish existing concrete defects + actual affected mounted/owning-path tests and final live read-only role screens. No new phase or R1–R10 replay. One worker tooba-worker-01/tooba-main, issued NOT claimed/running.
+Preserve VendorShell/registry/owner/version/replay, R9 skip-bootstrap memory recovery, Returns/payout/user work. ZERO migration/live business writes/seeds/grants/screenshots/delegation/polling. R6 effects UNKNOWN.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11 (ISSUED_NOT_CLAIMED)
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — OWNER TRIAL FOUND FUNCTIONAL GAPS; ONLY TB-282-R10 ISSUED — 2026-11-19
 
 Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10
