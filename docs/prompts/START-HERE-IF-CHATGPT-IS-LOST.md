@@ -1,3 +1,20 @@
+# CURRENT — R7 BOUNDED PROGRESS ACCEPTED; ONLY TB-282-R8 ISSUED — 2026-11-19
+
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7/ARCHITECT-REVIEW.md.
+Reviewed code 419d62d46bd3a547f275bd60ec44e7040afd6189 / main 8dc12e7cffed98ee40457639290ed3ae98989a70. Retain create/add/preview/dirty-back/labels and cookie hardening progress; delivery remains PARTIAL.
+Confirmed remaining defect: successful recovered create clears pending but does not adopt owning draft in /new; later Save/Add can mint another create. Initial retention test did not click replay.
+Safe live admin review blocked by dev-context in-memory snapshot missing under skip-bootstrap despite persisted BFF login. Only a bounded read-only existing-identity/tenant initialization/read repair is permitted, no registration/grants/seeds.
+Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8
+Expected-Base-SHA: 8dc12e7cffed98ee40457639290ed3ae98989a70
+Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8/TASK.md
+One worker tooba-worker-01/tooba-main; issued NOT claimed/running. Only recovered-create adoption and safe owner-review runtime; no redesign or new wave.
+R6 startup effects remain UNKNOWN. Preserve user work/Returns/payout/VendorShell/languages. ZERO new migration/seed/live business writes. Host refresh requires TOOBA_SKIP_DEVELOPMENT_BOOTSTRAP=1.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8 (ISSUED_NOT_CLAIMED)
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — TB-282-R7 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7/RESULT.md.
