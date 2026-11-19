@@ -1,3 +1,17 @@
+# CURRENT — OWNER TRIAL FOUND FUNCTIONAL GAPS; ONLY TB-282-R10 ISSUED — 2026-11-19
+
+Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10
+Expected-Base-SHA: 06e3bd558f0b9a2f323f9dbab596188580edb798
+Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10/TASK.md
+Owner reports no Story delete, no selected-file media preview, photo duration5 input also on video, no authorable start/end publication window, repeated/raw statuses and submit error. Screenshot VendorShell says invalid context. These are actual OWNER failures; R9 local recovery acceptance retained, owner UX/function acceptance NOT granted.
+Source confirmed unconditional photo-duration input/no local preview, stacked status cell, admin-only scheduling and no whole-Story delete route. One consolidated R10 implements A media/duration, B Jalali start/end including seller proposed window under admin approval, C real scoped Story deletion + separate slide removal, D single truthful status/legal choices, E actual submit/scope failure diagnosis+repair. No new broad auth/UI architecture wave.
+One worker tooba-worker-01/tooba-main; issued NOT claimed/running. Preserve R5–R9 exact retry, VendorShell, ownership/review policy, language registry, Returns/payout/user data. R9 skip-bootstrap InMemory recovery retained. ZERO worker live business writes/migrations/seeds/grants/screenshots/delegation/polling.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10 (ISSUED_NOT_CLAIMED)
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — STORY READY FOR OWNER REVIEW; R9 LOCAL RECOVERY ACCEPTED — 2026-11-19
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9/ARCHITECT-REVIEW.md
