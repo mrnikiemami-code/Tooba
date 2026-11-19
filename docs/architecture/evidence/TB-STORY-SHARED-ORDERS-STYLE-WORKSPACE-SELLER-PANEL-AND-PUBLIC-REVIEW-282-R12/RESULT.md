@@ -21,5 +21,7 @@ Decision: `PUBLICATION_WINDOW_NO_END_HEADER_STABLE_END_COLUMNS_CREATE_EDIT_RTL_D
 ## Limits
 - Geometry measured via CDP on active admin forms; seller VendorShell shares same component (source). No screenshots. No save exercised.
 
+Final code SHA: `d07ce9d90c0fefca6df53613ffc4a39ac167a393`
+
 automaticNextImplementationTask: NONE  
 STOP_FOR_ARCHITECT_AND_USER_REVIEW

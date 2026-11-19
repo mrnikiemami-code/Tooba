@@ -9,3 +9,5 @@ USER_REVIEW_URLS=/fa/admin/stories;/fa/vendor-panel/stories;/fa
 NEXT=3000_DEV
 ZERO_BACKEND=1
 ZERO_LIVE_STORY_MEDIA_WRITE=1
+FINAL_CODE_SHA=d07ce9d90c0fefca6df53613ffc4a39ac167a393
+NEXT_CHUNK=app/admin/stories/new/page.js_next-dev_PID48060
