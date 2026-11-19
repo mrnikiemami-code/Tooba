@@ -368,7 +368,38 @@ var skipDevelopmentBootstrap = string.Equals(
     Environment.GetEnvironmentVariable("TOOBA_SKIP_DEVELOPMENT_BOOTSTRAP"),
     "1",
     StringComparison.Ordinal);
-if (app.Environment.IsDevelopment() && !skipDevelopmentBootstrap)
+if (app.Environment.IsDevelopment() && skipDevelopmentBootstrap)
+{
+    // TB-282-R9: when business Development seeds are skipped, rebuild ONLY the process-local
+    // InMemory authorization projection from durable AccessControl assignments already in PG.
+    // No EnsureBootstrap / Register / seed / durable grant mutation.
+    try
+    {
+        await DevelopmentTenantCommerceContext.RunForDevelopmentTenantAsync(
+            app.Services,
+            "accesscontrol-inmemory-projection-recovery",
+            async (sp, ct) =>
+            {
+                var recovery = sp.GetRequiredService<Tooba.AccessControl.Contracts.Development.IAccessControlInMemoryProjectionRecovery>();
+                var result = await recovery.RecoverAsync(
+                    DevelopmentTenantCommerceContext.DevelopmentTenantId,
+                    ct);
+                app.Logger.LogInformation(
+                    "AccessControl InMemory projection recovery eligible={Eligible} users={Users} tenantMembers={TenantMembers} partyMembers={PartyMembers}",
+                    result.EngineEligible,
+                    result.UsersProjected,
+                    result.TenantMembershipsProjected,
+                    result.PartyMembershipsProjected);
+            });
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(
+            ex,
+            "AccessControl InMemory projection recovery failed; Host continues with empty local authorization (fail-closed).");
+    }
+}
+else if (app.Environment.IsDevelopment() && !skipDevelopmentBootstrap)
 {
     if (app.Services.GetRequiredService<ControlPlaneRegistry>().Edition == ToobaEdition.Marketplace)
     {

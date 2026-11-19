@@ -42,6 +42,7 @@ public sealed class AccessControlModule : IToobaModule
         services.AddScoped<SellerDevContextBootstrap>();
         services.AddScoped<ISellerDevContextStore>(sp => sp.GetRequiredService<SellerDevContextBootstrap>());
         services.AddScoped<IAccessControlDevelopmentSeedPrelude, AccessControlDevelopmentSeedPrelude>();
+        services.AddScoped<IAccessControlInMemoryProjectionRecovery, AccessControlInMemoryProjectionRecovery>();
         services.AddScoped<
             Tooba.AccessControl.Contracts.Access.IAccessControlEffectiveAccessReader,
             Adapters.AccessControlEffectiveAccessReader>();

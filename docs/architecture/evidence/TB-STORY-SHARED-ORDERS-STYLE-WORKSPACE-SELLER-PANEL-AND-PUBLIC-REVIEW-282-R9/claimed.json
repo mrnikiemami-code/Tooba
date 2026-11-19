@@ -1,0 +1,10 @@
+{
+    "bridgeRowId":  "48f7ecdc-bb77-47dd-b4aa-9f3928bd24dd",
+    "claimHeadSha":  "93df9aa520397953fb500bc8c1ad3f532b3f1352",
+    "workerId":  "tooba-worker-01",
+    "claimedAtUtc":  "2026-11-19T17:31:56.8235837Z",
+    "taskId":  "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9",
+    "issuanceTaskSha256":  "c4dbce7ea47d0625f5322104d69a8aa9ddb7fc6a161d5a3028d886ba19bd025e",
+    "note":  "Bridge next claimed; canonical docs TASK.md used",
+    "expectedBaseSha":  "dcd5e4e383f819924b182d421ffcb7dce32c1857"
+}

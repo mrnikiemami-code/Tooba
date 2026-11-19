@@ -1,15 +1,23 @@
-# CURRENT — R8 BOUNDED ACCEPTED; LIVE AUTH BLOCKED; ONLY TB-282-R9 ISSUED — 2026-11-19
+# CURRENT — TB-282-R9 WORKER PASS; READY_FOR_OWNER_REVIEW — 2026-11-19
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** + **READY_FOR_OWNER_REVIEW**: Development InMemory projection recovered from durable AccessControl assignments under skip-bootstrap; admin/seller Story list 200 for assigned actors; live create forms at 1440/390; ZERO durable grant; ZERO migration; ZERO live Story/Media write. BUILD_ID `7nEINy82sBP3x0f0H6xdw`.
+Decision `LOCAL_INMEMORY_AUTHORIZATION_PROJECTION_FROM_DURABLE_ACCESSCONTROL_ASSIGNMENTS_UNDER_SKIP_BOOTSTRAP_ZERO_DURABLE_GRANT_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `dcd5e4e383f819924b182d421ffcb7dce32c1857`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R9 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — R8 BOUNDED ACCEPTED; R9 WAS ISSUED
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8/ARCHITECT-REVIEW.md
-Code bd23deeec736746170ed6fe101cd880ba1b2e33d / main dcd5e4e383f819924b182d421ffcb7dce32c1857. R8 recovered-create adoption and read-only dev-context bind accepted within recorded limits; no new Story UI phase.
-Actual live Story list still 403 admin.authorization.denied; dev-context/login 200 is not readiness. InMemory auth loses process tuples on restart; snapshot Find alone does not establish tenant#view.
-Only task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9; docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9/TASK.md. Expected-Base dcd5e4e383f819924b182d421ffcb7dce32c1857. Rebuild ONLY Development InMemory projection from verified existing membership/assignments through owning Contracts; no persistent grants/identity/business writes or bootstrap/seed. If durable authority absent, explicit blocker instead of invented grant.
-One worker tooba-worker-01/tooba-main; issued NOT claimed/running. Host refresh skip-bootstrap=1; preserve user work, Returns, payout, VendorShell, language registry. No screenshots/delegation/polling. R6 effects UNKNOWN.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Code bd23deeec736746170ed6fe101cd880ba1b2e33d / main dcd5e4e383f819924b182d421ffcb7dce32c1857. Parent live-auth blocker closed by R9 worker PASS above.
 
-# HISTORICAL — superseded by CURRENT above
+# HISTORICAL — TB-282-R8 WORKER PASS; R9 WAS ISSUED
 
 # CURRENT — TB-282-R8 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
