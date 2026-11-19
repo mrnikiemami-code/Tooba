@@ -1,3 +1,18 @@
+# CURRENT — OWNER REQUESTED ADMIN SINGLE/BULK ACTIONS; ONLY TB-282-R13 ISSUED — 2026-11-20
+
+Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13
+Expected-Base-SHA: d6956b5f4363711aeba12ce7281f00fa42f46b62
+Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13/TASK.md
+Owner requires admin single+selected-row deletion/approval/rejection from grid. AppDataGrid already has bulkActions/pageSelectionOnly; Story has not wired review/bulk controls. R13 uses existing grid and per-row reviewed commands/version/exact retry, clear confirmations/reject reasons/partial results; no new bulk backend framework or grant.
+Owner rejects no-end at global far corner: move beside END label inside equal-height end header; retain desktop aligned date/clock rows and mobile layout, disabled mounted controls/values/null semantics.
+R12 bounded alignment acceptance preserved; this is explicit further owner UX/operation request. One worker tooba-worker-01/tooba-main, issued NOT claimed/running. No screenshots/delegation/polling/live mutations/schema/seeds.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R13 (ISSUED_NOT_CLAIMED)
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Preserve R5–R12/VendorShell/language registry/Returns/payout/user work. Existing production Html404 build blocker and R6 effects UNKNOWN remain.
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — R12 LAYOUT REPAIR ACCEPTED; AWAIT OWNER REVIEW — 2026-11-20
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12/ARCHITECT-REVIEW.md
