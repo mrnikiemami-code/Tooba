@@ -1,4 +1,4 @@
-# TB-282 RECEIPTS
+﻿# TB-282 RECEIPTS
 
 ## Claim
 
@@ -40,5 +40,5 @@ npm run test:critical-storefront → 19/20 (pre-existing storefront-landing-bloc
 ## Git
 
 - Code: `b0da0ab9d4ca593b9af17b0983802c2add936503`
-- Final origin/main: `906b7735e492fcf42b96368adde8f1f859a2bbdf` (merge of worker delivery + architect 282 issuance docs `6002b34ff`)
+- Final origin/main: `f776efc7262a497c76451e4b601ee3b712b0abb7` (merge of worker delivery + architect 282 issuance docs `6002b34ff`)
 - User-Work-Preserved: YES

@@ -1,4 +1,4 @@
-# TB-282 RESULT
+﻿# TB-282 RESULT
 
 Status: **PASS** within issued Gate0 + A–F connected product delivery (with disclosed limits).
 Decision: `GATE0_FULL_OCCURRENCE_IDENTITY_DETACH_AND_TWO_CONTEXT_CONCURRENCY_AND_SHARED_ORDERS_STYLE_STORY_WORKSPACE_SELLER_VENDORSHELL_MEDIA_UPLOAD_INTENT_AND_HONEST_PUBLIC_PLAYER_LANDED_WITH_FOCUSED_PROOF_ZERO_MIGRATION`
@@ -60,4 +60,4 @@ Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
 ## Final SHA
 
 - Implementation code SHA: `b0da0ab9d4ca593b9af17b0983802c2add936503`
-- Final origin/main (merge tip with architect issuance docs): `906b7735e492fcf42b96368adde8f1f859a2bbdf`
+- Final origin/main (merge tip with architect issuance docs): `f776efc7262a497c76451e4b601ee3b712b0abb7`
