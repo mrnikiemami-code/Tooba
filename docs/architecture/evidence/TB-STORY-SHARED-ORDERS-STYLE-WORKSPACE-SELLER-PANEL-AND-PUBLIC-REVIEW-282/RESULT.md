@@ -60,4 +60,4 @@ Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
 ## Final SHA
 
 - Implementation code SHA: `b0da0ab9d4ca593b9af17b0983802c2add936503`
-- Final origin/main tip recorded after docs parity commit in RECEIPTS.
+- Final origin/main (merge tip with architect issuance docs): `906b7735e492fcf42b96368adde8f1f859a2bbdf`
