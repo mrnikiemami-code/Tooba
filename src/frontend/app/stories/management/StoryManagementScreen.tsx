@@ -207,12 +207,17 @@ function StoryManagementScreenBody({
   const [dirty, setDirty] = useState(false);
   const slideFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  function destinationLabel(ctaType: string, ctaTarget: string | null | undefined): string {
+  function destinationLabelForItem(item: AdminStorySnapshot["items"][number]): string {
+    const ctaType = item.ctaType;
+    const ctaTarget = item.ctaTarget;
     if (!ctaType || ctaType === "none") return copy.destinationNone;
     if (ctaType === "product") {
       const id = (ctaTarget ?? "").trim();
       if (!id) return copy.productUnknown;
-      return productLabelById[id] ?? (selectedProductLabel || copy.productSelectedFallback);
+      // Bound only to THIS slide's owning target — never borrow selectedProductLabel from another editor.
+      const owned = item.ctaProductTitle?.trim() || productLabelById[id];
+      if (owned) return owned;
+      return copy.productUnknown;
     }
     if (ctaType === "external") {
       return ctaTarget?.trim() ? `${copy.destinationExternal}: ${ctaTarget}` : copy.destinationExternal;
@@ -243,7 +248,7 @@ function StoryManagementScreenBody({
     setSlideCtaTarget(item.ctaTarget ?? "");
     setSelectedProductLabel(
       item.ctaType === "product" && item.ctaTarget
-        ? productLabelById[item.ctaTarget] ?? copy.productSelectedFallback
+        ? item.ctaProductTitle?.trim() || productLabelById[item.ctaTarget] || ""
         : "",
     );
     setProductSearch("");
@@ -386,6 +391,15 @@ function StoryManagementScreenBody({
         setEditTitle(result.data.title);
         setEditLocale(result.data.locale || editLocale);
         setDirty(false);
+        // Hydrate per-target labels from owning DTO only (scoped to this story remount).
+        const nextLabels: Record<string, string> = {};
+        for (const item of result.data.items) {
+          if (item.ctaType === "product" && item.ctaTarget && item.ctaProductTitle?.trim()) {
+            nextLabels[item.ctaTarget] = item.ctaProductTitle.trim();
+          }
+        }
+        setProductLabelById(nextLabels);
+        setSelectedProductLabel("");
       } else if (result.state === "denied") setState("denied");
       else {
         setDetail(null);
@@ -945,7 +959,7 @@ function StoryManagementScreenBody({
                     </p>
                     {item.caption ? <p className="text-muted">{item.caption}</p> : null}
                     <p className="text-xs text-muted" data-testid="story-slide-destination">
-                      {copy.destinationPrefix} {destinationLabel(item.ctaType, item.ctaTarget)}
+                      {copy.destinationPrefix} {destinationLabelForItem(item)}
                     </p>
                   </div>
                   {capabilities.canEdit && sellerEditable ? (
@@ -1146,6 +1160,8 @@ function StoryManagementScreenBody({
                     <button
                       type="button"
                       className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
+                      data-testid="story-product-option"
+                      data-product-id={row.productId}
                       onClick={() => {
                         if (!row.productId) {
                           toast.error("این ردیف شناسهٔ محصول معتبری ندارد.");

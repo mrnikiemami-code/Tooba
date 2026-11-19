@@ -1,18 +1,13 @@
-# CURRENT — ONLY TB-282-R5 ISSUED; AWAIT WORKER RESULT — 2026-11-19
+# CURRENT — TB-282-R5 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5
-Expected-Base-SHA: 37cceaa9cf33505dd394ed9d4ede32aee465e45d
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/TASK.md
-Receipt/evidence: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/
-User authorized one focused closure to reach OWNER test. Scope ONLY R4 F1/F2: truthful per-slide product names/owning selected-target hydration (never current editor fallback), actual mounted edit PUT/no-extra-upload/delete, retained unknown response + true negative control, real grid/saved-view/390-1440 proof, and actual Catalog >40 query proof (not fake algorithm). Preserve current shared editor, compact save/upload, update-item wire and existing bridge actions-end pin. No redesign or new backend phase.
-One worker tooba-worker-01/tooba-main, issued NOT claimed/running. Wait for result; Architect reviews then announces ready for OWNER test or prepares a narrowly justified next task. Worker issues no next task.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-Existing VendorShell /vendor-panel/stories/story.view; seller current shop/products, admin shop/main creation+moderation. ZERO migration/live business writes/screenshots/delegation/polling. Returns/payout backlog/separate key state unchanged.
-User URLs /fa/admin/stories, /fa/vendor-panel/stories, /fa. Neither worker PASS nor this issuance is user/commercial acceptance.
+Worker PASS within issued A–D (F1 per-slide CtaProductTitle, F2 mounted update_item + retention + negative control, C real Catalog >40). Evidence: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/.
+NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: /fa/admin/stories, /fa/vendor-panel/stories, /fa.
+activeTask: NONE; automaticNextImplementationTask: NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+BUILD_ID SpxfHsxtpvAChwrYh4xI7; Host5088/Next3000; ZERO migration; ZERO live Story/Media write.
 
-# HISTORICAL — superseded by CURRENT above
+# HISTORICAL — TB-282-R5 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — TB-282-R4 REVIEWED; 282-R5 WAS ISSUED
 
 Reviewed implementation 35b9ffc6406a770147ddfd8fc1ef514f0db20a1e; fresh main/evidence 08f73aaa7dce43c73ff25d4a67c8ffec6a394314.
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/ARCHITECT-REVIEW.md.

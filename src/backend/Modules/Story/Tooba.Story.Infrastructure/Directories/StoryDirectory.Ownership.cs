@@ -173,24 +173,57 @@ public sealed partial class StoryDirectory
         IReadOnlyList<AdminStorySnapshot> rows,
         CancellationToken cancellationToken)
     {
-        if (rows.Count == 0 || _partySellers is null)
+        if (rows.Count == 0)
             return rows;
 
-        var shops = rows
-            .Where(row => row.SellerPartyId is Guid id && id != Guid.Empty)
-            .Select(row => row.SellerPartyId!.Value)
-            .Distinct()
-            .ToList();
-        if (shops.Count == 0)
-            return rows;
+        IReadOnlyDictionary<Guid, string> names = new Dictionary<Guid, string>();
+        if (_partySellers is not null)
+        {
+            var shops = rows
+                .Where(row => row.SellerPartyId is Guid id && id != Guid.Empty)
+                .Select(row => row.SellerPartyId!.Value)
+                .Distinct()
+                .ToList();
+            if (shops.Count > 0)
+            {
+                var projections = await _partySellers.GetStatusProjectionsAsync(shops, cancellationToken);
+                names = projections.ToDictionary(row => row.PartyId, row => row.DisplayName);
+            }
+        }
 
-        var projections = await _partySellers.GetStatusProjectionsAsync(shops, cancellationToken);
-        var names = projections.ToDictionary(row => row.PartyId, row => row.DisplayName);
-        return rows.Select(row =>
+        var withShops = rows.Select(row =>
         {
             if (row.SellerPartyId is Guid shop && names.TryGetValue(shop, out var name))
                 return row with { ShopDisplayName = name };
             return row;
+        }).ToList();
+
+        if (_productTitles is null)
+            return withShops;
+
+        var productIds = new HashSet<Guid>();
+        foreach (var row in withShops)
+        {
+            foreach (var item in row.Items)
+                CollectProductCta(item.CtaType, item.CtaTarget, productIds);
+        }
+
+        if (productIds.Count == 0)
+            return withShops;
+
+        var titles = await _productTitles.GetProductTitlesByIdsAsync(productIds, cancellationToken);
+        return withShops.Select(row =>
+        {
+            var items = row.Items.Select(item =>
+            {
+                if (!string.Equals(item.CtaType, "product", StringComparison.OrdinalIgnoreCase))
+                    return item;
+                if (!Guid.TryParse(item.CtaTarget?.Trim(), out var productId) || productId == Guid.Empty)
+                    return item with { CtaProductTitle = null };
+                titles.TryGetValue(productId, out var title);
+                return item with { CtaProductTitle = string.IsNullOrWhiteSpace(title) ? null : title };
+            }).ToList();
+            return row with { Items = items };
         }).ToList();
     }
 

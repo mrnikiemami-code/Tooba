@@ -23,20 +23,23 @@ public sealed partial class StoryDirectory : IStoryDirectory
     private readonly IStoryMediaAssetPort? _media;
     private readonly IStoryProductTargetPort? _products;
     private readonly ICatalogPublicSellerAttributionLookup? _publicSellers;
+    private readonly ICatalogAdminProductTitleIdLookup? _productTitles;
 
-    /// <summary>DbContext مالک را تزریق می‌کند؛ Party/Media/Product/PublicSeller اختیاری برای تست‌های جدا هستند.</summary>
+    /// <summary>DbContext مالک را تزریق می‌کند؛ Party/Media/Product/PublicSeller/Titles اختیاری برای تست‌های جدا هستند.</summary>
     public StoryDirectory(
         StoryDbContext db,
         IPartyAdminSellerReadGateway? partySellers = null,
         IStoryMediaAssetPort? media = null,
         IStoryProductTargetPort? products = null,
-        ICatalogPublicSellerAttributionLookup? publicSellers = null)
+        ICatalogPublicSellerAttributionLookup? publicSellers = null,
+        ICatalogAdminProductTitleIdLookup? productTitles = null)
     {
         _db = db;
         _partySellers = partySellers;
         _media = media;
         _products = products;
         _publicSellers = publicSellers;
+        _productTitles = productTitles;
     }
 
     /// <inheritdoc />

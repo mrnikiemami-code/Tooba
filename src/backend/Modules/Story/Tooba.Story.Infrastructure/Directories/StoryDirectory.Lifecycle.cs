@@ -192,17 +192,46 @@ public sealed partial class StoryDirectory
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
-    /// <summary>نام نمایشی فروشگاه را از Party Contracts می‌چسباند.</summary>
+    /// <summary>نام فروشگاه و عنوان محصول CTA هر اسلاید را از Contracts مالک غنی می‌کند.</summary>
     public async Task<AdminStorySnapshot> EnrichAsync(
         AdminStorySnapshot snapshot,
         CancellationToken cancellationToken)
     {
-        if (snapshot.SellerPartyId is not Guid shop || _partySellers is null)
+        var withShop = snapshot;
+        if (snapshot.SellerPartyId is Guid shop && _partySellers is not null)
+        {
+            var rows = await _partySellers.GetStatusProjectionsAsync([shop], cancellationToken);
+            var name = rows.FirstOrDefault(row => row.PartyId == shop)?.DisplayName;
+            withShop = snapshot with { ShopDisplayName = name };
+        }
+
+        return await EnrichProductTitlesAsync(withShop, cancellationToken);
+    }
+
+    private async Task<AdminStorySnapshot> EnrichProductTitlesAsync(
+        AdminStorySnapshot snapshot,
+        CancellationToken cancellationToken)
+    {
+        if (_productTitles is null || snapshot.Items.Count == 0)
             return snapshot;
 
-        var rows = await _partySellers.GetStatusProjectionsAsync([shop], cancellationToken);
-        var name = rows.FirstOrDefault(row => row.PartyId == shop)?.DisplayName;
-        return snapshot with { ShopDisplayName = name };
+        var ids = new HashSet<Guid>();
+        foreach (var item in snapshot.Items)
+            CollectProductCta(item.CtaType, item.CtaTarget, ids);
+        if (ids.Count == 0)
+            return snapshot;
+
+        var titles = await _productTitles.GetProductTitlesByIdsAsync(ids, cancellationToken);
+        var items = snapshot.Items.Select(item =>
+        {
+            if (!string.Equals(item.CtaType, "product", StringComparison.OrdinalIgnoreCase))
+                return item;
+            if (!Guid.TryParse(item.CtaTarget?.Trim(), out var productId) || productId == Guid.Empty)
+                return item with { CtaProductTitle = null };
+            titles.TryGetValue(productId, out var title);
+            return item with { CtaProductTitle = string.IsNullOrWhiteSpace(title) ? null : title };
+        }).ToList();
+        return snapshot with { Items = items };
     }
 
     private async Task EnsureShopEligibleAsync(Guid sellerPartyId, CancellationToken cancellationToken)

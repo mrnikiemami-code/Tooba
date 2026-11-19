@@ -1,18 +1,20 @@
-# CURRENT — ONLY TB-282-R5 ISSUED; AWAIT WORKER RESULT — 2026-11-19
+# CURRENT — TB-282-R5 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5
-Expected-Base-SHA: 37cceaa9cf33505dd394ed9d4ede32aee465e45d
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/TASK.md
-Receipt/evidence: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/
-User authorized one focused closure to reach OWNER test. Scope ONLY R4 F1/F2: truthful per-slide product names/owning selected-target hydration (never current editor fallback), actual mounted edit PUT/no-extra-upload/delete, retained unknown response + true negative control, real grid/saved-view/390-1440 proof, and actual Catalog >40 query proof (not fake algorithm). Preserve current shared editor, compact save/upload, update-item wire and existing bridge actions-end pin. No redesign or new backend phase.
-One worker tooba-worker-01/tooba-main, issued NOT claimed/running. Wait for result; Architect reviews then announces ready for OWNER test or prepares a narrowly justified next task. Worker issues no next task.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-Existing VendorShell /vendor-panel/stories/story.view; seller current shop/products, admin shop/main creation+moderation. ZERO migration/live business writes/screenshots/delegation/polling. Returns/payout backlog/separate key state unchanged.
-User URLs /fa/admin/stories, /fa/vendor-panel/stories, /fa. Neither worker PASS nor this issuance is user/commercial acceptance.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R5/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–D: F1 per-slide `CtaProductTitle` hydration (no cross-slide selectedProductLabel fallback); F2 mounted admin/seller update_item PUT + empty/non-JSON retention + precise negative control; C real CatalogPublishedProductSearchLookup >40; Host5088/Next3000 served BUILD_ID `SpxfHsxtpvAChwrYh4xI7`; ZERO migration; ZERO live Story/Media business write.
+Decision `A_F1_PER_SLIDE_CTA_PRODUCT_TITLE_HYDRATION_NO_CROSS_SLIDE_FALLBACK_B_F2_MOUNTED_UPDATE_ITEM_RETENTION_AND_PRECISE_NEGATIVE_CONTROL_C_REAL_CATALOG_PUBLISHED_SEARCH_LOOKUP_GT40_D_SERVED_HOST_NEXT_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `37cceaa9cf33505dd394ed9d4ede32aee465e45d`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. مرجع: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R5 ISSUED; WORKER PASS ABOVE
+
+Task issued Expected-Base `37cceaa9cf33505dd394ed9d4ede32aee465e45d`; claim docs HEAD `80241d42dbda61a0c3b7f21a68d362c87899abc2`. See CURRENT worker PASS above.
+
+# HISTORICAL — TB-282-R4 REVIEWED; 282-R5 WAS ISSUED
 
 Reviewed implementation 35b9ffc6406a770147ddfd8fc1ef514f0db20a1e; fresh main/evidence 08f73aaa7dce43c73ff25d4a67c8ffec6a394314.
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R4/ARCHITECT-REVIEW.md.
