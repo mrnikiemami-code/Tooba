@@ -1,3 +1,19 @@
+# CURRENT — STORY READY FOR OWNER REVIEW; R9 LOCAL RECOVERY ACCEPTED — 2026-11-19
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9/ARCHITECT-REVIEW.md
+Code 218a5e52d0a2bc6f518eb1e9d52b30f5cc6a4179 / implementation-evidence e5bcb134ad0c415fe547744b2f962dada187cb0d.
+Decision ACCEPT_FOR_OWNER_REVIEW_WITH_DECLARED_LOCAL_LIMITS. Development/InMemory projection rebuilt from existing AccessControl assignments under skip-bootstrap; source/evidence reviewed, Architect did not rerun Windows serving.
+Worker reports admin Story list 200 and assigned seller 200, unassigned 403; active admin/VendorShell /new at390/1440 no overflow. R8 403 blocker resolved for tested assigned actors. No new Story UI phase/task.
+State: AWAITING_OWNER_REVIEW
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_USER_REVIEW
+Next step: OWNER tests actual create/media/product/edit/reload, seller submit -> admin moderation -> public playback. No live Story/Media POST by worker; no full user/commercial/authorization certification.
+Host41552 skip-bootstrap=1 DLL54D3DE37…EEDC3; Next34656 BUILD_ID7nEINy82sBP3x0f0H6xdw (R8 FE unchanged). URLs /fa/admin/stories ; /fa/vendor-panel/stories ; /fa.
+Party-only/unassigned seller remains denied; known unrelated storefront bg-white failure and R6 startup-effects UNKNOWN preserved. No R10/proof-loop automatically. Preserve VendorShell, existing owner/actor fences, Returns/payout backlog/user work.
+
+# HISTORICAL — superseded by CURRENT above
+
 # CURRENT — TB-282-R9 WORKER PASS; READY_FOR_OWNER_REVIEW — 2026-11-19
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R9/TASK.md` and
