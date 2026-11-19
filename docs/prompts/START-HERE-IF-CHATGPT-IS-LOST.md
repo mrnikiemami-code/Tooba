@@ -1,3 +1,15 @@
+# CURRENT — OWNER REJECTED FEEDBACK PERSISTENCE/SEVERITY AND APPROVAL; R18 ISSUED — 2026-11-20
+
+Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18/TASK.md
+Owner requires auto-expiring existing-app colors, no blue cannot-run messages or permanent warning banner, and actual functioning approval. R17 presentation acceptance was narrow and is not functional/owner acceptance.
+Known source: zero-eligible uses info; generic batch summary hides refusal reason; pendingActs always renders yellow card. Provider already autoClose=3000 with focus/hover pauses. Actual approval failure ROOT UNKNOWN; do not invent media/auth/binding cause. R18 must prove owning approval path, valid approval + truthful invalid refusal, and measured toast disappearance on mounted/served UI.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Preserve R16/R17 compact/typing and durable safety; pending storage survives collapsed user-invoked recovery. No unsafe clearing/bypass, live Story-Media mutations/schema/auth/grants/seeds/config. Host5088 skip-bootstrap=1 / FE3000 next-dev; Html404 production blocker unchanged. Preserve VendorShell/i18n/date layout/Returns/payout/user data and R6 effects UNKNOWN.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — R17 TOAST PRESENTATION ACCEPTED; OWNER CHECK PENDING — 2026-11-20
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17/ARCHITECT-REVIEW.md
