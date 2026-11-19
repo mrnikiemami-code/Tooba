@@ -1,17 +1,16 @@
-# CURRENT — OWNER TOGGLE LAYOUT FAILURE; ONLY TB-282-R12 ISSUED — 2026-11-20
+# CURRENT — TB-282-R12 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12
-Expected-Base-SHA: 882f7f7bad03d29e1cba00cf2f34bfcbdf8874fe
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12/TASK.md
-Owner screenshot shows end fields below start after unchecking no-end. Source shared create/edit has checkbox min-height row only above end controls + nested labels. Only a small presentation repair: header checkbox, aligned two-column dates/clocks desktop, single-column mobile, stable disabled end controls, valid accessible markup. No lifecycle/date semantics/backend/auth changes.
-R11 local-trial acceptance retained with prior proof/build limits; this actual owner layout failure is not a new feature phase.
-One worker tooba-worker-01/tooba-main; issued NOT claimed/running. Verify served1440/390 toggle geometry, no screenshots/live saves. Preserve user data/Returns/payout/R5–R11 safeguards.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-Existing production Html404 build blocker remains; no production acceptance claimed.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R12/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued layout-only scope: shared create/edit publication window puts «بدون پایان» in section header; stable start/end columns (end disabled when no-end); served CDP geometry 1440 day/time tops equal and 390 start-then-end overflowX=0; FE mount 3/3; ZERO backend/live write.
+Decision `PUBLICATION_WINDOW_NO_END_HEADER_STABLE_END_COLUMNS_CREATE_EDIT_RTL_DESKTOP_MOBILE_GEOMETRY_VERIFIED_ZERO_BACKEND`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `882f7f7bad03d29e1cba00cf2f34bfcbdf8874fe`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — R12 ISSUED; WORKER PASS ABOVE
 
 # CURRENT — R11 ACCEPTED FOR LOCAL OWNER TEST; RELEASE BUILD BLOCKED — 2026-11-20
 

@@ -140,6 +140,108 @@ function isVideoFile(file: File | null): boolean {
   return file.type.startsWith("video/") || /\.(mp4|webm|mov)$/i.test(file.name);
 }
 
+/** بازهٔ انتشار مشترک ساخت/ویرایش — بدون‌پایان در هدر؛ ستون‌های شروع/پایان پایدار. */
+function StoryPublicationWindowFields({
+  testIdPrefix,
+  copy,
+  draftWindow,
+  noPublicationEnd,
+  error,
+  onDraftChange,
+  onNoEndChange,
+}: {
+  testIdPrefix: "story-create-window" | "story-edit-window";
+  copy: StoryCopy;
+  draftWindow: StoryScheduleDraft;
+  noPublicationEnd: boolean;
+  error: string | null;
+  onDraftChange: (next: StoryScheduleDraft) => void;
+  onNoEndChange: (noEnd: boolean) => void;
+}) {
+  const startDayId = `${testIdPrefix}-start-day-label`;
+  const startTimeId = `${testIdPrefix}-start-time`;
+  const endDayId = `${testIdPrefix}-end-day-label`;
+  const endTimeId = `${testIdPrefix}-end-time`;
+  const noEndId = `${testIdPrefix}-no-end`;
+  const endDisabled = noPublicationEnd;
+
+  return (
+    <fieldset
+      className="space-y-3 rounded-xl border border-gray-100 p-3"
+      data-testid={testIdPrefix === "story-create-window" ? "story-create-publication-window" : "story-edit-publication-window"}
+    >
+      <legend className="float-none mb-1 w-full px-0">
+        <span className="flex flex-wrap items-center justify-between gap-2 gap-y-2">
+          <span className="text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</span>
+          <span className="flex min-h-11 items-center gap-2 text-sm font-normal">
+            <input
+              id={noEndId}
+              type="checkbox"
+              className="h-4 w-4"
+              checked={noPublicationEnd}
+              onChange={(e) => onNoEndChange(e.target.checked)}
+              data-testid={noEndId}
+            />
+            <label htmlFor={noEndId} className="cursor-pointer select-none">
+              {copy.publicationNoEndToggle}
+            </label>
+          </span>
+        </span>
+      </legend>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-2 text-sm">
+          <p id={startDayId} className="text-gray-600">
+            {copy.publicationStartLabel}
+          </p>
+          <div data-testid={`${testIdPrefix}-start-day`}>
+            <JalaliDatePicker
+              ariaLabel={copy.publicationStartLabel}
+              value={draftWindow.startDayIso || undefined}
+              onChange={(iso) => onDraftChange({ ...draftWindow, startDayIso: iso ?? "" })}
+            />
+          </div>
+          <input
+            id={startTimeId}
+            type="time"
+            className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+            value={draftWindow.startTime}
+            onChange={(e) => onDraftChange({ ...draftWindow, startTime: e.target.value })}
+            data-testid={`${testIdPrefix}-start-time`}
+            aria-labelledby={startDayId}
+          />
+        </div>
+        <div className={`space-y-2 text-sm ${endDisabled ? "opacity-55" : ""}`}>
+          <p id={endDayId} className="text-gray-600">
+            {copy.publicationEndLabel}
+          </p>
+          <div data-testid={`${testIdPrefix}-end-day`} className={endDisabled ? "pointer-events-none" : undefined}>
+            <JalaliDatePicker
+              ariaLabel={copy.publicationEndLabel}
+              value={draftWindow.endDayIso || undefined}
+              onChange={(iso) => {
+                if (endDisabled) return;
+                onDraftChange({ ...draftWindow, endDayIso: iso ?? "" });
+              }}
+            />
+          </div>
+          <input
+            id={endTimeId}
+            type="time"
+            className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50"
+            value={draftWindow.endTime}
+            disabled={endDisabled}
+            onChange={(e) => onDraftChange({ ...draftWindow, endTime: e.target.value })}
+            data-testid={`${testIdPrefix}-end-time`}
+            aria-labelledby={endDayId}
+            aria-disabled={endDisabled}
+          />
+        </div>
+      </div>
+      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+    </fieldset>
+  );
+}
+
 /**
  * صفحهٔ مشترک مدیریت استوری — Admin و Seller؛ فهرست Orders-style و ویرایشگر سادهٔ کاسب.
  */
@@ -981,74 +1083,21 @@ function StoryManagementScreenBody({
                 ) : null}
               </fieldset>
             ) : null}
-            <fieldset className="space-y-2 rounded-xl border border-gray-100 p-3" data-testid="story-create-publication-window">
-              <legend className="px-1 text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</legend>
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="block text-sm">
-                  <span className="mb-1 block text-gray-600">{copy.publicationStartLabel}</span>
-                  <div data-testid="story-create-window-start-day">
-                    <JalaliDatePicker
-                      ariaLabel={copy.publicationStartLabel}
-                      value={draftWindow.startDayIso || undefined}
-                      onChange={(iso) => {
-                        setDraftWindow((prev) => ({ ...prev, startDayIso: iso ?? "" }));
-                        setDirty(true);
-                      }}
-                    />
-                  </div>
-                  <input
-                    type="time"
-                    className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                    value={draftWindow.startTime}
-                    onChange={(e) => {
-                      setDraftWindow((prev) => ({ ...prev, startTime: e.target.value }));
-                      setDirty(true);
-                    }}
-                    data-testid="story-create-window-start-time"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1 block text-gray-600">{copy.publicationEndLabel}</span>
-                  <label className="mb-2 flex min-h-11 items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={noPublicationEnd}
-                      onChange={(e) => {
-                        setNoPublicationEnd(e.target.checked);
-                        setDirty(true);
-                      }}
-                      data-testid="story-create-window-no-end"
-                    />
-                    {copy.publicationNoEndToggle}
-                  </label>
-                  {!noPublicationEnd ? (
-                    <>
-                      <div data-testid="story-create-window-end-day">
-                        <JalaliDatePicker
-                          ariaLabel={copy.publicationEndLabel}
-                          value={draftWindow.endDayIso || undefined}
-                          onChange={(iso) => {
-                            setDraftWindow((prev) => ({ ...prev, endDayIso: iso ?? "" }));
-                            setDirty(true);
-                          }}
-                        />
-                      </div>
-                      <input
-                        type="time"
-                        className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                        value={draftWindow.endTime}
-                        onChange={(e) => {
-                          setDraftWindow((prev) => ({ ...prev, endTime: e.target.value }));
-                          setDirty(true);
-                        }}
-                        data-testid="story-create-window-end-time"
-                      />
-                    </>
-                  ) : null}
-                </label>
-              </div>
-              {draftWindowError ? <p className="text-sm text-rose-700">{draftWindowError}</p> : null}
-            </fieldset>
+            <StoryPublicationWindowFields
+              testIdPrefix="story-create-window"
+              copy={copy}
+              draftWindow={draftWindow}
+              noPublicationEnd={noPublicationEnd}
+              error={draftWindowError}
+              onDraftChange={(next) => {
+                setDraftWindow(next);
+                setDirty(true);
+              }}
+              onNoEndChange={(noEnd) => {
+                setNoPublicationEnd(noEnd);
+                setDirty(true);
+              }}
+            />
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -1321,70 +1370,21 @@ function StoryManagementScreenBody({
                   </select>
                 </label>
               </div>
-              <fieldset className="space-y-2 rounded-xl border border-gray-100 p-3" data-testid="story-edit-publication-window">
-                <legend className="px-1 text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</legend>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="block text-sm">
-                    <span className="mb-1 block text-gray-600">{copy.publicationStartLabel}</span>
-                    <JalaliDatePicker
-                      ariaLabel={copy.publicationStartLabel}
-                      value={draftWindow.startDayIso || undefined}
-                      onChange={(iso) => {
-                        setDraftWindow((prev) => ({ ...prev, startDayIso: iso ?? "" }));
-                        setDirty(true);
-                      }}
-                    />
-                    <input
-                      type="time"
-                      className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      value={draftWindow.startTime}
-                      onChange={(e) => {
-                        setDraftWindow((prev) => ({ ...prev, startTime: e.target.value }));
-                        setDirty(true);
-                      }}
-                      data-testid="story-edit-window-start-time"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="mb-1 block text-gray-600">{copy.publicationEndLabel}</span>
-                    <label className="mb-2 flex min-h-11 items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={noPublicationEnd}
-                        onChange={(e) => {
-                          setNoPublicationEnd(e.target.checked);
-                          setDirty(true);
-                        }}
-                        data-testid="story-edit-window-no-end"
-                      />
-                      {copy.publicationNoEndToggle}
-                    </label>
-                    {!noPublicationEnd ? (
-                      <>
-                        <JalaliDatePicker
-                          ariaLabel={copy.publicationEndLabel}
-                          value={draftWindow.endDayIso || undefined}
-                          onChange={(iso) => {
-                            setDraftWindow((prev) => ({ ...prev, endDayIso: iso ?? "" }));
-                            setDirty(true);
-                          }}
-                        />
-                        <input
-                          type="time"
-                          className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                          value={draftWindow.endTime}
-                          onChange={(e) => {
-                            setDraftWindow((prev) => ({ ...prev, endTime: e.target.value }));
-                            setDirty(true);
-                          }}
-                          data-testid="story-edit-window-end-time"
-                        />
-                      </>
-                    ) : null}
-                  </label>
-                </div>
-                {draftWindowError ? <p className="text-sm text-rose-700">{draftWindowError}</p> : null}
-              </fieldset>
+              <StoryPublicationWindowFields
+                testIdPrefix="story-edit-window"
+                copy={copy}
+                draftWindow={draftWindow}
+                noPublicationEnd={noPublicationEnd}
+                error={draftWindowError}
+                onDraftChange={(next) => {
+                  setDraftWindow(next);
+                  setDirty(true);
+                }}
+                onNoEndChange={(noEnd) => {
+                  setNoPublicationEnd(noEnd);
+                  setDirty(true);
+                }}
+              />
               {detail.items.length > 0 && !detail.contentReady ? (
                 <p className="text-sm text-amber-800" data-testid="story-media-required-hint">
                   {copy.mediaRequiredHint}
