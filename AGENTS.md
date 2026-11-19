@@ -1,18 +1,18 @@
-# CURRENT — R10 PARTIAL; ONLY TB-282-R11 ISSUED — 2026-11-19
+# CURRENT — TB-282-R11 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
-Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10/ARCHITECT-REVIEW.md
-Code a58172221170def6a9ef7c316474289fb9a4d6c5 / main 400ccbf1cade071be3ebd72ab95171360475f6fb. Preserve preview/video-duration/draft-window/delete/status/readiness progress; full R10 PASS NOT accepted.
-Confirmed admin-for-shop delete replay scope mismatch, expired Active label falsely “در ویترین”, missing list delete, generic pending-delete route completion and date validation mismatch. R10 FE4/4 is date/copy units, not mounted preview/delete/submit proof; backend8/8 Domain facts, not real delete/replay path. Production Next build failed Html404; next-dev serving disclosed, no new BUILD_ID.
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11
-Expected-Base-SHA: 400ccbf1cade071be3ebd72ab95171360475f6fb
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11/TASK.md
-Only finish existing concrete defects + actual affected mounted/owning-path tests and final live read-only role screens. No new phase or R1–R10 replay. One worker tooba-worker-01/tooba-main, issued NOT claimed/running.
-Preserve VendorShell/registry/owner/version/replay, R9 skip-bootstrap memory recovery, Returns/payout/user work. ZERO migration/live business writes/seeds/grants/screenshots/delegation/polling. R6 effects UNKNOWN.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R11/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–C: admin delete replay from occurrence ledger (shop-owned); list+detail delete; mounted cancel/unknown/replay; displayState effectivelyPublic-only + past-end expired; EndAt>StartAt + requireEnd; URL-only media recovery copy; local preview mount; Next Html/404 prerender diagnosed (compile OK, unrelated Document Html on /404); Host5088 skip-bootstrap; Next3000 next-dev; ZERO migration; ZERO live Story/Media write; ZERO grant/seed.
+Decision `A_ADMIN_DELETE_REPLAY_FROM_OCCURRENCE_LEDGER_LIST_DETAIL_DELETE_B_EFFECTIVE_PUBLIC_ONLY_STATUS_END_GT_START_REQUIRE_END_C_MOUNTED_PREVIEW_DELETE_MEDIA_RECOVERY_NEXT_HTML404_DIAGNOSED_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `400ccbf1cade071be3ebd72ab95171360475f6fb`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — R10 PARTIAL; R11 WORKER PASS ABOVE
+
+# HISTORICAL — TB-282-R10 WORKER PASS; LATER PARTIAL; R11 ABOVE
 
 # CURRENT — TB-282-R10 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 

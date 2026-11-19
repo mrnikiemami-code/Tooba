@@ -411,36 +411,58 @@ public sealed partial class StoryDirectory
         return await EnrichAsync(MapAdmin(story, isAdmin), cancellationToken);
     }
 
-    /// <summary>بازپخش حذف پس از حذف هدف: occurrence مطابق ⇒ موفقیت با tombstone.</summary>
-    private async Task<AdminStorySnapshot?> TryReplayDeleteAsync(
+    /// <summary>
+    /// بازپخش حذف: هویت از occurrence ledger (شامل SellerPartyId ذخیره‌شده).
+    /// ادمین shop-owned را با sellerPartyId=null در آرگومان تطبیق نمی‌دهد — از ردیف occurrence می‌خواند.
+    /// اگر هدف هنوز باشد، حذف را کامل می‌کند بدون occurrence دوم؛ tombstone فقط وقتی ردیف رفته باشد.
+    /// </summary>
+    private async Task<(bool Handled, AdminStorySnapshot? Snapshot)> TryReplayOrFinishDeleteAsync(
         Guid tenantId,
-        Guid? sellerPartyId,
+        Guid? callerSellerPartyId,
         string actionCode,
         string occurrenceKey,
         string intentHash,
         bool isAdmin,
         Guid expectedStoryId,
+        int? expectedVersion,
         CancellationToken cancellationToken)
     {
         var key = occurrenceKey.Trim();
-        var existing = await _db.CommandOccurrences.AsNoTracking()
+        var existing = await _db.CommandOccurrences
             .FirstOrDefaultAsync(
                 row => row.OccurrenceKey == key && row.TenantId == tenantId,
                 cancellationToken);
         if (existing is null)
-            return null;
+            return (false, null);
+
         if (!string.Equals(existing.ActionCode, actionCode, StringComparison.Ordinal)
             || !string.Equals(existing.IntentHash, intentHash, StringComparison.Ordinal)
-            || existing.SellerPartyId != sellerPartyId
             || existing.StoryId != expectedStoryId)
         {
             throw new SemanticException(new SemanticError(StoryErrorCodes.OccurrenceConflict));
         }
 
-        var story = await LoadStoryAsync(tenantId, existing.StoryId, track: false, cancellationToken);
+        // Seller must match ledger shop; admin accepts ledger SellerPartyId (platform null or shop).
+        if (!isAdmin && existing.SellerPartyId != callerSellerPartyId)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.OccurrenceConflict));
+
+        var story = await LoadStoryAsync(tenantId, existing.StoryId, track: true, cancellationToken);
         if (story is null)
-            return MapDeletedSnapshot(tenantId, expectedStoryId, isAdmin);
-        return await EnrichAsync(MapAdmin(story, isAdmin), cancellationToken);
+            return (true, MapDeletedSnapshot(tenantId, expectedStoryId, isAdmin));
+
+        // Occurrence already minted but row still present — finish removal; never mint a second occurrence.
+        story.EnsureCanDelete(isAdmin);
+        story.EnsureExpectedVersion(expectedVersion);
+        if (!isAdmin)
+        {
+            if (story.SellerPartyId != callerSellerPartyId)
+                throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
+        }
+
+        _db.StoryItems.RemoveRange(story.Items);
+        _db.Stories.Remove(story);
+        await _db.SaveChangesAsync(cancellationToken);
+        return (true, MapDeletedSnapshot(tenantId, expectedStoryId, isAdmin));
     }
 
     private static AdminStorySnapshot MapDeletedSnapshot(Guid tenantId, Guid storyId, bool isAdmin) =>

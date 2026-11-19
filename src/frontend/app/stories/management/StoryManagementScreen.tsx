@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Eye, Send } from "lucide-react";
+import { Eye, Send, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   AppDataGrid,
@@ -109,15 +109,29 @@ function destinationLabelForType(ctaType: string | null | undefined, copy: Story
   return copy.destinationUnavailable;
 }
 
-function displayState(row: AdminStorySnapshot, copy: StoryCopy): string {
+function displayState(row: AdminStorySnapshot, copy: StoryCopy, nowMs: number = Date.now()): string {
+  // «در ویترین» فقط وقتی backend effectivelyPublic=true — نه صرفاً Status=Active.
   if (row.effectivelyPublic) return copy.displayOnStorefront;
   if (row.reviewStatus === "Submitted") return copy.displayAwaiting;
   if (row.reviewStatus === "Rejected") return copy.displayRejected;
   if (row.status === "Expired") return copy.displayExpired;
-  if (row.status === "Scheduled") return copy.displayScheduled;
   if (row.status === "Disabled") return copy.displayStopped;
-  if (row.status === "Draft" || row.reviewStatus === "None") return copy.displayDraft;
-  if (row.status === "Active") return copy.displayOnStorefront;
+  // پنجرهٔ انتشار گذشته روی Active/Scheduled ذخیره‌شده بدون بازنویسی Status → منقضی.
+  if (
+    (row.status === "Active" || row.status === "Scheduled") &&
+    row.endAt
+  ) {
+    const end = Date.parse(row.endAt);
+    if (!Number.isNaN(end) && end <= nowMs) return copy.displayExpired;
+  }
+  if (row.status === "Scheduled") return copy.displayScheduled;
+  if (row.status === "Active" && row.startAt) {
+    const start = Date.parse(row.startAt);
+    if (!Number.isNaN(start) && start > nowMs) return copy.displayScheduled;
+  }
+  if (row.status === "Draft" || row.reviewStatus === "None" || row.status === "Active") {
+    return copy.displayDraft;
+  }
   return copy.displayDraft;
 }
 
@@ -231,6 +245,7 @@ function StoryManagementScreenBody({
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [pendingLeaveHref, setPendingLeaveHref] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AdminStorySnapshot | null>(null);
   const [draftWindow, setDraftWindow] = useState<StoryScheduleDraft>({
     startDayIso: "",
     startTime: "10:00",
@@ -637,11 +652,14 @@ function StoryManagementScreenBody({
       toast.error(copy.shopPickRequired);
       return null;
     }
-    const windowParse = parseOptionalPublicationWindow({
-      ...draftWindow,
-      endDayIso: noPublicationEnd ? "" : draftWindow.endDayIso,
-      endTime: noPublicationEnd ? "" : draftWindow.endTime,
-    });
+    const windowParse = parseOptionalPublicationWindow(
+      {
+        ...draftWindow,
+        endDayIso: noPublicationEnd ? "" : draftWindow.endDayIso,
+        endTime: noPublicationEnd ? "" : draftWindow.endTime,
+      },
+      { requireEnd: !noPublicationEnd },
+    );
     if (!windowParse.ok) {
       setDraftWindowError(windowParse.message);
       toast.error(windowParse.message);
@@ -775,18 +793,21 @@ function StoryManagementScreenBody({
                   data-testid="story-recovery-retry"
                   onClick={() => {
                     const scope = { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId };
-                    if (
-                      act.role !== scope.role ||
-                      (act.shopId ?? null) !== (scope.shopId ?? null) ||
-                      act.actorUserId !== scope.actorUserId
-                    ) {
+                    // Admin freezes story sellerPartyId on the envelope; session shop stays platform null.
+                    const shopMismatch =
+                      act.role === "seller" && (act.shopId ?? null) !== (scope.shopId ?? null);
+                    if (act.role !== scope.role || act.actorUserId !== scope.actorUserId || shopMismatch) {
                       toast.error(copy.pendingContinueFailed);
                       return;
                     }
                     void replayPendingStoryIntent({
                       gate,
                       envelope: act,
-                      scope,
+                      scope: {
+                        role: act.role,
+                        shopId: act.role === "admin" ? act.shopId ?? null : scope.shopId,
+                        actorUserId: scope.actorUserId,
+                      },
                       uploadFile: recoveryFile,
                     }).then((outcome) => {
                       if (outcome.state === "ok") {
@@ -799,6 +820,17 @@ function StoryManagementScreenBody({
                             adoptBoundCreatedDraft(id, {
                               openSlideAfter: Boolean(createMode && !selectedId),
                             });
+                          }
+                        }
+                        if (act.action === "delete") {
+                          setDeleteOpen(false);
+                          setDeleteTarget(null);
+                          const closedId = act.routeTargetId;
+                          if (closedId && (selectedId === closedId || detail?.storyId === closedId)) {
+                            setSelectedId(null);
+                            setDetail(null);
+                            ownedDraftIdRef.current = null;
+                            router.push(basePath);
                           }
                         }
                         refreshGrid();
@@ -832,6 +864,10 @@ function StoryManagementScreenBody({
           onOk={() => setState("ok")}
           onOpenDetail={openDetail}
           onSubmit={(row) => void runSubmit(row)}
+          onRequestDelete={(row) => {
+            setDeleteTarget(row);
+            setDeleteOpen(true);
+          }}
           errorMessage={message}
           onRetry={refreshGrid}
           showError={state === "error"}
@@ -1361,11 +1397,14 @@ function StoryManagementScreenBody({
                   data-testid="story-save-title-locale"
                   onClick={() => {
                     if (!detail || !actorId) return;
-                    const windowParse = parseOptionalPublicationWindow({
-                      ...draftWindow,
-                      endDayIso: noPublicationEnd ? "" : draftWindow.endDayIso,
-                      endTime: noPublicationEnd ? "" : draftWindow.endTime,
-                    });
+                    const windowParse = parseOptionalPublicationWindow(
+                      {
+                        ...draftWindow,
+                        endDayIso: noPublicationEnd ? "" : draftWindow.endDayIso,
+                        endTime: noPublicationEnd ? "" : draftWindow.endTime,
+                      },
+                      { requireEnd: !noPublicationEnd },
+                    );
                     if (!windowParse.ok) {
                       setDraftWindowError(windowParse.message);
                       toast.error(windowParse.message);
@@ -1424,7 +1463,10 @@ function StoryManagementScreenBody({
                     type="button"
                     className="min-h-11 rounded-xl border border-rose-300 px-4 py-2 text-sm text-rose-700"
                     data-testid="story-delete-open"
-                    onClick={() => setDeleteOpen(true)}
+                    onClick={() => {
+                      setDeleteTarget(detail);
+                      setDeleteOpen(true);
+                    }}
                   >
                     {copy.deleteStory}
                   </button>
@@ -1470,6 +1512,11 @@ function StoryManagementScreenBody({
                     <p className="text-xs text-muted" data-testid="story-slide-destination">
                       {copy.destinationPrefix} {destinationLabelForItem(item)}
                     </p>
+                    {capabilities.mode === "seller" && !item.mediaAssetId ? (
+                      <p className="mt-1 text-xs text-amber-800" data-testid="story-slide-media-recovery">
+                        {copy.slideNeedsOwnedMedia}
+                      </p>
+                    ) : null}
                   </div>
                   {capabilities.canEdit && sellerEditable ? (
                     <div className="flex flex-wrap gap-2">
@@ -1930,20 +1977,26 @@ function StoryManagementScreenBody({
 
       <Dialog
         open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
+        onClose={() => {
+          setDeleteOpen(false);
+          setDeleteTarget(null);
+        }}
         title={copy.deleteStory}
       >
         <div className="space-y-3 p-1" data-testid="story-delete-dialog">
           <p className="text-sm text-muted">
             {copy.deleteStoryConfirm}
-            {detail?.title ? ` «${detail.title}»` : ""}
+            {deleteTarget?.title ? ` «${deleteTarget.title}»` : ""}
           </p>
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
               className="min-h-11 rounded-xl px-4 py-2 text-sm"
               data-testid="story-delete-cancel"
-              onClick={() => setDeleteOpen(false)}
+              onClick={() => {
+                setDeleteOpen(false);
+                setDeleteTarget(null);
+              }}
             >
               {copy.cancel}
             </button>
@@ -1952,9 +2005,10 @@ function StoryManagementScreenBody({
               className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
               data-testid="story-delete-confirm"
               onClick={() => {
-                if (!detail || !actorId) return;
+                const target = deleteTarget;
+                if (!target || !actorId) return;
                 const key = mintOccurrence();
-                const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
+                const body = { expectedVersion: target.versionToken, occurrenceKey: key };
                 const envelope: StoryIntentEnvelope = {
                   version: 2,
                   action: "delete",
@@ -1962,17 +2016,17 @@ function StoryManagementScreenBody({
                   method: "DELETE",
                   path:
                     capabilities.mode === "seller"
-                      ? `/v1/seller/stories/${detail.storyId}`
-                      : `/v1/admin/stories/${detail.storyId}`,
-                  routeTargetId: detail.storyId,
-                  expectedVersion: detail.versionToken,
+                      ? `/v1/seller/stories/${target.storyId}`
+                      : `/v1/admin/stories/${target.storyId}`,
+                  routeTargetId: target.storyId,
+                  expectedVersion: target.versionToken,
                   bodyText: JSON.stringify(body),
                   uploadMeta: null,
                   addBodyText: null,
                   uploadedAssetId: null,
                   children: [],
                   role: capabilities.mode,
-                  shopId: detail.sellerPartyId ?? sellerShopId,
+                  shopId: target.sellerPartyId ?? sellerShopId,
                   actorUserId: actorId,
                   recordedAt: new Date().toISOString(),
                 };
@@ -1984,13 +2038,22 @@ function StoryManagementScreenBody({
                   if (outcome.state === "ok") {
                     toast.success(copy.deletedToast);
                     setDeleteOpen(false);
-                    setSelectedId(null);
-                    setDetail(null);
-                    ownedDraftIdRef.current = null;
-                    router.push(basePath);
+                    setDeleteTarget(null);
+                    const closedId = target.storyId;
+                    if (selectedId === closedId || detail?.storyId === closedId) {
+                      setSelectedId(null);
+                      setDetail(null);
+                      ownedDraftIdRef.current = null;
+                      router.push(basePath);
+                    }
                     refreshGrid();
-                  } else if (outcome.state === "failed") toast.error(outcome.message);
-                  else toast.error(copy.sendFailed);
+                  } else if (outcome.state === "failed") {
+                    toast.error(outcome.message);
+                    setReloadToken((v) => v + 1);
+                  } else {
+                    toast.error(copy.sendFailed);
+                    setReloadToken((v) => v + 1);
+                  }
                 });
               }}
             >
@@ -2298,6 +2361,7 @@ function StoryLiveGrid({
   onOk,
   onOpenDetail,
   onSubmit,
+  onRequestDelete,
   errorMessage,
   onRetry,
   showError,
@@ -2312,6 +2376,7 @@ function StoryLiveGrid({
   onOk: () => void;
   onOpenDetail: (id: string) => void;
   onSubmit: (row: AdminStorySnapshot) => void;
+  onRequestDelete: (row: AdminStorySnapshot) => void;
   errorMessage?: string;
   onRetry: () => void;
   showError: boolean;
@@ -2427,15 +2492,23 @@ function StoryLiveGrid({
               onClick: (r) => onSubmit(r),
             });
           }
+          if (hasAction(row, "delete")) {
+            actions.push({
+              id: "delete",
+              label: copy.deleteStory,
+              icon: Trash2,
+              onClick: (r) => onRequestDelete(r),
+            });
+          }
           return <AppGridRowActionsCell row={row} actions={actions} compact />;
         },
-        width: 120,
-        minWidth: 100,
+        width: 140,
+        minWidth: 110,
         exportable: false,
         sortable: false,
       },
     ];
-  }, [capabilities.canSubmit, copy, numberLocale, onOpenDetail, onSubmit]);
+  }, [capabilities.canSubmit, copy, numberLocale, onOpenDetail, onSubmit, onRequestDelete]);
 
   const savedViewStore = useMemo(
     () =>

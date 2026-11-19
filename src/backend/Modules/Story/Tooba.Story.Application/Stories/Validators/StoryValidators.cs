@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Tooba.Story.Application.Stories.Commands.Admin;
 using Tooba.Story.Application.Stories.Commands.Seller;
 using Tooba.Story.Application.Stories.Queries.Admin;
@@ -65,7 +65,7 @@ public sealed class CreateAdminStoryCommandValidator : AbstractValidator<CreateA
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
         RuleFor(x => x.Input)
-            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt > s.StartAt)
             .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
@@ -77,7 +77,7 @@ public sealed class UpdateAdminStoryCommandValidator : AbstractValidator<UpdateA
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
         RuleFor(x => x.Input)
-            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt > s.StartAt)
             .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
@@ -102,7 +102,7 @@ public sealed class ScheduleAdminStoryCommandValidator : AbstractValidator<Sched
     public ScheduleAdminStoryCommandValidator()
     {
         RuleFor(x => x.Input)
-            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt > s.StartAt)
             .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
@@ -197,7 +197,7 @@ public sealed class CreateSellerStoryDraftCommandValidator : AbstractValidator<C
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
         RuleFor(x => x.Input)
-            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt > s.StartAt)
             .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
@@ -209,7 +209,7 @@ public sealed class UpdateSellerStoryCommandValidator : AbstractValidator<Update
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
         RuleFor(x => x.Input)
-            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt > s.StartAt)
             .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
@@ -309,7 +309,7 @@ public sealed class ApproveAndScheduleAdminStoryCommandValidator : AbstractValid
     public ApproveAndScheduleAdminStoryCommandValidator()
     {
         RuleFor(x => x)
-            .Must(x => x.StartAt is null || x.EndAt is null || x.EndAt >= x.StartAt)
+            .Must(x => x.StartAt is null || x.EndAt is null || x.EndAt > x.StartAt)
             .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }

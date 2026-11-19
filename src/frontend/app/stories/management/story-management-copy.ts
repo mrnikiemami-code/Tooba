@@ -77,6 +77,7 @@ export type StoryCopy = {
   deletedToast: string;
   deleteUnavailable: string;
   mediaRequiredHint: string;
+  slideNeedsOwnedMedia: string;
   localPreviewLabel: string;
   displayExpired: string;
   ctaLabel: string;
@@ -223,6 +224,8 @@ export const faStoryCopy: StoryCopy = {
   deletedToast: "استوری حذف شد.",
   deleteUnavailable: "حذف در این وضعیت مجاز نیست؛ از توقف یا بازگشت به پیش‌نویس استفاده کنید.",
   mediaRequiredHint: "برای ارسال، هر اسلاید باید از بارگذاری رسانهٔ مجاز ثبت شده باشد.",
+  slideNeedsOwnedMedia:
+    "این اسلاید فقط لینک دارد و قابل ارسال نیست. فایل معتبر بارگذاری کنید یا اسلاید را حذف و دوباره اضافه کنید.",
   localPreviewLabel: "پیش‌نمایش انتخاب‌شده",
   displayExpired: "منقضی",
   ctaLabel: "مقصد دکمه",
@@ -369,6 +372,8 @@ export const enStoryCopy: StoryCopy = {
   deletedToast: "Story deleted.",
   deleteUnavailable: "Delete is not available in this state; use stop or return to draft.",
   mediaRequiredHint: "Each slide must be registered via allowed media upload before submit.",
+  slideNeedsOwnedMedia:
+    "This slide is URL-only and cannot be submitted. Upload a valid file or remove the slide and add it again.",
   localPreviewLabel: "Selected preview",
   displayExpired: "Expired",
   ctaLabel: "Button destination",

@@ -216,25 +216,32 @@ public sealed partial class StoryDirectory : IStoryDirectory
     {
         var key = RequireOccurrenceKey(occurrenceKey);
         var intent = HashDeleteStoryIntent(storyId, expectedVersion);
-        var replay = await TryReplayDeleteAsync(
-            tenantId, sellerPartyId: null, "admin_delete", key, intent, isAdmin: true, storyId, cancellationToken);
-        if (replay is not null)
-            return replay;
+        var (handled, replay) = await TryReplayOrFinishDeleteAsync(
+            tenantId,
+            callerSellerPartyId: null,
+            "admin_delete",
+            key,
+            intent,
+            isAdmin: true,
+            storyId,
+            expectedVersion,
+            cancellationToken);
+        if (handled)
+            return replay ?? MapDeletedSnapshot(tenantId, storyId, isAdmin: true);
 
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         story.EnsureCanDelete(isAdmin: true);
         story.EnsureExpectedVersion(expectedVersion);
         var now = DateTimeOffset.UtcNow;
+        var shopScope = story.SellerPartyId;
         await RecordOccurrenceAsync(
-            tenantId, story.SellerPartyId, "admin_delete", key, intent,
+            tenantId, shopScope, "admin_delete", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         _db.StoryItems.RemoveRange(story.Items);
         _db.Stories.Remove(story);
-        var folded = await SaveChangesWithOccurrenceArbitrationAsync(
-            tenantId, key, intent, "admin_delete", story.SellerPartyId, expectedStoryId: storyId,
+        _ = await SaveChangesWithOccurrenceArbitrationAsync(
+            tenantId, key, intent, "admin_delete", shopScope, expectedStoryId: storyId,
             ownedStoryIds: [storyId], cancellationToken);
-        if (folded is Guid)
-            return MapDeletedSnapshot(tenantId, storyId, isAdmin: true);
         return MapDeletedSnapshot(tenantId, storyId, isAdmin: true);
     }
 
@@ -710,10 +717,18 @@ public sealed partial class StoryDirectory : IStoryDirectory
     {
         var key = RequireOccurrenceKey(occurrenceKey);
         var intent = HashDeleteStoryIntent(storyId, expectedVersion);
-        var replay = await TryReplayDeleteAsync(
-            tenantId, sellerPartyId, "seller_delete", key, intent, isAdmin: false, storyId, cancellationToken);
-        if (replay is not null)
-            return replay;
+        var (handled, replay) = await TryReplayOrFinishDeleteAsync(
+            tenantId,
+            callerSellerPartyId: sellerPartyId,
+            "seller_delete",
+            key,
+            intent,
+            isAdmin: false,
+            storyId,
+            expectedVersion,
+            cancellationToken);
+        if (handled)
+            return replay ?? MapDeletedSnapshot(tenantId, storyId, isAdmin: false);
 
         var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.EnsureCanDelete(isAdmin: false);

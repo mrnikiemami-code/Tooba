@@ -272,7 +272,13 @@ export function listPendingStoryIntents(
     if (!actorUserId?.trim()) {
       return [{ state: "blocked", detail: "actor.missing", rawKey: "*" }];
     }
-    const prefix = `${STORAGE_PREFIX}${role}:${shopId ?? "platform"}:${actorUserId}:`;
+    // Admin intents freeze story.sellerPartyId as shopId; session shop is platform null.
+    // Enumerate every admin:{shop}:{actor}:… key for this actor so shop-target deletes recover.
+    const prefix =
+      role === "admin"
+        ? `${STORAGE_PREFIX}${role}:`
+        : `${STORAGE_PREFIX}${role}:${shopId ?? "platform"}:${actorUserId}:`;
+    const adminActorSegment = `:${actorUserId}:`;
     const rows: PendingStoryIntent[] = [];
     const length = store.length;
     for (let i = 0; i < length; i++) {
@@ -287,6 +293,7 @@ export function listPendingStoryIntents(
         if (key.startsWith(STORAGE_PREFIX)) continue;
         continue;
       }
+      if (role === "admin" && !key.includes(adminActorSegment)) continue;
       let raw: string | null;
       try {
         raw = store.getItem(key);
@@ -305,7 +312,12 @@ export function listPendingStoryIntents(
           rows.push({ state: "blocked", detail: "legacy_v1", rawKey: key });
           continue;
         }
-        const valid = validateStoryEnvelope(parsed, { role, shopId, actorUserId });
+        const valid = validateStoryEnvelope(
+          parsed,
+          role === "admin"
+            ? { role, shopId: parsed.shopId ?? null, actorUserId }
+            : { role, shopId, actorUserId },
+        );
         if (!valid.ok) {
           rows.push({ state: "blocked", detail: valid.reason, rawKey: key });
           continue;

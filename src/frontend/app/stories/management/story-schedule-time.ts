@@ -90,14 +90,23 @@ export type StoryOptionalWindowParse =
   | { ok: false; field: "startAt" | "endAt"; message: string };
 
 /** بازهٔ انتشار پیش‌نویس: هر دو خالی = بدون بازه؛ پایان بدون شروع رد می‌شود. */
-export function parseOptionalPublicationWindow(draft: StoryScheduleDraft): StoryOptionalWindowParse {
+export function parseOptionalPublicationWindow(
+  draft: StoryScheduleDraft,
+  options?: { requireEnd?: boolean },
+): StoryOptionalWindowParse {
   const hasStart = Boolean(draft.startDayIso.trim());
   const hasEnd = Boolean(draft.endDayIso.trim());
   if (!hasStart && !hasEnd) {
+    if (options?.requireEnd) {
+      return { ok: false, field: "endAt", message: "زمان پایان را انتخاب کنید یا «بدون پایان» را فعال کنید." };
+    }
     return { ok: true, startAt: null, endAt: null };
   }
   if (!hasStart && hasEnd) {
     return { ok: false, field: "startAt", message: "برای پایان، ابتدا زمان شروع را انتخاب کنید." };
+  }
+  if (options?.requireEnd && !hasEnd) {
+    return { ok: false, field: "endAt", message: "زمان پایان را انتخاب کنید یا «بدون پایان» را فعال کنید." };
   }
   const parsed = parseStoryScheduleDraft(draft);
   if (!parsed.ok) return parsed;
