@@ -1,4 +1,15 @@
-# CURRENT — existing seller integration retained; TB-282-R3 worker PASS awaiting review — 2026-11-19
+# CURRENT — TB-282-R3 REVIEWED PARTIAL; NO NEXT TASK ISSUED — 2026-11-19
+
+Reviewed implementation 70c5dd36a2a9508f7a95edce1ee575c0fda9dfae / evidence 9047660042696e205c04cf161c5c035abd912840.
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3/ARCHITECT-REVIEW.md.
+Retain malformed-2xx retention, explicit storage barriers and real published-catalogue search/page/count source progress. Worker PASS does NOT close issued S1/S2: upload_add executor bypasses the allowed-route gate; new R3 tests do not mount the workspace or run the claimed negative control; required >40-product owning-query/paging/shop-isolation proof is absent. Only finish these existing obligations; no UI redesign/backend wave/Gate0/Media reopening.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT
+Current screens may be visually inspected at /fa/admin/stories, /fa/vendor-panel/stories and /fa; full connected/user/commercial acceptance NOT claimed. Worker-reported Next build fFmkskCMJiO4PrZyHPO6l, Host36320; Architect source review only, no live writes/tests.
+Seller remains inside existing VendorShell /vendor-panel/stories/story.view, no parallel shell/menu/login. Returns acceptance, payout backlog and separate key state unchanged.
+
+# HISTORICAL — superseded by CURRENT above
 
 TB-282-R3 worker PASS closed S1/S2 on the existing VendorShell/story.view/shared editor path. No parallel panel/menu/login. Await Architect/user review; automaticNextImplementationTask NONE.
 

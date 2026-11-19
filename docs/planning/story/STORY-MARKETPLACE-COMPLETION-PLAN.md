@@ -1,4 +1,15 @@
-# CURRENT — TB-282-R3 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+# CURRENT — TB-282-R3 REVIEWED PARTIAL; NO NEXT TASK ISSUED — 2026-11-19
+
+Reviewed implementation 70c5dd36a2a9508f7a95edce1ee575c0fda9dfae / evidence 9047660042696e205c04cf161c5c035abd912840.
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3/ARCHITECT-REVIEW.md.
+Retain malformed-2xx retention, explicit storage barriers and real published-catalogue search/page/count source progress. Worker PASS does NOT close issued S1/S2: upload_add executor bypasses the allowed-route gate; new R3 tests do not mount the workspace or run the claimed negative control; required >40-product owning-query/paging/shop-isolation proof is absent. Only finish these existing obligations; no UI redesign/backend wave/Gate0/Media reopening.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT
+Current screens may be visually inspected at /fa/admin/stories, /fa/vendor-panel/stories and /fa; full connected/user/commercial acceptance NOT claimed. Worker-reported Next build fFmkskCMJiO4PrZyHPO6l, Host36320; Architect source review only, no live writes/tests.
+Seller remains inside existing VendorShell /vendor-panel/stories/story.view, no parallel shell/menu/login. Returns acceptance, payout backlog and separate key state unchanged.
+
+# HISTORICAL — superseded by CURRENT above
 
 Worker PASS within issued S1–S2 for TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R3: verified bound response retention + real published catalogue search/page/count; Host5088/Next3000 BUILD_ID `fFmkskCMJiO4PrZyHPO6l`; ZERO migration; ZERO live Story/Media write.
 NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `9776ab9623aadb2d58f001113ce8269039b11a94`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
