@@ -1,4 +1,8 @@
-# CURRENT — FIRST DELIVERY ISSUED AS TB-STORY-281; SECOND DELIVERY NOT ISSUED — 2026-11-19
+# CURRENT — FIRST DELIVERY PARTIAL; 281-R1 CONSOLIDATED REPAIR ISSUED; UI NOT ISSUED — 2026-11-19
+
+Parent worker head 860c6a2c72842c8971d8b9f9885e26cdb0f3f657 independently source-reviewed; see parent ARCHITECT-REVIEW B1–B7. Complete original delivery-one scope and regression proofs in `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/TASK.md` before issuing the connected shared UI delivery. No automatic next implementation. Existing owner requirements, parent evidence and accepted unrelated work remain preserved.
+
+# HISTORICAL — first delivery issuance checkpoint
 
 Owner requested starting the first task and waiting for its result before issuing the next. Exact envelope: `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md`. Active worker tooba-worker-01. This task's bounded permission now supersedes the original analysis-only execution state for delivery ONE only; the original plan below is preserved as historical product context. No automatic continuation. UI/shared-list delivery remains planned, not issued. automaticNextImplementationTask NONE.
 
