@@ -41,6 +41,11 @@ npm run test:critical-storefront → 19/20 (storefront-landing-blocks.tsx:286 bg
 
 - Migration/DDL/seed/reset: NONE
 
+## Git
+
+- Code/Evidence HEAD: `2085d39d5641c387008edccaff5294b18ca8f4ae`
+- User-Work-Preserved: YES
+
 ## Negative control
 
 - Mounted same-key changed body blocked; recovery click resends exact frozen create bytes after unknown outcome (282-R2 suite).
