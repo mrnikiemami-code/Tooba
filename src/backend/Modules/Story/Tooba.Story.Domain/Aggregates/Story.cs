@@ -222,6 +222,19 @@ public sealed class Story
         Touch(now);
     }
 
+    /// <summary>
+    /// بازهٔ انتشار پیشنهادی/ذخیره‌شده روی پیش‌نویس بدون فعال‌سازی یا تغییر Status.
+    /// </summary>
+    public void SetDraftPublicationWindow(DateTimeOffset? startAt, DateTimeOffset? endAt, DateTimeOffset now)
+    {
+        if (startAt.HasValue && endAt.HasValue && endAt.Value <= startAt.Value)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+
+        StartAt = startAt;
+        EndAt = endAt;
+        Touch(now);
+    }
+
     /// <summary>زمان‌بندی را تنظیم و وضعیت Scheduled یا Active را بر اساس now تعیین می‌کند.</summary>
     public void SetSchedule(DateTimeOffset? startAt, DateTimeOffset? endAt, DateTimeOffset now)
     {
@@ -239,6 +252,15 @@ public sealed class Story
         else
             Status = StoryStatus.Active;
         Touch(now);
+    }
+
+    /// <summary>آیا حذف کل استوری برای نقش جاری مجاز است.</summary>
+    public void EnsureCanDelete(bool isAdmin)
+    {
+        if (isAdmin)
+            return;
+        if (!IsSellerContentEditable())
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
     }
 
     /// <summary>استوری را فعال می‌کند؛ فقط پس از واجد شرایط بودن انتشار.</summary>

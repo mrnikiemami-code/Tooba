@@ -8,6 +8,7 @@ export type StoryIntentAction =
   | "add_item"
   | "update_item"
   | "remove_item"
+  | "delete"
   | "reorder_items"
   | "submit"
   | "approve_publish"
@@ -67,6 +68,7 @@ const KNOWN_ACTIONS = new Set<StoryIntentAction>([
   "add_item",
   "update_item",
   "remove_item",
+  "delete",
   "reorder_items",
   "submit",
   "approve_publish",
@@ -351,6 +353,8 @@ export function pendingStoryLabel(envelope: StoryIntentEnvelope): string {
       return "بازگشت به پیش‌نویس هنوز تمام نشده";
     case "remove_item":
       return "حذف اسلاید هنوز تمام نشده";
+    case "delete":
+      return "حذف استوری هنوز تمام نشده";
     case "reorder_items":
       return "تغییر ترتیب هنوز تمام نشده";
     default:

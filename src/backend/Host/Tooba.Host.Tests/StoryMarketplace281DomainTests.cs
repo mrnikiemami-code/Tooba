@@ -27,7 +27,12 @@ public sealed class StoryMarketplace281DomainTests
             "ready",
             0,
             now.AddHours(-2));
-        story.AddItem("image", 0, now.AddHours(-2), mediaUrl: "https://cdn.example/a.jpg");
+        story.AddItem(
+            "image",
+            0,
+            now.AddHours(-2),
+            mediaAssetId: Guid.Parse("55555555-5555-5555-5555-555555555551"),
+            mediaUrl: "https://cdn.example/a.jpg");
         story.SubmitForReview(Guid.Parse("01a03628-3f68-7000-844d-99f1cadb54b0"), now.AddHours(-1));
         story.Approve(Guid.Parse("01a036c2-970e-7000-8eb7-94bf5cc2d8db"), now.AddMinutes(-30));
         story.SetSchedule(now.AddMinutes(30), now.AddHours(2), now.AddMinutes(-30));

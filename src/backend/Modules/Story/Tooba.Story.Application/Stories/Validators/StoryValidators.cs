@@ -64,6 +64,9 @@ public sealed class CreateAdminStoryCommandValidator : AbstractValidator<CreateA
     public CreateAdminStoryCommandValidator()
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
+        RuleFor(x => x.Input)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
 
@@ -73,6 +76,9 @@ public sealed class UpdateAdminStoryCommandValidator : AbstractValidator<UpdateA
     public UpdateAdminStoryCommandValidator()
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
+        RuleFor(x => x.Input)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
 
@@ -190,6 +196,9 @@ public sealed class CreateSellerStoryDraftCommandValidator : AbstractValidator<C
     public CreateSellerStoryDraftCommandValidator()
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
+        RuleFor(x => x.Input)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
 
@@ -199,6 +208,9 @@ public sealed class UpdateSellerStoryCommandValidator : AbstractValidator<Update
     public UpdateSellerStoryCommandValidator()
     {
         RuleFor(x => x.Input.Title).NotEmpty().WithErrorCode(StoryValidationCodes.TitleRequired);
+        RuleFor(x => x.Input)
+            .Must(s => s.StartAt is null || s.EndAt is null || s.EndAt >= s.StartAt)
+            .WithErrorCode(StoryValidationCodes.ScheduleRangeInvalid);
     }
 }
 

@@ -31,6 +31,7 @@ public static class StoryAdminEndpoints
         admin.MapGet("/{id:guid}", AdminGetAsync);
         admin.MapPost("", AdminCreateAsync);
         admin.MapPut("/{id:guid}", AdminUpdateAsync);
+        admin.MapDelete("/{id:guid}", AdminDeleteAsync);
         admin.MapPut("/reorder", AdminReorderAsync);
         admin.MapPost("/{id:guid}/enable", AdminEnableAsync);
         admin.MapPost("/{id:guid}/disable", AdminDisableAsync);
@@ -165,6 +166,20 @@ public static class StoryAdminEndpoints
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
             tenantId => sender.Send(new UpdateAdminStoryCommand(tenantId, id, StoryBodyMapping.ToUpdate(body)), cancellationToken));
+
+    private static Task<IResult> AdminDeleteAsync(
+        Guid id,
+        [FromBody] ReviewedStoryActionBody? body,
+        ISender sender,
+        IStoryAdminAuthorizer auth,
+        HttpContext http,
+        ICurrentTenant tenant,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        AdminMutationAsync(auth, http, tenant, api, cancellationToken,
+            tenantId => sender.Send(
+                new DeleteAdminStoryCommand(tenantId, id, body?.ExpectedVersion, body?.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> AdminReorderAsync(
         ReorderStoriesBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,

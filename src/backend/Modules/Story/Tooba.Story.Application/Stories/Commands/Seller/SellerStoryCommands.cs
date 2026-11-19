@@ -35,6 +35,21 @@ public sealed class UpdateSellerStoryCommandHandler(StoryPresentationComposer co
                 request.TenantId, request.SellerPartyId, request.StoryId, request.Input, cancellationToken));
 }
 
+/// <summary>حذف کل استوری قابل‌ویرایش فروشنده.</summary>
+public sealed record DeleteSellerStoryCommand(
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, int? ExpectedVersion, string? OccurrenceKey)
+    : IRequest<Result<AdminStorySnapshot>>;
+
+public sealed class DeleteSellerStoryCommandHandler(StoryPresentationComposer composer)
+    : IRequestHandler<DeleteSellerStoryCommand, Result<AdminStorySnapshot>>
+{
+    public Task<Result<AdminStorySnapshot>> Handle(DeleteSellerStoryCommand request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.SellerDeleteAsync(
+                request.TenantId, request.SellerPartyId, request.StoryId,
+                request.ExpectedVersion, request.OccurrenceKey, cancellationToken));
+}
+
 /// <summary>ارسال برای بازبینی.</summary>
 public sealed record SubmitSellerStoryCommand(
     Guid TenantId, Guid SellerPartyId, Guid StoryId, Guid ActorUserId,

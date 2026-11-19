@@ -13,7 +13,9 @@ public sealed record CreateStoryBody(
     string? CtaType,
     string? CtaTarget,
     Guid? SellerPartyId = null,
-    string? OccurrenceKey = null);
+    string? OccurrenceKey = null,
+    DateTimeOffset? StartAt = null,
+    DateTimeOffset? EndAt = null);
 
 /// <summary>بدنهٔ فرمان‌های نسخه‌دار بازبینی/انتشار.</summary>
 public sealed record ReviewedStoryActionBody(int? ExpectedVersion, string? OccurrenceKey = null);
@@ -35,7 +37,9 @@ public sealed record UpdateStoryBody(
     string? CtaType,
     string? CtaTarget,
     int? ExpectedVersion = null,
-    string? OccurrenceKey = null);
+    string? OccurrenceKey = null,
+    DateTimeOffset? StartAt = null,
+    DateTimeOffset? EndAt = null);
 
 /// <summary>بدنهٔ زمان‌بندی استوری.</summary>
 public sealed record SetStoryScheduleBody(
@@ -89,11 +93,13 @@ public static class StoryBodyMapping
 {
     public static CreateStoryCommand ToCreate(CreateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,
-        body.DisplayOrder, body.CtaType, body.CtaTarget, body.SellerPartyId, body.OccurrenceKey);
+        body.DisplayOrder, body.CtaType, body.CtaTarget, body.SellerPartyId, body.OccurrenceKey,
+        ExpectedVersion: null, body.StartAt, body.EndAt);
 
     public static UpdateStoryCommand ToUpdate(UpdateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,
-        body.CtaType, body.CtaTarget, body.ExpectedVersion, body.OccurrenceKey);
+        body.CtaType, body.CtaTarget, body.ExpectedVersion, body.OccurrenceKey,
+        body.StartAt, body.EndAt);
 
     public static SetStoryScheduleCommand ToSchedule(SetStoryScheduleBody body) =>
         new(body.StartAt, body.EndAt, body.ExpectedVersion, body.OccurrenceKey);

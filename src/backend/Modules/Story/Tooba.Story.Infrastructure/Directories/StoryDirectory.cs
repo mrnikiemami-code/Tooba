@@ -151,6 +151,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             cover.DisplayUrl,
             command.CtaType,
             command.CtaTarget);
+        story.SetDraftPublicationWindow(command.StartAt, command.EndAt, now);
         _db.Stories.Add(story);
         await RecordOccurrenceAsync(
             tenantId, null, "admin_create", key, intent,
@@ -187,6 +188,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CoverMediaUrl,
             allowUnscopedAdminAssets: story.SellerPartyId is null,
             cancellationToken);
+        var now = DateTimeOffset.UtcNow;
         story.Update(
             command.Title,
             command.Locale,
@@ -195,12 +197,45 @@ public sealed partial class StoryDirectory : IStoryDirectory
             cover.DisplayUrl,
             command.CtaType,
             command.CtaTarget,
-            DateTimeOffset.UtcNow);
+            now);
+        story.SetDraftPublicationWindow(command.StartAt, command.EndAt, now);
         await RecordOccurrenceAsync(
             tenantId, story.SellerPartyId, "admin_update", key, intent,
-            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> AdminDeleteAsync(
+        Guid tenantId,
+        Guid storyId,
+        int? expectedVersion,
+        string? occurrenceKey,
+        CancellationToken cancellationToken)
+    {
+        var key = RequireOccurrenceKey(occurrenceKey);
+        var intent = HashDeleteStoryIntent(storyId, expectedVersion);
+        var replay = await TryReplayDeleteAsync(
+            tenantId, sellerPartyId: null, "admin_delete", key, intent, isAdmin: true, storyId, cancellationToken);
+        if (replay is not null)
+            return replay;
+
+        var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.EnsureCanDelete(isAdmin: true);
+        story.EnsureExpectedVersion(expectedVersion);
+        var now = DateTimeOffset.UtcNow;
+        await RecordOccurrenceAsync(
+            tenantId, story.SellerPartyId, "admin_delete", key, intent,
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
+        _db.StoryItems.RemoveRange(story.Items);
+        _db.Stories.Remove(story);
+        var folded = await SaveChangesWithOccurrenceArbitrationAsync(
+            tenantId, key, intent, "admin_delete", story.SellerPartyId, expectedStoryId: storyId,
+            ownedStoryIds: [storyId], cancellationToken);
+        if (folded is Guid)
+            return MapDeletedSnapshot(tenantId, storyId, isAdmin: true);
+        return MapDeletedSnapshot(tenantId, storyId, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -605,6 +640,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             cover.DisplayUrl,
             command.CtaType,
             command.CtaTarget);
+        story.SetDraftPublicationWindow(command.StartAt, command.EndAt, now);
         _db.Stories.Add(story);
         await RecordOccurrenceAsync(
             tenantId,
@@ -645,6 +681,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var cover = await BindCoverAsync(
             tenantId, sellerPartyId, command.CoverMediaAssetId, command.CoverMediaUrl,
             allowUnscopedAdminAssets: false, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
         story.Update(
             command.Title,
             command.Locale,
@@ -653,12 +690,44 @@ public sealed partial class StoryDirectory : IStoryDirectory
             cover.DisplayUrl,
             command.CtaType,
             command.CtaTarget,
-            DateTimeOffset.UtcNow);
+            now);
+        story.SetDraftPublicationWindow(command.StartAt, command.EndAt, now);
         await RecordOccurrenceAsync(
             tenantId, sellerPartyId, "seller_update", key, intent,
-            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerDeleteAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        int? expectedVersion,
+        string? occurrenceKey,
+        CancellationToken cancellationToken)
+    {
+        var key = RequireOccurrenceKey(occurrenceKey);
+        var intent = HashDeleteStoryIntent(storyId, expectedVersion);
+        var replay = await TryReplayDeleteAsync(
+            tenantId, sellerPartyId, "seller_delete", key, intent, isAdmin: false, storyId, cancellationToken);
+        if (replay is not null)
+            return replay;
+
+        var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        story.EnsureCanDelete(isAdmin: false);
+        story.EnsureExpectedVersion(expectedVersion);
+        var now = DateTimeOffset.UtcNow;
+        await RecordOccurrenceAsync(
+            tenantId, sellerPartyId, "seller_delete", key, intent,
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
+        _db.StoryItems.RemoveRange(story.Items);
+        _db.Stories.Remove(story);
+        _ = await SaveChangesWithOccurrenceArbitrationAsync(
+            tenantId, key, intent, "seller_delete", sellerPartyId, expectedStoryId: storyId,
+            ownedStoryIds: [storyId], cancellationToken);
+        return MapDeletedSnapshot(tenantId, storyId, isAdmin: false);
     }
 
     /// <inheritdoc />

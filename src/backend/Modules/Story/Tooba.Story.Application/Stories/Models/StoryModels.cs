@@ -89,7 +89,9 @@ public sealed record CreateStoryCommand(
     string? CtaTarget,
     Guid? SellerPartyId = null,
     string? OccurrenceKey = null,
-    int? ExpectedVersion = null);
+    int? ExpectedVersion = null,
+    DateTimeOffset? StartAt = null,
+    DateTimeOffset? EndAt = null);
 
 /// <summary>فرمان به‌روزرسانی استوری.</summary>
 public sealed record UpdateStoryCommand(
@@ -101,7 +103,9 @@ public sealed record UpdateStoryCommand(
     string? CtaType,
     string? CtaTarget,
     int? ExpectedVersion = null,
-    string? OccurrenceKey = null);
+    string? OccurrenceKey = null,
+    DateTimeOffset? StartAt = null,
+    DateTimeOffset? EndAt = null);
 
 /// <summary>فرمان زمان‌بندی استوری.</summary>
 public sealed record SetStoryScheduleCommand(

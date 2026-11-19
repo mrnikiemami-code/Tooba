@@ -73,6 +73,20 @@ public sealed class UpdateAdminStoryCommandHandler(StoryPresentationComposer com
             () => composer.AdminUpdateAsync(request.TenantId, request.StoryId, request.Input, cancellationToken));
 }
 
+/// <summary>حذف کل استوری ادمین.</summary>
+public sealed record DeleteAdminStoryCommand(
+    Guid TenantId, Guid StoryId, int? ExpectedVersion, string? OccurrenceKey)
+    : IRequest<Result<AdminStorySnapshot>>;
+
+public sealed class DeleteAdminStoryCommandHandler(StoryPresentationComposer composer)
+    : IRequestHandler<DeleteAdminStoryCommand, Result<AdminStorySnapshot>>
+{
+    public Task<Result<AdminStorySnapshot>> Handle(DeleteAdminStoryCommand request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.AdminDeleteAsync(
+                request.TenantId, request.StoryId, request.ExpectedVersion, request.OccurrenceKey, cancellationToken));
+}
+
 /// <summary>مرتب‌سازی استوری‌های ادمین.</summary>
 public sealed record ReorderAdminStoriesCommand(
     Guid TenantId, IReadOnlyList<Guid> StoryIds, IReadOnlyList<int> ExpectedVersions, string? OccurrenceKey)

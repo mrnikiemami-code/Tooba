@@ -17,21 +17,25 @@ public static class StoryPublicationPolicy
         if (story.Items.Count == 0)
             return false;
 
+        // فروشگاه‌محور فقط با MediaAssetId مجاز است (هم‌تراز EnsureStoredContentAuthorized).
+        var requireOwnedAsset = story.SellerPartyId is Guid shop && shop != Guid.Empty;
         foreach (var item in story.Items)
         {
-            if (!IsPlayableItem(item))
+            if (!IsPlayableItem(item, requireOwnedAsset))
                 return false;
         }
 
         return true;
     }
 
-    /// <summary>یک اسلاید وقتی قابل‌پخش است که شناسهٔ دارایی Ready یا URL رسانهٔ غیرخالی داشته باشد.</summary>
-    public static bool IsPlayableItem(StoryItem item)
+    /// <summary>یک اسلاید وقتی قابل‌پخش است که شناسهٔ دارایی Ready یا (برای ویترین پلتفرم) URL غیرخالی داشته باشد.</summary>
+    public static bool IsPlayableItem(StoryItem item, bool requireOwnedMediaAsset = false)
     {
         ArgumentNullException.ThrowIfNull(item);
         if (item.MediaAssetId is Guid assetId && assetId != Guid.Empty)
             return true;
+        if (requireOwnedMediaAsset)
+            return false;
         return !string.IsNullOrWhiteSpace(item.MediaUrl);
     }
 
@@ -69,6 +73,7 @@ public static class StoryPublicationPolicy
         {
             codes.Add("update");
             codes.Add("add_item");
+            codes.Add("delete");
             if (story.Origin == StoryOrigin.Seller && story.ReviewStatus == StoryReviewStatus.Submitted)
             {
                 codes.Add("approve");
@@ -95,6 +100,7 @@ public static class StoryPublicationPolicy
             {
                 codes.Add("update");
                 codes.Add("add_item");
+                codes.Add("delete");
                 if (ready)
                     codes.Add("submit");
             }

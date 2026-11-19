@@ -94,6 +94,14 @@ public interface IStoryDirectory
         UpdateStoryCommand command,
         CancellationToken cancellationToken);
 
+    /// <summary>کل استوری را حذف می‌کند (آیتم‌ها همراه؛ occurrence برای بازپخش حفظ می‌شود).</summary>
+    Task<AdminStorySnapshot> AdminDeleteAsync(
+        Guid tenantId,
+        Guid storyId,
+        int? expectedVersion,
+        string? occurrenceKey,
+        CancellationToken cancellationToken);
+
     /// <summary>وضعیت استوری را فعال یا غیرفعال می‌کند.</summary>
     Task<AdminStorySnapshot> AdminSetStatusAsync(
         Guid tenantId,
@@ -205,6 +213,15 @@ public interface IStoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         UpdateStoryCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>کل استوری قابل‌ویرایش فروشنده را حذف می‌کند.</summary>
+    Task<AdminStorySnapshot> SellerDeleteAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        int? expectedVersion,
+        string? occurrenceKey,
         CancellationToken cancellationToken);
 
     /// <summary>استوری فروشنده را برای بازبینی ارسال می‌کند.</summary>

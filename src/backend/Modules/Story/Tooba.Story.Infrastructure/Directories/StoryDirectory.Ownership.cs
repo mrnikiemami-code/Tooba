@@ -411,4 +411,69 @@ public sealed partial class StoryDirectory
         return await EnrichAsync(MapAdmin(story, isAdmin), cancellationToken);
     }
 
+    /// <summary>بازپخش حذف پس از حذف هدف: occurrence مطابق ⇒ موفقیت با tombstone.</summary>
+    private async Task<AdminStorySnapshot?> TryReplayDeleteAsync(
+        Guid tenantId,
+        Guid? sellerPartyId,
+        string actionCode,
+        string occurrenceKey,
+        string intentHash,
+        bool isAdmin,
+        Guid expectedStoryId,
+        CancellationToken cancellationToken)
+    {
+        var key = occurrenceKey.Trim();
+        var existing = await _db.CommandOccurrences.AsNoTracking()
+            .FirstOrDefaultAsync(
+                row => row.OccurrenceKey == key && row.TenantId == tenantId,
+                cancellationToken);
+        if (existing is null)
+            return null;
+        if (!string.Equals(existing.ActionCode, actionCode, StringComparison.Ordinal)
+            || !string.Equals(existing.IntentHash, intentHash, StringComparison.Ordinal)
+            || existing.SellerPartyId != sellerPartyId
+            || existing.StoryId != expectedStoryId)
+        {
+            throw new SemanticException(new SemanticError(StoryErrorCodes.OccurrenceConflict));
+        }
+
+        var story = await LoadStoryAsync(tenantId, existing.StoryId, track: false, cancellationToken);
+        if (story is null)
+            return MapDeletedSnapshot(tenantId, expectedStoryId, isAdmin);
+        return await EnrichAsync(MapAdmin(story, isAdmin), cancellationToken);
+    }
+
+    private static AdminStorySnapshot MapDeletedSnapshot(Guid tenantId, Guid storyId, bool isAdmin) =>
+        new(
+            storyId,
+            tenantId,
+            isAdmin ? StoryOrigin.Admin : StoryOrigin.Seller,
+            SellerPartyId: null,
+            StoryReviewStatus.None,
+            SubmittedByActorUserId: null,
+            ReviewedByActorUserId: null,
+            SubmittedAt: null,
+            ReviewedAt: null,
+            RejectionReason: null,
+            Locale: null,
+            Market: null,
+            Title: string.Empty,
+            CoverMediaAssetId: null,
+            CoverMediaUrl: null,
+            DisplayOrder: 0,
+            StartAt: null,
+            EndAt: null,
+            StoryStatus.Disabled,
+            CtaType: StoryRules.CtaNone,
+            CtaTarget: null,
+            VersionToken: 0,
+            CreatedAt: DateTimeOffset.MinValue,
+            UpdatedAt: DateTimeOffset.MinValue,
+            Items: Array.Empty<AdminStoryItemSnapshot>(),
+            CreatedByActorUserId: null,
+            ShopDisplayName: null,
+            ContentReady: false,
+            EffectivelyPublic: false,
+            ActionCodes: Array.Empty<string>());
+
 }

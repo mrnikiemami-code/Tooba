@@ -68,6 +68,17 @@ export type StoryCopy = {
   keepMediaHint: string;
   captionLabel: string;
   durationLabel: string;
+  publicationWindowHeading: string;
+  publicationStartLabel: string;
+  publicationEndLabel: string;
+  publicationNoEndToggle: string;
+  deleteStory: string;
+  deleteStoryConfirm: string;
+  deletedToast: string;
+  deleteUnavailable: string;
+  mediaRequiredHint: string;
+  localPreviewLabel: string;
+  displayExpired: string;
   ctaLabel: string;
   mediaLabel: string;
   slideAdded: string;
@@ -155,7 +166,7 @@ export const faStoryCopy: StoryCopy = {
   details: "جزئیات",
   enable: "فعال",
   disable: "غیرفعال",
-  submit: "ارسال برای بازبینی",
+  submit: "ارسال برای تأیید",
   approve: "تأیید",
   reject: "رد",
   rejectPrompt: "دلیل رد استوری را وارد کنید",
@@ -169,12 +180,12 @@ export const faStoryCopy: StoryCopy = {
   editSlideTitle: "ویرایش اسلاید",
   newSlideTitle: "اسلاید جدید",
   saveSlideChanges: "ذخیره تغییرات",
-  saveTitleLocale: "ذخیره عنوان و زبان",
+  saveTitleLocale: "ذخیره پیش‌نویس",
   rejectionReason: "دلیل رد",
   listCountSuffix: "استوری",
   loadErrorTitle: "استوری‌ها خوانده نشد",
   filterAll: "همه",
-  filterPending: "در انتظار بازبینی",
+  filterPending: "در انتظار تأیید",
   originHeader: "منبع",
   reviewHeader: "بازبینی",
   sellerOwnerHeader: "فروشنده",
@@ -202,7 +213,18 @@ export const faStoryCopy: StoryCopy = {
   pickedFilePrefix: "انتخاب‌شده:",
   keepMediaHint: "رسانهٔ فعلی حفظ می‌شود مگر اینکه بعداً مسیر تعویض رسانه را جداگانه استفاده کنید.",
   captionLabel: "زیرنویس",
-  durationLabel: "مدت نمایش عکس (ثانیه)",
+  durationLabel: "مدت نمایش این عکس (ثانیه)",
+  publicationWindowHeading: "بازهٔ انتشار",
+  publicationStartLabel: "شروع نمایش",
+  publicationEndLabel: "پایان نمایش",
+  publicationNoEndToggle: "بدون پایان",
+  deleteStory: "حذف استوری",
+  deleteStoryConfirm: "این استوری و همهٔ اسلایدهایش حذف می‌شود. ادامه می‌دهید؟",
+  deletedToast: "استوری حذف شد.",
+  deleteUnavailable: "حذف در این وضعیت مجاز نیست؛ از توقف یا بازگشت به پیش‌نویس استفاده کنید.",
+  mediaRequiredHint: "برای ارسال، هر اسلاید باید از بارگذاری رسانهٔ مجاز ثبت شده باشد.",
+  localPreviewLabel: "پیش‌نمایش انتخاب‌شده",
+  displayExpired: "منقضی",
   ctaLabel: "مقصد دکمه",
   mediaLabel: "عکس یا ویدیو",
   slideAdded: "اسلاید اضافه شد.",
@@ -232,7 +254,7 @@ export const faStoryCopy: StoryCopy = {
   rowSubmit: "ارسال برای تأیید",
   noEnd: "بدون پایان",
   displayOnStorefront: "در ویترین",
-  displayAwaiting: "منتظر تأیید",
+  displayAwaiting: "در انتظار تأیید",
   displayRejected: "رد شده",
   displayScheduled: "زمان‌بندی‌شده",
   displayStopped: "متوقف",
@@ -290,7 +312,7 @@ export const enStoryCopy: StoryCopy = {
   details: "Details",
   enable: "Enable",
   disable: "Disable",
-  submit: "Submit for review",
+  submit: "Submit for approval",
   approve: "Approve",
   reject: "Reject",
   rejectPrompt: "Enter a rejection reason",
@@ -304,12 +326,12 @@ export const enStoryCopy: StoryCopy = {
   editSlideTitle: "Edit slide",
   newSlideTitle: "New slide",
   saveSlideChanges: "Save changes",
-  saveTitleLocale: "Save title and language",
+  saveTitleLocale: "Save draft",
   rejectionReason: "Rejection reason",
   listCountSuffix: "stories",
   loadErrorTitle: "Stories could not be loaded",
   filterAll: "All",
-  filterPending: "Awaiting review",
+  filterPending: "Awaiting approval",
   originHeader: "Origin",
   reviewHeader: "Review",
   sellerOwnerHeader: "Seller",
@@ -337,7 +359,18 @@ export const enStoryCopy: StoryCopy = {
   pickedFilePrefix: "Selected:",
   keepMediaHint: "Current media is kept unless you deliberately replace it later.",
   captionLabel: "Caption",
-  durationLabel: "Image duration (seconds)",
+  durationLabel: "Photo display duration (seconds)",
+  publicationWindowHeading: "Publication window",
+  publicationStartLabel: "Starts",
+  publicationEndLabel: "Ends",
+  publicationNoEndToggle: "No end",
+  deleteStory: "Delete story",
+  deleteStoryConfirm: "This story and all its slides will be deleted. Continue?",
+  deletedToast: "Story deleted.",
+  deleteUnavailable: "Delete is not available in this state; use stop or return to draft.",
+  mediaRequiredHint: "Each slide must be registered via allowed media upload before submit.",
+  localPreviewLabel: "Selected preview",
+  displayExpired: "Expired",
   ctaLabel: "Button destination",
   mediaLabel: "Photo or video",
   slideAdded: "Slide added.",

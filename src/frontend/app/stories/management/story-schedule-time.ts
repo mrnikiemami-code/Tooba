@@ -85,6 +85,36 @@ export function parseStoryScheduleDraft(draft: StoryScheduleDraft): StorySchedul
   return { ok: true, startAt, endAt };
 }
 
+export type StoryOptionalWindowParse =
+  | { ok: true; startAt: string | null; endAt: string | null }
+  | { ok: false; field: "startAt" | "endAt"; message: string };
+
+/** بازهٔ انتشار پیش‌نویس: هر دو خالی = بدون بازه؛ پایان بدون شروع رد می‌شود. */
+export function parseOptionalPublicationWindow(draft: StoryScheduleDraft): StoryOptionalWindowParse {
+  const hasStart = Boolean(draft.startDayIso.trim());
+  const hasEnd = Boolean(draft.endDayIso.trim());
+  if (!hasStart && !hasEnd) {
+    return { ok: true, startAt: null, endAt: null };
+  }
+  if (!hasStart && hasEnd) {
+    return { ok: false, field: "startAt", message: "برای پایان، ابتدا زمان شروع را انتخاب کنید." };
+  }
+  const parsed = parseStoryScheduleDraft(draft);
+  if (!parsed.ok) return parsed;
+  return { ok: true, startAt: parsed.startAt, endAt: parsed.endAt };
+}
+
+/** نمایش جلالی روز + ساعت در Asia/Tehran برای فهرست. */
+export function formatStoryScheduleClock(iso: string | null | undefined, locale: "fa" | "en" = "fa"): string {
+  if (!iso) return "";
+  const zoned = dayjs(iso).tz(STORY_SCHEDULE_TIME_ZONE);
+  if (!zoned.isValid()) return "";
+  if (locale === "fa") {
+    return zoned.calendar("jalali").format("YYYY/MM/DD HH:mm");
+  }
+  return zoned.format("YYYY-MM-DD HH:mm");
+}
+
 export function isoToScheduleDraft(iso: string | null): { dayIso: string; time: string } {
   if (!iso) return { dayIso: "", time: "" };
   const zoned = dayjs(iso).tz(STORY_SCHEDULE_TIME_ZONE);

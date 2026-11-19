@@ -42,7 +42,15 @@ public sealed partial class StoryDirectory
             command.CoverMediaAssetId?.ToString("D"),
             command.CoverMediaUrl,
             command.CtaType,
-            command.CtaTarget);
+            command.CtaTarget,
+            command.StartAt?.ToString("O", CultureInfo.InvariantCulture),
+            command.EndAt?.ToString("O", CultureInfo.InvariantCulture));
+
+    private static string HashDeleteStoryIntent(Guid storyId, int? expectedVersion) =>
+        HashCanonical(
+            storyId.ToString("D"),
+            expectedVersion?.ToString(CultureInfo.InvariantCulture),
+            "delete_story");
 
     private static string HashUpdateItemIntent(Guid storyId, Guid itemId, UpdateStoryItemCommand command) =>
         HashCanonical(

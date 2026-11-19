@@ -404,6 +404,8 @@ export async function createAdminStory(input: {
   ctaTarget?: string | null;
   sellerPartyId?: string | null;
   occurrenceKey?: string | null;
+  startAt?: string | null;
+  endAt?: string | null;
 }): Promise<{ ok: boolean; story?: AdminStorySnapshot; message?: string }> {
   try {
     const response = await fetch("/v1/admin/stories", {
@@ -419,6 +421,8 @@ export async function createAdminStory(input: {
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
         sellerPartyId: input.sellerPartyId ?? null,
+        startAt: input.startAt ?? null,
+        endAt: input.endAt ?? null,
         occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
@@ -444,6 +448,8 @@ export async function updateAdminStory(
     ctaTarget?: string | null;
     expectedVersion: number;
     occurrenceKey?: string | null;
+    startAt?: string | null;
+    endAt?: string | null;
   },
 ): Promise<AdminResult<AdminStorySnapshot>> {
   try {
@@ -458,6 +464,8 @@ export async function updateAdminStory(
         coverMediaUrl: input.coverMediaUrl ?? null,
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
+        startAt: input.startAt ?? null,
+        endAt: input.endAt ?? null,
         expectedVersion: input.expectedVersion,
         occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
@@ -809,6 +817,8 @@ type StoryMutationInput = {
   expectedVersion?: number | null;
   occurrenceKey?: string | null;
   sellerPartyId?: string | null;
+  startAt?: string | null;
+  endAt?: string | null;
 };
 
 type StoryItemMutationInput = {
@@ -948,6 +958,8 @@ export async function createSellerStory(
         displayOrder: input.displayOrder ?? null,
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
+        startAt: input.startAt ?? null,
+        endAt: input.endAt ?? null,
         occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
@@ -983,6 +995,8 @@ export async function updateSellerStory(
         coverMediaUrl: input.coverMediaUrl ?? null,
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
+        startAt: input.startAt ?? null,
+        endAt: input.endAt ?? null,
         expectedVersion: input.expectedVersion ?? null,
         occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),

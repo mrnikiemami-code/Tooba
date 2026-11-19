@@ -1,14 +1,18 @@
-# CURRENT — OWNER TRIAL FOUND FUNCTIONAL GAPS; ONLY TB-282-R10 ISSUED — 2026-11-19
+# CURRENT — TB-282-R10 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10
-Expected-Base-SHA: 06e3bd558f0b9a2f323f9dbab596188580edb798
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10/TASK.md
-Owner reports no Story delete, no selected-file media preview, photo duration5 input also on video, no authorable start/end publication window, repeated/raw statuses and submit error. Screenshot VendorShell says invalid context. These are actual OWNER failures; R9 local recovery acceptance retained, owner UX/function acceptance NOT granted.
-Source confirmed unconditional photo-duration input/no local preview, stacked status cell, admin-only scheduling and no whole-Story delete route. One consolidated R10 implements A media/duration, B Jalali start/end including seller proposed window under admin approval, C real scoped Story deletion + separate slide removal, D single truthful status/legal choices, E actual submit/scope failure diagnosis+repair. No new broad auth/UI architecture wave.
-One worker tooba-worker-01/tooba-main; issued NOT claimed/running. Preserve R5–R9 exact retry, VendorShell, ownership/review policy, language registry, Returns/payout/user data. R9 skip-bootstrap InMemory recovery retained. ZERO worker live business writes/migrations/seeds/grants/screenshots/delegation/polling.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R10/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–E: local media preview; photo dwell-only; video ended player; draft StartAt/EndAt without activation; whole-Story delete CQRS+DS confirm; one Persian status; seller playable requires MediaAssetId (submit 403 MediaForbidden aligned); Host5088 skip-bootstrap; Next3000 next-dev (production build Html/404 disclosed); ZERO migration; ZERO live Story/Media write; ZERO grant/seed.
+Decision `A_LOCAL_PREVIEW_PHOTO_DURATION_VIDEO_ENDED_B_DRAFT_PUBLICATION_WINDOW_START_END_NO_ACTIVATION_C_WHOLE_STORY_DELETE_CQRS_DS_CONFIRM_D_ONE_PERSIAN_STATUS_E_SELLER_PLAYABLE_REQUIRES_MEDIA_ASSET_SUBMIT_GATE_ALIGNED_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `06e3bd558f0b9a2f323f9dbab596188580edb798`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R10 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — OWNER TRIAL FOUND FUNCTIONAL GAPS; R10 WAS ISSUED
 
 # HISTORICAL — superseded by CURRENT above
 

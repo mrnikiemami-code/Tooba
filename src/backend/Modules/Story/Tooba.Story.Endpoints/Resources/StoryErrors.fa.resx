@@ -23,7 +23,7 @@
   <data name="story.version.required" xml:space="preserve"><value>نسخهٔ بازبینی استوری الزامی است.</value></data>
   <data name="story.version.stale" xml:space="preserve"><value>نسخهٔ بازبینی استوری کهنه است.</value></data>
   <data name="story.schedule.invalid" xml:space="preserve"><value>زمان‌بندی استوری نامعتبر است.</value></data>
-  <data name="story.media.forbidden" xml:space="preserve"><value>رسانهٔ استوری مجاز نیست.</value></data>
+  <data name="story.media.forbidden" xml:space="preserve"><value>برای این استوری باید فایل از بارگذاری رسانهٔ مجاز ثبت شود؛ پیوند خام کافی نیست.</value></data>
   <data name="story.media.unavailable" xml:space="preserve"><value>مرجع رسانهٔ استوری در دسترس نیست.</value></data>
   <data name="story.shop.authority.unavailable" xml:space="preserve"><value>مرجع فروشگاه استوری در دسترس نیست.</value></data>
   <data name="story.occurrence.conflict" xml:space="preserve"><value>رخداد فرمان استوری در تضاد است.</value></data>

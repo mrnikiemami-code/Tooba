@@ -33,11 +33,12 @@ import {
   STORY_ORIGIN_LABELS_BY_LOCALE,
   type StoryCopy,
 } from "./story-management-copy";
-import { StoryReviewBadge, StoryStatusBadge } from "./StoryStatusBadge";
 import { runDurableStoryMutation, runDurableUploadAdd, replayPendingStoryIntent } from "./story-executor";
 import { loadStoryLocaleOptions, loadStoryProductOptions, type StoryProductOptionRow } from "./story-lookups";
 import {
+  formatStoryScheduleClock,
   isoToScheduleDraft,
+  parseOptionalPublicationWindow,
   parseStoryScheduleDraft,
   type StoryScheduleDraft,
 } from "./story-schedule-time";
@@ -112,10 +113,17 @@ function displayState(row: AdminStorySnapshot, copy: StoryCopy): string {
   if (row.effectivelyPublic) return copy.displayOnStorefront;
   if (row.reviewStatus === "Submitted") return copy.displayAwaiting;
   if (row.reviewStatus === "Rejected") return copy.displayRejected;
+  if (row.status === "Expired") return copy.displayExpired;
   if (row.status === "Scheduled") return copy.displayScheduled;
   if (row.status === "Disabled") return copy.displayStopped;
   if (row.status === "Draft" || row.reviewStatus === "None") return copy.displayDraft;
-  return row.status;
+  if (row.status === "Active") return copy.displayOnStorefront;
+  return copy.displayDraft;
+}
+
+function isVideoFile(file: File | null): boolean {
+  if (!file) return false;
+  return file.type.startsWith("video/") || /\.(mp4|webm|mov)$/i.test(file.name);
 }
 
 /**
@@ -222,6 +230,16 @@ function StoryManagementScreenBody({
   const [dirty, setDirty] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [pendingLeaveHref, setPendingLeaveHref] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [draftWindow, setDraftWindow] = useState<StoryScheduleDraft>({
+    startDayIso: "",
+    startTime: "10:00",
+    endDayIso: "",
+    endTime: "",
+  });
+  const [draftWindowError, setDraftWindowError] = useState<string | null>(null);
+  const [noPublicationEnd, setNoPublicationEnd] = useState(true);
+  const [slidePreviewUrl, setSlidePreviewUrl] = useState<string | null>(null);
   const slideFileInputRef = useRef<HTMLInputElement | null>(null);
   const ownedDraftIdRef = useRef<string | null>(initialStoryId);
 
@@ -428,6 +446,34 @@ function StoryManagementScreenBody({
   }, [dirty]);
 
   useEffect(() => {
+    if (!slideFile) {
+      setSlidePreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+      return;
+    }
+    const url = URL.createObjectURL(slideFile);
+    setSlidePreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return url;
+    });
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [slideFile]);
+
+  useEffect(() => {
+    if (!slideDialogOpen) {
+      setSlidePreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+      setSlideFile(null);
+    }
+  }, [slideDialogOpen]);
+
+  useEffect(() => {
     if (!selectedId) {
       setDetail(null);
       return;
@@ -442,6 +488,16 @@ function StoryManagementScreenBody({
         ownedDraftIdRef.current = result.data.storyId;
         setEditTitle(result.data.title);
         setEditLocale(result.data.locale || editLocale);
+        const start = isoToScheduleDraft(result.data.startAt);
+        const end = isoToScheduleDraft(result.data.endAt);
+        setDraftWindow({
+          startDayIso: start.dayIso,
+          startTime: start.time || "10:00",
+          endDayIso: end.dayIso,
+          endTime: end.time,
+        });
+        setNoPublicationEnd(!result.data.endAt);
+        setDraftWindowError(null);
         setDirty(false);
         // Hydrate per-target labels from owning DTO only (scoped to this story remount).
         const nextLabels: Record<string, string> = {};
@@ -513,8 +569,13 @@ function StoryManagementScreenBody({
       toast.success(copy.submittedToast);
       refreshGrid();
       if (selectedId === row.storyId) setReloadToken((v) => v + 1);
-    } else if (outcome.state === "failed") toast.error(outcome.message);
-    else toast.error("ارسال انجام نشد.");
+    } else if (outcome.state === "failed") {
+      if (outcome.code === "story.media.forbidden" || outcome.code === "story.content.notReady") {
+        toast.error(copy.mediaRequiredHint);
+      } else {
+        toast.error(outcome.message);
+      }
+    } else toast.error(copy.sendFailed);
   }
 
   function extractCreatedStoryId(data: unknown): string | null {
@@ -576,13 +637,27 @@ function StoryManagementScreenBody({
       toast.error(copy.shopPickRequired);
       return null;
     }
+    const windowParse = parseOptionalPublicationWindow({
+      ...draftWindow,
+      endDayIso: noPublicationEnd ? "" : draftWindow.endDayIso,
+      endTime: noPublicationEnd ? "" : draftWindow.endTime,
+    });
+    if (!windowParse.ok) {
+      setDraftWindowError(windowParse.message);
+      toast.error(windowParse.message);
+      return null;
+    }
+    setDraftWindowError(null);
     const occurrenceKey = mintOccurrence();
     const shopId =
       capabilities.mode === "admin" && adminShopMode === "shop" ? adminShopId.trim() : sellerShopId;
     const body = {
       title,
+      locale: editLocale || null,
       occurrenceKey,
       sellerPartyId: capabilities.mode === "admin" && adminShopMode === "shop" ? adminShopId.trim() : null,
+      startAt: windowParse.startAt,
+      endAt: windowParse.endAt,
     };
     const envelope: StoryIntentEnvelope = {
       version: 2,
@@ -870,6 +945,74 @@ function StoryManagementScreenBody({
                 ) : null}
               </fieldset>
             ) : null}
+            <fieldset className="space-y-2 rounded-xl border border-gray-100 p-3" data-testid="story-create-publication-window">
+              <legend className="px-1 text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</legend>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="block text-sm">
+                  <span className="mb-1 block text-gray-600">{copy.publicationStartLabel}</span>
+                  <div data-testid="story-create-window-start-day">
+                    <JalaliDatePicker
+                      ariaLabel={copy.publicationStartLabel}
+                      value={draftWindow.startDayIso || undefined}
+                      onChange={(iso) => {
+                        setDraftWindow((prev) => ({ ...prev, startDayIso: iso ?? "" }));
+                        setDirty(true);
+                      }}
+                    />
+                  </div>
+                  <input
+                    type="time"
+                    className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    value={draftWindow.startTime}
+                    onChange={(e) => {
+                      setDraftWindow((prev) => ({ ...prev, startTime: e.target.value }));
+                      setDirty(true);
+                    }}
+                    data-testid="story-create-window-start-time"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-gray-600">{copy.publicationEndLabel}</span>
+                  <label className="mb-2 flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={noPublicationEnd}
+                      onChange={(e) => {
+                        setNoPublicationEnd(e.target.checked);
+                        setDirty(true);
+                      }}
+                      data-testid="story-create-window-no-end"
+                    />
+                    {copy.publicationNoEndToggle}
+                  </label>
+                  {!noPublicationEnd ? (
+                    <>
+                      <div data-testid="story-create-window-end-day">
+                        <JalaliDatePicker
+                          ariaLabel={copy.publicationEndLabel}
+                          value={draftWindow.endDayIso || undefined}
+                          onChange={(iso) => {
+                            setDraftWindow((prev) => ({ ...prev, endDayIso: iso ?? "" }));
+                            setDirty(true);
+                          }}
+                        />
+                      </div>
+                      <input
+                        type="time"
+                        className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                        value={draftWindow.endTime}
+                        onChange={(e) => {
+                          setDraftWindow((prev) => ({ ...prev, endTime: e.target.value }));
+                          setDirty(true);
+                        }}
+                        data-testid="story-create-window-end-time"
+                      />
+                    </>
+                  ) : null}
+                </label>
+              </div>
+              {draftWindowError ? <p className="text-sm text-rose-700">{draftWindowError}</p> : null}
+            </fieldset>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -912,21 +1055,20 @@ function StoryManagementScreenBody({
             <div>
               <h2 className="text-lg font-bold">{detail.title}</h2>
               <p className="text-sm text-muted" data-testid="story-detail-location">
-                {copy.locationPrefix} {shopLabel(detail, copy)} · {displayState(detail, copy)}
+                {copy.locationPrefix} {shopLabel(detail, copy)}
               </p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <StoryStatusBadge status={detail.status} />
-                {detail.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={detail.reviewStatus} /> : null}
-                {capabilities.showOrigin ? (
-                  <span className="text-xs text-muted" data-testid="story-detail-origin">
-                    {detail.origin === "Admin"
-                      ? copy.originCreatorAdmin
-                      : detail.origin === "Seller"
-                        ? copy.originCreatorSeller
-                        : originLabels[detail.origin] ?? detail.origin}
-                  </span>
-                ) : null}
-              </div>
+              <p className="mt-1 text-sm font-medium" data-testid="story-detail-status">
+                {displayState(detail, copy)}
+              </p>
+              {capabilities.showOrigin ? (
+                <span className="mt-1 block text-xs text-muted" data-testid="story-detail-origin">
+                  {detail.origin === "Admin"
+                    ? copy.originCreatorAdmin
+                    : detail.origin === "Seller"
+                      ? copy.originCreatorSeller
+                      : originLabels[detail.origin] ?? detail.origin}
+                </span>
+              ) : null}
             </div>
             <button
               type="button"
@@ -1143,6 +1285,75 @@ function StoryManagementScreenBody({
                   </select>
                 </label>
               </div>
+              <fieldset className="space-y-2 rounded-xl border border-gray-100 p-3" data-testid="story-edit-publication-window">
+                <legend className="px-1 text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</legend>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-gray-600">{copy.publicationStartLabel}</span>
+                    <JalaliDatePicker
+                      ariaLabel={copy.publicationStartLabel}
+                      value={draftWindow.startDayIso || undefined}
+                      onChange={(iso) => {
+                        setDraftWindow((prev) => ({ ...prev, startDayIso: iso ?? "" }));
+                        setDirty(true);
+                      }}
+                    />
+                    <input
+                      type="time"
+                      className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                      value={draftWindow.startTime}
+                      onChange={(e) => {
+                        setDraftWindow((prev) => ({ ...prev, startTime: e.target.value }));
+                        setDirty(true);
+                      }}
+                      data-testid="story-edit-window-start-time"
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-gray-600">{copy.publicationEndLabel}</span>
+                    <label className="mb-2 flex min-h-11 items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={noPublicationEnd}
+                        onChange={(e) => {
+                          setNoPublicationEnd(e.target.checked);
+                          setDirty(true);
+                        }}
+                        data-testid="story-edit-window-no-end"
+                      />
+                      {copy.publicationNoEndToggle}
+                    </label>
+                    {!noPublicationEnd ? (
+                      <>
+                        <JalaliDatePicker
+                          ariaLabel={copy.publicationEndLabel}
+                          value={draftWindow.endDayIso || undefined}
+                          onChange={(iso) => {
+                            setDraftWindow((prev) => ({ ...prev, endDayIso: iso ?? "" }));
+                            setDirty(true);
+                          }}
+                        />
+                        <input
+                          type="time"
+                          className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                          value={draftWindow.endTime}
+                          onChange={(e) => {
+                            setDraftWindow((prev) => ({ ...prev, endTime: e.target.value }));
+                            setDirty(true);
+                          }}
+                          data-testid="story-edit-window-end-time"
+                        />
+                      </>
+                    ) : null}
+                  </label>
+                </div>
+                {draftWindowError ? <p className="text-sm text-rose-700">{draftWindowError}</p> : null}
+              </fieldset>
+              {detail.items.length > 0 && !detail.contentReady ? (
+                <p className="text-sm text-amber-800" data-testid="story-media-required-hint">
+                  {copy.mediaRequiredHint}
+                </p>
+              ) : null}
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -1150,10 +1361,23 @@ function StoryManagementScreenBody({
                   data-testid="story-save-title-locale"
                   onClick={() => {
                     if (!detail || !actorId) return;
+                    const windowParse = parseOptionalPublicationWindow({
+                      ...draftWindow,
+                      endDayIso: noPublicationEnd ? "" : draftWindow.endDayIso,
+                      endTime: noPublicationEnd ? "" : draftWindow.endTime,
+                    });
+                    if (!windowParse.ok) {
+                      setDraftWindowError(windowParse.message);
+                      toast.error(windowParse.message);
+                      return;
+                    }
+                    setDraftWindowError(null);
                     const key = mintOccurrence();
                     const body = {
                       title: editTitle.trim(),
                       locale: editLocale || null,
+                      startAt: windowParse.startAt,
+                      endAt: windowParse.endAt,
                       expectedVersion: detail.versionToken,
                       occurrenceKey: key,
                     };
@@ -1195,6 +1419,16 @@ function StoryManagementScreenBody({
                 >
                   {copy.saveTitleLocale}
                 </button>
+                {hasAction(detail, "delete") ? (
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-xl border border-rose-300 px-4 py-2 text-sm text-rose-700"
+                    data-testid="story-delete-open"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    {copy.deleteStory}
+                  </button>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -1378,9 +1612,48 @@ function StoryManagementScreenBody({
               >
                 {slideFile ? `${copy.pickedFilePrefix} ${slideFile.name}` : copy.pickFile}
               </button>
+              {slidePreviewUrl ? (
+                <div className="space-y-1" data-testid="story-slide-local-preview">
+                  <p className="text-xs text-muted">{copy.localPreviewLabel}</p>
+                  {isVideoFile(slideFile) ? (
+                    // eslint-disable-next-line jsx-a11y/media-has-caption
+                    <video
+                      src={slidePreviewUrl}
+                      className="max-h-48 w-full rounded-xl object-contain"
+                      controls
+                      playsInline
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={slidePreviewUrl} alt="" className="max-h-48 w-full rounded-xl object-contain" />
+                  )}
+                </div>
+              ) : null}
             </div>
           ) : (
-            <p className="text-sm text-muted">{copy.keepMediaHint}</p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted">{copy.keepMediaHint}</p>
+              {detail?.items.find((row) => row.storyItemId === editingItemId)?.mediaUrl ? (
+                <div data-testid="story-slide-existing-preview">
+                  {detail.items.find((row) => row.storyItemId === editingItemId)?.mediaType === "video" ? (
+                    // eslint-disable-next-line jsx-a11y/media-has-caption
+                    <video
+                      src={detail.items.find((row) => row.storyItemId === editingItemId)!.mediaUrl!}
+                      className="max-h-48 w-full rounded-xl object-contain"
+                      controls
+                      playsInline
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={detail.items.find((row) => row.storyItemId === editingItemId)!.mediaUrl!}
+                      alt=""
+                      className="max-h-48 w-full rounded-xl object-contain"
+                    />
+                  )}
+                </div>
+              ) : null}
+            </div>
           )}
           <label className="block text-sm">
             <span className="mb-1 block text-gray-600">{copy.captionLabel}</span>
@@ -1391,17 +1664,21 @@ function StoryManagementScreenBody({
               data-testid="story-slide-caption"
             />
           </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">{copy.durationLabel}</span>
-            <input
-              type="number"
-              min={1}
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={slideDurationSec}
-              onChange={(e) => setSlideDurationSec(e.target.value)}
-              data-testid="story-slide-duration"
-            />
-          </label>
+          {(!editingItemId && isVideoFile(slideFile)) ||
+          (editingItemId &&
+            detail?.items.find((row) => row.storyItemId === editingItemId)?.mediaType === "video") ? null : (
+            <label className="block text-sm">
+              <span className="mb-1 block text-gray-600">{copy.durationLabel}</span>
+              <input
+                type="number"
+                min={1}
+                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                value={slideDurationSec}
+                onChange={(e) => setSlideDurationSec(e.target.value)}
+                data-testid="story-slide-duration"
+              />
+            </label>
+          )}
           <label className="block text-sm">
             <span className="mb-1 block text-gray-600">{copy.ctaLabel}</span>
             <select
@@ -1529,12 +1806,13 @@ function StoryManagementScreenBody({
                       return;
                     }
                     const key = mintOccurrence();
+                    const isVideo = existing.mediaType === "video";
                     const body = {
                       mediaType: existing.mediaType,
                       mediaAssetId: existing.mediaAssetId,
                       mediaUrl: existing.mediaUrl,
                       caption: slideCaption.trim() || null,
-                      durationMs: Math.max(1, Number(slideDurationSec) || 5) * 1000,
+                      durationMs: isVideo ? null : Math.max(1, Number(slideDurationSec) || 5) * 1000,
                       ctaType: slideCtaType,
                       ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
                       expectedVersion: detail.versionToken,
@@ -1584,7 +1862,7 @@ function StoryManagementScreenBody({
                   const itemKey = mintOccurrence();
                   const plannedAdd = {
                     caption: slideCaption.trim() || null,
-                    durationSec: Math.max(1, Number(slideDurationSec) || 5),
+                    durationSec: isVideoFile(slideFile) ? null : Math.max(1, Number(slideDurationSec) || 5),
                     ctaType: slideCtaType,
                     ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
                     expectedVersion: detail.versionToken,
@@ -1645,6 +1923,78 @@ function StoryManagementScreenBody({
               }}
             >
               {editingItemId ? copy.saveSlideChanges : copy.addItem}
+            </button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title={copy.deleteStory}
+      >
+        <div className="space-y-3 p-1" data-testid="story-delete-dialog">
+          <p className="text-sm text-muted">
+            {copy.deleteStoryConfirm}
+            {detail?.title ? ` «${detail.title}»` : ""}
+          </p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              className="min-h-11 rounded-xl px-4 py-2 text-sm"
+              data-testid="story-delete-cancel"
+              onClick={() => setDeleteOpen(false)}
+            >
+              {copy.cancel}
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
+              data-testid="story-delete-confirm"
+              onClick={() => {
+                if (!detail || !actorId) return;
+                const key = mintOccurrence();
+                const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
+                const envelope: StoryIntentEnvelope = {
+                  version: 2,
+                  action: "delete",
+                  occurrenceKey: key,
+                  method: "DELETE",
+                  path:
+                    capabilities.mode === "seller"
+                      ? `/v1/seller/stories/${detail.storyId}`
+                      : `/v1/admin/stories/${detail.storyId}`,
+                  routeTargetId: detail.storyId,
+                  expectedVersion: detail.versionToken,
+                  bodyText: JSON.stringify(body),
+                  uploadMeta: null,
+                  addBodyText: null,
+                  uploadedAssetId: null,
+                  children: [],
+                  role: capabilities.mode,
+                  shopId: detail.sellerPartyId ?? sellerShopId,
+                  actorUserId: actorId,
+                  recordedAt: new Date().toISOString(),
+                };
+                void runDurableStoryMutation({
+                  gate,
+                  envelope,
+                  scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                }).then((outcome) => {
+                  if (outcome.state === "ok") {
+                    toast.success(copy.deletedToast);
+                    setDeleteOpen(false);
+                    setSelectedId(null);
+                    setDetail(null);
+                    ownedDraftIdRef.current = null;
+                    router.push(basePath);
+                    refreshGrid();
+                  } else if (outcome.state === "failed") toast.error(outcome.message);
+                  else toast.error(copy.sendFailed);
+                });
+              }}
+            >
+              {copy.deleteStory}
             </button>
           </div>
         </div>
@@ -2010,12 +2360,8 @@ function StoryLiveGrid({
         header: copy.columnStatus,
         accessor: (row) => displayState(row, copy),
         cell: (row) => (
-          <span className="inline-flex flex-col gap-1">
-            <span className="text-sm">{displayState(row, copy)}</span>
-            <span className="flex flex-wrap gap-1">
-              <StoryStatusBadge status={row.status} />
-              {row.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={row.reviewStatus} /> : null}
-            </span>
+          <span className="text-sm" data-testid="story-row-status">
+            {displayState(row, copy)}
           </span>
         ),
         width: 160,
@@ -2033,18 +2379,26 @@ function StoryLiveGrid({
         id: "startAt",
         header: copy.columnStart,
         accessor: (row) => row.startAt ?? "",
-        cell: (row) => (row.startAt ? formatAdminDate(row.startAt) : "—"),
-        width: 120,
-        minWidth: 100,
+        cell: (row) =>
+          row.startAt
+            ? formatStoryScheduleClock(row.startAt, numberLocale.startsWith("en") ? "en" : "fa") ||
+              formatAdminDate(row.startAt)
+            : "—",
+        width: 140,
+        minWidth: 120,
         filterKind: "date",
       },
       {
         id: "endAt",
         header: copy.columnEnd,
         accessor: (row) => row.endAt ?? "",
-        cell: (row) => (row.endAt ? formatAdminDate(row.endAt) : copy.noEnd),
-        width: 120,
-        minWidth: 100,
+        cell: (row) =>
+          row.endAt
+            ? formatStoryScheduleClock(row.endAt, numberLocale.startsWith("en") ? "en" : "fa") ||
+              formatAdminDate(row.endAt)
+            : copy.noEnd,
+        width: 140,
+        minWidth: 120,
         filterKind: "date",
       },
       {

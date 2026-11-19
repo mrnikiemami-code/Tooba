@@ -58,6 +58,7 @@ function parseMessage(payload: unknown, fallback: string): string {
 function parseCode(payload: unknown): string | undefined {
   if (!payload || typeof payload !== "object") return undefined;
   const record = payload as Record<string, unknown>;
+  if (typeof record.errorCode === "string" && record.errorCode.trim()) return record.errorCode.trim();
   const errors = record.errors;
   if (Array.isArray(errors) && errors[0] && typeof errors[0] === "object") {
     const first = errors[0] as Record<string, unknown>;
@@ -115,7 +116,7 @@ function buildAddFromJournal(
   try {
     const planned = JSON.parse(journal.bodyText) as Record<string, unknown>;
     const mediaType = uploaded.contentType.startsWith("video/") ? "video" : "image";
-    const durationMs =
+    const imageDurationMs =
       mediaType === "image"
         ? Math.max(1, Number(planned.durationSec ?? planned.durationMs ?? 5) || 5) *
           (planned.durationMs ? 1 : 1000)
@@ -125,7 +126,7 @@ function buildAddFromJournal(
       mediaAssetId: uploaded.mediaAssetId,
       mediaUrl: uploaded.displayUrl,
       caption: typeof planned.caption === "string" ? planned.caption : null,
-      durationMs: planned.durationMs ?? durationMs,
+      durationMs: mediaType === "image" ? (planned.durationMs ?? imageDurationMs) : null,
       ctaType: planned.ctaType ?? "none",
       ctaTarget: planned.ctaTarget ?? null,
       expectedVersion: planned.expectedVersion ?? journal.expectedVersion,

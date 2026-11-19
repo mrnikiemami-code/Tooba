@@ -31,6 +31,7 @@ public static class StorySellerEndpoints
         seller.MapGet("/{id:guid}", SellerGetAsync);
         seller.MapPost("", SellerCreateAsync);
         seller.MapPut("/{id:guid}", SellerUpdateAsync);
+        seller.MapDelete("/{id:guid}", SellerDeleteAsync);
         seller.MapPost("/{id:guid}/submit", SellerSubmitAsync);
         seller.MapPost("/{id:guid}/return-to-draft", SellerReturnToDraftAsync);
         seller.MapPost("/{id:guid}/stop", SellerStopAsync);
@@ -138,6 +139,21 @@ public static class StorySellerEndpoints
         SellerMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, _, sellerPartyId) => sender.Send(
                 new UpdateSellerStoryCommand(tenantId, sellerPartyId, id, StoryBodyMapping.ToUpdate(body)),
+                cancellationToken));
+
+    private static Task<IResult> SellerDeleteAsync(
+        Guid id,
+        [FromBody] ReviewedStoryActionBody? body,
+        ISender sender,
+        IStorySellerAuthorizer auth,
+        HttpContext http,
+        ICurrentTenant tenant,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken) =>
+        SellerMutationAsync(auth, http, tenant, api, cancellationToken,
+            (tenantId, _, sellerPartyId) => sender.Send(
+                new DeleteSellerStoryCommand(
+                    tenantId, sellerPartyId, id, body?.ExpectedVersion, body?.OccurrenceKey),
                 cancellationToken));
 
     private static Task<IResult> SellerSubmitAsync(

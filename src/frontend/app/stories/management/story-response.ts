@@ -71,6 +71,7 @@ export function verifyStorySuccessPayload(
     case "add_item":
     case "update_item":
     case "remove_item":
+    case "delete":
     case "reorder_items":
       return verifyStoryTarget(envelope, root, mapped);
     case "upload":
@@ -244,6 +245,12 @@ export function bindStoryEnvelopeRoute(
             "DELETE",
             new RegExp(`^/v1/${role === "seller" ? "seller" : "admin"}/stories/${guid}/items/${guid}/?$`),
           ) &&
+          path.includes(envelope.routeTargetId!)
+        );
+      case "delete":
+        return (
+          Boolean(envelope.routeTargetId) &&
+          expect("DELETE", new RegExp(`^/v1/${role === "seller" ? "seller" : "admin"}/stories/${guid}/?$`)) &&
           path.includes(envelope.routeTargetId!)
         );
       case "reorder_items":

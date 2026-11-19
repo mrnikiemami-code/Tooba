@@ -57,6 +57,7 @@ public sealed partial class StoryDirectory
             cover.DisplayUrl,
             command.CtaType,
             command.CtaTarget);
+        story.SetDraftPublicationWindow(command.StartAt, command.EndAt, now);
         _db.Stories.Add(story);
         await RecordOccurrenceAsync(
             tenantId,
@@ -319,7 +320,9 @@ public sealed partial class StoryDirectory
             F(command.DisplayOrder?.ToString(System.Globalization.CultureInfo.InvariantCulture)),
             F(command.CtaType),
             F(command.CtaTarget),
-            F(command.SellerPartyId?.ToString("D")));
+            F(command.SellerPartyId?.ToString("D")),
+            F(command.StartAt?.ToString("O", System.Globalization.CultureInfo.InvariantCulture)),
+            F(command.EndAt?.ToString("O", System.Globalization.CultureInfo.InvariantCulture)));
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
         return Convert.ToHexString(hash).ToLowerInvariant();
     }

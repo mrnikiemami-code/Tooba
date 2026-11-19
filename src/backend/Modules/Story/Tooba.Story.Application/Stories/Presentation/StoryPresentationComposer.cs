@@ -95,6 +95,11 @@ public sealed class StoryPresentationComposer
         Guid tenantId, Guid storyId, UpdateStoryCommand command, CancellationToken cancellationToken) =>
         Guard(() => _stories.AdminUpdateAsync(tenantId, storyId, command, cancellationToken));
 
+    /// <summary>حذف کل استوری ادمین.</summary>
+    public Task<AdminStorySnapshot> AdminDeleteAsync(
+        Guid tenantId, Guid storyId, int? expectedVersion, string? occurrenceKey, CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminDeleteAsync(tenantId, storyId, expectedVersion, occurrenceKey, cancellationToken));
+
     /// <summary>فعال‌سازی.</summary>
     public Task<AdminStorySnapshot> AdminEnableAsync(
         Guid tenantId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken,
@@ -178,6 +183,13 @@ public sealed class StoryPresentationComposer
     public Task<AdminStorySnapshot> SellerUpdateAsync(
         Guid tenantId, Guid sellerPartyId, Guid storyId, UpdateStoryCommand command, CancellationToken cancellationToken) =>
         Guard(() => _stories.SellerUpdateAsync(tenantId, sellerPartyId, storyId, command, cancellationToken));
+
+    /// <summary>حذف کل استوری قابل‌ویرایش فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerDeleteAsync(
+        Guid tenantId, Guid sellerPartyId, Guid storyId, int? expectedVersion, string? occurrenceKey,
+        CancellationToken cancellationToken) =>
+        Guard(() => _stories.SellerDeleteAsync(
+            tenantId, sellerPartyId, storyId, expectedVersion, occurrenceKey, cancellationToken));
 
     /// <summary>ارسال برای بازبینی.</summary>
     public Task<AdminStorySnapshot> SellerSubmitAsync(
