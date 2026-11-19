@@ -1,16 +1,18 @@
-# CURRENT — OWNER REJECTED GRID INTERACTION; R16 ISSUED — 2026-11-20
+# CURRENT — TB-282-R16 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
-Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16/TASK.md
-Owner reports Reject dialog typing reloads grid and loses selection. R15 transport acceptance retained ONLY for that narrow repair; previous local owner-readiness handoff is superseded.
-Source-confirmed chain: inline Story callbacks -> queryAdapter identity -> AppDataGrid load identity -> forced defaultQuery effect on unrelated dialog renders. R16 fixes Story integration and proves per-character typing/selection/query stability with real grid and served controlled/read-only interactions. Screenshot's main-storefront row is independently ineligible; do not relax moderation.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-No backend/auth/schema/grant/seed/config/live Story-Media changes. Host5088 skip-bootstrap=1 / FE3000 next-dev. Preserve R13 layout, R14/R15 safety, VendorShell/language registry, Returns/payout/user work. Html404 production blocker and R6 effects UNKNOWN retained. Architect inspected source; regression/browser rerun delegated explicitly to R16, not claimed here.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued typing/selection repair: Story-owned grid callbacks stabilized (refs + useCallback); reject typing/backspace does not refetch or clear selection; cancel zero reject; confirm eligible only; served next-dev controlled proof queryReads flat; Host5088 skip-bootstrap; ZERO backend; ZERO live Story/Media write.
+Decision `STORY_OWNED_GRID_CALLBACKS_STABLE_REJECT_TYPING_NO_REFETCH_SELECTION_PRESERVED_SERVED_CONTROLLED_PROOF_ZERO_BACKEND_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `d7c36bf836f66365772f2f95a24a48e5b23628ae`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — prior records preserved below
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# CURRENT — R15 CLOSURE ACCEPTED FOR LOCAL OWNER TEST — 2026-11-20
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — OWNER REJECTED GRID INTERACTION; R16 ISSUED THEN WORKER PASS ABOVE
+
+# HISTORICAL — R15 CLOSURE ACCEPTED FOR LOCAL OWNER TEST — 2026-11-20
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15/ARCHITECT-REVIEW.md
 Code 877080f043de029d6cc9ffb0261702f7975d64b2 / worker evidence 277dfd046491998e4d5ae75288a0b6a402e493f6.

@@ -320,6 +320,7 @@ function StoryManagementScreenBody({
   const [adminOpResult, setAdminOpResult] = useState<StoryAdminBatchResult | null>(null);
   const [adminOpResultKind, setAdminOpResultKind] = useState<StoryAdminOpKind | null>(null);
   const adminOpCancelledRef = useRef(false);
+  const runSubmitRef = useRef<(row: AdminStorySnapshot) => void>(() => undefined);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleMode, setScheduleMode] = useState<"schedule" | "approve_schedule">("schedule");
   const [scheduleDraft, setScheduleDraft] = useState<StoryScheduleDraft>({
@@ -672,6 +673,28 @@ function StoryManagementScreenBody({
     setAdminOpReason("");
   }, [capabilities.mode]);
 
+  /** Stable grid status callbacks — dialog typing must not rebuild queryAdapter. */
+  const onGridDenied = useCallback(() => setState("denied"), []);
+  const onGridError = useCallback((detailMsg?: string) => {
+    setMessage(detailMsg);
+    setState("error");
+  }, []);
+  const onGridOk = useCallback(() => setState("ok"), []);
+  const onGridRequestDelete = useCallback(
+    (row: AdminStorySnapshot) => {
+      if (capabilities.mode === "admin") {
+        openAdminOp("delete", [row]);
+        return;
+      }
+      setDeleteTarget(row);
+      setDeleteOpen(true);
+    },
+    [capabilities.mode, openAdminOp],
+  );
+  const onGridSubmit = useCallback((row: AdminStorySnapshot) => {
+    runSubmitRef.current(row);
+  }, []);
+
   async function confirmAdminOp() {
     if (!adminOpPlan || !actorId || adminOpBusy) return;
     if (adminOpPlan.kind === "reject" && !adminOpReason.trim()) {
@@ -779,6 +802,9 @@ function StoryManagementScreenBody({
       }
     } else toast.error(copy.sendFailed);
   }
+  runSubmitRef.current = (row) => {
+    void runSubmit(row);
+  };
 
   function extractCreatedStoryId(data: unknown): string | null {
     if (!data || typeof data !== "object") return null;
@@ -1043,22 +1069,12 @@ function StoryManagementScreenBody({
           reloadToken={reloadToken}
           copy={copy}
           numberLocale={numberLocale}
-          onDenied={() => setState("denied")}
-          onError={(detailMsg) => {
-            setMessage(detailMsg);
-            setState("error");
-          }}
-          onOk={() => setState("ok")}
+          onDenied={onGridDenied}
+          onError={onGridError}
+          onOk={onGridOk}
           onOpenDetail={openDetail}
-          onSubmit={(row) => void runSubmit(row)}
-          onRequestDelete={(row) => {
-            if (capabilities.mode === "admin") {
-              openAdminOp("delete", [row]);
-              return;
-            }
-            setDeleteTarget(row);
-            setDeleteOpen(true);
-          }}
+          onSubmit={onGridSubmit}
+          onRequestDelete={onGridRequestDelete}
           onRequestAdminOp={openAdminOp}
           errorMessage={message}
           onRetry={refreshGrid}
@@ -2576,6 +2592,21 @@ function StoryLiveGrid({
   const actorId = resolveActorId(capabilities.mode);
   const sellerShopId = capabilities.mode === "seller" ? readSellerPartyId() : null;
   const isAdmin = capabilities.mode === "admin";
+  const onDeniedRef = useRef(onDenied);
+  const onErrorRef = useRef(onError);
+  const onOkRef = useRef(onOk);
+  const onOpenDetailRef = useRef(onOpenDetail);
+  const onSubmitRef = useRef(onSubmit);
+  const onRequestDeleteRef = useRef(onRequestDelete);
+  const onRequestAdminOpRef = useRef(onRequestAdminOp);
+  onDeniedRef.current = onDenied;
+  onErrorRef.current = onError;
+  onOkRef.current = onOk;
+  onOpenDetailRef.current = onOpenDetail;
+  onSubmitRef.current = onSubmit;
+  onRequestDeleteRef.current = onRequestDelete;
+  onRequestAdminOpRef.current = onRequestAdminOp;
+
   const columns = useMemo((): GridColumnDef<AdminStorySnapshot>[] => {
     return [
       {
@@ -2586,7 +2617,7 @@ function StoryLiveGrid({
           <button
             type="button"
             className="flex min-h-11 items-center gap-2 text-right font-bold line-clamp-2 hover:text-[#2563EB]"
-            onClick={() => onOpenDetail(row.storyId)}
+            onClick={() => onOpenDetailRef.current(row.storyId)}
             data-testid="story-row-title"
           >
             {row.coverMediaUrl ? (
@@ -2675,14 +2706,14 @@ function StoryLiveGrid({
         accessor: () => "",
         cell: (row) => {
           const actions: AppGridRowAction<AdminStorySnapshot>[] = [
-            { id: "view", label: copy.rowReview, icon: Eye, onClick: (r) => onOpenDetail(r.storyId) },
+            { id: "view", label: copy.rowReview, icon: Eye, onClick: (r) => onOpenDetailRef.current(r.storyId) },
           ];
           if (capabilities.canSubmit && hasAction(row, "submit")) {
             actions.push({
               id: "submit",
               label: copy.rowSubmit,
               icon: Send,
-              onClick: (r) => onSubmit(r),
+              onClick: (r) => onSubmitRef.current(r),
             });
           }
           if (isAdmin && hasAction(row, "approve")) {
@@ -2690,7 +2721,7 @@ function StoryLiveGrid({
               id: "approve",
               label: copy.approve,
               icon: Check,
-              onClick: (r) => onRequestAdminOp("approve", [r]),
+              onClick: (r) => onRequestAdminOpRef.current("approve", [r]),
             });
           }
           if (isAdmin && hasAction(row, "reject")) {
@@ -2698,7 +2729,7 @@ function StoryLiveGrid({
               id: "reject",
               label: copy.reject,
               icon: XCircle,
-              onClick: (r) => onRequestAdminOp("reject", [r]),
+              onClick: (r) => onRequestAdminOpRef.current("reject", [r]),
             });
           }
           if (hasAction(row, "delete")) {
@@ -2706,7 +2737,7 @@ function StoryLiveGrid({
               id: "delete",
               label: copy.deleteStory,
               icon: Trash2,
-              onClick: (r) => onRequestDelete(r),
+              onClick: (r) => onRequestDeleteRef.current(r),
             });
           }
           return <AppGridRowActionsCell row={row} actions={actions} compact />;
@@ -2717,21 +2748,12 @@ function StoryLiveGrid({
         sortable: false,
       },
     ];
-  }, [
-    capabilities.canSubmit,
-    copy,
-    isAdmin,
-    numberLocale,
-    onOpenDetail,
-    onSubmit,
-    onRequestDelete,
-    onRequestAdminOp,
-  ]);
+  }, [capabilities.canSubmit, copy, isAdmin, numberLocale]);
 
   const bulkActions = useMemo((): GridBulkAction<AdminStorySnapshot>[] => {
     if (!isAdmin) return [];
     const open = (kind: StoryAdminOpKind) => async (rows: AdminStorySnapshot[]) => {
-      onRequestAdminOp(kind, rows);
+      onRequestAdminOpRef.current(kind, rows);
       return { ok: true, message: "opened" };
     };
     return [
@@ -2757,7 +2779,7 @@ function StoryLiveGrid({
         execute: open("delete"),
       },
     ];
-  }, [copy.approve, copy.deleteStory, copy.reject, isAdmin, onRequestAdminOp]);
+  }, [copy.approve, copy.deleteStory, copy.reject, isAdmin]);
 
   const savedViewStore = useMemo(
     () =>
@@ -2776,24 +2798,24 @@ function StoryLiveGrid({
       if (capabilities.mode === "seller") {
         const result = await querySellerStories(query);
         if (result.state === "denied") {
-          onDenied();
+          onDeniedRef.current();
           return { rows: [], total: 0 };
         }
         if (result.state !== "ok" || !result.data) {
-          onError(result.message);
+          onErrorRef.current(result.message);
           return { rows: [], total: 0 };
         }
-        onOk();
+        onOkRef.current();
         return { rows: result.data.items, total: result.data.totalCount };
       }
       return adminGridQueryAdapter(
         (serverQuery) =>
           queryAdminStoriesGrid(serverQuery, reviewFilter ? { reviewStatus: reviewFilter } : undefined),
-        onDenied,
-        onError,
+        () => onDeniedRef.current(),
+        (message) => onErrorRef.current(message),
       )(query);
     },
-    [capabilities.mode, reloadToken, reviewFilter, onDenied, onError, onOk],
+    [capabilities.mode, reloadToken, reviewFilter],
   );
 
   const gridProps = useLegacyAdminGridDirectProps({

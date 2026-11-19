@@ -1,0 +1,9 @@
+{
+  "bridgeRowId": "514e987d-00c8-4421-b5b8-57867d02599f",
+  "claimHeadSha": "351c0e73eba611add824473f2d2694cbeacf954e",
+  "workerId": "tooba-worker-01",
+  "claimedAtUtc": "2026-11-19T22:31:30Z",
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16",
+  "expectedBaseSha": "d7c36bf836f66365772f2f95a24a48e5b23628ae",
+  "note": "Claimed via /api/tasks/next; docs-only issuance HEAD 351c0e73e"
+}
