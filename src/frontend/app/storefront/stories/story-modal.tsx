@@ -39,12 +39,12 @@ function isExternalHttp(url: string): boolean {
 function currentCta(
   item: PublicStoryItem | undefined,
   story: PublicStoryCard | undefined,
-): { type: string; target: string } | null {
+): { type: string; target: string; href: string | null } | null {
   if (item?.ctaTarget && item.ctaType && item.ctaType !== "none") {
-    return { type: item.ctaType, target: item.ctaTarget };
+    return { type: item.ctaType, target: item.ctaTarget, href: item.ctaHref ?? null };
   }
   if (story?.ctaTarget && story.ctaType && story.ctaType !== "none") {
-    return { type: story.ctaType, target: story.ctaTarget };
+    return { type: story.ctaType, target: story.ctaTarget, href: story.ctaHref ?? null };
   }
   return null;
 }
@@ -248,19 +248,20 @@ export function StoryModal({
     e.stopPropagation();
     const cta = currentCta(currentItem, currentStory);
     if (!cta) return;
-    const target = cta.target.trim();
-    if (!target || /^javascript:/i.test(target) || /^data:/i.test(target) || /^vbscript:/i.test(target)) {
+    const resolved = (cta.href ?? cta.target).trim();
+    if (!resolved || /^javascript:/i.test(resolved) || /^data:/i.test(resolved) || /^vbscript:/i.test(resolved)) {
       return;
     }
-    if (cta.type === "external" || isExternalHttp(target)) {
-      if (!isExternalHttp(target)) return;
-      window.location.href = target;
+    if (cta.type === "external" || isExternalHttp(resolved)) {
+      if (!isExternalHttp(resolved)) return;
+      window.location.href = resolved;
       return;
     }
-    if (/^[0-9a-fA-F-]{36}$/.test(target)) {
+    // Product Guid without Catalog-resolved href must not navigate silently.
+    if (/^[0-9a-fA-F-]{36}$/.test(resolved)) {
       return;
     }
-    const path = target.startsWith("/") ? target : `/${target}`;
+    const path = resolved.startsWith("/") ? resolved : `/${resolved}`;
     window.location.href = localizePath(path);
   };
 

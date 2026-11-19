@@ -29,8 +29,44 @@ public static class MediaAdminEndpoints
         var admin = app.MapGroup("/v1/admin/media");
         admin.MapPost("/upload", UploadAsync).DisableAntiforgery();
         admin.MapPost("/upload-for-shop", UploadForShopAsync).DisableAntiforgery();
+        admin.MapPost("/upload-story-platform", UploadStoryPlatformAsync).DisableAntiforgery();
         admin.MapGet("/", QueryAsync);
         admin.MapGet("/{id:guid}", GetAsync);
+    }
+
+    private static async Task<IResult> UploadStoryPlatformAsync(
+        HttpRequest request,
+        ISender sender,
+        ApiResponseFactory api,
+        IAdminPanelAccess adminAccess,
+        ICurrentTenant tenant,
+        CancellationToken cancellationToken)
+    {
+        var actorUserId = await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
+        if (!request.HasFormContentType)
+            return api.FromFailure(new SemanticError(MediaErrorCodes.UploadFailed));
+
+        var form = await request.ReadFormAsync(cancellationToken);
+        var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+        if (file is null)
+            return api.FromFailure(new SemanticError(MediaErrorCodes.UploadFailed));
+
+        var tenantKey = tenant.Current?.TenantId.Value;
+        if (string.IsNullOrWhiteSpace(tenantKey))
+            return api.FromFailure(new SemanticError(MediaErrorCodes.ValidationFailed));
+        var tenantId = StableStoryTenantGuid.FromTenantKey(tenantKey);
+        var occurrence = form["occurrenceKey"].ToString();
+
+        await using var stream = file.OpenReadStream();
+        return api.From(await sender.Send(
+            new UploadPlatformStoryMediaCommand(
+                stream,
+                file.FileName,
+                file.ContentType ?? string.Empty,
+                tenantId,
+                actorUserId,
+                string.IsNullOrWhiteSpace(occurrence) ? null : occurrence),
+            cancellationToken));
     }
 
     private static async Task<IResult> UploadForShopAsync(

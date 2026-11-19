@@ -10,7 +10,8 @@ public sealed record PublicStoryItem(
     string? Caption,
     int? DurationMs,
     string CtaType,
-    string? CtaTarget);
+    string? CtaTarget,
+    string? CtaHref = null);
 
 /// <summary>کارت عمومی استوری در ریل.</summary>
 public sealed record PublicStoryCard(
@@ -24,7 +25,8 @@ public sealed record PublicStoryCard(
     IReadOnlyList<PublicStoryItem> Items,
     Guid? SellerPartyId = null,
     string? ShopDisplayName = null,
-    string? ShopPublicId = null);
+    string? ShopPublicId = null,
+    string? CtaHref = null);
 
 /// <summary>آیتم مدیریتی استوری.</summary>
 public sealed record AdminStoryItemSnapshot(

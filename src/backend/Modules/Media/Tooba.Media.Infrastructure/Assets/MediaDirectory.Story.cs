@@ -212,6 +212,186 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
     }
 
     /// <inheritdoc />
+    public async Task<StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+        Stream stream,
+        string fileName,
+        string contentType,
+        Guid tenantId,
+        Guid actorUserId,
+        string? occurrenceKey,
+        CancellationToken cancellationToken)
+    {
+        if (tenantId == Guid.Empty || actorUserId == Guid.Empty)
+            throw new ContractOperationException(MediaErrorCodes.OwnerForbidden);
+        if (string.IsNullOrWhiteSpace(occurrenceKey))
+            throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
+        if (stream is null || !stream.CanRead)
+            throw new ContractOperationException(MediaErrorCodes.UploadFailed);
+        RefuseConstrainedTransaction();
+
+        var normalizedType = NormalizeContentType(contentType);
+        if (!IsImageOrVideo(normalizedType) || !AllowedContentTypes.Contains(normalizedType))
+            throw new ContractOperationException(MediaErrorCodes.TypeUnsupported);
+
+        await using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer, cancellationToken);
+        if (buffer.Length <= 0)
+            throw new ContractOperationException(MediaErrorCodes.UploadFailed);
+        if (buffer.Length > _maxUploadBytes)
+            throw new ContractOperationException(MediaErrorCodes.TooLarge);
+
+        var bytes = buffer.ToArray();
+        var digest = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        var safeName = SanitizeOriginalFileName(fileName);
+        var key = occurrenceKey.Trim();
+        // Platform scope: SellerPartyId Empty sentinel in existing occurrence PK (no schema change).
+        var platformShop = Guid.Empty;
+        var intentHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
+            string.Join('\u001f',
+                Len(tenantId.ToString("D")),
+                Len(actorUserId.ToString("D")),
+                Len(platformShop.ToString("D")),
+                Len(normalizedType),
+                Len(safeName),
+                Len(digest),
+                Len(buffer.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)))))).ToLowerInvariant();
+
+        var prior = await _db.AssetOwnerOccurrences.AsNoTracking()
+            .FirstOrDefaultAsync(
+                row => row.OccurrenceKey == key
+                    && row.TenantId == tenantId
+                    && row.SellerPartyId == platformShop,
+                cancellationToken);
+        if (prior is not null)
+        {
+            if (!string.Equals(prior.IntentHash, intentHash, StringComparison.Ordinal)
+                || prior.ActorUserId != actorUserId)
+                throw new ContractOperationException(MediaErrorCodes.OwnerForbidden);
+            var existing = await _db.Assets.AsNoTracking()
+                .FirstOrDefaultAsync(row => row.MediaAssetId == prior.MediaAssetId, cancellationToken)
+                ?? throw new ContractOperationException(MediaErrorCodes.Missing);
+            return MapStory(existing, sellerPartyId: null);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var assetId = DerivePlatformStoryAssetId(tenantId, actorUserId, key);
+        var extension = ExtensionByContentType[normalizedType];
+        // Distinct object-store key per ATTEMPT so concurrent losers cannot overwrite winner bytes.
+        var attemptId = UuidV7.New();
+        var storageKey = $"{now:yyyy}/{now:MM}/story-platform/{attemptId:N}{extension}";
+
+        buffer.Position = 0;
+        try
+        {
+            await _store.SaveAsync(buffer, storageKey, normalizedType, cancellationToken);
+        }
+        catch (ContractOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ContractOperationException(MediaErrorCodes.StorageUnavailable, ex);
+        }
+
+        var asset = MediaAsset.CreateReady(
+            storageKey,
+            safeName,
+            normalizedType,
+            buffer.Length,
+            digest,
+            width: null,
+            height: null,
+            actorUserId,
+            now,
+            assetId);
+        // Platform Story assets stay unscoped (no seller binding) — AuthorizeForStory uses allowUnscopedAdminAssets.
+        var occurrence = new MediaAssetOwnerOccurrence
+        {
+            OccurrenceKey = key,
+            TenantId = tenantId,
+            SellerPartyId = platformShop,
+            MediaAssetId = assetId,
+            ActorUserId = actorUserId,
+            IntentHash = intentHash,
+            CreatedAt = now,
+        };
+
+        _db.Assets.Add(asset);
+        _db.AssetOwnerOccurrences.Add(occurrence);
+
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsOccurrenceUniqueViolation(ex) || IsAssetPrimaryKeyViolation(ex))
+        {
+            DetachAttemptOwned(asset, binding: null, occurrence);
+            try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
+
+            var winner = await _db.AssetOwnerOccurrences.AsNoTracking()
+                .FirstOrDefaultAsync(
+                    row => row.OccurrenceKey == key
+                        && row.TenantId == tenantId
+                        && row.SellerPartyId == platformShop,
+                    cancellationToken);
+            if (winner is not null)
+            {
+                if (!string.Equals(winner.IntentHash, intentHash, StringComparison.Ordinal)
+                    || winner.ActorUserId != actorUserId)
+                    throw new ContractOperationException(MediaErrorCodes.OwnerForbidden, ex);
+                var existing = await _db.Assets.AsNoTracking()
+                    .FirstAsync(row => row.MediaAssetId == winner.MediaAssetId, cancellationToken);
+                return MapStory(existing, sellerPartyId: null);
+            }
+
+            throw new ContractOperationException(MediaErrorCodes.UploadFailed, ex);
+        }
+        catch (Exception ex)
+        {
+            DetachAttemptOwned(asset, binding: null, occurrence);
+            var durable = await _db.AssetOwnerOccurrences.AsNoTracking()
+                .FirstOrDefaultAsync(
+                    row => row.OccurrenceKey == key
+                        && row.TenantId == tenantId
+                        && row.SellerPartyId == platformShop,
+                    cancellationToken);
+            if (durable is not null)
+            {
+                if (!string.Equals(durable.IntentHash, intentHash, StringComparison.Ordinal)
+                    || durable.ActorUserId != actorUserId)
+                    throw new ContractOperationException(MediaErrorCodes.OwnerForbidden, ex);
+                var existing = await _db.Assets.AsNoTracking()
+                    .FirstAsync(row => row.MediaAssetId == durable.MediaAssetId, cancellationToken);
+                return MapStory(existing, sellerPartyId: null);
+            }
+
+            try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
+            throw new ContractOperationException(MediaErrorCodes.UploadFailed, ex);
+        }
+
+        return MapStory(asset, sellerPartyId: null);
+    }
+
+    private static Guid DerivePlatformStoryAssetId(Guid tenantId, Guid actorUserId, string occurrenceKey)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(
+            string.Join('\u001f',
+                "tooba.story.platform.media",
+                tenantId.ToString("D"),
+                actorUserId.ToString("D"),
+                occurrenceKey)));
+        Span<byte> guidBytes = stackalloc byte[16];
+        hash.AsSpan(0, 16).CopyTo(guidBytes);
+        return new Guid(guidBytes);
+    }
+
+    private static bool IsAssetPrimaryKeyViolation(DbUpdateException ex) =>
+        ex.InnerException is Npgsql.PostgresException { SqlState: "23505" } postgres
+        && string.Equals(postgres.SchemaName, "media", StringComparison.Ordinal)
+        && string.Equals(postgres.TableName, "assets", StringComparison.Ordinal);
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
         Guid tenantId,
         Guid sellerPartyId,
@@ -260,15 +440,18 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
 
     private void DetachAttemptOwned(
         MediaAsset asset,
-        MediaAssetOwnerBinding binding,
+        MediaAssetOwnerBinding? binding,
         MediaAssetOwnerOccurrence occurrence)
     {
         var assetEntry = _db.Entry(asset);
         if (assetEntry.State != EntityState.Detached)
             assetEntry.State = EntityState.Detached;
-        var bindingEntry = _db.Entry(binding);
-        if (bindingEntry.State != EntityState.Detached)
-            bindingEntry.State = EntityState.Detached;
+        if (binding is not null)
+        {
+            var bindingEntry = _db.Entry(binding);
+            if (bindingEntry.State != EntityState.Detached)
+                bindingEntry.State = EntityState.Detached;
+        }
         var occurrenceEntry = _db.Entry(occurrence);
         if (occurrenceEntry.State != EntityState.Detached)
             occurrenceEntry.State = EntityState.Detached;

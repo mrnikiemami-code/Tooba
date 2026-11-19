@@ -152,7 +152,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, null, "admin_create", key, intent,
             story.StoryId, Guid.Empty, now, cancellationToken);
-        var foldedCreate = await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, intent, "admin_create", null, expectedStoryId: null, attemptStoryId: story.StoryId, cancellationToken);
+        var foldedCreate = await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, intent, "admin_create", null, expectedStoryId: null, ownedStoryIds: [story.StoryId], cancellationToken);
         if (foldedCreate is Guid foldedStoryId)
         {
             story = await LoadStoryAsync(tenantId, foldedStoryId, track: false, cancellationToken)
@@ -317,7 +317,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await RecordOccurrenceAsync(
             tenantId, null, "admin_reorder_stories", key, intent,
             storyIdsInOrder[0], Guid.Empty, now, cancellationToken);
-        await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, intent, "admin_reorder_stories", null, expectedStoryId: null, attemptStoryId: Guid.Empty, cancellationToken);
+        await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, intent, "admin_reorder_stories", null, expectedStoryId: null, ownedStoryIds: storyIdsInOrder, cancellationToken);
         return stories
             .OrderBy(story => story.DisplayOrder)
             .Select(story => MapAdmin(story, isAdmin: true))
@@ -613,7 +613,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             actorUserId,
             now,
             cancellationToken);
-        var foldedSellerCreate = await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, createIntent, "seller_create", sellerPartyId, expectedStoryId: null, attemptStoryId: story.StoryId, cancellationToken);
+        var foldedSellerCreate = await SaveChangesWithOccurrenceArbitrationAsync(tenantId, key, createIntent, "seller_create", sellerPartyId, expectedStoryId: null, ownedStoryIds: [story.StoryId], cancellationToken);
         if (foldedSellerCreate is Guid foldedSellerStoryId)
         {
             story = await LoadStoryAsync(tenantId, foldedSellerStoryId, track: false, cancellationToken)

@@ -13,41 +13,68 @@ import {
 } from "../../../design-system";
 import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-system/app-data-grid/app-grid-row-actions";
-import { ADMIN_STORY_GRID_VIEW_KEY, createHostSavedViewStore } from "../../admin/saved-view-store";
+import { ADMIN_STORY_GRID_VIEW_KEY } from "../../admin/saved-view-store";
 import { formatAdminDate, type AdminLoadState } from "../../admin/admin-api";
+import { ADMIN_ACTOR_STORAGE_KEY, DEFAULT_ADMIN_ACTOR_ID } from "../../../lib/admin/admin-result";
+import { loadAdminSellers, type AdminSellerRow } from "../../../features/admin-sellers/api/sellers-api";
+import { readActorUserId, readSellerPartyId } from "../../vendor-panel/seller-api";
+import { loadAdminLanguages } from "../../../features/admin-languages";
+import { loadSellerOffers, type SellerOfferListRow } from "../../vendor-panel/seller-api";
 import {
   addAdminStoryItem,
   addSellerStoryItem,
   approveAndPublishAdminStory,
+  approveAndScheduleAdminStory,
   createAdminStory,
   createSellerStory,
+  disableAdminStory,
   getAdminStory,
   getSellerStory,
   queryAdminStoriesGrid,
   querySellerStories,
   rejectAdminStory,
+  removeAdminStoryItem,
+  removeSellerStoryItem,
+  reorderAdminStoryItems,
+  reorderSellerStoryItems,
+  returnSellerStoryToDraft,
   scheduleAdminStory,
+  stopSellerStory,
   submitSellerStory,
+  updateAdminStory,
+  updateAdminStoryItem,
+  updateSellerStory,
+  updateSellerStoryItem,
   uploadAdminStoryMedia,
   uploadAdminStoryMediaForShop,
   uploadSellerStoryMedia,
   type AdminStorySnapshot,
 } from "../story-api";
-import {
-  canEditSellerStory,
-  canSubmitStory,
-  type StoryCapabilities,
-} from "./story-capabilities";
+import { type StoryCapabilities } from "./story-capabilities";
 import { STORY_COPY, STORY_ORIGIN_LABELS } from "./story-management-copy";
 import { StoryReviewBadge, StoryStatusBadge } from "./StoryStatusBadge";
+import { runDurableStoryMutation } from "./story-executor";
 import {
   clearStoryIntentIfCurrent,
+  digestFile,
+  listPendingStoryIntents,
   newStoryOccurrenceKey as mintOccurrence,
   storeStoryIntent,
   type StoryIntentEnvelope,
 } from "./story-intent";
+import { createScopedStorySavedViewStore } from "./story-saved-views";
 
 const SELLER_STORY_GRID_VIEW_KEY = "seller.stories.grid.v1";
+
+function hasAction(row: AdminStorySnapshot, code: string): boolean {
+  return (row.actionCodes ?? []).includes(code);
+}
+
+function resolveActorId(mode: "admin" | "seller"): string {
+  if (mode === "seller") return readActorUserId() ?? "";
+  if (typeof window === "undefined") return DEFAULT_ADMIN_ACTOR_ID;
+  return window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID;
+}
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -106,24 +133,96 @@ function fromDatetimeLocalValue(value: string): string | null {
 /**
  * صفحهٔ مشترک مدیریت استوری — Admin و Seller؛ فهرست Orders-style و ویرایشگر سادهٔ کاسب.
  */
-export function StoryManagementScreen({ capabilities }: { capabilities: StoryCapabilities }) {
+export function StoryManagementScreen({
+  capabilities,
+  initialStoryId = null,
+  createMode = false,
+  navigate,
+  disableLiveGrid = false,
+}: {
+  capabilities: StoryCapabilities;
+  initialStoryId?: string | null;
+  createMode?: boolean;
+  /** Optional navigation (pages wire Next router; tests inject a stub). */
+  navigate?: (href: string) => void;
+  /** Test-only: skip AppDataGrid hook (avoids infinite act loops under jsdom). */
+  disableLiveGrid?: boolean;
+}) {
+  const router = {
+    push: (href: string) => {
+      if (navigate) navigate(href);
+      else if (typeof window !== "undefined") window.history.pushState({}, "", href);
+    },
+  };
+  const basePath = capabilities.mode === "seller" ? "/vendor-panel/stories" : "/admin/stories";
+  // continue as single body — keep previous Body signature by aliasing
+  return (
+    <StoryManagementScreenBody
+      capabilities={capabilities}
+      initialStoryId={initialStoryId}
+      createMode={createMode}
+      navigate={navigate}
+      disableLiveGrid={disableLiveGrid}
+      router={router}
+      basePath={basePath}
+    />
+  );
+}
+
+function StoryManagementScreenBody({
+  capabilities,
+  initialStoryId = null,
+  createMode = false,
+  navigate,
+  disableLiveGrid = false,
+  router,
+  basePath,
+}: {
+  capabilities: StoryCapabilities;
+  initialStoryId?: string | null;
+  createMode?: boolean;
+  navigate?: (href: string) => void;
+  disableLiveGrid?: boolean;
+  router: { push: (href: string) => void };
+  basePath: string;
+}) {
+  void navigate;
   const [state, setState] = useState<AdminLoadState | "loading">("loading");
   const [message, setMessage] = useState<string>();
-  const [showCreate, setShowCreate] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(createMode);
+  const [selectedId, setSelectedId] = useState<string | null>(initialStoryId);
   const [detail, setDetail] = useState<AdminStorySnapshot | null>(null);
   const [reviewFilter, setReviewFilter] = useState<string>("");
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectDraft, setRejectDraft] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleMode, setScheduleMode] = useState<"schedule" | "approve_schedule">("schedule");
   const [scheduleDraft, setScheduleDraft] = useState({ startAt: "", endAt: "" });
   const [reloadToken, setReloadToken] = useState(0);
   const [draftTitle, setDraftTitle] = useState("");
   const [slideFile, setSlideFile] = useState<File | null>(null);
   const [adminShopMode, setAdminShopMode] = useState<"platform" | "shop">("platform");
   const [adminShopId, setAdminShopId] = useState("");
+  const [adminShopName, setAdminShopName] = useState("");
+  const [shopOptions, setShopOptions] = useState<AdminSellerRow[]>([]);
+  const [shopSearch, setShopSearch] = useState("");
+  const [pendingActs, setPendingActs] = useState<StoryIntentEnvelope[]>([]);
+  const [previewConfirm, setPreviewConfirm] = useState<"publish" | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editLocale, setEditLocale] = useState("");
+  const [localeOptions, setLocaleOptions] = useState<Array<{ code: string; name: string; isDefault: boolean }>>([]);
+  const [productOptions, setProductOptions] = useState<SellerOfferListRow[]>([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [slideCaption, setSlideCaption] = useState("");
+  const [slideDurationSec, setSlideDurationSec] = useState("5");
+  const [slideCtaType, setSlideCtaType] = useState("none");
+  const [slideCtaTarget, setSlideCtaTarget] = useState("");
+  const [dirty, setDirty] = useState(false);
   const epochRef = useRef(0);
   const inFlightRef = useRef(false);
+  const sellerShopId = capabilities.mode === "seller" ? readSellerPartyId() : null;
+  const actorId = resolveActorId(capabilities.mode);
+  const gate = { inFlightRef, epochRef };
 
   const bumpEpoch = useCallback(() => {
     epochRef.current += 1;
@@ -137,7 +236,62 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
   useEffect(() => {
     bumpEpoch();
     return () => bumpEpoch();
-  }, [bumpEpoch, capabilities.mode]);
+  }, [bumpEpoch, capabilities.mode, sellerShopId, actorId, selectedId]);
+
+  useEffect(() => {
+    setPendingActs(listPendingStoryIntents(capabilities.mode, sellerShopId));
+  }, [capabilities.mode, sellerShopId, reloadToken]);
+
+  useEffect(() => {
+    if (capabilities.mode !== "admin") return;
+    void loadAdminSellers().then((result) => {
+      if (result.state === "ok" && result.data) {
+        setShopOptions(result.data.filter((row) => row.status.toLowerCase() === "active"));
+      }
+    });
+  }, [capabilities.mode]);
+
+  useEffect(() => {
+    void loadAdminLanguages().then((result) => {
+      if (result.state !== "ok" || !result.data) return;
+      const active = result.data.filter((row) => row.active);
+      setLocaleOptions(
+        active.map((row) => ({
+          code: row.code,
+          name: row.nativeName || row.displayName || row.code,
+          isDefault: Boolean(row.default),
+        })),
+      );
+      const def = active.find((row) => row.default) ?? active[0];
+      if (def) setEditLocale((prev) => prev || def.code);
+    });
+  }, []);
+
+  useEffect(() => {
+    const shop =
+      capabilities.mode === "seller"
+        ? sellerShopId
+        : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
+    if (!shop) {
+      setProductOptions([]);
+      return;
+    }
+    void loadSellerOffers(shop).then((result) => {
+      if (result.source === "host") {
+        setProductOptions(result.rows.filter((row) => row.status === "Active"));
+      }
+    });
+  }, [capabilities.mode, sellerShopId, detail?.sellerPartyId, adminShopId, adminShopMode]);
+
+  useEffect(() => {
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!dirty) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -149,8 +303,12 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
       const result =
         capabilities.mode === "seller" ? await getSellerStory(selectedId) : await getAdminStory(selectedId);
       if (started !== epochRef.current) return;
-      if (result.state === "ok" && result.data) setDetail(result.data);
-      else if (result.state === "denied") setState("denied");
+      if (result.state === "ok" && result.data) {
+        setDetail(result.data);
+        setEditTitle(result.data.title);
+        setEditLocale(result.data.locale || editLocale);
+        setDirty(false);
+      } else if (result.state === "denied") setState("denied");
       else {
         setDetail(null);
         toast.error(result.message ?? "بارگذاری جزئیات ممکن نشد.");
@@ -159,12 +317,1066 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
     void load();
   }, [selectedId, capabilities.mode, reloadToken]);
 
-  const openDetail = useCallback((id: string) => {
-    setSelectedId(id);
-  }, []);
+  const openDetail = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      router.push(`${basePath}/${encodeURIComponent(id)}`);
+    },
+    [basePath, router],
+  );
 
+  async function runSubmit(row: AdminStorySnapshot) {
+    if (inFlightRef.current) return;
+    if (!actorId) {
+      toast.error("شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.");
+      return;
+    }
+    const occurrenceKey = mintOccurrence();
+    const body = { expectedVersion: row.versionToken, occurrenceKey };
+    const envelope: StoryIntentEnvelope = {
+      version: 2,
+      action: "submit",
+      occurrenceKey,
+      method: "POST",
+      path: `/v1/seller/stories/${row.storyId}/submit`,
+      routeTargetId: row.storyId,
+      expectedVersion: row.versionToken,
+      bodyText: JSON.stringify(body),
+      uploadMeta: null,
+      children: [],
+      role: "seller",
+      shopId: row.sellerPartyId,
+      actorUserId: actorId,
+      recordedAt: new Date().toISOString(),
+    };
+    if (!storeStoryIntent(envelope)) {
+      toast.error("اقدام ناتمام قبلی هنوز باز است یا ذخیرهٔ مرورگر ممکن نیست؛ چیزی ارسال نشد.");
+      return;
+    }
+    inFlightRef.current = true;
+    const started = epochRef.current;
+    try {
+      const result = await submitSellerStory(row.storyId, null, row.versionToken, occurrenceKey);
+      if (started !== epochRef.current) return;
+      if (result.state === "ok") {
+        clearStoryIntentIfCurrent(envelope);
+        toast.success("برای تأیید ارسال شد.");
+        refreshGrid();
+        if (selectedId === row.storyId) setReloadToken((v) => v + 1);
+      } else {
+        toast.error(result.message ?? "ارسال ممکن نشد.");
+      }
+    } finally {
+      if (started === epochRef.current) inFlightRef.current = false;
+    }
+  }
+
+  async function createDraft() {
+    if (inFlightRef.current) return;
+    if (!actorId) {
+      toast.error("شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.");
+      return;
+    }
+    const title = draftTitle.trim();
+    if (!title) {
+      toast.error("عنوان را وارد کنید.");
+      return;
+    }
+    if (capabilities.mode === "admin" && adminShopMode === "shop" && !adminShopId.trim()) {
+      toast.error("فروشگاه را از فهرست نام‌ها انتخاب کنید.");
+      return;
+    }
+    const occurrenceKey = mintOccurrence();
+    const shopId =
+      capabilities.mode === "admin" && adminShopMode === "shop" ? adminShopId.trim() : sellerShopId;
+    const body = {
+      title,
+      occurrenceKey,
+      sellerPartyId: capabilities.mode === "admin" && adminShopMode === "shop" ? adminShopId.trim() : null,
+    };
+    const envelope: StoryIntentEnvelope = {
+      version: 2,
+      action: "create",
+      occurrenceKey,
+      method: "POST",
+      path: capabilities.mode === "seller" ? "/v1/seller/stories" : "/v1/admin/stories",
+      routeTargetId: null,
+      expectedVersion: null,
+      bodyText: JSON.stringify(body),
+      uploadMeta: null,
+      children: [],
+      role: capabilities.mode,
+      shopId,
+      actorUserId: actorId,
+      recordedAt: new Date().toISOString(),
+    };
+    if (!storeStoryIntent(envelope)) {
+      toast.error("اقدام ناتمام قبلی هنوز باز است یا ذخیرهٔ مرورگر ممکن نیست؛ چیزی ارسال نشد.");
+      return;
+    }
+    inFlightRef.current = true;
+    const started = epochRef.current;
+    try {
+      const result =
+        capabilities.mode === "seller"
+          ? await createSellerStory({ title, occurrenceKey })
+          : await createAdminStory(body);
+      if (started !== epochRef.current) return;
+      if (!result.ok || !result.story) {
+        toast.error(result.message ?? "ساخت پیش‌نویس ممکن نشد.");
+        return;
+      }
+      clearStoryIntentIfCurrent(envelope);
+      toast.success("پیش‌نویس ذخیره شد.");
+      setShowCreate(false);
+      setDraftTitle("");
+      setSlideFile(null);
+      openDetail(result.story.storyId);
+      refreshGrid();
+    } finally {
+      if (started === epochRef.current) inFlightRef.current = false;
+    }
+  }
+
+  if (state === "denied") return <Denied retry={refreshGrid} />;
+
+  const title = capabilities.mode === "seller" ? STORY_COPY.sellerTitle : STORY_COPY.adminTitle;
+  const description = capabilities.mode === "seller" ? STORY_COPY.sellerDescription : STORY_COPY.adminDescription;
+  const testId = capabilities.mode === "seller" ? "seller-stories" : "admin-stories";
+  const sellerEditable = detail ? hasAction(detail, "update") || hasAction(detail, "add_item") : false;
+  const filteredShops = shopOptions.filter((row) => {
+    const q = shopSearch.trim();
+    if (!q) return true;
+    return row.displayName.includes(q) || row.sellerPartyId.includes(q);
+  });
+
+  return (
+    <main data-testid={testId}>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <PageHeading title={title} description={description} />
+        <div className="flex flex-wrap items-center gap-2">
+          {capabilities.canReview ? (
+            <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
+              وضعیت بررسی
+              <select
+                className="min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
+                value={reviewFilter}
+                onChange={(e) => {
+                  setReviewFilter(e.target.value);
+                  refreshGrid();
+                }}
+                data-testid="admin-story-review-filter"
+              >
+                <option value="">{STORY_COPY.filterAll}</option>
+                <option value="Submitted">{STORY_COPY.filterPending}</option>
+                <option value="Approved">تأییدشده</option>
+                <option value="Rejected">ردشده</option>
+              </select>
+            </label>
+          ) : null}
+          {capabilities.canCreate ? (
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+              onClick={() => {
+                setShowCreate(true);
+                router.push(`${basePath}/new`);
+              }}
+              data-testid="story-create-open"
+            >
+              استوری جدید
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {pendingActs.length > 0 ? (
+        <section className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4" data-testid="story-pending-recovery">
+          <h2 className="mb-2 text-sm font-bold text-amber-900">اقدام ناتمام</h2>
+          <ul className="space-y-2 text-sm text-amber-900">
+            {pendingActs.map((act) => (
+              <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  {act.action} · کلید {act.occurrenceKey.slice(0, 8)}…
+                </span>
+                <button
+                  type="button"
+                  className="min-h-11 rounded-xl bg-amber-700 px-3 py-1.5 text-white"
+                  onClick={() => {
+                    toast.info("همان اقدام ذخیره‌شده را با همان کلید دوباره ارسال کنید؛ از تغییر فرم خودداری کنید.");
+                    if (act.routeTargetId) openDetail(act.routeTargetId);
+                  }}
+                >
+                  ادامه / ارسال مجدد
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {!selectedId && !showCreate && !disableLiveGrid ? (
+        <StoryLiveGrid
+          capabilities={capabilities}
+          reviewFilter={reviewFilter}
+          reloadToken={reloadToken}
+          onDenied={() => setState("denied")}
+          onError={(detailMsg) => {
+            setMessage(detailMsg);
+            setState("error");
+          }}
+          onOk={() => setState("ok")}
+          onOpenDetail={openDetail}
+          onSubmit={(row) => void runSubmit(row)}
+          errorMessage={message}
+          onRetry={refreshGrid}
+          showError={state === "error"}
+        />
+      ) : null}
+
+      {detail ? (
+        <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-detail-workspace">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold">{detail.title}</h2>
+              <p className="text-sm text-muted">{shopLabel(detail)} · {displayState(detail)}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <StoryStatusBadge status={detail.status} />
+                {detail.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={detail.reviewStatus} /> : null}
+                {capabilities.showOrigin ? (
+                  <span className="text-xs text-muted">{STORY_ORIGIN_LABELS[detail.origin] ?? detail.origin}</span>
+                ) : null}
+              </div>
+            </div>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl px-3 py-1.5 text-sm"
+              onClick={() => {
+                setSelectedId(null);
+                setDetail(null);
+                router.push(basePath);
+              }}
+            >
+              برگشت به فهرست
+            </button>
+          </div>
+
+          {detail.rejectionReason ? (
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" data-testid="story-rejection-reason">
+              <span className="font-bold">دلیل رد: </span>
+              {detail.rejectionReason}
+            </div>
+          ) : null}
+
+          <div className="mb-5 flex flex-wrap gap-2">
+            {hasAction(detail, "approve_and_publish") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+                onClick={() => setPreviewConfirm("publish")}
+              >
+                تأیید و انتشار
+              </button>
+            ) : null}
+            {hasAction(detail, "approve_and_schedule") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl border border-emerald-600 px-4 py-2 text-sm font-bold text-emerald-700"
+                onClick={() => {
+                  setScheduleMode("approve_schedule");
+                  setScheduleDraft({
+                    startAt: toDatetimeLocalValue(detail.startAt),
+                    endAt: toDatetimeLocalValue(detail.endAt),
+                  });
+                  setScheduleOpen(true);
+                }}
+              >
+                تأیید و زمان‌بندی
+              </button>
+            ) : null}
+            {hasAction(detail, "reject") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
+                onClick={() => setRejectOpen(true)}
+              >
+                رد با دلیل
+              </button>
+            ) : null}
+            {hasAction(detail, "schedule") || hasAction(detail, "publish_now") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
+                onClick={() => {
+                  setScheduleMode("schedule");
+                  setScheduleDraft({
+                    startAt: toDatetimeLocalValue(detail.startAt),
+                    endAt: toDatetimeLocalValue(detail.endAt),
+                  });
+                  setScheduleOpen(true);
+                }}
+              >
+                زمان‌بندی نمایش
+              </button>
+            ) : null}
+            {hasAction(detail, "stop") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl border border-rose-200 px-4 py-2 text-sm text-rose-700"
+                onClick={() => {
+                  const key = mintOccurrence();
+                  const run =
+                    capabilities.mode === "seller"
+                      ? stopSellerStory(detail.storyId, detail.versionToken, null, key)
+                      : disableAdminStory(detail.storyId, detail.versionToken, key);
+                  void run.then((ok) => {
+                    if (ok === true || (typeof ok === "object" && ok && "state" in ok && ok.state === "ok")) {
+                      toast.success("متوقف شد.");
+                      refreshGrid();
+                      setReloadToken((v) => v + 1);
+                    } else toast.error("توقف ممکن نشد.");
+                  });
+                }}
+              >
+                توقف نمایش
+              </button>
+            ) : null}
+            {hasAction(detail, "return_to_draft") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
+                onClick={() => {
+                  const key = mintOccurrence();
+                  void returnSellerStoryToDraft(detail.storyId, detail.versionToken, null, key).then((result) => {
+                    if (result.state === "ok") {
+                      toast.success("به پیش‌نویس برگشت.");
+                      refreshGrid();
+                      setReloadToken((v) => v + 1);
+                    } else toast.error(result.message ?? "بازگشت ممکن نشد.");
+                  });
+                }}
+              >
+                بازگشت به پیش‌نویس
+              </button>
+            ) : null}
+            {hasAction(detail, "submit") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                onClick={() => void runSubmit(detail)}
+              >
+                ارسال برای تأیید
+              </button>
+            ) : null}
+          </div>
+
+          {capabilities.canEdit && sellerEditable ? (
+            <div className="mb-4 grid gap-3 md:grid-cols-2">
+              <label className="block text-sm">
+                <span className="mb-1 block text-gray-600">عنوان</span>
+                <input
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  value={editTitle}
+                  onChange={(e) => {
+                    setEditTitle(e.target.value);
+                    setDirty(true);
+                  }}
+                  data-testid="story-edit-title"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-gray-600">زبان</span>
+                <select
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  value={editLocale}
+                  onChange={(e) => {
+                    setEditLocale(e.target.value);
+                    setDirty(true);
+                  }}
+                  data-testid="story-edit-locale"
+                >
+                  {localeOptions.map((row) => (
+                    <option key={row.code} value={row.code}>
+                      {row.name}
+                      {row.isDefault ? " (پیش‌فرض)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white md:col-span-2"
+                onClick={() => {
+                  if (!detail || !actorId) return;
+                  const key = mintOccurrence();
+                  const body = {
+                    title: editTitle.trim(),
+                    locale: editLocale || null,
+                    expectedVersion: detail.versionToken,
+                    occurrenceKey: key,
+                  };
+                  const envelope: StoryIntentEnvelope = {
+                    version: 2,
+                    action: "update",
+                    occurrenceKey: key,
+                    method: "PUT",
+                    path:
+                      capabilities.mode === "seller"
+                        ? `/v1/seller/stories/${detail.storyId}`
+                        : `/v1/admin/stories/${detail.storyId}`,
+                    routeTargetId: detail.storyId,
+                    expectedVersion: detail.versionToken,
+                    bodyText: JSON.stringify(body),
+                    uploadMeta: null,
+                    children: [],
+                    role: capabilities.mode,
+                    shopId: detail.sellerPartyId ?? sellerShopId,
+                    actorUserId: actorId,
+                    recordedAt: new Date().toISOString(),
+                  };
+                  void runDurableStoryMutation({
+                    gate,
+                    envelope,
+                    send: async () => {
+                      const result =
+                        capabilities.mode === "seller"
+                          ? await updateSellerStory(detail.storyId, {
+                              title: editTitle.trim(),
+                              locale: editLocale || null,
+                              expectedVersion: detail.versionToken,
+                              occurrenceKey: key,
+                            })
+                          : await updateAdminStory(detail.storyId, {
+                              title: editTitle.trim(),
+                              locale: editLocale || null,
+                              expectedVersion: detail.versionToken,
+                              occurrenceKey: key,
+                            });
+                      return result.state === "ok"
+                        ? { ok: true, data: result.data }
+                        : { ok: false, message: result.message ?? "ذخیره ممکن نشد." };
+                    },
+                  }).then((outcome) => {
+                    if (outcome.state === "ok") {
+                      toast.success("ذخیره شد.");
+                      setDirty(false);
+                      setReloadToken((v) => v + 1);
+                      refreshGrid();
+                    } else if (outcome.state === "failed") toast.error(outcome.message);
+                    else toast.error("ارسال انجام نشد.");
+                  });
+                }}
+              >
+                ذخیره عنوان و زبان
+              </button>
+            </div>
+          ) : null}
+
+          <h3 className="mb-2 text-sm font-bold">اسلایدها ({detail.items.length.toLocaleString("fa-IR")})</h3>
+          <ul className="mb-4 space-y-2 text-sm">
+            {detail.items.map((item, index) => (
+              <li key={item.storyItemId} className="rounded-xl border border-gray-100 px-3 py-2" data-testid="story-slide-row">
+                <div className="flex flex-wrap items-center gap-3">
+                  {item.mediaType === "video" && item.mediaUrl ? (
+                    // eslint-disable-next-line jsx-a11y/media-has-caption
+                    <video src={item.mediaUrl} className="h-16 w-16 rounded object-cover" muted playsInline controls />
+                  ) : item.mediaUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.mediaUrl} alt="" className="h-16 w-16 rounded object-cover" />
+                  ) : null}
+                  <div className="min-w-0 flex-1">
+                    <p>{item.mediaType === "video" ? "ویدیو" : "عکس"}</p>
+                    {item.caption ? <p className="text-muted">{item.caption}</p> : null}
+                  </div>
+                  {capabilities.canEdit && sellerEditable ? (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="min-h-11 rounded-xl border border-gray-200 px-3 py-1.5 text-sm"
+                        disabled={index === 0}
+                        onClick={() => {
+                          const ids = detail.items.map((row) => row.storyItemId);
+                          const next = [...ids];
+                          const tmp = next[index - 1]!;
+                          next[index - 1] = next[index]!;
+                          next[index] = tmp;
+                          const key = mintOccurrence();
+                          void (capabilities.mode === "seller"
+                            ? reorderSellerStoryItems(detail.storyId, next, detail.versionToken, null, key)
+                            : reorderAdminStoryItems(detail.storyId, next, detail.versionToken, key)
+                          ).then((result) => {
+                            if (result.state === "ok") {
+                              toast.success("ترتیب به‌روز شد.");
+                              setReloadToken((v) => v + 1);
+                            } else toast.error(result.message ?? "جابه‌جایی ممکن نشد.");
+                          });
+                        }}
+                      >
+                        بالاتر
+                      </button>
+                      <button
+                        type="button"
+                        className="min-h-11 rounded-xl border border-rose-200 px-3 py-1.5 text-sm text-rose-700"
+                        onClick={() => {
+                          const key = mintOccurrence();
+                          void (capabilities.mode === "seller"
+                            ? removeSellerStoryItem(detail.storyId, item.storyItemId, detail.versionToken, null, key)
+                            : removeAdminStoryItem(detail.storyId, item.storyItemId, detail.versionToken, key)
+                          ).then((result) => {
+                            if (result.state === "ok") {
+                              toast.success("اسلاید حذف شد.");
+                              setReloadToken((v) => v + 1);
+                              refreshGrid();
+                            } else toast.error(result.message ?? "حذف ممکن نشد.");
+                          });
+                        }}
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {capabilities.canEdit && sellerEditable ? (
+            <div className="space-y-3" data-testid="story-slide-editor">
+              <label className="block text-sm">
+                <span className="mb-1 block text-gray-600">عکس یا ویدیو</span>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  className="min-h-11 w-full text-sm"
+                  onChange={(e) => setSlideFile(e.target.files?.[0] ?? null)}
+                  data-testid="story-slide-file"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-gray-600">زیرنویس</span>
+                <input
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  value={slideCaption}
+                  onChange={(e) => setSlideCaption(e.target.value)}
+                  data-testid="story-slide-caption"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-gray-600">مدت نمایش عکس (ثانیه)</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  value={slideDurationSec}
+                  onChange={(e) => setSlideDurationSec(e.target.value)}
+                  data-testid="story-slide-duration"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-gray-600">مقصد دکمه</span>
+                <select
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  value={slideCtaType}
+                  onChange={(e) => {
+                    setSlideCtaType(e.target.value);
+                    setSlideCtaTarget("");
+                  }}
+                  data-testid="story-slide-cta-type"
+                >
+                  <option value="none">بدون دکمه</option>
+                  <option value="product">محصول فروشگاه</option>
+                  <option value="external">آدرس وب‌سایت</option>
+                </select>
+              </label>
+              {slideCtaType === "product" ? (
+                <div className="space-y-2" data-testid="story-product-picker">
+                  <input
+                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    placeholder="جستجوی نام محصول"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                  />
+                  <ul className="max-h-40 overflow-auto rounded-xl border border-gray-100">
+                    {productOptions
+                      .filter((row) => !productSearch.trim() || row.productTitle.includes(productSearch.trim()))
+                      .slice(0, 20)
+                      .map((row) => (
+                        <li key={row.offerId}>
+                          <button
+                            type="button"
+                            className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
+                            onClick={() => {
+                              if (!row.productId) {
+                                toast.error("این ردیف شناسهٔ محصول معتبری ندارد.");
+                                return;
+                              }
+                              setSlideCtaTarget(row.productId);
+                            }}
+                          >
+                            {row.productTitle}
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                  {slideCtaTarget ? <p className="text-xs text-muted">محصول انتخاب شد.</p> : null}
+                </div>
+              ) : null}
+              {slideCtaType === "external" ? (
+                <input
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  dir="ltr"
+                  placeholder="https://..."
+                  value={slideCtaTarget}
+                  onChange={(e) => setSlideCtaTarget(e.target.value)}
+                  data-testid="story-slide-cta-external"
+                />
+              ) : null}
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+                disabled={!slideFile || inFlightRef.current}
+                onClick={() => {
+                  if (!slideFile || !detail || !actorId) return;
+                  void (async () => {
+                    const uploadKey = mintOccurrence();
+                    const digest = await digestFile(slideFile);
+                    const uploadEnvelope: StoryIntentEnvelope = {
+                      version: 2,
+                      action: "upload_add",
+                      occurrenceKey: uploadKey,
+                      method: "POST",
+                      path: capabilities.mode === "seller" ? "/v1/seller/media/upload-story" : "/v1/admin/media/upload-story-platform",
+                      routeTargetId: detail.storyId,
+                      expectedVersion: detail.versionToken,
+                      bodyText: null,
+                      uploadMeta: {
+                        fileName: slideFile.name,
+                        fileType: slideFile.type,
+                        fileSize: slideFile.size,
+                        digestHex: digest,
+                      },
+                      children: [
+                        { step: "upload", occurrenceKey: uploadKey, done: false },
+                        { step: "add", occurrenceKey: mintOccurrence(), done: false },
+                      ],
+                      role: capabilities.mode,
+                      shopId: detail.sellerPartyId ?? sellerShopId,
+                      actorUserId: actorId,
+                      recordedAt: new Date().toISOString(),
+                    };
+                    const outcome = await runDurableStoryMutation({
+                      gate,
+                      envelope: uploadEnvelope,
+                      send: async () => {
+                        const uploaded =
+                          capabilities.mode === "seller"
+                            ? await uploadSellerStoryMedia(slideFile, uploadKey)
+                            : detail.sellerPartyId
+                              ? await uploadAdminStoryMediaForShop(slideFile, detail.sellerPartyId, uploadKey)
+                              : await uploadAdminStoryMedia(slideFile, uploadKey);
+                        if (uploaded.state !== "ok" || !uploaded.data) {
+                          return { ok: false, message: uploaded.message ?? "آپلود فایل ممکن نشد." };
+                        }
+                        uploadEnvelope.children[0]!.done = true;
+                        storeStoryIntent(uploadEnvelope);
+                        const itemKey = uploadEnvelope.children[1]!.occurrenceKey;
+                        const mediaType = uploaded.data.contentType.startsWith("video/") ? "video" : "image";
+                        const durationMs =
+                          mediaType === "image" ? Math.max(1, Number(slideDurationSec) || 5) * 1000 : null;
+                        const added =
+                          capabilities.mode === "seller"
+                            ? await addSellerStoryItem(detail.storyId, {
+                                mediaType,
+                                mediaAssetId: uploaded.data.mediaAssetId,
+                                mediaUrl: uploaded.data.displayUrl,
+                                caption: slideCaption.trim() || null,
+                                durationMs,
+                                ctaType: slideCtaType,
+                                ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
+                                expectedVersion: detail.versionToken,
+                                occurrenceKey: itemKey,
+                              })
+                            : await addAdminStoryItem(detail.storyId, {
+                                mediaType,
+                                mediaAssetId: uploaded.data.mediaAssetId,
+                                mediaUrl: uploaded.data.displayUrl,
+                                caption: slideCaption.trim() || null,
+                                durationMs,
+                                ctaType: slideCtaType,
+                                ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
+                                expectedVersion: detail.versionToken,
+                                occurrenceKey: itemKey,
+                              });
+                        if (added.state !== "ok") {
+                          return { ok: false, message: added.message ?? "افزودن اسلاید ممکن نشد." };
+                        }
+                        return { ok: true, data: added.data };
+                      },
+                    });
+                    if (outcome.state === "ok") {
+                      toast.success("اسلاید اضافه شد.");
+                      setSlideFile(null);
+                      setSlideCaption("");
+                      setSlideCtaType("none");
+                      setSlideCtaTarget("");
+                      refreshGrid();
+                      setReloadToken((v) => v + 1);
+                    } else if (outcome.state === "failed") toast.error(outcome.message);
+                    else toast.error("ارسال انجام نشد.");
+                  })();
+                }}
+              >
+                افزودن اسلاید
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="استوری جدید">
+        <div className="space-y-3 p-1">
+          <label className="block text-sm">
+            <span className="mb-1 block text-gray-600">عنوان</span>
+            <input
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              value={draftTitle}
+              onChange={(e) => setDraftTitle(e.target.value)}
+              data-testid="story-create-title"
+            />
+          </label>
+          {capabilities.mode === "admin" ? (
+            <fieldset className="space-y-2 text-sm">
+              <legend className="mb-1 text-gray-600">فروشگاه</legend>
+              <label className="flex min-h-11 items-center gap-2">
+                <input
+                  type="radio"
+                  checked={adminShopMode === "platform"}
+                  onChange={() => {
+                    setAdminShopMode("platform");
+                    setAdminShopId("");
+                    setAdminShopName("");
+                  }}
+                />
+                ویترین اصلی
+              </label>
+              <label className="flex min-h-11 items-center gap-2">
+                <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
+                فروشگاه مشخص
+              </label>
+              {adminShopMode === "shop" ? (
+                <div className="space-y-2" data-testid="story-admin-shop-picker">
+                  <input
+                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    placeholder="جستجوی نام فروشگاه"
+                    value={shopSearch}
+                    onChange={(e) => setShopSearch(e.target.value)}
+                    data-testid="story-admin-shop-search"
+                  />
+                  {adminShopName ? (
+                    <p className="text-sm text-muted">انتخاب‌شده: {adminShopName}</p>
+                  ) : (
+                    <p className="text-sm text-rose-700">فروشگاه را از فهرست نام‌ها انتخاب کنید.</p>
+                  )}
+                  <ul className="max-h-48 overflow-auto rounded-xl border border-gray-100">
+                    {filteredShops.map((row) => (
+                      <li key={row.sellerPartyId}>
+                        <button
+                          type="button"
+                          className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
+                          onClick={() => {
+                            setAdminShopId(row.sellerPartyId);
+                            setAdminShopName(row.displayName);
+                          }}
+                          data-testid="story-admin-shop-option"
+                        >
+                          {row.displayName}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </fieldset>
+          ) : null}
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setShowCreate(false)}>
+              انصراف
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+              onClick={() => void createDraft()}
+              data-testid="story-create-save"
+            >
+              ذخیره پیش‌نویس
+            </button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} title="رد با دلیل">
+        <div className="space-y-3 p-1">
+          <label className="block text-sm">
+            <span className="mb-1 block text-gray-600">دلیل رد</span>
+            <input
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              value={rejectDraft}
+              onChange={(e) => setRejectDraft(e.target.value)}
+              data-testid="story-reject-reason-input"
+            />
+          </label>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setRejectOpen(false)}>
+              انصراف
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
+              onClick={() => {
+                if (!detail || !rejectDraft.trim()) {
+                  toast.error("دلیل رد را بنویسید.");
+                  return;
+                }
+                const key = mintOccurrence();
+                void rejectAdminStory(detail.storyId, rejectDraft.trim(), detail.versionToken, key).then((result) => {
+                  if (result.state === "ok") {
+                    toast.success("رد شد.");
+                    setRejectOpen(false);
+                    refreshGrid();
+                    setReloadToken((v) => v + 1);
+                  } else toast.error(result.message ?? "رد ممکن نشد.");
+                });
+              }}
+            >
+              ثبت رد
+            </button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={scheduleOpen}
+        onClose={() => setScheduleOpen(false)}
+        title={scheduleMode === "approve_schedule" ? "تأیید و زمان‌بندی" : "زمان‌بندی نمایش"}
+      >
+        <div className="space-y-3 p-1">
+          <p className="text-sm text-muted">زمان به وقت تهران (UTC+03:30). اگر پایان خالی بماند تا توقف دستی می‌ماند.</p>
+          <label className="block text-sm">
+            <span className="mb-1 block text-gray-600">شروع (YYYY-MM-DDTHH:mm)</span>
+            <input
+              type="text"
+              dir="ltr"
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              value={scheduleDraft.startAt}
+              onChange={(e) => setScheduleDraft((c) => ({ ...c, startAt: e.target.value }))}
+              placeholder="1404-08-28T10:00"
+              data-testid="story-schedule-start"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-gray-600">پایان (اختیاری)</span>
+            <input
+              type="text"
+              dir="ltr"
+              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              value={scheduleDraft.endAt}
+              onChange={(e) => setScheduleDraft((c) => ({ ...c, endAt: e.target.value }))}
+              data-testid="story-schedule-end"
+            />
+          </label>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setScheduleOpen(false)}>
+              انصراف
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+              onClick={() => {
+                if (!detail || !actorId) return;
+                const key = mintOccurrence();
+                const startAt = fromDatetimeLocalValue(scheduleDraft.startAt);
+                const endAt = fromDatetimeLocalValue(scheduleDraft.endAt);
+                const body =
+                  scheduleMode === "approve_schedule"
+                    ? { expectedVersion: detail.versionToken, startAt, endAt, occurrenceKey: key }
+                    : { startAt, endAt, expectedVersion: detail.versionToken, occurrenceKey: key };
+                const envelope: StoryIntentEnvelope = {
+                  version: 2,
+                  action: scheduleMode === "approve_schedule" ? "approve_schedule" : "schedule",
+                  occurrenceKey: key,
+                  method: "POST",
+                  path:
+                    scheduleMode === "approve_schedule"
+                      ? `/v1/admin/stories/${detail.storyId}/approve-and-schedule`
+                      : `/v1/admin/stories/${detail.storyId}/schedule`,
+                  routeTargetId: detail.storyId,
+                  expectedVersion: detail.versionToken,
+                  bodyText: JSON.stringify(body),
+                  uploadMeta: null,
+                  children: [],
+                  role: "admin",
+                  shopId: detail.sellerPartyId,
+                  actorUserId: actorId,
+                  recordedAt: new Date().toISOString(),
+                };
+                void runDurableStoryMutation({
+                  gate,
+                  envelope,
+                  send: async () => {
+                    const result =
+                      scheduleMode === "approve_schedule"
+                        ? await approveAndScheduleAdminStory(detail.storyId, {
+                            expectedVersion: detail.versionToken,
+                            startAt,
+                            endAt,
+                            occurrenceKey: key,
+                          })
+                        : await scheduleAdminStory(detail.storyId, {
+                            startAt,
+                            endAt,
+                            expectedVersion: detail.versionToken,
+                            occurrenceKey: key,
+                          });
+                    return result.state === "ok"
+                      ? { ok: true, data: result.data }
+                      : { ok: false, message: result.message ?? "زمان‌بندی ممکن نشد." };
+                  },
+                }).then((outcome) => {
+                  if (outcome.state === "blocked") {
+                    toast.error(
+                      outcome.reason === "storage"
+                        ? "اقدام ناتمام قبلی هنوز باز است یا ذخیره ممکن نیست."
+                        : "ارسال انجام نشد.",
+                    );
+                    return;
+                  }
+                  if (outcome.state === "failed") {
+                    toast.error(outcome.message);
+                    return;
+                  }
+                  toast.success(scheduleMode === "approve_schedule" ? "تأیید و زمان‌بندی شد." : "زمان‌بندی ذخیره شد.");
+                  setScheduleOpen(false);
+                  refreshGrid();
+                  setReloadToken((v) => v + 1);
+                });
+              }}
+            >
+              {scheduleMode === "approve_schedule" ? "تأیید و زمان‌بندی" : "ذخیره زمان‌بندی"}
+            </button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog open={previewConfirm === "publish"} onClose={() => setPreviewConfirm(null)} title="تأیید انتشار">
+        <div className="space-y-3 p-1" data-testid="story-publish-preview">
+          {detail ? (
+            <>
+              <p className="text-sm text-muted">پیش‌نمایش نسخهٔ بررسی‌شده قبل از انتشار:</p>
+              <p className="font-bold">{detail.title}</p>
+              <ul className="space-y-2 text-sm">
+                {detail.items.map((item) => (
+                  <li key={item.storyItemId} className="flex items-center gap-3 rounded-xl border border-gray-100 px-3 py-2">
+                    {item.mediaType === "video" && item.mediaUrl ? (
+                      // eslint-disable-next-line jsx-a11y/media-has-caption
+                      <video src={item.mediaUrl} className="h-16 w-16 rounded object-cover" muted playsInline />
+                    ) : item.mediaUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.mediaUrl} alt="" className="h-16 w-16 rounded object-cover" />
+                    ) : null}
+                    <span>
+                      {item.mediaType === "video" ? "ویدیو" : "عکس"}
+                      {item.caption ? ` · ${item.caption}` : ""}
+                      {item.ctaType !== "none" ? ` · مقصد: ${item.ctaType}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex justify-end gap-2">
+                <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setPreviewConfirm(null)}>
+                  انصراف
+                </button>
+                <button
+                  type="button"
+                  className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+                  onClick={() => {
+                    if (!detail || !actorId) return;
+                    const key = mintOccurrence();
+                    const envelope: StoryIntentEnvelope = {
+                      version: 2,
+                      action: "approve_publish",
+                      occurrenceKey: key,
+                      method: "POST",
+                      path: `/v1/admin/stories/${detail.storyId}/approve-and-publish`,
+                      routeTargetId: detail.storyId,
+                      expectedVersion: detail.versionToken,
+                      bodyText: JSON.stringify({ expectedVersion: detail.versionToken, occurrenceKey: key }),
+                      uploadMeta: null,
+                      children: [],
+                      role: "admin",
+                      shopId: detail.sellerPartyId,
+                      actorUserId: actorId,
+                      recordedAt: new Date().toISOString(),
+                    };
+                    void runDurableStoryMutation({
+                      gate,
+                      envelope,
+                      send: async () => {
+                        const result = await approveAndPublishAdminStory(detail.storyId, detail.versionToken, key);
+                        return result.state === "ok"
+                          ? { ok: true, data: result.data }
+                          : { ok: false, message: result.message ?? "تأیید ممکن نشد." };
+                      },
+                    }).then((outcome) => {
+                      if (outcome.state === "ok") {
+                        toast.success("تأیید و منتشر شد.");
+                        setPreviewConfirm(null);
+                        refreshGrid();
+                        setReloadToken((v) => v + 1);
+                      } else if (outcome.state === "failed") toast.error(outcome.message);
+                      else toast.error("ارسال انجام نشد.");
+                    });
+                  }}
+                >
+                  تأیید انتشار
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </Dialog>
+    </main>
+  );
+}
+
+function StoryLiveGrid({
+  capabilities,
+  reviewFilter,
+  reloadToken,
+  onDenied,
+  onError,
+  onOk,
+  onOpenDetail,
+  onSubmit,
+  errorMessage,
+  onRetry,
+  showError,
+}: {
+  capabilities: StoryCapabilities;
+  reviewFilter: string;
+  reloadToken: number;
+  onDenied: () => void;
+  onError: (message?: string) => void;
+  onOk: () => void;
+  onOpenDetail: (id: string) => void;
+  onSubmit: (row: AdminStorySnapshot) => void;
+  errorMessage?: string;
+  onRetry: () => void;
+  showError: boolean;
+}) {
+  const actorId = resolveActorId(capabilities.mode);
+  const sellerShopId = capabilities.mode === "seller" ? readSellerPartyId() : null;
   const columns = useMemo((): GridColumnDef<AdminStorySnapshot>[] => {
-    const cols: GridColumnDef<AdminStorySnapshot>[] = [
+    return [
       {
         id: "title",
         header: "عنوان",
@@ -173,7 +1385,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
           <button
             type="button"
             className="flex min-h-11 items-center gap-2 text-right font-bold line-clamp-2 hover:text-[#2563EB]"
-            onClick={() => openDetail(row.storyId)}
+            onClick={() => onOpenDetail(row.storyId)}
             data-testid="story-row-title"
           >
             {row.coverMediaUrl ? (
@@ -258,19 +1470,14 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
         accessor: () => "",
         cell: (row) => {
           const actions: AppGridRowAction<AdminStorySnapshot>[] = [
-            {
-              id: "view",
-              label: "بررسی",
-              icon: Eye,
-              onClick: (r) => openDetail(r.storyId),
-            },
+            { id: "view", label: "بررسی", icon: Eye, onClick: (r) => onOpenDetail(r.storyId) },
           ];
-          if (capabilities.canSubmit && canSubmitStory(row.reviewStatus)) {
+          if (capabilities.canSubmit && hasAction(row, "submit")) {
             actions.push({
               id: "submit",
               label: "ارسال برای تأیید",
               icon: Send,
-              onClick: (r) => void runSubmit(r),
+              onClick: (r) => onSubmit(r),
             });
           }
           return <AppGridRowActionsCell row={row} actions={actions} compact />;
@@ -281,59 +1488,43 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
         sortable: false,
       },
     ];
-    return cols;
-  }, [capabilities.canSubmit, openDetail]);
+  }, [capabilities.canSubmit, onOpenDetail, onSubmit]);
 
   const savedViewStore = useMemo(
     () =>
-      createHostSavedViewStore(
-        capabilities.mode === "seller" ? SELLER_STORY_GRID_VIEW_KEY : ADMIN_STORY_GRID_VIEW_KEY,
-      ),
-    [capabilities.mode],
+      createScopedStorySavedViewStore({
+        role: capabilities.mode,
+        actorUserId: actorId || "anon",
+        shopId: sellerShopId,
+        gridKey: capabilities.mode === "seller" ? SELLER_STORY_GRID_VIEW_KEY : ADMIN_STORY_GRID_VIEW_KEY,
+      }),
+    [capabilities.mode, actorId, sellerShopId],
   );
 
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => {
       void reloadToken;
       if (capabilities.mode === "seller") {
-        const filterEntries = Object.entries(query.filters ?? {}).flatMap(([field, value]) => {
-          if (!value || typeof value !== "object") return [];
-          const operator =
-            "operator" in value && typeof value.operator === "string" ? value.operator : "contains";
-          const raw =
-            "query" in value && typeof value.query === "string"
-              ? value.query
-              : "values" in value && Array.isArray(value.values)
-                ? String(value.values[0] ?? "")
-                : null;
-          return [{ field, operator, value: raw }];
-        });
-        const result = await querySellerStories({
-          page: query.page,
-          pageSize: query.pageSize,
-          search: query.search,
-          filters: filterEntries,
-        });
+        const result = await querySellerStories(query);
         if (result.state === "denied") {
-          setState("denied");
+          onDenied();
           return { rows: [], total: 0 };
         }
         if (result.state !== "ok" || !result.data) {
-          setMessage(result.message);
-          setState("error");
+          onError(result.message);
           return { rows: [], total: 0 };
         }
-        setState("ok");
+        onOk();
         return { rows: result.data.items, total: result.data.totalCount };
       }
       return adminGridQueryAdapter(
         (serverQuery) =>
           queryAdminStoriesGrid(serverQuery, reviewFilter ? { reviewStatus: reviewFilter } : undefined),
-        () => setState("denied"),
-        (detailMsg) => setMessage(detailMsg),
+        onDenied,
+        onError,
       )(query);
     },
-    [capabilities.mode, reloadToken, reviewFilter],
+    [capabilities.mode, reloadToken, reviewFilter, onDenied, onError, onOk],
   );
 
   const gridProps = useLegacyAdminGridDirectProps({
@@ -343,464 +1534,15 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
     savedViewStore,
   });
 
-  async function runSubmit(row: AdminStorySnapshot) {
-    if (inFlightRef.current) return;
-    const occurrenceKey = mintOccurrence();
-    const envelope: StoryIntentEnvelope = {
-      version: 1,
-      action: "submit",
-      occurrenceKey,
-      routeTargetId: row.storyId,
-      expectedVersion: row.versionToken,
-      body: { expectedVersion: row.versionToken },
-      role: "seller",
-      shopId: row.sellerPartyId,
-      recordedAt: new Date().toISOString(),
-    };
-    if (!storeStoryIntent(envelope)) {
-      toast.error("ذخیرهٔ امن این اقدام در مرورگر ممکن نیست؛ چیزی ارسال نشد.");
-      return;
-    }
-    inFlightRef.current = true;
-    try {
-      const result = await submitSellerStory(row.storyId, null, row.versionToken, occurrenceKey);
-      if (result.state === "ok") {
-        clearStoryIntentIfCurrent(envelope);
-        toast.success("برای تأیید ارسال شد.");
-        refreshGrid();
-        if (selectedId === row.storyId) setReloadToken((v) => v + 1);
-      } else {
-        toast.error(result.message ?? "ارسال ممکن نشد.");
-      }
-    } finally {
-      inFlightRef.current = false;
-    }
-  }
-
-  async function createDraft() {
-    if (inFlightRef.current) return;
-    const title = draftTitle.trim();
-    if (!title) {
-      toast.error("عنوان را وارد کنید.");
-      return;
-    }
-    if (capabilities.mode === "admin" && adminShopMode === "shop" && !adminShopId.trim()) {
-      toast.error("فروشگاه را انتخاب کنید یا ویترین اصلی را بگذارید.");
-      return;
-    }
-    const occurrenceKey = mintOccurrence();
-    const envelope: StoryIntentEnvelope = {
-      version: 1,
-      action: "create",
-      occurrenceKey,
-      routeTargetId: null,
-      expectedVersion: null,
-      body: { title },
-      role: capabilities.mode,
-      shopId: capabilities.mode === "seller" ? null : adminShopMode === "shop" ? adminShopId.trim() : null,
-      recordedAt: new Date().toISOString(),
-    };
-    if (!storeStoryIntent(envelope)) {
-      toast.error("ذخیرهٔ امن پیش‌نویس در مرورگر ممکن نیست؛ چیزی ارسال نشد.");
-      return;
-    }
-    inFlightRef.current = true;
-    try {
-      const payload = {
-        title,
-        occurrenceKey,
-        sellerPartyId: capabilities.mode === "admin" && adminShopMode === "shop" ? adminShopId.trim() : null,
-      };
-      const result =
-        capabilities.mode === "seller" ? await createSellerStory(payload) : await createAdminStory(payload);
-      if (!result.ok || !result.story) {
-        toast.error(result.message ?? "ساخت پیش‌نویس ممکن نشد.");
-        return;
-      }
-      clearStoryIntentIfCurrent(envelope);
-      toast.success("پیش‌نویس ذخیره شد.");
-      setShowCreate(false);
-      setDraftTitle("");
-      setSlideFile(null);
-      setSelectedId(result.story.storyId);
-      refreshGrid();
-    } finally {
-      inFlightRef.current = false;
-    }
-  }
-
-  if (state === "denied") return <Denied retry={refreshGrid} />;
-
-  const title = capabilities.mode === "seller" ? STORY_COPY.sellerTitle : STORY_COPY.adminTitle;
-  const description = capabilities.mode === "seller" ? STORY_COPY.sellerDescription : STORY_COPY.adminDescription;
-  const testId = capabilities.mode === "seller" ? "seller-stories" : "admin-stories";
-  const sellerEditable = detail
-    ? capabilities.mode === "admin" || canEditSellerStory(detail.reviewStatus)
-    : false;
-
   return (
-    <main data-testid={testId}>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title={title} description={description} />
-        <div className="flex flex-wrap items-center gap-2">
-          {capabilities.canReview ? (
-            <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
-              وضعیت بررسی
-              <select
-                className="min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
-                value={reviewFilter}
-                onChange={(e) => {
-                  setReviewFilter(e.target.value);
-                  refreshGrid();
-                }}
-                data-testid="admin-story-review-filter"
-              >
-                <option value="">{STORY_COPY.filterAll}</option>
-                <option value="Submitted">{STORY_COPY.filterPending}</option>
-                <option value="Approved">تأییدشده</option>
-                <option value="Rejected">ردشده</option>
-              </select>
-            </label>
-          ) : null}
-          {capabilities.canCreate ? (
-            <button
-              type="button"
-              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-              onClick={() => setShowCreate(true)}
-              data-testid="story-create-open"
-            >
-              استوری جدید
-            </button>
-          ) : null}
-        </div>
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+      <div className="p-2 md:p-4">
+        {showError ? (
+          <ErrorState title={STORY_COPY.loadErrorTitle} detail={errorMessage} onRetry={onRetry} retryLabel={faWorkspaceMessages.retry} />
+        ) : (
+          <AppDataGrid<AdminStorySnapshot> {...gridProps} />
+        )}
       </div>
-
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-        <div className="p-2 md:p-4">
-          {state === "error" ? (
-            <ErrorState title={STORY_COPY.loadErrorTitle} detail={message} onRetry={refreshGrid} retryLabel={faWorkspaceMessages.retry} />
-          ) : (
-            <AppDataGrid<AdminStorySnapshot> {...gridProps} />
-          )}
-        </div>
-      </section>
-
-      {detail ? (
-        <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-detail-workspace">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold">{detail.title}</h2>
-              <p className="text-sm text-muted">{shopLabel(detail)} · {displayState(detail)}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <StoryStatusBadge status={detail.status} />
-                {detail.reviewStatus !== "None" ? <StoryReviewBadge reviewStatus={detail.reviewStatus} /> : null}
-                {capabilities.showOrigin ? (
-                  <span className="text-xs text-muted">{STORY_ORIGIN_LABELS[detail.origin] ?? detail.origin}</span>
-                ) : null}
-              </div>
-            </div>
-            <button
-              type="button"
-              className="min-h-11 rounded-xl px-3 py-1.5 text-sm"
-              onClick={() => {
-                setSelectedId(null);
-                setDetail(null);
-              }}
-            >
-              برگشت به فهرست
-            </button>
-          </div>
-
-          {detail.rejectionReason ? (
-            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" data-testid="story-rejection-reason">
-              <span className="font-bold">دلیل رد: </span>
-              {detail.rejectionReason}
-            </div>
-          ) : null}
-
-          <div className="mb-5 flex flex-wrap gap-2">
-            {capabilities.canReview && detail.reviewStatus === "Submitted" ? (
-              <>
-                <button
-                  type="button"
-                  className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
-                  onClick={() => {
-                    const key = mintOccurrence();
-                    void approveAndPublishAdminStory(detail.storyId, detail.versionToken, key).then((result) => {
-                      if (result.state === "ok") {
-                        toast.success("تأیید و منتشر شد.");
-                        refreshGrid();
-                        setReloadToken((v) => v + 1);
-                      } else toast.error(result.message ?? "تأیید ممکن نشد.");
-                    });
-                  }}
-                >
-                  تأیید و انتشار
-                </button>
-                <button
-                  type="button"
-                  className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
-                  onClick={() => setRejectOpen(true)}
-                >
-                  رد با دلیل
-                </button>
-              </>
-            ) : null}
-            {capabilities.canSchedule ? (
-              <button
-                type="button"
-                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
-                onClick={() => {
-                  setScheduleDraft({
-                    startAt: toDatetimeLocalValue(detail.startAt),
-                    endAt: toDatetimeLocalValue(detail.endAt),
-                  });
-                  setScheduleOpen(true);
-                }}
-              >
-                زمان‌بندی نمایش
-              </button>
-            ) : null}
-            {capabilities.canSubmit && canSubmitStory(detail.reviewStatus) ? (
-              <button
-                type="button"
-                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                onClick={() => void runSubmit(detail)}
-              >
-                ارسال برای تأیید
-              </button>
-            ) : null}
-          </div>
-
-          <h3 className="mb-2 text-sm font-bold">اسلایدها ({detail.items.length.toLocaleString("fa-IR")})</h3>
-          <ul className="mb-4 space-y-2 text-sm">
-            {detail.items.map((item) => (
-              <li key={item.storyItemId} className="flex items-center gap-3 rounded-xl border border-gray-100 px-3 py-2">
-                {item.mediaUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.mediaUrl} alt="" className="h-12 w-12 rounded object-cover" />
-                ) : null}
-                <span>{item.mediaType === "video" ? "ویدیو" : "عکس"}</span>
-              </li>
-            ))}
-          </ul>
-
-          {capabilities.canEdit && sellerEditable ? (
-            <div className="space-y-3">
-              <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">عکس یا ویدیو</span>
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  className="min-h-11 w-full text-sm"
-                  onChange={(e) => setSlideFile(e.target.files?.[0] ?? null)}
-                  data-testid="story-slide-file"
-                />
-              </label>
-              <button
-                type="button"
-                className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
-                disabled={!slideFile || inFlightRef.current}
-                onClick={() => {
-                  if (!slideFile || !detail) return;
-                  void (async () => {
-                    if (inFlightRef.current) return;
-                    inFlightRef.current = true;
-                    const uploadKey = mintOccurrence();
-                    try {
-                      const uploaded =
-                        capabilities.mode === "seller"
-                          ? await uploadSellerStoryMedia(slideFile, uploadKey)
-                          : detail.sellerPartyId
-                            ? await uploadAdminStoryMediaForShop(slideFile, detail.sellerPartyId, uploadKey)
-                            : await uploadAdminStoryMedia(slideFile, uploadKey);
-                      if (uploaded.state !== "ok" || !uploaded.data) {
-                        toast.error(uploaded.message ?? "آپلود فایل ممکن نشد.");
-                        return;
-                      }
-                      const itemKey = mintOccurrence();
-                      const mediaType = uploaded.data.contentType.startsWith("video/") ? "video" : "image";
-                      const added =
-                        capabilities.mode === "seller"
-                          ? await addSellerStoryItem(detail.storyId, {
-                              mediaType,
-                              mediaAssetId: uploaded.data.mediaAssetId,
-                              mediaUrl: uploaded.data.displayUrl,
-                              expectedVersion: detail.versionToken,
-                              occurrenceKey: itemKey,
-                            })
-                          : await addAdminStoryItem(detail.storyId, {
-                              mediaType,
-                              mediaAssetId: uploaded.data.mediaAssetId,
-                              mediaUrl: uploaded.data.displayUrl,
-                              expectedVersion: detail.versionToken,
-                              occurrenceKey: itemKey,
-                            });
-                      if (added.state === "ok") {
-                        toast.success("اسلاید اضافه شد.");
-                        setSlideFile(null);
-                        refreshGrid();
-                        setReloadToken((v) => v + 1);
-                      } else {
-                        toast.error(added.message ?? "افزودن اسلاید ممکن نشد.");
-                      }
-                    } finally {
-                      inFlightRef.current = false;
-                    }
-                  })();
-                }}
-              >
-                افزودن اسلاید
-              </button>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="استوری جدید">
-        <div className="space-y-3 p-1">
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">عنوان</span>
-            <input
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={draftTitle}
-              onChange={(e) => setDraftTitle(e.target.value)}
-              data-testid="story-create-title"
-            />
-          </label>
-          {capabilities.mode === "admin" ? (
-            <fieldset className="space-y-2 text-sm">
-              <legend className="mb-1 text-gray-600">فروشگاه</legend>
-              <label className="flex min-h-11 items-center gap-2">
-                <input
-                  type="radio"
-                  checked={adminShopMode === "platform"}
-                  onChange={() => setAdminShopMode("platform")}
-                />
-                ویترین اصلی
-              </label>
-              <label className="flex min-h-11 items-center gap-2">
-                <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
-                فروشگاه مشخص
-              </label>
-              {adminShopMode === "shop" ? (
-                <input
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  placeholder="شناسهٔ فروشگاه فعال"
-                  value={adminShopId}
-                  onChange={(e) => setAdminShopId(e.target.value)}
-                  data-testid="story-admin-shop-id"
-                />
-              ) : null}
-            </fieldset>
-          ) : null}
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setShowCreate(false)}>
-              انصراف
-            </button>
-            <button
-              type="button"
-              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-              onClick={() => void createDraft()}
-              data-testid="story-create-save"
-            >
-              ذخیره پیش‌نویس
-            </button>
-          </div>
-        </div>
-      </Dialog>
-
-      <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} title="رد با دلیل">
-        <div className="space-y-3 p-1">
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">دلیل رد</span>
-            <input
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={rejectDraft}
-              onChange={(e) => setRejectDraft(e.target.value)}
-              data-testid="story-reject-reason-input"
-            />
-          </label>
-          <div className="flex justify-end gap-2">
-            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setRejectOpen(false)}>
-              انصراف
-            </button>
-            <button
-              type="button"
-              className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
-              onClick={() => {
-                if (!detail || !rejectDraft.trim()) {
-                  toast.error("دلیل رد را بنویسید.");
-                  return;
-                }
-                const key = mintOccurrence();
-                void rejectAdminStory(detail.storyId, rejectDraft.trim(), detail.versionToken, key).then((result) => {
-                  if (result.state === "ok") {
-                    toast.success("رد شد.");
-                    setRejectOpen(false);
-                    refreshGrid();
-                    setReloadToken((v) => v + 1);
-                  } else toast.error(result.message ?? "رد ممکن نشد.");
-                });
-              }}
-            >
-              ثبت رد
-            </button>
-          </div>
-        </div>
-      </Dialog>
-
-      <Dialog open={scheduleOpen} onClose={() => setScheduleOpen(false)} title="زمان‌بندی نمایش">
-        <div className="space-y-3 p-1">
-          <p className="text-sm text-muted">اگر پایان خالی بماند، تا زمان توقف دستی در ویترین می‌ماند.</p>
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">شروع</span>
-            <input
-              type="datetime-local"
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={scheduleDraft.startAt}
-              onChange={(e) => setScheduleDraft((c) => ({ ...c, startAt: e.target.value }))}
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">پایان (اختیاری)</span>
-            <input
-              type="datetime-local"
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={scheduleDraft.endAt}
-              onChange={(e) => setScheduleDraft((c) => ({ ...c, endAt: e.target.value }))}
-            />
-          </label>
-          <div className="flex justify-end gap-2">
-            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setScheduleOpen(false)}>
-              انصراف
-            </button>
-            <button
-              type="button"
-              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-              onClick={() => {
-                if (!detail) return;
-                const key = mintOccurrence();
-                void scheduleAdminStory(detail.storyId, {
-                  startAt: fromDatetimeLocalValue(scheduleDraft.startAt),
-                  endAt: fromDatetimeLocalValue(scheduleDraft.endAt),
-                  expectedVersion: detail.versionToken,
-                  occurrenceKey: key,
-                }).then((result) => {
-                  if (result.state === "ok") {
-                    toast.success("زمان‌بندی ذخیره شد.");
-                    setScheduleOpen(false);
-                    refreshGrid();
-                    setReloadToken((v) => v + 1);
-                  } else toast.error(result.message ?? "زمان‌بندی ممکن نشد.");
-                });
-              }}
-            >
-              ذخیره زمان‌بندی
-            </button>
-          </div>
-        </div>
-      </Dialog>
-    </main>
+    </section>
   );
 }

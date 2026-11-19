@@ -32,6 +32,26 @@ function memoryStorage(): Storage {
   } as Storage;
 }
 
+function baseEnvelope(overrides: Partial<StoryIntentEnvelope> = {}): StoryIntentEnvelope {
+  return {
+    version: 2,
+    action: "submit",
+    occurrenceKey: newStoryOccurrenceKey(),
+    method: "POST",
+    path: "/v1/seller/stories/x/submit",
+    routeTargetId: "story-1",
+    expectedVersion: 3,
+    bodyText: JSON.stringify({ expectedVersion: 3 }),
+    uploadMeta: null,
+    children: [],
+    role: "seller",
+    shopId: "shop-a",
+    actorUserId: "actor-1",
+    recordedAt: "2026-11-19T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
 test("story intent stores exact bytes and clears only the same envelope", () => {
   const previous = globalThis.sessionStorage;
   Object.defineProperty(globalThis, "sessionStorage", {
@@ -39,24 +59,37 @@ test("story intent stores exact bytes and clears only the same envelope", () => 
     value: memoryStorage(),
   });
   try {
-    const envelope: StoryIntentEnvelope = {
-      version: 1,
-      action: "submit",
-      occurrenceKey: newStoryOccurrenceKey(),
-      routeTargetId: "story-1",
-      expectedVersion: 3,
-      body: { expectedVersion: 3 },
-      role: "seller",
-      shopId: "shop-a",
-      recordedAt: "2026-11-19T00:00:00.000Z",
-    };
+    const envelope = baseEnvelope();
     assert.equal(storeStoryIntent(envelope), true);
     const read = readStoryIntent("seller", "shop-a", "submit", "story-1");
-    assert.deepEqual(read, envelope);
+    assert.equal(read.state, "ok");
+    if (read.state === "ok") assert.deepEqual(read.envelope, envelope);
     clearStoryIntentIfCurrent({ ...envelope, occurrenceKey: "other" });
-    assert.ok(readStoryIntent("seller", "shop-a", "submit", "story-1"));
+    assert.equal(readStoryIntent("seller", "shop-a", "submit", "story-1").state, "ok");
     clearStoryIntentIfCurrent(envelope);
-    assert.equal(readStoryIntent("seller", "shop-a", "submit", "story-1"), null);
+    assert.equal(readStoryIntent("seller", "shop-a", "submit", "story-1").state, "missing");
+  } finally {
+    Object.defineProperty(globalThis, "sessionStorage", {
+      configurable: true,
+      value: previous,
+    });
+  }
+});
+
+test("pending intent refuses overwrite with a different occurrence key", () => {
+  const previous = globalThis.sessionStorage;
+  Object.defineProperty(globalThis, "sessionStorage", {
+    configurable: true,
+    value: memoryStorage(),
+  });
+  try {
+    const first = baseEnvelope({ occurrenceKey: "key-a" });
+    assert.equal(storeStoryIntent(first), true);
+    const second = baseEnvelope({ occurrenceKey: "key-b" });
+    assert.equal(storeStoryIntent(second), false);
+    const read = readStoryIntent("seller", "shop-a", "submit", "story-1");
+    assert.equal(read.state, "ok");
+    if (read.state === "ok") assert.equal(read.envelope.occurrenceKey, "key-a");
   } finally {
     Object.defineProperty(globalThis, "sessionStorage", {
       configurable: true,

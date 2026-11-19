@@ -47,8 +47,8 @@ import {
 } from "../settlement/settlement-api";
 import {
   ADMIN_STORY_CAPABILITIES,
-  StoryManagementScreen,
 } from "../stories/management";
+import { StoryManagementRoute } from "../stories/management/StoryManagementRoute";
 import {
   loadAdminHomeComposition,
   reorderAdminHomeSections,
@@ -758,5 +758,13 @@ export function AdminPageCompositionScreen() {
 
 /** مدیریت استوری‌های ویترین — wrapper نازک روی سیستم مشترک. */
 export function AdminStoriesScreen() {
-  return <StoryManagementScreen capabilities={ADMIN_STORY_CAPABILITIES} />;
+  return <StoryManagementRoute capabilities={ADMIN_STORY_CAPABILITIES} />;
+}
+
+export function AdminStoriesCreateScreen() {
+  return <StoryManagementRoute capabilities={ADMIN_STORY_CAPABILITIES} createMode />;
+}
+
+export function AdminStoriesDetailScreen({ storyId }: { storyId: string }) {
+  return <StoryManagementRoute capabilities={ADMIN_STORY_CAPABILITIES} initialStoryId={storyId} />;
 }

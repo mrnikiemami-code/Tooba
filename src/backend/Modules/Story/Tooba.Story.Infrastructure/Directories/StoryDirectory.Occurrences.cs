@@ -124,7 +124,7 @@ public sealed partial class StoryDirectory
             staged.ActionCode,
             staged.SellerPartyId,
             expectedStoryId: story.StoryId,
-            attemptStoryId: story.StoryId,
+            ownedStoryIds: [story.StoryId],
             cancellationToken);
         if (winnerStoryId is null)
             return story;
@@ -152,9 +152,13 @@ public sealed partial class StoryDirectory
         string actionCode,
         Guid? sellerPartyId,
         Guid? expectedStoryId,
-        Guid attemptStoryId,
+        IReadOnlyCollection<Guid> ownedStoryIds,
         CancellationToken cancellationToken)
     {
+        // Capture exact command-owned identities BEFORE SaveChanges mutates tracker state.
+        var owned = ownedStoryIds is null || ownedStoryIds.Count == 0
+            ? Array.Empty<Guid>()
+            : ownedStoryIds.Distinct().ToArray();
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
@@ -162,12 +166,12 @@ public sealed partial class StoryDirectory
         }
         catch (DbUpdateConcurrencyException)
         {
-            DetachAttemptOwned(occurrenceKey, tenantId, attemptStoryId);
+            DetachAttemptOwned(occurrenceKey, tenantId, owned);
             throw new SemanticException(new SemanticError(StoryErrorCodes.VersionStale));
         }
         catch (DbUpdateException ex) when (IsCommandOccurrenceUniqueViolation(ex))
         {
-            DetachAttemptOwned(occurrenceKey, tenantId, attemptStoryId);
+            DetachAttemptOwned(occurrenceKey, tenantId, owned);
             var winner = await _db.CommandOccurrences.AsNoTracking()
                 .FirstOrDefaultAsync(
                     row => row.OccurrenceKey == occurrenceKey && row.TenantId == tenantId,
@@ -193,10 +197,12 @@ public sealed partial class StoryDirectory
         && (expectedStoryId is not Guid requiredStory || existing.StoryId == requiredStory);
 
     /// <summary>
-    /// فقط state همین attempt (occurrence + story/آیتم‌های staged) را detach می‌کند؛ ChangeTracker.Clear ممنوع.
+    /// فقط occurrence و story/آیتم‌های همین command (ownedStoryIds صریح) را detach می‌کند.
+    /// Guid.Empty/فهرست خالی هرگز به معنی «همهٔ Modifiedها» نیست؛ ChangeTracker.Clear ممنوع.
     /// </summary>
-    private void DetachAttemptOwned(string occurrenceKey, Guid tenantId, Guid attemptStoryId)
+    private void DetachAttemptOwned(string occurrenceKey, Guid tenantId, IReadOnlyCollection<Guid> ownedStoryIds)
     {
+        var owned = ownedStoryIds as HashSet<Guid> ?? ownedStoryIds.ToHashSet();
         foreach (var entry in _db.ChangeTracker.Entries<StoryCommandOccurrence>().ToList())
         {
             if (entry.State == EntityState.Detached)
@@ -211,8 +217,7 @@ public sealed partial class StoryDirectory
         {
             if (entry.State is EntityState.Detached or EntityState.Unchanged)
                 continue;
-            // attemptStoryId Empty = multi-row command (e.g. reorder); otherwise only this story.
-            if (attemptStoryId != Guid.Empty && entry.Entity.StoryId != attemptStoryId)
+            if (!owned.Contains(entry.Entity.StoryId))
                 continue;
             entry.State = EntityState.Detached;
         }
@@ -221,7 +226,7 @@ public sealed partial class StoryDirectory
         {
             if (entry.State is EntityState.Detached or EntityState.Unchanged)
                 continue;
-            if (attemptStoryId != Guid.Empty && entry.Entity.StoryId != attemptStoryId)
+            if (!owned.Contains(entry.Entity.StoryId))
                 continue;
             entry.State = EntityState.Detached;
         }

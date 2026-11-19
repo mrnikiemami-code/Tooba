@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Tooba.BuildingBlocks;
 using Tooba.Media.Contracts.Assets;
@@ -384,6 +384,9 @@ public sealed class StoryMarketplace281R5ReplayTests
             Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
+            Task.FromResult(new StoryMediaAssetAuthorization(Guid.NewGuid(), contentType ?? "image/jpeg", "/v1/storefront/media/00000000-0000-0000-0000-000000000000", false, null));
         public Task<IReadOnlyList<StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
             Guid tenantId, Guid sellerPartyId, int take, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<StoryMediaAssetAuthorization>>([]);
@@ -400,6 +403,8 @@ public sealed class StoryMarketplace281R5ReplayTests
 
         public Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+        public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(productId == Guid.Empty ? null : "/products/" + productId.ToString("N"));
     }
 
     private sealed class PlatformProducts(Guid published) : IStoryProductTargetPort
@@ -413,5 +418,8 @@ public sealed class StoryMarketplace281R5ReplayTests
                 throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
             return Task.CompletedTask;
         }
+
+        public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(productId == Guid.Empty ? null : "/products/" + productId.ToString("N"));
     }
 }

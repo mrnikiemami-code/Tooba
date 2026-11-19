@@ -156,6 +156,50 @@ public sealed class StoryMarketplace282Gate0Tests
             e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted);
     }
 
+    [Fact]
+    public async Task Gate0b_detach_owned_ids_only_preserves_unrelated_modified_then_later_save()
+    {
+        var dbName = "g0b-owned-" + Guid.NewGuid().ToString("N");
+        var media = Guid.NewGuid();
+        var options = new DbContextOptionsBuilder<StoryDbContext>().UseInMemoryDatabase(dbName).Options;
+        await using var db = new StoryDbContext(options);
+        var dir = new StoryDirectory(db, null, new StubMedia(media), new PlatformProducts(Guid.NewGuid()));
+        var a = await dir.AdminCreateAsync(StoryTenantIds.StoreAlpha, new CreateStoryCommand("A", null, null, media, null, null, null, null, OccurrenceKey: "oa"), CancellationToken.None);
+        var b = await dir.AdminCreateAsync(StoryTenantIds.StoreAlpha, new CreateStoryCommand("B", null, null, media, null, null, null, null, OccurrenceKey: "ob"), CancellationToken.None);
+        var u = await dir.AdminCreateAsync(StoryTenantIds.StoreAlpha, new CreateStoryCommand("U", null, null, media, null, null, null, null, OccurrenceKey: "ou"), CancellationToken.None);
+
+        var storyA = await db.Stories.SingleAsync(s => s.StoryId == a.StoryId);
+        var storyB = await db.Stories.SingleAsync(s => s.StoryId == b.StoryId);
+        var storyU = await db.Stories.SingleAsync(s => s.StoryId == u.StoryId);
+        storyA.EnsureExpectedVersion(a.VersionToken);
+        storyA.SetDisplayOrder(1, DateTimeOffset.UtcNow);
+        storyB.EnsureExpectedVersion(b.VersionToken);
+        storyB.SetDisplayOrder(0, DateTimeOffset.UtcNow);
+        storyU.EnsureExpectedVersion(u.VersionToken);
+        storyU.SetDisplayOrder(7, DateTimeOffset.UtcNow);
+        Assert.Equal(EntityState.Modified, db.Entry(storyA).State);
+        Assert.Equal(EntityState.Modified, db.Entry(storyB).State);
+        Assert.Equal(EntityState.Modified, db.Entry(storyU).State);
+
+        var detach = typeof(StoryDirectory).GetMethod(
+            "DetachAttemptOwned",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        detach.Invoke(dir, ["lose-batch", StoryTenantIds.StoreAlpha, (IReadOnlyCollection<Guid>)[a.StoryId, b.StoryId]]);
+
+        Assert.Equal(EntityState.Detached, db.Entry(storyA).State);
+        Assert.Equal(EntityState.Detached, db.Entry(storyB).State);
+        Assert.Equal(EntityState.Modified, db.Entry(storyU).State);
+
+        var orderABefore = a.DisplayOrder;
+        var orderBBefore = b.DisplayOrder;
+        await db.SaveChangesAsync();
+        var savedU = await db.Stories.AsNoTracking().SingleAsync(s => s.StoryId == u.StoryId);
+        Assert.Equal(7, savedU.DisplayOrder);
+        // A/B were detached before save — their order mutations must NOT persist.
+        Assert.Equal(orderABefore, (await db.Stories.AsNoTracking().SingleAsync(s => s.StoryId == a.StoryId)).DisplayOrder);
+        Assert.Equal(orderBBefore, (await db.Stories.AsNoTracking().SingleAsync(s => s.StoryId == b.StoryId)).DisplayOrder);
+    }
+
     [SkippableFact]
     public async Task Gate0c_pg_two_context_stale_owning_command_rollback_only()
     {
@@ -370,6 +414,9 @@ public sealed class StoryMarketplace282Gate0Tests
             Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
+            Task.FromResult(new StoryMediaAssetAuthorization(Guid.NewGuid(), contentType ?? "image/jpeg", "/v1/storefront/media/00000000-0000-0000-0000-000000000000", false, null));
         public Task<IReadOnlyList<StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
             Guid tenantId, Guid sellerPartyId, int take, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<StoryMediaAssetAuthorization>>([]);
@@ -386,6 +433,8 @@ public sealed class StoryMarketplace282Gate0Tests
 
         public Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+        public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(productId == Guid.Empty ? null : "/products/" + productId.ToString("N"));
     }
 
     private sealed class PlatformProducts(Guid published) : IStoryProductTargetPort
@@ -399,5 +448,8 @@ public sealed class StoryMarketplace282Gate0Tests
                 throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
             return Task.CompletedTask;
         }
+
+        public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(productId == Guid.Empty ? null : "/products/" + productId.ToString("N"));
     }
 }

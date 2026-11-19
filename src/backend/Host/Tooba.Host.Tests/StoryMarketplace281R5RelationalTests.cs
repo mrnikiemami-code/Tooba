@@ -376,6 +376,9 @@ public sealed class StoryMarketplace281R5RelationalTests
             Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
+            Task.FromResult(new Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization(Guid.NewGuid(), contentType ?? "image/jpeg", "/v1/storefront/media/00000000-0000-0000-0000-000000000000", false, null));
         public Task<IReadOnlyList<Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
             Guid tenantId, Guid sellerPartyId, int take, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization>>([]);
@@ -388,6 +391,8 @@ public sealed class StoryMarketplace281R5RelationalTests
 
         public Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+        public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(productId == Guid.Empty ? null : "/products/" + productId.ToString("N"));
     }
 
     private sealed class RecordingStore : IMediaObjectStore

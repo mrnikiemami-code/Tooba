@@ -206,33 +206,88 @@ public sealed partial class StoryDirectory
             .Select(row => row.SellerPartyId!.Value)
             .Distinct()
             .ToList();
-        if (shops.Count == 0)
-            return rows;
 
         IReadOnlyDictionary<Guid, string> names = new Dictionary<Guid, string>();
-        if (_partySellers is not null)
-        {
-            var projections = await _partySellers.GetStatusProjectionsAsync(shops, cancellationToken);
-            names = projections.ToDictionary(row => row.PartyId, row => row.DisplayName);
-        }
-
         IReadOnlyDictionary<Guid, CatalogPublicSellerAttribution> publicAttrs =
             new Dictionary<Guid, CatalogPublicSellerAttribution>();
-        if (_publicSellers is not null)
-            publicAttrs = await _publicSellers.ResolveAsync(shops, cancellationToken);
+        if (shops.Count > 0)
+        {
+            if (_partySellers is not null)
+            {
+                var projections = await _partySellers.GetStatusProjectionsAsync(shops, cancellationToken);
+                names = projections.ToDictionary(row => row.PartyId, row => row.DisplayName);
+            }
+
+            if (_publicSellers is not null)
+                publicAttrs = await _publicSellers.ResolveAsync(shops, cancellationToken);
+        }
+
+        var productIds = new HashSet<Guid>();
+        foreach (var row in rows)
+        {
+            CollectProductCta(row.CtaType, row.CtaTarget, productIds);
+            foreach (var item in row.Items)
+                CollectProductCta(item.CtaType, item.CtaTarget, productIds);
+        }
+
+        var paths = new Dictionary<Guid, string>();
+        if (_products is not null)
+        {
+            foreach (var productId in productIds)
+            {
+                var path = await _products.TryResolvePublicProductPathAsync(productId, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(path))
+                    paths[productId] = path;
+            }
+        }
 
         return rows.Select(row =>
         {
+            var items = row.Items.Select(item => item with
+            {
+                CtaHref = ResolveCtaHref(item.CtaType, item.CtaTarget, item.CtaHref, paths),
+            }).ToList();
+            var enriched = row with
+            {
+                Items = items,
+                CtaHref = ResolveCtaHref(row.CtaType, row.CtaTarget, row.CtaHref, paths),
+            };
             if (row.SellerPartyId is not Guid shop)
-                return row;
+                return enriched;
             publicAttrs.TryGetValue(shop, out var attr);
             names.TryGetValue(shop, out var partyName);
-            return row with
+            return enriched with
             {
                 ShopDisplayName = attr?.DisplayName ?? partyName,
                 ShopPublicId = attr?.PublicId,
             };
         }).ToList();
+    }
+
+    private static void CollectProductCta(string? ctaType, string? ctaTarget, HashSet<Guid> sink)
+    {
+        if (!string.Equals(ctaType, "product", StringComparison.OrdinalIgnoreCase))
+            return;
+        if (Guid.TryParse(ctaTarget?.Trim(), out var id) && id != Guid.Empty)
+            sink.Add(id);
+    }
+
+    private static string? ResolveCtaHref(
+        string? ctaType,
+        string? ctaTarget,
+        string? existing,
+        IReadOnlyDictionary<Guid, string> paths)
+    {
+        if (!string.IsNullOrWhiteSpace(existing))
+            return existing;
+        if (string.Equals(ctaType, "product", StringComparison.OrdinalIgnoreCase)
+            && Guid.TryParse(ctaTarget?.Trim(), out var id)
+            && paths.TryGetValue(id, out var path))
+            return path;
+        if (string.Equals(ctaType, "external", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(ctaType, "internal", StringComparison.OrdinalIgnoreCase))
+            return string.IsNullOrWhiteSpace(ctaTarget) ? null : ctaTarget.Trim();
+        return null;
     }
 
     private async Task EnsureStoredContentAuthorizedAsync(

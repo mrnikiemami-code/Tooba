@@ -1,10 +1,11 @@
 "use client";
 
-import { SELLER_STORY_CAPABILITIES, StoryManagementScreen } from "../../stories/management";
+import { SELLER_STORY_CAPABILITIES } from "../../stories/management";
+import { StoryManagementRoute } from "../../stories/management/StoryManagementRoute";
 
 /**
  * مدیریت استوری فروشنده — همان UI مشترک Admin با قابلیت‌های محدود Seller.
  */
 export default function VendorStoriesPage() {
-  return <StoryManagementScreen capabilities={SELLER_STORY_CAPABILITIES} />;
+  return <StoryManagementRoute capabilities={SELLER_STORY_CAPABILITIES} />;
 }

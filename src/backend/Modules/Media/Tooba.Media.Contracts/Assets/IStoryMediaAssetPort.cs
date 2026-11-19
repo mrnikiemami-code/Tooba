@@ -28,6 +28,19 @@ public interface IStoryMediaAssetPort
         string? occurrenceKey,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Platform Story media upload with schema-free occurrence replay: deterministic asset id from
+    /// tenant+actor+occurrence, unique object-store key per attempt, no seller binding.
+    /// </summary>
+    Task<StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+        Stream stream,
+        string fileName,
+        string contentType,
+        Guid tenantId,
+        Guid actorUserId,
+        string? occurrenceKey,
+        CancellationToken cancellationToken);
+
     /// <summary>Lists Ready assets owned by the seller shop.</summary>
     Task<IReadOnlyList<StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
         Guid tenantId,

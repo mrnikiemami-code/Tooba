@@ -247,6 +247,9 @@ public sealed class StoryMarketplace281R3DirectoryTests
             Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
+            Task.FromResult(new StoryMediaAssetAuthorization(Guid.NewGuid(), contentType ?? "image/jpeg", "/v1/storefront/media/00000000-0000-0000-0000-000000000000", false, null));
         public Task<IReadOnlyList<StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
             Guid tenantId, Guid sellerPartyId, int take, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<StoryMediaAssetAuthorization>>([]);
@@ -267,6 +270,9 @@ public sealed class StoryMarketplace281R3DirectoryTests
                 throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
             return Task.CompletedTask;
         }
+
+        public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(productId == Guid.Empty ? null : "/products/" + productId.ToString("N"));
     }
 
     private sealed class StubPublicSellers(Guid shop, string publicId, string name) : ICatalogPublicSellerAttributionLookup

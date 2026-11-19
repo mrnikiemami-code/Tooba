@@ -69,7 +69,7 @@ public sealed partial class StoryDirectory
             now,
             cancellationToken);
         var foldedShopCreate = await SaveChangesWithOccurrenceArbitrationAsync(
-            tenantId, key, createIntent, "admin_create_for_shop", sellerPartyId, expectedStoryId: null, attemptStoryId: story.StoryId, cancellationToken);
+            tenantId, key, createIntent, "admin_create_for_shop", sellerPartyId, expectedStoryId: null, ownedStoryIds: [story.StoryId], cancellationToken);
         if (foldedShopCreate is Guid foldedShopStoryId)
         {
             story = await LoadStoryAsync(tenantId, foldedShopStoryId, track: false, cancellationToken)

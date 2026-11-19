@@ -14,4 +14,8 @@ public sealed class UnavailableStoryProductTargetPort : IStoryProductTargetPort
     /// <inheritdoc />
     public Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken) =>
         throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+
+    /// <inheritdoc />
+    public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+        Task.FromResult<string?>(null);
 }

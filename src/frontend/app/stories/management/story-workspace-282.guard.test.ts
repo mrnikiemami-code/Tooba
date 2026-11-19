@@ -29,6 +29,6 @@ test("shared story workspace uses merchant labels and owning media uploads", () 
 });
 
 test("vendor panel stories page keeps shared StoryManagementScreen", () => {
-  assert.match(vendorStories, /StoryManagementScreen/);
+  assert.match(vendorStories, /StoryManagementRoute|StoryManagementScreen/);
   assert.match(vendorStories, /SELLER_STORY_CAPABILITIES/);
 });

@@ -5,6 +5,7 @@
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
 import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
+import { toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper.ts";
 import {
   DEV_ACTOR_HEADER,
   readActorUserId,
@@ -37,6 +38,8 @@ export interface PublicStoryItem {
   durationMs: number | null;
   ctaType: string;
   ctaTarget: string | null;
+  /** Catalog-resolved public path for product CTA (never a bare Guid). */
+  ctaHref?: string | null;
 }
 
 export interface PublicStoryCard {
@@ -51,6 +54,7 @@ export interface PublicStoryCard {
   sellerPartyId?: string | null;
   shopDisplayName?: string | null;
   shopPublicId?: string | null;
+  ctaHref?: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
   /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
@@ -183,6 +187,7 @@ export function mapPublicStoryItem(value: unknown): PublicStoryItem | null {
     durationMs: numberOrNull(prop(item, "durationMs", "DurationMs")),
     ctaType: text(prop(item, "ctaType", "CtaType"), "none"),
     ctaTarget: nullableText(prop(item, "ctaTarget", "CtaTarget")),
+    ctaHref: nullableText(prop(item, "ctaHref", "CtaHref")),
   };
 }
 
@@ -207,6 +212,7 @@ export function mapPublicStory(value: unknown): PublicStoryCard | null {
     sellerPartyId: nullableText(prop(item, "sellerPartyId", "SellerPartyId")),
     shopDisplayName: nullableText(prop(item, "shopDisplayName", "ShopDisplayName")),
     shopPublicId: nullableText(prop(item, "shopPublicId", "ShopPublicId")),
+    ctaHref: nullableText(prop(item, "ctaHref", "CtaHref")),
   };
 }
 
@@ -530,18 +536,18 @@ export async function getAdminStory(storyId: string): Promise<AdminResult<AdminS
   }
 }
 
-/** Platform admin Media upload (library). */
+/** Platform Story media upload with occurrence-keyed replay (Media-owned path). */
 export async function uploadAdminStoryMedia(
   file: File,
   occurrenceKey: string,
 ): Promise<AdminResult<{ mediaAssetId: string; contentType: string; displayUrl: string | null }>> {
   try {
     const body = new FormData();
-    body.append("files", file);
+    body.append("file", file);
     body.append("occurrenceKey", storyOccurrenceKey(occurrenceKey));
     const headers = adminHeaders(false);
     delete headers["Content-Type"];
-    const response = await fetch("/v1/admin/media/upload", {
+    const response = await fetch("/v1/admin/media/upload-story-platform", {
       method: "POST",
       headers,
       body,
@@ -553,11 +559,8 @@ export async function uploadAdminStoryMedia(
       return { state: "error", data: null, status: response.status, message: `admin.http.${response.status}` };
     }
     const payload = await response.json().catch(() => null);
-    const rows = Array.isArray(payload) ? payload : Array.isArray(recordOf(payload)?.items) ? (recordOf(payload)!.items as unknown[]) : [payload];
-    const first = recordOf(rows[0]);
-    const mediaAssetId =
-      text(prop(first ?? {}, "mediaAssetId", "MediaAssetId")) ||
-      text(prop(first ?? {}, "id", "Id"));
+    const row = recordOf(payload);
+    const mediaAssetId = text(prop(row ?? {}, "mediaAssetId", "MediaAssetId"));
     if (!mediaAssetId) {
       return { state: "error", data: null, status: response.status, message: "invalid-response" };
     }
@@ -565,10 +568,8 @@ export async function uploadAdminStoryMedia(
       state: "ok",
       data: {
         mediaAssetId,
-        contentType: text(prop(first ?? {}, "contentType", "ContentType")) || file.type,
-        displayUrl:
-          nullableText(prop(first ?? {}, "displayUrl", "DisplayUrl")) ??
-          nullableText(prop(first ?? {}, "url", "Url")),
+        contentType: text(prop(row ?? {}, "contentType", "ContentType")) || file.type,
+        displayUrl: nullableText(prop(row ?? {}, "displayUrl", "DisplayUrl")),
       },
       status: response.status,
     };
@@ -1059,12 +1060,7 @@ export async function stopSellerStory(
 }
 
 export async function querySellerStories(
-  request: {
-    page?: number;
-    pageSize?: number;
-    search?: string | null;
-    filters?: Array<{ field: string; operator: string; value?: string | null }>;
-  },
+  query: GridServerQuery,
   sellerPartyId?: string | null,
 ): Promise<AdminResult<{ items: AdminStorySnapshot[]; page: number; pageSize: number; totalCount: number }>> {
   const partyId = resolveSellerPartyId(sellerPartyId);
@@ -1075,20 +1071,7 @@ export async function querySellerStories(
     const response = await fetch("/v1/seller/stories/query", {
       method: "POST",
       headers: sellerStoryHeaders(partyId, true),
-      body: JSON.stringify({
-        page: request.page ?? 1,
-        pageSize: request.pageSize ?? 50,
-        search: request.search ?? null,
-        sort: [],
-        filters: (request.filters ?? []).map((f) => ({
-          field: f.field,
-          operator: f.operator,
-          value: f.value ?? null,
-          valueTo: null,
-          values: null,
-        })),
-        advancedFilter: null,
-      }),
+      body: JSON.stringify(toHostGridQuery(query)),
     });
     if (response.status === 401 || response.status === 403) {
       return { state: "denied", data: null, status: response.status, message: "seller.authorization.denied" };
@@ -1144,6 +1127,169 @@ export async function addSellerStoryItem(
         displayOrder: null,
         expectedVersion: input.expectedVersion ?? null,
         occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
+      }),
+    });
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function updateAdminStoryItem(
+  storyId: string,
+  itemId: string,
+  input: {
+    caption?: string | null;
+    durationMs?: number | null;
+    ctaType?: string | null;
+    ctaTarget?: string | null;
+    mediaType?: string | null;
+    mediaAssetId?: string | null;
+    mediaUrl?: string | null;
+    expectedVersion: number;
+    occurrenceKey?: string | null;
+  },
+): Promise<AdminResult<AdminStorySnapshot>> {
+  try {
+    const response = await fetch(
+      `/v1/admin/stories/${encodeURIComponent(storyId)}/items/${encodeURIComponent(itemId)}`,
+      {
+        method: "PUT",
+        headers: adminHeaders(true),
+        body: JSON.stringify({
+          mediaType: input.mediaType ?? null,
+          mediaAssetId: input.mediaAssetId ?? null,
+          mediaUrl: input.mediaUrl ?? null,
+          caption: input.caption ?? null,
+          durationMs: input.durationMs ?? null,
+          ctaType: input.ctaType ?? "none",
+          ctaTarget: input.ctaTarget ?? null,
+          expectedVersion: input.expectedVersion,
+          occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
+        }),
+      },
+    );
+    return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function reorderAdminStoryItems(
+  storyId: string,
+  itemIdsInOrder: string[],
+  expectedVersion: number,
+  occurrenceKey?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  try {
+    const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/items/reorder`, {
+      method: "PUT",
+      headers: adminHeaders(true),
+      body: JSON.stringify({
+        itemIds: itemIdsInOrder,
+        expectedVersion,
+        occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()),
+      }),
+    });
+    return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function updateSellerStoryItem(
+  storyId: string,
+  itemId: string,
+  input: {
+    caption?: string | null;
+    durationMs?: number | null;
+    ctaType?: string | null;
+    ctaTarget?: string | null;
+    mediaType?: string | null;
+    mediaAssetId?: string | null;
+    mediaUrl?: string | null;
+    expectedVersion: number;
+    occurrenceKey?: string | null;
+  },
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(
+      `/v1/seller/stories/${encodeURIComponent(storyId)}/items/${encodeURIComponent(itemId)}`,
+      {
+        method: "PUT",
+        headers: sellerStoryHeaders(partyId, true),
+        body: JSON.stringify({
+          mediaType: input.mediaType ?? null,
+          mediaAssetId: input.mediaAssetId ?? null,
+          mediaUrl: input.mediaUrl ?? null,
+          caption: input.caption ?? null,
+          durationMs: input.durationMs ?? null,
+          ctaType: input.ctaType ?? "none",
+          ctaTarget: input.ctaTarget ?? null,
+          expectedVersion: input.expectedVersion,
+          occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
+        }),
+      },
+    );
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function removeSellerStoryItem(
+  storyId: string,
+  itemId: string,
+  expectedVersion: number,
+  sellerPartyId?: string | null,
+  occurrenceKey?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(
+      `/v1/seller/stories/${encodeURIComponent(storyId)}/items/${encodeURIComponent(itemId)}`,
+      {
+        method: "DELETE",
+        headers: sellerStoryHeaders(partyId, true),
+        body: JSON.stringify({
+          expectedVersion,
+          occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()),
+        }),
+      },
+    );
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function reorderSellerStoryItems(
+  storyId: string,
+  itemIdsInOrder: string[],
+  expectedVersion: number,
+  sellerPartyId?: string | null,
+  occurrenceKey?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/items/reorder`, {
+      method: "PUT",
+      headers: sellerStoryHeaders(partyId, true),
+      body: JSON.stringify({
+        itemIds: itemIdsInOrder,
+        expectedVersion,
+        occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return sellerJsonResult(response, mapAdminStory);

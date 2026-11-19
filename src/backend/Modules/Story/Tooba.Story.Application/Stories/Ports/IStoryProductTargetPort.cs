@@ -14,4 +14,9 @@ public interface IStoryProductTargetPort
     /// بدون الزام مالکیت فروشگاه؛ محصول غایب رد می‌شود.
     /// </summary>
     Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// مسیر عمومی canonical محصول برای CTA ویترین؛ غایب ⇒ null (بدون حدس).
+    /// </summary>
+    Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken);
 }

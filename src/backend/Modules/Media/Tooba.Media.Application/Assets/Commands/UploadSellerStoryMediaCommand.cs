@@ -34,6 +34,33 @@ public sealed class UploadSellerStoryMediaCommandHandler(IStoryMediaAssetPort me
             cancellationToken));
 }
 
+/// <summary>Platform Story media upload with occurrence-keyed replay (no seller binding).</summary>
+public sealed record UploadPlatformStoryMediaCommand(
+    Stream Content,
+    string OriginalFileName,
+    string ContentType,
+    Guid TenantId,
+    Guid ActorUserId,
+    string? OccurrenceKey) : IRequest<Result<StoryMediaAssetAuthorization>>;
+
+/// <summary>Handler for <see cref="UploadPlatformStoryMediaCommand"/>.</summary>
+public sealed class UploadPlatformStoryMediaCommandHandler(IStoryMediaAssetPort media)
+    : IRequestHandler<UploadPlatformStoryMediaCommand, Result<StoryMediaAssetAuthorization>>
+{
+    /// <inheritdoc />
+    public Task<Result<StoryMediaAssetAuthorization>> Handle(
+        UploadPlatformStoryMediaCommand request,
+        CancellationToken cancellationToken) =>
+        MediaOperation.ExecuteAsync(() => media.UploadForPlatformStoryAsync(
+            request.Content,
+            request.OriginalFileName,
+            request.ContentType,
+            request.TenantId,
+            request.ActorUserId,
+            request.OccurrenceKey,
+            cancellationToken));
+}
+
 /// <summary>Lists seller-owned Story media assets.</summary>
 public sealed record ListSellerStoryMediaQuery(Guid TenantId, Guid SellerPartyId, int Take)
     : IRequest<Result<IReadOnlyList<StoryMediaAssetAuthorization>>>;

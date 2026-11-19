@@ -33,4 +33,15 @@ public sealed class CatalogStoryProductTargetAdapter(ICatalogStorefrontProductCa
         if (!cards.ContainsKey(productId))
             throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
     }
+
+    /// <inheritdoc />
+    public async Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        if (productId == Guid.Empty)
+            return null;
+        var cards = await products.ComposeProductCardsAsync([productId], cancellationToken);
+        if (!cards.TryGetValue(productId, out var card) || string.IsNullOrWhiteSpace(card.Slug))
+            return null;
+        return "/products/" + Uri.EscapeDataString(card.Slug.Trim());
+    }
 }
