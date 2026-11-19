@@ -1,4 +1,10 @@
-# CURRENT — TB-281-R1 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
+# CURRENT — TB-STORY-281-R1 REMAINS PARTIAL; COMPLETE REMAINING FIRST-DELIVERY WORK IN 281-R2 — 2026-11-19
+
+Read `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/ARCHITECT-REVIEW.md` and exact `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2/TASK.md`. Source reviewed at ae947c863867437c13008029971a77eeb90edd41. Preserve fixed public Items loading, role mapper and version plumbing. Remaining original work is not a new product scope: safe Media upload/ownership + admin seam, all-route durable replay, stop/edit action cycle, seller query/admin shop-name/CTA/public identity, Media CQRS/tenant and actual G1–G7 controlled/rollback proof. R1 voluntarily stopped with these OPEN and no identified external blocker. Do not count seven facts/pins as full completion.
+
+Active issued task TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2, same single tooba-worker-01/tooba-main; completion ledger then implementation/proof, not another planning-only slice. Connected shared UI remains PLANNED NOT ISSUED. One narrowly authorized process-only no-Development-bootstrap option may be used/added per envelope to refresh Host safely without Pricing or other seed writes. Existing migrations immutable; any necessary additive repair follows exact backup/runner rules. No live business mutation/fixture/reset/key operation. Record exact task-hash/claim clarification; preserve historical reports. Returns acceptances and payout backlog unchanged. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+
+# HISTORICAL — TB-STORY-281-R1 partial checkpoint
 
 Worker PARTIAL on `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1`. Read evidence under `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/`. Parent 281 PARTIAL preserved. UI delivery two NOT ISSUED. Expected-Base `860c6a2c72842c8971d8b9f9885e26cdb0f3f657`. ZERO live Story/Media business write. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
 

@@ -1,4 +1,8 @@
-# CURRENT — FIRST DELIVERY PARTIAL; 281-R1 CONSOLIDATED REPAIR ISSUED; UI NOT ISSUED — 2026-11-19
+# CURRENT — FIRST DELIVERY STILL PARTIAL; 281-R2 FINISHES ORIGINAL REMAINDER; UI NOT ISSUED — 2026-11-19
+
+R1 head ae947c863867437c13008029971a77eeb90edd41 independently source-reviewed. See R1 ARCHITECT-REVIEW and exact `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R2/TASK.md`. Keep completed fixes; finish original media/command/query/proof scope. No new features or automatic task chain. Shared UI delivery waits for reviewed backend completion. Returns acceptances and future payment-method backlog preserved.
+
+# HISTORICAL — 281-R1 repair checkpoint
 
 Parent worker head 860c6a2c72842c8971d8b9f9885e26cdb0f3f657 independently source-reviewed; see parent ARCHITECT-REVIEW B1–B7. Complete original delivery-one scope and regression proofs in `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/TASK.md` before issuing the connected shared UI delivery. No automatic next implementation. Existing owner requirements, parent evidence and accepted unrelated work remain preserved.
 
