@@ -1,3 +1,17 @@
+# CURRENT — R15 CLOSURE ACCEPTED FOR LOCAL OWNER TEST — 2026-11-20
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15/ARCHITECT-REVIEW.md
+Code 877080f043de029d6cc9ffb0261702f7975d64b2 / worker evidence 277dfd046491998e4d5ae75288a0b6a402e493f6.
+Decision ACCEPT_REJECTED_TRANSPORT_CLOSURE_FOR_LOCAL_OWNER_TEST. Genuine fetch rejection now retains attempted uncertainty and bulk result panel; real selected-grid retry evidence reviewed. R14 epoch/panel and R13 layout retained.
+State: AWAITING_LOCAL_OWNER_TEST
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_USER_REVIEW
+No R16 issued. Owner tests admin single/bulk approve/reject/delete and result panel; no-end layout; seller submission, then approved public display. Not owner/product/release acceptance.
+Architect reviewed source and worker receipts, did not rerun Windows serving/tests. Host5088 skip-bootstrap=1 / FE3000 next-dev reported; Html404 production build blocker unchanged. No live mutations/backend/schema/grant/seed changes. Preserve VendorShell/language registry, Returns/payout/user work, critical-storefront limitation and R6 effects UNKNOWN.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — R14 PARTIAL; R15 REJECTED-TRANSPORT CLOSURE ISSUED — 2026-11-20
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/ARCHITECT-REVIEW.md
