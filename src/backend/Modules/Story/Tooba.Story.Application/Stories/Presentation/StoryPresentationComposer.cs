@@ -71,15 +71,22 @@ public sealed class StoryPresentationComposer
 
     /// <summary>بازگشت فروشنده به پیش‌نویس.</summary>
     public Task<AdminStorySnapshot> SellerReturnToDraftAsync(
-        Guid tenantId, Guid sellerPartyId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guid tenantId, Guid sellerPartyId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
         Guard(() => _stories.SellerReturnToDraftAsync(
-            tenantId, sellerPartyId, storyId, expectedVersion, cancellationToken));
+            tenantId, sellerPartyId, storyId, expectedVersion, cancellationToken, occurrenceKey));
 
     /// <summary>توقف انتشار توسط فروشنده.</summary>
     public Task<AdminStorySnapshot> SellerStopAsync(
-        Guid tenantId, Guid sellerPartyId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guid tenantId, Guid sellerPartyId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
         Guard(() => _stories.SellerStopAsync(
-            tenantId, sellerPartyId, storyId, expectedVersion, cancellationToken));
+            tenantId, sellerPartyId, storyId, expectedVersion, cancellationToken, occurrenceKey));
+
+    /// <summary>پرس‌وجوی صفحه‌بندی‌شدهٔ فروشنده.</summary>
+    public Task<GridPageResponse<AdminStorySnapshot>> SellerQueryAsync(
+        Guid tenantId, Guid sellerPartyId, GridQueryRequest request, CancellationToken cancellationToken) =>
+        Guard(() => _stories.SellerQueryAsync(tenantId, sellerPartyId, request, cancellationToken));
 
     /// <summary>به‌روزرسانی استوری.</summary>
     public Task<AdminStorySnapshot> AdminUpdateAsync(

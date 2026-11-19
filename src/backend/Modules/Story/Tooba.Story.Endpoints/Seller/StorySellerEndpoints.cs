@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Seller;
@@ -22,6 +23,7 @@ public static class StorySellerEndpoints
         ArgumentNullException.ThrowIfNull(app);
         var seller = app.MapGroup("/v1/seller/stories");
         seller.MapGet("", SellerListAsync);
+        seller.MapPost("/query", SellerQueryAsync);
         seller.MapGet("/{id:guid}", SellerGetAsync);
         seller.MapPost("", SellerCreateAsync);
         seller.MapPut("/{id:guid}", SellerUpdateAsync);
@@ -32,6 +34,25 @@ public static class StorySellerEndpoints
         seller.MapPut("/{id:guid}/items/{itemId:guid}", SellerUpdateItemAsync);
         seller.MapDelete("/{id:guid}/items/{itemId:guid}", SellerRemoveItemAsync);
         seller.MapPut("/{id:guid}/items/reorder", SellerReorderItemsAsync);
+    }
+
+    private static async Task<IResult> SellerQueryAsync(
+        GridQueryRequest? body,
+        ISender sender,
+        IStorySellerAuthorizer auth,
+        HttpContext http,
+        ICurrentTenant tenant,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken)
+    {
+        var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        var request = body ?? new GridQueryRequest(1, 50, null, [], [], null);
+        return api.From(await sender.Send(
+            new QuerySellerStoriesQuery(tenantResult.Value, sellerPartyId, request),
+            cancellationToken));
     }
 
     private static async Task<IResult> SellerListAsync(
@@ -96,7 +117,8 @@ public static class StorySellerEndpoints
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         SellerMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, _, sellerPartyId) => sender.Send(
-                new ReturnSellerStoryToDraftCommand(tenantId, sellerPartyId, id, body?.ExpectedVersion),
+                new ReturnSellerStoryToDraftCommand(
+                    tenantId, sellerPartyId, id, body?.ExpectedVersion, body?.OccurrenceKey),
                 cancellationToken));
 
     private static Task<IResult> SellerStopAsync(
@@ -104,7 +126,8 @@ public static class StorySellerEndpoints
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
         SellerMutationAsync(auth, http, tenant, api, cancellationToken,
             (tenantId, _, sellerPartyId) => sender.Send(
-                new StopSellerStoryCommand(tenantId, sellerPartyId, id, body?.ExpectedVersion),
+                new StopSellerStoryCommand(
+                    tenantId, sellerPartyId, id, body?.ExpectedVersion, body?.OccurrenceKey),
                 cancellationToken));
 
     private static Task<IResult> SellerAddItemAsync(

@@ -113,7 +113,9 @@ public sealed record AddStoryItemCommand(
     int? DurationMs,
     string? CtaType,
     string? CtaTarget,
-    int? DisplayOrder);
+    int? DisplayOrder,
+    string? OccurrenceKey = null,
+    int? ExpectedVersion = null);
 
 /// <summary>فرمان به‌روزرسانی آیتم.</summary>
 public sealed record UpdateStoryItemCommand(
@@ -123,4 +125,5 @@ public sealed record UpdateStoryItemCommand(
     string? Caption,
     int? DurationMs,
     string? CtaType,
-    string? CtaTarget);
+    string? CtaTarget,
+    int? ExpectedVersion = null);

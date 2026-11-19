@@ -1,4 +1,5 @@
 using MediatR;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Composition;
 using Tooba.Story.Application.Stories.Models;
@@ -20,6 +21,22 @@ public sealed class ListSellerStoriesQueryHandler(StoryPresentationComposer comp
         ListSellerStoriesQuery request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.SellerListAsync(request.TenantId, request.SellerPartyId, cancellationToken));
+}
+
+/// <summary>پرس‌وجوی صفحه‌بندی‌شدهٔ استوری فروشنده.</summary>
+public sealed record QuerySellerStoriesQuery(Guid TenantId, Guid SellerPartyId, GridQueryRequest Request)
+    : IRequest<Result<GridPageResponse<AdminStorySnapshot>>>;
+
+/// <summary>Handler پرس‌وجوی فروشنده.</summary>
+public sealed class QuerySellerStoriesQueryHandler(StoryPresentationComposer composer)
+    : IRequestHandler<QuerySellerStoriesQuery, Result<GridPageResponse<AdminStorySnapshot>>>
+{
+    /// <inheritdoc />
+    public Task<Result<GridPageResponse<AdminStorySnapshot>>> Handle(
+        QuerySellerStoriesQuery request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.SellerQueryAsync(
+                request.TenantId, request.SellerPartyId, request.Request, cancellationToken));
 }
 
 /// <summary>جزئیات استوری فروشنده.</summary>

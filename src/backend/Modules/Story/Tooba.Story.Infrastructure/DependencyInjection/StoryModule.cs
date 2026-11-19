@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
+using Tooba.Catalog.Contracts.Ports;
 using Tooba.Media.Contracts.Assets;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence;
@@ -36,10 +37,18 @@ public sealed class StoryModule : IToobaModule
     public void AddServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddSingleton<IOutboxModuleRegistration, StoryOutboxRegistration>();
+        services.AddScoped<IStoryProductTargetPort>(sp =>
+        {
+            var products = sp.GetService<ICatalogStorefrontProductCardLookup>();
+            return products is null
+                ? new UnavailableStoryProductTargetPort()
+                : new CatalogStoryProductTargetAdapter(products);
+        });
         services.AddScoped<StoryDirectory>(sp => new StoryDirectory(
             sp.GetRequiredService<StoryDbContext>(),
             sp.GetService<IPartyAdminSellerReadGateway>(),
-            sp.GetService<IStoryMediaAssetPort>()));
+            sp.GetService<IStoryMediaAssetPort>(),
+            sp.GetRequiredService<IStoryProductTargetPort>()));
         services.AddScoped<IStoryDirectory>(sp => sp.GetRequiredService<StoryDirectory>());
         services.AddScoped<IAdminStoryGridPort, AdminStoryGridAdapter>();
         services.AddScoped<StoryPresentationComposer>();

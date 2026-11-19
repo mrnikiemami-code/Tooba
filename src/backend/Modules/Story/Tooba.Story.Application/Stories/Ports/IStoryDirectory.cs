@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Domain.Enums;
 
@@ -65,7 +66,8 @@ public interface IStoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         int? expectedVersion,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
 
     /// <summary>توقف انتشار توسط فروشندهٔ مالک.</summary>
     Task<AdminStorySnapshot> SellerStopAsync(
@@ -73,6 +75,14 @@ public interface IStoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         int? expectedVersion,
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
+
+    /// <summary>پرس‌وجوی صفحه‌بندی‌شدهٔ استوری‌های فروشندهٔ مالک.</summary>
+    Task<GridPageResponse<AdminStorySnapshot>> SellerQueryAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        GridQueryRequest request,
         CancellationToken cancellationToken);
 
     /// <summary>فیلدهای استوری را به‌روزرسانی می‌کند.</summary>

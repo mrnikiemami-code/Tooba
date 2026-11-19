@@ -63,17 +63,30 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             throw new ContractOperationException(MediaErrorCodes.OwnerForbidden);
         if (string.IsNullOrWhiteSpace(occurrenceKey))
             throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
+        if (stream is null || !stream.CanRead)
+            throw new ContractOperationException(MediaErrorCodes.UploadFailed);
 
         var normalizedType = NormalizeContentType(contentType);
-        if (!IsImageOrVideo(normalizedType))
+        if (!IsImageOrVideo(normalizedType) || !AllowedContentTypes.Contains(normalizedType))
             throw new ContractOperationException(MediaErrorCodes.TypeUnsupported);
 
         await using var buffer = new MemoryStream();
         await stream.CopyToAsync(buffer, cancellationToken);
+        if (buffer.Length <= 0)
+            throw new ContractOperationException(MediaErrorCodes.UploadFailed);
+        if (buffer.Length > _maxUploadBytes)
+            throw new ContractOperationException(MediaErrorCodes.TooLarge);
+
         var bytes = buffer.ToArray();
         var digest = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        var safeName = SanitizeOriginalFileName(fileName);
         var intentHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-            $"{tenantId:D}|{sellerPartyId:D}|{normalizedType}|{fileName.Trim()}|{digest}"))).ToLowerInvariant();
+            string.Join('\u001f',
+                Len(tenantId.ToString("D")),
+                Len(sellerPartyId.ToString("D")),
+                Len(normalizedType),
+                Len(safeName),
+                Len(digest))))).ToLowerInvariant();
         var key = occurrenceKey.Trim();
 
         var prior = await _db.AssetOwnerOccurrences.AsNoTracking()
@@ -92,42 +105,86 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             return MapStory(existing, sellerPartyId);
         }
 
-        buffer.Position = 0;
-        var uploaded = await UploadAsync(buffer, fileName, contentType, actorUserId, cancellationToken);
-
         var now = DateTimeOffset.UtcNow;
-        _db.AssetOwnerBindings.Add(MediaAssetOwnerBinding.Create(
-            uploaded.MediaAssetId, tenantId, sellerPartyId, actorUserId, now));
-        _db.AssetOwnerOccurrences.Add(new MediaAssetOwnerOccurrence
+        var assetId = UuidV7.New();
+        var extension = ExtensionByContentType[normalizedType];
+        var storageKey = $"{now:yyyy}/{now:MM}/{assetId:N}{extension}";
+
+        buffer.Position = 0;
+        try
+        {
+            await _store.SaveAsync(buffer, storageKey, normalizedType, cancellationToken);
+        }
+        catch (ContractOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ContractOperationException(MediaErrorCodes.StorageUnavailable, ex);
+        }
+
+        var asset = MediaAsset.CreateReady(
+            storageKey,
+            safeName,
+            normalizedType,
+            buffer.Length,
+            digest,
+            width: null,
+            height: null,
+            actorUserId,
+            now,
+            assetId);
+        var binding = MediaAssetOwnerBinding.Create(assetId, tenantId, sellerPartyId, actorUserId, now);
+        var occurrence = new MediaAssetOwnerOccurrence
         {
             OccurrenceKey = key,
             TenantId = tenantId,
             SellerPartyId = sellerPartyId,
-            MediaAssetId = uploaded.MediaAssetId,
+            MediaAssetId = assetId,
             ActorUserId = actorUserId,
             IntentHash = intentHash,
             CreatedAt = now,
-        });
+        };
+
+        _db.Assets.Add(asset);
+        _db.AssetOwnerBindings.Add(binding);
+        _db.AssetOwnerOccurrences.Add(occurrence);
 
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            DetachAttemptOwned(asset, binding, occurrence);
+            try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
+
+            // Concurrent duplicate occurrence: fold to the winner if intent matches.
+            var winner = await _db.AssetOwnerOccurrences.AsNoTracking()
+                .FirstOrDefaultAsync(
+                    row => row.OccurrenceKey == key
+                        && row.TenantId == tenantId
+                        && row.SellerPartyId == sellerPartyId,
+                    cancellationToken);
+            if (winner is not null)
+            {
+                if (!string.Equals(winner.IntentHash, intentHash, StringComparison.Ordinal))
+                    throw new ContractOperationException(MediaErrorCodes.OwnerForbidden, ex);
+                var existing = await _db.Assets.AsNoTracking()
+                    .FirstAsync(row => row.MediaAssetId == winner.MediaAssetId, cancellationToken);
+                return MapStory(existing, sellerPartyId);
+            }
+
+            throw new ContractOperationException(MediaErrorCodes.UploadFailed, ex);
+        }
         catch (Exception ex)
         {
-            // Binding failed after object-store save: refuse returning an unscoped Ready asset.
-            var orphan = await _db.Assets.FirstOrDefaultAsync(row => row.MediaAssetId == uploaded.MediaAssetId, cancellationToken);
-            if (orphan is not null)
-            {
-                try { await _store.DeleteAsync(orphan.StorageKey, cancellationToken); } catch { /* best-effort */ }
-                _db.Assets.Remove(orphan);
-                try { await _db.SaveChangesAsync(cancellationToken); } catch { /* best-effort */ }
-            }
+            DetachAttemptOwned(asset, binding, occurrence);
+            try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
             throw new ContractOperationException(MediaErrorCodes.UploadFailed, ex);
         }
 
-        var asset = await _db.Assets.AsNoTracking()
-            .FirstAsync(row => row.MediaAssetId == uploaded.MediaAssetId, cancellationToken);
         return MapStory(asset, sellerPartyId);
     }
 
@@ -158,6 +215,33 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             .Where(row => IsImageOrVideo(row.ContentType))
             .ToList();
     }
+
+    private void DetachAttemptOwned(
+        MediaAsset asset,
+        MediaAssetOwnerBinding binding,
+        MediaAssetOwnerOccurrence occurrence)
+    {
+        var assetEntry = _db.Entry(asset);
+        if (assetEntry.State != EntityState.Detached)
+            assetEntry.State = EntityState.Detached;
+        var bindingEntry = _db.Entry(binding);
+        if (bindingEntry.State != EntityState.Detached)
+            bindingEntry.State = EntityState.Detached;
+        var occurrenceEntry = _db.Entry(occurrence);
+        if (occurrenceEntry.State != EntityState.Detached)
+            occurrenceEntry.State = EntityState.Detached;
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException ex)
+    {
+        var text = ex.InnerException?.Message ?? ex.Message;
+        return text.Contains("23505", StringComparison.Ordinal)
+            || text.Contains("unique", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("duplicate", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string Len(string value) =>
+        value.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + value;
 
     private static bool IsImageOrVideo(string contentType) =>
         contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)

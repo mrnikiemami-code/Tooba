@@ -50,8 +50,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     private const string StorefrontQueryFile =
         "Tooba.Story.Application/Stories/Queries/Storefront/GetPublicStoriesQuery.cs";
 
-    private const int ExpectedRouteCount = 29;
-    private const int ExpectedValidatorRequiredCount = 23;
+    private const int ExpectedRouteCount = 30;
+    private const int ExpectedValidatorRequiredCount = 24;
     private const int ExpectedExemptCount = 6;
 
     private static readonly HashSet<string> SupportedVerbs =
@@ -61,6 +61,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     [
         "ListAdminStoriesQuery",
         "QueryAdminStoryGridQuery",
+        "QuerySellerStoriesQuery",
         "CreateAdminStoryCommand",
         "UpdateAdminStoryCommand",
         "ReorderAdminStoriesCommand",
@@ -99,6 +100,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     [
         ("storefront", "Get", "/v1/storefront/stories", "GetPublicStoriesAsync", "GetPublicStoriesQuery"),
         ("seller", "Get", "/v1/seller/stories", "SellerListAsync", "ListSellerStoriesQuery"),
+        ("seller", "Post", "/v1/seller/stories/query", "SellerQueryAsync", "QuerySellerStoriesQuery"),
         ("seller", "Get", "/v1/seller/stories/{id:guid}", "SellerGetAsync", "GetSellerStoryQuery"),
         ("seller", "Post", "/v1/seller/stories", "SellerCreateAsync", "CreateSellerStoryDraftCommand"),
         ("seller", "Put", "/v1/seller/stories/{id:guid}", "SellerUpdateAsync", "UpdateSellerStoryCommand"),
@@ -132,6 +134,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     [
         ("ListAdminStoriesQuery", typeof(ListAdminStoriesQueryValidator)),
         ("QueryAdminStoryGridQuery", typeof(QueryAdminStoryGridQueryValidator)),
+        ("QuerySellerStoriesQuery", typeof(QuerySellerStoriesQueryValidator)),
         ("CreateAdminStoryCommand", typeof(CreateAdminStoryCommandValidator)),
         ("UpdateAdminStoryCommand", typeof(UpdateAdminStoryCommandValidator)),
         ("ReorderAdminStoriesCommand", typeof(ReorderAdminStoriesCommandValidator)),

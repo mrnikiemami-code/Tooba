@@ -776,6 +776,7 @@ export async function returnSellerStoryToDraft(
   storyId: string,
   expectedVersion: number,
   sellerPartyId?: string | null,
+  occurrenceKey?: string | null,
 ): Promise<AdminResult<AdminStorySnapshot>> {
   const partyId = resolveSellerPartyId(sellerPartyId);
   if (!partyId) {
@@ -785,7 +786,7 @@ export async function returnSellerStoryToDraft(
     const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/return-to-draft`, {
       method: "POST",
       headers: sellerStoryHeaders(partyId, true),
-      body: JSON.stringify({ expectedVersion }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: occurrenceKey ?? null }),
     });
     return sellerJsonResult(response, mapAdminStory);
   } catch {
@@ -797,6 +798,7 @@ export async function stopSellerStory(
   storyId: string,
   expectedVersion: number,
   sellerPartyId?: string | null,
+  occurrenceKey?: string | null,
 ): Promise<AdminResult<AdminStorySnapshot>> {
   const partyId = resolveSellerPartyId(sellerPartyId);
   if (!partyId) {
@@ -806,9 +808,60 @@ export async function stopSellerStory(
     const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/stop`, {
       method: "POST",
       headers: sellerStoryHeaders(partyId, true),
-      body: JSON.stringify({ expectedVersion }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: occurrenceKey ?? null }),
     });
     return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function querySellerStories(
+  request: {
+    page?: number;
+    pageSize?: number;
+    search?: string | null;
+    filters?: Array<{ field: string; operator: string; value?: string | null }>;
+  },
+  sellerPartyId?: string | null,
+): Promise<AdminResult<{ items: AdminStorySnapshot[]; page: number; pageSize: number; totalCount: number }>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch("/v1/seller/stories/query", {
+      method: "POST",
+      headers: sellerStoryHeaders(partyId, true),
+      body: JSON.stringify({
+        page: request.page ?? 1,
+        pageSize: request.pageSize ?? 50,
+        search: request.search ?? null,
+        sort: [],
+        filters: (request.filters ?? []).map((f) => ({
+          field: f.field,
+          operator: f.operator,
+          value: f.value ?? null,
+          valueTo: null,
+          values: null,
+        })),
+        advancedFilter: null,
+      }),
+    });
+    return sellerJsonResult(response, (raw) => {
+      const page = raw as {
+        items?: unknown[];
+        page?: number;
+        pageSize?: number;
+        totalCount?: number;
+      };
+      return {
+        items: Array.isArray(page.items) ? page.items.map((row) => mapAdminStory(row)) : [],
+        page: typeof page.page === "number" ? page.page : 1,
+        pageSize: typeof page.pageSize === "number" ? page.pageSize : 50,
+        totalCount: typeof page.totalCount === "number" ? page.totalCount : 0,
+      };
+    });
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }

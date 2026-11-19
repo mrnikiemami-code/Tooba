@@ -37,6 +37,10 @@ public sealed partial class StoryDirectory
                 return replay;
         }
 
+        await EnsureProductCtaAsync(sellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
+        var cover = await BindCoverAsync(
+            tenantId, sellerPartyId, command.CoverMediaAssetId, command.CoverMediaUrl,
+            allowUnscopedAdminAssets: false, cancellationToken);
         var now = DateTimeOffset.UtcNow;
         var order = command.DisplayOrder ?? await NextDisplayOrderAsync(tenantId, cancellationToken);
         var story = StoryEntity.CreateShopOwnedDraft(
@@ -48,8 +52,8 @@ public sealed partial class StoryDirectory
             now,
             command.Locale,
             command.Market,
-            command.CoverMediaAssetId,
-            command.CoverMediaUrl,
+            cover.AssetId,
+            cover.DisplayUrl,
             command.CtaType,
             command.CtaTarget);
         _db.Stories.Add(story);
@@ -106,11 +110,22 @@ public sealed partial class StoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         int? expectedVersion,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null)
     {
+        var intent = HashLifecycleIntent(storyId, expectedVersion, "return_to_draft");
+        var replay = await TryReplayLifecycleAsync(
+            tenantId, sellerPartyId, "seller_return_to_draft", occurrenceKey, intent, isAdmin: false, cancellationToken);
+        if (replay is not null)
+            return replay;
+
         var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.EnsureExpectedVersion(expectedVersion);
-        story.ReturnToDraftForEdit(DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        story.ReturnToDraftForEdit(now);
+        await RecordOccurrenceAsync(
+            tenantId, sellerPartyId, "seller_return_to_draft", occurrenceKey, intent,
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
@@ -121,11 +136,22 @@ public sealed partial class StoryDirectory
         Guid sellerPartyId,
         Guid storyId,
         int? expectedVersion,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null)
     {
+        var intent = HashLifecycleIntent(storyId, expectedVersion, "stop");
+        var replay = await TryReplayLifecycleAsync(
+            tenantId, sellerPartyId, "seller_stop", occurrenceKey, intent, isAdmin: false, cancellationToken);
+        if (replay is not null)
+            return replay;
+
         var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.EnsureExpectedVersion(expectedVersion);
-        story.StopOwnPublication(DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        story.StopOwnPublication(now);
+        await RecordOccurrenceAsync(
+            tenantId, sellerPartyId, "seller_stop", occurrenceKey, intent,
+            story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         await SaveStoryAsync(story, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }

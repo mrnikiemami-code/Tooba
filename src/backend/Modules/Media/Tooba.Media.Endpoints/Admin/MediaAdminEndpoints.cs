@@ -7,10 +7,12 @@ using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
+using Tooba.BuildingBlocks.Tenancy;
 using Tooba.Media.Application.Assets.Commands;
 using Tooba.Media.Application.Assets.Models;
 using Tooba.Media.Application.Assets.Queries;
 using Tooba.Media.Contracts.Errors;
+using Tooba.Party.Contracts.Ports;
 
 namespace Tooba.Media.Endpoints.Admin;
 
@@ -26,8 +28,54 @@ public static class MediaAdminEndpoints
     {
         var admin = app.MapGroup("/v1/admin/media");
         admin.MapPost("/upload", UploadAsync).DisableAntiforgery();
+        admin.MapPost("/upload-for-shop", UploadForShopAsync).DisableAntiforgery();
         admin.MapGet("/", QueryAsync);
         admin.MapGet("/{id:guid}", GetAsync);
+    }
+
+    private static async Task<IResult> UploadForShopAsync(
+        HttpRequest request,
+        ISender sender,
+        ApiResponseFactory api,
+        IAdminPanelAccess adminAccess,
+        ICurrentTenant tenant,
+        IPartyAdminSellerReadGateway parties,
+        CancellationToken cancellationToken)
+    {
+        var actorUserId = await adminAccess.RequireAuthorizedAsync(request, cancellationToken);
+        if (!request.HasFormContentType)
+            return api.FromFailure(new SemanticError(MediaErrorCodes.UploadFailed));
+
+        var form = await request.ReadFormAsync(cancellationToken);
+        if (!Guid.TryParse(form["sellerPartyId"].ToString(), out var sellerPartyId) || sellerPartyId == Guid.Empty)
+            return api.FromFailure(new SemanticError(MediaErrorCodes.ValidationFailed));
+
+        var shopRows = await parties.GetStatusProjectionsAsync([sellerPartyId], cancellationToken);
+        var shop = shopRows.FirstOrDefault(row => row.PartyId == sellerPartyId);
+        if (shop is null || !string.Equals(shop.Status, "Active", StringComparison.OrdinalIgnoreCase))
+            return api.FromFailure(new SemanticError(MediaErrorCodes.OwnerForbidden));
+
+        var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+        if (file is null)
+            return api.FromFailure(new SemanticError(MediaErrorCodes.UploadFailed));
+
+        var tenantKey = tenant.Current?.TenantId.Value;
+        if (string.IsNullOrWhiteSpace(tenantKey))
+            return api.FromFailure(new SemanticError(MediaErrorCodes.ValidationFailed));
+        var tenantId = StableStoryTenantGuid.FromTenantKey(tenantKey);
+        var occurrence = form["occurrenceKey"].ToString();
+
+        await using var stream = file.OpenReadStream();
+        return api.From(await sender.Send(
+            new UploadSellerStoryMediaCommand(
+                stream,
+                file.FileName,
+                file.ContentType ?? string.Empty,
+                tenantId,
+                sellerPartyId,
+                actorUserId,
+                string.IsNullOrWhiteSpace(occurrence) ? null : occurrence),
+            cancellationToken));
     }
 
     private static async Task<IResult> UploadAsync(

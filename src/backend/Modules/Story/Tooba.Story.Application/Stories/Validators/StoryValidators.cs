@@ -2,6 +2,7 @@ using FluentValidation;
 using Tooba.Story.Application.Stories.Commands.Admin;
 using Tooba.Story.Application.Stories.Commands.Seller;
 using Tooba.Story.Application.Stories.Queries.Admin;
+using Tooba.Story.Application.Stories.Queries.Seller;
 using Tooba.Story.Application.Stories.Queries.Storefront;
 using Tooba.Story.Domain.Enums;
 using Tooba.Story.Domain.Rules;
@@ -155,6 +156,16 @@ public sealed class QueryAdminStoryGridQueryValidator : AbstractValidator<QueryA
         if (string.IsNullOrWhiteSpace(raw))
             return true;
         return Enum.TryParse<StoryReviewStatus>(raw, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed);
+    }
+}
+
+/// <summary>اعتبارسنجی پرس‌وجوی فروشنده.</summary>
+public sealed class QuerySellerStoriesQueryValidator : AbstractValidator<QuerySellerStoriesQuery>
+{
+    public QuerySellerStoriesQueryValidator()
+    {
+        RuleFor(x => x.Request).NotNull().WithErrorCode(StoryValidationCodes.GridRequestRequired);
+        RuleFor(x => x.SellerPartyId).NotEmpty().WithErrorCode(StoryValidationCodes.GridRequestRequired);
     }
 }
 

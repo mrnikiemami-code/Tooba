@@ -362,7 +362,13 @@ builder.Services.AddOpenTelemetry()
     });
 
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
+// TB-281-R2: composition-only process opt-out for safe Host refresh without Development business seeds.
+// Default behaviour unchanged. Select via env TOOBA_SKIP_DEVELOPMENT_BOOTSTRAP=1 for the refresh process only.
+var skipDevelopmentBootstrap = string.Equals(
+    Environment.GetEnvironmentVariable("TOOBA_SKIP_DEVELOPMENT_BOOTSTRAP"),
+    "1",
+    StringComparison.Ordinal);
+if (app.Environment.IsDevelopment() && !skipDevelopmentBootstrap)
 {
     if (app.Services.GetRequiredService<ControlPlaneRegistry>().Edition == ToobaEdition.Marketplace)
     {

@@ -51,7 +51,7 @@ public sealed class SubmitSellerStoryCommandHandler(StoryPresentationComposer co
 
 /// <summary>بازگشت فروشنده به پیش‌نویس.</summary>
 public sealed record ReturnSellerStoryToDraftCommand(
-    Guid TenantId, Guid SellerPartyId, Guid StoryId, int? ExpectedVersion)
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, int? ExpectedVersion, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class ReturnSellerStoryToDraftCommandHandler(StoryPresentationComposer composer)
@@ -61,12 +61,13 @@ public sealed class ReturnSellerStoryToDraftCommandHandler(StoryPresentationComp
         ReturnSellerStoryToDraftCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.SellerReturnToDraftAsync(
-                request.TenantId, request.SellerPartyId, request.StoryId, request.ExpectedVersion, cancellationToken));
+                request.TenantId, request.SellerPartyId, request.StoryId, request.ExpectedVersion, cancellationToken,
+                request.OccurrenceKey));
 }
 
 /// <summary>توقف انتشار فروشنده.</summary>
 public sealed record StopSellerStoryCommand(
-    Guid TenantId, Guid SellerPartyId, Guid StoryId, int? ExpectedVersion)
+    Guid TenantId, Guid SellerPartyId, Guid StoryId, int? ExpectedVersion, string? OccurrenceKey = null)
     : IRequest<Result<AdminStorySnapshot>>;
 
 public sealed class StopSellerStoryCommandHandler(StoryPresentationComposer composer)
@@ -75,7 +76,8 @@ public sealed class StopSellerStoryCommandHandler(StoryPresentationComposer comp
     public Task<Result<AdminStorySnapshot>> Handle(StopSellerStoryCommand request, CancellationToken cancellationToken)
         => StoryOperation.ExecuteAsync(
             () => composer.SellerStopAsync(
-                request.TenantId, request.SellerPartyId, request.StoryId, request.ExpectedVersion, cancellationToken));
+                request.TenantId, request.SellerPartyId, request.StoryId, request.ExpectedVersion, cancellationToken,
+                request.OccurrenceKey));
 }
 
 /// <summary>افزودن آیتم فروشنده.</summary>

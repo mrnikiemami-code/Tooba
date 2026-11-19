@@ -101,11 +101,13 @@ public static class StoryPublicationPolicy
 
             if (story.Origin == StoryOrigin.Seller
                 && story.SellerPartyId.HasValue
-                && story.ReviewStatus == StoryReviewStatus.Approved
-                && story.Status is StoryStatus.Active or StoryStatus.Scheduled)
+                && story.ReviewStatus == StoryReviewStatus.Approved)
             {
-                codes.Add("stop");
-                codes.Add("return_to_draft");
+                if (story.Status is StoryStatus.Active or StoryStatus.Scheduled)
+                    codes.Add("stop");
+                // After stop (Disabled) the seller must still be able to return → edit → resubmit.
+                if (story.Status is StoryStatus.Active or StoryStatus.Scheduled or StoryStatus.Disabled)
+                    codes.Add("return_to_draft");
             }
         }
 
