@@ -139,6 +139,14 @@ namespace Tooba.Media.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Tooba.Media.Infrastructure.Assets.MediaAssetOwnerOccurrence", b =>
                 {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("SellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_party_id");
+
                     b.Property<string>("OccurrenceKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -152,19 +160,17 @@ namespace Tooba.Media.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("IntentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("intent_hash");
+
                     b.Property<Guid>("MediaAssetId")
                         .HasColumnType("uuid")
                         .HasColumnName("media_asset_id");
 
-                    b.Property<Guid>("SellerPartyId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("seller_party_id");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tenant_id");
-
-                    b.HasKey("OccurrenceKey")
+                    b.HasKey("TenantId", "SellerPartyId", "OccurrenceKey")
                         .HasName("pk_asset_owner_occurrences");
 
                     b.HasIndex("TenantId", "SellerPartyId", "CreatedAt")

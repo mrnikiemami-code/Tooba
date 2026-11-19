@@ -335,7 +335,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
                 File.ReadAllText(Path.Combine(root, ModuleRoot, "Tooba.Story.Contracts", "Errors", "StoryErrorCodes.cs")),
                 @"public const string \w+ = ""(story\.[A-Za-z.]+)"";")
             .Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(12, errorCodes.Length);
+        Assert.Equal(14, errorCodes.Length);
 
         var en = File.ReadAllText(Path.Combine(endpoints, "Resources", "StoryErrors.resx"));
         var fa = File.ReadAllText(Path.Combine(endpoints, "Resources", "StoryErrors.fa.resx"));

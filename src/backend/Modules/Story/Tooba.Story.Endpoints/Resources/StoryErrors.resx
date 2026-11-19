@@ -24,5 +24,7 @@
   <data name="story.version.stale" xml:space="preserve"><value>Story reviewed version is stale.</value></data>
   <data name="story.schedule.invalid" xml:space="preserve"><value>Story schedule is invalid.</value></data>
   <data name="story.media.forbidden" xml:space="preserve"><value>Story media is forbidden.</value></data>
+  <data name="story.media.unavailable" xml:space="preserve"><value>Story media authority is unavailable.</value></data>
+  <data name="story.shop.authority.unavailable" xml:space="preserve"><value>Story shop authority is unavailable.</value></data>
   <data name="story.occurrence.conflict" xml:space="preserve"><value>Story occurrence conflicts.</value></data>
 </root>

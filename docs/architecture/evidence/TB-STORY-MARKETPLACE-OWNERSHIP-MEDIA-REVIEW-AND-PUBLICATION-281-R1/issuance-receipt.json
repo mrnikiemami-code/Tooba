@@ -1,0 +1,9 @@
+﻿{
+    "sha256":  "2bca9e9a26d1f01833e3b9b5d7e5199f7882f6dcf0989224eb9d54b4b826d20a",
+    "expectedBaseSha":  "860c6a2c72842c8971d8b9f9885e26cdb0f3f657",
+    "bytes":  16639,
+    "bridgeRowId":  "99c98755-4a95-443e-aea8-2b09e02136e3",
+    "claimedAtUtc":  "2026-11-19T00:02:39.3865629Z",
+    "taskId":  "TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1",
+    "workerId":  "tooba-worker-01"
+}

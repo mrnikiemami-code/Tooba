@@ -1,4 +1,8 @@
-# CURRENT — TB-STORY-281 FIRST CONSOLIDATED DELIVERY ISSUED; WAIT FOR RESULT BEFORE NEXT TASK — 2026-11-19
+# CURRENT — TB-281-R1 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
+
+Read `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/RESULT.md`. Parent 281 PARTIAL preserved. UI delivery two NOT ISSUED. automaticNextImplementationTask NONE.
+
+# HISTORICAL — TB-STORY-281 FIRST CONSOLIDATED DELIVERY ISSUED; WAIT FOR RESULT BEFORE NEXT TASK — 2026-11-19
 
 Active issued task: `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281`, tooba-worker-01 / cursor / tooba-main. Read exact `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md`, issuance receipt and story SOURCE-AUDIT/COMPLETION-PLAN. Owner authorized starting delivery ONE, then explicitly waiting for its result before the next task. Scope: shop ownership + admin-on-behalf, Media-owned seller asset scope, content readiness, reviewed lifecycle/version/replay, real schedule windows, scoped read/grid/public contracts. Backend first; frontend only essential transport/mapping plumbing. Orders-style shared grid/editor and connected public-player delivery remain PLANNED NOT ISSUED. No automatic next task or delegation.
 

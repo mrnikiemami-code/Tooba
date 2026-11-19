@@ -56,9 +56,9 @@ public sealed class StoryMarketplace281DomainTests
     public async Task Admin_create_for_shop_is_visible_only_to_that_shop()
     {
         await using var db = CreateDb();
-        var directory = new StoryDirectory(db);
         var shopA = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5");
         var shopB = Guid.Parse("01a0ffff-0001-7000-8000-000000000001");
+        var directory = new StoryDirectory(db, new AlwaysActiveParty());
         var admin = Guid.Parse("01a036c2-970e-7000-8eb7-94bf5cc2d8db");
         var created = await directory.AdminCreateForShopAsync(
             StoryTenantIds.StoreAlpha,
@@ -86,15 +86,16 @@ public sealed class StoryMarketplace281DomainTests
     public async Task Stale_version_blocks_approve_and_publish()
     {
         await using var db = CreateDb();
-        var directory = new StoryDirectory(db);
         var shop = Guid.NewGuid();
+        var mediaId = Guid.Parse("01a0aaaa-0001-7000-8000-000000000001");
+        var directory = new StoryDirectory(db, new AlwaysActiveParty(), new AllowMedia(mediaId));
         var seller = Guid.NewGuid();
         var admin = Guid.NewGuid();
         var draft = await directory.SellerCreateDraftAsync(
             StoryTenantIds.StoreAlpha,
             shop,
             seller,
-            new CreateStoryCommand("v", null, null, null, "https://cdn.example/c.jpg", null, null, null),
+            new CreateStoryCommand("v", null, null, null, null, null, null, null),
             CancellationToken.None);
         await directory.SellerAddItemAsync(
             StoryTenantIds.StoreAlpha,
@@ -102,8 +103,8 @@ public sealed class StoryMarketplace281DomainTests
             draft.StoryId,
             new AddStoryItemCommand(
                 "image",
-                Guid.Parse("01a0aaaa-0001-7000-8000-000000000001"),
-                "https://cdn.example/i.jpg",
+                mediaId,
+                null,
                 null,
                 null,
                 null,
@@ -129,5 +130,31 @@ public sealed class StoryMarketplace281DomainTests
             .UseInMemoryDatabase("tb281-" + Guid.NewGuid().ToString("N"))
             .Options;
         return new StoryDbContext(options);
+    }
+
+    private sealed class AlwaysActiveParty : Tooba.Party.Contracts.Ports.IPartyAdminSellerReadGateway
+    {
+        public Task<IReadOnlyList<Tooba.Party.Contracts.Ports.PartyStatusProjection>> GetStatusProjectionsAsync(
+            IReadOnlyList<Guid> partyIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Party.Contracts.Ports.PartyStatusProjection>>(
+                partyIds.Select(id => new Tooba.Party.Contracts.Ports.PartyStatusProjection(id, "Shop", "Active")).ToList());
+    }
+
+    private sealed class AllowMedia(Guid readyId) : Tooba.Media.Contracts.Assets.IStoryMediaAssetPort
+    {
+        public Task<Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization> AuthorizeForStoryAsync(
+            Guid mediaAssetId, Guid tenantId, Guid? sellerPartyId, bool allowUnscopedAdminAssets,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization(
+                readyId, "image/jpeg", $"/v1/storefront/media/{readyId:D}", false, sellerPartyId));
+
+        public Task<Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization> UploadForSellerAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid sellerPartyId,
+            Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
+            Guid tenantId, Guid sellerPartyId, int take, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Media.Contracts.Assets.StoryMediaAssetAuthorization>>([]);
     }
 }

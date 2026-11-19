@@ -1,8 +1,10 @@
-# CURRENT — TB-STORY-281 FIRST CONSOLIDATED DELIVERY ISSUED; WAIT FOR RESULT BEFORE NEXT TASK — 2026-11-19
+# CURRENT — TB-281-R1 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
 
-Active issued task: `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281`, tooba-worker-01 / cursor / tooba-main. Read exact `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md`, issuance receipt and story SOURCE-AUDIT/COMPLETION-PLAN. Owner authorized starting delivery ONE, then explicitly waiting for its result before the next task. Scope: shop ownership + admin-on-behalf, Media-owned seller asset scope, content readiness, reviewed lifecycle/version/replay, real schedule windows, scoped read/grid/public contracts. Backend first; frontend only essential transport/mapping plumbing. Orders-style shared grid/editor and connected public-player delivery remain PLANNED NOT ISSUED. No automatic next task or delegation.
+Worker PARTIAL on `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1`. Read evidence under `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/`. Parent 281 PARTIAL preserved. UI delivery two NOT ISSUED. Expected-Base `860c6a2c72842c8971d8b9f9885e26cdb0f3f657`. ZERO live Story/Media business write. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
 
-Expected base `6c0914c37eb9de1e915c874718d813270cc8d9f0`; docs-only issuance descendant allowed. Bounded additive Story/Media migration permission ONLY under the exact backup/runner/verification procedure in this task; no business fixtures/seed/reset/live mutation. Preserve all existing user stories, Return280-R1/279-R3 acceptances and future payout backlog. User/Marketplace acceptance NOT claimed. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT after worker result.
+# HISTORICAL — TB-STORY-281 FIRST CONSOLIDATED DELIVERY ISSUED
+
+Active issued task was `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281`. Parent worker PARTIAL is historical; R1 continued unfinished A–G/B1–B7.
 
 # HISTORICAL — Story source audit/planning checkpoint
 

@@ -233,6 +233,30 @@ public sealed class GetPublicStoriesQueryValidator : AbstractValidator<GetPublic
             && raw.All(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_'));
 }
 
+/// <summary>اعتبارسنجی فعال‌سازی (نسخه از body؛ دامنه الزام می‌کند).</summary>
+public sealed class EnableAdminStoryCommandValidator : AbstractValidator<EnableAdminStoryCommand>
+{
+    public EnableAdminStoryCommandValidator()
+    {
+    }
+}
+
+/// <summary>اعتبارسنجی غیرفعال‌سازی (نسخه از body؛ دامنه الزام می‌کند).</summary>
+public sealed class DisableAdminStoryCommandValidator : AbstractValidator<DisableAdminStoryCommand>
+{
+    public DisableAdminStoryCommandValidator()
+    {
+    }
+}
+
+/// <summary>اعتبارسنجی تأیید ساده (نسخه از body؛ دامنه الزام می‌کند).</summary>
+public sealed class ApproveAdminStoryCommandValidator : AbstractValidator<ApproveAdminStoryCommand>
+{
+    public ApproveAdminStoryCommandValidator()
+    {
+    }
+}
+
 /// <summary>اعتبارسنجی تأیید و انتشار اتمی (نسخه از body اختیاری است؛ دامنه الزام می‌کند).</summary>
 public sealed class ApproveAndPublishAdminStoryCommandValidator : AbstractValidator<ApproveAndPublishAdminStoryCommand>
 {

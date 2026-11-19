@@ -7,6 +7,7 @@ using Tooba.Story.Domain.Aggregates;
 using Tooba.Story.Domain.Enums;
 using Tooba.Story.Domain.Rules;
 using Tooba.Story.Domain.Tenant;
+using Tooba.Story.Infrastructure.Directories;
 using Tooba.Story.Infrastructure.Persistence;
 using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
 
@@ -191,48 +192,7 @@ public sealed class AdminStoryGridQueryEngine
         return rows.Select(story =>
         {
             story.AttachItems(byStory.GetValueOrDefault(story.StoryId, []));
-            return MapAdmin(story);
+            return StoryDirectory.MapAdmin(story, isAdmin: true);
         }).ToList();
     }
-
-    private static AdminStorySnapshot MapAdmin(StoryEntity story) => new(
-        story.StoryId,
-        story.TenantId,
-        story.Origin,
-        story.SellerPartyId,
-        story.ReviewStatus,
-        story.SubmittedByActorUserId,
-        story.ReviewedByActorUserId,
-        story.SubmittedAt,
-        story.ReviewedAt,
-        story.RejectionReason,
-        story.Locale,
-        story.Market,
-        story.Title,
-        story.CoverMediaAssetId,
-        story.CoverMediaUrl,
-        story.DisplayOrder,
-        story.StartAt,
-        story.EndAt,
-        story.Status,
-        story.CtaType,
-        story.CtaTarget,
-        story.VersionToken,
-        story.CreatedAt,
-        story.UpdatedAt,
-        story.Items
-            .OrderBy(item => item.DisplayOrder)
-            .Select(item => new AdminStoryItemSnapshot(
-                item.StoryItemId,
-                item.DisplayOrder,
-                item.MediaType,
-                item.MediaAssetId,
-                item.MediaUrl,
-                item.Caption,
-                item.DurationMs,
-                item.CtaType,
-                item.CtaTarget,
-                item.CreatedAt,
-                item.UpdatedAt))
-            .ToList());
 }

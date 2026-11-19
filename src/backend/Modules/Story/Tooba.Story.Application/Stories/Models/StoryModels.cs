@@ -95,12 +95,14 @@ public sealed record UpdateStoryCommand(
     Guid? CoverMediaAssetId,
     string? CoverMediaUrl,
     string? CtaType,
-    string? CtaTarget);
+    string? CtaTarget,
+    int? ExpectedVersion = null);
 
 /// <summary>فرمان زمان‌بندی استوری.</summary>
 public sealed record SetStoryScheduleCommand(
     DateTimeOffset? StartAt,
-    DateTimeOffset? EndAt);
+    DateTimeOffset? EndAt,
+    int? ExpectedVersion = null);
 
 /// <summary>فرمان افزودن آیتم.</summary>
 public sealed record AddStoryItemCommand(

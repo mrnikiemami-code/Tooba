@@ -245,7 +245,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                 <button
                   type="button"
                   className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs text-white"
-                  onClick={() => void disableAdminStory(row.storyId).then(refresh)}
+                  onClick={() => void disableAdminStory(row.storyId, row.versionToken).then(refresh)}
                 >
                   {STORY_COPY.disable}
                 </button>
@@ -253,7 +253,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                 <button
                   type="button"
                   className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs text-white"
-                  onClick={() => void enableAdminStory(row.storyId).then(refresh)}
+                  onClick={() => void enableAdminStory(row.storyId, row.versionToken).then(refresh)}
                 >
                   {STORY_COPY.enable}
                 </button>
@@ -265,7 +265,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                   type="button"
                   className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs text-white"
                   onClick={() =>
-                    void approveAdminStory(row.storyId).then((result) => {
+                    void approveAdminStory(row.storyId, row.versionToken).then((result) => {
                       if (result.state === "ok") refresh();
                       else setMessage(result.message);
                     })
@@ -283,7 +283,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                       setMessage(STORY_COPY.rejectReasonRequired);
                       return;
                     }
-                    void rejectAdminStory(row.storyId, reason.trim()).then((result) => {
+                    void rejectAdminStory(row.storyId, reason.trim(), row.versionToken).then((result) => {
                       if (result.state === "ok") refresh();
                       else setMessage(result.message);
                     });
@@ -438,7 +438,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                 type="button"
                 className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
                 onClick={() =>
-                  void approveAdminStory(selected.storyId).then((result) => {
+                  void approveAdminStory(selected.storyId, selected.versionToken).then((result) => {
                     if (result.state === "ok") refresh();
                     else setMessage(result.message);
                   })
@@ -454,7 +454,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                     setMessage(STORY_COPY.rejectReasonRequired);
                     return;
                   }
-                  void rejectAdminStory(selected.storyId, rejectDraft.trim()).then((result) => {
+                  void rejectAdminStory(selected.storyId, rejectDraft.trim(), selected.versionToken).then((result) => {
                     if (result.state === "ok") refresh();
                     else setMessage(result.message);
                   });
@@ -509,6 +509,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                   void scheduleAdminStory(selected.storyId, {
                     startAt: fromDatetimeLocalValue(scheduleDraft.startAt),
                     endAt: fromDatetimeLocalValue(scheduleDraft.endAt),
+                    expectedVersion: selected.versionToken,
                   }).then((result) => {
                     if (result.state === "ok") refresh();
                     else setMessage(result.message);
@@ -616,7 +617,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
                       return;
                     }
                     if (capabilities.canPublish) {
-                      await enableAdminStory(result.story.storyId);
+                      await enableAdminStory(result.story.storyId, result.story.versionToken);
                     }
                     setShowCreate(false);
                     setSelectedId(result.story.storyId);

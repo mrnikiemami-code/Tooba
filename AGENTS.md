@@ -1,14 +1,18 @@
-# CURRENT — TB-281 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
+# CURRENT — TB-281-R1 WORKER PARTIAL; AWAIT ARCHITECT — 2026-11-19
 
-Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/TASK.md` and
-`docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,user-review.md,issuance-receipt.json}`.
-Status **PARTIAL** within issued first Story marketplace backend delivery: shop ownership + Media seller scope + publication policy + version-fenced lifecycle + FE transport landed with focused proof and additive Media/Story migrations applied after verified backup; full G1–G7 matrix and admin shop-name grid filter remain open.
-Decision `STORY_SHOP_OWNERSHIP_MEDIA_SELLER_SCOPE_PUBLICATION_POLICY_VERSION_FENCED_LIFECYCLE_AND_TRANSPORT_PLUMBING_LANDED_WITH_FOCUSED_PROOF_AND_ADDITIVE_SCHEMA_APPLIED_BUT_FULL_G_SCENARIO_MATRIX_AND_ADMIN_SHOP_NAME_GRID_FILTER_REMAIN_OPEN`.
-NOT Architect ACCEPT, NOT user acceptance. Delivery two NOT ISSUED. Expected-Base `6c0914c37eb9de1e915c874718d813270cc8d9f0` (ancestor); claim HEAD `c15a3a69c` docs-only. Host 5088 refreshed; ZERO live Story/Media business write. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/TASK.md` and
+`docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,source-findings-closure.md,directory-and-media-proof.md,rollback-only-proof.md,schema-and-backup-proof.md,ui-contract-handoff.md,user-review.md,issuance-receipt.json}`.
+Status **PARTIAL** within issued R1: persisted public reader + role-scoped actions + fail-closed Media/Party + classic version fences + seller upload intent/occurrence composite + FE version transport + additive Media IntentHash migration after verified backup; seller query/shop-name filter/CTA/full G1–G7/Media CQRS remain open.
+Decision `PERSISTED_PUBLIC_READER_ROLE_SCOPED_ACTIONS_FAIL_CLOSED_MEDIA_PARTY_CLASSIC_VERSION_FENCE_AND_ATOMIC_SELLER_UPLOAD_INTENT_LANDED_WITH_FOCUSED_PROOF_AND_ADDITIVE_MEDIA_INTENT_HASH_MIGRATION_BUT_SELLER_QUERY_SHOP_NAME_FILTER_CTA_FULL_G_MATRIX_AND_MEDIA_CQRS_CLEANUP_REMAIN_OPEN`.
+NOT Architect ACCEPT, NOT user acceptance. UI delivery two NOT ISSUED. Expected-Base `860c6a2c72842c8971d8b9f9885e26cdb0f3f657`. Host 5088 refreshed; ZERO live Story/Media business write. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+
+# HISTORICAL — TB-281 WORKER PARTIAL
+
+Parent first delivery PARTIAL preserved under `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281/`.
 
 # HISTORICAL — TB-STORY-281 FIRST CONSOLIDATED DELIVERY ISSUED
 
-Active issued task was `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281`. See CURRENT worker PARTIAL above for the executed result.
+Active issued task was `TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281`. See parent PARTIAL evidence.
 
 # HISTORICAL — Story source audit/planning checkpoint
 

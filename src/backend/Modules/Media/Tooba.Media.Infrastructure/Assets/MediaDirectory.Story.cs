@@ -61,51 +61,53 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
     {
         if (tenantId == Guid.Empty || sellerPartyId == Guid.Empty || actorUserId == Guid.Empty)
             throw new ContractOperationException(MediaErrorCodes.OwnerForbidden);
+        if (string.IsNullOrWhiteSpace(occurrenceKey))
+            throw new ContractOperationException(MediaErrorCodes.ValidationFailed);
 
         var normalizedType = NormalizeContentType(contentType);
         if (!IsImageOrVideo(normalizedType))
             throw new ContractOperationException(MediaErrorCodes.TypeUnsupported);
 
-        if (!string.IsNullOrWhiteSpace(occurrenceKey))
+        await using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer, cancellationToken);
+        var bytes = buffer.ToArray();
+        var digest = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        var intentHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
+            $"{tenantId:D}|{sellerPartyId:D}|{normalizedType}|{fileName.Trim()}|{digest}"))).ToLowerInvariant();
+        var key = occurrenceKey.Trim();
+
+        var prior = await _db.AssetOwnerOccurrences.AsNoTracking()
+            .FirstOrDefaultAsync(
+                row => row.OccurrenceKey == key
+                    && row.TenantId == tenantId
+                    && row.SellerPartyId == sellerPartyId,
+                cancellationToken);
+        if (prior is not null)
         {
-            var prior = await _db.AssetOwnerOccurrences.AsNoTracking()
-                .FirstOrDefaultAsync(
-                    row => row.OccurrenceKey == occurrenceKey.Trim()
-                        && row.TenantId == tenantId
-                        && row.SellerPartyId == sellerPartyId,
-                    cancellationToken);
-            if (prior is not null)
-            {
-                var existing = await _db.Assets.AsNoTracking()
-                    .FirstOrDefaultAsync(row => row.MediaAssetId == prior.MediaAssetId, cancellationToken)
-                    ?? throw new ContractOperationException(MediaErrorCodes.Missing);
-                return MapStory(existing, sellerPartyId);
-            }
+            if (!string.Equals(prior.IntentHash, intentHash, StringComparison.Ordinal))
+                throw new ContractOperationException(MediaErrorCodes.OwnerForbidden);
+            var existing = await _db.Assets.AsNoTracking()
+                .FirstOrDefaultAsync(row => row.MediaAssetId == prior.MediaAssetId, cancellationToken)
+                ?? throw new ContractOperationException(MediaErrorCodes.Missing);
+            return MapStory(existing, sellerPartyId);
         }
 
-        var uploaded = await UploadAsync(stream, fileName, contentType, actorUserId, cancellationToken);
+        buffer.Position = 0;
+        var uploaded = await UploadAsync(buffer, fileName, contentType, actorUserId, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var binding = MediaAssetOwnerBinding.Create(
-            uploaded.MediaAssetId,
-            tenantId,
-            sellerPartyId,
-            actorUserId,
-            now);
-        _db.AssetOwnerBindings.Add(binding);
-
-        if (!string.IsNullOrWhiteSpace(occurrenceKey))
+        _db.AssetOwnerBindings.Add(MediaAssetOwnerBinding.Create(
+            uploaded.MediaAssetId, tenantId, sellerPartyId, actorUserId, now));
+        _db.AssetOwnerOccurrences.Add(new MediaAssetOwnerOccurrence
         {
-            _db.AssetOwnerOccurrences.Add(new MediaAssetOwnerOccurrence
-            {
-                OccurrenceKey = occurrenceKey.Trim(),
-                TenantId = tenantId,
-                SellerPartyId = sellerPartyId,
-                MediaAssetId = uploaded.MediaAssetId,
-                ActorUserId = actorUserId,
-                CreatedAt = now,
-            });
-        }
+            OccurrenceKey = key,
+            TenantId = tenantId,
+            SellerPartyId = sellerPartyId,
+            MediaAssetId = uploaded.MediaAssetId,
+            ActorUserId = actorUserId,
+            IntentHash = intentHash,
+            CreatedAt = now,
+        });
 
         try
         {
@@ -113,6 +115,14 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
         }
         catch (Exception ex)
         {
+            // Binding failed after object-store save: refuse returning an unscoped Ready asset.
+            var orphan = await _db.Assets.FirstOrDefaultAsync(row => row.MediaAssetId == uploaded.MediaAssetId, cancellationToken);
+            if (orphan is not null)
+            {
+                try { await _store.DeleteAsync(orphan.StorageKey, cancellationToken); } catch { /* best-effort */ }
+                _db.Assets.Remove(orphan);
+                try { await _db.SaveChangesAsync(cancellationToken); } catch { /* best-effort */ }
+            }
             throw new ContractOperationException(MediaErrorCodes.UploadFailed, ex);
         }
 
@@ -175,6 +185,8 @@ public sealed class MediaAssetOwnerOccurrence
     public Guid MediaAssetId { get; init; }
     /// <summary>Actor.</summary>
     public Guid ActorUserId { get; init; }
+    /// <summary>SHA-256 of upload intent (type|name|content digest).</summary>
+    public string IntentHash { get; init; } = string.Empty;
     /// <summary>Created at.</summary>
     public DateTimeOffset CreatedAt { get; init; }
 }

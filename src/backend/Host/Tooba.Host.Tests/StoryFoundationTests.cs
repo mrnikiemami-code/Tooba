@@ -113,7 +113,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         scheduled = await directory.AdminSetScheduleAsync(
             tenantId,
             scheduled.StoryId,
-            new SetStoryScheduleCommand(clock.AddDays(2), clock.AddDays(5)),
+            new SetStoryScheduleCommand(clock.AddDays(2), clock.AddDays(5), scheduled.VersionToken),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Scheduled, scheduled.Status);
         Assert.DoesNotContain(
@@ -127,7 +127,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         expired = await directory.AdminSetScheduleAsync(
             tenantId,
             expired.StoryId,
-            new SetStoryScheduleCommand(clock.AddDays(-5), clock.AddDays(-1)),
+            new SetStoryScheduleCommand(clock.AddDays(-5), clock.AddDays(-1), expired.VersionToken),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Expired, expired.Status);
         Assert.DoesNotContain(
@@ -138,8 +138,10 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             tenantId,
             new CreateStoryCommand("خاموش", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
             CancellationToken.None);
-        await directory.AdminSetStatusAsync(tenantId, disabled.StoryId, StoryStatus.Active, CancellationToken.None);
-        disabled = await directory.AdminSoftDisableAsync(tenantId, disabled.StoryId, CancellationToken.None);
+        await directory.AdminSetStatusAsync(tenantId, disabled.StoryId, StoryStatus.Active, disabled.VersionToken, CancellationToken.None);
+        disabled = await directory.AdminGetAsync(tenantId, disabled.StoryId, CancellationToken.None)
+            ?? throw new InvalidOperationException("disabled missing");
+        disabled = await directory.AdminSoftDisableAsync(tenantId, disabled.StoryId, disabled.VersionToken, CancellationToken.None);
         Assert.Equal(StoryStatus.Disabled, disabled.Status);
         Assert.DoesNotContain(
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
@@ -238,19 +240,19 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             story => story.StoryId == submitted.StoryId);
 
         await Assert.ThrowsAsync<SemanticException>(() =>
-            directory.AdminSetStatusAsync(tenantId, submitted.StoryId, StoryStatus.Active, CancellationToken.None));
+            directory.AdminSetStatusAsync(tenantId, submitted.StoryId, StoryStatus.Active, submitted.VersionToken, CancellationToken.None));
 
         var domainStory = await db.Stories.AsNoTracking()
             .FirstAsync(story => story.StoryId == submitted.StoryId, CancellationToken.None);
         Assert.Throws<SemanticException>(() => domainStory.Activate(now));
 
         await Assert.ThrowsAsync<SemanticException>(() =>
-            directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, "   ", CancellationToken.None));
+            directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, "   ", submitted.VersionToken, CancellationToken.None));
         await Assert.ThrowsAsync<SemanticException>(() =>
-            directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, string.Empty, CancellationToken.None));
+            directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, string.Empty, submitted.VersionToken, CancellationToken.None));
 
         var rejected = await directory.AdminRejectAsync(
-            tenantId, submitted.StoryId, adminActor, "نیاز به پوشش بهتر", CancellationToken.None);
+            tenantId, submitted.StoryId, adminActor, "نیاز به پوشش بهتر", submitted.VersionToken, CancellationToken.None);
         Assert.Equal(StoryReviewStatus.Rejected, rejected.ReviewStatus);
         Assert.Equal("نیاز به پوشش بهتر", rejected.RejectionReason);
         Assert.Equal(StoryStatus.Draft, rejected.Status);
@@ -264,19 +266,19 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         Assert.Null(resubmitted.RejectionReason);
 
         var approved = await directory.AdminApproveAsync(
-            tenantId, resubmitted.StoryId, adminActor, CancellationToken.None);
+            tenantId, resubmitted.StoryId, adminActor, resubmitted.VersionToken, CancellationToken.None);
         Assert.Equal(StoryReviewStatus.Approved, approved.ReviewStatus);
         Assert.DoesNotContain(
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
             story => story.StoryId == approved.StoryId);
 
         var approvedAgain = await directory.AdminApproveAsync(
-            tenantId, approved.StoryId, adminActor, CancellationToken.None);
+            tenantId, approved.StoryId, adminActor, approved.VersionToken, CancellationToken.None);
         Assert.Equal(StoryReviewStatus.Approved, approvedAgain.ReviewStatus);
         Assert.Equal(adminActor, approvedAgain.ReviewedByActorUserId);
 
         var activated = await directory.AdminSetStatusAsync(
-            tenantId, approved.StoryId, StoryStatus.Active, CancellationToken.None);
+            tenantId, approved.StoryId, StoryStatus.Active, approvedAgain.VersionToken, CancellationToken.None);
         Assert.Equal(StoryStatus.Active, activated.Status);
         Assert.Contains(
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),

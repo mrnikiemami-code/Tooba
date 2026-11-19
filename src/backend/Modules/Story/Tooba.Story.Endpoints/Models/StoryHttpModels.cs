@@ -29,13 +29,14 @@ public sealed record UpdateStoryBody(
     Guid? CoverMediaAssetId,
     string? CoverMediaUrl,
     string? CtaType,
-    string? CtaTarget);
+    string? CtaTarget,
+    int? ExpectedVersion = null);
 
 /// <summary>بدنهٔ زمان‌بندی استوری.</summary>
-public sealed record SetStoryScheduleBody(DateTimeOffset? StartAt, DateTimeOffset? EndAt);
+public sealed record SetStoryScheduleBody(DateTimeOffset? StartAt, DateTimeOffset? EndAt, int? ExpectedVersion = null);
 
 /// <summary>بدنهٔ رد استوری.</summary>
-public sealed record RejectStoryBody(string? Reason);
+public sealed record RejectStoryBody(string? Reason, int? ExpectedVersion = null);
 
 /// <summary>بدنهٔ مرتب‌سازی استوری‌ها.</summary>
 public sealed record ReorderStoriesBody(IReadOnlyList<Guid> StoryIds);
@@ -73,10 +74,10 @@ public static class StoryBodyMapping
 
     public static UpdateStoryCommand ToUpdate(UpdateStoryBody body) => new(
         body.Title, body.Locale, body.Market, body.CoverMediaAssetId, body.CoverMediaUrl,
-        body.CtaType, body.CtaTarget);
+        body.CtaType, body.CtaTarget, body.ExpectedVersion);
 
     public static SetStoryScheduleCommand ToSchedule(SetStoryScheduleBody body) =>
-        new(body.StartAt, body.EndAt);
+        new(body.StartAt, body.EndAt, body.ExpectedVersion);
 
     public static AddStoryItemCommand ToAddItem(AddStoryItemBody body) => new(
         body.MediaType, body.MediaAssetId, body.MediaUrl, body.Caption, body.DurationMs,

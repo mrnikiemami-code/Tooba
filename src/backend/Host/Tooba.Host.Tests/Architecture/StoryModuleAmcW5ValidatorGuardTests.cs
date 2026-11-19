@@ -32,10 +32,10 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("CreateAdminStoryCommand", "POST /v1/admin/stories", ValidatorRequired),
         ("UpdateAdminStoryCommand", "PUT /v1/admin/stories/{id}", ValidatorRequired),
         ("ReorderAdminStoriesCommand", "PUT /v1/admin/stories/reorder", ValidatorRequired),
-        ("EnableAdminStoryCommand", "POST /v1/admin/stories/{id}/enable", NoValidatorRequired),
-        ("DisableAdminStoryCommand", "POST /v1/admin/stories/{id}/disable", NoValidatorRequired),
+        ("EnableAdminStoryCommand", "POST /v1/admin/stories/{id}/enable", ValidatorRequired),
+        ("DisableAdminStoryCommand", "POST /v1/admin/stories/{id}/disable", ValidatorRequired),
         ("ScheduleAdminStoryCommand", "POST /v1/admin/stories/{id}/schedule", ValidatorRequired),
-        ("ApproveAdminStoryCommand", "POST /v1/admin/stories/{id}/approve", NoValidatorRequired),
+        ("ApproveAdminStoryCommand", "POST /v1/admin/stories/{id}/approve", ValidatorRequired),
         ("ApproveAndPublishAdminStoryCommand", "POST /v1/admin/stories/{id}/approve-and-publish", ValidatorRequired),
         ("ApproveAndScheduleAdminStoryCommand", "POST /v1/admin/stories/{id}/approve-and-schedule", ValidatorRequired),
         ("RejectAdminStoryCommand", "POST /v1/admin/stories/{id}/reject", ValidatorRequired),
@@ -79,14 +79,17 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("ApproveAndScheduleAdminStoryCommand", typeof(ApproveAndScheduleAdminStoryCommandValidator)),
         ("ReturnSellerStoryToDraftCommand", typeof(ReturnSellerStoryToDraftCommandValidator)),
         ("StopSellerStoryCommand", typeof(StopSellerStoryCommandValidator)),
+        ("EnableAdminStoryCommand", typeof(EnableAdminStoryCommandValidator)),
+        ("DisableAdminStoryCommand", typeof(DisableAdminStoryCommandValidator)),
+        ("ApproveAdminStoryCommand", typeof(ApproveAdminStoryCommandValidator)),
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_29_with_20_required_and_9_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_29_with_23_required_and_6_no_validator()
     {
         Assert.Equal(29, Manifest.Length);
-        Assert.Equal(20, Manifest.Count(x => x.Classification == ValidatorRequired));
-        Assert.Equal(9, Manifest.Count(x => x.Classification == NoValidatorRequired));
+        Assert.Equal(23, Manifest.Count(x => x.Classification == ValidatorRequired));
+        Assert.Equal(6, Manifest.Count(x => x.Classification == NoValidatorRequired));
         Assert.Equal(Manifest.Length, Manifest.Select(x => x.RequestTypeName).Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -104,7 +107,7 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
     }
 
     [Fact]
-    public void Twenty_required_validators_resolve_via_foundation_DI_and_nine_have_none()
+    public void TwentyThree_required_validators_resolve_via_foundation_DI_and_six_have_none()
     {
         var services = new ServiceCollection();
         services.AddLogging();

@@ -1,0 +1,26 @@
+Task-ID: TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R1
+Status: PARTIAL
+Expected-Base-SHA: 860c6a2c72842c8971d8b9f9885e26cdb0f3f657
+Base-SHA: 860c6a2c72842c8971d8b9f9885e26cdb0f3f657
+Code-SHA: PENDING_COMMIT
+Evidence-SHA: PENDING_COMMIT
+Final-HEAD: PENDING_COMMIT
+HEAD-Equals-Origin-Main: PENDING_PUSH
+B1-Persisted-Public-Read: PASS
+B2-FailClosed-Shop-And-Media: PARTIAL
+B3-Atomic-Upload-Replay: PARTIAL
+B4-AllPath-Version-And-Occurrence: PARTIAL
+B5-RoleScoped-Projection: PASS
+B6-Queries-CTA-And-PublicIdentity: OPEN
+B7-Owning-CQRS-And-Tenant: OPEN
+G1-G7-Proof-State: PARTIAL_FOCUSED_ONLY
+Schema-State: ADDITIVE_MEDIA_INTENT_HASH_APPLIED
+Live-Business-Write-State: ZERO
+Technical-Validation: StoryMarketplace281 7/7; Story/Media AMSC 52/52; stories FE 6/6; tsc 0; Host publish 0; health/ready 200
+Served-State: Host5088 dll SHA256 96F28D635AD937484887C60B01FF550369A7F23955B8A0B30A23168EABE61FD5
+Evidence-Limits: no PG rollback suite; no controlled object-store R3; no seller query/CTA/shop-name; Host restart Development seed may fail pricing.overlap on second start while prior process serves
+UI-Delivery-State: PLANNED_NOT_ISSUED
+User-Acceptance: NOT_CLAIMED
+Marketplace-Readiness: NOT_CLAIMED
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT

@@ -87,6 +87,7 @@ public interface IStoryDirectory
         Guid tenantId,
         Guid storyId,
         StoryStatus status,
+        int? expectedVersion,
         CancellationToken cancellationToken);
 
     /// <summary>زمان‌بندی استوری را تنظیم می‌کند.</summary>
@@ -135,6 +136,7 @@ public interface IStoryDirectory
     Task<AdminStorySnapshot> AdminSoftDisableAsync(
         Guid tenantId,
         Guid storyId,
+        int? expectedVersion,
         CancellationToken cancellationToken);
 
     /// <summary>استوری فروشنده را تأیید می‌کند.</summary>
@@ -142,6 +144,7 @@ public interface IStoryDirectory
         Guid tenantId,
         Guid storyId,
         Guid adminActorUserId,
+        int? expectedVersion,
         CancellationToken cancellationToken);
 
     /// <summary>استوری فروشنده را با دلیل رد می‌کند.</summary>
@@ -150,6 +153,7 @@ public interface IStoryDirectory
         Guid storyId,
         Guid adminActorUserId,
         string reason,
+        int? expectedVersion,
         CancellationToken cancellationToken);
 
     /// <summary>فهرست استوری‌های یک فروشنده.</summary>

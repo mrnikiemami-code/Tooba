@@ -40,7 +40,8 @@ public sealed partial class StoryDirectory : IStoryDirectory
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        // Public eligibility: Admin-origin OR Approved review; Active OR Scheduled, then window via IsPubliclyVisible.
+        // Load candidate headers first, attach slides, THEN apply playable/window policy.
+        // Filtering before AttachItems would drop every freshly materialized row (Items.Count == 0).
         var rows = await _db.Stories.AsNoTracking()
             .Where(story => story.TenantId == tenantId
                 && (story.Status == StoryStatus.Active || story.Status == StoryStatus.Scheduled)
@@ -50,16 +51,10 @@ public sealed partial class StoryDirectory : IStoryDirectory
             .ThenBy(story => story.StoryId)
             .ToListAsync(cancellationToken);
 
-        var visible = rows
-            .Where(story => story.IsPubliclyVisible(now)
-                && StoryRules.MatchesLocale(story.Locale, locale)
-                && StoryRules.MatchesMarket(story.Market, market))
-            .ToList();
-
-        if (visible.Count == 0)
+        if (rows.Count == 0)
             return [];
 
-        var ids = visible.Select(story => story.StoryId).ToList();
+        var ids = rows.Select(story => story.StoryId).ToList();
         var items = await _db.StoryItems.AsNoTracking()
             .Where(item => ids.Contains(item.StoryId))
             .OrderBy(item => item.DisplayOrder)
@@ -67,11 +62,15 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var itemsByStory = items.GroupBy(item => item.StoryId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<StoryItem>)group.ToList());
 
-        return visible.Select(story =>
-        {
+        foreach (var story in rows)
             story.AttachItems(itemsByStory.GetValueOrDefault(story.StoryId, []));
-            return MapPublic(story);
-        }).ToList();
+
+        return rows
+            .Where(story => story.IsPubliclyVisible(now)
+                && StoryRules.MatchesLocale(story.Locale, locale)
+                && StoryRules.MatchesMarket(story.Market, market))
+            .Select(MapPublic)
+            .ToList();
     }
 
     /// <inheritdoc />
@@ -88,7 +87,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         return query
             .OrderBy(story => story.DisplayOrder)
             .ThenBy(story => story.StoryId)
-            .Select(MapAdmin)
+            .Select(story => MapAdmin(story, isAdmin: true))
             .ToList();
     }
 
@@ -105,7 +104,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await LoadStoryAsync(tenantId, storyId, track: false, cancellationToken);
-        return story is null ? null : MapAdmin(story);
+        return story is null ? null : MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -130,7 +129,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaTarget);
         _db.Stories.Add(story);
         await _db.SaveChangesAsync(cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -141,6 +140,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.EnsureExpectedVersion(command.ExpectedVersion);
         story.Update(
             command.Title,
             command.Locale,
@@ -151,7 +151,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaTarget,
             DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -159,9 +159,11 @@ public sealed partial class StoryDirectory : IStoryDirectory
         Guid tenantId,
         Guid storyId,
         StoryStatus status,
+        int? expectedVersion,
         CancellationToken cancellationToken)
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.EnsureExpectedVersion(expectedVersion);
         var now = DateTimeOffset.UtcNow;
         switch (status)
         {
@@ -183,7 +185,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         }
 
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -194,9 +196,10 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.EnsureExpectedVersion(command.ExpectedVersion);
         story.SetSchedule(command.StartAt, command.EndAt, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -223,7 +226,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         await _db.SaveChangesAsync(cancellationToken);
         return stories
             .OrderBy(story => story.DisplayOrder)
-            .Select(MapAdmin)
+            .Select(story => MapAdmin(story, isAdmin: true))
             .ToList();
     }
 
@@ -249,7 +252,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaType,
             command.CtaTarget);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -272,7 +275,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaTarget,
             DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -285,7 +288,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         story.RemoveItem(itemId, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -298,19 +301,21 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
         story.ReorderItems(itemIdsInOrder, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
     public async Task<AdminStorySnapshot> AdminSoftDisableAsync(
         Guid tenantId,
         Guid storyId,
+        int? expectedVersion,
         CancellationToken cancellationToken)
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.EnsureExpectedVersion(expectedVersion);
         story.Disable(DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -318,12 +323,14 @@ public sealed partial class StoryDirectory : IStoryDirectory
         Guid tenantId,
         Guid storyId,
         Guid adminActorUserId,
+        int? expectedVersion,
         CancellationToken cancellationToken)
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.EnsureExpectedVersion(expectedVersion);
         story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -332,12 +339,14 @@ public sealed partial class StoryDirectory : IStoryDirectory
         Guid storyId,
         Guid adminActorUserId,
         string reason,
+        int? expectedVersion,
         CancellationToken cancellationToken)
     {
         var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.EnsureExpectedVersion(expectedVersion);
         story.Reject(adminActorUserId, reason, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: true);
     }
 
     /// <inheritdoc />
@@ -350,7 +359,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         return stories
             .OrderBy(story => story.DisplayOrder)
             .ThenBy(story => story.StoryId)
-            .Select(MapAdmin)
+            .Select(story => MapAdmin(story, isAdmin: false))
             .ToList();
     }
 
@@ -362,7 +371,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await LoadSellerStoryAsync(tenantId, sellerPartyId, storyId, track: false, cancellationToken);
-        return story is null ? null : MapAdmin(story);
+        return story is null ? null : MapAdmin(story, isAdmin: false);
     }
 
     /// <inheritdoc />
@@ -391,7 +400,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaTarget);
         _db.Stories.Add(story);
         await _db.SaveChangesAsync(cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: false);
     }
 
     /// <inheritdoc />
@@ -403,6 +412,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         CancellationToken cancellationToken)
     {
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        story.EnsureExpectedVersion(command.ExpectedVersion);
         story.Update(
             command.Title,
             command.Locale,
@@ -413,7 +423,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaTarget,
             DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: false);
     }
 
     /// <inheritdoc />
@@ -427,7 +437,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.SubmitForReview(actorUserId, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: false);
     }
 
     /// <inheritdoc />
@@ -440,7 +450,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
     {
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         var bound = await BindSellerMediaAsync(
-            tenantId, sellerPartyId, command.MediaAssetId, command.MediaUrl, cancellationToken);
+            tenantId, sellerPartyId, command.MediaType, command.MediaAssetId, command.MediaUrl, cancellationToken);
         var now = DateTimeOffset.UtcNow;
         var order = command.DisplayOrder
             ?? (story.Items.Count == 0 ? 0 : story.Items.Max(item => item.DisplayOrder) + 1);
@@ -455,7 +465,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaType,
             command.CtaTarget);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: false);
     }
 
     /// <inheritdoc />
@@ -469,7 +479,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
     {
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         var bound = await BindSellerMediaAsync(
-            tenantId, sellerPartyId, command.MediaAssetId, command.MediaUrl, cancellationToken);
+            tenantId, sellerPartyId, command.MediaType, command.MediaAssetId, command.MediaUrl, cancellationToken);
         story.UpdateItem(
             itemId,
             command.MediaType,
@@ -481,7 +491,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             command.CtaTarget,
             DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: false);
     }
 
     /// <inheritdoc />
@@ -495,7 +505,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.RemoveItem(itemId, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: false);
     }
 
     /// <inheritdoc />
@@ -509,16 +519,13 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.ReorderItems(itemIdsInOrder, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return MapAdmin(story);
+        return MapAdmin(story, isAdmin: false);
     }
 
-    internal static AdminStorySnapshot MapAdmin(StoryEntity story)
+    internal static AdminStorySnapshot MapAdmin(StoryEntity story, bool isAdmin)
     {
         var now = DateTimeOffset.UtcNow;
-        var actions = StoryPublicationPolicy.ProjectActionCodes(story, isAdmin: true, now)
-            .Concat(StoryPublicationPolicy.ProjectActionCodes(story, isAdmin: false, now))
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
+        var actions = StoryPublicationPolicy.ProjectActionCodes(story, isAdmin, now).ToList();
         return new(
             story.StoryId,
             story.TenantId,
@@ -739,19 +746,22 @@ public sealed partial class StoryDirectory : IStoryDirectory
     private async Task<(Guid? AssetId, string? DisplayUrl)> BindSellerMediaAsync(
         Guid tenantId,
         Guid sellerPartyId,
+        string? declaredMediaType,
         Guid? mediaAssetId,
         string? mediaUrl,
         CancellationToken cancellationToken)
     {
+        if (_media is null)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MediaUnavailable));
+
         if (mediaAssetId is Guid assetId && assetId != Guid.Empty)
         {
-            if (_media is null)
-                return (assetId, string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim());
-
             try
             {
                 var authorized = await _media.AuthorizeForStoryAsync(
                     assetId, tenantId, sellerPartyId, allowUnscopedAdminAssets: false, cancellationToken);
+                if (!MediaTypeMatches(declaredMediaType, authorized.ContentType, authorized.IsVideo))
+                    throw new SemanticException(new SemanticError(StoryErrorCodes.MediaForbidden));
                 return (authorized.MediaAssetId, authorized.DisplayUrl);
             }
             catch (ContractOperationException)
@@ -765,6 +775,18 @@ public sealed partial class StoryDirectory : IStoryDirectory
             throw new SemanticException(new SemanticError(StoryErrorCodes.MediaForbidden));
 
         return (null, null);
+    }
+
+    private static bool MediaTypeMatches(string? declaredMediaType, string contentType, bool isVideo)
+    {
+        if (string.IsNullOrWhiteSpace(declaredMediaType))
+            return true;
+        var declared = declaredMediaType.Trim().ToLowerInvariant();
+        if (declared is "video" or "mp4")
+            return isVideo || contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase);
+        if (declared is "image" or "photo" or "jpg" or "jpeg" or "png" or "webp")
+            return !isVideo && contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+        return true;
     }
 
     private async Task SaveStoryAsync(StoryEntity story, CancellationToken cancellationToken)

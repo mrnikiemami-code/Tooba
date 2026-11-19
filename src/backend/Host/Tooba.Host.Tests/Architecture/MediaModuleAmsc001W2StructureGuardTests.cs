@@ -226,6 +226,7 @@ public sealed class MediaModuleAmsc001W2StructureGuardTests
                 "MediaAssetDemoBridge.cs",
                 "MediaAssetUploadBridge.cs",
                 "MediaDirectory.Queries.cs",
+                "MediaDirectory.Story.cs",
                 "MediaDirectory.Upload.cs",
                 "MediaDirectory.cs",
             },
@@ -242,7 +243,7 @@ public sealed class MediaModuleAmsc001W2StructureGuardTests
             .Where(x => x.StartsWith("MediaDirectory", StringComparison.Ordinal))
             .SelectMany(x => File.ReadAllLines(Path.Combine(infra, "Assets", x)))
             .Count(line => line.Contains("class MediaDirectory", StringComparison.Ordinal));
-        Assert.Equal(3, directoryDeclarations);
+        Assert.Equal(4, directoryDeclarations);
 
         // No second physical copy of the EF context or the object store lives outside its own home.
         var otherHomes = Directory.GetFiles(infra, "*.cs", SearchOption.AllDirectories)

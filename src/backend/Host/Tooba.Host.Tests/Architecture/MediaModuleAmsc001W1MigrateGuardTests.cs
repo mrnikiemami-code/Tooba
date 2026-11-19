@@ -259,7 +259,7 @@ public sealed class MediaModuleAmsc001W1MigrateGuardTests
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(3, migrations.Length);
+        Assert.Equal(4, migrations.Length);
         Assert.Equal("media", ReadSchema());
     }
 

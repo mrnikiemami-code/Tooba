@@ -87,12 +87,14 @@ public sealed class StoryPresentationComposer
         Guard(() => _stories.AdminUpdateAsync(tenantId, storyId, command, cancellationToken));
 
     /// <summary>فعال‌سازی.</summary>
-    public Task<AdminStorySnapshot> AdminEnableAsync(Guid tenantId, Guid storyId, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminSetStatusAsync(tenantId, storyId, StoryStatus.Active, cancellationToken));
+    public Task<AdminStorySnapshot> AdminEnableAsync(
+        Guid tenantId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminSetStatusAsync(tenantId, storyId, StoryStatus.Active, expectedVersion, cancellationToken));
 
     /// <summary>غیرفعال‌سازی.</summary>
-    public Task<AdminStorySnapshot> AdminDisableAsync(Guid tenantId, Guid storyId, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminSoftDisableAsync(tenantId, storyId, cancellationToken));
+    public Task<AdminStorySnapshot> AdminDisableAsync(
+        Guid tenantId, Guid storyId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminSoftDisableAsync(tenantId, storyId, expectedVersion, cancellationToken));
 
     /// <summary>زمان‌بندی.</summary>
     public Task<AdminStorySnapshot> AdminSetScheduleAsync(
@@ -101,13 +103,13 @@ public sealed class StoryPresentationComposer
 
     /// <summary>تأیید استوری فروشنده.</summary>
     public Task<AdminStorySnapshot> AdminApproveAsync(
-        Guid tenantId, Guid storyId, Guid adminActorUserId, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminApproveAsync(tenantId, storyId, adminActorUserId, cancellationToken));
+        Guid tenantId, Guid storyId, Guid adminActorUserId, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminApproveAsync(tenantId, storyId, adminActorUserId, expectedVersion, cancellationToken));
 
     /// <summary>رد استوری فروشنده.</summary>
     public Task<AdminStorySnapshot> AdminRejectAsync(
-        Guid tenantId, Guid storyId, Guid adminActorUserId, string reason, CancellationToken cancellationToken) =>
-        Guard(() => _stories.AdminRejectAsync(tenantId, storyId, adminActorUserId, reason, cancellationToken));
+        Guid tenantId, Guid storyId, Guid adminActorUserId, string reason, int? expectedVersion, CancellationToken cancellationToken) =>
+        Guard(() => _stories.AdminRejectAsync(tenantId, storyId, adminActorUserId, reason, expectedVersion, cancellationToken));
 
     /// <summary>مرتب‌سازی استوری‌ها.</summary>
     public Task<IReadOnlyList<AdminStorySnapshot>> AdminReorderStoriesAsync(

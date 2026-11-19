@@ -64,7 +64,7 @@ public sealed partial class StoryDirectory
             now,
             cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
-        return await EnrichAsync(MapAdmin(story), cancellationToken);
+        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
     /// <summary>Approves the reviewed version and publishes immediately.</summary>
@@ -80,7 +80,7 @@ public sealed partial class StoryDirectory
         story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
         story.Activate(DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return await EnrichAsync(MapAdmin(story), cancellationToken);
+        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
     /// <summary>Approves the reviewed version and applies the schedule in one owning transition.</summary>
@@ -97,7 +97,7 @@ public sealed partial class StoryDirectory
         story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
         story.SetSchedule(schedule.StartAt, schedule.EndAt, DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return await EnrichAsync(MapAdmin(story), cancellationToken);
+        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
     /// <summary>Seller returns an approved story to draft and stops publication.</summary>
@@ -112,7 +112,7 @@ public sealed partial class StoryDirectory
         story.EnsureExpectedVersion(expectedVersion);
         story.ReturnToDraftForEdit(DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return await EnrichAsync(MapAdmin(story), cancellationToken);
+        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
     /// <summary>Seller stops its own live/scheduled publication.</summary>
@@ -127,7 +127,7 @@ public sealed partial class StoryDirectory
         story.EnsureExpectedVersion(expectedVersion);
         story.StopOwnPublication(DateTimeOffset.UtcNow);
         await SaveStoryAsync(story, cancellationToken);
-        return await EnrichAsync(MapAdmin(story), cancellationToken);
+        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
     }
 
     /// <summary>Attaches shop display names from Party Contracts.</summary>
@@ -148,7 +148,7 @@ public sealed partial class StoryDirectory
         if (sellerPartyId == Guid.Empty)
             throw new SemanticException(new SemanticError(StoryErrorCodes.ShopInvalid));
         if (_partySellers is null)
-            return;
+            throw new SemanticException(new SemanticError(StoryErrorCodes.ShopAuthorityUnavailable));
 
         var rows = await _partySellers.GetStatusProjectionsAsync([sellerPartyId], cancellationToken);
         var row = rows.FirstOrDefault(item => item.PartyId == sellerPartyId);
@@ -180,7 +180,7 @@ public sealed partial class StoryDirectory
 
         var story = await LoadStoryAsync(tenantId, existing.StoryId, track: false, cancellationToken)
             ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
-        return await EnrichAsync(MapAdmin(story), cancellationToken);
+        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 
     private async Task RecordOccurrenceAsync(
@@ -213,8 +213,23 @@ public sealed partial class StoryDirectory
 
     private static string HashIntent(CreateStoryCommand command)
     {
-        var payload =
-            $"{command.Title}|{command.Locale}|{command.Market}|{command.CoverMediaAssetId}|{command.CoverMediaUrl}|{command.DisplayOrder}|{command.CtaType}|{command.CtaTarget}|{command.SellerPartyId}";
+        // Length-prefixed fields keep values that contain '|' unambiguous.
+        static string F(string? value)
+        {
+            var text = value ?? string.Empty;
+            return text.Length.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + text;
+        }
+
+        var payload = string.Join('\u001f',
+            F(command.Title),
+            F(command.Locale),
+            F(command.Market),
+            F(command.CoverMediaAssetId?.ToString("D")),
+            F(command.CoverMediaUrl),
+            F(command.DisplayOrder?.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            F(command.CtaType),
+            F(command.CtaTarget),
+            F(command.SellerPartyId?.ToString("D")));
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
         return Convert.ToHexString(hash).ToLowerInvariant();
     }

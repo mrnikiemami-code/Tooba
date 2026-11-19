@@ -41,6 +41,12 @@ public static class StoryErrorCodes
     /// <summary>رسانه برای این مالک/فروشگاه مجاز نیست.</summary>
     public const string MediaForbidden = "story.media.forbidden";
 
+    /// <summary>سرویس مالک رسانه در دسترس نیست؛ عملیات اثرگذار fail-closed است.</summary>
+    public const string MediaUnavailable = "story.media.unavailable";
+
+    /// <summary>سرویس مالک فروشگاه در دسترس نیست؛ عملیات اثرگذار fail-closed است.</summary>
+    public const string ShopAuthorityUnavailable = "story.shop.authority.unavailable";
+
     /// <summary>هویت رخداد فرمان با نتیجهٔ ذخیره‌شده در تضاد است.</summary>
     public const string OccurrenceConflict = "story.occurrence.conflict";
 }

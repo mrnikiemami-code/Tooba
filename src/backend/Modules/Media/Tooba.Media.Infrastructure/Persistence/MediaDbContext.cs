@@ -61,12 +61,13 @@ public sealed class MediaDbContext : DbContext
         modelBuilder.Entity<Tooba.Media.Infrastructure.Assets.MediaAssetOwnerOccurrence>(entity =>
         {
             entity.ToTable("asset_owner_occurrences");
-            entity.HasKey(x => x.OccurrenceKey);
+            entity.HasKey(x => new { x.TenantId, x.SellerPartyId, x.OccurrenceKey });
             entity.Property(x => x.OccurrenceKey).HasMaxLength(128);
             entity.Property(x => x.TenantId).IsRequired();
             entity.Property(x => x.SellerPartyId).IsRequired();
             entity.Property(x => x.MediaAssetId).IsRequired();
             entity.Property(x => x.ActorUserId).IsRequired();
+            entity.Property(x => x.IntentHash).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.SellerPartyId, x.CreatedAt });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);

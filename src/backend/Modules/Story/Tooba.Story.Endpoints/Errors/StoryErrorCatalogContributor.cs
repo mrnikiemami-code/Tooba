@@ -21,6 +21,8 @@ public sealed class StoryErrorCatalogContributor : IErrorCatalogContributor
         D(StoryErrorCodes.VersionStale, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Story reviewed version is stale."),
         D(StoryErrorCodes.ScheduleInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest, "Story schedule is invalid."),
         D(StoryErrorCodes.MediaForbidden, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden, "Story media is forbidden."),
+        D(StoryErrorCodes.MediaUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Story media authority is unavailable."),
+        D(StoryErrorCodes.ShopAuthorityUnavailable, ErrorClassification.Platform, StatusCodes.Status503ServiceUnavailable, "Story shop authority is unavailable."),
         D(StoryErrorCodes.OccurrenceConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict, "Story occurrence conflicts."),
     ];
 

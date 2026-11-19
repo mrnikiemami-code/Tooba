@@ -433,11 +433,12 @@ export async function updateAdminStory(
   }
 }
 
-export async function enableAdminStory(storyId: string): Promise<boolean> {
+export async function enableAdminStory(storyId: string, expectedVersion: number): Promise<boolean> {
   try {
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/enable`, {
       method: "POST",
       headers: adminHeaders(true),
+      body: JSON.stringify({ expectedVersion }),
     });
     return response.ok;
   } catch {
@@ -445,11 +446,12 @@ export async function enableAdminStory(storyId: string): Promise<boolean> {
   }
 }
 
-export async function disableAdminStory(storyId: string): Promise<boolean> {
+export async function disableAdminStory(storyId: string, expectedVersion: number): Promise<boolean> {
   try {
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/disable`, {
       method: "POST",
       headers: adminHeaders(true),
+      body: JSON.stringify({ expectedVersion }),
     });
     return response.ok;
   } catch {
@@ -459,7 +461,7 @@ export async function disableAdminStory(storyId: string): Promise<boolean> {
 
 export async function scheduleAdminStory(
   storyId: string,
-  input: { startAt?: string | null; endAt?: string | null },
+  input: { startAt?: string | null; endAt?: string | null; expectedVersion: number },
 ): Promise<AdminResult<AdminStorySnapshot>> {
   try {
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/schedule`, {
@@ -468,6 +470,7 @@ export async function scheduleAdminStory(
       body: JSON.stringify({
         startAt: input.startAt ?? null,
         endAt: input.endAt ?? null,
+        expectedVersion: input.expectedVersion,
       }),
     });
     return adminJsonResult(response, mapAdminStory);
@@ -541,11 +544,15 @@ export async function reorderAdminStories(storyIds: string[]): Promise<AdminResu
   }
 }
 
-export async function approveAdminStory(storyId: string): Promise<AdminResult<AdminStorySnapshot>> {
+export async function approveAdminStory(
+  storyId: string,
+  expectedVersion: number,
+): Promise<AdminResult<AdminStorySnapshot>> {
   try {
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/approve`, {
       method: "POST",
       headers: adminHeaders(true),
+      body: JSON.stringify({ expectedVersion }),
     });
     return adminJsonResult(response, mapAdminStory);
   } catch {
@@ -592,12 +599,13 @@ export async function approveAndScheduleAdminStory(
 export async function rejectAdminStory(
   storyId: string,
   reason: string,
+  expectedVersion: number,
 ): Promise<AdminResult<AdminStorySnapshot>> {
   try {
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/reject`, {
       method: "POST",
       headers: adminHeaders(true),
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({ reason, expectedVersion }),
     });
     return adminJsonResult(response, mapAdminStory);
   } catch {
