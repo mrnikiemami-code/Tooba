@@ -1,18 +1,20 @@
-# CURRENT — R14 PARTIAL; R15 REJECTED-TRANSPORT CLOSURE ISSUED — 2026-11-20
+# CURRENT — TB-282-R15 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
-Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/ARCHITECT-REVIEW.md
-Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15/TASK.md
-R14 code cbba1b3e247426ead2babd4f4dd0fae1755fd166 / evidence 8c6fe36325f181aba213fb655d735cc48c7384c7.
-Accepted: batch scope/epoch stop, per-row result panel, R13 date layout. Remaining: rejected fetch escapes before result Dialog; empty-200 test does not prove connection-loss handling. R15 repairs only this and proves actual grid-selected rejection/exact recovery.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
-No production/user acceptance. Host5088 skip-bootstrap=1; FE3000 next-dev; Html404 production build blocker unchanged. No live mutations/grants/seeds/backend changes authorized. Preserve VendorShell, language registry, date/retry rules, Returns/payout/user work and R6 effects UNKNOWN.
-Architect reviewed source/evidence, did not rerun Windows runtime.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R15/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued rejected-transport closure: fetch TypeError caught at Story wire; bulk result Dialog shows success/unknown/skipped; exact recovery retry; epoch+reject keeps later not_started; Host5088 skip-bootstrap; Next3000 next-dev; ZERO migration; ZERO live Story/Media write.
+Decision `REJECTED_FETCH_TRANSPORT_UNCERTAIN_BULK_RESULT_DIALOG_AND_EXACT_RETRY_ZERO_BACKEND_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `8c6fe36325f181aba213fb655d735cc48c7384c7`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW. R14 epoch/panel and R13 layout B retained.
 
-# HISTORICAL — prior records preserved below
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-# CURRENT — TB-282-R14 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — R15 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — R14 PARTIAL; R15 ISSUED THEN PASS ABOVE
+
+# HISTORICAL — TB-282-R14 WORKER PASS; PARTIAL BY ARCHITECT; R15 ABOVE
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/TASK.md` and
 `docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R14/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
