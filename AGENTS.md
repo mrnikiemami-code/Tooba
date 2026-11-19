@@ -1,14 +1,22 @@
-# CURRENT — TB-281-R5 WORKER PASS; AWAIT ARCHITECT — 2026-11-19
+# CURRENT — TB-282 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
 ## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
-صاحب محصول تأکید کرد استوری باید در پنل فروشندهٔ موجود قالب تکمیل شود، نه پنل تازه. سورس بررسی شد: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» با مجوز `story.view` و مسیر `/vendor-panel/stories` از قبل وجود دارد؛ صفحه همان feature مشترک را با قابلیت فروشنده می‌گیرد. مرجع اجباری تسک UI آینده: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پوسته، ناوبری و auth/context موجود حفظ شوند؛ منو/پنل/ورود موازی ساخته نشود. این فقط یادداشت است؛ UI هنوز NOT ISSUED و automaticNextImplementationTask NONE.
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. مرجع: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پنل/منو/ورود موازی ساخته نشد.
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,Gate0-proof.md,connected-workflow-proof.md,media-and-intent-proof.md,public-player-proof.md,ui-contract-handoff.md,user-review.md,issuance-receipt.json,claimed.json}`.
+Status **PASS** within issued Gate0+A–F: full occurrence identity fold + detach + two-context concurrency; shared Orders-style Story workspace on existing VendorShell + admin; seller Media upload + intent; honest public player; focused Gate0 4/4 + FE 20/20; ZERO migration; ZERO live Story/Media business write.
+Decision `GATE0_FULL_OCCURRENCE_IDENTITY_DETACH_AND_TWO_CONTEXT_CONCURRENCY_AND_SHARED_ORDERS_STYLE_STORY_WORKSPACE_SELLER_VENDORSHELL_MEDIA_UPLOAD_INTENT_AND_HONEST_PUBLIC_PLAYER_LANDED_WITH_FOCUSED_PROOF_ZERO_MIGRATION`.
+NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `c9ba2296a3adfbb6f6ed2638df65957f4c3f391c`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+
+# HISTORICAL — TB-281-R5 WORKER PASS; 282 WAS ISSUED
 
 Read `docs/ai/tasks/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/TASK.md` and
 `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,media-failure-proof.md,rollback-only-proof.md,all-route-matrix.md,schema-and-runtime-proof.md,ui-contract-handoff.md,issuance-receipt.json}`.
 Status **PASS** within issued A/B/C: Seller/AdminUpdateItem occurrence replay; length-prefixed update hashes; schedule replay-before-gates; Story occurrence unique arbitration; Media EF+ambient+enlistment refuse (ValidationFailed); fresh-context grid/expired/two-context stale + Media caller-entity proofs; focused 48/48; ZERO migration; ZERO live Story/Media business write.
 Decision `SELLER_ADMIN_UPDATE_ITEM_OCCURRENCE_REPLAY_LENGTH_PREFIXED_UPDATE_HASHES_SCHEDULE_REPLAY_BEFORE_GATES_STORY_OCCURRENCE_UNIQUE_ARBITRATION_MEDIA_AMBIENT_AND_ENLISTMENT_REFUSE_AND_TRUTHFUL_FRESH_CONTEXT_GRID_TWO_CONTEXT_STALE_AND_MEDIA_CALLER_ENTITY_PROOF_LANDED_WITH_FOCUSED_48_48_ZERO_MIGRATION`.
-NOT Architect ACCEPT, NOT user acceptance. UI delivery PLANNED_NOT_ISSUED. Expected-Base `aad32713b7486c429dbbfb5e948e95e30eb6bb67`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT.
+NOT Architect ACCEPT, NOT user acceptance. UI delivery was later issued as TB-282. Expected-Base `aad32713b7486c429dbbfb5e948e95e30eb6bb67`.
 
 # HISTORICAL — TB-281-R4 SOURCE REVIEW REQUIRED REPAIR; 281-R5 WAS ISSUED
 

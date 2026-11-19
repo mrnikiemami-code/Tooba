@@ -9,6 +9,8 @@ test("mapPublicStory maps PascalCase storefront payload", () => {
     CoverMediaUrl: "/images/stories/1.jpg",
     IsVideo: false,
     DisplayOrder: 2,
+    ShopDisplayName: "فروشگاه آلفا",
+    ShopPublicId: "shop-alpha-public",
     Items: [
       {
         StoryItemId: "22222222-2222-4222-8222-222222222222",
@@ -28,6 +30,33 @@ test("mapPublicStory maps PascalCase storefront payload", () => {
   assert.equal(story?.items.length, 1);
   assert.equal(story?.items[0]?.ctaTarget, "/products");
   assert.equal(story?.items[0]?.durationMs, 5000);
+  assert.equal(story?.shopDisplayName, "فروشگاه آلفا");
+  assert.equal(story?.shopPublicId, "shop-alpha-public");
+});
+
+test("mapPublicStory keeps missing shop public id honest", () => {
+  const story = mapPublicStory({
+    storyId: "33333333-3333-4333-8333-333333333333",
+    title: "ویترین",
+    coverMediaUrl: null,
+    isVideo: false,
+    displayOrder: 0,
+    shopDisplayName: "ویترین اصلی",
+    shopPublicId: null,
+    items: [
+      {
+        storyItemId: "44444444-4444-4444-8444-444444444444",
+        mediaType: "image",
+        mediaUrl: "/x.jpg",
+        caption: null,
+        durationMs: null,
+        ctaType: "none",
+        ctaTarget: null,
+      },
+    ],
+  });
+  assert.equal(story?.shopDisplayName, "ویترین اصلی");
+  assert.equal(story?.shopPublicId, null);
 });
 
 test("mapAdminStory normalizes numeric status and items", () => {

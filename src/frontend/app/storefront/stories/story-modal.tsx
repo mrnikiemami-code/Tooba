@@ -1,17 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent, type TouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type TouchEvent } from "react";
 import {
-  Bookmark,
   Camera,
   ChevronLeft,
   ChevronRight,
   Clock,
-  Flag,
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Send,
   Share2,
   Volume2,
   VolumeX,
@@ -25,20 +19,12 @@ const toPersianDigits = (n: number | string | null | undefined) => {
   return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number.parseInt(d, 10)]!);
 };
 
-type StoryComment = {
-  id: number;
-  user: string;
-  avatar: string;
-  text: string;
-  time: string;
-};
-
-function progressStep(item: PublicStoryItem | undefined, isVideo: boolean): number {
+function imageProgressStep(item: PublicStoryItem | undefined): number {
   const durationMs = item?.durationMs;
   if (durationMs != null && durationMs > 0) {
     return 5000 / durationMs;
   }
-  return isVideo ? 0.3 : 1;
+  return 1;
 }
 
 function isExternalHttp(url: string): boolean {
@@ -63,8 +49,14 @@ function currentCta(
   return null;
 }
 
+function shopHref(story: PublicStoryCard | undefined, localizePath: (path: string) => string): string | null {
+  const publicId = story?.shopPublicId?.trim();
+  if (!publicId) return null;
+  return localizePath(`/seller-profile/${encodeURIComponent(publicId)}`);
+}
+
 /**
- * مودال استوری Shopeiva — کروم بصری/تعاملی دقیق با مدل آیتم‌های زنده.
+ * مودال استوری Shopeiva — کروم بصری حفظ‌شده؛ بدون لایک/کامنت/ذخیرهٔ جعلی؛ پیشرفت ویدیو از metadata واقعی.
  */
 export function StoryModal({
   isOpen,
@@ -80,17 +72,11 @@ export function StoryModal({
   const localizePath = useLocalizedPath();
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [commentText, setCommentText] = useState("");
-  const [showComments, setShowComments] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [showActions, setShowActions] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
-  const [comments, setComments] = useState<StoryComment[]>([]);
   const [mediaError, setMediaError] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -103,12 +89,14 @@ export function StoryModal({
   const totalStories = stories.length;
   const isVideo = (currentItem?.mediaType ?? (currentStory?.isVideo ? "video" : "image")) === "video";
   const mediaUrl = currentItem?.mediaUrl ?? currentStory?.coverMediaUrl ?? "";
-  const avatarUrl = currentStory?.coverMediaUrl ?? items[0]?.mediaUrl ?? "/images/stories/1.jpg";
+  const avatarUrl = currentStory?.coverMediaUrl ?? items[0]?.mediaUrl ?? "";
+  const shopName = currentStory?.shopDisplayName?.trim() || null;
+  const shopLink = shopHref(currentStory, localizePath);
 
   const goToNextItem = useCallback(() => {
-    setShowComments(false);
     setIsPaused(false);
     setProgress(0);
+    setShareNotice(null);
     if (currentItemIndex < items.length - 1) {
       setCurrentItemIndex((prev) => prev + 1);
       return;
@@ -122,9 +110,9 @@ export function StoryModal({
   }, [currentItemIndex, items.length, currentStoryIndex, totalStories, onClose]);
 
   const goToPrevItem = useCallback(() => {
-    setShowComments(false);
     setIsPaused(false);
     setProgress(0);
+    setShareNotice(null);
     if (currentItemIndex > 0) {
       setCurrentItemIndex((prev) => prev - 1);
       return;
@@ -148,18 +136,14 @@ export function StoryModal({
   }, [isOpen, initialStoryId, stories]);
 
   useEffect(() => {
-    setIsLiked(false);
-    setIsSaved(false);
-    setLikesCount(0);
-    setComments([]);
     setProgress(0);
-    setShowComments(false);
     setIsPaused(false);
     setMediaError(false);
+    setShareNotice(null);
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.muted = isMuted;
-      void videoRef.current.play();
+      void videoRef.current.play().catch(() => undefined);
     }
     // Intentionally omit isMuted — mute toggle must not reset progress.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,12 +151,37 @@ export function StoryModal({
 
   useEffect(() => {
     if (!isOpen || !currentStory || items.length === 0) return;
-    if (isPaused || showComments) {
+    if (isPaused) {
       if (progressTimer.current) clearInterval(progressTimer.current);
+      if (isVideo && videoRef.current) videoRef.current.pause();
       return;
     }
 
-    const step = progressStep(currentItem, isVideo);
+    if (isVideo) {
+      if (progressTimer.current) clearInterval(progressTimer.current);
+      const video = videoRef.current;
+      if (video) {
+        void video.play().catch(() => undefined);
+        const onTime = () => {
+          const duration = video.duration;
+          if (!Number.isFinite(duration) || duration <= 0) return;
+          setProgress(Math.min(100, (video.currentTime / duration) * 100));
+        };
+        const onEnded = () => {
+          setProgress(100);
+          goToNextItem();
+        };
+        video.addEventListener("timeupdate", onTime);
+        video.addEventListener("ended", onEnded);
+        return () => {
+          video.removeEventListener("timeupdate", onTime);
+          video.removeEventListener("ended", onEnded);
+        };
+      }
+      return;
+    }
+
+    const step = imageProgressStep(currentItem);
     progressTimer.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
@@ -187,7 +196,7 @@ export function StoryModal({
     return () => {
       if (progressTimer.current) clearInterval(progressTimer.current);
     };
-  }, [isOpen, isPaused, showComments, isVideo, currentStoryIndex, currentItemIndex, currentItem, currentStory, items.length, goToNextItem]);
+  }, [isOpen, isPaused, isVideo, currentStoryIndex, currentItemIndex, currentItem, currentStory, items.length, goToNextItem]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -204,52 +213,34 @@ export function StoryModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose, goToNextItem, goToPrevItem]);
 
-  const toggleLike = () => {
-    setIsLiked((prev) => !prev);
-    setLikesCount((prev) => (isLiked ? Math.max(0, prev - 1) : prev + 1));
-  };
-
-  const toggleSave = () => setIsSaved((prev) => !prev);
-
   const toggleMute = () => {
     setIsMuted((prev) => !prev);
     if (videoRef.current) videoRef.current.muted = !isMuted;
   };
 
-  const handleCommentSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        user: "شما",
-        avatar: "/images/stories/1.jpg",
-        text: commentText,
-        time: "اکنون",
-      },
-    ]);
-    setCommentText("");
-  };
-
   const handleShare = async () => {
+    const storyId = currentStory?.storyId;
+    if (!storyId) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("story", storyId);
+    const shareUrl = url.toString();
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "استوری توبا",
-          text: "این استوری رو ببین!",
-          url: window.location.href,
+          title: currentStory?.title ?? "استوری توبا",
+          text: shopName ? `${shopName} · ${currentStory?.title ?? ""}` : currentStory?.title ?? "استوری توبا",
+          url: shareUrl,
         });
+        return;
       } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") console.error("Share failed:", error);
+        if (error instanceof Error && error.name === "AbortError") return;
       }
-    } else {
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        alert("لینک کپی شد!");
-      } catch {
-        alert(`لینک: ${window.location.href}`);
-      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareNotice("لینک کپی شد");
+    } catch {
+      setShareNotice(shareUrl);
     }
   };
 
@@ -264,6 +255,9 @@ export function StoryModal({
     if (cta.type === "external" || isExternalHttp(target)) {
       if (!isExternalHttp(target)) return;
       window.location.href = target;
+      return;
+    }
+    if (/^[0-9a-fA-F-]{36}$/.test(target)) {
       return;
     }
     const path = target.startsWith("/") ? target : `/${target}`;
@@ -293,7 +287,6 @@ export function StoryModal({
     <div
       data-testid="story-modal"
       className="fixed inset-0 z-[200] bg-black flex items-center justify-center p-2 sm:p-4"
-      onClick={() => setShowActions(false)}
     >
       <div
         className="relative w-full max-w-4xl h-[90vh] max-h-[750px] bg-black rounded-3xl overflow-hidden shadow-2xl"
@@ -327,6 +320,7 @@ export function StoryModal({
             onClose();
           }}
           className="absolute top-3 right-3 z-30 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-all border border-white/10"
+          aria-label="بستن"
         >
           <X className="w-5 h-5" />
         </button>
@@ -339,7 +333,6 @@ export function StoryModal({
               src={mediaUrl}
               className="w-full h-full object-contain"
               muted={isMuted}
-              loop
               playsInline
               autoPlay
               onError={() => setMediaError(true)}
@@ -349,7 +342,7 @@ export function StoryModal({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={mediaUrl}
-              alt="Story"
+              alt={currentStory.title}
               className="w-full h-full object-contain"
               onError={() => setMediaError(true)}
               onLoad={() => setMediaError(false)}
@@ -357,11 +350,20 @@ export function StoryModal({
           )}
 
           {mediaError ? (
-            <div className="w-full h-full flex items-center justify-center text-white/30 absolute inset-0">
-              <div className="text-center">
+            <div className="w-full h-full flex items-center justify-center text-white/30 absolute inset-0 bg-black/60">
+              <div className="text-center px-4">
                 <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-sm">محتوایی برای نمایش وجود ندارد</p>
-                <p className="text-xs text-white/20 mt-2">مسیر: {mediaUrl}</p>
+                <p className="text-sm text-white/80">نمایش این بخش ممکن نشد</p>
+                <button
+                  type="button"
+                  className="mt-4 min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-bold text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToNextItem();
+                  }}
+                >
+                  برو به اسلاید بعد
+                </button>
               </div>
             </div>
           ) : null}
@@ -373,6 +375,7 @@ export function StoryModal({
               goToPrevItem();
             }}
             className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-all border border-white/10"
+            aria-label="قبلی"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -383,55 +386,48 @@ export function StoryModal({
               goToNextItem();
             }}
             className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-all border border-white/10"
+            aria-label="بعدی"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
           <div className="absolute top-12 left-4 right-4 z-20 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={avatarUrl} alt={currentStory.title} width={40} height={40} className="object-cover w-full h-full" loading="lazy" />
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary bg-black/40">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" width={40} height={40} className="object-cover w-full h-full" loading="lazy" />
+              ) : null}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-white font-bold text-sm">{currentStory.title}</span>
-                <span className="text-white/50 text-xs">@story</span>
+                <span className="text-white font-bold text-sm truncate">{currentStory.title}</span>
               </div>
-              <div className="flex items-center gap-2 text-white/40 text-xs">
-                <Clock className="w-3 h-3" />
-                <span>اکنون</span>
+              <div className="flex items-center gap-2 text-white/70 text-xs">
+                <Clock className="w-3 h-3 shrink-0" />
+                {shopLink && shopName ? (
+                  <a
+                    href={shopLink}
+                    className="truncate underline-offset-2 hover:underline"
+                    data-testid="story-shop-link"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {shopName}
+                  </a>
+                ) : (
+                  <span className="truncate" data-testid="story-shop-name">
+                    {shopName ?? "ویترین اصلی"}
+                  </span>
+                )}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowActions((prev) => !prev);
-              }}
-              className="text-white/60 hover:text-white transition-colors p-2"
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
           </div>
-
-          {showActions ? (
-            <div
-              className="absolute top-20 left-4 right-4 z-30 bg-black/80 backdrop-blur-md rounded-xl p-3 border border-white/10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button type="button" className="flex items-center gap-3 w-full p-2 text-white hover:bg-surface/10 rounded-lg transition-colors">
-                <Flag className="w-4 h-4 text-danger" />
-                <span className="text-sm">گزارش مشکل</span>
-              </button>
-            </div>
-          ) : null}
 
           {cta ? (
             <div className="absolute bottom-20 left-4 right-4 z-20 flex justify-center">
               <button
                 type="button"
                 onClick={handleCta}
-                className="px-6 py-2.5 rounded-full bg-primary text-white text-sm font-bold shadow-lg hover:bg-primary-strong transition-colors"
+                className="px-6 py-2.5 rounded-full bg-primary text-white text-sm font-bold shadow-lg hover:bg-primary-strong transition-colors min-h-11"
               >
                 مشاهده
               </button>
@@ -444,43 +440,11 @@ export function StoryModal({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggleLike();
-                }}
-                className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10 group relative"
-              >
-                <Heart
-                  className={`w-6 h-6 transition-all ${isLiked ? "text-primary fill-primary scale-110" : "text-white group-hover:text-primary"}`}
-                />
-                {likesCount > 0 ? (
-                  <span className="absolute -top-1 -right-1 text-[10px] text-white bg-primary px-1.5 py-0.5 rounded-full">
-                    {toPersianDigits(likesCount)}
-                  </span>
-                ) : null}
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowComments((prev) => !prev);
-                }}
-                className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10 relative"
-              >
-                <MessageCircle className="w-6 h-6 text-white" />
-                {comments.length > 0 ? (
-                  <span className="absolute -top-1 -right-1 text-[10px] text-white bg-primary px-1.5 py-0.5 rounded-full">
-                    {toPersianDigits(comments.length)}
-                  </span>
-                ) : null}
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
                   void handleShare();
                 }}
-                className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10"
+                className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10 min-h-11 min-w-11 flex items-center justify-center"
+                aria-label="اشتراک"
+                data-testid="story-share"
               >
                 <Share2 className="w-6 h-6 text-white" />
               </button>
@@ -492,72 +456,19 @@ export function StoryModal({
                     e.stopPropagation();
                     toggleMute();
                   }}
-                  className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10"
+                  className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10 min-h-11 min-w-11 flex items-center justify-center"
+                  aria-label={isMuted ? "صدا روشن" : "صدا خاموش"}
                 >
                   {isMuted ? <VolumeX className="w-6 h-6 text-white" /> : <Volume2 className="w-6 h-6 text-white" />}
                 </button>
               ) : null}
             </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleSave();
-                }}
-                className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10"
-              >
-                <Bookmark className={`w-6 h-6 transition-all ${isSaved ? "text-primary fill-primary" : "text-white"}`} />
-              </button>
-            </div>
+            {shareNotice ? (
+              <span className="text-xs text-white/80 bg-black/50 rounded-full px-3 py-1" data-testid="story-share-notice">
+                {shareNotice}
+              </span>
+            ) : null}
           </div>
-
-          {showComments ? (
-            <div
-              className="absolute bottom-16 left-0 right-0 z-20 bg-black/80 backdrop-blur-md rounded-t-2xl max-h-[250px] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-3 max-h-[190px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                {comments.length === 0 ? (
-                  <p className="text-white/50 text-center text-sm py-4">هنوز کامنتی ثبت نشده</p>
-                ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="flex items-start gap-2 mb-3">
-                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={comment.avatar} alt={comment.user} width={32} height={32} className="object-cover w-full h-full" loading="lazy" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-white text-xs font-bold">{comment.user}</span>
-                          <span className="text-white/30 text-[10px]">{comment.time}</span>
-                        </div>
-                        <p className="text-white/80 text-sm">{comment.text}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <form onSubmit={handleCommentSubmit} className="p-2 border-t border-white/10 flex items-center gap-2 bg-black/40">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="نظرت چیه؟..."
-                  className="flex-1 bg-surface/10 text-white placeholder-white/40 text-sm rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-primary"
-                />
-                <button
-                  type="submit"
-                  disabled={!commentText.trim()}
-                  className="p-2 rounded-full bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-strong transition-colors"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
-            </div>
-          ) : null}
 
           <div className="absolute top-16 right-1/2 translate-x-1/2 z-20 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-white/60 text-xs">
             {toPersianDigits(currentStoryIndex + 1)} / {toPersianDigits(totalStories)}

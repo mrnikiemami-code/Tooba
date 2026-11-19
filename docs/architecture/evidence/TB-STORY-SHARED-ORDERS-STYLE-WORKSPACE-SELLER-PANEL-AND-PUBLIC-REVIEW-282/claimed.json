@@ -1,0 +1,10 @@
+﻿{
+    "bridgeRowId":  "c79810ad-6724-4071-a9fd-e5d61fdf2b56",
+    "claimHeadSha":  "c9ba2296a3adfbb6f6ed2638df65957f4c3f391c",
+    "workerId":  "tooba-worker-01",
+    "claimedAtUtc":  "2026-11-19T03:12:14.7293281Z",
+    "taskId":  "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282",
+    "expectedBaseSha":  "c9ba2296a3adfbb6f6ed2638df65957f4c3f391c",
+    "taskContentSha256":  "2EB89584B35746426911943E163BA8233D184B71DCA366061E1B4892AB93F129",
+    "contentBytes":  17754
+}

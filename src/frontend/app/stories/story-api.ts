@@ -1,4 +1,4 @@
-/**
+﻿/**
  * کلاینت عمومی/ادمین Story — فقط دادهٔ زندهٔ Host.
  */
 
@@ -13,10 +13,20 @@ import {
   SELLER_PARTY_STORAGE_KEY,
 } from "../vendor-panel/seller-api.ts";
 
-/** Stable occurrence for one reviewed mutation act; reuse on retry of the same act. */
+/**
+ * Reuse the frozen occurrence for the same reviewed act.
+ * Never mint a new key here — callers use newStoryOccurrenceKey() only for a deliberately NEW act.
+ */
 export function storyOccurrenceKey(existing?: string | null): string {
   const trimmed = existing?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : crypto.randomUUID();
+  if (!trimmed) {
+    throw new Error("story.occurrence.required");
+  }
+  return trimmed;
+}
+
+export function newStoryOccurrenceKey(): string {
+  return crypto.randomUUID();
 }
 
 export interface PublicStoryItem {
@@ -38,6 +48,9 @@ export interface PublicStoryCard {
   ctaType: string;
   ctaTarget: string | null;
   items: PublicStoryItem[];
+  sellerPartyId?: string | null;
+  shopDisplayName?: string | null;
+  shopPublicId?: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
   /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
@@ -191,6 +204,9 @@ export function mapPublicStory(value: unknown): PublicStoryCard | null {
     ctaType: text(prop(item, "ctaType", "CtaType"), "none"),
     ctaTarget: nullableText(prop(item, "ctaTarget", "CtaTarget")),
     items,
+    sellerPartyId: nullableText(prop(item, "sellerPartyId", "SellerPartyId")),
+    shopDisplayName: nullableText(prop(item, "shopDisplayName", "ShopDisplayName")),
+    shopPublicId: nullableText(prop(item, "shopPublicId", "ShopPublicId")),
   };
 }
 
@@ -394,7 +410,7 @@ export async function createAdminStory(input: {
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
         sellerPartyId: input.sellerPartyId ?? null,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     const payload = await response.json().catch(() => null);
@@ -434,7 +450,7 @@ export async function updateAdminStory(
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
         expectedVersion: input.expectedVersion,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return adminJsonResult(response, mapAdminStory);
@@ -452,7 +468,7 @@ export async function enableAdminStory(
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/enable`, {
       method: "POST",
       headers: adminHeaders(true),
-      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey) }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()) }),
     });
     return response.ok;
   } catch {
@@ -469,7 +485,7 @@ export async function disableAdminStory(
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/disable`, {
       method: "POST",
       headers: adminHeaders(true),
-      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey) }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()) }),
     });
     return response.ok;
   } catch {
@@ -494,10 +510,112 @@ export async function scheduleAdminStory(
         startAt: input.startAt ?? null,
         endAt: input.endAt ?? null,
         expectedVersion: input.expectedVersion,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function getAdminStory(storyId: string): Promise<AdminResult<AdminStorySnapshot>> {
+  try {
+    const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}`, {
+      headers: adminHeaders(),
+    });
+    return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+/** Platform admin Media upload (library). */
+export async function uploadAdminStoryMedia(
+  file: File,
+  occurrenceKey: string,
+): Promise<AdminResult<{ mediaAssetId: string; contentType: string; displayUrl: string | null }>> {
+  try {
+    const body = new FormData();
+    body.append("files", file);
+    body.append("occurrenceKey", storyOccurrenceKey(occurrenceKey));
+    const headers = adminHeaders(false);
+    delete headers["Content-Type"];
+    const response = await fetch("/v1/admin/media/upload", {
+      method: "POST",
+      headers,
+      body,
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      return { state: "error", data: null, status: response.status, message: `admin.http.${response.status}` };
+    }
+    const payload = await response.json().catch(() => null);
+    const rows = Array.isArray(payload) ? payload : Array.isArray(recordOf(payload)?.items) ? (recordOf(payload)!.items as unknown[]) : [payload];
+    const first = recordOf(rows[0]);
+    const mediaAssetId =
+      text(prop(first ?? {}, "mediaAssetId", "MediaAssetId")) ||
+      text(prop(first ?? {}, "id", "Id"));
+    if (!mediaAssetId) {
+      return { state: "error", data: null, status: response.status, message: "invalid-response" };
+    }
+    return {
+      state: "ok",
+      data: {
+        mediaAssetId,
+        contentType: text(prop(first ?? {}, "contentType", "ContentType")) || file.type,
+        displayUrl:
+          nullableText(prop(first ?? {}, "displayUrl", "DisplayUrl")) ??
+          nullableText(prop(first ?? {}, "url", "Url")),
+      },
+      status: response.status,
+    };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+/** Admin upload owning a shop's Story media. */
+export async function uploadAdminStoryMediaForShop(
+  file: File,
+  sellerPartyId: string,
+  occurrenceKey: string,
+): Promise<AdminResult<{ mediaAssetId: string; contentType: string; displayUrl: string | null }>> {
+  try {
+    const body = new FormData();
+    body.append("file", file);
+    body.append("sellerPartyId", sellerPartyId);
+    body.append("occurrenceKey", storyOccurrenceKey(occurrenceKey));
+    const headers = adminHeaders(false);
+    delete headers["Content-Type"];
+    const response = await fetch("/v1/admin/media/upload-for-shop", {
+      method: "POST",
+      headers,
+      body,
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      return { state: "error", data: null, status: response.status, message: `admin.http.${response.status}` };
+    }
+    const payload = await response.json().catch(() => null);
+    const row = recordOf(payload);
+    const mediaAssetId = text(prop(row ?? {}, "mediaAssetId", "MediaAssetId"));
+    if (!mediaAssetId) {
+      return { state: "error", data: null, status: response.status, message: "invalid-response" };
+    }
+    return {
+      state: "ok",
+      data: {
+        mediaAssetId,
+        contentType: text(prop(row ?? {}, "contentType", "ContentType")) || file.type,
+        displayUrl: nullableText(prop(row ?? {}, "displayUrl", "DisplayUrl")),
+      },
+      status: response.status,
+    };
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
@@ -507,6 +625,7 @@ export async function addAdminStoryItem(
   storyId: string,
   input: {
     mediaType: string;
+    mediaAssetId?: string | null;
     mediaUrl?: string | null;
     caption?: string | null;
     durationMs?: number | null;
@@ -522,7 +641,7 @@ export async function addAdminStoryItem(
       headers: adminHeaders(true),
       body: JSON.stringify({
         mediaType: input.mediaType,
-        mediaAssetId: null,
+        mediaAssetId: input.mediaAssetId ?? null,
         mediaUrl: input.mediaUrl ?? null,
         caption: input.caption ?? null,
         durationMs: input.durationMs ?? null,
@@ -530,7 +649,7 @@ export async function addAdminStoryItem(
         ctaTarget: input.ctaTarget ?? null,
         displayOrder: null,
         expectedVersion: input.expectedVersion,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return adminJsonResult(response, mapAdminStory);
@@ -553,7 +672,7 @@ export async function removeAdminStoryItem(
         headers: adminHeaders(true),
         body: JSON.stringify({
           expectedVersion,
-          occurrenceKey: storyOccurrenceKey(occurrenceKey),
+          occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()),
         }),
       },
     );
@@ -575,7 +694,7 @@ export async function reorderAdminStories(
       body: JSON.stringify({
         storyIds,
         expectedVersions,
-        occurrenceKey: storyOccurrenceKey(occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     if (response.status === 401 || response.status === 403) {
@@ -601,7 +720,7 @@ export async function approveAdminStory(
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/approve`, {
       method: "POST",
       headers: adminHeaders(true),
-      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey) }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()) }),
     });
     return adminJsonResult(response, mapAdminStory);
   } catch {
@@ -618,7 +737,7 @@ export async function approveAndPublishAdminStory(
     const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/approve-and-publish`, {
       method: "POST",
       headers: adminHeaders(true),
-      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey) }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()) }),
     });
     return adminJsonResult(response, mapAdminStory);
   } catch {
@@ -643,7 +762,7 @@ export async function approveAndScheduleAdminStory(
         expectedVersion: input.expectedVersion,
         startAt: input.startAt ?? null,
         endAt: input.endAt ?? null,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return adminJsonResult(response, mapAdminStory);
@@ -665,7 +784,7 @@ export async function rejectAdminStory(
       body: JSON.stringify({
         reason,
         expectedVersion,
-        occurrenceKey: storyOccurrenceKey(occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return adminJsonResult(response, mapAdminStory);
@@ -679,11 +798,13 @@ type StoryMutationInput = {
   locale?: string | null;
   market?: string | null;
   coverMediaUrl?: string | null;
+  coverMediaAssetId?: string | null;
   displayOrder?: number | null;
   ctaType?: string | null;
   ctaTarget?: string | null;
   expectedVersion?: number | null;
   occurrenceKey?: string | null;
+  sellerPartyId?: string | null;
 };
 
 type StoryItemMutationInput = {
@@ -757,6 +878,53 @@ export async function getSellerStory(
   }
 }
 
+/** Upload a seller Story media file; returns Ready asset id. */
+export async function uploadSellerStoryMedia(
+  file: File,
+  occurrenceKey: string,
+  sellerPartyId?: string | null,
+): Promise<AdminResult<{ mediaAssetId: string; contentType: string; displayUrl: string | null }>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const body = new FormData();
+    body.append("file", file);
+    body.append("occurrenceKey", storyOccurrenceKey(occurrenceKey));
+    const headers = sellerStoryHeaders(partyId, false);
+    delete headers["Content-Type"];
+    const response = await fetch("/v1/seller/media", {
+      method: "POST",
+      headers,
+      body,
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "seller.authorization.denied" };
+    }
+    if (!response.ok) {
+      return { state: "error", data: null, status: response.status, message: `seller.http.${response.status}` };
+    }
+    const payload = await response.json().catch(() => null);
+    const row = recordOf(payload);
+    const mediaAssetId = text(prop(row ?? {}, "mediaAssetId", "MediaAssetId"));
+    if (!mediaAssetId) {
+      return { state: "error", data: null, status: response.status, message: "invalid-response" };
+    }
+    return {
+      state: "ok",
+      data: {
+        mediaAssetId,
+        contentType: text(prop(row ?? {}, "contentType", "ContentType")),
+        displayUrl: nullableText(prop(row ?? {}, "displayUrl", "DisplayUrl")),
+      },
+      status: response.status,
+    };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
 export async function createSellerStory(
   input: StoryMutationInput,
   sellerPartyId?: string | null,
@@ -771,12 +939,12 @@ export async function createSellerStory(
         title: input.title,
         locale: input.locale ?? null,
         market: input.market ?? null,
-        coverMediaAssetId: null,
+        coverMediaAssetId: input.coverMediaAssetId ?? null,
         coverMediaUrl: input.coverMediaUrl ?? null,
         displayOrder: input.displayOrder ?? null,
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     const payload = await response.json().catch(() => null);
@@ -807,12 +975,12 @@ export async function updateSellerStory(
         title: input.title,
         locale: input.locale ?? null,
         market: input.market ?? null,
-        coverMediaAssetId: null,
+        coverMediaAssetId: input.coverMediaAssetId ?? null,
         coverMediaUrl: input.coverMediaUrl ?? null,
         ctaType: input.ctaType ?? "none",
         ctaTarget: input.ctaTarget ?? null,
         expectedVersion: input.expectedVersion ?? null,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return sellerJsonResult(response, mapAdminStory);
@@ -837,7 +1005,7 @@ export async function submitSellerStory(
       headers: sellerStoryHeaders(partyId, true),
       body: JSON.stringify({
         expectedVersion: expectedVersion ?? null,
-        occurrenceKey: storyOccurrenceKey(occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return sellerJsonResult(response, mapAdminStory);
@@ -860,7 +1028,7 @@ export async function returnSellerStoryToDraft(
     const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/return-to-draft`, {
       method: "POST",
       headers: sellerStoryHeaders(partyId, true),
-      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey) }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()) }),
     });
     return sellerJsonResult(response, mapAdminStory);
   } catch {
@@ -882,7 +1050,7 @@ export async function stopSellerStory(
     const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/stop`, {
       method: "POST",
       headers: sellerStoryHeaders(partyId, true),
-      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey) }),
+      body: JSON.stringify({ expectedVersion, occurrenceKey: storyOccurrenceKey(occurrenceKey ?? newStoryOccurrenceKey()) }),
     });
     return sellerJsonResult(response, mapAdminStory);
   } catch {
@@ -975,7 +1143,7 @@ export async function addSellerStoryItem(
         ctaTarget: input.ctaTarget ?? null,
         displayOrder: null,
         expectedVersion: input.expectedVersion ?? null,
-        occurrenceKey: storyOccurrenceKey(input.occurrenceKey),
+        occurrenceKey: storyOccurrenceKey(input.occurrenceKey ?? newStoryOccurrenceKey()),
       }),
     });
     return sellerJsonResult(response, mapAdminStory);

@@ -43,8 +43,15 @@ export function HomeStoriesSection({
     let cancelled = false;
     void fetchPublicStories(locale).then((rows) => {
       if (cancelled) return;
-      setStories(rows.filter((story) => story.items.length > 0));
+      const eligible = rows.filter((story) => story.items.length > 0);
+      setStories(eligible);
       setLoaded(true);
+      if (typeof window === "undefined") return;
+      const wanted = new URLSearchParams(window.location.search).get("story");
+      if (wanted && eligible.some((s) => s.storyId === wanted)) {
+        setSelectedStoryId(wanted);
+        setModalOpen(true);
+      }
     });
     return () => {
       cancelled = true;
@@ -218,7 +225,7 @@ export function HomeStoriesSection({
                       </div>
 
                       <span className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400 font-medium truncate w-[80px] md:w-[100px] text-center group-hover:text-primary transition-colors">
-                        {story.title}
+                        {story.shopDisplayName?.trim() || story.title}
                       </span>
 
                       <div

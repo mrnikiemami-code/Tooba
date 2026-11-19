@@ -47,6 +47,8 @@ test("gift cards admin list uses direct AppDataGrid", () => {
 test("stories management uses direct AppDataGrid", () => {
   assert.match(storyScreen, /AppDataGrid/);
   assert.match(storyScreen, /queryAdminStoriesGrid/);
+  assert.match(storyScreen, /querySellerStories/);
+  assert.doesNotMatch(storyScreen, /createClientGridQueryAdapter/);
   assert.doesNotMatch(storyScreen, /LegacyAppDataGrid/);
 });
 

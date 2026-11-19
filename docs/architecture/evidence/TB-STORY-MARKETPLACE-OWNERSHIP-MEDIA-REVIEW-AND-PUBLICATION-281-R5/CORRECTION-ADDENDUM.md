@@ -12,3 +12,7 @@ R4 historical RESULT/RECEIPTS/matrix files are **not rewritten**. This addendum 
 | C1 fresh context + expired + admin grid shop filter | Same context; no expired; no AdminStoryGridQueryEngine | C2 fresh-context package |
 | C2 two-context EF concurrency + winner | EnsureExpectedVersion direct + raw insert | C2 two-context owning command stale; A4 winner fold |
 | C3 Media committedRows=0 independent + caller entity | Printed phrase; no staged caller entity; same-context after-save | C3 real caller entity + fresh context + independent occ count |
+
+## C2 two-context clarification (closed by TB-282 Gate0c)
+
+R5 C2 «two-context» owning proof covers a **stale ExpectedVersion** command path (writer2 starts after writer1 committed a new version). It does **not** by itself prove two contexts that both preload the **same original** tracked Story before writer1 SaveChanges. TB-282 Gate0c adds that real optimistic-concurrency branch with typed loser and no extra occurrence (`StoryMarketplace282Gate0Tests`). R5 historical RESULT text is not rewritten.

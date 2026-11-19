@@ -8,6 +8,7 @@ using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Contracts.Errors;
 using Tooba.Story.Domain.Aggregates;
 using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
+using StoryItem = Tooba.Story.Domain.Aggregates.StoryItem;
 
 namespace Tooba.Story.Infrastructure.Directories;
 
@@ -115,12 +116,32 @@ public sealed partial class StoryDirectory
                 _db.StoryItems.Add(item);
         }
 
+        var staged = RequireStagedOccurrence(story.TenantId, occurrenceKey);
         var winnerStoryId = await SaveChangesWithOccurrenceArbitrationAsync(
-            story.TenantId, occurrenceKey, intentHash, cancellationToken);
+            story.TenantId,
+            occurrenceKey,
+            intentHash,
+            staged.ActionCode,
+            staged.SellerPartyId,
+            expectedStoryId: story.StoryId,
+            attemptStoryId: story.StoryId,
+            cancellationToken);
         if (winnerStoryId is null)
             return story;
         return await LoadStoryAsync(story.TenantId, winnerStoryId.Value, track: false, cancellationToken)
             ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
+    }
+
+    private StoryCommandOccurrence RequireStagedOccurrence(Guid tenantId, string occurrenceKey)
+    {
+        var key = occurrenceKey.Trim();
+        var staged = _db.ChangeTracker.Entries<StoryCommandOccurrence>()
+            .Select(entry => entry.Entity)
+            .FirstOrDefault(row =>
+                row.TenantId == tenantId
+                && string.Equals(row.OccurrenceKey, key, StringComparison.Ordinal));
+        return staged
+            ?? throw new SemanticException(new SemanticError(StoryErrorCodes.OccurrenceRequired));
     }
 
     /// <returns>شناسهٔ story برنده در fold؛ null اگر همین attempt ذخیره شده باشد.</returns>
@@ -128,6 +149,10 @@ public sealed partial class StoryDirectory
         Guid tenantId,
         string occurrenceKey,
         string intentHash,
+        string actionCode,
+        Guid? sellerPartyId,
+        Guid? expectedStoryId,
+        Guid attemptStoryId,
         CancellationToken cancellationToken)
     {
         try
@@ -137,25 +162,40 @@ public sealed partial class StoryDirectory
         }
         catch (DbUpdateConcurrencyException)
         {
-            DetachAttemptOccurrences(occurrenceKey, tenantId);
+            DetachAttemptOwned(occurrenceKey, tenantId, attemptStoryId);
             throw new SemanticException(new SemanticError(StoryErrorCodes.VersionStale));
         }
         catch (DbUpdateException ex) when (IsCommandOccurrenceUniqueViolation(ex))
         {
-            DetachAttemptOccurrences(occurrenceKey, tenantId);
+            DetachAttemptOwned(occurrenceKey, tenantId, attemptStoryId);
             var winner = await _db.CommandOccurrences.AsNoTracking()
                 .FirstOrDefaultAsync(
                     row => row.OccurrenceKey == occurrenceKey && row.TenantId == tenantId,
                     cancellationToken);
             if (winner is null)
                 throw;
-            if (!string.Equals(winner.IntentHash, intentHash, StringComparison.Ordinal))
+            // Same full identity as TryReplayMappedAsync — hash alone must never bind a foreign shop/action/target.
+            if (!AnswersOccurrenceIdentity(winner, actionCode, intentHash, sellerPartyId, expectedStoryId))
                 throw new SemanticException(new SemanticError(StoryErrorCodes.OccurrenceConflict));
             return winner.StoryId;
         }
     }
 
-    private void DetachAttemptOccurrences(string occurrenceKey, Guid tenantId)
+    private static bool AnswersOccurrenceIdentity(
+        StoryCommandOccurrence existing,
+        string actionCode,
+        string intentHash,
+        Guid? sellerPartyId,
+        Guid? expectedStoryId) =>
+        string.Equals(existing.ActionCode, actionCode, StringComparison.Ordinal)
+        && string.Equals(existing.IntentHash, intentHash, StringComparison.Ordinal)
+        && existing.SellerPartyId == sellerPartyId
+        && (expectedStoryId is not Guid requiredStory || existing.StoryId == requiredStory);
+
+    /// <summary>
+    /// فقط state همین attempt (occurrence + story/آیتم‌های staged) را detach می‌کند؛ ChangeTracker.Clear ممنوع.
+    /// </summary>
+    private void DetachAttemptOwned(string occurrenceKey, Guid tenantId, Guid attemptStoryId)
     {
         foreach (var entry in _db.ChangeTracker.Entries<StoryCommandOccurrence>().ToList())
         {
@@ -163,6 +203,25 @@ public sealed partial class StoryDirectory
                 continue;
             if (!string.Equals(entry.Entity.OccurrenceKey, occurrenceKey, StringComparison.Ordinal)
                 || entry.Entity.TenantId != tenantId)
+                continue;
+            entry.State = EntityState.Detached;
+        }
+
+        foreach (var entry in _db.ChangeTracker.Entries<StoryEntity>().ToList())
+        {
+            if (entry.State is EntityState.Detached or EntityState.Unchanged)
+                continue;
+            // attemptStoryId Empty = multi-row command (e.g. reorder); otherwise only this story.
+            if (attemptStoryId != Guid.Empty && entry.Entity.StoryId != attemptStoryId)
+                continue;
+            entry.State = EntityState.Detached;
+        }
+
+        foreach (var entry in _db.ChangeTracker.Entries<StoryItem>().ToList())
+        {
+            if (entry.State is EntityState.Detached or EntityState.Unchanged)
+                continue;
+            if (attemptStoryId != Guid.Empty && entry.Entity.StoryId != attemptStoryId)
                 continue;
             entry.State = EntityState.Detached;
         }
