@@ -1,5 +1,7 @@
 # CURRENT — TB-282 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
+R5 Architect review accepted A1/A2/A3 + Media guard progress; residual Gate0 (full occurrence identity, losing-entry detach, real EF concurrency) closed inside 282. Read `docs/architecture/evidence/TB-STORY-MARKETPLACE-OWNERSHIP-MEDIA-REVIEW-AND-PUBLICATION-281-R5/ARCHITECT-REVIEW.md`. No standalone R6.
+
 ## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
 
 استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. مرجع: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پنل/منو/ورود موازی ساخته نشد.
