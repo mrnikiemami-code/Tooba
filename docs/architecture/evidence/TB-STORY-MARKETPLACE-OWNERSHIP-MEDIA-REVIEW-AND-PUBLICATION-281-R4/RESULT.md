@@ -44,5 +44,14 @@ NOT Architect ACCEPT. NOT user acceptance. UI delivery PLANNED_NOT_ISSUED.
 - Live Story/Media business write: ZERO
 - Host refreshed with `TOOBA_SKIP_DEVELOPMENT_BOOTSTRAP=1` (see RECEIPTS)
 
+## Host / FE served
+
+- Host PID `49032`, dll SHA256 `191F4065BAE8CD959D183E95C3616694368366C1553D2DB70FAD35938ACF7A33`, `/health` 200, `/health/ready` 200, commerce `store-alpha`
+- Next BUILD_ID `17KblHHXwQQZBXZOOQ8u5`, PID `49844`, `/fa` 200
+
 automaticNextImplementationTask: NONE
 Stop-State: STOP_FOR_ARCHITECT
+
+## Final SHA
+
+- Code/Evidence HEAD after push: `1c7a7789344f1367875f882b687aa608dd5a0fdd` (== origin/main after push)
