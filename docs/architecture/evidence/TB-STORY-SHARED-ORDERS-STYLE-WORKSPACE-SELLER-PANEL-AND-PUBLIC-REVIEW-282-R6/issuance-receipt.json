@@ -1,0 +1,11 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R6",
+  "expectedBaseSha": "5a0b341ab5d3fcd7ab8539d3f5c488562529dd6b",
+  "issuedDate": "2026-11-19",
+  "timezone": "Asia/Tehran",
+  "taskSha256": "50d6c70ee6cde9d0365c13004452e14b64f86d23b34bbbab0c0ac048e9f82749",
+  "state": "ISSUED_NOT_CLAIMED",
+  "channel": "tooba-main",
+  "workerId": "tooba-worker-01",
+  "reason": "Owner rejected served merchant UX; one consolidated repair; downloadable exact envelope; Bridge dispatch/claim not performed by Architect"
+}
