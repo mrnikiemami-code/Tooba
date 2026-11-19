@@ -116,6 +116,12 @@ test("R12: create form keeps end fields mounted; checkbox outside columns; value
   const nested = section.querySelector('label label');
   assert.equal(nested, null);
 
+  const endHeader = q(section, '[data-testid="story-create-window-end-header"]');
+  assert.ok(endHeader.contains(q(section, '[data-testid="story-create-window-no-end"]')));
+  const legend = section.querySelector("legend");
+  assert.ok(legend);
+  assert.equal(legend.querySelector('[data-testid="story-create-window-no-end"]'), null);
+
   const noEnd = q(section, '[data-testid="story-create-window-no-end"]') as HTMLInputElement;
   assert.equal(noEnd.checked, true);
   await click(noEnd);

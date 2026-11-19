@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Eye, Send, Trash2 } from "lucide-react";
+import { Check, Eye, Send, Trash2, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   AppDataGrid,
@@ -11,7 +11,7 @@ import {
   adminGridQueryAdapter,
   useLegacyAdminGridDirectProps,
 } from "../../../design-system";
-import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
+import type { GridBulkAction, GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-system/app-data-grid/app-grid-row-actions";
 import { ADMIN_STORY_GRID_VIEW_KEY } from "../../admin/saved-view-store";
 import { formatAdminDate, type AdminLoadState } from "../../admin/admin-api";
@@ -50,6 +50,13 @@ import {
 } from "./story-intent";
 import { readStoryScope, subscribeStoryScope } from "./story-scope";
 import { createScopedStorySavedViewStore } from "./story-saved-views";
+import {
+  classifyAdminOp,
+  executeAdminOpBatch,
+  summarizeAdminBatch,
+  type StoryAdminOpKind,
+  type StoryAdminOpPlan,
+} from "./story-admin-ops";
 
 const SELLER_STORY_GRID_VIEW_KEY = "seller.stories.grid.v1";
 
@@ -140,7 +147,7 @@ function isVideoFile(file: File | null): boolean {
   return file.type.startsWith("video/") || /\.(mp4|webm|mov)$/i.test(file.name);
 }
 
-/** بازهٔ انتشار مشترک ساخت/ویرایش — بدون‌پایان در هدر؛ ستون‌های شروع/پایان پایدار. */
+/** بازهٔ انتشار مشترک — «بدون پایان» کنار برچسب پایان؛ ستون‌ها هم‌ارتفاع. */
 function StoryPublicationWindowFields({
   testIdPrefix,
   copy,
@@ -171,28 +178,15 @@ function StoryPublicationWindowFields({
       data-testid={testIdPrefix === "story-create-window" ? "story-create-publication-window" : "story-edit-publication-window"}
     >
       <legend className="float-none mb-1 w-full px-0">
-        <span className="flex flex-wrap items-center justify-between gap-2 gap-y-2">
-          <span className="text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</span>
-          <span className="flex min-h-11 items-center gap-2 text-sm font-normal">
-            <input
-              id={noEndId}
-              type="checkbox"
-              className="h-4 w-4"
-              checked={noPublicationEnd}
-              onChange={(e) => onNoEndChange(e.target.checked)}
-              data-testid={noEndId}
-            />
-            <label htmlFor={noEndId} className="cursor-pointer select-none">
-              {copy.publicationNoEndToggle}
-            </label>
-          </span>
-        </span>
+        <span className="text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</span>
       </legend>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2 text-sm">
-          <p id={startDayId} className="text-gray-600">
-            {copy.publicationStartLabel}
-          </p>
+          <div className="flex min-h-11 items-center">
+            <p id={startDayId} className="text-gray-600">
+              {copy.publicationStartLabel}
+            </p>
+          </div>
           <div data-testid={`${testIdPrefix}-start-day`}>
             <JalaliDatePicker
               ariaLabel={copy.publicationStartLabel}
@@ -211,9 +205,24 @@ function StoryPublicationWindowFields({
           />
         </div>
         <div className={`space-y-2 text-sm ${endDisabled ? "opacity-55" : ""}`}>
-          <p id={endDayId} className="text-gray-600">
-            {copy.publicationEndLabel}
-          </p>
+          <div className="flex min-h-11 flex-wrap items-center gap-2" data-testid={`${testIdPrefix}-end-header`}>
+            <p id={endDayId} className="text-gray-600">
+              {copy.publicationEndLabel}
+            </p>
+            <span className="inline-flex items-center gap-2 text-sm font-normal text-gray-700">
+              <input
+                id={noEndId}
+                type="checkbox"
+                className="h-4 w-4"
+                checked={noPublicationEnd}
+                onChange={(e) => onNoEndChange(e.target.checked)}
+                data-testid={noEndId}
+              />
+              <label htmlFor={noEndId} className="cursor-pointer select-none">
+                {copy.publicationNoEndToggle}
+              </label>
+            </span>
+          </div>
           <div data-testid={`${testIdPrefix}-end-day`} className={endDisabled ? "pointer-events-none" : undefined}>
             <JalaliDatePicker
               ariaLabel={copy.publicationEndLabel}
@@ -303,8 +312,9 @@ function StoryManagementScreenBody({
   const [selectedId, setSelectedId] = useState<string | null>(initialStoryId);
   const [detail, setDetail] = useState<AdminStorySnapshot | null>(null);
   const [reviewFilter, setReviewFilter] = useState<string>("");
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [rejectDraft, setRejectDraft] = useState("");
+  const [adminOpPlan, setAdminOpPlan] = useState<StoryAdminOpPlan | null>(null);
+  const [adminOpReason, setAdminOpReason] = useState("");
+  const [adminOpBusy, setAdminOpBusy] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleMode, setScheduleMode] = useState<"schedule" | "approve_schedule">("schedule");
   const [scheduleDraft, setScheduleDraft] = useState<StoryScheduleDraft>({
@@ -651,6 +661,62 @@ function StoryManagementScreenBody({
     [basePath, router],
   );
 
+  const openAdminOp = useCallback((kind: StoryAdminOpKind, rows: AdminStorySnapshot[]) => {
+    if (capabilities.mode !== "admin" || rows.length === 0) return;
+    setAdminOpPlan(classifyAdminOp(kind, rows));
+    setAdminOpReason("");
+  }, [capabilities.mode]);
+
+  async function confirmAdminOp() {
+    if (!adminOpPlan || !actorId || adminOpBusy) return;
+    if (adminOpPlan.kind === "reject" && !adminOpReason.trim()) {
+      toast.error(copy.rejectReasonRequired);
+      return;
+    }
+    if (adminOpPlan.eligible.length === 0) {
+      toast.error(copy.bulkNoneEligible);
+      return;
+    }
+    setAdminOpBusy(true);
+    try {
+      const result = await executeAdminOpBatch({
+        plan: adminOpPlan,
+        gate,
+        scope: { role: "admin", shopId: null, actorUserId: actorId },
+        actorUserId: actorId,
+        reason: adminOpReason.trim() || undefined,
+      });
+      const label =
+        adminOpPlan.kind === "approve"
+          ? copy.approveBatchToast
+          : adminOpPlan.kind === "reject"
+            ? copy.rejectBatchToast
+            : copy.deleteStory;
+      const summary = summarizeAdminBatch(result, label);
+      if (result.failed > 0 || result.unknown > 0) toast.error(summary);
+      else toast.success(summary);
+
+      const deletedIds = new Set(
+        result.items.filter((i) => i.outcome === "succeeded" && adminOpPlan.kind === "delete").map((i) => i.storyId),
+      );
+      if (deletedIds.size > 0) {
+        const closedId = selectedId && deletedIds.has(selectedId) ? selectedId : null;
+        if (closedId || (detail && deletedIds.has(detail.storyId))) {
+          setSelectedId(null);
+          setDetail(null);
+          ownedDraftIdRef.current = null;
+          router.push(basePath);
+        }
+      }
+      setAdminOpPlan(null);
+      setAdminOpReason("");
+      refreshGrid();
+      setReloadToken((v) => v + 1);
+    } finally {
+      setAdminOpBusy(false);
+    }
+  }
+
   async function runSubmit(row: AdminStorySnapshot) {
     if (inFlightRef.current) return;
     if (!actorId) {
@@ -967,9 +1033,14 @@ function StoryManagementScreenBody({
           onOpenDetail={openDetail}
           onSubmit={(row) => void runSubmit(row)}
           onRequestDelete={(row) => {
+            if (capabilities.mode === "admin") {
+              openAdminOp("delete", [row]);
+              return;
+            }
             setDeleteTarget(row);
             setDeleteOpen(true);
           }}
+          onRequestAdminOp={openAdminOp}
           errorMessage={message}
           onRetry={refreshGrid}
           showError={state === "error"}
@@ -1175,6 +1246,16 @@ function StoryManagementScreenBody({
           ) : null}
 
           <div className="mb-5 flex flex-wrap gap-2">
+            {hasAction(detail, "approve") ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white"
+                data-testid="story-detail-approve"
+                onClick={() => openAdminOp("approve", [detail])}
+              >
+                {copy.approve}
+              </button>
+            ) : null}
             {hasAction(detail, "approve_and_publish") ? (
               <button
                 type="button"
@@ -1209,9 +1290,10 @@ function StoryManagementScreenBody({
               <button
                 type="button"
                 className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
-                onClick={() => setRejectOpen(true)}
+                data-testid="story-detail-reject"
+                onClick={() => openAdminOp("reject", [detail])}
               >
-                رد با دلیل
+                {copy.reject}
               </button>
             ) : null}
             {hasAction(detail, "schedule") || hasAction(detail, "publish_now") ? (
@@ -1464,6 +1546,10 @@ function StoryManagementScreenBody({
                     className="min-h-11 rounded-xl border border-rose-300 px-4 py-2 text-sm text-rose-700"
                     data-testid="story-delete-open"
                     onClick={() => {
+                      if (capabilities.mode === "admin") {
+                        openAdminOp("delete", [detail]);
+                        return;
+                      }
                       setDeleteTarget(detail);
                       setDeleteOpen(true);
                     }}
@@ -2102,73 +2188,105 @@ function StoryManagementScreenBody({
         </div>
       </Dialog>
 
-      <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} title={copy.reject}>
-        <div className="space-y-3 p-1">
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">{copy.rejectionReason}</span>
-            <input
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={rejectDraft}
-              onChange={(e) => setRejectDraft(e.target.value)}
-              data-testid="story-reject-reason-input"
-            />
-          </label>
-          <div className="flex justify-end gap-2">
-            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setRejectOpen(false)}>
-              {copy.cancel}
-            </button>
-            <button
-              type="button"
-              className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
-              onClick={() => {
-                if (!detail || !rejectDraft.trim()) {
-                  toast.error(copy.rejectReasonRequired);
-                  return;
+      <Dialog
+        open={Boolean(adminOpPlan)}
+        onClose={() => {
+          if (adminOpBusy) return;
+          setAdminOpPlan(null);
+          setAdminOpReason("");
+        }}
+        title={
+          adminOpPlan?.kind === "approve"
+            ? copy.approveConfirm
+            : adminOpPlan?.kind === "reject"
+              ? copy.reject
+              : copy.deleteStory
+        }
+      >
+        {adminOpPlan ? (
+          <div className="space-y-3 p-1" data-testid="story-admin-op-dialog">
+            <p className="text-sm text-muted" data-testid="story-admin-op-selected-count">
+              {copy.bulkSelectedCount}: {adminOpPlan.selected.length.toLocaleString(numberLocale)}
+            </p>
+            {adminOpPlan.kind === "approve" ? (
+              <p className="text-sm text-muted">{copy.approveConfirmBody}</p>
+            ) : null}
+            {adminOpPlan.kind === "delete" ? (
+              <p className="text-sm text-rose-700">{copy.deleteBatchConfirmBody}</p>
+            ) : null}
+            {adminOpPlan.kind === "reject" ? (
+              <p className="text-sm text-muted">{copy.rejectConfirmBody}</p>
+            ) : null}
+            {adminOpPlan.eligible.length > 0 ? (
+              <div data-testid="story-admin-op-eligible">
+                <p className="mb-1 text-sm font-bold">{copy.bulkEligibleHeading}</p>
+                <ul className="max-h-40 space-y-1 overflow-auto text-sm">
+                  {adminOpPlan.eligible.map((entry) => (
+                    <li key={entry.row.storyId}>«{entry.row.title}»</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-sm text-rose-700" data-testid="story-admin-op-none-eligible">
+                {copy.bulkNoneEligible}
+              </p>
+            )}
+            {adminOpPlan.skipped.length > 0 ? (
+              <div data-testid="story-admin-op-skipped">
+                <p className="mb-1 text-sm font-bold">{copy.bulkSkippedHeading}</p>
+                <ul className="max-h-40 space-y-1 overflow-auto text-sm text-muted">
+                  {adminOpPlan.skipped.map((entry) => (
+                    <li key={entry.row.storyId}>
+                      «{entry.row.title}» — {entry.reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {adminOpPlan.kind === "reject" ? (
+              <label className="block text-sm">
+                <span className="mb-1 block text-gray-600">{copy.rejectionReason}</span>
+                <input
+                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  value={adminOpReason}
+                  onChange={(e) => setAdminOpReason(e.target.value)}
+                  data-testid="story-reject-reason-input"
+                />
+              </label>
+            ) : null}
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="min-h-11 rounded-xl px-4 py-2 text-sm"
+                data-testid="story-admin-op-cancel"
+                disabled={adminOpBusy}
+                onClick={() => {
+                  setAdminOpPlan(null);
+                  setAdminOpReason("");
+                }}
+              >
+                {copy.cancel}
+              </button>
+              <button
+                type="button"
+                className={
+                  adminOpPlan.kind === "delete" || adminOpPlan.kind === "reject"
+                    ? "min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                    : "min-h-11 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
                 }
-                if (!actorId) return;
-                const key = mintOccurrence();
-                const body = {
-                  reason: rejectDraft.trim(),
-                  expectedVersion: detail.versionToken,
-                  occurrenceKey: key,
-                };
-                const envelope: StoryIntentEnvelope = {
-                  version: 2,
-                  action: "reject",
-                  occurrenceKey: key,
-                  method: "POST",
-                  path: `/v1/admin/stories/${detail.storyId}/reject`,
-                  routeTargetId: detail.storyId,
-                  expectedVersion: detail.versionToken,
-                  bodyText: JSON.stringify(body),
-                  uploadMeta: null,
-                  addBodyText: null,
-                  uploadedAssetId: null,
-                  children: [],
-                  role: "admin",
-                  shopId: detail.sellerPartyId,
-                  actorUserId: actorId,
-                  recordedAt: new Date().toISOString(),
-                };
-                void runDurableStoryMutation({
-                  gate,
-                  envelope,
-                  scope: { role: "admin", shopId: null, actorUserId: actorId },
-                }).then((outcome) => {
-                  if (outcome.state === "ok") {
-                    toast.success("رد شد.");
-                    setRejectOpen(false);
-                    refreshGrid();
-                    setReloadToken((v) => v + 1);
-                  } else if (outcome.state === "failed") toast.error(outcome.message);
-                  else toast.error("رد ممکن نشد.");
-                });
-              }}
-            >
-              ثبت رد
-            </button>
+                data-testid="story-admin-op-confirm"
+                disabled={adminOpBusy || adminOpPlan.eligible.length === 0}
+                onClick={() => void confirmAdminOp()}
+              >
+                {adminOpPlan.kind === "approve"
+                  ? copy.approve
+                  : adminOpPlan.kind === "reject"
+                    ? copy.reject
+                    : copy.deleteStory}
+              </button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </Dialog>
 
       <Dialog
@@ -2362,6 +2480,7 @@ function StoryLiveGrid({
   onOpenDetail,
   onSubmit,
   onRequestDelete,
+  onRequestAdminOp,
   errorMessage,
   onRetry,
   showError,
@@ -2377,12 +2496,14 @@ function StoryLiveGrid({
   onOpenDetail: (id: string) => void;
   onSubmit: (row: AdminStorySnapshot) => void;
   onRequestDelete: (row: AdminStorySnapshot) => void;
+  onRequestAdminOp: (kind: StoryAdminOpKind, rows: AdminStorySnapshot[]) => void;
   errorMessage?: string;
   onRetry: () => void;
   showError: boolean;
 }) {
   const actorId = resolveActorId(capabilities.mode);
   const sellerShopId = capabilities.mode === "seller" ? readSellerPartyId() : null;
+  const isAdmin = capabilities.mode === "admin";
   const columns = useMemo((): GridColumnDef<AdminStorySnapshot>[] => {
     return [
       {
@@ -2492,6 +2613,22 @@ function StoryLiveGrid({
               onClick: (r) => onSubmit(r),
             });
           }
+          if (isAdmin && hasAction(row, "approve")) {
+            actions.push({
+              id: "approve",
+              label: copy.approve,
+              icon: Check,
+              onClick: (r) => onRequestAdminOp("approve", [r]),
+            });
+          }
+          if (isAdmin && hasAction(row, "reject")) {
+            actions.push({
+              id: "reject",
+              label: copy.reject,
+              icon: XCircle,
+              onClick: (r) => onRequestAdminOp("reject", [r]),
+            });
+          }
           if (hasAction(row, "delete")) {
             actions.push({
               id: "delete",
@@ -2508,7 +2645,47 @@ function StoryLiveGrid({
         sortable: false,
       },
     ];
-  }, [capabilities.canSubmit, copy, numberLocale, onOpenDetail, onSubmit, onRequestDelete]);
+  }, [
+    capabilities.canSubmit,
+    copy,
+    isAdmin,
+    numberLocale,
+    onOpenDetail,
+    onSubmit,
+    onRequestDelete,
+    onRequestAdminOp,
+  ]);
+
+  const bulkActions = useMemo((): GridBulkAction<AdminStorySnapshot>[] => {
+    if (!isAdmin) return [];
+    const open = (kind: StoryAdminOpKind) => async (rows: AdminStorySnapshot[]) => {
+      onRequestAdminOp(kind, rows);
+      return { ok: true, message: "opened" };
+    };
+    return [
+      {
+        id: "story-bulk-approve",
+        label: copy.approve,
+        requiresConfirmation: true,
+        isAvailable: (rows) => rows.length > 0,
+        execute: open("approve"),
+      },
+      {
+        id: "story-bulk-reject",
+        label: copy.reject,
+        requiresConfirmation: true,
+        isAvailable: (rows) => rows.length > 0,
+        execute: open("reject"),
+      },
+      {
+        id: "story-bulk-delete",
+        label: copy.deleteStory,
+        requiresConfirmation: true,
+        isAvailable: (rows) => rows.length > 0,
+        execute: open("delete"),
+      },
+    ];
+  }, [copy.approve, copy.deleteStory, copy.reject, isAdmin, onRequestAdminOp]);
 
   const savedViewStore = useMemo(
     () =>
@@ -2555,12 +2732,17 @@ function StoryLiveGrid({
   });
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm" data-testid="story-live-grid">
       <div className="p-2 md:p-4">
         {showError ? (
           <ErrorState title={copy.loadErrorTitle} detail={errorMessage} onRetry={onRetry} retryLabel={faWorkspaceMessages.retry} />
         ) : (
-          <AppDataGrid<AdminStorySnapshot> {...gridProps} />
+          <AppDataGrid<AdminStorySnapshot>
+            {...gridProps}
+            capabilities={{ rowSelection: isAdmin }}
+            bulkActions={bulkActions}
+            pageSelectionOnly
+          />
         )}
       </div>
     </section>

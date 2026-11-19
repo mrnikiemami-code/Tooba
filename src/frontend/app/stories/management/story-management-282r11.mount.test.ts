@@ -205,8 +205,8 @@ test("A: delete cancel sends zero DELETE; confirm then lost→replay clears and 
 
   await click(q(tree.container, '[data-testid="story-delete-open"]'));
   await flush();
-  await waitFor(() => qq(tree.container, '[data-testid="story-delete-dialog"]').length === 1);
-  const cancelBtn = q(document.body, '[data-testid="story-delete-cancel"]');
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-dialog"]').length === 1);
+  const cancelBtn = q(document.body, '[data-testid="story-admin-op-cancel"]');
   assert.ok(cancelBtn);
   await click(cancelBtn);
   await flush();
@@ -215,8 +215,8 @@ test("A: delete cancel sends zero DELETE; confirm then lost→replay clears and 
   // Re-open (portal Dialog may keep node briefly; open control still works).
   await click(q(tree.container, '[data-testid="story-delete-open"]'));
   await flush();
-  await waitFor(() => qq(document.body, '[data-testid="story-delete-confirm"]').length === 1);
-  await click(q(document.body, '[data-testid="story-delete-confirm"]'));
+  await waitFor(() => qq(document.body, '[data-testid="story-admin-op-confirm"]').length === 1);
+  await click(q(document.body, '[data-testid="story-admin-op-confirm"]'));
   await flush();
   await waitFor(() => deletes === 1);
   const pending = listPendingStoryIntents("admin", null, "actor-admin-1");

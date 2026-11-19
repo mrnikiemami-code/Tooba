@@ -11,6 +11,7 @@ export type StoryIntentAction =
   | "delete"
   | "reorder_items"
   | "submit"
+  | "approve"
   | "approve_publish"
   | "approve_schedule"
   | "reject"
@@ -71,6 +72,7 @@ const KNOWN_ACTIONS = new Set<StoryIntentAction>([
   "delete",
   "reorder_items",
   "submit",
+  "approve",
   "approve_publish",
   "approve_schedule",
   "reject",
@@ -352,6 +354,8 @@ export function pendingStoryLabel(envelope: StoryIntentEnvelope): string {
       return "افزودن اسلاید هنوز تمام نشده";
     case "submit":
       return "ارسال برای تأیید هنوز تمام نشده";
+    case "approve":
+      return "تأیید استوری هنوز تمام نشده";
     case "approve_publish":
       return "تأیید و انتشار هنوز تمام نشده";
     case "approve_schedule":

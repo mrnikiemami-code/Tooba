@@ -132,6 +132,16 @@ export type StoryCopy = {
   loadMoreProducts: string;
   approveAndPublish: string;
   approveAndSchedule: string;
+  approveConfirm: string;
+  approveConfirmBody: string;
+  approveBatchToast: string;
+  rejectConfirmBody: string;
+  rejectBatchToast: string;
+  deleteBatchConfirmBody: string;
+  bulkEligibleHeading: string;
+  bulkSkippedHeading: string;
+  bulkSelectedCount: string;
+  bulkNoneEligible: string;
   scheduleDisplay: string;
   stopDisplay: string;
   returnToDraft: string;
@@ -280,6 +290,16 @@ export const faStoryCopy: StoryCopy = {
   loadMoreProducts: "نمایش محصولات بیشتر",
   approveAndPublish: "تأیید و انتشار",
   approveAndSchedule: "تأیید و زمان‌بندی",
+  approveConfirm: "تأیید بازبینی",
+  approveConfirmBody: "با تأیید، بازهٔ انتشار هر استوری حفظ می‌شود و وضعیت بازبینی به‌روز می‌شود.",
+  approveBatchToast: "تأیید",
+  rejectConfirmBody: "دلیل رد برای همهٔ موارد انتخاب‌شدهٔ مجاز یکسان اعمال می‌شود.",
+  rejectBatchToast: "رد",
+  deleteBatchConfirmBody: "حذف قطعی است و قابل بازگشت نیست.",
+  bulkEligibleHeading: "قابل اجرا",
+  bulkSkippedHeading: "ردشده از این اقدام",
+  bulkSelectedCount: "انتخاب‌شده",
+  bulkNoneEligible: "هیچ مورد مجازی در انتخاب فعلی نیست.",
   scheduleDisplay: "زمان‌بندی نمایش",
   stopDisplay: "توقف نمایش",
   returnToDraft: "بازگشت به پیش‌نویس",
@@ -428,6 +448,16 @@ export const enStoryCopy: StoryCopy = {
   loadMoreProducts: "Show more products",
   approveAndPublish: "Approve and publish",
   approveAndSchedule: "Approve and schedule",
+  approveConfirm: "Confirm review",
+  approveConfirmBody: "Approval keeps each publication window and updates review status.",
+  approveBatchToast: "Approve",
+  rejectConfirmBody: "One reason applies to every eligible selected story.",
+  rejectBatchToast: "Reject",
+  deleteBatchConfirmBody: "Deletion is permanent and cannot be undone.",
+  bulkEligibleHeading: "Eligible",
+  bulkSkippedHeading: "Skipped for this action",
+  bulkSelectedCount: "Selected",
+  bulkNoneEligible: "No eligible stories in the current selection.",
   scheduleDisplay: "Schedule display",
   stopDisplay: "Stop display",
   returnToDraft: "Return to draft",
