@@ -43,4 +43,5 @@ Stop-State: STOP_FOR_ARCHITECT
 
 ## Final SHA
 
-- Code/Evidence HEAD after push: `fa32794e059f8fdf52858cabfcc83494be05ed03`
+- Implementation code SHA: `fa32794e059f8fdf52858cabfcc83494be05ed03`
+- Final origin/main (docs tip): `d14344a951be380bd67854abef67d331b75db885`
