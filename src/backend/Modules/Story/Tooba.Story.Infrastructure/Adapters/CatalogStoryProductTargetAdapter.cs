@@ -1,12 +1,18 @@
 ﻿using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts.Ports;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Contracts.Errors;
 
 namespace Tooba.Story.Infrastructure.Adapters;
 
-/// <summary>مالکیت/اعتبار محصول CTA استوری از طریق کارت‌های محصول ویترین Catalog.</summary>
-public sealed class CatalogStoryProductTargetAdapter(ICatalogStorefrontProductCardLookup products)
+/// <summary>
+/// اعتبار CTA محصول استوری: مالکیت از پیشنهاد واجد شرایط فروشنده، نه برنده‌ی کارت ویترین.
+/// مسیر عمومی همچنان از کارت Catalog برای slug می‌آید.
+/// </summary>
+public sealed class CatalogStoryProductTargetAdapter(
+    ICatalogStorefrontProductCardLookup products,
+    IOfferSellerProductIdLookup? sellerProducts = null)
     : IStoryProductTargetPort
 {
     /// <inheritdoc />
@@ -18,9 +24,16 @@ public sealed class CatalogStoryProductTargetAdapter(ICatalogStorefrontProductCa
         if (productId == Guid.Empty || sellerPartyId == Guid.Empty)
             throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
 
-        var cards = await products.ComposeProductCardsAsync([productId], cancellationToken);
-        if (!cards.TryGetValue(productId, out var card) || card.SellerPartyId != sellerPartyId)
+        if (sellerProducts is not null)
+        {
+            var owned = await sellerProducts.ListDistinctProductIdsForSellerAsync(sellerPartyId, cancellationToken);
+            if (owned.Contains(productId))
+                return;
             throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+        }
+
+        // بدون lookup پیشنهاد، به‌جای اعتماد به برنده‌ی کارت، رد می‌شود.
+        throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
     }
 
     /// <inheritdoc />

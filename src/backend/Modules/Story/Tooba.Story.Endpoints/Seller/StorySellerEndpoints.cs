@@ -10,6 +10,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Seller;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Queries.Seller;
+using Tooba.Story.Application.Stories.Queries.Shared;
 using Tooba.Story.Endpoints.Errors;
 using Tooba.Story.Endpoints.Models;
 
@@ -25,6 +26,8 @@ public static class StorySellerEndpoints
         var seller = app.MapGroup("/v1/seller/stories");
         seller.MapGet("", SellerListAsync);
         seller.MapPost("/query", SellerQueryAsync);
+        seller.MapGet("/locale-options", SellerLocaleOptionsAsync);
+        seller.MapGet("/product-options", SellerProductOptionsAsync);
         seller.MapGet("/{id:guid}", SellerGetAsync);
         seller.MapPost("", SellerCreateAsync);
         seller.MapPut("/{id:guid}", SellerUpdateAsync);
@@ -54,6 +57,28 @@ public static class StorySellerEndpoints
         return api.From(await sender.Send(
             new QuerySellerStoriesQuery(tenantResult.Value, sellerPartyId, request),
             cancellationToken));
+    }
+
+    private static async Task<IResult> SellerLocaleOptionsAsync(
+        ISender sender,
+        IStorySellerAuthorizer auth,
+        HttpContext http,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken)
+    {
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        return api.From(await sender.Send(new ListStoryLocaleOptionsQuery(), cancellationToken));
+    }
+
+    private static async Task<IResult> SellerProductOptionsAsync(
+        ISender sender,
+        IStorySellerAuthorizer auth,
+        HttpContext http,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken)
+    {
+        var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        return api.From(await sender.Send(new ListStoryProductOptionsQuery(sellerPartyId), cancellationToken));
     }
 
     private static async Task<IResult> SellerListAsync(

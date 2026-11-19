@@ -50,9 +50,11 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     private const string StorefrontQueryFile =
         "Tooba.Story.Application/Stories/Queries/Storefront/GetPublicStoriesQuery.cs";
 
-    private const int ExpectedRouteCount = 30;
+    private const int ExpectedRouteCount = 34;
+    // Admin+seller locale/product lookup routes share two request types (lawful dual-audience reads).
+    private const int ExpectedDistinctRequestCount = 32;
     private const int ExpectedValidatorRequiredCount = 27;
-    private const int ExpectedExemptCount = 3;
+    private const int ExpectedExemptCount = 5;
 
     private static readonly HashSet<string> SupportedVerbs =
         new(["Get", "Post", "Put", "Patch", "Delete"], StringComparer.Ordinal);
@@ -93,6 +95,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "GetAdminStoryQuery",
         "ListSellerStoriesQuery",
         "GetSellerStoryQuery",
+        "ListStoryLocaleOptionsQuery",
+        "ListStoryProductOptionsQuery",
     ];
 
     /// <summary>The exact expected audience → verb → full route → handler → dispatched request map (25 rows).</summary>
@@ -101,6 +105,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("storefront", "Get", "/v1/storefront/stories", "GetPublicStoriesAsync", "GetPublicStoriesQuery"),
         ("seller", "Get", "/v1/seller/stories", "SellerListAsync", "ListSellerStoriesQuery"),
         ("seller", "Post", "/v1/seller/stories/query", "SellerQueryAsync", "QuerySellerStoriesQuery"),
+        ("seller", "Get", "/v1/seller/stories/locale-options", "SellerLocaleOptionsAsync", "ListStoryLocaleOptionsQuery"),
+        ("seller", "Get", "/v1/seller/stories/product-options", "SellerProductOptionsAsync", "ListStoryProductOptionsQuery"),
         ("seller", "Get", "/v1/seller/stories/{id:guid}", "SellerGetAsync", "GetSellerStoryQuery"),
         ("seller", "Post", "/v1/seller/stories", "SellerCreateAsync", "CreateSellerStoryDraftCommand"),
         ("seller", "Put", "/v1/seller/stories/{id:guid}", "SellerUpdateAsync", "UpdateSellerStoryCommand"),
@@ -113,6 +119,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("seller", "Put", "/v1/seller/stories/{id:guid}/items/reorder", "SellerReorderItemsAsync", "ReorderSellerStoryItemsCommand"),
         ("admin", "Get", "/v1/admin/stories", "AdminListAsync", "ListAdminStoriesQuery"),
         ("admin", "Post", "/v1/admin/stories/query", "AdminQueryGridAsync", "QueryAdminStoryGridQuery"),
+        ("admin", "Get", "/v1/admin/stories/locale-options", "AdminLocaleOptionsAsync", "ListStoryLocaleOptionsQuery"),
+        ("admin", "Get", "/v1/admin/stories/product-options", "AdminProductOptionsAsync", "ListStoryProductOptionsQuery"),
         ("admin", "Get", "/v1/admin/stories/{id:guid}", "AdminGetAsync", "GetAdminStoryQuery"),
         ("admin", "Post", "/v1/admin/stories", "AdminCreateAsync", "CreateAdminStoryCommand"),
         ("admin", "Put", "/v1/admin/stories/{id:guid}", "AdminUpdateAsync", "UpdateAdminStoryCommand"),
@@ -197,8 +205,8 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
             Assert.Equal(expected[i].Request, actual[i].Request);
         }
 
-        // 25 routes → 25 distinct actual request types → exactly one handler each.
-        Assert.Equal(ExpectedRouteCount, derived.Select(d => d.Request).Distinct(StringComparer.Ordinal).Count());
+        // 34 routes → 32 distinct request types (locale/product shared by admin+seller) → one handler each.
+        Assert.Equal(ExpectedDistinctRequestCount, derived.Select(d => d.Request).Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(
             ExpectedRouteCount,
             derived.Select(d => (d.Verb, d.Path)).Distinct().Count());
@@ -238,16 +246,23 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
             classified.OrderBy(x => x, StringComparer.Ordinal).ToArray(),
             dispatched.Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray());
 
-        // No duplicate, orphan or unclassified dispatch, and no phantom classification.
-        Assert.Equal(dispatched.Length, dispatched.Distinct(StringComparer.Ordinal).Count());
+        // Route rows may share the two dual-audience lookup requests; every other request is 1:1.
+        Assert.Equal(ExpectedRouteCount, dispatched.Length);
+        Assert.Equal(ExpectedDistinctRequestCount, dispatched.Distinct(StringComparer.Ordinal).Count());
         Assert.Empty(dispatched.Except(classified, StringComparer.Ordinal));
         Assert.Empty(classified.Except(dispatched, StringComparer.Ordinal));
+        Assert.Equal(2, dispatched.Count(r => r == "ListStoryLocaleOptionsQuery"));
+        Assert.Equal(2, dispatched.Count(r => r == "ListStoryProductOptionsQuery"));
+        Assert.All(
+            dispatched.Where(r => r is not ("ListStoryLocaleOptionsQuery" or "ListStoryProductOptionsQuery"))
+                .GroupBy(r => r, StringComparer.Ordinal),
+            g => Assert.Equal(1, g.Count()));
 
-        // The partition is a real partition: disjoint halves, exact union.
+        // The partition is a real partition: disjoint halves, exact union over distinct requests.
         Assert.Empty(ValidatorRequired.Intersect(NoValidatorRequired, StringComparer.Ordinal));
         Assert.Equal(ExpectedValidatorRequiredCount, ValidatorRequired.Length);
         Assert.Equal(ExpectedExemptCount, NoValidatorRequired.Length);
-        Assert.Equal(ExpectedRouteCount, ValidatorRequired.Length + NoValidatorRequired.Length);
+        Assert.Equal(ExpectedDistinctRequestCount, ValidatorRequired.Length + NoValidatorRequired.Length);
 
         // The route surface is owned by the module composition entry, and each handler dispatches once.
         var module = File.ReadAllText(Path.Combine(root, ModuleRoot, ModuleFile));
@@ -397,12 +412,19 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
 
         foreach (var exempt in NoValidatorRequired)
         {
+            var constructions = Regex.Matches(
+                    string.Concat(storefront, seller, admin),
+                    $@"new\s+{Regex.Escape(exempt)}\s*\((?<args>[^)]*)\)")
+                .Cast<Match>()
+                .ToArray();
+            Assert.NotEmpty(constructions);
+
             var arguments = ConstructedArguments(storefront, exempt)
                 .Concat(ConstructedArguments(seller, exempt))
                 .Concat(ConstructedArguments(admin, exempt))
                 .ToArray();
 
-            Assert.NotEmpty(arguments);
+            // Parameterless dual-audience lookups (locale options) legitimately carry zero args.
             foreach (var argument in arguments)
             {
                 Assert.Contains(argument, allowedArguments);
@@ -529,7 +551,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         var legacyNamesBefore = LegacyConstructedRequestNames(admin).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         var legacyNamesAfter = LegacyConstructedRequestNames(remapped).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         Assert.Equal(legacyNamesBefore, legacyNamesAfter);
-        Assert.Equal(17, legacyNamesBefore.Length);
+        Assert.Equal(19, legacyNamesBefore.Length);
 
         // The corrupted route now dispatches the wrong (still in-set) request, and its original handler is
         // orphaned — a route/handler shape the exact map rejects.
@@ -580,7 +602,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         // The shipped source itself is untouched and still passes the exact map.
         var shipped = DeriveDispatches(root);
         Assert.Equal(ExpectedRouteCount, shipped.Count);
-        Assert.Equal(ExpectedRouteCount, shipped.Select(d => d.Request).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(ExpectedDistinctRequestCount, shipped.Select(d => d.Request).Distinct(StringComparer.Ordinal).Count());
         Assert.Contains(shipped, d => d.Request == "ListSellerStoriesQuery" && d.Path == "/v1/seller/stories");
         Assert.Contains(shipped, d => d.Request == "ReorderAdminStoriesCommand" && d.Path == "/v1/admin/stories/reorder");
     }

@@ -244,37 +244,20 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
         var digest = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         var safeName = SanitizeOriginalFileName(fileName);
         var key = occurrenceKey.Trim();
-        // Platform scope: SellerPartyId Empty sentinel in existing occurrence PK (no schema change).
-        var platformShop = Guid.Empty;
-        var intentHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-            string.Join('\u001f',
-                Len(tenantId.ToString("D")),
-                Len(actorUserId.ToString("D")),
-                Len(platformShop.ToString("D")),
-                Len(normalizedType),
-                Len(safeName),
-                Len(digest),
-                Len(buffer.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)))))).ToLowerInvariant();
+        // Platform identity is the deterministic asset PK (tenant+actor+occurrence) + stored asset metadata.
+        // No AssetOwnerOccurrences / Guid.Empty seller ledger rows.
+        var assetId = DerivePlatformStoryAssetId(tenantId, actorUserId, key);
 
-        var prior = await _db.AssetOwnerOccurrences.AsNoTracking()
-            .FirstOrDefaultAsync(
-                row => row.OccurrenceKey == key
-                    && row.TenantId == tenantId
-                    && row.SellerPartyId == platformShop,
-                cancellationToken);
+        var prior = await _db.Assets.AsNoTracking()
+            .FirstOrDefaultAsync(row => row.MediaAssetId == assetId, cancellationToken);
         if (prior is not null)
         {
-            if (!string.Equals(prior.IntentHash, intentHash, StringComparison.Ordinal)
-                || prior.ActorUserId != actorUserId)
+            if (!PlatformAssetMatchesIntent(prior, actorUserId, safeName, normalizedType, digest, buffer.Length))
                 throw new ContractOperationException(MediaErrorCodes.OwnerForbidden);
-            var existing = await _db.Assets.AsNoTracking()
-                .FirstOrDefaultAsync(row => row.MediaAssetId == prior.MediaAssetId, cancellationToken)
-                ?? throw new ContractOperationException(MediaErrorCodes.Missing);
-            return MapStory(existing, sellerPartyId: null);
+            return MapStory(prior, sellerPartyId: null);
         }
 
         var now = DateTimeOffset.UtcNow;
-        var assetId = DerivePlatformStoryAssetId(tenantId, actorUserId, key);
         var extension = ExtensionByContentType[normalizedType];
         // Distinct object-store key per ATTEMPT so concurrent losers cannot overwrite winner bytes.
         var attemptId = UuidV7.New();
@@ -305,65 +288,40 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             actorUserId,
             now,
             assetId);
-        // Platform Story assets stay unscoped (no seller binding) — AuthorizeForStory uses allowUnscopedAdminAssets.
-        var occurrence = new MediaAssetOwnerOccurrence
-        {
-            OccurrenceKey = key,
-            TenantId = tenantId,
-            SellerPartyId = platformShop,
-            MediaAssetId = assetId,
-            ActorUserId = actorUserId,
-            IntentHash = intentHash,
-            CreatedAt = now,
-        };
+        // Unscoped platform asset — AuthorizeForStory uses allowUnscopedAdminAssets; no seller binding.
 
         _db.Assets.Add(asset);
-        _db.AssetOwnerOccurrences.Add(occurrence);
 
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (IsOccurrenceUniqueViolation(ex) || IsAssetPrimaryKeyViolation(ex))
+        catch (DbUpdateException ex) when (IsAssetPrimaryKeyViolation(ex))
         {
-            DetachAttemptOwned(asset, binding: null, occurrence);
+            DetachAttemptOwned(asset, binding: null, occurrence: null);
             try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
 
-            var winner = await _db.AssetOwnerOccurrences.AsNoTracking()
-                .FirstOrDefaultAsync(
-                    row => row.OccurrenceKey == key
-                        && row.TenantId == tenantId
-                        && row.SellerPartyId == platformShop,
-                    cancellationToken);
+            var winner = await _db.Assets.AsNoTracking()
+                .FirstOrDefaultAsync(row => row.MediaAssetId == assetId, cancellationToken);
             if (winner is not null)
             {
-                if (!string.Equals(winner.IntentHash, intentHash, StringComparison.Ordinal)
-                    || winner.ActorUserId != actorUserId)
+                if (!PlatformAssetMatchesIntent(winner, actorUserId, safeName, normalizedType, digest, buffer.Length))
                     throw new ContractOperationException(MediaErrorCodes.OwnerForbidden, ex);
-                var existing = await _db.Assets.AsNoTracking()
-                    .FirstAsync(row => row.MediaAssetId == winner.MediaAssetId, cancellationToken);
-                return MapStory(existing, sellerPartyId: null);
+                return MapStory(winner, sellerPartyId: null);
             }
 
             throw new ContractOperationException(MediaErrorCodes.UploadFailed, ex);
         }
         catch (Exception ex)
         {
-            DetachAttemptOwned(asset, binding: null, occurrence);
-            var durable = await _db.AssetOwnerOccurrences.AsNoTracking()
-                .FirstOrDefaultAsync(
-                    row => row.OccurrenceKey == key
-                        && row.TenantId == tenantId
-                        && row.SellerPartyId == platformShop,
-                    cancellationToken);
+            DetachAttemptOwned(asset, binding: null, occurrence: null);
+            var durable = await _db.Assets.AsNoTracking()
+                .FirstOrDefaultAsync(row => row.MediaAssetId == assetId, cancellationToken);
             if (durable is not null)
             {
-                if (!string.Equals(durable.IntentHash, intentHash, StringComparison.Ordinal)
-                    || durable.ActorUserId != actorUserId)
+                if (!PlatformAssetMatchesIntent(durable, actorUserId, safeName, normalizedType, digest, buffer.Length))
                     throw new ContractOperationException(MediaErrorCodes.OwnerForbidden, ex);
-                var existing = await _db.Assets.AsNoTracking()
-                    .FirstAsync(row => row.MediaAssetId == durable.MediaAssetId, cancellationToken);
-                return MapStory(existing, sellerPartyId: null);
+                return MapStory(durable, sellerPartyId: null);
             }
 
             try { await _store.DeleteAsync(storageKey, cancellationToken); } catch { /* attempt-owned cleanup */ }
@@ -372,6 +330,19 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
 
         return MapStory(asset, sellerPartyId: null);
     }
+
+    private static bool PlatformAssetMatchesIntent(
+        MediaAsset asset,
+        Guid actorUserId,
+        string safeName,
+        string normalizedType,
+        string digest,
+        long byteSize) =>
+        asset.CreatedByUserId == actorUserId
+        && string.Equals(asset.OriginalFileName, safeName, StringComparison.Ordinal)
+        && string.Equals(asset.ContentType, normalizedType, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(asset.ChecksumSha256, digest, StringComparison.OrdinalIgnoreCase)
+        && asset.ByteSize == byteSize;
 
     private static Guid DerivePlatformStoryAssetId(Guid tenantId, Guid actorUserId, string occurrenceKey)
     {
@@ -441,7 +412,7 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
     private void DetachAttemptOwned(
         MediaAsset asset,
         MediaAssetOwnerBinding? binding,
-        MediaAssetOwnerOccurrence occurrence)
+        MediaAssetOwnerOccurrence? occurrence)
     {
         var assetEntry = _db.Entry(asset);
         if (assetEntry.State != EntityState.Detached)
@@ -452,9 +423,12 @@ public sealed partial class MediaDirectory : IStoryMediaAssetPort
             if (bindingEntry.State != EntityState.Detached)
                 bindingEntry.State = EntityState.Detached;
         }
-        var occurrenceEntry = _db.Entry(occurrence);
-        if (occurrenceEntry.State != EntityState.Detached)
-            occurrenceEntry.State = EntityState.Detached;
+        if (occurrence is not null)
+        {
+            var occurrenceEntry = _db.Entry(occurrence);
+            if (occurrenceEntry.State != EntityState.Detached)
+                occurrenceEntry.State = EntityState.Detached;
+        }
     }
 
     /// <summary>

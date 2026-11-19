@@ -10,6 +10,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Admin;
 using Tooba.Story.Application.Stories.Models;
 using Tooba.Story.Application.Stories.Queries.Admin;
+using Tooba.Story.Application.Stories.Queries.Shared;
 using Tooba.Story.Endpoints.Errors;
 using Tooba.Story.Endpoints.Models;
 
@@ -25,6 +26,8 @@ public static class StoryAdminEndpoints
         var admin = app.MapGroup("/v1/admin/stories");
         admin.MapGet("", AdminListAsync);
         admin.MapPost("/query", AdminQueryGridAsync);
+        admin.MapGet("/locale-options", AdminLocaleOptionsAsync);
+        admin.MapGet("/product-options", AdminProductOptionsAsync);
         admin.MapGet("/{id:guid}", AdminGetAsync);
         admin.MapPost("", AdminCreateAsync);
         admin.MapPut("/{id:guid}", AdminUpdateAsync);
@@ -58,6 +61,29 @@ public static class StoryAdminEndpoints
             return api.From(tenantResult);
         return api.From(await sender.Send(
             new ListAdminStoriesQuery(tenantResult.Value, reviewStatus, pendingReview), cancellationToken));
+    }
+
+    private static async Task<IResult> AdminLocaleOptionsAsync(
+        ISender sender,
+        IStoryAdminAuthorizer auth,
+        HttpContext http,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken)
+    {
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        return api.From(await sender.Send(new ListStoryLocaleOptionsQuery(), cancellationToken));
+    }
+
+    private static async Task<IResult> AdminProductOptionsAsync(
+        Guid? sellerPartyId,
+        ISender sender,
+        IStoryAdminAuthorizer auth,
+        HttpContext http,
+        ApiResponseFactory api,
+        CancellationToken cancellationToken)
+    {
+        await auth.RequireAuthorizedAsync(http, cancellationToken);
+        return api.From(await sender.Send(new ListStoryProductOptionsQuery(sellerPartyId), cancellationToken));
     }
 
     private static async Task<IResult> AdminQueryGridAsync(

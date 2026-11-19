@@ -1,14 +1,21 @@
-# CURRENT — TB-282-R1 REVIEWED PARTIAL; ONLY TB-282-R2 ISSUED — 2026-11-19
+# CURRENT — TB-282-R2 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
-Reviewed feature 98d3e1fcdaf74227e22034325cbdef639b0d5d78 + stub compile fix 77cb3d9bf12c7ec9cbd70c28e0cc9515c1937789; final d0c09e2ed340bdf82c9a6e4ae8eaeb8f7ed96d58.
-Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1/ARCHITECT-REVIEW.md. Worker PASS is NOT accepted as full F1-F5. Retain routes/name-picker/editor/action controls/scoped views/product href and explicit Gate0-owned ids progress.
-Only issued task TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2; exact docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2/TASK.md. One worker tooba-worker-01/tooba-main, await result/review; issued is not running.
-Four closure groups: B1 recovery BUTTON must dispatch frozen command and resume correct upload child; B2 lawful role-scoped lookup/date picker+zone; B3 actual scope/grid/shell behavioral proof (no production test bypass); B4 real platform identity (no fake seller scope) and FINAL builds/current serving proof.
-Existing template VendorShell /vendor-panel/stories/story.view mandatory, shared feature only; no new panel/menu/login/admin credential borrowing. DB registry languages, real picker/navigation, correct dates and plain merchant copy required.
-ZERO migration/live business writes/seed/key operation. User receives usable current build URLs only after evidence; user performs first live new-story act. Returns acceptances/payout backlog/history/user work unchanged.
-Previous PASS/current-status paragraphs below are historical. Worker PASS != Architect/user acceptance. automaticNextImplementationTask NONE.
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R2/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued B1–B4: exact recovery dispatch + durable frozen executor; Jalali/Tehran schedule + lawful locale/product lookups; VendorShell scope + no disableLiveGrid + real mounted proof; platform Media asset-PK only (no Guid.Empty seller occurrence); Host5088/Next3000 served; ZERO migration; ZERO live Story/Media business write.
+Decision `B1_EXACT_RECOVERY_DISPATCH_DURABLE_FROZEN_EXECUTOR_B2_JALALI_TEHRAN_LAWFUL_LOCALE_PRODUCT_LOOKUPS_B3_VENDORSHELL_SCOPE_NO_DISABLELIVEGRID_REAL_MOUNTED_PROOF_B4_PLATFORM_MEDIA_ASSET_PK_ONLY_SERVED_HOST_NEXT_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT user acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `d0c09e2ed340bdf82c9a6e4ae8eaeb8f7ed96d58`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
 
-# HISTORICAL — superseded by CURRENT above
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. مرجع: `docs/planning/story/SELLER-PANEL-INTEGRATION-REQUIREMENT.md`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R1 REVIEWED PARTIAL; 282-R2 WAS ISSUED
+
+Reviewed feature 98d3e1fcdaf74227e22034325cbdef639b0d5d78 + stub compile fix 77cb3d9bf12c7ec9cbd70c28e0cc9515c1937789; final before R2 `d0c09e2ed340bdf82c9a6e4ae8eaeb8f7ed96d58`.
+Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1/ARCHITECT-REVIEW.md. Parent PARTIAL closed by R2 worker PASS above.
+
+# HISTORICAL — TB-282-R1 WORKER PASS; 282-R2 WAS ISSUED
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1/TASK.md` and
 `docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R1/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.

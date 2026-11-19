@@ -5,7 +5,9 @@ using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
 using Tooba.Catalog.Contracts.Ports;
+using Tooba.Localization.Contracts.Ports;
 using Tooba.Media.Contracts.Assets;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Persistence;
 using Tooba.Story.Application.Stories.Ports;
@@ -42,8 +44,17 @@ public sealed class StoryModule : IToobaModule
             var products = sp.GetService<ICatalogStorefrontProductCardLookup>();
             return products is null
                 ? new UnavailableStoryProductTargetPort()
-                : new CatalogStoryProductTargetAdapter(products);
+                : new CatalogStoryProductTargetAdapter(
+                    products,
+                    sp.GetService<IOfferSellerProductIdLookup>());
         });
+        services.AddScoped<IStoryLocaleOptionsPort>(sp =>
+            new StoryLocaleOptionsAdapter(sp.GetRequiredService<ILanguageLookup>()));
+        services.AddScoped<IStoryProductOptionsPort>(sp =>
+            new StoryProductOptionsAdapter(
+                sp.GetService<IOfferSellerProductIdLookup>(),
+                sp.GetService<ICatalogStorefrontProductCardLookup>(),
+                sp.GetService<ICatalogDevelopmentPublishedProductSampler>()));
         services.AddScoped<StoryDirectory>(sp => new StoryDirectory(
             sp.GetRequiredService<StoryDbContext>(),
             sp.GetService<IPartyAdminSellerReadGateway>(),

@@ -7,6 +7,7 @@ using Tooba.Story.Application.Stories.Commands.Seller;
 using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Application.Stories.Queries.Admin;
 using Tooba.Story.Application.Stories.Queries.Seller;
+using Tooba.Story.Application.Stories.Queries.Shared;
 using Tooba.Story.Application.Stories.Queries.Storefront;
 using Tooba.Story.Application.Stories.Validators;
 using Xunit;
@@ -28,6 +29,8 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
     [
         ("ListAdminStoriesQuery", "GET /v1/admin/stories", ValidatorRequired),
         ("QueryAdminStoryGridQuery", "POST /v1/admin/stories/query", ValidatorRequired),
+        ("ListStoryLocaleOptionsQuery", "GET /v1/admin/stories/locale-options|/v1/seller/stories/locale-options", NoValidatorRequired),
+        ("ListStoryProductOptionsQuery", "GET /v1/admin/stories/product-options|/v1/seller/stories/product-options", NoValidatorRequired),
         ("GetAdminStoryQuery", "GET /v1/admin/stories/{id}", NoValidatorRequired),
         ("CreateAdminStoryCommand", "POST /v1/admin/stories", ValidatorRequired),
         ("UpdateAdminStoryCommand", "PUT /v1/admin/stories/{id}", ValidatorRequired),
@@ -41,18 +44,19 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("RejectAdminStoryCommand", "POST /v1/admin/stories/{id}/reject", ValidatorRequired),
         ("AddAdminStoryItemCommand", "POST /v1/admin/stories/{id}/items", ValidatorRequired),
         ("UpdateAdminStoryItemCommand", "PUT /v1/admin/stories/{id}/items/{itemId}", ValidatorRequired),
-        ("RemoveAdminStoryItemCommand", "DELETE /v1/admin/stories/{id}/items/{itemId}", NoValidatorRequired),
+        ("RemoveAdminStoryItemCommand", "DELETE /v1/admin/stories/{id}/items/{itemId}", ValidatorRequired),
         ("ReorderAdminStoryItemsCommand", "PUT /v1/admin/stories/{id}/items/reorder", ValidatorRequired),
         ("ListSellerStoriesQuery", "GET /v1/seller/stories", NoValidatorRequired),
+        ("QuerySellerStoriesQuery", "POST /v1/seller/stories/query", ValidatorRequired),
         ("GetSellerStoryQuery", "GET /v1/seller/stories/{id}", NoValidatorRequired),
         ("CreateSellerStoryDraftCommand", "POST /v1/seller/stories", ValidatorRequired),
         ("UpdateSellerStoryCommand", "PUT /v1/seller/stories/{id}", ValidatorRequired),
-        ("SubmitSellerStoryCommand", "POST /v1/seller/stories/{id}/submit", NoValidatorRequired),
+        ("SubmitSellerStoryCommand", "POST /v1/seller/stories/{id}/submit", ValidatorRequired),
         ("ReturnSellerStoryToDraftCommand", "POST /v1/seller/stories/{id}/return-to-draft", ValidatorRequired),
         ("StopSellerStoryCommand", "POST /v1/seller/stories/{id}/stop", ValidatorRequired),
         ("AddSellerStoryItemCommand", "POST /v1/seller/stories/{id}/items", ValidatorRequired),
         ("UpdateSellerStoryItemCommand", "PUT /v1/seller/stories/{id}/items/{itemId}", ValidatorRequired),
-        ("RemoveSellerStoryItemCommand", "DELETE /v1/seller/stories/{id}/items/{itemId}", NoValidatorRequired),
+        ("RemoveSellerStoryItemCommand", "DELETE /v1/seller/stories/{id}/items/{itemId}", ValidatorRequired),
         ("ReorderSellerStoryItemsCommand", "PUT /v1/seller/stories/{id}/items/reorder", ValidatorRequired),
         ("GetPublicStoriesQuery", "GET /v1/storefront/stories", ValidatorRequired),
     ];
@@ -61,6 +65,7 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
     [
         ("ListAdminStoriesQuery", typeof(ListAdminStoriesQueryValidator)),
         ("QueryAdminStoryGridQuery", typeof(QueryAdminStoryGridQueryValidator)),
+        ("QuerySellerStoriesQuery", typeof(QuerySellerStoriesQueryValidator)),
         ("CreateAdminStoryCommand", typeof(CreateAdminStoryCommandValidator)),
         ("UpdateAdminStoryCommand", typeof(UpdateAdminStoryCommandValidator)),
         ("ReorderAdminStoriesCommand", typeof(ReorderAdminStoriesCommandValidator)),
@@ -82,14 +87,16 @@ public sealed class StoryModuleAmcW5ValidatorGuardTests
         ("EnableAdminStoryCommand", typeof(EnableAdminStoryCommandValidator)),
         ("DisableAdminStoryCommand", typeof(DisableAdminStoryCommandValidator)),
         ("ApproveAdminStoryCommand", typeof(ApproveAdminStoryCommandValidator)),
+        ("RemoveAdminStoryItemCommand", typeof(RemoveAdminStoryItemCommandValidator)),
+        ("RemoveSellerStoryItemCommand", typeof(RemoveSellerStoryItemCommandValidator)),
     ];
 
     [Fact]
-    public void Complete_endpoint_inventory_is_exactly_29_with_23_required_and_6_no_validator()
+    public void Complete_endpoint_inventory_is_exactly_32_with_27_required_and_5_no_validator()
     {
-        Assert.Equal(29, Manifest.Length);
-        Assert.Equal(23, Manifest.Count(x => x.Classification == ValidatorRequired));
-        Assert.Equal(6, Manifest.Count(x => x.Classification == NoValidatorRequired));
+        Assert.Equal(32, Manifest.Length);
+        Assert.Equal(27, Manifest.Count(x => x.Classification == ValidatorRequired));
+        Assert.Equal(5, Manifest.Count(x => x.Classification == NoValidatorRequired));
         Assert.Equal(Manifest.Length, Manifest.Select(x => x.RequestTypeName).Distinct(StringComparer.Ordinal).Count());
     }
 

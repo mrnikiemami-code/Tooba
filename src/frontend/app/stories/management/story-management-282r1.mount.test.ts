@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TB-282-R1 F5 — mount REAL StoryManagementScreen + executor behaviors (not fs regex).
  * Run:
  *   npx tsx --tsconfig tsconfig.mount-tests.json --test app/stories/management/story-management-282r1.mount.test.ts
@@ -141,7 +141,6 @@ test("seller screen mounts without admin review controls", async () => {
     createElement(StoryManagementScreen, {
       capabilities: SELLER_STORY_CAPABILITIES,
       navigate: () => undefined,
-      disableLiveGrid: true,
       createMode: true,
     }),
   );
@@ -167,6 +166,8 @@ test("durable executor refuses overwrite and remount shows pending recovery", as
     expectedVersion: 1,
     bodyText: "{\"expectedVersion\":1,\"occurrenceKey\":\"occ-pending-1\"}",
     uploadMeta: null,
+    addBodyText: null,
+    uploadedAssetId: null,
     children: [],
     role: "seller",
     shopId: "22222222-2222-2222-2222-222222222222",
@@ -174,11 +175,16 @@ test("durable executor refuses overwrite and remount shows pending recovery", as
     recordedAt: new Date().toISOString(),
   };
   assert.equal(storeStoryIntent(pending), true);
+  const scope = {
+    role: "seller" as const,
+    shopId: "22222222-2222-2222-2222-222222222222",
+    actorUserId: "actor-seller-1",
+  };
   const gate = { inFlightRef: { current: false }, epochRef: { current: 1 } };
   const blocked = await runDurableStoryMutation({
     gate,
     envelope: { ...pending, occurrenceKey: "occ-other" },
-    send: async () => ({ ok: true, data: true }),
+    scope,
   });
   assert.equal(blocked.state, "blocked");
   assert.equal(blocked.state === "blocked" && blocked.reason, "storage");
@@ -189,14 +195,16 @@ test("durable executor refuses overwrite and remount shows pending recovery", as
     createElement(StoryManagementScreen, {
       capabilities: SELLER_STORY_CAPABILITIES,
       navigate: () => undefined,
-      disableLiveGrid: true,
       createMode: true,
     }),
   );
   await flush();
   await waitFor(() => qq(tree.container, '[data-testid="story-pending-recovery"]').length === 1);
   assert.ok((tree.container.textContent ?? "").includes("اقدام ناتمام"));
-  assert.equal(listPendingStoryIntents("seller", "22222222-2222-2222-2222-222222222222").length, 1);
+  assert.equal(
+    listPendingStoryIntents("seller", "22222222-2222-2222-2222-222222222222", "actor-seller-1").length,
+    1,
+  );
   clearStoryIntentIfCurrent(pending);
   globalThis.fetch = originalFetch;
   await tree.unmount();
@@ -216,30 +224,25 @@ test("same-tick double click executor sends once", async () => {
     expectedVersion: null,
     bodyText: "{}",
     uploadMeta: null,
+    addBodyText: null,
+    uploadedAssetId: null,
     children: [],
     role: "seller",
     shopId: "shop",
     actorUserId: "actor",
     recordedAt: new Date().toISOString(),
   };
-  const p1 = runDurableStoryMutation({
-    gate,
-    envelope,
-    send: async () => {
-      sends += 1;
-      await new Promise((r) => setTimeout(r, 30));
-      return { ok: true, data: true };
-    },
-  });
-  const p2 = runDurableStoryMutation({
-    gate,
-    envelope: { ...envelope, occurrenceKey: "occ-once" },
-    send: async () => {
-      sends += 1;
-      return { ok: true, data: true };
-    },
-  });
+  const scope = { role: "seller" as const, shopId: "shop", actorUserId: "actor" };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => {
+    sends += 1;
+    await new Promise((r) => setTimeout(r, 40));
+    return new Response("{}", { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const p1 = runDurableStoryMutation({ gate, envelope, scope });
+  const p2 = runDurableStoryMutation({ gate, envelope: { ...envelope }, scope });
   const [a, b] = await Promise.all([p1, p2]);
+  globalThis.fetch = originalFetch;
   assert.equal(sends, 1);
   assert.equal(a.state, "ok");
   assert.equal(b.state, "blocked");
@@ -254,7 +257,6 @@ test("admin publish preview dialog requires deliberate confirm", async () => {
       capabilities: ADMIN_STORY_CAPABILITIES,
       initialStoryId: "11111111-1111-1111-1111-111111111111",
       navigate: () => undefined,
-      disableLiveGrid: true,
     }),
   );
   await flush();
@@ -282,6 +284,8 @@ test("negative control: pending overwrite refusal holds", async () => {
     expectedVersion: 1,
     bodyText: "{}",
     uploadMeta: null,
+    addBodyText: null,
+    uploadedAssetId: null,
     children: [],
     role: "seller",
     shopId: "s",

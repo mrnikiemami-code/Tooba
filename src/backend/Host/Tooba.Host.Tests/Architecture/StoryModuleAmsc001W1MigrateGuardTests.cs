@@ -36,6 +36,8 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
         "Tooba.Party.Contracts",
         "Tooba.Media.Contracts",
         "Tooba.Catalog.Contracts",
+        "Tooba.Offer.Contracts",
+        "Tooba.Localization.Contracts",
     ];
 
     [Fact]
@@ -180,7 +182,9 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
                     || reference.Contains("Tooba.Persistence", StringComparison.Ordinal)
                     || reference.Contains("Tooba.Party.Contracts", StringComparison.Ordinal)
                     || reference.Contains("Tooba.Media.Contracts", StringComparison.Ordinal)
-                    || reference.Contains("Tooba.Catalog.Contracts", StringComparison.Ordinal),
+                    || reference.Contains("Tooba.Catalog.Contracts", StringComparison.Ordinal)
+                    || reference.Contains("Tooba.Offer.Contracts", StringComparison.Ordinal)
+                    || reference.Contains("Tooba.Localization.Contracts", StringComparison.Ordinal),
                     $"foreign project reference in {project}: {reference}");
             }
         }

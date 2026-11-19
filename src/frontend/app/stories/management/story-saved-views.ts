@@ -37,7 +37,6 @@ export function createScopedStorySavedViewStore(args: {
       const all = readAll().filter((row) => row.id !== view.id);
       all.push(view);
       writeAll(all);
-      return view;
     },
     async remove(id: string) {
       writeAll(readAll().filter((row) => row.id !== id));

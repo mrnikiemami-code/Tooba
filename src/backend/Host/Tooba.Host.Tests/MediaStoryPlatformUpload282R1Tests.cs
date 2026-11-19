@@ -39,10 +39,32 @@ public sealed class MediaStoryPlatformUpload282R1Tests
         Assert.Equal(1, store.Saved.Count);
         Assert.Equal(0, await db.AssetOwnerBindings.AsNoTracking()
             .CountAsync(b => b.MediaAssetId == first.MediaAssetId));
-        Assert.Equal(Guid.Empty, await db.AssetOwnerOccurrences.AsNoTracking()
-            .Where(o => o.MediaAssetId == first.MediaAssetId)
-            .Select(o => o.SellerPartyId)
-            .SingleAsync());
+        Assert.Equal(0, await db.AssetOwnerOccurrences.AsNoTracking()
+            .CountAsync(o => o.MediaAssetId == first.MediaAssetId));
+    }
+
+    [Fact]
+    public async Task Same_key_different_actor_is_independently_scoped_without_seller_occurrence()
+    {
+        var dbName = "media-plat-actor-scope-" + Guid.NewGuid().ToString("N");
+        var store = new RecordingStore();
+        await using var db = new MediaDbContext(
+            new DbContextOptionsBuilder<MediaDbContext>().UseInMemoryDatabase(dbName).Options);
+        var media = new MediaDirectory(db, store, Config());
+        var tenant = StoryTenantIds.StoreAlpha;
+        var key = "plat-occ-actor-scope";
+        var bytes = "platform-payload-actor"u8.ToArray();
+        var actorA = Guid.NewGuid();
+        var actorB = Guid.NewGuid();
+
+        var a = await media.UploadForPlatformStoryAsync(
+            new MemoryStream(bytes), "p.jpg", "image/jpeg", tenant, actorA, key, CancellationToken.None);
+        var b = await media.UploadForPlatformStoryAsync(
+            new MemoryStream(bytes), "p.jpg", "image/jpeg", tenant, actorB, key, CancellationToken.None);
+
+        Assert.NotEqual(a.MediaAssetId, b.MediaAssetId);
+        Assert.Equal(2, store.Saved.Count);
+        Assert.Equal(0, await db.AssetOwnerOccurrences.AsNoTracking().CountAsync());
     }
 
     [Fact]

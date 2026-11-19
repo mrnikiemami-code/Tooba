@@ -203,6 +203,11 @@ export function VendorShell({ children }: { children: ReactNode }) {
     setSellerPartyId(nextSeller);
     const match = contexts.find((row) => row.actorUserId === nextActor && row.sellerPartyId === nextSeller);
     setSellerLabel(match?.sellerLabel ?? "فروشنده");
+    try {
+      window.dispatchEvent(new CustomEvent("tooba.story.scope.changed"));
+    } catch {
+      /* ignore */
+    }
     window.location.assign(window.location.pathname + window.location.search);
   }
 

@@ -18,50 +18,31 @@ import { formatAdminDate, type AdminLoadState } from "../../admin/admin-api";
 import { ADMIN_ACTOR_STORAGE_KEY, DEFAULT_ADMIN_ACTOR_ID } from "../../../lib/admin/admin-result";
 import { loadAdminSellers, type AdminSellerRow } from "../../../features/admin-sellers/api/sellers-api";
 import { readActorUserId, readSellerPartyId } from "../../vendor-panel/seller-api";
-import { loadAdminLanguages } from "../../../features/admin-languages";
-import { loadSellerOffers, type SellerOfferListRow } from "../../vendor-panel/seller-api";
+import { JalaliDatePicker } from "../../../design-system/app-data-grid/jalali-date-picker";
 import {
-  addAdminStoryItem,
-  addSellerStoryItem,
-  approveAndPublishAdminStory,
-  approveAndScheduleAdminStory,
-  createAdminStory,
-  createSellerStory,
-  disableAdminStory,
   getAdminStory,
   getSellerStory,
   queryAdminStoriesGrid,
   querySellerStories,
-  rejectAdminStory,
-  removeAdminStoryItem,
-  removeSellerStoryItem,
-  reorderAdminStoryItems,
-  reorderSellerStoryItems,
-  returnSellerStoryToDraft,
-  scheduleAdminStory,
-  stopSellerStory,
-  submitSellerStory,
-  updateAdminStory,
-  updateAdminStoryItem,
-  updateSellerStory,
-  updateSellerStoryItem,
-  uploadAdminStoryMedia,
-  uploadAdminStoryMediaForShop,
-  uploadSellerStoryMedia,
   type AdminStorySnapshot,
 } from "../story-api";
 import { type StoryCapabilities } from "./story-capabilities";
 import { STORY_COPY, STORY_ORIGIN_LABELS } from "./story-management-copy";
 import { StoryReviewBadge, StoryStatusBadge } from "./StoryStatusBadge";
-import { runDurableStoryMutation } from "./story-executor";
+import { runDurableStoryMutation, runDurableUploadAdd, replayPendingStoryIntent } from "./story-executor";
+import { loadStoryLocaleOptions, loadStoryProductOptions, type StoryProductOptionRow } from "./story-lookups";
 import {
-  clearStoryIntentIfCurrent,
-  digestFile,
+  isoToScheduleDraft,
+  parseStoryScheduleDraft,
+  type StoryScheduleDraft,
+} from "./story-schedule-time";
+import {
   listPendingStoryIntents,
   newStoryOccurrenceKey as mintOccurrence,
-  storeStoryIntent,
+  pendingStoryLabel,
   type StoryIntentEnvelope,
 } from "./story-intent";
+import { readStoryScope, subscribeStoryScope } from "./story-scope";
 import { createScopedStorySavedViewStore } from "./story-saved-views";
 
 const SELLER_STORY_GRID_VIEW_KEY = "seller.stories.grid.v1";
@@ -115,21 +96,6 @@ function displayState(row: AdminStorySnapshot): string {
   return row.status;
 }
 
-function toDatetimeLocalValue(iso: string | null): string {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function fromDatetimeLocalValue(value: string): string | null {
-  if (!value.trim()) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString();
-}
-
 /**
  * صفحهٔ مشترک مدیریت استوری — Admin و Seller؛ فهرست Orders-style و ویرایشگر سادهٔ کاسب.
  */
@@ -138,15 +104,12 @@ export function StoryManagementScreen({
   initialStoryId = null,
   createMode = false,
   navigate,
-  disableLiveGrid = false,
 }: {
   capabilities: StoryCapabilities;
   initialStoryId?: string | null;
   createMode?: boolean;
   /** Optional navigation (pages wire Next router; tests inject a stub). */
   navigate?: (href: string) => void;
-  /** Test-only: skip AppDataGrid hook (avoids infinite act loops under jsdom). */
-  disableLiveGrid?: boolean;
 }) {
   const router = {
     push: (href: string) => {
@@ -162,7 +125,6 @@ export function StoryManagementScreen({
       initialStoryId={initialStoryId}
       createMode={createMode}
       navigate={navigate}
-      disableLiveGrid={disableLiveGrid}
       router={router}
       basePath={basePath}
     />
@@ -174,7 +136,6 @@ function StoryManagementScreenBody({
   initialStoryId = null,
   createMode = false,
   navigate,
-  disableLiveGrid = false,
   router,
   basePath,
 }: {
@@ -182,7 +143,6 @@ function StoryManagementScreenBody({
   initialStoryId?: string | null;
   createMode?: boolean;
   navigate?: (href: string) => void;
-  disableLiveGrid?: boolean;
   router: { push: (href: string) => void };
   basePath: string;
 }) {
@@ -197,7 +157,15 @@ function StoryManagementScreenBody({
   const [rejectDraft, setRejectDraft] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleMode, setScheduleMode] = useState<"schedule" | "approve_schedule">("schedule");
-  const [scheduleDraft, setScheduleDraft] = useState({ startAt: "", endAt: "" });
+  const [scheduleDraft, setScheduleDraft] = useState<StoryScheduleDraft>({
+    startDayIso: "",
+    startTime: "10:00",
+    endDayIso: "",
+    endTime: "",
+  });
+  const [scheduleFieldError, setScheduleFieldError] = useState<string | null>(null);
+  const [scopeTick, setScopeTick] = useState(0);
+  const [recoveryFile, setRecoveryFile] = useState<File | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const [draftTitle, setDraftTitle] = useState("");
   const [slideFile, setSlideFile] = useState<File | null>(null);
@@ -211,7 +179,7 @@ function StoryManagementScreenBody({
   const [editTitle, setEditTitle] = useState("");
   const [editLocale, setEditLocale] = useState("");
   const [localeOptions, setLocaleOptions] = useState<Array<{ code: string; name: string; isDefault: boolean }>>([]);
-  const [productOptions, setProductOptions] = useState<SellerOfferListRow[]>([]);
+  const [productOptions, setProductOptions] = useState<StoryProductOptionRow[]>([]);
   const [productSearch, setProductSearch] = useState("");
   const [slideCaption, setSlideCaption] = useState("");
   const [slideDurationSec, setSlideDurationSec] = useState("5");
@@ -220,8 +188,9 @@ function StoryManagementScreenBody({
   const [dirty, setDirty] = useState(false);
   const epochRef = useRef(0);
   const inFlightRef = useRef(false);
-  const sellerShopId = capabilities.mode === "seller" ? readSellerPartyId() : null;
-  const actorId = resolveActorId(capabilities.mode);
+  const scope = readStoryScope(capabilities.mode);
+  const sellerShopId = scope.shopId;
+  const actorId = scope.actorUserId || resolveActorId(capabilities.mode);
   const gate = { inFlightRef, epochRef };
 
   const bumpEpoch = useCallback(() => {
@@ -236,11 +205,26 @@ function StoryManagementScreenBody({
   useEffect(() => {
     bumpEpoch();
     return () => bumpEpoch();
-  }, [bumpEpoch, capabilities.mode, sellerShopId, actorId, selectedId]);
+  }, [bumpEpoch, capabilities.mode, sellerShopId, actorId, selectedId, scopeTick]);
 
   useEffect(() => {
-    setPendingActs(listPendingStoryIntents(capabilities.mode, sellerShopId));
-  }, [capabilities.mode, sellerShopId, reloadToken]);
+    return subscribeStoryScope(capabilities.mode, () => {
+      bumpEpoch();
+      setDetail(null);
+      setSelectedId(null);
+      setShowCreate(false);
+      setPendingActs([]);
+      setScopeTick((v) => v + 1);
+      setReloadToken((v) => v + 1);
+    });
+  }, [capabilities.mode, bumpEpoch]);
+
+  useEffect(() => {
+    const pending = listPendingStoryIntents(capabilities.mode, sellerShopId, actorId)
+      .filter((row) => row.state === "ok")
+      .map((row) => row.envelope);
+    setPendingActs(pending);
+  }, [capabilities.mode, sellerShopId, actorId, reloadToken, scopeTick]);
 
   useEffect(() => {
     if (capabilities.mode !== "admin") return;
@@ -252,36 +236,28 @@ function StoryManagementScreenBody({
   }, [capabilities.mode]);
 
   useEffect(() => {
-    void loadAdminLanguages().then((result) => {
-      if (result.state !== "ok" || !result.data) return;
-      const active = result.data.filter((row) => row.active);
-      setLocaleOptions(
-        active.map((row) => ({
-          code: row.code,
-          name: row.nativeName || row.displayName || row.code,
-          isDefault: Boolean(row.default),
-        })),
-      );
-      const def = active.find((row) => row.default) ?? active[0];
+    void loadStoryLocaleOptions({
+      mode: capabilities.mode,
+      shopId: sellerShopId,
+      actorUserId: actorId,
+    }).then((rows) => {
+      setLocaleOptions(rows);
+      const def = rows.find((row) => row.isDefault) ?? rows[0];
       if (def) setEditLocale((prev) => prev || def.code);
     });
-  }, []);
+  }, [capabilities.mode, sellerShopId, actorId, scopeTick]);
 
   useEffect(() => {
     const shop =
       capabilities.mode === "seller"
         ? sellerShopId
         : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
-    if (!shop) {
-      setProductOptions([]);
-      return;
-    }
-    void loadSellerOffers(shop).then((result) => {
-      if (result.source === "host") {
-        setProductOptions(result.rows.filter((row) => row.status === "Active"));
-      }
-    });
-  }, [capabilities.mode, sellerShopId, detail?.sellerPartyId, adminShopId, adminShopMode]);
+    void loadStoryProductOptions({
+      mode: capabilities.mode,
+      shopId: shop,
+      actorUserId: actorId,
+    }).then((rows) => setProductOptions(rows));
+  }, [capabilities.mode, sellerShopId, detail?.sellerPartyId, adminShopId, adminShopMode, actorId, scopeTick]);
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -343,32 +319,25 @@ function StoryManagementScreenBody({
       expectedVersion: row.versionToken,
       bodyText: JSON.stringify(body),
       uploadMeta: null,
+      addBodyText: null,
+      uploadedAssetId: null,
       children: [],
       role: "seller",
       shopId: row.sellerPartyId,
       actorUserId: actorId,
       recordedAt: new Date().toISOString(),
     };
-    if (!storeStoryIntent(envelope)) {
-      toast.error("اقدام ناتمام قبلی هنوز باز است یا ذخیرهٔ مرورگر ممکن نیست؛ چیزی ارسال نشد.");
-      return;
-    }
-    inFlightRef.current = true;
-    const started = epochRef.current;
-    try {
-      const result = await submitSellerStory(row.storyId, null, row.versionToken, occurrenceKey);
-      if (started !== epochRef.current) return;
-      if (result.state === "ok") {
-        clearStoryIntentIfCurrent(envelope);
-        toast.success("برای تأیید ارسال شد.");
-        refreshGrid();
-        if (selectedId === row.storyId) setReloadToken((v) => v + 1);
-      } else {
-        toast.error(result.message ?? "ارسال ممکن نشد.");
-      }
-    } finally {
-      if (started === epochRef.current) inFlightRef.current = false;
-    }
+    const outcome = await runDurableStoryMutation({
+      gate,
+      envelope,
+      scope: { role: "seller", shopId: row.sellerPartyId, actorUserId: actorId },
+    });
+    if (outcome.state === "ok") {
+      toast.success("برای تأیید ارسال شد.");
+      refreshGrid();
+      if (selectedId === row.storyId) setReloadToken((v) => v + 1);
+    } else if (outcome.state === "failed") toast.error(outcome.message);
+    else toast.error("ارسال انجام نشد.");
   }
 
   async function createDraft() {
@@ -404,38 +373,30 @@ function StoryManagementScreenBody({
       expectedVersion: null,
       bodyText: JSON.stringify(body),
       uploadMeta: null,
+      addBodyText: null,
+      uploadedAssetId: null,
       children: [],
       role: capabilities.mode,
       shopId,
       actorUserId: actorId,
       recordedAt: new Date().toISOString(),
     };
-    if (!storeStoryIntent(envelope)) {
-      toast.error("اقدام ناتمام قبلی هنوز باز است یا ذخیرهٔ مرورگر ممکن نیست؛ چیزی ارسال نشد.");
-      return;
-    }
-    inFlightRef.current = true;
-    const started = epochRef.current;
-    try {
-      const result =
-        capabilities.mode === "seller"
-          ? await createSellerStory({ title, occurrenceKey })
-          : await createAdminStory(body);
-      if (started !== epochRef.current) return;
-      if (!result.ok || !result.story) {
-        toast.error(result.message ?? "ساخت پیش‌نویس ممکن نشد.");
-        return;
-      }
-      clearStoryIntentIfCurrent(envelope);
+    const outcome = await runDurableStoryMutation({
+      gate,
+      envelope,
+      scope: { role: capabilities.mode, shopId, actorUserId: actorId },
+    });
+    if (outcome.state === "ok") {
+      const payload = outcome.data as { storyId?: string; data?: { storyId?: string } };
+      const id = payload?.storyId ?? payload?.data?.storyId;
       toast.success("پیش‌نویس ذخیره شد.");
       setShowCreate(false);
       setDraftTitle("");
       setSlideFile(null);
-      openDetail(result.story.storyId);
+      if (id) openDetail(String(id));
       refreshGrid();
-    } finally {
-      if (started === epochRef.current) inFlightRef.current = false;
-    }
+    } else if (outcome.state === "failed") toast.error(outcome.message);
+    else toast.error("ارسال انجام نشد.");
   }
 
   if (state === "denied") return <Denied retry={refreshGrid} />;
@@ -496,26 +457,48 @@ function StoryManagementScreenBody({
           <ul className="space-y-2 text-sm text-amber-900">
             {pendingActs.map((act) => (
               <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
-                <span>
-                  {act.action} · کلید {act.occurrenceKey.slice(0, 8)}…
-                </span>
+                <span>{pendingStoryLabel(act)}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(act.action === "upload" || act.action === "upload_add") && !act.children[0]?.done ? (
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      className="min-h-11 text-sm"
+                      data-testid="story-recovery-file"
+                      onChange={(e) => setRecoveryFile(e.target.files?.[0] ?? null)}
+                    />
+                  ) : null}
                 <button
                   type="button"
                   className="min-h-11 rounded-xl bg-amber-700 px-3 py-1.5 text-white"
+                  data-testid="story-recovery-retry"
                   onClick={() => {
-                    toast.info("همان اقدام ذخیره‌شده را با همان کلید دوباره ارسال کنید؛ از تغییر فرم خودداری کنید.");
-                    if (act.routeTargetId) openDetail(act.routeTargetId);
+                    void replayPendingStoryIntent({
+                      gate,
+                      envelope: act,
+                      scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                      uploadFile: recoveryFile,
+                    }).then((outcome) => {
+                      if (outcome.state === "ok") {
+                        toast.success("اقدام ناتمام با موفقیت ادامه یافت.");
+                        setRecoveryFile(null);
+                        refreshGrid();
+                        setReloadToken((v) => v + 1);
+                      } else if (outcome.state === "failed") toast.error(outcome.message);
+                      else toast.error("ارسال مجدد ممکن نشد.");
+                    });
                   }}
                 >
                   ادامه / ارسال مجدد
                 </button>
+                </div>
               </li>
             ))}
           </ul>
         </section>
       ) : null}
 
-      {!selectedId && !showCreate && !disableLiveGrid ? (
+      {!selectedId && !showCreate ? (
         <StoryLiveGrid
           capabilities={capabilities}
           reviewFilter={reviewFilter}
@@ -584,9 +567,14 @@ function StoryManagementScreenBody({
                 className="min-h-11 rounded-xl border border-emerald-600 px-4 py-2 text-sm font-bold text-emerald-700"
                 onClick={() => {
                   setScheduleMode("approve_schedule");
+                  const start = isoToScheduleDraft(detail.startAt);
+                  const end = isoToScheduleDraft(detail.endAt);
+                  setScheduleFieldError(null);
                   setScheduleDraft({
-                    startAt: toDatetimeLocalValue(detail.startAt),
-                    endAt: toDatetimeLocalValue(detail.endAt),
+                    startDayIso: start.dayIso,
+                    startTime: start.time || "10:00",
+                    endDayIso: end.dayIso,
+                    endTime: end.time,
                   });
                   setScheduleOpen(true);
                 }}
@@ -609,9 +597,14 @@ function StoryManagementScreenBody({
                 className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
                 onClick={() => {
                   setScheduleMode("schedule");
+                  const start = isoToScheduleDraft(detail.startAt);
+                  const end = isoToScheduleDraft(detail.endAt);
+                  setScheduleFieldError(null);
                   setScheduleDraft({
-                    startAt: toDatetimeLocalValue(detail.startAt),
-                    endAt: toDatetimeLocalValue(detail.endAt),
+                    startDayIso: start.dayIso,
+                    startTime: start.time || "10:00",
+                    endDayIso: end.dayIso,
+                    endTime: end.time,
                   });
                   setScheduleOpen(true);
                 }}
@@ -624,17 +617,41 @@ function StoryManagementScreenBody({
                 type="button"
                 className="min-h-11 rounded-xl border border-rose-200 px-4 py-2 text-sm text-rose-700"
                 onClick={() => {
+                  if (!actorId) return;
                   const key = mintOccurrence();
-                  const run =
-                    capabilities.mode === "seller"
-                      ? stopSellerStory(detail.storyId, detail.versionToken, null, key)
-                      : disableAdminStory(detail.storyId, detail.versionToken, key);
-                  void run.then((ok) => {
-                    if (ok === true || (typeof ok === "object" && ok && "state" in ok && ok.state === "ok")) {
+                  const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
+                  const envelope: StoryIntentEnvelope = {
+                    version: 2,
+                    action: "stop",
+                    occurrenceKey: key,
+                    method: "POST",
+                    path:
+                      capabilities.mode === "seller"
+                        ? `/v1/seller/stories/${detail.storyId}/stop`
+                        : `/v1/admin/stories/${detail.storyId}/disable`,
+                    routeTargetId: detail.storyId,
+                    expectedVersion: detail.versionToken,
+                    bodyText: JSON.stringify(body),
+                    uploadMeta: null,
+                    addBodyText: null,
+                    uploadedAssetId: null,
+                    children: [],
+                    role: capabilities.mode,
+                    shopId: detail.sellerPartyId ?? sellerShopId,
+                    actorUserId: actorId,
+                    recordedAt: new Date().toISOString(),
+                  };
+                  void runDurableStoryMutation({
+                    gate,
+                    envelope,
+                    scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                  }).then((outcome) => {
+                    if (outcome.state === "ok") {
                       toast.success("متوقف شد.");
                       refreshGrid();
                       setReloadToken((v) => v + 1);
-                    } else toast.error("توقف ممکن نشد.");
+                    } else if (outcome.state === "failed") toast.error(outcome.message);
+                    else toast.error("توقف ممکن نشد.");
                   });
                 }}
               >
@@ -646,13 +663,38 @@ function StoryManagementScreenBody({
                 type="button"
                 className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
                 onClick={() => {
+                  if (!actorId) return;
                   const key = mintOccurrence();
-                  void returnSellerStoryToDraft(detail.storyId, detail.versionToken, null, key).then((result) => {
-                    if (result.state === "ok") {
+                  const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
+                  const envelope: StoryIntentEnvelope = {
+                    version: 2,
+                    action: "return_to_draft",
+                    occurrenceKey: key,
+                    method: "POST",
+                    path: `/v1/seller/stories/${detail.storyId}/return-to-draft`,
+                    routeTargetId: detail.storyId,
+                    expectedVersion: detail.versionToken,
+                    bodyText: JSON.stringify(body),
+                    uploadMeta: null,
+                    addBodyText: null,
+                    uploadedAssetId: null,
+                    children: [],
+                    role: "seller",
+                    shopId: detail.sellerPartyId ?? sellerShopId,
+                    actorUserId: actorId,
+                    recordedAt: new Date().toISOString(),
+                  };
+                  void runDurableStoryMutation({
+                    gate,
+                    envelope,
+                    scope: { role: "seller", shopId: sellerShopId, actorUserId: actorId },
+                  }).then((outcome) => {
+                    if (outcome.state === "ok") {
                       toast.success("به پیش‌نویس برگشت.");
                       refreshGrid();
                       setReloadToken((v) => v + 1);
-                    } else toast.error(result.message ?? "بازگشت ممکن نشد.");
+                    } else if (outcome.state === "failed") toast.error(outcome.message);
+                    else toast.error("بازگشت ممکن نشد.");
                   });
                 }}
               >
@@ -728,6 +770,8 @@ function StoryManagementScreenBody({
                     expectedVersion: detail.versionToken,
                     bodyText: JSON.stringify(body),
                     uploadMeta: null,
+                    addBodyText: null,
+                    uploadedAssetId: null,
                     children: [],
                     role: capabilities.mode,
                     shopId: detail.sellerPartyId ?? sellerShopId,
@@ -737,25 +781,7 @@ function StoryManagementScreenBody({
                   void runDurableStoryMutation({
                     gate,
                     envelope,
-                    send: async () => {
-                      const result =
-                        capabilities.mode === "seller"
-                          ? await updateSellerStory(detail.storyId, {
-                              title: editTitle.trim(),
-                              locale: editLocale || null,
-                              expectedVersion: detail.versionToken,
-                              occurrenceKey: key,
-                            })
-                          : await updateAdminStory(detail.storyId, {
-                              title: editTitle.trim(),
-                              locale: editLocale || null,
-                              expectedVersion: detail.versionToken,
-                              occurrenceKey: key,
-                            });
-                      return result.state === "ok"
-                        ? { ok: true, data: result.data }
-                        : { ok: false, message: result.message ?? "ذخیره ممکن نشد." };
-                    },
+                    scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                   }).then((outcome) => {
                     if (outcome.state === "ok") {
                       toast.success("ذخیره شد.");
@@ -795,20 +821,45 @@ function StoryManagementScreenBody({
                         className="min-h-11 rounded-xl border border-gray-200 px-3 py-1.5 text-sm"
                         disabled={index === 0}
                         onClick={() => {
+                          if (!actorId) return;
                           const ids = detail.items.map((row) => row.storyItemId);
                           const next = [...ids];
                           const tmp = next[index - 1]!;
                           next[index - 1] = next[index]!;
                           next[index] = tmp;
                           const key = mintOccurrence();
-                          void (capabilities.mode === "seller"
-                            ? reorderSellerStoryItems(detail.storyId, next, detail.versionToken, null, key)
-                            : reorderAdminStoryItems(detail.storyId, next, detail.versionToken, key)
-                          ).then((result) => {
-                            if (result.state === "ok") {
+                          const body = { itemIds: next, expectedVersion: detail.versionToken, occurrenceKey: key };
+                          const envelope: StoryIntentEnvelope = {
+                            version: 2,
+                            action: "reorder_items",
+                            occurrenceKey: key,
+                            method: "PUT",
+                            path:
+                              capabilities.mode === "seller"
+                                ? `/v1/seller/stories/${detail.storyId}/items/reorder`
+                                : `/v1/admin/stories/${detail.storyId}/items/reorder`,
+                            routeTargetId: detail.storyId,
+                            expectedVersion: detail.versionToken,
+                            bodyText: JSON.stringify(body),
+                            uploadMeta: null,
+                            addBodyText: null,
+                            uploadedAssetId: null,
+                            children: [],
+                            role: capabilities.mode,
+                            shopId: detail.sellerPartyId ?? sellerShopId,
+                            actorUserId: actorId,
+                            recordedAt: new Date().toISOString(),
+                          };
+                          void runDurableStoryMutation({
+                            gate,
+                            envelope,
+                            scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                          }).then((outcome) => {
+                            if (outcome.state === "ok") {
                               toast.success("ترتیب به‌روز شد.");
                               setReloadToken((v) => v + 1);
-                            } else toast.error(result.message ?? "جابه‌جایی ممکن نشد.");
+                            } else if (outcome.state === "failed") toast.error(outcome.message);
+                            else toast.error("جابه‌جایی ممکن نشد.");
                           });
                         }}
                       >
@@ -818,16 +869,41 @@ function StoryManagementScreenBody({
                         type="button"
                         className="min-h-11 rounded-xl border border-rose-200 px-3 py-1.5 text-sm text-rose-700"
                         onClick={() => {
+                          if (!actorId) return;
                           const key = mintOccurrence();
-                          void (capabilities.mode === "seller"
-                            ? removeSellerStoryItem(detail.storyId, item.storyItemId, detail.versionToken, null, key)
-                            : removeAdminStoryItem(detail.storyId, item.storyItemId, detail.versionToken, key)
-                          ).then((result) => {
-                            if (result.state === "ok") {
+                          const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
+                          const envelope: StoryIntentEnvelope = {
+                            version: 2,
+                            action: "remove_item",
+                            occurrenceKey: key,
+                            method: "DELETE",
+                            path:
+                              capabilities.mode === "seller"
+                                ? `/v1/seller/stories/${detail.storyId}/items/${item.storyItemId}`
+                                : `/v1/admin/stories/${detail.storyId}/items/${item.storyItemId}`,
+                            routeTargetId: detail.storyId,
+                            expectedVersion: detail.versionToken,
+                            bodyText: JSON.stringify(body),
+                            uploadMeta: null,
+                            addBodyText: null,
+                            uploadedAssetId: null,
+                            children: [],
+                            role: capabilities.mode,
+                            shopId: detail.sellerPartyId ?? sellerShopId,
+                            actorUserId: actorId,
+                            recordedAt: new Date().toISOString(),
+                          };
+                          void runDurableStoryMutation({
+                            gate,
+                            envelope,
+                            scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                          }).then((outcome) => {
+                            if (outcome.state === "ok") {
                               toast.success("اسلاید حذف شد.");
                               setReloadToken((v) => v + 1);
                               refreshGrid();
-                            } else toast.error(result.message ?? "حذف ممکن نشد.");
+                            } else if (outcome.state === "failed") toast.error(outcome.message);
+                            else toast.error("حذف ممکن نشد.");
                           });
                         }}
                       >
@@ -938,80 +1014,54 @@ function StoryManagementScreenBody({
                 onClick={() => {
                   if (!slideFile || !detail || !actorId) return;
                   void (async () => {
+                    if (inFlightRef.current) return;
                     const uploadKey = mintOccurrence();
-                    const digest = await digestFile(slideFile);
+                    const itemKey = mintOccurrence();
+                    const plannedAdd = {
+                      caption: slideCaption.trim() || null,
+                      durationSec: Math.max(1, Number(slideDurationSec) || 5),
+                      ctaType: slideCtaType,
+                      ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
+                      expectedVersion: detail.versionToken,
+                      itemOccurrenceKey: itemKey,
+                    };
+                    // Lock + store begin before async digest (executor owns the mutex).
                     const uploadEnvelope: StoryIntentEnvelope = {
                       version: 2,
                       action: "upload_add",
                       occurrenceKey: uploadKey,
                       method: "POST",
-                      path: capabilities.mode === "seller" ? "/v1/seller/media/upload-story" : "/v1/admin/media/upload-story-platform",
+                      path:
+                        capabilities.mode === "seller"
+                          ? "/v1/seller/media/upload-story"
+                          : detail.sellerPartyId
+                            ? "/v1/admin/media/upload-for-shop"
+                            : "/v1/admin/media/upload-story-platform",
                       routeTargetId: detail.storyId,
                       expectedVersion: detail.versionToken,
-                      bodyText: null,
+                      bodyText: JSON.stringify(plannedAdd),
                       uploadMeta: {
                         fileName: slideFile.name,
                         fileType: slideFile.type,
                         fileSize: slideFile.size,
-                        digestHex: digest,
+                        digestHex: "pending",
                       },
+                      addBodyText: null,
+                      uploadedAssetId: null,
                       children: [
                         { step: "upload", occurrenceKey: uploadKey, done: false },
-                        { step: "add", occurrenceKey: mintOccurrence(), done: false },
+                        { step: "add", occurrenceKey: itemKey, done: false },
                       ],
                       role: capabilities.mode,
                       shopId: detail.sellerPartyId ?? sellerShopId,
                       actorUserId: actorId,
                       recordedAt: new Date().toISOString(),
                     };
-                    const outcome = await runDurableStoryMutation({
+                    const outcome = await runDurableUploadAdd({
                       gate,
                       envelope: uploadEnvelope,
-                      send: async () => {
-                        const uploaded =
-                          capabilities.mode === "seller"
-                            ? await uploadSellerStoryMedia(slideFile, uploadKey)
-                            : detail.sellerPartyId
-                              ? await uploadAdminStoryMediaForShop(slideFile, detail.sellerPartyId, uploadKey)
-                              : await uploadAdminStoryMedia(slideFile, uploadKey);
-                        if (uploaded.state !== "ok" || !uploaded.data) {
-                          return { ok: false, message: uploaded.message ?? "آپلود فایل ممکن نشد." };
-                        }
-                        uploadEnvelope.children[0]!.done = true;
-                        storeStoryIntent(uploadEnvelope);
-                        const itemKey = uploadEnvelope.children[1]!.occurrenceKey;
-                        const mediaType = uploaded.data.contentType.startsWith("video/") ? "video" : "image";
-                        const durationMs =
-                          mediaType === "image" ? Math.max(1, Number(slideDurationSec) || 5) * 1000 : null;
-                        const added =
-                          capabilities.mode === "seller"
-                            ? await addSellerStoryItem(detail.storyId, {
-                                mediaType,
-                                mediaAssetId: uploaded.data.mediaAssetId,
-                                mediaUrl: uploaded.data.displayUrl,
-                                caption: slideCaption.trim() || null,
-                                durationMs,
-                                ctaType: slideCtaType,
-                                ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
-                                expectedVersion: detail.versionToken,
-                                occurrenceKey: itemKey,
-                              })
-                            : await addAdminStoryItem(detail.storyId, {
-                                mediaType,
-                                mediaAssetId: uploaded.data.mediaAssetId,
-                                mediaUrl: uploaded.data.displayUrl,
-                                caption: slideCaption.trim() || null,
-                                durationMs,
-                                ctaType: slideCtaType,
-                                ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
-                                expectedVersion: detail.versionToken,
-                                occurrenceKey: itemKey,
-                              });
-                        if (added.state !== "ok") {
-                          return { ok: false, message: added.message ?? "افزودن اسلاید ممکن نشد." };
-                        }
-                        return { ok: true, data: added.data };
-                      },
+                      scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                      uploadFile: slideFile,
                     });
                     if (outcome.state === "ok") {
                       toast.success("اسلاید اضافه شد.");
@@ -1137,14 +1187,43 @@ function StoryManagementScreenBody({
                   toast.error("دلیل رد را بنویسید.");
                   return;
                 }
+                if (!actorId) return;
                 const key = mintOccurrence();
-                void rejectAdminStory(detail.storyId, rejectDraft.trim(), detail.versionToken, key).then((result) => {
-                  if (result.state === "ok") {
+                const body = {
+                  reason: rejectDraft.trim(),
+                  expectedVersion: detail.versionToken,
+                  occurrenceKey: key,
+                };
+                const envelope: StoryIntentEnvelope = {
+                  version: 2,
+                  action: "reject",
+                  occurrenceKey: key,
+                  method: "POST",
+                  path: `/v1/admin/stories/${detail.storyId}/reject`,
+                  routeTargetId: detail.storyId,
+                  expectedVersion: detail.versionToken,
+                  bodyText: JSON.stringify(body),
+                  uploadMeta: null,
+                  addBodyText: null,
+                  uploadedAssetId: null,
+                  children: [],
+                  role: "admin",
+                  shopId: detail.sellerPartyId,
+                  actorUserId: actorId,
+                  recordedAt: new Date().toISOString(),
+                };
+                void runDurableStoryMutation({
+                  gate,
+                  envelope,
+                  scope: { role: "admin", shopId: null, actorUserId: actorId },
+                }).then((outcome) => {
+                  if (outcome.state === "ok") {
                     toast.success("رد شد.");
                     setRejectOpen(false);
                     refreshGrid();
                     setReloadToken((v) => v + 1);
-                  } else toast.error(result.message ?? "رد ممکن نشد.");
+                  } else if (outcome.state === "failed") toast.error(outcome.message);
+                  else toast.error("رد ممکن نشد.");
                 });
               }}
             >
@@ -1160,29 +1239,27 @@ function StoryManagementScreenBody({
         title={scheduleMode === "approve_schedule" ? "تأیید و زمان‌بندی" : "زمان‌بندی نمایش"}
       >
         <div className="space-y-3 p-1">
-          <p className="text-sm text-muted">زمان به وقت تهران (UTC+03:30). اگر پایان خالی بماند تا توقف دستی می‌ماند.</p>
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">شروع (YYYY-MM-DDTHH:mm)</span>
-            <input
-              type="text"
-              dir="ltr"
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={scheduleDraft.startAt}
-              onChange={(e) => setScheduleDraft((c) => ({ ...c, startAt: e.target.value }))}
-              placeholder="1404-08-28T10:00"
-              data-testid="story-schedule-start"
+          <p className="text-sm text-muted">زمان به وقت تهران. اگر پایان خالی بماند تا توقف دستی می‌ماند.</p>
+          {scheduleFieldError ? (
+            <p className="text-sm text-rose-700" role="alert" data-testid="story-schedule-error">{scheduleFieldError}</p>
+          ) : null}
+          <label className="block text-sm" data-testid="story-schedule-start-wrap">
+            <span className="mb-1 block text-gray-600">روز و ساعت شروع</span>
+            <JalaliDatePicker
+              ariaLabel="روز شروع"
+              value={scheduleDraft.startDayIso || undefined}
+              onChange={(iso) => setScheduleDraft((c) => ({ ...c, startDayIso: iso ?? "" }))}
             />
+            <input type="time" className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" value={scheduleDraft.startTime} onChange={(e) => setScheduleDraft((c) => ({ ...c, startTime: e.target.value }))} data-testid="story-schedule-start" />
           </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">پایان (اختیاری)</span>
-            <input
-              type="text"
-              dir="ltr"
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              value={scheduleDraft.endAt}
-              onChange={(e) => setScheduleDraft((c) => ({ ...c, endAt: e.target.value }))}
-              data-testid="story-schedule-end"
+          <label className="block text-sm" data-testid="story-schedule-end-wrap">
+            <span className="mb-1 block text-gray-600">روز و ساعت پایان (اختیاری)</span>
+            <JalaliDatePicker
+              ariaLabel="روز پایان"
+              value={scheduleDraft.endDayIso || undefined}
+              onChange={(iso) => setScheduleDraft((c) => ({ ...c, endDayIso: iso ?? "" }))}
             />
+            <input type="time" className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" value={scheduleDraft.endTime} onChange={(e) => setScheduleDraft((c) => ({ ...c, endTime: e.target.value }))} data-testid="story-schedule-end" />
           </label>
           <div className="flex justify-end gap-2">
             <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setScheduleOpen(false)}>
@@ -1194,8 +1271,14 @@ function StoryManagementScreenBody({
               onClick={() => {
                 if (!detail || !actorId) return;
                 const key = mintOccurrence();
-                const startAt = fromDatetimeLocalValue(scheduleDraft.startAt);
-                const endAt = fromDatetimeLocalValue(scheduleDraft.endAt);
+                const parsed = parseStoryScheduleDraft(scheduleDraft);
+                if (!parsed.ok) {
+                  setScheduleFieldError(parsed.message);
+                  return;
+                }
+                setScheduleFieldError(null);
+                const startAt = parsed.startAt;
+                const endAt = parsed.endAt;
                 const body =
                   scheduleMode === "approve_schedule"
                     ? { expectedVersion: detail.versionToken, startAt, endAt, occurrenceKey: key }
@@ -1213,6 +1296,8 @@ function StoryManagementScreenBody({
                   expectedVersion: detail.versionToken,
                   bodyText: JSON.stringify(body),
                   uploadMeta: null,
+                  addBodyText: null,
+                  uploadedAssetId: null,
                   children: [],
                   role: "admin",
                   shopId: detail.sellerPartyId,
@@ -1222,25 +1307,7 @@ function StoryManagementScreenBody({
                 void runDurableStoryMutation({
                   gate,
                   envelope,
-                  send: async () => {
-                    const result =
-                      scheduleMode === "approve_schedule"
-                        ? await approveAndScheduleAdminStory(detail.storyId, {
-                            expectedVersion: detail.versionToken,
-                            startAt,
-                            endAt,
-                            occurrenceKey: key,
-                          })
-                        : await scheduleAdminStory(detail.storyId, {
-                            startAt,
-                            endAt,
-                            expectedVersion: detail.versionToken,
-                            occurrenceKey: key,
-                          });
-                    return result.state === "ok"
-                      ? { ok: true, data: result.data }
-                      : { ok: false, message: result.message ?? "زمان‌بندی ممکن نشد." };
-                  },
+                  scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                 }).then((outcome) => {
                   if (outcome.state === "blocked") {
                     toast.error(
@@ -1311,6 +1378,8 @@ function StoryManagementScreenBody({
                       expectedVersion: detail.versionToken,
                       bodyText: JSON.stringify({ expectedVersion: detail.versionToken, occurrenceKey: key }),
                       uploadMeta: null,
+                      addBodyText: null,
+                      uploadedAssetId: null,
                       children: [],
                       role: "admin",
                       shopId: detail.sellerPartyId,
@@ -1320,12 +1389,7 @@ function StoryManagementScreenBody({
                     void runDurableStoryMutation({
                       gate,
                       envelope,
-                      send: async () => {
-                        const result = await approveAndPublishAdminStory(detail.storyId, detail.versionToken, key);
-                        return result.state === "ok"
-                          ? { ok: true, data: result.data }
-                          : { ok: false, message: result.message ?? "تأیید ممکن نشد." };
-                      },
+                      scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                     }).then((outcome) => {
                       if (outcome.state === "ok") {
                         toast.success("تأیید و منتشر شد.");

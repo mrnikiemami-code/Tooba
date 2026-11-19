@@ -137,12 +137,12 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var endpointSources = Sources(endpoints);
         var applicationSources = Sources(application);
 
-        // 30 routes: 17 admin + 12 seller + 1 storefront (TB-281-R2 seller query; R3 keeps route count).
-        Assert.Equal(30, endpointSources.Sum(s => Regex.Matches(s, @"\.Map(Get|Post|Put|Patch|Delete)\(").Count));
-        Assert.Equal(17, Regex.Matches(
+        // 34 routes: 19 admin + 14 seller + 1 storefront (TB-282-R2 locale/product lookup reads).
+        Assert.Equal(34, endpointSources.Sum(s => Regex.Matches(s, @"\.Map(Get|Post|Put|Patch|Delete)\(").Count));
+        Assert.Equal(19, Regex.Matches(
             File.ReadAllText(Path.Combine(endpoints, "Admin", "StoryAdminEndpoints.cs")),
             @"\.Map(Get|Post|Put|Patch|Delete)\(").Count);
-        Assert.Equal(12, Regex.Matches(
+        Assert.Equal(14, Regex.Matches(
             File.ReadAllText(Path.Combine(endpoints, "Seller", "StorySellerEndpoints.cs")),
             @"\.Map(Get|Post|Put|Patch|Delete)\(").Count);
         Assert.Equal(1, Regex.Matches(
@@ -159,12 +159,12 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("app.MapStoryModuleEndpoints();", program, StringComparison.Ordinal);
 
-        // CQRS: 30 real requests/handlers (TB-281 + seller query), dispatched through ISender.
+        // CQRS: 32 real requests/handlers (TB-282-R2 + locale/product lookup reads), dispatched through ISender.
         var joinedApplication = string.Join("\n", applicationSources);
-        Assert.Equal(30, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
-        Assert.Equal(30, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
+        Assert.Equal(32, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
+        Assert.Equal(32, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
         Assert.Equal(27, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
-        Assert.Equal(30, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
+        Assert.Equal(34, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
 
         // No endpoint reaches persistence directly.
         Assert.DoesNotContain("DbContext", string.Join("\n", endpointSources), StringComparison.Ordinal);
@@ -259,7 +259,7 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
             ["Tooba.Story.Domain"] = ["Tooba.BuildingBlocks", "Tooba.Story.Contracts"],
             ["Tooba.Story.Application"] = ["Tooba.BuildingBlocks", "Tooba.Story.Contracts", "Tooba.Story.Domain"],
             ["Tooba.Story.Endpoints"] = ["Tooba.BuildingBlocks", "Tooba.Story.Application", "Tooba.Story.Contracts"],
-            ["Tooba.Story.Infrastructure"] = ["Tooba.Catalog.Contracts", "Tooba.Media.Contracts", "Tooba.ModuleContracts", "Tooba.Party.Contracts", "Tooba.Persistence", "Tooba.Story.Application", "Tooba.Story.Contracts", "Tooba.Story.Domain"],
+            ["Tooba.Story.Infrastructure"] = ["Tooba.Catalog.Contracts", "Tooba.Localization.Contracts", "Tooba.Media.Contracts", "Tooba.ModuleContracts", "Tooba.Offer.Contracts", "Tooba.Party.Contracts", "Tooba.Persistence", "Tooba.Story.Application", "Tooba.Story.Contracts", "Tooba.Story.Domain"],
         };
 
         foreach (var (project, references) in expected)
