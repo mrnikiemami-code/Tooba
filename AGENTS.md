@@ -1,3 +1,17 @@
+# CURRENT — R16 REPORTED TYPING REPAIR ACCEPTED; OWNER CHECK PENDING — 2026-11-20
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16/ARCHITECT-REVIEW.md
+Code 6450d2684f58b5861ea650404f5e37395d771342 / evidence 7f9dd5ef073cbbec257ec69b69194510b99e71b0.
+Decision ACCEPT_REPORTED_REJECT_TYPING_REPAIR_FOR_LOCAL_OWNER_CHECK. Source fix removes callback-driven query reload during dialog state changes. Mounted per-character/backspace and served controlled reads 1/1/1, selected count 3 retained, cancel zero reject reviewed. This is a bounded interaction acceptance, not all-Story or owner acceptance.
+State: AWAITING_LOCAL_OWNER_CHECK
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_USER_REVIEW
+No R17 issued. Coverage limits recorded: no independent IME/nondefault sort/page/scroll/mounted actor-switch proof; architect did not rerun Windows browser/tests. Main-storefront rows are not made eligible for seller moderation. Host5088 skip-bootstrap=1 / FE3000 next-dev; Html404 production blocker unchanged.
+Preserve R14/R15 safety/date layout, VendorShell/language registry, Returns/payout/user work, critical-storefront limitation and R6 effects UNKNOWN. ZERO backend/auth/grant/seed/live writes.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — TB-282-R16 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16/TASK.md` and
