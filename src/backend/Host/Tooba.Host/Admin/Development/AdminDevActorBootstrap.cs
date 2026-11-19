@@ -2,7 +2,6 @@ using Tooba.BuildingBlocks;
 using Tooba.Identity.Contracts;
 using Tooba.Identity.Contracts.Auth;
 using Tooba.Identity.Contracts.Errors;
-using Tooba.Identity.Contracts.Auth;
 
 namespace Tooba.Host.Admin.Development;
 
@@ -31,6 +30,39 @@ internal static class AdminDevActorBootstrap
             {
                 return _snapshot;
             }
+        }
+    }
+
+    /// <summary>
+    /// Read-only Development bind: locate the ALREADY EXISTING admin actor and current tenant,
+    /// populate <see cref="Snapshot"/> without Register/Write/seed. Safe under skip-bootstrap.
+    /// </summary>
+    public static async Task TryBindExistingSnapshotAsync(
+        IServiceProvider provider,
+        CancellationToken cancellationToken)
+    {
+        if (Snapshot is not null)
+        {
+            return;
+        }
+
+        var tenant = provider.GetRequiredService<ICurrentTenant>().Current;
+        if (tenant is null)
+        {
+            return;
+        }
+
+        var authentication = provider.GetRequiredService<IIdentityAuthenticationService>();
+        var actor = await authentication.FindUserIdByIdentifierAsync(
+            LoginIdentifierKind.Email, AdminEmail, cancellationToken);
+        if (actor is null)
+        {
+            return;
+        }
+
+        lock (Gate)
+        {
+            _snapshot ??= new AdminDevActorSnapshot(actor.Value, AdminEmail, tenant.TenantId.Value);
         }
     }
 
@@ -91,6 +123,15 @@ internal static class AdminDevActorBootstrap
         lock (Gate)
         {
             _snapshot = new AdminDevActorSnapshot(actor.Value, AdminEmail, tenant.TenantId.Value);
+        }
+    }
+
+    /// <summary>Test/process helper: clear in-memory snapshot (does not touch storage).</summary>
+    internal static void ClearSnapshotForTests()
+    {
+        lock (Gate)
+        {
+            _snapshot = null;
         }
     }
 }

@@ -20,11 +20,23 @@ public static class AdminDevContextEndpoints
         app.MapGet("/v1/admin/dev-context", GetDevContext);
     }
 
-    private static IResult GetDevContext(
+    private static async Task<IResult> GetDevContext(
         IHostEnvironment environment,
-        ApiResponseFactory api)
+        ApiResponseFactory api,
+        IServiceProvider services,
+        CancellationToken cancellationToken)
     {
-        if (!environment.IsDevelopment() || AdminDevActorBootstrap.Snapshot is not { } snapshot)
+        if (!environment.IsDevelopment())
+        {
+            return api.From(Result.Failure<AdminDevContextResponse>(new SemanticError(UnavailableCode)));
+        }
+
+        if (AdminDevActorBootstrap.Snapshot is null)
+        {
+            await AdminDevActorBootstrap.TryBindExistingSnapshotAsync(services, cancellationToken);
+        }
+
+        if (AdminDevActorBootstrap.Snapshot is not { } snapshot)
         {
             return api.From(Result.Failure<AdminDevContextResponse>(new SemanticError(UnavailableCode)));
         }

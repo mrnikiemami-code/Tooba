@@ -517,6 +517,29 @@ function StoryManagementScreenBody({
     else toast.error("ارسال انجام نشد.");
   }
 
+  function extractCreatedStoryId(data: unknown): string | null {
+    if (!data || typeof data !== "object") return null;
+    const root = data as { storyId?: unknown; data?: { storyId?: unknown } };
+    const id = root.storyId ?? root.data?.storyId;
+    if (typeof id === "string" && id.trim()) return id.trim();
+    return null;
+  }
+
+  /** Shared create completion: normal success and exact recovery replay both adopt one owning draft. */
+  function adoptBoundCreatedDraft(storyId: string, options?: { openSlideAfter?: boolean }): void {
+    ownedDraftIdRef.current = storyId;
+    setShowCreate(false);
+    setDirty(false);
+    if (options?.openSlideAfter) {
+      try {
+        sessionStorage.setItem(OPEN_SLIDE_AFTER_LOAD_KEY, storyId);
+      } catch {
+        /* ignore */
+      }
+    }
+    openDetail(storyId);
+  }
+
   async function createDraft(options?: { openSlideAfter?: boolean }): Promise<string | null> {
     const existingId = ownedDraftIdRef.current || selectedId;
     if (existingId) {
@@ -585,30 +608,21 @@ function StoryManagementScreenBody({
       scope: { role: capabilities.mode, shopId, actorUserId: actorId },
     });
     if (outcome.state === "ok") {
-      const payload = outcome.data as { storyId?: string; data?: { storyId?: string } };
-      const id = payload?.storyId ?? payload?.data?.storyId;
+      const id = extractCreatedStoryId(outcome.data);
       toast.success(copy.draftSaved);
-      setShowCreate(false);
-      setDirty(false);
       if (id) {
-        const storyId = String(id);
-        ownedDraftIdRef.current = storyId;
-        if (options?.openSlideAfter) {
-          try {
-            sessionStorage.setItem(OPEN_SLIDE_AFTER_LOAD_KEY, storyId);
-          } catch {
-            /* ignore */
-          }
-        }
-        // One deliberate route transition; dialog opens after bound detail load.
-        openDetail(storyId);
-        return storyId;
+        adoptBoundCreatedDraft(id, options);
+        return id;
       }
+      // Bound create without extractable id must keep evidence visible for recovery.
       refreshGrid();
       return null;
     }
     if (outcome.state === "failed") toast.error(outcome.message);
+    else if (outcome.state === "blocked") toast.error(copy.pendingContinueFailed);
     else toast.error(copy.sendFailed);
+    // Unknown/failed/blocked create retains storage; remount recovery card without a second create.
+    refreshGrid();
     return null;
   }
 
@@ -685,19 +699,37 @@ function StoryManagementScreenBody({
                   className="min-h-11 rounded-xl bg-amber-700 px-3 py-1.5 text-white"
                   data-testid="story-recovery-retry"
                   onClick={() => {
+                    const scope = { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId };
+                    if (
+                      act.role !== scope.role ||
+                      (act.shopId ?? null) !== (scope.shopId ?? null) ||
+                      act.actorUserId !== scope.actorUserId
+                    ) {
+                      toast.error(copy.pendingContinueFailed);
+                      return;
+                    }
                     void replayPendingStoryIntent({
                       gate,
                       envelope: act,
-                      scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                      scope,
                       uploadFile: recoveryFile,
                     }).then((outcome) => {
                       if (outcome.state === "ok") {
                         toast.success("اقدام ناتمام با موفقیت ادامه یافت.");
                         setRecoveryFile(null);
+                        if (act.action === "create") {
+                          const id = extractCreatedStoryId(outcome.data);
+                          if (id) {
+                            // Resume create→Add on /new through one remount; otherwise open bound detail.
+                            adoptBoundCreatedDraft(id, {
+                              openSlideAfter: Boolean(createMode && !selectedId),
+                            });
+                          }
+                        }
                         refreshGrid();
                         setReloadToken((v) => v + 1);
-                    } else if (outcome.state === "failed") toast.error(outcome.message);
-                    else toast.error(copy.pendingContinueFailed);
+                      } else if (outcome.state === "failed") toast.error(outcome.message);
+                      else toast.error(copy.pendingContinueFailed);
                     });
                   }}
                 >

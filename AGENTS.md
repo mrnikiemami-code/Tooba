@@ -1,19 +1,23 @@
-# CURRENT — R7 BOUNDED PROGRESS ACCEPTED; ONLY TB-282-R8 ISSUED — 2026-11-19
+# CURRENT — TB-282-R8 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–B: recovered create adopts bound draft (admin+seller+malformed); read-only AdminDevActor Snapshot bind under skip-bootstrap; Host/Next `dev-context` 200; BUILD_ID `7nEINy82sBP3x0f0H6xdw`; ZERO migration; ZERO live Story/Media write; ZERO grant/seed. Live Story list may still 403 under empty InMemory auth (disclosed fail-closed).
+Decision `A_RECOVERED_CREATE_ADOPTS_BOUND_DRAFT_BOTH_ROLES_B_READONLY_DEV_CONTEXT_SNAPSHOT_BIND_SKIP_BOOTSTRAP_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`. Expected-Base `8dc12e7cffed98ee40457639290ed3ae98989a70`. automaticNextImplementationTask NONE; STOP_FOR_ARCHITECT_AND_USER_REVIEW.
+
+## یادآوری اجباری معمار — استوری داخل پنل Seller قالب (۱۹ نوامبر ۲۰۲۶)
+
+استوری در پنل فروشندهٔ موجود قالب است: `vendor-panel/layout.tsx` -> `VendorShell`؛ منوی «استوری‌ها» / `story.view` / `/vendor-panel/stories`. پنل/منو/ورود موازی ساخته نشد.
+
+# HISTORICAL — TB-282-R8 ISSUED; WORKER PASS ABOVE
+
+# HISTORICAL — R7 BOUNDED PROGRESS ACCEPTED; R8 WAS ISSUED
 
 Read docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R7/ARCHITECT-REVIEW.md.
-Reviewed code 419d62d46bd3a547f275bd60ec44e7040afd6189 / main 8dc12e7cffed98ee40457639290ed3ae98989a70. Retain create/add/preview/dirty-back/labels and cookie hardening progress; delivery remains PARTIAL.
-Confirmed remaining defect: successful recovered create clears pending but does not adopt owning draft in /new; later Save/Add can mint another create. Initial retention test did not click replay.
-Safe live admin review blocked by dev-context in-memory snapshot missing under skip-bootstrap despite persisted BFF login. Only a bounded read-only existing-identity/tenant initialization/read repair is permitted, no registration/grants/seeds.
-Task-ID: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8
-Expected-Base-SHA: 8dc12e7cffed98ee40457639290ed3ae98989a70
-Exact envelope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8/TASK.md
-One worker tooba-worker-01/tooba-main; issued NOT claimed/running. Only recovered-create adoption and safe owner-review runtime; no redesign or new wave.
-R6 startup effects remain UNKNOWN. Preserve user work/Returns/payout/VendorShell/languages. ZERO new migration/seed/live business writes. Host refresh requires TOOBA_SKIP_DEVELOPMENT_BOOTSTRAP=1.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R8 (ISSUED_NOT_CLAIMED)
-automaticNextImplementationTask: NONE
-Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Reviewed code 419d62d46bd3a547f275bd60ec44e7040afd6189 / main 8dc12e7cffed98ee40457639290ed3ae98989a70. Parent PARTIAL closed by R8 worker PASS above.
 
-# HISTORICAL — superseded by CURRENT above
+# HISTORICAL — TB-282-R7 WORKER PASS; R8 WAS ISSUED
 
 # CURRENT — TB-282-R7 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-19
 
