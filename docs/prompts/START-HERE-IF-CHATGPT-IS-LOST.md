@@ -1,3 +1,15 @@
+# CURRENT — OWNER REJECTED MODERATION FEEDBACK; R17 ISSUED — 2026-11-20
+
+Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17/TASK.md
+Owner explicitly requires native app toast, understandable copy and compact bulk confirmations. No eligible action -> explanatory toast, no impossible dialog; completion -> one summary toast, no per-row result Dialog/full title lists. Large selections must have bounded summary UI.
+This owner direction SUPERSEDES R14/R15 result-dialog presentation requirement only. Keep internal per-row outcomes, durable exact retry, uncertainty, epoch/scope fences and R16 stable typing/selection repair. Main-storefront stories are not made eligible by changing copy.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+R16 typing fix accepted narrowly; whole owner UX acceptance remains rejected/pending. ZERO backend/auth/schema/grant/seed/config/live Story-Media changes; Host5088 skip-bootstrap=1 / FE3000 next-dev. Html404 release blocker unchanged. Preserve VendorShell/language registry/date layout/Returns/payout/user work and R6 effects UNKNOWN.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — R16 REPORTED TYPING REPAIR ACCEPTED; OWNER CHECK PENDING — 2026-11-20
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R16/ARCHITECT-REVIEW.md

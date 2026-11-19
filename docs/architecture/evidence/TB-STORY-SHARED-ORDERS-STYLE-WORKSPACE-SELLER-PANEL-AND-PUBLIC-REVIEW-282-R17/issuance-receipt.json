@@ -1,0 +1,11 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R17",
+  "expectedBaseSHA": "6271b64a59ae63d4344a4837f56d5933dc439504",
+  "taskSHA256": "c6b014e7547286c78a862b1aa474afb64bf1fa013ec287b8a5b5aa9b4d10414d",
+  "date": "2026-11-20",
+  "timezone": "Asia/Tehran",
+  "authority": "Owner explicitly rejected modal/per-row bulk feedback and requested native app toast",
+  "supersedes": "R14/R15 result-dialog presentation requirement only; safety retained",
+  "bridge": "Not enqueued through Bridge here; exact committed TASK.md canonical",
+  "automaticNextImplementationTask": "NONE"
+}
