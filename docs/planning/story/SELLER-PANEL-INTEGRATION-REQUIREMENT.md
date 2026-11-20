@@ -14,7 +14,7 @@ unit/guard 15/15, tsc 0; Host5088 skip-bootstrap=1, Next3000 next-dev, overflowX
 migration/config/grant/seed; ZERO live Story/Media write (version 3, occurrences 0 unchanged).
 Decision `STORY_FEEDBACK_3000MS_NO_PAUSE_SEMANTIC_SEVERITY_COLLAPSED_USER_INVOKED_RECOVERY_SINGLE_REFUSAL_REASON_AND_APPROVE_OFFERED_ONLY_WHEN_THE_REAL_APPROVE_COMMAND_ACCEPTS_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
 NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`.
-Expected-Base `1d02e87d49049e96f4d175284b96165b4c3b4777`.
+Expected-Base `1d02e87d49049e96f4d175284b96165b4c3b4777`; Final implementation SHA `0ba8caa56f0175a6d3b8a82766a6e914d4ad5fa2`.
 activeTask: NONE
 automaticNextImplementationTask: NONE
 Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
