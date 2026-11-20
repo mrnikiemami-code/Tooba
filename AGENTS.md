@@ -1,9 +1,31 @@
-# CURRENT — OWNER REJECTED FEEDBACK PERSISTENCE/SEVERITY AND APPROVAL; R18 ISSUED — 2026-11-20
+# CURRENT — TB-282-R18 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–B. Feedback uses the app's existing toast container with Story-level
+`autoClose 3000 / pauseOnHover false / pauseOnFocusLoss false` (served: 1 at 4149ms → 0 at 4450ms, no manual
+close); cannot-run and definite refusal are error severity (never blue), success success, uncertainty warning;
+the persistent amber card is now a collapsed user-invoked `<details>` count with storage/exact replay preserved;
+single refusal prints «تأیید نشد: <reason>». REAL approval cause proven on the owning method: owner story
+`01a04246-b309-7000-b1de-681552e70532` is Seller+Submitted with `contentReady=false` (legacy `MediaUrl` only, no
+owned `MediaAssetId`), so `AdminApproveAsync` always refuses `story.content.notReady`; `ProjectActionCodes` now
+offers `approve*` only when playable and keeps `reject` as the lawful repair path (reject → seller owned-asset
+update → resubmit → approve proven). Focused backend 2/2, mounts 6/6, story unit/guard 15/15, tsc 0; Host5088
+skip-bootstrap=1 recovery users=3, Next3000 next-dev, overflowX 0 at 390/1440; ZERO migration/config/grant/seed;
+ZERO live Story/Media write (version 3, occurrences 0 unchanged).
+Decision `STORY_FEEDBACK_3000MS_NO_PAUSE_SEMANTIC_SEVERITY_COLLAPSED_USER_INVOKED_RECOVERY_SINGLE_REFUSAL_REASON_AND_APPROVE_OFFERED_ONLY_WHEN_THE_REAL_APPROVE_COMMAND_ACCEPTS_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`.
+Expected-Base `1d02e87d49049e96f4d175284b96165b4c3b4777`. Final implementation SHA `0ba8caa56f0175a6d3b8a82766a6e914d4ad5fa2`.
+automaticNextImplementationTask NONE;
+STOP_FOR_ARCHITECT_AND_USER_REVIEW. Served refusal proof is controlled/read-only (no live approve POST); the
+owner's legacy record still needs a seller re-upload; Html404 production build blocker unchanged.
+
+# HISTORICAL — OWNER REJECTED FEEDBACK PERSISTENCE/SEVERITY AND APPROVAL; R18 WAS ISSUED — 2026-11-20
 
 Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18/TASK.md
 Owner requires auto-expiring existing-app colors, no blue cannot-run messages or permanent warning banner, and actual functioning approval. R17 presentation acceptance was narrow and is not functional/owner acceptance.
 Known source: zero-eligible uses info; generic batch summary hides refusal reason; pendingActs always renders yellow card. Provider already autoClose=3000 with focus/hover pauses. Actual approval failure ROOT UNKNOWN; do not invent media/auth/binding cause. R18 must prove owning approval path, valid approval + truthful invalid refusal, and measured toast disappearance on mounted/served UI.
-activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18
+activeTask: NONE
 automaticNextImplementationTask: NONE
 Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
 Preserve R16/R17 compact/typing and durable safety; pending storage survives collapsed user-invoked recovery. No unsafe clearing/bypass, live Story-Media mutations/schema/auth/grants/seeds/config. Host5088 skip-bootstrap=1 / FE3000 next-dev; Html404 production blocker unchanged. Preserve VendorShell/i18n/date layout/Returns/payout/user data and R6 effects UNKNOWN.
