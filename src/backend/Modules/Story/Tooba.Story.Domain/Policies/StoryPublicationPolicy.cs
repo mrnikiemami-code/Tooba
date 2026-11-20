@@ -76,7 +76,12 @@ public static class StoryPublicationPolicy
             codes.Add("delete");
             if (story.Origin == StoryOrigin.Seller && story.ReviewStatus == StoryReviewStatus.Submitted)
             {
-                codes.Add("approve");
+                // Approve is only truthful when the owning approve command would accept the content:
+                // AdminApproveAsync runs EnsureStoredContentAuthorizedAsync (HasPlayableContent) before any
+                // review mutation. Offering «approve» for URL-only/invalid media made the workspace promise
+                // an action the server always refuses; reject stays available because it has no readiness gate.
+                if (ready)
+                    codes.Add("approve");
                 codes.Add("reject");
                 if (ready)
                 {

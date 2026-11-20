@@ -67,6 +67,15 @@ function parseCode(payload: unknown): string | undefined {
   return undefined;
 }
 
+/** Terminal HTTP refusal: the server evaluated the frozen envelope and refused it; replay cannot help. */
+function isTerminalRefusal(result: Extract<StoryExecutorResult, { state: "failed" }>): boolean {
+  if (result.code === "story.transport.rejected" || result.code === "story.response.unverified") return false;
+  const status = result.status;
+  if (status < 400 || status >= 500) return false;
+  // Request timeout / too-early / throttling are retryable-uncertain, not a verdict on the intent.
+  return status !== 408 && status !== 425 && status !== 429;
+}
+
 /**
  * Dispatch the frozen envelope. For upload_add after upload success, uses addBodyText on add path child.
  * Callers that still need FormData for unresolved upload pass uploadFile; never rebuild JSON from form.
@@ -96,6 +105,11 @@ export async function runDurableStoryMutation<T = unknown>(args: {
     if (result.state === "ok") {
       if (!result.retainIntent) clearStoryIntentIfCurrent(result.envelope);
       return result;
+    }
+    // A definite refusal keeps nothing to continue: replaying the exact bytes would be refused again,
+    // and the leftover envelope made the next attempt look like a bogus "storage/unknown" outcome.
+    if (result.state === "failed" && isTerminalRefusal(result)) {
+      clearStoryIntentIfCurrent(result.envelope);
     }
     return result;
   } finally {
@@ -263,7 +277,10 @@ export async function runDurableUploadAdd(args: {
       clearStoryIntentIfCurrent(journal);
       return addResult;
     }
-    if (addResult.state === "failed") return { state: "failed", message: addResult.message, envelope: journal, status: addResult.status, code: addResult.code };
+    if (addResult.state === "failed") {
+      if (isTerminalRefusal(addResult)) clearStoryIntentIfCurrent(journal);
+      return { state: "failed", message: addResult.message, envelope: journal, status: addResult.status, code: addResult.code };
+    }
     return addResult;
   } finally {
     if (started === args.gate.epochRef.current) args.gate.inFlightRef.current = false;

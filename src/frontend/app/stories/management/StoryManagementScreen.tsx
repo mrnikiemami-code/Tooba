@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Eye, Send, Trash2, XCircle } from "lucide-react";
-import { toast } from "react-toastify";
+import { storyToast } from "./story-toast.ts";
 import {
   AppDataGrid,
   Dialog,
@@ -56,6 +56,7 @@ import {
   explainZeroEligibleToast,
   formatAdminBatchToast,
   groupSkippedReasons,
+  storyRefusalReasonFa,
   type StoryAdminOpKind,
   type StoryAdminOpPlan,
 } from "./story-admin-ops";
@@ -651,7 +652,7 @@ function StoryManagementScreenBody({
       } else if (result.state === "denied") setState("denied");
       else {
         setDetail(null);
-        toast.error(result.message ?? "بارگذاری جزئیات ممکن نشد.");
+        storyToast.error(result.message ?? copy.detailLoadFailed);
       }
     };
     void load();
@@ -669,7 +670,8 @@ function StoryManagementScreenBody({
     if (capabilities.mode !== "admin" || rows.length === 0) return;
     const plan = classifyAdminOp(kind, rows);
     if (plan.eligible.length === 0) {
-      toast.info(explainZeroEligibleToast(plan));
+      // Nothing can run: this is a refusal, not a blue informational note.
+      storyToast.error(explainZeroEligibleToast(plan));
       return;
     }
     setAdminOpPlan(plan);
@@ -701,11 +703,11 @@ function StoryManagementScreenBody({
   async function confirmAdminOp() {
     if (!adminOpPlan || !actorId || adminOpBusy) return;
     if (adminOpPlan.kind === "reject" && !adminOpReason.trim()) {
-      toast.error(copy.rejectReasonRequired);
+      storyToast.error(copy.rejectReasonRequired);
       return;
     }
     if (adminOpPlan.eligible.length === 0) {
-      toast.info(explainZeroEligibleToast(adminOpPlan));
+      storyToast.error(explainZeroEligibleToast(adminOpPlan));
       setAdminOpPlan(null);
       setAdminOpReason("");
       return;
@@ -727,10 +729,10 @@ function StoryManagementScreenBody({
         isCancelled: () => adminOpCancelledRef.current,
       });
       const announcement = formatAdminBatchToast(result, planKind);
-      if (announcement.severity === "success") toast.success(announcement.message);
-      else if (announcement.severity === "error") toast.error(announcement.message);
-      else if (announcement.severity === "warning") toast.warning(announcement.message);
-      else toast.info(announcement.message);
+      if (announcement.severity === "success") storyToast.success(announcement.message);
+      else if (announcement.severity === "error") storyToast.error(announcement.message);
+      else if (announcement.severity === "warning") storyToast.warning(announcement.message);
+      else storyToast.info(announcement.message);
 
       setAdminOpPlan(null);
       setAdminOpReason("");
@@ -760,7 +762,7 @@ function StoryManagementScreenBody({
   async function runSubmit(row: AdminStorySnapshot) {
     if (inFlightRef.current) return;
     if (!actorId) {
-      toast.error("شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.");
+      storyToast.error(copy.actorMissing);
       return;
     }
     const occurrenceKey = mintOccurrence();
@@ -789,16 +791,16 @@ function StoryManagementScreenBody({
       scope: { role: "seller", shopId: row.sellerPartyId, actorUserId: actorId },
     });
     if (outcome.state === "ok") {
-      toast.success(copy.submittedToast);
+      storyToast.success(copy.submittedToast);
       refreshGrid();
       if (selectedId === row.storyId) setReloadToken((v) => v + 1);
     } else if (outcome.state === "failed") {
       if (outcome.code === "story.media.forbidden" || outcome.code === "story.content.notReady") {
-        toast.error(copy.mediaRequiredHint);
+        storyToast.error(copy.mediaRequiredHint);
       } else {
-        toast.error(outcome.message);
+        storyToast.error(outcome.message);
       }
-    } else toast.error(copy.sendFailed);
+    } else storyToast.error(copy.sendFailed);
   }
   runSubmitRef.current = (row) => {
     void runSubmit(row);
@@ -851,16 +853,16 @@ function StoryManagementScreenBody({
     }
     if (inFlightRef.current) return null;
     if (!actorId) {
-      toast.error(copy.actorMissing);
+      storyToast.error(copy.actorMissing);
       return null;
     }
     const title = draftTitle.trim();
     if (!title) {
-      toast.error(copy.titleRequired);
+      storyToast.error(copy.titleRequired);
       return null;
     }
     if (capabilities.mode === "admin" && adminShopMode === "shop" && !adminShopId.trim()) {
-      toast.error(copy.shopPickRequired);
+      storyToast.error(copy.shopPickRequired);
       return null;
     }
     const windowParse = parseOptionalPublicationWindow(
@@ -873,7 +875,7 @@ function StoryManagementScreenBody({
     );
     if (!windowParse.ok) {
       setDraftWindowError(windowParse.message);
-      toast.error(windowParse.message);
+      storyToast.error(windowParse.message);
       return null;
     }
     setDraftWindowError(null);
@@ -913,7 +915,7 @@ function StoryManagementScreenBody({
     });
     if (outcome.state === "ok") {
       const id = extractCreatedStoryId(outcome.data);
-      toast.success(copy.draftSaved);
+      storyToast.success(copy.draftSaved);
       if (id) {
         adoptBoundCreatedDraft(id, options);
         return id;
@@ -922,9 +924,9 @@ function StoryManagementScreenBody({
       refreshGrid();
       return null;
     }
-    if (outcome.state === "failed") toast.error(outcome.message);
-    else if (outcome.state === "blocked") toast.error(copy.pendingContinueFailed);
-    else toast.error(copy.sendFailed);
+    if (outcome.state === "failed") storyToast.error(outcome.message);
+    else if (outcome.state === "blocked") storyToast.error(copy.pendingContinueFailed);
+    else storyToast.error(copy.sendFailed);
     // Unknown/failed/blocked create retains storage; remount recovery card without a second create.
     refreshGrid();
     return null;
@@ -982,9 +984,20 @@ function StoryManagementScreenBody({
       </div>
 
       {pendingActs.length > 0 ? (
-        <section className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4" data-testid="story-pending-recovery">
-          <h2 className="mb-2 text-sm font-bold text-amber-900">{copy.pendingHeading}</h2>
-          <ul className="space-y-2 text-sm text-amber-900">
+        <details
+          className="mb-4 rounded-xl border border-border bg-surface-elevated px-3 py-1.5 text-sm"
+          data-testid="story-pending-recovery"
+        >
+          <summary
+            className="flex min-h-9 cursor-pointer list-none items-center justify-between gap-2 text-fg-muted"
+            data-testid="story-pending-recovery-toggle"
+          >
+            <span className="font-bold">
+              {copy.pendingHeading} ({pendingActs.length.toLocaleString(numberLocale)})
+            </span>
+            <span className="text-xs">{copy.pendingExpandHint}</span>
+          </summary>
+          <ul className="mt-2 space-y-2 border-t border-border pt-2 text-fg-muted">
             {pendingActs.map((act) => (
               <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
                 <span>{pendingStoryLabel(act)}</span>
@@ -1008,7 +1021,7 @@ function StoryManagementScreenBody({
                     const shopMismatch =
                       act.role === "seller" && (act.shopId ?? null) !== (scope.shopId ?? null);
                     if (act.role !== scope.role || act.actorUserId !== scope.actorUserId || shopMismatch) {
-                      toast.error(copy.pendingContinueFailed);
+                      storyToast.error(copy.pendingContinueFailed);
                       return;
                     }
                     void replayPendingStoryIntent({
@@ -1022,7 +1035,7 @@ function StoryManagementScreenBody({
                       uploadFile: recoveryFile,
                     }).then((outcome) => {
                       if (outcome.state === "ok") {
-                        toast.success("اقدام ناتمام با موفقیت ادامه یافت.");
+                        storyToast.success(copy.pendingContinued);
                         setRecoveryFile(null);
                         if (act.action === "create") {
                           const id = extractCreatedStoryId(outcome.data);
@@ -1046,8 +1059,8 @@ function StoryManagementScreenBody({
                         }
                         refreshGrid();
                         setReloadToken((v) => v + 1);
-                      } else if (outcome.state === "failed") toast.error(outcome.message);
-                      else toast.error(copy.pendingContinueFailed);
+                      } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                      else storyToast.error(copy.pendingContinueFailed);
                     });
                   }}
                 >
@@ -1057,7 +1070,7 @@ function StoryManagementScreenBody({
               </li>
             ))}
           </ul>
-        </section>
+        </details>
       ) : null}
 
       {isListSurface ? (
@@ -1385,11 +1398,11 @@ function StoryManagementScreenBody({
                     scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                   }).then((outcome) => {
                     if (outcome.state === "ok") {
-                      toast.success(copy.stoppedToast);
+                      storyToast.success(copy.stoppedToast);
                       refreshGrid();
                       setReloadToken((v) => v + 1);
-                    } else if (outcome.state === "failed") toast.error(outcome.message);
-                    else toast.error("توقف ممکن نشد.");
+                    } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                    else storyToast.error(copy.stopFailed);
                   });
                 }}
               >
@@ -1428,11 +1441,11 @@ function StoryManagementScreenBody({
                     scope: { role: "seller", shopId: sellerShopId, actorUserId: actorId },
                   }).then((outcome) => {
                     if (outcome.state === "ok") {
-                      toast.success(copy.returnedToast);
+                      storyToast.success(copy.returnedToast);
                       refreshGrid();
                       setReloadToken((v) => v + 1);
-                    } else if (outcome.state === "failed") toast.error(outcome.message);
-                    else toast.error("بازگشت ممکن نشد.");
+                    } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                    else storyToast.error(copy.returnFailed);
                   });
                 }}
               >
@@ -1522,7 +1535,7 @@ function StoryManagementScreenBody({
                     );
                     if (!windowParse.ok) {
                       setDraftWindowError(windowParse.message);
-                      toast.error(windowParse.message);
+                      storyToast.error(windowParse.message);
                       return;
                     }
                     setDraftWindowError(null);
@@ -1562,12 +1575,12 @@ function StoryManagementScreenBody({
                       scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                     }).then((outcome) => {
                       if (outcome.state === "ok") {
-                        toast.success(copy.savedToast);
+                        storyToast.success(copy.savedToast);
                         setDirty(false);
                         setReloadToken((v) => v + 1);
                         refreshGrid();
-                      } else if (outcome.state === "failed") toast.error(outcome.message);
-                      else toast.error(copy.sendFailed);
+                      } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                      else storyToast.error(copy.sendFailed);
                     });
                   }}
                 >
@@ -1687,10 +1700,10 @@ function StoryManagementScreenBody({
                             scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                           }).then((outcome) => {
                             if (outcome.state === "ok") {
-                              toast.success(copy.reorderToast);
+                              storyToast.success(copy.reorderToast);
                               setReloadToken((v) => v + 1);
-                            } else if (outcome.state === "failed") toast.error(outcome.message);
-                            else toast.error(copy.reorderFailed);
+                            } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                            else storyToast.error(copy.reorderFailed);
                           });
                         }}
                       >
@@ -1730,11 +1743,11 @@ function StoryManagementScreenBody({
                             scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                           }).then((outcome) => {
                             if (outcome.state === "ok") {
-                              toast.success(copy.slideUpdated);
+                              storyToast.success(copy.slideUpdated);
                               setReloadToken((v) => v + 1);
                               refreshGrid();
-                            } else if (outcome.state === "failed") toast.error(outcome.message);
-                            else toast.error(copy.sendFailed);
+                            } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                            else storyToast.error(copy.sendFailed);
                           });
                         }}
                       >
@@ -1882,7 +1895,7 @@ function StoryManagementScreenBody({
                       data-product-id={row.productId}
                       onClick={() => {
                         if (!row.productId) {
-                          toast.error(copy.productIdInvalid);
+                          storyToast.error(copy.productIdInvalid);
                           return;
                         }
                         setSlideCtaTarget(row.productId);
@@ -1968,7 +1981,7 @@ function StoryManagementScreenBody({
                   if (editingItemId) {
                     const existing = detail.items.find((row) => row.storyItemId === editingItemId);
                     if (!existing) {
-                      toast.error(copy.slideMissing);
+                      storyToast.error(copy.slideMissing);
                       return;
                     }
                     const key = mintOccurrence();
@@ -2011,7 +2024,7 @@ function StoryManagementScreenBody({
                       scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                     });
                     if (outcome.state === "ok") {
-                      toast.success(copy.slideUpdated);
+                      storyToast.success(copy.slideUpdated);
                       if (slideCtaType === "product" && slideCtaTarget && selectedProductLabel) {
                         setProductLabelById((prev) => ({ ...prev, [slideCtaTarget]: selectedProductLabel }));
                       }
@@ -2019,8 +2032,8 @@ function StoryManagementScreenBody({
                       setEditingItemId(null);
                       setReloadToken((v) => v + 1);
                       refreshGrid();
-                    } else if (outcome.state === "failed") toast.error(outcome.message);
-                    else toast.error(copy.sendFailed);
+                    } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                    else storyToast.error(copy.sendFailed);
                     return;
                   }
                   if (!slideFile) return;
@@ -2072,7 +2085,7 @@ function StoryManagementScreenBody({
                     uploadFile: slideFile,
                   });
                   if (outcome.state === "ok") {
-                    toast.success(copy.slideAdded);
+                    storyToast.success(copy.slideAdded);
                     if (slideCtaType === "product" && slideCtaTarget && selectedProductLabel) {
                       setProductLabelById((prev) => ({ ...prev, [slideCtaTarget]: selectedProductLabel }));
                     }
@@ -2083,8 +2096,8 @@ function StoryManagementScreenBody({
                     setSlideCtaTarget("");
                     refreshGrid();
                     setReloadToken((v) => v + 1);
-                  } else if (outcome.state === "failed") toast.error(outcome.message);
-                  else toast.error(copy.sendFailed);
+                  } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                  else storyToast.error(copy.sendFailed);
                 })();
               }}
             >
@@ -2155,7 +2168,7 @@ function StoryManagementScreenBody({
                   scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                 }).then((outcome) => {
                   if (outcome.state === "ok") {
-                    toast.success(copy.deletedToast);
+                    storyToast.success(copy.deletedToast);
                     setDeleteOpen(false);
                     setDeleteTarget(null);
                     const closedId = target.storyId;
@@ -2167,10 +2180,10 @@ function StoryManagementScreenBody({
                     }
                     refreshGrid();
                   } else if (outcome.state === "failed") {
-                    toast.error(outcome.message);
+                    storyToast.error(outcome.message);
                     setReloadToken((v) => v + 1);
                   } else {
-                    toast.error(copy.sendFailed);
+                    storyToast.error(copy.sendFailed);
                     setReloadToken((v) => v + 1);
                   }
                 });
@@ -2394,18 +2407,18 @@ function StoryManagementScreenBody({
                   scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                 }).then((outcome) => {
                   if (outcome.state === "blocked") {
-                    toast.error(
+                    storyToast.error(
                       outcome.reason === "storage"
-                        ? "اقدام ناتمام قبلی هنوز باز است یا ذخیره ممکن نیست."
-                        : "ارسال انجام نشد.",
+                        ? copy.pendingStorageBlocked
+                        : copy.sendFailed,
                     );
                     return;
                   }
                   if (outcome.state === "failed") {
-                    toast.error(outcome.message);
+                    storyToast.error(outcome.message);
                     return;
                   }
-                  toast.success(scheduleMode === "approve_schedule" ? "تأیید و زمان‌بندی شد." : "زمان‌بندی ذخیره شد.");
+                  storyToast.success(scheduleMode === "approve_schedule" ? copy.approvedScheduled : copy.scheduleSaved);
                   setScheduleOpen(false);
                   refreshGrid();
                   setReloadToken((v) => v + 1);
@@ -2476,12 +2489,12 @@ function StoryManagementScreenBody({
                       scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                     }).then((outcome) => {
                       if (outcome.state === "ok") {
-                        toast.success("تأیید و منتشر شد.");
+                        storyToast.success(copy.approvedPublished);
                         setPreviewConfirm(null);
                         refreshGrid();
                         setReloadToken((v) => v + 1);
-                      } else if (outcome.state === "failed") toast.error(outcome.message);
-                      else toast.error("ارسال انجام نشد.");
+                      } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                      else storyToast.error(copy.sendFailed);
                     });
                   }}
                 >

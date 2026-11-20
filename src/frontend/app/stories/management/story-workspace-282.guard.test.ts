@@ -6,16 +6,21 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
 const screen = fs.readFileSync(path.join(root, "StoryManagementScreen.tsx"), "utf8");
+// Merchant-facing labels live in the locale catalogs (multilingual by design), not in the screen.
+const copy = fs.readFileSync(path.join(root, "story-management-copy.ts"), "utf8");
+// The existing react-toastify container stays the ONE feedback mechanism; the screen calls the
+// Story helper so the app duration/no-pause overrides are applied in one place.
+const storyToastSource = fs.readFileSync(path.join(root, "story-toast.ts"), "utf8");
 const vendorStories = fs.readFileSync(
   path.resolve(root, "../../vendor-panel/stories/page.tsx"),
   "utf8",
 );
 
 test("shared story workspace uses merchant labels and owning media uploads", () => {
-  assert.match(screen, /استوری جدید/);
-  assert.match(screen, /ذخیره پیش‌نویس/);
-  assert.match(screen, /ارسال برای تأیید/);
-  assert.match(screen, /عکس یا ویدیو/);
+  assert.match(copy, /استوری جدید/);
+  assert.match(copy, /ذخیره پیش‌نویس/);
+  assert.match(copy, /ارسال برای تأیید/);
+  assert.match(copy, /عکس یا ویدیو/);
   assert.match(screen, /upload-story/);
   assert.match(screen, /upload-for-shop|upload-story-platform/);
   assert.match(screen, /runDurableStoryMutation|runDurableUploadAdd/);
@@ -23,7 +28,8 @@ test("shared story workspace uses merchant labels and owning media uploads", () 
   assert.match(screen, /getSellerStory/);
   assert.match(screen, /querySellerStories/);
   assert.match(screen, /AppGridRowActionsCell/);
-  assert.match(screen, /react-toastify/);
+  assert.match(screen, /storyToast/);
+  assert.match(storyToastSource, /from "react-toastify"/);
   assert.match(screen, /JalaliDatePicker/);
   assert.doesNotMatch(screen, /loadAdminLanguages/);
   assert.doesNotMatch(screen, /loadSellerOffers/);

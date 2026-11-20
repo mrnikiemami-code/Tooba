@@ -157,11 +157,20 @@ export type StoryCopy = {
   pendingHeading: string;
   pendingRetry: string;
   pendingContinueFailed: string;
+  pendingExpandHint: string;
+  pendingContinued: string;
   draftSaved: string;
   submittedToast: string;
   stoppedToast: string;
   returnedToast: string;
   actorMissing: string;
+  detailLoadFailed: string;
+  stopFailed: string;
+  returnFailed: string;
+  pendingStorageBlocked: string;
+  approvedScheduled: string;
+  scheduleSaved: string;
+  approvedPublished: string;
   titleRequired: string;
   productIdInvalid: string;
   unsavedLeaveTitle: string;
@@ -324,11 +333,20 @@ export const faStoryCopy: StoryCopy = {
   pendingHeading: "اقدام ناتمام",
   pendingRetry: "ادامه / ارسال مجدد",
   pendingContinueFailed: "ارسال مجدد ممکن نشد.",
+  pendingExpandHint: "باز کردن",
+  pendingContinued: "اقدام ناتمام ادامه یافت.",
   draftSaved: "ذخیره شد.",
   submittedToast: "برای تأیید ارسال شد.",
   stoppedToast: "متوقف شد.",
   returnedToast: "به پیش‌نویس برگشت.",
   actorMissing: "شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.",
+  detailLoadFailed: "بارگذاری جزئیات ممکن نشد.",
+  stopFailed: "توقف ممکن نشد.",
+  returnFailed: "بازگشت ممکن نشد.",
+  pendingStorageBlocked: "اقدام ناتمام قبلی هنوز باز است یا ذخیره ممکن نیست.",
+  approvedScheduled: "تأیید و زمان‌بندی شد.",
+  scheduleSaved: "زمان‌بندی ذخیره شد.",
+  approvedPublished: "تأیید و منتشر شد.",
   titleRequired: "عنوان را وارد کنید.",
   productIdInvalid: "این ردیف شناسهٔ محصول معتبری ندارد.",
   unsavedLeaveTitle: "تغییرات ذخیره‌نشده",
@@ -491,11 +509,20 @@ export const enStoryCopy: StoryCopy = {
   pendingHeading: "Unfinished action",
   pendingRetry: "Continue / retry",
   pendingContinueFailed: "Retry could not be sent.",
+  pendingExpandHint: "Open",
+  pendingContinued: "Unfinished action resumed.",
   draftSaved: "Saved.",
   submittedToast: "Sent for approval.",
   stoppedToast: "Stopped.",
   returnedToast: "Returned to draft.",
   actorMissing: "A user identity is required to record this action safely.",
+  detailLoadFailed: "Could not load the details.",
+  stopFailed: "Stop failed.",
+  returnFailed: "Return to draft failed.",
+  pendingStorageBlocked: "A previous unfinished action is still open or storage is unavailable.",
+  approvedScheduled: "Approved and scheduled.",
+  scheduleSaved: "Schedule saved.",
+  approvedPublished: "Approved and published.",
   titleRequired: "Enter a title.",
   productIdInvalid: "This row has no valid product identity.",
   unsavedLeaveTitle: "Unsaved changes",
