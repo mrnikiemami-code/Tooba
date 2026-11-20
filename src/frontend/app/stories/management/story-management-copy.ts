@@ -57,8 +57,14 @@ export type StoryCopy = {
   destinationProduct: string;
   destinationShop: string;
   destinationExternal: string;
+  destinationInternal: string;
   destinationUnavailable: string;
   destinationPrefix: string;
+  externalLinkLabel: string;
+  internalLinkLabel: string;
+  ctaRequired: string;
+  ctaInvalidUrl: string;
+  ctaInvalidPath: string;
   productSearchPlaceholder: string;
   productSelectedPrefix: string;
   productUnknown: string;
@@ -124,6 +130,13 @@ export type StoryCopy = {
   shopNameUnavailable: string;
   locationPrefix: string;
   createWorkspaceTitle: string;
+  createWorkspaceHint: string;
+  detailWorkspaceHint: string;
+  editInfoHeading: string;
+  storyFormHeading: string;
+  storyFormHint: string;
+  listHeading: string;
+  listHint: string;
   saveForm: string;
   previewHeading: string;
   previewEmpty: string;
@@ -152,6 +165,8 @@ export type StoryCopy = {
   bulkOpReject: string;
   bulkOpDelete: string;
   scheduleDisplay: string;
+  publishNow: string;
+  publishedToast: string;
   stopDisplay: string;
   returnToDraft: string;
   pendingHeading: string;
@@ -231,9 +246,15 @@ export const faStoryCopy: StoryCopy = {
   destinationNone: "بدون لینک",
   destinationProduct: "محصول",
   destinationShop: "فروشگاه",
-  destinationExternal: "پیوند",
+  destinationExternal: "پیوند بیرونی",
+  destinationInternal: "صفحهٔ داخلی",
   destinationUnavailable: "مقصد در دسترس نیست",
   destinationPrefix: "مقصد:",
+  externalLinkLabel: "نشانی پیوند",
+  internalLinkLabel: "مسیر داخلی (مثلاً /products)",
+  ctaRequired: "برای این مقصد یک مقدار معتبر وارد کنید.",
+  ctaInvalidUrl: "نشانی پیوند باید با http:// یا https:// شروع شود.",
+  ctaInvalidPath: "مسیر داخلی باید با / شروع شود و شامل // یا \\ نباشد.",
   productSearchPlaceholder: "جستجوی نام محصول در فهرست مجاز",
   productSelectedPrefix: "محصول انتخاب‌شده:",
   productUnknown: "محصول (نامشخص)",
@@ -300,6 +321,13 @@ export const faStoryCopy: StoryCopy = {
   shopNameUnavailable: "نام فروشگاه در دسترس نیست",
   locationPrefix: "محل نمایش:",
   createWorkspaceTitle: "استوری جدید",
+  createWorkspaceHint: "عنوان، زبان و بازهٔ نمایش را ثبت کنید؛ سپس اسلایدها را اضافه کنید.",
+  detailWorkspaceHint: "مشخصات، اقدام‌های بازبینی و اسلایدهای همین استوری.",
+  editInfoHeading: "مشخصات استوری",
+  storyFormHeading: "مشخصات استوری",
+  storyFormHint: "عنوان، زبان و بازهٔ نمایش را ثبت کنید؛ سپس اسلایدها را مدیریت کنید.",
+  listHeading: "فهرست استوری‌ها",
+  listHint: "برای اقدام گروهی، ردیف‌ها را انتخاب کنید.",
   saveForm: "ذخیره",
   previewHeading: "پیش‌نمایش اسلایدها",
   previewEmpty: "هنوز اسلایدی نیست.",
@@ -328,6 +356,8 @@ export const faStoryCopy: StoryCopy = {
   bulkOpReject: "رد",
   bulkOpDelete: "حذف",
   scheduleDisplay: "زمان‌بندی نمایش",
+  publishNow: "انتشار فوری",
+  publishedToast: "منتشر شد.",
   stopDisplay: "توقف نمایش",
   returnToDraft: "بازگشت به پیش‌نویس",
   pendingHeading: "اقدام ناتمام",
@@ -407,9 +437,15 @@ export const enStoryCopy: StoryCopy = {
   destinationNone: "No link",
   destinationProduct: "Product",
   destinationShop: "Shop",
-  destinationExternal: "Link",
+  destinationExternal: "External link",
+  destinationInternal: "Internal page",
   destinationUnavailable: "Destination unavailable",
   destinationPrefix: "Destination:",
+  externalLinkLabel: "Link URL",
+  internalLinkLabel: "Internal path (e.g. /products)",
+  ctaRequired: "Enter a valid destination value.",
+  ctaInvalidUrl: "Link URL must start with http:// or https://.",
+  ctaInvalidPath: "Internal path must start with / and must not contain // or \\.",
   productSearchPlaceholder: "Search eligible product names",
   productSelectedPrefix: "Selected product:",
   productUnknown: "Product (unknown)",
@@ -476,6 +512,13 @@ export const enStoryCopy: StoryCopy = {
   shopNameUnavailable: "Shop name unavailable",
   locationPrefix: "Shown on:",
   createWorkspaceTitle: "New story",
+  createWorkspaceHint: "Set the title, language and publication window, then add slides.",
+  detailWorkspaceHint: "Story details, review actions and slides in one place.",
+  editInfoHeading: "Story details",
+  storyFormHeading: "Story details",
+  storyFormHint: "Set the title, language and publication window, then manage slides.",
+  listHeading: "Stories",
+  listHint: "Select rows to run a bulk action.",
   saveForm: "Save",
   previewHeading: "Slide preview",
   previewEmpty: "No slides yet.",
@@ -504,6 +547,8 @@ export const enStoryCopy: StoryCopy = {
   bulkOpReject: "Reject",
   bulkOpDelete: "Delete",
   scheduleDisplay: "Schedule display",
+  publishNow: "Publish now",
+  publishedToast: "Published.",
   stopDisplay: "Stop display",
   returnToDraft: "Return to draft",
   pendingHeading: "Unfinished action",

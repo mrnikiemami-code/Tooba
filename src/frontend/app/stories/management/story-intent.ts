@@ -14,6 +14,7 @@ export type StoryIntentAction =
   | "approve"
   | "approve_publish"
   | "approve_schedule"
+  | "publish_now"
   | "reject"
   | "schedule"
   | "stop"
@@ -75,6 +76,7 @@ const KNOWN_ACTIONS = new Set<StoryIntentAction>([
   "approve",
   "approve_publish",
   "approve_schedule",
+  "publish_now",
   "reject",
   "schedule",
   "stop",
@@ -361,6 +363,8 @@ export function pendingStoryLabel(envelope: StoryIntentEnvelope): string {
     case "approve_schedule":
     case "schedule":
       return "زمان‌بندی هنوز تمام نشده";
+    case "publish_now":
+      return "انتشار هنوز تمام نشده";
     case "reject":
       return "رد استوری هنوز تمام نشده";
     case "stop":

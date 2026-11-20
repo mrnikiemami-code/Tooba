@@ -1,4 +1,4 @@
-﻿using Tooba.Story.Contracts.Errors;
+using Tooba.Story.Contracts.Errors;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts.Ports;
@@ -181,12 +181,10 @@ public sealed partial class StoryDirectory : IStoryDirectory
             return replay;
         story.EnsureExpectedVersion(command.ExpectedVersion);
         await EnsureProductCtaAsync(story.SellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
-        var cover = await BindCoverAsync(
-            tenantId,
-            story.SellerPartyId,
+        var cover = await BindUpdatedCoverAsync(
+            story,
             command.CoverMediaAssetId,
             command.CoverMediaUrl,
-            allowUnscopedAdminAssets: story.SellerPartyId is null,
             cancellationToken);
         var now = DateTimeOffset.UtcNow;
         story.Update(
@@ -428,12 +426,9 @@ public sealed partial class StoryDirectory : IStoryDirectory
             return replay;
         story.EnsureExpectedVersion(command.ExpectedVersion);
         await EnsureProductCtaAsync(story.SellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
-        var bound = story.SellerPartyId is Guid shop && shop != Guid.Empty
-            ? await BindSellerMediaAsync(
-                tenantId, shop, command.MediaType, command.MediaAssetId, command.MediaUrl, cancellationToken)
-            : await BindCoverAsync(
-                tenantId, null, command.MediaAssetId, command.MediaUrl,
-                allowUnscopedAdminAssets: true, cancellationToken);
+        var existingItem = story.Items.FirstOrDefault(item => item.StoryItemId == itemId)
+            ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
+        var bound = await BindUpdatedItemMediaAsync(story, existingItem, command, cancellationToken);
         story.UpdateItem(
             itemId,
             command.MediaType,
@@ -685,9 +680,11 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.EnsureExpectedVersion(command.ExpectedVersion);
         await EnsureProductCtaAsync(sellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
-        var cover = await BindCoverAsync(
-            tenantId, sellerPartyId, command.CoverMediaAssetId, command.CoverMediaUrl,
-            allowUnscopedAdminAssets: false, cancellationToken);
+        var cover = await BindUpdatedCoverAsync(
+            story,
+            command.CoverMediaAssetId,
+            command.CoverMediaUrl,
+            cancellationToken);
         var now = DateTimeOffset.UtcNow;
         story.Update(
             command.Title,
@@ -848,8 +845,9 @@ public sealed partial class StoryDirectory : IStoryDirectory
         var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
         story.EnsureExpectedVersion(command.ExpectedVersion);
         await EnsureProductCtaAsync(sellerPartyId, command.CtaType, command.CtaTarget, cancellationToken);
-        var bound = await BindSellerMediaAsync(
-            tenantId, sellerPartyId, command.MediaType, command.MediaAssetId, command.MediaUrl, cancellationToken);
+        var existingItem = story.Items.FirstOrDefault(item => item.StoryItemId == itemId)
+            ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
+        var bound = await BindUpdatedItemMediaAsync(story, existingItem, command, cancellationToken);
         story.UpdateItem(
             itemId,
             command.MediaType,

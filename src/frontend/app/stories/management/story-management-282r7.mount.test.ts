@@ -390,7 +390,7 @@ function ownedCreatesSafe(creates: number): boolean {
   return creates === 1;
 }
 
-test("B: internal path is unavailable; shop GUID shows shop name; origin stays creator role", async () => {
+test("B: internal path is merchant-labeled; shop GUID shows shop name; origin stays creator role", async () => {
   const original = globalThis.fetch;
   const draft = emptyDraft({
     origin: "Admin",
@@ -444,10 +444,10 @@ test("B: internal path is unavailable; shop GUID shows shop name; origin stays c
   await flush();
   await waitFor(() => qq(tree.container, '[data-testid="story-slide-row"]').length === 2);
   const text = tree.container.textContent ?? "";
-  assert.match(text, new RegExp(faStoryCopy.destinationUnavailable));
+  assert.match(text, new RegExp(faStoryCopy.destinationInternal));
   assert.match(text, new RegExp(`${faStoryCopy.destinationShop}: فروشگاه آلفا`));
   assert.doesNotMatch(text, /\binternal\b/);
-  assert.doesNotMatch(text, /\/products/);
+  assert.match(text, /\/products/);
   assert.match(text, new RegExp(faStoryCopy.originCreatorAdmin));
   assert.doesNotMatch(text, /ویترین اصلی ·/);
   globalThis.fetch = original;

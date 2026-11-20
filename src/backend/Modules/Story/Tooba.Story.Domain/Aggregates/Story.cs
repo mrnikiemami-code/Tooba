@@ -211,7 +211,11 @@ public sealed class Story
         ValidateLocale(locale);
         ValidateMarket(market);
         ValidateMediaUrl(coverMediaUrl);
-        var (normalizedCtaType, normalizedCtaTarget) = StoryRules.ValidateCta(ctaType, ctaTarget);
+        var unchangedCta = string.Equals((ctaType ?? string.Empty).Trim(), CtaType, StringComparison.OrdinalIgnoreCase)
+            && string.Equals((ctaTarget ?? string.Empty).Trim(), CtaTarget ?? string.Empty, StringComparison.Ordinal);
+        var (normalizedCtaType, normalizedCtaTarget) = unchangedCta
+            ? (CtaType, CtaTarget)
+            : StoryRules.ValidateCta(ctaType, ctaTarget);
         Title = title.Trim();
         Locale = NormalizeOptional(locale, StoryRules.LocaleMaxLength);
         Market = NormalizeOptional(market, StoryRules.MarketMaxLength);

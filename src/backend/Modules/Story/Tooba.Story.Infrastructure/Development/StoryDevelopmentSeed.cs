@@ -18,6 +18,9 @@ public static class StoryDevelopmentSeed
     /// <summary>Actor نمونهٔ فروشنده.</summary>
     public static readonly Guid DevSellerActorId = Guid.Parse("01a03628-3f68-7000-844d-99f1cadb54b0");
 
+    /// <summary>دارایی رسانهٔ نمونهٔ فروشنده برای نمونهٔ قابل‌ارسال.</summary>
+    public static readonly Guid DevSellerMediaAssetId = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c6");
+
     /// <summary>استوری‌های نمونه را برای Tenantهای dev درج می‌کند.</summary>
     public static async Task ApplyAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
@@ -136,6 +139,7 @@ public static class StoryDevelopmentSeed
             displayOrder: 90,
             now,
             locale: "fa",
+            coverMediaAssetId: DevSellerMediaAssetId,
             coverMediaUrl: "/images/stories/1.jpg",
             ctaType: "internal",
             ctaTarget: "/products");
@@ -143,6 +147,7 @@ public static class StoryDevelopmentSeed
             StoryRules.MediaImage,
             displayOrder: 0,
             now,
+            mediaAssetId: DevSellerMediaAssetId,
             mediaUrl: "/images/stories/1.jpg",
             ctaType: "internal",
             ctaTarget: "/products");
@@ -155,6 +160,7 @@ public static class StoryDevelopmentSeed
             displayOrder: 91,
             now,
             locale: "fa",
+            coverMediaAssetId: DevSellerMediaAssetId,
             coverMediaUrl: "/images/stories/2.jpg",
             ctaType: "internal",
             ctaTarget: "/products");
@@ -162,6 +168,7 @@ public static class StoryDevelopmentSeed
             StoryRules.MediaImage,
             displayOrder: 0,
             now,
+            mediaAssetId: DevSellerMediaAssetId,
             mediaUrl: "/images/stories/2.jpg",
             ctaType: "internal",
             ctaTarget: "/products");

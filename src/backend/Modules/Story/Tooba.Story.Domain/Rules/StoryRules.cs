@@ -80,9 +80,33 @@ public static class StoryRules
                 throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
         }
 
+        if (normalizedType is "internal" or "category" or "article"
+            && !IsSafeInternalPath(normalizedTarget))
+        {
+            throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+        }
+
+        if (string.Equals(normalizedType, "external", StringComparison.Ordinal)
+            && (!Uri.TryCreate(normalizedTarget, UriKind.Absolute, out var uri)
+                || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)))
+        {
+            throw new SemanticException(new SemanticError(StoryErrorCodes.CtaRejected));
+        }
+
         return (normalizedType, normalizedTarget);
     }
 
+    /// <summary>مسیر داخلی امن برای CTAهای path-based؛ scheme، // و backslash پذیرفته نمی‌شوند.</summary>
+    public static bool IsSafeInternalPath(string? target)
+    {
+        if (string.IsNullOrWhiteSpace(target))
+            return false;
+        var value = target.Trim();
+        return value.StartsWith('/')
+            && !value.StartsWith("//", StringComparison.Ordinal)
+            && value.IndexOf('\\') < 0
+            && !value.Any(char.IsControl);
+    }
     /// <summary>نوع رسانه را اعتبارسنجی می‌کند.</summary>
     public static string ValidateMediaType(string mediaType)
     {

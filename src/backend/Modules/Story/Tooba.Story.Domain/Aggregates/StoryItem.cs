@@ -87,7 +87,11 @@ public sealed class StoryItem
         ValidateMediaUrl(mediaUrl);
         ValidateCaption(caption);
         ValidateDuration(durationMs);
-        var (normalizedCtaType, normalizedCtaTarget) = StoryRules.ValidateCta(ctaType, ctaTarget);
+        var unchangedCta = string.Equals((ctaType ?? string.Empty).Trim(), CtaType, StringComparison.OrdinalIgnoreCase)
+            && string.Equals((ctaTarget ?? string.Empty).Trim(), CtaTarget ?? string.Empty, StringComparison.Ordinal);
+        var (normalizedCtaType, normalizedCtaTarget) = unchangedCta
+            ? (CtaType, CtaTarget)
+            : StoryRules.ValidateCta(ctaType, ctaTarget);
         MediaAssetId = mediaAssetId;
         MediaUrl = NormalizeOptional(mediaUrl);
         Caption = NormalizeOptional(caption);

@@ -1,8 +1,18 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Eye, Send, Trash2, XCircle } from "lucide-react";
+import { Check, Eye, ImagePlus, Layers, Plus, Send, Store, Trash2, XCircle } from "lucide-react";
 import { storyToast } from "./story-toast.ts";
+import {
+  StoryActionBar,
+  StoryEmptyState,
+  StoryPageHeader,
+  StorySectionCard,
+  StoryStatusPill,
+  storyButtonClass,
+  type StoryTone,
+} from "./story-management-ui";
+import { StoryPublicationWindowFields } from "./story-publication-window-fields";
 import {
   AppDataGrid,
   Dialog,
@@ -86,18 +96,6 @@ function Denied({ retry, copy }: { retry: () => void; copy: StoryCopy }) {
   );
 }
 
-function PageHeading({ title, description, homeLabel }: { title: string; description: string; homeLabel: string }) {
-  return (
-    <div className="mb-5">
-      <p className="text-sm text-muted">
-        {homeLabel} / {title}
-      </p>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
-      <p className="mt-1 text-base text-muted">{description}</p>
-    </div>
-  );
-}
-
 function shopLabel(row: AdminStorySnapshot, copy: StoryCopy): string {
   if (row.shopDisplayName?.trim()) return row.shopDisplayName.trim();
   if (!row.sellerPartyId) return copy.platformStorefront;
@@ -115,6 +113,7 @@ function destinationLabelForType(ctaType: string | null | undefined, copy: Story
   if (!type || type === "none") return copy.destinationNone;
   if (type === "product") return copy.destinationProduct;
   if (type === "external") return copy.destinationExternal;
+  if (type === "internal" || type === "category" || type === "article") return copy.destinationInternal;
   if (type === "shop" || type === "seller") return copy.destinationShop;
   return copy.destinationUnavailable;
 }
@@ -145,118 +144,86 @@ function displayState(row: AdminStorySnapshot, copy: StoryCopy, nowMs: number = 
   return copy.displayDraft;
 }
 
+function displayStateTone(row: AdminStorySnapshot): StoryTone {
+  if (row.effectivelyPublic) return "success";
+  if (row.reviewStatus === "Rejected" || row.status === "Expired" || row.status === "Disabled") return "danger";
+  if (row.reviewStatus === "Submitted") return "warning";
+  if (row.status === "Scheduled") return "info";
+  return "neutral";
+}
+
+function StoryPreviewPanel({
+  items,
+  copy,
+  numberLocale,
+  testId,
+}: {
+  items: AdminStorySnapshot["items"];
+  copy: StoryCopy;
+  numberLocale: string;
+  testId: string;
+}) {
+  return (
+    <aside className="rounded-xl border border-border bg-background/40 p-4" data-testid={testId}>
+      <h3 className="mb-3 text-sm font-bold text-foreground">{copy.previewHeading}</h3>
+      {items.length === 0 ? (
+        <StoryEmptyState
+          compact
+          title={copy.previewEmpty}
+          description={copy.slidesEmptyHint}
+          icon={<ImagePlus className="h-5 w-5" aria-hidden="true" />}
+        />
+      ) : (
+        <ul className="space-y-3">
+          {items.map((item, index) => (
+            <li key={item.storyItemId} className="overflow-hidden rounded-xl border border-border bg-surface">
+              {item.mediaType === "video" && item.mediaUrl ? (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <video src={item.mediaUrl} className="max-h-40 w-full object-cover" muted playsInline controls />
+              ) : item.mediaUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.mediaUrl} alt="" className="max-h-40 w-full object-cover" />
+              ) : null}
+              <div className="p-3">
+                <p className="text-xs font-bold text-foreground">
+                  {(index + 1).toLocaleString(numberLocale)} · {item.mediaType === "video" ? copy.videoLabel : copy.photoLabel}
+                </p>
+                {item.caption ? <p className="mt-1 text-xs text-muted">{item.caption}</p> : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
+  );
+}
+
+function validateCtaInput(ctaType: string, ctaTarget: string, copy: StoryCopy): string | null {
+  const type = (ctaType ?? "").trim().toLowerCase();
+  if (!type || type === "none") return null;
+  const value = (ctaTarget ?? "").trim();
+  if (!value) return copy.ctaRequired;
+  if (type === "external") {
+    try {
+      const url = new URL(value);
+      if (url.protocol !== "http:" && url.protocol !== "https:") return copy.ctaInvalidUrl;
+    } catch {
+      return copy.ctaInvalidUrl;
+    }
+    return null;
+  }
+  if (type === "internal" || type === "category" || type === "article") {
+    if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+      return copy.ctaInvalidPath;
+    }
+  }
+  return null;
+}
 function isVideoFile(file: File | null): boolean {
   if (!file) return false;
   return file.type.startsWith("video/") || /\.(mp4|webm|mov)$/i.test(file.name);
 }
 
-/** بازهٔ انتشار مشترک — «بدون پایان» کنار برچسب پایان؛ ستون‌ها هم‌ارتفاع. */
-function StoryPublicationWindowFields({
-  testIdPrefix,
-  copy,
-  draftWindow,
-  noPublicationEnd,
-  error,
-  onDraftChange,
-  onNoEndChange,
-}: {
-  testIdPrefix: "story-create-window" | "story-edit-window";
-  copy: StoryCopy;
-  draftWindow: StoryScheduleDraft;
-  noPublicationEnd: boolean;
-  error: string | null;
-  onDraftChange: (next: StoryScheduleDraft) => void;
-  onNoEndChange: (noEnd: boolean) => void;
-}) {
-  const startDayId = `${testIdPrefix}-start-day-label`;
-  const startTimeId = `${testIdPrefix}-start-time`;
-  const endDayId = `${testIdPrefix}-end-day-label`;
-  const endTimeId = `${testIdPrefix}-end-time`;
-  const noEndId = `${testIdPrefix}-no-end`;
-  const endDisabled = noPublicationEnd;
-
-  return (
-    <fieldset
-      className="space-y-3 rounded-xl border border-gray-100 p-3"
-      data-testid={testIdPrefix === "story-create-window" ? "story-create-publication-window" : "story-edit-publication-window"}
-    >
-      <legend className="float-none mb-1 w-full px-0">
-        <span className="text-sm font-bold text-gray-700">{copy.publicationWindowHeading}</span>
-      </legend>
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-2 text-sm">
-          <div className="flex min-h-11 items-center">
-            <p id={startDayId} className="text-gray-600">
-              {copy.publicationStartLabel}
-            </p>
-          </div>
-          <div data-testid={`${testIdPrefix}-start-day`}>
-            <JalaliDatePicker
-              ariaLabel={copy.publicationStartLabel}
-              value={draftWindow.startDayIso || undefined}
-              onChange={(iso) => onDraftChange({ ...draftWindow, startDayIso: iso ?? "" })}
-            />
-          </div>
-          <input
-            id={startTimeId}
-            type="time"
-            className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-            value={draftWindow.startTime}
-            onChange={(e) => onDraftChange({ ...draftWindow, startTime: e.target.value })}
-            data-testid={`${testIdPrefix}-start-time`}
-            aria-labelledby={startDayId}
-          />
-        </div>
-        <div className={`space-y-2 text-sm ${endDisabled ? "opacity-55" : ""}`}>
-          <div className="flex min-h-11 flex-wrap items-center gap-2" data-testid={`${testIdPrefix}-end-header`}>
-            <p id={endDayId} className="text-gray-600">
-              {copy.publicationEndLabel}
-            </p>
-            <span className="inline-flex items-center gap-2 text-sm font-normal text-gray-700">
-              <input
-                id={noEndId}
-                type="checkbox"
-                className="h-4 w-4"
-                checked={noPublicationEnd}
-                onChange={(e) => onNoEndChange(e.target.checked)}
-                data-testid={noEndId}
-              />
-              <label htmlFor={noEndId} className="cursor-pointer select-none">
-                {copy.publicationNoEndToggle}
-              </label>
-            </span>
-          </div>
-          <div data-testid={`${testIdPrefix}-end-day`} className={endDisabled ? "pointer-events-none" : undefined}>
-            <JalaliDatePicker
-              ariaLabel={copy.publicationEndLabel}
-              value={draftWindow.endDayIso || undefined}
-              onChange={(iso) => {
-                if (endDisabled) return;
-                onDraftChange({ ...draftWindow, endDayIso: iso ?? "" });
-              }}
-            />
-          </div>
-          <input
-            id={endTimeId}
-            type="time"
-            className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50"
-            value={draftWindow.endTime}
-            disabled={endDisabled}
-            onChange={(e) => onDraftChange({ ...draftWindow, endTime: e.target.value })}
-            data-testid={`${testIdPrefix}-end-time`}
-            aria-labelledby={endDayId}
-            aria-disabled={endDisabled}
-          />
-        </div>
-      </div>
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-    </fieldset>
-  );
-}
-
-/**
- * صفحهٔ مشترک مدیریت استوری — Admin و Seller؛ فهرست Orders-style و ویرایشگر سادهٔ کاسب.
- */
 export function StoryManagementScreen({
   capabilities,
   initialStoryId = null,
@@ -354,6 +321,7 @@ function StoryManagementScreenBody({
   const [slideDurationSec, setSlideDurationSec] = useState("5");
   const [slideCtaType, setSlideCtaType] = useState("none");
   const [slideCtaTarget, setSlideCtaTarget] = useState("");
+  const [slideCtaError, setSlideCtaError] = useState<string | null>(null);
   const [slideDialogOpen, setSlideDialogOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [productLabelById, setProductLabelById] = useState<Record<string, string>>({});
@@ -400,7 +368,10 @@ function StoryManagementScreenBody({
     if (type === "external") {
       return ctaTarget?.trim() ? `${copy.destinationExternal}: ${ctaTarget}` : copy.destinationExternal;
     }
-    if (type === "shop" || type === "seller" || type === "internal") {
+    if (type === "internal" || type === "category" || type === "article") {
+      return ctaTarget?.trim() ? `${copy.destinationInternal}: ${ctaTarget}` : copy.destinationInternal;
+    }
+    if (type === "shop" || type === "seller") {
       const shopName = resolveShopDestinationName(ctaTarget);
       return shopName ? `${copy.destinationShop}: ${shopName}` : copy.destinationUnavailable;
     }
@@ -435,6 +406,7 @@ function StoryManagementScreenBody({
     setSlideCtaTarget("");
     setSelectedProductLabel("");
     setProductSearch("");
+    setSlideCtaError(null);
     setSlideDialogOpen(true);
   }
 
@@ -453,6 +425,7 @@ function StoryManagementScreenBody({
         : "",
     );
     setProductSearch("");
+    setSlideCtaError(null);
     setSlideDialogOpen(true);
   }
   const epochRef = useRef(0);
@@ -948,56 +921,61 @@ function StoryManagementScreenBody({
 
   return (
     <main data-testid={testId}>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title={title} description={description} homeLabel={copy.breadcrumbHome} />
-        <div className="flex flex-wrap items-center gap-2">
-          {isListSurface && capabilities.canReview ? (
-            <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
-              {copy.filterReviewLabel}
-              <select
-                className="min-h-11 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
-                value={reviewFilter}
-                onChange={(e) => {
-                  setReviewFilter(e.target.value);
-                  refreshGrid();
-                }}
-                data-testid="admin-story-review-filter"
+      <StoryPageHeader
+        breadcrumb={copy.breadcrumbHome}
+        title={title}
+        description={description}
+        actions={
+          <>
+            {isListSurface && capabilities.canReview ? (
+              <label className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs font-medium text-muted">
+                {copy.filterReviewLabel}
+                <select
+                  className="min-h-9 min-w-28 border-0 bg-transparent py-1 text-sm font-normal text-foreground outline-none"
+                  value={reviewFilter}
+                  onChange={(e) => {
+                    setReviewFilter(e.target.value);
+                    refreshGrid();
+                  }}
+                  data-testid="admin-story-review-filter"
+                >
+                  <option value="">{copy.filterAll}</option>
+                  <option value="Submitted">{copy.filterPending}</option>
+                  <option value="Approved">{copy.filterApproved}</option>
+                  <option value="Rejected">{copy.filterRejected}</option>
+                </select>
+              </label>
+            ) : null}
+            {isListSurface && capabilities.canCreate ? (
+              <button
+                type="button"
+                className={storyButtonClass("primary")}
+                onClick={() => router.push(`${basePath}/new`)}
+                data-testid="story-create-open"
               >
-                <option value="">{copy.filterAll}</option>
-                <option value="Submitted">{copy.filterPending}</option>
-                <option value="Approved">{copy.filterApproved}</option>
-                <option value="Rejected">{copy.filterRejected}</option>
-              </select>
-            </label>
-          ) : null}
-          {isListSurface && capabilities.canCreate ? (
-            <button
-              type="button"
-              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-              onClick={() => router.push(`${basePath}/new`)}
-              data-testid="story-create-open"
-            >
-              {copy.createButton}
-            </button>
-          ) : null}
-        </div>
-      </div>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {copy.createButton}
+              </button>
+            ) : null}
+          </>
+        }
+      />
 
       {pendingActs.length > 0 ? (
         <details
-          className="mb-4 rounded-xl border border-border bg-surface-elevated px-3 py-1.5 text-sm"
+          className="mb-4 rounded-xl border border-border bg-surface-elevated text-sm"
           data-testid="story-pending-recovery"
         >
           <summary
-            className="flex min-h-9 cursor-pointer list-none items-center justify-between gap-2 text-fg-muted"
+            className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-4 py-2 text-muted transition-colors hover:text-foreground"
             data-testid="story-pending-recovery-toggle"
           >
-            <span className="font-bold">
+            <span className="font-bold text-foreground">
               {copy.pendingHeading} ({pendingActs.length.toLocaleString(numberLocale)})
             </span>
-            <span className="text-xs">{copy.pendingExpandHint}</span>
+            <span className="rounded-full bg-secondary px-2 py-1 text-xs">{copy.pendingExpandHint}</span>
           </summary>
-          <ul className="mt-2 space-y-2 border-t border-border pt-2 text-fg-muted">
+          <ul className="space-y-2 border-t border-border px-4 py-3 text-muted">
             {pendingActs.map((act) => (
               <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
                 <span>{pendingStoryLabel(act)}</span>
@@ -1013,7 +991,7 @@ function StoryManagementScreenBody({
                   ) : null}
                 <button
                   type="button"
-                  className="min-h-11 rounded-xl bg-amber-700 px-3 py-1.5 text-white"
+                  className={storyButtonClass("secondary")}
                   data-testid="story-recovery-retry"
                   onClick={() => {
                     const scope = { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId };
@@ -1094,208 +1072,235 @@ function StoryManagementScreenBody({
       ) : null}
 
       {showCreateWorkspace ? (
-        <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-create-workspace">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">{copy.createWorkspaceTitle}</h2>
+        <StorySectionCard
+          testId="story-create-workspace"
+          className="mt-5"
+          title={copy.storyFormHeading}
+          description={copy.storyFormHint}
+          actions={
             <button
               type="button"
-              className="min-h-11 rounded-xl px-3 py-1.5 text-sm"
+              className={storyButtonClass("secondary")}
               data-testid="story-create-back"
               onClick={() => requestLeave(basePath)}
             >
               {copy.backToList}
             </button>
-          </div>
-          <div className="mb-5 space-y-3">
-            <label className="block text-sm">
-              <span className="mb-1 block text-gray-600">{copy.titleLabel}</span>
-              <input
-                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                value={draftTitle}
-                onChange={(e) => {
-                  setDraftTitle(e.target.value);
-                  setDirty(true);
-                }}
-                data-testid="story-create-title"
-              />
-            </label>
-            <label className="block text-sm">
-              <span className="mb-1 block text-gray-600">{copy.languageLabel}</span>
-              <select
-                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                value={editLocale}
-                onChange={(e) => {
-                  setEditLocale(e.target.value);
-                  setDirty(true);
-                }}
-                data-testid="story-create-locale"
-              >
-                {localeOptions.map((row) => (
-                  <option key={row.code} value={row.code}>
-                    {row.name}
-                    {row.isDefault ? copy.localeDefaultSuffix : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {capabilities.mode === "seller" ? (
-              <p className="rounded-xl bg-secondary px-3 py-2 text-sm" data-testid="story-seller-shop-fixed">
-                {copy.sellerShopFixedPrefix} {sellerShopLabel.trim() || copy.sellerShopFallback}
-                <span className="mt-1 block text-xs text-muted">{copy.sellerShopFixedHint}</span>
-              </p>
-            ) : null}
-            {capabilities.mode === "admin" ? (
-              <fieldset className="space-y-2 text-sm">
-                <legend className="mb-1 text-gray-600">{copy.placementLegend}</legend>
-                <label className="flex min-h-11 items-center gap-2">
-                  <input
-                    type="radio"
-                    checked={adminShopMode === "platform"}
-                    onChange={() => {
-                      setAdminShopMode("platform");
-                      setAdminShopId("");
-                      setAdminShopName("");
-                    }}
-                  />
-                  {copy.mainStorefront}
-                </label>
-                <label className="flex min-h-11 items-center gap-2">
-                  <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
-                  {copy.forOneShop}
-                </label>
-                {adminShopMode === "shop" ? (
-                  <div className="space-y-2" data-testid="story-admin-shop-picker">
+          }
+        >
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.9fr)]">
+            <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block text-sm">
+                    <span className="mb-1 block font-medium text-muted">{copy.titleLabel}</span>
                     <input
-                      className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      placeholder={copy.shopSearchPlaceholder}
-                      value={shopSearch}
-                      onChange={(e) => setShopSearch(e.target.value)}
-                      data-testid="story-admin-shop-search"
+                      className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+                      value={draftTitle}
+                      onChange={(e) => {
+                        setDraftTitle(e.target.value);
+                        setDirty(true);
+                      }}
+                      data-testid="story-create-title"
                     />
-                    {adminShopName ? (
-                      <p className="text-sm text-muted">
-                        {copy.selectedShopPrefix} {adminShopName}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-rose-700">{copy.shopPickRequired}</p>
-                    )}
-                    <ul className="max-h-48 overflow-auto rounded-xl border border-gray-100">
-                      {filteredShops.map((row) => (
-                        <li key={row.sellerPartyId}>
-                          <button
-                            type="button"
-                            className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
-                            onClick={() => {
-                              setAdminShopId(row.sellerPartyId);
-                              setAdminShopName(row.displayName);
-                            }}
-                            data-testid="story-admin-shop-option"
-                          >
-                            {row.displayName}
-                          </button>
-                        </li>
+                  </label>
+                  <label className="block text-sm">
+                    <span className="mb-1 block font-medium text-muted">{copy.languageLabel}</span>
+                    <select
+                      className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+                      value={editLocale}
+                      onChange={(e) => {
+                        setEditLocale(e.target.value);
+                        setDirty(true);
+                      }}
+                      data-testid="story-create-locale"
+                    >
+                      {localeOptions.map((row) => (
+                        <option key={row.code} value={row.code}>
+                          {row.name}
+                          {row.isDefault ? copy.localeDefaultSuffix : ""}
+                        </option>
                       ))}
-                    </ul>
-                  </div>
+                    </select>
+                  </label>
+                </div>
+                {capabilities.mode === "seller" ? (
+                  <p className="rounded-xl border border-border bg-secondary/60 px-4 py-3 text-sm" data-testid="story-seller-shop-fixed">
+                    <Store className="mb-0.5 me-1 inline h-4 w-4 text-muted" aria-hidden="true" />
+                    {copy.sellerShopFixedPrefix} {sellerShopLabel.trim() || copy.sellerShopFallback}
+                    <span className="mt-1 block text-xs text-muted">{copy.sellerShopFixedHint}</span>
+                  </p>
                 ) : null}
-              </fieldset>
-            ) : null}
-            <StoryPublicationWindowFields
-              testIdPrefix="story-create-window"
+                {capabilities.mode === "admin" ? (
+                  <fieldset className="space-y-2 rounded-xl border border-border p-3 text-sm">
+                    <legend className="px-1 text-xs font-medium text-muted">{copy.placementLegend}</legend>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 hover:bg-secondary">
+                        <input
+                          type="radio"
+                          checked={adminShopMode === "platform"}
+                          onChange={() => {
+                            setAdminShopMode("platform");
+                            setAdminShopId("");
+                            setAdminShopName("");
+                          }}
+                        />
+                        {copy.mainStorefront}
+                      </label>
+                      <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 hover:bg-secondary">
+                        <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
+                        {copy.forOneShop}
+                      </label>
+                    </div>
+                    {adminShopMode === "shop" ? (
+                      <div className="space-y-2 border-t border-border pt-3" data-testid="story-admin-shop-picker">
+                        <input
+                          className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+                          placeholder={copy.shopSearchPlaceholder}
+                          aria-label={copy.shopSearchPlaceholder}
+                          value={shopSearch}
+                          onChange={(e) => setShopSearch(e.target.value)}
+                          data-testid="story-admin-shop-search"
+                        />
+                        {adminShopName ? (
+                          <p className="text-sm text-muted">
+                            {copy.selectedShopPrefix} <span className="font-bold text-foreground">{adminShopName}</span>
+                          </p>
+                        ) : (
+                          <p className="text-sm text-danger">{copy.shopPickRequired}</p>
+                        )}
+                        <ul className="max-h-48 overflow-auto rounded-xl border border-border bg-surface">
+                          {filteredShops.map((row) => (
+                            <li key={row.sellerPartyId}>
+                              <button
+                                type="button"
+                                className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm transition-colors hover:bg-secondary"
+                                onClick={() => {
+                                  setAdminShopId(row.sellerPartyId);
+                                  setAdminShopName(row.displayName);
+                                }}
+                                data-testid="story-admin-shop-option"
+                              >
+                                {row.displayName}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </fieldset>
+                ) : null}
+                <StoryPublicationWindowFields
+                  testIdPrefix="story-create-window"
+                  copy={copy}
+                  draftWindow={draftWindow}
+                  noPublicationEnd={noPublicationEnd}
+                  error={draftWindowError}
+                  onDraftChange={(next) => {
+                    setDraftWindow(next);
+                    setDirty(true);
+                  }}
+                  onNoEndChange={(noEnd) => {
+                    setNoPublicationEnd(noEnd);
+                    setDirty(true);
+                  }}
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className={storyButtonClass("primary")}
+                    onClick={() => void createDraft()}
+                    data-testid="story-create-save"
+                  >
+                    {copy.saveForm}
+                  </button>
+                </div>
+            </div>
+            <StoryPreviewPanel
+              items={[]}
               copy={copy}
-              draftWindow={draftWindow}
-              noPublicationEnd={noPublicationEnd}
-              error={draftWindowError}
-              onDraftChange={(next) => {
-                setDraftWindow(next);
-                setDirty(true);
-              }}
-              onNoEndChange={(noEnd) => {
-                setNoPublicationEnd(noEnd);
-                setDirty(true);
-              }}
+              numberLocale={numberLocale}
+              testId="story-create-preview"
             />
-            <div className="flex flex-wrap items-center gap-2">
+          </div>
+        </StorySectionCard>
+      ) : null}
+      {showCreateWorkspace ? (
+        <StorySectionCard
+          testId="story-create-slides"
+          className="mt-4"
+          title={copy.itemsHeading}
+          actions={
+            capabilities.canCreate ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                onClick={() => void createDraft()}
-                data-testid="story-create-save"
+                className={storyButtonClass("primary")}
+                data-testid="story-slide-open-new"
+                onClick={() => {
+                  void createDraft({ openSlideAfter: true });
+                }}
               >
-                {copy.saveForm}
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {copy.addItem}
               </button>
-            </div>
-          </div>
-          <div className="mb-4">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-bold">{copy.itemsHeading}</h3>
-              {capabilities.canCreate ? (
-                <button
-                  type="button"
-                  className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                  data-testid="story-slide-open-new"
-                  onClick={() => {
-                    void createDraft({ openSlideAfter: true });
-                  }}
-                >
-                  {copy.addItem}
-                </button>
-              ) : null}
-            </div>
-            <p className="text-sm text-muted">{copy.slidesEmptyHint}</p>
-          </div>
-          <div data-testid="story-create-preview">
-            <h3 className="mb-2 text-sm font-bold">{copy.previewHeading}</h3>
-            <p className="text-sm text-muted">{copy.previewEmpty}</p>
-          </div>
-        </section>
+            ) : null
+          }
+        >
+          <StoryEmptyState
+            compact
+            testId="story-create-slides-empty"
+            title={copy.previewEmpty}
+            description={copy.slidesEmptyHint}
+            icon={<Layers className="h-5 w-5" aria-hidden="true" />}
+          />
+        </StorySectionCard>
       ) : null}
-
       {selectedId && detail ? (
-        <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="story-detail-workspace">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold">{detail.title}</h2>
-              <p className="text-sm text-muted" data-testid="story-detail-location">
-                {copy.locationPrefix} {shopLabel(detail, copy)}
-              </p>
-              <p className="mt-1 text-sm font-medium" data-testid="story-detail-status">
-                {displayState(detail, copy)}
-              </p>
-              {capabilities.showOrigin ? (
-                <span className="mt-1 block text-xs text-muted" data-testid="story-detail-origin">
-                  {detail.origin === "Admin"
-                    ? copy.originCreatorAdmin
-                    : detail.origin === "Seller"
-                      ? copy.originCreatorSeller
-                      : originLabels[detail.origin] ?? detail.origin}
-                </span>
-              ) : null}
+        <section className="mt-5 overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm" data-testid="story-detail-workspace">
+          <div className="flex flex-col gap-3 border-b border-border bg-background/30 px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="min-w-0 text-lg font-bold text-foreground">{detail.title}</h2>
+                <StoryStatusPill label={displayState(detail, copy)} tone={displayStateTone(detail)} testId="story-detail-status" />
+              </div>
+              <div className="mt-2 space-y-1">
+                <p className="text-sm text-muted" data-testid="story-detail-location">
+                  {copy.locationPrefix} {shopLabel(detail, copy)}
+                </p>
+                {capabilities.showOrigin ? (
+                  <span className="block text-xs text-muted" data-testid="story-detail-origin">
+                    {detail.origin === "Admin"
+                      ? copy.originCreatorAdmin
+                      : detail.origin === "Seller"
+                        ? copy.originCreatorSeller
+                        : originLabels[detail.origin] ?? detail.origin}
+                  </span>
+                ) : null}
+                <p className="text-xs text-muted">{copy.detailWorkspaceHint}</p>
+              </div>
             </div>
             <button
               type="button"
-              className="min-h-11 rounded-xl px-3 py-1.5 text-sm"
+              className={storyButtonClass("secondary")}
               data-testid="story-detail-back"
-              onClick={() =>
-                requestLeave(basePath)
-              }
+              onClick={() => requestLeave(basePath)}
             >
               {copy.backToList}
             </button>
           </div>
 
+          <div className="space-y-5 p-5">
           {detail.rejectionReason ? (
-            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" data-testid="story-rejection-reason">
+            <div className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger" data-testid="story-rejection-reason">
               <span className="font-bold">دلیل رد: </span>
               {detail.rejectionReason}
             </div>
           ) : null}
 
-          <div className="mb-5 flex flex-wrap gap-2">
+          <StoryActionBar>
             {hasAction(detail, "approve") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white"
+                className={storyButtonClass("primary")}
                 data-testid="story-detail-approve"
                 onClick={() => openAdminOp("approve", [detail])}
               >
@@ -1305,7 +1310,7 @@ function StoryManagementScreenBody({
             {hasAction(detail, "approve_and_publish") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+                className={storyButtonClass("primary")}
                 onClick={() => setPreviewConfirm("publish")}
               >
                 {copy.approveAndPublish}
@@ -1314,7 +1319,7 @@ function StoryManagementScreenBody({
             {hasAction(detail, "approve_and_schedule") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl border border-emerald-600 px-4 py-2 text-sm font-bold text-emerald-700"
+                className={storyButtonClass("secondary")}
                 onClick={() => {
                   setScheduleMode("approve_schedule");
                   const start = isoToScheduleDraft(detail.startAt);
@@ -1335,17 +1340,61 @@ function StoryManagementScreenBody({
             {hasAction(detail, "reject") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
+                className={storyButtonClass("danger")}
                 data-testid="story-detail-reject"
                 onClick={() => openAdminOp("reject", [detail])}
               >
                 {copy.reject}
               </button>
             ) : null}
-            {hasAction(detail, "schedule") || hasAction(detail, "publish_now") ? (
+            {hasAction(detail, "publish_now") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
+                className={storyButtonClass("primary")}
+                data-testid="story-detail-publish-now"
+                onClick={() => {
+                  if (!actorId) return;
+                  const key = mintOccurrence();
+                  const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
+                  const envelope: StoryIntentEnvelope = {
+                    version: 2,
+                    action: "publish_now",
+                    occurrenceKey: key,
+                    method: "POST",
+                    path: `/v1/admin/stories/${detail.storyId}/enable`,
+                    routeTargetId: detail.storyId,
+                    expectedVersion: detail.versionToken,
+                    bodyText: JSON.stringify(body),
+                    uploadMeta: null,
+                    addBodyText: null,
+                    uploadedAssetId: null,
+                    children: [],
+                    role: "admin",
+                    shopId: detail.sellerPartyId,
+                    actorUserId: actorId,
+                    recordedAt: new Date().toISOString(),
+                  };
+                  void runDurableStoryMutation({
+                    gate,
+                    envelope,
+                    scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                  }).then((outcome) => {
+                    if (outcome.state === "ok") {
+                      storyToast.success(copy.publishedToast);
+                      refreshGrid();
+                      setReloadToken((v) => v + 1);
+                    } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                    else storyToast.error(copy.sendFailed);
+                  });
+                }}
+              >
+                {copy.publishNow}
+              </button>
+            ) : null}
+            {hasAction(detail, "schedule") ? (
+              <button
+                type="button"
+                className={storyButtonClass("secondary")}
                 onClick={() => {
                   setScheduleMode("schedule");
                   const start = isoToScheduleDraft(detail.startAt);
@@ -1366,7 +1415,7 @@ function StoryManagementScreenBody({
             {hasAction(detail, "stop") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl border border-rose-200 px-4 py-2 text-sm text-rose-700"
+                className={storyButtonClass("danger")}
                 onClick={() => {
                   if (!actorId) return;
                   const key = mintOccurrence();
@@ -1412,7 +1461,7 @@ function StoryManagementScreenBody({
             {hasAction(detail, "return_to_draft") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
+                className={storyButtonClass("secondary")}
                 onClick={() => {
                   if (!actorId) return;
                   const key = mintOccurrence();
@@ -1455,21 +1504,26 @@ function StoryManagementScreenBody({
             {hasAction(detail, "submit") ? (
               <button
                 type="button"
-                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                className={storyButtonClass("primary")}
                 onClick={() => void runSubmit(detail)}
               >
                 ارسال برای تأیید
               </button>
             ) : null}
-          </div>
+          </StoryActionBar>
 
           {capabilities.canEdit && sellerEditable ? (
-            <div className="mb-4 space-y-3">
-              <div className="grid gap-3 md:grid-cols-2">
+            <StorySectionCard
+              title={copy.storyFormHeading}
+              description={copy.storyFormHint}
+            >
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.9fr)]">
+                <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <label className="block text-sm">
-                  <span className="mb-1 block text-gray-600">{copy.titleLabel}</span>
+                  <span className="mb-1 block text-muted">{copy.titleLabel}</span>
                   <input
-                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
                     value={editTitle}
                     onChange={(e) => {
                       setEditTitle(e.target.value);
@@ -1479,9 +1533,9 @@ function StoryManagementScreenBody({
                   />
                 </label>
                 <label className="block text-sm">
-                  <span className="mb-1 block text-gray-600">{copy.languageLabel}</span>
+                  <span className="mb-1 block text-muted">{copy.languageLabel}</span>
                   <select
-                    className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
                     value={editLocale}
                     onChange={(e) => {
                       setEditLocale(e.target.value);
@@ -1514,14 +1568,14 @@ function StoryManagementScreenBody({
                 }}
               />
               {detail.items.length > 0 && !detail.contentReady ? (
-                <p className="text-sm text-amber-800" data-testid="story-media-required-hint">
+                <p className="text-sm text-warning" data-testid="story-media-required-hint">
                   {copy.mediaRequiredHint}
                 </p>
               ) : null}
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+                  className={storyButtonClass("primary")}
                   data-testid="story-save-title-locale"
                   onClick={() => {
                     if (!detail || !actorId) return;
@@ -1543,6 +1597,11 @@ function StoryManagementScreenBody({
                     const body = {
                       title: editTitle.trim(),
                       locale: editLocale || null,
+                      market: detail.market ?? null,
+                      coverMediaAssetId: detail.coverMediaAssetId ?? null,
+                      coverMediaUrl: detail.coverMediaUrl ?? null,
+                      ctaType: detail.ctaType ?? "none",
+                      ctaTarget: detail.ctaTarget ?? null,
                       startAt: windowParse.startAt,
                       endAt: windowParse.endAt,
                       expectedVersion: detail.versionToken,
@@ -1589,7 +1648,7 @@ function StoryManagementScreenBody({
                 {hasAction(detail, "delete") ? (
                   <button
                     type="button"
-                    className="min-h-11 rounded-xl border border-rose-300 px-4 py-2 text-sm text-rose-700"
+                    className={storyButtonClass("danger")}
                     data-testid="story-delete-open"
                     onClick={() => {
                       if (capabilities.mode === "admin") {
@@ -1604,37 +1663,59 @@ function StoryManagementScreenBody({
                   </button>
                 ) : null}
               </div>
-            </div>
+                </div>
+                <StoryPreviewPanel
+                  items={detail.items}
+                  copy={copy}
+                  numberLocale={numberLocale}
+                  testId="story-edit-preview"
+                />
+              </div>
+            </StorySectionCard>
           ) : null}
 
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-bold">
-              {copy.itemsHeading} ({detail.items.length.toLocaleString(numberLocale)})
-            </h3>
-            {capabilities.canEdit && sellerEditable ? (
-              <button
-                type="button"
-                className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                data-testid="story-slide-open-new"
-                onClick={() => openNewSlideDialog()}
-              >
-                {copy.addItem}
-              </button>
-            ) : null}
-          </div>
-          <ul className="mb-4 space-y-2 text-sm" data-testid="story-detail-preview">
+          <StorySectionCard
+            className="mt-4"
+            title={`${copy.itemsHeading} (${detail.items.length.toLocaleString(numberLocale)})`}
+            actions={
+              capabilities.canEdit && sellerEditable ? (
+                <button
+                  type="button"
+                  className={storyButtonClass("primary")}
+                  data-testid="story-slide-open-new"
+                  onClick={() => openNewSlideDialog()}
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  {copy.addItem}
+                </button>
+              ) : null
+            }
+          >
+          {detail.items.length === 0 ? (
+            <StoryEmptyState
+              compact
+              testId="story-slides-empty"
+              title={copy.previewEmpty}
+              description={copy.slidesEmptyHint}
+              icon={<ImagePlus className="h-5 w-5" aria-hidden="true" />}
+            />
+          ) : null}
+          <ul className="space-y-3 text-sm" data-testid="story-detail-preview">
             {detail.items.map((item, index) => (
-              <li key={item.storyItemId} className="rounded-xl border border-gray-100 px-3 py-2" data-testid="story-slide-row">
+              <li key={item.storyItemId} className="rounded-xl border border-border bg-surface p-3" data-testid="story-slide-row">
                 <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted" aria-hidden="true">
+                    {(index + 1).toLocaleString(numberLocale)}
+                  </span>
                   {item.mediaType === "video" && item.mediaUrl ? (
                     // eslint-disable-next-line jsx-a11y/media-has-caption
-                    <video src={item.mediaUrl} className="h-16 w-16 rounded object-cover" muted playsInline controls />
+                    <video src={item.mediaUrl} className="h-16 w-16 shrink-0 rounded-lg border border-border object-cover" muted playsInline controls />
                   ) : item.mediaUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.mediaUrl} alt="" className="h-16 w-16 rounded object-cover" />
+                    <img src={item.mediaUrl} alt="" className="h-16 w-16 shrink-0 rounded-lg border border-border object-cover" />
                   ) : null}
                   <div className="min-w-0 flex-1">
-                    <p>
+                    <p className="font-medium text-foreground">
                       {item.mediaType === "video" ? copy.videoLabel : copy.photoLabel}
                       {item.durationMs
                         ? ` · ${Math.round(item.durationMs / 1000).toLocaleString(numberLocale)} ${copy.secondsSuffix}`
@@ -1645,7 +1726,7 @@ function StoryManagementScreenBody({
                       {copy.destinationPrefix} {destinationLabelForItem(item)}
                     </p>
                     {capabilities.mode === "seller" && !item.mediaAssetId ? (
-                      <p className="mt-1 text-xs text-amber-800" data-testid="story-slide-media-recovery">
+                      <p className="mt-1 text-xs text-warning" data-testid="story-slide-media-recovery">
                         {copy.slideNeedsOwnedMedia}
                       </p>
                     ) : null}
@@ -1654,7 +1735,7 @@ function StoryManagementScreenBody({
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        className="min-h-11 rounded-xl border border-gray-200 px-3 py-1.5 text-sm"
+                        className={storyButtonClass("secondary")}
                         data-testid="story-slide-edit"
                         onClick={() => openEditSlideDialog(item)}
                       >
@@ -1662,7 +1743,7 @@ function StoryManagementScreenBody({
                       </button>
                       <button
                         type="button"
-                        className="min-h-11 rounded-xl border border-gray-200 px-3 py-1.5 text-sm"
+                        className={storyButtonClass("secondary")}
                         disabled={index === 0}
                         onClick={() => {
                           if (!actorId) return;
@@ -1711,7 +1792,7 @@ function StoryManagementScreenBody({
                       </button>
                       <button
                         type="button"
-                        className="min-h-11 rounded-xl border border-rose-200 px-3 py-1.5 text-sm text-rose-700"
+                        className={storyButtonClass("danger")}
                         onClick={() => {
                           if (!actorId) return;
                           const key = mintOccurrence();
@@ -1759,7 +1840,8 @@ function StoryManagementScreenBody({
               </li>
             ))}
           </ul>
-
+          </StorySectionCard>
+          </div>
         </section>
       ) : null}
 
@@ -1774,7 +1856,7 @@ function StoryManagementScreenBody({
         <div className="space-y-3 p-1" data-testid="story-slide-editor">
           {!editingItemId ? (
             <div className="space-y-2 text-sm">
-              <span className="mb-1 block text-gray-600">{copy.mediaLabel}</span>
+              <span className="mb-1 block text-muted">{copy.mediaLabel}</span>
               <input
                 ref={slideFileInputRef}
                 type="file"
@@ -1785,7 +1867,7 @@ function StoryManagementScreenBody({
               />
               <button
                 type="button"
-                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm"
+                className={storyButtonClass("secondary")}
                 onClick={() => slideFileInputRef.current?.click()}
                 data-testid="story-slide-file-pick"
               >
@@ -1835,9 +1917,9 @@ function StoryManagementScreenBody({
             </div>
           )}
           <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">{copy.captionLabel}</span>
+            <span className="mb-1 block text-muted">{copy.captionLabel}</span>
             <input
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
               value={slideCaption}
               onChange={(e) => setSlideCaption(e.target.value)}
               data-testid="story-slide-caption"
@@ -1847,11 +1929,11 @@ function StoryManagementScreenBody({
           (editingItemId &&
             detail?.items.find((row) => row.storyItemId === editingItemId)?.mediaType === "video") ? null : (
             <label className="block text-sm">
-              <span className="mb-1 block text-gray-600">{copy.durationLabel}</span>
+              <span className="mb-1 block text-muted">{copy.durationLabel}</span>
               <input
                 type="number"
                 min={1}
-                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
                 value={slideDurationSec}
                 onChange={(e) => setSlideDurationSec(e.target.value)}
                 data-testid="story-slide-duration"
@@ -1859,33 +1941,36 @@ function StoryManagementScreenBody({
             </label>
           )}
           <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">{copy.ctaLabel}</span>
+            <span className="mb-1 block text-muted">{copy.ctaLabel}</span>
             <select
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
               value={slideCtaType}
               onChange={(e) => {
                 setSlideCtaType(e.target.value);
                 setSlideCtaTarget("");
                 setSelectedProductLabel("");
+                setSlideCtaError(null);
               }}
               data-testid="story-slide-cta-type"
             >
               <option value="none">{copy.destinationNone}</option>
               <option value="product">{copy.destinationProduct}</option>
               <option value="external">{copy.destinationExternal}</option>
+              <option value="internal">{copy.destinationInternal}</option>
             </select>
           </label>
           {slideCtaType === "product" ? (
             <div className="space-y-2" data-testid="story-product-picker">
               <input
-                className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
                 placeholder={copy.productSearchPlaceholder}
+                aria-label={copy.productSearchPlaceholder}
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
                 data-testid="story-product-search"
               />
               {productLoading ? <p className="text-xs text-muted">{copy.loadingProducts}</p> : null}
-              <ul className="max-h-40 overflow-auto rounded-xl border border-gray-100">
+              <ul className="max-h-40 overflow-auto rounded-xl border border-border">
                 {productOptions.map((row) => (
                   <li key={`${row.productId}:${row.offerId}`}>
                     <button
@@ -1911,7 +1996,7 @@ function StoryManagementScreenBody({
               {productOptions.length < productTotalCount ? (
                 <button
                   type="button"
-                  className="min-h-11 w-full rounded-xl border border-gray-200 text-sm"
+                  className="min-h-11 w-full rounded-xl border border-border text-sm"
                   data-testid="story-product-load-more"
                   onClick={() => {
                     const shop =
@@ -1949,19 +2034,50 @@ function StoryManagementScreenBody({
             </div>
           ) : null}
           {slideCtaType === "external" ? (
-            <input
-              className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              dir="ltr"
-              placeholder="https://..."
-              value={slideCtaTarget}
-              onChange={(e) => setSlideCtaTarget(e.target.value)}
-              data-testid="story-slide-cta-external"
-            />
+            <label className="block text-sm">
+              <span className="mb-1 block text-muted">{copy.externalLinkLabel}</span>
+              <input
+                className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+                dir="ltr"
+                placeholder="https://..."
+                value={slideCtaTarget}
+                aria-label={copy.externalLinkLabel}
+                aria-invalid={Boolean(slideCtaError)}
+                onChange={(e) => {
+                  setSlideCtaTarget(e.target.value);
+                  setSlideCtaError(null);
+                }}
+                data-testid="story-slide-cta-external"
+              />
+            </label>
+          ) : null}
+          {slideCtaType === "internal" ? (
+            <label className="block text-sm">
+              <span className="mb-1 block text-muted">{copy.internalLinkLabel}</span>
+              <input
+                className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+                dir="ltr"
+                placeholder="/products"
+                value={slideCtaTarget}
+                aria-label={copy.internalLinkLabel}
+                aria-invalid={Boolean(slideCtaError)}
+                onChange={(e) => {
+                  setSlideCtaTarget(e.target.value);
+                  setSlideCtaError(null);
+                }}
+                data-testid="story-slide-cta-internal"
+              />
+            </label>
+          ) : null}
+          {slideCtaError ? (
+            <p className="text-sm text-danger" role="alert" data-testid="story-slide-cta-error">
+              {slideCtaError}
+            </p>
           ) : null}
           <div className="flex flex-wrap justify-end gap-2 pt-2">
             <button
               type="button"
-              className="min-h-11 rounded-xl px-4 py-2 text-sm"
+              className={storyButtonClass("secondary")}
               onClick={() => {
                 setSlideDialogOpen(false);
                 setEditingItemId(null);
@@ -1971,13 +2087,27 @@ function StoryManagementScreenBody({
             </button>
             <button
               type="button"
-              className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+              className={storyButtonClass("primary")}
               disabled={(!editingItemId && !slideFile) || inFlightRef.current}
               data-testid="story-slide-save"
               onClick={() => {
                 if (!detail || !actorId) return;
                 void (async () => {
                   if (inFlightRef.current) return;
+                  const existingForCta = editingItemId
+                    ? detail.items.find((row) => row.storyItemId === editingItemId)
+                    : null;
+                  const ctaUnchanged = Boolean(
+                    existingForCta &&
+                    existingForCta.ctaType === slideCtaType &&
+                    (existingForCta.ctaTarget ?? "") === slideCtaTarget,
+                  );
+                  const ctaError = ctaUnchanged ? null : validateCtaInput(slideCtaType, slideCtaTarget, copy);
+                  if (ctaError) {
+                    setSlideCtaError(ctaError);
+                    storyToast.error(ctaError);
+                    return;
+                  }
                   if (editingItemId) {
                     const existing = detail.items.find((row) => row.storyItemId === editingItemId);
                     if (!existing) {
@@ -2123,7 +2253,7 @@ function StoryManagementScreenBody({
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
-              className="min-h-11 rounded-xl px-4 py-2 text-sm"
+              className={storyButtonClass("secondary")}
               data-testid="story-delete-cancel"
               onClick={() => {
                 setDeleteOpen(false);
@@ -2134,7 +2264,7 @@ function StoryManagementScreenBody({
             </button>
             <button
               type="button"
-              className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
+              className={storyButtonClass("danger")}
               data-testid="story-delete-confirm"
               onClick={() => {
                 const target = deleteTarget;
@@ -2208,7 +2338,7 @@ function StoryManagementScreenBody({
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
-              className="min-h-11 rounded-xl px-4 py-2 text-sm"
+              className={storyButtonClass("secondary")}
               data-testid="story-unsaved-stay"
               onClick={() => {
                 setLeaveOpen(false);
@@ -2219,7 +2349,7 @@ function StoryManagementScreenBody({
             </button>
             <button
               type="button"
-              className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white"
+              className={storyButtonClass("danger")}
               data-testid="story-unsaved-discard"
               onClick={() => {
                 const href = pendingLeaveHref;
@@ -2254,17 +2384,21 @@ function StoryManagementScreenBody({
       >
         {adminOpPlan ? (
           <div className="space-y-3 p-1" data-testid="story-admin-op-dialog">
-            <p className="text-sm text-muted" data-testid="story-admin-op-selected-count">
-              {copy.bulkSelectedCount}: {adminOpPlan.selected.length.toLocaleString(numberLocale)}
-            </p>
-            <p className="text-sm" data-testid="story-admin-op-processable-count">
-              {copy.bulkProcessableCount}: {adminOpPlan.eligible.length.toLocaleString(numberLocale)}
-            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-border bg-background/40 px-3 py-2">
+                <span className="block text-xs text-muted">{copy.bulkSelectedCount}</span>
+                <span className="text-lg font-bold text-foreground" data-testid="story-admin-op-selected-count">{adminOpPlan.selected.length.toLocaleString(numberLocale)}</span>
+              </div>
+              <div className="rounded-xl border border-border bg-background/40 px-3 py-2">
+                <span className="block text-xs text-muted">{copy.bulkProcessableCount}</span>
+                <span className="text-lg font-bold text-foreground" data-testid="story-admin-op-processable-count">{adminOpPlan.eligible.length.toLocaleString(numberLocale)}</span>
+              </div>
+            </div>
             {adminOpPlan.kind === "approve" ? (
               <p className="text-sm text-muted">{copy.approveConfirmBody}</p>
             ) : null}
             {adminOpPlan.kind === "delete" ? (
-              <p className="text-sm text-rose-700">{copy.deleteBatchConfirmBody}</p>
+              <p className="text-sm text-danger">{copy.deleteBatchConfirmBody}</p>
             ) : null}
             {adminOpPlan.kind === "reject" ? (
               <p className="text-sm text-muted">{copy.rejectConfirmBody}</p>
@@ -2286,9 +2420,9 @@ function StoryManagementScreenBody({
             ) : null}
             {adminOpPlan.kind === "reject" ? (
               <label className="block text-sm">
-                <span className="mb-1 block text-gray-600">{copy.rejectionReason}</span>
+                <span className="mb-1 block text-muted">{copy.rejectionReason}</span>
                 <input
-                  className="min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
                   value={adminOpReason}
                   onChange={(e) => setAdminOpReason(e.target.value)}
                   data-testid="story-reject-reason-input"
@@ -2298,7 +2432,7 @@ function StoryManagementScreenBody({
             <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
-                className="min-h-11 rounded-xl px-4 py-2 text-sm"
+                className={storyButtonClass("secondary")}
                 data-testid="story-admin-op-cancel"
                 disabled={adminOpBusy}
                 onClick={() => {
@@ -2310,11 +2444,7 @@ function StoryManagementScreenBody({
               </button>
               <button
                 type="button"
-                className={
-                  adminOpPlan.kind === "delete" || adminOpPlan.kind === "reject"
-                    ? "min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
-                    : "min-h-11 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
-                }
+                className={adminOpPlan.kind === "delete" || adminOpPlan.kind === "reject" ? storyButtonClass("danger") : storyButtonClass("primary")}
                 data-testid="story-admin-op-confirm"
                 disabled={adminOpBusy || adminOpPlan.eligible.length === 0}
                 onClick={() => void confirmAdminOp()}
@@ -2335,36 +2465,38 @@ function StoryManagementScreenBody({
         onClose={() => setScheduleOpen(false)}
         title={scheduleMode === "approve_schedule" ? "تأیید و زمان‌بندی" : "زمان‌بندی نمایش"}
       >
-        <div className="space-y-3 p-1">
-          <p className="text-sm text-muted">زمان به وقت تهران. اگر پایان خالی بماند تا توقف دستی می‌ماند.</p>
+        <div className="space-y-4 p-1">
+          <p className="rounded-xl border border-info/20 bg-info/10 px-3 py-2 text-xs leading-5 text-info">زمان به وقت تهران. اگر پایان خالی بماند تا توقف دستی می‌ماند.</p>
           {scheduleFieldError ? (
-            <p className="text-sm text-rose-700" role="alert" data-testid="story-schedule-error">{scheduleFieldError}</p>
+            <p className="text-sm text-danger" role="alert" data-testid="story-schedule-error">{scheduleFieldError}</p>
           ) : null}
-          <label className="block text-sm" data-testid="story-schedule-start-wrap">
-            <span className="mb-1 block text-gray-600">روز و ساعت شروع</span>
+          <div className="grid gap-3 md:grid-cols-2">
+          <label className="block rounded-xl border border-border bg-background/40 p-3 text-sm" data-testid="story-schedule-start-wrap">
+            <span className="mb-2 block font-medium text-muted">روز و ساعت شروع</span>
             <JalaliDatePicker
               ariaLabel="روز شروع"
               value={scheduleDraft.startDayIso || undefined}
               onChange={(iso) => setScheduleDraft((c) => ({ ...c, startDayIso: iso ?? "" }))}
             />
-            <input type="time" className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" value={scheduleDraft.startTime} onChange={(e) => setScheduleDraft((c) => ({ ...c, startTime: e.target.value }))} data-testid="story-schedule-start" />
+            <input type="time" className="mt-2 min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm" value={scheduleDraft.startTime} onChange={(e) => setScheduleDraft((c) => ({ ...c, startTime: e.target.value }))} data-testid="story-schedule-start" />
           </label>
-          <label className="block text-sm" data-testid="story-schedule-end-wrap">
-            <span className="mb-1 block text-gray-600">روز و ساعت پایان (اختیاری)</span>
+          <label className="block rounded-xl border border-border bg-background/40 p-3 text-sm" data-testid="story-schedule-end-wrap">
+            <span className="mb-2 block font-medium text-muted">روز و ساعت پایان (اختیاری)</span>
             <JalaliDatePicker
               ariaLabel="روز پایان"
               value={scheduleDraft.endDayIso || undefined}
               onChange={(iso) => setScheduleDraft((c) => ({ ...c, endDayIso: iso ?? "" }))}
             />
-            <input type="time" className="mt-2 min-h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" value={scheduleDraft.endTime} onChange={(e) => setScheduleDraft((c) => ({ ...c, endTime: e.target.value }))} data-testid="story-schedule-end" />
+            <input type="time" className="mt-2 min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm" value={scheduleDraft.endTime} onChange={(e) => setScheduleDraft((c) => ({ ...c, endTime: e.target.value }))} data-testid="story-schedule-end" />
           </label>
+          </div>
           <div className="flex justify-end gap-2">
-            <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setScheduleOpen(false)}>
+            <button type="button" className={storyButtonClass("secondary")} onClick={() => setScheduleOpen(false)}>
               انصراف
             </button>
             <button
               type="button"
-              className="min-h-11 rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
+              className={storyButtonClass("primary")}
               onClick={() => {
                 if (!detail || !actorId) return;
                 const key = mintOccurrence();
@@ -2431,7 +2563,8 @@ function StoryManagementScreenBody({
         </div>
       </Dialog>
 
-      <Dialog open={previewConfirm === "publish"} onClose={() => setPreviewConfirm(null)} title={copy.approveAndPublish}>
+      {previewConfirm === "publish" ? (
+      <Dialog open onClose={() => setPreviewConfirm(null)} title={copy.approveAndPublish}>
         <div className="space-y-3 p-1" data-testid="story-publish-preview">
           {detail ? (
             <>
@@ -2439,13 +2572,13 @@ function StoryManagementScreenBody({
               <p className="font-bold">{detail.title}</p>
               <ul className="space-y-2 text-sm">
                 {detail.items.map((item) => (
-                  <li key={item.storyItemId} className="flex items-center gap-3 rounded-xl border border-gray-100 px-3 py-2">
+                  <li key={item.storyItemId} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2">
                     {item.mediaType === "video" && item.mediaUrl ? (
                       // eslint-disable-next-line jsx-a11y/media-has-caption
-                      <video src={item.mediaUrl} className="h-16 w-16 rounded object-cover" muted playsInline />
+                      <video src={item.mediaUrl} className="h-16 w-16 shrink-0 rounded-lg border border-border object-cover" muted playsInline />
                     ) : item.mediaUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.mediaUrl} alt="" className="h-16 w-16 rounded object-cover" />
+                      <img src={item.mediaUrl} alt="" className="h-16 w-16 shrink-0 rounded-lg border border-border object-cover" />
                     ) : null}
                     <span>
                       {item.mediaType === "video" ? copy.videoLabel : copy.photoLabel}
@@ -2456,12 +2589,12 @@ function StoryManagementScreenBody({
                 ))}
               </ul>
               <div className="flex justify-end gap-2">
-                <button type="button" className="min-h-11 rounded-xl px-4 py-2 text-sm" onClick={() => setPreviewConfirm(null)}>
+                <button type="button" className={storyButtonClass("secondary")} onClick={() => setPreviewConfirm(null)}>
                   انصراف
                 </button>
                 <button
                   type="button"
-                  className="min-h-11 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
+                  className={storyButtonClass("primary")}
                   onClick={() => {
                     if (!detail || !actorId) return;
                     const key = mintOccurrence();
@@ -2505,6 +2638,7 @@ function StoryManagementScreenBody({
           ) : null}
         </div>
       </Dialog>
+      ) : null}
     </main>
   );
 }
@@ -2569,15 +2703,15 @@ function StoryLiveGrid({
         cell: (row) => (
           <button
             type="button"
-            className="flex min-h-11 items-center gap-2 text-right font-bold line-clamp-2 hover:text-[#2563EB]"
+            className="flex min-h-11 items-center gap-2 text-right font-bold line-clamp-2 hover:text-primary"
             onClick={() => onOpenDetailRef.current(row.storyId)}
             data-testid="story-row-title"
           >
             {row.coverMediaUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={row.coverMediaUrl} alt="" className="h-10 w-10 rounded object-cover" />
+              <img src={row.coverMediaUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg border border-border object-cover" />
             ) : (
-              <span className="flex h-10 w-10 items-center justify-center rounded bg-secondary text-xs">—</span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary text-xs text-muted">—</span>
             )}
             <span>{row.title}</span>
           </button>
@@ -2592,7 +2726,12 @@ function StoryLiveGrid({
         id: "shopDisplayName",
         header: copy.columnShop,
         accessor: (row) => shopLabel(row, copy),
-        cell: (row) => shopLabel(row, copy),
+        cell: (row) => (
+          <span className="inline-flex max-w-full items-center gap-1.5 text-sm text-muted">
+            <Store className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">{shopLabel(row, copy)}</span>
+          </span>
+        ),
         width: 140,
         minWidth: 110,
         filterKind: "text",
@@ -2602,9 +2741,7 @@ function StoryLiveGrid({
         header: copy.columnStatus,
         accessor: (row) => displayState(row, copy),
         cell: (row) => (
-          <span className="text-sm" data-testid="story-row-status">
-            {displayState(row, copy)}
-          </span>
+          <StoryStatusPill label={displayState(row, copy)} tone={displayStateTone(row)} testId="story-row-status" />
         ),
         width: 160,
         minWidth: 120,
@@ -2780,6 +2917,12 @@ function StoryLiveGrid({
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm" data-testid="story-live-grid">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
+        <div>
+          <h2 className="text-base font-bold text-foreground">{copy.listHeading}</h2>
+          <p className="mt-1 text-xs text-muted">{copy.listHint}</p>
+        </div>
+      </div>
       <div className="p-2 md:p-4">
         {showError ? (
           <ErrorState title={copy.loadErrorTitle} detail={errorMessage} onRetry={onRetry} retryLabel={faWorkspaceMessages.retry} />

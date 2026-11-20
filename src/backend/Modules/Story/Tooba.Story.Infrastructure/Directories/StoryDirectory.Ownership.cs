@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,7 @@ using Tooba.Story.Domain.Enums;
 using Tooba.Story.Domain.Policies;
 using Tooba.Story.Domain.Rules;
 using StoryEntity = Tooba.Story.Domain.Aggregates.Story;
+using StoryItemEntity = Tooba.Story.Domain.Aggregates.StoryItem;
 
 namespace Tooba.Story.Infrastructure.Directories;
 
@@ -141,6 +142,78 @@ public sealed partial class StoryDirectory
         return (coverMediaAssetId, coverMediaUrl);
     }
 
+    /// <summary>
+    /// Update must not silently drop existing media. A slide whose media is unchanged (by owned asset,
+    /// or by the same legacy URL) keeps exactly what is stored, so caption/CTA edits stay possible on
+    /// legacy shop slides. A genuinely changed media still goes through the owning authorization.
+    /// </summary>
+    /// <summary>
+    /// Story-level update must not drop an unchanged legacy cover URL. Omitted cover fields preserve
+    /// exactly what is stored; a genuinely changed value still passes the owning media authorization.
+    /// </summary>
+    private async Task<(Guid? AssetId, string? DisplayUrl)> BindUpdatedCoverAsync(
+        StoryEntity story,
+        Guid? coverMediaAssetId,
+        string? coverMediaUrl,
+        CancellationToken cancellationToken)
+    {
+        var requestedAsset = coverMediaAssetId is Guid assetId && assetId != Guid.Empty ? assetId : (Guid?)null;
+        var requestedUrl = string.IsNullOrWhiteSpace(coverMediaUrl) ? null : coverMediaUrl.Trim();
+        var existingAsset = story.CoverMediaAssetId is Guid storedAsset && storedAsset != Guid.Empty
+            ? storedAsset
+            : (Guid?)null;
+        var existingUrl = string.IsNullOrWhiteSpace(story.CoverMediaUrl) ? null : story.CoverMediaUrl.Trim();
+
+        if (requestedAsset is null && requestedUrl is null)
+            return (existingAsset, existingUrl);
+        if (requestedAsset is not null && requestedAsset == existingAsset)
+            return (existingAsset, existingUrl);
+        if (requestedAsset is null
+            && requestedUrl is not null
+            && string.Equals(requestedUrl, existingUrl, StringComparison.Ordinal))
+        {
+            return (existingAsset, existingUrl);
+        }
+
+        return await BindCoverAsync(
+            story.TenantId,
+            story.SellerPartyId,
+            coverMediaAssetId,
+            coverMediaUrl,
+            allowUnscopedAdminAssets: story.SellerPartyId is null,
+            cancellationToken);
+    }
+    private async Task<(Guid? AssetId, string? DisplayUrl)> BindUpdatedItemMediaAsync(
+        StoryEntity story,
+        StoryItemEntity existing,
+        UpdateStoryItemCommand command,
+        CancellationToken cancellationToken)
+    {
+        var requestedAsset = command.MediaAssetId is Guid assetId && assetId != Guid.Empty ? assetId : (Guid?)null;
+        var requestedUrl = string.IsNullOrWhiteSpace(command.MediaUrl) ? null : command.MediaUrl.Trim();
+        var existingAsset = existing.MediaAssetId is Guid storedAsset && storedAsset != Guid.Empty
+            ? storedAsset
+            : (Guid?)null;
+        var existingUrl = string.IsNullOrWhiteSpace(existing.MediaUrl) ? null : existing.MediaUrl.Trim();
+
+        if (requestedAsset is null && requestedUrl is null)
+            return (existingAsset, existingUrl);
+        if (requestedAsset is not null && requestedAsset == existingAsset)
+            return (existingAsset, existingUrl);
+        if (requestedAsset is null
+            && requestedUrl is not null
+            && string.Equals(requestedUrl, existingUrl, StringComparison.Ordinal))
+        {
+            return (existingAsset, existingUrl);
+        }
+
+        return story.SellerPartyId is Guid shop && shop != Guid.Empty
+            ? await BindSellerMediaAsync(
+                story.TenantId, shop, command.MediaType, command.MediaAssetId, command.MediaUrl, cancellationToken)
+            : await BindCoverAsync(
+                story.TenantId, null, command.MediaAssetId, command.MediaUrl,
+                allowUnscopedAdminAssets: true, cancellationToken);
+    }
     private async Task EnsureProductCtaAsync(
         Guid? sellerPartyId,
         string? ctaType,
@@ -317,9 +390,12 @@ public sealed partial class StoryDirectory
             && Guid.TryParse(ctaTarget?.Trim(), out var id)
             && paths.TryGetValue(id, out var path))
             return path;
-        if (string.Equals(ctaType, "external", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(ctaType, "internal", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(ctaType, "external", StringComparison.OrdinalIgnoreCase))
             return string.IsNullOrWhiteSpace(ctaTarget) ? null : ctaTarget.Trim();
+        if (string.Equals(ctaType, "internal", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(ctaType, "category", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(ctaType, "article", StringComparison.OrdinalIgnoreCase))
+            return StoryRules.IsSafeInternalPath(ctaTarget) ? ctaTarget!.Trim() : null;
         return null;
     }
 
@@ -330,6 +406,7 @@ public sealed partial class StoryDirectory
         if (!StoryPublicationPolicy.HasPlayableContent(story))
             throw new SemanticException(new SemanticError(StoryErrorCodes.ContentNotReady));
 
+        _ = StoryRules.ValidateCta(story.CtaType, story.CtaTarget);
         await EnsureProductCtaAsync(story.SellerPartyId, story.CtaType, story.CtaTarget, cancellationToken);
         if (story.CoverMediaAssetId is Guid coverId && coverId != Guid.Empty)
         {
@@ -344,6 +421,7 @@ public sealed partial class StoryDirectory
 
         foreach (var item in story.Items)
         {
+            _ = StoryRules.ValidateCta(item.CtaType, item.CtaTarget);
             await EnsureProductCtaAsync(story.SellerPartyId, item.CtaType, item.CtaTarget, cancellationToken);
             if (item.MediaAssetId is Guid mediaId && mediaId != Guid.Empty)
             {

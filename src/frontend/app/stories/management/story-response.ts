@@ -67,6 +67,7 @@ export function verifyStorySuccessPayload(
     case "approve_schedule":
     case "reject":
     case "schedule":
+    case "publish_now":
     case "stop":
     case "return_to_draft":
     case "add_item":
@@ -231,6 +232,12 @@ export function bindStoryEnvelopeRoute(
         return (
           Boolean(envelope.routeTargetId) &&
           expect("POST", new RegExp(`^/v1/admin/stories/${guid}/schedule/?$`)) &&
+          path.includes(envelope.routeTargetId!)
+        );
+      case "publish_now":
+        return (
+          Boolean(envelope.routeTargetId) &&
+          expect("POST", new RegExp(`^/v1/admin/stories/${guid}/enable/?$`)) &&
           path.includes(envelope.routeTargetId!)
         );
       case "reject":

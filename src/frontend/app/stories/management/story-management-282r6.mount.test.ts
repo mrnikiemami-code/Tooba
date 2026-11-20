@@ -104,6 +104,7 @@ test("A: admin and seller /new open the full form; title-only modal is gone", as
   assert.equal(qq(admin.container, '[data-testid="story-create-title"]').length, 1);
   assert.equal(qq(admin.container, '[data-testid="story-slide-open-new"]').length, 1);
   assert.equal(qq(admin.container, '[data-testid="story-create-preview"]').length, 1);
+  assert.equal(qq(admin.container, '[data-testid="story-create-slides"]').length, 1);
   assert.match(admin.container.textContent ?? "", new RegExp(faStoryCopy.mainStorefront));
   assert.doesNotMatch(admin.container.textContent ?? "", /ایجاد پیش‌نویس/);
   assert.equal(qq(admin.container, '[data-testid="admin-story-review-filter"]').length, 0);
@@ -183,7 +184,7 @@ test("B/C: platform vs shop location and internal destination stay merchant-labe
   await flush();
   await waitFor(() => qq(platform.container, '[data-testid="story-detail-location"]').length === 1);
   assert.match(platform.container.textContent ?? "", new RegExp(faStoryCopy.platformStorefront));
-  assert.match(platform.container.textContent ?? "", new RegExp(faStoryCopy.destinationUnavailable));
+  assert.match(platform.container.textContent ?? "", new RegExp(faStoryCopy.destinationInternal));
   assert.doesNotMatch(platform.container.textContent ?? "", /\binternal\b/);
   assert.doesNotMatch(platform.container.textContent ?? "", /Story/);
   await platform.unmount();
