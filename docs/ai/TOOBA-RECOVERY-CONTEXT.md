@@ -1,3 +1,9 @@
+# Mandatory delivery governance — TOOBA-DELIVERY-001 — 2026-11-21
+
+Before issuing, implementing or reviewing a task, read [TOOBA-DELIVERY-ASSURANCE](../architecture/TOOBA-DELIVERY-ASSURANCE.md) (root-relative path: `docs/architecture/TOOBA-DELIVERY-ASSURANCE.md`). Large tasks require a source-grounded architecture/scenario plan BEFORE production edits and ordered small connected waves INSIDE the same authorized task. Exact issued requirements cannot be dropped. Save must be proved through the real form/owning command and independent reread; modal-open/helper-only/HTTP200/chunk strings do not establish delivery. Run the plan and review structural gates in `docs/ai/delivery/check-readiness.mjs`; independently review the evidence because this checker cannot establish its truth. Missing mandatory proof is PARTIAL/BLOCKED. Worker PASS is never Architect ACCEPT or owner acceptance. Preserve the BRIDGE-WAKE-V1 envelope and task naming; no new queue/polling/agent or automatic task. This governance update does not accept or complete historical Story claims below.
+
+---
+
 # CURRENT — TB-282-R20 WORKER PASS_COMPLETE_R20; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md` and
