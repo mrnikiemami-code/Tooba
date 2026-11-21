@@ -446,6 +446,11 @@ test("R22 F04: remove, reorder, schedule and upload_add must prove their own eff
   const schedule = envelope("schedule", { startAt, endAt, expectedVersion: 8 });
   assert.equal(verifyStorySuccessPayload(schedule, story({ status: "Scheduled", startAt: "2026-11-01T10:00:00Z", endAt: "2026-11-02T10:00:00Z" })).ok, false);
   assert.equal(verifyStorySuccessPayload(schedule, story({ status: "Scheduled", startAt, endAt })).ok, true);
+  assert.equal(verifyStorySuccessPayload(schedule, story({ status: "Draft", startAt, endAt })).ok, false, "correct dates with Draft state are not a scheduled completion");
+
+  const approveSchedule = envelope("approve_schedule", { startAt, endAt, expectedVersion: 8 });
+  assert.equal(verifyStorySuccessPayload(approveSchedule, story({ reviewStatus: "None", status: "Scheduled", startAt, endAt })).ok, false);
+  assert.equal(verifyStorySuccessPayload(approveSchedule, story({ reviewStatus: "Approved", status: "Scheduled", startAt, endAt })).ok, true);
 
   const addBody = { mediaType: "image", mediaAssetId: ASSET, mediaUrl: "https://cdn.example.test/item.jpg", caption: "item", durationMs: 5000, ctaType: "none", ctaTarget: null };
   const add = envelope("upload_add", addBody, {

@@ -136,6 +136,8 @@ export function StoryModal({
   const t = STORY_MODAL_COPY[locale === "en" ? "en" : "fa"];
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
+  const [currentStoryId, setCurrentStoryId] = useState<string | null>(initialStoryId);
+  const [currentItemId, setCurrentItemId] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -153,9 +155,13 @@ export function StoryModal({
   const startX = useRef(0);
   const isDragging = useRef(false);
 
-  const currentStory = stories[currentStoryIndex];
+  const currentStory = currentStoryId
+    ? stories.find((story) => story.storyId === currentStoryId)
+    : stories[currentStoryIndex];
   const items = currentStory?.items?.length ? currentStory.items : [];
-  const currentItem = items[currentItemIndex];
+  const currentItem = currentItemId
+    ? items.find((item) => item.storyItemId === currentItemId) ?? items[currentItemIndex]
+    : items[currentItemIndex];
   const totalStories = stories.length;
   const isVideo = itemIsVideo(currentItem);
   const isHeld = isPaused || isHidden;
@@ -169,12 +175,17 @@ export function StoryModal({
     setProgress(0);
     setShareNotice(null);
     if (currentItemIndex < items.length - 1) {
+      const nextItem = items[currentItemIndex + 1];
       setCurrentItemIndex((prev) => prev + 1);
+      setCurrentItemId(nextItem?.storyItemId ?? null);
       return;
     }
     if (currentStoryIndex < totalStories - 1) {
+      const nextStory = stories[currentStoryIndex + 1];
       setCurrentStoryIndex((prev) => prev + 1);
+      setCurrentStoryId(nextStory?.storyId ?? null);
       setCurrentItemIndex(0);
+      setCurrentItemId(nextStory?.items?.[0]?.storyItemId ?? null);
       return;
     }
     onClose();
@@ -185,48 +196,63 @@ export function StoryModal({
     setProgress(0);
     setShareNotice(null);
     if (currentItemIndex > 0) {
+      const prevItem = items[currentItemIndex - 1];
       setCurrentItemIndex((prev) => prev - 1);
+      setCurrentItemId(prevItem?.storyItemId ?? null);
       return;
     }
     if (currentStoryIndex > 0) {
       const prevStory = stories[currentStoryIndex - 1];
       const prevItems = prevStory?.items ?? [];
       setCurrentStoryIndex((prev) => prev - 1);
+      setCurrentStoryId(prevStory?.storyId ?? null);
       setCurrentItemIndex(Math.max(0, prevItems.length - 1));
+      setCurrentItemId(prevItems[prevItems.length - 1]?.storyItemId ?? null);
     }
   }, [currentItemIndex, currentStoryIndex, stories]);
 
   useEffect(() => {
     if (!isOpen || !initialStoryId) return;
-    const index = storiesRef.current.findIndex((s) => s.storyId === initialStoryId);
-    if (index !== -1) {
-      setCurrentStoryIndex(index);
-      setCurrentItemIndex(0);
-    }
+    const story = storiesRef.current.find((s) => s.storyId === initialStoryId);
+    if (!story) return;
+    setCurrentStoryId(story.storyId);
+    setCurrentStoryIndex(storiesRef.current.findIndex((s) => s.storyId === story.storyId));
+    setCurrentItemIndex(0);
+    setCurrentItemId(story.items[0]?.storyItemId ?? null);
   }, [isOpen, initialStoryId]);
 
   useEffect(() => {
     if (!isOpen) return;
-    if (stories.length === 0 || !currentStory) {
+    if (stories.length === 0) {
       onClose();
       return;
     }
-    const storyIndex = stories.findIndex((story) => story.storyId === currentStory.storyId);
+    if (!currentStoryId) {
+      const first = stories[0];
+      setCurrentStoryId(first.storyId);
+      setCurrentStoryIndex(0);
+      setCurrentItemIndex(0);
+      setCurrentItemId(first.items[0]?.storyItemId ?? null);
+      return;
+    }
+    const storyIndex = stories.findIndex((story) => story.storyId === currentStoryId);
     if (storyIndex < 0) {
       onClose();
       return;
     }
     if (storyIndex !== currentStoryIndex) setCurrentStoryIndex(storyIndex);
     const nextItems = stories[storyIndex]?.items ?? [];
-    const itemIndex = currentItem?.storyItemId
-      ? nextItems.findIndex((item) => item.storyItemId === currentItem.storyItemId)
+    const itemIndex = currentItemId
+      ? nextItems.findIndex((item) => item.storyItemId === currentItemId)
       : -1;
     if (itemIndex >= 0) {
       if (itemIndex !== currentItemIndex) setCurrentItemIndex(itemIndex);
-    } else if (currentItemIndex >= nextItems.length) {
-      setCurrentItemIndex(Math.max(0, nextItems.length - 1));
+      if (nextItems[itemIndex]?.storyItemId !== currentItemId) setCurrentItemId(nextItems[itemIndex]?.storyItemId ?? null);
+    } else if (nextItems.length > 0) {
+      setCurrentItemIndex(0);
+      setCurrentItemId(nextItems[0]?.storyItemId ?? null);
     }
-  }, [stories, isOpen, currentStory?.storyId, currentItem?.storyItemId, currentStoryIndex, currentItemIndex, onClose]);
+  }, [stories, isOpen, currentStoryId, currentItemId, currentStoryIndex, currentItemIndex, onClose]);
 
   useEffect(() => {
     setProgress(0);

@@ -86,17 +86,19 @@ export function HomeStoriesSection({
       if (cancelled) return;
       if (result.state === "error") {
         setLoadError(result.message);
+        setStories((previous) =>
+          previous.filter((story) => !story.endAt || Date.parse(story.endAt) > Date.now()),
+        );
         setLoaded(true);
         return;
       }
       setLoadError(null);
-      const eligible = result.stories.filter((story) => story.items.length > 0);
+      const eligible = result.stories.filter((story) =>
+        story.items.length > 0 && (!story.endAt || Date.parse(story.endAt) > Date.now()),
+      );
       setStories(eligible);
       setLoaded(true);
-      // A story that stopped/expired while the tab was open must not stay playable.
-      setSelectedStoryId((prev) =>
-        prev && eligible.some((story) => story.storyId === prev) ? prev : null,
-      );
+      // The modal-close effect below owns removal; keep the selected id so it can see the loss.
       if (revalidateTick > 0) return;
       if (typeof window === "undefined") return;
       const wanted = new URLSearchParams(window.location.search).get("story");
@@ -133,7 +135,7 @@ export function HomeStoriesSection({
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [soonestEnd, stories.length]);
+  }, [soonestEnd, stories.length, revalidateTick]);
 
   useEffect(() => {
     if (!modalOpen || !selectedStoryId) return;

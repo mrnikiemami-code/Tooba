@@ -171,3 +171,35 @@ test("R22 F05: removing the current story closes the player instead of switching
   assert.equal(qq(tree.container, '[data-testid="story-modal"]').length, 0);
   await tree.unmount();
 });
+
+test("R22 F05: reordering the story array does not change the playing story", async () => {
+  const storyA = story([item({ storyItemId: "oa-1", caption: "A", mediaUrl: "https://cdn.example.test/oa.jpg" })], { storyId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa22a3", title: "A" });
+  const storyB = story([item({ storyItemId: "ob-1", caption: "B", mediaUrl: "https://cdn.example.test/ob.jpg" })], { storyId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb22b3", title: "B" });
+  const storyX = story([item({ storyItemId: "ox-1", caption: "X", mediaUrl: "https://cdn.example.test/ox.jpg" })], { storyId: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx22x1", title: "X" });
+  const tree = await mount(createElement(StoryModal, { isOpen: true, onClose: () => undefined, stories: [storyA, storyB], initialStoryId: storyA.storyId }));
+  await flush();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+  await flush();
+  assert.equal(captionOf(tree.container), "B");
+  await tree.rerender(createElement(StoryModal, { isOpen: true, onClose: () => undefined, stories: [storyX, storyA, storyB], initialStoryId: storyA.storyId }));
+  await flush();
+  assert.equal(captionOf(tree.container), "B", "the selected story id, not the old array index, must survive reorder");
+  await tree.unmount();
+});
+
+test("R22 F05: reordering slides inside the playing story keeps the current slide", async () => {
+  const body = story([
+    item({ storyItemId: "s-1", caption: "Slide one", mediaUrl: "https://cdn.example.test/s1.jpg" }),
+    item({ storyItemId: "s-2", caption: "Slide two", mediaUrl: "https://cdn.example.test/s2.jpg" }),
+  ], { storyId: "cccccccc-cccc-cccc-cccc-cccccccc22c1", title: "C" });
+  const tree = await mount(createElement(StoryModal, { isOpen: true, onClose: () => undefined, stories: [body], initialStoryId: body.storyId }));
+  await flush();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+  await flush();
+  assert.equal(captionOf(tree.container), "Slide two");
+  const reordered = story([body.items[1]!, body.items[0]!], { storyId: body.storyId, title: body.title });
+  await tree.rerender(createElement(StoryModal, { isOpen: true, onClose: () => undefined, stories: [reordered], initialStoryId: body.storyId }));
+  await flush();
+  assert.equal(captionOf(tree.container), "Slide two", "the selected slide id must survive slide reorder");
+  await tree.unmount();
+});

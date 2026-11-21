@@ -213,7 +213,7 @@ function verifyContentEffect(
     if (!sameInstant(body.endAt, snap.endAt)) {
       return { ok: false, reason: "story_end_unchanged" };
     }
-    return { ok: true, data: snap };
+    return null;
   }
 
   if (envelope.action === "remove_item") {

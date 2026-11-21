@@ -92,3 +92,14 @@ test("home stories use live Host binding without fake STORY_IMAGES", () => {
   assert.match(storiesSource, /bg-primary|from-primary|text-primary/);
   assert.doesNotMatch(storiesSource, /#E53935/);
 });
+
+test("R22 home stories own selected-story removal and chain revalidation", () => {
+  // Removal must be observed by the modal-close effect, not cleared first in the fetch callback.
+  assert.doesNotMatch(storiesSource, /setSelectedStoryId\(\(prev\)/);
+  assert.match(storiesSource, /!stories\.some\(\(story\) => story\.storyId === selectedStoryId\)/);
+  assert.match(storiesSource, /setModalOpen\(false\)/);
+  // A 5-minute cap must reschedule after each revalidation, and an error must still drop expired rows.
+  assert.match(storiesSource, /\[soonestEnd, stories\.length, revalidateTick\]/);
+  assert.match(storiesSource, /previous\.filter\(\(story\) => !story\.endAt/);
+  assert.doesNotMatch(storiesSource, /\/images\/stories\/1\.jpg/);
+});
